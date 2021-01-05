@@ -1,39 +1,9 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginUefiSecurity"']
 
-shared_module('fu_plugin_uefi_dbx',
+shared_module('fu_plugin_uefi_security',
   fu_hash,
   sources : [
-    'fu-plugin-uefi-dbx.c',
-    'fu-uefi-dbx-common.c',
-    'fu-uefi-dbx-device.c',
-    'fu-efi-image.c',
-    'fu-efi-signature.c',
-    'fu-efi-signature-common.c',
-    'fu-efi-signature-list.c',
-    'fu-efi-signature-parser.c',
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install : true,
-  install_dir: plugin_dir,
-  link_with : [
-    fwupd,
-    fwupdplugin,
-  ],
-  c_args : cargs,
-  dependencies : [
-    plugin_deps,
-  ],
-)
-
-if get_option('plugin_uefi_pk')
-shared_module('fu_plugin_uefi_pk',
-  fu_hash,
-  sources : [
-    'fu-plugin-uefi-pk.c',
+    'fu-plugin-uefi-security.c',
     'fu-uefi-dbx-common.c',
     'fu-uefi-dbx-device.c',
     'fu-efi-image.c',
@@ -59,7 +29,6 @@ shared_module('fu_plugin_uefi_pk',
     gnutls,
   ],
 )
-endif
 
 if get_option('tests')
   testdatadirs = environment()

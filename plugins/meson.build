@@ -123,6 +123,8 @@ if get_option('plugin_uefi_capsule')
 subdir('bios')
 subdir('uefi-capsule')
 subdir('uefi-recovery')
+endif
+if get_option('plugin_uefi_security')
 subdir('uefi-security')
 endif
 

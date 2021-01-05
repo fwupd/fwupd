@@ -9,16 +9,27 @@
 #include <gnutls/crypto.h>
 #include <gnutls/abstract.h>
 
-#include "fu-efi-signature-parser.h"
+#include "fu-plugin-vfuncs.h"
 #include "fu-efivar.h"
 #include "fu-hash.h"
-#include "fu-plugin-vfuncs.h"
+#include "fu-efi-signature-common.h"
+#include "fu-efi-signature-parser.h"
+#include "fu-uefi-dbx-common.h"
+#include "fu-uefi-dbx-device.h"
 
 struct FuPluginData {
 	gboolean		 has_pk_test_key;
 };
 
 #define FU_UEFI_PK_CHECKSUM_AMI_TEST_KEY	"a773113bafaf5129aa83fd0912e95da4fa555f91"
+
+void
+fu_plugin_init (FuPlugin *plugin)
+{
+	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "uefi");
+}
 
 static void
 _gnutls_datum_deinit (gnutls_datum_t *d)
@@ -34,10 +45,10 @@ G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_x509_crt_t, gnutls_x509_crt_deinit, NULL)
 #pragma clang diagnostic pop
 
 static gboolean
-fu_plugin_uefi_pk_parse_buf (FuPlugin *plugin,
-			     const gchar *buf,
-			     gsize bufsz,
-			     GError **error)
+fu_plugin_uefi_security_parse_buf (FuPlugin *plugin,
+				   const gchar *buf,
+				   gsize bufsz,
+				   GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	const gchar *needles[] = {
@@ -56,9 +67,9 @@ fu_plugin_uefi_pk_parse_buf (FuPlugin *plugin,
 }
 
 static gboolean
-fu_plugin_uefi_pk_parse_blob (FuPlugin *plugin,
-			      GBytes *blob,
-			      GError **error)
+fu_plugin_uefi_security_parse_blob (FuPlugin *plugin,
+				    GBytes *blob,
+				    GError **error)
 {
 	gchar buf[1024] = { '\0' };
 	gnutls_datum_t d = { 0 };
@@ -96,7 +107,7 @@ fu_plugin_uefi_pk_parse_blob (FuPlugin *plugin,
 	if (gnutls_x509_crt_get_issuer_dn (crt, buf, &bufsz) == GNUTLS_E_SUCCESS) {
 		if (g_getenv ("FWUPD_UEFI_PK_VERBOSE") != NULL)
 			g_debug ("PK issuer: %s", buf);
-		if (!fu_plugin_uefi_pk_parse_buf (plugin,
+		if (!fu_plugin_uefi_security_parse_buf (plugin,
 						  buf, bufsz,
 						  error))
 			return FALSE;
@@ -108,7 +119,7 @@ fu_plugin_uefi_pk_parse_blob (FuPlugin *plugin,
 		gnutls_x509_dn_get_str (dn, subject);
 		if (g_getenv ("FWUPD_UEFI_PK_VERBOSE") != NULL)
 			g_debug ("PK subject: %s", subject->data);
-		if (!fu_plugin_uefi_pk_parse_buf (plugin,
+		if (!fu_plugin_uefi_security_parse_buf (plugin,
 						  (const gchar *) subject->data,
 						  subject->size,
 						  error))
@@ -120,9 +131,9 @@ fu_plugin_uefi_pk_parse_blob (FuPlugin *plugin,
 }
 
 static gboolean
-fu_plugin_uefi_pk_parse_siglist (FuPlugin *plugin,
-				 FuEfiSignatureList *siglist,
-				 GError **error)
+fu_plugin_uefi_security_parse_siglist (FuPlugin *plugin,
+				       FuEfiSignatureList *siglist,
+				       GError **error)
 {
 	GPtrArray *sigs = fu_efi_signature_list_get_all (siglist);
 	FuPluginData *priv = fu_plugin_get_data (plugin);
@@ -136,7 +147,7 @@ fu_plugin_uefi_pk_parse_siglist (FuPlugin *plugin,
 			       FU_UEFI_PK_CHECKSUM_AMI_TEST_KEY) == 0) {
 			g_debug ("detected AMI test certificate");
 			priv->has_pk_test_key = TRUE;
-		} else if (!fu_plugin_uefi_pk_parse_blob (plugin, blob, error))
+		} else if (!fu_plugin_uefi_security_parse_blob (plugin, blob, error))
 			return FALSE;
 	}
 	return TRUE;
@@ -148,7 +159,9 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	gsize bufsz = 0;
 	g_autofree guint8 *buf = NULL;
 	g_autoptr(GPtrArray) siglists = NULL;
+	g_autoptr(FuUefiDbxDevice) device = NULL;
 
+	/* PK support */
 	if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "PK",
 				 &buf, &bufsz, NULL, error)) {
 		g_prefix_error (error, "failed to read PK: ");
@@ -164,17 +177,19 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	for (guint i = 0; i < siglists->len; i++) {
 		FuEfiSignatureList *siglist = g_ptr_array_index (siglists, i);
 		if (fu_efi_signature_list_get_kind (siglist) == FU_EFI_SIGNATURE_KIND_X509)
-			if (!fu_plugin_uefi_pk_parse_siglist (plugin, siglist, error))
+			if (!fu_plugin_uefi_security_parse_siglist (plugin, siglist, error))
 				return FALSE;
 	}
-	return TRUE;
-}
 
-void
-fu_plugin_init (FuPlugin *plugin)
-{
-	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
-	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+	/* dbx support */
+	device = fu_uefi_dbx_device_new ();
+	if (!fu_device_probe (FU_DEVICE (device), error))
+		return FALSE;
+	if (!fu_device_setup (FU_DEVICE (device), error))
+		return FALSE;
+	fu_plugin_device_add (plugin, FU_DEVICE (device));
+
+	return TRUE;
 }
 
 void

@@ -1,7 +1,7 @@
-UEFI dbx Support
+UEFI Security Plugin
 ================
 
-Introduction
+dbx support
 ------------
 
 Updating the UEFI revocation database prevents starting EFI binaries with known
@@ -10,6 +10,16 @@ the risk of the machine being "bricked" if the bootloader is not updated first.
 
 This plugin also checks if the UEFI dbx contains all the most recent revoked
 checksums. The result will be stored in an security attribute for HSI.
+
+PK support
+------------
+
+The platform key (PK) specifies the machine owner, typically the OEM
+that created the laptop or desktop.
+
+Several device manufacturers decide to ship the default "AMI Test PK"
+platform key instead of a Device Manufacturer specific one. This will
+cause an HSI-1 failure.
 
 Firmware Format
 ---------------
@@ -45,22 +55,3 @@ External interface access
 -------------------------
 This plugin requires:
 * read/write access to `/sys/firmware/efi/efivars`
-
-UEFI PK Support
-===============
-
-Introduction
-------------
-
-The platform key (PK) specifies the machine owner, typically the OEM
-that created the laptop or desktop.
-
-Several device manufacturers decide to ship the default "AMI Test PK"
-platform key instead of a Device Manufacturer specific one. This will
-cause an HSI-1 failure.
-
-External interface access
--------------------------
-
-This plugin requires:
-* read access to `/sys/firmware/efi/efivars`
