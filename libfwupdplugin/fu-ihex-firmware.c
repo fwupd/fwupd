@@ -215,6 +215,16 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 		g_debug ("  length:\t0x%02x", rcd->data->len);
 		g_debug ("  addr:\t0x%08x", addr);
 
+		/* sanity check */
+		if (rcd->record_type != FU_IHEX_FIRMWARE_RECORD_TYPE_EOF &&
+		    rcd->data->len == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "record 0x%x had zero size", k);
+			return FALSE;
+		}
+
 		/* process different record types */
 		switch (rcd->record_type) {
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_DATA:
