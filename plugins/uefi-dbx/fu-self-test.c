@@ -11,7 +11,6 @@
 #include "fu-common.h"
 #include "fu-uefi-dbx-common.h"
 #include "fu-efi-image.h"
-#include "fu-efi-signature-parser.h"
 
 static void
 fu_efi_image_func (void)

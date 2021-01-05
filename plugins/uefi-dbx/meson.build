@@ -10,7 +10,6 @@ shared_module('fu_plugin_uefi_dbx',
     'fu-efi-signature.c',
     'fu-efi-signature-common.c',
     'fu-efi-signature-list.c',
-    'fu-efi-signature-parser.c',
   ],
   include_directories : [
     root_incdir,
@@ -43,7 +42,6 @@ if get_option('tests')
       'fu-efi-signature.c',
       'fu-efi-signature-common.c',
       'fu-efi-signature-list.c',
-      'fu-efi-signature-parser.c',
     ],
     include_directories : [
       root_incdir,
@@ -64,31 +62,6 @@ if get_option('tests')
   test('uefi-dbx-self-test', e, env : testdatadirs)  # added to installed-tests
 endif
 
-uefi_dbx_fuzzer = executable(
-  'uefi-dbx-fuzzer',
-  sources : [
-    'fu-fuzzer.c',
-    'fu-efi-image.c',
-    'fu-efi-signature.c',
-    'fu-efi-signature-common.c',
-    'fu-efi-signature-list.c',
-    'fu-efi-signature-parser.c',
-    'fu-uefi-dbx-common.c',
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  dependencies : [
-    plugin_deps,
-  ],
-  link_with : [
-    fwupd,
-    fwupdplugin,
-  ],
-)
-
 dbxtool = executable(
   'dbxtool',
   sources : [
@@ -98,7 +71,6 @@ dbxtool = executable(
     'fu-efi-signature.c',
     'fu-efi-signature-common.c',
     'fu-efi-signature-list.c',
-    'fu-efi-signature-parser.c',
   ],
   include_directories : [
     root_incdir,
@@ -134,18 +106,5 @@ if get_option('man')
     ],
     install : true,
     install_dir : join_paths(mandir, 'man1'),
-  )
-endif
-
-if honggfuzz.found()
-  run_target('fuzz-efidbx',
-    command: [
-      honggfuzz,
-      '--input', join_paths(meson.current_source_dir(), 'fuzzing'),
-      '--output', join_paths(meson.current_build_dir(), 'fuzzing-corpus'),
-      '--workspace', join_paths(meson.current_build_dir(), 'fuzzing-findings'),
-      '--verifier',
-      '--', uefi_dbx_fuzzer, '___FILE___',
-    ],
   )
 endif
