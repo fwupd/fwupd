@@ -332,7 +332,7 @@ else
   tpm2tss = dependency('', required: false)
 endif
 
-if build_standalone and get_option('plugin_uefi')
+if build_standalone and get_option('plugin_uefi_capsule')
   cairo = dependency('cairo')
   fontconfig = cc.find_library('fontconfig')
   freetype = cc.find_library('freetype')
@@ -372,8 +372,8 @@ endif
 if build_standalone and get_option('plugin_dell')
   libsmbios_c = dependency('libsmbios_c', version : '>= 2.4.0')
   conf.set('HAVE_DELL', '1')
-  if not get_option('plugin_uefi')
-    error('plugin_dell also needs plugin_uefi to work')
+  if not get_option('plugin_uefi_capsule')
+    error('plugin_dell also needs plugin_uefi_capsule to work')
   endif
 endif
 

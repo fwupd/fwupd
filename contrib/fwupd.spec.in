@@ -213,10 +213,12 @@ can be flashed using flashrom. It is probably not required on servers.
 %endif
     -Dplugin_thunderbolt=true \
 %if 0%{?have_uefi}
-    -Dplugin_uefi=true \
+    -Dplugin_uefi_capsule=true \
+    -Dplugin_uefi_security=true \
     -Dtpm=true \
 %else
-    -Dplugin_uefi=false \
+    -Dplugin_uefi_capsule=false \
+    -Dplugin_uefi_security=false \
     -Dtpm=false \
 %endif
 %if 0%{?have_dell}
@@ -437,8 +439,8 @@ done
 %{_libdir}/fwupd-plugins-3/libfu_plugin_tpm.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_tpm_eventlog.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_bios.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_uefi.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_dbx.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_capsule.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_security.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_pk.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_recovery.so
 %endif

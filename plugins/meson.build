@@ -119,11 +119,11 @@ endif
 subdir('synaptics-mst')
 endif
 
-if get_option('plugin_uefi')
+if get_option('plugin_uefi_capsule')
 subdir('bios')
-subdir('uefi')
+subdir('uefi-capsule')
 subdir('uefi-recovery')
-subdir('uefi-dbx')
+subdir('uefi-security')
 endif
 
 if get_option('plugin_flashrom')

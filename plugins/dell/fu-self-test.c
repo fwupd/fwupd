@@ -478,8 +478,8 @@ fu_test_self_init (FuTest *self)
 	g_autofree gchar *pluginfn_dell = NULL;
 
 	self->plugin_uefi = fu_plugin_new ();
-	pluginfn_uefi = g_build_filename (PLUGINBUILDDIR, "..", "uefi",
-					  "libfu_plugin_uefi." G_MODULE_SUFFIX,
+	pluginfn_uefi = g_build_filename (PLUGINBUILDDIR, "..", "uefi-capsule",
+					  "libfu_plugin_uefi_capsule." G_MODULE_SUFFIX,
 					  NULL);
 	ret = fu_plugin_open (self->plugin_uefi, pluginfn_uefi, &error);
 	g_assert_no_error (error);

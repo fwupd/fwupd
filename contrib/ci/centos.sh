@@ -14,7 +14,8 @@ mkdir -p build
 cd build
 meson .. \
 	--werror \
-	-Dplugin_uefi=false \
+	-Dplugin_uefi_capsule=false \
+	-Dplugin_uefi_security=false \
 	-Dplugin_dell=false \
 	-Dplugin_modem_manager=false \
 	-Dplugin_synaptics=true \

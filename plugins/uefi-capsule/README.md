@@ -1,4 +1,4 @@
-UEFI Support
+UEFI Capsule Support
 ============
 
 Introduction
@@ -9,7 +9,7 @@ defines the software interface between an OS and platform firmware.
 With the UpdateCapsule boot service it can be used to update system firmware.
 
 If you don't want or need this functionality you can use the
-`-Dplugin_uefi=false` option.
+`-Dplugin_uefi_capsule=false` option.
 
 Firmware Format
 ---------------
