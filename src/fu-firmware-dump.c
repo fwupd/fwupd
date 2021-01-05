@@ -216,6 +216,9 @@ main (int argc, char **argv)
 		g_autoptr(GBytes) blob = NULL;
 #ifdef HAVE_HF_ITER
 		HF_ITER(&buf, &len);
+#else
+		g_printerr ("no files or HF_ITER data\n");
+		return 1;
 #endif
 		blob = g_bytes_new_static (buf, len);
 		for (guint i = 0; i < self->array->len; i++) {
