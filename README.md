@@ -139,5 +139,4 @@ There are several automated fuzzing tests in fwupd. These take some time to run:
         -Dintrospection=false ../
     ninja install
     ninja fuzz-firmware
-    ninja fuzz-smbios
     ninja fuzz-tpm-eventlog

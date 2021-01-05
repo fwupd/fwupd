@@ -16,8 +16,7 @@
 #include "fwupd-error.h"
 
 struct _FuSmbios {
-	GObject			 parent_instance;
-	gchar			*smbios_ver;
+	FuFirmware		 parent_instance;
 	guint32			 structure_table_len;
 	GPtrArray		*items;
 };
@@ -68,7 +67,7 @@ typedef struct {
 	GPtrArray		*strings;
 } FuSmbiosItem;
 
-G_DEFINE_TYPE (FuSmbios, fu_smbios, G_TYPE_OBJECT)
+G_DEFINE_TYPE (FuSmbios, fu_smbios, FU_TYPE_FIRMWARE)
 
 static void
 fu_smbios_convert_dt_value (FuSmbios *self, guint8 type, guint8 offset, guint8 value)
@@ -234,6 +233,7 @@ fu_smbios_parse_ep32 (FuSmbios *self, const gchar *buf, gsize sz, GError **error
 {
 	FuSmbiosStructureEntryPoint32 *ep;
 	guint8 csum = 0;
+	g_autofree gchar *version_str = NULL;
 
 	/* verify size */
 	if (sz != sizeof(FuSmbiosStructureEntryPoint32)) {
@@ -277,9 +277,10 @@ fu_smbios_parse_ep32 (FuSmbios *self, const gchar *buf, gsize sz, GError **error
 		return FALSE;
 	}
 	self->structure_table_len = GUINT16_FROM_LE (ep->structure_table_len);
-	self->smbios_ver = g_strdup_printf ("%u.%u",
-					    ep->smbios_major_ver,
-					    ep->smbios_minor_ver);
+	version_str = g_strdup_printf ("%u.%u",
+				       ep->smbios_major_ver,
+				       ep->smbios_minor_ver);
+	fu_firmware_set_version (FU_FIRMWARE (self), version_str);
 	return TRUE;
 }
 
@@ -288,6 +289,7 @@ fu_smbios_parse_ep64 (FuSmbios *self, const gchar *buf, gsize sz, GError **error
 {
 	FuSmbiosStructureEntryPoint64 *ep;
 	guint8 csum = 0;
+	g_autofree gchar *version_str = NULL;
 
 	/* verify size */
 	if (sz != sizeof(FuSmbiosStructureEntryPoint64)) {
@@ -312,9 +314,10 @@ fu_smbios_parse_ep64 (FuSmbios *self, const gchar *buf, gsize sz, GError **error
 	}
 	ep = (FuSmbiosStructureEntryPoint64 *) buf;
 	self->structure_table_len = GUINT32_FROM_LE (ep->structure_table_len);
-	self->smbios_ver = g_strdup_printf ("%u.%u",
-					    ep->smbios_major_ver,
-					    ep->smbios_minor_ver);
+	version_str = g_strdup_printf ("%u.%u",
+				       ep->smbios_major_ver,
+				       ep->smbios_minor_ver);
+	fu_firmware_set_version (FU_FIRMWARE (self), version_str);
 	return TRUE;
 }
 
@@ -379,6 +382,20 @@ fu_smbios_setup_from_path_dmi (FuSmbios *self, const gchar *path, GError **error
 
 	/* parse blob */
 	return fu_smbios_setup_from_data (self, (guint8 *) dmi_raw, sz, error);
+}
+
+static gboolean
+fu_smbios_parse (FuFirmware *firmware,
+		 GBytes *fw,
+		 guint64 addr_start,
+		 guint64 addr_end,
+		 FwupdInstallFlags flags,
+		 GError **error)
+{
+	FuSmbios *self = FU_SMBIOS (firmware);
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
+	return fu_smbios_setup_from_data (self, buf, bufsz, error);
 }
 
 /**
@@ -451,6 +468,24 @@ fu_smbios_setup (FuSmbios *self, GError **error)
 
 }
 
+static void
+fu_smbios_to_string_internal (FuFirmware *firmware, guint idt, GString *str)
+{
+	FuSmbios *self = FU_SMBIOS (firmware);
+	for (guint i = 0; i < self->items->len; i++) {
+		FuSmbiosItem *item = g_ptr_array_index (self->items, i);
+		fu_common_string_append_kx (str, idt + 0, "Type", item->type);
+		fu_common_string_append_kx (str, idt + 1, "Length", item->buf->len);
+		fu_common_string_append_kx (str, idt + 1, "Handle", item->handle);
+		for (guint j = 0; j < item->strings->len; j++) {
+			const gchar *tmp = g_ptr_array_index (item->strings, j);
+			g_autofree gchar *title = g_strdup_printf ("String[%02u]", j);
+			g_autofree gchar *value = fu_common_strsafe (tmp, 20);
+			fu_common_string_append_kv (str, idt + 2, title, value);
+		}
+	}
+}
+
 /**
  * fu_smbios_to_string:
  * @self: A #FuSmbios
@@ -464,23 +499,8 @@ fu_smbios_setup (FuSmbios *self, GError **error)
 gchar *
 fu_smbios_to_string (FuSmbios *self)
 {
-	GString *str;
-
 	g_return_val_if_fail (FU_IS_SMBIOS (self), NULL);
-
-	str = g_string_new (NULL);
-	g_string_append_printf (str, "SmbiosVersion: %s\n", self->smbios_ver);
-	for (guint i = 0; i < self->items->len; i++) {
-		FuSmbiosItem *item = g_ptr_array_index (self->items, i);
-		g_string_append_printf (str, "Type: %02x\n", item->type);
-		g_string_append_printf (str, " Length: %u\n", item->buf->len);
-		g_string_append_printf (str, " Handle: 0x%04x\n", item->handle);
-		for (guint j = 0; j < item->strings->len; j++) {
-			const gchar *tmp = g_ptr_array_index (item->strings, j);
-			g_string_append_printf (str, "  String[%02u]: %s\n", j, tmp);
-		}
-	}
-	return g_string_free (str, FALSE);
+	return fu_firmware_to_string (FU_FIRMWARE (self));
 }
 
 static FuSmbiosItem *
@@ -648,7 +668,6 @@ static void
 fu_smbios_finalize (GObject *object)
 {
 	FuSmbios *self = FU_SMBIOS (object);
-	g_free (self->smbios_ver);
 	g_ptr_array_unref (self->items);
 	G_OBJECT_CLASS (fu_smbios_parent_class)->finalize (object);
 }
@@ -657,7 +676,10 @@ static void
 fu_smbios_class_init (FuSmbiosClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	object_class->finalize = fu_smbios_finalize;
+	klass_firmware->parse = fu_smbios_parse;
+	klass_firmware->to_string = fu_smbios_to_string_internal;
 }
 
 static void

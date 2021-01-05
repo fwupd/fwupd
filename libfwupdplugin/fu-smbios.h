@@ -8,9 +8,11 @@
 
 #include <glib-object.h>
 
+#include "fu-firmware.h"
+
 #define FU_TYPE_SMBIOS (fu_smbios_get_type ())
 
-G_DECLARE_FINAL_TYPE (FuSmbios, fu_smbios, FU, SMBIOS, GObject)
+G_DECLARE_FINAL_TYPE (FuSmbios, fu_smbios, FU, SMBIOS, FuFirmware)
 
 FuSmbios	*fu_smbios_new			(void);
 
