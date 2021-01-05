@@ -8,7 +8,6 @@
 
 #include "fu-efivar.h"
 
-#include "fu-efi-signature-common.h"
 #include "fu-efi-signature.h"
 #include "fu-uefi-dbx-common.h"
 #include "fu-uefi-dbx-device.h"

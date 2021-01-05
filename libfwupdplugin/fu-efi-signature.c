@@ -6,7 +6,16 @@
 
 #include "config.h"
 
-#include "fu-efi-signature.h"
+#include "fu-efi-signature-private.h"
+
+/**
+ * SECTION:fu-efi-signature
+ * @short_description: Parser for EFI_SIGNATURE
+ *
+ * An object that represents a UEFI Signature.
+ *
+ * See also: #FuFirmware
+ */
 
 struct _FuEfiSignature {
 	FuFirmwareImage		 parent_instance;
@@ -16,6 +25,16 @@ struct _FuEfiSignature {
 
 G_DEFINE_TYPE (FuEfiSignature, fu_efi_signature, FU_TYPE_FIRMWARE_IMAGE)
 
+/**
+ * fu_efi_signature_kind_to_string:
+ * @kind: A #FuEfiSignatureKind, e.g. %FU_EFI_SIGNATURE_KIND_X509
+ *
+ * Converts the signature kind to a text representation.
+ *
+ * Returns: text, e.g. `x509_cert`
+ *
+ * Since: 1.5.5
+ **/
 const gchar *
 fu_efi_signature_kind_to_string (FuEfiSignatureKind kind)
 {
@@ -26,18 +45,17 @@ fu_efi_signature_kind_to_string (FuEfiSignatureKind kind)
 	return "unknown";
 }
 
-const gchar *
-fu_efi_signature_guid_to_string (const gchar *guid)
-{
-	if (g_strcmp0 (guid, FU_EFI_SIGNATURE_GUID_ZERO) == 0)
-		return "zero";
-	if (g_strcmp0 (guid, FU_EFI_SIGNATURE_GUID_MICROSOFT) == 0)
-		return "microsoft";
-	if (g_strcmp0 (guid, FU_EFI_SIGNATURE_GUID_OVMF) == 0)
-		return "ovmf";
-	return guid;
-}
-
+/**
+ * fu_efi_signature_new: (skip):
+ * @kind: A #FuEfiSignatureKind
+ * @owner: A GUID, e.g. %FU_EFI_SIGNATURE_GUID_MICROSOFT
+ *
+ * Creates a new EFI_SIGNATURE.
+ *
+ * Returns: (transfer full): signature
+ *
+ * Since: 1.5.5
+ **/
 FuEfiSignature *
 fu_efi_signature_new (FuEfiSignatureKind kind, const gchar *owner)
 {
@@ -47,13 +65,33 @@ fu_efi_signature_new (FuEfiSignatureKind kind, const gchar *owner)
 	return g_steal_pointer (&self);
 }
 
+/**
+ * fu_efi_signature_get_kind:
+ * @self: A #FuEfiSignature
+ *
+ * Returns the signature kind.
+ *
+ * Returns: #FuEfiSignatureKind, e.g. %FU_EFI_SIGNATURE_KIND_SHA256
+ *
+ * Since: 1.5.5
+ **/
 FuEfiSignatureKind
 fu_efi_signature_get_kind (FuEfiSignature *self)
 {
-	g_return_val_if_fail (FU_IS_EFI_SIGNATURE (self), 0);
+	g_return_val_if_fail (FU_IS_EFI_SIGNATURE (self), FU_EFI_SIGNATURE_KIND_UNKNOWN);
 	return self->kind;
 }
 
+/**
+ * fu_efi_signature_get_owner:
+ * @self: A #FuEfiSignature
+ *
+ * Returns the GUID of the signature owner.
+ *
+ * Returns: GUID owner, perhaps %FU_EFI_SIGNATURE_GUID_MICROSOFT
+ *
+ * Since: 1.5.5
+ **/
 const gchar *
 fu_efi_signature_get_owner (FuEfiSignature *self)
 {

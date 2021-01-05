@@ -10,7 +10,6 @@
 
 #include "fu-common.h"
 #include "fu-efi-image.h"
-#include "fu-efi-signature-common.h"
 #include "fu-volume.h"
 
 #include "fu-uefi-dbx-common.h"
@@ -53,6 +52,7 @@ fu_uefi_dbx_signature_list_validate_volume (FuEfiSignatureList *siglist, FuVolum
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index (files, i);
 		g_autofree gchar *checksum = NULL;
+		g_autoptr(FuFirmwareImage) img = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* get checksum of file */
@@ -64,7 +64,8 @@ fu_uefi_dbx_signature_list_validate_volume (FuEfiSignatureList *siglist, FuVolum
 
 		/* Authenticode signature is present in dbx! */
 		g_debug ("fn=%s, checksum=%s", fn, checksum);
-		if (fu_efi_signature_list_has_checksum (siglist, checksum)) {
+		img = fu_firmware_get_image_by_checksum (FU_FIRMWARE (siglist), checksum, NULL);
+		if (img != NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NEEDS_USER_ACTION,

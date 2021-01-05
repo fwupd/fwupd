@@ -9,8 +9,17 @@
 #include <fwupd.h>
 
 #include "fu-common.h"
-#include "fu-efi-signature.h"
+#include "fu-efi-signature-private.h"
 #include "fu-efi-signature-list.h"
+
+/**
+ * SECTION:fu-efi-signature-list
+ * @short_description: Parser for EFI_SIGNATURE_LIST
+ *
+ * An object that represents a UEFI SignatureList.
+ *
+ * See also: #FuFirmware
+ */
 
 struct _FuEfiSignatureList {
 	FuFirmware		 parent_instance;
@@ -239,6 +248,13 @@ fu_efi_signature_list_write (FuFirmware *firmware, GError **error)
 	return g_byte_array_free_to_bytes (buf);
 }
 
+/**
+ * fu_efi_signature_list_new:
+ *
+ * Creates a new #FuFirmware that can parse an EFI_SIGNATURE_LIST
+ *
+ * Since: 1.5.5
+ **/
 FuFirmware *
 fu_efi_signature_list_new (void)
 {
