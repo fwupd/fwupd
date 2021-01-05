@@ -285,6 +285,45 @@ fu_firmware_image_get_bytes (FuFirmwareImage *self)
 }
 
 /**
+ * fu_firmware_image_get_checksum:
+ * @self: a #FuPlugin
+ * @csum_kind: a #GChecksumType, e.g. %G_CHECKSUM_SHA256
+ * @error: A #GError, or %NULL
+ *
+ * Returns a checksum of the data.
+ *
+ * Returns: (transfer full): a checksum string, or %NULL if the checksum is not available
+ *
+ * Since: 1.5.5
+ **/
+gchar *
+fu_firmware_image_get_checksum (FuFirmwareImage *self,
+				GChecksumType csum_kind,
+				GError **error)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	FuFirmwareImageClass *klass = FU_FIRMWARE_IMAGE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* subclassed */
+	if (klass->get_checksum != NULL)
+		return klass->get_checksum (self, csum_kind, error);
+
+	/* internal data */
+	if (priv->bytes == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "no bytes found in firmware bytes %s",
+			     priv->id);
+		return NULL;
+	}
+	return g_compute_checksum_for_bytes (csum_kind, priv->bytes);
+}
+
+/**
  * fu_firmware_image_parse:
  * @self: A #FuFirmwareImage
  * @fw: A #GBytes
