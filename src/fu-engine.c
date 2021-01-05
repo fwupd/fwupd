@@ -2237,7 +2237,7 @@ fu_engine_install_release (FuEngine *self,
 	if (version_rel != NULL &&
 	    fu_common_vercmp_full (version_orig, version_rel, fmt) != 0 &&
 	    fu_common_vercmp_full (version_orig, fu_device_get_version (device), fmt) == 0 &&
-	    !fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
+	    !fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 		g_autofree gchar *str = NULL;
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		str = g_strdup_printf ("device version not updated on success, %s != %s",
