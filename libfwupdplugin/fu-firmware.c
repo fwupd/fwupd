@@ -206,6 +206,15 @@ fu_firmware_parse_full (FuFirmware *self,
 	g_return_val_if_fail (fw != NULL, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* sanity check */
+	if (g_bytes_get_size (fw) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "invalid firmware as zero sized");
+		return FALSE;
+	}
+
 	/* subclassed */
 	if (klass->tokenize != NULL) {
 		if (!klass->tokenize (self, fw, flags, error))
