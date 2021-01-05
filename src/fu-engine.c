@@ -6446,6 +6446,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	fu_engine_add_firmware_gtype (self, "fmap", FU_TYPE_FMAP_FIRMWARE);
 	fu_engine_add_firmware_gtype (self, "ihex", FU_TYPE_IHEX_FIRMWARE);
 	fu_engine_add_firmware_gtype (self, "srec", FU_TYPE_SREC_FIRMWARE);
+	fu_engine_add_firmware_gtype (self, "smbios", FU_TYPE_SMBIOS);
 
 	/* set shared USB context */
 	self->usb_ctx = g_usb_context_new (error);

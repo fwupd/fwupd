@@ -1,16 +1,4 @@
-if honggfuzz.found()
-  run_target('fuzz-smbios',
-    command: [
-      honggfuzz,
-      '--input', join_paths(meson.current_source_dir(), 'smbios'),
-      '--output', join_paths(meson.current_build_dir(), 'smbios-corpus'),
-      '--workspace', join_paths(meson.current_build_dir(), 'smbios-findings'),
-      '--verifier',
-      '--rlimit_rss', '10',
-      '--', fwupdtool, 'smbios-dump', '___FILE___',
-    ],
-  )
-if get_option('tests')
+if honggfuzz.found() and get_option('tests')
   run_target('fuzz-firmware',
     command: [
       honggfuzz,
@@ -23,5 +11,4 @@ if get_option('tests')
       fwupd_firmware_dump, '--timeout', '50',
     ],
 )
-endif
 endif
