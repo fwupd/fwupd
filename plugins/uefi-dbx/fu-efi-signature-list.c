@@ -28,11 +28,23 @@ fu_efi_signature_list_parse_item (FuEfiSignatureList *self,
 				  GError **error)
 {
 	fwupd_guid_t guid;
-	gsize sig_datasz = sig_size - sizeof(fwupd_guid_t);
+	gsize sig_datasz;
 	g_autofree gchar *sig_owner = NULL;
-	g_autofree guint8 *sig_data = g_malloc0 (sig_datasz);
+	g_autofree guint8 *sig_data = NULL;
 	g_autoptr(FuEfiSignature) sig = NULL;
 	g_autoptr(GBytes) data = NULL;
+
+	/* allocate data buf */
+	if (sig_size <= sizeof(fwupd_guid_t)) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "SignatureSize invalid: 0x%x",
+			     (guint) sig_size);
+		return FALSE;
+	}
+	sig_datasz = sig_size - sizeof(fwupd_guid_t);
+	sig_data = g_malloc0 (sig_datasz);
 
 	/* read both blocks of data */
 	if (!fu_memcpy_safe ((guint8 *) &guid, sizeof(guid), 0x0,	/* dst */
