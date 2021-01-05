@@ -6,16 +6,9 @@
 
 #pragma once
 
-#include "fu-efi-signature.h"
+#include "fu-firmware.h"
 
 #define FU_TYPE_EFI_SIGNATURE_LIST (fu_efi_signature_list_get_type ())
-G_DECLARE_FINAL_TYPE (FuEfiSignatureList, fu_efi_signature_list, FU, EFI_SIGNATURE_LIST, GObject)
+G_DECLARE_FINAL_TYPE (FuEfiSignatureList, fu_efi_signature_list, FU, EFI_SIGNATURE_LIST, FuFirmware)
 
-
-FuEfiSignatureList*fu_efi_signature_list_new		(FuEfiSignatureKind kind);
-FuEfiSignatureKind fu_efi_signature_list_get_kind	(FuEfiSignatureList	*self);
-void		 fu_efi_signature_list_add		(FuEfiSignatureList	*self,
-							 FuEfiSignature		*signature);
-GPtrArray	*fu_efi_signature_list_get_all		(FuEfiSignatureList	*self);
-gboolean	 fu_efi_signature_list_has_checksum	(FuEfiSignatureList	*self,
-							 const gchar		*checksum);
+FuFirmware		*fu_efi_signature_list_new		(void);

@@ -6,10 +6,9 @@
 
 #pragma once
 
-#include "fu-efi-signature.h"
+#include "fu-efi-signature-list.h"
 
-gboolean	 fu_efi_signature_list_array_inclusive	(GPtrArray	*outer,
-							 GPtrArray	*inner);
-guint		 fu_efi_signature_list_array_version	(GPtrArray	*siglists);
-gboolean	 fu_efi_signature_list_array_has_checksum (GPtrArray	*siglists,
-							 const gchar	*checksum);
+gboolean	 fu_efi_signature_list_inclusive	(FuEfiSignatureList	*outer,
+							 FuEfiSignatureList	*inner);
+gboolean	 fu_efi_signature_list_has_checksum	(FuEfiSignatureList	*siglist,
+							 const gchar		*checksum);
