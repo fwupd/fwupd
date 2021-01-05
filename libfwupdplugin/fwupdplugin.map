@@ -702,6 +702,7 @@ LIBFWUPDPLUGIN_1.5.4 {
 
 LIBFWUPDPLUGIN_1.5.5 {
   global:
+    fu_common_get_cpu_vendor;
     fu_common_strsafe;
     fu_device_add_internal_flag;
     fu_device_has_internal_flag;

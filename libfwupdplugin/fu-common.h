@@ -84,6 +84,22 @@ typedef enum {
 	FU_PATH_KIND_LAST
 } FuPathKind;
 
+/**
+ * FuCpuVendor:
+ * @FU_CPU_VENDOR_UNKNOWN:		Unknown
+ * @FU_CPU_VENDOR_INTEL:		Intel
+ * @FU_CPU_VENDOR_AMD:			AMD
+ *
+ * The CPU vendor.
+ **/
+typedef enum {
+	FU_CPU_VENDOR_UNKNOWN,
+	FU_CPU_VENDOR_INTEL,
+	FU_CPU_VENDOR_AMD,
+	/*< private >*/
+	FU_CPU_VENDOR_LAST
+} FuCpuVendor;
+
 typedef void	(*FuOutputHandler)		(const gchar	*line,
 						 gpointer	 user_data);
 
@@ -260,7 +276,9 @@ gboolean	 fu_common_cpuid		(guint32	 leaf,
 						 guint32	*edx,
 						 GError		**error)
 						 G_GNUC_WARN_UNUSED_RESULT;
-gboolean	 fu_common_is_cpu_intel		(void);
+gboolean	 fu_common_is_cpu_intel		(void)
+G_DEPRECATED_FOR(fu_common_get_cpu_vendor);
+FuCpuVendor	 fu_common_get_cpu_vendor	(void);
 gboolean	 fu_common_is_live_media	(void);
 GPtrArray	*fu_common_get_volumes_by_kind	(const gchar	*kind,
 						 GError		**error)

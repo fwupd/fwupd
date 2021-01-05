@@ -158,7 +158,7 @@ void
 fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	/* only Intel */
-	if (!fu_common_is_cpu_intel ())
+	if (fu_common_get_cpu_vendor () != FU_CPU_VENDOR_INTEL)
 		return;
 
 	fu_plugin_add_security_attrs_intel_cet_enabled (plugin, attrs);
