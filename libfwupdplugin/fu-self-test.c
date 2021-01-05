@@ -320,6 +320,26 @@ fu_smbios_dt_func (void)
 }
 
 static void
+fu_common_strsafe_func (void)
+{
+	struct {
+		const gchar *in;
+		const gchar *op;
+	} strs[] = {
+		{ "dave123",		"dave123" },
+		{ "dave123XXX",		"dave123" },
+		{ "dave\x03XXX",	"dave.XX" },
+		{ "dave\x03\x04XXX",	"dave..X" },
+		{ "\x03\x03",		NULL },
+		{ NULL, NULL }
+	};
+	for (guint i = 0; strs[i].in != NULL; i++) {
+		g_autofree gchar *tmp = fu_common_strsafe (strs[i].in, 7);
+		g_assert_cmpstr (tmp, ==, strs[i].op);
+	}
+}
+
+static void
 fu_hwids_func (void)
 {
 	g_autoptr(FuHwids) hwids = NULL;
@@ -2124,6 +2144,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/common{spawn-timeout)", fu_common_spawn_timeout_func);
 	g_test_add_func ("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	g_test_add_func ("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
+	g_test_add_func ("/fwupd/common{strsafe}", fu_common_strsafe_func);
 	g_test_add_func ("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
