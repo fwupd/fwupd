@@ -837,7 +837,7 @@ fu_plugin_init (FuPlugin *plugin)
 		data->smi_obj->fake_smbios = TRUE;
 
 	/* make sure that UEFI plugin is ready to receive devices */
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi_capsule");
 
 	/* our TPM device is upgradable! */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_BETTER_THAN, "tpm");

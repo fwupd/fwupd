@@ -14,7 +14,7 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	/* make sure that UEFI plugin is ready to receive devices */
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi_capsule");
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 }
 

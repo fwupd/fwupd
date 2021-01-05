@@ -1,19 +1,19 @@
 subdir('efi')
 
-cargs = ['-DG_LOG_DOMAIN="FuPluginUefi"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']
 
 efi_os_dir = get_option('efi_os_dir')
 if efi_os_dir != ''
   cargs += '-DEFI_OS_DIR="' + efi_os_dir + '"'
 endif
 
-install_data(['uefi.quirk'],
+install_data(['uefi-capsule.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
 
-shared_module('fu_plugin_uefi',
+shared_module('fu_plugin_uefi_capsule',
   fu_hash,
   sources : [
-    'fu-plugin-uefi.c',
+    'fu-plugin-uefi-capsule.c',
     'fu-uefi-bgrt.c',
     'fu-ucs2.c',
     'fu-uefi-bootmgr.c',
@@ -96,7 +96,7 @@ if get_option('man')
   )
 endif
 
-install_data(['uefi.conf'],
+install_data(['uefi_capsule.conf'],
   install_dir:  join_paths(sysconfdir, 'fwupd')
 )
 

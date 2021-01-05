@@ -15,7 +15,7 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "uefi");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "uefi_capsule");
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_EFI_SIGNATURE_LIST);
 }
 

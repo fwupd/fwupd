@@ -15,7 +15,7 @@ meson .. \
     -Dplugin_flashrom=true \
     -Dplugin_modem_manager=false \
     -Dplugin_thunderbolt=true \
-    -Dplugin_uefi=true \
+    -Dplugin_uefi_capsule=true \
     -Dplugin_dell=true \
     -Dplugin_synaptics=true $@
 ninja-build dist
