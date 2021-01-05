@@ -156,7 +156,7 @@ fu_smbios_setup_from_data (FuSmbios *self, const guint8 *buf, gsize sz, GError *
 		/* invalid */
 		if (str->len == 0x00)
 			break;
-		if (str->len >= sz) {
+		if (i + str->len >= sz) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_FILE,
