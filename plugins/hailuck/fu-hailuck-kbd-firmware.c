@@ -41,8 +41,23 @@ fu_hailuck_kbd_firmware_parse (FuFirmware *firmware,
 				     rcd->record_type);
 			return FALSE;
 		}
-		if (rcd->addr + rcd->data->len > buf->len)
+		if (rcd->data->len == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "record 0x%x had zero size", j);
+			return FALSE;
+		}
+		if (rcd->addr + rcd->data->len > buf->len) {
+			if (rcd->addr + rcd->data->len == 0) {
+				g_set_error_literal (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_NOT_SUPPORTED,
+						     "buffer would have zero size");
+				return FALSE;
+			}
 			fu_byte_array_set_size (buf, rcd->addr + rcd->data->len);
+		}
 		if (!fu_memcpy_safe (buf->data, buf->len, rcd->addr,
 				     rcd->data->data, rcd->data->len, 0x0,
 				     rcd->data->len, error))
