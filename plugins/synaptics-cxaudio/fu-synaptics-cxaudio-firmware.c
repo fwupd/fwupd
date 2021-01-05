@@ -155,6 +155,13 @@ fu_synaptics_cxaudio_firmware_parse (FuFirmware *firmware,
 			continue;
 		if (rcd->addr > FU_SYNAPTICS_CXAUDIO_EEPROM_SHADOW_SIZE)
 			continue;
+		if (rcd->buf->len == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "record 0x%x had zero size", i);
+			return FALSE;
+		}
 		if (!fu_memcpy_safe (shadow, FU_SYNAPTICS_CXAUDIO_EEPROM_SHADOW_SIZE, rcd->addr, /* dst */
 				     rcd->buf->data, rcd->buf->len, 0x0, /* src */
 				     rcd->buf->len, error))
