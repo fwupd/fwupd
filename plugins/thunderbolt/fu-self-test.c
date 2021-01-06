@@ -1232,6 +1232,38 @@ test_update_working (ThunderboltTest *tt, gconstpointer user_data)
 }
 
 static void
+test_update_wd19 (ThunderboltTest *tt, gconstpointer user_data)
+{
+	FuPlugin *plugin = tt->plugin;
+	MockTree *tree = tt->tree;
+	GBytes *fw_data = tt->fw_data;
+	gboolean ret;
+	const gchar *version_before;
+	const gchar *version_after;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(UpdateContext) up_ctx = NULL;
+
+	/* test sanity check */
+	g_assert_nonnull (tree);
+	g_assert_nonnull (fw_data);
+
+	/* simulate a wd19 update which will not disappear / re-appear */
+	fu_device_add_flag (tree->fu_device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
+	fu_device_add_flag (tree->fu_device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+	version_before = fu_device_get_version (tree->fu_device);
+
+	ret = fu_plugin_runner_update (plugin, tree->fu_device, fw_data, 0, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	ret = fu_device_has_flag (tree->fu_device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	g_assert_true (ret);
+
+	version_after = fu_device_get_version (tree->fu_device);
+	g_assert_cmpstr (version_after, ==, version_before);
+}
+
+static void
 test_update_fail (ThunderboltTest *tt, gconstpointer user_data)
 {
 	FuPlugin *plugin = tt->plugin;
@@ -1358,6 +1390,12 @@ main (int argc, char **argv)
 		    TEST_INIT_FULL,
 		    test_set_up,
 		    test_update_fail_nowshow,
+		    test_tear_down);
+	g_test_add ("/thunderbolt/update{delayed_activation}",
+		    ThunderboltTest,
+		    TEST_INIT_FULL,
+		    test_set_up,
+		    test_update_wd19,
 		    test_tear_down);
 
 	return g_test_run ();
