@@ -1328,6 +1328,10 @@ fu_util_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
 		/* TRANSLATORS: Failed to open plugin, hey Arch users */
 		return _("Plugin dependencies missing");
 	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_PENDING_UPDATE) {
+		/* TRANSLATORS: We've already scheduled an update with this plugin */
+		return _("Plugin has update pending");
+	}
 
 	/* fall back for unknown types */
 	return fwupd_plugin_flag_to_string (plugin_flag);
@@ -1355,6 +1359,9 @@ fu_util_plugin_flag_to_cli_text (FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:
 		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
 					    FU_UTIL_TERM_COLOR_RED);
+	case FWUPD_PLUGIN_FLAG_PENDING_UPDATE:
+		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
+					    FU_UTIL_CLI_COLOR_YELLOW);
 	default:
 		break;
 	}

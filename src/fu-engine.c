@@ -232,6 +232,20 @@ fu_engine_progress_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *sel
 }
 
 static void
+fu_engine_update_state_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
+{
+	/* update the plugin state for any device needing activation (like ATA) */
+	if (fu_device_get_update_state (device) == FWUPD_UPDATE_STATE_PENDING) {
+		FuPlugin *plugin;
+		plugin = fu_plugin_list_find_by_name (self->plugin_list,
+						      fu_device_get_plugin (device),
+						      NULL);
+		if (plugin != NULL)
+			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_PENDING_UPDATE);
+	}
+}
+
+static void
 fu_engine_status_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
 	fu_engine_set_status (self, fu_device_get_status (device));
@@ -249,11 +263,16 @@ fu_engine_watch_device (FuEngine *self, FuDevice *device)
 		g_signal_handlers_disconnect_by_func (device_old,
 						      fu_engine_status_notify_cb,
 						      self);
+		g_signal_handlers_disconnect_by_func (device_old,
+						      fu_engine_update_state_notify_cb,
+						      self);
 	}
 	g_signal_connect (device, "notify::progress",
 			  G_CALLBACK (fu_engine_progress_notify_cb), self);
 	g_signal_connect (device, "notify::status",
 			  G_CALLBACK (fu_engine_status_notify_cb), self);
+	g_signal_connect (device, "notify::update-state",
+			  G_CALLBACK (fu_engine_update_state_notify_cb), self);
 }
 
 static void

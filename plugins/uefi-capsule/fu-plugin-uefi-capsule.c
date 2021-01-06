@@ -30,6 +30,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUnixMountEntry, g_unix_mount_free)
 struct FuPluginData {
 	FuUefiBgrt		*bgrt;
 	FuVolume		*esp;
+	GFileMonitor		*monitor_bootnext;
 };
 
 void
@@ -51,6 +52,8 @@ fu_plugin_destroy (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	if (data->esp != NULL)
 		g_object_unref (data->esp);
+	if (data->monitor_bootnext != NULL)
+		g_object_unref (data->monitor_bootnext);
 	g_object_unref (data->bgrt);
 }
 
@@ -525,7 +528,7 @@ fu_plugin_uefi_capsule_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GEr
 	if (fu_device_get_custom_flags (FU_DEVICE (dev)) == NULL) {
 		/* for all Lenovo hardware */
 		if (fu_plugin_check_hwid (plugin, "6de5d951-d755-576b-bd09-c5cf66b27234")) {
-			fu_device_set_custom_flags (FU_DEVICE (dev), "use-legacy-bootmgr-desc");
+			fu_device_set_custom_flags (FU_DEVICE (dev), "use-legacy-bootmgr-desc,no-capsule-coalesce");
 			fu_plugin_add_report_metadata (plugin, "BootMgrDesc", "legacy");
 		}
 	}
@@ -763,6 +766,45 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 }
 
 gboolean
+fu_plugin_update_prepare (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
+			  FuDevice *dev,
+			  GError **error)
+{
+	if (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_PENDING_UPDATE) &&
+	    fu_device_has_custom_flag (dev, "no-capsule-coalesce")) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Please reboot before scheduling more UEFI updates");
+		return FALSE;
+	}
+	return FALSE;
+}
+
+static void
+fu_plugin_uefi_capsule_ensure_pending_flag (FuPlugin *plugin)
+{
+	if (fu_efivar_exists (FU_EFIVAR_GUID_EFI_GLOBAL, "BootNext") &&
+	    fu_efivar_exists (FU_EFIVAR_GUID_FWUPDATE, NULL)) {
+		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_PENDING_UPDATE);
+	} else {
+		fu_plugin_remove_flag (plugin, FWUPD_PLUGIN_FLAG_PENDING_UPDATE);
+	}
+}
+
+static void
+fu_plugin_uefi_capsule_bootnext_changed_cb (GFileMonitor *monitor,
+					    GFile *file,
+					    GFile *other_file,
+					    GFileMonitorEvent event_type,
+					    gpointer user_data)
+{
+	FuPlugin *plugin = FU_PLUGIN (user_data);
+	fu_plugin_uefi_capsule_ensure_pending_flag (plugin);
+}
+
+gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
@@ -798,6 +840,13 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			g_warning ("cannot find default ESP: %s", error_udisks2->message);
 		}
 	}
+
+	/* check, then set up a monitor to catch any scheduled updates */
+	fu_plugin_uefi_capsule_ensure_pending_flag (plugin);
+	data->monitor_bootnext = fu_efivar_get_monitor (FU_EFIVAR_GUID_EFI_GLOBAL, "BootNext", NULL);
+	g_signal_connect (data->monitor_bootnext, "changed",
+			  G_CALLBACK (fu_plugin_uefi_capsule_bootnext_changed_cb),
+			  plugin);
 
 	/* add each device */
 	for (guint i = 0; i < entries->len; i++) {
