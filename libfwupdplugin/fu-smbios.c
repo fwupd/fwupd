@@ -53,13 +53,6 @@ typedef struct __attribute__((packed)) {
 	guint64			 structure_table_addr;
 } FuSmbiosStructureEntryPoint64;
 
-/* little endian */
-typedef struct __attribute__((packed)) {
-	guint8			 type;
-	guint8			 len;
-	guint16			 handle;
-} FuSmbiosStructure;
-
 typedef struct {
 	guint8			 type;
 	guint16			 handle;
@@ -150,13 +143,27 @@ fu_smbios_setup_from_data (FuSmbios *self, const guint8 *buf, gsize sz, GError *
 {
 	/* go through each structure */
 	for (gsize i = 0; i < sz; i++) {
-		FuSmbiosStructure *str = (FuSmbiosStructure *) &buf[i];
 		FuSmbiosItem *item;
+		guint16 str_handle = 0;
+		guint8 str_len = 0;
+		guint8 str_type = 0;
+
+		/* le */
+		if (!fu_common_read_uint8_safe (buf, sz, i + 0x0,
+						&str_type, error))
+			return FALSE;
+		if (!fu_common_read_uint8_safe (buf, sz, i + 0x1,
+						&str_len, error))
+			return FALSE;
+		if (!fu_common_read_uint16_safe (buf, sz, i + 0x2,
+						 &str_handle, G_LITTLE_ENDIAN,
+						 error))
+			return FALSE;
 
 		/* invalid */
-		if (str->len == 0x00)
+		if (str_len == 0x00)
 			break;
-		if (i + str->len >= sz) {
+		if (i + str_len >= sz) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INVALID_FILE,
@@ -166,15 +173,15 @@ fu_smbios_setup_from_data (FuSmbios *self, const guint8 *buf, gsize sz, GError *
 
 		/* create a new result */
 		item = g_new0 (FuSmbiosItem, 1);
-		item->type = str->type;
-		item->handle = GUINT16_FROM_LE (str->handle);
-		item->buf = g_byte_array_sized_new (str->len);
+		item->type = str_type;
+		item->handle = GUINT16_FROM_LE (str_handle);
+		item->buf = g_byte_array_sized_new (str_len);
 		item->strings = g_ptr_array_new_with_free_func (g_free);
-		g_byte_array_append (item->buf, buf + i, str->len);
+		g_byte_array_append (item->buf, buf + i, str_len);
 		g_ptr_array_add (self->items, item);
 
 		/* jump to the end of the struct */
-		i += str->len;
+		i += str_len;
 		if (buf[i] == '\0' && buf[i+1] == '\0') {
 			i++;
 			continue;
