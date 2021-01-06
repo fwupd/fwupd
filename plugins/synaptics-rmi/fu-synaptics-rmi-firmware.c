@@ -145,14 +145,21 @@ rmi_firmware_container_id_to_string (RmiFirmwareContainerId container_id)
 	return NULL;
 }
 
-static void
+static gboolean
 fu_synaptics_rmi_firmware_add_image (FuFirmware *firmware, const gchar *id,
-				     const guint8 *data, gsize sz)
+				     GBytes *fw, gsize offset, gsize sz,
+				     GError **error)
 {
-	g_autoptr(GBytes) bytes = g_bytes_new (data, sz);
-	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (bytes);
+	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(FuFirmwareImage) img = NULL;
+
+	bytes = fu_common_bytes_new_offset (fw, offset, sz, error);
+	if (bytes == NULL)
+		return FALSE;
+	img = fu_firmware_image_new (bytes);
 	fu_firmware_image_set_id (img, id);
 	fu_firmware_add_image (firmware, img);
+	return TRUE;
 }
 
 static void
@@ -254,17 +261,23 @@ fu_synaptics_rmi_firmware_parse_v10 (FuFirmware *firmware, GBytes *fw, GError **
 			break;
 		case RMI_FIRMWARE_CONTAINER_ID_UI:
 		case RMI_FIRMWARE_CONTAINER_ID_CORE_CODE:
-			fu_synaptics_rmi_firmware_add_image (firmware, "ui",
-							     data + content_addr, length);
+			if (!fu_synaptics_rmi_firmware_add_image (firmware, "ui", fw,
+								  content_addr,
+								  length, error))
+				return FALSE;
 			break;
 		case RMI_FIRMWARE_CONTAINER_ID_FLASH_CONFIG:
-			fu_synaptics_rmi_firmware_add_image (firmware, "flash-config",
-							     data + content_addr, length);
+			if (!fu_synaptics_rmi_firmware_add_image (firmware, "flash-config", fw,
+								  content_addr,
+								  length, error))
+				return FALSE;
 			break;
 		case RMI_FIRMWARE_CONTAINER_ID_UI_CONFIG:
 		case RMI_FIRMWARE_CONTAINER_ID_CORE_CONFIG:
-			fu_synaptics_rmi_firmware_add_image (firmware, "config",
-							     data + content_addr, length);
+			if (!fu_synaptics_rmi_firmware_add_image (firmware, "config", fw,
+								  content_addr,
+								  length, error))
+				return FALSE;
 			break;
 		case RMI_FIRMWARE_CONTAINER_ID_GENERAL_INFORMATION:
 			if (length < 0x18 + RMI_PRODUCT_ID_LENGTH) {
@@ -318,17 +331,10 @@ fu_synaptics_rmi_firmware_parse_v0x (FuFirmware *firmware, GBytes *fw, GError **
 					 error))
 		return FALSE;
 	if (img_sz > 0) {
-		if (img_sz > sz - RMI_IMG_FW_OFFSET) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "img_sz offset invalid, got 0x%x, size 0x%x",
-				     (guint) img_sz, (guint) sz - RMI_IMG_FW_OFFSET);
+		if (!fu_synaptics_rmi_firmware_add_image (firmware, "ui", fw,
+							  RMI_IMG_FW_OFFSET,
+							  img_sz, error))
 			return FALSE;
-		}
-		fu_synaptics_rmi_firmware_add_image (firmware, "ui",
-						     data + RMI_IMG_FW_OFFSET,
-						     img_sz);
 	}
 
 	/* config */
@@ -338,17 +344,10 @@ fu_synaptics_rmi_firmware_parse_v0x (FuFirmware *firmware, GBytes *fw, GError **
 					 error))
 		return FALSE;
 	if (cfg_sz > 0) {
-		if (cfg_sz > sz - RMI_IMG_FW_OFFSET) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "cfg_sz offset invalid, got 0x%x, size 0x%x",
-				     (guint) cfg_sz, (guint) sz - RMI_IMG_FW_OFFSET);
+		if (!fu_synaptics_rmi_firmware_add_image (firmware, "config", fw,
+							  RMI_IMG_FW_OFFSET + img_sz,
+							  cfg_sz, error))
 			return FALSE;
-		}
-		fu_synaptics_rmi_firmware_add_image (firmware, "config",
-						     data + RMI_IMG_FW_OFFSET + img_sz,
-						     cfg_sz);
 	}
 	return TRUE;
 }
