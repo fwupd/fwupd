@@ -198,23 +198,25 @@ if get_option('tests')
     ],
   )
   test('fwupd-self-test', e, timeout: 60)
-  e = executable(
-    'fwupd-thread-test',
-    sources : [
-      'fwupd-thread-test.c'
-    ],
-    include_directories : [
-      root_incdir,
-    ],
-    dependencies : [
-      libfwupd_deps,
-    ],
-    link_with : fwupd,
-    c_args : [
-      '-DG_LOG_DOMAIN="Fwupd"',
-    ],
-  )
-  test('fwupd-thread-test', e, timeout: 60)
+  if gio.version().version_compare ('>= 2.64.0')
+    e = executable(
+      'fwupd-thread-test',
+      sources : [
+        'fwupd-thread-test.c'
+      ],
+      include_directories : [
+        root_incdir,
+      ],
+      dependencies : [
+        libfwupd_deps,
+      ],
+      link_with : fwupd,
+      c_args : [
+        '-DG_LOG_DOMAIN="Fwupd"',
+      ],
+    )
+    test('fwupd-thread-test', e, timeout: 60)
+  endif
 endif
 
 fwupd_incdir = include_directories('.')
