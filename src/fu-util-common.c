@@ -13,7 +13,9 @@
 #include <gusb.h>
 #include <xmlb.h>
 #include <fwupd.h>
+#ifdef HAVE_LIBCURL
 #include <curl/curl.h>
+#endif
 
 #include "fu-common.h"
 #include "fu-device-private.h"
