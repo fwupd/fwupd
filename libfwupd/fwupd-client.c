@@ -56,7 +56,7 @@ typedef struct {
 	gchar				*host_product;
 	gchar				*host_machine_id;
 	gchar				*host_security_id;
-	GDBusConnection			*conn;
+	GMutex				 proxy_mutex;	/* for @proxy */
 	GDBusProxy			*proxy;
 	gchar				*user_agent;
 #ifdef SOUP_SESSION_COMPAT
@@ -446,15 +446,27 @@ fwupd_client_connect_get_proxy_cb (GObject *source,
 	g_autoptr(GTask) task = G_TASK (user_data);
 	FwupdClient *self = g_task_get_source_object (task);
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GDBusProxy) proxy = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) val = NULL;
 	g_autoptr(GVariant) val2 = NULL;
+	g_autoptr(GMutexLocker) locker = NULL;
 
-	priv->proxy = g_dbus_proxy_new_finish (res, &error);
-	if (priv->proxy == NULL) {
+	proxy = g_dbus_proxy_new_finish (res, &error);
+	if (proxy == NULL) {
 		g_task_return_error (task, g_steal_pointer (&error));
 		return;
 	}
+
+	/* another thread did this for us */
+	locker = g_mutex_locker_new (&priv->proxy_mutex);
+	if (priv->proxy != NULL) {
+		g_task_return_boolean (task, TRUE);
+		return;
+	}
+	priv->proxy = g_steal_pointer (&proxy);
+
+	/* connect signals, etc. */
 	g_signal_connect (priv->proxy, "g-properties-changed",
 			  G_CALLBACK (fwupd_client_properties_changed_cb), self);
 	g_signal_connect (priv->proxy, "g-signal",
@@ -482,33 +494,6 @@ fwupd_client_connect_get_proxy_cb (GObject *source,
 	g_task_return_boolean (task, TRUE);
 }
 
-static void
-fwupd_client_connect_get_bus_cb (GObject *source,
-				 GAsyncResult *res,
-				 gpointer user_data)
-{
-	g_autoptr(GTask) task = G_TASK (user_data);
-	FwupdClient *self = g_task_get_source_object (task);
-	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GError) error = NULL;
-
-	priv->conn = g_bus_get_finish (res, &error);
-	if (priv->conn == NULL) {
-		g_prefix_error (&error, "Failed to connect to system D-Bus: ");
-		g_task_return_error (task, g_steal_pointer (&error));
-		return;
-	}
-	g_dbus_proxy_new (priv->conn,
-			  G_DBUS_PROXY_FLAGS_NONE,
-			  NULL,
-			  FWUPD_DBUS_SERVICE,
-			  FWUPD_DBUS_PATH,
-			  FWUPD_DBUS_INTERFACE,
-			  g_task_get_cancellable (task),
-			  fwupd_client_connect_get_proxy_cb,
-			  g_object_ref (task));
-}
-
 /**
  * fwupd_client_connect_async:
  * @self: A #FwupdClient
@@ -530,6 +515,7 @@ fwupd_client_connect_async (FwupdClient *self, GCancellable *cancellable,
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GTask) task = g_task_new (self, cancellable, callback, callback_data);
+	g_autoptr(GMutexLocker) locker = g_mutex_locker_new (&priv->proxy_mutex);
 
 	g_return_if_fail (FWUPD_IS_CLIENT (self));
 	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
@@ -540,10 +526,15 @@ fwupd_client_connect_async (FwupdClient *self, GCancellable *cancellable,
 		return;
 	}
 
-	g_bus_get (G_BUS_TYPE_SYSTEM, cancellable,
-		   fwupd_client_connect_get_bus_cb,
-		   g_steal_pointer (&task));
-
+	g_dbus_proxy_new_for_bus (G_BUS_TYPE_SYSTEM,
+				  G_DBUS_PROXY_FLAGS_NONE,
+				  NULL,
+				  FWUPD_DBUS_SERVICE,
+				  FWUPD_DBUS_PATH,
+				  FWUPD_DBUS_INTERFACE,
+				  cancellable,
+				  fwupd_client_connect_get_proxy_cb,
+				  g_steal_pointer (&task));
 }
 
 /**
@@ -2098,7 +2089,7 @@ fwupd_client_install_stream_async (FwupdClient *self,
 							 device_id,
 							 g_unix_input_stream_get_fd (istr),
 							 &builder));
-	g_dbus_connection_send_message_with_reply (priv->conn,
+	g_dbus_connection_send_message_with_reply (g_dbus_proxy_get_connection (priv->proxy),
 						   request,
 						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
 						   G_MAXINT,
@@ -2545,7 +2536,7 @@ fwupd_client_get_details_stream_async (FwupdClient *self,
 
 	/* call into daemon */
 	g_dbus_message_set_body (request, g_variant_new ("(h)", fd));
-	g_dbus_connection_send_message_with_reply (priv->conn,
+	g_dbus_connection_send_message_with_reply (g_dbus_proxy_get_connection (priv->proxy),
 						   request,
 						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
 						   G_MAXINT,
@@ -2824,7 +2815,7 @@ fwupd_client_update_metadata_stream_async (FwupdClient *self,
 							 remote_id,
 							 g_unix_input_stream_get_fd (istr),
 							 g_unix_input_stream_get_fd (istr_sig)));
-	g_dbus_connection_send_message_with_reply (priv->conn,
+	g_dbus_connection_send_message_with_reply (g_dbus_proxy_get_connection (priv->proxy),
 						   request,
 						   G_DBUS_SEND_MESSAGE_FLAGS_NONE,
 						   G_MAXINT,
@@ -4651,6 +4642,8 @@ fwupd_client_class_init (FwupdClientClass *klass)
 static void
 fwupd_client_init (FwupdClient *self)
 {
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_mutex_init (&priv->proxy_mutex);
 }
 
 static void
@@ -4665,8 +4658,7 @@ fwupd_client_finalize (GObject *object)
 	g_free (priv->host_product);
 	g_free (priv->host_machine_id);
 	g_free (priv->host_security_id);
-	if (priv->conn != NULL)
-		g_object_unref (priv->conn);
+	g_mutex_clear (&priv->proxy_mutex);
 	if (priv->proxy != NULL)
 		g_object_unref (priv->proxy);
 #ifdef SOUP_SESSION_COMPAT
