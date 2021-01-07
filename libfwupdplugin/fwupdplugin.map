@@ -716,6 +716,7 @@ LIBFWUPDPLUGIN_1.5.5 {
     fu_efi_signature_kind_to_string;
     fu_efi_signature_list_get_type;
     fu_efi_signature_list_new;
+    fu_efivar_get_monitor;
     fu_firmware_get_image_by_checksum;
     fu_firmware_image_get_checksum;
   local: *;

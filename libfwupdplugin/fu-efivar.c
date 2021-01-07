@@ -430,6 +430,37 @@ fu_efivar_get_names (const gchar *guid, GError **error)
 }
 
 /**
+ * fu_efivar_get_monitor:
+ * @guid: Globally unique identifier
+ * @name: Variable name
+ * @error: A #GError
+ *
+ * Returns a file monitor for a specific key.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.5.5
+ **/
+GFileMonitor *
+fu_efivar_get_monitor (const gchar *guid, const gchar *name, GError **error)
+{
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFileMonitor) monitor = NULL;
+
+	g_return_val_if_fail (guid != NULL, NULL);
+	g_return_val_if_fail (name != NULL, NULL);
+
+	fn = fu_efivar_get_filename (guid, name);
+	file = g_file_new_for_path (fn);
+	monitor = g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, error);
+	if (monitor == NULL)
+		return NULL;
+	g_file_monitor_set_rate_limit (monitor, 5000);
+	return g_steal_pointer (&monitor);
+}
+
+/**
  * fu_efivar_space_used:
  * @error: A #GError
  *
