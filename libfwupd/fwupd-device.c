@@ -74,6 +74,7 @@ enum {
 	PROP_PROTOCOL,
 	PROP_STATUS,
 	PROP_PARENT,
+	PROP_UPDATE_STATE,
 	PROP_LAST
 };
 
@@ -1882,7 +1883,10 @@ fwupd_device_set_update_state (FwupdDevice *device, FwupdUpdateState update_stat
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	if (priv->update_state == update_state)
+		return;
 	priv->update_state = update_state;
+	g_object_notify (G_OBJECT (device), "update-state");
 }
 
 /**
@@ -2442,6 +2446,9 @@ fwupd_device_get_property (GObject *object, guint prop_id,
 	case PROP_PARENT:
 		g_value_set_object (value, priv->parent);
 		break;
+	case PROP_UPDATE_STATE:
+		g_value_set_uint (value, priv->update_state);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -2468,6 +2475,9 @@ fwupd_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PARENT:
 		fwupd_device_set_parent (self, g_value_get_object (value));
+		break;
+	case PROP_UPDATE_STATE:
+		fwupd_device_set_update_state (self, g_value_get_uint (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2520,6 +2530,14 @@ fwupd_device_class_init (FwupdDeviceClass *klass)
 				     G_PARAM_CONSTRUCT |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_PARENT, pspec);
+
+	pspec = g_param_spec_uint ("update-state", NULL, NULL,
+				   FWUPD_UPDATE_STATE_UNKNOWN,
+				   FWUPD_UPDATE_STATE_LAST,
+				   FWUPD_UPDATE_STATE_UNKNOWN,
+				   G_PARAM_READWRITE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_UPDATE_STATE, pspec);
 }
 
 static void
