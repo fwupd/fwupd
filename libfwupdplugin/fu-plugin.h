@@ -30,6 +30,7 @@ G_DECLARE_DERIVABLE_TYPE (FuPlugin, fu_plugin, FU, PLUGIN, FwupdPlugin)
 #define fu_plugin_get_flags(p)			fwupd_plugin_get_flags(FWUPD_PLUGIN(p))
 #define fu_plugin_has_flag(p,f)			fwupd_plugin_has_flag(FWUPD_PLUGIN(p),f)
 #define fu_plugin_add_flag(p,f)			fwupd_plugin_add_flag(FWUPD_PLUGIN(p),f)
+#define fu_plugin_remove_flag(p,f)		fwupd_plugin_remove_flag(FWUPD_PLUGIN(p),f)
 
 struct _FuPluginClass
 {
