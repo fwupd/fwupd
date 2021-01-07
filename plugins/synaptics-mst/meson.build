@@ -1,35 +1,36 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
 
-install_data(['synaptics-mst.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
-
-shared_module('fu_plugin_synaptics_mst',
-  fu_hash,
-  sources : [
-    'fu-plugin-synaptics-mst.c',
-    'fu-synaptics-mst-common.c',
-    'fu-synaptics-mst-connection.c',
-    'fu-synaptics-mst-device.c',
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install : true,
-  install_dir: plugin_dir,
-  c_args : [
-    cargs,
-  ],
-  link_with : [
-    fwupd,
-    fwupdplugin,
-  ],
-  dependencies : [
-    plugin_deps,
-  ],
-)
+if build_plugins
+  install_data(['synaptics-mst.quirk'],
+    install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+  )
+  shared_module('fu_plugin_synaptics_mst',
+    fu_hash,
+    sources : [
+      'fu-plugin-synaptics-mst.c',
+      'fu-synaptics-mst-common.c',
+      'fu-synaptics-mst-connection.c',
+      'fu-synaptics-mst-device.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    install : true,
+    install_dir: plugin_dir,
+    c_args : [
+      cargs,
+    ],
+    link_with : [
+      fwupd,
+      fwupdplugin,
+    ],
+    dependencies : [
+      plugin_deps,
+    ],
+  )
+endif
 
 if get_option('tests')
   testdatadirs = environment()

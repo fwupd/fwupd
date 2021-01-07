@@ -1,9 +1,5 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginDfu"']
 
-install_data(['dfu.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
-
 dfu = static_library(
   'dfu',
   fu_hash,
@@ -40,28 +36,33 @@ dfu = static_library(
   ],
 )
 
-shared_module('fu_plugin_dfu',
-  fu_hash,
-  sources : [
-    'fu-plugin-dfu.c',
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install : true,
-  install_dir: plugin_dir,
-  c_args : cargs,
-  dependencies : [
-    plugin_deps,
-  ],
-  link_with : [
-    fwupd,
-    fwupdplugin,
-    dfu,
-  ],
-)
+if build_plugins
+  install_data(['dfu.quirk'],
+    install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+  )
+  shared_module('fu_plugin_dfu',
+    fu_hash,
+    sources : [
+      'fu-plugin-dfu.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    install : true,
+    install_dir: plugin_dir,
+    c_args : cargs,
+    dependencies : [
+      plugin_deps,
+    ],
+    link_with : [
+      fwupd,
+      fwupdplugin,
+      dfu,
+    ],
+  )
+endif
 
 dfu_tool = executable(
   'dfu-tool',

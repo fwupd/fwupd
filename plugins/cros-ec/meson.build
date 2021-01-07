@@ -1,10 +1,10 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginCrosEc"']
 
-install_data(['cros-ec.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
-
-shared_module('fu_plugin_cros_ec',
+if build_plugins
+  install_data(['cros-ec.quirk'],
+    install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+  )
+  shared_module('fu_plugin_cros_ec',
   fu_hash,
   sources : [
     'fu-plugin-cros-ec.c',
@@ -28,3 +28,4 @@ shared_module('fu_plugin_cros_ec',
     plugin_deps,
   ],
 )
+endif

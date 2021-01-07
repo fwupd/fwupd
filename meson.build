@@ -164,12 +164,19 @@ add_project_arguments('-D_GNU_SOURCE', language : 'c')
 if get_option('build') == 'all'
   build_standalone = true
   build_daemon = true
+  build_plugins = true
 elif get_option('build') == 'standalone'
   build_standalone = true
   build_daemon = false
+  build_plugins = true
 elif get_option('build') == 'library'
   build_standalone = false
   build_daemon = false
+  build_plugins = false
+elif get_option('build') == 'fuzzing'
+  build_standalone = true
+  build_daemon = false
+  build_plugins = false
 endif
 
 prefix = get_option('prefix')

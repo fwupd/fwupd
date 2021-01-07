@@ -1,27 +1,29 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSwap"']
 
-shared_module('fu_plugin_linux_swap',
-  fu_hash,
-  sources : [
-    'fu-plugin-linux-swap.c',
-    'fu-linux-swap.c',
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install : true,
-  install_dir: plugin_dir,
-  link_with : [
-    fwupd,
-    fwupdplugin,
-  ],
-  c_args : cargs,
-  dependencies : [
-    plugin_deps,
-  ],
-)
+if build_plugins
+  shared_module('fu_plugin_linux_swap',
+    fu_hash,
+    sources : [
+      'fu-plugin-linux-swap.c',
+      'fu-linux-swap.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    install : true,
+    install_dir: plugin_dir,
+    link_with : [
+      fwupd,
+      fwupdplugin,
+    ],
+    c_args : cargs,
+    dependencies : [
+      plugin_deps,
+    ],
+  )
+endif
 
 if get_option('tests')
   e = executable(

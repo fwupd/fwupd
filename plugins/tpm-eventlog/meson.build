@@ -1,30 +1,32 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginTpmEventlog"']
 
-shared_module('fu_plugin_tpm_eventlog',
-  fu_hash,
-  sources : [
-    'fu-plugin-tpm-eventlog.c',
-    'fu-tpm-eventlog-common.c',
-    'fu-tpm-eventlog-device.c',
-    'fu-tpm-eventlog-parser.c',
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install : true,
-  install_dir: plugin_dir,
-  link_with : [
-    fwupdplugin,
-    fwupd,
-  ],
-  c_args : cargs,
-  dependencies : [
-    plugin_deps,
-    tpm2tss,
-  ],
-)
+if build_plugins
+  shared_module('fu_plugin_tpm_eventlog',
+    fu_hash,
+    sources : [
+      'fu-plugin-tpm-eventlog.c',
+      'fu-tpm-eventlog-common.c',
+      'fu-tpm-eventlog-device.c',
+      'fu-tpm-eventlog-parser.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    install : true,
+    install_dir: plugin_dir,
+    link_with : [
+      fwupdplugin,
+      fwupd,
+    ],
+    c_args : cargs,
+    dependencies : [
+      plugin_deps,
+      tpm2tss,
+    ],
+  )
+endif
 
 if get_option('tests')
   testdatadirs = environment()

@@ -7,40 +7,42 @@ if efi_os_dir != ''
   cargs += '-DEFI_OS_DIR="' + efi_os_dir + '"'
 endif
 
-install_data(['uefi-capsule.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
-
-shared_module('fu_plugin_uefi_capsule',
-  fu_hash,
-  sources : [
-    'fu-plugin-uefi-capsule.c',
-    'fu-uefi-bgrt.c',
-    'fu-ucs2.c',
-    'fu-uefi-bootmgr.c',
-    'fu-uefi-common.c',
-    'fu-uefi-device.c',
-    'fu-uefi-devpath.c',
-    'fu-uefi-pcrs.c',
-    'fu-uefi-update-info.c',
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install : true,
-  install_dir: plugin_dir,
-  link_with : [
-    fwupd,
-    fwupdplugin,
-  ],
-  c_args : cargs,
-  dependencies : [
-    plugin_deps,
-    efiboot,
-    tpm2tss,
-  ],
-)
+if build_plugins
+  install_data(['uefi-capsule.quirk'],
+    install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+  )
+  shared_module('fu_plugin_uefi_capsule',
+    fu_hash,
+    sources : [
+      'fu-plugin-uefi-capsule.c',
+      'fu-uefi-bgrt.c',
+      'fu-ucs2.c',
+      'fu-uefi-bootmgr.c',
+      'fu-uefi-common.c',
+      'fu-uefi-device.c',
+      'fu-uefi-devpath.c',
+      'fu-uefi-pcrs.c',
+      'fu-uefi-update-info.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    install : true,
+    install_dir: plugin_dir,
+    link_with : [
+      fwupd,
+      fwupdplugin,
+    ],
+    c_args : cargs,
+    dependencies : [
+      plugin_deps,
+      efiboot,
+      tpm2tss,
+    ],
+  )
+endif
 
 fwupdate = executable(
   'fwupdate',

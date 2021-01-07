@@ -1,27 +1,28 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginPciBcr"']
 
-install_data(['pci-bcr.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
-
-shared_module('fu_plugin_pci_bcr',
-  fu_hash,
-  sources : [
-    'fu-plugin-pci-bcr.c',
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install : true,
-  install_dir: plugin_dir,
-  link_with : [
-    fwupd,
-    fwupdplugin,
-  ],
-  c_args : cargs,
-  dependencies : [
-    plugin_deps,
-  ],
-)
+if build_plugins
+  install_data(['pci-bcr.quirk'],
+    install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+  )
+  shared_module('fu_plugin_pci_bcr',
+    fu_hash,
+    sources : [
+      'fu-plugin-pci-bcr.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    install : true,
+    install_dir: plugin_dir,
+    link_with : [
+      fwupd,
+      fwupdplugin,
+    ],
+    c_args : cargs,
+    dependencies : [
+      plugin_deps,
+    ],
+  )
+endif

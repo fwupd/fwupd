@@ -1,33 +1,34 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginDellEsrt"']
 
-install_data(['metadata.xml'],
-  install_dir : join_paths(datadir, 'fwupd', 'remotes.d', 'dell-esrt')
-)
-
-shared_module('fu_plugin_dell_esrt',
-  fu_hash,
-  sources : [
-    'fu-plugin-dell-esrt.c',
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install : true,
-  install_dir: plugin_dir,
-  c_args : [
-    cargs,
-  ],
-  link_with : [
-    fwupd,
-    fwupdplugin,
-  ],
-  dependencies : [
-    plugin_deps,
-    libsmbios_c,
-  ],
-)
+if build_plugins
+  install_data(['metadata.xml'],
+    install_dir : join_paths(datadir, 'fwupd', 'remotes.d', 'dell-esrt')
+  )
+  shared_module('fu_plugin_dell_esrt',
+    fu_hash,
+    sources : [
+      'fu-plugin-dell-esrt.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    install : true,
+    install_dir: plugin_dir,
+    c_args : [
+      cargs,
+    ],
+    link_with : [
+      fwupd,
+      fwupdplugin,
+    ],
+    dependencies : [
+      plugin_deps,
+      libsmbios_c,
+    ],
+  )
+endif
 
 # replace @datadir@
 con2 = configuration_data()

@@ -1,29 +1,31 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
 
-shared_module('fu_plugin_uefi_dbx',
-  fu_hash,
-  sources : [
-    'fu-plugin-uefi-dbx.c',
-    'fu-uefi-dbx-common.c',
-    'fu-uefi-dbx-device.c',
-    'fu-efi-image.c',
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install : true,
-  install_dir: plugin_dir,
-  link_with : [
-    fwupd,
-    fwupdplugin,
-  ],
-  c_args : cargs,
-  dependencies : [
-    plugin_deps,
-  ],
-)
+if build_plugins
+  shared_module('fu_plugin_uefi_dbx',
+    fu_hash,
+    sources : [
+      'fu-plugin-uefi-dbx.c',
+      'fu-uefi-dbx-common.c',
+      'fu-uefi-dbx-device.c',
+      'fu-efi-image.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    install : true,
+    install_dir: plugin_dir,
+    link_with : [
+      fwupd,
+      fwupdplugin,
+    ],
+    c_args : cargs,
+    dependencies : [
+      plugin_deps,
+    ],
+  )
+endif
 
 if get_option('tests')
   testdatadirs = environment()

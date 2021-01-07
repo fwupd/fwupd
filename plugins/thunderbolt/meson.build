@@ -1,38 +1,41 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 cargs += '-DTESTDATADIR="' + join_paths(meson.source_root(), 'data', 'tests') + '"'
-install_data([
-  'thunderbolt.quirk',
-  ],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-)
-fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
-  fu_hash,
-  sources : [
-    'fu-plugin-thunderbolt.c',
-    'fu-thunderbolt-device.c',
-    'fu-thunderbolt-firmware.c',
-    'fu-thunderbolt-firmware-update.c',
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  install : true,
-  install_dir: plugin_dir,
-  link_with : [
-    fwupd,
-    fwupdplugin,
-  ],
-  c_args : cargs,
-  dependencies : [
-    plugin_deps,
-  ],
-)
 
-install_data(['thunderbolt.conf'],
-  install_dir:  join_paths(sysconfdir, 'fwupd')
-)
+if build_plugins
+  install_data(['thunderbolt.conf'],
+    install_dir:  join_paths(sysconfdir, 'fwupd')
+  )
+  install_data([
+    'thunderbolt.quirk',
+    ],
+    install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+  )
+  fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
+    fu_hash,
+    sources : [
+      'fu-plugin-thunderbolt.c',
+      'fu-thunderbolt-device.c',
+      'fu-thunderbolt-firmware.c',
+      'fu-thunderbolt-firmware-update.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    install : true,
+    install_dir: plugin_dir,
+    link_with : [
+      fwupd,
+      fwupdplugin,
+    ],
+    c_args : cargs,
+    dependencies : [
+      plugin_deps,
+    ],
+  )
+endif
+
 # we use functions from 2.52 in the tests
 if get_option('tests') and umockdev.found() and gio.version().version_compare('>= 2.52')
   cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
