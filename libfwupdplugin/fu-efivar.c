@@ -236,10 +236,27 @@ fu_efivar_delete_with_glob (const gchar *guid, const gchar *name_glob, GError **
 	return TRUE;
 }
 
+static gboolean
+fu_efivar_exists_guid (const gchar *guid)
+{
+	const gchar *fn;
+	g_autofree gchar *efivardir = fu_efivar_get_path ();
+	g_autoptr(GDir) dir = NULL;
+
+	dir = g_dir_open (efivardir, 0, NULL);
+	if (dir == NULL)
+		return FALSE;
+	while ((fn = g_dir_read_name (dir)) != NULL) {
+		if (g_str_has_suffix (fn, guid))
+			return TRUE;
+	}
+	return TRUE;
+}
+
 /**
  * fu_efivar_exists:
  * @guid: Globally unique identifier
- * @name: Variable name
+ * @name: (nullable): Variable name
  *
  * Test if a variable exists
  *
@@ -253,7 +270,10 @@ fu_efivar_exists (const gchar *guid, const gchar *name)
 	g_autofree gchar *fn = NULL;
 
 	g_return_val_if_fail (guid != NULL, FALSE);
-	g_return_val_if_fail (name != NULL, FALSE);
+
+	/* any name */
+	if (name == NULL)
+		return fu_efivar_exists_guid (guid);
 
 	fn = fu_efivar_get_filename (guid, name);
 	return g_file_test (fn, G_FILE_TEST_EXISTS);
