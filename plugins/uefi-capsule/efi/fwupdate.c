@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2018 Red Hat, Inc.
+ * Copyright (C) 2014 Red Hat, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */

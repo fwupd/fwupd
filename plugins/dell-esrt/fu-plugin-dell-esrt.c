@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2017-2018 Dell, Inc.
+ * Copyright (C) 2017 Dell, Inc.
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */

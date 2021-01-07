@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2020 boger wang <boger@goodix.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+

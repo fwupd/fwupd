@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright 2017-2019 Richard Hughes <richard@hughsie.com> -->
+<!-- Copyright 2017 Richard Hughes <richard@hughsie.com> -->
 <component type="firmware">
   <id>com.hughski.test.firmware</id>
   <provides>

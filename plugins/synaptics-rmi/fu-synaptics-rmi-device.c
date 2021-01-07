@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2012-2014 Andrew Duggan
- * Copyright (C) 2012-2019 Synaptics Inc.
+ * Copyright (C) 2012 Andrew Duggan
+ * Copyright (C) 2012 Synaptics Inc.
  * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+

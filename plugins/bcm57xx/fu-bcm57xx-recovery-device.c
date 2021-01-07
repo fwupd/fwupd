@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2020 Evan Lojewski
+ * Copyright (C) 2018 Evan Lojewski
  * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: GPL-2+
