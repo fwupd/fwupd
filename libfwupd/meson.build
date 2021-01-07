@@ -207,9 +207,7 @@ if get_option('tests')
       root_incdir,
     ],
     dependencies : [
-      gio,
-      libcurl,
-      libjsonglib,
+      libfwupd_deps,
     ],
     link_with : fwupd,
     c_args : [
