@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
  * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
  *

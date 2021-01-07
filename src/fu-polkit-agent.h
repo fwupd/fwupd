@@ -2,7 +2,7 @@
  *
  * Copyright (C) 2011 Lennart Poettering <lennart@poettering.net>
  * Copyright (C) 2012 Matthias Klumpp <matthias@tenstral.net>
- * Copyright (C) 2015-2020 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */

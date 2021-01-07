@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# Copyright (C) 2017-2018 Dell, Inc.
+# Copyright (C) 2017 Dell, Inc.
 # Copyright (C) 2020 Intel, Inc.
 #
 # SPDX-License-Identifier: LGPL-2.1+
