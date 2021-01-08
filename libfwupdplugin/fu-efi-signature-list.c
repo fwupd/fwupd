@@ -157,6 +157,7 @@ fu_efi_signature_list_get_version (FuEfiSignatureList *self)
 	guint csum_cnt = 0;
 	const gchar *ignored_guids[] = {
 		FU_EFI_SIGNATURE_GUID_OVMF,
+		FU_EFI_SIGNATURE_GUID_OVMF_LEGACY,
 		NULL };
 	g_autoptr(GPtrArray) sigs = NULL;
 	sigs = fu_firmware_get_images (FU_FIRMWARE (self));
