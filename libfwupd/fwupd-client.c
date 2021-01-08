@@ -451,6 +451,10 @@ fwupd_client_connect_get_proxy_cb (GObject *source,
 	g_autoptr(GVariant) val = NULL;
 	g_autoptr(GVariant) val2 = NULL;
 	g_autoptr(GVariant) val3 = NULL;
+	g_autoptr(GVariant) val4 = NULL;
+	g_autoptr(GVariant) val5 = NULL;
+	g_autoptr(GVariant) val6 = NULL;
+	g_autoptr(GVariant) val7 = NULL;
 	g_autoptr(GMutexLocker) locker = NULL;
 
 	proxy = g_dbus_proxy_new_finish (res, &error);
@@ -481,18 +485,18 @@ fwupd_client_connect_get_proxy_cb (GObject *source,
 	val3 = g_dbus_proxy_get_cached_property (priv->proxy, "Status");
 	if (val3 != NULL)
 		fwupd_client_set_status (self, g_variant_get_uint32 (val3));
-	val2 = g_dbus_proxy_get_cached_property (priv->proxy, "Interactive");
-	if (val2 != NULL)
-		priv->interactive = g_variant_get_boolean (val2);
-	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostProduct");
-	if (val != NULL)
-		fwupd_client_set_host_product (self, g_variant_get_string (val, NULL));
-	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostMachineId");
-	if (val != NULL)
-		fwupd_client_set_host_machine_id (self, g_variant_get_string (val, NULL));
-	val = g_dbus_proxy_get_cached_property (priv->proxy, "HostSecurityId");
-	if (val != NULL)
-		fwupd_client_set_host_security_id (self, g_variant_get_string (val, NULL));
+	val4 = g_dbus_proxy_get_cached_property (priv->proxy, "Interactive");
+	if (val4 != NULL)
+		priv->interactive = g_variant_get_boolean (val4);
+	val5 = g_dbus_proxy_get_cached_property (priv->proxy, "HostProduct");
+	if (val5 != NULL)
+		fwupd_client_set_host_product (self, g_variant_get_string (val5, NULL));
+	val6 = g_dbus_proxy_get_cached_property (priv->proxy, "HostMachineId");
+	if (val6 != NULL)
+		fwupd_client_set_host_machine_id (self, g_variant_get_string (val6, NULL));
+	val7 = g_dbus_proxy_get_cached_property (priv->proxy, "HostSecurityId");
+	if (val7 != NULL)
+		fwupd_client_set_host_security_id (self, g_variant_get_string (val7, NULL));
 
 	/* success */
 	g_task_return_boolean (task, TRUE);
