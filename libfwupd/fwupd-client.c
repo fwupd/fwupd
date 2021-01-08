@@ -52,6 +52,9 @@ typedef struct {
 	gboolean			 tainted;
 	gboolean			 interactive;
 	guint				 percentage;
+	GMutex				 idle_mutex;	/* for @idle_id and @idle_sources */
+	guint				 idle_id;
+	GPtrArray			*idle_sources;	/* element-type FwupdClientContextHelper */
 	gchar				*daemon_version;
 	gchar				*host_product;
 	gchar				*host_machine_id;
@@ -121,13 +124,129 @@ fwupd_client_curl_helper_free (FwupdCurlHelper *helper)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FwupdCurlHelper, fwupd_client_curl_helper_free)
 #endif
 
+typedef struct {
+	FwupdClient	*self;
+	gchar		*property_name;
+	guint		 signal_id;
+	FwupdDevice	*device;
+} FwupdClientContextHelper;
+
+static void
+fwupd_client_context_helper_free (FwupdClientContextHelper *helper)
+{
+	g_clear_object (&helper->device);
+	g_object_unref (helper->self);
+	g_free (helper->property_name);
+	g_free (helper);
+}
+
+/* always executed in the main context given by priv->main_ctx */
+static void
+fwupd_client_context_object_notify (FwupdClient *self, const gchar *property_name)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (g_main_context_is_owner (priv->main_ctx));
+
+	/* property */
+	g_object_notify (G_OBJECT (self), property_name);
+
+	/* legacy signal name */
+	if (g_strcmp0 (property_name, "status") == 0)
+		g_signal_emit (self, signals[SIGNAL_STATUS_CHANGED], 0, priv->status);
+}
+
+/* emits all pending context helpers in the correct GMainContext */
+static gboolean
+fwupd_client_context_idle_cb (gpointer user_data)
+{
+	FwupdClient *self = FWUPD_CLIENT (user_data);
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GMutexLocker) locker = g_mutex_locker_new (&priv->idle_mutex);
+
+	for (guint i = 0; i < priv->idle_sources->len; i++) {
+		FwupdClientContextHelper *helper = g_ptr_array_index (priv->idle_sources, i);
+
+		/* property */
+		if (helper->property_name != NULL)
+			fwupd_client_context_object_notify (self, helper->property_name);
+
+		/* device signal */
+		if (helper->signal_id !=0 && helper->device != NULL)
+			g_signal_emit (self, signals[helper->signal_id], 0, helper->device);
+	}
+
+	/* all done */
+	g_ptr_array_set_size (priv->idle_sources, 0);
+	priv->idle_id = 0;
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fwupd_client_context_helper (FwupdClient *self, FwupdClientContextHelper *helper)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GMutexLocker) locker = g_mutex_locker_new (&priv->idle_mutex);
+
+	/* no source already attached to the context */
+	if (priv->idle_id == 0) {
+		g_autoptr(GSource) source = g_idle_source_new ();
+		g_source_set_callback (source, fwupd_client_context_idle_cb, self, NULL);
+		priv->idle_id = g_source_attach (g_steal_pointer (&source), priv->main_ctx);
+	}
+
+	/* run in the correct GMainContext and thread */
+	g_ptr_array_add (priv->idle_sources, helper);
+}
+
+/* run callback in the correct thread */
+static void
+fwupd_client_object_notify (FwupdClient *self, const gchar *property_name)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	FwupdClientContextHelper *helper = NULL;
+
+	/* shortcut */
+	if (g_main_context_is_owner (priv->main_ctx)) {
+		fwupd_client_context_object_notify (self, property_name);
+		return;
+	}
+
+	/* run in the correct GMainContext and thread */
+	helper = g_new0 (FwupdClientContextHelper, 1);
+	helper->self = g_object_ref (self);
+	helper->property_name = g_strdup (property_name);
+	fwupd_client_context_helper (self, helper);
+}
+
+/* run callback in the correct thread */
+static void
+fwupd_client_signal_emit_device (FwupdClient *self, guint signal_id, FwupdDevice *device)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	FwupdClientContextHelper *helper = NULL;
+
+	/* shortcut */
+	if (g_main_context_is_owner (priv->main_ctx)) {
+		g_signal_emit (self, signals[signal_id], 0, device);
+		return;
+	}
+
+	/* run in the correct GMainContext and thread */
+	helper = g_new0 (FwupdClientContextHelper, 1);
+	helper->self = g_object_ref (self);
+	helper->signal_id = signal_id;
+	helper->device = g_object_ref (device);
+	fwupd_client_context_helper (self, helper);
+}
+
 static void
 fwupd_client_set_host_product (FwupdClient *self, const gchar *host_product)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_free (priv->host_product);
 	priv->host_product = g_strdup (host_product);
-	g_object_notify (G_OBJECT (self), "host-product");
+	fwupd_client_object_notify (self, "host-product");
 }
 
 static void
@@ -136,7 +255,7 @@ fwupd_client_set_host_machine_id (FwupdClient *self, const gchar *host_machine_i
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_free (priv->host_machine_id);
 	priv->host_machine_id = g_strdup (host_machine_id);
-	g_object_notify (G_OBJECT (self), "host-machine-id");
+	fwupd_client_object_notify (self, "host-machine-id");
 }
 
 static void
@@ -145,7 +264,7 @@ fwupd_client_set_host_security_id (FwupdClient *self, const gchar *host_security
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_free (priv->host_security_id);
 	priv->host_security_id = g_strdup (host_security_id);
-	g_object_notify (G_OBJECT (self), "host-security-id");
+	fwupd_client_object_notify (self, "host-security-id");
 }
 
 static void
@@ -154,7 +273,7 @@ fwupd_client_set_daemon_version (FwupdClient *self, const gchar *daemon_version)
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_free (priv->daemon_version);
 	priv->daemon_version = g_strdup (daemon_version);
-	g_object_notify (G_OBJECT (self), "daemon-version");
+	fwupd_client_object_notify (self, "daemon-version");
 }
 
 static void
@@ -166,8 +285,7 @@ fwupd_client_set_status (FwupdClient *self, FwupdStatus status)
 	priv->status = status;
 	g_debug ("Emitting ::status-changed() [%s]",
 		 fwupd_status_to_string (priv->status));
-	g_signal_emit (self, signals[SIGNAL_STATUS_CHANGED], 0, priv->status);
-	g_object_notify (G_OBJECT (self), "status");
+	fwupd_client_object_notify (self, "status");
 }
 
 static void
@@ -177,7 +295,7 @@ fwupd_client_set_percentage (FwupdClient *self, guint percentage)
 	if (priv->percentage == percentage)
 		return;
 	priv->percentage = percentage;
-	g_object_notify (G_OBJECT (self), "percentage");
+	fwupd_client_object_notify (self, "percentage");
 }
 
 static void
@@ -202,7 +320,7 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 		val = g_dbus_proxy_get_cached_property (proxy, "Tainted");
 		if (val != NULL) {
 			priv->tainted = g_variant_get_boolean (val);
-			g_object_notify (G_OBJECT (self), "tainted");
+			fwupd_client_object_notify (self, "tainted");
 		}
 	}
 	if (g_variant_dict_contains (dict, "Interactive")) {
@@ -210,7 +328,7 @@ fwupd_client_properties_changed_cb (GDBusProxy *proxy,
 		val = g_dbus_proxy_get_cached_property (proxy, "Interactive");
 		if (val != NULL) {
 			priv->interactive = g_variant_get_boolean (val);
-			g_object_notify (G_OBJECT (self), "interactive");
+			fwupd_client_object_notify (self, "interactive");
 		}
 	}
 	if (g_variant_dict_contains (dict, "Percentage")) {
@@ -262,21 +380,21 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 		dev = fwupd_device_from_variant (parameters);
 		g_debug ("Emitting ::device-added(%s)",
 			 fwupd_device_get_id (dev));
-		g_signal_emit (self, signals[SIGNAL_DEVICE_ADDED], 0, dev);
+		fwupd_client_signal_emit_device (self, SIGNAL_DEVICE_ADDED, dev);
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
 		dev = fwupd_device_from_variant (parameters);
-		g_signal_emit (self, signals[SIGNAL_DEVICE_REMOVED], 0, dev);
 		g_debug ("Emitting ::device-removed(%s)",
 			 fwupd_device_get_id (dev));
+		fwupd_client_signal_emit_device (self, SIGNAL_DEVICE_REMOVED, dev);
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceChanged") == 0) {
 		dev = fwupd_device_from_variant (parameters);
-		g_signal_emit (self, signals[SIGNAL_DEVICE_CHANGED], 0, dev);
 		g_debug ("Emitting ::device-changed(%s)",
 			 fwupd_device_get_id (dev));
+		fwupd_client_signal_emit_device (self, SIGNAL_DEVICE_CHANGED, dev);
 		return;
 	}
 	g_debug ("Unknown signal name '%s' from %s", signal_name, sender_name);
@@ -305,9 +423,9 @@ fwupd_client_get_main_context (FwupdClient *self)
 /**
  * fwupd_client_set_main_context:
  * @self: A #FwupdClient
- * @main_ctx: #GMainContext
+ * @main_ctx: (nullable): #GMainContext or %NULL to use the global default main context
  *
- * Sets the internal #GMainContext to use for synchronous methods.
+ * Sets the internal #GMainContext to use for returning progress signals.
  *
  * Since: 1.5.3
  **/
@@ -315,9 +433,11 @@ void
 fwupd_client_set_main_context (FwupdClient *self, GMainContext *main_ctx)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	if (main_ctx != priv->main_ctx)
-		g_main_context_unref (priv->main_ctx);
-	priv->main_ctx = g_main_context_ref (main_ctx);
+	if (main_ctx == priv->main_ctx)
+		return;
+	g_clear_pointer (&priv->main_ctx, g_main_context_unref);
+	if (main_ctx != NULL)
+		priv->main_ctx = g_main_context_ref (main_ctx);
 }
 
 /**
@@ -2120,6 +2240,10 @@ fwupd_client_install_stream_async (FwupdClient *self,
  *
  * Install firmware onto a specific device.
  *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * fwupd_client_set_main_context().
+ *
  * Since: 1.5.0
  **/
 void
@@ -2193,6 +2317,10 @@ fwupd_client_install_bytes_finish (FwupdClient *self, GAsyncResult *res, GError 
  * @callback_data: the data to pass to @callback
  *
  * Install firmware onto a specific device.
+ *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * fwupd_client_set_main_context().
  *
  * Since: 1.5.0
  **/
@@ -2422,6 +2550,10 @@ fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpoi
  * @callback_data: the data to pass to @callback
  *
  * Installs a new release on a device, downloading the firmware if required.
+ *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * fwupd_client_set_main_context().
  *
  * Since: 1.5.0
  **/
@@ -2851,6 +2983,10 @@ fwupd_client_update_metadata_stream_async (FwupdClient *self,
  * The @remote_id allows the firmware to be tagged so that the remote can be
  * matched when the firmware is downloaded.
  *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * fwupd_client_set_main_context().
+ *
  * Since: 1.5.0
  **/
 void
@@ -3047,6 +3183,10 @@ fwupd_client_refresh_remote_signature_cb (GObject *source,
  * @callback_data: the data to pass to @callback
  *
  * Refreshes a remote by downloading new metadata.
+ *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * fwupd_client_set_main_context().
  *
  * Since: 1.5.0
  **/
@@ -4126,6 +4266,10 @@ fwupd_client_download_bytes_thread_cb (GTask *task,
  * You must have called fwupd_client_connect_async() on @self before using
  * this method.
  *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * fwupd_client_set_main_context().
+ *
  * Since: 1.5.0
  **/
 void
@@ -4252,6 +4396,10 @@ fwupd_client_upload_bytes_thread_cb (GTask *task,
  *
  * You must have called fwupd_client_connect_async() on @self before using
  * this method.
+ *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * fwupd_client_set_main_context().
  *
  * Since: 1.5.0
  **/
@@ -4652,6 +4800,8 @@ fwupd_client_init (FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_mutex_init (&priv->proxy_mutex);
+	g_mutex_init (&priv->idle_mutex);
+	priv->idle_sources = g_ptr_array_new_with_free_func ((GDestroyNotify) fwupd_client_context_helper_free);
 }
 
 static void
@@ -4666,6 +4816,10 @@ fwupd_client_finalize (GObject *object)
 	g_free (priv->host_product);
 	g_free (priv->host_machine_id);
 	g_free (priv->host_security_id);
+	g_mutex_clear (&priv->idle_mutex);
+	if (priv->idle_id != 0)
+		g_source_remove (priv->idle_id);
+	g_ptr_array_unref (priv->idle_sources);
 	g_mutex_clear (&priv->proxy_mutex);
 	if (priv->proxy != NULL)
 		g_object_unref (priv->proxy);
