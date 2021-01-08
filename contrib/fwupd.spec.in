@@ -214,9 +214,11 @@ can be flashed using flashrom. It is probably not required on servers.
     -Dplugin_thunderbolt=true \
 %if 0%{?have_uefi}
     -Dplugin_uefi_capsule=true \
+    -Dplugin_uefi_pk=true \
     -Dtpm=true \
 %else
     -Dplugin_uefi_capsule=false \
+    -Dplugin_uefi_pk=false \
     -Dtpm=false \
 %endif
 %if 0%{?have_dell}
