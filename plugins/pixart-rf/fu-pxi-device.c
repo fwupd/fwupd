@@ -561,9 +561,6 @@ fu_pxi_device_fw_get_info (FuPxiDevice *self, GError **error)
 	res[1] = FU_PXI_DEVICE_CMD_FW_GET_INFO;
 	if (!fu_pxi_device_get_feature (self, res, FU_PXI_DEVICE_FW_INFO_RET_LEN + 1, error))
 		return FALSE;
-
-	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "req", (guint8 *) req, sizeof(req));
 	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x2, &opcode, error))
 		return FALSE;
 	if (opcode != FU_PXI_DEVICE_CMD_FW_GET_INFO) {
