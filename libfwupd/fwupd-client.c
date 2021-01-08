@@ -450,6 +450,7 @@ fwupd_client_connect_get_proxy_cb (GObject *source,
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) val = NULL;
 	g_autoptr(GVariant) val2 = NULL;
+	g_autoptr(GVariant) val3 = NULL;
 	g_autoptr(GMutexLocker) locker = NULL;
 
 	proxy = g_dbus_proxy_new_finish (res, &error);
@@ -477,6 +478,9 @@ fwupd_client_connect_get_proxy_cb (GObject *source,
 	val2 = g_dbus_proxy_get_cached_property (priv->proxy, "Tainted");
 	if (val2 != NULL)
 		priv->tainted = g_variant_get_boolean (val2);
+	val3 = g_dbus_proxy_get_cached_property (priv->proxy, "Status");
+	if (val3 != NULL)
+		fwupd_client_set_status (self, g_variant_get_uint32 (val3));
 	val2 = g_dbus_proxy_get_cached_property (priv->proxy, "Interactive");
 	if (val2 != NULL)
 		priv->interactive = g_variant_get_boolean (val2);
