@@ -134,7 +134,7 @@ Fuzzing
 There are several automated fuzzing tests in fwupd. These take some time to run:
 
     CC=hfuzz-clang meson --default-library=static \
-        -Dtmpdir=/tmp -Dsystemd_root_prefix=/tmp \
+        -Dudevdir=/tmp -Dsystemd_root_prefix=/tmp \
         -Dplugin_redfish=false -Dcurl=false \
         -Dintrospection=false ../
     ninja install
