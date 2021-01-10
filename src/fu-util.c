@@ -56,7 +56,7 @@ typedef enum {
 
 struct FuUtilPrivate {
 	GCancellable		*cancellable;
-	GMainLoop		*loop;
+	GMainContext		*main_ctx;
 	GOptionContext		*context;
 	FwupdInstallFlags	 flags;
 	FwupdClient		*client;
@@ -2423,7 +2423,7 @@ fu_util_private_free (FuUtilPrivate *priv)
 	if (priv->current_device != NULL)
 		g_object_unref (priv->current_device);
 	g_free (priv->current_message);
-	g_main_loop_unref (priv->loop);
+	g_main_context_unref (priv->main_ctx);
 	g_object_unref (priv->cancellable);
 	g_object_unref (priv->progressbar);
 	g_option_context_free (priv->context);
@@ -2782,7 +2782,7 @@ main (int argc, char *argv[])
 	fwupd_error_quark ();
 
 	/* create helper object */
-	priv->loop = g_main_loop_new (NULL, FALSE);
+	priv->main_ctx = g_main_context_new ();
 	priv->progressbar = fu_progressbar_new ();
 
 	/* add commands */
@@ -3108,6 +3108,7 @@ main (int argc, char *argv[])
 
 	/* connect to the daemon */
 	priv->client = fwupd_client_new ();
+	fwupd_client_set_main_context (priv->client, priv->main_ctx);
 	g_signal_connect (priv->client, "notify::percentage",
 			  G_CALLBACK (fu_util_client_notify_cb), priv);
 	g_signal_connect (priv->client, "notify::status",
