@@ -56,7 +56,7 @@ fwupd_client_helper_new (FwupdClient *self)
 {
 	FwupdClientHelper *helper;
 	helper = g_new0 (FwupdClientHelper, 1);
-	helper->context = g_main_context_new ();
+	helper->context = fwupd_client_get_main_context (self);
 	helper->loop = g_main_loop_new (helper->context, FALSE);
 	g_main_context_push_thread_default (helper->context);
 	return helper;

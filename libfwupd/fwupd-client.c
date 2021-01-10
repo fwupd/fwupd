@@ -405,7 +405,7 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
  * @self: A #FwupdClient
  *
  * Gets the internal #GMainContext to use for synchronous methods.
- * By default the value is set to the value of g_main_context_ref_thread_default()
+ * By default the value is set a new #GMainContext.
  *
  * Return value: (transfer full): the #GMainContext
  *
@@ -417,7 +417,7 @@ fwupd_client_get_main_context (FwupdClient *self)
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	if (priv->main_ctx != NULL)
 		return g_main_context_ref (priv->main_ctx);
-	return g_main_context_ref_thread_default ();
+	return g_main_context_new ();
 }
 
 /**
