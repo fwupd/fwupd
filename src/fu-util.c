@@ -2702,6 +2702,7 @@ main (int argc, char *argv[])
 	gboolean verbose = FALSE;
 	gboolean version = FALSE;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
+	g_autoptr(GDateTime) dt_now = g_date_time_new_now_utc ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GError) error_polkit = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new ();
@@ -3043,6 +3044,17 @@ main (int argc, char *argv[])
 					      "to do this automatically in the future "
 					      "export DISABLE_SSL_STRICT in your environment"));
 		g_setenv ("DISABLE_SSL_STRICT", "1", TRUE);
+	}
+
+	/* this doesn't have to be precise (e.g. using the build-year) as we just
+	 * want to check the clock is not set to the default of 1970-01-01... */
+	if (g_date_time_get_year (dt_now) < 2021) {
+		g_autofree gchar *fmt = NULL;
+		/* TRANSLATORS: this is a prefix on the console */
+		fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
+		/* TRANSLATORS: try to help */
+		g_printerr ("%s %s\n", fmt, _("The system clock has not been set "
+					      "correctly and downloading files may fail."));
 	}
 
 	/* non-TTY consoles cannot answer questions */
