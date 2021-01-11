@@ -35,6 +35,27 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.5.5" date="2021-01-11">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a plugin to update PixArt RF devices</li>
+          <li>Add new hardware to use the elantp and rts54hid plugins</li>
+          <li>Allow specifying more than one VendorID for a device</li>
+          <li>Detect the AMD TSME encryption state for HSI-4</li>
+          <li>Detect the AMI PK test key is not installed for HSI-1</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix flashing a fingerprint reader that is in use</li>
+          <li>Fix several critical warnings when parsing invalid firmware</li>
+          <li>Fix updating DFU devices that use DNLOAD_BUSY</li>
+          <li>Ignore the legacy UEFI OVMF dummy GUID</li>
+          <li>Make libfwupd more thread safe to fix a crash in gnome-software</li>
+          <li>Never show unprintable chars from invalid firmware in the logs</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.4" date="2020-12-16">
       <description>
         <p>This release adds the following features:</p>

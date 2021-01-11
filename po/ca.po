@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2020
+# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2021
 # Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2017
 msgid ""
 msgstr ""
@@ -582,6 +582,10 @@ msgstr "No realitzis el reinici després de l'actualització"
 msgid "Do not check for unreported history"
 msgstr "No comprovar si hi ha un historial sense informar"
 
+#. TRANSLATORS: command line option
+msgid "Do not check if download remotes should be enabled"
+msgstr "No comprovar si la baixada des del remot ha d'estar habilitada"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
 msgstr "No incloure el prefix de domini del registre"
@@ -756,10 +760,6 @@ msgstr "Ha fallat en aplicar l'actualització"
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
 msgstr "Ha fallat en connectar amb el dimoni"
-
-#. TRANSLATORS: could not parse file
-msgid "Failed to extract local dbx "
-msgstr "Ha fallat en extreure una dbx local"
 
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
@@ -1809,6 +1809,10 @@ msgstr "Aquesta eina només pot ser usada per l'usuari «root»."
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Aquesta eina llegirà i analitzarà el registre d'esdeveniments TPM des del microprogramari del sistema."
 
+#. TRANSLATORS: command line option
+msgid "Timeout in milliseconds for each parse"
+msgstr "Temps d'espera en mil·lisegons per a cada anàlisi"
+
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Tipus"
@@ -1828,6 +1832,10 @@ msgstr "Les actualitzacions de la càpsula UEFI no estan disponibles o habilitad
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Utilitat dbx UEFI"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI platform key"
+msgstr "Clau de la plataforma UEFI"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"

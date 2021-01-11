@@ -4,7 +4,7 @@
 #
 # Translators:
 # Jiri Grönroos <jiri.gronroos@iki.fi>, 2017-2018,2020
-# Kimmo Kujansuu <mrkujansuu@gmail.com>, 2019-2020
+# Kimmo Kujansuu <mrkujansuu@gmail.com>, 2019-2021
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -582,6 +582,10 @@ msgstr "Älä tarkista käynnistystä uudelleen päivityksen jälkeen"
 msgid "Do not check for unreported history"
 msgstr "Älä tarkista ilmoittamattomasta historiasta"
 
+#. TRANSLATORS: command line option
+msgid "Do not check if download remotes should be enabled"
+msgstr "Älä tarkista, kannattaako etänä lataus ottaa käyttöön"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
 msgstr "Älä sisällytä lokiin toimialueen etuliitettä"
@@ -756,10 +760,6 @@ msgstr "Päivityksen asentaminen epäonnistui"
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
 msgstr "Yhteys taustaprosessiin epäonnistui"
-
-#. TRANSLATORS: could not parse file
-msgid "Failed to extract local dbx "
-msgstr "Paikallisen dbx-tiedoston purkaminen epäonnistui"
 
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
@@ -1809,6 +1809,10 @@ msgstr "Tätä työkalua voi käyttää vain root-käyttäjä"
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Tämä työkalu lukee ja TPM-tapahtumalokin järjestelmän laiteohjelmistosta."
 
+#. TRANSLATORS: command line option
+msgid "Timeout in milliseconds for each parse"
+msgstr "Aikakatkaisu millisekunteina kutakin jäsentämistä varten"
+
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Tyyppi"
@@ -1828,6 +1832,10 @@ msgstr "UEFI-päivitykset eivät ole saatavilla tai käytössä"
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "UEFI dbx-apuohjelma"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI platform key"
+msgstr "UEFI-alustan avain"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"

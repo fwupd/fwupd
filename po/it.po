@@ -4,7 +4,7 @@
 #
 # Translators:
 # Gianvito Cavasoli <gianvito@gmx.it>, 2016
-# Milo Casagrande <milo@ubuntu.com>, 2017-2020
+# Milo Casagrande <milo@ubuntu.com>, 2017-2021
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -760,10 +760,6 @@ msgstr "Applicazione aggiornamento non riuscita"
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
 msgstr "Connessione al demone non riuscita"
-
-#. TRANSLATORS: could not parse file
-msgid "Failed to extract local dbx "
-msgstr "Estrazione dbx locale non riuscita"
 
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
@@ -1836,6 +1832,10 @@ msgstr "Aggiornamenti capsula UEFI non disponibili o non abilitati"
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Strumento EUFI dbx"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI platform key"
+msgstr "Chiave piattaforma UEFI"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"

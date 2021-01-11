@@ -714,10 +714,6 @@ msgstr "Neuspjela primjena nadopune"
 msgid "Failed to connect to daemon"
 msgstr "Neuspjelo povezivanje s pozadinskim programom"
 
-#. TRANSLATORS: could not parse file
-msgid "Failed to extract local dbx "
-msgstr "Neuspjelo raspakiravanje lokalnog dbx-a"
-
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
 msgstr "Neuspjeli prikaz uređaja na čekanju"

@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Piotr Drąg <piotrdrag@gmail.com>, 2015-2020
+# Piotr Drąg <piotrdrag@gmail.com>, 2015-2021
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -597,6 +597,10 @@ msgstr "Bez sprawdzania potrzeby ponownego uruchomienia po aktualizacji"
 msgid "Do not check for unreported history"
 msgstr "Bez sprawdzania niezgłoszonej historii"
 
+#. TRANSLATORS: command line option
+msgid "Do not check if download remotes should be enabled"
+msgstr "Bez sprawdzania, czy repozytoria pobierania mają być włączone"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
 msgstr "Bez dołączania przedrostka domeny dziennika"
@@ -775,10 +779,6 @@ msgstr "Zastosowanie aktualizacji się nie powiodło"
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
 msgstr "Połączenie z usługą się nie powiodło"
-
-#. TRANSLATORS: could not parse file
-msgid "Failed to extract local dbx "
-msgstr "Rozpakowanie lokalnej bazy dbx się nie powiodło "
 
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
@@ -1836,6 +1836,10 @@ msgstr "To narzędzie może być używane tylko przez użytkownika root"
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "To narzędzie odczyta i przetworzy dziennik zdarzeń TPM z oprogramowania sprzętowego komputera."
 
+#. TRANSLATORS: command line option
+msgid "Timeout in milliseconds for each parse"
+msgstr "Czas oczekiwania w milisekundach dla każdego przetworzenia"
+
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Typ"
@@ -1855,6 +1859,10 @@ msgstr "Aktualizacje kapsułowe UEFI są niedostępne lub wyłączone"
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Narzędzie bazy dbx dla UEFI"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI platform key"
+msgstr "Klucz platformy UEFI"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"

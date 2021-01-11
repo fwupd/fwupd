@@ -326,10 +326,6 @@ msgstr "Produciuse un fallo ao aplicar a actualización"
 msgid "Failed to connect to daemon"
 msgstr "Produciuse un fallo ao conectarse ao demoni"
 
-#. TRANSLATORS: could not parse file
-msgid "Failed to extract local dbx "
-msgstr "Produciuse un fallo ao extraer o dbx local"
-
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
 msgstr "Produciuse un fallo ao obter a lista de dispositivos pendentes"
