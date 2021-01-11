@@ -364,7 +364,7 @@ dfu_target_stm_download_element (DfuTarget *target,
 			 g_bytes_get_size (bytes_tmp));
 		/* ST uses wBlockNum=0 for DfuSe commands and wBlockNum=1 is reserved */
 		if (!dfu_target_download_chunk (target,
-						(guint8) (i + 2),
+						(i + 2),
 						bytes_tmp,
 						error))
 			return FALSE;
