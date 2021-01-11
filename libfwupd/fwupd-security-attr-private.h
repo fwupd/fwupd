@@ -15,6 +15,7 @@ G_BEGIN_DECLS
 
 #define FWUPD_SECURITY_ATTR_ID_ACPI_DMAR		"org.fwupd.hsi.AcpiDmar"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM		"org.fwupd.hsi.EncryptedRam"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_ECC_RAM			"org.fwupd.hsi.EccRam"			/* Since: 1.5.6 */
 #define FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION	"org.fwupd.hsi.Fwupd.Attestation"	/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS		"org.fwupd.hsi.Fwupd.Plugins"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES		"org.fwupd.hsi.Fwupd.Updates"		/* Since: 1.5.0 */

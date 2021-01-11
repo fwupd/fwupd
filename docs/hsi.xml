@@ -742,6 +742,35 @@
         </para>
       </note>
     </refsect3>
+
+    <refsect3 id="org.fwupd.hsi.EccRam">
+      <title>DRAM memory error correction</title>
+      <para>
+        Memory error correction (ECC) is used by memory to correct accidental
+        bitflips.
+        The presence of ECC memory makes attacks like RowHammer harder to exploit.
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>
+            For HSI-3 this should be supported and enabled <emphasis>v1.5.6</emphasis>
+          </para>
+        </listitem>
+      </itemizedlist>
+      <note>
+        <para>
+          See also:
+          <itemizedlist>
+            <listitem>
+              <ulink url="https://en.wikipedia.org/wiki/ECC_memory">
+                Wikipedia ECC Overview
+              </ulink>
+            </listitem>
+          </itemizedlist>
+        </para>
+      </note>
+    </refsect3>
+
     <refsect3 id="org.fwupd.hsi.IntelSmap">
       <title>Supervisor Mode Access Prevention</title>
       <para>

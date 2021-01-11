@@ -73,6 +73,10 @@ fu_security_attr_get_name (FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME */
 		return g_strdup (_("Encrypted RAM"));
 	}
+	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_ECC_RAM) == 0) {
+		/* TRANSLATORS: Title: Memory contents are error corrected */
+		return g_strdup (_("ECC RAM"));
+	}
 	if (g_strcmp0 (appstream_id, FWUPD_SECURITY_ATTR_ID_IOMMU) == 0) {
 		/* TRANSLATORS: Title: https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit */
 		return g_strdup (_("IOMMU"));
