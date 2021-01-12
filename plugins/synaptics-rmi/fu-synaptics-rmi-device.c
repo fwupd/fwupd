@@ -50,6 +50,7 @@ typedef struct
 	guint8			 current_page;
 	guint16			 sig_size;	/* 0x0 for non-secure update */
 	guint8			 max_page;
+	gboolean		 in_iep_mode;
 } FuSynapticsRmiDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuSynapticsRmiDevice, fu_synaptics_rmi_device, FU_TYPE_UDEV_DEVICE)
@@ -86,6 +87,7 @@ fu_synaptics_rmi_device_to_string (FuUdevDevice *device, guint idt, GString *str
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 	fu_common_string_append_kx (str, idt, "CurrentPage", priv->current_page);
+	fu_common_string_append_kx (str, idt, "InIepMode", priv->in_iep_mode);
 	fu_common_string_append_kx (str, idt, "MaxPage", priv->max_page);
 	fu_common_string_append_kx (str, idt, "SigSize", priv->sig_size);
 	if (priv->f34 != NULL) {
@@ -355,6 +357,9 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	g_autoptr(GByteArray) f01_product_id = NULL;
 	g_autoptr(GByteArray) f01_ds4 = NULL;
 
+	/* assume reset */
+	priv->in_iep_mode = FALSE;
+
 	/* read PDT */
 	if (!fu_synaptics_rmi_device_scan_pdt (self, error))
 		return FALSE;
@@ -362,6 +367,13 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	if (priv->f01 == NULL)
 		return FALSE;
 	addr = priv->f01->query_base;
+
+	/* set page */
+	if (!fu_synaptics_rmi_device_set_page (self, 0, error))
+		return FALSE;
+	if (!fu_synaptics_rmi_device_enter_iep_mode (self, error))
+		return FALSE;
+
 	f01_basic = fu_synaptics_rmi_device_read (self, addr, RMI_DEVICE_F01_BASIC_QUERY_LEN, error);
 	if (f01_basic == NULL) {
 		g_prefix_error (error, "failed to read the basic query: ");
@@ -601,6 +613,26 @@ fu_synaptics_rmi_device_wait_for_attr (FuSynapticsRmiDevice *self,
 {
 	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
 	return klass_rmi->wait_for_attr (self, source_mask, timeout_ms, error);
+}
+
+gboolean
+fu_synaptics_rmi_device_enter_iep_mode (FuSynapticsRmiDevice *self, GError **error)
+{
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+
+	/* already set */
+	if (priv->in_iep_mode)
+		return TRUE;
+	if (klass_rmi->enter_iep_mode != NULL) {
+		g_debug ("enabling RMI iep_mode");
+		if (!klass_rmi->enter_iep_mode (self, error)) {
+			g_prefix_error (error, "failed to enable RMI iep_mode: ");
+			return FALSE;
+		}
+	}
+	priv->in_iep_mode = TRUE;
+	return TRUE;
 }
 
 gboolean

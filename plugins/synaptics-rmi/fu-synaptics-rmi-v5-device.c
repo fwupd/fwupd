@@ -88,6 +88,8 @@ fu_synaptics_rmi_v5_device_erase_all (FuSynapticsRmiDevice *self, GError **error
 		return FALSE;
 	}
 	g_usleep (1000 * RMI_F34_ERASE_WAIT_MS);
+	if (!fu_synaptics_rmi_device_enter_iep_mode (self, error))
+		return FALSE;
 	if (!fu_synaptics_rmi_device_wait_for_idle (self,
 						    RMI_F34_ERASE_WAIT_MS,
 						    RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34,
@@ -154,6 +156,8 @@ fu_synaptics_rmi_v5_device_secure_check (FuDevice *device,
 			g_prefix_error (error, "failed to read status: ");
 			return FALSE;
 		}
+		if (!fu_synaptics_rmi_device_enter_iep_mode (self, error))
+			return FALSE;
 		for (guint16 block_num = 0; block_num < rsa_block_cnt; block_num++) {
 			g_autoptr(GByteArray) res = NULL;
 			res = fu_synaptics_rmi_device_read_packet_register (self,
@@ -240,6 +244,8 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 				     "not bootloader, perhaps need detach?!");
 		return FALSE;
 	}
+	if (!fu_synaptics_rmi_device_enter_iep_mode (self, error))
+		return FALSE;
 
 	/* check is idle */
 	if (!fu_synaptics_rmi_device_wait_for_idle (self, 0,
@@ -373,6 +379,8 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 		}
 		g_usleep (1000 * 1000);
 	}
+	if (!fu_synaptics_rmi_device_enter_iep_mode (self, error))
+		return FALSE;
 
 	/* program the configuration image */
 	if (!fu_synaptics_rmi_device_write (self, f34->data_base, req_addr, error)) {
