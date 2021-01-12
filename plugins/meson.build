@@ -25,9 +25,12 @@ subdir('ata')
 subdir('elantp')
 subdir('optionrom')
 subdir('superio')
-subdir('synaptics-rmi')
 subdir('thelio-io')
 subdir('wacom-raw')
+endif
+
+if get_option('gudev') and get_option('plugin_synaptics_rmi')
+subdir('synaptics-rmi')
 endif
 
 if get_option('gudev') and get_option('gusb')

@@ -25,6 +25,7 @@ shared_module('fu_plugin_synaptics_rmi',
   c_args : cargs,
   dependencies : [
     plugin_deps,
+    gnutls,
   ],
   link_with : [
     fwupd,

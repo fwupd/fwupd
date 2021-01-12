@@ -91,6 +91,7 @@ typedef struct
 	FuSynapticsRmiFunction	*f01;
 	FuSynapticsRmiFunction	*f34;
 	guint8			 current_page;
+	guint16			 sig_size;	/* 0x0 for non-secure update */
 } FuSynapticsRmiDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuSynapticsRmiDevice, fu_synaptics_rmi_device, FU_TYPE_UDEV_DEVICE)
@@ -127,6 +128,7 @@ fu_synaptics_rmi_device_to_string (FuUdevDevice *device, guint idt, GString *str
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 	fu_common_string_append_kx (str, idt, "CurrentPage", priv->current_page);
+	fu_common_string_append_kx (str, idt, "SigSize", priv->sig_size);
 	if (priv->f34 != NULL) {
 		fu_common_string_append_kx (str, idt, "BlVer",
 					    priv->f34->function_version + 0x5);
@@ -265,6 +267,19 @@ fu_synaptics_rmi_device_read (FuSynapticsRmiDevice *self, guint16 addr, gsize re
 	return g_steal_pointer (&buf);
 }
 
+GByteArray *
+fu_synaptics_rmi_device_read_packet_register (FuSynapticsRmiDevice *self,
+					      guint16 addr,
+					      gsize req_sz,
+					      GError **error)
+{
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "packet register reads not supported");
+	return NULL;
+}
+
 gboolean
 fu_synaptics_rmi_device_write (FuSynapticsRmiDevice *self, guint16 addr, GByteArray *req, GError **error)
 {
@@ -399,6 +414,21 @@ fu_synaptics_rmi_device_scan_pdt (FuSynapticsRmiDevice *self, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+void
+fu_synaptics_rmi_device_set_sig_size (FuSynapticsRmiDevice *self,
+					guint16 sig_size)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	priv->sig_size = sig_size;
+}
+
+guint16
+fu_synaptics_rmi_device_get_sig_size (FuSynapticsRmiDevice *self)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	return priv->sig_size;
 }
 
 typedef enum {
@@ -670,7 +700,8 @@ fu_synaptics_rmi_device_prepare_firmware (FuDevice *device,
 	bytes_bin = fu_firmware_get_image_by_id_bytes (firmware, "ui", error);
 	if (bytes_bin == NULL)
 		return NULL;
-	size_expected = (gsize) priv->flash.block_count_fw * (gsize) priv->flash.block_size;
+	size_expected = ((gsize) priv->flash.block_count_fw * (gsize) priv->flash.block_size) +
+			fu_synaptics_rmi_firmware_get_sig_size (FU_SYNAPTICS_RMI_FIRMWARE (firmware));
 	if (g_bytes_get_size (bytes_bin) != size_expected) {
 		g_set_error (error,
 			     FWUPD_ERROR,
