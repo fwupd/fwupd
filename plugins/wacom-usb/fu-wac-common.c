@@ -15,7 +15,7 @@ guint32
 fu_wac_calculate_checksum32le (const guint8 *data, gsize len)
 {
 	guint32 csum = 0x0;
-	g_return_val_if_fail (len % 4 == 0, 0xff);
+	g_return_val_if_fail (len % 4 == 0, G_MAXUINT32);
 	for (guint i = 0; i < len; i += 4) {
 		guint32 tmp;
 		memcpy (&tmp, &data[i], sizeof(guint32));

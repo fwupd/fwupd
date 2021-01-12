@@ -2,6 +2,11 @@
 set -e
 set -x
 
+# check for g_return_val_if_fail sanity
+if ! ./contrib/ci/check-null-false-returns.py; then
+    exit 1
+fi
+
 # these are deprecated in favor of INTERNAL flags
 deprecated="FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS
             FWUPD_DEVICE_FLAG_ONLY_SUPPORTED
