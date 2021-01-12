@@ -312,6 +312,28 @@ fu_synaptics_rmi_device_query_status (FuSynapticsRmiDevice *self, GError **error
 }
 
 static gboolean
+fu_synaptics_rmi_device_query_build_id (FuSynapticsRmiDevice *self,
+					guint32 *build_id,
+					GError **error)
+{
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	if (klass_rmi->query_build_id == NULL)
+		return TRUE;
+	return klass_rmi->query_build_id (self, build_id, error);
+}
+
+static gboolean
+fu_synaptics_rmi_device_query_product_sub_id (FuSynapticsRmiDevice *self,
+					      guint8 *product_sub_id,
+					      GError **error)
+{
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	if (klass_rmi->query_product_sub_id == NULL)
+		return TRUE;
+	return klass_rmi->query_product_sub_id (self, product_sub_id, error);
+}
+
+static gboolean
 fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
@@ -319,6 +341,7 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	guint16 addr;
 	guint16 prod_info_addr;
 	guint8 ds4_query_length = 0;
+	guint8 product_sub_id = 0;
 	gboolean has_build_id_query = FALSE;
 	gboolean has_dds4_queries = FALSE;
 	gboolean has_lts;
@@ -355,7 +378,19 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 		g_prefix_error (error, "failed to read the product id: ");
 		return FALSE;
 	}
-	product_id = g_strndup ((const gchar *) f01_product_id->data, f01_product_id->len);
+	if (!fu_synaptics_rmi_device_query_product_sub_id (self, &product_sub_id, error)) {
+		g_prefix_error (error, "failed to query product sub id: ");
+		return FALSE;
+	}
+	if (product_sub_id == 0) {
+		/* HID */
+		product_id = g_strndup ((const gchar *) f01_product_id->data,
+					f01_product_id->len);
+	} else {
+		/* PS/2 */
+		g_autofree gchar *tmp = g_strndup ((const gchar *) f01_product_id->data, 6);
+		product_id = g_strdup_printf ("%s-%03d", tmp, product_sub_id);
+	}
 	if (product_id != NULL)
 		fu_synaptics_rmi_device_set_product_id (self, product_id);
 
@@ -413,6 +448,13 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 		priv->flash.build_id = fu_common_read_uint32 (buf32, G_LITTLE_ENDIAN);
 	}
 
+	/* read build ID, typically only for PS/2 */
+	if (!fu_synaptics_rmi_device_query_build_id (self,
+						     &priv->flash.build_id,
+						     error)) {
+		g_prefix_error (error, "failed to query build id: ");
+		return FALSE;
+	}
 
 	/* get Function34_Query0,1 */
 	priv->f34 = fu_synaptics_rmi_device_get_function (self, 0x34, error);
