@@ -114,7 +114,7 @@ fu_synaptics_rmi_v7_device_detach (FuDevice *device, GError **error)
 		return FALSE;
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	g_usleep (1000 * RMI_F34_ENABLE_WAIT_MS);
-	return fu_synaptics_rmi_device_rebind_driver (self, error);
+	return TRUE;
 }
 
 static gboolean
