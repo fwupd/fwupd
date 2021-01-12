@@ -83,7 +83,7 @@ fu_synaptics_rmi_v5_device_erase_all (FuSynapticsRmiDevice *self, GError **error
 		g_prefix_error (error, "failed to erase core config: ");
 		return FALSE;
 	}
-	g_usleep (1000 * RMI_F34_ENABLE_WAIT_MS);
+	g_usleep (1000 * RMI_F34_ERASE_WAIT_MS);
 	if (!fu_synaptics_rmi_device_wait_for_idle (self,
 						    RMI_F34_ERASE_WAIT_MS,
 						    RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34,
