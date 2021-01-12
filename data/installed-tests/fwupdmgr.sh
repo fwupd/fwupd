@@ -1,7 +1,6 @@
 #!/bin/bash
 
 exec 2>&1
-dirname=`dirname $0`
 device=08d460be0f1f9f128413f816022a6439e0078018
 
 error()
