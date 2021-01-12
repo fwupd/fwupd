@@ -350,7 +350,7 @@ dfu_tool_bytes_replace (GBytes *data, GBytes *search, GBytes *replace)
 	search_buf = (gpointer) g_bytes_get_data (search, &search_sz);
 	replace_buf = (gpointer) g_bytes_get_data (replace, &replace_sz);
 
-	g_return_val_if_fail (search_sz == replace_sz, FALSE);
+	g_return_val_if_fail (search_sz == replace_sz, 0);
 
 	/* find and replace each one */
 	for (gsize i = 0; i < data_sz - search_sz + 1; i++) {

@@ -524,7 +524,7 @@ gboolean
 dfu_device_has_attribute (DfuDevice *device, DfuDeviceAttributes attribute)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (DFU_IS_DEVICE (device), 0x0);
+	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	return (priv->attributes & attribute) > 0;
 }
 
