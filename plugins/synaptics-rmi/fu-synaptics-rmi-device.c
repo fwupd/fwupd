@@ -439,10 +439,27 @@ fu_synaptics_rmi_device_set_product_id (FuSynapticsRmiDevice *self, const gchar 
 }
 
 static gboolean
+fu_synaptics_rmi_device_query_status (FuSynapticsRmiDevice *self, GError **error)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	if (priv->f34->function_version == 0x0 ||
+	    priv->f34->function_version == 0x1) {
+		return fu_synaptics_rmi_v5_device_query_status (self, error);
+	}
+	if (priv->f34->function_version == 0x2) {
+		return fu_synaptics_rmi_v7_device_query_status (self, error);
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "f34 function version 0x%02x unsupported",
+		     priv->f34->function_version);
+	return FALSE;
+}
+
+static gboolean
 fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_GET_CLASS (device);
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (device);
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 	guint16 addr;
@@ -542,26 +559,26 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 		priv->flash.build_id = fu_common_read_uint32 (buf32, G_LITTLE_ENDIAN);
 	}
 
+
+	/* get Function34_Query0,1 */
 	priv->f34 = fu_synaptics_rmi_device_get_function (self, 0x34, error);
 	if (priv->f34 == NULL)
 		return FALSE;
-
-	/* set up vfuncs for each bootloader protocol version */
 	if (priv->f34->function_version == 0x0) {
-		klass_rmi->setup = fu_synaptics_rmi_v5_device_setup;
-		klass_rmi->query_status = fu_synaptics_rmi_v5_device_query_status;
-		klass_device->detach = fu_synaptics_rmi_v5_device_detach;
-		klass_device->write_firmware = fu_synaptics_rmi_v5_device_write_firmware;
+		if (!fu_synaptics_rmi_v5_device_setup (self, error)) {
+			g_prefix_error (error, "failed to do v5 setup: ");
+			return FALSE;
+		}
 	} else if (priv->f34->function_version == 0x1) {
-		klass_rmi->setup = fu_synaptics_rmi_v6_device_setup;
-		klass_rmi->query_status = fu_synaptics_rmi_v5_device_query_status;
-		klass_device->detach = fu_synaptics_rmi_v5_device_detach;
-		klass_device->write_firmware = fu_synaptics_rmi_v5_device_write_firmware;
+		if (!fu_synaptics_rmi_v6_device_setup (self, error)) {
+			g_prefix_error (error, "failed to do v6 setup: ");
+			return FALSE;
+		}
 	} else if (priv->f34->function_version == 0x2) {
-		klass_rmi->setup = fu_synaptics_rmi_v7_device_setup;
-		klass_rmi->query_status = fu_synaptics_rmi_v7_device_query_status;
-		klass_device->detach = fu_synaptics_rmi_v7_device_detach;
-		klass_device->write_firmware = fu_synaptics_rmi_v7_device_write_firmware;
+		if (!fu_synaptics_rmi_v7_device_setup (self, error)) {
+			g_prefix_error (error, "failed to do v7 setup: ");
+			return FALSE;
+		}
 	} else {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -570,13 +587,7 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 			     priv->f34->function_version);
 		return FALSE;
 	}
-
-	/* get Function34_Query0,1 */
-	if (!klass_rmi->setup (self, error)) {
-		g_prefix_error (error, "failed to read f34 queries: ");
-		return FALSE;
-	}
-	if (!klass_rmi->query_status (self, error)) {
+	if (!fu_synaptics_rmi_device_query_status (self, error)) {
 		g_prefix_error (error, "failed to read bootloader status: ");
 		return FALSE;
 	}
@@ -1006,6 +1017,55 @@ fu_synaptics_rmi_device_attach (FuDevice *device, GError **error)
 	return fu_synaptics_rmi_device_rebind_driver (self, error);
 }
 
+static gboolean
+fu_synaptics_rmi_device_detach (FuDevice *device, GError **error)
+{
+	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	if (priv->f34->function_version == 0x0 ||
+	    priv->f34->function_version == 0x1) {
+		return fu_synaptics_rmi_v5_device_detach (device, error);
+	}
+	if (priv->f34->function_version == 0x2) {
+		return fu_synaptics_rmi_v7_device_detach (device, error);
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "f34 function version 0x%02x unsupported",
+		     priv->f34->function_version);
+	return FALSE;
+}
+
+static gboolean
+fu_synaptics_rmi_device_write_firmware (FuDevice *device,
+					FuFirmware *firmware,
+					FwupdInstallFlags flags,
+					GError **error)
+{
+	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	if (priv->f34->function_version == 0x0 ||
+	    priv->f34->function_version == 0x1) {
+		return fu_synaptics_rmi_v5_device_write_firmware (device,
+								  firmware,
+								  flags,
+								  error);
+	}
+	if (priv->f34->function_version == 0x2) {
+		return fu_synaptics_rmi_v7_device_write_firmware (device,
+								  firmware,
+								  flags,
+								  error);
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "f34 function version 0x%02x unsupported",
+		     priv->f34->function_version);
+	return FALSE;
+}
+
 static void
 fu_synaptics_rmi_device_init (FuSynapticsRmiDevice *self)
 {
@@ -1038,8 +1098,10 @@ fu_synaptics_rmi_device_class_init (FuSynapticsRmiDeviceClass *klass)
 	klass_device_udev->to_string = fu_synaptics_rmi_device_to_string;
 	klass_device->prepare_firmware = fu_synaptics_rmi_device_prepare_firmware;
 	klass_device->attach = fu_synaptics_rmi_device_attach;
+	klass_device->detach = fu_synaptics_rmi_device_detach;
 	klass_device->setup = fu_synaptics_rmi_device_setup;
 	klass_device_udev->probe = fu_synaptics_rmi_device_probe;
 	klass_device_udev->open = fu_synaptics_rmi_device_open;
 	klass_device_udev->close = fu_synaptics_rmi_device_close;
+	klass_device->write_firmware = fu_synaptics_rmi_device_write_firmware;
 }
