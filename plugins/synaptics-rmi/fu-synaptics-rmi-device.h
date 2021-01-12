@@ -19,6 +19,27 @@ struct _FuSynapticsRmiDeviceClass
 								 GError			**error);
 	gboolean		 (*query_status)		(FuSynapticsRmiDevice	*self,
 								 GError			**error);
+	gboolean		 (*write)			(FuSynapticsRmiDevice	*self,
+								 guint16		 addr,
+								 GByteArray		*req,
+								 GError			**error);
+	GByteArray		*(*read)			(FuSynapticsRmiDevice	*self,
+								 guint16		 addr,
+								 gsize			 req_sz,
+								 GError			**error);
+	GByteArray		*(*read_packet_register)	(FuSynapticsRmiDevice	*self,
+								 guint16		 addr,
+								 gsize			 req_sz,
+								 GError			**error);
+	gboolean		 (*wait_for_attr)		(FuSynapticsRmiDevice	*self,
+								 guint8			 source_mask,
+								 guint			 timeout_ms,
+								 GError			**error);
+	gboolean		 (*set_page)			(FuSynapticsRmiDevice	*self,
+								 guint8			 page,
+								 GError			**error);
+	gboolean		 (*disable_sleep)		(FuSynapticsRmiDevice	 *self,
+								 GError			**error);
 };
 
 typedef struct {
@@ -41,11 +62,17 @@ typedef struct {
 #define RMI_F34_ENABLE_WAIT_MS				300		/* ms */
 #define RMI_F34_IDLE_WAIT_MS				500		/* ms */
 
+#define RMI_DEVICE_PAGE_SELECT_REGISTER			0xff
+#define RMI_DEVICE_BUS_SELECT_REGISTER			0xfe
+
 typedef enum {
 	RMI_DEVICE_WAIT_FOR_IDLE_FLAG_NONE		= 0,
 	RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34	= (1 << 0),
 } RmiDeviceWaitForIdleFlags;
 
+gboolean		 fu_synaptics_rmi_device_set_page	(FuSynapticsRmiDevice	*self,
+								 guint8			 page,
+								 GError			**error);
 gboolean		 fu_synaptics_rmi_device_write_bootloader_id	(FuSynapticsRmiDevice	*self,
 								 GError			**error);
 gboolean		 fu_synaptics_rmi_device_disable_irqs	(FuSynapticsRmiDevice	*self,
@@ -74,10 +101,11 @@ FuSynapticsRmiFlash	*fu_synaptics_rmi_device_get_flash	(FuSynapticsRmiDevice	*se
 FuSynapticsRmiFunction	*fu_synaptics_rmi_device_get_function	(FuSynapticsRmiDevice	*self,
 								 guint8			 function_number,
 								 GError			**error);
-gboolean		 fu_synaptics_rmi_device_rebind_driver	(FuSynapticsRmiDevice	*self,
-								 GError			**error);
 gboolean		 fu_synaptics_rmi_device_poll_wait	(FuSynapticsRmiDevice	*self,
 								 GError			**error);
 void			 fu_synaptics_rmi_device_set_sig_size	(FuSynapticsRmiDevice	*self,
 								 guint16		 sig_size);
 guint16			 fu_synaptics_rmi_device_get_sig_size	(FuSynapticsRmiDevice	*self);
+void			 fu_synaptics_rmi_device_set_max_page	(FuSynapticsRmiDevice	*self,
+								 guint8			 max_page);
+guint8			 fu_synaptics_rmi_device_get_max_page	(FuSynapticsRmiDevice	*self);
