@@ -49,6 +49,8 @@ struct _FuSynapticsRmiDeviceClass
 	gboolean		 (*query_product_sub_id)	(FuSynapticsRmiDevice	 *self,
 								 guint8			*product_sub_id,
 								 GError			**error);
+	gboolean		 (*enter_iep_mode)		(FuSynapticsRmiDevice	 *self,
+								 GError			**error);
 };
 
 typedef struct {
@@ -118,6 +120,8 @@ guint16			 fu_synaptics_rmi_device_get_sig_size	(FuSynapticsRmiDevice	*self);
 void			 fu_synaptics_rmi_device_set_max_page	(FuSynapticsRmiDevice	*self,
 								 guint8			 max_page);
 guint8			 fu_synaptics_rmi_device_get_max_page	(FuSynapticsRmiDevice	*self);
+gboolean		 fu_synaptics_rmi_device_enter_iep_mode	(FuSynapticsRmiDevice	*self,
+								 GError			**error);
 gboolean		 fu_synaptics_rmi_device_write_bus_select (FuSynapticsRmiDevice *self,
 								 guint8			 bus,
 								 GError			**error);
