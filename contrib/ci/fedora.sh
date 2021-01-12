@@ -14,6 +14,12 @@ for val in $deprecated; do
     fi
 done
 
+# check shell scripts
+dnf install -y ShellCheck
+if ! find . -name '*.sh' | xargs shellcheck --severity=error -e SC2068; then
+    exit 1
+fi
+
 #generate a tarball
 git config tar.tar.xz.command "xz -c"
 mkdir -p build && pushd build
