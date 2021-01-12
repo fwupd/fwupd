@@ -43,6 +43,12 @@ struct _FuSynapticsRmiDeviceClass
 	gboolean		 (*write_bus_select)		(FuSynapticsRmiDevice	 *self,
 								 guint8			 bus,
 								 GError			**error);
+	gboolean		 (*query_build_id)		(FuSynapticsRmiDevice	*self,
+								 guint32		*build_id,
+								 GError			**error);
+	gboolean		 (*query_product_sub_id)	(FuSynapticsRmiDevice	 *self,
+								 guint8			*product_sub_id,
+								 GError			**error);
 };
 
 typedef struct {
