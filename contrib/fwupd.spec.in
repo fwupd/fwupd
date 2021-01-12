@@ -223,10 +223,10 @@ can be flashed using flashrom. It is probably not required on servers.
 %endif
 %if 0%{?have_dell}
     -Dplugin_dell=true \
-    -Dplugin_synaptics=true \
+    -Dplugin_synaptics_mst=true \
 %else
     -Dplugin_dell=false \
-    -Dplugin_synaptics=false \
+    -Dplugin_synaptics_mst=false \
 %endif
 %if 0%{?have_modem_manager}
     -Dplugin_modem_manager=true \
