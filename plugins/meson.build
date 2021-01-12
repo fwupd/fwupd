@@ -112,7 +112,7 @@ subdir('dell')
 subdir('dell-esrt')
 endif
 
-if get_option('plugin_synaptics')
+if get_option('plugin_synaptics_mst')
 if not get_option('gudev')
   error('gudev is required for plugin_synaptics_mst')
 endif

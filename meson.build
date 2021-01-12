@@ -392,10 +392,6 @@ if build_standalone and get_option('plugin_nvme')
   endif
 endif
 
-if build_standalone and get_option('plugin_synaptics')
-    conf.set('HAVE_SYNAPTICS', '1')
-endif
-
 if build_standalone and get_option('plugin_thunderbolt')
   umockdev = dependency('umockdev-1.0', required: false)
   conf.set('HAVE_THUNDERBOLT', '1')

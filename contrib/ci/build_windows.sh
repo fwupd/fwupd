@@ -30,7 +30,7 @@ meson .. \
     -Dplugin_amt=false \
     -Dintrospection=false \
     -Dplugin_thunderbolt=false \
-    -Dplugin_synaptics=false \
+    -Dplugin_synaptics_mst=false \
     -Dman=false \
     -Dsoup_session_compat=false \
     -Dgcab:introspection=false \
