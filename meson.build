@@ -255,8 +255,13 @@ gcab = find_program('gcab', required : get_option('tests'))
 bashcomp = dependency('bash-completion', required: false)
 python3 = find_program('python3')
 
-if get_option('plugin_uefi_pk')
+if get_option('gnutls')
   gnutls = dependency('gnutls', version : '>= 3.6.0')
+  conf.set('HAVE_GNUTLS', '1')
+else
+  if get_option('plugin_uefi_pk')
+    error('plugin_uefi_pk needs -Dgnutls=true to work')
+  endif
 endif
 
 platform_deps = []
