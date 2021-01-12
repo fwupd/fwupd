@@ -172,6 +172,15 @@ fu_synaptics_rmi_device_set_page (FuSynapticsRmiDevice *self, guint8 page, GErro
 }
 
 gboolean
+fu_synaptics_rmi_device_write_bus_select (FuSynapticsRmiDevice *self, guint8 bus, GError **error)
+{
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	if (klass_rmi->write_bus_select == NULL)
+		return TRUE;
+	return klass_rmi->write_bus_select (self, bus, error);
+}
+
+gboolean
 fu_synaptics_rmi_device_reset (FuSynapticsRmiDevice *self, GError **error)
 {
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);

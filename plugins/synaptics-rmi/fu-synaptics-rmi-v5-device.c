@@ -44,6 +44,10 @@ fu_synaptics_rmi_v5_device_detach (FuDevice *device, GError **error)
 	/* disable interrupts */
 	if (!fu_synaptics_rmi_device_disable_irqs (self, error))
 		return FALSE;
+	if (!fu_synaptics_rmi_device_write_bus_select (self, 0, error)) {
+		g_prefix_error (error, "failed to write bus select: ");
+		return FALSE;
+	}
 
 	/* unlock bootloader and rebind kernel driver */
 	if (!fu_synaptics_rmi_device_write_bootloader_id (self, error))
