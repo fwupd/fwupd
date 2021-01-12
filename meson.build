@@ -262,6 +262,9 @@ else
   if get_option('plugin_uefi_pk')
     error('plugin_uefi_pk needs -Dgnutls=true to work')
   endif
+  if get_option('plugin_synaptics_rmi')
+    error('plugin_synaptics_rmi needs -Dgnutls=true to work')
+  endif
 endif
 
 platform_deps = []

@@ -31,6 +31,7 @@ struct _FuSynapticsRmiFirmware {
 	guint32			 package_id;
 	guint16			 product_info;
 	gchar			*product_id;
+	guint32			 sig_size;
 };
 
 G_DEFINE_TYPE (FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU_TYPE_FIRMWARE)
@@ -42,6 +43,7 @@ G_DEFINE_TYPE (FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU_TYPE_FIRMWA
 #define RMI_IMG_CONFIG_SIZE_OFFSET		0x0c
 #define RMI_IMG_PACKAGE_ID_OFFSET		0x1a
 #define RMI_IMG_FW_BUILD_ID_OFFSET		0x50
+#define RMI_IMG_SIGNATURE_SIZE_OFFSET		0x54
 #define RMI_IMG_PRODUCT_ID_OFFSET		0x10
 #define RMI_IMG_PRODUCT_INFO_OFFSET		0x1e
 #define RMI_IMG_FW_OFFSET			0x100
@@ -174,6 +176,7 @@ fu_synaptics_rmi_firmware_to_string (FuFirmware *firmware, guint idt, GString *s
 	fu_common_string_append_kx (str, idt, "BuildId", self->build_id);
 	fu_common_string_append_kx (str, idt, "PackageId", self->package_id);
 	fu_common_string_append_kx (str, idt, "ProductInfo", self->product_info);
+	fu_common_string_append_kx (str, idt, "SigSize", self->sig_size);
 }
 
 static gboolean
@@ -318,6 +321,7 @@ fu_synaptics_rmi_firmware_parse_v10 (FuFirmware *firmware, GBytes *fw, GError **
 static gboolean
 fu_synaptics_rmi_firmware_parse_v0x (FuFirmware *firmware, GBytes *fw, GError **error)
 {
+	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE (firmware);
 	guint32 cfg_sz;
 	guint32 img_sz = 0;
 	gsize sz = 0;
@@ -331,6 +335,15 @@ fu_synaptics_rmi_firmware_parse_v0x (FuFirmware *firmware, GBytes *fw, GError **
 					 error))
 		return FALSE;
 	if (img_sz > 0) {
+		/* payload, then signature appended */
+		if (self->sig_size > 0) {
+			img_sz -= self->sig_size;
+			if (!fu_synaptics_rmi_firmware_add_image (firmware, "sig", fw,
+								  RMI_IMG_FW_OFFSET + img_sz,
+								  self->sig_size,
+								  error))
+				return FALSE;
+		}
 		if (!fu_synaptics_rmi_firmware_add_image (firmware, "ui", fw,
 							  RMI_IMG_FW_OFFSET,
 							  img_sz, error))
@@ -363,6 +376,7 @@ fu_synaptics_rmi_firmware_parse (FuFirmware *firmware,
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE (firmware);
 	gsize sz = 0;
 	guint32 checksum_calculated;
+	guint32 firmware_size = 0;
 	const guint8 *data = g_bytes_get_data (fw, &sz);
 
 	/* check minimum size */
@@ -425,6 +439,12 @@ fu_synaptics_rmi_firmware_parse (FuFirmware *firmware,
 					 G_LITTLE_ENDIAN,
 					 error))
 		return FALSE;
+	if (!fu_common_read_uint32_safe (data, sz,
+					 RMI_IMG_IMAGE_SIZE_OFFSET,
+					 &firmware_size,
+					 G_LITTLE_ENDIAN,
+					 error))
+		return FALSE;
 
 	/* parse partitions, but ignore lockdown */
 	switch (self->bootloader_version) {
@@ -433,6 +453,14 @@ fu_synaptics_rmi_firmware_parse (FuFirmware *firmware,
 	case 4:
 	case 5:
 	case 6:
+		if ((self->io & 0x10) >> 1) {
+			if (!fu_common_read_uint32_safe (data, sz,
+							 RMI_IMG_SIGNATURE_SIZE_OFFSET,
+							 &self->sig_size,
+							 G_LITTLE_ENDIAN,
+							 error))
+				return FALSE;
+		}
 		if (!fu_synaptics_rmi_firmware_parse_v0x (firmware, fw, error))
 			return FALSE;
 		self->kind = RMI_FIRMWARE_KIND_0X;
@@ -453,6 +481,12 @@ fu_synaptics_rmi_firmware_parse (FuFirmware *firmware,
 
 	/* success */
 	return TRUE;
+}
+
+guint32
+fu_synaptics_rmi_firmware_get_sig_size (FuSynapticsRmiFirmware *self)
+{
+	return self->sig_size;
 }
 
 static GBytes *
