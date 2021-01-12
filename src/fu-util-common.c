@@ -1310,7 +1310,7 @@ fu_util_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED) {
 		/* TRANSLATORS: capsule updates are an optional BIOS feature */
-		return _("UEFI capsule updates not available or enabled");
+		return _("UEFI capsule updates not available or enabled in firmware setup");
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED) {
 		/* TRANSLATORS: user needs to run a command */

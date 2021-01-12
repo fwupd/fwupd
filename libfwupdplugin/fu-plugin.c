@@ -465,7 +465,7 @@ fu_plugin_build_device_update_error (FuPlugin *self)
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_LEGACY_BIOS))
 		return "Not updatable in legacy BIOS mode";
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED))
-		return "Not updatable as UEFI capsule updates not enabled";
+		return "Not updatable as UEFI capsule updates not enabled in firmware setup";
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED))
 		return "Not updatable as requires unlock";
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED))
