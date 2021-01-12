@@ -10,6 +10,7 @@
 
 #include "fu-synaptics-rmi-common.h"
 #include "fu-synaptics-rmi-firmware.h"
+#include "fu-synaptics-rmi-ps2-device.h"
 #include "fu-synaptics-rmi-v5-device.h"
 #include "fu-synaptics-rmi-v6-device.h"
 #include "fu-synaptics-rmi-v7-device.h"
@@ -683,6 +684,14 @@ fu_synaptics_rmi_device_wait_for_idle (FuSynapticsRmiDevice *self,
 		f34_command = res->data[0] & RMI_F34_COMMAND_MASK;
 		f34_status = (res->data[0] >> RMI_F34_STATUS_SHIFT) & RMI_F34_STATUS_MASK;
 		f34_enabled = !!(res->data[0] & RMI_F34_ENABLED_MASK);
+	}
+
+	/* PS/2 */
+	if (FU_IS_SYNAPTICS_RMI_PS2_DEVICE (self)) {
+		if (f34_command == 0) {
+			g_debug ("F34 zero as PS/2");
+			return TRUE;
+		}
 	}
 
 	/* is idle */
