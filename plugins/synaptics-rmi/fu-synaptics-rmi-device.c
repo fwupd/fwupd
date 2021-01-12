@@ -90,6 +90,7 @@ typedef struct
 	FuIOChannel		*io_channel;
 	FuSynapticsRmiFunction	*f01;
 	FuSynapticsRmiFunction	*f34;
+	guint8			 current_page;
 } FuSynapticsRmiDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuSynapticsRmiDevice, fu_synaptics_rmi_device, FU_TYPE_UDEV_DEVICE)
@@ -125,6 +126,7 @@ fu_synaptics_rmi_device_to_string (FuUdevDevice *device, guint idt, GString *str
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	fu_common_string_append_kx (str, idt, "CurrentPage", priv->current_page);
 	if (priv->f34 != NULL) {
 		fu_common_string_append_kx (str, idt, "BlVer",
 					    priv->f34->function_version + 0x5);
@@ -310,15 +312,18 @@ fu_synaptics_rmi_device_write (FuSynapticsRmiDevice *self, guint16 addr, GByteAr
 }
 
 static gboolean
-fu_synaptics_rmi_device_set_rma_page (FuSynapticsRmiDevice *self, guint8 page, GError **error)
+fu_synaptics_rmi_device_set_page (FuSynapticsRmiDevice *self, guint8 page, GError **error)
 {
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GByteArray) req = g_byte_array_new ();
-
+	if (priv->current_page == page)
+		return TRUE;
 	fu_byte_array_append_uint8 (req, page);
 	if (!fu_synaptics_rmi_device_write (self, RMI_DEVICE_PAGE_SELECT_REGISTER, req, error)) {
 		g_prefix_error (error, "failed to set RMA page 0x%x: ", page);
 		return FALSE;
 	}
+	priv->current_page = page;
 	return TRUE;
 }
 
@@ -352,7 +357,7 @@ fu_synaptics_rmi_device_scan_pdt (FuSynapticsRmiDevice *self, GError **error)
 		guint32 pdt_end = page_start + RMI_DEVICE_PAGE_SCAN_END;
 
 		/* set page */
-		if (!fu_synaptics_rmi_device_set_rma_page (self, page, error))
+		if (!fu_synaptics_rmi_device_set_page (self, page, error))
 			return FALSE;
 
 		/* read out functions */
@@ -1010,6 +1015,7 @@ fu_synaptics_rmi_device_init (FuSynapticsRmiDevice *self)
 	fu_device_set_name (FU_DEVICE (self), "Touchpad");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
+	priv->current_page = 0xfe;
 	priv->functions = g_ptr_array_new_with_free_func (g_free);
 }
 
