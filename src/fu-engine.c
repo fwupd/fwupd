@@ -6205,6 +6205,13 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 	if (g_strcmp0 (fwupd_release_get_metadata_item (rel_history, "BootTime"),
 		       btime) == 0) {
 		g_debug ("service restarted, but no reboot has taken place");
+
+		/* if it needed reboot then, it also needs it now... */
+		if (fu_device_get_update_state (dev_history) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
+			g_debug ("inheriting needs-reboot for %s",
+				 fu_device_get_name (dev));
+			fu_device_set_update_state (dev, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
+		}
 		return TRUE;
 	}
 
