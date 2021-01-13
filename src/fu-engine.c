@@ -6065,6 +6065,7 @@ fu_engine_get_archive_size_max (FuEngine *self)
 	return fu_config_get_archive_size_max (self->config);
 }
 
+#ifdef HAVE_GUSB
 static void
 fu_engine_usb_device_removed_cb (GUsbContext *ctx,
 				 GUsbDevice *usb_device,
@@ -6145,6 +6146,7 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 		}
 	}
 }
+#endif
 
 static void
 fu_engine_load_quirks (FuEngine *self, FuQuirksLoadFlags quirks_flags)
@@ -6449,7 +6451,11 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	fu_engine_add_firmware_gtype (self, "smbios", FU_TYPE_SMBIOS);
 
 	/* set shared USB context */
+#ifdef HAVE_GUSB
 	self->usb_ctx = g_usb_context_new (error);
+#else
+	self->usb_ctx = g_object_new (G_TYPE_OBJECT, NULL);
+#endif
 	if (self->usb_ctx == NULL) {
 		g_prefix_error (error, "Failed to get USB context: ");
 		return FALSE;
@@ -6500,6 +6506,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		fu_engine_plugins_coldplug (self, FALSE);
 
 	/* coldplug USB devices */
+#ifdef HAVE_GUSB
 	g_signal_connect (self->usb_ctx, "device-added",
 			  G_CALLBACK (fu_engine_usb_device_added_cb),
 			  self);
@@ -6508,6 +6515,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 			  self);
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
 		g_usb_context_enumerate (self->usb_ctx);
+#endif
 
 #ifdef HAVE_GUDEV
 	/* coldplug udev devices */
@@ -6668,13 +6676,14 @@ fu_engine_init (FuEngine *self)
 	g_hash_table_insert (self->compile_versions,
 			     g_strdup ("org.freedesktop.fwupd"),
 			     g_strdup (VERSION));
+#ifdef HAVE_GUSB
 	g_hash_table_insert (self->compile_versions,
 			     g_strdup ("org.freedesktop.gusb"),
 			     g_strdup_printf ("%i.%i.%i",
 					      G_USB_MAJOR_VERSION,
 					      G_USB_MINOR_VERSION,
 					      G_USB_MICRO_VERSION));
-
+#endif
 }
 
 static void

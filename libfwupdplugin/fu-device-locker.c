@@ -9,7 +9,9 @@
 #include "config.h"
 
 #include <gio/gio.h>
+#ifdef HAVE_GUSB
 #include <gusb.h>
+#endif
 
 #include "fu-device-locker.h"
 #include "fu-usb-device.h"
@@ -86,6 +88,7 @@ fu_device_locker_close (FuDeviceLocker *self, GError **error)
 	if (!self->device_open)
 		return TRUE;
 	if (!self->close_func (self->device, &error_local)) {
+#ifdef HAVE_GUSB
 		if (G_USB_IS_DEVICE (self->device) &&
 		    g_error_matches (error_local,
 				     G_USB_DEVICE_ERROR,
@@ -96,6 +99,10 @@ fu_device_locker_close (FuDeviceLocker *self, GError **error)
 			g_propagate_error (error, g_steal_pointer (&error_local));
 			return FALSE;
 		}
+#else
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+#endif
 	}
 	self->device_open = FALSE;
 	return TRUE;
@@ -131,6 +138,7 @@ fu_device_locker_new (gpointer device, GError **error)
 	g_return_val_if_fail (device != NULL, NULL);
 	g_return_val_if_fail (error != NULL, NULL);
 
+#ifdef HAVE_GUSB
 	/* GUsbDevice */
 	if (G_USB_IS_DEVICE (device)) {
 		return fu_device_locker_new_full (device,
@@ -138,6 +146,7 @@ fu_device_locker_new (gpointer device, GError **error)
 						  (FuDeviceLockerFunc) g_usb_device_close,
 						  error);
 	}
+#endif
 
 	/* FuDevice */
 	if (FU_IS_DEVICE (device)) {
