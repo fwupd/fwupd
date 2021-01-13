@@ -103,13 +103,16 @@ endif
 library_deps = [
   introspection_deps,
   gmodule,
-  libarchive,
   libjsonglib,
   libgcab,
   valgrind,
   libjcat,
   platform_deps,
 ]
+
+if get_option('libarchive')
+  library_deps += libarchive
+endif
 
 fwupdplugin_mapfile = 'fwupdplugin.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupdplugin_mapfile)

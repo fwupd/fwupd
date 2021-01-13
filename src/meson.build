@@ -15,9 +15,12 @@ daemon_dep = [
   gudev,
   gusb,
   sqlite,
-  libarchive,
   libjsonglib,
 ]
+
+if get_option('libarchive')
+  daemon_dep += libarchive
+endif
 
 if get_option('systemd')
   systemd_src += 'fu-systemd.c'
@@ -66,7 +69,6 @@ fwupdmgr = executable(
     gudev,
     gusb,
     sqlite,
-    libarchive,
   ],
   link_with : [
     fwupd,
@@ -168,7 +170,6 @@ fwupdtool = executable(
     gusb,
     sqlite,
     valgrind,
-    libarchive,
   ],
   link_with : [
     fwupd,
