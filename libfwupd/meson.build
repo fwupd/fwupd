@@ -40,12 +40,12 @@ endif
 libfwupd_src = [
   'fwupd-client.c',
   'fwupd-client-sync.c',
-  'fwupd-common.c',
-  'fwupd-device.c',
-  'fwupd-enums.c',
-  'fwupd-error.c',
+  'fwupd-common.c',         # fuzzing
+  'fwupd-device.c',         # fuzzing
+  'fwupd-enums.c',          # fuzzing
+  'fwupd-error.c',          # fuzzing
   'fwupd-security-attr.c',
-  'fwupd-release.c',
+  'fwupd-release.c',        # fuzzing
   'fwupd-plugin.c',
   'fwupd-remote.c',
 ]

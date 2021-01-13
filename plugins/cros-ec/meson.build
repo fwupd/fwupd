@@ -9,8 +9,8 @@ shared_module('fu_plugin_cros_ec',
   sources : [
     'fu-plugin-cros-ec.c',
     'fu-cros-ec-usb-device.c',
-    'fu-cros-ec-common.c',
-    'fu-cros-ec-firmware.c',
+    'fu-cros-ec-common.c',      # fuzzing
+    'fu-cros-ec-firmware.c',    # fuzzing
   ],
   include_directories : [
     root_incdir,
