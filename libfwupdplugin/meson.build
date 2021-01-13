@@ -1,28 +1,28 @@
 fwupdplugin_src = [
   'fu-archive.c',
   'fu-cabinet.c',
-  'fu-chunk.c',
-  'fu-common.c',
+  'fu-chunk.c',             # fuzzing
+  'fu-common.c',            # fuzzing
   'fu-common-cab.c',
   'fu-common-guid.c',
-  'fu-common-version.c',
-  'fu-device-locker.c',
-  'fu-device.c',
-  'fu-dfu-firmware.c',
-  'fu-volume.c',
-  'fu-firmware.c',
-  'fu-firmware-common.c',
-  'fu-firmware-image.c',
-  'fu-dfuse-firmware.c',
-  'fu-fmap-firmware.c',
+  'fu-common-version.c',    # fuzzing
+  'fu-device-locker.c',     # fuzzing
+  'fu-device.c',            # fuzzing
+  'fu-dfu-firmware.c',      # fuzzing
+  'fu-volume.c',            # fuzzing
+  'fu-firmware.c',          # fuzzing
+  'fu-firmware-common.c',   # fuzzing
+  'fu-firmware-image.c',    # fuzzing
+  'fu-dfuse-firmware.c',    # fuzzing
+  'fu-fmap-firmware.c',     # fuzzing
   'fu-hwids.c',
-  'fu-ihex-firmware.c',
-  'fu-io-channel.c',
+  'fu-ihex-firmware.c',     # fuzzing
+  'fu-io-channel.c',        # fuzzing
   'fu-plugin.c',
-  'fu-quirks.c',
+  'fu-quirks.c',            # fuzzing
   'fu-security-attrs.c',
   'fu-smbios.c',
-  'fu-srec-firmware.c',
+  'fu-srec-firmware.c',     # fuzzing
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
   'fu-efivar.c',

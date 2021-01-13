@@ -11,7 +11,7 @@ shared_module('fu_plugin_synaptics_prometheus',
     'fu-synaprom-common.c',
     'fu-synaprom-config.c',
     'fu-synaprom-device.c',
-    'fu-synaprom-firmware.c',
+    'fu-synaprom-firmware.c',       # fuzzing
   ],
   include_directories : [
     root_incdir,
