@@ -7,7 +7,6 @@
 #pragma once
 
 #include <glib.h>
-#include <gusb.h>
 
 typedef struct {
 	guint32		 idx;
