@@ -762,6 +762,38 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static void
+fu_plugin_uefi_update_state_notify_cb (GObject *object,
+				       GParamSpec *pspec,
+				       FuPlugin *plugin)
+{
+	FuDevice *device = FU_DEVICE (object);
+	GPtrArray *devices;
+	g_autofree gchar *msg = NULL;
+
+	/* device is not in needs-reboot state */
+	if (fu_device_get_update_state (device) != FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+		return;
+
+	/* only do this on hardware that cannot coalesce multiple capsules */
+	if (!fu_plugin_has_custom_flag (plugin, "no-coalesce"))
+		return;
+
+	/* mark every other device for this plugin as non-updatable */
+	msg = g_strdup_printf ("Cannot update as %s [%s] needs reboot",
+			       fu_device_get_name (device),
+			       fu_device_get_id (device));
+	devices = fu_plugin_get_devices (plugin);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index (devices, i);
+		if (device_tmp == device)
+			continue;
+		fu_device_remove_flag (device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_add_flag (device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
+		fu_device_set_update_error (device_tmp, msg);
+	}
+}
+
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -818,6 +850,12 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 		/* load all configuration variables */
 		fu_plugin_uefi_capsule_load_config (plugin, FU_DEVICE (dev));
+
+		/* watch in case we set needs-reboot in the engine */
+		g_signal_connect (dev, "notify::update-state",
+				  G_CALLBACK (fu_plugin_uefi_update_state_notify_cb),
+				  plugin);
+
 		fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	}
 
