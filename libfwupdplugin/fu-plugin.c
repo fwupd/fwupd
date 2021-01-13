@@ -40,6 +40,7 @@ typedef struct {
 	guint			 order;
 	guint			 priority;
 	GPtrArray		*rules[FU_PLUGIN_RULE_LAST];
+	GPtrArray		*devices;		/* (nullable) (element-type FuDevice) */
 	gchar			*build_hash;
 	FuHwids			*hwids;
 	FuQuirks		*quirks;
@@ -477,6 +478,15 @@ fu_plugin_build_device_update_error (FuPlugin *self)
 	return NULL;
 }
 
+static void
+fu_plugin_ensure_devices (FuPlugin *self)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	if (priv->devices != NULL)
+		return;
+	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+}
+
 /**
  * fu_plugin_device_add:
  * @self: A #FuPlugin
@@ -495,6 +505,7 @@ fu_plugin_build_device_update_error (FuPlugin *self)
 void
 fu_plugin_device_add (FuPlugin *self, FuDevice *device)
 {
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	GPtrArray *children;
 	g_autoptr(GError) error = NULL;
 
@@ -506,6 +517,10 @@ fu_plugin_device_add (FuPlugin *self, FuDevice *device)
 		g_warning ("ignoring add: %s", error->message);
 		return;
 	}
+
+	/* add to array */
+	fu_plugin_ensure_devices (self);
+	g_ptr_array_add (priv->devices, g_object_ref (device));
 
 	/* proxy to device where required */
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE)) {
@@ -536,6 +551,26 @@ fu_plugin_device_add (FuPlugin *self, FuDevice *device)
 		if (fu_device_get_created (child) == 0)
 			fu_plugin_device_add (self, child);
 	}
+}
+
+/**
+ * fu_plugin_get_devices:
+ * @self: A #FuPlugin
+ *
+ * Returns all devices added by the plugin using fu_plugin_device_add() and
+ * not yet removed with fu_plugin_device_remove().
+ *
+ * Returns: (transfer none) (element-type FuDevice): devices
+ *
+ * Since: 1.5.6
+ **/
+GPtrArray *
+fu_plugin_get_devices (FuPlugin *self)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
+	fu_plugin_ensure_devices (self);
+	return priv->devices;
 }
 
 /**
@@ -584,8 +619,14 @@ fu_plugin_device_register (FuPlugin *self, FuDevice *device)
 void
 fu_plugin_device_remove (FuPlugin *self, FuDevice *device)
 {
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+
 	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (FU_IS_DEVICE (device));
+
+	/* remove from array */
+	if (priv->devices != NULL)
+		g_ptr_array_remove (priv->devices, device);
 
 	g_debug ("emit removed from %s: %s",
 		 fu_plugin_get_name (self),
@@ -2906,6 +2947,8 @@ fu_plugin_finalize (GObject *object)
 		if (priv->rules[i] != NULL)
 			g_ptr_array_unref (priv->rules[i]);
 	}
+	if (priv->devices != NULL)
+		g_ptr_array_unref (priv->devices);
 	if (priv->usb_ctx != NULL)
 		g_object_unref (priv->usb_ctx);
 	if (priv->hwids != NULL)

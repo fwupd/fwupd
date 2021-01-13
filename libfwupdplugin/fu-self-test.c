@@ -424,6 +424,24 @@ _plugin_device_added_cb (FuPlugin *plugin, FuDevice *device, gpointer user_data)
 }
 
 static void
+fu_plugin_devices_func (void)
+{
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	GPtrArray *devices;
+
+	devices = fu_plugin_get_devices (plugin);
+	g_assert_nonnull (devices);
+	g_assert_cmpint (devices->len, ==, 0);
+
+	fu_device_set_id (device, "testdev");
+	fu_plugin_device_add (plugin, device);
+	g_assert_cmpint (devices->len, ==, 1);
+	fu_plugin_device_remove (plugin, device);
+	g_assert_cmpint (devices->len, ==, 0);
+}
+
+static void
 fu_plugin_delay_func (void)
 {
 	FuDevice *device_tmp;
@@ -2129,6 +2147,7 @@ main (int argc, char **argv)
 	g_setenv ("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
 	g_test_add_func ("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
+	g_test_add_func ("/fwupd/plugin{devices}", fu_plugin_devices_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
 	g_test_add_func ("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);

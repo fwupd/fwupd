@@ -721,3 +721,9 @@ LIBFWUPDPLUGIN_1.5.5 {
     fu_firmware_image_get_checksum;
   local: *;
 } LIBFWUPDPLUGIN_1.5.4;
+
+LIBFWUPDPLUGIN_1.5.6 {
+  global:
+    fu_plugin_get_devices;
+  local: *;
+} LIBFWUPDPLUGIN_1.5.5;
