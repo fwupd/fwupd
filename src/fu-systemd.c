@@ -8,7 +8,7 @@
 
 #include <stdio.h>
 #include <glib/gi18n.h>
-#include <gusb.h>
+#include <gio/gio.h>
 
 #include "fu-systemd.h"
 
