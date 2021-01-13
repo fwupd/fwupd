@@ -1100,6 +1100,32 @@ fu_util_device_flag_to_string (guint64 device_flag)
 	return NULL;
 }
 
+static const gchar *
+fu_util_update_state_to_string (FwupdUpdateState update_state)
+{
+	if (update_state == FWUPD_UPDATE_STATE_PENDING) {
+		/* TRANSLATORS: The update state of the specific device */
+		return _("Pending");
+	}
+	if (update_state == FWUPD_UPDATE_STATE_SUCCESS) {
+		/* TRANSLATORS: The update state of the specific device */
+		return _("Success");
+	}
+	if (update_state == FWUPD_UPDATE_STATE_FAILED) {
+		/* TRANSLATORS: The update state of the specific device */
+		return _("Failed");
+	}
+	if (update_state == FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
+		/* TRANSLATORS: The update state of the specific device */
+		return _("Transient failure");
+	}
+	if (update_state == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
+		/* TRANSLATORS: The update state of the specific device */
+		return _("Needs reboot");
+	}
+	return NULL;
+}
+
 gchar *
 fu_util_device_to_string (FwupdDevice *dev, guint idt)
 {
@@ -1206,7 +1232,7 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	if (state != FWUPD_UPDATE_STATE_UNKNOWN) {
 		/* TRANSLATORS: hardware state, e.g. "pending" */
 		fu_common_string_append_kv (str, idt + 1, _("Update State"),
-					    fwupd_update_state_to_string (state));
+					    fu_util_update_state_to_string (state));
 
 		if (state == FWUPD_UPDATE_STATE_SUCCESS) {
 			tmp = fwupd_device_get_update_message (dev);
