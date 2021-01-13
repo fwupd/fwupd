@@ -301,7 +301,7 @@ fu_config_class_init (FuConfigClass *klass)
 static void
 fu_config_init (FuConfig *self)
 {
-	self->archive_size_max = 512 * 0x100000;
+	self->archive_size_max = G_MAXUINT64;
 	self->disabled_devices = g_ptr_array_new_with_free_func (g_free);
 	self->disabled_plugins = g_ptr_array_new_with_free_func (g_free);
 	self->approved_firmware = g_ptr_array_new_with_free_func (g_free);
