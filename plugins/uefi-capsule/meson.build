@@ -63,10 +63,7 @@ fwupdate = executable(
     fwupdplugin_incdir,
   ],
   dependencies : [
-    libxmlb,
-    giounix,
-    gusb,
-    gudev,
+    plugin_deps,
     efiboot,
     tpm2tss,
   ],

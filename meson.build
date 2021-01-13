@@ -212,7 +212,10 @@ else
   gudev = dependency('', required : false)
 endif
 libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
-gusb = dependency('gusb', version : '>= 0.3.5', fallback : ['gusb', 'gusb_dep'])
+if get_option('gusb')
+  gusb = dependency('gusb', version : '>= 0.3.5', fallback : ['gusb', 'gusb_dep'])
+  conf.set('HAVE_GUSB', '1')
+endif
 sqlite = dependency('sqlite3')
 if get_option('libarchive')
   libarchive = dependency('libarchive')
@@ -462,6 +465,11 @@ endif
 conf.set_quoted('FWUPD_PLUGINDIR', plugin_dir)
 endif
 
+# sanity check, otherwise there is not point building
+if host_machine.system() == 'windows' and not get_option('gusb')
+  error('-Dgusb=true is required for Windows build')
+endif
+
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set_quoted('VERSION', meson.project_version())
@@ -482,9 +490,12 @@ if build_standalone
   plugin_deps += gio
   plugin_deps += giounix
   plugin_deps += gmodule
-  plugin_deps += gusb
   plugin_deps += gudev
   plugin_deps += libjsonglib
+endif
+
+if get_option('gusb')
+  plugin_deps += gusb
 endif
 
 if get_option('libarchive')

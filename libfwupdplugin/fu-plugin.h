@@ -7,7 +7,9 @@
 #pragma once
 
 #include <gio/gio.h>
+#ifdef HAVE_GUSB
 #include <gusb.h>
+#endif
 
 #include "fu-common.h"
 #include "fu-common-guid.h"

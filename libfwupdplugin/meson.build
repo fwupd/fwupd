@@ -92,8 +92,11 @@ introspection_deps = [
   libxmlb,
   libjcat,
   giounix,
-  gusb,
 ]
+
+if get_option('gusb')
+  introspection_deps += gusb
+endif
 
 if get_option('gudev')
   fwupdplugin_headers_private += 'fu-udev-device-private.h'
@@ -160,7 +163,7 @@ fwupdplugin_pkgg.generate(
   description : 'library for plugins to use to interact with fwupd daemon',
 )
 
-if get_option('introspection')
+if get_option('introspection') and get_option('gusb')
   gir_dep = declare_dependency(sources: fwupd_gir)
   if gusb.type_name() == 'internal'
     libgusb_girtarget = subproject('gusb').get_variable('libgusb_girtarget')[0]

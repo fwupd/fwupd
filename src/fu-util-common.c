@@ -10,7 +10,9 @@
 
 #include <stdio.h>
 #include <glib/gi18n.h>
+#ifdef HAVE_GUSB
 #include <gusb.h>
+#endif
 #include <xmlb.h>
 #include <fwupd.h>
 #ifdef HAVE_LIBCURL
@@ -286,11 +288,13 @@ fu_util_get_versions (void)
 	g_string_append_printf (string, "client version:\t%s\n", SOURCE_VERSION);
 	g_string_append_printf (string,
 				"compile-time dependency versions\n");
+#ifdef HAVE_GUSB
 	g_string_append_printf (string,
 				"\tgusb:\t%d.%d.%d\n",
 				G_USB_MAJOR_VERSION,
 				G_USB_MINOR_VERSION,
 				G_USB_MICRO_VERSION);
+#endif
 #ifdef EFIVAR_LIBRARY_VERSION
 	g_string_append_printf (string,
 				"\tefivar:\t%s",
