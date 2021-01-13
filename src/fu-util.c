@@ -1835,7 +1835,13 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_maybe_send_reports (priv, remote_id, error))
 		return FALSE;
 
-	return TRUE;
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug ("skipping reboot check");
+		return TRUE;
+	}
+
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
 
 static gboolean
