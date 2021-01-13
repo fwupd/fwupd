@@ -6,6 +6,7 @@ option('gtkdoc', type : 'boolean', value : false, description : 'enable develope
 option('introspection', type : 'boolean', value : true, description : 'generate GObject Introspection data')
 option('lvfs', type : 'boolean', value : true, description : 'enable LVFS remotes')
 option('man', type : 'boolean', value : true, description : 'enable man pages')
+option('libarchive', type : 'boolean', value : true, description : 'enable libarchive support')
 option('gudev', type : 'boolean', value : true, description : 'enable GUdev support')
 option('polkit', type: 'boolean', value : true, description : 'enable PolKit support in daemon')
 option('plugin_altos', type : 'boolean', value : true, description : 'enable altos support')

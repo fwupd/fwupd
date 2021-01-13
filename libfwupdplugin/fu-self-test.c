@@ -61,6 +61,11 @@ fu_archive_invalid_func (void)
 	g_autoptr(GBytes) data = NULL;
 	g_autoptr(GError) error = NULL;
 
+#ifndef HAVE_LIBARCHIVE
+	g_test_skip ("no libarchive support");
+	return;
+#endif
+
 	filename = g_build_filename (TESTDATADIR_SRC, "metadata.xml", NULL);
 	data = fu_common_get_contents_bytes (filename, &error);
 	g_assert_no_error (error);
@@ -81,6 +86,11 @@ fu_archive_cab_func (void)
 	g_autoptr(GBytes) data = NULL;
 	g_autoptr(GError) error = NULL;
 	GBytes *data_tmp;
+
+#ifndef HAVE_LIBARCHIVE
+	g_test_skip ("no libarchive support");
+	return;
+#endif
 
 	filename = g_build_filename (TESTDATADIR_DST, "colorhug", "colorhug-als-3.0.2.cab", NULL);
 	data = fu_common_get_contents_bytes (filename, &error);

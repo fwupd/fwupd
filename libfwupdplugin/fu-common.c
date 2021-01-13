@@ -23,8 +23,10 @@
 #include <cpuid.h>
 #endif
 
+#ifdef HAVE_LIBARCHIVE
 #include <archive_entry.h>
 #include <archive.h>
+#endif
 #include <errno.h>
 #include <limits.h>
 #include <string.h>
@@ -303,6 +305,7 @@ fu_common_get_contents_fd (gint fd, gsize count, GError **error)
 #endif
 }
 
+#ifdef HAVE_LIBARCHIVE
 static gboolean
 fu_common_extract_archive_entry (struct archive_entry *entry, const gchar *dir)
 {
@@ -319,6 +322,7 @@ fu_common_extract_archive_entry (struct archive_entry *entry, const gchar *dir)
 	archive_entry_update_pathname_utf8 (entry, buf);
 	return TRUE;
 }
+#endif
 
 /**
  * fu_common_extract_archive:
@@ -335,6 +339,7 @@ fu_common_extract_archive_entry (struct archive_entry *entry, const gchar *dir)
 gboolean
 fu_common_extract_archive (GBytes *blob, const gchar *dir, GError **error)
 {
+#ifdef HAVE_LIBARCHIVE
 	gboolean ret = TRUE;
 	int r;
 	struct archive *arch = NULL;
@@ -397,6 +402,13 @@ out:
 		archive_read_free (arch);
 	}
 	return ret;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "missing libarchive support");
+	return FALSE;
+#endif
 }
 
 static void
