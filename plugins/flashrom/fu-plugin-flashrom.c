@@ -59,18 +59,21 @@ fu_plugin_flashrom_debug_cb (enum flashrom_log_level lvl, const char *fmt, va_li
 #pragma clang diagnostic ignored "-Wformat-nonliteral"
 	g_autofree gchar *tmp = g_strdup_vprintf (fmt, args);
 #pragma clang diagnostic pop
+	g_autofree gchar *str = fu_common_strstrip (tmp);
+	if (g_strcmp0 (str, "OK.") == 0 || g_strcmp0 (str, ".") == 0)
+		return 0;
 	switch (lvl) {
 	case FLASHROM_MSG_ERROR:
 	case FLASHROM_MSG_WARN:
-		g_warning ("%s", tmp);
+		g_warning ("%s", str);
 		break;
 	case FLASHROM_MSG_INFO:
-		g_debug ("%s", tmp);
+		g_debug ("%s", str);
 		break;
 	case FLASHROM_MSG_DEBUG:
 	case FLASHROM_MSG_DEBUG2:
 		if (g_getenv ("FWUPD_FLASHROM_VERBOSE") != NULL)
-			g_debug ("%s", tmp);
+			g_debug ("%s", str);
 		break;
 	case FLASHROM_MSG_SPEW:
 		break;
