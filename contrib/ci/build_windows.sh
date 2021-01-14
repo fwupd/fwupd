@@ -16,7 +16,6 @@ meson .. \
     --bindir=$target \
     -Dbuild=standalone \
     -Dpolkit=false \
-    -Dplugin_coreboot=false \
     -Dplugin_flashrom=false \
     -Dplugin_uefi_capsule=false \
     -Dplugin_redfish=false \
