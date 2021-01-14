@@ -143,10 +143,6 @@ if get_option('plugin_flashrom')
 subdir('flashrom')
 endif
 
-if get_option('plugin_coreboot')
-subdir('coreboot')
-endif
-
 if get_option('plugin_platform_integrity')
 subdir('platform-integrity')
 endif
