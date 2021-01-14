@@ -280,6 +280,7 @@ gboolean	 fu_common_is_cpu_intel		(void)
 G_DEPRECATED_FOR(fu_common_get_cpu_vendor);
 FuCpuVendor	 fu_common_get_cpu_vendor	(void);
 gboolean	 fu_common_is_live_media	(void);
+guint64		 fu_common_get_memory_size	(void);
 GPtrArray	*fu_common_get_volumes_by_kind	(const gchar	*kind,
 						 GError		**error)
 						 G_GNUC_WARN_UNUSED_RESULT;

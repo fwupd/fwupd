@@ -19,6 +19,10 @@
 #include <shlwapi.h>
 #endif
 
+#ifdef _WIN32
+#include <sysinfoapi.h>
+#endif
+
 #ifdef HAVE_CPUID_H
 #include <cpuid.h>
 #endif
@@ -31,6 +35,7 @@
 #include <limits.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "fwupd-error.h"
 
@@ -2342,6 +2347,28 @@ fu_common_is_live_media (void)
 			return TRUE;
 	}
 	return FALSE;
+}
+
+/**
+ * fu_common_get_memory_size:
+ *
+ * Returns the size of physical memory.
+ *
+ * Returns: bytes
+ *
+ * Since: 1.5.6
+ **/
+guint64
+fu_common_get_memory_size (void)
+{
+#ifdef _WIN32
+	MEMORYSTATUSEX status;
+	status.dwLength = sizeof(status);
+	GlobalMemoryStatusEx (&status);
+	return (guint64) status.ullTotalPhys;
+#else
+	return sysconf (_SC_PHYS_PAGES) * sysconf (_SC_PAGE_SIZE);
+#endif
 }
 
 static GPtrArray *

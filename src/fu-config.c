@@ -127,8 +127,21 @@ fu_config_reload (FuConfig *self, GError **error)
 						  "fwupd",
 						  "ArchiveSizeMax",
 						  NULL);
-	if (archive_size_max > 0)
+	if (archive_size_max > 0) {
 		self->archive_size_max = archive_size_max * 0x100000;
+	} else {
+		guint64 memory_size = fu_common_get_memory_size ();
+		g_autofree gchar *str = NULL;
+		if (memory_size > 0) {
+			self->archive_size_max = MAX (memory_size / 4, G_MAXSIZE);
+			str = g_format_size (self->archive_size_max);
+			g_debug ("using autodetected max archive size %s", str);
+		} else {
+			self->archive_size_max = 512 * 0x100000;
+			str = g_format_size (self->archive_size_max);
+			g_debug ("using fallback max archive size %s", str);
+		}
+	}
 
 	/* get idle timeout */
 	idle_timeout = g_key_file_get_uint64 (keyfile,
@@ -301,7 +314,6 @@ fu_config_class_init (FuConfigClass *klass)
 static void
 fu_config_init (FuConfig *self)
 {
-	self->archive_size_max = 512 * 0x100000;
 	self->disabled_devices = g_ptr_array_new_with_free_func (g_free);
 	self->disabled_plugins = g_ptr_array_new_with_free_func (g_free);
 	self->approved_firmware = g_ptr_array_new_with_free_func (g_free);
