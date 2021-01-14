@@ -670,19 +670,21 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	title = fu_util_get_tree_title (priv);
 
-	/* print */
+	/* get devices and build tree */
 	devs = fu_engine_get_devices (priv->engine, error);
 	if (devs == NULL)
 		return FALSE;
+	if (devs->len > 0) {
+		fwupd_device_array_ensure_parents (devs);
+		fu_util_build_device_tree (priv, root, devs, NULL);
+	}
 
 	/* print */
-	if (devs->len == 0) {
+	if (g_node_n_children (root) == 0) {
 		/* TRANSLATORS: nothing attached that can be upgraded */
 		g_print ("%s\n", _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
-	fwupd_device_array_ensure_parents (devs);
-	fu_util_build_device_tree (priv, root, devs, NULL);
 	fu_util_print_tree (root, title);
 
 	/* save the device state for other applications to see */

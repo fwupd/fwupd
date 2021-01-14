@@ -538,14 +538,15 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	devs = fwupd_client_get_devices (priv->client, NULL, error);
 	if (devs == NULL)
 		return FALSE;
+	if (devs->len > 0)
+		fu_util_build_device_tree (priv, root, devs, NULL);
 
 	/* print */
-	if (devs->len == 0) {
+	if (g_node_n_children (root) == 0) {
 		/* TRANSLATORS: nothing attached that can be upgraded */
 		g_print ("%s\n", _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
-	fu_util_build_device_tree (priv, root, devs, NULL);
 	fu_util_print_tree (root, title);
 
 	/* nag? */
