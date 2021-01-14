@@ -269,7 +269,8 @@ GBytes *
 fu_common_get_contents_fd (gint fd, gsize count, GError **error)
 {
 #ifdef HAVE_GIO_UNIX
-	g_autoptr(GBytes) blob = NULL;
+	guint8 tmp[0x8000] = { 0x0 };
+	g_autoptr(GByteArray) buf = g_byte_array_new ();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 
@@ -287,15 +288,31 @@ fu_common_get_contents_fd (gint fd, gsize count, GError **error)
 
 	/* read the entire fd to a data blob */
 	stream = g_unix_input_stream_new (fd, TRUE);
-	blob = g_input_stream_read_bytes (stream, count, NULL, &error_local);
-	if (blob == NULL) {
-		g_set_error_literal (error,
+
+	/* read from stream in 32kB chunks */
+	while (TRUE) {
+		gssize sz;
+		sz = g_input_stream_read (stream, tmp, sizeof(tmp), NULL, &error_local);
+		if (sz == 0)
+			break;
+		if (sz < 0) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     error_local->message);
+			return NULL;
+		}
+		g_byte_array_append (buf, tmp, sz);
+		if (buf->len > count) {
+			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     error_local->message);
-		return NULL;
+				     "cannot read from fd: 0x%x > 0x%x",
+				     buf->len, (guint) count);
+			return NULL;
+		}
 	}
-	return g_steal_pointer (&blob);
+	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
 #else
 	g_set_error_literal (error,
 			     FWUPD_ERROR,
