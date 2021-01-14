@@ -24,8 +24,10 @@
 #include <string.h>
 
 #include "fu-plugin-vfuncs.h"
+#include "fu-flashrom-device.h"
 #include "fu-hash.h"
-#include "libflashrom.h"
+
+#include <libflashrom.h>
 
 #define SELFCHECK_TRUE 1
 
@@ -83,6 +85,39 @@ fu_plugin_flashrom_debug_cb (enum flashrom_log_level lvl, const char *fmt, va_li
 	return 0;
 }
 
+static void
+fu_plugin_flashrom_device_set_version (FuPlugin *plugin, FuDevice *device)
+{
+	const gchar *version;
+	const gchar *version_major;
+	const gchar *version_minor;
+
+	/* as-is */
+	version = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION);
+	if (version != NULL) {
+		/* some Lenovo hardware requires a specific prefix for the EC,
+		 * so strip it before we use ensure-semver */
+		if (strlen (version) > 9 && g_str_has_prefix (version, "CBET"))
+			version += 9;
+
+		/* this may not "stick" if there are no numeric chars */
+		fu_device_set_version (device, version);
+		if (fu_device_get_version (device) != NULL)
+			return;
+	}
+
+	/* component parts only */
+	version_major = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE);
+	version_minor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_MINOR_RELEASE);
+	if (version_major != NULL && version_minor != NULL) {
+		g_autofree gchar *tmp = g_strdup_printf ("%s.%s.0",
+							 version_major,
+							 version_minor);
+		fu_device_set_version (device, tmp);
+		return;
+	}
+}
+
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -92,7 +127,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	gint rc;
 	g_autoptr(GPtrArray) devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
-	dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
 	for (guint i = 0; i < hwids->len; i++) {
 		const gchar *guid = g_ptr_array_index (hwids, i);
 		const gchar *quirk_str;
@@ -103,23 +137,24 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 							  "DeviceId");
 		if (quirk_str != NULL) {
 			g_autofree gchar *device_id = g_strdup_printf ("flashrom-%s", quirk_str);
-			g_autoptr(FuDevice) dev = fu_device_new ();
-			fu_device_set_id (dev, device_id);
-			fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
-			fu_device_set_protocol (dev, "org.flashrom");
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-			fu_device_set_name (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME));
-			fu_device_set_vendor (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER));
-			fu_device_add_internal_flag (dev, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
-			fu_device_set_version (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION));
-			fu_device_add_guid (dev, guid);
+			g_autoptr(FuDevice) device = fu_flashrom_device_new ();
+			fu_device_set_quirks (device, fu_plugin_get_quirks (plugin));
+			fu_device_set_name (device, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME));
+			fu_device_set_vendor (device, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER));
+
+			/* use same VendorID logic as with UEFI */
+			dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
 			if (dmi_vendor != NULL) {
 				g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
-				fu_device_add_vendor_id (FU_DEVICE (dev), vendor_id);
+				fu_device_add_vendor_id (FU_DEVICE (device), vendor_id);
 			}
-			g_ptr_array_add (devices, g_steal_pointer (&dev));
+
+			fu_device_set_id (device, device_id);
+			fu_device_add_guid (device, guid);
+			fu_plugin_flashrom_device_set_version (plugin, device);
+			if (!fu_device_setup (device, error))
+				return FALSE;
+			g_ptr_array_add (devices, g_steal_pointer (&device));
 			break;
 		}
 	}
