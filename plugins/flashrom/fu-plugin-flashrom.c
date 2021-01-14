@@ -264,6 +264,7 @@ fu_plugin_update (FuPlugin *plugin,
 	}
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_progress (device, 0); /* urgh */
 	rc = flashrom_image_write (data->flashctx, (void *) buf, sz, NULL /* refbuffer */);
 	if (rc != 0) {
 		g_set_error (error,
