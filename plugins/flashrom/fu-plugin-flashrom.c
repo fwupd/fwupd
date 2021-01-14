@@ -89,6 +89,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GPtrArray *hwids = fu_plugin_get_hwids (plugin);
 	const gchar *dmi_vendor;
+	gint rc;
 	g_autoptr(GPtrArray) devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
 	dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
@@ -142,11 +143,26 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 				     "programmer initialization failed");
 		return FALSE;
 	}
-	if (flashrom_flash_probe (&data->flashctx, data->flashprog, NULL)) {
+	rc = flashrom_flash_probe (&data->flashctx, data->flashprog, NULL);
+	if (rc == 3) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "flash probe failed");
+				     "flash probe failed: multiple chips were found");
+		return FALSE;
+	}
+	if (rc == 2) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "flash probe failed: no chip was found");
+		return FALSE;
+	}
+	if (rc != 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "flash probe failed: unknown error");
 		return FALSE;
 	}
 	data->flash_size = flashrom_flash_getsize (data->flashctx);
