@@ -1128,6 +1128,30 @@ fu_device_func (void)
 }
 
 static void
+fu_device_instance_ids_func (void)
+{
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* sanity check */
+	g_assert_false (fu_device_has_guid (device, "c0a26214-223b-572a-9477-cde897fe8619"));
+
+	/* add a deferred instance ID that only gets converted on ->setup */
+	fu_device_add_instance_id (device, "foobarbaz");
+	g_assert_false (fu_device_has_guid (device, "c0a26214-223b-572a-9477-cde897fe8619"));
+
+	ret = fu_device_setup (device, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_true (fu_device_has_guid (device, "c0a26214-223b-572a-9477-cde897fe8619"));
+
+	/* this gets added immediately */
+	fu_device_add_instance_id (device, "bazbarfoo");
+	g_assert_true (fu_device_has_guid (device, "77e49bb0-2cd6-5faf-bcee-5b7fbe6e944d"));
+}
+
+static void
 fu_device_flags_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
@@ -2191,6 +2215,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func ("/fwupd/device", fu_device_func);
+	g_test_add_func ("/fwupd/device{instance-ids}", fu_device_instance_ids_func);
 	g_test_add_func ("/fwupd/device{flags}", fu_device_flags_func);
 	g_test_add_func ("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
