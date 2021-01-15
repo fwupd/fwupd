@@ -1415,6 +1415,7 @@ fu_device_add_instance_id_full (FuDevice *self,
 				const gchar *instance_id,
 				FuDeviceInstanceFlags flags)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *guid = NULL;
 	if (fwupd_guid_is_valid (instance_id)) {
 		g_warning ("use fu_device_add_guid(\"%s\") instead!", instance_id);
@@ -1430,6 +1431,10 @@ fu_device_add_instance_id_full (FuDevice *self,
 	fu_device_add_guid_quirks (self, guid);
 	if ((flags & FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS) == 0)
 		fwupd_device_add_instance_id (FWUPD_DEVICE (self), instance_id);
+
+	/* already done by ->setup(), so this must be ->registered() */
+	if (priv->done_setup)
+		fwupd_device_add_guid (FWUPD_DEVICE (self), guid);
 }
 
 /**
