@@ -28,17 +28,19 @@ fi
 
 # Clean up from fwupdate->fwupd transition
 # This can be removed after bullseye and focal are released
-EFIDIR=$(dpkg-vendor --query vendor | awk '{ print tolower($$0) }')
-if [ "${DPKG_MAINTSCRIPT_ARCH}" = "amd64" ]; then
-	EFI_NAME=x64
-elif [ "${DPKG_MAINTSCRIPT_ARCH}" = "i386" ]; then
-	EFI_NAME=ia32
-elif [ "${DPKG_MAINTSCRIPT_ARCH}" = "arm64" ]; then
-	EFI_NAME=aa64
-elif [ "${DPKG_MAINTSCRIPT_ARCH}" = "armhf" ]; then
-	EFI_NAME=arm
+if [ -f /etc/lsb-release ]; then
+	EFIDIR=$(awk '/DISTRIB_ID/ {split($$0,a,"="); print tolower(a[2])}' /etc/lsb-release)
+	if [ "${DPKG_MAINTSCRIPT_ARCH}" = "amd64" ]; then
+		EFI_NAME=x64
+	elif [ "${DPKG_MAINTSCRIPT_ARCH}" = "i386" ]; then
+		EFI_NAME=ia32
+	elif [ "${DPKG_MAINTSCRIPT_ARCH}" = "arm64" ]; then
+		EFI_NAME=aa64
+	elif [ "${DPKG_MAINTSCRIPT_ARCH}" = "armhf" ]; then
+		EFI_NAME=arm
+	fi
+	rm -f /boot/efi/EFI/$EFIDIR/fwup$EFI_NAME.efi
 fi
-rm -f /boot/efi/EFI/$EFIDIR/fwup$EFI_NAME.efi
 rm -f /var/lib/fwupdate/done
 rm -f /var/cache/fwupdate/done
 for dir in /var/cache/fwupdate /var/lib/fwupdate; do
