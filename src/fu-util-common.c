@@ -1217,6 +1217,13 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		fu_common_string_append_kv (str, idt + 1, _("Vendor"), tmp2);
 	}
 
+	/* branch */
+	if (fwupd_device_get_branch (dev) != NULL) {
+		/* TRANSLATORS: the stream of firmware, e.g. nonfree or open-source */
+		fu_common_string_append_kv (str, idt + 1, _("Release Branch"),
+					    fwupd_device_get_branch (dev));
+	}
+
 	/* install duration */
 	if (fwupd_device_get_install_duration (dev) > 0) {
 		g_autofree gchar *time = fu_util_time_to_str (fwupd_device_get_install_duration (dev));
