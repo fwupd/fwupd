@@ -1312,6 +1312,35 @@ fu_common_strstrip_func (void)
 }
 
 static void
+fu_common_version_semver_func (void)
+{
+	struct {
+		const gchar *old;
+		const gchar *new;
+	} map[] = {
+		{ "1.2.3",		"1.2.3" },
+		{ "1.2-3",		"1.2.3" },
+		{ "1~2-3",		"1.2.3" },
+		{ ".1.2",		"1.2" },
+		{ "1.2.",		"1.2" },
+		{ "1..2",		"1.2" },
+		{ "CBET1.2.3",		"1.2.3" },
+		{ "1.2.3alpha",		"1.2.3" },
+		{ "5",			"5" },
+		{ "\t5\n",		"5" },
+		{ "0x123456",		"0.18.13398" },
+		{ "coreboot-unknown",	NULL },
+		{ "",			NULL },
+		{ " ",			NULL },
+		{ NULL,			NULL }
+	};
+	for (guint i = 0; map[i].old != NULL; i++) {
+		g_autofree gchar *tmp = fu_common_version_ensure_semver (map[i].old);
+		g_assert_cmpstr (tmp, ==, map[i].new);
+	}
+}
+
+static void
 fu_common_version_func (void)
 {
 	guint i;
@@ -2182,6 +2211,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/common{string-append-kv}", fu_common_string_append_kv_func);
 	g_test_add_func ("/fwupd/common{version-guess-format}", fu_common_version_guess_format_func);
 	g_test_add_func ("/fwupd/common{version}", fu_common_version_func);
+	g_test_add_func ("/fwupd/common{version-semver}", fu_common_version_semver_func);
 	g_test_add_func ("/fwupd/common{vercmp}", fu_common_vercmp_func);
 	g_test_add_func ("/fwupd/common{strstrip}", fu_common_strstrip_func);
 	g_test_add_func ("/fwupd/common{endian}", fu_common_endian_func);
