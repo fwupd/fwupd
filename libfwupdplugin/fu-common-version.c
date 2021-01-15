@@ -238,35 +238,55 @@ _g_ascii_is_digits (const gchar *str)
 	return TRUE;
 }
 
-static gboolean
-fu_common_version_is_valid_semver_char (gchar c)
-{
-	if (g_ascii_isdigit (c))
-		return TRUE;
-	if (c == '.')
-		return TRUE;
-	return FALSE;
-}
-
 /**
  * fu_common_version_ensure_semver:
  * @version: A version number, e.g. ` V1.2.3 `
  *
  * Builds a semver from the possibly crazy version number.
  *
- * Returns: A version number, e.g. "1.2.3"
+ * Returns: A version number, e.g. "1.2.3", or %NULL if the version was not valid
  *
  * Since: 1.2.9
  */
 gchar *
 fu_common_version_ensure_semver (const gchar *version)
 {
-	GString *version_safe = g_string_new (NULL);
+	gboolean dot_valid = FALSE;
+	guint digit_cnt = 0;
+	g_autoptr(GString) version_safe = g_string_new (NULL);
+
+	/* invalid */
+	if (version == NULL)
+		return NULL;
+
+	/* hex prefix */
+	if (g_str_has_prefix (version, "0x"))
+		return fu_common_version_parse (version);
+
+	/* make sane */
 	for (guint i = 0; version[i] != '\0'; i++) {
-		if (fu_common_version_is_valid_semver_char (version[i]))
+		if (g_ascii_isdigit (version[i])) {
 			g_string_append_c (version_safe, version[i]);
+			digit_cnt++;
+			dot_valid = TRUE;
+			continue;
+		}
+		if (version[i] == '-' || version[i] == '~') {
+			g_string_append_c (version_safe, '.');
+			dot_valid = FALSE;
+			continue;
+		}
+		if (version[i] == '.' && dot_valid && version[i + 1] != '\0') {
+			g_string_append_c (version_safe, version[i]);
+			dot_valid = FALSE;
+			continue;
+		}
 	}
-	return g_string_free (version_safe, FALSE);
+
+	/* found no digits */
+	if (digit_cnt == 0)
+		return NULL;
+	return g_string_free (g_steal_pointer (&version_safe), FALSE);
 }
 
 /**
