@@ -1596,31 +1596,68 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_export_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuHwids) hwids = fu_hwids_new ();
+	g_autoptr(FuSmbios) smbios = fu_smbios_new ();
+	g_autoptr(GKeyFile) kf = g_key_file_new ();
+	g_autoptr(GPtrArray) hwid_keys = NULL;
+
+	/* check args */
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments, expected HWIDS-FILE");
+		return FALSE;
+	}
+
+	/* setup default hwids */
+	if (!fu_smbios_setup (smbios, error))
+		return FALSE;
+	if (!fu_hwids_setup (hwids, smbios, error))
+		return FALSE;
+
+	/* save all keys */
+	hwid_keys = fu_hwids_get_keys (hwids);
+	for (guint i = 0; i < hwid_keys->len; i++) {
+		const gchar *hwid_key = g_ptr_array_index (hwid_keys, i);
+		const gchar *value = fu_hwids_get_value (hwids, hwid_key);
+		g_key_file_set_string (kf, "HwIds", hwid_key, value);
+	}
+
+	/* success */
+	return g_key_file_save_to_file (kf, values[0], error);
+}
+
+static gboolean
 fu_util_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(FuSmbios) smbios = fu_smbios_new ();
+	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(FuHwids) hwids = fu_hwids_new ();
-	const gchar *hwid_keys[] = {
-		FU_HWIDS_KEY_BIOS_VENDOR,
-		FU_HWIDS_KEY_BIOS_VERSION,
-		FU_HWIDS_KEY_BIOS_MAJOR_RELEASE,
-		FU_HWIDS_KEY_BIOS_MINOR_RELEASE,
-		FU_HWIDS_KEY_MANUFACTURER,
-		FU_HWIDS_KEY_FAMILY,
-		FU_HWIDS_KEY_PRODUCT_NAME,
-		FU_HWIDS_KEY_PRODUCT_SKU,
-		FU_HWIDS_KEY_ENCLOSURE_KIND,
-		FU_HWIDS_KEY_BASEBOARD_MANUFACTURER,
-		FU_HWIDS_KEY_BASEBOARD_PRODUCT,
-		NULL };
+	g_autoptr(GPtrArray) hwid_keys = fu_hwids_get_keys (hwids);
 
 	/* read DMI data */
 	if (g_strv_length (values) == 0) {
+		smbios = fu_smbios_new ();
 		if (!fu_smbios_setup (smbios, error))
 			return FALSE;
 	} else if (g_strv_length (values) == 1) {
-		if (!fu_smbios_setup_from_file (smbios, values[0], error))
-			return FALSE;
+		/* a keyfile with overrides */
+		g_autoptr(GKeyFile) kf = g_key_file_new ();
+		if (g_key_file_load_from_file (kf, values[0], G_KEY_FILE_NONE, NULL)) {
+			for (guint i = 0; i < hwid_keys->len; i++) {
+				const gchar *hwid_key = g_ptr_array_index (hwid_keys, i);
+				g_autofree gchar *tmp = NULL;
+				tmp = g_key_file_get_string (kf, "HwIds", hwid_key, NULL);
+				fu_hwids_add_smbios_override (hwids, hwid_key, tmp);
+			}
+		/* a DMI blob */
+		} else {
+			smbios = fu_smbios_new ();
+			if (!fu_smbios_setup_from_file (smbios, values[0], error))
+				return FALSE;
+		}
 	} else {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -1634,16 +1671,17 @@ fu_util_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* show debug output */
 	g_print ("Computer Information\n");
 	g_print ("--------------------\n");
-	for (guint i = 0; hwid_keys[i] != NULL; i++) {
-		const gchar *tmp = fu_hwids_get_value (hwids, hwid_keys[i]);
-		if (tmp == NULL)
+	for (guint i = 0; i < hwid_keys->len; i++) {
+		const gchar *hwid_key = g_ptr_array_index (hwid_keys, i);
+		const gchar *value = fu_hwids_get_value (hwids, hwid_key);
+		if (value == NULL)
 			continue;
-		if (g_strcmp0 (hwid_keys[i], FU_HWIDS_KEY_BIOS_MAJOR_RELEASE) == 0 ||
-		    g_strcmp0 (hwid_keys[i], FU_HWIDS_KEY_BIOS_MINOR_RELEASE) == 0) {
-			guint64 val = g_ascii_strtoull (tmp, NULL, 16);
-			g_print ("%s: %" G_GUINT64_FORMAT "\n", hwid_keys[i], val);
+		if (g_strcmp0 (hwid_key, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE) == 0 ||
+		    g_strcmp0 (hwid_key, FU_HWIDS_KEY_BIOS_MINOR_RELEASE) == 0) {
+			guint64 val = g_ascii_strtoull (value, NULL, 16);
+			g_print ("%s: %" G_GUINT64_FORMAT "\n", hwid_key, val);
 		} else {
-			g_print ("%s: %s\n", hwid_keys[i], tmp);
+			g_print ("%s: %s\n", hwid_key, value);
 		}
 	}
 
@@ -2886,10 +2924,17 @@ main (int argc, char *argv[])
 	fu_util_cmd_array_add (cmd_array,
 		     "hwids",
 		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-		     _("[FILE]"),
+		     _("[SMBIOS-FILE|HWIDS-FILE]"),
 		     /* TRANSLATORS: command description */
 		     _("Return all the hardware IDs for the machine"),
 		     fu_util_hwids);
+	fu_util_cmd_array_add (cmd_array,
+		     "export-hwids",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("HWIDS-FILE"),
+		     /* TRANSLATORS: command description */
+		     _("Save a file that allows generation of hardware IDs"),
+		     fu_util_export_hwids);
 	fu_util_cmd_array_add (cmd_array,
 		     "monitor",
 		     NULL,
