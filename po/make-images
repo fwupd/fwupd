@@ -46,7 +46,6 @@ class Rasterizer:
         self.pattern = "{directory}/{language}/LC_IMAGES/fwupd-{width}-{height}.{suffix}"
 
         gettext.textdomain(self.domain)
-        gettext.bind_textdomain_codeset(self.domain, 'UTF8')
         gettext.install(self.domain, self.modir)
 
     @property
