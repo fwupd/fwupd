@@ -13,6 +13,8 @@ import os
 import sys
 import gettext
 import math
+import io
+import gzip
 import cairo
 import gi
 gi.require_version('Pango', '1.0')
@@ -140,11 +142,17 @@ class Rasterizer:
                 os.mkdir(d, 0o755)
             d = os.path.split(filename)[0]
             make_dir(d)
-            img.write_to_png(filename)
-            pimg = Image.open(filename)
-            img = pimg.copy()
-            del pimg
-            img.save(filename)
+
+            # write PNG
+            buf_png = io.BytesIO()
+            img.write_to_png(buf_png)
+
+            # convert to BMP
+            pimg = Image.open(buf_png)
+            buf_bmp = io.BytesIO()
+            pimg.save(buf_bmp, format='BMP')
+            with gzip.open(filename, 'wb') as f:
+                f.write(bytes(buf_bmp))
 
         for lang in self.languages:
             #print("lang:\"%s\" string:\"%s\"" % (lang, string))
@@ -166,7 +174,7 @@ class Rasterizer:
             for width, height in sizes:
                 nameinfo.update({'width': width,
                                  'height': height,
-                                 'suffix': 'bmp'})
+                                 'suffix': 'bmp.gz'})
                 filename = self.pattern.format_map(nameinfo)
                 render_one(lang, string, width, height, filename)
         print("")
