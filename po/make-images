@@ -176,7 +176,8 @@ class Rasterizer:
                                  'height': height,
                                  'suffix': 'bmp.gz'})
                 filename = self.pattern.format_map(nameinfo)
-                render_one(lang, string, width, height, filename)
+                if not os.path.exists(filename):
+                    render_one(lang, string, width, height, filename)
         print("")
 
 if __name__ == '__main__':
