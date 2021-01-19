@@ -1,16 +1,17 @@
 #!/usr/bin/python3
-""" This thing rasterizes text for use later """
-
-# pylint: disable=wrong-import-position,too-many-locals,unused-argument
-# pylint: disable=invalid-name,too-many-instance-attributes
-
-"""
-SPDX-License-Identifier: LGPL-2.1+
-"""
-
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2017 Peter Jones <pjones@redhat.com>
+# Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
+#
+# SPDX-License-Identifier: LGPL-2.1+
+#
+# pylint: disable=wrong-import-position,too-many-locals,unused-argument, too-many-statements
+# pylint: disable=invalid-name,too-many-instance-attributes, missing-module-docstring
 
 import os
 import sys
+import argparse
 import gettext
 import math
 import io
@@ -21,15 +22,6 @@ gi.require_version('Pango', '1.0')
 gi.require_version('PangoCairo', '1.0')
 from gi.repository import Pango, PangoCairo
 from PIL import Image
-
-def usage(return_code):
-    """ print usage and exit with the supplied return code """
-    if return_code == 0:
-        out = sys.stdout
-    else:
-        out = sys.stderr
-    out.write("usage: make-images <label text> <mo file directory> <LINGUAS> <installdir>")
-    sys.exit(return_code)
 
 class Rasterizer:
     """ Rasterize some text """
@@ -181,12 +173,10 @@ class Rasterizer:
                     render_one(lang, string, width, height, filename)
 
 if __name__ == '__main__':
-    if {'-?', '--help', '--usage'}.intersection(set(sys.argv)):
-        usage(0)
-    if len(sys.argv) != 4:
-        usage(1)
-
-    label = os.fsencode(sys.argv[1]).decode('utf-8')
-    r = Rasterizer(label=label, modir=sys.argv[2],
-                   linguas=sys.argv[3])
+    parser = argparse.ArgumentParser(description='Make UX images')
+    parser.add_argument('--localedir', help='Locale dir', required=True)
+    parser.add_argument('--label', help='Update text', required=True)
+    parser.add_argument('--linguas', help='LINGUAS location', required=True)
+    args = parser.parse_args()
+    r = Rasterizer(label=args.label, modir=args.localedir, linguas=args.linguas)
     r.render()
