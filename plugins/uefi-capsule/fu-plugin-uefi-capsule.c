@@ -11,6 +11,7 @@
 #include <gio/gunixmounts.h>
 #include <glib/gi18n.h>
 
+#include "fu-archive.h"
 #include "fu-device-metadata.h"
 #include "fu-plugin-vfuncs.h"
 #include "fu-hash.h"
@@ -130,71 +131,45 @@ static GBytes *
 fu_plugin_uefi_capsule_get_splash_data (guint width, guint height, GError **error)
 {
 	const gchar * const *langs = g_get_language_names ();
-	const gchar *localedir = FWUPD_LOCALEDIR;
-	const gsize chunk_size = 1024 * 1024;
-	gsize buf_idx = 0;
-	gsize buf_sz = chunk_size;
-	gssize len;
-	g_autofree gchar *basename = NULL;
-	g_autofree guint8 *buf = NULL;
-	g_autoptr(GBytes) compressed_data = NULL;
-	g_autoptr(GConverter) conv = NULL;
-	g_autoptr(GInputStream) stream_compressed = NULL;
-	g_autoptr(GInputStream) stream_raw = NULL;
+	g_autofree gchar *datadir_pkg = NULL;
+	g_autofree gchar *filename_archive = NULL;
+	g_autofree gchar *langs_str = NULL;
+	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(GBytes) blob_archive = NULL;
 
-	/* ensure this is sane */
-	if (!g_str_has_prefix (localedir, "/"))
-		localedir = "/usr/share/locale";
+	/* load archive */
+	datadir_pkg = fu_common_get_path (FU_PATH_KIND_DATADIR_PKG);
+	filename_archive = g_build_filename (datadir_pkg, "uefi-capsule-ux.tar.xz", NULL);
+	blob_archive = fu_common_get_contents_bytes (filename_archive, error);
+	if (blob_archive == NULL)
+		return NULL;
+	archive = fu_archive_new (blob_archive, FU_ARCHIVE_FLAG_NONE, error);
+	if (archive == NULL)
+		return NULL;
 
 	/* find the closest locale match, falling back to `en` and `C` */
-	basename = g_strdup_printf ("fwupd-%u-%u.bmp.gz", width, height);
 	for (guint i = 0; langs[i] != NULL; i++) {
+		GBytes *blob_tmp;
 		g_autofree gchar *fn = NULL;
 		if (g_str_has_suffix (langs[i], ".UTF-8"))
 			continue;
-		fn = g_build_filename (localedir, langs[i],
-				       "LC_IMAGES", basename, NULL);
-		if (g_file_test (fn, G_FILE_TEST_EXISTS)) {
-			compressed_data = fu_common_get_contents_bytes (fn, error);
-			if (compressed_data == NULL)
-				return NULL;
-			break;
+		fn = g_strdup_printf ("fwupd-%s-%u-%u.bmp", langs[i], width, height);
+		blob_tmp = fu_archive_lookup_by_fn (archive, fn, NULL);
+		if (blob_tmp != NULL) {
+			g_debug ("using UX image %s", fn);
+			return g_bytes_ref (blob_tmp);
 		}
 		g_debug ("no %s found", fn);
 	}
 
 	/* we found nothing */
-	if (compressed_data == NULL) {
-		g_autofree gchar *tmp = g_strjoinv (",", (gchar **) langs);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "failed to get splash file for %s in %s",
-			     tmp, localedir);
-		return NULL;
-	}
-
-	/* decompress data */
-	stream_compressed = g_memory_input_stream_new_from_bytes (compressed_data);
-	conv = G_CONVERTER (g_zlib_decompressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP));
-	stream_raw = g_converter_input_stream_new (stream_compressed, conv);
-	buf = g_malloc0 (buf_sz);
-	while ((len = g_input_stream_read (stream_raw,
-					   buf + buf_idx,
-					   buf_sz - buf_idx,
-					   NULL, error)) > 0) {
-		buf_idx += len;
-		if (buf_sz - buf_idx < chunk_size) {
-			buf_sz += chunk_size;
-			buf = g_realloc (buf, buf_sz);
-		}
-	}
-	if (len < 0) {
-		g_prefix_error (error, "failed to decompress file: ");
-		return NULL;
-	}
-	g_debug ("decompressed image to %" G_GSIZE_FORMAT "kb", buf_idx / 1024);
-	return g_bytes_new_take (g_steal_pointer (&buf), buf_idx);
+	langs_str = g_strjoinv (",", (gchar **) langs);
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "failed to get splash file for %s in %s",
+		     langs_str, datadir_pkg);
+	return NULL;
 }
 
 static guint8

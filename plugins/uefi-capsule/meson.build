@@ -97,7 +97,33 @@ install_data(['uefi_capsule.conf'],
   install_dir:  join_paths(sysconfdir, 'fwupd')
 )
 
-meson.add_install_script('make-images.sh', localedir, python3.path())
+# add all the .po files as inputs to watch
+ux_linguas = run_command(
+  'cat', files(join_paths(meson.source_root(), 'po', 'LINGUAS')),
+).stdout().strip().split('\n')
+ux_capsule_pofiles = []
+foreach ux_lingua : ux_linguas
+  ux_capsule_pofiles += join_paths(meson.source_root(), 'po', '@0@.po'.format(ux_lingua))
+endforeach
+
+# add the archive of pregenerated images
+custom_target('ux-capsule-tar',
+  input : [
+    join_paths(meson.source_root(), 'po', 'LINGUAS'),
+    join_paths(meson.current_source_dir(), 'make-images.py'),
+    ux_capsule_pofiles,
+  ],
+  output : 'uefi-capsule-ux.tar.xz',
+  command : [
+    python3.path(),
+    join_paths(meson.current_source_dir(), 'make-images.py'),
+    '--podir', join_paths(meson.source_root(), 'po'),
+    '--label', 'Installing firmware update…',
+    '--out', '@OUTPUT@',
+  ],
+  install: true,
+  install_dir: join_paths(datadir, 'fwupd'),
+)
 
 if get_option('tests')
   testdatadir = join_paths(meson.current_source_dir(), 'tests')

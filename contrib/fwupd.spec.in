@@ -452,7 +452,7 @@ done
 %{_libdir}/fwupd-plugins-3/libfu_plugin_goodixmoc.so
 %ghost %{_localstatedir}/lib/fwupd/gnupg
 %if 0%{?have_uefi}
-%{_datadir}/locale/*/LC_IMAGES/fwupd*
+%{_datadir}/fwupd/ux-capsule.tar.xz
 %endif
 
 %if 0%{?have_modem_manager}
