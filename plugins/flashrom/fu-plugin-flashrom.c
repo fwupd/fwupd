@@ -41,6 +41,7 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 }
 
 void

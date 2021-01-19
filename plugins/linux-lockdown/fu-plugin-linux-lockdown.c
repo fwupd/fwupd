@@ -42,6 +42,20 @@ fu_plugin_destroy (FuPlugin *plugin)
 	}
 }
 
+static const gchar *
+fu_plugin_linux_lockdown_to_string (FuPluginLinuxLockdown lockdown)
+{
+	if (lockdown == FU_PLUGIN_LINUX_LOCKDOWN_NONE)
+		return "none";
+	if (lockdown == FU_PLUGIN_LINUX_LOCKDOWN_INTEGRITY)
+		return "integrity";
+	if (lockdown == FU_PLUGIN_LINUX_LOCKDOWN_CONFIDENTIALITY)
+		return "confidentiality";
+	if (lockdown == FU_PLUGIN_LINUX_LOCKDOWN_INVALID)
+		return "invalid";
+	return NULL;
+}
+
 static void
 fu_plugin_linux_lockdown_rescan (FuPlugin *plugin)
 {
@@ -61,6 +75,10 @@ fu_plugin_linux_lockdown_rescan (FuPlugin *plugin)
 	} else {
 		data->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN;
 	}
+
+	/* update metadata */
+	fu_plugin_add_report_metadata (plugin, "LinuxLockdown",
+				       fu_plugin_linux_lockdown_to_string (data->lockdown));
 }
 
 static void
