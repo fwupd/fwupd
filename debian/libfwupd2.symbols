@@ -44,6 +44,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  LIBFWUPD_1.5.1@LIBFWUPD_1.5.1 1.5.1
  LIBFWUPD_1.5.2@LIBFWUPD_1.5.2 1.5.2
  LIBFWUPD_1.5.3@LIBFWUPD_1.5.3 1.5.3
+ LIBFWUPD_1.5.5@LIBFWUPD_1.5.5 1.5.5
  fwupd_build_history_report_json@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_machine_id@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_user_agent@LIBFWUPD_1.0.3 1.0.3
@@ -185,6 +186,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_device_add_icon@LIBFWUPD_0.9.8 1.0.0
  fwupd_device_add_instance_id@LIBFWUPD_1.2.5 1.2.5
  fwupd_device_add_release@LIBFWUPD_0.9.8 1.0.0
+ fwupd_device_add_vendor_id@LIBFWUPD_1.5.5 1.5.5
  fwupd_device_array_ensure_parents@LIBFWUPD_1.3.7 1.3.7
  fwupd_device_array_from_variant@LIBFWUPD_1.2.10 1.2.10
  fwupd_device_compare@LIBFWUPD_1.1.1 1.1.1
@@ -222,6 +224,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_device_get_update_state@LIBFWUPD_0.9.8 1.0.0
  fwupd_device_get_vendor@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_get_vendor_id@LIBFWUPD_0.9.4 1.0.0
+ fwupd_device_get_vendor_ids@LIBFWUPD_1.5.5 1.5.5
  fwupd_device_get_version@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_get_version_bootloader@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_get_version_bootloader_raw@LIBFWUPD_1.4.0 1.4.0
@@ -232,6 +235,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_device_has_flag@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_has_guid@LIBFWUPD_0.9.3 1.0.0
  fwupd_device_has_instance_id@LIBFWUPD_1.2.5 1.2.5
+ fwupd_device_has_vendor_id@LIBFWUPD_1.5.5 1.5.5
  fwupd_device_id_is_valid@LIBFWUPD_1.4.1 1.4.1
  fwupd_device_incorporate@LIBFWUPD_1.1.0 1.1.0
  fwupd_device_new@LIBFWUPD_0.9.3 1.0.0
