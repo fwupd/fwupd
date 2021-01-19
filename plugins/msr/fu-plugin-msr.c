@@ -21,13 +21,25 @@ typedef union {
 	} __attribute__((packed)) fields;
 } FuMsrIa32Debug;
 
+typedef union {
+	guint32 data;
+	struct {
+		guint32 unknown0		: 23;	/* 0 -> 22 inc */
+		guint32 sev_is_enabled		: 1;
+		guint32 unknown1		: 8;
+	} __attribute__((packed)) fields;
+} FuMsrK8Syscfg;
+
 struct FuPluginData {
 	gboolean		 ia32_debug_supported;
 	FuMsrIa32Debug		 ia32_debug;
+	gboolean		 k8_syscfg_supported;
+	FuMsrK8Syscfg		 k8_syscfg;
 };
 
 #define PCI_MSR_IA32_DEBUG_INTERFACE		0xc80
 #define PCI_MSR_IA32_BIOS_SIGN_ID		0x8b
+#define PCI_MSR_K8_SYSCFG			0xC0010010
 
 void
 fu_plugin_init (FuPlugin *plugin)
@@ -41,12 +53,23 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
+	guint eax = 0;
 	guint ecx = 0;
 
 	/* sdbg is supported: https://en.wikipedia.org/wiki/CPUID */
-	if (!fu_common_cpuid (0x01, NULL, NULL, &ecx, NULL, error))
-		return FALSE;
-	priv->ia32_debug_supported = ((ecx >> 11) & 0x1) > 0;
+	if (fu_common_get_cpu_vendor () == FU_CPU_VENDOR_INTEL) {
+		if (!fu_common_cpuid (0x01, NULL, NULL, &ecx, NULL, error))
+			return FALSE;
+		priv->ia32_debug_supported = ((ecx >> 11) & 0x1) > 0;
+	}
+
+	/* indicates support for SEV */
+	if (fu_common_get_cpu_vendor () == FU_CPU_VENDOR_AMD) {
+		if (!fu_common_cpuid (0x8000001f, &eax, NULL, NULL, NULL, error))
+			return FALSE;
+		priv->k8_syscfg_supported = ((eax >> 0) & 0x1) > 0;
+	}
+
 	return TRUE;
 }
 
@@ -89,6 +112,21 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 			 priv->ia32_debug.fields.enabled,
 			 priv->ia32_debug.fields.locked,
 			 priv->ia32_debug.fields.debug_occurred);
+	}
+
+	/* grab MSR */
+	if (priv->k8_syscfg_supported) {
+		if (!fu_udev_device_pread_full (device, PCI_MSR_K8_SYSCFG,
+						buf, sizeof(buf), error)) {
+			g_prefix_error (error, "could not read MSR_K8_SYSCFG: ");
+			return FALSE;
+		}
+		if (!fu_common_read_uint32_safe (buf, sizeof(buf), 0x0,
+						 &priv->k8_syscfg.data, G_LITTLE_ENDIAN,
+						 error))
+			return FALSE;
+		g_debug ("MSR_K8_SYSCFG: sev_is_enabled=%i",
+			 priv->k8_syscfg.fields.sev_is_enabled);
 	}
 
 	/* get microcode version */
@@ -134,7 +172,7 @@ fu_plugin_add_security_attr_dci_enabled (FuPlugin *plugin, FuSecurityAttrs *attr
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
-	if (!fu_common_is_cpu_intel ())
+	if (fu_common_get_cpu_vendor () != FU_CPU_VENDOR_INTEL)
 		return;
 	if (!priv->ia32_debug_supported)
 		return;
@@ -163,7 +201,7 @@ fu_plugin_add_security_attr_dci_locked (FuPlugin *plugin, FuSecurityAttrs *attrs
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* this MSR is only valid for a subset of Intel CPUs */
-	if (!fu_common_is_cpu_intel ())
+	if (fu_common_get_cpu_vendor () != FU_CPU_VENDOR_INTEL)
 		return;
 	if (!priv->ia32_debug_supported)
 		return;
@@ -185,9 +223,41 @@ fu_plugin_add_security_attr_dci_locked (FuPlugin *plugin, FuSecurityAttrs *attrs
 	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 }
 
+static void
+fu_plugin_add_security_attr_amd_tsme_enabled (FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* this MSR is only valid for a subset of AMD CPUs */
+	if (fu_common_get_cpu_vendor () != FU_CPU_VENDOR_AMD)
+		return;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
+	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION);
+	fu_security_attrs_append (attrs, attr);
+
+	/* check fields */
+	if (!priv->k8_syscfg_supported) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
+	if (!priv->k8_syscfg.fields.sev_is_enabled) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+}
+
 void
 fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	fu_plugin_add_security_attr_dci_enabled (plugin, attrs);
 	fu_plugin_add_security_attr_dci_locked (plugin, attrs);
+	fu_plugin_add_security_attr_amd_tsme_enabled (plugin, attrs);
 }

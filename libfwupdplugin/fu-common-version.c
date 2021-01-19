@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -438,6 +438,9 @@ fu_common_version_verify_format (const gchar *version,
 {
 	FwupdVersionFormat fmt_base = fu_common_version_convert_base (fmt);
 	FwupdVersionFormat fmt_guess;
+
+	g_return_val_if_fail (version != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* don't touch */
 	if (fmt == FWUPD_VERSION_FORMAT_PLAIN)

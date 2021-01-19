@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2020 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -34,5 +34,6 @@ void		 fu_cabinet_set_jcat_context	(FuCabinet		*self,
 gboolean	 fu_cabinet_parse		(FuCabinet		*self,
 						 GBytes			*data,
 						 FuCabinetParseFlags	 flags,
-						 GError			**error);
+						 GError			**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 XbSilo		*fu_cabinet_get_silo		(FuCabinet		*self);

@@ -8,8 +8,7 @@
 
 #include "fu-efivar.h"
 
-#include "fu-efi-signature-common.h"
-#include "fu-efi-signature-parser.h"
+#include "fu-efi-signature.h"
 #include "fu-uefi-dbx-common.h"
 #include "fu-uefi-dbx-device.h"
 
@@ -55,24 +54,18 @@ fu_uefi_dbx_device_write_firmware (FuDevice *device,
 static gboolean
 fu_uefi_dbx_device_set_version_number (FuDevice *device, GError **error)
 {
-	gsize bufsz = 0;
-	g_autofree gchar *version = NULL;
-	g_autofree guint8 *buf = NULL;
-	g_autoptr(GPtrArray) dbx = NULL;
+	g_autoptr(GBytes) dbx_blob = NULL;
+	g_autoptr(FuFirmware) dbx = fu_efi_signature_list_new ();
 
 	/* use the number of checksums in the dbx as a version number, ignoring
 	 * some owners that do not make sense */
-	if (!fu_efivar_get_data (FU_EFIVAR_GUID_SECURITY_DATABASE, "dbx",
-				 &buf, &bufsz, NULL, error))
+	dbx_blob = fu_efivar_get_data_bytes (FU_EFIVAR_GUID_SECURITY_DATABASE, "dbx", NULL, error);
+	if (dbx_blob == NULL)
 		return FALSE;
-	dbx = fu_efi_signature_parser_new (buf, bufsz,
-					   FU_EFI_SIGNATURE_PARSER_FLAGS_NONE,
-					   error);
-	if (dbx == NULL)
+	if (!fu_firmware_parse (dbx, dbx_blob, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 		return FALSE;
-	version = g_strdup_printf ("%u", fu_efi_signature_list_array_version (dbx));
-	fu_device_set_version (device, version);
-	fu_device_set_version_lowest (device, version);
+	fu_device_set_version (device, fu_firmware_get_version (dbx));
+	fu_device_set_version_lowest (device, fu_firmware_get_version (dbx));
 	return TRUE;
 }
 
@@ -82,22 +75,16 @@ fu_uefi_dbx_prepare_firmware (FuDevice *device,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
-	const guint8 *buf;
-	gsize bufsz = 0;
-	g_autoptr(GPtrArray) siglists = NULL;
+	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new ();
 
 	/* parse dbx */
-	buf = g_bytes_get_data (fw, &bufsz);
-	siglists = fu_efi_signature_parser_new (buf, bufsz,
-						FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,
-						error);
-	if (siglists == NULL)
+	if (!fu_firmware_parse (siglist, fw, flags, error))
 		return NULL;
 
 	/* validate this is safe to apply */
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
 		fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
-		if (!fu_uefi_dbx_signature_list_validate (siglists, error)) {
+		if (!fu_uefi_dbx_signature_list_validate (FU_EFI_SIGNATURE_LIST (siglist), error)) {
 			g_prefix_error (error,
 					"Blocked executable in the ESP, "
 					"ensure grub and shim are up to date: ");
@@ -112,37 +99,37 @@ fu_uefi_dbx_prepare_firmware (FuDevice *device,
 static gboolean
 fu_uefi_dbx_device_probe (FuDevice *device, GError **error)
 {
-	gsize bufsz = 0;
 	g_autofree gchar *arch_up = NULL;
-	g_autofree guint8 *buf = NULL;
-	g_autoptr(GPtrArray) kek = NULL;
+	g_autoptr(FuFirmware) kek = fu_efi_signature_list_new ();
+	g_autoptr(GBytes) kek_blob = NULL;
+	g_autoptr(GPtrArray) sigs = NULL;
 
 	/* use each of the certificates in the KEK to generate the GUIDs */
-	if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "KEK",
-				 &buf, &bufsz, NULL, error))
+	kek_blob = fu_efivar_get_data_bytes (FU_EFIVAR_GUID_EFI_GLOBAL, "KEK", NULL, error);
+	if (kek_blob == NULL)
 		return FALSE;
-	kek = fu_efi_signature_parser_new (buf, bufsz,
-					   FU_EFI_SIGNATURE_PARSER_FLAGS_NONE,
-					   error);
-	if (kek == NULL)
+	if (!fu_firmware_parse (kek, kek_blob, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 		return FALSE;
 	arch_up = g_utf8_strup (EFI_MACHINE_TYPE_NAME, -1);
-	for (guint i = 0; i < kek->len; i++) {
-		FuEfiSignatureList *siglist = g_ptr_array_index (kek, i);
-		GPtrArray *sigs = fu_efi_signature_list_get_all (siglist);
-		for (guint j = 0; j < sigs->len; j++) {
-			FuEfiSignature *sig = g_ptr_array_index (sigs, j);
-			g_autofree gchar *checksum_up = NULL;
-			g_autofree gchar *devid1 = NULL;
-			g_autofree gchar *devid2 = NULL;
+	sigs = fu_firmware_get_images (kek);
+	for (guint j = 0; j < sigs->len; j++) {
+		FuEfiSignature *sig = g_ptr_array_index (sigs, j);
+		g_autofree gchar *checksum = NULL;
+		g_autofree gchar *checksum_up = NULL;
+		g_autofree gchar *devid1 = NULL;
+		g_autofree gchar *devid2 = NULL;
 
-			checksum_up = g_utf8_strup (fu_efi_signature_get_checksum (sig), -1);
-			devid1 = g_strdup_printf ("UEFI\\CRT_%s", checksum_up);
-			fu_device_add_instance_id (device, devid1);
-			devid2 = g_strdup_printf ("UEFI\\CRT_%s&ARCH_%s",
-						  checksum_up, arch_up);
-			fu_device_add_instance_id (device, devid2);
-		}
+		checksum = fu_firmware_image_get_checksum (FU_FIRMWARE_IMAGE (sig),
+							   G_CHECKSUM_SHA256,
+							   error);
+		if (checksum == NULL)
+			return FALSE;
+		checksum_up = g_utf8_strup (checksum, -1);
+		devid1 = g_strdup_printf ("UEFI\\CRT_%s", checksum_up);
+		fu_device_add_instance_id (device, devid1);
+		devid2 = g_strdup_printf ("UEFI\\CRT_%s&ARCH_%s",
+					  checksum_up, arch_up);
+		fu_device_add_instance_id (device, devid2);
 	}
 	return fu_uefi_dbx_device_set_version_number (device, error);
 }
@@ -153,7 +140,7 @@ fu_uefi_dbx_device_init (FuUefiDbxDevice *self)
 	fu_device_set_physical_id (FU_DEVICE (self), "dbx");
 	fu_device_set_name (FU_DEVICE (self), "UEFI dbx");
 	fu_device_set_summary (FU_DEVICE (self), "UEFI Revocation Database");
-	fu_device_set_vendor_id (FU_DEVICE (self), "UEFI:Linux Foundation");
+	fu_device_add_vendor_id (FU_DEVICE (self), "UEFI:Linux Foundation");
 	fu_device_set_protocol (FU_DEVICE (self), "org.uefi.dbx");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_install_duration (FU_DEVICE (self), 1);

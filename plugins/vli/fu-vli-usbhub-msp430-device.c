@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2017-2019 VIA Corporation
- * Copyright (C) 2019-2020 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 VIA Corporation
+ * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */

@@ -140,7 +140,7 @@ fu_rts54hid_device_verify_update_fw (FuRts54HidDevice *self, GError **error)
 		return FALSE;
 
 	/* check device status */
-	if (buf[0x40] != 0x01) {
+	if (buf[0] != 0x01) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_WRITE,
@@ -207,11 +207,11 @@ fu_rts54hid_device_ensure_status (FuRts54HidDevice *self, GError **error)
 		return FALSE;
 
 	/* check the hardware capabilities */
-	self->dual_bank = (buf[0x40 + 7] & 0xf0) == 0x80;
-	self->fw_auth = (buf[0x40 + 13] & 0x02) > 0;
+	self->dual_bank = (buf[7] & 0xf0) == 0x80;
+	self->fw_auth = (buf[13] & 0x02) > 0;
 
 	/* hub version is more accurate than bcdVersion */
-	version = g_strdup_printf ("%x.%x", buf[0x40 + 10], buf[0x40 + 11]);
+	version = g_strdup_printf ("%x.%x", buf[10], buf[11]);
 	fu_device_set_version (FU_DEVICE (self), version);
 	return TRUE;
 }
@@ -283,7 +283,6 @@ fu_rts54hid_device_write_firmware (FuDevice *device,
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-
 		/* write chunk */
 		if (!fu_rts54hid_device_write_flash (self,
 						     chk->address,

@@ -71,7 +71,7 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 	dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BASEBOARD_MANUFACTURER);
 	if (dmi_vendor != NULL) {
 		g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
-		fu_device_set_vendor_id (FU_DEVICE (dev), vendor_id);
+		fu_device_add_vendor_id (FU_DEVICE (dev), vendor_id);
 	}
 
 	/* unlock */

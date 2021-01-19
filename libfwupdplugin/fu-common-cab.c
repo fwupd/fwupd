@@ -27,6 +27,10 @@ XbSilo *
 fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
 {
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new ();
+
+	g_return_val_if_fail (blob != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
 	fu_cabinet_set_size_max (cabinet, size_max);
 	if (!fu_cabinet_parse (cabinet, blob, FU_CABINET_PARSE_FLAG_NONE, error))
 		return NULL;

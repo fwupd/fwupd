@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -61,6 +61,7 @@ gboolean
 fu_io_channel_shutdown (FuIOChannel *self, GError **error)
 {
 	g_return_val_if_fail (FU_IS_IO_CHANNEL (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 	if (!g_close (self->fd, error))
 		return FALSE;
 	self->fd = -1;
@@ -159,6 +160,7 @@ fu_io_channel_write_raw (FuIOChannel *self,
 	gsize idx = 0;
 
 	g_return_val_if_fail (FU_IS_IO_CHANNEL (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* flush pending reads */
 	if (flags & FU_IO_CHANNEL_FLAG_FLUSH_INPUT) {
@@ -489,7 +491,12 @@ FuIOChannel *
 fu_io_channel_new_file (const gchar *filename, GError **error)
 {
 #ifdef HAVE_POLL_H
-	gint fd = g_open (filename, O_RDWR | O_NONBLOCK, S_IRWXU);
+	gint fd;
+
+	g_return_val_if_fail (filename != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	fd = g_open (filename, O_RDWR | O_NONBLOCK, S_IRWXU);
 	if (fd < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -499,6 +506,8 @@ fu_io_channel_new_file (const gchar *filename, GError **error)
 	}
 	return fu_io_channel_unix_new (fd);
 #else
+	g_return_val_if_fail (filename != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 	g_set_error_literal (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,

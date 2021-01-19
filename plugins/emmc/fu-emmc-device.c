@@ -201,7 +201,7 @@ fu_emmc_device_probe (FuUdevDevice *device, GError **error)
 	/* set the vendor */
 	tmp = g_udev_device_get_sysfs_attr (udev_parent, "manfid");
 	vendor_id = g_strdup_printf ("EMMC:%s", tmp);
-	fu_device_set_vendor_id (FU_DEVICE (device), vendor_id);
+	fu_device_add_vendor_id (FU_DEVICE (device), vendor_id);
 	fu_device_set_vendor (FU_DEVICE (device), fu_emmc_device_get_manufacturer (manfid));
 
 	/* set the physical ID */
@@ -387,11 +387,15 @@ fu_emmc_device_write_firmware (FuDevice *device,
 			if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
 						   MMC_IOC_MULTI_CMD, (guint8 *) multi_cmd,
 						   NULL, error)) {
+				g_autoptr(GError) error_local = NULL;
 				g_prefix_error (error, "multi-cmd failed: ");
 				/* multi-cmd ioctl failed before exiting from ffu mode */
-				fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
-						      MMC_IOC_CMD, (guint8 *) &multi_cmd->cmds[2],
-						      NULL, NULL);
+				if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
+							   MMC_IOC_CMD, (guint8 *) &multi_cmd->cmds[2],
+							   NULL, &error_local)) {
+					g_prefix_error (error, "%s: ",
+							error_local->message);
+				}
 				return FALSE;
 			}
 
@@ -455,11 +459,15 @@ fu_emmc_device_write_firmware (FuDevice *device,
 		if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
 					   MMC_IOC_MULTI_CMD, (guint8 *) multi_cmd,
 					   NULL, error)) {
+			g_autoptr(GError) error_local = NULL;
 			/* In case multi-cmd ioctl failed before exiting from ffu mode */
 			g_prefix_error (error, "multi-cmd failed setting install mode: ");
-			fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
-					      MMC_IOC_CMD, (guint8 *) &multi_cmd->cmds[2],
-					      NULL, NULL);
+			if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
+						   MMC_IOC_CMD, (guint8 *) &multi_cmd->cmds[2],
+						   NULL, &error_local)) {
+				g_prefix_error (error, "%s: ",
+						error_local->message);
+			}
 			return FALSE;
 		}
 

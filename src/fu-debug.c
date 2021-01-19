@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2010 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */

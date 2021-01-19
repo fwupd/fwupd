@@ -4,7 +4,7 @@
 #
 # Translators:
 # Andi Chandler <andi@gowling.com>, 2019-2020
-# Richard Hughes <richard@hughsie.com>, 2015,2017-2020
+# Richard Hughes <richard@hughsie.com>, 2015,2017-2021
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -760,10 +760,6 @@ msgstr "Failed to apply update"
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
 msgstr "Failed to connect to daemon"
-
-#. TRANSLATORS: could not parse file
-msgid "Failed to extract local dbx "
-msgstr "Failed to extract local dbx "
 
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
@@ -1836,6 +1832,10 @@ msgstr "UEFI capsule updates not available or enabled"
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "UEFI dbx Utility"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI platform key"
+msgstr "UEFI platform key"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"

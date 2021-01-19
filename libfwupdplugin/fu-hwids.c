@@ -214,6 +214,10 @@ fu_hwids_get_replace_values (FuHwids *self, const gchar *keys, GError **error)
 	g_auto(GStrv) split = NULL;
 	g_autoptr(GString) str = g_string_new (NULL);
 
+	g_return_val_if_fail (FU_IS_HWIDS (self), NULL);
+	g_return_val_if_fail (keys != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
 	/* do any replacements */
 	keys = fu_hwids_get_replace_keys (self, keys);
 
@@ -251,7 +255,13 @@ fu_hwids_get_replace_values (FuHwids *self, const gchar *keys, GError **error)
 gchar *
 fu_hwids_get_guid (FuHwids *self, const gchar *keys, GError **error)
 {
-	g_autofree gchar *tmp = fu_hwids_get_replace_values (self, keys, error);
+	g_autofree gchar *tmp = NULL;
+
+	g_return_val_if_fail (FU_IS_HWIDS (self), NULL);
+	g_return_val_if_fail (keys != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	tmp = fu_hwids_get_replace_values (self, keys, error);
 	if (tmp == NULL)
 		return NULL;
 	return fu_hwids_get_guid_for_str (tmp, error);
@@ -345,6 +355,7 @@ fu_hwids_setup (FuHwids *self, FuSmbios *smbios, GError **error)
 
 	g_return_val_if_fail (FU_IS_HWIDS (self), FALSE);
 	g_return_val_if_fail (FU_IS_SMBIOS (smbios), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* get all DMI data */
 	for (guint i = 0; map[i].key != NULL; i++) {

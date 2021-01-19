@@ -164,7 +164,7 @@ fu_synaprom_firmware_write (FuFirmware *firmware, GError **error)
 	/* add payload */
 	payload = fu_firmware_get_image_default_bytes (firmware, error);
 	if (payload == NULL)
-		return FALSE;
+		return NULL;
 	fu_byte_array_append_uint16 (blob,
 				     FU_SYNAPROM_FIRMWARE_TAG_MFW_PAYLOAD,
 				     G_LITTLE_ENDIAN);

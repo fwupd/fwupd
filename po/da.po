@@ -702,10 +702,6 @@ msgstr "Kunne ikke anvende opdatering"
 msgid "Failed to connect to daemon"
 msgstr "Kunne ikke oprette forbindelse til dæmonen"
 
-#. TRANSLATORS: could not parse file
-msgid "Failed to extract local dbx "
-msgstr "Kunne ikke udpakke lokal dbx "
-
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
 msgstr "Kunne ikke hente afventende enheder"

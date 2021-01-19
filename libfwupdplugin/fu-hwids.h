@@ -34,13 +34,16 @@ const gchar	*fu_hwids_get_replace_keys	(FuHwids	*self,
 						 const gchar	*key);
 gchar		*fu_hwids_get_replace_values	(FuHwids	*self,
 						 const gchar	*keys,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gchar		*fu_hwids_get_guid		(FuHwids	*self,
 						 const gchar	*keys,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray	*fu_hwids_get_guids		(FuHwids	*self);
 gboolean	 fu_hwids_has_guid		(FuHwids	*self,
 						 const gchar	*guid);
 gboolean	 fu_hwids_setup			(FuHwids	*self,
 						 FuSmbios	*smbios,
-						 GError		**error);
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;

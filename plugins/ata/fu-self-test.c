@@ -63,7 +63,6 @@ fu_ata_oui_func (void)
 	dev = fu_ata_device_new_from_blob ((guint8 *)data, sz, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);
-	fu_ata_device_set_unknown_oui_report (dev, FALSE);
 	fu_device_convert_instance_ids (FU_DEVICE (dev));
 	str = fu_device_to_string (FU_DEVICE (dev));
 	g_debug ("%s", str);

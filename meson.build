@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.5.4',
+  version : '1.5.5',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -219,12 +219,12 @@ endif
 libjcat = dependency('jcat', version : '>= 0.1.0', fallback : ['libjcat', 'libjcat_dep'])
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
-libcurl = dependency('libcurl', version : '>= 7.47.0')
-if libcurl.version().version_compare('>= 7.56.0')
-  conf.set('HAVE_LIBCURL_7_56_0', '1')
-endif
-if libcurl.version().version_compare('>= 7.62.0')
-  conf.set('HAVE_LIBCURL_7_62_0', '1')
+if get_option('curl')
+  libcurl = dependency('libcurl', version : '>= 7.56.0')
+  conf.set('HAVE_LIBCURL', '1')
+  if libcurl.version().version_compare('>= 7.62.0')
+    conf.set('HAVE_LIBCURL_7_62_0', '1')
+  endif
 endif
 if build_daemon
   if get_option('polkit')
@@ -248,6 +248,10 @@ libgcab = dependency('libgcab-1.0', version : '>= 1.0', fallback : ['gcab', 'gca
 gcab = find_program('gcab', required : get_option('tests'))
 bashcomp = dependency('bash-completion', required: false)
 python3 = find_program('python3')
+
+if get_option('plugin_uefi_pk')
+  gnutls = dependency('gnutls', version : '>= 3.6.0')
+endif
 
 platform_deps = []
 if get_option('default_library') != 'static'
@@ -281,6 +285,9 @@ endif
 if cc.has_header('linux/ethtool.h')
   conf.set('HAVE_ETHTOOL_H', '1')
 endif
+if cc.has_header('linux/hidraw.h')
+  conf.set('HAVE_HIDRAW_H', '1')
+endif
 if cc.has_header('sys/mman.h')
   conf.set('HAVE_MMAN_H', '1')
 endif
@@ -290,9 +297,7 @@ endif
 if cc.has_header('fnmatch.h')
   conf.set('HAVE_FNMATCH_H', '1')
 endif
-if cc.has_header('cpuid.h') and \
-   cc.has_header_symbol('cpuid.h', '__get_cpuid_count') and \
-   (host_cpu == 'x86' or host_cpu == 'x86_64')
+if cc.has_header('cpuid.h') and cc.has_header_symbol('cpuid.h', '__get_cpuid_count') and (host_cpu == 'x86' or host_cpu == 'x86_64')
   conf.set('HAVE_CPUID_H', '1')
 else
   if get_option('plugin_msr')
@@ -325,7 +330,7 @@ else
   tpm2tss = dependency('', required: false)
 endif
 
-if build_standalone and get_option('plugin_uefi')
+if build_standalone and get_option('plugin_uefi_capsule')
   cairo = dependency('cairo')
   fontconfig = cc.find_library('fontconfig')
   freetype = cc.find_library('freetype')
@@ -365,8 +370,8 @@ endif
 if build_standalone and get_option('plugin_dell')
   libsmbios_c = dependency('libsmbios_c', version : '>= 2.4.0')
   conf.set('HAVE_DELL', '1')
-  if not get_option('plugin_uefi')
-    error('plugin_dell also needs plugin_uefi to work')
+  if not get_option('plugin_uefi_capsule')
+    error('plugin_dell also needs plugin_uefi_capsule to work')
   endif
 endif
 

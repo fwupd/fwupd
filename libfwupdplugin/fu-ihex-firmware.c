@@ -69,18 +69,13 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 
 	/* check starting token */
 	if (line[0] != ':') {
-		g_autoptr(GString) str = g_string_new (NULL);
-		for (gsize i = 0; line[i] != '\0' && i < 5; i++) {
-			if (!g_ascii_isprint (line[i]))
-				break;
-			g_string_append_c (str, line[i]);
-		}
-		if (str->len > 0) {
+		g_autofree gchar *strsafe = fu_common_strsafe (line, 5);
+		if (strsafe != NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "invalid starting token: %s",
-				     str->str);
+				     strsafe);
 			return NULL;
 		}
 		g_set_error_literal (error,
@@ -219,6 +214,16 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 		g_debug ("%s:", fu_ihex_firmware_record_type_to_string (rcd->record_type));
 		g_debug ("  length:\t0x%02x", rcd->data->len);
 		g_debug ("  addr:\t0x%08x", addr);
+
+		/* sanity check */
+		if (rcd->record_type != FU_IHEX_FIRMWARE_RECORD_TYPE_EOF &&
+		    rcd->data->len == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "record 0x%x had zero size", k);
+			return FALSE;
+		}
 
 		/* process different record types */
 		switch (rcd->record_type) {

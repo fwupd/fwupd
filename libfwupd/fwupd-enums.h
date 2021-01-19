@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -106,11 +106,11 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_TRUSTED:			Extra metadata can be exposed about this device
  * @FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN:		Requires system shutdown to apply firmware
  * @FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED:	Requires the update to be retried with a new plugin
- * @FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS:	Do not add instance IDs from the device baseclass
+ * @FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS:	Deprecated, no not use
  * @FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION:		Device update needs to be separately activated
  * @FWUPD_DEVICE_FLAG_HISTORICAL		Device is for historical data only
- * @FWUPD_DEVICE_FLAG_ENSURE_SEMVER:		Ensure the version is a valid semantic version, e.g. numbers separated with dots
- * @FWUPD_DEVICE_FLAG_ONLY_SUPPORTED:		Only devices supported in the metadata will be opened
+ * @FWUPD_DEVICE_FLAG_ENSURE_SEMVER:		Deprecated, no not use
+ * @FWUPD_DEVICE_FLAG_ONLY_SUPPORTED:		Deprecated, no not use
  * @FWUPD_DEVICE_FLAG_WILL_DISAPPEAR:		Device will disappear after update and can't be verified
  * @FWUPD_DEVICE_FLAG_CAN_VERIFY:		Device checksums can be compared against metadata
  * @FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE:		Image can be dumped from device for verification
@@ -119,16 +119,16 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE:	Device remains usable while fwupd flashes or schedules the update
  * @FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED:	All firmware updates for this device require a firmware version check
  * @FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES:	Install each intermediate release rather than jumping direct to newest
- * @FWUPD_DEVICE_FLAG_MD_SET_NAME:		Set the device name from the metadata <name> if available
- * @FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY:	Set the device name from the metadata <category> if available
- * @FWUPD_DEVICE_FLAG_MD_SET_VERFMT:		Set the device version format from the metadata if available
+ * @FWUPD_DEVICE_FLAG_MD_SET_NAME:		Deprecated, no not use
+ * @FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY:	Deprecated, no not use
+ * @FWUPD_DEVICE_FLAG_MD_SET_VERFMT:		Deprecated, no not use
  * @FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS:	Add counterpart GUIDs from an alternate mode like bootloader
  * @FWUPD_DEVICE_FLAG_NO_GUID_MATCHING:		Force an explicit ID match when adding devices to the device list
  * @FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN:		Device is updatable but should not be called by the client
  * @FWUPD_DEVICE_FLAG_SKIPS_RESTART:		Device relies upon activation or power cycle to load firmware
  * @FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES:	Device supports switching to a different stream of firmware
  * @FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL:	Device firmware should be saved before installing firmware
- * @FWUPD_DEVICE_FLAG_MD_SET_ICON:		Set the device icon from the metadata if available
+ * @FWUPD_DEVICE_FLAG_MD_SET_ICON:		Deprecated, no not use
  *
  * The device flags.
  **/
@@ -152,11 +152,11 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_TRUSTED		(1u << 16)	/* Since: 1.1.2 */
 #define FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN	(1u << 17)	/* Since: 1.2.4 */
 #define FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED (1u << 18)	/* Since: 1.2.5 */
-#define FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS	(1u << 19)	/* Since: 1.2.5 */
+#define FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS	(1u << 19)	/* Since: 1.2.5; Deprecated: 1.5.5 */
 #define FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION	(1u << 20)	/* Since: 1.2.6 */
-#define FWUPD_DEVICE_FLAG_ENSURE_SEMVER		(1u << 21)	/* Since: 1.2.9 */
+#define FWUPD_DEVICE_FLAG_ENSURE_SEMVER		(1u << 21)	/* Since: 1.2.9; Deprecated: 1.5.5 */
 #define FWUPD_DEVICE_FLAG_HISTORICAL		(1u << 22)	/* Since: 1.3.2 */
-#define FWUPD_DEVICE_FLAG_ONLY_SUPPORTED	(1u << 23)	/* Since: 1.3.3 */
+#define FWUPD_DEVICE_FLAG_ONLY_SUPPORTED	(1u << 23)	/* Since: 1.3.3; Deprecated: 1.5.5 */
 #define FWUPD_DEVICE_FLAG_WILL_DISAPPEAR	(1u << 24)	/* Since: 1.3.3 */
 #define FWUPD_DEVICE_FLAG_CAN_VERIFY		(1u << 25)	/* Since: 1.3.3 */
 #define FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE	(1u << 26)	/* Since: 1.3.3 */
@@ -165,16 +165,16 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE	(1u << 29)	/* Since: 1.3.3 */
 #define FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED (1u << 30)	/* Since: 1.3.7 */
 #define FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES	(1u << 31)	/* Since: 1.3.7 */
-#define FWUPD_DEVICE_FLAG_MD_SET_NAME		(1llu << 32)	/* Since: 1.4.0 */
-#define FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY	(1llu << 33)	/* Since: 1.4.0 */
-#define FWUPD_DEVICE_FLAG_MD_SET_VERFMT		(1llu << 34)	/* Since: 1.4.0 */
+#define FWUPD_DEVICE_FLAG_MD_SET_NAME		(1llu << 32)	/* Since: 1.4.0; Deprecated: 1.5.5 */
+#define FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY	(1llu << 33)	/* Since: 1.4.0; Deprecated: 1.5.5 */
+#define FWUPD_DEVICE_FLAG_MD_SET_VERFMT		(1llu << 34)	/* Since: 1.4.0; Deprecated: 1.5.5 */
 #define FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS	(1llu << 35)	/* Since: 1.4.0 */
 #define FWUPD_DEVICE_FLAG_NO_GUID_MATCHING	(1llu << 36)	/* Since: 1.4.1 */
 #define FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN	(1llu << 37)	/* Since: 1.4.1 */
 #define FWUPD_DEVICE_FLAG_SKIPS_RESTART		(1llu << 38)	/* Since: 1.5.0 */
 #define FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES	(1llu << 39)	/* Since: 1.5.0 */
 #define FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL	(1llu << 40)	/* Since: 1.5.0 */
-#define FWUPD_DEVICE_FLAG_MD_SET_ICON		(1llu << 41)	/* Since: 1.5.2 */
+#define FWUPD_DEVICE_FLAG_MD_SET_ICON		(1llu << 41)	/* Since: 1.5.2; Deprecated: 1.5.5 */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64	/* Since: 0.7.3 */
 typedef guint64 FwupdDeviceFlags;
 

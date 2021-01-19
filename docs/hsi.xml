@@ -281,6 +281,34 @@
       </note>
     </refsect3>
 
+    <refsect3 id="org.fwupd.hsi.Uefi.Pk">
+      <title>UEFI PK</title>
+      <para>
+        UEFI defines a platform key for the system.
+        This should not be a test key, e.g. ``DO NOT TRUST - AMI Test PK``
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>
+            For HSI-1 a test key must not be enrolled.
+            <emphasis>v1.5.0</emphasis>
+          </para>
+        </listitem>
+      </itemizedlist>
+      <note>
+        <para>
+          See also:
+          <itemizedlist>
+            <listitem>
+              <ulink url="https://wiki.ubuntu.com/UEFI/SecureBoot/Testing">
+                UEFI Testing Wiki Entry
+              </ulink>
+            </listitem>
+          </itemizedlist>
+        </para>
+      </note>
+    </refsect3>
+
     <refsect3 id="org.fwupd.hsi.Spi.Bioswe">
       <title>BIOS Write Enable (BWE)</title>
       <para>
@@ -682,10 +710,10 @@
     </refsect3>
 
     <refsect3 id="org.fwupd.hsi.EncryptedRam">
-      <title>DRAM total memory encryption (TME)</title>
+      <title>DRAM memory encryption</title>
       <para>
-        Total memory encryption technology is used by the firmware on supported
-        SOCs to encrypt all data on external memory buses.
+        TME (Intel) or TSME (AMD) is used by the firmware on supported SOCs to
+        encrypt all data on external memory buses.
         It mitigates against an attacker being able to capture memory data while
         the system is running or to capture memory by removing a DRAM chip.
       </para>
@@ -704,7 +732,12 @@
               <ulink url="https://software.intel.com/content/www/us/en/develop/blogs/intel-releases-new-technology-specification-for-memory-encryption.html">
                 Intel TME Press Release
               </ulink>
-            </listitem>0
+            </listitem>
+            <listitem>
+              <ulink url="https://en.wikichip.org/wiki/x86/sme">
+                WikiChip SME Overview
+              </ulink>
+            </listitem>
           </itemizedlist>
         </para>
       </note>

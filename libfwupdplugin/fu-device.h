@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2020 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -25,45 +25,61 @@ struct _FuDeviceClass
 	gboolean		 (*write_firmware)	(FuDevice	*self,
 							 FuFirmware	*firmware,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	FuFirmware		*(*read_firmware)	(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*detach)		(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*attach)		(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*open)		(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*close)		(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*probe)		(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*rescan)		(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	FuFirmware		*(*prepare_firmware)	(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*set_quirk_kv)	(FuDevice	*self,
 							 const gchar	*key,
 							 const gchar	*value,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*setup)		(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	void			 (*incorporate)		(FuDevice	*self,
 							 FuDevice	*donor);
 	gboolean		 (*poll)		(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*activate)		(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*reload)		(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*prepare)		(FuDevice	*self,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*cleanup)		(FuDevice	*self,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	void			 (*report_metadata_pre)	(FuDevice	*self,
 							 GHashTable	*metadata);
 	void			 (*report_metadata_post)(FuDevice	*self,
@@ -71,11 +87,14 @@ struct _FuDeviceClass
 	gboolean		 (*bind_driver)		(FuDevice	*self,
 							 const gchar	*subsystem,
 							 const gchar	*driver,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*unbind_driver)	(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	GBytes			*(*dump_firmware)	(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	/*< private >*/
 	gpointer	padding[11];
 };
@@ -114,7 +133,8 @@ typedef enum {
 
 typedef gboolean (*FuDeviceRetryFunc)			(FuDevice	*device,
 							 gpointer	 user_data,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 
 FuDevice	*fu_device_new				(void);
 
@@ -122,6 +142,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_remove_flag(d,v)		fwupd_device_remove_flag(FWUPD_DEVICE(d),v)
 #define fu_device_has_flag(d,v)			fwupd_device_has_flag(FWUPD_DEVICE(d),v)
 #define fu_device_has_instance_id(d,v)		fwupd_device_has_instance_id(FWUPD_DEVICE(d),v)
+#define fu_device_has_vendor_id(d,v)		fwupd_device_has_vendor_id(FWUPD_DEVICE(d),v)
 #define fu_device_add_checksum(d,v)		fwupd_device_add_checksum(FWUPD_DEVICE(d),v)
 #define fu_device_add_release(d,v)		fwupd_device_add_release(FWUPD_DEVICE(d),v)
 #define fu_device_add_icon(d,v)			fwupd_device_add_icon(FWUPD_DEVICE(d),v)
@@ -138,7 +159,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_update_error(d,v)		fwupd_device_set_update_error(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_state(d,v)		fwupd_device_set_update_state(FWUPD_DEVICE(d),v)
 #define fu_device_set_vendor(d,v)		fwupd_device_set_vendor(FWUPD_DEVICE(d),v)
-#define fu_device_set_vendor_id(d,v)		fwupd_device_set_vendor_id(FWUPD_DEVICE(d),v)
+#define fu_device_add_vendor_id(d,v)		fwupd_device_add_vendor_id(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_raw(d,v)		fwupd_device_set_version_raw(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_lowest_raw(d,v)	fwupd_device_set_version_lowest_raw(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_bootloader_raw(d,v)	fwupd_device_set_version_bootloader_raw(FWUPD_DEVICE(d),v)
@@ -168,9 +189,37 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_version_raw(d)		fwupd_device_get_version_raw(FWUPD_DEVICE(d))
 #define fu_device_get_version_lowest_raw(d)	fwupd_device_get_version_lowest_raw(FWUPD_DEVICE(d))
 #define fu_device_get_version_bootloader_raw(d)	fwupd_device_get_version_bootloader_raw(FWUPD_DEVICE(d))
-#define fu_device_get_vendor_id(d)		fwupd_device_get_vendor_id(FWUPD_DEVICE(d))
+#define fu_device_get_vendor_ids(d)		fwupd_device_get_vendor_ids(FWUPD_DEVICE(d))
 #define fu_device_get_flashes_left(d)		fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
 #define fu_device_get_install_duration(d)	fwupd_device_get_install_duration(FWUPD_DEVICE(d))
+
+/**
+ * FuDeviceInternalFlags:
+ * @FU_DEVICE_INTERNAL_FLAG_NONE:			No flags set
+ * @FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS:	Do not add instance IDs from the device baseclass
+ * @FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER:		Ensure the version is a valid semantic version, e.g. numbers separated with dots
+ * @FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED:		Only devices supported in the metadata will be opened
+ * @FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME:		Set the device name from the metadata `name` if available
+ * @FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY:	Set the device name from the metadata `category` if available
+ * @FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT:		Set the device version format from the metadata if available
+ * @FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON:		Set the device icon from the metadata if available
+ * @FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN:			Retry the device open up to 5 times if it fails
+ *
+ * The device internal flags.
+ **/
+typedef enum {
+	FU_DEVICE_INTERNAL_FLAG_NONE			= 0,
+	FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS	= (1llu << 0),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER		= (1llu << 1),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED		= (1llu << 2),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME		= (1llu << 3),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY	= (1llu << 4),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT		= (1llu << 5),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON		= (1llu << 6),	/* Since: 1.5.5 */
+	FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN		= (1llu << 7),	/* Since: 1.5.5 */
+	/*< private >*/
+	FU_DEVICE_INTERNAL_FLAG_UNKNOWN			= G_MAXUINT64,
+} FuDeviceInternalFlags;
 
 /* accessors */
 gchar		*fu_device_to_string			(FuDevice	*self);
@@ -280,50 +329,72 @@ void		 fu_device_set_quirks			(FuDevice	*self,
 FuQuirks	*fu_device_get_quirks			(FuDevice	*self);
 FwupdRelease	*fu_device_get_release_default		(FuDevice	*self);
 GType		 fu_device_get_specialized_gtype	(FuDevice	*self);
+void		 fu_device_add_internal_flag		(FuDevice	*self,
+							 FuDeviceInternalFlags flag);
+void		 fu_device_remove_internal_flag		(FuDevice	*self,
+							 FuDeviceInternalFlags flag);
+gboolean	 fu_device_has_internal_flag		(FuDevice	*self,
+							 FuDeviceInternalFlags flag);
 gboolean	 fu_device_write_firmware		(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 FuFirmware	*fu_device_prepare_firmware		(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 FuFirmware	*fu_device_read_firmware		(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 GBytes		*fu_device_dump_firmware		(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_attach			(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_detach			(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_reload			(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_prepare			(FuDevice	*self,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_cleanup			(FuDevice	*self,
 							 FwupdInstallFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 void		 fu_device_incorporate			(FuDevice	*self,
 							 FuDevice	*donor);
 void		 fu_device_incorporate_flag		(FuDevice	*self,
 							 FuDevice	*donor,
 							 FwupdDeviceFlags flag);
 gboolean	 fu_device_open				(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_close			(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_probe			(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_setup			(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_rescan			(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_activate			(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 void		 fu_device_probe_invalidate		(FuDevice	*self);
 gboolean	 fu_device_poll				(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 void		 fu_device_set_poll_interval		(FuDevice	*self,
 							 guint		 interval);
 void		 fu_device_retry_set_delay		(FuDevice	*self,
@@ -336,12 +407,22 @@ gboolean	 fu_device_retry			(FuDevice	*self,
 							 FuDeviceRetryFunc func,
 							 guint		 count,
 							 gpointer	 user_data,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
+gboolean	 fu_device_retry_full			(FuDevice	*self,
+							 FuDeviceRetryFunc func,
+							 guint		 count,
+							 guint		 delay,
+							 gpointer	 user_data,
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_bind_driver			(FuDevice	*self,
 							 const gchar	*subsystem,
 							 const gchar	*driver,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_unbind_driver		(FuDevice	*self,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 GHashTable	*fu_device_report_metadata_pre		(FuDevice	*self);
 GHashTable	*fu_device_report_metadata_post		(FuDevice	*self);

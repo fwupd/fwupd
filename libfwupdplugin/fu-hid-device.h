@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2020 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -57,11 +57,13 @@ gboolean	 fu_hid_device_set_report		(FuHidDevice	*self,
 							 gsize		 bufsz,
 							 guint		 timeout,
 							 FuHidDeviceFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_hid_device_get_report		(FuHidDevice	*self,
 							 guint8		 value,
 							 guint8		*buf,
 							 gsize		 bufsz,
 							 guint		 timeout,
 							 FuHidDeviceFlags flags,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;

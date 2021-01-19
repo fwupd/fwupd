@@ -32,6 +32,7 @@ subdir('upower')
 subdir('wacom-usb')
 subdir('vli')
 subdir('goodix-moc')
+subdir('pixart-rf')
 
 if get_option('plugin_msr')
 subdir('msr')
@@ -100,6 +101,9 @@ subdir('thunderbolt')
 endif
 
 if get_option('plugin_redfish')
+if not get_option('curl')
+  error('curl is required for plugin_redfish')
+endif
 subdir('redfish')
 endif
 
@@ -115,11 +119,15 @@ endif
 subdir('synaptics-mst')
 endif
 
-if get_option('plugin_uefi')
+if get_option('plugin_uefi_capsule')
 subdir('bios')
-subdir('uefi')
+subdir('uefi-capsule')
 subdir('uefi-recovery')
 subdir('uefi-dbx')
+endif
+
+if get_option('plugin_uefi_pk')
+subdir('uefi-pk')
 endif
 
 if get_option('plugin_flashrom')

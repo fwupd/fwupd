@@ -25,7 +25,6 @@
 
 struct FuUtilPrivate {
 	GCancellable		*cancellable;
-	GMainLoop		*loop;
 	GOptionContext		*context;
 	FwupdClient		*client;
 	FwupdInstallFlags	 flags;
@@ -296,7 +295,6 @@ fu_util_private_free (FuUtilPrivate *priv)
 {
 	if (priv->client != NULL)
 		g_object_unref (priv->client);
-	g_main_loop_unref (priv->loop);
 	g_object_unref (priv->cancellable);
 	g_option_context_free (priv->context);
 	g_free (priv);
@@ -337,7 +335,6 @@ main (int argc, char *argv[])
 	fwupd_error_quark ();
 
 	/* create helper object */
-	priv->loop = g_main_loop_new (NULL, FALSE);
 	priv->client = fwupd_client_new ();
 
 	/* add commands */

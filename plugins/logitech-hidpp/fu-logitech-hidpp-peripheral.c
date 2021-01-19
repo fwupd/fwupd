@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -477,7 +477,7 @@ fu_logitech_hidpp_peripheral_probe (FuUdevDevice *device, GError **error)
 		return FALSE;
 
 	/* nearly... */
-	fu_device_set_vendor_id (FU_DEVICE (device), "USB:0x046D");
+	fu_device_add_vendor_id (FU_DEVICE (device), "USB:0x046D");
 
 	/* this is a non-standard extension */
 	devid = g_strdup_printf ("UFY\\VID_%04X&PID_%04X",
@@ -1045,5 +1045,6 @@ fu_logitech_hidpp_peripheral_init (FuLogitechHidPpPeripheral *self)
 
 	/* there are a lot of unifying peripherals, but not all respond
 	 * well to opening -- so limit to ones with issued updates */
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_ONLY_SUPPORTED);
+	fu_device_add_internal_flag (FU_DEVICE (self),
+				     FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED);
 }

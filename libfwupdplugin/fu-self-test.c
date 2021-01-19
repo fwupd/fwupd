@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -173,7 +173,7 @@ static void
 fu_device_version_format_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ENSURE_SEMVER);
+	fu_device_add_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
 	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version (device, "Ver1.2.3 RELEASE");
 	g_assert_cmpstr (fu_device_get_version (device), ==, "1.2.3");
@@ -317,6 +317,26 @@ fu_smbios_dt_func (void)
 	str = fu_smbios_get_string (smbios, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x04, &error);
 	g_assert_no_error (error);
 	g_assert_cmpstr (str, ==, "Hughski Limited");
+}
+
+static void
+fu_common_strsafe_func (void)
+{
+	struct {
+		const gchar *in;
+		const gchar *op;
+	} strs[] = {
+		{ "dave123",		"dave123" },
+		{ "dave123XXX",		"dave123" },
+		{ "dave\x03XXX",	"dave.XX" },
+		{ "dave\x03\x04XXX",	"dave..X" },
+		{ "\x03\x03",		NULL },
+		{ NULL, NULL }
+	};
+	for (guint i = 0; strs[i].in != NULL; i++) {
+		g_autofree gchar *tmp = fu_common_strsafe (strs[i].in, 7);
+		g_assert_cmpstr (tmp, ==, strs[i].op);
+	}
 }
 
 static void
@@ -1116,6 +1136,10 @@ fu_device_parent_func (void)
 	g_autoptr(FuDevice) grandparent_root = NULL;
 	g_autoptr(FuDevice) parent = fu_device_new ();
 	g_autoptr(FuDevice) parent_root = NULL;
+
+	fu_device_set_physical_id (child, "dummy");
+	fu_device_set_physical_id (grandparent, "dummy");
+	fu_device_set_physical_id (parent, "dummy");
 
 	/* set up three layer family */
 	fu_device_add_child (grandparent, parent);
@@ -2120,6 +2144,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/common{spawn-timeout)", fu_common_spawn_timeout_func);
 	g_test_add_func ("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
 	g_test_add_func ("/fwupd/common{kernel-lockdown}", fu_common_kernel_lockdown_func);
+	g_test_add_func ("/fwupd/common{strsafe}", fu_common_strsafe_func);
 	g_test_add_func ("/fwupd/efivar", fu_efivar_func);
 	g_test_add_func ("/fwupd/hwids", fu_hwids_func);
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);

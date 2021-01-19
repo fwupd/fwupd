@@ -391,7 +391,7 @@ fu_thunderbolt_device_setup_controller (FuDevice *device, GError **error)
 							     domain);
 			}
 			vendor_id = g_strdup_printf ("TBT:0x%04X", (guint) vid);
-			fu_device_set_vendor_id (device, vendor_id);
+			fu_device_add_vendor_id (device, vendor_id);
 			device_id = g_strdup_printf ("TBT-%04x%04x%s",
 						     (guint) vid,
 						     (guint) did,

@@ -10,11 +10,11 @@
 
 #include "fu-hailuck-kbd-firmware.h"
 
-struct _FuHaiLuckKbdFirmware {
+struct _FuHailuckKbdFirmware {
 	FuIhexFirmwareClass	 parent_instance;
 };
 
-G_DEFINE_TYPE (FuHaiLuckKbdFirmware, fu_hailuck_kbd_firmware, FU_TYPE_IHEX_FIRMWARE)
+G_DEFINE_TYPE (FuHailuckKbdFirmware, fu_hailuck_kbd_firmware, FU_TYPE_IHEX_FIRMWARE)
 
 static gboolean
 fu_hailuck_kbd_firmware_parse (FuFirmware *firmware,
@@ -41,8 +41,23 @@ fu_hailuck_kbd_firmware_parse (FuFirmware *firmware,
 				     rcd->record_type);
 			return FALSE;
 		}
-		if (rcd->addr + rcd->data->len > buf->len)
+		if (rcd->data->len == 0) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "record 0x%x had zero size", j);
+			return FALSE;
+		}
+		if (rcd->addr + rcd->data->len > buf->len) {
+			if (rcd->addr + rcd->data->len == 0) {
+				g_set_error_literal (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_NOT_SUPPORTED,
+						     "buffer would have zero size");
+				return FALSE;
+			}
 			fu_byte_array_set_size (buf, rcd->addr + rcd->data->len);
+		}
 		if (!fu_memcpy_safe (buf->data, buf->len, rcd->addr,
 				     rcd->data->data, rcd->data->len, 0x0,
 				     rcd->data->len, error))
@@ -67,12 +82,12 @@ fu_hailuck_kbd_firmware_parse (FuFirmware *firmware,
 }
 
 static void
-fu_hailuck_kbd_firmware_init (FuHaiLuckKbdFirmware *self)
+fu_hailuck_kbd_firmware_init (FuHailuckKbdFirmware *self)
 {
 }
 
 static void
-fu_hailuck_kbd_firmware_class_init (FuHaiLuckKbdFirmwareClass *klass)
+fu_hailuck_kbd_firmware_class_init (FuHailuckKbdFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_hailuck_kbd_firmware_parse;

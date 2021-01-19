@@ -17,7 +17,7 @@ meson .. \
 	--cross-file s390x_cross.txt \
 	--werror \
 	-Dplugin_flashrom=false \
-	-Dplugin_uefi=false \
+	-Dplugin_uefi_capsule=false \
 	-Dplugin_dell=false \
 	-Dplugin_modem_manager=false \
 	-Dplugin_msr=false \

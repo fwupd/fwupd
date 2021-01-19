@@ -699,3 +699,24 @@ LIBFWUPDPLUGIN_1.5.4 {
     fu_common_bytes_new_offset;
   local: *;
 } LIBFWUPDPLUGIN_1.5.3;
+
+LIBFWUPDPLUGIN_1.5.5 {
+  global:
+    fu_common_get_cpu_vendor;
+    fu_common_strsafe;
+    fu_device_add_internal_flag;
+    fu_device_has_internal_flag;
+    fu_device_internal_flag_from_string;
+    fu_device_internal_flag_to_string;
+    fu_device_remove_internal_flag;
+    fu_device_retry_full;
+    fu_efi_signature_get_kind;
+    fu_efi_signature_get_owner;
+    fu_efi_signature_get_type;
+    fu_efi_signature_kind_to_string;
+    fu_efi_signature_list_get_type;
+    fu_efi_signature_list_new;
+    fu_firmware_get_image_by_checksum;
+    fu_firmware_image_get_checksum;
+  local: *;
+} LIBFWUPDPLUGIN_1.5.4;

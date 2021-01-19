@@ -169,7 +169,8 @@ fu_nvme_device_parse_cns_maybe_dell (FuNvmeDevice *self, const guint8 *buf)
 
 	/* do not add the FuUdevDevice instance IDs as generic firmware
 	 * should not be used on these OEM-specific devices */
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS);
+	fu_device_add_internal_flag (FU_DEVICE (self),
+				     FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS);
 
 	/* add instance ID *and* GUID as using no-auto-instance-ids */
 	devid = g_strdup_printf ("STORAGE-DELL-%s", component_id);

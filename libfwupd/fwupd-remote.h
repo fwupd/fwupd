@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -73,13 +73,16 @@ FwupdRemoteKind	 fwupd_remote_get_kind			(FwupdRemote	*self);
 FwupdKeyringKind fwupd_remote_get_keyring_kind		(FwupdRemote	*self);
 gchar		*fwupd_remote_build_firmware_uri	(FwupdRemote	*self,
 							 const gchar	*url,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fwupd_remote_load_signature		(FwupdRemote	*self,
 							 const gchar	*filename,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fwupd_remote_load_signature_bytes	(FwupdRemote	*self,
 							 GBytes		*bytes,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 
 FwupdRemote	*fwupd_remote_from_variant		(GVariant	*value);
 GPtrArray	*fwupd_remote_array_from_variant	(GVariant	*value);

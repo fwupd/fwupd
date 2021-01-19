@@ -18,7 +18,7 @@ meson .. \
     -Dpolkit=false \
     -Dplugin_coreboot=false \
     -Dplugin_flashrom=false \
-    -Dplugin_uefi=false \
+    -Dplugin_uefi_capsule=false \
     -Dplugin_redfish=false \
     -Dplugin_altos=false \
     -Dplugin_dell=false \

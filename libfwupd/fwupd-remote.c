@@ -1,12 +1,14 @@
 /*
- * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
 
+#ifdef HAVE_LIBCURL
 #include <curl/curl.h>
+#endif
 #include <jcat.h>
 
 #include "fwupd-deprecated.h"

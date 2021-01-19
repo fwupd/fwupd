@@ -5,7 +5,7 @@ i18n.gettext(meson.project_name(),
   ]
 )
 
-if get_option('plugin_uefi')
+if get_option('plugin_uefi_capsule')
 meson.add_install_script('make-images.sh', localedir, python3.path())
 endif
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2019 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
  * Copyright (C) 2019 Aleksander Morgado <aleksander@aleksander.es>
  *
  * SPDX-License-Identifier: LGPL-2.1+

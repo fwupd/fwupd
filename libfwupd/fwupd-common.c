@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -157,6 +157,8 @@ fwupd_get_os_release (GError **error)
 	const gchar *paths[] = { "/etc/os-release", "/usr/lib/os-release", NULL };
 	g_autofree gchar *buf = NULL;
 	g_auto(GStrv) lines = NULL;
+
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 /* TODO: Read the Windows version */
 #ifdef _WIN32
@@ -348,6 +350,9 @@ fwupd_build_machine_id (const gchar *salt, GError **error)
 	g_autoptr(GChecksum) csum = NULL;
 	gsize sz = 0;
 
+	g_return_val_if_fail (salt != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
 	/* one of these has to exist */
 	fns[0] = g_build_filename (FWUPD_SYSCONFDIR, "machine-id", NULL);
 	fns[1] = g_build_filename (FWUPD_LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL);
@@ -528,6 +533,9 @@ fwupd_build_history_report_json (GPtrArray *devices, GError **error)
 	g_autoptr(JsonBuilder) builder = NULL;
 	g_autoptr(JsonGenerator) json_generator = NULL;
 	g_autoptr(JsonNode) json_root = NULL;
+
+	g_return_val_if_fail (devices != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* get a hash that represents the machine */
 	machine_id = fwupd_build_machine_id ("fwupd", error);
@@ -722,6 +730,7 @@ fwupd_guid_from_string (const gchar *guidstr,
 	g_auto(GStrv) split = NULL;
 
 	g_return_val_if_fail (guidstr != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* split into sections */
 	if (strlen (guidstr) != 36) {

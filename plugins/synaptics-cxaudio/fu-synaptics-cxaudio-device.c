@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2005-2019 Synaptics Incorporated
- * Copyright (C) 2019-2020 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2005 Synaptics Incorporated
+ * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */

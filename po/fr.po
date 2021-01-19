@@ -5,7 +5,7 @@
 # Translators:
 # Corentin Noël <tintou@noel.tf>, 2020
 # Franck <franck.routier@gmail.com>, 2015
-# Julien Humbert <julroy67@gmail.com>, 2020
+# Julien Humbert <julroy67@gmail.com>, 2020-2021
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -83,6 +83,10 @@ msgstr "Authentification…"
 msgid "Authentication is required to update the firmware on this machine"
 msgstr "Une authentification est nécessaire pour mettre à jour le micrologiciel sur cette machine"
 
+#. TRANSLATORS: firmware version of bootloader
+msgid "Bootloader Version"
+msgstr "Version du chargeur d’amorçage"
+
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Annuler"
@@ -99,6 +103,15 @@ msgstr "Modifié"
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "Somme de contrôle"
+
+#. TRANSLATORS: get interactive prompt, where branch is the
+#. * supplier of the firmware, e.g. "non-free" or "free"
+msgid "Choose a branch:"
+msgstr "Choisir une branche :"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a volume:"
+msgstr "Choisir un volume :"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
@@ -145,6 +158,10 @@ msgstr "Périphérique retiré :"
 msgid "Disabled"
 msgstr "Désactivé"
 
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "Afficher la version"
+
 #. TRANSLATORS: success
 #. success
 msgid "Done!"
@@ -175,6 +192,10 @@ msgstr "Activé"
 msgid "Encrypted"
 msgstr "Chiffré"
 
+#. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
+msgid "Encrypted RAM"
+msgstr "RAM chiffrée"
+
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
 msgstr "Quitter après un bref délai"
@@ -182,6 +203,10 @@ msgstr "Quitter après un bref délai"
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
 msgstr "Quitter après le chargement du moteur"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE"
+msgstr "FICHIER"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
 msgid "Failed"
@@ -207,6 +232,11 @@ msgstr "Drapeaux"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
 msgstr "Trouvé"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgctxt "A single GUID"
+msgid "GUID"
+msgstr "GUID"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -238,6 +268,16 @@ msgstr "Installation sur %s…"
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
 
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * active means being used by the OS
+msgid "Intel CET Active"
+msgstr "Intel CET actif"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * enabled means supported by the processor
+msgid "Intel CET Enabled"
+msgstr "Intel CET activé"
+
 #. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
 msgid "Intel SMAP"
 msgstr "Intel SMAP"
@@ -249,6 +289,10 @@ msgstr "Périphérique interne"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Invalid"
 msgstr "Invalide"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "KEY,VALUE"
+msgstr "CLÉ,VALEUR"
 
 #. TRANSLATORS: time remaining for completing firmware flash
 msgid "Less than one minute remaining"
@@ -305,6 +349,10 @@ msgstr "Non pris en charge"
 msgid "OK"
 msgstr "OK"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "PATH"
+msgstr "CHEMIN"
+
 #. TRANSLATORS: remote filename base
 msgid "Password"
 msgstr "Mot de passe"
@@ -348,9 +396,21 @@ msgstr "Réinstallation de %s en %s"
 msgid "Removed"
 msgstr "Retiré"
 
+#. TRANSLATORS: reboot to apply the update
+msgid "Restart now?"
+msgstr "Redémarrer maintenant ?"
+
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "Redémarrage du périphérique…"
+
+#. TRANSLATORS: Volume has been chosen by the user
+msgid "Selected volume"
+msgstr "Volume sélectionné"
+
+#. TRANSLATORS: command line option
+msgid "Show all results"
+msgstr "Afficher tous les résultats"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
@@ -359,6 +419,9 @@ msgstr "Montrer les options de débogage"
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
 msgstr "Montre des informations de débogage complémentaires"
+
+msgid "Signature"
+msgstr "Signature"
 
 #. TRANSLATORS: file size of the download
 msgid "Size"
@@ -376,9 +439,16 @@ msgstr "Résumé"
 msgid "Supported"
 msgstr "Pris en charge"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "TEXT"
+msgstr "TEXTE"
+
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
 msgstr "TPM v2.0"
+
+msgid "Target"
+msgstr "Cible"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -397,6 +467,13 @@ msgstr "Inconnu"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unlocked"
 msgstr "Déverrouillé"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Update now?"
+msgstr "Mettre à jour maintenant ?"
+
+msgid "Updating"
+msgstr "Mise à jour"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
@@ -422,10 +499,30 @@ msgstr "Valide"
 msgid "Variant"
 msgstr "Variante"
 
+#. TRANSLATORS: manufacturer of hardware
+msgid "Vendor"
+msgstr "Fournisseur"
+
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Vérification…"
 
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "Version"
+
+#. TRANSLATORS: waiting for device to do something
+msgid "Waiting…"
+msgstr "En attente…"
+
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "Écriture…"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[CHECKSUM]"
+msgstr "[SOMME DE CONTRÔLE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILE]"
+msgstr "[FICHIER]"

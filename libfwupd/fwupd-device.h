@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2020 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -113,9 +113,16 @@ void		 fwupd_device_set_protocol		(FwupdDevice	*device,
 const gchar	*fwupd_device_get_vendor		(FwupdDevice	*device);
 void		 fwupd_device_set_vendor		(FwupdDevice	*device,
 							 const gchar	*vendor);
+G_DEPRECATED_FOR(fwupd_device_get_vendor_ids)
 const gchar	*fwupd_device_get_vendor_id		(FwupdDevice	*device);
+G_DEPRECATED_FOR(fwupd_device_add_vendor_id)
 void		 fwupd_device_set_vendor_id		(FwupdDevice	*device,
 							 const gchar	*vendor_id);
+void		 fwupd_device_add_vendor_id		(FwupdDevice	*device,
+							 const gchar	*vendor_id);
+gboolean	 fwupd_device_has_vendor_id		(FwupdDevice	*device,
+							 const gchar	*vendor_id);
+GPtrArray	*fwupd_device_get_vendor_ids		(FwupdDevice	*device);
 void		 fwupd_device_add_guid			(FwupdDevice	*device,
 							 const gchar	*guid);
 gboolean	 fwupd_device_has_guid			(FwupdDevice	*device,

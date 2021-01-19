@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
- * Copyright (C) 2015-2017 Peter Jones <pjones@redhat.com>
+ * Copyright (C) 2015 Peter Jones <pjones@redhat.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -572,8 +572,16 @@ fu_uefi_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* delete the logs to save space; use fwupdate to debug the EFI binary */
-	fu_efivar_delete (FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_VERBOSE", NULL);
-	fu_efivar_delete (FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_DEBUG_LOG", NULL);
+	if (fu_efivar_exists (FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_VERBOSE")) {
+		if (!fu_efivar_delete (FU_EFIVAR_GUID_FWUPDATE,
+				       "FWUPDATE_VERBOSE", error))
+			return FALSE;
+	}
+	if (fu_efivar_exists (FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_DEBUG_LOG")) {
+		if (!fu_efivar_delete (FU_EFIVAR_GUID_FWUPDATE,
+				       "FWUPDATE_DEBUG_LOG", error))
+			return FALSE;
+	}
 
 	/* set the blob header shared with fwupd.efi */
 	if (!fu_uefi_device_write_update_info (self, fn, varname, self->fw_class, error))
@@ -674,8 +682,8 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_MD_SET_VERFMT);
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_MD_SET_ICON);
+	fu_device_add_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
+	fu_device_add_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON);
 
 	/* add icons */
 	if (self->kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {

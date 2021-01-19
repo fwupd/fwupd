@@ -1,5 +1,5 @@
-UEFI Support
-============
+UEFI Capsule Support
+====================
 
 Introduction
 ------------
@@ -9,7 +9,7 @@ defines the software interface between an OS and platform firmware.
 With the UpdateCapsule boot service it can be used to update system firmware.
 
 If you don't want or need this functionality you can use the
-`-Dplugin_uefi=false` option.
+`-Dplugin_uefi_capsule=false` option.
 
 Firmware Format
 ---------------
@@ -55,7 +55,7 @@ Custom EFI System Partition
 
 Since version 1.1.0 fwupd will autodetect the ESP when it is mounted on
 `/boot/efi`, `/boot`, or `/efi`. A custom EFI system partition location can be
-used by modifying *OverrideESPMountPoint* in `/etc/fwupd/uefi.conf`.
+used by modifying *OverrideESPMountPoint* in `/etc/fwupd/uefi_capsule.conf`.
 
 Setting an invalid directory will disable the fwupd plugin.
 

@@ -269,7 +269,7 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 		dock_name = g_strdup_printf ("Dell %s", dock_type);
 	}
 	fu_device_set_vendor (dev, "Dell Inc.");
-	fu_device_set_vendor_id (dev, "PCI:0x1028");
+	fu_device_add_vendor_id (dev, "PCI:0x1028");
 	fu_device_set_name (dev, dock_name);
 	fu_device_set_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "device-firmware");
 	if (type == DOCK_TYPE_TB16) {
@@ -719,7 +719,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_add_instance_id (dev, tpm_guid_raw);
 	fu_device_add_instance_id (dev, "system-tpm");
 	fu_device_set_vendor (dev, "Dell Inc.");
-	fu_device_set_vendor_id (dev, "PCI:0x1028");
+	fu_device_add_vendor_id (dev, "PCI:0x1028");
 	fu_device_set_name (dev, pretty_tpm_name);
 	fu_device_set_summary (dev, "Platform TPM device");
 	fu_device_set_version_format (dev, FWUPD_VERSION_FORMAT_QUAD);
@@ -754,7 +754,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		fu_device_set_id (dev_alt, tpm_id_alt);
 		fu_device_add_instance_id (dev_alt, tpm_guid_raw_alt);
 		fu_device_set_vendor (dev, "Dell Inc.");
-		fu_device_set_vendor_id (dev, "PCI:0x1028");
+		fu_device_add_vendor_id (dev, "PCI:0x1028");
 		fu_device_set_name (dev_alt, pretty_tpm_name_alt);
 		fu_device_set_summary (dev_alt, "Alternate mode for platform TPM device");
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_INTERNAL);
@@ -805,7 +805,7 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 			/* the kernel returns lowercase in sysfs, need to match it */
 			device_id = g_strdup_printf ("TBT-%04x%04x", 0x00d4u,
 						     (unsigned) system_id);
-			fu_device_set_vendor_id (device, vendor_id);
+			fu_device_add_vendor_id (device, vendor_id);
 			fu_device_add_instance_id (device, device_id);
 			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		}
@@ -837,7 +837,7 @@ fu_plugin_init (FuPlugin *plugin)
 		data->smi_obj->fake_smbios = TRUE;
 
 	/* make sure that UEFI plugin is ready to receive devices */
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi_capsule");
 
 	/* our TPM device is upgradable! */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_BETTER_THAN, "tpm");

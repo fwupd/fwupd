@@ -72,7 +72,6 @@ struct _FuAtaDevice {
 	guint16			 transfer_blocks;
 	guint8			 transfer_mode;
 	guint32			 oui;
-	gboolean		 unknown_oui_report;
 };
 
 G_DEFINE_TYPE (FuAtaDevice, fu_ata_device, FU_TYPE_UDEV_DEVICE)
@@ -87,12 +86,6 @@ guint16
 fu_ata_device_get_transfer_blocks (FuAtaDevice *self)
 {
 	return self->transfer_blocks;
-}
-
-void
-fu_ata_device_set_unknown_oui_report (FuAtaDevice *self, gboolean enabled)
-{
-	self->unknown_oui_report = enabled;
 }
 
 static gchar *
@@ -164,7 +157,8 @@ fu_ata_device_parse_id_maybe_dell (FuAtaDevice *self, const guint16 *buf)
 
 	/* do not add the FuUdevDevice instance IDs as generic firmware
 	 * should not be used on these OEM-specific devices */
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS);
+	fu_device_add_internal_flag (FU_DEVICE (self),
+				     FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS);
 
 	/* add instance ID *and* GUID as using no-auto-instance-ids */
 	guid_id = g_strdup_printf ("STORAGE-DELL-%s", component_id);
@@ -179,7 +173,7 @@ fu_ata_device_parse_id_maybe_dell (FuAtaDevice *self, const guint16 *buf)
 
 	/* owned by Dell */
 	fu_device_set_vendor (FU_DEVICE (self), "Dell");
-	fu_device_set_vendor_id (FU_DEVICE (self), "ATA:0x1028");
+	fu_device_add_vendor_id (FU_DEVICE (self), "ATA:0x1028");
 }
 
 static void
@@ -303,7 +297,7 @@ fu_ata_device_parse_vendor_name (FuAtaDevice *self, const gchar *name)
 
 	/* devices without a vendor ID will not be UPGRADABLE */
 	if (vendor_id != NULL)
-		fu_device_set_vendor_id (FU_DEVICE (self), vendor_id);
+		fu_device_add_vendor_id (FU_DEVICE (self), vendor_id);
 
 	/* remove leading junk */
 	while (name[0] == ' ' || name[0] == '_' || name[0] == '-')
@@ -394,27 +388,16 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 		fu_device_add_instance_id_full (device, tmp, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 		has_oui_quirk = fu_device_get_vendor (FU_DEVICE (self)) != NULL;
 	}
+	if (self->oui > 0x0) {
+		g_autofree gchar *vendor_id = NULL;
+		vendor_id = g_strdup_printf ("OUI:%06x", self->oui);
+		fu_device_add_vendor_id (device, vendor_id);
+	}
 
 	/* if not already set using the vendor block or a OUI quirk */
 	name = fu_ata_device_get_string (id, 27, 46);
 	if (name != NULL && !has_oui_quirk)
 		fu_ata_device_parse_vendor_name (self, name);
-
-	/* ask user to report data */
-	if (self->oui != 0x0 && !has_oui_quirk && self->unknown_oui_report) {
-		const gchar *url = "https://github.com/fwupd/fwupd/wiki/ATA-Disk:-OUI-Quirk-Required";
-		g_printerr ("\nOUI quirk required, please see %s!\n", url);
-		g_printerr ("---\n");
-		g_printerr ("[DeviceInstanceId=OUI\\%06x]\n", self->oui);
-		if (fu_device_get_vendor_id (FU_DEVICE (self)) != NULL) {
-			g_printerr ("Vendor = %s\n", fu_device_get_vendor (FU_DEVICE (self)));
-			g_printerr ("VendorId = %s\n", fu_device_get_vendor_id (FU_DEVICE (self)));
-		} else {
-			g_printerr ("Vendor = FIXME\n");
-			g_printerr ("VendorId = ATA:UNKNOWN\n");
-		}
-		g_printerr ("---\n");
-	}
 
 	/* 8 byte additional product identifier == SKU? */
 	sku = fu_ata_device_get_string (id, 170, 173);

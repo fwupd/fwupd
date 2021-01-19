@@ -268,13 +268,28 @@ fu_ccgx_firmware_parse (FuFirmware *firmware,
 	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 
 	/* parse header */
+	if (lines[0] == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "invalid header, expected == 12 chars");
+		return FALSE;
+	}
 	g_strdelimit (lines[0], "\r\x1a", '\0');
-	if (lines[0] == NULL || strlen (lines[0]) != 12) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "invalid header, expected == 12 chars -- got %s",
-			     lines[0]);
+	if (strlen (lines[0]) != 12) {
+		g_autofree gchar *strsafe = fu_common_strsafe (lines[0], 12);
+		if (strsafe != NULL) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "invalid header, expected == 12 chars -- got %s",
+				     strsafe);
+			return FALSE;
+		}
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "invalid header, expected == 12 chars");
 		return FALSE;
 	}
 	self->silicon_id = fu_firmware_strparse_uint32 (lines[0]) >> 16;

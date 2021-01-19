@@ -12,5 +12,3 @@
 G_DECLARE_FINAL_TYPE (FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU, SYNAPTICS_RMI_FIRMWARE, FuFirmware)
 
 FuFirmware	*fu_synaptics_rmi_firmware_new			(void);
-GBytes		*fu_synaptics_rmi_firmware_generate_v0x		(void);
-GBytes		*fu_synaptics_rmi_firmware_generate_v10		(void);

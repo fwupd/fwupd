@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -408,7 +408,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	if (subsystem != NULL && priv->vendor != 0x0000) {
 		g_autofree gchar *vendor_id = NULL;
 		vendor_id = g_strdup_printf ("%s:0x%04X", subsystem, (guint) priv->vendor);
-		fu_device_set_vendor_id (device, vendor_id);
+		fu_device_add_vendor_id (device, vendor_id);
 	}
 
 	/* add GUIDs in order of priority */
@@ -1007,6 +1007,7 @@ fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystems, GEr
 
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
 	g_return_val_if_fail (subsystems != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* nothing to do */
 	if (priv->udev_device == NULL)
@@ -1320,6 +1321,7 @@ fu_udev_device_ioctl (FuUdevDevice *self,
 	g_return_val_if_fail (request != 0x0, FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
 	g_return_val_if_fail (priv->fd > 0, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	rc_tmp = ioctl (priv->fd, request, buf);
 	if (rc != NULL)
@@ -1373,6 +1375,7 @@ fu_udev_device_pread_full (FuUdevDevice *self, goffset port,
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
 	g_return_val_if_fail (priv->fd > 0, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 #ifdef HAVE_PWRITE
 	if (pread (priv->fd, buf, bufsz, port) != (gssize) bufsz) {
@@ -1417,6 +1420,7 @@ fu_udev_device_pwrite_full (FuUdevDevice *self, goffset port,
 
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
 	g_return_val_if_fail (priv->fd > 0, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 #ifdef HAVE_PWRITE
 	if (pwrite (priv->fd, buf, bufsz, port) != (gssize) bufsz) {
@@ -1505,6 +1509,7 @@ fu_udev_device_get_sysfs_attr (FuUdevDevice *self, const gchar *attr,
 
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), NULL);
 	g_return_val_if_fail (attr != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* nothing to do */
 	if (priv->udev_device == NULL) {
@@ -1580,6 +1585,7 @@ fu_udev_device_write_sysfs (FuUdevDevice *self, const gchar *attribute,
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
 	g_return_val_if_fail (attribute != NULL, FALSE);
 	g_return_val_if_fail (val != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	path = g_build_filename (fu_udev_device_get_sysfs_path (self),
 				 attribute, NULL);

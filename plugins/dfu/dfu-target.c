@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -519,18 +519,26 @@ dfu_target_check_status (DfuTarget *target, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
 	DfuStatus status;
+	g_autoptr(GTimer) timer = g_timer_new ();
 
 	/* get the status */
 	if (!dfu_device_refresh (priv->device, error))
 		return FALSE;
 
 	/* wait for dfuDNBUSY to not be set */
-	if (dfu_device_get_version (priv->device) == DFU_VERSION_DFUSE) {
-		while (dfu_device_get_state (priv->device) == DFU_STATE_DFU_DNBUSY) {
-			g_debug ("waiting for DFU_STATE_DFU_DNBUSY to clear");
-			g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
-			if (!dfu_device_refresh (priv->device, error))
-				return FALSE;
+	while (dfu_device_get_state (priv->device) == DFU_STATE_DFU_DNBUSY) {
+		g_debug ("waiting for DFU_STATE_DFU_DNBUSY to clear");
+		g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
+		if (!dfu_device_refresh (priv->device, error))
+			return FALSE;
+		/* this is a really long time to save fwupd in case
+		 * the device has got wedged */
+		if (g_timer_elapsed (timer, NULL) > 120.f) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "Stuck in DFU_DNBUSY");
+			return FALSE;
 		}
 	}
 
@@ -768,8 +776,8 @@ dfu_target_download_chunk (DfuTarget *target, guint16 index, GBytes *bytes, GErr
 		g_usleep (dfu_device_get_download_timeout (priv->device) * 1000);
 	}
 
-	/* find out if the write was successful */
-	if (!dfu_device_refresh (priv->device, error))
+	/* find out if the write was successful, waiting for BUSY to clear */
+	if (!dfu_target_check_status (target, error))
 		return FALSE;
 
 	g_assert (actual_length == g_bytes_get_size (bytes));

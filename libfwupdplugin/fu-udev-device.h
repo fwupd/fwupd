@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2019 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -73,7 +73,8 @@ guint		 fu_udev_device_get_slot_depth		(FuUdevDevice	*self,
 							 const gchar	*subsystem);
 gboolean	 fu_udev_device_set_physical_id		(FuUdevDevice	*self,
 							 const gchar	*subsystems,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 void		 fu_udev_device_set_readonly		(FuUdevDevice	*self,
 							 gboolean	 readonly)
 G_GNUC_DEPRECATED_FOR(fu_udev_device_set_flags);
@@ -87,25 +88,30 @@ gboolean	 fu_udev_device_ioctl			(FuUdevDevice	*self,
 							 gulong		 request,
 							 guint8		*buf,
 							 gint		*rc,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_udev_device_pwrite			(FuUdevDevice	*self,
 							 goffset	 port,
 							 guint8		 data,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_udev_device_pwrite_full		(FuUdevDevice	*self,
 							 goffset	 port,
 							 const guint8	*buf,
 							 gsize		 bufsz,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_udev_device_pread			(FuUdevDevice	*self,
 							 goffset	 port,
 							 guint8		*data,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_udev_device_pread_full		(FuUdevDevice	*self,
 							 goffset	 port,
 							 guint8		*buf,
 							 gsize		 bufsz,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 const gchar	*fu_udev_device_get_sysfs_attr		 (FuUdevDevice	*self,
 							  const gchar	*attr,
 							  GError	**error);
@@ -114,5 +120,6 @@ gchar		*fu_udev_device_get_parent_name		(FuUdevDevice	*self);
 gboolean	 fu_udev_device_write_sysfs		(FuUdevDevice	*self,
 							 const gchar	*attribute,
 							 const gchar	*val,
-							 GError		**error);
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 const gchar	*fu_udev_device_get_devtype		(FuUdevDevice	*self);

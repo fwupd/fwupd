@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2020 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2016 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -47,6 +47,7 @@ fwupd_client_helper_free (FwupdClientHelper *helper)
 	g_free (helper->str);
 	g_main_loop_unref (helper->loop);
 	g_main_context_unref (helper->context);
+	g_main_context_pop_thread_default (helper->context);
 	g_free (helper);
 }
 
@@ -57,6 +58,7 @@ fwupd_client_helper_new (FwupdClient *self)
 	helper = g_new0 (FwupdClientHelper, 1);
 	helper->context = fwupd_client_get_main_context (self);
 	helper->loop = g_main_loop_new (helper->context, FALSE);
+	g_main_context_push_thread_default (helper->context);
 	return helper;
 }
 

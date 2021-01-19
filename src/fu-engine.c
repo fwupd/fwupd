@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -1153,6 +1153,59 @@ fu_engine_check_requirement_not_child (FuEngine *self, XbNode *req,
 }
 
 static gboolean
+fu_engine_check_requirement_vendor_id (FuEngine *self, XbNode *req,
+				       FuDevice *device, GError **error)
+{
+	GPtrArray *vendor_ids;
+	const gchar *vendor_ids_metadata;
+	g_autofree gchar *vendor_ids_device = NULL;
+	g_auto(GStrv) vendor_ids_tmp = NULL;
+
+	/* devices without vendor IDs should not exist! */
+	vendor_ids = fu_device_get_vendor_ids (device);
+	if (vendor_ids->len == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "device [%s] has no vendor ID",
+			     fu_device_get_id (device));
+		return FALSE;
+	}
+
+	/* metadata with empty vendor IDs should not exist! */
+	vendor_ids_metadata = xb_node_get_attr (req, "version");
+	if (vendor_ids_metadata == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "metadata has no vendor ID");
+		return FALSE;
+	}
+
+	/* just cat them together into a string */
+	vendor_ids_tmp = g_new0 (gchar *, vendor_ids->len + 1);
+	for (guint i = 0; i < vendor_ids->len; i++) {
+		const gchar *vendor_id_tmp = g_ptr_array_index (vendor_ids, i);
+		vendor_ids_tmp[i] = g_strdup (vendor_id_tmp);
+	}
+	vendor_ids_device = g_strjoinv ("|", vendor_ids_tmp);
+
+	/* it is always safe to use a regex, even for simple strings */
+	if (!g_regex_match_simple (vendor_ids_metadata, vendor_ids_device, 0, 0)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "Not compatible with vendor %s: got %s",
+			     vendor_ids_device,
+			     vendor_ids_metadata);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req, FuDevice *device,
 				      FwupdInstallFlags flags, GError **error)
 {
@@ -1228,20 +1281,10 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req, FuDevice *dev
 	}
 
 	/* vendor ID */
-	if (g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0 &&
-	    fu_device_get_vendor_id (device_actual) != NULL) {
-		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
-		    !fu_engine_require_vercmp (req, fu_device_get_vendor_id (device_actual),
-					       fu_device_get_version_format (device_actual),
-					       &error_local)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Not compatible with vendor: %s",
-				     error_local->message);
-			return FALSE;
-		}
-		return TRUE;
+	if (g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0) {
+		if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID)
+			return TRUE;
+		return fu_engine_check_requirement_vendor_id (self, req, device_actual, error);
 	}
 
 	/* child version */
@@ -2194,7 +2237,7 @@ fu_engine_install_release (FuEngine *self,
 	if (version_rel != NULL &&
 	    fu_common_vercmp_full (version_orig, version_rel, fmt) != 0 &&
 	    fu_common_vercmp_full (version_orig, fu_device_get_version (device), fmt) == 0 &&
-	    !fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
+	    !fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 		g_autofree gchar *str = NULL;
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		str = g_strdup_printf ("device version not updated on success, %s != %s",
@@ -3081,7 +3124,7 @@ fu_engine_md_refresh_device_name (FuEngine *self, FuDevice *device, XbNode *comp
 	name = xb_node_query_text (component, "name", NULL);
 	if (name != NULL) {
 		fu_device_set_name (device, name);
-		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME);
+		fu_device_remove_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME);
 	}
 }
 
@@ -3098,7 +3141,7 @@ fu_engine_md_refresh_device_icon (FuEngine *self, FuDevice *device, XbNode *comp
 	icon = xb_node_query_text (component, "icon", NULL);
 	if (icon != NULL) {
 		fu_device_add_icon (device, icon);
-		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_MD_SET_ICON);
+		fu_device_remove_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON);
 	}
 }
 
@@ -3144,7 +3187,7 @@ fu_engine_md_refresh_device_name_category (FuEngine *self, FuDevice *device, XbN
 	}
 	if (name != NULL) {
 		fu_device_set_name (device, name);
-		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY);
+		fu_device_remove_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY);
 	}
 }
 
@@ -3203,22 +3246,22 @@ fu_engine_md_refresh_device_verfmt (FuEngine *self, FuDevice *device, XbNode *co
 	}
 
 	/* do not try to do this again */
-	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_MD_SET_VERFMT);
+	fu_device_remove_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
 }
 
 void
 fu_engine_md_refresh_device_from_component (FuEngine *self, FuDevice *device, XbNode *component)
 {
 	/* set the name */
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME))
+	if (fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME))
 		fu_engine_md_refresh_device_name (self, device, component);
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY))
+	if (fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY))
 		fu_engine_md_refresh_device_name_category (self, device, component);
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_ICON))
+	if (fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON))
 		fu_engine_md_refresh_device_icon (self, device, component);
 
 	/* fix the version */
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_MD_SET_VERFMT))
+	if (fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT))
 		fu_engine_md_refresh_device_verfmt (self, device, component);
 }
 
@@ -3929,7 +3972,7 @@ fu_engine_get_details (FuEngine *self, FuEngineRequest *request, gint fd, GError
 			fwupd_release_set_remote_id (rel, remote_id);
 			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED);
 		}
-		if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_MD_SET_VERFMT))
+		if (fu_device_has_internal_flag (dev, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT))
 			fu_engine_md_refresh_device_verfmt (self, dev, component);
 
 		/* if this matched a device on the system, ensure all the
@@ -5302,7 +5345,7 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 
 	/* no vendor-id, and so no way to lock it down! */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
-	    fu_device_get_vendor_id (device) == NULL) {
+	    fu_device_get_vendor_ids(device)->len == 0) {
 		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_set_update_error (device, "No vendor ID set");
 	}
@@ -5313,7 +5356,7 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 
 	/* does the device *still* not have a vendor ID? */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
-	    fu_device_get_vendor_id (device) == NULL) {
+	    fu_device_get_vendor_ids(device)->len == 0) {
 		g_warning ("device %s [%s] does not define a vendor-id!",
 			   fu_device_get_id (device),
 			   fu_device_get_name (device));
@@ -6403,6 +6446,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	fu_engine_add_firmware_gtype (self, "fmap", FU_TYPE_FMAP_FIRMWARE);
 	fu_engine_add_firmware_gtype (self, "ihex", FU_TYPE_IHEX_FIRMWARE);
 	fu_engine_add_firmware_gtype (self, "srec", FU_TYPE_SREC_FIRMWARE);
+	fu_engine_add_firmware_gtype (self, "smbios", FU_TYPE_SMBIOS);
 
 	/* set shared USB context */
 	self->usb_ctx = g_usb_context_new (error);

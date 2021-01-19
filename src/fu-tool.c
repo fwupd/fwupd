@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2015 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -49,6 +49,7 @@ typedef enum {
 
 struct FuUtilPrivate {
 	GCancellable		*cancellable;
+	GMainContext		*main_ctx;
 	GMainLoop		*loop;
 	GOptionContext		*context;
 	FuEngine		*engine;
@@ -248,6 +249,8 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->engine);
 	if (priv->request != NULL)
 		g_object_unref (priv->request);
+	if (priv->main_ctx != NULL)
+		g_main_context_unref (priv->main_ctx);
 	if (priv->loop != NULL)
 		g_main_loop_unref (priv->loop);
 	if (priv->cancellable != NULL)
@@ -1765,6 +1768,7 @@ static gboolean
 fu_util_monitor (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdClient) client = fwupd_client_new ();
+	fwupd_client_set_main_context (client, priv->main_ctx);
 
 	/* get all the devices */
 	if (!fwupd_client_connect (client, priv->cancellable, error))
@@ -2758,7 +2762,8 @@ main (int argc, char *argv[])
 #endif
 
 	/* create helper object */
-	priv->loop = g_main_loop_new (NULL, FALSE);
+	priv->main_ctx = g_main_context_new ();
+	priv->loop = g_main_loop_new (priv->main_ctx, FALSE);
 	priv->progressbar = fu_progressbar_new ();
 	priv->request = fu_engine_request_new ();
 

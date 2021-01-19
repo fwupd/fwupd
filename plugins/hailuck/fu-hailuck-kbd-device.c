@@ -10,11 +10,11 @@
 #include "fu-hailuck-kbd-device.h"
 #include "fu-hailuck-tp-device.h"
 
-struct _FuHaiLuckKbdDevice {
+struct _FuHailuckKbdDevice {
 	FuHidDevice		 parent_instance;
 };
 
-G_DEFINE_TYPE (FuHaiLuckKbdDevice, fu_hailuck_kbd_device, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE (FuHailuckKbdDevice, fu_hailuck_kbd_device, FU_TYPE_HID_DEVICE)
 
 static gboolean
 fu_hailuck_kbd_device_detach (FuDevice *device, GError **error)
@@ -36,7 +36,7 @@ static gboolean
 fu_hailuck_kbd_device_probe (FuUsbDevice *device, GError **error)
 {
 	g_autofree gchar *devid = NULL;
-	g_autoptr(FuHaiLuckTpDevice) tp_device = fu_hailuck_tp_device_new (FU_DEVICE (device));
+	g_autoptr(FuHailuckTpDevice) tp_device = fu_hailuck_tp_device_new (FU_DEVICE (device));
 
 	/* add extra keyboard-specific GUID */
 	devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X&MODE_KBD",
@@ -60,7 +60,7 @@ fu_hailuck_kbd_device_probe (FuUsbDevice *device, GError **error)
 }
 
 static void
-fu_hailuck_kbd_device_init (FuHaiLuckKbdDevice *self)
+fu_hailuck_kbd_device_init (FuHailuckKbdDevice *self)
 {
 	fu_device_set_firmware_size (FU_DEVICE (self), 0x4000);
 	fu_device_set_protocol (FU_DEVICE (self), "com.hailuck.kbd");
@@ -73,7 +73,7 @@ fu_hailuck_kbd_device_init (FuHaiLuckKbdDevice *self)
 }
 
 static void
-fu_hailuck_kbd_device_class_init (FuHaiLuckKbdDeviceClass *klass)
+fu_hailuck_kbd_device_class_init (FuHailuckKbdDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);

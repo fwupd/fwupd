@@ -266,6 +266,7 @@ dfu_device_wait_for_replug (DfuToolPrivate *priv, DfuDevice *device, guint timeo
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(GUsbDevice) usb_device2  = NULL;
 	g_autoptr(GUsbContext) usb_context = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* get all the DFU devices */
 	usb_context = g_usb_context_new (error);
@@ -273,7 +274,8 @@ dfu_device_wait_for_replug (DfuToolPrivate *priv, DfuDevice *device, guint timeo
 		return FALSE;
 
 	/* close */
-	fu_device_close (FU_DEVICE (device), NULL);
+	if (!fu_device_close (FU_DEVICE (device), &error_local))
+		g_debug ("failed to close: %s", error_local->message);
 
 	/* watch the device disappear and re-appear */
 	usb_device2 = g_usb_context_wait_for_replug (usb_context,

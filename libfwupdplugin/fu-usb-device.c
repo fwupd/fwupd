@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017-2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -309,7 +309,7 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 
 	/* set vendor ID */
 	vendor_id = g_strdup_printf ("USB:0x%04X", g_usb_device_get_vid (priv->usb_device));
-	fu_device_set_vendor_id (device, vendor_id);
+	fu_device_add_vendor_id (device, vendor_id);
 
 	/* set the version if the release has been set */
 	release = g_usb_device_get_release (priv->usb_device);
@@ -505,6 +505,9 @@ fu_usb_device_find_udev_device (FuUsbDevice *device, GError **error)
 	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(GList) devices = NULL;
 	g_autoptr(GUdevClient) gudev_client = g_udev_client_new (NULL);
+
+	g_return_val_if_fail (FU_IS_USB_DEVICE (device), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* find all tty devices */
 	devices = g_udev_client_query_by_subsystem (gudev_client, "usb");

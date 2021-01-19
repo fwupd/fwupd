@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2017 Peter Jones <pjones@redhat.com>
+ * Copyright (C) 2015 Peter Jones <pjones@redhat.com>
  * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -17,8 +17,7 @@
 #include "fu-common.h"
 #include "fu-efivar.h"
 #include "fu-uefi-dbx-common.h"
-#include "fu-efi-signature-common.h"
-#include "fu-efi-signature-parser.h"
+#include "fu-efi-signature.h"
 
 /* custom return code */
 #define EXIT_NOTHING_TO_DO		2
@@ -29,29 +28,62 @@ fu_util_ignore_cb (const gchar *log_domain, GLogLevelFlags log_level,
 {
 }
 
-static GPtrArray *
+static FuFirmware *
 fu_dbxtool_get_siglist_system (GError **error)
 {
-	gsize bufsz = 0;
-	g_autofree guint8 *buf = NULL;
-	if (!fu_efivar_get_data (FU_EFIVAR_GUID_SECURITY_DATABASE, "dbx",
-				 &buf, &bufsz, NULL, error))
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(FuFirmware) dbx = fu_efi_signature_list_new ();
+	blob = fu_efivar_get_data_bytes (FU_EFIVAR_GUID_SECURITY_DATABASE, "dbx", NULL, error);
+	if (blob == NULL)
 		return NULL;
-	return fu_efi_signature_parser_new (buf, bufsz,
-					    FU_EFI_SIGNATURE_PARSER_FLAGS_NONE,
-					    error);
+	if (!fu_firmware_parse (dbx, blob, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
+		return NULL;
+	return g_steal_pointer (&dbx);
 }
 
-static GPtrArray *
+static FuFirmware *
 fu_dbxtool_get_siglist_local (const gchar *filename, GError **error)
 {
-	gsize bufsz = 0;
-	g_autofree guint8 *buf = NULL;
-	if (!g_file_get_contents (filename, (gchar **) &buf, &bufsz, error))
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(FuFirmware) siglist = fu_efi_signature_list_new ();
+	blob = fu_common_get_contents_bytes (filename, error);
+	if (blob == NULL)
 		return NULL;
-	return fu_efi_signature_parser_new (buf, bufsz,
-					    FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,
-					    error);
+	if (!fu_firmware_parse (siglist, blob, FWUPD_INSTALL_FLAG_NONE, error))
+		return NULL;
+	return g_steal_pointer (&siglist);
+}
+
+static gboolean
+fu_dbxtool_siglist_inclusive (FuFirmware *outer, FuFirmware *inner)
+{
+	g_autoptr(GPtrArray) sigs = fu_firmware_get_images (inner);
+	for (guint i = 0; i < sigs->len; i++) {
+		FuEfiSignature *sig = g_ptr_array_index (sigs, i);
+		g_autofree gchar *checksum = NULL;
+		g_autoptr(FuFirmwareImage) img = NULL;
+		checksum = fu_firmware_image_get_checksum (FU_FIRMWARE_IMAGE (sig),
+							   G_CHECKSUM_SHA256, NULL);
+		if (checksum == NULL)
+			continue;
+		img = fu_firmware_get_image_by_checksum (outer, checksum, NULL);
+		if (img == NULL)
+			return FALSE;
+	}
+	return TRUE;
+}
+
+static const gchar *
+fu_dbxtool_guid_to_string (const gchar *guid)
+{
+	if (g_strcmp0 (guid, FU_EFI_SIGNATURE_GUID_ZERO) == 0)
+		return "zero";
+	if (g_strcmp0 (guid, FU_EFI_SIGNATURE_GUID_MICROSOFT) == 0)
+		return "microsoft";
+	if (g_strcmp0 (guid, FU_EFI_SIGNATURE_GUID_OVMF) == 0 ||
+	    g_strcmp0 (guid, FU_EFI_SIGNATURE_GUID_OVMF_LEGACY) == 0)
+		return "ovmf";
+	return guid;
 }
 
 int
@@ -123,7 +155,8 @@ main (int argc, char *argv[])
 	/* list contents, either of the existing system, or an update */
 	if (action_list || action_version) {
 		guint cnt = 1;
-		g_autoptr(GPtrArray) dbx = NULL;
+		g_autoptr(FuFirmware) dbx = NULL;
+		g_autoptr(GPtrArray) sigs = NULL;
 		if (dbxfile != NULL) {
 			dbx = fu_dbxtool_get_siglist_local (dbxfile, &error);
 			if (dbx == NULL) {
@@ -141,20 +174,21 @@ main (int argc, char *argv[])
 		}
 		if (action_version) {
 			/* TRANSLATORS: the detected version number of the dbx */
-			g_print ("%s: %u\n", _("Version"), fu_efi_signature_list_array_version (dbx));
+			g_print ("%s: %s\n", _("Version"), fu_firmware_get_version (dbx));
 			return EXIT_SUCCESS;
 		}
-		for (guint j = 0; j < dbx->len; j++) {
-			FuEfiSignatureList *siglist = g_ptr_array_index (dbx, j);
-			GPtrArray *sigs = fu_efi_signature_list_get_all (siglist);
-			for (guint i = 0; i < sigs->len; i++) {
-				FuEfiSignature *sig = g_ptr_array_index (sigs, i);
-				g_print ("%4u: {%s} {%s} %s\n",
-					 cnt++,
-					 fu_efi_signature_guid_to_string (fu_efi_signature_get_owner (sig)),
-					 fu_efi_signature_kind_to_string (fu_efi_signature_get_kind (sig)),
-					 fu_efi_signature_get_checksum (sig));
-			}
+		sigs = fu_firmware_get_images (FU_FIRMWARE (dbx));
+		for (guint i = 0; i < sigs->len; i++) {
+			FuEfiSignature *sig = g_ptr_array_index (sigs, i);
+			g_autofree gchar *checksum = NULL;
+			checksum = fu_firmware_image_get_checksum (FU_FIRMWARE_IMAGE (sig),
+								   G_CHECKSUM_SHA256,
+								   NULL);
+			g_print ("%4u: {%s} {%s} %s\n",
+				 cnt++,
+				 fu_dbxtool_guid_to_string (fu_efi_signature_get_owner (sig)),
+				 fu_efi_signature_kind_to_string (fu_efi_signature_get_kind (sig)),
+				 checksum);
 		}
 		return EXIT_SUCCESS;
 	}
@@ -169,10 +203,9 @@ main (int argc, char *argv[])
 
 	/* apply update */
 	if (action_apply) {
-		gsize bufsz = 0;
-		g_autofree guint8 *buf = NULL;
-		g_autoptr(GPtrArray) dbx_system = NULL;
-		g_autoptr(GPtrArray) dbx_update = NULL;
+		g_autoptr(FuFirmware) dbx_system = NULL;
+		g_autoptr(FuFirmware) dbx_update = fu_efi_signature_list_new ();
+		g_autoptr(GBytes) blob = NULL;
 
 		if (dbxfile == NULL) {
 			/* TRANSLATORS: user did not include a filename parameter */
@@ -191,27 +224,20 @@ main (int argc, char *argv[])
 
 		/* TRANSLATORS: reading new dbx from the update */
 		g_print ("%s\n", _("Parsing dbx update…"));
-		if (!g_file_get_contents (dbxfile, (gchar **) &buf, &bufsz, &error)) {
+		blob = fu_common_get_contents_bytes (dbxfile, &error);
+		if (blob == NULL) {
 			/* TRANSLATORS: could not read file */
 			g_printerr ("%s: %s\n", _("Failed to load local dbx"), error->message);
 			return EXIT_FAILURE;
 		}
-		dbx_update = fu_efi_signature_parser_new (buf, bufsz,
-							  FU_EFI_SIGNATURE_PARSER_FLAGS_IGNORE_HEADER,
-							  &error);
-		if (dbx_update == NULL) {
+		if (!fu_firmware_parse (dbx_update, blob, FWUPD_INSTALL_FLAG_NONE, &error)) {
 			/* TRANSLATORS: could not parse file */
 			g_printerr ("%s: %s\n", _("Failed to parse local dbx"), error->message);
 			return EXIT_FAILURE;
 		}
-		if (dbx_update->len != 1) {
-			/* TRANSLATORS: could not parse file */
-			g_printerr ("%s: %s\n", _("Failed to extract local dbx "), error->message);
-			return EXIT_FAILURE;
-		}
 
 		/* check this is a newer dbx update */
-		if (!force && fu_efi_signature_list_array_inclusive (dbx_system, dbx_update)) {
+		if (!force && fu_dbxtool_siglist_inclusive (dbx_system, dbx_update)) {
 			/* TRANSLATORS: same or newer update already applied */
 			g_printerr ("%s\n", _("Cannot apply as dbx update has already been applied."));
 			return EXIT_FAILURE;
@@ -228,7 +254,7 @@ main (int argc, char *argv[])
 		if (!force) {
 			/* TRANSLATORS: ESP refers to the EFI System Partition */
 			g_print ("%s\n", _("Validating ESP contents…"));
-			if (!fu_uefi_dbx_signature_list_validate (dbx_update, &error)) {
+			if (!fu_uefi_dbx_signature_list_validate (FU_EFI_SIGNATURE_LIST (dbx_update), &error)) {
 				/* TRANSLATORS: something with a blocked hash exists
 				 * in the users ESP -- which would be bad! */
 				g_printerr ("%s: %s\n", _("Failed to validate ESP contents"), error->message);
@@ -238,14 +264,14 @@ main (int argc, char *argv[])
 
 		/* TRANSLATORS: actually sending the update to the hardware */
 		g_print ("%s\n", _("Applying update…"));
-		if (!fu_efivar_set_data (FU_EFIVAR_GUID_SECURITY_DATABASE,
-					 "dbx", buf, bufsz,
-					 FU_EFIVAR_ATTR_APPEND_WRITE |
-					 FU_EFIVAR_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
-					 FU_EFIVAR_ATTR_RUNTIME_ACCESS |
-					 FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
-					 FU_EFIVAR_ATTR_NON_VOLATILE,
-					 &error)) {
+		if (!fu_efivar_set_data_bytes (FU_EFIVAR_GUID_SECURITY_DATABASE,
+					       "dbx", blob,
+					       FU_EFIVAR_ATTR_APPEND_WRITE |
+					       FU_EFIVAR_ATTR_TIME_BASED_AUTHENTICATED_WRITE_ACCESS |
+					       FU_EFIVAR_ATTR_RUNTIME_ACCESS |
+					       FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
+					       FU_EFIVAR_ATTR_NON_VOLATILE,
+					       &error)) {
 			/* TRANSLATORS: dbx file failed to be applied as an update */
 			g_printerr ("%s: %s\n", _("Failed to apply update"), error->message);
 			return EXIT_FAILURE;

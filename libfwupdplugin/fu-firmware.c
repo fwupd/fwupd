@@ -206,6 +206,15 @@ fu_firmware_parse_full (FuFirmware *self,
 	g_return_val_if_fail (fw != NULL, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* sanity check */
+	if (g_bytes_get_size (fw) == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "invalid firmware as zero sized");
+		return FALSE;
+	}
+
 	/* subclassed */
 	if (klass->tokenize != NULL) {
 		if (!klass->tokenize (self, fw, flags, error))
@@ -360,6 +369,11 @@ fu_firmware_parse_file (FuFirmware *self, GFile *file, FwupdInstallFlags flags, 
 	gchar *buf = NULL;
 	gsize bufsz = 0;
 	g_autoptr(GBytes) fw = NULL;
+
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (G_IS_FILE (file), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	if (!g_file_load_contents (file, NULL, &buf, &bufsz, NULL, error))
 		return FALSE;
 	fw = g_bytes_new_take (buf, bufsz);
@@ -409,6 +423,11 @@ gboolean
 fu_firmware_write_file (FuFirmware *self, GFile *file, GError **error)
 {
 	g_autoptr(GBytes) blob = NULL;
+
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (G_IS_FILE (file), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	blob = fu_firmware_write (self, error);
 	if (blob == NULL)
 		return FALSE;
@@ -658,6 +677,51 @@ fu_firmware_get_image_by_idx (FuFirmware *self, guint64 idx, GError **error)
 		     FWUPD_ERROR,
 		     FWUPD_ERROR_NOT_FOUND,
 		     "no image idx %" G_GUINT64_FORMAT " found in firmware", idx);
+	return NULL;
+}
+
+/**
+ * fu_firmware_get_image_by_checksum:
+ * @self: a #FuPlugin
+ * @checksum: checksum string of any format
+ * @error: A #GError, or %NULL
+ *
+ * Gets the firmware image using the image checksum. The checksum type is guessed
+ * based on the length of the input string.
+ *
+ * Returns: (transfer full): a #FuFirmwareImage, or %NULL if the image is not found
+ *
+ * Since: 1.5.5
+ **/
+FuFirmwareImage *
+fu_firmware_get_image_by_checksum (FuFirmware *self,
+				   const gchar *checksum,
+				   GError **error)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	GChecksumType csum_kind;
+
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), NULL);
+	g_return_val_if_fail (checksum != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	csum_kind = fwupd_checksum_guess_kind (checksum);
+	for (guint i = 0; i < priv->images->len; i++) {
+		FuFirmwareImage *img = g_ptr_array_index (priv->images, i);
+		g_autofree gchar *checksum_tmp = NULL;
+
+		/* if this expensive then the subclassed FuFirmwareImage can
+		 * cache the result as required */
+		checksum_tmp = fu_firmware_image_get_checksum (img, csum_kind, error);
+		if (checksum_tmp == NULL)
+			return NULL;
+		if (g_strcmp0 (checksum_tmp, checksum) == 0)
+			return g_object_ref (img);
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_FOUND,
+		     "no image with checksum %s found in firmware", checksum);
 	return NULL;
 }
 

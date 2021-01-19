@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Yuri Chornoivan <yurchor@ukr.net>, 2015-2020
+# Yuri Chornoivan <yurchor@ukr.net>, 2015-2021
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -779,10 +779,6 @@ msgstr "Не вдалося застосувати оновлення"
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
 msgstr "Не вдалося встановити з'єднання із фоновою службою"
-
-#. TRANSLATORS: could not parse file
-msgid "Failed to extract local dbx "
-msgstr "Не вдалося видобути локальний dbx"
 
 #. TRANSLATORS: we could not get the devices to update offline
 msgid "Failed to get pending devices"
@@ -1863,6 +1859,10 @@ msgstr "Капсульні оновлення UEFI є недоступними �
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Засіб роботи з dbx UEFI"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI platform key"
+msgstr "Ключ платформи UEFI"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"

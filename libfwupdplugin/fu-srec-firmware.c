@@ -110,11 +110,20 @@ fu_srec_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 
 		/* check starting token */
 		if (line[0] != 'S') {
+			g_autofree gchar *strsafe = fu_common_strsafe (line, 3);
+			if (strsafe != NULL) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "invalid starting token, got '%s' at line %u",
+					     strsafe, ln + 1);
+				return FALSE;
+			}
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "invalid starting token, got '%c' at line %u",
-				     line[0], ln + 1);
+				     "invalid starting token at line %u",
+				     ln + 1);
 			return FALSE;
 		}
 

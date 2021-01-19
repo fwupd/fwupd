@@ -78,6 +78,10 @@ VendorId = ATA:0x8086
 Vendor = ADATA
 VendorId = ATA:0x1CC1
 
+[DeviceInstanceId=OUI\7c3548]
+Vendor = Transcend
+VendorId = ATA:0x8564
+
 [DeviceInstanceId=OUI\001b44]
 Vendor = SanDisk
 VendorId = ATA:0x15B7
