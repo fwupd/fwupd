@@ -97,6 +97,8 @@ install_data(['uefi_capsule.conf'],
   install_dir:  join_paths(sysconfdir, 'fwupd')
 )
 
+meson.add_install_script('make-images.sh', localedir, python3.path())
+
 if get_option('tests')
   testdatadir = join_paths(meson.current_source_dir(), 'tests')
   cargs += '-DTESTDATADIR="' + testdatadir + '"'
