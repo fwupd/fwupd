@@ -1,8 +1,13 @@
 fwupd (1.5.5-1) UNRELEASED; urgency=medium
 
   * New upstream version (1.5.5)
+  * trivial: debian: migrate uefi->uefi_capsule in uefi.conf
+  * trivial: debian: fix modules-load.d directory
+  * trivial: debian: add dbus to recommends (Closes: #980049)
+  * Backport 2 patches for continual "Unknown" message on new connections
+  * trivial: debian: read /etc/lsb-release instead of dpkg-dev (Closes: #977860, #977861, #970783)
 
- -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 17 Dec 2020 08:21:03 -0600
+ -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 19 Jan 2021 12:48:10 -0600
 
 fwupd (1.5.3-2) unstable; urgency=medium
 

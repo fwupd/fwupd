@@ -103,6 +103,7 @@ Depends: ${misc:Depends},
          shared-mime-info
 Recommends: python3,
 	    bolt,
+	    dbus,
 	    secureboot-db,
 	    udisks2,
 	    fwupd-signed

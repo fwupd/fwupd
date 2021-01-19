@@ -19,6 +19,7 @@ Copyright: 9elements Agency GmbH <patrick.rudolph@9elements.com>
 	   Intel Corporation.
 	   Intel, Inc.
 	   Jeremy Soller <jeremy@system76.com>
+	   Jimmy Yu <Jimmy_yu@pixart.com>
 	   Kalev Lember <klember@redhat.com>
 	   Lennart Poettering <lennart@poettering.net>
 	   Mario Limonciello <mario.limonciello@dell.com>
@@ -26,6 +27,8 @@ Copyright: 9elements Agency GmbH <patrick.rudolph@9elements.com>
 	   Max Ehrlich maxehr@gmail.com
 	   Peichen Huang <peichenhuang@tw.synaptics.com>
 	   Peter Jones <pjones@redhat.com>
+	   Philip Withnall <philip@tecnocode.co.uk>
+	   Philip Withnall <pwithnall@endlessos.org>
 	   Realtek Semiconductor Corporation
 	   Red Hat, Inc.
 	   Richard Hughes <richard@hughsie.com>
@@ -44,7 +47,7 @@ License: CC0-1.0
 
 Files: debian/*
 Copyright: 2015 Daniel Jared Dominguez <Jared_Dominguez@Dell.com>
-           2015-2018 Mario Limonciello <mario.limonciello@dell.com>
+           2015 Mario Limonciello <mario.limonciello@dell.com>
 License: LGPL-2.1+
 
 License: LGPL-2.1+
