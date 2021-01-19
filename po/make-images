@@ -143,15 +143,17 @@ class Rasterizer:
             make_dir(d)
 
             # write PNG
-            buf_png = io.BytesIO()
-            img.write_to_png(buf_png)
+            with io.BytesIO() as io_png:
+                img.write_to_png(io_png)
+                io_png.seek(0)
 
-            # convert to BMP
-            pimg = Image.open(buf_png)
-            buf_bmp = io.BytesIO()
-            pimg.save(buf_bmp, format='BMP')
-            with gzip.open(filename, 'wb') as f:
-                f.write(bytes(buf_bmp))
+                # convert to BMP
+                with io.BytesIO() as io_bmp:
+                    pimg = Image.open(io_png)
+                    pimg.save(io_bmp, format='BMP')
+                    io_bmp.seek(0)
+                    with gzip.open(filename, 'wb') as f:
+                        f.write(io_bmp.read())
 
         for lang in self.languages:
             #print("lang:\"%s\" string:\"%s\"" % (lang, string))
