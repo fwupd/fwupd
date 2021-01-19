@@ -1,3 +1,9 @@
+fwupd (1.5.5-2) unstable; urgency=medium
+
+  * fwupd.postinst: Adjust to read /etc/os-release instead of `/etc/lsb-release`
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 19 Jan 2021 15:48:55 -0600
+
 fwupd (1.5.5-1) unstable; urgency=medium
 
   * New upstream version (1.5.5)
