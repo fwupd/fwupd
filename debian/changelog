@@ -1,4 +1,4 @@
-fwupd (1.5.5-1) UNRELEASED; urgency=medium
+fwupd (1.5.5-1) unstable; urgency=medium
 
   * New upstream version (1.5.5)
   * trivial: debian: migrate uefi->uefi_capsule in uefi.conf
@@ -7,7 +7,7 @@ fwupd (1.5.5-1) UNRELEASED; urgency=medium
   * Backport 2 patches for continual "Unknown" message on new connections
   * trivial: debian: read /etc/lsb-release instead of dpkg-dev (Closes: #977860, #977861, #970783)
 
- -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 19 Jan 2021 12:48:10 -0600
+ -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 19 Jan 2021 12:50:02 -0600
 
 fwupd (1.5.3-2) unstable; urgency=medium
 
