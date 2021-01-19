@@ -21,12 +21,16 @@ struct _FuRts54HubDevice {
 
 G_DEFINE_TYPE (FuRts54HubDevice, fu_rts54hub_device, FU_TYPE_USB_DEVICE)
 
-#define FU_RTS54HUB_DEVICE_TIMEOUT			100	/* ms */
+#define FU_RTS54HUB_DEVICE_TIMEOUT			1000	/* ms */
 #define FU_RTS54HUB_DEVICE_TIMEOUT_RW			1000	/* ms */
 #define FU_RTS54HUB_DEVICE_TIMEOUT_ERASE		5000	/* ms */
 #define FU_RTS54HUB_DEVICE_TIMEOUT_AUTH			10000	/* ms */
 #define FU_RTS54HUB_DEVICE_BLOCK_SIZE			4096
 #define FU_RTS54HUB_DEVICE_STATUS_LEN			25
+
+#define FU_RTS54HUB_I2C_CONFIG_REQUEST 			0xF6
+#define FU_RTS54HUB_I2C_WRITE_REQUEST 			0xC6
+#define FU_RTS54HUB_I2C_READ_REQUEST 			0xD6
 
 typedef enum {
 	FU_RTS54HUB_VENDOR_CMD_NONE			= 0x00,
@@ -41,6 +45,83 @@ fu_rts54hub_device_to_string (FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kb (str, idt, "FwAuth", self->fw_auth);
 	fu_common_string_append_kb (str, idt, "DualBank", self->dual_bank);
 	fu_common_string_append_kb (str, idt, "RunningOnFlash", self->running_on_flash);
+}
+
+gboolean
+fu_rts54hub_device_i2c_config (FuRts54HubDevice *self,
+			       guint8 target_addr,
+			       guint8 sub_length,
+			       FuRts54HubI2cSpeed speed,
+			       GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint16 value = 0;
+	guint16 index = 0x8080;
+
+	value = ((guint16)target_addr << 8) | sub_length;
+	index += speed;
+	if (!g_usb_device_control_transfer (usb_device,
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_RTS54HUB_I2C_CONFIG_REQUEST,
+					    value,		/* value */
+					    index,		/* idx */
+					    NULL, 0,		/* data */
+					    NULL,		/* actual */
+					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    NULL, error)) {
+		g_prefix_error (error, "failed to issue i2c Conf cmd 0x%02x: ", target_addr);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_rts54hub_device_i2c_write (FuRts54HubDevice *self,
+			      guint32 sub_addr, const guint8 *data, gsize datasz,
+			      GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	g_autofree guint8 *datarw = fu_memdup_safe (data, datasz, error);
+	if (datarw == NULL)
+		return FALSE;
+	if (!g_usb_device_control_transfer (usb_device,
+					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_RTS54HUB_I2C_WRITE_REQUEST,
+					    sub_addr,			/* value */
+					    0x0000,			/* idx */
+					    datarw, datasz,		/* data */
+					    NULL,
+					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    NULL, error)) {
+		g_prefix_error (error, "failed to write I2C");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+gboolean
+fu_rts54hub_device_i2c_read (FuRts54HubDevice *self,
+			     guint32 sub_addr, guint8 *data,
+			     gsize datasz, GError **error)
+{
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	if (!g_usb_device_control_transfer (usb_device,
+					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					    G_USB_DEVICE_RECIPIENT_DEVICE,
+					    FU_RTS54HUB_I2C_READ_REQUEST, 0x0000,
+					    sub_addr,
+					    data, datasz, NULL,
+					    FU_RTS54HUB_DEVICE_TIMEOUT,
+					    NULL, error)) {
+		g_prefix_error (error, "failed to read I2C: ");
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
@@ -201,7 +282,7 @@ fu_rts54hub_device_erase_flash (FuRts54HubDevice *self,
 	return TRUE;
 }
 
-static gboolean
+gboolean
 fu_rts54hub_device_vendor_cmd (FuRts54HubDevice *self, guint8 value, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
@@ -400,16 +481,13 @@ fu_rts54hub_device_prepare_firmware (FuDevice *device,
 				     FwupdInstallFlags flags,
 				     GError **error)
 {
-	gsize sz = 0;
-	const guint8 *data = g_bytes_get_data (fw, &sz);
-	if (sz < 0x7ef3) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "firmware was too small");
+	gsize bufsz = 0;
+	guint8 tmp = 0;
+	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
+
+	if (!fu_common_read_uint8_safe (buf, bufsz, 0x7ef3, &tmp, error))
 		return NULL;
-	}
-	if ((data[0x7ef3] & 0xf0) != 0x80) {
+	if ((tmp & 0xf0) != 0x80) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
