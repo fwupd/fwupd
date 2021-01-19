@@ -130,7 +130,7 @@ class Rasterizer:
                 tmpname = filename[len(os.environ['DESTDIR']):]
             except KeyError:
                 tmpname = filename[len(os.environ['MESON_BUILD_ROOT']):]
-            print("Writing %s                    " % (tmpname,), end='\r')
+            print("Writing {}".format(tmpname))
             def make_dir(d):
                 """ make our parent dir and then our own dir """
                 if os.access(d, os.O_RDWR):
@@ -179,7 +179,6 @@ class Rasterizer:
                 filename = self.pattern.format_map(nameinfo)
                 if not os.path.exists(filename):
                     render_one(lang, string, width, height, filename)
-        print("")
 
 if __name__ == '__main__':
     if {'-?', '--help', '--usage'}.intersection(set(sys.argv)):
