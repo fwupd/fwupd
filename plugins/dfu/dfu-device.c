@@ -1227,6 +1227,53 @@ dfu_device_open (FuUsbDevice *device, GError **error)
 		priv->status = DFU_STATUS_OK;
 	}
 
+	/* GD32VF103 encodes the serial number in UTF-8 (rather than UTF-16)
+	 * and also uses the first two bytes as the model identifier */
+	if (fu_device_has_custom_flag (FU_DEVICE (device), "gd32")) {
+#if G_USB_CHECK_VERSION(0,3,6)
+		GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+		const guint8 *buf;
+		gsize bufsz = 0;
+		guint16 langid = G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES;
+		guint8 idx = g_usb_device_get_serial_number_index (usb_device);
+		g_autofree gchar *chip_id = NULL;
+		g_autofree gchar *serial_str = NULL;
+		g_autoptr(GBytes) serial_blob = NULL;
+		serial_blob = g_usb_device_get_string_descriptor_bytes (usb_device,
+									idx,
+									langid,
+									error);
+		if (serial_blob == NULL)
+			return FALSE;
+		if (g_getenv ("FWUPD_DFU_VERBOSE") != NULL)
+			fu_common_dump_bytes (G_LOG_DOMAIN, "GD32 serial", serial_blob);
+		buf = g_bytes_get_data (serial_blob, &bufsz);
+		if (bufsz < 2) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "GD32 serial number invalid");
+			return FALSE;
+		}
+
+		/* ID is first two bytes */
+		chip_id = g_strdup_printf ("%02x%02x", buf[0], buf[1]);
+		dfu_device_set_chip_id (self, chip_id);
+
+		/* serial number follows */
+		serial_str = g_strndup ((const gchar *) buf + 2, bufsz - 2);
+		fu_device_set_serial (FU_DEVICE (device), serial_str);
+#else
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "GUsb version %s too old to support GD32, "
+			     "fwupd needs to be rebuilt against 0.3.6 or later",
+			     g_usb_version_string ());
+		return FALSE;
+#endif
+	}
+
 	/* set up target ready for use */
 	for (guint j = 0; j < targets->len; j++) {
 		DfuTarget *target = g_ptr_array_index (targets, j);

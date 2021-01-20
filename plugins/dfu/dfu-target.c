@@ -311,6 +311,7 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 					 0x0, /* size_left */
 					 0x0, /* zone */
 					 0x0, /* number */
+					 DFU_SECTOR_CAP_ERASEABLE |
 					 DFU_SECTOR_CAP_READABLE |
 					 DFU_SECTOR_CAP_WRITEABLE);
 		g_ptr_array_add (priv->sectors, sector);
@@ -650,6 +651,7 @@ dfu_target_setup (DfuTarget *target, GError **error)
 {
 	DfuTargetClass *klass = DFU_TARGET_GET_CLASS (target);
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
+	FuDevice *device = FU_DEVICE (dfu_target_get_device (target));
 
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -664,6 +666,47 @@ dfu_target_setup (DfuTarget *target, GError **error)
 			return FALSE;
 	}
 
+	/* GD32VF103 devices features and peripheral list */
+	if (fu_device_has_custom_flag (device, "gd32")) {
+		/*             RB R8 R6 R4  VB V8
+		 * Flash (KB) 128 64 32 16 128 64
+		 *             TB T8 T6 T4  CB C8 C6 C4
+		 * Flash (KB) 128 64 32 16 128 64 32 16
+		 */
+		guint flashsz = 0;
+		const gchar *chip_id = dfu_device_get_chip_id (dfu_target_get_device (target));
+		DfuSector *sector;
+		if (chip_id[1] == '2') {
+			flashsz = 8;
+		} else if (chip_id[1] == '4') {
+			flashsz = 16;
+		} else if (chip_id[1] == '6') {
+			flashsz = 32;
+		} else if (chip_id[1] == '8') {
+			flashsz = 64;
+		} else if (chip_id[1] == 'B') {
+			flashsz = 128;
+		} else if (chip_id[1] == 'D') {
+			flashsz = 256;
+		} else {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Unknown GD32 sector size: %c",
+				     chip_id[1]);
+			return FALSE;
+		}
+		g_debug ("using GD32 sector size of 0x%x", flashsz * 0x400);
+		sector = dfu_sector_new (0x08000000, /* addr */
+					 flashsz * 0x400, /* size */
+					 flashsz * 0x400, /* size_left */
+					 0x0, /* zone */
+					 0x0, /* number */
+					 DFU_SECTOR_CAP_READABLE |
+					 DFU_SECTOR_CAP_WRITEABLE);
+		g_ptr_array_add (priv->sectors, sector);
+	}
+
 	/* get string */
 	if (priv->alt_idx != 0x00 && priv->alt_name == NULL) {
 		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (priv->device));
@@ -674,10 +717,12 @@ dfu_target_setup (DfuTarget *target, GError **error)
 	}
 
 	/* parse the DfuSe format according to UM0424 */
-	if (!dfu_target_parse_sectors (target,
-				       priv->alt_name,
-				       error))
-		return FALSE;
+	if (priv->sectors->len == 0) {
+		if (!dfu_target_parse_sectors (target,
+					       priv->alt_name,
+					       error))
+			return FALSE;
+	}
 
 	/* add a dummy entry */
 	if (priv->sectors->len == 0) {
