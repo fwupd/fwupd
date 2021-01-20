@@ -41,6 +41,7 @@ This plugin uses the following plugin-specific quirks:
 |`DfuFlags`              | Optional quirks for a DFU device which doesn't follow the DFU 1.0 or 1.1 specification | 1.0.1|
 |`DfuForceVersion`       | Forces a specific DFU version for the hardware device. This is required if the device does not set, or sets incorrectly, items in the DFU functional descriptor. |1.0.1|
 |`DfuForceTimeout`       | Forces a specific device timeout, in ms     | 1.4.0                 |
+|`DfuForceTransferSize`  | Forces a target transfer size, in bytes     | 1.5.6                 |
 
 External interface access
 -------------------------
