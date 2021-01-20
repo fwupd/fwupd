@@ -1917,6 +1917,7 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* find the device and check it has multiple branches */
 	priv->filter_include |= FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES;
+	priv->filter_include |= FWUPD_DEVICE_FLAG_UPDATABLE;
 	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
 		return FALSE;
