@@ -601,14 +601,13 @@ fu_util_cmd_array_to_string (GPtrArray *array)
 }
 
 const gchar *
-fu_util_release_get_branch (FwupdRelease *release)
+fu_util_branch_for_display (const gchar *branch)
 {
-	const gchar *tmp = fwupd_release_get_branch (release);
-	if (tmp == NULL) {
+	if (branch == NULL) {
 		/* TRANSLATORS: this is the default branch name when unset */
 		return _("default");
 	}
-	return tmp;
+	return branch;
 }
 
 gchar *
