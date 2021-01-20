@@ -95,6 +95,7 @@ typedef struct {
 	gchar			*chip_id;
 	guint16			 version;
 	guint16			 force_version;
+	guint16			 force_transfer_size;
 	guint16			 runtime_pid;
 	guint16			 runtime_vid;
 	guint16			 runtime_release;
@@ -122,6 +123,10 @@ dfu_device_to_string (FuDevice *device, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt, "ChipId", priv->chip_id);
 	fu_common_string_append_kx (str, idt, "Version", priv->version);
 	fu_common_string_append_kx (str, idt, "ForceVersion", priv->force_version);
+	if (priv->force_transfer_size != 0x0) {
+		fu_common_string_append_kx (str, idt, "ForceTransferSize",
+					    priv->force_transfer_size);
+	}
 	fu_common_string_append_kx (str, idt, "RuntimePid", priv->runtime_pid);
 	fu_common_string_append_kx (str, idt, "RuntimeVid", priv->runtime_vid);
 	fu_common_string_append_kx (str, idt, "RuntimeRelease", priv->runtime_release);
@@ -345,15 +350,18 @@ dfu_device_add_targets (DfuDevice *device, GError **error)
 		}
 
 		/* fix up the transfer size */
-		if (priv->transfer_size == 0xffff) {
+		if (priv->force_transfer_size != 0x0) {
+			priv->transfer_size = priv->force_transfer_size;
+			g_debug ("forcing DFU transfer size 0x%04x bytes", priv->transfer_size);
+		} else if (priv->transfer_size == 0xffff) {
 			priv->transfer_size = 0x0400;
 			g_debug ("DFU transfer size unspecified, guessing");
-		}
-		if (priv->transfer_size > 0x0000) {
-			g_debug ("using DFU transfer size 0x%04x bytes", priv->transfer_size);
-		} else {
+		} else if (priv->transfer_size == 0x0) {
 			g_warning ("DFU transfer size invalid, using default");
 			priv->transfer_size = 64;
+		} else {
+			g_debug ("using DFU transfer size 0x%04x bytes",
+				 priv->transfer_size);
 		}
 
 		/* create a target of the required type */
@@ -1780,6 +1788,18 @@ dfu_device_set_quirk_kv (FuDevice *device,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
 				     "invalid DFU timeout");
+		return FALSE;
+	}
+	if (g_strcmp0 (key, "DfuForceTransferSize") == 0) {
+		guint64 tmp = fu_common_strtoull (value);
+		if (tmp < G_MAXUINT16) {
+			priv->force_transfer_size = tmp;
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid DFU transfer size");
 		return FALSE;
 	}
 
