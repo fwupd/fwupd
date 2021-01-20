@@ -78,7 +78,7 @@ gboolean	 fu_util_cmd_array_run		(GPtrArray	*array,
 						 gchar		**values,
 						 GError		**error);
 gchar		*fu_util_release_get_name	(FwupdRelease	*release);
-const gchar	*fu_util_release_get_branch	(FwupdRelease	*release);
+const gchar	*fu_util_branch_for_display	(const gchar	*branch);
 
 const gchar	*fu_util_get_systemd_unit	(void);
 gboolean	 fu_util_using_correct_daemon	(GError		**error);

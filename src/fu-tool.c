@@ -2569,6 +2569,11 @@ fu_util_esp_list (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+_g_str_equal0 (gconstpointer str1, gconstpointer str2)
+{
+	return g_strcmp0 (str1, str2) == 0;
+}
 
 static gboolean
 fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
@@ -2615,10 +2620,10 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* get all the unique branches */
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel_tmp = g_ptr_array_index (rels, i);
-		const gchar *branch_tmp = fu_util_release_get_branch (rel_tmp);
+		const gchar *branch_tmp = fwupd_release_get_branch (rel_tmp);
 #if GLIB_CHECK_VERSION(2,54,3)
 		if (g_ptr_array_find_with_equal_func (branches, branch_tmp,
-						      g_str_equal, NULL))
+						      _g_str_equal0, NULL))
 			continue;
 #endif
 		g_ptr_array_add (branches, g_strdup (branch_tmp));
@@ -2639,7 +2644,7 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print ("0.\t%s\n", _("Cancel"));
 		for (guint i = 0; i < branches->len; i++) {
 			const gchar *branch_tmp = g_ptr_array_index (branches, i);
-			g_print ("%u.\t%s\n", i + 1, branch_tmp);
+			g_print ("%u.\t%s\n", i + 1, fu_util_branch_for_display (branch_tmp));
 		}
 		idx = fu_util_prompt_for_number (branches->len);
 		if (idx == 0) {
@@ -2659,7 +2664,7 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Device %s is already on branch %s",
 			     fu_device_get_name (dev),
-			     branch);
+			     fu_util_branch_for_display (branch));
 		return FALSE;
 	}
 
@@ -2676,7 +2681,7 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "No releases for branch %s",
-			     branch);
+			     fu_util_branch_for_display (branch));
 		return FALSE;
 	}
 
