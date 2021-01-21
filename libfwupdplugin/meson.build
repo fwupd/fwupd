@@ -38,6 +38,7 @@ fwupdplugin_headers = [
   'fu-common-cab.h',
   'fu-common-guid.h',
   'fu-common-version.h',
+  'fu-deprecated.h',
   'fu-device.h',
   'fu-device-metadata.h',
   'fu-device-locker.h',
