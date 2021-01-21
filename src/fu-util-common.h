@@ -8,6 +8,7 @@
 
 #include <glib.h>
 #include <fwupd.h>
+#include "fwupd-security-attr-private.h"
 
 /* this is only valid for tools */
 #define FWUPD_ERROR_INVALID_ARGS        (FWUPD_ERROR_LAST+1)

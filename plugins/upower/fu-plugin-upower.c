@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 #define MINIMUM_BATTERY_PERCENTAGE_FALLBACK	10
 

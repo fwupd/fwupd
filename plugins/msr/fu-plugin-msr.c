@@ -9,7 +9,6 @@
 #include <cpuid.h>
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 typedef union {
 	guint32 data;

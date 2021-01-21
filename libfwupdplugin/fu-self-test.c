@@ -17,6 +17,7 @@
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
+#include "fwupd-security-attr-private.h"
 
 static GMainLoop *_test_loop = NULL;
 static guint _test_loop_timeout_id = 0;

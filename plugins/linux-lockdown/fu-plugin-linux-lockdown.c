@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 typedef enum {
 	FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN,

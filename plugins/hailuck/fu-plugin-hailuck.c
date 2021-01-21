@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 #include "fu-hailuck-bl-device.h"
 #include "fu-hailuck-kbd-device.h"

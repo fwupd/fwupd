@@ -10,7 +10,6 @@
 #include <glib/gstdio.h>
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 struct FuPluginData {
 	GDBusProxy		*logind_proxy;

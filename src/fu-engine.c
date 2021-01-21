@@ -28,6 +28,7 @@
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
+#include "fwupd-security-attr-private.h"
 
 #include "fu-cabinet.h"
 #include "fu-common-cab.h"

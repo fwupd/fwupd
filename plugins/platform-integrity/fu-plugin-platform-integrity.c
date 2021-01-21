@@ -8,7 +8,6 @@
 
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 struct FuPluginData {
 	gchar			*sysfs_path;

@@ -8,7 +8,6 @@
 
 #include "fu-plugin-vfuncs.h"
 
-#include "fu-hash.h"
 
 #include "fu-pxi-device.h"
 #include "fu-pxi-firmware.h"

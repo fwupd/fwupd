@@ -8,7 +8,6 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 #include "fu-thelio-io-device.h"
 
