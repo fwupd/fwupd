@@ -23,8 +23,8 @@
 #ifdef HAVE_GUDEV
 #include "fu-udev-device.h"
 #endif
-#include "fwupd-common.h"
-#include "fwupd-plugin.h"
+#include <libfwupd/fwupd-common.h>
+#include <libfwupd/fwupd-plugin.h>
 
 #define FU_TYPE_PLUGIN (fu_plugin_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuPlugin, fu_plugin, FU, PLUGIN, FwupdPlugin)
