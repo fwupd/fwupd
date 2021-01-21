@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 #include "fu-synaptics-cxaudio-device.h"
 #include "fu-synaptics-cxaudio-firmware.h"

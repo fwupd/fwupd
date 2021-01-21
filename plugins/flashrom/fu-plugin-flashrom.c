@@ -26,7 +26,6 @@
 
 #include "fu-plugin-vfuncs.h"
 #include "fu-flashrom-device.h"
-#include "fu-hash.h"
 
 #include <libflashrom.h>
 

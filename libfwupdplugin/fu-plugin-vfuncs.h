@@ -10,6 +10,13 @@
 #include "fu-device.h"
 #include "fu-security-attrs.h"
 
+/* for in-tree plugins only */
+#ifdef FWUPD_COMPILATION
+#include "fu-hash.h"
+/* only until HSI is declared stable */
+#include "fwupd-security-attr-private.h"
+#endif
+
 /**
  * SECTION:fu-plugin-vfuncs
  * @short_description: Virtual functions for plugins

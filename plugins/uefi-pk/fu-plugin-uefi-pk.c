@@ -12,7 +12,6 @@
 #include "fu-efi-signature.h"
 #include "fu-efi-signature-list.h"
 #include "fu-efivar.h"
-#include "fu-hash.h"
 #include "fu-plugin-vfuncs.h"
 
 struct FuPluginData {

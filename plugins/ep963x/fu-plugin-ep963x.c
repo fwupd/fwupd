@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 #include "fu-ep963x-device.h"
 #include "fu-ep963x-firmware.h"

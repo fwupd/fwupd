@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 #include "fu-synaptics-rmi-hid-device.h"
 #include "fu-synaptics-rmi-ps2-device.h"

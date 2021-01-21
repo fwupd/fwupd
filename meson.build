@@ -147,6 +147,8 @@ add_project_link_arguments(
   language: 'c'
 )
 
+add_project_arguments('-DFWUPD_COMPILATION', language : 'c')
+
 # Needed for realpath(), syscall(), cfmakeraw(), etc.
 add_project_arguments('-D_DEFAULT_SOURCE', language : 'c')
 
