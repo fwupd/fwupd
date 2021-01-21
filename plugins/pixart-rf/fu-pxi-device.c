@@ -253,12 +253,11 @@ fu_pxi_device_fw_object_create (FuPxiDevice *self, const FuChunk *chk, GError **
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 
 	/* request */
-	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_OUTPUT_REPORT_ID);
+	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
 	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE);
 	fu_byte_array_append_uint32 (req, chk->address, G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint32 (req, chk->data_sz, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0x0,
-					 req->data, req->len, error))
+	if (!fu_pxi_device_set_feature (self, req->data, req->len, error))
 		return FALSE;
 
 	/* check object create success or not */
@@ -282,10 +281,11 @@ static gboolean
 fu_pxi_device_write_payload (FuPxiDevice *self, const FuChunk *chk, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new ();
-	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_OUTPUT_REPORT_ID);
+	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
 	g_byte_array_append (req, chk->data, chk->data_sz);
-	return fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0x0,
-					   req->data, req->len, error);
+	if (!fu_pxi_device_set_feature (self, req->data, req->len, error))
+		return FALSE;
+	return TRUE;
 }
 
 static gboolean
@@ -348,15 +348,13 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, const FuChunk *chk, GError **error
 static gboolean
 fu_pxi_device_reset (FuPxiDevice *self, GError **error)
 {
-	guint8 req[FU_PXI_DEVICE_OTA_BUF_SZ] = {
-		PXI_HID_DEV_OTA_OUTPUT_REPORT_ID,
-		FU_PXI_DEVICE_CMD_FW_MCU_RESET,
-		OTA_RESET,
-	};
+	g_autoptr(GByteArray) req = g_byte_array_new ();
+	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
+	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_MCU_RESET);
+	fu_byte_array_append_uint8 (req, OTA_RESET);
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0,
-					 req, 0x3,
-					 error)) {
+
+	if (!fu_pxi_device_set_feature (self, req->data, req->len, error)) {
 		g_prefix_error (error, "failed to reset: ");
 		return FALSE;
 	}
@@ -462,7 +460,7 @@ fu_pxi_device_fw_upgrade (FuPxiDevice *self, FuFirmware *firmware, GError **erro
 		return FALSE;
 	buf = g_bytes_get_data (fw, &bufsz);
 	checksum = fu_pxi_device_calculate_checksum (buf, bufsz);
-	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_OUTPUT_REPORT_ID);
+	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
 	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_UPGRADE);
 	fu_byte_array_append_uint32 (req, bufsz, G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint16 (req, checksum, G_LITTLE_ENDIAN);
@@ -475,9 +473,9 @@ fu_pxi_device_fw_upgrade (FuPxiDevice *self, FuFirmware *firmware, GError **erro
 
 	/* send fw upgrade command */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
-	if (!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0,
-					 req->data, req->len, error))
+	if (!fu_pxi_device_set_feature (self, req->data, req->len, error))
 		return FALSE;
+
 	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL)
 		fu_common_dump_raw (G_LOG_DOMAIN, "fw upgrade", req->data, req->len);
 
