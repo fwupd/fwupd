@@ -368,12 +368,15 @@ fu_pxi_device_reset (FuPxiDevice *self, GError **error)
 static gboolean
 fu_pxi_device_fw_ota_init (FuPxiDevice *self, GError **error)
 {
-	const guint8 req[] = {
-		PXI_HID_DEV_OTA_OUTPUT_REPORT_ID,
-		FU_PXI_DEVICE_CMD_FW_OTA_INIT,
-	};
-	return fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0,
-					   req, sizeof(req), error);
+
+	g_autoptr(GByteArray) req = g_byte_array_new ();
+
+	/* write fw ota init command */
+	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
+	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_OTA_INIT);
+	if (!fu_pxi_device_set_feature (self, req->data, req->len, error))
+		return FALSE;
+	return TRUE;
 }
 
 static gboolean
@@ -551,10 +554,9 @@ fu_pxi_device_fw_get_info (FuPxiDevice *self, GError **error)
 	g_autofree gchar *version_str = NULL;
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 
-	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_OUTPUT_REPORT_ID);
+	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
 	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_GET_INFO);
-	if (!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0,
-					 req->data, req->len, error))
+	if (!fu_pxi_device_set_feature (self, req->data, req->len, error))
 		return FALSE;
 
 	res[0] = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
