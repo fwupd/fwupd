@@ -22,7 +22,7 @@ GUID Generation
 
 These devices use the standard USB DeviceInstanceId values, e.g.
 
- * `HIDRAW\VEN_093A&DEV_2801`
+ * `HIDRAW\VEN_093A`
 
 Vendor ID Security
 ------------------
