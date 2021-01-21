@@ -1,5 +1,11 @@
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
 
+install_data([
+  'pixart-rf.quirk',
+  ],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_pixart_rf',
   fu_hash,
   sources : [
