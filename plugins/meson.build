@@ -25,6 +25,7 @@ subdir('ata')
 subdir('elantp')
 subdir('optionrom')
 subdir('superio')
+subdir('system76-launch')
 subdir('thelio-io')
 subdir('wacom-raw')
 endif
