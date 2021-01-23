@@ -2471,6 +2471,7 @@ fu_util_prompt_for_volume (GError **error)
 {
 	FuVolume *volume;
 	guint idx;
+	gboolean is_fallback = FALSE;
 	g_autoptr(GPtrArray) volumes = NULL;
 	g_autoptr(GPtrArray) volumes_vfat = g_ptr_array_new ();
 	g_autoptr(GError) error_local = NULL;
@@ -2478,6 +2479,7 @@ fu_util_prompt_for_volume (GError **error)
 	/* exactly one */
 	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, &error_local);
 	if (volumes == NULL) {
+		is_fallback = TRUE;
 		g_debug ("%s, falling back to %s", error_local->message, FU_VOLUME_KIND_BDP);
 		volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_BDP, error);
 		if (volumes == NULL) {
@@ -2485,13 +2487,13 @@ fu_util_prompt_for_volume (GError **error)
 			return NULL;
 		}
 	}
-	/* only add internal vfat partitions */
+	/* on fallback: only add internal vfat partitions */
 	for (guint i = 0; i < volumes->len; i++) {
 		FuVolume *vol = g_ptr_array_index (volumes, i);
 		g_autofree gchar *type = fu_volume_get_id_type (vol);
 		if (type == NULL)
 			continue;
-		if (!fu_volume_is_internal (vol))
+		if (is_fallback && !fu_volume_is_internal (vol))
 			continue;
 		if (g_strcmp0 (type, "vfat") == 0)
 			g_ptr_array_add (volumes_vfat, vol);
