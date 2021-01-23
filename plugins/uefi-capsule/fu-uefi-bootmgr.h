@@ -19,6 +19,7 @@ typedef enum {
 	FU_UEFI_BOOTMGR_FLAG_LAST
 } FuUefiBootmgrFlags;
 
+gboolean	 fu_uefi_bootmgr_verify_fwupd	(GError			**error);
 gboolean	 fu_uefi_bootmgr_bootnext	(FuDevice 		*device,
 						 const gchar		*esp_path,
 						 const gchar		*description,
