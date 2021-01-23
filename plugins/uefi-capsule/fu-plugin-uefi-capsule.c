@@ -16,6 +16,7 @@
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-uefi-bgrt.h"
+#include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-efivar.h"
@@ -44,6 +45,10 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+
+	/* for the uploaded report */
+	if (fu_plugin_has_custom_flag (plugin, "use-legacy-bootmgr-desc"))
+		fu_plugin_add_report_metadata (plugin, "BootMgrDesc", "legacy");
 }
 
 void
@@ -70,10 +75,26 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	const gchar *tmp;
 	g_autofree gchar *err_msg = NULL;
 	g_autofree gchar *version_str = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* trivial case */
 	if (status == FU_UEFI_DEVICE_STATUS_SUCCESS) {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
+		return TRUE;
+	}
+
+	/* check if something rudely removed our BOOTXXXX entry */
+	if (!fu_uefi_bootmgr_verify_fwupd (&error_local)) {
+		if (fu_plugin_has_custom_flag (plugin, "boot-order-lock")) {
+			g_prefix_error (&error_local,
+					"boot entry missing; "
+					"perhaps 'Boot Order Lock' enabled in the BIOS: ");
+			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+		} else {
+			g_prefix_error (&error_local, "boot entry missing: ");
+			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+		}
+		fu_device_set_update_error (device, error_local->message);
 		return TRUE;
 	}
 
@@ -497,12 +518,9 @@ fu_plugin_uefi_capsule_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GEr
 		return FALSE;
 
 	/* if not already set by quirks */
-	if (fu_device_get_custom_flags (FU_DEVICE (dev)) == NULL) {
-		/* for all Lenovo hardware */
-		if (fu_plugin_check_hwid (plugin, "6de5d951-d755-576b-bd09-c5cf66b27234")) {
-			fu_device_set_custom_flags (FU_DEVICE (dev), "use-legacy-bootmgr-desc");
-			fu_plugin_add_report_metadata (plugin, "BootMgrDesc", "legacy");
-		}
+	if (fu_device_get_custom_flags (FU_DEVICE (dev)) == NULL &&
+	    fu_plugin_has_custom_flag (plugin, "use-legacy-bootmgr-desc")) {
+		fu_device_set_custom_flags (FU_DEVICE (dev), "use-legacy-bootmgr-desc");
 	}
 
 	/* set fallback name if nothing else is set */
