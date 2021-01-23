@@ -3147,23 +3147,16 @@ fu_device_rescan (FuDevice *self, GError **error)
 void
 fu_device_convert_instance_ids (FuDevice *self)
 {
-	GPtrArray *children;
-	GPtrArray *instance_ids = fwupd_device_get_instance_ids (FWUPD_DEVICE (self));
+	GPtrArray *instance_ids;
 
 	/* OEM specific hardware */
 	if (fu_device_has_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS))
 		return;
+	instance_ids = fwupd_device_get_instance_ids (FWUPD_DEVICE (self));
 	for (guint i = 0; i < instance_ids->len; i++) {
 		const gchar *instance_id = g_ptr_array_index (instance_ids, i);
 		g_autofree gchar *guid = fwupd_guid_hash_string (instance_id);
 		fwupd_device_add_guid (FWUPD_DEVICE (self), guid);
-	}
-
-	/* convert all children too */
-	children = fu_device_get_children (self);
-	for (guint i = 0; i < children->len; i++) {
-		FuDevice *devtmp = g_ptr_array_index (children, i);
-		fu_device_convert_instance_ids (devtmp);
 	}
 }
 
@@ -3185,6 +3178,7 @@ fu_device_setup (FuDevice *self, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	GPtrArray *children;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -3196,6 +3190,14 @@ fu_device_setup (FuDevice *self, GError **error)
 	/* subclassed */
 	if (klass->setup != NULL) {
 		if (!klass->setup (self, error))
+			return FALSE;
+	}
+
+	/* run setup on the children too (unless done already) */
+	children = fu_device_get_children (self);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child_tmp = g_ptr_array_index (children, i);
+		if (!fu_device_setup (child_tmp, error))
 			return FALSE;
 	}
 
