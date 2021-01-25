@@ -19,7 +19,6 @@
 #include "fu-pxi-firmware.h"
 
 #define PXI_HID_DEV_OTA_INPUT_REPORT_ID		0x05
-#define PXI_HID_DEV_OTA_OUTPUT_REPORT_ID	0x06
 #define PXI_HID_DEV_OTA_FEATURE_REPORT_ID	0x07
 
 #define FU_PXI_DEVICE_CMD_FW_OTA_INIT		0x10u
@@ -33,7 +32,7 @@
 #define FU_PXI_DEVICE_CMD_FW_OTA_DISCONNECT	0x29u
 
 #define FU_PXI_DEVICE_OBJECT_SIZE_MAX		4096	/* bytes */
-#define FU_PXI_DEVICE_OTA_BUF_SZ		32	/* bytes */
+#define FU_PXI_DEVICE_OTA_BUF_SZ		512	/* bytes */
 #define FU_PXI_DEVICE_NOTTFY_RET_LEN		4	/* bytes */
 #define FU_PXI_DEVICE_FW_INFO_RET_LEN		8	/* bytes */
 
@@ -71,9 +70,29 @@ struct _FuPxiDevice {
 	guint16		 mtu_size;
 	guint16		 prn_threshold;
 	guint8		 spec_check_result;
+	struct hidraw_devinfo	hid_raw_info;
 };
 
 G_DEFINE_TYPE (FuPxiDevice, fu_pxi_device, FU_TYPE_UDEV_DEVICE)
+
+static gboolean
+fu_pxi_device_get_raw_info (FuPxiDevice *self, struct hidraw_devinfo *info, GError **error)
+{
+#ifdef HAVE_HIDRAW_H
+	if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
+			     HIDIOCGRAWINFO, (guint8 *) info,
+			     NULL, error)) {
+		return FALSE;
+	}
+	return TRUE;
+#else
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "<linux/hidraw.h> not available");
+	return FALSE;
+#endif
+}
 
 static const gchar *
 fu_pxi_device_spec_check_result_to_string (guint8 spec_check_result)
@@ -595,10 +614,21 @@ static gboolean
 fu_pxi_device_setup (FuDevice *device, GError **error)
 {
 	FuPxiDevice *self = FU_PXI_DEVICE (device);
+	g_autofree gchar *devid = NULL;
+	if (!fu_pxi_device_get_raw_info (self, &self->hid_raw_info ,error))
+		return FALSE;
 	if (!fu_pxi_device_fw_ota_init (self, error))
 		return FALSE;
 	if (!fu_pxi_device_fw_get_info (self, error))
 		return FALSE;
+
+	devid = g_strdup_printf ("HIDRAW\\VID_%04hX&PID_%04hX&DEV_%s",
+				self->hid_raw_info.vendor,
+				self->hid_raw_info.product,
+				fu_device_get_name (device));
+
+	fu_device_add_instance_id (device, devid);
+	fu_device_set_id (device, devid);
 	return TRUE;
 }
 
