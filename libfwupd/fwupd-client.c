@@ -2487,6 +2487,8 @@ fwupd_client_is_url (const gchar *perhaps_url)
 static void
 fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
+	GPtrArray *locations;
+	const gchar *uri_tmp;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *uri_str = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
@@ -2502,14 +2504,25 @@ fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpoi
 		return;
 	}
 
+	/* get the default release only until other parts of fwupd can cope */
+	locations = fwupd_release_get_locations (data->release);
+	if (locations->len == 0) {
+		g_task_return_new_error (task,
+					 FWUPD_ERROR,
+					 FWUPD_ERROR_INVALID_FILE,
+					 "release missing URI");
+		return;
+	}
+	uri_tmp = g_ptr_array_index (locations, 0);
+
 	/* local and directory remotes may have the firmware already */
 	if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL &&
-	    !fwupd_client_is_url (fwupd_release_get_uri (data->release))) {
+	    !fwupd_client_is_url (uri_tmp)) {
 		const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
 		g_autofree gchar *path = g_path_get_dirname (fn_cache);
-		fn = g_build_filename (path, fwupd_release_get_uri (data->release), NULL);
+		fn = g_build_filename (path, uri_tmp, NULL);
 	} else if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
-		fn = g_strdup (fwupd_release_get_uri (data->release) + 7);
+		fn = g_strdup (uri_tmp + 7);
 	}
 
 	/* install with flags chosen by the user */
@@ -2525,7 +2538,7 @@ fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpoi
 
 	/* remote file */
 	uri_str = fwupd_remote_build_firmware_uri (remote,
-						   fwupd_release_get_uri (data->release),
+						   uri_tmp,
 						   &error);
 	if (uri_str == NULL) {
 		g_task_return_error (task, g_steal_pointer (&error));
@@ -2589,8 +2602,21 @@ fwupd_client_install_release_async (FwupdClient *self,
 	/* work out what remote-specific URI fields this should use */
 	remote_id = fwupd_release_get_remote_id (release);
 	if (remote_id == NULL) {
+		GPtrArray *locations;
+		const gchar *uri_tmp;
+
+		/* get the default release only until other parts of fwupd can cope */
+		locations = fwupd_release_get_locations (release);
+		if (locations->len == 0) {
+			g_task_return_new_error (task,
+						 FWUPD_ERROR,
+						 FWUPD_ERROR_INVALID_FILE,
+						 "release missing URI");
+			return;
+		}
+		uri_tmp = g_ptr_array_index (locations, 0);
 		fwupd_client_download_bytes_async (self,
-						   fwupd_release_get_uri (release),
+						   uri_tmp,
 						   FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
 						   cancellable,
 						   fwupd_client_install_release_download_cb,
