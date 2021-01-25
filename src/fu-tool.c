@@ -1097,18 +1097,21 @@ static gboolean
 fu_util_install_release (FuUtilPrivate *priv, FwupdRelease *rel, GError **error)
 {
 	FwupdRemote *remote;
+	GPtrArray *locations;
 	const gchar *remote_id;
 	const gchar *uri_tmp;
 	g_auto(GStrv) argv = NULL;
 
-	uri_tmp = fwupd_release_get_uri (rel);
-	if (uri_tmp == NULL) {
+	/* get the default release only until other parts of fwupd can cope */
+	locations = fwupd_release_get_locations (rel);
+	if (locations->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "release missing URI");
 		return FALSE;
 	}
+	uri_tmp = g_ptr_array_index (locations, 0);
 	remote_id = fwupd_release_get_remote_id (rel);
 	if (remote_id == NULL) {
 		g_set_error (error,

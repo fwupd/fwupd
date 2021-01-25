@@ -326,6 +326,54 @@ fu_engine_get_release_version (FuEngine *self, FuDevice *dev, XbNode *rel, GErro
 }
 
 static gboolean
+fu_engine_set_release_from_artifact (FuEngine *self,
+				     FwupdRelease *rel,
+				     FwupdRemote *remote,
+				     XbNode *artifact,
+				     GError **error)
+{
+	guint64 size;
+	g_autoptr(GPtrArray) locations = NULL;
+	g_autoptr(GPtrArray) checksums = NULL;
+
+	/* location */
+	locations = xb_node_query (artifact, "location", 0, NULL);
+	if (locations != NULL) {
+		for (guint i = 0; i < locations->len; i++) {
+			XbNode *n = g_ptr_array_index (locations, i);
+			if (remote != NULL) {
+				g_autofree gchar *uri = NULL;
+				uri = fwupd_remote_build_firmware_uri (remote,
+								       xb_node_get_text (n),
+								       NULL);
+				if (uri != NULL) {
+					fwupd_release_add_location (rel, uri);
+					continue;
+				}
+			}
+			fwupd_release_add_location (rel, xb_node_get_text (n));
+		}
+	}
+
+	/* checksum */
+	checksums = xb_node_query (artifact, "checksum", 0, NULL);
+	if (checksums != NULL) {
+		for (guint i = 0; i < checksums->len; i++) {
+			XbNode *n = g_ptr_array_index (checksums, i);
+			fwupd_release_add_checksum (rel, xb_node_get_text (n));
+		}
+	}
+
+	/* size */
+	size = xb_node_query_text_as_uint (artifact, "size[@type='installed']", NULL);
+	if (size != G_MAXUINT64)
+		fwupd_release_set_size (rel, size);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_set_release_from_appstream (FuEngine *self,
 				      FuDevice *dev,
 				      FwupdRelease *rel,
@@ -340,6 +388,7 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	g_autofree gchar *version_rel = NULL;
 	g_autoptr(GPtrArray) cats = NULL;
 	g_autoptr(GPtrArray) issues = NULL;
+	g_autoptr(XbNode) artifact = NULL;
 	g_autoptr(XbNode) description = NULL;
 
 	/* set from the component */
@@ -382,6 +431,15 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 		if (remote == NULL)
 			g_warning ("no remote found for release %s", version_rel);
 	}
+	artifact = xb_node_query_first (release, "artifacts/artifact", NULL);
+	if (artifact != NULL) {
+		if (!fu_engine_set_release_from_artifact (self,
+							  rel,
+							  remote,
+							  artifact,
+							  error))
+			return FALSE;
+	}
 	description = xb_node_query_first (release, "description", NULL);
 	if (description != NULL) {
 		g_autofree gchar *xml = NULL;
@@ -396,14 +454,14 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 			uri = fwupd_remote_build_firmware_uri (remote, tmp, NULL);
 		if (uri == NULL)
 			uri = g_strdup (tmp);
-		fwupd_release_set_uri (rel, uri);
+		fwupd_release_add_location (rel, uri);
 	} else if (remote != NULL &&
 		   fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
 		g_autofree gchar *uri = NULL;
 		tmp = xb_node_query_text (component, "../custom/value[@key='fwupd::FilenameCache']", NULL);
 		if (tmp != NULL)  {
 			uri = g_strdup_printf ("file://%s", tmp);
-			fwupd_release_set_uri (rel, uri);
+			fwupd_release_add_location (rel, uri);
 		}
 	}
 	tmp = xb_node_query_text (release, "checksum[@target='content']", NULL);
@@ -4343,6 +4401,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 		const gchar *update_image;
 		gint vercmp;
 		GPtrArray *checksums;
+		GPtrArray *locations;
 		g_autoptr(FwupdRelease) rel = fwupd_release_new ();
 		g_autoptr(GError) error_loop = NULL;
 
@@ -4363,7 +4422,8 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 			fwupd_release_set_install_duration (rel, fu_device_get_install_duration (device));
 
 		/* invalid */
-		if (fwupd_release_get_uri (rel) == NULL)
+		locations = fwupd_release_get_locations (rel);
+		if (locations->len == 0)
 			continue;
 		checksums = fwupd_release_get_checksums (rel);
 		if (checksums->len == 0)

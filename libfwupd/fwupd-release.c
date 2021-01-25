@@ -47,7 +47,7 @@ typedef struct {
 	gchar				*name_variant_suffix;
 	gchar				*summary;
 	gchar				*branch;
-	gchar				*uri;
+	GPtrArray			*locations;
 	gchar				*vendor;
 	gchar				*version;
 	gchar				*remote_id;
@@ -545,18 +545,21 @@ fwupd_release_get_metadata_item (FwupdRelease *release, const gchar *key)
  * fwupd_release_get_uri:
  * @release: A #FwupdRelease
  *
- * Gets the update uri.
+ * Gets the default update URI.
  *
- * Returns: the update uri, or %NULL if unset
+ * Returns: the update URI, or %NULL if unset
  *
  * Since: 0.9.3
+ * Deprecated: 1.5.6: Use fwupd_release_get_locations() instead.
  **/
 const gchar *
 fwupd_release_get_uri (FwupdRelease *release)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE (release);
 	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
-	return priv->uri;
+	if (priv->locations->len == 0)
+		return NULL;
+	return (const gchar *) g_ptr_array_index (priv->locations, 0);
 }
 
 /**
@@ -564,17 +567,62 @@ fwupd_release_get_uri (FwupdRelease *release)
  * @release: A #FwupdRelease
  * @uri: the update URI
  *
- * Sets the update uri, i.e. where you can download the firmware from.
+ * Sets the update URI, i.e. where you can download the firmware from.
  *
  * Since: 0.9.3
+ * Deprecated: 1.5.6: Use fwupd_release_add_location() instead.
  **/
 void
 fwupd_release_set_uri (FwupdRelease *release, const gchar *uri)
 {
 	FwupdReleasePrivate *priv = GET_PRIVATE (release);
 	g_return_if_fail (FWUPD_IS_RELEASE (release));
-	g_free (priv->uri);
-	priv->uri = g_strdup (uri);
+	g_ptr_array_set_size (priv->locations, 0);
+	g_ptr_array_add (priv->locations, g_strdup (uri));
+}
+
+/**
+ * fwupd_release_get_locations:
+ * @release: A #FwupdRelease
+ *
+ * Gets the update URI, i.e. where you can download the firmware from.
+ *
+ * Typically the first URI will be the main HTTP mirror, but all URIs may not
+ * be valid HTTP URIs. For example, "ipns://QmSrPmba" is valid here.
+ *
+ * Returns: (element-type utf8) (transfer none): the URIs
+ *
+ * Since: 1.5.6
+ **/
+GPtrArray *
+fwupd_release_get_locations (FwupdRelease *release)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_val_if_fail (FWUPD_IS_RELEASE (release), NULL);
+	return priv->locations;
+}
+
+/**
+ * fwupd_release_add_location:
+ * @release: A #FwupdRelease
+ * @location: the update URI
+ *
+ * Adds an update URI, i.e. where you can download the firmware from.
+ *
+ * Since: 1.5.6
+ **/
+void
+fwupd_release_add_location (FwupdRelease *release, const gchar *location)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE (release);
+	g_return_if_fail (FWUPD_IS_RELEASE (release));
+	g_return_if_fail (location != NULL);
+	for (guint i = 0; i < priv->locations->len; i++) {
+		const gchar *location_tmp = g_ptr_array_index (priv->locations, i);
+		if (g_strcmp0 (location_tmp, location) == 0)
+			return;
+	}
+	g_ptr_array_add (priv->locations, g_strdup (location));
 }
 
 /**
@@ -1429,10 +1477,15 @@ fwupd_release_to_variant (FwupdRelease *release)
 				       FWUPD_RESULT_KEY_CHECKSUM,
 				       g_variant_new_string (str->str));
 	}
-	if (priv->uri != NULL) {
+	if (priv->locations->len > 0) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_LOCATIONS,
+				       g_variant_new_strv ((const gchar * const*) priv->locations->pdata,
+							   priv->locations->len));
+		/* for compatibilty */
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_URI,
-				       g_variant_new_string (priv->uri));
+				       g_variant_new_string (g_ptr_array_index (priv->locations, 0)));
 	}
 	if (priv->homepage != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
@@ -1561,8 +1614,14 @@ fwupd_release_from_key_value (FwupdRelease *release, const gchar *key, GVariant 
 			fwupd_release_add_checksum (release, split[i]);
 		return;
 	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_LOCATIONS) == 0) {
+		g_autofree const gchar **strv = g_variant_get_strv (value, NULL);
+		for (guint i = 0; strv[i] != NULL; i++)
+			fwupd_release_add_location (release, strv[i]);
+		return;
+	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_URI) == 0) {
-		fwupd_release_set_uri (release, g_variant_get_string (value, NULL));
+		fwupd_release_add_location (release, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_HOMEPAGE) == 0) {
@@ -1755,7 +1814,18 @@ fwupd_release_to_json (FwupdRelease *release, JsonBuilder *builder)
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_LICENSE, priv->license);
 	fwupd_release_json_add_int (builder, FWUPD_RESULT_KEY_SIZE, priv->size);
 	fwupd_release_json_add_int (builder, FWUPD_RESULT_KEY_CREATED, priv->created);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_URI, priv->uri);
+	if (priv->locations->len > 0) {
+		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_LOCATIONS);
+		json_builder_begin_array (builder);
+		for (guint i = 0; i < priv->locations->len; i++) {
+			const gchar *location = g_ptr_array_index (priv->locations, i);
+			json_builder_add_string_value (builder, location);
+		}
+		json_builder_end_array (builder);
+		/* for compatibilty */
+		fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_URI,
+					       (const gchar *) g_ptr_array_index (priv->locations, 0));
+	}
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
 	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
@@ -1831,7 +1901,10 @@ fwupd_release_to_string (FwupdRelease *release)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_LICENSE, priv->license);
 	fwupd_pad_kv_siz (str, FWUPD_RESULT_KEY_SIZE, priv->size);
 	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_CREATED, priv->created);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_URI, priv->uri);
+	for (guint i = 0; i < priv->locations->len; i++) {
+		const gchar *location = g_ptr_array_index (priv->locations, i);
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_URI, location);
+	}
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
@@ -1873,6 +1946,7 @@ fwupd_release_init (FwupdRelease *release)
 	priv->categories = g_ptr_array_new_with_free_func (g_free);
 	priv->issues = g_ptr_array_new_with_free_func (g_free);
 	priv->checksums = g_ptr_array_new_with_free_func (g_free);
+	priv->locations = g_ptr_array_new_with_free_func (g_free);
 	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 }
 
@@ -1893,7 +1967,7 @@ fwupd_release_finalize (GObject *object)
 	g_free (priv->name_variant_suffix);
 	g_free (priv->summary);
 	g_free (priv->branch);
-	g_free (priv->uri);
+	g_ptr_array_unref (priv->locations);
 	g_free (priv->homepage);
 	g_free (priv->details_url);
 	g_free (priv->source_url);
