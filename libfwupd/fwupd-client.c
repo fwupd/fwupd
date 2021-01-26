@@ -70,6 +70,7 @@ typedef struct {
 
 #ifdef HAVE_LIBCURL
 typedef struct {
+	GPtrArray			*urls;
 	CURL				*curl;
 	curl_mime			*mime;
 	struct curl_slist		*headers;
@@ -118,6 +119,8 @@ fwupd_client_curl_helper_free (FwupdCurlHelper *helper)
 		curl_mime_free (helper->mime);
 	if (helper->headers != NULL)
 		curl_slist_free_all (helper->headers);
+	if (helper->urls != NULL)
+		g_ptr_array_unref (helper->urls);
 	g_free (helper);
 }
 
@@ -2473,7 +2476,7 @@ fwupd_client_install_release_download_cb (GObject *source, GAsyncResult *res, gp
 }
 
 static gboolean
-fwupd_client_is_url (const gchar *perhaps_url)
+fwupd_client_is_url_http (const gchar *perhaps_url)
 {
 #ifdef HAVE_LIBCURL_7_62_0
 	g_autoptr(CURLU) h = curl_url ();
@@ -2517,7 +2520,7 @@ fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpoi
 
 	/* local and directory remotes may have the firmware already */
 	if (fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_LOCAL &&
-	    !fwupd_client_is_url (uri_tmp)) {
+	    !fwupd_client_is_url_http (uri_tmp)) {
 		const gchar *fn_cache = fwupd_remote_get_filename_cache (remote);
 		g_autofree gchar *path = g_path_get_dirname (fn_cache);
 		fn = g_build_filename (path, uri_tmp, NULL);
@@ -4228,6 +4231,53 @@ fwupd_client_download_write_callback_cb (char *ptr, size_t size, size_t nmemb, v
 	return realsize;
 }
 
+static GBytes *
+fwupd_client_download_http (FwupdClient *self,
+			    CURL *curl,
+			    const gchar *url,
+			    GError **error)
+{
+	CURLcode res;
+	gchar errbuf[CURL_ERROR_SIZE] = { '\0' };
+	g_autoptr(GByteArray) buf = g_byte_array_new ();
+
+	g_debug ("downloading %s", url);
+	fwupd_client_set_status (self, FWUPD_STATUS_DOWNLOADING);
+	curl_easy_setopt (curl, CURLOPT_URL, url);
+	curl_easy_setopt (curl, CURLOPT_ERRORBUFFER, errbuf);
+	curl_easy_setopt (curl, CURLOPT_WRITEFUNCTION, fwupd_client_download_write_callback_cb);
+	curl_easy_setopt (curl, CURLOPT_WRITEDATA, buf);
+	res = curl_easy_perform (curl);
+	fwupd_client_set_status (self, FWUPD_STATUS_IDLE);
+	if (res != CURLE_OK) {
+		glong status_code = 0;
+		curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &status_code);
+		g_debug ("status-code was %ld", status_code);
+		if (status_code == 429) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "Failed to download due to server limit");
+			return NULL;
+		}
+		if (errbuf[0] != '\0') {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "failed to download file: %s",
+				     errbuf);
+			return NULL;
+		}
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "failed to download file: %s",
+			     curl_easy_strerror (res));
+		return NULL;
+	}
+	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
+}
+
 static void
 fwupd_client_download_bytes_thread_cb (GTask *task,
 				       gpointer source_object,
@@ -4236,47 +4286,75 @@ fwupd_client_download_bytes_thread_cb (GTask *task,
 {
 	FwupdClient *self = FWUPD_CLIENT (source_object);
 	FwupdCurlHelper *helper = g_task_get_task_data (task);
-	CURLcode res;
-	gchar errbuf[CURL_ERROR_SIZE] = { '\0' };
-	g_autoptr(GByteArray) buf = g_byte_array_new ();
+	g_autoptr(GBytes) blob = NULL;
 
-	curl_easy_setopt (helper->curl, CURLOPT_ERRORBUFFER, errbuf);
-	curl_easy_setopt (helper->curl, CURLOPT_WRITEFUNCTION, fwupd_client_download_write_callback_cb);
-	curl_easy_setopt (helper->curl, CURLOPT_WRITEDATA, buf);
-	res = curl_easy_perform (helper->curl);
-	fwupd_client_set_status (self, FWUPD_STATUS_IDLE);
-	if (res != CURLE_OK) {
-		glong status_code = 0;
-		curl_easy_getinfo (helper->curl, CURLINFO_RESPONSE_CODE, &status_code);
-		g_debug ("status-code was %ld", status_code);
-		if (status_code == 429) {
-			g_task_return_new_error (task,
-						 FWUPD_ERROR,
-						 FWUPD_ERROR_INVALID_FILE,
-						 "Failed to download due to server limit");
+	for (guint i = 0; i < helper->urls->len; i++) {
+		const gchar *url = g_ptr_array_index (helper->urls, i);
+		g_autoptr(GError) error = NULL;
+		if (fwupd_client_is_url_http (url)) {
+			blob = fwupd_client_download_http (self, helper->curl, url, &error);
+			if (blob != NULL)
+				break;
+		} else {
+			g_set_error (&error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "not sure how to handle: %s", url);
+		}
+		if (i == helper->urls->len - 1) {
+			g_task_return_error (task, g_steal_pointer (&error));
 			return;
 		}
-		if (errbuf[0] != '\0') {
-			g_task_return_new_error (task,
-						 FWUPD_ERROR,
-						 FWUPD_ERROR_INVALID_FILE,
-						 "failed to download file: %s",
-						 errbuf);
-			return;
-		}
-		g_task_return_new_error (task,
-					 FWUPD_ERROR,
-					 FWUPD_ERROR_INVALID_FILE,
-					 "failed to download file: %s",
-					 curl_easy_strerror (res));
-
-		return;
+		g_warning ("failed to download %s: %s, trying next URI…",
+			   url, error->message);
 	}
 	g_task_return_pointer (task,
-			       g_byte_array_free_to_bytes (g_steal_pointer (&buf)),
+			       g_steal_pointer (&blob),
 			       (GDestroyNotify) g_bytes_unref);
 }
 #endif
+
+/* private */
+void
+fwupd_client_download_bytes2_async (FwupdClient *self,
+				    GPtrArray *urls,
+				    FwupdClientDownloadFlags flags,
+				    GCancellable *cancellable,
+				    GAsyncReadyCallback callback,
+				    gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GTask) task = NULL;
+#ifdef HAVE_LIBCURL
+	g_autoptr(GError) error = NULL;
+	g_autoptr(FwupdCurlHelper) helper = NULL;
+#endif
+
+	g_return_if_fail (FWUPD_IS_CLIENT (self));
+	g_return_if_fail (urls != NULL);
+	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
+	g_return_if_fail (priv->proxy != NULL);
+
+	/* ensure networking set up */
+	task = g_task_new (self, cancellable, callback, callback_data);
+#ifdef HAVE_LIBCURL
+	helper = fwupd_client_curl_new (self, &error);
+	if (helper == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
+	helper->urls = g_ptr_array_ref (urls);
+	g_task_set_task_data (task, g_steal_pointer (&helper), (GDestroyNotify) fwupd_client_curl_helper_free);
+
+	/* download data */
+	g_task_run_in_thread (task, fwupd_client_download_bytes_thread_cb);
+#else
+	g_task_return_new_error (task,
+				 FWUPD_ERROR,
+				 FWUPD_ERROR_NOT_SUPPORTED,
+				 "no libcurl support");
+#endif
+}
 
 /**
  * fwupd_client_download_bytes_async:
@@ -4308,38 +4386,17 @@ fwupd_client_download_bytes_async (FwupdClient *self,
 				   gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GTask) task = NULL;
-#ifdef HAVE_LIBCURL
-	g_autoptr(GError) error = NULL;
-	g_autoptr(FwupdCurlHelper) helper = NULL;
-#endif
+	g_autoptr(GPtrArray) urls = g_ptr_array_new_with_free_func (g_free);
 
 	g_return_if_fail (FWUPD_IS_CLIENT (self));
 	g_return_if_fail (url != NULL);
 	g_return_if_fail (cancellable == NULL || G_IS_CANCELLABLE (cancellable));
 	g_return_if_fail (priv->proxy != NULL);
 
-	/* ensure networking set up */
-	task = g_task_new (self, cancellable, callback, callback_data);
-#ifdef HAVE_LIBCURL
-	helper = fwupd_client_curl_new (self, &error);
-	if (helper == NULL) {
-		g_task_return_error (task, g_steal_pointer (&error));
-		return;
-	}
-	curl_easy_setopt (helper->curl, CURLOPT_URL, url);
-	g_task_set_task_data (task, g_steal_pointer (&helper), (GDestroyNotify) fwupd_client_curl_helper_free);
-
-	/* download data */
-	g_debug ("downloading %s", url);
-	fwupd_client_set_status (self, FWUPD_STATUS_DOWNLOADING);
-	g_task_run_in_thread (task, fwupd_client_download_bytes_thread_cb);
-#else
-	g_task_return_new_error (task,
-				 FWUPD_ERROR,
-				 FWUPD_ERROR_NOT_SUPPORTED,
-				 "no libcurl support");
-#endif
+	/* just proxy */
+	g_ptr_array_add (urls, g_strdup (url));
+	fwupd_client_download_bytes2_async (self, urls, flags, cancellable,
+					    callback, callback_data);
 }
 
 /**
