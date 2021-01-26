@@ -121,19 +121,23 @@ dfu_target_finalize (GObject *object)
 	G_OBJECT_CLASS (dfu_target_parent_class)->finalize (object);
 }
 
-static gchar *
-dfu_target_sectors_to_string (DfuTarget *target)
+void
+dfu_target_to_string (DfuTarget *target, guint idt, GString *str)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	GString *str = g_string_new ("");
+	fu_common_string_append_kx (str, idt, "AltSetting", priv->alt_setting);
+	fu_common_string_append_kx (str, idt, "AltIdx", priv->alt_idx);
+	fu_common_string_append_kv (str, idt, "AltName", priv->alt_name);
+	if (priv->alt_name_for_display != NULL) {
+		fu_common_string_append_kv (str, idt, "AltNameForDisplay",
+					    priv->alt_name_for_display);
+	}
 	for (guint i = 0; i < priv->sectors->len; i++) {
 		DfuSector *sector = g_ptr_array_index (priv->sectors, i);
-		g_autofree gchar *tmp = dfu_sector_to_string (sector);
-		g_string_append_printf (str, "%s\n", tmp);
+		g_autofree gchar *tmp1 = g_strdup_printf ("Idx%02x", i);
+		g_autofree gchar *tmp2 = dfu_sector_to_string (sector);
+		fu_common_string_append_kv (str, idt + 1, tmp1, tmp2);
 	}
-	if (str->len > 0)
-		g_string_truncate (str, str->len - 1);
-	return g_string_free (str, FALSE);
 }
 
 DfuSector *
@@ -288,7 +292,6 @@ gboolean
 dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_autofree gchar *str_debug = NULL;
 	g_auto(GStrv) zones = NULL;
 
 	/* not set */
@@ -373,8 +376,6 @@ dfu_target_parse_sectors (DfuTarget *target, const gchar *alt_name, GError **err
 	}
 
 	/* success */
-	str_debug = dfu_target_sectors_to_string (target);
-	g_debug ("%s", str_debug);
 	return TRUE;
 }
 
