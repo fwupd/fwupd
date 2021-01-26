@@ -1,3 +1,10 @@
+fwupd (1.5.5-3) UNRELEASED; urgency=medium
+
+  [ Steve McIntyre ]
+  * Fix up Uploaders for the -signed packages - remove Jared, add Matthias
+
+ -- Steve McIntyre <93sam@debian.org>  Tue, 26 Jan 2021 00:23:14 +0000
+
 fwupd (1.5.5-2) unstable; urgency=medium
 
   * fwupd.postinst: Adjust to read /etc/os-release instead of `/etc/lsb-release`
