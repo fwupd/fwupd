@@ -257,6 +257,15 @@ void		 fwupd_client_install_release_async	(FwupdClient	*self,
 							 FwupdInstallFlags install_flags,
 							 GCancellable	*cancellable,
 							 GAsyncReadyCallback callback,
+							 gpointer	 callback_data)
+G_DEPRECATED_FOR(fwupd_client_install_release2_async);
+void		 fwupd_client_install_release2_async	(FwupdClient	*self,
+							 FwupdDevice	*device,
+							 FwupdRelease	*release,
+							 FwupdInstallFlags install_flags,
+							 FwupdClientDownloadFlags download_flags,
+							 GCancellable	*cancellable,
+							 GAsyncReadyCallback callback,
 							 gpointer	 callback_data);
 gboolean	 fwupd_client_install_release_finish	(FwupdClient	*self,
 							 GAsyncResult	*res,
