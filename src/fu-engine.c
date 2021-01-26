@@ -1160,7 +1160,6 @@ fu_engine_check_requirement_vendor_id (FuEngine *self, XbNode *req,
 	GPtrArray *vendor_ids;
 	const gchar *vendor_ids_metadata;
 	g_autofree gchar *vendor_ids_device = NULL;
-	g_auto(GStrv) vendor_ids_tmp = NULL;
 
 	/* devices without vendor IDs should not exist! */
 	vendor_ids = fu_device_get_vendor_ids (device);
@@ -1183,15 +1182,8 @@ fu_engine_check_requirement_vendor_id (FuEngine *self, XbNode *req,
 		return FALSE;
 	}
 
-	/* just cat them together into a string */
-	vendor_ids_tmp = g_new0 (gchar *, vendor_ids->len + 1);
-	for (guint i = 0; i < vendor_ids->len; i++) {
-		const gchar *vendor_id_tmp = g_ptr_array_index (vendor_ids, i);
-		vendor_ids_tmp[i] = g_strdup (vendor_id_tmp);
-	}
-	vendor_ids_device = g_strjoinv ("|", vendor_ids_tmp);
-
 	/* it is always safe to use a regex, even for simple strings */
+	vendor_ids_device = fu_common_strjoin_array ("|", vendor_ids);
 	if (!g_regex_match_simple (vendor_ids_metadata, vendor_ids_device, 0, 0)) {
 		g_set_error (error,
 			     FWUPD_ERROR,

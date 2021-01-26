@@ -1913,6 +1913,36 @@ fu_common_strsafe (const gchar *str, gsize maxsz)
 	return g_string_free (g_steal_pointer (&tmp), FALSE);
 }
 
+
+/**
+ * fu_common_strjoin_array:
+ * @separator: (nullable): string to insert between each of the strings, or %NULL
+ * @array: (element-type utf8): A #GPtrArray
+ *
+ * Joins an array of strings together to form one long string, with the optional
+ * separator inserted between each of them.
+ *
+ * If @array has no items, the return value will be an empty string.
+ * If @array contains a single item, separator will not appear in the resulting
+ * string.
+ *
+ * Returns: a string
+ *
+ * Since: 1.5.6
+ **/
+gchar *
+fu_common_strjoin_array (const gchar *separator, GPtrArray *array)
+{
+	g_autofree const gchar **strv = NULL;
+
+	g_return_val_if_fail (array != NULL, NULL);
+
+	strv = g_new0 (const gchar *, array->len + 1);
+	for (guint i = 0; i < array->len; i++)
+		strv[i] = g_ptr_array_index (array, i);
+	return g_strjoinv (separator, (gchar **) strv);
+}
+
 /**
  * fu_memcpy_safe:
  * @dst: destination buffer

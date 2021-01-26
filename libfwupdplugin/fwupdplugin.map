@@ -725,6 +725,7 @@ LIBFWUPDPLUGIN_1.5.5 {
 LIBFWUPDPLUGIN_1.5.6 {
   global:
     fu_common_get_memory_size;
+    fu_common_strjoin_array;
     fu_hwids_add_smbios_override;
     fu_hwids_get_keys;
     fu_plugin_get_devices;
