@@ -1134,6 +1134,7 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 {
 	FwupdUpdateState state;
 	GPtrArray *guids = fwupd_device_get_guids (dev);
+	GPtrArray *vendor_ids = fwupd_device_get_vendor_ids (dev);
 	GPtrArray *instance_ids = fwupd_device_get_instance_ids (dev);
 	GString *str = g_string_new (NULL);
 	const gchar *tmp;
@@ -1203,17 +1204,18 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 
 	/* vendor */
 	tmp = fwupd_device_get_vendor (dev);
-	tmp2 = fwupd_device_get_vendor_id (dev);
-	if (tmp != NULL && tmp2 != NULL) {
-		g_autofree gchar *both = g_strdup_printf ("%s (%s)", tmp, tmp2);
+	if (tmp != NULL && vendor_ids->len > 0) {
+		g_autofree gchar *strv = fu_common_strjoin_array ("|", vendor_ids);
+		g_autofree gchar *both = g_strdup_printf ("%s (%s)", tmp, strv);
 		/* TRANSLATORS: manufacturer of hardware */
 		fu_common_string_append_kv (str, idt + 1, _("Vendor"), both);
 	} else if (tmp != NULL) {
 		/* TRANSLATORS: manufacturer of hardware */
 		fu_common_string_append_kv (str, idt + 1, _("Vendor"), tmp);
-	} else if (tmp2 != NULL) {
+	} else if (vendor_ids->len > 0) {
+		g_autofree gchar *strv = fu_common_strjoin_array ("|", vendor_ids);
 		/* TRANSLATORS: manufacturer of hardware */
-		fu_common_string_append_kv (str, idt + 1, _("Vendor"), tmp2);
+		fu_common_string_append_kv (str, idt + 1, _("Vendor"), strv);
 	}
 
 	/* branch */

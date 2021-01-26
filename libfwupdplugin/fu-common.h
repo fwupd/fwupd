@@ -268,6 +268,8 @@ gchar		**fu_common_strnsplit		(const gchar	*str,
 						 gint		 max_tokens);
 gchar		*fu_common_strsafe		(const gchar	*str,
 						 gsize		 maxsz);
+gchar		*fu_common_strjoin_array	(const gchar	*separator,
+						 GPtrArray	*array);
 gboolean	 fu_common_kernel_locked_down	(void);
 gboolean	 fu_common_cpuid		(guint32	 leaf,
 						 guint32	*eax,
