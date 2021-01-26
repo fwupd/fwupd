@@ -1477,49 +1477,49 @@ static void
 fu_common_vercmp_func (void)
 {
 	/* same */
-	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.3"), ==, 0);
-	g_assert_cmpint (fu_common_vercmp ("001.002.003", "001.002.003"), ==, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3", "1.2.3", FWUPD_VERSION_FORMAT_UNKNOWN), ==, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("001.002.003", "001.002.003", FWUPD_VERSION_FORMAT_UNKNOWN), ==, 0);
 	g_assert_cmpint (fu_common_vercmp_full ("0x00000002", "0x2", FWUPD_VERSION_FORMAT_HEX), ==, 0);
 
 	/* upgrade and downgrade */
-	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.4"), <, 0);
-	g_assert_cmpint (fu_common_vercmp ("001.002.000", "001.002.009"), <, 0);
-	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.2"), >, 0);
-	g_assert_cmpint (fu_common_vercmp ("001.002.009", "001.002.000"), >, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3", "1.2.4", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("001.002.000", "001.002.009", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3", "1.2.2", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("001.002.009", "001.002.000", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
 
 	/* unequal depth */
-	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.3.1"), <, 0);
-	g_assert_cmpint (fu_common_vercmp ("1.2.3.1", "1.2.4"), <, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3", "1.2.3.1", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3.1", "1.2.4", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
 
 	/* mixed-alpha-numeric */
-	g_assert_cmpint (fu_common_vercmp ("1.2.3a", "1.2.3a"), ==, 0);
-	g_assert_cmpint (fu_common_vercmp ("1.2.3a", "1.2.3b"), <, 0);
-	g_assert_cmpint (fu_common_vercmp ("1.2.3b", "1.2.3a"), >, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3a", "1.2.3a", FWUPD_VERSION_FORMAT_UNKNOWN), ==, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3a", "1.2.3b", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3b", "1.2.3a", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
 
 	/* alpha version append */
-	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.3a"), <, 0);
-	g_assert_cmpint (fu_common_vercmp ("1.2.3a", "1.2.3"), >, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3", "1.2.3a", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3a", "1.2.3", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
 
 	/* alpha only */
-	g_assert_cmpint (fu_common_vercmp ("alpha", "alpha"), ==, 0);
-	g_assert_cmpint (fu_common_vercmp ("alpha", "beta"), <, 0);
-	g_assert_cmpint (fu_common_vercmp ("beta", "alpha"), >, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("alpha", "alpha", FWUPD_VERSION_FORMAT_UNKNOWN), ==, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("alpha", "beta", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("beta", "alpha", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
 
 	/* alpha-compare */
-	g_assert_cmpint (fu_common_vercmp ("1.2a.3", "1.2a.3"), ==, 0);
-	g_assert_cmpint (fu_common_vercmp ("1.2a.3", "1.2b.3"), <, 0);
-	g_assert_cmpint (fu_common_vercmp ("1.2b.3", "1.2a.3"), >, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2a.3", "1.2a.3", FWUPD_VERSION_FORMAT_UNKNOWN), ==, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2a.3", "1.2b.3", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2b.3", "1.2a.3", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
 
 	/* tilde is all-powerful */
-	g_assert_cmpint (fu_common_vercmp ("1.2.3~rc1", "1.2.3~rc1"), ==, 0);
-	g_assert_cmpint (fu_common_vercmp ("1.2.3~rc1", "1.2.3"), <, 0);
-	g_assert_cmpint (fu_common_vercmp ("1.2.3", "1.2.3~rc1"), >, 0);
-	g_assert_cmpint (fu_common_vercmp ("1.2.3~rc2", "1.2.3~rc1"), >, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3~rc1", "1.2.3~rc1", FWUPD_VERSION_FORMAT_UNKNOWN), ==, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3~rc1", "1.2.3", FWUPD_VERSION_FORMAT_UNKNOWN), <, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3", "1.2.3~rc1", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
+	g_assert_cmpint (fu_common_vercmp_full ("1.2.3~rc2", "1.2.3~rc1", FWUPD_VERSION_FORMAT_UNKNOWN), >, 0);
 
 	/* invalid */
-	g_assert_cmpint (fu_common_vercmp ("1", NULL), ==, G_MAXINT);
-	g_assert_cmpint (fu_common_vercmp (NULL, "1"), ==, G_MAXINT);
-	g_assert_cmpint (fu_common_vercmp (NULL, NULL), ==, G_MAXINT);
+	g_assert_cmpint (fu_common_vercmp_full ("1", NULL, FWUPD_VERSION_FORMAT_UNKNOWN), ==, G_MAXINT);
+	g_assert_cmpint (fu_common_vercmp_full (NULL, "1", FWUPD_VERSION_FORMAT_UNKNOWN), ==, G_MAXINT);
+	g_assert_cmpint (fu_common_vercmp_full (NULL, NULL, FWUPD_VERSION_FORMAT_UNKNOWN), ==, G_MAXINT);
 }
 
 static void
