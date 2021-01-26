@@ -33,4 +33,10 @@ void		 fwupd_client_update_metadata_stream_async(FwupdClient	*self,
 							 GCancellable	*cancellable,
 							 GAsyncReadyCallback callback,
 							 gpointer	 callback_data);
+void		 fwupd_client_download_bytes2_async	(FwupdClient	*self,
+							 GPtrArray	*urls,
+							 FwupdClientDownloadFlags flags,
+							 GCancellable	*cancellable,
+							 GAsyncReadyCallback callback,
+							 gpointer	 callback_data);
 #endif
