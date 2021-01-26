@@ -2609,25 +2609,12 @@ fwupd_client_install_release2_async (FwupdClient *self,
 	/* work out what remote-specific URI fields this should use */
 	remote_id = fwupd_release_get_remote_id (release);
 	if (remote_id == NULL) {
-		GPtrArray *locations;
-		const gchar *uri_tmp;
-
-		/* get the default release only until other parts of fwupd can cope */
-		locations = fwupd_release_get_locations (release);
-		if (locations->len == 0) {
-			g_task_return_new_error (task,
-						 FWUPD_ERROR,
-						 FWUPD_ERROR_INVALID_FILE,
-						 "release missing URI");
-			return;
-		}
-		uri_tmp = g_ptr_array_index (locations, 0);
-		fwupd_client_download_bytes_async (self,
-						   uri_tmp,
-						   download_flags,
-						   cancellable,
-						   fwupd_client_install_release_download_cb,
-						   g_steal_pointer (&task));
+		fwupd_client_download_bytes2_async (self,
+						    fwupd_release_get_locations (release),
+						    download_flags,
+						    cancellable,
+						    fwupd_client_install_release_download_cb,
+						    g_steal_pointer (&task));
 		return;
 	}
 
