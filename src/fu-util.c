@@ -1531,8 +1531,9 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 					     error))
 			return FALSE;
 	}
-	return fwupd_client_install_release (priv->client, dev, rel, priv->flags,
-					     priv->cancellable, error);
+	return fwupd_client_install_release2 (priv->client, dev, rel, priv->flags,
+					      FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					      priv->cancellable, error);
 }
 
 static gboolean

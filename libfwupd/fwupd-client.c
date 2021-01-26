@@ -2394,6 +2394,7 @@ typedef struct {
 	FwupdDevice		*device;
 	FwupdRelease		*release;
 	FwupdInstallFlags	 install_flags;
+	FwupdClientDownloadFlags download_flags;
 } FwupdClientInstallReleaseData;
 
 static void
@@ -2550,18 +2551,19 @@ fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpoi
 
 	/* download file */
 	fwupd_client_download_bytes_async (FWUPD_CLIENT (source), uri_str,
-					   FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					   data->download_flags,
 					   cancellable,
 					   fwupd_client_install_release_download_cb,
 					   g_steal_pointer (&task));
 }
 
 /**
- * fwupd_client_install_release_async:
+ * fwupd_client_install_release2_async:
  * @self: A #FwupdClient
  * @device: A #FwupdDevice
  * @release: A #FwupdRelease
  * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
+ * @download_flags: the #FwupdClientDownloadFlags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_DISABLE_IPFS
  * @cancellable: the #GCancellable, or %NULL
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -2572,16 +2574,17 @@ fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpoi
  * emitted in the global default main context, if not explicitly set with
  * fwupd_client_set_main_context().
  *
- * Since: 1.5.0
+ * Since: 1.5.6
  **/
 void
-fwupd_client_install_release_async (FwupdClient *self,
-				    FwupdDevice *device,
-				    FwupdRelease *release,
-				    FwupdInstallFlags install_flags,
-				    GCancellable *cancellable,
-				    GAsyncReadyCallback callback,
-				    gpointer callback_data)
+fwupd_client_install_release2_async (FwupdClient *self,
+				     FwupdDevice *device,
+				     FwupdRelease *release,
+				     FwupdInstallFlags install_flags,
+				     FwupdClientDownloadFlags download_flags,
+				     GCancellable *cancellable,
+				     GAsyncReadyCallback callback,
+				     gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GTask) task = NULL;
@@ -2599,6 +2602,7 @@ fwupd_client_install_release_async (FwupdClient *self,
 	data = g_new0 (FwupdClientInstallReleaseData, 1);
 	data->device = g_object_ref (device);
 	data->release = g_object_ref (release);
+	data->download_flags = download_flags;
 	data->install_flags = install_flags;
 	g_task_set_task_data (task, data, (GDestroyNotify) fwupd_client_install_release_data_free);
 
@@ -2620,7 +2624,7 @@ fwupd_client_install_release_async (FwupdClient *self,
 		uri_tmp = g_ptr_array_index (locations, 0);
 		fwupd_client_download_bytes_async (self,
 						   uri_tmp,
-						   FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+						   download_flags,
 						   cancellable,
 						   fwupd_client_install_release_download_cb,
 						   g_steal_pointer (&task));
@@ -2631,6 +2635,39 @@ fwupd_client_install_release_async (FwupdClient *self,
 	fwupd_client_get_remote_by_id_async (self, remote_id, cancellable,
 					     fwupd_client_install_release_remote_cb,
 					     g_steal_pointer (&task));
+}
+
+/**
+ * fwupd_client_install_release_async:
+ * @self: A #FwupdClient
+ * @device: A #FwupdDevice
+ * @release: A #FwupdRelease
+ * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
+ * @cancellable: the #GCancellable, or %NULL
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Installs a new release on a device, downloading the firmware if required.
+ *
+ * NOTE: This method is thread-safe, but progress signals will be
+ * emitted in the global default main context, if not explicitly set with
+ * fwupd_client_set_main_context().
+ *
+ * Since: 1.5.0
+ * Deprecated: 1.5.6
+ **/
+void
+fwupd_client_install_release_async (FwupdClient *self,
+				    FwupdDevice *device,
+				    FwupdRelease *release,
+				    FwupdInstallFlags install_flags,
+				    GCancellable *cancellable,
+				    GAsyncReadyCallback callback,
+				    gpointer callback_data)
+{
+	return fwupd_client_install_release2_async (self, device, release, install_flags,
+						    FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+						    cancellable, callback, callback_data);
 }
 
 /**
