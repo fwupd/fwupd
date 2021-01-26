@@ -134,6 +134,10 @@ dfu_device_to_string (FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kx (str, idt, "IfaceNumber", priv->iface_number);
 	fu_common_string_append_kx (str, idt, "DnloadTimeout", priv->dnload_timeout);
 	fu_common_string_append_kx (str, idt, "TimeoutMs", priv->timeout_ms);
+	for (guint i = 0; i < priv->targets->len; i++) {
+		DfuTarget *target = g_ptr_array_index (priv->targets, i);
+		dfu_target_to_string (target, idt + 1, str);
+	}
 }
 
 /**

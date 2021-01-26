@@ -83,3 +83,6 @@ gboolean	 dfu_target_download			(DfuTarget	*target,
 							 GError		**error);
 gboolean	 dfu_target_mass_erase			(DfuTarget	*target,
 							 GError		**error);
+void		 dfu_target_to_string			(DfuTarget	*target,
+							 guint		 idt,
+							 GString	*str);
