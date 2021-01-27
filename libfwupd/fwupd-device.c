@@ -381,6 +381,9 @@ fwupd_device_child_finalized_cb (gpointer data, GObject *where_the_object_was)
  * Adds a child device. An child device is logically linked to the primary
  * device in some way.
  *
+ * NOTE: You should never call this function from user code, it is for daemon
+ * use only. Only use fwupd_device_set_parent() to set up a logical tree.
+ *
  * Since: 1.5.1
  **/
 void
@@ -2684,10 +2687,8 @@ fwupd_device_array_ensure_parents (GPtrArray *devices)
 		if (parent_id != NULL) {
 			FwupdDevice *dev_tmp;
 			dev_tmp = g_hash_table_lookup (devices_by_id, parent_id);
-			if (dev_tmp != NULL) {
-				fwupd_device_add_child (dev_tmp, dev);
+			if (dev_tmp != NULL)
 				fwupd_device_set_parent (dev, dev_tmp);
-			}
 		}
 	}
 }
