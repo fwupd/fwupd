@@ -233,7 +233,7 @@ fu_hwids_get_replace_keys (FuHwids *self, const gchar *key)
 /**
  * fu_hwids_add_smbios_override:
  * @self: A #FuHwids
- * @keys: A key, e.g. %FU_HWIDS_KEY_PRODUCT_SKU
+ * @key: A key, e.g. %FU_HWIDS_KEY_PRODUCT_SKU
  * @value: (nullable): A new value, e.g. "ExampleModel" or %NULL
  *
  * Sets SMBIOS override values so you can emulate another system.

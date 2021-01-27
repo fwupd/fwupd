@@ -457,7 +457,7 @@ fu_efivar_get_names (const gchar *guid, GError **error)
  *
  * Returns a file monitor for a specific key.
  *
- * Returns: %TRUE on success
+ * Returns: (transfer full): a #GFileMonitor, or %NULL for an error
  *
  * Since: 1.5.5
  **/
