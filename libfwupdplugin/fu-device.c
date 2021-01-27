@@ -2505,7 +2505,7 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		}
 		if (tmp2->len > 0)
 			g_string_truncate (tmp2, tmp2->len - 1);
-		fu_common_string_append_kv (tmp2, idt + 1, "PrivateFlags", tmp2->str);
+		fu_common_string_append_kv (str, idt + 1, "PrivateFlags", tmp2->str);
 	}
 
 	/* subclassed */
