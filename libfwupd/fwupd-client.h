@@ -44,11 +44,13 @@ struct _FwupdClientClass
 /**
  * FwupdClientDownloadFlags:
  * @FWUPD_CLIENT_DOWNLOAD_FLAG_NONE:		No flags set
+ * @FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS:	Only use IPFS when downloading URIs
  *
  * The options to use for downloading.
  **/
 typedef enum {
 	FWUPD_CLIENT_DOWNLOAD_FLAG_NONE			= 0,		/* Since: 1.4.5 */
+	FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS		= 1 << 0,	/* Since: 1.5.6 */
 	/*< private >*/
 	FWUPD_CLIENT_DOWNLOAD_FLAG_LAST
 } FwupdClientDownloadFlags;

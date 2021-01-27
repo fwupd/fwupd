@@ -59,6 +59,7 @@ struct FuUtilPrivate {
 	GMainContext		*main_ctx;
 	GOptionContext		*context;
 	FwupdInstallFlags	 flags;
+	FwupdClientDownloadFlags download_flags;
 	FwupdClient		*client;
 	FuProgressbar		*progressbar;
 	gboolean		 no_remote_check;
@@ -598,7 +599,7 @@ fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GErro
 	if (!fu_common_mkdir_parent (filename, error))
 		return NULL;
 	blob = fwupd_client_download_bytes (priv->client, perhapsfn,
-					    FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					    priv->download_flags,
 					    priv->cancellable, error);
 	if (blob == NULL)
 		return NULL;
@@ -1539,7 +1540,7 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 			return FALSE;
 	}
 	return fwupd_client_install_release2 (priv->client, dev, rel, priv->flags,
-					      FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					      priv->download_flags,
 					      priv->cancellable, error);
 }
 
@@ -2716,6 +2717,7 @@ main (int argc, char *argv[])
 	gboolean allow_branch_switch = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
+	gboolean enable_ipfs = FALSE;
 	gboolean ignore_power = FALSE;
 	gboolean is_interactive = TRUE;
 	gboolean no_history = FALSE;
@@ -2785,6 +2787,9 @@ main (int argc, char *argv[])
 		{ "disable-ssl-strict", '\0', 0, G_OPTION_ARG_NONE, &priv->disable_ssl_strict,
 			/* TRANSLATORS: command line option */
 			_("Ignore SSL strict checks when downloading files"), NULL },
+		{ "ipfs", '\0', 0, G_OPTION_ARG_NONE, &enable_ipfs,
+			/* TRANSLATORS: command line option */
+			_("Only use IPFS when downloading files"), NULL },
 		{ "filter", '\0', 0, G_OPTION_ARG_STRING, &filter,
 			/* TRANSLATORS: command line option */
 			_("Filter with a set of device flags using a ~ prefix to "
@@ -3129,6 +3134,10 @@ main (int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 	if (ignore_power)
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_POWER;
+
+	/* use IPFS for metadata and firmware *only* if specified */
+	if (enable_ipfs)
+		priv->download_flags |= FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS;
 
 #ifdef HAVE_POLKIT
 	/* start polkit tty agent to listen for password requests */

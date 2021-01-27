@@ -55,6 +55,7 @@ _fwupdmgr_opts=(
 	'--sign'
 	'--filter'
 	'--disable-ssl-strict'
+	'--ipfs'
 	'--ignore-power'
 )
 
