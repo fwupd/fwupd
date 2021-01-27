@@ -363,6 +363,16 @@ fwupd_device_set_parent (FwupdDevice *device, FwupdDevice *parent)
 	fwupd_device_set_parent_id (device, parent != NULL ? fwupd_device_get_id (parent) : NULL);
 }
 
+static void
+fwupd_device_child_finalized_cb (gpointer data, GObject *where_the_object_was)
+{
+	FwupdDevice *device = FWUPD_DEVICE (data);
+	g_critical ("FuDevice child %p was finalized while still having parent %s [%s]!",
+		    where_the_object_was,
+		    fwupd_device_get_name (device),
+		    fwupd_device_get_id (device));
+}
+
 /**
  * fwupd_device_add_child:
  * @device: A #FwupdDevice
@@ -384,6 +394,9 @@ fwupd_device_add_child (FwupdDevice *device, FwupdDevice *child)
 		if (devtmp == child)
 			return;
 	}
+	g_object_weak_ref (G_OBJECT (child),
+			   fwupd_device_child_finalized_cb,
+			   device);
 	g_ptr_array_add (priv->children, g_object_ref (child));
 }
 
@@ -2561,6 +2574,13 @@ fwupd_device_finalize (GObject *object)
 
 	if (priv->parent != NULL)
 		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
+	for (guint i = 0; i < priv->children->len; i++) {
+		FwupdDevice *child = g_ptr_array_index (priv->children, i);
+		g_object_weak_unref (G_OBJECT (child),
+				     fwupd_device_child_finalized_cb,
+				     device);
+	}
+
 	g_free (priv->description);
 	g_free (priv->id);
 	g_free (priv->parent_id);
