@@ -2514,16 +2514,23 @@ fwupd_client_is_url_http (const gchar *perhaps_url)
 #endif
 }
 
+static gboolean
+fwupd_client_is_url_ipfs (const gchar *perhaps_url)
+{
+	return g_str_has_prefix (perhaps_url, "ipfs://") ||
+		g_str_has_prefix (perhaps_url, "ipns://");
+}
+
 static void
 fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	GPtrArray *locations;
 	const gchar *uri_tmp;
 	g_autofree gchar *fn = NULL;
-	g_autofree gchar *uri_str = NULL;
 	g_autoptr(FwupdRemote) remote = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GTask) task = G_TASK (user_data);
+	g_autoptr(GPtrArray) uris_built = g_ptr_array_new_with_free_func (g_free);
 	FwupdClientInstallReleaseData *data = g_task_get_task_data (task);
 	GCancellable *cancellable = g_task_get_cancellable (task);
 
@@ -2567,20 +2574,57 @@ fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpoi
 	}
 
 	/* remote file */
-	uri_str = fwupd_remote_build_firmware_uri (remote,
-						   uri_tmp,
-						   &error);
-	if (uri_str == NULL) {
-		g_task_return_error (task, g_steal_pointer (&error));
-		return;
+	for (guint i = 0; i < locations->len; i++) {
+		uri_tmp = g_ptr_array_index (locations, i);
+		if (fwupd_client_is_url_ipfs (uri_tmp)) {
+			g_ptr_array_add (uris_built, g_strdup (uri_tmp));
+		} else if (fwupd_client_is_url_http (uri_tmp)) {
+			g_autofree gchar *uri_str = NULL;
+			uri_str = fwupd_remote_build_firmware_uri (remote,
+								   uri_tmp,
+								   &error);
+			if (uri_str == NULL) {
+				g_task_return_error (task, g_steal_pointer (&error));
+				return;
+			}
+			g_ptr_array_add (uris_built, g_steal_pointer (&uri_str));
+		}
 	}
 
 	/* download file */
-	fwupd_client_download_bytes_async (FWUPD_CLIENT (source), uri_str,
-					   data->download_flags,
-					   cancellable,
-					   fwupd_client_install_release_download_cb,
-					   g_steal_pointer (&task));
+	fwupd_client_download_bytes2_async (FWUPD_CLIENT (source),
+					    uris_built,
+					    data->download_flags,
+					    cancellable,
+					    fwupd_client_install_release_download_cb,
+					    g_steal_pointer (&task));
+}
+
+static GPtrArray *
+fwupd_client_filter_locations (GPtrArray *locations,
+			       FwupdClientDownloadFlags download_flags,
+			       GError **error)
+{
+	g_autoptr(GPtrArray) uris_filtered = g_ptr_array_new_with_free_func (g_free);
+
+	g_return_val_if_fail (locations != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	for (guint i = 0; i < locations->len; i++) {
+		const gchar *uri = g_ptr_array_index (locations, i);
+		if ((download_flags & FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS) > 0 &&
+		    !fwupd_client_is_url_ipfs (uri))
+			continue;
+		g_ptr_array_add (uris_filtered, g_strdup (uri));
+	}
+	if (uris_filtered->len == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "no valid release URIs");
+		return NULL;
+	}
+	return g_steal_pointer (&uris_filtered);
 }
 
 /**
@@ -4288,6 +4332,58 @@ fwupd_client_download_write_callback_cb (char *ptr, size_t size, size_t nmemb, v
 }
 
 static GBytes *
+fwupd_client_stream_read_bytes (GInputStream *stream, GError **error)
+{
+	guint8 tmp[0x8000] = { 0x0 };
+	g_autoptr(GByteArray) buf = g_byte_array_new ();
+
+	/* read from stream in 32kB chunks */
+	while (TRUE) {
+		gssize sz;
+		sz = g_input_stream_read (stream, tmp, sizeof(tmp), NULL, error);
+		if (sz == 0)
+			break;
+		if (sz < 0)
+			return NULL;
+		g_byte_array_append (buf, tmp, sz);
+	}
+	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
+}
+
+static GBytes *
+fwupd_client_download_ipfs (FwupdClient *self, const gchar *url, GError **error)
+{
+	GInputStream *stream = NULL;
+	g_autofree gchar *path = NULL;
+	g_autoptr(GSubprocess) subprocess = NULL;
+
+	/* we get no detailed progess details */
+	fwupd_client_set_status (self, FWUPD_STATUS_DOWNLOADING);
+	fwupd_client_set_percentage (self, 0);
+
+	/* convert from URI to path */
+	if (g_str_has_prefix (url, "ipfs://")) {
+		path = g_strdup_printf ("/ipfs/%s", url + 7);
+	} else if (g_str_has_prefix (url, "ipns://")) {
+		path = g_strdup_printf ("/ipns/%s", url + 7);
+	} else {
+		path = g_strdup (url);
+	}
+
+	/* run sync */
+	subprocess = g_subprocess_new (G_SUBPROCESS_FLAGS_STDOUT_PIPE,
+				       error, "ipfs", "cat", path, NULL);
+	if (subprocess == NULL)
+		return NULL;
+	if (!g_subprocess_wait_check (subprocess, NULL, error))
+		return NULL;
+
+	/* get raw stdout */
+	stream = g_subprocess_get_stdout_pipe (subprocess);
+	return fwupd_client_stream_read_bytes (stream, error);
+}
+
+static GBytes *
 fwupd_client_download_http (FwupdClient *self,
 			    CURL *curl,
 			    const gchar *url,
@@ -4297,7 +4393,6 @@ fwupd_client_download_http (FwupdClient *self,
 	gchar errbuf[CURL_ERROR_SIZE] = { '\0' };
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
 
-	g_debug ("downloading %s", url);
 	fwupd_client_set_status (self, FWUPD_STATUS_DOWNLOADING);
 	curl_easy_setopt (curl, CURLOPT_URL, url);
 	curl_easy_setopt (curl, CURLOPT_ERRORBUFFER, errbuf);
@@ -4347,8 +4442,13 @@ fwupd_client_download_bytes_thread_cb (GTask *task,
 	for (guint i = 0; i < helper->urls->len; i++) {
 		const gchar *url = g_ptr_array_index (helper->urls, i);
 		g_autoptr(GError) error = NULL;
+		g_debug ("downloading %s", url);
 		if (fwupd_client_is_url_http (url)) {
 			blob = fwupd_client_download_http (self, helper->curl, url, &error);
+			if (blob != NULL)
+				break;
+		} else if (fwupd_client_is_url_ipfs (url)) {
+			blob = fwupd_client_download_ipfs (self, url, &error);
 			if (blob != NULL)
 				break;
 		} else {
@@ -4361,8 +4461,10 @@ fwupd_client_download_bytes_thread_cb (GTask *task,
 			g_task_return_error (task, g_steal_pointer (&error));
 			return;
 		}
-		g_warning ("failed to download %s: %s, trying next URI…",
-			   url, error->message);
+		fwupd_client_set_percentage (self, 0);
+		fwupd_client_set_status (self, FWUPD_STATUS_IDLE);
+		g_debug ("failed to download %s: %s, trying next URI…",
+			 url, error->message);
 	}
 	g_task_return_pointer (task,
 			       g_steal_pointer (&blob),
@@ -4399,7 +4501,11 @@ fwupd_client_download_bytes2_async (FwupdClient *self,
 		g_task_return_error (task, g_steal_pointer (&error));
 		return;
 	}
-	helper->urls = g_ptr_array_ref (urls);
+	helper->urls = fwupd_client_filter_locations (urls, flags, &error);
+	if (helper->urls == NULL) {
+		g_task_return_error (task, g_steal_pointer (&error));
+		return;
+	}
 	g_task_set_task_data (task, g_steal_pointer (&helper), (GDestroyNotify) fwupd_client_curl_helper_free);
 
 	/* download data */

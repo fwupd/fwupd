@@ -464,7 +464,9 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 		else
 			priv->kind = FWUPD_REMOTE_KIND_LOCAL;
 	} else if (g_str_has_prefix (metadata_uri, "http://") ||
-		   g_str_has_prefix (metadata_uri, "https://")) {
+		   g_str_has_prefix (metadata_uri, "https://") ||
+		   g_str_has_prefix (metadata_uri, "ipfs://") ||
+		   g_str_has_prefix (metadata_uri, "ipns://")) {
 		priv->kind = FWUPD_REMOTE_KIND_DOWNLOAD;
 	} else {
 		g_set_error (error,
