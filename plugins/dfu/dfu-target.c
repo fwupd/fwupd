@@ -622,6 +622,11 @@ void
 dfu_target_set_alt_name (DfuTarget *target, const gchar *alt_name)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
+
+	/* not changed */
+	if (g_strcmp0 (priv->alt_name, alt_name) == 0)
+		return;
+
 	g_free (priv->alt_name);
 	priv->alt_name = g_strdup (alt_name);
 }

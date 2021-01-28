@@ -70,6 +70,11 @@ fwupd_plugin_set_name (FwupdPlugin *plugin, const gchar *name)
 	FwupdPluginPrivate *priv = GET_PRIVATE (plugin);
 	g_return_if_fail (FWUPD_IS_PLUGIN (plugin));
 	g_return_if_fail (name != NULL);
+
+	/* not changed */
+	if (g_strcmp0 (priv->name, name) == 0)
+		return;
+
 	g_free (priv->name);
 	priv->name = g_strdup (name);
 	g_object_notify (G_OBJECT (plugin), "name");

@@ -173,6 +173,11 @@ fu_plugin_set_build_hash (FuPlugin *self, const gchar *build_hash)
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (build_hash != NULL);
+
+	/* not changed */
+	if (g_strcmp0 (priv->build_hash, build_hash) == 0)
+		return;
+
 	g_free (priv->build_hash);
 	priv->build_hash = g_strdup (build_hash);
 }

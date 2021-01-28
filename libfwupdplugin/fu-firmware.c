@@ -140,6 +140,11 @@ fu_firmware_set_version (FuFirmware *self, const gchar *version)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_FIRMWARE (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->version, version) == 0)
+		return;
+
 	g_free (priv->version);
 	priv->version = g_strdup (version);
 }
