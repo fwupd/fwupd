@@ -1221,8 +1221,6 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
-	g_autoptr(GNode) root = g_node_new (NULL);
-	g_autofree gchar *title = fu_util_get_tree_title (priv);
 
 	priv->filter_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
 	dev = fu_util_get_device_or_prompt (priv, values, error);
@@ -1239,12 +1237,21 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print ("%s\n", _("No releases available"));
 		return TRUE;
 	}
-
-	for (guint i = 0; i < rels->len; i++) {
-		FwupdRelease *rel = g_ptr_array_index (rels, i);
-		g_node_append_data (root, rel);
+	if (g_getenv ("FWUPD_VERBOSE") != NULL) {
+		for (guint i = 0; i < rels->len; i++) {
+			FwupdRelease *rel = g_ptr_array_index (rels, i);
+			g_autofree gchar *tmp = fwupd_release_to_string (rel);
+			g_print ("%s\n", tmp);
+		}
+	} else {
+		g_autoptr(GNode) root = g_node_new (NULL);
+		g_autofree gchar *title = fu_util_get_tree_title (priv);
+		for (guint i = 0; i < rels->len; i++) {
+			FwupdRelease *rel = g_ptr_array_index (rels, i);
+			g_node_append_data (root, rel);
+		}
+		fu_util_print_tree (root, title);
 	}
-	fu_util_print_tree (root, title);
 
 	return TRUE;
 }
