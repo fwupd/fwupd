@@ -6,15 +6,11 @@
 
 #pragma once
 
-#include <glib.h>
+#include <glib-object.h>
 
-typedef struct {
-	guint32		 idx;
-	guint32		 page;
-	guint32		 address;
-	const guint8	*data;
-	guint32		 data_sz;
-} FuChunk;
+#define FU_TYPE_CHUNK (fu_chunk_get_type ())
+
+G_DECLARE_FINAL_TYPE (FuChunk, fu_chunk, FU, CHUNK, GObject)
 
 guint32		 fu_chunk_get_idx			(FuChunk	*self);
 guint32		 fu_chunk_get_page			(FuChunk	*self);
@@ -29,7 +25,7 @@ FuChunk		*fu_chunk_new				(guint32	 idx,
 							 guint32	 address,
 							 const guint8	*data,
 							 guint32	 data_sz);
-gchar		*fu_chunk_to_string			(FuChunk	*item);
+gchar		*fu_chunk_to_string			(FuChunk	*self);
 
 gchar		*fu_chunk_array_to_string		(GPtrArray	*chunks);
 GPtrArray	*fu_chunk_array_new			(const guint8	*data,
