@@ -325,6 +325,23 @@ fu_engine_get_release_version (FuEngine *self, FuDevice *dev, XbNode *rel, GErro
 	return fu_common_version_from_uint32 ((guint32) ver_uint32, fmt);
 }
 
+static gint
+fu_engine_scheme_compare_cb (gconstpointer a, gconstpointer b, gpointer user_data)
+{
+	FuEngine *self = FU_ENGINE (user_data);
+	const gchar *location1 = *((const gchar ** )a);
+	const gchar *location2 = *((const gchar **) b);
+	g_autofree gchar *scheme1 = fu_common_uri_get_scheme (location1);
+	g_autofree gchar *scheme2 = fu_common_uri_get_scheme (location2);
+	guint prio1 = fu_config_get_uri_scheme_prio (self->config, scheme1);
+	guint prio2 = fu_config_get_uri_scheme_prio (self->config, scheme2);
+	if (prio1 < prio2)
+		return -1;
+	if (prio1 > prio2)
+		return 1;
+	return 0;
+}
+
 static gboolean
 fu_engine_set_release_from_artifact (FuEngine *self,
 				     FwupdRelease *rel,
@@ -341,6 +358,17 @@ fu_engine_set_release_from_artifact (FuEngine *self,
 	if (locations != NULL) {
 		for (guint i = 0; i < locations->len; i++) {
 			XbNode *n = g_ptr_array_index (locations, i);
+			g_autofree gchar *scheme = NULL;
+
+			/* check the scheme is allowed */
+			scheme = fu_common_uri_get_scheme (xb_node_get_text (n));
+			if (scheme != NULL) {
+				guint prio = fu_config_get_uri_scheme_prio (self->config, scheme);
+				if (prio == G_MAXUINT)
+					continue;
+			}
+
+			/* build the complete URI */
 			if (remote != NULL) {
 				g_autofree gchar *uri = NULL;
 				uri = fwupd_remote_build_firmware_uri (remote,
@@ -524,6 +552,10 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateImage']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_update_image (rel, tmp);
+
+	/* sort the locations by scheme */
+	g_ptr_array_sort_with_data (fwupd_release_get_locations (rel),
+				    fu_engine_scheme_compare_cb, self);
 	return TRUE;
 }
 

@@ -27,5 +27,7 @@ GPtrArray	*fu_config_get_disabled_devices		(FuConfig	*self);
 GPtrArray	*fu_config_get_disabled_plugins		(FuConfig	*self);
 GPtrArray	*fu_config_get_approved_firmware	(FuConfig	*self);
 GPtrArray	*fu_config_get_blocked_firmware		(FuConfig	*self);
+guint		 fu_config_get_uri_scheme_prio		(FuConfig	*self,
+							 const gchar	*protocol);
 gboolean	 fu_config_get_update_motd		(FuConfig	*self);
 gboolean	 fu_config_get_enumerate_all_devices	(FuConfig	*self);
