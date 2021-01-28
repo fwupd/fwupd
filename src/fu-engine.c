@@ -447,21 +447,23 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 		if (xml != NULL)
 			fwupd_release_set_description (rel, xml);
 	}
-	tmp = xb_node_query_text (release, "location", NULL);
-	if (tmp != NULL) {
-		g_autofree gchar *uri = NULL;
-		if (remote != NULL)
-			uri = fwupd_remote_build_firmware_uri (remote, tmp, NULL);
-		if (uri == NULL)
-			uri = g_strdup (tmp);
-		fwupd_release_add_location (rel, uri);
-	} else if (remote != NULL &&
-		   fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
-		g_autofree gchar *uri = NULL;
-		tmp = xb_node_query_text (component, "../custom/value[@key='fwupd::FilenameCache']", NULL);
-		if (tmp != NULL)  {
-			uri = g_strdup_printf ("file://%s", tmp);
+	if (artifact == NULL) {
+		tmp = xb_node_query_text (release, "location", NULL);
+		if (tmp != NULL) {
+			g_autofree gchar *uri = NULL;
+			if (remote != NULL)
+				uri = fwupd_remote_build_firmware_uri (remote, tmp, NULL);
+			if (uri == NULL)
+				uri = g_strdup (tmp);
 			fwupd_release_add_location (rel, uri);
+		} else if (remote != NULL &&
+			   fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+			g_autofree gchar *uri = NULL;
+			tmp = xb_node_query_text (component, "../custom/value[@key='fwupd::FilenameCache']", NULL);
+			if (tmp != NULL)  {
+				uri = g_strdup_printf ("file://%s", tmp);
+				fwupd_release_add_location (rel, uri);
+			}
 		}
 	}
 	tmp = xb_node_query_text (release, "checksum[@target='content']", NULL);
@@ -473,13 +475,17 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	tmp = xb_node_query_text (release, "url[@type='source']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_source_url (rel, tmp);
-	tmp = xb_node_query_text (release, "checksum[@target='container']", NULL);
-	if (tmp != NULL)
-		fwupd_release_add_checksum (rel, tmp);
-	tmp64 = xb_node_query_text_as_uint (release, "size[@type='installed']", NULL);
-	if (tmp64 != G_MAXUINT64) {
-		fwupd_release_set_size (rel, tmp64);
-	} else {
+	if (artifact == NULL) {
+		tmp = xb_node_query_text (release, "checksum[@target='container']", NULL);
+		if (tmp != NULL)
+			fwupd_release_add_checksum (rel, tmp);
+	}
+	if (artifact == NULL) {
+		tmp64 = xb_node_query_text_as_uint (release, "size[@type='installed']", NULL);
+		if (tmp64 != G_MAXUINT64)
+			fwupd_release_set_size (rel, tmp64);
+	}
+	if (fwupd_release_get_size (rel) == 0) {
 		GBytes *sz = xb_node_get_data (release, "fwupd::ReleaseSize");
 		if (sz != NULL) {
 			const guint64 *sizeptr = g_bytes_get_data (sz, NULL);
