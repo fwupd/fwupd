@@ -349,9 +349,15 @@ fu_engine_set_release_from_artifact (FuEngine *self,
 				     XbNode *artifact,
 				     GError **error)
 {
+	const gchar *filename;
 	guint64 size;
 	g_autoptr(GPtrArray) locations = NULL;
 	g_autoptr(GPtrArray) checksums = NULL;
+
+	/* filename */
+	filename = xb_node_query_text (artifact, "filename", NULL);
+	if (filename != NULL)
+		fwupd_release_set_filename (rel, filename);
 
 	/* location */
 	locations = xb_node_query (artifact, "location", 0, NULL);
@@ -494,9 +500,11 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 			}
 		}
 	}
-	tmp = xb_node_query_text (release, "checksum[@target='content']", NULL);
-	if (tmp != NULL)
-		fwupd_release_set_filename (rel, tmp);
+	if (artifact == NULL) {
+		tmp = xb_node_query_text (release, "checksum[@target='content']", NULL);
+		if (tmp != NULL)
+			fwupd_release_set_filename (rel, tmp);
+	}
 	tmp = xb_node_query_text (release, "url[@type='details']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_details_url (rel, tmp);
