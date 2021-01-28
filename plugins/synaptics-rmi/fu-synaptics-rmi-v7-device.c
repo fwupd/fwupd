@@ -219,9 +219,9 @@ fu_synaptics_rmi_v7_device_write_blocks (FuSynapticsRmiDevice *self,
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		g_autoptr(GByteArray) req = g_byte_array_new ();
-		g_byte_array_append (req, chk->data, chk->data_sz);
+		g_byte_array_append (req, fu_chunk_get_data (chk), fu_chunk_get_data_sz (chk));
 		if (!fu_synaptics_rmi_device_write (self, address, req, error)) {
-			g_prefix_error (error, "failed to write block @0x%x:%x: ", address, chk->address);
+			g_prefix_error (error, "failed to write block @0x%x:%x: ", address, fu_chunk_get_address (chk));
 			return FALSE;
 		}
 	}
@@ -287,7 +287,7 @@ fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
 		g_autoptr(GByteArray) req_trans_sz = g_byte_array_new ();
 		g_autoptr(GByteArray) req_cmd = g_byte_array_new ();
 		fu_byte_array_append_uint16 (req_trans_sz,
-					     chk->data_sz / flash->block_size,
+					     fu_chunk_get_data_sz (chk) / flash->block_size,
 					     G_LITTLE_ENDIAN);
 		if (!fu_synaptics_rmi_device_write (self,
 						    f34->data_base + 0x3,
@@ -306,8 +306,8 @@ fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
 		}
 		if (!fu_synaptics_rmi_v7_device_write_blocks (self,
 							      f34->data_base + 0x5,
-							      chk->data,
-							      chk->data_sz,
+							      fu_chunk_get_data (chk),
+							      fu_chunk_get_data_sz (chk),
 							      error))
 			return FALSE;
 		fu_device_set_progress_full (FU_DEVICE (self), (gsize) i, (gsize) chunks->len);

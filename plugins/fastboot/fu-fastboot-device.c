@@ -281,7 +281,10 @@ fu_fastboot_device_download (FuDevice *device, GBytes *fw, GError **error)
 						self->blocksz);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		if (!fu_fastboot_device_write (device, chk->data, chk->data_sz, error))
+		if (!fu_fastboot_device_write (device,
+					       fu_chunk_get_data (chk),
+					       fu_chunk_get_data_sz (chk),
+					       error))
 			return FALSE;
 		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len * 2);
 	}

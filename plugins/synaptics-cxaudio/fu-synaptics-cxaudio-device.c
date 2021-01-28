@@ -141,7 +141,7 @@ fu_synaptics_cxaudio_device_operation (FuSynapticsCxaudioDevice *self,
 	/* send to hardware */
 	chunks = fu_chunk_array_new (buf, bufsz, addr, 0x0, payload_max);
 	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chunk = g_ptr_array_index (chunks, i);
+		FuChunk *chk = g_ptr_array_index (chunks, i);
 		guint8 inbuf[FU_SYNAPTICS_CXAUDIO_INPUT_REPORT_SIZE] = { 0 };
 		guint8 outbuf[FU_SYNAPTICS_CXAUDIO_OUTPUT_REPORT_SIZE] = { 0 };
 
@@ -149,10 +149,10 @@ fu_synaptics_cxaudio_device_operation (FuSynapticsCxaudioDevice *self,
 		outbuf[0] = FU_SYNAPTICS_CXAUDIO_MEM_WRITEID;
 
 		/* set memory address and payload length (if relevant) */
-		if (chunk->address >= 64 * 1024)
+		if (fu_chunk_get_address (chk) >= 64 * 1024)
 			outbuf[1] |= 1 << 4;
-		outbuf[2] = chunk->data_sz;
-		fu_common_write_uint16 (outbuf + 3, chunk->address, G_BIG_ENDIAN);
+		outbuf[2] = fu_chunk_get_data_sz (chk);
+		fu_common_write_uint16 (outbuf + 3, fu_chunk_get_address (chk), G_BIG_ENDIAN);
 
 		/* set memtype */
 		if (mem_kind == FU_SYNAPTICS_CXAUDIO_MEM_KIND_EEPROM)
@@ -162,8 +162,9 @@ fu_synaptics_cxaudio_device_operation (FuSynapticsCxaudioDevice *self,
 		if (operation == FU_SYNAPTICS_CXAUDIO_OPERATION_WRITE) {
 			outbuf[1] |= 1 << 6;
 			if (!fu_memcpy_safe (outbuf, sizeof(outbuf), idx_write, /* dst */
-					     chunk->data, chunk->data_sz, 0x0, /* src */
-					     chunk->data_sz, error))
+					     fu_chunk_get_data (chk),
+					     fu_chunk_get_data_sz (chk), 0x0, /* src */
+					     fu_chunk_get_data_sz (chk), error))
 				return FALSE;
 		}
 		if (!fu_synaptics_cxaudio_device_output_report (self, outbuf, sizeof(outbuf), error))
@@ -191,14 +192,15 @@ fu_synaptics_cxaudio_device_operation (FuSynapticsCxaudioDevice *self,
 							  error)) {
 				g_prefix_error (error,
 						"failed to verify on packet %u @0x%x: ",
-						chunk->idx, chunk->address);
+						fu_chunk_get_idx (chk), fu_chunk_get_address (chk));
 				return FALSE;
 			}
 		}
 		if (operation == FU_SYNAPTICS_CXAUDIO_OPERATION_READ) {
-			if (!fu_memcpy_safe ((guint8 *) chunk->data, chunk->data_sz, 0x0, /* dst */
+			if (!fu_memcpy_safe (fu_chunk_get_data_out (chk),
+					     fu_chunk_get_data_sz (chk), 0x0, /* dst */
 					     inbuf, sizeof(inbuf), idx_read, /* src */
-					     chunk->data_sz, error))
+					     fu_chunk_get_data_sz (chk), error))
 				return FALSE;
 		}
 	}

@@ -221,10 +221,10 @@ fu_wacom_aes_device_write_firmware (FuDevice *device, GPtrArray *chunks, GError 
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_wacom_aes_device_write_block (self,
-						      chk->idx,
-						      chk->address,
-						      chk->data,
-						      chk->data_sz,
+						      fu_chunk_get_idx (chk),
+						      fu_chunk_get_address (chk),
+						      fu_chunk_get_data (chk),
+						      fu_chunk_get_data_sz (chk),
 						      error))
 			return FALSE;
 		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);

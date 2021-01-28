@@ -246,7 +246,7 @@ fu_ep963x_device_write_firmware (FuDevice *device,
 	blocks = fu_chunk_array_new_from_bytes (fw, 0x00, 0x00,
 						FU_EP963_TRANSFER_BLOCK_SIZE);
 	for (guint i = 0; i < blocks->len; i++) {
-		FuChunk *blk = g_ptr_array_index (blocks, i);
+		FuChunk *chk2 = g_ptr_array_index (blocks, i);
 		guint8 buf[] = { i };
 		g_autoptr(GPtrArray) chunks = NULL;
 
@@ -264,8 +264,9 @@ fu_ep963x_device_write_firmware (FuDevice *device,
 		}
 
 		/* 4 byte chunks */
-		chunks = fu_chunk_array_new (blk->data, blk->data_sz,
-					     blk->address, 0x0,
+		chunks = fu_chunk_array_new (fu_chunk_get_data (chk2),
+					     fu_chunk_get_data_sz (chk2),
+					     fu_chunk_get_address (chk2), 0x0,
 					     FU_EP963_TRANSFER_CHUNK_SIZE);
 		for (guint j = 0; j < chunks->len; j++) {
 			FuChunk *chk = g_ptr_array_index (chunks, j);
@@ -275,13 +276,14 @@ fu_ep963x_device_write_firmware (FuDevice *device,
 			if (!fu_ep963x_device_write (self,
 						     FU_EP963_USB_CONTROL_ID,
 						     FU_EP963_OPCODE_SUBMCU_WRITE_BLOCK_DATA,
-						     chk->data, chk->data_sz,
+						     fu_chunk_get_data (chk),
+						     fu_chunk_get_data_sz (chk),
 						     &error_loop)) {
 				g_set_error (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_WRITE,
 					     "failed to write 0x%x: %s",
-					     (guint) chk->address,
+					     (guint) fu_chunk_get_address (chk),
 					     error_loop->message);
 				return FALSE;
 			}
@@ -296,7 +298,7 @@ fu_ep963x_device_write_firmware (FuDevice *device,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_WRITE,
 				     "failed to write 0x%x: %s",
-				     (guint) blk->address,
+				     (guint) fu_chunk_get_address (chk2),
 				     error_local->message);
 			return FALSE;
 		}

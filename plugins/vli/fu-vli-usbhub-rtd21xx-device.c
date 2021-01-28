@@ -409,10 +409,10 @@ fu_vli_usbhub_rtd21xx_device_write_firmware (FuDevice *device,
 		if (!fu_vli_usbhub_device_i2c_write (parent,
 						     UC_FOREGROUND_SLAVE_ADDR,
 						     UC_FOREGROUND_ISP_DATA_OPCODE,
-						     (guint8 *) chk->data,
-						     chk->data_sz,
+						     fu_chunk_get_data_out (chk),
+						     fu_chunk_get_data_sz (chk),
 						     error)) {
-			g_prefix_error (error, "failed to write @0x%04x: ", chk->address);
+			g_prefix_error (error, "failed to write @0x%04x: ", fu_chunk_get_address (chk));
 			return FALSE;
 		}
 

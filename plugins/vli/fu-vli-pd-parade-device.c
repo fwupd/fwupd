@@ -476,8 +476,8 @@ fu_vli_pd_parade_device_write_firmware (FuDevice *device,
 		return FALSE;
 	blocks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, 0x10000);
 	for (guint i = 1; i < blocks->len; i++) {
-		FuChunk *block = g_ptr_array_index (blocks, i);
-		if (!fu_vli_pd_parade_device_block_erase (self, block->idx, error))
+		FuChunk *chk = g_ptr_array_index (blocks, i);
+		if (!fu_vli_pd_parade_device_block_erase (self, fu_chunk_get_idx (chk), error))
 			return FALSE;
 		fu_device_set_progress_full (FU_DEVICE (self), i, blocks->len);
 	}
@@ -494,8 +494,8 @@ fu_vli_pd_parade_device_write_firmware (FuDevice *device,
 	/* write blocks */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 1; i < blocks->len; i++) {
-		FuChunk *block = g_ptr_array_index (blocks, i);
-		if (!fu_vli_pd_parade_device_block_write (self, block->idx, block->data, error))
+		FuChunk *chk = g_ptr_array_index (blocks, i);
+		if (!fu_vli_pd_parade_device_block_write (self, fu_chunk_get_idx (chk), fu_chunk_get_data (chk), error))
 			return FALSE;
 		fu_device_set_progress_full (FU_DEVICE (self), i, blocks->len);
 	}
@@ -507,11 +507,11 @@ fu_vli_pd_parade_device_write_firmware (FuDevice *device,
 	fw_verify = _g_bytes_new_sized (g_bytes_get_size (fw));
 	blocks_verify = fu_chunk_array_new_from_bytes (fw_verify, 0x0, 0x0, 0x10000);
 	for (guint i = 1; i < blocks_verify->len; i++) {
-		FuChunk *block = g_ptr_array_index (blocks_verify, i);
+		FuChunk *chk = g_ptr_array_index (blocks_verify, i);
 		if (!fu_vli_pd_parade_device_block_read (self,
-							 block->idx,
-							 (guint8 *) block->data,
-							 block->data_sz,
+							 fu_chunk_get_idx (chk),
+							 fu_chunk_get_data_out (chk),
+							 fu_chunk_get_data_sz (chk),
 							 error))
 			return FALSE;
 		fu_device_set_progress_full (FU_DEVICE (self), i, blocks->len);
@@ -602,11 +602,11 @@ fu_vli_pd_parade_device_dump_firmware (FuDevice *device, GError **error)
 	fw = _g_bytes_new_sized (fu_device_get_firmware_size_max (device));
 	blocks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, 0x10000);
 	for (guint i = 0; i < blocks->len; i++) {
-		FuChunk *block = g_ptr_array_index (blocks, i);
+		FuChunk *chk = g_ptr_array_index (blocks, i);
 		if (!fu_vli_pd_parade_device_block_read (self,
-							 block->idx,
-							 (guint8 *) block->data,
-							 block->data_sz,
+							 fu_chunk_get_idx (chk),
+							 fu_chunk_get_data_out (chk),
+							 fu_chunk_get_data_sz (chk),
 							 error))
 			return NULL;
 	}

@@ -448,29 +448,32 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 	/* flash the firmware in 32 byte blocks */
 	chunks = fu_chunk_array_new_from_bytes (fw_payload, 0x0, 0x0, 32);
 	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chunk = g_ptr_array_index (chunks, i);
+		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (g_getenv ("FWUPD_EBITDO_VERBOSE") != NULL) {
 			g_debug ("writing %u bytes to 0x%04x of 0x%04x",
-				 chunk->data_sz, chunk->address, chunk->data_sz);
+				 fu_chunk_get_data_sz (chk),
+				 fu_chunk_get_address (chk),
+				 fu_chunk_get_data_sz (chk));
 		}
 		if (!fu_ebitdo_device_send (self,
 					    FU_EBITDO_PKT_TYPE_USER_CMD,
 					    FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA,
 					    FU_EBITDO_PKT_CMD_FW_UPDATE_DATA,
-					    chunk->data, chunk->data_sz,
+					    fu_chunk_get_data (chk),
+					    fu_chunk_get_data_sz (chk),
 					    error)) {
 			g_prefix_error (error,
 					"failed to write firmware @0x%04x: ",
-					chunk->address);
+					fu_chunk_get_address (chk));
 			return FALSE;
 		}
 		if (!fu_ebitdo_device_receive (self, NULL, 0, error)) {
 			g_prefix_error (error,
 					"failed to get ACK for write firmware @0x%04x: ",
-					chunk->address);
+					fu_chunk_get_address (chk));
 			return FALSE;
 		}
-		fu_device_set_progress_full (device, chunk->idx, chunks->len);
+		fu_device_set_progress_full (device, fu_chunk_get_idx (chk), chunks->len);
 	}
 
 	/* set the "encode id" which is likely a checksum, bluetooth pairing

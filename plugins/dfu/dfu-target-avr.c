@@ -566,38 +566,38 @@ dfu_target_avr_download_element (DfuTarget *target,
 
 	/* process each chunk */
 	for (guint i = 0; i < chunks->len; i++) {
-		const FuChunk *chk = g_ptr_array_index (chunks, i);
+		FuChunk *chk = g_ptr_array_index (chunks, i);
 		g_autofree guint8 *buf = NULL;
 		g_autoptr(GBytes) chunk_tmp = NULL;
 
 		/* select page if required */
-		if (chk->page != page_last) {
+		if (fu_chunk_get_page (chk) != page_last) {
 			if (fu_device_has_custom_flag (FU_DEVICE (dfu_target_get_device (target)),
 						       "legacy-protocol")) {
 				if (!dfu_target_avr_select_memory_page (target,
-									chk->page,
+									fu_chunk_get_page (chk),
 									error))
 					return FALSE;
 			} else {
 				if (!dfu_target_avr32_select_memory_page (target,
-									  chk->page,
+									  fu_chunk_get_page (chk),
 									  error))
 					return FALSE;
 			}
-			page_last = chk->page;
+			page_last = fu_chunk_get_page (chk);
 		}
 
 		/* create chk with header and footer */
-		buf = g_malloc0 (chk->data_sz + header_sz + sizeof(footer));
+		buf = g_malloc0 (fu_chunk_get_data_sz (chk) + header_sz + sizeof(footer));
 		buf[0] = DFU_AVR32_GROUP_DOWNLOAD;
 		buf[1] = DFU_AVR32_CMD_PROGRAM_START;
-		fu_common_write_uint16 (&buf[2], chk->address, G_BIG_ENDIAN);
-		fu_common_write_uint16 (&buf[4], chk->address + chk->data_sz - 1, G_BIG_ENDIAN);
-		memcpy (&buf[header_sz], chk->data, chk->data_sz);
-		memcpy (&buf[header_sz + chk->data_sz], footer, sizeof(footer));
+		fu_common_write_uint16 (&buf[2], fu_chunk_get_address (chk), G_BIG_ENDIAN);
+		fu_common_write_uint16 (&buf[4], fu_chunk_get_address (chk) + fu_chunk_get_data_sz (chk) - 1, G_BIG_ENDIAN);
+		memcpy (&buf[header_sz], fu_chunk_get_data (chk), fu_chunk_get_data_sz (chk));
+		memcpy (&buf[header_sz + fu_chunk_get_data_sz (chk)], footer, sizeof(footer));
 
 		/* download data */
-		chunk_tmp = g_bytes_new_static (buf, chk->data_sz + header_sz + sizeof(footer));
+		chunk_tmp = g_bytes_new_static (buf, fu_chunk_get_data_sz (chk) + header_sz + sizeof(footer));
 		g_debug ("sending %" G_GSIZE_FORMAT " bytes to the hardware",
 			 g_bytes_get_size (chunk_tmp));
 		if (!dfu_target_download_chunk (target, i, chunk_tmp, error))
@@ -666,29 +666,30 @@ dfu_target_avr_upload_element (DfuTarget *target,
 	blobs = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
 	for (guint i = 0; i < chunks->len; i++) {
 		GBytes *blob_tmp = NULL;
-		const FuChunk *chk = g_ptr_array_index (chunks, i);
+		FuChunk *chk = g_ptr_array_index (chunks, i);
 
 		/* select page if required */
-		if (chk->page != page_last) {
+		if (fu_chunk_get_page (chk) != page_last) {
 			if (fu_device_has_custom_flag (FU_DEVICE (dfu_target_get_device (target)),
 						       "legacy-protocol")) {
 				if (!dfu_target_avr_select_memory_page (target,
-									chk->page,
+									fu_chunk_get_page (chk),
 									error))
 					return NULL;
 			} else {
 				if (!dfu_target_avr32_select_memory_page (target,
-									  chk->page,
+									  fu_chunk_get_page (chk),
 									  error))
 					return NULL;
 			}
-			page_last = chk->page;
+			page_last = fu_chunk_get_page (chk);
 		}
 
 		/* prepare to read */
 		if (!dfu_target_avr_read_memory (target,
-						 chk->address,
-						 chk->address + chk->data_sz - 1,
+						 fu_chunk_get_address (chk),
+						 fu_chunk_get_address (chk) +
+						 fu_chunk_get_data_sz (chk) - 1,
 						 error))
 			return NULL;
 
@@ -705,7 +706,7 @@ dfu_target_avr_upload_element (DfuTarget *target,
 		/* this page has valid data */
 		if (!fu_common_bytes_is_empty (blob_tmp)) {
 			g_debug ("chunk %u has data (page %" G_GUINT32_FORMAT ")",
-				 i, chk->page);
+				 i, fu_chunk_get_page (chk));
 			chunk_valid = i;
 		} else {
 			g_debug ("chunk %u is empty", i);

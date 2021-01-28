@@ -133,9 +133,9 @@ fu_hailuck_tp_device_write_firmware (FuDevice *device,
 		fu_byte_array_append_uint8 (buf, FU_HAILUCK_REPORT_ID_LONG);
 		fu_byte_array_append_uint8 (buf, FU_HAILUCK_CMD_WRITE_TP);
 		fu_byte_array_append_uint16 (buf, 0xCCCC, G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint16 (buf, chk->address, G_LITTLE_ENDIAN);
+		fu_byte_array_append_uint16 (buf, fu_chunk_get_address (chk), G_LITTLE_ENDIAN);
 		fu_byte_array_append_uint16 (buf, 0xCCCC, G_LITTLE_ENDIAN);
-		g_byte_array_append (buf, chk->data, chk->data_sz);
+		g_byte_array_append (buf, fu_chunk_get_data (chk), fu_chunk_get_data_sz (chk));
 		fu_byte_array_append_uint8 (buf, 0xEE);
 		fu_byte_array_append_uint8 (buf, 0xD2);
 		fu_byte_array_append_uint16 (buf, 0xCCCC, G_LITTLE_ENDIAN);

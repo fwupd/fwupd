@@ -21,6 +21,130 @@
  */
 
 /**
+ * fu_chunk_get_idx:
+ * @self: a #FuChunk
+ *
+ * Gets the index of the chunk.
+ *
+ * Return value: index
+ *
+ * Since: 1.5.6
+ **/
+guint32
+fu_chunk_get_idx (FuChunk *self)
+{
+	g_return_val_if_fail (self != NULL, G_MAXUINT32);
+	return self->idx;
+}
+
+/**
+ * fu_chunk_get_page:
+ * @self: a #FuChunk
+ *
+ * Gets the page of the chunk.
+ *
+ * Return value: page
+ *
+ * Since: 1.5.6
+ **/
+guint32
+fu_chunk_get_page (FuChunk *self)
+{
+	g_return_val_if_fail (self != NULL, G_MAXUINT32);
+	return self->page;
+}
+
+/**
+ * fu_chunk_get_address:
+ * @self: a #FuChunk
+ *
+ * Gets the address of the chunk.
+ *
+ * Return value: address
+ *
+ * Since: 1.5.6
+ **/
+guint32
+fu_chunk_get_address (FuChunk *self)
+{
+	g_return_val_if_fail (self != NULL, G_MAXUINT32);
+	return self->address;
+}
+
+/**
+ * fu_chunk_get_data:
+ * @self: a #FuChunk
+ *
+ * Gets the data of the chunk.
+ *
+ * Return value: bytes
+ *
+ * Since: 1.5.6
+ **/
+const guint8 *
+fu_chunk_get_data (FuChunk *self)
+{
+	g_return_val_if_fail (self != NULL, NULL);
+	return self->data;
+}
+
+/**
+ * fu_chunk_get_data_out:
+ * @self: a #FuChunk
+ *
+ * Gets the mutable data of the chunk.
+ *
+ * WARNING: At the moment fu_chunk_get_data_out() returns the same data as
+ * fu_chunk_get_data() in all cases. The caller should verify the data passed to
+ * fu_chunk_array_new() is also writable (i.e. not `const` or `mmap`) before
+ * using this function.
+ *
+ * Return value: (transfer none): bytes
+ *
+ * Since: 1.5.6
+ **/
+guint8 *
+fu_chunk_get_data_out (FuChunk *self)
+{
+	g_return_val_if_fail (self != NULL, NULL);
+	return (guint8 *) self->data;
+}
+
+/**
+ * fu_chunk_get_data_sz:
+ * @self: a #FuChunk
+ *
+ * Gets the data size of the chunk.
+ *
+ * Return value: size in bytes
+ *
+ * Since: 1.5.6
+ **/
+guint32
+fu_chunk_get_data_sz (FuChunk *self)
+{
+	g_return_val_if_fail (self != NULL, G_MAXUINT32);
+	return self->data_sz;
+}
+
+/**
+ * fu_chunk_get_bytes:
+ * @self: a #FuChunk
+ *
+ * Gets the data as bytes of the chunk.
+ *
+ * Return value: (transfer full): a #GBytes
+ *
+ * Since: 1.5.6
+ **/
+GBytes *
+fu_chunk_get_bytes (FuChunk *self)
+{
+	g_return_val_if_fail (self != NULL, NULL);
+	return g_bytes_new_static (self->data, self->data_sz);
+}
+
+/**
  * fu_chunk_new: (skip):
  * @idx: the packet number
  * @page: the hardware memory page
