@@ -533,18 +533,18 @@ fu_superio_it89_device_write_chunk (FuSuperioDevice *self, FuChunk *chk, GError 
 	g_autoptr(GBytes) fw3 = NULL;
 
 	/* erase page */
-	if (!fu_superio_it89_device_erase_addr (self, chk->address, error)) {
-		g_prefix_error (error, "failed to erase @0x%04x: ", (guint) chk->address);
+	if (!fu_superio_it89_device_erase_addr (self, fu_chunk_get_address (chk), error)) {
+		g_prefix_error (error, "failed to erase @0x%04x: ", (guint) fu_chunk_get_address (chk));
 		return FALSE;
 	}
 
 	/* check erased */
-	fw1 = fu_superio_it89_device_read_addr (self, chk->address,
-						chk->data_sz, NULL,
+	fw1 = fu_superio_it89_device_read_addr (self, fu_chunk_get_address (chk),
+						fu_chunk_get_data_sz (chk), NULL,
 						error);
 	if (fw1 == NULL) {
-		g_prefix_error (error, "failed to read erased "
-				"bytes @0x%04x: ", (guint) chk->address);
+		g_prefix_error (error, "failed to read erased bytes @0x%04x: ",
+				(guint) fu_chunk_get_address (chk));
 		return FALSE;
 	}
 	if (!fu_common_bytes_is_empty (fw1)) {
@@ -556,28 +556,34 @@ fu_superio_it89_device_write_chunk (FuSuperioDevice *self, FuChunk *chk, GError 
 	}
 
 	/* skip empty page */
-	fw2 = g_bytes_new_static (chk->data, chk->data_sz);
+	fw2 = g_bytes_new_static (fu_chunk_get_data (chk), fu_chunk_get_data_sz (chk));
 	if (fu_common_bytes_is_empty (fw2))
 		return TRUE;
 
 	/* write page */
-	if (!fu_superio_it89_device_write_addr (self, chk->address, fw2, error)) {
-		g_prefix_error (error, "failed to write @0x%04x: ", (guint) chk->address);
+	if (!fu_superio_it89_device_write_addr (self,
+						fu_chunk_get_address (chk),
+						fw2,
+						error)) {
+		g_prefix_error (error, "failed to write @0x%04x: ",
+				(guint) fu_chunk_get_address (chk));
 		return FALSE;
 	}
 
 	/* verify page */
-	fw3 = fu_superio_it89_device_read_addr (self, chk->address,
-						chk->data_sz, NULL,
+	fw3 = fu_superio_it89_device_read_addr (self,
+						fu_chunk_get_address (chk),
+						fu_chunk_get_data_sz (chk),
+						NULL,
 						error);
 	if (fw3 == NULL) {
 		g_prefix_error (error, "failed to read written "
-				"bytes @0x%04x: ", (guint) chk->address);
+				"bytes @0x%04x: ", (guint) fu_chunk_get_address (chk));
 		return FALSE;
 	}
 	if (!fu_common_bytes_compare (fw2, fw3, error)) {
 		g_prefix_error (error, "failed to verify @0x%04x: ",
-				(guint) chk->address);
+				(guint) fu_chunk_get_address (chk));
 		return FALSE;
 	}
 

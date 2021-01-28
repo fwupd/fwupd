@@ -341,10 +341,10 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 		if (!fu_synaptics_rmi_v5_device_write_block (self,
 							     RMI_F34_WRITE_FW_BLOCK,
 							     address,
-							     chk->data,
-							     chk->data_sz,
+							     fu_chunk_get_data (chk),
+							     fu_chunk_get_data_sz (chk),
 							     error)) {
-			g_prefix_error (error, "failed to write bin block %u: ", chk->idx);
+			g_prefix_error (error, "failed to write bin block %u: ", fu_chunk_get_idx (chk));
 			return FALSE;
 		}
 		fu_device_set_progress_full (device, (gsize) i,
@@ -368,10 +368,10 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 			if (!fu_synaptics_rmi_v5_device_write_block (self,
 								     RMI_F34_WRITE_SIGNATURE,
 								     address,
-								     chk->data,
-								     chk->data_sz,
+								     fu_chunk_get_data (chk),
+								     fu_chunk_get_data_sz (chk),
 								     error)) {
-				g_prefix_error (error, "failed to write bin block %u: ", chk->idx);
+				g_prefix_error (error, "failed to write bin block %u: ", fu_chunk_get_idx (chk));
 				return FALSE;
 			}
 			fu_device_set_progress_full (device, (gsize) i,
@@ -392,10 +392,10 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 		if (!fu_synaptics_rmi_v5_device_write_block (self,
 							     RMI_F34_WRITE_CONFIG_BLOCK,
 							     address,
-							     chk->data,
-							     chk->data_sz,
+							     fu_chunk_get_data (chk),
+							     fu_chunk_get_data_sz (chk),
 							     error)) {
-			g_prefix_error (error, "failed to write cfg block %u: ", chk->idx);
+			g_prefix_error (error, "failed to write cfg block %u: ", fu_chunk_get_idx (chk));
 			return FALSE;
 		}
 		fu_device_set_progress_full (device,

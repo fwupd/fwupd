@@ -310,17 +310,20 @@ fu_elantp_hid_device_write_firmware (FuDevice *device,
 	chunks = fu_chunk_array_new (buf + iap_addr, bufsz - iap_addr, 0x0, 0x0, self->fw_page_size);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		guint16 csum_tmp = fu_elantp_calc_checksum (chk->data, chk->data_sz);
+		guint16 csum_tmp = fu_elantp_calc_checksum (fu_chunk_get_data (chk),
+							    fu_chunk_get_data_sz (chk));
 		gsize blksz = self->fw_page_size + 3;
 		g_autofree guint8 *blk = g_malloc0 (blksz);
 
 		/* write block */
 		blk[0] = 0x0B; /* report ID */
 		if (!fu_memcpy_safe (blk, blksz, 0x1,			/* dst */
-				     chk->data, chk->data_sz, 0x0,	/* src */
-				     chk->data_sz, error))
+				     fu_chunk_get_data (chk),
+				     fu_chunk_get_data_sz (chk), 0x0,	/* src */
+				     fu_chunk_get_data_sz (chk), error))
 			return FALSE;
-		fu_common_write_uint16 (blk + chk->data_sz + 1, csum_tmp, G_LITTLE_ENDIAN);
+		fu_common_write_uint16 (blk + fu_chunk_get_data_sz (chk) + 1,
+					csum_tmp, G_LITTLE_ENDIAN);
 
 		if (!fu_elantp_hid_device_send_cmd (self, blk, blksz, NULL, 0, error))
 			return FALSE;

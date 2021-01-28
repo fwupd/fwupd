@@ -382,7 +382,7 @@ fu_emmc_device_write_firmware (FuDevice *device,
 		for (guint i = 0; i < chunks->len; i++) {
 			FuChunk *chk = g_ptr_array_index (chunks, i);
 
-			mmc_ioc_cmd_set_data (multi_cmd->cmds[1], chk->data);
+			mmc_ioc_cmd_set_data (multi_cmd->cmds[1], fu_chunk_get_data (chk));
 
 			if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
 						   MMC_IOC_MULTI_CMD, (guint8 *) multi_cmd,

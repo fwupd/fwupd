@@ -196,8 +196,8 @@ fu_pxi_device_check_support_resume (FuPxiDevice *self,
 	/* calculate device current checksum */
 	for (guint i = 0; i < self->offset; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		checksum_tmp += fu_pxi_device_calculate_checksum (chk->data,
-								  chk->data_sz);
+		checksum_tmp += fu_pxi_device_calculate_checksum (fu_chunk_get_data (chk),
+								  fu_chunk_get_data_sz (chk));
 	}
 
 	/* check current file is different with previous fw bin or not */
@@ -247,7 +247,7 @@ fu_pxi_device_wait_notify (FuPxiDevice *self,
 }
 
 static gboolean
-fu_pxi_device_fw_object_create (FuPxiDevice *self, const FuChunk *chk, GError **error)
+fu_pxi_device_fw_object_create (FuPxiDevice *self, FuChunk *chk, GError **error)
 {
 	guint8 opcode = 0;
 	g_autoptr(GByteArray) req = g_byte_array_new ();
@@ -255,8 +255,8 @@ fu_pxi_device_fw_object_create (FuPxiDevice *self, const FuChunk *chk, GError **
 	/* request */
 	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_OUTPUT_REPORT_ID);
 	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE);
-	fu_byte_array_append_uint32 (req, chk->address, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint32 (req, chk->data_sz, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32 (req, fu_chunk_get_address (chk), G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32 (req, fu_chunk_get_data_sz (chk), G_LITTLE_ENDIAN);
 	if (!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0x0,
 					 req->data, req->len, error))
 		return FALSE;
@@ -279,20 +279,20 @@ fu_pxi_device_fw_object_create (FuPxiDevice *self, const FuChunk *chk, GError **
 }
 
 static gboolean
-fu_pxi_device_write_payload (FuPxiDevice *self, const FuChunk *chk, GError **error)
+fu_pxi_device_write_payload (FuPxiDevice *self, FuChunk *chk, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_OUTPUT_REPORT_ID);
-	g_byte_array_append (req, chk->data, chk->data_sz);
+	g_byte_array_append (req, fu_chunk_get_data (chk), fu_chunk_get_data_sz (chk));
 	return fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0x0,
 					   req->data, req->len, error);
 }
 
 static gboolean
-fu_pxi_device_write_chunk (FuPxiDevice *self, const FuChunk *chk, GError **error)
+fu_pxi_device_write_chunk (FuPxiDevice *self, FuChunk *chk, GError **error)
 {
 	guint32 prn = 0;
-	guint16 checksum = fu_pxi_device_calculate_checksum (chk->data, chk->data_sz);
+	guint16 checksum;
 	guint16 checksum_device = 0;
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -301,7 +301,9 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, const FuChunk *chk, GError **error
 		return FALSE;
 
 	/* write payload */
-	chunks = fu_chunk_array_new (chk->data, chk->data_sz, chk->address,
+	chunks = fu_chunk_array_new (fu_chunk_get_data (chk),
+				     fu_chunk_get_data_sz (chk),
+				     fu_chunk_get_address (chk),
 				     0x0, self->mtu_size);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk2 = g_ptr_array_index (chunks, i);
@@ -330,6 +332,8 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, const FuChunk *chk, GError **error
 	}
 
 	/* the last chunk */
+	checksum = fu_pxi_device_calculate_checksum (fu_chunk_get_data (chk),
+						     fu_chunk_get_data_sz (chk));
 	self->checksum += checksum;
 	if (checksum_device != self->checksum ) {
 		g_set_error (error,

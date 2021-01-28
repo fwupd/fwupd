@@ -374,7 +374,7 @@ fu_csr_device_download (FuDevice *device,
 	/* send to hardware */
 	for (idx = 0; idx < chunks->len; idx++) {
 		FuChunk *chk = g_ptr_array_index (chunks, idx);
-		g_autoptr(GBytes) blob_tmp = g_bytes_new_static (chk->data, chk->data_sz);
+		g_autoptr(GBytes) blob_tmp = fu_chunk_get_bytes (chk);
 
 		/* send packet */
 		if (!fu_csr_device_download_chunk (self, idx, blob_tmp, error))

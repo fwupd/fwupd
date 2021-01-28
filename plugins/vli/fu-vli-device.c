@@ -263,11 +263,13 @@ fu_vli_device_spi_read (FuVliDevice *self, guint32 address, gsize bufsz, GError 
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_vli_device_spi_read_block (self,
-						  chk->address,
-						  (guint8 *) chk->data,
-						  chk->data_sz,
+						  fu_chunk_get_address (chk),
+						  fu_chunk_get_data_out (chk),
+						  fu_chunk_get_data_sz (chk),
 						  error)) {
-			g_prefix_error (error, "SPI data read failed @0x%x: ", chk->address);
+			g_prefix_error (error,
+					"SPI data read failed @0x%x: ",
+					fu_chunk_get_address (chk));
 			return NULL;
 		}
 		fu_device_set_progress_full (FU_DEVICE (self),
@@ -333,11 +335,11 @@ fu_vli_device_spi_write (FuVliDevice *self,
 		for (guint i = 1; i < chunks->len; i++) {
 			chk = g_ptr_array_index (chunks, i);
 			if (!fu_vli_device_spi_write_block (self,
-							    chk->address + address,
-							    chk->data,
-							    chk->data_sz,
+							    fu_chunk_get_address (chk) + address,
+							    fu_chunk_get_data (chk),
+							    fu_chunk_get_data_sz (chk),
 							    error)) {
-				g_prefix_error (error, "failed to write block 0x%x: ", chk->idx);
+				g_prefix_error (error, "failed to write block 0x%x: ", fu_chunk_get_idx (chk));
 				return FALSE;
 			}
 			fu_device_set_progress_full (FU_DEVICE (self),
@@ -347,9 +349,9 @@ fu_vli_device_spi_write (FuVliDevice *self,
 	}
 	chk = g_ptr_array_index (chunks, 0);
 	if (!fu_vli_device_spi_write_block (self,
-					    chk->address + address,
-					    chk->data,
-					    chk->data_sz,
+					    fu_chunk_get_address (chk) + address,
+					    fu_chunk_get_data (chk),
+					    fu_chunk_get_data_sz (chk),
 					    error)) {
 		g_prefix_error (error, "failed to write CRC block: ");
 		return FALSE;
@@ -400,13 +402,15 @@ fu_vli_device_spi_erase (FuVliDevice *self, guint32 addr, gsize sz, GError **err
 	g_autoptr(GPtrArray) chunks = fu_chunk_array_new (NULL, sz, addr, 0x0, 0x1000);
 	g_debug ("erasing 0x%x bytes @0x%x", (guint) sz, addr);
 	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chunk = g_ptr_array_index (chunks, i);
+		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-			g_debug ("erasing @0x%x", chunk->address);
-		if (!fu_vli_device_spi_erase_sector (FU_VLI_DEVICE (self), chunk->address, error)) {
+			g_debug ("erasing @0x%x", fu_chunk_get_address (chk));
+		if (!fu_vli_device_spi_erase_sector (FU_VLI_DEVICE (self),
+						     fu_chunk_get_address (chk),
+						     error)) {
 			g_prefix_error (error,
 					"failed to erase FW sector @0x%x: ",
-					chunk->address);
+					fu_chunk_get_address (chk));
 			return FALSE;
 		}
 		fu_device_set_progress_full (FU_DEVICE (self),

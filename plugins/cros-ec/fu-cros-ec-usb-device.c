@@ -509,8 +509,8 @@ fu_cros_ec_usb_device_transfer_block (FuDevice *device, gpointer user_data,
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 
 		if (!fu_cros_ec_usb_device_do_xfer (self,
-						    (guint8 *)chk->data,
-						    chk->data_sz,
+						    fu_chunk_get_data_out (chk),
+						    fu_chunk_get_data_sz (chk),
 						    NULL,
 						    0, FALSE,
 						    NULL, error)) {

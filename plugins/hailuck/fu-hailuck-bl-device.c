@@ -109,9 +109,9 @@ fu_hailuck_bl_device_dump_firmware (FuDevice *device, GError **error)
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_hailuck_bl_device_read_block (self,
-						       (guint8 *) chk->data,
-						       chk->data_sz,
-						       error))
+						      fu_chunk_get_data_out (chk),
+						      fu_chunk_get_data_sz (chk),
+						      error))
 			return NULL;
 		fu_device_set_progress_full (device, i, chunks->len - 1);
 	}
@@ -219,15 +219,22 @@ fu_hailuck_bl_device_write_firmware (FuDevice *device,
 
 	/* intentionally corrupt first chunk so that CRC fails */
 	chk0 = g_ptr_array_index (chunks, 0);
-	chk0_data = g_memdup (chk0->data, chk0->data_sz);
+	chk0_data = g_memdup (fu_chunk_get_data (chk0),
+			      fu_chunk_get_data_sz (chk0));
 	chk0_data[0] = 0x00;
-	if (!fu_hailuck_bl_device_write_block (self, chk0_data, chk0->data_sz, error))
+	if (!fu_hailuck_bl_device_write_block (self,
+					       chk0_data,
+					       fu_chunk_get_data_sz (chk0),
+					       error))
 		return FALSE;
 
 	/* send the rest of the chunks */
 	for (guint i = 1; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		if (!fu_hailuck_bl_device_write_block (self, chk->data, chk->data_sz, error))
+		if (!fu_hailuck_bl_device_write_block (self,
+						       fu_chunk_get_data (chk),
+						       fu_chunk_get_data_sz (chk),
+						       error))
 			return FALSE;
 		fu_device_set_progress_full (device, i, chunks->len);
 	}
@@ -235,7 +242,10 @@ fu_hailuck_bl_device_write_firmware (FuDevice *device,
 	/* retry write of first block */
 	if (!fu_hailuck_bl_device_write_block_start (self, g_bytes_get_size (fw), error))
 		return FALSE;
-	if (!fu_hailuck_bl_device_write_block (self, chk0->data, chk0->data_sz, error))
+	if (!fu_hailuck_bl_device_write_block (self,
+					       fu_chunk_get_data (chk0),
+					       fu_chunk_get_data_sz (chk0),
+					       error))
 		return FALSE;
 	fu_device_set_progress_full (device, chunks->len, chunks->len);
 

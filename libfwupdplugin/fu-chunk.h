@@ -16,6 +16,14 @@ typedef struct {
 	guint32		 data_sz;
 } FuChunk;
 
+guint32		 fu_chunk_get_idx			(FuChunk	*self);
+guint32		 fu_chunk_get_page			(FuChunk	*self);
+guint32		 fu_chunk_get_address			(FuChunk	*self);
+const guint8	*fu_chunk_get_data			(FuChunk	*self);
+guint8		*fu_chunk_get_data_out			(FuChunk	*self);
+guint32		 fu_chunk_get_data_sz			(FuChunk	*self);
+GBytes		*fu_chunk_get_bytes			(FuChunk	*self);
+
 FuChunk		*fu_chunk_new				(guint32	 idx,
 							 guint32	 page,
 							 guint32	 address,

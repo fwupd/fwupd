@@ -80,14 +80,14 @@ fu_wac_module_touch_write_firmware (FuDevice *device,
 		/* build G11T data packet */
 		memset (buf, 0xff, sizeof(buf));
 		buf[0] = 0x01; /* writing */
-		buf[1] = chk->idx + 1;
-		fu_common_write_uint32 (&buf[2], chk->address, G_LITTLE_ENDIAN);
+		buf[1] = fu_chunk_get_idx (chk) + 1;
+		fu_common_write_uint32 (&buf[2], fu_chunk_get_address (chk), G_LITTLE_ENDIAN);
 		buf[6] = 0x10; /* no idea! */
-		memcpy (&buf[7], chk->data, chk->data_sz);
+		memcpy (&buf[7], fu_chunk_get_data (chk), fu_chunk_get_data_sz (chk));
 		blob_chunk = g_bytes_new (buf, sizeof(buf));
 		if (!fu_wac_module_set_feature (self, FU_WAC_MODULE_COMMAND_DATA,
 						blob_chunk, error)) {
-			g_prefix_error (error, "failed to write block %u: ", chk->idx);
+			g_prefix_error (error, "failed to write block %u: ", fu_chunk_get_idx (chk));
 			return FALSE;
 		}
 
