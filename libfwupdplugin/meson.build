@@ -222,6 +222,7 @@ if get_option('introspection') and get_option('gusb')
       'LIBFWUPDPLUGIN',
       '@INPUT@',
       '@OUTPUT@',
+      '--override', 'fu_chunk_get_type', '1.5.6',
     ],
   )
 

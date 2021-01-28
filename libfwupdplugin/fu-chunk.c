@@ -20,6 +20,17 @@
  *
  */
 
+struct _FuChunk {
+	GObject			 parent_instance;
+	guint32			 idx;
+	guint32			 page;
+	guint32			 address;
+	const guint8		*data;
+	guint32			 data_sz;
+};
+
+G_DEFINE_TYPE (FuChunk, fu_chunk, G_TYPE_OBJECT)
+
 /**
  * fu_chunk_get_idx:
  * @self: a #FuChunk
@@ -145,7 +156,7 @@ fu_chunk_get_bytes (FuChunk *self)
 }
 
 /**
- * fu_chunk_new: (skip):
+ * fu_chunk_new:
  * @idx: the packet number
  * @page: the hardware memory page
  * @address: the address *within* the page
@@ -165,18 +176,18 @@ fu_chunk_new (guint32 idx,
 	      const guint8 *data,
 	      guint32 data_sz)
 {
-	FuChunk *item = g_new0 (FuChunk, 1);
-	item->idx = idx;
-	item->page = page;
-	item->address = address;
-	item->data = data;
-	item->data_sz = data_sz;
-	return item;
+	FuChunk *self = g_object_new (FU_TYPE_CHUNK, NULL);
+	self->idx = idx;
+	self->page = page;
+	self->address = address;
+	self->data = data;
+	self->data_sz = data_sz;
+	return self;
 }
 
 /**
  * fu_chunk_to_string:
- * @item: a #FuChunk
+ * @self: a #FuChunk
  *
  * Converts the chunked packet to a string representation.
  *
@@ -185,12 +196,12 @@ fu_chunk_new (guint32 idx,
  * Since: 1.1.2
  **/
 gchar *
-fu_chunk_to_string (FuChunk *item)
+fu_chunk_to_string (FuChunk *self)
 {
 	g_autoptr(GString) str = g_string_new (NULL);
-	if (item->data != NULL) {
-		for (guint32 i = 0; i < item->data_sz; i++) {
-			gchar tmp = (gchar) item->data[i];
+	if (self->data != NULL) {
+		for (guint32 i = 0; i < self->data_sz; i++) {
+			gchar tmp = (gchar) self->data[i];
 			if (tmp == 0x00)
 				break;
 			g_string_append_c (str, g_ascii_isalnum (tmp) ? tmp : '?');
@@ -198,10 +209,10 @@ fu_chunk_to_string (FuChunk *item)
 	}
 	return g_strdup_printf ("#%02" G_GUINT32_FORMAT ": page:%02x "
 				"addr:%04x len:%02" G_GUINT32_FORMAT " %s",
-				item->idx,
-				(guint) item->page,
-				(guint) item->address,
-				item->data_sz,
+				self->idx,
+				(guint) self->page,
+				(guint) self->address,
+				self->data_sz,
 				str->str);
 }
 
@@ -220,15 +231,15 @@ fu_chunk_array_to_string (GPtrArray *chunks)
 {
 	GString *str = g_string_new (NULL);
 	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *item = g_ptr_array_index (chunks, i);
-		g_autofree gchar *tmp = fu_chunk_to_string (item);
+		FuChunk *chk = g_ptr_array_index (chunks, i);
+		g_autofree gchar *tmp = fu_chunk_to_string (chk);
 		g_string_append_printf (str, "%s\n", tmp);
 	}
 	return g_string_free (str, FALSE);
 }
 
 /**
- * fu_chunk_array_new: (skip):
+ * fu_chunk_array_new:
  * @data: a linear blob of memory, or %NULL
  * @data_sz: size of @data_sz
  * @addr_start: the hardware address offset, or 0
@@ -256,7 +267,7 @@ fu_chunk_array_new (const guint8 *data,
 
 	g_return_val_if_fail (data_sz > 0, NULL);
 
-	segments = g_ptr_array_new_with_free_func (g_free);
+	segments = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (idx = 1; idx < data_sz; idx++) {
 		guint32 page = 0;
 		if (page_sz > 0)
@@ -312,7 +323,7 @@ fu_chunk_array_new (const guint8 *data,
 }
 
 /**
- * fu_chunk_array_new_from_bytes: (skip):
+ * fu_chunk_array_new_from_bytes:
  * @blob: a #GBytes
  * @addr_start: the hardware address offset, or 0
  * @page_sz: the hardware page size, or 0
@@ -335,4 +346,14 @@ fu_chunk_array_new_from_bytes (GBytes *blob,
 	const guint8 *data = g_bytes_get_data (blob, &sz);
 	return fu_chunk_array_new (data, (guint32) sz,
 				   addr_start, page_sz, packet_sz);
+}
+
+static void
+fu_chunk_class_init (FuChunkClass *klass)
+{
+}
+
+static void
+fu_chunk_init (FuChunk *self)
+{
 }
