@@ -172,6 +172,11 @@ fwupd_device_set_summary (FwupdDevice *device, const gchar *summary)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->summary, summary) == 0)
+		return;
+
 	g_free (priv->summary);
 	priv->summary = g_strdup (summary);
 }
@@ -208,6 +213,11 @@ fwupd_device_set_branch (FwupdDevice *device, const gchar *branch)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->branch, branch) == 0)
+		return;
+
 	g_free (priv->branch);
 	priv->branch = g_strdup (branch);
 }
@@ -244,6 +254,11 @@ fwupd_device_set_serial (FwupdDevice *device, const gchar *serial)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->serial, serial) == 0)
+		return;
+
 	g_free (priv->serial);
 	priv->serial = g_strdup (serial);
 }
@@ -280,6 +295,11 @@ fwupd_device_set_id (FwupdDevice *device, const gchar *id)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->id, id) == 0)
+		return;
+
 	g_free (priv->id);
 	priv->id = g_strdup (id);
 }
@@ -316,6 +336,11 @@ fwupd_device_set_parent_id (FwupdDevice *device, const gchar *parent_id)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->parent_id, parent_id) == 0)
+		return;
+
 	g_free (priv->parent_id);
 	priv->parent_id = g_strdup (parent_id);
 }
@@ -633,6 +658,11 @@ fwupd_device_set_name (FwupdDevice *device, const gchar *name)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->name, name) == 0)
+		return;
+
 	g_free (priv->name);
 	priv->name = g_strdup (name);
 }
@@ -669,6 +699,11 @@ fwupd_device_set_vendor (FwupdDevice *device, const gchar *vendor)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->vendor, vendor) == 0)
+		return;
+
 	g_free (priv->vendor);
 	priv->vendor = g_strdup (vendor);
 }
@@ -827,6 +862,11 @@ fwupd_device_set_description (FwupdDevice *device, const gchar *description)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->description, description) == 0)
+		return;
+
 	g_free (priv->description);
 	priv->description = g_strdup (description);
 }
@@ -863,6 +903,11 @@ fwupd_device_set_version (FwupdDevice *device, const gchar *version)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->version, version) == 0)
+		return;
+
 	g_free (priv->version);
 	priv->version = g_strdup (version);
 }
@@ -899,6 +944,11 @@ fwupd_device_set_version_lowest (FwupdDevice *device, const gchar *version_lowes
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->version_lowest, version_lowest) == 0)
+		return;
+
 	g_free (priv->version_lowest);
 	priv->version_lowest = g_strdup (version_lowest);
 }
@@ -970,6 +1020,11 @@ fwupd_device_set_version_bootloader (FwupdDevice *device, const gchar *version_b
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->version_bootloader, version_bootloader) == 0)
+		return;
+
 	g_free (priv->version_bootloader);
 	priv->version_bootloader = g_strdup (version_bootloader);
 }
@@ -1111,6 +1166,11 @@ fwupd_device_set_plugin (FwupdDevice *device, const gchar *plugin)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->plugin, plugin) == 0)
+		return;
+
 	g_free (priv->plugin);
 	priv->plugin = g_strdup (plugin);
 }
@@ -1147,6 +1207,11 @@ fwupd_device_set_protocol (FwupdDevice *device, const gchar *protocol)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->protocol, protocol) == 0)
+		return;
+
 	g_free (priv->protocol);
 	priv->protocol = g_strdup (protocol);
 }
@@ -2007,6 +2072,11 @@ fwupd_device_set_update_message (FwupdDevice *device, const gchar *update_messag
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->update_message, update_message) == 0)
+		return;
+
 	g_free (priv->update_message);
 	priv->update_message = g_strdup (update_message);
 }
@@ -2043,6 +2113,11 @@ fwupd_device_set_update_image (FwupdDevice *device, const gchar *update_image)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->update_image, update_image) == 0)
+		return;
+
 	g_free (priv->update_image);
 	priv->update_image = g_strdup (update_image);
 }
@@ -2079,6 +2154,11 @@ fwupd_device_set_update_error (FwupdDevice *device, const gchar *update_error)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->update_error, update_error) == 0)
+		return;
+
 	g_free (priv->update_error);
 	priv->update_error = g_strdup (update_error);
 }
