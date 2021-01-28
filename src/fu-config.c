@@ -31,6 +31,7 @@ struct _FuConfig
 	GPtrArray		*disabled_plugins;	/* (element-type utf-8) */
 	GPtrArray		*approved_firmware;	/* (element-type utf-8) */
 	GPtrArray		*blocked_firmware;	/* (element-type utf-8) */
+	GPtrArray		*uri_schemes;		/* (element-type utf-8) */
 	guint64			 archive_size_max;
 	guint			 idle_timeout;
 	gchar			*config_file;
@@ -54,6 +55,7 @@ fu_config_reload (FuConfig *self, GError **error)
 	guint idle_timeout;
 	g_auto(GStrv) approved_firmware = NULL;
 	g_auto(GStrv) blocked_firmware = NULL;
+	g_auto(GStrv) uri_schemes = NULL;
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autofree gchar *domains = NULL;
@@ -120,6 +122,26 @@ fu_config_reload (FuConfig *self, GError **error)
 			g_ptr_array_add (self->blocked_firmware,
 					 g_strdup (blocked_firmware[i]));
 		}
+	}
+
+	/* get download schemes */
+	g_ptr_array_set_size (self->uri_schemes, 0);
+	uri_schemes = g_key_file_get_string_list (keyfile,
+						  "fwupd",
+						  "UriSchemes",
+						  NULL, /* length */
+						  NULL);
+	if (uri_schemes != NULL) {
+		for (guint i = 0; uri_schemes[i] != NULL; i++) {
+			g_ptr_array_add (self->uri_schemes,
+					 g_strdup (uri_schemes[i]));
+		}
+	}
+	if (self->uri_schemes->len == 0) {
+		g_ptr_array_add (self->uri_schemes, g_strdup ("file"));
+		g_ptr_array_add (self->uri_schemes, g_strdup ("https"));
+		g_ptr_array_add (self->uri_schemes, g_strdup ("http"));
+		g_ptr_array_add (self->uri_schemes, g_strdup ("ipfs"));
 	}
 
 	/* get maximum archive size, defaulting to something sane */
@@ -263,6 +285,24 @@ fu_config_get_blocked_firmware (FuConfig *self)
 	return self->blocked_firmware;
 }
 
+guint
+fu_config_get_uri_scheme_prio (FuConfig *self, const gchar *scheme)
+{
+#if GLIB_CHECK_VERSION(2,54,0)
+	guint idx = G_MAXUINT;
+	g_ptr_array_find_with_equal_func (self->uri_schemes,
+					  scheme, g_str_equal, &idx);
+	return idx;
+#else
+	for (guint i = 0; i < self->uri_schemes->len; i++)
+		const gchar *scheme_tmp = g_ptr_array_index (self->uri_schemes, i);
+		if (g_str_equal (scheme_tmp, scheme))
+			return i;
+	}
+	return G_MAXUINT;
+#endif
+}
+
 guint64
 fu_config_get_archive_size_max (FuConfig *self)
 {
@@ -318,6 +358,7 @@ fu_config_init (FuConfig *self)
 	self->disabled_plugins = g_ptr_array_new_with_free_func (g_free);
 	self->approved_firmware = g_ptr_array_new_with_free_func (g_free);
 	self->blocked_firmware = g_ptr_array_new_with_free_func (g_free);
+	self->uri_schemes = g_ptr_array_new_with_free_func (g_free);
 }
 
 static void
@@ -333,6 +374,7 @@ fu_config_finalize (GObject *obj)
 	g_ptr_array_unref (self->disabled_plugins);
 	g_ptr_array_unref (self->approved_firmware);
 	g_ptr_array_unref (self->blocked_firmware);
+	g_ptr_array_unref (self->uri_schemes);
 	g_free (self->config_file);
 
 	G_OBJECT_CLASS (fu_config_parent_class)->finalize (obj);
