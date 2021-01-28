@@ -2854,3 +2854,26 @@ fu_common_crc32 (const guint8 *buf, gsize bufsz)
 {
 	return fu_common_crc32_full (buf, bufsz, 0xFFFFFFFF, 0xEDB88320);
 }
+
+/**
+ * fu_common_uri_get_scheme:
+ * @uri: valid URI, e.g. `https://foo.bar/baz`
+ *
+ * Returns the USI scheme for the given URI.
+ *
+ * Returns: scheme value, or %NULL if invalid, e.g. `https`
+ *
+ * Since: 1.5.6
+ **/
+gchar *
+fu_common_uri_get_scheme (const gchar *uri)
+{
+	gchar *tmp;
+
+	g_return_val_if_fail (uri != NULL, NULL);
+
+	tmp = g_strstr_len (uri, -1, ":");
+	if (tmp == NULL || tmp[0] == '\0')
+		return NULL;
+	return g_utf8_strdown (uri, tmp - uri);
+}

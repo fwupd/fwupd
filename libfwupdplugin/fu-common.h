@@ -308,3 +308,4 @@ guint32		 fu_common_crc32_full		(const guint8	*buf,
 						 gsize		 bufsz,
 						 guint32	 crc,
 						 guint32	 polynomial);
+gchar		*fu_common_uri_get_scheme	(const gchar	*uri);
