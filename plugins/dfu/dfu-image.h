@@ -9,9 +9,8 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include "fu-chunk.h"
 #include "fu-firmware-image.h"
-
-#include "dfu-element.h"
 
 #define DFU_TYPE_IMAGE (dfu_image_get_type ())
 G_DECLARE_DERIVABLE_TYPE (DfuImage, dfu_image, DFU, IMAGE, FuFirmwareImage)
@@ -23,16 +22,16 @@ struct _DfuImageClass
 
 DfuImage	*dfu_image_new		(void);
 
-GPtrArray	*dfu_image_get_elements		(DfuImage	*image);
-DfuElement	*dfu_image_get_element		(DfuImage	*image,
+GPtrArray	*dfu_image_get_chunks		(DfuImage	*image);
+FuChunk		*dfu_image_get_chunk_by_idx	(DfuImage	*image,
 						 guint8		 idx);
-DfuElement	*dfu_image_get_element_default	(DfuImage	*image);
+FuChunk		*dfu_image_get_chunk_default	(DfuImage	*image);
 guint8		 dfu_image_get_alt_setting	(DfuImage	*image);
 const gchar	*dfu_image_get_name		(DfuImage	*image);
 guint32		 dfu_image_get_size		(DfuImage	*image);
 
-void		 dfu_image_add_element		(DfuImage	*image,
-						 DfuElement	*element);
+void		 dfu_image_add_chunk		(DfuImage	*image,
+						 FuChunk	*chk);
 
 void		 dfu_image_set_alt_setting	(DfuImage	*image,
 						 guint8		 alt_setting);

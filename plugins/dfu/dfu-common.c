@@ -123,7 +123,7 @@ dfu_version_to_string (DfuVersion version)
 
 /**
  * dfu_utils_bytes_join_array:
- * @chunks: (element-kind GBytes): bytes
+ * @chunks: (element-type GBytes): bytes
  *
  * Creates a monolithic block of memory from an array of #GBytes.
  *

@@ -8,9 +8,9 @@
 
 #include <string.h>
 
+#include "fu-chunk.h"
 #include "fu-dfu-firmware.h"
 
-#include "dfu-element.h"
 #include "dfu-format-dfu.h"
 #include "dfu-format-dfuse.h"
 #include "dfu-format-raw.h"
@@ -125,21 +125,21 @@ dfu_firmware_to_dfu (DfuFirmware *firmware, GError **error)
 {
 	/* plain DFU */
 	if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_DFU) {
-		GBytes *contents;
-		DfuElement *element;
+		g_autoptr(GBytes) contents = NULL;
+		FuChunk *chk;
 		g_autoptr(DfuImage) image = NULL;
 		image = DFU_IMAGE (fu_firmware_get_image_default (FU_FIRMWARE (firmware), error));
 		if (image == NULL)
 			return NULL;
-		element = dfu_image_get_element (image, 0);
-		if (element == NULL) {
+		chk = dfu_image_get_chunk_by_idx (image, 0);
+		if (chk == NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_FOUND,
 				     "no firmware element data to write");
 			return NULL;
 		}
-		contents = dfu_element_get_contents (element);
+		contents = fu_chunk_get_bytes (chk);
 		return dfu_firmware_add_footer (firmware, contents, error);
 	}
 

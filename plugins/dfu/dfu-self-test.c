@@ -17,6 +17,7 @@
 #include "dfu-target-private.h"
 
 #include "fu-common.h"
+#include "fu-chunk.h"
 
 #include "fwupd-error.h"
 
@@ -61,13 +62,13 @@ fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 static void
 dfu_firmware_raw_func (void)
 {
-	DfuElement *element;
-	GBytes *no_suffix_contents;
+	FuChunk *chk;
 	gchar buf[256];
 	gboolean ret;
 	g_autoptr(DfuFirmware) firmware = NULL;
 	g_autoptr(DfuImage) image_tmp = NULL;
 	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GBytes) no_suffix_contents = NULL;
 	g_autoptr(GBytes) roundtrip = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -90,9 +91,9 @@ dfu_firmware_raw_func (void)
 	image_tmp = DFU_IMAGE (fu_firmware_get_image_by_idx (FU_FIRMWARE (firmware), 0, NULL));
 	g_assert (image_tmp != NULL);
 	g_assert_cmpint (dfu_image_get_size (image_tmp), ==, 256);
-	element = dfu_image_get_element (image_tmp, 0);
-	g_assert (element != NULL);
-	no_suffix_contents = dfu_element_get_contents (element);
+	chk = dfu_image_get_chunk_by_idx (image_tmp, 0);
+	g_assert (chk != NULL);
+	no_suffix_contents = fu_chunk_get_bytes (chk);
 	g_assert (no_suffix_contents != NULL);
 	g_assert_cmpint (g_bytes_compare (no_suffix_contents, fw), ==, 0);
 
@@ -116,7 +117,7 @@ dfu_firmware_dfu_func (void)
 	g_autoptr(DfuFirmware) firmware2 = dfu_firmware_new ();
 	g_autoptr(DfuFirmware) firmware3 = dfu_firmware_new ();
 	g_autoptr(DfuImage) image = NULL;
-	g_autoptr(DfuElement) element = NULL;
+	g_autoptr(FuChunk) chk = NULL;
 	g_autoptr(GBytes) data = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) roundtrip_orig = NULL;
@@ -135,9 +136,8 @@ dfu_firmware_dfu_func (void)
 	fu_dfu_firmware_set_pid (FU_DFU_FIRMWARE (firmware1), 0x5678);
 	fu_dfu_firmware_set_release (FU_DFU_FIRMWARE (firmware1), 0xfedc);
 	image = dfu_image_new ();
-	element = dfu_element_new ();
-	dfu_element_set_contents (element, fw);
-	dfu_image_add_element (image, element);
+	chk = fu_chunk_bytes_new (fw);
+	dfu_image_add_chunk (image, chk);
 	fu_firmware_add_image (FU_FIRMWARE (firmware1), FU_FIRMWARE_IMAGE (image));
 	g_assert_cmpint (dfu_firmware_get_size (firmware1), ==, 256);
 	data = dfu_firmware_write_data (firmware1, &error);
