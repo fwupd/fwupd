@@ -32,6 +32,22 @@ struct _FuChunk {
 G_DEFINE_TYPE (FuChunk, fu_chunk, G_TYPE_OBJECT)
 
 /**
+ * fu_chunk_set_idx:
+ * @self: a #FuChunk
+ * @idx: index, starting at 0
+ *
+ * Sets the index of the chunk.
+ *
+ * Since: 1.5.6
+ **/
+void
+fu_chunk_set_idx (FuChunk *self, guint32 idx)
+{
+	g_return_if_fail (FU_IS_CHUNK (self));
+	self->idx = idx;
+}
+
+/**
  * fu_chunk_get_idx:
  * @self: a #FuChunk
  *
@@ -49,6 +65,22 @@ fu_chunk_get_idx (FuChunk *self)
 }
 
 /**
+ * fu_chunk_set_page:
+ * @self: a #FuChunk
+ * @page: page number, starting at 0
+ *
+ * Sets the page of the chunk.
+ *
+ * Since: 1.5.6
+ **/
+void
+fu_chunk_set_page (FuChunk *self, guint32 page)
+{
+	g_return_if_fail (FU_IS_CHUNK (self));
+	self->page = page;
+}
+
+/**
  * fu_chunk_get_page:
  * @self: a #FuChunk
  *
@@ -63,6 +95,22 @@ fu_chunk_get_page (FuChunk *self)
 {
 	g_return_val_if_fail (FU_IS_CHUNK (self), G_MAXUINT32);
 	return self->page;
+}
+
+/**
+ * fu_chunk_set_address:
+ * @self: a #FuChunk
+ * @address: memory address
+ *
+ * Sets the address of the chunk.
+ *
+ * Since: 1.5.6
+ **/
+void
+fu_chunk_set_address (FuChunk *self, guint32 address)
+{
+	g_return_if_fail (FU_IS_CHUNK (self));
+	self->address = address;
 }
 
 /**
