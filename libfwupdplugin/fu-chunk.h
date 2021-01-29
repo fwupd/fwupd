@@ -12,6 +12,7 @@
 
 G_DECLARE_FINAL_TYPE (FuChunk, fu_chunk, FU, CHUNK, GObject)
 
+FuChunk		*fu_chunk_bytes_new			(GBytes		*bytes);
 void		 fu_chunk_set_idx			(FuChunk	*self,
 							 guint32	 idx);
 guint32		 fu_chunk_get_idx			(FuChunk	*self);
@@ -24,6 +25,8 @@ guint32		 fu_chunk_get_address			(FuChunk	*self);
 const guint8	*fu_chunk_get_data			(FuChunk	*self);
 guint8		*fu_chunk_get_data_out			(FuChunk	*self);
 guint32		 fu_chunk_get_data_sz			(FuChunk	*self);
+void		 fu_chunk_set_bytes			(FuChunk	*self,
+							 GBytes		*bytes);
 GBytes		*fu_chunk_get_bytes			(FuChunk	*self);
 
 FuChunk		*fu_chunk_new				(guint32	 idx,

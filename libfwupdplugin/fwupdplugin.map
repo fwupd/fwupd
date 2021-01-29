@@ -724,6 +724,7 @@ LIBFWUPDPLUGIN_1.5.5 {
 
 LIBFWUPDPLUGIN_1.5.6 {
   global:
+    fu_chunk_bytes_new;
     fu_chunk_get_address;
     fu_chunk_get_bytes;
     fu_chunk_get_data;
@@ -733,6 +734,7 @@ LIBFWUPDPLUGIN_1.5.6 {
     fu_chunk_get_page;
     fu_chunk_get_type;
     fu_chunk_set_address;
+    fu_chunk_set_bytes;
     fu_chunk_set_idx;
     fu_chunk_set_page;
     fu_common_get_memory_size;

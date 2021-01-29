@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "fu-chunk.h"
+#include "fu-common.h"
 
 /**
  * SECTION:fu-chunk
@@ -27,6 +28,7 @@ struct _FuChunk {
 	guint32			 address;
 	const guint8		*data;
 	guint32			 data_sz;
+	GBytes			*bytes;
 };
 
 G_DEFINE_TYPE (FuChunk, fu_chunk, G_TYPE_OBJECT)
@@ -187,6 +189,32 @@ fu_chunk_get_data_sz (FuChunk *self)
 }
 
 /**
+ * fu_chunk_set_bytes:
+ * @self: a #FuChunk
+ * @bytes: (nullable): a #GBytes, or %NULL
+ *
+ * Sets the GBytes blob
+ *
+ * Since: 1.5.6
+ **/
+void
+fu_chunk_set_bytes (FuChunk *self, GBytes *bytes)
+{
+	g_return_if_fail (FU_IS_CHUNK (self));
+
+	/* not changed */
+	if (self->bytes == bytes)
+		return;
+
+	if (self->bytes != NULL) {
+		g_bytes_unref (self->bytes);
+		self->bytes = NULL;
+	}
+	if (bytes != NULL)
+		self->bytes = g_bytes_ref (bytes);
+}
+
+/**
  * fu_chunk_get_bytes:
  * @self: a #FuChunk
  *
@@ -200,6 +228,8 @@ GBytes *
 fu_chunk_get_bytes (FuChunk *self)
 {
 	g_return_val_if_fail (FU_IS_CHUNK (self), NULL);
+	if (self->bytes != NULL)
+		return g_bytes_ref (self->bytes);
 	return g_bytes_new_static (self->data, self->data_sz);
 }
 
@@ -230,6 +260,28 @@ fu_chunk_new (guint32 idx,
 	self->address = address;
 	self->data = data;
 	self->data_sz = data_sz;
+	return self;
+}
+
+/**
+ * fu_chunk_bytes_new:
+ * @bytes: (nullable): a #GBytes
+ *
+ * Creates a new packet of data.
+ *
+ * Return value: (transfer full): a #FuChunk
+ *
+ * Since: 1.5.6
+ **/
+FuChunk *
+fu_chunk_bytes_new (GBytes *bytes)
+{
+	FuChunk *self = g_object_new (FU_TYPE_CHUNK, NULL);
+	if (bytes != NULL) {
+		self->bytes = g_bytes_ref (bytes);
+		self->data = g_bytes_get_data (bytes, NULL);
+		self->data_sz = g_bytes_get_size (bytes);
+	}
 	return self;
 }
 
@@ -390,15 +442,35 @@ fu_chunk_array_new_from_bytes (GBytes *blob,
 			       guint32 page_sz,
 			       guint32 packet_sz)
 {
+	GPtrArray *chunks;
 	gsize sz;
 	const guint8 *data = g_bytes_get_data (blob, &sz);
-	return fu_chunk_array_new (data, (guint32) sz,
-				   addr_start, page_sz, packet_sz);
+
+	chunks = fu_chunk_array_new (data, (guint32) sz, addr_start, page_sz, packet_sz);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index (chunks, i);
+		chk->bytes = fu_common_bytes_new_offset (blob,
+							 chk->data - data,
+							 chk->data_sz,
+							 NULL);
+	}
+	return chunks;
+}
+
+static void
+fu_chunk_finalize (GObject *object)
+{
+	FuChunk *self = FU_CHUNK (object);
+	if (self->bytes != NULL)
+		g_bytes_unref (self->bytes);
+	G_OBJECT_CLASS (fu_chunk_parent_class)->finalize (object);
 }
 
 static void
 fu_chunk_class_init (FuChunkClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	object_class->finalize = fu_chunk_finalize;
 }
 
 static void
