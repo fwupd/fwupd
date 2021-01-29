@@ -10,7 +10,7 @@
 
 #include <string.h>
 
-#include "fu-chunk.h"
+#include "fu-chunk-private.h"
 #include "fu-common.h"
 
 /**
@@ -285,6 +285,22 @@ fu_chunk_bytes_new (GBytes *bytes)
 	return self;
 }
 
+void
+fu_chunk_add_string (FuChunk *self, guint idt, GString *str)
+{
+	fu_common_string_append_kv (str, idt, G_OBJECT_TYPE_NAME (self), NULL);
+	fu_common_string_append_kx (str, idt + 1, "Index", self->idx);
+	fu_common_string_append_kx (str, idt + 1, "Page", self->page);
+	fu_common_string_append_kx (str, idt + 1, "Address", self->address);
+	if (self->data != NULL) {
+		g_autofree gchar *datastr = NULL;
+		datastr = fu_common_strsafe ((const gchar *) self->data, MIN (self->data_sz, 16));
+		if (datastr != NULL)
+			fu_common_string_append_kv (str, idt + 1, "Data", datastr);
+	}
+	fu_common_string_append_kx (str, idt + 1, "DataSz", self->data_sz);
+}
+
 /**
  * fu_chunk_to_string:
  * @self: a #FuChunk
@@ -298,22 +314,9 @@ fu_chunk_bytes_new (GBytes *bytes)
 gchar *
 fu_chunk_to_string (FuChunk *self)
 {
-	g_autoptr(GString) str = g_string_new (NULL);
-	if (self->data != NULL) {
-		for (guint32 i = 0; i < self->data_sz; i++) {
-			gchar tmp = (gchar) self->data[i];
-			if (tmp == 0x00)
-				break;
-			g_string_append_c (str, g_ascii_isalnum (tmp) ? tmp : '?');
-		}
-	}
-	return g_strdup_printf ("#%02" G_GUINT32_FORMAT ": page:%02x "
-				"addr:%04x len:%02" G_GUINT32_FORMAT " %s",
-				self->idx,
-				(guint) self->page,
-				(guint) self->address,
-				self->data_sz,
-				str->str);
+	GString *str = g_string_new (NULL);
+	fu_chunk_add_string (self, 0, str);
+	return g_string_free (str, FALSE);
 }
 
 /**
@@ -335,6 +338,8 @@ fu_chunk_array_to_string (GPtrArray *chunks)
 		g_autofree gchar *tmp = fu_chunk_to_string (chk);
 		g_string_append_printf (str, "%s\n", tmp);
 	}
+	if (str->len > 0)
+		g_string_truncate (str, str->len - 1);
 	return g_string_free (str, FALSE);
 }
 

@@ -1309,34 +1309,117 @@ fu_chunk_func (void)
 
 	chunked3 = fu_chunk_array_new ((const guint8 *) "123456", 6, 0x0, 3, 3);
 	chunked3_str = fu_chunk_array_to_string (chunked3);
-	g_print ("\n%s", chunked3_str);
-	g_assert_cmpstr (chunked3_str, ==, "#00: page:00 addr:0000 len:03 123\n"
-					   "#01: page:01 addr:0000 len:03 456\n");
+	g_assert_cmpstr (chunked3_str, ==, "FuChunk:\n"
+					   "  Index:                0x0\n"
+					   "  Page:                 0x0\n"
+					   "  Address:              0x0\n"
+					   "  Data:                 123\n"
+					   "  DataSz:               0x3\n"
+					   "\n"
+					   "FuChunk:\n"
+					   "  Index:                0x1\n"
+					   "  Page:                 0x1\n"
+					   "  Address:              0x0\n"
+					   "  Data:                 456\n"
+					   "  DataSz:               0x3\n");
 
 	chunked4 = fu_chunk_array_new ((const guint8 *) "123456", 6, 0x4, 4, 4);
 	chunked4_str = fu_chunk_array_to_string (chunked4);
-	g_print ("\n%s", chunked4_str);
-	g_assert_cmpstr (chunked4_str, ==, "#00: page:01 addr:0000 len:04 1234\n"
-					   "#01: page:02 addr:0000 len:02 56\n");
+	g_assert_cmpstr (chunked4_str, ==, "FuChunk:\n"
+					   "  Index:                0x0\n"
+					   "  Page:                 0x1\n"
+					   "  Address:              0x0\n"
+					   "  Data:                 1234\n"
+					   "  DataSz:               0x4\n"
+					   "\n"
+					   "FuChunk:\n"
+					   "  Index:                0x1\n"
+					   "  Page:                 0x2\n"
+					   "  Address:              0x0\n"
+					   "  Data:                 56\n"
+					   "  DataSz:               0x2\n");
 
 	chunked1 = fu_chunk_array_new ((const guint8 *) "0123456789abcdef", 16, 0x0, 10, 4);
 	chunked1_str = fu_chunk_array_to_string (chunked1);
-	g_print ("\n%s", chunked1_str);
-	g_assert_cmpstr (chunked1_str, ==, "#00: page:00 addr:0000 len:04 0123\n"
-					   "#01: page:00 addr:0004 len:04 4567\n"
-					   "#02: page:00 addr:0008 len:02 89\n"
-					   "#03: page:01 addr:0000 len:04 abcd\n"
-					   "#04: page:01 addr:0004 len:02 ef\n");
+	g_assert_cmpstr (chunked1_str, ==, "FuChunk:\n"
+					   "  Index:                0x0\n"
+					   "  Page:                 0x0\n"
+					   "  Address:              0x0\n"
+					   "  Data:                 0123\n"
+					   "  DataSz:               0x4\n"
+					   "\n"
+					   "FuChunk:\n"
+					   "  Index:                0x1\n"
+					   "  Page:                 0x0\n"
+					   "  Address:              0x4\n"
+					   "  Data:                 4567\n"
+					   "  DataSz:               0x4\n"
+					   "\n"
+					   "FuChunk:\n"
+					   "  Index:                0x2\n"
+					   "  Page:                 0x0\n"
+					   "  Address:              0x8\n"
+					   "  Data:                 89\n"
+					   "  DataSz:               0x2\n"
+					   "\n"
+					   "FuChunk:\n"
+					   "  Index:                0x3\n"
+					   "  Page:                 0x1\n"
+					   "  Address:              0x0\n"
+					   "  Data:                 abcd\n"
+					   "  DataSz:               0x4\n"
+					   "\n"
+					   "FuChunk:\n"
+					   "  Index:                0x4\n"
+					   "  Page:                 0x1\n"
+					   "  Address:              0x4\n"
+					   "  Data:                 ef\n"
+					   "  DataSz:               0x2\n");
 
 	chunked2 = fu_chunk_array_new ((const guint8 *) "XXXXXXYYYYYYZZZZZZ", 18, 0x0, 6, 4);
 	chunked2_str = fu_chunk_array_to_string (chunked2);
 	g_print ("\n%s", chunked2_str);
-	g_assert_cmpstr (chunked2_str, ==, "#00: page:00 addr:0000 len:04 XXXX\n"
-					   "#01: page:00 addr:0004 len:02 XX\n"
-					   "#02: page:01 addr:0000 len:04 YYYY\n"
-					   "#03: page:01 addr:0004 len:02 YY\n"
-					   "#04: page:02 addr:0000 len:04 ZZZZ\n"
-					   "#05: page:02 addr:0004 len:02 ZZ\n");
+	g_assert_cmpstr (chunked2_str, ==, "FuChunk:\n"
+					   "  Index:                0x0\n"
+					   "  Page:                 0x0\n"
+					   "  Address:              0x0\n"
+					   "  Data:                 XXXX\n"
+					   "  DataSz:               0x4\n"
+					   "\n"
+					   "FuChunk:\n"
+					   "  Index:                0x1\n"
+					   "  Page:                 0x0\n"
+					   "  Address:              0x4\n"
+					   "  Data:                 XX\n"
+					   "  DataSz:               0x2\n"
+					   "\n"
+					   "FuChunk:\n"
+					   "  Index:                0x2\n"
+					   "  Page:                 0x1\n"
+					   "  Address:              0x0\n"
+					   "  Data:                 YYYY\n"
+					   "  DataSz:               0x4\n"
+					   "\n"
+					   "FuChunk:\n"
+					   "  Index:                0x3\n"
+					   "  Page:                 0x1\n"
+					   "  Address:              0x4\n"
+					   "  Data:                 YY\n"
+					   "  DataSz:               0x2\n"
+					   "\n"
+					   "FuChunk:\n"
+					   "  Index:                0x4\n"
+					   "  Page:                 0x2\n"
+					   "  Address:              0x0\n"
+					   "  Data:                 ZZZZ\n"
+					   "  DataSz:               0x4\n"
+					   "\n"
+					   "FuChunk:\n"
+					   "  Index:                0x5\n"
+					   "  Page:                 0x2\n"
+					   "  Address:              0x4\n"
+					   "  Data:                 ZZ\n"
+					   "  DataSz:               0x2\n");
 }
 
 static void
