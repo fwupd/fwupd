@@ -139,7 +139,7 @@ fu_synaptics_cxaudio_device_operation (FuSynapticsCxaudioDevice *self,
 	}
 
 	/* send to hardware */
-	chunks = fu_chunk_array_new (buf, bufsz, addr, 0x0, payload_max);
+	chunks = fu_chunk_array_mutable_new (buf, bufsz, addr, 0x0, payload_max);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		guint8 inbuf[FU_SYNAPTICS_CXAUDIO_INPUT_REPORT_SIZE] = { 0 };

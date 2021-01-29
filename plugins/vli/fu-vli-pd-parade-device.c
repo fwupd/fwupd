@@ -410,13 +410,6 @@ fu_vli_pd_parade_device_block_write (FuVliPdParadeDevice *self,
 	return TRUE;
 }
 
-static GBytes *
-_g_bytes_new_sized (gsize sz)
-{
-	guint8 *buf = g_malloc0 (sz);
-	return g_bytes_new_take (buf, sz);
-}
-
 static gboolean
 fu_vli_pd_parade_device_block_read (FuVliPdParadeDevice *self,
 				    guint8 block_idx,
@@ -444,13 +437,14 @@ fu_vli_pd_parade_device_write_firmware (FuDevice *device,
 {
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE (device);
 	FuVliPdDevice *parent = FU_VLI_PD_DEVICE (fu_device_get_parent (device));
+	FuChunk *chk0;
 	guint8 buf[0x20];
 	guint block_idx_tmp;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GByteArray) buf_verify = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_verify = NULL;
 	g_autoptr(GPtrArray) blocks = NULL;
-	g_autoptr(GPtrArray) blocks_verify = NULL;
 
 	/* simple image */
 	fw = fu_firmware_get_image_default_bytes (firmware, error);
@@ -502,20 +496,29 @@ fu_vli_pd_parade_device_write_firmware (FuDevice *device,
 	if (!fu_vli_pd_parade_device_write_disable (self, error))
 		return FALSE;
 
-	/*  verify SPI ROM */
+	/* add the new boot config into the verify buffer */
+	buf_verify = g_byte_array_sized_new (g_bytes_get_size (fw));
+	chk0 = g_ptr_array_index (blocks, 0);
+	g_byte_array_append (buf_verify,
+			     fu_chunk_get_data (chk0),
+			     fu_chunk_get_data_sz (chk0));
+
+	/*  verify SPI ROM, ignoring the boot config */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
-	fw_verify = _g_bytes_new_sized (g_bytes_get_size (fw));
-	blocks_verify = fu_chunk_array_new_from_bytes (fw_verify, 0x0, 0x0, 0x10000);
-	for (guint i = 1; i < blocks_verify->len; i++) {
-		FuChunk *chk = g_ptr_array_index (blocks_verify, i);
+	for (guint i = 1; i < blocks->len; i++) {
+		FuChunk *chk = g_ptr_array_index (blocks, i);
+		gsize bufsz = fu_chunk_get_data_sz (chk);
+		g_autofree guint8 *vbuf = g_malloc0 (bufsz);
 		if (!fu_vli_pd_parade_device_block_read (self,
 							 fu_chunk_get_idx (chk),
-							 fu_chunk_get_data_out (chk),
-							 fu_chunk_get_data_sz (chk),
+							 vbuf,
+							 bufsz,
 							 error))
 			return FALSE;
+		g_byte_array_append (buf_verify, vbuf, bufsz);
 		fu_device_set_progress_full (FU_DEVICE (self), i, blocks->len);
 	}
+	fw_verify = g_byte_array_free_to_bytes (g_steal_pointer (&buf_verify));
 	if (!fu_common_bytes_compare (fw, fw_verify, error))
 		return FALSE;
 
@@ -585,7 +588,7 @@ fu_vli_pd_parade_device_dump_firmware (FuDevice *device, GError **error)
 	FuVliPdDevice *parent = FU_VLI_PD_DEVICE (fu_device_get_parent (device));
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GByteArray) fw = NULL;
 	g_autoptr(GPtrArray) blocks = NULL;
 
 	/* open device */
@@ -599,8 +602,8 @@ fu_vli_pd_parade_device_dump_firmware (FuDevice *device, GError **error)
 
 	/* read */
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
-	fw = _g_bytes_new_sized (fu_device_get_firmware_size_max (device));
-	blocks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, 0x10000);
+	fu_byte_array_set_size (fw, fu_device_get_firmware_size_max (device));
+	blocks = fu_chunk_array_mutable_new (fw->data, fw->len, 0x0, 0x0, 0x10000);
 	for (guint i = 0; i < blocks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (blocks, i);
 		if (!fu_vli_pd_parade_device_block_read (self,
@@ -610,7 +613,7 @@ fu_vli_pd_parade_device_dump_firmware (FuDevice *device, GError **error)
 							 error))
 			return NULL;
 	}
-	return g_steal_pointer (&fw);
+	return g_byte_array_free_to_bytes (g_steal_pointer (&fw));
 }
 
 static gboolean

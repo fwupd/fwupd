@@ -340,7 +340,7 @@ fu_bcm57xx_device_dump_firmware (FuDevice *device, GError **error)
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
-	chunks = fu_chunk_array_new (buf, bufsz, 0x0, 0x0, FU_BCM57XX_BLOCK_SZ);
+	chunks = fu_chunk_array_mutable_new (buf, bufsz, 0x0, 0x0, FU_BCM57XX_BLOCK_SZ);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_bcm57xx_device_nvram_read (self, fu_chunk_get_address (chk),

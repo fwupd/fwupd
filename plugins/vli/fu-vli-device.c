@@ -259,7 +259,7 @@ fu_vli_device_spi_read (FuVliDevice *self, guint32 address, gsize bufsz, GError 
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* get data from hardware */
-	chunks = fu_chunk_array_new (buf, bufsz, address, 0x0, FU_VLI_DEVICE_TXSIZE);
+	chunks = fu_chunk_array_mutable_new (buf, bufsz, address, 0x0, FU_VLI_DEVICE_TXSIZE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_vli_device_spi_read_block (self,
