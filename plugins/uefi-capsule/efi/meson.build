@@ -154,17 +154,15 @@ so = custom_target('fwup.so',
                              efi_ldflags + ['@INPUT@'] +
                              ['-lefi', '-lgnuefi', libgcc_file_name])
 
-configure_file(
-  input : 'generate_binary.sh.in',
-  output : 'generate_binary.sh',
-  configuration : conf
-)
-
-build_tool = join_paths(meson.current_build_dir(), 'generate_binary.sh')
 app = custom_target(efi_name,
                     input : so,
                     output : efi_name,
-                    command : [build_tool, '@INPUT@', '@OUTPUT@', efi_format],
+                    command : [
+                      join_paths(meson.current_source_dir(), 'generate_binary.py'),
+                      '@INPUT@', '@OUTPUT@',
+                      '--arch', gnu_efi_arch,
+                      '--objcopy', efi_objcopy,
+                    ],
                     install : true,
                     install_dir : efi_app_location)
 
