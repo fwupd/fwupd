@@ -154,11 +154,17 @@ so = custom_target('fwup.so',
                              efi_ldflags + ['@INPUT@'] +
                              ['-lefi', '-lgnuefi', libgcc_file_name])
 
+glob_csv = join_paths(meson.source_root(), 'data/*.csv')
+sbat_csv = join_paths(meson.current_build_dir(), 'sbat.csv')
 build_tool = join_paths(meson.current_source_dir(), 'generate_binary.py')
 app = custom_target(efi_name,
                     input : so,
                     output : efi_name,
                     command : [build_tool, '@INPUT@', '@OUTPUT@', efi_format, efi_objcopy],
+                    command : [build_tool, '@INPUT@', '@OUTPUT@', efi_format, efi_objcopy,
+                               glob_csv, sbat_csv, get_option('sbat_version'),
+                               meson.project_name(), meson.project_version(),
+                               get_option('sbat_component_generation')],
                     install : true,
                     install_dir : efi_app_location)
 

@@ -44,3 +44,5 @@ option('efi-ldsdir', type : 'string', description : 'path to the EFI lds directo
 option('efi-includedir', type : 'string', value : '/usr/include/efi', description : 'path to the EFI header directory')
 option('efi_os_dir', type: 'string', description : 'the name of OS directory in ESP')
 option('link_language', type : 'string', value : 'c', description : 'the linker to use for targets [c, cpp]')
+option('sbat_version', type : 'string', value : '0', description : 'SBAT data version')
+option('sbat_component_generation', type : 'string', value : '0', description : 'SBAT component generation')
