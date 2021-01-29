@@ -11,10 +11,10 @@
 #include <gusb.h>
 
 #include "dfu-common.h"
-#include "dfu-image.h"
 #include "dfu-sector.h"
 
 #include "fu-chunk.h"
+#include "fu-firmware.h"
 
 #include "fwupd-enums.h"
 
@@ -74,13 +74,14 @@ const gchar	*dfu_target_get_alt_name		(DfuTarget	*target,
 							 GError		**error);
 const gchar	*dfu_target_get_alt_name_for_display	(DfuTarget	*target,
 							 GError		**error);
-DfuImage	*dfu_target_upload			(DfuTarget	*target,
+gboolean	 dfu_target_upload			(DfuTarget	*target,
+							 FuFirmware	*firmware,
 							 DfuTargetTransferFlags flags,
 							 GError		**error);
 gboolean	 dfu_target_setup			(DfuTarget	*target,
 							 GError		**error);
 gboolean	 dfu_target_download			(DfuTarget	*target,
-							 DfuImage	*image,
+							 FuFirmwareImage *image,
 							 DfuTargetTransferFlags flags,
 							 GError		**error);
 gboolean	 dfu_target_mass_erase			(DfuTarget	*target,

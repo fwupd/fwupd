@@ -1902,6 +1902,61 @@ fu_firmware_build_func (void)
 	g_assert_cmpstr (str, ==, "hello");
 }
 
+static gsize
+fu_firmware_dfuse_image_get_size (FuFirmwareImage *self)
+{
+	g_autoptr(GPtrArray) chunks = fu_firmware_image_get_chunks (self);
+	gsize length = 0;
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index (chunks, i);
+		length += fu_chunk_get_data_sz (chk);
+	}
+	return length;
+}
+
+static gsize
+fu_firmware_dfuse_get_size (FuFirmware *firmware)
+{
+	gsize length = 0;
+	g_autoptr(GPtrArray) images = fu_firmware_get_images (firmware);
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmwareImage *image = g_ptr_array_index (images, i);
+		length += fu_firmware_dfuse_image_get_size (image);
+	}
+	return length;
+}
+
+static void
+fu_firmware_dfuse_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autoptr(FuFirmware) firmware = fu_dfuse_firmware_new ();
+	g_autoptr(GBytes) roundtrip_orig = NULL;
+	g_autoptr(GBytes) roundtrip = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* load a DfuSe firmware */
+	filename = g_build_filename (TESTDATADIR_SRC, "firmware.dfuse", NULL);
+	g_assert (filename != NULL);
+	roundtrip_orig = fu_common_get_contents_bytes (filename, &error);
+	ret = fu_firmware_parse (firmware, roundtrip_orig, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	g_assert_cmpint (fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware)), ==, 0x1234);
+	g_assert_cmpint (fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware)), ==, 0x5678);
+	g_assert_cmpint (fu_dfu_firmware_get_release (FU_DFU_FIRMWARE (firmware)), ==, 0x8642);
+	g_assert_cmpint (fu_firmware_dfuse_get_size (firmware), ==, 0x21);
+
+	/* can we roundtrip without losing data */
+	roundtrip = fu_firmware_write (firmware, &error);
+	g_assert_no_error (error);
+	g_assert (roundtrip != NULL);
+	ret = fu_common_bytes_compare (roundtrip, roundtrip_orig, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+}
+
 static void
 fu_firmware_new_from_gtypes_func (void)
 {
@@ -1920,6 +1975,7 @@ fu_firmware_new_from_gtypes_func (void)
 	/* dfu -> FuDfuFirmware */
 	firmware1 = fu_firmware_new_from_gtypes (blob, FWUPD_INSTALL_FLAG_NONE, &error,
 						 FU_TYPE_SREC_FIRMWARE,
+						 FU_TYPE_DFUSE_FIRMWARE,
 						 FU_TYPE_DFU_FIRMWARE,
 						 G_TYPE_INVALID);
 	g_assert_no_error (error);
@@ -2416,6 +2472,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/firmware{srec-tokenization}", fu_firmware_srec_tokenization_func);
 	g_test_add_func ("/fwupd/firmware{srec}", fu_firmware_srec_func);
 	g_test_add_func ("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
+	g_test_add_func ("/fwupd/firmware{dfuse}", fu_firmware_dfuse_func);
 	g_test_add_func ("/fwupd/firmware{gtypes}", fu_firmware_new_from_gtypes_func);
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
