@@ -14,7 +14,6 @@
 
 #include "dfu-common.h"
 #include "dfu-target.h"
-#include "dfu-firmware.h"
 
 #define DFU_TYPE_DEVICE (dfu_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (DfuDevice, dfu_device, DFU, DEVICE, FuUsbDevice)
@@ -63,7 +62,7 @@ guint16		 dfu_device_get_runtime_pid		(DfuDevice	*device);
 guint16		 dfu_device_get_runtime_release		(DfuDevice	*device);
 gboolean	 dfu_device_reset			(DfuDevice	*device,
 							 GError		**error);
-DfuFirmware	*dfu_device_upload			(DfuDevice	*device,
+FuFirmware	*dfu_device_upload			(DfuDevice	*device,
 							 DfuTargetTransferFlags flags,
 							 GError		**error);
 gboolean	 dfu_device_refresh			(DfuDevice	*device,

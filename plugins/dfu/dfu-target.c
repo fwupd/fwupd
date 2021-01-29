@@ -15,7 +15,7 @@
  * want to update one target on the device. Most users will want to
  * update all the targets on the device at the same time.
  *
- * See also: #DfuDevice, #DfuImage
+ * See also: #DfuDevice, #FuFirmwareImage
  */
 
 #include "config.h"
@@ -27,6 +27,8 @@
 #include "dfu-device.h"
 #include "dfu-sector.h"
 #include "dfu-target-private.h"
+
+#include "fu-dfu-firmware-private.h"
 
 #include "fwupd-error.h"
 
@@ -1072,18 +1074,10 @@ dfu_target_get_size_of_zone (DfuTarget *target, guint16 zone)
 	return len;
 }
 
-/**
- * dfu_target_upload:
- * @target: a #DfuTarget
- * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
- * @error: a #GError, or %NULL
- *
- * Uploads firmware from the target to the host.
- *
- * Return value: (transfer full): the uploaded image, or %NULL for error
- **/
-DfuImage *
+/* private */
+gboolean
 dfu_target_upload (DfuTarget *target,
+		   FuFirmware *firmware,
 		   DfuTargetTransferFlags flags,
 		   GError **error)
 {
@@ -1092,14 +1086,14 @@ dfu_target_upload (DfuTarget *target,
 	guint16 zone_cur;
 	guint32 zone_size = 0;
 	guint32 zone_last = G_MAXUINT;
-	g_autoptr(DfuImage) image = NULL;
+	g_autoptr(FuFirmwareImage) image = NULL;
 
-	g_return_val_if_fail (DFU_IS_TARGET (target), NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* ensure populated */
 	if (!dfu_target_setup (target, error))
-		return NULL;
+		return FALSE;
 
 	/* can the target do this? */
 	if (!dfu_device_can_upload (priv->device)) {
@@ -1107,12 +1101,12 @@ dfu_target_upload (DfuTarget *target,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "target cannot do uploading");
-		return NULL;
+		return FALSE;
 	}
 
 	/* use correct alt */
 	if (!dfu_target_use_alt_setting (target, error))
-		return NULL;
+		return FALSE;
 
 	/* no open?! */
 	if (priv->sectors->len == 0) {
@@ -1120,13 +1114,13 @@ dfu_target_upload (DfuTarget *target,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "no sectors defined for target");
-		return NULL;
+		return FALSE;
 	}
 
 	/* create a new image */
-	image = dfu_image_new ();
-	dfu_image_set_name (image, priv->alt_name);
-	dfu_image_set_alt_setting (image, priv->alt_setting);
+	image = fu_firmware_image_new (NULL);
+	fu_firmware_image_set_id (image, priv->alt_name);
+	fu_firmware_image_set_idx (image, priv->alt_setting);
 
 	/* get all the sectors for the device */
 	for (guint i = 0; i < priv->sectors->len; i++) {
@@ -1142,24 +1136,25 @@ dfu_target_upload (DfuTarget *target,
 		zone_size = dfu_target_get_size_of_zone (target, zone_cur);
 		zone_last = zone_cur;
 
-		/* get the first chk from the hardware */
+		/* get the first element from the hardware */
 		g_debug ("starting upload from 0x%08x (0x%04x)",
 			 dfu_sector_get_address (sector),
 			 zone_size);
 		chk = dfu_target_upload_element (target,
-						     dfu_sector_get_address (sector),
-						     0,		/* expected */
-						     zone_size,	/* maximum */
-						     error);
+						 dfu_sector_get_address (sector),
+						 0,		/* expected */
+						 zone_size,	/* maximum */
+						 error);
 		if (chk == NULL)
-			return NULL;
+			return FALSE;
 
-		/* this chk was uploaded okay */
-		dfu_image_add_chunk (image, chk);
+		/* this chunk was uploaded okay */
+		fu_firmware_image_add_chunk (image, chk);
 	}
 
 	/* success */
-	return g_object_ref (image);
+	fu_firmware_add_image (firmware, image);
+	return TRUE;
 }
 
 static gchar *
@@ -1197,9 +1192,9 @@ dfu_target_download_element_dfu (DfuTarget *target,
 				 GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	g_autoptr(GBytes) bytes = NULL;
 	guint32 nr_chunks;
 	guint16 transfer_size = dfu_device_get_transfer_size (priv->device);
+	g_autoptr(GBytes) bytes = NULL;
 
 	/* round up as we have to transfer incomplete blocks */
 	bytes = fu_chunk_get_bytes (chk);
@@ -1282,10 +1277,10 @@ dfu_target_download_element (DfuTarget *target,
 		dfu_target_set_action (target, FWUPD_STATUS_DEVICE_VERIFY);
 		bytes = fu_chunk_get_bytes (chk);
 		chunk_tmp = dfu_target_upload_element (target,
-							 fu_chunk_get_address (chk),
-							 g_bytes_get_size (bytes),
-							 g_bytes_get_size (bytes),
-							 error);
+						       fu_chunk_get_address (chk),
+						       g_bytes_get_size (bytes),
+						       g_bytes_get_size (bytes),
+						       error);
 		if (chunk_tmp == NULL)
 			return FALSE;
 		bytes_tmp = fu_chunk_get_bytes (chunk_tmp);
@@ -1308,7 +1303,7 @@ dfu_target_download_element (DfuTarget *target,
 /**
  * dfu_target_download:
  * @target: a #DfuTarget
- * @image: a #DfuImage
+ * @image: a #FuFirmwareImage
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
  * @error: a #GError, or %NULL
  *
@@ -1318,15 +1313,16 @@ dfu_target_download_element (DfuTarget *target,
  * Return value: %TRUE for success
  **/
 gboolean
-dfu_target_download (DfuTarget *target, DfuImage *image,
-		     DfuTargetTransferFlags flags, GError **error)
+dfu_target_download (DfuTarget *target,
+		     FuFirmwareImage *image,
+		     DfuTargetTransferFlags flags,
+		     GError **error)
 {
 	DfuTargetPrivate *priv = GET_PRIVATE (target);
-	GPtrArray *chunks;
-	gboolean ret;
+	g_autoptr(GPtrArray) chunks = NULL;
 
 	g_return_val_if_fail (DFU_IS_TARGET (target), FALSE);
-	g_return_val_if_fail (DFU_IS_IMAGE (image), FALSE);
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (image), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* ensure populated */
@@ -1347,7 +1343,7 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 		return FALSE;
 
 	/* download all chunks in the image to the device */
-	chunks = dfu_image_get_chunks (image);
+	chunks = fu_firmware_image_get_chunks (image);
 	if (chunks->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -1356,8 +1352,8 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 		return FALSE;
 	}
 	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = dfu_image_get_chunk_by_idx (image, (guint8) i);
-		g_debug ("downloading chk at 0x%04x",
+		FuChunk *chk = g_ptr_array_index (chunks, i);
+		g_debug ("downloading chunk at 0x%04x",
 			 fu_chunk_get_address (chk));
 
 		/* auto-detect missing firmware address -- this assumes
@@ -1374,11 +1370,7 @@ dfu_target_download (DfuTarget *target, DfuImage *image,
 		}
 
 		/* download to device */
-		ret = dfu_target_download_element (target,
-						   chk,
-						   flags,
-						   error);
-		if (!ret)
+		if (!dfu_target_download_element (target, chk, flags, error))
 			return FALSE;
 	}
 

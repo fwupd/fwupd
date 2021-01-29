@@ -17,7 +17,7 @@
  *    file. The file format is chosen automatically, with DfuSe being
  *    chosen if the device contains more than one target.
  *
- * See also: #DfuTarget, #DfuFirmware
+ * See also: #DfuTarget, #FuDfuseFirmware
  */
 
 /**
@@ -79,6 +79,8 @@
 #include "dfu-target-stm.h"
 
 #include "fu-device-locker.h"
+#include "fu-dfu-firmware-private.h"
+#include "fu-dfuse-firmware.h"
 #include "fu-firmware-common.h"
 
 #include "fwupd-error.h"
@@ -1471,14 +1473,14 @@ dfu_device_action_cb (DfuTarget *target, FwupdStatus action, DfuDevice *device)
  *
  * Return value: (transfer full): the uploaded firmware, or %NULL for error
  **/
-DfuFirmware *
+FuFirmware *
 dfu_device_upload (DfuDevice *device,
 		   DfuTargetTransferFlags flags,
 		   GError **error)
 {
 	DfuDevicePrivate *priv = GET_PRIVATE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	g_autoptr(DfuFirmware) firmware = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
 
 	/* no backing USB device */
 	if (usb_device == NULL) {
@@ -1494,8 +1496,13 @@ dfu_device_upload (DfuDevice *device,
 	if (!dfu_device_ensure_interface (device, error))
 		return NULL;
 
-	/* create ahead of time */
-	firmware = dfu_firmware_new ();
+	/* choose the most appropriate type */
+	if (priv->targets->len > 1) {
+		firmware = fu_dfuse_firmware_new ();
+		g_debug ("switching to DefuSe automatically");
+	} else {
+		firmware = fu_dfu_firmware_new ();
+	}
 	fu_dfu_firmware_set_vid (FU_DFU_FIRMWARE (firmware), priv->runtime_vid);
 	fu_dfu_firmware_set_pid (FU_DFU_FIRMWARE (firmware), priv->runtime_pid);
 	fu_dfu_firmware_set_release (FU_DFU_FIRMWARE (firmware), 0xffff);
@@ -1506,7 +1513,6 @@ dfu_device_upload (DfuDevice *device,
 		const gchar *alt_name;
 		gulong id1;
 		gulong id2;
-		g_autoptr(DfuImage) image = NULL;
 
 		/* upload to target and proxy signals */
 		target = g_ptr_array_index (priv->targets, i);
@@ -1522,26 +1528,17 @@ dfu_device_upload (DfuDevice *device,
 					G_CALLBACK (dfu_device_percentage_cb), device);
 		id2 = g_signal_connect (target, "action-changed",
 					G_CALLBACK (dfu_device_action_cb), device);
-		image = dfu_target_upload (target,
-					   DFU_TARGET_TRANSFER_FLAG_NONE,
-					   error);
+		if (!dfu_target_upload (target,
+					firmware,
+					DFU_TARGET_TRANSFER_FLAG_NONE,
+					error))
+			return NULL;
 		g_signal_handler_disconnect (target, id1);
 		g_signal_handler_disconnect (target, id2);
-		if (image == NULL)
-			return NULL;
-		fu_firmware_add_image (FU_FIRMWARE (firmware), FU_FIRMWARE_IMAGE (image));
 	}
 
 	/* do not do the dummy upload for quirked devices */
 	priv->done_upload_or_download = TRUE;
-
-	/* choose the most appropriate type */
-	if (priv->targets->len > 1) {
-		g_debug ("switching to DefuSe automatically");
-		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFUSE);
-	} else {
-		dfu_firmware_set_format (firmware, DFU_FIRMWARE_FORMAT_DFU);
-	}
 
 	/* success */
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_IDLE);
@@ -1569,7 +1566,7 @@ dfu_device_id_compatible (guint16 id_file, guint16 id_runtime, guint16 id_dev)
 
 static gboolean
 dfu_device_download (DfuDevice *device,
-		     DfuFirmware *firmware,
+		     FuFirmware *firmware,
 		     DfuTargetTransferFlags flags,
 		     GError **error)
 {
@@ -1647,7 +1644,7 @@ dfu_device_download (DfuDevice *device,
 	}
 
 	/* download each target */
-	images = fu_firmware_get_images (FU_FIRMWARE (firmware));
+	images = fu_firmware_get_images (firmware);
 	if (images->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -1656,18 +1653,17 @@ dfu_device_download (DfuDevice *device,
 		return FALSE;
 	}
 	for (guint i = 0; i < images->len; i++) {
-		DfuImage *image;
+		FuFirmwareImage *image = g_ptr_array_index (images, i);
 		DfuTargetTransferFlags flags_local = DFU_TARGET_TRANSFER_FLAG_NONE;
 		const gchar *alt_name;
+		guint8 alt;
 		gulong id1;
 		gulong id2;
 		g_autoptr(DfuTarget) target_tmp = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		image = g_ptr_array_index (images, i);
-		target_tmp = dfu_device_get_target_by_alt_setting (device,
-								   dfu_image_get_alt_setting (image),
-								   error);
+		alt = fu_firmware_image_get_idx (image);
+		target_tmp = dfu_device_get_target_by_alt_setting (device, alt, error);
 		if (target_tmp == NULL)
 			return FALSE;
 
@@ -1686,7 +1682,7 @@ dfu_device_download (DfuDevice *device,
 		/* download onto target */
 		if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY)
 			flags_local = DFU_TARGET_TRANSFER_FLAG_VERIFY;
-		if (dfu_firmware_get_format (firmware) == DFU_FIRMWARE_FORMAT_RAW)
+		if (fu_dfu_firmware_get_version (FU_DFU_FIRMWARE (firmware)) == 0x0)
 			flags_local |= DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC;
 		id1 = g_signal_connect (target_tmp, "percentage-changed",
 					G_CALLBACK (dfu_device_percentage_cb), device);
@@ -1753,7 +1749,7 @@ static GBytes *
 dfu_device_dump_firmware (FuDevice *device, GError **error)
 {
 	DfuDevice *self = DFU_DEVICE (device);
-	g_autoptr(DfuFirmware) dfu_firmware = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* require detach -> attach */
@@ -1768,14 +1764,25 @@ dfu_device_dump_firmware (FuDevice *device, GError **error)
 	g_debug ("uploading from device->host");
 	if (!dfu_device_refresh_and_clear (self, error))
 		return NULL;
-	dfu_firmware = dfu_device_upload (self,
-					  DFU_TARGET_TRANSFER_FLAG_NONE,
-					  error);
-	if (dfu_firmware == NULL)
+	firmware = dfu_device_upload (self, DFU_TARGET_TRANSFER_FLAG_NONE, error);
+	if (firmware == NULL)
 		return NULL;
 
 	/* get the checksum */
-	return dfu_firmware_write_data (dfu_firmware, error);
+	return fu_firmware_write (firmware, error);
+}
+
+static FuFirmware *
+dfu_device_prepare_firmware (FuDevice *device,
+			     GBytes *fw,
+			     FwupdInstallFlags flags,
+			     GError **error)
+{
+	return fu_firmware_new_from_gtypes (fw, flags, error,
+					    FU_TYPE_DFUSE_FIRMWARE,
+					    FU_TYPE_DFU_FIRMWARE,
+					    FU_TYPE_FIRMWARE,
+					    G_TYPE_INVALID);
 }
 
 static gboolean
@@ -1786,27 +1793,17 @@ dfu_device_write_firmware (FuDevice *device,
 {
 	DfuDevice *self = DFU_DEVICE (device);
 	DfuTargetTransferFlags transfer_flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
-	g_autoptr(DfuFirmware) dfu_firmware = NULL;
-	g_autoptr(GBytes) blob_fw = NULL;
 
 	/* open it */
-	blob_fw = fu_firmware_get_image_default_bytes (firmware, error);
-	if (blob_fw == NULL)
-		return FALSE;
 	if (!dfu_device_refresh_and_clear (self, error))
 		return FALSE;
-
 	if (flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) {
 		transfer_flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID;
 		transfer_flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID;
 	}
 
 	/* hit hardware */
-	dfu_firmware = dfu_firmware_new ();
-	if (!dfu_firmware_parse_data (dfu_firmware, blob_fw,
-				      FWUPD_INSTALL_FLAG_NONE, error))
-		return FALSE;
-	return dfu_device_download (self, dfu_firmware, transfer_flags, error);
+	return dfu_device_download (self, firmware, transfer_flags, error);
 }
 
 static gboolean
@@ -1916,6 +1913,7 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	klass_device->to_string = dfu_device_to_string;
 	klass_device->dump_firmware = dfu_device_dump_firmware;
 	klass_device->write_firmware = dfu_device_write_firmware;
+	klass_device->prepare_firmware = dfu_device_prepare_firmware;
 	klass_device->attach = dfu_device_attach;
 	klass_device->detach = dfu_device_detach;
 	klass_device->reload = dfu_device_reload;
