@@ -260,14 +260,14 @@ fu_chunk_array_new (const guint8 *data,
 		    guint32 page_sz,
 		    guint32 packet_sz)
 {
-	GPtrArray *segments = NULL;
+	GPtrArray *chunks = NULL;
 	guint32 page_old = G_MAXUINT32;
 	guint32 idx;
 	guint32 last_flush = 0;
 
 	g_return_val_if_fail (data_sz > 0, NULL);
 
-	segments = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (idx = 1; idx < data_sz; idx++) {
 		guint32 page = 0;
 		if (page_sz > 0)
@@ -279,8 +279,8 @@ fu_chunk_array_new (const guint8 *data,
 			guint32 address_offset = addr_start + last_flush;
 			if (page_sz > 0)
 				address_offset %= page_sz;
-			g_ptr_array_add (segments,
-					 fu_chunk_new (segments->len,
+			g_ptr_array_add (chunks,
+					 fu_chunk_new (chunks->len,
 						       page_old,
 						       address_offset,
 						       data_offset,
@@ -294,8 +294,8 @@ fu_chunk_array_new (const guint8 *data,
 			guint32 address_offset = addr_start + last_flush;
 			if (page_sz > 0)
 				address_offset %= page_sz;
-			g_ptr_array_add (segments,
-					 fu_chunk_new (segments->len,
+			g_ptr_array_add (chunks,
+					 fu_chunk_new (chunks->len,
 						       page,
 						       address_offset,
 						       data_offset,
@@ -312,14 +312,14 @@ fu_chunk_array_new (const guint8 *data,
 			address_offset %= page_sz;
 			page = (addr_start + (idx - 1)) / page_sz;
 		}
-		g_ptr_array_add (segments,
-				 fu_chunk_new (segments->len,
+		g_ptr_array_add (chunks,
+				 fu_chunk_new (chunks->len,
 					       page,
 					       address_offset,
 					       data_offset,
 					       data_sz - last_flush));
 	}
-	return segments;
+	return chunks;
 }
 
 /**
