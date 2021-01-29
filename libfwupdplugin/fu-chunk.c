@@ -217,8 +217,11 @@ fu_chunk_set_bytes (FuChunk *self, GBytes *bytes)
 		g_bytes_unref (self->bytes);
 		self->bytes = NULL;
 	}
-	if (bytes != NULL)
+	if (bytes != NULL) {
 		self->bytes = g_bytes_ref (bytes);
+		self->data = g_bytes_get_data (bytes, NULL);
+		self->data_sz = g_bytes_get_size (bytes);
+	}
 }
 
 /**
@@ -284,11 +287,7 @@ FuChunk *
 fu_chunk_bytes_new (GBytes *bytes)
 {
 	FuChunk *self = g_object_new (FU_TYPE_CHUNK, NULL);
-	if (bytes != NULL) {
-		self->bytes = g_bytes_ref (bytes);
-		self->data = g_bytes_get_data (bytes, NULL);
-		self->data_sz = g_bytes_get_size (bytes);
-	}
+	fu_chunk_set_bytes (self, bytes);
 	return self;
 }
 
@@ -504,6 +503,45 @@ fu_chunk_array_new_from_bytes (GBytes *blob,
 							 NULL);
 	}
 	return chunks;
+}
+
+/* private */
+gboolean
+fu_chunk_build (FuChunk *self, XbNode *n, GError **error)
+{
+	guint64 tmp;
+	g_autoptr(XbNode) data = NULL;
+
+	g_return_val_if_fail (FU_IS_CHUNK (self), FALSE);
+	g_return_val_if_fail (XB_IS_NODE (n), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* optional properties */
+	tmp = xb_node_query_text_as_uint (n, "idx", NULL);
+	if (tmp != G_MAXUINT64)
+		self->idx = tmp;
+	tmp = xb_node_query_text_as_uint (n, "page", NULL);
+	if (tmp != G_MAXUINT64)
+		self->page = tmp;
+	tmp = xb_node_query_text_as_uint (n, "addr", NULL);
+	if (tmp != G_MAXUINT64)
+		self->address = tmp;
+	data = xb_node_query_first (n, "data", NULL);
+	if (data != NULL && xb_node_get_text (data) != NULL) {
+		gsize bufsz = 0;
+		g_autofree guchar *buf = NULL;
+		g_autoptr(GBytes) blob = NULL;
+		buf = g_base64_decode (xb_node_get_text (data), &bufsz);
+		blob = g_bytes_new (buf, bufsz);
+		fu_chunk_set_bytes (self, blob);
+	} else if (data != NULL) {
+		g_autoptr(GBytes) blob = NULL;
+		blob = g_bytes_new (NULL, 0);
+		fu_chunk_set_bytes (self, blob);
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static void
