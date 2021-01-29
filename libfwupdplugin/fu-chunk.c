@@ -28,6 +28,7 @@ struct _FuChunk {
 	guint32			 address;
 	const guint8		*data;
 	guint32			 data_sz;
+	gboolean		 is_mutable;
 	GBytes			*bytes;
 };
 
@@ -168,6 +169,12 @@ guint8 *
 fu_chunk_get_data_out (FuChunk *self)
 {
 	g_return_val_if_fail (FU_IS_CHUNK (self), NULL);
+
+	/* warn, but allow to proceed */
+	if (!self->is_mutable) {
+		g_critical ("calling fu_chunk_get_data_out() from immutable chunk");
+		self->is_mutable = TRUE;
+	}
 	return (guint8 *) self->data;
 }
 
@@ -341,6 +348,43 @@ fu_chunk_array_to_string (GPtrArray *chunks)
 	if (str->len > 0)
 		g_string_truncate (str, str->len - 1);
 	return g_string_free (str, FALSE);
+}
+
+/**
+ * fu_chunk_array_mutable_new:
+ * @data: a mutable blob of memory
+ * @data_sz: size of @data_sz
+ * @addr_start: the hardware address offset, or 0
+ * @page_sz: the hardware page size, or 0
+ * @packet_sz: the transfer size, or 0
+ *
+ * Chunks a mutable blob of memory into packets, ensuring each packet does not
+ * cross a package boundary and is less that a specific transfer size.
+ *
+ * Return value: (transfer container) (element-type FuChunk): array of packets
+ *
+ * Since: 1.5.6
+ **/
+GPtrArray *
+fu_chunk_array_mutable_new (guint8 *data,
+			    guint32 data_sz,
+			    guint32 addr_start,
+			    guint32 page_sz,
+			    guint32 packet_sz)
+{
+	GPtrArray *chunks;
+
+	g_return_val_if_fail (data != NULL, NULL);
+	g_return_val_if_fail (data_sz > 0, NULL);
+
+	chunks = fu_chunk_array_new (data, data_sz, addr_start, page_sz, packet_sz);
+	if (chunks == NULL)
+		return NULL;
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index (chunks, i);
+		chk->is_mutable = TRUE;
+	}
+	return chunks;
 }
 
 /**

@@ -105,7 +105,7 @@ fu_hailuck_bl_device_dump_firmware (FuDevice *device, GError **error)
 
 	/* recieve data back */
 	fu_byte_array_set_size (fwbuf, fwsz);
-	chunks = fu_chunk_array_new (fwbuf->data, fwbuf->len, 0x0, 0x0, 2048);
+	chunks = fu_chunk_array_mutable_new (fwbuf->data, fwbuf->len, 0x0, 0x0, 2048);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_hailuck_bl_device_read_block (self,
