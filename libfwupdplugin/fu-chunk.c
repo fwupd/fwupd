@@ -44,7 +44,7 @@ G_DEFINE_TYPE (FuChunk, fu_chunk, G_TYPE_OBJECT)
 guint32
 fu_chunk_get_idx (FuChunk *self)
 {
-	g_return_val_if_fail (self != NULL, G_MAXUINT32);
+	g_return_val_if_fail (FU_IS_CHUNK (self), G_MAXUINT32);
 	return self->idx;
 }
 
@@ -61,7 +61,7 @@ fu_chunk_get_idx (FuChunk *self)
 guint32
 fu_chunk_get_page (FuChunk *self)
 {
-	g_return_val_if_fail (self != NULL, G_MAXUINT32);
+	g_return_val_if_fail (FU_IS_CHUNK (self), G_MAXUINT32);
 	return self->page;
 }
 
@@ -78,7 +78,7 @@ fu_chunk_get_page (FuChunk *self)
 guint32
 fu_chunk_get_address (FuChunk *self)
 {
-	g_return_val_if_fail (self != NULL, G_MAXUINT32);
+	g_return_val_if_fail (FU_IS_CHUNK (self), G_MAXUINT32);
 	return self->address;
 }
 
@@ -95,7 +95,7 @@ fu_chunk_get_address (FuChunk *self)
 const guint8 *
 fu_chunk_get_data (FuChunk *self)
 {
-	g_return_val_if_fail (self != NULL, NULL);
+	g_return_val_if_fail (FU_IS_CHUNK (self), NULL);
 	return self->data;
 }
 
@@ -117,7 +117,7 @@ fu_chunk_get_data (FuChunk *self)
 guint8 *
 fu_chunk_get_data_out (FuChunk *self)
 {
-	g_return_val_if_fail (self != NULL, NULL);
+	g_return_val_if_fail (FU_IS_CHUNK (self), NULL);
 	return (guint8 *) self->data;
 }
 
@@ -134,7 +134,7 @@ fu_chunk_get_data_out (FuChunk *self)
 guint32
 fu_chunk_get_data_sz (FuChunk *self)
 {
-	g_return_val_if_fail (self != NULL, G_MAXUINT32);
+	g_return_val_if_fail (FU_IS_CHUNK (self), G_MAXUINT32);
 	return self->data_sz;
 }
 
@@ -151,7 +151,7 @@ fu_chunk_get_data_sz (FuChunk *self)
 GBytes *
 fu_chunk_get_bytes (FuChunk *self)
 {
-	g_return_val_if_fail (self != NULL, NULL);
+	g_return_val_if_fail (FU_IS_CHUNK (self), NULL);
 	return g_bytes_new_static (self->data, self->data_sz);
 }
 
