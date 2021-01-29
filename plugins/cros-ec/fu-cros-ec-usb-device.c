@@ -187,18 +187,19 @@ fu_cros_ec_usb_device_probe (FuUsbDevice *device, GError **error)
 }
 
 static gboolean
-fu_cros_ec_usb_device_do_xfer (FuCrosEcUsbDevice * self, guint8 *outbuf,
+fu_cros_ec_usb_device_do_xfer (FuCrosEcUsbDevice * self, const guint8 *outbuf,
 			       gsize outlen, guint8 *inbuf, gsize inlen,
 			       gboolean allow_less, gsize *rxed_count,
 			       GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	gsize actual = 0;
+	g_autofree guint8 *outbuf_tmp = g_memdup (outbuf, outlen);
 
 	/* send data out */
 	if (outbuf != NULL && outlen > 0) {
 		if (!g_usb_device_bulk_transfer (usb_device, self->ep_num,
-						 outbuf, outlen,
+						 outbuf_tmp, outlen,
 						 &actual, BULK_SEND_TIMEOUT_MS,
 						 NULL, error)) {
 			return FALSE;
@@ -311,7 +312,7 @@ fu_cros_ec_usb_ext_cmd (FuDevice *device, guint16 subcommand,
 			return FALSE;
 	}
 
-	return fu_cros_ec_usb_device_do_xfer (self, (guint8 *)ufh, usb_msg_size,
+	return fu_cros_ec_usb_device_do_xfer (self, (const guint8 *)ufh, usb_msg_size,
 					      (guint8 *)resp,
 					      resp_size != NULL ? *resp_size : 0,
 					      TRUE, NULL, error);
@@ -328,7 +329,7 @@ fu_cros_ec_usb_device_start_request (FuDevice *device, gpointer user_data,
 
 	memset(&ufh, 0, sizeof (ufh));
 	ufh.block_size = GUINT32_TO_BE (sizeof(ufh));
-	if (!fu_cros_ec_usb_device_do_xfer (self, (guint8 *)&ufh, sizeof(ufh),
+	if (!fu_cros_ec_usb_device_do_xfer (self, (const guint8 *)&ufh, sizeof(ufh),
 					    start_resp,
 					    sizeof(START_RESP), TRUE,
 					    &rxed_size, error))
@@ -491,7 +492,7 @@ fu_cros_ec_usb_device_transfer_block (FuDevice *device, gpointer user_data,
 						self->chunk_len);
 
 	/* first send the header */
-	if (!fu_cros_ec_usb_device_do_xfer (self, (guint8 *)&block_info->ufh,
+	if (!fu_cros_ec_usb_device_do_xfer (self, (const guint8 *)&block_info->ufh,
 					    sizeof(struct update_frame_header),
 					    NULL,
 					    0, FALSE,
@@ -509,7 +510,7 @@ fu_cros_ec_usb_device_transfer_block (FuDevice *device, gpointer user_data,
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 
 		if (!fu_cros_ec_usb_device_do_xfer (self,
-						    fu_chunk_get_data_out (chk),
+						    fu_chunk_get_data (chk),
 						    fu_chunk_get_data_sz (chk),
 						    NULL,
 						    0, FALSE,
@@ -640,7 +641,7 @@ fu_cros_ec_usb_device_send_done (FuDevice *device)
 
 	/* send stop request, ignoring reply */
 	if (!fu_cros_ec_usb_device_do_xfer (FU_CROS_EC_USB_DEVICE (device),
-					    (guint8 *)&out, sizeof (out),
+					    (const guint8 *)&out, sizeof (out),
 					    (guint8 *)&out, 1,
 					    FALSE, NULL, &error_local)) {
 		g_debug ("error on transfer of done: %s",
