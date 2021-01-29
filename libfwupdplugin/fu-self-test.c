@@ -1903,6 +1903,47 @@ fu_firmware_build_func (void)
 }
 
 static void
+fu_firmware_new_from_gtypes_func (void)
+{
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FuFirmware) firmware1 = NULL;
+	g_autoptr(FuFirmware) firmware2 = NULL;
+	g_autoptr(FuFirmware) firmware3 = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+
+	fn = g_build_filename (TESTDATADIR_SRC, "firmware.dfu", NULL);
+	blob = fu_common_get_contents_bytes (fn, &error);
+	g_assert_no_error (error);
+	g_assert (blob != NULL);
+
+	/* dfu -> FuDfuFirmware */
+	firmware1 = fu_firmware_new_from_gtypes (blob, FWUPD_INSTALL_FLAG_NONE, &error,
+						 FU_TYPE_SREC_FIRMWARE,
+						 FU_TYPE_DFU_FIRMWARE,
+						 G_TYPE_INVALID);
+	g_assert_no_error (error);
+	g_assert_nonnull (firmware1);
+	g_assert_cmpstr (G_OBJECT_TYPE_NAME (firmware1), ==, "FuDfuFirmware");
+
+	/* dfu -> FuFirmware */
+	firmware2 = fu_firmware_new_from_gtypes (blob, FWUPD_INSTALL_FLAG_NONE, &error,
+						 FU_TYPE_SREC_FIRMWARE,
+						 FU_TYPE_FIRMWARE,
+						 G_TYPE_INVALID);
+	g_assert_no_error (error);
+	g_assert_nonnull (firmware2);
+	g_assert_cmpstr (G_OBJECT_TYPE_NAME (firmware2), ==, "FuFirmware");
+
+	/* dfu -> error */
+	firmware3 = fu_firmware_new_from_gtypes (blob, FWUPD_INSTALL_FLAG_NONE, &error,
+						 FU_TYPE_SREC_FIRMWARE,
+						 G_TYPE_INVALID);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null (firmware3);
+}
+
+static void
 fu_firmware_dfu_func (void)
 {
 	gboolean ret;
@@ -2375,6 +2416,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/firmware{srec-tokenization}", fu_firmware_srec_tokenization_func);
 	g_test_add_func ("/fwupd/firmware{srec}", fu_firmware_srec_func);
 	g_test_add_func ("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
+	g_test_add_func ("/fwupd/firmware{gtypes}", fu_firmware_new_from_gtypes_func);
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func ("/fwupd/device", fu_device_func);
