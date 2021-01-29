@@ -17,6 +17,7 @@
 #include "dfu-device.h"
 #include "dfu-sector.h"
 
+#include "fu-chunk.h"
 #include "fu-device-locker.h"
 
 #include "fwupd-error.h"
@@ -413,10 +414,10 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 	images = fu_firmware_get_images (FU_FIRMWARE (firmware));
 	for (guint i = 0; i < images->len; i++) {
 		DfuImage *image = g_ptr_array_index (images, i);
-		GPtrArray *elements = dfu_image_get_elements (image);
-		for (guint j = 0; j < elements->len; j++) {
-			DfuElement *element = g_ptr_array_index (elements, j);
-			GBytes *contents = dfu_element_get_contents (element);
+		GPtrArray *chunks = dfu_image_get_chunks (image);
+		for (guint j = 0; j < chunks->len; j++) {
+			FuChunk *chk = g_ptr_array_index (chunks, j);
+			g_autoptr(GBytes) contents = fu_chunk_get_bytes (chk);
 			if (contents == NULL)
 				continue;
 			cnt += dfu_tool_bytes_replace (contents, data_search, data_replace);

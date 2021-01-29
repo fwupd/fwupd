@@ -9,8 +9,8 @@
 #include <string.h>
 
 #include "fu-common.h"
+#include "fu-chunk.h"
 
-#include "dfu-element.h"
 #include "dfu-format-dfuse.h"
 #include "dfu-image.h"
 
@@ -31,15 +31,15 @@ typedef struct __attribute__((packed)) {
  *
  * Unpacks an element from DfuSe data.
  *
- * Returns: a #DfuElement, or %NULL for error
+ * Returns: a #FuChunk, or %NULL for error
  **/
-static DfuElement *
+static FuChunk *
 dfu_element_from_dfuse (const guint8 *data,
 			guint32 length,
 			guint32 *consumed,
 			GError **error)
 {
-	DfuElement *element = NULL;
+	FuChunk *chk = NULL;
 	DfuSeElementPrefix *el = (DfuSeElementPrefix *) data;
 	guint32 size;
 	g_autoptr(GBytes) contents = NULL;
@@ -68,39 +68,39 @@ dfu_element_from_dfuse (const guint8 *data,
 		return NULL;
 	}
 
-	/* create new element */
-	element = dfu_element_new ();
-	dfu_element_set_address (element, GUINT32_FROM_LE (el->address));
+	/* create new chk */
 	contents = g_bytes_new (data + sizeof(DfuSeElementPrefix), size);
-	dfu_element_set_contents (element, contents);
+	chk = fu_chunk_bytes_new (contents);
+	fu_chunk_set_address (chk, GUINT32_FROM_LE (el->address));
 
 	/* return size */
 	if (consumed != NULL)
 		*consumed = (guint32) sizeof(DfuSeElementPrefix) + size;
 
-	return element;
+	return chk;
 }
 
 /**
  * dfu_element_to_dfuse: (skip)
- * @element: a #DfuElement
+ * @chk: a #FuChunk
  *
  * Packs a DfuSe element.
  *
  * Returns: (transfer full): the packed data
  **/
 static GBytes *
-dfu_element_to_dfuse (DfuElement *element)
+dfu_element_to_dfuse (FuChunk *chk)
 {
 	DfuSeElementPrefix *el;
 	const guint8 *data;
 	gsize length;
 	guint8 *buf;
 
-	data = g_bytes_get_data (dfu_element_get_contents (element), &length);
+	data = fu_chunk_get_data (chk);
+	length = fu_chunk_get_data_sz (chk);
 	buf = g_malloc0 (length + sizeof (DfuSeElementPrefix));
 	el = (DfuSeElementPrefix *) buf;
-	el->address = GUINT32_TO_LE (dfu_element_get_address (element));
+	el->address = GUINT32_TO_LE (fu_chunk_get_address (chk));
 	el->size = GUINT32_TO_LE (length);
 
 	memcpy (buf + sizeof (DfuSeElementPrefix), data, length);
@@ -114,7 +114,7 @@ typedef struct __attribute__((packed)) {
 	guint32		 target_named;
 	gchar		 target_name[255];
 	guint32		 target_size;
-	guint32		 elements;
+	guint32		 chunks;
 } DfuSeImagePrefix;
 
 /**
@@ -135,7 +135,7 @@ dfu_image_from_dfuse (const guint8 *data,
 		      GError **error)
 {
 	DfuSeImagePrefix *im;
-	guint32 elements;
+	guint32 chunks;
 	guint32 offset = sizeof(DfuSeImagePrefix);
 	g_autoptr(DfuImage) image = NULL;
 
@@ -167,17 +167,17 @@ dfu_image_from_dfuse (const guint8 *data,
 	if (GUINT32_FROM_LE (im->target_named) == 0x01)
 		dfu_image_set_name (image, im->target_name);
 
-	/* parse elements */
+	/* parse chunks */
 	length -= offset;
-	elements = GUINT32_FROM_LE (im->elements);
-	for (guint j = 0; j < elements; j++) {
+	chunks = GUINT32_FROM_LE (im->chunks);
+	for (guint j = 0; j < chunks; j++) {
 		guint32 consumed_local;
-		g_autoptr(DfuElement) element = NULL;
-		element = dfu_element_from_dfuse (data + offset, length,
+		g_autoptr(FuChunk) chk = NULL;
+		chk = dfu_element_from_dfuse (data + offset, length,
 						  &consumed_local, error);
-		if (element == NULL)
+		if (chk == NULL)
 			return NULL;
-		dfu_image_add_element (image, element);
+		dfu_image_add_chunk (image, chk);
 		offset += consumed_local;
 		length -= consumed_local;
 	}
@@ -201,7 +201,7 @@ static GBytes *
 dfu_image_to_dfuse (DfuImage *image)
 {
 	DfuSeImagePrefix *im;
-	GPtrArray *elements;
+	GPtrArray *chunks;
 	guint32 length_total = 0;
 	guint32 offset = sizeof (DfuSeImagePrefix);
 	guint8 *buf;
@@ -209,10 +209,10 @@ dfu_image_to_dfuse (DfuImage *image)
 
 	/* get total size */
 	element_array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
-	elements = dfu_image_get_elements (image);
-	for (guint i = 0; i < elements->len; i++) {
-		DfuElement *element = g_ptr_array_index (elements, i);
-		GBytes *bytes = dfu_element_to_dfuse (element);
+	chunks = dfu_image_get_chunks (image);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index (chunks, i);
+		GBytes *bytes = dfu_element_to_dfuse (chk);
 		g_ptr_array_add (element_array, bytes);
 		length_total += (guint32) g_bytes_get_size (bytes);
 	}
@@ -227,7 +227,7 @@ dfu_image_to_dfuse (DfuImage *image)
 		memcpy (im->target_name, dfu_image_get_name (image), 255);
 	}
 	im->target_size = GUINT32_TO_LE (length_total);
-	im->elements = GUINT32_TO_LE (elements->len);
+	im->chunks = GUINT32_TO_LE (chunks->len);
 
 	/* copy data */
 	for (guint i = 0; i < element_array->len; i++) {

@@ -11,7 +11,7 @@
  * A #DfuImage is typically made up of several #DfuElements, although
  * typically there will only be one.
  *
- * See also: #DfuElement
+ * See also: #FuChunk
  */
 
 #include "config.h"
@@ -22,13 +22,12 @@
 #include "fu-common.h"
 
 #include "dfu-common.h"
-#include "dfu-element.h"
 #include "dfu-image.h"
 
 static void dfu_image_finalize			 (GObject *object);
 
 typedef struct {
-	GPtrArray		*elements;
+	GPtrArray		*chunks;
 	gchar			 name[255];
 } DfuImagePrivate;
 
@@ -39,7 +38,7 @@ static void
 dfu_image_init (DfuImage *image)
 {
 	DfuImagePrivate *priv = GET_PRIVATE (image);
-	priv->elements = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	priv->chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	memset (priv->name, 0x00, 255);
 }
 
@@ -49,7 +48,7 @@ dfu_image_finalize (GObject *object)
 	DfuImage *image = DFU_IMAGE (object);
 	DfuImagePrivate *priv = GET_PRIVATE (image);
 
-	g_ptr_array_unref (priv->elements);
+	g_ptr_array_unref (priv->chunks);
 
 	G_OBJECT_CLASS (dfu_image_parent_class)->finalize (object);
 }
@@ -70,56 +69,56 @@ dfu_image_new (void)
 }
 
 /**
- * dfu_image_get_elements:
+ * dfu_image_get_chunks:
  * @image: a #DfuImage
  *
  * Gets the element data.
  *
- * Return value: (transfer none) (element-type DfuElement): element data
+ * Return value: (transfer none) (element-type FuChunk): chunk data
  **/
 GPtrArray *
-dfu_image_get_elements (DfuImage *image)
+dfu_image_get_chunks (DfuImage *image)
 {
 	DfuImagePrivate *priv = GET_PRIVATE (image);
 	g_return_val_if_fail (DFU_IS_IMAGE (image), NULL);
-	return priv->elements;
+	return priv->chunks;
 }
 
 /**
- * dfu_image_get_element:
+ * dfu_image_get_chunk_by_idx:
  * @image: a #DfuImage
  * @idx: an array index
  *
  * Gets the element.
  *
- * Return value: (transfer none): element data, or %NULL for invalid
+ * Return value: (transfer none): chunk data, or %NULL for invalid
  **/
-DfuElement *
-dfu_image_get_element (DfuImage *image, guint8 idx)
+FuChunk *
+dfu_image_get_chunk_by_idx (DfuImage *image, guint8 idx)
 {
 	DfuImagePrivate *priv = GET_PRIVATE (image);
 	g_return_val_if_fail (DFU_IS_IMAGE (image), NULL);
-	if (idx >= priv->elements->len)
+	if (idx >= priv->chunks->len)
 		return NULL;
-	return g_ptr_array_index (priv->elements, idx);
+	return g_ptr_array_index (priv->chunks, idx);
 }
 
 /**
- * dfu_image_get_element_default:
+ * dfu_image_get_chunk_default:
  * @image: a #DfuImage
  *
  * Gets the default element.
  *
- * Return value: (transfer none): element data, or %NULL for invalid
+ * Return value: (transfer none): chunk data, or %NULL for invalid
  **/
-DfuElement *
-dfu_image_get_element_default (DfuImage *image)
+FuChunk *
+dfu_image_get_chunk_default (DfuImage *image)
 {
 	DfuImagePrivate *priv = GET_PRIVATE (image);
 	g_return_val_if_fail (DFU_IS_IMAGE (image), NULL);
-	if (priv->elements->len == 0)
+	if (priv->chunks->len == 0)
 		return NULL;
-	return g_ptr_array_index (priv->elements, 0);
+	return g_ptr_array_index (priv->chunks, 0);
 }
 
 /**
@@ -157,12 +156,12 @@ dfu_image_get_name (DfuImage *image)
  * dfu_image_get_size:
  * @image: a #DfuImage
  *
- * Gets the size of all the elements in the image.
+ * Gets the size of all the chunks in the image.
  *
  * This only returns actual data that would be sent to the device and
  * does not include any padding.
  *
- * Return value: a integer value, or 0 if there are no elements.
+ * Return value: a integer value, or 0 if there are no chunks.
  **/
 guint32
 dfu_image_get_size (DfuImage *image)
@@ -170,27 +169,27 @@ dfu_image_get_size (DfuImage *image)
 	DfuImagePrivate *priv = GET_PRIVATE (image);
 	guint32 length = 0;
 	g_return_val_if_fail (DFU_IS_IMAGE (image), 0);
-	for (guint i = 0; i < priv->elements->len; i++) {
-		DfuElement *element = g_ptr_array_index (priv->elements, i);
-		length += (guint32) g_bytes_get_size (dfu_element_get_contents (element));
+	for (guint i = 0; i < priv->chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index (priv->chunks, i);
+		length += fu_chunk_get_data_sz (chk);
 	}
 	return length;
 }
 
 /**
- * dfu_image_add_element:
+ * dfu_image_add_chunk:
  * @image: a #DfuImage
- * @element: a #DfuElement
+ * @chk: a #FuChunk
  *
  * Adds an element to the image.
  **/
 void
-dfu_image_add_element (DfuImage *image, DfuElement *element)
+dfu_image_add_chunk (DfuImage *image, FuChunk *chk)
 {
 	DfuImagePrivate *priv = GET_PRIVATE (image);
 	g_return_if_fail (DFU_IS_IMAGE (image));
-	g_return_if_fail (DFU_IS_ELEMENT (element));
-	g_ptr_array_add (priv->elements, g_object_ref (element));
+	g_return_if_fail (FU_IS_CHUNK (chk));
+	g_ptr_array_add (priv->chunks, g_object_ref (chk));
 }
 
 /**
@@ -239,13 +238,13 @@ dfu_image_to_string (FuFirmwareImage *self, guint idt, GString *str)
 	DfuImagePrivate *priv = GET_PRIVATE (image);
 	if (priv->name[0] != '\0')
 		fu_common_string_append_kv (str, idt, "Name", priv->name);
-	fu_common_string_append_ku (str, idt, "Elements", priv->elements->len);
+	fu_common_string_append_ku (str, idt, "Elements", priv->chunks->len);
 
-	/* add elements */
-	for (guint i = 0; i < priv->elements->len; i++) {
-		DfuElement *element = g_ptr_array_index (priv->elements, i);
+	/* add chunks */
+	for (guint i = 0; i < priv->chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index (priv->chunks, i);
 		g_autofree gchar *tmp = NULL;
-		tmp = dfu_element_to_string (element);
+		tmp = fu_chunk_to_string (chk);
 		g_string_append_printf (str, "== ELEMENT %u ==\n", i);
 		g_string_append_printf (str, "%s\n", tmp);
 	}

@@ -14,6 +14,8 @@
 #include "dfu-image.h"
 #include "dfu-sector.h"
 
+#include "fu-chunk.h"
+
 #include "fwupd-enums.h"
 
 #define DFU_TYPE_TARGET (dfu_target_get_type ())
@@ -54,13 +56,13 @@ struct _DfuTargetClass
 							 GError		**error);
 	gboolean		 (*mass_erase)		(DfuTarget	*target,
 							 GError		**error);
-	DfuElement		*(*upload_element)	(DfuTarget	*target,
+	FuChunk			*(*upload_element)	(DfuTarget	*target,
 							 guint32	 address,
 							 gsize		 expected_size,
 							 gsize		 maximum_size,
 							 GError		**error);
 	gboolean		 (*download_element)	(DfuTarget	*target,
-							 DfuElement	*element,
+							 FuChunk	*chk,
 							 DfuTargetTransferFlags flags,
 							 GError		**error);
 };
