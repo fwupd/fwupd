@@ -6388,7 +6388,8 @@ fu_engine_update_history_database (FuEngine *self, GError **error)
 		g_autoptr(GError) error_local = NULL;
 
 		/* not in the required state */
-		if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+		if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_NEEDS_REBOOT &&
+		    fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_PENDING)
 			continue;
 
 		/* try to save the new update-state, but ignoring any error */
