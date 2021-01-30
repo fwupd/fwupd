@@ -85,7 +85,6 @@ fu_system76_launch_device_detach (FuDevice *device, GError **error)
 	const guint8 ep_out = 0x03;
 	guint8 data[32] = { 0 };
 	gsize actual_len = 0;
-	g_autofree gchar *version = NULL;
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 
