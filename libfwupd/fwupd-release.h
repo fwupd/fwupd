@@ -41,7 +41,7 @@ void		 fwupd_release_set_uri			(FwupdRelease	*release,
 							 const gchar	*uri);
 GPtrArray	*fwupd_release_get_locations		(FwupdRelease	*release);
 void		 fwupd_release_add_location		(FwupdRelease	*release,
-							 const gchar	*uri);
+							 const gchar	*location);
 GPtrArray	*fwupd_release_get_issues		(FwupdRelease	*release);
 void		 fwupd_release_add_issue		(FwupdRelease	*release,
 							 const gchar	*issue);
