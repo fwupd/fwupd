@@ -33,17 +33,6 @@ typedef struct {
 } DfuToolPrivate;
 
 static void
-dfu_tool_print_indent (const gchar *title, const gchar *message, guint indent)
-{
-	for (gsize i = 0; i < indent; i++)
-		g_print (" ");
-	g_print ("%s:", title);
-	for (gsize i = strlen (title) + indent; i < 15; i++)
-		g_print (" ");
-	g_print ("%s\n", message);
-}
-
-static void
 dfu_tool_private_free (DfuToolPrivate *priv)
 {
 	if (priv == NULL)
@@ -648,112 +637,6 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
-static gchar *
-dfu_tool_get_device_string (DfuToolPrivate *priv, DfuDevice *device)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	g_autoptr(FuDeviceLocker) locker  = NULL;
-
-	/* open if required, and get status */
-	if (usb_device == NULL) {
-		return g_strdup_printf ("%04x:%04x [%s]",
-					dfu_device_get_runtime_vid (device),
-					dfu_device_get_runtime_pid (device),
-					"removed");
-	}
-	if (!fu_usb_device_is_open (FU_USB_DEVICE (device))) {
-		g_autoptr(GError) error = NULL;
-		locker = fu_device_locker_new (device, &error);
-		if (locker == NULL) {
-			return g_strdup_printf ("%04x:%04x [%s]",
-						fu_usb_device_get_vid (FU_USB_DEVICE (device)),
-						fu_usb_device_get_pid (FU_USB_DEVICE (device)),
-						error->message);
-		}
-		if (!dfu_device_refresh (device, &error))
-			return NULL;
-	}
-	return g_strdup_printf ("%04x:%04x [%s:%s]",
-				fu_usb_device_get_vid (FU_USB_DEVICE (device)),
-				fu_usb_device_get_pid (FU_USB_DEVICE (device)),
-				dfu_state_to_string (dfu_device_get_state (device)),
-				dfu_status_to_string (dfu_device_get_status (device)));
-}
-
-static void
-dfu_tool_device_added_cb (GUsbContext *context,
-			  DfuDevice *device,
-			  gpointer user_data)
-{
-	DfuToolPrivate *priv = (DfuToolPrivate *) user_data;
-	g_autofree gchar *tmp = dfu_tool_get_device_string (priv, device);
-	/* TRANSLATORS: this is when a device is hotplugged */
-	dfu_tool_print_indent (_("Added"), tmp, 0);
-}
-
-static void
-dfu_tool_device_removed_cb (GUsbContext *context,
-			    DfuDevice *device,
-			    gpointer user_data)
-{
-	DfuToolPrivate *priv = (DfuToolPrivate *) user_data;
-	g_autofree gchar *tmp = dfu_tool_get_device_string (priv, device);
-	/* TRANSLATORS: this is when a device is hotplugged */
-	dfu_tool_print_indent (_("Removed"), tmp, 0);
-}
-
-static void
-dfu_tool_device_changed_cb (GUsbContext *context, DfuDevice *device, gpointer user_data)
-{
-	DfuToolPrivate *priv = (DfuToolPrivate *) user_data;
-	g_autofree gchar *tmp = dfu_tool_get_device_string (priv, device);
-	/* TRANSLATORS: this is when a device is hotplugged */
-	dfu_tool_print_indent (_("Changed"), tmp, 0);
-}
-
-static void
-dfu_tool_watch_cancelled_cb (GCancellable *cancellable, gpointer user_data)
-{
-	GMainLoop *loop = (GMainLoop *) user_data;
-	/* TRANSLATORS: this is when a device ctrl+c's a watch */
-	g_print ("%s\n", _("Cancelled"));
-	g_main_loop_quit (loop);
-}
-
-static gboolean
-dfu_tool_watch (DfuToolPrivate *priv, gchar **values, GError **error)
-{
-	g_autoptr(GUsbContext) usb_context = NULL;
-	g_autoptr(GMainLoop) loop = NULL;
-	g_autoptr(GPtrArray) devices = NULL;
-
-	/* get all the DFU devices */
-	usb_context = g_usb_context_new (error);
-	if (usb_context == NULL)
-		return FALSE;
-	g_usb_context_enumerate (usb_context);
-
-	/* print what's already attached */
-	devices = g_usb_context_get_devices (usb_context);
-	for (guint i = 0; i < devices->len; i++) {
-		DfuDevice *device = g_ptr_array_index (devices, i);
-		dfu_tool_device_added_cb (usb_context, device, priv);
-	}
-
-	/* watch for any hotplugged device */
-	loop = g_main_loop_new (NULL, FALSE);
-	g_signal_connect (usb_context, "device-added",
-			  G_CALLBACK (dfu_tool_device_added_cb), priv);
-	g_signal_connect (usb_context, "device-removed",
-			  G_CALLBACK (dfu_tool_device_removed_cb), priv);
-	g_signal_connect (usb_context, "device-changed",
-			  G_CALLBACK (dfu_tool_device_changed_cb), priv);
-	g_signal_connect (priv->cancellable, "cancelled",
-			  G_CALLBACK (dfu_tool_watch_cancelled_cb), loop);
-	g_main_loop_run (loop);
-	return TRUE;
-}
-
 static gboolean
 dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 {
@@ -1019,12 +902,6 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Write firmware from file into one partition"),
 		     dfu_tool_write_alt);
-	dfu_tool_add (priv->cmd_array,
-		     "watch",
-		     NULL,
-		     /* TRANSLATORS: command description */
-		     _("Watch DFU devices being hotplugged"),
-		     dfu_tool_watch);
 	dfu_tool_add (priv->cmd_array,
 		     "replace-data",
 		     NULL,
