@@ -1241,7 +1241,6 @@ test_update_wd19 (ThunderboltTest *tt, gconstpointer user_data)
 	const gchar *version_before;
 	const gchar *version_after;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(UpdateContext) up_ctx = NULL;
 
 	/* test sanity check */
 	g_assert_nonnull (tree);
