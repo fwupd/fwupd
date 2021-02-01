@@ -10,7 +10,11 @@ import sys
 import tempfile
 import gi
 
-gi.require_version('Fwupd', '2.0')
+try:
+    gi.require_version('Fwupd', '2.0')
+except ValueError:
+    print("Missing gobject-introspection packages.  Try to install gir1.2-fwupd-2.0.")
+    sys.exit(1)
 from gi.repository import Fwupd  # pylint: disable=wrong-import-position
 from simple_client import install, check_exists
 from add_capsule_header import add_header
