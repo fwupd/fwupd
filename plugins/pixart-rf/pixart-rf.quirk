@@ -3,6 +3,5 @@
 Plugin = pixart_rf
 
 # Primax Devcie
-[DeviceInstanceId=HIDRAW\VEN_0461&PID_4EEE]
-[DeviceInstanceId=HIDRAW\VEN_0461&PID_4EEF]
+[DeviceInstanceId=HIDRAW\VEN_0461]
 Plugin = pixart_rf
