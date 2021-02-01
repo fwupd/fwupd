@@ -1,3 +1,8 @@
-# pxi-hid
+# Pixart Devcie
 [DeviceInstanceId=HIDRAW\VEN_093A]
+Plugin = pixart_rf
+
+# Primax Devcie
+[DeviceInstanceId=HIDRAW\VEN_0461&PID_4EEE]
+[DeviceInstanceId=HIDRAW\VEN_0461&PID_4EEF]
 Plugin = pixart_rf
