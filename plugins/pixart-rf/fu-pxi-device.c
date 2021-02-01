@@ -622,7 +622,7 @@ fu_pxi_device_setup (FuDevice *device, GError **error)
 	if (!fu_pxi_device_fw_get_info (self, error))
 		return FALSE;
 
-	devid = g_strdup_printf ("HIDRAW\\VID_%04hX&PID_%04hX&DEV_%s",
+	devid = g_strdup_printf ("HIDRAW\\VID_%04hX&PID_%04hX&BLE_DEV_%s",
 				self->hid_raw_info.vendor,
 				self->hid_raw_info.product,
 				fu_device_get_name (device));
