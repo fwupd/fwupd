@@ -36,5 +36,4 @@ The vendor ID is set from the USB vendor, in this instance set to `USB:0x093A`
 
 External interface access
 -------------------------
-This plugin requires ioctl `HIDIOCSFEATURE` access.
-This plugin requires ioctl `HIDIOCGFEATURE` access.
+This plugin requires ioctl `HIDIOCSFEATURE` and `HIDIOCGFEATURE` access.
