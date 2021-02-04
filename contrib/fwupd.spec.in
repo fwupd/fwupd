@@ -182,6 +182,11 @@ Data files for installed tests.
 %if 0%{?have_uefi}
     -Dplugin_uefi=true \
     -Dplugin_nvme=true \
+    -Defi_os_dir="fedora" \
+    -Defi_sbat_distro_summary="The Fedora Project" \
+    -Defi_sbat_distro_pkgname="%{name}" \
+    -Defi_sbat_distro_version="%{version}" \
+    -Defi_sbat_distro_url="https://src.fedoraproject.org/rpms/%{name}" \
     -Dtpm=true \
 %else
     -Dplugin_uefi=false \
