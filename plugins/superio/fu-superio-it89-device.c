@@ -412,7 +412,9 @@ fu_plugin_superio_fix_signature (FuSuperioDevice *self, GBytes *fw, GError **err
 	}
 
 	/* fix signature to match SMT version */
-	buf2 = g_memdup (buf, sz);
+	buf2 = fu_memdup_safe (buf, sz, error);
+	if (buf2 == NULL)
+		return NULL;
 	buf2[signature_offset] = 0x7f;
 	return g_bytes_new_take (g_steal_pointer (&buf2), sz);
 }

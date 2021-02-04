@@ -748,6 +748,7 @@ LIBFWUPDPLUGIN_1.5.6 {
     fu_firmware_new_from_gtypes;
     fu_hwids_add_smbios_override;
     fu_hwids_get_keys;
+    fu_memdup_safe;
     fu_plugin_get_devices;
   local: *;
 } LIBFWUPDPLUGIN_1.5.5;

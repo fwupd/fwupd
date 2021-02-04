@@ -219,8 +219,11 @@ fu_hailuck_bl_device_write_firmware (FuDevice *device,
 
 	/* intentionally corrupt first chunk so that CRC fails */
 	chk0 = g_ptr_array_index (chunks, 0);
-	chk0_data = g_memdup (fu_chunk_get_data (chk0),
-			      fu_chunk_get_data_sz (chk0));
+	chk0_data = fu_memdup_safe (fu_chunk_get_data (chk0),
+				    fu_chunk_get_data_sz (chk0),
+				    error);
+	if (chk0_data == NULL)
+		return FALSE;
 	chk0_data[0] = 0x00;
 	if (!fu_hailuck_bl_device_write_block (self,
 					       chk0_data,

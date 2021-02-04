@@ -90,7 +90,12 @@ fu_fastboot_device_write (FuDevice *device, const guint8 *buf, gsize buflen, GEr
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	gboolean ret;
 	gsize actual_len = 0;
-	g_autofree guint8 *buf2 = g_memdup (buf, (guint) buflen);
+	g_autofree guint8 *buf2 = NULL;
+
+	/* make mutable */
+	buf2 = fu_memdup_safe (buf, buflen, error);
+	if (buf2 == NULL)
+		return FALSE;
 
 	fu_fastboot_buffer_dump ("writing", buf, buflen);
 	ret = g_usb_device_bulk_transfer (usb_device,

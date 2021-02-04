@@ -2020,6 +2020,48 @@ fu_memcpy_safe (guint8 *dst, gsize dst_sz, gsize dst_offset,
 }
 
 /**
+ * fu_memdup_safe:
+ * @src: source buffer
+ * @n: number of bytes to copy from @src
+ * @error: A #GError or %NULL
+ *
+ * Duplicates some memory using memdup in a safe way.
+ *
+ * You don't need to use this function in "obviously correct" cases, nor should
+ * you use it when performance is a concern. Only us it when you're not sure if
+ * malicious data from a device or firmware could cause memory corruption.
+ *
+ * NOTE: This function intentionally limits allocation size to 1GB.
+ *
+ * Return value: (transfer full): block of allocated memory, or %NULL for an error.
+ *
+ * Since: 1.5.6
+ **/
+guint8 *
+fu_memdup_safe (const guint8 *src, gsize n, GError **error)
+{
+	g_autofree guint8 *dst = NULL;
+
+	/* sanity check */
+	if (n > 0x40000000) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "cannot allocate %uGB of memory",
+			     (guint) (n / 0x40000000));
+		return NULL;
+	}
+
+	/* linear block of memory */
+	dst = g_malloc (n);
+	if (!fu_memcpy_safe (dst, n, 0x0,	/* dst */
+			     src, n, 0x0,	/* src */
+			     n, error))
+		return NULL;
+	return g_steal_pointer (&dst);
+}
+
+/**
  * fu_common_read_uint8_safe:
  * @buf: source buffer
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`
