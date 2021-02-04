@@ -72,7 +72,7 @@ def find_uefi_device(client, deviceid):
         if not item.has_flag(1 << 8):
             continue
         # return the first hit for UEFI plugin
-        if item.get_plugin() == 'uefi':
+        if item.get_plugin() == 'uefi' or item.get_plugin() == 'uefi-capsule':
             print("Installing to %s" % item.get_name())
             return item.get_guid_default(), item.get_id(), item.get_version()
     print("Couldn't find any UEFI devices")
