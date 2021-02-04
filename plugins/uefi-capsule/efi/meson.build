@@ -154,6 +154,11 @@ so = custom_target('fwup.so',
                              efi_ldflags + ['@INPUT@'] +
                              ['-lefi', '-lgnuefi', libgcc_file_name])
 
+# sanity check the packager set this to *SOMETHING*
+if get_option('efi_os_dir') == '' and get_option('supported_build')
+    error('-Defi_os_dir is unset, see plugins/uefi-capsule/README.md')
+endif
+
 app = custom_target(efi_name,
                     input : so,
                     output : efi_name,
@@ -162,6 +167,16 @@ app = custom_target(efi_name,
                       '@INPUT@', '@OUTPUT@',
                       '--arch', gnu_efi_arch,
                       '--objcopy', efi_objcopy,
+                      '--project-name', meson.project_name(),
+                      '--project-version', meson.project_version(),
+                      '--sbat-version', '1',
+                      '--sbat-generation', '@0@'.format(get_option('efi_sbat_fwupd_generation')),
+                      '--sbat-distro-id', get_option('efi_os_dir'),
+                      '--sbat-distro-generation', '0',
+                      '--sbat-distro-summary', get_option('efi_sbat_distro_summary'),
+                      '--sbat-distro-pkgname', get_option('efi_sbat_distro_pkgname'),
+                      '--sbat-distro-version', get_option('efi_sbat_distro_version'),
+                      '--sbat-distro-url', get_option('efi_sbat_distro_url'),
                     ],
                     install : true,
                     install_dir : efi_app_location)
