@@ -194,7 +194,12 @@ fu_cros_ec_usb_device_do_xfer (FuCrosEcUsbDevice * self, const guint8 *outbuf,
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	gsize actual = 0;
-	g_autofree guint8 *outbuf_tmp = g_memdup (outbuf, outlen);
+	g_autofree guint8 *outbuf_tmp = NULL;
+
+	/* make mutable */
+	outbuf_tmp = fu_memdup_safe (outbuf, outlen, error);
+	if (outbuf_tmp == NULL)
+		return FALSE;
 
 	/* send data out */
 	if (outbuf != NULL && outlen > 0) {

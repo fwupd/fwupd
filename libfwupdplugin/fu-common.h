@@ -191,6 +191,10 @@ GBytes		*fu_common_bytes_new_offset	(GBytes		*bytes,
 						 GError		**error)
 						 G_GNUC_WARN_UNUSED_RESULT;
 gsize		 fu_common_strwidth		(const gchar	*text);
+guint8		*fu_memdup_safe			(const guint8	*src,
+						 gsize		 n,
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_memcpy_safe			(guint8		*dst,
 						 gsize		 dst_sz,
 						 gsize		 dst_offset,
