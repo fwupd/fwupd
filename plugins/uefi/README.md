@@ -11,6 +11,21 @@ With the UpdateCapsule boot service it can be used to update system firmware.
 If you don't want or need this functionality you can use the
 `-Dplugin_uefi=false` option.
 
+UEFI SBAT Support
+-----------------
+
+If compiling with `-Dsupported_build=true` the packager must also specify the
+SBAT metadata required for the secure boot revocation support. See the
+specification for more information: https://github.com/rhboot/shim/blob/sbat/SBAT.md
+
+Typically, this will be set as part of the package build script, e.g.
+
+    -Defi_os_dir="fedora" \
+    -Defi_sbat_distro_summary="The Fedora Project" \
+    -Defi_sbat_distro_pkgname="%{name}" \
+    -Defi_sbat_distro_version="%{version}" \
+    -Defi_sbat_distro_url="https://src.fedoraproject.org/rpms/%{name}" \
+
 Firmware Format
 ---------------
 
