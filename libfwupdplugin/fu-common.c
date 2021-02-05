@@ -2040,8 +2040,6 @@ fu_memcpy_safe (guint8 *dst, gsize dst_sz, gsize dst_offset,
 guint8 *
 fu_memdup_safe (const guint8 *src, gsize n, GError **error)
 {
-	g_autofree guint8 *dst = NULL;
-
 	/* sanity check */
 	if (n > 0x40000000) {
 		g_set_error (error,
@@ -2052,13 +2050,12 @@ fu_memdup_safe (const guint8 *src, gsize n, GError **error)
 		return NULL;
 	}
 
+#if GLIB_CHECK_VERSION(2,67,3)
 	/* linear block of memory */
-	dst = g_malloc (n);
-	if (!fu_memcpy_safe (dst, n, 0x0,	/* dst */
-			     src, n, 0x0,	/* src */
-			     n, error))
-		return NULL;
-	return g_steal_pointer (&dst);
+	return g_memdup2 (src, n);
+#else
+	return g_memdup (src, (guint) n);
+#endif
 }
 
 /**
