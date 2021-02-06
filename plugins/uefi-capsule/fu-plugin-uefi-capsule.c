@@ -644,7 +644,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	nvram_total = fu_efivar_space_used (error);
 	if (nvram_total == G_MAXUINT64)
 		return FALSE;
-	nvram_total_str = g_format_size_full (nvram_total, G_FORMAT_SIZE_LONG_FORMAT);
+	nvram_total_str = g_strdup_printf ("%" G_GUINT64_FORMAT, nvram_total);
 	fu_plugin_add_report_metadata (plugin, "EfivarNvramUsed", nvram_total_str);
 
 	/* override the default ESP path */
