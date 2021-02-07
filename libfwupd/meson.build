@@ -50,11 +50,6 @@ libfwupd_src = [
   'fwupd-remote.c',
 ]
 
-# force the meson link detection logic to choose the C++ linker
-if get_option('link_language') == 'cpp'
-  libfwupd_src += 'fwupd-fuzz.cpp'
-endif
-
 fwupd_mapfile = 'fwupd.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupd_mapfile)
 fwupd = library(

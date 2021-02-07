@@ -43,4 +43,3 @@ option('efi-libdir', type : 'string', description : 'path to the EFI lib directo
 option('efi-ldsdir', type : 'string', description : 'path to the EFI lds directory')
 option('efi-includedir', type : 'string', value : '/usr/include/efi', description : 'path to the EFI header directory')
 option('efi_os_dir', type: 'string', description : 'the name of OS directory in ESP')
-option('link_language', type : 'string', value : 'c', description : 'the linker to use for targets [c, cpp]')

@@ -111,12 +111,6 @@ warning_flags = [
 cc = meson.get_compiler('c')
 add_project_arguments(cc.get_supported_arguments(warning_flags), language : 'c')
 
-# oss-fuzz requires linking with CXX...
-link_language = get_option('link_language')
-if link_language != 'c'
-  add_languages(link_language)
-endif
-
 # use honggfuzz for parallel persistent fuzzing
 honggfuzz = find_program('honggfuzz', required: false)
 if cc.has_function('HF_ITER')
