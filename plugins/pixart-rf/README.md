@@ -20,7 +20,7 @@ This plugin supports the following protocol ID:
 GUID Generation
 ---------------
 
-These devices use the standard USB DeviceInstanceId values for 	Pixart Imaging, Inc, e.g.
+These devices use the standard USB DeviceInstanceId values for Pixart Imaging, Inc, e.g.
 
  * `HIDRAW\VEN_093A`
  
