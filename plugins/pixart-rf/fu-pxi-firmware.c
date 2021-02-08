@@ -48,7 +48,7 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 		return FALSE;
 	}
 	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL) {
-		fu_common_dump_raw (G_LOG_DOMAIN, "fw_header header",
+		fu_common_dump_raw (G_LOG_DOMAIN, "fw header",
 				    fw_header, 32);
 	}
 
