@@ -65,7 +65,7 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 			guint cmdlen = strlen (lines[i]);
 
 			/* header info record */
-			if (memcmp (lines[i] + 2, "COM", 3) == 0) {
+			if (cmdlen > 3 && memcmp (lines[i] + 2, "COM", 3) == 0) {
 				guint8 header_image_cnt = 0;
 				if (cmdlen != 40) {
 					g_set_error (error,
