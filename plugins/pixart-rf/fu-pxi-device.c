@@ -70,7 +70,6 @@ struct _FuPxiDevice {
 	guint16		 mtu_size;
 	guint16		 prn_threshold;
 	guint8		 spec_check_result;
-	struct hidraw_devinfo	hid_raw_info;
 };
 
 G_DEFINE_TYPE (FuPxiDevice, fu_pxi_device, FU_TYPE_UDEV_DEVICE)
@@ -617,7 +616,8 @@ fu_pxi_device_setup (FuDevice *device, GError **error)
 {
 	FuPxiDevice *self = FU_PXI_DEVICE (device);
 	g_autofree gchar *devid = NULL;
-	if (!fu_pxi_device_get_raw_info (self, &self->hid_raw_info ,error))
+	struct hidraw_devinfo	hid_raw_info;
+	if (!fu_pxi_device_get_raw_info (self, &hid_raw_info ,error))
 		return FALSE;
 	if (!fu_pxi_device_fw_ota_init (self, error))
 		return FALSE;
@@ -625,8 +625,8 @@ fu_pxi_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 
 	devid = g_strdup_printf ("HIDRAW\\VID_%04hX&PID_%04hX&BLE_DEV_%s",
-				self->hid_raw_info.vendor,
-				self->hid_raw_info.product,
+				hid_raw_info.vendor,
+				hid_raw_info.product,
 				fu_device_get_name (device));
 
 	fu_device_add_instance_id (device, devid);
