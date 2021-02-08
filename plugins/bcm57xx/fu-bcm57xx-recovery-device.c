@@ -144,8 +144,6 @@ fu_bcm57xx_recovery_device_bar_read (FuBcm57xxRecoveryDevice *self,
 				     guint bar, gsize offset, guint32 *val,
 				     GError **error)
 {
-	guint8 *base = self->bar[bar].buf + offset;
-
 	/* this should never happen */
 	if (self->bar[bar].buf == NULL) {
 		g_set_error (error,
@@ -156,8 +154,9 @@ fu_bcm57xx_recovery_device_bar_read (FuBcm57xxRecoveryDevice *self,
 	}
 
 	BARRIER();
-	*val = *(guint32 *)base;
-	return TRUE;
+	return fu_memcpy_safe ((guint8 *) val, sizeof(*val), 0x0,	/* dst */
+			       self->bar[bar].buf, self->bar[bar].bufsz, offset,
+			       sizeof(*val), error);
 }
 
 static gboolean
@@ -165,8 +164,6 @@ fu_bcm57xx_recovery_device_bar_write (FuBcm57xxRecoveryDevice *self,
 				      guint bar, gsize offset, guint32 val,
 				      GError **error)
 {
-	guint8 *base = self->bar[bar].buf + offset;
-
 	/* this should never happen */
 	if (self->bar[bar].buf == NULL) {
 		g_set_error (error,
@@ -177,7 +174,10 @@ fu_bcm57xx_recovery_device_bar_write (FuBcm57xxRecoveryDevice *self,
 	}
 
 	BARRIER();
-	*(guint32 *)base = val;
+	if (!fu_memcpy_safe (self->bar[bar].buf, self->bar[bar].bufsz, offset,	/* dst */
+			     (const guint8 *) &val, sizeof(val), 0x0,		/* src */
+			     sizeof(val), error))
+		return FALSE;
 	BARRIER();
 	return TRUE;
 }
