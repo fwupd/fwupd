@@ -632,7 +632,6 @@ fu_pxi_device_setup (FuDevice *device, GError **error)
 				fu_device_get_name (device));
 
 	fu_device_add_instance_id (device, devid);
-	fu_device_set_id (device, devid);
 	return TRUE;
 }
 
