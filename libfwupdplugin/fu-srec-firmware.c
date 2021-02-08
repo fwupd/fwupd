@@ -98,6 +98,7 @@ fu_srec_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 		const gchar *line = lines[ln];
 		gsize linesz;
 		guint32 rec_addr32;
+		guint16 rec_addr16;
 		guint8 addrsz = 0;		/* bytes */
 		guint8 rec_count;		/* words */
 		guint8 rec_kind;
@@ -127,19 +128,10 @@ fu_srec_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 			return FALSE;
 		}
 
-		/* check there's enough data for the smallest possible record */
-		if (linesz < 10) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "record incomplete at line %u, length %u",
-				     ln + 1, (guint) linesz);
-			return FALSE;
-		}
-
 		/* kind, count, address, (data), checksum, linefeed */
 		rec_kind = line[1] - '0';
-		rec_count = fu_firmware_strparse_uint8 (line + 2);
+		if (!fu_firmware_strparse_uint8_safe (line, linesz, 2, &rec_count, error))
+			return FALSE;
 		if (rec_count * 2 != linesz - 4) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -154,10 +146,21 @@ fu_srec_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 			guint8 rec_csum = 0;
 			guint8 rec_csum_expected;
-			for (guint8 i = 0; i < rec_count; i++)
-				rec_csum += fu_firmware_strparse_uint8 (line + (i * 2) + 2);
+			for (guint8 i = 0; i < rec_count; i++) {
+				guint8 csum_tmp = 0;
+				if (!fu_firmware_strparse_uint8_safe (line, linesz,
+								      (i * 2) + 2,
+								      &csum_tmp,
+								      error))
+					return FALSE;
+				rec_csum += csum_tmp;
+			}
 			rec_csum ^= 0xff;
-			rec_csum_expected = fu_firmware_strparse_uint8 (line + (rec_count * 2) + 2);
+			if (!fu_firmware_strparse_uint8_safe (line, linesz,
+							      (rec_count * 2) + 2,
+							      &rec_csum_expected,
+							      error))
+				return FALSE;
 			if (rec_csum != rec_csum_expected) {
 				g_set_error (error,
 					     FWUPD_ERROR,
@@ -214,13 +217,23 @@ fu_srec_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 		/* parse address */
 		switch (addrsz) {
 		case 2:
-			rec_addr32 = fu_firmware_strparse_uint16 (line + 4);
+			if (!fu_firmware_strparse_uint16_safe (line, linesz,
+							       4, &rec_addr16,
+							       error))
+				return FALSE;
+			rec_addr32 = rec_addr16;
 			break;
 		case 3:
-			rec_addr32 = fu_firmware_strparse_uint24 (line + 4);
+			if (!fu_firmware_strparse_uint24_safe (line, linesz,
+							       4, &rec_addr32,
+							       error))
+				return FALSE;
 			break;
 		case 4:
-			rec_addr32 = fu_firmware_strparse_uint32 (line + 4);
+			if (!fu_firmware_strparse_uint32_safe (line, linesz,
+							       4, &rec_addr32,
+							       error))
+				return FALSE;
 			break;
 		default:
 			g_assert_not_reached ();
@@ -234,7 +247,9 @@ fu_srec_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 		rcd = fu_srec_firmware_record_new (ln + 1, rec_kind, rec_addr32);
 		if (rec_kind == 1 || rec_kind == 2 || rec_kind == 3) {
 			for (guint8 i = 4 + (addrsz * 2); i <= rec_count * 2; i += 2) {
-				guint8 tmp = fu_firmware_strparse_uint8 (line + i);
+				guint8 tmp = 0;
+				if (!fu_firmware_strparse_uint8_safe (line, linesz, i, &tmp, error))
+					return FALSE;
 				fu_byte_array_append_uint8 (rcd->buf, tmp);
 			}
 		}

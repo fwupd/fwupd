@@ -746,6 +746,11 @@ LIBFWUPDPLUGIN_1.5.6 {
     fu_firmware_image_add_chunk;
     fu_firmware_image_get_chunks;
     fu_firmware_new_from_gtypes;
+    fu_firmware_strparse_uint16_safe;
+    fu_firmware_strparse_uint24_safe;
+    fu_firmware_strparse_uint32_safe;
+    fu_firmware_strparse_uint4_safe;
+    fu_firmware_strparse_uint8_safe;
     fu_hwids_add_smbios_override;
     fu_hwids_get_keys;
     fu_memdup_safe;
