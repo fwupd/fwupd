@@ -2600,6 +2600,7 @@ fwupd_client_install_release_remote_cb (GObject *source, GAsyncResult *res, gpoi
 					    g_steal_pointer (&task));
 }
 
+#ifdef HAVE_LIBCURL
 static GPtrArray *
 fwupd_client_filter_locations (GPtrArray *locations,
 			       FwupdClientDownloadFlags download_flags,
@@ -2626,6 +2627,7 @@ fwupd_client_filter_locations (GPtrArray *locations,
 	}
 	return g_steal_pointer (&uris_filtered);
 }
+#endif
 
 /**
  * fwupd_client_install_release2_async:
