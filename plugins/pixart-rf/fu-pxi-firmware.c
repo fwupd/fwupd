@@ -31,7 +31,7 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 	const guint8 TAG[8] = {0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA};
 	gboolean check_header_exist = TRUE;
 
-	/* Get buf */
+	/* get buf */
 	buf = g_bytes_get_data (fw, &bufsz);
 	if (bufsz < 32) {
 		g_set_error (error,
@@ -40,7 +40,7 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 			     "firmware invalid, too small!");
 		return FALSE;
 	}
-	/* Get fw header */
+	/* get fw header */
 	if (!fu_memcpy_safe (fw_header, 32, 0x0,
 			     buf, bufsz, bufsz - 32,
 			     32, error)) {
@@ -52,7 +52,7 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 				    fw_header, 32);
 	}
 
-	/* Check the TAG from fw header is correct */
+	/* check the TAG from fw header is correct */
 	for (guint32 idx = 24; idx < 32; idx++) {
 		if (fw_header[idx] != TAG[idx - 24]) {
 			check_header_exist = FALSE;
