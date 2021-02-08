@@ -63,7 +63,7 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* set the default version if can not find it in fw bin */
-	if (check_header_exist == TRUE) {
+	if (check_header_exist) {
 		g_autofree gchar *version = NULL;
 		version = g_strdup_printf ("%c.%c.%c",
 					   fw_header[0],
