@@ -9,7 +9,6 @@
 #include <fwupd.h>
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 #include "fu-logitech-hidpp-bootloader-nordic.h"
 #include "fu-logitech-hidpp-bootloader-texas.h"

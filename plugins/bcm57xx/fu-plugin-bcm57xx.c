@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 #include "fu-bcm57xx-device.h"
 #include "fu-bcm57xx-dict-image.h"

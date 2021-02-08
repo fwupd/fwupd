@@ -10,12 +10,6 @@ dfu = static_library(
   sources : [
     'dfu-common.c',
     'dfu-device.c',
-    'dfu-element.c',
-    'dfu-firmware.c',
-    'dfu-format-dfu.c',
-    'dfu-format-dfuse.c',
-    'dfu-format-raw.c',
-    'dfu-image.c',
     'dfu-sector.c',
     'dfu-target.c',
     'dfu-target-stm.c',

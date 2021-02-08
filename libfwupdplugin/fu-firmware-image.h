@@ -10,6 +10,8 @@
 #include <fwupd.h>
 #include <xmlb.h>
 
+#include "fu-chunk.h"
+
 #define FU_TYPE_FIRMWARE_IMAGE (fu_firmware_image_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuFirmwareImage, fu_firmware_image, FU, FIRMWARE_IMAGE, GObject)
 
@@ -67,6 +69,9 @@ void		 fu_firmware_image_set_idx	(FuFirmwareImage	*self,
 GBytes		*fu_firmware_image_get_bytes	(FuFirmwareImage	*self);
 void		 fu_firmware_image_set_bytes	(FuFirmwareImage	*self,
 						 GBytes			*bytes);
+void		 fu_firmware_image_add_chunk	(FuFirmwareImage	*self,
+						 FuChunk		*chk);
+GPtrArray	*fu_firmware_image_get_chunks	(FuFirmwareImage	*self);
 gchar		*fu_firmware_image_get_checksum	(FuFirmwareImage	*self,
 						 GChecksumType		 csum_kind,
 						 GError			**error);

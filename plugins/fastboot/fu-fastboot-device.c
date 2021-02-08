@@ -90,7 +90,12 @@ fu_fastboot_device_write (FuDevice *device, const guint8 *buf, gsize buflen, GEr
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	gboolean ret;
 	gsize actual_len = 0;
-	g_autofree guint8 *buf2 = g_memdup (buf, (guint) buflen);
+	g_autofree guint8 *buf2 = NULL;
+
+	/* make mutable */
+	buf2 = fu_memdup_safe (buf, buflen, error);
+	if (buf2 == NULL)
+		return FALSE;
 
 	fu_fastboot_buffer_dump ("writing", buf, buflen);
 	ret = g_usb_device_bulk_transfer (usb_device,
@@ -281,7 +286,10 @@ fu_fastboot_device_download (FuDevice *device, GBytes *fw, GError **error)
 						self->blocksz);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		if (!fu_fastboot_device_write (device, chk->data, chk->data_sz, error))
+		if (!fu_fastboot_device_write (device,
+					       fu_chunk_get_data (chk),
+					       fu_chunk_get_data_sz (chk),
+					       error))
 			return FALSE;
 		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len * 2);
 	}

@@ -37,6 +37,7 @@ _fwupdtool_cmd_list=(
 	'watch'
 	'unbind-driver'
 	'bind-driver'
+	'export-hwids'
 )
 
 _fwupdtool_opts=(

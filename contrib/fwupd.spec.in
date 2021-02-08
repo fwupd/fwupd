@@ -144,6 +144,9 @@ Recommends: %{name}-plugin-modem-manager
 %if 0%{?have_flashrom}
 Recommends: %{name}-plugin-flashrom
 %endif
+%if 0%{?have_uefi}
+Recommends: %{name}-plugin-uefi-capsule-data
+%endif
 
 %description
 fwupd is a daemon to allow session software to update device firmware.
@@ -179,6 +182,17 @@ Summary: fwupd plugin using flashrom
 %description plugin-flashrom
 This provides the optional package which is only required on hardware that
 can be flashed using flashrom. It is probably not required on servers.
+%endif
+
+%if 0%{?have_uefi}
+%package plugin-uefi-capsule-data
+Summary: Localized data for the UEFI UX capsule
+
+%description plugin-uefi-capsule-data
+This provides the pregenerated BMP artwork for the UX capsule, which allows the
+"Installing firmware update…" localized text to be shown during a UEFI firmware
+update operation. This subpackage is probably not required on embedded hardware
+or server machines.
 %endif
 
 %prep
@@ -223,10 +237,10 @@ can be flashed using flashrom. It is probably not required on servers.
 %endif
 %if 0%{?have_dell}
     -Dplugin_dell=true \
-    -Dplugin_synaptics=true \
+    -Dplugin_synaptics_mst=true \
 %else
     -Dplugin_dell=false \
-    -Dplugin_synaptics=false \
+    -Dplugin_synaptics_mst=false \
 %endif
 %if 0%{?have_modem_manager}
     -Dplugin_modem_manager=true \
@@ -385,7 +399,6 @@ done
 %{_libdir}/fwupd-plugins-3/libfu_plugin_bcm57xx.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ccgx.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_colorhug.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_coreboot.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_cros_ec.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_csr.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_cpu.so
@@ -429,6 +442,7 @@ done
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_cxaudio.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_prometheus.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_rmi.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_system76_launch.so
 %if 0%{?enable_dummy}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_test.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_invalid.so
@@ -452,9 +466,6 @@ done
 %{_libdir}/fwupd-plugins-3/libfu_plugin_wacom_usb.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_goodixmoc.so
 %ghost %{_localstatedir}/lib/fwupd/gnupg
-%if 0%{?have_uefi}
-%{_datadir}/locale/*/LC_IMAGES/fwupd*
-%endif
 
 %if 0%{?have_modem_manager}
 %files plugin-modem-manager
@@ -463,6 +474,10 @@ done
 %if 0%{?have_flashrom}
 %files plugin-flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
+%endif
+%if 0%{?have_uefi}
+%files plugin-uefi-capsule-data
+%{_datadir}/fwupd/uefi-capsule-ux.tar.xz
 %endif
 
 %files devel
@@ -490,4 +505,3 @@ done
 %changelog
 * #LONGDATE# Richard Hughes <richard@hughsie.com> #VERSION#-0.#BUILD##ALPHATAG#
 - Update from git
-

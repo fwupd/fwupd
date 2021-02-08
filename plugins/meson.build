@@ -1,37 +1,19 @@
 subdir('acpi-dmar')
 subdir('acpi-facp')
 subdir('bcm57xx')
-subdir('ccgx')
-subdir('cros-ec')
 subdir('cpu')
-subdir('dfu')
-subdir('colorhug')
-subdir('ebitdo')
 subdir('ep963x')
-subdir('fastboot')
-subdir('fresco-pd')
-subdir('hailuck')
 subdir('iommu')
-subdir('jabra')
 subdir('linux-lockdown')
 subdir('linux-sleep')
 subdir('linux-swap')
 subdir('linux-tainted')
-subdir('steelseries')
 subdir('dell-dock')
 subdir('nitrokey')
 subdir('pci-bcr')
 subdir('pci-mei')
-subdir('rts54hid')
-subdir('rts54hub')
-subdir('solokey')
-subdir('synaptics-cxaudio')
-subdir('synaptics-prometheus')
 subdir('test')
 subdir('upower')
-subdir('wacom-usb')
-subdir('vli')
-subdir('goodix-moc')
 subdir('pixart-rf')
 
 if get_option('plugin_msr')
@@ -41,20 +23,48 @@ endif
 if get_option('gudev')
 subdir('ata')
 subdir('elantp')
-subdir('logitech-hidpp')
 subdir('optionrom')
 subdir('superio')
-subdir('synaptics-rmi')
+subdir('system76-launch')
 subdir('thelio-io')
 subdir('wacom-raw')
+endif
+
+if get_option('gudev') and get_option('plugin_synaptics_rmi')
+subdir('synaptics-rmi')
+endif
+
+if get_option('gudev') and get_option('gusb')
+subdir('logitech-hidpp')
 endif
 
 if get_option('systemd')
 subdir('logind')
 endif
 
+if get_option('gusb')
+subdir('ccgx')
+subdir('colorhug')
+subdir('cros-ec')
+subdir('dfu')
+subdir('ebitdo')
+subdir('fastboot')
+subdir('fresco-pd')
+subdir('goodix-moc')
+subdir('hailuck')
+subdir('jabra')
+subdir('rts54hid')
+subdir('rts54hub')
+subdir('solokey')
+subdir('steelseries')
+subdir('synaptics-cxaudio')
+subdir('synaptics-prometheus')
+subdir('vli')
+subdir('wacom-usb')
+
 # depends on dfu
 subdir('csr')
+endif
 
 if get_option('tpm')
 if not get_option('gudev')
@@ -83,8 +93,8 @@ subdir('modem-manager')
 endif
 
 if get_option('plugin_altos')
-if not get_option('gudev')
-  error('gudev is required for plugin_altos')
+if not get_option('gudev') or not get_option('gusb')
+  error('gudev and gusb is required for plugin_altos')
 endif
 subdir('altos')
 endif
@@ -112,7 +122,7 @@ subdir('dell')
 subdir('dell-esrt')
 endif
 
-if get_option('plugin_synaptics')
+if get_option('plugin_synaptics_mst')
 if not get_option('gudev')
   error('gudev is required for plugin_synaptics_mst')
 endif
@@ -132,10 +142,6 @@ endif
 
 if get_option('plugin_flashrom')
 subdir('flashrom')
-endif
-
-if get_option('plugin_coreboot')
-subdir('coreboot')
 endif
 
 if get_option('plugin_platform_integrity')

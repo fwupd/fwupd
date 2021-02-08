@@ -100,30 +100,8 @@ dfu_status_to_string (DfuStatus status)
 }
 
 /**
- * dfu_version_to_string:
- * @version: a #DfuVersion, e.g. %DFU_VERSION_DFU_1_1
- *
- * Converts an enumerated value to a string.
- *
- * Return value: a string
- **/
-const gchar *
-dfu_version_to_string (DfuVersion version)
-{
-	if (version == DFU_VERSION_DFU_1_0)
-		return "1.0";
-	if (version == DFU_VERSION_DFU_1_1)
-		return "1.1";
-	if (version == DFU_VERSION_DFUSE)
-		return "DfuSe";
-	if (version == DFU_VERSION_ATMEL_AVR)
-		return "AtmelAVR";
-	return NULL;
-}
-
-/**
  * dfu_utils_bytes_join_array:
- * @chunks: (element-kind GBytes): bytes
+ * @chunks: (element-type GBytes): bytes
  *
  * Creates a monolithic block of memory from an array of #GBytes.
  *

@@ -337,7 +337,9 @@ fu_goodixmoc_device_write_firmware (FuDevice *device,
 		g_autoptr(GByteArray) req = g_byte_array_new ();
 		g_autoptr(GError) error_block = NULL;
 
-		g_byte_array_append (req, chk->data, chk->data_sz);
+		g_byte_array_append (req,
+				     fu_chunk_get_data (chk),
+				     fu_chunk_get_data_sz (chk));
 
 		/* the last chunk */
 		if (i == chunks->len - 1) {

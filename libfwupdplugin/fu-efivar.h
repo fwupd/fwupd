@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <glib.h>
+#include <gio/gio.h>
 
 #define FU_EFIVAR_GUID_EFI_GLOBAL			"8be4df61-93ca-11d2-aa0d-00e098032b8c"
 #define FU_EFIVAR_GUID_FWUPDATE				"0abba7dc-e516-4167-bbf5-4d9d1c739416"
@@ -27,6 +27,9 @@ gboolean	 fu_efivar_supported		(GError		**error);
 guint64		 fu_efivar_space_used		(GError		**error);
 gboolean	 fu_efivar_exists		(const gchar	*guid,
 						 const gchar	*name);
+GFileMonitor	*fu_efivar_get_monitor		(const gchar	*guid,
+						 const gchar	*name,
+						 GError		**error);
 gboolean	 fu_efivar_get_data		(const gchar	*guid,
 						 const gchar	*name,
 						 guint8		**data,

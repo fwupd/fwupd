@@ -7,11 +7,19 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
+
+typedef enum {
+	FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN,
+	FU_PLUGIN_LINUX_LOCKDOWN_INVALID,
+	FU_PLUGIN_LINUX_LOCKDOWN_NONE,
+	FU_PLUGIN_LINUX_LOCKDOWN_INTEGRITY,
+	FU_PLUGIN_LINUX_LOCKDOWN_CONFIDENTIALITY,
+} FuPluginLinuxLockdown;
 
 struct FuPluginData {
 	GFile			*file;
 	GFileMonitor		*monitor;
+	FuPluginLinuxLockdown	 lockdown;
 };
 
 void
@@ -33,6 +41,45 @@ fu_plugin_destroy (FuPlugin *plugin)
 	}
 }
 
+static const gchar *
+fu_plugin_linux_lockdown_to_string (FuPluginLinuxLockdown lockdown)
+{
+	if (lockdown == FU_PLUGIN_LINUX_LOCKDOWN_NONE)
+		return "none";
+	if (lockdown == FU_PLUGIN_LINUX_LOCKDOWN_INTEGRITY)
+		return "integrity";
+	if (lockdown == FU_PLUGIN_LINUX_LOCKDOWN_CONFIDENTIALITY)
+		return "confidentiality";
+	if (lockdown == FU_PLUGIN_LINUX_LOCKDOWN_INVALID)
+		return "invalid";
+	return NULL;
+}
+
+static void
+fu_plugin_linux_lockdown_rescan (FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+
+	/* load file */
+	if (!g_file_load_contents (data->file, NULL, &buf, &bufsz, NULL, NULL)) {
+		data->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_INVALID;
+	} else if (g_strstr_len (buf, bufsz, "[none]") != NULL) {
+		data->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_NONE;
+	} else if (g_strstr_len (buf, bufsz, "[integrity]") != NULL) {
+		data->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_INTEGRITY;
+	} else if (g_strstr_len (buf, bufsz, "[confidentiality]") != NULL) {
+		data->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_CONFIDENTIALITY;
+	} else {
+		data->lockdown = FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN;
+	}
+
+	/* update metadata */
+	fu_plugin_add_report_metadata (plugin, "LinuxLockdown",
+				       fu_plugin_linux_lockdown_to_string (data->lockdown));
+}
+
 static void
 fu_plugin_linux_lockdown_changed_cb (GFileMonitor *monitor,
 				     GFile *file,
@@ -41,6 +88,7 @@ fu_plugin_linux_lockdown_changed_cb (GFileMonitor *monitor,
 				     gpointer user_data)
 {
 	FuPlugin *plugin = FU_PLUGIN (user_data);
+	fu_plugin_linux_lockdown_rescan (plugin);
 	fu_plugin_security_changed (plugin);
 }
 
@@ -59,6 +107,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		return FALSE;
 	g_signal_connect (data->monitor, "changed",
 			  G_CALLBACK (fu_plugin_linux_lockdown_changed_cb), plugin);
+	fu_plugin_linux_lockdown_rescan (plugin);
 	return TRUE;
 }
 
@@ -66,10 +115,7 @@ void
 fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	gsize bufsz = 0;
-	g_autofree gchar *buf = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	/* create attr */
 	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN);
@@ -78,14 +124,12 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attrs_append (attrs, attr);
 
 	/* load file */
-	if (!g_file_load_contents (data->file, NULL, &buf, &bufsz, NULL, &error_local)) {
-		g_autofree gchar *fn = g_file_get_path (data->file);
-		g_warning ("could not open %s: %s", fn, error_local->message);
+	if (data->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_INVALID ||
+	    data->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN) {
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	if (g_strstr_len (buf, bufsz, "[integrity]") == NULL &&
-	    g_strstr_len (buf, bufsz, "[confidentiality]") == NULL) {
+	if (data->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_NONE) {
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}

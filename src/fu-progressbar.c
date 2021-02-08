@@ -297,6 +297,12 @@ fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage
 {
 	g_return_if_fail (FU_IS_PROGRESSBAR (self));
 
+	/* ignore initial client connection */
+	if (self->status == FWUPD_STATUS_UNKNOWN && status == FWUPD_STATUS_IDLE) {
+		self->status = status;
+		return;
+	}
+
 	/* use cached value */
 	if (status == FWUPD_STATUS_UNKNOWN)
 		status = self->status;

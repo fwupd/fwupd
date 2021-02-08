@@ -654,6 +654,11 @@ fu_device_set_equivalent_id (FuDevice *self, const gchar *equivalent_id)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->equivalent_id, equivalent_id) == 0)
+		return;
+
 	g_free (priv->equivalent_id);
 	priv->equivalent_id = g_strdup (equivalent_id);
 }
@@ -692,6 +697,11 @@ fu_device_set_alternate_id (FuDevice *self, const gchar *alternate_id)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->alternate_id, alternate_id) == 0)
+		return;
+
 	g_free (priv->alternate_id);
 	priv->alternate_id = g_strdup (alternate_id);
 }
@@ -1415,6 +1425,7 @@ fu_device_add_instance_id_full (FuDevice *self,
 				const gchar *instance_id,
 				FuDeviceInstanceFlags flags)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *guid = NULL;
 	if (fwupd_guid_is_valid (instance_id)) {
 		g_warning ("use fu_device_add_guid(\"%s\") instead!", instance_id);
@@ -1430,6 +1441,10 @@ fu_device_add_instance_id_full (FuDevice *self,
 	fu_device_add_guid_quirks (self, guid);
 	if ((flags & FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS) == 0)
 		fwupd_device_add_instance_id (FWUPD_DEVICE (self), instance_id);
+
+	/* already done by ->setup(), so this must be ->registered() */
+	if (priv->done_setup)
+		fwupd_device_add_guid (FWUPD_DEVICE (self), guid);
 }
 
 /**
@@ -2023,6 +2038,11 @@ fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->logical_id, logical_id) == 0)
+		return;
+
 	g_free (priv->logical_id);
 	priv->logical_id = g_strdup (logical_id);
 	priv->device_id_valid = FALSE;
@@ -2062,6 +2082,11 @@ fu_device_set_proxy_guid (FuDevice *self, const gchar *proxy_guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->proxy_guid, proxy_guid) == 0)
+		return;
+
 	g_free (priv->proxy_guid);
 	priv->proxy_guid = g_strdup (proxy_guid);
 }
@@ -2121,6 +2146,11 @@ fu_device_set_physical_id (FuDevice *self, const gchar *physical_id)
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (physical_id != NULL);
+
+	/* not changed */
+	if (g_strcmp0 (priv->physical_id, physical_id) == 0)
+		return;
+
 	g_free (priv->physical_id);
 	priv->physical_id = g_strdup (physical_id);
 	priv->device_id_valid = FALSE;
@@ -2500,7 +2530,7 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		}
 		if (tmp2->len > 0)
 			g_string_truncate (tmp2, tmp2->len - 1);
-		fu_common_string_append_kv (tmp2, idt + 1, "PrivateFlags", tmp2->str);
+		fu_common_string_append_kv (str, idt + 1, "PrivateFlags", tmp2->str);
 	}
 
 	/* subclassed */
@@ -3142,23 +3172,16 @@ fu_device_rescan (FuDevice *self, GError **error)
 void
 fu_device_convert_instance_ids (FuDevice *self)
 {
-	GPtrArray *children;
-	GPtrArray *instance_ids = fwupd_device_get_instance_ids (FWUPD_DEVICE (self));
+	GPtrArray *instance_ids;
 
 	/* OEM specific hardware */
 	if (fu_device_has_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS))
 		return;
+	instance_ids = fwupd_device_get_instance_ids (FWUPD_DEVICE (self));
 	for (guint i = 0; i < instance_ids->len; i++) {
 		const gchar *instance_id = g_ptr_array_index (instance_ids, i);
 		g_autofree gchar *guid = fwupd_guid_hash_string (instance_id);
 		fwupd_device_add_guid (FWUPD_DEVICE (self), guid);
-	}
-
-	/* convert all children too */
-	children = fu_device_get_children (self);
-	for (guint i = 0; i < children->len; i++) {
-		FuDevice *devtmp = g_ptr_array_index (children, i);
-		fu_device_convert_instance_ids (devtmp);
 	}
 }
 
@@ -3180,6 +3203,7 @@ fu_device_setup (FuDevice *self, GError **error)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	GPtrArray *children;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -3191,6 +3215,14 @@ fu_device_setup (FuDevice *self, GError **error)
 	/* subclassed */
 	if (klass->setup != NULL) {
 		if (!klass->setup (self, error))
+			return FALSE;
+	}
+
+	/* run setup on the children too (unless done already) */
+	children = fu_device_get_children (self);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child_tmp = g_ptr_array_index (children, i);
+		if (!fu_device_setup (child_tmp, error))
 			return FALSE;
 	}
 

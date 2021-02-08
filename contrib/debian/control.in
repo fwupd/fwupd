@@ -49,9 +49,11 @@ Depends: ${misc:Depends},
          shared-mime-info
 Recommends: python3,
 	    bolt,
+	    dbus,
 	    secureboot-db,
 	    udisks2,
 	    fwupd-signed
+Suggests: gir1.2-fwupd-2.0
 Provides: fwupdate
 Conflicts: fwupdate-amd64-signed,
 	   fwupdate-i386-signed,
@@ -118,6 +120,10 @@ Architecture: linux-any
 Multi-Arch: same
 Depends: libfwupd2 (= ${binary:Version}),
          gir1.2-fwupd-2.0 (= ${binary:Version}),
+         libcurl4-gnutls-dev,
+         libglib2.0-dev (>= 2.45.8),
+         libjcat-dev,
+         libjson-glib-dev (>= 1.1.1),
          ${misc:Depends}
 Breaks: fwupd-dev (<< 0.5.4-2~)
 Replaces: fwupd-dev (<< 0.5.4-2~)
@@ -148,6 +154,17 @@ Architecture: linux-any
 Multi-Arch: same
 Depends: libfwupdplugin1 (= ${binary:Version}),
          gir1.2-fwupdplugin-1.0 (= ${binary:Version}),
+         libarchive-dev,
+         libcurl4-gnutls-dev,
+         libfwupd-dev (= ${binary:Version}),
+         libgcab-dev,
+         libglib2.0-dev (>= 2.45.8),
+         libgudev-1.0-dev,
+         libgusb-dev (>= 0.3.5),
+         libjcat-dev,
+         libjson-glib-dev (>= 1.1.1),
+         libxmlb-dev (>= 0.1.13),
+         valgrind [!ia64 !riscv64 !x32 !mips !sparc64 !sh4 !ppc64 !powerpcspe !hppa !alpha !mips64el !armhf !armel !mipsel !m68k],
          ${misc:Depends}
 Section: libdevel
 Description: development files for libfwupdplugin

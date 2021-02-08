@@ -9,10 +9,14 @@
 #include "config.h"
 
 #include <gio/gio.h>
+
+#ifdef HAVE_LIBARCHIVE
 #include <archive_entry.h>
 #include <archive.h>
+#endif
 
 #include "fu-archive.h"
+#include "fwupd-error.h"
 
 /**
  * SECTION:fu-archive
@@ -116,6 +120,7 @@ fu_archive_iterate (FuArchive *self,
 	return TRUE;
 }
 
+#ifdef HAVE_LIBARCHIVE
 /* workaround the struct types of libarchive */
 typedef struct archive _archive_read_ctx;
 
@@ -127,10 +132,12 @@ _archive_read_ctx_free (_archive_read_ctx *arch)
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(_archive_read_ctx, _archive_read_ctx_free)
+#endif
 
 static gboolean
 fu_archive_load (FuArchive *self, GBytes *blob, FuArchiveFlags flags, GError **error)
 {
+#ifdef HAVE_LIBARCHIVE
 	int r;
 	g_autoptr(_archive_read_ctx) arch = NULL;
 
@@ -219,6 +226,13 @@ fu_archive_load (FuArchive *self, GBytes *blob, FuArchiveFlags flags, GError **e
 
 	/* success */
 	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "missing libarchive support");
+	return FALSE;
+#endif
 }
 
 /**

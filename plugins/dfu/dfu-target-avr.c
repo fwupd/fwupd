@@ -26,7 +26,7 @@
  *
  * Assigns a sector description for the chip ID. This is required so fwupd can
  * program the user firmware avoiding the bootloader and for checking the total
- * element size.
+ * chunk size.
  *
  * The chip ID can be found from a datasheet or using `dfu-tool list` when the
  * hardware is connected and in bootloader mode.
@@ -491,17 +491,17 @@ dfu_target_avr_setup (DfuTarget *target, GError **error)
 
 static gboolean
 dfu_target_avr_download_element (DfuTarget *target,
-				 DfuElement *element,
+				 FuChunk *chk,
 				 DfuTargetTransferFlags flags,
 				 GError **error)
 {
 	DfuSector *sector;
-	GBytes *blob;
 	const guint8 *data;
 	gsize header_sz = ATMEL_AVR32_CONTROL_BLOCK_SIZE;
 	guint16 page_last = G_MAXUINT16;
 	guint32 address;
 	guint32 address_offset = 0x0;
+	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 	const guint8 footer[] = { 0x00, 0x00, 0x00, 0x00,	/* CRC */
 				  16,				/* len */
@@ -520,7 +520,7 @@ dfu_target_avr_download_element (DfuTarget *target,
 		return FALSE;
 
 	/* verify the element isn't larger than the target size */
-	blob = dfu_element_get_contents (element);
+	blob = fu_chunk_get_bytes (chk);
 	sector = dfu_target_get_sector_default (target);
 	if (sector == NULL) {
 		g_set_error_literal (error,
@@ -529,7 +529,7 @@ dfu_target_avr_download_element (DfuTarget *target,
 				     "no sector defined for target");
 		return FALSE;
 	}
-	address = dfu_element_get_address (element) & ~0x80000000;
+	address = fu_chunk_get_address (chk) & ~0x80000000;
 	if (address < dfu_sector_get_address (sector)) {
 		address_offset = dfu_sector_get_address (sector) - address;
 		g_warning ("firmware element starts at 0x%x but sector "
@@ -566,38 +566,38 @@ dfu_target_avr_download_element (DfuTarget *target,
 
 	/* process each chunk */
 	for (guint i = 0; i < chunks->len; i++) {
-		const FuChunk *chk = g_ptr_array_index (chunks, i);
+		FuChunk *chk2 = g_ptr_array_index (chunks, i);
 		g_autofree guint8 *buf = NULL;
 		g_autoptr(GBytes) chunk_tmp = NULL;
 
 		/* select page if required */
-		if (chk->page != page_last) {
+		if (fu_chunk_get_page (chk2) != page_last) {
 			if (fu_device_has_custom_flag (FU_DEVICE (dfu_target_get_device (target)),
 						       "legacy-protocol")) {
 				if (!dfu_target_avr_select_memory_page (target,
-									chk->page,
+									fu_chunk_get_page (chk2),
 									error))
 					return FALSE;
 			} else {
 				if (!dfu_target_avr32_select_memory_page (target,
-									  chk->page,
+									  fu_chunk_get_page (chk2),
 									  error))
 					return FALSE;
 			}
-			page_last = chk->page;
+			page_last = fu_chunk_get_page (chk2);
 		}
 
-		/* create chk with header and footer */
-		buf = g_malloc0 (chk->data_sz + header_sz + sizeof(footer));
+		/* create chunk with header and footer */
+		buf = g_malloc0 (fu_chunk_get_data_sz (chk2) + header_sz + sizeof(footer));
 		buf[0] = DFU_AVR32_GROUP_DOWNLOAD;
 		buf[1] = DFU_AVR32_CMD_PROGRAM_START;
-		fu_common_write_uint16 (&buf[2], chk->address, G_BIG_ENDIAN);
-		fu_common_write_uint16 (&buf[4], chk->address + chk->data_sz - 1, G_BIG_ENDIAN);
-		memcpy (&buf[header_sz], chk->data, chk->data_sz);
-		memcpy (&buf[header_sz + chk->data_sz], footer, sizeof(footer));
+		fu_common_write_uint16 (&buf[2], fu_chunk_get_address (chk2), G_BIG_ENDIAN);
+		fu_common_write_uint16 (&buf[4], fu_chunk_get_address (chk2) + fu_chunk_get_data_sz (chk2) - 1, G_BIG_ENDIAN);
+		memcpy (&buf[header_sz], fu_chunk_get_data (chk2), fu_chunk_get_data_sz (chk2));
+		memcpy (&buf[header_sz + fu_chunk_get_data_sz (chk2)], footer, sizeof(footer));
 
 		/* download data */
-		chunk_tmp = g_bytes_new_static (buf, chk->data_sz + header_sz + sizeof(footer));
+		chunk_tmp = g_bytes_new_static (buf, fu_chunk_get_data_sz (chk2) + header_sz + sizeof(footer));
 		g_debug ("sending %" G_GSIZE_FORMAT " bytes to the hardware",
 			 g_bytes_get_size (chunk_tmp));
 		if (!dfu_target_download_chunk (target, i, chunk_tmp, error))
@@ -613,7 +613,7 @@ dfu_target_avr_download_element (DfuTarget *target,
 	return TRUE;
 }
 
-static DfuElement *
+static FuChunk *
 dfu_target_avr_upload_element (DfuTarget *target,
 			       guint32 address,
 			       gsize expected_size,
@@ -622,7 +622,7 @@ dfu_target_avr_upload_element (DfuTarget *target,
 {
 	guint16 page_last = G_MAXUINT16;
 	guint chunk_valid = G_MAXUINT;
-	g_autoptr(DfuElement) element = NULL;
+	g_autoptr(FuChunk) chk2 = NULL;
 	g_autoptr(GBytes) contents = NULL;
 	g_autoptr(GBytes) contents_truncated = NULL;
 	g_autoptr(GPtrArray) blobs = NULL;
@@ -666,29 +666,30 @@ dfu_target_avr_upload_element (DfuTarget *target,
 	blobs = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
 	for (guint i = 0; i < chunks->len; i++) {
 		GBytes *blob_tmp = NULL;
-		const FuChunk *chk = g_ptr_array_index (chunks, i);
+		FuChunk *chk = g_ptr_array_index (chunks, i);
 
 		/* select page if required */
-		if (chk->page != page_last) {
+		if (fu_chunk_get_page (chk) != page_last) {
 			if (fu_device_has_custom_flag (FU_DEVICE (dfu_target_get_device (target)),
 						       "legacy-protocol")) {
 				if (!dfu_target_avr_select_memory_page (target,
-									chk->page,
+									fu_chunk_get_page (chk),
 									error))
 					return NULL;
 			} else {
 				if (!dfu_target_avr32_select_memory_page (target,
-									  chk->page,
+									  fu_chunk_get_page (chk),
 									  error))
 					return NULL;
 			}
-			page_last = chk->page;
+			page_last = fu_chunk_get_page (chk);
 		}
 
 		/* prepare to read */
 		if (!dfu_target_avr_read_memory (target,
-						 chk->address,
-						 chk->address + chk->data_sz - 1,
+						 fu_chunk_get_address (chk),
+						 fu_chunk_get_address (chk) +
+						 fu_chunk_get_data_sz (chk) - 1,
 						 error))
 			return NULL;
 
@@ -705,7 +706,7 @@ dfu_target_avr_upload_element (DfuTarget *target,
 		/* this page has valid data */
 		if (!fu_common_bytes_is_empty (blob_tmp)) {
 			g_debug ("chunk %u has data (page %" G_GUINT32_FORMAT ")",
-				 i, chk->page);
+				 i, fu_chunk_get_page (chk));
 			chunk_valid = i;
 		} else {
 			g_debug ("chunk %u is empty", i);
@@ -737,10 +738,9 @@ dfu_target_avr_upload_element (DfuTarget *target,
 		contents_truncated = g_bytes_ref (contents);
 	}
 
-	element = dfu_element_new ();
-	dfu_element_set_address (element, address | 0x80000000); /* flash */
-	dfu_element_set_contents (element, contents_truncated);
-	return g_steal_pointer (&element);
+	chk2 = fu_chunk_bytes_new (contents_truncated);
+	fu_chunk_set_address (chk2, address | 0x80000000); /* flash */
+	return g_steal_pointer (&chk2);
 }
 
 static void

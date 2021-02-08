@@ -20,7 +20,6 @@
 #include "fwupd-common.h"
 #include "fu-plugin-dell.h"
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 #include "fu-device-metadata.h"
 
 /* These are used to indicate the status of a previous DELL flash */

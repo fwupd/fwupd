@@ -236,10 +236,27 @@ fu_efivar_delete_with_glob (const gchar *guid, const gchar *name_glob, GError **
 	return TRUE;
 }
 
+static gboolean
+fu_efivar_exists_guid (const gchar *guid)
+{
+	const gchar *fn;
+	g_autofree gchar *efivardir = fu_efivar_get_path ();
+	g_autoptr(GDir) dir = NULL;
+
+	dir = g_dir_open (efivardir, 0, NULL);
+	if (dir == NULL)
+		return FALSE;
+	while ((fn = g_dir_read_name (dir)) != NULL) {
+		if (g_str_has_suffix (fn, guid))
+			return TRUE;
+	}
+	return TRUE;
+}
+
 /**
  * fu_efivar_exists:
  * @guid: Globally unique identifier
- * @name: Variable name
+ * @name: (nullable): Variable name
  *
  * Test if a variable exists
  *
@@ -253,7 +270,10 @@ fu_efivar_exists (const gchar *guid, const gchar *name)
 	g_autofree gchar *fn = NULL;
 
 	g_return_val_if_fail (guid != NULL, FALSE);
-	g_return_val_if_fail (name != NULL, FALSE);
+
+	/* any name */
+	if (name == NULL)
+		return fu_efivar_exists_guid (guid);
 
 	fn = fu_efivar_get_filename (guid, name);
 	return g_file_test (fn, G_FILE_TEST_EXISTS);
@@ -427,6 +447,37 @@ fu_efivar_get_names (const gchar *guid, GError **error)
 
 	/* success */
 	return g_steal_pointer (&names);
+}
+
+/**
+ * fu_efivar_get_monitor:
+ * @guid: Globally unique identifier
+ * @name: Variable name
+ * @error: A #GError
+ *
+ * Returns a file monitor for a specific key.
+ *
+ * Returns: (transfer full): a #GFileMonitor, or %NULL for an error
+ *
+ * Since: 1.5.5
+ **/
+GFileMonitor *
+fu_efivar_get_monitor (const gchar *guid, const gchar *name, GError **error)
+{
+	g_autofree gchar *fn = NULL;
+	g_autoptr(GFile) file = NULL;
+	g_autoptr(GFileMonitor) monitor = NULL;
+
+	g_return_val_if_fail (guid != NULL, NULL);
+	g_return_val_if_fail (name != NULL, NULL);
+
+	fn = fu_efivar_get_filename (guid, name);
+	file = g_file_new_for_path (fn);
+	monitor = g_file_monitor_file (file, G_FILE_MONITOR_NONE, NULL, error);
+	if (monitor == NULL)
+		return NULL;
+	g_file_monitor_set_rate_limit (monitor, 5000);
+	return g_steal_pointer (&monitor);
 }
 
 /**

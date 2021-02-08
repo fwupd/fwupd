@@ -28,6 +28,7 @@
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-resources.h"
+#include "fwupd-security-attr-private.h"
 
 #include "fu-cabinet.h"
 #include "fu-common-cab.h"
@@ -57,6 +58,7 @@
 #include "fu-usb-device-private.h"
 
 #include "fu-dfu-firmware.h"
+#include "fu-dfuse-firmware.h"
 #include "fu-fmap-firmware.h"
 #include "fu-ihex-firmware.h"
 #include "fu-srec-firmware.h"
@@ -324,6 +326,88 @@ fu_engine_get_release_version (FuEngine *self, FuDevice *dev, XbNode *rel, GErro
 	return fu_common_version_from_uint32 ((guint32) ver_uint32, fmt);
 }
 
+static gint
+fu_engine_scheme_compare_cb (gconstpointer a, gconstpointer b, gpointer user_data)
+{
+	FuEngine *self = FU_ENGINE (user_data);
+	const gchar *location1 = *((const gchar ** )a);
+	const gchar *location2 = *((const gchar **) b);
+	g_autofree gchar *scheme1 = fu_common_uri_get_scheme (location1);
+	g_autofree gchar *scheme2 = fu_common_uri_get_scheme (location2);
+	guint prio1 = fu_config_get_uri_scheme_prio (self->config, scheme1);
+	guint prio2 = fu_config_get_uri_scheme_prio (self->config, scheme2);
+	if (prio1 < prio2)
+		return -1;
+	if (prio1 > prio2)
+		return 1;
+	return 0;
+}
+
+static gboolean
+fu_engine_set_release_from_artifact (FuEngine *self,
+				     FwupdRelease *rel,
+				     FwupdRemote *remote,
+				     XbNode *artifact,
+				     GError **error)
+{
+	const gchar *filename;
+	guint64 size;
+	g_autoptr(GPtrArray) locations = NULL;
+	g_autoptr(GPtrArray) checksums = NULL;
+
+	/* filename */
+	filename = xb_node_query_text (artifact, "filename", NULL);
+	if (filename != NULL)
+		fwupd_release_set_filename (rel, filename);
+
+	/* location */
+	locations = xb_node_query (artifact, "location", 0, NULL);
+	if (locations != NULL) {
+		for (guint i = 0; i < locations->len; i++) {
+			XbNode *n = g_ptr_array_index (locations, i);
+			g_autofree gchar *scheme = NULL;
+
+			/* check the scheme is allowed */
+			scheme = fu_common_uri_get_scheme (xb_node_get_text (n));
+			if (scheme != NULL) {
+				guint prio = fu_config_get_uri_scheme_prio (self->config, scheme);
+				if (prio == G_MAXUINT)
+					continue;
+			}
+
+			/* build the complete URI */
+			if (remote != NULL) {
+				g_autofree gchar *uri = NULL;
+				uri = fwupd_remote_build_firmware_uri (remote,
+								       xb_node_get_text (n),
+								       NULL);
+				if (uri != NULL) {
+					fwupd_release_add_location (rel, uri);
+					continue;
+				}
+			}
+			fwupd_release_add_location (rel, xb_node_get_text (n));
+		}
+	}
+
+	/* checksum */
+	checksums = xb_node_query (artifact, "checksum", 0, NULL);
+	if (checksums != NULL) {
+		for (guint i = 0; i < checksums->len; i++) {
+			XbNode *n = g_ptr_array_index (checksums, i);
+			fwupd_release_add_checksum (rel, xb_node_get_text (n));
+		}
+	}
+
+	/* size */
+	size = xb_node_query_text_as_uint (artifact, "size[@type='installed']", NULL);
+	if (size != G_MAXUINT64)
+		fwupd_release_set_size (rel, size);
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_engine_set_release_from_appstream (FuEngine *self,
 				      FuDevice *dev,
@@ -339,6 +423,7 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	g_autofree gchar *version_rel = NULL;
 	g_autoptr(GPtrArray) cats = NULL;
 	g_autoptr(GPtrArray) issues = NULL;
+	g_autoptr(XbNode) artifact = NULL;
 	g_autoptr(XbNode) description = NULL;
 
 	/* set from the component */
@@ -381,6 +466,15 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 		if (remote == NULL)
 			g_warning ("no remote found for release %s", version_rel);
 	}
+	artifact = xb_node_query_first (release, "artifacts/artifact", NULL);
+	if (artifact != NULL) {
+		if (!fu_engine_set_release_from_artifact (self,
+							  rel,
+							  remote,
+							  artifact,
+							  error))
+			return FALSE;
+	}
 	description = xb_node_query_first (release, "description", NULL);
 	if (description != NULL) {
 		g_autofree gchar *xml = NULL;
@@ -388,39 +482,47 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 		if (xml != NULL)
 			fwupd_release_set_description (rel, xml);
 	}
-	tmp = xb_node_query_text (release, "location", NULL);
-	if (tmp != NULL) {
-		g_autofree gchar *uri = NULL;
-		if (remote != NULL)
-			uri = fwupd_remote_build_firmware_uri (remote, tmp, NULL);
-		if (uri == NULL)
-			uri = g_strdup (tmp);
-		fwupd_release_set_uri (rel, uri);
-	} else if (remote != NULL &&
-		   fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
-		g_autofree gchar *uri = NULL;
-		tmp = xb_node_query_text (component, "../custom/value[@key='fwupd::FilenameCache']", NULL);
-		if (tmp != NULL)  {
-			uri = g_strdup_printf ("file://%s", tmp);
-			fwupd_release_set_uri (rel, uri);
+	if (artifact == NULL) {
+		tmp = xb_node_query_text (release, "location", NULL);
+		if (tmp != NULL) {
+			g_autofree gchar *uri = NULL;
+			if (remote != NULL)
+				uri = fwupd_remote_build_firmware_uri (remote, tmp, NULL);
+			if (uri == NULL)
+				uri = g_strdup (tmp);
+			fwupd_release_add_location (rel, uri);
+		} else if (remote != NULL &&
+			   fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+			g_autofree gchar *uri = NULL;
+			tmp = xb_node_query_text (component, "../custom/value[@key='fwupd::FilenameCache']", NULL);
+			if (tmp != NULL)  {
+				uri = g_strdup_printf ("file://%s", tmp);
+				fwupd_release_add_location (rel, uri);
+			}
 		}
 	}
-	tmp = xb_node_query_text (release, "checksum[@target='content']", NULL);
-	if (tmp != NULL)
-		fwupd_release_set_filename (rel, tmp);
+	if (artifact == NULL) {
+		tmp = xb_node_query_text (release, "checksum[@target='content']", NULL);
+		if (tmp != NULL)
+			fwupd_release_set_filename (rel, tmp);
+	}
 	tmp = xb_node_query_text (release, "url[@type='details']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_details_url (rel, tmp);
 	tmp = xb_node_query_text (release, "url[@type='source']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_source_url (rel, tmp);
-	tmp = xb_node_query_text (release, "checksum[@target='container']", NULL);
-	if (tmp != NULL)
-		fwupd_release_add_checksum (rel, tmp);
-	tmp64 = xb_node_query_text_as_uint (release, "size[@type='installed']", NULL);
-	if (tmp64 != G_MAXUINT64) {
-		fwupd_release_set_size (rel, tmp64);
-	} else {
+	if (artifact == NULL) {
+		tmp = xb_node_query_text (release, "checksum[@target='container']", NULL);
+		if (tmp != NULL)
+			fwupd_release_add_checksum (rel, tmp);
+	}
+	if (artifact == NULL) {
+		tmp64 = xb_node_query_text_as_uint (release, "size[@type='installed']", NULL);
+		if (tmp64 != G_MAXUINT64)
+			fwupd_release_set_size (rel, tmp64);
+	}
+	if (fwupd_release_get_size (rel) == 0) {
 		GBytes *sz = xb_node_get_data (release, "fwupd::ReleaseSize");
 		if (sz != NULL) {
 			const guint64 *sizeptr = g_bytes_get_data (sz, NULL);
@@ -465,6 +567,10 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateImage']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_update_image (rel, tmp);
+
+	/* sort the locations by scheme */
+	g_ptr_array_sort_with_data (fwupd_release_get_locations (rel),
+				    fu_engine_scheme_compare_cb, self);
 	return TRUE;
 }
 
@@ -1159,7 +1265,6 @@ fu_engine_check_requirement_vendor_id (FuEngine *self, XbNode *req,
 	GPtrArray *vendor_ids;
 	const gchar *vendor_ids_metadata;
 	g_autofree gchar *vendor_ids_device = NULL;
-	g_auto(GStrv) vendor_ids_tmp = NULL;
 
 	/* devices without vendor IDs should not exist! */
 	vendor_ids = fu_device_get_vendor_ids (device);
@@ -1182,15 +1287,8 @@ fu_engine_check_requirement_vendor_id (FuEngine *self, XbNode *req,
 		return FALSE;
 	}
 
-	/* just cat them together into a string */
-	vendor_ids_tmp = g_new0 (gchar *, vendor_ids->len + 1);
-	for (guint i = 0; i < vendor_ids->len; i++) {
-		const gchar *vendor_id_tmp = g_ptr_array_index (vendor_ids, i);
-		vendor_ids_tmp[i] = g_strdup (vendor_id_tmp);
-	}
-	vendor_ids_device = g_strjoinv ("|", vendor_ids_tmp);
-
 	/* it is always safe to use a regex, even for simple strings */
+	vendor_ids_device = fu_common_strjoin_array ("|", vendor_ids);
 	if (!g_regex_match_simple (vendor_ids_metadata, vendor_ids_device, 0, 0)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -4342,6 +4440,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 		const gchar *update_image;
 		gint vercmp;
 		GPtrArray *checksums;
+		GPtrArray *locations;
 		g_autoptr(FwupdRelease) rel = fwupd_release_new ();
 		g_autoptr(GError) error_loop = NULL;
 
@@ -4362,7 +4461,8 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 			fwupd_release_set_install_duration (rel, fu_device_get_install_duration (device));
 
 		/* invalid */
-		if (fwupd_release_get_uri (rel) == NULL)
+		locations = fwupd_release_get_locations (rel);
+		if (locations->len == 0)
 			continue;
 		checksums = fwupd_release_get_checksums (rel);
 		if (checksums->len == 0)
@@ -6065,6 +6165,7 @@ fu_engine_get_archive_size_max (FuEngine *self)
 	return fu_config_get_archive_size_max (self->config);
 }
 
+#ifdef HAVE_GUSB
 static void
 fu_engine_usb_device_removed_cb (GUsbContext *ctx,
 				 GUsbDevice *usb_device,
@@ -6145,6 +6246,7 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 		}
 	}
 }
+#endif
 
 static void
 fu_engine_load_quirks (FuEngine *self, FuQuirksLoadFlags quirks_flags)
@@ -6203,6 +6305,13 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 	if (g_strcmp0 (fwupd_release_get_metadata_item (rel_history, "BootTime"),
 		       btime) == 0) {
 		g_debug ("service restarted, but no reboot has taken place");
+
+		/* if it needed reboot then, it also needs it now... */
+		if (fu_device_get_update_state (dev_history) == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
+			g_debug ("inheriting needs-reboot for %s",
+				 fu_device_get_name (dev));
+			fu_device_set_update_state (dev, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
+		}
 		return TRUE;
 	}
 
@@ -6280,7 +6389,8 @@ fu_engine_update_history_database (FuEngine *self, GError **error)
 		g_autoptr(GError) error_local = NULL;
 
 		/* not in the required state */
-		if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+		if (fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_NEEDS_REBOOT &&
+		    fu_device_get_update_state (dev) != FWUPD_UPDATE_STATE_PENDING)
 			continue;
 
 		/* try to save the new update-state, but ignoring any error */
@@ -6443,13 +6553,18 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	/* add the "built-in" firmware types */
 	fu_engine_add_firmware_gtype (self, "raw", FU_TYPE_FIRMWARE);
 	fu_engine_add_firmware_gtype (self, "dfu", FU_TYPE_DFU_FIRMWARE);
+	fu_engine_add_firmware_gtype (self, "dfuse", FU_TYPE_DFUSE_FIRMWARE);
 	fu_engine_add_firmware_gtype (self, "fmap", FU_TYPE_FMAP_FIRMWARE);
 	fu_engine_add_firmware_gtype (self, "ihex", FU_TYPE_IHEX_FIRMWARE);
 	fu_engine_add_firmware_gtype (self, "srec", FU_TYPE_SREC_FIRMWARE);
 	fu_engine_add_firmware_gtype (self, "smbios", FU_TYPE_SMBIOS);
 
 	/* set shared USB context */
+#ifdef HAVE_GUSB
 	self->usb_ctx = g_usb_context_new (error);
+#else
+	self->usb_ctx = g_object_new (G_TYPE_OBJECT, NULL);
+#endif
 	if (self->usb_ctx == NULL) {
 		g_prefix_error (error, "Failed to get USB context: ");
 		return FALSE;
@@ -6500,6 +6615,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		fu_engine_plugins_coldplug (self, FALSE);
 
 	/* coldplug USB devices */
+#ifdef HAVE_GUSB
 	g_signal_connect (self->usb_ctx, "device-added",
 			  G_CALLBACK (fu_engine_usb_device_added_cb),
 			  self);
@@ -6508,6 +6624,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 			  self);
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
 		g_usb_context_enumerate (self->usb_ctx);
+#endif
 
 #ifdef HAVE_GUDEV
 	/* coldplug udev devices */
@@ -6668,13 +6785,14 @@ fu_engine_init (FuEngine *self)
 	g_hash_table_insert (self->compile_versions,
 			     g_strdup ("org.freedesktop.fwupd"),
 			     g_strdup (VERSION));
+#ifdef HAVE_GUSB
 	g_hash_table_insert (self->compile_versions,
 			     g_strdup ("org.freedesktop.gusb"),
 			     g_strdup_printf ("%i.%i.%i",
 					      G_USB_MAJOR_VERSION,
 					      G_USB_MINOR_VERSION,
 					      G_USB_MICRO_VERSION));
-
+#endif
 }
 
 static void

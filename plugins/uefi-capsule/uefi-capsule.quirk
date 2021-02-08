@@ -14,6 +14,26 @@ Flags = use-shim-unique,no-ux-capsule
 [HwId=386c2f52-44ec-55d3-b802-47631bfb8451]
 Flags = uefi-force-enable
 
+# Lenovo
+[HwId=6de5d951-d755-576b-bd09-c5cf66b27234]
+Flags = boot-order-lock,use-legacy-bootmgr-desc
+
+# Lenovo ThinkPad X1 Yoga 4th
+[HwId=1138930e-8df1-5ae0-b946-7b0d9c9b4a79]
+Flags = no-coalesce
+
+# Lenovo ThinkPad X1 Carbon 5th
+[HwId=595a0c1a-9819-52f6-8ea7-e0924c073f64]
+Flags = no-coalesce
+
+# Lenovo ThinkPad X1 Carbon 7th
+[HwId=30ddbc9b-8200-5581-8dfd-6bb26e2e42d7]
+Flags = no-coalesce
+
+# Lenovo ThinkPad T460s
+[HwId=90706264-e399-575b-a9fb-077ead03b9b4]
+Flags = no-coalesce
+
 # Dynabook (né Toshiba) X30, X40
 [Guid=28108d08-5027-42c2-a5b8-92d6ede9b97b]
 VersionFormat = bcd

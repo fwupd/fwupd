@@ -59,6 +59,7 @@ struct FuUtilPrivate {
 	GMainContext		*main_ctx;
 	GOptionContext		*context;
 	FwupdInstallFlags	 flags;
+	FwupdClientDownloadFlags download_flags;
 	FwupdClient		*client;
 	FuProgressbar		*progressbar;
 	gboolean		 no_remote_check;
@@ -538,14 +539,15 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	devs = fwupd_client_get_devices (priv->client, NULL, error);
 	if (devs == NULL)
 		return FALSE;
+	if (devs->len > 0)
+		fu_util_build_device_tree (priv, root, devs, NULL);
 
 	/* print */
-	if (devs->len == 0) {
+	if (g_node_n_children (root) == 0) {
 		/* TRANSLATORS: nothing attached that can be upgraded */
 		g_print ("%s\n", _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
-	fu_util_build_device_tree (priv, root, devs, NULL);
 	fu_util_print_tree (root, title);
 
 	/* nag? */
@@ -597,7 +599,7 @@ fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GErro
 	if (!fu_common_mkdir_parent (filename, error))
 		return NULL;
 	blob = fwupd_client_download_bytes (priv->client, perhapsfn,
-					    FWUPD_CLIENT_DOWNLOAD_FLAG_NONE,
+					    priv->download_flags,
 					    priv->cancellable, error);
 	if (blob == NULL)
 		return NULL;
@@ -1220,8 +1222,6 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
 	g_autoptr(GPtrArray) rels = NULL;
-	g_autoptr(GNode) root = g_node_new (NULL);
-	g_autofree gchar *title = fu_util_get_tree_title (priv);
 
 	priv->filter_include |= FWUPD_DEVICE_FLAG_SUPPORTED;
 	dev = fu_util_get_device_or_prompt (priv, values, error);
@@ -1238,12 +1238,21 @@ fu_util_get_releases (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print ("%s\n", _("No releases available"));
 		return TRUE;
 	}
-
-	for (guint i = 0; i < rels->len; i++) {
-		FwupdRelease *rel = g_ptr_array_index (rels, i);
-		g_node_append_data (root, rel);
+	if (g_getenv ("FWUPD_VERBOSE") != NULL) {
+		for (guint i = 0; i < rels->len; i++) {
+			FwupdRelease *rel = g_ptr_array_index (rels, i);
+			g_autofree gchar *tmp = fwupd_release_to_string (rel);
+			g_print ("%s\n", tmp);
+		}
+	} else {
+		g_autoptr(GNode) root = g_node_new (NULL);
+		g_autofree gchar *title = fu_util_get_tree_title (priv);
+		for (guint i = 0; i < rels->len; i++) {
+			FwupdRelease *rel = g_ptr_array_index (rels, i);
+			g_node_append_data (root, rel);
+		}
+		fu_util_print_tree (root, title);
 	}
-	fu_util_print_tree (root, title);
 
 	return TRUE;
 }
@@ -1530,8 +1539,9 @@ fu_util_update_device_with_release (FuUtilPrivate *priv,
 					     error))
 			return FALSE;
 	}
-	return fwupd_client_install_release (priv->client, dev, rel, priv->flags,
-					     priv->cancellable, error);
+	return fwupd_client_install_release2 (priv->client, dev, rel, priv->flags,
+					      priv->download_flags,
+					      priv->cancellable, error);
 }
 
 static gboolean
@@ -1835,7 +1845,13 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_maybe_send_reports (priv, remote_id, error))
 		return FALSE;
 
-	return TRUE;
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug ("skipping reboot check");
+		return TRUE;
+	}
+
+	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
 
 static gboolean
@@ -1899,6 +1915,12 @@ fu_util_reinstall (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+_g_str_equal0 (gconstpointer str1, gconstpointer str2)
+{
+	return g_strcmp0 (str1, str2) == 0;
+}
+
+static gboolean
 fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *remote_id;
@@ -1910,6 +1932,7 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* find the device and check it has multiple branches */
 	priv->filter_include |= FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES;
+	priv->filter_include |= FWUPD_DEVICE_FLAG_UPDATABLE;
 	dev = fu_util_get_device_or_prompt (priv, values, error);
 	if (dev == NULL)
 		return FALSE;
@@ -1923,10 +1946,10 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* get all the unique branches */
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel_tmp = g_ptr_array_index (rels, i);
-		const gchar *branch_tmp = fu_util_release_get_branch (rel_tmp);
+		const gchar *branch_tmp = fwupd_release_get_branch (rel_tmp);
 #if GLIB_CHECK_VERSION(2,54,3)
 		if (g_ptr_array_find_with_equal_func (branches, branch_tmp,
-						      g_str_equal, NULL))
+						      _g_str_equal0, NULL))
 			continue;
 #endif
 		g_ptr_array_add (branches, g_strdup (branch_tmp));
@@ -1947,7 +1970,7 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print ("0.\t%s\n", _("Cancel"));
 		for (guint i = 0; i < branches->len; i++) {
 			const gchar *branch_tmp = g_ptr_array_index (branches, i);
-			g_print ("%u.\t%s\n", i + 1, branch_tmp);
+			g_print ("%u.\t%s\n", i + 1, fu_util_branch_for_display (branch_tmp));
 		}
 		idx = fu_util_prompt_for_number (branches->len);
 		if (idx == 0) {
@@ -1967,7 +1990,7 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Device %s is already on branch %s",
 			     fu_device_get_name (dev),
-			     branch);
+			     fu_util_branch_for_display (branch));
 		return FALSE;
 	}
 
@@ -1984,7 +2007,7 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "No releases for branch %s",
-			     branch);
+			     fu_util_branch_for_display (branch));
 		return FALSE;
 	}
 
@@ -2694,6 +2717,7 @@ main (int argc, char *argv[])
 	gboolean allow_branch_switch = FALSE;
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
+	gboolean enable_ipfs = FALSE;
 	gboolean ignore_power = FALSE;
 	gboolean is_interactive = TRUE;
 	gboolean no_history = FALSE;
@@ -2702,6 +2726,7 @@ main (int argc, char *argv[])
 	gboolean verbose = FALSE;
 	gboolean version = FALSE;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
+	g_autoptr(GDateTime) dt_now = g_date_time_new_now_utc ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GError) error_polkit = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new ();
@@ -2762,6 +2787,9 @@ main (int argc, char *argv[])
 		{ "disable-ssl-strict", '\0', 0, G_OPTION_ARG_NONE, &priv->disable_ssl_strict,
 			/* TRANSLATORS: command line option */
 			_("Ignore SSL strict checks when downloading files"), NULL },
+		{ "ipfs", '\0', 0, G_OPTION_ARG_NONE, &enable_ipfs,
+			/* TRANSLATORS: command line option */
+			_("Only use IPFS when downloading files"), NULL },
 		{ "filter", '\0', 0, G_OPTION_ARG_STRING, &filter,
 			/* TRANSLATORS: command line option */
 			_("Filter with a set of device flags using a ~ prefix to "
@@ -3045,6 +3073,17 @@ main (int argc, char *argv[])
 		g_setenv ("DISABLE_SSL_STRICT", "1", TRUE);
 	}
 
+	/* this doesn't have to be precise (e.g. using the build-year) as we just
+	 * want to check the clock is not set to the default of 1970-01-01... */
+	if (g_date_time_get_year (dt_now) < 2021) {
+		g_autofree gchar *fmt = NULL;
+		/* TRANSLATORS: this is a prefix on the console */
+		fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
+		/* TRANSLATORS: try to help */
+		g_printerr ("%s %s\n", fmt, _("The system clock has not been set "
+					      "correctly and downloading files may fail."));
+	}
+
 	/* non-TTY consoles cannot answer questions */
 	if (isatty (fileno (stdout)) == 0) {
 		is_interactive = FALSE;
@@ -3095,6 +3134,10 @@ main (int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
 	if (ignore_power)
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_POWER;
+
+	/* use IPFS for metadata and firmware *only* if specified */
+	if (enable_ipfs)
+		priv->download_flags |= FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS;
 
 #ifdef HAVE_POLKIT
 	/* start polkit tty agent to listen for password requests */

@@ -670,19 +670,21 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	title = fu_util_get_tree_title (priv);
 
-	/* print */
+	/* get devices and build tree */
 	devs = fu_engine_get_devices (priv->engine, error);
 	if (devs == NULL)
 		return FALSE;
+	if (devs->len > 0) {
+		fwupd_device_array_ensure_parents (devs);
+		fu_util_build_device_tree (priv, root, devs, NULL);
+	}
 
 	/* print */
-	if (devs->len == 0) {
+	if (g_node_n_children (root) == 0) {
 		/* TRANSLATORS: nothing attached that can be upgraded */
 		g_print ("%s\n", _("No hardware detected with firmware update capability"));
 		return TRUE;
 	}
-	fwupd_device_array_ensure_parents (devs);
-	fu_util_build_device_tree (priv, root, devs, NULL);
 	fu_util_print_tree (root, title);
 
 	/* save the device state for other applications to see */
@@ -870,7 +872,7 @@ fu_util_firmware_dump (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_COLDPLUG, error))
 		return FALSE;
 
 	/* get device */
@@ -1095,18 +1097,21 @@ static gboolean
 fu_util_install_release (FuUtilPrivate *priv, FwupdRelease *rel, GError **error)
 {
 	FwupdRemote *remote;
+	GPtrArray *locations;
 	const gchar *remote_id;
 	const gchar *uri_tmp;
 	g_auto(GStrv) argv = NULL;
 
-	uri_tmp = fwupd_release_get_uri (rel);
-	if (uri_tmp == NULL) {
+	/* get the default release only until other parts of fwupd can cope */
+	locations = fwupd_release_get_locations (rel);
+	if (locations->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
 				     "release missing URI");
 		return FALSE;
 	}
+	uri_tmp = g_ptr_array_index (locations, 0);
 	remote_id = fwupd_release_get_remote_id (rel);
 	if (remote_id == NULL) {
 		g_set_error (error,
@@ -1594,31 +1599,68 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_export_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuHwids) hwids = fu_hwids_new ();
+	g_autoptr(FuSmbios) smbios = fu_smbios_new ();
+	g_autoptr(GKeyFile) kf = g_key_file_new ();
+	g_autoptr(GPtrArray) hwid_keys = NULL;
+
+	/* check args */
+	if (g_strv_length (values) != 1) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments, expected HWIDS-FILE");
+		return FALSE;
+	}
+
+	/* setup default hwids */
+	if (!fu_smbios_setup (smbios, error))
+		return FALSE;
+	if (!fu_hwids_setup (hwids, smbios, error))
+		return FALSE;
+
+	/* save all keys */
+	hwid_keys = fu_hwids_get_keys (hwids);
+	for (guint i = 0; i < hwid_keys->len; i++) {
+		const gchar *hwid_key = g_ptr_array_index (hwid_keys, i);
+		const gchar *value = fu_hwids_get_value (hwids, hwid_key);
+		g_key_file_set_string (kf, "HwIds", hwid_key, value);
+	}
+
+	/* success */
+	return g_key_file_save_to_file (kf, values[0], error);
+}
+
+static gboolean
 fu_util_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	g_autoptr(FuSmbios) smbios = fu_smbios_new ();
+	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(FuHwids) hwids = fu_hwids_new ();
-	const gchar *hwid_keys[] = {
-		FU_HWIDS_KEY_BIOS_VENDOR,
-		FU_HWIDS_KEY_BIOS_VERSION,
-		FU_HWIDS_KEY_BIOS_MAJOR_RELEASE,
-		FU_HWIDS_KEY_BIOS_MINOR_RELEASE,
-		FU_HWIDS_KEY_MANUFACTURER,
-		FU_HWIDS_KEY_FAMILY,
-		FU_HWIDS_KEY_PRODUCT_NAME,
-		FU_HWIDS_KEY_PRODUCT_SKU,
-		FU_HWIDS_KEY_ENCLOSURE_KIND,
-		FU_HWIDS_KEY_BASEBOARD_MANUFACTURER,
-		FU_HWIDS_KEY_BASEBOARD_PRODUCT,
-		NULL };
+	g_autoptr(GPtrArray) hwid_keys = fu_hwids_get_keys (hwids);
 
 	/* read DMI data */
 	if (g_strv_length (values) == 0) {
+		smbios = fu_smbios_new ();
 		if (!fu_smbios_setup (smbios, error))
 			return FALSE;
 	} else if (g_strv_length (values) == 1) {
-		if (!fu_smbios_setup_from_file (smbios, values[0], error))
-			return FALSE;
+		/* a keyfile with overrides */
+		g_autoptr(GKeyFile) kf = g_key_file_new ();
+		if (g_key_file_load_from_file (kf, values[0], G_KEY_FILE_NONE, NULL)) {
+			for (guint i = 0; i < hwid_keys->len; i++) {
+				const gchar *hwid_key = g_ptr_array_index (hwid_keys, i);
+				g_autofree gchar *tmp = NULL;
+				tmp = g_key_file_get_string (kf, "HwIds", hwid_key, NULL);
+				fu_hwids_add_smbios_override (hwids, hwid_key, tmp);
+			}
+		/* a DMI blob */
+		} else {
+			smbios = fu_smbios_new ();
+			if (!fu_smbios_setup_from_file (smbios, values[0], error))
+				return FALSE;
+		}
 	} else {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -1632,16 +1674,17 @@ fu_util_hwids (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* show debug output */
 	g_print ("Computer Information\n");
 	g_print ("--------------------\n");
-	for (guint i = 0; hwid_keys[i] != NULL; i++) {
-		const gchar *tmp = fu_hwids_get_value (hwids, hwid_keys[i]);
-		if (tmp == NULL)
+	for (guint i = 0; i < hwid_keys->len; i++) {
+		const gchar *hwid_key = g_ptr_array_index (hwid_keys, i);
+		const gchar *value = fu_hwids_get_value (hwids, hwid_key);
+		if (value == NULL)
 			continue;
-		if (g_strcmp0 (hwid_keys[i], FU_HWIDS_KEY_BIOS_MAJOR_RELEASE) == 0 ||
-		    g_strcmp0 (hwid_keys[i], FU_HWIDS_KEY_BIOS_MINOR_RELEASE) == 0) {
-			guint64 val = g_ascii_strtoull (tmp, NULL, 16);
-			g_print ("%s: %" G_GUINT64_FORMAT "\n", hwid_keys[i], val);
+		if (g_strcmp0 (hwid_key, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE) == 0 ||
+		    g_strcmp0 (hwid_key, FU_HWIDS_KEY_BIOS_MINOR_RELEASE) == 0) {
+			guint64 val = g_ascii_strtoull (value, NULL, 16);
+			g_print ("%s: %" G_GUINT64_FORMAT "\n", hwid_key, val);
 		} else {
-			g_print ("%s: %s\n", hwid_keys[i], tmp);
+			g_print ("%s: %s\n", hwid_key, value);
 		}
 	}
 
@@ -2431,6 +2474,7 @@ fu_util_prompt_for_volume (GError **error)
 {
 	FuVolume *volume;
 	guint idx;
+	gboolean is_fallback = FALSE;
 	g_autoptr(GPtrArray) volumes = NULL;
 	g_autoptr(GPtrArray) volumes_vfat = g_ptr_array_new ();
 	g_autoptr(GError) error_local = NULL;
@@ -2438,6 +2482,7 @@ fu_util_prompt_for_volume (GError **error)
 	/* exactly one */
 	volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_ESP, &error_local);
 	if (volumes == NULL) {
+		is_fallback = TRUE;
 		g_debug ("%s, falling back to %s", error_local->message, FU_VOLUME_KIND_BDP);
 		volumes = fu_common_get_volumes_by_kind (FU_VOLUME_KIND_BDP, error);
 		if (volumes == NULL) {
@@ -2445,13 +2490,13 @@ fu_util_prompt_for_volume (GError **error)
 			return NULL;
 		}
 	}
-	/* only add internal vfat partitions */
+	/* on fallback: only add internal vfat partitions */
 	for (guint i = 0; i < volumes->len; i++) {
 		FuVolume *vol = g_ptr_array_index (volumes, i);
 		g_autofree gchar *type = fu_volume_get_id_type (vol);
 		if (type == NULL)
 			continue;
-		if (!fu_volume_is_internal (vol))
+		if (is_fallback && !fu_volume_is_internal (vol))
 			continue;
 		if (g_strcmp0 (type, "vfat") == 0)
 			g_ptr_array_add (volumes_vfat, vol);
@@ -2529,6 +2574,11 @@ fu_util_esp_list (FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static gboolean
+_g_str_equal0 (gconstpointer str1, gconstpointer str2)
+{
+	return g_strcmp0 (str1, str2) == 0;
+}
 
 static gboolean
 fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
@@ -2549,6 +2599,7 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* find the device and check it has multiple branches */
 	priv->filter_include |= FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES;
+	priv->filter_include |= FWUPD_DEVICE_FLAG_UPDATABLE;
 	if (g_strv_length (values) == 1)
 		dev = fu_util_get_device (priv, values[1], error);
 	else
@@ -2574,10 +2625,10 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 	/* get all the unique branches */
 	for (guint i = 0; i < rels->len; i++) {
 		FwupdRelease *rel_tmp = g_ptr_array_index (rels, i);
-		const gchar *branch_tmp = fu_util_release_get_branch (rel_tmp);
+		const gchar *branch_tmp = fwupd_release_get_branch (rel_tmp);
 #if GLIB_CHECK_VERSION(2,54,3)
 		if (g_ptr_array_find_with_equal_func (branches, branch_tmp,
-						      g_str_equal, NULL))
+						      _g_str_equal0, NULL))
 			continue;
 #endif
 		g_ptr_array_add (branches, g_strdup (branch_tmp));
@@ -2598,7 +2649,7 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print ("0.\t%s\n", _("Cancel"));
 		for (guint i = 0; i < branches->len; i++) {
 			const gchar *branch_tmp = g_ptr_array_index (branches, i);
-			g_print ("%u.\t%s\n", i + 1, branch_tmp);
+			g_print ("%u.\t%s\n", i + 1, fu_util_branch_for_display (branch_tmp));
 		}
 		idx = fu_util_prompt_for_number (branches->len);
 		if (idx == 0) {
@@ -2618,7 +2669,7 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Device %s is already on branch %s",
 			     fu_device_get_name (dev),
-			     branch);
+			     fu_util_branch_for_display (branch));
 		return FALSE;
 	}
 
@@ -2635,7 +2686,7 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "No releases for branch %s",
-			     branch);
+			     fu_util_branch_for_display (branch));
 		return FALSE;
 	}
 
@@ -2884,10 +2935,17 @@ main (int argc, char *argv[])
 	fu_util_cmd_array_add (cmd_array,
 		     "hwids",
 		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-		     _("[FILE]"),
+		     _("[SMBIOS-FILE|HWIDS-FILE]"),
 		     /* TRANSLATORS: command description */
 		     _("Return all the hardware IDs for the machine"),
 		     fu_util_hwids);
+	fu_util_cmd_array_add (cmd_array,
+		     "export-hwids",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("HWIDS-FILE"),
+		     /* TRANSLATORS: command description */
+		     _("Save a file that allows generation of hardware IDs"),
+		     fu_util_export_hwids);
 	fu_util_cmd_array_add (cmd_array,
 		     "monitor",
 		     NULL,

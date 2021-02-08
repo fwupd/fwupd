@@ -270,11 +270,13 @@ fu_solokey_device_packet (FuSolokeyDevice *self, guint8 cmd,
 					     SOLO_USB_HID_EP_SIZE - 5);
 		for (guint i = 0; i < chunks->len; i++) {
 			FuChunk *chk = g_ptr_array_index (chunks, i);
-			guint8 seq = chk->idx;
+			guint8 seq = fu_chunk_get_idx (chk);
 			g_autoptr(GByteArray) req2 = g_byte_array_new ();
 			g_byte_array_append (req2, buf_cid, sizeof(buf_cid));
 			g_byte_array_append (req2, &seq, sizeof(seq));
-			g_byte_array_append (req2, chk->data, chk->data_sz);
+			g_byte_array_append (req2,
+					     fu_chunk_get_data (chk),
+					     fu_chunk_get_data_sz (chk));
 			if (!fu_solokey_device_packet_tx (self, req2, error))
 				return NULL;
 		}
@@ -447,8 +449,10 @@ fu_solokey_device_write_firmware (FuDevice *device,
 		g_autoptr(GByteArray) res = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		g_byte_array_append (buf, chk->data, chk->data_sz);
-		fu_solokey_device_exchange (req, SOLO_BOOTLOADER_WRITE, chk->address, buf);
+		g_byte_array_append (buf,
+				     fu_chunk_get_data (chk),
+				     fu_chunk_get_data_sz (chk));
+		fu_solokey_device_exchange (req, SOLO_BOOTLOADER_WRITE, fu_chunk_get_address (chk), buf);
 		res = fu_solokey_device_packet (self, SOLO_BOOTLOADER_HID_CMD_BOOT, req, &error_local);
 		if (res == NULL) {
 			g_set_error (error,

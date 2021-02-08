@@ -40,6 +40,7 @@ typedef struct {
 	guint			 order;
 	guint			 priority;
 	GPtrArray		*rules[FU_PLUGIN_RULE_LAST];
+	GPtrArray		*devices;		/* (nullable) (element-type FuDevice) */
 	gchar			*build_hash;
 	FuHwids			*hwids;
 	FuQuirks		*quirks;
@@ -48,8 +49,8 @@ typedef struct {
 	GPtrArray		*udev_subsystems;
 	FuSmbios		*smbios;
 	GType			 device_gtype;
-	GHashTable		*devices;		/* (nullable): platform_id:GObject */
-	GRWLock			 devices_mutex;
+	GHashTable		*cache;			/* (nullable): platform_id:GObject */
+	GRWLock			 cache_mutex;
 	GHashTable		*report_metadata;	/* (nullable): key:value */
 	FuPluginData		*data;
 } FuPluginPrivate;
@@ -172,6 +173,11 @@ fu_plugin_set_build_hash (FuPlugin *self, const gchar *build_hash)
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (build_hash != NULL);
+
+	/* not changed */
+	if (g_strcmp0 (priv->build_hash, build_hash) == 0)
+		return;
+
 	g_free (priv->build_hash);
 	priv->build_hash = g_strdup (build_hash);
 }
@@ -209,13 +215,13 @@ gpointer
 fu_plugin_cache_lookup (FuPlugin *self, const gchar *id)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&priv->devices_mutex);
+	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&priv->cache_mutex);
 	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
 	g_return_val_if_fail (id != NULL, NULL);
 	g_return_val_if_fail (locker != NULL, NULL);
-	if (priv->devices == NULL)
+	if (priv->cache == NULL)
 		return NULL;
-	return g_hash_table_lookup (priv->devices, id);
+	return g_hash_table_lookup (priv->cache, id);
 }
 
 /**
@@ -232,17 +238,17 @@ void
 fu_plugin_cache_add (FuPlugin *self, const gchar *id, gpointer dev)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new (&priv->devices_mutex);
+	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new (&priv->cache_mutex);
 	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (id != NULL);
 	g_return_if_fail (locker != NULL);
-	if (priv->devices == NULL) {
-		priv->devices = g_hash_table_new_full (g_str_hash,
-						       g_str_equal,
-						       g_free,
-						       (GDestroyNotify) g_object_unref);
+	if (priv->cache == NULL) {
+		priv->cache = g_hash_table_new_full (g_str_hash,
+						     g_str_equal,
+						     g_free,
+						     (GDestroyNotify) g_object_unref);
 	}
-	g_hash_table_insert (priv->devices, g_strdup (id), g_object_ref (dev));
+	g_hash_table_insert (priv->cache, g_strdup (id), g_object_ref (dev));
 }
 
 /**
@@ -258,13 +264,13 @@ void
 fu_plugin_cache_remove (FuPlugin *self, const gchar *id)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new (&priv->devices_mutex);
+	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new (&priv->cache_mutex);
 	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (id != NULL);
 	g_return_if_fail (locker != NULL);
-	if (priv->devices == NULL)
+	if (priv->cache == NULL)
 		return;
-	g_hash_table_remove (priv->devices, id);
+	g_hash_table_remove (priv->cache, id);
 }
 
 /**
@@ -465,7 +471,7 @@ fu_plugin_build_device_update_error (FuPlugin *self)
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_LEGACY_BIOS))
 		return "Not updatable in legacy BIOS mode";
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED))
-		return "Not updatable as UEFI capsule updates not enabled";
+		return "Not updatable as UEFI capsule updates not enabled in firmware setup";
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED))
 		return "Not updatable as requires unlock";
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED))
@@ -475,6 +481,15 @@ fu_plugin_build_device_update_error (FuPlugin *self)
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED))
 		return "Not updatable as plugin was disabled";
 	return NULL;
+}
+
+static void
+fu_plugin_ensure_devices (FuPlugin *self)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	if (priv->devices != NULL)
+		return;
+	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 }
 
 /**
@@ -495,6 +510,7 @@ fu_plugin_build_device_update_error (FuPlugin *self)
 void
 fu_plugin_device_add (FuPlugin *self, FuDevice *device)
 {
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	GPtrArray *children;
 	g_autoptr(GError) error = NULL;
 
@@ -506,6 +522,10 @@ fu_plugin_device_add (FuPlugin *self, FuDevice *device)
 		g_warning ("ignoring add: %s", error->message);
 		return;
 	}
+
+	/* add to array */
+	fu_plugin_ensure_devices (self);
+	g_ptr_array_add (priv->devices, g_object_ref (device));
 
 	/* proxy to device where required */
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE)) {
@@ -536,6 +556,26 @@ fu_plugin_device_add (FuPlugin *self, FuDevice *device)
 		if (fu_device_get_created (child) == 0)
 			fu_plugin_device_add (self, child);
 	}
+}
+
+/**
+ * fu_plugin_get_devices:
+ * @self: A #FuPlugin
+ *
+ * Returns all devices added by the plugin using fu_plugin_device_add() and
+ * not yet removed with fu_plugin_device_remove().
+ *
+ * Returns: (transfer none) (element-type FuDevice): devices
+ *
+ * Since: 1.5.6
+ **/
+GPtrArray *
+fu_plugin_get_devices (FuPlugin *self)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
+	fu_plugin_ensure_devices (self);
+	return priv->devices;
 }
 
 /**
@@ -584,8 +624,14 @@ fu_plugin_device_register (FuPlugin *self, FuDevice *device)
 void
 fu_plugin_device_remove (FuPlugin *self, FuDevice *device)
 {
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+
 	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (FU_IS_DEVICE (device));
+
+	/* remove from array */
+	if (priv->devices != NULL)
+		g_ptr_array_remove (priv->devices, device);
 
 	g_debug ("emit removed from %s: %s",
 		 fu_plugin_get_name (self),
@@ -2881,7 +2927,7 @@ static void
 fu_plugin_init (FuPlugin *self)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
-	g_rw_lock_init (&priv->devices_mutex);
+	g_rw_lock_init (&priv->cache_mutex);
 }
 
 static void
@@ -2891,7 +2937,7 @@ fu_plugin_finalize (GObject *object)
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginInitFunc func = NULL;
 
-	g_rw_lock_clear (&priv->devices_mutex);
+	g_rw_lock_clear (&priv->cache_mutex);
 
 	/* optional */
 	if (priv->module != NULL) {
@@ -2906,6 +2952,8 @@ fu_plugin_finalize (GObject *object)
 		if (priv->rules[i] != NULL)
 			g_ptr_array_unref (priv->rules[i]);
 	}
+	if (priv->devices != NULL)
+		g_ptr_array_unref (priv->devices);
 	if (priv->usb_ctx != NULL)
 		g_object_unref (priv->usb_ctx);
 	if (priv->hwids != NULL)
@@ -2922,8 +2970,8 @@ fu_plugin_finalize (GObject *object)
 		g_hash_table_unref (priv->compile_versions);
 	if (priv->report_metadata != NULL)
 		g_hash_table_unref (priv->report_metadata);
-	if (priv->devices != NULL)
-		g_hash_table_unref (priv->devices);
+	if (priv->cache != NULL)
+		g_hash_table_unref (priv->cache);
 	g_free (priv->build_hash);
 	g_free (priv->data);
 	/* Must happen as the last step to avoid prematurely

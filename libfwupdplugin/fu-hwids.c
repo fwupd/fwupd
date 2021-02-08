@@ -21,6 +21,7 @@ struct _FuHwids {
 	GObject			 parent_instance;
 	GHashTable		*hash_dmi_hw;		/* BiosVersion->"1.2.3 " */
 	GHashTable		*hash_dmi_display;	/* BiosVersion->"1.2.3" */
+	GHashTable		*hash_smbios_override;	/* BiosVersion->"1.2.3" */
 	GHashTable		*hash_guid;		/* a-c-b-d->1 */
 	GPtrArray		*array_guids;		/* a-c-b-d */
 };
@@ -76,6 +77,39 @@ GPtrArray *
 fu_hwids_get_guids (FuHwids *self)
 {
 	return self->array_guids;
+}
+
+/**
+ * fu_hwids_get_keys:
+ * @self: A #FuHwids
+ *
+ * Returns all the defined HWID keys.
+ *
+ * Returns: (transfer container) (element-type utf8): All the known keys,
+ * e.g. %FU_HWIDS_KEY_FAMILY
+ *
+ * Since: 1.5.6
+ **/
+GPtrArray *
+fu_hwids_get_keys (FuHwids *self)
+{
+	GPtrArray *array = g_ptr_array_new ();
+	const gchar *keys[] = {
+		FU_HWIDS_KEY_BIOS_VENDOR,
+		FU_HWIDS_KEY_BIOS_VERSION,
+		FU_HWIDS_KEY_BIOS_MAJOR_RELEASE,
+		FU_HWIDS_KEY_BIOS_MINOR_RELEASE,
+		FU_HWIDS_KEY_MANUFACTURER,
+		FU_HWIDS_KEY_FAMILY,
+		FU_HWIDS_KEY_PRODUCT_NAME,
+		FU_HWIDS_KEY_PRODUCT_SKU,
+		FU_HWIDS_KEY_ENCLOSURE_KIND,
+		FU_HWIDS_KEY_BASEBOARD_MANUFACTURER,
+		FU_HWIDS_KEY_BASEBOARD_PRODUCT,
+		NULL };
+	for (guint i = 0; keys[i] != NULL; i++)
+		g_ptr_array_add (array, (gpointer) keys[i]);
+	return array;
 }
 
 static gchar *
@@ -197,6 +231,26 @@ fu_hwids_get_replace_keys (FuHwids *self, const gchar *key)
 }
 
 /**
+ * fu_hwids_add_smbios_override:
+ * @self: A #FuHwids
+ * @key: A key, e.g. %FU_HWIDS_KEY_PRODUCT_SKU
+ * @value: (nullable): A new value, e.g. "ExampleModel" or %NULL
+ *
+ * Sets SMBIOS override values so you can emulate another system.
+ *
+ * This function has no effect if called after fu_hwids_setup()
+ *
+ * Since: 1.5.6
+ **/
+void
+fu_hwids_add_smbios_override (FuHwids *self, const gchar *key, const gchar *value)
+{
+	g_return_if_fail (FU_IS_HWIDS (self));
+	g_return_if_fail (key != NULL);
+	g_hash_table_insert (self->hash_smbios_override, g_strdup (key), g_strdup (value));
+}
+
+/**
  * fu_hwids_get_replace_values:
  * @self: A #FuHwids
  * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
@@ -310,7 +364,7 @@ fu_hwids_convert_integer_cb (FuSmbios *smbios,
 /**
  * fu_hwids_setup:
  * @self: A #FuHwids
- * @smbios: A #FuSmbios
+ * @smbios: (nullable): A #FuSmbios or %NULL
  * @error: A #GError or %NULL
  *
  * Reads all the SMBIOS values from the hardware.
@@ -354,26 +408,39 @@ fu_hwids_setup (FuHwids *self, FuSmbios *smbios, GError **error)
 	};
 
 	g_return_val_if_fail (FU_IS_HWIDS (self), FALSE);
-	g_return_val_if_fail (FU_IS_SMBIOS (smbios), FALSE);
+	g_return_val_if_fail (FU_IS_SMBIOS (smbios) || smbios == NULL, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* get all DMI data */
 	for (guint i = 0; map[i].key != NULL; i++) {
-		const gchar *contents_hdr;
+		const gchar *contents_hdr = NULL;
 		g_autofree gchar *contents = NULL;
 		g_autofree gchar *contents_safe = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		/* get the data from a SMBIOS table */
-		contents = map[i].func (smbios, map[i].type, map[i].offset, &error_local);
-		if (contents == NULL) {
-			g_debug ("ignoring %s: %s", map[i].key, error_local->message);
+		/* get the data from a SMBIOS table unless an override exists */
+		if (g_hash_table_lookup_extended (self->hash_smbios_override,
+						  map[i].key, NULL,
+						  (gpointer *) &contents_hdr)) {
+			if (contents_hdr == NULL) {
+				g_debug ("ignoring %s", map[i].key);
+				continue;
+			}
+		} else if (smbios != NULL) {
+			contents = map[i].func (smbios, map[i].type,
+						map[i].offset, &error_local);
+			if (contents == NULL) {
+				g_debug ("ignoring %s: %s", map[i].key, error_local->message);
+				continue;
+			}
+			contents_hdr = contents;
+		} else {
+			g_debug ("ignoring %s", map[i].key);
 			continue;
 		}
-		g_debug ("smbios property %s=%s", map[i].key, contents);
+		g_debug ("smbios property %s=%s", map[i].key, contents_hdr);
 
 		/* weirdly, remove leading zeros */
-		contents_hdr = contents;
 		while (contents_hdr[0] == '0' &&
 		       map[i].func != fu_hwids_convert_padded_integer_cb)
 			contents_hdr++;
@@ -421,6 +488,7 @@ fu_hwids_finalize (GObject *object)
 
 	g_hash_table_unref (self->hash_dmi_hw);
 	g_hash_table_unref (self->hash_dmi_display);
+	g_hash_table_unref (self->hash_smbios_override);
 	g_hash_table_unref (self->hash_guid);
 	g_ptr_array_unref (self->array_guids);
 
@@ -439,6 +507,7 @@ fu_hwids_init (FuHwids *self)
 {
 	self->hash_dmi_hw = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->hash_dmi_display = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	self->hash_smbios_override = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->hash_guid = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 	self->array_guids = g_ptr_array_new_with_free_func (g_free);
 }

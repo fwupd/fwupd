@@ -10,7 +10,7 @@ shared_module('fu_plugin_solokey',
   fu_hash,
   sources : [
     'fu-solokey-device.c',
-    'fu-solokey-firmware.c',
+    'fu-solokey-firmware.c',    # fuzzing
     'fu-plugin-solokey.c',
   ],
   include_directories : [

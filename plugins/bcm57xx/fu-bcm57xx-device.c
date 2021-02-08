@@ -340,11 +340,12 @@ fu_bcm57xx_device_dump_firmware (FuDevice *device, GError **error)
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
-	chunks = fu_chunk_array_new (buf, bufsz, 0x0, 0x0, FU_BCM57XX_BLOCK_SZ);
+	chunks = fu_chunk_array_mutable_new (buf, bufsz, 0x0, 0x0, FU_BCM57XX_BLOCK_SZ);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		if (!fu_bcm57xx_device_nvram_read (self, chk->address,
-						   (guint8 *) chk->data, chk->data_sz,
+		if (!fu_bcm57xx_device_nvram_read (self, fu_chunk_get_address (chk),
+						   fu_chunk_get_data_out (chk),
+						   fu_chunk_get_data_sz (chk),
 						   error))
 			return NULL;
 		fu_device_set_progress_full (device, i, chunks->len - 1);
@@ -481,8 +482,9 @@ fu_bcm57xx_device_write_firmware (FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes (blob, 0x0, 0x0, FU_BCM57XX_BLOCK_SZ);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		if (!fu_bcm57xx_device_nvram_write (self, chk->address,
-						    chk->data, chk->data_sz,
+		if (!fu_bcm57xx_device_nvram_write (self, fu_chunk_get_address (chk),
+						    fu_chunk_get_data (chk),
+						    fu_chunk_get_data_sz (chk),
 						    error))
 			return FALSE;
 		fu_device_set_progress_full (device, i, chunks->len - 1);

@@ -88,6 +88,11 @@ static void
 fwupd_remote_set_title (FwupdRemote *self, const gchar *title)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->title, title) == 0)
+		return;
+
 	g_free (priv->title);
 	priv->title = g_strdup (title);
 }
@@ -105,6 +110,11 @@ void
 fwupd_remote_set_agreement (FwupdRemote *self, const gchar *agreement)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->agreement, agreement) == 0)
+		return;
+
 	g_free (priv->agreement);
 	priv->agreement = g_strdup (agreement);
 }
@@ -113,6 +123,11 @@ static void
 fwupd_remote_set_checksum (FwupdRemote *self, const gchar *checksum)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->checksum, checksum) == 0)
+		return;
+
 	g_free (priv->checksum);
 	priv->checksum = g_strdup (checksum);
 }
@@ -121,8 +136,14 @@ static void
 fwupd_remote_set_password (FwupdRemote *self, const gchar *password)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->password, password) == 0)
+		return;
+
 	if (password != NULL && password[0] == '\0')
 		password = NULL;
+	g_free (priv->password);
 	priv->password = g_strdup (password);
 }
 
@@ -154,6 +175,11 @@ static void
 fwupd_remote_set_id (FwupdRemote *self, const gchar *id)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->id, id) == 0)
+		return;
+
 	g_free (priv->id);
 	priv->id = g_strdup (id);
 	g_strdelimit (priv->id, ".", '\0');
@@ -163,6 +189,8 @@ static void
 fwupd_remote_set_filename_source (FwupdRemote *self, const gchar *filename_source)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	if (priv->filename_source == filename_source)
+		return;
 	g_free (priv->filename_source);
 	priv->filename_source = g_strdup (filename_source);
 }
@@ -344,6 +372,10 @@ fwupd_remote_set_filename_cache (FwupdRemote *self, const gchar *filename)
 
 	g_return_if_fail (FWUPD_IS_REMOTE (self));
 
+	/* not changed */
+	if (g_strcmp0 (priv->filename_cache, filename) == 0)
+		return;
+
 	g_free (priv->filename_cache);
 	priv->filename_cache = g_strdup (filename);
 
@@ -432,7 +464,9 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 		else
 			priv->kind = FWUPD_REMOTE_KIND_LOCAL;
 	} else if (g_str_has_prefix (metadata_uri, "http://") ||
-		   g_str_has_prefix (metadata_uri, "https://")) {
+		   g_str_has_prefix (metadata_uri, "https://") ||
+		   g_str_has_prefix (metadata_uri, "ipfs://") ||
+		   g_str_has_prefix (metadata_uri, "ipns://")) {
 		priv->kind = FWUPD_REMOTE_KIND_DOWNLOAD;
 	} else {
 		g_set_error (error,
@@ -737,6 +771,11 @@ fwupd_remote_set_remotes_dir (FwupdRemote *self, const gchar *directory)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FWUPD_IS_REMOTE (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->remotes_dir, directory) == 0)
+		return;
+
 	g_free (priv->remotes_dir);
 	priv->remotes_dir = g_strdup (directory);
 }

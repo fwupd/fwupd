@@ -285,9 +285,9 @@ fu_rts54hid_device_write_firmware (FuDevice *device,
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		/* write chunk */
 		if (!fu_rts54hid_device_write_flash (self,
-						     chk->address,
-						     chk->data,
-						     chk->data_sz,
+						     fu_chunk_get_address (chk),
+						     fu_chunk_get_data (chk),
+						     fu_chunk_get_data_sz (chk),
 						     error))
 			return FALSE;
 

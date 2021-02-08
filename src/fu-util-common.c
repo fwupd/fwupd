@@ -10,7 +10,9 @@
 
 #include <stdio.h>
 #include <glib/gi18n.h>
+#ifdef HAVE_GUSB
 #include <gusb.h>
+#endif
 #include <xmlb.h>
 #include <fwupd.h>
 #ifdef HAVE_LIBCURL
@@ -286,11 +288,13 @@ fu_util_get_versions (void)
 	g_string_append_printf (string, "client version:\t%s\n", SOURCE_VERSION);
 	g_string_append_printf (string,
 				"compile-time dependency versions\n");
+#ifdef HAVE_GUSB
 	g_string_append_printf (string,
 				"\tgusb:\t%d.%d.%d\n",
 				G_USB_MAJOR_VERSION,
 				G_USB_MINOR_VERSION,
 				G_USB_MICRO_VERSION);
+#endif
 #ifdef EFIVAR_LIBRARY_VERSION
 	g_string_append_printf (string,
 				"\tefivar:\t%s",
@@ -597,14 +601,13 @@ fu_util_cmd_array_to_string (GPtrArray *array)
 }
 
 const gchar *
-fu_util_release_get_branch (FwupdRelease *release)
+fu_util_branch_for_display (const gchar *branch)
 {
-	const gchar *tmp = fwupd_release_get_branch (release);
-	if (tmp == NULL) {
+	if (branch == NULL) {
 		/* TRANSLATORS: this is the default branch name when unset */
 		return _("default");
 	}
-	return tmp;
+	return branch;
 }
 
 gchar *
@@ -1100,11 +1103,38 @@ fu_util_device_flag_to_string (guint64 device_flag)
 	return NULL;
 }
 
+static const gchar *
+fu_util_update_state_to_string (FwupdUpdateState update_state)
+{
+	if (update_state == FWUPD_UPDATE_STATE_PENDING) {
+		/* TRANSLATORS: The update state of the specific device */
+		return _("Pending");
+	}
+	if (update_state == FWUPD_UPDATE_STATE_SUCCESS) {
+		/* TRANSLATORS: The update state of the specific device */
+		return _("Success");
+	}
+	if (update_state == FWUPD_UPDATE_STATE_FAILED) {
+		/* TRANSLATORS: The update state of the specific device */
+		return _("Failed");
+	}
+	if (update_state == FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
+		/* TRANSLATORS: The update state of the specific device */
+		return _("Transient failure");
+	}
+	if (update_state == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
+		/* TRANSLATORS: The update state of the specific device */
+		return _("Needs reboot");
+	}
+	return NULL;
+}
+
 gchar *
 fu_util_device_to_string (FwupdDevice *dev, guint idt)
 {
 	FwupdUpdateState state;
 	GPtrArray *guids = fwupd_device_get_guids (dev);
+	GPtrArray *vendor_ids = fwupd_device_get_vendor_ids (dev);
 	GPtrArray *instance_ids = fwupd_device_get_instance_ids (dev);
 	GString *str = g_string_new (NULL);
 	const gchar *tmp;
@@ -1174,17 +1204,25 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 
 	/* vendor */
 	tmp = fwupd_device_get_vendor (dev);
-	tmp2 = fwupd_device_get_vendor_id (dev);
-	if (tmp != NULL && tmp2 != NULL) {
-		g_autofree gchar *both = g_strdup_printf ("%s (%s)", tmp, tmp2);
+	if (tmp != NULL && vendor_ids->len > 0) {
+		g_autofree gchar *strv = fu_common_strjoin_array ("|", vendor_ids);
+		g_autofree gchar *both = g_strdup_printf ("%s (%s)", tmp, strv);
 		/* TRANSLATORS: manufacturer of hardware */
 		fu_common_string_append_kv (str, idt + 1, _("Vendor"), both);
 	} else if (tmp != NULL) {
 		/* TRANSLATORS: manufacturer of hardware */
 		fu_common_string_append_kv (str, idt + 1, _("Vendor"), tmp);
-	} else if (tmp2 != NULL) {
+	} else if (vendor_ids->len > 0) {
+		g_autofree gchar *strv = fu_common_strjoin_array ("|", vendor_ids);
 		/* TRANSLATORS: manufacturer of hardware */
-		fu_common_string_append_kv (str, idt + 1, _("Vendor"), tmp2);
+		fu_common_string_append_kv (str, idt + 1, _("Vendor"), strv);
+	}
+
+	/* branch */
+	if (fwupd_device_get_branch (dev) != NULL) {
+		/* TRANSLATORS: the stream of firmware, e.g. nonfree or open-source */
+		fu_common_string_append_kv (str, idt + 1, _("Release Branch"),
+					    fwupd_device_get_branch (dev));
 	}
 
 	/* install duration */
@@ -1206,7 +1244,7 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	if (state != FWUPD_UPDATE_STATE_UNKNOWN) {
 		/* TRANSLATORS: hardware state, e.g. "pending" */
 		fu_common_string_append_kv (str, idt + 1, _("Update State"),
-					    fwupd_update_state_to_string (state));
+					    fu_util_update_state_to_string (state));
 
 		if (state == FWUPD_UPDATE_STATE_SUCCESS) {
 			tmp = fwupd_device_get_update_message (dev);
@@ -1310,7 +1348,7 @@ fu_util_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED) {
 		/* TRANSLATORS: capsule updates are an optional BIOS feature */
-		return _("UEFI capsule updates not available or enabled");
+		return _("UEFI capsule updates not available or enabled in firmware setup");
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED) {
 		/* TRANSLATORS: user needs to run a command */

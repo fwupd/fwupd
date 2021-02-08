@@ -70,8 +70,9 @@ override_dh_install:
 	dh_install
 	#install the EFI binaries if needed
 	[ ! -d debian/tmp/usr/libexec/fwupd/efi/ ] || dh_install -pfwupd usr/libexec/fwupd/efi
-	#install MSR conf if needed
+	#install MSR conf if needed (depending on distro)
 	[ ! -d debian/tmp/usr/lib/modules-load.d ] || dh_install -pfwupd usr/lib/modules-load.d
+	[ ! -d debian/tmp/lib/modules-load.d ] || dh_install -pfwupd lib/modules-load.d
 	dh_missing -a --fail-missing
 
 	#this is placed in fwupd-tests

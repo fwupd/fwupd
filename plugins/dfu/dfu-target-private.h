@@ -12,7 +12,6 @@
 #include "dfu-target.h"
 #include "dfu-sector.h"
 
-
 DfuTarget	*dfu_target_new				(void);
 
 GBytes		*dfu_target_upload_chunk		(DfuTarget	*target,

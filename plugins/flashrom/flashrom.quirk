@@ -6,3 +6,11 @@ DeviceId=librem15v3
 [HwId=52b68c34-6b31-5ecc-8a5c-de37e666ccd5]
 DeviceId=LT1000
 VersionFormat=quad
+
+# Starlabs LabTop L4
+[HwId=baf1d04e-fd16-5e6a-93cc-1c23d171f879]
+DeviceId=StarlabsLabTopL4
+
+# Starlabs LabTop L4 (in coreboot)
+[Guid=0ee5867c-93f0-5fb4-adf1-9d686ea1183a]
+Branch=coreboot

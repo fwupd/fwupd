@@ -83,6 +83,7 @@ fu_usb_device_finalize (GObject *object)
 static void
 fu_usb_device_init (FuUsbDevice *device)
 {
+#ifdef HAVE_GUSB
 	fu_device_retry_add_recovery (FU_DEVICE (device),
 				      G_USB_DEVICE_ERROR,
 				      G_USB_DEVICE_ERROR_NO_DEVICE,
@@ -91,6 +92,7 @@ fu_usb_device_init (FuUsbDevice *device)
 				      G_USB_DEVICE_ERROR,
 				      G_USB_DEVICE_ERROR_PERMISSION_DENIED,
 				      NULL);
+#endif
 }
 
 /**
@@ -111,6 +113,7 @@ fu_usb_device_is_open (FuUsbDevice *device)
 	return priv->usb_device_locker != NULL;
 }
 
+#ifdef HAVE_GUSB
 static gboolean
 fu_usb_device_query_hub (FuUsbDevice *self, GError **error)
 {
@@ -153,6 +156,7 @@ fu_usb_device_query_hub (FuUsbDevice *self, GError **error)
 	}
 	return TRUE;
 }
+#endif
 
 static gboolean
 fu_usb_device_open (FuDevice *device, GError **error)
@@ -160,8 +164,9 @@ fu_usb_device_open (FuDevice *device, GError **error)
 	FuUsbDevice *self = FU_USB_DEVICE (device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	FuUsbDeviceClass *klass = FU_USB_DEVICE_GET_CLASS (device);
-	guint idx;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+#ifdef HAVE_GUSB
+	guint idx;
 
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -258,6 +263,7 @@ fu_usb_device_open (FuDevice *device, GError **error)
 		if (!fu_usb_device_query_hub (self, error))
 			return FALSE;
 	}
+#endif
 
 	/* subclassed */
 	if (klass->open != NULL) {
@@ -299,6 +305,7 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE (device);
 	FuUsbDeviceClass *klass = FU_USB_DEVICE_GET_CLASS (device);
+#ifdef HAVE_GUSB
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	guint16 release;
 	g_autofree gchar *devid0 = NULL;
@@ -361,6 +368,7 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 		fu_device_add_instance_id_full (device, intid3,
 						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
+#endif
 
 	/* subclassed */
 	if (klass->probe != NULL) {
@@ -385,11 +393,15 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 guint16
 fu_usb_device_get_vid (FuUsbDevice *self)
 {
+#ifdef HAVE_GUSB
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), 0x0000);
 	if (priv->usb_device == NULL)
 		return 0x0;
 	return g_usb_device_get_vid (priv->usb_device);
+#else
+	return 0x0;
+#endif
 }
 
 /**
@@ -405,11 +417,15 @@ fu_usb_device_get_vid (FuUsbDevice *self)
 guint16
 fu_usb_device_get_pid (FuUsbDevice *self)
 {
+#ifdef HAVE_GUSB
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), 0x0000);
 	if (priv->usb_device == NULL)
 		return 0x0;
 	return g_usb_device_get_pid (priv->usb_device);
+#else
+	return 0x0;
+#endif
 }
 
 /**
@@ -425,11 +441,15 @@ fu_usb_device_get_pid (FuUsbDevice *self)
 const gchar *
 fu_usb_device_get_platform_id (FuUsbDevice *self)
 {
+#ifdef HAVE_GUSB
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), NULL);
 	if (priv->usb_device == NULL)
 		return NULL;
 	return g_usb_device_get_platform_id (priv->usb_device);
+#else
+	return NULL;
+#endif
 }
 
 /**
@@ -482,9 +502,11 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 		return;
 	}
 
+#ifdef HAVE_GUSB
 	/* set device ID automatically */
 	fu_device_set_physical_id (FU_DEVICE (device),
 				   g_usb_device_get_platform_id (usb_device));
+#endif
 }
 
 /**
@@ -501,7 +523,7 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 GUdevDevice *
 fu_usb_device_find_udev_device (FuUsbDevice *device, GError **error)
 {
-#ifdef HAVE_GUDEV
+#if defined(HAVE_GUDEV) && defined(HAVE_GUSB)
 	FuUsbDevicePrivate *priv = GET_PRIVATE (device);
 	g_autoptr(GList) devices = NULL;
 	g_autoptr(GUdevClient) gudev_client = g_udev_client_new (NULL);
@@ -643,7 +665,11 @@ fu_usb_device_class_init (FuUsbDeviceClass *klass)
 	device_class->unbind_driver = fu_udev_device_unbind_driver;
 
 	pspec = g_param_spec_object ("usb-device", NULL, NULL,
+#ifdef HAVE_GUSB
 				     G_USB_TYPE_DEVICE,
+#else
+				     G_TYPE_OBJECT,
+#endif
 				     G_PARAM_READWRITE |
 				     G_PARAM_CONSTRUCT |
 				     G_PARAM_STATIC_NAME);

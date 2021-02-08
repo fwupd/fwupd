@@ -5,6 +5,8 @@ Planned API/ABI changes for next release
  * Remove the `soup-session` fallback property in `FwupdClient`.
  * Remove fwupd_device_set_vendor_id() and fwupd_device_get_vendor_id()
  * Remove the deprecated flags like `FWUPD_DEVICE_FLAG_MD_SET_ICON`
+ * Remove `fwupd_release_get_uri()` and `fwupd_release_set_uri()`
+ * Rename `fwupd_client_install_release2_async()` to `fwupd_client_install_release_async()`
 
 Migration from Version 0.9.x
 ============================

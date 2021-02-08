@@ -11,6 +11,20 @@ With the UpdateCapsule boot service it can be used to update system firmware.
 If you don't want or need this functionality you can use the
 `-Dplugin_uefi_capsule=false` option.
 
+Lenovo Specific Behaviour
+-------------------------
+
+On Lenovo hardware only the boot label is set to `Linux-Firmware-Updater` rather
+than "Linux Firmware Updater" (with spaces) due to long-fixed EFI boot manager
+bugs. Many users will have these old BIOS versions installed and so we use the
+`use-legacy-bootmgr-desc` quirk to use the safe name.
+
+On some Lenovo hardware only one capsule is installable due to possible problems
+with the UpdateCapsule coalesce operation. As soon as one UEFI device has been
+scheduled for update the other UEFI devices found in the ESRT will be marked
+as `updatable-hidden` rather than `updatable`. Rebooting will restore them so
+they can be updated on next OS boot.
+
 Firmware Format
 ---------------
 

@@ -2,6 +2,11 @@
 set -e
 set -x
 
+# check for g_return_val_if_fail sanity
+if ! ./contrib/ci/check-null-false-returns.py; then
+    exit 1
+fi
+
 # these are deprecated in favor of INTERNAL flags
 deprecated="FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS
             FWUPD_DEVICE_FLAG_ONLY_SUPPORTED
@@ -13,6 +18,12 @@ for val in $deprecated; do
         exit 1
     fi
 done
+
+# check shell scripts
+dnf install -y ShellCheck
+if ! find . -name '*.sh' | xargs shellcheck --severity=error -e SC2068; then
+    exit 1
+fi
 
 #generate a tarball
 git config tar.tar.xz.command "xz -c"
@@ -29,7 +40,7 @@ meson .. \
     -Dplugin_thunderbolt=true \
     -Dplugin_uefi_capsule=true \
     -Dplugin_dell=true \
-    -Dplugin_synaptics=true $@
+    -Dplugin_synaptics_mst=true $@
 ninja-build dist
 popd
 VERSION=`meson introspect build --projectinfo | jq -r .version`

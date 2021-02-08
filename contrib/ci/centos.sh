@@ -17,7 +17,7 @@ meson .. \
 	-Dplugin_uefi_capsule=false \
 	-Dplugin_dell=false \
 	-Dplugin_modem_manager=false \
-	-Dplugin_synaptics=true \
+	-Dplugin_synaptics_mst=true \
 	-Dplugin_flashrom=true \
 	-Dintrospection=true \
 	-Dgtkdoc=true \

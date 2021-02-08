@@ -13,11 +13,22 @@ daemon_dep = [
   giounix,
   gmodule,
   gudev,
-  gusb,
   sqlite,
-  libarchive,
   libjsonglib,
 ]
+
+client_dep = [
+  gudev,
+]
+
+if get_option('gusb')
+  daemon_dep += gusb
+  client_dep += gusb
+endif
+
+if get_option('libarchive')
+  daemon_dep += libarchive
+endif
 
 if get_option('systemd')
   systemd_src += 'fu-systemd.c'
@@ -63,10 +74,8 @@ fwupdmgr = executable(
   dependencies : [
     libfwupd_deps,
     libxmlb,
-    gudev,
-    gusb,
+    client_dep,
     sqlite,
-    libarchive,
   ],
   link_with : [
     fwupd,
@@ -94,8 +103,7 @@ fwupdagent = executable(
   dependencies : [
     libfwupd_deps,
     libxmlb,
-    gudev,
-    gusb,
+    client_dep,
   ],
   link_with : [
     fwupd,
@@ -123,8 +131,7 @@ fwupdoffline = executable(
   ],
   dependencies : [
     libfwupd_deps,
-    gudev,
-    gusb,
+    client_dep,
     libxmlb,
     sqlite,
   ],
@@ -164,11 +171,9 @@ fwupdtool = executable(
     libfwupd_deps,
     libxmlb,
     libgcab,
-    gudev,
-    gusb,
+    client_dep,
     sqlite,
     valgrind,
-    libarchive,
   ],
   link_with : [
     fwupd,

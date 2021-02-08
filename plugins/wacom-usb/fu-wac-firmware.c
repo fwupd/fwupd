@@ -44,7 +44,7 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 
 	/* check the prefix (BE) */
 	data = (guint8 *) g_bytes_get_data (fw, &len);
-	if (memcmp (data, "WACOM", 5) != 0) {
+	if (len < 5 || memcmp (data, "WACOM", 5) != 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,

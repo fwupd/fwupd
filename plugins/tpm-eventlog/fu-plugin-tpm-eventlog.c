@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-hash.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-tpm-eventlog-device.h"
@@ -67,6 +66,18 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	for (guint i = 0; i < data->pcr0s->len; i++) {
 		const gchar *csum = g_ptr_array_index (data->pcr0s, i);
 		fu_device_add_checksum (FU_DEVICE (dev), csum);
+	}
+	for (guint i = 0; i < data->pcr0s->len; i++) {
+		const gchar *csum = g_ptr_array_index (data->pcr0s, i);
+		GChecksumType csum_type = fwupd_checksum_guess_kind (csum);
+		if (csum_type == G_CHECKSUM_SHA1) {
+			fu_plugin_add_report_metadata (plugin, "Pcr0_SHA1", csum);
+			continue;
+		}
+		if (csum_type == G_CHECKSUM_SHA256) {
+			fu_plugin_add_report_metadata (plugin, "Pcr0_SHA256", csum);
+			continue;
+		}
 	}
 
 	/* add optional report metadata */

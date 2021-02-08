@@ -10,6 +10,7 @@
 #include <glib/gstdio.h>
 #include <string.h>
 
+#include "fu-common.h"
 #include "fu-rom.h"
 
 static void fu_rom_finalize			 (GObject *object);
@@ -423,7 +424,9 @@ fu_rom_pci_get_header (const guint8 *buffer, guint32 sz)
 	}
 
 	/* copy this locally to the header */
-	hdr->rom_data = g_memdup (buffer, hdr->rom_len);
+	hdr->rom_data = fu_memdup_safe (buffer, hdr->rom_len, NULL);
+	if (hdr->rom_data == NULL)
+		return NULL;
 
 	/* parse out CPI */
 	hdr->entry_point = ((guint32) buffer[0x05] << 16) +
@@ -582,7 +585,8 @@ fu_rom_load_data (FuRom *self,
 				hdr->last_image = 0x80;
 				hdr->rom_offset = hdr_sz + jump;
 				hdr->rom_len = sz - hdr->rom_offset;
-				hdr->rom_data = g_memdup (&buffer[hdr->rom_offset], hdr->rom_len);
+				hdr->rom_data = fu_memdup_safe (&buffer[hdr->rom_offset],
+								hdr->rom_len, NULL);
 				hdr->image_len = hdr->rom_len;
 				g_ptr_array_add (self->hdrs, hdr);
 			} else {

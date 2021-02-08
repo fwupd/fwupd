@@ -15,6 +15,8 @@
 #include "dfu-target-stm.h"
 #include "dfu-target-private.h"
 
+#include "fu-chunk.h"
+
 #include "fwupd-error.h"
 
 G_DEFINE_TYPE (DfuTargetStm, dfu_target_stm, DFU_TYPE_TARGET)
@@ -83,7 +85,7 @@ dfu_target_stm_set_address (DfuTarget *target, guint32 address, GError **error)
 	return dfu_target_check_status (target, error);
 }
 
-static DfuElement *
+static FuChunk *
 dfu_target_stm_upload_element (DfuTarget *target,
 			       guint32 address,
 			       gsize expected_size,
@@ -92,7 +94,7 @@ dfu_target_stm_upload_element (DfuTarget *target,
 {
 	DfuDevice *device = dfu_target_get_device (target);
 	DfuSector *sector;
-	DfuElement *element = NULL;
+	FuChunk *chk = NULL;
 	GBytes *chunk_tmp;
 	guint32 offset = address;
 	guint percentage_size = expected_size > 0 ? expected_size : maximum_size;
@@ -204,10 +206,9 @@ dfu_target_stm_upload_element (DfuTarget *target,
 	} else {
 		contents_truncated = g_bytes_ref (contents);
 	}
-	element = dfu_element_new ();
-	dfu_element_set_contents (element, contents_truncated);
-	dfu_element_set_address (element, address);
-	return element;
+	chk = fu_chunk_bytes_new (contents_truncated);
+	fu_chunk_set_address (chk, address);
+	return chk;
 }
 
 /**
@@ -242,21 +243,21 @@ dfu_target_stm_erase_address (DfuTarget *target, guint32 address, GError **error
 
 static gboolean
 dfu_target_stm_download_element (DfuTarget *target,
-				 DfuElement *element,
+				 FuChunk *chk,
 				 DfuTargetTransferFlags flags,
 				 GError **error)
 {
 	DfuDevice *device = dfu_target_get_device (target);
 	DfuSector *sector;
-	GBytes *bytes;
 	guint nr_chunks;
 	guint zone_last = G_MAXUINT;
 	guint16 transfer_size = dfu_device_get_transfer_size (device);
+	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(GPtrArray) sectors_array = NULL;
 	g_autoptr(GHashTable) sectors_hash = NULL;
 
 	/* round up as we have to transfer incomplete blocks */
-	bytes = dfu_element_get_contents (element);
+	bytes = fu_chunk_get_bytes (chk);
 	nr_chunks = (guint) ceil ((gdouble) g_bytes_get_size (bytes) /
 				  (gdouble) transfer_size);
 	if (nr_chunks == 0) {
@@ -275,7 +276,7 @@ dfu_target_stm_download_element (DfuTarget *target,
 
 		/* for DfuSe devices we need to handle the erase and setting
 		 * the sectory address manually */
-		offset_dev = dfu_element_get_address (element) + (i * transfer_size);
+		offset_dev = fu_chunk_get_address (chk) + (i * transfer_size);
 		sector = dfu_target_get_sector_for_addr (target, offset_dev);
 		if (sector == NULL) {
 			g_set_error (error,
@@ -332,7 +333,7 @@ dfu_target_stm_download_element (DfuTarget *target,
 
 		/* caclulate the offset into the element data */
 		offset = i * transfer_size;
-		offset_dev = dfu_element_get_address (element) + offset;
+		offset_dev = fu_chunk_get_address (chk) + offset;
 
 		/* for DfuSe devices we need to set the address manually */
 		sector = dfu_target_get_sector_for_addr (target, offset_dev);
@@ -364,7 +365,7 @@ dfu_target_stm_download_element (DfuTarget *target,
 			 g_bytes_get_size (bytes_tmp));
 		/* ST uses wBlockNum=0 for DfuSe commands and wBlockNum=1 is reserved */
 		if (!dfu_target_download_chunk (target,
-						(guint8) (i + 2),
+						(i + 2),
 						bytes_tmp,
 						error))
 			return FALSE;

@@ -10,7 +10,9 @@
 
 #include <glib/gi18n.h>
 
+#include "fu-security-attrs.h"
 #include "fu-security-attrs-private.h"
+#include "fwupd-security-attr-private.h"
 
 struct _FuSecurityAttrs {
 	GObject			 parent_instance;

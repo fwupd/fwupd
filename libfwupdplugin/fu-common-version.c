@@ -238,35 +238,57 @@ _g_ascii_is_digits (const gchar *str)
 	return TRUE;
 }
 
-static gboolean
-fu_common_version_is_valid_semver_char (gchar c)
-{
-	if (g_ascii_isdigit (c))
-		return TRUE;
-	if (c == '.')
-		return TRUE;
-	return FALSE;
-}
-
 /**
  * fu_common_version_ensure_semver:
  * @version: A version number, e.g. ` V1.2.3 `
  *
  * Builds a semver from the possibly crazy version number.
  *
- * Returns: A version number, e.g. "1.2.3"
+ * Returns: A version number, e.g. "1.2.3", or %NULL if the version was not valid
  *
  * Since: 1.2.9
  */
 gchar *
 fu_common_version_ensure_semver (const gchar *version)
 {
-	GString *version_safe = g_string_new (NULL);
-	for (guint i = 0; version[i] != '\0'; i++) {
-		if (fu_common_version_is_valid_semver_char (version[i]))
-			g_string_append_c (version_safe, version[i]);
+	gboolean dot_valid = FALSE;
+	guint digit_cnt = 0;
+	g_autoptr(GString) version_safe = g_string_new (NULL);
+
+	/* invalid */
+	if (version == NULL)
+		return NULL;
+
+	/* hex prefix */
+	if (g_str_has_prefix (version, "0x")) {
+		return fu_common_version_parse_from_format (version,
+							    FWUPD_VERSION_FORMAT_TRIPLET);
 	}
-	return g_string_free (version_safe, FALSE);
+
+	/* make sane */
+	for (guint i = 0; version[i] != '\0'; i++) {
+		if (g_ascii_isdigit (version[i])) {
+			g_string_append_c (version_safe, version[i]);
+			digit_cnt++;
+			dot_valid = TRUE;
+			continue;
+		}
+		if (version[i] == '-' || version[i] == '~') {
+			g_string_append_c (version_safe, '.');
+			dot_valid = FALSE;
+			continue;
+		}
+		if (version[i] == '.' && dot_valid && version[i + 1] != '\0') {
+			g_string_append_c (version_safe, version[i]);
+			dot_valid = FALSE;
+			continue;
+		}
+	}
+
+	/* found no digits */
+	if (digit_cnt == 0)
+		return NULL;
+	return g_string_free (g_steal_pointer (&version_safe), FALSE);
 }
 
 /**
@@ -465,49 +487,8 @@ fu_common_version_verify_format (const gchar *version,
 	return TRUE;
 }
 
-/**
- * fu_common_vercmp_full:
- * @version_a: the semver release version, e.g. 1.2.3
- * @version_b: the semver release version, e.g. 1.2.3.1
- * @fmt: a #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_PLAIN
- *
- * Compares version numbers for sorting taking into account the version format
- * if required.
- *
- * Returns: -1 if a < b, +1 if a > b, 0 if they are equal, and %G_MAXINT on error
- *
- * Since: 1.3.9
- */
-gint
-fu_common_vercmp_full (const gchar *version_a,
-		       const gchar *version_b,
-		       FwupdVersionFormat fmt)
-{
-	if (fmt == FWUPD_VERSION_FORMAT_PLAIN)
-		return g_strcmp0 (version_a, version_b);
-	if (fmt == FWUPD_VERSION_FORMAT_HEX) {
-		g_autofree gchar *hex_a = NULL;
-		g_autofree gchar *hex_b = NULL;
-		hex_a = fu_common_version_parse_from_format (version_a, fmt);
-		hex_b = fu_common_version_parse_from_format (version_b, fmt);
-		return fu_common_vercmp (hex_a, hex_b);
-	}
-	return fu_common_vercmp (version_a, version_b);
-}
-
-/**
- * fu_common_vercmp:
- * @version_a: the semver release version, e.g. 1.2.3
- * @version_b: the semver release version, e.g. 1.2.3.1
- *
- * Compares version numbers for sorting.
- *
- * Returns: -1 if a < b, +1 if a > b, 0 if they are equal, and %G_MAXINT on error
- *
- * Since: 0.3.5
- */
-gint
-fu_common_vercmp (const gchar *version_a, const gchar *version_b)
+static gint
+fu_common_vercmp_safe (const gchar *version_a, const gchar *version_b)
 {
 	guint longest_split;
 	g_auto(GStrv) split_a = NULL;
@@ -558,4 +539,51 @@ fu_common_vercmp (const gchar *version_a, const gchar *version_b)
 
 	/* we really shouldn't get here */
 	return 0;
+}
+
+/**
+ * fu_common_vercmp:
+ * @version_a: the semver release version, e.g. 1.2.3
+ * @version_b: the semver release version, e.g. 1.2.3.1
+ *
+ * Compares version numbers for sorting.
+ *
+ * Returns: -1 if a < b, +1 if a > b, 0 if they are equal, and %G_MAXINT on error
+ *
+ * Since: 0.3.5
+ */
+gint
+fu_common_vercmp (const gchar *version_a, const gchar *version_b)
+{
+	return fu_common_vercmp_safe (version_a, version_b);
+}
+
+/**
+ * fu_common_vercmp_full:
+ * @version_a: the semver release version, e.g. 1.2.3
+ * @version_b: the semver release version, e.g. 1.2.3.1
+ * @fmt: a #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_PLAIN
+ *
+ * Compares version numbers for sorting taking into account the version format
+ * if required.
+ *
+ * Returns: -1 if a < b, +1 if a > b, 0 if they are equal, and %G_MAXINT on error
+ *
+ * Since: 1.3.9
+ */
+gint
+fu_common_vercmp_full (const gchar *version_a,
+		       const gchar *version_b,
+		       FwupdVersionFormat fmt)
+{
+	if (fmt == FWUPD_VERSION_FORMAT_PLAIN)
+		return g_strcmp0 (version_a, version_b);
+	if (fmt == FWUPD_VERSION_FORMAT_HEX) {
+		g_autofree gchar *hex_a = NULL;
+		g_autofree gchar *hex_b = NULL;
+		hex_a = fu_common_version_parse_from_format (version_a, fmt);
+		hex_b = fu_common_version_parse_from_format (version_b, fmt);
+		return fu_common_vercmp_safe (hex_a, hex_b);
+	}
+	return fu_common_vercmp_safe (version_a, version_b);
 }

@@ -61,6 +61,10 @@ FuFirmwareFlags	 fu_firmware_flag_from_string		(const gchar	*flag);
 
 FuFirmware	*fu_firmware_new			(void);
 FuFirmware	*fu_firmware_new_from_bytes		(GBytes		*fw);
+FuFirmware	*fu_firmware_new_from_gtypes		(GBytes		*fw,
+							 FwupdInstallFlags flags,
+							 GError		**error,
+							 ...);
 gchar		*fu_firmware_to_string			(FuFirmware	*self);
 const gchar	*fu_firmware_get_version		(FuFirmware	*self);
 void		 fu_firmware_set_version		(FuFirmware	*self,

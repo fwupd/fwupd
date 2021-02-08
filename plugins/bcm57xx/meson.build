@@ -7,13 +7,13 @@ shared_module('fu_plugin_bcm57xx',
   fu_hash,
   sources : [
     'fu-plugin-bcm57xx.c',
-    'fu-bcm57xx-common.c',
+    'fu-bcm57xx-common.c',          # fuzzing
     'fu-bcm57xx-device.c',
-    'fu-bcm57xx-dict-image.c',
-    'fu-bcm57xx-firmware.c',
+    'fu-bcm57xx-dict-image.c',      # fuzzing
+    'fu-bcm57xx-firmware.c',        # fuzzing
     'fu-bcm57xx-recovery-device.c',
-    'fu-bcm57xx-stage1-image.c',
-    'fu-bcm57xx-stage2-image.c',
+    'fu-bcm57xx-stage1-image.c',    # fuzzing
+    'fu-bcm57xx-stage2-image.c',    # fuzzing
   ],
   include_directories : [
     root_incdir,

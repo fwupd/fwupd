@@ -1,10 +1,13 @@
 #!/bin/sh -e
 
 install_if_missing() {
+	directory=$(dirname ${2}/${1})
 	if [ "$2" != "/" ]; then
-		mkdir -p $(dirname ${2}/${1})
+		mkdir -p $directory
 	fi
-	install -m 644 -C ${SNAP}/${1} ${2}/${1}
+	if [ -d $directory ]; then
+		install -m 644 -C ${SNAP}/${1} ${2}/${1}
+	fi
 }
 
 #install policykit rules and actions
