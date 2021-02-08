@@ -395,9 +395,7 @@ fu_pxi_device_fw_ota_init (FuPxiDevice *self, GError **error)
 	/* write fw ota init command */
 	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
 	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_OTA_INIT);
-	if (!fu_pxi_device_set_feature (self, req->data, req->len, error))
-		return FALSE;
-	return TRUE;
+	return fu_pxi_device_set_feature (self, req->data, req->len, error);
 }
 
 static gboolean
