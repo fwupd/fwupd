@@ -1890,14 +1890,12 @@ fu_common_strsafe (const gchar *str, gsize maxsz)
 	gboolean valid = FALSE;
 	g_autoptr(GString) tmp = NULL;
 
-	g_return_val_if_fail (maxsz > 0, NULL);
-
 	/* sanity check */
-	if (str == NULL)
+	if (str == NULL || maxsz == 0)
 		return NULL;
 
 	/* replace non-printable chars with '.' */
-	tmp = g_string_sized_new (strlen (str));
+	tmp = g_string_sized_new (maxsz);
 	for (gsize i = 0; str[i] != '\0' && i < maxsz; i++) {
 		if (!g_ascii_isprint (str[i])) {
 			g_string_append_c (tmp, '.');
