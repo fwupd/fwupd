@@ -1816,9 +1816,11 @@ dfu_device_set_quirk_kv (FuDevice *device,
 	DfuDevicePrivate *priv = GET_PRIVATE (self);
 
 	if (g_strcmp0 (key, FU_QUIRKS_DFU_FORCE_VERSION) == 0) {
-		if (value != NULL && strlen (value) == 4) {
-			priv->force_version = fu_firmware_strparse_uint16 (value);
-			return TRUE;
+		if (value != NULL) {
+			gsize valuesz = strlen (value);
+			return fu_firmware_strparse_uint16_safe (value, valuesz, 0,
+								 &priv->force_version,
+								 error);
 		}
 		g_set_error_literal (error,
 				     G_IO_ERROR,

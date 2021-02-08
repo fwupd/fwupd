@@ -88,20 +88,14 @@ fu_ccgx_firmware_add_record (FuCcgxFirmware *self, const gchar *line, GError **e
 	g_autoptr(FuCcgxFirmwareRecord) rcd = NULL;
 	g_autoptr(GByteArray) data = g_byte_array_new ();
 
-	/* https://community.cypress.com/docs/DOC-10562 */
-	if (linesz < 12) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "invalid record, expected >= 12 chars");
-		return FALSE;
-	}
-
-	/* parse */
+	/* parse according to https://community.cypress.com/docs/DOC-10562 */
 	rcd = g_new0 (FuCcgxFirmwareRecord, 1);
-	rcd->array_id = fu_firmware_strparse_uint8 (line + 0);
-	rcd->row_number = fu_firmware_strparse_uint16 (line + 2);
-	buflen = fu_firmware_strparse_uint16 (line + 6);
+	if (!fu_firmware_strparse_uint8_safe (line, linesz, 0, &rcd->array_id, error))
+		return FALSE;
+	if (!fu_firmware_strparse_uint16_safe (line, linesz, 2, &rcd->row_number, error))
+		return FALSE;
+	if (!fu_firmware_strparse_uint16_safe (line, linesz, 6, &buflen, error))
+		return FALSE;
 	if (linesz != (buflen * 2) + 12) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -113,16 +107,21 @@ fu_ccgx_firmware_add_record (FuCcgxFirmware *self, const gchar *line, GError **e
 
 	/* parse payload, adding checksum */
 	for (guint i = 0; i < buflen; i++) {
-		guint8 tmp = fu_firmware_strparse_uint8 (line + 10 + (i * 2));
+		guint8 tmp = 0;
+		if (!fu_firmware_strparse_uint8_safe (line, linesz, 10 + (i * 2), &tmp, error))
+			return FALSE;
 		fu_byte_array_append_uint8 (data, tmp);
 		checksum_calc += tmp;
 	}
 	rcd->data = g_byte_array_free_to_bytes (g_steal_pointer (&data));
 
 	/* verify 2s complement checksum */
-	checksum_file = fu_firmware_strparse_uint8 (line + (buflen * 2) + 10);
+	if (!fu_firmware_strparse_uint8_safe (line, linesz, (buflen * 2) + 10, &checksum_file, error))
+		return FALSE;
 	for (guint i = 0; i < 5; i++) {
-		guint8 tmp = fu_firmware_strparse_uint8 (line + (i * 2));
+		guint8 tmp = 0;
+		if (!fu_firmware_strparse_uint8_safe (line, linesz, i * 2, &tmp, error))
+			return FALSE;
 		checksum_calc += tmp;
 	}
 	checksum_calc = 1 + ~checksum_calc;
@@ -262,7 +261,9 @@ fu_ccgx_firmware_parse (FuFirmware *firmware,
 			GError **error)
 {
 	FuCcgxFirmware *self = FU_CCGX_FIRMWARE (firmware);
+	gsize linesz;
 	gsize sz = 0;
+	guint32 device_id = 0;
 	const gchar *data = g_bytes_get_data (fw, &sz);
 	g_auto(GStrv) lines = fu_common_strnsplit (data, sz, "\n", -1);
 	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
@@ -276,7 +277,8 @@ fu_ccgx_firmware_parse (FuFirmware *firmware,
 		return FALSE;
 	}
 	g_strdelimit (lines[0], "\r\x1a", '\0');
-	if (strlen (lines[0]) != 12) {
+	linesz = strlen (lines[0]);
+	if (linesz != 12) {
 		g_autofree gchar *strsafe = fu_common_strsafe (lines[0], 12);
 		if (strsafe != NULL) {
 			g_set_error (error,
@@ -292,7 +294,9 @@ fu_ccgx_firmware_parse (FuFirmware *firmware,
 				     "invalid header, expected == 12 chars");
 		return FALSE;
 	}
-	self->silicon_id = fu_firmware_strparse_uint32 (lines[0]) >> 16;
+	if (!fu_firmware_strparse_uint32_safe (lines[0], linesz, 0, &device_id, error))
+		return FALSE;
+	self->silicon_id = device_id >> 16;
 
 	/* parse data */
 	for (guint ln = 1; lines[ln] != NULL; ln++) {

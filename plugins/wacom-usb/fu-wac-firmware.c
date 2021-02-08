@@ -62,7 +62,7 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 
 		/* Wacom-specific metadata */
 		if (g_strcmp0 (cmd, "WA") == 0) {
-			guint cmdlen = strlen (lines[i]);
+			gsize cmdlen = strlen (lines[i]);
 
 			/* header info record */
 			if (cmdlen > 3 && memcmp (lines[i] + 2, "COM", 3) == 0) {
@@ -71,18 +71,32 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 					g_set_error (error,
 						     FWUPD_ERROR,
 						     FWUPD_ERROR_INTERNAL,
-						     "invalid header, got %u bytes",
+						     "invalid header, got %" G_GSIZE_FORMAT " bytes",
 						     cmdlen);
 					return FALSE;
 				}
-				header_image_cnt = fu_firmware_strparse_uint4 (lines[i] + 5);
+				if (!fu_firmware_strparse_uint4_safe (lines[i],
+								      cmdlen,
+								      5,
+								      &header_image_cnt,
+								      error))
+					return FALSE;
 				for (guint j = 0; j < header_image_cnt; j++) {
-					FuFirmwareWacHeaderRecord *hdr = g_new0 (FuFirmwareWacHeaderRecord, 1);
-					hdr->addr = fu_firmware_strparse_uint32 (lines[i] + (j * 16) + 6);
-					hdr->sz = fu_firmware_strparse_uint32 (lines[i] + (j * 16) + 14);
-					g_ptr_array_add (header_infos, hdr);
+					g_autofree FuFirmwareWacHeaderRecord *hdr = NULL;
+					hdr = g_new0 (FuFirmwareWacHeaderRecord, 1);
+					if (!fu_firmware_strparse_uint32_safe (lines[i], cmdlen,
+									       (j * 16) + 6,
+									       &hdr->addr,
+									       error))
+						return FALSE;
+					if (!fu_firmware_strparse_uint32_safe (lines[i], cmdlen,
+									       (j * 16) + 14,
+									       &hdr->sz,
+									       error))
+						return FALSE;
 					g_debug ("header_fw%u_addr: 0x%x", j, hdr->addr);
 					g_debug ("header_fw%u_sz:   0x%x", j, hdr->sz);
+					g_ptr_array_add (header_infos, g_steal_pointer (&hdr));
 				}
 				continue;
 			}
@@ -90,7 +104,13 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 			/* firmware headline record */
 			if (cmdlen == 13) {
 				FuFirmwareWacHeaderRecord *hdr;
-				guint8 idx = fu_firmware_strparse_uint4 (lines[i] + 2);
+				guint8 idx = 0;
+				if (!fu_firmware_strparse_uint4_safe (lines[i],
+								      cmdlen,
+								      2,
+								      &idx,
+								      error))
+					return FALSE;
 				if (idx == 0) {
 					g_set_error (error,
 						     FWUPD_ERROR,
@@ -108,7 +128,12 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 					return FALSE;
 				}
 				hdr = g_ptr_array_index (header_infos, idx - 1);
-				hdr->prog_start_addr = fu_firmware_strparse_uint32 (lines[i] + 3);
+				if (!fu_firmware_strparse_uint32_safe (lines[i],
+								       cmdlen,
+								       3,
+								       &hdr->prog_start_addr,
+								       error))
+					return FALSE;
 				if (hdr->prog_start_addr != hdr->addr) {
 					g_set_error (error,
 						     FWUPD_ERROR,

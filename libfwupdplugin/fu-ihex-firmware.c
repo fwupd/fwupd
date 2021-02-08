@@ -65,7 +65,9 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 			     FwupdInstallFlags flags, GError **error)
 {
 	g_autoptr(FuIhexFirmwareRecord) rcd = NULL;
+	gsize linesz = strlen (line);
 	guint line_end;
+	guint16 addr16 = 0;
 
 	/* check starting token */
 	if (line[0] != ':') {
@@ -90,17 +92,13 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 	rcd->ln = ln;
 	rcd->data = g_byte_array_new ();
 	rcd->buf = g_string_new (line);
-	if (rcd->buf->len < 11) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "line incomplete, length: %u",
-			     (guint) rcd->buf->len);
+	if (!fu_firmware_strparse_uint8_safe (line, linesz, 1, &rcd->byte_cnt, error))
 		return NULL;
-	}
-	rcd->byte_cnt = fu_firmware_strparse_uint8 (line + 1);
-	rcd->addr = fu_firmware_strparse_uint16 (line + 3);
-	rcd->record_type = fu_firmware_strparse_uint8 (line + 7);
+	if (!fu_firmware_strparse_uint16_safe (line, linesz, 3, &addr16, error))
+		return NULL;
+	rcd->addr = addr16;
+	if (!fu_firmware_strparse_uint8_safe (line, linesz, 7, &rcd->record_type, error))
+		return NULL;
 
 	/* position of checksum */
 	line_end = 9 + rcd->byte_cnt * 2;
@@ -117,7 +115,9 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 checksum = 0;
 		for (guint i = 1; i < line_end + 2; i += 2) {
-			guint8 data_tmp = fu_firmware_strparse_uint8 (line + i);
+			guint8 data_tmp = 0;
+			if (!fu_firmware_strparse_uint8_safe (line, linesz, i, &data_tmp, error))
+				return NULL;
 			checksum += data_tmp;
 		}
 		if (checksum != 0)  {
@@ -132,7 +132,9 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 
 	/* add data */
 	for (guint i = 9; i < line_end; i += 2) {
-		guint8 tmp_c = fu_firmware_strparse_uint8 (line + i);
+		guint8 tmp_c = 0;
+		if (!fu_firmware_strparse_uint8_safe (line, linesz, i, &tmp_c, error))
+			return NULL;
 		fu_byte_array_append_uint8 (rcd->data, tmp_c);
 	}
 	return g_steal_pointer (&rcd);

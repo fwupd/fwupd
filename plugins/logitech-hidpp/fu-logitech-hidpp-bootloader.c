@@ -61,10 +61,11 @@ fu_logitech_hidpp_bootloader_parse_requests (FuLogitechHidPpBootloader *self, GB
 		guint8 rec_type = 0x00;
 		guint16 offset = 0x0000;
 		gboolean exit = FALSE;
+		gsize linesz = strlen (lines[i]);
 
 		/* skip empty lines */
 		tmp = lines[i];
-		if (strlen (tmp) < 5)
+		if (linesz < 5)
 			continue;
 
 		payload = fu_logitech_hidpp_bootloader_request_new ();
@@ -77,7 +78,9 @@ fu_logitech_hidpp_bootloader_parse_requests (FuLogitechHidPpBootloader *self, GB
 				     payload->len);
 			return NULL;
 		}
-		payload->addr = fu_firmware_strparse_uint16 (tmp + 0x03);
+		if (!fu_firmware_strparse_uint16_safe (tmp, linesz, 0x03,
+						       &payload->addr, error))
+			return NULL;
 		payload->cmd = FU_UNIFYING_BOOTLOADER_CMD_WRITE_RAM_BUFFER;
 
 		rec_type = fu_logitech_hidpp_buffer_read_uint8 (tmp + 0x07);
@@ -94,7 +97,10 @@ fu_logitech_hidpp_bootloader_parse_requests (FuLogitechHidPpBootloader *self, GB
 				safely ignore it */
 				continue;
 			case 0x04: /* extended linear address */
-				offset = fu_firmware_strparse_uint16 (tmp + 0x09);
+				if (!fu_firmware_strparse_uint16_safe (tmp, linesz,
+								       0x09, &offset,
+								       error))
+					return NULL;
 				if (offset != 0x0000) {
 					g_set_error (error,
 						     G_IO_ERROR,
