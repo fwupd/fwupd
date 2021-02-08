@@ -90,11 +90,6 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 	rcd->ln = ln;
 	rcd->data = g_byte_array_new ();
 	rcd->buf = g_string_new (line);
-	rcd->byte_cnt = fu_firmware_strparse_uint8 (line + 1);
-	rcd->addr = fu_firmware_strparse_uint16 (line + 3);
-	rcd->record_type = fu_firmware_strparse_uint8 (line + 7);
-
-	/* check there's enough data for the smallest possible record */
 	if (rcd->buf->len < 11) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -103,6 +98,9 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 			     (guint) rcd->buf->len);
 		return NULL;
 	}
+	rcd->byte_cnt = fu_firmware_strparse_uint8 (line + 1);
+	rcd->addr = fu_firmware_strparse_uint16 (line + 3);
+	rcd->record_type = fu_firmware_strparse_uint8 (line + 7);
 
 	/* position of checksum */
 	line_end = 9 + rcd->byte_cnt * 2;
