@@ -7,8 +7,10 @@
 #include "config.h"
 
 #include "fu-common.h"
-
 #include "fu-pxi-firmware.h"
+
+#define PIXART_RF_FW_HEADER_SIZE	32	/* bytes */
+#define PIXART_RF_FW_TAG_OFFSET		24	
 
 struct _FuPxiRfFirmware {
 	FuFirmware		 parent_instance;
@@ -26,14 +28,14 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 {
 	gsize bufsz = 0;
 	const guint8 *buf;
-	guint8 fw_header[32];
+	guint8 fw_header[PIXART_RF_FW_HEADER_SIZE];
 	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 	const guint8 TAG[8] = {0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA};
 	gboolean check_header_exist = TRUE;
 
 	/* get buf */
 	buf = g_bytes_get_data (fw, &bufsz);
-	if (bufsz < 32) {
+	if (bufsz < PIXART_RF_FW_HEADER_SIZE) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
@@ -41,19 +43,19 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 		return FALSE;
 	}
 	/* get fw header */
-	if (!fu_memcpy_safe (fw_header, 32, 0x0,
-			     buf, bufsz, bufsz - 32,
-			     32, error)) {
+	if (!fu_memcpy_safe (fw_header, PIXART_RF_FW_HEADER_SIZE, 0x0,
+			     buf, bufsz, bufsz - PIXART_RF_FW_HEADER_SIZE,
+			     PIXART_RF_FW_HEADER_SIZE, error)) {
 		g_prefix_error (error, "failed to read fw header: ");
 		return FALSE;
 	}
 	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL) {
 		fu_common_dump_raw (G_LOG_DOMAIN, "fw header",
-				    fw_header, 32);
+				    fw_header, PIXART_RF_FW_HEADER_SIZE);
 	}
 
 	/* check the TAG from fw header is correct */
-	for (guint32 idx = 24; idx < 32; idx++) {
+	for (guint32 idx = PIXART_RF_FW_TAG_OFFSET; idx < PIXART_RF_FW_HEADER_SIZE; idx++) {
 		if (fw_header[idx] != TAG[idx - 24]) {
 			check_header_exist = FALSE;
 			break;
