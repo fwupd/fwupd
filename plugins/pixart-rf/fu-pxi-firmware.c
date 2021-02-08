@@ -25,11 +25,13 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 			  GError **error)
 {
 	gsize bufsz = 0;
-	guint8 pos = 0;
 	const guint8 *buf;
+	guint8 fw_header[32];
 	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
+	const guint8 TAG[8] = {0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA};
+	gboolean check_header_exist = TRUE;
 
-	/* get buf */
+	/* Get buf */
 	buf = g_bytes_get_data (fw, &bufsz);
 	if (bufsz < 32) {
 		g_set_error (error,
@@ -38,26 +40,33 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 			     "firmware invalid, too small!");
 		return FALSE;
 	}
+	/* Get fw header */
+	if (!fu_memcpy_safe (fw_header, 32, 0x0,
+			     buf, bufsz, bufsz - 32,
+			     32, error)) {
+		g_prefix_error (error, "failed to read fw header: ");
+		return FALSE;
+	}
 	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL) {
-		fu_common_dump_raw (G_LOG_DOMAIN, "fw last 32 bytes",
-				    &buf[bufsz - 32], 32);
+		fu_common_dump_raw (G_LOG_DOMAIN, "fw_header header",
+				    fw_header, 32);
 	}
 
-	/* find the version tag */
-	for (guint32 idx = 0; idx < 32; idx++) {
-		if (buf[(bufsz - 32) + idx ] == 'v') {
-			pos = idx;
+	/* Check the TAG from fw header is correct */
+	for (guint32 idx = 24; idx < 32; idx++) {
+		if (fw_header[idx] != TAG[idx - 24]) {
+			check_header_exist = FALSE;
 			break;
 		}
 	}
 
 	/* set the default version if can not find it in fw bin */
-	if (pos < 32 - 6 && buf[(bufsz - 32) + pos + 1] == '_') {
+	if (check_header_exist == TRUE) {
 		g_autofree gchar *version = NULL;
 		version = g_strdup_printf ("%c.%c.%c",
-					   buf[(bufsz - 32) + pos + 2],
-					   buf[(bufsz - 32) + pos + 4],
-					   buf[(bufsz - 32) + pos + 6]);
+					   fw_header[0],
+					   fw_header[2],
+					   fw_header[4]);
 		fu_firmware_set_version (firmware, version);
 	} else {
 		fu_firmware_set_version (firmware, "1.0.0");
