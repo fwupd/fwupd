@@ -289,8 +289,10 @@ mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/fwupd
 %systemd_post fwupd.service
 
 # change vendor-installed remotes to use the default keyring type
-for fn in /etc/fwupd/remotes.d/*.conf;
-    do sed -i 's/Keyring=gpg/#Keyring=pkcs/g' "$fn";
+for fn in /etc/fwupd/remotes.d/*.conf; do
+    if grep -q "Keyring=gpg" "$fn"; then
+        sed -i 's/Keyring=gpg/#Keyring=pkcs/g' "$fn";
+    fi
 done
 
 %preun
