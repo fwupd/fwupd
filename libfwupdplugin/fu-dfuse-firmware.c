@@ -107,8 +107,11 @@ fu_dfuse_firmware_image_parse (GBytes *bytes, gsize *offset, GError **error)
 
 	/* set properties */
 	fu_firmware_image_set_idx (image, hdr.alt_setting);
-	if (GUINT32_FROM_LE (hdr.target_named) == 0x01)
-		fu_firmware_image_set_id (image, hdr.target_name);
+	if (GUINT32_FROM_LE (hdr.target_named) == 0x01) {
+		g_autofree gchar *img_id = NULL;
+		img_id = g_strndup (hdr.target_name, sizeof(hdr.target_name));
+		fu_firmware_image_set_id (image, img_id);
+	}
 
 	/* parse chunks */
 	*offset += sizeof(hdr);
