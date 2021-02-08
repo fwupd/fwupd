@@ -1,7 +1,7 @@
-# Pixart Devcie
+# Pixart Device
 [DeviceInstanceId=HIDRAW\VEN_093A]
 Plugin = pixart_rf
 
-# Primax Devcie
+# Primax Device
 [DeviceInstanceId=HIDRAW\VEN_0461]
 Plugin = pixart_rf
