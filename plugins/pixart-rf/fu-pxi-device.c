@@ -628,7 +628,8 @@ fu_pxi_device_setup (FuDevice *device, GError **error)
 				hid_raw_info.vendor,
 				hid_raw_info.product,
 				fu_device_get_name (device));
-
+				
+	fu_device_set_logical_id (device, devid);
 	fu_device_add_instance_id (device, devid);
 	return TRUE;
 }
