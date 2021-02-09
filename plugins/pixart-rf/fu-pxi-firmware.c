@@ -37,7 +37,7 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 
 	/* get buf */
 	buf = g_bytes_get_data (fw, &bufsz);
-	if (bufsz < PIXART_RF_FW_HEADER_SIZE) {
+	if (bufsz < sizeof(fw_header)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
@@ -45,27 +45,27 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 		return FALSE;
 	}
 	/* get fw header */
-	if (!fu_memcpy_safe (fw_header, PIXART_RF_FW_HEADER_SIZE, 0x0,
-			     buf, bufsz, bufsz - PIXART_RF_FW_HEADER_SIZE,
-			     PIXART_RF_FW_HEADER_SIZE, error)) {
+	if (!fu_memcpy_safe (fw_header, sizeof(fw_header), 0x0,
+			     buf, bufsz, bufsz - sizeof(fw_header),
+			     sizeof(fw_header), error)) {
 		g_prefix_error (error, "failed to read fw header ");
 		return FALSE;
 	}
 	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL) {
 		fu_common_dump_raw (G_LOG_DOMAIN, "fw header",
-				    fw_header, PIXART_RF_FW_HEADER_SIZE);
+				    fw_header, sizeof(fw_header));
 	}
 	
 	/* get fw header tag */
-	if (!fu_memcpy_safe (fw_header_tag, PIXART_RF_FW_HEADER_TAG_SIZE, 0x0,
-			     fw_header, PIXART_RF_FW_HEADER_SIZE, PIXART_RF_FW_HEADER_TAG_OFFSET,
-			     PIXART_RF_FW_HEADER_TAG_SIZE, error)) {
+	if (!fu_memcpy_safe (fw_header_tag, sizeof(fw_header_tag), 0x0,
+			     fw_header, sizeof(fw_header), PIXART_RF_FW_HEADER_TAG_OFFSET,
+			     sizeof(fw_header_tag), error)) {
 		g_prefix_error (error, "failed to read fw header tag ");
 		return FALSE;
 	}
 
 	/* check the TAG from fw header is correct */
-	for (guint32 idx = 0x0; idx < PIXART_RF_FW_HEADER_TAG_SIZE; idx++) {
+	for (guint32 idx = 0x0; idx < sizeof(fw_header); idx++) {
 		if (fw_header_tag[idx] != TAG[idx]) {
 			check_header_exist = FALSE;
 			break;
