@@ -2,6 +2,18 @@
 [DeviceInstanceId=HIDRAW\VEN_093A]
 Plugin = pixart_rf
 
-# Primax Device
-[DeviceInstanceId=HIDRAW\VEN_0461]
+# Primax Device MS
+[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EEF]
+Plugin = pixart_rf
+
+# Primax Device US KB
+[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EEE]
+Plugin = pixart_rf
+
+# Primax Device UK KB
+[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EF4]
+Plugin = pixart_rf
+
+# Primax Device JP KB
+[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EFF]
 Plugin = pixart_rf
