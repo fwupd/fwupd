@@ -268,6 +268,7 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 	DOCK_INFO *dock_info;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(FuUsbDevice) fake_usb_device = fu_usb_device_new (NULL);
 	gulong added_id;
 	gulong register_id;
 
@@ -285,7 +286,9 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 	fu_plugin_dell_inject_fake_data (self->plugin_dell,
 					   (guint32 *) &out,
 					   0x1234, 0x4321, NULL, FALSE);
-	ret = fu_plugin_usb_device_added (self->plugin_dell, NULL, &error);
+	ret = fu_plugin_backend_device_added (self->plugin_dell,
+					      FU_DEVICE (fake_usb_device),
+					      &error);
 	g_assert_false (ret);
 	g_clear_error (&error);
 	g_assert_cmpint (devices->len, ==, 0);
@@ -297,7 +300,9 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 					   (guint32 *) &out,
 					   DOCK_NIC_VID, DOCK_NIC_PID,
 					   NULL, FALSE);
-	ret = fu_plugin_usb_device_added (self->plugin_dell, NULL, &error);
+	ret = fu_plugin_backend_device_added (self->plugin_dell,
+					      FU_DEVICE (fake_usb_device),
+					      &error);
 	g_assert_true (ret);
 	g_clear_error (&error);
 	g_assert_cmpint (devices->len, ==, 0);
@@ -331,7 +336,9 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 					   (guint32 *) &out,
 					   DOCK_NIC_VID, DOCK_NIC_PID,
 					   buf.buf, FALSE);
-	ret = fu_plugin_usb_device_added (self->plugin_dell, NULL, NULL);
+	ret = fu_plugin_backend_device_added (self->plugin_dell,
+					      FU_DEVICE (fake_usb_device),
+					      NULL);
 	g_assert (ret);
 	g_assert_cmpint (devices->len, ==, 4);
 	g_ptr_array_set_size (devices, 0);
@@ -366,7 +373,9 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 					   (guint32 *) &out,
 					   DOCK_NIC_VID, DOCK_NIC_PID,
 					   buf.buf, FALSE);
-	ret = fu_plugin_usb_device_added (self->plugin_dell, NULL, NULL);
+	ret = fu_plugin_backend_device_added (self->plugin_dell,
+					      FU_DEVICE (fake_usb_device),
+					      NULL);
 	g_assert (ret);
 	g_assert_cmpint (devices->len, ==, 3);
 	g_ptr_array_set_size (devices, 0);
@@ -398,7 +407,9 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 					   (guint32 *) &out,
 					   DOCK_NIC_VID, DOCK_NIC_PID,
 					   buf.buf, FALSE);
-	ret = fu_plugin_usb_device_added (self->plugin_dell, NULL, &error);
+	ret = fu_plugin_backend_device_added (self->plugin_dell,
+					      FU_DEVICE (fake_usb_device),
+					      &error);
 	g_assert (ret);
 	g_assert_no_error (error);
 	g_assert_cmpint (devices->len, ==, 3);
@@ -431,7 +442,9 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 					 (guint32 *) &out,
 					 DOCK_NIC_VID, DOCK_NIC_PID,
 					 buf.buf, FALSE);
-	ret = fu_plugin_usb_device_added (self->plugin_dell, NULL, &error);
+	ret = fu_plugin_backend_device_added (self->plugin_dell,
+					      FU_DEVICE (fake_usb_device),
+					      &error);
 	g_assert (ret);
 	g_assert_no_error (error);
 	g_assert_cmpint (devices->len, ==, 2);
@@ -458,7 +471,9 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 					 (guint32 *) &out,
 					 DOCK_NIC_VID, DOCK_NIC_PID,
 					 buf.buf, FALSE);
-	ret = fu_plugin_usb_device_added (self->plugin_dell, NULL, &error);
+	ret = fu_plugin_backend_device_added (self->plugin_dell,
+					      FU_DEVICE (fake_usb_device),
+					      &error);
 	g_assert_false (ret);
 	g_assert_cmpint (devices->len, ==, 0);
 	g_free (buf.record);

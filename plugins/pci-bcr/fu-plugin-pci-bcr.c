@@ -146,7 +146,7 @@ fu_plugin_add_security_attr_smm_bwp (FuPlugin *plugin, FuSecurityAttrs *attrs)
 }
 
 gboolean
-fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
+fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	FuDevice *device_msf;
@@ -162,19 +162,21 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	}
 
 	/* interesting device? */
-	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "pci") != 0)
+	if (!FU_IS_UDEV_DEVICE (device))
+		return TRUE;
+	if (g_strcmp0 (fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)), "pci") != 0)
 		return TRUE;
 
 	/* open the config */
-	fu_udev_device_set_flags (device, FU_UDEV_DEVICE_FLAG_USE_CONFIG);
-	if (!fu_udev_device_set_physical_id (device, "pci", error))
+	fu_udev_device_set_flags (FU_UDEV_DEVICE (device), FU_UDEV_DEVICE_FLAG_USE_CONFIG);
+	if (!fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "pci", error))
 		return FALSE;
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
 
 	/* grab BIOS Control Register */
-	if (!fu_udev_device_pread (device, priv->bcr_addr, &priv->bcr, error)) {
+	if (!fu_udev_device_pread (FU_UDEV_DEVICE (device), priv->bcr_addr, &priv->bcr, error)) {
 		g_prefix_error (error, "could not read BCR: ");
 		return FALSE;
 	}

@@ -91,16 +91,27 @@ gboolean	 fu_plugin_runner_update_reload		(FuPlugin	*self,
 							 FuDevice	*device,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
+G_DEPRECATED_FOR(fu_plugin_runner_backend_device_added)
 gboolean	 fu_plugin_runner_usb_device_added	(FuPlugin	*self,
 							 FuUsbDevice	*device,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
+G_DEPRECATED_FOR(fu_plugin_runner_backend_device_added)
 gboolean	 fu_plugin_runner_udev_device_added	(FuPlugin	*self,
 							 FuUdevDevice	*device,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
+G_DEPRECATED_FOR(fu_plugin_runner_backend_device_changed)
 gboolean	 fu_plugin_runner_udev_device_changed	(FuPlugin	*self,
 							 FuUdevDevice	*device,
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
+gboolean	 fu_plugin_runner_backend_device_added	(FuPlugin	*self,
+							 FuDevice	*device,
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
+gboolean	 fu_plugin_runner_backend_device_changed (FuPlugin	*self,
+							 FuDevice	*device,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_device_created	(FuPlugin	*self,

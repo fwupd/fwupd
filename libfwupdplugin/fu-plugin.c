@@ -97,12 +97,6 @@ typedef gboolean	 (*FuPluginUpdateFunc)		(FuPlugin	*self,
 							 GBytes		*blob_fw,
 							 FwupdInstallFlags flags,
 							 GError		**error);
-typedef gboolean	 (*FuPluginUsbDeviceAddedFunc)	(FuPlugin	*self,
-							 FuUsbDevice	*device,
-							 GError		**error);
-typedef gboolean	 (*FuPluginUdevDeviceAddedFunc)	(FuPlugin	*self,
-							 FuUdevDevice	*device,
-							 GError		**error);
 typedef void		 (*FuPluginSecurityAttrsFunc)	(FuPlugin	*self,
 							 FuSecurityAttrs *attrs);
 
@@ -1782,7 +1776,7 @@ fu_plugin_add_udev_subsystem (FuPlugin *self, const gchar *subsystem)
  *
  * Sets the device #GType which is used when creating devices.
  *
- * If this method is used then fu_plugin_usb_device_added() is not called, and
+ * If this method is used then fu_plugin_backend_device_added() is not called, and
  * instead the object is created in the daemon for the plugin.
  *
  * Plugins can use this method only in fu_plugin_init()
@@ -1856,7 +1850,7 @@ fu_plugin_check_supported_device (FuPlugin *self, FuDevice *device)
 }
 
 static gboolean
-fu_plugin_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
+fu_plugin_backend_device_added (FuPlugin *self, FuDevice *device, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	GType device_gtype = fu_device_get_specialized_gtype (FU_DEVICE (device));
@@ -1895,53 +1889,13 @@ fu_plugin_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError **error)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	GType device_gtype = fu_device_get_specialized_gtype (FU_DEVICE (device));
-	g_autoptr(FuDevice) dev = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* fall back to plugin default */
-	if (device_gtype == G_TYPE_INVALID)
-		device_gtype = priv->device_gtype;
-
-	/* create new device and incorporate existing properties */
-	dev = g_object_new (device_gtype, NULL);
-	fu_device_incorporate (FU_DEVICE (dev), FU_DEVICE (device));
-	if (!fu_plugin_runner_device_created (self, dev, error))
-		return FALSE;
-
-	/* there are a lot of different devices that match, but not all respond
-	 * well to opening -- so limit some ones with issued updates */
-	if (fu_device_has_internal_flag (dev, FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED)) {
-		if (!fu_device_probe (dev, error))
-			return FALSE;
-		fu_device_convert_instance_ids (dev);
-		if (!fu_plugin_check_supported_device (self, dev)) {
-			g_autofree gchar *guids = fu_device_get_guids_as_str (dev);
-			g_debug ("%s has no updates, so ignoring device", guids);
-			return TRUE;
-		}
-	}
-
-	/* open and add */
-	locker = fu_device_locker_new (dev, error);
-	if (locker == NULL)
-		return FALSE;
-	fu_plugin_device_add (self, FU_DEVICE (dev));
-	fu_plugin_runner_device_added (self, dev);
-	return TRUE;
-}
-
 /**
  * fu_plugin_runner_usb_device_added:
  * @self: a #FuPlugin
  * @device: a #FuUsbDevice
  * @error: a #GError or NULL
  *
- * Call the usb_device_added routine for the plugin
+ * Call the backend_device_added routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
@@ -1950,48 +1904,7 @@ fu_plugin_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError **erro
 gboolean
 fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	FuPluginUsbDeviceAddedFunc func = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
-	g_return_val_if_fail (FU_IS_USB_DEVICE (device), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-
-	/* not enabled */
-	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED))
-		return TRUE;
-
-	/* no object loaded */
-	if (priv->module == NULL)
-		return TRUE;
-
-	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_usb_device_added", (gpointer *) &func);
-	if (func == NULL) {
-		if (priv->device_gtype != G_TYPE_INVALID ||
-		    fu_device_get_specialized_gtype (FU_DEVICE (device)) != G_TYPE_INVALID) {
-			if (!fu_plugin_usb_device_added (self, device, error))
-				return FALSE;
-		}
-		return TRUE;
-	}
-	g_debug ("usb_device_added(%s)", fu_plugin_get_name (self));
-	if (!func (self, device, &error_local)) {
-		if (error_local == NULL) {
-			g_critical ("unset plugin error in usb_device_added(%s)",
-				    fu_plugin_get_name (self));
-			g_set_error_literal (&error_local,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
-					     "unspecified error");
-		}
-		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
-					    "failed to add device using on %s: ",
-					    fu_plugin_get_name (self));
-		return FALSE;
-	}
-	return TRUE;
+	return fu_plugin_runner_backend_device_added (self, FU_DEVICE (device), error);
 }
 
 /**
@@ -2000,7 +1913,7 @@ fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError *
  * @device: a #FuUdevDevice
  * @error: a #GError or NULL
  *
- * Call the udev_device_added routine for the plugin
+ * Call the backend_device_added routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
@@ -2009,12 +1922,30 @@ fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError *
 gboolean
 fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError **error)
 {
+	return fu_plugin_runner_backend_device_added (self, FU_DEVICE (device), error);
+}
+
+/**
+ * fu_plugin_runner_backend_device_added:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ * @error: a #GError or NULL
+ *
+ * Call the backend_device_added routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.5.6
+ **/
+gboolean
+fu_plugin_runner_backend_device_added (FuPlugin *self, FuDevice *device, GError **error)
+{
 	FuPluginPrivate *priv = GET_PRIVATE (self);
-	FuPluginUdevDeviceAddedFunc func = NULL;
+	FuPluginDeviceFunc func = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
-	g_return_val_if_fail (FU_IS_UDEV_DEVICE (device), FALSE);
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* not enabled */
@@ -2026,11 +1957,11 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 		return TRUE;
 
 	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_udev_device_added", (gpointer *) &func);
+	g_module_symbol (priv->module, "fu_plugin_backend_device_added", (gpointer *) &func);
 	if (func == NULL) {
 		if (priv->device_gtype != G_TYPE_INVALID ||
-		    fu_device_get_specialized_gtype (FU_DEVICE (device)) != G_TYPE_INVALID) {
-			return fu_plugin_udev_device_added (self, device, error);
+		    fu_device_get_specialized_gtype (device) != G_TYPE_INVALID) {
+			return fu_plugin_backend_device_added (self, device, error);
 		}
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -2038,10 +1969,10 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 				     "No device GType set");
 		return FALSE;
 	}
-	g_debug ("udev_device_added(%s)", fu_plugin_get_name (self));
+	g_debug ("backend_device_added(%s)", fu_plugin_get_name (self));
 	if (!func (self, device, &error_local)) {
 		if (error_local == NULL) {
-			g_critical ("unset plugin error in udev_device_added(%s)",
+			g_critical ("unset plugin error in backend_device_added(%s)",
 				    fu_plugin_get_name (self));
 			g_set_error_literal (&error_local,
 					     FWUPD_ERROR,
@@ -2062,7 +1993,7 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
  * @device: a #FuUdevDevice
  * @error: a #GError or NULL
  *
- * Call the udev_device_changed routine for the plugin
+ * Call the backend_device_changed routine for the plugin
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
@@ -2071,12 +2002,30 @@ fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError
 gboolean
 fu_plugin_runner_udev_device_changed (FuPlugin *self, FuUdevDevice *device, GError **error)
 {
+	return fu_plugin_runner_backend_device_changed (self, FU_DEVICE (device), error);
+}
+
+/**
+ * fu_plugin_runner_backend_device_changed:
+ * @self: a #FuPlugin
+ * @device: a #FuDevice
+ * @error: a #GError or NULL
+ *
+ * Call the backend_device_changed routine for the plugin
+ *
+ * Returns: #TRUE for success, #FALSE for failure
+ *
+ * Since: 1.5.6
+ **/
+gboolean
+fu_plugin_runner_backend_device_changed (FuPlugin *self, FuDevice *device, GError **error)
+{
 	FuPluginPrivate *priv = GET_PRIVATE (self);
-	FuPluginUdevDeviceAddedFunc func = NULL;
+	FuPluginDeviceFunc func = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
-	g_return_val_if_fail (FU_IS_UDEV_DEVICE (device), FALSE);
+	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* not enabled */
@@ -2088,7 +2037,7 @@ fu_plugin_runner_udev_device_changed (FuPlugin *self, FuUdevDevice *device, GErr
 		return TRUE;
 
 	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_udev_device_changed", (gpointer *) &func);
+	g_module_symbol (priv->module, "fu_plugin_backend_device_changed", (gpointer *) &func);
 	if (func == NULL)
 		return TRUE;
 	g_debug ("udev_device_changed(%s)", fu_plugin_get_name (self));
@@ -2153,7 +2102,7 @@ fu_plugin_runner_device_removed (FuPlugin *self, FuDevice *device)
 	g_autoptr(GError) error_local= NULL;
 
 	if (!fu_plugin_runner_device_generic (self, device,
-					      "fu_plugin_device_removed",
+					      "fu_plugin_backend_device_removed",
 					      NULL,
 					      &error_local))
 		g_warning ("%s", error_local->message);
