@@ -36,7 +36,6 @@ static void fu_plugin_finalize			 (GObject *object);
 
 typedef struct {
 	GModule			*module;
-	GUsbContext		*usb_ctx;
 	guint			 order;
 	guint			 priority;
 	GPtrArray		*rules[FU_PLUGIN_RULE_LAST];
@@ -320,7 +319,8 @@ fu_plugin_alloc_data (FuPlugin *self, gsize data_sz)
  * fu_plugin_get_usb_context:
  * @self: A #FuPlugin
  *
- * Gets the shared USB context that all plugins can use.
+ * This used to get the shared USB context that all plugins can use; it now
+ * returns %NULL;
  *
  * Returns: (transfer none): a #GUsbContext.
  *
@@ -329,9 +329,8 @@ fu_plugin_alloc_data (FuPlugin *self, gsize data_sz)
 GUsbContext *
 fu_plugin_get_usb_context (FuPlugin *self)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
-	return priv->usb_ctx;
+	return NULL;
 }
 
 /**
@@ -339,15 +338,13 @@ fu_plugin_get_usb_context (FuPlugin *self)
  * @self: A #FuPlugin
  * @usb_ctx: A #FGUsbContext
  *
- * Sets the shared USB context for a plugin
+ * This used to set the shared USB context for a plugin. It now does nothing.
  *
  * Since: 0.8.0
  **/
 void
 fu_plugin_set_usb_context (FuPlugin *self, GUsbContext *usb_ctx)
 {
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	g_set_object (&priv->usb_ctx, usb_ctx);
 }
 
 /**
@@ -2954,8 +2951,6 @@ fu_plugin_finalize (GObject *object)
 	}
 	if (priv->devices != NULL)
 		g_ptr_array_unref (priv->devices);
-	if (priv->usb_ctx != NULL)
-		g_object_unref (priv->usb_ctx);
 	if (priv->hwids != NULL)
 		g_object_unref (priv->hwids);
 	if (priv->quirks != NULL)
