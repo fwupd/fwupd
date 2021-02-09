@@ -217,7 +217,6 @@ def _build(bld: Builder) -> None:
     src = bld.checkout_source(
         "json-glib",
         url="https://gitlab.gnome.org/GNOME/json-glib.git",
-        commit="c30c988ac3b0d9e7c332232e3c3969818749b239",
     )
     bld.build_meson_project(
         src,
