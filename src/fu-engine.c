@@ -6064,7 +6064,6 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		filename = g_build_filename (plugin_path, fn, NULL);
 		plugin = fu_plugin_new ();
 		fu_plugin_set_name (plugin, name);
-		fu_plugin_set_usb_context (plugin, self->usb_ctx);
 		fu_plugin_set_hwids (plugin, self->hwids);
 		fu_plugin_set_smbios (plugin, self->smbios);
 		fu_plugin_set_udev_subsystems (plugin, self->udev_subsystems);
