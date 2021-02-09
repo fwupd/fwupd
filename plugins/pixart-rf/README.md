@@ -20,15 +20,17 @@ This plugin supports the following protocol ID:
 GUID Generation
 ---------------
 
-These devices use the standard USB DeviceInstanceId values for Pixart Imaging, Inc, e.g.
+These devices use the standard HIDRAW DeviceInstanceId values for Pixart Imaging, Inc, e.g.
 
  * `HIDRAW\VEN_093A`
  
-These devices use the standard USB DeviceInstanceId values for Primax Electronics, Ltd, e.g.
+Customer support HIDRAW DeviceInstanceId values for Primax Electronics, Ltd, e.g.
 
- * `HIDRAW\VEN_0461`
- 
- 
+ * `HIDRAW\VEN_0461&DEV_4EEF`
+ * `HIDRAW\VEN_0461&DEV_4EEE`
+ * `HIDRAW\VEN_0461&DEV_4EF4`
+ * `HIDRAW\VEN_0461&DEV_4EFF`
+
 Vendor ID Security
 ------------------
 
