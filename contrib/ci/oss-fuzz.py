@@ -290,14 +290,15 @@ def _build(bld: Builder) -> None:
         )
 
     # plugins
-    for srcdir, fuzzer in [
-        ("bcm57xx", "bcm57xx"),
-        ("cros-ec", "cros-ec"),
-        ("ebitdo", "ebitdo"),
-        ("solokey", "solokey"),
-        ("synaptics-prometheus", "synaprom"),
-        ("synaptics-rmi", "synaptics-rmi"),
-        ("wacom-usb", "wac"),
+    for srcdir, fuzzer, globstr in [
+        ("bcm57xx", "bcm57xx", "bcm57xx*"),
+        ("cros-ec", "cros-ec", "cros-ec*"),
+        ("ebitdo", "ebitdo", "ebitdo*"),
+        ("hailuck", "hailuck-kbd", "ihex*"),
+        ("solokey", "solokey", "solokey*"),
+        ("synaptics-prometheus", "synaprom", "synaprom*"),
+        ("synaptics-rmi", "synaptics-rmi", "synaptics-rmi*"),
+        ("wacom-usb", "wac", "wacom*"),
     ]:
         fuzz_objs = []
         for obj in bld.grep_meson("fwupd/plugins/{}".format(srcdir)):
@@ -313,7 +314,7 @@ def _build(bld: Builder) -> None:
         bld.link(fuzz_objs + built_objs, "{}_fuzzer".format(fuzzer))
         bld.makezip(
             "{}_fuzzer_seed_corpus.zip".format(fuzzer),
-            "fwupd/src/fuzzing/firmware/{}*".format(fuzzer),
+            "fwupd/src/fuzzing/firmware/{}".format(globstr),
         )
 
 
