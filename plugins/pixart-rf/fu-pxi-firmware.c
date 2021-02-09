@@ -65,7 +65,7 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* check the TAG from fw header is correct */
-	for (guint32 idx = 0x0; idx < sizeof(fw_header); idx++) {
+	for (guint32 idx = 0x0; idx < sizeof(fw_header_tag); idx++) {
 		if (fw_header_tag[idx] != TAG[idx]) {
 			check_header_exist = FALSE;
 			break;
