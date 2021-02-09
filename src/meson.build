@@ -50,9 +50,17 @@ daemon_src = [
   'fu-install-task.c',
   'fu-keyring-utils.c',
   'fu-plugin-list.c',
+  'fu-backend.c',
   'fu-remote-list.c',
   'fu-security-attr.c',
 ] + systemd_src
+
+if get_option('gudev')
+  daemon_src += 'fu-udev-backend.c'
+endif
+if get_option('gusb')
+  daemon_src += 'fu-usb-backend.c'
+endif
 
 if build_daemon
 fwupdmgr = executable(
