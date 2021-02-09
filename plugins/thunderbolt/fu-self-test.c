@@ -879,7 +879,7 @@ fu_thunderbolt_gudev_uevent_cb (GUdevClient *gudev_client,
 	if (g_strcmp0 (action, "add") == 0) {
 		g_autoptr(FuUdevDevice) device = fu_udev_device_new (udev_device);
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_plugin_runner_udev_device_added (tt->plugin, device, &error_local))
+		if (!fu_plugin_runner_backend_device_added (tt->plugin, FU_DEVICE (device), &error_local))
 			g_debug ("failed to add: %s", error_local->message);
 		return;
 	}

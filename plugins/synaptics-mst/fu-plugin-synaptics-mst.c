@@ -97,12 +97,14 @@ fu_plugin_synaptics_mst_rescan_cb (gpointer user_data)
 }
 
 gboolean
-fu_plugin_udev_device_changed (FuPlugin *plugin, FuUdevDevice *device, GError **error)
+fu_plugin_backend_device_changed (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 
 	/* interesting device? */
-	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "drm") != 0)
+	if (!FU_IS_UDEV_DEVICE (device))
+		return TRUE;
+	if (g_strcmp0 (fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)), "drm") != 0)
 		return TRUE;
 
 	/* recoldplug all drm_dp_aux_dev devices after a *long* delay */
@@ -115,13 +117,17 @@ fu_plugin_udev_device_changed (FuPlugin *plugin, FuUdevDevice *device, GError **
 }
 
 gboolean
-fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
+fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuSynapticsMstDevice) dev = NULL;
 
-	dev = fu_synaptics_mst_device_new (device);
+	/* interesting device? */
+	if (!FU_IS_UDEV_DEVICE (device))
+		return TRUE;
+
+	dev = fu_synaptics_mst_device_new (FU_UDEV_DEVICE (device));
 	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;

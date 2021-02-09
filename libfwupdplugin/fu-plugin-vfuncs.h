@@ -281,43 +281,43 @@ gboolean	 fu_plugin_composite_cleanup		(FuPlugin	*plugin,
 							 GPtrArray	*devices,
 							 GError		**error);
 /**
- * fu_plugin_usb_device_added
+ * fu_plugin_backend_device_added
  * @plugin: A #FuPlugin
- * @device: A #FuUsbDevice
+ * @device: A #FuDevice
  * @error: A #GError or NULL
  *
- * Function run after USB device added to daemon.
+ * Function to run after a device is added by a backend, e.g. by USB or Udev.
  *
- * Since: 1.0.2
+ * Since: 1.5.6
  **/
-gboolean	 fu_plugin_usb_device_added		(FuPlugin	*plugin,
-							 FuUsbDevice	*device,
+gboolean	 fu_plugin_backend_device_added		(FuPlugin	*plugin,
+							 FuDevice	*device,
 							 GError		**error);
 /**
- * fu_plugin_udev_device_added
+ * fu_plugin_backend_device_changed
  * @plugin: A #FuPlugin
- * @device: A #FuUdevDevice
+ * @device: A #FuDevice
  * @error: A #GError or NULL
  *
- * Function run after Udev device added to daemon.
+ * Function run when the device changed.
  *
- * Since: 1.1.2
+ * Since: 1.5.6
  **/
-gboolean	 fu_plugin_udev_device_added		(FuPlugin	*plugin,
-							 FuUdevDevice	*device,
+gboolean	 fu_plugin_backend_device_changed	(FuPlugin	*plugin,
+							 FuDevice	*device,
 							 GError		**error);
 /**
- * fu_plugin_udev_device_changed
+ * fu_plugin_backend_device_removed
  * @plugin: A #FuPlugin
- * @device: A #FuUdevDevice
+ * @device: A #FuDevice
  * @error: A #GError or NULL
  *
- * Function run when Udev device changed.
+ * Function to run when device is physically removed.
  *
- * Since: 1.1.2
+ * Since: 1.5.6
  **/
-gboolean	 fu_plugin_udev_device_changed		(FuPlugin	*plugin,
-							 FuUdevDevice	*device,
+gboolean	 fu_plugin_backend_device_removed	(FuPlugin	*plugin,
+							 FuDevice	*device,
 							 GError		**error);
 /**
  * fu_plugin_device_added
@@ -330,19 +330,6 @@ gboolean	 fu_plugin_udev_device_changed		(FuPlugin	*plugin,
  **/
 void		 fu_plugin_device_added			(FuPlugin	*plugin,
 							 FuDevice	*dev);
-/**
- * fu_plugin_device_removed
- * @plugin: A #FuPlugin
- * @device: A #FuDevice
- * @error: A #GError or NULL
- *
- * Function run when device removed.
- *
- * Since: 1.1.2
- **/
-gboolean	 fu_plugin_device_removed		(FuPlugin	*plugin,
-							 FuDevice	*device,
-							 GError		**error);
 /**
  * fu_plugin_device_created
  * @plugin: A #FuPlugin

@@ -5609,7 +5609,7 @@ fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
 		plugin = fu_plugin_list_find_by_name (self->plugin_list, plugin_name, NULL);
 		if (plugin == NULL)
 			continue;
-		if (!fu_plugin_runner_udev_device_added (plugin, device, &error)) {
+		if (!fu_plugin_runner_backend_device_added (plugin, FU_DEVICE (device), &error)) {
 			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
 					g_debug ("%s ignoring: %s",
@@ -5687,7 +5687,7 @@ fu_engine_udev_changed_cb (gpointer user_data)
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
 		g_autoptr(GError) error = NULL;
-		if (!fu_plugin_runner_udev_device_changed (plugin_tmp, device, &error)) {
+		if (!fu_plugin_runner_backend_device_changed (plugin_tmp, FU_DEVICE (device), &error)) {
 			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				g_debug ("%s ignoring: %s",
 					 fu_plugin_get_name (plugin_tmp),
@@ -6228,7 +6228,7 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 		plugin = fu_plugin_list_find_by_name (self->plugin_list, plugin_name, NULL);
 		if (plugin == NULL)
 			continue;
-		if (!fu_plugin_runner_usb_device_added (plugin, device, &error)) {
+		if (!fu_plugin_runner_backend_device_added (plugin, FU_DEVICE (device), &error)) {
 			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
 					g_debug ("%s ignoring: %s",
