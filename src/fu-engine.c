@@ -13,9 +13,6 @@
 #include <gio/gunixinputstream.h>
 #endif
 #include <glib-object.h>
-#ifdef HAVE_GUDEV
-#include <gudev/gudev.h>
-#endif
 #include <string.h>
 #ifdef HAVE_UTSNAME_H
 #include <sys/utsname.h>
@@ -55,7 +52,13 @@
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
 #include "fu-udev-device-private.h"
-#include "fu-usb-device-private.h"
+
+#ifdef HAVE_GUDEV
+#include "fu-udev-backend.h"
+#endif
+#ifdef HAVE_GUSB
+#include "fu-usb-backend.h"
+#endif
 
 #include "fu-dfu-firmware.h"
 #include "fu-dfuse-firmware.h"
@@ -77,10 +80,7 @@ struct _FuEngine
 {
 	GObject			 parent_instance;
 	FuAppFlags		 app_flags;
-	GUsbContext		*usb_ctx;
-#ifdef HAVE_GUDEV
-	GUdevClient		*gudev_client;
-#endif
+	GPtrArray		*backends;
 	FuConfig		*config;
 	FuRemoteList		*remote_list;
 	FuDeviceList		*device_list;
@@ -96,9 +96,6 @@ struct _FuEngine
 	FuPluginList		*plugin_list;
 	GPtrArray		*plugin_filter;
 	GPtrArray		*udev_subsystems;
-#ifdef HAVE_GUDEV
-	GHashTable		*udev_changed_ids;	/* sysfs:FuEngineUdevChangedHelper */
-#endif
 	FuSmbios		*smbios;
 	FuHwids			*hwids;
 	FuQuirks		*quirks;
@@ -5570,196 +5567,6 @@ fu_engine_recoldplug_delay_cb (gpointer user_data)
 	return FALSE;
 }
 
-#ifdef HAVE_GUDEV
-static void
-fu_engine_udev_device_add (FuEngine *self, GUdevDevice *udev_device)
-{
-	g_autoptr(FuUdevDevice) device = fu_udev_device_new (udev_device);
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GPtrArray) possible_plugins = NULL;
-
-	/* debug */
-	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
-		g_debug ("UDEV %s added",
-			 g_udev_device_get_sysfs_path (udev_device));
-	}
-
-	/* add any extra quirks */
-	fu_device_set_quirks (FU_DEVICE (device), self->quirks);
-	if (!fu_device_probe (FU_DEVICE (device), &error_local)) {
-		g_warning ("failed to probe device %s: %s",
-			   g_udev_device_get_sysfs_path (udev_device),
-			   error_local->message);
-		return;
-	}
-
-	/* super useful for plugin development */
-	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
-		g_autofree gchar *str = fu_device_to_string (FU_DEVICE (device));
-		g_debug ("%s", str);
-	}
-
-	/* can be specified using a quirk */
-	possible_plugins = fu_device_get_possible_plugins (FU_DEVICE (device));
-	for (guint i = 0; i < possible_plugins->len; i++) {
-		FuPlugin *plugin;
-		const gchar *plugin_name = g_ptr_array_index (possible_plugins, i);
-		g_autoptr(GError) error = NULL;
-
-		plugin = fu_plugin_list_find_by_name (self->plugin_list, plugin_name, NULL);
-		if (plugin == NULL)
-			continue;
-		if (!fu_plugin_runner_backend_device_added (plugin, FU_DEVICE (device), &error)) {
-			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
-					g_debug ("%s ignoring: %s",
-						 fu_plugin_get_name (plugin),
-						 error->message);
-				}
-				continue;
-			}
-			g_warning ("failed to add udev device %s: %s",
-				   g_udev_device_get_sysfs_path (udev_device),
-				   error->message);
-			continue;
-		}
-	}
-}
-
-static void
-fu_engine_udev_device_remove (FuEngine *self, GUdevDevice *udev_device)
-{
-	g_autoptr(GPtrArray) devices = NULL;
-
-	/* debug */
-	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
-		g_debug ("UDEV %s removed",
-			 g_udev_device_get_sysfs_path (udev_device));
-	}
-
-	/* go through each device and remove any that match */
-	devices = fu_device_list_get_all (self->device_list);
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *device = g_ptr_array_index (devices, i);
-		if (!FU_IS_UDEV_DEVICE (device))
-			continue;
-		if (g_strcmp0 (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)),
-			       g_udev_device_get_sysfs_path (udev_device)) == 0) {
-			g_debug ("auto-removing GUdevDevice");
-			fu_device_list_remove (self->device_list, device);
-		}
-	}
-}
-
-typedef struct {
-	FuEngine	*self;
-	GUdevDevice	*udev_device;
-	guint		 idle_id;
-} FuEngineUdevChangedHelper;
-
-static void
-fu_engine_udev_changed_helper_free (FuEngineUdevChangedHelper *helper)
-{
-	if (helper->idle_id != 0)
-		g_source_remove (helper->idle_id);
-	g_object_unref (helper->self);
-	g_object_unref (helper->udev_device);
-	g_free (helper);
-}
-
-static FuEngineUdevChangedHelper *
-fu_engine_udev_changed_helper_new (FuEngine *self, GUdevDevice *udev_device)
-{
-	FuEngineUdevChangedHelper *helper = g_new0 (FuEngineUdevChangedHelper, 1);
-	helper->self = g_object_ref (self);
-	helper->udev_device = g_object_ref (udev_device);
-	return helper;
-}
-
-static gboolean
-fu_engine_udev_changed_cb (gpointer user_data)
-{
-	FuEngineUdevChangedHelper *helper = (FuEngineUdevChangedHelper *) user_data;
-	GPtrArray *plugins = fu_plugin_list_get_all (helper->self->plugin_list);
-	g_autoptr(FuUdevDevice) device = fu_udev_device_new (helper->udev_device);
-
-	/* run all plugins */
-	for (guint j = 0; j < plugins->len; j++) {
-		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-		g_autoptr(GError) error = NULL;
-		if (!fu_plugin_runner_backend_device_changed (plugin_tmp, FU_DEVICE (device), &error)) {
-			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-				g_debug ("%s ignoring: %s",
-					 fu_plugin_get_name (plugin_tmp),
-					 error->message);
-				continue;
-			}
-			g_warning ("%s failed to change udev device %s: %s",
-				   fu_plugin_get_name (plugin_tmp),
-				   g_udev_device_get_sysfs_path (helper->udev_device),
-				   error->message);
-		}
-	}
-
-	/* device done, so remove ref */
-	helper->idle_id = 0;
-	g_hash_table_remove (helper->self->udev_changed_ids,
-			     g_udev_device_get_sysfs_path (helper->udev_device));
-	return FALSE;
-}
-
-static void
-fu_engine_udev_device_changed (FuEngine *self, GUdevDevice *udev_device)
-{
-	const gchar *sysfs_path = g_udev_device_get_sysfs_path (udev_device);
-	g_autoptr(GPtrArray) devices = NULL;
-	FuEngineUdevChangedHelper *helper;
-
-	/* emit changed on any that match */
-	devices = fu_device_list_get_all (self->device_list);
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *device = g_ptr_array_index (devices, i);
-		if (!FU_IS_UDEV_DEVICE (device))
-			continue;
-		if (g_strcmp0 (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)),
-			       sysfs_path) == 0) {
-			fu_udev_device_emit_changed (FU_UDEV_DEVICE (device));
-		}
-	}
-
-	/* run all plugins, with per-device rate limiting */
-	if (g_hash_table_remove (self->udev_changed_ids, sysfs_path)) {
-		g_debug ("re-adding rate-limited timeout for %s", sysfs_path);
-	} else {
-		g_debug ("adding rate-limited timeout for %s", sysfs_path);
-	}
-	helper = fu_engine_udev_changed_helper_new (self, udev_device);
-	helper->idle_id = g_timeout_add (500, fu_engine_udev_changed_cb, helper);
-	g_hash_table_insert (self->udev_changed_ids, g_strdup (sysfs_path), helper);
-}
-
-static void
-fu_engine_enumerate_udev (FuEngine *self)
-{
-	/* get all devices of class */
-	for (guint i = 0; i < self->udev_subsystems->len; i++) {
-		const gchar *subsystem = g_ptr_array_index (self->udev_subsystems, i);
-		GList *devices = g_udev_client_query_by_subsystem (self->gudev_client,
-								   subsystem);
-		if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
-			g_debug ("%u devices with subsystem %s",
-				 g_list_length (devices), subsystem);
-		}
-		for (GList *l = devices; l != NULL; l = l->next) {
-			GUdevDevice *udev_device = l->data;
-			fu_engine_udev_device_add (self, udev_device);
-		}
-		g_list_foreach (devices, (GFunc) g_object_unref, NULL);
-		g_list_free (devices);
-	}
-}
-#endif
-
 static void
 fu_engine_plugin_recoldplug_cb (FuPlugin *plugin, FuEngine *self)
 {
@@ -5770,9 +5577,15 @@ fu_engine_plugin_recoldplug_cb (FuPlugin *plugin, FuEngine *self)
 	if (self->app_flags & FU_APP_FLAGS_NO_IDLE_SOURCES) {
 		g_debug ("doing direct recoldplug");
 		fu_engine_plugins_coldplug (self, TRUE);
-#ifdef HAVE_GUDEV
-		fu_engine_enumerate_udev (self);
-#endif
+		for (guint i = 0; i < self->backends->len; i++) {
+			FuBackend *backend = g_ptr_array_index (self->backends, i);
+			g_autoptr(GError) error_local = NULL;
+			if (!fu_backend_recoldplug (backend, &error_local)) {
+				g_warning ("failed to recoldplug: %s",
+					   error_local->message);
+				continue;
+			}
+		}
 		return;
 	}
 	g_debug ("scheduling a recoldplug");
@@ -6075,7 +5888,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				  self);
 
 		/* if loaded from fu_engine_load() open the plugin */
-		if (self->usb_ctx != NULL) {
+		if (g_hash_table_size (self->firmware_gtypes) > 0) {
 			if (!fu_plugin_open (plugin, filename, &error_local)) {
 				g_warning ("cannot load: %s", error_local->message);
 				fu_engine_add_plugin (self, plugin);
@@ -6164,62 +5977,53 @@ fu_engine_get_archive_size_max (FuEngine *self)
 	return fu_config_get_archive_size_max (self->config);
 }
 
-#ifdef HAVE_GUSB
 static void
-fu_engine_usb_device_removed_cb (GUsbContext *ctx,
-				 GUsbDevice *usb_device,
-				 FuEngine *self)
+fu_engine_backend_device_removed_cb (FuBackend *backend, FuDevice *device, FuEngine *self)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* debug */
 	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
-		g_debug ("USB %04x:%04x removed",
-			 g_usb_device_get_vid (usb_device),
-			 g_usb_device_get_pid (usb_device));
+		g_debug ("%s removed %s",
+			 fu_backend_get_name (backend),
+			 fu_device_get_physical_id (device));
 	}
 
 	/* go through each device and remove any that match */
 	devices = fu_device_list_get_all (self->device_list);
 	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *device = g_ptr_array_index (devices, i);
-		if (!FU_IS_USB_DEVICE (device))
-			continue;
-		if (g_strcmp0 (fu_usb_device_get_platform_id (FU_USB_DEVICE (device)),
-			       g_usb_device_get_platform_id (usb_device)) == 0) {
+		FuDevice *device_tmp = g_ptr_array_index (devices, i);
+		if (g_strcmp0 (fu_device_get_physical_id (device_tmp),
+			       fu_device_get_physical_id (device)) == 0) {
 			g_debug ("auto-removing GUsbDevice");
-			fu_device_list_remove (self->device_list, device);
+			fu_device_list_remove (self->device_list, device_tmp);
 		}
 	}
 }
 
 static void
-fu_engine_usb_device_added_cb (GUsbContext *ctx,
-			       GUsbDevice *usb_device,
-			       FuEngine *self)
+fu_engine_backend_device_added_cb (FuBackend *backend, FuDevice *device, FuEngine *self)
 {
-	g_autoptr(FuUsbDevice) device = fu_usb_device_new (usb_device);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) possible_plugins = NULL;
 
-	/* debug */
+	/* super useful for plugin development */
 	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
-		g_debug ("USB %04x:%04x added",
-			 g_usb_device_get_vid (usb_device),
-			 g_usb_device_get_pid (usb_device));
+		g_autofree gchar *str = fu_device_to_string (FU_DEVICE (device));
+		g_debug ("%s added %s", fu_backend_get_name (backend), str);
 	}
 
 	/* add any extra quirks */
-	fu_device_set_quirks (FU_DEVICE (device), self->quirks);
-	if (!fu_device_probe (FU_DEVICE (device), &error_local)) {
+	fu_device_set_quirks (device, self->quirks);
+	if (!fu_device_probe (device, &error_local)) {
 		g_warning ("failed to probe device %s: %s",
-			   fu_device_get_physical_id (FU_DEVICE (device)),
+			   fu_device_get_physical_id (device),
 			   error_local->message);
 		return;
 	}
 
 	/* can be specified using a quirk */
-	possible_plugins = fu_device_get_possible_plugins (FU_DEVICE (device));
+	possible_plugins = fu_device_get_possible_plugins (device);
 	for (guint i = 0; i < possible_plugins->len; i++) {
 		FuPlugin *plugin;
 		const gchar *plugin_name = g_ptr_array_index (possible_plugins, i);
@@ -6228,7 +6032,7 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 		plugin = fu_plugin_list_find_by_name (self->plugin_list, plugin_name, NULL);
 		if (plugin == NULL)
 			continue;
-		if (!fu_plugin_runner_backend_device_added (plugin, FU_DEVICE (device), &error)) {
+		if (!fu_plugin_runner_backend_device_added (plugin, device, &error)) {
 			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 				if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
 					g_debug ("%s ignoring: %s",
@@ -6237,15 +6041,57 @@ fu_engine_usb_device_added_cb (GUsbContext *ctx,
 				}
 				continue;
 			}
-			g_warning ("failed to add USB device %04x:%04x: %s",
-				   g_usb_device_get_vid (usb_device),
-				   g_usb_device_get_pid (usb_device),
+			g_warning ("failed to add device %s: %s",
+				   fu_device_get_physical_id (device),
 				   error->message);
 			continue;
 		}
 	}
 }
-#endif
+
+static void
+fu_engine_backend_device_changed_cb (FuBackend *backend, FuDevice *device, FuEngine *self)
+{
+	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* debug */
+	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
+		g_debug ("%s changed %s",
+			 fu_backend_get_name (backend),
+			 fu_device_get_physical_id (device));
+	}
+
+	/* emit changed on any that match */
+	devices = fu_device_list_get_all (self->device_list);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index (devices, i);
+		if (!FU_IS_UDEV_DEVICE (device_tmp))
+			continue;
+		if (g_strcmp0 (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device_tmp)),
+			       fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device))) == 0) {
+			fu_udev_device_emit_changed (FU_UDEV_DEVICE (device));
+		}
+	}
+
+	/* run all plugins */
+	for (guint j = 0; j < plugins->len; j++) {
+		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
+		g_autoptr(GError) error = NULL;
+		if (!fu_plugin_runner_backend_device_changed (plugin_tmp, device, &error)) {
+			if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_debug ("%s ignoring: %s",
+					 fu_plugin_get_name (plugin_tmp),
+					 error->message);
+				continue;
+			}
+			g_warning ("%s failed to change udev device %s: %s",
+				   fu_plugin_get_name (plugin_tmp),
+				   fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)),
+				   error->message);
+		}
+	}
+}
 
 static void
 fu_engine_load_quirks (FuEngine *self, FuQuirksLoadFlags quirks_flags)
@@ -6401,28 +6247,6 @@ fu_engine_update_history_database (FuEngine *self, GError **error)
 	return TRUE;
 }
 
-#ifdef HAVE_GUDEV
-static void
-fu_engine_udev_uevent_cb (GUdevClient *gudev_client,
-			  const gchar *action,
-			  GUdevDevice *udev_device,
-			  FuEngine *self)
-{
-	if (g_strcmp0 (action, "add") == 0) {
-		fu_engine_udev_device_add (self, udev_device);
-		return;
-	}
-	if (g_strcmp0 (action, "remove") == 0) {
-		fu_engine_udev_device_remove (self, udev_device);
-		return;
-	}
-	if (g_strcmp0 (action, "change") == 0) {
-		fu_engine_udev_device_changed (self, udev_device);
-		return;
-	}
-}
-#endif
-
 static void
 fu_engine_ensure_client_certificate (FuEngine *self)
 {
@@ -6558,15 +6382,11 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	fu_engine_add_firmware_gtype (self, "srec", FU_TYPE_SREC_FIRMWARE);
 	fu_engine_add_firmware_gtype (self, "smbios", FU_TYPE_SMBIOS);
 
-	/* set shared USB context */
-#ifdef HAVE_GUSB
-	self->usb_ctx = g_usb_context_new (error);
-#else
-	self->usb_ctx = g_object_new (G_TYPE_OBJECT, NULL);
-#endif
-	if (self->usb_ctx == NULL) {
-		g_prefix_error (error, "Failed to get USB context: ");
-		return FALSE;
+	/* set up backends */
+	for (guint i = 0; i < self->backends->len; i++) {
+		FuBackend *backend = g_ptr_array_index (self->backends, i);
+		if (!fu_backend_setup (backend, error))
+			return FALSE;
 	}
 
 	/* delete old data files */
@@ -6591,21 +6411,6 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	g_signal_connect (self->device_list, "changed",
 			  G_CALLBACK (fu_engine_device_changed_cb),
 			  self);
-
-#ifdef HAVE_GUDEV
-	/* udev watches can only be set up in _init() so set up client now */
-	if (self->udev_subsystems->len > 0) {
-		g_auto(GStrv) udev_subsystems = g_new0 (gchar *, self->udev_subsystems->len + 1);
-		for (guint i = 0; i < self->udev_subsystems->len; i++) {
-			const gchar *subsystem = g_ptr_array_index (self->udev_subsystems, i);
-			udev_subsystems[i] = g_strdup (subsystem);
-		}
-		self->gudev_client = g_udev_client_new ((const gchar * const *) udev_subsystems);
-		g_signal_connect (self->gudev_client, "uevent",
-				  G_CALLBACK (fu_engine_udev_uevent_cb), self);
-	}
-#endif
-
 	fu_engine_set_status (self, FWUPD_STATUS_LOADING);
 
 	/* add devices */
@@ -6613,23 +6418,23 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
 		fu_engine_plugins_coldplug (self, FALSE);
 
-	/* coldplug USB devices */
-#ifdef HAVE_GUSB
-	g_signal_connect (self->usb_ctx, "device-added",
-			  G_CALLBACK (fu_engine_usb_device_added_cb),
-			  self);
-	g_signal_connect (self->usb_ctx, "device-removed",
-			  G_CALLBACK (fu_engine_usb_device_removed_cb),
-			  self);
-	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
-		g_usb_context_enumerate (self->usb_ctx);
-#endif
-
-#ifdef HAVE_GUDEV
-	/* coldplug udev devices */
-	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
-		fu_engine_enumerate_udev (self);
-#endif
+	/* coldplug backends */
+	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
+		for (guint i = 0; i < self->backends->len; i++) {
+			FuBackend *backend = g_ptr_array_index (self->backends, i);
+			g_signal_connect (backend, "device-added",
+					  G_CALLBACK (fu_engine_backend_device_added_cb),
+					  self);
+			g_signal_connect (backend, "device-removed",
+					  G_CALLBACK (fu_engine_backend_device_removed_cb),
+					  self);
+			g_signal_connect (backend, "device-changed",
+					  G_CALLBACK (fu_engine_backend_device_changed_cb),
+					  self);
+			if (!fu_backend_coldplug (backend, error))
+				return FALSE;
+		}
+	}
 
 	/* set device properties from the metadata */
 	fu_engine_md_refresh_devices (self);
@@ -6735,10 +6540,7 @@ fu_engine_init (FuEngine *self)
 	self->plugin_filter = g_ptr_array_new_with_free_func (g_free);
 	self->host_security_attrs = fu_security_attrs_new ();
 	self->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
-#ifdef HAVE_GUDEV
-	self->udev_changed_ids = g_hash_table_new_full (g_str_hash, g_str_equal,
-							g_free, (GDestroyNotify) fu_engine_udev_changed_helper_free);
-#endif
+	self->backends = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->firmware_gtypes = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
@@ -6752,6 +6554,14 @@ fu_engine_init (FuEngine *self)
 
 	g_signal_connect (self->idle, "notify::status",
 			  G_CALLBACK (fu_engine_idle_status_notify_cb), self);
+
+	/* backends */
+#ifdef HAVE_GUSB
+	g_ptr_array_add (self->backends, fu_usb_backend_new ());
+#endif
+#ifdef HAVE_GUDEV
+	g_ptr_array_add (self->backends, fu_udev_backend_new (self->udev_subsystems));
+#endif
 
 	/* setup Jcat context */
 	self->jcat_context = jcat_context_new ();
@@ -6799,14 +6609,8 @@ fu_engine_finalize (GObject *obj)
 {
 	FuEngine *self = FU_ENGINE (obj);
 
-	if (self->usb_ctx != NULL)
-		g_object_unref (self->usb_ctx);
 	if (self->silo != NULL)
 		g_object_unref (self->silo);
-#ifdef HAVE_GUDEV
-	if (self->gudev_client != NULL)
-		g_object_unref (self->gudev_client);
-#endif
 	if (self->coldplug_id != 0)
 		g_source_remove (self->coldplug_id);
 	if (self->approved_firmware != NULL)
@@ -6828,9 +6632,7 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->jcat_context);
 	g_ptr_array_unref (self->plugin_filter);
 	g_ptr_array_unref (self->udev_subsystems);
-#ifdef HAVE_GUDEV
-	g_hash_table_unref (self->udev_changed_ids);
-#endif
+	g_ptr_array_unref (self->backends);
 	g_hash_table_unref (self->runtime_versions);
 	g_hash_table_unref (self->compile_versions);
 	g_hash_table_unref (self->firmware_gtypes);
