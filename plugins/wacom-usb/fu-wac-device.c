@@ -199,9 +199,15 @@ fu_wac_device_ensure_flash_descriptors (FuWacDevice *self, GError **error)
 	for (guint i = 0; i < self->nr_flash_blocks; i++) {
 		FuWacFlashDescriptor *fd = g_new0 (FuWacFlashDescriptor, 1);
 		const guint blksz = sizeof(FuWacFlashDescriptor);
-		fd->start_addr = fu_common_read_uint32 (buf + (i * blksz) + 1, G_LITTLE_ENDIAN);
-		fd->block_sz = fu_common_read_uint32 (buf + (i * blksz) + 5, G_LITTLE_ENDIAN);
-		fd->write_sz = fu_common_read_uint16 (buf + (i * blksz) + 9, G_LITTLE_ENDIAN);
+		if (!fu_common_read_uint32_safe (buf, sz, (i * blksz) + 1,
+						 &fd->start_addr, G_LITTLE_ENDIAN, error))
+			return FALSE;
+		if (!fu_common_read_uint32_safe (buf, sz, (i * blksz) + 5,
+						 &fd->block_sz, G_LITTLE_ENDIAN, error))
+			return FALSE;
+		if (!fu_common_read_uint16_safe (buf, sz, (i * blksz) + 9,
+						 &fd->write_sz, G_LITTLE_ENDIAN, error))
+			return FALSE;
 		g_ptr_array_add (self->flash_descriptors, fd);
 	}
 	g_debug ("added %u flash descriptors", self->flash_descriptors->len);
