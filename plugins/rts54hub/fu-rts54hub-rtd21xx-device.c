@@ -192,15 +192,15 @@ fu_rts54hub_rtd21xx_device_read_status_raw (FuRts54hubRtd21xxDevice *self,
 					    guint8 *status,
 					    GError **error)
 {
-	guint8 buf[] = { 0x00 };
+	guint8 buf = 0x00;
 	if (!fu_rts54hub_rtd21xx_device_i2c_read (self,
 						  UC_FOREGROUND_SLAVE_ADDR,
 						  UC_FOREGROUND_STATUS,
-						  buf, sizeof(buf),
+						  &buf, sizeof(buf),
 						  error))
 		return FALSE;
 	if (status != NULL)
-		*status = buf[0];
+		*status = buf;
 	return TRUE;
 }
 
