@@ -188,6 +188,7 @@ fu_synaptics_rmi_firmware_parse_v10 (FuFirmware *firmware, GBytes *fw, GError **
 	guint32 cntrs_len;
 	guint32 offset;
 	guint32 cntr_addr;
+	guint8 product_id[RMI_PRODUCT_ID_LENGTH] = { 0x0 };
 	gsize sz = 0;
 	const guint8 *data = g_bytes_get_data (fw, &sz);
 
@@ -305,7 +306,10 @@ fu_synaptics_rmi_firmware_parse_v10 (FuFirmware *firmware, GBytes *fw, GError **
 							 G_LITTLE_ENDIAN,
 							 error))
 				return FALSE;
-			self->product_id = g_strndup ((const gchar *) data + content_addr + 0x18, RMI_PRODUCT_ID_LENGTH);
+			if (!fu_memcpy_safe (product_id, sizeof(product_id), 0x0,	/* dst */
+					     data, sz, content_addr + 0x18,		/* src */
+					     sizeof(product_id), error))
+				return FALSE;
 			break;
 		default:
 			g_debug ("unsupported container %s [0x%02x]",
@@ -314,6 +318,11 @@ fu_synaptics_rmi_firmware_parse_v10 (FuFirmware *firmware, GBytes *fw, GError **
 			break;
 		}
 		offset += 4;
+	}
+	if (product_id[0] != '\0') {
+		g_free (self->product_id);
+		self->product_id = g_strndup ((const gchar *) product_id,
+					      sizeof(product_id));
 	}
 	return TRUE;
 }
