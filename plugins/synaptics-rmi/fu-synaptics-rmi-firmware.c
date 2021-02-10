@@ -261,7 +261,10 @@ fu_synaptics_rmi_firmware_parse_v10 (FuFirmware *firmware, GBytes *fw, GError **
 		}
 		switch (container_id) {
 		case RMI_FIRMWARE_CONTAINER_ID_BL:
-			self->bootloader_version = data[content_addr];
+			if (!fu_common_read_uint8_safe (data, sz, content_addr,
+							&self->bootloader_version,
+							error))
+				return FALSE;
 			break;
 		case RMI_FIRMWARE_CONTAINER_ID_UI:
 		case RMI_FIRMWARE_CONTAINER_ID_CORE_CODE:
