@@ -861,7 +861,9 @@ fu_logitech_hidpp_peripheral_write_firmware_pkt (FuLogitechHidPpPeripheral *self
 	}
 
 	/* check error */
-	packet_cnt = fu_common_read_uint32 (msg->data, G_BIG_ENDIAN);
+	if (!fu_common_read_uint32_safe (msg->data, sizeof(msg->data), 0x0,
+					 &packet_cnt, G_BIG_ENDIAN, error))
+		return FALSE;
 	g_debug ("packet_cnt=0x%04x", packet_cnt);
 	if (fu_logitech_hidpp_peripheral_check_status (msg->data[4], &error_local))
 		return TRUE;
