@@ -49,6 +49,7 @@ G_DEFINE_TYPE (FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU_TYPE_FIRMWA
 #define RMI_IMG_FW_OFFSET			0x100
 
 #define RMI_IMG_V10_CNTR_ADDR_OFFSET		0x0c
+#define RMI_IMG_MAX_CONTAINERS			1024
 
 typedef struct __attribute__((packed)) {
 	guint32	 content_checksum;
@@ -224,6 +225,14 @@ fu_synaptics_rmi_firmware_parse_v10 (FuFirmware *firmware, GBytes *fw, GError **
 		return FALSE;
 	}
 	cntrs_len = GUINT32_FROM_LE(desc.content_length) / 4;
+	if (cntrs_len > RMI_IMG_MAX_CONTAINERS) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "too many containers in file [%u], maximum is %u",
+			     cntrs_len, (guint) RMI_IMG_MAX_CONTAINERS);
+		return FALSE;
+	}
 	g_debug ("offset=0x%x (cntrs_len=%u)", offset, cntrs_len);
 
 	for (guint32 i = 0; i < cntrs_len; i++) {
