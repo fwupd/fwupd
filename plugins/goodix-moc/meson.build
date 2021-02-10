@@ -9,7 +9,6 @@ install_data([
 shared_module('fu_plugin_goodixmoc',
   fu_hash,
   sources : [
-    'fu-goodixmoc-common.c',
     'fu-goodixmoc-device.c',
     'fu-plugin-goodixmoc.c',
   ],
