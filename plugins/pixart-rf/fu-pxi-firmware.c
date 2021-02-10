@@ -7,8 +7,11 @@
 #include "config.h"
 
 #include "fu-common.h"
-
 #include "fu-pxi-firmware.h"
+
+#define PIXART_RF_FW_HEADER_SIZE		32	/* bytes */
+#define PIXART_RF_FW_HEADER_TAG_OFFSET		24
+#define PIXART_RF_FW_HEADER_TAG_SIZE		8	/* bytes */
 
 struct _FuPxiRfFirmware {
 	FuFirmware		 parent_instance;
@@ -24,44 +27,63 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
-	gsize bufsz = 0;
-	guint8 pos = 0;
 	const guint8 *buf;
+	const guint8 tag[] = {
+		0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA,
+	};
+	gboolean header_ok = TRUE;
+	gsize bufsz = 0;
+	guint8 fw_header[PIXART_RF_FW_HEADER_SIZE];
 	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 
 	/* get buf */
 	buf = g_bytes_get_data (fw, &bufsz);
-	if (bufsz < 32) {
+	if (bufsz < sizeof(fw_header)) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "firmware invalid, too small!");
 		return FALSE;
 	}
+
+	/* get fw header */
+	if (!fu_memcpy_safe (fw_header, sizeof(fw_header), 0x0,
+			     buf, bufsz, bufsz - sizeof(fw_header),
+			     sizeof(fw_header), error)) {
+		g_prefix_error (error, "failed to read fw header ");
+		return FALSE;
+	}
 	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL) {
-		fu_common_dump_raw (G_LOG_DOMAIN, "fw last 32 bytes",
-				    &buf[bufsz - 32], 32);
+		fu_common_dump_raw (G_LOG_DOMAIN, "fw header",
+				    fw_header, sizeof(fw_header));
 	}
 
-	/* find the version tag */
-	for (guint32 idx = 0; idx < 32; idx++) {
-		if (buf[(bufsz - 32) + idx ] == 'v') {
-			pos = idx;
+	/* check the tag from fw header is correct */
+	for (guint32 i = 0x0; i < sizeof(tag); i++) {
+		guint8 tmp = 0;
+		if (!fu_common_read_uint8_safe (fw_header, sizeof(fw_header),
+						i + PIXART_RF_FW_HEADER_TAG_OFFSET,
+						&tmp, error))
+			return FALSE;
+		if (tmp != tag[i]) {
+			header_ok = FALSE;
 			break;
 		}
 	}
 
 	/* set the default version if can not find it in fw bin */
-	if (pos < 32 - 6 && buf[(bufsz - 32) + pos + 1] == '_') {
+	if (header_ok) {
 		g_autofree gchar *version = NULL;
 		version = g_strdup_printf ("%c.%c.%c",
-					   buf[(bufsz - 32) + pos + 2],
-					   buf[(bufsz - 32) + pos + 4],
-					   buf[(bufsz - 32) + pos + 6]);
+					   fw_header[0],
+					   fw_header[2],
+					   fw_header[4]);
 		fu_firmware_set_version (firmware, version);
 	} else {
-		fu_firmware_set_version (firmware, "1.0.0");
+		fu_firmware_set_version (firmware, "0.0.0");
 	}
+
+	/* success */
 	fu_firmware_add_image (firmware, img);
 	return TRUE;
 }

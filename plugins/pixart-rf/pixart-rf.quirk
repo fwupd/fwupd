@@ -1,3 +1,19 @@
-# pxi-hid
+# Pixart
 [DeviceInstanceId=HIDRAW\VEN_093A&DEV_2801]
+Plugin = pixart_rf
+
+# Primax MS
+[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EEF]
+Plugin = pixart_rf
+
+# Primax US KB
+[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EEE]
+Plugin = pixart_rf
+
+# Primax UK KB
+[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EF4]
+Plugin = pixart_rf
+
+# Primax JP KB
+[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EFF]
 Plugin = pixart_rf
