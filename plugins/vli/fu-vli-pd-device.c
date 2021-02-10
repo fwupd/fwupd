@@ -272,7 +272,9 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 		g_prefix_error (error, "failed to get version: ");
 		return FALSE;
 	}
-	version_raw = fu_common_read_uint32 (verbuf, G_BIG_ENDIAN);
+	if (!fu_common_read_uint32_safe (verbuf, sizeof(verbuf), 0x0,
+					 &version_raw, G_BIG_ENDIAN, error))
+		return FALSE;
 	fu_device_set_version_raw (FU_DEVICE (self), version_raw);
 	version_str = fu_common_version_from_uint32 (version_raw, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_version (FU_DEVICE (self), version_str);

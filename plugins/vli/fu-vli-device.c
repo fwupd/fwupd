@@ -515,12 +515,24 @@ fu_vli_device_spi_read_flash_id (FuVliDevice *self, GError **error)
 	}
 	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
 		fu_common_dump_raw (G_LOG_DOMAIN, "SpiCmdReadId", buf, sizeof(buf));
-	if (priv->spi_cmd_read_id_sz == 4)
-		priv->flash_id = fu_common_read_uint32 (buf, G_BIG_ENDIAN);
-	else if (priv->spi_cmd_read_id_sz == 2)
-		priv->flash_id = fu_common_read_uint16 (buf, G_BIG_ENDIAN);
-	else if (priv->spi_cmd_read_id_sz == 1)
-		priv->flash_id = buf[0];
+	if (priv->spi_cmd_read_id_sz == 4) {
+		if (!fu_common_read_uint32_safe (buf, sizeof(buf), 0x0,
+						 &priv->flash_id,
+						 G_BIG_ENDIAN, error))
+			return FALSE;
+	} else if (priv->spi_cmd_read_id_sz == 2) {
+		guint16 tmp = 0;
+		if (!fu_common_read_uint16_safe (buf, sizeof(buf), 0x0,
+						 &tmp, G_BIG_ENDIAN, error))
+			return FALSE;
+		priv->flash_id = tmp;
+	} else if (priv->spi_cmd_read_id_sz == 1) {
+		guint8 tmp = 0;
+		if (!fu_common_read_uint8_safe (buf, sizeof(buf), 0x0,
+						&tmp, error))
+			return FALSE;
+		priv->flash_id = tmp;
+	}
 	return TRUE;
 }
 
