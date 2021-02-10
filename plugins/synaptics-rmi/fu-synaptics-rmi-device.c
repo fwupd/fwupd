@@ -458,7 +458,10 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 				     f01_tmp->data, f01_tmp->len, 0x0,	/* src */
 				     f01_tmp->len, error))
 			return FALSE;
-		priv->flash.build_id = fu_common_read_uint32 (buf32, G_LITTLE_ENDIAN);
+		if (!fu_common_read_uint32_safe (buf32, sizeof(buf32), 0x0,
+						 &priv->flash.build_id,
+						 G_LITTLE_ENDIAN, error))
+			return FALSE;
 	}
 
 	/* read build ID, typically only for PS/2 */
