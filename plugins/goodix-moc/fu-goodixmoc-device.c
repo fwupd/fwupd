@@ -14,6 +14,7 @@
 
 struct _FuGoodixMocDevice {
 	FuUsbDevice	parent_instance;
+	guint8		dummy_seq;
 };
 
 G_DEFINE_TYPE (FuGoodixMocDevice, fu_goodixmoc_device, FU_TYPE_USB_DEVICE)
@@ -27,26 +28,34 @@ G_DEFINE_TYPE (FuGoodixMocDevice, fu_goodixmoc_device, FU_TYPE_USB_DEVICE)
 #define GX_FLASH_TRANSFER_BLOCK_SIZE	1000	/* 1000 */
 
 static gboolean
-goodixmoc_device_cmd_send (GUsbDevice *usbdevice,
+goodixmoc_device_cmd_send (FuGoodixMocDevice *self,
 			   guint8      cmd0,
 			   guint8      cmd1,
 			   GxPkgType   type,
 			   GByteArray *req,
 			   GError    **error)
 {
-	GxfpPkgHeader header = { 0 };
-	guint32 crc_actual = 0;
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+	guint32 crc_all = 0;
+	guint32 crc_hdr = 0;
 	gsize actual_len = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
 
-	fu_goodixmoc_build_header (&header, req->len, cmd0, cmd1, type);
-	g_byte_array_append (buf, (guint8 *)&header, sizeof(header));
+	/* build header */
+	fu_byte_array_append_uint8 (buf, cmd0);
+	fu_byte_array_append_uint8 (buf, cmd1);
+	fu_byte_array_append_uint8 (buf, type);			/* pkg_flag */
+	fu_byte_array_append_uint8 (buf, self->dummy_seq++);	/* reserved */
+	fu_byte_array_append_uint16 (buf, req->len + GX_SIZE_CRC32, G_LITTLE_ENDIAN);
+	crc_hdr = fu_common_crc8 (buf->data, buf->len);
+	fu_byte_array_append_uint8 (buf, crc_hdr);
+	fu_byte_array_append_uint8 (buf, ~crc_hdr);
 	g_byte_array_append (buf, req->data, req->len);
-	crc_actual = fu_common_crc32 (buf->data, sizeof(header) + req->len);
-	fu_byte_array_append_uint32 (buf, crc_actual, G_LITTLE_ENDIAN);
+	crc_all = fu_common_crc32 (buf->data, buf->len);
+	fu_byte_array_append_uint32 (buf, crc_all, G_LITTLE_ENDIAN);
 
 	/* send zero length package */
-	if (!g_usb_device_bulk_transfer (usbdevice,
+	if (!g_usb_device_bulk_transfer (usb_device,
 					 GX_USB_BULK_EP_OUT,
 					 NULL,
 					 0,
@@ -62,7 +71,7 @@ goodixmoc_device_cmd_send (GUsbDevice *usbdevice,
 	}
 
 	/* send data */
-	if (!g_usb_device_bulk_transfer (usbdevice,
+	if (!g_usb_device_bulk_transfer (usb_device,
 					 GX_USB_BULK_EP_OUT,
 					 buf->data,
 					 buf->len,
@@ -84,12 +93,12 @@ goodixmoc_device_cmd_send (GUsbDevice *usbdevice,
 }
 
 static gboolean
-goodixmoc_device_cmd_recv (GUsbDevice  *usbdevice,
+goodixmoc_device_cmd_recv (FuGoodixMocDevice *self,
 			   GxfpCmdResp *presponse,
 			   gboolean     data_reply,
 			   GError     **error)
 {
-	GxfpPkgHeader header = { 0 };
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	guint32 crc_actual = 0;
 	guint32 crc_calculated = 0;
 	gsize actual_len = 0;
@@ -102,9 +111,11 @@ goodixmoc_device_cmd_recv (GUsbDevice  *usbdevice,
 	* | zlp | ack | zlp | data |
 	*/
 	while (1) {
+		guint16 header_len = 0x0;
+		guint8 header_cmd0 = 0x0;
 		g_autoptr(GByteArray) reply = g_byte_array_new ();
 		fu_byte_array_set_size (reply, GX_FLASH_TRANSFER_BLOCK_SIZE);
-		if (!g_usb_device_bulk_transfer (usbdevice,
+		if (!g_usb_device_bulk_transfer (usb_device,
 						 GX_USB_BULK_EP_IN,
 						 reply->data,
 						 reply->len,
@@ -125,12 +136,14 @@ goodixmoc_device_cmd_recv (GUsbDevice  *usbdevice,
 		}
 
 		/* parse package header */
-		if (!fu_goodixmoc_parse_header (reply->data,
-						actual_len,
-						&header,
-						error))
+		if (!fu_common_read_uint8_safe (reply->data, reply->len, 0x0,
+						&header_cmd0, error))
 			return FALSE;
-		offset = sizeof(header) + header.len;
+		if (!fu_common_read_uint16_safe	(reply->data, reply->len, 0x4,
+						 &header_len, G_LITTLE_ENDIAN,
+						 error))
+			return FALSE;
+		offset = sizeof(GxfpPkgHeader) + header_len - GX_SIZE_CRC32;
 		crc_actual = fu_common_crc32 (reply->data, offset);
 		if (!fu_common_read_uint32_safe	(reply->data,
 						 reply->len,
@@ -149,15 +162,33 @@ goodixmoc_device_cmd_recv (GUsbDevice  *usbdevice,
 		}
 
 		/* parse package data */
-		if (!fu_goodixmoc_parse_body (header.cmd0,
-					      reply->data + sizeof(header),
-					      header.len,
-					      presponse,
-					      error))
+		if (!fu_common_read_uint8_safe (reply->data, reply->len,
+						sizeof(GxfpPkgHeader) + 0x00,
+						&presponse->result, error))
 			return FALSE;
+		if (header_cmd0 == GX_CMD_ACK) {
+			if (header_len == 0) {
+				g_set_error_literal (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INTERNAL,
+						     "invalid bufsz");
+				return FALSE;
+			}
+			if (!fu_common_read_uint8_safe (reply->data, reply->len,
+							sizeof(GxfpPkgHeader) + 0x01,
+							&presponse->ack_msg.cmd, error))
+				return FALSE;
+		} else if (header_cmd0 == GX_CMD_VERSION) {
+			if (!fu_memcpy_safe ((guint8 *) &presponse->version_info,
+					     sizeof(presponse->version_info), 0x0,	/* dst */
+					     reply->data, reply->len,
+					     sizeof(GxfpPkgHeader) + 0x01,		/* src */
+					     sizeof(GxfpVersionInfo), error))
+				return FALSE;
+		}
 
 		/* continue after ack received */
-		if (header.cmd0 == GX_CMD_ACK && data_reply)
+		if (header_cmd0 == GX_CMD_ACK && data_reply)
 			continue;
 		break;
 	}
@@ -176,36 +207,27 @@ fu_goodixmoc_device_cmd_xfer (FuGoodixMocDevice	*device,
 			      gboolean		 data_reply,
 			      GError		**error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE(device));
-	if (!goodixmoc_device_cmd_send (usb_device, cmd0, cmd1, type, req, error))
+	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE(device);
+	if (!goodixmoc_device_cmd_send (self, cmd0, cmd1, type, req, error))
 		return FALSE;
-	return goodixmoc_device_cmd_recv (usb_device, presponse, data_reply, error);
+	return goodixmoc_device_cmd_recv (self, presponse, data_reply, error);
 }
 
-static gchar *
-fu_goodixmoc_device_get_version (FuGoodixMocDevice *self, GError **error)
+static gboolean
+fu_goodixmoc_device_setup_version (FuGoodixMocDevice *self, GError **error)
 {
 	GxfpCmdResp rsp = { 0 };
-	gchar ver[9] = { 0 };
-	guint8 dummy = 0;
+	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 
-	fu_byte_array_append_uint8 (req, dummy);
+	fu_byte_array_append_uint8 (req, 0);	/* dummy */
 	if (!fu_goodixmoc_device_cmd_xfer (self, GX_CMD_VERSION, GX_CMD1_DEFAULT,
-					  GX_PKG_TYPE_EOP,
-					  req,
-					  &rsp,
-					  TRUE,
-					  error))
-		return NULL;
-	if (!fu_memcpy_safe ((guint8 *) ver, sizeof(ver), 0x0,
-			      rsp.version_info.fwversion,
-			      sizeof(rsp.version_info.fwversion),
-			      0x0,
-			      sizeof(rsp.version_info.fwversion),
-			      error))
-		return NULL;
-	return g_strndup (ver, sizeof(ver));
+					  GX_PKG_TYPE_EOP, req, &rsp, TRUE, error))
+		return FALSE;
+	version = g_strndup ((const gchar *) rsp.version_info.fwversion,
+			     sizeof(rsp.version_info.fwversion));
+	fu_device_set_version (FU_DEVICE (self), version);
+	return TRUE;
 }
 
 static gboolean
@@ -281,15 +303,13 @@ fu_goodixmoc_device_open (FuUsbDevice *device, GError **error)
 static gboolean
 fu_goodixmoc_device_setup (FuDevice *device, GError **error)
 {
-	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE(device);
-	g_autofree gchar *version = NULL;
+	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE (device);
 
-	version = fu_goodixmoc_device_get_version (self, error);
-	if (version == NULL) {
+	/* ensure version */
+	if (!fu_goodixmoc_device_setup_version (self, error)) {
 		g_prefix_error (error, "failed to get firmware version: ");
 		return FALSE;
 	}
-	fu_device_set_version (device, version);
 
 	/* success */
 	return TRUE;
