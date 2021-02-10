@@ -224,6 +224,7 @@ fu_solokey_device_packet (FuSolokeyDevice *self, guint8 cmd,
 	guint8 buf_cid[4] = { 0x00 };
 	guint8 buf_len[2] = { 0x00 };
 	guint8 cmd_id = cmd | 0x80;
+	guint8 cmd_id_tmp = 0;
 	guint16 first_chunk_size;
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 	g_autoptr(GByteArray) res = NULL;
@@ -298,18 +299,24 @@ fu_solokey_device_packet (FuSolokeyDevice *self, guint8 cmd,
 		return NULL;
 	}
 	if (memcmp (res->data + 0, buf_cid, sizeof(buf_cid)) != 0) {
+		guint32 cid = 0;
+		if (!fu_common_read_uint32_safe (res->data, res->len, 0x0,
+						 &cid, G_BIG_ENDIAN, error))
+			return NULL;
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "CID invalid, got %x",
-			     fu_common_read_uint32 (res->data + 0, G_BIG_ENDIAN));
+			     "CID invalid, got %x", cid);
 		return NULL;
 	}
-	if (res->data[4] != cmd_id) {
+	if (!fu_common_read_uint8_safe (res->data, res->len, 0x4,
+					&cmd_id_tmp, error))
+		return NULL;
+	if (cmd_id_tmp != cmd_id) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "command ID invalid, got %x", res->data[4]);
+			     "command ID invalid, got %x", cmd_id_tmp);
 		return NULL;
 	}
 	return g_steal_pointer (&res);
@@ -318,6 +325,7 @@ fu_solokey_device_packet (FuSolokeyDevice *self, guint8 cmd,
 static gboolean
 fu_solokey_device_setup_cid (FuSolokeyDevice *self, GError **error)
 {
+	guint16 init_len = 0;
 	g_autoptr(GByteArray) nonce = g_byte_array_new ();
 	g_autoptr(GByteArray) res = NULL;
 
@@ -331,21 +339,26 @@ fu_solokey_device_setup_cid (FuSolokeyDevice *self, GError **error)
 	res = fu_solokey_device_packet (self, 0x06, nonce, error);
 	if (res == NULL)
 		return FALSE;
-	if (fu_common_read_uint16 (res->data + 5, G_LITTLE_ENDIAN) < 0x11) {
+	if (!fu_common_read_uint16_safe (res->data, res->len, 5,
+					 &init_len, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (init_len < 0x11) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
 				     "INIT length invalid");
 		return FALSE;
 	}
-	if (memcmp (res->data + 7, nonce->data, 8) != 0) {
+	if (res->len < 7 + 8 || memcmp (res->data + 7, nonce->data, 8) != 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
 				     "nonce invalid");
 		return FALSE;
 	}
-	self->cid = fu_common_read_uint32 (res->data + 7 + 8, G_LITTLE_ENDIAN);
+	if (!fu_common_read_uint32_safe (res->data, res->len,  7 + 8,
+					 &self->cid, G_LITTLE_ENDIAN, error))
+		return FALSE;
 	g_debug ("CID to use for device: %04x", self->cid);
 	return TRUE;
 }
