@@ -362,7 +362,9 @@ fu_vli_usbhub_rtd21xx_device_write_firmware (FuDevice *device,
 	}
 
 	/* verify project ID */
-	project_addr = fu_common_read_uint32 (read_buf + 1, G_BIG_ENDIAN);
+	if (!fu_common_read_uint32_safe (read_buf, sizeof(read_buf), 0x1,
+					 &project_addr, G_BIG_ENDIAN, error))
+		return FALSE;
 	project_id_count = read_buf[5];
 	write_buf[0] = ISP_CMD_SYNC_IDENTIFY_CODE;
 	if (!fu_memcpy_safe (write_buf, sizeof(write_buf), 0x1, /* dst */
