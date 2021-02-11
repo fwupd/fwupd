@@ -13,14 +13,18 @@ import subprocess
 import glob
 from typing import Dict, Optional, List, Union
 
+DEFAULT_BUILDDIR = ".ossfuzz"
+
 
 class Builder:
     def __init__(self) -> None:
 
         self.cc = self._ensure_environ("CC", "gcc")
         self.cxx = self._ensure_environ("CXX", "g++")
-        self.builddir = self._ensure_environ("WORK", os.path.realpath("build"))
-        self.installdir = self._ensure_environ("OUT", os.path.realpath("build/out"))
+        self.builddir = self._ensure_environ("WORK", os.path.realpath(DEFAULT_BUILDDIR))
+        self.installdir = self._ensure_environ(
+            "OUT", os.path.realpath(os.path.join(DEFAULT_BUILDDIR, "out"))
+        )
         self.srcdir = self._ensure_environ("SRC", os.path.realpath(".."))
         self.ldflags = ["-lpthread", "-lresolv", "-ldl", "-lffi", "-lz"]
 
@@ -64,7 +68,7 @@ class Builder:
 
     def build_meson_project(self, srcdir: str, argv) -> None:
         """ configure and build the meson project """
-        srcdir_build = os.path.join(srcdir, "build")
+        srcdir_build = os.path.join(srcdir, DEFAULT_BUILDDIR)
         if not os.path.exists(srcdir_build):
             subprocess.run(
                 [
@@ -77,7 +81,7 @@ class Builder:
                     "static",
                 ]
                 + argv
-                + ["build"],
+                + [DEFAULT_BUILDDIR],
                 cwd=srcdir,
                 check=True,
             )
@@ -124,7 +128,11 @@ class Builder:
             ]
         )
         print("building {} into {}".format(src, dst))
-        subprocess.run(argv, cwd=self.srcdir, check=True)
+        try:
+            subprocess.run(argv, cwd=self.srcdir, check=True)
+        except subprocess.CalledProcessError as e:
+            print(e)
+            sys.exit(1)
         return os.path.join(self.builddir, "{}".format(dst))
 
     def link(self, objs: List[str], dst: str) -> None:
