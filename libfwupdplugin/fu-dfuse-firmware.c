@@ -120,6 +120,15 @@ fu_dfuse_firmware_image_parse (FuDfuseFirmware *self,
 		fu_firmware_image_set_id (image, img_id);
 	}
 
+	/* no chunks */
+	if (hdr.chunks == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "DfuSe image has no chunks");
+		return NULL;
+	}
+
 	/* parse chunks */
 	*offset += sizeof(hdr);
 	for (guint j = 0; j < GUINT32_FROM_LE (hdr.chunks); j++) {
