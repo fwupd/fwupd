@@ -438,7 +438,9 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 	images = fu_firmware_get_images (firmware);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmwareImage *image = g_ptr_array_index (images, i);
-		g_autoptr(GPtrArray) chunks = fu_firmware_image_get_chunks (image);
+		g_autoptr(GPtrArray) chunks = fu_firmware_image_get_chunks (image, error);
+		if (chunks == NULL)
+			return FALSE;
 		for (guint j = 0; j < chunks->len; j++) {
 			FuChunk *chk = g_ptr_array_index (chunks, j);
 			g_autoptr(GBytes) contents = fu_chunk_get_bytes (chk);

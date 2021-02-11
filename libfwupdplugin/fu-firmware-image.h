@@ -71,7 +71,8 @@ void		 fu_firmware_image_set_bytes	(FuFirmwareImage	*self,
 						 GBytes			*bytes);
 void		 fu_firmware_image_add_chunk	(FuFirmwareImage	*self,
 						 FuChunk		*chk);
-GPtrArray	*fu_firmware_image_get_chunks	(FuFirmwareImage	*self);
+GPtrArray	*fu_firmware_image_get_chunks	(FuFirmwareImage	*self,
+						 GError			**error);
 gchar		*fu_firmware_image_get_checksum	(FuFirmwareImage	*self,
 						 GChecksumType		 csum_kind,
 						 GError			**error);

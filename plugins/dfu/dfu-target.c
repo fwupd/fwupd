@@ -1343,7 +1343,9 @@ dfu_target_download (DfuTarget *target,
 		return FALSE;
 
 	/* download all chunks in the image to the device */
-	chunks = fu_firmware_image_get_chunks (image);
+	chunks = fu_firmware_image_get_chunks (image, error);
+	if (chunks == NULL)
+		return FALSE;
 	if (chunks->len == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,

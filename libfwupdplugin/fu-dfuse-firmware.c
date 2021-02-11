@@ -233,7 +233,7 @@ fu_firmware_image_chunk_write (FuChunk *chk)
 }
 
 static GBytes *
-fu_dfuse_firmware_image_write (FuFirmwareImage *image)
+fu_dfuse_firmware_image_write (FuFirmwareImage *image, GError **error)
 {
 	DfuSeImageHdr hdr = { 0x0 };
 	gsize totalsz = 0;
@@ -243,7 +243,9 @@ fu_dfuse_firmware_image_write (FuFirmwareImage *image)
 
 	/* get total size */
 	blobs = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
-	chunks = fu_firmware_image_get_chunks (image);
+	chunks = fu_firmware_image_get_chunks (image, error);
+	if (chunks == NULL)
+		return NULL;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		GBytes *bytes = fu_firmware_image_chunk_write (chk);
@@ -292,9 +294,12 @@ fu_dfuse_firmware_write (FuFirmware *firmware, GError **error)
 	images = fu_firmware_get_images (FU_FIRMWARE (firmware));
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmwareImage *img = g_ptr_array_index (images, i);
-		GBytes *blob = fu_dfuse_firmware_image_write (img);
+		g_autoptr(GBytes) blob = NULL;
+		blob = fu_dfuse_firmware_image_write (img, error);
+		if (blob == NULL)
+			return NULL;
 		totalsz += g_bytes_get_size (blob);
-		g_ptr_array_add (blobs, blob);
+		g_ptr_array_add (blobs, g_steal_pointer (&blob));
 	}
 	buf = g_byte_array_sized_new (sizeof(DfuSeHdr) + totalsz);
 

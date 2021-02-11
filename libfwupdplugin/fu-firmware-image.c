@@ -303,6 +303,7 @@ fu_firmware_image_get_bytes (FuFirmwareImage *self)
 /**
  * fu_firmware_image_get_chunks:
  * @self: a #FuFirmwareImage
+ * @error: A #GError, or %NULL
  *
  * Gets the optional image chunks.
  *
@@ -311,10 +312,12 @@ fu_firmware_image_get_bytes (FuFirmwareImage *self)
  * Since: 1.5.6
  **/
 GPtrArray *
-fu_firmware_image_get_chunks (FuFirmwareImage *self)
+fu_firmware_image_get_chunks (FuFirmwareImage *self, GError **error)
 {
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+
 	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* set */
 	if (priv->chunks != NULL)
@@ -333,6 +336,10 @@ fu_firmware_image_get_chunks (FuFirmwareImage *self)
 	}
 
 	/* nothing to do */
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "no bytes or chunks found in firmware");
 	return NULL;
 }
 
