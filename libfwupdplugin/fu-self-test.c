@@ -1958,6 +1958,51 @@ fu_firmware_dfuse_func (void)
 }
 
 static void
+fu_firmware_fmap_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *filename = NULL;
+	g_autofree gchar *img_str = NULL;
+	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new ();
+	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(GBytes) img_blob = NULL;
+	g_autoptr(GBytes) roundtrip = NULL;
+	g_autoptr(GBytes) roundtrip_orig = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) images = NULL;
+
+	/* load firmware */
+	filename = g_build_filename (TESTDATADIR_SRC, "firmware.fmap", NULL);
+	g_assert (filename != NULL);
+	roundtrip_orig = fu_common_get_contents_bytes (filename, &error);
+	ret = fu_firmware_parse (firmware, roundtrip_orig, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+
+	/* check image count */
+	images = fu_firmware_get_images (firmware);
+	g_assert_cmpint (images->len, ==, 2);
+
+	/* get a specific image */
+	img = fu_firmware_get_image_by_id (firmware, "FMAP", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (img);
+	img_blob = fu_firmware_image_get_bytes (img);
+	g_assert_cmpint (g_bytes_get_size (img_blob), ==, 0xb);
+	img_str = g_strndup (g_bytes_get_data (img_blob, NULL),
+			     g_bytes_get_size (img_blob));
+	g_assert_cmpstr (img_str, ==, "hello world");
+
+	/* can we roundtrip without losing data */
+	roundtrip = fu_firmware_write (firmware, &error);
+	g_assert_no_error (error);
+	g_assert (roundtrip != NULL);
+	ret = fu_common_bytes_compare (roundtrip, roundtrip_orig, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+}
+
+static void
 fu_firmware_new_from_gtypes_func (void)
 {
 	g_autofree gchar *fn = NULL;
@@ -2473,6 +2518,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/firmware{srec}", fu_firmware_srec_func);
 	g_test_add_func ("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
 	g_test_add_func ("/fwupd/firmware{dfuse}", fu_firmware_dfuse_func);
+	g_test_add_func ("/fwupd/firmware{fmap}", fu_firmware_fmap_func);
 	g_test_add_func ("/fwupd/firmware{gtypes}", fu_firmware_new_from_gtypes_func);
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);

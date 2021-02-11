@@ -319,6 +319,9 @@ endif
 if cc.has_function('realpath')
   conf.set('HAVE_REALPATH', '1')
 endif
+if cc.has_function('memmem')
+  conf.set('HAVE_MEMMEM', '1')
+endif
 if cc.has_function('sigaction')
   conf.set('HAVE_SIGACTION', '1')
 endif
