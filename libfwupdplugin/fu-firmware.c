@@ -48,6 +48,10 @@ fu_firmware_flag_to_string (FuFirmwareFlags flag)
 		return "dedupe-id";
 	if (flag == FU_FIRMWARE_FLAG_DEDUPE_IDX)
 		return "dedupe-idx";
+	if (flag == FU_FIRMWARE_FLAG_HAS_CHECKSUM)
+		return "has-checksum";
+	if (flag == FU_FIRMWARE_FLAG_HAS_VID_PID)
+		return "has-vid-pid";
 	return NULL;
 }
 
@@ -68,6 +72,10 @@ fu_firmware_flag_from_string (const gchar *flag)
 		return FU_FIRMWARE_FLAG_DEDUPE_ID;
 	if (g_strcmp0 (flag, "dedupe-idx") == 0)
 		return FU_FIRMWARE_FLAG_DEDUPE_IDX;
+	if (g_strcmp0 (flag, "has-checksum") == 0)
+		return FU_FIRMWARE_FLAG_HAS_CHECKSUM;
+	if (g_strcmp0 (flag, "has-vid-pid") == 0)
+		return FU_FIRMWARE_FLAG_HAS_VID_PID;
 	return FU_FIRMWARE_FLAG_NONE;
 }
 

@@ -429,6 +429,8 @@ static void
 fu_ccgx_firmware_init (FuCcgxFirmware *self)
 {
 	self->records = g_ptr_array_new_with_free_func ((GFreeFunc) fu_ccgx_firmware_record_free);
+	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 }
 
 static void

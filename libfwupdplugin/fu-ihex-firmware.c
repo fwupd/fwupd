@@ -445,6 +445,7 @@ static void
 fu_ihex_firmware_init (FuIhexFirmware *self)
 {
 	self->records = g_ptr_array_new_with_free_func ((GFreeFunc) fu_ihex_firmware_record_free);
+	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 }
 
 static void
