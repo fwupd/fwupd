@@ -55,17 +55,21 @@ G_STATIC_ASSERT(sizeof(DfuSeImageHdr) == 274);
 G_STATIC_ASSERT(sizeof(DfuSeElementHdr) == 8);
 
 static FuChunk *
-fu_firmware_image_chunk_parse (GBytes *bytes, gsize *offset, GError **error)
+fu_firmware_image_chunk_parse (FuDfuseFirmware *self,
+			       GBytes *bytes,
+			       gsize *offset,
+			       GError **error)
 {
 	DfuSeElementHdr hdr = { 0x0 };
 	gsize bufsz = 0;
+	gsize ftrlen = fu_dfu_firmware_get_footer_len (FU_DFU_FIRMWARE (self));
 	const guint8 *buf = g_bytes_get_data (bytes, &bufsz);
 	g_autoptr(FuChunk) chk = NULL;
 	g_autoptr(GBytes) blob = NULL;
 
 	/* check size */
 	if (!fu_memcpy_safe ((guint8 *) &hdr, sizeof(hdr), 0x0,	/* dst */
-			     buf, bufsz, *offset,		/* src */
+			     buf, bufsz - ftrlen, *offset,	/* src */
 			     sizeof(hdr), error))
 		return NULL;
 
@@ -85,7 +89,10 @@ fu_firmware_image_chunk_parse (GBytes *bytes, gsize *offset, GError **error)
 }
 
 static FuFirmwareImage *
-fu_dfuse_firmware_image_parse (GBytes *bytes, gsize *offset, GError **error)
+fu_dfuse_firmware_image_parse (FuDfuseFirmware *self,
+			       GBytes *bytes,
+			       gsize *offset,
+			       GError **error)
 {
 	DfuSeImageHdr hdr = { 0x0 };
 	gsize bufsz = 0;
@@ -117,7 +124,10 @@ fu_dfuse_firmware_image_parse (GBytes *bytes, gsize *offset, GError **error)
 	*offset += sizeof(hdr);
 	for (guint j = 0; j < GUINT32_FROM_LE (hdr.chunks); j++) {
 		g_autoptr(FuChunk) chk = NULL;
-		chk = fu_firmware_image_chunk_parse (bytes, offset, error);
+		chk = fu_firmware_image_chunk_parse (self,
+						     bytes,
+						     offset,
+						     error);
 		if (chk == NULL)
 			return NULL;
 		fu_firmware_image_add_chunk (image, chk);
@@ -187,7 +197,9 @@ fu_dfuse_firmware_parse (FuFirmware *firmware,
 	offset += sizeof(hdr);
 	for (guint i = 0; i < hdr.targets; i++) {
 		g_autoptr(FuFirmwareImage) image = NULL;
-		image = fu_dfuse_firmware_image_parse (fw, &offset, error);
+		image = fu_dfuse_firmware_image_parse (FU_DFUSE_FIRMWARE (firmware),
+						       fw, &offset,
+						       error);
 		if (image == NULL)
 			return FALSE;
 		fu_firmware_add_image (firmware, image);
