@@ -199,6 +199,7 @@ fu_synaprom_firmware_build (FuFirmware *firmware, XbNode *n, GError **error)
 static void
 fu_synaprom_firmware_init (FuSynapromFirmware *self)
 {
+	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 }
 
 static void

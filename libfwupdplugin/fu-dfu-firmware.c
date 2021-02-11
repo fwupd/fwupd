@@ -378,6 +378,8 @@ fu_dfu_firmware_init (FuDfuFirmware *self)
 	priv->pid = 0xffff;
 	priv->release = 0xffff;
 	priv->version = DFU_VERSION_DFU_1_0;
+	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 }
 
 static void
