@@ -11,8 +11,8 @@ shared_module('fu_plugin_ccgx',
   fu_hash,
   sources : [
     'fu-plugin-ccgx.c',
-    'fu-ccgx-common.c',
-    'fu-ccgx-firmware.c',
+    'fu-ccgx-common.c',         # fuzzing
+    'fu-ccgx-firmware.c',       # fuzzing
     'fu-ccgx-hid-device.c',
     'fu-ccgx-hpi-common.c',
     'fu-ccgx-hpi-device.c',

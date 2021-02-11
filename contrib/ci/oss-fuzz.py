@@ -299,6 +299,7 @@ def _build(bld: Builder) -> None:
     # plugins
     for srcdir, fuzzer, globstr in [
         ("bcm57xx", "bcm57xx", "bcm57xx*"),
+        ("ccgx", "ccgx", "ccgx*"),
         ("cros-ec", "cros-ec", "cros-ec*"),
         ("ebitdo", "ebitdo", "ebitdo*"),
         ("hailuck", "hailuck-kbd", "ihex*"),
