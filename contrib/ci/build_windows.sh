@@ -47,6 +47,7 @@ meson .. \
     -Dgusb:docs=false \
     -Dgusb:introspection=false \
     -Dgusb:vapi=false \
+    -Dbluez=false \
     -Dgudev=false $@
 VERSION=$(meson introspect . --projectinfo | jq -r .version)
 ninja -v
