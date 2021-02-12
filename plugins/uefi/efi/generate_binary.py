@@ -13,10 +13,13 @@ import argparse
 import tempfile
 
 
-def _run_objcopy_sbat(args):
+def _run_objcopy_sbat(args, tfd):
     """ append SBAT metadata """
     FWUPD_SUMMARY = "Firmware update daemon"
     FWUPD_URL = "https://github.com/fwupd/fwupd"
+
+    with open(args.infile, "rb") as ifd:
+        tfd.write(ifd.read())
 
     with tempfile.NamedTemporaryFile() as sfd:
 
@@ -63,38 +66,43 @@ def _run_objcopy_sbat(args):
             args.objcopy,
             "--add-section",
             ".sbat={}".format(sfd.name),
-            args.outfile,
+            tfd.name,
         ]
         subprocess.run(argv, check=True)
 
 
 def _run_objcopy(args):
 
-    argv = [
-        args.objcopy,
-        "-j",
-        ".text",
-        "-j",
-        ".sdata",
-        "-j",
-        ".dynamic",
-        "-j",
-        ".rel*",
-        args.infile,
-        args.outfile,
-    ]
+    with tempfile.NamedTemporaryFile() as tfd:
+        _run_objcopy_sbat(args, tfd)
 
-    # aarch64 and arm32 don't have an EFI capable objcopy
-    # Use 'binary' instead, and add required symbols manually
-    if args.arch in ["aarch64", "arm"]:
-        argv.extend(["-O", "binary"])
-    else:
-        argv.extend(["--target", "efi-app-{}".format(args.arch)])
-    try:
-        subprocess.run(argv, check=True)
-    except FileNotFoundError as e:
-        print(str(e))
-        sys.exit(1)
+        argv = [
+            args.objcopy,
+            "-j",
+            ".text",
+            "-j",
+            ".sbat",
+            "-j",
+            ".sdata",
+            "-j",
+            ".dynamic",
+            "-j",
+            ".rel*",
+            tfd.name,
+            args.outfile,
+        ]
+
+        # aarch64 and arm32 don't have an EFI capable objcopy
+        # Use 'binary' instead, and add required symbols manually
+        if args.arch in ["aarch64", "arm"]:
+            argv.extend(["-O", "binary"])
+        else:
+            argv.extend(["--target", "efi-app-{}".format(args.arch)])
+        try:
+            subprocess.run(argv, check=True)
+        except FileNotFoundError as e:
+            print(str(e))
+            sys.exit(1)
 
 
 def _run_genpeimg(args):
@@ -189,7 +197,6 @@ if __name__ == "__main__":
     )
     _args = parser.parse_args()
     _run_objcopy(_args)
-    _run_objcopy_sbat(_args)
     _run_genpeimg(_args)
 
     sys.exit(0)
