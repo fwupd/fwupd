@@ -23,7 +23,7 @@ ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
 	SB_STYLE := ubuntu
 	tar_name := fwupd_$(deb_version)_$(DEB_HOST_ARCH).tar.gz
 	CONFARGS += -Dplugin_flashrom=false
-	CONFARGS += -Defi_os_dir=ubuntu
+	CONFARGS += -Defi_sbat_distro_id=ubuntu
 	CONFARGS += -Defi_sbat_distro_summary=Ubuntu
 	CONFARGS += -Defi_sbat_distro_pkgname=fwupd
 	CONFARGS += -Defi_sbat_distro_version=$(deb_version)
@@ -35,7 +35,7 @@ else
 	else
 		CONFARGS += -Dplugin_flashrom=false
 	endif
-	CONFARGS += -Defi_os_dir=debian
+	CONFARGS += -Defi_sbat_distro_id=debian
 	CONFARGS += -Defi_sbat_distro_summary=Debian
 	CONFARGS += -Defi_sbat_distro_pkgname=fwupd
 	CONFARGS += -Defi_sbat_distro_version=$(deb_version)
