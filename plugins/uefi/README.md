@@ -20,7 +20,7 @@ specification for more information: https://github.com/rhboot/shim/blob/sbat/SBA
 
 Typically, this will be set as part of the package build script, e.g.
 
-    -Defi_os_dir="fedora" \
+    -Defi_sbat_distro_id="fedora" \
     -Defi_sbat_distro_summary="The Fedora Project" \
     -Defi_sbat_distro_pkgname="%{name}" \
     -Defi_sbat_distro_version="%{version}" \

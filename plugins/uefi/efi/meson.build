@@ -154,6 +154,11 @@ so = custom_target('fwup.so',
                              efi_ldflags + ['@INPUT@'] +
                              ['-lefi', '-lgnuefi', libgcc_file_name])
 
+# sanity check the packager set this to *SOMETHING*
+if get_option('efi_sbat_distro_id') == ''
+    error('-Defi_sbat_distro_id is unset, see plugins/uefi-capsule/README.md')
+endif
+
 app = custom_target(efi_name,
                     input : so,
                     output : efi_name,
@@ -166,7 +171,7 @@ app = custom_target(efi_name,
                       '--project-version', meson.project_version(),
                       '--sbat-version', '1',
                       '--sbat-generation', '@0@'.format(get_option('efi_sbat_fwupd_generation')),
-                      '--sbat-distro-id', get_option('efi_os_dir'),
+                      '--sbat-distro-id', get_option('efi_sbat_distro_id'),
                       '--sbat-distro-generation', '0',
                       '--sbat-distro-summary', get_option('efi_sbat_distro_summary'),
                       '--sbat-distro-pkgname', get_option('efi_sbat_distro_pkgname'),
