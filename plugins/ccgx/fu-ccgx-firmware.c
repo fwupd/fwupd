@@ -79,11 +79,13 @@ fu_ccgx_firmware_record_free (FuCcgxFirmwareRecord *rcd)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCcgxFirmwareRecord, fu_ccgx_firmware_record_free)
 
 static gboolean
-fu_ccgx_firmware_add_record (FuCcgxFirmware *self, const gchar *line, GError **error)
+fu_ccgx_firmware_add_record (FuCcgxFirmware *self,
+			     const gchar *line,
+			     FwupdInstallFlags flags,
+			     GError **error)
 {
 	guint16 linesz = strlen (line);
 	guint16 buflen;
-	guint8 checksum_file;
 	guint8 checksum_calc = 0;
 	g_autoptr(FuCcgxFirmwareRecord) rcd = NULL;
 	g_autoptr(GByteArray) data = g_byte_array_new ();
@@ -116,22 +118,27 @@ fu_ccgx_firmware_add_record (FuCcgxFirmware *self, const gchar *line, GError **e
 	rcd->data = g_byte_array_free_to_bytes (g_steal_pointer (&data));
 
 	/* verify 2s complement checksum */
-	if (!fu_firmware_strparse_uint8_safe (line, linesz, (buflen * 2) + 10, &checksum_file, error))
-		return FALSE;
-	for (guint i = 0; i < 5; i++) {
-		guint8 tmp = 0;
-		if (!fu_firmware_strparse_uint8_safe (line, linesz, i * 2, &tmp, error))
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+		guint8 checksum_file;
+		if (!fu_firmware_strparse_uint8_safe (line, linesz, (buflen * 2) + 10,
+						      &checksum_file, error))
 			return FALSE;
-		checksum_calc += tmp;
-	}
-	checksum_calc = 1 + ~checksum_calc;
-	if (checksum_file != checksum_calc)  {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "checksum invalid, got %02x, expected %02x",
-			     checksum_calc, checksum_file);
-		return FALSE;
+		for (guint i = 0; i < 5; i++) {
+			guint8 tmp = 0;
+			if (!fu_firmware_strparse_uint8_safe (line, linesz, i * 2,
+							      &tmp, error))
+				return FALSE;
+			checksum_calc += tmp;
+		}
+		checksum_calc = 1 + ~checksum_calc;
+		if (checksum_file != checksum_calc)  {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "checksum invalid, got %02x, expected %02x",
+				     checksum_calc, checksum_file);
+			return FALSE;
+		}
 	}
 
 	/* success */
@@ -314,7 +321,7 @@ fu_ccgx_firmware_parse (FuFirmware *firmware,
 		g_strdelimit (lines[ln], "\r\x1a", '\0');
 		if (lines[ln][0] == '\0')
 			continue;
-		if (!fu_ccgx_firmware_add_record (self, lines[ln] + 1, error)) {
+		if (!fu_ccgx_firmware_add_record (self, lines[ln] + 1, flags, error)) {
 			g_prefix_error (error, "error on line %u: ", ln + 1);
 			return FALSE;
 		}
