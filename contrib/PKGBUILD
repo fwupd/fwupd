@@ -20,7 +20,7 @@ build() {
         export CI="--wrap-mode=default"
     fi
     arch-meson -D b_lto=false $CI ../build \
-        -Defi_os_dir="arch" \
+        -Defi_sbat_distro_id="arch" \
         -Defi_sbat_distro_summary="Arch Linux" \
         -Defi_sbat_distro_pkgname="${pkgname}" \
         -Defi_sbat_distro_version="$(pkgver)" \
