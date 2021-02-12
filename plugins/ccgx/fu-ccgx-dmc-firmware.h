@@ -14,16 +14,16 @@
 G_DECLARE_FINAL_TYPE (FuCcgxDmcFirmware, fu_ccgx_dmc_firmware, FU,CCGX_DMC_FIRMWARE, FuFirmware)
 
 typedef struct {
-	GBytes			*data;
-} FuCcgxDmcFirmwareDataRecord;
-
-typedef struct {
-	FwctSegmentationInfo	 info_header;
+	guint16			 start_row;
+	guint16			 num_rows;
 	GPtrArray		*data_records;
 } FuCcgxDmcFirmwareSegmentRecord;
 
 typedef struct {
-	FwctImageInfo		 info_header;
+	guint8			 row_size;
+	guint32			 img_offset;
+	guint8			 img_digest[32];
+	guint8			 num_img_segments;
 	GPtrArray		*seg_records;
 } FuCcgxDmcFirmwareImageRecord;
 
@@ -31,5 +31,4 @@ FuFirmware	*fu_ccgx_dmc_firmware_new			(void);
 GPtrArray	*fu_ccgx_dmc_firmware_get_image_records		(FuCcgxDmcFirmware	*self);
 GBytes		*fu_ccgx_dmc_firmware_get_fwct_record		(FuCcgxDmcFirmware	*self);
 GBytes		*fu_ccgx_dmc_firmware_get_custom_meta_record	(FuCcgxDmcFirmware	*self);
-FwctInfo	*fu_ccgx_dmc_firmware_get_fwct_info		(FuCcgxDmcFirmware	*self);
 guint32		 fu_ccgx_dmc_firmware_get_fw_data_size		(FuCcgxDmcFirmware	*self);
