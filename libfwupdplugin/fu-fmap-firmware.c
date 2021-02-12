@@ -186,7 +186,7 @@ fu_fmap_firmware_write (FuFirmware *firmware, GError **error)
 		.base = GUINT64_TO_LE (priv->base),
 		.size = 0x0,
 		.name = "",
-		.nareas = GUINT32_TO_LE (images->len),
+		.nareas = GUINT16_TO_LE (images->len),
 	};
 
 	/* pad to offset */
@@ -200,7 +200,7 @@ fu_fmap_firmware_write (FuFirmware *firmware, GError **error)
 		g_autoptr(GBytes) fw = fu_firmware_image_get_bytes (img);
 		total_sz += g_bytes_get_size (fw);
 	}
-	hdr.size = GUINT16_TO_LE (priv->offset + total_sz);
+	hdr.size = GUINT32_TO_LE (priv->offset + total_sz);
 	g_byte_array_append (buf, (const guint8 *) &hdr, sizeof(hdr));
 
 	/* add each area */
