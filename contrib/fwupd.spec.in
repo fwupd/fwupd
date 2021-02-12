@@ -176,7 +176,7 @@ Data files for installed tests.
     -Dplugin_uefi=true \
     -Dplugin_nvme=true \
     -Dplugin_tpm=true \
-    -Defi_os_dir="fedora" \
+    -Defi_sbat_distro_id="fedora" \
     -Defi_sbat_distro_summary="The Fedora Project" \
     -Defi_sbat_distro_pkgname="%{name}" \
     -Defi_sbat_distro_version="%{version}" \
