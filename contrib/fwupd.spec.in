@@ -229,7 +229,7 @@ or server machines.
 %if 0%{?have_uefi}
     -Dplugin_uefi_capsule=true \
     -Dplugin_uefi_pk=true \
-    -Defi_os_dir="fedora" \
+    -Defi_sbat_distro_id="fedora" \
     -Defi_sbat_distro_summary="The Fedora Project" \
     -Defi_sbat_distro_pkgname="%{name}" \
     -Defi_sbat_distro_version="%{version}" \
