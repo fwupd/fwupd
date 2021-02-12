@@ -246,7 +246,7 @@ fu_srec_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 		/* data */
 		rcd = fu_srec_firmware_record_new (ln + 1, rec_kind, rec_addr32);
 		if (rec_kind == 1 || rec_kind == 2 || rec_kind == 3) {
-			for (guint8 i = 4 + (addrsz * 2); i <= rec_count * 2; i += 2) {
+			for (gsize i = 4 + (addrsz * 2); i <= rec_count * 2; i += 2) {
 				guint8 tmp = 0;
 				if (!fu_firmware_strparse_uint8_safe (line, linesz, i, &tmp, error))
 					return FALSE;
