@@ -11,6 +11,7 @@
 #include <gusb.h>
 #endif
 
+#include "fu-bluez-device.h"
 #include "fu-common.h"
 #include "fu-common-guid.h"
 #include "fu-common-version.h"

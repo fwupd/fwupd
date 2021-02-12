@@ -206,6 +206,9 @@ if get_option('gudev')
 else
   gudev = dependency('', required : false)
 endif
+if get_option('bluez')
+  conf.set('HAVE_BLUEZ', '1')
+endif
 libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
 if get_option('gusb')
   gusb = dependency('gusb', version : '>= 0.3.5', fallback : ['gusb', 'gusb_dep'])

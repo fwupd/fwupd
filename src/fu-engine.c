@@ -59,6 +59,9 @@
 #ifdef HAVE_GUSB
 #include "fu-usb-backend.h"
 #endif
+#ifdef HAVE_BLUEZ
+#include "fu-bluez-backend.h"
+#endif
 
 #include "fu-dfu-firmware.h"
 #include "fu-dfuse-firmware.h"
@@ -6590,6 +6593,9 @@ fu_engine_init (FuEngine *self)
 #endif
 #ifdef HAVE_GUDEV
 	g_ptr_array_add (self->backends, fu_udev_backend_new (self->udev_subsystems));
+#endif
+#ifdef HAVE_BLUEZ
+	g_ptr_array_add (self->backends, fu_bluez_backend_new ());
 #endif
 
 	/* setup Jcat context */
