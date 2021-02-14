@@ -1902,7 +1902,8 @@ fu_common_strsafe (const gchar *str, gsize maxsz)
 			continue;
 		}
 		g_string_append_c (tmp, str[i]);
-		valid = TRUE;
+		if (!g_ascii_isspace (str[i]))
+			valid = TRUE;
 	}
 
 	/* if just junk, don't return 'all dots' */
