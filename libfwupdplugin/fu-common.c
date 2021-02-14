@@ -1896,7 +1896,7 @@ fu_common_strsafe (const gchar *str, gsize maxsz)
 
 	/* replace non-printable chars with '.' */
 	tmp = g_string_sized_new (maxsz);
-	for (gsize i = 0; str[i] != '\0' && i < maxsz; i++) {
+	for (gsize i = 0; i < maxsz && str[i] != '\0'; i++) {
 		if (!g_ascii_isprint (str[i])) {
 			g_string_append_c (tmp, '.');
 			continue;
