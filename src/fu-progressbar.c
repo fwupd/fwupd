@@ -196,7 +196,7 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 
 	/* dump to screen */
 	g_print ("%s", str->str);
-	self->to_erase = str->len;
+	self->to_erase = g_utf8_strlen (str->str, -1);
 
 	/* done */
 	if (is_idle_newline) {
