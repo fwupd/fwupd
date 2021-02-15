@@ -288,6 +288,9 @@ fu_smbios_parse_ep32 (FuSmbios *self, const gchar *buf, gsize sz, GError **error
 				       ep->smbios_major_ver,
 				       ep->smbios_minor_ver);
 	fu_firmware_set_version (FU_FIRMWARE (self), version_str);
+	fu_firmware_set_version_raw (FU_FIRMWARE (self),
+				     (((guint16) ep->smbios_major_ver) << 8) +
+				     ep->smbios_minor_ver);
 	return TRUE;
 }
 

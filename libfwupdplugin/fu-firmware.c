@@ -24,6 +24,7 @@ typedef struct {
 	FuFirmwareFlags			 flags;
 	GPtrArray			*images;	/* FuFirmwareImage */
 	gchar				*version;
+	guint64				 version_raw;
 } FuFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuFirmware, fu_firmware, G_TYPE_OBJECT)
@@ -155,6 +156,45 @@ fu_firmware_set_version (FuFirmware *self, const gchar *version)
 
 	g_free (priv->version);
 	priv->version = g_strdup (version);
+}
+
+/**
+ * fu_firmware_get_version_raw:
+ * @self: A #FuFirmware
+ *
+ * Gets an raw version that represents the firmware. This is most frequently
+ * used when building firmware with `<version_raw>0x123456</version_raw>` in a
+ * `firmware.builder.xml` file to avoid string splitting and sanity checks.
+ *
+ * Returns: an integer, or %G_MAXUINT64 for invalid
+ *
+ * Since:  1.5.7
+ **/
+guint64
+fu_firmware_get_version_raw (FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), G_MAXUINT64);
+	return priv->version_raw;
+}
+
+/**
+ * fu_firmware_set_version_raw:
+ * @self: A #FuFirmware
+ * @version: A raw version, or %G_MAXUINT64 for invalid
+ *
+ * Sets an raw version that represents the firmware.
+ *
+ * This is optional, and is typically only used for debugging.
+ *
+ * Since: 1.5.7
+ **/
+void
+fu_firmware_set_version_raw (FuFirmware *self, guint64 version_raw)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_FIRMWARE (self));
+	priv->version_raw = version_raw;
 }
 
 /**
@@ -316,6 +356,7 @@ fu_firmware_build (FuFirmware *self, XbNode *n, GError **error)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS (self);
 	const gchar *tmp;
+	guint64 version_raw;
 	g_autoptr(GPtrArray) xb_images = NULL;
 
 	g_return_val_if_fail (FU_IS_FIRMWARE (self), FALSE);
@@ -326,6 +367,9 @@ fu_firmware_build (FuFirmware *self, XbNode *n, GError **error)
 	tmp = xb_node_query_text (n, "version", NULL);
 	if (tmp != NULL)
 		fu_firmware_set_version (self, tmp);
+	version_raw = xb_node_query_text_as_uint (n, "version_raw", NULL);
+	if (version_raw != G_MAXUINT64)
+		fu_firmware_set_version_raw (self, version_raw);
 
 	/* parse images */
 	xb_images = xb_node_query (n, "image", 0, NULL);
@@ -847,6 +891,8 @@ fu_firmware_to_string (FuFirmware *self)
 	}
 	if (priv->version != NULL)
 		fu_common_string_append_kv (str, 0, "Version", priv->version);
+	if (priv->version_raw != 0x0)
+		fu_common_string_append_kx (str, 0, "VersionRaw", priv->version_raw);
 
 	/* vfunc */
 	if (klass->to_string != NULL)
