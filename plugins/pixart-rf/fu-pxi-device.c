@@ -124,7 +124,7 @@ fu_pxi_device_prepare_firmware (FuDevice *device,
 				FwupdInstallFlags flags,
 				GError **error)
 {
-	g_autoptr(FuFirmware) firmware = fu_pxi_rf_firmware_new ();
+	g_autoptr(FuFirmware) firmware = fu_pxi_firmware_new ();
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 	return g_steal_pointer (&firmware);

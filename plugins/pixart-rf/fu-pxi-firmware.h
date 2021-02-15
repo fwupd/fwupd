@@ -8,7 +8,7 @@
 
 #include "fu-firmware.h"
 
-#define FU_TYPE_PXI_RF_FIRMWARE (fu_pxi_rf_firmware_get_type ())
-G_DECLARE_FINAL_TYPE (FuPxiRfFirmware, fu_pxi_rf_firmware, FU, PXI_RF_FIRMWARE, FuFirmware)
+#define FU_TYPE_PXI_FIRMWARE (fu_pxi_firmware_get_type ())
+G_DECLARE_FINAL_TYPE (FuPxiFirmware, fu_pxi_firmware, FU, PXI_FIRMWARE, FuFirmware)
 
-FuFirmware		*fu_pxi_rf_firmware_new		(void);
+FuFirmware		*fu_pxi_firmware_new		(void);

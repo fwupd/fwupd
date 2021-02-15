@@ -303,6 +303,7 @@ def _build(bld: Builder) -> None:
         ("cros-ec", "cros-ec", "cros-ec*"),
         ("ebitdo", "ebitdo", "ebitdo*"),
         ("hailuck", "hailuck-kbd", "ihex*"),
+        ("pixart-rf", "pxi", "pixart*"),
         ("solokey", "solokey", "solokey*"),
         ("synaptics-prometheus", "synaprom", "synaprom*"),
         ("synaptics-rmi", "synaptics-rmi", "synaptics-rmi*"),
