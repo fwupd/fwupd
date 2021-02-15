@@ -236,6 +236,13 @@ fu_ccgx_firmware_parse_md_block (FuCcgxFirmware *self, FuFirmwareImage *img, GEr
 		g_autofree gchar *version_str = NULL;
 		rcd = g_ptr_array_index (self->records, rcd_version_idx);
 		buf = g_bytes_get_data (rcd->data, &bufsz);
+		if (bufsz == 0) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "metadata record had zero size");
+			return FALSE;
+		}
 		if (!fu_common_read_uint32_safe (buf, bufsz, CCGX_APP_VERSION_OFFSET % bufsz,
 						 &version, G_LITTLE_ENDIAN, error))
 			return FALSE;
