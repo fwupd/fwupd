@@ -633,12 +633,18 @@ fu_pxi_device_setup (FuDevice *device, GError **error)
 {
 	FuPxiDevice *self = FU_PXI_DEVICE (device);
 
-	if (!fu_pxi_device_setup_guid (self ,error))
+	if (!fu_pxi_device_setup_guid (self ,error)) {
+		g_prefix_error (error, "failed to setup GUID: ");
 		return FALSE;
-	if (!fu_pxi_device_fw_ota_init (self, error))
+	}
+	if (!fu_pxi_device_fw_ota_init (self, error)) {
+		g_prefix_error (error, "failed to OTA init: ");
 		return FALSE;
-	if (!fu_pxi_device_fw_get_info (self, error))
+	}
+	if (!fu_pxi_device_fw_get_info (self, error)) {
+		g_prefix_error (error, "failed to get info: ");
 		return FALSE;
+	}
 	return TRUE;
 }
 
