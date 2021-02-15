@@ -73,6 +73,9 @@ gchar		*fu_firmware_to_string			(FuFirmware	*self);
 const gchar	*fu_firmware_get_version		(FuFirmware	*self);
 void		 fu_firmware_set_version		(FuFirmware	*self,
 							 const gchar	*version);
+guint64		 fu_firmware_get_version_raw		(FuFirmware	*self);
+void		 fu_firmware_set_version_raw		(FuFirmware	*self,
+							 guint64	 version_raw);
 void		 fu_firmware_add_flag			(FuFirmware	*firmware,
 							 FuFirmwareFlags flag);
 gboolean	 fu_firmware_has_flag			(FuFirmware	*firmware,

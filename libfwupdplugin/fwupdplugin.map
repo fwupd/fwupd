@@ -759,3 +759,10 @@ LIBFWUPDPLUGIN_1.5.6 {
     fu_plugin_runner_backend_device_changed;
   local: *;
 } LIBFWUPDPLUGIN_1.5.5;
+
+LIBFWUPDPLUGIN_1.5.7 {
+  global:
+    fu_firmware_get_version_raw;
+    fu_firmware_set_version_raw;
+  local: *;
+} LIBFWUPDPLUGIN_1.5.6;

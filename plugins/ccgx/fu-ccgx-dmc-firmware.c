@@ -298,6 +298,7 @@ fu_ccgx_dmc_firmware_parse (FuFirmware *firmware,
 		ver = fu_common_version_from_uint32 (self->fwct_info.composite_version,
 						     FWUPD_VERSION_FORMAT_QUAD);
 		fu_firmware_set_version (firmware, ver);
+		fu_firmware_set_version_raw (firmware, self->fwct_info.composite_version);
 	}
 
 	/* read fwct data */

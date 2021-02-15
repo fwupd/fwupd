@@ -249,6 +249,7 @@ fu_ccgx_firmware_parse_md_block (FuCcgxFirmware *self, FuFirmwareImage *img, GEr
 		self->app_type = version & 0xffff;
 		version_str = fu_ccgx_version_to_string (version);
 		fu_firmware_set_version (FU_FIRMWARE (self), version_str);
+		fu_firmware_set_version_raw (FU_FIRMWARE (self), version);
 	}
 
 	/* work out the FWMode */
