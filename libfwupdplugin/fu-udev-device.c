@@ -1327,7 +1327,8 @@ fu_udev_device_ioctl (FuUdevDevice *self,
 	if (rc != NULL)
 		*rc = rc_tmp;
 	if (rc_tmp < 0) {
-		if (rc_tmp == -EPERM) {
+#ifdef HAVE_ERRNO_H
+		if (errno == EPERM) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_PERMISSION_DENIED,
@@ -1337,8 +1338,14 @@ fu_udev_device_ioctl (FuUdevDevice *self,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "ioctl not supported: %s",
+			     "ioctl error: %s",
 			     strerror (errno));
+#else
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "unspecified ioctl error");
+#endif
 		return FALSE;
 	}
 	return TRUE;
