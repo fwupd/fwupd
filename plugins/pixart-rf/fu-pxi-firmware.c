@@ -74,10 +74,12 @@ fu_pxi_rf_firmware_parse (FuFirmware *firmware,
 	/* set the default version if can not find it in fw bin */
 	if (header_ok) {
 		g_autofree gchar *version = NULL;
-		version = g_strdup_printf ("%c.%c.%c",
-					   fw_header[0],
-					   fw_header[2],
-					   fw_header[4]);
+		version_raw = (((guint32) (fw_header[0] - '0')) << 16) +
+			      (((guint32) (fw_header[2] - '0')) << 8) +
+			        (guint32) (fw_header[4] - '0');
+		fu_firmware_set_version_raw (firmware, version_raw);
+		version = fu_common_version_from_uint32 (version_raw,
+							 FWUPD_VERSION_FORMAT_DELL_BIOS);
 		fu_firmware_set_version (firmware, version);
 	} else {
 		fu_firmware_set_version (firmware, "0.0.0");
