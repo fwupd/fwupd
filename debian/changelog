@@ -1,4 +1,4 @@
-fwupd (1.5.6-1) UNRELEASED; urgency=medium
+fwupd (1.5.6-1) unstable; urgency=medium
 
   [ Steve McIntyre ]
   * Fix up Uploaders for the -signed packages - remove Jared, add Matthias
@@ -7,7 +7,7 @@ fwupd (1.5.6-1) UNRELEASED; urgency=medium
   * New upstream version (1.5.6)
   * drop all upstream patches
 
- -- superm1 <superm1@penguin.lxd>  Tue, 16 Feb 2021 10:17:50 -0600
+ -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 16 Feb 2021 10:54:08 -0600
 
 fwupd (1.5.5-2) unstable; urgency=medium
 
