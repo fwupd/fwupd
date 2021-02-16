@@ -34,6 +34,8 @@ typedef struct __attribute__((packed)) {
 #define FU_SYNAPROM_FIRMWARE_TAG_MAX			0xfff0
 #define FU_SYNAPROM_FIRMWARE_SIGSIZE			0x0100
 
+#define FU_SYNAPROM_FIRMWARE_IMAGE_COUNT_MAX		64
+
 static const gchar *
 fu_synaprom_firmware_tag_to_string (guint16 tag)
 {
@@ -66,6 +68,7 @@ fu_synaprom_firmware_parse (FuFirmware *firmware,
 	const guint8 *buf;
 	gsize bufsz = 0;
 	gsize offset = 0;
+	guint img_cnt = 0;
 
 	g_return_val_if_fail (fw != NULL, FALSE);
 
@@ -130,6 +133,17 @@ fu_synaprom_firmware_parse (FuFirmware *firmware,
 		fu_firmware_image_set_idx (img, tag);
 		fu_firmware_image_set_id (img, fu_synaprom_firmware_tag_to_string (tag));
 		fu_firmware_add_image (firmware, img);
+
+		/* sanity check */
+		if (img_cnt++ > FU_SYNAPROM_FIRMWARE_IMAGE_COUNT_MAX) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "maximum number of images exceeded, "
+				     "maximum is 0x%02x",
+				     (guint) FU_SYNAPROM_FIRMWARE_IMAGE_COUNT_MAX);
+			return FALSE;
+		}
 
 		/* next item */
 		buf += hdrsz;
