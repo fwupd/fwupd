@@ -546,7 +546,6 @@ fwupd_client_remotes_func (void)
 	g_assert_no_error (error);
 	g_assert (remote2 != NULL);
 	g_assert_cmpstr (fwupd_remote_get_id (remote2), ==, "lvfs");
-	g_assert (fwupd_remote_get_enabled (remote2));
 	g_assert (fwupd_remote_get_metadata_uri (remote2) != NULL);
 
 	/* check we set an error when unfound */
