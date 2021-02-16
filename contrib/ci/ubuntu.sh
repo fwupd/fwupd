@@ -26,8 +26,3 @@ ninja -C build test -v
 ninja -C build install -v
 mkdir -p dist/docs
 cp build/docs/* dist/docs -R
-
-#run static analysis (these mostly won't be critical)
-if [ "$CC" = "clang" ]; then
-	ninja -C build scan-build -v
-fi
