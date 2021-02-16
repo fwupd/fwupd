@@ -21,6 +21,10 @@ def _run_objcopy_sbat(args, tfd):
     with open(args.infile, "rb") as ifd:
         tfd.write(ifd.read())
 
+    # not specified
+    if not args.sbat_distro_id:
+        return
+
     with tempfile.NamedTemporaryFile() as sfd:
 
         # spec
@@ -45,18 +49,17 @@ def _run_objcopy_sbat(args, tfd):
         )
 
         # distro specifics, falling back to the project defaults
-        if args.sbat_distro_id:
-            sfd.write(
-                "{0}-{1},{2},{3},{4},{5},{6}\n".format(
-                    args.project_name,
-                    args.sbat_distro_id,
-                    args.sbat_distro_generation or args.sbat_generation,
-                    args.sbat_distro_summary or FWUPD_SUMMARY,
-                    args.sbat_distro_pkgname,
-                    args.sbat_distro_version or args.project_version,
-                    args.sbat_distro_url or FWUPD_URL,
-                ).encode()
-            )
+        sfd.write(
+            "{0}-{1},{2},{3},{4},{5},{6}\n".format(
+                args.project_name,
+                args.sbat_distro_id,
+                args.sbat_distro_generation or args.sbat_generation,
+                args.sbat_distro_summary or FWUPD_SUMMARY,
+                args.sbat_distro_pkgname,
+                args.sbat_distro_version or args.project_version,
+                args.sbat_distro_url or FWUPD_URL,
+            ).encode()
+        )
 
         # all written
         sfd.seek(0)
