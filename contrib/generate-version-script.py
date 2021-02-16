@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: LGPL-2.1+
 
 import sys
+import argparse
 import xml.etree.ElementTree as ET
 
 from pkg_resources import parse_version
@@ -30,6 +31,7 @@ class LdVersionScript:
     def __init__(self, library_name):
         self.library_name = library_name
         self.releases = {}
+        self.overrides = {}
 
     def _add_node(self, node):
         identifier = node.attrib[XMLNS_C + 'identifier']
@@ -80,8 +82,9 @@ class LdVersionScript:
         type_name = cls.attrib['{http://www.gtk.org/introspection/glib/1.0}get-type']
 
         # finally add the get_type symbol
-        if version_lowest:
-            self.releases[version_lowest].append(type_name)
+        version = self.overrides.get(type_name, version_lowest)
+        if version:
+            self.releases[version].append(type_name)
 
     def import_gir(self, filename):
         tree = ET.parse(filename)
@@ -120,11 +123,22 @@ class LdVersionScript:
 
 
 if __name__ == '__main__':
-    if {'-?', '--help', '--usage'}.intersection(set(sys.argv)):
-        usage(0)
-    if len(sys.argv) != 4:
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-r',
+        '--override',
+        action='append',
+        nargs=2,
+        metavar=('symbol', 'version'),
+    )
+    args, argv = parser.parse_known_args()
+    if len(argv) != 3:
         usage(1)
 
-    ld = LdVersionScript(library_name=sys.argv[1])
-    ld.import_gir(sys.argv[2])
-    open(sys.argv[3], 'w').write(ld.render())
+    ld = LdVersionScript(library_name=argv[0])
+    if args.override:
+        for override_symbol, override_version in args.override:
+            ld.overrides[override_symbol] = override_version
+    ld.import_gir(argv[1])
+    open(argv[2], 'w').write(ld.render())

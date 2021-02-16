@@ -639,3 +639,12 @@ LIBFWUPD_1.5.5 {
     fwupd_device_has_vendor_id;
   local: *;
 } LIBFWUPD_1.5.3;
+
+LIBFWUPD_1.5.6 {
+  global:
+    fwupd_client_install_release2;
+    fwupd_client_install_release2_async;
+    fwupd_release_add_location;
+    fwupd_release_get_locations;
+  local: *;
+} LIBFWUPD_1.5.5;

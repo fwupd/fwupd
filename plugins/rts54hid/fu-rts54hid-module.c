@@ -258,8 +258,8 @@ fu_rts54hid_module_write_firmware (FuDevice *module,
 
 		/* write chunk */
 		if (!fu_rts54hid_module_i2c_write (self,
-						   chk->data,
-						   chk->data_sz,
+						   fu_chunk_get_data (chk),
+						   fu_chunk_get_data_sz (chk),
 						   error))
 			return FALSE;
 

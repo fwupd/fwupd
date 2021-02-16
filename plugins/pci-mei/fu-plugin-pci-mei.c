@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 #include "fu-mei-common.h"
 
@@ -140,7 +139,7 @@ fu_mei_parse_fwvers (FuPlugin *plugin, const gchar *fwvers, GError **error)
 }
 
 gboolean
-fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
+fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	const gchar *fwvers;
@@ -148,44 +147,46 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* interesting device? */
-	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "pci") != 0)
+	if (!FU_IS_UDEV_DEVICE (device))
+		return TRUE;
+	if (g_strcmp0 (fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)), "pci") != 0)
 		return TRUE;
 
 	/* open the config */
-	fu_udev_device_set_flags (device, FU_UDEV_DEVICE_FLAG_USE_CONFIG);
-	if (!fu_udev_device_set_physical_id (device, "pci", error))
+	fu_udev_device_set_flags (FU_UDEV_DEVICE (device), FU_UDEV_DEVICE_FLAG_USE_CONFIG);
+	if (!fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "pci", error))
 		return FALSE;
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
 
 	/* grab MEI config registers */
-	if (!fu_udev_device_pread_full (device, PCI_CFG_HFS_1, buf, sizeof(buf), error)) {
+	if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (device), PCI_CFG_HFS_1, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "could not read HFS1: ");
 		return FALSE;
 	}
 	priv->hfsts1.data = fu_common_read_uint32 (buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread_full (device, PCI_CFG_HFS_2, buf, sizeof(buf), error)) {
+	if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (device), PCI_CFG_HFS_2, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "could not read HFS2: ");
 		return FALSE;
 	}
 	priv->hfsts2.data = fu_common_read_uint32 (buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread_full (device, PCI_CFG_HFS_3, buf, sizeof(buf), error)) {
+	if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (device), PCI_CFG_HFS_3, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "could not read HFS3: ");
 		return FALSE;
 	}
 	priv->hfsts3.data = fu_common_read_uint32 (buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread_full (device, PCI_CFG_HFS_4, buf, sizeof(buf), error)) {
+	if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (device), PCI_CFG_HFS_4, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "could not read HFS4: ");
 		return FALSE;
 	}
 	priv->hfsts4.data = fu_common_read_uint32 (buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread_full (device, PCI_CFG_HFS_5, buf, sizeof(buf), error)) {
+	if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (device), PCI_CFG_HFS_5, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "could not read HFS5: ");
 		return FALSE;
 	}
 	priv->hfsts5.data = fu_common_read_uint32 (buf, G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pread_full (device, PCI_CFG_HFS_6, buf, sizeof(buf), error)) {
+	if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (device), PCI_CFG_HFS_6, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "could not read HFS6: ");
 		return FALSE;
 	}
@@ -200,7 +201,7 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	}
 
 	/* check firmware version */
-	fwvers = fu_udev_device_get_sysfs_attr (device, "mei/mei0/fw_ver", NULL);
+	fwvers = fu_udev_device_get_sysfs_attr (FU_UDEV_DEVICE (device), "mei/mei0/fw_ver", NULL);
 	if (fwvers != NULL) {
 		if (!fu_mei_parse_fwvers (plugin, fwvers, error))
 			return FALSE;

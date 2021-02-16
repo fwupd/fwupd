@@ -11,11 +11,12 @@
 #include <gio/gunixmounts.h>
 #include <glib/gi18n.h>
 
+#include "fu-archive.h"
 #include "fu-device-metadata.h"
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 #include "fu-uefi-bgrt.h"
+#include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-efivar.h"
@@ -41,8 +42,13 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "tpm");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "tpm_eventlog");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "dell");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+
+	/* for the uploaded report */
+	if (fu_plugin_has_custom_flag (plugin, "use-legacy-bootmgr-desc"))
+		fu_plugin_add_report_metadata (plugin, "BootMgrDesc", "legacy");
 }
 
 void
@@ -69,10 +75,26 @@ fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 	const gchar *tmp;
 	g_autofree gchar *err_msg = NULL;
 	g_autofree gchar *version_str = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* trivial case */
 	if (status == FU_UEFI_DEVICE_STATUS_SUCCESS) {
 		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
+		return TRUE;
+	}
+
+	/* check if something rudely removed our BOOTXXXX entry */
+	if (!fu_uefi_bootmgr_verify_fwupd (&error_local)) {
+		if (fu_plugin_has_custom_flag (plugin, "boot-order-lock")) {
+			g_prefix_error (&error_local,
+					"boot entry missing; "
+					"perhaps 'Boot Order Lock' enabled in the BIOS: ");
+			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+		} else {
+			g_prefix_error (&error_local, "boot entry missing: ");
+			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+		}
+		fu_device_set_update_error (device, error_local->message);
 		return TRUE;
 	}
 
@@ -129,71 +151,45 @@ static GBytes *
 fu_plugin_uefi_capsule_get_splash_data (guint width, guint height, GError **error)
 {
 	const gchar * const *langs = g_get_language_names ();
-	const gchar *localedir = FWUPD_LOCALEDIR;
-	const gsize chunk_size = 1024 * 1024;
-	gsize buf_idx = 0;
-	gsize buf_sz = chunk_size;
-	gssize len;
-	g_autofree gchar *basename = NULL;
-	g_autofree guint8 *buf = NULL;
-	g_autoptr(GBytes) compressed_data = NULL;
-	g_autoptr(GConverter) conv = NULL;
-	g_autoptr(GInputStream) stream_compressed = NULL;
-	g_autoptr(GInputStream) stream_raw = NULL;
+	g_autofree gchar *datadir_pkg = NULL;
+	g_autofree gchar *filename_archive = NULL;
+	g_autofree gchar *langs_str = NULL;
+	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(GBytes) blob_archive = NULL;
 
-	/* ensure this is sane */
-	if (!g_str_has_prefix (localedir, "/"))
-		localedir = "/usr/share/locale";
+	/* load archive */
+	datadir_pkg = fu_common_get_path (FU_PATH_KIND_DATADIR_PKG);
+	filename_archive = g_build_filename (datadir_pkg, "uefi-capsule-ux.tar.xz", NULL);
+	blob_archive = fu_common_get_contents_bytes (filename_archive, error);
+	if (blob_archive == NULL)
+		return NULL;
+	archive = fu_archive_new (blob_archive, FU_ARCHIVE_FLAG_NONE, error);
+	if (archive == NULL)
+		return NULL;
 
 	/* find the closest locale match, falling back to `en` and `C` */
-	basename = g_strdup_printf ("fwupd-%u-%u.bmp.gz", width, height);
 	for (guint i = 0; langs[i] != NULL; i++) {
+		GBytes *blob_tmp;
 		g_autofree gchar *fn = NULL;
 		if (g_str_has_suffix (langs[i], ".UTF-8"))
 			continue;
-		fn = g_build_filename (localedir, langs[i],
-				       "LC_IMAGES", basename, NULL);
-		if (g_file_test (fn, G_FILE_TEST_EXISTS)) {
-			compressed_data = fu_common_get_contents_bytes (fn, error);
-			if (compressed_data == NULL)
-				return NULL;
-			break;
+		fn = g_strdup_printf ("fwupd-%s-%u-%u.bmp", langs[i], width, height);
+		blob_tmp = fu_archive_lookup_by_fn (archive, fn, NULL);
+		if (blob_tmp != NULL) {
+			g_debug ("using UX image %s", fn);
+			return g_bytes_ref (blob_tmp);
 		}
 		g_debug ("no %s found", fn);
 	}
 
 	/* we found nothing */
-	if (compressed_data == NULL) {
-		g_autofree gchar *tmp = g_strjoinv (",", (gchar **) langs);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "failed to get splash file for %s in %s",
-			     tmp, localedir);
-		return NULL;
-	}
-
-	/* decompress data */
-	stream_compressed = g_memory_input_stream_new_from_bytes (compressed_data);
-	conv = G_CONVERTER (g_zlib_decompressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP));
-	stream_raw = g_converter_input_stream_new (stream_compressed, conv);
-	buf = g_malloc0 (buf_sz);
-	while ((len = g_input_stream_read (stream_raw,
-					   buf + buf_idx,
-					   buf_sz - buf_idx,
-					   NULL, error)) > 0) {
-		buf_idx += len;
-		if (buf_sz - buf_idx < chunk_size) {
-			buf_sz += chunk_size;
-			buf = g_realloc (buf, buf_sz);
-		}
-	}
-	if (len < 0) {
-		g_prefix_error (error, "failed to decompress file: ");
-		return NULL;
-	}
-	g_debug ("decompressed image to %" G_GSIZE_FORMAT "kb", buf_idx / 1024);
-	return g_bytes_new_take (g_steal_pointer (&buf), buf_idx);
+	langs_str = g_strjoinv (",", (gchar **) langs);
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "failed to get splash file for %s in %s",
+		     langs_str, datadir_pkg);
+	return NULL;
 }
 
 static guint8
@@ -522,12 +518,9 @@ fu_plugin_uefi_capsule_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GEr
 		return FALSE;
 
 	/* if not already set by quirks */
-	if (fu_device_get_custom_flags (FU_DEVICE (dev)) == NULL) {
-		/* for all Lenovo hardware */
-		if (fu_plugin_check_hwid (plugin, "6de5d951-d755-576b-bd09-c5cf66b27234")) {
-			fu_device_set_custom_flags (FU_DEVICE (dev), "use-legacy-bootmgr-desc");
-			fu_plugin_add_report_metadata (plugin, "BootMgrDesc", "legacy");
-		}
+	if (fu_device_get_custom_flags (FU_DEVICE (dev)) == NULL &&
+	    fu_plugin_has_custom_flag (plugin, "use-legacy-bootmgr-desc")) {
+		fu_device_set_custom_flags (FU_DEVICE (dev), "use-legacy-bootmgr-desc");
 	}
 
 	/* set fallback name if nothing else is set */
@@ -651,7 +644,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	nvram_total = fu_efivar_space_used (error);
 	if (nvram_total == G_MAXUINT64)
 		return FALSE;
-	nvram_total_str = g_format_size_full (nvram_total, G_FORMAT_SIZE_LONG_FORMAT);
+	nvram_total_str = g_strdup_printf ("%" G_GUINT64_FORMAT, nvram_total);
 	fu_plugin_add_report_metadata (plugin, "EfivarNvramUsed", nvram_total_str);
 
 	/* override the default ESP path */
@@ -762,6 +755,38 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static void
+fu_plugin_uefi_update_state_notify_cb (GObject *object,
+				       GParamSpec *pspec,
+				       FuPlugin *plugin)
+{
+	FuDevice *device = FU_DEVICE (object);
+	GPtrArray *devices;
+	g_autofree gchar *msg = NULL;
+
+	/* device is not in needs-reboot state */
+	if (fu_device_get_update_state (device) != FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+		return;
+
+	/* only do this on hardware that cannot coalesce multiple capsules */
+	if (!fu_plugin_has_custom_flag (plugin, "no-coalesce"))
+		return;
+
+	/* mark every other device for this plugin as non-updatable */
+	msg = g_strdup_printf ("Cannot update as %s [%s] needs reboot",
+			       fu_device_get_name (device),
+			       fu_device_get_id (device));
+	devices = fu_plugin_get_devices (plugin);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index (devices, i);
+		if (device_tmp == device)
+			continue;
+		fu_device_remove_flag (device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_add_flag (device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
+		fu_device_set_update_error (device_tmp, msg);
+	}
+}
+
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -818,6 +843,12 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 		/* load all configuration variables */
 		fu_plugin_uefi_capsule_load_config (plugin, FU_DEVICE (dev));
+
+		/* watch in case we set needs-reboot in the engine */
+		g_signal_connect (dev, "notify::update-state",
+				  G_CALLBACK (fu_plugin_uefi_update_state_notify_cb),
+				  plugin);
+
 		fu_plugin_device_add (plugin, FU_DEVICE (dev));
 	}
 

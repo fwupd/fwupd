@@ -54,6 +54,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_UPDATE_ERROR		"UpdateError"	/* s */
 #define FWUPD_RESULT_KEY_UPDATE_STATE		"UpdateState"	/* u */
 #define FWUPD_RESULT_KEY_URI			"Uri"		/* s */
+#define FWUPD_RESULT_KEY_LOCATIONS		"Locations"	/* as */
 #define FWUPD_RESULT_KEY_VENDOR_ID		"VendorId"	/* s */
 #define FWUPD_RESULT_KEY_VENDOR			"Vendor"	/* s */
 #define FWUPD_RESULT_KEY_VENDOR			"Vendor"	/* s */

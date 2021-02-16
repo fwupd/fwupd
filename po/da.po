@@ -192,10 +192,6 @@ msgstr "Aktiverer firmwareopdatering"
 msgid "Activating firmware update for"
 msgstr "Aktiverer firmwareopdatering for"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Tilføjet"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Alder"
@@ -368,7 +364,6 @@ msgstr "Kan ikke anvende eftersom dbx-opdatering allerede er blevet anvendt."
 msgid "Cannot apply updates on live media"
 msgstr "Kan ikke anvende opdateringer på livemedier"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Ændret"
@@ -691,6 +686,7 @@ msgid "Extract a firmware blob to images"
 msgstr "Udpak en firmwareblob til aftryk"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: The update state of the specific device
 msgid "Failed"
 msgstr "Mislykkedes"
 
@@ -1360,10 +1356,6 @@ msgstr "Geninstallerer %s med %s... "
 msgid "Remote ID"
 msgstr "Fjern-id"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Fjernet"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "Erstat data i en eksisterende firmwarefil"
@@ -1714,10 +1706,6 @@ msgstr "UEFI ESP-partition ikke registreret eller konfigureret"
 msgid "UEFI Firmware Utility"
 msgstr "UEFI-firmwareredskab"
 
-#. TRANSLATORS: capsule updates are an optional BIOS feature
-msgid "UEFI capsule updates not available or enabled"
-msgstr "UEFI-kapselopdateringer ikke tilgængelige eller aktiveret"
-
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "UEFI-dbx-redskab"
@@ -1926,10 +1914,6 @@ msgstr "ADVARSEL:"
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Venter …"
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Hold øje med DFU-enheder som hotplugges"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"

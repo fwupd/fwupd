@@ -1,6 +1,7 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8 -*-
  *
  * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2019 9elements Agency GmbH <patrick.rudolph@9elements.com>
  *
  * Licensed under the GNU General Public License Version 2
  *
@@ -24,8 +25,9 @@
 #include <string.h>
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
-#include "libflashrom.h"
+#include "fu-flashrom-device.h"
+
+#include <libflashrom.h>
 
 #define SELFCHECK_TRUE 1
 
@@ -41,6 +43,8 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
+	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_CONFLICTS, "coreboot"); /* obsoleted */
 }
 
 void
@@ -59,18 +63,21 @@ fu_plugin_flashrom_debug_cb (enum flashrom_log_level lvl, const char *fmt, va_li
 #pragma clang diagnostic ignored "-Wformat-nonliteral"
 	g_autofree gchar *tmp = g_strdup_vprintf (fmt, args);
 #pragma clang diagnostic pop
+	g_autofree gchar *str = fu_common_strstrip (tmp);
+	if (g_strcmp0 (str, "OK.") == 0 || g_strcmp0 (str, ".") == 0)
+		return 0;
 	switch (lvl) {
 	case FLASHROM_MSG_ERROR:
 	case FLASHROM_MSG_WARN:
-		g_warning ("%s", tmp);
+		g_warning ("%s", str);
 		break;
 	case FLASHROM_MSG_INFO:
-		g_debug ("%s", tmp);
+		g_debug ("%s", str);
 		break;
 	case FLASHROM_MSG_DEBUG:
 	case FLASHROM_MSG_DEBUG2:
 		if (g_getenv ("FWUPD_FLASHROM_VERBOSE") != NULL)
-			g_debug ("%s", tmp);
+			g_debug ("%s", str);
 		break;
 	case FLASHROM_MSG_SPEW:
 		break;
@@ -80,15 +87,100 @@ fu_plugin_flashrom_debug_cb (enum flashrom_log_level lvl, const char *fmt, va_li
 	return 0;
 }
 
+static void
+fu_plugin_flashrom_device_set_version (FuPlugin *plugin, FuDevice *device)
+{
+	const gchar *version;
+	const gchar *version_major;
+	const gchar *version_minor;
+
+	/* as-is */
+	version = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION);
+	if (version != NULL) {
+		/* some Lenovo hardware requires a specific prefix for the EC,
+		 * so strip it before we use ensure-semver */
+		if (strlen (version) > 9 && g_str_has_prefix (version, "CBET"))
+			version += 9;
+
+		/* this may not "stick" if there are no numeric chars */
+		fu_device_set_version (device, version);
+		if (fu_device_get_version (device) != NULL)
+			return;
+	}
+
+	/* component parts only */
+	version_major = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE);
+	version_minor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_MINOR_RELEASE);
+	if (version_major != NULL && version_minor != NULL) {
+		g_autofree gchar *tmp = g_strdup_printf ("%s.%s.0",
+							 version_major,
+							 version_minor);
+		fu_device_set_version (device, tmp);
+		return;
+	}
+}
+static void
+fu_plugin_flashrom_device_set_bios_info (FuPlugin *plugin, FuDevice *device)
+{
+	const guint8 *buf;
+	gsize bufsz;
+	guint32 bios_char = 0x0;
+	guint8 bios_sz = 0x0;
+	g_autoptr(GBytes) bios_table = NULL;
+
+	/* get SMBIOS info */
+	bios_table = fu_plugin_get_smbios_data (plugin, FU_SMBIOS_STRUCTURE_TYPE_BIOS);
+	if (bios_table == NULL)
+		return;
+
+	/* ROM size */
+	buf = g_bytes_get_data (bios_table, &bufsz);
+	if (fu_common_read_uint8_safe (buf, bufsz, 0x9, &bios_sz, NULL)) {
+		guint64 firmware_size = (bios_sz + 1) * 64 * 1024;
+		fu_device_set_firmware_size_max (device, firmware_size);
+	}
+
+	/* BIOS characteristics */
+	if (fu_common_read_uint32_safe (buf, bufsz, 0xa, &bios_char, G_LITTLE_ENDIAN, NULL)) {
+		if ((bios_char & (1 << 11)) == 0)
+			fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	}
+}
+
+static void
+fu_plugin_flashrom_device_set_hwids (FuPlugin *plugin, FuDevice *device)
+{
+	static const gchar *hwids[] = {
+		"HardwareID-3",
+		"HardwareID-4",
+		"HardwareID-5",
+		"HardwareID-6",
+		"HardwareID-10",
+		/* a more useful one for coreboot branch detection */
+		FU_HWIDS_KEY_MANUFACTURER "&"
+		FU_HWIDS_KEY_FAMILY "&"
+		FU_HWIDS_KEY_PRODUCT_NAME "&"
+		FU_HWIDS_KEY_PRODUCT_SKU "&"
+		FU_HWIDS_KEY_BIOS_VENDOR,
+	};
+	/* don't include FU_HWIDS_KEY_BIOS_VERSION */
+	for (guint i = 0; i < G_N_ELEMENTS (hwids); i++) {
+		g_autofree gchar *str = NULL;
+		str = fu_plugin_get_hwid_replace_value (plugin, hwids[i], NULL);
+		if (str != NULL)
+			fu_device_add_instance_id (device, str);
+	}
+}
+
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	GPtrArray *hwids = fu_plugin_get_hwids (plugin);
 	const gchar *dmi_vendor;
+	gint rc;
 	g_autoptr(GPtrArray) devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
-	dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
 	for (guint i = 0; i < hwids->len; i++) {
 		const gchar *guid = g_ptr_array_index (hwids, i);
 		const gchar *quirk_str;
@@ -99,22 +191,26 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 							  "DeviceId");
 		if (quirk_str != NULL) {
 			g_autofree gchar *device_id = g_strdup_printf ("flashrom-%s", quirk_str);
-			g_autoptr(FuDevice) dev = fu_device_new ();
-			fu_device_set_id (dev, device_id);
-			fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
-			fu_device_set_protocol (dev, "org.flashrom");
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
-			fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-			fu_device_set_name (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME));
-			fu_device_set_vendor (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER));
-			fu_device_add_internal_flag (dev, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
-			fu_device_set_version (dev, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION));
-			fu_device_add_guid (dev, guid);
+			g_autoptr(FuDevice) device = fu_flashrom_device_new ();
+			fu_device_set_quirks (device, fu_plugin_get_quirks (plugin));
+			fu_device_set_name (device, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME));
+			fu_device_set_vendor (device, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER));
+
+			/* use same VendorID logic as with UEFI */
+			dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
 			if (dmi_vendor != NULL) {
 				g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
-				fu_device_add_vendor_id (FU_DEVICE (dev), vendor_id);
+				fu_device_add_vendor_id (FU_DEVICE (device), vendor_id);
 			}
-			g_ptr_array_add (devices, g_steal_pointer (&dev));
+
+			fu_device_set_id (device, device_id);
+			fu_device_add_guid (device, guid);
+			fu_plugin_flashrom_device_set_version (plugin, device);
+			fu_plugin_flashrom_device_set_hwids (plugin, device);
+			fu_plugin_flashrom_device_set_bios_info (plugin, device);
+			if (!fu_device_setup (device, error))
+				return FALSE;
+			g_ptr_array_add (devices, g_steal_pointer (&device));
 			break;
 		}
 	}
@@ -139,11 +235,26 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 				     "programmer initialization failed");
 		return FALSE;
 	}
-	if (flashrom_flash_probe (&data->flashctx, data->flashprog, NULL)) {
+	rc = flashrom_flash_probe (&data->flashctx, data->flashprog, NULL);
+	if (rc == 3) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "flash probe failed");
+				     "flash probe failed: multiple chips were found");
+		return FALSE;
+	}
+	if (rc == 2) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "flash probe failed: no chip was found");
+		return FALSE;
+	}
+	if (rc != 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "flash probe failed: unknown error");
 		return FALSE;
 	}
 	data->flash_size = flashrom_flash_getsize (data->flashctx);
@@ -245,6 +356,7 @@ fu_plugin_update (FuPlugin *plugin,
 	}
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_progress (device, 0); /* urgh */
 	rc = flashrom_image_write (data->flashctx, (void *) buf, sz, NULL /* refbuffer */);
 	if (rc != 0) {
 		g_set_error (error,

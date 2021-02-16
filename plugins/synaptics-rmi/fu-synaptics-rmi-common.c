@@ -14,6 +14,11 @@
 
 #include <gio/gio.h>
 
+#ifdef HAVE_GNUTLS
+#include <gnutls/abstract.h>
+#include <gnutls/crypto.h>
+#endif
+
 #include "fu-common.h"
 #include "fu-io-channel.h"
 #include "fu-synaptics-rmi-common.h"
@@ -29,6 +34,15 @@
 
 #define RMI_FUNCTION_VERSION_MASK		0x60
 #define RMI_FUNCTION_INTERRUPT_SOURCES_MASK	0x7
+
+#ifdef HAVE_GNUTLS
+typedef guchar gnutls_data_t;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(gnutls_data_t, gnutls_free)
+G_DEFINE_AUTO_CLEANUP_FREE_FUNC(gnutls_pubkey_t, gnutls_pubkey_deinit, NULL)
+#pragma clang diagnostic pop
+#endif
 
 guint32
 fu_synaptics_rmi_generate_checksum (const guint8 *data, gsize len)
@@ -99,4 +113,69 @@ fu_synaptics_rmi_device_writeln (const gchar *fn, const gchar *buf, GError **err
 	io = fu_io_channel_unix_new (fd);
 	return fu_io_channel_write_raw (io, (const guint8 *) buf, strlen (buf),
 					1000, FU_IO_CHANNEL_FLAG_NONE, error);
+}
+
+gboolean
+fu_synaptics_verify_sha256_signature (GBytes *payload,
+				      GBytes *pubkey,
+				      GBytes *signature,
+				      GError **error)
+{
+#ifdef HAVE_GNUTLS
+	gnutls_datum_t hash;
+	gnutls_datum_t m;
+	gnutls_datum_t e;
+	gnutls_datum_t sig;
+	gnutls_hash_hd_t sha2;
+	g_auto(gnutls_pubkey_t) pub = NULL;
+	gint ec;
+	guint8 exponent[] = { 1, 0, 1 };
+	guint hash_length = gnutls_hash_get_len (GNUTLS_DIG_SHA256);
+	g_autoptr(gnutls_data_t) hash_data = NULL;
+
+	/* hash firmware data */
+	hash_data = gnutls_malloc (hash_length);
+	gnutls_hash_init (&sha2, GNUTLS_DIG_SHA256);
+	gnutls_hash (sha2, g_bytes_get_data (payload, NULL), g_bytes_get_size (payload));
+	gnutls_hash_deinit (sha2, hash_data);
+
+	/* hash */
+	hash.size = hash_length;
+	hash.data = hash_data;
+
+	/* modulus */
+	m.size = g_bytes_get_size (pubkey);
+	m.data = (guint8 *) g_bytes_get_data (pubkey, NULL);
+
+	/* exponent */
+	e.size = sizeof(exponent);
+	e.data = exponent;
+
+	/* signature */
+	sig.size = g_bytes_get_size (signature);
+	sig.data = (guint8 *) g_bytes_get_data (signature, NULL);
+
+	gnutls_pubkey_init (&pub);
+	ec = gnutls_pubkey_import_rsa_raw (pub, &m, &e);
+	if (ec < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "failed to import RSA key: %s",
+			     gnutls_strerror (ec));
+		return FALSE;
+	}
+	ec = gnutls_pubkey_verify_hash2 (pub, GNUTLS_SIGN_RSA_SHA256,
+					 0, &hash, &sig);
+	if (ec < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "failed to verify firmware: %s",
+			     gnutls_strerror (ec));
+		return FALSE;
+	}
+#endif
+	/* success */
+	return TRUE;
 }

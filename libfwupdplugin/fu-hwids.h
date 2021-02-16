@@ -27,9 +27,12 @@ G_DECLARE_FINAL_TYPE (FuHwids, fu_hwids, FU, HWIDS, GObject)
 #define FU_HWIDS_KEY_PRODUCT_SKU		"ProductSku"
 
 FuHwids		*fu_hwids_new			(void);
-
+GPtrArray	*fu_hwids_get_keys		(FuHwids	*self);
 const gchar	*fu_hwids_get_value		(FuHwids	*self,
 						 const gchar	*key);
+void		 fu_hwids_add_smbios_override	(FuHwids	*self,
+						 const gchar	*key,
+						 const gchar	*value);
 const gchar	*fu_hwids_get_replace_keys	(FuHwids	*self,
 						 const gchar	*key);
 gchar		*fu_hwids_get_replace_values	(FuHwids	*self,

@@ -259,15 +259,17 @@ fu_vli_device_spi_read (FuVliDevice *self, guint32 address, gsize bufsz, GError 
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* get data from hardware */
-	chunks = fu_chunk_array_new (buf, bufsz, address, 0x0, FU_VLI_DEVICE_TXSIZE);
+	chunks = fu_chunk_array_mutable_new (buf, bufsz, address, 0x0, FU_VLI_DEVICE_TXSIZE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_vli_device_spi_read_block (self,
-						  chk->address,
-						  (guint8 *) chk->data,
-						  chk->data_sz,
+						  fu_chunk_get_address (chk),
+						  fu_chunk_get_data_out (chk),
+						  fu_chunk_get_data_sz (chk),
 						  error)) {
-			g_prefix_error (error, "SPI data read failed @0x%x: ", chk->address);
+			g_prefix_error (error,
+					"SPI data read failed @0x%x: ",
+					fu_chunk_get_address (chk));
 			return NULL;
 		}
 		fu_device_set_progress_full (FU_DEVICE (self),
@@ -333,11 +335,11 @@ fu_vli_device_spi_write (FuVliDevice *self,
 		for (guint i = 1; i < chunks->len; i++) {
 			chk = g_ptr_array_index (chunks, i);
 			if (!fu_vli_device_spi_write_block (self,
-							    chk->address + address,
-							    chk->data,
-							    chk->data_sz,
+							    fu_chunk_get_address (chk) + address,
+							    fu_chunk_get_data (chk),
+							    fu_chunk_get_data_sz (chk),
 							    error)) {
-				g_prefix_error (error, "failed to write block 0x%x: ", chk->idx);
+				g_prefix_error (error, "failed to write block 0x%x: ", fu_chunk_get_idx (chk));
 				return FALSE;
 			}
 			fu_device_set_progress_full (FU_DEVICE (self),
@@ -347,9 +349,9 @@ fu_vli_device_spi_write (FuVliDevice *self,
 	}
 	chk = g_ptr_array_index (chunks, 0);
 	if (!fu_vli_device_spi_write_block (self,
-					    chk->address + address,
-					    chk->data,
-					    chk->data_sz,
+					    fu_chunk_get_address (chk) + address,
+					    fu_chunk_get_data (chk),
+					    fu_chunk_get_data_sz (chk),
 					    error)) {
 		g_prefix_error (error, "failed to write CRC block: ");
 		return FALSE;
@@ -400,13 +402,15 @@ fu_vli_device_spi_erase (FuVliDevice *self, guint32 addr, gsize sz, GError **err
 	g_autoptr(GPtrArray) chunks = fu_chunk_array_new (NULL, sz, addr, 0x0, 0x1000);
 	g_debug ("erasing 0x%x bytes @0x%x", (guint) sz, addr);
 	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chunk = g_ptr_array_index (chunks, i);
+		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
-			g_debug ("erasing @0x%x", chunk->address);
-		if (!fu_vli_device_spi_erase_sector (FU_VLI_DEVICE (self), chunk->address, error)) {
+			g_debug ("erasing @0x%x", fu_chunk_get_address (chk));
+		if (!fu_vli_device_spi_erase_sector (FU_VLI_DEVICE (self),
+						     fu_chunk_get_address (chk),
+						     error)) {
 			g_prefix_error (error,
 					"failed to erase FW sector @0x%x: ",
-					chunk->address);
+					fu_chunk_get_address (chk));
 			return FALSE;
 		}
 		fu_device_set_progress_full (FU_DEVICE (self),
@@ -511,12 +515,24 @@ fu_vli_device_spi_read_flash_id (FuVliDevice *self, GError **error)
 	}
 	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL)
 		fu_common_dump_raw (G_LOG_DOMAIN, "SpiCmdReadId", buf, sizeof(buf));
-	if (priv->spi_cmd_read_id_sz == 4)
-		priv->flash_id = fu_common_read_uint32 (buf, G_BIG_ENDIAN);
-	else if (priv->spi_cmd_read_id_sz == 2)
-		priv->flash_id = fu_common_read_uint16 (buf, G_BIG_ENDIAN);
-	else if (priv->spi_cmd_read_id_sz == 1)
-		priv->flash_id = buf[0];
+	if (priv->spi_cmd_read_id_sz == 4) {
+		if (!fu_common_read_uint32_safe (buf, sizeof(buf), 0x0,
+						 &priv->flash_id,
+						 G_BIG_ENDIAN, error))
+			return FALSE;
+	} else if (priv->spi_cmd_read_id_sz == 2) {
+		guint16 tmp = 0;
+		if (!fu_common_read_uint16_safe (buf, sizeof(buf), 0x0,
+						 &tmp, G_BIG_ENDIAN, error))
+			return FALSE;
+		priv->flash_id = tmp;
+	} else if (priv->spi_cmd_read_id_sz == 1) {
+		guint8 tmp = 0;
+		if (!fu_common_read_uint8_safe (buf, sizeof(buf), 0x0,
+						&tmp, error))
+			return FALSE;
+		priv->flash_id = tmp;
+	}
 	return TRUE;
 }
 

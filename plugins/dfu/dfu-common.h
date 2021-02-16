@@ -7,7 +7,6 @@
 #pragma once
 
 #include <glib.h>
-#include <gusb.h>
 
 /**
  * DfuRequest:
@@ -107,29 +106,8 @@ typedef enum {
 	DFU_STATE_LAST
 } DfuState;
 
-/**
- * DfuVersion:
- * @DFU_VERSION_UNKNOWN:			Format unknown
- * @DFU_VERSION_DFU_1_0:			DFU 1.0
- * @DFU_VERSION_DFU_1_1:			DFU 1.1
- * @DFU_VERSION_DFUSE:				DfuSe
- * @DFU_VERSION_ATMEL_AVR:			Atmel AVR
- *
- * The known versions of the DFU standard in BCD format.
- **/
-typedef enum {
-	DFU_VERSION_UNKNOWN			= 0,
-	DFU_VERSION_DFU_1_0			= 0x0100,
-	DFU_VERSION_DFU_1_1			= 0x0110,
-	DFU_VERSION_DFUSE			= 0x011a, /* defined by ST */
-	DFU_VERSION_ATMEL_AVR			= 0xff01, /* made up */
-	/*< private >*/
-	DFU_VERSION_LAST
-} DfuVersion;
-
 const gchar	*dfu_state_to_string			(DfuState	 state);
 const gchar	*dfu_status_to_string			(DfuStatus	 status);
-const gchar	*dfu_version_to_string			(DfuVersion	 version);
 
 /* helpers */
 GBytes		*dfu_utils_bytes_join_array		(GPtrArray	*chunks);

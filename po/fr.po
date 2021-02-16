@@ -62,10 +62,6 @@ msgid_plural "%u seconds"
 msgstr[0] "%u seconde"
 msgstr[1] "%u secondes"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Ajouté"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Âge"
@@ -95,7 +91,6 @@ msgstr "Annuler"
 msgid "Cancelled"
 msgstr "Annulé"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Modifié"
@@ -209,6 +204,7 @@ msgid "FILE"
 msgstr "FICHIER"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: The update state of the specific device
 msgid "Failed"
 msgstr "Échec"
 
@@ -392,10 +388,6 @@ msgstr "Redémarrage…"
 msgid "Reinstalling %s with %s... "
 msgstr "Réinstallation de %s en %s"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Retiré"
-
 #. TRANSLATORS: reboot to apply the update
 msgid "Restart now?"
 msgstr "Redémarrer maintenant ?"
@@ -522,7 +514,3 @@ msgstr "Écriture…"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"
 msgstr "[SOMME DE CONTRÔLE]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[FILE]"
-msgstr "[FICHIER]"

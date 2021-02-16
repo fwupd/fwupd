@@ -50,6 +50,7 @@ fu_jabra_device_prepare (FuDevice *device, FwupdInstallFlags flags, GError **err
 {
 	FuJabraDevice *self = FU_JABRA_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	gsize magiclen = strlen (self->magic);
 	guint8 adr = 0x00;
 	guint8 rep = 0x00;
 	guint8 iface_hid;
@@ -57,8 +58,10 @@ fu_jabra_device_prepare (FuDevice *device, FwupdInstallFlags flags, GError **err
 	g_autoptr(GError) error_local = NULL;
 
 	/* parse string and create magic packet */
-	rep = fu_firmware_strparse_uint8 (self->magic + 0);
-	adr = fu_firmware_strparse_uint8 (self->magic + 2);
+	if (!fu_firmware_strparse_uint8_safe (self->magic, magiclen, 0, &rep, error))
+		return FALSE;
+	if (!fu_firmware_strparse_uint8_safe (self->magic, magiclen, 2, &adr, error))
+		return FALSE;
 	buf[0] = rep;
 	buf[1] = adr;
 	buf[2] = 0x00;
@@ -146,6 +149,7 @@ fu_jabra_device_init (FuJabraDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_set_remove_delay (FU_DEVICE (self), 20000); /* 10+10s! */
+	fu_device_set_protocol (FU_DEVICE (self), "org.usb.dfu");
 }
 
 static void

@@ -9,7 +9,6 @@
 #include <cpuid.h>
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 typedef union {
 	guint32 data;
@@ -74,7 +73,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 }
 
 gboolean
-fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
+fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuDevice *device_cpu = fu_plugin_cache_lookup (plugin, "cpu");
 	FuPluginData *priv = fu_plugin_get_data (plugin);
@@ -83,11 +82,13 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	g_autofree gchar *basename = NULL;
 
 	/* interesting device? */
-	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "msr") != 0)
+	if (!FU_IS_UDEV_DEVICE (device))
+		return TRUE;
+	if (g_strcmp0 (fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)), "msr") != 0)
 		return TRUE;
 
 	/* we only care about the first processor */
-	basename = g_path_get_basename (fu_udev_device_get_sysfs_path (device));
+	basename = g_path_get_basename (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
 	if (g_strcmp0 (basename, "msr0") != 0)
 		return TRUE;
 
@@ -99,7 +100,7 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 
 	/* grab MSR */
 	if (priv->ia32_debug_supported) {
-		if (!fu_udev_device_pread_full (device, PCI_MSR_IA32_DEBUG_INTERFACE,
+		if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (device), PCI_MSR_IA32_DEBUG_INTERFACE,
 						buf, sizeof(buf), error)) {
 			g_prefix_error (error, "could not read IA32_DEBUG_INTERFACE: ");
 			return FALSE;
@@ -116,7 +117,7 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 
 	/* grab MSR */
 	if (priv->k8_syscfg_supported) {
-		if (!fu_udev_device_pread_full (device, PCI_MSR_K8_SYSCFG,
+		if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (device), PCI_MSR_K8_SYSCFG,
 						buf, sizeof(buf), error)) {
 			g_prefix_error (error, "could not read MSR_K8_SYSCFG: ");
 			return FALSE;
@@ -132,7 +133,7 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	/* get microcode version */
 	if (device_cpu != NULL) {
 		guint32 ver_raw;
-		if (!fu_udev_device_pread_full (device, PCI_MSR_IA32_BIOS_SIGN_ID,
+		if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (device), PCI_MSR_IA32_BIOS_SIGN_ID,
 						buf, sizeof(buf), error)) {
 			g_prefix_error (error, "could not read IA32_BIOS_SIGN_ID: ");
 			return FALSE;

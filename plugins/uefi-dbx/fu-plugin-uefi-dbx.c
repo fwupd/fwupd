@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 #include "fu-efi-signature-list.h"
 #include "fu-uefi-dbx-device.h"
 

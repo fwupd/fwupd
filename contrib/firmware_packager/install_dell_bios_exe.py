@@ -10,7 +10,11 @@ import sys
 import tempfile
 import gi
 
-gi.require_version('Fwupd', '2.0')
+try:
+    gi.require_version('Fwupd', '2.0')
+except ValueError:
+    print("Missing gobject-introspection packages.  Try to install gir1.2-fwupd-2.0.")
+    sys.exit(1)
 from gi.repository import Fwupd  # pylint: disable=wrong-import-position
 from simple_client import install, check_exists
 from add_capsule_header import add_header
@@ -68,7 +72,7 @@ def find_uefi_device(client, deviceid):
         if not item.has_flag(1 << 8):
             continue
         # return the first hit for UEFI plugin
-        if item.get_plugin() == 'uefi':
+        if item.get_plugin() == 'uefi' or item.get_plugin() == 'uefi_capsule':
             print("Installing to %s" % item.get_name())
             return item.get_guid_default(), item.get_id(), item.get_version()
     print("Couldn't find any UEFI devices")

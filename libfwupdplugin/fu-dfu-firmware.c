@@ -11,7 +11,7 @@
 #include <string.h>
 
 #include "fu-common.h"
-#include "fu-dfu-firmware.h"
+#include "fu-dfu-firmware-private.h"
 
 /**
  * SECTION:fu-dfu-firmware
@@ -27,6 +27,7 @@ typedef struct {
 	guint16			 pid;
 	guint16			 release;
 	guint16			 version;
+	guint8			 footer_len;
 } FuDfuFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuDfuFirmware, fu_dfu_firmware, FU_TYPE_FIRMWARE)
@@ -41,6 +42,15 @@ fu_dfu_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
 	fu_common_string_append_kx (str, idt, "Pid", priv->pid);
 	fu_common_string_append_kx (str, idt, "Release", priv->release);
 	fu_common_string_append_kx (str, idt, "Version", priv->version);
+}
+
+/* private */
+guint8
+fu_dfu_firmware_get_footer_len (FuDfuFirmware *self)
+{
+	FuDfuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DFU_FIRMWARE (self), 0x0);
+	return priv->footer_len;
 }
 
 /**
@@ -193,23 +203,18 @@ typedef struct __attribute__((packed)) {
 	guint32		crc;
 } FuDfuFirmwareFooter;
 
-static gboolean
-fu_dfu_firmware_parse (FuFirmware *firmware,
-		       GBytes *fw,
-		       guint64 addr_start,
-		       guint64 addr_end,
-		       FwupdInstallFlags flags,
-		       GError **error)
+gboolean
+fu_dfu_firmware_parse_footer (FuDfuFirmware *self,
+			      GBytes *fw,
+			      FwupdInstallFlags flags,
+			      GError **error)
 {
-	FuDfuFirmware *self = FU_DFU_FIRMWARE (firmware);
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE (self);
 	FuDfuFirmwareFooter ftr;
 	gsize len;
 	guint32 crc;
 	guint32 crc_new;
 	guint8 *data;
-	g_autoptr(FuFirmwareImage) image = NULL;
-	g_autoptr(GBytes) contents = NULL;
 
 	/* check data size */
 	data = (guint8 *) g_bytes_get_data (fw, &len);
@@ -254,19 +259,42 @@ fu_dfu_firmware_parse (FuFirmware *firmware,
 	priv->pid = GUINT16_FROM_LE(ftr.pid);
 	priv->release = GUINT16_FROM_LE(ftr.release);
 	priv->version = GUINT16_FROM_LE(ftr.ver);
+	priv->footer_len = ftr.len;
 
 	/* check reported length */
-	if (ftr.len > len) {
+	if (priv->footer_len > len) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "reported firmware size %04x larger than file %04x",
-			     (guint) ftr.len, (guint) len);
+			     "reported footer size %04x larger than file %04x",
+			     (guint) priv->footer_len, (guint) len);
 		return FALSE;
 	}
 
 	/* success */
-	contents = fu_common_bytes_new_offset (fw, 0, len - ftr.len, error);
+	return TRUE;
+}
+
+static gboolean
+fu_dfu_firmware_parse (FuFirmware *firmware,
+		       GBytes *fw,
+		       guint64 addr_start,
+		       guint64 addr_end,
+		       FwupdInstallFlags flags,
+		       GError **error)
+{
+	FuDfuFirmware *self = FU_DFU_FIRMWARE (firmware);
+	FuDfuFirmwarePrivate *priv = GET_PRIVATE (self);
+	gsize len = g_bytes_get_size (fw);
+	g_autoptr(FuFirmwareImage) image = NULL;
+	g_autoptr(GBytes) contents = NULL;
+
+	/* parse footer */
+	if (!fu_dfu_firmware_parse_footer (self, fw, flags, error))
+		return FALSE;
+
+	/* trim footer off */
+	contents = fu_common_bytes_new_offset (fw, 0, len - priv->footer_len, error);
 	if (contents == NULL)
 		return FALSE;
 	image = fu_firmware_image_new (contents);
@@ -274,8 +302,8 @@ fu_dfu_firmware_parse (FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
-fu_dfu_firmware_add_footer (FuDfuFirmware *self, GBytes *contents, GError **error)
+GBytes *
+fu_dfu_firmware_append_footer (FuDfuFirmware *self, GBytes *contents, GError **error)
 {
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE (self);
 	GByteArray *buf = g_byte_array_new ();
@@ -317,7 +345,29 @@ fu_dfu_firmware_write (FuFirmware *firmware, GError **error)
 	fw = fu_firmware_get_image_default_bytes (firmware, error);
 	if (fw == NULL)
 		return NULL;
-	return fu_dfu_firmware_add_footer (self, fw, error);
+	return fu_dfu_firmware_append_footer (self, fw, error);
+}
+
+static gboolean
+fu_dfu_firmware_build (FuFirmware *firmware, XbNode *n, GError **error)
+{
+	FuDfuFirmware *self = FU_DFU_FIRMWARE (firmware);
+	FuDfuFirmwarePrivate *priv = GET_PRIVATE (self);
+	guint64 tmp;
+
+	/* optional properties */
+	tmp = xb_node_query_text_as_uint (n, "vendor", NULL);
+	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+		priv->vid = tmp;
+	tmp = xb_node_query_text_as_uint (n, "product", NULL);
+	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+		priv->pid = tmp;
+	tmp = xb_node_query_text_as_uint (n, "release", NULL);
+	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+		priv->release = tmp;
+
+	/* success */
+	return TRUE;
 }
 
 static void
@@ -327,7 +377,9 @@ fu_dfu_firmware_init (FuDfuFirmware *self)
 	priv->vid = 0xffff;
 	priv->pid = 0xffff;
 	priv->release = 0xffff;
-	priv->version = 0x0100;
+	priv->version = DFU_VERSION_DFU_1_0;
+	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 }
 
 static void
@@ -337,6 +389,7 @@ fu_dfu_firmware_class_init (FuDfuFirmwareClass *klass)
 	klass_firmware->to_string = fu_dfu_firmware_to_string;
 	klass_firmware->parse = fu_dfu_firmware_parse;
 	klass_firmware->write = fu_dfu_firmware_write;
+	klass_firmware->build = fu_dfu_firmware_build;
 }
 
 /**

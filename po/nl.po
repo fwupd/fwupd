@@ -15,10 +15,6 @@ msgstr ""
 "Language: nl\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Toegevoegd"
-
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
@@ -56,7 +52,6 @@ msgstr "Om de opgeslagen controlesommen op het apparaat bij te werken moet u toe
 msgid "Cancelled"
 msgstr "Geannuleerd"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Gewijzigd"
@@ -212,10 +207,6 @@ msgstr "Metadata verversen vanuit externe server"
 msgid "Reinstalling %s with %s... "
 msgstr "Bezig met herinstalleren van %s met %s..."
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Verwijderd"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "Gegevens vervangen in een bestaand firmwarebestand"
@@ -270,10 +261,6 @@ msgstr "Bezig met bijwerken van %s van %s naar %s..."
 #. TRANSLATORS: verifying we wrote the firmware correctly
 msgid "Verifying…"
 msgstr "Bezig met valideren..."
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Het hotpluggen van DFU-apparaten weergeven"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"

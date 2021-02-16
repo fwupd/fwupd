@@ -16,158 +16,41 @@
 
 typedef struct {
 	guint64			 base;
+	gsize			 offset;
 } FuFmapFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_fmap_firmware_get_instance_private (o))
 
-/* returns size of fmap data structure if successful, <0 to indicate error */
-static gint
-fmap_size (FuFmap *fmap)
-{
-	if (fmap == NULL)
-		return -1;
-
-	return sizeof (*fmap) + (fmap->nareas * sizeof (FuFmapArea));
-}
-
-/* brute force linear search */
 static gboolean
-fmap_lsearch (const guint8 *image, gsize len, gsize *offset, GError **error)
+fu_fmap_firmware_find_offset (FuFmapFirmware *self,
+			      const guint8 *buf, gsize bufsz,
+			      GError **error)
 {
-	gsize i;
-	gboolean fmap_found = FALSE;
+#ifdef HAVE_MEMMEM
+	FuFmapFirmwarePrivate *priv = GET_PRIVATE (self);
+	const guint8 *tmp;
 
-	if (offset == NULL) {
+	g_return_val_if_fail (buf != NULL, FALSE);
+
+	/* trust glibc to do a binary or linear search as appropriate */
+	tmp = memmem (buf, bufsz, FMAP_SIGNATURE, 8);
+	if (tmp == NULL) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "offset return not valid");
+				     "fmap header not found");
 		return FALSE;
 	}
-
-	for (i = 0; i < len - strlen(FMAP_SIGNATURE); i++) {
-		if (!memcmp(&image[i],
-		            FMAP_SIGNATURE,
-		            strlen(FMAP_SIGNATURE))) {
-			fmap_found = TRUE;
-			break;
-		}
-	}
-
-	if (!fmap_found) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "fmap not found using linear search");
-		return FALSE;
-	}
-
-	if (i + fmap_size ((FuFmap *)&image[i]) > len) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "malformed fmap too close to end of image");
-		return FALSE;
-	}
-
-	*offset = i;
+	priv->offset = tmp - buf;
 	return TRUE;
-}
-
-/* if image length is a power of 2, use binary search */
-static gboolean
-fmap_bsearch (const guint8 *image, gsize len, gsize *offset, GError **error)
-{
-	gsize i;
-	gboolean fmap_found = FALSE;
-
-	if (offset == NULL) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "offset return not valid");
-		return FALSE;
-	}
-
-	/*
-	 * For efficient operation, we start with the largest stride possible
-	 * and then decrease the stride on each iteration. Also, check for a
-	 * remainder when modding the offset with the previous stride. This
-	 * makes it so that each offset is only checked once.
-	 */
-	for (gint stride = len / 2; stride >= 1; stride /= 2) {
-		if (fmap_found)
-			break;
-
-		for (i = 0; i < len - strlen(FMAP_SIGNATURE); i += stride) {
-			if ((i % (stride * 2) == 0) && (i != 0))
-				continue;
-			if (!memcmp (&image[i],
-				     FMAP_SIGNATURE,
-				     strlen (FMAP_SIGNATURE))) {
-				fmap_found = TRUE;
-				break;
-			}
-		}
-	}
-
-	if (!fmap_found) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "fmap not found using binary search");
-		return FALSE;
-	}
-
-	if (i + fmap_size ((FuFmap *)&image[i]) > len) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "malformed fmap too close to end of image");
-		return FALSE;
-	}
-
-	*offset = i;
-	return TRUE;
-}
-
-static gint
-popcnt (guint u)
-{
-	gint count;
-
-	/* K&R method */
-	for (count = 0; u; count++)
-		u &= (u - 1);
-
-	return count;
-}
-
-static gboolean
-fmap_find (const guint8 *image, gsize image_len, gsize *offset, GError **error)
-{
-	if (image == NULL || image_len == 0) {
-		g_set_error_literal (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "invalid image");
-		return FALSE;
-	}
-
-	if (popcnt (image_len) == 1) {
-		if (!fmap_bsearch (image, image_len, offset, error)) {
-			g_prefix_error (error, "failed fmap_find using bsearch: ");
-			return FALSE;
-		}
-	} else {
-		if (!fmap_lsearch (image, image_len, offset, error)) {
-			g_prefix_error (error, "failed fmap_find using lsearch: ");
-			return FALSE;
-		}
-	}
-
-	return TRUE;
+#else
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "memmem() not available");
+	return FALSE;
+#endif
 }
 
 static void
@@ -175,6 +58,8 @@ fu_fmap_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
 {
 	FuFmapFirmware *self = FU_FMAP_FIRMWARE (firmware);
 	FuFmapFirmwarePrivate *priv = GET_PRIVATE (self);
+	if (priv->offset > 0)
+		fu_common_string_append_kx (str, idt, "Offset", priv->offset);
 	fu_common_string_append_kx (str, idt, "Base", priv->base);
 }
 
@@ -205,15 +90,13 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 
 	/* only search for the fmap signature if not fuzzing */
 	if ((flags & FWUPD_INSTALL_FLAG_NO_SEARCH) == 0) {
-		if (!fmap_find (buf, bufsz, &offset, error)) {
-			g_prefix_error (error, "cannot find fmap in image: ");
+		if (!fu_fmap_firmware_find_offset (self, buf, bufsz, error))
 			return FALSE;
-		}
 	}
 
 	/* load header */
 	if (!fu_memcpy_safe ((guint8 *) &fmap, sizeof(fmap), 0x0,	/* dst */
-			     buf, bufsz, offset,			/* src */
+			     buf, bufsz, priv->offset,			/* src */
 			     sizeof(fmap), error))
 		return FALSE;
 	priv->base = GUINT64_FROM_LE (fmap.base);
@@ -235,7 +118,7 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 			     GUINT16_FROM_LE (fmap.nareas));
 		return FALSE;
 	}
-	offset += sizeof(fmap);
+	offset = priv->offset + sizeof(fmap);
 
 	for (gsize i = 0; i < GUINT16_FROM_LE (fmap.nareas); i++) {
 		FuFmapArea area;
@@ -303,8 +186,12 @@ fu_fmap_firmware_write (FuFirmware *firmware, GError **error)
 		.base = GUINT64_TO_LE (priv->base),
 		.size = 0x0,
 		.name = "",
-		.nareas = GUINT32_TO_LE (images->len),
+		.nareas = GUINT16_TO_LE (images->len),
 	};
+
+	/* pad to offset */
+	if (priv->offset > 0)
+		fu_byte_array_set_size (buf, priv->offset);
 
 	/* add header */
 	total_sz = offset = sizeof(hdr) + (sizeof(FuFmapArea) * images->len);
@@ -313,7 +200,7 @@ fu_fmap_firmware_write (FuFirmware *firmware, GError **error)
 		g_autoptr(GBytes) fw = fu_firmware_image_get_bytes (img);
 		total_sz += g_bytes_get_size (fw);
 	}
-	hdr.size = GUINT16_TO_LE (total_sz);
+	hdr.size = GUINT32_TO_LE (priv->offset + total_sz);
 	g_byte_array_append (buf, (const guint8 *) &hdr, sizeof(hdr));
 
 	/* add each area */
@@ -322,7 +209,7 @@ fu_fmap_firmware_write (FuFirmware *firmware, GError **error)
 		const gchar *id = fu_firmware_image_get_id (img);
 		g_autoptr(GBytes) fw = fu_firmware_image_get_bytes (img);
 		FuFmapArea area = {
-			.offset = GUINT32_TO_LE (offset),
+			.offset = GUINT32_TO_LE (priv->offset + offset),
 			.size = GUINT32_TO_LE (g_bytes_get_size (fw)),
 			.name = { "" },
 			.flags = 0x0,
@@ -357,6 +244,9 @@ fu_fmap_firmware_build (FuFirmware *firmware, XbNode *n, GError **error)
 	tmp = xb_node_query_text_as_uint (n, "base", NULL);
 	if (tmp != G_MAXUINT64)
 		priv->base = tmp;
+	tmp = xb_node_query_text_as_uint (n, "offset", NULL);
+	if (tmp != G_MAXUINT64)
+		priv->offset = tmp;
 
 	/* success */
 	return TRUE;

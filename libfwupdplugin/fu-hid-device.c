@@ -82,6 +82,7 @@ fu_hid_device_open (FuUsbDevice *device, GError **error)
 {
 	FuHidDevice *self = FU_HID_DEVICE (device);
 	FuHidDeviceClass *klass = FU_HID_DEVICE_GET_CLASS (device);
+#ifdef HAVE_GUSB
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDeviceClaimInterfaceFlags flags = 0;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
@@ -117,6 +118,7 @@ fu_hid_device_open (FuUsbDevice *device, GError **error)
 		g_prefix_error (error, "failed to claim HID interface: ");
 		return FALSE;
 	}
+#endif
 
 	/* subclassed */
 	if (klass->open != NULL) {
@@ -133,10 +135,12 @@ fu_hid_device_close (FuUsbDevice *device, GError **error)
 {
 	FuHidDevice *self = FU_HID_DEVICE (device);
 	FuHidDeviceClass *klass = FU_HID_DEVICE_GET_CLASS (device);
+#ifdef HAVE_GUSB
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDeviceClaimInterfaceFlags flags = 0;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
 	g_autoptr(GError) error_local = NULL;
+#endif
 
 	/* subclassed */
 	if (klass->close != NULL) {
@@ -144,6 +148,7 @@ fu_hid_device_close (FuUsbDevice *device, GError **error)
 			return FALSE;
 	}
 
+#ifdef HAVE_GUSB
 	/* release */
 	if ((priv->flags & FU_HID_DEVICE_FLAG_NO_KERNEL_REBIND) == 0)
 		flags |= G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER;
@@ -162,6 +167,7 @@ fu_hid_device_close (FuUsbDevice *device, GError **error)
 					    "failed to release HID interface: ");
 		return FALSE;
 	}
+#endif
 
 	/* success */
 	return TRUE;
@@ -237,6 +243,7 @@ fu_hid_device_set_report_internal (FuHidDevice *self,
 				   FuHidDeviceRetryHelper *helper,
 				   GError **error)
 {
+#ifdef HAVE_GUSB
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device;
 	gsize actual_len = 0;
@@ -273,6 +280,7 @@ fu_hid_device_set_report_internal (FuHidDevice *self,
 			     actual_len, helper->bufsz);
 		return FALSE;
 	}
+#endif
 	return TRUE;
 }
 
@@ -342,6 +350,7 @@ fu_hid_device_get_report_internal (FuHidDevice *self,
 				   FuHidDeviceRetryHelper *helper,
 				   GError **error)
 {
+#ifdef HAVE_GUSB
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device;
 	gsize actual_len = 0;
@@ -384,6 +393,7 @@ fu_hid_device_get_report_internal (FuHidDevice *self,
 			     actual_len, helper->bufsz);
 		return FALSE;
 	}
+#endif
 	return TRUE;
 }
 

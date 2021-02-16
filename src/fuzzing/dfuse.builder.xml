@@ -1,0 +1,29 @@
+<firmware gtype="FuDfuseFirmware">
+  <vendor>0x1234</vendor>
+  <product>0x5678</product>
+  <release>0x8642</release>
+  <image>
+    <idx>0x1</idx>
+    <id>one</id>
+    <chunks>
+      <chunk>
+        <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
+        <addr>0x8001234</addr>
+      </chunk>
+      <chunk>
+        <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
+        <addr>0x8005678</addr>
+      </chunk>
+    </chunks>
+  </image>
+  <image>
+    <id>two</id>
+    <addr>0x7</addr>
+    <chunks>
+      <chunk>
+        <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
+        <addr>0x8000000</addr>
+      </chunk>
+    </chunks>
+  </image>
+</firmware>

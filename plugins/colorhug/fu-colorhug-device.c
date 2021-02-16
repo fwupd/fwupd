@@ -397,12 +397,13 @@ fu_colorhug_device_write_firmware (FuDevice *device,
 		g_autoptr(GError) error_local = NULL;
 
 		/* set address, length, checksum, data */
-		fu_common_write_uint16 (buf + 0, chk->address, G_LITTLE_ENDIAN);
-		buf[2] = chk->data_sz;
-		buf[3] = ch_colorhug_device_calculate_checksum (chk->data, chk->data_sz);
+		fu_common_write_uint16 (buf + 0, fu_chunk_get_address (chk), G_LITTLE_ENDIAN);
+		buf[2] = fu_chunk_get_data_sz (chk);
+		buf[3] = ch_colorhug_device_calculate_checksum (fu_chunk_get_data (chk),
+								fu_chunk_get_data_sz (chk));
 		if (!fu_memcpy_safe (buf, sizeof(buf), 0x4,		/* dst */
-				     chk->data, chk->data_sz, 0x0,	/* src */
-				     chk->data_sz, error))
+				     fu_chunk_get_data (chk), fu_chunk_get_data_sz (chk), 0x0,	/* src */
+				     fu_chunk_get_data_sz (chk), error))
 			return FALSE;
 		if (!fu_colorhug_device_msg (self, CH_CMD_WRITE_FLASH,
 					     buf, sizeof(buf), /* in */
@@ -429,8 +430,8 @@ fu_colorhug_device_write_firmware (FuDevice *device,
 		g_autoptr(GError) error_local = NULL;
 
 		/* set address */
-		fu_common_write_uint16 (buf + 0, chk->address, G_LITTLE_ENDIAN);
-		buf[2] = chk->data_sz;
+		fu_common_write_uint16 (buf + 0, fu_chunk_get_address (chk), G_LITTLE_ENDIAN);
+		buf[2] = fu_chunk_get_data_sz (chk);
 		if (!fu_colorhug_device_msg (self, CH_CMD_READ_FLASH,
 					     buf, sizeof(buf), /* in */
 					     buf_out, sizeof(buf_out), /* out */
@@ -444,13 +445,16 @@ fu_colorhug_device_write_firmware (FuDevice *device,
 		}
 
 		/* verify */
-		if (memcmp (buf_out + 1, chk->data, chk->data_sz) != 0) {
+		if (memcmp (buf_out + 1,
+			    fu_chunk_get_data (chk),
+			    fu_chunk_get_data_sz (chk)) != 0) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_WRITE,
 				     "failed to verify firmware for chunk %u, "
 				     "address 0x%0x, length 0x%0x",
-				     i, (guint) chk->address, chk->data_sz);
+				     i, (guint) fu_chunk_get_address (chk),
+				     fu_chunk_get_data_sz (chk));
 			return FALSE;
 		}
 

@@ -38,7 +38,9 @@ fu_wacom_emr_device_setup (FuDevice *device, GError **error)
 		if (!fu_wacom_device_get_feature (FU_WACOM_DEVICE (self),
 						  data, sizeof(data), error))
 			return FALSE;
-		fw_ver = fu_common_read_uint16 (data + 11, G_LITTLE_ENDIAN);
+		if (!fu_common_read_uint16_safe (data, sizeof(data), 11,
+						 &fw_ver, G_LITTLE_ENDIAN, error))
+			return FALSE;
 		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		version = fu_common_version_from_uint16 (fw_ver, FWUPD_VERSION_FORMAT_PAIR);
 		fu_device_set_version (device, version);
@@ -207,13 +209,13 @@ fu_wacom_emr_device_write_firmware (FuDevice *device, GPtrArray *chunks, GError 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		if (fu_wacom_common_block_is_empty (chk->data, chk->data_sz))
+		if (fu_wacom_common_block_is_empty (fu_chunk_get_data (chk), fu_chunk_get_data_sz (chk)))
 			continue;
 		if (!fu_wacom_emr_device_write_block (self,
-						      chk->idx,
-						      chk->address,
-						      chk->data,
-						      chk->data_sz,
+						      fu_chunk_get_idx (chk),
+						      fu_chunk_get_address (chk),
+						      fu_chunk_get_data (chk),
+						      fu_chunk_get_data_sz (chk),
 						      error))
 			return FALSE;
 		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);

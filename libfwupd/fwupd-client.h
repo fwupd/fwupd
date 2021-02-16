@@ -44,11 +44,13 @@ struct _FwupdClientClass
 /**
  * FwupdClientDownloadFlags:
  * @FWUPD_CLIENT_DOWNLOAD_FLAG_NONE:		No flags set
+ * @FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS:	Only use IPFS when downloading URIs
  *
  * The options to use for downloading.
  **/
 typedef enum {
 	FWUPD_CLIENT_DOWNLOAD_FLAG_NONE			= 0,		/* Since: 1.4.5 */
+	FWUPD_CLIENT_DOWNLOAD_FLAG_ONLY_IPFS		= 1 << 0,	/* Since: 1.5.6 */
 	/*< private >*/
 	FWUPD_CLIENT_DOWNLOAD_FLAG_LAST
 } FwupdClientDownloadFlags;
@@ -255,6 +257,15 @@ void		 fwupd_client_install_release_async	(FwupdClient	*self,
 							 FwupdDevice	*device,
 							 FwupdRelease	*release,
 							 FwupdInstallFlags install_flags,
+							 GCancellable	*cancellable,
+							 GAsyncReadyCallback callback,
+							 gpointer	 callback_data)
+G_DEPRECATED_FOR(fwupd_client_install_release2_async);
+void		 fwupd_client_install_release2_async	(FwupdClient	*self,
+							 FwupdDevice	*device,
+							 FwupdRelease	*release,
+							 FwupdInstallFlags install_flags,
+							 FwupdClientDownloadFlags download_flags,
 							 GCancellable	*cancellable,
 							 GAsyncReadyCallback callback,
 							 gpointer	 callback_data);

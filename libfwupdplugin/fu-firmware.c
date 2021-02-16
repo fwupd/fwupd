@@ -48,6 +48,10 @@ fu_firmware_flag_to_string (FuFirmwareFlags flag)
 		return "dedupe-id";
 	if (flag == FU_FIRMWARE_FLAG_DEDUPE_IDX)
 		return "dedupe-idx";
+	if (flag == FU_FIRMWARE_FLAG_HAS_CHECKSUM)
+		return "has-checksum";
+	if (flag == FU_FIRMWARE_FLAG_HAS_VID_PID)
+		return "has-vid-pid";
 	return NULL;
 }
 
@@ -68,6 +72,10 @@ fu_firmware_flag_from_string (const gchar *flag)
 		return FU_FIRMWARE_FLAG_DEDUPE_ID;
 	if (g_strcmp0 (flag, "dedupe-idx") == 0)
 		return FU_FIRMWARE_FLAG_DEDUPE_IDX;
+	if (g_strcmp0 (flag, "has-checksum") == 0)
+		return FU_FIRMWARE_FLAG_HAS_CHECKSUM;
+	if (g_strcmp0 (flag, "has-vid-pid") == 0)
+		return FU_FIRMWARE_FLAG_HAS_VID_PID;
 	return FU_FIRMWARE_FLAG_NONE;
 }
 
@@ -140,6 +148,11 @@ fu_firmware_set_version (FuFirmware *self, const gchar *version)
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_FIRMWARE (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->version, version) == 0)
+		return;
+
 	g_free (priv->version);
 	priv->version = g_strdup (version);
 }
@@ -905,4 +918,69 @@ fu_firmware_new_from_bytes (GBytes *fw)
 	img = fu_firmware_image_new (fw);
 	fu_firmware_add_image (self, img);
 	return self;
+}
+
+/**
+ * fu_firmware_new_from_gtypes:
+ * @fw: a #GBytes
+ * @flags: a #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM
+ * @error: (nullable): a #GError or %NULL
+ * @...: An array of #GTypes, ending with %G_TYPE_INVALID
+ *
+ * Tries to parse the firmware with each #GType in order.
+ *
+ * Return value: (transfer full) (nullable): A #FuFirmware, or %NULL
+ *
+ * Since: 1.5.6
+ **/
+FuFirmware *
+fu_firmware_new_from_gtypes (GBytes *fw, FwupdInstallFlags flags, GError **error, ...)
+{
+	va_list args;
+	g_autoptr(GArray) gtypes = g_array_new (FALSE, FALSE, sizeof(GType));
+	g_autoptr(GError) error_all = NULL;
+
+	g_return_val_if_fail (fw != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* create array of GTypes */
+	va_start (args, error);
+	for (guint i = 0; ; i++) {
+		GType gtype = va_arg (args, GType);
+		if (gtype == G_TYPE_INVALID)
+			break;
+		g_array_append_val (gtypes, gtype);
+	}
+	va_end (args);
+
+	/* invalid */
+	if (gtypes->len == 0) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_ARGUMENT,
+				     "no GTypes specified");
+		return NULL;
+	}
+
+	/* try each GType in turn */
+	for (guint i = 0; i < gtypes->len; i++) {
+		GType gtype = g_array_index (gtypes, GType, i);
+		g_autoptr(FuFirmware) firmware = g_object_new (gtype, NULL);
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_firmware_parse (firmware, fw, flags, &error_local)) {
+			if (error_all == NULL) {
+				g_propagate_error (&error_all,
+						   g_steal_pointer (&error_local));
+			} else {
+				g_prefix_error (&error_all, "%s: ",
+						error_local->message);
+			}
+			continue;
+		}
+		return g_steal_pointer (&firmware);
+	}
+
+	/* failed */
+	g_propagate_error (error, g_steal_pointer (&error_all));
+	return NULL;
 }

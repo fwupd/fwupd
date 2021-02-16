@@ -8,7 +8,6 @@
 
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 struct FuPluginData {
 	gchar			*sysfs_path;
@@ -30,12 +29,14 @@ fu_plugin_destroy (FuPlugin *plugin)
 }
 
 gboolean
-fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
+fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 
 	/* interesting device? */
-	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "platform-integrity") != 0)
+	if (!FU_IS_UDEV_DEVICE (device))
+		return TRUE;
+	if (g_strcmp0 (fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)), "platform-integrity") != 0)
 		return TRUE;
 
 	/* we only care about the first instance */
@@ -49,7 +50,7 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	}
 
 	/* success */
-	priv->sysfs_path = g_strdup (fu_udev_device_get_sysfs_path (device));
+	priv->sysfs_path = g_strdup (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
 	return TRUE;
 }
 

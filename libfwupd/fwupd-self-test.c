@@ -346,7 +346,8 @@ fwupd_device_func (void)
 	fwupd_release_set_filename (rel, "firmware.bin");
 	fwupd_release_set_appstream_id (rel, "org.dave.ColorHug.firmware");
 	fwupd_release_set_size (rel, 1024);
-	fwupd_release_set_uri (rel, "http://foo.com");
+	fwupd_release_add_location (rel, "http://foo.com");
+	fwupd_release_add_location (rel, "ftp://foo.com");
 	fwupd_release_set_version (rel, "1.2.3");
 	fwupd_device_add_release (dev, rel);
 	str = fwupd_device_to_string (dev);
@@ -380,6 +381,7 @@ fwupd_device_func (void)
 		"  Checksum:             SHA1(deadbeef)\n"
 		"  Size:                 1.0 kB\n"
 		"  Uri:                  http://foo.com\n"
+		"  Uri:                  ftp://foo.com\n"
 		"  Flags:                trusted-payload\n", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -426,6 +428,10 @@ fwupd_device_func (void)
 		"        \"deadbeef\"\n"
 		"      ],\n"
 		"      \"Size\" : 1024,\n"
+		"      \"Locations\" : [\n"
+		"        \"http://foo.com\",\n"
+		"        \"ftp://foo.com\"\n"
+		"      ],\n"
 		"      \"Uri\" : \"http://foo.com\",\n"
 		"      \"Flags\" : [\n"
 		"        \"trusted-payload\"\n"
@@ -540,7 +546,6 @@ fwupd_client_remotes_func (void)
 	g_assert_no_error (error);
 	g_assert (remote2 != NULL);
 	g_assert_cmpstr (fwupd_remote_get_id (remote2), ==, "lvfs");
-	g_assert (fwupd_remote_get_enabled (remote2));
 	g_assert (fwupd_remote_get_metadata_uri (remote2) != NULL);
 
 	/* check we set an error when unfound */

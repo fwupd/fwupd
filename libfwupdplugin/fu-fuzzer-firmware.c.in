@@ -1,0 +1,33 @@
+/*
+ * Copyright (C) 2020 Richard Hughes <richard@hughsie.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+#include "config.h"
+#include "@INCLUDE@"
+
+int
+LLVMFuzzerTestOneInput (const guint8 *data, gsize size)
+{
+	g_autoptr(FuFirmware) firmware = @FIRMWARENEW@ ();
+	g_autoptr(GBytes) fw = g_bytes_new (data, size);
+	gboolean ret = fu_firmware_parse (firmware, fw, FWUPD_INSTALL_FLAG_NONE, NULL);
+	if (!ret && fu_firmware_has_flag (firmware, FU_FIRMWARE_FLAG_HAS_CHECKSUM)) {
+		ret = fu_firmware_parse (firmware, fw,
+					 FWUPD_INSTALL_FLAG_NO_SEARCH |
+					 FWUPD_INSTALL_FLAG_IGNORE_VID_PID |
+					 FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM,
+					 NULL);
+	}
+	if (ret) {
+		g_autofree gchar *str = fu_firmware_to_string (firmware);
+		g_autoptr(GBytes) fw2 = fu_firmware_write (firmware, NULL);
+		g_print ("%s", str);
+		if (fw2 != NULL) {
+			g_print ("[%" G_GSIZE_FORMAT " bytes]\n",
+				 g_bytes_get_size (fw2));
+		}
+	}
+	return 0;
+}

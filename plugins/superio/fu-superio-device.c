@@ -122,7 +122,7 @@ fu_superio_device_to_string (FuUdevDevice *device, guint idt, GString *str)
 	fu_common_string_append_kx (str, idt, "PM1_IOBAD1", priv->pm1_iobad1);
 }
 
-static guint16
+static gboolean
 fu_superio_device_check_id (FuSuperioDevice *self, GError **error)
 {
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);

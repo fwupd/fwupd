@@ -53,3 +53,4 @@ $ tree /boot
 - Is this a regression?
 - Are you using an NVMe disk?
 - Is secure boot enabled?
+- Is this a Lenovo system with 'Boot Order Lock' turned on in the BIOS?

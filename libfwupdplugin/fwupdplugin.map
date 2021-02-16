@@ -716,7 +716,46 @@ LIBFWUPDPLUGIN_1.5.5 {
     fu_efi_signature_kind_to_string;
     fu_efi_signature_list_get_type;
     fu_efi_signature_list_new;
+    fu_efivar_get_monitor;
     fu_firmware_get_image_by_checksum;
     fu_firmware_image_get_checksum;
   local: *;
 } LIBFWUPDPLUGIN_1.5.4;
+
+LIBFWUPDPLUGIN_1.5.6 {
+  global:
+    fu_chunk_array_mutable_new;
+    fu_chunk_bytes_new;
+    fu_chunk_get_address;
+    fu_chunk_get_bytes;
+    fu_chunk_get_data;
+    fu_chunk_get_data_out;
+    fu_chunk_get_data_sz;
+    fu_chunk_get_idx;
+    fu_chunk_get_page;
+    fu_chunk_get_type;
+    fu_chunk_set_address;
+    fu_chunk_set_bytes;
+    fu_chunk_set_idx;
+    fu_chunk_set_page;
+    fu_common_get_memory_size;
+    fu_common_strjoin_array;
+    fu_common_uri_get_scheme;
+    fu_dfuse_firmware_get_type;
+    fu_dfuse_firmware_new;
+    fu_firmware_image_add_chunk;
+    fu_firmware_image_get_chunks;
+    fu_firmware_new_from_gtypes;
+    fu_firmware_strparse_uint16_safe;
+    fu_firmware_strparse_uint24_safe;
+    fu_firmware_strparse_uint32_safe;
+    fu_firmware_strparse_uint4_safe;
+    fu_firmware_strparse_uint8_safe;
+    fu_hwids_add_smbios_override;
+    fu_hwids_get_keys;
+    fu_memdup_safe;
+    fu_plugin_get_devices;
+    fu_plugin_runner_backend_device_added;
+    fu_plugin_runner_backend_device_changed;
+  local: *;
+} LIBFWUPDPLUGIN_1.5.5;

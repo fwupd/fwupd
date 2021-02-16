@@ -149,14 +149,7 @@ fu_uefi_get_bitmap_size (const guint8 *buf,
 	g_return_val_if_fail (buf != NULL, FALSE);
 
 	/* check header */
-	if (bufsz < 26) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "blob was too small %" G_GSIZE_FORMAT, bufsz);
-		return FALSE;
-	}
-	if (memcmp (buf, "BM", 2) != 0) {
+	if (bufsz < 26 || memcmp (buf, "BM", 2) != 0) {
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
@@ -165,7 +158,8 @@ fu_uefi_get_bitmap_size (const guint8 *buf,
 	}
 
 	/* starting address */
-	ui32 = fu_common_read_uint32 (buf + 10, G_LITTLE_ENDIAN);
+	if (!fu_common_read_uint32_safe (buf, bufsz, 10, &ui32, G_LITTLE_ENDIAN, error))
+		return FALSE;
 	if (ui32 < 26) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -175,7 +169,8 @@ fu_uefi_get_bitmap_size (const guint8 *buf,
 	}
 
 	/* BITMAPINFOHEADER header */
-	ui32 = fu_common_read_uint32 (buf + 14, G_LITTLE_ENDIAN);
+	if (!fu_common_read_uint32_safe (buf, bufsz, 14, &ui32, G_LITTLE_ENDIAN, error))
+		return FALSE;
 	if (ui32 < 26 - 14) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -185,10 +180,16 @@ fu_uefi_get_bitmap_size (const guint8 *buf,
 	}
 
 	/* dimensions */
-	if (width != NULL)
-		*width = fu_common_read_uint32 (buf + 18, G_LITTLE_ENDIAN);
-	if (height != NULL)
-		*height = fu_common_read_uint32 (buf + 22, G_LITTLE_ENDIAN);
+	if (width != NULL) {
+		if (!fu_common_read_uint32_safe (buf, bufsz, 18, width,
+						 G_LITTLE_ENDIAN, error))
+			return FALSE;
+	}
+	if (height != NULL) {
+		if (!fu_common_read_uint32_safe (buf, bufsz, 22, height,
+						 G_LITTLE_ENDIAN, error))
+			return FALSE;
+	}
 	return TRUE;
 }
 

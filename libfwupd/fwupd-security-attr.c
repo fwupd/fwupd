@@ -228,6 +228,10 @@ fwupd_security_attr_set_appstream_id (FwupdSecurityAttr *self, const gchar *apps
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FWUPD_IS_SECURITY_ATTR (self));
 
+	/* not changed */
+	if (g_strcmp0 (priv->appstream_id, appstream_id) == 0)
+		return;
+
 	/* sanity check */
 	if (!g_str_has_prefix (appstream_id, "org.fwupd.hsi."))
 		g_critical ("HSI attributes need to have a 'org.fwupd.hsi.' prefix");
@@ -268,6 +272,11 @@ fwupd_security_attr_set_name (FwupdSecurityAttr *self, const gchar *name)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FWUPD_IS_SECURITY_ATTR (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->name, name) == 0)
+		return;
+
 	g_free (priv->name);
 	priv->name = g_strdup (name);
 }
@@ -286,6 +295,11 @@ fwupd_security_attr_set_plugin (FwupdSecurityAttr *self, const gchar *plugin)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FWUPD_IS_SECURITY_ATTR (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->plugin, plugin) == 0)
+		return;
+
 	g_free (priv->plugin);
 	priv->plugin = g_strdup (plugin);
 }
@@ -304,6 +318,11 @@ fwupd_security_attr_set_url (FwupdSecurityAttr *self, const gchar *url)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FWUPD_IS_SECURITY_ATTR (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->url, url) == 0)
+		return;
+
 	g_free (priv->url);
 	priv->url = g_strdup (url);
 }

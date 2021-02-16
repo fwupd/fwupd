@@ -130,7 +130,7 @@ fu_wacom_aes_device_setup (FuDevice *device, GError **error)
 		if (!fu_wacom_aes_add_recovery_hwid (device, &error_local))
 			g_debug ("failed to get HwID: %s", error_local->message);
 	} else {
-		guint32 fw_ver;
+		guint16 fw_ver;
 		guint8 data[FU_WACOM_RAW_STATUS_REPORT_SZ] = {
 			FU_WACOM_RAW_STATUS_REPORT_ID,
 			0x0
@@ -140,7 +140,9 @@ fu_wacom_aes_device_setup (FuDevice *device, GError **error)
 		if (!fu_wacom_device_get_feature (FU_WACOM_DEVICE (self),
 						  data, sizeof(data), error))
 			return FALSE;
-		fw_ver = fu_common_read_uint16 (data + 11, G_LITTLE_ENDIAN);
+		if (!fu_common_read_uint16_safe (data, sizeof(data), 11,
+						 &fw_ver, G_LITTLE_ENDIAN, error))
+			return FALSE;
 		version = g_strdup_printf ("%04x.%02x", fw_ver, data[13]);
 		fu_device_set_version (device, version);
 	}
@@ -221,10 +223,10 @@ fu_wacom_aes_device_write_firmware (FuDevice *device, GPtrArray *chunks, GError 
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_wacom_aes_device_write_block (self,
-						      chk->idx,
-						      chk->address,
-						      chk->data,
-						      chk->data_sz,
+						      fu_chunk_get_idx (chk),
+						      fu_chunk_get_address (chk),
+						      fu_chunk_get_data (chk),
+						      fu_chunk_get_data_sz (chk),
 						      error))
 			return FALSE;
 		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);

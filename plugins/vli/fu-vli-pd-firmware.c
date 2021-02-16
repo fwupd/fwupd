@@ -159,6 +159,7 @@ fu_vli_pd_firmware_parse (FuFirmware *firmware,
 static void
 fu_vli_pd_firmware_init (FuVliPdFirmware *self)
 {
+	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 }
 
 static void

@@ -7,7 +7,13 @@
 #pragma once
 
 #include <glib-object.h>
+#ifdef HAVE_GUSB
 #include <gusb.h>
+#else
+typedef GObject GUsbContext;
+typedef GObject GUsbDevice;
+#define G_USB_CHECK_VERSION(a,c,b)	0
+#endif
 
 #include "fu-plugin.h"
 #include "fu-udev-device.h"

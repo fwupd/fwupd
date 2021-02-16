@@ -12,7 +12,7 @@ shared_module('fu_plugin_hailuck',
     'fu-hailuck-common.c',
     'fu-hailuck-bl-device.c',
     'fu-hailuck-kbd-device.c',
-    'fu-hailuck-kbd-firmware.c',
+    'fu-hailuck-kbd-firmware.c',  # fuzzing
     'fu-hailuck-tp-device.c',
     'fu-plugin-hailuck.c',
   ],

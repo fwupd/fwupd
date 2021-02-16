@@ -191,6 +191,10 @@ GBytes		*fu_common_bytes_new_offset	(GBytes		*bytes,
 						 GError		**error)
 						 G_GNUC_WARN_UNUSED_RESULT;
 gsize		 fu_common_strwidth		(const gchar	*text);
+guint8		*fu_memdup_safe			(const guint8	*src,
+						 gsize		 n,
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_memcpy_safe			(guint8		*dst,
 						 gsize		 dst_sz,
 						 gsize		 dst_offset,
@@ -268,6 +272,8 @@ gchar		**fu_common_strnsplit		(const gchar	*str,
 						 gint		 max_tokens);
 gchar		*fu_common_strsafe		(const gchar	*str,
 						 gsize		 maxsz);
+gchar		*fu_common_strjoin_array	(const gchar	*separator,
+						 GPtrArray	*array);
 gboolean	 fu_common_kernel_locked_down	(void);
 gboolean	 fu_common_cpuid		(guint32	 leaf,
 						 guint32	*eax,
@@ -280,6 +286,7 @@ gboolean	 fu_common_is_cpu_intel		(void)
 G_DEPRECATED_FOR(fu_common_get_cpu_vendor);
 FuCpuVendor	 fu_common_get_cpu_vendor	(void);
 gboolean	 fu_common_is_live_media	(void);
+guint64		 fu_common_get_memory_size	(void);
 GPtrArray	*fu_common_get_volumes_by_kind	(const gchar	*kind,
 						 GError		**error)
 						 G_GNUC_WARN_UNUSED_RESULT;
@@ -305,3 +312,4 @@ guint32		 fu_common_crc32_full		(const guint8	*buf,
 						 gsize		 bufsz,
 						 guint32	 crc,
 						 guint32	 polynomial);
+gchar		*fu_common_uri_get_scheme	(const gchar	*uri);

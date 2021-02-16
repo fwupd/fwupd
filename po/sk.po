@@ -15,10 +15,6 @@ msgstr ""
 "Language: sk\n"
 "Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n == 1 ? 0 : n % 1 == 0 && n >= 2 && n <= 4 ? 1 : n % 1 != 0 ? 2: 3);\n"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Pridané"
-
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
@@ -52,7 +48,6 @@ msgstr "Na aktualizovanie firmvéru v tomto počítači je potrebné overenie to
 msgid "Cancelled"
 msgstr "Zrušené"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Zmenené"
@@ -204,10 +199,6 @@ msgstr "Obnoví metaúdaje zo vzdialeného servera"
 msgid "Reinstalling %s with %s... "
 msgstr "Preinštalováva sa %s verziou %s... "
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Odstránené"
-
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "Zobrazí voľby ladenia"
@@ -237,10 +228,6 @@ msgstr "Aktualizuje sa %s z verzie %s na verziu %s... "
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
 msgstr "Verzia"
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Sleduje pripojenie zariadení DFU"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"

@@ -192,10 +192,6 @@ msgstr "Firmware-päivityksen aktivointi"
 msgid "Activating firmware update for"
 msgstr "Käynnistä laiteohjelmiston päivitys"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Lisätty"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Ikä"
@@ -379,7 +375,6 @@ msgstr "Ei voida käyttää, koska dbx-päivitys on jo asennettu."
 msgid "Cannot apply updates on live media"
 msgstr "Päivityksiä ei voi käyttää asennus-mediassa"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Muutettu"
@@ -750,6 +745,7 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: The update state of the specific device
 msgid "Failed"
 msgstr "Epäonnistui"
 
@@ -958,6 +954,10 @@ msgstr "Antaa laitteen julkaisut"
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Saat viimeisimmän päivityksen tulokset"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "HWIDS-FILE"
+msgstr "HWIDS-FILE"
 
 #. TRANSLATORS: The hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
@@ -1243,6 +1243,10 @@ msgstr "Kytkee ESP:n käyttöön"
 msgid "Needs a reboot after installation"
 msgstr "Tarvitsee käynnistyksen asennuksen jälkeen"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Needs reboot"
+msgstr "Käynnistys tarvitaan"
+
 #. TRANSLATORS: Requires system shutdown to apply firmware
 msgid "Needs shutdown after installation"
 msgstr "Tarvitsee sammutuksen asennuksen jälkeen"
@@ -1335,6 +1339,10 @@ msgstr "Salasana"
 
 msgid "Payload"
 msgstr "Tietosisältö"
+
+#. TRANSLATORS: The update state of the specific device
+msgid "Pending"
+msgstr "Odottaa"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Percentage complete"
@@ -1430,14 +1438,14 @@ msgstr "Asenna laiteohjelmisto 'firmware' uudelleen laitteelle"
 msgid "Reinstalling %s with %s... "
 msgstr "Uudelleenasennus %s kera %s... "
 
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Release Branch"
+msgstr "Julkaisuhaara"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "Etätunnus"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Poistettu"
 
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
@@ -1513,6 +1521,10 @@ msgstr "SPI-kirjoitus"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
 msgstr "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
+
+#. TRANSLATORS: command description
+msgid "Save a file that allows generation of hardware IDs"
+msgstr "Tallenna tiedosto, joka sallii laitteistotunnusten luomisen"
 
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
@@ -1639,6 +1651,10 @@ msgstr "Määritä dbx-tietokantatiedosto"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Määritä tavujen määrä USB-siirtoa kohti"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Success"
+msgstr "Onnistui"
+
 #. TRANSLATORS: success message -- where activation is making the new
 #. * firmware take effect, usually after updating offline
 msgid "Successfully activated all devices"
@@ -1753,6 +1769,10 @@ msgstr "Palvelu on ladannut 3-osapuolen koodin, eikä kehittäjät enää jatkos
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
 msgstr "Laitteistotoimittaja %s ei toimita ohjelmistoa kohteesta %s."
 
+#. TRANSLATORS: try to help
+msgid "The system clock has not been set correctly and downloading files may fail."
+msgstr "Järjestelmän kelloa ei ole asetettu oikein ja tiedostojen lataaminen saattaa epäonnistua."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "Estettyjä firmware-tiedostoja ei ole"
@@ -1813,6 +1833,10 @@ msgstr "Tämä työkalu lukee ja TPM-tapahtumalokin järjestelmän laiteohjelmis
 msgid "Timeout in milliseconds for each parse"
 msgstr "Aikakatkaisu millisekunteina kutakin jäsentämistä varten"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Transient failure"
+msgstr "Ohimenevä häiriö"
+
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Tyyppi"
@@ -1826,8 +1850,8 @@ msgid "UEFI Firmware Utility"
 msgstr "UEFI firmware -apuohjelma"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
-msgid "UEFI capsule updates not available or enabled"
-msgstr "UEFI-päivitykset eivät ole saatavilla tai käytössä"
+msgid "UEFI capsule updates not available or enabled in firmware setup"
+msgstr "UEFI-kapselipäivitykset eivät ole saatavilla tai käytössä laiteohjelmiston asennuksessa"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
@@ -2046,10 +2070,6 @@ msgid "Waiting…"
 msgstr "Odotetaan…"
 
 #. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Katso, että DFU-laitteet on kytketty"
-
-#. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Katso laitteiston muutoksia"
 
@@ -2095,8 +2115,8 @@ msgid "[FILE FILE_SIG REMOTE-ID]"
 msgstr "[FILE FILE_SIG REMOTE-ID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[FILE]"
-msgstr "[FILE]"
+msgid "[SMBIOS-FILE|HWIDS-FILE]"
+msgstr "[SMBIOS-FILE|HWIDS-FILE]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

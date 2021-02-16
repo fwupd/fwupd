@@ -11,6 +11,35 @@ With the UpdateCapsule boot service it can be used to update system firmware.
 If you don't want or need this functionality you can use the
 `-Dplugin_uefi_capsule=false` option.
 
+Lenovo Specific Behaviour
+-------------------------
+
+On Lenovo hardware only the boot label is set to `Linux-Firmware-Updater` rather
+than "Linux Firmware Updater" (with spaces) due to long-fixed EFI boot manager
+bugs. Many users will have these old BIOS versions installed and so we use the
+`use-legacy-bootmgr-desc` quirk to use the safe name.
+
+On some Lenovo hardware only one capsule is installable due to possible problems
+with the UpdateCapsule coalesce operation. As soon as one UEFI device has been
+scheduled for update the other UEFI devices found in the ESRT will be marked
+as `updatable-hidden` rather than `updatable`. Rebooting will restore them so
+they can be updated on next OS boot.
+
+UEFI SBAT Support
+-----------------
+
+If compiling with `-Dsupported_build=true` the packager must also specify the
+SBAT metadata required for the secure boot revocation support. See the
+specification for more information: https://github.com/rhboot/shim/blob/sbat/SBAT.md
+
+Typically, this will be set as part of the package build script, e.g.
+
+    -Defi_sbat_distro_id="fedora" \
+    -Defi_sbat_distro_summary="The Fedora Project" \
+    -Defi_sbat_distro_pkgname="%{name}" \
+    -Defi_sbat_distro_version="%{version}" \
+    -Defi_sbat_distro_url="https://src.fedoraproject.org/rpms/%{name}" \
+
 Firmware Format
 ---------------
 

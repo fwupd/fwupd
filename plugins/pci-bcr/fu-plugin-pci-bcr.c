@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 struct FuPluginData {
 	gboolean		 has_device;
@@ -30,6 +29,16 @@ fu_plugin_init (FuPlugin *plugin)
 	priv->bcr_addr = 0xdc;
 }
 
+static void
+fu_plugin_pci_bcr_set_updatable (FuPlugin *plugin, FuDevice *dev)
+{
+	FuPluginData *priv = fu_plugin_get_data (plugin);
+	if ((priv->bcr & BCR_WPD) == 0 && (priv->bcr & BCR_BLE) > 0) {
+		fu_device_remove_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_set_update_error (dev, "BIOS locked");
+	}
+}
+
 void
 fu_plugin_device_registered (FuPlugin *plugin, FuDevice *dev)
 {
@@ -41,6 +50,15 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *dev)
 				 priv->bcr_addr, tmp);
 			priv->bcr_addr = tmp;
 		}
+	}
+	if (g_strcmp0 (fu_device_get_plugin (dev), "flashrom") == 0 &&
+	    fu_device_has_instance_id (dev, "main-system-firmware")) {
+		/* PCI\VEN_8086 added first */
+		if (priv->has_device) {
+			fu_plugin_pci_bcr_set_updatable (plugin, dev);
+			return;
+		}
+		fu_plugin_cache_add (plugin, "main-system-firmware", dev);
 	}
 }
 
@@ -128,9 +146,10 @@ fu_plugin_add_security_attr_smm_bwp (FuPlugin *plugin, FuSecurityAttrs *attrs)
 }
 
 gboolean
-fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
+fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
+	FuDevice *device_msf;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* not supported */
@@ -143,22 +162,31 @@ fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **er
 	}
 
 	/* interesting device? */
-	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "pci") != 0)
+	if (!FU_IS_UDEV_DEVICE (device))
+		return TRUE;
+	if (g_strcmp0 (fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)), "pci") != 0)
 		return TRUE;
 
 	/* open the config */
-	fu_udev_device_set_flags (device, FU_UDEV_DEVICE_FLAG_USE_CONFIG);
-	if (!fu_udev_device_set_physical_id (device, "pci", error))
+	fu_udev_device_set_flags (FU_UDEV_DEVICE (device), FU_UDEV_DEVICE_FLAG_USE_CONFIG);
+	if (!fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "pci", error))
 		return FALSE;
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
 
 	/* grab BIOS Control Register */
-	if (!fu_udev_device_pread (device, priv->bcr_addr, &priv->bcr, error)) {
+	if (!fu_udev_device_pread (FU_UDEV_DEVICE (device), priv->bcr_addr, &priv->bcr, error)) {
 		g_prefix_error (error, "could not read BCR: ");
 		return FALSE;
 	}
+
+	/* main-system-firmware device added first, probably from flashrom */
+	device_msf = fu_plugin_cache_lookup (plugin, "main-system-firmware");
+	if (device_msf != NULL)
+		fu_plugin_pci_bcr_set_updatable (plugin, device_msf);
+
+	/* success */
 	priv->has_device = TRUE;
 	return TRUE;
 }

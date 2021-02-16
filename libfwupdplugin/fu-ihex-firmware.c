@@ -65,7 +65,9 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 			     FwupdInstallFlags flags, GError **error)
 {
 	g_autoptr(FuIhexFirmwareRecord) rcd = NULL;
+	gsize linesz = strlen (line);
 	guint line_end;
+	guint16 addr16 = 0;
 
 	/* check starting token */
 	if (line[0] != ':') {
@@ -90,19 +92,13 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 	rcd->ln = ln;
 	rcd->data = g_byte_array_new ();
 	rcd->buf = g_string_new (line);
-	rcd->byte_cnt = fu_firmware_strparse_uint8 (line + 1);
-	rcd->addr = fu_firmware_strparse_uint16 (line + 3);
-	rcd->record_type = fu_firmware_strparse_uint8 (line + 7);
-
-	/* check there's enough data for the smallest possible record */
-	if (rcd->buf->len < 11) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "line incomplete, length: %u",
-			     (guint) rcd->buf->len);
+	if (!fu_firmware_strparse_uint8_safe (line, linesz, 1, &rcd->byte_cnt, error))
 		return NULL;
-	}
+	if (!fu_firmware_strparse_uint16_safe (line, linesz, 3, &addr16, error))
+		return NULL;
+	rcd->addr = addr16;
+	if (!fu_firmware_strparse_uint8_safe (line, linesz, 7, &rcd->record_type, error))
+		return NULL;
 
 	/* position of checksum */
 	line_end = 9 + rcd->byte_cnt * 2;
@@ -119,7 +115,9 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 checksum = 0;
 		for (guint i = 1; i < line_end + 2; i += 2) {
-			guint8 data_tmp = fu_firmware_strparse_uint8 (line + i);
+			guint8 data_tmp = 0;
+			if (!fu_firmware_strparse_uint8_safe (line, linesz, i, &data_tmp, error))
+				return NULL;
 			checksum += data_tmp;
 		}
 		if (checksum != 0)  {
@@ -134,7 +132,9 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 
 	/* add data */
 	for (guint i = 9; i < line_end; i += 2) {
-		guint8 tmp_c = fu_firmware_strparse_uint8 (line + i);
+		guint8 tmp_c = 0;
+		if (!fu_firmware_strparse_uint8_safe (line, linesz, i, &tmp_c, error))
+			return NULL;
 		fu_byte_array_append_uint8 (rcd->data, tmp_c);
 	}
 	return g_steal_pointer (&rcd);
@@ -196,6 +196,7 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 {
 	FuIhexFirmware *self = FU_IHEX_FIRMWARE (firmware);
 	gboolean got_eof = FALSE;
+	gboolean got_sig = FALSE;
 	guint32 abs_addr = 0x0;
 	guint32 addr_last = 0x0;
 	guint32 img_addr = G_MAXUINT32;
@@ -309,12 +310,21 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 			g_debug ("  seg_addr:\t0x%02x on line %u", seg_addr, rcd->ln);
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE:
+			if (got_sig) {
+				g_set_error_literal (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INVALID_FILE,
+						     "duplicate signature, perhaps "
+						     "corrupt file");
+				return FALSE;
+			}
 			if (rcd->data->len > 0) {
 				g_autoptr(GBytes) data_sig = g_bytes_new (rcd->data->data, rcd->data->len);
 				g_autoptr(FuFirmwareImage) img_sig = fu_firmware_image_new (data_sig);
 				fu_firmware_image_set_id (img_sig, FU_FIRMWARE_IMAGE_ID_SIGNATURE);
 				fu_firmware_add_image (firmware, img_sig);
 			}
+			got_sig = TRUE;
 			break;
 		default:
 			/* vendors sneak in nonstandard sections past the EOF */
@@ -445,6 +455,7 @@ static void
 fu_ihex_firmware_init (FuIhexFirmware *self)
 {
 	self->records = g_ptr_array_new_with_free_func ((GFreeFunc) fu_ihex_firmware_record_free);
+	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 }
 
 static void

@@ -1,0 +1,29 @@
+#!/bin/sh
+set -e
+
+#DEBHELPER#
+
+if dpkg-maintscript-helper supports rm_conffile 2>/dev/null; then
+	dpkg-maintscript-helper rm_conffile \
+		/etc/fwupd.conf 1.0.0~ -- "$@"
+	dpkg-maintscript-helper rm_conffile \
+		/etc/fwupd/remotes.d/fwupd.conf 1.2.7~ -- "$@"
+	dpkg-maintscript-helper rm_conffile \
+		/etc/dbus-1/system.d/org.freedesktop.fwupd.conf 1.3.2~ -- "$@"
+	dpkg-maintscript-helper rm_conffile \
+		/etc/fwupd/ata.conf 1.5.5~ -- "$@"
+fi
+
+#Perform transition from /etc/fwupd/uefi.conf to /etc/fwupd/uefi_capsule.conf
+if dpkg-maintscript-helper supports mv_conffile 2>/dev/null; then
+	ORIGINAL=/etc/fwupd/uefi.conf
+	NEW=/etc/fwupd/uefi_capsule.conf
+	dpkg-maintscript-helper mv_conffile $ORIGINAL $NEW 1.5.5~ -- "$@"
+fi
+
+# 1.3.2 had fwupd-refresh.service and fwupd.service both claiming
+# this directory, but fwupd-refresh.service used DynamicUser directive
+# meaning no other unit could access it.
+if [ -L /var/cache/fwupd ]; then
+	rm -f /var/cache/fwupd
+fi

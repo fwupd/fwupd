@@ -42,7 +42,7 @@ _test_add_fake_devices_from_dir (FuPlugin *plugin, const gchar *path)
 				    "device-file", fn,
 				    NULL);
 		g_debug ("creating drm_dp_aux_dev object backed by %s", fn);
-		ret = fu_plugin_runner_udev_device_added (plugin, dev, &error);
+		ret = fu_plugin_runner_backend_device_added (plugin, FU_DEVICE (dev), &error);
 		g_assert_no_error (error);
 		g_assert (ret);
 	}

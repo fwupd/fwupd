@@ -59,13 +59,78 @@ fu_uefi_bootmgr_add_to_boot_order (guint16 boot_entry, GError **error)
 				   attr, error);
 }
 
+static guint16
+fu_uefi_bootmgr_parse_name (const gchar *name)
+{
+	gint rc;
+	gint scanned = 0;
+	guint16 entry = 0;
+
+	/* BootXXXX */
+	rc = sscanf (name, "Boot%hX%n", &entry, &scanned);
+	if (rc != 1 || scanned != 8)
+		return G_MAXUINT16;
+	return entry;
+}
+
+gboolean
+fu_uefi_bootmgr_verify_fwupd (GError **error)
+{
+	g_autoptr(GPtrArray) names = NULL;
+
+	names = fu_efivar_get_names (FU_EFIVAR_GUID_EFI_GLOBAL, error);
+	if (names == NULL)
+		return FALSE;
+	for (guint i = 0; i < names->len; i++) {
+		const gchar *desc;
+		const gchar *name = g_ptr_array_index (names, i);
+		efi_load_option *loadopt;
+		gsize var_data_size = 0;
+		guint16 entry;
+		g_autofree guint8 *var_data_tmp = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* not BootXXXX */
+		entry = fu_uefi_bootmgr_parse_name (name);
+		if (entry == G_MAXUINT16)
+			continue;
+
+		/* parse key */
+		if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, name,
+					 &var_data_tmp, &var_data_size,
+					 NULL, &error_local)) {
+			g_debug ("failed to get data for name %s: %s",
+				 name, error_local->message);
+			continue;
+		}
+		loadopt = (efi_load_option *) var_data_tmp;
+		if (!efi_loadopt_is_valid(loadopt, var_data_size)) {
+			g_debug ("%s -> load option was invalid", name);
+			continue;
+		}
+
+		desc = (const gchar *) efi_loadopt_desc (loadopt, var_data_size);
+		if (g_strcmp0 (desc, "Linux Firmware Updater") == 0 ||
+		    g_strcmp0 (desc, "Linux-Firmware-Updater") == 0) {
+			g_debug ("found %s at Boot%04X", desc, entry);
+			return TRUE;
+		}
+	}
+
+	/* did not find */
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "no 'Linux Firmware Updater' entry found");
+	return FALSE;
+}
+
 static gboolean
 fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_size, GError **error)
 {
 	const gchar *desc;
 	const gchar *name;
 	efi_load_option *loadopt = NULL;
-	gint rc;
 	gsize var_data_size = 0;
 	guint32 attr;
 	guint16 boot_next = G_MAXUINT16;
@@ -77,23 +142,14 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 	if (names == NULL)
 		return FALSE;
 	for (guint i = 0; i < names->len; i++) {
-		gint scanned = 0;
 		guint16 entry = 0;
 		g_autofree guint8 *var_data_tmp = NULL;
 		g_autoptr(GError) error_local = NULL;
 
+		/* not BootXXXX */
 		name = g_ptr_array_index (names, i);
-		rc = sscanf (name, "Boot%hX%n", &entry, &scanned);
-		if (rc < 0) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_FAILED,
-				     "failed to parse Boot entry %s", name);
-			return FALSE;
-		}
-		if (rc != 1)
-			continue;
-		if (scanned != 8)
+		entry = fu_uefi_bootmgr_parse_name (name);
+		if (entry == G_MAXUINT16)
 			continue;
 
 		/* mark this as used */

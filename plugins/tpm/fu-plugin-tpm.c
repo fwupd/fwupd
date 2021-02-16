@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-hash.h"
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-tpm-device.h"

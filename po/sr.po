@@ -17,10 +17,6 @@ msgstr ""
 "Language: sr\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Додао"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Старост"
@@ -82,7 +78,6 @@ msgstr "Изгради фирмвер унутар кутије"
 msgid "Cancelled"
 msgstr "Отказао"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Променио"
@@ -377,10 +372,6 @@ msgstr "Поново инсталирам %s са %s..."
 msgid "Remote ID"
 msgstr "Удаљени ИБ"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Уклонио"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "Замењује податке у постојећој датотеци фирмвера"
@@ -502,10 +493,6 @@ msgstr "Издање"
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Чекам…"
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Надгледај ДФУ уређаје док се каче на живо"
 
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"

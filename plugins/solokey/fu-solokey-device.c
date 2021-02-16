@@ -224,6 +224,7 @@ fu_solokey_device_packet (FuSolokeyDevice *self, guint8 cmd,
 	guint8 buf_cid[4] = { 0x00 };
 	guint8 buf_len[2] = { 0x00 };
 	guint8 cmd_id = cmd | 0x80;
+	guint8 cmd_id_tmp = 0;
 	guint16 first_chunk_size;
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 	g_autoptr(GByteArray) res = NULL;
@@ -270,11 +271,13 @@ fu_solokey_device_packet (FuSolokeyDevice *self, guint8 cmd,
 					     SOLO_USB_HID_EP_SIZE - 5);
 		for (guint i = 0; i < chunks->len; i++) {
 			FuChunk *chk = g_ptr_array_index (chunks, i);
-			guint8 seq = chk->idx;
+			guint8 seq = fu_chunk_get_idx (chk);
 			g_autoptr(GByteArray) req2 = g_byte_array_new ();
 			g_byte_array_append (req2, buf_cid, sizeof(buf_cid));
 			g_byte_array_append (req2, &seq, sizeof(seq));
-			g_byte_array_append (req2, chk->data, chk->data_sz);
+			g_byte_array_append (req2,
+					     fu_chunk_get_data (chk),
+					     fu_chunk_get_data_sz (chk));
 			if (!fu_solokey_device_packet_tx (self, req2, error))
 				return NULL;
 		}
@@ -296,18 +299,24 @@ fu_solokey_device_packet (FuSolokeyDevice *self, guint8 cmd,
 		return NULL;
 	}
 	if (memcmp (res->data + 0, buf_cid, sizeof(buf_cid)) != 0) {
+		guint32 cid = 0;
+		if (!fu_common_read_uint32_safe (res->data, res->len, 0x0,
+						 &cid, G_BIG_ENDIAN, error))
+			return NULL;
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "CID invalid, got %x",
-			     fu_common_read_uint32 (res->data + 0, G_BIG_ENDIAN));
+			     "CID invalid, got %x", cid);
 		return NULL;
 	}
-	if (res->data[4] != cmd_id) {
+	if (!fu_common_read_uint8_safe (res->data, res->len, 0x4,
+					&cmd_id_tmp, error))
+		return NULL;
+	if (cmd_id_tmp != cmd_id) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
-			     "command ID invalid, got %x", res->data[4]);
+			     "command ID invalid, got %x", cmd_id_tmp);
 		return NULL;
 	}
 	return g_steal_pointer (&res);
@@ -316,6 +325,7 @@ fu_solokey_device_packet (FuSolokeyDevice *self, guint8 cmd,
 static gboolean
 fu_solokey_device_setup_cid (FuSolokeyDevice *self, GError **error)
 {
+	guint16 init_len = 0;
 	g_autoptr(GByteArray) nonce = g_byte_array_new ();
 	g_autoptr(GByteArray) res = NULL;
 
@@ -329,21 +339,26 @@ fu_solokey_device_setup_cid (FuSolokeyDevice *self, GError **error)
 	res = fu_solokey_device_packet (self, 0x06, nonce, error);
 	if (res == NULL)
 		return FALSE;
-	if (fu_common_read_uint16 (res->data + 5, G_LITTLE_ENDIAN) < 0x11) {
+	if (!fu_common_read_uint16_safe (res->data, res->len, 5,
+					 &init_len, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (init_len < 0x11) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
 				     "INIT length invalid");
 		return FALSE;
 	}
-	if (memcmp (res->data + 7, nonce->data, 8) != 0) {
+	if (res->len < 7 + 8 || memcmp (res->data + 7, nonce->data, 8) != 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
 				     "nonce invalid");
 		return FALSE;
 	}
-	self->cid = fu_common_read_uint32 (res->data + 7 + 8, G_LITTLE_ENDIAN);
+	if (!fu_common_read_uint32_safe (res->data, res->len,  7 + 8,
+					 &self->cid, G_LITTLE_ENDIAN, error))
+		return FALSE;
 	g_debug ("CID to use for device: %04x", self->cid);
 	return TRUE;
 }
@@ -447,8 +462,10 @@ fu_solokey_device_write_firmware (FuDevice *device,
 		g_autoptr(GByteArray) res = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		g_byte_array_append (buf, chk->data, chk->data_sz);
-		fu_solokey_device_exchange (req, SOLO_BOOTLOADER_WRITE, chk->address, buf);
+		g_byte_array_append (buf,
+				     fu_chunk_get_data (chk),
+				     fu_chunk_get_data_sz (chk));
+		fu_solokey_device_exchange (req, SOLO_BOOTLOADER_WRITE, fu_chunk_get_address (chk), buf);
 		res = fu_solokey_device_packet (self, SOLO_BOOTLOADER_HID_CMD_BOOT, req, &error_local);
 		if (res == NULL) {
 			g_set_error (error,

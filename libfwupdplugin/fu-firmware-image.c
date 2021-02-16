@@ -9,6 +9,7 @@
 #include "config.h"
 
 #include "fu-common.h"
+#include "fu-chunk-private.h"
 #include "fu-firmware-image-private.h"
 
 /**
@@ -26,6 +27,7 @@ typedef struct {
 	guint64			 idx;
 	gchar			*version;
 	gchar			*filename;
+	GPtrArray		*chunks;	/* nullable, element-type FuChunk */
 } FuFirmwareImagePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuFirmwareImage, fu_firmware_image, G_TYPE_OBJECT)
@@ -63,6 +65,11 @@ fu_firmware_image_set_version (FuFirmwareImage *self, const gchar *version)
 {
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_FIRMWARE_IMAGE (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->version, version) == 0)
+		return;
+
 	g_free (priv->version);
 	priv->version = g_strdup (version);
 }
@@ -99,6 +106,11 @@ fu_firmware_image_set_filename (FuFirmwareImage *self, const gchar *filename)
 {
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_FIRMWARE_IMAGE (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->filename, filename) == 0)
+		return;
+
 	g_free (priv->filename);
 	priv->filename = g_strdup (filename);
 }
@@ -115,6 +127,11 @@ fu_firmware_image_set_id (FuFirmwareImage *self, const gchar *id)
 {
 	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_FIRMWARE_IMAGE (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->id, id) == 0)
+		return;
+
 	g_free (priv->id);
 	priv->id = g_strdup (id);
 }
@@ -283,6 +300,68 @@ fu_firmware_image_get_bytes (FuFirmwareImage *self)
 		return NULL;
 	return g_bytes_ref (priv->bytes);
 }
+/**
+ * fu_firmware_image_get_chunks:
+ * @self: a #FuFirmwareImage
+ * @error: A #GError, or %NULL
+ *
+ * Gets the optional image chunks.
+ *
+ * Return value: (transfer container) (element-type FuChunk) (nullable): chunk data, or %NULL
+ *
+ * Since: 1.5.6
+ **/
+GPtrArray *
+fu_firmware_image_get_chunks (FuFirmwareImage *self, GError **error)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+
+	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* set */
+	if (priv->chunks != NULL)
+		return g_ptr_array_ref (priv->chunks);
+
+	/* lets build something plausible */
+	if (priv->bytes != NULL) {
+		g_autoptr(GPtrArray) chunks = NULL;
+		g_autoptr(FuChunk) chk = NULL;
+		chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+		chk = fu_chunk_bytes_new (priv->bytes);
+		fu_chunk_set_idx (chk, priv->idx);
+		fu_chunk_set_address (chk, priv->addr);
+		g_ptr_array_add (chunks, g_steal_pointer (&chk));
+		return g_steal_pointer (&chunks);
+	}
+
+	/* nothing to do */
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "no bytes or chunks found in firmware");
+	return NULL;
+}
+
+/**
+ * fu_firmware_image_add_chunk:
+ * @self: a #FuFirmwareImage
+ * @chk: a #FuChunk
+ *
+ * Adds a chunk to the image.
+ *
+ * Since: 1.5.6
+ **/
+void
+fu_firmware_image_add_chunk (FuFirmwareImage *self, FuChunk *chk)
+{
+	FuFirmwareImagePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_FIRMWARE_IMAGE (self));
+	g_return_if_fail (FU_IS_CHUNK (chk));
+	if (priv->chunks == NULL)
+		priv->chunks = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	g_ptr_array_add (priv->chunks, g_object_ref (chk));
+}
 
 /**
  * fu_firmware_image_get_checksum:
@@ -375,6 +454,7 @@ fu_firmware_image_build (FuFirmwareImage *self, XbNode *n, GError **error)
 	FuFirmwareImageClass *klass = FU_FIRMWARE_IMAGE_GET_CLASS (self);
 	guint64 tmpval;
 	const gchar *tmp;
+	g_autoptr(GPtrArray) chunks = NULL;
 	g_autoptr(XbNode) data = NULL;
 
 	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (self), FALSE);
@@ -419,6 +499,19 @@ fu_firmware_image_build (FuFirmwareImage *self, XbNode *n, GError **error)
 		fu_firmware_image_set_bytes (self, blob);
 	}
 
+	/* optional chunks */
+	chunks = xb_node_query (n, "chunks/chunk", 0, NULL);
+	if (chunks != NULL) {
+		for (guint i = 0; i < chunks->len; i++) {
+			XbNode *c = g_ptr_array_index (chunks, i);
+			g_autoptr(FuChunk) chk = fu_chunk_bytes_new (NULL);
+			fu_chunk_set_idx (chk, i);
+			if (!fu_chunk_build (chk, c, error))
+				return FALSE;
+			fu_firmware_image_add_chunk (self, chk);
+		}
+	}
+
 	/* subclassed */
 	if (klass->build != NULL) {
 		if (!klass->build (self, n, error))
@@ -456,15 +549,22 @@ fu_firmware_image_write (FuFirmwareImage *self, GError **error)
 	if (klass->write != NULL)
 		return klass->write (self, error);
 
-	/* fall back to what was set manually */
-	if (priv->bytes == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "no bytes found in firmware bytes %s", priv->id);
-		return NULL;
+	/* set */
+	if (priv->bytes != NULL)
+		return g_bytes_ref (priv->bytes);
+
+	/* fall back to chunks */
+	if (priv->chunks != NULL && priv->chunks->len == 1) {
+		FuChunk *chk = g_ptr_array_index (priv->chunks, 0);
+		return fu_chunk_get_bytes (chk);
 	}
-	return g_bytes_ref (priv->bytes);
+
+	/* failed */
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_FOUND,
+		     "no bytes found in firmware bytes %s", priv->id);
+	return NULL;
 }
 
 /**
@@ -559,6 +659,14 @@ fu_firmware_image_add_string (FuFirmwareImage *self, guint idt, GString *str)
 					    g_bytes_get_size (priv->bytes));
 	}
 
+	/* add chunks */
+	if (priv->chunks != NULL) {
+		for (guint i = 0; i < priv->chunks->len; i++) {
+			FuChunk *chk = g_ptr_array_index (priv->chunks, i);
+			fu_chunk_add_string (chk, idt + 1, str);
+		}
+	}
+
 	/* vfunc */
 	if (klass->to_string != NULL)
 		klass->to_string (self, idt, str);
@@ -597,6 +705,8 @@ fu_firmware_image_finalize (GObject *object)
 	g_free (priv->filename);
 	if (priv->bytes != NULL)
 		g_bytes_unref (priv->bytes);
+	if (priv->chunks != NULL)
+		g_ptr_array_unref (priv->chunks);
 	G_OBJECT_CLASS (fu_firmware_image_parent_class)->finalize (object);
 }
 

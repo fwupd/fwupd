@@ -50,10 +50,6 @@ msgid_plural "%u seconds"
 msgstr[0] "%u sekonde"
 msgstr[1] "%u sekondes"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Bygevoeg"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Ouderdom"
@@ -74,7 +70,6 @@ msgstr "Kanselleer"
 msgid "Cancelled"
 msgstr "Gekanselleer"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Verander"
@@ -223,10 +218,6 @@ msgstr "Lees tans…"
 #, c-format
 msgid "Reinstalling %s with %s... "
 msgstr "Herinstalleer tans %s met %s… "
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Verwyder"
 
 #. TRANSLATORS: metadata is downloaded from the Internet
 msgid "Requires internet connection"

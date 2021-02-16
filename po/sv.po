@@ -187,10 +187,6 @@ msgstr "Aktiverar uppdatering av fast programvara"
 msgid "Activating firmware update for"
 msgstr "Aktiverar uppdatering av fast programvara för"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Tillagd"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Ålder"
@@ -335,7 +331,6 @@ msgstr "Avbryt"
 msgid "Cancelled"
 msgstr "Avbruten"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Ändrad"
@@ -638,6 +633,7 @@ msgid "Exit after the engine has loaded"
 msgstr "Avsluta efter att motorn har lästs in"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: The update state of the specific device
 msgid "Failed"
 msgstr "Misslyckades"
 
@@ -1174,10 +1170,6 @@ msgstr "Återinstallerar %s med %s… "
 msgid "Remote ID"
 msgstr "Fjärrkälla-id"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Borttagen"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "Ersätt data i en befintlig fast programvarufil"
@@ -1638,10 +1630,6 @@ msgstr "VARNING:"
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Väntar..."
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Övervaka anslutna DFU-enheter"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"

@@ -1,0 +1,38 @@
+#!/bin/sh
+# Copyright 2020 Collabora Ltd.
+# Copyright 2021 Simon McVittie
+# SPDX-License-Identifier: LGPL-2.1-or-later
+
+set -eux
+
+WORKDIR="$(mktemp -d)"
+trap 'cd /; rm -fr "$WORKDIR"' 0 INT QUIT ABRT PIPE TERM
+
+if [ -n "${DEB_HOST_GNU_TYPE:-}" ]; then
+    CROSS_COMPILE="$DEB_HOST_GNU_TYPE-"
+else
+    CROSS_COMPILE=
+fi
+
+CC="${CROSS_COMPILE}gcc"
+PKG_CONFIG="${CROSS_COMPILE}pkg-config"
+
+cd "$WORKDIR"
+
+cat > trivial.c <<'EOF'
+#undef NDEBUG
+#include <assert.h>
+
+#include <fwupd.h>
+
+int main (void)
+{
+    assert (fwupd_error_to_string (FWUPD_ERROR_NOTHING_TO_DO) != NULL);
+    return 0;
+}
+EOF
+
+# Deliberately word-splitting pkg-config's output:
+# shellcheck disable=SC2046
+"${CC}" -otrivial trivial.c $("${PKG_CONFIG}" --cflags --libs fwupd)
+./trivial

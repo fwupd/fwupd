@@ -8,39 +8,13 @@
 
 #include "config.h"
 
-#include <sys/ioctl.h>
-#include <linux/hidraw.h>
-
-#include "fu-io-channel.h"
-
 #include "fu-synaptics-rmi-common.h"
 #include "fu-synaptics-rmi-firmware.h"
+#include "fu-synaptics-rmi-ps2-device.h"
 #include "fu-synaptics-rmi-v5-device.h"
 #include "fu-synaptics-rmi-v6-device.h"
 #include "fu-synaptics-rmi-v7-device.h"
 
-#define RMI_WRITE_REPORT_ID				0x9	/* output report */
-#define RMI_READ_ADDR_REPORT_ID				0xa	/* output report */
-#define RMI_READ_DATA_REPORT_ID				0xb	/* input report */
-#define RMI_ATTN_REPORT_ID				0xc	/* input report */
-#define RMI_SET_RMI_MODE_REPORT_ID			0xf	/* feature report */
-
-#define RMI_DEVICE_DEFAULT_TIMEOUT			2000
-
-#define HID_RMI4_REPORT_ID				0
-#define HID_RMI4_READ_INPUT_COUNT			1
-#define HID_RMI4_READ_INPUT_DATA			2
-#define HID_RMI4_READ_OUTPUT_ADDR			2
-#define HID_RMI4_READ_OUTPUT_COUNT			4
-#define HID_RMI4_WRITE_OUTPUT_COUNT			1
-#define HID_RMI4_WRITE_OUTPUT_ADDR			2
-#define HID_RMI4_WRITE_OUTPUT_DATA			4
-#define HID_RMI4_FEATURE_MODE				1
-#define HID_RMI4_ATTN_INTERUPT_SOURCES			1
-#define HID_RMI4_ATTN_DATA				2
-
-#define RMI_DEVICE_PAGE_SELECT_REGISTER			0xff
-#define RMI_DEVICE_MAX_PAGE				0xff
 #define RMI_DEVICE_PAGE_SIZE				0x100
 #define RMI_DEVICE_PAGE_SCAN_START			0x00e9
 #define RMI_DEVICE_PAGE_SCAN_END			0x0005
@@ -68,28 +42,16 @@
 #define RMI_F01_CMD_DEVICE_RESET			1
 #define RMI_F01_DEFAULT_RESET_DELAY_MS			100
 
-/*
- * msleep mode controls power management on the device and affects all
- * functions of the device.
- */
-#define RMI_F01_CTRL0_SLEEP_MODE_MASK			0x03
-
-#define RMI_SLEEP_MODE_NORMAL				0x00
-#define RMI_SLEEP_MODE_SENSOR_SLEEP			0x01
-
-/*
- * This bit disables whatever sleep mode may be selected by the sleep_mode
- * field and forces the device to run at full power without sleeping.
- */
-#define RMI_F01_CRTL0_NOSLEEP_BIT			(1 << 2)
-
 typedef struct
 {
 	FuSynapticsRmiFlash	 flash;
 	GPtrArray		*functions;
-	FuIOChannel		*io_channel;
 	FuSynapticsRmiFunction	*f01;
 	FuSynapticsRmiFunction	*f34;
+	guint8			 current_page;
+	guint16			 sig_size;	/* 0x0 for non-secure update */
+	guint8			 max_page;
+	gboolean		 in_iep_mode;
 } FuSynapticsRmiDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuSynapticsRmiDevice, fu_synaptics_rmi_device, FU_TYPE_UDEV_DEVICE)
@@ -125,6 +87,10 @@ fu_synaptics_rmi_device_to_string (FuUdevDevice *device, guint idt, GString *str
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	fu_common_string_append_kx (str, idt, "CurrentPage", priv->current_page);
+	fu_common_string_append_kx (str, idt, "InIepMode", priv->in_iep_mode);
+	fu_common_string_append_kx (str, idt, "MaxPage", priv->max_page);
+	fu_common_string_append_kx (str, idt, "SigSize", priv->sig_size);
 	if (priv->f34 != NULL) {
 		fu_common_string_append_kx (str, idt, "BlVer",
 					    priv->f34->function_version + 0x5);
@@ -159,167 +125,62 @@ fu_synaptics_rmi_device_get_function (FuSynapticsRmiDevice *self,
 }
 
 GByteArray *
-fu_synaptics_rmi_device_read (FuSynapticsRmiDevice *self, guint16 addr, gsize req_sz, GError **error)
+fu_synaptics_rmi_device_read (FuSynapticsRmiDevice *self,
+			      guint16 addr,
+			      gsize req_sz,
+			      GError **error)
 {
-	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GByteArray) buf = g_byte_array_new ();
-	g_autoptr(GByteArray) req = g_byte_array_new ();
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	return klass_rmi->read (self, addr, req_sz, error);
+}
 
-	/* maximum size */
-	if (req_sz > 0xffff) {
+GByteArray *
+fu_synaptics_rmi_device_read_packet_register (FuSynapticsRmiDevice *self,
+					      guint16 addr,
+					      gsize req_sz,
+					      GError **error)
+{
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	if (klass_rmi->read_packet_register == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "data to read was too long");
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "packet register reads not supported");
 		return NULL;
 	}
-
-	/* report then old 1 byte read count */
-	fu_byte_array_append_uint8 (req, RMI_READ_ADDR_REPORT_ID);
-	fu_byte_array_append_uint8 (req, 0x0);
-
-	/* address */
-	fu_byte_array_append_uint16 (req, addr, G_LITTLE_ENDIAN);
-
-	/* read output count */
-	fu_byte_array_append_uint16 (req, req_sz, G_LITTLE_ENDIAN);
-
-	/* request */
-	for (guint j = req->len; j < 21; j++)
-		fu_byte_array_append_uint8 (req, 0x0);
-	if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-		fu_common_dump_full (G_LOG_DOMAIN, "ReportWrite",
-				     req->data, req->len,
-				     80, FU_DUMP_FLAGS_NONE);
-	}
-	if (!fu_io_channel_write_byte_array (priv->io_channel, req, RMI_DEVICE_DEFAULT_TIMEOUT,
-					     FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
-					     FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO, error))
-		return NULL;
-
-	/* keep reading responses until we get enough data */
-	while (buf->len < req_sz) {
-		guint8 input_count_sz = 0;
-		g_autoptr(GByteArray) res = NULL;
-		res = fu_io_channel_read_byte_array (priv->io_channel, req_sz,
-						     RMI_DEVICE_DEFAULT_TIMEOUT,
-						     FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
-						     error);
-		if (res == NULL)
-			return NULL;
-		if (res->len == 0) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
-					     "response zero sized");
-			return NULL;
-		}
-		if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-			fu_common_dump_full (G_LOG_DOMAIN, "ReportRead",
-					     res->data, res->len,
-					     80, FU_DUMP_FLAGS_NONE);
-		}
-
-		/* ignore non data report events */
-		if (res->data[HID_RMI4_REPORT_ID] != RMI_READ_DATA_REPORT_ID) {
-			g_debug ("ignoring report with ID 0x%02x",
-				 res->data[HID_RMI4_REPORT_ID]);
-			continue;
-		}
-		if (res->len < HID_RMI4_READ_INPUT_DATA) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "response too small: 0x%02x",
-				     res->len);
-			return NULL;
-		}
-		input_count_sz = res->data[HID_RMI4_READ_INPUT_COUNT];
-		if (input_count_sz == 0) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
-					     "input count zero");
-			return NULL;
-		}
-		if (input_count_sz + (guint) HID_RMI4_READ_INPUT_DATA > res->len) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "underflow 0x%02x from expected 0x%02x",
-				     res->len, (guint) input_count_sz + HID_RMI4_READ_INPUT_DATA);
-			return NULL;
-		}
-		g_byte_array_append (buf,
-				     res->data + HID_RMI4_READ_INPUT_DATA,
-				     input_count_sz);
-
-	}
-	if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-		fu_common_dump_full (G_LOG_DOMAIN, "DeviceRead", buf->data, buf->len,
-				     80, FU_DUMP_FLAGS_NONE);
-	}
-
-	return g_steal_pointer (&buf);
+	return klass_rmi->read_packet_register (self, addr, req_sz, error);
 }
 
 gboolean
-fu_synaptics_rmi_device_write (FuSynapticsRmiDevice *self, guint16 addr, GByteArray *req, GError **error)
+fu_synaptics_rmi_device_write (FuSynapticsRmiDevice *self,
+			       guint16 addr,
+			       GByteArray *req,
+			       GError **error)
 {
-	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
-	guint8 len = 0x0;
-	g_autoptr(GByteArray) buf = g_byte_array_new ();
-
-	/* check size */
-	if (req != NULL) {
-		if (req->len > 0xff) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
-					     "data to write was too long");
-			return FALSE;
-		}
-		len = req->len;
-	}
-
-	/* report */
-	fu_byte_array_append_uint8 (buf, RMI_WRITE_REPORT_ID);
-
-	/* length */
-	fu_byte_array_append_uint8 (buf, len);
-
-	/* address */
-	fu_byte_array_append_uint16 (buf, addr, G_LITTLE_ENDIAN);
-
-	/* optional data */
-	if (req != NULL)
-		g_byte_array_append (buf, req->data, req->len);
-
-	/* pad out to 21 bytes for some reason */
-	for (guint i = buf->len; i < 21; i++)
-		fu_byte_array_append_uint8 (buf, 0x0);
-	if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-		fu_common_dump_full (G_LOG_DOMAIN, "DeviceWrite", buf->data, buf->len,
-				     80, FU_DUMP_FLAGS_NONE);
-	}
-
-	return fu_io_channel_write_byte_array (priv->io_channel, buf, RMI_DEVICE_DEFAULT_TIMEOUT,
-					       FU_IO_CHANNEL_FLAG_SINGLE_SHOT |
-					       FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO,
-					       error);
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	return klass_rmi->write (self, addr, req, error);
 }
 
-static gboolean
-fu_synaptics_rmi_device_set_rma_page (FuSynapticsRmiDevice *self, guint8 page, GError **error)
+gboolean
+fu_synaptics_rmi_device_set_page (FuSynapticsRmiDevice *self, guint8 page, GError **error)
 {
-	g_autoptr(GByteArray) req = g_byte_array_new ();
-
-	fu_byte_array_append_uint8 (req, page);
-	if (!fu_synaptics_rmi_device_write (self, RMI_DEVICE_PAGE_SELECT_REGISTER, req, error)) {
-		g_prefix_error (error, "failed to set RMA page 0x%x: ", page);
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	if (priv->current_page == page)
+		return TRUE;
+	if (!klass_rmi->set_page (self, page, error))
 		return FALSE;
-	}
+	priv->current_page = page;
 	return TRUE;
+}
+
+gboolean
+fu_synaptics_rmi_device_write_bus_select (FuSynapticsRmiDevice *self, guint8 bus, GError **error)
+{
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	if (klass_rmi->write_bus_select == NULL)
+		return TRUE;
+	return klass_rmi->write_bus_select (self, bus, error);
 }
 
 gboolean
@@ -345,14 +206,14 @@ fu_synaptics_rmi_device_scan_pdt (FuSynapticsRmiDevice *self, GError **error)
 	g_ptr_array_set_size (priv->functions, 0);
 
 	/* scan pages */
-	for (guint page = 0; page < RMI_DEVICE_MAX_PAGE; page++) {
+	for (guint page = 0; page < priv->max_page; page++) {
 		gboolean found = FALSE;
 		guint32 page_start = RMI_DEVICE_PAGE_SIZE * page;
 		guint32 pdt_start = page_start + RMI_DEVICE_PAGE_SCAN_START;
 		guint32 pdt_end = page_start + RMI_DEVICE_PAGE_SCAN_END;
 
 		/* set page */
-		if (!fu_synaptics_rmi_device_set_rma_page (self, page, error))
+		if (!fu_synaptics_rmi_device_set_page (self, page, error))
 			return FALSE;
 
 		/* read out functions */
@@ -361,7 +222,9 @@ fu_synaptics_rmi_device_scan_pdt (FuSynapticsRmiDevice *self, GError **error)
 			g_autoptr(GByteArray) res = NULL;
 			res = fu_synaptics_rmi_device_read (self, addr, RMI_DEVICE_PDT_ENTRY_SIZE, error);
 			if (res == NULL) {
-				g_prefix_error (error, "failed to read PDT entry @ 0x%04x: ", addr);
+				g_prefix_error (error,
+						"failed to read page %u PDT entry @ 0x%04x: ",
+						page, addr);
 				return FALSE;
 			}
 			func = fu_synaptics_rmi_function_parse (res, page_start, interrupt_count, error);
@@ -396,23 +259,34 @@ fu_synaptics_rmi_device_scan_pdt (FuSynapticsRmiDevice *self, GError **error)
 	return TRUE;
 }
 
-typedef enum {
-	HID_RMI4_MODE_MOUSE				= 0,
-	HID_RMI4_MODE_ATTN_REPORTS			= 1,
-	HID_RMI4_MODE_NO_PACKED_ATTN_REPORTS		= 2,
-} FuSynapticsRmiHidMode;
-
-static gboolean
-fu_synaptics_rmi_device_set_mode (FuSynapticsRmiDevice *self,
-				  FuSynapticsRmiHidMode mode,
-				  GError **error)
+void
+fu_synaptics_rmi_device_set_sig_size (FuSynapticsRmiDevice *self,
+					guint16 sig_size)
 {
-	const guint8 data[] = { 0x0f, mode };
-	if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "SetMode", data, sizeof(data));
-	return fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
-				     HIDIOCSFEATURE(sizeof(data)), (guint8 *) data,
-				     NULL, error);
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	priv->sig_size = sig_size;
+}
+
+guint16
+fu_synaptics_rmi_device_get_sig_size (FuSynapticsRmiDevice *self)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	return priv->sig_size;
+}
+
+void
+fu_synaptics_rmi_device_set_max_page (FuSynapticsRmiDevice *self,
+				      guint8 max_page)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	priv->max_page = max_page;
+}
+
+guint8
+fu_synaptics_rmi_device_get_max_page (FuSynapticsRmiDevice *self)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	return priv->max_page;
 }
 
 static void
@@ -434,15 +308,43 @@ fu_synaptics_rmi_device_set_product_id (FuSynapticsRmiDevice *self, const gchar 
 }
 
 static gboolean
+fu_synaptics_rmi_device_query_status (FuSynapticsRmiDevice *self, GError **error)
+{
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	return klass_rmi->query_status (self, error);
+}
+
+static gboolean
+fu_synaptics_rmi_device_query_build_id (FuSynapticsRmiDevice *self,
+					guint32 *build_id,
+					GError **error)
+{
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	if (klass_rmi->query_build_id == NULL)
+		return TRUE;
+	return klass_rmi->query_build_id (self, build_id, error);
+}
+
+static gboolean
+fu_synaptics_rmi_device_query_product_sub_id (FuSynapticsRmiDevice *self,
+					      guint8 *product_sub_id,
+					      GError **error)
+{
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	if (klass_rmi->query_product_sub_id == NULL)
+		return TRUE;
+	return klass_rmi->query_product_sub_id (self, product_sub_id, error);
+}
+
+static gboolean
 fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_GET_CLASS (device);
-	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (device);
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 	guint16 addr;
 	guint16 prod_info_addr;
 	guint8 ds4_query_length = 0;
+	guint8 product_sub_id = 0;
 	gboolean has_build_id_query = FALSE;
 	gboolean has_dds4_queries = FALSE;
 	gboolean has_lts;
@@ -456,6 +358,9 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	g_autoptr(GByteArray) f01_product_id = NULL;
 	g_autoptr(GByteArray) f01_ds4 = NULL;
 
+	/* assume reset */
+	priv->in_iep_mode = FALSE;
+
 	/* read PDT */
 	if (!fu_synaptics_rmi_device_scan_pdt (self, error))
 		return FALSE;
@@ -463,6 +368,13 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	if (priv->f01 == NULL)
 		return FALSE;
 	addr = priv->f01->query_base;
+
+	/* set page */
+	if (!fu_synaptics_rmi_device_set_page (self, 0, error))
+		return FALSE;
+	if (!fu_synaptics_rmi_device_enter_iep_mode (self, error))
+		return FALSE;
+
 	f01_basic = fu_synaptics_rmi_device_read (self, addr, RMI_DEVICE_F01_BASIC_QUERY_LEN, error);
 	if (f01_basic == NULL) {
 		g_prefix_error (error, "failed to read the basic query: ");
@@ -479,7 +391,19 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 		g_prefix_error (error, "failed to read the product id: ");
 		return FALSE;
 	}
-	product_id = g_strndup ((const gchar *) f01_product_id->data, f01_product_id->len);
+	if (!fu_synaptics_rmi_device_query_product_sub_id (self, &product_sub_id, error)) {
+		g_prefix_error (error, "failed to query product sub id: ");
+		return FALSE;
+	}
+	if (product_sub_id == 0) {
+		/* HID */
+		product_id = g_strndup ((const gchar *) f01_product_id->data,
+					f01_product_id->len);
+	} else {
+		/* PS/2 */
+		g_autofree gchar *tmp = g_strndup ((const gchar *) f01_product_id->data, 6);
+		product_id = g_strdup_printf ("%s-%03d", tmp, product_sub_id);
+	}
 	if (product_id != NULL)
 		fu_synaptics_rmi_device_set_product_id (self, product_id);
 
@@ -534,29 +458,39 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 				     f01_tmp->data, f01_tmp->len, 0x0,	/* src */
 				     f01_tmp->len, error))
 			return FALSE;
-		priv->flash.build_id = fu_common_read_uint32 (buf32, G_LITTLE_ENDIAN);
+		if (!fu_common_read_uint32_safe (buf32, sizeof(buf32), 0x0,
+						 &priv->flash.build_id,
+						 G_LITTLE_ENDIAN, error))
+			return FALSE;
 	}
 
+	/* read build ID, typically only for PS/2 */
+	if (!fu_synaptics_rmi_device_query_build_id (self,
+						     &priv->flash.build_id,
+						     error)) {
+		g_prefix_error (error, "failed to query build id: ");
+		return FALSE;
+	}
+
+	/* get Function34_Query0,1 */
 	priv->f34 = fu_synaptics_rmi_device_get_function (self, 0x34, error);
 	if (priv->f34 == NULL)
 		return FALSE;
-
-	/* set up vfuncs for each bootloader protocol version */
 	if (priv->f34->function_version == 0x0) {
-		klass_rmi->setup = fu_synaptics_rmi_v5_device_setup;
-		klass_rmi->query_status = fu_synaptics_rmi_v5_device_query_status;
-		klass_device->detach = fu_synaptics_rmi_v5_device_detach;
-		klass_device->write_firmware = fu_synaptics_rmi_v5_device_write_firmware;
+		if (!fu_synaptics_rmi_v5_device_setup (self, error)) {
+			g_prefix_error (error, "failed to do v5 setup: ");
+			return FALSE;
+		}
 	} else if (priv->f34->function_version == 0x1) {
-		klass_rmi->setup = fu_synaptics_rmi_v6_device_setup;
-		klass_rmi->query_status = fu_synaptics_rmi_v5_device_query_status;
-		klass_device->detach = fu_synaptics_rmi_v5_device_detach;
-		klass_device->write_firmware = fu_synaptics_rmi_v5_device_write_firmware;
+		if (!fu_synaptics_rmi_v6_device_setup (self, error)) {
+			g_prefix_error (error, "failed to do v6 setup: ");
+			return FALSE;
+		}
 	} else if (priv->f34->function_version == 0x2) {
-		klass_rmi->setup = fu_synaptics_rmi_v7_device_setup;
-		klass_rmi->query_status = fu_synaptics_rmi_v7_device_query_status;
-		klass_device->detach = fu_synaptics_rmi_v7_device_detach;
-		klass_device->write_firmware = fu_synaptics_rmi_v7_device_write_firmware;
+		if (!fu_synaptics_rmi_v7_device_setup (self, error)) {
+			g_prefix_error (error, "failed to do v7 setup: ");
+			return FALSE;
+		}
 	} else {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -565,13 +499,7 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 			     priv->f34->function_version);
 		return FALSE;
 	}
-
-	/* get Function34_Query0,1 */
-	if (!klass_rmi->setup (self, error)) {
-		g_prefix_error (error, "failed to read f34 queries: ");
-		return FALSE;
-	}
-	if (!klass_rmi->query_status (self, error)) {
+	if (!fu_synaptics_rmi_device_query_status (self, error)) {
 		g_prefix_error (error, "failed to read bootloader status: ");
 		return FALSE;
 	}
@@ -587,51 +515,6 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-static gboolean
-fu_synaptics_rmi_device_open (FuUdevDevice *device, GError **error)
-{
-	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
-	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
-
-	/* set up touchpad so we can query it */
-	priv->io_channel = fu_io_channel_unix_new (fu_udev_device_get_fd (device));
-	if (!fu_synaptics_rmi_device_set_mode (self, HID_RMI4_MODE_ATTN_REPORTS, error))
-		return FALSE;
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_synaptics_rmi_device_close (FuUdevDevice *device, GError **error)
-{
-	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
-	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GError) error_local = NULL;
-
-	/* turn it back to mouse mode */
-	if (!fu_synaptics_rmi_device_set_mode (self, HID_RMI4_MODE_MOUSE, &error_local)) {
-		/* if just detached for replug, swallow error */
-		if (!g_error_matches (error_local,
-				      FWUPD_ERROR,
-				      FWUPD_ERROR_PERMISSION_DENIED)) {
-			g_propagate_error (error, g_steal_pointer (&error_local));
-			return FALSE;
-		}
-		g_debug ("ignoring: %s", error_local->message);
-	}
-
-	fu_udev_device_set_fd (device, -1);
-	g_clear_object (&priv->io_channel);
-	return TRUE;
-}
-
-static gboolean
-fu_synaptics_rmi_device_probe (FuUdevDevice *device, GError **error)
-{
-	return fu_udev_device_set_physical_id (device, "hid", error);
 }
 
 static FuFirmware *
@@ -654,7 +537,8 @@ fu_synaptics_rmi_device_prepare_firmware (FuDevice *device,
 	bytes_bin = fu_firmware_get_image_by_id_bytes (firmware, "ui", error);
 	if (bytes_bin == NULL)
 		return NULL;
-	size_expected = (gsize) priv->flash.block_count_fw * (gsize) priv->flash.block_size;
+	size_expected = ((gsize) priv->flash.block_count_fw * (gsize) priv->flash.block_size) +
+			fu_synaptics_rmi_firmware_get_sig_size (FU_SYNAPTICS_RMI_FIRMWARE (firmware));
 	if (g_bytes_get_size (bytes_bin) != size_expected) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -731,56 +615,28 @@ fu_synaptics_rmi_device_wait_for_attr (FuSynapticsRmiDevice *self,
 				       guint timeout_ms,
 				       GError **error)
 {
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	return klass_rmi->wait_for_attr (self, source_mask, timeout_ms, error);
+}
+
+gboolean
+fu_synaptics_rmi_device_enter_iep_mode (FuSynapticsRmiDevice *self, GError **error)
+{
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GTimer) timer = g_timer_new ();
 
-	/* wait for event from hardware */
-	while (g_timer_elapsed (timer, NULL) * 1000.f < timeout_ms) {
-		g_autoptr(GByteArray) res = NULL;
-		g_autoptr(GError) error_local = NULL;
-
-		/* read from fd */
-		res = fu_io_channel_read_byte_array (priv->io_channel,
-						     HID_RMI4_ATTN_INTERUPT_SOURCES + 1,
-						     timeout_ms,
-						     FU_IO_CHANNEL_FLAG_NONE,
-						     &error_local);
-		if (res == NULL) {
-			if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_TIMED_OUT))
-				break;
-			g_propagate_error (error, g_steal_pointer (&error_local));
+	/* already set */
+	if (priv->in_iep_mode)
+		return TRUE;
+	if (klass_rmi->enter_iep_mode != NULL) {
+		g_debug ("enabling RMI iep_mode");
+		if (!klass_rmi->enter_iep_mode (self, error)) {
+			g_prefix_error (error, "failed to enable RMI iep_mode: ");
 			return FALSE;
 		}
-		if (g_getenv ("FWUPD_SYNAPTICS_RMI_VERBOSE") != NULL) {
-			fu_common_dump_full (G_LOG_DOMAIN, "ReportRead",
-					     res->data, res->len,
-					     80, FU_DUMP_FLAGS_NONE);
-		}
-		if (res->len < HID_RMI4_ATTN_INTERUPT_SOURCES + 1) {
-			g_debug ("attr: ignoring small read of %u", res->len);
-			continue;
-		}
-		if (res->data[HID_RMI4_REPORT_ID] != RMI_ATTN_REPORT_ID) {
-			g_debug ("attr: ignoring invalid report ID 0x%x",
-				 res->data[HID_RMI4_REPORT_ID]);
-			continue;
-		}
-
-		/* success */
-		if (source_mask & res->data[HID_RMI4_ATTN_INTERUPT_SOURCES])
-			return TRUE;
-
-		/* wrong mask */
-		g_debug ("source mask did not match: 0x%x",
-			 res->data[HID_RMI4_ATTN_INTERUPT_SOURCES]);
 	}
-
-	/* urgh */
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "no attr report, timed out");
-	return FALSE;
+	priv->in_iep_mode = TRUE;
+	return TRUE;
 }
 
 gboolean
@@ -833,6 +689,14 @@ fu_synaptics_rmi_device_wait_for_idle (FuSynapticsRmiDevice *self,
 		f34_enabled = !!(res->data[0] & RMI_F34_ENABLED_MASK);
 	}
 
+	/* PS/2 */
+	if (FU_IS_SYNAPTICS_RMI_PS2_DEVICE (self)) {
+		if (f34_command == 0) {
+			g_debug ("F34 zero as PS/2");
+			return TRUE;
+		}
+	}
+
 	/* is idle */
 	if (f34_status == 0x0 && f34_command == 0x0) {
 		if (f34_enabled == 0x0) {
@@ -857,87 +721,10 @@ fu_synaptics_rmi_device_wait_for_idle (FuSynapticsRmiDevice *self,
 gboolean
 fu_synaptics_rmi_device_disable_sleep (FuSynapticsRmiDevice *self, GError **error)
 {
-	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(GByteArray) f01_control0 = NULL;
-
-	f01_control0 = fu_synaptics_rmi_device_read (self, priv->f01->control_base, 0x1, error);
-	if (f01_control0 == NULL) {
-		g_prefix_error (error, "failed to write get f01_control0: ");
-		return FALSE;
-	}
-	f01_control0->data[0] |= RMI_F01_CRTL0_NOSLEEP_BIT;
-	f01_control0->data[0] = (f01_control0->data[0] & ~RMI_F01_CTRL0_SLEEP_MODE_MASK) | RMI_SLEEP_MODE_NORMAL;
-	if (!fu_synaptics_rmi_device_write (self,
-					    priv->f01->control_base,
-					    f01_control0,
-					    error)) {
-		g_prefix_error (error, "failed to write f01_control0: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-gboolean
-fu_synaptics_rmi_device_rebind_driver (FuSynapticsRmiDevice *self, GError **error)
-{
-	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (self));
-	const gchar *hid_id;
-	const gchar *driver;
-	const gchar *subsystem;
-	g_autofree gchar *fn_rebind = NULL;
-	g_autofree gchar *fn_unbind = NULL;
-	g_autoptr(GUdevDevice) parent_hid = NULL;
-	g_autoptr(GUdevDevice) parent_i2c = NULL;
-
-	/* get actual HID node */
-	parent_hid = g_udev_device_get_parent_with_subsystem (udev_device, "hid", NULL);
-	if (parent_hid == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "no HID parent device for %s",
-			     g_udev_device_get_sysfs_path (udev_device));
-		return FALSE;
-	}
-
-	/* find the physical ID to use for the rebind */
-	hid_id = g_udev_device_get_property (parent_hid, "HID_PHYS");
-	if (hid_id == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "no HID_PHYS in %s",
-			     g_udev_device_get_sysfs_path (parent_hid));
-		return FALSE;
-	}
-	g_debug ("HID_PHYS: %s", hid_id);
-
-	/* build paths */
-	parent_i2c = g_udev_device_get_parent_with_subsystem (udev_device, "i2c", NULL);
-	if (parent_i2c == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "no I2C parent device for %s",
-			     g_udev_device_get_sysfs_path (udev_device));
-		return FALSE;
-	}
-	driver = g_udev_device_get_driver (parent_i2c);
-	subsystem = g_udev_device_get_subsystem (parent_i2c);
-	fn_rebind = g_build_filename ("/sys/bus/", subsystem, "drivers", driver, "bind", NULL);
-	fn_unbind = g_build_filename ("/sys/bus/", subsystem, "drivers", driver, "unbind", NULL);
-
-	/* unbind hidraw, then bind it again to get a replug */
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	if (!fu_synaptics_rmi_device_writeln (fn_unbind, hid_id, error))
-		return FALSE;
-	if (!fu_synaptics_rmi_device_writeln (fn_rebind, hid_id, error))
-		return FALSE;
-
-	/* success */
-	return TRUE;
+	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
+	if (klass_rmi->disable_sleep == NULL)
+		return TRUE;
+	return klass_rmi->disable_sleep (self, error);
 }
 
 gboolean
@@ -982,23 +769,32 @@ fu_synaptics_rmi_device_disable_irqs (FuSynapticsRmiDevice *self, GError **error
 }
 
 static gboolean
-fu_synaptics_rmi_device_attach (FuDevice *device, GError **error)
+fu_synaptics_rmi_device_write_firmware (FuDevice *device,
+					FuFirmware *firmware,
+					FwupdInstallFlags flags,
+					GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
-
-	/* sanity check */
-	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug ("already in runtime mode, skipping");
-		return TRUE;
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	if (priv->f34->function_version == 0x0 ||
+	    priv->f34->function_version == 0x1) {
+		return fu_synaptics_rmi_v5_device_write_firmware (device,
+								  firmware,
+								  flags,
+								  error);
 	}
-
-	/* reset device */
-	if (!fu_synaptics_rmi_device_reset (self, error))
-		return FALSE;
-
-	/* rebind to rescan PDT with new firmware running */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	return fu_synaptics_rmi_device_rebind_driver (self, error);
+	if (priv->f34->function_version == 0x2) {
+		return fu_synaptics_rmi_v7_device_write_firmware (device,
+								  firmware,
+								  flags,
+								  error);
+	}
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_NOT_SUPPORTED,
+		     "f34 function version 0x%02x unsupported",
+		     priv->f34->function_version);
+	return FALSE;
 }
 
 static void
@@ -1007,9 +803,8 @@ fu_synaptics_rmi_device_init (FuSynapticsRmiDevice *self)
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.rmi");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_name (FU_DEVICE (self), "Touchpad");
-	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
+	priv->current_page = 0xfe;
 	priv->functions = g_ptr_array_new_with_free_func (g_free);
 }
 
@@ -1031,9 +826,6 @@ fu_synaptics_rmi_device_class_init (FuSynapticsRmiDeviceClass *klass)
 	object_class->finalize = fu_synaptics_rmi_device_finalize;
 	klass_device_udev->to_string = fu_synaptics_rmi_device_to_string;
 	klass_device->prepare_firmware = fu_synaptics_rmi_device_prepare_firmware;
-	klass_device->attach = fu_synaptics_rmi_device_attach;
 	klass_device->setup = fu_synaptics_rmi_device_setup;
-	klass_device_udev->probe = fu_synaptics_rmi_device_probe;
-	klass_device_udev->open = fu_synaptics_rmi_device_open;
-	klass_device_udev->close = fu_synaptics_rmi_device_close;
+	klass_device->write_firmware = fu_synaptics_rmi_device_write_firmware;
 }

@@ -152,10 +152,6 @@ msgstr "Firmware frissítés aktiválása"
 msgid "Activating firmware update for"
 msgstr "Firmware frissítés aktiválása ennél:"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Hozzáadva"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Kor"
@@ -272,7 +268,6 @@ msgstr "Mégse"
 msgid "Cancelled"
 msgstr "Megszakítva"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Módosítva"
@@ -947,10 +942,6 @@ msgstr "%s újratelepítése ezzel: %s…"
 msgid "Remote ID"
 msgstr "Távoli azonosító"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Eltávolítva"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "Adatok cseréje egy meglévő firmware fájlban"
@@ -1329,10 +1320,6 @@ msgstr "Verzió"
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Várakozás…"
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "DFU-eszközök menet közbeni csatlakoztatásának figyelése"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"

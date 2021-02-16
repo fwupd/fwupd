@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 #include "fu-wacom-aes-device.h"
 #include "fu-wacom-emr-device.h"
 #include "fu-wacom-common.h"

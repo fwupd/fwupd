@@ -20,7 +20,6 @@
 #include "fwupd-common.h"
 #include "fu-plugin-dell.h"
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 #include "fu-device-metadata.h"
 
 /* These are used to indicate the status of a previous DELL flash */
@@ -294,9 +293,9 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 }
 
 gboolean
-fu_plugin_usb_device_added (FuPlugin *plugin,
-			    FuUsbDevice *device,
-			    GError **error)
+fu_plugin_backend_device_added (FuPlugin *plugin,
+				FuDevice *device,
+				GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	FwupdVersionFormat version_format = FWUPD_VERSION_FORMAT_DELL_BIOS;
@@ -311,11 +310,20 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 	gboolean old_ec = FALSE;
 	g_autofree gchar *flash_ver_str = NULL;
 
+	/* not interesting */
+	if (!FU_IS_USB_DEVICE (device)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not a USB device");
+		return FALSE;
+	}
+
 	/* don't look up immediately if a dock is connected as that would
 	   mean a SMI on every USB device that showed up on the system */
 	if (!data->smi_obj->fake_smbios) {
-		vid = fu_usb_device_get_vid (device);
-		pid = fu_usb_device_get_pid (device);
+		vid = fu_usb_device_get_vid (FU_USB_DEVICE (device));
+		pid = fu_usb_device_get_pid (FU_USB_DEVICE (device));
 		platform = fu_device_get_physical_id (FU_DEVICE (device));
 	} else {
 		vid = data->fake_vid;

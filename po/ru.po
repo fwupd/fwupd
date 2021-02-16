@@ -131,10 +131,6 @@ msgstr "Активация обновления прошивки"
 msgid "Activating firmware update for"
 msgstr "Активация обновления прошивки для"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Добавлено"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Возраст"
@@ -241,7 +237,6 @@ msgstr "Отменить"
 msgid "Cancelled"
 msgstr "Отменено"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Изменено"
@@ -723,10 +718,6 @@ msgstr "Переустановка %s с %s…"
 msgid "Remote ID"
 msgstr "Идентификатор репозитория"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Удалено"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "Заменить данные в существующем файле прошивки"
@@ -966,10 +957,6 @@ msgstr "Версия"
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Ожидание…"
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Следить за устройствами DFU, которые являются подключёнными"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"

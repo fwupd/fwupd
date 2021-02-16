@@ -208,10 +208,6 @@ msgstr "Aktivování aktualizace firmware"
 msgid "Activating firmware update for"
 msgstr "Aktivace aktualizovaného firmware pro"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Přidáno"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Stáří"
@@ -393,7 +389,6 @@ msgstr "Tuto aktualizaci dbx už není možné použít, protože už je použí
 msgid "Cannot apply updates on live media"
 msgstr "Aktualizace není možné použít při provozování systému z instalačního média (live)"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Změněno"
@@ -748,6 +743,7 @@ msgid "FILENAME DEVICE-ID"
 msgstr "NÁZEV-SOUBORU IDENTIFIKÁTOR-ZAŘÍZENÍ"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: The update state of the specific device
 msgid "Failed"
 msgstr "Nezdařilo se"
 
@@ -1439,10 +1435,6 @@ msgstr "Přeinstalovává se %s na %s…"
 msgid "Remote ID"
 msgstr "ID vzdáleného zdroje"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Odebráno"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "Nahradit data ve stávajícím souboru s firmwarem"
@@ -1831,10 +1823,6 @@ msgstr "Nezjištěn (či nastaven) UEFI ESP oddíl"
 msgid "UEFI Firmware Utility"
 msgstr "Nástroj pro práci s firmwarem UEFI"
 
-#. TRANSLATORS: capsule updates are an optional BIOS feature
-msgid "UEFI capsule updates not available or enabled"
-msgstr "Nejsou k dispozici (nebo zapnuté) aktualizace typu UEFI capsule"
-
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Nástroj pro UEFI dbx"
@@ -2052,10 +2040,6 @@ msgid "Waiting…"
 msgstr "Čeká se…"
 
 #. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Sledovat připojení zařízení podporujících DFU"
-
-#. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Sledovat změny hardwaru"
 
@@ -2091,10 +2075,6 @@ msgstr "[KONTROLNÍ-SOUČET]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID]"
 msgstr "[IDENTIF-ZAŘÍZENÍ|GUID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[FILE]"
-msgstr "[SOUBOR]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

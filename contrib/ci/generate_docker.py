@@ -10,6 +10,7 @@ import sys
 import shutil
 from generate_dependencies import parse_dependencies
 
+
 def get_container_cmd():
     '''return docker or podman as container manager'''
 

@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-hash.h"
 #include "fu-plugin-vfuncs.h"
 
 struct FuPluginData {
@@ -22,12 +21,14 @@ fu_plugin_init (FuPlugin *plugin)
 }
 
 gboolean
-fu_plugin_udev_device_added (FuPlugin *plugin, FuUdevDevice *device, GError **error)
+fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 
 	/* interesting device? */
-	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "iommu") != 0)
+	if (!FU_IS_UDEV_DEVICE (device))
+		return TRUE;
+	if (g_strcmp0 (fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)), "iommu") != 0)
 		return TRUE;
 	priv->has_iommu = TRUE;
 

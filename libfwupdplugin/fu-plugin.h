@@ -7,7 +7,9 @@
 #pragma once
 
 #include <gio/gio.h>
+#ifdef HAVE_GUSB
 #include <gusb.h>
+#endif
 
 #include "fu-common.h"
 #include "fu-common-guid.h"
@@ -21,8 +23,8 @@
 #ifdef HAVE_GUDEV
 #include "fu-udev-device.h"
 #endif
-#include "fwupd-common.h"
-#include "fwupd-plugin.h"
+#include <libfwupd/fwupd-common.h>
+#include <libfwupd/fwupd-plugin.h>
 
 #define FU_TYPE_PLUGIN (fu_plugin_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuPlugin, fu_plugin, FU, PLUGIN, FwupdPlugin)
@@ -30,6 +32,7 @@ G_DECLARE_DERIVABLE_TYPE (FuPlugin, fu_plugin, FU, PLUGIN, FwupdPlugin)
 #define fu_plugin_get_flags(p)			fwupd_plugin_get_flags(FWUPD_PLUGIN(p))
 #define fu_plugin_has_flag(p,f)			fwupd_plugin_has_flag(FWUPD_PLUGIN(p),f)
 #define fu_plugin_add_flag(p,f)			fwupd_plugin_add_flag(FWUPD_PLUGIN(p),f)
+#define fu_plugin_remove_flag(p,f)		fwupd_plugin_remove_flag(FWUPD_PLUGIN(p),f)
 
 struct _FuPluginClass
 {
@@ -137,6 +140,7 @@ gchar		*fu_plugin_get_hwid_replace_value	(FuPlugin	*self,
 							 const gchar	*keys,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
+GPtrArray	*fu_plugin_get_devices			(FuPlugin	*self);
 GPtrArray	*fu_plugin_get_hwids			(FuPlugin	*self);
 const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*self,
 							 const gchar	*dmi_id);

@@ -62,12 +62,15 @@ def parse_args():
         help="Reinstall payloads(default False)",
     )
     parser.add_argument(
-        "command", choices=["get-devices", "get-details", "install", "refresh"], help="What to do"
+        "command",
+        choices=["get-devices", "get-details", "install", "refresh"],
+        help="What to do",
     )
     parser.add_argument('cab', nargs='?', help='CAB file')
     parser.add_argument('deviceid', nargs='?', help='DeviceID to operate on(optional)')
     args = parser.parse_args()
     return args
+
 
 def refresh(client):
     """Uses fwupd client to refresh metadata"""
@@ -79,6 +82,7 @@ def refresh(client):
         if remote.get_kind() != Fwupd.RemoteKind.DOWNLOAD:
             continue
         client.refresh_remote(remote)
+
 
 def get_devices(client):
     """Use fwupd client to fetch devices"""

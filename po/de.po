@@ -24,10 +24,6 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f Minute verbleibt"
 msgstr[1] "%.0f Minuten verbleiben"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Hinzugefügt"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Alter"
@@ -93,7 +89,6 @@ msgstr "Abbrechen"
 msgid "Cancelled"
 msgstr "Abgebrochen"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Geändert"
@@ -460,10 +455,6 @@ msgstr "Metadaten von entferntem Server aktualisieren"
 msgid "Reinstalling %s with %s... "
 msgstr "Erneute Installation von %s mit %s …"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Entfernt"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "Daten in einer bestehenden Firmware-Datei ersetzen"
@@ -621,10 +612,6 @@ msgstr "Version"
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Warten …"
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Geräteanschluss von DFU-Geräten überwachen"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"

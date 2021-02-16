@@ -216,7 +216,10 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 			if (memcmp (buf, "CSR-dfu", 7) == 0) {
 				guint16 hdr_ver;
 				guint16 hdr_len;
-				hdr_ver = fu_common_read_uint16 (buf + 8, G_LITTLE_ENDIAN);
+				if (!fu_common_read_uint16_safe	(buf, chunk_sz, 8,
+								 &hdr_ver, G_LITTLE_ENDIAN,
+								 error))
+					return NULL;
 				if (hdr_ver != 0x03) {
 					g_set_error (error,
 						     FWUPD_ERROR,
@@ -226,7 +229,10 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 						     hdr_ver);
 					return NULL;
 				}
-				total_sz = fu_common_read_uint32 (buf + 10, G_LITTLE_ENDIAN);
+				if (!fu_common_read_uint32_safe	(buf, chunk_sz, 10,
+								 &total_sz, G_LITTLE_ENDIAN,
+								 error))
+					return NULL;
 				if (total_sz == 0) {
 					g_set_error (error,
 						     FWUPD_ERROR,
@@ -236,7 +242,10 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 						     total_sz);
 					return NULL;
 				}
-				hdr_len = fu_common_read_uint16 (buf + 14, G_LITTLE_ENDIAN);
+				if (!fu_common_read_uint16_safe	(buf, chunk_sz, 14,
+								 &hdr_len, G_LITTLE_ENDIAN,
+								 error))
+					return NULL;
 				g_debug ("CSR header length: %" G_GUINT16_FORMAT, hdr_len);
 			}
 		}
@@ -374,7 +383,7 @@ fu_csr_device_download (FuDevice *device,
 	/* send to hardware */
 	for (idx = 0; idx < chunks->len; idx++) {
 		FuChunk *chk = g_ptr_array_index (chunks, idx);
-		g_autoptr(GBytes) blob_tmp = g_bytes_new_static (chk->data, chk->data_sz);
+		g_autoptr(GBytes) blob_tmp = fu_chunk_get_bytes (chk);
 
 		/* send packet */
 		if (!fu_csr_device_download_chunk (self, idx, blob_tmp, error))

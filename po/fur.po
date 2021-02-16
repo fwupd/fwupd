@@ -42,10 +42,6 @@ msgstr "Ative il gnûf firmware sul dispositîf"
 msgid "Activating firmware update"
 msgstr "Ativazion inzornament firmware"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Zontât"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Etât"
@@ -150,7 +146,6 @@ msgstr "Anule"
 msgid "Cancelled"
 msgstr "Anulât"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Modificât"
@@ -625,10 +620,6 @@ msgstr "Daûr a tornâ a instalâ %s cun %s... "
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "ID rimot"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Gjavât"
 
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"

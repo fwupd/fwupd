@@ -342,9 +342,9 @@ fu_nvme_device_write_firmware (FuDevice *device,
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_nvme_device_fw_download (self,
-						 chk->address,
-						 chk->data,
-						 chk->data_sz,
+						 fu_chunk_get_address (chk),
+						 fu_chunk_get_data (chk),
+						 fu_chunk_get_data_sz (chk),
 						 error)) {
 			g_prefix_error (error, "failed to write chunk %u: ", i);
 			return FALSE;

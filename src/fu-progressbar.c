@@ -196,7 +196,7 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 
 	/* dump to screen */
 	g_print ("%s", str->str);
-	self->to_erase = str->len;
+	self->to_erase = g_utf8_strlen (str->str, -1);
 
 	/* done */
 	if (is_idle_newline) {
@@ -296,6 +296,12 @@ void
 fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage)
 {
 	g_return_if_fail (FU_IS_PROGRESSBAR (self));
+
+	/* ignore initial client connection */
+	if (self->status == FWUPD_STATUS_UNKNOWN && status == FWUPD_STATUS_IDLE) {
+		self->status = status;
+		return;
+	}
 
 	/* use cached value */
 	if (status == FWUPD_STATUS_UNKNOWN)

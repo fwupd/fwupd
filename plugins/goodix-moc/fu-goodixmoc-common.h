@@ -35,7 +35,7 @@ typedef struct {
 	guint8		 protocol[8];
 	guint8		 flashVersion[8];
 	guint8		 reserved[62];
-} GxfpVersiomInfo;
+} GxfpVersionInfo;
 
 typedef struct {
 	guint8		 cmd;
@@ -46,7 +46,7 @@ typedef struct {
 	guint8		 result;
 	union {
 		GxfpAckMsg	ack_msg;
-		GxfpVersiomInfo version_info;
+		GxfpVersionInfo version_info;
 	};
 } GxfpCmdResp;
 
@@ -64,18 +64,3 @@ typedef struct __attribute__((__packed__)) {
 	guint8		 crc8;
 	guint8		 rev_crc8;
 } GxfpPkgHeader;
-
-void		 fu_goodixmoc_build_header	(GxfpPkgHeader	*pheader,
-						 guint16	 len,
-						 guint8		 cmd0,
-						 guint8		 cmd1,
-						 GxPkgType	 type);
-gboolean	 fu_goodixmoc_parse_header	(guint8		*buf,
-						 guint32	 bufsz,
-						 GxfpPkgHeader	*pheader,
-						 GError		**error);
-gboolean	 fu_goodixmoc_parse_body	(guint8		 cmd,
-						 guint8		*buf,
-						 guint32	 bufsz,
-						 GxfpCmdResp	*presp,
-						 GError		**error);

@@ -253,25 +253,34 @@ fu_vli_usbhub_msp430_device_write_firmware (FuDevice *device,
 				     (guint) sizeof(req.buf));
 			return FALSE;
 		}
-		if (9 + (guint) req.len * 2 > (guint) rcd->buf->len) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "line %u malformed", rcd->ln);
-			return FALSE;
-		}
 
 		/* write each record directly to the hardware */
 		req.buf[0] = I2C_ADDR_WRITE;
 		req.buf[1] = I2C_CMD_WRITE;
 		req.buf[2] = 0x3a; /* ':' */
 		req.buf[3] = req.len;
-		req.buf[4] = fu_firmware_strparse_uint8 (line + 3);
-		req.buf[5] = fu_firmware_strparse_uint8 (line + 5);
-		req.buf[6] = fu_firmware_strparse_uint8 (line + 7);
-		for (guint8 i = 0; i < req.len; i++)
-			req.buf[7 + i] = fu_firmware_strparse_uint8 (line + 9 + (i * 2));
-		req.buf[7 + req.len] = fu_firmware_strparse_uint8 (line + 9+ (req.len * 2));
+		if (!fu_firmware_strparse_uint8_safe (line, rcd->buf->len,
+						      3, &req.buf[4], error))
+			return FALSE;
+		if (!fu_firmware_strparse_uint8_safe (line, rcd->buf->len,
+						      5, &req.buf[5], error))
+			return FALSE;
+		if (!fu_firmware_strparse_uint8_safe (line, rcd->buf->len,
+						      7, &req.buf[6], error))
+			return FALSE;
+		for (guint8 i = 0; i < req.len; i++) {
+			if (!fu_firmware_strparse_uint8_safe (line,
+							      rcd->buf->len, 9 + (i * 2),
+							      &req.buf[7 + i],
+							      error))
+				return FALSE;
+		}
+		if (!fu_firmware_strparse_uint8_safe (line,
+						      rcd->buf->len,
+						      9 + (req.len * 2),
+						      &req.buf[7 + req.len],
+						      error))
+			return FALSE;
 		req.bufsz = req.len + 8;
 
 		/* retry this if it fails */

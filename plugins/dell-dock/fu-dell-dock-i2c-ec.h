@@ -17,8 +17,6 @@
 
 #include "config.h"
 
-#include <gusb.h>
-
 #include "fu-device.h"
 
 #define FU_TYPE_DELL_DOCK_EC (fu_dell_dock_ec_get_type ())

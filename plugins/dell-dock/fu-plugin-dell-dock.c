@@ -18,7 +18,6 @@
 #include "fu-device.h"
 #include "fwupd-error.h"
 #include "fu-plugin-vfuncs.h"
-#include "fu-hash.h"
 
 #include "fu-dell-dock-common.h"
 
@@ -80,34 +79,38 @@ fu_plugin_dell_dock_probe (FuPlugin *plugin,
 }
 
 gboolean
-fu_plugin_usb_device_added (FuPlugin *plugin,
-			    FuUsbDevice *device,
-			    GError **error)
+fu_plugin_backend_device_added (FuPlugin *plugin,
+				 FuDevice *device,
+				 GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(FuDellDockHub) hub = fu_dell_dock_hub_new (device);
-	FuDevice *fu_device = FU_DEVICE (hub);
+	g_autoptr(FuDellDockHub) hub = NULL;
 	const gchar *key = NULL;
 
-	locker = fu_device_locker_new (fu_device, error);
+	/* not interesting */
+	if (!FU_IS_USB_DEVICE (device))
+		return TRUE;
+
+	hub = fu_dell_dock_hub_new (FU_USB_DEVICE (device));
+	locker = fu_device_locker_new (FU_DEVICE (hub), error);
 	if (locker == NULL)
 		return FALSE;
-	fu_plugin_device_add (plugin, fu_device);
+	fu_plugin_device_add (plugin, FU_DEVICE (hub));
 
-	if (fu_device_has_custom_flag (fu_device, "has-bridge")) {
+	if (fu_device_has_custom_flag (FU_DEVICE (hub), "has-bridge")) {
 		g_autoptr(GError) error_local = NULL;
 
 		/* only add the device with parent to cache */
-		key = fu_device_get_id (fu_device);
+		key = fu_device_get_id (FU_DEVICE (hub));
 		if (fu_plugin_cache_lookup (plugin, key) != NULL) {
 			g_debug ("Ignoring already added device %s", key);
 			return TRUE;
 		}
-		fu_plugin_cache_add (plugin, key, fu_device);
+		fu_plugin_cache_add (plugin, key, FU_DEVICE (hub));
 
 		/* probe for extended devices */
 		if (!fu_plugin_dell_dock_probe (plugin,
-						fu_device,
+						FU_DEVICE (hub),
 						&error_local)) {
 			g_warning ("Failed to probe bridged devices for %s: %s",
 				   key,
@@ -116,7 +119,7 @@ fu_plugin_usb_device_added (FuPlugin *plugin,
 	}
 
 	/* clear updatable flag if parent doesn't have it */
-	fu_dell_dock_clone_updatable (fu_device);
+	fu_dell_dock_clone_updatable (FU_DEVICE (hub));
 
 	return TRUE;
 }
@@ -133,7 +136,7 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 }
 
 gboolean
-fu_plugin_device_removed (FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_backend_device_removed (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	const gchar *device_key = fu_device_get_id (device);
 	FuDevice *dev;

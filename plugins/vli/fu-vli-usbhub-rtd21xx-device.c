@@ -362,7 +362,9 @@ fu_vli_usbhub_rtd21xx_device_write_firmware (FuDevice *device,
 	}
 
 	/* verify project ID */
-	project_addr = fu_common_read_uint32 (read_buf + 1, G_BIG_ENDIAN);
+	if (!fu_common_read_uint32_safe (read_buf, sizeof(read_buf), 0x1,
+					 &project_addr, G_BIG_ENDIAN, error))
+		return FALSE;
 	project_id_count = read_buf[5];
 	write_buf[0] = ISP_CMD_SYNC_IDENTIFY_CODE;
 	if (!fu_memcpy_safe (write_buf, sizeof(write_buf), 0x1, /* dst */
@@ -409,10 +411,10 @@ fu_vli_usbhub_rtd21xx_device_write_firmware (FuDevice *device,
 		if (!fu_vli_usbhub_device_i2c_write (parent,
 						     UC_FOREGROUND_SLAVE_ADDR,
 						     UC_FOREGROUND_ISP_DATA_OPCODE,
-						     (guint8 *) chk->data,
-						     chk->data_sz,
+						     fu_chunk_get_data_out (chk),
+						     fu_chunk_get_data_sz (chk),
 						     error)) {
-			g_prefix_error (error, "failed to write @0x%04x: ", chk->address);
+			g_prefix_error (error, "failed to write @0x%04x: ", fu_chunk_get_address (chk));
 			return FALSE;
 		}
 

@@ -73,7 +73,7 @@ guint16
 fu_thunderbolt_firmware_get_device_id (FuThunderboltFirmware *self)
 {
 	FuThunderboltFirmwarePrivate *priv;
-	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), 0x0);
 	priv = GET_PRIVATE (self);
 	return priv->device_id;
 }
@@ -82,7 +82,7 @@ guint16
 fu_thunderbolt_firmware_get_vendor_id (FuThunderboltFirmware *self)
 {
 	FuThunderboltFirmwarePrivate *priv;
-	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), 0x0);
 	priv = GET_PRIVATE (self);
 	return priv->vendor_id;
 }
@@ -91,7 +91,7 @@ guint16
 fu_thunderbolt_firmware_get_model_id (FuThunderboltFirmware *self)
 {
 	FuThunderboltFirmwarePrivate *priv;
-	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), 0x0);
 	priv = GET_PRIVATE (self);
 	return priv->model_id;
 }
@@ -100,7 +100,7 @@ guint8
 fu_thunderbolt_firmware_get_flash_size (FuThunderboltFirmware *self)
 {
 	FuThunderboltFirmwarePrivate *priv;
-	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), FALSE);
+	g_return_val_if_fail (FU_IS_THUNDERBOLT_FIRMWARE (self), 0x0);
 	priv = GET_PRIVATE (self);
 	return priv->flash_size;
 }
@@ -528,6 +528,7 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 static void
 fu_thunderbolt_firmware_init (FuThunderboltFirmware *self)
 {
+	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 }
 
 static void
