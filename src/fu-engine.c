@@ -5580,6 +5580,8 @@ fu_engine_plugin_recoldplug_cb (FuPlugin *plugin, FuEngine *self)
 		for (guint i = 0; i < self->backends->len; i++) {
 			FuBackend *backend = g_ptr_array_index (self->backends, i);
 			g_autoptr(GError) error_local = NULL;
+			if (!fu_backend_get_enabled (backend))
+				continue;
 			if (!fu_backend_recoldplug (backend, &error_local)) {
 				g_warning ("failed to recoldplug: %s",
 					   error_local->message);
@@ -6285,6 +6287,7 @@ gboolean
 fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 {
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
+	guint backend_cnt = 0;
 	g_autoptr(GPtrArray) checksums_approved = NULL;
 	g_autoptr(GPtrArray) checksums_blocked = NULL;
 #ifndef _WIN32
@@ -6385,8 +6388,21 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	/* set up backends */
 	for (guint i = 0; i < self->backends->len; i++) {
 		FuBackend *backend = g_ptr_array_index (self->backends, i);
-		if (!fu_backend_setup (backend, error))
-			return FALSE;
+		g_autoptr(GError) error_backend = NULL;
+		if (!fu_backend_setup (backend, &error_backend)) {
+			g_debug ("failed to setup backend %s: %s",
+				 fu_backend_get_name (backend),
+				 error_backend->message);
+			continue;
+		}
+		backend_cnt++;
+	}
+	if (backend_cnt == 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "all backends failed setup");
+		return FALSE;
 	}
 
 	/* delete old data files */
@@ -6422,6 +6438,9 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
 		for (guint i = 0; i < self->backends->len; i++) {
 			FuBackend *backend = g_ptr_array_index (self->backends, i);
+			g_autoptr(GError) error_backend = NULL;
+			if (!fu_backend_get_enabled (backend))
+				continue;
 			g_signal_connect (backend, "device-added",
 					  G_CALLBACK (fu_engine_backend_device_added_cb),
 					  self);
@@ -6431,8 +6450,12 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 			g_signal_connect (backend, "device-changed",
 					  G_CALLBACK (fu_engine_backend_device_changed_cb),
 					  self);
-			if (!fu_backend_coldplug (backend, error))
-				return FALSE;
+			if (!fu_backend_coldplug (backend, &error_backend)) {
+				g_warning ("failed to coldplug backend %s: %s",
+					   fu_backend_get_name (backend),
+					   error_backend->message);
+				continue;
+			}
 		}
 	}
 
