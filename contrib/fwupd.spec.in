@@ -229,11 +229,13 @@ or server machines.
 %if 0%{?have_uefi}
     -Dplugin_uefi_capsule=true \
     -Dplugin_uefi_pk=true \
+%ifarch x86_64
     -Defi_sbat_distro_id="fedora" \
     -Defi_sbat_distro_summary="The Fedora Project" \
     -Defi_sbat_distro_pkgname="%{name}" \
     -Defi_sbat_distro_version="%{version}" \
     -Defi_sbat_distro_url="https://src.fedoraproject.org/rpms/%{name}" \
+%endif
     -Dtpm=true \
 %else
     -Dplugin_uefi_capsule=false \
