@@ -39,10 +39,6 @@ msgstr "Activar os dispositivos pendentes"
 msgid "Activate the new firmware on the device"
 msgstr "Activar o novo firmware no dispositivo"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Engadido"
-
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
 msgstr "Aceptar e activar o remoto?"
@@ -151,7 +147,6 @@ msgstr "Cancelado"
 msgid "Cannot apply updates on live media"
 msgstr "Non foi posíbel aplicar as actualizacións no soporte multimedia"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Cambiado"
@@ -315,6 +310,7 @@ msgid "Exit after the engine has loaded"
 msgstr "Saír despois de que se cargue o motor"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: The update state of the specific device
 msgid "Failed"
 msgstr "Fallido"
 
@@ -722,10 +718,6 @@ msgstr "Reinstalar firmware nun dispositivo"
 #, c-format
 msgid "Reinstalling %s with %s... "
 msgstr "Reinstalando %s con %s... "
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Retirado"
 
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"

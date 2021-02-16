@@ -155,10 +155,6 @@ msgstr "펌웨어 업데이트 활성화 중"
 msgid "Activating firmware update for"
 msgstr "다음 장치의 펌웨어 업데이트 활성화 중:"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "추가함"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "경과 기간"
@@ -274,7 +270,6 @@ msgstr "취소"
 msgid "Cancelled"
 msgstr "취소함"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "바뀜"
@@ -994,10 +989,6 @@ msgstr "%2$s(으)로 %1$s 다시 설치하는 중... "
 msgid "Remote ID"
 msgstr "원격 ID"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "제거함"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "기존 펌웨어 파일의 데이터 교체"
@@ -1380,10 +1371,6 @@ msgstr "버전"
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "기다리는 중…"
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "DFU 핫 플러그 장치 보기"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"

@@ -205,10 +205,6 @@ msgstr "Активуємо оновлення мікропрограми"
 msgid "Activating firmware update for"
 msgstr "Активуємо оновлення мікропрограми для"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Додано"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Вік"
@@ -394,7 +390,6 @@ msgstr "Не вдалося застосувати, оскільки оновл�
 msgid "Cannot apply updates on live media"
 msgstr "Не можна застосовувати оновлення до портативного носія"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Змінено"
@@ -769,6 +764,7 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "НАЗВА_ФАЙЛА_ДЖ НАЗВА_ФАЙЛА_ПРИЗН [ТИП-МІКРОПРОГРАМИ-ДЖ] [ТИП-МІКРОПРОГРАМИ-ПРИЗН]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: The update state of the specific device
 msgid "Failed"
 msgstr "Помилка"
 
@@ -981,6 +977,10 @@ msgstr "Отримує випуски для пристрою"
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Отримує результати з останнього оновлення"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "HWIDS-FILE"
+msgstr "ФАЙЛ-HWIDS"
 
 #. TRANSLATORS: The hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
@@ -1268,6 +1268,10 @@ msgstr "Монтує ESP"
 msgid "Needs a reboot after installation"
 msgstr "Потребує перезавантаження після встановлення"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Needs reboot"
+msgstr "Потребує перезавантаження"
+
 #. TRANSLATORS: Requires system shutdown to apply firmware
 msgid "Needs shutdown after installation"
 msgstr "Потребує вимикання після встановлення"
@@ -1331,6 +1335,10 @@ msgid "Only show single PCR value"
 msgstr "Показувати лише одне значення PCR"
 
 #. TRANSLATORS: command line option
+msgid "Only use IPFS when downloading files"
+msgstr "Використовувати IPFS лише при отриманні файлів"
+
+#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Перевизначити типовий шлях до ESP"
 
@@ -1360,6 +1368,10 @@ msgstr "Пароль"
 
 msgid "Payload"
 msgstr "Вміст"
+
+#. TRANSLATORS: The update state of the specific device
+msgid "Pending"
+msgstr "У черзі"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Percentage complete"
@@ -1455,14 +1467,14 @@ msgstr "Повторно встановити мікропрограму на п
 msgid "Reinstalling %s with %s... "
 msgstr "Повторно встановлюємо %s з номером версії %s... "
 
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Release Branch"
+msgstr "Гілка випусків"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "Віддалений ідентифікатор"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Вилучено"
 
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
@@ -1538,6 +1550,10 @@ msgstr "Запис SPI"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
 msgstr "ПІДСИСТЕМА ДРАЙВЕР [ІД_ПРИСТРОЮ|GUID]"
+
+#. TRANSLATORS: command description
+msgid "Save a file that allows generation of hardware IDs"
+msgstr "Зберегти файл, за допомогою якого можна буде створити апаратні ідентифікатори"
 
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
@@ -1664,6 +1680,10 @@ msgstr "Вказати файл бази даних dbx"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Вказати кількість байтів на один пакет передавання даних USB"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Success"
+msgstr "Успіх"
+
 #. TRANSLATORS: success message -- where activation is making the new
 #. * firmware take effect, usually after updating offline
 msgid "Successfully activated all devices"
@@ -1780,6 +1800,10 @@ msgstr "Ця фонова служба завантажила сторонній
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
 msgstr "Мікропрограма з %s не постачається %s, постачальником обладнання."
 
+#. TRANSLATORS: try to help
+msgid "The system clock has not been set correctly and downloading files may fail."
+msgstr "Годинник системи налаштовано неправильно — це може зашкодити отриманню файлів."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "Заблокованих файлів мікропрограм немає"
@@ -1840,6 +1864,10 @@ msgstr "Цей інструмент читає і обробляє журнал 
 msgid "Timeout in milliseconds for each parse"
 msgstr "Час очікування у мілісекундах на кожну обробку"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Transient failure"
+msgstr "Проміжна помилка"
+
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Тип"
@@ -1853,8 +1881,8 @@ msgid "UEFI Firmware Utility"
 msgstr "Засіб роботи із мікропрограмами UEFI"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
-msgid "UEFI capsule updates not available or enabled"
-msgstr "Капсульні оновлення UEFI є недоступними або їх не увімкнено"
+msgid "UEFI capsule updates not available or enabled in firmware setup"
+msgstr "Капсульні оновлення UEFI є недоступними або їх не увімкнено у налаштуваннях мікропрограми"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
@@ -2077,10 +2105,6 @@ msgid "Waiting…"
 msgstr "Очікуємо…"
 
 #. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Спостерігати за пристроями DFU, які з’єднують із комп’ютером"
-
-#. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Спостерігати за змінами у обладнанні"
 
@@ -2126,8 +2150,8 @@ msgid "[FILE FILE_SIG REMOTE-ID]"
 msgstr "[ФАЙЛ ПІДПИС_ФАЙЛА ВІДДАЛ-ІД]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[FILE]"
-msgstr "[ФАЙЛ]"
+msgid "[SMBIOS-FILE|HWIDS-FILE]"
+msgstr "[ФАЙЛ-SMBIOS|ФАЙЛ-HWIDS]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

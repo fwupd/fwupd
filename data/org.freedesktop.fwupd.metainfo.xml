@@ -35,6 +35,39 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.5.6" date="2021-02-16">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add SBAT metadata to the fwupd EFI binary</li>
+          <li>Add support for GD32VF103 as found in the Longan Nano</li>
+          <li>Add support for RMI PS2 devices</li>
+          <li>Add support for the System76 Keyboard</li>
+          <li>Allow downloading firmware from IPFS</li>
+          <li>Install the UX data into a single .tar.xz file</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add support for the Starlabs LabTop L4</li>
+          <li>Allow using an external ESP again</li>
+          <li>Ask the user to reboot when required if downgrading</li>
+          <li>Be more paranoid when parsing ASCII buffers and devices</li>
+          <li>Check if the fwupd BootXXXX entry exists on failure</li>
+          <li>Clear the pending flag if restarting the system</li>
+          <li>Do not allow flashing using flashrom if BLE is enabled</li>
+          <li>Do not allow Lenovo hardware to install multiple capsules</li>
+          <li>Do not parse the OptionROM image</li>
+          <li>Do not show Unknown [***] for every client connection</li>
+          <li>Fix dnload wBlockNum wraparound for ST devices</li>
+          <li>Fix OOM when using large ArchiveSizeMax values</li>
+          <li>Fix several crashes spotted by AddressSanitizer</li>
+          <li>Fix several places where the Goodix MOC plugin could crash</li>
+          <li>Include the PCR0 to the report metadata</li>
+          <li>Report the lockdown status from UEFI and SuperIO plugins</li>
+          <li>Show a console warning if the system clock is not set</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.5" date="2021-01-11">
       <description>
         <p>This release adds the following features:</p>

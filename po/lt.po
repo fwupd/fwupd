@@ -4,7 +4,7 @@
 #
 # Translators:
 # Moo, 2019
-# Moo, 2020
+# Moo, 2020-2021
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -55,6 +55,11 @@ msgstr "%s sisteminis atnaujinimas"
 msgid "%s Update"
 msgstr "%s atnaujinimas"
 
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s version"
+msgstr "%s versija"
+
 #. TRANSLATORS: command description
 msgid "Activate devices"
 msgstr "Aktyvuoti įrenginius"
@@ -74,10 +79,6 @@ msgstr "Aktyvuojamas programinės aparatinės įrangos atnaujinimas"
 msgid "Activating firmware update for"
 msgstr "Aktyvuojama programinė aparatinė įranga, skirta"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Pridėtas"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Amžius"
@@ -94,6 +95,10 @@ msgstr "Alternatyvusis %s pavadinimas"
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
 msgstr "Leisti sendinti programinės aparatinės įrangos versijas"
+
+#. TRANSLATORS: command line option
+msgid "Allow reinstalling existing firmware versions"
+msgstr "Leisti iš naujo įdiegti esamas programinės aparatinės įrangos versijas"
 
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
@@ -183,7 +188,6 @@ msgstr "Atsisakyti"
 msgid "Cancelled"
 msgstr "Atsisakyta"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Pakeistas"
@@ -387,6 +391,7 @@ msgid "Exit after the engine has loaded"
 msgstr "Išeiti, įkėlus modulį"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: The update state of the specific device
 msgid "Failed"
 msgstr "Patyrė nesėkmę"
 
@@ -742,10 +747,6 @@ msgstr "Iš naujo įdiegiama %s su %s... "
 msgid "Remote ID"
 msgstr "Nuotolinės saugyklos ID"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Pašalintas"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "Pakeisti duomenis esamame programinės aparatinės įrangos faile"
@@ -891,6 +892,10 @@ msgstr "Palaikomas nuotoliniame serveryje"
 msgid "System requires external power source"
 msgstr "Sistema reikalauja išorinio maitinimo šaltinio"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "TEXT"
+msgstr "TEKSTAS"
+
 msgid "Target"
 msgstr "Paskirtis"
 
@@ -1031,10 +1036,6 @@ msgstr "ĮSPĖJIMAS:"
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Laukiama…"
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Stebėti ĮPAĮA įrenginius, kurie atnaujinami nepaleidžiant iš naujo"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"

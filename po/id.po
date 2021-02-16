@@ -148,10 +148,6 @@ msgstr "Mengaktifkan pemutakhiran firmware"
 msgid "Activating firmware update for"
 msgstr "Mengaktifkan pembaruan firmware untuk"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Ditambahkan"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Usia"
@@ -267,7 +263,6 @@ msgstr "Batal"
 msgid "Cancelled"
 msgstr "Dibatalkan"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Diubah"
@@ -959,10 +954,6 @@ msgstr "Memasang ulang %s dengan %s... "
 msgid "Remote ID"
 msgstr "ID Remote"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Dihapus"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "Gantikan data dalam suatu berkas firmware yang telah ada"
@@ -1341,10 +1332,6 @@ msgstr "Versi"
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Menunggu…"
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Amati perangkat DFU yang sedang di-hotplug"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"

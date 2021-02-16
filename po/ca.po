@@ -192,10 +192,6 @@ msgstr "Activació de l'actualització del microprogramari"
 msgid "Activating firmware update for"
 msgstr "Activa l'actualització del microprogramari per a"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "S'ha afegit"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Antiguitat"
@@ -379,7 +375,6 @@ msgstr "No s'ha pogut aplicar perquè l'actualització de la dbx ja s'ha aplicat
 msgid "Cannot apply updates on live media"
 msgstr "No s'han pogut aplicar les actualitzacions en els suports en viu"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "S'ha canviat"
@@ -750,6 +745,7 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "NOM_FITXER_ORIG NOM_FITXER_DEST [TIPUS_MICROPROGRAMARI_ORIG] [TIPUS_MICROPROGRAMARI_DEST]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: The update state of the specific device
 msgid "Failed"
 msgstr "Ha fallat"
 
@@ -958,6 +954,10 @@ msgstr "Obté els alliberaments per a un dispositiu."
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Obté els resultats de l'última actualització."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "HWIDS-FILE"
+msgstr "FITXER-HWIDS"
 
 #. TRANSLATORS: The hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
@@ -1243,6 +1243,10 @@ msgstr "Munta l'ESP."
 msgid "Needs a reboot after installation"
 msgstr "Requereix un reinici després de la instal·lació"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Needs reboot"
+msgstr "Cal reiniciar"
+
 #. TRANSLATORS: Requires system shutdown to apply firmware
 msgid "Needs shutdown after installation"
 msgstr "Requereix aturar després de la instal·lació"
@@ -1335,6 +1339,10 @@ msgstr "Contrasenya"
 
 msgid "Payload"
 msgstr "Carrega útil"
+
+#. TRANSLATORS: The update state of the specific device
+msgid "Pending"
+msgstr "Pendent"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Percentage complete"
@@ -1430,14 +1438,14 @@ msgstr "Torna a instal·lar el microprogramari a un dispositiu."
 msgid "Reinstalling %s with %s... "
 msgstr "S'està reinstal·lant %s amb %s... "
 
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Release Branch"
+msgstr "Branca de llançament"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "ID remot"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "S'ha eliminat"
 
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
@@ -1513,6 +1521,10 @@ msgstr "Escriu l'SPI"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
 msgstr "SUBSISTEMA CONTROLADOR [ID_DISPOSITIU|GUID]"
+
+#. TRANSLATORS: command description
+msgid "Save a file that allows generation of hardware IDs"
+msgstr "Desa un fitxer que permet la generació dels ID de maquinari"
 
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
@@ -1639,6 +1651,10 @@ msgstr "Especifica el fitxer de base de dades dbx."
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Especifiqueu el nombre de bytes per a la transferència USB"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Success"
+msgstr "Amb èxit"
+
 #. TRANSLATORS: success message -- where activation is making the new
 #. * firmware take effect, usually after updating offline
 msgid "Successfully activated all devices"
@@ -1753,6 +1769,10 @@ msgstr "El dimoni ha carregat codi de tercers i ja no és admès pels desenvolup
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
 msgstr "El microprogramari des de %s no és proporcionat per %s, el proveïdor de maquinari."
 
+#. TRANSLATORS: try to help
+msgid "The system clock has not been set correctly and downloading files may fail."
+msgstr "El rellotge del sistema no s'ha configurat correctament i pot fallar la descàrrega de fitxers."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "No hi ha cap fitxer de microprogramari bloquejat."
@@ -1813,6 +1833,10 @@ msgstr "Aquesta eina llegirà i analitzarà el registre d'esdeveniments TPM des 
 msgid "Timeout in milliseconds for each parse"
 msgstr "Temps d'espera en mil·lisegons per a cada anàlisi"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Transient failure"
+msgstr "Fallada transitòria"
+
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Tipus"
@@ -1826,8 +1850,8 @@ msgid "UEFI Firmware Utility"
 msgstr "Utilitat per al microprogramari UEFI"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
-msgid "UEFI capsule updates not available or enabled"
-msgstr "Les actualitzacions de la càpsula UEFI no estan disponibles o habilitades"
+msgid "UEFI capsule updates not available or enabled in firmware setup"
+msgstr "Les actualitzacions de la càpsula UEFI no estan disponibles o habilitades a la configuració del microprogramari"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
@@ -2046,10 +2070,6 @@ msgid "Waiting…"
 msgstr "S'està esperant…"
 
 #. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Vigila els dispositius DFU que han estat connectats en calent."
-
-#. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Mira per a canvis al maquinari."
 
@@ -2095,8 +2115,8 @@ msgid "[FILE FILE_SIG REMOTE-ID]"
 msgstr "[FITXER SIGNATURA_FITXER ID_REMOT]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[FILE]"
-msgstr "[FITXER]"
+msgid "[SMBIOS-FILE|HWIDS-FILE]"
+msgstr "[FITXER-HWIDS-SMBIOS]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

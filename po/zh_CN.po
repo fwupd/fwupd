@@ -189,10 +189,6 @@ msgstr "正在激活固件更新"
 msgid "Activating firmware update for"
 msgstr "正在激活固件更新给"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "已添加"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "已发布时间"
@@ -375,7 +371,6 @@ msgstr "无法应用 dbx 更新因其更新已应用。"
 msgid "Cannot apply updates on live media"
 msgstr "无法在  Live 系统介质上应用更新"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "已变更"
@@ -744,6 +739,7 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "源文件名 目标文件名 [源固件类型] [目标固件类型]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: The update state of the specific device
 msgid "Failed"
 msgstr "已失败"
 
@@ -1426,10 +1422,6 @@ msgstr "正在重新安装 %s，使用 %s…"
 msgid "Remote ID"
 msgstr "远程源 ID"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "已移除"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "用已有的固件文件替换数据"
@@ -1815,10 +1807,6 @@ msgstr "UEFI ESP 分区未检测到或未配置"
 msgid "UEFI Firmware Utility"
 msgstr "固件 UEFI 实用工具"
 
-#. TRANSLATORS: capsule updates are an optional BIOS feature
-msgid "UEFI capsule updates not available or enabled"
-msgstr "UEFI 胶囊更新不可用或未启用"
-
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "UEFI dbx 实用工具"
@@ -2030,10 +2018,6 @@ msgid "Waiting…"
 msgstr "等待中..."
 
 #. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "注意被热插入的固件升级 (DFU) 设备"
-
-#. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "监视硬件更改"
 
@@ -2077,10 +2061,6 @@ msgstr "[设备ID|GUID] [分支]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"
 msgstr "[文件 文件签名 远程ID]"
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[FILE]"
-msgstr "[文件]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

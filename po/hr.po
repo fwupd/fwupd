@@ -201,10 +201,6 @@ msgstr "Aktivacija nadopune firmvera"
 msgid "Activating firmware update for"
 msgstr "Aktivacija nadopune firmvera za"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Dodano"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Dob"
@@ -378,7 +374,6 @@ msgstr "Nemoguća primjena kao dbx nadopune jer je već primijenjeno."
 msgid "Cannot apply updates on live media"
 msgstr "Nemoguća primjena na live medij"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Promijenjeno"
@@ -703,6 +698,7 @@ msgid "Extract a firmware blob to images"
 msgstr "Izdvoji blob firmvera u slike"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: The update state of the specific device
 msgid "Failed"
 msgstr "Neuspjelo"
 
@@ -1375,10 +1371,6 @@ msgstr "Ponovna instalacija %s inačice %s... "
 msgid "Remote ID"
 msgstr "Udaljeni ID"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Uklonjeno"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "Zamijeni podatke u postojećoj datoteci firmvera"
@@ -1734,10 +1726,6 @@ msgstr "UEFI ESP particija nije otkrivena ili konfigurirana"
 msgid "UEFI Firmware Utility"
 msgstr "UEFI firmver pomagalo"
 
-#. TRANSLATORS: capsule updates are an optional BIOS feature
-msgid "UEFI capsule updates not available or enabled"
-msgstr "Aktualiziranja za UEFI capsule nedostupna ili neaktivirana"
-
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "UEFI dbx pomagalo"
@@ -1948,10 +1936,6 @@ msgstr "UPOZORENJE:"
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Čekanje…"
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Nadgledaj odspajanje DFU uređaja"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"

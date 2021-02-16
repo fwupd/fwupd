@@ -135,10 +135,6 @@ msgstr "Aygıttaki yeni ürün yazılımını etkinleştirin"
 msgid "Activating firmware update"
 msgstr "Ürün yazılımı güncellemesini etkinleştir"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Eklendi"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Yaş"
@@ -247,7 +243,6 @@ msgstr "İptal"
 msgid "Cancelled"
 msgstr "İptal Edildi"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Değişti"
@@ -800,10 +795,6 @@ msgstr "Üstveriyi uzak sunucudan yenile"
 msgid "Remote ID"
 msgstr "Uzak Kimlik"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Kaldırıldı"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "Varolan bir üretici yazılımı dosyasındaki verileri değiştir"
@@ -1099,10 +1090,6 @@ msgstr "Sürüm"
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "Bekliyor…"
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Çalışırken takılı olan DFU aygıtlarını izle"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"

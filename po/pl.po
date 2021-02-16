@@ -205,10 +205,6 @@ msgstr "Aktywowanie aktualizacji oprogramowania sprzętowego"
 msgid "Activating firmware update for"
 msgstr "Aktywowanie aktualizacji oprogramowania sprzętowego dla"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Dodano"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Wiek"
@@ -394,7 +390,6 @@ msgstr "Nie można zastosować, ponieważ aktualizacja bazy dbx została już za
 msgid "Cannot apply updates on live media"
 msgstr "Nie można stosować aktualizacji na nośnikach typu Live"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Zmieniono"
@@ -769,6 +764,7 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "NAZWA-PLIKU-ŹRÓDŁOWEGO NAZWA-PLIKU-DOCELOWEGO [TYP-ŹRÓDŁOWEGO-OPROGRAMOWANIA-SPRZĘTOWEGO] [TYP-DOCELOWEGO-OPROGRAMOWANIA-SPRZĘTOWEGO]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: The update state of the specific device
 msgid "Failed"
 msgstr "Nie powiodło się"
 
@@ -981,6 +977,10 @@ msgstr "Uzyskuje wydania dla urządzenia"
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Uzyskuje wyniki z ostatniej aktualizacji"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "HWIDS-FILE"
+msgstr "PLIK-HWIDS"
 
 #. TRANSLATORS: The hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
@@ -1268,6 +1268,10 @@ msgstr "Montuje MSP"
 msgid "Needs a reboot after installation"
 msgstr "Wymaga ponownego uruchomienia po instalacji"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Needs reboot"
+msgstr "Wymaga ponownego uruchomienia"
+
 #. TRANSLATORS: Requires system shutdown to apply firmware
 msgid "Needs shutdown after installation"
 msgstr "Wymaga wyłączenia komputera po instalacji"
@@ -1331,6 +1335,10 @@ msgid "Only show single PCR value"
 msgstr "Wyświetla tylko jedną wartość PCR"
 
 #. TRANSLATORS: command line option
+msgid "Only use IPFS when downloading files"
+msgstr "Używa IPFS tylko podczas pobierania plików"
+
+#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Zastępuje domyślną ścieżkę ESP"
 
@@ -1360,6 +1368,10 @@ msgstr "Hasło"
 
 msgid "Payload"
 msgstr "Dane"
+
+#. TRANSLATORS: The update state of the specific device
+msgid "Pending"
+msgstr "Oczekujące"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Percentage complete"
@@ -1455,14 +1467,14 @@ msgstr "Ponownie instaluje oprogramowanie sprzętowe na urządzeniu"
 msgid "Reinstalling %s with %s... "
 msgstr "Ponowne instalowanie %s za pomocą %s… "
 
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Release Branch"
+msgstr "Gałąź wydania"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "Identyfikator repozytorium"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Usunięto"
 
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
@@ -1538,6 +1550,10 @@ msgstr "Zapis SPI"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
 msgstr "PODSYSTEM STEROWNIK [IDENTYFIKATOR-URZĄDZENIA|GUID]"
+
+#. TRANSLATORS: command description
+msgid "Save a file that allows generation of hardware IDs"
+msgstr "Zapisuje plik umożliwiający utworzenie identyfikatorów sprzętu"
 
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
@@ -1664,6 +1680,10 @@ msgstr "Podaje plik bazy dbx"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Podaje liczbę bajtów na przesyłanie USB"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Success"
+msgstr "Powodzenie"
+
 #. TRANSLATORS: success message -- where activation is making the new
 #. * firmware take effect, usually after updating offline
 msgid "Successfully activated all devices"
@@ -1780,6 +1800,10 @@ msgstr "Usługa wczytała kod firmy trzeciej i nie jest już wspierana przez je
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
 msgstr "Oprogramowanie sprzętowe od firmy %s nie jest dostarczane przez firmę %s, dostawcę sprzętu."
 
+#. TRANSLATORS: try to help
+msgid "The system clock has not been set correctly and downloading files may fail."
+msgstr "Zegar komputera nie jest poprawnie ustawiony i pobieranie plików może się nie powieść."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "Nie ma zablokowanych plików oprogramowania sprzętowego"
@@ -1840,6 +1864,10 @@ msgstr "To narzędzie odczyta i przetworzy dziennik zdarzeń TPM z oprogramowa
 msgid "Timeout in milliseconds for each parse"
 msgstr "Czas oczekiwania w milisekundach dla każdego przetworzenia"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Transient failure"
+msgstr "Przejściowe niepowodzenie"
+
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Typ"
@@ -1853,8 +1881,8 @@ msgid "UEFI Firmware Utility"
 msgstr "Narzędzie oprogramowania sprzętowego UEFI"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
-msgid "UEFI capsule updates not available or enabled"
-msgstr "Aktualizacje kapsułowe UEFI są niedostępne lub wyłączone"
+msgid "UEFI capsule updates not available or enabled in firmware setup"
+msgstr "Aktualizacje kapsułowe UEFI są niedostępne lub wyłączone w konfiguracji oprogramowania sprzętowego"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
@@ -2077,10 +2105,6 @@ msgid "Waiting…"
 msgstr "Oczekiwanie…"
 
 #. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Obserwuje podłączanie urządzeń DFU w czasie działania"
-
-#. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Obserwuje zmiany sprzętu"
 
@@ -2126,8 +2150,8 @@ msgid "[FILE FILE_SIG REMOTE-ID]"
 msgstr "[PLIK PODPIS_PLIKU IDENTYFIKATOR-REPOZYTORIUM]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[FILE]"
-msgstr "[PLIK]"
+msgid "[SMBIOS-FILE|HWIDS-FILE]"
+msgstr "[PLIK-SMBIOS|PLIK-HWIDS]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

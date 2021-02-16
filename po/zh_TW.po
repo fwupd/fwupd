@@ -21,10 +21,6 @@ msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
 msgstr[0] "剩下 %.0f 分鐘"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "已加入"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "年紀"
@@ -102,7 +98,6 @@ msgstr "取消"
 msgid "Cancelled"
 msgstr "已取消"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "已變更"
@@ -502,10 +497,6 @@ msgstr "正將 %s 重新安裝為 %s 版... "
 msgid "Remote ID"
 msgstr "遠端 ID"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "已移除"
-
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
 msgstr "取代既有韌體檔案中的資料"
@@ -666,10 +657,6 @@ msgstr "版本"
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
 msgstr "等候中…"
-
-#. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "監看 DFU 裝置熱插拔的過程"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"

@@ -192,10 +192,6 @@ msgstr "Attivazione aggiornamento firmware"
 msgid "Activating firmware update for"
 msgstr "Attivazione aggiornamento firmware per"
 
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Added"
-msgstr "Aggiunto"
-
 #. TRANSLATORS: the age of the metadata
 msgid "Age"
 msgstr "Età"
@@ -379,7 +375,6 @@ msgstr "Impossibile applicare poiché l'aggiornamento dbx è già stato applicat
 msgid "Cannot apply updates on live media"
 msgstr "Impossibile applicare gli aggiornamenti su supporti live"
 
-#. TRANSLATORS: this is when a device is hotplugged
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
 msgstr "Modificato"
@@ -750,6 +745,7 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "NOMEFILE-SRC NOMEFILE-DST [TIPO-FIRMWARE-SRC] [TIPO-FIRMWARE-DST]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: The update state of the specific device
 msgid "Failed"
 msgstr "Non riuscito"
 
@@ -958,6 +954,10 @@ msgstr "Ottiene i rilasci di un dispositivo"
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Ottiene i risultati dell'ultimo aggiornamento"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "HWIDS-FILE"
+msgstr "FILE-HWIDS"
 
 #. TRANSLATORS: The hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
@@ -1243,6 +1243,10 @@ msgstr "Monta l'ESP"
 msgid "Needs a reboot after installation"
 msgstr "Necessita un riavvio dopo l'installazione"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Needs reboot"
+msgstr "Richiesto riavvio"
+
 #. TRANSLATORS: Requires system shutdown to apply firmware
 msgid "Needs shutdown after installation"
 msgstr "Necessita l'arresto dopo l'installazione"
@@ -1306,6 +1310,10 @@ msgid "Only show single PCR value"
 msgstr "Mostra solo il valore PCR"
 
 #. TRANSLATORS: command line option
+msgid "Only use IPFS when downloading files"
+msgstr "Usa IPFS solo quando si scaricano file"
+
+#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Sovrascrive il percorso ESP predefinito"
 
@@ -1335,6 +1343,10 @@ msgstr "Password"
 
 msgid "Payload"
 msgstr "Carico"
+
+#. TRANSLATORS: The update state of the specific device
+msgid "Pending"
+msgstr "In attesa"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Percentage complete"
@@ -1430,14 +1442,14 @@ msgstr "Installa nuovamente il firmware su un dispositivo"
 msgid "Reinstalling %s with %s... "
 msgstr "Reinstallazione di %s con %s..."
 
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Release Branch"
+msgstr "Ramo di rilascio"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
 msgstr "ID remoto"
-
-#. TRANSLATORS: this is when a device is hotplugged
-msgid "Removed"
-msgstr "Rimosso"
 
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
@@ -1513,6 +1525,10 @@ msgstr "Scrittura SPI"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
 msgstr "SOTTOSISTEMA DRIVER [ID-DISPOSITIVO|GUID]"
+
+#. TRANSLATORS: command description
+msgid "Save a file that allows generation of hardware IDs"
+msgstr "Salva una file che consente di generare ID hardware"
 
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
@@ -1639,6 +1655,10 @@ msgstr "Indica il file del database dbx"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Specifica il numero di byte per trasferimento USB"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Success"
+msgstr "Completato"
+
 #. TRANSLATORS: success message -- where activation is making the new
 #. * firmware take effect, usually after updating offline
 msgid "Successfully activated all devices"
@@ -1753,6 +1773,10 @@ msgstr "Il demone ha caricato codice di terze parti e non è più supportato dag
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
 msgstr "Il firmware su %s non è fornito da %s, il fornitore dell'hardware."
 
+#. TRANSLATORS: try to help
+msgid "The system clock has not been set correctly and downloading files may fail."
+msgstr "L'orologio di sistema non è stato impostato correttamente e lo scaricamento di file potrebbe non riuscire."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "Non ci sono file di firmware bloccati"
@@ -1813,6 +1837,10 @@ msgstr "Questo strumento legge e analizza il registro eventi TPM dal firmware di
 msgid "Timeout in milliseconds for each parse"
 msgstr "Tempo massimo in millisecondi per ogni analisi"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Transient failure"
+msgstr "Errore transitorio"
+
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Tipo"
@@ -1826,8 +1854,8 @@ msgid "UEFI Firmware Utility"
 msgstr "Strumento firmware UEFI"
 
 #. TRANSLATORS: capsule updates are an optional BIOS feature
-msgid "UEFI capsule updates not available or enabled"
-msgstr "Aggiornamenti capsula UEFI non disponibili o non abilitati"
+msgid "UEFI capsule updates not available or enabled in firmware setup"
+msgstr "Aggiornamenti capsula UEFI non disponibili o non abilitati nella configurazione firmware"
 
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
@@ -2046,10 +2074,6 @@ msgid "Waiting…"
 msgstr "Attesa…"
 
 #. TRANSLATORS: command description
-msgid "Watch DFU devices being hotplugged"
-msgstr "Controlla i dispositivi DFU che sono collegati a caldo"
-
-#. TRANSLATORS: command description
 msgid "Watch for hardware changes"
 msgstr "Controlla le modifiche hardware"
 
@@ -2095,8 +2119,8 @@ msgid "[FILE FILE_SIG REMOTE-ID]"
 msgstr "[FILE SIG_FILE ID-REMOTO]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "[FILE]"
-msgstr "[FILE]"
+msgid "[SMBIOS-FILE|HWIDS-FILE]"
+msgstr "[FILE-SMBIOS|FILE-HWIDS]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"
