@@ -5,10 +5,7 @@ subdir('dell-dock')
 subdir('nitrokey')
 subdir('test')
 
-if get_option('plugin_msr')
-  subdir('msr')
-endif
-
+#Plugins requiring Gudev backend
 if get_option('gudev')
   subdir('ata')
   subdir('elantp')
@@ -17,6 +14,7 @@ if get_option('gudev')
   subdir('thelio-io')
   subdir('wacom-raw')
 
+  #Plugins requiring Gudev + Gusb backends
   if get_option('gusb')
     subdir('dfu')
     subdir('csr') # depends on dfu
@@ -24,6 +22,7 @@ if get_option('gudev')
   endif
 endif
 
+# Plugins only requiring GUSB backend
 if get_option('gusb')
   subdir('ccgx')
   subdir('colorhug')
@@ -45,36 +44,7 @@ if get_option('gusb')
   subdir('wacom-usb')
 endif
 
-if get_option('systemd')
-  subdir('logind')
-endif
-
-if get_option('tpm')
-  if not get_option('gudev')
-    error('gudev is required for tpm')
-  endif
-  subdir('tpm')
-  subdir('tpm-eventlog')
-endif
-
-if get_option('plugin_emmc')
-  if not get_option('gudev')
-    error('gudev is required for plugin_emmc')
-  endif
-  subdir('emmc')
-endif
-
-if get_option('plugin_nvme')
-  if not get_option('gudev')
-    error('gudev is required for plugin_nvme')
-  endif
-  subdir('nvme')
-endif
-
-if get_option('plugin_modem_manager')
-  subdir('modem-manager')
-endif
-
+# Individual plugins that can be enabled/disabled
 if get_option('plugin_altos')
   if not get_option('gudev') or not get_option('gusb')
     error('gudev and gusb is required for plugin_altos')
@@ -86,11 +56,39 @@ if get_option('plugin_amt')
   subdir('amt')
 endif
 
-if get_option('plugin_thunderbolt')
+if get_option('plugin_dell')
+  subdir('dell')
+  subdir('dell-esrt')
+endif
+
+if get_option('plugin_emmc')
   if not get_option('gudev')
-    error('gudev is required for plugin_thunderbolt')
+    error('gudev is required for plugin_emmc')
   endif
-  subdir('thunderbolt')
+  subdir('emmc')
+endif
+
+if get_option('plugin_flashrom')
+  subdir('flashrom')
+endif
+
+if get_option('plugin_modem_manager')
+  subdir('modem-manager')
+endif
+
+if get_option('plugin_msr')
+  subdir('msr')
+endif
+
+if get_option('plugin_nvme')
+  if not get_option('gudev')
+    error('gudev is required for plugin_nvme')
+  endif
+  subdir('nvme')
+endif
+
+if get_option('plugin_platform_integrity')
+  subdir('platform-integrity')
 endif
 
 if get_option('plugin_redfish')
@@ -100,9 +98,11 @@ if get_option('plugin_redfish')
   subdir('redfish')
 endif
 
-if get_option('plugin_dell')
-  subdir('dell')
-  subdir('dell-esrt')
+if get_option('plugin_synaptics_mst')
+  if not get_option('gudev')
+    error('gudev is required for plugin_synaptics_mst')
+  endif
+  subdir('synaptics-mst')
 endif
 
 if get_option('plugin_synaptics_rmi')
@@ -112,11 +112,11 @@ if get_option('plugin_synaptics_rmi')
   subdir('synaptics-rmi')
 endif
 
-if get_option('plugin_synaptics_mst')
+if get_option('plugin_thunderbolt')
   if not get_option('gudev')
-    error('gudev is required for plugin_synaptics_mst')
+    error('gudev is required for plugin_thunderbolt')
   endif
-  subdir('synaptics-mst')
+  subdir('thunderbolt')
 endif
 
 if get_option('plugin_uefi_capsule')
@@ -130,12 +130,18 @@ if get_option('plugin_uefi_pk')
   subdir('uefi-pk')
 endif
 
-if get_option('plugin_flashrom')
-  subdir('flashrom')
+# Daemon support plugins
+if get_option('systemd')
+  subdir('logind')
 endif
 
-if get_option('plugin_platform_integrity')
-  subdir('platform-integrity')
+# TPM plugins
+if get_option('tpm')
+  if not get_option('gudev')
+    error('gudev is required for tpm')
+  endif
+  subdir('tpm')
+  subdir('tpm-eventlog')
 endif
 
 # These don't offer individual meson options
