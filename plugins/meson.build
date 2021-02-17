@@ -18,6 +18,8 @@ subdir('thelio-io')
 subdir('wacom-raw')
 
 if get_option('gusb')
+subdir('dfu')
+subdir('csr') # depends on dfu
 subdir('logitech-hidpp')
 endif
 
@@ -31,7 +33,6 @@ if get_option('gusb')
 subdir('ccgx')
 subdir('colorhug')
 subdir('cros-ec')
-subdir('dfu')
 subdir('ebitdo')
 subdir('fastboot')
 subdir('fresco-pd')
@@ -47,9 +48,6 @@ subdir('synaptics-prometheus')
 subdir('system76-launch')
 subdir('vli')
 subdir('wacom-usb')
-
-# depends on dfu
-subdir('csr')
 endif
 
 if get_option('tpm')
