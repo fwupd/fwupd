@@ -16,8 +16,8 @@ if get_option('gudev')
 
   #Plugins requiring Gudev + Gusb backends
   if get_option('gusb')
-    subdir('dfu')
     subdir('csr') # depends on dfu
+    subdir('dfu')
     subdir('logitech-hidpp')
   endif
 endif
@@ -119,6 +119,14 @@ if get_option('plugin_thunderbolt')
   subdir('thunderbolt')
 endif
 
+if get_option('plugin_tpm')
+  if not get_option('gudev')
+    error('gudev is required for tpm')
+  endif
+  subdir('tpm')
+  subdir('tpm-eventlog')
+endif
+
 if get_option('plugin_uefi_capsule')
   subdir('bios')
   subdir('uefi-capsule')
@@ -128,20 +136,6 @@ endif
 
 if get_option('plugin_uefi_pk')
   subdir('uefi-pk')
-endif
-
-# Daemon support plugins
-if get_option('systemd')
-  subdir('logind')
-endif
-
-# TPM plugins
-if get_option('tpm')
-  if not get_option('gudev')
-    error('gudev is required for tpm')
-  endif
-  subdir('tpm')
-  subdir('tpm-eventlog')
 endif
 
 # These don't offer individual meson options
@@ -158,4 +152,8 @@ if host_machine.system() == 'linux'
   subdir('pci-mei')         #pci
   subdir('upower')
   subdir('pixart-rf')       #linux kernel hidraw
+
+  if get_option('systemd')
+    subdir('logind')
+  endif
 endif

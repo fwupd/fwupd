@@ -236,11 +236,11 @@ or server machines.
     -Defi_sbat_distro_version="%{version}" \
     -Defi_sbat_distro_url="https://src.fedoraproject.org/rpms/%{name}" \
 %endif
-    -Dtpm=true \
+    -Dplugin_tpm=true \
 %else
     -Dplugin_uefi_capsule=false \
     -Dplugin_uefi_pk=false \
-    -Dtpm=false \
+    -Dplugin_tpm=false \
 %endif
 %if 0%{?have_dell}
     -Dplugin_dell=true \
