@@ -1,20 +1,9 @@
-subdir('acpi-dmar')
-subdir('acpi-facp')
 subdir('bcm57xx')
 subdir('cpu')
 subdir('ep963x')
-subdir('iommu')
-subdir('linux-lockdown')
-subdir('linux-sleep')
-subdir('linux-swap')
-subdir('linux-tainted')
 subdir('dell-dock')
 subdir('nitrokey')
-subdir('pci-bcr')
-subdir('pci-mei')
 subdir('test')
-subdir('upower')
-subdir('pixart-rf')
 
 if get_option('plugin_msr')
 subdir('msr')
@@ -27,15 +16,12 @@ subdir('optionrom')
 subdir('superio')
 subdir('thelio-io')
 subdir('wacom-raw')
-endif
 
-if get_option('gudev') and get_option('plugin_synaptics_rmi')
-subdir('synaptics-rmi')
-endif
-
-if get_option('gudev') and get_option('gusb')
+if get_option('gusb')
 subdir('logitech-hidpp')
 endif
+
+endif #get_option('gudev')
 
 if get_option('systemd')
 subdir('logind')
@@ -122,6 +108,13 @@ subdir('dell')
 subdir('dell-esrt')
 endif
 
+if get_option('plugin_synaptics_rmi')
+if not get_option('gudev')
+  error('gudev is required for plugin_synaptics_rmi')
+endif
+subdir('synaptics-rmi')
+endif
+
 if get_option('plugin_synaptics_mst')
 if not get_option('gudev')
   error('gudev is required for plugin_synaptics_mst')
@@ -146,4 +139,20 @@ endif
 
 if get_option('plugin_platform_integrity')
 subdir('platform-integrity')
+endif
+
+# These don't offer individual meson options
+# but will currently only run on Linux
+if host_machine.system() == 'linux'
+subdir('acpi-dmar')       #/sys/firmware/acpi
+subdir('acpi-facp')       #/sys/firmware/acpi
+subdir('iommu')           #linux kernel iommu
+subdir('linux-lockdown')
+subdir('linux-sleep')
+subdir('linux-swap')
+subdir('linux-tainted')
+subdir('pci-bcr')         #pci
+subdir('pci-mei')         #pci
+subdir('upower')
+subdir('pixart-rf')       #linux kernel hidraw
 endif
