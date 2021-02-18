@@ -23,9 +23,10 @@ struct _FuLogitechHidPpRuntime
 G_DEFINE_TYPE (FuLogitechHidPpRuntime, fu_logitech_hidpp_runtime, FU_TYPE_UDEV_DEVICE)
 
 static void
-fu_logitech_hidpp_runtime_to_string (FuUdevDevice *device, guint idt, GString *str)
+fu_logitech_hidpp_runtime_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuLogitechHidPpRuntime *self = FU_UNIFYING_RUNTIME (device);
+	FU_DEVICE_CLASS (fu_logitech_hidpp_runtime_parent_class)->to_string (device, idt, str);
 	fu_common_string_append_kb (str, idt, "SignedFirmware", self->signed_firmware);
 }
 
@@ -128,15 +129,19 @@ fu_logitech_hidpp_runtime_open (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_logitech_hidpp_runtime_probe (FuUdevDevice *device, GError **error)
+fu_logitech_hidpp_runtime_probe (FuDevice *device, GError **error)
 {
 	FuLogitechHidPpRuntime *self = FU_UNIFYING_RUNTIME (device);
 	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (device));
 	guint16 release = 0xffff;
 	g_autoptr(GUdevDevice) udev_parent = NULL;
 
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_logitech_hidpp_runtime_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id (device, "usb", error))
+	if (!fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "usb", error))
 		return FALSE;
 
 	/* generate bootloader-specific GUID */
@@ -156,7 +161,7 @@ fu_logitech_hidpp_runtime_probe (FuUdevDevice *device, GError **error)
 			devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
 						  (guint) FU_UNIFYING_DEVICE_VID,
 						  (guint) FU_UNIFYING_DEVICE_PID_BOOTLOADER_NORDIC);
-			fu_device_add_counterpart_guid (FU_DEVICE (device), devid2);
+			fu_device_add_counterpart_guid (device, devid2);
 			self->version_bl_major = 0x01;
 			break;
 		case 0x2400:
@@ -164,7 +169,7 @@ fu_logitech_hidpp_runtime_probe (FuUdevDevice *device, GError **error)
 			devid2 = g_strdup_printf ("USB\\VID_%04X&PID_%04X",
 						  (guint) FU_UNIFYING_DEVICE_VID,
 						  (guint) FU_UNIFYING_DEVICE_PID_BOOTLOADER_TEXAS);
-			fu_device_add_counterpart_guid (FU_DEVICE (device), devid2);
+			fu_device_add_counterpart_guid (device, devid2);
 			self->version_bl_major = 0x03;
 			break;
 		default:
@@ -306,17 +311,16 @@ static void
 fu_logitech_hidpp_runtime_class_init (FuLogitechHidPpRuntimeClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_device_udev = FU_UDEV_DEVICE_CLASS (klass);
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	object_class->finalize = fu_logitech_hidpp_runtime_finalize;
 	klass_device->open = fu_logitech_hidpp_runtime_open;
-	klass_device_udev->probe = fu_logitech_hidpp_runtime_probe;
+	klass_device->probe = fu_logitech_hidpp_runtime_probe;
 	klass_device->setup = fu_logitech_hidpp_runtime_setup;
 	klass_device->close = fu_logitech_hidpp_runtime_close;
 	klass_device->detach = fu_logitech_hidpp_runtime_detach;
 	klass_device->poll = fu_logitech_hidpp_runtime_poll;
-	klass_device_udev->to_string = fu_logitech_hidpp_runtime_to_string;
+	klass_device->to_string = fu_logitech_hidpp_runtime_to_string;
 }
 
 static void

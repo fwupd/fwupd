@@ -400,17 +400,20 @@ fu_dfu_csr_device_download (FuDevice *device,
 }
 
 static gboolean
-fu_dfu_csr_device_probe (FuUsbDevice *device, GError **error)
+fu_dfu_csr_device_probe (FuDevice *device, GError **error)
 {
 	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE (device);
 
+	/* FuUsbDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_dfu_csr_device_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* proxy the quirk delay */
-	if (fu_device_has_custom_flag (FU_DEVICE (device),
-				       FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY))
+	if (fu_device_has_custom_flag (device, FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY))
 		self->quirks = FU_DFU_CSR_DEVICE_QUIRK_REQUIRE_DELAY;
 
 	/* hardcoded */
-	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* success */
 	return TRUE;
@@ -438,12 +441,11 @@ static void
 fu_dfu_csr_device_class_init (FuDfuCsrDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_dfu_csr_device_to_string;
 	klass_device->write_firmware = fu_dfu_csr_device_download;
 	klass_device->dump_firmware = fu_dfu_csr_device_upload;
 	klass_device->prepare_firmware = fu_dfu_csr_device_prepare_firmware;
 	klass_device->attach = fu_dfu_csr_device_attach;
 	klass_device->setup = fu_dfu_csr_device_setup;
-	klass_usb_device->probe = fu_dfu_csr_device_probe;
+	klass_device->probe = fu_dfu_csr_device_probe;
 }

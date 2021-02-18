@@ -293,26 +293,33 @@ fu_colorhug_device_get_version (FuColorhugDevice *self, GError **error)
 }
 
 static gboolean
-fu_colorhug_device_probe (FuUsbDevice *device, GError **error)
+fu_colorhug_device_probe (FuDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 
+	/* FuUsbDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_colorhug_device_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* compact memory layout */
-	if (fu_device_has_custom_flag (FU_DEVICE (device),
-				       FU_COLORHUG_DEVICE_FLAG_HALFSIZE))
+	if (fu_device_has_custom_flag (device, FU_COLORHUG_DEVICE_FLAG_HALFSIZE))
 		self->start_addr = CH_EEPROM_ADDR_RUNCODE_ALS;
 
 	/* add hardcoded bits */
-	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_colorhug_device_open (FuUsbDevice *device, GError **error)
+fu_colorhug_device_open (FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+
+	/* FuUsbDevice->open */
+	if (!FU_DEVICE_CLASS (fu_colorhug_device_parent_class)->open (device, error))
+		return FALSE;
 
 	/* got the version using the HID API */
 	if (!g_usb_device_set_configuration (usb_device, CH_USB_CONFIG, error))
@@ -483,12 +490,11 @@ static void
 fu_colorhug_device_class_init (FuColorhugDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_colorhug_device_write_firmware;
 	klass_device->attach = fu_colorhug_device_attach;
 	klass_device->detach = fu_colorhug_device_detach;
 	klass_device->reload = fu_colorhug_device_reload;
 	klass_device->setup = fu_colorhug_device_setup;
-	klass_usb_device->open = fu_colorhug_device_open;
-	klass_usb_device->probe = fu_colorhug_device_probe;
+	klass_device->open = fu_colorhug_device_open;
+	klass_device->probe = fu_colorhug_device_probe;
 }

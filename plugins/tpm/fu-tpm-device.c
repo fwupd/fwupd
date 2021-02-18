@@ -30,9 +30,12 @@ fu_tpm_device_get_family (FuTpmDevice *self)
 }
 
 static gboolean
-fu_tpm_device_probe (FuUdevDevice *device, GError **error)
+fu_tpm_device_probe (FuDevice *device, GError **error)
 {
-	return fu_udev_device_set_physical_id (device, "tpm", error);
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_tpm_device_parent_class)->probe (device, error))
+		return FALSE;
+	return fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "tpm", error);
 }
 
 static gboolean
@@ -262,8 +265,7 @@ fu_tpm_device_class_init (FuTpmDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_tpm_device_finalize;
 	klass_device->setup = fu_tpm_device_setup;
-	klass_udev_device->probe = fu_tpm_device_probe;
+	klass_device->probe = fu_tpm_device_probe;
 }

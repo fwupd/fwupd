@@ -111,10 +111,14 @@ fu_superio_device_regdump (FuSuperioDevice *self, guint8 ldn, GError **error)
 }
 
 static void
-fu_superio_device_to_string (FuUdevDevice *device, guint idt, GString *str)
+fu_superio_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
+
+	/* FuUdevDevice->to_string */
+	FU_DEVICE_CLASS (fu_superio_device_parent_class)->to_string (device, idt, str);
+
 	fu_common_string_append_kv (str, idt, "Chipset", priv->chipset);
 	fu_common_string_append_kx (str, idt, "Id", priv->id);
 	fu_common_string_append_kx (str, idt, "Port", priv->port);
@@ -413,7 +417,6 @@ fu_superio_device_class_init (FuSuperioDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	GParamSpec *pspec;
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 
 	/* properties */
 	object_class->get_property = fu_superio_device_get_property;
@@ -437,7 +440,7 @@ fu_superio_device_class_init (FuSuperioDeviceClass *klass)
 	g_object_class_install_property (object_class, PROP_ID, pspec);
 
 	object_class->finalize = fu_superio_device_finalize;
-	klass_udev_device->to_string = fu_superio_device_to_string;
+	klass_device->to_string = fu_superio_device_to_string;
 	klass_device->probe = fu_superio_device_probe;
 	klass_device->setup = fu_superio_device_setup;
 	klass_device->prepare_firmware = fu_superio_device_prepare_firmware;

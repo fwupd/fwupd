@@ -377,7 +377,7 @@ fu_rts54hub_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hub_device_close (FuUsbDevice *device, GError **error)
+fu_rts54hub_device_close (FuDevice *device, GError **error)
 {
 	FuRts54HubDevice *self = FU_RTS54HUB_DEVICE (device);
 
@@ -389,8 +389,8 @@ fu_rts54hub_device_close (FuUsbDevice *device, GError **error)
 		}
 	}
 
-	/* success */
-	return TRUE;
+	/* FuUsbDevice->close */
+	return FU_DEVICE_CLASS (fu_rts54hub_device_parent_class)->close (device, error);
 }
 
 static gboolean
@@ -508,10 +508,9 @@ static void
 fu_rts54hub_device_class_init (FuRts54HubDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_rts54hub_device_write_firmware;
 	klass_device->setup = fu_rts54hub_device_setup;
 	klass_device->to_string = fu_rts54hub_device_to_string;
 	klass_device->prepare_firmware = fu_rts54hub_device_prepare_firmware;
-	klass_usb_device->close = fu_rts54hub_device_close;
+	klass_device->close = fu_rts54hub_device_close;
 }

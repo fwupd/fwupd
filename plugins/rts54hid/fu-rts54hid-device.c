@@ -241,12 +241,16 @@ fu_rts54hid_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hid_device_close (FuHidDevice *device, GError **error)
+fu_rts54hid_device_close (FuDevice *device, GError **error)
 {
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE (device);
 
 	/* set MCU to normal clock rate */
-	return fu_rts54hid_device_set_clock_mode (self, FALSE, error);
+	if (!fu_rts54hid_device_set_clock_mode (self, FALSE, error))
+		return FALSE;
+
+	/* FuHidDevice->close */
+	return FU_DEVICE_CLASS (fu_rts54hid_device_parent_class)->close (device, error);
 }
 
 static gboolean
@@ -318,9 +322,8 @@ static void
 fu_rts54hid_device_class_init (FuRts54HidDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuHidDeviceClass *klass_hid_device = FU_HID_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_rts54hid_device_write_firmware;
 	klass_device->to_string = fu_rts54hid_device_to_string;
 	klass_device->setup = fu_rts54hid_device_setup;
-	klass_hid_device->close = fu_rts54hid_device_close;
+	klass_device->close = fu_rts54hid_device_close;
 }

@@ -145,10 +145,14 @@ fu_cros_ec_usb_device_find_interface (FuUsbDevice *device,
 }
 
 static gboolean
-fu_cros_ec_usb_device_open (FuUsbDevice *device, GError **error)
+fu_cros_ec_usb_device_open (FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
+
+	/* FuUsbDevice->open */
+	if (!FU_DEVICE_CLASS (fu_cros_ec_usb_device_parent_class)->open (device, error))
+		return FALSE;
 
 	if (!g_usb_device_claim_interface (usb_device, self->iface_idx,
 					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
@@ -162,13 +166,17 @@ fu_cros_ec_usb_device_open (FuUsbDevice *device, GError **error)
 }
 
 static gboolean
-fu_cros_ec_usb_device_probe (FuUsbDevice *device, GError **error)
+fu_cros_ec_usb_device_probe (FuDevice *device, GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
 
+	/* FuUsbDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_cros_ec_usb_device_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* very much like usb_updater2's usb_findit() */
 
-	if (!fu_cros_ec_usb_device_find_interface (device, error)) {
+	if (!fu_cros_ec_usb_device_find_interface (FU_USB_DEVICE (device), error)) {
 		g_prefix_error (error, "failed to find update interface: ");
 		return FALSE;
 	}
@@ -843,9 +851,9 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_cros_ec_usb_device_close (FuUsbDevice *device, GError **error)
+fu_cros_ec_usb_device_close (FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
 
 	if (!g_usb_device_release_interface (usb_device, self->iface_idx,
@@ -855,8 +863,8 @@ fu_cros_ec_usb_device_close (FuUsbDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* success */
-	return TRUE;
+	/* FuUsbDevice->close */
+	return FU_DEVICE_CLASS (fu_cros_ec_usb_device_parent_class)->close (device, error);
 }
 
 static FuFirmware *
@@ -980,14 +988,13 @@ static void
 fu_cros_ec_usb_device_class_init (FuCrosEcUsbDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->attach = fu_cros_ec_usb_device_attach;
 	klass_device->detach = fu_cros_ec_usb_device_detach;
 	klass_device->prepare_firmware = fu_cros_ec_usb_device_prepare_firmware;
 	klass_device->setup = fu_cros_ec_usb_device_setup;
 	klass_device->to_string = fu_cros_ec_usb_device_to_string;
 	klass_device->write_firmware = fu_cros_ec_usb_device_write_firmware;
-	klass_usb_device->open = fu_cros_ec_usb_device_open;
-	klass_usb_device->probe = fu_cros_ec_usb_device_probe;
-	klass_usb_device->close = fu_cros_ec_usb_device_close;
+	klass_device->open = fu_cros_ec_usb_device_open;
+	klass_device->probe = fu_cros_ec_usb_device_probe;
+	klass_device->close = fu_cros_ec_usb_device_close;
 }

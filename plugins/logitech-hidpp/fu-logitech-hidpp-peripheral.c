@@ -258,9 +258,13 @@ fu_logitech_hidpp_map_to_string (FuLogitechHidPpHidppMap *map, guint idt, GStrin
 }
 
 static void
-fu_logitech_hidpp_peripheral_to_string (FuUdevDevice *device, guint idt, GString *str)
+fu_logitech_hidpp_peripheral_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuLogitechHidPpPeripheral *self = FU_UNIFYING_PERIPHERAL (device);
+
+	/* FuUdevDevice->to_string */
+	FU_DEVICE_CLASS (fu_logitech_hidpp_peripheral_parent_class)->to_string (device, idt, str);
+
 	fu_common_string_append_ku (str, idt, "HidppVersion", self->hidpp_version);
 	fu_common_string_append_kx (str, idt, "HidppId", self->hidpp_id);
 	fu_common_string_append_ku (str, idt, "BatteryLevel", self->battery_level);
@@ -468,22 +472,26 @@ fu_logitech_hidpp_feature_search (FuDevice *device, guint16 feature, GError **er
 }
 
 static gboolean
-fu_logitech_hidpp_peripheral_probe (FuUdevDevice *device, GError **error)
+fu_logitech_hidpp_peripheral_probe (FuDevice *device, GError **error)
 {
 	g_autofree gchar *devid = NULL;
 
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_logitech_hidpp_peripheral_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id (device, "hid", error))
+	if (!fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "hid", error))
 		return FALSE;
 
 	/* nearly... */
-	fu_device_add_vendor_id (FU_DEVICE (device), "USB:0x046D");
+	fu_device_add_vendor_id (device, "USB:0x046D");
 
 	/* this is a non-standard extension */
 	devid = g_strdup_printf ("UFY\\VID_%04X&PID_%04X",
-				 fu_udev_device_get_vendor (device),
-				 fu_udev_device_get_model (device));
-	fu_device_add_instance_id (FU_DEVICE (device), devid);
+				 fu_udev_device_get_vendor (FU_UDEV_DEVICE (device)),
+				 fu_udev_device_get_model (FU_UDEV_DEVICE (device)));
+	fu_device_add_instance_id (device, devid);
 	return TRUE;
 }
 
@@ -1020,7 +1028,6 @@ static void
 fu_logitech_hidpp_peripheral_class_init (FuLogitechHidPpPeripheralClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_device_udev = FU_UDEV_DEVICE_CLASS (klass);
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
 	object_class->finalize = fu_logitech_hidpp_peripheral_finalize;
@@ -1031,8 +1038,8 @@ fu_logitech_hidpp_peripheral_class_init (FuLogitechHidPpPeripheralClass *klass)
 	klass_device->attach = fu_logitech_hidpp_peripheral_attach;
 	klass_device->detach = fu_logitech_hidpp_peripheral_detach;
 	klass_device->poll = fu_logitech_hidpp_peripheral_poll;
-	klass_device_udev->to_string = fu_logitech_hidpp_peripheral_to_string;
-	klass_device_udev->probe = fu_logitech_hidpp_peripheral_probe;
+	klass_device->to_string = fu_logitech_hidpp_peripheral_to_string;
+	klass_device->probe = fu_logitech_hidpp_peripheral_probe;
 }
 
 static void

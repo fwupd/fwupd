@@ -54,10 +54,14 @@ fu_fastboot_device_probe (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_fastboot_device_open (FuUsbDevice *device, GError **error)
+fu_fastboot_device_open (FuDevice *device, GError **error)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+
+	/* FuUsbDevice->open */
+	if (!FU_DEVICE_CLASS (fu_fastboot_device_parent_class)->open (device, error))
+		return FALSE;
 
 	if (!g_usb_device_claim_interface (usb_device, self->intf_nr,
 					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
@@ -639,10 +643,10 @@ fu_fastboot_device_write_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_fastboot_device_close (FuUsbDevice *device, GError **error)
+fu_fastboot_device_close (FuDevice *device, GError **error)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 
 	/* we're done here */
 	if (!g_usb_device_release_interface (usb_device, self->intf_nr,
@@ -652,8 +656,8 @@ fu_fastboot_device_close (FuUsbDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* success */
-	return TRUE;
+	/* FuUsbDevice->close */
+	return FU_DEVICE_CLASS (fu_fastboot_device_parent_class)->close (device, error);
 }
 
 static gboolean
@@ -715,13 +719,12 @@ static void
 fu_fastboot_device_class_init (FuFastbootDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->probe = fu_fastboot_device_probe;
 	klass_device->setup = fu_fastboot_device_setup;
 	klass_device->write_firmware = fu_fastboot_device_write_firmware;
 	klass_device->attach = fu_fastboot_device_attach;
 	klass_device->to_string = fu_fastboot_device_to_string;
 	klass_device->set_quirk_kv = fu_fastboot_device_set_quirk_kv;
-	klass_usb_device->open = fu_fastboot_device_open;
-	klass_usb_device->close = fu_fastboot_device_close;
+	klass_device->open = fu_fastboot_device_open;
+	klass_device->close = fu_fastboot_device_close;
 }

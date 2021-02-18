@@ -63,11 +63,15 @@ fu_solokey_device_exchange (GByteArray *req, guint8 cmd, guint32 addr, GByteArra
 }
 
 static gboolean
-fu_solokey_device_open (FuUsbDevice *device, GError **error)
+fu_solokey_device_open (FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autofree gchar *product = NULL;
 	g_auto(GStrv) split = NULL;
+
+	/* FuUsbDevice->open */
+	if (!FU_DEVICE_CLASS (fu_solokey_device_parent_class)->open (device, error))
+		return FALSE;
 
 	/* got the version using the HID API */
 	if (!g_usb_device_set_configuration (usb_device, 0x0001, error))
@@ -109,16 +113,16 @@ fu_solokey_device_open (FuUsbDevice *device, GError **error)
 		return FALSE;
 	}
 	if (g_strcmp0 (split[1], "Bootloader") == 0) {
-		fu_device_set_version_bootloader (FU_DEVICE (device), split[2]);
-		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-		fu_device_remove_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+		fu_device_set_version_bootloader (device, split[2]);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	} else if (g_strcmp0 (split[1], "Keys") == 0 && g_strcmp0 (split[2], "Solo") == 0) {
-		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-		fu_device_remove_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	} else {
-		fu_device_set_version (FU_DEVICE (device), split[1]);
-		fu_device_remove_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+		fu_device_set_version (device, split[1]);
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	}
 
 	/* success */
@@ -126,9 +130,9 @@ fu_solokey_device_open (FuUsbDevice *device, GError **error)
 }
 
 static gboolean
-fu_solokey_device_close (FuUsbDevice *device, GError **error)
+fu_solokey_device_close (FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 
 	/* rebind kernel driver so it works as a security key again... */
 	if (!g_usb_device_release_interface (usb_device, 0x0000,
@@ -138,8 +142,8 @@ fu_solokey_device_close (FuUsbDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* success */
-	return TRUE;
+	/* FuUsbDevice->close */
+	return FU_DEVICE_CLASS (fu_solokey_device_parent_class)->close (device, error);
 }
 
 static gboolean
@@ -390,7 +394,7 @@ fu_solokey_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 
 	/* verify version */
-	if (fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_solokey_device_get_version_bl (self, error))
 			return FALSE;
 	}
@@ -506,10 +510,9 @@ static void
 fu_solokey_device_class_init (FuSolokeyDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_solokey_device_write_firmware;
 	klass_device->prepare_firmware = fu_solokey_device_prepare_firmware;
 	klass_device->setup = fu_solokey_device_setup;
-	klass_usb_device->open = fu_solokey_device_open;
-	klass_usb_device->close = fu_solokey_device_close;
+	klass_device->open = fu_solokey_device_open;
+	klass_device->close = fu_solokey_device_close;
 }

@@ -267,6 +267,7 @@ fu_usb_device_open (FuDevice *device, GError **error)
 
 	/* subclassed */
 	if (klass->open != NULL) {
+		g_warning ("FuUsbDevice->open is deprecated!");
 		if (!klass->open (self, error))
 			return FALSE;
 	}
@@ -292,6 +293,7 @@ fu_usb_device_close (FuDevice *device, GError **error)
 
 	/* subclassed */
 	if (klass->close != NULL) {
+		g_warning ("FuUsbDevice->close is deprecated!");
 		if (!klass->close (self, error))
 			return FALSE;
 	}
@@ -372,6 +374,7 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 
 	/* subclassed */
 	if (klass->probe != NULL) {
+		g_warning ("FuUsbDevice->probe is deprecated!");
 		if (!klass->probe (self, error))
 			return FALSE;
 	}

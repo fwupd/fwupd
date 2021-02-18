@@ -33,16 +33,20 @@ fu_hailuck_kbd_device_detach (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_hailuck_kbd_device_probe (FuUsbDevice *device, GError **error)
+fu_hailuck_kbd_device_probe (FuDevice *device, GError **error)
 {
 	g_autofree gchar *devid = NULL;
 	g_autoptr(FuHailuckTpDevice) tp_device = fu_hailuck_tp_device_new (FU_DEVICE (device));
 
+	/* FuUsbDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_hailuck_kbd_device_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* add extra keyboard-specific GUID */
 	devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X&MODE_KBD",
-				 fu_usb_device_get_vid (device),
-				 fu_usb_device_get_pid (device));
-	fu_device_add_instance_id (FU_DEVICE (device), devid);
+				 fu_usb_device_get_vid (FU_USB_DEVICE (device)),
+				 fu_usb_device_get_pid (FU_USB_DEVICE (device)));
+	fu_device_add_instance_id (device, devid);
 
 	/* add touchpad */
 	if (!fu_device_probe (FU_DEVICE (tp_device), error))
@@ -50,10 +54,10 @@ fu_hailuck_kbd_device_probe (FuUsbDevice *device, GError **error)
 
 	/* assume the TP has the same version as the keyboard */
 	fu_device_set_version (FU_DEVICE (tp_device),
-			       fu_device_get_version (FU_DEVICE (device)));
+			       fu_device_get_version (device));
 	fu_device_set_version_format (FU_DEVICE (tp_device),
-				      fu_device_get_version_format (FU_DEVICE (device)));
-	fu_device_add_child (FU_DEVICE (device), FU_DEVICE (tp_device));
+				      fu_device_get_version_format (device));
+	fu_device_add_child (device, FU_DEVICE (tp_device));
 
 	/* success */
 	return TRUE;
@@ -76,7 +80,6 @@ static void
 fu_hailuck_kbd_device_class_init (FuHailuckKbdDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->detach = fu_hailuck_kbd_device_detach;
-	klass_usb_device->probe = fu_hailuck_kbd_device_probe;
+	klass_device->probe = fu_hailuck_kbd_device_probe;
 }

@@ -78,14 +78,18 @@ fu_hid_device_set_property (GObject *object, guint prop_id,
 }
 
 static gboolean
-fu_hid_device_open (FuUsbDevice *device, GError **error)
+fu_hid_device_open (FuDevice *device, GError **error)
 {
 	FuHidDevice *self = FU_HID_DEVICE (device);
 	FuHidDeviceClass *klass = FU_HID_DEVICE_GET_CLASS (device);
 #ifdef HAVE_GUSB
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDeviceClaimInterfaceFlags flags = 0;
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+
+	/* FuUsbDevice->open */
+	if (!FU_DEVICE_CLASS (fu_hid_device_parent_class)->open (device, error))
+		return FALSE;
 
 	/* auto-detect */
 	if (priv->interface_autodetect) {
@@ -122,6 +126,7 @@ fu_hid_device_open (FuUsbDevice *device, GError **error)
 
 	/* subclassed */
 	if (klass->open != NULL) {
+		g_warning ("FuHidDevice->open is deprecated!");
 		if (!klass->open (self, error))
 			return FALSE;
 	}
@@ -131,19 +136,20 @@ fu_hid_device_open (FuUsbDevice *device, GError **error)
 }
 
 static gboolean
-fu_hid_device_close (FuUsbDevice *device, GError **error)
+fu_hid_device_close (FuDevice *device, GError **error)
 {
 	FuHidDevice *self = FU_HID_DEVICE (device);
 	FuHidDeviceClass *klass = FU_HID_DEVICE_GET_CLASS (device);
 #ifdef HAVE_GUSB
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDeviceClaimInterfaceFlags flags = 0;
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(GError) error_local = NULL;
 #endif
 
 	/* subclassed */
 	if (klass->close != NULL) {
+		g_warning ("FuHidDevice->close is deprecated!");
 		if (!klass->close (self, error))
 			return FALSE;
 	}
@@ -169,8 +175,8 @@ fu_hid_device_close (FuUsbDevice *device, GError **error)
 	}
 #endif
 
-	/* success */
-	return TRUE;
+	/* FuUsbDevice->close */
+	return FU_DEVICE_CLASS (fu_hid_device_parent_class)->close (device, error);
 }
 
 /**
@@ -486,14 +492,14 @@ fu_hid_device_new (GUsbDevice *usb_device)
 static void
 fu_hid_device_class_init (FuHidDeviceClass *klass)
 {
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	GParamSpec *pspec;
 
 	object_class->get_property = fu_hid_device_get_property;
 	object_class->set_property = fu_hid_device_set_property;
-	klass_usb_device->open = fu_hid_device_open;
-	klass_usb_device->close = fu_hid_device_close;
+	klass_device->open = fu_hid_device_open;
+	klass_device->close = fu_hid_device_close;
 
 	pspec = g_param_spec_uint ("interface", NULL, NULL,
 				   0x00, 0xff, 0x00,
