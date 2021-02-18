@@ -1,3 +1,4 @@
+if get_option('gudev')
 cargs = ['-DG_LOG_DOMAIN="FuPluginElantp"']
 
 install_data([
@@ -34,3 +35,4 @@ shared_module('fu_plugin_elantp',
     plugin_deps,
   ],
 )
+endif

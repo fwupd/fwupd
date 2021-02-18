@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginSteelSeries"']
 
 install_data(['steelseries.quirk'],
@@ -25,3 +26,4 @@ shared_module('fu_plugin_steelseries',
     plugin_deps,
   ],
 )
+endif

@@ -1,3 +1,4 @@
+if get_option('gudev') and get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechHidPp"']
 
 install_data([
@@ -60,4 +61,5 @@ if get_option('tests')
     c_args : cargs,
   )
   test('logitech-hidpp-self-test', e)
+endif
 endif

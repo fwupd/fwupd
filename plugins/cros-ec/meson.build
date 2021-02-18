@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginCrosEc"']
 
 install_data(['cros-ec.quirk'],
@@ -28,3 +29,4 @@ shared_module('fu_plugin_cros_ec',
     plugin_deps,
   ],
 )
+endif

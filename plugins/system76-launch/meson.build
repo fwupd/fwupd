@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginSystem76Launch"']
 
 install_data(['system76-launch.quirk'],
@@ -25,3 +26,4 @@ shared_module('fu_plugin_system76_launch',
     plugin_deps,
   ],
 )
+endif

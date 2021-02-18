@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginEbitdo"']
 
 install_data(['ebitdo.quirk'],
@@ -28,3 +29,4 @@ shared_module('fu_plugin_ebitdo',
     plugin_deps,
   ],
 )
+endif

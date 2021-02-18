@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginRts54Hid"']
 
 install_data([
@@ -29,3 +30,4 @@ shared_module('fu_plugin_rts54hid',
     plugin_deps,
   ],
 )
+endif

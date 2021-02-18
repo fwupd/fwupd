@@ -1,3 +1,4 @@
+if get_option('plugin_uefi_capsule')
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiRecovery"']
 
 install_data(['uefi-recovery.quirk'],
@@ -27,3 +28,4 @@ shared_module('fu_plugin_uefi_recovery',
     plugin_deps,
   ],
 )
+endif

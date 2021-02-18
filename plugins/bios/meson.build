@@ -1,3 +1,4 @@
+if get_option('plugin_uefi_capsule')
 cargs = ['-DG_LOG_DOMAIN="FuPluginBios"']
 
 shared_module('fu_plugin_bios',
@@ -21,3 +22,4 @@ shared_module('fu_plugin_bios',
     plugin_deps,
   ],
 )
+endif

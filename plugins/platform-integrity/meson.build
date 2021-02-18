@@ -1,3 +1,4 @@
+if get_option('plugin_platform_integrity')
 cargs = ['-DG_LOG_DOMAIN="FuPluginPlatformIntegrity"']
 
 install_data([
@@ -33,3 +34,4 @@ shared_module('fu_plugin_platform_integrity',
     plugin_deps,
   ],
 )
+endif

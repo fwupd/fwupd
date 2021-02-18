@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginDfuCsr"']
 
 install_data(['dfu-csr.quirk'],
@@ -27,3 +28,4 @@ shared_module('fu_plugin_dfu_csr',
     dfu,
   ],
 )
+endif

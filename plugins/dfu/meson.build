@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginDfu"']
 
 install_data(['dfu.quirk'],
@@ -139,3 +140,4 @@ if get_option('tests')
 endif
 
 plugindfu_incdir = include_directories('.')
+endif

@@ -1,3 +1,7 @@
+if get_option('plugin_synaptics_rmi')
+if not get_option('gudev')
+  error('gudev is required for plugin_synaptics_rmi')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsRmi"']
 
 install_data(['synaptics-rmi.quirk'],
@@ -34,3 +38,4 @@ shared_module('fu_plugin_synaptics_rmi',
     fwupdplugin,
   ],
 )
+endif

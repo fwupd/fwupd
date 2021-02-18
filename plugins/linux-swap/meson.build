@@ -1,3 +1,4 @@
+if host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSwap"']
 
 shared_module('fu_plugin_linux_swap',
@@ -22,6 +23,7 @@ shared_module('fu_plugin_linux_swap',
     plugin_deps,
   ],
 )
+endif
 
 if get_option('tests')
   e = executable(

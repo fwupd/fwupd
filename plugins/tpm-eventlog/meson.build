@@ -1,3 +1,4 @@
+if get_option('plugin_tpm')
 cargs = ['-DG_LOG_DOMAIN="FuPluginTpmEventlog"']
 
 shared_module('fu_plugin_tpm_eventlog',
@@ -109,4 +110,5 @@ if honggfuzz.found()
       '--', fwupdtpmevlog, '___FILE___',
     ],
   )
+endif
 endif

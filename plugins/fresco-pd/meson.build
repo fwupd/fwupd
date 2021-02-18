@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginFrescoPd"']
 
 install_data(['fresco-pd.quirk'],
@@ -28,3 +29,4 @@ shared_module('fu_plugin_fresco_pd',
     plugin_deps,
   ],
 )
+endif

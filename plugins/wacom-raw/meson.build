@@ -1,3 +1,4 @@
+if get_option('gudev')
 cargs = ['-DG_LOG_DOMAIN="FuPluginWacomRaw"']
 
 install_data(['wacom-raw.quirk'],
@@ -29,3 +30,4 @@ shared_module('fu_plugin_wacom_raw',
     fwupdplugin,
   ],
 )
+endif

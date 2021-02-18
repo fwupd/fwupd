@@ -1,3 +1,4 @@
+if host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSleep"']
 
 shared_module('fu_plugin_linux_sleep',
@@ -21,3 +22,4 @@ shared_module('fu_plugin_linux_sleep',
     plugin_deps,
   ],
 )
+endif

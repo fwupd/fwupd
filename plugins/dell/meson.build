@@ -1,3 +1,4 @@
+if get_option('plugin_dell')
 cargs = ['-DG_LOG_DOMAIN="FuPluginDell"']
 
 install_data(['dell.quirk'],
@@ -64,4 +65,5 @@ if get_option('tests')
     ],
   )
   test('dell-self-test', e)
+endif
 endif

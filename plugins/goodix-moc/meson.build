@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginGoodixMoc"']
 
 install_data([
@@ -28,3 +29,4 @@ shared_module('fu_plugin_goodixmoc',
     plugin_deps,
   ],
 )
+endif
