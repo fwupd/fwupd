@@ -1,5 +1,5 @@
-CSR Support
-===========
+DFU CSR Support
+===============
 
 Introduction
 ------------

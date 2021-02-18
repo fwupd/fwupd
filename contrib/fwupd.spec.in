@@ -409,7 +409,6 @@ done
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ccgx.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_colorhug.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_cros_ec.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_csr.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_cpu.so
 %if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dell.so
@@ -417,6 +416,7 @@ done
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dell_dock.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dfu.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_dfu_csr.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_elantp.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_emmc.so

@@ -111,7 +111,7 @@ Here is an example as seen in the CSR plugin.
 
 ```
 [DeviceInstanceId=USB\VID_0A12&PID_1337]
-Plugin = csr
+Plugin = dfu_csr
 Name = H05
 Summary = Bluetooth Headphones
 Icon = audio-headphones
