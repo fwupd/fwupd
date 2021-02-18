@@ -6024,6 +6024,12 @@ fu_engine_backend_device_added_cb (FuBackend *backend, FuDevice *device, FuEngin
 		return;
 	}
 
+	/* super useful for plugin development */
+	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
+		g_autofree gchar *str = fu_device_to_string (FU_DEVICE (device));
+		g_debug ("%s added %s", fu_backend_get_name (backend), str);
+	}
+
 	/* can be specified using a quirk */
 	possible_plugins = fu_device_get_possible_plugins (device);
 	for (guint i = 0; i < possible_plugins->len; i++) {
