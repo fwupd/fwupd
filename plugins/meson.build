@@ -63,7 +63,7 @@ subdir('vli')
 subdir('wacom-usb')
 
 # depends on dfu
-subdir('csr')
+subdir('dfu-csr')
 endif
 
 if get_option('plugin_tpm')
