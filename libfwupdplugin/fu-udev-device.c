@@ -170,8 +170,10 @@ fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 #endif
 
 	/* subclassed */
-	if (klass->to_string != NULL)
+	if (klass->to_string != NULL) {
+		g_warning ("FuUdevDevice->to_string is deprecated!");
 		klass->to_string (self, idt, str);
+	}
 }
 
 static void
@@ -498,6 +500,7 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 
 	/* subclassed */
 	if (klass->probe != NULL) {
+		g_warning ("FuUdevDevice->probe is deprecated!");
 		if (!klass->probe (self, error))
 			return FALSE;
 	}
@@ -1226,6 +1229,7 @@ fu_udev_device_open (FuDevice *device, GError **error)
 
 	/* subclassed */
 	if (klass->open != NULL) {
+		g_warning ("FuUdevDevice->open is deprecated!");
 		if (!klass->open (self, error))
 			return FALSE;
 	}
@@ -1277,6 +1281,7 @@ fu_udev_device_close (FuDevice *device, GError **error)
 
 	/* subclassed */
 	if (klass->close != NULL) {
+		g_warning ("FuUdevDevice->close is deprecated!");
 		if (!klass->close (self, error))
 			return FALSE;
 	}

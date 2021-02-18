@@ -15,10 +15,14 @@
 G_DEFINE_TYPE (FuSteelseriesDevice, fu_steelseries_device, FU_TYPE_USB_DEVICE)
 
 static gboolean
-fu_steelseries_device_open (FuUsbDevice *device, GError **error)
+fu_steelseries_device_open (FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	const guint8 iface_idx = 0x00;
+
+	/* FuUsbDevice->open */
+	if (!FU_DEVICE_CLASS (fu_steelseries_device_parent_class)->open (device, error))
+		return FALSE;
 
 	/* get firmware version on SteelSeries Rival 100 */
 	if (!g_usb_device_claim_interface (usb_device, iface_idx,
@@ -94,9 +98,9 @@ fu_steelseries_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_steelseries_device_close (FuUsbDevice *device, GError **error)
+fu_steelseries_device_close (FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	const guint8 iface_idx = 0x00;
 
 	/* we're done here */
@@ -107,8 +111,8 @@ fu_steelseries_device_close (FuUsbDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* success */
-	return TRUE;
+	/* FuUsbDevice->close */
+	return FU_DEVICE_CLASS (fu_steelseries_device_parent_class)->close (device, error);
 }
 
 static void
@@ -121,8 +125,7 @@ static void
 fu_steelseries_device_class_init (FuSteelseriesDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->setup = fu_steelseries_device_setup;
-	klass_usb_device->open = fu_steelseries_device_open;
-	klass_usb_device->close = fu_steelseries_device_close;
+	klass_device->open = fu_steelseries_device_open;
+	klass_device->close = fu_steelseries_device_close;
 }

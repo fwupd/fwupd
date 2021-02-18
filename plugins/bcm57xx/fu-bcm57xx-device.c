@@ -45,21 +45,26 @@ struct _FuBcm57xxDevice {
 G_DEFINE_TYPE (FuBcm57xxDevice, fu_bcm57xx_device, FU_TYPE_UDEV_DEVICE)
 
 static void
-fu_bcm57xx_device_to_string (FuUdevDevice *device, guint idt, GString *str)
+fu_bcm57xx_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE (device);
+	FU_DEVICE_CLASS (fu_bcm57xx_device_parent_class)->to_string (device, idt, str);
 	fu_common_string_append_kv (str, idt, "EthtoolIface", self->ethtool_iface);
 }
 
 static gboolean
-fu_bcm57xx_device_probe (FuUdevDevice *device, GError **error)
+fu_bcm57xx_device_probe (FuDevice *device, GError **error)
 {
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE (device);
 	g_autofree gchar *fn = NULL;
 	g_autoptr(GPtrArray) ifaces = NULL;
 
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_bcm57xx_device_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* only enumerate number 0 */
-	if (fu_udev_device_get_number (device) != 0) {
+	if (fu_udev_device_get_number (FU_UDEV_DEVICE (device)) != 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -75,7 +80,7 @@ fu_bcm57xx_device_probe (FuUdevDevice *device, GError **error)
 		return FALSE;
 
 	/* only if has an interface */
-	fn = g_build_filename (fu_udev_device_get_sysfs_path (device), "net", NULL);
+	fn = g_build_filename (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)), "net", NULL);
 	if (!g_file_test (fn, G_FILE_TEST_EXISTS)) {
 		g_debug ("waiting for net devices to appear");
 		g_usleep (50 * 1000);
@@ -88,7 +93,7 @@ fu_bcm57xx_device_probe (FuUdevDevice *device, GError **error)
 	}
 
 	/* success */
-	return fu_udev_device_set_physical_id (device, "pci", error);
+	return fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "pci", error);
 }
 
 static gboolean
@@ -631,7 +636,6 @@ fu_bcm57xx_device_class_init (FuBcm57xxDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_bcm57xx_device_finalize;
 	klass_device->prepare_firmware = fu_bcm57xx_device_prepare_firmware;
 	klass_device->setup = fu_bcm57xx_device_setup;
@@ -642,6 +646,6 @@ fu_bcm57xx_device_class_init (FuBcm57xxDeviceClass *klass)
 	klass_device->write_firmware = fu_bcm57xx_device_write_firmware;
 	klass_device->read_firmware = fu_bcm57xx_device_read_firmware;
 	klass_device->dump_firmware = fu_bcm57xx_device_dump_firmware;
-	klass_udev_device->probe = fu_bcm57xx_device_probe;
-	klass_udev_device->to_string = fu_bcm57xx_device_to_string;
+	klass_device->probe = fu_bcm57xx_device_probe;
+	klass_device->to_string = fu_bcm57xx_device_to_string;
 }

@@ -81,9 +81,13 @@ fu_synaptics_mst_device_init (FuSynapticsMstDevice *self)
 }
 
 static void
-fu_synaptics_mst_device_to_string (FuUdevDevice *device, guint idt, GString *str)
+fu_synaptics_mst_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE (device);
+
+	/* FuUdevDevice->to_string */
+	FU_DEVICE_CLASS (fu_synaptics_mst_device_parent_class)->to_string (device, idt, str);
+
 	if (self->mode != FU_SYNAPTICS_MST_MODE_UNKNOWN) {
 		fu_common_string_append_kv (str, idt, "Mode",
 					    fu_synaptics_mst_mode_to_string (self->mode));
@@ -127,14 +131,19 @@ fu_synaptics_mst_device_disable_rc (FuSynapticsMstDevice *self, GError **error)
 }
 
 static gboolean
-fu_synaptics_mst_device_probe (FuUdevDevice *device, GError **error)
+fu_synaptics_mst_device_probe (FuDevice *device, GError **error)
 {
-	g_autofree gchar *logical_id = NULL;
-	logical_id = g_path_get_basename (fu_udev_device_get_sysfs_path(device));
-	fu_device_set_logical_id (FU_DEVICE (device), logical_id);
-	if (!fu_udev_device_set_physical_id (device, "pci,drm_dp_aux_dev", error))
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_synaptics_mst_device_parent_class)->probe (device, error))
 		return FALSE;
-	return TRUE;
+
+	/* get from sysfs if not set from tests */
+	if (fu_device_get_logical_id (device) == NULL) {
+		g_autofree gchar *logical_id = NULL;
+		logical_id = g_path_get_basename (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
+		fu_device_set_logical_id (device, logical_id);
+	}
+	return fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "pci,drm_dp_aux_dev", error);
 }
 
 static gboolean
@@ -1178,11 +1187,10 @@ fu_synaptics_mst_device_class_init (FuSynapticsMstDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_synaptics_mst_device_finalize;
-	klass_udev_device->to_string = fu_synaptics_mst_device_to_string;
+	klass_device->to_string = fu_synaptics_mst_device_to_string;
 	klass_device->rescan = fu_synaptics_mst_device_rescan;
 	klass_device->write_firmware = fu_synaptics_mst_device_write_firmware;
 	klass_device->prepare_firmware = fu_synaptics_mst_device_prepare_firmware;
-	klass_udev_device->probe = fu_synaptics_mst_device_probe;
+	klass_device->probe = fu_synaptics_mst_device_probe;
 }

@@ -71,9 +71,10 @@ struct _FuEmmcDevice {
 G_DEFINE_TYPE (FuEmmcDevice, fu_emmc_device, FU_TYPE_UDEV_DEVICE)
 
 static void
-fu_emmc_device_to_string (FuUdevDevice *device, guint idt, GString *str)
+fu_emmc_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuEmmcDevice *self = FU_EMMC_DEVICE (device);
+	FU_DEVICE_CLASS (fu_emmc_device_parent_class)->to_string (device, idt, str);
 	fu_common_string_append_ku (str, idt, "SectorSize", self->sect_size);
 }
 
@@ -127,9 +128,9 @@ fu_emmc_device_get_sysattr_guint64 (GUdevDevice *device,
 }
 
 static gboolean
-fu_emmc_device_probe (FuUdevDevice *device, GError **error)
+fu_emmc_device_probe (FuDevice *device, GError **error)
 {
-	GUdevDevice *udev_device = fu_udev_device_get_dev (device);
+	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (device));
 	guint64 flag;
 	guint64 oemid = 0;
 	guint64 manfid = 0;
@@ -139,6 +140,10 @@ fu_emmc_device_probe (FuUdevDevice *device, GError **error)
 	g_autofree gchar *man_oem = NULL;
 	g_autofree gchar *man_oem_name = NULL;
 	g_autofree gchar *vendor_id = NULL;
+
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_emmc_device_parent_class)->probe (device, error))
+		return FALSE;
 
 	udev_parent = g_udev_device_get_parent_with_subsystem (udev_device, "mmc", NULL);
 	if (udev_parent == NULL) {
@@ -167,7 +172,7 @@ fu_emmc_device_probe (FuUdevDevice *device, GError **error)
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "%s does not support field firmware updates",
-			     fu_device_get_name (FU_DEVICE (device)));
+			     fu_device_get_name (device));
 		return FALSE;
 	}
 
@@ -182,9 +187,9 @@ fu_emmc_device_probe (FuUdevDevice *device, GError **error)
 	}
 
 	/* name */
-	fu_device_set_name (FU_DEVICE (device), tmp);
+	fu_device_set_name (device, tmp);
 	name_only = g_strdup_printf ("EMMC\\%s", fu_device_get_name (device));
-	fu_device_add_instance_id (FU_DEVICE (device), name_only);
+	fu_device_add_instance_id (device, name_only);
 
 	/* manfid + oemid, manfid + oemid + name */
 	if (!fu_emmc_device_get_sysattr_guint64 (udev_parent, "manfid", &manfid, error))
@@ -193,32 +198,32 @@ fu_emmc_device_probe (FuUdevDevice *device, GError **error)
 		return FALSE;
 	man_oem = g_strdup_printf ("EMMC\\%04" G_GUINT64_FORMAT "&%04" G_GUINT64_FORMAT,
 				   manfid, oemid);
-	fu_device_add_instance_id (FU_DEVICE (device), man_oem);
+	fu_device_add_instance_id (device, man_oem);
 	man_oem_name = g_strdup_printf ("EMMC\\%04" G_GUINT64_FORMAT "&%04" G_GUINT64_FORMAT "&%s",
 					manfid, oemid, fu_device_get_name (device));
-	fu_device_add_instance_id (FU_DEVICE (device), man_oem_name);
+	fu_device_add_instance_id (device, man_oem_name);
 
 	/* set the vendor */
 	tmp = g_udev_device_get_sysfs_attr (udev_parent, "manfid");
 	vendor_id = g_strdup_printf ("EMMC:%s", tmp);
-	fu_device_add_vendor_id (FU_DEVICE (device), vendor_id);
-	fu_device_set_vendor (FU_DEVICE (device), fu_emmc_device_get_manufacturer (manfid));
+	fu_device_add_vendor_id (device, vendor_id);
+	fu_device_set_vendor (device, fu_emmc_device_get_manufacturer (manfid));
 
 	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id (device, "mmc", error))
+	if (!fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "mmc", error))
 		return FALSE;
 
 	/* internal */
 	if (!fu_emmc_device_get_sysattr_guint64 (udev_device, "removable", &flag, error))
 		return FALSE;
 	if (flag == 0)
-		fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_INTERNAL);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
 
 	/* firmware version */
 	tmp = g_udev_device_get_sysfs_attr (udev_parent, "fwrev");
 	if (tmp != NULL) {
-		fu_device_set_version_format (FU_DEVICE (device), FWUPD_VERSION_FORMAT_NUMBER);
-		fu_device_set_version (FU_DEVICE (device), tmp);
+		fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_NUMBER);
+		fu_device_set_version (device, tmp);
 	}
 
 	return TRUE;
@@ -505,11 +510,10 @@ fu_emmc_device_class_init (FuEmmcDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_emmc_device_finalize;
 	klass_device->setup = fu_emmc_device_setup;
-	klass_udev_device->to_string = fu_emmc_device_to_string;
+	klass_device->to_string = fu_emmc_device_to_string;
 	klass_device->prepare_firmware = fu_emmc_device_prepare_firmware;
-	klass_udev_device->probe = fu_emmc_device_probe;
+	klass_device->probe = fu_emmc_device_probe;
 	klass_device->write_firmware = fu_emmc_device_write_firmware;
 }

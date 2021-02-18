@@ -36,15 +36,19 @@ fu_hailuck_bl_device_attach (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_hailuck_bl_device_probe (FuUsbDevice *device, GError **error)
+fu_hailuck_bl_device_probe (FuDevice *device, GError **error)
 {
 	g_autofree gchar *devid = NULL;
 
+	/* FuUsbDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_hailuck_bl_device_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* add extra keyboard-specific GUID */
 	devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X&MODE_KBD",
-				 fu_usb_device_get_vid (device),
-				 fu_usb_device_get_pid (device));
-	fu_device_add_instance_id (FU_DEVICE (device), devid);
+				 fu_usb_device_get_vid (FU_USB_DEVICE (device)),
+				 fu_usb_device_get_pid (FU_USB_DEVICE (device)));
+	fu_device_add_instance_id (device, devid);
 
 	/* success */
 	return TRUE;
@@ -276,10 +280,9 @@ static void
 fu_hailuck_bl_device_class_init (FuHailuckBlDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->dump_firmware = fu_hailuck_bl_device_dump_firmware;
 	klass_device->prepare_firmware = fu_hailuck_bl_device_prepare_firmware;
 	klass_device->write_firmware = fu_hailuck_bl_device_write_firmware;
 	klass_device->attach = fu_hailuck_bl_device_attach;
-	klass_usb_device->probe = fu_hailuck_bl_device_probe;
+	klass_device->probe = fu_hailuck_bl_device_probe;
 }

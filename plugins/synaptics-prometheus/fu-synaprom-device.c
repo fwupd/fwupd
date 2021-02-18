@@ -64,9 +64,14 @@ typedef struct __attribute__((packed)) {
 G_DEFINE_TYPE (FuSynapromDevice, fu_synaprom_device, FU_TYPE_USB_DEVICE)
 
 static gboolean
-fu_synaprom_device_open (FuUsbDevice *device, GError **error)
+fu_synaprom_device_open (FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+
+	/* FuUsbDevice->open */
+	if (!FU_DEVICE_CLASS (fu_synaprom_device_parent_class)->open (device, error))
+		return FALSE;
+
 	if (!g_usb_device_claim_interface (usb_device, 0x0,
 					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 					   error)) {
@@ -454,14 +459,13 @@ static void
 fu_synaprom_device_class_init (FuSynapromDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_synaprom_device_write_firmware;
 	klass_device->prepare_firmware = fu_synaprom_device_prepare_fw;
 	klass_device->setup = fu_synaprom_device_setup;
 	klass_device->reload = fu_synaprom_device_setup;
 	klass_device->attach = fu_synaprom_device_attach;
 	klass_device->detach = fu_synaprom_device_detach;
-	klass_usb_device->open = fu_synaprom_device_open;
+	klass_device->open = fu_synaprom_device_open;
 }
 
 FuSynapromDevice *

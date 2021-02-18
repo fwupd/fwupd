@@ -41,18 +41,22 @@ fu_elantp_i2c_device_to_string (FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_elantp_i2c_device_probe (FuUdevDevice *device, GError **error)
+fu_elantp_i2c_device_probe (FuDevice *device, GError **error)
 {
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_elantp_i2c_device_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* check is valid */
-	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "i2c-dev") != 0) {
+	if (g_strcmp0 (fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)), "i2c-dev") != 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "is not correct subsystem=%s, expected i2c-dev",
-			     fu_udev_device_get_subsystem (device));
+			     fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)));
 		return FALSE;
 	}
-	if (fu_udev_device_get_device_file (device) == NULL) {
+	if (fu_udev_device_get_device_file (FU_UDEV_DEVICE (device)) == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -61,7 +65,7 @@ fu_elantp_i2c_device_probe (FuUdevDevice *device, GError **error)
 	}
 
 	/* set the physical ID */
-	return fu_udev_device_set_physical_id (device, "i2c", error);
+	return fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "i2c", error);
 }
 
 static gboolean
@@ -277,16 +281,20 @@ fu_elantp_i2c_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_elantp_i2c_device_open (FuUdevDevice *device, GError **error)
+fu_elantp_i2c_device_open (FuDevice *device, GError **error)
 {
 	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE (device);
 	gint addr = self->i2c_addr;
 	guint8 tx_buf[] = { 0x02, 0x01 };
 
+	/* FuUdevDevice->open */
+	if (!FU_DEVICE_CLASS (fu_elantp_i2c_device_parent_class)->open (device, error))
+		return FALSE;
+
 	/* set target address */
-	if (!fu_udev_device_ioctl (device, I2C_SLAVE,
+	if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (device), I2C_SLAVE,
 				   GINT_TO_POINTER (addr), NULL, NULL)) {
-		if (!fu_udev_device_ioctl (device, I2C_SLAVE_FORCE,
+		if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (device), I2C_SLAVE_FORCE,
 					   GINT_TO_POINTER (addr), NULL, error)) {
 			g_prefix_error (error,
 					"failed to set target address to 0x%x: ",
@@ -296,7 +304,7 @@ fu_elantp_i2c_device_open (FuUdevDevice *device, GError **error)
 	}
 
 	/* read i2c device */
-	return fu_udev_device_pwrite_full (device, 0x0, tx_buf, sizeof(tx_buf), error);
+	return fu_udev_device_pwrite_full (FU_UDEV_DEVICE (device), 0x0, tx_buf, sizeof(tx_buf), error);
 }
 
 static FuFirmware *
@@ -634,7 +642,6 @@ fu_elantp_i2c_device_class_init (FuElantpI2cDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_elantp_i2c_device_finalize;
 	klass_device->to_string = fu_elantp_i2c_device_to_string;
 	klass_device->attach = fu_elantp_i2c_device_attach;
@@ -644,6 +651,6 @@ fu_elantp_i2c_device_class_init (FuElantpI2cDeviceClass *klass)
 	klass_device->reload = fu_elantp_i2c_device_setup;
 	klass_device->write_firmware = fu_elantp_i2c_device_write_firmware;
 	klass_device->prepare_firmware = fu_elantp_i2c_device_prepare_firmware;
-	klass_udev_device->probe = fu_elantp_i2c_device_probe;
-	klass_udev_device->open = fu_elantp_i2c_device_open;
+	klass_device->probe = fu_elantp_i2c_device_probe;
+	klass_device->open = fu_elantp_i2c_device_open;
 }

@@ -251,9 +251,13 @@ fu_thunderbolt_device_type_to_string (FuThunderboltDevice *self)
 }
 
 static void
-fu_thunderbolt_device_to_string (FuUdevDevice *device, guint idt, GString *str)
+fu_thunderbolt_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
+
+	/* FuUdevDevice->to_string */
+	FU_DEVICE_CLASS (fu_thunderbolt_device_parent_class)->to_string (device, idt, str);
+
 	fu_common_string_append_kv (str, idt, "Device Type", fu_thunderbolt_device_type_to_string (self));
 	fu_common_string_append_kb (str, idt, "Safe Mode", self->safe_mode);
 	fu_common_string_append_kb (str, idt, "Native mode", self->is_native);
@@ -262,22 +266,26 @@ fu_thunderbolt_device_to_string (FuUdevDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_thunderbolt_device_probe (FuUdevDevice *device, GError **error)
+fu_thunderbolt_device_probe (FuDevice *device, GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
-	const gchar *tmp = fu_udev_device_get_devtype (device);
+	const gchar *tmp = fu_udev_device_get_devtype (FU_UDEV_DEVICE (device));
+
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_thunderbolt_device_parent_class)->probe (device, error))
+		return FALSE;
 
 	/* device */
 	if (g_strcmp0 (tmp, "thunderbolt_device") == 0) {
-		tmp = fu_udev_device_get_sysfs_attr (device, "unique_id", NULL);
+		tmp = fu_udev_device_get_sysfs_attr (FU_UDEV_DEVICE (device), "unique_id", NULL);
 		if (tmp != NULL)
-			fu_device_set_physical_id (FU_DEVICE (device), tmp);
+			fu_device_set_physical_id (device, tmp);
 	/* retimer */
 	} else if (g_strcmp0 (tmp, "thunderbolt_retimer") == 0) {
 		self->device_type = FU_THUNDERBOLT_DEVICE_TYPE_RETIMER;
 		tmp = g_path_get_basename (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
 		if (tmp != NULL)
-			fu_device_set_physical_id (FU_DEVICE (device), tmp);
+			fu_device_set_physical_id (device, tmp);
 	/* domain or unsupported */
 	} else {
 		g_set_error (error,
@@ -795,14 +803,13 @@ fu_thunderbolt_device_class_init (FuThunderboltDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_thunderbolt_device_finalize;
 	klass_device->activate = fu_thunderbolt_device_activate;
-	klass_udev_device->to_string = fu_thunderbolt_device_to_string;
+	klass_device->to_string = fu_thunderbolt_device_to_string;
 	klass_device->setup = fu_thunderbolt_device_setup;
 	klass_device->prepare_firmware = fu_thunderbolt_device_prepare_firmware;
 	klass_device->write_firmware = fu_thunderbolt_device_write_firmware;
 	klass_device->attach = fu_thunderbolt_device_attach;
 	klass_device->rescan = fu_thunderbolt_device_rescan;
-	klass_udev_device->probe = fu_thunderbolt_device_probe;
+	klass_device->probe = fu_thunderbolt_device_probe;
 }

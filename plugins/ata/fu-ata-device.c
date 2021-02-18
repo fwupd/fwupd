@@ -428,10 +428,14 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 }
 
 static gboolean
-fu_ata_device_probe (FuUdevDevice *device, GError **error)
+fu_ata_device_probe (FuDevice *device, GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
-	GUdevDevice *udev_device = fu_udev_device_get_dev (device);
+	GUdevDevice *udev_device = fu_udev_device_get_dev (FU_UDEV_DEVICE (device));
+
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_ata_device_parent_class)->probe (device, error))
+		return FALSE;
 
 	/* check is valid */
 	if (g_strcmp0 (g_udev_device_get_devtype (udev_device), "disk") != 0) {
@@ -452,15 +456,15 @@ fu_ata_device_probe (FuUdevDevice *device, GError **error)
 	}
 
 	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id (device, "scsi", error))
+	if (!fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "scsi", error))
 		return FALSE;
 
 	/* look at the PCI and USB depth to work out if in an external enclosure */
-	self->pci_depth = fu_udev_device_get_slot_depth (device, "pci");
-	self->usb_depth = fu_udev_device_get_slot_depth (device, "usb");
+	self->pci_depth = fu_udev_device_get_slot_depth (FU_UDEV_DEVICE (device), "pci");
+	self->usb_depth = fu_udev_device_get_slot_depth (FU_UDEV_DEVICE (device), "usb");
 	if (self->pci_depth <= 2 && self->usb_depth <= 2) {
-		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
-		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	}
 
 	return TRUE;
@@ -838,14 +842,13 @@ fu_ata_device_class_init (FuAtaDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_ata_device_finalize;
 	klass_device->to_string = fu_ata_device_to_string;
 	klass_device->set_quirk_kv = fu_ata_device_set_quirk_kv;
 	klass_device->setup = fu_ata_device_setup;
 	klass_device->activate = fu_ata_device_activate;
 	klass_device->write_firmware = fu_ata_device_write_firmware;
-	klass_udev_device->probe = fu_ata_device_probe;
+	klass_device->probe = fu_ata_device_probe;
 }
 
 FuAtaDevice *

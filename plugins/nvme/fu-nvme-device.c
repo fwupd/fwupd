@@ -24,9 +24,10 @@ struct _FuNvmeDevice {
 G_DEFINE_TYPE (FuNvmeDevice, fu_nvme_device, FU_TYPE_UDEV_DEVICE)
 
 static void
-fu_nvme_device_to_string (FuUdevDevice *device, guint idt, GString *str)
+fu_nvme_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
+	FU_DEVICE_CLASS (fu_nvme_device_parent_class)->to_string (device, idt, str);
 	fu_common_string_append_ku (str, idt, "PciDepth", self->pci_depth);
 }
 
@@ -262,25 +263,29 @@ fu_nvme_device_dump (const gchar *title, const guint8 *buf, gsize sz)
 }
 
 static gboolean
-fu_nvme_device_probe (FuUdevDevice *device, GError **error)
+fu_nvme_device_probe (FuDevice *device, GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
 
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_nvme_device_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id (device, "pci", error))
+	if (!fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "pci", error))
 		return FALSE;
 
 	/* look at the PCI depth to work out if in an external enclosure */
-	self->pci_depth = fu_udev_device_get_slot_depth (device, "pci");
+	self->pci_depth = fu_udev_device_get_slot_depth (FU_UDEV_DEVICE (device), "pci");
 	if (self->pci_depth <= 2) {
-		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
-		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	}
 
 	/* all devices need at least a warm reset, but some quirked drives
 	 * need a full "cold" shutdown and startup */
-	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
-		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	if (!fu_device_has_flag (self, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN))
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 
 	return TRUE;
 }
@@ -412,13 +417,12 @@ fu_nvme_device_class_init (FuNvmeDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_nvme_device_finalize;
-	klass_udev_device->to_string = fu_nvme_device_to_string;
+	klass_device->to_string = fu_nvme_device_to_string;
 	klass_device->set_quirk_kv = fu_nvme_device_set_quirk_kv;
 	klass_device->setup = fu_nvme_device_setup;
 	klass_device->write_firmware = fu_nvme_device_write_firmware;
-	klass_udev_device->probe = fu_nvme_device_probe;
+	klass_device->probe = fu_nvme_device_probe;
 }
 
 FuNvmeDevice *

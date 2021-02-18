@@ -1528,11 +1528,16 @@ fu_ccgx_hpi_device_set_quirk_kv (FuDevice *device,
 }
 
 static gboolean
-fu_ccgx_hpi_device_open (FuUsbDevice *device, GError **error)
+fu_ccgx_hpi_device_open (FuDevice *device, GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
-	if (!g_usb_device_claim_interface (fu_usb_device_get_dev (device),
+
+	/* FuUsbDevice->open */
+	if (!FU_DEVICE_CLASS (fu_ccgx_hpi_device_parent_class)->open (device, error))
+		return FALSE;
+
+	if (!g_usb_device_claim_interface (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
 					   self->inf_num,
 					   G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 					   &error_local)) {
@@ -1547,15 +1552,15 @@ fu_ccgx_hpi_device_open (FuUsbDevice *device, GError **error)
 }
 
 static gboolean
-fu_ccgx_hpi_device_close (FuUsbDevice *device, GError **error)
+fu_ccgx_hpi_device_close (FuDevice *device, GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
 
 	/* do not close handle when device restarts */
-	if (fu_device_get_status (FU_DEVICE (device)) == FWUPD_STATUS_DEVICE_RESTART)
+	if (fu_device_get_status (device) == FWUPD_STATUS_DEVICE_RESTART)
 		return TRUE;
-	if (!g_usb_device_release_interface (fu_usb_device_get_dev (device),
+	if (!g_usb_device_release_interface (fu_usb_device_get_dev (FU_USB_DEVICE (device)),
 					     self->inf_num,
 					     G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
 					     &error_local)) {
@@ -1566,7 +1571,8 @@ fu_ccgx_hpi_device_close (FuUsbDevice *device, GError **error)
 			     error_local->message);
 		return FALSE;
 	}
-	return TRUE;
+	/* FuUsbDevice->close */
+	return FU_DEVICE_CLASS (fu_ccgx_hpi_device_parent_class)->close (device, error);
 }
 
 static void
@@ -1605,7 +1611,6 @@ static void
 fu_ccgx_hpi_device_class_init (FuCcgxHpiDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_ccgx_hpi_device_to_string;
 	klass_device->write_firmware = fu_ccgx_hpi_write_firmware;
 	klass_device->prepare_firmware = fu_ccgx_hpi_device_prepare_firmware;
@@ -1613,6 +1618,6 @@ fu_ccgx_hpi_device_class_init (FuCcgxHpiDeviceClass *klass)
 	klass_device->attach = fu_ccgx_hpi_device_attach;
 	klass_device->setup = fu_ccgx_hpi_device_setup;
 	klass_device->set_quirk_kv = fu_ccgx_hpi_device_set_quirk_kv;
-	klass_usb_device->open = fu_ccgx_hpi_device_open;
-	klass_usb_device->close = fu_ccgx_hpi_device_close;
+	klass_device->open = fu_ccgx_hpi_device_open;
+	klass_device->close = fu_ccgx_hpi_device_close;
 }

@@ -83,10 +83,14 @@ fu_synaptics_rmi_flash_to_string (FuSynapticsRmiFlash *flash, guint idt, GString
 }
 
 static void
-fu_synaptics_rmi_device_to_string (FuUdevDevice *device, guint idt, GString *str)
+fu_synaptics_rmi_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+
+	/* FuUdevDevice->to_string */
+	FU_DEVICE_CLASS (fu_synaptics_rmi_device_parent_class)->to_string (device, idt, str);
+
 	fu_common_string_append_kx (str, idt, "CurrentPage", priv->current_page);
 	fu_common_string_append_kx (str, idt, "InIepMode", priv->in_iep_mode);
 	fu_common_string_append_kx (str, idt, "MaxPage", priv->max_page);
@@ -822,9 +826,8 @@ fu_synaptics_rmi_device_class_init (FuSynapticsRmiDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_device_udev = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_synaptics_rmi_device_finalize;
-	klass_device_udev->to_string = fu_synaptics_rmi_device_to_string;
+	klass_device->to_string = fu_synaptics_rmi_device_to_string;
 	klass_device->prepare_firmware = fu_synaptics_rmi_device_prepare_firmware;
 	klass_device->setup = fu_synaptics_rmi_device_setup;
 	klass_device->write_firmware = fu_synaptics_rmi_device_write_firmware;
