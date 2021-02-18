@@ -159,7 +159,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--sbat-generation",
-        default=0,
+        default=1,
         type=int,
         help="SBAT generation",
     )
