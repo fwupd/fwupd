@@ -23,7 +23,7 @@ meson .. \
     -Dplugin_dell=false \
     -Dplugin_nvme=false \
     -Dplugin_platform_integrity=false \
-    -Dtpm=false \
+    -Dplugin_tpm=false \
     -Dsystemd=false \
     -Dplugin_emmc=false \
     -Dplugin_amt=false \
