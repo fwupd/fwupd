@@ -66,7 +66,7 @@ subdir('wacom-usb')
 subdir('csr')
 endif
 
-if get_option('tpm')
+if get_option('plugin_tpm')
 if not get_option('gudev')
   error('gudev is required for tpm')
 endif
