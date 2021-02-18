@@ -454,6 +454,7 @@ done
 %{_libdir}/fwupd-plugins-3/libfu_plugin_system76_launch.so
 %if 0%{?enable_dummy}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_test.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_test_ble.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_invalid.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thelio_io.so

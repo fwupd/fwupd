@@ -19,9 +19,9 @@
 
 /**
  * SECTION:fu-bluez-device
- * @short_description: a Bluez Bluetooth LE device
+ * @short_description: a Bluez Bluetooth device
  *
- * An object that represents a Bluez Bluetooth LE device.
+ * An object that represents a Bluez Bluetooth device.
  *
  * See also: #FuBluezDevice
  */
@@ -220,7 +220,6 @@ static gboolean
 fu_bluez_device_setup (FuDevice *device, GError **error)
 {
 	FuBluezDevice *self = FU_BLUEZ_DEVICE (device);
-	FuBluezDevicePrivate *priv = GET_PRIVATE (self);
 
 	fu_bluez_device_add_device_uuids (self);
 

@@ -5,6 +5,12 @@ if get_option('plugin_dummy')
   install_dummy = true
 endif
 
+if get_option('bluez')
+install_data(['test-ble.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+endif
+
 shared_module('fu_plugin_test',
   fu_hash,
   sources : [
@@ -46,3 +52,28 @@ shared_module('fu_plugin_invalid',
     plugin_deps,
   ],
 )
+
+if get_option('bluez')
+shared_module('fu_plugin_test_ble',
+  fu_hash,
+  sources : [
+    'fu-plugin-test-ble.c',
+    'fu-test-ble-device.c',
+  ],
+  include_directories : [
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
+  ],
+  install : install_dummy,
+  install_dir: plugin_dir,
+  link_with : [
+    fwupd,
+    fwupdplugin,
+  ],
+  c_args : cargs,
+  dependencies : [
+    plugin_deps,
+  ],
+)
+endif
