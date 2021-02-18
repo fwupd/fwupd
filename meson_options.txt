@@ -43,7 +43,7 @@ option('efi-libdir', type : 'string', description : 'path to the EFI lib directo
 option('efi-ldsdir', type : 'string', description : 'path to the EFI lds directory')
 option('efi-includedir', type : 'string', value : '/usr/include/efi', description : 'path to the EFI header directory')
 option('efi_os_dir', type: 'string', description : 'the hardcoded name of OS directory in ESP, e.g. fedora')
-option('efi_sbat_fwupd_generation', type : 'integer', value : 0, description : 'SBAT fwupd generation')
+option('efi_sbat_fwupd_generation', type : 'integer', value : 1, description : 'SBAT fwupd generation')
 option('efi_sbat_distro_id', type : 'string', value : '', description : 'SBAT distribution ID, e.g. fedora')
 option('efi_sbat_distro_summary', type : 'string', value : '', description : 'SBAT distribution summary, e.g. Fedora')
 option('efi_sbat_distro_pkgname', type : 'string', value : '', description : 'SBAT distribution package name, e.g. fwupd')
