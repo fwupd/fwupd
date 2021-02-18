@@ -611,18 +611,18 @@ fu_pxi_device_setup_guid (FuPxiDevice *self, GError **error)
 #ifdef HAVE_HIDRAW_H
 	struct hidraw_devinfo hid_raw_info = { 0x0 };
 	g_autofree gchar *devid = NULL;
-	g_autoptr(GString) ble_name = NULL;
+	g_autoptr(GString) dev_name = NULL;
 
 	/* extra GUID */
 	if (!fu_pxi_device_get_raw_info (self, &hid_raw_info ,error))
 		return FALSE;
-	ble_name = g_string_new (fu_device_get_name (FU_DEVICE (self)));
-	g_string_ascii_up (ble_name);
-	fu_common_string_replace (ble_name, " ", "_");
-	devid = g_strdup_printf ("HIDRAW\\VID_%04X&PID_%04X&BLE_%s",
+	dev_name = g_string_new (fu_device_get_name (FU_DEVICE (self)));
+	g_string_ascii_up (dev_name);
+	fu_common_string_replace (dev_name, " ", "_");
+	devid = g_strdup_printf ("HIDRAW\\VEN_%04X&DEV_%04X&NAME_%s",
 				 (guint) hid_raw_info.vendor,
 				 (guint) hid_raw_info.product,
-				 ble_name->str);
+				 dev_name->str);
 	fu_device_add_instance_id (FU_DEVICE (self), devid);
 #endif
 	return TRUE;
