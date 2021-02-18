@@ -2,6 +2,9 @@
 set -e
 set -x
 
+#get any missing deps from the container
+./contrib/ci/generate_dependencies.py | xargs dnf install -y
+
 #generate a tarball
 git config tar.tar.xz.command "xz -c"
 mkdir -p build && pushd build

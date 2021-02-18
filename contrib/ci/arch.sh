@@ -6,6 +6,9 @@ shopt -s extglob
 VERSION=`git describe | sed 's/-/.r/;s/-/./'`
 [ -z $VERSION ] && VERSION=`head meson.build | grep ' version :' | cut -d \' -f2`
 
+#install anything missing from the container
+./contrib/ci/generate_dependencies.py | xargs pacman -S --noconfirm --needed
+
 # prepare the build tree
 rm -rf build
 mkdir build && pushd build
