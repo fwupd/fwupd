@@ -3,6 +3,9 @@ set -e
 set -x
 shopt -s extglob
 
+#install anything missing from the container
+./contrib/ci/generate_dependencies.py | xargs pacman -S --noconfirm --needed
+
 # prepare the build tree
 rm -rf build
 mkdir build && pushd build
