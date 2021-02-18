@@ -25,6 +25,9 @@ if ! find . -name '*.sh' | xargs shellcheck --severity=error -e SC2068; then
     exit 1
 fi
 
+#get any missing deps from the container
+./contrib/ci/generate_dependencies.py | xargs dnf install -y
+
 #generate a tarball
 git config tar.tar.xz.command "xz -c"
 mkdir -p build && pushd build
