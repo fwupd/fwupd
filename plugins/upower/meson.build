@@ -1,3 +1,4 @@
+if host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginUpower"']
 
 shared_module('fu_plugin_upower',
@@ -25,3 +26,4 @@ shared_module('fu_plugin_upower',
 install_data(['upower.conf'],
   install_dir:  join_paths(sysconfdir, 'fwupd')
 )
+endif

@@ -1,3 +1,7 @@
+if get_option('plugin_nvme')
+if not get_option('gudev')
+  error('gudev is required for plugin_nvme')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
 
 install_data([
@@ -61,4 +65,5 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('nvme-self-test', e, env : testdatadirs)  # added to installed-tests
+endif
 endif

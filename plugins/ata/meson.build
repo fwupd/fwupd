@@ -1,3 +1,4 @@
+if get_option('gudev')
 cargs = ['-DG_LOG_DOMAIN="FuPluginAta"']
 
 install_data([
@@ -59,4 +60,5 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('ata-self-test', e, env : testdatadirs)  # added to installed-tests
+endif
 endif

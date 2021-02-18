@@ -1,3 +1,4 @@
+if get_option('plugin_uefi_capsule')
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
 
 shared_module('fu_plugin_uefi_dbx',
@@ -98,4 +99,5 @@ if get_option('man')
     install : true,
     install_dir : join_paths(mandir, 'man1'),
   )
+endif
 endif

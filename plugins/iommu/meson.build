@@ -1,3 +1,4 @@
+if host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginIommu"']
 
 install_data([
@@ -27,3 +28,4 @@ shared_module('fu_plugin_iommu',
     plugin_deps,
   ],
 )
+endif

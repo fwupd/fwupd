@@ -1,3 +1,7 @@
+if get_option('systemd')
+if host_machine.system() != 'linux'
+  error('linux is required for systemd')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogind"']
 
 shared_module('fu_plugin_logind',
@@ -21,3 +25,4 @@ shared_module('fu_plugin_logind',
     plugin_deps,
   ],
 )
+endif

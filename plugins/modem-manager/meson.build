@@ -1,3 +1,4 @@
+if get_option('plugin_modem_manager')
 cargs = ['-DG_LOG_DOMAIN="FuPluginMm"']
 
 install_data(['modem-manager.quirk'],
@@ -32,3 +33,4 @@ shared_module('fu_plugin_modem_manager',
     libqmi_glib,
   ],
 )
+endif

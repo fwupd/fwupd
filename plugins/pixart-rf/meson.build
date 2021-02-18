@@ -1,3 +1,4 @@
+if host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
 
 install_data(['pixart-rf.quirk'],
@@ -27,3 +28,4 @@ shared_module('fu_plugin_pixart_rf',
     fwupdplugin,
   ],
 )
+endif

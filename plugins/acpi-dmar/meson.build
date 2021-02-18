@@ -1,3 +1,4 @@
+if host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiDmar"']
 
 shared_module('fu_plugin_acpi_dmar',
@@ -50,4 +51,5 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('acpi-dmar-self-test', e, env : testdatadirs)  # added to installed-tests
+endif
 endif

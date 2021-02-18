@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginFastboot"']
 
 install_data(['fastboot.quirk'],
@@ -26,3 +27,4 @@ shared_module('fu_plugin_fastboot',
     plugin_deps,
   ],
 )
+endif

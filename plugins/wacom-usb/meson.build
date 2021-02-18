@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginWacomUsb"']
 
 install_data(['wacom-usb.quirk'],
@@ -65,4 +66,5 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('wacom-usb-self-test', e, env : testdatadirs)  # added to installed-tests
+endif
 endif

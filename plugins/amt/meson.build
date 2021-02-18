@@ -1,3 +1,4 @@
+if get_option('plugin_amt')
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmt"']
 
 shared_module('fu_plugin_amt',
@@ -21,3 +22,4 @@ shared_module('fu_plugin_amt',
     plugin_deps,
   ],
 )
+endif
