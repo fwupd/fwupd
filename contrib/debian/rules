@@ -87,6 +87,7 @@ override_dh_install:
 
 	#this is placed in fwupd-tests
 	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-3/libfu_plugin_test.so
+	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-3/libfu_plugin_test_ble.so
 	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-3/libfu_plugin_invalid.so
 	rm -f debian/fwupd/etc/fwupd/remotes.d/fwupd-tests.conf
 

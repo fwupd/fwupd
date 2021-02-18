@@ -12,6 +12,10 @@ GUID Generation
 The devices created by this plugin use hardcoded GUIDs that do not correspond
 to any kind of DeviceInstanceId values.
 
+In other cases devices use the standard BLE DeviceInstanceId values, e.g.
+
+ * `USB\VID_2DC8&PID_AB11`
+
 Vendor ID Security
 ------------------
 
