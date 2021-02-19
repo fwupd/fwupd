@@ -10,6 +10,8 @@ ifeq "$(DEB_HOST_ARCH_BITS)" "32"
 	export DEB_CFLAGS_MAINT_APPEND = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE
 endif
 
+CONFARGS =
+
 ifneq ($(CI),)
 	CONFARGS += --wrap-mode=default
 endif
@@ -19,9 +21,39 @@ deb_version := $(shell dpkg-parsechangelog --show-field Version)
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
 	SB_STYLE := ubuntu
 	tar_name := fwupd_$(deb_version)_$(DEB_HOST_ARCH).tar.gz
+	CONFARGS += -Dplugin_flashrom=false
+	CONFARGS += -Defi_sbat_distro_id=ubuntu
+	CONFARGS += -Defi_sbat_distro_summary=Ubuntu
+	CONFARGS += -Defi_sbat_distro_pkgname=fwupd
+	CONFARGS += -Defi_sbat_distro_version=$(deb_version)
+	CONFARGS += -Defi_sbat_distro_url="https://launchpad.net/ubuntu/+source/fwupd"
 else
 	TMPLDIR  := debian/fwupd-$(DEB_HOST_ARCH)-signed-template/usr/share/code-signing/fwupd-$(DEB_HOST_ARCH)-signed-template
+	ifneq ($(DEB_HOST_ARCH_CPU),ia64)
+		CONFARGS += -Dplugin_flashrom=true
+	else
+		CONFARGS += -Dplugin_flashrom=false
+	endif
+	CONFARGS += -Defi_sbat_distro_id=debian
+	CONFARGS += -Defi_sbat_distro_summary=Debian
+	CONFARGS += -Defi_sbat_distro_pkgname=fwupd
+	CONFARGS += -Defi_sbat_distro_version=$(deb_version)
+	CONFARGS += -Defi_sbat_distro_url="https://tracker.debian.org/pkg/fwupd"
 endif
+
+ifeq (yes,$(shell pkg-config --exists libsmbios_c && echo yes))
+	CONFARGS += -Dplugin_dell=true
+else
+	CONFARGS += -Dplugin_dell=false
+endif
+
+ifeq (yes,$(shell pkg-config --exists efivar && echo yes))
+	CONFARGS += -Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true
+else
+	CONFARGS += -Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false
+endif
+
+CONFARGS += -Dplugin_dummy=true -Dgtkdoc=true
 
 %:
 	dh $@ --with gir
@@ -34,22 +66,7 @@ ifeq (ubuntu,$(SB_STYLE))
 endif
 
 override_dh_auto_configure:
-	if pkg-config --exists libsmbios_c; then \
-		export DELL="-Dplugin_dell=true"; \
-	else \
-		export DELL="-Dplugin_dell=false"; \
-	fi; \
-	if pkg-config --exists efivar; then \
-		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true"; \
-	else \
-		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false"; \
-	fi; \
-	if [ ! -z "$$CI" ]; then \
-		export FLASHROM="-Dplugin_flashrom=true"; \
-	else \
-		export FLASHROM="-Dplugin_flashrom=false"; \
-	fi; \
-	dh_auto_configure -- $$UEFI $$DELL $$FLASHROM $$CI -Dplugin_dummy=true -Dgtkdoc=true
+	dh_auto_configure -- $(CONFARGS)
 
 override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
