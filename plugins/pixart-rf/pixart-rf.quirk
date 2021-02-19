@@ -39,5 +39,5 @@ Plugin = pixart_rf
 Plugin = pixart_rf
 
 # Primax JP KB
-[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EFF]
+[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EF5]
 Plugin = pixart_rf
