@@ -23,6 +23,14 @@ else
 	TMPLDIR  := debian/fwupd-$(DEB_HOST_ARCH)-signed-template/usr/share/code-signing/fwupd-$(DEB_HOST_ARCH)-signed-template
 endif
 
+ifeq (yes,$(shell pkg-config --exists efivar && echo yes))
+	CONFARGS += -Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true
+else
+	CONFARGS += -Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false
+endif
+
+CONFARGS += -Dplugin_dummy=true -Dgtkdoc=true --libexecdir=/usr/lib
+
 %:
 	dh $@ --with gir
 
