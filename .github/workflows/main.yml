@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [fedora, debian-x86_64, arch, debian-i386]
+        os: [fedora, debian-x86_64, debian-i386]
     steps:
       - uses: actions/checkout@v2
       - name: Docker login
