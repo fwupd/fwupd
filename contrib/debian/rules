@@ -41,22 +41,7 @@ ifeq (ubuntu,$(SB_STYLE))
 endif
 
 override_dh_auto_configure:
-	if pkg-config --exists libsmbios_c; then \
-		export DELL="-Dplugin_dell=true"; \
-	else \
-		export DELL="-Dplugin_dell=false"; \
-	fi; \
-	if pkg-config --exists efivar; then \
-		export UEFI="-Dplugin_uefi=true -Dplugin_redfish=true -Dplugin_nvme=true"; \
-	else \
-		export UEFI="-Dplugin_uefi=false -Dplugin_redfish=false -Dplugin_nvme=false"; \
-	fi; \
-	if [ ! -z "$$CI" ]; then \
-		export FLASHROM="-Dplugin_flashrom=true"; \
-	else \
-		export FLASHROM="-Dplugin_flashrom=false"; \
-	fi; \
-	dh_auto_configure -- $$UEFI $$DELL $$FLASHROM $$CI -Dplugin_dummy=true --libexecdir=/usr/lib
+	dh_auto_configure -- $(CONFARGS)
 
 override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
