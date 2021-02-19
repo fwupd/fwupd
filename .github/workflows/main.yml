@@ -6,19 +6,6 @@ on:
     branches: [ 1_2_X ]
 
 jobs:
-  abi:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Refresh dependencies
-        run: sudo apt update
-      - name: Install dependencies
-        run: ./contrib/ci/generate_dependencies.py | sudo xargs apt install -y
-      - name: Check ABI
-        run: ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
-
   build:
     runs-on: ubuntu-latest
     strategy:
