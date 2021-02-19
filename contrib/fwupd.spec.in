@@ -154,9 +154,6 @@ Data files for installed tests.
 %build
 
 %meson \
-%if 0%{?enable_ci}
-    --werror \
-%endif
     -Dgtkdoc=true \
 %if 0%{?enable_tests}
     -Dtests=true \
