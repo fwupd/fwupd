@@ -74,6 +74,45 @@ def _run_objcopy_sbat(args, tfd):
         subprocess.run(argv, check=True)
 
 
+def _get_sbat_objcopy_argv(args):
+
+    _SBAT_SECTION_ALIGNMENT = 512
+    _SBAT_SECTION_VMA = 0x2000
+
+    if not args.sbat_distro_id:
+        return []
+
+    argv = [
+        "-j",
+        ".sbat",
+    ]
+    has_sbat_in_lds = False
+    if args.linker_script:
+        with open(args.linker_script, "r") as flinker:
+            has_sbat_in_lds = flinker.read().find(".sbat") != -1
+        if not has_sbat_in_lds:
+            print(
+                "No .sbat in {}, assuming alignment {} and vma 0x{:04x}",
+                args.linker_script,
+                _SBAT_SECTION_ALIGNMENT,
+                _SBAT_SECTION_VMA,
+            )
+    else:
+        print(
+            "No lds specified, assuming alignment {} and vma 0x{:04x}",
+            _SBAT_SECTION_ALIGNMENT,
+            _SBAT_SECTION_VMA,
+        )
+    if not has_sbat_in_lds:
+        argv += [
+            "--set-section-alignment",
+            ".sbat={}".format(_SBAT_SECTION_ALIGNMENT),
+            "--change-section-vma",
+            ".sbat=0x{:04x}".format(_SBAT_SECTION_VMA),
+        ]
+    return argv
+
+
 def _run_objcopy(args):
 
     with tempfile.NamedTemporaryFile() as tfd:
@@ -84,8 +123,6 @@ def _run_objcopy(args):
             "-j",
             ".text",
             "-j",
-            ".sbat",
-            "-j",
             ".sdata",
             "-j",
             ".data",
@@ -95,6 +132,9 @@ def _run_objcopy(args):
             ".dynsym",
             "-j",
             ".rel*",
+        ]
+        argv += _get_sbat_objcopy_argv(args)
+        argv += [
             tfd.name,
             args.outfile,
         ]
@@ -193,6 +233,11 @@ if __name__ == "__main__":
         "--sbat-distro-url",
         default=None,
         help="SBAT distribution URL",
+    )
+    parser.add_argument(
+        "--linker-script",
+        default=None,
+        help="Linker script, e.g. /usr/lib/gnuefi/x64/efi.lds",
     )
     parser.add_argument(
         "infile",

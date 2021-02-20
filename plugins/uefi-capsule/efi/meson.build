@@ -177,6 +177,7 @@ app = custom_target(efi_name,
                       '--sbat-distro-pkgname', get_option('efi_sbat_distro_pkgname'),
                       '--sbat-distro-version', get_option('efi_sbat_distro_version'),
                       '--sbat-distro-url', get_option('efi_sbat_distro_url'),
+                      '--linker-script', join_paths(efi_ldsdir, arch_lds),
                     ],
                     install : true,
                     install_dir : efi_app_location)
