@@ -41,3 +41,7 @@ Plugin = pixart_rf
 # Primax JP KB
 [DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EF5]
 Plugin = pixart_rf
+
+# Chicony Cheetos
+[DeviceInstanceId=HIDRAW\VEN_04F2&DEV_2051]
+Plugin = pixart_rf
