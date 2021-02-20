@@ -1,7 +1,7 @@
 efi_cc = get_option('efi-cc')
 efi_ld = get_option('efi-ld')
 efi_objcopy = get_option('efi-objcopy')
-efi_ldsdir = get_option('efi-ldsdir')
+efi_crtdir = get_option('efi-crtdir')
 efi_incdir = get_option('efi-includedir')
 
 gnu_efi_path_arch = ''
@@ -31,38 +31,37 @@ if not have_gnu_efi
   error('gnu-efi support requested, but headers were not found')
 endif
 
-arch_lds = 'efi.lds'
+arch_lds = 'elf_@0@_efi.lds'.format(gnu_efi_path_arch)
+
 arch_crt = 'crt0.o'
-if efi_ldsdir == ''
-  efi_ldsdir = join_paths(efi_libdir, 'gnuefi', gnu_efi_path_arch)
-  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+if efi_crtdir == ''
+  efi_crtdir = join_paths(efi_libdir, 'gnuefi', gnu_efi_path_arch)
+  cmd = run_command('test', '-f', join_paths(efi_crtdir, arch_crt))
   if cmd.returncode() != 0
-    arch_lds = 'elf_@0@_efi.lds'.format(gnu_efi_path_arch)
     arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
-    efi_ldsdir = join_paths(efi_libdir, 'gnuefi')
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+    efi_crtdir = join_paths(efi_libdir, 'gnuefi')
+    cmd = run_command('test', '-f', join_paths(efi_crtdir, arch_crt))
   endif
   if cmd.returncode() != 0
-    efi_ldsdir = efi_libdir
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+    efi_crtdir = efi_libdir
+    cmd = run_command('test', '-f', join_paths(efi_crtdir, arch_crt))
     if cmd.returncode() != 0
-      error('Cannot find @0@'.format(arch_lds))
+      error('Cannot find @0@'.format(arch_crt))
     endif
   endif
 else
-  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+  cmd = run_command('test', '-f', join_paths(efi_crtdir, arch_crt))
   if cmd.returncode() != 0
-    arch_lds = 'elf_@0@_efi.lds'.format(gnu_efi_path_arch)
     arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+    cmd = run_command('test', '-f', join_paths(efi_crtdir, arch_crt))
   endif
   if cmd.returncode() != 0
-    error('Cannot find @0@'.format(arch_lds))
+    error('Cannot find @0@'.format(arch_crt))
   endif
 endif
 
 message('efi-libdir: "@0@"'.format(efi_libdir))
-message('efi-ldsdir: "@0@"'.format(efi_ldsdir))
+message('efi-crtdir: "@0@"'.format(efi_crtdir))
 message('efi-includedir: "@0@"'.format(efi_incdir))
 
 debugdir = join_paths (libdir, 'debug')
@@ -106,14 +105,14 @@ elif host_cpu == 'x86'
 endif
 
 efi_ldflags = ['-T',
-               join_paths(efi_ldsdir, arch_lds),
+               join_paths(meson.current_source_dir(), 'lds', arch_lds),
                '-shared',
                '-Bsymbolic',
                '-nostdlib',
                '-znocombreloc',
-               '-L', efi_ldsdir,
+               '-L', efi_crtdir,
                '-L', efi_libdir,
-               join_paths(efi_ldsdir, arch_crt)]
+               join_paths(efi_crtdir, arch_crt)]
 if host_cpu == 'aarch64' or host_cpu == 'arm'
   # Aarch64 and ARM32 don't have an EFI capable objcopy. Use 'binary'
   # instead, and add required symbols manually.
@@ -147,8 +146,27 @@ o_file4 = custom_target('fwup-common.o',
                         command : [efi_cc, '-c', '@INPUT@', '-o', '@OUTPUT@']
                                   + compile_args)
 
+o_file5 = custom_target('fwup-sbat.o',
+                        output : 'fwup-sbat.o',
+                        command : [
+                          join_paths(meson.current_source_dir(), 'generate_sbat.py'),
+                          '@OUTPUT@',
+                          '--cc', efi_cc,
+                          '--objcopy', efi_objcopy,
+                          '--project-name', meson.project_name(),
+                          '--project-version', meson.project_version(),
+                          '--sbat-version', '1',
+                          '--sbat-generation', '@0@'.format(get_option('efi_sbat_fwupd_generation')),
+                          '--sbat-distro-id', get_option('efi_sbat_distro_id'),
+                          '--sbat-distro-generation', '0',
+                          '--sbat-distro-summary', get_option('efi_sbat_distro_summary'),
+                          '--sbat-distro-pkgname', get_option('efi_sbat_distro_pkgname'),
+                          '--sbat-distro-version', get_option('efi_sbat_distro_version'),
+                          '--sbat-distro-url', get_option('efi_sbat_distro_url'),
+                        ])
+
 so = custom_target('fwup.so',
-                   input : [o_file1, o_file2, o_file3, o_file4],
+                   input : [o_file1, o_file2, o_file3, o_file4, o_file5],
                    output : 'fwup.so',
                    command : [efi_ld, '-o', '@OUTPUT@'] +
                              efi_ldflags + ['@INPUT@'] +
@@ -167,16 +185,6 @@ app = custom_target(efi_name,
                       '@INPUT@', '@OUTPUT@',
                       '--arch', gnu_efi_arch,
                       '--objcopy', efi_objcopy,
-                      '--project-name', meson.project_name(),
-                      '--project-version', meson.project_version(),
-                      '--sbat-version', '1',
-                      '--sbat-generation', '@0@'.format(get_option('efi_sbat_fwupd_generation')),
-                      '--sbat-distro-id', get_option('efi_sbat_distro_id'),
-                      '--sbat-distro-generation', '0',
-                      '--sbat-distro-summary', get_option('efi_sbat_distro_summary'),
-                      '--sbat-distro-pkgname', get_option('efi_sbat_distro_pkgname'),
-                      '--sbat-distro-version', get_option('efi_sbat_distro_version'),
-                      '--sbat-distro-url', get_option('efi_sbat_distro_url'),
                     ],
                     install : true,
                     install_dir : efi_app_location)
