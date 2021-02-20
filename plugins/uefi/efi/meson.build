@@ -31,10 +31,17 @@ if not have_gnu_efi
   error('gnu-efi support requested, but headers were not found')
 endif
 
-arch_lds = 'elf_@0@_efi.lds'.format(gnu_efi_path_arch)
+arch_lds = 'efi.lds'
+arch_crt = 'crt0.o'
 if efi_ldsdir == ''
-  efi_ldsdir = join_paths(efi_libdir, 'gnuefi')
+  efi_ldsdir = join_paths(efi_libdir, 'gnuefi', gnu_efi_path_arch)
   cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+  if cmd.returncode() != 0
+    arch_lds = 'elf_@0@_efi.lds'.format(gnu_efi_path_arch)
+    arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
+    efi_ldsdir = join_paths(efi_libdir, 'gnuefi')
+    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+  endif
   if cmd.returncode() != 0
     efi_ldsdir = efi_libdir
     cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
@@ -42,10 +49,32 @@ if efi_ldsdir == ''
       error('Cannot find @0@'.format(arch_lds))
     endif
   endif
+else
+  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+  if cmd.returncode() != 0
+    arch_lds = 'elf_@0@_efi.lds'.format(gnu_efi_path_arch)
+    arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
+    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+  endif
+  if cmd.returncode() != 0
+    error('Cannot find @0@'.format(arch_lds))
+  endif
+endif
+
+# is the system linker script new enough to know about SBAT?
+# i.e. gnu-efi with https://github.com/vathpela/gnu-efi/pull/14 has been installed
+efi_crtdir = efi_ldsdir
+if get_option('efi_sbat_distro_id') != ''
+  cmd = run_command('grep', '-q', 'sbat', join_paths(efi_ldsdir, arch_lds))
+  if cmd.returncode() != 0
+    warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_ldsdir, arch_lds)))
+    efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
+  endif
 endif
 
 message('efi-libdir: "@0@"'.format(efi_libdir))
 message('efi-ldsdir: "@0@"'.format(efi_ldsdir))
+message('efi-crtdir: "@0@"'.format(efi_crtdir))
 message('efi-includedir: "@0@"'.format(efi_incdir))
 
 debugdir = join_paths (libdir, 'debug')
@@ -94,8 +123,9 @@ efi_ldflags = ['-T',
                '-Bsymbolic',
                '-nostdlib',
                '-znocombreloc',
+               '-L', efi_crtdir,
                '-L', efi_libdir,
-               join_paths(efi_ldsdir, 'crt0-efi-@0@.o'.format(gnu_efi_path_arch))]
+               join_paths(efi_crtdir, arch_crt)]
 if efi_arch == 'aarch64' or efi_arch == 'arm'
   # Aarch64 and ARM32 don't have an EFI capable objcopy. Use 'binary'
   # instead, and add required symbols manually.
@@ -129,8 +159,27 @@ o_file4 = custom_target('fwup-common.o',
                         command : [efi_cc, '-c', '@INPUT@', '-o', '@OUTPUT@']
                                   + compile_args)
 
+o_file5 = custom_target('fwup-sbat.o',
+                        output : 'fwup-sbat.o',
+                        command : [
+                          join_paths(meson.current_source_dir(), 'generate_sbat.py'),
+                          '@OUTPUT@',
+                          '--cc', efi_cc,
+                          '--objcopy', efi_objcopy,
+                          '--project-name', meson.project_name(),
+                          '--project-version', meson.project_version(),
+                          '--sbat-version', '1',
+                          '--sbat-generation', '@0@'.format(get_option('efi_sbat_fwupd_generation')),
+                          '--sbat-distro-id', get_option('efi_sbat_distro_id'),
+                          '--sbat-distro-generation', '0',
+                          '--sbat-distro-summary', get_option('efi_sbat_distro_summary'),
+                          '--sbat-distro-pkgname', get_option('efi_sbat_distro_pkgname'),
+                          '--sbat-distro-version', get_option('efi_sbat_distro_version'),
+                          '--sbat-distro-url', get_option('efi_sbat_distro_url'),
+                        ])
+
 so = custom_target('fwup.so',
-                   input : [o_file1, o_file2, o_file3, o_file4],
+                   input : [o_file1, o_file2, o_file3, o_file4, o_file5],
                    output : 'fwup.so',
                    command : [efi_ld, '-o', '@OUTPUT@'] +
                              efi_ldflags + ['@INPUT@'] +
@@ -149,16 +198,6 @@ app = custom_target(efi_name,
                       '@INPUT@', '@OUTPUT@',
                       '--arch', gnu_efi_arch,
                       '--objcopy', efi_objcopy,
-                      '--project-name', meson.project_name(),
-                      '--project-version', meson.project_version(),
-                      '--sbat-version', '1',
-                      '--sbat-generation', '@0@'.format(get_option('efi_sbat_fwupd_generation')),
-                      '--sbat-distro-id', get_option('efi_sbat_distro_id'),
-                      '--sbat-distro-generation', '0',
-                      '--sbat-distro-summary', get_option('efi_sbat_distro_summary'),
-                      '--sbat-distro-pkgname', get_option('efi_sbat_distro_pkgname'),
-                      '--sbat-distro-version', get_option('efi_sbat_distro_version'),
-                      '--sbat-distro-url', get_option('efi_sbat_distro_url'),
                     ],
                     install : true,
                     install_dir : efi_app_location)
