@@ -98,6 +98,7 @@ fu_cpu_device_init (FuCpuDevice *self)
 {
 	fu_device_add_guid (FU_DEVICE (self), "cpu");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
 	fu_device_add_icon (FU_DEVICE (self), "computer");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_physical_id (FU_DEVICE (self), "cpu:0");

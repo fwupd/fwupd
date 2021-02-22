@@ -279,6 +279,7 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 	fu_device_add_icon (dev, "computer");
 	fu_device_add_guid (dev, component_guid);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
 	fu_device_set_version_format (dev, version_format);
 	if (version != NULL) {
 		fu_device_set_version (dev, version);
@@ -734,6 +735,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	fu_device_set_version (dev, version_str);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
 	fu_device_add_icon (dev, "computer");
 	fu_device_set_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "dell-tpm-firmware");
 	if ((out->status & TPM_OWN_MASK) == 0 && out->flashes_left > 0) {
@@ -768,6 +770,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_INTERNAL);
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_LOCKED);
+		fu_device_add_flag (dev_alt, FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
 		fu_device_add_icon (dev_alt, "computer");
 		fu_device_set_alternate_id (dev_alt, fu_device_get_id (dev));
 		fu_device_set_metadata (dev_alt, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "dell-tpm-firmware");

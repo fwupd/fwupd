@@ -5370,6 +5370,22 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 		return;
 	}
 
+	/* verify device either opts into GUID matching or has opted out */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NO_GUID_MATCHING) &&
+	    !fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_COLDPLUG_MATCH_GUID) &&
+	    !fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID)) {
+		g_warning ("device  %s [%s] does not set either "
+			   "FWUPD_DEVICE_FLAG_NO_GUID_MATCHING, "
+			   "FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID or "
+			   "FU_DEVICE_INTERNAL_FLAG_COLDPLUG_MATCH_GUID, "
+			   "so setting both internal flags!",
+			   fu_device_get_name (device),
+			   fu_device_get_id (device));
+		fu_device_add_internal_flag (device,
+					     FU_DEVICE_INTERNAL_FLAG_COLDPLUG_MATCH_GUID |
+					     FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	}
+
 	/* is this GUID disabled */
 	disabled_devices = fu_config_get_disabled_devices (self->config);
 	for (guint i = 0; i < disabled_devices->len; i++) {

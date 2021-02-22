@@ -483,6 +483,7 @@ fu_plugin_amt_create_device (GError **error)
 	fu_device_set_id (dev, "/dev/mei0");
 	fu_device_set_vendor (dev, "Intel Corporation");
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
 	fu_device_add_icon (dev, "computer");
 	fu_device_add_parent_guid (dev, "main-system-firmware");
 	if (!amt_get_provisioning_state (ctx, &state, error))

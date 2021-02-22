@@ -168,6 +168,10 @@ fu_device_internal_flag_to_string (FuDeviceInternalFlags flag)
 		return "ensure-semver";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN)
 		return "retry-open";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID)
+		return "replug-match-guid";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_COLDPLUG_MATCH_GUID)
+		return "coldplug-match-guid";
 	return NULL;
 }
 

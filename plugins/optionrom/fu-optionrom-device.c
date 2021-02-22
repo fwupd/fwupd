@@ -118,6 +118,7 @@ static void
 fu_optionrom_device_init (FuOptionromDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_logical_id (FU_DEVICE (self), "rom");

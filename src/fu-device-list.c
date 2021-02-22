@@ -703,7 +703,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	/* verify a compatible device does not already exist */
 	item = fu_device_list_get_by_guids_removed (self, fu_device_get_guids (device));
 	if (item != NULL) {
-		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NO_GUID_MATCHING)) {
+		if (fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID)) {
 			g_debug ("found compatible device %s recently removed, reusing "
 				 "item from plugin %s for plugin %s",
 				 fu_device_get_id (item->device),
@@ -713,7 +713,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 			return;
 		} else {
 			g_debug ("not adding matching %s for device add, use "
-				 "FWUPD_DEVICE_FLAG_NO_GUID_MATCHING if required",
+				 "FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID if required",
 				 fu_device_get_id (item->device));
 		}
 	}
@@ -723,7 +723,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	if (item != NULL &&
 	    g_strcmp0 (fu_device_get_protocol (item->device),
 		       fu_device_get_protocol (device)) == 0) {
-		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NO_GUID_MATCHING)) {
+		if (fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_COLDPLUG_MATCH_GUID)) {
 			if (fu_device_get_priority (device) < fu_device_get_priority (item->device)) {
 				g_debug ("ignoring device %s [%s:%s] as better device %s [%s:%s] already exists",
 					 fu_device_get_id (device),
@@ -754,7 +754,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 			fu_device_list_remove (self, item->device);
 		} else {
 			g_debug ("not adding matching %s for device add, use "
-				 "FWUPD_DEVICE_FLAG_NO_GUID_MATCHING if required",
+				 "FU_DEVICE_INTERNAL_FLAG_COLDPLUG_MATCH_GUID if required",
 				 fu_device_get_id (item->device));
 		}
 	}

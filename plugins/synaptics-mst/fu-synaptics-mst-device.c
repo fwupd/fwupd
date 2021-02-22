@@ -69,6 +69,7 @@ fu_synaptics_mst_device_finalize (GObject *object)
 static void
 fu_synaptics_mst_device_init (FuSynapticsMstDevice *self)
 {
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
 	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.mst");
 	fu_device_set_vendor (FU_DEVICE (self), "Synaptics");
 	fu_device_add_vendor_id (FU_DEVICE (self), "DRM_DP_AUX_DEV:0x06CB");
