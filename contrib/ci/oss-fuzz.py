@@ -308,6 +308,7 @@ def _build(bld: Builder) -> None:
         ("solokey", "solokey", "solokey*"),
         ("synaptics-prometheus", "synaprom", "synaprom*"),
         ("synaptics-rmi", "synaptics-rmi", "synaptics-rmi*"),
+        ("synaptics-mst", "synaptics-mst", "synaptics-mst*"),
         ("wacom-usb", "wac", "wacom*"),
     ]:
         fuzz_objs = []

@@ -14,6 +14,7 @@
 #include "fu-synaptics-mst-common.h"
 #include "fu-synaptics-mst-connection.h"
 #include "fu-synaptics-mst-device.h"
+#include "fu-synaptics-mst-firmware.h"
 
 #define FU_SYNAPTICS_MST_ID_CTRL_SIZE	0x1000
 #define SYNAPTICS_UPDATE_ENUMERATE_TRIES 3
@@ -783,16 +784,14 @@ fu_synaptics_mst_device_prepare_firmware (FuDevice *device,
 					  GError **error)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE (device);
+	g_autoptr(FuFirmware) firmware = fu_synaptics_mst_firmware_new ();
 
 	/* check firmware and board ID match */
+	if (!fu_firmware_parse (firmware, fw, flags, error))
+		return NULL;
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
 	    !fu_device_has_custom_flag (device, "ignore-board-id")) {
-		const guint8 *buf;
-		gsize len;
-		guint16 board_id;
-
-		buf = g_bytes_get_data (fw, &len);
-		board_id = fu_common_read_uint16 (buf + ADDR_CUSTOMER_ID, G_BIG_ENDIAN);
+		guint16 board_id = fu_synaptics_mst_firmware_get_board_id (FU_SYNAPTICS_MST_FIRMWARE (firmware));
 		if (board_id != self->board_id) {
 			g_set_error (error,
 				     G_IO_ERROR,
