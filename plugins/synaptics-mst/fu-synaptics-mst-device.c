@@ -1177,7 +1177,13 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 	guid3 = g_strdup_printf ("MST-%s", name_family);
 	fu_device_add_instance_id (FU_DEVICE (self), guid3);
 
-	/* success */
+	/* this is not a valid customer ID */
+	if ((self->board_id >> 8) == 0x0) {
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_set_update_error (device, "cannot update as CustomerID is unset");
+	} else {
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	}
 	return TRUE;
 }
 
