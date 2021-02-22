@@ -747,7 +747,7 @@ fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
 	/* clone the info from real device but prevent it from being flashed */
 	device_flags_alt = fu_device_get_flags (device_alt);
 	fu_device_set_flags (device, device_flags_alt);
-	fu_device_set_flags (device_alt, device_flags_alt & ~FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_remove_flag (device_alt, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* make sure that this unlocked device can be updated */
 	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_QUAD);
