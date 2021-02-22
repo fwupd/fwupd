@@ -325,7 +325,11 @@ fwupd_device_func (void)
 	fwupd_device_add_guid (dev, "00000000-0000-0000-0000-000000000000");
 	fwupd_device_add_icon (dev, "input-gaming");
 	fwupd_device_add_icon (dev, "input-mouse");
-	fwupd_device_add_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fwupd_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE |
+				    FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	g_assert_true (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_REQUIRE_AC));
+	g_assert_true (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false (fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_HISTORICAL));
 	rel = fwupd_release_new ();
 	fwupd_release_add_flag (rel, FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD);
 	fwupd_release_add_checksum (rel, "deadbeef");
