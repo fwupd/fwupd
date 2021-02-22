@@ -16,6 +16,13 @@ These devices also use custom GUID values constructed using the board ID, e.g.
  * `SYNAPTICS_RMI\TM3038-002`
  * `SYNAPTICS_RMI\TM3038`
 
+Update Behavior
+---------------
+
+The device usually presents in HID mode, and the firmware is written to the
+device by switching to a SERIO mode where the touchpad is nonfunctional.
+Once complete the device is reset to get out of SERIO mode and to load the new
+firmware version.
 
 Vendor ID Security
 ------------------

@@ -78,6 +78,7 @@ fu_ccgx_hid_device_init (FuCcgxHidDevice *self)
 	fu_device_set_protocol (FU_DEVICE (self), "com.cypress.ccgx");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
+	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_retry_set_delay (FU_DEVICE (self), FU_CCGX_HID_DEVICE_RETRY_DELAY);
 }
 

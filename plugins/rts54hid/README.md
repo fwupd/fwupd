@@ -33,6 +33,12 @@ Child I²C devices are created using the device number as a suffix, for instance
 
  * `USB\VID_0BDA&PID_1100&I2C_01`
 
+Update Behavior
+---------------
+
+The firmware is deployed when the device is in normal runtime mode, and the
+device will reset when the new firmware has been written.
+
 Vendor ID Security
 ------------------
 

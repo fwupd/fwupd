@@ -511,7 +511,6 @@ static void
 fu_bluez_device_init (FuBluezDevice *self)
 {
 	FuBluezDevicePrivate *priv = GET_PRIVATE (self);
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
 	priv->uuid_paths = g_hash_table_new_full (g_str_hash, g_str_equal,
 						  g_free, g_free);
 }

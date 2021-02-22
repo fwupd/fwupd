@@ -575,7 +575,6 @@ fu_rts54hub_rtd21xx_device_init (FuRts54hubRtd21xxDevice *self)
 	fu_device_add_icon (FU_DEVICE (self), "video-display");
 	fu_device_set_protocol (FU_DEVICE (self), "com.realtek.rts54.i2c");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_install_duration (FU_DEVICE (self), 100); /* seconds */

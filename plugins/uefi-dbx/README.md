@@ -35,6 +35,12 @@ certificates found in the system KEK and optionally the EFI architecture. e.g.
 
 ...where `arch` is typically one of `IA32`, `X64`, `ARM` or `AA64`
 
+Update Behavior
+---------------
+
+The firmware is deployed when the machine is in normal runtime mode, but it is
+only activated when the system is restarted.
+
 Vendor ID Security
 ------------------
 

@@ -31,6 +31,17 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_18D1&PID_4EE0`
  * `USB\VID_18D1`
 
+Update Behavior
+---------------
+
+A fastboot device usually presents in runtime mode (or with no interface),
+but if the user puts the device into fastboot mode using a physical button
+it then enumerates with a USB descriptor. On attach the device reboots to
+runtime mode which *may* mean the device "goes away".
+
+For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
+the bootloader and runtime modes are treated as the same device.
+
 Quirk use
 ---------
 This plugin uses the following plugin-specific quirk:

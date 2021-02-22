@@ -952,6 +952,7 @@ fu_cros_ec_usb_device_init (FuCrosEcUsbDevice *device)
 {
 	fu_device_set_protocol (FU_DEVICE (device), "com.google.usb.crosec");
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_internal_flag (FU_DEVICE (device), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_version_format (FU_DEVICE (device), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 }

@@ -429,6 +429,8 @@ fu_thunderbolt_device_setup_controller (FuDevice *device, GError **error)
 		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
 		/* control the order of activation (less relevant; install too though) */
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST);
+	} else {
+		fu_device_add_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	}
 
 	return TRUE;

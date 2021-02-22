@@ -34,6 +34,16 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_1D50&PID_60C6`
  * `USB\VID_1D50`
 
+Update Behavior
+---------------
+
+The device usually presents in runtime mode, but on detach re-enumerates with a
+different USB PID in a bootloader mode. On attach the device again re-enumerates
+back to the runtime mode.
+
+For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
+the bootloader and runtime modes are treated as the same device.
+
 Vendor ID Security
 ------------------
 

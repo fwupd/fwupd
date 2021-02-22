@@ -47,6 +47,20 @@ Vendor ID Security
 The vendor ID is set from the vendor ID, in this instance set to `USB:0x046D`
 in bootloader and `HIDRAW:0x046D` in runtime mode.
 
+Update Behavior
+---------------
+
+The peripheral firmware is deployed when the device is in normal runtime mode,
+and the device will reset when the new firmware has been written.
+
+The reciever device presents in runtime mode, but on detach re-enumerates with a
+different USB PID in a bootloader mode. On attach the device again re-enumerates
+back to the runtime mode. All unifying devices attached to the reciever will not
+work for the duration of the update.
+
+For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
+the bootloader and runtime modes are treated as the same device.
+
 Design Notes
 ------------
 

@@ -32,6 +32,16 @@ This plugin uses the following plugin-specific quirks:
 | `WacomI2cFlashBaseAddr` | Base address for firmware           | 1.2.4                 |
 | `WacomI2cFlashSize`     | Maximum size of the firmware zone   | 1.2.4                 |
 
+Update Behavior
+---------------
+
+The device usually presents in runtime mode, but on detach re-enumerates with a
+different HIDRAW PID in a bootloader mode. On attach the device re-enumerates
+back to the runtime mode.
+
+For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
+the bootloader and runtime modes are treated as the same device.
+
 Vendor ID Security
 ------------------
 

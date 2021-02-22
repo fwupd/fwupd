@@ -556,6 +556,7 @@ static void
 fu_altos_device_init (FuAltosDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_vendor (FU_DEVICE (self), "altusmetrum.org");
 	fu_device_set_summary (FU_DEVICE (self), "A USB hardware random number generator");

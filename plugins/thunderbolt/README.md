@@ -44,6 +44,21 @@ The retimer index is oriented around the physical connection within
 the machine.  It is important as multiple controllers may otherwise
 identify identically.
 
+Update Behavior
+---------------
+
+For most devices the firmware is written to the device at runtime and the
+update is applied immediately. Once complete the controller may reboot
+which may cause all connected USB and TBT devices to be reenumerated.
+
+For some devices and circumstances (such as the Dell WD19 with a new enough
+kernel) the device will remain functional for the duration of the update.
+The update will complete on unplug.
+
+If a user sets `DelayedActivation` configuration option then the update will
+be staged but not completed until `activate` is separately called such as at
+logout or shutdown.
+
 Vendor ID Security
 ------------------
 

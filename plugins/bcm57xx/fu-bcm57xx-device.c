@@ -612,7 +612,6 @@ fu_bcm57xx_device_close (FuDevice *device, GError **error)
 static void
 fu_bcm57xx_device_init (FuBcm57xxDevice *self)
 {
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
 	fu_device_set_protocol (FU_DEVICE (self), "com.broadcom.bcm57xx");
 	fu_device_add_icon (FU_DEVICE (self), "network-wired");
 

@@ -34,6 +34,14 @@ These device use the Microsoft DeviceInstanceId values, e.g.
 See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices
 for more details.
 
+Update Behavior
+---------------
+
+The firmware is deployed when the device is in normal runtime mode, but it is
+only activated when the system is in the final shutdown stages. This is done to
+minimize the chance of data loss if the switch to the new firmware is not done
+correctly.
+
 Vendor ID Security
 ------------------
 

@@ -29,6 +29,12 @@ These devices also use custom GUID values, e.g.
 
  * `USB\VID_1D5C&PID_7102&CID_01`
 
+Update Behavior
+---------------
+
+The firmware is deployed when the device is in normal runtime mode, and the
+device will reset when the new firmware has been written.
+
 Vendor ID Security
 ------------------
 
