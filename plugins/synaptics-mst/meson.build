@@ -15,6 +15,7 @@ shared_module('fu_plugin_synaptics_mst',
     'fu-synaptics-mst-common.c',
     'fu-synaptics-mst-connection.c',
     'fu-synaptics-mst-device.c',
+    'fu-synaptics-mst-firmware.c',      # fuzzing
   ],
   include_directories : [
     root_incdir,
@@ -48,6 +49,7 @@ if get_option('tests')
       'fu-synaptics-mst-common.c',
       'fu-synaptics-mst-connection.c',
       'fu-synaptics-mst-device.c',
+      'fu-synaptics-mst-firmware.c',
     ],
     include_directories : [
       root_incdir,

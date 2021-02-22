@@ -12,6 +12,7 @@
 
 #include "fu-synaptics-mst-common.h"
 #include "fu-synaptics-mst-device.h"
+#include "fu-synaptics-mst-firmware.h"
 
 #define FU_SYNAPTICS_MST_DRM_REPLUG_DELAY	5 /* s */
 
@@ -176,6 +177,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem (plugin, "drm");	/* used for uevent only */
 	fu_plugin_add_udev_subsystem (plugin, "drm_dp_aux_dev");
+	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_SYNAPTICS_MST_FIRMWARE);
 }
 
 void
