@@ -2348,8 +2348,7 @@ fu_plugin_runner_unlock (FuPlugin *self, FuDevice *device, GError **error)
 		return FALSE;
 
 	/* update with correct flags */
-	flags = fu_device_get_flags (device);
-	fu_device_set_flags (device, flags &= ~FWUPD_DEVICE_FLAG_LOCKED);
+	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_LOCKED);
 	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	return TRUE;
 }
