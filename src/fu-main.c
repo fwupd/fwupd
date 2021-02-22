@@ -14,6 +14,7 @@
 #include <glib/gi18n.h>
 #include <glib-unix.h>
 #include <locale.h>
+#include <malloc.h>
 #ifdef HAVE_POLKIT
 #include <polkit/polkit.h>
 #endif
@@ -2035,6 +2036,9 @@ main (int argc, char *argv[])
 		g_idle_add (fu_main_timed_exit_cb, priv->loop);
 	else if (timed_exit)
 		g_timeout_add_seconds (5, fu_main_timed_exit_cb, priv->loop);
+
+	/* drop heap except one page */
+	malloc_trim (4096);
 
 	/* wait */
 	g_message ("Daemon ready for requests (locale %s)", g_getenv ("LANG"));
