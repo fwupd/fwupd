@@ -123,7 +123,7 @@ typedef enum {
  * @FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY:	Deprecated, no not use
  * @FWUPD_DEVICE_FLAG_MD_SET_VERFMT:		Deprecated, no not use
  * @FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS:	Add counterpart GUIDs from an alternate mode like bootloader
- * @FWUPD_DEVICE_FLAG_NO_GUID_MATCHING:		Force an explicit ID match when adding devices to the device list
+ * @FWUPD_DEVICE_FLAG_NO_GUID_MATCHING:		Deprecated, no not use
  * @FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN:		Device is updatable but should not be called by the client
  * @FWUPD_DEVICE_FLAG_SKIPS_RESTART:		Device relies upon activation or power cycle to load firmware
  * @FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES:	Device supports switching to a different stream of firmware
@@ -169,7 +169,7 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY	(1llu << 33)	/* Since: 1.4.0; Deprecated: 1.5.5 */
 #define FWUPD_DEVICE_FLAG_MD_SET_VERFMT		(1llu << 34)	/* Since: 1.4.0; Deprecated: 1.5.5 */
 #define FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS	(1llu << 35)	/* Since: 1.4.0 */
-#define FWUPD_DEVICE_FLAG_NO_GUID_MATCHING	(1llu << 36)	/* Since: 1.4.1 */
+#define FWUPD_DEVICE_FLAG_NO_GUID_MATCHING	(1llu << 36)	/* Since: 1.4.1; Deprecated: 1.5.8 */
 #define FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN	(1llu << 37)	/* Since: 1.4.1 */
 #define FWUPD_DEVICE_FLAG_SKIPS_RESTART		(1llu << 38)	/* Since: 1.5.0 */
 #define FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES	(1llu << 39)	/* Since: 1.5.0 */

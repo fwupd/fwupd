@@ -41,6 +41,12 @@ added:
 
 and any optional GUID saved in the vendor extension block.
 
+Update Behavior
+---------------
+
+The firmware is deployed when the device is in normal runtime mode, but it is
+only activated when the system is either restarted or in some cases shutdown.
+
 Quirk use
 ---------
 This plugin uses the following plugin-specific quirks:

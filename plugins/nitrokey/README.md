@@ -20,6 +20,18 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_20A0&PID_4109`
  * `USB\VID_20A0`
 
+Update Behavior
+---------------
+
+The device usually presents in runtime mode, but on detach re-enumerates with a
+different USB VID and PID in DFU mode. The device is then handled by the `dfu`
+plugin.
+
+On DFU attach the device again re-enumerates back to the runtime mode.
+
+For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
+the bootloader and runtime modes are treated as the same device.
+
 Vendor ID Security
 ------------------
 

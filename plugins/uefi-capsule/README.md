@@ -11,8 +11,8 @@ With the UpdateCapsule boot service it can be used to update system firmware.
 If you don't want or need this functionality you can use the
 `-Dplugin_uefi_capsule=false` option.
 
-Lenovo Specific Behaviour
--------------------------
+Lenovo Specific Behavior
+------------------------
 
 On Lenovo hardware only the boot label is set to `Linux-Firmware-Updater` rather
 than "Linux Firmware Updater" (with spaces) due to long-fixed EFI boot manager
@@ -52,6 +52,14 @@ for details.
 This plugin supports the following protocol ID:
 
  * org.uefi.capsule
+
+Update Behavior
+---------------
+
+The firmware is deployed when the OS is running, but it is only written when the
+system has been restarted and the `fwupd*.efi` binary has been run. To achieve
+this fwupd sets up the EFI `BootNext` variable, creating the new boot entry if
+required.
 
 GUID Generation
 ---------------

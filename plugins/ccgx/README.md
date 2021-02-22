@@ -93,6 +93,17 @@ application ID and device mode, e.g.
  * `USB\VID_1234&PID_5678&SID_9ABC&APP_DEF1`
  * `USB\VID_1234&PID_5678&SID_9ABC&APP_DEF1&MODE_FW2`
 
+
+Update Behavior
+---------------
+
+The device usually presents in runtime HID mode, but on detach re-enumerates
+with with a DMC or HPI interface. On attach the device again re-enumerates
+back to the runtime HID mode.
+
+For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
+the DMC/HPI and runtime modes are treated as the same device.
+
 Vendor ID Security
 ------------------
 

@@ -40,6 +40,12 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_056A&PID_0378`
  * `USB\VID_056A`
 
+Update Behavior
+---------------
+
+The firmware is deployed when the device is in normal runtime mode, and the
+device will reset when the new firmware has been written.
+
 Vendor ID Security
 ------------------
 

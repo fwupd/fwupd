@@ -29,6 +29,12 @@ Pixart Imaging, Inc and Primax Electronics, Ltd, e.g.
 
 Additionaly, a custom GUID values including the name is used, e.g.
 
+Update Behavior
+---------------
+
+The firmware is deployed when the device is in normal runtime mode, and the
+device will reset when the new firmware has been written.
+
 Vendor ID Security
 ------------------
 

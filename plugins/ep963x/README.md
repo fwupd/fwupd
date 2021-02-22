@@ -25,6 +25,13 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_17EF&PID_7226`
  * `USB\VID_17EF`
 
+Update Behavior
+---------------
+
+The device usually presents in runtime mode, but on detach re-enumerates with
+the same USB PID in an unlocked mode. On attach the device again re-enumerates
+back to the runtime locked mode.
+
 Vendor ID Security
 ------------------
 

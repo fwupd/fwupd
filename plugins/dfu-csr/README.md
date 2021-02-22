@@ -35,6 +35,17 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_0A12&PID_1337`
  * `USB\VID_0A12`
 
+Update Behavior
+---------------
+
+A DFU device usually presents in runtime mode (or with no interfaces defined),
+but if the user puts the device into bootloader mode using a physical button
+it then enumerates with a HID descriptor. On attach the device returns to
+runtime mode which *may* mean the device "goes away".
+
+For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
+the bootloader and runtime modes are treated as the same device.
+
 Vendor ID Security
 ------------------
 

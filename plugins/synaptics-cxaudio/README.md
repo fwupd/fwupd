@@ -31,6 +31,12 @@ These devices also use custom GUID values, e.g.
  * `SYNAPTICS_CXAUDIO\CX2198X`
  * `SYNAPTICS_CXAUDIO\CX21985`
 
+Update Behavior
+---------------
+
+The firmware is deployed when the device is in normal runtime mode, and the
+device will reset when the new firmware has been written.
+
 Vendor ID Security
 ------------------
 

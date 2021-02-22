@@ -51,6 +51,12 @@ These device uses hardware ID values which are derived from SMBIOS. They should
 match the values provided by `fwupdtool hwids` or the `ComputerHardwareIds.exe`
 Windows utility.
 
+Update Behavior
+---------------
+
+The firmware is deployed to the SPI chip when the machine is in normal runtime
+mode, but it is only used when the device is rebooted.
+
 Vendor ID Security
 ------------------
 

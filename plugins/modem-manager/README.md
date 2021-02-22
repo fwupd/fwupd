@@ -34,6 +34,9 @@ the fastboot upgrade procedure.
 
 Update Protocol: com.google.fastboot
 
+For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
+the fastboot and runtime modes are treated as the same device.
+
 Update method: qmi-pdc
 ----------------------
 
@@ -48,6 +51,9 @@ partition where the MCFG files are stored can be wiped out before installing
 the new ones.
 
 Update protocol: com.qualcomm.qmi_pdc
+
+For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
+the fastboot and runtime modes are treated as the same device.
 
 External interface access
 -------------------------

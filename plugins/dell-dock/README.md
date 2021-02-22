@@ -48,6 +48,12 @@ These devices use several different generation schemes, e.g.
  * MST Hub: `MST-panamera-vmm5331-259`
  * Thunderbolt Controller: `TBT-00d4b070`
 
+Update Behavior
+---------------
+
+For devices implementing "passive flow" the update is deployed at runtime and
+then actually written the next time the dock is attached.
+
 Vendor ID Security
 ------------------
 

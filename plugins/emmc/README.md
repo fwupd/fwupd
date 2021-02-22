@@ -20,6 +20,12 @@ These devices use the following instance values:
  * `EMMC\%MANFID%&%OEMID%`
  * `EMMC\%MANFID%&%OEMID%&%NAME%`
 
+Update Behavior
+---------------
+
+The firmware is deployed when the device is in normal runtime mode, but it is
+only activated when the device is rebooted.
+
 Vendor ID Security
 ------------------
 

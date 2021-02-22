@@ -480,6 +480,7 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 	} else {
 		g_debug ("not using passive flow (EC: %s Hub2: %s)",
 			 self->ec_version, hub_version);
+		fu_device_add_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	}
 	return TRUE;
 }

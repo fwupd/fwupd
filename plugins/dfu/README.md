@@ -27,6 +27,16 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_273F&PID_1003`
  * `USB\VID_273F`
 
+Update Behavior
+---------------
+
+A DFU device usually presents in runtime mode (with optional DFU runtime), but
+on detach re-enumerates with an additional required DFU descriptor. On attach
+the device again re-enumerates back to the runtime mode.
+
+For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
+the bootloader and runtime modes are treated as the same device.
+
 Vendor ID Security
 ------------------
 

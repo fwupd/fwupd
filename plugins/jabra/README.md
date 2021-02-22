@@ -22,6 +22,18 @@ This plugin uses the following plugin-specific quirks:
 |---------------|----------------------------------------------|---------------|
 |`JabraMagic`   | Two magic bytes sent to detach into DFU mode.|1.3.3          |
 
+Update Behavior
+---------------
+
+The device usually presents in runtime mode, but on detach re-enumerates with a
+different USB VID and PID in DFU APP mode. The device is then further detached
+by the `dfu` plugin.
+
+On DFU attach the device again re-enumerates back to the Jabra runtime mode.
+
+For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
+the bootloader and runtime modes are treated as the same device.
+
 Vendor ID Security
 ------------------
 

@@ -25,6 +25,12 @@ These devices use the standard USB DeviceInstanceId values, e.g.
  * `USB\VID_27C6&PID_6001`
  * `USB\VID_27C6`
 
+Update Behavior
+---------------
+
+The firmware is deployed when the device is in normal runtime mode, and the
+device will reset when the new firmware has been written.
+
 Vendor ID Security
 ------------------
 
