@@ -71,7 +71,6 @@ fu_plugin_synaptics_mst_device_rescan (FuPlugin *plugin, FuDevice *device)
 		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
 			fu_plugin_device_remove (plugin, device);
 	} else {
-		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_plugin_device_add (plugin, device);
 	}
 }
