@@ -1402,8 +1402,7 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 	FwupdDevicePrivate *priv_donor = GET_PRIVATE (donor);
 
-	if (priv->flags == 0)
-		fwupd_device_add_flag (self, priv_donor->flags);
+	fwupd_device_add_flag (self, priv_donor->flags);
 	if (priv->created == 0)
 		fwupd_device_set_created (self, priv_donor->created);
 	if (priv->modified == 0)
