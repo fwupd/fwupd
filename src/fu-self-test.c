@@ -2652,7 +2652,7 @@ fu_history_func (gconstpointer user_data)
 	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 	fu_device_set_update_error (device, "word");
 	fu_device_add_guid (device, "827edddd-9bb6-5632-889f-2c01255503da");
-	fu_device_set_flags (device, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_created (device, 123);
 	fu_device_set_modified (device, 456);
 	release = fwupd_release_new ();

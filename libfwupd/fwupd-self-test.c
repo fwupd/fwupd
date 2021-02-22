@@ -330,7 +330,7 @@ fwupd_device_func (void)
 	dev = fwupd_device_new ();
 	fwupd_device_add_checksum (dev, "beefdead");
 	fwupd_device_set_created (dev, 1);
-	fwupd_device_set_flags (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fwupd_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fwupd_device_set_id (dev, "USB:foo");
 	fwupd_device_set_modified (dev, 60 * 60 * 24);
 	fwupd_device_set_name (dev, "ColorHug2");
