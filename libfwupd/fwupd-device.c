@@ -1033,7 +1033,7 @@ fwupd_device_add_flag (FwupdDevice *device, FwupdDeviceFlags flag)
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
 	if (flag == 0)
 		return;
-	if ((priv->flags & flag) > 0)
+	if ((priv->flags | flag) == priv->flags)
 		return;
 	priv->flags |= flag;
 	g_object_notify (G_OBJECT (device), "flags");
