@@ -368,26 +368,6 @@ fu_rts54hub_rtd21xx_device_detach (FuDevice *device, GError **error)
 static gboolean
 fu_rts54hub_rtd21xx_device_attach (FuDevice *device, GError **error)
 {
-#if 0
-	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE (device);
-	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE (fu_device_get_parent (device));
-	guint8 buf[] = { ISP_CMD_FW_UPDATE_RESET };
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* open device */
-	locker = fu_device_locker_new (parent, error);
-	if (locker == NULL)
-		return FALSE;
-	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
-						   UC_FOREGROUND_SLAVE_ADDR,
-						   UC_FOREGROUND_OPCODE,
-						   buf, sizeof(buf),
-						   error)) {
-		g_prefix_error (error, "failed to attach: ");
-		return FALSE;
-	}
-#endif
-	/* success */
 	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	return TRUE;
 }
