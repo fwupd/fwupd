@@ -477,9 +477,11 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 		g_debug ("using passive flow");
 		self->passive_flow = PASSIVE_REBOOT_MASK;
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NO_GUID_MATCHING);
 	} else {
 		g_debug ("not using passive flow (EC: %s Hub2: %s)",
 			 self->ec_version, hub_version);
+		fu_device_add_flag (device, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	}
 	return TRUE;
 }
