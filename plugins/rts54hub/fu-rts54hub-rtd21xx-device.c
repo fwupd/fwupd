@@ -360,15 +360,6 @@ fu_rts54hub_rtd21xx_device_detach (FuDevice *device, GError **error)
 			      100, NULL, error))
 		return FALSE;
 
-	/* success */
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	return TRUE;
-}
-
-static gboolean
-fu_rts54hub_rtd21xx_device_attach (FuDevice *device, GError **error)
-{
-	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	return TRUE;
 }
 
@@ -592,7 +583,6 @@ fu_rts54hub_rtd21xx_device_class_init (FuRts54hubRtd21xxDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->setup = fu_rts54hub_rtd21xx_device_setup;
 	klass_device->reload = fu_rts54hub_rtd21xx_device_reload;
-	klass_device->attach = fu_rts54hub_rtd21xx_device_attach;
 	klass_device->detach = fu_rts54hub_rtd21xx_device_detach;
 	klass_device->write_firmware = fu_rts54hub_rtd21xx_device_write_firmware;
 	klass_device->to_string = fu_rts54hub_rtd21xx_device_to_string;
