@@ -181,7 +181,7 @@ fu_firmware_get_version_raw (FuFirmware *self)
 /**
  * fu_firmware_set_version_raw:
  * @self: A #FuFirmware
- * @version: A raw version, or %G_MAXUINT64 for invalid
+ * @version_raw: A raw version, or %G_MAXUINT64 for invalid
  *
  * Sets an raw version that represents the firmware.
  *
