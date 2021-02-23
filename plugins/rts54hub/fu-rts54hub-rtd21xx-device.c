@@ -29,8 +29,8 @@ G_DEFINE_TYPE (FuRts54hubRtd21xxDevice, fu_rts54hub_rtd21xx_device, FU_TYPE_DEVI
 #define UC_FOREGROUND_OPCODE		0x33
 #define UC_FOREGROUND_ISP_DATA_OPCODE	0x34
 
-#define ISP_DATA_BLOCKSIZE		30
-#define ISP_PACKET_SIZE			32
+#define ISP_DATA_BLOCKSIZE		256
+#define ISP_PACKET_SIZE			257
 
 typedef enum {
 	ISP_STATUS_BUSY			 = 0xBB,	/* host must wait for device */
@@ -245,6 +245,7 @@ fu_rts54hub_rtd21xx_ensure_version_unlocked (FuRts54hubRtd21xxDevice *self,
 {
 	guint8 buf_rep[7] = { 0x00 };
 	guint8 buf_req[] = { ISP_CMD_GET_FW_INFO };
+	guint8 buf[] = { ISP_CMD_FW_UPDATE_RESET };
 	g_autofree gchar *version = NULL;
 	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
 						   UC_FOREGROUND_SLAVE_ADDR,
@@ -268,6 +269,16 @@ fu_rts54hub_rtd21xx_ensure_version_unlocked (FuRts54hubRtd21xxDevice *self,
 	/* set version */
 	version = g_strdup_printf ("%u.%u", buf_rep[1], buf_rep[2]);
 	fu_device_set_version (FU_DEVICE (self), version);
+
+	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
+						   UC_FOREGROUND_SLAVE_ADDR,
+						   UC_FOREGROUND_OPCODE,
+						   buf, sizeof(buf),
+						   error)) {
+		g_prefix_error (error, "failed to ISP_CMD_FW_UPDATE_RESET: ");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -355,34 +366,6 @@ fu_rts54hub_rtd21xx_device_detach (FuDevice *device, GError **error)
 			      100, NULL, error))
 		return FALSE;
 
-	/* success */
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
-	return TRUE;
-}
-
-static gboolean
-fu_rts54hub_rtd21xx_device_attach (FuDevice *device, GError **error)
-{
-	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE (device);
-	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE (fu_device_get_parent (device));
-	guint8 buf[] = { ISP_CMD_FW_UPDATE_RESET };
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* open device */
-	locker = fu_device_locker_new (parent, error);
-	if (locker == NULL)
-		return FALSE;
-	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
-						   UC_FOREGROUND_SLAVE_ADDR,
-						   UC_FOREGROUND_OPCODE,
-						   buf, sizeof(buf),
-						   error)) {
-		g_prefix_error (error, "failed to attach: ");
-		return FALSE;
-	}
-
-	/* success */
-	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	return TRUE;
 }
 
@@ -552,7 +535,7 @@ fu_rts54hub_rtd21xx_device_write_firmware (FuDevice *device,
 
 	/* the device needs some time to restart with the new firmware before
 	* it can be queried again */
-	fu_device_sleep_with_progress (device, 20);
+	fu_device_sleep_with_progress (device, 60);
 
 	/* success */
 	return TRUE;
@@ -606,7 +589,6 @@ fu_rts54hub_rtd21xx_device_class_init (FuRts54hubRtd21xxDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->setup = fu_rts54hub_rtd21xx_device_setup;
 	klass_device->reload = fu_rts54hub_rtd21xx_device_reload;
-	klass_device->attach = fu_rts54hub_rtd21xx_device_attach;
 	klass_device->detach = fu_rts54hub_rtd21xx_device_detach;
 	klass_device->write_firmware = fu_rts54hub_rtd21xx_device_write_firmware;
 	klass_device->to_string = fu_rts54hub_rtd21xx_device_to_string;
