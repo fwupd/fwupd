@@ -1,3 +1,9 @@
+fwupd (1.5.7-2) UNRELEASED; urgency=medium
+
+  * Backport a patch to fix FTBFS on armhf for SBAT
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 23 Feb 2021 16:43:15 -0600
+
 fwupd (1.5.7-1) unstable; urgency=medium
 
   * New upstream version (1.5.7)
