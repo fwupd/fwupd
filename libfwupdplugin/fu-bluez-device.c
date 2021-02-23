@@ -19,9 +19,9 @@
 
 /**
  * SECTION:fu-bluez-device
- * @short_description: a Bluez Bluetooth device
+ * @short_description: a BlueZ Bluetooth device
  *
- * An object that represents a Bluez Bluetooth device.
+ * An object that represents a BlueZ Bluetooth device.
  *
  * See also: #FuBluezDevice
  */
