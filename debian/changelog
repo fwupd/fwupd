@@ -1,4 +1,4 @@
-fwupd (1.5.7-1) UNRELEASED; urgency=medium
+fwupd (1.5.7-1) unstable; urgency=medium
 
   * New upstream version (1.5.7)
     - Fixes issues with SBAT on UEFI.
