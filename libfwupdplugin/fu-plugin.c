@@ -1985,6 +1985,14 @@ fu_plugin_runner_verify (FuPlugin *self,
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_verify", (gpointer *) &func);
 	if (func == NULL) {
+		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "device %s does not support verification",
+				     fu_device_get_id (device));
+			return FALSE;
+		}
 		return fu_plugin_device_read_firmware (self, device, error);
 	}
 
