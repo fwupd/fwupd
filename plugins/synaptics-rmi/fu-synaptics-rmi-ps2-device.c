@@ -861,12 +861,10 @@ fu_synaptics_rmi_ps2_device_detach (FuDevice *device, GError **error)
 static gboolean
 fu_synaptics_rmi_ps2_device_setup (FuDevice *device, GError **error)
 {
-	FuSynapticsRmiDevice *rmi_device = FU_SYNAPTICS_RMI_DEVICE (device);
-
 	/* we can only scan the PDT in serio_raw mode */
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
-		return fu_synaptics_rmi_v5_device_setup (rmi_device, error);
-	return TRUE;
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+		return TRUE;
+	return FU_DEVICE_CLASS (fu_synaptics_rmi_ps2_device_parent_class)->setup (device, error);
 }
 
 static gboolean
