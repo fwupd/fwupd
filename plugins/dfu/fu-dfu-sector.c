@@ -5,7 +5,7 @@
  */
 
 /**
- * SECTION:dfu-sector
+ * SECTION:fu-dfu-sector
  * @short_description: Object representing a sector on a chip
  *
  * This object represents an sector of memory at a specific address on the
@@ -25,8 +25,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "dfu-common.h"
-#include "dfu-sector.h"
+#include "fu-dfu-common.h"
+#include "fu-dfu-sector.h"
 
 typedef struct {
 	guint32			 address;
@@ -34,135 +34,135 @@ typedef struct {
 	guint32			 size_left;
 	guint16			 zone;
 	guint16			 number;
-	DfuSectorCap	 cap;
-} DfuSectorPrivate;
+	FuDfuSectorCap		 cap;
+} FuDfuSectorPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (DfuSector, dfu_sector, G_TYPE_OBJECT)
-#define GET_PRIVATE(o) (dfu_sector_get_instance_private (o))
+G_DEFINE_TYPE_WITH_PRIVATE (FuDfuSector, fu_dfu_sector, G_TYPE_OBJECT)
+#define GET_PRIVATE(o) (fu_dfu_sector_get_instance_private (o))
 
 static void
-dfu_sector_class_init (DfuSectorClass *klass)
+fu_dfu_sector_class_init (FuDfuSectorClass *klass)
 {
 }
 
 static void
-dfu_sector_init (DfuSector *sector)
+fu_dfu_sector_init (FuDfuSector *self)
 {
 }
 
 /**
- * dfu_sector_new: (skip)
+ * fu_dfu_sector_new: (skip)
  * address: the address for the sector
  * size: the size of this sector
  * size_left: the size of the rest of the sector
  * zone: the zone of memory the setor belongs
  * number: the sector number in the zone
- * cap: the #DfuSectorCap
+ * cap: the #FuDfuSectorCap
  *
  * Creates a new DFU sector object.
  *
- * Return value: a new #DfuSector
+ * Return value: a new #FuDfuSector
  **/
-DfuSector *
-dfu_sector_new (guint32 address, guint32 size, guint32 size_left,
-		guint16 zone, guint16 number, DfuSectorCap cap)
+FuDfuSector *
+fu_dfu_sector_new (guint32 address, guint32 size, guint32 size_left,
+		   guint16 zone, guint16 number, FuDfuSectorCap cap)
 {
-	DfuSectorPrivate *priv;
-	DfuSector *sector;
-	sector = g_object_new (DFU_TYPE_SECTOR, NULL);
-	priv = GET_PRIVATE (sector);
+	FuDfuSectorPrivate *priv;
+	FuDfuSector *self;
+	self = g_object_new (FU_TYPE_DFU_SECTOR, NULL);
+	priv = GET_PRIVATE (self);
 	priv->address = address;
 	priv->size = size;
 	priv->size_left = size_left;
 	priv->zone = zone;
 	priv->number = number;
 	priv->cap = cap;
-	return sector;
+	return self;
 }
 
 /**
- * dfu_sector_get_address:
- * @sector: a #DfuSector
+ * fu_dfu_sector_get_address:
+ * @self: a #FuDfuSector
  *
  * Gets the alternate setting.
  *
  * Return value: integer, or 0x00 for unset
  **/
 guint32
-dfu_sector_get_address (DfuSector *sector)
+fu_dfu_sector_get_address (FuDfuSector *self)
 {
-	DfuSectorPrivate *priv = GET_PRIVATE (sector);
-	g_return_val_if_fail (DFU_IS_SECTOR (sector), 0x00);
+	FuDfuSectorPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DFU_SECTOR (self), 0x00);
 	return priv->address;
 }
 
 /**
- * dfu_sector_get_size:
- * @sector: a #DfuSector
+ * fu_dfu_sector_get_size:
+ * @self: a #FuDfuSector
  *
  * Gets the sector size.
  *
  * Return value: integer, or 0x00 for unset
  **/
 guint32
-dfu_sector_get_size (DfuSector *sector)
+fu_dfu_sector_get_size (FuDfuSector *self)
 {
-	DfuSectorPrivate *priv = GET_PRIVATE (sector);
-	g_return_val_if_fail (DFU_IS_SECTOR (sector), 0x00);
+	FuDfuSectorPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DFU_SECTOR (self), 0x00);
 	return priv->size;
 }
 
 /**
- * dfu_sector_get_size_left:
- * @sector: a #DfuSector
+ * fu_dfu_sector_get_size_left:
+ * @self: a #FuDfuSector
  *
  * Gets the size of the rest of the sector.
  *
  * Return value: integer, or 0x00 for unset
  **/
 guint32
-dfu_sector_get_size_left (DfuSector *sector)
+fu_dfu_sector_get_size_left (FuDfuSector *self)
 {
-	DfuSectorPrivate *priv = GET_PRIVATE (sector);
-	g_return_val_if_fail (DFU_IS_SECTOR (sector), 0x00);
+	FuDfuSectorPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DFU_SECTOR (self), 0x00);
 	return priv->size_left;
 }
 
 /**
- * dfu_sector_get_zone:
- * @sector: a #DfuSector
+ * fu_dfu_sector_get_zone:
+ * @self: a #FuDfuSector
  *
  * Gets the sector zone number.
  *
  * Return value: integer, or 0x00 for unset
  **/
 guint16
-dfu_sector_get_zone (DfuSector *sector)
+fu_dfu_sector_get_zone (FuDfuSector *self)
 {
-	DfuSectorPrivate *priv = GET_PRIVATE (sector);
-	g_return_val_if_fail (DFU_IS_SECTOR (sector), 0x00);
+	FuDfuSectorPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DFU_SECTOR (self), 0x00);
 	return priv->zone;
 }
 
 /**
- * dfu_sector_get_number:
- * @sector: a #DfuSector
+ * fu_dfu_sector_get_number:
+ * @self: a #FuDfuSector
  *
  * Gets the sector index number.
  *
  * Return value: integer, or 0x00 for unset
  **/
 guint16
-dfu_sector_get_number (DfuSector *sector)
+fu_dfu_sector_get_number (FuDfuSector *self)
 {
-	DfuSectorPrivate *priv = GET_PRIVATE (sector);
-	g_return_val_if_fail (DFU_IS_SECTOR (sector), 0x00);
+	FuDfuSectorPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DFU_SECTOR (self), 0x00);
 	return priv->number;
 }
 
 /**
- * dfu_sector_get_id:
- * @sector: a #DfuSector
+ * fu_dfu_sector_get_id:
+ * @self: a #FuDfuSector
  *
  * Gets the sector ID which is a combination of the zone and sector number.
  * You can use this number to check if the segment is the 'same' as the last
@@ -171,32 +171,32 @@ dfu_sector_get_number (DfuSector *sector)
  * Return value: integer ID, or 0x00 for unset
  **/
 guint32
-dfu_sector_get_id (DfuSector *sector)
+fu_dfu_sector_get_id (FuDfuSector *self)
 {
-	DfuSectorPrivate *priv = GET_PRIVATE (sector);
-	g_return_val_if_fail (DFU_IS_SECTOR (sector), 0x00);
+	FuDfuSectorPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DFU_SECTOR (self), 0x00);
 	return (((guint32) priv->zone) << 16) | priv->number;
 }
 
 /**
- * dfu_sector_has_cap:
- * @sector: a #DfuSector
- * @cap: a #DfuSectorCap, e.g. %DFU_SECTOR_CAP_ERASEABLE
+ * fu_dfu_sector_has_cap:
+ * @self: a #FuDfuSector
+ * @cap: a #FuDfuSectorCap, e.g. %DFU_SECTOR_CAP_ERASEABLE
  *
  * Finds out if the sector has the required capability.
  *
  * Return value: %TRUE if the sector has the capabilily
  **/
 gboolean
-dfu_sector_has_cap (DfuSector *sector, DfuSectorCap cap)
+fu_dfu_sector_has_cap (FuDfuSector *self, FuDfuSectorCap cap)
 {
-	DfuSectorPrivate *priv = GET_PRIVATE (sector);
-	g_return_val_if_fail (DFU_IS_SECTOR (sector), FALSE);
+	FuDfuSectorPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DFU_SECTOR (self), FALSE);
 	return (priv->cap & cap) > 0;
 }
 
 static gchar *
-dfu_sector_cap_to_string (DfuSectorCap cap)
+fu_dfu_sector_cap_to_string (FuDfuSectorCap cap)
 {
 	GString *str = g_string_new (NULL);
 	if (cap & DFU_SECTOR_CAP_READABLE)
@@ -209,24 +209,24 @@ dfu_sector_cap_to_string (DfuSectorCap cap)
 }
 
 /**
- * dfu_sector_to_string:
- * @sector: a #DfuSector
+ * fu_dfu_sector_to_string:
+ * @self: a #FuDfuSector
  *
  * Returns a string representation of the object.
  *
  * Return value: NULL terminated string, or %NULL for invalid
  **/
 gchar *
-dfu_sector_to_string (DfuSector *sector)
+fu_dfu_sector_to_string (FuDfuSector *self)
 {
-	DfuSectorPrivate *priv = GET_PRIVATE (sector);
+	FuDfuSectorPrivate *priv = GET_PRIVATE (self);
 	GString *str;
 	g_autofree gchar *caps_str = NULL;
 
-	g_return_val_if_fail (DFU_IS_SECTOR (sector), NULL);
+	g_return_val_if_fail (FU_IS_DFU_SECTOR (self), NULL);
 
 	str = g_string_new ("");
-	caps_str = dfu_sector_cap_to_string (priv->cap);
+	caps_str = fu_dfu_sector_cap_to_string (priv->cap);
 	g_string_append_printf (str,
 				"Zone:%i, Sec#:%i, Addr:0x%08x, "
 				"Size:0x%04x, Caps:0x%01x [%s]",

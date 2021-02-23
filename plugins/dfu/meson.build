@@ -9,12 +9,12 @@ dfu = static_library(
   'dfu',
   fu_hash,
   sources : [
-    'dfu-common.c',
-    'dfu-device.c',
-    'dfu-sector.c',
-    'dfu-target.c',
-    'dfu-target-stm.c',
-    'dfu-target-avr.c',
+    'fu-dfu-common.c',
+    'fu-dfu-device.c',
+    'fu-dfu-sector.c',
+    'fu-dfu-target.c',
+    'fu-dfu-target-stm.c',
+    'fu-dfu-target-avr.c',
   ],
   dependencies : [
     giounix,
@@ -58,11 +58,11 @@ shared_module('fu_plugin_dfu',
   ],
 )
 
-dfu_tool = executable(
+fu_dfu_tool = executable(
   'dfu-tool',
   fu_hash,
   sources : [
-    'dfu-tool.c',
+    'fu-dfu-tool.c',
   ],
   include_directories : [
     root_incdir,
@@ -88,9 +88,9 @@ dfu_tool = executable(
 
 if get_option('man')
   help2man = find_program('help2man')
-  extra = join_paths(meson.current_source_dir(), 'dfu-tool.h2m')
+  extra = join_paths(meson.current_source_dir(), 'fu-dfu-tool.h2m')
   custom_target('dfu-tool-man',
-    input : dfu_tool,
+    input : fu_dfu_tool,
     output : 'dfu-tool.1',
     command : [
       help2man, '@INPUT@',
@@ -111,10 +111,10 @@ if get_option('tests')
   testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
   testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
-    'dfu-self-test',
+    'fu-dfu-self-test',
     fu_hash,
     sources : [
-      'dfu-self-test.c'
+      'fu-dfu-self-test.c'
     ],
     include_directories : [
       root_incdir,
@@ -136,7 +136,7 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('dfu-self-test', e, env : testdatadirs)  # added to installed-tests
+  test('fu-dfu-self-test', e, env : testdatadirs)  # added to installed-tests
 endif
 
 plugindfu_incdir = include_directories('.')

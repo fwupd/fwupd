@@ -10,19 +10,19 @@
 #include <gio/gio.h>
 #include <gusb.h>
 
-#include "dfu-common.h"
-#include "dfu-sector.h"
+#include "fu-dfu-common.h"
+#include "fu-dfu-sector.h"
 
 #include "fu-chunk.h"
 #include "fu-firmware.h"
 
 #include "fwupd-enums.h"
 
-#define DFU_TYPE_TARGET (dfu_target_get_type ())
-G_DECLARE_DERIVABLE_TYPE (DfuTarget, dfu_target, DFU, TARGET, GUsbDevice)
+#define FU_TYPE_DFU_TARGET (fu_dfu_target_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuDfuTarget, fu_dfu_target, FU, DFU_TARGET, GUsbDevice)
 
 /**
- * DfuTargetTransferFlags:
+ * FuDfuTargetTransferFlags:
  * @DFU_TARGET_TRANSFER_FLAG_NONE:		No flags set
  * @DFU_TARGET_TRANSFER_FLAG_VERIFY:		Verify the download once complete
  * @DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID:	Allow downloading images with wildcard VIDs
@@ -39,53 +39,53 @@ typedef enum {
 	DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC	= (1 << 7),
 	/*< private >*/
 	DFU_TARGET_TRANSFER_FLAG_LAST
-} DfuTargetTransferFlags;
+} FuDfuTargetTransferFlags;
 
-struct _DfuTargetClass
+struct _FuDfuTargetClass
 {
 	GUsbDeviceClass		 parent_class;
-	void			 (*percentage_changed)	(DfuTarget	*target,
+	void			 (*percentage_changed)	(FuDfuTarget	*self,
 							 guint		 percentage);
-	void			 (*action_changed)	(DfuTarget	*target,
+	void			 (*action_changed)	(FuDfuTarget	*self,
 							 FwupdStatus	 action);
-	gboolean		 (*setup)		(DfuTarget	*target,
+	gboolean		 (*setup)		(FuDfuTarget	*self,
 							 GError		**error);
-	gboolean		 (*attach)		(DfuTarget	*target,
+	gboolean		 (*attach)		(FuDfuTarget	*self,
 							 GError		**error);
-	gboolean		 (*detach)		(DfuTarget	*target,
+	gboolean		 (*detach)		(FuDfuTarget	*self,
 							 GError		**error);
-	gboolean		 (*mass_erase)		(DfuTarget	*target,
+	gboolean		 (*mass_erase)		(FuDfuTarget	*self,
 							 GError		**error);
-	FuChunk			*(*upload_element)	(DfuTarget	*target,
+	FuChunk			*(*upload_element)	(FuDfuTarget	*self,
 							 guint32	 address,
 							 gsize		 expected_size,
 							 gsize		 maximum_size,
 							 GError		**error);
-	gboolean		 (*download_element)	(DfuTarget	*target,
+	gboolean		 (*download_element)	(FuDfuTarget	*self,
 							 FuChunk	*chk,
-							 DfuTargetTransferFlags flags,
+							 FuDfuTargetTransferFlags flags,
 							 GError		**error);
 };
 
-GPtrArray	*dfu_target_get_sectors			(DfuTarget	*target);
-DfuSector	*dfu_target_get_sector_default		(DfuTarget	*target);
-guint8		 dfu_target_get_alt_setting		(DfuTarget	*target);
-const gchar	*dfu_target_get_alt_name		(DfuTarget	*target,
+GPtrArray	*fu_dfu_target_get_sectors		(FuDfuTarget	*self);
+FuDfuSector	*fu_dfu_target_get_sector_default	(FuDfuTarget	*self);
+guint8		 fu_dfu_target_get_alt_setting		(FuDfuTarget	*self);
+const gchar	*fu_dfu_target_get_alt_name		(FuDfuTarget	*self,
 							 GError		**error);
-const gchar	*dfu_target_get_alt_name_for_display	(DfuTarget	*target,
+const gchar	*fu_dfu_target_get_alt_name_for_display	(FuDfuTarget	*self,
 							 GError		**error);
-gboolean	 dfu_target_upload			(DfuTarget	*target,
+gboolean	 fu_dfu_target_upload			(FuDfuTarget	*self,
 							 FuFirmware	*firmware,
-							 DfuTargetTransferFlags flags,
+							 FuDfuTargetTransferFlags flags,
 							 GError		**error);
-gboolean	 dfu_target_setup			(DfuTarget	*target,
+gboolean	 fu_dfu_target_setup			(FuDfuTarget	*self,
 							 GError		**error);
-gboolean	 dfu_target_download			(DfuTarget	*target,
+gboolean	 fu_dfu_target_download			(FuDfuTarget	*self,
 							 FuFirmwareImage *image,
-							 DfuTargetTransferFlags flags,
+							 FuDfuTargetTransferFlags flags,
 							 GError		**error);
-gboolean	 dfu_target_mass_erase			(DfuTarget	*target,
+gboolean	 fu_dfu_target_mass_erase		(FuDfuTarget	*self,
 							 GError		**error);
-void		 dfu_target_to_string			(DfuTarget	*target,
+void		 fu_dfu_target_to_string		(FuDfuTarget	*self,
 							 guint		 idt,
 							 GString	*str);

@@ -11,8 +11,7 @@
 #include "fu-chunk.h"
 #include "fu-dfu-csr-device.h"
 #include "fu-dfu-firmware.h"
-
-#include "dfu-common.h"
+#include "fu-dfu-common.h"
 
 /**
  * FU_DFU_CSR_DEVICE_QUIRK_FLAG_REQUIRE_DELAY:
@@ -34,7 +33,7 @@ struct _FuDfuCsrDevice
 {
 	FuHidDevice		 parent_instance;
 	FuDfuCsrDeviceQuirks	 quirks;
-	DfuState		 dfu_state;
+	FuDfuState		 dfu_state;
 	guint32			 dnload_timeout;
 };
 
@@ -62,7 +61,7 @@ static void
 fu_dfu_csr_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE (device);
-	fu_common_string_append_kv (str, idt, "State", dfu_state_to_string (self->dfu_state));
+	fu_common_string_append_kv (str, idt, "State", fu_dfu_state_to_string (self->dfu_state));
 	fu_common_string_append_ku (str, idt, "DownloadTimeout", self->dnload_timeout);
 }
 
@@ -112,8 +111,8 @@ fu_dfu_csr_device_get_status (FuDfuCsrDevice *self, GError **error)
 	self->dfu_state = buf[5];
 	self->dnload_timeout = buf[2] + (((guint32) buf[3]) << 8) + (((guint32) buf[4]) << 16);
 	g_debug ("timeout=%" G_GUINT32_FORMAT, self->dnload_timeout);
-	g_debug ("state=%s", dfu_state_to_string (self->dfu_state));
-	g_debug ("status=%s", dfu_status_to_string (buf[6]));
+	g_debug ("state=%s", fu_dfu_state_to_string (self->dfu_state));
+	g_debug ("status=%s", fu_dfu_status_to_string (buf[6]));
 	return TRUE;
 }
 
@@ -127,7 +126,7 @@ fu_dfu_csr_device_clear_status (FuDfuCsrDevice *self, GError **error)
 	/* only clear the status if the state is error */
 	if (!fu_dfu_csr_device_get_status (self, error))
 		return FALSE;
-	if (self->dfu_state != DFU_STATE_DFU_ERROR)
+	if (self->dfu_state != FU_DFU_STATE_DFU_ERROR)
 		return TRUE;
 
 	/* hit hardware */
@@ -261,7 +260,7 @@ fu_dfu_csr_device_upload (FuDevice *device, GError **error)
 	}
 
 	/* notify UI */
-	return dfu_utils_bytes_join_array (chunks);
+	return fu_dfu_utils_bytes_join_array (chunks);
 }
 
 static gboolean
@@ -314,7 +313,7 @@ fu_dfu_csr_device_download_chunk (FuDfuCsrDevice *self, guint16 idx, GBytes *chu
 		return FALSE;
 
 	/* is still busy */
-	if (self->dfu_state == DFU_STATE_DFU_DNBUSY) {
+	if (self->dfu_state == FU_DFU_STATE_DFU_DNBUSY) {
 		g_debug ("busy, so sleeping a bit longer");
 		g_usleep (G_USEC_PER_SEC);
 		if (!fu_dfu_csr_device_get_status (self, error))
@@ -322,8 +321,8 @@ fu_dfu_csr_device_download_chunk (FuDfuCsrDevice *self, guint16 idx, GBytes *chu
 	}
 
 	/* not correct */
-	if (self->dfu_state != DFU_STATE_DFU_DNLOAD_IDLE &&
-	    self->dfu_state != DFU_STATE_DFU_IDLE) {
+	if (self->dfu_state != FU_DFU_STATE_DFU_DNLOAD_IDLE &&
+	    self->dfu_state != FU_DFU_STATE_DFU_IDLE) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,

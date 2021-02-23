@@ -8,19 +8,19 @@
 
 #include <string.h>
 
-#include "dfu-device.h"
-#include "dfu-sector.h"
-#include "dfu-target-private.h"
+#include "fu-dfu-device.h"
+#include "fu-dfu-sector.h"
+#include "fu-dfu-target-private.h"
 
 #include "fu-common.h"
 
 static void
-dfu_enums_func (void)
+fu_dfu_enums_func (void)
 {
-	for (guint i = 0; i < DFU_STATE_LAST; i++)
-		g_assert_cmpstr (dfu_state_to_string (i), !=, NULL);
-	for (guint i = 0; i < DFU_STATUS_LAST; i++)
-		g_assert_cmpstr (dfu_status_to_string (i), !=, NULL);
+	for (guint i = 0; i < FU_DFU_STATE_LAST; i++)
+		g_assert_cmpstr (fu_dfu_state_to_string (i), !=, NULL);
+	for (guint i = 0; i < FU_DFU_STATUS_LAST; i++)
+		g_assert_cmpstr (fu_dfu_status_to_string (i), !=, NULL);
 }
 
 static gboolean
@@ -43,16 +43,16 @@ fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 }
 
 static gchar *
-dfu_target_sectors_to_string (DfuTarget *target)
+fu_dfu_target_sectors_to_string (FuDfuTarget *target)
 {
 	GPtrArray *sectors;
 	GString *str;
 
 	str = g_string_new ("");
-	sectors = dfu_target_get_sectors (target);
+	sectors = fu_dfu_target_get_sectors (target);
 	for (guint i = 0; i < sectors->len; i++) {
-		DfuSector *sector = g_ptr_array_index (sectors, i);
-		g_autofree gchar *tmp = dfu_sector_to_string (sector);
+		FuDfuSector *sector = g_ptr_array_index (sectors, i);
+		g_autofree gchar *tmp = fu_dfu_sector_to_string (sector);
 		g_string_append_printf (str, "%s\n", tmp);
 	}
 	if (str->len > 0)
@@ -61,37 +61,37 @@ dfu_target_sectors_to_string (DfuTarget *target)
 }
 
 static void
-dfu_target_dfuse_func (void)
+fu_dfu_target_dfuse_func (void)
 {
 	gboolean ret;
 	gchar *tmp;
-	g_autoptr(DfuDevice) device = dfu_device_new (NULL);
-	g_autoptr(DfuTarget) target = NULL;
+	g_autoptr(FuDfuDevice) device = fu_dfu_device_new (NULL);
+	g_autoptr(FuDfuTarget) target = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* NULL */
-	target = g_object_new (DFU_TYPE_TARGET, NULL);
-	dfu_target_set_device (target, device);
-	ret = dfu_target_parse_sectors (target, NULL, &error);
+	target = g_object_new (FU_TYPE_DFU_TARGET, NULL);
+	fu_dfu_target_set_device (target, device);
+	ret = fu_dfu_target_parse_sectors (target, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	tmp = dfu_target_sectors_to_string (target);
+	tmp = fu_dfu_target_sectors_to_string (target);
 	g_assert_cmpstr (tmp, ==, "");
 	g_free (tmp);
 
 	/* no addresses */
-	ret = dfu_target_parse_sectors (target, "@Flash3", &error);
+	ret = fu_dfu_target_parse_sectors (target, "@Flash3", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	tmp = dfu_target_sectors_to_string (target);
+	tmp = fu_dfu_target_sectors_to_string (target);
 	g_assert_cmpstr (tmp, ==, "");
 	g_free (tmp);
 
 	/* one sector, no space */
-	ret = dfu_target_parse_sectors (target, "@Internal Flash /0x08000000/2*001Ka", &error);
+	ret = fu_dfu_target_parse_sectors (target, "@Internal Flash /0x08000000/2*001Ka", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	tmp = dfu_target_sectors_to_string (target);
+	tmp = fu_dfu_target_sectors_to_string (target);
 	ret = fu_test_compare_lines (tmp,
 				      "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1 [R]\n"
 				      "Zone:0, Sec#:0, Addr:0x08000400, Size:0x0400, Caps:0x1 [R]",
@@ -101,10 +101,10 @@ dfu_target_dfuse_func (void)
 	g_free (tmp);
 
 	/* multiple sectors */
-	ret = dfu_target_parse_sectors (target, "@Flash1   /0x08000000/2*001Ka,4*001Kg", &error);
+	ret = fu_dfu_target_parse_sectors (target, "@Flash1   /0x08000000/2*001Ka,4*001Kg", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	tmp = dfu_target_sectors_to_string (target);
+	tmp = fu_dfu_target_sectors_to_string (target);
 	ret = fu_test_compare_lines (tmp,
 				      "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1 [R]\n"
 				      "Zone:0, Sec#:0, Addr:0x08000400, Size:0x0400, Caps:0x1 [R]\n"
@@ -118,10 +118,10 @@ dfu_target_dfuse_func (void)
 	g_free (tmp);
 
 	/* non-contiguous */
-	ret = dfu_target_parse_sectors (target, "@Flash2 /0xF000/4*100Ba/0xE000/3*8Kg/0x80000/2*24Kg", &error);
+	ret = fu_dfu_target_parse_sectors (target, "@Flash2 /0xF000/4*100Ba/0xE000/3*8Kg/0x80000/2*24Kg", &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	tmp = dfu_target_sectors_to_string (target);
+	tmp = fu_dfu_target_sectors_to_string (target);
 	ret = fu_test_compare_lines (tmp,
 				      "Zone:0, Sec#:0, Addr:0x0000f000, Size:0x0064, Caps:0x1 [R]\n"
 				      "Zone:0, Sec#:0, Addr:0x0000f064, Size:0x0064, Caps:0x1 [R]\n"
@@ -138,11 +138,11 @@ dfu_target_dfuse_func (void)
 	g_free (tmp);
 
 	/* invalid */
-	ret = dfu_target_parse_sectors (target, "Flash", NULL);
+	ret = fu_dfu_target_parse_sectors (target, "Flash", NULL);
 	g_assert (ret);
-	ret = dfu_target_parse_sectors (target, "@Internal Flash /0x08000000", NULL);
+	ret = fu_dfu_target_parse_sectors (target, "@Internal Flash /0x08000000", NULL);
 	g_assert (!ret);
-	ret = dfu_target_parse_sectors (target, "@Internal Flash /0x08000000/12*001a", NULL);
+	ret = fu_dfu_target_parse_sectors (target, "@Internal Flash /0x08000000/12*001a", NULL);
 	g_assert (!ret);
 }
 
@@ -158,8 +158,8 @@ main (int argc, char **argv)
 	g_setenv ("G_MESSAGES_DEBUG", "all", FALSE);
 
 	/* tests go here */
-	g_test_add_func ("/dfu/enums", dfu_enums_func);
-	g_test_add_func ("/dfu/target(DfuSe}", dfu_target_dfuse_func);
+	g_test_add_func ("/dfu/enums", fu_dfu_enums_func);
+	g_test_add_func ("/dfu/target(DfuSe}", fu_dfu_target_dfuse_func);
 	return g_test_run ();
 }
 
