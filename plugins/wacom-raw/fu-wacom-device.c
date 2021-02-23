@@ -26,10 +26,14 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuWacomDevice, fu_wacom_device, FU_TYPE_UDEV_DEVICE)
 #define GET_PRIVATE(o) (fu_wacom_device_get_instance_private (o))
 
 static void
-fu_wacom_device_to_string (FuUdevDevice *device, guint idt, GString *str)
+fu_wacom_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE (device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE (self);
+
+	/* FuUdevDevice->to_string */
+	FU_DEVICE_CLASS (fu_wacom_device_parent_class)->to_string (device, idt, str);
+
 	fu_common_string_append_kx (str, idt, "FlashBlockSize", priv->flash_block_size);
 	fu_common_string_append_kx (str, idt, "FlashBaseAddr", priv->flash_base_addr);
 	fu_common_string_append_kx (str, idt, "FlashSize", priv->flash_size);
@@ -90,12 +94,14 @@ fu_wacom_device_check_mpu (FuWacomDevice *self, GError **error)
 }
 
 static gboolean
-fu_wacom_device_probe (FuUdevDevice *device, GError **error)
+fu_wacom_device_probe (FuDevice *device, GError **error)
 {
-	/* set the physical ID */
-	if (!fu_udev_device_set_physical_id (device, "hid", error))
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_wacom_device_parent_class)->probe (device, error))
 		return FALSE;
-	return TRUE;
+
+	/* set the physical ID */
+	return fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "hid", error);
 }
 
 static gboolean
@@ -361,12 +367,11 @@ static void
 fu_wacom_device_class_init (FuWacomDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_device_udev = FU_UDEV_DEVICE_CLASS (klass);
-	klass_device_udev->to_string = fu_wacom_device_to_string;
+	klass_device->to_string = fu_wacom_device_to_string;
 	klass_device->prepare_firmware = fu_wacom_device_prepare_firmware;
 	klass_device->write_firmware = fu_wacom_device_write_firmware;
 	klass_device->attach = fu_wacom_device_attach;
 	klass_device->detach = fu_wacom_device_detach;
 	klass_device->set_quirk_kv = fu_wacom_device_set_quirk_kv;
-	klass_device_udev->probe = fu_wacom_device_probe;
+	klass_device->probe = fu_wacom_device_probe;
 }

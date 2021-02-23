@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginJabra"']
 
 install_data(['jabra.quirk'],
@@ -26,3 +27,4 @@ shared_module('fu_plugin_jabra',
     plugin_deps,
   ],
 )
+endif

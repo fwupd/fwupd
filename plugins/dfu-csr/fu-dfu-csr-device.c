@@ -9,71 +9,71 @@
 #include <string.h>
 
 #include "fu-chunk.h"
-#include "fu-csr-device.h"
+#include "fu-dfu-csr-device.h"
 #include "fu-dfu-firmware.h"
 
 #include "dfu-common.h"
 
 /**
- * FU_CSR_DEVICE_QUIRK_FLAG_REQUIRE_DELAY:
+ * FU_DFU_CSR_DEVICE_QUIRK_FLAG_REQUIRE_DELAY:
  *
  * Respect the write timeout value when performing actions. This is sometimes
  * set to a huge amount of time, and so is not used by default.
  *
  * Since: 1.0.3
  */
-#define FU_CSR_DEVICE_FLAG_REQUIRE_DELAY	"require-delay"
+#define FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY	"require-delay"
 
 typedef enum {
-	FU_CSR_DEVICE_QUIRK_NONE		= 0,
-	FU_CSR_DEVICE_QUIRK_REQUIRE_DELAY	= (1 << 0),
-	FU_CSR_DEVICE_QUIRK_LAST
-} FuCsrDeviceQuirks;
+	FU_DFU_CSR_DEVICE_QUIRK_NONE		= 0,
+	FU_DFU_CSR_DEVICE_QUIRK_REQUIRE_DELAY	= (1 << 0),
+	FU_DFU_CSR_DEVICE_QUIRK_LAST
+} FuDfuCsrDeviceQuirks;
 
-struct _FuCsrDevice
+struct _FuDfuCsrDevice
 {
 	FuHidDevice		 parent_instance;
-	FuCsrDeviceQuirks	 quirks;
+	FuDfuCsrDeviceQuirks	 quirks;
 	DfuState		 dfu_state;
 	guint32			 dnload_timeout;
 };
 
-G_DEFINE_TYPE (FuCsrDevice, fu_csr_device, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE (FuDfuCsrDevice, fu_dfu_csr_device, FU_TYPE_HID_DEVICE)
 
-#define FU_CSR_REPORT_ID_COMMAND		0x01
-#define FU_CSR_REPORT_ID_STATUS			0x02
-#define FU_CSR_REPORT_ID_CONTROL		0x03
+#define FU_DFU_CSR_REPORT_ID_COMMAND		0x01
+#define FU_DFU_CSR_REPORT_ID_STATUS		0x02
+#define FU_DFU_CSR_REPORT_ID_CONTROL		0x03
 
-#define FU_CSR_COMMAND_HEADER_SIZE		6	/* bytes */
-#define FU_CSR_COMMAND_UPGRADE			0x01
+#define FU_DFU_CSR_COMMAND_HEADER_SIZE		6	/* bytes */
+#define FU_DFU_CSR_COMMAND_UPGRADE		0x01
 
-#define FU_CSR_STATUS_HEADER_SIZE		7
+#define FU_DFU_CSR_STATUS_HEADER_SIZE		7
 
-#define FU_CSR_CONTROL_HEADER_SIZE		2	/* bytes */
-#define FU_CSR_CONTROL_CLEAR_STATUS		0x04
-#define FU_CSR_CONTROL_RESET			0xff
+#define FU_DFU_CSR_CONTROL_HEADER_SIZE		2	/* bytes */
+#define FU_DFU_CSR_CONTROL_CLEAR_STATUS		0x04
+#define FU_DFU_CSR_CONTROL_RESET		0xff
 
 /* maximum firmware packet, including the command header */
-#define FU_CSR_PACKET_DATA_SIZE			1023	/* bytes */
+#define FU_DFU_CSR_PACKET_DATA_SIZE		1023	/* bytes */
 
-#define FU_CSR_DEVICE_TIMEOUT			5000	/* ms */
+#define FU_DFU_CSR_DEVICE_TIMEOUT		5000	/* ms */
 
 static void
-fu_csr_device_to_string (FuDevice *device, guint idt, GString *str)
+fu_dfu_csr_device_to_string (FuDevice *device, guint idt, GString *str)
 {
-	FuCsrDevice *self = FU_CSR_DEVICE (device);
+	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE (device);
 	fu_common_string_append_kv (str, idt, "State", dfu_state_to_string (self->dfu_state));
 	fu_common_string_append_ku (str, idt, "DownloadTimeout", self->dnload_timeout);
 }
 
 static gboolean
-fu_csr_device_attach (FuDevice *device, GError **error)
+fu_dfu_csr_device_attach (FuDevice *device, GError **error)
 {
-	guint8 buf[] = { FU_CSR_REPORT_ID_CONTROL, FU_CSR_CONTROL_RESET };
+	guint8 buf[] = { FU_DFU_CSR_REPORT_ID_CONTROL, FU_DFU_CSR_CONTROL_RESET };
 	if (!fu_hid_device_set_report (FU_HID_DEVICE (device),
-				       FU_CSR_REPORT_ID_CONTROL,
+				       FU_DFU_CSR_REPORT_ID_CONTROL,
 				       buf, sizeof(buf),
-				       FU_CSR_DEVICE_TIMEOUT,
+				       FU_DFU_CSR_DEVICE_TIMEOUT,
 				       FU_HID_DEVICE_FLAG_IS_FEATURE,
 				       error)) {
 		g_prefix_error (error, "failed to attach: ");
@@ -83,15 +83,15 @@ fu_csr_device_attach (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_csr_device_get_status (FuCsrDevice *self, GError **error)
+fu_dfu_csr_device_get_status (FuDfuCsrDevice *self, GError **error)
 {
 	guint8 buf[64] = {0};
 
 	/* hit hardware */
 	if (!fu_hid_device_get_report (FU_HID_DEVICE (self),
-				       FU_CSR_REPORT_ID_STATUS,
+				       FU_DFU_CSR_REPORT_ID_STATUS,
 				       buf, sizeof(buf),
-				       FU_CSR_DEVICE_TIMEOUT,
+				       FU_DFU_CSR_DEVICE_TIMEOUT,
 				       FU_HID_DEVICE_FLAG_ALLOW_TRUNC |
 				       FU_HID_DEVICE_FLAG_IS_FEATURE,
 				       error)) {
@@ -100,12 +100,12 @@ fu_csr_device_get_status (FuCsrDevice *self, GError **error)
 	}
 
 	/* check packet */
-	if (buf[0] != FU_CSR_REPORT_ID_STATUS) {
+	if (buf[0] != FU_DFU_CSR_REPORT_ID_STATUS) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
 			     "GetStatus packet-id was %i expected %i",
-			     buf[0], FU_CSR_REPORT_ID_STATUS);
+			     buf[0], FU_DFU_CSR_REPORT_ID_STATUS);
 		return FALSE;
 	}
 
@@ -119,22 +119,22 @@ fu_csr_device_get_status (FuCsrDevice *self, GError **error)
 
 
 static gboolean
-fu_csr_device_clear_status (FuCsrDevice *self, GError **error)
+fu_dfu_csr_device_clear_status (FuDfuCsrDevice *self, GError **error)
 {
-	guint8 buf[] = { FU_CSR_REPORT_ID_CONTROL,
-			 FU_CSR_CONTROL_CLEAR_STATUS };
+	guint8 buf[] = { FU_DFU_CSR_REPORT_ID_CONTROL,
+			 FU_DFU_CSR_CONTROL_CLEAR_STATUS };
 
 	/* only clear the status if the state is error */
-	if (!fu_csr_device_get_status (self, error))
+	if (!fu_dfu_csr_device_get_status (self, error))
 		return FALSE;
 	if (self->dfu_state != DFU_STATE_DFU_ERROR)
 		return TRUE;
 
 	/* hit hardware */
 	if (!fu_hid_device_set_report (FU_HID_DEVICE (self),
-				       FU_CSR_REPORT_ID_CONTROL,
+				       FU_DFU_CSR_REPORT_ID_CONTROL,
 				       buf, sizeof(buf),
-				       FU_CSR_DEVICE_TIMEOUT,
+				       FU_DFU_CSR_DEVICE_TIMEOUT,
 				       FU_HID_DEVICE_FLAG_IS_FEATURE,
 				       error)) {
 		g_prefix_error (error, "failed to ClearStatus: ");
@@ -142,20 +142,20 @@ fu_csr_device_clear_status (FuCsrDevice *self, GError **error)
 	}
 
 	/* check the hardware again */
-	return fu_csr_device_get_status (self, error);
+	return fu_dfu_csr_device_get_status (self, error);
 }
 
 static GBytes *
-fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
+fu_dfu_csr_device_upload_chunk (FuDfuCsrDevice *self, GError **error)
 {
 	guint16 data_sz;
 	guint8 buf[64] = {0};
 
 	/* hit hardware */
 	if (!fu_hid_device_get_report (FU_HID_DEVICE (self),
-				       FU_CSR_REPORT_ID_COMMAND,
+				       FU_DFU_CSR_REPORT_ID_COMMAND,
 				       buf, sizeof(buf),
-				       FU_CSR_DEVICE_TIMEOUT,
+				       FU_DFU_CSR_DEVICE_TIMEOUT,
 				       FU_HID_DEVICE_FLAG_ALLOW_TRUNC |
 				       FU_HID_DEVICE_FLAG_IS_FEATURE,
 				       error)) {
@@ -164,7 +164,7 @@ fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
 	}
 
 	/* check command byte */
-	if (buf[0] != FU_CSR_REPORT_ID_COMMAND) {
+	if (buf[0] != FU_DFU_CSR_REPORT_ID_COMMAND) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -174,7 +174,7 @@ fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
 
 	/* check the length */
 	data_sz = fu_common_read_uint16 (&buf[1], G_LITTLE_ENDIAN);
-	if (data_sz + FU_CSR_COMMAND_HEADER_SIZE != (guint16) sizeof(buf)) {
+	if (data_sz + FU_DFU_CSR_COMMAND_HEADER_SIZE != (guint16) sizeof(buf)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -184,14 +184,14 @@ fu_csr_device_upload_chunk (FuCsrDevice *self, GError **error)
 	}
 
 	/* return as bytes */
-	return g_bytes_new (buf + FU_CSR_COMMAND_HEADER_SIZE,
-			    sizeof(buf) - FU_CSR_COMMAND_HEADER_SIZE);
+	return g_bytes_new (buf + FU_DFU_CSR_COMMAND_HEADER_SIZE,
+			    sizeof(buf) - FU_DFU_CSR_COMMAND_HEADER_SIZE);
 }
 
 static GBytes *
-fu_csr_device_upload (FuDevice *device, GError **error)
+fu_dfu_csr_device_upload (FuDevice *device, GError **error)
 {
-	FuCsrDevice *self = FU_CSR_DEVICE (device);
+	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE (device);
 	g_autoptr(GPtrArray) chunks = NULL;
 	guint32 total_sz = 0;
 	gsize done_sz = 0;
@@ -205,15 +205,15 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 		gsize chunk_sz;
 
 		/* hit hardware */
-		chunk = fu_csr_device_upload_chunk (self, error);
+		chunk = fu_dfu_csr_device_upload_chunk (self, error);
 		if (chunk == NULL)
 			return NULL;
 		chunk_sz = g_bytes_get_size (chunk);
 
-		/* get the total size using the CSR header */
+		/* get the total size using the DFU_CSR header */
 		if (i == 0 && chunk_sz >= 10) {
 			const guint8 *buf = g_bytes_get_data (chunk, NULL);
-			if (memcmp (buf, "CSR-dfu", 7) == 0) {
+			if (memcmp (buf, "DFU_CSR-dfu", 7) == 0) {
 				guint16 hdr_ver;
 				guint16 hdr_len;
 				if (!fu_common_read_uint16_safe	(buf, chunk_sz, 8,
@@ -224,7 +224,7 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 					g_set_error (error,
 						     FWUPD_ERROR,
 						     FWUPD_ERROR_INTERNAL,
-						     "CSR header version is "
+						     "DFU_CSR header version is "
 						     "invalid %" G_GUINT16_FORMAT,
 						     hdr_ver);
 					return NULL;
@@ -237,7 +237,7 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 					g_set_error (error,
 						     FWUPD_ERROR,
 						     FWUPD_ERROR_INTERNAL,
-						     "CSR header data length "
+						     "DFU_CSR header data length "
 						     "invalid %" G_GUINT32_FORMAT,
 						     total_sz);
 					return NULL;
@@ -246,7 +246,7 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 								 &hdr_len, G_LITTLE_ENDIAN,
 								 error))
 					return NULL;
-				g_debug ("CSR header length: %" G_GUINT16_FORMAT, hdr_len);
+				g_debug ("DFU_CSR header length: %" G_GUINT16_FORMAT, hdr_len);
 			}
 		}
 
@@ -256,7 +256,7 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 		fu_device_set_progress_full (device, done_sz, (gsize) total_sz);
 
 		/* we're done */
-		if (chunk_sz < 64 - FU_CSR_COMMAND_HEADER_SIZE)
+		if (chunk_sz < 64 - FU_DFU_CSR_COMMAND_HEADER_SIZE)
 			break;
 	}
 
@@ -265,15 +265,15 @@ fu_csr_device_upload (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_csr_device_download_chunk (FuCsrDevice *self, guint16 idx, GBytes *chunk, GError **error)
+fu_dfu_csr_device_download_chunk (FuDfuCsrDevice *self, guint16 idx, GBytes *chunk, GError **error)
 {
 	const guint8 *chunk_data;
 	gsize chunk_sz = 0;
-	guint8 buf[FU_CSR_PACKET_DATA_SIZE] = {0};
+	guint8 buf[FU_DFU_CSR_PACKET_DATA_SIZE] = {0};
 
 	/* too large? */
 	chunk_data = g_bytes_get_data (chunk, &chunk_sz);
-	if (chunk_sz + FU_CSR_COMMAND_HEADER_SIZE > FU_CSR_PACKET_DATA_SIZE) {
+	if (chunk_sz + FU_DFU_CSR_COMMAND_HEADER_SIZE > FU_DFU_CSR_PACKET_DATA_SIZE) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INTERNAL,
@@ -283,20 +283,20 @@ fu_csr_device_download_chunk (FuCsrDevice *self, guint16 idx, GBytes *chunk, GEr
 	g_debug ("writing %" G_GSIZE_FORMAT " bytes of data", chunk_sz);
 
 	/* create packet */
-	buf[0] = FU_CSR_REPORT_ID_COMMAND;
-	buf[1] = FU_CSR_COMMAND_UPGRADE;
+	buf[0] = FU_DFU_CSR_REPORT_ID_COMMAND;
+	buf[1] = FU_DFU_CSR_COMMAND_UPGRADE;
 	fu_common_write_uint16 (&buf[2], idx, G_LITTLE_ENDIAN);
 	fu_common_write_uint16 (&buf[4], chunk_sz, G_LITTLE_ENDIAN);
-	if (!fu_memcpy_safe (buf, sizeof(buf), FU_CSR_COMMAND_HEADER_SIZE,	/* dst */
+	if (!fu_memcpy_safe (buf, sizeof(buf), FU_DFU_CSR_COMMAND_HEADER_SIZE,	/* dst */
 			     chunk_data, chunk_sz, 0x0,				/* src */
 			     chunk_sz, error))
 		return FALSE;
 
 	/* hit hardware */
 	if (!fu_hid_device_set_report (FU_HID_DEVICE (self),
-				       FU_CSR_REPORT_ID_COMMAND,
+				       FU_DFU_CSR_REPORT_ID_COMMAND,
 				       buf, sizeof(buf),
-				       FU_CSR_DEVICE_TIMEOUT,
+				       FU_DFU_CSR_DEVICE_TIMEOUT,
 				       FU_HID_DEVICE_FLAG_IS_FEATURE,
 				       error)) {
 		g_prefix_error (error, "failed to Upgrade: ");
@@ -304,20 +304,20 @@ fu_csr_device_download_chunk (FuCsrDevice *self, guint16 idx, GBytes *chunk, GEr
 	}
 
 	/* wait for hardware */
-	if (self->quirks & FU_CSR_DEVICE_QUIRK_REQUIRE_DELAY) {
+	if (self->quirks & FU_DFU_CSR_DEVICE_QUIRK_REQUIRE_DELAY) {
 		g_debug ("sleeping for %ums", self->dnload_timeout);
 		g_usleep (self->dnload_timeout * 1000);
 	}
 
 	/* get status */
-	if (!fu_csr_device_get_status (self, error))
+	if (!fu_dfu_csr_device_get_status (self, error))
 		return FALSE;
 
 	/* is still busy */
 	if (self->dfu_state == DFU_STATE_DFU_DNBUSY) {
 		g_debug ("busy, so sleeping a bit longer");
 		g_usleep (G_USEC_PER_SEC);
-		if (!fu_csr_device_get_status (self, error))
+		if (!fu_dfu_csr_device_get_status (self, error))
 			return FALSE;
 	}
 
@@ -336,17 +336,17 @@ fu_csr_device_download_chunk (FuCsrDevice *self, guint16 idx, GBytes *chunk, GEr
 }
 
 static FuFirmware *
-fu_csr_device_prepare_firmware (FuDevice *device,
-				GBytes *fw,
-				FwupdInstallFlags flags,
-				GError **error)
+fu_dfu_csr_device_prepare_firmware (FuDevice *device,
+				    GBytes *fw,
+				    FwupdInstallFlags flags,
+				    GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_dfu_firmware_new ();
 
 	/* parse the file */
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
-	if (g_getenv ("FWUPD_CSR_VERBOSE") != NULL) {
+	if (g_getenv ("FWUPD_DFU_CSR_VERBOSE") != NULL) {
 		g_autofree gchar *fw_str = NULL;
 		fw_str = fu_firmware_to_string (firmware);
 		g_debug ("%s", fw_str);
@@ -357,12 +357,12 @@ fu_csr_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_csr_device_download (FuDevice *device,
-			FuFirmware *firmware,
-			FwupdInstallFlags flags,
-			GError **error)
+fu_dfu_csr_device_download (FuDevice *device,
+			    FuFirmware *firmware,
+			    FwupdInstallFlags flags,
+			    GError **error)
 {
-	FuCsrDevice *self = FU_CSR_DEVICE (device);
+	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE (device);
 	guint16 idx;
 	g_autoptr(GBytes) blob_empty = NULL;
 	g_autoptr(GBytes) blob = NULL;
@@ -378,7 +378,7 @@ fu_csr_device_download (FuDevice *device,
 
 	/* create chunks */
 	chunks = fu_chunk_array_new_from_bytes (blob, 0x0, 0x0,
-						FU_CSR_PACKET_DATA_SIZE - FU_CSR_COMMAND_HEADER_SIZE);
+						FU_DFU_CSR_PACKET_DATA_SIZE - FU_DFU_CSR_COMMAND_HEADER_SIZE);
 
 	/* send to hardware */
 	for (idx = 0; idx < chunks->len; idx++) {
@@ -386,7 +386,7 @@ fu_csr_device_download (FuDevice *device,
 		g_autoptr(GBytes) blob_tmp = fu_chunk_get_bytes (chk);
 
 		/* send packet */
-		if (!fu_csr_device_download_chunk (self, idx, blob_tmp, error))
+		if (!fu_dfu_csr_device_download_chunk (self, idx, blob_tmp, error))
 			return FALSE;
 
 		/* update progress */
@@ -396,32 +396,35 @@ fu_csr_device_download (FuDevice *device,
 
 	/* all done */
 	blob_empty = g_bytes_new (NULL, 0);
-	return fu_csr_device_download_chunk (self, idx, blob_empty, error);
+	return fu_dfu_csr_device_download_chunk (self, idx, blob_empty, error);
 }
 
 static gboolean
-fu_csr_device_probe (FuUsbDevice *device, GError **error)
+fu_dfu_csr_device_probe (FuDevice *device, GError **error)
 {
-	FuCsrDevice *self = FU_CSR_DEVICE (device);
+	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE (device);
+
+	/* FuUsbDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_dfu_csr_device_parent_class)->probe (device, error))
+		return FALSE;
 
 	/* proxy the quirk delay */
-	if (fu_device_has_custom_flag (FU_DEVICE (device),
-				       FU_CSR_DEVICE_FLAG_REQUIRE_DELAY))
-		self->quirks = FU_CSR_DEVICE_QUIRK_REQUIRE_DELAY;
+	if (fu_device_has_custom_flag (device, FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY))
+		self->quirks = FU_DFU_CSR_DEVICE_QUIRK_REQUIRE_DELAY;
 
 	/* hardcoded */
-	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_csr_device_setup (FuDevice *device, GError **error)
+fu_dfu_csr_device_setup (FuDevice *device, GError **error)
 {
-	FuCsrDevice *self = FU_CSR_DEVICE (device);
+	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE (device);
 
-	if (!fu_csr_device_clear_status (self, error))
+	if (!fu_dfu_csr_device_clear_status (self, error))
 		return FALSE;
 
 	/* success */
@@ -429,21 +432,20 @@ fu_csr_device_setup (FuDevice *device, GError **error)
 }
 
 static void
-fu_csr_device_init (FuCsrDevice *self)
+fu_dfu_csr_device_init (FuDfuCsrDevice *self)
 {
 	fu_device_set_protocol (FU_DEVICE (self), "com.qualcomm.dfu");
 }
 
 static void
-fu_csr_device_class_init (FuCsrDeviceClass *klass)
+fu_dfu_csr_device_class_init (FuDfuCsrDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
-	klass_device->to_string = fu_csr_device_to_string;
-	klass_device->write_firmware = fu_csr_device_download;
-	klass_device->dump_firmware = fu_csr_device_upload;
-	klass_device->prepare_firmware = fu_csr_device_prepare_firmware;
-	klass_device->attach = fu_csr_device_attach;
-	klass_device->setup = fu_csr_device_setup;
-	klass_usb_device->probe = fu_csr_device_probe;
+	klass_device->to_string = fu_dfu_csr_device_to_string;
+	klass_device->write_firmware = fu_dfu_csr_device_download;
+	klass_device->dump_firmware = fu_dfu_csr_device_upload;
+	klass_device->prepare_firmware = fu_dfu_csr_device_prepare_firmware;
+	klass_device->attach = fu_dfu_csr_device_attach;
+	klass_device->setup = fu_dfu_csr_device_setup;
+	klass_device->probe = fu_dfu_csr_device_probe;
 }

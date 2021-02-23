@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginNovatek"']
 
 install_data([
@@ -32,3 +33,4 @@ shared_module('fu_plugin_hailuck',
     plugin_deps,
   ],
 )
+endif

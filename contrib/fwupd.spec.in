@@ -137,6 +137,7 @@ Provides: fwupdate-efi
 
 # optional, but a really good idea
 Recommends: udisks2
+Recommends: bluez
 
 %if 0%{?have_modem_manager}
 Recommends: %{name}-plugin-modem-manager
@@ -229,18 +230,16 @@ or server machines.
 %if 0%{?have_uefi}
     -Dplugin_uefi_capsule=true \
     -Dplugin_uefi_pk=true \
-%ifarch x86_64
     -Defi_sbat_distro_id="fedora" \
     -Defi_sbat_distro_summary="The Fedora Project" \
     -Defi_sbat_distro_pkgname="%{name}" \
     -Defi_sbat_distro_version="%{version}" \
     -Defi_sbat_distro_url="https://src.fedoraproject.org/rpms/%{name}" \
-%endif
-    -Dtpm=true \
+    -Dplugin_tpm=true \
 %else
     -Dplugin_uefi_capsule=false \
     -Dplugin_uefi_pk=false \
-    -Dtpm=false \
+    -Dplugin_tpm=false \
 %endif
 %if 0%{?have_dell}
     -Dplugin_dell=true \
@@ -255,6 +254,7 @@ or server machines.
     -Dplugin_modem_manager=false \
 %endif
     -Dman=true \
+    -Dbluez=true \
     -Dsupported_build=true
 
 %meson_build
@@ -409,7 +409,6 @@ done
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ccgx.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_colorhug.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_cros_ec.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_csr.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_cpu.so
 %if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dell.so
@@ -417,6 +416,7 @@ done
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dell_dock.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_dfu.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_dfu_csr.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_elantp.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_emmc.so
@@ -454,6 +454,7 @@ done
 %{_libdir}/fwupd-plugins-3/libfu_plugin_system76_launch.so
 %if 0%{?enable_dummy}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_test.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_test_ble.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_invalid.so
 %endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_thelio_io.so

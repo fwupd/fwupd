@@ -16,9 +16,10 @@ Firmware Format
 The daemon will decompress the cabinet archive and extract a firmware blob in
 an unspecified binary file format.
 
-This plugin supports the following protocol ID:
+This plugin supports the following protocol IDs:
 
  * com.realtek.rts54
+ * com.realtek.rts54.i2c
 
 GUID Generation
 ---------------

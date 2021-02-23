@@ -20,9 +20,14 @@ This plugin supports the following protocol ID:
 GUID Generation
 ---------------
 
-These devices use the standard USB DeviceInstanceId values, e.g.
+These devices use the standard HIDRAW DeviceInstanceId values for both
+Pixart Imaging, Inc and Primax Electronics, Ltd, e.g.
 
  * `HIDRAW\VEN_093A&DEV_2801`
+ * `HIDRAW\VEN_0461&DEV_4EEF`
+ * `HIDRAW\VEN_0461&DEV_4EEF&NAME_${NAME}`
+
+Additionaly, a custom GUID values including the name is used, e.g.
 
 Vendor ID Security
 ------------------
@@ -31,4 +36,4 @@ The vendor ID is set from the USB vendor, in this instance set to `USB:0x093A`
 
 External interface access
 -------------------------
-This plugin requires ioctl `HIDIOCSFEATURE` access.
+This plugin requires ioctl `HIDIOCSFEATURE` and `HIDIOCGFEATURE` access.

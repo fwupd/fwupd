@@ -1,3 +1,4 @@
+if host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxLockdown"']
 
 shared_module('fu_plugin_linux_lockdown',
@@ -21,3 +22,4 @@ shared_module('fu_plugin_linux_lockdown',
     plugin_deps,
   ],
 )
+endif

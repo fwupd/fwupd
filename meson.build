@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.5.6',
+  version : '1.5.7',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -206,6 +206,9 @@ if get_option('gudev')
 else
   gudev = dependency('', required : false)
 endif
+if get_option('bluez')
+  conf.set('HAVE_BLUEZ', '1')
+endif
 libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
 if get_option('gusb')
   gusb = dependency('gusb', version : '>= 0.3.5', fallback : ['gusb', 'gusb_dep'])
@@ -335,7 +338,7 @@ if cc.has_function('pwrite', args : '-D_XOPEN_SOURCE')
   conf.set('HAVE_PWRITE', '1')
 endif
 
-if build_standalone and get_option('tpm')
+if build_standalone and get_option('plugin_tpm')
   tpm2tss = dependency('tss2-esys', version : '>= 2.0')
   conf.set('HAVE_TSS2', '1')
 else

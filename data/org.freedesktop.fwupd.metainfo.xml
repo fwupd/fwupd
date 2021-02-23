@@ -35,6 +35,25 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.5.7" date="2021-02-23">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add initial support for Bluez bluetooth devices</li>
+          <li>Add more supported pixart devices</li>
+          <li>Add support for the RTD21xx HDMI converter</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Convert MBR types to GPT GUIDs to help find the ESP</li>
+          <li>Do not allow updating a synaptics-mst device with no customer ID</li>
+          <li>Drop unused heap pages after startup has completed</li>
+          <li>Ensure SBAT metadata is added correctly</li>
+          <li>Move the plugin build logic to the plugins themselves</li>
+          <li>Only allow verify-update for plugins that support CAN_VERIFY</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.6" date="2021-02-16">
       <description>
         <p>This release adds the following features:</p>

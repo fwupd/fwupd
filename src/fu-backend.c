@@ -12,6 +12,7 @@
 
 typedef struct {
 	gchar				*name;
+	gboolean			 enabled;
 } FuBackendPrivate;
 
 enum {
@@ -60,11 +61,18 @@ gboolean
 fu_backend_setup (FuBackend *self, GError **error)
 {
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS (self);
+	FuBackendPrivate *priv = GET_PRIVATE (self);
+
 	g_return_val_if_fail (FU_IS_BACKEND (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
 	if (klass->setup == NULL)
 		return TRUE;
-	return klass->setup (self, error);
+	if (!klass->setup (self, error)) {
+		priv->enabled = FALSE;
+		return FALSE;
+	}
+	return TRUE;
 }
 
 gboolean
@@ -95,6 +103,22 @@ fu_backend_get_name (FuBackend *self)
 	FuBackendPrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_BACKEND (self), NULL);
 	return priv->name;
+}
+
+gboolean
+fu_backend_get_enabled (FuBackend *self)
+{
+	FuBackendPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_BACKEND (self), FALSE);
+	return priv->enabled;
+}
+
+void
+fu_backend_set_enabled (FuBackend *self, gboolean enabled)
+{
+	FuBackendPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_BACKEND (self));
+	priv->enabled = FALSE;
 }
 
 static void
@@ -132,6 +156,8 @@ fu_backend_set_property (GObject *object, guint prop_id,
 static void
 fu_backend_init (FuBackend *self)
 {
+	FuBackendPrivate *priv = GET_PRIVATE (self);
+	priv->enabled = TRUE;
 }
 
 static void

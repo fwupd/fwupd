@@ -1,3 +1,4 @@
+if get_option('plugin_dell')
 cargs = ['-DG_LOG_DOMAIN="FuPluginDellEsrt"']
 
 install_data(['metadata.xml'],
@@ -39,3 +40,4 @@ configure_file(
   install: true,
   install_dir: join_paths(sysconfdir, 'fwupd', 'remotes.d'),
 )
+endif

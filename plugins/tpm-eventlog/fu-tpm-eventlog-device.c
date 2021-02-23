@@ -30,7 +30,7 @@ static void
 fu_tpm_eventlog_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuTpmEventlogDevice *self = FU_TPM_EVENTLOG_DEVICE (device);
-	if (self->items->len > 0) {
+	if (self->items != NULL && self->items->len > 0) {
 		fu_common_string_append_kv (str, idt, "Items", NULL);
 		for (guint i = 0; i < self->items->len; i++) {
 			FuTpmEventlogItem *item = g_ptr_array_index (self->items, i);

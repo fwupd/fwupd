@@ -304,12 +304,16 @@ fu_synaptics_rmi_hid_device_set_mode (FuSynapticsRmiHidDevice *self,
 }
 
 static gboolean
-fu_synaptics_rmi_hid_device_open (FuUdevDevice *device, GError **error)
+fu_synaptics_rmi_hid_device_open (FuDevice *device, GError **error)
 {
 	FuSynapticsRmiHidDevice *self = FU_SYNAPTICS_RMI_HID_DEVICE (device);
 
+	/* FuUdevDevice->open */
+	if (!FU_DEVICE_CLASS (fu_synaptics_rmi_hid_device_parent_class)->open (device, error))
+		return FALSE;
+
 	/* set up touchpad so we can query it */
-	self->io_channel = fu_io_channel_unix_new (fu_udev_device_get_fd (device));
+	self->io_channel = fu_io_channel_unix_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (device)));
 	if (!fu_synaptics_rmi_hid_device_set_mode (self, HID_RMI4_MODE_ATTN_REPORTS, error))
 		return FALSE;
 
@@ -318,7 +322,7 @@ fu_synaptics_rmi_hid_device_open (FuUdevDevice *device, GError **error)
 }
 
 static gboolean
-fu_synaptics_rmi_hid_device_close (FuUdevDevice *device, GError **error)
+fu_synaptics_rmi_hid_device_close (FuDevice *device, GError **error)
 {
 	FuSynapticsRmiHidDevice *self = FU_SYNAPTICS_RMI_HID_DEVICE (device);
 	g_autoptr(GError) error_local = NULL;
@@ -335,9 +339,11 @@ fu_synaptics_rmi_hid_device_close (FuUdevDevice *device, GError **error)
 		g_debug ("ignoring: %s", error_local->message);
 	}
 
-	fu_udev_device_set_fd (device, -1);
+	fu_udev_device_set_fd (FU_UDEV_DEVICE (device), -1);
 	g_clear_object (&self->io_channel);
-	return TRUE;
+
+	/* FuUdevDevice->close */
+	return FU_DEVICE_CLASS (fu_synaptics_rmi_hid_device_parent_class)->close (device, error);
 }
 
 static gboolean
@@ -466,9 +472,12 @@ fu_synaptics_rmi_hid_device_set_page (FuSynapticsRmiDevice *self,
 }
 
 static gboolean
-fu_synaptics_rmi_hid_device_probe (FuUdevDevice *device, GError **error)
+fu_synaptics_rmi_hid_device_probe (FuDevice *device, GError **error)
 {
-	return fu_udev_device_set_physical_id (device, "hid", error);
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_synaptics_rmi_hid_device_parent_class)->probe (device, error))
+		return FALSE;
+	return fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "hid", error);
 }
 
 static gboolean
@@ -536,12 +545,11 @@ fu_synaptics_rmi_hid_device_class_init (FuSynapticsRmiHidDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_udev = FU_UDEV_DEVICE_CLASS (klass);
 	klass_device->attach = fu_synaptics_rmi_hid_device_attach;
 	klass_device->detach = fu_synaptics_rmi_hid_device_detach;
-	klass_udev->probe = fu_synaptics_rmi_hid_device_probe;
-	klass_udev->open = fu_synaptics_rmi_hid_device_open;
-	klass_udev->close = fu_synaptics_rmi_hid_device_close;
+	klass_device->probe = fu_synaptics_rmi_hid_device_probe;
+	klass_device->open = fu_synaptics_rmi_hid_device_open;
+	klass_device->close = fu_synaptics_rmi_hid_device_close;
 	klass_rmi->write = fu_synaptics_rmi_hid_device_write;
 	klass_rmi->read = fu_synaptics_rmi_hid_device_read;
 	klass_rmi->wait_for_attr = fu_synaptics_rmi_hid_device_wait_for_attr;

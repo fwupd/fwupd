@@ -6,7 +6,7 @@
 # Ascii Wolf <mail@asciiwolf.com>, 2017,2019-2020
 # Ascii Wolf <mail@asciiwolf.com>, 2017
 # Marek Černocký <marek@manet.cz>, 2016,2018
-# Pavel Borecki <pavel.borecki@gmail.com>, 2020
+# Pavel Borecki <pavel.borecki@gmail.com>, 2020-2021
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -591,6 +591,10 @@ msgstr "Nekontrolovat restart po aktualizaci"
 msgid "Do not check for unreported history"
 msgstr "Nekontrolovat nenahlášení historie"
 
+#. TRANSLATORS: command line option
+msgid "Do not check if download remotes should be enabled"
+msgstr "Nekontrolovat zda by mělo být zapnuté stahování ze vzdálených"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
 msgstr "Nepřidávat dlouhou příponu oblasti"
@@ -741,6 +745,10 @@ msgstr "SOUBOR ALTERN-NÁZEV-ZAŘÍZENÍ|ALTENRN-IDENTIF-ZAŘÍZENÍ [ALTERN-NÁ
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ID"
 msgstr "NÁZEV-SOUBORU IDENTIFIKÁTOR-ZAŘÍZENÍ"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [FIRMWARE-TYPE]"
+msgstr "NÁZEV-SOUBORU [TYP-FIRMWARE]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: The update state of the specific device
@@ -1243,6 +1251,10 @@ msgstr "Připojí ESP oddíl"
 msgid "Needs a reboot after installation"
 msgstr "Po instalaci vyžaduje restart"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Needs reboot"
+msgstr "Vyžaduje restart"
+
 #. TRANSLATORS: Requires system shutdown to apply firmware
 msgid "Needs shutdown after installation"
 msgstr "Po instalaci vyžaduje vypnutí"
@@ -1306,6 +1318,10 @@ msgid "Only show single PCR value"
 msgstr "Zobrazit pouze jedinou PCR hodnotu"
 
 #. TRANSLATORS: command line option
+msgid "Only use IPFS when downloading files"
+msgstr "IFPS použít pouze při stahování souborů"
+
+#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Přepsat výchozí cestu ESP"
 
@@ -1335,6 +1351,10 @@ msgstr "Heslo"
 
 msgid "Payload"
 msgstr "Obsah"
+
+#. TRANSLATORS: The update state of the specific device
+msgid "Pending"
+msgstr "Čeká"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Percentage complete"
@@ -1430,6 +1450,10 @@ msgstr "Přeinstalovat firmware na zařízení"
 msgid "Reinstalling %s with %s... "
 msgstr "Přeinstalovává se %s na %s…"
 
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Release Branch"
+msgstr "Větev vydání"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
@@ -1509,6 +1533,10 @@ msgstr "SPI zápis"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
 msgstr "OVLADAČ PODSYSTÉMU [IDENTIF-ZAŘÍZENÍ|GUID]"
+
+#. TRANSLATORS: command description
+msgid "Save a file that allows generation of hardware IDs"
+msgstr "Uložit soubor který umožňuje vytváření identifikátorů hardware"
 
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
@@ -1635,6 +1663,10 @@ msgstr "Zadejte soubor dbx databáze"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Zadejte počet bajtů v jednotlivých přenosech přes USB sběrnici"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Success"
+msgstr "Úspěch"
+
 #. TRANSLATORS: success message -- where activation is making the new
 #. * firmware take effect, usually after updating offline
 msgid "Successfully activated all devices"
@@ -1751,6 +1783,10 @@ msgstr "Proces služby načetl kód třetí strany a není už podporován půvo
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
 msgstr "Firmware od %s není dodáváno %s, výrobce hardware."
 
+#. TRANSLATORS: try to help
+msgid "The system clock has not been set correctly and downloading files may fail."
+msgstr "Systémové hodiny nemají správný čas – stahování souborů se kvůli tomu nemusí zdařit."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "Nejsou zde žádné blokované soubory s firmware"
@@ -1811,6 +1847,10 @@ msgstr "Tento nástroj načte a zpracuje záznam událostí ve správě TPM z fi
 msgid "Timeout in milliseconds for each parse"
 msgstr "Časový limit (v milisekundách) pro každé ze zpracovávání"
 
+#. TRANSLATORS: The update state of the specific device
+msgid "Transient failure"
+msgstr "Přechodný nezdar"
+
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Typ"
@@ -1823,9 +1863,17 @@ msgstr "Nezjištěn (či nastaven) UEFI ESP oddíl"
 msgid "UEFI Firmware Utility"
 msgstr "Nástroj pro práci s firmwarem UEFI"
 
+#. TRANSLATORS: capsule updates are an optional BIOS feature
+msgid "UEFI capsule updates not available or enabled in firmware setup"
+msgstr "Nejsou k dispozici (nebo zapnuté v nastavení firmware) aktualizace typu UEFI capsule"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Nástroj pro UEFI dbx"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI platform key"
+msgstr "Klíč UEFI platformy"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"
@@ -2075,6 +2123,14 @@ msgstr "[KONTROLNÍ-SOUČET]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[DEVICE-ID|GUID]"
 msgstr "[IDENTIF-ZAŘÍZENÍ|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [BRANCH]"
+msgstr "[IDENTIF-ZAŘÍZENÍ|GUID] [VĚTEV]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILE FILE_SIG REMOTE-ID]"
+msgstr "[SOUBOR PODPIS_SOUBORU IDENTIF-NA-PROTEJŠKU]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

@@ -12,6 +12,7 @@
 
 #include "fu-synaptics-mst-common.h"
 #include "fu-synaptics-mst-device.h"
+#include "fu-synaptics-mst-firmware.h"
 
 #define FU_SYNAPTICS_MST_DRM_REPLUG_DELAY	5 /* s */
 
@@ -70,7 +71,6 @@ fu_plugin_synaptics_mst_device_rescan (FuPlugin *plugin, FuDevice *device)
 		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
 			fu_plugin_device_remove (plugin, device);
 	} else {
-		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_plugin_device_add (plugin, device);
 	}
 }
@@ -176,6 +176,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem (plugin, "drm");	/* used for uevent only */
 	fu_plugin_add_udev_subsystem (plugin, "drm_dp_aux_dev");
+	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_SYNAPTICS_MST_FIRMWARE);
 }
 
 void

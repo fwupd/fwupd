@@ -9,6 +9,9 @@ if [ "$CI_NETWORK" = "true" ]; then
 	export G_TEST_SRCDIR=`pwd`/fwupd-test-firmware/installed-tests
 fi
 
+#install anything missing from the container
+./contrib/ci/generate_dependencies.py | xargs pacman -S --noconfirm --needed
+
 # prepare the build tree
 rm -rf build
 mkdir build && pushd build

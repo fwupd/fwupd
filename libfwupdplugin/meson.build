@@ -1,5 +1,6 @@
 fwupdplugin_src = [
   'fu-archive.c',
+  'fu-bluez-device.c',
   'fu-cabinet.c',
   'fu-chunk.c',             # fuzzing
   'fu-common.c',            # fuzzing
@@ -33,6 +34,7 @@ fwupdplugin_src = [
 
 fwupdplugin_headers = [
   'fu-archive.h',
+  'fu-bluez-device.h',
   'fu-cabinet.h',
   'fu-chunk.h',
   'fu-common.h',

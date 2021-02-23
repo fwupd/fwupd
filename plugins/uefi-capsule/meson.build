@@ -1,3 +1,4 @@
+if get_option('plugin_uefi_capsule')
 subdir('efi')
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']
@@ -159,4 +160,5 @@ if get_option('tests')
     c_args : cargs
   )
   test('uefi-self-test', e)
+endif
 endif

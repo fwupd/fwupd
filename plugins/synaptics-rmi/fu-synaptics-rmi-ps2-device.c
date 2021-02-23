@@ -719,32 +719,38 @@ fu_synaptics_rmi_ps2_device_write_bus_select (FuSynapticsRmiDevice *rmi_device,
 }
 
 static gboolean
-fu_synaptics_rmi_ps2_device_probe (FuUdevDevice *device, GError **error)
+fu_synaptics_rmi_ps2_device_probe (FuDevice *device, GError **error)
 {
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_synaptics_rmi_ps2_device_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* psmouse is the usual mode, but serio is needed for update */
-	if (g_strcmp0 (fu_udev_device_get_driver (device), "serio_raw") == 0) {
-		fu_device_add_flag (FU_DEVICE (device),
-				    FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	if (g_strcmp0 (fu_udev_device_get_driver (FU_UDEV_DEVICE (device)), "serio_raw") == 0) {
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	} else {
-		fu_device_remove_flag (FU_DEVICE (device),
-				       FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	}
 
 	/* set the physical ID */
-	return fu_udev_device_set_physical_id (device, "platform", error);
+	return fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "platform", error);
 }
 
 static gboolean
-fu_synaptics_rmi_ps2_device_open (FuUdevDevice *device, GError **error)
+fu_synaptics_rmi_ps2_device_open (FuDevice *device, GError **error)
 {
 	FuSynapticsRmiPs2Device *self = FU_SYNAPTICS_RMI_PS2_DEVICE (device);
 	guint8 buf[2] = { 0x0 };
 
+	/* FuUdevDevice->open */
+	if (!FU_DEVICE_CLASS (fu_synaptics_rmi_ps2_device_parent_class)->open (device, error))
+		return FALSE;
+
 	/* create channel */
-	self->io_channel = fu_io_channel_unix_new (fu_udev_device_get_fd (device));
+	self->io_channel = fu_io_channel_unix_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (device)));
 
 	/* in serio_raw mode */
-	if (fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 
 		/* clear out any data in the serio_raw queue */
 		for(guint i = 0; i < 0xffff; i++) {
@@ -784,13 +790,14 @@ fu_synaptics_rmi_ps2_device_open (FuUdevDevice *device, GError **error)
 }
 
 static gboolean
-fu_synaptics_rmi_ps2_device_close (FuUdevDevice *device, GError **error)
+fu_synaptics_rmi_ps2_device_close (FuDevice *device, GError **error)
 {
 	FuSynapticsRmiPs2Device *self = FU_SYNAPTICS_RMI_PS2_DEVICE (device);
-	fu_udev_device_set_fd (device, -1);
+	fu_udev_device_set_fd (FU_UDEV_DEVICE (device), -1);
 	g_clear_object (&self->io_channel);
-	return TRUE;
-}
+
+	/* FuUdevDevice->close */
+	return FU_DEVICE_CLASS (fu_synaptics_rmi_ps2_device_parent_class)->close (device, error);}
 
 static gboolean
 fu_synaptics_rmi_ps2_device_detach (FuDevice *device, GError **error)
@@ -854,12 +861,10 @@ fu_synaptics_rmi_ps2_device_detach (FuDevice *device, GError **error)
 static gboolean
 fu_synaptics_rmi_ps2_device_setup (FuDevice *device, GError **error)
 {
-	FuSynapticsRmiDevice *rmi_device = FU_SYNAPTICS_RMI_DEVICE (device);
-
 	/* we can only scan the PDT in serio_raw mode */
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
-		return fu_synaptics_rmi_v5_device_setup (rmi_device, error);
-	return TRUE;
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+		return TRUE;
+	return FU_DEVICE_CLASS (fu_synaptics_rmi_ps2_device_parent_class)->setup (device, error);
 }
 
 static gboolean
@@ -926,14 +931,13 @@ static void
 fu_synaptics_rmi_ps2_device_class_init (FuSynapticsRmiPs2DeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_udev = FU_UDEV_DEVICE_CLASS (klass);
 	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_CLASS (klass);
 	klass_device->attach = fu_synaptics_rmi_ps2_device_attach;
 	klass_device->detach = fu_synaptics_rmi_ps2_device_detach;
 	klass_device->setup = fu_synaptics_rmi_ps2_device_setup;
-	klass_udev->probe = fu_synaptics_rmi_ps2_device_probe;
-	klass_udev->open = fu_synaptics_rmi_ps2_device_open;
-	klass_udev->close = fu_synaptics_rmi_ps2_device_close;
+	klass_device->probe = fu_synaptics_rmi_ps2_device_probe;
+	klass_device->open = fu_synaptics_rmi_ps2_device_open;
+	klass_device->close = fu_synaptics_rmi_ps2_device_close;
 	klass_rmi->read = fu_synaptics_rmi_ps2_device_read;
 	klass_rmi->write = fu_synaptics_rmi_ps2_device_write;
 	klass_rmi->set_page = fu_synaptics_rmi_ps2_device_set_page;

@@ -1,3 +1,4 @@
+if get_option('gudev')
 cargs = ['-DG_LOG_DOMAIN="FuPluginOptionrom"']
 
 install_data(['optionrom.quirk'],
@@ -26,3 +27,4 @@ shared_module('fu_plugin_optionrom',
     plugin_deps,
   ],
 )
+endif

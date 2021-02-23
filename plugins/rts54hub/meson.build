@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginRts54Hub"']
 
 install_data([
@@ -10,6 +11,7 @@ shared_module('fu_plugin_rts54hub',
   fu_hash,
   sources : [
     'fu-rts54hub-device.c',
+    'fu-rts54hub-rtd21xx-device.c',
     'fu-plugin-rts54hub.c',
   ],
   include_directories : [
@@ -28,3 +30,4 @@ shared_module('fu_plugin_rts54hub',
     plugin_deps,
   ],
 )
+endif

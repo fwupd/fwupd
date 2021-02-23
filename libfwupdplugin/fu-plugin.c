@@ -2212,6 +2212,14 @@ fu_plugin_runner_verify (FuPlugin *self,
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_verify", (gpointer *) &func);
 	if (func == NULL) {
+		if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY)) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "device %s does not support verification",
+				     fu_device_get_id (device));
+			return FALSE;
+		}
 		return fu_plugin_device_read_firmware (self, device, error);
 	}
 
@@ -2348,8 +2356,7 @@ fu_plugin_runner_unlock (FuPlugin *self, FuDevice *device, GError **error)
 		return FALSE;
 
 	/* update with correct flags */
-	flags = fu_device_get_flags (device);
-	fu_device_set_flags (device, flags &= ~FWUPD_DEVICE_FLAG_LOCKED);
+	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_LOCKED);
 	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	return TRUE;
 }

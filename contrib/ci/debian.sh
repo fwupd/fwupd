@@ -29,6 +29,7 @@ sed s/quilt/native/ debian/source/format -i
 #check if we have all deps available
 #if some are missing, we're going to use subproject instead and
 #packaging CI will fail
+./contrib/ci/generate_dependencies.py  | xargs apt install -y || true
 if ! dpkg-checkbuilddeps; then
 	./contrib/ci/ubuntu.sh
 	exit 0

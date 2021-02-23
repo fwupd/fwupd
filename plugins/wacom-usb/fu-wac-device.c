@@ -764,9 +764,9 @@ fu_wac_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_wac_device_close (FuUsbDevice *device, GError **error)
+fu_wac_device_close (FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 
 	/* reattach wacom.ko */
 	if (!g_usb_device_release_interface (usb_device, 0x00, /* HID */
@@ -783,8 +783,8 @@ fu_wac_device_close (FuUsbDevice *device, GError **error)
 	 * this should let the kernel unstick itself. */
 	g_usleep (20 * 1000);
 
-	/* success */
-	return TRUE;
+	/* FuUsbDevice->close */
+	return FU_DEVICE_CLASS (fu_wac_device_parent_class)->close (device, error);
 }
 
 static gboolean
@@ -826,12 +826,11 @@ fu_wac_device_class_init (FuWacDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	object_class->finalize = fu_wac_device_finalize;
 	klass_device->prepare_firmware = fu_wac_device_prepare_firmware;
 	klass_device->write_firmware = fu_wac_device_write_firmware;
 	klass_device->to_string = fu_wac_device_to_string;
 	klass_device->setup = fu_wac_device_setup;
 	klass_device->cleanup = fu_wac_device_cleanup;
-	klass_usb_device->close = fu_wac_device_close;
+	klass_device->close = fu_wac_device_close;
 }

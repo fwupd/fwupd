@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginCcgx"']
 
 install_data([
@@ -17,8 +18,8 @@ shared_module('fu_plugin_ccgx',
     'fu-ccgx-hpi-common.c',
     'fu-ccgx-hpi-device.c',
     'fu-ccgx-dmc-device.c',
-    'fu-ccgx-dmc-firmware.c',
-    'fu-ccgx-dmc-common.c',
+    'fu-ccgx-dmc-firmware.c',   # fuzzing
+    'fu-ccgx-dmc-common.c',     # fuzzing
   ],
   include_directories : [
     root_incdir,
@@ -37,3 +38,4 @@ shared_module('fu_plugin_ccgx',
     gudev,
   ],
 )
+endif

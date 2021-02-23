@@ -26,6 +26,9 @@ struct _FuBackendClass
 };
 
 const gchar	*fu_backend_get_name			(FuBackend	*self);
+gboolean	 fu_backend_get_enabled			(FuBackend	*self);
+void		 fu_backend_set_enabled			(FuBackend	*self,
+							 gboolean	 enabled);
 gboolean	 fu_backend_setup			(FuBackend	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;

@@ -1,3 +1,7 @@
+if get_option('plugin_tpm')
+if not get_option('gudev')
+  error('gudev is required for tpm')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
 
 install_data([
@@ -29,3 +33,4 @@ shared_module('fu_plugin_tpm',
     tpm2tss,
   ],
 )
+endif

@@ -1,3 +1,7 @@
+if get_option('plugin_thunderbolt')
+if not get_option('gudev')
+  error('gudev is required for plugin_thunderbolt')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 cargs += '-DTESTDATADIR="' + join_paths(meson.source_root(), 'data', 'tests') + '"'
 install_data([
@@ -69,4 +73,5 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
     test_env.prepend('LD_PRELOAD', 'libumockdev-preload.so.0')
   endif
   test('thunderbolt-self-test', e, env: test_env, timeout : 120)
+endif
 endif

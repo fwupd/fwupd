@@ -41,21 +41,25 @@ fu_elantp_hid_device_to_string (FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_elantp_hid_device_probe (FuUdevDevice *device, GError **error)
+fu_elantp_hid_device_probe (FuDevice *device, GError **error)
 {
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_elantp_hid_device_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* check is valid */
-	if (g_strcmp0 (fu_udev_device_get_subsystem (device), "hidraw") != 0) {
+	if (g_strcmp0 (fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)), "hidraw") != 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "is not correct subsystem=%s, expected hidraw",
-			     fu_udev_device_get_subsystem (device));
+			     fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)));
 		return FALSE;
 	}
 
 	/* i2c-hid */
-	if (fu_udev_device_get_model (device) < 0x3000 ||
-	    fu_udev_device_get_model (device) >= 0x4000) {
+	if (fu_udev_device_get_model (FU_UDEV_DEVICE (device)) < 0x3000 ||
+	    fu_udev_device_get_model (FU_UDEV_DEVICE (device)) >= 0x4000) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -64,7 +68,7 @@ fu_elantp_hid_device_probe (FuUdevDevice *device, GError **error)
 	}
 
 	/* set the physical ID */
-	return fu_udev_device_set_physical_id (device, "hid", error);
+	return fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "hid", error);
 }
 
 static gboolean
@@ -566,7 +570,6 @@ fu_elantp_hid_device_class_init (FuElantpHidDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_elantp_hid_device_finalize;
 	klass_device->to_string = fu_elantp_hid_device_to_string;
 	klass_device->attach = fu_elantp_hid_device_attach;
@@ -576,5 +579,5 @@ fu_elantp_hid_device_class_init (FuElantpHidDeviceClass *klass)
 	klass_device->reload = fu_elantp_hid_device_setup;
 	klass_device->write_firmware = fu_elantp_hid_device_write_firmware;
 	klass_device->prepare_firmware = fu_elantp_hid_device_prepare_firmware;
-	klass_udev_device->probe = fu_elantp_hid_device_probe;
+	klass_device->probe = fu_elantp_hid_device_probe;
 }

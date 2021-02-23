@@ -1,3 +1,4 @@
+if get_option('plugin_msr')
 cargs = ['-DG_LOG_DOMAIN="FuPluginMsr"']
 
 install_data(['msr.quirk'],
@@ -31,3 +32,4 @@ shared_module('fu_plugin_msr',
     plugin_deps,
   ],
 )
+endif

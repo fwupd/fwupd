@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsCxaudio"']
 
 install_data(['synaptics-cxaudio.quirk'],
@@ -27,3 +28,4 @@ shared_module('fu_plugin_synaptics_cxaudio',
     plugin_deps,
   ],
 )
+endif

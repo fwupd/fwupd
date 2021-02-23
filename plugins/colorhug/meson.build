@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginColorHug"']
 
 install_data([
@@ -29,3 +30,4 @@ shared_module('fu_plugin_colorhug',
     plugin_deps,
   ],
 )
+endif

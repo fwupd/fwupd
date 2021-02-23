@@ -19,7 +19,6 @@
 #include "fu-pxi-firmware.h"
 
 #define PXI_HID_DEV_OTA_INPUT_REPORT_ID		0x05
-#define PXI_HID_DEV_OTA_OUTPUT_REPORT_ID	0x06
 #define PXI_HID_DEV_OTA_FEATURE_REPORT_ID	0x07
 
 #define FU_PXI_DEVICE_CMD_FW_OTA_INIT		0x10u
@@ -33,7 +32,7 @@
 #define FU_PXI_DEVICE_CMD_FW_OTA_DISCONNECT	0x29u
 
 #define FU_PXI_DEVICE_OBJECT_SIZE_MAX		4096	/* bytes */
-#define FU_PXI_DEVICE_OTA_BUF_SZ		32	/* bytes */
+#define FU_PXI_DEVICE_OTA_BUF_SZ		512	/* bytes */
 #define FU_PXI_DEVICE_NOTTFY_RET_LEN		4	/* bytes */
 #define FU_PXI_DEVICE_FW_INFO_RET_LEN		8	/* bytes */
 
@@ -75,6 +74,19 @@ struct _FuPxiDevice {
 
 G_DEFINE_TYPE (FuPxiDevice, fu_pxi_device, FU_TYPE_UDEV_DEVICE)
 
+#ifdef HAVE_HIDRAW_H
+static gboolean
+fu_pxi_device_get_raw_info (FuPxiDevice *self, struct hidraw_devinfo *info, GError **error)
+{
+	if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
+				   HIDIOCGRAWINFO, (guint8 *) info,
+				   NULL, error)) {
+		return FALSE;
+	}
+	return TRUE;
+}
+#endif
+
 static const gchar *
 fu_pxi_device_spec_check_result_to_string (guint8 spec_check_result)
 {
@@ -112,20 +124,22 @@ fu_pxi_device_prepare_firmware (FuDevice *device,
 				FwupdInstallFlags flags,
 				GError **error)
 {
-	g_autoptr(FuFirmware) firmware = fu_pxi_rf_firmware_new ();
+	g_autoptr(FuFirmware) firmware = fu_pxi_firmware_new ();
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 	return g_steal_pointer (&firmware);
 }
 
 static gboolean
-fu_pxi_device_set_feature (FuPxiDevice *self, const guint8 *buf, guint bufsz, GError **error)
+fu_pxi_device_set_feature (FuPxiDevice *self, GByteArray *req, GError **error)
 {
 #ifdef HAVE_HIDRAW_H
-	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL)
-		fu_common_dump_raw (G_LOG_DOMAIN, "SetFeature", buf, bufsz);
+	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL) {
+		fu_common_dump_raw (G_LOG_DOMAIN, "SetFeature",
+				    req->data, req->len);
+	}
 	return fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
-				     HIDIOCSFEATURE(bufsz), (guint8 *) buf,
+				     HIDIOCSFEATURE(req->len), (guint8 *) req->data,
 				     NULL, error);
 #else
 	g_set_error_literal (error,
@@ -253,12 +267,11 @@ fu_pxi_device_fw_object_create (FuPxiDevice *self, FuChunk *chk, GError **error)
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 
 	/* request */
-	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_OUTPUT_REPORT_ID);
+	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
 	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE);
 	fu_byte_array_append_uint32 (req, fu_chunk_get_address (chk), G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint32 (req, fu_chunk_get_data_sz (chk), G_LITTLE_ENDIAN);
-	if (!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0x0,
-					 req->data, req->len, error))
+	if (!fu_pxi_device_set_feature (self, req, error))
 		return FALSE;
 
 	/* check object create success or not */
@@ -282,10 +295,9 @@ static gboolean
 fu_pxi_device_write_payload (FuPxiDevice *self, FuChunk *chk, GError **error)
 {
 	g_autoptr(GByteArray) req = g_byte_array_new ();
-	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_OUTPUT_REPORT_ID);
+	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
 	g_byte_array_append (req, fu_chunk_get_data (chk), fu_chunk_get_data_sz (chk));
-	return fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0x0,
-					   req->data, req->len, error);
+	return fu_pxi_device_set_feature (self, req, error);
 }
 
 static gboolean
@@ -352,15 +364,13 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, FuChunk *chk, GError **error)
 static gboolean
 fu_pxi_device_reset (FuPxiDevice *self, GError **error)
 {
-	guint8 req[FU_PXI_DEVICE_OTA_BUF_SZ] = {
-		PXI_HID_DEV_OTA_OUTPUT_REPORT_ID,
-		FU_PXI_DEVICE_CMD_FW_MCU_RESET,
-		OTA_RESET,
-	};
+	g_autoptr(GByteArray) req = g_byte_array_new ();
+	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
+	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_MCU_RESET);
+	fu_byte_array_append_uint8 (req, OTA_RESET);
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0,
-					 req, 0x3,
-					 error)) {
+
+	if (!fu_pxi_device_set_feature (self, req, error)) {
 		g_prefix_error (error, "failed to reset: ");
 		return FALSE;
 	}
@@ -372,12 +382,13 @@ fu_pxi_device_reset (FuPxiDevice *self, GError **error)
 static gboolean
 fu_pxi_device_fw_ota_init (FuPxiDevice *self, GError **error)
 {
-	const guint8 req[] = {
-		PXI_HID_DEV_OTA_OUTPUT_REPORT_ID,
-		FU_PXI_DEVICE_CMD_FW_OTA_INIT,
-	};
-	return fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0,
-					   req, sizeof(req), error);
+
+	g_autoptr(GByteArray) req = g_byte_array_new ();
+
+	/* write fw ota init command */
+	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
+	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_OTA_INIT);
+	return fu_pxi_device_set_feature (self, req, error);
 }
 
 static gboolean
@@ -393,7 +404,7 @@ fu_pxi_device_fw_ota_init_new (FuPxiDevice *self, gsize bufsz, GError **error)
 	fu_byte_array_append_uint32 (req, bufsz, G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint8 (req, 0x0);	/* OTA setting */
 	g_byte_array_append (req, fw_version, sizeof(fw_version));
-	if (!fu_pxi_device_set_feature (self, req->data, req->len, error))
+	if (!fu_pxi_device_set_feature (self, req, error))
 		return FALSE;
 
 	/* delay for BLE device read command */
@@ -463,7 +474,7 @@ fu_pxi_device_fw_upgrade (FuPxiDevice *self, FuFirmware *firmware, GError **erro
 		return FALSE;
 	buf = g_bytes_get_data (fw, &bufsz);
 	checksum = fu_pxi_device_calculate_checksum (buf, bufsz);
-	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_OUTPUT_REPORT_ID);
+	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
 	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_UPGRADE);
 	fu_byte_array_append_uint32 (req, bufsz, G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint16 (req, checksum, G_LITTLE_ENDIAN);
@@ -476,9 +487,9 @@ fu_pxi_device_fw_upgrade (FuPxiDevice *self, FuFirmware *firmware, GError **erro
 
 	/* send fw upgrade command */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
-	if (!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0,
-					 req->data, req->len, error))
+	if (!fu_pxi_device_set_feature (self, req, error))
 		return FALSE;
+
 	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL)
 		fu_common_dump_raw (G_LOG_DOMAIN, "fw upgrade", req->data, req->len);
 
@@ -555,10 +566,9 @@ fu_pxi_device_fw_get_info (FuPxiDevice *self, GError **error)
 	g_autofree gchar *version_str = NULL;
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 
-	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_OUTPUT_REPORT_ID);
+	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
 	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_GET_INFO);
-	if (!fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0,
-					 req->data, req->len, error))
+	if (!fu_pxi_device_set_feature (self, req, error))
 		return FALSE;
 
 	res[0] = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
@@ -596,13 +606,45 @@ fu_pxi_device_probe (FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_pxi_device_setup_guid (FuPxiDevice *self, GError **error)
+{
+#ifdef HAVE_HIDRAW_H
+	struct hidraw_devinfo hid_raw_info = { 0x0 };
+	g_autofree gchar *devid = NULL;
+	g_autoptr(GString) dev_name = NULL;
+
+	/* extra GUID */
+	if (!fu_pxi_device_get_raw_info (self, &hid_raw_info ,error))
+		return FALSE;
+	dev_name = g_string_new (fu_device_get_name (FU_DEVICE (self)));
+	g_string_ascii_up (dev_name);
+	fu_common_string_replace (dev_name, " ", "_");
+	devid = g_strdup_printf ("HIDRAW\\VEN_%04X&DEV_%04X&NAME_%s",
+				 (guint) hid_raw_info.vendor,
+				 (guint) hid_raw_info.product,
+				 dev_name->str);
+	fu_device_add_instance_id (FU_DEVICE (self), devid);
+#endif
+	return TRUE;
+}
+
+static gboolean
 fu_pxi_device_setup (FuDevice *device, GError **error)
 {
 	FuPxiDevice *self = FU_PXI_DEVICE (device);
-	if (!fu_pxi_device_fw_ota_init (self, error))
+
+	if (!fu_pxi_device_setup_guid (self ,error)) {
+		g_prefix_error (error, "failed to setup GUID: ");
 		return FALSE;
-	if (!fu_pxi_device_fw_get_info (self, error))
+	}
+	if (!fu_pxi_device_fw_ota_init (self, error)) {
+		g_prefix_error (error, "failed to OTA init: ");
 		return FALSE;
+	}
+	if (!fu_pxi_device_fw_get_info (self, error)) {
+		g_prefix_error (error, "failed to get info: ");
+		return FALSE;
+	}
 	return TRUE;
 }
 

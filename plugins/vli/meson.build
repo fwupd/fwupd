@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginVliUsbhub"']
 
 install_data([
@@ -69,4 +70,5 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('vli-self-test', e)  # added to installed-tests
+endif
 endif

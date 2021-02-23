@@ -299,13 +299,16 @@ def _build(bld: Builder) -> None:
     # plugins
     for srcdir, fuzzer, globstr in [
         ("bcm57xx", "bcm57xx", "bcm57xx*"),
-        ("ccgx", "ccgx", "ccgx*"),
+        ("ccgx", "ccgx", "ccgx*.cyacd"),
+        ("ccgx", "ccgx-dmc", "ccgx-dmc*.bin"),
         ("cros-ec", "cros-ec", "cros-ec*"),
         ("ebitdo", "ebitdo", "ebitdo*"),
         ("hailuck", "hailuck-kbd", "ihex*"),
+        ("pixart-rf", "pxi", "pixart*"),
         ("solokey", "solokey", "solokey*"),
         ("synaptics-prometheus", "synaprom", "synaprom*"),
         ("synaptics-rmi", "synaptics-rmi", "synaptics-rmi*"),
+        ("synaptics-mst", "synaptics-mst", "synaptics-mst*"),
         ("wacom-usb", "wac", "wacom*"),
     ]:
         fuzz_objs = []

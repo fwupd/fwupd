@@ -15,12 +15,16 @@ struct _FuOptionromDevice {
 G_DEFINE_TYPE (FuOptionromDevice, fu_optionrom_device, FU_TYPE_UDEV_DEVICE)
 
 static gboolean
-fu_optionrom_device_probe (FuUdevDevice *device, GError **error)
+fu_optionrom_device_probe (FuDevice *device, GError **error)
 {
 	g_autofree gchar *fn = NULL;
 
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_optionrom_device_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* does the device even have ROM? */
-	fn = g_build_filename (fu_udev_device_get_sysfs_path (device), "rom", NULL);
+	fn = g_build_filename (fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)), "rom", NULL);
 	if (!g_file_test (fn, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -30,7 +34,7 @@ fu_optionrom_device_probe (FuUdevDevice *device, GError **error)
 	}
 
 	/* set the physical ID */
-	return fu_udev_device_set_physical_id (device, "pci", error);
+	return fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "pci", error);
 }
 
 static GBytes *
@@ -133,8 +137,7 @@ fu_optionrom_device_class_init (FuOptionromDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUdevDeviceClass *klass_udev_device = FU_UDEV_DEVICE_CLASS (klass);
 	object_class->finalize = fu_optionrom_device_finalize;
 	klass_device->dump_firmware = fu_optionrom_device_dump_firmware;
-	klass_udev_device->probe = fu_optionrom_device_probe;
+	klass_device->probe = fu_optionrom_device_probe;
 }

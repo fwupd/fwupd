@@ -1,14 +1,15 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginCsr"']
+if get_option('gusb')
+cargs = ['-DG_LOG_DOMAIN="FuPluginDfuCsr"']
 
-install_data(['csr-aiaiai.quirk'],
+install_data(['dfu-csr.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
-shared_module('fu_plugin_csr',
+shared_module('fu_plugin_dfu_csr',
   fu_hash,
   sources : [
-    'fu-csr-device.c',
-    'fu-plugin-csr.c',
+    'fu-dfu-csr-device.c',
+    'fu-plugin-dfu-csr.c',
   ],
   include_directories : [
     root_incdir,
@@ -27,3 +28,4 @@ shared_module('fu_plugin_csr',
     dfu,
   ],
 )
+endif

@@ -25,6 +25,9 @@ if ! find . -name '*.sh' | xargs shellcheck --severity=error -e SC2068; then
     exit 1
 fi
 
+#get any missing deps from the container
+./contrib/ci/generate_dependencies.py | xargs dnf install -y
+
 #generate a tarball
 git config tar.tar.xz.command "xz -c"
 mkdir -p build && pushd build
@@ -77,7 +80,7 @@ mkdir -p dist
 cp $HOME/rpmbuild/RPMS/*/*.rpm dist
 
 if [ "$CI" = "true" ]; then
-	sed "s,^DisabledPlugins=test;invalid,DisabledPlugins=," -i /etc/fwupd/daemon.conf
+	sed "s,^DisabledPlugins=.*,DisabledPlugins=," -i /etc/fwupd/daemon.conf
 
 	# set up enough PolicyKit and D-Bus to run the daemon
 	mkdir -p /run/dbus

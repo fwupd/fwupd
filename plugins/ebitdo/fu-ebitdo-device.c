@@ -267,10 +267,14 @@ fu_ebitdo_device_validate (FuEbitdoDevice *self, GError **error)
 }
 
 static gboolean
-fu_ebitdo_device_open (FuUsbDevice *device, GError **error)
+fu_ebitdo_device_open (FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
+
+	/* FuUsbDevice->open */
+	if (!FU_DEVICE_CLASS (fu_ebitdo_device_parent_class)->open (device, error))
+		return FALSE;
 
 	/* open, then ensure this is actually 8Bitdo hardware */
 	if (!fu_ebitdo_device_validate (self, error))
@@ -549,28 +553,28 @@ fu_ebitdo_device_attach (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_ebitdo_device_probe (FuUsbDevice *device, GError **error)
+fu_ebitdo_device_probe (FuDevice *device, GError **error)
 {
-	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
+	/* FuUsbDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_ebitdo_device_parent_class)->probe (device, error))
+		return FALSE;
 
 	/* allowed, but requires manual bootloader step */
-	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_remove_delay (FU_DEVICE (device), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_remove_delay (device, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 
 	/* set name and vendor */
-	fu_device_set_summary (FU_DEVICE (device),
-			       "A redesigned classic game controller");
-	fu_device_set_vendor (FU_DEVICE (device), "8Bitdo");
+	fu_device_set_summary (device, "A redesigned classic game controller");
+	fu_device_set_vendor (device, "8Bitdo");
 
 	/* add a hardcoded icon name */
-	fu_device_add_icon (FU_DEVICE (device), "input-gaming");
+	fu_device_add_icon (device, "input-gaming");
 
 	/* only the bootloader can do the update */
-	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		fu_device_add_counterpart_guid (FU_DEVICE (device), "USB\\VID_0483&PID_5750");
-		fu_device_add_counterpart_guid (FU_DEVICE (device), "USB\\VID_2DC8&PID_5750");
-		fu_device_add_flag (FU_DEVICE (device),
-				    FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		fu_device_add_counterpart_guid (device, "USB\\VID_0483&PID_5750");
+		fu_device_add_counterpart_guid (device, "USB\\VID_2DC8&PID_5750");
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	}
 
 	/* success */
@@ -600,11 +604,10 @@ static void
 fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_ebitdo_device_write_firmware;
 	klass_device->setup = fu_ebitdo_device_setup;
 	klass_device->attach = fu_ebitdo_device_attach;
-	klass_usb_device->open = fu_ebitdo_device_open;
-	klass_usb_device->probe = fu_ebitdo_device_probe;
+	klass_device->open = fu_ebitdo_device_open;
+	klass_device->probe = fu_ebitdo_device_probe;
 	klass_device->prepare_firmware = fu_ebitdo_device_prepare_firmware;
 }

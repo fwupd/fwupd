@@ -1213,7 +1213,7 @@ dfu_device_get_interface (DfuDevice *device)
  * Return value: %TRUE for success
  **/
 static gboolean
-dfu_device_open (FuUsbDevice *device, GError **error)
+dfu_device_open (FuDevice *device, GError **error)
 {
 	DfuDevice *self = DFU_DEVICE (device);
 	DfuDevicePrivate *priv = GET_PRIVATE (self);
@@ -1222,9 +1222,13 @@ dfu_device_open (FuUsbDevice *device, GError **error)
 	g_return_val_if_fail (DFU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* FuUsbDevice->open */
+	if (!FU_DEVICE_CLASS (dfu_device_parent_class)->open (device, error))
+		return FALSE;
+
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == DFU_STATE_APP_IDLE &&
-	    fu_device_has_custom_flag (FU_DEVICE (self), "no-dfu-runtime")) {
+	    fu_device_has_custom_flag (device, "no-dfu-runtime")) {
 		dfu_device_set_state (self, DFU_STATE_APP_IDLE);
 		priv->status = DFU_STATUS_OK;
 	}
@@ -1297,7 +1301,7 @@ dfu_device_open (FuUsbDevice *device, GError **error)
  * Return value: %TRUE for success
  **/
 static gboolean
-dfu_device_close (FuUsbDevice *device, GError **error)
+dfu_device_close (FuDevice *device, GError **error)
 {
 	DfuDevice *self = DFU_DEVICE (device);
 	DfuDevicePrivate *priv = GET_PRIVATE (self);
@@ -1315,14 +1319,19 @@ dfu_device_close (FuUsbDevice *device, GError **error)
 		priv->claimed_interface = FALSE;
 	}
 
-	return TRUE;
+	/* FuUsbDevice->close */
+	return FU_DEVICE_CLASS (dfu_device_parent_class)->close (device, error);
 }
 
 static gboolean
-dfu_device_probe (FuUsbDevice *device, GError **error)
+dfu_device_probe (FuDevice *device, GError **error)
 {
 	DfuDevice *self = DFU_DEVICE (device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+
+	/* FuUsbDevice->probe */
+	if (!FU_DEVICE_CLASS (dfu_device_parent_class)->probe (device, error))
+		return FALSE;
 
 	/* add all the targets */
 	if (!dfu_device_add_targets (self, error)) {
@@ -1339,10 +1348,10 @@ dfu_device_probe (FuUsbDevice *device, GError **error)
 			   g_usb_device_get_pid (usb_device));
 	}
 
-	/* hardware rom Jabra literally reboots if you try to retry a failed
+	/* hardware from Jabra literally reboots if you try to retry a failed
 	 * write -- there's no way to avoid blocking the daemon like this... */
-	if (fu_device_has_custom_flag (FU_DEVICE (device), "attach-extra-reset"))
-		fu_device_sleep_with_progress (FU_DEVICE (self), 10); /* seconds */
+	if (fu_device_has_custom_flag (device, "attach-extra-reset"))
+		fu_device_sleep_with_progress (device, 10); /* seconds */
 
 	/* success */
 	return TRUE;
@@ -1420,7 +1429,7 @@ dfu_device_attach (FuDevice *device, GError **error)
 
 	/* handle m-stack DFU bootloaders */
 	if (!priv->done_upload_or_download &&
-	    fu_device_has_custom_flag (FU_DEVICE (self), "attach-upload-download")) {
+	    fu_device_has_custom_flag (device, "attach-upload-download")) {
 		g_autoptr(GBytes) chunk = NULL;
 		g_autoptr(DfuTarget) target_zero = NULL;
 		g_debug ("doing dummy upload to work around m-stack quirk");
@@ -1910,7 +1919,6 @@ dfu_device_class_init (DfuDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
 	klass_device->set_quirk_kv = dfu_device_set_quirk_kv;
 	klass_device->to_string = dfu_device_to_string;
 	klass_device->dump_firmware = dfu_device_dump_firmware;
@@ -1919,9 +1927,9 @@ dfu_device_class_init (DfuDeviceClass *klass)
 	klass_device->attach = dfu_device_attach;
 	klass_device->detach = dfu_device_detach;
 	klass_device->reload = dfu_device_reload;
-	klass_usb_device->open = dfu_device_open;
-	klass_usb_device->close = dfu_device_close;
-	klass_usb_device->probe = dfu_device_probe;
+	klass_device->open = dfu_device_open;
+	klass_device->close = dfu_device_close;
+	klass_device->probe = dfu_device_probe;
 	object_class->finalize = dfu_device_finalize;
 }
 

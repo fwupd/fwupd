@@ -1,3 +1,7 @@
+if get_option('plugin_synaptics_mst')
+if not get_option('gudev')
+  error('gudev is required for plugin_synaptics_mst')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
 
 install_data(['synaptics-mst.quirk'],
@@ -11,6 +15,7 @@ shared_module('fu_plugin_synaptics_mst',
     'fu-synaptics-mst-common.c',
     'fu-synaptics-mst-connection.c',
     'fu-synaptics-mst-device.c',
+    'fu-synaptics-mst-firmware.c',      # fuzzing
   ],
   include_directories : [
     root_incdir,
@@ -44,6 +49,7 @@ if get_option('tests')
       'fu-synaptics-mst-common.c',
       'fu-synaptics-mst-connection.c',
       'fu-synaptics-mst-device.c',
+      'fu-synaptics-mst-firmware.c',
     ],
     include_directories : [
       root_incdir,
@@ -66,4 +72,5 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('synaptics-mst-self-test', e, env: testdatadirs)
+endif
 endif

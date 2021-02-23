@@ -115,6 +115,7 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 		g_autofree gchar *version_str = NULL;
 		version_str = fu_common_version_from_uint16 (version, FWUPD_VERSION_FORMAT_BCD);
 		fu_firmware_set_version (firmware, version_str);
+		fu_firmware_set_version_raw (firmware, version);
 	}
 
 	/* get device type from firmware image */

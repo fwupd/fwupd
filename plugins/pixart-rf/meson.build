@@ -1,11 +1,16 @@
+if host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
+
+install_data(['pixart-rf.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
 
 shared_module('fu_plugin_pixart_rf',
   fu_hash,
   sources : [
     'fu-plugin-pixart-rf.c',
     'fu-pxi-device.c',
-    'fu-pxi-firmware.c',
+    'fu-pxi-firmware.c',      # fuzzing
   ],
   include_directories : [
     root_incdir,
@@ -23,3 +28,4 @@ shared_module('fu_plugin_pixart_rf',
     fwupdplugin,
   ],
 )
+endif

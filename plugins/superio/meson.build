@@ -1,3 +1,4 @@
+if get_option('gudev')
 cargs = ['-DG_LOG_DOMAIN="FuPluginSuperio"']
 
 install_data(['superio.quirk'],
@@ -29,3 +30,4 @@ shared_module('fu_plugin_superio',
     plugin_deps,
   ],
 )
+endif

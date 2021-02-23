@@ -1,3 +1,7 @@
+if get_option('plugin_altos')
+if not get_option('gudev') or not get_option('gusb')
+  error('gudev and gusb is required for plugin_altos')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginAltos"']
 
 install_data(['altos.quirk'],
@@ -28,3 +32,4 @@ shared_module('fu_plugin_altos',
     plugin_deps,
   ],
 )
+endif

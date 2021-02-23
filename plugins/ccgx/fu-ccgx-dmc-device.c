@@ -358,21 +358,20 @@ fu_ccgx_dmc_write_firmware_image (FuDevice *device,
 
 		/* write start row and number of rows to a device */
 		if (!fu_ccgx_dmc_device_send_write_command (self,
-							    seg_rcd->info_header.start_row,
-							    seg_rcd->info_header.num_rows,
+							    seg_rcd->start_row,
+							    seg_rcd->num_rows,
 							    error))
 			return FALSE;
 
 		/* get data records */
 		data_records = seg_rcd->data_records;
 		for (guint32 data_index = 0; data_index < data_records->len; data_index++) {
-			FuCcgxDmcFirmwareDataRecord *data_rcd;
+			GBytes *data_rcd = g_ptr_array_index (data_records, data_index);
 			const guint8 *row_buffer = NULL;
 			gsize row_size = 0;
 
 			/* write row data */
-			data_rcd = g_ptr_array_index (data_records, data_index);
-			row_buffer = g_bytes_get_data (data_rcd->data, &row_size);
+			row_buffer = g_bytes_get_data (data_rcd, &row_size);
 			if (!fu_ccgx_dmc_device_send_row_data (self,
 							       row_buffer,
 							       (guint16) row_size,

@@ -1,3 +1,7 @@
+if get_option('plugin_redfish')
+if not get_option('curl')
+  error('curl is required for plugin_redfish')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginRedfish"']
 
 shared_module('fu_plugin_redfish',
@@ -58,4 +62,5 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('redfish-self-test', e)  # added to installed-tests
+endif
 endif

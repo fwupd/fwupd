@@ -1,3 +1,4 @@
+if host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginPciMei"']
 
 install_data(['pci-mei.quirk'],
@@ -26,3 +27,4 @@ shared_module('fu_plugin_pci_mei',
     plugin_deps,
   ],
 )
+endif

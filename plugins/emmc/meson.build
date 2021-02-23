@@ -1,3 +1,7 @@
+if get_option('plugin_emmc')
+if not get_option('gudev')
+  error('gudev is required for plugin_emmc')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginEmmc"']
 
 install_data(['emmc.quirk'],
@@ -25,3 +29,4 @@ shared_module('fu_plugin_emmc',
     plugin_deps,
   ],
 )
+endif

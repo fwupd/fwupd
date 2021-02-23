@@ -1,3 +1,4 @@
+if host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginPciBcr"']
 
 install_data(['pci-bcr.quirk'],
@@ -25,3 +26,4 @@ shared_module('fu_plugin_pci_bcr',
     plugin_deps,
   ],
 )
+endif
