@@ -9,16 +9,16 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#define DFU_TYPE_SECTOR (dfu_sector_get_type ())
-G_DECLARE_DERIVABLE_TYPE (DfuSector, dfu_sector, DFU, SECTOR, GObject)
+#define FU_TYPE_DFU_SECTOR (fu_dfu_sector_get_type ())
+G_DECLARE_DERIVABLE_TYPE (FuDfuSector, fu_dfu_sector, FU, DFU_SECTOR, GObject)
 
-struct _DfuSectorClass
+struct _FuDfuSectorClass
 {
 	GObjectClass		 parent_class;
 };
 
 /**
- * DfuSectorCap:
+ * FuDfuSectorCap:
  * @DFU_SECTOR_CAP_NONE:		No operations possible
  * @DFU_SECTOR_CAP_READABLE:		Sector can be read
  * @DFU_SECTOR_CAP_WRITEABLE:		Sector can be written
@@ -33,20 +33,20 @@ typedef enum {
 	DFU_SECTOR_CAP_ERASEABLE	= 1 << 2,
 	/*< private >*/
 	DFU_SECTOR_CAP_LAST
-} DfuSectorCap;
+} FuDfuSectorCap;
 
-DfuSector	*dfu_sector_new			(guint32	 address,
+FuDfuSector	*fu_dfu_sector_new		(guint32	 address,
 						 guint32	 size,
 						 guint32	 size_left,
 						 guint16	 zone,
 						 guint16	 number,
-						 DfuSectorCap	 cap);
-guint32		 dfu_sector_get_id		(DfuSector	*sector);
-guint32		 dfu_sector_get_address		(DfuSector	*sector);
-guint32		 dfu_sector_get_size		(DfuSector	*sector);
-guint32		 dfu_sector_get_size_left	(DfuSector	*sector);
-guint16		 dfu_sector_get_zone		(DfuSector	*sector);
-guint16		 dfu_sector_get_number		(DfuSector	*sector);
-gboolean	 dfu_sector_has_cap		(DfuSector	*sector,
-						 DfuSectorCap	 cap);
-gchar		*dfu_sector_to_string		(DfuSector	*sector);
+						 FuDfuSectorCap	 cap);
+guint32		 fu_dfu_sector_get_id		(FuDfuSector	*self);
+guint32		 fu_dfu_sector_get_address	(FuDfuSector	*self);
+guint32		 fu_dfu_sector_get_size		(FuDfuSector	*self);
+guint32		 fu_dfu_sector_get_size_left	(FuDfuSector	*self);
+guint16		 fu_dfu_sector_get_zone		(FuDfuSector	*self);
+guint16		 fu_dfu_sector_get_number	(FuDfuSector	*self);
+gboolean	 fu_dfu_sector_has_cap		(FuDfuSector	*self,
+						 FuDfuSectorCap	 cap);
+gchar		*fu_dfu_sector_to_string	(FuDfuSector	*self);

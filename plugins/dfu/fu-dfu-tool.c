@@ -14,8 +14,8 @@
 #include <glib-unix.h>
 #endif
 
-#include "dfu-device.h"
-#include "dfu-sector.h"
+#include "fu-dfu-device.h"
+#include "fu-dfu-sector.h"
 
 #include "fu-chunk.h"
 #include "fu-dfuse-firmware.h"
@@ -30,27 +30,27 @@ typedef struct {
 	gchar			*device_vid_pid;
 	guint16			 transfer_size;
 	FuQuirks		*quirks;
-} DfuToolPrivate;
+} FuDfuTool;
 
 static void
-dfu_tool_private_free (DfuToolPrivate *priv)
+fu_dfu_tool_free (FuDfuTool *self)
 {
-	if (priv == NULL)
+	if (self == NULL)
 		return;
-	g_free (priv->device_vid_pid);
-	if (priv->cancellable != NULL)
-		g_object_unref (priv->cancellable);
-	g_object_unref (priv->quirks);
-	if (priv->cmd_array != NULL)
-		g_ptr_array_unref (priv->cmd_array);
-	g_free (priv);
+	g_free (self->device_vid_pid);
+	if (self->cancellable != NULL)
+		g_object_unref (self->cancellable);
+	g_object_unref (self->quirks);
+	if (self->cmd_array != NULL)
+		g_ptr_array_unref (self->cmd_array);
+	g_free (self);
 }
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(DfuToolPrivate, dfu_tool_private_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuDfuTool, fu_dfu_tool_free)
 #pragma clang diagnostic pop
 
-typedef gboolean (*FuUtilPrivateCb)	(DfuToolPrivate	*util,
+typedef gboolean (*FuUtilPrivateCb)	(FuDfuTool	*util,
 					 gchar		**values,
 					 GError		**error);
 
@@ -62,7 +62,7 @@ typedef struct {
 } FuUtilItem;
 
 static void
-dfu_tool_item_free (FuUtilItem *item)
+fu_dfu_tool_item_free (FuUtilItem *item)
 {
 	g_free (item->name);
 	g_free (item->arguments);
@@ -71,13 +71,13 @@ dfu_tool_item_free (FuUtilItem *item)
 }
 
 static gint
-dfu_tool_sort_command_name_cb (FuUtilItem **item1, FuUtilItem **item2)
+fu_dfu_tool_sort_command_name_cb (FuUtilItem **item1, FuUtilItem **item2)
 {
 	return g_strcmp0 ((*item1)->name, (*item2)->name);
 }
 
 static void
-dfu_tool_add (GPtrArray *array,
+fu_dfu_tool_add (GPtrArray *array,
 	      const gchar *name,
 	      const gchar *arguments,
 	      const gchar *description,
@@ -108,7 +108,7 @@ dfu_tool_add (GPtrArray *array,
 }
 
 static gchar *
-dfu_tool_get_descriptions (GPtrArray *array)
+fu_dfu_tool_get_descriptions (GPtrArray *array)
 {
 	gsize len;
 	const gsize max_len = 31;
@@ -149,16 +149,16 @@ dfu_tool_get_descriptions (GPtrArray *array)
 }
 
 static gboolean
-dfu_tool_run (DfuToolPrivate *priv,
+fu_dfu_tool_run (FuDfuTool *self,
 	      const gchar *command,
 	      gchar **values,
 	      GError **error)
 {
 	/* find command */
-	for (guint i = 0; i < priv->cmd_array->len; i++) {
-		FuUtilItem *item = g_ptr_array_index (priv->cmd_array, i);
+	for (guint i = 0; i < self->cmd_array->len; i++) {
+		FuUtilItem *item = g_ptr_array_index (self->cmd_array, i);
 		if (g_strcmp0 (item->name, command) == 0)
-			return item->callback (priv, values, error);
+			return item->callback (self, values, error);
 	}
 
 	/* not found */
@@ -170,8 +170,8 @@ dfu_tool_run (DfuToolPrivate *priv,
 	return FALSE;
 }
 
-static DfuDevice *
-dfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
+static FuDfuDevice *
+fu_dfu_tool_get_default_device (FuDfuTool *self, GError **error)
 {
 	g_autoptr(GUsbContext) usb_context = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -183,15 +183,15 @@ dfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
 	g_usb_context_enumerate (usb_context);
 
 	/* we specified it manually */
-	if (priv->device_vid_pid != NULL) {
+	if (self->device_vid_pid != NULL) {
 		gchar *tmp;
 		guint64 pid;
 		guint64 vid;
-		g_autoptr(DfuDevice) device = NULL;
+		g_autoptr(FuDfuDevice) device = NULL;
 		g_autoptr(GUsbDevice) usb_device = NULL;
 
 		/* parse */
-		vid = g_ascii_strtoull (priv->device_vid_pid, &tmp, 16);
+		vid = g_ascii_strtoull (self->device_vid_pid, &tmp, 16);
 		if (vid == 0 || vid > G_MAXUINT16) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
@@ -228,8 +228,8 @@ dfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
 				     (guint) vid, (guint) pid);
 			return NULL;
 		}
-		device = dfu_device_new (usb_device);
-		fu_device_set_quirks (FU_DEVICE (device), priv->quirks);
+		device = fu_dfu_device_new (usb_device);
+		fu_device_set_quirks (FU_DEVICE (device), self->quirks);
 		return device;
 	}
 
@@ -237,8 +237,8 @@ dfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
 	devices = g_usb_context_get_devices (usb_context);
 	for (guint i = 0; i < devices->len; i++) {
 		GUsbDevice *usb_device = g_ptr_array_index (devices, i);
-		g_autoptr(DfuDevice) device = dfu_device_new (usb_device);
-		fu_device_set_quirks (FU_DEVICE (device), priv->quirks);
+		g_autoptr(FuDfuDevice) device = fu_dfu_device_new (usb_device);
+		fu_device_set_quirks (FU_DEVICE (device), self->quirks);
 		if (fu_device_probe (FU_DEVICE (device), NULL))
 			return g_steal_pointer (&device);
 	}
@@ -252,7 +252,7 @@ dfu_tool_get_default_device (DfuToolPrivate *priv, GError **error)
 }
 
 static gboolean
-dfu_device_wait_for_replug (DfuToolPrivate *priv, DfuDevice *device, guint timeout, GError **error)
+fu_dfu_device_wait_for_replug (FuDfuTool *self, FuDfuDevice *device, guint timeout, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(GUsbDevice) usb_device2  = NULL;
@@ -281,7 +281,7 @@ dfu_device_wait_for_replug (DfuToolPrivate *priv, DfuDevice *device, guint timeo
 	fu_usb_device_set_dev (FU_USB_DEVICE (device), usb_device2);
 	if (!fu_device_open (FU_DEVICE (device), error))
 		return FALSE;
-	if (!dfu_device_refresh_and_clear (device, error))
+	if (!fu_dfu_device_refresh_and_clear (device, error))
 		return FALSE;
 
 	/* success */
@@ -289,7 +289,7 @@ dfu_device_wait_for_replug (DfuToolPrivate *priv, DfuDevice *device, guint timeo
 }
 
 static GBytes *
-dfu_tool_parse_hex_string (const gchar *val, GError **error)
+fu_dfu_tool_parse_hex_string (const gchar *val, GError **error)
 {
 	gsize result_size;
 	g_autofree guint8 *result = NULL;
@@ -327,7 +327,7 @@ dfu_tool_parse_hex_string (const gchar *val, GError **error)
 }
 
 static guint
-dfu_tool_bytes_replace (GBytes *data, GBytes *search, GBytes *replace)
+fu_dfu_tool_bytes_replace (GBytes *data, GBytes *search, GBytes *replace)
 {
 	gsize data_sz;
 	gsize replace_sz;
@@ -357,7 +357,7 @@ dfu_tool_bytes_replace (GBytes *data, GBytes *search, GBytes *replace)
 }
 
 static gboolean
-dfu_tool_parse_firmware_from_file (FuFirmware *firmware, GFile *file,
+fu_dfu_tool_parse_firmware_from_file (FuFirmware *firmware, GFile *file,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
@@ -371,7 +371,7 @@ dfu_tool_parse_firmware_from_file (FuFirmware *firmware, GFile *file,
 }
 
 static gboolean
-dfu_tool_write_firmware_to_file (FuFirmware *firmware, GFile *file, GError **error)
+fu_dfu_tool_write_firmware_to_file (FuFirmware *firmware, GFile *file, GError **error)
 {
 	const guint8 *data;
 	gsize length = 0;
@@ -391,7 +391,7 @@ dfu_tool_write_firmware_to_file (FuFirmware *firmware, GFile *file, GError **err
 }
 
 static gboolean
-dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
+fu_dfu_tool_replace_data (FuDfuTool *self, gchar **values, GError **error)
 {
 	guint cnt = 0;
 	g_autoptr(FuFirmware) firmware = NULL;
@@ -413,17 +413,17 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* open */
 	file = g_file_new_for_path (values[0]);
 	firmware = fu_dfu_firmware_new ();
-	if (!dfu_tool_parse_firmware_from_file (firmware, file,
+	if (!fu_dfu_tool_parse_firmware_from_file (firmware, file,
 				      FWUPD_INSTALL_FLAG_NONE,
 				      error)) {
 		return FALSE;
 	}
 
 	/* parse hex values */
-	data_search = dfu_tool_parse_hex_string (values[1], error);
+	data_search = fu_dfu_tool_parse_hex_string (values[1], error);
 	if (data_search == NULL)
 		return FALSE;
-	data_replace = dfu_tool_parse_hex_string (values[2], error);
+	data_replace = fu_dfu_tool_parse_hex_string (values[2], error);
 	if (data_replace == NULL)
 		return FALSE;
 	if (g_bytes_get_size (data_search) != g_bytes_get_size (data_replace)) {
@@ -446,7 +446,7 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 			g_autoptr(GBytes) contents = fu_chunk_get_bytes (chk);
 			if (contents == NULL)
 				continue;
-			cnt += dfu_tool_bytes_replace (contents, data_search, data_replace);
+			cnt += fu_dfu_tool_bytes_replace (contents, data_search, data_replace);
 		}
 	}
 
@@ -460,11 +460,11 @@ dfu_tool_replace_data (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* write out new file */
-	return dfu_tool_write_firmware_to_file (firmware, file, error);
+	return fu_dfu_tool_write_firmware_to_file (firmware, file, error);
 }
 
 static void
-fu_tool_action_changed_cb (FuDevice *device, GParamSpec *pspec, DfuToolPrivate *priv)
+fu_tool_action_changed_cb (FuDevice *device, GParamSpec *pspec, FuDfuTool *self)
 {
 	g_print ("%s:\t%u%%\n",
 		 fwupd_status_to_string (fu_device_get_status (device)),
@@ -472,13 +472,13 @@ fu_tool_action_changed_cb (FuDevice *device, GParamSpec *pspec, DfuToolPrivate *
 }
 
 static gboolean
-dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
+fu_dfu_tool_read_alt (FuDfuTool *self, gchar **values, GError **error)
 {
-	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
+	FuDfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
 	g_autofree gchar *str_debug = NULL;
-	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(FuDfuDevice) device = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(DfuTarget) target = NULL;
+	g_autoptr(FuDfuTarget) target = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GFile) file = NULL;
 
@@ -493,38 +493,38 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* open correct device */
-	device = dfu_tool_get_default_device (priv, error);
+	device = fu_dfu_tool_get_default_device (self, error);
 	if (device == NULL)
 		return FALSE;
-	if (priv->transfer_size > 0)
-		dfu_device_set_transfer_size (device, priv->transfer_size);
+	if (self->transfer_size > 0)
+		fu_dfu_device_set_transfer_size (device, self->transfer_size);
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!dfu_device_refresh (device, error))
+	if (!fu_dfu_device_refresh (device, error))
 		return FALSE;
 
 	/* set up progress */
 	g_signal_connect (device, "notify::status",
-			  G_CALLBACK (fu_tool_action_changed_cb), priv);
+			  G_CALLBACK (fu_tool_action_changed_cb), self);
 	g_signal_connect (device, "notify::progress",
-			  G_CALLBACK (fu_tool_action_changed_cb), priv);
+			  G_CALLBACK (fu_tool_action_changed_cb), self);
 
 	/* APP -> DFU */
 	if (!fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug ("detaching");
 		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
-		if (!dfu_device_wait_for_replug (priv, device,
-						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
-						 error))
+		if (!fu_dfu_device_wait_for_replug (self, device,
+						    FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
+						    error))
 			return FALSE;
 	}
 
 	/* transfer */
-	target = dfu_device_get_target_by_alt_name (device,
-						    values[1],
-						    NULL);
+	target = fu_dfu_device_get_target_by_alt_name (device,
+						       values[1],
+						       NULL);
 	if (target == NULL) {
 		gchar *endptr;
 		guint64 tmp = g_ascii_strtoull (values[1], &endptr, 10);
@@ -536,7 +536,7 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 				     values[1]);
 			return FALSE;
 		}
-		target = dfu_device_get_target_by_alt_setting (device,
+		target = fu_dfu_device_get_target_by_alt_setting (device,
 							       (guint8) tmp,
 							       error);
 		if (target == NULL)
@@ -545,20 +545,20 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* do transfer */
 	firmware = fu_dfuse_firmware_new ();
-	fu_dfu_firmware_set_vid (FU_DFU_FIRMWARE (firmware), dfu_device_get_runtime_vid (device));
-	fu_dfu_firmware_set_pid (FU_DFU_FIRMWARE (firmware), dfu_device_get_runtime_pid (device));
-	if (!dfu_target_upload (target, firmware, flags, error))
+	fu_dfu_firmware_set_vid (FU_DFU_FIRMWARE (firmware), fu_dfu_device_get_runtime_vid (device));
+	fu_dfu_firmware_set_pid (FU_DFU_FIRMWARE (firmware), fu_dfu_device_get_runtime_pid (device));
+	if (!fu_dfu_target_upload (target, firmware, flags, error))
 		return FALSE;
 
 	/* do host reset */
 	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
-	if (!dfu_device_wait_for_replug (priv, device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
+	if (!fu_dfu_device_wait_for_replug (self, device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
 
 	/* save file */
 	file = g_file_new_for_path (values[0]);
-	if (!dfu_tool_write_firmware_to_file (firmware, file, error))
+	if (!fu_dfu_tool_write_firmware_to_file (firmware, file, error))
 		return FALSE;
 
 	/* print the new object */
@@ -571,11 +571,11 @@ dfu_tool_read_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
+fu_dfu_tool_read (FuDfuTool *self, gchar **values, GError **error)
 {
-	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
+	FuDfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_NONE;
 	g_autofree gchar *str_debug = NULL;
-	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(FuDfuDevice) device = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -590,20 +590,20 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* open correct device */
-	device = dfu_tool_get_default_device (priv, error);
+	device = fu_dfu_tool_get_default_device (self, error);
 	if (device == NULL)
 		return FALSE;
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!dfu_device_refresh (device, error))
+	if (!fu_dfu_device_refresh (device, error))
 		return FALSE;
 
 	/* APP -> DFU */
 	if (!fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
-		if (!dfu_device_wait_for_replug (priv, device,
+		if (!fu_dfu_device_wait_for_replug (self, device,
 						 FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE,
 						 error)) {
 			return FALSE;
@@ -612,22 +612,22 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 
 	/* transfer */
 	g_signal_connect (device, "notify::status",
-			  G_CALLBACK (fu_tool_action_changed_cb), priv);
+			  G_CALLBACK (fu_tool_action_changed_cb), self);
 	g_signal_connect (device, "notify::progress",
-			  G_CALLBACK (fu_tool_action_changed_cb), priv);
-	firmware = dfu_device_upload (device, flags, error);
+			  G_CALLBACK (fu_tool_action_changed_cb), self);
+	firmware = fu_dfu_device_upload (device, flags, error);
 	if (firmware == NULL)
 		return FALSE;
 
 	/* do host reset */
 	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
-	if (!dfu_device_wait_for_replug (priv, device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
+	if (!fu_dfu_device_wait_for_replug (self, device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
 
 	/* save file */
 	file = g_file_new_for_path (values[0]);
-	if (!dfu_tool_write_firmware_to_file (firmware, file, error))
+	if (!fu_dfu_tool_write_firmware_to_file (firmware, file, error))
 		return FALSE;
 
 	/* print the new object */
@@ -640,14 +640,14 @@ dfu_tool_read (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
+fu_dfu_tool_write_alt (FuDfuTool *self, gchar **values, GError **error)
 {
-	DfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
+	FuDfuTargetTransferFlags flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
 	g_autofree gchar *str_debug = NULL;
-	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(FuDfuDevice) device = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuFirmwareImage) image = NULL;
-	g_autoptr(DfuTarget) target = NULL;
+	g_autoptr(FuDfuTarget) target = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GFile) file = NULL;
 
@@ -665,35 +665,35 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	/* open file */
 	firmware = fu_dfuse_firmware_new ();
 	file = g_file_new_for_path (values[0]);
-	if (!dfu_tool_parse_firmware_from_file (firmware, file,
+	if (!fu_dfu_tool_parse_firmware_from_file (firmware, file,
 				      FWUPD_INSTALL_FLAG_NONE,
 				      error))
 		return FALSE;
 
 	/* open correct device */
-	device = dfu_tool_get_default_device (priv, error);
+	device = fu_dfu_tool_get_default_device (self, error);
 	if (device == NULL)
 		return FALSE;
-	if (priv->transfer_size > 0)
-		dfu_device_set_transfer_size (device, priv->transfer_size);
+	if (self->transfer_size > 0)
+		fu_dfu_device_set_transfer_size (device, self->transfer_size);
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!dfu_device_refresh (device, error))
+	if (!fu_dfu_device_refresh (device, error))
 		return FALSE;
 
 	/* set up progress */
 	g_signal_connect (device, "notify::status",
-			  G_CALLBACK (fu_tool_action_changed_cb), priv);
+			  G_CALLBACK (fu_tool_action_changed_cb), self);
 	g_signal_connect (device, "notify::progress",
-			  G_CALLBACK (fu_tool_action_changed_cb), priv);
+			  G_CALLBACK (fu_tool_action_changed_cb), self);
 
 	/* APP -> DFU */
 	if (!fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug ("detaching");
 		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
-		if (!dfu_device_wait_for_replug (priv, device, 5000, error))
+		if (!fu_dfu_device_wait_for_replug (self, device, 5000, error))
 			return FALSE;
 	}
 
@@ -702,9 +702,7 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	g_debug ("DFU: %s", str_debug);
 
 	/* get correct target on device */
-	target = dfu_device_get_target_by_alt_name (device,
-						    values[1],
-						    NULL);
+	target = fu_dfu_device_get_target_by_alt_name (device, values[1], NULL);
 	if (target == NULL) {
 		gchar *endptr;
 		guint64 tmp = g_ascii_strtoull (values[1], &endptr, 10);
@@ -716,9 +714,9 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 				     values[1]);
 			return FALSE;
 		}
-		target = dfu_device_get_target_by_alt_setting (device,
-							       (guint8) tmp,
-							       error);
+		target = fu_dfu_device_get_target_by_alt_setting (device,
+								  (guint8) tmp,
+								  error);
 		if (target == NULL)
 			return FALSE;
 	}
@@ -749,13 +747,13 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	if (!dfu_target_download (target, image, flags, error))
+	if (!fu_dfu_target_download (target, image, flags, error))
 		return FALSE;
 
 	/* do host reset */
 	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
-	if (!dfu_device_wait_for_replug (priv, device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
+	if (!fu_dfu_device_wait_for_replug (self, device, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE, error))
 		return FALSE;
 
 	/* success */
@@ -764,10 +762,10 @@ dfu_tool_write_alt (DfuToolPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
+fu_dfu_tool_write (FuDfuTool *self, gchar **values, GError **error)
 {
 	FwupdInstallFlags flags = FWUPD_INSTALL_FLAG_NONE;
-	g_autoptr(DfuDevice) device = NULL;
+	g_autoptr(FuDfuDevice) device = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 
@@ -786,36 +784,36 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* open correct device */
-	device = dfu_tool_get_default_device (priv, error);
+	device = fu_dfu_tool_get_default_device (self, error);
 	if (device == NULL)
 		return FALSE;
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!dfu_device_refresh (device, error))
+	if (!fu_dfu_device_refresh (device, error))
 		return FALSE;
 
 	/* APP -> DFU */
 	if (!fu_device_has_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_device_detach (FU_DEVICE (device), error))
 			return FALSE;
-		if (!dfu_device_wait_for_replug (priv, device,
-						 fu_device_get_remove_delay (FU_DEVICE (device)),
-						 error))
+		if (!fu_dfu_device_wait_for_replug (self, device,
+						    fu_device_get_remove_delay (FU_DEVICE (device)),
+						    error))
 			return FALSE;
 	}
 
 	/* allow wildcards */
-	if (priv->force) {
+	if (self->force) {
 		flags |= FWUPD_INSTALL_FLAG_IGNORE_VID_PID;
 		flags |= FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM;
 	}
 
 	/* transfer */
 	g_signal_connect (device, "notify::status",
-			  G_CALLBACK (fu_tool_action_changed_cb), priv);
+			  G_CALLBACK (fu_tool_action_changed_cb), self);
 	g_signal_connect (device, "notify::progress",
-			  G_CALLBACK (fu_tool_action_changed_cb), priv);
+			  G_CALLBACK (fu_tool_action_changed_cb), self);
 	if (!fu_device_write_firmware (FU_DEVICE (device), fw, flags, error))
 		return FALSE;
 
@@ -823,8 +821,8 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 	if (!fu_device_attach (FU_DEVICE (device), error))
 		return FALSE;
 
-	if (dfu_device_has_attribute (device, DFU_DEVICE_ATTRIBUTE_MANIFEST_TOL)) {
-		if (!dfu_device_wait_for_replug (priv, device, fu_device_get_remove_delay (FU_DEVICE (device)), error))
+	if (fu_dfu_device_has_attribute (device, FU_DFU_DEVICE_ATTR_MANIFEST_TOL)) {
+		if (!fu_dfu_device_wait_for_replug (self, device, fu_device_get_remove_delay (FU_DEVICE (device)), error))
 			return FALSE;
 	}
 
@@ -836,11 +834,11 @@ dfu_tool_write (DfuToolPrivate *priv, gchar **values, GError **error)
 
 #ifdef HAVE_GIO_UNIX
 static gboolean
-dfu_tool_sigint_cb (gpointer user_data)
+fu_dfu_tool_sigint_cb (gpointer user_data)
 {
-	DfuToolPrivate *priv = (DfuToolPrivate *) user_data;
+	FuDfuTool *self = (FuDfuTool *) user_data;
 	g_debug ("Handling SIGINT");
-	g_cancellable_cancel (priv->cancellable);
+	g_cancellable_cancel (self->cancellable);
 	return FALSE;
 }
 #endif
@@ -852,7 +850,7 @@ main (int argc, char *argv[])
 	gboolean verbose = FALSE;
 	gboolean version = FALSE;
 	g_autofree gchar *cmd_descriptions = NULL;
-	g_autoptr(DfuToolPrivate) priv = g_new0 (DfuToolPrivate, 1);
+	g_autoptr(FuDfuTool) self = g_new0 (FuDfuTool, 1);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GOptionContext) context = NULL;
 	const GOptionEntry options[] = {
@@ -860,11 +858,11 @@ main (int argc, char *argv[])
 			_("Print the version number"), NULL },
 		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
 			_("Print verbose debug statements"), NULL },
-		{ "device", 'd', 0, G_OPTION_ARG_STRING, &priv->device_vid_pid,
+		{ "device", 'd', 0, G_OPTION_ARG_STRING, &self->device_vid_pid,
 			_("Specify Vendor/Product ID(s) of DFU device"), _("VID:PID") },
-		{ "transfer-size", 't', 0, G_OPTION_ARG_STRING, &priv->transfer_size,
+		{ "transfer-size", 't', 0, G_OPTION_ARG_STRING, &self->transfer_size,
 			_("Specify the number of bytes per USB transfer"), _("BYTES") },
-		{ "force", '\0', 0, G_OPTION_ARG_NONE, &priv->force,
+		{ "force", '\0', 0, G_OPTION_ARG_NONE, &self->force,
 			_("Force the action ignoring all warnings"), NULL },
 		{ NULL}
 	};
@@ -876,66 +874,66 @@ main (int argc, char *argv[])
 	textdomain (GETTEXT_PACKAGE);
 
 	/* add commands */
-	priv->cmd_array = g_ptr_array_new_with_free_func ((GDestroyNotify) dfu_tool_item_free);
-	dfu_tool_add (priv->cmd_array,
+	self->cmd_array = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_dfu_tool_item_free);
+	fu_dfu_tool_add (self->cmd_array,
 		     "read",
 		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 		     _("FILENAME"),
 		     /* TRANSLATORS: command description */
 		     _("Read firmware from device into a file"),
-		     dfu_tool_read);
-	dfu_tool_add (priv->cmd_array,
+		     fu_dfu_tool_read);
+	fu_dfu_tool_add (self->cmd_array,
 		     "read-alt",
 		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 		     _("FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"),
 		     /* TRANSLATORS: command description */
 		     _("Read firmware from one partition into a file"),
-		     dfu_tool_read_alt);
-	dfu_tool_add (priv->cmd_array,
+		     fu_dfu_tool_read_alt);
+	fu_dfu_tool_add (self->cmd_array,
 		     "write",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Write firmware from file into device"),
-		     dfu_tool_write);
-	dfu_tool_add (priv->cmd_array,
+		     fu_dfu_tool_write);
+	fu_dfu_tool_add (self->cmd_array,
 		     "write-alt",
 		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 		     _("FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"),
 		     /* TRANSLATORS: command description */
 		     _("Write firmware from file into one partition"),
-		     dfu_tool_write_alt);
-	dfu_tool_add (priv->cmd_array,
+		     fu_dfu_tool_write_alt);
+	fu_dfu_tool_add (self->cmd_array,
 		     "replace-data",
 		     NULL,
 		     /* TRANSLATORS: command description */
 		     _("Replace data in an existing firmware file"),
-		     dfu_tool_replace_data);
+		     fu_dfu_tool_replace_data);
 
 	/* use quirks */
-	priv->quirks = fu_quirks_new ();
-	if (!fu_quirks_load (priv->quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error)) {
+	self->quirks = fu_quirks_new ();
+	if (!fu_quirks_load (self->quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error)) {
 		/* TRANSLATORS: quirks are device-specific workarounds */
 		g_print ("%s: %s\n", _("Failed to load quirks"), error->message);
 		return EXIT_FAILURE;
 	}
 
 	/* do stuff on ctrl+c */
-	priv->cancellable = g_cancellable_new ();
+	self->cancellable = g_cancellable_new ();
 #ifdef HAVE_GIO_UNIX
 	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
 				SIGINT,
-				dfu_tool_sigint_cb,
-				priv,
+				fu_dfu_tool_sigint_cb,
+				self,
 				NULL);
 #endif
 
 	/* sort by command name */
-	g_ptr_array_sort (priv->cmd_array,
-			  (GCompareFunc) dfu_tool_sort_command_name_cb);
+	g_ptr_array_sort (self->cmd_array,
+			  (GCompareFunc) fu_dfu_tool_sort_command_name_cb);
 
 	/* get a list of the commands */
 	context = g_option_context_new (NULL);
-	cmd_descriptions = dfu_tool_get_descriptions (priv->cmd_array);
+	cmd_descriptions = fu_dfu_tool_get_descriptions (self->cmd_array);
 	g_option_context_set_summary (context, cmd_descriptions);
 
 	/* TRANSLATORS: DFU stands for device firmware update */
@@ -959,7 +957,7 @@ main (int argc, char *argv[])
 	}
 
 	/* run the specified command */
-	ret = dfu_tool_run (priv, argv[1], (gchar**) &argv[2], &error);
+	ret = fu_dfu_tool_run (self, argv[1], (gchar**) &argv[2], &error);
 	if (!ret) {
 		if (g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL)) {
 			g_autofree gchar *tmp = NULL;

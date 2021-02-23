@@ -9,8 +9,6 @@ to `DFU mode' which allows the user to read and write firmware.
 Either the whole device can be written in one operation, or individual
 `targets' can be specified with the alternative name or number.
 .PP
-\fBdfu-tool\fR uses the libdfu shared
-library to perform actions.
 All synchronous actions can be safely cancelled and on failure will return
 errors with both a type and a full textual description.
 libdfu supports DFU 1.0, DFU 1.1 and the ST DfuSe vendor extension, and
