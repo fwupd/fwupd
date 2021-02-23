@@ -137,6 +137,7 @@ Provides: fwupdate-efi
 
 # optional, but a really good idea
 Recommends: udisks2
+Recommends: bluez
 
 %if 0%{?have_modem_manager}
 Recommends: %{name}-plugin-modem-manager
@@ -253,6 +254,7 @@ or server machines.
     -Dplugin_modem_manager=false \
 %endif
     -Dman=true \
+    -Dbluez=true \
     -Dsupported_build=true
 
 %meson_build
