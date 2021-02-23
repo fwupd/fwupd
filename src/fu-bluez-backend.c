@@ -43,10 +43,10 @@ fu_bluez_backend_object_properties_changed (FuBluezBackend *self, GDBusProxy *pr
 	device_tmp = g_hash_table_lookup (self->devices, path);
 	if (device_tmp != NULL) {
 		if (suitable) {
-			g_debug ("ignoring suitable changed Bluez device: %s", path);
+			g_debug ("ignoring suitable changed BlueZ device: %s", path);
 			return;
 		}
-		g_debug ("removing unsuitable Bluez device: %s", path);
+		g_debug ("removing unsuitable BlueZ device: %s", path);
 		fu_backend_device_removed (FU_BACKEND (self), device_tmp);
 		g_hash_table_remove (self->devices, path);
 		return;
@@ -61,7 +61,7 @@ fu_bluez_backend_object_properties_changed (FuBluezBackend *self, GDBusProxy *pr
 			    "object-manager", self->object_manager,
 			    "proxy", proxy,
 			    NULL);
-	g_debug ("adding suitable Bluez device: %s", path);
+	g_debug ("adding suitable BlueZ device: %s", path);
 	g_hash_table_insert (self->devices, g_strdup (path), g_object_ref (dev));
 	fu_backend_device_added (FU_BACKEND (self), FU_DEVICE (dev));
 }
@@ -109,7 +109,7 @@ fu_bluez_backend_object_removed_cb (GDBusObjectManager *manager,
 	device_tmp = g_hash_table_lookup (self->devices, path);
 	if (device_tmp == NULL)
 		return;
-	g_debug ("removing Bluez device: %s", path);
+	g_debug ("removing BlueZ device: %s", path);
 	fu_backend_device_removed (FU_BACKEND (self), device_tmp);
 	g_hash_table_remove (self->devices, path);
 }
