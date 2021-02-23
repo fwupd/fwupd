@@ -366,7 +366,7 @@ fu_bluez_device_read_string (FuBluezDevice *self, const gchar *uuid, GError **er
  *
  * Writes to a UUID on the device.
  *
- * Returns: (transfer full): data, or %NULL for error
+ * Returns: %TRUE if all the data was written
  *
  * Since: 1.5.7
  **/
