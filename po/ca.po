@@ -1310,6 +1310,10 @@ msgid "Only show single PCR value"
 msgstr "Mostra només un únic valor de PCR"
 
 #. TRANSLATORS: command line option
+msgid "Only use IPFS when downloading files"
+msgstr "Empra només IPFS quan es baixin els fitxers"
+
+#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Preferència sobre el camí ESP predeterminat"
 
