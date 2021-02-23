@@ -50,10 +50,15 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  LIBFWUPDPLUGIN_1.5.4@LIBFWUPDPLUGIN_1.5.4 1.5.4
  LIBFWUPDPLUGIN_1.5.5@LIBFWUPDPLUGIN_1.5.5 1.5.5
  LIBFWUPDPLUGIN_1.5.6@LIBFWUPDPLUGIN_1.5.6 1.5.6
+ LIBFWUPDPLUGIN_1.5.7@LIBFWUPDPLUGIN_1.5.7 1.5.7
  fu_archive_get_type@LIBFWUPDPLUGIN_1.2.2 1.2.2
  fu_archive_iterate@LIBFWUPDPLUGIN_1.3.4 1.3.4
  fu_archive_lookup_by_fn@LIBFWUPDPLUGIN_1.2.2 1.2.2
  fu_archive_new@LIBFWUPDPLUGIN_1.2.2 1.2.2
+ fu_bluez_device_get_type@LIBFWUPDPLUGIN_1.5.7 1.5.7
+ fu_bluez_device_read@LIBFWUPDPLUGIN_1.5.7 1.5.7
+ fu_bluez_device_read_string@LIBFWUPDPLUGIN_1.5.7 1.5.7
+ fu_bluez_device_write@LIBFWUPDPLUGIN_1.5.7 1.5.7
  fu_byte_array_append_uint16@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_byte_array_append_uint32@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_byte_array_append_uint8@LIBFWUPDPLUGIN_1.3.1 1.3.1
@@ -289,7 +294,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_efivar_exists@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_efivar_get_data@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_efivar_get_data_bytes@LIBFWUPDPLUGIN_1.5.0 1.5.0
- fu_efivar_get_monitor@LIBFWUPDPLUGIN_1.5.5 1.5.6-1
+ fu_efivar_get_monitor@LIBFWUPDPLUGIN_1.5.5 1.5.5
  fu_efivar_get_names@LIBFWUPDPLUGIN_1.4.7 1.4.7
  fu_efivar_secure_boot_enabled@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_efivar_secure_boot_enabled_full@LIBFWUPDPLUGIN_1.5.0 1.5.0
@@ -312,6 +317,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_firmware_get_images@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_get_type@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_get_version@LIBFWUPDPLUGIN_1.3.3 1.3.3
+ fu_firmware_get_version_raw@LIBFWUPDPLUGIN_1.5.7 1.5.7
  fu_firmware_has_flag@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_firmware_image_add_chunk@LIBFWUPDPLUGIN_1.5.6 1.5.6
  fu_firmware_image_build@LIBFWUPDPLUGIN_1.5.0 1.5.0
@@ -347,6 +353,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_firmware_remove_image_by_id@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_firmware_remove_image_by_idx@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_firmware_set_version@LIBFWUPDPLUGIN_1.3.3 1.3.3
+ fu_firmware_set_version_raw@LIBFWUPDPLUGIN_1.5.7 1.5.7
  fu_firmware_strparse_uint16@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_strparse_uint16_safe@LIBFWUPDPLUGIN_1.5.6 1.5.6
  fu_firmware_strparse_uint24@LIBFWUPDPLUGIN_1.3.1 1.3.1

@@ -1,3 +1,12 @@
+fwupd (1.5.7-1) UNRELEASED; urgency=medium
+
+  * New upstream version (1.5.7)
+    - Fixes issues with SBAT on UEFI.
+  * Fixes dependencies for -dev packages:
+    Closes: #980691, #980684
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Tue, 23 Feb 2021 09:03:46 -0600
+
 fwupd (1.5.6-1) unstable; urgency=medium
 
   [ Steve McIntyre ]

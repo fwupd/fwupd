@@ -3,7 +3,8 @@ Upstream-Name: fwupd
 Source: https://github.com/fwupd/fwupd
 
 Files: *
-Copyright: 9elements Agency GmbH <patrick.rudolph@9elements.com>
+Copyright: 
+	   9elements Agency GmbH <patrick.rudolph@9elements.com>
 	   Aleix Pol <aleixpol@kde.org>
 	   Aleksander Morgado <aleksander@aleksander.es>
 	   Andrew Duggan
@@ -30,9 +31,12 @@ Copyright: 9elements Agency GmbH <patrick.rudolph@9elements.com>
 	   Peter Jones <pjones@redhat.com>
 	   Philip Withnall <philip@tecnocode.co.uk>
 	   Philip Withnall <pwithnall@endlessos.org>
+	   Realtek Corporation
 	   Realtek Semiconductor Corporation
 	   Red Hat, Inc.
+	   Ricardo Cañuelo <ricardo.canuelo@collabora.com>
 	   Richard Hughes <richard@hughsie.com>
+	   Ricky Wu <ricky_wu@realtek.com> <spring1527@gmail.com>
 	   Ryan Chang <ryan.chang@synaptics.com>
 	   Synaptics
 	   Synaptics Inc
