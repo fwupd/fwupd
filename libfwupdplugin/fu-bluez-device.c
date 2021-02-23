@@ -381,9 +381,9 @@ fu_bluez_device_write (FuBluezDevice *self,
 	g_autoptr(GDBusProxy) proxy = NULL;
 	g_autoptr(GVariantBuilder) opt_builder = NULL;
 	g_autoptr(GVariantBuilder) val_builder = NULL;
-	g_autoptr(GVariant) opt_variant = NULL;
 	g_autoptr(GVariant) ret = NULL;
-	g_autoptr(GVariant) val_variant = NULL;
+	GVariant *opt_variant = NULL;
+	GVariant *val_variant = NULL;
 
 	path = g_hash_table_lookup (priv->uuid_paths, uuid);
 	if (path == NULL) {
