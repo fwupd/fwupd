@@ -14,7 +14,6 @@
 struct _FuBluezBackend {
 	FuBackend		 parent_instance;
 	GDBusObjectManager	*object_manager;
-	GHashTable		*devices;	/* object_path : * FuDevice */
 };
 
 G_DEFINE_TYPE (FuBluezBackend, fu_bluez_backend, FU_TYPE_BACKEND)
@@ -40,7 +39,7 @@ fu_bluez_backend_object_properties_changed (FuBluezBackend *self, GDBusProxy *pr
 			g_variant_get_boolean (val_paired);
 
 	/* is this an existing device we've previously added */
-	device_tmp = g_hash_table_lookup (self->devices, path);
+	device_tmp = fu_backend_lookup_by_id (FU_BACKEND (self), path);
 	if (device_tmp != NULL) {
 		if (suitable) {
 			g_debug ("ignoring suitable changed BlueZ device: %s", path);
@@ -48,7 +47,6 @@ fu_bluez_backend_object_properties_changed (FuBluezBackend *self, GDBusProxy *pr
 		}
 		g_debug ("removing unsuitable BlueZ device: %s", path);
 		fu_backend_device_removed (FU_BACKEND (self), device_tmp);
-		g_hash_table_remove (self->devices, path);
 		return;
 	}
 
@@ -58,11 +56,11 @@ fu_bluez_backend_object_properties_changed (FuBluezBackend *self, GDBusProxy *pr
 
 	/* create device */
 	dev = g_object_new (FU_TYPE_BLUEZ_DEVICE,
+			    "backend-id", path,
 			    "object-manager", self->object_manager,
 			    "proxy", proxy,
 			    NULL);
 	g_debug ("adding suitable BlueZ device: %s", path);
-	g_hash_table_insert (self->devices, g_strdup (path), g_object_ref (dev));
 	fu_backend_device_added (FU_BACKEND (self), FU_DEVICE (dev));
 }
 
@@ -106,12 +104,11 @@ fu_bluez_backend_object_removed_cb (GDBusObjectManager *manager,
 	const gchar *path = g_dbus_object_get_object_path (object);
 	FuDevice *device_tmp;
 
-	device_tmp = g_hash_table_lookup (self->devices, path);
+	device_tmp = fu_backend_lookup_by_id (FU_BACKEND (self), path);
 	if (device_tmp == NULL)
 		return;
 	g_debug ("removing BlueZ device: %s", path);
 	fu_backend_device_removed (FU_BACKEND (self), device_tmp);
-	g_hash_table_remove (self->devices, path);
 }
 
 static gboolean
@@ -158,16 +155,12 @@ fu_bluez_backend_finalize (GObject *object)
 	FuBluezBackend *self = FU_BLUEZ_BACKEND (object);
 	if (self->object_manager != NULL)
 		g_object_unref (self->object_manager);
-	g_hash_table_unref (self->devices);
 	G_OBJECT_CLASS (fu_bluez_backend_parent_class)->finalize (object);
 }
 
 static void
 fu_bluez_backend_init (FuBluezBackend *self)
 {
-	self->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       g_free,
-					       (GDestroyNotify) g_object_unref);
 }
 
 static void

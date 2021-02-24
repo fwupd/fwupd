@@ -13,6 +13,7 @@
 typedef struct {
 	gchar				*name;
 	gboolean			 enabled;
+	GHashTable			*devices;	/* device_id : * FuDevice */
 } FuBackendPrivate;
 
 enum {
@@ -36,17 +37,23 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuBackend, fu_backend, G_TYPE_OBJECT)
 void
 fu_backend_device_added (FuBackend *self, FuDevice *device)
 {
+	FuBackendPrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_BACKEND (self));
 	g_return_if_fail (FU_IS_DEVICE (device));
+	g_hash_table_insert (priv->devices,
+			     g_strdup (fu_device_get_backend_id (device)),
+			     g_object_ref (device));
 	g_signal_emit (self, signals[SIGNAL_ADDED], 0, device);
 }
 
 void
 fu_backend_device_removed (FuBackend *self, FuDevice *device)
 {
+	FuBackendPrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_BACKEND (self));
 	g_return_if_fail (FU_IS_DEVICE (device));
 	g_signal_emit (self, signals[SIGNAL_REMOVED], 0, device);
+	g_hash_table_remove (priv->devices, fu_device_get_backend_id (device));
 }
 
 void
@@ -121,6 +128,15 @@ fu_backend_set_enabled (FuBackend *self, gboolean enabled)
 	priv->enabled = FALSE;
 }
 
+/* (transfer none) */
+FuDevice *
+fu_backend_lookup_by_id (FuBackend *self, const gchar *device_id)
+{
+	FuBackendPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_BACKEND (self), NULL);
+	return g_hash_table_lookup (priv->devices, device_id);
+}
+
 static void
 fu_backend_get_property (GObject *object, guint prop_id,
 			 GValue *value, GParamSpec *pspec)
@@ -158,6 +174,9 @@ fu_backend_init (FuBackend *self)
 {
 	FuBackendPrivate *priv = GET_PRIVATE (self);
 	priv->enabled = TRUE;
+	priv->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
+					       g_free,
+					       (GDestroyNotify) g_object_unref);
 }
 
 static void
@@ -166,6 +185,7 @@ fu_backend_finalize (GObject *object)
 	FuBackend *self = FU_BACKEND (object);
 	FuBackendPrivate *priv = GET_PRIVATE (self);
 	g_free (priv->name);
+	g_hash_table_unref (priv->devices);
 	G_OBJECT_CLASS (fu_backend_parent_class)->finalize (object);
 }
 

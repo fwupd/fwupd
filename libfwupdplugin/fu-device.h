@@ -284,6 +284,9 @@ void		 fu_device_set_physical_id		(FuDevice	*self,
 const gchar	*fu_device_get_logical_id		(FuDevice	*self);
 void		 fu_device_set_logical_id		(FuDevice	*self,
 							 const gchar	*logical_id);
+const gchar	*fu_device_get_backend_id		(FuDevice	*self);
+void		 fu_device_set_backend_id		(FuDevice	*self,
+							 const gchar	*backend_id);
 const gchar	*fu_device_get_proxy_guid		(FuDevice	*self);
 void		 fu_device_set_proxy_guid		(FuDevice	*self,
 							 const gchar	*proxy_guid);

@@ -564,6 +564,9 @@ fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 	fu_udev_device_set_driver (self, g_udev_device_get_driver (priv->udev_device));
 	fu_udev_device_set_device_file (self, g_udev_device_get_device_file (priv->udev_device));
 
+	/* so we can display something sensible for unclaimed devices */
+	fu_device_set_backend_id (FU_DEVICE (self), g_udev_device_get_sysfs_path (priv->udev_device));
+
 	/* fall back to the first thing handled by misc drivers */
 	if (priv->device_file == NULL) {
 		/* perhaps we should unconditionally fall back? or perhaps
