@@ -17,7 +17,6 @@ struct _FuUdevBackend {
 	FuBackend		 parent_instance;
 	GUdevClient		*gudev_client;
 	GHashTable		*changed_idle_ids;	/* sysfs:FuUdevBackendHelper */
-	GHashTable		*devices;		/* sysfs_path : FuDevice */
 	GPtrArray		*subsystems;
 };
 
@@ -29,9 +28,6 @@ fu_udev_backend_device_add (FuUdevBackend *self, GUdevDevice *udev_device)
 	g_autoptr(FuUdevDevice) device = fu_udev_device_new (udev_device);
 
 	/* success */
-	g_hash_table_insert (self->devices,
-			     g_strdup (g_udev_device_get_sysfs_path (udev_device)),
-			     g_object_ref (device));
 	fu_backend_device_added (FU_BACKEND (self), FU_DEVICE (device));
 }
 
@@ -41,16 +37,14 @@ fu_udev_backend_device_remove (FuUdevBackend *self, GUdevDevice *udev_device)
 	FuDevice *device_tmp;
 
 	/* find the device we enumerated */
-	device_tmp = g_hash_table_lookup (self->devices,
-					  g_udev_device_get_sysfs_path (udev_device));
+	device_tmp = fu_backend_lookup_by_id (FU_BACKEND (self),
+					      g_udev_device_get_sysfs_path (udev_device));
 	if (device_tmp != NULL) {
 		if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
 			g_debug ("UDEV %s removed",
 				 g_udev_device_get_sysfs_path (udev_device));
 		}
 		fu_backend_device_removed (FU_BACKEND (self), device_tmp);
-		g_hash_table_remove (self->devices,
-				     g_udev_device_get_sysfs_path (udev_device));
 	}
 }
 
@@ -98,7 +92,7 @@ fu_udev_backend_device_changed (FuUdevBackend *self, GUdevDevice *udev_device)
 	FuDevice *device_tmp;
 
 	/* not a device we enumerated */
-	device_tmp = g_hash_table_lookup (self->devices, sysfs_path);
+	device_tmp = fu_backend_lookup_by_id (FU_BACKEND (self), sysfs_path);
 	if (device_tmp == NULL)
 		return;
 
@@ -178,7 +172,6 @@ fu_udev_backend_finalize (GObject *object)
 		g_object_unref (self->gudev_client);
 	if (self->subsystems != NULL)
 		g_ptr_array_unref (self->subsystems);
-	g_hash_table_unref (self->devices);
 	g_hash_table_unref (self->changed_idle_ids);
 	G_OBJECT_CLASS (fu_udev_backend_parent_class)->finalize (object);
 }
@@ -186,8 +179,6 @@ fu_udev_backend_finalize (GObject *object)
 static void
 fu_udev_backend_init (FuUdevBackend *self)
 {
-	self->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       g_free, (GDestroyNotify) g_object_unref);
 	self->changed_idle_ids = g_hash_table_new_full (g_str_hash, g_str_equal,
 							g_free, (GDestroyNotify) fu_udev_backend_changed_helper_free);
 }

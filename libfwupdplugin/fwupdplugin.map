@@ -770,3 +770,10 @@ LIBFWUPDPLUGIN_1.5.7 {
     fu_firmware_set_version_raw;
   local: *;
 } LIBFWUPDPLUGIN_1.5.6;
+
+LIBFWUPDPLUGIN_1.5.8 {
+  global:
+    fu_device_get_backend_id;
+    fu_device_set_backend_id;
+  local: *;
+} LIBFWUPDPLUGIN_1.5.7;

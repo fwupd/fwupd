@@ -39,6 +39,7 @@ typedef struct {
 	gchar				*equivalent_id;
 	gchar				*physical_id;
 	gchar				*logical_id;
+	gchar				*backend_id;
 	gchar				*proxy_guid;
 	FuDevice			*alternate;
 	FuDevice			*proxy;		/* noref */
@@ -76,6 +77,7 @@ enum {
 	PROP_PROGRESS,
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
+	PROP_BACKEND_ID,
 	PROP_QUIRKS,
 	PROP_PROXY,
 	PROP_LAST
@@ -99,6 +101,9 @@ fu_device_get_property (GObject *object, guint prop_id,
 		break;
 	case PROP_LOGICAL_ID:
 		g_value_set_string (value, priv->logical_id);
+		break;
+	case PROP_BACKEND_ID:
+		g_value_set_string (value, priv->backend_id);
 		break;
 	case PROP_QUIRKS:
 		g_value_set_object (value, priv->quirks);
@@ -126,6 +131,9 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_LOGICAL_ID:
 		fu_device_set_logical_id (self, g_value_get_string (value));
+		break;
+	case PROP_BACKEND_ID:
+		fu_device_set_backend_id (self, g_value_get_string (value));
 		break;
 	case PROP_QUIRKS:
 		fu_device_set_quirks (self, g_value_get_object (value));
@@ -2050,6 +2058,55 @@ fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
 }
 
 /**
+ * fu_device_get_backend_id:
+ * @self: A #FuDevice
+ *
+ * Gets the ID set for the device as recognised by the backend. This is typically
+ * a Linux sysfs path or USB platform ID. If unset, it also falls back to the
+ * physical ID as this may be the same value.
+ *
+ * Returns: a string value, or %NULL if never set.
+ *
+ * Since: 1.5.8
+ **/
+const gchar *
+fu_device_get_backend_id (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	if (priv->backend_id != NULL)
+		return priv->backend_id;
+	return priv->physical_id;
+}
+
+/**
+ * fu_device_set_backend_id:
+ * @self: A #FuDevice
+ * @backend_id: a string, e.g. `dev2`
+ *
+ * Sets the backend ID on the device. This is designed to disambiguate devices
+ * with the same physical ID. This is typically a Linux sysfs path or USB
+ * platform ID.
+ *
+ * Since: 1.5.8
+ **/
+void
+fu_device_set_backend_id (FuDevice *self, const gchar *backend_id)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+
+	/* not changed */
+	if (g_strcmp0 (priv->backend_id, backend_id) == 0)
+		return;
+
+	g_free (priv->backend_id);
+	priv->backend_id = g_strdup (backend_id);
+	priv->device_id_valid = FALSE;
+	g_object_notify (G_OBJECT (self), "backend-id");
+}
+
+/**
  * fu_device_get_proxy_guid:
  * @self: A #FuDevice
  *
@@ -2492,6 +2549,8 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt + 1, "PhysicalId", priv->physical_id);
 	if (priv->logical_id != NULL)
 		fu_common_string_append_kv (str, idt + 1, "LogicalId", priv->logical_id);
+	if (priv->backend_id != NULL)
+		fu_common_string_append_kv (str, idt + 1, "BackendId", priv->backend_id);
 	if (priv->proxy != NULL)
 		fu_common_string_append_kv (str, idt + 1, "ProxyId", fu_device_get_id (priv->proxy));
 	if (priv->proxy_guid != NULL)
@@ -3446,6 +3505,8 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_physical_id (self, priv_donor->physical_id);
 	if (priv->logical_id == NULL && priv_donor->logical_id != NULL)
 		fu_device_set_logical_id (self, priv_donor->logical_id);
+	if (priv->backend_id == NULL && priv_donor->backend_id != NULL)
+		fu_device_set_backend_id (self, priv_donor->backend_id);
 	if (priv->proxy == NULL && priv_donor->proxy != NULL)
 		fu_device_set_proxy (self, priv_donor->proxy);
 	if (priv->proxy_guid == NULL && priv_donor->proxy_guid != NULL)
@@ -3552,6 +3613,11 @@ fu_device_class_init (FuDeviceClass *klass)
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_LOGICAL_ID, pspec);
 
+	pspec = g_param_spec_string ("backend-id", NULL, NULL, NULL,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_BACKEND_ID, pspec);
+
 	pspec = g_param_spec_uint ("progress", NULL, NULL,
 				   0, 100, 0,
 				   G_PARAM_READWRITE |
@@ -3610,6 +3676,7 @@ fu_device_finalize (GObject *object)
 	g_free (priv->equivalent_id);
 	g_free (priv->physical_id);
 	g_free (priv->logical_id);
+	g_free (priv->backend_id);
 	g_free (priv->proxy_guid);
 
 	G_OBJECT_CLASS (fu_device_parent_class)->finalize (object);

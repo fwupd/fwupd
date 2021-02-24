@@ -16,7 +16,6 @@
 struct _FuUsbBackend {
 	FuBackend		 parent_instance;
 	GUsbContext		*usb_ctx;
-	GHashTable		*devices;	/* platform_id : FuDevice */
 };
 
 G_DEFINE_TYPE (FuUsbBackend, fu_usb_backend, FU_TYPE_BACKEND)
@@ -26,13 +25,9 @@ fu_usb_backend_device_added_cb (GUsbContext *ctx,
 			       GUsbDevice *usb_device,
 			       FuBackend *backend)
 {
-	FuUsbBackend *self = FU_USB_BACKEND (backend);
 	g_autoptr(FuUsbDevice) device = fu_usb_device_new (usb_device);
 
 	/* success */
-	g_hash_table_insert (self->devices,
-			     g_strdup (g_usb_device_get_platform_id (usb_device)),
-			     g_object_ref (device));
 	fu_backend_device_added (backend, FU_DEVICE (device));
 }
 
@@ -45,13 +40,10 @@ fu_usb_backend_device_removed_cb (GUsbContext *ctx,
 	FuDevice *device_tmp;
 
 	/* find the device we enumerated */
-	device_tmp = g_hash_table_lookup (self->devices,
-					  g_usb_device_get_platform_id (usb_device));
-	if (device_tmp != NULL) {
+	device_tmp = fu_backend_lookup_by_id (FU_BACKEND (self),
+					      g_usb_device_get_platform_id (usb_device));
+	if (device_tmp != NULL)
 		fu_backend_device_removed (backend, device_tmp);
-		g_hash_table_remove (self->devices,
-				     g_usb_device_get_platform_id (usb_device));
-	}
 }
 
 static gboolean
@@ -88,15 +80,12 @@ fu_usb_backend_finalize (GObject *object)
 	FuUsbBackend *self = FU_USB_BACKEND (object);
 	if (self->usb_ctx != NULL)
 		g_object_unref (self->usb_ctx);
-	g_hash_table_unref (self->devices);
 	G_OBJECT_CLASS (fu_usb_backend_parent_class)->finalize (object);
 }
 
 static void
 fu_usb_backend_init (FuUsbBackend *self)
 {
-	self->devices = g_hash_table_new_full (g_str_hash, g_str_equal,
-					       g_free, (GDestroyNotify) g_object_unref);
 }
 
 static void
