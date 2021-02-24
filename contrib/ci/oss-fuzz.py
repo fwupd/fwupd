@@ -303,6 +303,7 @@ def _build(bld: Builder) -> None:
         ("ccgx", "ccgx-dmc", "ccgx-dmc*.bin"),
         ("cros-ec", "cros-ec", "cros-ec*"),
         ("ebitdo", "ebitdo", "ebitdo*"),
+        ("elantp", "elantp", "elantp*"),
         ("hailuck", "hailuck-kbd", "ihex*"),
         ("pixart-rf", "pxi", "pixart*"),
         ("solokey", "solokey", "solokey*"),
