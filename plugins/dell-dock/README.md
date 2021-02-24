@@ -51,8 +51,7 @@ These devices use several different generation schemes, e.g.
 Update Behavior
 ---------------
 
-For devices implementing "passive flow" the update is deployed at runtime and
-then actually written the next time the dock is attached.
+All devices will be updated the next time the usb-c plug from the dock is unplugged from the host.
 
 Vendor ID Security
 ------------------

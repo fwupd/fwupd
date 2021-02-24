@@ -31,7 +31,6 @@
 #define EC_CMD_GET_DOCK_TYPE		0x05
 #define EC_CMD_MODIFY_LOCK		0x0a
 #define EC_CMD_RESET			0x0b
-#define EC_CMD_REBOOT			0x0c
 #define EC_CMD_PASSIVE			0x0d
 #define EC_GET_FW_UPDATE_STATUS		0x0f
 
@@ -473,15 +472,14 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 
 	/* Determine if the passive flow should be used when flashing */
 	hub_version = fu_device_get_version (fu_device_get_proxy (device));
-	if (fu_common_vercmp_full (hub_version, "1.42", FWUPD_VERSION_FORMAT_PAIR) >= 0) {
-		g_debug ("using passive flow");
-		self->passive_flow = PASSIVE_REBOOT_MASK;
-		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
-	} else {
-		g_debug ("not using passive flow (EC: %s Hub2: %s)",
-			 self->ec_version, hub_version);
-		fu_device_add_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	if (fu_common_vercmp_full (hub_version, "1.42", FWUPD_VERSION_FORMAT_PAIR) < 0) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+			     "dock containing hub2 version %s is not supported",
+			     hub_version);
+		return FALSE;
 	}
+	self->passive_flow = PASSIVE_REBOOT_MASK;
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
 	return TRUE;
 }
 
@@ -656,24 +654,16 @@ gboolean
 fu_dell_dock_ec_reboot_dock (FuDevice *device, GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
+	guint32 cmd = EC_CMD_PASSIVE |  /* cmd */
+		      1 << 8 |          /* length of data arguments */
+		      self->passive_flow << 16;
 
 	g_return_val_if_fail (device != NULL, FALSE);
 
-	if (self->passive_flow > 0) {
-		guint32 cmd = EC_CMD_PASSIVE |  /* cmd */
-			      1 << 8 |          /* length of data arguments */
-			      self->passive_flow << 16;
-		g_debug ("activating passive flow (%x) for %s",
-			 self->passive_flow,
-			 fu_device_get_name (device));
-		return fu_dell_dock_ec_write (device, 3, (guint8 *) &cmd, error);
-	} else {
-		guint16 cmd = EC_CMD_REBOOT;
-		g_debug ("rebooting %s", fu_device_get_name (device));
-		return fu_dell_dock_ec_write (device, 2, (guint8 *) &cmd, error);
-	}
-
-	return TRUE;
+	g_debug ("activating passive flow (%x) for %s",
+		 self->passive_flow,
+		 fu_device_get_name (device));
+	return fu_dell_dock_ec_write (device, 3, (guint8 *) &cmd, error);
 }
 
 static gboolean
@@ -771,8 +761,6 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 			  GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
-	FuDellDockECFWUpdateStatus status = FW_UPDATE_IN_PROGRESS;
-	guint8 progress1 = 0, progress0 = 0;
 	gsize fw_size = 0;
 	const guint8 *data;
 	gsize write_size = 0;
@@ -829,53 +817,8 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 	fu_device_set_version (device, dynamic_version);
 
 	/* activate passive behavior */
-	if (self->passive_flow)
-		self->passive_flow |= PASSIVE_RESET_MASK;
-
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
-		g_debug ("Skipping EC reset per quirk request");
-		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-		return TRUE;
-	}
-
-	if (!fu_dell_dock_ec_reset (device, error))
-		return FALSE;
-
-	/* notify daemon that this device will need to replug */
-	fu_dell_dock_will_replug (device);
-
-	/* poll for completion status */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
-	while (status != FW_UPDATE_COMPLETE) {
-		g_autoptr(GError) error_local = NULL;
-
-		if (!fu_dell_dock_hid_get_ec_status (fu_device_get_proxy (device), &progress1,
-						     &progress0, error)) {
-			g_prefix_error (error, "Failed to read scratch: ");
-			return FALSE;
-		}
-		g_debug ("Read %u and %u from scratch", progress1, progress0);
-		if (progress0 > 100)
-			progress0 = 100;
-		fu_device_set_progress_full (device, progress0, 100);
-
-		/* This is expected to fail until update is done */
-		if (!fu_dell_dock_get_ec_status (device, &status,
-						 &error_local)) {
-			g_debug ("Flash EC Received result: %s (status %u)",
-				 error_local->message, status);
-			return TRUE;
-		}
-		if (status == FW_UPDATE_AUTHENTICATION_FAILED) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "invalid EC firmware image");
-			return FALSE;
-		}
-	}
-
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+	self->passive_flow |= PASSIVE_RESET_MASK;
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 	return TRUE;
 }
 
