@@ -53,7 +53,7 @@ GType = FuVliPdDevice
 [DeviceInstanceId=USB\VID_17EF&PID_7212]
 Plugin = vli
 GType = FuVliPdDevice
-Flag = dual-image
+Flags = dual-image
 
 # Lenovo
 [DeviceInstanceId=USB\VID_17EF&PID_7215]
