@@ -20,55 +20,68 @@ struct _FuSystem76LaunchDevice {
 G_DEFINE_TYPE (FuSystem76LaunchDevice, fu_system76_launch_device, FU_TYPE_USB_DEVICE)
 
 static gboolean
-fu_system76_launch_device_setup (FuDevice *device, GError **error)
+fu_system76_launch_device_command (FuDevice *device, guint8 *data, gsize len, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	const guint8 ep_in = 0x82;
 	const guint8 ep_out = 0x03;
-	guint8 data[32] = { 0 };
 	gsize actual_len = 0;
-	g_autofree gchar *version = NULL;
 
-	/* send version command */
-	data[0] = SYSTEM76_LAUNCH_CMD_VERSION;
+	/* send command */
 	if (!g_usb_device_interrupt_transfer (usb_device,
 					      ep_out,
 					      data,
-					      sizeof(data),
+					      len,
 					      &actual_len,
 					      SYSTEM76_LAUNCH_TIMEOUT,
 					      NULL,
 					      error)) {
-		g_prefix_error (error, "failed to send version command: ");
+		g_prefix_error (error, "failed to send command: ");
 		return FALSE;
 	}
-	if (actual_len < sizeof(data)) {
+	if (actual_len < len) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
-			     "version command truncated: sent %" G_GSIZE_FORMAT " bytes",
+			     "command truncated: sent %" G_GSIZE_FORMAT " bytes",
 			     actual_len);
 		return FALSE;
 	}
 
-	/* receive version response */
+	/* receive response */
 	if (!g_usb_device_interrupt_transfer (usb_device,
 					      ep_in,
 					      data,
-					      sizeof(data),
+					      len,
 					      &actual_len,
 					      SYSTEM76_LAUNCH_TIMEOUT,
 					      NULL,
 					      error)) {
-		g_prefix_error (error, "failed to read version response: ");
+		g_prefix_error (error, "failed to read response: ");
 		return FALSE;
 	}
-	if (actual_len < sizeof(data)) {
+	if (actual_len < len) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_INVALID_DATA,
-			     "version response truncated: received %" G_GSIZE_FORMAT " bytes",
+			     "response truncated: received %" G_GSIZE_FORMAT " bytes",
 			     actual_len);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_system76_launch_device_setup (FuDevice *device, GError **error)
+{
+	guint8 data[32] = { 0 };
+	g_autofree gchar *version = NULL;
+
+	/* execute version command */
+	data[0] = SYSTEM76_LAUNCH_CMD_VERSION;
+	if (!fu_system76_launch_device_command (device, data, sizeof(data), error)) {
+		g_prefix_error (error, "failed to execute version command: ");
 		return FALSE;
 	}
 
@@ -81,27 +94,27 @@ fu_system76_launch_device_setup (FuDevice *device, GError **error)
 static gboolean
 fu_system76_launch_device_detach (FuDevice *device, GError **error)
 {
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	const guint8 ep_out = 0x03;
 	guint8 data[32] = { 0 };
-	gsize actual_len = 0;
 
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-
-	/* send reset command, should result in bootloader device appearing */
+	/* execute reset command */
 	data[0] = SYSTEM76_LAUNCH_CMD_RESET;
-	if (!g_usb_device_interrupt_transfer (usb_device,
-					      ep_out,
-					      data,
-					      sizeof(data),
-					      &actual_len,
-					      SYSTEM76_LAUNCH_TIMEOUT,
-					      NULL,
-					      error)) {
-		g_prefix_error (error, "failed to send reset command: ");
+	if (!fu_system76_launch_device_command (device, data, sizeof(data), error)) {
+		g_prefix_error (error, "failed to execute reset command: ");
 		return FALSE;
 	}
 
+	/* prompt for unlock if reset was blocked */
+	if (data[1] != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NEEDS_USER_ACTION,
+			     "To ensure you have physical access, %s needs to be manually unlocked. "
+			     "Please press Fn+Esc to unlock and re-run the update.",
+			     fu_device_get_name (device));
+		return FALSE;
+	}
+
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	return TRUE;
