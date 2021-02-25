@@ -680,6 +680,7 @@ fu_logitech_hidpp_peripheral_detach (FuDevice *device, GError **error)
 			g_prefix_error (error, "failed to put device into DFU mode: ");
 			return FALSE;
 		}
+		g_usleep (200 * 1000);
 		return fu_logitech_hidpp_peripheral_setup (FU_DEVICE (self), error);
 	}
 
