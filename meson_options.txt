@@ -29,6 +29,7 @@ option('plugin_modem_manager', type : 'boolean', value : false, description : 'e
 option('plugin_msr', type : 'boolean', value : true, description : 'enable MSR support')
 option('plugin_flashrom', type : 'boolean', value : false, description : 'enable libflashrom support')
 option('plugin_platform_integrity', type : 'boolean', value : false, description : 'enable platform integrity support')
+option('qubes', type : 'boolean', value : false, description : 'build packages for Qubes OS')
 option('supported_build', type : 'boolean', value : false, description: 'distribution package with upstream support')
 option('systemd', type : 'boolean', value : true, description : 'enable systemd support')
 option('systemd_root_prefix', type: 'string', value: '', description: 'Directory to base systemd’s installation directories on')

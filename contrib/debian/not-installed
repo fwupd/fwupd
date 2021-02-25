@@ -1,0 +1,4 @@
+usr/libexec/qubes-fwupd/fwupd_usbvm_validate.py
+usr/sbin/qubes-fwupdmgr
+usr/share/qubes-fwupd/src/*
+usr/share/qubes-fwupd/test/*

@@ -1,4 +1,7 @@
 subdir('firmware_packager')
+if get_option('qubes')
+  subdir('qubes')
+endif
 
 if host_machine.system() == 'windows'
   con2 = configuration_data()

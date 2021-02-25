@@ -59,6 +59,10 @@ else
 	CONFARGS += -Dplugin_msr=false
 endif
 
+ifneq ($(QUBES_OPTION),)
+	CONFARGS += -Dqubes=true
+endif
+
 CONFARGS += -Dplugin_dummy=true -Dgtkdoc=true -Dsupported_build=true
 
 %:

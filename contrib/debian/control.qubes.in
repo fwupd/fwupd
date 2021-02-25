@@ -1,0 +1,4 @@
+Package: fwupd-qubes-vm-whonix
+Architecture: amd64
+Description: Whonix support for Qubes OS
+ This package is used to download firmware updates and metadata via TOR.

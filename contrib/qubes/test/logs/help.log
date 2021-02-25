@@ -1,0 +1,25 @@
+======================================================================
+Usage:				
+======================================================================
+	Command:			qubes-fwupdmgr [OPTION…][FLAG..]
+	Example:			qubes-fwupdmgr refresh --whonix --url=<url>
+
+Options:			
+======================================================================
+	get-devices:			Get all devices that support firmware updates
+	get-updates:			Get the list of updates for connected hardware
+	refresh:			Refresh metadata from remote server
+	update:				Update chosen device to latest firmware version
+	update-heads:			Updates heads firmware to the latest version
+	downgrade:			Downgrade chosen device to chosen firmware version
+	clean:				Delete all cached update files
+
+Flags:				
+======================================================================
+	--whonix:			Download firmware updates via Tor
+	--device:			Specify device for heads update (default - x230)
+	--url:				Address of the custom metadata remote server
+
+Help:				
+======================================================================
+	-h --help:			Show help options

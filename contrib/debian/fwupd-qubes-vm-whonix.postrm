@@ -1,0 +1,7 @@
+#!/bin/bash
+
+HOME_DIR=`getent passwd user | awk '{ split($$0,a,":"); print a[6]}'`
+
+if [ -z "$HOME_DIR" ] && [ "$1" = "purge" ]; then
+    rm -rf $HOME_DIR/.cache/fwupd
+fi
