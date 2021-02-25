@@ -5,12 +5,12 @@
   ],
   "releases": [
     {
-      "version": "154.36.7.55",
-      "file": "42421a49bef459931c17b4d42d80e961ee72197aa38acf6f3fc28a255c9c2652-Hyper-USB-C_Hub_New.cab"
+      "version": "154.36.9.55",
+      "file": "ecfebc47d63a5319e35da39bd6124b80e90138a208bc9134c9d1b256b232a704-Hyper-USB-C_Hub.cab"
     },
     {
-      "version": "138.36.7.55",
-      "file": "06f707d52b6a9b020c41a3d92fb22aead7559295bbfb90e8a562f43b9d2666f9-Hyper-USB-C_Hub_Old.cab"
+      "version": "138.36.9.55",
+      "file": "1694cceda16068b24d7627caace4bd373ecae73aca891f610dec0fe5a4d1207c-Hyper-USB-C_Hub_Old.cab"
     }
   ]
 }
