@@ -1,0 +1,11 @@
+#!/bin/bash
+
+HOME_DIR=`getent passwd user | awk '{ split($$0,a,":"); print a[6]}'`
+
+if [ -z "$HOME_DIR" ]; then
+    echo "Default user does not exist!!" >&2
+    echo "Package does not create fwupd directories" >&2
+else
+    mkdir -p $HOME_DIR/.cache/fwupd_download_updates
+    chown -R user:user $HOME_DIR/.cache/fwupd_download_updates
+fi

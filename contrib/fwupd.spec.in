@@ -196,6 +196,26 @@ update operation. This subpackage is probably not required on embedded hardware
 or server machines.
 %endif
 
+%if 0%{?qubes_packages}
+%package qubes-dom0
+Summary: fwupd wrapper for Qubes OS - dom0 scripts
+Requires:   gcab
+Requires:   fwupd >= 1.5.7
+Requires:   libjcat >= 0.1.6
+
+%description qubes-dom0
+fwupd wrapper for Qubes OS
+
+%package qubes-vm
+Summary: fwupd wrapper for Qubes OS - VM scripts
+Requires:   gcab
+Requires:   fwupd >= 1.5.7
+Requires:   libjcat >= 0.1.6
+
+%description qubes-vm
+fwupd wrapper for Qubes OS
+%endif
+
 %prep
 %autosetup -p1
 
@@ -252,6 +272,9 @@ or server machines.
     -Dplugin_modem_manager=true \
 %else
     -Dplugin_modem_manager=false \
+%endif
+%if 0%{?qubes_packages}
+    -Dqubes=true \
 %endif
     -Dman=true \
     -Dbluez=true \
@@ -510,6 +533,30 @@ done
 %{_libexecdir}/installed-tests/fwupd/*
 %dir %{_sysconfdir}/fwupd/remotes.d
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/fwupd-tests.conf
+%endif
+
+%if 0%{?qubes_packages}
+%files qubes-vm
+%{_libexecdir}/qubes-fwupd/fwupd_common_vm.py
+%{_libexecdir}/qubes-fwupd/fwupd_download_updates.py
+%{_libexecdir}/qubes-fwupd/fwupd_usbvm_validate.py
+
+%files qubes-dom0
+%{_datadir}/qubes-fwupd/src/fwupd_receive_updates.py
+/usr/sbin/qubes-fwupdmgr
+%{_datadir}/qubes-fwupd/src/qubes_fwupd_heads.py
+%{_datadir}/qubes-fwupd/src/qubes_fwupd_update.py
+%{_datadir}/qubes-fwupd/src/__init__.py
+%{_datadir}/qubes-fwupd/test/fwupd_logs.py
+%{_datadir}/qubes-fwupd/test/test_qubes_fwupdmgr.py
+%{_datadir}/qubes-fwupd/test/test_qubes_fwupd_heads.py
+%{_datadir}/qubes-fwupd/test/__init__.py
+%{_datadir}/qubes-fwupd/test/logs/get_devices.log
+%{_datadir}/qubes-fwupd/test/logs/get_updates.log
+%{_datadir}/qubes-fwupd/test/logs/help.log
+%{_datadir}/qubes-fwupd/test/logs/firmware.metainfo.xml
+%{_datadir}/qubes-fwupd/test/logs/metainfo_name/firmware.metainfo.xml
+%{_datadir}/qubes-fwupd/test/logs/metainfo_version/firmware.metainfo.xml
 %endif
 
 %changelog

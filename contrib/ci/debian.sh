@@ -2,6 +2,8 @@
 set -e
 set -x
 
+export QUBES_OPTION=
+
 # remove when tpm2-tss is fixed
 mkdir -p /usr/include/tss
 
@@ -9,6 +11,11 @@ mkdir -p /usr/include/tss
 if [ "$OS" = "debian-s390x" ]; then
 	./contrib/ci/debian_s390x.sh
 	exit 0
+fi
+
+# Set Qubes Os vars if -Dqubes=true is parameter
+if [ "$QUBES" = "true" ]; then
+	export QUBES_OPTION='-Dqubes=true'
 fi
 
 #prepare
@@ -47,7 +54,8 @@ if [ -x /usr/lib/fwupd/fwupd ]; then
 fi
 #build the package
 EDITOR=/bin/true dch --create --package fwupd -v $VERSION "CI Build"
-debuild --no-lintian --preserve-envvar CI --preserve-envvar CC
+debuild --no-lintian --preserve-envvar CI --preserve-envvar CC \
+	--preserve-envvar QUBES_OPTION
 
 #check lintian output
 #suppress tags that are side effects of building in docker this way

@@ -11,6 +11,7 @@ import xml.etree.ElementTree as etree
 
 def parse_control_dependencies(requested_type):
     TARGET = os.getenv('OS')
+    QUBES = os.getenv('QUBES')
     deps = []
     dep = ''
 
@@ -81,7 +82,7 @@ def parse_control_dependencies(requested_type):
                                 suffix = "]"
                             dep = "%s%s%s%s" % (dep, prefix, exclusions[i].text, suffix)
                     deps.append(dep)
-    return deps
+    return deps, QUBES
 
 
 def update_debian_control(target):
@@ -95,14 +96,23 @@ def update_debian_control(target):
     with open(control_in, 'r') as rfd:
         lines = rfd.readlines()
 
-    deps = parse_control_dependencies("build")
+    deps, QUBES = parse_control_dependencies("build")
     deps.sort()
+
+    if QUBES:
+        lines += '\n'
+        control_qubes_in = os.path.join(target, 'control.qubes.in')
+        with open(control_qubes_in, 'r') as rfd:
+            lines += rfd.readlines()
+
     with open(control_out, 'w') as wfd:
         for line in lines:
             if line.startswith("Build-Depends: %%%DYNAMIC%%%"):
                 wfd.write("Build-Depends:\n")
                 for i in range(0, len(deps)):
                     wfd.write("\t%s,\n" % deps[i])
+            elif "fwupd-qubes-vm-whonix" in line and not QUBES:
+                break
             else:
                 wfd.write(line)
 
