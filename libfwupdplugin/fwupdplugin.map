@@ -773,6 +773,8 @@ LIBFWUPDPLUGIN_1.5.7 {
 
 LIBFWUPDPLUGIN_1.5.8 {
   global:
+    fu_bluez_device_notify_start;
+    fu_bluez_device_notify_stop;
     fu_device_get_backend_id;
     fu_device_set_backend_id;
   local: *;

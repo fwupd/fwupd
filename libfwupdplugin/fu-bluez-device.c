@@ -30,8 +30,16 @@ typedef struct {
 	FuBluezDevice		 parent_instance;
 	GDBusObjectManager	*object_manager;
 	GDBusProxy		*proxy;
-	GHashTable		*uuid_paths;	/* utf8 : utf8 */
+	GHashTable		*uuids;		/* utf8 : FuBluezDeviceUuidHelper */
 } FuBluezDevicePrivate;
+
+typedef struct {
+	FuBluezDevice		*self;
+	gchar			*uuid;
+	gchar			*path;
+	gulong			 signal_id;
+	GDBusProxy		*proxy;
+} FuBluezDeviceUuidHelper;
 
 enum {
 	PROP_0,
@@ -40,20 +48,115 @@ enum {
 	PROP_LAST
 };
 
+enum {
+	SIGNAL_CHANGED,
+	SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST] = { 0 };
+
 G_DEFINE_TYPE_WITH_PRIVATE (FuBluezDevice, fu_bluez_device, FU_TYPE_DEVICE)
 
 #define GET_PRIVATE(o) (fu_bluez_device_get_instance_private (o))
 
 static void
+fu_bluez_uuid_free (FuBluezDeviceUuidHelper *uuid_helper)
+{
+	if (uuid_helper->path != NULL)
+		g_free (uuid_helper->path);
+	if (uuid_helper->proxy != NULL)
+		g_object_unref (uuid_helper->proxy);
+	g_free (uuid_helper->uuid);
+	g_object_unref (uuid_helper->self);
+	g_free (uuid_helper);
+}
+
+/*
+ * Looks up a UUID in the FuBluezDevice uuids table.
+ */
+static FuBluezDeviceUuidHelper *
+fu_bluez_device_get_uuid_helper (FuBluezDevice *self,
+				 const gchar *uuid,
+				 GError **error)
+{
+	FuBluezDevicePrivate *priv = GET_PRIVATE (self);
+	FuBluezDeviceUuidHelper *uuid_helper;
+
+	uuid_helper = g_hash_table_lookup (priv->uuids, uuid);
+	if (uuid_helper == NULL) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "UUID %s not supported", uuid);
+		return NULL;
+	}
+
+	return uuid_helper;
+}
+
+static void
+fu_bluez_device_signal_cb (GDBusProxy *proxy,
+			   GVariant *changed_properties,
+			   GStrv invalidated_properties,
+			   FuBluezDeviceUuidHelper *uuid_helper)
+{
+	g_signal_emit (uuid_helper->self, signals[SIGNAL_CHANGED], 0, uuid_helper->uuid);
+}
+
+/*
+ * Builds the GDBusProxy of the BlueZ object identified by a UUID
+ * string. If the object doesn't have a dedicated proxy yet, this
+ * creates it and saves it in the FuBluezDeviceUuidHelper object.
+ *
+ * NOTE: Currently limited to GATT characteristics.
+ */
+static gboolean
+fu_bluez_device_ensure_uuid_helper_proxy (FuBluezDeviceUuidHelper *uuid_helper,
+					  GError **error)
+{
+	if (uuid_helper->proxy != NULL)
+		return TRUE;
+	uuid_helper->proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+						     G_DBUS_PROXY_FLAGS_NONE,
+						     NULL,
+						     "org.bluez",
+						     uuid_helper->path,
+						     "org.bluez.GattCharacteristic1",
+						     NULL, error);
+	if (uuid_helper->proxy == NULL) {
+		g_prefix_error (error, "Failed to create GDBusProxy for uuid_helper: ");
+		return FALSE;
+	}
+	g_dbus_proxy_set_default_timeout (uuid_helper->proxy, DEFAULT_PROXY_TIMEOUT);
+	uuid_helper->signal_id = g_signal_connect (uuid_helper->proxy,
+						   "g-properties-changed",
+						   G_CALLBACK (fu_bluez_device_signal_cb),
+						   uuid_helper);
+	if (uuid_helper->signal_id <= 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "cannot connect to signal of UUID %s",
+			     uuid_helper->uuid);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static void
 fu_bluez_device_add_uuid_path (FuBluezDevice *self, const gchar *uuid, const gchar *path)
 {
 	FuBluezDevicePrivate *priv = GET_PRIVATE (self);
+	FuBluezDeviceUuidHelper *uuid_helper;
 	g_return_if_fail (FU_IS_BLUEZ_DEVICE (self));
 	g_return_if_fail (uuid != NULL);
 	g_return_if_fail (path != NULL);
-	g_hash_table_insert (priv->uuid_paths,
-			     g_strdup (uuid),
-			     g_strdup (path));
+
+	uuid_helper = g_new0 (FuBluezDeviceUuidHelper, 1);
+	uuid_helper->self = g_object_ref (self);
+	uuid_helper->uuid = g_strdup (uuid);
+	uuid_helper->path = g_strdup (path);
+	g_hash_table_insert (priv->uuids, g_strdup (uuid), uuid_helper);
 }
 
 static void
@@ -107,14 +210,15 @@ fu_bluez_device_to_string (FuDevice *device, guint idt, GString *str)
 	FuBluezDevice *self = FU_BLUEZ_DEVICE (device);
 	FuBluezDevicePrivate *priv = GET_PRIVATE (self);
 
-	if (priv->uuid_paths != NULL) {
+	if (priv->uuids != NULL) {
 		GHashTableIter iter;
 		gpointer key, value;
-		g_hash_table_iter_init (&iter, priv->uuid_paths);
+		g_hash_table_iter_init (&iter, priv->uuids);
 		while (g_hash_table_iter_next (&iter, &key, &value)) {
+			FuBluezDeviceUuidHelper *uuid_helper = (FuBluezDeviceUuidHelper *) value;
 			fu_common_string_append_kv (str, idt + 1,
 						    (const gchar *) key,
-						    (const gchar *) value);
+						    uuid_helper->path);
 		}
 	}
 }
@@ -141,6 +245,7 @@ fu_bluez_device_get_ble_property (const gchar *obj_path,
 		g_prefix_error (error, "failed to connect to %s: ", iface);
 		return NULL;
 	}
+	g_dbus_proxy_set_default_timeout (proxy, DEFAULT_PROXY_TIMEOUT);
 	val = g_dbus_proxy_get_cached_property (proxy, prop_name);
 	if (val == NULL) {
 		g_prefix_error (error, "property %s not found in %s: ",
@@ -171,7 +276,7 @@ fu_bluez_device_get_ble_string_property (const gchar *obj_path,
 }
 
 /*
- * Populates the {uuid : object_path} entries of a device for all its
+ * Populates the {uuid_helper : object_path} entries of a device for all its
  * characteristics.
  *
  * TODO: Extend to services and descriptors too?
@@ -278,35 +383,18 @@ fu_bluez_device_probe (FuDevice *device, GError **error)
 GByteArray *
 fu_bluez_device_read (FuBluezDevice *self, const gchar *uuid, GError **error)
 {
-	FuBluezDevicePrivate *priv = GET_PRIVATE (self);
+	FuBluezDeviceUuidHelper *uuid_helper;
 	guint8 byte;
-	const gchar *path;
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
-	g_autoptr(GDBusProxy) proxy = NULL;
 	g_autoptr(GVariantBuilder) builder = NULL;
 	g_autoptr(GVariantIter) iter = NULL;
 	g_autoptr(GVariant) val = NULL;
 
-	path = g_hash_table_lookup (priv->uuid_paths, uuid);
-	if (path == NULL) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_NOT_SUPPORTED,
-			     "UUID %s not supported", uuid);
+	uuid_helper = fu_bluez_device_get_uuid_helper (self, uuid, error);
+	if (uuid_helper == NULL)
 		return NULL;
-	}
-	proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
-					       G_DBUS_PROXY_FLAGS_NONE,
-					       NULL,
-					       "org.bluez",
-					       path,
-					       "org.bluez.GattCharacteristic1",
-					       NULL, error);
-	if (proxy == NULL) {
-		g_prefix_error (error, "Failed to connect GattCharacteristic1: ");
+	if (!fu_bluez_device_ensure_uuid_helper_proxy (uuid_helper, error))
 		return NULL;
-	}
-	g_dbus_proxy_set_default_timeout (proxy, DEFAULT_PROXY_TIMEOUT);
 
 	/*
 	 * Call the "ReadValue" method through the proxy synchronously.
@@ -320,7 +408,7 @@ fu_bluez_device_read (FuBluezDevice *self, const gchar *uuid, GError **error)
 	g_variant_builder_add (builder, "{sv}", "offset",
 			       g_variant_new("q", 0));
 
-	val = g_dbus_proxy_call_sync (proxy,
+	val = g_dbus_proxy_call_sync (uuid_helper->proxy,
 				      "ReadValue",
 				      g_variant_new ("(a{sv})", builder),
 				      G_DBUS_CALL_FLAGS_NONE,
@@ -376,34 +464,18 @@ fu_bluez_device_write (FuBluezDevice *self,
 		       GByteArray *buf,
 		       GError **error)
 {
-	FuBluezDevicePrivate *priv = GET_PRIVATE (self);
-	const gchar *path;
-	g_autoptr(GDBusProxy) proxy = NULL;
+	FuBluezDeviceUuidHelper *uuid_helper;
 	g_autoptr(GVariantBuilder) opt_builder = NULL;
 	g_autoptr(GVariantBuilder) val_builder = NULL;
 	g_autoptr(GVariant) ret = NULL;
 	GVariant *opt_variant = NULL;
 	GVariant *val_variant = NULL;
 
-	path = g_hash_table_lookup (priv->uuid_paths, uuid);
-	if (path == NULL) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_NOT_SUPPORTED,
-			     "UUID %s not supported", uuid);
+	uuid_helper = fu_bluez_device_get_uuid_helper (self, uuid, error);
+	if (uuid_helper == NULL)
 		return FALSE;
-	}
-	proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
-					       G_DBUS_PROXY_FLAGS_NONE,
-					       NULL,
-					       "org.bluez",
-					       path,
-					       "org.bluez.GattCharacteristic1",
-					       NULL, error);
-	if (proxy == NULL) {
-		g_prefix_error (error, "Failed to connect GattCharacteristic1: ");
+	if (!fu_bluez_device_ensure_uuid_helper_proxy (uuid_helper, error))
 		return FALSE;
-	}
 
 	/* build the value variant */
 	val_builder = g_variant_builder_new (G_VARIANT_TYPE ("ay"));
@@ -417,7 +489,7 @@ fu_bluez_device_write (FuBluezDevice *self,
 			       g_variant_new_uint16 (0));
 	opt_variant = g_variant_new("a{sv}", opt_builder);
 
-	ret = g_dbus_proxy_call_sync (proxy,
+	ret = g_dbus_proxy_call_sync (uuid_helper->proxy,
 				      "WriteValue",
 				      g_variant_new ("(@ay@a{sv})",
 						     val_variant,
@@ -433,6 +505,78 @@ fu_bluez_device_write (FuBluezDevice *self,
 	return TRUE;
 }
 
+/**
+ * fu_bluez_device_notify_start:
+ * @uuid: The UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
+ * @error: A #GError, or %NULL
+ *
+ * Enables notifications for property changes in a UUID (StartNotify
+ * method).
+ *
+ * Returns: %TRUE if the method call completed successfully.
+ *
+ * Since: 1.5.8
+ **/
+gboolean
+fu_bluez_device_notify_start (FuBluezDevice *self, const gchar *uuid, GError **error)
+{
+	FuBluezDeviceUuidHelper *uuid_helper;
+	g_autoptr(GVariant) retval = NULL;
+
+	uuid_helper = fu_bluez_device_get_uuid_helper (self, uuid, error);
+	if (uuid_helper == NULL)
+		return FALSE;
+	if (!fu_bluez_device_ensure_uuid_helper_proxy (uuid_helper, error))
+		return FALSE;
+	retval = g_dbus_proxy_call_sync (uuid_helper->proxy,
+					 "StartNotify",
+					 NULL,
+					 G_DBUS_CALL_FLAGS_NONE,
+					 -1, NULL, error);
+	if (retval == NULL) {
+		g_prefix_error (error, "Failed to enable notifications: ");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+/**
+ * fu_bluez_device_notify_stop:
+ * @uuid: The UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
+ * @error: A #GError, or %NULL
+ *
+ * Disables notifications for property changes in a UUID (StopNotify
+ * method).
+ *
+ * Returns: %TRUE if the method call completed successfully.
+ *
+ * Since: 1.5.8
+ **/
+gboolean
+fu_bluez_device_notify_stop (FuBluezDevice *self, const gchar *uuid, GError **error)
+{
+	FuBluezDeviceUuidHelper *uuid_helper;
+	g_autoptr(GVariant) retval = NULL;
+
+	uuid_helper = fu_bluez_device_get_uuid_helper (self, uuid, error);
+	if (uuid_helper == NULL)
+		return FALSE;
+	if (!fu_bluez_device_ensure_uuid_helper_proxy (uuid_helper, error))
+		return FALSE;
+	retval = g_dbus_proxy_call_sync (uuid_helper->proxy,
+					 "StopNotify",
+					 NULL,
+					 G_DBUS_CALL_FLAGS_NONE,
+					 -1, NULL, error);
+	if (retval == NULL) {
+		g_prefix_error (error, "Failed to enable notifications: ");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 static void
 fu_bluez_device_incorporate (FuDevice *self, FuDevice *donor)
 {
@@ -441,14 +585,15 @@ fu_bluez_device_incorporate (FuDevice *self, FuDevice *donor)
 	FuBluezDevicePrivate *priv = GET_PRIVATE (uself);
 	FuBluezDevicePrivate *privdonor = GET_PRIVATE (udonor);
 
-	if (g_hash_table_size (priv->uuid_paths) == 0) {
+	if (g_hash_table_size (priv->uuids) == 0) {
 		GHashTableIter iter;
 		gpointer key, value;
-		g_hash_table_iter_init (&iter, privdonor->uuid_paths);
+		g_hash_table_iter_init (&iter, privdonor->uuids);
 		while (g_hash_table_iter_next (&iter, &key, &value)) {
+			FuBluezDeviceUuidHelper *uuid_helper = (FuBluezDeviceUuidHelper *) value;
 			fu_bluez_device_add_uuid_path (uself,
 						       (const gchar *) key,
-						       (const gchar *) value);
+						       uuid_helper->path);
 		}
 	}
 	if (priv->object_manager == NULL)
@@ -501,7 +646,7 @@ fu_bluez_device_finalize (GObject *object)
 	FuBluezDevice *self = FU_BLUEZ_DEVICE (object);
 	FuBluezDevicePrivate *priv = GET_PRIVATE (self);
 
-	g_hash_table_unref (priv->uuid_paths);
+	g_hash_table_unref (priv->uuids);
 	g_object_unref (priv->proxy);
 	g_object_unref (priv->object_manager);
 	G_OBJECT_CLASS (fu_bluez_device_parent_class)->finalize (object);
@@ -511,8 +656,8 @@ static void
 fu_bluez_device_init (FuBluezDevice *self)
 {
 	FuBluezDevicePrivate *priv = GET_PRIVATE (self);
-	priv->uuid_paths = g_hash_table_new_full (g_str_hash, g_str_equal,
-						  g_free, g_free);
+	priv->uuids = g_hash_table_new_full (g_str_hash, g_str_equal,
+					     g_free, (GDestroyNotify) fu_bluez_uuid_free);
 }
 
 static void
@@ -529,6 +674,12 @@ fu_bluez_device_class_init (FuBluezDeviceClass *klass)
 	device_class->setup = fu_bluez_device_setup;
 	device_class->to_string = fu_bluez_device_to_string;
 	device_class->incorporate = fu_bluez_device_incorporate;
+
+	signals[SIGNAL_CHANGED] =
+		g_signal_new ("changed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      0, NULL, NULL, g_cclosure_marshal_VOID__STRING,
+			      G_TYPE_NONE, 1, G_TYPE_STRING);
 
 	pspec = g_param_spec_object ("object-manager", NULL, NULL,
 				     G_TYPE_DBUS_OBJECT_MANAGER,

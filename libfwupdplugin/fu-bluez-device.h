@@ -27,3 +27,9 @@ gboolean		 fu_bluez_device_write		(FuBluezDevice	*self,
 							 const gchar	*uuid,
 							 GByteArray	*buf,
 							 GError		**error);
+gboolean		 fu_bluez_device_notify_start	(FuBluezDevice	*self,
+							 const gchar	*uuid,
+							 GError		**error);
+gboolean		 fu_bluez_device_notify_stop	(FuBluezDevice	*self,
+							 const gchar	*uuid,
+							 GError		**error);
