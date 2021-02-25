@@ -1328,8 +1328,18 @@ fu_udev_device_ioctl (FuUdevDevice *self,
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
 	g_return_val_if_fail (request != 0x0, FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
-	g_return_val_if_fail (priv->fd > 0, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* not open! */
+	if (priv->fd == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "%s [%s] has not been opened",
+			     fu_device_get_id (FU_DEVICE (self)),
+			     fu_device_get_name (FU_DEVICE (self)));
+		return FALSE;
+	}
 
 	rc_tmp = ioctl (priv->fd, request, buf);
 	if (rc != NULL)
@@ -1389,8 +1399,18 @@ fu_udev_device_pread_full (FuUdevDevice *self, goffset port,
 
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
 	g_return_val_if_fail (buf != NULL, FALSE);
-	g_return_val_if_fail (priv->fd > 0, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* not open! */
+	if (priv->fd == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "%s [%s] has not been opened",
+			     fu_device_get_id (FU_DEVICE (self)),
+			     fu_device_get_name (FU_DEVICE (self)));
+		return FALSE;
+	}
 
 #ifdef HAVE_PWRITE
 	if (pread (priv->fd, buf, bufsz, port) != (gssize) bufsz) {
@@ -1434,8 +1454,18 @@ fu_udev_device_pwrite_full (FuUdevDevice *self, goffset port,
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 
 	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
-	g_return_val_if_fail (priv->fd > 0, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* not open! */
+	if (priv->fd == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "%s [%s] has not been opened",
+			     fu_device_get_id (FU_DEVICE (self)),
+			     fu_device_get_name (FU_DEVICE (self)));
+		return FALSE;
+	}
 
 #ifdef HAVE_PWRITE
 	if (pwrite (priv->fd, buf, bufsz, port) != (gssize) bufsz) {
