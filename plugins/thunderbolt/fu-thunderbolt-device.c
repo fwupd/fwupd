@@ -665,6 +665,8 @@ fu_thunderbolt_device_prepare_firmware (FuDevice *device,
 	if (nvmem == NULL)
 		return NULL;
 	controller_fw = g_file_load_bytes (nvmem, NULL, NULL, error);
+	if (controller_fw == NULL)
+		return NULL;
 	if (!fu_firmware_parse (FU_FIRMWARE (firmware_old), controller_fw, flags, error))
 		return NULL;
 	if (fu_thunderbolt_firmware_is_host (FU_THUNDERBOLT_FIRMWARE (firmware)) !=
