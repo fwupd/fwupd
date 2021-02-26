@@ -34,11 +34,16 @@ fu_superio_it85_device_get_str (FuSuperioDevice *self, guint8 idx, GError **erro
 }
 
 static gboolean
-fu_superio_it85_device_setup (FuSuperioDevice *self, GError **error)
+fu_superio_it85_device_setup (FuDevice *device, GError **error)
 {
+	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	guint8 size_tmp = 0;
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *version = NULL;
+
+	/* FuSuperioDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_superio_it85_device_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* get EC size */
 	if (!fu_superio_device_ec_get_param (self, 0xe5, &size_tmp, error)) {
@@ -71,6 +76,6 @@ fu_superio_it85_device_init (FuSuperioIt85Device *self)
 static void
 fu_superio_it85_device_class_init (FuSuperioIt85DeviceClass *klass)
 {
-	FuSuperioDeviceClass *klass_superio_device = FU_SUPERIO_DEVICE_CLASS (klass);
-	klass_superio_device->setup = fu_superio_it85_device_setup;
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	klass_device->setup = fu_superio_it85_device_setup;
 }

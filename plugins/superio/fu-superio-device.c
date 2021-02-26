@@ -264,7 +264,6 @@ fu_superio_device_probe (FuDevice *device, GError **error)
 static gboolean
 fu_superio_device_setup (FuDevice *device, GError **error)
 {
-	FuSuperioDeviceClass *klass = FU_SUPERIO_DEVICE_GET_CLASS (device);
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 
@@ -314,10 +313,6 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 		}
 		fu_common_dump_raw (G_LOG_DOMAIN, "EC Registers", buf, 0x100);
 	}
-
-	/* subclassed setup */
-	if (klass->setup != NULL)
-		return klass->setup (self, error);
 
 	/* success */
 	return TRUE;
