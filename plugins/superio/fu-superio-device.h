@@ -14,8 +14,6 @@ G_DECLARE_DERIVABLE_TYPE (FuSuperioDevice, fu_superio_device, FU, SUPERIO_DEVICE
 struct _FuSuperioDeviceClass
 {
 	FuUdevDeviceClass	parent_class;
-	gboolean		 (*setup)	(FuSuperioDevice	*self,
-						 GError		**error);
 };
 
 gboolean	 fu_superio_device_ec_read	(FuSuperioDevice	*self,

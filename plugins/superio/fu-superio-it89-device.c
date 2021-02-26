@@ -90,10 +90,15 @@ fu_superio_it89_device_ec_size (FuSuperioDevice *self, GError **error)
 }
 
 static gboolean
-fu_superio_it89_device_setup (FuSuperioDevice *self, GError **error)
+fu_superio_it89_device_setup (FuDevice *device, GError **error)
 {
+	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	guint8 version_tmp[2] = { 0x00 };
 	g_autofree gchar *version = NULL;
+
+	/* FuSuperioDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_superio_it89_device_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* try to recover this */
 	if (g_getenv ("FWUPD_SUPERIO_RECOVER") != NULL) {
@@ -702,11 +707,10 @@ static void
 fu_superio_it89_device_class_init (FuSuperioIt89DeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuSuperioDeviceClass *klass_superio_device = FU_SUPERIO_DEVICE_CLASS (klass);
 	klass_device->attach = fu_superio_it89_device_attach;
 	klass_device->detach = fu_superio_it89_device_detach;
 	klass_device->read_firmware = fu_superio_it89_device_read_firmware;
 	klass_device->dump_firmware = fu_superio_it89_device_dump_firmware;
 	klass_device->write_firmware = fu_superio_it89_device_write_firmware;
-	klass_superio_device->setup = fu_superio_it89_device_setup;
+	klass_device->setup = fu_superio_it89_device_setup;
 }
