@@ -179,7 +179,7 @@ fu_synaptics_rmi_device_set_page (FuSynapticsRmiDevice *self, guint8 page, GErro
 }
 
 void		 
-fu_synaptics_rmi_device_set_iepmode	(FuSynapticsRmiDevice *self, gboolean iepmode)
+fu_synaptics_rmi_device_set_iepmode (FuSynapticsRmiDevice *self, gboolean iepmode)
 {
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 	priv->in_iep_mode = iepmode;
