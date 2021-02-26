@@ -1583,6 +1583,8 @@ fu_dfu_device_download (FuDfuDevice *self,
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	gboolean ret;
 	g_autoptr(GPtrArray) images = NULL;
+	guint16 firmware_pid = 0xffff;
+	guint16 firmware_vid = 0xffff;
 
 	/* no backing USB device */
 	if (usb_device == NULL) {
@@ -1598,9 +1600,15 @@ fu_dfu_device_download (FuDfuDevice *self,
 	if (!fu_dfu_device_ensure_interface (self, error))
 		return FALSE;
 
+	/* firmware supports footer? */
+	if (FU_IS_DFU_FIRMWARE (firmware)) {
+		firmware_vid = fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware));
+		firmware_pid = fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware));
+	}
+
 	/* do we allow wildcard VID:PID matches */
 	if ((flags & DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID) == 0) {
-		if (fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware)) == 0xffff) {
+		if (firmware_vid == 0xffff) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1609,7 +1617,7 @@ fu_dfu_device_download (FuDfuDevice *self,
 		}
 	}
 	if ((flags & DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID) == 0) {
-		if (fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware)) == 0xffff) {
+		if (firmware_pid == 0xffff) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1620,15 +1628,14 @@ fu_dfu_device_download (FuDfuDevice *self,
 
 	/* check vendor matches */
 	if (priv->runtime_vid != 0xffff) {
-		if (!fu_dfu_device_id_compatible (fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware)),
-					       priv->runtime_vid,
-					       fu_usb_device_get_vid (FU_USB_DEVICE (self)))) {
+		if (!fu_dfu_device_id_compatible (firmware_vid, priv->runtime_vid,
+						  fu_usb_device_get_vid (FU_USB_DEVICE (self)))) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "vendor ID incorrect, expected 0x%04x "
 				     "got 0x%04x and 0x%04x\n",
-				     fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware)),
+				     firmware_vid,
 				     priv->runtime_vid,
 				     fu_usb_device_get_vid (FU_USB_DEVICE (self)));
 			return FALSE;
@@ -1637,15 +1644,14 @@ fu_dfu_device_download (FuDfuDevice *self,
 
 	/* check product matches */
 	if (priv->runtime_pid != 0xffff) {
-		if (!fu_dfu_device_id_compatible (fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware)),
-					       priv->runtime_pid,
-					       fu_usb_device_get_pid (FU_USB_DEVICE (self)))) {
+		if (!fu_dfu_device_id_compatible (firmware_pid, priv->runtime_pid,
+					          fu_usb_device_get_pid (FU_USB_DEVICE (self)))) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "product ID incorrect, expected 0x%04x "
 				     "got 0x%04x and 0x%04x",
-				     fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware)),
+				     firmware_pid,
 				     priv->runtime_pid,
 				     fu_usb_device_get_pid (FU_USB_DEVICE (self)));
 			return FALSE;
@@ -1691,16 +1697,14 @@ fu_dfu_device_download (FuDfuDevice *self,
 		/* download onto target */
 		if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY)
 			flags_local = DFU_TARGET_TRANSFER_FLAG_VERIFY;
-		if (fu_dfu_firmware_get_version (FU_DFU_FIRMWARE (firmware)) == 0x0)
+		if (!FU_IS_DFU_FIRMWARE (firmware) ||
+		    fu_dfu_firmware_get_version (FU_DFU_FIRMWARE (firmware)) == 0x0)
 			flags_local |= DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC;
 		id1 = g_signal_connect (target_tmp, "percentage-changed",
 					G_CALLBACK (fu_dfu_device_percentage_cb), self);
 		id2 = g_signal_connect (target_tmp, "action-changed",
 					G_CALLBACK (fu_dfu_device_action_cb), self);
-		ret = fu_dfu_target_download (target_tmp,
-					   image,
-					   flags_local,
-					   error);
+		ret = fu_dfu_target_download (target_tmp, image, flags_local, error);
 		g_signal_handler_disconnect (target_tmp, id1);
 		g_signal_handler_disconnect (target_tmp, id2);
 		if (!ret)
