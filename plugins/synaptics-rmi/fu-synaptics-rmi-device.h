@@ -81,6 +81,8 @@ typedef enum {
 	RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34	= (1 << 0),
 } RmiDeviceWaitForIdleFlags;
 
+void		 	 fu_synaptics_rmi_device_set_iepmode	(FuSynapticsRmiDevice	*self,
+								 gboolean		iepmode);
 gboolean		 fu_synaptics_rmi_device_set_page	(FuSynapticsRmiDevice	*self,
 								 guint8			 page,
 								 GError			**error);

@@ -354,6 +354,7 @@ fu_synaptics_rmi_ps2_device_query_build_id (FuSynapticsRmiDevice *rmi_device,
 		g_prefix_error (error, "failed to detect Synaptics styk: ");
 		return FALSE;
 	}
+	fu_synaptics_rmi_device_set_iepmode (rmi_device, FALSE);
 	if (esdr == esdrTouchPad || is_synaptics_styk) {
 		/* Get the firmware id from the Extra Capabilities 2 Byte
 		 * The firmware id is located in bits 0 - 23 */
