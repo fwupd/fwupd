@@ -1237,7 +1237,7 @@ fu_dfu_device_open (FuDevice *device, GError **error)
 	 * and also uses the first two bytes as the model identifier */
 	if (fu_device_has_custom_flag (FU_DEVICE (device), "gd32")) {
 #if G_USB_CHECK_VERSION(0,3,6)
-		GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 		const guint8 *buf;
 		gsize bufsz = 0;
 		guint16 langid = G_USB_DEVICE_LANGID_ENGLISH_UNITED_STATES;
