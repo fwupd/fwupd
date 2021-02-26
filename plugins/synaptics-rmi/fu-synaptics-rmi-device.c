@@ -178,6 +178,13 @@ fu_synaptics_rmi_device_set_page (FuSynapticsRmiDevice *self, guint8 page, GErro
 	return TRUE;
 }
 
+void		 
+fu_synaptics_rmi_device_set_iepmode (FuSynapticsRmiDevice *self, gboolean iepmode)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	priv->in_iep_mode = iepmode;
+}
+
 gboolean
 fu_synaptics_rmi_device_write_bus_select (FuSynapticsRmiDevice *self, guint8 bus, GError **error)
 {
