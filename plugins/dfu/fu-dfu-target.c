@@ -709,6 +709,7 @@ fu_dfu_target_setup (FuDfuTarget *self, GError **error)
 					 flashsz * 0x400, /* size_left */
 					 0x0, /* zone */
 					 0x0, /* number */
+					 DFU_SECTOR_CAP_ERASEABLE |
 					 DFU_SECTOR_CAP_READABLE |
 					 DFU_SECTOR_CAP_WRITEABLE);
 		g_ptr_array_add (priv->sectors, sector);
