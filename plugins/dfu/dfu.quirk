@@ -4,7 +4,7 @@ Plugin = dfu
 
 # GD32VF103 Rev1
 [DeviceInstanceId=USB\VID_28E9&PID_0189]
-Flags = gd32
+Flags = gd32,force-dfu-mode
 Vendor = GDMicroelectronics
 
 # Realtek USB camera

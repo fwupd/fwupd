@@ -674,45 +674,42 @@ fu_dfu_target_setup (FuDfuTarget *self, GError **error)
 	}
 
 	/* GD32VF103 devices features and peripheral list */
-	if (fu_device_has_custom_flag (device, "gd32")) {
+	if (priv->alt_setting == 0x0 &&
+	    fu_device_has_custom_flag (device, "gd32")) {
 		/*             RB R8 R6 R4  VB V8
 		 * Flash (KB) 128 64 32 16 128 64
 		 *             TB T8 T6 T4  CB C8 C6 C4
 		 * Flash (KB) 128 64 32 16 128 64 32 16
 		 */
-		guint flashsz = 0;
-		const gchar *chip_id = fu_dfu_device_get_chip_id (fu_dfu_target_get_device (self));
-		FuDfuSector *sector;
-		if (chip_id[1] == '2') {
-			flashsz = 8;
-		} else if (chip_id[1] == '4') {
-			flashsz = 16;
-		} else if (chip_id[1] == '6') {
-			flashsz = 32;
-		} else if (chip_id[1] == '8') {
-			flashsz = 64;
-		} else if (chip_id[1] == 'B') {
-			flashsz = 128;
-		} else if (chip_id[1] == 'D') {
-			flashsz = 256;
+		const gchar *serial = fu_device_get_serial (device);
+		if (serial == NULL || strlen (serial) < 4 || serial[3] != 'J') {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "GD32 serial number %s invalid",
+				     serial);
+			return FALSE;
+		}
+		if (serial[2] == '2') {
+			fu_dfu_target_set_alt_name (self, "@Internal Flash  /0x8000000/8*1Kg");
+		} else if (serial[2] == '4') {
+			fu_dfu_target_set_alt_name (self, "@Internal Flash  /0x8000000/16*1Kg");
+		} else if (serial[2] == '6') {
+			fu_dfu_target_set_alt_name (self, "@Internal Flash  /0x8000000/32*1Kg");
+		} else if (serial[2] == '8') {
+			fu_dfu_target_set_alt_name (self, "@Internal Flash  /0x8000000/64*1Kg");
+		} else if (serial[2] == 'B') {
+			fu_dfu_target_set_alt_name (self, "@Internal Flash  /0x8000000/128*1Kg");
+		} else if (serial[2] == 'D') {
+			fu_dfu_target_set_alt_name (self, "@Internal Flash  /0x8000000/256*1Kg");
 		} else {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "Unknown GD32 sector size: %c",
-				     chip_id[1]);
+				     serial[2]);
 			return FALSE;
 		}
-		g_debug ("using GD32 sector size of 0x%x", flashsz * 0x400);
-		sector = fu_dfu_sector_new (0x08000000, /* addr */
-					 flashsz * 0x400, /* size */
-					 flashsz * 0x400, /* size_left */
-					 0x0, /* zone */
-					 0x0, /* number */
-					 DFU_SECTOR_CAP_ERASEABLE |
-					 DFU_SECTOR_CAP_READABLE |
-					 DFU_SECTOR_CAP_WRITEABLE);
-		g_ptr_array_add (priv->sectors, sector);
 	}
 
 	/* get string */
