@@ -1,5 +1,4 @@
 install_data([
-    'GPG-KEY-Hughski-Limited',
     'GPG-KEY-Linux-Foundation-Firmware',
     'GPG-KEY-Linux-Vendor-Firmware-Service',
   ],
