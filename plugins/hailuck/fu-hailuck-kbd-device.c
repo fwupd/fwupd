@@ -67,7 +67,7 @@ static void
 fu_hailuck_kbd_device_init (FuHailuckKbdDevice *self)
 {
 	fu_device_set_firmware_size (FU_DEVICE (self), 0x4000);
-	fu_device_set_protocol (FU_DEVICE (self), "com.hailuck.kbd");
+	fu_device_add_protocol (FU_DEVICE (self), "com.hailuck.kbd");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);

@@ -1156,7 +1156,9 @@ fu_device_set_quirk_kv (FuDevice *self,
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_PROTOCOL) == 0) {
-		fu_device_set_protocol (self, value);
+		g_auto(GStrv) sections = g_strsplit (value, ",", -1);
+		for (guint i = 0; sections[i] != NULL; i++)
+			fu_device_add_protocol (self, sections[i]);
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_VERSION) == 0) {
@@ -2164,7 +2166,10 @@ const gchar *
 fu_device_get_protocol (FuDevice *self)
 {
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 	return fwupd_device_get_protocol (FWUPD_DEVICE (self));
+#pragma GCC diagnostic pop
 }
 
 /**
@@ -2180,7 +2185,7 @@ void
 fu_device_set_protocol (FuDevice *self, const gchar *protocol)
 {
 	g_return_if_fail (FU_IS_DEVICE (self));
-	fwupd_device_set_protocol (FWUPD_DEVICE (self), protocol);
+	fwupd_device_add_protocol (FWUPD_DEVICE (self), protocol);
 }
 
 /**

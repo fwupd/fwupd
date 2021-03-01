@@ -9,3 +9,4 @@ Planned API/ABI changes for next release
  * Remove FuHidDevice->open() and FuHidDevice->close()
  * Remove FuUsbDevice->probe(), FuUsbDevice->open() and FuUsbDevice->close()
  * Remove FuUdevDevice->to_string(), FuUdevDevice->probe(), FuUdevDevice->open() and FuUdevDevice->close()
+ * Remove fu_device_get_protocol() and fu_device_set_protocol()

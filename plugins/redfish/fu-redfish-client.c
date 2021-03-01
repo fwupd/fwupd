@@ -147,7 +147,7 @@ fu_redfish_client_coldplug_member (FuRedfishClient *self,
 	id = g_strdup_printf ("Redfish-Inventory-%s",
 			      json_object_get_string_member (member, "Id"));
 	fu_device_set_id (dev, id);
-	fu_device_set_protocol (dev, "org.dmtf.redfish");
+	fu_device_add_protocol (dev, "org.dmtf.redfish");
 
 	fu_device_add_guid (dev, guid);
 	if (json_object_has_member (member, "Name"))

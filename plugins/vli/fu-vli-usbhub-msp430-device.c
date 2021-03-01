@@ -323,7 +323,7 @@ static void
 fu_vli_usbhub_msp430_device_init (FuVliUsbhubMsp430Device *self)
 {
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
-	fu_device_set_protocol (FU_DEVICE (self), "com.vli.i2c");
+	fu_device_add_protocol (FU_DEVICE (self), "com.vli.i2c");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_logical_id (FU_DEVICE (self), "I2C");

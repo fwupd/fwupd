@@ -965,7 +965,7 @@ fu_dell_dock_mst_close (FuDevice *device, GError **error)
 static void
 fu_dell_dock_mst_init (FuDellDockMst *self)
 {
-	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.mst");
+	fu_device_add_protocol (FU_DEVICE (self), "com.synaptics.mst");
 }
 
 static void

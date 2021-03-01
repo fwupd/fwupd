@@ -5389,7 +5389,7 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 
 	/* does the device not have an assigned protocol */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
-	    fu_device_get_protocol (device) == NULL) {
+	    fu_device_get_protocols (device)->len == 0) {
 		g_warning ("device %s [%s] does not define an update protocol",
 			   fu_device_get_id (device),
 			   fu_device_get_name (device));

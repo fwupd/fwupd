@@ -388,7 +388,7 @@ fu_fresco_pd_device_init (FuFrescoPdDevice *self)
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_protocol (FU_DEVICE (self), "com.frescologic.pd");
+	fu_device_add_protocol (FU_DEVICE (self), "com.frescologic.pd");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_install_duration (FU_DEVICE (self), 15);
 	fu_device_set_remove_delay (FU_DEVICE (self), 20000);

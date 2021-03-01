@@ -654,7 +654,7 @@ fu_pxi_device_init (FuPxiDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_vendor_id (FU_DEVICE (self), "USB:0x093A");
-	fu_device_set_protocol (FU_DEVICE (self), "com.pixart.rf");
+	fu_device_add_protocol (FU_DEVICE (self), "com.pixart.rf");
 }
 
 static void

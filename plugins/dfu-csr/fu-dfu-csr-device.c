@@ -433,7 +433,7 @@ fu_dfu_csr_device_setup (FuDevice *device, GError **error)
 static void
 fu_dfu_csr_device_init (FuDfuCsrDevice *self)
 {
-	fu_device_set_protocol (FU_DEVICE (self), "com.qualcomm.dfu");
+	fu_device_add_protocol (FU_DEVICE (self), "com.qualcomm.dfu");
 	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 }
 

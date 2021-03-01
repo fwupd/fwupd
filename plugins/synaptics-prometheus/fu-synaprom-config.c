@@ -216,7 +216,7 @@ fu_synaprom_config_write_firmware (FuDevice *device,
 static void
 fu_synaprom_config_init (FuSynapromConfig *self)
 {
-	fu_device_set_protocol (FU_DEVICE (self), "com.synaptics.prometheus.config");
+	fu_device_add_protocol (FU_DEVICE (self), "com.synaptics.prometheus.config");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_logical_id (FU_DEVICE (self), "cfg");

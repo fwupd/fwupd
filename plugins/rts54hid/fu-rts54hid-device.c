@@ -314,7 +314,7 @@ fu_rts54hid_device_write_firmware (FuDevice *device,
 static void
 fu_rts54hid_device_init (FuRts54HidDevice *self)
 {
-	fu_device_set_protocol (FU_DEVICE (self), "com.realtek.rts54");
+	fu_device_add_protocol (FU_DEVICE (self), "com.realtek.rts54");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 }
 

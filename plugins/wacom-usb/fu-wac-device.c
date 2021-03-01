@@ -802,7 +802,7 @@ fu_wac_device_init (FuWacDevice *self)
 	self->checksums = g_array_new (FALSE, FALSE, sizeof(guint32));
 	self->configuration = 0xffff;
 	self->firmware_index = 0xffff;
-	fu_device_set_protocol (FU_DEVICE (self), "com.wacom.usb");
+	fu_device_add_protocol (FU_DEVICE (self), "com.wacom.usb");
 	fu_device_add_icon (FU_DEVICE (self), "input-tablet");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);

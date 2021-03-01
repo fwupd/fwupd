@@ -40,7 +40,7 @@ fu_dell_dock_hub_probe (FuDevice *device, GError **error)
 
 	fu_device_set_logical_id (device, "hub");
 	fu_device_add_instance_id (device, devid);
-	fu_device_set_protocol (device, "com.dell.dock");
+	fu_device_add_protocol (device, "com.dell.dock");
 
 	return TRUE;
 }

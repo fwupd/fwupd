@@ -107,9 +107,16 @@ void		 fwupd_device_add_checksum		(FwupdDevice	*device,
 const gchar	*fwupd_device_get_plugin		(FwupdDevice	*device);
 void		 fwupd_device_set_plugin		(FwupdDevice	*device,
 							 const gchar	*plugin);
+G_DEPRECATED_FOR(fwupd_device_get_protocols)
 const gchar	*fwupd_device_get_protocol		(FwupdDevice	*device);
+G_DEPRECATED_FOR(fwupd_device_add_protocol)
 void		 fwupd_device_set_protocol		(FwupdDevice	*device,
 							 const gchar	*protocol);
+void		 fwupd_device_add_protocol		(FwupdDevice	*device,
+							 const gchar	*protocol);
+gboolean	 fwupd_device_has_protocol		(FwupdDevice	*device,
+							 const gchar	*protocol);
+GPtrArray	*fwupd_device_get_protocols		(FwupdDevice	*device);
 const gchar	*fwupd_device_get_vendor		(FwupdDevice	*device);
 void		 fwupd_device_set_vendor		(FwupdDevice	*device,
 							 const gchar	*vendor);
