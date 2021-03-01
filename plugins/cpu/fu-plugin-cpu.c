@@ -14,6 +14,7 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_BEFORE, "msr");
+	fu_plugin_add_possible_quirk_key (plugin, "BcrAddr");
 }
 
 gboolean

@@ -192,6 +192,7 @@ GPtrArray	*fu_engine_get_releases_for_device 	(FuEngine	*self,
 							 GError		**error);
 
 /* for the self tests */
+FuQuirks	*fu_engine_get_quirks			(FuEngine	*self);
 void		 fu_engine_add_device			(FuEngine	*self,
 							 FuDevice	*device);
 void		 fu_engine_add_plugin			(FuEngine	*self,

@@ -23,4 +23,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_set_device_gtype (plugin, FU_TYPE_CCGX_HID_DEVICE);
 	fu_plugin_set_device_gtype (plugin, FU_TYPE_CCGX_HPI_DEVICE);
 	fu_plugin_set_device_gtype (plugin, FU_TYPE_CCGX_DMC_DEVICE);
+	fu_plugin_add_possible_quirk_key (plugin, "FlashRowSize");
+	fu_plugin_add_possible_quirk_key (plugin, "FlashSize");
+	fu_plugin_add_possible_quirk_key (plugin, "ImageKind");
 }

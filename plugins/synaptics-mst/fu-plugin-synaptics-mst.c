@@ -177,6 +177,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_add_udev_subsystem (plugin, "drm");	/* used for uevent only */
 	fu_plugin_add_udev_subsystem (plugin, "drm_dp_aux_dev");
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_SYNAPTICS_MST_FIRMWARE);
+	fu_plugin_add_possible_quirk_group (plugin, "SynapticsMSTBoardID");
 }
 
 void

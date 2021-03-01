@@ -25,6 +25,15 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+	fu_plugin_add_possible_quirk_key (plugin, "DellDockBlobBuildOffset");
+	fu_plugin_add_possible_quirk_key (plugin, "DellDockBlobMajorOffset");
+	fu_plugin_add_possible_quirk_key (plugin, "DellDockBlobMinorOffset");
+	fu_plugin_add_possible_quirk_key (plugin, "DellDockBlobVersionOffset");
+	fu_plugin_add_possible_quirk_key (plugin, "DellDockBoardMin");
+	fu_plugin_add_possible_quirk_key (plugin, "DellDockHubVersionLowest");
+	fu_plugin_add_possible_quirk_key (plugin, "DellDockInstallDurationI2C");
+	fu_plugin_add_possible_quirk_key (plugin, "DellDockUnlockTarget");
+	fu_plugin_add_possible_quirk_key (plugin, "DellDockVersionLowest");
 
 	/* allow these to be built by quirks */
 	g_type_ensure (FU_TYPE_DELL_DOCK_STATUS);

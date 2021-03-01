@@ -19,6 +19,9 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_VLI_USBHUB_FIRMWARE);
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_VLI_PD_FIRMWARE);
+	fu_plugin_add_possible_quirk_key (plugin, "DeviceKind");
+	fu_plugin_add_possible_quirk_key (plugin, "SpiCmdChipErase");
+	fu_plugin_add_possible_quirk_key (plugin, "SpiCmdSectorErase");
 
 	/* register the custom types */
 	g_type_ensure (FU_TYPE_VLI_USBHUB_DEVICE);

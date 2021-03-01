@@ -3070,6 +3070,13 @@ fu_engine_set_silo (FuEngine *self, XbSilo *silo)
 	g_set_object (&self->silo, silo);
 }
 
+/* for the self tests */
+FuQuirks *
+fu_engine_get_quirks (FuEngine *self)
+{
+	return self->quirks;
+}
+
 static gboolean
 fu_engine_appstream_upgrade_cb (XbBuilderFixup *self,
 				XbBuilderNode *bn,

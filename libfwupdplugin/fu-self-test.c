@@ -502,6 +502,8 @@ fu_plugin_quirks_func (void)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
 	g_autoptr(GError) error = NULL;
 
+	fu_quirks_add_possible_key (quirks, "Test");
+	fu_quirks_add_possible_group (quirks, "ACME Inc.");
 	ret = fu_quirks_load (quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);

@@ -16,12 +16,14 @@ G_DECLARE_FINAL_TYPE (FuQuirks, fu_quirks, FU, QUIRKS, GObject)
  * FuQuirksLoadFlags:
  * @FU_QUIRKS_LOAD_FLAG_NONE:		No flags set
  * @FU_QUIRKS_LOAD_FLAG_READONLY_FS:	Ignore readonly filesystem errors
+ * @FU_QUIRKS_LOAD_FLAG_FATAL_WARNINGS:	All quirk warnings are fatal
  *
  * The flags to use when loading quirks.
  **/
 typedef enum {
 	FU_QUIRKS_LOAD_FLAG_NONE		= 0,
 	FU_QUIRKS_LOAD_FLAG_READONLY_FS		= 1 << 0,
+	FU_QUIRKS_LOAD_FLAG_FATAL_WARNINGS	= 1 << 1,
 	/*< private >*/
 	FU_QUIRKS_LOAD_FLAG_LAST
 } FuQuirksLoadFlags;
@@ -43,6 +45,10 @@ gboolean	 fu_quirks_lookup_by_id_iter		(FuQuirks	*self,
 							 const gchar	*group,
 							 FuQuirksIter	 iter_cb,
 							 gpointer	 user_data);
+void		 fu_quirks_add_possible_key		(FuQuirks	*self,
+							 const gchar	*possible_key);
+void		 fu_quirks_add_possible_group		(FuQuirks	*self,
+							 const gchar	*possible_group);
 
 #define	FU_QUIRKS_PLUGIN			"Plugin"
 #define	FU_QUIRKS_FLAGS				"Flags"
