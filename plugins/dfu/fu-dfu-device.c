@@ -758,17 +758,6 @@ fu_dfu_device_set_state (FuDfuDevice *self, FuDfuState state)
 	} else {
 		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	}
-
-	switch (state) {
-	case FU_DFU_STATE_DFU_UPLOAD_IDLE:
-		fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
-		break;
-	case FU_DFU_STATE_DFU_DNLOAD_IDLE:
-		fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
-		break;
-	default:
-		break;
-	}
 }
 
 static void
