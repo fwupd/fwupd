@@ -45,10 +45,6 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-
-	/* for the uploaded report */
-	if (fu_plugin_has_custom_flag (plugin, "use-legacy-bootmgr-desc"))
-		fu_plugin_add_report_metadata (plugin, "BootMgrDesc", "legacy");
 }
 
 void
@@ -619,6 +615,10 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	/* don't let user's environment influence test suite failures */
 	if (g_getenv ("FWUPD_UEFI_TEST") != NULL)
 		return TRUE;
+
+	/* for the uploaded report */
+	if (fu_plugin_has_custom_flag (plugin, "use-legacy-bootmgr-desc"))
+		fu_plugin_add_report_metadata (plugin, "BootMgrDesc", "legacy");
 
 	/* some platforms have broken SMBIOS data */
 	if (fu_plugin_has_custom_flag (plugin, "uefi-force-enable"))

@@ -6369,15 +6369,11 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if ((self->app_flags & FU_APP_FLAGS_NO_IDLE_SOURCES) == 0)
 		fu_idle_set_timeout (self->idle, fu_config_get_idle_timeout (self->config));
 
-	/* load quirks, SMBIOS and the hwids */
+	/* load SMBIOS and the hwids */
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
 		fu_engine_load_smbios (self);
 		fu_engine_load_hwids (self);
 	}
-	/* on a read-only filesystem don't care about the cache GUID */
-	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
-		quirks_flags |= FU_QUIRKS_LOAD_FLAG_READONLY_FS;
-	fu_engine_load_quirks (self, quirks_flags);
 
 	/* load AppStream metadata */
 	if (!fu_engine_load_metadata_store (self, flags, error)) {
@@ -6425,6 +6421,11 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		g_prefix_error (error, "Failed to load plugins: ");
 		return FALSE;
 	}
+
+	/* on a read-only filesystem don't care about the cache GUID */
+	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
+		quirks_flags |= FU_QUIRKS_LOAD_FLAG_READONLY_FS;
+	fu_engine_load_quirks (self, quirks_flags);
 
 	/* watch the device list for updates and proxy */
 	g_signal_connect (self->device_list, "added",
