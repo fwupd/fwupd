@@ -10,6 +10,7 @@
 
 #include <fwupd.h>
 
+#include "fu-common.h"
 #include "fu-common-version.h"
 #include "fu-device-private.h"
 #include "fu-install-task.h"
@@ -254,16 +255,17 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	protocol = xb_node_query_text (self->component,
 				       "custom/value[@key='LVFS::UpdateProtocol']",
 				       NULL);
-	if (fu_device_get_protocol (self->device) != NULL && protocol != NULL &&
-	    g_strcmp0 (fu_device_get_protocol (self->device), protocol) != 0 &&
+	if (fu_device_get_protocols (self->device)->len != 0 && protocol != NULL &&
+	    !fu_device_has_protocol (self->device, protocol) &&
 	    (flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
+		g_autofree gchar *str = NULL;
+		str = fu_common_strjoin_array ("|", fu_device_get_protocols (self->device));
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "Device %s does not support %s, only %s",
 			     fu_device_get_name (self->device),
-			     protocol,
-			     fu_device_get_protocol (self->device));
+			     protocol, str);
 		return FALSE;
 	}
 

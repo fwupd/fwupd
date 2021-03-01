@@ -647,7 +647,7 @@ fu_vli_pd_parade_device_init (FuVliPdParadeDevice *self)
 	fu_device_add_icon (FU_DEVICE (self), "video-display");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_set_protocol (FU_DEVICE (self), "com.vli.i2c");
+	fu_device_add_protocol (FU_DEVICE (self), "com.vli.i2c");
 	fu_device_set_install_duration (FU_DEVICE (self), 15); /* seconds */
 	fu_device_set_logical_id (FU_DEVICE (self), "PS186");
 	fu_device_set_summary (FU_DEVICE (self), "DisplayPort 1.4a to HDMI 2.0b Protocol Converter");

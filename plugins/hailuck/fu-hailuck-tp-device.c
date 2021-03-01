@@ -202,7 +202,7 @@ fu_hailuck_tp_device_init (FuHailuckTpDevice *self)
 {
 	fu_device_retry_set_delay (FU_DEVICE (self), 50); /* ms */
 	fu_device_set_firmware_size (FU_DEVICE (self), 0x6018);
-	fu_device_set_protocol (FU_DEVICE (self), "com.hailuck.tp");
+	fu_device_add_protocol (FU_DEVICE (self), "com.hailuck.tp");
 	fu_device_set_logical_id (FU_DEVICE (self), "TP");
 	fu_device_set_name (FU_DEVICE (self), "Touchpad");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);

@@ -38,7 +38,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_add_icon (device, "preferences-desktop-keyboard");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-	fu_device_set_protocol (device, "com.acme.test");
+	fu_device_add_protocol (device, "com.acme.test");
 	fu_device_set_summary (device, "A fake webcam");
 	fu_device_set_vendor (device, "ACME Corp.");
 	fu_device_add_vendor_id (device, "USB:0x046D");
@@ -64,7 +64,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 		child1 = fu_device_new ();
 		fu_device_add_vendor_id (child1, "USB:FFFF");
-		fu_device_set_protocol (child1, "com.acme");
+		fu_device_add_protocol (child1, "com.acme");
 		fu_device_set_physical_id (child1, "fake");
 		fu_device_set_logical_id (child1, "child1");
 		fu_device_add_guid (child1, "7fddead7-12b5-4fb9-9fa0-6d30305df755");
@@ -77,7 +77,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 		child2 = fu_device_new ();
 		fu_device_add_vendor_id (child2, "USB:FFFF");
-		fu_device_set_protocol (child2, "com.acme");
+		fu_device_add_protocol (child2, "com.acme");
 		fu_device_set_physical_id (child2, "fake");
 		fu_device_set_logical_id (child2, "child2");
 		fu_device_add_guid (child2, "b8fe6b45-8702-4bcd-8120-ef236caac76f");

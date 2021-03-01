@@ -721,7 +721,7 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 static void
 fu_uefi_device_init (FuUefiDevice *self)
 {
-	fu_device_set_protocol (FU_DEVICE (self), "org.uefi.capsule");
+	fu_device_add_protocol (FU_DEVICE (self), "org.uefi.capsule");
 }
 
 static void

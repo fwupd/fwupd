@@ -648,3 +648,11 @@ LIBFWUPD_1.5.6 {
     fwupd_release_get_locations;
   local: *;
 } LIBFWUPD_1.5.5;
+
+LIBFWUPD_1.5.8 {
+  global:
+    fwupd_device_add_protocol;
+    fwupd_device_get_protocols;
+    fwupd_device_has_protocol;
+  local: *;
+} LIBFWUPD_1.5.6;

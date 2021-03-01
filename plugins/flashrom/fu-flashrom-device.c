@@ -17,7 +17,7 @@ G_DEFINE_TYPE (FuFlashromDevice, fu_flashrom_device, FU_TYPE_DEVICE)
 static void
 fu_flashrom_device_init (FuFlashromDevice *self)
 {
-	fu_device_set_protocol (FU_DEVICE (self), "org.flashrom");
+	fu_device_add_protocol (FU_DEVICE (self), "org.flashrom");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);

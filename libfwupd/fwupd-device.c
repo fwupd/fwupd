@@ -35,6 +35,7 @@ typedef struct {
 	guint64				 flags;
 	GPtrArray			*guids;
 	GPtrArray			*vendor_ids;
+	GPtrArray			*protocols;
 	GPtrArray			*instance_ids;
 	GPtrArray			*icons;
 	gchar				*name;
@@ -1184,6 +1185,8 @@ fwupd_device_set_plugin (FwupdDevice *device, const gchar *plugin)
  * Returns: the protocol name, or %NULL if unset
  *
  * Since: 1.3.6
+ *
+ * Deprecated: 1.5.8: Use fwupd_device_get_protocols() instead.
  **/
 const gchar *
 fwupd_device_get_protocol (FwupdDevice *device)
@@ -1201,19 +1204,98 @@ fwupd_device_get_protocol (FwupdDevice *device)
  * Sets the protocol that is used to update the device.
  *
  * Since: 1.3.6
+ *
+ * Deprecated: 1.5.8: Use fwupd_device_add_protocol() instead.
  **/
 void
 fwupd_device_set_protocol (FwupdDevice *device, const gchar *protocol)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_auto(GStrv) protocols = NULL;
+
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (protocol != NULL);
 
-	/* not changed */
-	if (g_strcmp0 (priv->protocol, protocol) == 0)
+	/* add all */
+	protocols = g_strsplit (protocol, "|", -1);
+	for (guint i = 0; protocols[i] != NULL; i++)
+		fwupd_device_add_protocol (device, protocols[i]);
+}
+
+/**
+ * fwupd_device_get_protocols:
+ * @device: A #FwupdDevice
+ *
+ * Gets the device protocol.
+ *
+ * Returns: (element-type utf8) (transfer none): the device protocol
+ *
+ * Since: 1.5.8
+ **/
+GPtrArray *
+fwupd_device_get_protocols (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	return priv->protocols;
+}
+
+/**
+ * fwupd_device_has_protocol:
+ * @device: A #FwupdDevice
+ * @protocol: the ID, e.g. 'USB:0x1234'
+ *
+ * Finds out if the device has this specific protocol.
+ *
+ * Returns: %TRUE if the ID is found
+ *
+ * Since: 1.5.8
+ **/
+gboolean
+fwupd_device_has_protocol (FwupdDevice *device, const gchar *protocol)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (protocol != NULL, FALSE);
+
+	for (guint i = 0; i < priv->protocols->len; i++) {
+		const gchar *protocol_tmp = g_ptr_array_index (priv->protocols, i);
+		if (g_strcmp0 (protocol, protocol_tmp) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * fwupd_device_add_protocol:
+ * @device: A #FwupdDevice
+ * @protocol: the ID, e.g. 'USB:0x1234'
+ *
+ * Adds a device protocol.
+ *
+ * Since: 1.5.8
+ **/
+void
+fwupd_device_add_protocol (FwupdDevice *device, const gchar *protocol)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_auto(GStrv) protocols_tmp = NULL;
+
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (protocol != NULL);
+
+	if (fwupd_device_has_protocol (device, protocol))
 		return;
+	g_ptr_array_add (priv->protocols, g_strdup (protocol));
 
+	/* build for compatibility */
+	protocols_tmp = g_new0 (gchar *, priv->protocols->len + 1);
+	for (guint i = 0; i < priv->protocols->len; i++) {
+		const gchar *protocol_tmp = g_ptr_array_index (priv->protocols, i);
+		protocols_tmp[i] = g_strdup (protocol_tmp);
+	}
 	g_free (priv->protocol);
-	priv->protocol = g_strdup (protocol);
+	priv->protocol = g_strjoinv ("|", protocols_tmp);
 }
 
 /**
@@ -1435,8 +1517,10 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 	}
 	if (priv->plugin == NULL)
 		fwupd_device_set_plugin (self, priv_donor->plugin);
-	if (priv->protocol == NULL)
-		fwupd_device_set_protocol (self, priv_donor->protocol);
+	for (guint i = 0; i < priv_donor->protocols->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv_donor->protocols, i);
+		fwupd_device_add_protocol (self, tmp);
+	}
 	if (priv->update_error == NULL)
 		fwupd_device_set_update_error (self, priv_donor->update_error);
 	if (priv->update_message == NULL)
@@ -1593,10 +1677,17 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 				       FWUPD_RESULT_KEY_PLUGIN,
 				       g_variant_new_string (priv->plugin));
 	}
-	if (priv->protocol != NULL) {
+	if (priv->protocols->len > 0) {
+		g_autoptr(GString) str = g_string_new (NULL);
+		for (guint i = 0; i < priv->protocols->len; i++) {
+			const gchar *tmp = g_ptr_array_index (priv->protocols, i);
+			g_string_append_printf (str, "%s|", tmp);
+		}
+		if (str->len > 0)
+			g_string_truncate (str, str->len - 1);
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_PROTOCOL,
-				       g_variant_new_string (priv->protocol));
+				       g_variant_new_string (str->str));
 	}
 	if (priv->version != NULL) {
 		g_variant_builder_add (&builder, "{sv}",
@@ -1813,7 +1904,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_PROTOCOL) == 0) {
-		fwupd_device_set_protocol (device, g_variant_get_string (value, NULL));
+		g_auto(GStrv) protocols = NULL;
+		protocols = g_strsplit (g_variant_get_string (value, NULL), "|", -1);
+		for (guint i = 0; protocols[i] != NULL; i++)
+			fwupd_device_add_protocol (device, protocols[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION) == 0) {
@@ -2316,6 +2410,15 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
+	if (priv->protocols->len > 1) { /* --> 0 when bumping API */
+		json_builder_set_member_name (builder, "VendorIds");
+		json_builder_begin_array (builder);
+		for (guint i = 0; i < priv->protocols->len; i++) {
+			const gchar *tmp = g_ptr_array_index (priv->protocols, i);
+			json_builder_add_string_value (builder, tmp);
+		}
+		json_builder_end_array (builder);
+	}
 	if (priv->flags != FWUPD_DEVICE_FLAG_NONE) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_FLAGS);
 		json_builder_begin_array (builder);
@@ -2461,7 +2564,10 @@ fwupd_device_to_string (FwupdDevice *device)
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_BRANCH, priv->branch);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
+	for (guint i = 0; i < priv->protocols->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv->protocols, i);
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PROTOCOL, tmp);
+	}
 	fwupd_pad_kv_dfl (str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index (priv->checksums, i);
@@ -2563,7 +2669,7 @@ fwupd_device_set_property (GObject *object, guint prop_id,
 		fwupd_device_set_flags (self, g_value_get_uint64 (value));
 		break;
 	case PROP_PROTOCOL:
-		fwupd_device_set_protocol (self, g_value_get_string (value));
+		fwupd_device_add_protocol (self, g_value_get_string (value));
 		break;
 	case PROP_STATUS:
 		fwupd_device_set_status (self, g_value_get_uint (value));
@@ -2644,6 +2750,7 @@ fwupd_device_init (FwupdDevice *device)
 	priv->icons = g_ptr_array_new_with_free_func (g_free);
 	priv->checksums = g_ptr_array_new_with_free_func (g_free);
 	priv->vendor_ids = g_ptr_array_new_with_free_func (g_free);
+	priv->protocols = g_ptr_array_new_with_free_func (g_free);
 	priv->children = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	priv->releases = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 }
@@ -2682,6 +2789,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->version_bootloader);
 	g_ptr_array_unref (priv->guids);
 	g_ptr_array_unref (priv->vendor_ids);
+	g_ptr_array_unref (priv->protocols);
 	g_ptr_array_unref (priv->instance_ids);
 	g_ptr_array_unref (priv->icons);
 	g_ptr_array_unref (priv->checksums);

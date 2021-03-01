@@ -276,7 +276,7 @@ fu_dell_dock_tbt_finalize (GObject *object)
 static void
 fu_dell_dock_tbt_init (FuDellDockTbt *self)
 {
-	fu_device_set_protocol (FU_DEVICE (self), "com.intel.thunderbolt");
+	fu_device_add_protocol (FU_DEVICE (self), "com.intel.thunderbolt");
 }
 
 static void

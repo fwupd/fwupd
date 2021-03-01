@@ -7,6 +7,7 @@ Planned API/ABI changes for next release
  * Remove the deprecated flags like `FWUPD_DEVICE_FLAG_MD_SET_ICON`
  * Remove `fwupd_release_get_uri()` and `fwupd_release_set_uri()`
  * Rename `fwupd_client_install_release2_async()` to `fwupd_client_install_release_async()`
+ * Remove fwupd_device_set_protocol() and fwupd_device_get_protocol()
 
 Migration from Version 0.9.x
 ============================

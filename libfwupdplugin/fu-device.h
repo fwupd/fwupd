@@ -143,6 +143,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_has_flag(d,v)			fwupd_device_has_flag(FWUPD_DEVICE(d),v)
 #define fu_device_has_instance_id(d,v)		fwupd_device_has_instance_id(FWUPD_DEVICE(d),v)
 #define fu_device_has_vendor_id(d,v)		fwupd_device_has_vendor_id(FWUPD_DEVICE(d),v)
+#define fu_device_has_protocol(d,v)		fwupd_device_has_protocol(FWUPD_DEVICE(d),v)
 #define fu_device_add_checksum(d,v)		fwupd_device_add_checksum(FWUPD_DEVICE(d),v)
 #define fu_device_add_release(d,v)		fwupd_device_add_release(FWUPD_DEVICE(d),v)
 #define fu_device_add_icon(d,v)			fwupd_device_add_icon(FWUPD_DEVICE(d),v)
@@ -160,6 +161,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_update_state(d,v)		fwupd_device_set_update_state(FWUPD_DEVICE(d),v)
 #define fu_device_set_vendor(d,v)		fwupd_device_set_vendor(FWUPD_DEVICE(d),v)
 #define fu_device_add_vendor_id(d,v)		fwupd_device_add_vendor_id(FWUPD_DEVICE(d),v)
+#define fu_device_add_protocol(d,v)		fwupd_device_add_protocol(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_raw(d,v)		fwupd_device_set_version_raw(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_lowest_raw(d,v)	fwupd_device_set_version_lowest_raw(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_bootloader_raw(d,v)	fwupd_device_set_version_bootloader_raw(FWUPD_DEVICE(d),v)
@@ -190,6 +192,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_version_lowest_raw(d)	fwupd_device_get_version_lowest_raw(FWUPD_DEVICE(d))
 #define fu_device_get_version_bootloader_raw(d)	fwupd_device_get_version_bootloader_raw(FWUPD_DEVICE(d))
 #define fu_device_get_vendor_ids(d)		fwupd_device_get_vendor_ids(FWUPD_DEVICE(d))
+#define fu_device_get_protocols(d)		fwupd_device_get_protocols(FWUPD_DEVICE(d))
 #define fu_device_get_flashes_left(d)		fwupd_device_get_flashes_left(FWUPD_DEVICE(d))
 #define fu_device_get_install_duration(d)	fwupd_device_get_install_duration(FWUPD_DEVICE(d))
 
@@ -292,7 +295,9 @@ void		 fu_device_set_backend_id		(FuDevice	*self,
 const gchar	*fu_device_get_proxy_guid		(FuDevice	*self);
 void		 fu_device_set_proxy_guid		(FuDevice	*self,
 							 const gchar	*proxy_guid);
+G_DEPRECATED_FOR(fu_device_get_protocols)
 const gchar	*fu_device_get_protocol			(FuDevice	*self);
+G_DEPRECATED_FOR(fu_device_add_protocol)
 void		 fu_device_set_protocol			(FuDevice	*self,
 							 const gchar	*protocol);
 guint		 fu_device_get_priority			(FuDevice	*self);

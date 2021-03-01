@@ -495,7 +495,7 @@ fu_emmc_device_write_firmware (FuDevice *device,
 static void
 fu_emmc_device_init (FuEmmcDevice *self)
 {
-	fu_device_set_protocol (FU_DEVICE (self), "org.jedec.mmc");
+	fu_device_add_protocol (FU_DEVICE (self), "org.jedec.mmc");
 	fu_device_add_icon (FU_DEVICE (self), "media-memory");
 }
 

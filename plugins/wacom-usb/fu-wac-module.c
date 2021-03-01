@@ -305,7 +305,7 @@ fu_wac_module_set_property (GObject *object, guint prop_id,
 static void
 fu_wac_module_init (FuWacModule *self)
 {
-	fu_device_set_protocol (FU_DEVICE (self), "com.wacom.usb");
+	fu_device_add_protocol (FU_DEVICE (self), "com.wacom.usb");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
