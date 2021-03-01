@@ -106,6 +106,20 @@ fu_quirks_convert_quirk_to_xml_cb (XbBuilderSource *self,
 		g_auto(GStrv) keys = NULL;
 		g_autofree gchar *group_id = NULL;
 		g_autoptr(XbBuilderNode) bn = NULL;
+
+		/* sanity check group */
+		if (g_str_has_prefix (groups[i], "HwID") ||
+		    g_str_has_prefix (groups[i], "DeviceInstanceID") ||
+		    g_str_has_prefix (groups[i], "GUID")) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid group name '%s'",
+				     groups[i]);
+			return FALSE;
+		}
+
+		/* get all KVs for the entry */
 		keys = g_key_file_get_keys (kf, groups[i], NULL, error);
 		if (keys == NULL)
 			return NULL;
@@ -113,6 +127,16 @@ fu_quirks_convert_quirk_to_xml_cb (XbBuilderSource *self,
 		bn = xb_builder_node_insert (root, "device", "id", group_id, NULL);
 		for (guint j = 0; keys[j] != NULL; j++) {
 			g_autofree gchar *value = NULL;
+
+			/* sanity check key */
+			if (g_str_has_prefix (keys[j], "DeviceID")) {
+				g_set_error (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_INVALID_DATA,
+					     "invalid key name '%s'",
+					     keys[j]);
+				return FALSE;
+			}
 			value = g_key_file_get_value (kf, groups[i], keys[j], error);
 			if (value == NULL)
 				return NULL;
