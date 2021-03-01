@@ -15,19 +15,7 @@ fu_plugin_init (FuPlugin *plugin)
 	/* make sure that UEFI plugin is ready to receive devices */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi_capsule");
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-}
-
-gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
-{
-	if (!fu_plugin_has_custom_flag (plugin, "requires-uefi-recovery")) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not required");
-		return FALSE;
-	}
-	return TRUE;
+	fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
 }
 
 gboolean

@@ -45,6 +45,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_CONFLICTS, "coreboot"); /* obsoleted */
+	fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
 }
 
 void
@@ -176,48 +177,25 @@ gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	GPtrArray *hwids = fu_plugin_get_hwids (plugin);
 	const gchar *dmi_vendor;
 	gint rc;
-	g_autoptr(GPtrArray) devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	g_autoptr(FuDevice) device = fu_flashrom_device_new ();
 
-	for (guint i = 0; i < hwids->len; i++) {
-		const gchar *guid = g_ptr_array_index (hwids, i);
-		const gchar *quirk_str;
-		g_autofree gchar *quirk_key_prefixed = NULL;
-		quirk_key_prefixed = g_strdup_printf ("HwId=%s", guid);
-		quirk_str = fu_plugin_lookup_quirk_by_id (plugin,
-							  quirk_key_prefixed,
-							  "DeviceId");
-		if (quirk_str != NULL) {
-			g_autofree gchar *device_id = g_strdup_printf ("flashrom-%s", quirk_str);
-			g_autoptr(FuDevice) device = fu_flashrom_device_new ();
-			fu_device_set_quirks (device, fu_plugin_get_quirks (plugin));
-			fu_device_set_name (device, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME));
-			fu_device_set_vendor (device, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER));
+	fu_device_set_quirks (device, fu_plugin_get_quirks (plugin));
+	fu_device_set_name (device, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME));
+	fu_device_set_vendor (device, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER));
 
-			/* use same VendorID logic as with UEFI */
-			dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
-			if (dmi_vendor != NULL) {
-				g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
-				fu_device_add_vendor_id (FU_DEVICE (device), vendor_id);
-			}
-
-			fu_device_set_id (device, device_id);
-			fu_device_add_guid (device, guid);
-			fu_plugin_flashrom_device_set_version (plugin, device);
-			fu_plugin_flashrom_device_set_hwids (plugin, device);
-			fu_plugin_flashrom_device_set_bios_info (plugin, device);
-			if (!fu_device_setup (device, error))
-				return FALSE;
-			g_ptr_array_add (devices, g_steal_pointer (&device));
-			break;
-		}
+	/* use same VendorID logic as with UEFI */
+	dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
+	if (dmi_vendor != NULL) {
+		g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
+		fu_device_add_vendor_id (FU_DEVICE (device), vendor_id);
 	}
-
-	/* nothing to do, so don't bother initializing flashrom */
-	if (devices->len == 0)
-		return TRUE;
+	fu_plugin_flashrom_device_set_version (plugin, device);
+	fu_plugin_flashrom_device_set_hwids (plugin, device);
+	fu_plugin_flashrom_device_set_bios_info (plugin, device);
+	if (!fu_device_setup (device, error))
+		return FALSE;
 
 	/* actually probe hardware to check for support */
 	if (flashrom_init (SELFCHECK_TRUE)) {
@@ -266,12 +244,9 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
-	/* add devices */
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *dev = g_ptr_array_index (devices, i);
-		fu_plugin_device_add (plugin, dev);
-		fu_plugin_cache_add (plugin, fu_device_get_id (dev), dev);
-	}
+	/* success */
+	fu_plugin_device_add (plugin, device);
+	fu_plugin_cache_add (plugin, fu_device_get_id (device), device);
 	return TRUE;
 }
 

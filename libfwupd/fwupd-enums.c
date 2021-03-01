@@ -345,6 +345,8 @@ fwupd_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
 		return "legacy-bios";
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_FAILED_OPEN)
 		return "failed-open";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_REQUIRE_HWID)
+		return "require-hwid";
 	if (plugin_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -385,6 +387,8 @@ fwupd_plugin_flag_from_string (const gchar *plugin_flag)
 		return FWUPD_PLUGIN_FLAG_LEGACY_BIOS;
 	if (g_strcmp0 (plugin_flag, "failed-open") == 0)
 		return FWUPD_PLUGIN_FLAG_FAILED_OPEN;
+	if (g_strcmp0 (plugin_flag, "require-hwid") == 0)
+		return FWUPD_PLUGIN_FLAG_REQUIRE_HWID;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

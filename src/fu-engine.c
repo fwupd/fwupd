@@ -5110,6 +5110,12 @@ fu_engine_plugins_setup (FuEngine *self)
 	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = g_ptr_array_index (plugins, i);
+		if (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID)) {
+			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_NO_HARDWARE);
+			g_message ("disabling plugin %s because no HwId",
+				   fu_plugin_get_name (plugin));
+			continue;
+		}
 		if (!fu_plugin_runner_startup (plugin, &error)) {
 			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED);
 			if (g_error_matches (error,
@@ -6105,11 +6111,49 @@ fu_engine_backend_device_changed_cb (FuBackend *backend, FuDevice *device, FuEng
 }
 
 static void
+fu_engine_load_quirks_for_hwid (FuEngine *self, const gchar *hwid)
+{
+	FuPlugin *plugin;
+	const gchar *value;
+	g_autofree gchar *key = g_strdup_printf ("HwId=%s", hwid);
+	g_auto(GStrv) plugins = NULL;
+
+	/* does prefixed quirk exist */
+	value = fu_quirks_lookup_by_id (self->quirks, key, FU_QUIRKS_PLUGIN);
+	if (value == NULL)
+		return;
+	plugins = g_strsplit (value, ",", -1);
+	for (guint i = 0; plugins[i] != NULL; i++) {
+		g_autoptr(GError) error_local = NULL;
+		plugin = fu_plugin_list_find_by_name (self->plugin_list,
+						      plugins[i], &error_local);
+		if (plugin == NULL) {
+			g_debug ("no %s plugin for HwId %s: %s",
+				 plugins[i], hwid, error_local->message);
+			continue;
+		}
+		g_debug ("enabling %s due to HwId %s", plugins[i], hwid);
+		fu_plugin_remove_flag (plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
+	}
+}
+
+static void
 fu_engine_load_quirks (FuEngine *self, FuQuirksLoadFlags quirks_flags)
 {
+	GPtrArray *hwids = fu_hwids_get_guids (self->hwids);
 	g_autoptr(GError) error = NULL;
-	if (!fu_quirks_load (self->quirks, quirks_flags, &error))
+
+	/* rebuild silo if required */
+	if (!fu_quirks_load (self->quirks, quirks_flags, &error)) {
 		g_warning ("Failed to load quirks: %s", error->message);
+		return;
+	}
+
+	/* search each hwid */
+	for (guint i = 0; i < hwids->len; i++) {
+		const gchar *hwid = g_ptr_array_index (hwids, i);
+		fu_engine_load_quirks_for_hwid (self, hwid);
+	}
 }
 
 static void
