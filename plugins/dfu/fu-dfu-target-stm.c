@@ -276,35 +276,38 @@ fu_dfu_target_stm_download_element (FuDfuTarget *target,
 
 		/* for DfuSe devices we need to handle the erase and setting
 		 * the sectory address manually */
-		offset_dev = fu_chunk_get_address (chk) + (i * transfer_size);
-		sector = fu_dfu_target_get_sector_for_addr (target, offset_dev);
-		if (sector == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "no memory sector at 0x%04x",
-				     (guint) offset_dev);
-			return FALSE;
-		}
-		if (!fu_dfu_sector_has_cap (sector, DFU_SECTOR_CAP_WRITEABLE)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "memory sector at 0x%04x is not writable",
-				     (guint) offset_dev);
-			return FALSE;
-		}
+		offset_dev = i * transfer_size;
+		while (offset_dev < (i + 1) * transfer_size) {
+			sector = fu_dfu_target_get_sector_for_addr (target, fu_chunk_get_address (chk) + offset_dev);
+			if (sector == NULL) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "no memory sector at 0x%04x",
+					     (guint) fu_chunk_get_address (chk) + offset_dev);
+				return FALSE;
+			}
+			if (!fu_dfu_sector_has_cap (sector, DFU_SECTOR_CAP_WRITEABLE)) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "memory sector at 0x%04x is not writable",
+					     (guint) fu_chunk_get_address (chk) + offset_dev);
+				return FALSE;
+			}
 
-		/* if it's erasable and not yet blanked */
-		if (fu_dfu_sector_has_cap (sector, DFU_SECTOR_CAP_ERASEABLE) &&
-		    g_hash_table_lookup (sectors_hash, sector) == NULL) {
-			g_hash_table_insert (sectors_hash,
-					     sector,
-					     GINT_TO_POINTER (1));
-			g_ptr_array_add (sectors_array, sector);
-			g_debug ("marking sector 0x%04x-%04x to be erased",
-				 fu_dfu_sector_get_address (sector),
-				 fu_dfu_sector_get_address (sector) + fu_dfu_sector_get_size (sector));
+			/* if it's erasable and not yet blanked */
+			if (fu_dfu_sector_has_cap (sector, DFU_SECTOR_CAP_ERASEABLE) &&
+			    g_hash_table_lookup (sectors_hash, sector) == NULL) {
+				g_hash_table_insert (sectors_hash,
+						     sector,
+						     GINT_TO_POINTER (1));
+				g_ptr_array_add (sectors_array, sector);
+				g_debug ("marking sector 0x%04x-%04x to be erased",
+					 fu_dfu_sector_get_address (sector),
+					 fu_dfu_sector_get_address (sector) + fu_dfu_sector_get_size (sector));
+			}
+			offset_dev += fu_dfu_sector_get_size (sector);
 		}
 	}
 
