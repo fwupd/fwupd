@@ -26,34 +26,34 @@ InstallDuration=20
 SuperioChipsets=IT8987
 InstallDuration=20
 
-[SuperIO=IT8510]
-Id=0x8510
-Port=0x2e
+[DeviceInstanceId=SuperIO-IT8510]
+SuperioId=0x8510
+SuperioPort=0x2e
 
-[SuperIO=IT8511]
-Id=0x8511
-Port=0x2e
+[DeviceInstanceId=SuperIO-IT8511]
+SuperioId=0x8511
+SuperioPort=0x2e
 
-[SuperIO=IT8512]
-Id=0x8512
-Port=0x2e
+[DeviceInstanceId=SuperIO-IT8512]
+SuperioId=0x8512
+SuperioPort=0x2e
 
-[SuperIO=IT8513]
-Id=0x8513
-Port=0x2e
+[DeviceInstanceId=SuperIO-IT8513]
+SuperioId=0x8513
+SuperioPort=0x2e
 
-[SuperIO=IT8516]
-Id=0x8516
-Port=0x2e
+[DeviceInstanceId=SuperIO-IT8516]
+SuperioId=0x8516
+SuperioPort=0x2e
 
-[SuperIO=IT8518]
-Id=0x8518
-Port=0x2e
+[DeviceInstanceId=SuperIO-IT8518]
+SuperioId=0x8518
+SuperioPort=0x2e
 
-[SuperIO=IT8587]
-Id=0x8587
-Port=0x2e
+[DeviceInstanceId=SuperIO-IT8587]
+SuperioId=0x8587
+SuperioPort=0x2e
 
-[SuperIO=IT8987]
-Id=0x8987
-Port=0x4e
+[DeviceInstanceId=SuperIO-IT8987]
+SuperioId=0x8987
+SuperioPort=0x4e

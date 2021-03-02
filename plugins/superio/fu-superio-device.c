@@ -27,8 +27,6 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuSuperioDevice, fu_superio_device, FU_TYPE_UDEV_DEV
 enum {
 	PROP_0,
 	PROP_CHIPSET,
-	PROP_PORT,
-	PROP_ID,
 	PROP_LAST
 };
 
@@ -131,6 +129,15 @@ fu_superio_device_check_id (FuSuperioDevice *self, GError **error)
 {
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 	guint16 id_tmp;
+
+	/* no quirk entry */
+	if (priv->id == 0x0) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_SUPPORTED,
+				     "invalid SuperioId");
+		return FALSE;
+	}
 
 	/* check ID, which can be done from any LDN */
 	if (!fu_superio_device_regval16 (self, SIO_LDNxx_IDX_CHIPID1, &id_tmp, error))
@@ -354,12 +361,6 @@ fu_superio_device_get_property (GObject *object, guint prop_id,
 	case PROP_CHIPSET:
 		g_value_set_string (value, priv->chipset);
 		break;
-	case PROP_PORT:
-		g_value_set_uint (value, priv->port);
-		break;
-	case PROP_ID:
-		g_value_set_uint (value, priv->id);
-		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -377,16 +378,52 @@ fu_superio_device_set_property (GObject *object, guint prop_id,
 		g_free (priv->chipset);
 		priv->chipset = g_value_dup_string (value);
 		break;
-	case PROP_PORT:
-		priv->port = g_value_get_uint (value);
-		break;
-	case PROP_ID:
-		priv->id = g_value_get_uint (value);
-		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
 	}
+}
+
+static gboolean
+fu_superio_device_set_quirk_kv (FuDevice *device,
+				const gchar *key,
+				const gchar *value,
+				GError **error)
+{
+	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
+
+	if (g_strcmp0 (key, "SuperioId") == 0) {
+		guint64 tmp = fu_common_strtoull (value);
+		if (tmp < G_MAXUINT16) {
+			priv->id = tmp;
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid value");
+		return FALSE;
+	}
+	if (g_strcmp0 (key, "SuperioPort") == 0) {
+		guint64 tmp = fu_common_strtoull (value);
+		if (tmp < G_MAXUINT16) {
+			priv->port = tmp;
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid value");
+		return FALSE;
+	}
+
+	/* failed */
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "quirk key not supported");
+	return FALSE;
 }
 
 static void
@@ -421,21 +458,10 @@ fu_superio_device_class_init (FuSuperioDeviceClass *klass)
 				     G_PARAM_CONSTRUCT_ONLY |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_CHIPSET, pspec);
-	pspec = g_param_spec_uint ("port", NULL, NULL,
-				   0, G_MAXUINT, 0,
-				   G_PARAM_READWRITE |
-				   G_PARAM_CONSTRUCT_ONLY |
-				   G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_PORT, pspec);
-	pspec = g_param_spec_uint ("id", NULL, NULL,
-				   0, G_MAXUINT, 0,
-				   G_PARAM_READWRITE |
-				   G_PARAM_CONSTRUCT_ONLY |
-				   G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_ID, pspec);
 
 	object_class->finalize = fu_superio_device_finalize;
 	klass_device->to_string = fu_superio_device_to_string;
+	klass_device->set_quirk_kv = fu_superio_device_set_quirk_kv;
 	klass_device->probe = fu_superio_device_probe;
 	klass_device->setup = fu_superio_device_setup;
 	klass_device->prepare_firmware = fu_superio_device_prepare_firmware;
