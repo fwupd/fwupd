@@ -43,6 +43,7 @@
 
 struct _FuSynapticsMstDevice {
 	FuUdevDevice		 parent_instance;
+	gchar			*device_kind;
 	gchar			*system_type;
 	guint64			 write_block_size;
 	FuSynapticsMstFamily	 family;
@@ -61,6 +62,7 @@ fu_synaptics_mst_device_finalize (GObject *object)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE (object);
 
+	g_free (self->device_kind);
 	g_free (self->system_type);
 
 	G_OBJECT_CLASS (fu_synaptics_mst_device_parent_class)->finalize (object);
@@ -89,6 +91,7 @@ fu_synaptics_mst_device_to_string (FuDevice *device, guint idt, GString *str)
 	/* FuUdevDevice->to_string */
 	FU_DEVICE_CLASS (fu_synaptics_mst_device_parent_class)->to_string (device, idt, str);
 
+	fu_common_string_append_kv (str, idt, "DeviceKind", self->device_kind);
 	if (self->mode != FU_SYNAPTICS_MST_MODE_UNKNOWN) {
 		fu_common_string_append_kv (str, idt, "Mode",
 					    fu_synaptics_mst_mode_to_string (self->mode));
@@ -998,20 +1001,17 @@ static gboolean
 fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE (device);
-	FuQuirks *quirks;
 	guint8 buf_vid[4];
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autofree gchar *version = NULL;
+	g_autofree gchar *guid0 = NULL;
 	g_autofree gchar *guid1 = NULL;
 	g_autofree gchar *guid2 = NULL;
 	g_autofree gchar *guid3 = NULL;
-	g_autofree gchar *group = NULL;
 	g_autofree gchar *name = NULL;
-	const gchar *guid_template;
 	const gchar *name_parent;
 	const gchar *name_family;
-	const gchar *plugin;
 	guint8 buf_ver[16];
 
 	/* read vendor ID */
@@ -1092,10 +1092,10 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 	if (!fu_synaptics_mst_device_scan_cascade (self, 0, error))
 		return FALSE;
 
-	/* set up the device name via quirks */
-	group = g_strdup_printf ("SynapticsMSTBoardID=%u", self->board_id);
-	quirks = fu_device_get_quirks (FU_DEVICE (self));
-	name_parent = fu_quirks_lookup_by_id (quirks, group, FU_QUIRKS_NAME);
+	/* set up the device name and kind via quirks */
+	guid0 = g_strdup_printf ("MST-%u", self->board_id);
+	fu_device_add_instance_id (FU_DEVICE (self), guid0);
+	name_parent = fu_device_get_name (FU_DEVICE (self));
 	if (name_parent != NULL) {
 		name = g_strdup_printf ("VMM%04x inside %s",
 					self->chip_id, name_parent);
@@ -1104,20 +1104,9 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 	}
 	fu_device_set_name (FU_DEVICE (self), name);
 
-	plugin = fu_quirks_lookup_by_id (quirks, group, FU_QUIRKS_PLUGIN);
-	if (plugin != NULL && g_strcmp0 (plugin, "synaptics_mst") != 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "%s is only supported by %s",
-			     name, plugin);
-		return FALSE;
-	}
-
 	/* this is a host system, use system ID */
-	guid_template = fu_quirks_lookup_by_id (quirks, group, "DeviceKind");
 	name_family = fu_synaptics_mst_family_to_string (self->family);
-	if (g_strcmp0 (guid_template, "system") == 0) {
+	if (g_strcmp0 (self->device_kind, "system") == 0) {
 		g_autofree gchar *guid = NULL;
 		guid = g_strdup_printf ("MST-%s-%s-%u",
 					name_family,
@@ -1126,9 +1115,9 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 		fu_device_add_instance_id (FU_DEVICE (self), guid);
 
 	/* docks or something else */
-	} else if (guid_template != NULL) {
+	} else if (self->device_kind != NULL) {
 		g_auto(GStrv) templates = NULL;
-		templates = g_strsplit (guid_template, ",", -1);
+		templates = g_strsplit (self->device_kind, ",", -1);
 		for (guint i = 0; templates[i] != NULL; i++) {
 			g_autofree gchar *dock_id1 = NULL;
 			g_autofree gchar *dock_id2 = NULL;
@@ -1187,6 +1176,24 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_synaptics_mst_device_set_quirk_kv (FuDevice *device,
+			    const gchar *key,
+			    const gchar *value,
+			    GError **error)
+{
+	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE (device);
+	if (g_strcmp0 (key, "SynapticsMstDeviceKind") == 0) {
+		self->device_kind = g_strdup (value);
+		return TRUE;
+	}
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "quirk key not supported");
+	return FALSE;
+}
+
 static void
 fu_synaptics_mst_device_class_init (FuSynapticsMstDeviceClass *klass)
 {
@@ -1194,6 +1201,7 @@ fu_synaptics_mst_device_class_init (FuSynapticsMstDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	object_class->finalize = fu_synaptics_mst_device_finalize;
 	klass_device->to_string = fu_synaptics_mst_device_to_string;
+	klass_device->set_quirk_kv = fu_synaptics_mst_device_set_quirk_kv;
 	klass_device->rescan = fu_synaptics_mst_device_rescan;
 	klass_device->write_firmware = fu_synaptics_mst_device_write_firmware;
 	klass_device->prepare_firmware = fu_synaptics_mst_device_prepare_firmware;

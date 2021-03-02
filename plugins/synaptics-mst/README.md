@@ -18,6 +18,7 @@ GUID Generation
 
 These devices use custom GUID values, e.g.
 
+ * `MST-$(board-ID)`
  * `MST-$(device_kind)-$(chip-ID)-$(board-ID)`
  * `MST-$(device_kind)-$(board-ID)`
  * `MST-$(device_kind)`
