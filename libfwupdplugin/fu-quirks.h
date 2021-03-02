@@ -43,6 +43,8 @@ gboolean	 fu_quirks_lookup_by_id_iter		(FuQuirks	*self,
 							 const gchar	*group,
 							 FuQuirksIter	 iter_cb,
 							 gpointer	 user_data);
+void		 fu_quirks_add_possible_key		(FuQuirks	*self,
+							 const gchar	*possible_key);
 
 #define	FU_QUIRKS_PLUGIN			"Plugin"
 #define	FU_QUIRKS_FLAGS				"Flags"

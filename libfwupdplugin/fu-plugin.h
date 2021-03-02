@@ -128,6 +128,8 @@ void		 fu_plugin_set_device_gtype		(FuPlugin	*self,
 void		 fu_plugin_add_firmware_gtype		(FuPlugin	*self,
 							 const gchar	*id,
 							 GType		 gtype);
+void		 fu_plugin_add_possible_quirk_key	(FuPlugin	*self,
+							 const gchar	*possible_key);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*self,
 							 const gchar	*id);
 void		 fu_plugin_cache_remove			(FuPlugin	*self,

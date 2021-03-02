@@ -24,6 +24,7 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *priv = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem (plugin, "pci");
+	fu_plugin_add_possible_quirk_key (plugin, "PciBcrAddr");
 
 	/* this is true except for some Atoms */
 	priv->bcr_addr = 0xdc;

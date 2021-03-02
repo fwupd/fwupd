@@ -510,9 +510,9 @@ fu_plugin_quirks_func (void)
 	/* exact */
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "USB\\VID_0A5C&PID_6412", "Flags");
 	g_assert_cmpstr (tmp, ==, "ignore-runtime");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "ACME Inc.=True", "Test");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "ACME Inc.=True", "Name");
 	g_assert_cmpstr (tmp, ==, "awesome");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "CORP*", "Test");
+	tmp = fu_plugin_lookup_quirk_by_id (plugin, "CORP*", "Name");
 	g_assert_cmpstr (tmp, ==, "town");
 	tmp = fu_plugin_lookup_quirk_by_id (plugin, "baz", "Unfound");
 	g_assert_cmpstr (tmp, ==, NULL);
