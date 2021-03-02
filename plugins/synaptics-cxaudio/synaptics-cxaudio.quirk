@@ -23,10 +23,10 @@ Guid = SYNAPTICS_CXAUDIO\CX2198X
 
 [Guid=SYNAPTICS_CXAUDIO\CX2098X]
 Plugin = synaptics_cxaudio
-ChipIdBase = 20980
+CxaudioChipIdBase = 20980
 
 [Guid=SYNAPTICS_CXAUDIO\CX2198X]
 Plugin = synaptics_cxaudio
-ChipIdBase = 21980
-EepromPatchValidAddr = 0x0014
-EepromPatch2ValidAddr = 0x0171
+CxaudioChipIdBase = 21980
+CxaudioPatch1ValidAddr = 0x0014
+CxaudioPatch2ValidAddr = 0x0171

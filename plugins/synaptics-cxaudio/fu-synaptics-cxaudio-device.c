@@ -730,19 +730,19 @@ fu_synaptics_cxaudio_device_set_quirk_kv (FuDevice *device,
 					GError **error)
 {
 	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE (device);
-	if (g_strcmp0 (key, "ChipIdBase") == 0) {
+	if (g_strcmp0 (key, "CxaudioChipIdBase") == 0) {
 		self->chip_id_base = fu_common_strtoull (value);
 		return TRUE;
 	}
-	if (g_strcmp0 (key, "IsSoftwareResetSupported") == 0) {
+	if (g_strcmp0 (key, "CxaudioSoftwareReset") == 0) {
 		self->sw_reset_supported = fu_common_strtoull (value);
 		return TRUE;
 	}
-	if (g_strcmp0 (key, "EepromPatchValidAddr") == 0) {
+	if (g_strcmp0 (key, "CxaudioPatch1ValidAddr") == 0) {
 		self->eeprom_patch_valid_addr = fu_common_strtoull (value);
 		return TRUE;
 	}
-	if (g_strcmp0 (key, "EepromPatch2ValidAddr") == 0) {
+	if (g_strcmp0 (key, "CxaudioPatch2ValidAddr") == 0) {
 		self->eeprom_patch2_valid_addr = fu_common_strtoull (value);
 		return TRUE;
 	}

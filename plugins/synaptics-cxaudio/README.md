@@ -49,10 +49,10 @@ This plugin uses the following plugin-specific quirks:
 
 | Quirk                      | Description                      | Minimum fwupd version |
 |----------------------------|----------------------------------|-----------------------|
-| `ChipIdBase`               | Base integer for ChipID          | 1.3.2                 |
-| `IsSoftwareResetSupported` | If the chip supports self-reset  | 1.3.2                 |
-| `EepromPatchValidAddr`     | Address of patch location #1     | 1.3.2                 |
-| `EepromPatch2ValidAddr`    | Address of patch location #2     | 1.3.2                 |
+| `CxaudioChipIdBase`        | Base integer for ChipID          | 1.3.2                 |
+| `CxaudioSoftwareReset`     | If the chip supports self-reset  | 1.3.2                 |
+| `CxaudioPatch1ValidAddr`   | Address of patch location #1     | 1.3.2                 |
+| `CxaudioPatch2ValidAddr`   | Address of patch location #2     | 1.3.2                 |
 
 External interface access
 -------------------------
