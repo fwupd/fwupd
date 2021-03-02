@@ -1109,6 +1109,85 @@ fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystems, GEr
 }
 
 /**
+ * fu_udev_device_set_logical_id:
+ * @self: A #FuUdevDevice
+ * @subsystem: A subsystem string, e.g. `pci,usb`
+ * @error: A #GError, or %NULL
+ *
+ * Sets the logical ID from the device subsystem. Plugins should choose the
+ * subsystem that most relevant in the udev tree, for instance choosing 'hid'
+ * over 'usb' for a mouse device.
+ *
+ * Returns: %TRUE if the logical device was set.
+ *
+ * Since: 1.5.8
+ **/
+gboolean
+fu_udev_device_set_logical_id (FuUdevDevice *self, const gchar *subsystem, GError **error)
+{
+#ifdef HAVE_GUDEV
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	const gchar *tmp;
+	g_autofree gchar *logical_id = NULL;
+	g_autoptr(GUdevDevice) udev_device = NULL;
+
+	g_return_val_if_fail (FU_IS_UDEV_DEVICE (self), FALSE);
+	g_return_val_if_fail (subsystem != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* nothing to do */
+	if (priv->udev_device == NULL)
+		return TRUE;
+
+	/* find correct device matching subsystem */
+	if (g_strcmp0 (priv->subsystem, subsystem) == 0) {
+		udev_device = g_object_ref (priv->udev_device);
+	} else {
+		udev_device = g_udev_device_get_parent_with_subsystem (priv->udev_device,
+								       subsystem, NULL);
+	}
+	if (udev_device == NULL) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "failed to find device with subsystem %s",
+			     subsystem);
+		return FALSE;
+	}
+
+	/* query each subsystem */
+	if (g_strcmp0 (subsystem, "hid") == 0) {
+		tmp = g_udev_device_get_property (udev_device, "HID_UNIQ");
+		if (tmp == NULL) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_NOT_FOUND,
+					     "failed to find HID_UNIQ");
+			return FALSE;
+		}
+		logical_id = g_strdup_printf ("HID_UNIQ=%s", tmp);
+	} else {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_SUPPORTED,
+			     "cannot handle subsystem %s",
+			     subsystem);
+		return FALSE;
+	}
+
+	/* success */
+	fu_device_set_logical_id (FU_DEVICE (self), logical_id);
+	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "Not supported as <gudev.h> is unavailable");
+	return FALSE;
+#endif
+}
+
+/**
  * fu_udev_device_get_fd:
  * @self: A #FuUdevDevice
  *

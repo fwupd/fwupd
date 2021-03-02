@@ -605,7 +605,9 @@ fu_pxi_device_fw_get_info (FuPxiDevice *self, GError **error)
 static gboolean
 fu_pxi_device_probe (FuDevice *device, GError **error)
 {
-	/* set the physical ID */
+	/* set the logical and physical ID */
+	if (!fu_udev_device_set_logical_id (FU_UDEV_DEVICE (device), "hid", error))
+		return FALSE;
 	return fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "hid", error);
 }
 
