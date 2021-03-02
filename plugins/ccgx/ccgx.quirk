@@ -9,7 +9,7 @@ Plugin = ccgx
 GType = FuCcgxHpiDevice
 
 [DeviceInstanceId=USB\VID_04B4&PID_521A&SID_1F00&APP_6D64]
-ImageKind = dual-asymmetric
+CcgxImageKind = dual-asymmetric
 Name = ThinkPad USB-C Dock Gen2 PD Controller
 ParentGuid = USB\VID_17EF&PID_A391
 InstallDuration = 120
@@ -39,7 +39,7 @@ Plugin = ccgx
 GType = FuCcgxHpiDevice
 
 [DeviceInstanceId=USB\VID_04B4&PID_5218&SID_1F00&APP_6432]
-ImageKind = dual-symmetric
+CcgxImageKind = dual-symmetric
 Name = ThinkPad USB-C Dock Hybrid PD Controller
 ParentGuid = USB\VID_17EF&PID_1028
 InstallDuration = 120
@@ -58,7 +58,7 @@ GType = FuCcgxDmcDevice
 Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_0363
 Name = HP USB-C Dock G5
-ImageKind = dmc-composite
+CcgxImageKind = dmc-composite
 InstallDuration = 233
 RemoveDelay = 203000
 
@@ -69,6 +69,6 @@ GType = FuCcgxDmcDevice
 Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_096B
 Name = HP USB-C/A Universal Dock G2
-ImageKind = dmc-composite
+CcgxImageKind = dmc-composite
 InstallDuration = 180
 RemoveDelay = 162000
