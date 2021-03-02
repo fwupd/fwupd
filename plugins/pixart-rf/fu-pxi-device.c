@@ -107,6 +107,10 @@ static void
 fu_pxi_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuPxiDevice *self = FU_PXI_DEVICE (device);
+
+	/* FuUdevDevice->to_string */
+	FU_DEVICE_CLASS (fu_pxi_device_parent_class)->to_string (device, idt, str);
+
 	fu_common_string_append_kx (str, idt, "Status", self->status);
 	fu_common_string_append_kx (str, idt, "NewFlow", self->new_flow);
 	fu_common_string_append_kx (str, idt, "CurrentObjectOffset", self->offset);
