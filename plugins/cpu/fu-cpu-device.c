@@ -249,9 +249,9 @@ fu_cpu_device_set_quirk_kv (FuDevice *device,
 			    const gchar *value,
 			    GError **error)
 {
-	if (g_strcmp0 (key, "BcrAddr") == 0) {
+	if (g_strcmp0 (key, "PciBcrAddr") == 0) {
 		guint64 tmp = fu_common_strtoull (value);
-		fu_device_set_metadata_integer (device, "BcrAddr", tmp);
+		fu_device_set_metadata_integer (device, "PciBcrAddr", tmp);
 		return TRUE;
 	}
 	g_set_error_literal (error,
