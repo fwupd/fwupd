@@ -28,6 +28,8 @@ struct _FuElantpHidDevice {
 
 G_DEFINE_TYPE (FuElantpHidDevice, fu_elantp_hid_device, FU_TYPE_UDEV_DEVICE)
 
+static gboolean fu_elantp_hid_device_detach (FuDevice *device, GError **error);
+
 static void
 fu_elantp_hid_device_to_string (FuDevice *device, guint idt, GString *str)
 {
@@ -307,6 +309,10 @@ fu_elantp_hid_device_write_firmware (FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
+	/* detach */
+	if (!fu_elantp_hid_device_detach (device, error))
+		return FALSE;
+
 	/* write each block */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	buf = g_bytes_get_data (fw, &bufsz);
@@ -575,7 +581,6 @@ fu_elantp_hid_device_class_init (FuElantpHidDeviceClass *klass)
 	object_class->finalize = fu_elantp_hid_device_finalize;
 	klass_device->to_string = fu_elantp_hid_device_to_string;
 	klass_device->attach = fu_elantp_hid_device_attach;
-	klass_device->detach = fu_elantp_hid_device_detach;
 	klass_device->set_quirk_kv = fu_elantp_hid_device_set_quirk_kv;
 	klass_device->setup = fu_elantp_hid_device_setup;
 	klass_device->reload = fu_elantp_hid_device_setup;
