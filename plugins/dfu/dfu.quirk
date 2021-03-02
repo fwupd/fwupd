@@ -140,192 +140,192 @@ Plugin = dfu
 DfuForceVersion = ff01
 
 # AT32UC3B1256	[BLDR][USER]	USER@0x2000, BLDR+USER=0x40000
-[AvrChipId=0x58200203]
+[DeviceInstanceId=DFU_AVR\CID_0x58200203]
 DfuAltName = @Flash/0x2000/1*248Kg
 
 # AT32UC3A3256	[BLDR][USER]	USER@0x2000, BLDR+USER=0x40000
-[AvrChipId=0x58200204]
+[DeviceInstanceId=DFU_AVR\CID_0x58200204]
 DfuAltName = @Flash/0x2000/1*248Kg
 
 # AT90USB1287	[USER][BLDR]	BLDR@0x1e000, BLDR+USER=0x20000
-[AvrChipId=0x581e9782]
+[DeviceInstanceId=DFU_AVR\CID_0x581e9782]
 DfuAltName = @Flash/0x0/1*120Kg
 
 # AT90USB647	[USER][BLDR]	BLDR@0x0e000, BLDR+USER=0x10000
 # AT90USB646	[USER][BLDR]	BLDR@0x0e000, BLDR+USER=0x10000
-[AvrChipId=0x581e9682]
+[DeviceInstanceId=DFU_AVR\CID_0x581e9682]
 DfuAltName = @Flash/0x0/1*56Kg
 
 # ATmega32U4	[USER][BLDR]	BLDR@0x07000, BLDR+USER=0x08000
-[AvrChipId=0x581e9587]
+[DeviceInstanceId=DFU_AVR\CID_0x581e9587]
 DfuAltName = @Flash/0x0/1*28Kg
 
 # ATmega16U4	[USER][BLDR]	BLDR@0x03000, BLDR+USER=0x04000
-[AvrChipId=0x581e9488]
+[DeviceInstanceId=DFU_AVR\CID_0x581e9488]
 DfuAltName = @Flash/0x0/1*12Kg
 
 # ATmega32U2	[USER][BLDR]	BLDR@0x07000, BLDR+USER=0x08000
-[AvrChipId=0x581e958a]
+[DeviceInstanceId=DFU_AVR\CID_0x581e958a]
 DfuAltName = @Flash/0x0/1*28Kg
 
 # ATmega16U2	[USER][BLDR]	BLDR@0x03000, BLDR+USER=0x04000
-[AvrChipId=0x581e9489]
+[DeviceInstanceId=DFU_AVR\CID_0x581e9489]
 DfuAltName = @Flash/0x0/1*12Kg
 
 # AT90USB162	[USER][BLDR]	BLDR@0x03000, BLDR+USER=0x04000
-[AvrChipId=0x581e9482]
+[DeviceInstanceId=DFU_AVR\CID_0x581e9482]
 DfuAltName = @Flash/0x0/1*12Kg
 
 # ATmega8U2	[USER][BLDR]	BLDR@0x01000, BLDR+USER=0x02000
-[AvrChipId=0x581e9389]
+[DeviceInstanceId=DFU_AVR\CID_0x581e9389]
 DfuAltName = @Flash/0x0/1*4Kg
 
 # AT90USB82	[USER][BLDR]	BLDR@0x01000, BLDR+USER=0x02000
-[AvrChipId=0x581e9382]
+[DeviceInstanceId=DFU_AVR\CID_0x581e9382]
 DfuAltName = @Flash/0x0/1*4Kg
 
 # ATxmega16A4	[USER]		USER=0x4000
-[AvrChipId=0x1e9441]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9441]
 DfuAltName = @Flash/0x0/1*16Kg
 
 # ATxmega16C4	[USER]		USER=0x4000
-[AvrChipId=0x1e9544]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9544]
 DfuAltName = @Flash/0x0/1*16Kg
 
 # ATxmega16D4	[USER]		USER=0x4000
-[AvrChipId=0x1e9442]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9442]
 DfuAltName = @Flash/0x0/1*16Kg
 
 # ATxmega32A4	[USER]		USER=0x8000
-[AvrChipId=0x1e9541]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9541]
 DfuAltName = @Flash/0x0/1*32Kg
 
 # ATxmega32C4	[USER]		USER=0x8000
-[AvrChipId=0x1e9443]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9443]
 DfuAltName = @Flash/0x0/1*32Kg
 
 # ATxmega32D4	[USER]		USER=0x8000
-[AvrChipId=0x1e9542]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9542]
 DfuAltName = @Flash/0x0/1*32Kg
 
 # ATxmega64A4	[USER]		USER=0x10000
-[AvrChipId=0x1e9646]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9646]
 DfuAltName = @Flash/0x0/1*64Kg
 
 # ATxmega64C3	[USER]		USER=0x10000
-[AvrChipId=0x1e9649]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9649]
 DfuAltName = @Flash/0x0/1*64Kg
 
 # ATxmega64D3	[USER]		USER=0x10000
-[AvrChipId=0x1e964a]
+[DeviceInstanceId=DFU_AVR\CID_0x1e964a]
 DfuAltName = @Flash/0x0/1*64Kg
 
 # ATxmega64D4	[USER]		USER=0x10000
-[AvrChipId=0x1e9647]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9647]
 DfuAltName = @Flash/0x0/1*64Kg
 
 # ATxmega64A1	[USER]		USER=0x10000
-[AvrChipId=0x1e964e]
+[DeviceInstanceId=DFU_AVR\CID_0x1e964e]
 DfuAltName = @Flash/0x0/1*64Kg
 
 # ATxmega64A3	[USER]		USER=0x10000
-[AvrChipId=0x1e9642]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9642]
 DfuAltName = @Flash/0x0/1*64Kg
 
 # ATxmega64B1	[USER]		USER=0x10000
-[AvrChipId=0x1e9652]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9652]
 DfuAltName = @Flash/0x0/1*64Kg
 
 # ATxmega64B3	[USER]		USER=0x10000
-[AvrChipId=0x1e9651]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9651]
 DfuAltName = @Flash/0x0/1*64Kg
 
 # ATxmega128C3	[USER]		USER=0x20000
-[AvrChipId=0x1e9752]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9752]
 DfuAltName = @Flash/0x0/1*128Kg
 
 # ATxmega128D3	[USER]		USER=0x20000
-[AvrChipId=0x1e9748]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9748]
 DfuAltName = @Flash/0x0/1*128Kg
 
 # ATxmega128D4	[USER]		USER=0x20000
- [AvrChipId=0x1e9747]
+ [DeviceInstanceId=DFU_AVR\CID_0x1e9747]
 DfuAltName = @Flash/0x0/1*128Kg
 
 # ATxmega128A1	[USER]		USER=0x20000
-[AvrChipId=0x1e974c]
+[DeviceInstanceId=DFU_AVR\CID_0x1e974c]
 DfuAltName = @Flash/0x0/1*128Kg
 
 # ATxmega128A1D	[USER]		USER=0x20000
-[AvrChipId=0x1e9741]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9741]
 DfuAltName = @Flash/0x0/1*128Kg
 
 # ATxmega128A3	[USER]		USER=0x20000
-[AvrChipId=0x1e9742]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9742]
 DfuAltName = @Flash/0x0/1*128Kg
 
 # ATxmega128A4	[USER]		USER=0x20000
-[AvrChipId=0x1e9746]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9746]
 DfuAltName = @Flash/0x0/1*128Kg
 
 # ATxmega128B1	[USER]		USER=0x20000
-[AvrChipId=0x1e974d]
+[DeviceInstanceId=DFU_AVR\CID_0x1e974d]
 DfuAltName = @Flash/0x0/1*128Kg
 
 # ATxmega128B3	[USER]		USER=0x20000
-[AvrChipId=0x1e974b]
+[DeviceInstanceId=DFU_AVR\CID_0x1e974b]
 DfuAltName = @Flash/0x0/1*128Kg
 
 # ATxmega192C3	[USER]		USER=0x30000
-[AvrChipId=0x1e9751]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9751]
 DfuAltName = @Flash/0x0/1*192Kg
 
 # ATxmega192D3	[USER]		USER=0x30000
-[AvrChipId=0x1e9749]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9749]
 DfuAltName = @Flash/0x0/1*192Kg
 
 # ATxmega192A1	[USER]		USER=0x30000
-[AvrChipId=0x1e974e]
+[DeviceInstanceId=DFU_AVR\CID_0x1e974e]
 DfuAltName = @Flash/0x0/1*192Kg
 
 # ATxmega192A3	[USER]		USER=0x30000
-[AvrChipId=0x1e9744]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9744]
 DfuAltName = @Flash/0x0/1*192Kg
 
 # ATxmega256	[USER]		USER=0x40000
-[AvrChipId=0x1e9846]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9846]
 DfuAltName = @Flash/0x0/1*256Kg
 
 # ATxmega256D3	[USER]		USER=0x40000
-[AvrChipId=0x1e9844]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9844]
 DfuAltName = @Flash/0x0/1*256Kg
 
 # ATxmega256A3	[USER]		USER=0x40000
-[AvrChipId=0x1e9842]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9842]
 DfuAltName = @Flash/0x0/1*256Kg
 
 # ATxmega256A3B	[USER]		USER=0x40000
-[AvrChipId=0x1e9843]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9843]
 DfuAltName = @Flash/0x0/1*256Kg
 
 # ATxmega384C3	[USER]		USER=0x60000
-[AvrChipId=0x1e9845]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9845]
 DfuAltName = @Flash/0x0/1*384Kg
 
 # ATxmega384D3	[USER]		USER=0x60000
-[AvrChipId=0x1e9847]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9847]
 DfuAltName = @Flash/0x0/1*384Kg
 
 # ATxmega8E5	[USER]		USER=0x2000
-[AvrChipId=0x1e9341]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9341]
 DfuAltName = @Flash/0x0/1*8Kg
 
 # ATxmega16E5	[USER]		USER=0x4000
-[AvrChipId=0x1e9445]
+[DeviceInstanceId=DFU_AVR\CID_0x1e9445]
 DfuAltName = @Flash/0x0/1*16Kg
 
 # ATxmega32E5	[USER]		USER=0x8000
-[AvrChipId=0x1e954c]
+[DeviceInstanceId=DFU_AVR\CID_0x1e954c]
 DfuAltName = @Flash/0x0/1*32Kg
 
 # STM32F745 dfuse bootloader

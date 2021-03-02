@@ -411,12 +411,11 @@ fu_dfu_target_avr_setup (FuDfuTarget *target, GError **error)
 	FuDfuDevice *device;
 	FuDfuTargetAvr *self = FU_DFU_TARGET_AVR (target);
 	FuDfuTargetAvrPrivate *priv = GET_PRIVATE (self);
-	const gchar *quirk_str;
+	const gchar *chip_id;
 	const guint8 *buf;
 	gsize sz;
 	guint32 device_id_be;
-	g_autofree gchar *chip_id = NULL;
-	g_autofree gchar *chip_id_prefixed = NULL;
+	g_autofree gchar *chip_id_guid = NULL;
 	g_autoptr(GBytes) chunk_sig = NULL;
 
 	/* already done */
@@ -450,9 +449,9 @@ fu_dfu_target_avr_setup (FuDfuTarget *target, GError **error)
 	memcpy (&device_id_be, buf, 4);
 	priv->device_id = GINT32_FROM_BE (device_id_be);
 	if (buf[0] == ATMEL_MANUFACTURER_CODE1) {
-		chip_id = g_strdup_printf ("0x%08x", (guint) priv->device_id);
+		chip_id_guid = g_strdup_printf ("DFU_AVR\\CID_0x%08x", (guint) priv->device_id);
 	} else if (buf[0] == ATMEL_MANUFACTURER_CODE2) {
-		chip_id = g_strdup_printf ("0x%06x", (guint) priv->device_id >> 8);
+		chip_id_guid = g_strdup_printf ("DFU_AVR\\CID_0x%06x", (guint) priv->device_id >> 8);
 	} else {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -465,14 +464,11 @@ fu_dfu_target_avr_setup (FuDfuTarget *target, GError **error)
 		return FALSE;
 	}
 
-	/* set the alt-name using the device ID */
-	fu_dfu_device_set_chip_id (fu_dfu_target_get_device (target), chip_id);
+	/* set the alt-name using the chip ID via a quirk */
 	device = fu_dfu_target_get_device (target);
-	chip_id_prefixed = g_strdup_printf ("AvrChipId=%s", chip_id);
-	quirk_str = fu_quirks_lookup_by_id (fu_device_get_quirks (FU_DEVICE (device)),
-					    chip_id_prefixed,
-					    FU_QUIRKS_DFU_AVR_ALT_NAME);
-	if (quirk_str == NULL) {
+	fu_device_add_instance_id (FU_DEVICE (device), chip_id_guid);
+	chip_id = fu_dfu_device_get_chip_id (device);
+	if (chip_id == NULL) {
 		fu_dfu_device_remove_attribute (fu_dfu_target_get_device (target),
 						FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD);
 		fu_dfu_device_remove_attribute (fu_dfu_target_get_device (target),
@@ -480,11 +476,11 @@ fu_dfu_target_avr_setup (FuDfuTarget *target, GError **error)
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "DeviceID %s is not supported",
+			     "ChipID %s is not supported",
 			     chip_id);
 		return FALSE;
 	}
-	fu_dfu_target_set_alt_name (target, quirk_str);
+	fu_dfu_target_set_alt_name (target, chip_id);
 
 	return TRUE;
 }

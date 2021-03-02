@@ -1854,6 +1854,10 @@ fu_dfu_device_set_quirk_kv (FuDevice *device,
 				     "invalid DFU transfer size");
 		return FALSE;
 	}
+	if (g_strcmp0 (key, "DfuAltName") == 0) {
+		fu_dfu_device_set_chip_id (self, value);
+		return TRUE;
+	}
 
 	/* failed */
 	g_set_error_literal (error,
