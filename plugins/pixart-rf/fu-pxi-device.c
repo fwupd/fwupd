@@ -165,6 +165,16 @@ fu_pxi_device_get_feature (FuPxiDevice *self, guint8 *buf, guint bufsz, GError *
 	}
 	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL)
 		fu_common_dump_raw (G_LOG_DOMAIN, "GetFeature", buf, bufsz);
+
+	/* prepend the report-id and cmd for versions of bluez that do not have
+	 * https://github.com/bluez/bluez/commit/35a2c50437cca4d26ac6537ce3a964bb509c9b62 */
+	if (bufsz > 2 && buf[0] != PXI_HID_DEV_OTA_FEATURE_REPORT_ID) {
+		g_debug ("doing fixup for old bluez version");
+		memmove (buf + 2, buf, bufsz - 2);
+		buf[0] = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
+		buf[1] = 0x0;
+	}
+
 	return TRUE;
 #else
 	g_set_error_literal (error,
@@ -421,28 +431,28 @@ fu_pxi_device_fw_ota_init_new (FuPxiDevice *self, gsize bufsz, GError **error)
 		return FALSE;
 
 	/* shared state */
-	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x3,
+	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x5,
 					&self->status, error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x4,
+	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x6,
 					&self->new_flow, error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe (res, sizeof(res), 0x5,
+	if (!fu_common_read_uint16_safe (res, sizeof(res), 0x7,
 					 &self->offset, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe (res, sizeof(res), 0x7,
+	if (!fu_common_read_uint16_safe (res, sizeof(res), 0x9,
 					 &self->checksum, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	if (!fu_common_read_uint32_safe (res, sizeof(res), 0x9,
+	if (!fu_common_read_uint32_safe (res, sizeof(res), 0xb,
 					 &self->max_object_size, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe (res, sizeof(res), 0xd,
+	if (!fu_common_read_uint16_safe (res, sizeof(res), 0xf,
 					 &self->mtu_size, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	if (!fu_common_read_uint16_safe (res, sizeof(res), 0xf,
+	if (!fu_common_read_uint16_safe (res, sizeof(res), 0x11,
 					 &self->prn_threshold, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x11,
+	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x13,
 					&self->spec_check_result, error))
 		return FALSE;
 
@@ -577,9 +587,9 @@ fu_pxi_device_fw_get_info (FuPxiDevice *self, GError **error)
 
 	res[0] = PXI_HID_DEV_OTA_FEATURE_REPORT_ID;
 	res[1] = FU_PXI_DEVICE_CMD_FW_GET_INFO;
-	if (!fu_pxi_device_get_feature (self, res, FU_PXI_DEVICE_FW_INFO_RET_LEN + 1, error))
+	if (!fu_pxi_device_get_feature (self, res, FU_PXI_DEVICE_FW_INFO_RET_LEN + 3, error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x2, &opcode, error))
+	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x4, &opcode, error))
 		return FALSE;
 	if (opcode != FU_PXI_DEVICE_CMD_FW_GET_INFO) {
 		g_set_error (error,
@@ -590,11 +600,11 @@ fu_pxi_device_fw_get_info (FuPxiDevice *self, GError **error)
 		return FALSE;
 	}
 	/* set current version */
-	version_str = g_strndup ((gchar *) res + 0x4, 5);
+	version_str = g_strndup ((gchar *) res + 0x6, 5);
 	fu_device_set_version (FU_DEVICE (self), version_str);
 
 	/* add current checksum */
-	if (!fu_common_read_uint16_safe (res, sizeof(res), 0x9,
+	if (!fu_common_read_uint16_safe (res, sizeof(res), 0xb,
 					 &checksum, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
