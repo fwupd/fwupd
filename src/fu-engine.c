@@ -5111,7 +5111,7 @@ fu_engine_plugins_setup (FuEngine *self)
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = g_ptr_array_index (plugins, i);
 		if (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID)) {
-			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_NO_HARDWARE);
+			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED);
 			g_message ("disabling plugin %s because no HwId",
 				   fu_plugin_get_name (plugin));
 			continue;
