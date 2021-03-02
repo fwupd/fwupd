@@ -64,6 +64,9 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
+	fu_plugin_add_possible_quirk_key (plugin, "SuperioChipsets");
+	fu_plugin_add_possible_quirk_key (plugin, "SuperioId");
+	fu_plugin_add_possible_quirk_key (plugin, "SuperioPort");
 }
 
 gboolean

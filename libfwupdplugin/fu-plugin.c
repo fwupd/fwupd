@@ -1807,6 +1807,29 @@ fu_common_string_uncamelcase (const gchar *str)
 }
 
 /**
+ * fu_plugin_add_possible_quirk_key:
+ * @self: a #FuPlugin
+ * @possible_key: A quirk string, e.g. `DfuVersion`
+ *
+ * Adds a possible quirk key. If added by a plugin it should be namespaced
+ * using the plugin name, where possible.
+ *
+ * Plugins can use this method only in fu_plugin_init()
+ *
+ * Since: 1.5.8
+ **/
+void
+fu_plugin_add_possible_quirk_key (FuPlugin *self, const gchar *possible_key)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_PLUGIN (self));
+	g_return_if_fail (possible_key != NULL);
+	if (priv->quirks == NULL)
+		return;
+	fu_quirks_add_possible_key (priv->quirks, possible_key);
+}
+
+/**
  * fu_plugin_add_firmware_gtype:
  * @self: a #FuPlugin
  * @id: (nullable): An optional string describing the type, e.g. "ihex"

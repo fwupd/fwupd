@@ -2,10 +2,10 @@
 Flags= ignore-runtime
 
 [ACME Inc.=True]
-Test = awesome
+Name = awesome
 
 [CORP*]
-Test = town
+Name = town
 
 [USB\VID_0BDA&PID_1100]
 Flags = clever
