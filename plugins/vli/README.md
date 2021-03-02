@@ -59,27 +59,27 @@ This plugin uses the following plugin-specific quirks:
 
 | Quirk                      | Description                      | Minimum fwupd version |
 |----------------------------|----------------------------------|-----------------------|
-| `DeviceKind`               | Device kind, e.g. `VL102`        | 1.3.7                 |
-| `SpiAutoDetect`            | SPI autodetect (default 0x1)     | 1.3.7                 |
-| `SpiCmdChipErase`          | Flash command to erase chip      | 1.3.3                 |
-| `SpiCmdChipErase`          | Flash command to erase sector    | 1.3.3                 |
-| `SpiCmdReadId`             | Flash command to read the ID     | 1.3.3                 |
-| `SpiCmdReadIdSz`           | Size of the ReadId response      | 1.3.3                 |
+| `VliDeviceKind`            | Device kind, e.g. `VL102`        | 1.3.7                 |
+| `VliSpiAutoDetect`         | SPI autodetect (default 0x1)     | 1.3.7                 |
+| `VliSpiCmdChipErase`       | Flash command to erase chip      | 1.3.3                 |
+| `VliSpiCmdChipErase`       | Flash command to erase sector    | 1.3.3                 |
+| `VliSpiCmdReadId`          | Flash command to read the ID     | 1.3.3                 |
+| `VliSpiCmdReadIdSz`        | Size of the ReadId response      | 1.3.3                 |
 
-The `SpiCmdReadId` and `SpiCmdReadIdSz` quirks have to be assigned to the device
+The `VliSpiCmdReadId` and `VliSpiCmdReadIdSz` quirks have to be assigned to the device
 instance attribute, rather then the flash part as the ID is required to query
 the other flash chip parameters. For example:
 
     [DeviceInstanceId=USB\VID_2109&PID_0210]
     Plugin = vli
     GType = FuVliUsbhubDevice
-    SpiCmdReadId = 0xf8
-    SpiCmdReadIdSz = 4
+    VliSpiCmdReadId = 0xf8
+    VliSpiCmdReadIdSz = 4
 
     # W3IRDFLASHxxx
     [Guid=VLI_USBHUB\\SPI_37303840]
-    SpiCmdChipErase = 0xc7
-    SpiCmdSectorErase = 0x20
+    VliSpiCmdChipErase = 0xc7
+    VliSpiCmdSectorErase = 0x20
 
 External interface access
 -------------------------

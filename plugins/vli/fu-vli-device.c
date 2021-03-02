@@ -605,34 +605,34 @@ fu_vli_device_set_quirk_kv (FuDevice *device,
 {
 	FuVliDevice *self = FU_VLI_DEVICE (device);
 	FuVliDevicePrivate *priv = GET_PRIVATE (self);
-	if (g_strcmp0 (key, "SpiCmdReadId") == 0) {
+	if (g_strcmp0 (key, "VliSpiCmdReadId") == 0) {
 		priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_READ_ID] = fu_common_strtoull (value);
 		return TRUE;
 	}
-	if (g_strcmp0 (key, "SpiCmdReadIdSz") == 0) {
+	if (g_strcmp0 (key, "VliSpiCmdReadIdSz") == 0) {
 		priv->spi_cmd_read_id_sz = fu_common_strtoull (value);
 		return TRUE;
 	}
-	if (g_strcmp0 (key, "SpiCmdChipErase") == 0) {
+	if (g_strcmp0 (key, "VliSpiCmdChipErase") == 0) {
 		priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_CHIP_ERASE] = fu_common_strtoull (value);
 		return TRUE;
 	}
-	if (g_strcmp0 (key, "SpiCmdSectorErase") == 0) {
+	if (g_strcmp0 (key, "VliSpiCmdSectorErase") == 0) {
 		priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_SECTOR_ERASE] = fu_common_strtoull (value);
 		return TRUE;
 	}
-	if (g_strcmp0 (key, "SpiAutoDetect") == 0) {
+	if (g_strcmp0 (key, "VliSpiAutoDetect") == 0) {
 		priv->spi_auto_detect = fu_common_strtoull (value) > 0;
 		return TRUE;
 	}
-	if (g_strcmp0 (key, "DeviceKind") == 0) {
+	if (g_strcmp0 (key, "VliDeviceKind") == 0) {
 		FuVliDeviceKind device_kind;
 		device_kind = fu_vli_common_device_kind_from_string (value);
 		if (device_kind == FU_VLI_DEVICE_KIND_UNKNOWN) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_NOT_SUPPORTED,
-				     "DeviceKind %s is not supported",
+				     "VliDeviceKind %s is not supported",
 				     value);
 			return FALSE;
 		}
