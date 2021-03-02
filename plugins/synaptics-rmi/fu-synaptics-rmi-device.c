@@ -159,10 +159,11 @@ gboolean
 fu_synaptics_rmi_device_write (FuSynapticsRmiDevice *self,
 			       guint16 addr,
 			       GByteArray *req,
+				   gboolean allow_failure,
 			       GError **error)
 {
 	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
-	return klass_rmi->write (self, addr, req, error);
+	return klass_rmi->write (self, addr, req, allow_failure, error);
 }
 
 gboolean
@@ -201,7 +202,7 @@ fu_synaptics_rmi_device_reset (FuSynapticsRmiDevice *self, GError **error)
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 
 	fu_byte_array_append_uint8 (req, RMI_F01_CMD_DEVICE_RESET);
-	if (!fu_synaptics_rmi_device_write (self, priv->f01->command_base, req, error))
+	if (!fu_synaptics_rmi_device_write (self, priv->f01->command_base, req, TRUE, error))
 		return FALSE;
 	g_usleep (1000 * RMI_F01_DEFAULT_RESET_DELAY_MS);
 	return TRUE;
@@ -752,7 +753,7 @@ fu_synaptics_rmi_device_write_bootloader_id (FuSynapticsRmiDevice *self, GError 
 	g_byte_array_append (bootloader_id_req, priv->flash.bootloader_id, sizeof(priv->flash.bootloader_id));
 	if (!fu_synaptics_rmi_device_write (self,
 					    priv->f34->data_base + block_data_offset,
-					    bootloader_id_req, error)) {
+					    bootloader_id_req, FALSE, error)) {
 		g_prefix_error (error, "failed to write bootloader_id: ");
 		return FALSE;
 	}
@@ -772,6 +773,7 @@ fu_synaptics_rmi_device_disable_irqs (FuSynapticsRmiDevice *self, GError **error
 	if (!fu_synaptics_rmi_device_write (self,
 					    priv->f01->control_base + 1,
 					    interrupt_disable_req,
+						FALSE,
 					    error)) {
 		g_prefix_error (error, "failed to disable interrupts: ");
 		return FALSE;

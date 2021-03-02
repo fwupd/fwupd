@@ -22,6 +22,7 @@ struct _FuSynapticsRmiDeviceClass
 	gboolean		 (*write)			(FuSynapticsRmiDevice	*self,
 								 guint16		 addr,
 								 GByteArray		*req,
+								 gboolean		allow_failure,
 								 GError			**error);
 	GByteArray		*(*read)			(FuSynapticsRmiDevice	*self,
 								 guint16		 addr,
@@ -101,6 +102,7 @@ GByteArray		*fu_synaptics_rmi_device_read_packet_register (FuSynapticsRmiDevice	
 gboolean		 fu_synaptics_rmi_device_write		(FuSynapticsRmiDevice	*self,
 								 guint16		 addr,
 								 GByteArray		*req,
+								 gboolean		allow_failure,
 								 GError			**error);
 gboolean		 fu_synaptics_rmi_device_reset		(FuSynapticsRmiDevice	*self,
 								 GError			**error);

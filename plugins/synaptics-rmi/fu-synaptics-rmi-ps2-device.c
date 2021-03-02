@@ -147,6 +147,7 @@ static gboolean
 fu_synaptics_rmi_ps2_device_write_byte (FuSynapticsRmiPs2Device *self,
 					guint8 buf,
 					guint timeout,
+					gboolean allow_failure,
 					GError **error)
 {
 	gboolean do_write = TRUE;
@@ -195,11 +196,17 @@ fu_synaptics_rmi_ps2_device_write_byte (FuSynapticsRmiPs2Device *self,
 			g_usleep (1000 * 10);
 		}
 		if (i >= 3) {
-			g_set_error_literal (error,
+			if (!allow_failure) {
+				g_set_error_literal (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_NOT_SUPPORTED,
 					     "cannot write byte after retries");
-			return FALSE;
+				return FALSE;
+			} else {
+				/* Just break without error return because FW may not return */
+				/* ACK for some command, ie. RESET command.*/
+				break;
+			}
 		}
 	}
 
@@ -215,15 +222,15 @@ fu_synaptics_rmi_ps2_device_set_resolution_sequence (FuSynapticsRmiPs2Device *se
 {
 	/* send set scaling twice if send_e6s */
 	for (gint i = send_e6s ? 2 : 1; i > 0; --i) {
-		if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetScaling1To1, 50, error))
+		if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetScaling1To1, 50, FALSE, error))
 			return FALSE;
 	}
 	for (gint i = 3; i >= 0; --i) {
 		guint8 ucTwoBitArg = (arg >> (i * 2)) & 0x3;
-		if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetResolution, 50, error)) {
+		if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetResolution, 50, FALSE, error)) {
 			return FALSE;
 		}
-		if (!fu_synaptics_rmi_ps2_device_write_byte (self, ucTwoBitArg, 50, error))
+		if (!fu_synaptics_rmi_ps2_device_write_byte (self, ucTwoBitArg, 50, FALSE, error))
 			return FALSE;
 	}
 
@@ -253,6 +260,7 @@ fu_synaptics_rmi_ps2_device_status_request_sequence (FuSynapticsRmiPs2Device *se
 		if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 							     edpAuxStatusRequest,
 							     10,
+								 FALSE,
 							     &error_local)) {
 			g_debug ("failed write try #%u: %s",
 				 i, error_local->message);
@@ -294,8 +302,8 @@ fu_synaptics_rmi_ps2_device_sample_rate_sequence (FuSynapticsRmiPs2Device *self,
 			send_e6s = TRUE;
 		}
 		if (!fu_synaptics_rmi_ps2_device_set_resolution_sequence (self, arg, send_e6s, &error_local) ||
-		    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetSampleRate, 50, &error_local) ||
-		    !fu_synaptics_rmi_ps2_device_write_byte (self, param, 50, &error_local)) {
+		    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetSampleRate, 50, FALSE, &error_local) ||
+		    !fu_synaptics_rmi_ps2_device_write_byte (self, param, 50, FALSE, &error_local)) {
 			if (i > 3) {
 				g_propagate_error (error, g_steal_pointer (&error_local));
 				return FALSE;
@@ -315,7 +323,7 @@ fu_synaptics_rmi_ps2_device_detect_synaptics_styk (FuSynapticsRmiPs2Device *self
 						   GError **error)
 {
 	guint8 buf;
-	if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxIBMReadSecondaryID, 10, error)) {
+	if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxIBMReadSecondaryID, 10, FALSE, error)) {
 		g_prefix_error (error, "failed to write IBMReadSecondaryID(0xE1): ");
 		return FALSE;
 	}
@@ -391,7 +399,7 @@ fu_synaptics_rmi_ps2_device_enter_iep_mode (FuSynapticsRmiDevice *rmi_device,
 	FuSynapticsRmiPs2Device *self = FU_SYNAPTICS_RMI_PS2_DEVICE (rmi_device);
 
 	/* disable stream */
-	if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxDisable, 50, error)) {
+	if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxDisable, 50, FALSE, error)) {
 		g_prefix_error (error, "failed to disable stream mode: ");
 		return FALSE;
 	}
@@ -416,6 +424,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register (FuSynapticsRmiPs2Device *self,
 						const guint8 *buf,
 						guint8 buflen,
 						guint timeout,
+						gboolean allow_failure,
 						GError **error)
 {
 	g_return_val_if_fail (timeout > 0, FALSE);
@@ -425,6 +434,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register (FuSynapticsRmiPs2Device *self,
 	if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 						     edpAuxSetScaling2To1,
 						     timeout,
+							 allow_failure,
 						     error)) {
 		g_prefix_error (error, "failed to edpAuxSetScaling2To1: ");
 		return FALSE;
@@ -432,6 +442,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register (FuSynapticsRmiPs2Device *self,
 	if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 						     edpAuxSetSampleRate,
 						     timeout,
+							 allow_failure,
 						     error)) {
 		g_prefix_error (error, "failed to edpAuxSetSampleRate: ");
 		return FALSE;
@@ -439,6 +450,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register (FuSynapticsRmiPs2Device *self,
 	if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 						     addr,
 						     timeout,
+							 allow_failure,
 						     error)) {
 		g_prefix_error (error, "failed to write address: ");
 		return FALSE;
@@ -447,6 +459,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register (FuSynapticsRmiPs2Device *self,
 		if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 							     edpAuxSetSampleRate,
 							     timeout,
+								 allow_failure,
 							     error)) {
 			g_prefix_error (error, "failed to set byte %u: ", i);
 			return FALSE;
@@ -454,6 +467,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register (FuSynapticsRmiPs2Device *self,
 		if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 							     buf[i],
 							     timeout,
+								 allow_failure,
 							     error)) {
 			g_prefix_error (error, "failed to write byte %u: ", i);
 			return FALSE;
@@ -477,10 +491,10 @@ fu_synaptics_rmi_ps2_device_read_rmi_register (FuSynapticsRmiPs2Device *self,
 		return FALSE;
 	for (guint retries = 0; ; retries++) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetScaling2To1, 50, error) ||
-		    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetSampleRate, 50, error) ||
-		    !fu_synaptics_rmi_ps2_device_write_byte (self, addr, 50, error) ||
-		    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxStatusRequest, 50, error)) {
+		if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetScaling2To1, 50, FALSE, error) ||
+		    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetSampleRate, 50, FALSE, error) ||
+		    !fu_synaptics_rmi_ps2_device_write_byte (self, addr, 50, FALSE, error) ||
+		    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxStatusRequest, 50, FALSE, error)) {
 			g_prefix_error (error, "failed to write command in Read RMI register: ");
 			return FALSE;
 		}
@@ -517,10 +531,10 @@ fu_synaptics_rmi_ps2_device_read_rmi_packet_register (FuSynapticsRmiPs2Device *s
 
 	if (!fu_synaptics_rmi_ps2_device_enter_iep_mode (FU_SYNAPTICS_RMI_DEVICE (self), error))
 		return NULL;
-	if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetScaling2To1, 50, error) ||
-	    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetSampleRate, 50, error) ||
-	    !fu_synaptics_rmi_ps2_device_write_byte (self, addr, 50, error) ||
-	    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxStatusRequest, 50, error)) {
+	if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetScaling2To1, 50, FALSE, error) ||
+	    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetSampleRate, 50, FALSE, error) ||
+	    !fu_synaptics_rmi_ps2_device_write_byte (self, addr, 50, FALSE, error) ||
+	    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxStatusRequest, 50, FALSE, error)) {
 		g_prefix_error (error, "failed to write command in Read RMI Packet Register: ");
 		return NULL;
 	}
@@ -572,6 +586,7 @@ fu_synaptics_rmi_ps2_device_set_page (FuSynapticsRmiDevice *rmi_device,
 							     &page,
 							     1,
 							     20,
+								 FALSE,
 							     error)) {
 		g_prefix_error (error, "failed to write page %u: ", page);
 		return FALSE;
@@ -673,6 +688,7 @@ static gboolean
 fu_synaptics_rmi_ps2_device_write (FuSynapticsRmiDevice *rmi_device,
 				   guint16 addr,
 				   GByteArray *req,
+				   gboolean allow_failure,
 				   GError **error)
 {
 	FuSynapticsRmiPs2Device *self = FU_SYNAPTICS_RMI_PS2_DEVICE (rmi_device);
@@ -687,6 +703,7 @@ fu_synaptics_rmi_ps2_device_write (FuSynapticsRmiDevice *rmi_device,
 							     req->data,
 							     req->len,
 							     1000, /* timeout */
+								 allow_failure,
 							     error)) {
 		g_prefix_error (error,
 				"failed to write register %x: ",
@@ -712,6 +729,7 @@ fu_synaptics_rmi_ps2_device_write_bus_select (FuSynapticsRmiDevice *rmi_device,
 	if (!fu_synaptics_rmi_ps2_device_write (rmi_device,
 						RMI_DEVICE_BUS_SELECT_REGISTER,
 						req,
+						FALSE,
 						error)) {
 		g_prefix_error (error, "failed to write rmi register %u: ", bus);
 		return FALSE;
@@ -761,7 +779,7 @@ fu_synaptics_rmi_ps2_device_open (FuDevice *device, GError **error)
 		}
 
 		/* send reset -- may take 300-500ms */
-		if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxReset, 600, error)) {
+		if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxReset, 600, FALSE, error)) {
 			g_prefix_error (error, "failed to reset: ");
 			return FALSE;
 		}
@@ -780,7 +798,7 @@ fu_synaptics_rmi_ps2_device_open (FuDevice *device, GError **error)
 		}
 
 		/* disable the device so that it stops reporting finger data */
-		if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxDisable, 50, error)) {
+		if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxDisable, 50, FALSE, error)) {
 			g_prefix_error (error, "failed to disable stream mode: ");
 			return FALSE;
 		}
@@ -878,6 +896,9 @@ fu_synaptics_rmi_ps2_device_attach (FuDevice *device, GError **error)
 		g_debug ("already in runtime mode, skipping");
 		return TRUE;
 	}
+
+	/* Set iepmode before reset device forcibly because of FW requirement */
+	fu_synaptics_rmi_device_set_iepmode (rmi_device, FALSE);
 
 	/* delay after writing */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
