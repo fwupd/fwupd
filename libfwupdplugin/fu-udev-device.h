@@ -75,6 +75,10 @@ gboolean	 fu_udev_device_set_physical_id		(FuUdevDevice	*self,
 							 const gchar	*subsystems,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
+gboolean	 fu_udev_device_set_logical_id		(FuUdevDevice	*self,
+							 const gchar	*subsystem,
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 void		 fu_udev_device_set_readonly		(FuUdevDevice	*self,
 							 gboolean	 readonly)
 G_GNUC_DEPRECATED_FOR(fu_udev_device_set_flags);
