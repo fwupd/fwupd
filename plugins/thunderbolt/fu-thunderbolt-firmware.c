@@ -10,6 +10,7 @@
 #include <libfwupd/fwupd-error.h>
 
 #include "fu-common.h"
+#include "fu-common-version.h"
 #include "fu-thunderbolt-firmware.h"
 
 typedef struct
@@ -371,6 +372,7 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 	FuThunderboltFirmwareClass *klass_firmware = FU_THUNDERBOLT_FIRMWARE_GET_CLASS (firmware);
 
 	guint8 tmp = 0;
+	guint16 version = 0;
 	static const FuThunderboltHwInfo hw_info_arr[] = {
 		{ 0x156D, 2, _FAMILY_FR, 2 }, /* FR 4C */
 		{ 0x156B, 2, _FAMILY_FR, 1 }, /* FR 2C */
@@ -393,7 +395,7 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 		{ 0x1137, 4, _FAMILY_MR, 2 },
 		{ 0 }
 	};
-
+	g_autofree gchar *version_str = NULL;
 	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 
 	/* add this straight away so we can read it without a self */
@@ -498,6 +500,24 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 			return FALSE;
 		}
 		priv->has_pd = fu_thunderbolt_firmware_valid_pd_pointer (pd_pointer);
+	}
+
+	/* versions */
+	switch (priv->family) {
+	case _FAMILY_TR:
+		if (!fu_thunderbolt_firmware_read_uint16 (self,
+							 _SECTION_DIGITAL,
+							 0x09,
+							 &version,
+							 error)) {
+			g_prefix_error (error, "failed to read version: ");
+			return FALSE;
+		}
+		version_str = fu_common_version_from_uint16 (version, FWUPD_VERSION_FORMAT_BCD);
+		fu_firmware_set_version (FU_FIRMWARE (self), version_str);
+		break;
+	default:
+		break;
 	}
 
 	if (priv->is_host) {
