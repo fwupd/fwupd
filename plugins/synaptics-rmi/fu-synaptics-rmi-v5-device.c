@@ -36,8 +36,8 @@ fu_synaptics_rmi_v5_device_detach (FuDevice *device, GError **error)
 	g_autoptr(GByteArray) enable_req = g_byte_array_new ();
 
 	/* sanity check */
-	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		g_debug ("already in runtime mode, skipping");
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		g_debug ("already in bootloader mode, skipping");
 		return TRUE;
 	}
 
@@ -56,6 +56,7 @@ fu_synaptics_rmi_v5_device_detach (FuDevice *device, GError **error)
 	if (!fu_synaptics_rmi_device_write (self,
 					    flash->status_addr,
 					    enable_req,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					    error)) {
 		g_prefix_error (error, "failed to enable programming: ");
 		return FALSE;
@@ -83,6 +84,7 @@ fu_synaptics_rmi_v5_device_erase_all (FuSynapticsRmiDevice *self, GError **error
 	if (!fu_synaptics_rmi_device_write (self,
 					    flash->status_addr,
 					    erase_cmd,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					    error)) {
 		g_prefix_error (error, "failed to erase core config: ");
 		return FALSE;
@@ -112,7 +114,9 @@ fu_synaptics_rmi_v5_device_write_block (FuSynapticsRmiDevice *self,
 
 	g_byte_array_append (req, data, datasz);
 	fu_byte_array_append_uint8 (req, cmd);
-	if (!fu_synaptics_rmi_device_write (self, address, req, error)) {
+	if (!fu_synaptics_rmi_device_write (self, address, req,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+					    error)) {
 		g_prefix_error (error, "failed to write block @0x%x: ", address);
 		return FALSE;
 	}
@@ -318,7 +322,9 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 	/* write initial address */
 	fu_byte_array_append_uint16 (req_addr, 0x0, G_LITTLE_ENDIAN);
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_synaptics_rmi_device_write (self, f34->data_base, req_addr, error)) {
+	if (!fu_synaptics_rmi_device_write (self, f34->data_base, req_addr,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+					    error)) {
 		g_prefix_error (error, "failed to write 1st address zero: ");
 		return FALSE;
 	}
@@ -359,7 +365,9 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 							    0x00,	/* start addr */
 							    0x00,	/* page_sz */
 							    flash->block_size);
-		if (!fu_synaptics_rmi_device_write (self, f34->data_base, req_addr, error)) {
+		if (!fu_synaptics_rmi_device_write (self, f34->data_base, req_addr,
+						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+						    error)) {
 			g_prefix_error (error, "failed to write 1st address zero: ");
 			return FALSE;
 		}
@@ -383,7 +391,9 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* program the configuration image */
-	if (!fu_synaptics_rmi_device_write (self, f34->data_base, req_addr, error)) {
+	if (!fu_synaptics_rmi_device_write (self, f34->data_base, req_addr,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+					    error)) {
 		g_prefix_error (error, "failed to 2nd write address zero: ");
 		return FALSE;
 	}
