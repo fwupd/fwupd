@@ -1,3 +1,3 @@
 # match all devices with this udev subsystem
-[DeviceInstanceId=PLATFORM-INTEGRITY]
+[PLATFORM-INTEGRITY]
 Plugin = platform_integrity

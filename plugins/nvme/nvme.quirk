@@ -1,7 +1,7 @@
 # match all devices with this udev subsystem
-[DeviceInstanceId=NVME]
+[NVME]
 Plugin = nvme
 
 # Phison
-[DeviceInstanceId=NVME\VEN_1987]
+[NVME\VEN_1987]
 Flags = force-align,needs-shutdown

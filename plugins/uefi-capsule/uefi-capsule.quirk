@@ -1,39 +1,39 @@
 # Star Labs Lite (Mk III)
-[Guid=d9d7b13b-e4db-4f91-8bf6-8952a9caa82a]
+[d9d7b13b-e4db-4f91-8bf6-8952a9caa82a]
 Flags = no-ux-capsule
 
 # Star Labs LabTop (Mk III)
-[Guid=8265d473-a6c2-42b4-897b-bc220faa2d32]
+[8265d473-a6c2-42b4-897b-bc220faa2d32]
 Flags = use-shim-unique
 
 # Star Labs Lite (Mk II)
-[Guid=797f8bae-0ea2-4c0f-8a30-7d10ccfacbc0]
+[797f8bae-0ea2-4c0f-8a30-7d10ccfacbc0]
 Flags = use-shim-unique,no-ux-capsule
 
 # Silicom Minnowboard Turbot D0/D1 PLATFORM
-[HwId=386c2f52-44ec-55d3-b802-47631bfb8451]
+[386c2f52-44ec-55d3-b802-47631bfb8451]
 Flags = uefi-force-enable
 
 # Lenovo
-[HwId=6de5d951-d755-576b-bd09-c5cf66b27234]
+[6de5d951-d755-576b-bd09-c5cf66b27234]
 Flags = boot-order-lock,use-legacy-bootmgr-desc
 
 # Lenovo ThinkPad X1 Yoga 4th
-[HwId=1138930e-8df1-5ae0-b946-7b0d9c9b4a79]
+[1138930e-8df1-5ae0-b946-7b0d9c9b4a79]
 Flags = no-coalesce
 
 # Lenovo ThinkPad X1 Carbon 5th
-[HwId=595a0c1a-9819-52f6-8ea7-e0924c073f64]
+[595a0c1a-9819-52f6-8ea7-e0924c073f64]
 Flags = no-coalesce
 
 # Lenovo ThinkPad X1 Carbon 7th
-[HwId=30ddbc9b-8200-5581-8dfd-6bb26e2e42d7]
+[30ddbc9b-8200-5581-8dfd-6bb26e2e42d7]
 Flags = no-coalesce
 
 # Lenovo ThinkPad T460s
-[HwId=90706264-e399-575b-a9fb-077ead03b9b4]
+[90706264-e399-575b-a9fb-077ead03b9b4]
 Flags = no-coalesce
 
 # Dynabook (né Toshiba) X30, X40
-[Guid=28108d08-5027-42c2-a5b8-92d6ede9b97b]
+[28108d08-5027-42c2-a5b8-92d6ede9b97b]
 VersionFormat = bcd

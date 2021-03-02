@@ -753,10 +753,9 @@ fu_plugin_has_custom_flag (FuPlugin *self, const gchar *flag)
 	for (guint i = 0; i < hwids->len; i++) {
 		const gchar *hwid = g_ptr_array_index (hwids, i);
 		const gchar *value;
-		g_autofree gchar *key = g_strdup_printf ("HwId=%s", hwid);
 
 		/* does prefixed quirk exist */
-		value = fu_quirks_lookup_by_id (priv->quirks, key, FU_QUIRKS_FLAGS);
+		value = fu_quirks_lookup_by_id (priv->quirks, hwid, FU_QUIRKS_FLAGS);
 		if (value != NULL) {
 			g_auto(GStrv) quirks = g_strsplit (value, ",", -1);
 			if (g_strv_contains ((const gchar * const *) quirks, flag))

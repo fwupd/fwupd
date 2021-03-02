@@ -1,2 +1,2 @@
-[DeviceInstanceId=TPM]
+[TPM]
 Plugin = tpm

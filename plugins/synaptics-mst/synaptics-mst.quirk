@@ -1,5 +1,5 @@
 # match all devices with this udev subsystem
-[DeviceInstanceId=DRM_DP_AUX_DEV]
+[DRM_DP_AUX_DEV]
 Plugin = synaptics_mst
 
 # GUID generation for Synaptics MST plugin
@@ -19,36 +19,36 @@ Plugin = synaptics_mst
 # To override this behavior add FWUPD_DEVICE_FLAG_SKIPS_RESTART
 #
 
-[DeviceInstanceId=MST-272]
+[MST-272]
 Name = Dell X6 Platform
 SynapticsMstDeviceKind = system
 
-[DeviceInstanceId=MST-273]
+[MST-273]
 Name = Dell X7 Platform
 SynapticsMstDeviceKind = system
 
-[DeviceInstanceId=MST-274]
+[MST-274]
 Name = Dell WD15/TB16/TB18 wired Dock
 SynapticsMstDeviceKind = wd15,tb16,tb18
 
-[DeviceInstanceId=MST-275]
+[MST-275]
 Name = Dell WLD15 Wireless Dock
 SynapticsMstDeviceKind = wld15
 
-[DeviceInstanceId=MST-277]
+[MST-277]
 Name = Dell Rugged Platform
 SynapticsMstDeviceKind = system
 
 # ThinkPad Workstation Dock
-[DeviceInstanceId=MST-tesla-vmm2322-513]
+[MST-tesla-vmm2322-513]
 ParentGuid = USB\VID_17EF&PID_305A
 
 # ThinkPad Thunderbolt 3 Workstation Dock
-[DeviceInstanceId=MST-panamera-vmm5322-595]
+[MST-panamera-vmm5322-595]
 ParentGuid = TBT-01081720
 
-[DeviceInstanceId=MST-596]
+[MST-596]
 Name = ThinkPad USB-C Dock Gen2
 
-[DeviceInstanceId=MST-596]
+[MST-596]
 Name = ThinkPad USB-C Dock Gen2

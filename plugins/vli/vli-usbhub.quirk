@@ -1,133 +1,133 @@
 # 3470_Class
-[DeviceInstanceId=USB\VID_2109&PID_0810]
+[USB\VID_2109&PID_0810]
 Plugin = vli
 GType = FuVliUsbhubDevice
-[DeviceInstanceId=USB\VID_2109&PID_0811]
+[USB\VID_2109&PID_0811]
 Plugin = vli
 GType = FuVliUsbhubDevice
-[DeviceInstanceId=USB\VID_2109&PID_0812]
+[USB\VID_2109&PID_0812]
 Plugin = vli
 GType = FuVliUsbhubDevice
-[DeviceInstanceId=USB\VID_2109&PID_0813]
+[USB\VID_2109&PID_0813]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = needs-unlock-legacy813
-[DeviceInstanceId=USB\VID_2109&PID_8110]
+[USB\VID_2109&PID_8110]
 Plugin = vli
 GType = FuVliUsbhubDevice
-[DeviceInstanceId=USB\VID_2109&PID_8113]
+[USB\VID_2109&PID_8113]
 Plugin = vli
 GType = FuVliUsbhubDevice
 
 # 3507_Class
-[DeviceInstanceId=USB\VID_2109&PID_0210]
+[USB\VID_2109&PID_0210]
 Plugin = vli
 GType = FuVliUsbhubDevice
 
 # 3545_Class
-[DeviceInstanceId=USB\VID_2109&PID_0211]
+[USB\VID_2109&PID_0211]
 Plugin = vli
 GType = FuVliUsbhubDevice
-[DeviceInstanceId=USB\VID_2109&PID_2211]
+[USB\VID_2109&PID_2211]
 Plugin = vli
 GType = FuVliUsbhubDevice
-[DeviceInstanceId=USB\VID_2109&PID_0212]
+[USB\VID_2109&PID_0212]
 Plugin = vli
 GType = FuVliUsbhubDevice
-[DeviceInstanceId=USB\VID_2109&PID_2212]
+[USB\VID_2109&PID_2212]
 Plugin = vli
 GType = FuVliUsbhubDevice
 
 # VL817
-[DeviceInstanceId=USB\VID_2109&PID_0817]
+[USB\VID_2109&PID_0817]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
-[DeviceInstanceId=USB\VID_2109&PID_2817]
+[USB\VID_2109&PID_2817]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 
 # VL820
-[DeviceInstanceId=USB\VID_2109&PID_0820]
+[USB\VID_2109&PID_0820]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3,has-shared-spi-pd
-[DeviceInstanceId=USB\VID_2109&PID_2820]
+[USB\VID_2109&PID_2820]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,has-shared-spi-pd
 
 # A25Lxxx
-[Guid=VLI_USBHUB\\SPI_3730]
+[VLI_USBHUB\\SPI_3730]
 VliSpiCmdChipErase = 0xc7
 VliSpiCmdSectorErase = 0x20
 
 # AT25F512A/B
-[Guid=VLI_USBHUB\\SPI_1F65]
+[VLI_USBHUB\\SPI_1F65]
 # VliSpiCmdReadId = 0x15
 VliSpiCmdChipErase = 0x62
 VliSpiCmdSectorErase = 0x00
 
 # EN25Fxx
-[Guid=VLI_USBHUB\\SPI_1C31]
+[VLI_USBHUB\\SPI_1C31]
 VliSpiCmdChipErase = 0x60
 VliSpiCmdSectorErase = 0x20
 
 # GD25Qxxx
-[Guid=VLI_USBHUB\SPI_C840]
+[VLI_USBHUB\SPI_C840]
 VliSpiCmdChipErase = 0xC7
 VliSpiCmdSectorErase = 0x20
 
 # M25PxxA/xx
-[Guid=VLI_USBHUB\\SPI_0020]
+[VLI_USBHUB\\SPI_0020]
 VliSpiCmdChipErase = 0xC7
 VliSpiCmdSectorErase = 0x00
 
 # MX25Lxxx/xxxC/xxxE
-[Guid=VLI_USBHUB\\SPI_C220]
+[VLI_USBHUB\\SPI_C220]
 VliSpiCmdChipErase = 0x60
 VliSpiCmdSectorErase = 0x20
 
 # MX25Lxxx1E
-[Guid=VLI_USBHUB\\SPI_C222]
+[VLI_USBHUB\\SPI_C222]
 VliSpiCmdChipErase = 0x60
 VliSpiCmdSectorErase = 0x20
 
 # PCT/SST25VFxxx/xxxA
-[Guid=VLI_USBHUB\\SPI_00BF]
+[VLI_USBHUB\\SPI_00BF]
 # VliSpiCmdReadId = 0x90
 VliSpiCmdChipErase = 0x60
 VliSpiCmdSectorErase = 0x20
 
 # PM25LDxxx
-[Guid=VLI_USBHUB\\SPI_009D]
+[VLI_USBHUB\\SPI_009D]
 # VliSpiCmdReadId = 0x90
 VliSpiCmdChipErase = 0xC7
 VliSpiCmdSectorErase = 0xD7
 
 # PM25LVxxx
-[Guid=VLI_USBHUB\\SPI_009D]
+[VLI_USBHUB\\SPI_009D]
 # VliSpiCmdReadId = 0xAB
 VliSpiCmdChipErase = 0xC7
 VliSpiCmdSectorErase = 0xD7
 
 # W25XxxBV/W25XxxCL
-[Guid=VLI_USBHUB\\SPI_00EF]
+[VLI_USBHUB\\SPI_00EF]
 VliSpiCmdChipErase = 0xC7
 VliSpiCmdSectorErase = 0x20
 
 # FM25Fxxx
-#[Guid=VLI_USBHUB\\SPI_XXXX]
+#[VLI_USBHUB\\SPI_XXXX]
 #VliSpiCmdChipErase = 0xC7
 #VliSpiCmdSectorErase = 0x20
 
 # KH25LxxxxE
-#[Guid=VLI_USBHUB\\SPI_XXXX]
+#[VLI_USBHUB\\SPI_XXXX]
 #VliSpiCmdChipErase = 0x60
 #VliSpiCmdSectorErase = 0x20
 
 # MX25Vxxx
-#[Guid=VLI_USBHUB\\SPI_XXXX]
+#[VLI_USBHUB\\SPI_XXXX]
 #VliSpiCmdChipErase = 0x60
 #VliSpiCmdSectorErase = 0x20

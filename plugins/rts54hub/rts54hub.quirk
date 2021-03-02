@@ -1,17 +1,17 @@
 # RTS5423 Development Board
-[DeviceInstanceId=USB\VID_0BDA&PID_5423]
+[USB\VID_0BDA&PID_5423]
 Plugin = rts54hub
 FirmwareSizeMin = 0x20000
 FirmwareSizeMax = 0x40000
 
 # Lenovo HotRod
-[DeviceInstanceId=USB\VID_17EF&PID_30BF]
+[USB\VID_17EF&PID_30BF]
 Plugin = rts54hub
 Vendor = Lenovo
 FirmwareSizeMin = 0x20000
 FirmwareSizeMax = 0x40000
 Children = FuRts54hubRtd21xxDevice|USB\VID_17EF&PID_30BF&I2C_01
-[DeviceInstanceId=USB\VID_17EF&PID_30BF&I2C_01]
+[USB\VID_17EF&PID_30BF&I2C_01]
 Plugin = rts54hub
 Name = HDMI Converter
 Flags = updatable

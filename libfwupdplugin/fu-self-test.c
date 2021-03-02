@@ -540,7 +540,7 @@ fu_plugin_quirks_performance_func (void)
 	/* lookup */
 	g_timer_reset (timer);
 	for (guint j = 0; j < 1000; j++) {
-		const gchar *group = "DeviceInstanceId=USB\\VID_0BDA&PID_1100";
+		const gchar *group = "USB\\VID_0BDA&PID_1100";
 		for (guint i = 0; keys[i] != NULL; i++) {
 			const gchar *tmp = fu_quirks_lookup_by_id (quirks, group, keys[i]);
 			g_assert_cmpstr (tmp, !=, NULL);

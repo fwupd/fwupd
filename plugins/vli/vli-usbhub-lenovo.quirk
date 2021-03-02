@@ -1,278 +1,278 @@
 # Lenovo CS18 Ultra Dock
-[DeviceInstanceId=USB\VID_17EF&PID_3070]
+[USB\VID_17EF&PID_3070]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
 CounterpartGuid = USB\VID_17EF&PID_3071
-[DeviceInstanceId=USB\VID_17EF&PID_3072&HUB_0006]
+[USB\VID_17EF&PID_3072&HUB_0006]
 ParentGuid = USB\VID_17EF&PID_3072&HUB_0002
-[DeviceInstanceId=USB\VID_17EF&PID_3071]
+[USB\VID_17EF&PID_3071]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
-[DeviceInstanceId=USB\VID_17EF&PID_3071&HUB_0002]
+[USB\VID_17EF&PID_3071&HUB_0002]
 ParentGuid = USB\VID_17EF&PID_3071&HUB_0006
 
 # Lenovo CS18 Pro and Basic Dock
-[DeviceInstanceId=USB\VID_17EF&PID_3072]
+[USB\VID_17EF&PID_3072]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
 CounterpartGuid = USB\VID_17EF&PID_3073
-[DeviceInstanceId=USB\VID_17EF&PID_3073]
+[USB\VID_17EF&PID_3073]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
-[DeviceInstanceId=USB\VID_17EF&PID_3073&HUB_0006]
+[USB\VID_17EF&PID_3073&HUB_0006]
 ParentGuid = USB\VID_17EF&PID_3073&HUB_0002
 
 # Lenovo TR Dock
-[DeviceInstanceId=USB\VID_17EF&PID_307F&HUB_0002]
+[USB\VID_17EF&PID_307F&HUB_0002]
 ParentGuid = TBT-01081720
-[DeviceInstanceId=USB\VID_17EF&PID_307F]
+[USB\VID_17EF&PID_307F]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3,has-msp430
 CounterpartGuid = USB\VID_17EF&PID_3080
-[DeviceInstanceId=USB\VID_17EF&PID_307F&HUB_0006]
+[USB\VID_17EF&PID_307F&HUB_0006]
 ParentGuid = USB\VID_17EF&PID_307F&HUB_0002
-[DeviceInstanceId=USB\VID_17EF&PID_3080]
+[USB\VID_17EF&PID_3080]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
-[DeviceInstanceId=USB\VID_17EF&PID_3080&HUB_06]
+[USB\VID_17EF&PID_3080&HUB_06]
 ParentGuid = USB\VID_17EF&PID_3080&HUB_20
-[DeviceInstanceId=USB\VID_17EF&PID_3080&HUB_20]
+[USB\VID_17EF&PID_3080&HUB_20]
 ParentGuid = TBT-01081720
 
 # Lenovo CS13 KG Dock
-[DeviceInstanceId=USB\VID_17EF&PID_1010]
+[USB\VID_17EF&PID_1010]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 
 # Lenovo CS13 GD Dock
-[DeviceInstanceId=USB\VID_17EF&PID_1012]
+[USB\VID_17EF&PID_1012]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 
 # Lenovo CS13 MO Dock
-[DeviceInstanceId=USB\VID_17EF&PID_1013]
+[USB\VID_17EF&PID_1013]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 
 # Lenovo USB3 Ultra Dock
-[DeviceInstanceId=USB\VID_17EF&PID_1014]
+[USB\VID_17EF&PID_1014]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,usb3
-[DeviceInstanceId=USB\VID_17EF&PID_1015]
+[USB\VID_17EF&PID_1015]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 ParentGuid = USB\VID_17EF&PID_1014
 
 # Lenovo USB3 Pro Dock
-[DeviceInstanceId=USB\VID_17EF&PID_1016]
+[USB\VID_17EF&PID_1016]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,usb3
-[DeviceInstanceId=USB\VID_17EF&PID_1018]
+[USB\VID_17EF&PID_1018]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 ParentGuid = USB\VID_17EF&PID_1016
 
 # Lenovo Workstation D40
-[DeviceInstanceId=USB\VID_17EF&PID_1033]
+[USB\VID_17EF&PID_1033]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 
 # Lenovo Workstation S40
-[DeviceInstanceId=USB\VID_17EF&PID_1034]
+[USB\VID_17EF&PID_1034]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 
 # Lenovo Workstation v40
-[DeviceInstanceId=USB\VID_17EF&PID_1035]
+[USB\VID_17EF&PID_1035]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 
 # Lenovo One Link Plus
-[DeviceInstanceId=USB\VID_17EF&PID_1018]
+[USB\VID_17EF&PID_1018]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,usb3
-[DeviceInstanceId=USB\VID_17EF&PID_1019]
+[USB\VID_17EF&PID_1019]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,usb3
 ParentGuid = USB\VID_17EF&PID_1018
 
 # Lenovo Hybrid dock
-[DeviceInstanceId=USB\VID_17EF&PID_A356]
+[USB\VID_17EF&PID_A356]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
 CounterpartGuid = USB\VID_17EF&PID_1028
-[DeviceInstanceId=USB\VID_17EF&PID_1028]
+[USB\VID_17EF&PID_1028]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
-[DeviceInstanceId=USB\VID_17EF&PID_A357]
+[USB\VID_17EF&PID_A357]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
 ParentGuid = USB\VID_17EF&PID_A356
 CounterpartGuid = USB\VID_17EF&PID_1029
-[DeviceInstanceId=USB\VID_17EF&PID_1029]
+[USB\VID_17EF&PID_1029]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_17EF&PID_1028
 
 # Lenovo Travel hub
-[DeviceInstanceId=USB\VID_17EF&PID_7216]
+[USB\VID_17EF&PID_7216]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
 CounterpartGuid = USB\VID_17EF&PID_7224
-[DeviceInstanceId=USB\VID_17EF&PID_7224]
+[USB\VID_17EF&PID_7224]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_17EF&PID_7216
 
 # Lenovo Travel hub Gen2
-[DeviceInstanceId=USB\VID_17EF&PID_721D]
+[USB\VID_17EF&PID_721D]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3,has-shared-spi-pd
 CounterpartGuid = USB\VID_17EF&PID_7225
-[DeviceInstanceId=USB\VID_17EF&PID_7225]
+[USB\VID_17EF&PID_7225]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_17EF&PID_721D
-[DeviceInstanceId=USB\VID_17EF&PID_721C]
+[USB\VID_17EF&PID_721C]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = has-rtd21xx
 ParentGuid = USB\VID_17EF&PID_721D
-[DeviceInstanceId=USB\VID_17EF&PID_721C&I2C_REALTEK]
+[USB\VID_17EF&PID_721C&I2C_REALTEK]
 Name = RTD2181S
 
 # Lenovo USB-C Mini dock
-[DeviceInstanceId=USB\VID_17EF&PID_3094]
+[USB\VID_17EF&PID_3094]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3,has-shared-spi-pd,attach-with-gpiob
 CounterpartGuid = USB\VID_17EF&PID_3095
-[DeviceInstanceId=USB\VID_17EF&PID_3095]
+[USB\VID_17EF&PID_3095]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2,attach-with-gpiob
 ParentGuid = USB\VID_17EF&PID_3094
-[DeviceInstanceId=USB\VID_17EF&PID_3097]
+[USB\VID_17EF&PID_3097]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_17EF&PID_3094
-[DeviceInstanceId=USB\VID_17EF&PID_3093]
+[USB\VID_17EF&PID_3093]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = has-rtd21xx
 ParentGuid = USB\VID_17EF&PID_3094
-[DeviceInstanceId=USB\VID_17EF&PID_3093&I2C_REALTEK]
+[USB\VID_17EF&PID_3093&I2C_REALTEK]
 Name = RTD2181S
-[DeviceInstanceId=USB\VID_17EF&PID_721C&APP_26]
+[USB\VID_17EF&PID_721C&APP_26]
 ProxyGuid = USB\VID_17EF&PID_3094
 FirmwareSize = 0x8000
 
 # Lenovo Travel Hub 1in3
-[DeviceInstanceId=USB\VID_17EF&PID_7228]
+[USB\VID_17EF&PID_7228]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
 CounterpartGuid = USB\VID_17EF
-[DeviceInstanceId=USB\VID_17EF&PID_7226]
+[USB\VID_17EF&PID_7226]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_17EF&PID_7228
 
 # Lenovo USB-C 7-in-1 Hub
-[DeviceInstanceId=USB\VID_17EF&PID_722A]
+[USB\VID_17EF&PID_722A]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3,has-shared-spi-pd
 CounterpartGuid = USB\VID_17EF&PID_7229
-[DeviceInstanceId=USB\VID_17EF&PID_7229]
+[USB\VID_17EF&PID_7229]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_17EF&PID_722A
 
 # Lenovo USB-C to 4 USB-A Hub
-[DeviceInstanceId=USB\VID_17EF&PID_1039]
+[USB\VID_17EF&PID_1039]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3,has-shared-spi-pd,attach-with-gpiob
 CounterpartGuid = USB\VID_17EF&PID_103A
-[DeviceInstanceId=USB\VID_17EF&PID_103A]
+[USB\VID_17EF&PID_103A]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_17EF&PID_1039
 
 # Lenovo Gen2 dock
-[DeviceInstanceId=USB\VID_17EF&PID_A391]
+[USB\VID_17EF&PID_A391]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
 CounterpartGuid = USB\VID_17EF&PID_A392
-[DeviceInstanceId=USB\VID_17EF&PID_A392]
+[USB\VID_17EF&PID_A392]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_17EF&PID_A391
-[DeviceInstanceId=USB\VID_17EF&PID_A393]
+[USB\VID_17EF&PID_A393]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
 ParentGuid = USB\VID_17EF&PID_A391
 CounterpartGuid = USB\VID_17EF&PID_A394
-[DeviceInstanceId=USB\VID_17EF&PID_A394]
+[USB\VID_17EF&PID_A394]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_17EF&PID_A392
-[DeviceInstanceId=USB\VID_17EF&PID_A395]
+[USB\VID_17EF&PID_A395]
 Plugin = vli
 GType = FuVliUsbhubDevice
 
 # Lenovo Modularized dock (with VIA USB PID?!)
-[DeviceInstanceId=USB\VID_2109&PID_1822]
+[USB\VID_2109&PID_1822]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
 CounterpartGuid = USB\VID_2109&PID_2822
-[DeviceInstanceId=USB\VID_2109&PID_2822]
+[USB\VID_2109&PID_2822]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
-[DeviceInstanceId=USB\VID_2109&PID_3822]
+[USB\VID_2109&PID_3822]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
 ParentGuid = USB\VID_2109&PID_1822
 CounterpartGuid = USB\VID_2109&PID_4822
-[DeviceInstanceId=USB\VID_2109&PID_4822]
+[USB\VID_2109&PID_4822]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2

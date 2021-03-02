@@ -1,97 +1,97 @@
-[DeviceInstanceId=HIDRAW\VEN_04F3]
+[HIDRAW\VEN_04F3]
 Plugin = elantp
 GType = FuElantpHidDevice
 
 # ThinkPad X1 Carbon Gen 9
-[HwId=6c87726f-b545-549e-840a-189422ea21d0]
+[6c87726f-b545-549e-840a-189422ea21d0]
 Flags = elantp-recovery
 
 # Lenovo X1 Nano Gen1
-[HwId=4c20262a-aee0-5d6e-ba72-6d29b23fe350]
+[4c20262a-aee0-5d6e-ba72-6d29b23fe350]
 Flags = elantp-recovery
 
 # Lenovo ThinkPad X13 Yoga Gen 2
-[HwId=34874ca5-54f0-5a4f-9161-e03910d14b75] 
+[34874ca5-54f0-5a4f-9161-e03910d14b75]
 Flags = elantp-recovery
 
 # Lenovo ThinkPad X13 Gen 2 - 20XHFVT007
-[HwId=e5319542-ca16-5d93-bd0f-2d25f547a846] 
+[e5319542-ca16-5d93-bd0f-2d25f547a846]
 Flags = elantp-recovery
 
 # Lenovo ThinkPad X13 Gen 2 - 20XHFVT003
-[HwId=ea5ea62f-ec8d-5f5d-8231-0816c89d75d6] 
+[ea5ea62f-ec8d-5f5d-8231-0816c89d75d6]
 Flags = elantp-recovery
 
 # Acer Aspire V3-372T
-[HwId=513cde3d-d939-59bd-a634-5c1645ebb93b]
+[513cde3d-d939-59bd-a634-5c1645ebb93b]
 Flags = elantp-recovery
 
 # recovery device
-[DeviceInstanceId=I2C\NAME_Synopsys-DesignWare-I2C-adapter]
+[I2C\NAME_Synopsys-DesignWare-I2C-adapter]
 Plugin = elantp
 GType = FuElantpI2cDevice
 ElantpI2cTargetAddress = 0x15
 
-[DeviceInstanceId=ELANTP\ICTYPE_00]
+[ELANTP\ICTYPE_00]
 ElantpIcPageCount = 0x200
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_03]
+[ELANTP\ICTYPE_03]
 ElantpIcPageCount = 0x300
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_06]
+[ELANTP\ICTYPE_06]
 ElantpIcPageCount = 0x200
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_07]
+[ELANTP\ICTYPE_07]
 ElantpIcPageCount = 0x300
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_08]
+[ELANTP\ICTYPE_08]
 ElantpIcPageCount = 0x200
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_0A]
+[ELANTP\ICTYPE_0A]
 ElantpIcPageCount = 0x300
 ElantpIapPassword = 0xE15A
 
-[DeviceInstanceId=ELANTP\ICTYPE_0B]
+[ELANTP\ICTYPE_0B]
 ElantpIcPageCount = 0x300
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_0C]
+[ELANTP\ICTYPE_0C]
 ElantpIcPageCount = 0x300
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_0E]
+[ELANTP\ICTYPE_0E]
 ElantpIcPageCount = 0x280
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_09]
+[ELANTP\ICTYPE_09]
 ElantpIcPageCount = 0x300
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_0D]
+[ELANTP\ICTYPE_0D]
 ElantpIcPageCount = 0x380
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_10]
+[ELANTP\ICTYPE_10]
 ElantpIcPageCount = 0x400
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_11]
+[ELANTP\ICTYPE_11]
 ElantpIcPageCount = 0x500
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_13]
+[ELANTP\ICTYPE_13]
 ElantpIcPageCount = 0x800
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_14]
+[ELANTP\ICTYPE_14]
 ElantpIcPageCount = 0x400
 ElantpIapPassword = 0x1EA5
 
-[DeviceInstanceId=ELANTP\ICTYPE_15]
+[ELANTP\ICTYPE_15]
 ElantpIcPageCount = 0x400
 ElantpIapPassword = 0x1EA5
