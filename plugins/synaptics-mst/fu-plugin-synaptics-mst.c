@@ -132,7 +132,7 @@ fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **err
 	if (locker == NULL)
 		return FALSE;
 
-	/* for DeviceKind=system devices */
+	/* for SynapticsMstDeviceKind=system devices */
 	fu_synaptics_mst_device_set_system_type (FU_SYNAPTICS_MST_DEVICE (dev),
 						fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_SKU));
 

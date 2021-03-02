@@ -4,14 +4,14 @@ Plugin = synaptics_mst
 
 # GUID generation for Synaptics MST plugin
 #
-# SynapticsMSTBoardID is the 16 bit board ID which contains:
+# SYNAPTICSMST\BID is the 16 bit board ID which contains:
 # * Customer ID in first byte
 # * Board ID in the second byte
 #
-# DeviceKind = system
+# SynapticsMstDeviceKind = system
 #  * Will map to a GUID containing HwID product SKU
 #  * These GUIDs will look like MST-${PRODUCTSKU}-${BOARDID}
-# DeviceKind != system
+# SynapticsMstDeviceKind != system
 #  * Will map to a GUID containing each comma delimited substring
 #  * These GUIDs will look like MST-${DEVICEKIND}-${CHIPID}-${BOARDID}
 #
@@ -19,25 +19,25 @@ Plugin = synaptics_mst
 # To override this behavior add FWUPD_DEVICE_FLAG_SKIPS_RESTART
 #
 
-[SynapticsMSTBoardID=272]
+[DeviceInstanceId=MST-272]
 Name = Dell X6 Platform
-DeviceKind = system
+SynapticsMstDeviceKind = system
 
-[SynapticsMSTBoardID=273]
+[DeviceInstanceId=MST-273]
 Name = Dell X7 Platform
-DeviceKind = system
+SynapticsMstDeviceKind = system
 
-[SynapticsMSTBoardID=274]
+[DeviceInstanceId=MST-274]
 Name = Dell WD15/TB16/TB18 wired Dock
-DeviceKind = wd15,tb16,tb18
+SynapticsMstDeviceKind = wd15,tb16,tb18
 
-[SynapticsMSTBoardID=275]
+[DeviceInstanceId=MST-275]
 Name = Dell WLD15 Wireless Dock
-DeviceKind = wld15
+SynapticsMstDeviceKind = wld15
 
-[SynapticsMSTBoardID=277]
+[DeviceInstanceId=MST-277]
 Name = Dell Rugged Platform
-DeviceKind = system
+SynapticsMstDeviceKind = system
 
 # ThinkPad Workstation Dock
 [DeviceInstanceId=MST-tesla-vmm2322-513]
@@ -47,5 +47,8 @@ ParentGuid = USB\VID_17EF&PID_305A
 [DeviceInstanceId=MST-panamera-vmm5322-595]
 ParentGuid = TBT-01081720
 
-[SynapticsMSTBoardID=596]
+[DeviceInstanceId=MST-596]
+Name = ThinkPad USB-C Dock Gen2
+
+[DeviceInstanceId=MST-596]
 Name = ThinkPad USB-C Dock Gen2
