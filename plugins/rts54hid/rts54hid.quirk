@@ -1,12 +1,12 @@
 # RTS5423
-[DeviceInstanceId=USB\VID_0BDA&PID_1100]
+[USB\VID_0BDA&PID_1100]
 Plugin = rts54hid
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x40000
 Children = FuRts54HidModule|USB\VID_0BDA&PID_1100&I2C_01
 
 # this is a fictitious example...
-[DeviceInstanceId=USB\VID_0BDA&PID_1100&I2C_01]
+[USB\VID_0BDA&PID_1100&I2C_01]
 Plugin = rts54hid
 Name = HDMI Converter
 Flags = updatable

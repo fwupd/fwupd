@@ -1,99 +1,99 @@
 # match all devices with this udev subsystem
-[DeviceInstanceId=BLOCK]
+[BLOCK]
 Plugin = ata
 
-[DeviceInstanceId=OUI\000039]
+[OUI\000039]
 Vendor = Toshiba
 VendorId = ATA:0x1179
 
-[DeviceInstanceId=OUI\0000f0]
+[OUI\0000f0]
 Vendor = Samsung
 VendorId = ATA:0x144D
 
-[DeviceInstanceId=OUI\000120]
+[OUI\000120]
 Vendor = Corsair
 VendorId = ATA:0x1987
 
-[DeviceInstanceId=OUI\0004cf]
+[OUI\0004cf]
 Vendor = Seagate
 VendorId = ATA:0x1BB1
 
-[DeviceInstanceId=OUI\00080d]
+[OUI\00080d]
 Vendor = Toshiba
 VendorId = ATA:0x1179
 
-[DeviceInstanceId=OUI\000c50]
+[OUI\000c50]
 Vendor = Seagate
 VendorId = ATA:0x1BB1
 
-[DeviceInstanceId=OUI\000cca]
+[OUI\000cca]
 Vendor = Western Digital
 VendorId = ATA:0x101C
 
-[DeviceInstanceId=OUI\0014ee]
+[OUI\0014ee]
 Vendor = Western Digital
 VendorId = ATA:0x101C
 
-[DeviceInstanceId=OUI\001517]
+[OUI\001517]
 Vendor = Intel
 VendorId = ATA:0x8086
 
-[DeviceInstanceId=OUI\001b44]
+[OUI\001b44]
 Vendor = Western Digital
 VendorId = ATA:0x101C
 
-[DeviceInstanceId=OUI\002303]
+[OUI\002303]
 Vendor = LITE-ON
 VendorId = ATA:0x14A4
 
-[DeviceInstanceId=OUI\0024e9]
+[OUI\0024e9]
 Vendor = Samsung
 VendorId = ATA:0x144D
 
-[DeviceInstanceId=OUI\002538]
+[OUI\002538]
 Vendor = Samsung
 VendorId = ATA:0x144D
 
-[DeviceInstanceId=OUI\0026b7]
+[OUI\0026b7]
 Vendor = Kingston
 VendorId = ATA:0x2646
 
-[DeviceInstanceId=OUI\00a075]
+[OUI\00a075]
 Vendor = Micron
 VendorId = ATA:0x1344
 
-[DeviceInstanceId=OUI\030302]
+[OUI\030302]
 Vendor = SK hynix
 VendorId = ATA:0x1C5C
 
-[DeviceInstanceId=OUI\550380]
+[OUI\550380]
 Vendor = Kingston
 VendorId = ATA:0x2646
 
-[DeviceInstanceId=OUI\5cd2e4]
+[OUI\5cd2e4]
 Vendor = Intel
 VendorId = ATA:0x8086
 
-[DeviceInstanceId=OUI\707c18]
+[OUI\707c18]
 Vendor = ADATA
 VendorId = ATA:0x1CC1
 
-[DeviceInstanceId=OUI\7c3548]
+[OUI\7c3548]
 Vendor = Transcend
 VendorId = ATA:0x8564
 
-[DeviceInstanceId=OUI\001b44]
+[OUI\001b44]
 Vendor = SanDisk
 VendorId = ATA:0x15B7
 
-[DeviceInstanceId=OUI\96a060]
+[OUI\96a060]
 Vendor = Western Digital
 VendorId = ATA:0x101C
 
-[DeviceInstanceId=OUI\f8db4c]
+[OUI\f8db4c]
 Vendor = PNY
 VendorId = ATA:0x196E
 
-[DeviceInstanceId=OUI\e83a97]
+[OUI\e83a97]
 Vendor = Toshiba
 VendorId = ATA:0x1179

@@ -70,14 +70,14 @@ The `VliSpiCmdReadId` and `VliSpiCmdReadIdSz` quirks have to be assigned to the 
 instance attribute, rather then the flash part as the ID is required to query
 the other flash chip parameters. For example:
 
-    [DeviceInstanceId=USB\VID_2109&PID_0210]
+    [USB\VID_2109&PID_0210]
     Plugin = vli
     GType = FuVliUsbhubDevice
     VliSpiCmdReadId = 0xf8
     VliSpiCmdReadIdSz = 4
 
     # W3IRDFLASHxxx
-    [Guid=VLI_USBHUB\\SPI_37303840]
+    [VLI_USBHUB\\SPI_37303840]
     VliSpiCmdChipErase = 0xc7
     VliSpiCmdSectorErase = 0x20
 

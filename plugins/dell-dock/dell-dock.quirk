@@ -14,15 +14,15 @@
 #
 
 # Used to make plugin probe the devices
-[DeviceInstanceId=USB\VID_413C&PID_B06F]
+[USB\VID_413C&PID_B06F]
 Name = Unprobed Dell accessory endpoint
 Plugin = dell_dock
-[DeviceInstanceId=USB\VID_413C&PID_B06E]
+[USB\VID_413C&PID_B06E]
 Name = Unprobed Dell accessory endpoint
 Plugin = dell_dock
 
 # USB hub1
-[DeviceInstanceId=USB\VID_413C&PID_B06F&hub]
+[USB\VID_413C&PID_B06F&hub]
 Name = RTS5413 in Dell dock
 Summary = USB 3.1 Generation 1 Hub
 ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
@@ -37,7 +37,7 @@ DellDockBlobMinorOffset = 0x7F6F
 InstallDuration = 14
 
 # USB hub2
-[DeviceInstanceId=USB\VID_413C&PID_B06E&hub]
+[USB\VID_413C&PID_B06E&hub]
 Name = RTS5487 in Dell dock
 Summary = USB 3.1 Generation 2 Hub
 ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
@@ -53,7 +53,7 @@ InstallDuration = 3
 
 # Embedded Controller
 # Name is intentionally not set (it's queried by dock)
-[Guid=USB\VID_413C&PID_B06E&hub&embedded]
+[USB\VID_413C&PID_B06E&hub&embedded]
 Name = Dell dock
 Summary = High performance dock
 Plugin = dell_dock
@@ -71,7 +71,7 @@ DellDockBlobVersionOffset = 0x1AFC0
 InstallDuration = 60
 
 # Representation of overall dock update
-[DeviceInstanceId=USB\VID_413C&PID_B06E&hub&status]
+[USB\VID_413C&PID_B06E&hub&status]
 Name = Package level of Dell dock
 Summary = A representation of dock update status
 Plugin = dell_dock
@@ -82,7 +82,7 @@ InstallDuration = 5
 DellDockBlobVersionOffset = 0x14
 
 # MST Hub
-[Guid=MST-panamera-vmm5331-259]
+[MST-panamera-vmm5331-259]
 Name = VMM5331 in Dell dock
 Summary = Multi Stream Transport controller
 Vendor = Dell Inc.
@@ -99,7 +99,7 @@ DellDockBlobBuildOffset = 0x18402
 Icon = video-display
 
 # Thunderbolt controller
-[Guid=TBT-00d4b070]
+[TBT-00d4b070]
 Name = Thunderbolt controller in Dell dock
 Summary = Thunderbolt controller
 Vendor = Dell Inc.

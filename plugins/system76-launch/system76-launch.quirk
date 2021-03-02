@@ -1,4 +1,4 @@
 # System76 Launch
-[DeviceInstanceId=USB\VID_3384&PID_0001&REV_0001]
+[USB\VID_3384&PID_0001&REV_0001]
 Plugin = system76_launch
 CounterpartGuid = USB\VID_03EB&PID_2FF4

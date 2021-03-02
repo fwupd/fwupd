@@ -1,9 +1,9 @@
 # ISA bridge i.e. 00:1F.0
 # -> drivers/mfd/lpc_ich.c
-[DeviceInstanceId=PCI\VEN_8086&CLASS_060100]
+[PCI\VEN_8086&CLASS_060100]
 Plugin = pci_bcr
 
 # PCI devices, i.e. 00:1F.5
 #  -> drivers/mtd/spi-nor/controllers/intel-spi-pci.c
-[DeviceInstanceId=PCI\VEN_8086&CLASS_0C8000]
+[PCI\VEN_8086&CLASS_0C8000]
 Plugin = pci_bcr

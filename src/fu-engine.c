@@ -6115,11 +6115,10 @@ fu_engine_load_quirks_for_hwid (FuEngine *self, const gchar *hwid)
 {
 	FuPlugin *plugin;
 	const gchar *value;
-	g_autofree gchar *key = g_strdup_printf ("HwId=%s", hwid);
 	g_auto(GStrv) plugins = NULL;
 
 	/* does prefixed quirk exist */
-	value = fu_quirks_lookup_by_id (self->quirks, key, FU_QUIRKS_PLUGIN);
+	value = fu_quirks_lookup_by_id (self->quirks, hwid, FU_QUIRKS_PLUGIN);
 	if (value == NULL)
 		return;
 	plugins = g_strsplit (value, ",", -1);

@@ -1,47 +1,47 @@
 # Pixart 2801
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2801]
+[HIDRAW\VEN_093A&DEV_2801]
 Plugin = pixart_rf
 
 # Pixart 2860
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2860]
+[HIDRAW\VEN_093A&DEV_2860]
 Plugin = pixart_rf
 
 # Pixart 2802
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2802]
+[HIDRAW\VEN_093A&DEV_2802]
 Plugin = pixart_rf
 
 # Pixart 2822
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2822]
+[HIDRAW\VEN_093A&DEV_2822]
 Plugin = pixart_rf
 
 # Pixart 2861
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2861]
+[HIDRAW\VEN_093A&DEV_2861]
 Plugin = pixart_rf
 
 # Pixart 2862
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2862]
+[HIDRAW\VEN_093A&DEV_2862]
 Plugin = pixart_rf
 
 # Pixart 2452
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2452]
+[HIDRAW\VEN_093A&DEV_2452]
 Plugin = pixart_rf
 
 # Primax Mouse
-[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EEF]
+[HIDRAW\VEN_0461&DEV_4EEF]
 Plugin = pixart_rf
 
 # Primax US KB
-[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EEE]
+[HIDRAW\VEN_0461&DEV_4EEE]
 Plugin = pixart_rf
 
 # Primax UK KB
-[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EF4]
+[HIDRAW\VEN_0461&DEV_4EF4]
 Plugin = pixart_rf
 
 # Primax JP KB
-[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EF5]
+[HIDRAW\VEN_0461&DEV_4EF5]
 Plugin = pixart_rf
 
 # Chicony Cheetos
-[DeviceInstanceId=HIDRAW\VEN_04F2&DEV_2051]
+[HIDRAW\VEN_04F2&DEV_2051]
 Plugin = pixart_rf
