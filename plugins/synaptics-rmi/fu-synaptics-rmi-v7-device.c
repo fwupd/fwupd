@@ -100,6 +100,7 @@ fu_synaptics_rmi_v7_device_detach (FuDevice *device, GError **error)
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 1,
 					    enable_req,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					    error)) {
 		g_prefix_error (error, "failed to enable programming: ");
 		return FALSE;
@@ -147,6 +148,7 @@ fu_synaptics_rmi_v7_device_erase_all (FuSynapticsRmiDevice *self, GError **error
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 1,
 					    erase_cmd,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					    error)) {
 		g_prefix_error (error, "failed to unlock erasing: ");
 		return FALSE;
@@ -179,6 +181,7 @@ fu_synaptics_rmi_v7_device_erase_all (FuSynapticsRmiDevice *self, GError **error
 		if (!fu_synaptics_rmi_device_write (self,
 						    f34->data_base + 1,
 						    erase_config_cmd,
+						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						    error)) {
 			g_prefix_error (error, "failed to erase core config: ");
 			return FALSE;
@@ -220,7 +223,9 @@ fu_synaptics_rmi_v7_device_write_blocks (FuSynapticsRmiDevice *self,
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		g_autoptr(GByteArray) req = g_byte_array_new ();
 		g_byte_array_append (req, fu_chunk_get_data (chk), fu_chunk_get_data_sz (chk));
-		if (!fu_synaptics_rmi_device_write (self, address, req, error)) {
+		if (!fu_synaptics_rmi_device_write (self, address, req,
+						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+						    error)) {
 			g_prefix_error (error, "failed to write block @0x%x:%x: ", address, fu_chunk_get_address (chk));
 			return FALSE;
 		}
@@ -263,6 +268,7 @@ fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 0x1,
 					    req_partition_id,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					    error)) {
 		g_prefix_error (error, "failed to write flash partition: ");
 		return FALSE;
@@ -271,6 +277,7 @@ fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 0x2,
 					    req_offset,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					    error)) {
 		g_prefix_error (error, "failed to write offset: ");
 		return FALSE;
@@ -292,6 +299,7 @@ fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
 		if (!fu_synaptics_rmi_device_write (self,
 						    f34->data_base + 0x3,
 						    req_trans_sz,
+						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						    error)) {
 			g_prefix_error (error, "failed to write transfer length: ");
 			return FALSE;
@@ -300,6 +308,7 @@ fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
 		if (!fu_synaptics_rmi_device_write (self,
 						    f34->data_base + 0x4,
 						    req_cmd,
+						    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						    error)) {
 			g_prefix_error (error, "failed to flash command: ");
 			return FALSE;
@@ -423,6 +432,7 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 0x1,
 					    req_partition_id,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					    error)) {
 		g_prefix_error (error, "failed to write flash partition id: ");
 		return FALSE;
@@ -431,6 +441,7 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 0x2,
 					    req_addr_zero,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					    error)) {
 		g_prefix_error (error, "failed to write flash config address: ");
 		return FALSE;
@@ -443,6 +454,7 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 0x3,
 					    req_transfer_length,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					    error)) {
 		g_prefix_error (error, "failed to set transfer length: ");
 		return FALSE;
@@ -453,6 +465,7 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 0x4,
 					    req_cmd,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 					    error)) {
 		g_prefix_error (error, "failed to write command to read: ");
 		return FALSE;

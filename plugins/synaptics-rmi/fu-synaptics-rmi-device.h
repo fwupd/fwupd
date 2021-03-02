@@ -12,6 +12,11 @@
 #define FU_TYPE_SYNAPTICS_RMI_DEVICE (fu_synaptics_rmi_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuSynapticsRmiDevice, fu_synaptics_rmi_device, FU, SYNAPTICS_RMI_DEVICE, FuUdevDevice)
 
+typedef enum {
+	FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE		= 0,
+	FU_SYNAPTICS_RMI_DEVICE_FLAG_ALLOW_FAILURE	= 1 << 0,
+} FuSynapticsRmiDeviceFlags;
+
 struct _FuSynapticsRmiDeviceClass
 {
 	FuUdevDeviceClass	parent_class;
@@ -22,6 +27,7 @@ struct _FuSynapticsRmiDeviceClass
 	gboolean		 (*write)			(FuSynapticsRmiDevice	*self,
 								 guint16		 addr,
 								 GByteArray		*req,
+								 FuSynapticsRmiDeviceFlags flags,
 								 GError			**error);
 	GByteArray		*(*read)			(FuSynapticsRmiDevice	*self,
 								 guint16		 addr,
@@ -101,6 +107,7 @@ GByteArray		*fu_synaptics_rmi_device_read_packet_register (FuSynapticsRmiDevice	
 gboolean		 fu_synaptics_rmi_device_write		(FuSynapticsRmiDevice	*self,
 								 guint16		 addr,
 								 GByteArray		*req,
+								 FuSynapticsRmiDeviceFlags flags,
 								 GError			**error);
 gboolean		 fu_synaptics_rmi_device_reset		(FuSynapticsRmiDevice	*self,
 								 GError			**error);
