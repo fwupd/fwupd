@@ -158,7 +158,10 @@ fu_ccgx_firmware_record_calc_checksum (FuCcgxFirmwareRecord *rcd)
 }
 
 static gboolean
-fu_ccgx_firmware_parse_md_block (FuCcgxFirmware *self, FuFirmwareImage *img, GError **error)
+fu_ccgx_firmware_parse_md_block (FuCcgxFirmware *self,
+				 FuFirmwareImage *img,
+				 FwupdInstallFlags flags,
+				 GError **error)
 {
 	FuCcgxFirmwareRecord *rcd;
 	CCGxMetaData metadata;
@@ -228,13 +231,15 @@ fu_ccgx_firmware_parse_md_block (FuCcgxFirmware *self, FuFirmwareImage *img, GEr
 		return FALSE;
 	}
 	checksum_calc = 1 + ~checksum_calc;
-	if (metadata.fw_checksum != checksum_calc)  {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "checksum invalid, got %02x, expected %02x",
-			     checksum_calc, metadata.fw_checksum);
-		return FALSE;
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+		if (metadata.fw_checksum != checksum_calc)  {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "checksum invalid, got %02x, expected %02x",
+				     checksum_calc, metadata.fw_checksum);
+			return FALSE;
+		}
 	}
 
 	/* get version if enough data */
@@ -334,7 +339,7 @@ fu_ccgx_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* parse metadata block */
-	if (!fu_ccgx_firmware_parse_md_block (self, img, error)) {
+	if (!fu_ccgx_firmware_parse_md_block (self, img, flags, error)) {
 		g_prefix_error (error, "failed to parse metadata: ");
 		return FALSE;
 	}
