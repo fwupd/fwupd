@@ -20,7 +20,7 @@ struct _FuElantpFirmware {
 G_DEFINE_TYPE (FuElantpFirmware, fu_elantp_firmware, FU_TYPE_FIRMWARE)
 
 /* firmware block update */
-#define ETP_IAP_START_ADDR_WRDS		0x008
+#define ETP_IAP_START_ADDR_WRDS		0x0083
 
 guint16
 fu_elantp_firmware_get_module_id (FuElantpFirmware *self)
