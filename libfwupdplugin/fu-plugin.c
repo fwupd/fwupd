@@ -2312,6 +2312,12 @@ fu_plugin_runner_activate (FuPlugin *self, FuDevice *device, GError **error)
 
 	/* update with correct flags */
 	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+
+	/* allow it to be updatable again */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	}
 	fu_device_set_modified (device, (guint64) g_get_real_time () / G_USEC_PER_SEC);
 	return TRUE;
 }

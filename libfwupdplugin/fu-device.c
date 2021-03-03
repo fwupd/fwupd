@@ -2270,6 +2270,13 @@ fu_device_add_flag (FuDevice *self, FwupdDeviceFlags flag)
 	if (flag & FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)
 		flag |= FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED;
 	fwupd_device_add_flag (FWUPD_DEVICE (self), flag);
+
+	/* activatable devices shouldn't be allowed to update again until activated */
+	/* don't let devices be updated until activated */
+	if (flag & FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION) {
+		fwupd_device_remove_flag (FWUPD_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+		fwupd_device_add_flag (FWUPD_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
+	}
 }
 
 static void
