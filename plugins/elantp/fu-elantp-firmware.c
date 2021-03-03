@@ -22,6 +22,8 @@ G_DEFINE_TYPE (FuElantpFirmware, fu_elantp_firmware, FU_TYPE_FIRMWARE)
 /* firmware block update */
 #define ETP_IAP_START_ADDR_WRDS		0x0083
 
+const guint8 elantp_signature[] = { 0xAA, 0x55, 0xCC, 0x33, 0xFF, 0xFF };
+
 guint16
 fu_elantp_firmware_get_module_id (FuElantpFirmware *self)
 {
@@ -89,6 +91,24 @@ fu_elantp_firmware_parse (FuFirmware *firmware,
 					 &self->module_id, G_LITTLE_ENDIAN, error))
 		return FALSE;
 
+	/* check signature */
+	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+		gsize offset = bufsz - sizeof(elantp_signature);
+		for (gsize i = 0; i < sizeof(elantp_signature); i++) {
+			guint8 tmp = 0x0;
+			if (!fu_common_read_uint8_safe (buf, bufsz, offset + i, &tmp, error))
+				return FALSE;
+			if (tmp != elantp_signature[i]) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "signature[%u] invalid: got 0x%2x, expected 0x%02x",
+					     (guint) i, tmp, elantp_signature[i]);
+				return FALSE;
+			}
+		}
+	}
+
 	/* whole image */
 	fu_firmware_add_image (firmware, img);
 	return TRUE;
@@ -130,6 +150,8 @@ fu_elantp_firmware_write (FuFirmware *firmware, GError **error)
 	 * ------ ~0x10a
 	 *  DATA
 	 * ------
+	 *  SIGNATURE
+	 * ------
 	 */
 	fu_byte_array_set_size (buf, self->iap_addr + 0x2 + 0x2);
 	fu_common_write_uint16 (buf->data + ETP_IAP_START_ADDR_WRDS * 2,
@@ -139,6 +161,7 @@ fu_elantp_firmware_write (FuFirmware *firmware, GError **error)
 	fu_common_write_uint16 (buf->data + self->iap_addr + 0x2,
 				self->module_id, G_LITTLE_ENDIAN);
 	g_byte_array_append (buf, g_bytes_get_data (blob, NULL), g_bytes_get_size (blob));
+	g_byte_array_append (buf, elantp_signature, sizeof(elantp_signature));
 	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
 }
 
