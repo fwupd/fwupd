@@ -5722,7 +5722,7 @@ fu_engine_ensure_security_attrs_tainted (FuEngine *self)
 	fu_security_attrs_append (self->host_security_attrs, attr);
 	for (guint i = 0; i < disabled->len; i++) {
 		const gchar *name_tmp = g_ptr_array_index (disabled, i);
-		if (g_strcmp0 (name_tmp, "test") != 0 &&
+		if (!g_str_has_prefix (name_tmp, "test") &&
 		    g_strcmp0 (name_tmp, "invalid") != 0) {
 			disabled_plugins = TRUE;
 			break;
