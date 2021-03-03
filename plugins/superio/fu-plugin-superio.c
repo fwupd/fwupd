@@ -25,11 +25,13 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 		dev = g_object_new (FU_TYPE_SUPERIO_IT85_DEVICE,
 				    "device-file", "/dev/port",
 				    "chipset", chipset,
+				    "quirks", fu_plugin_get_quirks (plugin),
 				    NULL);
 	} else if (g_strcmp0 (chipset, "IT8987") == 0) {
 		dev = g_object_new (FU_TYPE_SUPERIO_IT89_DEVICE,
 				    "device-file", "/dev/port",
 				    "chipset", chipset,
+				    "quirks", fu_plugin_get_quirks (plugin),
 				    NULL);
 	} else {
 		g_set_error (error,
