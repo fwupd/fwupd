@@ -9,6 +9,7 @@
 
 #include <string.h>
 
+#include "fu-chunk.h"
 #include "fu-common.h"
 #include "fu-common-version.h"
 #include "fu-ccgx-dmc-common.h"
@@ -389,12 +390,11 @@ fu_ccgx_dmc_firmware_write (FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmwareImage *img = g_ptr_array_index (images, i);
 		g_autoptr(GBytes) img_bytes = fu_firmware_image_get_bytes (img);
+		g_autoptr(GPtrArray) chunks = fu_chunk_array_new_from_bytes (img_bytes, 0x0, 0x0, 64);
 		fu_byte_array_append_uint8 (buf, 0x0);				/* img_id */
 		fu_byte_array_append_uint8 (buf, 0x0);				/* type */
 		fu_byte_array_append_uint16 (buf, 0x0, G_LITTLE_ENDIAN);	/* start_row, unknown */
-		fu_byte_array_append_uint16 (buf,
-					     MAX (g_bytes_get_size (img_bytes) / 64, 1),
-					     G_LITTLE_ENDIAN);			/* num_rows */
+		fu_byte_array_append_uint16 (buf, MAX (chunks->len, 1), G_LITTLE_ENDIAN); /* num_rows */
 		for (guint j = 0; j < 2; j++)
 			fu_byte_array_append_uint8 (buf, 0x0);			/* reserv0 */
 	}
@@ -412,8 +412,10 @@ fu_ccgx_dmc_firmware_write (FuFirmware *firmware, GError **error)
 		g_autoptr(GChecksum) csum = g_checksum_new (G_CHECKSUM_SHA256);
 		g_autoptr(GBytes) img_bytes = fu_firmware_image_get_bytes (img);
 		g_autoptr(GBytes) img_padded = NULL;
+		g_autoptr(GPtrArray) chunks = NULL;
 
-		img_padded = fu_common_bytes_pad (img_bytes, 64);
+		chunks = fu_chunk_array_new_from_bytes (img_bytes, 0x0, 0x0, 64);
+		img_padded = fu_common_bytes_pad (img_bytes, MAX (chunks->len, 1) * 64);
 		g_byte_array_append (buf,
 				     g_bytes_get_data (img_padded, NULL),
 				     g_bytes_get_size (img_padded));
