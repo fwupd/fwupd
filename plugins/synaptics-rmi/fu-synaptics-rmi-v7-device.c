@@ -100,7 +100,7 @@ fu_synaptics_rmi_v7_device_detach (FuDevice *device, GError **error)
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 1,
 					    enable_req,
-						FALSE,
+					    FALSE,
 					    error)) {
 		g_prefix_error (error, "failed to enable programming: ");
 		return FALSE;
@@ -148,7 +148,7 @@ fu_synaptics_rmi_v7_device_erase_all (FuSynapticsRmiDevice *self, GError **error
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 1,
 					    erase_cmd,
-						FALSE,
+					    FALSE,
 					    error)) {
 		g_prefix_error (error, "failed to unlock erasing: ");
 		return FALSE;
@@ -266,7 +266,7 @@ fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 0x1,
 					    req_partition_id,
-						FALSE,
+					    FALSE,
 					    error)) {
 		g_prefix_error (error, "failed to write flash partition: ");
 		return FALSE;
@@ -275,7 +275,7 @@ fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 0x2,
 					    req_offset,
-						FALSE,
+					    FALSE,
 					    error)) {
 		g_prefix_error (error, "failed to write offset: ");
 		return FALSE;
@@ -297,7 +297,7 @@ fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
 		if (!fu_synaptics_rmi_device_write (self,
 						    f34->data_base + 0x3,
 						    req_trans_sz,
-							FALSE,
+						    FALSE,
 						    error)) {
 			g_prefix_error (error, "failed to write transfer length: ");
 			return FALSE;
@@ -306,7 +306,7 @@ fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
 		if (!fu_synaptics_rmi_device_write (self,
 						    f34->data_base + 0x4,
 						    req_cmd,
-							FALSE,
+						    FALSE,
 						    error)) {
 			g_prefix_error (error, "failed to flash command: ");
 			return FALSE;
@@ -430,7 +430,7 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 0x1,
 					    req_partition_id,
-						FALSE,
+					    FALSE,
 					    error)) {
 		g_prefix_error (error, "failed to write flash partition id: ");
 		return FALSE;
@@ -439,7 +439,7 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 0x2,
 					    req_addr_zero,
-						FALSE,
+					    FALSE,
 					    error)) {
 		g_prefix_error (error, "failed to write flash config address: ");
 		return FALSE;
@@ -452,7 +452,7 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 0x3,
 					    req_transfer_length,
-						FALSE,
+					    FALSE,
 					    error)) {
 		g_prefix_error (error, "failed to set transfer length: ");
 		return FALSE;
@@ -463,7 +463,7 @@ fu_synaptics_rmi_device_read_flash_config_v7 (FuSynapticsRmiDevice *self, GError
 	if (!fu_synaptics_rmi_device_write (self,
 					    f34->data_base + 0x4,
 					    req_cmd,
-						FALSE,
+					    FALSE,
 					    error)) {
 		g_prefix_error (error, "failed to write command to read: ");
 		return FALSE;

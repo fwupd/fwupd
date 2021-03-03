@@ -773,7 +773,7 @@ fu_synaptics_rmi_device_disable_irqs (FuSynapticsRmiDevice *self, GError **error
 	if (!fu_synaptics_rmi_device_write (self,
 					    priv->f01->control_base + 1,
 					    interrupt_disable_req,
-						FALSE,
+					    FALSE,
 					    error)) {
 		g_prefix_error (error, "failed to disable interrupts: ");
 		return FALSE;

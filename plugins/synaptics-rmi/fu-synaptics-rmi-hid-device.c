@@ -180,6 +180,7 @@ static gboolean
 fu_synaptics_rmi_hid_device_write (FuSynapticsRmiDevice *rmi_device,
 				   guint16 addr,
 				   GByteArray *req,
+				   gboolean allow_failure,
 				   GError **error)
 {
 	FuSynapticsRmiHidDevice *self = FU_SYNAPTICS_RMI_HID_DEVICE (rmi_device);
@@ -464,7 +465,7 @@ fu_synaptics_rmi_hid_device_set_page (FuSynapticsRmiDevice *self,
 	if (!fu_synaptics_rmi_device_write (self,
 					    RMI_DEVICE_PAGE_SELECT_REGISTER,
 					    req,
-						FALSE,
+					    FALSE,
 					    error)) {
 		g_prefix_error (error, "failed to set RMA page 0x%x: ", page);
 		return FALSE;
@@ -501,7 +502,7 @@ fu_synaptics_rmi_hid_device_disable_sleep (FuSynapticsRmiDevice *rmi_device,
 	if (!fu_synaptics_rmi_device_write (rmi_device,
 					    f01->control_base,
 					    f01_control0,
-						FALSE,
+					    FALSE,
 					    error)) {
 		g_prefix_error (error, "failed to write f01_control0: ");
 		return FALSE;

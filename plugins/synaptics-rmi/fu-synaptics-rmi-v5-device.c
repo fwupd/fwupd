@@ -56,7 +56,7 @@ fu_synaptics_rmi_v5_device_detach (FuDevice *device, GError **error)
 	if (!fu_synaptics_rmi_device_write (self,
 					    flash->status_addr,
 					    enable_req,
-						FALSE,
+					    FALSE,
 					    error)) {
 		g_prefix_error (error, "failed to enable programming: ");
 		return FALSE;

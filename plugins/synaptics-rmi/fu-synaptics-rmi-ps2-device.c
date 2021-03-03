@@ -260,7 +260,7 @@ fu_synaptics_rmi_ps2_device_status_request_sequence (FuSynapticsRmiPs2Device *se
 		if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 							     edpAuxStatusRequest,
 							     10,
-								 FALSE,
+							     FALSE,
 							     &error_local)) {
 			g_debug ("failed write try #%u: %s",
 				 i, error_local->message);
@@ -434,7 +434,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register (FuSynapticsRmiPs2Device *self,
 	if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 						     edpAuxSetScaling2To1,
 						     timeout,
-							 allow_failure,
+						     allow_failure,
 						     error)) {
 		g_prefix_error (error, "failed to edpAuxSetScaling2To1: ");
 		return FALSE;
@@ -442,7 +442,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register (FuSynapticsRmiPs2Device *self,
 	if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 						     edpAuxSetSampleRate,
 						     timeout,
-							 allow_failure,
+						     allow_failure,
 						     error)) {
 		g_prefix_error (error, "failed to edpAuxSetSampleRate: ");
 		return FALSE;
@@ -450,7 +450,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register (FuSynapticsRmiPs2Device *self,
 	if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 						     addr,
 						     timeout,
-							 allow_failure,
+						     allow_failure,
 						     error)) {
 		g_prefix_error (error, "failed to write address: ");
 		return FALSE;
@@ -459,7 +459,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register (FuSynapticsRmiPs2Device *self,
 		if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 							     edpAuxSetSampleRate,
 							     timeout,
-								 allow_failure,
+							     allow_failure,
 							     error)) {
 			g_prefix_error (error, "failed to set byte %u: ", i);
 			return FALSE;
@@ -467,7 +467,7 @@ fu_synaptics_rmi_ps2_device_write_rmi_register (FuSynapticsRmiPs2Device *self,
 		if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 							     buf[i],
 							     timeout,
-								 allow_failure,
+							     allow_failure,
 							     error)) {
 			g_prefix_error (error, "failed to write byte %u: ", i);
 			return FALSE;
@@ -586,7 +586,7 @@ fu_synaptics_rmi_ps2_device_set_page (FuSynapticsRmiDevice *rmi_device,
 							     &page,
 							     1,
 							     20,
-								 FALSE,
+							     FALSE,
 							     error)) {
 		g_prefix_error (error, "failed to write page %u: ", page);
 		return FALSE;
@@ -703,7 +703,7 @@ fu_synaptics_rmi_ps2_device_write (FuSynapticsRmiDevice *rmi_device,
 							     req->data,
 							     req->len,
 							     1000, /* timeout */
-								 allow_failure,
+							     allow_failure,
 							     error)) {
 		g_prefix_error (error,
 				"failed to write register %x: ",
