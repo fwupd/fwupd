@@ -1665,7 +1665,7 @@ fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
  * @bytes: a #GBytes
  * @sz: the desired size in bytes
  *
- * Pads a GBytes to a given @sz with `0xff`.
+ * Pads a GBytes to a minimum @sz with `0xff`.
  *
  * Return value: (transfer full): a #GBytes
  *
@@ -1676,7 +1676,8 @@ fu_common_bytes_pad (GBytes *bytes, gsize sz)
 {
 	gsize bytes_sz;
 
-	g_return_val_if_fail (g_bytes_get_size (bytes) <= sz, NULL);
+	g_return_val_if_fail (bytes != NULL, NULL);
+	g_return_val_if_fail (sz != 0, NULL);
 
 	/* pad */
 	bytes_sz = g_bytes_get_size (bytes);
@@ -1688,7 +1689,7 @@ fu_common_bytes_pad (GBytes *bytes, gsize sz)
 		return g_bytes_new_take (data_new, sz);
 	}
 
-	/* exactly right */
+	/* not required */
 	return g_bytes_ref (bytes);
 }
 
