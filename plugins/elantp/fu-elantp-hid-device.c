@@ -356,7 +356,9 @@ fu_elantp_hid_device_write_firmware (FuDevice *device,
 	if (!fu_elantp_hid_device_read_cmd (self, ETP_CMD_I2C_IAP_CHECKSUM,
 					    csum_buf, sizeof(csum_buf), error))
 		return FALSE;
-	checksum_device = fu_common_read_uint16 (csum_buf, G_LITTLE_ENDIAN);
+	if (!fu_common_read_uint16_safe (csum_buf, sizeof(csum_buf), 0x0,
+					 &checksum_device, G_LITTLE_ENDIAN, error))
+		return FALSE;
 	if (checksum != checksum_device) {
 		g_set_error (error,
 			     FWUPD_ERROR,
