@@ -224,6 +224,26 @@ gboolean	 fu_common_read_uint32_safe	(const guint8	*buf,
 						 FuEndianType	 endian,
 						 GError		**error)
 						 G_GNUC_WARN_UNUSED_RESULT;
+gboolean	 fu_common_write_uint8_safe	(guint8		*buf,
+						 gsize		 bufsz,
+						 gsize		 offset,
+						 guint8		 value,
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
+gboolean	 fu_common_write_uint16_safe	(guint8		*buf,
+						 gsize		 bufsz,
+						 gsize		 offset,
+						 guint16	 value,
+						 FuEndianType	 endian,
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
+gboolean	 fu_common_write_uint32_safe	(guint8		*buf,
+						 gsize		 bufsz,
+						 gsize		 offset,
+						 guint32	 value,
+						 FuEndianType	 endian,
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 
 void		 fu_byte_array_set_size		(GByteArray	*array,
 						 guint		 length);

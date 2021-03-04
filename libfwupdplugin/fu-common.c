@@ -2180,6 +2180,115 @@ fu_common_read_uint32_safe (const guint8 *buf,
 }
 
 /**
+ * fu_common_write_uint8_safe:
+ * @buf: source buffer
+ * @bufsz: maximum size of @buf, typically `sizeof(buf)`
+ * @offset: offset in bytes into @buf to write to
+ * @value: the value to write
+ * @error: A #GError or %NULL
+ *
+ * Write a value to a buffer in a safe way.
+ *
+ * You don't need to use this function in "obviously correct" cases, nor should
+ * you use it when performance is a concern. Only us it when you're not sure if
+ * malicious data from a device or firmware could cause memory corruption.
+ *
+ * Return value: %TRUE if @value was written, %FALSE otherwise
+ *
+ * Since: 1.5.8
+ **/
+gboolean
+fu_common_write_uint8_safe (guint8 *buf,
+			    gsize bufsz,
+			    gsize offset,
+			    guint8 value,
+			    GError **error)
+{
+	g_return_val_if_fail (buf != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	return fu_memcpy_safe (buf, bufsz, offset,		/* dst */
+			       &value, sizeof(value), 0x0,	/* src */
+			       sizeof(value), error);
+}
+
+/**
+ * fu_common_write_uint16_safe:
+ * @buf: source buffer
+ * @bufsz: maximum size of @buf, typically `sizeof(buf)`
+ * @offset: offset in bytes into @buf to write to
+ * @value: the value to write
+ * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @error: A #GError or %NULL
+ *
+ * Write a value to a buffer using a specified endian in a safe way.
+ *
+ * You don't need to use this function in "obviously correct" cases, nor should
+ * you use it when performance is a concern. Only us it when you're not sure if
+ * malicious data from a device or firmware could cause memory corruption.
+ *
+ * Return value: %TRUE if @value was written, %FALSE otherwise
+ *
+ * Since: 1.5.8
+ **/
+gboolean
+fu_common_write_uint16_safe (guint8 *buf,
+			     gsize bufsz,
+			     gsize offset,
+			     guint16 value,
+			     FuEndianType endian,
+			     GError **error)
+{
+	guint8 tmp[2] = { 0x0 };
+
+	g_return_val_if_fail (buf != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	fu_common_write_uint16 (tmp, value, endian);
+	return fu_memcpy_safe (buf, bufsz, offset,	/* dst */
+			       tmp, sizeof(tmp), 0x0,	/* src */
+			       sizeof(tmp), error);
+}
+
+/**
+ * fu_common_write_uint32_safe:
+ * @buf: source buffer
+ * @bufsz: maximum size of @buf, typically `sizeof(buf)`
+ * @offset: offset in bytes into @buf to write to
+ * @value: the value to write
+ * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @error: A #GError or %NULL
+ *
+ * Write a value to a buffer using a specified endian in a safe way.
+ *
+ * You don't need to use this function in "obviously correct" cases, nor should
+ * you use it when performance is a concern. Only us it when you're not sure if
+ * malicious data from a device or firmware could cause memory corruption.
+ *
+ * Return value: %TRUE if @value was written, %FALSE otherwise
+ *
+ * Since: 1.5.8
+ **/
+gboolean
+fu_common_write_uint32_safe (guint8 *buf,
+			     gsize bufsz,
+			     gsize offset,
+			     guint32 value,
+			     FuEndianType endian,
+			     GError **error)
+{
+	guint8 tmp[4] = { 0x0 };
+
+	g_return_val_if_fail (buf != NULL, FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	fu_common_write_uint32 (tmp, value, endian);
+	return fu_memcpy_safe (buf, bufsz, offset,	/* dst */
+			       tmp, sizeof(tmp), 0x0,	/* src */
+			       sizeof(tmp), error);
+}
+
+/**
  * fu_byte_array_append_uint8:
  * @array: A #GByteArray
  * @data:  #guint8
