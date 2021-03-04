@@ -6,23 +6,23 @@ SuperioChipsets=IT8587
 [f00d8c4e-dce2-51c3-89d6-6cbc5fc5cdbb]
 SuperioChipsets=IT8587
 
-# Star Lite Mk III
-[23fe120a-f9e1-590d-9e6b-4a2a9274b293]
+# Star LabTop Mk III (HwId)
+[013b60e5-1023-5bee-8ae5-14cae21377b7]
 SuperioChipsets=IT8987
 InstallDuration=20
 
-# Star LabTop Mk IV
+# Star LabTop Mk IV (HwId)
 [baf1d04e-fd16-5e6a-93cc-1c23d171f879]
 SuperioChipsets=IT8987
 InstallDuration=20
 
-# Star LabTop Mk3
-[3dc52d2c-9e9b-5ba5-b10d-9ba1eb11dacc]
+# Star Lite Mk II (HwId)
+[013b60e5-1023-5bee-8ae5-14cae21377b7]
 SuperioChipsets=IT8987
 InstallDuration=20
 
-# Star Lite Mk2
-[d1a64840-4307-58fb-a62c-de28a07c0151]
+# Star Lite Mk III (HwId)
+[d5521faa-c50b-5d64-971d-8fd400030c51]
 SuperioChipsets=IT8987
 InstallDuration=20
 

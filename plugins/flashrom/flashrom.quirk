@@ -7,10 +7,29 @@ Plugin=flashrom
 Plugin=flashrom
 VersionFormat=quad
 
-# Starlabs LabTop L4
+# Star LabTop Mk III (HwId)
+[013b60e5-1023-5bee-8ae5-14cae21377b7]
+Plugin=flashrom
+PciBcrAddr = 0x0
+
+# Star LabTop Mk IV (HwId)
 [baf1d04e-fd16-5e6a-93cc-1c23d171f879]
 Plugin=flashrom
 
-# Starlabs LabTop L4 (in coreboot)
+# Star Lite Mk II (HwId)
+[013b60e5-1023-5bee-8ae5-14cae21377b7]
+Plugin=flashrom
+
+# Star Lite Mk III (HwId)
+[d5521faa-c50b-5d64-971d-8fd400030c51]
+Plugin=flashrom
+
+# Star LabTop Mk III (coreboot GUID)
+[cc6437bf-0955-5c03-84a6-8b87c7a7c244]
+Branch=coreboot
+VersionFormat=number
+
+# Star LabTop Mk IV (coreboot GUID)
 [0ee5867c-93f0-5fb4-adf1-9d686ea1183a]
 Branch=coreboot
+VersionFormat=number
