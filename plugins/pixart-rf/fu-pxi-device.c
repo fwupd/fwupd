@@ -255,10 +255,21 @@ fu_pxi_device_wait_notify (FuPxiDevice *self,
 		PXI_HID_DEV_OTA_INPUT_REPORT_ID,
 		0x0,
 	};
-	if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (self),
-					port, res, (FU_PXI_DEVICE_NOTTFY_RET_LEN + 1) - port,
-					error))
-		return FALSE;
+
+	/* skip the wrong reprot id ,and keep polling until result is correct */
+	while(1) {
+
+		if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (self),
+						port, res, (FU_PXI_DEVICE_NOTTFY_RET_LEN + 1) - port,
+						error))
+			return FALSE;
+		if (res[0x0] == PXI_HID_DEV_OTA_INPUT_REPORT_ID)
+			break;
+
+		/* delay for next poll report */
+		g_usleep (5);
+	}
+
 	if (status != NULL) {
 		if (!fu_common_read_uint8_safe (res, sizeof(res), 0x1,
 						status, error))
