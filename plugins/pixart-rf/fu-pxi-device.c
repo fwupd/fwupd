@@ -36,6 +36,8 @@
 #define FU_PXI_DEVICE_NOTTFY_RET_LEN		4	/* bytes */
 #define FU_PXI_DEVICE_FW_INFO_RET_LEN		8	/* bytes */
 
+#define FU_PXI_DEVICE_NOTIFY_TIMEOUT_MS		5000
+
 /* OTA target selection */
 enum ota_process_setting {
 	OTA_MAIN_FW,				/* Main firmware */
@@ -251,14 +253,28 @@ fu_pxi_device_wait_notify (FuPxiDevice *self,
 			   guint16 *checksum,
 			   GError **error)
 {
-	guint8 res[FU_PXI_DEVICE_OTA_BUF_SZ] = {
-		PXI_HID_DEV_OTA_INPUT_REPORT_ID,
-		0x0,
-	};
-	if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (self),
-					port, res, (FU_PXI_DEVICE_NOTTFY_RET_LEN + 1) - port,
-					error))
+	g_autoptr(GTimer) timer = g_timer_new ();
+	guint8 res[FU_PXI_DEVICE_OTA_BUF_SZ] = { 0 };
+
+	/* skip the wrong report id ,and keep polling until result is correct */
+	while (g_timer_elapsed (timer, NULL) * 1000.f < FU_PXI_DEVICE_NOTIFY_TIMEOUT_MS) {
+		if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (self),
+						port, res, (FU_PXI_DEVICE_NOTTFY_RET_LEN + 1) - port,
+						error))
+			return FALSE;
+		if (res[0] == PXI_HID_DEV_OTA_INPUT_REPORT_ID)
+			break;
+	}
+
+	/* timeout */
+	if (res[0] != PXI_HID_DEV_OTA_INPUT_REPORT_ID) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Timed-out waiting for HID report");
 		return FALSE;
+	}
+
 	if (status != NULL) {
 		if (!fu_common_read_uint8_safe (res, sizeof(res), 0x1,
 						status, error))
