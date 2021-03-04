@@ -1,4 +1,4 @@
 [wrap-git]
 directory = libxmlb
 url = https://github.com/hughsie/libxmlb.git
-revision = 0.1.14
+revision = 0.2.1
