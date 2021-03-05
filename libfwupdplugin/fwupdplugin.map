@@ -787,6 +787,11 @@ LIBFWUPDPLUGIN_1.5.8 {
     fu_device_get_battery_level;
     fu_device_set_backend_id;
     fu_device_set_battery_level;
+    fu_efi_firmware_volume_get_type;
+    fu_efi_firmware_volume_new;
+    fu_efi_guid_to_name;
+    fu_efi_image_get_type;
+    fu_efi_image_new;
     fu_ifd_access_to_string;
     fu_ifd_firmware_check_jedec_cmd;
     fu_ifd_firmware_get_type;

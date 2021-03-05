@@ -1,0 +1,10 @@
+<firmware gtype="FuEfiFirmwareVolume">
+  <image>
+    <id>fff12b8d-7696-4c8b-a985-2747075b4f50</id>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </image>
+  <image>
+    <id>8c8ce578-8a3d-4f1c-9935-896185c32dd3</id>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </image>
+</firmware>

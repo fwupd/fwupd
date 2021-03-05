@@ -27,6 +27,9 @@ fwupdplugin_src = [
   'fu-security-attrs.c',
   'fu-smbios.c',
   'fu-srec-firmware.c',     # fuzzing
+  'fu-efi-common.c',        # fuzzing
+  'fu-efi-firmware-volume.c',     # fuzzing
+  'fu-efi-image.c',         # fuzzing
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
   'fu-efivar.c',
@@ -66,6 +69,9 @@ fwupdplugin_headers = [
   'fu-security-attrs.h',
   'fu-smbios.h',
   'fu-srec-firmware.h',
+  'fu-efi-common.h',
+  'fu-efi-firmware-volume.h',
+  'fu-efi-image.h',
   'fu-efi-signature.h',
   'fu-efi-signature-list.h',
   'fu-efivar.h',
