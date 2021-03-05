@@ -25,7 +25,7 @@ Plugin=flashrom
 Plugin=flashrom
 
 # Star LabTop Mk III (coreboot GUID)
-[cc6437bf-0955-5c03-84a6-8b87c7a7c244]
+[d33219e2-b84c-53a8-a624-27af9752dba6]
 Branch=coreboot
 VersionFormat=number
 
