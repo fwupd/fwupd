@@ -15,7 +15,6 @@
 struct _FuLogitechHidPpPeripheral
 {
 	FuUdevDevice		 parent_instance;
-	guint8			 battery_level;
 	guint8			 cached_fw_entity;
 	guint8			 hidpp_id;
 	guint8			 hidpp_version;
@@ -267,7 +266,6 @@ fu_logitech_hidpp_peripheral_to_string (FuDevice *device, guint idt, GString *st
 
 	fu_common_string_append_ku (str, idt, "HidppVersion", self->hidpp_version);
 	fu_common_string_append_kx (str, idt, "HidppId", self->hidpp_id);
-	fu_common_string_append_ku (str, idt, "BatteryLevel", self->battery_level);
 	fu_common_string_append_kb (str, idt, "IsUpdatable", self->is_updatable);
 	fu_common_string_append_kb (str, idt, "IsActive", self->is_active);
 	for (guint i = 0; i < self->feature_index->len; i++) {
@@ -380,7 +378,7 @@ fu_logitech_hidpp_peripheral_fetch_battery_level (FuLogitechHidPpPeripheral *sel
 				return FALSE;
 			}
 			if (msg->data[0] != 0x00)
-				self->battery_level = msg->data[0];
+				fu_device_set_battery_level (FU_DEVICE (self), msg->data[0]);
 			return TRUE;
 		}
 	}
@@ -395,7 +393,7 @@ fu_logitech_hidpp_peripheral_fetch_battery_level (FuLogitechHidPpPeripheral *sel
 		msg->hidpp_version = self->hidpp_version;
 		if (fu_logitech_hidpp_transfer (self->io_channel, msg, NULL)) {
 			if (msg->data[0] != 0x00)
-				self->battery_level = msg->data[0];
+				fu_device_set_battery_level (FU_DEVICE (self), msg->data[0]);
 			return TRUE;
 		}
 
@@ -404,16 +402,16 @@ fu_logitech_hidpp_peripheral_fetch_battery_level (FuLogitechHidPpPeripheral *sel
 		if (fu_logitech_hidpp_transfer (self->io_channel, msg, NULL)) {
 			switch (msg->data[0]) {
 			case 1: /* 0 - 10 */
-				self->battery_level = 5;
+				fu_device_set_battery_level (FU_DEVICE (self), 5);
 				break;
 			case 3: /* 11 - 30 */
-				self->battery_level = 20;
+				fu_device_set_battery_level (FU_DEVICE (self), 20);
 				break;
 			case 5: /* 31 - 80 */
-				self->battery_level = 55;
+				fu_device_set_battery_level (FU_DEVICE (self), 55);
 				break;
 			case 7: /* 81 - 100 */
-				self->battery_level = 90;
+				fu_device_set_battery_level (FU_DEVICE (self), 90);
 				break;
 			default:
 				g_warning ("unknown battery percentage: 0x%02x",
