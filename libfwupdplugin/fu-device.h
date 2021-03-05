@@ -329,6 +329,9 @@ guint64		 fu_device_get_firmware_size_max	(FuDevice	*self);
 guint		 fu_device_get_progress			(FuDevice	*self);
 void		 fu_device_set_progress			(FuDevice	*self,
 							 guint		 progress);
+guint		 fu_device_get_battery_level		(FuDevice	*self);
+void		 fu_device_set_battery_level		(FuDevice	*self,
+							 guint		 battery_level);
 void		 fu_device_set_progress_full		(FuDevice	*self,
 							 gsize		 progress_done,
 							 gsize		 progress_total);

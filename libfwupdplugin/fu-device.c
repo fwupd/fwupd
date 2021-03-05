@@ -50,6 +50,7 @@ typedef struct {
 	GRWLock				 parent_guids_mutex;
 	guint				 remove_delay;	/* ms */
 	guint				 progress;
+	guint				 battery_level;
 	gint				 order;
 	guint				 priority;
 	guint				 poll_id;
@@ -75,6 +76,7 @@ typedef struct {
 enum {
 	PROP_0,
 	PROP_PROGRESS,
+	PROP_BATTERY_LEVEL,
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
 	PROP_BACKEND_ID,
@@ -95,6 +97,9 @@ fu_device_get_property (GObject *object, guint prop_id,
 	switch (prop_id) {
 	case PROP_PROGRESS:
 		g_value_set_uint (value, priv->progress);
+		break;
+	case PROP_BATTERY_LEVEL:
+		g_value_set_uint (value, priv->battery_level);
 		break;
 	case PROP_PHYSICAL_ID:
 		g_value_set_string (value, priv->physical_id);
@@ -125,6 +130,9 @@ fu_device_set_property (GObject *object, guint prop_id,
 	switch (prop_id) {
 	case PROP_PROGRESS:
 		fu_device_set_progress (self, g_value_get_uint (value));
+		break;
+	case PROP_BATTERY_LEVEL:
+		fu_device_set_battery_level (self, g_value_get_uint (value));
 		break;
 	case PROP_PHYSICAL_ID:
 		fu_device_set_physical_id (self, g_value_get_string (value));
@@ -2538,6 +2546,46 @@ fu_device_sleep_with_progress (FuDevice *self, guint delay_secs)
 	}
 }
 
+/**
+ * fu_device_get_battery_level:
+ * @self: A #FuDevice
+ *
+ * Returns the battery level.
+ *
+ * Returns: value in percent
+ *
+ * Since: 1.5.8
+ **/
+guint
+fu_device_get_battery_level (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
+	return priv->battery_level;
+}
+
+/**
+ * fu_device_set_battery_level:
+ * @self: A #FuDevice
+ * @battery_level: the percentage value
+ *
+ * Sets the battery level, or 0 for invalid. Setting this allows fwupd to show
+ * a warning if the device change is too low to perform the update.
+ *
+ * Since: 1.5.8
+ **/
+void
+fu_device_set_battery_level (FuDevice *self, guint battery_level)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (battery_level <= 100);
+	if (priv->battery_level == battery_level)
+		return;
+	priv->battery_level = battery_level;
+	g_object_notify (G_OBJECT (self), "battery-level");
+}
+
 static void
 fu_device_add_string (FuDevice *self, guint idt, GString *str)
 {
@@ -2569,6 +2617,8 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt + 1, "ProxyId", fu_device_get_id (priv->proxy));
 	if (priv->proxy_guid != NULL)
 		fu_common_string_append_kv (str, idt + 1, "ProxyGuid", priv->proxy_guid);
+	if (priv->battery_level != 0)
+		fu_common_string_append_ku (str, idt + 1, "BatteryLevel", priv->battery_level);
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_min);
 		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMin", sz);
@@ -3637,6 +3687,12 @@ fu_device_class_init (FuDeviceClass *klass)
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_PROGRESS, pspec);
+
+	pspec = g_param_spec_uint ("battery-level", NULL, NULL,
+				   0, 100, 0,
+				   G_PARAM_READWRITE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_BATTERY_LEVEL, pspec);
 
 	pspec = g_param_spec_object ("quirks", NULL, NULL,
 				     FU_TYPE_QUIRKS,

@@ -779,7 +779,9 @@ LIBFWUPDPLUGIN_1.5.8 {
     fu_common_write_uint32_safe;
     fu_common_write_uint8_safe;
     fu_device_get_backend_id;
+    fu_device_get_battery_level;
     fu_device_set_backend_id;
+    fu_device_set_battery_level;
     fu_plugin_add_possible_quirk_key;
     fu_quirks_add_possible_key;
     fu_udev_device_set_logical_id;
