@@ -224,6 +224,13 @@ gboolean	 fu_common_read_uint32_safe	(const guint8	*buf,
 						 FuEndianType	 endian,
 						 GError		**error)
 						 G_GNUC_WARN_UNUSED_RESULT;
+gboolean	 fu_common_read_uint64_safe	(const guint8	*buf,
+						 gsize		 bufsz,
+						 gsize		 offset,
+						 guint64	*value,
+						 FuEndianType	 endian,
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_common_write_uint8_safe	(guint8		*buf,
 						 gsize		 bufsz,
 						 gsize		 offset,
@@ -244,6 +251,13 @@ gboolean	 fu_common_write_uint32_safe	(guint8		*buf,
 						 FuEndianType	 endian,
 						 GError		**error)
 						 G_GNUC_WARN_UNUSED_RESULT;
+gboolean	 fu_common_write_uint64_safe	(guint8		*buf,
+						 gsize		 bufsz,
+						 gsize		 offset,
+						 guint64	 value,
+						 FuEndianType	 endian,
+						 GError		**error)
+						 G_GNUC_WARN_UNUSED_RESULT;
 
 void		 fu_byte_array_set_size		(GByteArray	*array,
 						 guint		 length);
@@ -255,6 +269,9 @@ void		 fu_byte_array_append_uint16	(GByteArray	*array,
 void		 fu_byte_array_append_uint32	(GByteArray	*array,
 						 guint32	 data,
 						 FuEndianType	 endian);
+void		 fu_byte_array_append_uint64	(GByteArray	*array,
+						 guint64	 data,
+						 FuEndianType	 endian);
 
 void		 fu_common_write_uint16		(guint8		*buf,
 						 guint16	 val_native,
@@ -262,9 +279,14 @@ void		 fu_common_write_uint16		(guint8		*buf,
 void		 fu_common_write_uint32		(guint8		*buf,
 						 guint32	 val_native,
 						 FuEndianType	 endian);
+void		 fu_common_write_uint64		(guint8		*buf,
+						 guint64	 val_native,
+						 FuEndianType	 endian);
 guint16		 fu_common_read_uint16		(const guint8	*buf,
 						 FuEndianType	 endian);
 guint32		 fu_common_read_uint32		(const guint8	*buf,
+						 FuEndianType	 endian);
+guint64		 fu_common_read_uint64		(const guint8	*buf,
 						 FuEndianType	 endian);
 
 guint		 fu_common_string_replace	(GString	*string,
