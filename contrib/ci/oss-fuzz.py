@@ -282,7 +282,7 @@ def _build(bld: Builder) -> None:
         built_objs.append(bld.compile("fwupd/libfwupdplugin/fu-fuzzer-main.c"))
 
     # built in formats
-    for fuzzer in ["dfuse", "fmap", "ihex", "srec"]:
+    for fuzzer in ["dfuse", "fmap", "ifd", "ihex", "srec"]:
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {

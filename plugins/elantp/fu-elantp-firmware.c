@@ -154,12 +154,21 @@ fu_elantp_firmware_write (FuFirmware *firmware, GError **error)
 	 * ------
 	 */
 	fu_byte_array_set_size (buf, self->iap_addr + 0x2 + 0x2);
-	fu_common_write_uint16 (buf->data + ETP_IAP_START_ADDR_WRDS * 2,
-				self->iap_addr / 2, G_LITTLE_ENDIAN);
-	fu_common_write_uint16 (buf->data + self->iap_addr,
-				(self->iap_addr + 2) / 2, G_LITTLE_ENDIAN);
-	fu_common_write_uint16 (buf->data + self->iap_addr + 0x2,
-				self->module_id, G_LITTLE_ENDIAN);
+	if (!fu_common_write_uint16_safe (buf->data, buf->len,
+					  ETP_IAP_START_ADDR_WRDS * 2,
+					  self->iap_addr / 2,
+					  G_LITTLE_ENDIAN, error))
+		return NULL;
+	if (!fu_common_write_uint16_safe (buf->data, buf->len,
+					  self->iap_addr,
+					  (self->iap_addr + 2) / 2,
+					  G_LITTLE_ENDIAN, error))
+		return NULL;
+	if (!fu_common_write_uint16_safe (buf->data, buf->len,
+					  self->iap_addr + 0x2,
+					  self->module_id,
+					  G_LITTLE_ENDIAN, error))
+		return NULL;
 	g_byte_array_append (buf, g_bytes_get_data (blob, NULL), g_bytes_get_size (blob));
 	g_byte_array_append (buf, elantp_signature, sizeof(elantp_signature));
 	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
