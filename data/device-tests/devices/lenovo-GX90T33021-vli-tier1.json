@@ -1,0 +1,16 @@
+{
+  "name": "Lenovo Travel Hub 1in3 [VL211]",
+  "guids": [
+    "7636b85e-d79f-5d30-a329-458957958b88"
+  ],
+  "releases": [
+    {
+      "version": "44.33",
+      "file": "2004603b40bd529d85c2fcfcf9d50d77b47229e6564ef0ea9c03633bdccff94d-Lenovo-Travel_Hub_1in3_New.cab"
+    },
+    {
+      "version": "04.33",
+      "file": "5fb4f4dce233626558806c2b7474d3b5ed4f500f6013aa3b376a54322642d449-Lenovo-Travel_Hub_1in3_Old.cab"
+    }
+  ]
+}

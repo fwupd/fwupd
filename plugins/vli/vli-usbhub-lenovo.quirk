@@ -200,7 +200,7 @@ Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
 CounterpartGuid = USB\VID_17EF
-[USB\VID_17EF&PID_7226]
+[USB\VID_17EF&PID_7236]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
