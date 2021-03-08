@@ -220,6 +220,7 @@ if get_option('introspection') and get_option('gusb')
     input: fwupdplugin_gir[0],
     output: 'fwupdplugin.map',
     command: [
+      python3,
       join_paths(meson.source_root(), 'contrib', 'generate-version-script.py'),
       'LIBFWUPDPLUGIN',
       '@INPUT@',

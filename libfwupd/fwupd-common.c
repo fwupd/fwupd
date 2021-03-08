@@ -152,22 +152,13 @@ fwupd_checksum_get_best (GPtrArray *checksums)
 GHashTable *
 fwupd_get_os_release (GError **error)
 {
-	GHashTable *hash;
 	const gchar *filename = NULL;
 	const gchar *paths[] = { "/etc/os-release", "/usr/lib/os-release", NULL };
 	g_autofree gchar *buf = NULL;
 	g_auto(GStrv) lines = NULL;
+	g_autoptr(GHashTable) hash = NULL;
 
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-
-/* TODO: Read the Windows version */
-#ifdef _WIN32
-	hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
-	g_hash_table_insert (hash,
-			     g_strdup("OS"),
-			     g_strdup("Windows"));
-	return hash;
-#endif
 
 	/* find the correct file */
 	for (guint i = 0; paths[i] != NULL; i++) {
@@ -176,7 +167,25 @@ fwupd_get_os_release (GError **error)
 			break;
 		}
 	}
+
+	hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	if (filename == NULL) {
+#if defined(_WIN32)
+		/* TODO: Read the Windows version */
+		g_hash_table_insert (hash,
+				     g_strdup ("OS"),
+				     g_strdup ("Windows"));
+#elif defined(__NetBSD__)
+		g_hash_table_insert (hash,
+				     g_strdup ("OS"),
+				     g_strdup ("NetBSD"));
+#elif defined(__OpenBSD__)
+		g_hash_table_insert (hash,
+				     g_strdup ("OS"),
+				     g_strdup ("OpenBSD"));
+#endif
+		if (g_hash_table_size (hash) > 0)
+			return g_steal_pointer (&hash);
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_READ,
@@ -187,7 +196,6 @@ fwupd_get_os_release (GError **error)
 	/* load each line */
 	if (!g_file_get_contents (filename, &buf, NULL, error))
 		return NULL;
-	hash = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	lines = g_strsplit (buf, "\n", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
 		gsize len, off = 0;
@@ -210,7 +218,7 @@ fwupd_get_os_release (GError **error)
 				     g_strdup (split[0]),
 				     g_strndup (split[1] + off, len));
 	}
-	return hash;
+	return g_steal_pointer (&hash);
 }
 
 static gchar *
@@ -346,7 +354,7 @@ fwupd_build_machine_id (const gchar *salt, GError **error)
 {
 	const gchar *fn = NULL;
 	g_autofree gchar *buf = NULL;
-	g_auto(GStrv) fns = g_new0 (gchar *, 5);
+	g_auto(GStrv) fns = g_new0 (gchar *, 6);
 	g_autoptr(GChecksum) csum = NULL;
 	gsize sz = 0;
 
@@ -358,6 +366,7 @@ fwupd_build_machine_id (const gchar *salt, GError **error)
 	fns[1] = g_build_filename (FWUPD_LOCALSTATEDIR, "lib", "dbus", "machine-id", NULL);
 	fns[2] = g_strdup ("/etc/machine-id");
 	fns[3] = g_strdup ("/var/lib/dbus/machine-id");
+	fns[4] = g_strdup ("/var/db/dbus/machine-id");
 	for (guint i = 0; fns[i] != NULL; i++) {
 		if (g_file_test (fns[i], G_FILE_TEST_EXISTS)) {
 			fn = fns[i];
