@@ -154,6 +154,7 @@ if get_option('introspection')
     input: fwupd_gir[0],
     output: 'fwupd.map',
     command: [
+      python3,
       join_paths(meson.source_root(), 'contrib', 'generate-version-script.py'),
       'LIBFWUPD',
       '@INPUT@',

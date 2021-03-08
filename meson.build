@@ -242,7 +242,7 @@ if build_daemon
     warning('Polkit is disabled, the daemon will allow ALL client actions')
   endif
   udevdir = get_option('udevdir')
-  if udevdir == ''
+  if udevdir == '' and host_machine.system() == 'linux'
     udev = dependency('udev')
     udevdir = udev.get_pkgconfig_variable('udevdir')
   endif

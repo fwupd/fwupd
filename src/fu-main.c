@@ -2041,8 +2041,10 @@ main (int argc, char *argv[])
 	else if (timed_exit)
 		g_timeout_add_seconds (5, fu_main_timed_exit_cb, priv->loop);
 
+#ifdef __linux__
 	/* drop heap except one page */
 	malloc_trim (4096);
+#endif
 
 	/* wait */
 	g_message ("Daemon ready for requests (locale %s)", g_getenv ("LANG"));

@@ -2573,7 +2573,7 @@ fu_byte_array_align_up (GByteArray *array, guint8 alignment, guint8 data)
 gboolean
 fu_common_kernel_locked_down (void)
 {
-#ifndef _WIN32
+#ifdef __linux__
 	gsize len = 0;
 	g_autofree gchar *dir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_SECURITY);
 	g_autofree gchar *fname = g_build_filename (dir, "lockdown", NULL);
