@@ -1996,6 +1996,11 @@ fu_util_firmware_extract (FuUtilPrivate *priv, gchar **values, GError **error)
 		/* use suitable filename */
 		if (fu_firmware_image_get_filename (img) != NULL) {
 			fn = g_strdup (fu_firmware_image_get_filename (img));
+		} else if (fu_firmware_image_get_id (img) != NULL &&
+		           fu_firmware_image_get_idx (img) != 0x0) {
+			fn = g_strdup_printf ("idx-%s-0x%x.fw",
+					      fu_firmware_image_get_id (img),
+					      (guint) fu_firmware_image_get_idx (img));
 		} else if (fu_firmware_image_get_id (img) != NULL) {
 			fn = g_strdup_printf ("id-%s.fw", fu_firmware_image_get_id (img));
 		} else if (fu_firmware_image_get_idx (img) != 0x0) {
