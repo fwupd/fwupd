@@ -80,9 +80,8 @@ fu_hid_device_set_property (GObject *object, guint prop_id,
 static gboolean
 fu_hid_device_open (FuDevice *device, GError **error)
 {
-	FuHidDevice *self = FU_HID_DEVICE (device);
-	FuHidDeviceClass *klass = FU_HID_DEVICE_GET_CLASS (device);
 #ifdef HAVE_GUSB
+	FuHidDevice *self = FU_HID_DEVICE (device);
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDeviceClaimInterfaceFlags flags = 0;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
@@ -124,13 +123,6 @@ fu_hid_device_open (FuDevice *device, GError **error)
 	}
 #endif
 
-	/* subclassed */
-	if (klass->open != NULL) {
-		g_warning ("FuHidDevice->open is deprecated!");
-		if (!klass->open (self, error))
-			return FALSE;
-	}
-
 	/* success */
 	return TRUE;
 }
@@ -138,21 +130,13 @@ fu_hid_device_open (FuDevice *device, GError **error)
 static gboolean
 fu_hid_device_close (FuDevice *device, GError **error)
 {
-	FuHidDevice *self = FU_HID_DEVICE (device);
-	FuHidDeviceClass *klass = FU_HID_DEVICE_GET_CLASS (device);
 #ifdef HAVE_GUSB
+	FuHidDevice *self = FU_HID_DEVICE (device);
 	FuHidDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDeviceClaimInterfaceFlags flags = 0;
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 	g_autoptr(GError) error_local = NULL;
 #endif
-
-	/* subclassed */
-	if (klass->close != NULL) {
-		g_warning ("FuHidDevice->close is deprecated!");
-		if (!klass->close (self, error))
-			return FALSE;
-	}
 
 #ifdef HAVE_GUSB
 	/* release */

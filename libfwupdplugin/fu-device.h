@@ -295,11 +295,6 @@ void		 fu_device_set_backend_id		(FuDevice	*self,
 const gchar	*fu_device_get_proxy_guid		(FuDevice	*self);
 void		 fu_device_set_proxy_guid		(FuDevice	*self,
 							 const gchar	*proxy_guid);
-G_DEPRECATED_FOR(fu_device_get_protocols)
-const gchar	*fu_device_get_protocol			(FuDevice	*self);
-G_DEPRECATED_FOR(fu_device_add_protocol)
-void		 fu_device_set_protocol			(FuDevice	*self,
-							 const gchar	*protocol);
 guint		 fu_device_get_priority			(FuDevice	*self);
 void		 fu_device_set_priority			(FuDevice	*self,
 							 guint		 priority);

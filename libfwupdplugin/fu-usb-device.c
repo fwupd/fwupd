@@ -163,7 +163,6 @@ fu_usb_device_open (FuDevice *device, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE (device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
-	FuUsbDeviceClass *klass = FU_USB_DEVICE_GET_CLASS (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 #ifdef HAVE_GUSB
 	guint idx;
@@ -265,13 +264,6 @@ fu_usb_device_open (FuDevice *device, GError **error)
 	}
 #endif
 
-	/* subclassed */
-	if (klass->open != NULL) {
-		g_warning ("FuUsbDevice->open is deprecated!");
-		if (!klass->open (self, error))
-			return FALSE;
-	}
-
 	/* success */
 	priv->usb_device_locker = g_steal_pointer (&locker);
 	return TRUE;
@@ -282,7 +274,6 @@ fu_usb_device_close (FuDevice *device, GError **error)
 {
 	FuUsbDevice *self = FU_USB_DEVICE (device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
-	FuUsbDeviceClass *klass = FU_USB_DEVICE_GET_CLASS (device);
 
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -291,13 +282,6 @@ fu_usb_device_close (FuDevice *device, GError **error)
 	if (priv->usb_device_locker == NULL)
 		return TRUE;
 
-	/* subclassed */
-	if (klass->close != NULL) {
-		g_warning ("FuUsbDevice->close is deprecated!");
-		if (!klass->close (self, error))
-			return FALSE;
-	}
-
 	g_clear_object (&priv->usb_device_locker);
 	return TRUE;
 }
@@ -305,9 +289,8 @@ fu_usb_device_close (FuDevice *device, GError **error)
 static gboolean
 fu_usb_device_probe (FuDevice *device, GError **error)
 {
-	FuUsbDevice *self = FU_USB_DEVICE (device);
-	FuUsbDeviceClass *klass = FU_USB_DEVICE_GET_CLASS (device);
 #ifdef HAVE_GUSB
+	FuUsbDevice *self = FU_USB_DEVICE (device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	guint16 release;
 	g_autofree gchar *devid0 = NULL;
@@ -371,13 +354,6 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
 #endif
-
-	/* subclassed */
-	if (klass->probe != NULL) {
-		g_warning ("FuUsbDevice->probe is deprecated!");
-		if (!klass->probe (self, error))
-			return FALSE;
-	}
 
 	/* success */
 	return TRUE;

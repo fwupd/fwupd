@@ -16,11 +16,7 @@ G_DECLARE_DERIVABLE_TYPE (FuHidDevice, fu_hid_device, FU, HID_DEVICE, FuUsbDevic
 struct _FuHidDeviceClass
 {
 	FuUsbDeviceClass parent_class;
-	gboolean	 (*open)		(FuHidDevice		*device,
-						 GError			**error);
-	gboolean	 (*close)		(FuHidDevice		*device,
-						 GError			**error);
-	gpointer	__reserved[29];
+	gpointer	__reserved[31];
 };
 
 /**

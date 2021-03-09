@@ -112,7 +112,6 @@ void		 fu_plugin_set_enabled			(FuPlugin	*self,
 G_DEPRECATED_FOR(fu_plugin_add_flag);
 void		 fu_plugin_set_build_hash		(FuPlugin	*self,
 							 const gchar	*build_hash);
-GUsbContext	*fu_plugin_get_usb_context		(FuPlugin	*self);
 void		 fu_plugin_device_add			(FuPlugin	*self,
 							 FuDevice	*device);
 void		 fu_plugin_device_remove		(FuPlugin	*self,
