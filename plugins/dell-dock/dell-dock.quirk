@@ -63,7 +63,6 @@ Icon = dock-usb
 FirmwareSizeMin = 0x1FFC0
 FirmwareSizeMax = 0x20000
 Flags = require-ac,dual-image,self-recovery,usable-during-update
-Children = FuDellDockStatus|USB\VID_413C&PID_B06E&hub&status,FuDellDockMst|MST-panamera-vmm5331-259
 DellDockUnlockTarget = 1
 DellDockBoardMin = 6
 DellDockVersionLowest = 01.00.00.00
@@ -72,6 +71,17 @@ InstallDuration = 60
 
 # Representation of overall dock update
 [USB\VID_413C&PID_B06E&hub&status]
+Name = Package level of Dell dock
+Summary = A representation of dock update status
+Plugin = dell_dock
+Vendor = Dell Inc.
+Flags = self-recovery,usable-during-update
+FirmwareSize = 24
+InstallDuration = 5
+DellDockBlobVersionOffset = 0x14
+
+# Representation of overall dock update
+[USB\VID_413C&PID_B06E&hub&salomon_mlk_status]
 Name = Package level of Dell dock
 Summary = A representation of dock update status
 Plugin = dell_dock
@@ -115,3 +125,16 @@ DellDockUnlockTarget = 10
 DellDockHubVersionLowest = 1.31
 DellDockBlobMajorOffset = 0x400a
 DellDockBlobMinorOffset = 0x4009
+
+# USB4 controller
+[TBT-00d4b071]
+Name = USB4 controller in Dell dock
+Summary = USB4 controller
+Vendor = Dell Inc.
+VendorId = TBT:0x00D4
+ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
+FirmwareSizeMin=0x40000
+FirmwareSizeMax=0x80000
+Flags = skips-restart,require-ac,dual-image
+Icon = thunderbolt
+InstallDuration = 46
