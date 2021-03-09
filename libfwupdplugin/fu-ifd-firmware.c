@@ -277,7 +277,7 @@ fu_ifd_firmware_parse (FuFirmware *firmware,
  *
  * Return value: %TRUE if the command is allowed
  *
- * Since: 1.5.8
+ * Since: 1.6.0
  **/
 gboolean
 fu_ifd_firmware_check_jedec_cmd (FuIfdFirmware *self, guint8 cmd)
@@ -449,7 +449,7 @@ fu_ifd_firmware_class_init (FuIfdFirmwareClass *klass)
  *
  * Creates a new #FuFirmware of sub type Ifd
  *
- * Since: 1.5.8
+ * Since: 1.6.0
  **/
 FuFirmware *
 fu_ifd_firmware_new (void)

@@ -18,7 +18,7 @@
  *
  * Return value: identifier string
  *
- * Since: 1.5.8
+ * Since: 1.6.0
  **/
 const gchar *
 fu_ifd_region_to_string (FuIfdRegion region)
@@ -54,7 +54,7 @@ fu_ifd_region_to_string (FuIfdRegion region)
  *
  * Return value: identifier string
  *
- * Since: 1.5.8
+ * Since: 1.6.0
  **/
 const gchar *
 fu_ifd_access_to_string (FuIfdAccess access)

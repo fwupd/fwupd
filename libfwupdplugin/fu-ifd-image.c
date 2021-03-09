@@ -40,7 +40,7 @@ fu_ifd_image_to_string (FuFirmwareImage *image, guint idt, GString *str)
  *
  * Sets the access control for a specific reason.
  *
- * Since: 1.5.8
+ * Since: 1.6.0
  **/
 void
 fu_ifd_image_set_access (FuIfdImage *self, FuIfdRegion region, FuIfdAccess access)
@@ -58,7 +58,7 @@ fu_ifd_image_set_access (FuIfdImage *self, FuIfdRegion region, FuIfdAccess acces
  *
  * Return value: a #FuIfdAccess, e.g. %FU_IFD_ACCESS_NONE
  *
- * Since: 1.5.8
+ * Since: 1.6.0
  **/
 FuIfdAccess
 fu_ifd_image_get_access (FuIfdImage *self, FuIfdRegion region)
@@ -84,7 +84,7 @@ fu_ifd_image_class_init (FuIfdImageClass *klass)
  *
  * Creates a new #FuFirmwareImage
  *
- * Since: 1.5.8
+ * Since: 1.6.0
  **/
 FuFirmwareImage *
 fu_ifd_image_new (void)
