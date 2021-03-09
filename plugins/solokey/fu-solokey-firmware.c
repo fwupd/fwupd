@@ -39,8 +39,7 @@ fu_solokey_firmware_parse (FuFirmware *firmware,
 	JsonObject *json_obj;
 	const gchar *base64;
 	g_autoptr(FuFirmware) ihex_firmware = fu_ihex_firmware_new ();
-	g_autoptr(FuFirmwareImage) img = NULL;
-	g_autoptr(FuFirmwareImage) img_sig = fu_firmware_image_new (NULL);
+	g_autoptr(FuFirmware) img_sig = fu_firmware_new ();
 	g_autoptr(GBytes) fw_ihex = NULL;
 	g_autoptr(GBytes) fw_sig = NULL;
 	g_autoptr(GString) base64_websafe = NULL;
@@ -90,10 +89,11 @@ fu_solokey_firmware_parse (FuFirmware *firmware,
 	fw_ihex = _g_base64_decode_to_bytes (base64);
 	if (!fu_firmware_parse (ihex_firmware, fw_ihex, flags, error))
 		return FALSE;
-	img = fu_firmware_get_image_default (ihex_firmware, error);
-	if (img == NULL)
+	fw = fu_firmware_get_bytes (ihex_firmware, error);
+	if (fw == NULL)
 		return FALSE;
-	fu_firmware_add_image (firmware, img);
+	fu_firmware_set_addr (firmware, fu_firmware_get_addr (ihex_firmware));
+	fu_firmware_set_bytes (firmware, fw);
 
 	/* signature */
 	base64 = json_object_get_string_member (json_obj, "signature");
@@ -109,8 +109,8 @@ fu_solokey_firmware_parse (FuFirmware *firmware,
 	fu_common_string_replace (base64_websafe, "_", "/");
 	g_string_append (base64_websafe, "==");
 	fw_sig = _g_base64_decode_to_bytes (base64_websafe->str);
-	fu_firmware_image_set_bytes (img_sig, fw_sig);
-	fu_firmware_image_set_id (img_sig, FU_FIRMWARE_IMAGE_ID_SIGNATURE);
+	fu_firmware_set_bytes (img_sig, fw_sig);
+	fu_firmware_set_id (img_sig, FU_FIRMWARE_ID_SIGNATURE);
 	fu_firmware_add_image (firmware, img_sig);
 	return TRUE;
 }

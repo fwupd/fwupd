@@ -1,19 +1,19 @@
 <firmware gtype="FuCrosEcFirmware">
   <base>0x3000</base>
-  <image>
+  <firmware>
     <id>RO_FRID</id>
     <data>Y2hlZXNlX3YxLjEuMTc1NS00ZGE5NTIwICAgICAgICA=</data>
-  </image>
-  <image>
+  </firmware>
+  <firmware>
     <id>RW_FWID</id>
     <data>Y2hlZXNlX3YxLjEuMTc1NS00ZGE5NTIwICAgICAgICA=</data>
-  </image>
-  <image>
+  </firmware>
+  <firmware>
     <id>EC_RO</id>
     <data>Y2hlZXNlX3YxLjEuMTc1NS00ZGE5NTIwICAgICAgICA=</data>
-  </image>
-  <image>
+  </firmware>
+  <firmware>
     <id>EC_RW</id>
     <data>Y2hlZXNlX3YxLjEuMTc1NS00ZGE5NTIwICAgICAgICA=</data>
-  </image>
+  </firmware>
 </firmware>

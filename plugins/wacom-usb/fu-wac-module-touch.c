@@ -41,23 +41,18 @@ fu_wac_module_touch_write_firmware (FuDevice *device,
 {
 	FuWacModule *self = FU_WAC_MODULE (device);
 	gsize blocks_total = 0;
-	g_autoptr(FuFirmwareImage) img = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	/* use the correct image from the firmware */
-	img = fu_firmware_get_image_default (firmware, error);
-	if (img == NULL)
-		return FALSE;
 	g_debug ("using element at addr 0x%0x",
-		 (guint) fu_firmware_image_get_addr (img));
-	fw = fu_firmware_image_write (img, error);
-	if (fw == NULL)
-		return FALSE;
+		 (guint) fu_firmware_get_addr (firmware));
 
 	/* build each data packet */
+	fw = fu_firmware_get_bytes (firmware, error);
+	if (fw == NULL)
+		return FALSE;
 	chunks = fu_chunk_array_new_from_bytes (fw,
-						fu_firmware_image_get_addr (img),
+						fu_firmware_get_addr (firmware),
 						0x0, /* page_sz */
 						128); /* packet_sz */
 	blocks_total = chunks->len + 2;

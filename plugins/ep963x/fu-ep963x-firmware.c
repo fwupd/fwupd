@@ -29,7 +29,6 @@ fu_ep963x_firmware_parse (FuFirmware *firmware,
 {
 	gsize len = 0x0;
 	const guint8 *data = g_bytes_get_data (fw, &len);
-	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 
 	/* check size */
 	if (len != FU_EP963_FIRMWARE_SIZE) {
@@ -51,7 +50,7 @@ fu_ep963x_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* success */
-	fu_firmware_add_image (firmware, img);
+	fu_firmware_set_bytes (firmware, fw);
 	return TRUE;
 }
 

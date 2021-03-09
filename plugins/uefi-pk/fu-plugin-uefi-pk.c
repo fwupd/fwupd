@@ -81,7 +81,9 @@ fu_plugin_uefi_pk_parse_signature (FuPlugin *plugin,
 	}
 
 	/* parse certificate */
-	blob = fu_firmware_image_get_bytes (FU_FIRMWARE_IMAGE (sig));
+	blob = fu_firmware_get_bytes (FU_FIRMWARE (sig), error);
+	if (blob == NULL)
+		return FALSE;
 	d.size = g_bytes_get_size (blob);
 	d.data = (unsigned char *) g_bytes_get_data (blob, NULL);
 	rc = gnutls_x509_crt_import (crt, &d, GNUTLS_X509_FMT_DER);
@@ -125,7 +127,7 @@ gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
-	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(FuFirmware) pk = fu_efi_signature_list_new ();
 	g_autoptr(GBytes) pk_blob = NULL;
 	g_autoptr(GPtrArray) sigs = NULL;

@@ -393,9 +393,9 @@ fu_bcm57xx_device_prepare_firmware (FuDevice *device,
 	g_autoptr(GBytes) fw_old = NULL;
 	g_autoptr(FuFirmware) firmware = fu_bcm57xx_firmware_new ();
 	g_autoptr(FuFirmware) firmware_tmp = fu_bcm57xx_firmware_new ();
-	g_autoptr(FuFirmwareImage) img_ape = NULL;
-	g_autoptr(FuFirmwareImage) img_stage1 = NULL;
-	g_autoptr(FuFirmwareImage) img_stage2 = NULL;
+	g_autoptr(FuFirmware) img_ape = NULL;
+	g_autoptr(FuFirmware) img_stage1 = NULL;
+	g_autoptr(FuFirmware) img_stage2 = NULL;
 	g_autoptr(GPtrArray) images = NULL;
 
 	/* try to parse NVRAM, stage1 or APE */
@@ -450,9 +450,9 @@ fu_bcm57xx_device_prepare_firmware (FuDevice *device,
 	/* the src and dst dictionaries may be in different order */
 	images = fu_firmware_get_images (firmware);
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmwareImage *img = g_ptr_array_index (images, i);
+		FuFirmware *img = g_ptr_array_index (images, i);
 		if (FU_IS_BCM57XX_DICT_IMAGE (img)) {
-			fu_firmware_image_set_idx (img, 0x80 + dict_cnt);
+			fu_firmware_set_idx (img, 0x80 + dict_cnt);
 			dict_cnt++;
 		}
 	}

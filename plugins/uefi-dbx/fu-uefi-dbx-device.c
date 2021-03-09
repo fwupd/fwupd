@@ -29,7 +29,7 @@ fu_uefi_dbx_device_write_firmware (FuDevice *device,
 	g_autoptr(GBytes) fw = NULL;
 
 	/* get default image */
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 
@@ -119,9 +119,9 @@ fu_uefi_dbx_device_probe (FuDevice *device, GError **error)
 		g_autofree gchar *devid1 = NULL;
 		g_autofree gchar *devid2 = NULL;
 
-		checksum = fu_firmware_image_get_checksum (FU_FIRMWARE_IMAGE (sig),
-							   G_CHECKSUM_SHA256,
-							   error);
+		checksum = fu_firmware_get_checksum (FU_FIRMWARE (sig),
+						     G_CHECKSUM_SHA256,
+						     error);
 		if (checksum == NULL)
 			return FALSE;
 		checksum_up = g_utf8_strup (checksum, -1);

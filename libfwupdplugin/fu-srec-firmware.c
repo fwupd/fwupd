@@ -280,7 +280,6 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 	guint16 data_cnt = 0;
 	guint32 addr32_last = 0;
 	guint32 img_address = 0;
-	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (NULL);
 	g_autoptr(GBytes) img_bytes = NULL;
 	g_autoptr(GByteArray) outbuf = g_byte_array_new ();
 
@@ -310,7 +309,7 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 				g_string_append_c (modname, tmp);
 			}
 			if (modname->len != 0)
-				fu_firmware_image_set_id (img, modname->str);
+				fu_firmware_set_id (firmware, modname->str);
 			got_hdr = TRUE;
 			continue;
 		}
@@ -387,9 +386,8 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 
 	/* add single image */
 	img_bytes = g_bytes_new (outbuf->data, outbuf->len);
-	fu_firmware_image_set_bytes (img, img_bytes);
-	fu_firmware_image_set_addr (img, img_address);
-	fu_firmware_add_image (firmware, img);
+	fu_firmware_set_bytes (firmware, img_bytes);
+	fu_firmware_set_addr (firmware, img_address);
 	return TRUE;
 }
 

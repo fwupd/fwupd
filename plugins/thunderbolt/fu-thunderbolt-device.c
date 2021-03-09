@@ -743,7 +743,7 @@ fu_thunderbolt_device_write_firmware (FuDevice *device,
 	g_autoptr(GBytes) blob_fw = NULL;
 
 	/* get default image */
-	blob_fw = fu_firmware_get_image_default_bytes (firmware, error);
+	blob_fw = fu_firmware_get_bytes (firmware, error);
 	if (blob_fw == NULL)
 		return FALSE;
 

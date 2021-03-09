@@ -52,7 +52,7 @@ fu_uefi_dbx_signature_list_validate_volume (FuEfiSignatureList *siglist, FuVolum
 	for (guint i = 0; i < files->len; i++) {
 		const gchar *fn = g_ptr_array_index (files, i);
 		g_autofree gchar *checksum = NULL;
-		g_autoptr(FuFirmwareImage) img = NULL;
+		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(GError) error_local = NULL;
 
 		/* get checksum of file */

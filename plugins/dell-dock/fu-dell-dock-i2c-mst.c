@@ -753,7 +753,7 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 	g_return_val_if_fail (fu_device_get_proxy (device) != NULL, FALSE);
 
 	/* get default image */
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 	data = g_bytes_get_data (fw, NULL);

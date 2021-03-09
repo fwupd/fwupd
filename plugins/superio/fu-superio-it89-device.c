@@ -652,7 +652,7 @@ fu_superio_it89_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* get default image */
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 

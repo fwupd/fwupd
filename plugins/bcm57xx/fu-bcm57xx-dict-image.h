@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include "fu-firmware-image.h"
+#include "fu-firmware.h"
 
 #define FU_TYPE_BCM57XX_DICT_IMAGE (fu_bcm57xx_dict_image_get_type ())
-G_DECLARE_FINAL_TYPE (FuBcm57xxDictImage, fu_bcm57xx_dict_image, FU, BCM57XX_DICT_IMAGE, FuFirmwareImage)
+G_DECLARE_FINAL_TYPE (FuBcm57xxDictImage, fu_bcm57xx_dict_image, FU, BCM57XX_DICT_IMAGE, FuFirmware)
 
-FuFirmwareImage	*fu_bcm57xx_dict_image_new		(void);
+FuFirmware	*fu_bcm57xx_dict_image_new		(void);
 void		 fu_bcm57xx_dict_image_set_kind		(FuBcm57xxDictImage	*self,
 							 guint8			 kind);
 guint8		 fu_bcm57xx_dict_image_get_kind		(FuBcm57xxDictImage	*self);

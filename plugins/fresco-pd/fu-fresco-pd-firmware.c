@@ -43,7 +43,6 @@ fu_fresco_pd_firmware_parse (FuFirmware *firmware,
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
 	g_autofree gchar *version = NULL;
-	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 
 	/* read version block */
 	if (!fu_memcpy_safe (ver, sizeof(ver), 0x0,	/* dst */
@@ -56,8 +55,8 @@ fu_fresco_pd_firmware_parse (FuFirmware *firmware,
 
 	/* set version number */
 	version = fu_fresco_pd_version_from_buf (ver);
-	fu_firmware_image_set_version (img, version);
-	fu_firmware_add_image (firmware, img);
+	fu_firmware_set_version (firmware, version);
+	fu_firmware_set_bytes (firmware, fw);
 	return TRUE;
 }
 

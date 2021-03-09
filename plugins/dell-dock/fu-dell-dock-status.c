@@ -75,7 +75,7 @@ fu_dell_dock_status_write (FuDevice *device,
 	g_return_val_if_fail (FU_IS_FIRMWARE (firmware), FALSE);
 
 	/* get default image */
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 	data = g_bytes_get_data (fw, &length);

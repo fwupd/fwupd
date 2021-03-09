@@ -1657,7 +1657,7 @@ fu_dfu_device_download (FuDfuDevice *self,
 		return FALSE;
 	}
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmwareImage *image = g_ptr_array_index (images, i);
+		FuFirmware *image = g_ptr_array_index (images, i);
 		FuDfuTargetTransferFlags flags_local = DFU_TARGET_TRANSFER_FLAG_NONE;
 		const gchar *alt_name;
 		guint8 alt;
@@ -1666,7 +1666,7 @@ fu_dfu_device_download (FuDfuDevice *self,
 		g_autoptr(FuDfuTarget) target_tmp = NULL;
 		g_autoptr(GError) error_local = NULL;
 
-		alt = fu_firmware_image_get_idx (image);
+		alt = fu_firmware_get_idx (image);
 		target_tmp = fu_dfu_device_get_target_by_alt_setting (self, alt, error);
 		if (target_tmp == NULL)
 			return FALSE;

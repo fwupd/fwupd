@@ -34,7 +34,7 @@ typedef struct __attribute__((packed)) {
 #define FU_SYNAPROM_FIRMWARE_TAG_MAX			0xfff0
 #define FU_SYNAPROM_FIRMWARE_SIGSIZE			0x0100
 
-#define FU_SYNAPROM_FIRMWARE_IMAGE_COUNT_MAX		64
+#define FU_SYNAPROM_FIRMWARE_COUNT_MAX		64
 
 static const gchar *
 fu_synaprom_firmware_tag_to_string (guint16 tag)
@@ -90,7 +90,7 @@ fu_synaprom_firmware_parse (FuFirmware *firmware,
 		guint32 hdrsz;
 		guint32 tag;
 		g_autoptr(GBytes) bytes = NULL;
-		g_autoptr(FuFirmwareImage) img = NULL;
+		g_autoptr(FuFirmware) img = NULL;
 
 		/* verify item header */
 		memcpy (&header, buf, sizeof(header));
@@ -129,19 +129,19 @@ fu_synaprom_firmware_parse (FuFirmware *firmware,
 			 tag,
 			 fu_synaprom_firmware_tag_to_string (tag),
 			 hdrsz);
-		img = fu_firmware_image_new (bytes);
-		fu_firmware_image_set_idx (img, tag);
-		fu_firmware_image_set_id (img, fu_synaprom_firmware_tag_to_string (tag));
+		img = fu_firmware_new_from_bytes (bytes);
+		fu_firmware_set_idx (img, tag);
+		fu_firmware_set_id (img, fu_synaprom_firmware_tag_to_string (tag));
 		fu_firmware_add_image (firmware, img);
 
 		/* sanity check */
-		if (img_cnt++ > FU_SYNAPROM_FIRMWARE_IMAGE_COUNT_MAX) {
+		if (img_cnt++ > FU_SYNAPROM_FIRMWARE_COUNT_MAX) {
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
 				     "maximum number of images exceeded, "
 				     "maximum is 0x%02x",
-				     (guint) FU_SYNAPROM_FIRMWARE_IMAGE_COUNT_MAX);
+				     (guint) FU_SYNAPROM_FIRMWARE_COUNT_MAX);
 			return FALSE;
 		}
 
@@ -176,7 +176,7 @@ fu_synaprom_firmware_write (FuFirmware *firmware, GError **error)
 	g_byte_array_append (blob, (const guint8 *) &hdr, sizeof(hdr));
 
 	/* add payload */
-	payload = fu_firmware_get_image_default_bytes (firmware, error);
+	payload = fu_firmware_get_bytes (firmware, error);
 	if (payload == NULL)
 		return NULL;
 	fu_byte_array_append_uint16 (blob,

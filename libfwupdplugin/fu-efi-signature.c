@@ -18,12 +18,12 @@
  */
 
 struct _FuEfiSignature {
-	FuFirmwareImage		 parent_instance;
+	FuFirmware		 parent_instance;
 	FuEfiSignatureKind	 kind;
 	gchar			*owner;
 };
 
-G_DEFINE_TYPE (FuEfiSignature, fu_efi_signature, FU_TYPE_FIRMWARE_IMAGE)
+G_DEFINE_TYPE (FuEfiSignature, fu_efi_signature, FU_TYPE_FIRMWARE)
 
 /**
  * fu_efi_signature_kind_to_string:
@@ -100,12 +100,14 @@ fu_efi_signature_get_owner (FuEfiSignature *self)
 }
 
 static gchar *
-fu_efi_signature_get_checksum (FuFirmwareImage *firmware_image,
+fu_efi_signature_get_checksum (FuFirmware *firmware,
 			       GChecksumType csum_kind,
 			       GError **error)
 {
-	FuEfiSignature *self = FU_EFI_SIGNATURE (firmware_image);
-	g_autoptr(GBytes) data = fu_firmware_image_get_bytes (firmware_image);
+	FuEfiSignature *self = FU_EFI_SIGNATURE (firmware);
+	g_autoptr(GBytes) data = fu_firmware_get_bytes (firmware, error);
+	if (data == NULL)
+		return NULL;
 
 	/* special case: this is *literally* a hash */
 	if (self->kind == FU_EFI_SIGNATURE_KIND_SHA256 &&
@@ -136,9 +138,9 @@ static void
 fu_efi_signature_class_init (FuEfiSignatureClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	FuFirmwareImageClass *firmware_image_class = FU_FIRMWARE_IMAGE_CLASS (klass);
+	FuFirmwareClass *firmware_class = FU_FIRMWARE_CLASS (klass);
 	object_class->finalize = fu_efi_signature_finalize;
-	firmware_image_class->get_checksum = fu_efi_signature_get_checksum;
+	firmware_class->get_checksum = fu_efi_signature_get_checksum;
 }
 
 static void

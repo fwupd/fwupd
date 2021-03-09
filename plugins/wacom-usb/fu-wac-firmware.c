@@ -187,8 +187,9 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 		/* end */
 		if (g_strcmp0 (cmd, "S7") == 0) {
 			g_autoptr(GBytes) blob = NULL;
+			g_autoptr(GBytes) fw_srec = NULL;
 			g_autoptr(FuFirmware) firmware_srec = fu_srec_firmware_new ();
-			g_autoptr(FuFirmwareImage) img = NULL;
+			g_autoptr(FuFirmware) img = NULL;
 			FuFirmwareWacHeaderRecord *hdr;
 
 			/* get the correct relocated start address */
@@ -213,10 +214,12 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 			blob = g_bytes_new (image_buffer->str, image_buffer->len);
 			if (!fu_firmware_parse_full (firmware_srec, blob, hdr->addr, 0x0, flags, error))
 				return FALSE;
-			img = fu_firmware_get_image_default (firmware_srec, error);
-			if (img == NULL)
+			fw_srec = fu_firmware_get_bytes (firmware_srec, error);
+			if (fw_srec == NULL)
 				return FALSE;
-			fu_firmware_image_set_idx (img, images_cnt);
+			fu_firmware_set_bytes (img, fw_srec);
+			fu_firmware_set_addr (img, fu_firmware_get_addr (firmware_srec));
+			fu_firmware_set_idx (img, images_cnt);
 			fu_firmware_add_image (firmware, img);
 			images_cnt++;
 

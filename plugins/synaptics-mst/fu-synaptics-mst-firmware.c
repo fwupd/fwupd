@@ -43,13 +43,12 @@ fu_synaptics_mst_firmware_parse (FuFirmware *firmware,
 	FuSynapticsMstFirmware *self = FU_SYNAPTICS_MST_FIRMWARE (firmware);
 	const guint8 *buf;
 	gsize bufsz;
-	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 	buf = g_bytes_get_data (fw, &bufsz);
 	if (!fu_common_read_uint16_safe (buf, bufsz, ADDR_CUSTOMER_ID,
 					 &self->board_id, G_BIG_ENDIAN,
 					 error))
 		return FALSE;
-	fu_firmware_add_image (firmware, img);
+	fu_firmware_set_bytes (firmware, fw);
 	return TRUE;
 }
 

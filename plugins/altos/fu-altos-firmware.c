@@ -88,12 +88,10 @@ fu_altos_firmware_parse (FuFirmware *firmware,
 		if (g_strcmp0 (name, ".text") == 0) {
 			Elf_Data *data = elf_getdata (scn, NULL);
 			if (data != NULL && data->d_buf != NULL) {
-				g_autoptr(FuFirmwareImage) img = NULL;
 				g_autoptr(GBytes) bytes = NULL;
 				bytes = g_bytes_new (data->d_buf, data->d_size);
-				img = fu_firmware_image_new (bytes);
-				fu_firmware_image_set_addr (img, shdr.sh_addr);
-				fu_firmware_add_image (firmware, img);
+				fu_firmware_set_addr (firmware, shdr.sh_addr);
+				fu_firmware_set_bytes (firmware, bytes);
 			}
 			return TRUE;
 		}

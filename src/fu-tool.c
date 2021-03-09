@@ -1984,22 +1984,24 @@ fu_util_firmware_extract (FuUtilPrivate *priv, gchar **values, GError **error)
 	g_print ("%s", str);
 	images = fu_firmware_get_images (firmware);
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmwareImage *img = g_ptr_array_index (images, i);
+		FuFirmware *img = g_ptr_array_index (images, i);
 		g_autofree gchar *fn = NULL;
 		g_autoptr(GBytes) blob_img = NULL;
 
 		/* get raw image without generated header, footer or crc */
-		blob_img = fu_firmware_image_get_bytes (img);
-		if (blob_img == NULL || g_bytes_get_size (blob_img) == 0)
+		blob_img = fu_firmware_get_bytes (img, error);
+		if (blob_img == NULL)
+			return FALSE;
+		if (g_bytes_get_size (blob_img) == 0)
 			continue;
 
 		/* use suitable filename */
-		if (fu_firmware_image_get_filename (img) != NULL) {
-			fn = g_strdup (fu_firmware_image_get_filename (img));
-		} else if (fu_firmware_image_get_id (img) != NULL) {
-			fn = g_strdup_printf ("id-%s.fw", fu_firmware_image_get_id (img));
-		} else if (fu_firmware_image_get_idx (img) != 0x0) {
-			fn = g_strdup_printf ("idx-0x%x.fw", (guint) fu_firmware_image_get_idx (img));
+		if (fu_firmware_get_filename (img) != NULL) {
+			fn = g_strdup (fu_firmware_get_filename (img));
+		} else if (fu_firmware_get_id (img) != NULL) {
+			fn = g_strdup_printf ("id-%s.fw", fu_firmware_get_id (img));
+		} else if (fu_firmware_get_idx (img) != 0x0) {
+			fn = g_strdup_printf ("idx-0x%x.fw", (guint) fu_firmware_get_idx (img));
 		} else {
 			fn = g_strdup_printf ("img-0x%x.fw", i);
 		}
@@ -2179,7 +2181,7 @@ fu_util_firmware_convert (FuUtilPrivate *priv, gchar **values, GError **error)
 	firmware_dst = g_object_new (gtype_dst, NULL);
 	images = fu_firmware_get_images (firmware_src);
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmwareImage *img = g_ptr_array_index (images, i);
+		FuFirmware *img = g_ptr_array_index (images, i);
 		fu_firmware_add_image (firmware_dst, img);
 	}
 

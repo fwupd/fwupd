@@ -438,22 +438,16 @@ fu_solokey_device_write_firmware (FuDevice *device,
 				  GError **error)
 {
 	FuSolokeyDevice *self = FU_SOLOKEY_DEVICE (device);
-	g_autoptr(FuFirmwareImage) img = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_sig = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	/* get main image */
-	img = fu_firmware_get_image_by_id (firmware, NULL, error);
-	if (img == NULL)
-		return FALSE;
-
 	/* build packets */
-	fw = fu_firmware_image_write (img, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 	chunks = fu_chunk_array_new_from_bytes (fw,
-						fu_firmware_image_get_addr (img),
+						fu_firmware_get_addr (firmware),
 						0x00,	/* page_sz */
 						2048);
 
@@ -486,7 +480,7 @@ fu_solokey_device_write_firmware (FuDevice *device,
 
 	/* verify the signature and reboot back to runtime */
 	fw_sig = fu_firmware_get_image_by_id_bytes (firmware,
-						    FU_FIRMWARE_IMAGE_ID_SIGNATURE,
+						    FU_FIRMWARE_ID_SIGNATURE,
 						    error);
 	if (fw_sig == NULL)
 		return FALSE;

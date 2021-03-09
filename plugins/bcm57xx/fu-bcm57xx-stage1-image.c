@@ -13,14 +13,16 @@
 #include "fu-bcm57xx-stage1-image.h"
 
 struct _FuBcm57xxStage1Image {
-	FuFirmwareImage		 parent_instance;
+	FuFirmware		 parent_instance;
 };
 
-G_DEFINE_TYPE (FuBcm57xxStage1Image, fu_bcm57xx_stage1_image, FU_TYPE_FIRMWARE_IMAGE)
+G_DEFINE_TYPE (FuBcm57xxStage1Image, fu_bcm57xx_stage1_image, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_bcm57xx_stage1_image_parse (FuFirmwareImage *image,
+fu_bcm57xx_stage1_image_parse (FuFirmware *image,
 			       GBytes *fw,
+			       guint64 addr_start,
+			       guint64 addr_end,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
@@ -42,7 +44,7 @@ fu_bcm57xx_stage1_image_parse (FuFirmwareImage *image,
 	if (fwversion != 0x0) {
 		g_autofree gchar *tmp = NULL;
 		tmp = fu_common_version_from_uint32 (fwversion, FWUPD_VERSION_FORMAT_TRIPLET);
-		fu_firmware_image_set_version (image, tmp);
+		fu_firmware_set_version (image, tmp);
 	} else {
 		guint32 bufver[4] = { '\0' };
 		guint32 veraddr = 0x0;
@@ -66,7 +68,7 @@ fu_bcm57xx_stage1_image_parse (FuFirmwareImage *image,
 			return FALSE;
 		veritem = fu_bcm57xx_veritem_new ((guint8 *) bufver, sizeof(bufver));
 		if (veritem != NULL)
-			fu_firmware_image_set_version (image, veritem->version);
+			fu_firmware_set_version (image, veritem->version);
 	}
 
 	fw_nocrc = fu_common_bytes_new_offset (fw, 0x0,
@@ -74,12 +76,12 @@ fu_bcm57xx_stage1_image_parse (FuFirmwareImage *image,
 					       error);
 	if (fw_nocrc == NULL)
 		return FALSE;
-	fu_firmware_image_set_bytes (image, fw_nocrc);
+	fu_firmware_set_bytes (image, fw_nocrc);
 	return TRUE;
 }
 
 static GBytes *
-fu_bcm57xx_stage1_image_write (FuFirmwareImage *image, GError **error)
+fu_bcm57xx_stage1_image_write (FuFirmware *image, GError **error)
 {
 	const guint8 *buf;
 	gsize bufsz = 0;
@@ -89,14 +91,9 @@ fu_bcm57xx_stage1_image_write (FuFirmwareImage *image, GError **error)
 	g_autoptr(GBytes) fw_align = NULL;
 
 	/* get the CRC-less data */
-	fw_nocrc = fu_firmware_image_get_bytes (image);
-	if (fw_nocrc == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported");
+	fw_nocrc = fu_firmware_get_bytes (image, error);
+	if (fw_nocrc == NULL)
 		return NULL;
-	}
 
 	/* this has to be aligned by DWORDs */
 	fw_align = fu_common_bytes_align (fw_nocrc, sizeof(guint32), 0xff);
@@ -120,13 +117,13 @@ fu_bcm57xx_stage1_image_init (FuBcm57xxStage1Image *self)
 static void
 fu_bcm57xx_stage1_image_class_init (FuBcm57xxStage1ImageClass *klass)
 {
-	FuFirmwareImageClass *klass_image = FU_FIRMWARE_IMAGE_CLASS (klass);
+	FuFirmwareClass *klass_image = FU_FIRMWARE_CLASS (klass);
 	klass_image->parse = fu_bcm57xx_stage1_image_parse;
 	klass_image->write = fu_bcm57xx_stage1_image_write;
 }
 
-FuFirmwareImage *
+FuFirmware *
 fu_bcm57xx_stage1_image_new (void)
 {
-	return FU_FIRMWARE_IMAGE (g_object_new (FU_TYPE_BCM57XX_STAGE1_IMAGE, NULL));
+	return FU_FIRMWARE (g_object_new (FU_TYPE_BCM57XX_STAGE1_IMAGE, NULL));
 }

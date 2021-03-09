@@ -25,7 +25,7 @@ typedef struct {
 	guint8			 img_digest[32];
 	guint8			 num_img_segments;
 	GPtrArray		*seg_records;
-} FuCcgxDmcFirmwareImageRecord;
+} FuCcgxDmcFirmwareRecord;
 
 FuFirmware	*fu_ccgx_dmc_firmware_new			(void);
 GPtrArray	*fu_ccgx_dmc_firmware_get_image_records		(FuCcgxDmcFirmware	*self);

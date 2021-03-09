@@ -456,14 +456,14 @@ fu_wac_device_write_firmware (FuDevice *device,
 	gsize blocks_done = 0;
 	gsize blocks_total = 0;
 	g_autofree guint32 *csum_local = NULL;
-	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GHashTable) fd_blobs = NULL;
 
 	/* use the correct image from the firmware */
 	img = fu_firmware_get_image_by_idx (firmware, self->firmware_index == 1 ? 1 : 0, error);
 	if (img == NULL)
 		return FALSE;
-	g_debug ("using image at addr 0x%0x", (guint) fu_firmware_image_get_addr (img));
+	g_debug ("using image at addr 0x%0x", (guint) fu_firmware_get_addr (img));
 
 	/* enter flash mode */
 	if (!fu_wac_device_switch_to_flash_loader (self, error))
@@ -505,7 +505,7 @@ fu_wac_device_write_firmware (FuDevice *device,
 
 		if (fu_wav_device_flash_descriptor_is_wp (fd))
 			continue;
-		blob_tmp = fu_firmware_image_write_chunk (img,
+		blob_tmp = fu_firmware_write_chunk (img,
 							  fd->start_addr,
 							  fd->block_sz,
 							  NULL);

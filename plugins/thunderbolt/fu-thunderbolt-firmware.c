@@ -170,7 +170,7 @@ fu_thunderbolt_firmware_read_location (FuThunderboltFirmware *self,
 	g_autoptr(GBytes) fw = NULL;
 
 	/* get blob */
-	fw = fu_firmware_get_image_default_bytes (FU_FIRMWARE (self), error);
+	fw = fu_firmware_get_bytes (FU_FIRMWARE (self), error);
 	if (fw == NULL)
 		return FALSE;
 	srcbuf = g_bytes_get_data (fw, &srcbufsz);
@@ -396,10 +396,9 @@ fu_thunderbolt_firmware_parse (FuFirmware *firmware,
 		{ 0 }
 	};
 	g_autofree gchar *version_str = NULL;
-	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 
 	/* add this straight away so we can read it without a self */
-	fu_firmware_add_image (firmware, img);
+	fu_firmware_set_bytes (firmware, fw);
 
 	/* subclassed */
 	if (klass_firmware->parse != NULL) {

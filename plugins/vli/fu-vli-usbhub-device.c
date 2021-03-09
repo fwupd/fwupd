@@ -713,7 +713,7 @@ fu_vli_usbhub_device_update_v1 (FuVliUsbhubDevice *self,
 	g_autoptr(GBytes) fw = NULL;
 
 	/* simple image */
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 
@@ -815,7 +815,7 @@ fu_vli_usbhub_device_update_v2 (FuVliUsbhubDevice *self, FuFirmware *firmware, G
 	g_autoptr(GBytes) fw = NULL;
 
 	/* simple image */
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 

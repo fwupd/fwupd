@@ -1650,7 +1650,7 @@ fu_firmware_ihex_func (void)
 	ret = fu_firmware_parse (firmware, data_file, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	data_fw = fu_firmware_get_image_default_bytes (firmware, &error);
+	data_fw = fu_firmware_get_bytes (firmware, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (data_fw);
 	g_assert_cmpint (g_bytes_get_size (data_fw), ==, 136);
@@ -1705,14 +1705,14 @@ fu_firmware_ihex_signed_func (void)
 	ret = fu_firmware_parse (firmware, data_file, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	data_fw = fu_firmware_get_image_by_id_bytes (firmware, NULL, &error);
+	data_fw = fu_firmware_get_bytes (firmware, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (data_fw);
 	g_assert_cmpint (g_bytes_get_size (data_fw), ==, 136);
 
 	/* get the signed image */
 	data_sig = fu_firmware_get_image_by_id_bytes (firmware,
-						      FU_FIRMWARE_IMAGE_ID_SIGNATURE,
+						      FU_FIRMWARE_ID_SIGNATURE,
 						      &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (data_sig);
@@ -1731,8 +1731,6 @@ fu_firmware_ihex_offset_func (void)
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new ();
 	g_autoptr(FuFirmware) firmware_verify = fu_ihex_firmware_new ();
-	g_autoptr(FuFirmwareImage) img_verify = NULL;
-	g_autoptr(FuFirmwareImage) img = NULL;
 	g_autoptr(GBytes) data_bin = NULL;
 	g_autoptr(GBytes) data_dummy = NULL;
 	g_autoptr(GBytes) data_verify = NULL;
@@ -1740,9 +1738,8 @@ fu_firmware_ihex_offset_func (void)
 
 	/* add a 4 byte image in high memory */
 	data_dummy = g_bytes_new_static ("foo", 4);
-	img = fu_firmware_image_new (data_dummy);
-	fu_firmware_image_set_addr (img, 0x80000000);
-	fu_firmware_add_image (firmware, img);
+	fu_firmware_set_addr (firmware, 0x80000000);
+	fu_firmware_set_bytes (firmware, data_dummy);
 	data_bin = fu_firmware_write (firmware, &error);
 	g_assert_no_error (error);
 	g_assert (data_bin != NULL);
@@ -1757,11 +1754,8 @@ fu_firmware_ihex_offset_func (void)
 	ret = fu_firmware_parse (firmware_verify, data_bin, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	img_verify = fu_firmware_get_image_default (firmware_verify, &error);
-	g_assert_no_error (error);
-	g_assert (img_verify != NULL);
-	g_assert_cmpint (fu_firmware_image_get_addr (img_verify), ==, 0x80000000);
-	data_verify = fu_firmware_image_write (img_verify, &error);
+	g_assert_cmpint (fu_firmware_get_addr (firmware_verify), ==, 0x80000000);
+	data_verify = fu_firmware_get_bytes (firmware_verify, &error);
 	g_assert_no_error (error);
 	g_assert (data_verify != NULL);
 	g_assert_cmpint (g_bytes_get_size (data_verify), ==, 0x4);
@@ -1786,7 +1780,7 @@ fu_firmware_srec_func (void)
 	ret = fu_firmware_parse (firmware, data_srec, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	data_bin = fu_firmware_get_image_default_bytes (firmware, &error);
+	data_bin = fu_firmware_get_bytes (firmware, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (data_bin);
 	g_assert_cmpint (g_bytes_get_size (data_bin), ==, 136);
@@ -1839,7 +1833,7 @@ fu_firmware_build_func (void)
 	gboolean ret;
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new ();
-	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GError) error = NULL;
@@ -1851,19 +1845,19 @@ fu_firmware_build_func (void)
 		"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 		"<firmware>\n"
 		"  <version>1.2.3</version>\n"
-		"  <image>\n"
+		"  <firmware>\n"
 		"    <version>4.5.6</version>\n"
 		"    <id>header</id>\n"
 		"    <idx>456</idx>\n"
 		"    <addr>0x456</addr>\n"
 		"    <data>aGVsbG8=</data>\n"
-		"  </image>\n"
-		"  <image>\n"
+		"  </firmware>\n"
+		"  <firmware>\n"
 		"    <version>7.8.9</version>\n"
 		"    <id>header</id>\n"
 		"    <idx>789</idx>\n"
 		"    <addr>0x789</addr>\n"
-		"  </image>\n"
+		"  </firmware>\n"
 		"</firmware>\n";
 	blob = g_bytes_new_static (buf, strlen (buf));
 	g_assert_no_error (error);
@@ -1891,10 +1885,10 @@ fu_firmware_build_func (void)
 	img = fu_firmware_get_image_by_id (firmware, "header", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (img);
-	g_assert_cmpstr (fu_firmware_image_get_version (img), ==, "4.5.6");
-	g_assert_cmpint (fu_firmware_image_get_idx (img), ==, 456);
-	g_assert_cmpint (fu_firmware_image_get_addr (img), ==, 0x456);
-	blob2 = fu_firmware_image_write (img, &error);
+	g_assert_cmpstr (fu_firmware_get_version (img), ==, "4.5.6");
+	g_assert_cmpint (fu_firmware_get_idx (img), ==, 456);
+	g_assert_cmpint (fu_firmware_get_addr (img), ==, 0x456);
+	blob2 = fu_firmware_write (img, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob2);
 	g_assert_cmpint (g_bytes_get_size (blob2), ==, 5);
@@ -1903,9 +1897,9 @@ fu_firmware_build_func (void)
 }
 
 static gsize
-fu_firmware_dfuse_image_get_size (FuFirmwareImage *self)
+fu_firmware_dfuse_image_get_size (FuFirmware *self)
 {
-	g_autoptr(GPtrArray) chunks = fu_firmware_image_get_chunks (self, NULL);
+	g_autoptr(GPtrArray) chunks = fu_firmware_get_chunks (self, NULL);
 	gsize length = 0;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
@@ -1920,7 +1914,7 @@ fu_firmware_dfuse_get_size (FuFirmware *firmware)
 	gsize length = 0;
 	g_autoptr(GPtrArray) images = fu_firmware_get_images (firmware);
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmwareImage *image = g_ptr_array_index (images, i);
+		FuFirmware *image = g_ptr_array_index (images, i);
 		length += fu_firmware_dfuse_image_get_size (image);
 	}
 	return length;
@@ -1964,7 +1958,7 @@ fu_firmware_fmap_func (void)
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *img_str = NULL;
 	g_autoptr(FuFirmware) firmware = fu_fmap_firmware_new ();
-	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GBytes) img_blob = NULL;
 	g_autoptr(GBytes) roundtrip = NULL;
 	g_autoptr(GBytes) roundtrip_orig = NULL;
@@ -1987,7 +1981,9 @@ fu_firmware_fmap_func (void)
 	img = fu_firmware_get_image_by_id (firmware, "FMAP", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (img);
-	img_blob = fu_firmware_image_get_bytes (img);
+	img_blob = fu_firmware_get_bytes (img, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (img_blob);
 	g_assert_cmpint (g_bytes_get_size (img_blob), ==, 0xb);
 	img_str = g_strndup (g_bytes_get_data (img_blob, NULL),
 			     g_bytes_get_size (img_blob));
@@ -2066,7 +2062,7 @@ fu_firmware_dfu_func (void)
 	g_assert_cmpint (fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware)), ==, 0x1234);
 	g_assert_cmpint (fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware)), ==, 0x4321);
 	g_assert_cmpint (fu_dfu_firmware_get_release (FU_DFU_FIRMWARE (firmware)), ==, 0xdead);
-	data_bin = fu_firmware_get_image_default_bytes (firmware, &error);
+	data_bin = fu_firmware_get_bytes (firmware, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (data_bin);
 	g_assert_cmpint (g_bytes_get_size (data_bin), ==, 136);
@@ -2086,22 +2082,22 @@ fu_firmware_func (void)
 {
 	gboolean ret;
 	g_autoptr(FuFirmware) firmware = fu_firmware_new ();
-	g_autoptr(FuFirmwareImage) img1 = fu_firmware_image_new (NULL);
-	g_autoptr(FuFirmwareImage) img2 = fu_firmware_image_new (NULL);
-	g_autoptr(FuFirmwareImage) img_id = NULL;
-	g_autoptr(FuFirmwareImage) img_idx = NULL;
+	g_autoptr(FuFirmware) img1 = fu_firmware_new ();
+	g_autoptr(FuFirmware) img2 = fu_firmware_new ();
+	g_autoptr(FuFirmware) img_id = NULL;
+	g_autoptr(FuFirmware) img_idx = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) images = NULL;
 	g_autofree gchar *str = NULL;
 
-	fu_firmware_image_set_addr (img1, 0x200);
-	fu_firmware_image_set_idx (img1, 13);
-	fu_firmware_image_set_id (img1, "primary");
-	fu_firmware_image_set_filename (img1, "BIOS.bin");
+	fu_firmware_set_addr (img1, 0x200);
+	fu_firmware_set_idx (img1, 13);
+	fu_firmware_set_id (img1, "primary");
+	fu_firmware_set_filename (img1, "BIOS.bin");
 	fu_firmware_add_image (firmware, img1);
-	fu_firmware_image_set_addr (img2, 0x400);
-	fu_firmware_image_set_idx (img2, 23);
-	fu_firmware_image_set_id (img2, "secondary");
+	fu_firmware_set_addr (img2, 0x400);
+	fu_firmware_set_idx (img2, 23);
+	fu_firmware_set_id (img2, "secondary");
 	fu_firmware_add_image (firmware, img2);
 
 	img_id = fu_firmware_get_image_by_id (firmware, "NotGoingToExist", &error);
@@ -2111,9 +2107,9 @@ fu_firmware_func (void)
 	img_id = fu_firmware_get_image_by_id (firmware, "primary", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (img_id);
-	g_assert_cmpint (fu_firmware_image_get_addr (img_id), ==, 0x200);
-	g_assert_cmpint (fu_firmware_image_get_idx (img_id), ==, 13);
-	g_assert_cmpstr (fu_firmware_image_get_id (img_id), ==, "primary");
+	g_assert_cmpint (fu_firmware_get_addr (img_id), ==, 0x200);
+	g_assert_cmpint (fu_firmware_get_idx (img_id), ==, 13);
+	g_assert_cmpstr (fu_firmware_get_id (img_id), ==, "primary");
 
 	img_idx = fu_firmware_get_image_by_idx (firmware, 123456, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
@@ -2122,18 +2118,18 @@ fu_firmware_func (void)
 	img_idx = fu_firmware_get_image_by_idx (firmware, 23, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (img_idx);
-	g_assert_cmpint (fu_firmware_image_get_addr (img_idx), ==, 0x400);
-	g_assert_cmpint (fu_firmware_image_get_idx (img_idx), ==, 23);
-	g_assert_cmpstr (fu_firmware_image_get_id (img_idx), ==, "secondary");
+	g_assert_cmpint (fu_firmware_get_addr (img_idx), ==, 0x400);
+	g_assert_cmpint (fu_firmware_get_idx (img_idx), ==, 23);
+	g_assert_cmpstr (fu_firmware_get_id (img_idx), ==, "secondary");
 
 	str = fu_firmware_to_string (firmware);
 	g_assert_cmpstr (str, ==, "FuFirmware:\n"
-				  "  FuFirmwareImage:\n"
+				  "  FuFirmware:\n"
 				  "  ID:                   primary\n"
 				  "  Index:                0xd\n"
 				  "  Address:              0x200\n"
 				  "  Filename:             BIOS.bin\n"
-				  "  FuFirmwareImage:\n"
+				  "  FuFirmware:\n"
 				  "  ID:                   secondary\n"
 				  "  Index:                0x17\n"
 				  "  Address:              0x400\n");
@@ -2156,45 +2152,45 @@ static void
 fu_firmware_dedupe_func (void)
 {
 	g_autoptr(FuFirmware) firmware = fu_firmware_new ();
-	g_autoptr(FuFirmwareImage) img1 = fu_firmware_image_new (NULL);
-	g_autoptr(FuFirmwareImage) img1_old = fu_firmware_image_new (NULL);
-	g_autoptr(FuFirmwareImage) img2 = fu_firmware_image_new (NULL);
-	g_autoptr(FuFirmwareImage) img2_old = fu_firmware_image_new (NULL);
-	g_autoptr(FuFirmwareImage) img_id = NULL;
-	g_autoptr(FuFirmwareImage) img_idx = NULL;
+	g_autoptr(FuFirmware) img1 = fu_firmware_new ();
+	g_autoptr(FuFirmware) img1_old = fu_firmware_new ();
+	g_autoptr(FuFirmware) img2 = fu_firmware_new ();
+	g_autoptr(FuFirmware) img2_old = fu_firmware_new ();
+	g_autoptr(FuFirmware) img_id = NULL;
+	g_autoptr(FuFirmware) img_idx = NULL;
 	g_autoptr(GError) error = NULL;
 
 	fu_firmware_add_flag (firmware, FU_FIRMWARE_FLAG_DEDUPE_ID);
 	fu_firmware_add_flag (firmware, FU_FIRMWARE_FLAG_DEDUPE_IDX);
 
-	fu_firmware_image_set_idx (img1_old, 13);
-	fu_firmware_image_set_id (img1_old, "DAVE");
+	fu_firmware_set_idx (img1_old, 13);
+	fu_firmware_set_id (img1_old, "DAVE");
 	fu_firmware_add_image (firmware, img1_old);
 
-	fu_firmware_image_set_idx (img1, 13);
-	fu_firmware_image_set_id (img1, "primary");
+	fu_firmware_set_idx (img1, 13);
+	fu_firmware_set_id (img1, "primary");
 	fu_firmware_add_image (firmware, img1);
 
 
-	fu_firmware_image_set_idx (img2_old, 123456);
-	fu_firmware_image_set_id (img2_old, "secondary");
+	fu_firmware_set_idx (img2_old, 123456);
+	fu_firmware_set_id (img2_old, "secondary");
 	fu_firmware_add_image (firmware, img2_old);
 
-	fu_firmware_image_set_idx (img2, 23);
-	fu_firmware_image_set_id (img2, "secondary");
+	fu_firmware_set_idx (img2, 23);
+	fu_firmware_set_id (img2, "secondary");
 	fu_firmware_add_image (firmware, img2);
 
 	img_id = fu_firmware_get_image_by_id (firmware, "primary", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (img_id);
-	g_assert_cmpint (fu_firmware_image_get_idx (img_id), ==, 13);
-	g_assert_cmpstr (fu_firmware_image_get_id (img_id), ==, "primary");
+	g_assert_cmpint (fu_firmware_get_idx (img_id), ==, 13);
+	g_assert_cmpstr (fu_firmware_get_id (img_id), ==, "primary");
 
 	img_idx = fu_firmware_get_image_by_idx (firmware, 23, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (img_idx);
-	g_assert_cmpint (fu_firmware_image_get_idx (img_idx), ==, 23);
-	g_assert_cmpstr (fu_firmware_image_get_id (img_idx), ==, "secondary");
+	g_assert_cmpint (fu_firmware_get_idx (img_idx), ==, 23);
+	g_assert_cmpstr (fu_firmware_get_id (img_idx), ==, "secondary");
 }
 
 static void
