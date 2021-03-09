@@ -65,12 +65,37 @@ fu_plugin_dell_dock_probe (FuPlugin *plugin,
 			   FuDevice *proxy,
 			   GError **error)
 {
+	const gchar* instance;
 	g_autoptr(FuDellDockEc) ec_device = NULL;
+	g_autoptr(FuDellDockMst) mst_device = NULL;
+	g_autoptr(FuDellDockStatus) status_device = NULL;
 
-	/* create all static endpoints */
+	/* create ec endpoint */
 	ec_device = fu_dell_dock_ec_new (proxy);
 	if (!fu_plugin_dell_dock_create_node (plugin,
 					      FU_DEVICE (ec_device),
+					      error))
+		return FALSE;
+
+	/* create mst endpoint */
+	mst_device = fu_dell_dock_mst_new ();
+	fu_device_add_child (FU_DEVICE (ec_device), FU_DEVICE (mst_device));
+	fu_device_add_instance_id (FU_DEVICE (mst_device), "MST-panamera-vmm5331-259");
+	if (!fu_plugin_dell_dock_create_node (plugin,
+					      FU_DEVICE (mst_device),
+					      error))
+		return FALSE;
+
+	/* create package version endpoint */
+	status_device = fu_dell_dock_status_new ();
+	if (fu_dell_dock_module_is_usb4 (FU_DEVICE (ec_device)))
+		instance = "USB\\VID_413C&PID_B06E&hub&salomon_mlk_status";
+	else
+		instance = "USB\\VID_413C&PID_B06E&hub&status";
+	fu_device_add_child (FU_DEVICE (ec_device), FU_DEVICE (status_device));
+	fu_device_add_instance_id (FU_DEVICE (status_device), instance);
+	if (!fu_plugin_dell_dock_create_node (plugin,
+					      FU_DEVICE (status_device),
 					      error))
 		return FALSE;
 

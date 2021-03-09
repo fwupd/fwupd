@@ -106,6 +106,7 @@ typedef enum {
 	MODULE_TYPE_130_UNIVERSAL,
 	MODULE_TYPE_240_TRIN,
 	MODULE_TYPE_210_DUAL,
+	MODULE_TYPE_130_USB4,
 } FuDellDockDockModule;
 
 typedef struct __attribute__ ((packed)) {
@@ -176,6 +177,13 @@ fu_dell_dock_ec_set_board (FuDevice *device)
 		fu_device_set_summary (device, summary);
 }
 
+gboolean
+fu_dell_dock_module_is_usb4 (FuDevice *device)
+{
+	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
+	return self->data->module_type == MODULE_TYPE_130_USB4;
+}
+
 const gchar *
 fu_dell_dock_ec_get_module_type (FuDevice *device)
 {
@@ -195,6 +203,8 @@ fu_dell_dock_ec_get_module_type (FuDevice *device)
 		return "240 (Trinity)";
 	case MODULE_TYPE_210_DUAL:
 		return "210 (Dual)";
+	case MODULE_TYPE_130_USB4:
+		return "130 (TBT4)";
 	default:
 		return "unknown";
 	}
@@ -421,7 +431,8 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 			g_debug ("\tParsed version %s", self->mst_version);
 		} else if (map->device_type == FU_DELL_DOCK_DEVICETYPE_TBT &&
 			   (self->data->module_type == MODULE_TYPE_130_TBT ||
-			    self->data->module_type == MODULE_TYPE_45_TBT)) {
+			    self->data->module_type == MODULE_TYPE_45_TBT  ||
+			    self->data->module_type == MODULE_TYPE_130_USB4)) {
 			/* guard against invalid Thunderbolt version read from EC */
 			if (!fu_dell_dock_test_valid_byte (device_entry[i].version.version_8, 2)) {
 				g_warning ("[EC bug] EC read invalid Thunderbolt version %08x",
@@ -455,23 +466,11 @@ fu_dell_dock_ec_get_dock_info (FuDevice *device,
 
 	/* Thunderbolt SKU takes a little longer */
 	if (self->data->module_type == MODULE_TYPE_130_TBT ||
-	    self->data->module_type == MODULE_TYPE_45_TBT) {
+	    self->data->module_type == MODULE_TYPE_45_TBT  ||
+	    self->data->module_type == MODULE_TYPE_130_USB4) {
 		guint64 tmp = fu_device_get_install_duration (device);
 		fu_device_set_install_duration (device, tmp + 20);
 	}
-
-	/* minimum EC version this code will support */
-	if (fu_common_vercmp_full (self->ec_version,
-				   self->ec_minimum_version,
-				   FWUPD_VERSION_FORMAT_QUAD) < 0) {
-		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
-			     "dock containing EC version %s is not supported",
-			     self->ec_version);
-		return FALSE;
-	}
-
-	fu_device_set_version_lowest (device, self->ec_minimum_version);
-
 
 	/* Determine if the passive flow should be used when flashing */
 	hub_version = fu_device_get_version (fu_device_get_proxy (device));
@@ -782,10 +781,24 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 		return FALSE;
 	data = g_bytes_get_data (fw, &fw_size);
 	write_size =  (fw_size / HIDI2C_MAX_WRITE) >= 1 ? HIDI2C_MAX_WRITE : fw_size;
-
 	dynamic_version = g_strndup ((gchar *) data + self->blob_version_offset, 11);
-	g_debug ("writing EC firmware version %s", dynamic_version);
 
+	/* meet the minimum EC version */
+	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
+	    (self->data->module_type != MODULE_TYPE_130_USB4) &&
+	    (fu_common_vercmp_full (dynamic_version,
+				    self->ec_minimum_version,
+				    FWUPD_VERSION_FORMAT_QUAD) < 0)) {
+		g_set_error (error,
+		             FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "New EC version %s is less than minimum required %s",
+			     dynamic_version,
+			     self->ec_minimum_version);
+		return FALSE;
+	}
+
+	g_debug ("writing EC firmware version %s", dynamic_version);
 	if (!fu_dell_dock_ec_modify_lock (device, self->unlock_target, TRUE, error))
 		return FALSE;
 
