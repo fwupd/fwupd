@@ -145,9 +145,8 @@ fu_udev_device_to_string_raw (GUdevDevice *udev_device, guint idt, GString *str)
 static void
 fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 {
-	FuUdevDevice *self = FU_UDEV_DEVICE (device);
-	FuUdevDeviceClass *klass = FU_UDEV_DEVICE_GET_CLASS (self);
 #ifdef HAVE_GUDEV
+	FuUdevDevice *self = FU_UDEV_DEVICE (device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 	if (priv->udev_device != NULL) {
 		fu_common_string_append_kv (str, idt, "SysfsPath",
@@ -168,12 +167,6 @@ fu_udev_device_to_string (FuDevice *device, guint idt, GString *str)
 		}
 	}
 #endif
-
-	/* subclassed */
-	if (klass->to_string != NULL) {
-		g_warning ("FuUdevDevice->to_string is deprecated!");
-		klass->to_string (self, idt, str);
-	}
 }
 
 static void
@@ -275,7 +268,6 @@ fu_udev_device_probe_serio (FuUdevDevice *self, GError **error)
 static gboolean
 fu_udev_device_probe (FuDevice *device, GError **error)
 {
-	FuUdevDeviceClass *klass = FU_UDEV_DEVICE_GET_CLASS (device);
 	FuUdevDevice *self = FU_UDEV_DEVICE (device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
 #ifdef HAVE_GUDEV
@@ -497,13 +489,6 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	if (parent_i2c != NULL)
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
 #endif
-
-	/* subclassed */
-	if (klass->probe != NULL) {
-		g_warning ("FuUdevDevice->probe is deprecated!");
-		if (!klass->probe (self, error))
-			return FALSE;
-	}
 
 	/* success */
 	return TRUE;
@@ -1280,7 +1265,6 @@ fu_udev_device_open (FuDevice *device, GError **error)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE (device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
-	FuUdevDeviceClass *klass = FU_UDEV_DEVICE_GET_CLASS (device);
 
 	/* open device */
 	if (priv->device_file != NULL && priv->flags != FU_UDEV_DEVICE_FLAG_NONE) {
@@ -1307,13 +1291,6 @@ fu_udev_device_open (FuDevice *device, GError **error)
 				     strerror (errno));
 			return FALSE;
 		}
-	}
-
-	/* subclassed */
-	if (klass->open != NULL) {
-		g_warning ("FuUdevDevice->open is deprecated!");
-		if (!klass->open (self, error))
-			return FALSE;
 	}
 
 	/* success */
@@ -1359,14 +1336,6 @@ fu_udev_device_close (FuDevice *device, GError **error)
 {
 	FuUdevDevice *self = FU_UDEV_DEVICE (device);
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
-	FuUdevDeviceClass *klass = FU_UDEV_DEVICE_GET_CLASS (device);
-
-	/* subclassed */
-	if (klass->close != NULL) {
-		g_warning ("FuUdevDevice->close is deprecated!");
-		if (!klass->close (self, error))
-			return FALSE;
-	}
 
 	/* close device */
 	if (priv->fd > 0) {

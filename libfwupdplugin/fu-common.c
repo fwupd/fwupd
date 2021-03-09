@@ -2596,22 +2596,6 @@ fu_common_cpuid (guint32 leaf,
 }
 
 /**
- * fu_common_is_cpu_intel:
- *
- * Uses CPUID to discover the CPU vendor and check if it is Intel.
- *
- * Return value: %TRUE if the vendor was Intel.
- * Deprecated: 1.5.5: Use fu_common_get_cpu_vendor() instead.
- *
- * Since: 1.5.0
- **/
-gboolean
-fu_common_is_cpu_intel (void)
-{
-	return fu_common_get_cpu_vendor () == FU_CPU_VENDOR_INTEL;
-}
-
-/**
  * fu_common_get_cpu_vendor:
  *
  * Uses CPUID to discover the CPU vendor.

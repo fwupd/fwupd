@@ -50,7 +50,6 @@ LIBFWUPDPLUGIN_0.8.0 {
     fu_plugin_get_enabled;
     fu_plugin_get_name;
     fu_plugin_get_type;
-    fu_plugin_get_usb_context;
     fu_plugin_new;
     fu_plugin_open;
     fu_plugin_request_recoldplug;
@@ -66,7 +65,6 @@ LIBFWUPDPLUGIN_0.8.0 {
     fu_plugin_set_coldplug_delay;
     fu_plugin_set_enabled;
     fu_plugin_set_name;
-    fu_plugin_set_usb_context;
   local: *;
 } LIBFWUPDPLUGIN_0.7.2;
 
@@ -164,9 +162,6 @@ LIBFWUPDPLUGIN_1.0.2 {
   global:
     fu_device_get_remove_delay;
     fu_device_set_remove_delay;
-    fu_plugin_runner_udev_device_added;
-    fu_plugin_runner_udev_device_changed;
-    fu_plugin_runner_usb_device_added;
     fu_usb_device_get_dev;
     fu_usb_device_get_type;
     fu_usb_device_new;
@@ -430,11 +425,6 @@ LIBFWUPDPLUGIN_1.3.1 {
     fu_firmware_new_from_bytes;
     fu_firmware_parse;
     fu_firmware_parse_full;
-    fu_firmware_strparse_uint16;
-    fu_firmware_strparse_uint24;
-    fu_firmware_strparse_uint32;
-    fu_firmware_strparse_uint4;
-    fu_firmware_strparse_uint8;
     fu_firmware_to_string;
     fu_firmware_write;
     fu_ihex_firmware_get_type;
@@ -513,9 +503,7 @@ LIBFWUPDPLUGIN_1.3.4 {
 LIBFWUPDPLUGIN_1.3.5 {
   global:
     fu_common_fnmatch;
-    fu_device_get_protocol;
     fu_device_incorporate_flag;
-    fu_device_set_protocol;
     fu_plugin_is_open;
   local: *;
 } LIBFWUPDPLUGIN_1.3.4;
@@ -625,7 +613,6 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_common_crc32_full;
     fu_common_crc8;
     fu_common_filename_glob;
-    fu_common_is_cpu_intel;
     fu_device_bind_driver;
     fu_device_dump_firmware;
     fu_device_report_metadata_post;

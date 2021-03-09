@@ -2161,42 +2161,6 @@ fu_device_set_proxy_guid (FuDevice *self, const gchar *proxy_guid)
 }
 
 /**
- * fu_device_get_protocol:
- * @self: A #FuDevice
- *
- * Gets the protocol ID on the device.
- *
- * Returns: a string value e.g. `org.hughski.colorhug`, or %NULL
- *
- * Since: 1.3.5
- **/
-const gchar *
-fu_device_get_protocol (FuDevice *self)
-{
-	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-	return fwupd_device_get_protocol (FWUPD_DEVICE (self));
-#pragma GCC diagnostic pop
-}
-
-/**
- * fu_device_set_protocol:
- * @self: A #FuDevice
- * @protocol: a defined protocol ID, e.g. `org.hughski.colorhug`
- *
- * Sets the protocol ID on the device.
- *
- * Since: 1.3.5
- **/
-void
-fu_device_set_protocol (FuDevice *self, const gchar *protocol)
-{
-	g_return_if_fail (FU_IS_DEVICE (self));
-	fwupd_device_add_protocol (FWUPD_DEVICE (self), protocol);
-}
-
-/**
  * fu_device_set_physical_id:
  * @self: A #FuDevice
  * @physical_id: a string that identifies the physical device connection

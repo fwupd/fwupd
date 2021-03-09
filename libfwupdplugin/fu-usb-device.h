@@ -24,13 +24,7 @@ G_DECLARE_DERIVABLE_TYPE (FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuDevice)
 struct _FuUsbDeviceClass
 {
 	FuDeviceClass	parent_class;
-	gboolean	 (*open)		(FuUsbDevice		*device,
-						 GError			**error);
-	gboolean	 (*close)		(FuUsbDevice		*device,
-						 GError			**error);
-	gboolean	 (*probe)		(FuUsbDevice		*device,
-						 GError			**error);
-	gpointer	__reserved[28];
+	gpointer	__reserved[31];
 };
 
 FuUsbDevice	*fu_usb_device_new			(GUsbDevice	*usb_device);

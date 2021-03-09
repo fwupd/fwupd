@@ -13,8 +13,6 @@
 
 FuPlugin	*fu_plugin_new				(void);
 gboolean	 fu_plugin_is_open			(FuPlugin	*self);
-void		 fu_plugin_set_usb_context		(FuPlugin	*self,
-							 GUsbContext	*usb_ctx);
 void		 fu_plugin_set_hwids			(FuPlugin	*self,
 							 FuHwids	*hwids);
 void		 fu_plugin_set_udev_subsystems		(FuPlugin	*self,
@@ -89,21 +87,6 @@ gboolean	 fu_plugin_runner_update_detach		(FuPlugin	*self,
 							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_update_reload		(FuPlugin	*self,
 							 FuDevice	*device,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
-G_DEPRECATED_FOR(fu_plugin_runner_backend_device_added)
-gboolean	 fu_plugin_runner_usb_device_added	(FuPlugin	*self,
-							 FuUsbDevice	*device,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
-G_DEPRECATED_FOR(fu_plugin_runner_backend_device_added)
-gboolean	 fu_plugin_runner_udev_device_added	(FuPlugin	*self,
-							 FuUdevDevice	*device,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
-G_DEPRECATED_FOR(fu_plugin_runner_backend_device_changed)
-gboolean	 fu_plugin_runner_udev_device_changed	(FuPlugin	*self,
-							 FuUdevDevice	*device,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_backend_device_added	(FuPlugin	*self,

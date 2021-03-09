@@ -310,38 +310,6 @@ fu_plugin_alloc_data (FuPlugin *self, gsize data_sz)
 }
 
 /**
- * fu_plugin_get_usb_context:
- * @self: A #FuPlugin
- *
- * This used to get the shared USB context that all plugins can use; it now
- * returns %NULL;
- *
- * Returns: (transfer none): a #GUsbContext.
- *
- * Since: 0.8.0
- **/
-GUsbContext *
-fu_plugin_get_usb_context (FuPlugin *self)
-{
-	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
-	return NULL;
-}
-
-/**
- * fu_plugin_set_usb_context:
- * @self: A #FuPlugin
- * @usb_ctx: A #FGUsbContext
- *
- * This used to set the shared USB context for a plugin. It now does nothing.
- *
- * Since: 0.8.0
- **/
-void
-fu_plugin_set_usb_context (FuPlugin *self, GUsbContext *usb_ctx)
-{
-}
-
-/**
  * fu_plugin_get_enabled:
  * @self: A #FuPlugin
  *
@@ -1912,42 +1880,6 @@ fu_plugin_backend_device_added (FuPlugin *self, FuDevice *device, GError **error
 }
 
 /**
- * fu_plugin_runner_usb_device_added:
- * @self: a #FuPlugin
- * @device: a #FuUsbDevice
- * @error: a #GError or NULL
- *
- * Call the backend_device_added routine for the plugin
- *
- * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.0.2
- **/
-gboolean
-fu_plugin_runner_usb_device_added (FuPlugin *self, FuUsbDevice *device, GError **error)
-{
-	return fu_plugin_runner_backend_device_added (self, FU_DEVICE (device), error);
-}
-
-/**
- * fu_plugin_runner_udev_device_added:
- * @self: a #FuPlugin
- * @device: a #FuUdevDevice
- * @error: a #GError or NULL
- *
- * Call the backend_device_added routine for the plugin
- *
- * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.0.2
- **/
-gboolean
-fu_plugin_runner_udev_device_added (FuPlugin *self, FuUdevDevice *device, GError **error)
-{
-	return fu_plugin_runner_backend_device_added (self, FU_DEVICE (device), error);
-}
-
-/**
  * fu_plugin_runner_backend_device_added:
  * @self: a #FuPlugin
  * @device: a #FuDevice
@@ -2007,24 +1939,6 @@ fu_plugin_runner_backend_device_added (FuPlugin *self, FuDevice *device, GError 
 		return FALSE;
 	}
 	return TRUE;
-}
-
-/**
- * fu_plugin_runner_udev_device_changed:
- * @self: a #FuPlugin
- * @device: a #FuUdevDevice
- * @error: a #GError or NULL
- *
- * Call the backend_device_changed routine for the plugin
- *
- * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.0.2
- **/
-gboolean
-fu_plugin_runner_udev_device_changed (FuPlugin *self, FuUdevDevice *device, GError **error)
-{
-	return fu_plugin_runner_backend_device_changed (self, FU_DEVICE (device), error);
 }
 
 /**

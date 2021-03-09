@@ -23,16 +23,7 @@ G_DECLARE_DERIVABLE_TYPE (FuUdevDevice, fu_udev_device, FU, UDEV_DEVICE, FuDevic
 struct _FuUdevDeviceClass
 {
 	FuDeviceClass	parent_class;
-	gboolean	 (*probe)			(FuUdevDevice	*device,
-							 GError		**error);
-	gboolean	 (*open)			(FuUdevDevice	*device,
-							 GError		**error);
-	gboolean	 (*close)			(FuUdevDevice	*device,
-							 GError		**error);
-	void		 (*to_string)			(FuUdevDevice	*self,
-							 guint		 indent,
-							 GString	*str);
-	gpointer	__reserved[28];
+	gpointer	__reserved[31];
 };
 
 /**
