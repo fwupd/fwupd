@@ -26,6 +26,7 @@ Pixart Imaging, Inc and Primax Electronics, Ltd, e.g.
  * `HIDRAW\VEN_093A&DEV_2801`
  * `HIDRAW\VEN_0461&DEV_4EEF`
  * `HIDRAW\VEN_0461&DEV_4EEF&NAME_${NAME}`
+ * `HIDRAW\VEN_0461&DEV_4EEF&MODEL_${MODEL_NAME}`
 
 Additionaly, a custom GUID values including the name is used, e.g.
 
