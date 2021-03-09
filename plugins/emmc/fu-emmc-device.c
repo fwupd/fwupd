@@ -336,7 +336,7 @@ fu_emmc_device_write_firmware (FuDevice *device,
 	if (!fu_emmc_read_extcsd (FU_EMMC_DEVICE (device), ext_csd, sizeof (ext_csd), error))
 		return FALSE;
 
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 	fw_size = g_bytes_get_size (fw);

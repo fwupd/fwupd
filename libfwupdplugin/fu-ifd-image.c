@@ -14,11 +14,11 @@ typedef struct {
 	FuIfdAccess		 access[FU_IFD_REGION_MAX];
 } FuIfdImagePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuIfdImage, fu_ifd_image, FU_TYPE_FIRMWARE_IMAGE)
+G_DEFINE_TYPE_WITH_PRIVATE (FuIfdImage, fu_ifd_image, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_ifd_image_get_instance_private (o))
 
 static void
-fu_ifd_image_to_string (FuFirmwareImage *image, guint idt, GString *str)
+fu_ifd_image_to_string (FuFirmware *image, guint idt, GString *str)
 {
 	FuIfdImage *self = FU_IFD_IMAGE (image);
 	FuIfdImagePrivate *priv = GET_PRIVATE (self);
@@ -75,19 +75,19 @@ fu_ifd_image_init (FuIfdImage *self)
 static void
 fu_ifd_image_class_init (FuIfdImageClass *klass)
 {
-	FuFirmwareImageClass *klass_image = FU_FIRMWARE_IMAGE_CLASS (klass);
+	FuFirmwareClass *klass_image = FU_FIRMWARE_CLASS (klass);
 	klass_image->to_string = fu_ifd_image_to_string;
 }
 
 /**
  * fu_ifd_image_new:
  *
- * Creates a new #FuFirmwareImage
+ * Creates a new #FuFirmware
  *
  * Since: 1.6.0
  **/
-FuFirmwareImage *
+FuFirmware *
 fu_ifd_image_new (void)
 {
-	return FU_FIRMWARE_IMAGE (g_object_new (FU_TYPE_IFD_IMAGE, NULL));
+	return FU_FIRMWARE (g_object_new (FU_TYPE_IFD_IMAGE, NULL));
 }

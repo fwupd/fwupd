@@ -2802,7 +2802,7 @@ fu_device_prepare_firmware (FuDevice *self,
 	}
 
 	/* check size */
-	fw_def = fu_firmware_get_image_default_bytes (firmware, NULL);
+	fw_def = fu_firmware_get_bytes (firmware, NULL);
 	if (fw_def != NULL) {
 		guint64 fw_sz = (guint64) g_bytes_get_size (fw_def);
 		if (priv->size_max > 0 && fw_sz > priv->size_max) {

@@ -201,7 +201,6 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 	guint32 addr_last = 0x0;
 	guint32 img_addr = G_MAXUINT32;
 	guint32 seg_addr = 0x0;
-	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (NULL);
 	g_autoptr(GBytes) img_bytes = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
 
@@ -320,8 +319,8 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 			}
 			if (rcd->data->len > 0) {
 				g_autoptr(GBytes) data_sig = g_bytes_new (rcd->data->data, rcd->data->len);
-				g_autoptr(FuFirmwareImage) img_sig = fu_firmware_image_new (data_sig);
-				fu_firmware_image_set_id (img_sig, FU_FIRMWARE_IMAGE_ID_SIGNATURE);
+				g_autoptr(FuFirmware) img_sig = fu_firmware_new_from_bytes (data_sig);
+				fu_firmware_set_id (img_sig, FU_FIRMWARE_ID_SIGNATURE);
 				fu_firmware_add_image (firmware, img_sig);
 			}
 			got_sig = TRUE;
@@ -350,10 +349,9 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 
 	/* add single image */
 	img_bytes = g_bytes_new (buf->data, buf->len);
-	fu_firmware_image_set_bytes (img, img_bytes);
 	if (img_addr != G_MAXUINT32)
-		fu_firmware_image_set_addr (img, img_addr);
-	fu_firmware_add_image (firmware, img);
+		fu_firmware_set_addr (firmware, img_addr);
+	fu_firmware_set_bytes (firmware, img_bytes);
 	return TRUE;
 }
 
@@ -381,29 +379,18 @@ fu_ihex_firmware_emit_chunk (GString *str,
 }
 
 static gboolean
-fu_ihex_firmware_image_to_string (FuFirmwareImage *img, GString *str, GError **error)
+fu_ihex_firmware_image_to_string (GBytes *bytes, guint32 addr, guint8 record_type,
+				  GString *str, GError **error)
 {
 	const guint8 *data;
 	const guint chunk_size = 16;
 	gsize len;
 	guint32 address_offset_last = 0x0;
-	guint8 record_type = FU_IHEX_FIRMWARE_RECORD_TYPE_DATA;
-	g_autoptr(GBytes) bytes = NULL;
-
-	/* get data */
-	bytes = fu_firmware_image_write (img, error);
-	if (bytes == NULL)
-		return FALSE;
-
-	/* special case */
-	if (g_strcmp0 (fu_firmware_image_get_id (img),
-		       FU_FIRMWARE_IMAGE_ID_SIGNATURE) == 0)
-		record_type = FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE;
 
 	/* get number of chunks */
 	data = g_bytes_get_data (bytes, &len);
 	for (gsize i = 0; i < len; i += chunk_size) {
-		guint32 address_tmp = fu_firmware_image_get_addr (img) + i;
+		guint32 address_tmp = addr + i;
 		guint32 address_offset = (address_tmp >> 16) & 0xffff;
 		gsize chunk_len = MIN (len - i, 16);
 
@@ -426,15 +413,29 @@ fu_ihex_firmware_image_to_string (FuFirmwareImage *img, GString *str, GError **e
 static GBytes *
 fu_ihex_firmware_write (FuFirmware *firmware, GError **error)
 {
-	g_autoptr(GPtrArray) imgs = NULL;
-	g_autoptr(GString) str = NULL;
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(FuFirmware) img_sig = NULL;
+	g_autoptr(GString) str = g_string_new ("");
 
-	/* write all the element data */
-	str = g_string_new ("");
-	imgs = fu_firmware_get_images (firmware);
-	for (guint i = 0; i < imgs->len; i++) {
-		FuFirmwareImage *img = g_ptr_array_index (imgs, i);
-		if (!fu_ihex_firmware_image_to_string (img, str, error))
+	/* payload */
+	fw = fu_firmware_get_bytes (firmware, error);
+	if (fw == NULL)
+		return NULL;
+	if (!fu_ihex_firmware_image_to_string (fw,
+					       fu_firmware_get_addr (firmware),
+					       FU_IHEX_FIRMWARE_RECORD_TYPE_DATA,
+					       str, error))
+		return NULL;
+
+	/* signature */
+	img_sig = fu_firmware_get_image_by_id (firmware, FU_FIRMWARE_ID_SIGNATURE, NULL);
+	if (img_sig != NULL) {
+		g_autoptr(GBytes) img_fw = fu_firmware_get_bytes (img_sig, error);
+		if (img_fw == NULL)
+			return NULL;
+		if (!fu_ihex_firmware_image_to_string (img_fw, 0,
+						       FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE,
+						       str, error))
 			return NULL;
 	}
 

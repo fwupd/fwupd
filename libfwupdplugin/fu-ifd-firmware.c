@@ -209,7 +209,7 @@ fu_ifd_firmware_parse (FuFirmware *firmware,
 		guint32 freg_base = FU_IFD_FREG_BASE(priv->flash_descriptor_regs[i]);
 		guint32 freg_limt = FU_IFD_FREG_LIMIT(priv->flash_descriptor_regs[i]);
 		guint32 freg_size = freg_limt - freg_base;
-		g_autoptr(FuFirmwareImage) img = NULL;
+		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(GBytes) contents = NULL;
 		guint8 bit_r = 0;
 		guint8 bit_w = 0;
@@ -224,11 +224,11 @@ fu_ifd_firmware_parse (FuFirmware *firmware,
 		if (contents == NULL)
 			return FALSE;
 		img = fu_ifd_image_new ();
-		fu_firmware_image_set_bytes (img, contents);
-		fu_firmware_image_set_addr (img, freg_base);
-		fu_firmware_image_set_idx (img, i);
+		fu_firmware_set_bytes (img, contents);
+		fu_firmware_set_addr (img, freg_base);
+		fu_firmware_set_idx (img, i);
 		if (freg_str != NULL)
-			fu_firmware_image_set_id (img, freg_str);
+			fu_firmware_set_id (img, freg_str);
 		fu_firmware_add_image (firmware, img);
 
 		/* is writable by anything other than the region itself */
@@ -303,9 +303,12 @@ fu_ifd_firmware_write (FuFirmware *firmware, GError **error)
 
 	/* get total size */
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmwareImage *img = g_ptr_array_index (images, i);
-		g_autoptr(GBytes) blob = fu_firmware_image_get_bytes (img);
-		guint32 freg_base = fu_firmware_image_get_addr (img);
+		FuFirmware *img = g_ptr_array_index (images, i);
+		g_autoptr(GBytes) blob = NULL;
+		guint32 freg_base = fu_firmware_get_addr (img);
+		blob = fu_firmware_get_bytes (img, error);
+		if (blob == NULL)
+			return NULL;
 		bufsz_max = MAX(freg_base + MAX(g_bytes_get_size (blob), 0x1000), bufsz_max);
 	}
 	fu_byte_array_set_size (buf, bufsz_max);
@@ -345,10 +348,12 @@ fu_ifd_firmware_write (FuFirmware *firmware, GError **error)
 		guint32 freg_base = 0x7FFF000;
 		guint32 freg_limt = 0x0;
 		guint32 flreg;
-		g_autoptr(FuFirmwareImage) img = fu_firmware_get_image_by_idx (firmware, i, NULL);
+		g_autoptr(FuFirmware) img = fu_firmware_get_image_by_idx (firmware, i, NULL);
 		if (img != NULL) {
-			g_autoptr(GBytes) blob = fu_firmware_image_get_bytes (img);
-			freg_base = fu_firmware_image_get_addr (img);
+			g_autoptr(GBytes) blob = fu_firmware_get_bytes (img, error);
+			if (blob == NULL)
+				return NULL;
+			freg_base = fu_firmware_get_addr (img);
 			freg_limt = freg_base + g_bytes_get_size (blob);
 		}
 		flreg = ((freg_limt << 4) & 0xFFFF0000) | (freg_base >> 12);
@@ -361,10 +366,11 @@ fu_ifd_firmware_write (FuFirmware *firmware, GError **error)
 
 	/* write images at correct offsets */
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmwareImage *img = g_ptr_array_index (images, i);
-		g_autoptr(GBytes) blob = fu_firmware_image_get_bytes (img);
-		g_assert (blob != NULL);
-		if (!fu_memcpy_safe (buf->data, buf->len, fu_firmware_image_get_addr (img),
+		FuFirmware *img = g_ptr_array_index (images, i);
+		g_autoptr(GBytes) blob = fu_firmware_get_bytes (img, error);
+		if (blob == NULL)
+			return NULL;
+		if (!fu_memcpy_safe (buf->data, buf->len, fu_firmware_get_addr (img),
 				     g_bytes_get_data (blob, NULL), g_bytes_get_size (blob), 0x0,
 				     g_bytes_get_size (blob), error))
 			return NULL;

@@ -122,7 +122,7 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 
 	for (gsize i = 0; i < GUINT16_FROM_LE (fmap.nareas); i++) {
 		FuFmapArea area;
-		g_autoptr(FuFirmwareImage) img = NULL;
+		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(GBytes) bytes = NULL;
 		g_autofree gchar *area_name = NULL;
 
@@ -136,7 +136,6 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 		if (area.size == 0)
 			continue;
 
-		img = fu_firmware_image_new (NULL);
 		bytes = fu_common_bytes_new_offset (fw,
 						    (gsize) GUINT32_FROM_LE (area.offset),
 						    (gsize) GUINT32_FROM_LE (area.size),
@@ -144,10 +143,10 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 		if (bytes == NULL)
 			return FALSE;
 		area_name = g_strndup ((const gchar *) area.name, FU_FMAP_FIRMWARE_STRLEN);
-		fu_firmware_image_set_id (img, area_name);
-		fu_firmware_image_set_idx (img, i + 1);
-		fu_firmware_image_set_addr (img, GUINT32_FROM_LE (area.offset));
-		fu_firmware_image_set_bytes (img, bytes);
+		img = fu_firmware_new_from_bytes (bytes);
+		fu_firmware_set_id (img, area_name);
+		fu_firmware_set_idx (img, i + 1);
+		fu_firmware_set_addr (img, GUINT32_FROM_LE (area.offset));
 		fu_firmware_add_image (firmware, img);
 
 		if (g_strcmp0 (area_name, FMAP_AREANAME) == 0) {
@@ -155,7 +154,7 @@ fu_fmap_firmware_parse (FuFirmware *firmware,
 			version = g_strdup_printf ("%d.%d",
 						   fmap.ver_major,
 						   fmap.ver_minor);
-			fu_firmware_image_set_version (img, version);
+			fu_firmware_set_version (img, version);
 		}
 		offset += sizeof(area);
 	}
@@ -196,8 +195,10 @@ fu_fmap_firmware_write (FuFirmware *firmware, GError **error)
 	/* add header */
 	total_sz = offset = sizeof(hdr) + (sizeof(FuFmapArea) * images->len);
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmwareImage *img = g_ptr_array_index (images, i);
-		g_autoptr(GBytes) fw = fu_firmware_image_get_bytes (img);
+		FuFirmware *img = g_ptr_array_index (images, i);
+		g_autoptr(GBytes) fw = fu_firmware_get_bytes (img, error);
+		if (fw == NULL)
+			return NULL;
 		total_sz += g_bytes_get_size (fw);
 	}
 	hdr.size = GUINT32_TO_LE (priv->offset + total_sz);
@@ -205,9 +206,9 @@ fu_fmap_firmware_write (FuFirmware *firmware, GError **error)
 
 	/* add each area */
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmwareImage *img = g_ptr_array_index (images, i);
-		const gchar *id = fu_firmware_image_get_id (img);
-		g_autoptr(GBytes) fw = fu_firmware_image_get_bytes (img);
+		FuFirmware *img = g_ptr_array_index (images, i);
+		const gchar *id = fu_firmware_get_id (img);
+		g_autoptr(GBytes) fw = fu_firmware_get_bytes (img, NULL);
 		FuFmapArea area = {
 			.offset = GUINT32_TO_LE (priv->offset + offset),
 			.size = GUINT32_TO_LE (g_bytes_get_size (fw)),
@@ -222,8 +223,8 @@ fu_fmap_firmware_write (FuFirmware *firmware, GError **error)
 
 	/* add the images */
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmwareImage *img = g_ptr_array_index (images, i);
-		g_autoptr(GBytes) fw = fu_firmware_image_get_bytes (img);
+		FuFirmware *img = g_ptr_array_index (images, i);
+		g_autoptr(GBytes) fw = fu_firmware_get_bytes (img, NULL);
 		g_byte_array_append (buf,
 				     g_bytes_get_data (fw, NULL),
 				     g_bytes_get_size (fw));

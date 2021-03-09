@@ -437,8 +437,8 @@ fu_dfu_tool_replace_data (FuDfuTool *self, gchar **values, GError **error)
 	/* get each data segment */
 	images = fu_firmware_get_images (firmware);
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmwareImage *image = g_ptr_array_index (images, i);
-		g_autoptr(GPtrArray) chunks = fu_firmware_image_get_chunks (image, error);
+		FuFirmware *image = g_ptr_array_index (images, i);
+		g_autoptr(GPtrArray) chunks = fu_firmware_get_chunks (image, error);
 		if (chunks == NULL)
 			return FALSE;
 		for (guint j = 0; j < chunks->len; j++) {
@@ -646,7 +646,7 @@ fu_dfu_tool_write_alt (FuDfuTool *self, gchar **values, GError **error)
 	g_autofree gchar *str_debug = NULL;
 	g_autoptr(FuDfuDevice) device = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(FuFirmwareImage) image = NULL;
+	g_autoptr(FuFirmware) image = NULL;
 	g_autoptr(FuDfuTarget) target = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -741,7 +741,7 @@ fu_dfu_tool_write_alt (FuDfuTool *self, gchar **values, GError **error)
 		}
 	} else {
 		g_print ("WARNING: Using default firmware image\n");
-		image = fu_firmware_get_image_default (firmware, error);
+		image = fu_firmware_get_image_by_id (firmware, NULL, error);
 		if (image == NULL)
 			return FALSE;
 	}

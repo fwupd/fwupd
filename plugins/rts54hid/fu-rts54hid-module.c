@@ -234,7 +234,7 @@ fu_rts54hid_module_write_firmware (FuDevice *module,
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* get default image */
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 

@@ -12,14 +12,16 @@
 #include "fu-bcm57xx-stage2-image.h"
 
 struct _FuBcm57xxStage2Image {
-	FuFirmwareImage		 parent_instance;
+	FuFirmware		 parent_instance;
 };
 
-G_DEFINE_TYPE (FuBcm57xxStage2Image, fu_bcm57xx_stage2_image, FU_TYPE_FIRMWARE_IMAGE)
+G_DEFINE_TYPE (FuBcm57xxStage2Image, fu_bcm57xx_stage2_image, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_bcm57xx_stage2_image_parse (FuFirmwareImage *image,
+fu_bcm57xx_stage2_image_parse (FuFirmware *image,
 			       GBytes *fw,
+			       guint64 addr_start,
+			       guint64 addr_end,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
@@ -33,12 +35,12 @@ fu_bcm57xx_stage2_image_parse (FuFirmwareImage *image,
 					       error);
 	if (fw_nocrc == NULL)
 		return FALSE;
-	fu_firmware_image_set_bytes (image, fw_nocrc);
+	fu_firmware_set_bytes (image, fw_nocrc);
 	return TRUE;
 }
 
 static GBytes *
-fu_bcm57xx_stage2_image_write (FuFirmwareImage *image, GError **error)
+fu_bcm57xx_stage2_image_write (FuFirmware *image, GError **error)
 {
 	const guint8 *buf;
 	gsize bufsz = 0;
@@ -46,14 +48,9 @@ fu_bcm57xx_stage2_image_write (FuFirmwareImage *image, GError **error)
 	g_autoptr(GBytes) fw_nocrc = NULL;
 
 	/* get the CRC-less data */
-	fw_nocrc = fu_firmware_image_get_bytes (image);
-	if (fw_nocrc == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported");
+	fw_nocrc = fu_firmware_get_bytes (image, error);
+	if (fw_nocrc == NULL)
 		return NULL;
-	}
 
 	/* add to a mutable buffer */
 	buf = g_bytes_get_data (fw_nocrc, &bufsz);
@@ -77,13 +74,13 @@ fu_bcm57xx_stage2_image_init (FuBcm57xxStage2Image *self)
 static void
 fu_bcm57xx_stage2_image_class_init (FuBcm57xxStage2ImageClass *klass)
 {
-	FuFirmwareImageClass *klass_image = FU_FIRMWARE_IMAGE_CLASS (klass);
+	FuFirmwareClass *klass_image = FU_FIRMWARE_CLASS (klass);
 	klass_image->parse = fu_bcm57xx_stage2_image_parse;
 	klass_image->write = fu_bcm57xx_stage2_image_write;
 }
 
-FuFirmwareImage *
+FuFirmware *
 fu_bcm57xx_stage2_image_new (void)
 {
-	return FU_FIRMWARE_IMAGE (g_object_new (FU_TYPE_BCM57XX_STAGE2_IMAGE, NULL));
+	return FU_FIRMWARE (g_object_new (FU_TYPE_BCM57XX_STAGE2_IMAGE, NULL));
 }

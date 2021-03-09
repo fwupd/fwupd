@@ -819,7 +819,7 @@ fu_synaptics_mst_device_write_firmware (FuDevice *device,
 	gsize payload_len;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 	payload_data = g_bytes_get_data (fw, &payload_len);

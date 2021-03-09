@@ -8,10 +8,10 @@
 
 #include <gio/gio.h>
 
-#include "fu-firmware-image.h"
+#include "fu-firmware.h"
 
 #define FU_TYPE_EFI_SIGNATURE (fu_efi_signature_get_type ())
-G_DECLARE_FINAL_TYPE (FuEfiSignature, fu_efi_signature, FU, EFI_SIGNATURE, FuFirmwareImage)
+G_DECLARE_FINAL_TYPE (FuEfiSignature, fu_efi_signature, FU, EFI_SIGNATURE, FuFirmware)
 
 typedef enum {
 	FU_EFI_SIGNATURE_KIND_UNKNOWN,

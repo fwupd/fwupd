@@ -206,7 +206,7 @@ fu_pxi_device_check_support_resume (FuPxiDevice *self,
 	guint16 checksum_tmp = 0x0;
 
 	/* get the default image */
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 
@@ -499,7 +499,7 @@ fu_pxi_device_fw_upgrade (FuPxiDevice *self, FuFirmware *firmware, GError **erro
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GByteArray) req = g_byte_array_new ();
 
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 	buf = g_bytes_get_data (fw, &bufsz);
@@ -551,7 +551,7 @@ fu_pxi_device_write_firmware (FuDevice *device,
 	g_autoptr(GError) error_local = NULL;
 
 	/* get the default image */
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 

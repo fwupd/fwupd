@@ -81,7 +81,7 @@ gboolean	 fu_dfu_target_upload			(FuDfuTarget	*self,
 gboolean	 fu_dfu_target_setup			(FuDfuTarget	*self,
 							 GError		**error);
 gboolean	 fu_dfu_target_download			(FuDfuTarget	*self,
-							 FuFirmwareImage *image,
+							 FuFirmware *image,
 							 FuDfuTargetTransferFlags flags,
 							 GError		**error);
 gboolean	 fu_dfu_target_mass_erase		(FuDfuTarget	*self,

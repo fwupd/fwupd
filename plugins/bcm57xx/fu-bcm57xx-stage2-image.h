@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "fu-firmware-image.h"
+#include "fu-firmware.h"
 
 #define FU_TYPE_BCM57XX_STAGE2_IMAGE (fu_bcm57xx_stage2_image_get_type ())
-G_DECLARE_FINAL_TYPE (FuBcm57xxStage2Image, fu_bcm57xx_stage2_image, FU, BCM57XX_STAGE2_IMAGE, FuFirmwareImage)
+G_DECLARE_FINAL_TYPE (FuBcm57xxStage2Image, fu_bcm57xx_stage2_image, FU, BCM57XX_STAGE2_IMAGE, FuFirmware)
 
-FuFirmwareImage	*fu_bcm57xx_stage2_image_new		(void);
+FuFirmware	*fu_bcm57xx_stage2_image_new		(void);

@@ -74,8 +74,8 @@ fu_efi_signature_list_parse_item (FuEfiSignatureList *self,
 	sig_owner = fwupd_guid_to_string (&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	data = g_bytes_new (sig_data, sig_datasz);
 	sig = fu_efi_signature_new (sig_kind, sig_owner);
-	fu_firmware_image_set_bytes (FU_FIRMWARE_IMAGE (sig), data);
-	fu_firmware_add_image (FU_FIRMWARE (self), FU_FIRMWARE_IMAGE (sig));
+	fu_firmware_set_bytes (FU_FIRMWARE (sig), data);
+	fu_firmware_add_image (FU_FIRMWARE (self), FU_FIRMWARE (sig));
 	return TRUE;
 }
 

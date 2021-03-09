@@ -15,7 +15,7 @@
  * want to update one target on the device. Most users will want to
  * update all the targets on the device at the same time.
  *
- * See also: #FuDfuDevice, #FuFirmwareImage
+ * See also: #FuDfuDevice, #FuFirmware
  */
 
 #include "config.h"
@@ -1082,7 +1082,7 @@ fu_dfu_target_upload (FuDfuTarget *self,
 	guint16 zone_cur;
 	guint32 zone_size = 0;
 	guint32 zone_last = G_MAXUINT;
-	g_autoptr(FuFirmwareImage) image = NULL;
+	g_autoptr(FuFirmware) image = NULL;
 
 	g_return_val_if_fail (FU_IS_DFU_TARGET (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -1114,9 +1114,9 @@ fu_dfu_target_upload (FuDfuTarget *self,
 	}
 
 	/* create a new image */
-	image = fu_firmware_image_new (NULL);
-	fu_firmware_image_set_id (image, priv->alt_name);
-	fu_firmware_image_set_idx (image, priv->alt_setting);
+	image = fu_firmware_new ();
+	fu_firmware_set_id (image, priv->alt_name);
+	fu_firmware_set_idx (image, priv->alt_setting);
 
 	/* get all the sectors for the device */
 	for (guint i = 0; i < priv->sectors->len; i++) {
@@ -1145,7 +1145,7 @@ fu_dfu_target_upload (FuDfuTarget *self,
 			return FALSE;
 
 		/* this chunk was uploaded okay */
-		fu_firmware_image_add_chunk (image, chk);
+		fu_firmware_add_chunk (image, chk);
 	}
 
 	/* success */
@@ -1299,7 +1299,7 @@ fu_dfu_target_download_element (FuDfuTarget *self,
 /**
  * fu_dfu_target_download:
  * @self: a #FuDfuTarget
- * @image: a #FuFirmwareImage
+ * @image: a #FuFirmware
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
  * @error: a #GError, or %NULL
  *
@@ -1310,7 +1310,7 @@ fu_dfu_target_download_element (FuDfuTarget *self,
  **/
 gboolean
 fu_dfu_target_download (FuDfuTarget *self,
-			FuFirmwareImage *image,
+			FuFirmware *image,
 			FuDfuTargetTransferFlags flags,
 			GError **error)
 {
@@ -1318,7 +1318,7 @@ fu_dfu_target_download (FuDfuTarget *self,
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	g_return_val_if_fail (FU_IS_DFU_TARGET (self), FALSE);
-	g_return_val_if_fail (FU_IS_FIRMWARE_IMAGE (image), FALSE);
+	g_return_val_if_fail (FU_IS_FIRMWARE (image), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* ensure populated */
@@ -1339,7 +1339,7 @@ fu_dfu_target_download (FuDfuTarget *self,
 		return FALSE;
 
 	/* download all chunks in the image to the device */
-	chunks = fu_firmware_image_get_chunks (image, error);
+	chunks = fu_firmware_get_chunks (image, error);
 	if (chunks == NULL)
 		return FALSE;
 	if (chunks->len == 0) {

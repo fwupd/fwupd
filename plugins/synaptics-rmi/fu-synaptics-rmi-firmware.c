@@ -154,13 +154,13 @@ fu_synaptics_rmi_firmware_add_image (FuFirmware *firmware, const gchar *id,
 				     GError **error)
 {
 	g_autoptr(GBytes) bytes = NULL;
-	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(FuFirmware) img = NULL;
 
 	bytes = fu_common_bytes_new_offset (fw, offset, sz, error);
 	if (bytes == NULL)
 		return FALSE;
-	img = fu_firmware_image_new (bytes);
-	fu_firmware_image_set_id (img, id);
+	img = fu_firmware_new_from_bytes (bytes);
+	fu_firmware_set_id (img, id);
 	fu_firmware_add_image (firmware, img);
 	return TRUE;
 }
@@ -516,14 +516,14 @@ fu_synaptics_rmi_firmware_write_v0x (FuFirmware *firmware, GError **error)
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE (firmware);
 	GByteArray *buf = g_byte_array_new ();
 	gsize bufsz = 0;
-	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GBytes) buf_blob = NULL;
 
 	/* default image */
-	img = fu_firmware_get_image_default (firmware, error);
+	img = fu_firmware_get_image_by_id (firmware, "ui", error);
 	if (img == NULL)
 		return NULL;
-	buf_blob = fu_firmware_image_write (img, error);
+	buf_blob = fu_firmware_write (img, error);
 	if (buf_blob == NULL)
 		return NULL;
 	bufsz = g_bytes_get_size (buf_blob);
@@ -553,7 +553,7 @@ fu_synaptics_rmi_firmware_write_v10 (FuFirmware *firmware, GError **error)
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE (firmware);
 	GByteArray *buf = g_byte_array_new ();
 	gsize bufsz = 0;
-	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GBytes) buf_blob = NULL;
 
 	/* header | desc_hdr | offset_table | desc | flash_config |
@@ -571,10 +571,10 @@ fu_synaptics_rmi_firmware_write_v10 (FuFirmware *firmware, GError **error)
 	};
 
 	/* default image */
-	img = fu_firmware_get_image_default (firmware, error);
+	img = fu_firmware_get_image_by_id (firmware, "ui", error);
 	if (img == NULL)
 		return NULL;
-	buf_blob = fu_firmware_image_write (img, error);
+	buf_blob = fu_firmware_write (img, error);
 	if (buf_blob == NULL)
 		return NULL;
 	bufsz = g_bytes_get_size (buf_blob);

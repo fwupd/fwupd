@@ -88,7 +88,7 @@ fu_firmware_image_chunk_parse (FuDfuseFirmware *self,
 	return g_steal_pointer (&chk);
 }
 
-static FuFirmwareImage *
+static FuFirmware *
 fu_dfuse_firmware_image_parse (FuDfuseFirmware *self,
 			       GBytes *bytes,
 			       gsize *offset,
@@ -97,7 +97,7 @@ fu_dfuse_firmware_image_parse (FuDfuseFirmware *self,
 	DfuSeImageHdr hdr = { 0x0 };
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data (bytes, &bufsz);
-	g_autoptr(FuFirmwareImage) image = fu_firmware_image_new (NULL);
+	g_autoptr(FuFirmware) image = fu_firmware_new ();
 
 	/* verify image signature */
 	if (!fu_memcpy_safe ((guint8 *) &hdr, sizeof(hdr), 0x0,	/* dst */
@@ -113,11 +113,11 @@ fu_dfuse_firmware_image_parse (FuDfuseFirmware *self,
 	}
 
 	/* set properties */
-	fu_firmware_image_set_idx (image, hdr.alt_setting);
+	fu_firmware_set_idx (image, hdr.alt_setting);
 	if (GUINT32_FROM_LE (hdr.target_named) == 0x01) {
 		g_autofree gchar *img_id = NULL;
 		img_id = g_strndup (hdr.target_name, sizeof(hdr.target_name));
-		fu_firmware_image_set_id (image, img_id);
+		fu_firmware_set_id (image, img_id);
 	}
 
 	/* no chunks */
@@ -139,7 +139,7 @@ fu_dfuse_firmware_image_parse (FuDfuseFirmware *self,
 						     error);
 		if (chk == NULL)
 			return NULL;
-		fu_firmware_image_add_chunk (image, chk);
+		fu_firmware_add_chunk (image, chk);
 	}
 
 	/* success */
@@ -205,7 +205,7 @@ fu_dfuse_firmware_parse (FuFirmware *firmware,
 	/* parse the image targets */
 	offset += sizeof(hdr);
 	for (guint i = 0; i < hdr.targets; i++) {
-		g_autoptr(FuFirmwareImage) image = NULL;
+		g_autoptr(FuFirmware) image = NULL;
 		image = fu_dfuse_firmware_image_parse (FU_DFUSE_FIRMWARE (firmware),
 						       fw, &offset,
 						       error);
@@ -217,7 +217,7 @@ fu_dfuse_firmware_parse (FuFirmware *firmware,
 }
 
 static GBytes *
-fu_firmware_image_chunk_write (FuChunk *chk)
+fu_firmware_chunk_write (FuChunk *chk)
 {
 	DfuSeElementHdr hdr = { 0x0 };
 	const guint8 *data = fu_chunk_get_data (chk);
@@ -233,7 +233,7 @@ fu_firmware_image_chunk_write (FuChunk *chk)
 }
 
 static GBytes *
-fu_dfuse_firmware_image_write (FuFirmwareImage *image, GError **error)
+fu_dfuse_firmware_write_image (FuFirmware *image, GError **error)
 {
 	DfuSeImageHdr hdr = { 0x0 };
 	gsize totalsz = 0;
@@ -243,12 +243,12 @@ fu_dfuse_firmware_image_write (FuFirmwareImage *image, GError **error)
 
 	/* get total size */
 	blobs = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
-	chunks = fu_firmware_image_get_chunks (image, error);
+	chunks = fu_firmware_get_chunks (image, error);
 	if (chunks == NULL)
 		return NULL;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		GBytes *bytes = fu_firmware_image_chunk_write (chk);
+		GBytes *bytes = fu_firmware_chunk_write (chk);
 		g_ptr_array_add (blobs, bytes);
 		totalsz += g_bytes_get_size (bytes);
 	}
@@ -258,11 +258,11 @@ fu_dfuse_firmware_image_write (FuFirmwareImage *image, GError **error)
 
 	/* add prefix */
 	memcpy (hdr.sig, "Target", 6);
-	hdr.alt_setting = fu_firmware_image_get_idx (image);
-	if (fu_firmware_image_get_id (image) != NULL) {
+	hdr.alt_setting = fu_firmware_get_idx (image);
+	if (fu_firmware_get_id (image) != NULL) {
 		hdr.target_named = GUINT32_TO_LE (0x01);
 		g_strlcpy ((gchar *) &hdr.target_name,
-			   fu_firmware_image_get_id (image),
+			   fu_firmware_get_id (image),
 			   sizeof(hdr.target_name));
 	}
 	hdr.target_size = GUINT32_TO_LE (totalsz);
@@ -293,9 +293,9 @@ fu_dfuse_firmware_write (FuFirmware *firmware, GError **error)
 	blobs = g_ptr_array_new_with_free_func ((GDestroyNotify) g_bytes_unref);
 	images = fu_firmware_get_images (FU_FIRMWARE (firmware));
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmwareImage *img = g_ptr_array_index (images, i);
+		FuFirmware *img = g_ptr_array_index (images, i);
 		g_autoptr(GBytes) blob = NULL;
-		blob = fu_dfuse_firmware_image_write (img, error);
+		blob = fu_dfuse_firmware_write_image (img, error);
 		if (blob == NULL)
 			return NULL;
 		totalsz += g_bytes_get_size (blob);

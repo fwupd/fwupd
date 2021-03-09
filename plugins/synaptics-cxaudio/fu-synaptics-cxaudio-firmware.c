@@ -146,7 +146,6 @@ fu_synaptics_cxaudio_firmware_parse (FuFirmware *firmware,
 	GPtrArray *records = fu_srec_firmware_get_records (FU_SREC_FIRMWARE (firmware));
 	guint8 dev_kind_candidate = G_MAXUINT8;
 	g_autofree guint8 *shadow = g_malloc0 (FU_SYNAPTICS_CXAUDIO_EEPROM_SHADOW_SIZE);
-	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 
 	/* copy shadow EEPROM */
 	for (guint i = 0; i < records->len; i++) {
@@ -281,7 +280,7 @@ fu_synaptics_cxaudio_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* this isn't used, but it seems a good thing to add */
-	fu_firmware_add_image (firmware, img);
+	fu_firmware_set_bytes (firmware, fw);
 	return TRUE;
 }
 

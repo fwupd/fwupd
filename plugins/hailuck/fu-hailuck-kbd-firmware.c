@@ -25,7 +25,6 @@ fu_hailuck_kbd_firmware_parse (FuFirmware *firmware,
 			       GError **error)
 {
 	GPtrArray *records = fu_ihex_firmware_get_records (FU_IHEX_FIRMWARE (firmware));
-	g_autoptr(FuFirmwareImage) img = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
 	g_autoptr(GBytes) fw_new = NULL;
 
@@ -76,8 +75,7 @@ fu_hailuck_kbd_firmware_parse (FuFirmware *firmware,
 
 	/* whole image */
 	fw_new = g_byte_array_free_to_bytes (g_steal_pointer (&buf));
-	img = fu_firmware_image_new (fw_new);
-	fu_firmware_add_image (firmware, img);
+	fu_firmware_set_bytes (firmware, fw_new);
 	return TRUE;
 }
 

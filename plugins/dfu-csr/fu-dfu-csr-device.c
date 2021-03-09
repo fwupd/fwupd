@@ -368,7 +368,7 @@ fu_dfu_csr_device_download (FuDevice *device,
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* get default image */
-	blob = fu_firmware_get_image_default_bytes (firmware, error);
+	blob = fu_firmware_get_bytes (firmware, error);
 	if (blob == NULL)
 		return FALSE;
 

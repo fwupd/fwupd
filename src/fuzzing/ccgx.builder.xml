@@ -1,6 +1,4 @@
 <firmware gtype="FuCcgxFirmware">
   <silicon_id>0x1F00</silicon_id>
-  <image>
-    <data>aGVsbG8gd29ybGQ=</data>
-  </image>
+  <data>aGVsbG8gd29ybGQ=</data>
 </firmware>

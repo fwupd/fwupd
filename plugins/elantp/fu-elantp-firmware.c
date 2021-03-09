@@ -59,7 +59,6 @@ fu_elantp_firmware_parse (FuFirmware *firmware,
 	guint16 iap_addr_wrds;
 	guint16 module_id_wrds;
 	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
-	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 
 	/* presumably in words */
 	if (!fu_common_read_uint16_safe (buf, bufsz, ETP_IAP_START_ADDR_WRDS * 2,
@@ -110,7 +109,7 @@ fu_elantp_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* whole image */
-	fu_firmware_add_image (firmware, img);
+	fu_firmware_set_bytes (firmware, fw);
 	return TRUE;
 }
 
@@ -140,7 +139,7 @@ fu_elantp_firmware_write (FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) blob = NULL;
 
 	/* only one image supported */
-	blob = fu_firmware_get_image_default_bytes (firmware, error);
+	blob = fu_firmware_get_bytes (firmware, error);
 	if (blob == NULL)
 		return NULL;
 

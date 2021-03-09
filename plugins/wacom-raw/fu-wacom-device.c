@@ -215,27 +215,23 @@ fu_wacom_device_write_firmware (FuDevice *device,
 	FuWacomDevice *self = FU_WACOM_DEVICE (device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE (self);
 	FuWacomDeviceClass *klass = FU_WACOM_DEVICE_GET_CLASS (device);
-	g_autoptr(FuFirmwareImage) img = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* use the correct image from the firmware */
-	img = fu_firmware_get_image_default (firmware, error);
-	if (img == NULL)
-		return FALSE;
 	g_debug ("using element at addr 0x%0x",
-		 (guint) fu_firmware_image_get_addr (img));
+		 (guint) fu_firmware_get_addr (firmware));
 
 	/* check start address and size */
-	if (fu_firmware_image_get_addr (img) != priv->flash_base_addr) {
+	if (fu_firmware_get_addr (firmware) != priv->flash_base_addr) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "base addr invalid: 0x%05x",
-			     (guint) fu_firmware_image_get_addr (img));
+			     (guint) fu_firmware_get_addr (firmware));
 		return FALSE;
 	}
-	fw = fu_firmware_image_write (img, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 	if (g_bytes_get_size (fw) > priv->flash_size) {

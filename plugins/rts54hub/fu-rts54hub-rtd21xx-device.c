@@ -392,7 +392,7 @@ fu_rts54hub_rtd21xx_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* simple image */
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
 	fwbuf = g_bytes_get_data (fw, &fwbufsz);

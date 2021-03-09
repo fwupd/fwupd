@@ -4,16 +4,16 @@
   <descriptor_map2>0x310330</descriptor_map2>
   <components_rcd>0x325c00f5</components_rcd>
   <illegal_jedec>0x42</illegal_jedec>
-  <image>
+  <firmware>
     <id>bios</id>
     <idx>0x1</idx>
     <addr>0x1000</addr>
     <data>aGVsbG8gd29ybGQ=</data>
-  </image>
-  <image>
+  </firmware>
+  <firmware>
     <id>me</id>
     <idx>0x2</idx>
     <addr>0x2000</addr>
     <data>V29ybGQh</data>
-  </image>
+  </firmware>
 </firmware>

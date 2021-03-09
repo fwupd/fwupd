@@ -339,7 +339,7 @@ fu_ccgx_dmc_get_image_write_status_cb (FuDevice *device, gpointer user_data, GEr
 
 static gboolean
 fu_ccgx_dmc_write_firmware_image (FuDevice *device,
-				  FuCcgxDmcFirmwareImageRecord *img_rcd,
+				  FuCcgxDmcFirmwareRecord *img_rcd,
 				  gsize *fw_data_written,
 				  const gsize fw_data_size,
 				  GError **error)
@@ -400,7 +400,7 @@ fu_ccgx_dmc_write_firmware (FuDevice *device,
 			    GError **error)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE (device);
-	FuCcgxDmcFirmwareImageRecord *img_rcd = NULL;
+	FuCcgxDmcFirmwareRecord *img_rcd = NULL;
 	DmcIntRqt dmc_int_rqt = {0};
 	GBytes *custom_meta_blob;
 	GBytes *fwct_blob;

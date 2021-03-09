@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include "fu-firmware-image.h"
+#include "fu-firmware.h"
 #include "fu-ifd-common.h"
 
 #define FU_TYPE_IFD_IMAGE (fu_ifd_image_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuIfdImage, fu_ifd_image, FU, IFD_IMAGE, FuFirmwareImage)
+G_DECLARE_DERIVABLE_TYPE (FuIfdImage, fu_ifd_image, FU, IFD_IMAGE, FuFirmware)
 
 struct _FuIfdImageClass
 {
-	FuFirmwareImageClass	 parent_class;
+	FuFirmwareClass	 parent_class;
 };
 
-FuFirmwareImage	*fu_ifd_image_new		(void);
+FuFirmware	*fu_ifd_image_new		(void);
 void		 fu_ifd_image_set_access	(FuIfdImage	*self,
 						 FuIfdRegion	 region,
 						 FuIfdAccess	 access);

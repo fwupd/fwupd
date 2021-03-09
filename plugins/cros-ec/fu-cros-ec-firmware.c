@@ -73,8 +73,8 @@ fu_cros_ec_firmware_parse (FuFirmware *firmware,
 		FuCrosEcFirmwareSection *section = g_ptr_array_index (self->sections, i);
 		const gchar *fmap_name;
 		const gchar *fmap_fwid_name;
-		g_autoptr(FuFirmwareImage) img = NULL;
-		g_autoptr(FuFirmwareImage) fwid_img = NULL;
+		g_autoptr(FuFirmware) img = NULL;
+		g_autoptr(FuFirmware) fwid_img = NULL;
 		g_autoptr(GBytes) payload_bytes = NULL;
 		g_autoptr(GBytes) fwid_bytes = NULL;
 
@@ -108,7 +108,7 @@ fu_cros_ec_firmware_parse (FuFirmware *firmware,
 					fmap_fwid_name);
 			return FALSE;
 		}
-		fwid_bytes = fu_firmware_image_write (fwid_img, error);
+		fwid_bytes = fu_firmware_write (fwid_img, error);
 		if (fwid_bytes == NULL) {
 			g_prefix_error (error,
 					"unable to get bytes from %s: ",
@@ -122,17 +122,17 @@ fu_cros_ec_firmware_parse (FuFirmware *firmware,
 				     g_bytes_get_size (fwid_bytes), error))
 			return FALSE;
 
-		payload_bytes = fu_firmware_image_write (img, error);
+		payload_bytes = fu_firmware_write (img, error);
 		if (payload_bytes == NULL) {
 			g_prefix_error (error,
 					"unable to get bytes from %s: ",
 					fmap_name);
 			return FALSE;
 		}
-		section->offset = fu_firmware_image_get_addr (img);
+		section->offset = fu_firmware_get_addr (img);
 		section->size = g_bytes_get_size (payload_bytes);
-		fu_firmware_image_set_version (img, section->raw_version);
-		section->image_idx = fu_firmware_image_get_idx (img);
+		fu_firmware_set_version (img, section->raw_version);
+		section->image_idx = fu_firmware_get_idx (img);
 
 		if (!fu_cros_ec_parse_version (section->raw_version,
 					       &section->version,

@@ -21,7 +21,7 @@ fu_wac_firmware_parse_func (void)
 	gboolean ret;
 	g_autofree gchar *fn = NULL;
 	g_autoptr(FuFirmware) firmware = fu_wac_firmware_new ();
-	g_autoptr(FuFirmwareImage) img = NULL;
+	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GBytes) blob_block = NULL;
 	g_autoptr(GBytes) bytes = NULL;
 	g_autoptr(GError) error = NULL;
@@ -40,12 +40,12 @@ fu_wac_firmware_parse_func (void)
 	g_assert_true (ret);
 
 	/* get image data */
-	img = fu_firmware_get_image_default (firmware, &error);
+	img = fu_firmware_get_image_by_id (firmware, 0, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (img);
 
 	/* get block */
-	blob_block = fu_firmware_image_write_chunk (img, 0x8008000, 1024, &error);
+	blob_block = fu_firmware_write_chunk (img, 0x8008000, 1024, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (blob_block);
 	fu_wac_buffer_dump ("IMG", FU_WAC_REPORT_ID_MODULE,

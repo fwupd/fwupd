@@ -159,7 +159,6 @@ fu_ccgx_firmware_record_calc_checksum (FuCcgxFirmwareRecord *rcd)
 
 static gboolean
 fu_ccgx_firmware_parse_md_block (FuCcgxFirmware *self,
-				 FuFirmwareImage *img,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
@@ -289,7 +288,6 @@ fu_ccgx_firmware_parse (FuFirmware *firmware,
 	guint32 device_id = 0;
 	const gchar *data = g_bytes_get_data (fw, &sz);
 	g_auto(GStrv) lines = fu_common_strnsplit (data, sz, "\n", -1);
-	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 
 	/* parse header */
 	if (lines[0] == NULL) {
@@ -335,17 +333,17 @@ fu_ccgx_firmware_parse (FuFirmware *firmware,
 	/* address is first data entry */
 	if (self->records->len > 0) {
 		FuCcgxFirmwareRecord *rcd = g_ptr_array_index (self->records, 0);
-		fu_firmware_image_set_addr (img, rcd->row_number);
+		fu_firmware_set_addr (firmware, rcd->row_number);
 	}
 
 	/* parse metadata block */
-	if (!fu_ccgx_firmware_parse_md_block (self, img, flags, error)) {
+	if (!fu_ccgx_firmware_parse_md_block (self, flags, error)) {
 		g_prefix_error (error, "failed to parse metadata: ");
 		return FALSE;
 	}
 
 	/* add something, although we'll use the records for the update */
-	fu_firmware_add_image (firmware, img);
+	fu_firmware_set_bytes (firmware, fw);
 	return TRUE;
 }
 
@@ -405,7 +403,7 @@ fu_ccgx_firmware_write (FuFirmware *firmware, GError **error)
 				(guint) 0x0);				/* Checksum, or 0x0 */
 
 	/* add image in chunks */
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return NULL;
 	chunks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, 0x100);

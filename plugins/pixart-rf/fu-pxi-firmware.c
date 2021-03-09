@@ -35,7 +35,6 @@ fu_pxi_firmware_parse (FuFirmware *firmware,
 	gsize bufsz = 0;
 	guint32 version_raw = 0;
 	guint8 fw_header[PIXART_RF_FW_HEADER_SIZE];
-	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 
 	/* get buf */
 	buf = g_bytes_get_data (fw, &bufsz);
@@ -87,7 +86,7 @@ fu_pxi_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* success */
-	fu_firmware_add_image (firmware, img);
+	fu_firmware_set_bytes (firmware, fw);
 	return TRUE;
 }
 
@@ -103,7 +102,7 @@ fu_pxi_firmware_write (FuFirmware *firmware, GError **error)
 	};
 
 	/* data first */
-	blob = fu_firmware_get_image_default_bytes (firmware, error);
+	blob = fu_firmware_get_bytes (firmware, error);
 	if (blob == NULL)
 		return NULL;
 	buf = g_byte_array_sized_new (g_bytes_get_size (blob) + sizeof (fw_header));

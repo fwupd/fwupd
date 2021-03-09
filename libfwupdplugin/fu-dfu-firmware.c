@@ -286,7 +286,6 @@ fu_dfu_firmware_parse (FuFirmware *firmware,
 	FuDfuFirmware *self = FU_DFU_FIRMWARE (firmware);
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE (self);
 	gsize len = g_bytes_get_size (fw);
-	g_autoptr(FuFirmwareImage) image = NULL;
 	g_autoptr(GBytes) contents = NULL;
 
 	/* parse footer */
@@ -297,8 +296,7 @@ fu_dfu_firmware_parse (FuFirmware *firmware,
 	contents = fu_common_bytes_new_offset (fw, 0, len - priv->footer_len, error);
 	if (contents == NULL)
 		return FALSE;
-	image = fu_firmware_image_new (contents);
-	fu_firmware_add_image (firmware, image);
+	fu_firmware_set_bytes (firmware, contents);
 	return TRUE;
 }
 
@@ -342,7 +340,7 @@ fu_dfu_firmware_write (FuFirmware *firmware, GError **error)
 	}
 
 	/* add footer */
-	fw = fu_firmware_get_image_default_bytes (firmware, error);
+	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return NULL;
 	return fu_dfu_firmware_append_footer (self, fw, error);

@@ -78,7 +78,6 @@ fu_vli_pd_firmware_parse (FuFirmware *firmware,
 	guint32 fwver;
 	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
 	g_autofree gchar *fwver_str = NULL;
-	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 
 	/* map header from new offset location */
 	if (!fu_memcpy_safe ((guint8 *) &self->hdr, sizeof(self->hdr), 0x0,
@@ -153,7 +152,7 @@ fu_vli_pd_firmware_parse (FuFirmware *firmware,
 	}
 
 	/* whole image */
-	fu_firmware_add_image (firmware, img);
+	fu_firmware_set_bytes (firmware, fw);
 	return TRUE;
 }
 

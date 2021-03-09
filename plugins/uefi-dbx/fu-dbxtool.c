@@ -61,8 +61,8 @@ fu_dbxtool_siglist_inclusive (FuFirmware *outer, FuFirmware *inner)
 	for (guint i = 0; i < sigs->len; i++) {
 		FuEfiSignature *sig = g_ptr_array_index (sigs, i);
 		g_autofree gchar *checksum = NULL;
-		g_autoptr(FuFirmwareImage) img = NULL;
-		checksum = fu_firmware_image_get_checksum (FU_FIRMWARE_IMAGE (sig),
+		g_autoptr(FuFirmware) img = NULL;
+		checksum = fu_firmware_get_checksum (FU_FIRMWARE (sig),
 							   G_CHECKSUM_SHA256, NULL);
 		if (checksum == NULL)
 			continue;
@@ -181,7 +181,7 @@ main (int argc, char *argv[])
 		for (guint i = 0; i < sigs->len; i++) {
 			FuEfiSignature *sig = g_ptr_array_index (sigs, i);
 			g_autofree gchar *checksum = NULL;
-			checksum = fu_firmware_image_get_checksum (FU_FIRMWARE_IMAGE (sig),
+			checksum = fu_firmware_get_checksum (FU_FIRMWARE (sig),
 								   G_CHECKSUM_SHA256,
 								   NULL);
 			g_print ("%4u: {%s} {%s} %s\n",
