@@ -35,7 +35,7 @@
 #define EC_GET_FW_UPDATE_STATUS		0x0f
 
 #define EXPECTED_DOCK_INFO_SIZE		0xb7
-#define EXPECTED_DOCK_TYPE		0x04
+#define WD19_BASE			0x04
 
 #define TBT_MODE_MASK			0x01
 
@@ -136,6 +136,7 @@ struct _FuDellDockEc {
 	FuDevice			 parent_instance;
 	FuDellDockDockDataStructure 	*data;
 	FuDellDockDockPackageFWVersion 	*raw_versions;
+	guint8 				 base_type;
 	gchar 				*ec_version;
 	gchar 				*mst_version;
 	gchar 				*tbt_version;
@@ -300,6 +301,7 @@ fu_dell_dock_ec_write (FuDevice *device, gsize length, guint8 *data, GError **er
 static gboolean
 fu_dell_dock_is_valid_dock (FuDevice *device, GError **error)
 {
+	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
 	const guint8 *result = NULL;
 	gsize sz = 0;
 	g_autoptr(GBytes) data = NULL;
@@ -316,9 +318,10 @@ fu_dell_dock_is_valid_dock (FuDevice *device, GError **error)
 				     "No valid dock was found");
 		return FALSE;
 	}
+	self->base_type = result[0];
 
 	/* this will trigger setting up all the quirks */
-	if (result[0] == EXPECTED_DOCK_TYPE) {
+	if (self->base_type == WD19_BASE) {
 		fu_device_add_instance_id (device, DELL_DOCK_EC_INSTANCE_ID);
 		return TRUE;
 	}
@@ -327,7 +330,7 @@ fu_dell_dock_is_valid_dock (FuDevice *device, GError **error)
 		     FWUPD_ERROR,
 		     FWUPD_ERROR_NOT_SUPPORTED,
 		     "Invalid dock type: %x",
-		     *result);
+		     self->base_type);
 	return FALSE;
 }
 
@@ -567,6 +570,7 @@ fu_dell_dock_ec_to_string (FuDevice *device, guint idt, GString *str)
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
 	gchar service_tag[8] = {0x00};
 
+	fu_common_string_append_ku (str, idt, "BaseType", self->base_type);
 	fu_common_string_append_ku (str, idt, "BoardId", self->data->board_id);
 	fu_common_string_append_ku (str, idt, "PowerSupply", self->data->power_supply_wattage);
 	fu_common_string_append_kx (str, idt, "StatusPort0", self->data->port0_dock_status);
