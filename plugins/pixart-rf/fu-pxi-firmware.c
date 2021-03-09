@@ -14,10 +14,94 @@
 #define PIXART_RF_FW_HEADER_TAG_OFFSET		24
 
 struct _FuPxiFirmware {
-	FuFirmware		 parent_instance;
+	FuFirmware		parent_instance;
+	guint8			model_name[12];
 };
 
 G_DEFINE_TYPE (FuPxiFirmware, fu_pxi_firmware, FU_TYPE_FIRMWARE)
+
+gboolean
+fu_pxi_firmware_get_model_name (FuPxiFirmware *self, guint8 *model_name, GError **error)
+{
+	g_return_val_if_fail (FU_IS_PXI_FIRMWARE (self), 0);
+
+	/* get model from fw */
+	if (!fu_memcpy_safe (model_name, sizeof(self->model_name), 0x0,
+			     self->model_name, sizeof(self->model_name), 0x0,
+			     sizeof(self->model_name),
+			     error)) {
+		g_prefix_error (error, "failed to read model");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
+static gboolean
+fu_pxi_firmware_check_header (FuFirmware *firmware,
+				GBytes *fw, guint8 *fw_header, GError **error)
+{
+	const guint8 *buf;
+	const guint8 tag[] = {
+		0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA,
+	};
+	guint8 fw_header_tmp[PIXART_RF_FW_HEADER_SIZE];
+	gsize bufsz = 0;
+	g_autoptr(FuFirmware) img = fu_firmware_new_from_bytes (fw);
+
+	/* get buf */
+	buf = g_bytes_get_data (fw, &bufsz);
+	if (bufsz < sizeof(fw_header_tmp)) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "firmware invalid, too small!");
+		return FALSE;
+	}
+
+	/* get fw header from buf */
+	if (!fu_memcpy_safe (fw_header_tmp, sizeof(fw_header_tmp), 0x0,
+			     buf, bufsz, bufsz - sizeof(fw_header_tmp),
+			     sizeof(fw_header_tmp), error)) {
+		g_prefix_error (error, "failed to read fw header ");
+		return FALSE;
+	}
+	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL) {
+		fu_common_dump_raw (G_LOG_DOMAIN, "fw header",
+				    fw_header_tmp, sizeof(fw_header_tmp));
+	}
+
+	/* check the tag from fw header is correct */
+	for (guint32 i = 0x0; i < sizeof(tag); i++) {
+		guint8 tmp = 0;
+		if (!fu_common_read_uint8_safe (fw_header_tmp, sizeof(fw_header_tmp),
+						i + PIXART_RF_FW_HEADER_TAG_OFFSET,
+						&tmp, error))
+			return FALSE;
+		if (tmp != tag[i]) {
+			return FALSE;
+			break;
+		}
+	}
+
+	/* set fw header */
+	if (!fu_memcpy_safe (fw_header, sizeof(fw_header_tmp), 0x0,
+			     fw_header_tmp, sizeof(fw_header_tmp), 0x0,
+			     sizeof(fw_header_tmp), error)) {
+		g_prefix_error (error, "failed to get fw header ");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static void
+fu_pxi_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+{
+	FuPxiFirmware *self = FU_PXI_FIRMWARE (firmware);
+	fu_common_string_append_kv (str, idt, "ModelName", g_strndup ((gchar *) self->model_name, 12));
+
+}
 
 static gboolean
 fu_pxi_firmware_parse (FuFirmware *firmware,
@@ -27,52 +111,21 @@ fu_pxi_firmware_parse (FuFirmware *firmware,
 		       FwupdInstallFlags flags,
 		       GError **error)
 {
-	const guint8 *buf;
-	const guint8 tag[] = {
-		0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA,
-	};
-	gboolean header_ok = TRUE;
-	gsize bufsz = 0;
-	guint32 version_raw = 0;
+
 	guint8 fw_header[PIXART_RF_FW_HEADER_SIZE];
-
-	/* get buf */
-	buf = g_bytes_get_data (fw, &bufsz);
-	if (bufsz < sizeof(fw_header)) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "firmware invalid, too small!");
-		return FALSE;
-	}
-
-	/* get fw header */
-	if (!fu_memcpy_safe (fw_header, sizeof(fw_header), 0x0,
-			     buf, bufsz, bufsz - sizeof(fw_header),
-			     sizeof(fw_header), error)) {
-		g_prefix_error (error, "failed to read fw header ");
-		return FALSE;
-	}
-	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL) {
-		fu_common_dump_raw (G_LOG_DOMAIN, "fw header",
-				    fw_header, sizeof(fw_header));
-	}
-
-	/* check the tag from fw header is correct */
-	for (guint32 i = 0x0; i < sizeof(tag); i++) {
-		guint8 tmp = 0;
-		if (!fu_common_read_uint8_safe (fw_header, sizeof(fw_header),
-						i + PIXART_RF_FW_HEADER_TAG_OFFSET,
-						&tmp, error))
-			return FALSE;
-		if (tmp != tag[i]) {
-			header_ok = FALSE;
-			break;
-		}
-	}
+	guint32 version_raw = 0;
+	FuPxiFirmware *self = FU_PXI_FIRMWARE (firmware);
+	g_autoptr(FuFirmware) img = fu_firmware_new_from_bytes (fw);
 
 	/* set the default version if can not find it in fw bin */
-	if (header_ok) {
+	if (!fu_pxi_firmware_check_header (firmware, fw, fw_header, error)) {
+
+		fu_firmware_set_version (firmware, "0.0.0");
+
+
+	} else {
+
+		/* set fw version */
 		g_autofree gchar *version = NULL;
 		version_raw = (((guint32) (fw_header[0] - '0')) << 16) +
 			      (((guint32) (fw_header[2] - '0')) << 8) +
@@ -81,8 +134,19 @@ fu_pxi_firmware_parse (FuFirmware *firmware,
 		version = fu_common_version_from_uint32 (version_raw,
 							 FWUPD_VERSION_FORMAT_DELL_BIOS);
 		fu_firmware_set_version (firmware, version);
-	} else {
-		fu_firmware_set_version (firmware, "0.0.0");
+
+		/* set fw model name */
+		if (!fu_memcpy_safe (self->model_name, sizeof(self->model_name), 0x0,
+					fw_header, sizeof(fw_header), 0x05,
+					sizeof(self->model_name), error)) {
+
+			g_prefix_error (error, "failed to get fw model name");
+			return FALSE;
+		}
+	}
+	if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL) {
+		fu_common_dump_raw (G_LOG_DOMAIN, "fw model name",
+				    self->model_name, sizeof(self->model_name));
 	}
 
 	/* success */
@@ -146,6 +210,7 @@ fu_pxi_firmware_class_init (FuPxiFirmwareClass *klass)
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_pxi_firmware_parse;
 	klass_firmware->write = fu_pxi_firmware_write;
+	klass_firmware->to_string = fu_pxi_firmware_to_string;
 }
 
 FuFirmware *

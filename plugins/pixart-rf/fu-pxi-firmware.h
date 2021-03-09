@@ -12,3 +12,4 @@
 G_DECLARE_FINAL_TYPE (FuPxiFirmware, fu_pxi_firmware, FU, PXI_FIRMWARE, FuFirmware)
 
 FuFirmware		*fu_pxi_firmware_new		(void);
+gboolean		fu_pxi_firmware_get_model_name (FuPxiFirmware *self, guint8 *model_name, GError **error);
