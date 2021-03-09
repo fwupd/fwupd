@@ -320,6 +320,8 @@ def _build(bld: Builder) -> None:
         Fuzzer("ccgx", globstr="ccgx*.cyacd"),
         Fuzzer("cros-ec"),
         Fuzzer("ebitdo"),
+        Fuzzer("efi-filesystem", srcdir="spi", pattern="efi-firmware-filesystem"),
+        Fuzzer("efi-volume", srcdir="spi", pattern="efi-firmware-volume"),
         Fuzzer("elantp"),
         Fuzzer("hailuck-kbd", srcdir="hailuck", globstr="ihex*"),
         Fuzzer("ifd", srcdir="spi"),

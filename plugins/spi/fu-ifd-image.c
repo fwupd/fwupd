@@ -67,9 +67,29 @@ fu_ifd_image_get_access (FuIfdImage *self, FuIfdRegion region)
 	return priv->access[region];
 }
 
+static GBytes *
+fu_ifd_image_write (FuFirmware *firmware, GError **error)
+{
+	g_autoptr(GByteArray) buf = g_byte_array_new ();
+	g_autoptr(GBytes) bytes = NULL;
+
+	/* simple payload */
+	bytes = fu_firmware_get_bytes (firmware, error);
+	if (bytes == NULL)
+		return NULL;
+	fu_byte_array_append_bytes (buf, bytes);
+
+	/* align up */
+	fu_byte_array_set_size (buf,
+				fu_common_align_up (g_bytes_get_size (bytes),
+						    fu_firmware_get_alignment (firmware)));
+	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
+}
+
 static void
 fu_ifd_image_init (FuIfdImage *self)
 {
+	fu_firmware_set_alignment (FU_FIRMWARE (self), 12);
 }
 
 static void
@@ -77,6 +97,7 @@ fu_ifd_image_class_init (FuIfdImageClass *klass)
 {
 	FuFirmwareClass *klass_image = FU_FIRMWARE_CLASS (klass);
 	klass_image->to_string = fu_ifd_image_to_string;
+	klass_image->write = fu_ifd_image_write;
 }
 
 /**

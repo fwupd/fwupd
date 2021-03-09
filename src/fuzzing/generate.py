@@ -6,7 +6,9 @@
 # SPDX-License-Identifier: LGPL-2.1+
 
 import os
+import sys
 import subprocess
+
 
 if __name__ == "__main__":
 
@@ -17,10 +19,15 @@ if __name__ == "__main__":
         ("cros-ec.builder.xml", "cros-ec.bin"),
         ("dfuse.builder.xml", "dfuse.dfu"),
         ("ebitdo.builder.xml", "ebitdo.dat"),
+        ("efi-firmware-file.builder.xml", "efi-file.bin"),
+        ("efi-firmware-filesystem.builder.xml", "efi-filesystem.bin"),
+        ("efi-firmware-volume.builder.xml", "efi-volume.bin"),
         ("elantp.builder.xml", "elantp.bin"),
         ("fmap.builder.xml", "fmap.bin"),
         ("fmap-offset.builder.xml", "fmap-offset.bin"),
+        ("ifd-bios.builder.xml", "ifd-bios.bin"),
         ("ifd.builder.xml", "ifd.bin"),
+        ("ifd-no-bios.builder.xml", "ifd-no-bios.bin"),
         ("ihex.builder.xml", "ihex.hex"),
         ("pixart.builder.xml", "pixart.bin"),
         ("rmi-0x.builder.xml", "synaptics-rmi-0x.img"),
@@ -46,3 +53,4 @@ if __name__ == "__main__":
             subprocess.run(argv, check=True)
         except subprocess.CalledProcessError as e:
             print("tried to run: `{}` and got {}".format(" ".join(argv), str(e)))
+            sys.exit(1)

@@ -1,0 +1,19 @@
+<firmware gtype="FuIfdFirmware">
+  <descriptor_map0>0x40003</descriptor_map0>
+  <descriptor_map1>0x58100208</descriptor_map1>
+  <descriptor_map2>0x310330</descriptor_map2>
+  <components_rcd>0x325c00f5</components_rcd>
+  <illegal_jedec>0x42</illegal_jedec>
+  <firmware gtype="FuIfdImage">
+    <id>gbe</id>
+    <idx>0x3</idx>
+    <addr>0x3000</addr>
+    <data>V29ybGQh</data>
+  </firmware>
+  <firmware gtype="FuIfdImage">
+    <id>me</id>
+    <idx>0x2</idx>
+    <addr>0x2000</addr>
+    <data>V29ybGQh</data>
+  </firmware>
+</firmware>
