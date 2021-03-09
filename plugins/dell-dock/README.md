@@ -47,6 +47,7 @@ These devices use several different generation schemes, e.g.
  * Update Level: `USB\VID_413C&PID_B06E&hub&status`
  * MST Hub: `MST-panamera-vmm5331-259`
  * Thunderbolt Controller: `TBT-00d4b070`
+ * USB4 Controller: `TBT-00d4b071`
 
 Update Behavior
 ---------------
