@@ -70,6 +70,8 @@ def _generate_sbat(args):
             args.objcopy,
             "--add-section",
             ".sbat={}".format(sfd.name),
+            "--set-section-flags",
+            ".sbat=contents,alloc,load,readonly,data",
             args.outfile,
         ]
         subprocess.run(argv, check=True)
