@@ -4,9 +4,16 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginSpi"']
 shared_module('fu_plugin_spi',
   fu_hash,
   sources : [
-    'fu-ifd-common.c',        # fuzzing
-    'fu-ifd-firmware.c',      # fuzzing
-    'fu-ifd-image.c',         # fuzzing
+    'fu-efi-common.c',              # fuzzing
+    'fu-efi-firmware-common.c',     # fuzzing
+    'fu-efi-firmware-file.c',       # fuzzing
+    'fu-efi-firmware-filesystem.c', # fuzzing
+    'fu-efi-firmware-section.c',    # fuzzing
+    'fu-efi-firmware-volume.c',     # fuzzing
+    'fu-ifd-bios.c',                # fuzzing
+    'fu-ifd-common.c',              # fuzzing
+    'fu-ifd-firmware.c',            # fuzzing
+    'fu-ifd-image.c',               # fuzzing
     'fu-plugin-spi.c',
   ],
   include_directories : [
@@ -23,6 +30,7 @@ shared_module('fu_plugin_spi',
   c_args : cargs,
   dependencies : [
     plugin_deps,
+    lzma,
   ],
 )
 endif

@@ -265,6 +265,15 @@ else
   endif
 endif
 
+if get_option('lzma')
+  lzma = dependency('liblzma')
+  conf.set('HAVE_LZMA', '1')
+else
+  if get_option('plugin_spi')
+    error('plugin_spi needs -Dlzma=true to work')
+  endif
+endif
+
 platform_deps = []
 if get_option('default_library') != 'static'
   if host_machine.system() == 'windows'

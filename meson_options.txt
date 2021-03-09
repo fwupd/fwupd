@@ -12,6 +12,7 @@ option('gusb', type : 'boolean', value : true, description : 'enable GUsb suppor
 option('bluez', type : 'boolean', value : false, description : 'enable BlueZ support')
 option('polkit', type: 'boolean', value : true, description : 'enable PolKit support in daemon')
 option('gnutls', type: 'boolean', value : true, description : 'enable GnuTLS support')
+option('lzma', type: 'boolean', value : false, description : 'enable LZMA support')
 option('plugin_altos', type : 'boolean', value : true, description : 'enable altos support')
 option('plugin_amt', type : 'boolean', value : true, description : 'enable Intel AMT support')
 option('plugin_dell', type : 'boolean', value : true, description : 'enable Dell-specific support')

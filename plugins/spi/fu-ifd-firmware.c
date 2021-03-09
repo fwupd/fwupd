@@ -9,7 +9,7 @@
 #include "fu-common.h"
 #include "fu-ifd-common.h"
 #include "fu-ifd-firmware.h"
-#include "fu-ifd-image.h"
+#include "fu-ifd-bios.h"
 
 /**
  * SECTION:fu-ifd-firmware
@@ -206,7 +206,7 @@ fu_ifd_firmware_parse (FuFirmware *firmware,
 		const gchar *freg_str = fu_ifd_region_to_string (i);
 		guint32 freg_base = FU_IFD_FREG_BASE(priv->flash_descriptor_regs[i]);
 		guint32 freg_limt = FU_IFD_FREG_LIMIT(priv->flash_descriptor_regs[i]);
-		guint32 freg_size = freg_limt - freg_base;
+		guint32 freg_size = (freg_limt - freg_base) + 1;
 		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(GBytes) contents = NULL;
 		guint8 bit_r = 0;
@@ -221,8 +221,13 @@ fu_ifd_firmware_parse (FuFirmware *firmware,
 		contents = fu_common_bytes_new_offset (fw, freg_base, freg_size, error);
 		if (contents == NULL)
 			return FALSE;
-		img = fu_ifd_image_new ();
-		fu_firmware_set_bytes (img, contents);
+		if (i == FU_IFD_REGION_BIOS) {
+			img = fu_ifd_bios_new ();
+		} else {
+			img = fu_ifd_image_new ();
+		}
+		if (!fu_firmware_parse (img, contents, flags, error))
+			return FALSE;
 		fu_firmware_set_addr (img, freg_base);
 		fu_firmware_set_idx (img, i);
 		if (freg_str != NULL)
@@ -295,19 +300,47 @@ fu_ifd_firmware_write (FuFirmware *firmware, GError **error)
 {
 	FuIfdFirmware *self = FU_IFD_FIRMWARE (firmware);
 	FuIfdFirmwarePrivate *priv = GET_PRIVATE (self);
-	gsize bufsz_max = FU_IFD_SIZE;
+	gsize bufsz_max = 0x0;
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
 	g_autoptr(GPtrArray) images = fu_firmware_get_images (firmware);
+	g_autoptr(GHashTable) blobs = NULL;
+	g_autoptr(FuFirmware) img_desc = NULL;
 
-	/* get total size */
-	for (guint i = 0; i < images->len; i++) {
-		FuFirmware *img = g_ptr_array_index (images, i);
+	/* if the descriptor does not exist, then add something plausible */
+	img_desc = fu_firmware_get_image_by_idx (firmware, FU_IFD_REGION_DESC, NULL);
+	if (img_desc == NULL) {
+		g_autoptr(GByteArray) buf_desc = g_byte_array_new ();
+		g_autoptr(GBytes) blob_desc = NULL;
+		fu_byte_array_set_size (buf_desc, FU_IFD_SIZE);
+
+		/* success */
+		blob_desc = g_byte_array_free_to_bytes (g_steal_pointer (&buf_desc));
+		img_desc = fu_firmware_new_from_bytes (blob_desc);
+		fu_firmware_set_addr (img_desc, 0x0);
+		fu_firmware_set_idx (img_desc, FU_IFD_REGION_DESC);
+		fu_firmware_set_id (img_desc, "desc");
+		fu_firmware_add_image (firmware, img_desc);
+	}
+
+	/* generate ahead of time */
+	blobs = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, (GDestroyNotify) g_bytes_unref);
+	for (guint i = 0; i < priv->num_regions; i++) {
+		g_autoptr(FuFirmware) img = fu_firmware_get_image_by_idx (firmware, i, NULL);
 		g_autoptr(GBytes) blob = NULL;
-		guint32 freg_base = fu_firmware_get_addr (img);
-		blob = fu_firmware_get_bytes (img, error);
-		if (blob == NULL)
+
+		if (img == NULL)
+			continue;
+		blob = fu_firmware_write (img, error);
+		if (blob == NULL) {
+			g_prefix_error (error,
+					"failed to write %s: ",
+					fu_firmware_get_id (img));
 			return NULL;
-		bufsz_max = MAX(freg_base + MAX(g_bytes_get_size (blob), 0x1000), bufsz_max);
+		}
+		g_hash_table_insert (blobs, GUINT_TO_POINTER (i), g_bytes_ref (blob));
+
+		/* check total size */
+		bufsz_max = MAX(fu_firmware_get_addr (img) + g_bytes_get_size (blob), bufsz_max);
 	}
 	fu_byte_array_set_size (buf, bufsz_max);
 
@@ -348,11 +381,9 @@ fu_ifd_firmware_write (FuFirmware *firmware, GError **error)
 		guint32 flreg;
 		g_autoptr(FuFirmware) img = fu_firmware_get_image_by_idx (firmware, i, NULL);
 		if (img != NULL) {
-			g_autoptr(GBytes) blob = fu_firmware_get_bytes (img, error);
-			if (blob == NULL)
-				return NULL;
+			GBytes *blob = g_hash_table_lookup (blobs, GUINT_TO_POINTER (fu_firmware_get_idx (img)));
 			freg_base = fu_firmware_get_addr (img);
-			freg_limt = freg_base + g_bytes_get_size (blob);
+			freg_limt = (freg_base + g_bytes_get_size (blob)) - 1;
 		}
 		flreg = ((freg_limt << 4) & 0xFFFF0000) | (freg_base >> 12);
 		g_debug ("freg 0x%04x -> 0x%04x = 0x%08x", freg_base, freg_limt, flreg);
@@ -363,11 +394,12 @@ fu_ifd_firmware_write (FuFirmware *firmware, GError **error)
 	}
 
 	/* write images at correct offsets */
-	for (guint i = 0; i < images->len; i++) {
-		FuFirmware *img = g_ptr_array_index (images, i);
-		g_autoptr(GBytes) blob = fu_firmware_get_bytes (img, error);
-		if (blob == NULL)
-			return NULL;
+	for (guint i = 1; i < priv->num_regions; i++) {
+		GBytes *blob;
+		g_autoptr(FuFirmware) img = fu_firmware_get_image_by_idx (firmware, i, NULL);
+		if (img == NULL)
+			continue;
+		blob = g_hash_table_lookup (blobs, GUINT_TO_POINTER (fu_firmware_get_idx (img)));
 		if (!fu_memcpy_safe (buf->data, buf->len, fu_firmware_get_addr (img),
 				     g_bytes_get_data (blob, NULL), g_bytes_get_size (blob), 0x0,
 				     g_bytes_get_size (blob), error))

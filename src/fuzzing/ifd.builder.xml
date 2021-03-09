@@ -4,13 +4,40 @@
   <descriptor_map2>0x310330</descriptor_map2>
   <components_rcd>0x325c00f5</components_rcd>
   <illegal_jedec>0x42</illegal_jedec>
-  <firmware>
+  <firmware gtype="FuIfdBios">
     <id>bios</id>
     <idx>0x1</idx>
     <addr>0x1000</addr>
-    <data>aGVsbG8gd29ybGQ=</data>
+    <firmware gtype="FuEfiFirmwareVolume">
+      <id>8c8ce578-8a3d-4f1c-9935-896185c32dd3</id>
+      <alignment>0xB</alignment>
+      <firmware gtype="FuEfiFirmwareFilesystem">
+        <alignment>0x3</alignment>
+        <firmware gtype="FuEfiFirmwareFile">
+          <id>ced4eac6-49f3-4c12-a597-fc8c33447691</id>
+          <type>0x0B</type>
+          <firmware gtype="FuEfiFirmwareSection">
+            <type>0x02</type>
+            <id>ced4eac6-49f3-4c12-a597-fc8c33447691</id>
+            <data>aGVsbG8gd29ybGQ=</data>
+          </firmware>
+          <firmware gtype="FuEfiFirmwareSection">
+            <data>aGVsbG8gd29ybGQ=</data>
+          </firmware>
+        </firmware>
+        <firmware gtype="FuEfiFirmwareFile">
+          <id>ced4eac6-49f3-4c12-a597-fc8c33447691</id>
+          <data>aGVsbG8gd29ybGQ=</data>
+        </firmware>
+      </firmware>
+    </firmware>
+    <firmware gtype="FuEfiFirmwareVolume">
+      <id>fff12b8d-7696-4c8b-a985-2747075b4f50</id>
+      <alignment>0xB</alignment>
+      <data>aGVsbG8gd29ybGQ=</data>
+    </firmware>
   </firmware>
-  <firmware>
+  <firmware gtype="FuIfdImage">
     <id>me</id>
     <idx>0x2</idx>
     <addr>0x2000</addr>
