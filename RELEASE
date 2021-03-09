@@ -17,7 +17,7 @@ git add ../po/*.po
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
-export release_ver="1.5.8"
+export release_ver="1.6.0"
 
 git commit -a -m "Release fwupd ${release_ver}"
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
