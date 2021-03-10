@@ -514,9 +514,10 @@ static GBytes *
 fu_synaptics_rmi_firmware_write_v0x (FuFirmware *firmware, GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE (firmware);
-	GByteArray *buf = g_byte_array_new ();
 	gsize bufsz = 0;
+	guint32 csum;
 	g_autoptr(FuFirmware) img = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new ();
 	g_autoptr(GBytes) buf_blob = NULL;
 
 	/* default image */
@@ -544,16 +545,23 @@ fu_synaptics_rmi_firmware_write_v0x (FuFirmware *firmware, GError **error)
 	fu_common_write_uint32 (buf->data + RMI_IMG_CONFIG_SIZE_OFFSET, bufsz, G_LITTLE_ENDIAN);
 	fu_common_write_uint32 (buf->data + RMI_IMG_FW_OFFSET + 0x0, 0xdead, G_LITTLE_ENDIAN);		/* img */
 	fu_common_write_uint32 (buf->data + RMI_IMG_FW_OFFSET + bufsz, 0xbeef, G_LITTLE_ENDIAN);	/* config */
-	return g_byte_array_free_to_bytes (buf);
+
+	/* fixup checksum */
+	csum = fu_synaptics_rmi_generate_checksum (buf->data + 4, buf->len - 4);
+	fu_common_write_uint32 (buf->data + RMI_IMG_CHECKSUM_OFFSET, csum, G_LITTLE_ENDIAN);
+
+	/* success */
+	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
 }
 
 static GBytes *
 fu_synaptics_rmi_firmware_write_v10 (FuFirmware *firmware, GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE (firmware);
-	GByteArray *buf = g_byte_array_new ();
 	gsize bufsz = 0;
+	guint32 csum;
 	g_autoptr(FuFirmware) img = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new ();
 	g_autoptr(GBytes) buf_blob = NULL;
 
 	/* header | desc_hdr | offset_table | desc | flash_config |
@@ -602,7 +610,13 @@ fu_synaptics_rmi_firmware_write_v10 (FuFirmware *firmware, GError **error)
 	memcpy (buf->data + RMI_IMG_FW_OFFSET + 0x20, offset_table, sizeof(offset_table));
 	memcpy (buf->data + RMI_IMG_FW_OFFSET + 0x24, &desc, sizeof(desc));
 	fu_common_write_uint32 (buf->data + RMI_IMG_FW_OFFSET + 0x44, 0xfeed, G_LITTLE_ENDIAN);	/* flash_config */
-	return g_byte_array_free_to_bytes (buf);
+
+	/* fixup checksum */
+	csum = fu_synaptics_rmi_generate_checksum (buf->data + 4, buf->len - 4);
+	fu_common_write_uint32 (buf->data + RMI_IMG_CHECKSUM_OFFSET, csum, G_LITTLE_ENDIAN);
+
+	/* success */
+	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
 }
 
 static gboolean
