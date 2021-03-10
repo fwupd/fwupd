@@ -758,6 +758,7 @@ LIBFWUPDPLUGIN_1.6.0 {
   global:
     fu_firmware_add_chunk;
     fu_firmware_get_addr;
+    fu_firmware_get_alignment;
     fu_firmware_get_bytes;
     fu_firmware_get_checksum;
     fu_firmware_get_chunks;
@@ -766,6 +767,7 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_firmware_get_idx;
     fu_firmware_get_offset;
     fu_firmware_set_addr;
+    fu_firmware_set_alignment;
     fu_firmware_set_bytes;
     fu_firmware_set_filename;
     fu_firmware_set_id;

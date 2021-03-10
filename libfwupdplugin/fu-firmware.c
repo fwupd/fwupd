@@ -26,6 +26,7 @@ typedef struct {
 	gchar				*version;
 	guint64				 version_raw;
 	GBytes				*bytes;
+	guint8				 alignment;
 	gchar				*id;
 	gchar				*filename;
 	guint64				 idx;
@@ -440,6 +441,47 @@ fu_firmware_get_bytes (FuFirmware *self, GError **error)
 }
 
 /**
+ * fu_firmware_set_alignment:
+ * @self: a #FuFirmware
+ * @alignment: integer, or 0 to disable
+ *
+ * Sets the alignment of the firmware.
+ *
+ * This allows a firmware to pad to a power of 2 boundary, where @alignment
+ * is the bit position to align to.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_firmware_set_alignment (FuFirmware *self, guint8 alignment)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_FIRMWARE (self));
+	priv->alignment = alignment;
+}
+
+/**
+ * fu_firmware_get_alignment:
+ * @self: a #FuFirmware
+ *
+ * Gets the alignment of the firmware.
+ *
+ * This allows a firmware to pad to a power of 2 boundary, where @alignment
+ * is the bit position to align to.
+ *
+ * Returns: integer
+ *
+ * Since: 1.6.0
+ **/
+guint8
+fu_firmware_get_alignment (FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), G_MAXUINT8);
+	return priv->alignment;
+}
+
+/**
  * fu_firmware_get_chunks:
  * @self: a #FuFirmware
  * @error: A #GError, or %NULL
@@ -727,6 +769,9 @@ fu_firmware_build (FuFirmware *self, XbNode *n, GError **error)
 	tmpval = xb_node_query_text_as_uint (n, "offset", NULL);
 	if (tmpval != G_MAXUINT64)
 		fu_firmware_set_offset (self, tmpval);
+	tmpval = xb_node_query_text_as_uint (n, "alignment", NULL);
+	if (tmpval != G_MAXUINT64)
+		fu_firmware_set_alignment (self, (guint8) tmpval);
 	tmp = xb_node_query_text (n, "filename", NULL);
 	if (tmp != NULL) {
 		g_autoptr(GBytes) blob = NULL;
@@ -1311,6 +1356,10 @@ fu_firmware_add_string (FuFirmware *self, guint idt, GString *str)
 	if (priv->bytes != NULL) {
 		fu_common_string_append_kx (str, idt, "Data",
 					    g_bytes_get_size (priv->bytes));
+	}
+	if (priv->alignment != 0x0) {
+		fu_common_string_append_kx (str, idt, "Alignment",
+					    (guint64) 1 << priv->alignment);
 	}
 
 	/* add chunks */

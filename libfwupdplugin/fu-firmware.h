@@ -109,6 +109,9 @@ GBytes		*fu_firmware_get_bytes			(FuFirmware	*self,
 							 GError		**error);
 void		 fu_firmware_set_bytes			(FuFirmware	*self,
 							 GBytes		*bytes);
+guint8		 fu_firmware_get_alignment		(FuFirmware	*self);
+void		 fu_firmware_set_alignment		(FuFirmware	*self,
+							 guint8		 alignment);
 void		 fu_firmware_add_chunk			(FuFirmware	*self,
 							 FuChunk	*chk);
 GPtrArray	*fu_firmware_get_chunks			(FuFirmware	*self,
