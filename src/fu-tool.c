@@ -1549,7 +1549,12 @@ fu_util_activate (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_READONLY, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_READONLY |
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_REMOTES |
+				   FU_ENGINE_LOAD_FLAG_HWINFO,
+				   error))
 		return FALSE;
 
 	/* parse arguments */
