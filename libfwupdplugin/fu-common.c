@@ -3206,3 +3206,38 @@ fu_common_uri_get_scheme (const gchar *uri)
 		return NULL;
 	return g_utf8_strdown (uri, tmp - uri);
 }
+
+/**
+ * fu_common_align_up:
+ * @value: value to align
+ * @alignment: align to this power of 2
+ *
+ * Align a value to a power of 2 boundary, where @alignment is the bit position
+ * to align to. If @alignment is zero then @value is always returned unchanged.
+ *
+ * Returns: aligned value, which will be the same as @value if already aligned,
+ * 		or %G_MAXSIZE if the value would overflow
+ *
+ * Since: 1.6.0
+ **/
+gsize
+fu_common_align_up (gsize value, guint8 alignment)
+{
+	gsize value_new;
+	guint32 mask = 1 << alignment;
+
+	/* no alignment required */
+	if ((value & (mask - 1)) == 0)
+		return value;
+
+	/* increment up to the next alignment value */
+	value_new = value + mask;
+	value_new &= ~(mask - 1);
+
+	/* overflow */
+	if (value_new < value)
+		return G_MAXSIZE;
+
+	/* success */
+	return value_new;
+}
