@@ -102,6 +102,9 @@ void		 fu_firmware_set_addr			(FuFirmware	*self,
 guint64		 fu_firmware_get_offset			(FuFirmware	*self);
 void		 fu_firmware_set_offset			(FuFirmware	*self,
 							 guint64	 offset);
+gsize		 fu_firmware_get_size			(FuFirmware	*self);
+void		 fu_firmware_set_size			(FuFirmware	*self,
+							 gsize		 offset);
 guint64		 fu_firmware_get_idx			(FuFirmware	*self);
 void		 fu_firmware_set_idx			(FuFirmware	*self,
 							 guint64	 idx);

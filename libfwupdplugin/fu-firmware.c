@@ -32,6 +32,7 @@ typedef struct {
 	guint64				 idx;
 	guint64				 addr;
 	guint64				 offset;
+	gsize				 size;
 	GPtrArray			*chunks;	/* nullable, element-type FuChunk */
 } FuFirmwarePrivate;
 
@@ -356,6 +357,50 @@ fu_firmware_get_offset (FuFirmware *self)
 }
 
 /**
+ * fu_firmware_set_size:
+ * @self: a #FuPlugin
+ * @size: integer
+ *
+ * Sets the total size of the image, which should be the same size as the
+ * data from fu_firmware_write().
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_firmware_set_size (FuFirmware *self, gsize size)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_FIRMWARE (self));
+	priv->size = size;
+}
+
+/**
+ * fu_firmware_get_size:
+ * @self: a #FuPlugin
+ *
+ * Gets the total size of the image, which is typically the same size as the
+ * data from fu_firmware_write().
+ *
+ * If the size has not been explicitly set, and fu_firmware_set_bytes() has been
+ * used then the size of this is used instead.
+ *
+ * Returns: integer
+ *
+ * Since: 1.6.0
+ **/
+gsize
+fu_firmware_get_size (FuFirmware *self)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FIRMWARE (self), G_MAXSIZE);
+	if (priv->size != 0)
+		return priv->size;
+	if (priv->bytes != NULL)
+		return g_bytes_get_size (priv->bytes);
+	return 0;
+}
+
+/**
  * fu_firmware_set_idx:
  * @self: a #FuPlugin
  * @idx: integer
@@ -663,6 +708,7 @@ fu_firmware_parse_full (FuFirmware *self,
 
 	/* just add entire blob */
 	fu_firmware_set_bytes (self, fw);
+	fu_firmware_set_size (self, g_bytes_get_size (fw));
 	return TRUE;
 }
 
@@ -1349,6 +1395,8 @@ fu_firmware_add_string (FuFirmware *self, guint idt, GString *str)
 		fu_common_string_append_kx (str, idt, "Address", priv->addr);
 	if (priv->offset != 0x0)
 		fu_common_string_append_kx (str, idt, "Offset", priv->offset);
+	if (priv->size != 0x0)
+		fu_common_string_append_kx (str, idt, "Size", priv->size);
 	if (priv->filename != NULL)
 		fu_common_string_append_kv (str, idt, "Filename", priv->filename);
 	if (priv->bytes != NULL) {
