@@ -1349,8 +1349,6 @@ fu_firmware_add_string (FuFirmware *self, guint idt, GString *str)
 		fu_common_string_append_kx (str, idt, "Address", priv->addr);
 	if (priv->offset != 0x0)
 		fu_common_string_append_kx (str, idt, "Offset", priv->offset);
-	if (priv->version != NULL)
-		fu_common_string_append_kv (str, idt, "Version", priv->version);
 	if (priv->filename != NULL)
 		fu_common_string_append_kv (str, idt, "Filename", priv->filename);
 	if (priv->bytes != NULL) {
