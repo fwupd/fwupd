@@ -120,6 +120,17 @@ fu_archive_cab_func (void)
 }
 
 static void
+fu_common_align_up_func (void)
+{
+	g_assert_cmpint (fu_common_align_up (0, 0), ==, 0);
+	g_assert_cmpint (fu_common_align_up (5, 0), ==, 5);
+	g_assert_cmpint (fu_common_align_up (5, 3), ==, 8);
+	g_assert_cmpint (fu_common_align_up (1023, 10), ==, 1024);
+	g_assert_cmpint (fu_common_align_up (1024, 10), ==, 1024);
+	g_assert_cmpint (fu_common_align_up (G_MAXSIZE - 1, 10), ==, G_MAXSIZE);
+}
+
+static void
 fu_common_byte_array_func (void)
 {
 	g_autoptr(GByteArray) array = g_byte_array_new ();
@@ -2476,6 +2487,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);
 	g_test_add_func ("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
+	g_test_add_func ("/fwupd/common{align-up}", fu_common_align_up_func);
 	g_test_add_func ("/fwupd/common{byte-array}", fu_common_byte_array_func);
 	g_test_add_func ("/fwupd/common{crc}", fu_common_crc_func);
 	g_test_add_func ("/fwupd/common{string-append-kv}", fu_common_string_append_kv_func);

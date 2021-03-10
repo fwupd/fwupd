@@ -355,3 +355,5 @@ guint32		 fu_common_crc32_full		(const guint8	*buf,
 						 guint32	 crc,
 						 guint32	 polynomial);
 gchar		*fu_common_uri_get_scheme	(const gchar	*uri);
+gsize		 fu_common_align_up		(gsize		 value,
+						 guint8		 alignment);
