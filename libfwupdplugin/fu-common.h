@@ -272,6 +272,8 @@ void		 fu_byte_array_append_uint32	(GByteArray	*array,
 void		 fu_byte_array_append_uint64	(GByteArray	*array,
 						 guint64	 data,
 						 FuEndianType	 endian);
+void		 fu_byte_array_append_bytes	(GByteArray	*array,
+						 GBytes		*bytes);
 
 void		 fu_common_write_uint16		(guint8		*buf,
 						 guint16	 val_native,

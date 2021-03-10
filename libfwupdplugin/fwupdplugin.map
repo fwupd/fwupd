@@ -736,6 +736,7 @@ LIBFWUPDPLUGIN_1.5.8 {
   global:
     fu_bluez_device_notify_start;
     fu_bluez_device_notify_stop;
+    fu_byte_array_append_bytes;
     fu_byte_array_append_uint64;
     fu_common_read_uint64;
     fu_common_read_uint64_safe;

@@ -396,12 +396,6 @@ fu_bcm57xx_firmware_parse (FuFirmware *firmware,
 	return TRUE;
 }
 
-static void
-_g_byte_array_append_bytes (GByteArray *buf, GBytes *bytes)
-{
-	g_byte_array_append (buf, g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes));
-}
-
 static GBytes *
 _g_bytes_new_sized (gsize sz)
 {
@@ -519,7 +513,7 @@ fu_bcm57xx_firmware_write (FuFirmware *firmware, GError **error)
 					self->model, G_BIG_ENDIAN);
 		blob_info = g_byte_array_free_to_bytes (tmp);
 	}
-	_g_byte_array_append_bytes (buf, blob_info);
+	fu_byte_array_append_bytes (buf, blob_info);
 
 	/* add vpd */
 	img_vpd = fu_firmware_get_image_by_id (firmware, "vpd", NULL);
@@ -530,7 +524,7 @@ fu_bcm57xx_firmware_write (FuFirmware *firmware, GError **error)
 	} else {
 		blob_vpd = _g_bytes_new_sized (BCM_NVRAM_VPD_SZ);
 	}
-	_g_byte_array_append_bytes (buf, blob_vpd);
+	fu_byte_array_append_bytes (buf, blob_vpd);
 
 	/* add info2 */
 	img_info2 = fu_firmware_get_image_by_id (firmware, "info2", NULL);
@@ -541,16 +535,16 @@ fu_bcm57xx_firmware_write (FuFirmware *firmware, GError **error)
 	} else {
 		blob_info2 = _g_bytes_new_sized (BCM_NVRAM_INFO2_SZ);
 	}
-	_g_byte_array_append_bytes (buf, blob_info2);
+	fu_byte_array_append_bytes (buf, blob_info2);
 
 	/* add stage1+2 */
-	_g_byte_array_append_bytes (buf, blob_stage1);
-	_g_byte_array_append_bytes (buf, blob_stage2);
+	fu_byte_array_append_bytes (buf, blob_stage1);
+	fu_byte_array_append_bytes (buf, blob_stage2);
 
 	/* add dictionaries, e.g. APE */
 	for (guint i = 0; i < blob_dicts->len; i++) {
 		GBytes *blob = g_ptr_array_index (blob_dicts, i);
-		_g_byte_array_append_bytes (buf, blob);
+		fu_byte_array_append_bytes (buf, blob);
 	}
 
 	/* pad until full */

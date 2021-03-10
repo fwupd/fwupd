@@ -411,7 +411,7 @@ fu_solokey_device_verify (FuSolokeyDevice *self, GBytes *fw_sig, GError **error)
 	g_autoptr(GByteArray) sig = g_byte_array_new ();
 
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
-	g_byte_array_append (sig, g_bytes_get_data (fw_sig, NULL), g_bytes_get_size (fw_sig));
+	fu_byte_array_append_bytes (sig, fw_sig);
 	fu_solokey_device_exchange (req, SOLO_BOOTLOADER_DONE, 0x00, sig);
 	res = fu_solokey_device_packet (self, SOLO_BOOTLOADER_HID_CMD_BOOT, req, error);
 	if (res == NULL)

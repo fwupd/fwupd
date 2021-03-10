@@ -168,7 +168,7 @@ fu_elantp_firmware_write (FuFirmware *firmware, GError **error)
 					  self->module_id,
 					  G_LITTLE_ENDIAN, error))
 		return NULL;
-	g_byte_array_append (buf, g_bytes_get_data (blob, NULL), g_bytes_get_size (blob));
+	fu_byte_array_append_bytes (buf, blob);
 	g_byte_array_append (buf, elantp_signature, sizeof(elantp_signature));
 	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
 }

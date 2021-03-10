@@ -2493,6 +2493,23 @@ fu_byte_array_append_uint64 (GByteArray *array, guint64 data, FuEndianType endia
 }
 
 /**
+ * fu_byte_array_append_bytes:
+ * @array: A #GByteArray
+ * @bytes:  A #GBytes
+ *
+ * Adds the contents of a GBytes to a byte array
+ *
+ * Since: 1.5.8
+ **/
+void
+fu_byte_array_append_bytes (GByteArray *array, GBytes *bytes)
+{
+	g_byte_array_append (array,
+			     g_bytes_get_data (bytes, NULL),
+			     g_bytes_get_size (bytes));
+}
+
+/**
  * fu_byte_array_set_size:
  * @array: a #GByteArray
  * @length:  the new size of the GByteArray
