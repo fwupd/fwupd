@@ -1,10 +1,10 @@
 <firmware gtype="FuBcm57xxFirmware">
   <version>1.2.3</version>
   <firmware gtype="FuBcm57xxStage1Image">
-    <version>7.8.9</version>
+    <version_raw>0x123456</version_raw>
     <id>stage1</id>
     <idx>0x01</idx>
-    <filename>bcm57xx-stage1.bin</filename>
+    <data>aGVsbG8gd29ybGQ=</data>
   </firmware>
   <firmware gtype="FuBcm57xxStage2Image">
     <id>stage2</id>

@@ -45,6 +45,7 @@ fu_bcm57xx_stage1_image_parse (FuFirmware *image,
 		g_autofree gchar *tmp = NULL;
 		tmp = fu_common_version_from_uint32 (fwversion, FWUPD_VERSION_FORMAT_TRIPLET);
 		fu_firmware_set_version (image, tmp);
+		fu_firmware_set_version_raw (image, fwversion);
 	} else {
 		guint32 bufver[4] = { '\0' };
 		guint32 veraddr = 0x0;
@@ -81,37 +82,45 @@ fu_bcm57xx_stage1_image_parse (FuFirmware *image,
 }
 
 static GBytes *
-fu_bcm57xx_stage1_image_write (FuFirmware *image, GError **error)
+fu_bcm57xx_stage1_image_write (FuFirmware *firmware, GError **error)
 {
-	const guint8 *buf;
-	gsize bufsz = 0;
 	guint32 crc;
-	g_autoptr(GByteArray) blob = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new ();
 	g_autoptr(GBytes) fw_nocrc = NULL;
-	g_autoptr(GBytes) fw_align = NULL;
 
-	/* get the CRC-less data */
-	fw_nocrc = fu_firmware_get_bytes (image, error);
+	/* the CRC-less payload */
+	fw_nocrc = fu_firmware_get_bytes (firmware, error);
 	if (fw_nocrc == NULL)
 		return NULL;
 
-	/* this has to be aligned by DWORDs */
-	fw_align = fu_common_bytes_align (fw_nocrc, sizeof(guint32), 0xff);
+	/* fuzzing, so write a header with the version */
+	if (g_bytes_get_size (fw_nocrc) < BCM_NVRAM_STAGE1_VERSION)
+		fu_byte_array_set_size (buf, BCM_NVRAM_STAGE1_VERSION + sizeof(guint32));
 
-	/* add to a mutable buffer */
-	buf = g_bytes_get_data (fw_align, &bufsz);
-	blob = g_byte_array_sized_new (bufsz + sizeof(guint32));
-	g_byte_array_append (blob, buf, bufsz);
+	/* payload */
+	fu_byte_array_append_bytes (buf, fw_nocrc);
+
+	/* update version */
+	if (!fu_common_write_uint32_safe (buf->data, buf->len, BCM_NVRAM_STAGE1_VERSION,
+					  fu_firmware_get_version_raw (firmware),
+					  G_BIG_ENDIAN, error))
+		return NULL;
+
+	/* align */
+	fu_byte_array_set_size (buf,
+				fu_common_align_up (g_bytes_get_size (fw_nocrc),
+						    fu_firmware_get_alignment (firmware)));
 
 	/* add CRC */
-	crc = fu_bcm57xx_nvram_crc (buf, bufsz);
-	fu_byte_array_append_uint32 (blob, crc, G_LITTLE_ENDIAN);
-	return g_byte_array_free_to_bytes (g_steal_pointer (&blob));
+	crc = fu_bcm57xx_nvram_crc (buf->data, buf->len);
+	fu_byte_array_append_uint32 (buf, crc, G_LITTLE_ENDIAN);
+	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
 }
 
 static void
 fu_bcm57xx_stage1_image_init (FuBcm57xxStage1Image *self)
 {
+	fu_firmware_set_alignment (FU_FIRMWARE (self), 2);
 }
 
 static void
