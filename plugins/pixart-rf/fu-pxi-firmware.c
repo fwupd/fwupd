@@ -115,9 +115,25 @@ fu_pxi_firmware_parse (FuFirmware *firmware,
 	return TRUE;
 }
 
+static gboolean
+fu_pxi_firmware_build (FuFirmware *firmware, XbNode *n, GError **error)
+{
+	FuPxiFirmware *self = FU_PXI_FIRMWARE (firmware);
+	const gchar *tmp;
+
+	/* optional properties */
+	tmp = xb_node_query_text (n, "model_name", NULL);
+	if (tmp != NULL)
+		self->model_name = g_strdup (tmp);
+
+	/* success */
+	return TRUE;
+}
+
 static GBytes *
 fu_pxi_firmware_write (FuFirmware *firmware, GError **error)
 {
+	FuPxiFirmware *self = FU_PXI_FIRMWARE (firmware);
 	guint8 fw_header[PIXART_RF_FW_HEADER_SIZE] = { 0x0 };
 	guint64 version_raw = fu_firmware_get_version_raw (firmware);
 	g_autoptr(GByteArray) buf = NULL;
@@ -156,6 +172,17 @@ fu_pxi_firmware_write (FuFirmware *firmware, GError **error)
 			     (guint) version_raw);
 		return NULL;
 	}
+	if (self->model_name != NULL) {
+		gsize model_namesz = MIN (strlen (self->model_name),
+					  FU_PXI_DEVICE_MODEL_NAME_LEN);
+		if (!fu_memcpy_safe (fw_header, sizeof(fw_header), 0x05,			/* dst */
+				     (const guint8 *) self->model_name, model_namesz, 0x0,	/* src */
+				     model_namesz, error)) {
+			g_prefix_error (error, "failed to get fw model name: ");
+			return NULL;
+		}
+	}
+
 	g_byte_array_append (buf, fw_header, sizeof(fw_header));
 	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
 }
@@ -180,6 +207,7 @@ fu_pxi_firmware_class_init (FuPxiFirmwareClass *klass)
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	object_class->finalize = fu_pxi_firmware_finalize;
 	klass_firmware->parse = fu_pxi_firmware_parse;
+	klass_firmware->build = fu_pxi_firmware_build;
 	klass_firmware->write = fu_pxi_firmware_write;
 	klass_firmware->to_string = fu_pxi_firmware_to_string;
 }
