@@ -426,6 +426,7 @@ fu_synaptics_rmi_ps2_device_enter_iep_mode (FuSynapticsRmiDevice *rmi_device,
 		g_prefix_error (error, "failed to enter RMI mode: ");
 		return FALSE;
 	}
+	fu_synaptics_rmi_device_set_iepmode (rmi_device, TRUE);
 
 	/* success */
 	return TRUE;
@@ -442,8 +443,10 @@ fu_synaptics_rmi_ps2_device_write_rmi_register (FuSynapticsRmiPs2Device *self,
 {
 	g_return_val_if_fail (timeout > 0, FALSE);
 
-	if (!fu_synaptics_rmi_device_enter_iep_mode (FU_SYNAPTICS_RMI_DEVICE (self), error))
-		return FALSE;
+	if (fu_synaptics_rmi_device_get_iepmode (FU_SYNAPTICS_RMI_DEVICE (self)) == FALSE) {
+		if (!fu_synaptics_rmi_ps2_device_enter_iep_mode (FU_SYNAPTICS_RMI_DEVICE (self), error))
+			return FALSE;
+	}
 	if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 						     edpAuxSetScaling2To1,
 						     timeout,
@@ -500,8 +503,10 @@ fu_synaptics_rmi_ps2_device_read_rmi_register (FuSynapticsRmiPs2Device *self,
 {
 	g_return_val_if_fail (buf != NULL, FALSE);
 
-	if (!fu_synaptics_rmi_device_enter_iep_mode (FU_SYNAPTICS_RMI_DEVICE (self), error))
-		return FALSE;
+	if (fu_synaptics_rmi_device_get_iepmode (FU_SYNAPTICS_RMI_DEVICE (self)) == FALSE) {
+		if (!fu_synaptics_rmi_ps2_device_enter_iep_mode (FU_SYNAPTICS_RMI_DEVICE (self), error))
+			return FALSE;
+	}
 	for (guint retries = 0; ; retries++) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetScaling2To1, 50,
@@ -550,20 +555,22 @@ fu_synaptics_rmi_ps2_device_read_rmi_packet_register (FuSynapticsRmiPs2Device *s
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
 
-	if (!fu_synaptics_rmi_ps2_device_enter_iep_mode (FU_SYNAPTICS_RMI_DEVICE (self), error))
-		return NULL;
+	if (fu_synaptics_rmi_device_get_iepmode (FU_SYNAPTICS_RMI_DEVICE (self)) == FALSE) {
+		if (!fu_synaptics_rmi_ps2_device_enter_iep_mode (FU_SYNAPTICS_RMI_DEVICE (self), error))
+			return NULL;
+	}
 	if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetScaling2To1, 50,
 						     FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						     error) ||
 	    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetSampleRate, 50,
 						     FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						     error) ||
-	    !fu_synaptics_rmi_ps2_device_write_byte (self, addr,
+	    !fu_synaptics_rmi_ps2_device_write_byte (self, addr, 50,
 						     FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
-						     FALSE, error) ||
-	    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxStatusRequest,
+						     error) ||
+	    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxStatusRequest, 50,
 						     FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
-						     FALSE, error)) {
+						     error)) {
 		g_prefix_error (error, "failed to write command in Read RMI Packet Register: ");
 		return NULL;
 	}
@@ -897,10 +904,12 @@ fu_synaptics_rmi_ps2_device_detach (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* Set iepmode before querying device forcibly because of FW requirement */
+	fu_synaptics_rmi_device_set_iepmode (self, FALSE);
 	if (!fu_synaptics_rmi_device_enter_iep_mode (self, error)) {
 		return FALSE;
 	}
-
+	
 	if (!fu_synaptics_rmi_ps2_device_query_status (self, error)) {
 		g_prefix_error (error, "failed to query status after detach: ");
 		return FALSE;

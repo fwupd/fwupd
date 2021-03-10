@@ -187,6 +187,13 @@ fu_synaptics_rmi_device_set_iepmode (FuSynapticsRmiDevice *self, gboolean iepmod
 }
 
 gboolean
+fu_synaptics_rmi_device_get_iepmode (FuSynapticsRmiDevice *self)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	return priv->in_iep_mode;
+}
+
+gboolean
 fu_synaptics_rmi_device_write_bus_select (FuSynapticsRmiDevice *self, guint8 bus, GError **error)
 {
 	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
@@ -386,6 +393,9 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	/* set page */
 	if (!fu_synaptics_rmi_device_set_page (self, 0, error))
 		return FALSE;
+
+	/* Force entering iep mode again. */
+	fu_synaptics_rmi_device_set_iepmode (self, FALSE);
 	if (!fu_synaptics_rmi_device_enter_iep_mode (self, error))
 		return FALSE;
 
@@ -420,6 +430,11 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	}
 	if (product_id != NULL)
 		fu_synaptics_rmi_device_set_product_id (self, product_id);
+
+	/* Force entering iep mode again. */
+	fu_synaptics_rmi_device_set_iepmode (self, FALSE);
+	if (!fu_synaptics_rmi_device_enter_iep_mode (self, error))
+		return FALSE;
 
 	/* skip */
 	prod_info_addr = addr + 6;

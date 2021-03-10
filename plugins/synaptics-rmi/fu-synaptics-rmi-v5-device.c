@@ -84,12 +84,13 @@ fu_synaptics_rmi_v5_device_erase_all (FuSynapticsRmiDevice *self, GError **error
 	if (!fu_synaptics_rmi_device_write (self,
 					    flash->status_addr,
 					    erase_cmd,
-					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_ALLOW_FAILURE,
 					    error)) {
 		g_prefix_error (error, "failed to erase core config: ");
 		return FALSE;
 	}
 	g_usleep (1000 * RMI_F34_ERASE_WAIT_MS);
+	fu_synaptics_rmi_device_set_iepmode (self, FALSE);
 	if (!fu_synaptics_rmi_device_enter_iep_mode (self, error))
 		return FALSE;
 	if (!fu_synaptics_rmi_device_wait_for_idle (self,
@@ -115,7 +116,7 @@ fu_synaptics_rmi_v5_device_write_block (FuSynapticsRmiDevice *self,
 	g_byte_array_append (req, data, datasz);
 	fu_byte_array_append_uint8 (req, cmd);
 	if (!fu_synaptics_rmi_device_write (self, address, req,
-					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_ALLOW_FAILURE,
 					    error)) {
 		g_prefix_error (error, "failed to write block @0x%x: ", address);
 		return FALSE;
@@ -160,6 +161,7 @@ fu_synaptics_rmi_v5_device_secure_check (FuDevice *device,
 			g_prefix_error (error, "failed to read status: ");
 			return FALSE;
 		}
+		fu_synaptics_rmi_device_set_iepmode (self, FALSE);
 		if (!fu_synaptics_rmi_device_enter_iep_mode (self, error))
 			return FALSE;
 		for (guint16 block_num = 0; block_num < rsa_block_cnt; block_num++) {
@@ -233,9 +235,13 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 	FuSynapticsRmiFunction *f34;
 	FuSynapticsRmiFirmware *rmi_firmware = FU_SYNAPTICS_RMI_FIRMWARE (firmware);
 	guint32 address;
+	guint32 firmware_length = 
+		fu_synaptics_rmi_firmware_get_firmware_size (rmi_firmware) - 
+		fu_synaptics_rmi_firmware_get_sig_size (rmi_firmware);
 	g_autoptr(GBytes) bytes_bin = NULL;
 	g_autoptr(GBytes) bytes_cfg = NULL;
 	g_autoptr(GBytes) signature_bin = NULL;
+	g_autoptr(GBytes) firmware_bin = NULL;
 	g_autoptr(GPtrArray) chunks_bin = NULL;
 	g_autoptr(GPtrArray) chunks_cfg = NULL;
 	g_autoptr(GByteArray) req_addr = g_byte_array_new ();
@@ -248,6 +254,7 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 				     "not bootloader, perhaps need detach?!");
 		return FALSE;
 	}
+	fu_synaptics_rmi_device_set_iepmode (self, FALSE);
 	if (!fu_synaptics_rmi_device_enter_iep_mode (self, error))
 		return FALSE;
 
@@ -288,11 +295,12 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 	if (bytes_cfg == NULL)
 		return FALSE;
 
+	firmware_bin = g_bytes_new_from_bytes (bytes_bin, 0, firmware_length);
 	/* verify signature if set */
 	signature_bin = fu_firmware_get_image_by_id_bytes (firmware, "sig", NULL);
 	if (signature_bin != NULL) {
 		if (!fu_synaptics_rmi_v5_device_secure_check (device,
-							      bytes_bin,
+							      firmware_bin,
 							      signature_bin,
 							      error)) {
 			g_prefix_error (error, "secure check failed: ");
@@ -334,7 +342,7 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 		address = f34->data_base + RMI_F34_BLOCK_DATA_V1_OFFSET;
 	else
 		address = f34->data_base + RMI_F34_BLOCK_DATA_OFFSET;
-	chunks_bin = fu_chunk_array_new_from_bytes (bytes_bin,
+	chunks_bin = fu_chunk_array_new_from_bytes (firmware_bin,
 						    0x00,	/* start addr */
 						    0x00,	/* page_sz */
 						    flash->block_size);
@@ -387,6 +395,8 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 		}
 		g_usleep (1000 * 1000);
 	}
+
+	fu_synaptics_rmi_device_set_iepmode (self, FALSE);
 	if (!fu_synaptics_rmi_device_enter_iep_mode (self, error))
 		return FALSE;
 

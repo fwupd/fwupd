@@ -13,3 +13,4 @@ G_DECLARE_FINAL_TYPE (FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU, SYN
 
 FuFirmware	*fu_synaptics_rmi_firmware_new			(void);
 guint32		 fu_synaptics_rmi_firmware_get_sig_size		(FuSynapticsRmiFirmware	*self);
+guint32		 fu_synaptics_rmi_firmware_get_firmware_size		(FuSynapticsRmiFirmware	*self);

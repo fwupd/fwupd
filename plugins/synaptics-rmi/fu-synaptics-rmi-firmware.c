@@ -32,6 +32,7 @@ struct _FuSynapticsRmiFirmware {
 	guint16			 product_info;
 	gchar			*product_id;
 	guint32			 sig_size;
+	guint32			 firmware_size;
 };
 
 G_DEFINE_TYPE (FuSynapticsRmiFirmware, fu_synaptics_rmi_firmware, FU_TYPE_FIRMWARE)
@@ -345,6 +346,7 @@ fu_synaptics_rmi_firmware_parse_v0x (FuFirmware *firmware, GBytes *fw, GError **
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE (firmware);
 	guint32 cfg_sz;
 	guint32 img_sz = 0;
+	guint32 sig_offset = 0;
 	gsize sz = 0;
 	const guint8 *data = g_bytes_get_data (fw, &sz);
 
@@ -358,9 +360,9 @@ fu_synaptics_rmi_firmware_parse_v0x (FuFirmware *firmware, GBytes *fw, GError **
 	if (img_sz > 0) {
 		/* payload, then signature appended */
 		if (self->sig_size > 0) {
-			img_sz -= self->sig_size;
+			sig_offset = img_sz - self->sig_size;
 			if (!fu_synaptics_rmi_firmware_add_image (firmware, "sig", fw,
-								  RMI_IMG_FW_OFFSET + img_sz,
+								  RMI_IMG_FW_OFFSET + sig_offset,
 								  self->sig_size,
 								  error))
 				return FALSE;
@@ -397,7 +399,6 @@ fu_synaptics_rmi_firmware_parse (FuFirmware *firmware,
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE (firmware);
 	gsize sz = 0;
 	guint32 checksum_calculated;
-	guint32 firmware_size = 0;
 	const guint8 *data = g_bytes_get_data (fw, &sz);
 
 	/* check minimum size */
@@ -462,7 +463,7 @@ fu_synaptics_rmi_firmware_parse (FuFirmware *firmware,
 		return FALSE;
 	if (!fu_common_read_uint32_safe (data, sz,
 					 RMI_IMG_IMAGE_SIZE_OFFSET,
-					 &firmware_size,
+					 &self->firmware_size,
 					 G_LITTLE_ENDIAN,
 					 error))
 		return FALSE;
@@ -508,6 +509,12 @@ guint32
 fu_synaptics_rmi_firmware_get_sig_size (FuSynapticsRmiFirmware *self)
 {
 	return self->sig_size;
+}
+
+guint32
+fu_synaptics_rmi_firmware_get_firmware_size (FuSynapticsRmiFirmware *self)
+{
+	return self->firmware_size;
 }
 
 static GBytes *
