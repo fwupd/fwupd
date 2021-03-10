@@ -558,7 +558,7 @@ static GBytes *
 fu_synaptics_rmi_firmware_write_v10 (FuFirmware *firmware, GError **error)
 {
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE (firmware);
-	gsize bufsz = 0;
+	gsize bufsz;
 	guint32 csum;
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
@@ -574,7 +574,7 @@ fu_synaptics_rmi_firmware_write_v10 (FuFirmware *firmware, GError **error)
 	guint32 offset_table[] = { RMI_IMG_FW_OFFSET + 0x24 };				/* offset to first RmiFirmwareContainerDescriptor */
 	RmiFirmwareContainerDescriptor desc = {
 		.container_id =		GUINT16_TO_LE(RMI_FIRMWARE_CONTAINER_ID_FLASH_CONFIG),
-		.content_length =	GUINT32_TO_LE(bufsz),
+		.content_length =	0x0,
 		.content_address =	GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x44),
 	};
 
@@ -586,6 +586,7 @@ fu_synaptics_rmi_firmware_write_v10 (FuFirmware *firmware, GError **error)
 	if (buf_blob == NULL)
 		return NULL;
 	bufsz = g_bytes_get_size (buf_blob);
+	desc.content_length = GUINT32_TO_LE(bufsz);
 
 	/* create empty block */
 	fu_byte_array_set_size (buf, RMI_IMG_FW_OFFSET + 0x48);
