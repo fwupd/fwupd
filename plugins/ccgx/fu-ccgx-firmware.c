@@ -384,17 +384,7 @@ fu_ccgx_firmware_write (FuFirmware *firmware, GError **error)
 	g_autoptr(GByteArray) mdbuf = g_byte_array_new ();
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
-	g_autoptr(GPtrArray) images = fu_firmware_get_images (firmware);
 	g_autoptr(GString) str = g_string_new (NULL);
-
-	/* can only contain one image */
-	if (images->len != 1) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "only supports writing one image");
-		return NULL;
-	}
 
 	/* header record */
 	g_string_append_printf (str, "%04X%04X%02X%02X\n",
