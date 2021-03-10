@@ -52,6 +52,29 @@ fu_synaptics_mst_firmware_parse (FuFirmware *firmware,
 	return TRUE;
 }
 
+static GBytes *
+fu_synaptics_mst_firmware_write (FuFirmware *firmware, GError **error)
+{
+	g_autoptr(GByteArray) buf = g_byte_array_new ();
+	g_autoptr(GBytes) blob = NULL;
+
+	/* assumed header */
+	fu_byte_array_set_size (buf, ADDR_CUSTOMER_ID + sizeof(guint16));
+	if (!fu_common_write_uint16_safe (buf->data, buf->len, ADDR_CUSTOMER_ID,
+					  fu_firmware_get_idx (firmware), G_BIG_ENDIAN,
+					  error))
+		return NULL;
+
+	/* payload */
+	blob = fu_firmware_get_bytes (firmware, error);
+	if (blob == NULL)
+		return NULL;
+	fu_byte_array_append_bytes (buf, blob);
+
+	/* success */
+	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
+}
+
 static void
 fu_synaptics_mst_firmware_init (FuSynapticsMstFirmware *self)
 {
@@ -63,6 +86,7 @@ fu_synaptics_mst_firmware_class_init (FuSynapticsMstFirmwareClass *klass)
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_synaptics_mst_firmware_parse;
 	klass_firmware->to_string = fu_synaptics_mst_firmware_to_string;
+	klass_firmware->write = fu_synaptics_mst_firmware_write;
 }
 
 FuFirmware *
