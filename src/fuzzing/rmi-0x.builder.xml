@@ -2,6 +2,7 @@
   <kind>0x01</kind>
   <product_id>Example</product_id>
   <firmware gtype="FuFirmware">
+    <id>ui</id>
     <data>ZGF2ZQ==</data> <!-- base64, 4 bytes -->
   </firmware>
 </firmware>
