@@ -47,29 +47,31 @@ fu_bcm57xx_stage1_image_parse (FuFirmware *image,
 		fu_firmware_set_version (image, tmp);
 		fu_firmware_set_version_raw (image, fwversion);
 	} else {
-		guint32 bufver[4] = { '\0' };
 		guint32 veraddr = 0x0;
-		g_autoptr(Bcm57xxVeritem) veritem = NULL;
 
-		/* fall back to the string, e.g. '5719-v1.43' */
+		/* fall back to the optional string, e.g. '5719-v1.43' */
 		if (!fu_common_read_uint32_safe (buf, bufsz, BCM_NVRAM_STAGE1_VERADDR,
 						 &veraddr, G_BIG_ENDIAN, error))
 			return FALSE;
-		if (veraddr < BCM_PHYS_ADDR_DEFAULT + sizeof(bufver)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "version address 0x%x less than physical 0x%x",
-				     veraddr, (guint) BCM_PHYS_ADDR_DEFAULT);
-			return FALSE;
+		if (veraddr != 0x0) {
+			guint32 bufver[4] = { '\0' };
+			g_autoptr(Bcm57xxVeritem) veritem = NULL;
+			if (veraddr < BCM_PHYS_ADDR_DEFAULT + sizeof(bufver)) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "version address 0x%x less than physical 0x%x",
+					     veraddr, (guint) BCM_PHYS_ADDR_DEFAULT);
+				return FALSE;
+			}
+			if (!fu_memcpy_safe ((guint8 *) bufver, sizeof(bufver), 0x0,	/* dst */
+					     buf, bufsz, veraddr - BCM_PHYS_ADDR_DEFAULT, /* src */
+					     sizeof(bufver), error))
+				return FALSE;
+			veritem = fu_bcm57xx_veritem_new ((guint8 *) bufver, sizeof(bufver));
+			if (veritem != NULL)
+				fu_firmware_set_version (image, veritem->version);
 		}
-		if (!fu_memcpy_safe ((guint8 *) bufver, sizeof(bufver), 0x0,	/* dst */
-				     buf, bufsz, veraddr - BCM_PHYS_ADDR_DEFAULT, /* src */
-				     sizeof(bufver), error))
-			return FALSE;
-		veritem = fu_bcm57xx_veritem_new ((guint8 *) bufver, sizeof(bufver));
-		if (veritem != NULL)
-			fu_firmware_set_version (image, veritem->version);
 	}
 
 	fw_nocrc = fu_common_bytes_new_offset (fw, 0x0,
