@@ -1,0 +1,5 @@
+<firmware gtype="FuSrecFirmware">
+  <addr>0x1000000</addr>
+  <id>HDR</id>
+  <data>aGVsbG8gd29ybGQ=</data>
+</firmware>
