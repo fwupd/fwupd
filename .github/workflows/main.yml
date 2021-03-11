@@ -1,9 +1,9 @@
 name: Continuous Integration
 on:
   push:
-    branches: [ master, 1_4_X ]
+    branches: [ 1_5_X ]
   pull_request:
-    branches: [ master, 1_4_X ]
+    branches: [ 1_5_X ]
 
 jobs:
   abi:
