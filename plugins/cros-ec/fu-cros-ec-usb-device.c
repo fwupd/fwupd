@@ -264,6 +264,9 @@ fu_cros_ec_usb_device_flush (FuDevice *device, gpointer user_data,
 	gsize actual = 0;
 	g_autofree guint8 *inbuf = g_malloc0 (self->chunk_len);
 
+	/* bulk transfer expected to fail normally (ie, no stale data)
+	 * but if bulk transfer succeeds, indicates stale bytes on the device
+	 * so this will retry until they're emptied */
 	if (g_usb_device_bulk_transfer (usb_device, self->ep_num | 0x80, inbuf,
 					self->chunk_len, &actual,
 					FLUSH_TIMEOUT_MS, NULL, NULL)) {
@@ -510,9 +513,11 @@ fu_cros_ec_usb_device_transfer_block (FuDevice *device, gpointer user_data,
 					    NULL,
 					    0, FALSE,
 					    NULL, error)) {
+		g_autoptr(GError) error_flush = NULL;
 		/* flush all data from endpoint to recover in case of error */
-		if (!fu_cros_ec_usb_device_recovery (device, NULL)) {
-			g_debug ("failed to flush to idle");
+		if (!fu_cros_ec_usb_device_recovery (device, &error_flush)) {
+			g_debug ("failed to flush to idle: %s",
+				 error_flush->message);
 		}
 		g_prefix_error (error, "failed at sending header: ");
 		return FALSE;
@@ -528,11 +533,13 @@ fu_cros_ec_usb_device_transfer_block (FuDevice *device, gpointer user_data,
 						    NULL,
 						    0, FALSE,
 						    NULL, error)) {
+			g_autoptr(GError) error_flush = NULL;
 			g_prefix_error (error, "failed at sending chunk: ");
 
 			/* flush all data from endpoint to recover in case of error */
-			if (!fu_cros_ec_usb_device_recovery (device, NULL)) {
-				g_debug ("failed to flush to idle");
+			if (!fu_cros_ec_usb_device_recovery (device, &error_flush)) {
+				g_debug ("failed to flush to idle: %s",
+					 error_flush->message);
 			}
 			return FALSE;
 		}
@@ -542,10 +549,12 @@ fu_cros_ec_usb_device_transfer_block (FuDevice *device, gpointer user_data,
 	if (!fu_cros_ec_usb_device_do_xfer (self, NULL, 0,
 					    (guint8 *)&reply, sizeof (reply),
 					    TRUE, &transfer_size, error)) {
+		g_autoptr(GError) error_flush = NULL;
 		g_prefix_error (error, "failed at reply: ");
 		/* flush all data from endpoint to recover in case of error */
-		if (!fu_cros_ec_usb_device_recovery (device, NULL)) {
-			g_debug ("failed to flush to idle");
+		if (!fu_cros_ec_usb_device_recovery (device, &error_flush)) {
+			g_debug ("failed to flush to idle: %s",
+				 error_flush->message);
 		}
 		return FALSE;
 	}
@@ -691,6 +700,7 @@ fu_cros_ec_usb_device_reset_to_ro (FuDevice *device, GError **error)
 	guint8 command_body[2]; /* Max command body size. */
 	gsize command_body_size = 0;
 	gsize response_size = 1;
+	g_autoptr(GError) error_local = NULL;
 
 	if (fu_device_has_custom_flag (device, "ro-written"))
 		fu_device_set_custom_flags (device, "ro-written,rebooting-to-ro");
@@ -698,10 +708,9 @@ fu_cros_ec_usb_device_reset_to_ro (FuDevice *device, GError **error)
 		fu_device_set_custom_flags (device, "rebooting-to-ro");
 	if (!fu_cros_ec_usb_device_send_subcommand  (device, subcommand, command_body,
 				     command_body_size, &response,
-				     &response_size, FALSE, error)) {
+				     &response_size, FALSE, &error_local)) {
 		/* failure here is ok */
-		g_clear_error (error);
-		return TRUE;
+		g_debug ("ignoring failure: %s", error_local->message);
 	}
 
 	/* success */
