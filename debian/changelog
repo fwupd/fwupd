@@ -1,3 +1,11 @@
+fwupd (1.5.7-3) unstable; urgency=medium
+
+  * Backport a patch to fix regression in fwupdtool activate
+  * Backport a patch to fix activatable devices getting stuck in an update loop
+  * Rebuild to pick up new signing keys.
+
+ -- Mario Limonciello <mario.limonciello@dell.com>  Thu, 11 Mar 2021 16:16:53 -0600
+
 fwupd (1.5.7-2) unstable; urgency=medium
 
   * Backport a patch to fix FTBFS on armhf for SBAT
