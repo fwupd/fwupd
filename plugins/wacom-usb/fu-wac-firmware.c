@@ -253,6 +253,59 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 	return TRUE;
 }
 
+static guint8
+fu_wac_firmware_calc_checksum (GByteArray *buf)
+{
+	guint8 csum = 0;
+	for (guint i = 0; i < buf->len; i++)
+		csum += buf->data[i];
+	return csum ^ 0xFF;
+}
+
+static GBytes *
+fu_wac_firmware_write (FuFirmware *firmware, GError **error)
+{
+	g_autoptr(GPtrArray) images = fu_firmware_get_images (firmware);
+	g_autoptr(GString) str = g_string_new (NULL);
+	g_autoptr(GByteArray) buf_hdr = g_byte_array_new ();
+
+	/* fw header */
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmware *img = g_ptr_array_index (images, i);
+		fu_byte_array_append_uint32 (buf_hdr, fu_firmware_get_addr (img), G_BIG_ENDIAN);
+		fu_byte_array_append_uint32 (buf_hdr, fu_firmware_get_size (img), G_BIG_ENDIAN);
+	}
+	g_string_append_printf (str, "WACOM%u", images->len);
+	for (guint i = 0; i < buf_hdr->len; i++)
+		g_string_append_printf (str, "%02X", buf_hdr->data[i]);
+	g_string_append_printf (str, "%02X\n", fu_wac_firmware_calc_checksum (buf_hdr));
+
+	/* payload */
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmware *img = g_ptr_array_index (images, i);
+		g_autoptr(GBytes) img_blob = NULL;
+		g_autoptr(GByteArray) buf_img = g_byte_array_new ();
+
+		/* img header */
+		g_string_append_printf (str, "WA%u", (guint) fu_firmware_get_idx (img) + 1);
+		fu_byte_array_append_uint32 (buf_img, fu_firmware_get_addr (img), G_BIG_ENDIAN);
+		for (guint j = 0; j < buf_img->len; j++)
+			g_string_append_printf (str, "%02X", buf_img->data[j]);
+		g_string_append_printf (str, "%02X\n", fu_wac_firmware_calc_checksum (buf_img));
+
+		/* srec */
+		img_blob = fu_firmware_write (img, error);
+		if (img_blob == NULL)
+			return NULL;
+		g_string_append_len (str,
+				     (const gchar *) g_bytes_get_data (img_blob, NULL),
+				     g_bytes_get_size (img_blob));
+	}
+
+	/* success */
+	return g_string_free_to_bytes (g_steal_pointer (&str));
+}
+
 static void
 fu_wac_firmware_init (FuWacFirmware *self)
 {
@@ -263,6 +316,7 @@ fu_wac_firmware_class_init (FuWacFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_wac_firmware_parse;
+	klass_firmware->write = fu_wac_firmware_write;
 }
 
 FuFirmware *
