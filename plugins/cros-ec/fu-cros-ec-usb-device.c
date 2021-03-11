@@ -811,10 +811,21 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 		FuCrosEcFirmwareSection *section = g_ptr_array_index (sections, i);
 
 		if (section->ustatus == FU_CROS_EC_FW_NEEDED) {
+			g_autoptr(GError) error_local = NULL;
+
 			if (!fu_cros_ec_usb_device_transfer_section (device,
 								     firmware,
 								     section,
-								     error)) {
+								     &error_local)) {
+				if (g_error_matches (error_local,
+						     G_USB_DEVICE_ERROR,
+						     G_USB_DEVICE_ERROR_NOT_SUPPORTED)) {
+					g_debug ("failed to transfer section, trying another write, ignoring error: %s",
+						 error_local->message);
+					fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
+					return TRUE;
+				}
+				g_propagate_error (error, g_steal_pointer (&error_local));
 				return FALSE;
 			}
 			num_txed_sections++;
