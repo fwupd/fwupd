@@ -438,7 +438,6 @@ static GBytes *
 fu_srec_firmware_write (FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GString) str = g_string_new (NULL);
-	g_autoptr(GPtrArray) chunks = NULL;
 	g_autoptr(GBytes) buf_blob = NULL;
 	const gchar *id = fu_firmware_get_id (firmware);
 	gsize id_strlen = id != NULL ? strlen (id) : 0;
@@ -467,19 +466,20 @@ fu_srec_firmware_write (FuFirmware *firmware, GError **error)
 				     0x0, (const guint8 *) id, id_strlen);
 
 	/* payload */
-	chunks = fu_chunk_array_new_from_bytes (buf_blob,
-						fu_firmware_get_addr (firmware),
-						0x0, 64);
-	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index (chunks, i);
-		fu_srec_firmware_write_line (str, kind_data,
-					     fu_chunk_get_address (chk),
-					     fu_chunk_get_data (chk),
-					     fu_chunk_get_data_sz (chk));
+	if (g_bytes_get_size (buf_blob) > 0) {
+		g_autoptr(GPtrArray) chunks = NULL;
+		chunks = fu_chunk_array_new_from_bytes (buf_blob,
+							fu_firmware_get_addr (firmware),
+							0x0, 64);
+		for (guint i = 0; i < chunks->len; i++) {
+			FuChunk *chk = g_ptr_array_index (chunks, i);
+			fu_srec_firmware_write_line (str, kind_data,
+						     fu_chunk_get_address (chk),
+						     fu_chunk_get_data (chk),
+						     fu_chunk_get_data_sz (chk));
+		}
+		fu_srec_firmware_write_line (str, kind_coun, chunks->len, NULL, 0);
 	}
-
-	/* number of records */
-	fu_srec_firmware_write_line (str, kind_coun, chunks->len, NULL, 0);
 
 	/* EOF */
 	fu_srec_firmware_write_line (str, kind_term, 0x0, NULL, 0);
