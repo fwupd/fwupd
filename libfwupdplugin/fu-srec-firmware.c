@@ -472,7 +472,8 @@ fu_srec_firmware_write (FuFirmware *firmware, GError **error)
 						0x0, 64);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		fu_srec_firmware_write_line (str, kind_data, 0x0,
+		fu_srec_firmware_write_line (str, kind_data,
+					     fu_chunk_get_address (chk),
 					     fu_chunk_get_data (chk),
 					     fu_chunk_get_data_sz (chk));
 	}
