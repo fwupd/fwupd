@@ -746,9 +746,6 @@ fu_pxi_device_setup_guid (FuPxiDevice *self, GError **error)
 					 dev_name->str);
 		fu_device_add_instance_id (FU_DEVICE (self), devid2);
 	}
-
-	/* set logical id */
-	fu_device_set_logical_id (FU_DEVICE (self), devid);
 #endif
 	return TRUE;
 }
