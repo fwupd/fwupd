@@ -2510,6 +2510,25 @@ fu_byte_array_append_bytes (GByteArray *array, GBytes *bytes)
 }
 
 /**
+ * fu_byte_array_set_size_full:
+ * @array: a #GByteArray
+ * @length:  the new size of the GByteArray
+ * @data: the byte used to pad the array
+ *
+ * Sets the size of the GByteArray, expanding with @data as required.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_byte_array_set_size_full (GByteArray *array, guint length, guint8 data)
+{
+	guint oldlength = array->len;
+	g_byte_array_set_size (array, length);
+	if (length > oldlength)
+		memset (array->data + oldlength, data, length - oldlength);
+}
+
+/**
  * fu_byte_array_set_size:
  * @array: a #GByteArray
  * @length:  the new size of the GByteArray
@@ -2521,10 +2540,26 @@ fu_byte_array_append_bytes (GByteArray *array, GBytes *bytes)
 void
 fu_byte_array_set_size (GByteArray *array, guint length)
 {
-	guint oldlength = array->len;
-	g_byte_array_set_size (array, length);
-	if (length > oldlength)
-		memset (array->data + oldlength, 0x0, length - oldlength);
+	return fu_byte_array_set_size_full (array, length, 0x0);
+}
+
+/**
+ * fu_byte_array_align_up:
+ * @array: a #GByteArray
+ * @alignment: align to this power of 2
+ * @data: the byte used to pad the array
+ *
+ * Align a byte array length to a power of 2 boundary, where @alignment is the
+ * bit position to align to. If @alignment is zero then @array is unchanged.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_byte_array_align_up (GByteArray *array, guint8 alignment, guint8 data)
+{
+	fu_byte_array_set_size_full (array,
+				     fu_common_align_up (array->len, alignment),
+				     data);
 }
 
 /**
