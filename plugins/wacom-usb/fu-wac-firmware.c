@@ -189,7 +189,7 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 			g_autoptr(GBytes) blob = NULL;
 			g_autoptr(GBytes) fw_srec = NULL;
 			g_autoptr(FuFirmware) firmware_srec = fu_srec_firmware_new ();
-			g_autoptr(FuFirmware) img = NULL;
+			g_autoptr(FuFirmware) img = fu_firmware_new ();
 			FuFirmwareWacHeaderRecord *hdr;
 
 			/* get the correct relocated start address */
