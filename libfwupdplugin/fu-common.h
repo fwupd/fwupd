@@ -261,6 +261,12 @@ gboolean	 fu_common_write_uint64_safe	(guint8		*buf,
 
 void		 fu_byte_array_set_size		(GByteArray	*array,
 						 guint		 length);
+void		 fu_byte_array_set_size_full	(GByteArray	*array,
+						 guint		 length,
+						 guint8		 data);
+void		 fu_byte_array_align_up		(GByteArray	*array,
+						 guint8		 alignment,
+						 guint8		 data);
 void		 fu_byte_array_append_uint8	(GByteArray	*array,
 						 guint8		 data);
 void		 fu_byte_array_append_uint16	(GByteArray	*array,
