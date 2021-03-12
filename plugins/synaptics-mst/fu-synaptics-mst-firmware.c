@@ -26,10 +26,12 @@ fu_synaptics_mst_firmware_get_board_id (FuSynapticsMstFirmware *self)
 }
 
 static void
-fu_synaptics_mst_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_synaptics_mst_firmware_export (FuFirmware *firmware,
+				  FuFirmwareExportFlags flags,
+				  XbBuilderNode *bn)
 {
 	FuSynapticsMstFirmware *self = FU_SYNAPTICS_MST_FIRMWARE (firmware);
-	fu_common_string_append_kx (str, idt, "BoardId", self->board_id);
+	fu_xmlb_builder_insert_kx (bn, "board_id", self->board_id);
 }
 
 static gboolean
@@ -75,6 +77,21 @@ fu_synaptics_mst_firmware_write (FuFirmware *firmware, GError **error)
 	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
 }
 
+static gboolean
+fu_synaptics_rmi_firmware_build (FuFirmware *firmware, XbNode *n, GError **error)
+{
+	FuSynapticsMstFirmware *self = FU_SYNAPTICS_MST_FIRMWARE (firmware);
+	guint64 tmp;
+
+	/* optional properties */
+	tmp = xb_node_query_text_as_uint (n, "board_id", NULL);
+	if (tmp != G_MAXUINT64)
+		self->board_id = tmp;
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_synaptics_mst_firmware_init (FuSynapticsMstFirmware *self)
 {
@@ -85,8 +102,9 @@ fu_synaptics_mst_firmware_class_init (FuSynapticsMstFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_synaptics_mst_firmware_parse;
-	klass_firmware->to_string = fu_synaptics_mst_firmware_to_string;
+	klass_firmware->export = fu_synaptics_mst_firmware_export;
 	klass_firmware->write = fu_synaptics_mst_firmware_write;
+	klass_firmware->build = fu_synaptics_rmi_firmware_build;
 }
 
 FuFirmware *

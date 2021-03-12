@@ -3276,3 +3276,59 @@ fu_common_align_up (gsize value, guint8 alignment)
 	/* success */
 	return value_new;
 }
+
+/**
+ * fu_xmlb_builder_insert_kv:
+ * @bn: #JsonBuilder
+ * @key: string key
+ * @value: string value
+ *
+ * Convenience function to add an XML node with a string value. If @value is %NULL
+ * then no member is added.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_xmlb_builder_insert_kv (XbBuilderNode *bn, const gchar *key, const gchar *value)
+{
+	if (value == NULL)
+		return;
+	xb_builder_node_insert_text (bn, key, value, NULL);
+}
+
+/**
+ * fu_xmlb_builder_insert_kx:
+ * @bn: #JsonBuilder
+ * @key: string key
+ * @value: integer value
+ *
+ * Convenience function to add an XML node with a integer value. If @value is 0
+ * then no member is added.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_xmlb_builder_insert_kx (XbBuilderNode *bn, const gchar *key, guint64 value)
+{
+	g_autofree gchar *value_hex = NULL;
+	if (value == 0)
+		return;
+	value_hex = g_strdup_printf ("0x%x", (guint) value);
+	xb_builder_node_insert_text (bn, key, value_hex, NULL);
+}
+
+/**
+ * fu_xmlb_builder_insert_kb:
+ * @bn: #JsonBuilder
+ * @key: string key
+ * @value: boolean value
+ *
+ * Convenience function to add an XML node with a boolean value.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_xmlb_builder_insert_kb (XbBuilderNode *bn, const gchar *key, gboolean value)
+{
+	xb_builder_node_insert_text (bn, key, value ? "true" : "false", NULL);
+}

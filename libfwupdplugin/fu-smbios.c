@@ -479,19 +479,24 @@ fu_smbios_setup (FuSmbios *self, GError **error)
 }
 
 static void
-fu_smbios_to_string_internal (FuFirmware *firmware, guint idt, GString *str)
+fu_smbios_export (FuFirmware *firmware,
+		  FuFirmwareExportFlags flags,
+		  XbBuilderNode *bn)
 {
 	FuSmbios *self = FU_SMBIOS (firmware);
+
 	for (guint i = 0; i < self->items->len; i++) {
 		FuSmbiosItem *item = g_ptr_array_index (self->items, i);
-		fu_common_string_append_kx (str, idt + 0, "Type", item->type);
-		fu_common_string_append_kx (str, idt + 1, "Length", item->buf->len);
-		fu_common_string_append_kx (str, idt + 1, "Handle", item->handle);
+		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert (bn, "item", NULL);
+		fu_xmlb_builder_insert_kx (bc, "type", item->type);
+		fu_xmlb_builder_insert_kx (bc, "length", item->buf->len);
+		fu_xmlb_builder_insert_kx (bc, "handle", item->handle);
 		for (guint j = 0; j < item->strings->len; j++) {
 			const gchar *tmp = g_ptr_array_index (item->strings, j);
-			g_autofree gchar *title = g_strdup_printf ("String[%02u]", j);
+			g_autofree gchar *title = g_strdup_printf ("%02u", j);
 			g_autofree gchar *value = fu_common_strsafe (tmp, 20);
-			fu_common_string_append_kv (str, idt + 2, title, value);
+			xb_builder_node_insert_text (bc, "string", value,
+						     "idx", title, NULL);
 		}
 	}
 }
@@ -689,7 +694,7 @@ fu_smbios_class_init (FuSmbiosClass *klass)
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	object_class->finalize = fu_smbios_finalize;
 	klass_firmware->parse = fu_smbios_parse;
-	klass_firmware->to_string = fu_smbios_to_string_internal;
+	klass_firmware->export = fu_smbios_export;
 }
 
 static void

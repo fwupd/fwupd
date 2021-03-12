@@ -35,13 +35,17 @@ G_DEFINE_TYPE (FuBcm57xxFirmware, fu_bcm57xx_firmware, FU_TYPE_FIRMWARE)
 #define BCM_CODE_DIRECTORY_ADDR_APE		0x07
 
 static void
-fu_bcm57xx_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_bcm57xx_firmware_export (FuFirmware *firmware,
+			    FuFirmwareExportFlags flags,
+			    XbBuilderNode *bn)
 {
 	FuBcm57xxFirmware *self = FU_BCM57XX_FIRMWARE (firmware);
-	fu_common_string_append_kx (str, idt, "Vendor", self->vendor);
-	fu_common_string_append_kx (str, idt, "Model", self->model);
-	fu_common_string_append_kb (str, idt, "IsBackup", self->is_backup);
-	fu_common_string_append_kx (str, idt, "PhysAddr", self->phys_addr);
+	fu_xmlb_builder_insert_kx (bn, "vendor", self->vendor);
+	fu_xmlb_builder_insert_kx (bn, "model", self->model);
+	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
+		fu_xmlb_builder_insert_kb (bn, "is_backup", self->is_backup);
+		fu_xmlb_builder_insert_kx (bn, "phys_addr", self->phys_addr);
+	}
 }
 
 static gboolean
@@ -589,7 +593,7 @@ fu_bcm57xx_firmware_class_init (FuBcm57xxFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_bcm57xx_firmware_parse;
-	klass_firmware->to_string = fu_bcm57xx_firmware_to_string;
+	klass_firmware->export = fu_bcm57xx_firmware_export;
 	klass_firmware->write = fu_bcm57xx_firmware_write;
 	klass_firmware->build = fu_bcm57xx_firmware_build;
 }

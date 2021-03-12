@@ -34,12 +34,14 @@ fu_vli_usbhub_firmware_get_device_id (FuVliUsbhubFirmware *self)
 }
 
 static void
-fu_vli_usbhub_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_vli_usbhub_firmware_export (FuFirmware *firmware,
+			       FuFirmwareExportFlags flags,
+			       XbBuilderNode *bn)
 {
 	FuVliUsbhubFirmware *self = FU_VLI_USBHUB_FIRMWARE (firmware);
-	fu_common_string_append_kv (str, idt, "DeviceKind",
-				    fu_vli_common_device_kind_to_string (self->device_kind));
-	fu_vli_usbhub_header_to_string (&self->hdr, idt, str);
+	fu_xmlb_builder_insert_kv (bn, "device_kind",
+				   fu_vli_common_device_kind_to_string (self->device_kind));
+	fu_vli_usbhub_header_export (&self->hdr, bn);
 }
 
 static gboolean
@@ -213,7 +215,7 @@ fu_vli_usbhub_firmware_class_init (FuVliUsbhubFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_vli_usbhub_firmware_parse;
-	klass_firmware->to_string = fu_vli_usbhub_firmware_to_string;
+	klass_firmware->export = fu_vli_usbhub_firmware_export;
 }
 
 FuFirmware *

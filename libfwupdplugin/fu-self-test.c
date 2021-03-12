@@ -1320,117 +1320,98 @@ fu_chunk_func (void)
 
 	chunked3 = fu_chunk_array_new ((const guint8 *) "123456", 6, 0x0, 3, 3);
 	chunked3_str = fu_chunk_array_to_string (chunked3);
-	g_assert_cmpstr (chunked3_str, ==, "FuChunk:\n"
-					   "  Index:                0x0\n"
-					   "  Page:                 0x0\n"
-					   "  Address:              0x0\n"
-					   "  Data:                 123\n"
-					   "  DataSz:               0x3\n"
-					   "\n"
-					   "FuChunk:\n"
-					   "  Index:                0x1\n"
-					   "  Page:                 0x1\n"
-					   "  Address:              0x0\n"
-					   "  Data:                 456\n"
-					   "  DataSz:               0x3\n");
+	g_assert_cmpstr (chunked3_str, ==,
+			 "<chunks>\n"
+			 "  <chunk>\n"
+			 "    <data size=\"0x3\">123</data>\n"
+			 "  </chunk>\n"
+			 "  <chunk>\n"
+			 "    <idx>0x1</idx>\n"
+			 "    <page>0x1</page>\n"
+			 "    <data size=\"0x3\">456</data>\n"
+			 "  </chunk>\n"
+			 "</chunks>\n");
 
 	chunked4 = fu_chunk_array_new ((const guint8 *) "123456", 6, 0x4, 4, 4);
 	chunked4_str = fu_chunk_array_to_string (chunked4);
-	g_assert_cmpstr (chunked4_str, ==, "FuChunk:\n"
-					   "  Index:                0x0\n"
-					   "  Page:                 0x1\n"
-					   "  Address:              0x0\n"
-					   "  Data:                 1234\n"
-					   "  DataSz:               0x4\n"
-					   "\n"
-					   "FuChunk:\n"
-					   "  Index:                0x1\n"
-					   "  Page:                 0x2\n"
-					   "  Address:              0x0\n"
-					   "  Data:                 56\n"
-					   "  DataSz:               0x2\n");
+	g_assert_cmpstr (chunked4_str, ==,
+			 "<chunks>\n"
+			 "  <chunk>\n"
+			 "    <page>0x1</page>\n"
+			 "    <data size=\"0x4\">1234</data>\n"
+			 "  </chunk>\n"
+			 "  <chunk>\n"
+			 "    <idx>0x1</idx>\n"
+			 "    <page>0x2</page>\n"
+			 "    <data size=\"0x2\">56</data>\n"
+			 "  </chunk>\n"
+			 "</chunks>\n");
 
 	chunked1 = fu_chunk_array_new ((const guint8 *) "0123456789abcdef", 16, 0x0, 10, 4);
 	chunked1_str = fu_chunk_array_to_string (chunked1);
-	g_assert_cmpstr (chunked1_str, ==, "FuChunk:\n"
-					   "  Index:                0x0\n"
-					   "  Page:                 0x0\n"
-					   "  Address:              0x0\n"
-					   "  Data:                 0123\n"
-					   "  DataSz:               0x4\n"
-					   "\n"
-					   "FuChunk:\n"
-					   "  Index:                0x1\n"
-					   "  Page:                 0x0\n"
-					   "  Address:              0x4\n"
-					   "  Data:                 4567\n"
-					   "  DataSz:               0x4\n"
-					   "\n"
-					   "FuChunk:\n"
-					   "  Index:                0x2\n"
-					   "  Page:                 0x0\n"
-					   "  Address:              0x8\n"
-					   "  Data:                 89\n"
-					   "  DataSz:               0x2\n"
-					   "\n"
-					   "FuChunk:\n"
-					   "  Index:                0x3\n"
-					   "  Page:                 0x1\n"
-					   "  Address:              0x0\n"
-					   "  Data:                 abcd\n"
-					   "  DataSz:               0x4\n"
-					   "\n"
-					   "FuChunk:\n"
-					   "  Index:                0x4\n"
-					   "  Page:                 0x1\n"
-					   "  Address:              0x4\n"
-					   "  Data:                 ef\n"
-					   "  DataSz:               0x2\n");
-
+	g_assert_cmpstr (chunked1_str, ==,
+			 "<chunks>\n"
+			 "  <chunk>\n"
+			 "    <data size=\"0x4\">0123</data>\n"
+			 "  </chunk>\n"
+			 "  <chunk>\n"
+			 "    <idx>0x1</idx>\n"
+			 "    <addr>0x4</addr>\n"
+			 "    <data size=\"0x4\">4567</data>\n"
+			 "  </chunk>\n"
+			 "  <chunk>\n"
+			 "    <idx>0x2</idx>\n"
+			 "    <addr>0x8</addr>\n"
+			 "    <data size=\"0x2\">89</data>\n"
+			 "  </chunk>\n"
+			 "  <chunk>\n"
+			 "    <idx>0x3</idx>\n"
+			 "    <page>0x1</page>\n"
+			 "    <data size=\"0x4\">abcd</data>\n"
+			 "  </chunk>\n"
+			 "  <chunk>\n"
+			 "    <idx>0x4</idx>\n"
+			 "    <page>0x1</page>\n"
+			 "    <addr>0x4</addr>\n"
+			 "    <data size=\"0x2\">ef</data>\n"
+			 "  </chunk>\n"
+			 "</chunks>\n");
 	chunked2 = fu_chunk_array_new ((const guint8 *) "XXXXXXYYYYYYZZZZZZ", 18, 0x0, 6, 4);
 	chunked2_str = fu_chunk_array_to_string (chunked2);
 	g_print ("\n%s", chunked2_str);
-	g_assert_cmpstr (chunked2_str, ==, "FuChunk:\n"
-					   "  Index:                0x0\n"
-					   "  Page:                 0x0\n"
-					   "  Address:              0x0\n"
-					   "  Data:                 XXXX\n"
-					   "  DataSz:               0x4\n"
-					   "\n"
-					   "FuChunk:\n"
-					   "  Index:                0x1\n"
-					   "  Page:                 0x0\n"
-					   "  Address:              0x4\n"
-					   "  Data:                 XX\n"
-					   "  DataSz:               0x2\n"
-					   "\n"
-					   "FuChunk:\n"
-					   "  Index:                0x2\n"
-					   "  Page:                 0x1\n"
-					   "  Address:              0x0\n"
-					   "  Data:                 YYYY\n"
-					   "  DataSz:               0x4\n"
-					   "\n"
-					   "FuChunk:\n"
-					   "  Index:                0x3\n"
-					   "  Page:                 0x1\n"
-					   "  Address:              0x4\n"
-					   "  Data:                 YY\n"
-					   "  DataSz:               0x2\n"
-					   "\n"
-					   "FuChunk:\n"
-					   "  Index:                0x4\n"
-					   "  Page:                 0x2\n"
-					   "  Address:              0x0\n"
-					   "  Data:                 ZZZZ\n"
-					   "  DataSz:               0x4\n"
-					   "\n"
-					   "FuChunk:\n"
-					   "  Index:                0x5\n"
-					   "  Page:                 0x2\n"
-					   "  Address:              0x4\n"
-					   "  Data:                 ZZ\n"
-					   "  DataSz:               0x2\n");
+	g_assert_cmpstr (chunked2_str, ==,
+			 "<chunks>\n"
+			 "  <chunk>\n"
+			 "    <data size=\"0x4\">XXXX</data>\n"
+			 "  </chunk>\n"
+			 "  <chunk>\n"
+			 "    <idx>0x1</idx>\n"
+			 "    <addr>0x4</addr>\n"
+			 "    <data size=\"0x2\">XX</data>\n"
+			 "  </chunk>\n"
+			 "  <chunk>\n"
+			 "    <idx>0x2</idx>\n"
+			 "    <page>0x1</page>\n"
+			 "    <data size=\"0x4\">YYYY</data>\n"
+			 "  </chunk>\n"
+			 "  <chunk>\n"
+			 "    <idx>0x3</idx>\n"
+			 "    <page>0x1</page>\n"
+			 "    <addr>0x4</addr>\n"
+			 "    <data size=\"0x2\">YY</data>\n"
+			 "  </chunk>\n"
+			 "  <chunk>\n"
+			 "    <idx>0x4</idx>\n"
+			 "    <page>0x2</page>\n"
+			 "    <data size=\"0x4\">ZZZZ</data>\n"
+			 "  </chunk>\n"
+			 "  <chunk>\n"
+			 "    <idx>0x5</idx>\n"
+			 "    <page>0x2</page>\n"
+			 "    <addr>0x4</addr>\n"
+			 "    <data size=\"0x2\">ZZ</data>\n"
+			 "  </chunk>\n"
+			 "</chunks>\n");
 }
 
 static void
@@ -2134,16 +2115,20 @@ fu_firmware_func (void)
 	g_assert_cmpstr (fu_firmware_get_id (img_idx), ==, "secondary");
 
 	str = fu_firmware_to_string (firmware);
-	g_assert_cmpstr (str, ==, "FuFirmware:\n"
-				  "  FuFirmware:\n"
-				  "  ID:                   primary\n"
-				  "  Index:                0xd\n"
-				  "  Address:              0x200\n"
-				  "  Filename:             BIOS.bin\n"
-				  "  FuFirmware:\n"
-				  "  ID:                   secondary\n"
-				  "  Index:                0x17\n"
-				  "  Address:              0x400\n");
+	g_assert_cmpstr (str, ==,
+			 "<firmware>\n"
+			 "  <firmware>\n"
+			 "    <id>primary</id>\n"
+			 "    <idx>0xd</idx>\n"
+			 "    <addr>0x200</addr>\n"
+			 "    <filename>BIOS.bin</filename>\n"
+			 "  </firmware>\n"
+			 "  <firmware>\n"
+			 "    <id>secondary</id>\n"
+			 "    <idx>0x17</idx>\n"
+			 "    <addr>0x400</addr>\n"
+			 "  </firmware>\n"
+			 "</firmware>\n");
 
 	ret = fu_firmware_remove_image_by_idx (firmware, 0xd, &error);
 	g_assert_no_error (error);
@@ -2464,6 +2449,147 @@ fu_security_attrs_hsi_func (void)
 	g_assert_cmpstr (hsi8, ==, expected_hsi8);
 	g_clear_object (&attr);
 }
+static void
+fu_firmware_dfuse_xml_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *csum1 = NULL;
+	g_autofree gchar *csum2 = NULL;
+	g_autofree gchar *xml_out = NULL;
+	g_autofree gchar *xml_src = NULL;
+	g_autoptr(FuFirmware) firmware1 = fu_dfuse_firmware_new ();
+	g_autoptr(FuFirmware) firmware2 = fu_dfuse_firmware_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* build and write */
+	ret = g_file_get_contents (FWUPD_FUZZINGSRCDIR "/dfuse.builder.xml",
+				   &xml_src, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_firmware_build_from_xml (firmware1, xml_src, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum1 = fu_firmware_get_checksum (firmware1, G_CHECKSUM_SHA1, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (csum1, ==, "c1ff429f0e381c8fe8e1b2ee41a5a9a79e2f2ff7");
+
+	/* ensure we can round-trip */
+	xml_out = fu_firmware_export_to_xml (firmware1,
+					     FU_FIRMWARE_EXPORT_FLAG_NONE,
+					     &error);
+
+	g_assert_no_error (error);
+	ret = fu_firmware_build_from_xml (firmware2, xml_out, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum2 = fu_firmware_get_checksum (firmware2, G_CHECKSUM_SHA1, &error);
+	g_assert_cmpstr (csum1, ==, csum2);
+}
+static void
+fu_firmware_srec_xml_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *csum1 = NULL;
+	g_autofree gchar *csum2 = NULL;
+	g_autofree gchar *xml_out = NULL;
+	g_autofree gchar *xml_src = NULL;
+	g_autoptr(FuFirmware) firmware1 = fu_srec_firmware_new ();
+	g_autoptr(FuFirmware) firmware2 = fu_srec_firmware_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* build and write */
+	ret = g_file_get_contents (FWUPD_FUZZINGSRCDIR "/srec.builder.xml",
+				   &xml_src, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_firmware_build_from_xml (firmware1, xml_src, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum1 = fu_firmware_get_checksum (firmware1, G_CHECKSUM_SHA1, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (csum1, ==, "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
+
+	/* ensure we can round-trip */
+	xml_out = fu_firmware_export_to_xml (firmware1,
+					     FU_FIRMWARE_EXPORT_FLAG_NONE,
+					     &error);
+	g_assert_no_error (error);
+	ret = fu_firmware_build_from_xml (firmware2, xml_out, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum2 = fu_firmware_get_checksum (firmware2, G_CHECKSUM_SHA1, &error);
+	g_assert_cmpstr (csum1, ==, csum2);
+}
+static void
+fu_firmware_ihex_xml_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *csum1 = NULL;
+	g_autofree gchar *csum2 = NULL;
+	g_autofree gchar *xml_out = NULL;
+	g_autofree gchar *xml_src = NULL;
+	g_autoptr(FuFirmware) firmware1 = fu_ihex_firmware_new ();
+	g_autoptr(FuFirmware) firmware2 = fu_ihex_firmware_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* build and write */
+	ret = g_file_get_contents (FWUPD_FUZZINGSRCDIR "/ihex.builder.xml",
+				   &xml_src, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_firmware_build_from_xml (firmware1, xml_src, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum1 = fu_firmware_get_checksum (firmware1, G_CHECKSUM_SHA1, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (csum1, ==, "a8d74f767f3fc992b413e5ba801cedc80a4cf013");
+
+	/* ensure we can round-trip */
+	xml_out = fu_firmware_export_to_xml (firmware1,
+					     FU_FIRMWARE_EXPORT_FLAG_NONE,
+					     &error);
+	g_assert_no_error (error);
+	ret = fu_firmware_build_from_xml (firmware2, xml_out, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum2 = fu_firmware_get_checksum (firmware2, G_CHECKSUM_SHA1, &error);
+	g_assert_cmpstr (csum1, ==, csum2);
+}
+static void
+fu_firmware_fmap_xml_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *csum1 = NULL;
+	g_autofree gchar *csum2 = NULL;
+	g_autofree gchar *xml_out = NULL;
+	g_autofree gchar *xml_src = NULL;
+	g_autoptr(FuFirmware) firmware1 = fu_fmap_firmware_new ();
+	g_autoptr(FuFirmware) firmware2 = fu_fmap_firmware_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* build and write */
+	ret = g_file_get_contents (FWUPD_FUZZINGSRCDIR "/fmap.builder.xml",
+				   &xml_src, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_firmware_build_from_xml (firmware1, xml_src, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum1 = fu_firmware_get_checksum (firmware1, G_CHECKSUM_SHA1, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (csum1, ==, "a0b9ffc10a586d217edf9e9bae7c1fe7c564ea01");
+
+	/* ensure we can round-trip */
+	xml_out = fu_firmware_export_to_xml (firmware1,
+					     FU_FIRMWARE_EXPORT_FLAG_NONE,
+					     &error);
+	g_assert_no_error (error);
+	ret = fu_firmware_build_from_xml (firmware2, xml_out, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum2 = fu_firmware_get_checksum (firmware2, G_CHECKSUM_SHA1, &error);
+	g_assert_cmpstr (csum1, ==, csum2);
+}
 
 int
 main (int argc, char **argv)
@@ -2520,13 +2646,17 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/firmware{dedupe}", fu_firmware_dedupe_func);
 	g_test_add_func ("/fwupd/firmware{build}", fu_firmware_build_func);
 	g_test_add_func ("/fwupd/firmware{ihex}", fu_firmware_ihex_func);
+	g_test_add_func ("/fwupd/firmware{ihex-xml}", fu_firmware_ihex_xml_func);
 	g_test_add_func ("/fwupd/firmware{ihex-offset}", fu_firmware_ihex_offset_func);
 	g_test_add_func ("/fwupd/firmware{ihex-signed}", fu_firmware_ihex_signed_func);
 	g_test_add_func ("/fwupd/firmware{srec-tokenization}", fu_firmware_srec_tokenization_func);
 	g_test_add_func ("/fwupd/firmware{srec}", fu_firmware_srec_func);
+	g_test_add_func ("/fwupd/firmware{srec-xml}", fu_firmware_srec_xml_func);
 	g_test_add_func ("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
 	g_test_add_func ("/fwupd/firmware{dfuse}", fu_firmware_dfuse_func);
+	g_test_add_func ("/fwupd/firmware{dfuse-xml}", fu_firmware_dfuse_xml_func);
 	g_test_add_func ("/fwupd/firmware{fmap}", fu_firmware_fmap_func);
+	g_test_add_func ("/fwupd/firmware{fmap-xml}", fu_firmware_fmap_xml_func);
 	g_test_add_func ("/fwupd/firmware{gtypes}", fu_firmware_new_from_gtypes_func);
 	g_test_add_func ("/fwupd/archive{invalid}", fu_archive_invalid_func);
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);

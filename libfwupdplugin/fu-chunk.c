@@ -292,19 +292,23 @@ fu_chunk_bytes_new (GBytes *bytes)
 }
 
 void
-fu_chunk_add_string (FuChunk *self, guint idt, GString *str)
+fu_chunk_export (FuChunk *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
-	fu_common_string_append_kv (str, idt, G_OBJECT_TYPE_NAME (self), NULL);
-	fu_common_string_append_kx (str, idt + 1, "Index", self->idx);
-	fu_common_string_append_kx (str, idt + 1, "Page", self->page);
-	fu_common_string_append_kx (str, idt + 1, "Address", self->address);
+	fu_xmlb_builder_insert_kx (bn, "idx", self->idx);
+	fu_xmlb_builder_insert_kx (bn, "page", self->page);
+	fu_xmlb_builder_insert_kx (bn, "addr", self->address);
 	if (self->data != NULL) {
 		g_autofree gchar *datastr = NULL;
-		datastr = fu_common_strsafe ((const gchar *) self->data, MIN (self->data_sz, 16));
-		if (datastr != NULL)
-			fu_common_string_append_kv (str, idt + 1, "Data", datastr);
+		g_autofree gchar *dataszstr = g_strdup_printf ("0x%x", (guint) self->data_sz);
+		if (flags & FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA) {
+			datastr = fu_common_strsafe ((const gchar *) self->data, MIN (self->data_sz, 16));
+		} else {
+			datastr = g_base64_encode (self->data, self->data_sz);
+		}
+		xb_builder_node_insert_text (bn, "data", datastr,
+					     "size", dataszstr,
+					     NULL);
 	}
-	fu_common_string_append_kx (str, idt + 1, "DataSz", self->data_sz);
 }
 
 /**
@@ -320,9 +324,15 @@ fu_chunk_add_string (FuChunk *self, guint idt, GString *str)
 gchar *
 fu_chunk_to_string (FuChunk *self)
 {
-	GString *str = g_string_new (NULL);
-	fu_chunk_add_string (self, 0, str);
-	return g_string_free (str, FALSE);
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new ("chunk");
+	fu_chunk_export (self, FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA, bn);
+	return xb_builder_node_export (bn,
+				       XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
+#if LIBXMLB_CHECK_VERSION(0,2,2)
+				       XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
+#endif
+				       XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
+				       NULL);
 }
 
 /**
@@ -338,15 +348,19 @@ fu_chunk_to_string (FuChunk *self)
 gchar *
 fu_chunk_array_to_string (GPtrArray *chunks)
 {
-	GString *str = g_string_new (NULL);
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new ("chunks");
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		g_autofree gchar *tmp = fu_chunk_to_string (chk);
-		g_string_append_printf (str, "%s\n", tmp);
+		g_autoptr(XbBuilderNode) bc = xb_builder_node_insert (bn, "chunk", NULL);
+		fu_chunk_export (chk, FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA, bc);
 	}
-	if (str->len > 0)
-		g_string_truncate (str, str->len - 1);
-	return g_string_free (str, FALSE);
+	return xb_builder_node_export (bn,
+				       XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
+#if LIBXMLB_CHECK_VERSION(0,2,2)
+				       XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
+#endif
+				       XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
+				       NULL);
 }
 
 /**

@@ -44,17 +44,19 @@ fu_synaptics_cxaudio_firmware_get_layout_version (FuSynapticsCxaudioFirmware *se
 }
 
 static void
-fu_synaptics_cxaudio_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_synaptics_cxaudio_firmware_export (FuFirmware *firmware,
+				      FuFirmwareExportFlags flags,
+				      XbBuilderNode *bn)
 {
 	FuSynapticsCxaudioFirmware *self = FU_SYNAPTICS_CXAUDIO_FIRMWARE (firmware);
-	fu_common_string_append_kx (str, idt, "FileKind", self->file_kind);
-	fu_common_string_append_kx (str, idt, "DeviceKind", self->device_kind);
-	fu_common_string_append_kx (str, idt, "LayoutSignature", self->cinfo.LayoutSignature);
-	fu_common_string_append_kx (str, idt, "LayoutVersion", self->cinfo.LayoutVersion);
+	fu_xmlb_builder_insert_kx (bn, "file_kind", self->file_kind);
+	fu_xmlb_builder_insert_kx (bn, "device_kind", self->device_kind);
+	fu_xmlb_builder_insert_kx (bn, "layout_signature", self->cinfo.LayoutSignature);
+	fu_xmlb_builder_insert_kx (bn, "layout_version", self->cinfo.LayoutVersion);
 	if (self->cinfo.LayoutVersion >= 1) {
-		fu_common_string_append_kx (str, idt, "VendorID", self->cinfo.VendorID);
-		fu_common_string_append_kx (str, idt, "ProductID", self->cinfo.ProductID);
-		fu_common_string_append_kx (str, idt, "RevisionID", self->cinfo.RevisionID);
+		fu_xmlb_builder_insert_kx (bn, "vid", self->cinfo.VendorID);
+		fu_xmlb_builder_insert_kx (bn, "pid", self->cinfo.ProductID);
+		fu_xmlb_builder_insert_kx (bn, "rev", self->cinfo.RevisionID);
 	}
 }
 
@@ -294,7 +296,7 @@ fu_synaptics_cxaudio_firmware_class_init (FuSynapticsCxaudioFirmwareClass *klass
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_synaptics_cxaudio_firmware_parse;
-	klass_firmware->to_string = fu_synaptics_cxaudio_firmware_to_string;
+	klass_firmware->export = fu_synaptics_cxaudio_firmware_export;
 }
 
 FuFirmware *

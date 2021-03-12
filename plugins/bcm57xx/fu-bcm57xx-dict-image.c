@@ -20,17 +20,19 @@ struct _FuBcm57xxDictImage {
 G_DEFINE_TYPE (FuBcm57xxDictImage, fu_bcm57xx_dict_image, FU_TYPE_FIRMWARE)
 
 static void
-fu_bcm57xx_dict_image_to_string (FuFirmware *image, guint idt, GString *str)
+fu_bcm57xx_dict_image_export (FuFirmware *firmware,
+			      FuFirmwareExportFlags flags,
+			      XbBuilderNode *bn)
 {
-	FuBcm57xxDictImage *self = FU_BCM57XX_DICT_IMAGE (image);
+	FuBcm57xxDictImage *self = FU_BCM57XX_DICT_IMAGE (firmware);
 	if (self->target != 0xff)
-		fu_common_string_append_kx (str, idt, "Target", self->target);
+		fu_xmlb_builder_insert_kx (bn, "target", self->target);
 	if (self->kind != 0xff)
-		fu_common_string_append_kx (str, idt, "Kind", self->kind);
+		fu_xmlb_builder_insert_kx (bn, "kind", self->kind);
 }
 
 static gboolean
-fu_bcm57xx_dict_image_parse (FuFirmware *image,
+fu_bcm57xx_dict_image_parse (FuFirmware *firmware,
 			     GBytes *fw,
 			     guint64 addr_start,
 			     guint64 addr_end,
@@ -47,12 +49,12 @@ fu_bcm57xx_dict_image_parse (FuFirmware *image,
 					       error);
 	if (fw_nocrc == NULL)
 		return FALSE;
-	fu_firmware_set_bytes (image, fw_nocrc);
+	fu_firmware_set_bytes (firmware, fw_nocrc);
 	return TRUE;
 }
 
 static GBytes *
-fu_bcm57xx_dict_image_write (FuFirmware *image, GError **error)
+fu_bcm57xx_dict_image_write (FuFirmware *firmware, GError **error)
 {
 	const guint8 *buf;
 	gsize bufsz = 0;
@@ -61,7 +63,7 @@ fu_bcm57xx_dict_image_write (FuFirmware *image, GError **error)
 	g_autoptr(GBytes) fw_nocrc = NULL;
 
 	/* get the CRC-less data */
-	fw_nocrc = fu_firmware_get_bytes (image, error);
+	fw_nocrc = fu_firmware_get_bytes (firmware, error);
 	if (fw_nocrc == NULL)
 		return NULL;
 
@@ -77,9 +79,9 @@ fu_bcm57xx_dict_image_write (FuFirmware *image, GError **error)
 }
 
 static gboolean
-fu_bcm57xx_dict_image_build (FuFirmware *image, XbNode *n, GError **error)
+fu_bcm57xx_dict_image_build (FuFirmware *firmware, XbNode *n, GError **error)
 {
-	FuBcm57xxDictImage *self = FU_BCM57XX_DICT_IMAGE (image);
+	FuBcm57xxDictImage *self = FU_BCM57XX_DICT_IMAGE (firmware);
 	guint64 tmp;
 
 	/* two simple properties */
@@ -167,7 +169,7 @@ fu_bcm57xx_dict_image_class_init (FuBcm57xxDictImageClass *klass)
 	klass_image->parse = fu_bcm57xx_dict_image_parse;
 	klass_image->write = fu_bcm57xx_dict_image_write;
 	klass_image->build = fu_bcm57xx_dict_image_build;
-	klass_image->to_string = fu_bcm57xx_dict_image_to_string;
+	klass_image->export = fu_bcm57xx_dict_image_export;
 }
 
 FuFirmware *

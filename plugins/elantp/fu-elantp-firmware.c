@@ -39,11 +39,13 @@ fu_elantp_firmware_get_iap_addr (FuElantpFirmware *self)
 }
 
 static void
-fu_elantp_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_elantp_firmware_export (FuFirmware *firmware,
+			   FuFirmwareExportFlags flags,
+			   XbBuilderNode *bn)
 {
 	FuElantpFirmware *self = FU_ELANTP_FIRMWARE (firmware);
-	fu_common_string_append_kx (str, idt, "IapAddr", self->iap_addr);
-	fu_common_string_append_kx (str, idt, "ModuleId", self->module_id);
+	fu_xmlb_builder_insert_kx (bn, "iap_addr", self->iap_addr);
+	fu_xmlb_builder_insert_kx (bn, "module_id", self->module_id);
 }
 
 static gboolean
@@ -185,7 +187,7 @@ fu_elantp_firmware_class_init (FuElantpFirmwareClass *klass)
 	klass_firmware->parse = fu_elantp_firmware_parse;
 	klass_firmware->build = fu_elantp_firmware_build;
 	klass_firmware->write = fu_elantp_firmware_write;
-	klass_firmware->to_string = fu_elantp_firmware_to_string;
+	klass_firmware->export = fu_elantp_firmware_export;
 }
 
 FuFirmware *

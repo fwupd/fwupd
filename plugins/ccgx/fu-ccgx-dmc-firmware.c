@@ -75,11 +75,15 @@ fu_ccgx_dmc_firmware_get_fw_data_size (FuCcgxDmcFirmware *self)
 }
 
 static void
-fu_ccgx_dmc_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_ccgx_dmc_firmware_export (FuFirmware *firmware,
+			     FuFirmwareExportFlags flags,
+			     XbBuilderNode *bn)
 {
 	FuCcgxDmcFirmware *self = FU_CCGX_DMC_FIRMWARE (firmware);
-	fu_common_string_append_kx (str, idt, "FwDataSize", self->fw_data_size);
-	fu_common_string_append_ku (str, idt, "ImageRecords", self->image_records->len);
+	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
+		fu_xmlb_builder_insert_kx (bn, "fw_data_size", self->fw_data_size);
+		fu_xmlb_builder_insert_kx (bn, "image_records", self->image_records->len);
+	}
 }
 
 static gboolean
@@ -466,7 +470,7 @@ fu_ccgx_dmc_firmware_class_init (FuCcgxDmcFirmwareClass *klass)
 	object_class->finalize = fu_ccgx_dmc_firmware_finalize;
 	klass_firmware->parse = fu_ccgx_dmc_firmware_parse;
 	klass_firmware->write = fu_ccgx_dmc_firmware_write;
-	klass_firmware->to_string = fu_ccgx_dmc_firmware_to_string;
+	klass_firmware->export = fu_ccgx_dmc_firmware_export;
 }
 
 FuFirmware *

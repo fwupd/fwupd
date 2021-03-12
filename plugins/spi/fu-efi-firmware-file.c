@@ -96,22 +96,20 @@ fu_efi_firmware_file_type_to_string (guint8 type)
 }
 
 static void
-fu_efi_firmware_file_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_efi_firmware_file_export (FuFirmware *firmware,
+			     FuFirmwareExportFlags flags,
+			     XbBuilderNode *bn)
 {
 	FuEfiFirmwareFile *self = FU_EFI_FIRMWARE_FILE (firmware);
 	FuEfiFirmwareFilePrivate *priv = GET_PRIVATE (self);
-	const gchar *type_name = fu_efi_firmware_file_type_to_string (priv->type);
-	const gchar *guid_name = fu_efi_guid_to_name (fu_firmware_get_id (firmware));
 
-	if (guid_name != NULL)
-		fu_common_string_append_kv (str, idt, "Name", guid_name);
-	if (priv->attrib != 0x0)
-		fu_common_string_append_kx (str, idt, "Attrib", priv->attrib);
-	if (type_name != NULL) {
-		g_autofree gchar *tmp = g_strdup_printf ("%s [0x%02x]", type_name, priv->type);
-		fu_common_string_append_kv (str, idt, "Type", tmp);
-	} else {
-		fu_common_string_append_kx (str, idt, "Type", priv->type);
+	fu_xmlb_builder_insert_kx (bn, "attrib", priv->attrib);
+	fu_xmlb_builder_insert_kx (bn, "type", priv->type);
+	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
+		fu_xmlb_builder_insert_kv (bn, "name",
+					   fu_efi_guid_to_name (fu_firmware_get_id (firmware)));
+		fu_xmlb_builder_insert_kv (bn, "type_name",
+					   fu_efi_firmware_file_type_to_string (priv->type));
 	}
 }
 
@@ -367,7 +365,7 @@ fu_efi_firmware_file_class_init (FuEfiFirmwareFileClass *klass)
 	klass_firmware->parse = fu_efi_firmware_file_parse;
 	klass_firmware->write = fu_efi_firmware_file_write;
 	klass_firmware->build = fu_efi_firmware_file_build;
-	klass_firmware->to_string = fu_efi_firmware_file_to_string;
+	klass_firmware->export = fu_efi_firmware_file_export;
 }
 
 /**

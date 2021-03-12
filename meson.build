@@ -471,6 +471,7 @@ conf.set_quoted('FWUPD_DATADIR', datadir)
 conf.set_quoted('FWUPD_LOCALSTATEDIR', localstatedir)
 conf.set_quoted('FWUPD_SYSCONFDIR', sysconfdir)
 conf.set_quoted('FWUPD_LOCALEDIR', localedir)
+conf.set_quoted('FWUPD_FUZZINGSRCDIR', join_paths(meson.source_root(), 'src', 'fuzzing'))
 
 if build_standalone
 if host_machine.system() == 'windows'

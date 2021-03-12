@@ -36,3 +36,29 @@ shared_module('fu_plugin_elantp',
   ],
 )
 endif
+
+if get_option('tests')
+  e = executable(
+    'elantp-self-test',
+    fu_hash,
+    sources : [
+      'fu-self-test.c',
+      'fu-elantp-firmware.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    dependencies : [
+      plugin_deps,
+    ],
+    link_with : [
+      fwupd,
+      fwupdplugin,
+    ],
+    install : true,
+    install_dir : installed_test_bindir,
+  )
+  test('elantp-self-test', e)
+endif

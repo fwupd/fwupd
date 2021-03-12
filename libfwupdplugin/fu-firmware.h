@@ -16,6 +16,19 @@
 #define FU_TYPE_FIRMWARE (fu_firmware_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuFirmware, fu_firmware, FU, FIRMWARE, GObject)
 
+/**
+ * FuFirmwareExportFlags:
+ * @FU_FIRMWARE_EXPORT_FLAG_NONE:		No flags set
+ * @FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG:	Include debug information when exporting
+ * @FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA:		Write the data as UTF-8 strings
+ *
+ * The firmware export flags.
+ **/
+#define FU_FIRMWARE_EXPORT_FLAG_NONE			(0u)		/* Since: 1.6.0 */
+#define FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG		(1u << 0)	/* Since: 1.6.0 */
+#define FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA		(1u << 1)	/* Since: 1.6.0 */
+typedef guint64 FuFirmwareExportFlags;
+
 struct _FuFirmwareClass
 {
 	GObjectClass		 parent_class;
@@ -29,9 +42,9 @@ struct _FuFirmwareClass
 	GBytes			*(*write)		(FuFirmware	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
-	void			 (*to_string)		(FuFirmware	*self,
-							 guint		 indent,
-							 GString	*str);
+	void			 (*export)		(FuFirmware	*self,
+							 FuFirmwareExportFlags flags,
+							 XbBuilderNode	*bn);
 	gboolean		 (*tokenize)		(FuFirmware	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
@@ -66,9 +79,9 @@ struct _FuFirmwareClass
 #define FU_FIRMWARE_FLAG_HAS_VID_PID		(1u << 3)	/* Since: 1.5.6 */
 typedef guint64 FuFirmwareFlags;
 
-#define FU_FIRMWARE_ID_PAYLOAD		"payload"
+#define FU_FIRMWARE_ID_PAYLOAD			"payload"
 #define FU_FIRMWARE_ID_SIGNATURE		"signature"
-#define FU_FIRMWARE_ID_HEADER		"header"
+#define FU_FIRMWARE_ID_HEADER			"header"
 
 const gchar	*fu_firmware_flag_to_string		(FuFirmwareFlags flag);
 FuFirmwareFlags	 fu_firmware_flag_from_string		(const gchar	*flag);
@@ -80,6 +93,12 @@ FuFirmware	*fu_firmware_new_from_gtypes		(GBytes		*fw,
 							 GError		**error,
 							 ...);
 gchar		*fu_firmware_to_string			(FuFirmware	*self);
+void		 fu_firmware_export			(FuFirmware	*self,
+							 FuFirmwareExportFlags flags,
+							 XbBuilderNode	*bn);
+gchar		*fu_firmware_export_to_xml		(FuFirmware	*self,
+							 FuFirmwareExportFlags flags,
+							 GError		**error);
 const gchar	*fu_firmware_get_version		(FuFirmware	*self);
 void		 fu_firmware_set_version		(FuFirmware	*self,
 							 const gchar	*version);
@@ -127,6 +146,10 @@ gboolean	 fu_firmware_tokenize			(FuFirmware	*self,
 							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_firmware_build			(FuFirmware	*self,
 							 XbNode		*n,
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
+gboolean	 fu_firmware_build_from_xml		(FuFirmware	*self,
+							 const gchar	*xml,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_firmware_parse			(FuFirmware	*self,

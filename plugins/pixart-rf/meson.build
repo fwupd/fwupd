@@ -29,3 +29,29 @@ shared_module('fu_plugin_pixart_rf',
   ],
 )
 endif
+
+if get_option('tests')
+  e = executable(
+    'pxi-self-test',
+    fu_hash,
+    sources : [
+      'fu-self-test.c',
+      'fu-pxi-firmware.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    dependencies : [
+      plugin_deps,
+    ],
+    link_with : [
+      fwupd,
+      fwupdplugin,
+    ],
+    install : true,
+    install_dir : installed_test_bindir,
+  )
+  test('pxi-self-test', e)
+endif

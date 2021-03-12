@@ -608,6 +608,7 @@ fu_firmware_get_checksum (FuFirmware *self,
 {
 	FuFirmwarePrivate *priv = GET_PRIVATE (self);
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS (self);
+	g_autoptr(GBytes) blob = NULL;
 
 	g_return_val_if_fail (FU_IS_FIRMWARE (self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
@@ -617,15 +618,14 @@ fu_firmware_get_checksum (FuFirmware *self,
 		return klass->get_checksum (self, csum_kind, error);
 
 	/* internal data */
-	if (priv->bytes == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "no bytes found in firmware bytes %s",
-			     priv->id);
+	if (priv->bytes != NULL)
+		return g_compute_checksum_for_bytes (csum_kind, priv->bytes);
+
+	/* write */
+	blob = fu_firmware_write (self, error);
+	if (blob == NULL)
 		return NULL;
-	}
-	return g_compute_checksum_for_bytes (csum_kind, priv->bytes);
+	return g_compute_checksum_for_bytes (csum_kind, blob);
 }
 
 /**
@@ -888,6 +888,84 @@ fu_firmware_build (FuFirmware *self, XbNode *n, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+/**
+ * fu_firmware_build_from_xml:
+ * @self: A #FuFirmware
+ * @xml: XML text
+ * @error: A #GError, or %NULL
+ *
+ * Builds a firmware from an XML manifest. The manifest would typically have the
+ * following form:
+ *
+ * |[<!-- language="XML" -->
+ * <?xml version="1.0" encoding="UTF-8"?>
+ * <firmware gtype="FuBcm57xxFirmware">
+ *   <version>1.2.3</version>
+ *   <firmware gtype="FuBcm57xxStage1Image">
+ *     <version>7.8.9</version>
+ *     <id>stage1</id>
+ *     <idx>0x01</idx>
+ *     <filename>stage1.bin</filename>
+ *   </firmware>
+ *   <firmware gtype="FuBcm57xxStage2Image">
+ *     <id>stage2</id>
+ *     <data/> <!-- empty! -->
+ *   </firmware>
+ *   <firmware gtype="FuBcm57xxDictImage">
+ *     <id>ape</id>
+ *     <addr>0x7</addr>
+ *     <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
+ *   </firmware>
+ * </firmware>
+ * ]|
+ *
+ * This would be used in a build-system to merge images from generated files:
+ * `fwupdtool firmware-build fw.builder.xml test.fw`
+ *
+ * Static binary content can be specified in the `<firmware>/<data>` section and
+ * is encoded as base64 text if not empty.
+ *
+ * Additionally, extra nodes can be included under nested `<firmware>` objects
+ * which can be parsed by the subclassed objects. You should verify the
+ * subclassed object `FuFirmware->build` vfunc for the specific additional
+ * options supported.
+ *
+ * Plugins should manually g_type_ensure() subclassed image objects if not
+ * constructed as part of the plugin fu_plugin_init() or fu_plugin_setup()
+ * functions.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.6.0
+ **/
+gboolean
+fu_firmware_build_from_xml (FuFirmware *self, const gchar *xml, GError **error)
+{
+	g_autoptr(XbBuilder) builder = xb_builder_new ();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
+	g_autoptr(XbNode) n = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* parse XML */
+	if (!xb_builder_source_load_xml (source, xml,
+					 XB_BUILDER_SOURCE_FLAG_NONE,
+					 error)) {
+		g_prefix_error (error, "could not parse XML: ");
+		return FALSE;
+	}
+	xb_builder_import_source (builder, source);
+	silo = xb_builder_compile (builder, XB_BUILDER_COMPILE_FLAG_NONE,
+				   NULL, error);
+	if (silo == NULL)
+		return FALSE;
+
+	/* create FuFirmware of specific GType */
+	n = xb_silo_query_first (silo, "firmware", error);
+	if (n == NULL)
+		return FALSE;
+	return fu_firmware_build (self, n, error);
 }
 
 /**
@@ -1363,14 +1441,30 @@ fu_firmware_get_image_by_idx_bytes (FuFirmware *self, guint64 idx, GError **erro
 	return fu_firmware_write (img, error);
 }
 
-static void
-fu_firmware_add_string (FuFirmware *self, guint idt, GString *str)
+/**
+ * fu_firmware_export:
+ * @self: A #FuFirmware
+ * @flags: #FuFirmwareExportFlags, e.g. %FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG
+ * @bn: A #XbBuilderNode
+ *
+ * This allows us to build an XML object for the nested firmware.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_firmware_export (FuFirmware *self,
+		    FuFirmwareExportFlags flags,
+		    XbBuilderNode *bn)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS (self);
 	FuFirmwarePrivate *priv = GET_PRIVATE (self);
+	const gchar *gtypestr = G_OBJECT_TYPE_NAME (self);
+
+	/* object */
+	if (g_strcmp0 (gtypestr, "FuFirmware") != 0)
+		xb_builder_node_set_attr (bn, "gtype", gtypestr);
 
 	/* subclassed type */
-	fu_common_string_append_kv (str, idt, G_OBJECT_TYPE_NAME (self), NULL);
 	if (priv->flags != FU_FIRMWARE_FLAG_NONE) {
 		g_autoptr(GString) tmp = g_string_new ("");
 		for (guint i = 0; i < 64; i++) {
@@ -1381,49 +1475,82 @@ fu_firmware_add_string (FuFirmware *self, guint idt, GString *str)
 		}
 		if (tmp->len > 0)
 			g_string_truncate (tmp, tmp->len - 1);
-		fu_common_string_append_kv (str, idt, "Flags", tmp->str);
+		fu_xmlb_builder_insert_kv (bn, "flags", tmp->str);
 	}
-	if (priv->id != NULL)
-		fu_common_string_append_kv (str, idt, "ID", priv->id);
-	if (priv->idx != 0x0)
-		fu_common_string_append_kx (str, idt, "Index", priv->idx);
-	if (priv->version != NULL)
-		fu_common_string_append_kv (str, idt, "Version", priv->version);
-	if (priv->version_raw != 0x0)
-		fu_common_string_append_kx (str, idt, "VersionRaw", priv->version_raw);
-	if (priv->addr != 0x0)
-		fu_common_string_append_kx (str, idt, "Address", priv->addr);
-	if (priv->offset != 0x0)
-		fu_common_string_append_kx (str, idt, "Offset", priv->offset);
-	if (priv->size != 0x0)
-		fu_common_string_append_kx (str, idt, "Size", priv->size);
-	if (priv->filename != NULL)
-		fu_common_string_append_kv (str, idt, "Filename", priv->filename);
+	fu_xmlb_builder_insert_kv (bn, "id", priv->id);
+	fu_xmlb_builder_insert_kx (bn, "idx", priv->idx);
+	fu_xmlb_builder_insert_kv (bn, "version", priv->version);
+	fu_xmlb_builder_insert_kx (bn, "version_raw", priv->version_raw);
+	fu_xmlb_builder_insert_kx (bn, "addr", priv->addr);
+	fu_xmlb_builder_insert_kx (bn, "offset", priv->offset);
+	fu_xmlb_builder_insert_kx (bn, "size", priv->size);
+	fu_xmlb_builder_insert_kv (bn, "filename", priv->filename);
 	if (priv->bytes != NULL) {
-		fu_common_string_append_kx (str, idt, "Data",
-					    g_bytes_get_size (priv->bytes));
+		gsize bufsz = 0;
+		const guint8 *buf = g_bytes_get_data (priv->bytes, &bufsz);
+		g_autofree gchar *datastr = NULL;
+		g_autofree gchar *dataszstr = g_strdup_printf ("0x%x", (guint) bufsz);
+		if (flags & FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA) {
+			datastr = fu_common_strsafe ((const gchar *) buf, MIN (bufsz, 16));
+		} else {
+			datastr = g_base64_encode (buf, bufsz);
+		}
+		xb_builder_node_insert_text (bn, "data", datastr,
+					     "size", dataszstr,
+					     NULL);
 	}
-	if (priv->alignment != 0x0) {
-		fu_common_string_append_kx (str, idt, "Alignment",
-					    (guint64) 1 << priv->alignment);
-	}
+	fu_xmlb_builder_insert_kx (bn, "alignment", priv->alignment);
 
-	/* add chunks */
-	if (priv->chunks != NULL) {
+	/* chunks */
+	if (priv->chunks != NULL && priv->chunks->len > 0) {
+		g_autoptr(XbBuilderNode) bp = xb_builder_node_insert (bn, "chunks", NULL);
 		for (guint i = 0; i < priv->chunks->len; i++) {
 			FuChunk *chk = g_ptr_array_index (priv->chunks, i);
-			fu_chunk_add_string (chk, 1, str);
+			g_autoptr(XbBuilderNode) bc = xb_builder_node_insert (bp, "chunk", NULL);
+			fu_chunk_export (chk, flags, bc);
 		}
 	}
 
 	/* vfunc */
-	if (klass->to_string != NULL)
-		klass->to_string (self, idt, str);
+	if (klass->export != NULL)
+		klass->export (self, flags, bn);
 
-	for (guint i = 0; i < priv->images->len; i++) {
-		FuFirmware *img = g_ptr_array_index (priv->images, i);
-		fu_firmware_add_string (img, idt + 1, str);
+	/* children */
+	if (priv->images->len > 0) {
+		for (guint i = 0; i < priv->images->len; i++) {
+			FuFirmware *img = g_ptr_array_index (priv->images, i);
+			g_autoptr(XbBuilderNode) bc = xb_builder_node_insert (bn, "firmware", NULL);
+			fu_firmware_export (img, flags, bc);
+		}
 	}
+}
+
+/**
+ * fu_firmware_export_to_xml:
+ * @self: A #FuFirmware
+ * @flags: #FuFirmwareExportFlags, e.g. %FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG
+ * @error: (nullable): a #GError or %NULL
+ *
+ * This allows us to build an XML object for the nested firmware.
+ *
+ * Returns: a string value, or %NULL for invalid.
+ *
+ * Since: 1.6.0
+ **/
+gchar *
+fu_firmware_export_to_xml (FuFirmware *self,
+			   FuFirmwareExportFlags flags,
+			   GError **error)
+{
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new ("firmware");
+	fu_firmware_export (self, flags, bn);
+	return xb_builder_node_export (bn,
+				       XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
+#if LIBXMLB_CHECK_VERSION(0,2,2)
+				       XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
+#endif
+				       XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
+				       error);
 }
 
 /**
@@ -1439,9 +1566,15 @@ fu_firmware_add_string (FuFirmware *self, guint idt, GString *str)
 gchar *
 fu_firmware_to_string (FuFirmware *self)
 {
-	GString *str = g_string_new (NULL);
-	fu_firmware_add_string (self, 0, str);
-	return g_string_free (str, FALSE);
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new ("firmware");
+	fu_firmware_export (self, FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG, bn);
+	return xb_builder_node_export (bn,
+				       XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
+#if LIBXMLB_CHECK_VERSION(0,2,2)
+				       XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
+#endif
+				       XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
+				       NULL);
 }
 
 static void

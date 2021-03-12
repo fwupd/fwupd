@@ -1940,6 +1940,62 @@ fu_util_firmware_parse (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_firmware_export (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FuFirmwareExportFlags flags = FU_FIRMWARE_EXPORT_FLAG_NONE;
+	GType gtype;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autofree gchar *firmware_type = NULL;
+	g_autofree gchar *str = NULL;
+
+	/* check args */
+	if (g_strv_length (values) == 0 || g_strv_length (values) > 2) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments: filename required");
+		return FALSE;
+	}
+
+	if (g_strv_length (values) == 2)
+		firmware_type = g_strdup (values[1]);
+
+	/* load file */
+	blob = fu_common_get_contents_bytes (values[0], error);
+	if (blob == NULL)
+		return FALSE;
+
+	/* load engine */
+	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, error))
+		return FALSE;
+
+	/* find the GType to use */
+	if (firmware_type == NULL)
+		firmware_type = fu_util_prompt_for_firmware_type (priv, error);
+	if (firmware_type == NULL)
+		return FALSE;
+	gtype = fu_engine_get_firmware_gtype_by_id (priv->engine, firmware_type);
+	if (gtype == G_TYPE_INVALID) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "GType %s not supported", firmware_type);
+		return FALSE;
+	}
+	firmware = g_object_new (gtype, NULL);
+	if (!fu_firmware_parse (firmware, blob, priv->flags, error))
+		return FALSE;
+	if (priv->show_all)
+		flags |= FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG;
+	str = fu_firmware_export_to_xml (firmware, flags, error);
+	if (str == NULL)
+		return FALSE;
+	g_print ("%s", str);
+	return TRUE;
+}
+
+static gboolean
 fu_util_firmware_extract (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GType gtype;
@@ -3010,6 +3066,13 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Parse and show details about a firmware file"),
 		     fu_util_firmware_parse);
+	fu_util_cmd_array_add (cmd_array,
+		     "firmware-export",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("FILENAME [FIRMWARE-TYPE]"),
+		     /* TRANSLATORS: command description */
+		     _("Export a firmware file structure to XML"),
+		     fu_util_firmware_export);
 	fu_util_cmd_array_add (cmd_array,
 		     "firmware-extract",
 		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */

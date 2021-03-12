@@ -16,29 +16,45 @@ fu_vli_usbhub_header_crc8 (FuVliUsbhubHeader *hdr)
 }
 
 void
-fu_vli_usbhub_header_to_string (FuVliUsbhubHeader *hdr, guint idt, GString *str)
+fu_vli_usbhub_header_export (FuVliUsbhubHeader *hdr, XbBuilderNode *bn)
 {
-	fu_common_string_append_kx (str, idt, "DevId", GUINT16_FROM_BE(hdr->dev_id));
-	fu_common_string_append_kx (str, idt, "Variant", hdr->variant);
+	fu_xmlb_builder_insert_kx (bn, "dev_id", GUINT16_FROM_BE(hdr->dev_id));
+	fu_xmlb_builder_insert_kx (bn, "variant", hdr->variant);
 	if (hdr->usb2_fw_sz > 0) {
-		fu_common_string_append_kx (str, idt, "Usb2FwAddr",
-					    GUINT16_FROM_BE(hdr->usb2_fw_addr));
-		fu_common_string_append_kx (str, idt, "Usb2FwSz",
-					    GUINT16_FROM_BE(hdr->usb2_fw_sz));
+		fu_xmlb_builder_insert_kx (bn, "usb2_fw_addr",
+					   GUINT16_FROM_BE(hdr->usb2_fw_addr));
+		fu_xmlb_builder_insert_kx (bn, "usb2_fw_sz",
+					   GUINT16_FROM_BE(hdr->usb2_fw_sz));
 	}
-	fu_common_string_append_kx (str, idt, "Usb3FwAddr",
-				    ((guint32) hdr->usb3_fw_addr_high) << 16 |
-				    GUINT16_FROM_BE(hdr->usb3_fw_addr));
-	fu_common_string_append_kx (str, idt, "Usb3FwSz",
-				    GUINT16_FROM_BE(hdr->usb3_fw_sz));
+	fu_xmlb_builder_insert_kx (bn, "usb3_fw_addr",
+				   ((guint32) hdr->usb3_fw_addr_high) << 16 |
+				   GUINT16_FROM_BE(hdr->usb3_fw_addr));
+	fu_xmlb_builder_insert_kx (bn, "usb3_fw_sz",
+				   GUINT16_FROM_BE(hdr->usb3_fw_sz));
 	if (hdr->prev_ptr != VLI_USBHUB_FLASHMAP_IDX_INVALID) {
-		fu_common_string_append_kx (str, idt, "PrevPtr",
-					    VLI_USBHUB_FLASHMAP_IDX_TO_ADDR(hdr->prev_ptr));
+		fu_xmlb_builder_insert_kx (bn, "prev_ptr",
+					   VLI_USBHUB_FLASHMAP_IDX_TO_ADDR(hdr->prev_ptr));
 	}
 	if (hdr->next_ptr != VLI_USBHUB_FLASHMAP_IDX_INVALID) {
-		fu_common_string_append_kx (str, idt, "NextPtr",
-					    VLI_USBHUB_FLASHMAP_IDX_TO_ADDR(hdr->next_ptr));
+		fu_xmlb_builder_insert_kx (bn, "next_ptr",
+					   VLI_USBHUB_FLASHMAP_IDX_TO_ADDR(hdr->next_ptr));
 	}
-	fu_common_string_append_kb (str, idt, "ChecksumOK",
-				    hdr->checksum == fu_vli_usbhub_header_crc8 (hdr));
+	fu_xmlb_builder_insert_kb (bn, "checksum_ok",
+				   hdr->checksum == fu_vli_usbhub_header_crc8 (hdr));
+}
+
+void
+fu_vli_usbhub_header_to_string (FuVliUsbhubHeader *hdr, guint idt, GString *str)
+{
+	g_autoptr(XbBuilderNode) bn = xb_builder_node_new ("header");
+	g_autofree gchar *xml = NULL;
+	fu_vli_usbhub_header_export (hdr, bn);
+	xml = xb_builder_node_export (bn,
+				      XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
+#if LIBXMLB_CHECK_VERSION(0,2,2)
+				      XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
+#endif
+				      XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
+				      NULL);
+	fu_common_string_append_kv (str, idt, "xml", xml);
 }

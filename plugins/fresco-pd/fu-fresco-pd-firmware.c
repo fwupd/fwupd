@@ -24,10 +24,12 @@ fu_fresco_pd_firmware_get_customer_id (FuFrescoPdFirmware *self)
 }
 
 static void
-fu_fresco_pd_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_fresco_pd_firmware_export (FuFirmware *firmware,
+			      FuFirmwareExportFlags flags,
+			      XbBuilderNode *bn)
 {
 	FuFrescoPdFirmware *self = FU_FRESCO_PD_FIRMWARE (firmware);
-	fu_common_string_append_ku (str, idt, "CustomerID", self->customer_id);
+	fu_xmlb_builder_insert_kx (bn, "customer_id", self->customer_id);
 }
 
 static gboolean
@@ -70,7 +72,7 @@ fu_fresco_pd_firmware_class_init (FuFrescoPdFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_fresco_pd_firmware_parse;
-	klass_firmware->to_string = fu_fresco_pd_firmware_to_string;
+	klass_firmware->export = fu_fresco_pd_firmware_export;
 }
 
 FuFirmware *

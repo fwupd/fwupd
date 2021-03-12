@@ -54,13 +54,14 @@ fu_fmap_firmware_find_offset (FuFmapFirmware *self,
 }
 
 static void
-fu_fmap_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_fmap_firmware_export (FuFirmware *firmware,
+			 FuFirmwareExportFlags flags,
+			 XbBuilderNode *bn)
 {
 	FuFmapFirmware *self = FU_FMAP_FIRMWARE (firmware);
 	FuFmapFirmwarePrivate *priv = GET_PRIVATE (self);
-	if (priv->offset > 0)
-		fu_common_string_append_kx (str, idt, "Offset", priv->offset);
-	fu_common_string_append_kx (str, idt, "Base", priv->base);
+	fu_xmlb_builder_insert_kx (bn, "offset", priv->offset);
+	fu_xmlb_builder_insert_kx (bn, "base", priv->base);
 }
 
 static gboolean
@@ -260,7 +261,7 @@ static void
 fu_fmap_firmware_class_init (FuFmapFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
-	klass_firmware->to_string = fu_fmap_firmware_to_string;
+	klass_firmware->export = fu_fmap_firmware_export;
 	klass_firmware->parse = fu_fmap_firmware_parse;
 	klass_firmware->write = fu_fmap_firmware_write;
 	klass_firmware->build = fu_fmap_firmware_build;

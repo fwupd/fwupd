@@ -28,10 +28,12 @@ fu_pxi_firmware_get_model_name (FuPxiFirmware *self)
 }
 
 static void
-fu_pxi_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_pxi_firmware_export (FuFirmware *firmware,
+			FuFirmwareExportFlags flags,
+			XbBuilderNode *bn)
 {
 	FuPxiFirmware *self = FU_PXI_FIRMWARE (firmware);
-	fu_common_string_append_kv (str, idt, "ModelName", self->model_name);
+	fu_xmlb_builder_insert_kv (bn, "model_name", self->model_name);
 }
 
 static gboolean
@@ -206,7 +208,7 @@ fu_pxi_firmware_class_init (FuPxiFirmwareClass *klass)
 	klass_firmware->parse = fu_pxi_firmware_parse;
 	klass_firmware->build = fu_pxi_firmware_build;
 	klass_firmware->write = fu_pxi_firmware_write;
-	klass_firmware->to_string = fu_pxi_firmware_to_string;
+	klass_firmware->export = fu_pxi_firmware_export;
 }
 
 FuFirmware *
