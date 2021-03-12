@@ -315,7 +315,7 @@ fu_pxi_device_wait_notify (FuPxiDevice *self,
 		/* need check command result if command is fw upgrade */
 		if (*status == FU_PXI_DEVICE_CMD_FW_UPGRADE) {
 			if (!fu_common_read_uint8_safe (res, sizeof(res), 0x2,
-					&command_status, error))
+							&command_status, error))
 				return FALSE;
 			if (command_status != ERR_COMMAND_SUCCESS)
 				return FALSE;
