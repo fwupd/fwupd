@@ -196,6 +196,7 @@ fu_pxi_firmware_finalize (GObject *object)
 {
 	FuPxiFirmware *self = FU_PXI_FIRMWARE (object);
 	g_free (self->model_name);
+	G_OBJECT_CLASS (fu_pxi_firmware_parent_class)->finalize (object);
 }
 
 static void
