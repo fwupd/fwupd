@@ -282,7 +282,7 @@ def _build(bld: Builder) -> None:
         built_objs.append(bld.compile("fwupd/libfwupdplugin/fu-fuzzer-main.c"))
 
     # built in formats
-    for fuzzer in ["dfuse", "fmap", "ifd", "ihex", "srec"]:
+    for fuzzer in ["dfuse", "fmap", "ihex", "srec"]:
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {
@@ -307,6 +307,7 @@ def _build(bld: Builder) -> None:
         ("hailuck", "hailuck-kbd", "ihex*"),
         ("pixart-rf", "pxi", "pixart*"),
         ("solokey", "solokey", "solokey*"),
+        ("spi", "ifd", "ifd*"),
         ("synaptics-prometheus", "synaprom", "synaprom*"),
         ("synaptics-rmi", "synaptics-rmi", "synaptics-rmi*"),
         ("synaptics-mst", "synaptics-mst", "synaptics-mst*"),

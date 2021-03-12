@@ -780,14 +780,5 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_firmware_set_offset;
     fu_firmware_set_size;
     fu_firmware_write_chunk;
-    fu_ifd_access_to_string;
-    fu_ifd_firmware_check_jedec_cmd;
-    fu_ifd_firmware_get_type;
-    fu_ifd_firmware_new;
-    fu_ifd_image_get_access;
-    fu_ifd_image_get_type;
-    fu_ifd_image_new;
-    fu_ifd_image_set_access;
-    fu_ifd_region_to_string;
   local: *;
 } LIBFWUPDPLUGIN_1.5.8;
