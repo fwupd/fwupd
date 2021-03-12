@@ -127,25 +127,28 @@ fu_thunderbolt_firmware_family_to_string (FuThunderboltFamily family)
 }
 
 static void
-fu_thunderbolt_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_thunderbolt_firmware_export (FuFirmware *firmware,
+				FuFirmwareExportFlags flags,
+				XbBuilderNode *bn)
 {
 	FuThunderboltFirmware *self = FU_THUNDERBOLT_FIRMWARE (firmware);
 	FuThunderboltFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(XbBuilderNode) bc = NULL;
 
-	fu_common_string_append_kv (str, idt, "Family",
-				    fu_thunderbolt_firmware_family_to_string (priv->family));
-	fu_common_string_append_kb (str, idt, "IsHost", priv->is_host);
-	fu_common_string_append_kb (str, idt, "IsNative", priv->is_native);
-	fu_common_string_append_kx (str, idt, "DeviceId", priv->device_id);
-	fu_common_string_append_kx (str, idt, "VendorId", priv->vendor_id);
-	fu_common_string_append_kx (str, idt, "ModelId", priv->model_id);
-	fu_common_string_append_kx (str, idt, "FlashSize", priv->flash_size);
-	fu_common_string_append_kx (str, idt, "Generation", priv->gen);
-	fu_common_string_append_kx (str, idt, "Ports", priv->ports);
-	fu_common_string_append_kb (str, idt, "HasPd", priv->has_pd);
+	fu_xmlb_builder_insert_kv (bn, "family",
+				   fu_thunderbolt_firmware_family_to_string (priv->family));
+	fu_xmlb_builder_insert_kb (bn, "is_host", priv->is_host);
+	fu_xmlb_builder_insert_kb (bn, "is_native", priv->is_native);
+	fu_xmlb_builder_insert_kx (bn, "device_id", priv->device_id);
+	fu_xmlb_builder_insert_kx (bn, "vendor_id", priv->vendor_id);
+	fu_xmlb_builder_insert_kx (bn, "model_id", priv->model_id);
+	fu_xmlb_builder_insert_kx (bn, "flash_size", priv->flash_size);
+	fu_xmlb_builder_insert_kx (bn, "generation", priv->gen);
+	fu_xmlb_builder_insert_kx (bn, "ports", priv->ports);
+	fu_xmlb_builder_insert_kb (bn, "has_pd", priv->has_pd);
 	for (guint i = 0; i < _SECTION_LAST; i++) {
-		g_autofree gchar *title = g_strdup_printf ("Section%u", i);
-		fu_common_string_append_kx (str, idt, title, priv->sections[i]);
+		g_autofree gchar *tmp = g_strdup_printf ("%x", priv->sections[i]);
+		xb_builder_node_insert_text (bn, "section", tmp, NULL);
 	}
 }
 
@@ -555,7 +558,7 @@ fu_thunderbolt_firmware_class_init (FuThunderboltFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_thunderbolt_firmware_parse;
-	klass_firmware->to_string = fu_thunderbolt_firmware_to_string;
+	klass_firmware->export = fu_thunderbolt_firmware_export;
 }
 
 FuThunderboltFirmware *

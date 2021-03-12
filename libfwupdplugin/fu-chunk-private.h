@@ -9,10 +9,11 @@
 #include <xmlb.h>
 
 #include "fu-chunk.h"
+#include "fu-firmware.h"
 
-void		 fu_chunk_add_string			(FuChunk	*self,
-							 guint		 idt,
-							 GString	*str);
+void		 fu_chunk_export			(FuChunk	*self,
+							 FuFirmwareExportFlags flags,
+							 XbBuilderNode	*bn);
 gboolean	 fu_chunk_build				(FuChunk	*self,
 							 XbNode		*n,
 							 GError		**error);

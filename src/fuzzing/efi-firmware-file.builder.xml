@@ -1,0 +1,7 @@
+<firmware gtype="FuEfiFirmwareFile">
+  <id>ced4eac6-49f3-4c12-a597-fc8c33447691</id>
+  <type>0x0B</type>
+  <firmware gtype="FuEfiFirmwareSection">
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+</firmware>

@@ -761,6 +761,9 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_byte_array_set_size_full;
     fu_common_align_up;
     fu_firmware_add_chunk;
+    fu_firmware_build_from_xml;
+    fu_firmware_export;
+    fu_firmware_export_to_xml;
     fu_firmware_get_addr;
     fu_firmware_get_alignment;
     fu_firmware_get_bytes;
@@ -780,5 +783,8 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_firmware_set_offset;
     fu_firmware_set_size;
     fu_firmware_write_chunk;
+    fu_xmlb_builder_insert_kb;
+    fu_xmlb_builder_insert_kv;
+    fu_xmlb_builder_insert_kx;
   local: *;
 } LIBFWUPDPLUGIN_1.5.8;

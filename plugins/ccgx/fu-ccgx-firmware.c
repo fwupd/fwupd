@@ -58,14 +58,18 @@ fu_ccgx_firmware_get_fw_mode (FuCcgxFirmware *self)
 }
 
 static void
-fu_ccgx_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_ccgx_firmware_export (FuFirmware *firmware,
+			 FuFirmwareExportFlags flags,
+			 XbBuilderNode *bn)
 {
 	FuCcgxFirmware *self = FU_CCGX_FIRMWARE (firmware);
-	fu_common_string_append_kx (str, idt, "AppType", self->app_type);
-	fu_common_string_append_kx (str, idt, "SiliconId", self->silicon_id);
-	fu_common_string_append_ku (str, idt, "Records", self->records->len);
-	fu_common_string_append_kv (str, idt, "FWMode",
-				    fu_ccgx_fw_mode_to_string (self->fw_mode));
+	fu_xmlb_builder_insert_kx (bn, "silicon_id", self->silicon_id);
+	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
+		fu_xmlb_builder_insert_kx (bn, "app_type", self->app_type);
+		fu_xmlb_builder_insert_kx (bn, "records", self->records->len);
+		fu_xmlb_builder_insert_kv (bn, "fw_mode",
+					    fu_ccgx_fw_mode_to_string (self->fw_mode));
+	}
 }
 
 static void
@@ -467,7 +471,7 @@ fu_ccgx_firmware_class_init (FuCcgxFirmwareClass *klass)
 	klass_firmware->parse = fu_ccgx_firmware_parse;
 	klass_firmware->write = fu_ccgx_firmware_write;
 	klass_firmware->build = fu_ccgx_firmware_build;
-	klass_firmware->to_string = fu_ccgx_firmware_to_string;
+	klass_firmware->export = fu_ccgx_firmware_export;
 }
 
 FuFirmware *

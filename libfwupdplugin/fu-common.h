@@ -7,6 +7,7 @@
 #pragma once
 
 #include <gio/gio.h>
+#include <xmlb.h>
 
 #include "fu-volume.h"
 
@@ -363,3 +364,13 @@ guint32		 fu_common_crc32_full		(const guint8	*buf,
 gchar		*fu_common_uri_get_scheme	(const gchar	*uri);
 gsize		 fu_common_align_up		(gsize		 value,
 						 guint8		 alignment);
+
+void		 fu_xmlb_builder_insert_kv	(XbBuilderNode	*bn,
+						 const gchar	*key,
+						 const gchar	*value);
+void		 fu_xmlb_builder_insert_kx	(XbBuilderNode	*bn,
+						 const gchar	*key,
+						 guint64	 value);
+void		 fu_xmlb_builder_insert_kb	(XbBuilderNode	*bn,
+						 const gchar	*key,
+						 gboolean	 value);

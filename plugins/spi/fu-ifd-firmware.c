@@ -61,43 +61,38 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuIfdFirmware, fu_ifd_firmware, FU_TYPE_FIRMWARE)
 #define FU_IFD_FREG_LIMIT(freg)			((((freg) >> 4) & 0x07FFF000) | 0x00000FFF)
 
 static void
-fu_ifd_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_ifd_firmware_export (FuFirmware *firmware,
+			FuFirmwareExportFlags flags,
+			XbBuilderNode *bn)
 {
 	FuIfdFirmware *self = FU_IFD_FIRMWARE (firmware);
 	FuIfdFirmwarePrivate *priv = GET_PRIVATE (self);
-	fu_common_string_append_kx (str, idt, "DescriptorMap0",
-				    priv->descriptor_map0);
-	fu_common_string_append_kx (str, idt, "DescriptorMap1",
-				    priv->descriptor_map1);
-	fu_common_string_append_kx (str, idt, "DescriptorMap2",
-				    priv->descriptor_map2);
-	fu_common_string_append_ku (str, idt, "NumRegions",
-				    priv->num_regions);
-	fu_common_string_append_ku (str, idt, "NumComponents",
-				    priv->num_components + 1);
-	fu_common_string_append_kx (str, idt, "FlashRegionBaseAddr",
-				    priv->flash_region_base_addr);
-	fu_common_string_append_kx (str, idt, "FlashComponentBaseAddr",
-				    priv->flash_component_base_addr);
-	fu_common_string_append_kx (str, idt, "FlashMasterBaseAddr",
-				    priv->flash_master_base_addr);
+	fu_xmlb_builder_insert_kx (bn, "descriptor_map0", priv->descriptor_map0);
+	fu_xmlb_builder_insert_kx (bn, "descriptor_map1", priv->descriptor_map1);
+	fu_xmlb_builder_insert_kx (bn, "descriptor_map2", priv->descriptor_map2);
+	fu_xmlb_builder_insert_kx (bn, "num_regions", priv->num_regions);
+	fu_xmlb_builder_insert_kx (bn, "num_components", priv->num_components + 1);
+	fu_xmlb_builder_insert_kx (bn, "flash_region_base_addr", priv->flash_region_base_addr);
+	fu_xmlb_builder_insert_kx (bn, "flash_component_base_addr", priv->flash_component_base_addr);
+	fu_xmlb_builder_insert_kx (bn, "flash_master_base_addr", priv->flash_master_base_addr);
 	for (guint i = 1; i < 3; i++) {
 		g_autofree gchar *title = g_strdup_printf ("FlashMaster%x", i + 1);
-		fu_common_string_append_kx (str, idt, title,
-					    priv->flash_master[i]);
+		fu_xmlb_builder_insert_kx (bn, title, priv->flash_master[i]);
 	}
-	fu_common_string_append_kx (str, idt, "FlashIchStrapBaseAddr",
-				    priv->flash_ich_strap_base_addr);
-	fu_common_string_append_kx (str, idt, "FlashMchStrapBaseAddr",
-				    priv->flash_mch_strap_base_addr);
-	fu_common_string_append_kx (str, idt, "ComponentsRcd",
-				    priv->components_rcd);
-	fu_common_string_append_kx (str, idt, "IllegalJedec", priv->illegal_jedec);
-	fu_common_string_append_kx (str, idt, "IllegalJedec1", priv->illegal_jedec1);
-	if (priv->flash_descriptor_regs != NULL) {
-		for (guint i = 0; i < priv->num_regions; i++) {
-			g_autofree gchar *title = g_strdup_printf ("FlashDescriptorReg%x", i);
-			fu_common_string_append_kx (str, idt, title, priv->flash_descriptor_regs[i]);
+	fu_xmlb_builder_insert_kx (bn, "flash_ich_strap_base_addr",
+				   priv->flash_ich_strap_base_addr);
+	fu_xmlb_builder_insert_kx (bn, "flash_mch_strap_base_addr",
+				   priv->flash_mch_strap_base_addr);
+	fu_xmlb_builder_insert_kx (bn, "components_rcd",
+				   priv->components_rcd);
+	fu_xmlb_builder_insert_kx (bn, "illegal_jedec", priv->illegal_jedec);
+	fu_xmlb_builder_insert_kx (bn, "illegal_jedec1", priv->illegal_jedec1);
+	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
+		if (priv->flash_descriptor_regs != NULL) {
+			for (guint i = 0; i < priv->num_regions; i++) {
+				g_autofree gchar *title = g_strdup_printf ("flash_descriptor_reg%x", i);
+				fu_xmlb_builder_insert_kx (bn, title, priv->flash_descriptor_regs[i]);
+			}
 		}
 	}
 }
@@ -474,7 +469,7 @@ fu_ifd_firmware_class_init (FuIfdFirmwareClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	object_class->finalize = fu_ifd_firmware_finalize;
-	klass_firmware->to_string = fu_ifd_firmware_to_string;
+	klass_firmware->export = fu_ifd_firmware_export;
 	klass_firmware->parse = fu_ifd_firmware_parse;
 	klass_firmware->write = fu_ifd_firmware_write;
 	klass_firmware->build = fu_ifd_firmware_build;

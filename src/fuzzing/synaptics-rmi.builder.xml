@@ -1,0 +1,4 @@
+<firmware gtype="FuSynapticsMstFirmware">
+  <board_id>0x42</board_id>
+  <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
+</firmware>

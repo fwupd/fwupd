@@ -18,17 +18,19 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuIfdImage, fu_ifd_image, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_ifd_image_get_instance_private (o))
 
 static void
-fu_ifd_image_to_string (FuFirmware *image, guint idt, GString *str)
+fu_ifd_image_export (FuFirmware *firmware,
+		     FuFirmwareExportFlags flags,
+		     XbBuilderNode *bn)
 {
-	FuIfdImage *self = FU_IFD_IMAGE (image);
+	FuIfdImage *self = FU_IFD_IMAGE (firmware);
 	FuIfdImagePrivate *priv = GET_PRIVATE (self);
 	for (guint i = 0; i < FU_IFD_REGION_MAX; i++) {
-		g_autofree gchar *title = NULL;
 		if (priv->access[i] == FU_IFD_ACCESS_NONE)
 			continue;
-		title = g_strdup_printf ("Access[%s]", fu_ifd_region_to_string (i));
-		fu_common_string_append_kv (str, idt, title,
-					    fu_ifd_access_to_string (priv->access[i]));
+		xb_builder_node_insert_text (bn, "access",
+					     fu_ifd_access_to_string (priv->access[i]),
+					     "region", fu_ifd_region_to_string (i),
+					     NULL);
 	}
 }
 
@@ -71,19 +73,32 @@ static GBytes *
 fu_ifd_image_write (FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
-	g_autoptr(GBytes) bytes = NULL;
+	g_autoptr(GPtrArray) images = fu_firmware_get_images (firmware);
 
-	/* simple payload */
-	bytes = fu_firmware_get_bytes (firmware, error);
-	if (bytes == NULL)
-		return NULL;
-	fu_byte_array_append_bytes (buf, bytes);
+	/* add each volume */
+	if (images->len > 0) {
+		for (guint i = 0; i < images->len; i++) {
+			FuFirmware *img = g_ptr_array_index (images, i);
+			g_autoptr(GBytes) bytes = fu_firmware_write (img, error);
+			if (bytes == NULL)
+				return NULL;
+			fu_byte_array_append_bytes (buf, bytes);
+		}
+	} else {
+		g_autoptr(GBytes) bytes = NULL;
+		bytes = fu_firmware_get_bytes (firmware, error);
+		if (bytes == NULL)
+			return NULL;
+		fu_byte_array_append_bytes (buf, bytes);
+	}
 
 	/* align up */
-	fu_byte_array_set_size (buf,
-				fu_common_align_up (g_bytes_get_size (bytes),
-						    fu_firmware_get_alignment (firmware)));
+	fu_byte_array_set_size (buf, fu_common_align_up (buf->len,
+				fu_firmware_get_alignment (firmware)));
+
+	/* success */
 	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
+
 }
 
 static void
@@ -96,7 +111,7 @@ static void
 fu_ifd_image_class_init (FuIfdImageClass *klass)
 {
 	FuFirmwareClass *klass_image = FU_FIRMWARE_CLASS (klass);
-	klass_image->to_string = fu_ifd_image_to_string;
+	klass_image->export = fu_ifd_image_export;
 	klass_image->write = fu_ifd_image_write;
 }
 

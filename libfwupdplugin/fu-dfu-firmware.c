@@ -34,14 +34,16 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuDfuFirmware, fu_dfu_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_dfu_firmware_get_instance_private (o))
 
 static void
-fu_dfu_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_dfu_firmware_export (FuFirmware *firmware,
+			FuFirmwareExportFlags flags,
+			XbBuilderNode *bn)
 {
 	FuDfuFirmware *self = FU_DFU_FIRMWARE (firmware);
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE (self);
-	fu_common_string_append_kx (str, idt, "Vid", priv->vid);
-	fu_common_string_append_kx (str, idt, "Pid", priv->pid);
-	fu_common_string_append_kx (str, idt, "Release", priv->release);
-	fu_common_string_append_kx (str, idt, "DfuVersion", priv->dfu_version);
+	fu_xmlb_builder_insert_kx (bn, "vendor", priv->vid);
+	fu_xmlb_builder_insert_kx (bn, "product", priv->pid);
+	fu_xmlb_builder_insert_kx (bn, "release", priv->release);
+	fu_xmlb_builder_insert_kx (bn, "dfu_version", priv->dfu_version);
 }
 
 /* private */
@@ -387,7 +389,7 @@ static void
 fu_dfu_firmware_class_init (FuDfuFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
-	klass_firmware->to_string = fu_dfu_firmware_to_string;
+	klass_firmware->export = fu_dfu_firmware_export;
 	klass_firmware->parse = fu_dfu_firmware_parse;
 	klass_firmware->write = fu_dfu_firmware_write;
 	klass_firmware->build = fu_dfu_firmware_build;

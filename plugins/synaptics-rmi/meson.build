@@ -39,3 +39,31 @@ shared_module('fu_plugin_synaptics_rmi',
   ],
 )
 endif
+
+if get_option('tests')
+  e = executable(
+    'synaptics-rmi-self-test',
+    fu_hash,
+    sources : [
+      'fu-self-test.c',
+      'fu-synaptics-rmi-common.c',
+      'fu-synaptics-rmi-firmware.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    dependencies : [
+      plugin_deps,
+      gnutls,
+    ],
+    link_with : [
+      fwupd,
+      fwupdplugin,
+    ],
+    install : true,
+    install_dir : installed_test_bindir,
+  )
+  test('synaptics-rmi-self-test', e)
+endif

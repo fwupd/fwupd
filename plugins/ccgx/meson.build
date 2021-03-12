@@ -39,3 +39,32 @@ shared_module('fu_plugin_ccgx',
   ],
 )
 endif
+
+if get_option('tests')
+  e = executable(
+    'ccgx-self-test',
+    fu_hash,
+    sources : [
+      'fu-self-test.c',
+      'fu-ccgx-common.c',
+      'fu-ccgx-firmware.c',
+      'fu-ccgx-dmc-common.c',
+      'fu-ccgx-dmc-firmware.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    dependencies : [
+      plugin_deps,
+    ],
+    link_with : [
+      fwupd,
+      fwupdplugin,
+    ],
+    install : true,
+    install_dir : installed_test_bindir,
+  )
+  test('ccgx-self-test', e)
+endif

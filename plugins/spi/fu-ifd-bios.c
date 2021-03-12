@@ -80,30 +80,6 @@ fu_ifd_bios_parse (FuFirmware *firmware,
 	return TRUE;
 }
 
-static GBytes *
-fu_ifd_bios_write (FuFirmware *firmware, GError **error)
-{
-	g_autoptr(GByteArray) buf = g_byte_array_new ();
-	g_autoptr(GPtrArray) images = fu_firmware_get_images (firmware);
-
-	/* add each volume */
-	for (guint i = 0; i < images->len; i++) {
-		FuFirmware *img = g_ptr_array_index (images, i);
-		g_autoptr(GBytes) bytes = fu_firmware_write (img, error);
-		if (bytes == NULL)
-			return NULL;
-		fu_byte_array_append_bytes (buf, bytes);
-	}
-
-	/* align up */
-	fu_byte_array_set_size (buf,
-				fu_common_align_up (buf->len,
-				fu_firmware_get_alignment (firmware)));
-
-	/* success */
-	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
-}
-
 static void
 fu_ifd_bios_init (FuIfdBios *self)
 {
@@ -115,7 +91,6 @@ fu_ifd_bios_class_init (FuIfdBiosClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_ifd_bios_parse;
-	klass_firmware->write = fu_ifd_bios_write;
 }
 
 /**

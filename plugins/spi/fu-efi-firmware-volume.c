@@ -44,14 +44,17 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuEfiFirmwareVolume, fu_efi_firmware_volume, FU_TYPE
 #define FU_EFI_FIRMWARE_VOLUME_SIZE				0x40
 
 static void
-fu_ifd_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
+fu_ifd_firmware_export (FuFirmware *firmware,
+			FuFirmwareExportFlags flags,
+			XbBuilderNode *bn)
 {
 	FuEfiFirmwareVolume *self = FU_EFI_FIRMWARE_VOLUME (firmware);
 	FuEfiFirmwareVolumePrivate *priv = GET_PRIVATE (self);
-	const gchar *guid_name = fu_efi_guid_to_name (fu_firmware_get_id (firmware));
-	if (guid_name != NULL)
-		fu_common_string_append_kv (str, idt, "Name", guid_name);
-	fu_common_string_append_kx (str, idt, "Attrs", priv->attrs);
+	fu_xmlb_builder_insert_kx (bn, "attrs", priv->attrs);
+	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
+		fu_xmlb_builder_insert_kv (bn, "name",
+					   fu_efi_guid_to_name (fu_firmware_get_id (firmware)));
+	}
 }
 
 static gboolean
@@ -356,7 +359,7 @@ fu_efi_firmware_volume_class_init (FuEfiFirmwareVolumeClass *klass)
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
 	klass_firmware->parse = fu_efi_firmware_volume_parse;
 	klass_firmware->write = fu_efi_firmware_volume_write;
-	klass_firmware->to_string = fu_ifd_firmware_to_string;
+	klass_firmware->export = fu_ifd_firmware_export;
 }
 
 /**

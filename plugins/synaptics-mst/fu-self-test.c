@@ -10,6 +10,8 @@
 #include <glib/gstdio.h>
 #include <stdlib.h>
 
+#include "fu-synaptics-mst-firmware.h"
+
 #include "fu-plugin-private.h"
 
 static void
@@ -129,6 +131,42 @@ fu_plugin_synaptics_mst_tb16_func (void)
 	g_assert_cmpint (devices->len, ==, 2);
 }
 
+static void
+fu_synaptics_mst_firmware_xml_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *csum1 = NULL;
+	g_autofree gchar *csum2 = NULL;
+	g_autofree gchar *xml_out = NULL;
+	g_autofree gchar *xml_src = NULL;
+	g_autoptr(FuFirmware) firmware1 = fu_synaptics_mst_firmware_new ();
+	g_autoptr(FuFirmware) firmware2 = fu_synaptics_mst_firmware_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* build and write */
+	ret = g_file_get_contents (FWUPD_FUZZINGSRCDIR "/synaptics-mst.builder.xml",
+				   &xml_src, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_firmware_build_from_xml (firmware1, xml_src, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum1 = fu_firmware_get_checksum (firmware1, G_CHECKSUM_SHA1, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (csum1, ==, "bfcdf3e6ca6cef45543bfbb57509c92aec9a39fb");
+
+	/* ensure we can round-trip */
+	xml_out = fu_firmware_export_to_xml (firmware1,
+					     FU_FIRMWARE_EXPORT_FLAG_NONE,
+					     &error);
+	g_assert_no_error (error);
+	ret = fu_firmware_build_from_xml (firmware2, xml_out, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum2 = fu_firmware_get_checksum (firmware2, G_CHECKSUM_SHA1, &error);
+	g_assert_cmpstr (csum1, ==, csum2);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -142,5 +180,7 @@ main (int argc, char **argv)
 	/* tests go here */
 	g_test_add_func ("/fwupd/plugin/synaptics_mst{none}", fu_plugin_synaptics_mst_none_func);
 	g_test_add_func ("/fwupd/plugin/synaptics_mst{tb16}", fu_plugin_synaptics_mst_tb16_func);
+	g_test_add_func ("/fwupd/plugin/synaptics_mst/firmware{xml}", fu_synaptics_mst_firmware_xml_func);
+
 	return g_test_run ();
 }
