@@ -197,6 +197,23 @@ class Builder:
         return srcs
 
 
+class Fuzzer:
+    def __init__(self, name, srcdir=None, globstr=None, pattern=None) -> None:
+
+        self.name = name
+        self.srcdir = srcdir or name
+        self.globstr = globstr or "{}*".format(name)
+        self.pattern = pattern or "{}-firmware".format(name)
+
+    @property
+    def new_gtype(self) -> str:
+        return "fu_{}_new".format(self.pattern).replace("-", "_")
+
+    @property
+    def header(self) -> str:
+        return "fu-{}.h".format(self.pattern)
+
+
 def _build(bld: Builder) -> None:
 
     # GLib
@@ -282,52 +299,52 @@ def _build(bld: Builder) -> None:
         built_objs.append(bld.compile("fwupd/libfwupdplugin/fu-fuzzer-main.c"))
 
     # built in formats
-    for fuzzer in ["dfuse", "fmap", "ihex", "srec"]:
+    for fzr in [Fuzzer("dfuse"), Fuzzer("fmap"), Fuzzer("ihex"), Fuzzer("srec")]:
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {
-                "@FIRMWARENEW@": "fu_{}_firmware_new".format(fuzzer),
-                "@INCLUDE@": "libfwupdplugin/fu-{}-firmware.h".format(fuzzer),
+                "@FIRMWARENEW@": fzr.new_gtype,
+                "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
             },
         )
-        bld.link([bld.compile(src)] + built_objs, "{}_fuzzer".format(fuzzer))
+        bld.link([bld.compile(src)] + built_objs, "{}_fuzzer".format(fzr.name))
         bld.makezip(
-            "{}_fuzzer_seed_corpus.zip".format(fuzzer),
-            "fwupd/src/fuzzing/firmware/{}*".format(fuzzer),
+            "{}_fuzzer_seed_corpus.zip".format(fzr.name),
+            "fwupd/src/fuzzing/firmware/{}".format(fzr.globstr),
         )
 
     # plugins
-    for srcdir, fuzzer, globstr in [
-        ("bcm57xx", "bcm57xx", "bcm57xx*"),
-        ("ccgx", "ccgx", "ccgx*.cyacd"),
-        ("ccgx", "ccgx-dmc", "ccgx-dmc*.bin"),
-        ("cros-ec", "cros-ec", "cros-ec*"),
-        ("ebitdo", "ebitdo", "ebitdo*"),
-        ("elantp", "elantp", "elantp*"),
-        ("hailuck", "hailuck-kbd", "ihex*"),
-        ("pixart-rf", "pxi", "pixart*"),
-        ("solokey", "solokey", "solokey*"),
-        ("spi", "ifd", "ifd*"),
-        ("synaptics-prometheus", "synaprom", "synaprom*"),
-        ("synaptics-rmi", "synaptics-rmi", "synaptics-rmi*"),
-        ("synaptics-mst", "synaptics-mst", "synaptics-mst*"),
-        ("wacom-usb", "wac", "wacom*"),
+    for fzr in [
+        Fuzzer("bcm57xx"),
+        Fuzzer("ccgx-dmc", srcdir="ccgx", globstr="ccgx-dmc*.bin"),
+        Fuzzer("ccgx", globstr="ccgx*.cyacd"),
+        Fuzzer("cros-ec"),
+        Fuzzer("ebitdo"),
+        Fuzzer("elantp"),
+        Fuzzer("hailuck-kbd", srcdir="hailuck", globstr="ihex*"),
+        Fuzzer("ifd", srcdir="spi"),
+        Fuzzer("pixart", srcdir="pixart-rf", pattern="pxi-firmware"),
+        Fuzzer("solokey"),
+        Fuzzer("synaprom", srcdir="synaptics-prometheus"),
+        Fuzzer("synaptics-mst"),
+        Fuzzer("synaptics-rmi"),
+        Fuzzer("wacom-usb", pattern="wac-firmware", globstr="wacom*"),
     ]:
         fuzz_objs = []
-        for obj in bld.grep_meson("fwupd/plugins/{}".format(srcdir)):
+        for obj in bld.grep_meson("fwupd/plugins/{}".format(fzr.srcdir)):
             fuzz_objs.append(bld.compile(obj))
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {
-                "@FIRMWARENEW@": "fu_{}_firmware_new".format(fuzzer.replace("-", "_")),
-                "@INCLUDE@": "plugins/{}/fu-{}-firmware.h".format(srcdir, fuzzer),
+                "@FIRMWARENEW@": fzr.new_gtype,
+                "@INCLUDE@": os.path.join("plugins", fzr.srcdir, fzr.header),
             },
         )
         fuzz_objs.append(bld.compile(src))
-        bld.link(fuzz_objs + built_objs, "{}_fuzzer".format(fuzzer))
+        bld.link(fuzz_objs + built_objs, "{}_fuzzer".format(fzr.name))
         bld.makezip(
-            "{}_fuzzer_seed_corpus.zip".format(fuzzer),
-            "fwupd/src/fuzzing/firmware/{}".format(globstr),
+            "{}_fuzzer_seed_corpus.zip".format(fzr.name),
+            "fwupd/src/fuzzing/firmware/{}".format(fzr.globstr),
         )
 
 
