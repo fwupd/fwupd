@@ -60,5 +60,5 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('ata-self-test', e)
+  test('bcm57xx-self-test', e)
 endif
