@@ -146,9 +146,7 @@ fu_pxi_firmware_write (FuFirmware *firmware, GError **error)
 	if (blob == NULL)
 		return NULL;
 	buf = g_byte_array_sized_new (g_bytes_get_size (blob) + sizeof (fw_header));
-	g_byte_array_append (buf,
-			     g_bytes_get_data (blob, NULL),
-			     g_bytes_get_size (blob));
+	fu_byte_array_append_bytes (buf, blob);
 
 	/* footer */
 	if (!fu_memcpy_safe (fw_header, sizeof (fw_header),

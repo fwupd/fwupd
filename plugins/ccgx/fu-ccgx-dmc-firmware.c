@@ -419,9 +419,7 @@ fu_ccgx_dmc_firmware_write (FuFirmware *firmware, GError **error)
 
 		chunks = fu_chunk_array_new_from_bytes (img_bytes, 0x0, 0x0, 64);
 		img_padded = fu_common_bytes_pad (img_bytes, MAX (chunks->len, 1) * 64);
-		g_byte_array_append (buf,
-				     g_bytes_get_data (img_padded, NULL),
-				     g_bytes_get_size (img_padded));
+		fu_byte_array_append_bytes (buf, img_padded);
 		g_checksum_update (csum,
 				   (const guchar *) g_bytes_get_data (img_padded, NULL),
 				   g_bytes_get_size (img_padded));

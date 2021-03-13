@@ -185,9 +185,7 @@ fu_synaprom_firmware_write (FuFirmware *firmware, GError **error)
 	fu_byte_array_append_uint32 (blob,
 				     g_bytes_get_size (payload),
 				     G_LITTLE_ENDIAN);
-	g_byte_array_append (blob,
-			     g_bytes_get_data (payload, NULL),
-			     g_bytes_get_size (payload));
+	fu_byte_array_append_bytes (blob, payload);
 
 	/* add signature */
 	for (guint i = 0; i < FU_SYNAPROM_FIRMWARE_SIGSIZE; i++)
