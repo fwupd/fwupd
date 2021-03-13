@@ -225,9 +225,7 @@ fu_fmap_firmware_write (FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index (images, i);
 		g_autoptr(GBytes) fw = fu_firmware_get_bytes (img, NULL);
-		g_byte_array_append (buf,
-				     g_bytes_get_data (fw, NULL),
-				     g_bytes_get_size (fw));
+		fu_byte_array_append_bytes (buf, fw);
 	}
 
 	/* success */

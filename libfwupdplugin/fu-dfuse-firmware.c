@@ -272,9 +272,7 @@ fu_dfuse_firmware_write_image (FuFirmware *image, GError **error)
 	/* copy data */
 	for (guint i = 0; i < blobs->len; i++) {
 		GBytes *blob = g_ptr_array_index (blobs, i);
-		g_byte_array_append (buf,
-				     g_bytes_get_data (blob, NULL),
-				     g_bytes_get_size (blob));
+		fu_byte_array_append_bytes (buf, blob);
 	}
 	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
 }
@@ -321,9 +319,7 @@ fu_dfuse_firmware_write (FuFirmware *firmware, GError **error)
 	/* copy images */
 	for (guint i = 0; i < blobs->len; i++) {
 		GBytes *blob = g_ptr_array_index (blobs, i);
-		g_byte_array_append (buf,
-				     g_bytes_get_data (blob, NULL),
-				     g_bytes_get_size (blob));
+		fu_byte_array_append_bytes (buf, blob);
 	}
 
 	/* return blob */
