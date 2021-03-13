@@ -744,31 +744,31 @@ fu_firmware_parse (FuFirmware *self, GBytes *fw, FwupdInstallFlags flags, GError
  * <?xml version="1.0" encoding="UTF-8"?>
  * <firmware gtype="FuBcm57xxFirmware">
  *   <version>1.2.3</version>
- *   <image gtype="FuBcm57xxStage1Image">
+ *   <firmware gtype="FuBcm57xxStage1Image">
  *     <version>7.8.9</version>
  *     <id>stage1</id>
  *     <idx>0x01</idx>
  *     <filename>stage1.bin</filename>
- *   </image>
- *   <image gtype="FuBcm57xxStage2Image">
+ *   </firmware>
+ *   <firmware gtype="FuBcm57xxStage2Image">
  *     <id>stage2</id>
  *     <data/> <!-- empty! -->
- *   </image>
- *   <image gtype="FuBcm57xxDictImage">
+ *   </firmware>
+ *   <firmware gtype="FuBcm57xxDictImage">
  *     <id>ape</id>
  *     <addr>0x7</addr>
  *     <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
- *   </image>
+ *   </firmware>
  * </firmware>
  * ]|
  *
  * This would be used in a build-system to merge images from generated files:
  * `fwupdtool firmware-build fw.builder.xml test.fw`
  *
- * Static binary content can be specified in the `<image>/<data>` sections and
+ * Static binary content can be specified in the `<firmware>/<data>` section and
  * is encoded as base64 text if not empty.
  *
- * Additionally, extra nodes can be included under `<image>` and `<firmware>`
+ * Additionally, extra nodes can be included under nested `<firmware>` objects
  * which can be parsed by the subclassed objects. You should verify the
  * subclassed object `FuFirmware->build` vfunc for the specific additional
  * options supported.
