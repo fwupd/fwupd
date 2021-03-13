@@ -26,7 +26,7 @@ typedef struct {
 	guint16			 vid;
 	guint16			 pid;
 	guint16			 release;
-	guint16			 version;
+	guint16			 dfu_version;
 	guint8			 footer_len;
 } FuDfuFirmwarePrivate;
 
@@ -41,7 +41,7 @@ fu_dfu_firmware_to_string (FuFirmware *firmware, guint idt, GString *str)
 	fu_common_string_append_kx (str, idt, "Vid", priv->vid);
 	fu_common_string_append_kx (str, idt, "Pid", priv->pid);
 	fu_common_string_append_kx (str, idt, "Release", priv->release);
-	fu_common_string_append_kx (str, idt, "Version", priv->version);
+	fu_common_string_append_kx (str, idt, "DfuVersion", priv->dfu_version);
 }
 
 /* private */
@@ -122,7 +122,7 @@ fu_dfu_firmware_get_version (FuDfuFirmware *self)
 {
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DFU_FIRMWARE (self), 0x0);
-	return priv->version;
+	return priv->dfu_version;
 }
 
 /**
@@ -190,7 +190,7 @@ fu_dfu_firmware_set_version (FuDfuFirmware *self, guint16 version)
 {
 	FuDfuFirmwarePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DFU_FIRMWARE (self));
-	priv->version = version;
+	priv->dfu_version = version;
 }
 
 typedef struct __attribute__((packed)) {
@@ -258,7 +258,7 @@ fu_dfu_firmware_parse_footer (FuDfuFirmware *self,
 	priv->vid = GUINT16_FROM_LE(ftr.vid);
 	priv->pid = GUINT16_FROM_LE(ftr.pid);
 	priv->release = GUINT16_FROM_LE(ftr.release);
-	priv->version = GUINT16_FROM_LE(ftr.ver);
+	priv->dfu_version = GUINT16_FROM_LE(ftr.ver);
 	priv->footer_len = ftr.len;
 
 	/* check reported length */
@@ -316,7 +316,7 @@ fu_dfu_firmware_append_footer (FuDfuFirmware *self, GBytes *contents, GError **e
 	fu_byte_array_append_uint16 (buf, priv->release, G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint16 (buf, priv->pid, G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint16 (buf, priv->vid, G_LITTLE_ENDIAN);
-	fu_byte_array_append_uint16 (buf, priv->version, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint16 (buf, priv->dfu_version, G_LITTLE_ENDIAN);
 	g_byte_array_append (buf, (const guint8 *) "UFD", 3);
 	fu_byte_array_append_uint8 (buf, sizeof(FuDfuFirmwareFooter));
 	fu_byte_array_append_uint32 (buf, ~fu_common_crc32 (buf->data, buf->len), G_LITTLE_ENDIAN);
@@ -363,6 +363,9 @@ fu_dfu_firmware_build (FuFirmware *firmware, XbNode *n, GError **error)
 	tmp = xb_node_query_text_as_uint (n, "release", NULL);
 	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
 		priv->release = tmp;
+	tmp = xb_node_query_text_as_uint (n, "dfu_version", NULL);
+	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+		priv->dfu_version = tmp;
 
 	/* success */
 	return TRUE;
@@ -375,7 +378,7 @@ fu_dfu_firmware_init (FuDfuFirmware *self)
 	priv->vid = 0xffff;
 	priv->pid = 0xffff;
 	priv->release = 0xffff;
-	priv->version = DFU_VERSION_DFU_1_0;
+	priv->dfu_version = DFU_VERSION_DFU_1_0;
 	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 }
