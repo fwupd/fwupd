@@ -380,6 +380,14 @@ fu_srec_firmware_parse (FuFirmware *firmware,
 				if (img_address == 0x0)
 					img_address = rcd->addr;
 				addr32_last = rcd->addr + rcd->buf->len;
+				if (addr32_last < rcd->addr) {
+					g_set_error (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INVALID_FILE,
+						     "overflow from address 0x%x at line %u",
+						     (guint) rcd->addr, rcd->ln);
+					return FALSE;
+				}
 			}
 			data_cnt++;
 		}
