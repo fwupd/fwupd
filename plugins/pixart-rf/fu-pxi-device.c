@@ -569,7 +569,7 @@ fu_pxi_device_fw_upgrade (FuPxiDevice *self, FuFirmware *firmware, GError **erro
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
-			     "FwUpgrade command fail, got fw checksum 0x%04x, fw size %lu",
+			     "FwUpgrade command fail, got fw checksum 0x%04x, fw size %" G_GSIZE_FORMAT,
 			     checksum,
 			     bufsz);
 		return FALSE;
