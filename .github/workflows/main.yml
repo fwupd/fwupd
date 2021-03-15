@@ -1,9 +1,9 @@
 name: Continuous Integration
 on:
   push:
-    branches: [ master, 1_4_X, 1.5.7-FreeBSD-CI ]
+    branches: [ master, 1_4_X, wip_bsd_ci ]
   pull_request:
-    branches: [ master, 1_4_X, 1.5.7-FreeBSD-CI ]
+    branches: [ master, 1_4_X, wip_bsd_ci ]
 
 jobs:
   #   abi:
