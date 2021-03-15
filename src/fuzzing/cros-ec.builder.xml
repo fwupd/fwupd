@@ -1,5 +1,5 @@
 <firmware gtype="FuCrosEcFirmware">
-  <base>0x3000</base>
+  <addr>0x3000</addr>
   <firmware>
     <id>RO_FRID</id>
     <data>Y2hlZXNlX3YxLjEuMTc1NS00ZGE5NTIwICAgICAgICA=</data>
