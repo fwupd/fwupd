@@ -1544,7 +1544,11 @@ fu_main_daemon_method_call (GDBusConnection *connection, const gchar *sender,
 		feature_flags = feature_flags_u64;
 		g_hash_table_insert (priv->sender_features,
 				     g_strdup (sender),
+#if GLIB_CHECK_VERSION(2,67,4)
+				     g_memdup2 (&feature_flags, sizeof(feature_flags)));
+#else
 				     g_memdup (&feature_flags, sizeof(feature_flags)));
+#endif
 		g_dbus_method_invocation_return_value (invocation, NULL);
 		return;
 	}
