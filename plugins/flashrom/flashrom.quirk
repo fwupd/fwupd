@@ -10,7 +10,6 @@ VersionFormat=quad
 # Star LabTop Mk III (HwId)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
 Plugin=flashrom
-PciBcrAddr = 0x0
 
 # Star LabTop Mk IV (HwId)
 [baf1d04e-fd16-5e6a-93cc-1c23d171f879]
