@@ -75,51 +75,26 @@ jobs:
             vala gtk-doc json-glib gpgme gnutls sqlite3 curl gcab libarchive
         sync: rsync
         run: |
-          pwd
-          env
           mkdir -p /usr/local/etc/pkg/repos/
           cp /etc/pkg/FreeBSD.conf /usr/local/etc/pkg/repos/FreeBSD.conf
           sed -i .old 's|url: "pkg+http://pkg.FreeBSD.org/${ABI}/quarterly"|url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest"|' /usr/local/etc/pkg/repos/FreeBSD.conf
           pkg install -y libtasn1
           pkg upgrade -y libtasn1
-          pkg info libtasn1
           cd /usr
           git clone https://github.com/3mdeb/freebsd-ports.git --depth 1 -b fwupd-port ports
           cd /usr/ports/sysutils/fwupd
-          ls
           REPOSITORY_NAME=$(echo "${GITHUB_REPOSITORY}" | awk -F / '{print $2}')
           sed -i .old "s/#GH_TAGNAME=.*$/GH_TAGNAME=\t${GITHUB_SHA}/" Makefile
           sed -i .old "s/GH_ACCOUNT=.*$/GH_ACCOUNT=\t${GITHUB_REPOSITORY_OWNER}/" Makefile
           sed -i .old "s/GH_PROJECT=.*$/GH_PROJECT=\t${REPOSITORY_NAME}/" Makefile
-          echo '---'
-          ls
-          echo '---'
-          cat Makefile
-          echo '---'
           make makesum
-          echo "START FWUPD BUILD"
           make package
           make install
-          echo '---'
-          ls .
-          echo '---'
-          ls ~/
-          echo '---'
-          ls ~/work
-          echo '---'
-          pwd
-          echo '---'
-          #cp /usr/ports/sysutils/fwupd/work/pkg/fwupd*.txz ~/work/
-
-    - name: Test dirs
-      run: |
-        ls -l
-        pwd
-
+          cp /usr/ports/sysutils/fwupd/work/pkg/fwupd*.txz ~/work/fwupd/fwupd/ || exit 1
 
     - name: Upload fwupd binary artifact
       uses: actions/upload-artifact@v2
       with:
-        name: fwupd
+        name: Binary package
         path: |
           fwupd*.txz
