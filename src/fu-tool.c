@@ -65,6 +65,9 @@ struct FuUtilPrivate {
 	FwupdInstallFlags	 flags;
 	gboolean		 show_all;
 	gboolean		 disable_ssl_strict;
+	GThread			*dbus_thread;
+	guint			 dbus_owner_id;
+	gint			 dbus_status;
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
 	FwupdDevice		*current_device;
@@ -168,6 +171,50 @@ fu_util_show_plugin_warnings (FuUtilPrivate *priv)
 	}
 }
 
+typedef enum {
+	FU_MAIN_DBUS_STATUS_UNKNOWN,
+	FU_MAIN_DBUS_STATUS_ACQUIRED,
+	FU_MAIN_DBUS_STATUS_LOST,
+} FuMainDbusStatus;
+
+static void
+fu_main_on_name_acquired_cb (GDBusConnection *connection,
+			     const gchar *name,
+			     gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
+	g_debug ("acquired name: %s", name);
+	g_atomic_int_set (&priv->dbus_status, FU_MAIN_DBUS_STATUS_ACQUIRED);
+}
+
+static void
+fu_main_on_name_lost_cb (GDBusConnection *connection,
+			 const gchar *name,
+			 gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
+	g_debug ("lost name %s", name);
+	g_atomic_int_set (&priv->dbus_status, FU_MAIN_DBUS_STATUS_LOST);
+}
+
+static gpointer
+fu_util_dbus_thread_cb (gpointer user_data)
+{
+	FuUtilPrivate *priv = (FuUtilPrivate *) user_data;
+	g_autoptr(GMainLoop) loop = g_main_loop_new (NULL, FALSE);
+
+	/* own the object */
+	priv->dbus_owner_id = g_bus_own_name (G_BUS_TYPE_SYSTEM,
+					      FWUPD_DBUS_SERVICE,
+					      G_BUS_NAME_OWNER_FLAGS_REPLACE,
+					      NULL, /* bus */
+					      fu_main_on_name_acquired_cb,
+					      fu_main_on_name_lost_cb,
+					      priv, NULL);
+	g_main_loop_run (loop);
+	return NULL;
+}
+
 static gboolean
 fu_util_start_engine (FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **error)
 {
@@ -176,6 +223,27 @@ fu_util_start_engine (FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **err
 	if (!fu_systemd_unit_stop (fu_util_get_systemd_unit (), &error_local))
 		g_debug ("Failed to stop daemon: %s", error_local->message);
 #endif
+
+	/* make sure we can own the name */
+	priv->dbus_thread = g_thread_new ("dbus", fu_util_dbus_thread_cb, priv);
+	for (guint i = 0; i < 5000; i++) {
+		g_usleep (1000);
+		if (priv->dbus_status != FU_MAIN_DBUS_STATUS_UNKNOWN)
+			break;
+		if (i == 1) {
+			/* TRANSLATORS: we're waiting for the currently running
+			 * fwupd instance to quit */
+			g_printerr ("%s\n", _("Waiting for D-Bus name…"));
+		}
+	}
+	if (priv->dbus_status != FU_MAIN_DBUS_STATUS_ACQUIRED) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_ALREADY_PENDING,
+				     "Failed to own name, action in progress");
+		return FALSE;
+	}
+
 	if (!fu_engine_load (priv->engine, flags, error))
 		return FALSE;
 	if (fu_engine_get_tainted (priv->engine)) {
@@ -260,6 +328,10 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->cancellable);
 	if (priv->progressbar != NULL)
 		g_object_unref (priv->progressbar);
+	if (priv->dbus_owner_id > 0)
+		g_bus_unown_name (priv->dbus_owner_id);
+	if (priv->dbus_thread != NULL)
+		g_thread_unref (priv->dbus_thread);
 	if (priv->context != NULL)
 		g_option_context_free (priv->context);
 	g_free (priv->current_message);

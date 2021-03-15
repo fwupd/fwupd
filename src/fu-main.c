@@ -1791,6 +1791,10 @@ fu_main_on_name_lost_cb (GDBusConnection *connection,
 			 gpointer user_data)
 {
 	FuMainPrivate *priv = (FuMainPrivate *) user_data;
+	if (priv->update_in_progress) {
+		g_warning ("name lost during a firmware update, ignoring");
+		return;
+	}
 	g_warning ("another service has claimed the dbus name %s", name);
 	g_main_loop_quit (priv->loop);
 }
