@@ -32,6 +32,8 @@
 #define FU_PXI_DEVICE_CMD_FW_OTA_DISCONNECT	0x29u
 #define FU_PXI_DEVICE_CMD_FW_OTA_GET_MODEL	0x2bu
 
+#define FU_PXI_DEVICE_CMD_STATUS_SUCCESS	0x0
+
 #define FU_PXI_DEVICE_OBJECT_SIZE_MAX		4096	/* bytes */
 #define FU_PXI_DEVICE_OTA_BUF_SZ		512	/* bytes */
 #define FU_PXI_DEVICE_NOTTFY_RET_LEN		4	/* bytes */
@@ -286,6 +288,7 @@ fu_pxi_device_wait_notify (FuPxiDevice *self,
 {
 	g_autoptr(GTimer) timer = g_timer_new ();
 	guint8 res[FU_PXI_DEVICE_OTA_BUF_SZ] = { 0 };
+	guint8 cmd_status = 0x0;
 
 	/* skip the wrong report id ,and keep polling until result is correct */
 	while (g_timer_elapsed (timer, NULL) * 1000.f < FU_PXI_DEVICE_NOTIFY_TIMEOUT_MS) {
@@ -305,11 +308,30 @@ fu_pxi_device_wait_notify (FuPxiDevice *self,
 				     "Timed-out waiting for HID report");
 		return FALSE;
 	}
-
+	/* get the opcode if status is not null */
 	if (status != NULL) {
+		guint8 status_tmp = 0x0;
 		if (!fu_common_read_uint8_safe (res, sizeof(res), 0x1,
-						status, error))
+						&status_tmp, error))
 			return FALSE;
+
+		/* need check command result if command is fw upgrade */
+		if (status_tmp == FU_PXI_DEVICE_CMD_FW_UPGRADE) {
+			if (!fu_common_read_uint8_safe (res, sizeof(res), 0x2,
+							&cmd_status, error))
+				return FALSE;
+			if (cmd_status != FU_PXI_DEVICE_CMD_STATUS_SUCCESS) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_READ,
+					     "cmd status was 0x%02x",
+					     cmd_status);
+				return FALSE;
+			}
+		}
+
+		/* propagate */
+		*status = status_tmp;
 	}
 	if (checksum != NULL) {
 		if (!fu_common_read_uint16_safe (res, sizeof(res), 0x3,
@@ -555,8 +577,14 @@ fu_pxi_device_fw_upgrade (FuPxiDevice *self, FuFirmware *firmware, GError **erro
 		fu_common_dump_raw (G_LOG_DOMAIN, "fw upgrade", req->data, req->len);
 
 	/* wait fw upgrade command result */
-	if (!fu_pxi_device_wait_notify (self, 0x1, &opcode, NULL, error))
+	if (!fu_pxi_device_wait_notify (self, 0x1, &opcode, NULL, error)) {
+		g_prefix_error (error,
+				"FwUpgrade command fail, "
+				"fw-checksum: 0x%04x fw-size: %" G_GSIZE_FORMAT ": ",
+				checksum,
+				bufsz);
 		return FALSE;
+	}
 	if (opcode != FU_PXI_DEVICE_CMD_FW_UPGRADE) {
 		g_set_error (error,
 			     FWUPD_ERROR,
