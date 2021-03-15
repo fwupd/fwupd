@@ -1,61 +1,125 @@
 name: Continuous Integration
 on:
   push:
-    branches: [ master, 1_4_X ]
+    branches: [ master, 1_4_X, 1.5.7-FreeBSD-CI ]
   pull_request:
-    branches: [ master, 1_4_X ]
+    branches: [ master, 1_4_X, 1.5.7-FreeBSD-CI ]
 
 jobs:
-  abi:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Refresh dependencies
-        run: sudo apt update
-      - name: Install dependencies
-        run: ./contrib/ci/generate_dependencies.py | sudo xargs apt install -y
-      - name: Check ABI
-        run: ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
+  #   abi:
+  #     runs-on: ubuntu-20.04
+  #     steps:
+  #       - uses: actions/checkout@v2
+  #         with:
+  #           fetch-depth: 0
+  #       - name: Refresh dependencies
+  #         run: sudo apt update
+  #       - name: Install dependencies
+  #         run: ./contrib/ci/generate_dependencies.py | sudo xargs apt install -y
+  #       - name: Check ABI
+  #         run: ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
+  # 
+  #   build:
+  #     runs-on: ubuntu-latest
+  #     strategy:
+  #       matrix:
+  #         os: [fedora, debian-x86_64, arch, debian-i386]
+  #     steps:
+  #       - uses: actions/checkout@v2
+  #       - name: Docker login
+  #         run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+  #         env:
+  #           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  #       - name: Build in container
+  #         env:
+  #           CI_NETWORK: true
+  #           CI: true
+  #         run: |
+  #           echo $GITHUB_WORKSPACE
+  #           docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
+  # 
+  #   fuzzing:
+  #     runs-on: ubuntu-latest
+  #     steps:
+  #     - name: Build Fuzzers
+  #       id: build
+  #       uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+  #       with:
+  #         oss-fuzz-project-name: 'fwupd'
+  #         dry-run: false
+  #     - name: Run Fuzzers
+  #       uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+  #       with:
+  #         oss-fuzz-project-name: 'fwupd'
+  #         fuzz-seconds: 300
+  #         dry-run: false
+  #     - name: Upload Crash
+  #       uses: actions/upload-artifact@v1
+  #       if: failure() && steps.build.outcome == 'success'
+  #       with:
+  #         name: artifacts
+  #         path: ./out/artifacts
 
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        os: [fedora, debian-x86_64, arch, debian-i386]
+  build-freebsd:
+    runs-on: macos-latest
+    name: Build fwupd from FreeBSD ports
     steps:
-      - uses: actions/checkout@v2
-      - name: Docker login
-        run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - name: Build in container
-        env:
-          CI_NETWORK: true
-          CI: true
+    - name: Build
+      id: test
+      uses: vmactions/freebsd-vm@v0.1.2
+      with:
+        usesh: true
+        mem: 8192
+        prepare: |
+          pkg install -y git python3 glib meson pkgconf gobject-introspection \
+            vala gtk-doc json-glib gpgme gnutls sqlite3 curl gcab libarchive
+        sync: rsync
         run: |
-          echo $GITHUB_WORKSPACE
-          docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
+          pwd
+          env
+          mkdir -p /usr/local/etc/pkg/repos/
+          cp /etc/pkg/FreeBSD.conf /usr/local/etc/pkg/repos/FreeBSD.conf
+          sed -i .old 's|url: "pkg+http://pkg.FreeBSD.org/${ABI}/quarterly"|url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest"|' /usr/local/etc/pkg/repos/FreeBSD.conf
+          pkg install -y libtasn1
+          pkg upgrade -y libtasn1
+          pkg info libtasn1
+          cd /usr
+          git clone https://github.com/3mdeb/freebsd-ports.git --depth 1 -b fwupd-port ports
+          cd /usr/ports/sysutils/fwupd
+          ls
+          REPOSITORY_NAME=$(echo "${GITHUB_REPOSITORY}" | awk -F / '{print $2}')
+          sed -i .old "s/#GH_TAGNAME=.*$/GH_TAGNAME=\t${GITHUB_SHA}/" Makefile
+          sed -i .old "s/GH_ACCOUNT=.*$/GH_ACCOUNT=\t${GITHUB_REPOSITORY_OWNER}/" Makefile
+          sed -i .old "s/GH_PROJECT=.*$/GH_PROJECT=\t${REPOSITORY_NAME}/" Makefile
+          echo '---'
+          ls
+          echo '---'
+          cat Makefile
+          echo '---'
+          make makesum
+          echo "START FWUPD BUILD"
+          make package
+          make install
+          echo '---'
+          ls .
+          echo '---'
+          ls ~/
+          echo '---'
+          ls ~/work
+          echo '---'
+          pwd
+          echo '---'
+          #cp /usr/ports/sysutils/fwupd/work/pkg/fwupd*.txz ~/work/
 
-  fuzzing:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Build Fuzzers
-      id: build
-      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+    - name: Test dirs
+      run: |
+        ls -l
+        pwd
+
+
+    - name: Upload fwupd binary artifact
+      uses: actions/upload-artifact@v2
       with:
-        oss-fuzz-project-name: 'fwupd'
-        dry-run: false
-    - name: Run Fuzzers
-      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
-      with:
-        oss-fuzz-project-name: 'fwupd'
-        fuzz-seconds: 300
-        dry-run: false
-    - name: Upload Crash
-      uses: actions/upload-artifact@v1
-      if: failure() && steps.build.outcome == 'success'
-      with:
-        name: artifacts
-        path: ./out/artifacts
+        name: fwupd
+        path: |
+          fwupd*.txz
