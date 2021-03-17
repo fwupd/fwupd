@@ -353,7 +353,7 @@ fu_efi_firmware_file_init (FuEfiFirmwareFile *self)
 	FuEfiFirmwareFilePrivate *priv = GET_PRIVATE (self);
 	priv->attrib = FU_EFI_FIRMWARE_FILE_ATTRIB_NONE;
 	priv->type = FU_EFI_FIRMWARE_FILE_TYPE_RAW;
-	fu_firmware_set_alignment (FU_FIRMWARE (self), 3);
+	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_8);
 }
 
 static void

@@ -40,6 +40,7 @@
 #include "fwupd-error.h"
 
 #include "fu-common.h"
+#include "fu-firmware.h"
 #include "fu-volume-private.h"
 
 #define UDISKS_DBUS_SERVICE			"org.freedesktop.UDisks2"
@@ -3245,7 +3246,7 @@ fu_common_uri_get_scheme (const gchar *uri)
 /**
  * fu_common_align_up:
  * @value: value to align
- * @alignment: align to this power of 2
+ * @alignment: align to this power of 2, where 0x1F is the maximum value of 2GB
  *
  * Align a value to a power of 2 boundary, where @alignment is the bit position
  * to align to. If @alignment is zero then @value is always returned unchanged.
@@ -3260,6 +3261,8 @@ fu_common_align_up (gsize value, guint8 alignment)
 {
 	gsize value_new;
 	guint32 mask = 1 << alignment;
+
+	g_return_val_if_fail (alignment <= FU_FIRMWARE_ALIGNMENT_2G, G_MAXSIZE);
 
 	/* no alignment required */
 	if ((value & (mask - 1)) == 0)

@@ -252,7 +252,7 @@ fu_efi_firmware_section_init (FuEfiFirmwareSection *self)
 {
 	FuEfiFirmwareSectionPrivate *priv = GET_PRIVATE (self);
 	priv->type = FU_EFI_FIRMWARE_SECTION_TYPE_RAW;
-//	fu_firmware_set_alignment (FU_FIRMWARE (self), 3);
+//	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_8);
 }
 
 static void

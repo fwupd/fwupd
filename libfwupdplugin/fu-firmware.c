@@ -816,8 +816,18 @@ fu_firmware_build (FuFirmware *self, XbNode *n, GError **error)
 	if (tmpval != G_MAXUINT64)
 		fu_firmware_set_offset (self, tmpval);
 	tmpval = xb_node_query_text_as_uint (n, "alignment", NULL);
-	if (tmpval != G_MAXUINT64)
+	if (tmpval != G_MAXUINT64) {
+		if (tmpval > FU_FIRMWARE_ALIGNMENT_2G) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_FOUND,
+				     "0x%x invalid, maximum is 0x%x",
+				     (guint) tmpval,
+				     (guint) FU_FIRMWARE_ALIGNMENT_2G);
+			return FALSE;
+		}
 		fu_firmware_set_alignment (self, (guint8) tmpval);
+	}
 	tmp = xb_node_query_text (n, "filename", NULL);
 	if (tmp != NULL) {
 		g_autoptr(GBytes) blob = NULL;

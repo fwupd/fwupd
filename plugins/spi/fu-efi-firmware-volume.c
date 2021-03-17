@@ -77,6 +77,7 @@ fu_efi_firmware_volume_parse (FuFirmware *firmware,
 	guint32 attrs = 0;
 	guint32 sig = 0;
 	guint64 fv_length = 0;
+	guint8 alignment;
 	guint8 revision = 0;
 	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
 	g_autofree gchar *guid_str = NULL;
@@ -129,7 +130,17 @@ fu_efi_firmware_volume_parse (FuFirmware *firmware,
 		g_prefix_error (error, "failed to read attrs: ");
 		return FALSE;
 	}
-	fu_firmware_set_alignment (firmware, (attrs & 0x00ff0000) >> 16);
+	alignment = (attrs & 0x00ff0000) >> 16;
+	if (alignment > FU_FIRMWARE_ALIGNMENT_2G) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "0x%x invalid, maximum is 0x%x",
+			     (guint) alignment,
+			     (guint) FU_FIRMWARE_ALIGNMENT_2G);
+		return FALSE;
+	}
+	fu_firmware_set_alignment (firmware, alignment);
 	priv->attrs = attrs & 0xffff;
 	if (!fu_common_read_uint16_safe (buf, bufsz,
 					 offset + FU_EFI_FIRMWARE_VOLUME_OFFSET_HDR_LEN,

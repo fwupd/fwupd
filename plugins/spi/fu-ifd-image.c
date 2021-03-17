@@ -104,7 +104,7 @@ fu_ifd_image_write (FuFirmware *firmware, GError **error)
 static void
 fu_ifd_image_init (FuIfdImage *self)
 {
-	fu_firmware_set_alignment (FU_FIRMWARE (self), 12);
+	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_4K);
 }
 
 static void
