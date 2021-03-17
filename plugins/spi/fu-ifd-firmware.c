@@ -75,10 +75,6 @@ fu_ifd_firmware_export (FuFirmware *firmware,
 	fu_xmlb_builder_insert_kx (bn, "flash_region_base_addr", priv->flash_region_base_addr);
 	fu_xmlb_builder_insert_kx (bn, "flash_component_base_addr", priv->flash_component_base_addr);
 	fu_xmlb_builder_insert_kx (bn, "flash_master_base_addr", priv->flash_master_base_addr);
-	for (guint i = 1; i < 3; i++) {
-		g_autofree gchar *title = g_strdup_printf ("FlashMaster%x", i + 1);
-		fu_xmlb_builder_insert_kx (bn, title, priv->flash_master[i]);
-	}
 	fu_xmlb_builder_insert_kx (bn, "flash_ich_strap_base_addr",
 				   priv->flash_ich_strap_base_addr);
 	fu_xmlb_builder_insert_kx (bn, "flash_mch_strap_base_addr",
@@ -88,6 +84,10 @@ fu_ifd_firmware_export (FuFirmware *firmware,
 	fu_xmlb_builder_insert_kx (bn, "illegal_jedec", priv->illegal_jedec);
 	fu_xmlb_builder_insert_kx (bn, "illegal_jedec1", priv->illegal_jedec1);
 	if (flags & FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG) {
+		for (guint i = 1; i < 3; i++) {
+			g_autofree gchar *title = g_strdup_printf ("flash_master%x", i + 1);
+			fu_xmlb_builder_insert_kx (bn, title, priv->flash_master[i]);
+		}
 		if (priv->flash_descriptor_regs != NULL) {
 			for (guint i = 0; i < priv->num_regions; i++) {
 				g_autofree gchar *title = g_strdup_printf ("flash_descriptor_reg%x", i);
