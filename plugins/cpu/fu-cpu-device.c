@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include "fu-cpu-device.h"
+#include "fu-plugin-vfuncs.h"
 
 struct _FuCpuDevice {
 	FuDevice		 parent_instance;
@@ -262,12 +263,131 @@ fu_cpu_device_set_quirk_kv (FuDevice *device,
 }
 
 static void
+fu_cpu_device_add_security_attrs_intel_cet_enabled (FuCpuDevice *self, FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED);
+	fwupd_security_attr_set_plugin (attr, fu_device_get_plugin (FU_DEVICE (self)));
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
+	fu_security_attrs_append (attrs, attr);
+
+	/* check for CET */
+	if (!fu_cpu_device_has_flag (self, FU_CPU_DEVICE_FLAG_SHSTK) ||
+	    !fu_cpu_device_has_flag (self, FU_CPU_DEVICE_FLAG_IBT)) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+}
+
+static void
+fu_cpu_device_add_security_attrs_intel_cet_active (FuCpuDevice *self, FuSecurityAttrs *attrs)
+{
+	gint exit_status = 0xff;
+	g_autofree gchar *toolfn = NULL;
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* check for CET */
+	if (!fu_cpu_device_has_flag (self, FU_CPU_DEVICE_FLAG_SHSTK) ||
+	    !fu_cpu_device_has_flag (self, FU_CPU_DEVICE_FLAG_IBT))
+		return;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE);
+	fwupd_security_attr_set_plugin (attr, fu_device_get_plugin (FU_DEVICE (self)));
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
+	fu_security_attrs_append (attrs, attr);
+
+	/* check that userspace has been compiled for CET support */
+	toolfn = g_build_filename (FWUPD_LIBEXECDIR, "fwupd", "fwupd-detect-cet", NULL);
+	if (!g_spawn_command_line_sync (toolfn, NULL, NULL, &exit_status, &error_local)) {
+		g_warning ("failed to test CET: %s", error_local->message);
+		return;
+	}
+	if (!g_spawn_check_exit_status (exit_status, &error_local)) {
+		g_debug ("CET does not function, not supported: %s", error_local->message);
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_SUPPORTED);
+}
+
+static void
+fu_cpu_device_add_security_attrs_intel_tme (FuCpuDevice *self, FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
+	fwupd_security_attr_set_plugin (attr, fu_device_get_plugin (FU_DEVICE (self)));
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION);
+	fu_security_attrs_append (attrs, attr);
+
+	/* check for TME */
+	if (!fu_cpu_device_has_flag (self, FU_CPU_DEVICE_FLAG_TME)) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+}
+
+static void
+fu_cpu_device_add_security_attrs_intel_smap (FuCpuDevice *self, FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* create attr */
+	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_INTEL_SMAP);
+	fwupd_security_attr_set_plugin (attr, fu_device_get_plugin (FU_DEVICE (self)));
+	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION);
+	fu_security_attrs_append (attrs, attr);
+
+	/* check for SMEP and SMAP */
+	if (!fu_cpu_device_has_flag (self, FU_CPU_DEVICE_FLAG_SMAP)) {
+		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+}
+
+static void
+fu_cpu_device_add_security_attrs (FuDevice *device, FuSecurityAttrs *attrs)
+{
+	FuCpuDevice *self = FU_CPU_DEVICE (device);
+
+	/* only Intel */
+	if (fu_common_get_cpu_vendor () != FU_CPU_VENDOR_INTEL)
+		return;
+
+	fu_cpu_device_add_security_attrs_intel_cet_enabled (self, attrs);
+	fu_cpu_device_add_security_attrs_intel_cet_active (self, attrs);
+	fu_cpu_device_add_security_attrs_intel_tme (self, attrs);
+	fu_cpu_device_add_security_attrs_intel_smap (self, attrs);
+}
+
+static void
 fu_cpu_device_class_init (FuCpuDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_cpu_device_to_string;
 	klass_device->probe = fu_cpu_device_probe;
 	klass_device->set_quirk_kv = fu_cpu_device_set_quirk_kv;
+	klass_device->add_security_attrs = fu_cpu_device_add_security_attrs;
 }
 
 FuCpuDevice *

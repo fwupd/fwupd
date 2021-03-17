@@ -3428,6 +3428,27 @@ fu_device_report_metadata_post (FuDevice *self)
 }
 
 /**
+ * fu_device_add_security_attrs:
+ * @self: A #FuDevice
+ * @attrs: A #FuSecurityAttrs
+ *
+ * Adds HSI security attributes.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_device_add_security_attrs (FuDevice *self, FuSecurityAttrs *attrs)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+
+	/* optional */
+	if (klass->add_security_attrs != NULL)
+		return klass->add_security_attrs (self, attrs);
+}
+
+/**
  * fu_device_bind_driver:
  * @self: A #FuDevice
  * @subsystem: A subsystem string, e.g. `pci`

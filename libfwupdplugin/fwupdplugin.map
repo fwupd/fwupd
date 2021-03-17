@@ -760,6 +760,7 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_byte_array_align_up;
     fu_byte_array_set_size_full;
     fu_common_align_up;
+    fu_device_add_security_attrs;
     fu_firmware_add_chunk;
     fu_firmware_build_from_xml;
     fu_firmware_export;
