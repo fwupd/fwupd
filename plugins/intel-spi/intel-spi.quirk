@@ -1,0 +1,401 @@
+[PCI\VEN_8086&DEV_A0A4]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_2410]
+Plugin = intel_spi
+IntelSpiKind = ich0
+
+[PCI\VEN_8086&DEV_2420]
+Plugin = intel_spi
+IntelSpiKind = ich0
+
+[PCI\VEN_8086&DEV_2440]
+Plugin = intel_spi
+IntelSpiKind = ich2345
+
+[PCI\VEN_8086&DEV_244C]
+Plugin = intel_spi
+IntelSpiKind = ich2345
+
+[PCI\VEN_8086&DEV_2450]
+Plugin = intel_spi
+IntelSpiKind = ich2345
+
+[PCI\VEN_8086&DEV_2480]
+Plugin = intel_spi
+IntelSpiKind = ich2345
+
+[PCI\VEN_8086&DEV_248C]
+Plugin = intel_spi
+IntelSpiKind = ich2345
+
+[PCI\VEN_8086&DEV_24C0]
+Plugin = intel_spi
+IntelSpiKind = ich2345
+
+[PCI\VEN_8086&DEV_24CC]
+Plugin = intel_spi
+IntelSpiKind = ich2345
+
+[PCI\VEN_8086&DEV_24D0]
+Plugin = intel_spi
+IntelSpiKind = ich2345
+
+[PCI\VEN_8086&DEV_25A1]
+Plugin = intel_spi
+IntelSpiKind = ich2345
+
+[PCI\VEN_8086&DEV_2640]
+Plugin = intel_spi
+IntelSpiKind = ich6
+
+[PCI\VEN_8086&DEV_2641]
+Plugin = intel_spi
+IntelSpiKind = ich6
+
+[PCI\VEN_8086&DEV_2642]
+Plugin = intel_spi
+IntelSpiKind = ich6
+
+[PCI\VEN_8086&DEV_2670]
+Plugin = intel_spi
+IntelSpiKind = ich6
+
+[PCI\VEN_8086&DEV_8119]
+Plugin = intel_spi
+IntelSpiKind = poulsbo
+
+[PCI\VEN_8086&DEV_9D43]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_9D46]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_9D48]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_9D4B]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_9D4E]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_9D50]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_9D53]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_9D56]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_9D58]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_9D84]
+Plugin = intel_spi
+IntelSpiKind = pch300
+
+[PCI\VEN_8086&DEV_0284]
+Plugin = intel_spi
+IntelSpiKind = pch400
+
+[PCI\VEN_8086&DEV_0285]
+Plugin = intel_spi
+IntelSpiKind = pch400
+
+[PCI\VEN_8086&DEV_A143]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A144]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A145]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A146]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A147]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A148]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A149]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A14A]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A14D]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A14E]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A150]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A151]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A152]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A153]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A154]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A155]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A1A4]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1C0]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1C1]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1C2]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1C3]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1C4]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1C5]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1C6]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1C7]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1C8]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1C9]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1CA]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1CB]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1CC]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A1CD]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A240]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A241]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A242]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A243]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A244]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A245]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A246]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A247]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A248]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A249]
+Plugin = intel_spi
+IntelSpiKind = c620
+
+[PCI\VEN_8086&DEV_A2C4]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A2C5]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A2C6]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A2C7]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A2C8]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A2C9]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A2D2]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_5AE8]
+Plugin = intel_spi
+IntelSpiKind = apl
+
+[PCI\VEN_8086&DEV_5AF0]
+Plugin = intel_spi
+IntelSpiKind = apl
+
+[PCI\VEN_8086&DEV_A303]
+Plugin = intel_spi
+IntelSpiKind = pch300
+
+[PCI\VEN_8086&DEV_A304]
+Plugin = intel_spi
+IntelSpiKind = pch300
+
+[PCI\VEN_8086&DEV_A305]
+Plugin = intel_spi
+IntelSpiKind = pch300
+
+[PCI\VEN_8086&DEV_A306]
+Plugin = intel_spi
+IntelSpiKind = pch300
+
+[PCI\VEN_8086&DEV_A308]
+Plugin = intel_spi
+IntelSpiKind = pch300
+
+[PCI\VEN_8086&DEV_A309]
+Plugin = intel_spi
+IntelSpiKind = pch300
+
+[PCI\VEN_8086&DEV_A30A]
+Plugin = intel_spi
+IntelSpiKind = pch300
+
+[PCI\VEN_8086&DEV_A30C]
+Plugin = intel_spi
+IntelSpiKind = pch300
+
+[PCI\VEN_8086&DEV_A30D]
+Plugin = intel_spi
+IntelSpiKind = pch300
+
+[PCI\VEN_8086&DEV_A30E]
+Plugin = intel_spi
+IntelSpiKind = pch300
+
+[PCI\VEN_8086&DEV_3482]
+Plugin = intel_spi
+IntelSpiKind = pch300
+
+
+[INTEL_SPI_CHIPSET\APL]
+IntelSpiBarProxy = 00:0d.2
+IntelSpiBiosCntl = 0xDC
+Flags = PCH
+
+[INTEL_SPI_CHIPSET\C620]
+IntelSpiBarProxy = 00:1f.5
+IntelSpiBiosCntl = 0xDC
+Flags = PCH
+
+[INTEL_SPI_CHIPSET\ICH0]
+IntelSpiBiosCntl = 0x4E
+Flags = ICH
+
+[INTEL_SPI_CHIPSET\ICH2345]
+IntelSpiBiosCntl = 0x4E
+Flags = ICH
+
+[INTEL_SPI_CHIPSET\ICH6]
+IntelSpiBiosCntl = 0xDC
+Flags = ICH
+
+[INTEL_SPI_CHIPSET\PCH100]
+IntelSpiBarProxy = 00:1f.5
+IntelSpiBiosCntl = 0xDC
+Flags = PCH
+
+[INTEL_SPI_CHIPSET\PCH300]
+IntelSpiBarProxy = 00:1f.5
+IntelSpiBiosCntl = 0xDC
+Flags = PCH
+
+[INTEL_SPI_CHIPSET\PCH400]
+IntelSpiBarProxy = 00:1f.5
+IntelSpiBiosCntl = 0xDC
+Flags = PCH
+
+[INTEL_SPI_CHIPSET\POULSBO]
+IntelSpiBiosCntl = 0xD8
+Flags = ICH

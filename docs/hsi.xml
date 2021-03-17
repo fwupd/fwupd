@@ -393,6 +393,22 @@
       </note>
     </refsect3>
 
+    <refsect3 id="org.fwupd.hsi.Spi.Descriptor">
+      <title>Read-only SPI Descriptor</title>
+      <para>
+        The SPI descriptor must always be read only from all other regions.
+        Additionally on Intel architectures the FLOCKDN register must be set to
+        prevent configuration registers in the SPI BAR from being changed.
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>
+            For HSI-1 this should be read only from all regions <emphasis>v1.6.0</emphasis>
+          </para>
+        </listitem>
+      </itemizedlist>
+    </refsect3>
+
     <refsect3 id="org.fwupd.hsi.Tpm.Version20">
       <title>TPM 2.0 Present</title>
       <para>

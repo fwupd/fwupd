@@ -36,6 +36,7 @@ G_BEGIN_DECLS
 #define FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE		"org.fwupd.hsi.Spi.Bioswe"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_SPI_BLE			"org.fwupd.hsi.Spi.Ble"			/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP		"org.fwupd.hsi.Spi.SmmBwp"		/* Since: 1.5.0 */
+#define FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR		"org.fwupd.hsi.Spi.Descriptor"		/* Since: 1.6.0 */
 #define FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE		"org.fwupd.hsi.SuspendToIdle"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM		"org.fwupd.hsi.SuspendToRam"		/* Since: 1.5.0 */
 #define FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0	"org.fwupd.hsi.Tpm.ReconstructionPcr0"	/* Since: 1.5.0 */
