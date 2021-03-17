@@ -28,7 +28,7 @@ build() {
         export CI="--wrap-mode=default"
     fi
     arch-meson -D b_lto=false $CI ../build \
-        -Dplugin_spi=true \
+        -Dplugin_intel_spi=true \
         -Dlzma=true \
         -Defi_sbat_distro_id="arch" \
         -Defi_sbat_distro_summary="Arch Linux" \

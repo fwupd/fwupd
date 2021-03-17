@@ -269,8 +269,8 @@ if get_option('lzma')
   lzma = dependency('liblzma')
   conf.set('HAVE_LZMA', '1')
 else
-  if get_option('plugin_spi')
-    error('plugin_spi needs -Dlzma=true to work')
+  if get_option('plugin_intel_spi')
+    error('plugin_intel_spi needs -Dlzma=true to work')
   endif
 endif
 

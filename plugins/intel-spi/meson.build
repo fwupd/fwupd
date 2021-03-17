@@ -1,7 +1,7 @@
-if get_option('plugin_spi')
-cargs = ['-DG_LOG_DOMAIN="FuPluginSpi"']
+if get_option('plugin_intel_spi')
+cargs = ['-DG_LOG_DOMAIN="FuPluginIntelSpi"']
 
-shared_module('fu_plugin_spi',
+shared_module('fu_plugin_intel_spi',
   fu_hash,
   sources : [
     'fu-efi-common.c',              # fuzzing
@@ -14,7 +14,7 @@ shared_module('fu_plugin_spi',
     'fu-ifd-common.c',              # fuzzing
     'fu-ifd-firmware.c',            # fuzzing
     'fu-ifd-image.c',               # fuzzing
-    'fu-plugin-spi.c',
+    'fu-plugin-intel-spi.c',
   ],
   include_directories : [
     root_incdir,
@@ -37,7 +37,7 @@ endif
 
 if get_option('tests') and get_option('lzma')
   e = executable(
-    'spi-self-test',
+    'intel-spi-self-test',
     fu_hash,
     sources : [
       'fu-self-test.c',
@@ -68,5 +68,5 @@ if get_option('tests') and get_option('lzma')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('spi-self-test', e)
+  test('intel-spi-self-test', e)
 endif
