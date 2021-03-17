@@ -70,7 +70,7 @@ fu_bcm57xx_dict_image_write (FuFirmware *firmware, GError **error)
 	/* add to a mutable buffer */
 	buf = g_bytes_get_data (fw_nocrc, &bufsz);
 	blob = g_byte_array_sized_new (bufsz + sizeof(guint32));
-	g_byte_array_append (blob, buf, bufsz);
+	fu_byte_array_append_bytes (blob, fw_nocrc);
 
 	/* add CRC */
 	crc = fu_bcm57xx_nvram_crc (buf, bufsz);

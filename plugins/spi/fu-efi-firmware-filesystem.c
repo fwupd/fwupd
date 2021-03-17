@@ -82,9 +82,7 @@ fu_efi_firmware_filesystem_write (FuFirmware *firmware, GError **error)
 		blob = fu_firmware_write (img, error);
 		if (blob == NULL)
 			return NULL;
-		g_byte_array_append (buf,
-				     g_bytes_get_data (blob, NULL),
-				     g_bytes_get_size (blob));
+		fu_byte_array_append_bytes (buf, blob);
 		fu_byte_array_align_up (buf, fu_firmware_get_alignment (firmware), 0xFF);
 	}
 

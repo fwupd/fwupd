@@ -334,12 +334,8 @@ fu_efi_firmware_volume_write (FuFirmware *firmware, GError **error)
 					  error))
 		return NULL;
 
-	/* contents */
-	g_byte_array_append (buf,
-			     (const guint8 *) g_bytes_get_data (img_blob, NULL),
-			     g_bytes_get_size (img_blob));
-
-	/* pad to alignment */
+	/* pad contents to alignment */
+	fu_byte_array_append_bytes (buf, img_blob);
 	fu_byte_array_set_size_full (buf, fv_length, 0xFF);
 
 	/* success */
