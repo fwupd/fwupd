@@ -12,6 +12,7 @@
 #include "fu-firmware.h"
 #include "fu-quirks.h"
 #include "fu-common-version.h"
+#include "fu-security-attrs.h"
 
 #define FU_TYPE_DEVICE (fu_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuDevice, fu_device, FU, DEVICE, FwupdDevice)
@@ -95,8 +96,10 @@ struct _FuDeviceClass
 	GBytes			*(*dump_firmware)	(FuDevice	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
+	void			 (*add_security_attrs)	(FuDevice	*self,
+							 FuSecurityAttrs *attrs);
 	/*< private >*/
-	gpointer	padding[11];
+	gpointer	padding[10];
 };
 
 /**
@@ -434,3 +437,5 @@ gboolean	 fu_device_unbind_driver		(FuDevice	*self,
 							 G_GNUC_WARN_UNUSED_RESULT;
 GHashTable	*fu_device_report_metadata_pre		(FuDevice	*self);
 GHashTable	*fu_device_report_metadata_post		(FuDevice	*self);
+void		 fu_device_add_security_attrs		(FuDevice	*self,
+							 FuSecurityAttrs *attrs);

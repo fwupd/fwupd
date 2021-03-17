@@ -5820,6 +5820,7 @@ static void
 fu_engine_ensure_security_attrs (FuEngine *self)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
+	g_autoptr(GPtrArray) devices = fu_device_list_get_all (self->device_list);
 	g_autoptr(GPtrArray) items = NULL;
 
 	/* already valid */
@@ -5831,6 +5832,12 @@ fu_engine_ensure_security_attrs (FuEngine *self)
 
 	/* built in */
 	fu_engine_ensure_security_attrs_tainted (self);
+
+	/* call into devices */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index (devices, i);
+		fu_device_add_security_attrs (device, self->host_security_attrs);
+	}
 
 	/* call into plugins */
 	for (guint j = 0; j < plugins->len; j++) {
