@@ -204,8 +204,6 @@ fu_ifd_firmware_parse (FuFirmware *firmware,
 		guint32 freg_size = (freg_limt - freg_base) + 1;
 		g_autoptr(FuFirmware) img = NULL;
 		g_autoptr(GBytes) contents = NULL;
-		guint8 bit_r = 0;
-		guint8 bit_w = 0;
 
 		/* invalid */
 		if (freg_base > freg_limt)
@@ -230,35 +228,10 @@ fu_ifd_firmware_parse (FuFirmware *firmware,
 		fu_firmware_add_image (firmware, img);
 
 		/* is writable by anything other than the region itself */
-		if (priv->is_skylake) {
-			for (FuIfdRegion r = 1; r <= 3; r++) {
-				bit_r = (priv->flash_master[r] >> (i + 8)) & 0b1;
-				bit_w = (priv->flash_master[r] >> (i + 20)) & 0b1;
-				fu_ifd_image_set_access (FU_IFD_IMAGE (img), r,
-							 (bit_r ? FU_IFD_ACCESS_READ : FU_IFD_ACCESS_NONE) |
-							 (bit_w ? FU_IFD_ACCESS_WRITE : FU_IFD_ACCESS_NONE));
-			}
-		} else {
-			if (i == FU_IFD_REGION_DESC) {
-				bit_r = 16;
-				bit_w = 24;
-			} else if (i == FU_IFD_REGION_BIOS) {
-				bit_r = 17;
-				bit_w = 25;
-			} else if (i == FU_IFD_REGION_ME) {
-				bit_r = 18;
-				bit_w = 26;
-			} else if (i == FU_IFD_REGION_GBE) {
-				bit_r = 19;
-				bit_w = 27;
-			}
-			for (FuIfdRegion r = 1; r <= 3 && bit_r != 0; r++) {
-				fu_ifd_image_set_access (FU_IFD_IMAGE (img), r,
-							 ((priv->flash_master[r] >> bit_r) & 0b1 ?
-							  FU_IFD_ACCESS_READ : FU_IFD_ACCESS_NONE) |
-							 ((priv->flash_master[r] >> bit_w) & 0b1 ?
-							  FU_IFD_ACCESS_WRITE : FU_IFD_ACCESS_NONE));
-			}
+		for (FuIfdRegion r = 1; r <= 3; r++) {
+			FuIfdAccess acc;
+			acc = fu_ifd_region_to_access (i, priv->flash_master[r], priv->is_skylake);
+			fu_ifd_image_set_access (FU_IFD_IMAGE (img), r, acc);
 		}
 	}
 

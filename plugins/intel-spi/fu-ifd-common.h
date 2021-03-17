@@ -28,5 +28,13 @@ typedef enum {
 	FU_IFD_ACCESS_WRITE			= 1 << 1,
 } FuIfdAccess;
 
+#define FU_IFD_FREG_BASE(freg)			(((freg) << 12) & 0x07FFF000)
+#define FU_IFD_FREG_LIMIT(freg)			((((freg) >> 4) & 0x07FFF000) | 0x00000FFF)
+
 const gchar	*fu_ifd_region_to_string	(FuIfdRegion	 region);
+const gchar	*fu_ifd_region_to_name		(FuIfdRegion	 region);
 const gchar	*fu_ifd_access_to_string	(FuIfdAccess	 access);
+
+FuIfdAccess	 fu_ifd_region_to_access	(FuIfdRegion	 region,
+						 guint32	 flash_master,
+						 gboolean	 is_skylake);

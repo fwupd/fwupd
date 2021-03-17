@@ -1,6 +1,10 @@
 if get_option('plugin_intel_spi')
 cargs = ['-DG_LOG_DOMAIN="FuPluginIntelSpi"']
 
+install_data(['intel-spi.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_intel_spi',
   fu_hash,
   sources : [
@@ -12,8 +16,12 @@ shared_module('fu_plugin_intel_spi',
     'fu-efi-firmware-volume.c',     # fuzzing
     'fu-ifd-bios.c',                # fuzzing
     'fu-ifd-common.c',              # fuzzing
+    'fu-ifd-device.c',
     'fu-ifd-firmware.c',            # fuzzing
     'fu-ifd-image.c',               # fuzzing
+    'fu-intel-spi-common.c',
+    'fu-intel-spi-device.c',
+    'fu-pci-device.c',
     'fu-plugin-intel-spi.c',
   ],
   include_directories : [
