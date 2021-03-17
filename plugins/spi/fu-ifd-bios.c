@@ -83,7 +83,7 @@ fu_ifd_bios_parse (FuFirmware *firmware,
 static void
 fu_ifd_bios_init (FuIfdBios *self)
 {
-	fu_firmware_set_alignment (FU_FIRMWARE (self), 12);
+	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_4K);
 }
 
 static void

@@ -122,7 +122,7 @@ fu_bcm57xx_stage1_image_write (FuFirmware *firmware, GError **error)
 static void
 fu_bcm57xx_stage1_image_init (FuBcm57xxStage1Image *self)
 {
-	fu_firmware_set_alignment (FU_FIRMWARE (self), 2);
+	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_4);
 }
 
 static void
