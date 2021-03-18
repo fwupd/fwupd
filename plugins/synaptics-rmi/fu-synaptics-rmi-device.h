@@ -15,6 +15,7 @@ G_DECLARE_DERIVABLE_TYPE (FuSynapticsRmiDevice, fu_synaptics_rmi_device, FU, SYN
 typedef enum {
 	FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE		= 0,
 	FU_SYNAPTICS_RMI_DEVICE_FLAG_ALLOW_FAILURE	= 1 << 0,
+	FU_SYNAPTICS_RMI_DEVICE_FLAG_FORCE		= 1 << 1,
 } FuSynapticsRmiDeviceFlags;
 
 struct _FuSynapticsRmiDeviceClass
@@ -87,8 +88,9 @@ typedef enum {
 	RMI_DEVICE_WAIT_FOR_IDLE_FLAG_REFRESH_F34	= (1 << 0),
 } RmiDeviceWaitForIdleFlags;
 
-void		 	 fu_synaptics_rmi_device_set_iepmode	(FuSynapticsRmiDevice	*self,
+void			 fu_synaptics_rmi_device_set_iepmode	(FuSynapticsRmiDevice	*self,
 								 gboolean		iepmode);
+gboolean		 fu_synaptics_rmi_device_get_iepmode	(FuSynapticsRmiDevice	*self);
 gboolean		 fu_synaptics_rmi_device_set_page	(FuSynapticsRmiDevice	*self,
 								 guint8			 page,
 								 GError			**error);
@@ -130,6 +132,7 @@ void			 fu_synaptics_rmi_device_set_max_page	(FuSynapticsRmiDevice	*self,
 								 guint8			 max_page);
 guint8			 fu_synaptics_rmi_device_get_max_page	(FuSynapticsRmiDevice	*self);
 gboolean		 fu_synaptics_rmi_device_enter_iep_mode	(FuSynapticsRmiDevice	*self,
+								 FuSynapticsRmiDeviceFlags flags,
 								 GError			**error);
 gboolean		 fu_synaptics_rmi_device_write_bus_select (FuSynapticsRmiDevice *self,
 								 guint8			 bus,
