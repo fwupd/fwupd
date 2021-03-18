@@ -84,7 +84,7 @@ fu_synaptics_rmi_v5_device_erase_all (FuSynapticsRmiDevice *self, GError **error
 	if (!fu_synaptics_rmi_device_write (self,
 					    flash->status_addr,
 					    erase_cmd,
-					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_ALLOW_FAILURE,
 					    error)) {
 		g_prefix_error (error, "failed to erase core config: ");
 		return FALSE;
@@ -115,7 +115,7 @@ fu_synaptics_rmi_v5_device_write_block (FuSynapticsRmiDevice *self,
 	g_byte_array_append (req, data, datasz);
 	fu_byte_array_append_uint8 (req, cmd);
 	if (!fu_synaptics_rmi_device_write (self, address, req,
-					    FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+					    FU_SYNAPTICS_RMI_DEVICE_FLAG_ALLOW_FAILURE,
 					    error)) {
 		g_prefix_error (error, "failed to write block @0x%x: ", address);
 		return FALSE;
