@@ -174,16 +174,33 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 		self->device_kind = FU_VLI_DEVICE_KIND_VL211;
 		break;
 	case 0x0518:
-		/* VL820 == VT3518 */
-		if (!fu_common_read_uint8_safe (buf, bufsz, 0xf000, &tmp, error)) {
-			g_prefix_error (error, "failed to get Q7/Q8 difference: ");
+	{
+		if (!fu_common_read_uint8_safe (buf, bufsz, 0x8021, &tmp, error)) {
+			g_prefix_error (error, "failed to get 820/822 byte: ");
 			return FALSE;
 		}
-		if (tmp & (1 << 0))
-			self->device_kind = FU_VLI_DEVICE_KIND_VL820Q8;
-		else
-			self->device_kind = FU_VLI_DEVICE_KIND_VL820Q7;
+		/* VL820/VL822 == VT3518 */
+		if (tmp == 0xF0) {
+			self->device_kind = FU_VLI_DEVICE_KIND_VL822;
+		} else {
+			/* Q7/Q8 requires searching two addresses for offset value */
+			if (!fu_common_read_uint16_safe (buf, bufsz, 0x8018,
+						 &adr_ofs,G_BIG_ENDIAN, error)) {
+				g_prefix_error (error, "failed to get Q7/Q8 offset mapping: ");
+				return FALSE;
+			}
+			if (!fu_common_read_uint8_safe (buf, bufsz, adr_ofs + 0x2000 + 0x05, 
+						 	&tmp, error)) {
+				g_prefix_error (error, "failed to get offset version: ");
+				return FALSE;
+			}
+			if (tmp & (1 << 0))
+				self->device_kind = FU_VLI_DEVICE_KIND_VL820Q8;
+			else
+				self->device_kind = FU_VLI_DEVICE_KIND_VL820Q7;
+		}
 		break;
+	}
 	case 0x0538:
 		/* VL817 == VT3538 */
 		self->device_kind = FU_VLI_DEVICE_KIND_VL817;

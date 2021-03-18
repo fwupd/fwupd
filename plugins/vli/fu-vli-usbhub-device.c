@@ -379,6 +379,7 @@ fu_vli_usbhub_device_guess_kind (FuVliUsbhubDevice *self, GError **error)
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
 	guint8 b811P812 = 0x0;
 	guint8 b820Q7Q8 = 0x0;
+	guint8 b820822 = 0x0;
 	guint8 chipid1 = 0x0;
 	guint8 chipid2 = 0x0;
 	guint8 chipid12 = 0x0;
@@ -419,6 +420,10 @@ fu_vli_usbhub_device_guess_kind (FuVliUsbhubDevice *self, GError **error)
 		g_prefix_error (error, "Read_820Q7Q8 failed: ");
 		return FALSE;
 	}
+	if (!fu_vli_usbhub_device_read_reg (self, 0xf88c, &b820822, error)) {
+		g_prefix_error (error, "Read_820822 failed: ");
+		return FALSE;
+	}
 	if (g_getenv ("FWUPD_VLI_USBHUB_VERBOSE") != NULL) {
 		g_debug ("chipver = 0x%02x", chipver);
 		g_debug ("chipver2 = 0x%02x", chipver2);
@@ -428,15 +433,20 @@ fu_vli_usbhub_device_guess_kind (FuVliUsbhubDevice *self, GError **error)
 		g_debug ("chipid12 = 0x%02x", chipid12);
 		g_debug ("chipid22 = 0x%02x", chipid22);
 		g_debug ("b820Q7Q8 = 0x%02x", b820Q7Q8);
+		g_debug ("b820822 = 0x%02x", b820822);
 	}
 
 	if (chipid2 == 0x35 && chipid1 == 0x07) {
 		fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL210);
 	} else if (chipid2 == 0x35 && chipid1 == 0x18) {
-		if (b820Q7Q8 & (1 << 2))
-			fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL820Q8);
-		else
-			fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL820Q7);
+		if (b820822 == 0xF0) {
+			fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL822);
+		} else {
+			if (b820Q7Q8 & (1 << 2))
+				fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL820Q8);
+			else
+				fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL820Q7);
+		}
 	} else if (chipid2 == 0x35 && chipid1 == 0x31) {
 		fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL815);
 	} else if (chipid2 == 0x35 && chipid1 == 0x38) {
