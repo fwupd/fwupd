@@ -350,6 +350,7 @@ fu_synaptics_rmi_firmware_parse_v0x (FuFirmware *firmware, GBytes *fw, GError **
 	FuSynapticsRmiFirmware *self = FU_SYNAPTICS_RMI_FIRMWARE (firmware);
 	guint32 cfg_sz;
 	guint32 img_sz = 0;
+	guint32 sig_offset = 0;
 	gsize sz = 0;
 	const guint8 *data = g_bytes_get_data (fw, &sz);
 
@@ -363,9 +364,9 @@ fu_synaptics_rmi_firmware_parse_v0x (FuFirmware *firmware, GBytes *fw, GError **
 	if (img_sz > 0) {
 		/* payload, then signature appended */
 		if (self->sig_size > 0) {
-			img_sz -= self->sig_size;
+			sig_offset = img_sz - self->sig_size;
 			if (!fu_synaptics_rmi_firmware_add_image (firmware, "sig", fw,
-								  RMI_IMG_FW_OFFSET + img_sz,
+								  RMI_IMG_FW_OFFSET + sig_offset,
 								  self->sig_size,
 								  error))
 				return FALSE;
@@ -471,6 +472,7 @@ fu_synaptics_rmi_firmware_parse (FuFirmware *firmware,
 					 G_LITTLE_ENDIAN,
 					 error))
 		return FALSE;
+	fu_firmware_set_size (firmware, firmware_size);
 
 	/* parse partitions, but ignore lockdown */
 	switch (self->bootloader_version) {
