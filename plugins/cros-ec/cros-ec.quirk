@@ -8,6 +8,11 @@ Summary = Servo Micro (aka "uServo") Debug Board
 Plugin = cros_ec
 Summary = Quiche Reference Board
 
+# Baklava (D501)
+[USB\VID_0502&PID_1195]
+Plugin = cros_ec
+Summary = D501 Device (Google Quiche derivative)
+
 # Gingerbread
 [USB\VID_18D1&PID_5049]
 Plugin = cros_ec
