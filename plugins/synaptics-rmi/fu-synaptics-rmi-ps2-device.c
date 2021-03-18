@@ -442,7 +442,9 @@ fu_synaptics_rmi_ps2_device_write_rmi_register (FuSynapticsRmiPs2Device *self,
 {
 	g_return_val_if_fail (timeout > 0, FALSE);
 
-	if (!fu_synaptics_rmi_device_enter_iep_mode (FU_SYNAPTICS_RMI_DEVICE (self), error))
+	if (!fu_synaptics_rmi_device_enter_iep_mode (FU_SYNAPTICS_RMI_DEVICE (self),
+						     FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+						     error))
 		return FALSE;
 	if (!fu_synaptics_rmi_ps2_device_write_byte (self,
 						     edpAuxSetScaling2To1,
@@ -500,7 +502,9 @@ fu_synaptics_rmi_ps2_device_read_rmi_register (FuSynapticsRmiPs2Device *self,
 {
 	g_return_val_if_fail (buf != NULL, FALSE);
 
-	if (!fu_synaptics_rmi_device_enter_iep_mode (FU_SYNAPTICS_RMI_DEVICE (self), error))
+	if (!fu_synaptics_rmi_device_enter_iep_mode (FU_SYNAPTICS_RMI_DEVICE (self),
+						     FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+						     error))
 		return FALSE;
 	for (guint retries = 0; ; retries++) {
 		g_autoptr(GError) error_local = NULL;
@@ -550,7 +554,9 @@ fu_synaptics_rmi_ps2_device_read_rmi_packet_register (FuSynapticsRmiPs2Device *s
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
 
-	if (!fu_synaptics_rmi_ps2_device_enter_iep_mode (FU_SYNAPTICS_RMI_DEVICE (self), error))
+	if (!fu_synaptics_rmi_device_enter_iep_mode (FU_SYNAPTICS_RMI_DEVICE (self),
+						     FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+						     error))
 		return NULL;
 	if (!fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetScaling2To1, 50,
 						     FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
@@ -897,9 +903,11 @@ fu_synaptics_rmi_ps2_device_detach (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	if (!fu_synaptics_rmi_device_enter_iep_mode (self, error)) {
+	/* set iepmode before querying device forcibly because of FW requirement */
+	if (!fu_synaptics_rmi_device_enter_iep_mode (self,
+						     FU_SYNAPTICS_RMI_DEVICE_FLAG_FORCE,
+						     error))
 		return FALSE;
-	}
 
 	if (!fu_synaptics_rmi_ps2_device_query_status (self, error)) {
 		g_prefix_error (error, "failed to query status after detach: ");
@@ -930,7 +938,7 @@ fu_synaptics_rmi_ps2_device_attach (FuDevice *device, GError **error)
 		return TRUE;
 	}
 
-	/* Set iepmode before reset device forcibly because of FW requirement */
+	/* set iepmode before reset device forcibly because of FW requirement */
 	fu_synaptics_rmi_device_set_iepmode (rmi_device, FALSE);
 
 	/* delay after writing */
@@ -938,7 +946,9 @@ fu_synaptics_rmi_ps2_device_attach (FuDevice *device, GError **error)
 	fu_device_sleep_with_progress (device, 2);
 
 	/* reset device */
-	if (!fu_synaptics_rmi_device_enter_iep_mode (rmi_device, error))
+	if (!fu_synaptics_rmi_device_enter_iep_mode (rmi_device,
+						     FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
+						     error))
 		return FALSE;
 	if (!fu_synaptics_rmi_device_reset (rmi_device, error)) {
 		g_prefix_error (error, "failed to reset device: ");

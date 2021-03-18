@@ -179,11 +179,18 @@ fu_synaptics_rmi_device_set_page (FuSynapticsRmiDevice *self, guint8 page, GErro
 	return TRUE;
 }
 
-void		 
+void
 fu_synaptics_rmi_device_set_iepmode (FuSynapticsRmiDevice *self, gboolean iepmode)
 {
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 	priv->in_iep_mode = iepmode;
+}
+
+gboolean
+fu_synaptics_rmi_device_get_iepmode (FuSynapticsRmiDevice *self)
+{
+	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
+	return priv->in_iep_mode;
 }
 
 gboolean
@@ -386,7 +393,9 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	/* set page */
 	if (!fu_synaptics_rmi_device_set_page (self, 0, error))
 		return FALSE;
-	if (!fu_synaptics_rmi_device_enter_iep_mode (self, error))
+
+	/* force entering iep mode again */
+	if (!fu_synaptics_rmi_device_enter_iep_mode (self, FU_SYNAPTICS_RMI_DEVICE_FLAG_FORCE, error))
 		return FALSE;
 
 	f01_basic = fu_synaptics_rmi_device_read (self, addr, RMI_DEVICE_F01_BASIC_QUERY_LEN, error);
@@ -420,6 +429,10 @@ fu_synaptics_rmi_device_setup (FuDevice *device, GError **error)
 	}
 	if (product_id != NULL)
 		fu_synaptics_rmi_device_set_product_id (self, product_id);
+
+	/* force entering iep mode again */
+	if (!fu_synaptics_rmi_device_enter_iep_mode (self, FU_SYNAPTICS_RMI_DEVICE_FLAG_FORCE, error))
+		return FALSE;
 
 	/* skip */
 	prod_info_addr = addr + 6;
@@ -634,13 +647,15 @@ fu_synaptics_rmi_device_wait_for_attr (FuSynapticsRmiDevice *self,
 }
 
 gboolean
-fu_synaptics_rmi_device_enter_iep_mode (FuSynapticsRmiDevice *self, GError **error)
+fu_synaptics_rmi_device_enter_iep_mode (FuSynapticsRmiDevice *self,
+					FuSynapticsRmiDeviceFlags flags,
+					GError **error)
 {
 	FuSynapticsRmiDeviceClass *klass_rmi = FU_SYNAPTICS_RMI_DEVICE_GET_CLASS (self);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 
 	/* already set */
-	if (priv->in_iep_mode)
+	if ((flags & FU_SYNAPTICS_RMI_DEVICE_FLAG_FORCE) == 0 && priv->in_iep_mode)
 		return TRUE;
 	if (klass_rmi->enter_iep_mode != NULL) {
 		g_debug ("enabling RMI iep_mode");
