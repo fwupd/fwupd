@@ -233,9 +233,13 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 	FuSynapticsRmiFunction *f34;
 	FuSynapticsRmiFirmware *rmi_firmware = FU_SYNAPTICS_RMI_FIRMWARE (firmware);
 	guint32 address;
+	guint32 firmware_length =
+		fu_firmware_get_size (firmware) -
+		fu_synaptics_rmi_firmware_get_sig_size (rmi_firmware);
 	g_autoptr(GBytes) bytes_bin = NULL;
 	g_autoptr(GBytes) bytes_cfg = NULL;
 	g_autoptr(GBytes) signature_bin = NULL;
+	g_autoptr(GBytes) firmware_bin = NULL;
 	g_autoptr(GPtrArray) chunks_bin = NULL;
 	g_autoptr(GPtrArray) chunks_cfg = NULL;
 	g_autoptr(GByteArray) req_addr = g_byte_array_new ();
@@ -289,10 +293,11 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* verify signature if set */
+	firmware_bin = g_bytes_new_from_bytes (bytes_bin, 0, firmware_length);
 	signature_bin = fu_firmware_get_image_by_id_bytes (firmware, "sig", NULL);
 	if (signature_bin != NULL) {
 		if (!fu_synaptics_rmi_v5_device_secure_check (device,
-							      bytes_bin,
+							      firmware_bin,
 							      signature_bin,
 							      error)) {
 			g_prefix_error (error, "secure check failed: ");
@@ -334,7 +339,7 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 		address = f34->data_base + RMI_F34_BLOCK_DATA_V1_OFFSET;
 	else
 		address = f34->data_base + RMI_F34_BLOCK_DATA_OFFSET;
-	chunks_bin = fu_chunk_array_new_from_bytes (bytes_bin,
+	chunks_bin = fu_chunk_array_new_from_bytes (firmware_bin,
 						    0x00,	/* start addr */
 						    0x00,	/* page_sz */
 						    flash->block_size);
