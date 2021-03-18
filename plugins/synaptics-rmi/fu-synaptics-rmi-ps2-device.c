@@ -558,12 +558,12 @@ fu_synaptics_rmi_ps2_device_read_rmi_packet_register (FuSynapticsRmiPs2Device *s
 	    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxSetSampleRate, 50,
 						     FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
 						     error) ||
-	    !fu_synaptics_rmi_ps2_device_write_byte (self, addr,
+	    !fu_synaptics_rmi_ps2_device_write_byte (self, addr, 50,
 						     FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
-						     FALSE, error) ||
-	    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxStatusRequest,
+						     error) ||
+	    !fu_synaptics_rmi_ps2_device_write_byte (self, edpAuxStatusRequest, 50,
 						     FU_SYNAPTICS_RMI_DEVICE_FLAG_NONE,
-						     FALSE, error)) {
+						     error)) {
 		g_prefix_error (error, "failed to write command in Read RMI Packet Register: ");
 		return NULL;
 	}
