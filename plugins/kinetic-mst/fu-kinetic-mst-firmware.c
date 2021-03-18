@@ -46,10 +46,15 @@ fu_kinetic_mst_firmware_parse (FuFirmware *firmware,
 	gsize bufsz;
 	g_autoptr(FuFirmwareImage) img = fu_firmware_image_new (fw);
 	buf = g_bytes_get_data (fw, &bufsz);
+
+#if 0
 	if (!fu_common_read_uint16_safe (buf, bufsz, ADDR_CUSTOMER_ID,
 					 &self->board_id, G_BIG_ENDIAN,
 					 error))
 		return FALSE;
+#else
+    // <TODO> parse Kinetic's FW image format
+#endif
 	fu_firmware_add_image (firmware, img);
 	return TRUE;
 }
