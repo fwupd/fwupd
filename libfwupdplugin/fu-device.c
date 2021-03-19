@@ -2073,7 +2073,7 @@ fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
  * fu_device_get_backend_id:
  * @self: A #FuDevice
  *
- * Gets the ID set for the device as recognised by the backend. This is typically
+ * Gets the ID set for the device as recognized by the backend. This is typically
  * a Linux sysfs path or USB platform ID. If unset, it also falls back to the
  * physical ID as this may be the same value.
  *

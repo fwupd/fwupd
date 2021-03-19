@@ -4359,7 +4359,7 @@ fwupd_client_download_ipfs (FwupdClient *self, const gchar *url, GError **error)
 	g_autofree gchar *path = NULL;
 	g_autoptr(GSubprocess) subprocess = NULL;
 
-	/* we get no detailed progess details */
+	/* we get no detailed progress details */
 	fwupd_client_set_status (self, FWUPD_STATUS_DOWNLOADING);
 	fwupd_client_set_percentage (self, 0);
 

@@ -29,7 +29,7 @@ without modification. Devices without GUIDs are not supported.
 Update Behavior
 ---------------
 
-The firmware willl be deployed as appropriate. The Redfish API does not specify
+The firmware will be deployed as appropriate. The Redfish API does not specify
 when the firmware will actually be written to the SPI device.
 
 Vendor ID Security

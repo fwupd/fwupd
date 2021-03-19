@@ -137,7 +137,7 @@
         <p>This release fixes the following bugs:</p>
         <ul>
           <li>Add a UEFI quirk for Star Labs Lite Mk III</li>
-          <li>Add the device firmare ID for serio class hardware</li>
+          <li>Add the device firmware ID for serio class hardware</li>
           <li>Allow the client to send legacy PKCS7 and GPG signatures</li>
           <li>Do not use accidentally depend on new meson versions</li>
           <li>Fix a possible critical warning due to missing retval</li>
@@ -632,7 +632,7 @@
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Blacklist the synapticsmst plugin when using amdgpu</li>
+          <li>Blocklist the synapticsmst plugin when using amdgpu</li>
           <li>Correct ATA activation functionality to work for all vendors</li>
           <li>Implement QMI PDC active config selection for modems</li>
           <li>Make an error message clearer when there are no updates available</li>
@@ -1149,7 +1149,7 @@
             device
           </li>
           <li>Add FuDeviceLocker to simplify device open/close lifecycles</li>
-          <li>Add functionality to blacklist Dell HW with problems</li>
+          <li>Add functionality to blocklist Dell HW with problems</li>
           <li>Add fu_plugin_check_supported()</li>
           <li>Add fwupd_remote_get_checksum() to use in client programs</li>
           <li>Add ModifyRemote as an easy way to enable and disable remotes</li>
@@ -1222,7 +1222,7 @@
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Check all the device GUIDs against the blacklist when added</li>
+          <li>Check all the device GUIDs against the blocklist when added</li>
           <li>Correct a memory leak in Dell plugin</li>
           <li>Default to 'en' for UEFI capsule graphics</li>
           <li>Don't log a warning when an unknown unifying report is parsed</li>
@@ -1464,7 +1464,7 @@
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Add XPS 9250 to Dell TPM modeswitch blacklist</li>
+          <li>Add XPS 9250 to Dell TPM modeswitch blocklist</li>
           <li>Allow blacklisting devices by their GUID</li>
           <li>Conditionally enable all providers based upon installed</li>
           <li>Display flashes left in results output when it gets low</li>

@@ -434,7 +434,7 @@ fu_plugin_uefi_capsule_load_config (FuPlugin *plugin, FuDevice *device)
 					"RequireShimForSecureBoot",
 					!disable_shim);
 
-	/* check if using UEFI removeable path */
+	/* check if using UEFI removable path */
 	fallback_removable_path = fu_plugin_get_config_value_boolean (plugin, "FallbacktoRemovablePath");
 	fu_device_set_metadata_boolean (device,
 					"FallbacktoRemovablePath",

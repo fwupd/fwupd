@@ -559,9 +559,9 @@ run_target('codespell',
     codespell,
     meson.source_root(),
     '--write-changes',
-    '--builtin', 'en-GB_to_en-US',
-    '--skip', '*.po,*.csv,*.svg,*.p7c,subprojects,.git,pcrs,build*',
-    '--ignore-words-list', 'conexant,Conexant,gir,GIR,hsi,HSI,cancelled,Cancelled',
+    '--builtin', 'clear,informal,en-GB_to_en-US',
+    '--skip', '*.po,*.csv,*.svg,*.p7c,subprojects,.git,pcrs,build*,.ossfuzz',
+    '--ignore-words-list', 'conexant,Conexant,gir,GIR,hsi,HSI,cancelled,Cancelled,te',
   ]
 )
 endif

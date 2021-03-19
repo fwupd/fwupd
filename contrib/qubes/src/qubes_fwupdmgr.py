@@ -438,10 +438,10 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         ]
 
     def _download_firmware_updates(self, url, sha, whonix=False):
-        """Initializes downloading firmware upadate archive.
+        """Initializes downloading firmware update archive.
 
         Keywords arguments:
-        url -- url path to the firmware upadate archive
+        url -- url path to the firmware update archive
         sha -- SHA256 checksum of the firmware update archive
         whonix -- Flag enforces downloading the updates via Tor
         """
