@@ -148,7 +148,8 @@ fu_efi_firmware_volume_parse (FuFirmware *firmware,
 		g_prefix_error (error, "failed to read hdr_length: ");
 		return FALSE;
 	}
-	if (hdr_length < FU_EFI_FIRMWARE_VOLUME_SIZE) {
+	if (hdr_length < FU_EFI_FIRMWARE_VOLUME_SIZE ||
+	    hdr_length > fv_length) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INTERNAL,
