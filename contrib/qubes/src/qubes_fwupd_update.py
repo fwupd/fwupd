@@ -58,7 +58,7 @@ class FwupdUpdate:
         self.updatevm = p.communicate()[0].decode().split("\n")[0]
         if p.returncode != 0 and not UPDATEVM_REGEX.match(self.updatevm):
             self.updatevm = None
-            raise Exception("Specifing updatevm failed")
+            raise Exception("Specifying updatevm failed")
 
     def _check_updatevm(self):
         """Checks if usbvm is running"""
@@ -133,10 +133,10 @@ class FwupdUpdate:
             raise Exception("Metadata download failed.")
 
     def download_firmware_updates(self, url, sha, whonix=False):
-        """Initializes downloading firmware upadate archive.
+        """Initializes downloading firmware update archive.
 
         Keywords arguments:
-        url -- url path to the firmware upadate archive
+        url -- url path to the firmware update archive
         sha -- SHA256 checksum of the firmware update archive
         whonix -- Flag enforces downloading the updates via Tor
         """

@@ -2,7 +2,7 @@ libfwupdplugin
 ==============
 
 This library is only partially API and ABI stable. Keeping unused, unsafe and
-deprecated functions around forever is a maintainance burden and so symbols are
+deprecated functions around forever is a maintenance burden and so symbols are
 removed when branching for new minor versions.
 
 Remember: Plugins should be upstream!

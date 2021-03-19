@@ -100,7 +100,7 @@ class FwupdUsbvmUpdates(FwupdVmCommon):
             exit(1)
 
     def validate_updates(self, archive_path, sha):
-        """Validates recived an update file.
+        """Validates received an update file.
 
         Keyword arguments:
         archive_path - path to the firmware update archive
@@ -151,7 +151,7 @@ def main():
     elif sys.argv[1] == "updates" and not len(sys.argv) < 4:
         f.validate_updates(sys.argv[2], sys.argv[3])
     else:
-        raise Exception("Invaild command")
+        raise Exception("Invalid command")
 
 
 if __name__ == '__main__':

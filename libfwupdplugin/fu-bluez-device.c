@@ -400,7 +400,7 @@ fu_bluez_device_read (FuBluezDevice *self, const gchar *uuid, GError **error)
 	 * Call the "ReadValue" method through the proxy synchronously.
 	 *
 	 * The method takes one argument: an array of dicts of
-	 * {string:value} specifing the options (here the option is
+	 * {string:value} specifying the options (here the option is
 	 * "offset":0.
 	 * The result is a byte array.
 	 */

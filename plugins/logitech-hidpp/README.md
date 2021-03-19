@@ -53,9 +53,9 @@ Update Behavior
 The peripheral firmware is deployed when the device is in normal runtime mode,
 and the device will reset when the new firmware has been written.
 
-The reciever device presents in runtime mode, but on detach re-enumerates with a
+The receiver device presents in runtime mode, but on detach re-enumerates with a
 different USB PID in a bootloader mode. On attach the device again re-enumerates
-back to the runtime mode. All unifying devices attached to the reciever will not
+back to the runtime mode. All unifying devices attached to the receiver will not
 work for the duration of the update.
 
 For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that

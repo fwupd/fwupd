@@ -1577,7 +1577,7 @@ fwupd_release_to_variant (FwupdRelease *release)
 				       FWUPD_RESULT_KEY_LOCATIONS,
 				       g_variant_new_strv ((const gchar * const*) priv->locations->pdata,
 							   priv->locations->len));
-		/* for compatibilty */
+		/* for compatibility */
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_URI,
 				       g_variant_new_string (g_ptr_array_index (priv->locations, 0)));
@@ -1917,7 +1917,7 @@ fwupd_release_to_json (FwupdRelease *release, JsonBuilder *builder)
 			json_builder_add_string_value (builder, location);
 		}
 		json_builder_end_array (builder);
-		/* for compatibilty */
+		/* for compatibility */
 		fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_URI,
 					       (const gchar *) g_ptr_array_index (priv->locations, 0));
 	}
