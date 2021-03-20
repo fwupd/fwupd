@@ -72,7 +72,7 @@ fu_efi_firmware_file_xml_func (void)
 	g_assert_true (ret);
 	csum1 = fu_firmware_get_checksum (firmware1, G_CHECKSUM_SHA1, &error);
 	g_assert_no_error (error);
-	g_assert_cmpstr (csum1, ==, "fb0f4b276b3672d2dbcf3fe543ddd743f02c7fe0");
+	g_assert_cmpstr (csum1, ==, "1002c14b29a76069f3b7e35c50a55d2b0d197441");
 
 	/* ensure we can round-trip */
 	xml_out = fu_firmware_export_to_xml (firmware1,
@@ -180,7 +180,7 @@ fu_ifd_image_xml_func (void)
 	g_assert_true (ret);
 	csum1 = fu_firmware_get_checksum (firmware1, G_CHECKSUM_SHA1, &error);
 	g_assert_no_error (error);
-	g_assert_cmpstr (csum1, ==, "49e18145664a6910ba86b5e6ce74e40efd76c963");
+	g_assert_cmpstr (csum1, ==, "aebfb3845c9bc638de30360f5ece156958918ca2");
 
 	/* ensure we can round-trip */
 	xml_out = fu_firmware_export_to_xml (firmware1,
