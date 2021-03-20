@@ -2735,7 +2735,7 @@ fu_common_get_memory_size (void)
 	GlobalMemoryStatusEx (&status);
 	return (guint64) status.ullTotalPhys;
 #else
-	return sysconf (_SC_PHYS_PAGES) * sysconf (_SC_PAGE_SIZE);
+	return (guint64) sysconf (_SC_PHYS_PAGES) * (guint64) sysconf (_SC_PAGE_SIZE);
 #endif
 }
 
