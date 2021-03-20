@@ -44,5 +44,5 @@ gboolean	 fu_wacom_device_erase_all	(FuWacomDevice	*self,
 						 GError		**error);
 gboolean	 fu_wacom_device_check_mpu	(FuWacomDevice	*self,
 						 GError		**error);
-guint		 fu_wacom_device_get_block_sz	(FuWacomDevice	*self);
+gsize		 fu_wacom_device_get_block_sz	(FuWacomDevice	*self);
 guint		 fu_wacom_device_get_base_addr	(FuWacomDevice	*self);
