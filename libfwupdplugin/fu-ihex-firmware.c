@@ -282,6 +282,14 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 				}
 			}
 			addr_last = addr + rcd->data->len - 1;
+			if (addr_last < addr) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "overflow of address 0x%x on line %u",
+					     (guint) addr, rcd->ln);
+				return FALSE;
+			}
 
 			/* write into buf */
 			g_byte_array_append (buf, rcd->data->data, rcd->data->len);
