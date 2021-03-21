@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-extern "C" {
 #include <fwupd.h>
-}
 
 #include <QCoreApplication>
 #include <QtConcurrentRun>
