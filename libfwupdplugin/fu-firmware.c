@@ -1577,7 +1577,10 @@ gchar *
 fu_firmware_to_string (FuFirmware *self)
 {
 	g_autoptr(XbBuilderNode) bn = xb_builder_node_new ("firmware");
-	fu_firmware_export (self, FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG, bn);
+	fu_firmware_export (self,
+			    FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG |
+			    FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA,
+			    bn);
 	return xb_builder_node_export (bn,
 				       XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
 #if LIBXMLB_CHECK_VERSION(0,2,2)
