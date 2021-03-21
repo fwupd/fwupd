@@ -228,6 +228,16 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 		/* process different record types */
 		switch (rcd->record_type) {
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_DATA:
+
+			/* does not make sense */
+			if (got_eof) {
+				g_set_error_literal (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INVALID_FILE,
+						     "cannot process data after EOF");
+				return FALSE;
+			}
+
 			/* base address for element */
 			if (img_addr == G_MAXUINT32)
 				img_addr = addr;
