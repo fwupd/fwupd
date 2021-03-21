@@ -238,6 +238,13 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 						     "cannot process data after EOF");
 				return FALSE;
 			}
+			if (rcd->data->len == 0) {
+				g_set_error_literal (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INVALID_FILE,
+						     "cannot parse invalid data");
+				return FALSE;
+			}
 
 			/* base address for element */
 			if (img_addr == G_MAXUINT32)
