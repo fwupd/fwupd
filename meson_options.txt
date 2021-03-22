@@ -24,6 +24,7 @@ option('plugin_tpm', type : 'boolean', value : true, description : 'enable TPM s
 option('plugin_thunderbolt', type : 'boolean', value : true, description : 'enable Thunderbolt support')
 option('plugin_redfish', type : 'boolean', value : true, description : 'enable Redfish support')
 option('plugin_uefi_capsule', type : 'boolean', value : true, description : 'enable UEFI capsule support')
+option('plugin_uefi_capsule_splash', type : 'boolean', value : true, description : 'enable UEFI capsule splash support')
 option('plugin_uefi_pk', type : 'boolean', value : true, description : 'enable UEFI PK support')
 option('plugin_nvme', type : 'boolean', value : true, description : 'enable NVMe support')
 option('plugin_modem_manager', type : 'boolean', value : false, description : 'enable ModemManager support')
