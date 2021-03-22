@@ -3276,6 +3276,18 @@ fu_common_device_category_to_name (const gchar *cat)
 		return "Platform Security Processor";
 	if (g_strcmp0 (cat, "X-CpuMicrocode") == 0)
 		return "CPU Microcode";
+	if (g_strcmp0 (cat, "X-Battery") == 0)
+		return "Battery";
+	if (g_strcmp0 (cat, "X-Camera") == 0)
+		return "Camera";
+	if (g_strcmp0 (cat, "X-TPM") == 0)
+		return "TPM";
+	if (g_strcmp0 (cat, "X-Touchpad") == 0)
+		return "Touchpad";
+	if (g_strcmp0 (cat, "X-Mouse") == 0)
+		return "Mouse";
+	if (g_strcmp0 (cat, "X-Keyboard") == 0)
+		return "Keyboard";
 	return NULL;
 }
 
