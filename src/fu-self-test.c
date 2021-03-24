@@ -3134,6 +3134,9 @@ fu_common_store_cab_func (void)
 	g_autoptr(XbNode) rel = NULL;
 	g_autoptr(XbNode) req = NULL;
 	g_autoptr(XbSilo) silo = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
 
 	/* create silo */
 	blob = _build_cab (GCAB_COMPRESSION_NONE,
@@ -3170,7 +3173,17 @@ fu_common_store_cab_func (void)
 	component = xb_silo_query_first (silo, "components/component/id[text()='com.acme.example.firmware']/..", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	query = xb_query_new_full (xb_node_get_silo (component),
+				   "releases/release",
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				   &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (query);
+	rel = xb_node_query_first_full (component, query, &error);
+#else
 	rel = xb_node_query_first (component, "releases/release", &error);
+#endif
 	g_assert_no_error (error);
 	g_assert_nonnull (rel);
 	g_assert_cmpstr (xb_node_get_attr (rel, "version"), ==, "1.2.3");
@@ -3196,6 +3209,9 @@ fu_common_store_cab_unsigned_func (void)
 	g_autoptr(XbNode) csum = NULL;
 	g_autoptr(XbNode) rel = NULL;
 	g_autoptr(XbSilo) silo = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
 
 	/* create silo */
 	blob = _build_cab (GCAB_COMPRESSION_NONE,
@@ -3220,7 +3236,17 @@ fu_common_store_cab_unsigned_func (void)
 	component = xb_silo_query_first (silo, "components/component/id[text()='com.acme.example.firmware']/..", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	query = xb_query_new_full (xb_node_get_silo (component),
+				   "releases/release",
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				   &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (query);
+	rel = xb_node_query_first_full (component, query, &error);
+#else
 	rel = xb_node_query_first (component, "releases/release", &error);
+#endif
 	g_assert_no_error (error);
 	g_assert_nonnull (rel);
 	g_assert_cmpstr (xb_node_get_attr (rel, "version"), ==, "1.2.3");
@@ -3241,6 +3267,9 @@ fu_common_store_cab_folder_func (void)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbNode) rel = NULL;
 	g_autoptr(XbSilo) silo = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
 
 	/* create silo */
 	blob = _build_cab (GCAB_COMPRESSION_NONE,
@@ -3265,7 +3294,17 @@ fu_common_store_cab_folder_func (void)
 	component = xb_silo_query_first (silo, "components/component/id[text()='com.acme.example.firmware']/..", &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	query = xb_query_new_full (xb_node_get_silo (component),
+				   "releases/release",
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				   &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (query);
+	rel = xb_node_query_first_full (component, query, &error);
+#else
 	rel = xb_node_query_first (component, "releases/release", &error);
+#endif
 	g_assert_no_error (error);
 	g_assert_nonnull (rel);
 	g_assert_cmpstr (xb_node_get_attr (rel, "version"), ==, "1.2.3");

@@ -1550,6 +1550,9 @@ fu_engine_install (FuEngine *self,
 	g_autoptr(GBytes) blob_fw2 = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(XbNode) rel = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (XB_IS_NODE (component), FALSE);
@@ -1580,7 +1583,17 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* parse the DriverVer */
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	query = xb_query_new_full (xb_node_get_silo (component),
+				   "releases/release",
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				   error);
+	if (query == NULL)
+		return FALSE;
+	rel = xb_node_query_first_full (component, query, &error_local);
+#else
 	rel = xb_node_query_first (component, "releases/release", &error_local);
+#endif
 	if (rel == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -2581,6 +2594,9 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 	g_autoptr(GPtrArray) provides = NULL;
 	g_autoptr(XbNode) description = NULL;
 	g_autoptr(XbNode) release = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
 
 	dev = fu_device_new ();
 	provides = xb_node_query (component,
@@ -2633,9 +2649,19 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 		return NULL;
 
 	/* verify trust */
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	query = xb_query_new_full (xb_node_get_silo (component),
+				   "releases/release",
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				   error);
+	if (query == NULL)
+		return FALSE;
+	release = xb_node_query_first_full (component, query, &error_local);
+#else
 	release = xb_node_query_first (component,
 				       "releases/release",
 				       &error_local);
+#endif
 	if (release == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
