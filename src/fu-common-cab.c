@@ -514,7 +514,19 @@ fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
 	for (guint i = 0; i < components->len; i++) {
 		XbNode *component = g_ptr_array_index (components, i);
 		g_autoptr(GPtrArray) releases = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+		g_autoptr(XbQuery) query = NULL;
+		query = xb_query_new_full (xb_node_get_silo (component),
+					   "releases/release",
+					   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+					   error);
+		if (query == NULL)
+			return FALSE;
+		xb_query_set_limit (query, 0);
+		releases = xb_node_query_full (component, query, &error_local);
+#else
 		releases = xb_node_query (component, "releases/release", 0, &error_local);
+#endif
 		if (releases == NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
