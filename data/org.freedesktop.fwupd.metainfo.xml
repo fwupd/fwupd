@@ -32,6 +32,29 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.4.7" date="2021-03-24">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add SBAT metadata to the fwupd EFI binary</li>
+          <li>Check returned volumes before accessing them</li>
+          <li>Correct a Thunderbolt assertion if kernel failed FW read</li>
+          <li>Do not dedupe NVMe devices</li>
+          <li>Do not match all HIDRAW\VEN_06CB devices</li>
+          <li>Don't allow device updates while needing activation</li>
+          <li>Fix adding multiple flags to devices</li>
+          <li>Fix critical warning regression with 'fwupdate -a'</li>
+          <li>Fix probe warning for the Logitech Unifying device</li>
+          <li>Fix the quirk key name for the Lenovo HDMI with power</li>
+          <li>Make TPM more optional</li>
+          <li>Make udisks2 errors more apparent</li>
+          <li>Only set the version format for ESRT entries</li>
+          <li>Remove the Hughski public key</li>
+          <li>Restore recognizing gpg and pkcs7 types still</li>
+          <li>Wait a few ms for the Logitech hardware to settle after detach</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.4.6" date="2020-09-07">
       <description>
         <p>This release adds the following features:</p>
