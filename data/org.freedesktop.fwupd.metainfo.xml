@@ -35,6 +35,45 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.5.8" date="2021-03-24">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add a new internal flag to opt-in to GUID matching</li>
+          <li>Add D501 Baklava device support</li>
+          <li>Add fu_device_set_battery_level()</li>
+          <li>Add missing uint64 read and write helpers</li>
+          <li>Add Qubes wrapper source and create packages</li>
+          <li>Allow enabling plugins only matching a specific HwId</li>
+          <li>Prompt for unlock keypress if reset command is blocked</li>
+          <li>Remove obsolete dell-dock non-passive update flow support</li>
+          <li>Remove the Hughski public key</li>
+          <li>Show a warning when parsing invalid quirk files</li>
+          <li>Support for GATT characteristic signals/notifications</li>
+          <li>Support more than one protocol for a given device</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Align the CCGX DMC firmware to 64 byte chunks</li>
+          <li>Be more strict for custom quirk keys</li>
+          <li>Check pixart firmware compatibility with hardware before flashing</li>
+          <li>Correct a thunderbolt assertion if kernel failed FW read</li>
+          <li>Correctly erase STM32 devices when transfer size is less than sector size</li>
+          <li>Detect SREC overflow to avoid adding ~4GB of 0xFF padding</li>
+          <li>Do not show a critical error when flashing footer-less binary files</li>
+          <li>Don't allow device updates while needing activation</li>
+          <li>Fix a regression in the elantp defined IAP start address</li>
+          <li>Fix a regression where activate stopped working</li>
+          <li>Fix firmware update of pointing device on Lenovo ThinkPad Nano</li>
+          <li>Fix the HSI plugin 'Disabled' state</li>
+          <li>Fix the quirk key name for the Lenovo HDMI with power</li>
+          <li>Fix writing to the GD32VF103 bootloader</li>
+          <li>Only call elantp->detach() when writing a firmware blob</li>
+          <li>Updated StarLabs GUIDs</li>
+          <li>Wait a few ms for the Logitech hardware to settle after detach</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.7" date="2021-02-23">
       <description>
         <p>This release adds the following features:</p>

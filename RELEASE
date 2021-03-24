@@ -6,14 +6,6 @@ git log --format="%s" --cherry-pick --right-only 1.5.7... | grep -i -v trivial |
 Add any user visible changes into ../data/org.freedesktop.fwupd.metainfo.xml
 appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > NEWS
 
-Update translations:
-
-ninja-build fwupd-pot
-tx push --source
-tx pull --all --force --minimum-perc=5
-ninja-build fix-translations
-git add ../po/*.po
-
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
