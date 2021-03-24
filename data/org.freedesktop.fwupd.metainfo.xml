@@ -32,6 +32,16 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.2.14" date="2021-03-24">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add SBAT metadata to the fwupd EFI binary</li>
+          <li>Fix using a very new libxmlb with a very old fwupd daemon</li>
+          <li>Use the system provided flashrom on Fedora</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.13" date="2020-06-23">
       <description>
         <p>This release fixes the following bugs:</p>
