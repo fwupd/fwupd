@@ -35,6 +35,21 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.3.12" date="2021-03-24">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add SBAT metadata to the fwupd EFI binary</li>
+          <li>Add XB_QUERY_FLAG_FORCE_NODE_CACHE to reduce RSS usage</li>
+          <li>Correct a logic error in TPM PCR reading</li>
+          <li>Do not match all HIDRAW\VEN_06CB devices</li>
+          <li>Essentially block Dell K12A</li>
+          <li>Fix adding multiple flags to devices</li>
+          <li>Use the system provided flashrom on Fedora</li>
+          <li>Wait a few ms for the Logitech hardware to settle after detach</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.3.11" date="2020-06-18">
       <description>
         <p>This release fixes the following bugs:</p>
