@@ -245,7 +245,7 @@ fu_cros_ec_usb_device_do_xfer (FuCrosEcUsbDevice * self, const guint8 *outbuf,
 				     G_IO_ERROR_PARTIAL_INPUT,
 				     "only received %" G_GSIZE_FORMAT "/%"
 				     G_GSIZE_FORMAT " bytes",
-				     actual, outlen);
+				     actual, inlen);
 			return FALSE;
 		}
 	}
