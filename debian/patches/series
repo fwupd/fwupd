@@ -1,3 +1,4 @@
 0001-trivial-add-linker-script-for-armhf.patch
 0001-fu-tool-fix-a-regression-where-activate-stopped-work.patch
 0001-libfwupdplugin-don-t-allow-device-updates-while-need.patch
+0002-fix-vendor-sbat-string.patch
