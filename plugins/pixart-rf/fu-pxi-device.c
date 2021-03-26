@@ -44,6 +44,8 @@
 
 #define FU_PXI_DEVICE_NOTIFY_TIMEOUT_MS		5000
 
+#define FU_PXI_DEVICE_SET_REPORT_RETRIES	10
+
 /* OTA target selection */
 enum ota_process_setting {
 	OTA_MAIN_FW,				/* Main firmware */
@@ -174,6 +176,17 @@ fu_pxi_device_prepare_firmware (FuDevice *device,
 	return g_steal_pointer (&firmware);
 }
 
+#ifdef HAVE_HIDRAW_H
+static gboolean
+fu_pxi_device_set_feature_cb (FuDevice *device, gpointer user_data, GError **error)
+{
+	GByteArray *req = (GByteArray *) user_data;
+	return fu_udev_device_ioctl (FU_UDEV_DEVICE (device),
+				     HIDIOCSFEATURE(req->len), (guint8 *) req->data,
+				     NULL, error);
+}
+#endif
+
 static gboolean
 fu_pxi_device_set_feature (FuPxiDevice *self, GByteArray *req, GError **error)
 {
@@ -182,9 +195,9 @@ fu_pxi_device_set_feature (FuPxiDevice *self, GByteArray *req, GError **error)
 		fu_common_dump_raw (G_LOG_DOMAIN, "SetFeature",
 				    req->data, req->len);
 	}
-	return fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
-				     HIDIOCSFEATURE(req->len), (guint8 *) req->data,
-				     NULL, error);
+	return fu_device_retry (FU_DEVICE (self),
+				fu_pxi_device_set_feature_cb,
+				FU_PXI_DEVICE_SET_REPORT_RETRIES, req, error);
 #else
 	g_set_error_literal (error,
 			     G_IO_ERROR,
@@ -920,6 +933,7 @@ fu_pxi_device_init (FuPxiDevice *self)
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_vendor_id (FU_DEVICE (self), "USB:0x093A");
 	fu_device_add_protocol (FU_DEVICE (self), "com.pixart.rf");
+	fu_device_retry_set_delay (FU_DEVICE (self), 50);
 	self->retransmit_id = PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID;
 }
 
