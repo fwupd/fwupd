@@ -478,30 +478,6 @@ fu_util_modify_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError 
 	return TRUE;
 }
 
-static gboolean
-fu_util_modify_remote (FuUtilPrivate *priv,
-		       const gchar *remote_id,
-		       const gchar *key,
-		       const gchar *value,
-		       GError **error)
-{
-	g_autoptr(FwupdRemote) remote = NULL;
-
-	/* ensure the remote exists */
-	remote = fwupd_client_get_remote_by_id (priv->client, remote_id, NULL, error);
-	if (remote == NULL)
-		return FALSE;
-
-	/* show some kind of warning when enabling download-type remotes */
-	if (g_strcmp0 (key, "Enabled") == 0 && g_strcmp0 (value, "true") == 0) {
-		if (!fu_util_modify_remote_warning (priv, remote, error))
-			return FALSE;
-	}
-	return fwupd_client_modify_remote (priv->client,
-					   remote_id, key, value,
-					   NULL, error);
-}
-
 static void
 fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, FwupdDevice *dev)
 {
@@ -1050,7 +1026,12 @@ fu_util_download_metadata_enable_lvfs (FuUtilPrivate *priv, GError **error)
 		_("Enable this remote?"));
 	if (!fu_util_prompt_for_boolean (TRUE))
 		return TRUE;
-	if (!fu_util_modify_remote (priv, "lvfs", "Enabled", "true", error))
+	if (!fwupd_client_modify_remote (priv->client,
+					 fwupd_remote_get_id (remote),
+					 "Enabled", "true",
+					 priv->cancellable, error))
+		return FALSE;
+	if (!fu_util_modify_remote_warning (priv, remote, error))
 		return FALSE;
 
 	/* refresh the newly-enabled remote */
@@ -1740,6 +1721,7 @@ fu_util_update (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_remote_modify (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	g_autoptr(FwupdRemote) remote = NULL;
 	if (g_strv_length (values) < 3) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -1747,7 +1729,16 @@ fu_util_remote_modify (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments");
 		return FALSE;
 	}
-	if (!fu_util_modify_remote (priv, values[0], values[1], values[2], error))
+
+	/* ensure the remote exists */
+	remote = fwupd_client_get_remote_by_id (priv->client, values[0],
+						priv->cancellable, error);
+	if (remote == NULL)
+		return FALSE;
+	if (!fwupd_client_modify_remote (priv->client,
+					 fwupd_remote_get_id (remote),
+					 values[1], values[2],
+					 priv->cancellable, error))
 		return FALSE;
 
 	/* TRANSLATORS: success message for a per-remote setting change */
@@ -1758,6 +1749,7 @@ fu_util_remote_modify (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_remote_enable (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	g_autoptr(FwupdRemote) remote = NULL;
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -1765,17 +1757,51 @@ fu_util_remote_enable (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments");
 		return FALSE;
 	}
-	if (!fu_util_modify_remote (priv, values[0], "Enabled", "true", error))
+	remote = fwupd_client_get_remote_by_id (priv->client, values[0],
+						priv->cancellable, error);
+	if (remote == NULL)
+		return FALSE;
+	if (!fu_util_modify_remote_warning (priv, remote, error))
+		return FALSE;
+	if (!fwupd_client_modify_remote (priv->client,
+					 fwupd_remote_get_id (remote),
+					 "Enabled", "true",
+					 priv->cancellable, error))
+		return FALSE;
+
+	/* ask for permission to refresh */
+	if (priv->no_remote_check ||
+	    fwupd_remote_get_kind (remote) != FWUPD_REMOTE_KIND_DOWNLOAD) {
+		/* TRANSLATORS: success message */
+		g_print ("%s\n", _("Successfully enabled remote"));
+		return TRUE;
+	}
+	if (!priv->assume_yes) {
+		g_print ("%s (%s) [Y|n]: ",
+			 /* TRANSLATORS: ask the user if we can update the metadata */
+			 _("Do you want to refresh this remote now?"),
+			 /* TRANSLATORS: metadata is downloaded from the Internet */
+			 _("Requires internet connection"));
+		if (!fu_util_prompt_for_boolean (TRUE)) {
+			/* TRANSLATORS: success message */
+			g_print ("%s\n", _("Successfully enabled remote"));
+			return TRUE;
+		}
+	}
+	if (!fwupd_client_refresh_remote (priv->client, remote,
+					  priv->cancellable, error))
 		return FALSE;
 
 	/* TRANSLATORS: success message */
-	g_print ("%s\n", _("Successfully enabled remote"));
+	g_print ("\n%s\n", _("Successfully enabled and refreshed remote"));
 	return TRUE;
 }
 
 static gboolean
 fu_util_remote_disable (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	g_autoptr(FwupdRemote) remote = NULL;
+
 	if (g_strv_length (values) != 1) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -1783,7 +1809,15 @@ fu_util_remote_disable (FuUtilPrivate *priv, gchar **values, GError **error)
 				     "Invalid arguments");
 		return FALSE;
 	}
-	if (!fu_util_modify_remote (priv, values[0], "Enabled", "false", error))
+
+	/* ensure the remote exists */
+	remote = fwupd_client_get_remote_by_id (priv->client, values[0],
+						priv->cancellable, error);
+	if (remote == NULL)
+		return FALSE;
+	if (!fwupd_client_modify_remote (priv->client,
+					 values[0], "Enabled", "false",
+					 priv->cancellable, error))
 		return FALSE;
 
 	/* TRANSLATORS: success message */
