@@ -51,7 +51,7 @@ def _generate_sbat(args):
 
         # distro specifics, falling back to the project defaults
         sfd.write(
-            "{0}-{1},{2},{3},{4},{5},{6}\n".format(
+            "{0}.{1},{2},{3},{4},{5},{6}\n".format(
                 args.project_name,
                 args.sbat_distro_id,
                 args.sbat_distro_generation or args.sbat_generation,
