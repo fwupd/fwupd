@@ -2275,7 +2275,7 @@ fu_util_verify_update (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* get device */
 	if (g_strv_length (values) == 1) {
-		dev = fu_util_get_device (priv, values[1], error);
+		dev = fu_util_get_device (priv, values[0], error);
 		if (dev == NULL)
 			return FALSE;
 	} else {
