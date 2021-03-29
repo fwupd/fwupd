@@ -1226,23 +1226,8 @@ fu_util_prompt_for_release (FuUtilPrivate *priv, GPtrArray *rels, GError **error
 	/* TRANSLATORS: this is to abort the interactive prompt */
 	g_print ("0.\t%s\n", _("Cancel"));
 	for (guint i = 0; i < rels->len; i++) {
-		const gchar *desc_tmp;
-		g_autofree gchar *desc = NULL;
-
-		rel = g_ptr_array_index (rels, i);
-
-		/* no description provided */
-		desc_tmp = fwupd_release_get_description (rel);
-		if (desc_tmp == NULL) {
-			g_print ("%u.\t%s\n", i + 1, fwupd_release_get_version (rel));
-			continue;
-		}
-
-		/* remove markup, and fall back if we fail */
-		desc = fu_util_convert_description (desc_tmp, NULL);
-		if (desc == NULL)
-			desc = g_strdup (desc_tmp);
-		g_print ("%u.\t%s (%s)\n", i + 1, fwupd_release_get_version (rel), desc);
+		FwupdRelease *rel_tmp = g_ptr_array_index (rels, i);
+		g_print ("%u.\t%s\n", i + 1, fwupd_release_get_version (rel_tmp));
 	}
 	idx = fu_util_prompt_for_number (rels->len);
 	if (idx == 0) {
@@ -1471,15 +1456,82 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_prompt_warning_composite (FuUtilPrivate *priv,
+				  FwupdDevice *dev,
+				  FwupdRelease *rel,
+				  GError **error)
+{
+	const gchar *rel_csum;
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* get the default checksum */
+	rel_csum = fwupd_checksum_get_best (fwupd_release_get_checksums (rel));
+	if (rel_csum == NULL) {
+		g_debug ("no checksum for release!");
+		return TRUE;
+	}
+
+	/* find other devices matching the composite ID and the release checksum */
+	devices = fwupd_client_get_devices (priv->client, NULL, error);
+	if (devices == NULL)
+		return FALSE;
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev_tmp = g_ptr_array_index (devices, i);
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GPtrArray) rels = NULL;
+
+		/* not the parent device */
+		if (g_strcmp0 (fwupd_device_get_id (dev),
+			       fwupd_device_get_id (dev_tmp)) == 0)
+			continue;
+
+		/* not the same composite device */
+		if (g_strcmp0 (fwupd_device_get_composite_id (dev),
+			       fwupd_device_get_composite_id (dev_tmp)) != 0)
+			continue;
+
+		/* get releases */
+		if (!fwupd_device_has_flag (dev_tmp, FWUPD_DEVICE_FLAG_UPDATABLE))
+			continue;
+		rels = fwupd_client_get_releases (priv->client,
+						  fwupd_device_get_id (dev_tmp),
+						  NULL, &error_local);
+		if (rels == NULL) {
+			g_debug ("ignoring: %s", error_local->message);
+			continue;
+		}
+
+		/* do any releases match this checksum */
+		for (guint j = 0; j < rels->len; j++) {
+			FwupdRelease *rel_tmp = g_ptr_array_index (rels, j);
+			if (fwupd_release_has_checksum (rel_tmp, rel_csum)) {
+				if (!fu_util_prompt_warning (dev_tmp, rel_tmp,
+							     fu_util_get_tree_title (priv),
+							     error))
+					return FALSE;
+				break;
+			}
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_util_update_device_with_release (FuUtilPrivate *priv,
 				    FwupdDevice *dev,
 				    FwupdRelease *rel,
 				    GError **error)
 {
 	if (!priv->no_safety_check && !priv->assume_yes) {
-		if (!fu_util_prompt_warning (dev,
+		if (!fu_util_prompt_warning_composite (priv, dev, rel, error))
+			return FALSE;
+		if (!fu_util_prompt_warning (dev, rel,
 					     fu_util_get_tree_title (priv),
 					     error))
+			return FALSE;
+		if (!fu_util_prompt_warning_composite (priv, dev, rel, error))
 			return FALSE;
 	}
 	return fwupd_client_install_release2 (priv->client, dev, rel, priv->flags,
@@ -1534,7 +1586,6 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		FwupdRelease *rel;
 		const gchar *remote_id;
-		g_autofree gchar *upgrade_str = NULL;
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
 
@@ -1570,13 +1621,6 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 			continue;
 		}
 		rel = g_ptr_array_index (rels, 0);
-		/* TRANSLATORS: message letting the user know an upgrade is available
-		 * %1 is the device name and %2 and %3 are version strings */
-		upgrade_str = g_strdup_printf (_("Upgrade available for %s from %s to %s"),
-					       fwupd_device_get_name (dev),
-					       fwupd_device_get_version (dev),
-					       fwupd_release_get_version (rel));
-		g_print ("%s\n", upgrade_str);
 		if (!fu_util_update_device_with_release (priv, dev, rel, error))
 			return FALSE;
 
