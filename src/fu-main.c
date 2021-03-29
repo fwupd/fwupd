@@ -14,7 +14,9 @@
 #include <glib/gi18n.h>
 #include <glib-unix.h>
 #include <locale.h>
+#ifdef HAVE_MALLOC_H
 #include <malloc.h>
+#endif
 #ifdef HAVE_POLKIT
 #include <polkit/polkit.h>
 #endif
@@ -2041,7 +2043,7 @@ main (int argc, char *argv[])
 	else if (timed_exit)
 		g_timeout_add_seconds (5, fu_main_timed_exit_cb, priv->loop);
 
-#ifdef __linux__
+#ifdef HAVE_MALLOC_TRIM
 	/* drop heap except one page */
 	malloc_trim (4096);
 #endif
