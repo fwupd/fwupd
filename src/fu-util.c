@@ -39,14 +39,6 @@
 #define EXIT_NOTHING_TO_DO		2
 
 typedef enum {
-	FU_UTIL_HISTORY_DO_NOTHING,
-	FU_UTIL_HISTORY_NEVER,
-	FU_UTIL_HISTORY_PROMPT,
-	FU_UTIL_HISTORY_AUTOMATIC,
-	FU_UTIL_HISTORY_LAST,
-} FuUtilHistoryAction;
-
-typedef enum {
 	FU_UTIL_OPERATION_UNKNOWN,
 	FU_UTIL_OPERATION_UPDATE,
 	FU_UTIL_OPERATION_DOWNGRADE,
@@ -221,81 +213,6 @@ fu_util_prompt_for_device (FuUtilPrivate *priv, GPtrArray *devices, GError **err
 }
 
 static gboolean
-fu_util_maybe_enable_automatic (FuUtilPrivate *priv, GPtrArray *remotes, GError **error)
-{
-	guint idx;
-
-	/* TRANSLATORS: Display a message asking every time an update is performed */
-	g_print ("%d.\t%s\n",
-		 FU_UTIL_HISTORY_DO_NOTHING,
-		 ngettext ("Do not upload report at this time, but prompt again for future updates",
-			   "Do not upload reports at this time, but prompt again for future updates",
-			   remotes->len));
-	/* TRANSLATORS: Display a message asking every time an update is performed */
-	g_print ("%d.\t%s\n",
-		 FU_UTIL_HISTORY_NEVER,
-		 ngettext ("Do not upload report, and never ask to upload reports for future updates",
-			   "Do not upload reports, and never ask to upload reports for future updates",
-			   remotes->len));
-	/* TRANSLATORS: Display a message asking every time an update is performed */
-	g_print ("%d.\t%s\n",
-		 FU_UTIL_HISTORY_PROMPT,
-		 ngettext ("Upload report just this one time, but prompt again for future updates",
-			   "Upload reports just this one time, but prompt again for future updates",
-			   remotes->len));
-	/* TRANSLATORS: Display a message asking every time an update is performed */
-	g_print ("%d.\t%s\n",
-		 FU_UTIL_HISTORY_AUTOMATIC,
-		 ngettext ("Upload report this time and automatically upload reports after completing future updates",
-			   "Upload reports this time and automatically upload reports after completing future updates",
-			   remotes->len));
-	idx = fu_util_prompt_for_number (FU_UTIL_HISTORY_LAST - 1);
-
-	switch (idx) {
-	case FU_UTIL_HISTORY_NEVER:
-		for (guint i = 0; i < remotes->len; i++) {
-			FwupdRemote *remote = g_ptr_array_index (remotes, i);
-			const gchar *remote_id = fwupd_remote_get_id (remote);
-			if (fwupd_remote_get_report_uri (remote) == NULL)
-				continue;
-			if (!fwupd_client_modify_remote (priv->client,
-							 remote_id, "ReportURI", "",
-							 NULL, error))
-				return FALSE;
-		}
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "Reporting disabled");
-		return FALSE;
-	case FU_UTIL_HISTORY_DO_NOTHING:
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOTHING_TO_DO,
-				     "Request canceled");
-		return FALSE;
-	case FU_UTIL_HISTORY_AUTOMATIC:
-		for (guint i = 0; i < remotes->len; i++) {
-			FwupdRemote *remote = g_ptr_array_index (remotes, i);
-			const gchar *remote_id = fwupd_remote_get_id (remote);
-			if (fwupd_remote_get_report_uri (remote) == NULL)
-				continue;
-			if (fwupd_remote_get_automatic_reports (remote))
-				continue;
-			if (!fwupd_client_modify_remote (priv->client,
-							 remote_id, "AutomaticReports", "true",
-							 NULL, error))
-				return FALSE;
-		}
-		break;
-	default:
-		break;
-	}
-
-	return TRUE;
-}
-
-static gboolean
 fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
@@ -429,7 +346,7 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 		}
 
 		/* ask for permission */
-		g_print ("\n%s\n%s (%s):\n",
+		g_print ("\n%s\n%s (%s) [Y|n]:\n",
 			 /* TRANSLATORS: explain why we want to upload */
 			 _("Uploading firmware reports helps hardware vendors"
 			   " to quickly identify failing and successful updates"
@@ -438,12 +355,57 @@ fu_util_perhaps_show_unreported (FuUtilPrivate *priv, GError **error)
 			 _("Upload report now?"),
 			 /* TRANSLATORS: metadata is downloaded from the Internet */
 			 _("Requires internet connection"));
-		if (!fu_util_maybe_enable_automatic (priv, remotes, error))
+		if (!fu_util_prompt_for_boolean (TRUE)) {
+			g_print ("\n%s [y|N]:\n",
+				 /* TRANSLATORS: offer to disable this nag */
+				 _("Do you want to disable this feature for future updates?"));
+			if (fu_util_prompt_for_boolean (FALSE)) {
+				for (guint i = 0; i < remotes->len; i++) {
+					FwupdRemote *remote = g_ptr_array_index (remotes, i);
+					const gchar *remote_id = fwupd_remote_get_id (remote);
+					if (fwupd_remote_get_report_uri (remote) == NULL)
+						continue;
+					if (!fwupd_client_modify_remote (priv->client,
+									 remote_id, "ReportURI", "",
+									 NULL, error))
+						return FALSE;
+				}
+			}
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOTHING_TO_DO,
+					     "Declined upload");
 			return FALSE;
+		}
+	}
+
+	/* upload */
+	if (!fu_util_report_history (priv, NULL, error))
+		return FALSE;
+
+	/* offer to make automatic */
+	if (!priv->assume_yes && !all_automatic) {
+		g_print ("\n%s [y|N]:\n",
+			 /* TRANSLATORS: offer to stop asking the question */
+			 _("Do you want to upload reports automatically for future updates?"));
+		if (fu_util_prompt_for_boolean (FALSE)) {
+			for (guint i = 0; i < remotes->len; i++) {
+				FwupdRemote *remote = g_ptr_array_index (remotes, i);
+				const gchar *remote_id = fwupd_remote_get_id (remote);
+				if (fwupd_remote_get_report_uri (remote) == NULL)
+					continue;
+				if (fwupd_remote_get_automatic_reports (remote))
+					continue;
+				if (!fwupd_client_modify_remote (priv->client,
+								 remote_id, "AutomaticReports", "true",
+								 NULL, error))
+					return FALSE;
+			}
+		}
 	}
 
 	/* success */
-	return fu_util_report_history (priv, NULL, error);
+	return TRUE;
 }
 
 static gboolean
