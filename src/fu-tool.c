@@ -1251,14 +1251,15 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 			continue;
 		}
 
+		rel = g_ptr_array_index (rels, 0);
 		if (!priv->no_safety_check) {
 			if (!fu_util_prompt_warning (dev,
+						     rel,
 						     fu_util_get_tree_title (priv),
 						     error))
 				return FALSE;
 		}
 
-		rel = g_ptr_array_index (rels, 0);
 		if (!fu_util_install_release (priv, rel, &error_local)) {
 			g_printerr ("%s\n", error_local->message);
 			continue;
