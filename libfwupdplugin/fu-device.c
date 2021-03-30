@@ -23,6 +23,8 @@
 #define FU_DEVICE_RETRY_OPEN_COUNT			5
 #define FU_DEVICE_RETRY_OPEN_DELAY			500 /* ms */
 
+#define FU_DEVICE_DEFAULT_BATTERY_THRESHOLD		10 /* % */
+
 /**
  * SECTION:fu-device
  * @short_description: a physical or logical device
@@ -51,6 +53,7 @@ typedef struct {
 	guint				 remove_delay;	/* ms */
 	guint				 progress;
 	guint				 battery_level;
+	guint				 battery_threshold;
 	gint				 order;
 	guint				 priority;
 	guint				 poll_id;
@@ -77,6 +80,7 @@ enum {
 	PROP_0,
 	PROP_PROGRESS,
 	PROP_BATTERY_LEVEL,
+	PROP_BATTERY_THRESHOLD,
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
 	PROP_BACKEND_ID,
@@ -100,6 +104,9 @@ fu_device_get_property (GObject *object, guint prop_id,
 		break;
 	case PROP_BATTERY_LEVEL:
 		g_value_set_uint (value, priv->battery_level);
+		break;
+	case PROP_BATTERY_THRESHOLD:
+		g_value_set_uint (value, priv->battery_threshold);
 		break;
 	case PROP_PHYSICAL_ID:
 		g_value_set_string (value, priv->physical_id);
@@ -133,6 +140,9 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_BATTERY_LEVEL:
 		fu_device_set_battery_level (self, g_value_get_uint (value));
+		break;
+	case PROP_BATTERY_THRESHOLD:
+		fu_device_set_battery_threshold (self, g_value_get_uint (value));
 		break;
 	case PROP_PHYSICAL_ID:
 		fu_device_set_physical_id (self, g_value_get_string (value));
@@ -1219,6 +1229,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_PRIORITY) == 0) {
 		fu_device_set_priority (self, fu_common_strtoull (value));
+		return TRUE;
+	}
+	if (g_strcmp0 (key, FU_QUIRKS_BATTERY_THRESHOLD) == 0) {
+		fu_device_set_battery_threshold (self, fu_common_strtoull (value));
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_REMOVE_DELAY) == 0) {
@@ -2550,6 +2564,55 @@ fu_device_set_battery_level (FuDevice *self, guint battery_level)
 	g_object_notify (G_OBJECT (self), "battery-level");
 }
 
+/**
+ * fu_device_get_battery_threshold:
+ * @self: A #FuDevice
+ *
+ * Returns the battery threshold under which a firmware update cannot be
+ * performed.
+ *
+ * If fu_device_set_battery_threshold() has not been used, a default value is
+ * used instead.
+ *
+ * Returns: value in percent
+ *
+ * Since: 1.6.0
+ **/
+guint
+fu_device_get_battery_threshold (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
+
+	/* default value */
+	if (priv->battery_threshold == 0)
+		return FU_DEVICE_DEFAULT_BATTERY_THRESHOLD;
+
+	return priv->battery_threshold;
+}
+
+/**
+ * fu_device_set_battery_threshold:
+ * @self: A #FuDevice
+ * @battery_threshold: the percentage value
+ *
+ * Sets the battery level, or 0 for the default. Setting this allows fwupd to
+ * show a warning if the device change is too low to perform the update.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_device_set_battery_threshold (FuDevice *self, guint battery_threshold)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (battery_threshold <= 100);
+	if (priv->battery_threshold == battery_threshold)
+		return;
+	priv->battery_threshold = battery_threshold;
+	g_object_notify (G_OBJECT (self), "battery-threshold");
+}
+
 static void
 fu_device_add_string (FuDevice *self, guint idt, GString *str)
 {
@@ -2583,6 +2646,8 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt + 1, "ProxyGuid", priv->proxy_guid);
 	if (priv->battery_level != 0)
 		fu_common_string_append_ku (str, idt + 1, "BatteryLevel", priv->battery_level);
+	if (priv->battery_threshold != 0)
+		fu_common_string_append_ku (str, idt + 1, "BatteryThreshold", priv->battery_threshold);
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_min);
 		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMin", sz);
@@ -3678,6 +3743,12 @@ fu_device_class_init (FuDeviceClass *klass)
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_BATTERY_LEVEL, pspec);
+
+	pspec = g_param_spec_uint ("battery-threshold", NULL, NULL,
+				   0, 100, 0,
+				   G_PARAM_READWRITE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_BATTERY_THRESHOLD, pspec);
 
 	pspec = g_param_spec_object ("quirks", NULL, NULL,
 				     FU_TYPE_QUIRKS,

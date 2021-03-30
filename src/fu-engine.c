@@ -129,8 +129,6 @@ static guint signals[SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE (FuEngine, fu_engine, G_TYPE_OBJECT)
 
-#define FU_ENGINE_BATTERY_LEVEL_THRESHOLD	10 /* % */
-
 static void
 fu_engine_emit_changed (FuEngine *self)
 {
@@ -2625,10 +2623,9 @@ fu_engine_device_prepare (FuEngine *self,
 		return FALSE;
 	}
 
-	/* check battery level is sane -- if the device needs a higher
-	 * threshold then it can be checked in FuDevice->prepare() */
+	/* check battery level is sane */
 	if (fu_device_get_battery_level (device) > 0 &&
-	    fu_device_get_battery_level (device) < FU_ENGINE_BATTERY_LEVEL_THRESHOLD) {
+	    fu_device_get_battery_level (device) < fu_device_get_battery_threshold (device)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW,
