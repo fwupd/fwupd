@@ -198,6 +198,7 @@ if libgcab.version().version_compare('>= 1.0')
 endif
 gcab = find_program('gcab', required : true)
 bashcomp = dependency('bash-completion', required: false)
+python3 = find_program('python3')
 
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
@@ -220,9 +221,12 @@ if get_option('plugin_uefi')
   efiboot = dependency('efiboot')
   objcopy = find_program ('objcopy')
   readelf = find_program ('readelf')
+  genpeimg = find_program ('genpeimg', required: false)
 
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
   conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
+
+  conf.set('EFI_OBJCOPY', get_option('efi-objcopy'))
 
   efi_arch = host_machine.cpu_family()
   if efi_arch == 'x86'
@@ -242,11 +246,9 @@ if get_option('plugin_uefi')
           gnu_efi_arch = ''
   endif
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
-
-  python3 = find_program('python3')
   r = run_command([python3, 'po/test-deps'])
   if r.returncode() != 0
-    error(r.stdout())
+    error(r.stderr())
   endif
 endif
 
