@@ -174,7 +174,6 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 		self->device_kind = FU_VLI_DEVICE_KIND_VL211;
 		break;
 	case 0x0518:
-	{
 		if (!fu_common_read_uint8_safe (buf, bufsz, 0x8021, &tmp, error)) {
 			g_prefix_error (error, "failed to get 820/822 byte: ");
 			return FALSE;
@@ -200,7 +199,6 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 				self->device_kind = FU_VLI_DEVICE_KIND_VL820Q7;
 		}
 		break;
-	}
 	case 0x0538:
 		/* VL817 == VT3538 */
 		self->device_kind = FU_VLI_DEVICE_KIND_VL817;

@@ -110,6 +110,8 @@ fu_vli_common_device_kind_from_string (const gchar *device_kind)
 		return FU_VLI_DEVICE_KIND_VL820Q7;
 	if (g_strcmp0 (device_kind, "VL820Q8") == 0)
 		return FU_VLI_DEVICE_KIND_VL820Q8;
+	if (g_strcmp0 (device_kind, "VL822") == 0)
+		return FU_VLI_DEVICE_KIND_VL822;
 	if (g_strcmp0 (device_kind, "VL120") == 0)
 		return FU_VLI_DEVICE_KIND_VL120;
 	if (g_strcmp0 (device_kind, "VL210") == 0)
