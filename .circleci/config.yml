@@ -1,0 +1,15 @@
+version: 2
+jobs:
+  noop:
+    machine:
+      image: circleci/classic:latest
+    steps:
+      - run:
+          name: "No-op"
+          command: echo "No-op for 1_2_X"
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - noop

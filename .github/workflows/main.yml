@@ -1,0 +1,26 @@
+name: Continuous Integration
+on:
+  push:
+    branches: [ 1_1_X ]
+  pull_request:
+    branches: [ 1_1_X ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [fedora, debian-x86_64, debian-i386]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Docker login
+        run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Build in container
+        env:
+          CI_NETWORK: true
+          CI: true
+        run: |
+          echo $GITHUB_WORKSPACE
+          docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
