@@ -50,6 +50,8 @@ fu_vli_common_device_kind_to_string (FuVliDeviceKind device_kind)
 		return "VL820Q7";
 	if (device_kind == FU_VLI_DEVICE_KIND_VL820Q8)
 		return "VL820Q8";
+	if (device_kind == FU_VLI_DEVICE_KIND_VL822)
+		return "VL822";
 	if (device_kind == FU_VLI_DEVICE_KIND_VL120)
 		return "VL120";
 	if (device_kind == FU_VLI_DEVICE_KIND_VL210)
@@ -108,6 +110,8 @@ fu_vli_common_device_kind_from_string (const gchar *device_kind)
 		return FU_VLI_DEVICE_KIND_VL820Q7;
 	if (g_strcmp0 (device_kind, "VL820Q8") == 0)
 		return FU_VLI_DEVICE_KIND_VL820Q8;
+	if (g_strcmp0 (device_kind, "VL822") == 0)
+		return FU_VLI_DEVICE_KIND_VL822;
 	if (g_strcmp0 (device_kind, "VL120") == 0)
 		return FU_VLI_DEVICE_KIND_VL120;
 	if (g_strcmp0 (device_kind, "VL210") == 0)
@@ -171,6 +175,8 @@ fu_vli_common_device_kind_get_size (FuVliDeviceKind device_kind)
 	if (device_kind == FU_VLI_DEVICE_KIND_VL820Q7)
 		return 0x20000 * 2;
 	if (device_kind == FU_VLI_DEVICE_KIND_VL820Q8)
+		return 0x20000 * 2;
+	if (device_kind == FU_VLI_DEVICE_KIND_VL822)
 		return 0x20000 * 2;
 	if (device_kind == FU_VLI_DEVICE_KIND_PS186)
 		return 0x40000;

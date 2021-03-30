@@ -1,0 +1,16 @@
+{
+  "name": "BizLink Cayenne Hub [VL822+VL103]",
+  "guids": [
+    "a0eff862-6b0b-5571-91ec-a0c4bb25b539"
+  ],
+  "releases": [
+    {
+      "version": "A6.83",
+      "file": "4b71550a59348053430bb4da8939eb24739617f5f03ff0551c4f3331056cfabf-BizLink-Cayenne_New.cab"
+    },
+    {
+      "version": "06.83",
+      "file": "071cb1ecd11fed54438541d447d2289cf87ee1cb8c8e342b8e7bc28fcd8d70be-BizLink-Cayenne_Old.cab"
+    }
+  ]
+}

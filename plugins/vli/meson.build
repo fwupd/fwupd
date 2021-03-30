@@ -6,6 +6,7 @@ install_data([
   'vli-usbhub.quirk',
   'vli-usbhub-lenovo.quirk',
   'vli-usbhub-hyper.quirk',
+  'vli-usbhub-bizlink.quirk',
   ],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )

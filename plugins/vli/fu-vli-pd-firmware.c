@@ -50,6 +50,8 @@ fu_vli_pd_firmware_validate_header (FuVliPdFirmware *self)
 		return TRUE;
 	if (GUINT16_FROM_LE (self->hdr.vid) == 0x2D01)
 		return TRUE;
+	if (GUINT16_FROM_LE (self->hdr.vid) == 0x06C4)
+		return TRUE;
 	return FALSE;
 }
 
