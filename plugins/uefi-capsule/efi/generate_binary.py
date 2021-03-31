@@ -27,7 +27,7 @@ def _run_objcopy(args):
         "-j",
         ".dynamic",
         "-j",
-        ".dynsym",
+        ".rodata",
         "-j",
         ".rel*",
         args.infile,
