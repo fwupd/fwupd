@@ -70,4 +70,5 @@ void		 fu_quirks_add_possible_key		(FuQuirks	*self,
 #define	FU_QUIRKS_UPDATE_MESSAGE		"UpdateMessage"
 #define	FU_QUIRKS_UPDATE_IMAGE			"UpdateImage"
 #define	FU_QUIRKS_PRIORITY			"Priority"
+#define	FU_QUIRKS_BATTERY_THRESHOLD		"BatteryThreshold"
 #define	FU_QUIRKS_REMOVE_DELAY			"RemoveDelay"

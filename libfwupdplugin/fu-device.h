@@ -330,6 +330,9 @@ void		 fu_device_set_progress			(FuDevice	*self,
 guint		 fu_device_get_battery_level		(FuDevice	*self);
 void		 fu_device_set_battery_level		(FuDevice	*self,
 							 guint		 battery_level);
+guint		 fu_device_get_battery_threshold	(FuDevice	*self);
+void		 fu_device_set_battery_threshold	(FuDevice	*self,
+							 guint		 battery_threshold);
 void		 fu_device_set_progress_full		(FuDevice	*self,
 							 gsize		 progress_done,
 							 gsize		 progress_total);

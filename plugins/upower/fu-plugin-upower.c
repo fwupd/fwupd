@@ -164,7 +164,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW,
-			     "Cannot install update when battery "
+			     "Cannot install update when system battery "
 			     "is not at least %" G_GUINT64_FORMAT "%% unless forced",
 			      data->minimum_battery);
 		return FALSE;
