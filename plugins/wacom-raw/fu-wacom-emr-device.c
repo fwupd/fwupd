@@ -136,10 +136,10 @@ fu_wacom_emr_device_write_block (FuWacomEmrDevice *self,
 				 guint32 idx,
 				 guint32 address,
 				 const guint8 *data,
-				 guint16 datasz,
+				 gsize datasz,
 				 GError **error)
 {
-	guint blocksz = fu_wacom_device_get_block_sz (FU_WACOM_DEVICE (self));
+	gsize blocksz = fu_wacom_device_get_block_sz (FU_WACOM_DEVICE (self));
 	FuWacomRawRequest req = {
 		.cmd = FU_WACOM_RAW_BL_CMD_WRITE_FLASH,
 		.echo = (guint8) idx + 1,
@@ -155,7 +155,7 @@ fu_wacom_emr_device_write_block (FuWacomEmrDevice *self,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "data size 0x%x too large for packet",
-			     datasz);
+			     (guint) datasz);
 		return FALSE;
 	}
 	if (datasz != blocksz) {
@@ -163,7 +163,7 @@ fu_wacom_emr_device_write_block (FuWacomEmrDevice *self,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "block size 0x%x != 0x%x untested",
-			     datasz, (guint) blocksz);
+			     (guint) datasz, (guint) blocksz);
 		return FALSE;
 	}
 
