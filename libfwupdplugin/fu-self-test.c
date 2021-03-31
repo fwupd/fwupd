@@ -1190,6 +1190,7 @@ fu_device_inhibit_func (void)
 	g_autoptr(FuDevice) device = fu_device_new ();
 
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_battery_threshold (device, 25);
 	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE));
 	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 
@@ -1202,7 +1203,7 @@ fu_device_inhibit_func (void)
 	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* another */
-	fu_device_inhibit (device, "low-system-power", "System power is too low");
+	fu_device_set_battery_level (device, 5);
 	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE));
 
@@ -1212,7 +1213,7 @@ fu_device_inhibit_func (void)
 	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* we got some more power -> fine */
-	fu_device_uninhibit (device, "low-system-power");
+	fu_device_set_battery_level (device, 95);
 	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE));
 	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 }
