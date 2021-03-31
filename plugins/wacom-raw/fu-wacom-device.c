@@ -35,7 +35,7 @@ fu_wacom_device_to_string (FuUdevDevice *device, guint idt, GString *str)
 	fu_common_string_append_kx (str, idt, "FlashSize", priv->flash_size);
 }
 
-guint
+gsize
 fu_wacom_device_get_block_sz (FuWacomDevice *self)
 {
 	FuWacomDevicePrivate *priv = GET_PRIVATE (self);
