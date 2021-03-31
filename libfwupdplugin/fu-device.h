@@ -286,6 +286,11 @@ void		 fu_device_set_version_lowest		(FuDevice	*self,
 							 const gchar	*version);
 void		 fu_device_set_version_bootloader	(FuDevice	*self,
 							 const gchar	*version);
+void		 fu_device_inhibit			(FuDevice	*self,
+							 const gchar	*inhibit_id,
+							 const gchar	*reason);
+void		 fu_device_uninhibit			(FuDevice	*self,
+							 const gchar	*inhibit_id);
 const gchar	*fu_device_get_physical_id		(FuDevice	*self);
 void		 fu_device_set_physical_id		(FuDevice	*self,
 							 const gchar	*physical_id);

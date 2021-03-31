@@ -1185,6 +1185,39 @@ fu_device_instance_ids_func (void)
 }
 
 static void
+fu_device_inhibit_func (void)
+{
+	g_autoptr(FuDevice) device = fu_device_new ();
+
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
+
+	/* does not exist -> fine */
+	fu_device_uninhibit (device, "NOTGOINGTOEXIST");
+
+	/* first one */
+	fu_device_inhibit (device, "needs-activation", "Device is pending activation");
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
+	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE));
+
+	/* another */
+	fu_device_inhibit (device, "low-system-power", "System power is too low");
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
+	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE));
+
+	/* activated, power still too low */
+	fu_device_uninhibit (device, "needs-activation");
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
+	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE));
+
+	/* we got some more power -> fine */
+	fu_device_uninhibit (device, "low-system-power");
+	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
+}
+
+static void
 fu_device_flags_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
@@ -2663,6 +2696,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device", fu_device_func);
 	g_test_add_func ("/fwupd/device{instance-ids}", fu_device_instance_ids_func);
 	g_test_add_func ("/fwupd/device{flags}", fu_device_flags_func);
+	g_test_add_func ("/fwupd/device{inhibit}", fu_device_inhibit_func);
 	g_test_add_func ("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func ("/fwupd/device{children}", fu_device_children_func);
 	g_test_add_func ("/fwupd/device{incorporate}", fu_device_incorporate_func);
