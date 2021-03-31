@@ -46,6 +46,7 @@ typedef struct {
 	FuDevice			*alternate;
 	FuDevice			*proxy;		/* noref */
 	FuQuirks			*quirks;
+	GHashTable			*inhibits;	/* (nullable) */
 	GHashTable			*metadata;	/* (nullable) */
 	GRWLock				 metadata_mutex;
 	GPtrArray			*parent_guids;
@@ -1994,6 +1995,126 @@ fu_device_set_version_bootloader (FuDevice *self, const gchar *version)
 	}
 }
 
+typedef struct {
+	gchar		*inhibit_id;
+	gchar		*reason;
+} FuDeviceInhibit;
+
+static void
+fu_device_inhibit_free (FuDeviceInhibit *inhibit)
+{
+	g_free (inhibit->inhibit_id);
+	g_free (inhibit->reason);
+	g_free (inhibit);
+}
+
+static void
+fu_device_ensure_inhibits (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	guint nr_inhibits = g_hash_table_size (priv->inhibits);
+
+	/* was okay -> not okay */
+	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    nr_inhibits > 0) {
+		g_autofree gchar *reasons_str = NULL;
+		g_autoptr(GList) values = g_hash_table_get_values (priv->inhibits);
+		g_autoptr(GPtrArray) reasons = g_ptr_array_new ();
+
+		fu_device_remove_flag (self, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_add_flag (self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
+
+		/* update update error */
+		for (GList *l = values; l != NULL; l = l->next) {
+			FuDeviceInhibit *inhibit = (FuDeviceInhibit *) l->data;
+			g_ptr_array_add (reasons, inhibit->reason);
+		}
+		reasons_str = fu_common_strjoin_array (", ", reasons);
+		fu_device_set_update_error (self, reasons_str);
+	}
+
+	/* not okay -> is okay */
+	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN) &&
+	    nr_inhibits == 0) {
+		fu_device_remove_flag (self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
+		fu_device_add_flag (self, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_set_update_error (self, NULL);
+	}
+}
+
+/**
+ * fu_device_inhibit:
+ * @self: A #FuDevice
+ * @inhibit_id: an ID used for uninhibiting, e.g. `low-power`
+ * @reason: (allow-none): a string, e.g. `Cannot update as foo [bar] needs reboot`
+ *
+ * Prevent the device from being updated, changing it from %FWUPD_DEVICE_FLAG_UPDATABLE
+ * to %FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN if not already inhibited.
+ *
+ * If the device already has an inhibit with the same @inhibit_id then the request
+ * is ignored.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_device_inhibit (FuDevice *self, const gchar *inhibit_id, const gchar *reason)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	FuDeviceInhibit *inhibit;
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (inhibit_id != NULL);
+
+	/* lazy create as most devices will not need this */
+	if (priv->inhibits == NULL) {
+		priv->inhibits = g_hash_table_new_full (g_str_hash,
+							g_str_equal,
+							NULL,
+							(GDestroyNotify) fu_device_inhibit_free);
+	}
+
+	/* already exists */
+	inhibit = g_hash_table_lookup (priv->inhibits, inhibit_id);
+	if (inhibit != NULL)
+		return;
+
+	/* create new */
+	inhibit = g_new0 (FuDeviceInhibit, 1);
+	inhibit->inhibit_id = g_strdup (inhibit_id);
+	inhibit->reason = g_strdup (reason);
+	g_hash_table_insert (priv->inhibits, inhibit->inhibit_id, inhibit);
+
+	/* refresh */
+	fu_device_ensure_inhibits (self);
+}
+
+/**
+ * fu_device_uninhibit:
+ * @self: A #FuDevice
+ * @inhibit_id: an ID used for uninhibiting, e.g. `low-power`
+ *
+ * Allow the device from being updated if there are no other inhibitors,
+ * changing it from %FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN to %FWUPD_DEVICE_FLAG_UPDATABLE.
+ *
+ * If the device already has no inhibit with the @inhibit_id then the request
+ * is ignored.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_device_uninhibit (FuDevice *self, const gchar *inhibit_id)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (inhibit_id != NULL);
+
+	if (priv->inhibits == NULL)
+		return;
+	if (g_hash_table_remove (priv->inhibits, inhibit_id))
+		fu_device_ensure_inhibits (self);
+}
+
 /**
  * fu_device_ensure_id:
  * @self: A #FuDevice
@@ -2259,10 +2380,8 @@ fu_device_add_flag (FuDevice *self, FwupdDeviceFlags flag)
 
 	/* activatable devices shouldn't be allowed to update again until activated */
 	/* don't let devices be updated until activated */
-	if (flag & FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION) {
-		fwupd_device_remove_flag (FWUPD_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-		fwupd_device_add_flag (FWUPD_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
-	}
+	if (flag & FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)
+		fu_device_inhibit (self, "needs-activation", "Pending activation");
 }
 
 static void
@@ -3795,6 +3914,8 @@ fu_device_finalize (GObject *object)
 		g_source_remove (priv->poll_id);
 	if (priv->metadata != NULL)
 		g_hash_table_unref (priv->metadata);
+	if (priv->inhibits != NULL)
+		g_hash_table_unref (priv->inhibits);
 	g_ptr_array_unref (priv->parent_guids);
 	g_ptr_array_unref (priv->possible_plugins);
 	g_ptr_array_unref (priv->retry_recs);

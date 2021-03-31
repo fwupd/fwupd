@@ -781,9 +781,7 @@ fu_plugin_uefi_update_state_notify_cb (GObject *object,
 		FuDevice *device_tmp = g_ptr_array_index (devices, i);
 		if (device_tmp == device)
 			continue;
-		fu_device_remove_flag (device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_add_flag (device_tmp, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
-		fu_device_set_update_error (device_tmp, msg);
+		fu_device_inhibit (device_tmp, "no-coalesce", msg);
 	}
 }
 
