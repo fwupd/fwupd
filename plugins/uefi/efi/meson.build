@@ -72,6 +72,20 @@ if get_option('efi_sbat_distro_id') != ''
   endif
 endif
 
+# is the system crt0 for arm and aarch64 new enough to know about SBAT?
+if host_machine.cpu_family() == 'aarch64' or host_machine.cpu_family() == 'arm'
+  if get_option('efi_sbat_distro_id') != ''
+    arch_crt_source = 'crt0-efi-@0@.S'.format(gnu_efi_path_arch)
+    cmd = run_command('grep', '-q', 'sbat', join_paths(efi_crtdir, arch_crt_source))
+    if cmd.returncode() != 0
+      warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_crtdir, arch_crt_source)))
+      # The gnuefi libraries are still needed
+      efi_libdir = efi_crtdir
+      efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
+    endif
+  endif
+endif
+
 message('efi-libdir: "@0@"'.format(efi_libdir))
 message('efi-ldsdir: "@0@"'.format(efi_ldsdir))
 message('efi-crtdir: "@0@"'.format(efi_crtdir))
@@ -143,12 +157,20 @@ o_file1 = custom_target('fwupdate.o',
                         command : [efi_cc, '-c', '@INPUT@', '-o', '@OUTPUT@']
                                   + compile_args)
 
+fwupd_so_deps = []
+if efi_crtdir == join_paths(meson.current_build_dir(), 'crt0')
+  # A custom crt0 is needed
+  subdir('crt0')
+  fwupd_so_deps += [o_crt0]
+endif
+
 so = custom_target('fwup.so',
                    input : [o_file1],
                    output : 'fwup.so',
                    command : [efi_ld, '-o', '@OUTPUT@'] +
                              efi_ldflags + ['@INPUT@'] +
-                             ['-lefi', '-lgnuefi', libgcc_file_name])
+                             ['-lefi', '-lgnuefi', libgcc_file_name],
+                   depends: fwupd_so_deps)
 
 # sanity check the packager set this to *SOMETHING*
 if get_option('efi_sbat_distro_id') == ''
@@ -180,7 +202,7 @@ dbg = custom_target('efi_debug',
                                '-j', '.sdata',
                                '-j', '.data',
                                '-j', '.dynamic',
-                               '-j', '.dynsym',
+                               '-j', '.rodata',
                                '-j', '.rel*',
                                '-j', '.rela*',
                                '-j', '.reloc',
