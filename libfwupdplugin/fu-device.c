@@ -2663,6 +2663,19 @@ fu_device_sleep_with_progress (FuDevice *self, guint delay_secs)
 	}
 }
 
+static void
+fu_device_ensure_battery_inhibit (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	if (priv->battery_level == 0)
+		return;
+	if (priv->battery_level >= fu_device_get_battery_threshold (self)) {
+		fu_device_uninhibit (self, "battery");
+		return;
+	}
+	fu_device_inhibit (self, "battery", "Battery level is too low");
+}
+
 /**
  * fu_device_get_battery_level:
  * @self: A #FuDevice
@@ -2701,6 +2714,7 @@ fu_device_set_battery_level (FuDevice *self, guint battery_level)
 		return;
 	priv->battery_level = battery_level;
 	g_object_notify (G_OBJECT (self), "battery-level");
+	fu_device_ensure_battery_inhibit (self);
 }
 
 /**
@@ -2750,6 +2764,7 @@ fu_device_set_battery_threshold (FuDevice *self, guint battery_threshold)
 		return;
 	priv->battery_threshold = battery_threshold;
 	g_object_notify (G_OBJECT (self), "battery-threshold");
+	fu_device_ensure_battery_inhibit (self);
 }
 
 static void
