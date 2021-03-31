@@ -31,30 +31,13 @@
 
 #define SELFCHECK_TRUE 1
 
-struct FuPluginData {
-	gsize				 flash_size;
-	struct flashrom_flashctx	*flashctx;
-	struct flashrom_layout		*layout;
-	struct flashrom_programmer	*flashprog;
-};
-
 void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_CONFLICTS, "coreboot"); /* obsoleted */
 	fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
-}
-
-void
-fu_plugin_destroy (FuPlugin *plugin)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	flashrom_layout_release (data->layout);
-	flashrom_programmer_shutdown (data->flashprog);
-	flashrom_flash_release (data->flashctx);
 }
 
 static int
@@ -176,9 +159,7 @@ fu_plugin_flashrom_device_set_hwids (FuPlugin *plugin, FuDevice *device)
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *dmi_vendor;
-	gint rc;
 	g_autoptr(FuDevice) device = fu_flashrom_device_new ();
 
 	fu_device_set_quirks (device, fu_plugin_get_quirks (plugin));
@@ -197,7 +178,15 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	if (!fu_device_setup (device, error))
 		return FALSE;
 
-	/* actually probe hardware to check for support */
+	/* success */
+	fu_plugin_device_add (plugin, device);
+	fu_plugin_cache_add (plugin, fu_device_get_id (device), device);
+	return TRUE;
+}
+
+gboolean
+fu_plugin_startup (FuPlugin *plugin, GError **error)
+{
 	if (flashrom_init (SELFCHECK_TRUE)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -206,150 +195,5 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 	flashrom_set_log_callback (fu_plugin_flashrom_debug_cb);
-	if (flashrom_programmer_init (&data->flashprog, "internal", NULL)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "programmer initialization failed");
-		return FALSE;
-	}
-	rc = flashrom_flash_probe (&data->flashctx, data->flashprog, NULL);
-	if (rc == 3) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "flash probe failed: multiple chips were found");
-		return FALSE;
-	}
-	if (rc == 2) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "flash probe failed: no chip was found");
-		return FALSE;
-	}
-	if (rc != 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "flash probe failed: unknown error");
-		return FALSE;
-	}
-	data->flash_size = flashrom_flash_getsize (data->flashctx);
-	if (data->flash_size == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "flash size zero");
-		return FALSE;
-	}
-
-	/* success */
-	fu_plugin_device_add (plugin, device);
-	fu_plugin_cache_add (plugin, fu_device_get_id (device), device);
-	return TRUE;
-}
-
-gboolean
-fu_plugin_update_prepare (FuPlugin *plugin,
-			  FwupdInstallFlags flags,
-			  FuDevice *device,
-			  GError **error)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	g_autofree gchar *firmware_orig = NULL;
-	g_autofree gchar *basename = NULL;
-
-	/* not us */
-	if (fu_plugin_cache_lookup (plugin, fu_device_get_id (device)) == NULL)
-		return TRUE;
-
-	/* if the original firmware doesn't exist, grab it now */
-	basename = g_strdup_printf ("flashrom-%s.bin", fu_device_get_id (device));
-	firmware_orig = g_build_filename (FWUPD_LOCALSTATEDIR, "lib", "fwupd",
-					  "builder", basename, NULL);
-	if (!fu_common_mkdir_parent (firmware_orig, error))
-		return FALSE;
-	if (!g_file_test (firmware_orig, G_FILE_TEST_EXISTS)) {
-		g_autofree guint8 *newcontents = g_malloc0 (data->flash_size);
-		g_autoptr(GBytes) buf = NULL;
-
-		fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
-		if (flashrom_image_read (data->flashctx, newcontents, data->flash_size)) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_READ,
-					     "failed to back up original firmware");
-			return FALSE;
-		}
-		buf = g_bytes_new_static (newcontents, data->flash_size);
-		if (!fu_common_set_contents_bytes (firmware_orig, buf, error))
-			return FALSE;
-	}
-
-	return TRUE;
-}
-
-gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *device,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	gsize sz = 0;
-	gint rc;
-	const guint8 *buf = g_bytes_get_data (blob_fw, &sz);
-
-	if (flashrom_layout_read_from_ifd (&data->layout, data->flashctx, NULL, 0)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_READ,
-				     "failed to read layout from Intel ICH descriptor");
-		return FALSE;
-	}
-
-	/* include bios region for safety reasons */
-	if (flashrom_layout_include_region (data->layout, "bios")) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "invalid region name");
-		return FALSE;
-	}
-
-	/* write region */
-	flashrom_layout_set (data->flashctx, data->layout);
-	if (sz != data->flash_size) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "invalid image size 0x%x, expected 0x%x",
-			     (guint) sz, (guint) data->flash_size);
-		return FALSE;
-	}
-
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	fu_device_set_progress (device, 0); /* urgh */
-	rc = flashrom_image_write (data->flashctx, (void *) buf, sz, NULL /* refbuffer */);
-	if (rc != 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "image write failed, err=%i", rc);
-		return FALSE;
-	}
-
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
-	if (flashrom_image_verify (data->flashctx, (void *) buf, sz)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "image verify failed");
-		return FALSE;
-	}
-
-	/* success */
 	return TRUE;
 }
