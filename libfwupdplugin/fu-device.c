@@ -2350,6 +2350,26 @@ fu_device_get_physical_id (FuDevice *self)
 }
 
 /**
+ * fu_device_remove_flag:
+ * @self: A #FuDevice
+ * @flag: A #FwupdDeviceFlags
+ *
+ * Removes a device flag from the device
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_device_remove_flag (FuDevice *self, FwupdDeviceFlags flag)
+{
+	/* proxy */
+	fwupd_device_remove_flag (FWUPD_DEVICE (self), flag);
+
+	/* allow it to be updatable again */
+	if (flag & FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)
+		fu_device_uninhibit (self, "needs-activation");
+}
+
+/**
  * fu_device_add_flag:
  * @self: A #FuDevice
  * @flag: A #FwupdDeviceFlags
