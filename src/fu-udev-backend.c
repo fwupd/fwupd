@@ -190,7 +190,6 @@ fu_udev_backend_class_init (FuUdevBackendClass *klass)
 	FuBackendClass *klass_backend = FU_BACKEND_CLASS (klass);
 	object_class->finalize = fu_udev_backend_finalize;
 	klass_backend->coldplug = fu_udev_backend_coldplug;
-	klass_backend->recoldplug = fu_udev_backend_coldplug;
 }
 
 FuBackend *

@@ -47,7 +47,6 @@ struct _FuPluginClass
 							 FwupdStatus	 status);
 	void		 (* percentage_changed)		(FuPlugin	*self,
 							 guint		 percentage);
-	void		 (* recoldplug)			(FuPlugin	*self);
 	void		 (* set_coldplug_delay)		(FuPlugin	*self,
 							 guint		 duration);
 	void		 (* device_register)		(FuPlugin	*self,
@@ -113,7 +112,6 @@ void		 fu_plugin_device_remove		(FuPlugin	*self,
 							 FuDevice	*device);
 void		 fu_plugin_device_register		(FuPlugin	*self,
 							 FuDevice	*device);
-void		 fu_plugin_request_recoldplug		(FuPlugin	*self);
 void		 fu_plugin_security_changed		(FuPlugin	*self);
 void		 fu_plugin_set_coldplug_delay		(FuPlugin	*self,
 							 guint		 duration);

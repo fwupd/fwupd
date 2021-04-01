@@ -56,9 +56,6 @@ gboolean	 fu_plugin_runner_coldplug_prepare	(FuPlugin	*self,
 gboolean	 fu_plugin_runner_coldplug_cleanup	(FuPlugin	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
-gboolean	 fu_plugin_runner_recoldplug		(FuPlugin	*self,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_update_prepare	(FuPlugin	*self,
 							 FwupdInstallFlags flags,
 							 FuDevice	*device,

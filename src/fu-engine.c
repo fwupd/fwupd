@@ -94,7 +94,6 @@ struct _FuEngine
 	FuHistory		*history;
 	FuIdle			*idle;
 	XbSilo			*silo;
-	gboolean		 coldplug_running;
 	guint			 coldplug_id;
 	guint			 coldplug_delay;
 	FuPluginList		*plugin_list;
@@ -5154,13 +5153,10 @@ fu_engine_plugins_setup (FuEngine *self)
 }
 
 static void
-fu_engine_plugins_coldplug (FuEngine *self, gboolean is_recoldplug)
+fu_engine_plugins_coldplug (FuEngine *self)
 {
 	GPtrArray *plugins;
 	g_autoptr(GString) str = g_string_new (NULL);
-
-	/* don't allow coldplug to be scheduled when in coldplug */
-	self->coldplug_running = TRUE;
 
 	/* prepare */
 	plugins = fu_plugin_list_get_all (self->plugin_list);
@@ -5181,15 +5177,10 @@ fu_engine_plugins_coldplug (FuEngine *self, gboolean is_recoldplug)
 	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = g_ptr_array_index (plugins, i);
-		if (is_recoldplug) {
-			if (!fu_plugin_runner_recoldplug (plugin, &error))
-				g_message ("failed recoldplug: %s", error->message);
-		} else {
-			if (!fu_plugin_runner_coldplug (plugin, &error)) {
-				fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED);
-				g_message ("disabling plugin because: %s",
-					   error->message);
-			}
+		if (!fu_plugin_runner_coldplug (plugin, &error)) {
+			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED);
+			g_message ("disabling plugin because: %s",
+				   error->message);
 		}
 	}
 
@@ -5212,9 +5203,6 @@ fu_engine_plugins_coldplug (FuEngine *self, gboolean is_recoldplug)
 		g_string_truncate (str, str->len - 2);
 		g_debug ("using plugins: %s", str->str);
 	}
-
-	/* we can recoldplug from this point on */
-	self->coldplug_running = FALSE;
 }
 
 static void
@@ -5591,45 +5579,6 @@ fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 	fu_engine_emit_changed (self);
 }
 
-static gboolean
-fu_engine_recoldplug_delay_cb (gpointer user_data)
-{
-	FuEngine *self = (FuEngine *) user_data;
-	g_debug ("recoldplugging");
-	fu_engine_plugins_coldplug (self, TRUE);
-	self->coldplug_id = 0;
-	return FALSE;
-}
-
-static void
-fu_engine_plugin_recoldplug_cb (FuPlugin *plugin, FuEngine *self)
-{
-	if (self->coldplug_running) {
-		g_warning ("coldplug already running, cannot recoldplug");
-		return;
-	}
-	if (self->app_flags & FU_APP_FLAGS_NO_IDLE_SOURCES) {
-		g_debug ("doing direct recoldplug");
-		fu_engine_plugins_coldplug (self, TRUE);
-		for (guint i = 0; i < self->backends->len; i++) {
-			FuBackend *backend = g_ptr_array_index (self->backends, i);
-			g_autoptr(GError) error_local = NULL;
-			if (!fu_backend_get_enabled (backend))
-				continue;
-			if (!fu_backend_recoldplug (backend, &error_local)) {
-				g_warning ("failed to recoldplug: %s",
-					   error_local->message);
-				continue;
-			}
-		}
-		return;
-	}
-	g_debug ("scheduling a recoldplug");
-	if (self->coldplug_id != 0)
-		g_source_remove (self->coldplug_id);
-	self->coldplug_id = g_timeout_add (1500, fu_engine_recoldplug_delay_cb, self);
-}
-
 static void
 fu_engine_plugin_set_coldplug_delay_cb (FuPlugin *plugin, guint duration, FuEngine *self)
 {
@@ -5954,9 +5903,6 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				  self);
 		g_signal_connect (plugin, "device-register",
 				  G_CALLBACK (fu_engine_plugin_device_register_cb),
-				  self);
-		g_signal_connect (plugin, "recoldplug",
-				  G_CALLBACK (fu_engine_plugin_recoldplug_cb),
 				  self);
 		g_signal_connect (plugin, "set-coldplug-delay",
 				  G_CALLBACK (fu_engine_plugin_set_coldplug_delay_cb),
@@ -6517,7 +6463,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	/* add devices */
 	fu_engine_plugins_setup (self);
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
-		fu_engine_plugins_coldplug (self, FALSE);
+		fu_engine_plugins_coldplug (self);
 
 	/* coldplug backends */
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {

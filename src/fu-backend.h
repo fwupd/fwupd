@@ -20,9 +20,6 @@ struct _FuBackendClass
 	gboolean		 (*coldplug)		(FuBackend	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
-	gboolean		 (*recoldplug)		(FuBackend	*self,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
 };
 
 const gchar	*fu_backend_get_name			(FuBackend	*self);
@@ -35,9 +32,6 @@ gboolean	 fu_backend_setup			(FuBackend	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_backend_coldplug			(FuBackend	*self,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
-gboolean	 fu_backend_recoldplug			(FuBackend	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
 void		 fu_backend_device_added		(FuBackend	*self,

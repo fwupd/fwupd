@@ -45,7 +45,6 @@ LIBFWUPDPLUGIN_0.8.0 {
     fu_plugin_get_type;
     fu_plugin_new;
     fu_plugin_open;
-    fu_plugin_request_recoldplug;
     fu_plugin_runner_clear_results;
     fu_plugin_runner_coldplug;
     fu_plugin_runner_coldplug_cleanup;
@@ -182,7 +181,6 @@ LIBFWUPDPLUGIN_1.0.4 {
   global:
     fu_plugin_add_report_metadata;
     fu_plugin_get_report_metadata;
-    fu_plugin_runner_recoldplug;
   local: *;
 } LIBFWUPDPLUGIN_1.0.3;
 

@@ -93,17 +93,6 @@ fu_backend_coldplug (FuBackend *self, GError **error)
 	return klass->coldplug (self, error);
 }
 
-gboolean
-fu_backend_recoldplug (FuBackend *self, GError **error)
-{
-	FuBackendClass *klass = FU_BACKEND_GET_CLASS (self);
-	g_return_val_if_fail (FU_IS_BACKEND (self), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-	if (klass->recoldplug == NULL)
-		return TRUE;
-	return klass->recoldplug (self, error);
-}
-
 const gchar *
 fu_backend_get_name (FuBackend *self)
 {
