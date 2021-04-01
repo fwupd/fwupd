@@ -119,6 +119,7 @@ fu_plugin_backend_device_changed (FuPlugin *plugin, FuDevice *device, GError **e
 gboolean
 fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuSynapticsMstDevice) dev = NULL;
@@ -134,7 +135,7 @@ fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **err
 
 	/* for SynapticsMstDeviceKind=system devices */
 	fu_synaptics_mst_device_set_system_type (FU_SYNAPTICS_MST_DEVICE (dev),
-						fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_SKU));
+						 fu_context_get_hwid_value (ctx, FU_HWIDS_KEY_PRODUCT_SKU));
 
 	/* this might fail if there is nothing connected */
 	fu_plugin_synaptics_mst_device_rescan (plugin, FU_DEVICE (dev));
@@ -168,16 +169,17 @@ fu_plugin_update (FuPlugin *plugin,
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *priv = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 
 	/* devices added by this plugin */
 	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_udev_subsystem (plugin, "drm");	/* used for uevent only */
-	fu_plugin_add_udev_subsystem (plugin, "drm_dp_aux_dev");
+	fu_context_add_udev_subsystem (ctx, "drm");	/* used for uevent only */
+	fu_context_add_udev_subsystem (ctx, "drm_dp_aux_dev");
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_SYNAPTICS_MST_FIRMWARE);
-	fu_plugin_add_possible_quirk_key (plugin, "SynapticsMstDeviceKind");
+	fu_context_add_quirk_key (ctx, "SynapticsMstDeviceKind");
 }
 
 void

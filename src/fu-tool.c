@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <jcat.h>
 
+#include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
 #include "fu-history.h"
@@ -28,6 +29,7 @@
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
 #include "fu-util-common.h"
+#include "fu-hwids.h"
 #include "fu-debug.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
@@ -1847,7 +1849,7 @@ fu_util_get_firmware_types (FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_engine_load (priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, error))
 		return FALSE;
 
-	firmware_types = fu_engine_get_firmware_gtype_ids (priv->engine);
+	firmware_types = fu_context_get_firmware_gtype_ids (fu_engine_get_context (priv->engine));
 	for (guint i = 0; i < firmware_types->len; i++) {
 		const gchar *id = g_ptr_array_index (firmware_types, i);
 		g_print ("%s\n", id);
@@ -1866,7 +1868,7 @@ fu_util_prompt_for_firmware_type (FuUtilPrivate *priv, GError **error)
 {
 	g_autoptr(GPtrArray) firmware_types = NULL;
 	guint idx;
-	firmware_types = fu_engine_get_firmware_gtype_ids (priv->engine);
+	firmware_types = fu_context_get_firmware_gtype_ids (fu_engine_get_context (priv->engine));
 
 	/* TRANSLATORS: get interactive prompt */
 	g_print ("%s\n", _("Choose a firmware type:"));
@@ -1923,7 +1925,7 @@ fu_util_firmware_parse (FuUtilPrivate *priv, gchar **values, GError **error)
 		firmware_type = fu_util_prompt_for_firmware_type (priv, error);
 	if (firmware_type == NULL)
 		return FALSE;
-	gtype = fu_engine_get_firmware_gtype_by_id (priv->engine, firmware_type);
+	gtype = fu_context_get_firmware_gtype_by_id (fu_engine_get_context (priv->engine), firmware_type);
 	if (gtype == G_TYPE_INVALID) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -1975,7 +1977,7 @@ fu_util_firmware_export (FuUtilPrivate *priv, gchar **values, GError **error)
 		firmware_type = fu_util_prompt_for_firmware_type (priv, error);
 	if (firmware_type == NULL)
 		return FALSE;
-	gtype = fu_engine_get_firmware_gtype_by_id (priv->engine, firmware_type);
+	gtype = fu_context_get_firmware_gtype_by_id (fu_engine_get_context (priv->engine), firmware_type);
 	if (gtype == G_TYPE_INVALID) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -2030,7 +2032,7 @@ fu_util_firmware_extract (FuUtilPrivate *priv, gchar **values, GError **error)
 		firmware_type = fu_util_prompt_for_firmware_type (priv, error);
 	if (firmware_type == NULL)
 		return FALSE;
-	gtype = fu_engine_get_firmware_gtype_by_id (priv->engine, firmware_type);
+	gtype = fu_context_get_firmware_gtype_by_id (fu_engine_get_context (priv->engine), firmware_type);
 	if (gtype == G_TYPE_INVALID) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -2138,7 +2140,7 @@ fu_util_firmware_build (FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 	tmp = xb_node_get_attr (n, "id");
 	if (tmp != NULL) {
-		gtype = fu_engine_get_firmware_gtype_by_id (priv->engine, tmp);
+		gtype = fu_context_get_firmware_gtype_by_id (fu_engine_get_context (priv->engine), tmp);
 		if (gtype == G_TYPE_INVALID) {
 			g_set_error (error,
 				     G_IO_ERROR,
@@ -2172,6 +2174,7 @@ fu_util_firmware_build (FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_firmware_convert (FuUtilPrivate *priv, gchar **values, GError **error)
 {
+	FuContext *ctx = fu_engine_get_context (priv->engine);
 	GType gtype_dst;
 	GType gtype_src;
 	g_autofree gchar *firmware_type_dst = NULL;
@@ -2216,7 +2219,8 @@ fu_util_firmware_convert (FuUtilPrivate *priv, gchar **values, GError **error)
 		firmware_type_dst = fu_util_prompt_for_firmware_type (priv, error);
 	if (firmware_type_dst == NULL)
 		return FALSE;
-	gtype_src = fu_engine_get_firmware_gtype_by_id (priv->engine, firmware_type_src);
+	gtype_src = fu_context_get_firmware_gtype_by_id (fu_engine_get_context (priv->engine),
+							 firmware_type_src);
 	if (gtype_src == G_TYPE_INVALID) {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -2227,7 +2231,7 @@ fu_util_firmware_convert (FuUtilPrivate *priv, gchar **values, GError **error)
 	firmware_src = g_object_new (gtype_src, NULL);
 	if (!fu_firmware_parse (firmware_src, blob_src, priv->flags, error))
 		return FALSE;
-	gtype_dst = fu_engine_get_firmware_gtype_by_id (priv->engine, firmware_type_dst);
+	gtype_dst = fu_context_get_firmware_gtype_by_id (ctx, firmware_type_dst);
 	if (gtype_dst == G_TYPE_INVALID) {
 		g_set_error (error,
 			     G_IO_ERROR,

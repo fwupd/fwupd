@@ -9,8 +9,8 @@
 #include <glib-object.h>
 #include <fwupd.h>
 
+#include "fu-context.h"
 #include "fu-firmware.h"
-#include "fu-quirks.h"
 #include "fu-common-version.h"
 #include "fu-security-attrs.h"
 
@@ -344,9 +344,9 @@ void		 fu_device_set_progress_full		(FuDevice	*self,
 							 gsize		 progress_total);
 void		 fu_device_sleep_with_progress		(FuDevice	*self,
 							 guint		 delay_secs);
-void		 fu_device_set_quirks			(FuDevice	*self,
-							 FuQuirks	*quirks);
-FuQuirks	*fu_device_get_quirks			(FuDevice	*self);
+void		 fu_device_set_context			(FuDevice	*self,
+							 FuContext	*ctx);
+FuContext	*fu_device_get_context			(FuDevice	*self);
 FwupdRelease	*fu_device_get_release_default		(FuDevice	*self);
 GType		 fu_device_get_specialized_gtype	(FuDevice	*self);
 void		 fu_device_add_internal_flag		(FuDevice	*self,

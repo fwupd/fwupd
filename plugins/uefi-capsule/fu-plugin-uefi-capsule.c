@@ -505,6 +505,7 @@ fu_plugin_uefi_capsule_get_name_for_type (FuPlugin *plugin, FuUefiDeviceKind dev
 static gboolean
 fu_plugin_uefi_capsule_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuUefiDeviceKind device_kind;
 
 	/* probe to get add GUIDs (and hence any quirk fixups) */
@@ -534,7 +535,7 @@ fu_plugin_uefi_capsule_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GEr
 	/* set fallback vendor if nothing else is set */
 	if (fu_device_get_vendor (FU_DEVICE (dev)) == NULL &&
 	    device_kind == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE) {
-		const gchar *vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER);
+		const gchar *vendor = fu_context_get_hwid_value (ctx, FU_HWIDS_KEY_MANUFACTURER);
 		if (vendor != NULL)
 			fu_device_set_vendor (FU_DEVICE (dev), vendor);
 	}
@@ -542,7 +543,7 @@ fu_plugin_uefi_capsule_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GEr
 	/* set vendor ID as the BIOS vendor */
 	if (device_kind != FU_UEFI_DEVICE_KIND_FMP) {
 		const gchar *dmi_vendor;
-		dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
+		dmi_vendor = fu_context_get_hwid_value (ctx, FU_HWIDS_KEY_BIOS_VENDOR);
 		if (dmi_vendor != NULL) {
 			g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
 			fu_device_add_vendor_id (FU_DEVICE (dev), vendor_id);
@@ -565,9 +566,10 @@ fu_plugin_uefi_capsule_test_secure_boot (FuPlugin *plugin)
 static gboolean
 fu_plugin_uefi_capsule_smbios_enabled (FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	const guint8 *data;
 	gsize sz;
-	g_autoptr(GBytes) bios_information = fu_plugin_get_smbios_data (plugin, 0);
+	g_autoptr(GBytes) bios_information = fu_context_get_smbios_data (ctx, 0);
 	if (bios_information == NULL) {
 		const gchar *tmp = g_getenv ("FWUPD_DELL_FAKE_SMBIOS");
 		if (tmp != NULL)
@@ -788,6 +790,7 @@ fu_plugin_uefi_update_state_notify_cb (GObject *object,
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *str;
 	g_autofree gchar *esrt_path = NULL;
@@ -831,7 +834,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			g_warning ("failed to add %s: %s", path, error_parse->message);
 			continue;
 		}
-		fu_device_set_quirks (FU_DEVICE (dev), fu_plugin_get_quirks (plugin));
+		fu_device_set_context (FU_DEVICE (dev), ctx);
 		if (data->esp != NULL)
 			fu_uefi_device_set_esp (FU_UEFI_DEVICE (dev), data->esp);
 		if (!fu_plugin_uefi_capsule_coldplug_device (plugin, dev, error))

@@ -20,6 +20,7 @@
 #include <libfwupdplugin/fu-common-cab.h>
 #include <libfwupdplugin/fu-common-guid.h>
 #include <libfwupdplugin/fu-common-version.h>
+#include <libfwupdplugin/fu-context.h>
 #include <libfwupdplugin/fu-device.h>
 #include <libfwupdplugin/fu-device-locker.h>
 #include <libfwupdplugin/fu-device-metadata.h>
@@ -28,14 +29,11 @@
 #include <libfwupdplugin/fu-firmware.h>
 #include <libfwupdplugin/fu-firmware-common.h>
 #include <libfwupdplugin/fu-fmap-firmware.h>
-#include <libfwupdplugin/fu-hwids.h>
 #include <libfwupdplugin/fu-ihex-firmware.h>
 #include <libfwupdplugin/fu-io-channel.h>
 #include <libfwupdplugin/fu-plugin.h>
 #include <libfwupdplugin/fu-plugin-vfuncs.h>
-#include <libfwupdplugin/fu-quirks.h>
 #include <libfwupdplugin/fu-security-attrs.h>
-#include <libfwupdplugin/fu-smbios.h>
 #include <libfwupdplugin/fu-srec-firmware.h>
 #include <libfwupdplugin/fu-efi-signature.h>
 #include <libfwupdplugin/fu-efi-signature-list.h>

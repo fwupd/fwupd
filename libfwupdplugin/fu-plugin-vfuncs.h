@@ -8,6 +8,8 @@
 
 #include "fu-plugin.h"
 #include "fu-device.h"
+#include "fu-hwids.h"
+#include "fu-quirks.h"
 #include "fu-security-attrs.h"
 
 /* for in-tree plugins only */

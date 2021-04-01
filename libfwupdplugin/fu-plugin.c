@@ -17,6 +17,7 @@
 #include <valgrind.h>
 #endif /* HAVE_VALGRIND */
 
+#include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
 #include "fu-mutex.h"
@@ -39,12 +40,9 @@ typedef struct {
 	GPtrArray		*rules[FU_PLUGIN_RULE_LAST];
 	GPtrArray		*devices;		/* (nullable) (element-type FuDevice) */
 	gchar			*build_hash;
-	FuHwids			*hwids;
-	FuQuirks		*quirks;
 	GHashTable		*runtime_versions;
 	GHashTable		*compile_versions;
-	GPtrArray		*udev_subsystems;
-	FuSmbios		*smbios;
+	FuContext		*ctx;
 	GType			 device_gtype;
 	GHashTable		*cache;			/* (nullable): platform_id:GObject */
 	GRWLock			 cache_mutex;
@@ -58,8 +56,6 @@ enum {
 	SIGNAL_DEVICE_REGISTER,
 	SIGNAL_RULES_CHANGED,
 	SIGNAL_CHECK_SUPPORTED,
-	SIGNAL_ADD_FIRMWARE_GTYPE,
-	SIGNAL_SECURITY_CHANGED,
 	SIGNAL_LAST
 };
 
@@ -556,85 +552,6 @@ fu_plugin_device_remove (FuPlugin *self, FuDevice *device)
 }
 
 /**
- * fu_plugin_security_changed:
- * @self: A #FuPlugin
- *
- * Informs the daemon that the HSI state may have changed.
- *
- * Since: 1.5.0
- **/
-void
-fu_plugin_security_changed (FuPlugin *self)
-{
-	g_return_if_fail (FU_IS_PLUGIN (self));
-	g_signal_emit (self, signals[SIGNAL_SECURITY_CHANGED], 0);
-}
-
-/**
- * fu_plugin_check_hwid:
- * @self: A #FuPlugin
- * @hwid: A Hardware ID GUID, e.g. `6de5d951-d755-576b-bd09-c5cf66b27234`
- *
- * Checks to see if a specific GUID exists. All hardware IDs on a
- * specific system can be shown using the `fwupdmgr hwids` command.
- *
- * Returns: %TRUE if the HwId is found on the system.
- *
- * Since: 0.9.1
- **/
-gboolean
-fu_plugin_check_hwid (FuPlugin *self, const gchar *hwid)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	if (priv->hwids == NULL)
-		return FALSE;
-	return fu_hwids_has_guid (priv->hwids, hwid);
-}
-
-/**
- * fu_plugin_get_hwid_replace_value:
- * @self: A #FuPlugin
- * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
- * @error: A #GError or %NULL
- *
- * Gets the replacement value for a specific key. All hardware IDs on a
- * specific system can be shown using the `fwupdmgr hwids` command.
- *
- * Returns: (transfer full): a string, or %NULL for error.
- *
- * Since: 1.3.3
- **/
-gchar *
-fu_plugin_get_hwid_replace_value (FuPlugin *self, const gchar *keys, GError **error)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	if (priv->hwids == NULL)
-		return NULL;
-
-	return fu_hwids_get_replace_values (priv->hwids, keys, error);
-}
-
-/**
- * fu_plugin_get_hwids:
- * @self: A #FuPlugin
- *
- * Returns all the HWIDs defined in the system. All hardware IDs on a
- * specific system can be shown using the `fwupdmgr hwids` command.
- *
- * Returns: (transfer none) (element-type utf8): An array of GUIDs
- *
- * Since: 1.1.1
- **/
-GPtrArray *
-fu_plugin_get_hwids (FuPlugin *self)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	if (priv->hwids == NULL)
-		return NULL;
-	return fu_hwids_get_guids (priv->hwids);
-}
-
-/**
  * fu_plugin_has_custom_flag:
  * @self: A #FuPlugin
  * @flag: A custom text flag, specific to the plugin, e.g. `uefi-force-enable`
@@ -649,25 +566,26 @@ gboolean
 fu_plugin_has_custom_flag (FuPlugin *self, const gchar *flag)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
-	GPtrArray *hwids = fu_plugin_get_hwids (self);
+	GPtrArray *guids;
 
 	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
 	g_return_val_if_fail (flag != NULL, FALSE);
 
 	/* never set up, e.g. in tests */
-	if (hwids == NULL)
+	if (priv->ctx == NULL)
 		return FALSE;
 
 	/* search each hwid */
-	for (guint i = 0; i < hwids->len; i++) {
-		const gchar *hwid = g_ptr_array_index (hwids, i);
+	guids = fu_context_get_hwid_guids (priv->ctx);
+	for (guint i = 0; i < guids->len; i++) {
+		const gchar *guid = g_ptr_array_index (guids, i);
 		const gchar *value;
 
 		/* does prefixed quirk exist */
-		value = fu_quirks_lookup_by_id (priv->quirks, hwid, FU_QUIRKS_FLAGS);
+		value = fu_context_lookup_quirk_by_id (priv->ctx, guid, FU_QUIRKS_FLAGS);
 		if (value != NULL) {
-			g_auto(GStrv) quirks = g_strsplit (value, ",", -1);
-			if (g_strv_contains ((const gchar * const *) quirks, flag))
+			g_auto(GStrv) values = g_strsplit (value, ",", -1);
+			if (g_strv_contains ((const gchar * const *) values, flag))
 				return TRUE;
 		}
 	}
@@ -695,271 +613,20 @@ fu_plugin_check_supported (FuPlugin *self, const gchar *guid)
 }
 
 /**
- * fu_plugin_get_dmi_value:
+ * fu_plugin_get_context:
  * @self: A #FuPlugin
- * @dmi_id: A DMI ID, e.g. `BiosVersion`
  *
- * Gets a hardware DMI value.
+ * Gets the context for a plugin.
  *
- * Returns: The string, or %NULL
+ * Returns: (transfer none): a #FuContext or %NULL if not set
  *
- * Since: 0.9.7
+ * Since: 1.6.0
  **/
-const gchar *
-fu_plugin_get_dmi_value (FuPlugin *self, const gchar *dmi_id)
+FuContext *
+fu_plugin_get_context (FuPlugin *self)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
-	if (priv->hwids == NULL)
-		return NULL;
-	return fu_hwids_get_value (priv->hwids, dmi_id);
-}
-
-/**
- * fu_plugin_get_smbios_string:
- * @self: A #FuPlugin
- * @structure_type: A SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
- * @offset: A SMBIOS offset
- *
- * Gets a hardware SMBIOS string.
- *
- * The @type and @offset can be referenced from the DMTF SMBIOS specification:
- * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
- *
- * Returns: A string, or %NULL
- *
- * Since: 0.9.8
- **/
-const gchar *
-fu_plugin_get_smbios_string (FuPlugin *self, guint8 structure_type, guint8 offset)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	if (priv->smbios == NULL)
-		return NULL;
-	return fu_smbios_get_string (priv->smbios, structure_type, offset, NULL);
-}
-
-/**
- * fu_plugin_get_smbios_data:
- * @self: A #FuPlugin
- * @structure_type: A SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
- *
- * Gets a hardware SMBIOS data.
- *
- * Returns: (transfer full): A #GBytes, or %NULL
- *
- * Since: 0.9.8
- **/
-GBytes *
-fu_plugin_get_smbios_data (FuPlugin *self, guint8 structure_type)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	if (priv->smbios == NULL)
-		return NULL;
-	return fu_smbios_get_data (priv->smbios, structure_type, NULL);
-}
-
-/**
- * fu_plugin_set_hwids:
- * @self: A #FuPlugin
- * @hwids: A #FuHwids
- *
- * Sets the hwids for a plugin
- *
- * Since: 0.9.7
- **/
-void
-fu_plugin_set_hwids (FuPlugin *self, FuHwids *hwids)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	g_set_object (&priv->hwids, hwids);
-}
-
-/**
- * fu_plugin_set_udev_subsystems:
- * @self: A #FuPlugin
- * @udev_subsystems: (element-type utf8): A #GPtrArray
- *
- * Sets the udev subsystems used by a plugin
- *
- * Since: 1.1.2
- **/
-void
-fu_plugin_set_udev_subsystems (FuPlugin *self, GPtrArray *udev_subsystems)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	if (priv->udev_subsystems != NULL)
-		g_ptr_array_unref (priv->udev_subsystems);
-	priv->udev_subsystems = g_ptr_array_ref (udev_subsystems);
-}
-
-/**
- * fu_plugin_set_quirks:
- * @self: A #FuPlugin
- * @quirks: A #FuQuirks
- *
- * Sets the quirks for a plugin
- *
- * Since: 1.0.1
- **/
-void
-fu_plugin_set_quirks (FuPlugin *self, FuQuirks *quirks)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	g_set_object (&priv->quirks, quirks);
-}
-
-/**
- * fu_plugin_get_quirks:
- * @self: A #FuPlugin
- *
- * Returns the hardware database object. This can be used to discover device
- * quirks or other device-specific settings.
- *
- * Returns: (transfer none): a #FuQuirks, or %NULL if not set
- *
- * Since: 1.0.1
- **/
-FuQuirks *
-fu_plugin_get_quirks (FuPlugin *self)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	return priv->quirks;
-}
-
-/**
- * fu_plugin_set_runtime_versions:
- * @self: A #FuPlugin
- * @runtime_versions: A #GHashTables
- *
- * Sets the runtime versions for a plugin
- *
- * Since: 1.0.7
- **/
-void
-fu_plugin_set_runtime_versions (FuPlugin *self, GHashTable *runtime_versions)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	priv->runtime_versions = g_hash_table_ref (runtime_versions);
-}
-
-/**
- * fu_plugin_add_runtime_version:
- * @self: A #FuPlugin
- * @component_id: An AppStream component id, e.g. "org.gnome.Software"
- * @version: A version string, e.g. "1.2.3"
- *
- * Sets a runtime version of a specific dependency.
- *
- * Since: 1.0.7
- **/
-void
-fu_plugin_add_runtime_version (FuPlugin *self,
-			       const gchar *component_id,
-			       const gchar *version)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	if (priv->runtime_versions == NULL)
-		return;
-	g_hash_table_insert (priv->runtime_versions,
-			     g_strdup (component_id),
-			     g_strdup (version));
-}
-
-/**
- * fu_plugin_set_compile_versions:
- * @self: A #FuPlugin
- * @compile_versions: A #GHashTables
- *
- * Sets the compile time versions for a plugin
- *
- * Since: 1.0.7
- **/
-void
-fu_plugin_set_compile_versions (FuPlugin *self, GHashTable *compile_versions)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	priv->compile_versions = g_hash_table_ref (compile_versions);
-}
-
-/**
- * fu_plugin_add_compile_version:
- * @self: A #FuPlugin
- * @component_id: An AppStream component id, e.g. "org.gnome.Software"
- * @version: A version string, e.g. "1.2.3"
- *
- * Sets a compile-time version of a specific dependency.
- *
- * Since: 1.0.7
- **/
-void
-fu_plugin_add_compile_version (FuPlugin *self,
-			       const gchar *component_id,
-			       const gchar *version)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	if (priv->compile_versions == NULL)
-		return;
-	g_hash_table_insert (priv->compile_versions,
-			     g_strdup (component_id),
-			     g_strdup (version));
-}
-
-/**
- * fu_plugin_lookup_quirk_by_id:
- * @self: A #FuPlugin
- * @group: A string, e.g. "DfuFlags"
- * @key: An ID to match the entry, e.g. "Summary"
- *
- * Looks up an entry in the hardware database using a string value.
- *
- * Returns: (transfer none): values from the database, or %NULL if not found
- *
- * Since: 1.0.1
- **/
-const gchar *
-fu_plugin_lookup_quirk_by_id (FuPlugin *self, const gchar *group, const gchar *key)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_IS_PLUGIN (self), NULL);
-
-	/* exact ID */
-	return fu_quirks_lookup_by_id (priv->quirks, group, key);
-}
-
-/**
- * fu_plugin_lookup_quirk_by_id_as_uint64:
- * @self: A #FuPlugin
- * @group: A string, e.g. "DfuFlags"
- * @key: An ID to match the entry, e.g. "Size"
- *
- * Looks up an entry in the hardware database using a string key, returning
- * an integer value. Values are assumed base 10, unless prefixed with "0x"
- * where they are parsed as base 16.
- *
- * Returns: guint64 id or 0 if not found
- *
- * Since: 1.1.2
- **/
-guint64
-fu_plugin_lookup_quirk_by_id_as_uint64 (FuPlugin *self, const gchar *group, const gchar *key)
-{
-	return fu_common_strtoull (fu_plugin_lookup_quirk_by_id (self, group, key));
-}
-
-/**
- * fu_plugin_set_smbios:
- * @self: A #FuPlugin
- * @smbios: A #FuSmbios
- *
- * Sets the smbios for a plugin
- *
- * Since: 1.0.0
- **/
-void
-fu_plugin_set_smbios (FuPlugin *self, FuSmbios *smbios)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	g_set_object (&priv->smbios, smbios);
+	return priv->ctx;
 }
 
 static gboolean
@@ -1567,32 +1234,6 @@ fu_plugin_runner_add_security_attrs (FuPlugin *self, FuSecurityAttrs *attrs)
 }
 
 /**
- * fu_plugin_add_udev_subsystem:
- * @self: a #FuPlugin
- * @subsystem: a subsystem name, e.g. `pciport`
- *
- * Registers the udev subsystem to be watched by the daemon.
- *
- * Plugins can use this method only in fu_plugin_init()
- *
- * Since: 1.1.2
- **/
-void
-fu_plugin_add_udev_subsystem (FuPlugin *self, const gchar *subsystem)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	if (priv->udev_subsystems == NULL)
-		priv->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
-	for (guint i = 0; i < priv->udev_subsystems->len; i++) {
-		const gchar *subsystem_tmp = g_ptr_array_index (priv->udev_subsystems, i);
-		if (g_strcmp0 (subsystem_tmp, subsystem) == 0)
-			return;
-	}
-	g_debug ("added udev subsystem watch of %s", subsystem);
-	g_ptr_array_add (priv->udev_subsystems, g_strdup (subsystem));
-}
-
-/**
  * fu_plugin_set_device_gtype:
  * @self: a #FuPlugin
  * @device_gtype: a #GType `FU_TYPE_DEVICE`
@@ -1631,29 +1272,6 @@ fu_common_string_uncamelcase (const gchar *str)
 }
 
 /**
- * fu_plugin_add_possible_quirk_key:
- * @self: a #FuPlugin
- * @possible_key: A quirk string, e.g. `DfuVersion`
- *
- * Adds a possible quirk key. If added by a plugin it should be namespaced
- * using the plugin name, where possible.
- *
- * Plugins can use this method only in fu_plugin_init()
- *
- * Since: 1.5.8
- **/
-void
-fu_plugin_add_possible_quirk_key (FuPlugin *self, const gchar *possible_key)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FU_IS_PLUGIN (self));
-	g_return_if_fail (possible_key != NULL);
-	if (priv->quirks == NULL)
-		return;
-	fu_quirks_add_possible_key (priv->quirks, possible_key);
-}
-
-/**
  * fu_plugin_add_firmware_gtype:
  * @self: a #FuPlugin
  * @id: (nullable): An optional string describing the type, e.g. "ihex"
@@ -1669,6 +1287,7 @@ fu_plugin_add_possible_quirk_key (FuPlugin *self, const gchar *possible_key)
 void
 fu_plugin_add_firmware_gtype (FuPlugin *self, const gchar *id, GType gtype)
 {
+	FuPluginPrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *id_safe = NULL;
 	if (id != NULL) {
 		id_safe = g_strdup (id);
@@ -1679,7 +1298,7 @@ fu_plugin_add_firmware_gtype (FuPlugin *self, const gchar *id, GType gtype)
 		fu_common_string_replace (str, "Firmware", "");
 		id_safe = fu_common_string_uncamelcase (str->str);
 	}
-	g_signal_emit (self, signals[SIGNAL_ADD_FIRMWARE_GTYPE], 0, id_safe, gtype);
+	fu_context_add_firmware_gtype (priv->ctx, id_safe, gtype);
 }
 
 static gboolean
@@ -2630,12 +2249,6 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, device_register),
 			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
 			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
-	signals[SIGNAL_SECURITY_CHANGED] =
-		g_signal_new ("security-changed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (FuPluginClass, security_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__VOID,
-			      G_TYPE_NONE, 0);
 	signals[SIGNAL_CHECK_SUPPORTED] =
 		g_signal_new ("check-supported",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
@@ -2648,12 +2261,6 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, rules_changed),
 			      NULL, NULL, g_cclosure_marshal_VOID__VOID,
 			      G_TYPE_NONE, 0);
-	signals[SIGNAL_ADD_FIRMWARE_GTYPE] =
-		g_signal_new ("add-firmware-gtype",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (FuPluginClass, add_firmware_gtype),
-			      NULL, NULL, g_cclosure_marshal_generic,
-			      G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_GTYPE);
 }
 
 static void
@@ -2687,14 +2294,8 @@ fu_plugin_finalize (GObject *object)
 	}
 	if (priv->devices != NULL)
 		g_ptr_array_unref (priv->devices);
-	if (priv->hwids != NULL)
-		g_object_unref (priv->hwids);
-	if (priv->quirks != NULL)
-		g_object_unref (priv->quirks);
-	if (priv->udev_subsystems != NULL)
-		g_ptr_array_unref (priv->udev_subsystems);
-	if (priv->smbios != NULL)
-		g_object_unref (priv->smbios);
+	if (priv->ctx != NULL)
+		g_object_unref (priv->ctx);
 	if (priv->runtime_versions != NULL)
 		g_hash_table_unref (priv->runtime_versions);
 	if (priv->compile_versions != NULL)
@@ -2725,7 +2326,11 @@ fu_plugin_finalize (GObject *object)
  * Since: 0.8.0
  **/
 FuPlugin *
-fu_plugin_new (void)
+fu_plugin_new (FuContext *ctx)
 {
-	return FU_PLUGIN (g_object_new (FU_TYPE_PLUGIN, NULL));
+	FuPlugin *self = FU_PLUGIN (g_object_new (FU_TYPE_PLUGIN, NULL));
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+	if (ctx != NULL)
+		priv->ctx = g_object_ref (ctx);
+	return self;
 }

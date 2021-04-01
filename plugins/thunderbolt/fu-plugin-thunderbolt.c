@@ -49,9 +49,10 @@ fu_plugin_thunderbolt_safe_kernel (FuPlugin *plugin, GError **error)
 gboolean
 fu_plugin_device_created (FuPlugin *plugin, FuDevice *dev, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_INHIBITS_IDLE,
 			    "thunderbolt requires device wakeup");
-	fu_device_set_quirks (dev, fu_plugin_get_quirks (plugin));
+	fu_device_set_context (dev, ctx);
 	return TRUE;
 }
 
@@ -75,8 +76,9 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_udev_subsystem (plugin, "thunderbolt");
+	fu_context_add_udev_subsystem (ctx, "thunderbolt");
 	fu_plugin_set_device_gtype (plugin, FU_TYPE_THUNDERBOLT_DEVICE);
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_THUNDERBOLT_FIRMWARE);
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_THUNDERBOLT_FIRMWARE_UPDATE);

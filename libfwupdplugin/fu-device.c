@@ -16,6 +16,7 @@
 #include "fu-common-version.h"
 #include "fu-device-private.h"
 #include "fu-mutex.h"
+#include "fu-quirks.h"
 
 #include "fwupd-common.h"
 #include "fwupd-device-private.h"
@@ -45,7 +46,7 @@ typedef struct {
 	gchar				*proxy_guid;
 	FuDevice			*alternate;
 	FuDevice			*proxy;		/* noref */
-	FuQuirks			*quirks;
+	FuContext			*ctx;
 	GHashTable			*inhibits;	/* (nullable) */
 	GHashTable			*metadata;	/* (nullable) */
 	GRWLock				 metadata_mutex;
@@ -85,7 +86,7 @@ enum {
 	PROP_PHYSICAL_ID,
 	PROP_LOGICAL_ID,
 	PROP_BACKEND_ID,
-	PROP_QUIRKS,
+	PROP_CONTEXT,
 	PROP_PROXY,
 	PROP_LAST
 };
@@ -118,8 +119,8 @@ fu_device_get_property (GObject *object, guint prop_id,
 	case PROP_BACKEND_ID:
 		g_value_set_string (value, priv->backend_id);
 		break;
-	case PROP_QUIRKS:
-		g_value_set_object (value, priv->quirks);
+	case PROP_CONTEXT:
+		g_value_set_object (value, priv->ctx);
 		break;
 	case PROP_PROXY:
 		g_value_set_object (value, priv->proxy);
@@ -154,8 +155,8 @@ fu_device_set_property (GObject *object, guint prop_id,
 	case PROP_BACKEND_ID:
 		fu_device_set_backend_id (self, g_value_get_string (value));
 		break;
-	case PROP_QUIRKS:
-		fu_device_set_quirks (self, g_value_get_object (value));
+	case PROP_CONTEXT:
+		fu_device_set_context (self, g_value_get_object (value));
 		break;
 	case PROP_PROXY:
 		fu_device_set_proxy (self, g_value_get_object (value));
@@ -846,11 +847,11 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 {
 	g_return_if_fail (FU_IS_DEVICE (self));
 
-	/* if the parent has quirks, make the child inherit it */
+	/* if the parent has a context, make the child inherit it */
 	if (parent != NULL) {
-		if (fu_device_get_quirks (self) == NULL &&
-		    fu_device_get_quirks (parent) != NULL)
-			fu_device_set_quirks (self, fu_device_get_quirks (parent));
+		if (fu_device_get_context (self) == NULL &&
+		    fu_device_get_context (parent) != NULL)
+			fu_device_set_context (self, fu_device_get_context (parent));
 	}
 
 	fwupd_device_set_parent (FWUPD_DEVICE (self), FWUPD_DEVICE (parent));
@@ -1085,7 +1086,7 @@ fu_device_add_child_by_type_guid (FuDevice *self,
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FuDevice) child = NULL;
 	child = g_object_new (type,
-			      "quirks", priv->quirks,
+			      "context", priv->ctx,
 			      "logical-id", guid,
 			      NULL);
 	fu_device_add_guid (child, guid);
@@ -1299,7 +1300,7 @@ fu_device_get_specialized_gtype (FuDevice *self)
 }
 
 static void
-fu_device_quirks_iter_cb (FuQuirks *quirks, const gchar *key, const gchar *value, gpointer user_data)
+fu_device_quirks_iter_cb (FuContext *ctx, const gchar *key, const gchar *value, gpointer user_data)
 {
 	FuDevice *self = FU_DEVICE (user_data);
 	g_autoptr(GError) error = NULL;
@@ -1315,9 +1316,9 @@ static void
 fu_device_add_guid_quirks (FuDevice *self, const gchar *guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	if (priv->quirks == NULL)
+	if (priv->ctx == NULL)
 		return;
-	fu_quirks_lookup_by_id_iter (priv->quirks, guid, fu_device_quirks_iter_cb, self);
+	fu_context_lookup_quirk_by_id_iter (priv->ctx, guid, fu_device_quirks_iter_cb, self);
 }
 
 /**
@@ -2871,41 +2872,41 @@ fu_device_to_string (FuDevice *self)
 }
 
 /**
- * fu_device_set_quirks:
+ * fu_device_set_context:
  * @self: A #FuDevice
- * @quirks: A #FuQuirks, or %NULL
+ * @ctx: A #FuContext, or %NULL
  *
- * Sets the optional quirk information which may be useful to this device.
+ * Sets the optional context which may be useful to this device.
  * This is typically set after the #FuDevice has been created, but before
  * the device has been opened or probed.
  *
- * Since: 1.0.3
+ * Since: 1.6.0
  **/
 void
-fu_device_set_quirks (FuDevice *self, FuQuirks *quirks)
+fu_device_set_context (FuDevice *self, FuContext *ctx)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
-	if (g_set_object (&priv->quirks, quirks))
-		g_object_notify (G_OBJECT (self), "quirks");
+	if (g_set_object (&priv->ctx, ctx))
+		g_object_notify (G_OBJECT (self), "context");
 }
 
 /**
- * fu_device_get_quirks:
+ * fu_device_get_context:
  * @self: A #FuDevice
  *
- * Gets the quirk information which may be useful to this device.
+ * Gets the context assigned for this device.
  *
- * Returns: (transfer none): the #FuQuirks object, or %NULL
+ * Returns: (transfer none): the #FuContext object, or %NULL
  *
- * Since: 1.0.3
+ * Since: 1.6.0
  **/
-FuQuirks *
-fu_device_get_quirks (FuDevice *self)
+FuContext *
+fu_device_get_context (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return priv->quirks;
+	return priv->ctx;
 }
 
 /**
@@ -3779,8 +3780,8 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 		fu_device_set_proxy (self, priv_donor->proxy);
 	if (priv->proxy_guid == NULL && priv_donor->proxy_guid != NULL)
 		fu_device_set_proxy_guid (self, priv_donor->proxy_guid);
-	if (priv->quirks == NULL)
-		fu_device_set_quirks (self, fu_device_get_quirks (donor));
+	if (priv->ctx == NULL)
+		fu_device_set_context (self, fu_device_get_context (donor));
 	g_rw_lock_reader_lock (&priv_donor->parent_guids_mutex);
 	for (guint i = 0; i < parent_guids->len; i++)
 		fu_device_add_parent_guid (self, g_ptr_array_index (parent_guids, i));
@@ -3904,11 +3905,11 @@ fu_device_class_init (FuDeviceClass *klass)
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_BATTERY_THRESHOLD, pspec);
 
-	pspec = g_param_spec_object ("quirks", NULL, NULL,
-				     FU_TYPE_QUIRKS,
+	pspec = g_param_spec_object ("context", NULL, NULL,
+				     FU_TYPE_CONTEXT,
 				     G_PARAM_READWRITE |
 				     G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_QUIRKS, pspec);
+	g_object_class_install_property (object_class, PROP_CONTEXT, pspec);
 
 	pspec = g_param_spec_object ("proxy", NULL, NULL,
 				     FU_TYPE_DEVICE,
@@ -3943,8 +3944,8 @@ fu_device_finalize (GObject *object)
 		g_object_unref (priv->alternate);
 	if (priv->proxy != NULL)
 		g_object_remove_weak_pointer (G_OBJECT (priv->proxy), (gpointer *) &priv->proxy);
-	if (priv->quirks != NULL)
-		g_object_unref (priv->quirks);
+	if (priv->ctx != NULL)
+		g_object_unref (priv->ctx);
 	if (priv->poll_id != 0)
 		g_source_remove (priv->poll_id);
 	if (priv->metadata != NULL)

@@ -121,6 +121,7 @@ static guint8 enclosure_allowlist [] = { 0x03, /* desktop */
 static guint16
 fu_dell_get_system_id (FuPlugin *plugin)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *system_id_str = NULL;
 	guint16 system_id = 0;
@@ -130,8 +131,7 @@ fu_dell_get_system_id (FuPlugin *plugin)
 	if (data->smi_obj->fake_smbios)
 		return 0;
 
-	system_id_str = fu_plugin_get_dmi_value (plugin,
-		FU_HWIDS_KEY_PRODUCT_SKU);
+	system_id_str = fu_context_get_hwid_value (ctx, FU_HWIDS_KEY_PRODUCT_SKU);
 	if (system_id_str != NULL)
 		system_id = g_ascii_strtoull (system_id_str, &endptr, 16);
 	if (system_id == 0 || endptr == system_id_str)
@@ -143,6 +143,7 @@ fu_dell_get_system_id (FuPlugin *plugin)
 static gboolean
 fu_dell_supported (FuPlugin *plugin)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	g_autoptr(GBytes) de_table = NULL;
 	g_autoptr(GBytes) da_table = NULL;
 	g_autoptr(GBytes) enclosure = NULL;
@@ -151,7 +152,7 @@ fu_dell_supported (FuPlugin *plugin)
 	gsize len;
 
 	/* make sure that Dell SMBIOS methods are available */
-	de_table = fu_plugin_get_smbios_data (plugin, 0xDE);
+	de_table = fu_context_get_smbios_data (ctx, 0xDE);
 	if (de_table == NULL)
 		return FALSE;
 	value = g_bytes_get_data (de_table, &len);
@@ -159,7 +160,7 @@ fu_dell_supported (FuPlugin *plugin)
 		return FALSE;
 	if (*value != 0xDE)
 		return FALSE;
-	da_table = fu_plugin_get_smbios_data (plugin, 0xDA);
+	da_table = fu_context_get_smbios_data (ctx, 0xDA);
 	if (da_table == NULL)
 		return FALSE;
 	da_values = (struct da_structure *) g_bytes_get_data (da_table, &len);
@@ -172,7 +173,7 @@ fu_dell_supported (FuPlugin *plugin)
 	}
 
 	/* only run on intended Dell hw types */
-	enclosure = fu_plugin_get_smbios_data (plugin,
+	enclosure = fu_context_get_smbios_data (ctx,
 					       FU_SMBIOS_STRUCTURE_TYPE_CHASSIS);
 	if (enclosure == NULL)
 		return FALSE;
@@ -440,12 +441,13 @@ fu_plugin_backend_device_added (FuPlugin *plugin,
 gboolean
 fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	g_autoptr(GBytes) de_table = NULL;
 	const gchar *tmp = NULL;
 	const guint16 *completion_code;
 	gsize len;
 
-	de_table = fu_plugin_get_smbios_data (plugin, 0xDE);
+	de_table = fu_context_get_smbios_data (ctx, 0xDE);
 	completion_code = g_bytes_get_data (de_table, &len);
 	if (len < 8) {
 		g_set_error (error,
@@ -823,6 +825,7 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	g_autofree gchar *tmp = NULL;
 
@@ -830,7 +833,7 @@ fu_plugin_init (FuPlugin *plugin)
 	tmp = g_strdup_printf ("%d.%d",
 			       smbios_get_library_version_major(),
 			       smbios_get_library_version_minor());
-	fu_plugin_add_runtime_version (plugin, "com.dell.libsmbios", tmp);
+	fu_context_add_runtime_version (ctx, "com.dell.libsmbios", tmp);
 	g_debug ("Using libsmbios %s", tmp);
 
 	data->smi_obj = g_malloc0 (sizeof (FuDellSmiObj));

@@ -33,8 +33,9 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_udev_subsystem (plugin, "hidraw");
+	fu_context_add_udev_subsystem (ctx, "hidraw");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_CONFLICTS, "unifying");
 
 	/* register the custom types */

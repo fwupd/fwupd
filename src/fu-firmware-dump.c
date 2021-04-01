@@ -10,6 +10,7 @@
 #include <locale.h>
 #include <stdlib.h>
 
+#include "fu-context-private.h"
 #include "fu-engine.h"
 
 typedef struct {
@@ -129,6 +130,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuUtil, fu_util_private_free)
 int
 main (int argc, char **argv)
 {
+	FuContext *ctx;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) firmware_types = NULL;
 	g_autoptr(GOptionContext) context = NULL;
@@ -175,11 +177,12 @@ main (int argc, char **argv)
 	}
 
 	/* get all parser objects */
-	firmware_types = fu_engine_get_firmware_gtype_ids (self->engine);
+	ctx = fu_engine_get_context (self->engine);
+	firmware_types = fu_context_get_firmware_gtype_ids (ctx);
 	self->array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	for (guint i = 0; i < firmware_types->len; i++) {
 		const gchar *id = g_ptr_array_index (firmware_types, i);
-		GType gtype = fu_engine_get_firmware_gtype_by_id (self->engine, id);
+		GType gtype = fu_context_get_firmware_gtype_by_id (ctx, id);
 		g_ptr_array_add (self->array, g_object_new (gtype, NULL));
 	}
 

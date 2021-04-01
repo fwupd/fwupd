@@ -88,8 +88,9 @@ fu_plugin_linux_lockdown_changed_cb (GFileMonitor *monitor,
 				     gpointer user_data)
 {
 	FuPlugin *plugin = FU_PLUGIN (user_data);
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	fu_plugin_linux_lockdown_rescan (plugin);
-	fu_plugin_security_changed (plugin);
+	fu_context_security_changed (ctx);
 }
 
 gboolean

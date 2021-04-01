@@ -6,25 +6,12 @@
 
 #pragma once
 
-#include "fu-quirks.h"
+#include "fu-context.h"
 #include "fu-plugin.h"
 #include "fu-security-attrs.h"
-#include "fu-smbios.h"
 
-FuPlugin	*fu_plugin_new				(void);
+FuPlugin	*fu_plugin_new				(FuContext	*ctx);
 gboolean	 fu_plugin_is_open			(FuPlugin	*self);
-void		 fu_plugin_set_hwids			(FuPlugin	*self,
-							 FuHwids	*hwids);
-void		 fu_plugin_set_udev_subsystems		(FuPlugin	*self,
-							 GPtrArray	*udev_subsystems);
-void		 fu_plugin_set_quirks			(FuPlugin	*self,
-							 FuQuirks	*quirks);
-void		 fu_plugin_set_runtime_versions		(FuPlugin	*self,
-							 GHashTable	*runtime_versions);
-void		 fu_plugin_set_compile_versions		(FuPlugin	*self,
-							 GHashTable	*compile_versions);
-void		 fu_plugin_set_smbios			(FuPlugin	*self,
-							 FuSmbios	*smbios);
 guint		 fu_plugin_get_order			(FuPlugin	*self);
 void		 fu_plugin_set_order			(FuPlugin	*self,
 							 guint		 order);

@@ -24,16 +24,18 @@
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
+
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_possible_quirk_key (plugin, "DellDockBlobBuildOffset");
-	fu_plugin_add_possible_quirk_key (plugin, "DellDockBlobMajorOffset");
-	fu_plugin_add_possible_quirk_key (plugin, "DellDockBlobMinorOffset");
-	fu_plugin_add_possible_quirk_key (plugin, "DellDockBlobVersionOffset");
-	fu_plugin_add_possible_quirk_key (plugin, "DellDockBoardMin");
-	fu_plugin_add_possible_quirk_key (plugin, "DellDockHubVersionLowest");
-	fu_plugin_add_possible_quirk_key (plugin, "DellDockInstallDurationI2C");
-	fu_plugin_add_possible_quirk_key (plugin, "DellDockUnlockTarget");
-	fu_plugin_add_possible_quirk_key (plugin, "DellDockVersionLowest");
+	fu_context_add_quirk_key (ctx, "DellDockBlobBuildOffset");
+	fu_context_add_quirk_key (ctx, "DellDockBlobMajorOffset");
+	fu_context_add_quirk_key (ctx, "DellDockBlobMinorOffset");
+	fu_context_add_quirk_key (ctx, "DellDockBlobVersionOffset");
+	fu_context_add_quirk_key (ctx, "DellDockBoardMin");
+	fu_context_add_quirk_key (ctx, "DellDockHubVersionLowest");
+	fu_context_add_quirk_key (ctx, "DellDockInstallDurationI2C");
+	fu_context_add_quirk_key (ctx, "DellDockUnlockTarget");
+	fu_context_add_quirk_key (ctx, "DellDockVersionLowest");
 
 	/* allow these to be built by quirks */
 	g_type_ensure (FU_TYPE_DELL_DOCK_STATUS);
@@ -48,9 +50,10 @@ fu_plugin_dell_dock_create_node (FuPlugin *plugin,
 				 FuDevice *device,
 				 GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	fu_device_set_quirks (device, fu_plugin_get_quirks (plugin));
+	fu_device_set_context (device, ctx);
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;

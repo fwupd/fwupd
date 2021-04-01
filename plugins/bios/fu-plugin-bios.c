@@ -18,9 +18,10 @@ fu_plugin_init (FuPlugin *plugin)
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	const gchar *vendor;
 
-	vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
+	vendor = fu_context_get_hwid_value (ctx, FU_HWIDS_KEY_BIOS_VENDOR);
 	if (g_strcmp0 (vendor, "coreboot") == 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
