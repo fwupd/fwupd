@@ -47,8 +47,6 @@ struct _FuPluginClass
 							 FwupdStatus	 status);
 	void		 (* percentage_changed)		(FuPlugin	*self,
 							 guint		 percentage);
-	void		 (* set_coldplug_delay)		(FuPlugin	*self,
-							 guint		 duration);
 	void		 (* device_register)		(FuPlugin	*self,
 							 FuDevice	*device);
 	gboolean	 (* check_supported)		(FuPlugin	*self,
@@ -113,8 +111,6 @@ void		 fu_plugin_device_remove		(FuPlugin	*self,
 void		 fu_plugin_device_register		(FuPlugin	*self,
 							 FuDevice	*device);
 void		 fu_plugin_security_changed		(FuPlugin	*self);
-void		 fu_plugin_set_coldplug_delay		(FuPlugin	*self,
-							 guint		 duration);
 void		 fu_plugin_set_device_gtype		(FuPlugin	*self,
 							 GType		 device_gtype);
 void		 fu_plugin_add_firmware_gtype		(FuPlugin	*self,
