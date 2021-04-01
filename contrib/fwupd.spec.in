@@ -426,6 +426,7 @@ done
 %{_libdir}/fwupd-plugins-3/libfu_plugin_acpi_facp.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_altos.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_amt.so
+%{_libdir}/fwupd-plugins-3/libfu_plugin_analogix.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ata.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_bcm57xx.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ccgx.so
