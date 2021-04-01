@@ -18,6 +18,7 @@
 #include "fu-dfu-sector.h"
 
 #include "fu-chunk.h"
+#include "fu-context-private.h"
 #include "fu-dfuse-firmware.h"
 #include "fu-device-locker.h"
 
@@ -29,7 +30,7 @@ typedef struct {
 	gboolean		 force;
 	gchar			*device_vid_pid;
 	guint16			 transfer_size;
-	FuQuirks		*quirks;
+	FuContext		*ctx;
 } FuDfuTool;
 
 static void
@@ -40,7 +41,7 @@ fu_dfu_tool_free (FuDfuTool *self)
 	g_free (self->device_vid_pid);
 	if (self->cancellable != NULL)
 		g_object_unref (self->cancellable);
-	g_object_unref (self->quirks);
+	g_object_unref (self->ctx);
 	if (self->cmd_array != NULL)
 		g_ptr_array_unref (self->cmd_array);
 	g_free (self);
@@ -229,7 +230,7 @@ fu_dfu_tool_get_default_device (FuDfuTool *self, GError **error)
 			return NULL;
 		}
 		device = fu_dfu_device_new (usb_device);
-		fu_device_set_quirks (FU_DEVICE (device), self->quirks);
+		fu_device_set_context (FU_DEVICE (device), self->ctx);
 		return device;
 	}
 
@@ -238,7 +239,7 @@ fu_dfu_tool_get_default_device (FuDfuTool *self, GError **error)
 	for (guint i = 0; i < devices->len; i++) {
 		GUsbDevice *usb_device = g_ptr_array_index (devices, i);
 		g_autoptr(FuDfuDevice) device = fu_dfu_device_new (usb_device);
-		fu_device_set_quirks (FU_DEVICE (device), self->quirks);
+		fu_device_set_context (FU_DEVICE (device), self->ctx);
 		if (fu_device_probe (FU_DEVICE (device), NULL))
 			return g_steal_pointer (&device);
 	}
@@ -910,8 +911,8 @@ main (int argc, char *argv[])
 		     fu_dfu_tool_replace_data);
 
 	/* use quirks */
-	self->quirks = fu_quirks_new ();
-	if (!fu_quirks_load (self->quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error)) {
+	self->ctx = fu_context_new ();
+	if (!fu_context_load_quirks (self->ctx, FU_QUIRKS_LOAD_FLAG_NONE, &error)) {
 		/* TRANSLATORS: quirks are device-specific workarounds */
 		g_print ("%s: %s\n", _("Failed to load quirks"), error->message);
 		return EXIT_FAILURE;

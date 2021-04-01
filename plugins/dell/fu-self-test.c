@@ -10,6 +10,7 @@
 #include <glib/gstdio.h>
 #include <stdlib.h>
 
+#include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
 #include "fu-plugin-dell.h"
@@ -487,11 +488,12 @@ static void
 fu_test_self_init (FuTest *self)
 {
 	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *pluginfn_uefi = NULL;
 	g_autofree gchar *pluginfn_dell = NULL;
 
-	self->plugin_uefi_capsule = fu_plugin_new ();
+	self->plugin_uefi_capsule = fu_plugin_new (ctx);
 	pluginfn_uefi = g_build_filename (PLUGINBUILDDIR, "..", "uefi-capsule",
 					  "libfu_plugin_uefi_capsule." G_MODULE_SUFFIX,
 					  NULL);
@@ -502,7 +504,7 @@ fu_test_self_init (FuTest *self)
 	g_assert_no_error (error);
 	g_assert (ret);
 
-	self->plugin_dell = fu_plugin_new ();
+	self->plugin_dell = fu_plugin_new (ctx);
 	pluginfn_dell = g_build_filename (PLUGINBUILDDIR,
 					  "libfu_plugin_dell." G_MODULE_SUFFIX,
 					  NULL);

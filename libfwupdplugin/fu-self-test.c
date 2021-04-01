@@ -13,6 +13,7 @@
 #include <libgcab.h>
 #include <glib/gstdio.h>
 
+#include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
@@ -460,7 +461,7 @@ static void
 fu_plugin_devices_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
-	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new (NULL);
 	GPtrArray *devices;
 
 	devices = fu_plugin_get_devices (plugin);
@@ -481,7 +482,7 @@ fu_plugin_delay_func (void)
 	g_autoptr(FuPlugin) plugin = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
-	plugin = fu_plugin_new ();
+	plugin = fu_plugin_new (NULL);
 	g_signal_connect (plugin, "device-added",
 			  G_CALLBACK (_plugin_device_added_cb),
 			  &device_tmp);
@@ -509,29 +510,27 @@ fu_plugin_quirks_func (void)
 {
 	const gchar *tmp;
 	gboolean ret;
-	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
-	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_quirks_load (quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	fu_plugin_set_quirks (plugin, quirks);
 
 	/* exact */
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "USB\\VID_0A5C&PID_6412", "Flags");
+	tmp = fu_context_lookup_quirk_by_id (ctx, "USB\\VID_0A5C&PID_6412", "Flags");
 	g_assert_cmpstr (tmp, ==, "ignore-runtime");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "ACME Inc.=True", "Name");
+	tmp = fu_context_lookup_quirk_by_id (ctx, "ACME Inc.=True", "Name");
 	g_assert_cmpstr (tmp, ==, "awesome");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "CORP*", "Name");
+	tmp = fu_context_lookup_quirk_by_id (ctx, "CORP*", "Name");
 	g_assert_cmpstr (tmp, ==, "town");
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "baz", "Unfound");
+	tmp = fu_context_lookup_quirk_by_id (ctx, "baz", "Unfound");
 	g_assert_cmpstr (tmp, ==, NULL);
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "unfound", "tests");
+	tmp = fu_context_lookup_quirk_by_id (ctx, "unfound", "tests");
 	g_assert_cmpstr (tmp, ==, NULL);
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "unfound", "unfound");
+	tmp = fu_context_lookup_quirk_by_id (ctx, "unfound", "unfound");
 	g_assert_cmpstr (tmp, ==, NULL);
-	tmp = fu_plugin_lookup_quirk_by_id (plugin, "bb9ec3e2-77b3-53bc-a1f1-b05916715627", "Flags");
+	tmp = fu_context_lookup_quirk_by_id (ctx, "bb9ec3e2-77b3-53bc-a1f1-b05916715627", "Flags");
 	g_assert_cmpstr (tmp, ==, "clever");
 }
 
@@ -567,16 +566,16 @@ fu_plugin_quirks_device_func (void)
 	GPtrArray *children;
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new ();
-	g_autoptr(FuQuirks) quirks = fu_quirks_new ();
+	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_quirks_load (quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NONE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	/* use quirk file to set device attributes */
 	fu_device_set_physical_id (device, "usb:00:05");
-	fu_device_set_quirks (device, quirks);
+	fu_device_set_context (device, ctx);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_instance_id (device, "USB\\VID_0BDA&PID_1100");
 	fu_device_convert_instance_ids (device);

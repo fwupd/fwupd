@@ -14,6 +14,7 @@
 #include "fwupd-enums.h"
 
 #include "fu-common.h"
+#include "fu-context.h"
 #include "fu-engine-request.h"
 #include "fu-install-task.h"
 #include "fu-plugin.h"
@@ -180,9 +181,7 @@ gboolean	 fu_engine_modify_config		(FuEngine	*self,
 							 const gchar	*key,
 							 const gchar	*value,
 							 GError		**error);
-GPtrArray	*fu_engine_get_firmware_gtype_ids	(FuEngine	*engine);
-GType		 fu_engine_get_firmware_gtype_by_id	(FuEngine	*engine,
-							 const gchar	*id);
+FuContext	*fu_engine_get_context			(FuEngine	*engine);
 void		 fu_engine_md_refresh_device_from_component (FuEngine	*self,
 							 FuDevice	*device,
 							 XbNode		*component);

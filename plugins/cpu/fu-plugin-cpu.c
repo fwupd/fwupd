@@ -19,8 +19,9 @@ fu_plugin_init (FuPlugin *plugin)
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	g_autoptr(FuCpuDevice) dev = fu_cpu_device_new ();
-	fu_device_set_quirks (FU_DEVICE (dev), fu_plugin_get_quirks (plugin));
+	fu_device_set_context (FU_DEVICE (dev), ctx);
 	if (!fu_device_probe (FU_DEVICE (dev), error))
 		return FALSE;
 	if (!fu_device_setup (FU_DEVICE (dev), error))

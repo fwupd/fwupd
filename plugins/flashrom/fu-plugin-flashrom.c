@@ -74,12 +74,13 @@ fu_plugin_flashrom_debug_cb (enum flashrom_log_level lvl, const char *fmt, va_li
 static void
 fu_plugin_flashrom_device_set_version (FuPlugin *plugin, FuDevice *device)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	const gchar *version;
 	const gchar *version_major;
 	const gchar *version_minor;
 
 	/* as-is */
-	version = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VERSION);
+	version = fu_context_get_hwid_value (ctx, FU_HWIDS_KEY_BIOS_VERSION);
 	if (version != NULL) {
 		/* some Lenovo hardware requires a specific prefix for the EC,
 		 * so strip it before we use ensure-semver */
@@ -93,8 +94,8 @@ fu_plugin_flashrom_device_set_version (FuPlugin *plugin, FuDevice *device)
 	}
 
 	/* component parts only */
-	version_major = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE);
-	version_minor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_MINOR_RELEASE);
+	version_major = fu_context_get_hwid_value (ctx, FU_HWIDS_KEY_BIOS_MAJOR_RELEASE);
+	version_minor = fu_context_get_hwid_value (ctx, FU_HWIDS_KEY_BIOS_MINOR_RELEASE);
 	if (version_major != NULL && version_minor != NULL) {
 		g_autofree gchar *tmp = g_strdup_printf ("%s.%s.0",
 							 version_major,
@@ -106,6 +107,7 @@ fu_plugin_flashrom_device_set_version (FuPlugin *plugin, FuDevice *device)
 static void
 fu_plugin_flashrom_device_set_bios_info (FuPlugin *plugin, FuDevice *device)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	const guint8 *buf;
 	gsize bufsz;
 	guint32 bios_char = 0x0;
@@ -113,7 +115,7 @@ fu_plugin_flashrom_device_set_bios_info (FuPlugin *plugin, FuDevice *device)
 	g_autoptr(GBytes) bios_table = NULL;
 
 	/* get SMBIOS info */
-	bios_table = fu_plugin_get_smbios_data (plugin, FU_SMBIOS_STRUCTURE_TYPE_BIOS);
+	bios_table = fu_context_get_smbios_data (ctx, FU_SMBIOS_STRUCTURE_TYPE_BIOS);
 	if (bios_table == NULL)
 		return;
 
@@ -134,6 +136,7 @@ fu_plugin_flashrom_device_set_bios_info (FuPlugin *plugin, FuDevice *device)
 static void
 fu_plugin_flashrom_device_set_hwids (FuPlugin *plugin, FuDevice *device)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	static const gchar *hwids[] = {
 		"HardwareID-3",
 		"HardwareID-4",
@@ -150,7 +153,7 @@ fu_plugin_flashrom_device_set_hwids (FuPlugin *plugin, FuDevice *device)
 	/* don't include FU_HWIDS_KEY_BIOS_VERSION */
 	for (guint i = 0; i < G_N_ELEMENTS (hwids); i++) {
 		g_autofree gchar *str = NULL;
-		str = fu_plugin_get_hwid_replace_value (plugin, hwids[i], NULL);
+		str = fu_context_get_hwid_replace_value (ctx, hwids[i], NULL);
 		if (str != NULL)
 			fu_device_add_instance_id (device, str);
 	}
@@ -159,15 +162,16 @@ fu_plugin_flashrom_device_set_hwids (FuPlugin *plugin, FuDevice *device)
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	const gchar *dmi_vendor;
 	g_autoptr(FuDevice) device = fu_flashrom_device_new ();
 
-	fu_device_set_quirks (device, fu_plugin_get_quirks (plugin));
-	fu_device_set_name (device, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_NAME));
-	fu_device_set_vendor (device, fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_MANUFACTURER));
+	fu_device_set_context (device, ctx);
+	fu_device_set_name (device, fu_context_get_hwid_value (ctx, FU_HWIDS_KEY_PRODUCT_NAME));
+	fu_device_set_vendor (device, fu_context_get_hwid_value (ctx, FU_HWIDS_KEY_MANUFACTURER));
 
 	/* use same VendorID logic as with UEFI */
-	dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BIOS_VENDOR);
+	dmi_vendor = fu_context_get_hwid_value (ctx, FU_HWIDS_KEY_BIOS_VENDOR);
 	if (dmi_vendor != NULL) {
 		g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
 		fu_device_add_vendor_id (FU_DEVICE (device), vendor_id);

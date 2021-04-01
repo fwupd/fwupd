@@ -58,12 +58,6 @@ LIBFWUPDPLUGIN_0.8.0 {
   local: *;
 } LIBFWUPDPLUGIN_0.7.2;
 
-LIBFWUPDPLUGIN_0.9.1 {
-  global:
-    fu_plugin_check_hwid;
-  local: *;
-} LIBFWUPDPLUGIN_0.8.0;
-
 LIBFWUPDPLUGIN_0.9.3 {
   global:
     fu_hwids_get_guid;
@@ -76,7 +70,7 @@ LIBFWUPDPLUGIN_0.9.3 {
     fu_hwids_new;
     fu_hwids_setup;
   local: *;
-} LIBFWUPDPLUGIN_0.9.1;
+} LIBFWUPDPLUGIN_0.8.0;
 
 LIBFWUPDPLUGIN_0.9.5 {
   global:
@@ -98,17 +92,13 @@ LIBFWUPDPLUGIN_0.9.7 {
     fu_device_set_metadata_boolean;
     fu_device_set_metadata_integer;
     fu_plugin_device_register;
-    fu_plugin_get_dmi_value;
     fu_plugin_runner_device_register;
-    fu_plugin_set_hwids;
   local: *;
 } LIBFWUPDPLUGIN_0.9.5;
 
 LIBFWUPDPLUGIN_0.9.8 {
   global:
     fu_device_to_string;
-    fu_plugin_get_smbios_data;
-    fu_plugin_get_smbios_string;
   local: *;
 } LIBFWUPDPLUGIN_0.9.7;
 
@@ -123,7 +113,6 @@ LIBFWUPDPLUGIN_1.0.0 {
     fu_plugin_has_rule;
     fu_plugin_set_order;
     fu_plugin_set_priority;
-    fu_plugin_set_smbios;
     fu_smbios_get_data;
     fu_smbios_get_string;
     fu_smbios_get_type;
@@ -138,9 +127,6 @@ LIBFWUPDPLUGIN_1.0.0 {
 LIBFWUPDPLUGIN_1.0.1 {
   global:
     fu_chunk_array_to_string;
-    fu_plugin_get_quirks;
-    fu_plugin_lookup_quirk_by_id;
-    fu_plugin_set_quirks;
     fu_quirks_get_type;
     fu_quirks_load;
     fu_quirks_lookup_by_id;
@@ -166,11 +152,9 @@ LIBFWUPDPLUGIN_1.0.3 {
     fu_common_write_uint16;
     fu_common_write_uint32;
     fu_device_get_progress;
-    fu_device_get_quirks;
     fu_device_get_status;
     fu_device_set_progress;
     fu_device_set_progress_full;
-    fu_device_set_quirks;
     fu_device_set_status;
     fu_usb_device_is_open;
   local: *;
@@ -196,15 +180,6 @@ LIBFWUPDPLUGIN_1.0.6 {
   local: *;
 } LIBFWUPDPLUGIN_1.0.5;
 
-LIBFWUPDPLUGIN_1.0.7 {
-  global:
-    fu_plugin_add_compile_version;
-    fu_plugin_add_runtime_version;
-    fu_plugin_set_compile_versions;
-    fu_plugin_set_runtime_versions;
-  local: *;
-} LIBFWUPDPLUGIN_1.0.6;
-
 LIBFWUPDPLUGIN_1.0.8 {
   global:
     fu_common_error_array_get_best;
@@ -227,7 +202,7 @@ LIBFWUPDPLUGIN_1.0.8 {
     fu_plugin_name_compare;
     fu_plugin_order_compare;
   local: *;
-} LIBFWUPDPLUGIN_1.0.7;
+} LIBFWUPDPLUGIN_1.0.6;
 
 LIBFWUPDPLUGIN_1.0.9 {
   global:
@@ -251,7 +226,6 @@ LIBFWUPDPLUGIN_1.1.1 {
   global:
     fu_device_get_priority;
     fu_device_set_priority;
-    fu_plugin_get_hwids;
     fu_plugin_get_priority;
   local: *;
 } LIBFWUPDPLUGIN_1.1.0;
@@ -281,15 +255,12 @@ LIBFWUPDPLUGIN_1.1.2 {
     fu_device_set_physical_id;
     fu_device_set_poll_interval;
     fu_device_setup;
-    fu_plugin_add_udev_subsystem;
-    fu_plugin_lookup_quirk_by_id_as_uint64;
     fu_plugin_runner_device_removed;
     fu_plugin_runner_update_attach;
     fu_plugin_runner_update_cleanup;
     fu_plugin_runner_update_detach;
     fu_plugin_runner_update_prepare;
     fu_plugin_runner_update_reload;
-    fu_plugin_set_udev_subsystems;
     fu_udev_device_emit_changed;
     fu_udev_device_get_dev;
     fu_udev_device_get_model;
@@ -452,7 +423,6 @@ LIBFWUPDPLUGIN_1.3.3 {
     fu_firmware_set_version;
     fu_firmware_write_file;
     fu_plugin_add_firmware_gtype;
-    fu_plugin_get_hwid_replace_value;
     fu_plugin_set_device_gtype;
     fu_quirks_lookup_by_id_iter;
     fu_udev_device_get_fd;
@@ -606,7 +576,6 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_fmap_firmware_new;
     fu_plugin_runner_add_security_attrs;
     fu_plugin_runner_device_added;
-    fu_plugin_security_changed;
     fu_security_attrs_append;
     fu_security_attrs_calculate_hsi;
     fu_security_attrs_depsolve;
@@ -737,7 +706,6 @@ LIBFWUPDPLUGIN_1.5.8 {
     fu_device_get_battery_level;
     fu_device_set_backend_id;
     fu_device_set_battery_level;
-    fu_plugin_add_possible_quirk_key;
     fu_quirks_add_possible_key;
     fu_udev_device_set_logical_id;
   local: *;
@@ -748,11 +716,37 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_byte_array_align_up;
     fu_byte_array_set_size_full;
     fu_common_align_up;
+    fu_context_add_compile_version;
+    fu_context_add_firmware_gtype;
+    fu_context_add_quirk_key;
+    fu_context_add_runtime_version;
+    fu_context_add_udev_subsystem;
+    fu_context_get_firmware_gtype_by_id;
+    fu_context_get_firmware_gtype_ids;
+    fu_context_get_hwid_guids;
+    fu_context_get_hwid_replace_value;
+    fu_context_get_hwid_value;
+    fu_context_get_smbios_data;
+    fu_context_get_smbios_integer;
+    fu_context_get_smbios_string;
+    fu_context_get_type;
+    fu_context_get_udev_subsystems;
+    fu_context_has_hwid_guid;
+    fu_context_load_hwinfo;
+    fu_context_load_quirks;
+    fu_context_lookup_quirk_by_id;
+    fu_context_lookup_quirk_by_id_iter;
+    fu_context_new;
+    fu_context_security_changed;
+    fu_context_set_compile_versions;
+    fu_context_set_runtime_versions;
     fu_device_add_security_attrs;
     fu_device_get_battery_threshold;
+    fu_device_get_context;
     fu_device_inhibit;
     fu_device_remove_flag;
     fu_device_set_battery_threshold;
+    fu_device_set_context;
     fu_device_uninhibit;
     fu_firmware_add_chunk;
     fu_firmware_build_from_xml;
@@ -777,6 +771,7 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_firmware_set_offset;
     fu_firmware_set_size;
     fu_firmware_write_chunk;
+    fu_plugin_get_context;
     fu_xmlb_builder_insert_kb;
     fu_xmlb_builder_insert_kv;
     fu_xmlb_builder_insert_kx;

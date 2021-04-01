@@ -7,6 +7,7 @@ fwupdplugin_src = [
   'fu-common-cab.c',
   'fu-common-guid.c',
   'fu-common-version.c',    # fuzzing
+  'fu-context.c',           # fuzzing
   'fu-device-locker.c',     # fuzzing
   'fu-device.c',            # fuzzing
   'fu-dfu-firmware.c',      # fuzzing
@@ -15,13 +16,13 @@ fwupdplugin_src = [
   'fu-firmware-common.c',   # fuzzing
   'fu-dfuse-firmware.c',    # fuzzing
   'fu-fmap-firmware.c',     # fuzzing
-  'fu-hwids.c',
+  'fu-hwids.c',             # fuzzing
   'fu-ihex-firmware.c',     # fuzzing
   'fu-io-channel.c',        # fuzzing
   'fu-plugin.c',
   'fu-quirks.c',            # fuzzing
   'fu-security-attrs.c',
-  'fu-smbios.c',
+  'fu-smbios.c',            # fuzzing
   'fu-srec-firmware.c',     # fuzzing
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
@@ -40,6 +41,7 @@ fwupdplugin_headers = [
   'fu-common-cab.h',
   'fu-common-guid.h',
   'fu-common-version.h',
+  'fu-context.h',
   'fu-deprecated.h',
   'fu-device.h',
   'fu-device-metadata.h',
@@ -84,6 +86,7 @@ fu_hash = custom_target(
 
 fwupdplugin_headers_private = [
   fu_hash,
+  'fu-context-private.h',
   'fu-device-private.h',
   'fu-plugin-private.h',
   'fu-security-attrs-private.h',
@@ -126,7 +129,8 @@ fwupdplugin = library(
   'fwupdplugin',
   sources : [
     fwupdplugin_src,
-    fwupdplugin_headers
+    fwupdplugin_headers,
+    fwupdplugin_headers_private,
   ],
   soversion : libfwupdplugin_lt_current,
   version : libfwupdplugin_lt_version,

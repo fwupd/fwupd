@@ -32,13 +32,13 @@
 #include "fu-common-cab.h"
 #include "fu-common.h"
 #include "fu-config.h"
+#include "fu-context-private.h"
 #include "fu-debug.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
 #include "fu-engine-helper.h"
 #include "fu-engine-request.h"
-#include "fu-hwids.h"
 #include "fu-idle.h"
 #include "fu-keyring-utils.h"
 #include "fu-hash.h"
@@ -51,7 +51,6 @@
 #include "fu-remote-list.h"
 #include "fu-security-attr.h"
 #include "fu-security-attrs-private.h"
-#include "fu-smbios-private.h"
 #include "fu-udev-device-private.h"
 
 #ifdef HAVE_GUDEV
@@ -97,15 +96,11 @@ struct _FuEngine
 	guint			 coldplug_id;
 	FuPluginList		*plugin_list;
 	GPtrArray		*plugin_filter;
-	GPtrArray		*udev_subsystems;
-	FuSmbios		*smbios;
-	FuHwids			*hwids;
-	FuQuirks		*quirks;
+	FuContext		*ctx;
 	GHashTable		*runtime_versions;
 	GHashTable		*compile_versions;
 	GHashTable		*approved_firmware;	/* (nullable) */
 	GHashTable		*blocked_firmware;	/* (nullable) */
-	GHashTable		*firmware_gtypes;
 	gchar			*host_machine_id;
 	JcatContext		*jcat_context;
 	gboolean		 loaded;
@@ -151,37 +146,10 @@ fu_engine_emit_device_changed (FuEngine *self, FuDevice *device)
 	g_signal_emit (self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
 }
 
-static gint
-fu_engine_gtypes_sort_cb (gconstpointer a, gconstpointer b)
+FuContext *
+fu_engine_get_context (FuEngine *self)
 {
-	const gchar *stra = *((const gchar **) a);
-	const gchar *strb = *((const gchar **) b);
-	return g_strcmp0 (stra, strb);
-}
-
-GPtrArray *
-fu_engine_get_firmware_gtype_ids (FuEngine *self)
-{
-	GPtrArray *firmware_gtypes = g_ptr_array_new_with_free_func (g_free);
-	g_autoptr(GList) keys = g_hash_table_get_keys (self->firmware_gtypes);
-	for (GList *l = keys; l != NULL; l = l->next) {
-		const gchar *id = l->data;
-		g_ptr_array_add (firmware_gtypes, g_strdup (id));
-	}
-	g_ptr_array_sort (firmware_gtypes, fu_engine_gtypes_sort_cb);
-	return firmware_gtypes;
-}
-
-GType
-fu_engine_get_firmware_gtype_by_id (FuEngine *self, const gchar *id)
-{
-	return GPOINTER_TO_SIZE (g_hash_table_lookup (self->firmware_gtypes, id));
-}
-
-static void
-fu_engine_add_firmware_gtype (FuEngine *self, const gchar *id, GType gtype)
-{
-	g_hash_table_insert (self->firmware_gtypes, g_strdup (id), GSIZE_TO_POINTER (gtype));
+	return self->ctx;
 }
 
 /**
@@ -1498,7 +1466,7 @@ fu_engine_check_requirement_hardware (FuEngine *self, XbNode *req, GError **erro
 	/* split and treat as OR */
 	hwid_split = g_strsplit (xb_node_get_text (req), "|", -1);
 	for (guint i = 0; hwid_split[i] != NULL; i++) {
-		if (fu_hwids_has_guid (self->hwids, hwid_split[i])) {
+		if (fu_context_has_hwid_guid (self->ctx, hwid_split[i])) {
 			g_debug ("HWID provided %s", hwid_split[i]);
 			return TRUE;
 		}
@@ -1820,16 +1788,16 @@ fu_engine_get_report_metadata (FuEngine *self, GError **error)
 		return NULL;
 
 	/* DMI data */
-	tmp = fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_PRODUCT_NAME);
+	tmp = fu_context_get_hwid_value (self->ctx, FU_HWIDS_KEY_PRODUCT_NAME);
 	if (tmp != NULL)
 		g_hash_table_insert (hash, g_strdup ("HostProduct"), g_strdup (tmp));
-	tmp = fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_FAMILY);
+	tmp = fu_context_get_hwid_value (self->ctx, FU_HWIDS_KEY_FAMILY);
 	if (tmp != NULL)
 		g_hash_table_insert (hash, g_strdup ("HostFamily"), g_strdup (tmp));
-	tmp = fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_PRODUCT_SKU);
+	tmp = fu_context_get_hwid_value (self->ctx, FU_HWIDS_KEY_PRODUCT_SKU);
 	if (tmp != NULL)
 		g_hash_table_insert (hash, g_strdup ("HostSku"), g_strdup (tmp));
-	tmp = fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_MANUFACTURER);
+	tmp = fu_context_get_hwid_value (self->ctx, FU_HWIDS_KEY_MANUFACTURER);
 	if (tmp != NULL)
 		g_hash_table_insert (hash, g_strdup ("HostVendor"), g_strdup (tmp));
 
@@ -5494,16 +5462,6 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 }
 
 static void
-fu_engine_plugin_add_firmware_gtype_cb (FuPlugin *plugin,
-					const gchar *id,
-					GType gtype,
-					gpointer user_data)
-{
-	FuEngine *self = FU_ENGINE (user_data);
-	fu_engine_add_firmware_gtype (self, id, gtype);
-}
-
-static void
 fu_engine_plugin_rules_changed_cb (FuPlugin *plugin, gpointer user_data)
 {
 	FuEngine *self = FU_ENGINE (user_data);
@@ -5517,7 +5475,7 @@ fu_engine_plugin_rules_changed_cb (FuPlugin *plugin, gpointer user_data)
 }
 
 static void
-fu_engine_plugin_security_changed_cb (FuPlugin *plugin, gpointer user_data)
+fu_engine_context_security_changed_cb (FuContext *ctx, gpointer user_data)
 {
 	FuEngine *self = FU_ENGINE (user_data);
 
@@ -5658,7 +5616,7 @@ fu_engine_get_host_product (FuEngine *self)
 {
 	const gchar *result = NULL;
 	g_return_val_if_fail (FU_IS_ENGINE (self), NULL);
-	result = fu_hwids_get_value (self->hwids, FU_HWIDS_KEY_PRODUCT_NAME);
+	result = fu_context_get_hwid_value (self->ctx, FU_HWIDS_KEY_PRODUCT_NAME);
 	return result != NULL ? result : "Unknown Product";
 }
 
@@ -5708,13 +5666,11 @@ fu_engine_attrs_calculate_hsi_for_chassis (FuEngine *self)
 	g_autoptr(GError) error = NULL;
 
 	/* get chassis type from SMBIOS data */
-	val = fu_smbios_get_integer (self->smbios,
-				     FU_SMBIOS_STRUCTURE_TYPE_CHASSIS,
-				     0x05, &error);
-	if (val == G_MAXUINT) {
-		g_warning ("failed to get chassis type: %s", error->message);
+	val = fu_context_get_smbios_integer (self->ctx,
+					     FU_SMBIOS_STRUCTURE_TYPE_CHASSIS,
+					     0x05);
+	if (val == G_MAXUINT)
 		return g_strdup ("HSI-INVALID:chassis");
-	}
 
 	/* verify HSI makes sense for this chassis type */
 	switch (val) {
@@ -5835,6 +5791,7 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		g_autofree gchar *name = NULL;
 		g_autoptr(FuPlugin) plugin = NULL;
 		g_autoptr(GError) error_local = NULL;
+		g_autoptr(GPtrArray) firmware_gtypes = NULL;
 
 		/* ignore non-plugins */
 		if (!g_str_has_suffix (fn, suffix))
@@ -5852,20 +5809,12 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 
 		/* open module */
 		filename = g_build_filename (plugin_path, fn, NULL);
-		plugin = fu_plugin_new ();
+		plugin = fu_plugin_new (self->ctx);
 		fu_plugin_set_name (plugin, name);
-		fu_plugin_set_hwids (plugin, self->hwids);
-		fu_plugin_set_smbios (plugin, self->smbios);
-		fu_plugin_set_udev_subsystems (plugin, self->udev_subsystems);
-		fu_plugin_set_quirks (plugin, self->quirks);
-		fu_plugin_set_runtime_versions (plugin, self->runtime_versions);
-		fu_plugin_set_compile_versions (plugin, self->compile_versions);
-		g_signal_connect (plugin, "add-firmware-gtype",
-				  G_CALLBACK (fu_engine_plugin_add_firmware_gtype_cb),
-				  self);
 
 		/* if loaded from fu_engine_load() open the plugin */
-		if (g_hash_table_size (self->firmware_gtypes) > 0) {
+		firmware_gtypes = fu_context_get_firmware_gtype_ids (self->ctx);
+		if (firmware_gtypes->len > 0) {
 			if (!fu_plugin_open (plugin, filename, &error_local)) {
 				g_warning ("cannot load: %s", error_local->message);
 				fu_engine_add_plugin (self, plugin);
@@ -5894,9 +5843,6 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				  self);
 		g_signal_connect (plugin, "rules-changed",
 				  G_CALLBACK (fu_engine_plugin_rules_changed_cb),
-				  self);
-		g_signal_connect (plugin, "security-changed",
-				  G_CALLBACK (fu_engine_plugin_security_changed_cb),
 				  self);
 
 		/* add */
@@ -5985,7 +5931,7 @@ fu_engine_backend_device_added_cb (FuBackend *backend, FuDevice *device, FuEngin
 	}
 
 	/* add any extra quirks */
-	fu_device_set_quirks (device, self->quirks);
+	fu_device_set_context (device, self->ctx);
 	if (!fu_device_probe (device, &error_local)) {
 		g_warning ("failed to probe device %s: %s",
 			   fu_device_get_backend_id (device),
@@ -6078,7 +6024,7 @@ fu_engine_load_quirks_for_hwid (FuEngine *self, const gchar *hwid)
 	g_auto(GStrv) plugins = NULL;
 
 	/* does prefixed quirk exist */
-	value = fu_quirks_lookup_by_id (self->quirks, hwid, FU_QUIRKS_PLUGIN);
+	value = fu_context_lookup_quirk_by_id (self->ctx, hwid, FU_QUIRKS_PLUGIN);
 	if (value == NULL)
 		return;
 	plugins = g_strsplit (value, ",", -1);
@@ -6099,36 +6045,20 @@ fu_engine_load_quirks_for_hwid (FuEngine *self, const gchar *hwid)
 static void
 fu_engine_load_quirks (FuEngine *self, FuQuirksLoadFlags quirks_flags)
 {
-	GPtrArray *hwids = fu_hwids_get_guids (self->hwids);
+	GPtrArray *guids = fu_context_get_hwid_guids (self->ctx);
 	g_autoptr(GError) error = NULL;
 
 	/* rebuild silo if required */
-	if (!fu_quirks_load (self->quirks, quirks_flags, &error)) {
+	if (!fu_context_load_quirks (self->ctx, quirks_flags, &error)) {
 		g_warning ("Failed to load quirks: %s", error->message);
 		return;
 	}
 
 	/* search each hwid */
-	for (guint i = 0; i < hwids->len; i++) {
-		const gchar *hwid = g_ptr_array_index (hwids, i);
+	for (guint i = 0; i < guids->len; i++) {
+		const gchar *hwid = g_ptr_array_index (guids, i);
 		fu_engine_load_quirks_for_hwid (self, hwid);
 	}
-}
-
-static void
-fu_engine_load_smbios (FuEngine *self)
-{
-	g_autoptr(GError) error = NULL;
-	if (!fu_smbios_setup (self->smbios, &error))
-		g_warning ("Failed to load SMBIOS: %s", error->message);
-}
-
-static void
-fu_engine_load_hwids (FuEngine *self)
-{
-	g_autoptr(GError) error = NULL;
-	if (!fu_hwids_setup (self->hwids, self->smbios, &error))
-		g_warning ("Failed to load HWIDs: %s", error->message);
 }
 
 static gboolean
@@ -6373,10 +6303,8 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		fu_idle_set_timeout (self->idle, fu_config_get_idle_timeout (self->config));
 
 	/* load SMBIOS and the hwids */
-	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO) {
-		fu_engine_load_smbios (self);
-		fu_engine_load_hwids (self);
-	}
+	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO)
+		fu_context_load_hwinfo (self->ctx, NULL);
 
 	/* load AppStream metadata */
 	if (!fu_engine_load_metadata_store (self, flags, error)) {
@@ -6385,13 +6313,13 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	}
 
 	/* add the "built-in" firmware types */
-	fu_engine_add_firmware_gtype (self, "raw", FU_TYPE_FIRMWARE);
-	fu_engine_add_firmware_gtype (self, "dfu", FU_TYPE_DFU_FIRMWARE);
-	fu_engine_add_firmware_gtype (self, "dfuse", FU_TYPE_DFUSE_FIRMWARE);
-	fu_engine_add_firmware_gtype (self, "fmap", FU_TYPE_FMAP_FIRMWARE);
-	fu_engine_add_firmware_gtype (self, "ihex", FU_TYPE_IHEX_FIRMWARE);
-	fu_engine_add_firmware_gtype (self, "srec", FU_TYPE_SREC_FIRMWARE);
-	fu_engine_add_firmware_gtype (self, "smbios", FU_TYPE_SMBIOS);
+	fu_context_add_firmware_gtype (self->ctx, "raw", FU_TYPE_FIRMWARE);
+	fu_context_add_firmware_gtype (self->ctx, "dfu", FU_TYPE_DFU_FIRMWARE);
+	fu_context_add_firmware_gtype (self->ctx, "dfuse", FU_TYPE_DFUSE_FIRMWARE);
+	fu_context_add_firmware_gtype (self->ctx, "fmap", FU_TYPE_FMAP_FIRMWARE);
+	fu_context_add_firmware_gtype (self->ctx, "ihex", FU_TYPE_IHEX_FIRMWARE);
+	fu_context_add_firmware_gtype (self->ctx, "srec", FU_TYPE_SREC_FIRMWARE);
+	fu_context_add_firmware_gtype (self->ctx, "smbios", FU_TYPE_SMBIOS);
 
 	/* set up backends */
 	for (guint i = 0; i < self->backends->len; i++) {
@@ -6532,9 +6460,7 @@ fu_engine_add_runtime_version (FuEngine *self,
 			       const gchar *component_id,
 			       const gchar *version)
 {
-	g_hash_table_insert (self->runtime_versions,
-			     g_strdup (component_id),
-			     g_strdup (version));
+	fu_context_add_runtime_version (self->ctx, component_id, version);
 }
 
 void
@@ -6567,19 +6493,22 @@ fu_engine_init (FuEngine *self)
 	self->config = fu_config_new ();
 	self->remote_list = fu_remote_list_new ();
 	self->device_list = fu_device_list_new ();
-	self->smbios = fu_smbios_new ();
-	self->hwids = fu_hwids_new ();
+	self->ctx = fu_context_new ();
 	self->idle = fu_idle_new ();
-	self->quirks = fu_quirks_new ();
 	self->history = fu_history_new ();
 	self->plugin_list = fu_plugin_list_new ();
 	self->plugin_filter = g_ptr_array_new_with_free_func (g_free);
 	self->host_security_attrs = fu_security_attrs_new ();
-	self->udev_subsystems = g_ptr_array_new_with_free_func (g_free);
 	self->backends = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	self->runtime_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 	self->compile_versions = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
-	self->firmware_gtypes = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+
+	fu_context_set_runtime_versions (self->ctx, self->runtime_versions);
+	fu_context_set_compile_versions (self->ctx, self->compile_versions);
+
+	g_signal_connect (self->ctx, "security-changed",
+			  G_CALLBACK (fu_engine_context_security_changed_cb),
+			  self);
 
 	g_signal_connect (self->config, "changed",
 			  G_CALLBACK (fu_engine_config_changed_cb),
@@ -6596,7 +6525,7 @@ fu_engine_init (FuEngine *self)
 	g_ptr_array_add (self->backends, fu_usb_backend_new ());
 #endif
 #ifdef HAVE_GUDEV
-	g_ptr_array_add (self->backends, fu_udev_backend_new (self->udev_subsystems));
+	g_ptr_array_add (self->backends, fu_udev_backend_new (fu_context_get_udev_subsystems (self->ctx)));
 #endif
 #ifdef HAVE_BLUEZ
 	g_ptr_array_add (self->backends, fu_bluez_backend_new ());
@@ -6663,18 +6592,14 @@ fu_engine_finalize (GObject *obj)
 	g_object_unref (self->idle);
 	g_object_unref (self->config);
 	g_object_unref (self->remote_list);
-	g_object_unref (self->smbios);
-	g_object_unref (self->quirks);
-	g_object_unref (self->hwids);
+	g_object_unref (self->ctx);
 	g_object_unref (self->history);
 	g_object_unref (self->device_list);
 	g_object_unref (self->jcat_context);
 	g_ptr_array_unref (self->plugin_filter);
-	g_ptr_array_unref (self->udev_subsystems);
 	g_ptr_array_unref (self->backends);
 	g_hash_table_unref (self->runtime_versions);
 	g_hash_table_unref (self->compile_versions);
-	g_hash_table_unref (self->firmware_gtypes);
 	g_object_unref (self->plugin_list);
 
 	G_OBJECT_CLASS (fu_engine_parent_class)->finalize (obj);

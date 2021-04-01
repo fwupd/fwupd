@@ -132,7 +132,8 @@ fu_quirks_convert_quirk_to_xml_cb (XbBuilderSource *source,
 			g_autofree gchar *value = NULL;
 
 			/* sanity check key */
-			if (g_hash_table_lookup (self->possible_keys, keys[j]) == NULL) {
+			if ((self->load_flags & FU_QUIRKS_LOAD_FLAG_NO_VERIFY) == 0 &&
+			    g_hash_table_lookup (self->possible_keys, keys[j]) == NULL) {
 				if (!g_ptr_array_find_with_equal_func (self->invalid_keys,
 								       keys[j],
 								       g_str_equal,
@@ -237,10 +238,8 @@ static gboolean
 fu_quirks_check_silo (FuQuirks *self, GError **error)
 {
 	XbBuilderCompileFlags compile_flags = XB_BUILDER_COMPILE_FLAG_WATCH_BLOB;
-	g_autofree gchar *cachedirpkg = NULL;
 	g_autofree gchar *datadir = NULL;
 	g_autofree gchar *localstatedir = NULL;
-	g_autofree gchar *xmlbfn = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(XbBuilder) builder = NULL;
 
@@ -260,9 +259,16 @@ fu_quirks_check_silo (FuQuirks *self, GError **error)
 		return FALSE;
 
 	/* load silo */
-	cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
-	xmlbfn = g_build_filename (cachedirpkg, "quirks.xmlb", NULL);
-	file = g_file_new_for_path (xmlbfn);
+	if (self->load_flags & FU_QUIRKS_LOAD_FLAG_NO_CACHE) {
+		g_autoptr(GFileIOStream) iostr = NULL;
+		file = g_file_new_tmp (NULL, &iostr, error);
+		if (file == NULL)
+			return FALSE;
+	} else {
+		g_autofree gchar *cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
+		g_autofree gchar *xmlbfn = g_build_filename (cachedirpkg, "quirks.xmlb", NULL);
+		file = g_file_new_for_path (xmlbfn);
+	}
 	if (g_getenv ("FWUPD_XMLB_VERBOSE") != NULL) {
 		xb_builder_set_profile_flags (builder,
 					      XB_SILO_PROFILE_FLAG_XPATH |

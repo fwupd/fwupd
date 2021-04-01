@@ -41,7 +41,8 @@ fu_plugin_linux_swap_changed_cb (GFileMonitor *monitor,
 				 gpointer user_data)
 {
 	FuPlugin *plugin = FU_PLUGIN (user_data);
-	fu_plugin_security_changed (plugin);
+	FuContext *ctx = fu_plugin_get_context (plugin);
+	fu_context_security_changed (ctx);
 }
 
 gboolean

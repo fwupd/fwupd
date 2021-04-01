@@ -16,6 +16,7 @@
 static gboolean
 fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	const gchar *dmi_vendor;
 	g_autoptr(FuSuperioDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -25,13 +26,13 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 		dev = g_object_new (FU_TYPE_SUPERIO_IT85_DEVICE,
 				    "device-file", "/dev/port",
 				    "chipset", chipset,
-				    "quirks", fu_plugin_get_quirks (plugin),
+				    "context", ctx,
 				    NULL);
 	} else if (g_strcmp0 (chipset, "IT8987") == 0) {
 		dev = g_object_new (FU_TYPE_SUPERIO_IT89_DEVICE,
 				    "device-file", "/dev/port",
 				    "chipset", chipset,
-				    "quirks", fu_plugin_get_quirks (plugin),
+				    "context", ctx,
 				    NULL);
 	} else {
 		g_set_error (error,
@@ -46,7 +47,7 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 		return FALSE;
 
 	/* set vendor ID as the motherboard vendor */
-	dmi_vendor = fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_BASEBOARD_MANUFACTURER);
+	dmi_vendor = fu_context_get_hwid_value (ctx, FU_HWIDS_KEY_BASEBOARD_MANUFACTURER);
 	if (dmi_vendor != NULL) {
 		g_autofree gchar *vendor_id = g_strdup_printf ("DMI:%s", dmi_vendor);
 		fu_device_add_vendor_id (FU_DEVICE (dev), vendor_id);
@@ -64,16 +65,18 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
-	fu_plugin_add_possible_quirk_key (plugin, "SuperioChipsets");
-	fu_plugin_add_possible_quirk_key (plugin, "SuperioId");
-	fu_plugin_add_possible_quirk_key (plugin, "SuperioPort");
+	fu_context_add_quirk_key (ctx, "SuperioChipsets");
+	fu_context_add_quirk_key (ctx, "SuperioId");
+	fu_context_add_quirk_key (ctx, "SuperioPort");
 }
 
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	GPtrArray *hwids;
 
 	if (fu_common_kernel_locked_down ()) {
@@ -84,12 +87,12 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
-	hwids = fu_plugin_get_hwids (plugin);
+	hwids = fu_context_get_hwid_guids (ctx);
 	for (guint i = 0; i < hwids->len; i++) {
 		const gchar *tmp;
 		const gchar *guid = g_ptr_array_index (hwids, i);
 		g_autofree gchar *key = g_strdup_printf ("%s", guid);
-		tmp = fu_plugin_lookup_quirk_by_id (plugin, key, FU_QUIRKS_SUPERIO_CHIPSETS);
+		tmp = fu_context_lookup_quirk_by_id (ctx, key, FU_QUIRKS_SUPERIO_CHIPSETS);
 		if (tmp == NULL)
 			continue;
 		if (!fu_plugin_superio_coldplug_chipset (plugin, tmp, error))

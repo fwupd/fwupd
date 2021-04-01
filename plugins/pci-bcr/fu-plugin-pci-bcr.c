@@ -21,10 +21,11 @@ struct FuPluginData {
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *priv = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_udev_subsystem (plugin, "pci");
-	fu_plugin_add_possible_quirk_key (plugin, "PciBcrAddr");
+	fu_context_add_udev_subsystem (ctx, "pci");
+	fu_context_add_quirk_key (ctx, "PciBcrAddr");
 
 	/* this is true except for some Atoms */
 	priv->bcr_addr = 0xdc;

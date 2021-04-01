@@ -15,10 +15,9 @@
 #include "fu-common.h"
 #include "fu-common-guid.h"
 #include "fu-common-version.h"
+#include "fu-context.h"
 #include "fu-device.h"
 #include "fu-device-locker.h"
-#include "fu-quirks.h"
-#include "fu-hwids.h"
 #include "fu-usb-device.h"
 //#include "fu-hid-device.h"
 #ifdef HAVE_GUDEV
@@ -52,10 +51,6 @@ struct _FuPluginClass
 	gboolean	 (* check_supported)		(FuPlugin	*self,
 							 const gchar	*guid);
 	void		 (* rules_changed)		(FuPlugin	*self);
-	gboolean	 (* add_firmware_gtype)		(FuPlugin	*self,
-							 const gchar	*id,
-							 GType		 gtype);
-	void		 (* security_changed)		(FuPlugin	*self);
 	/*< private >*/
 	gpointer	padding[20];
 };
@@ -102,6 +97,7 @@ const gchar	*fu_plugin_get_name			(FuPlugin	*self);
 FuPluginData	*fu_plugin_get_data			(FuPlugin	*self);
 FuPluginData	*fu_plugin_alloc_data			(FuPlugin	*self,
 							 gsize		 data_sz);
+FuContext	*fu_plugin_get_context			(FuPlugin	*self);
 void		 fu_plugin_set_build_hash		(FuPlugin	*self,
 							 const gchar	*build_hash);
 void		 fu_plugin_device_add			(FuPlugin	*self,
@@ -110,14 +106,11 @@ void		 fu_plugin_device_remove		(FuPlugin	*self,
 							 FuDevice	*device);
 void		 fu_plugin_device_register		(FuPlugin	*self,
 							 FuDevice	*device);
-void		 fu_plugin_security_changed		(FuPlugin	*self);
 void		 fu_plugin_set_device_gtype		(FuPlugin	*self,
 							 GType		 device_gtype);
 void		 fu_plugin_add_firmware_gtype		(FuPlugin	*self,
 							 const gchar	*id,
 							 GType		 gtype);
-void		 fu_plugin_add_possible_quirk_key	(FuPlugin	*self,
-							 const gchar	*possible_key);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*self,
 							 const gchar	*id);
 void		 fu_plugin_cache_remove			(FuPlugin	*self,
@@ -125,33 +118,10 @@ void		 fu_plugin_cache_remove			(FuPlugin	*self,
 void		 fu_plugin_cache_add			(FuPlugin	*self,
 							 const gchar	*id,
 							 gpointer	 dev);
-gboolean	 fu_plugin_check_hwid			(FuPlugin	*self,
-							 const gchar	*hwid);
-gchar		*fu_plugin_get_hwid_replace_value	(FuPlugin	*self,
-							 const gchar	*keys,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray	*fu_plugin_get_devices			(FuPlugin	*self);
-GPtrArray	*fu_plugin_get_hwids			(FuPlugin	*self);
-const gchar	*fu_plugin_get_dmi_value		(FuPlugin	*self,
-							 const gchar	*dmi_id);
-const gchar	*fu_plugin_get_smbios_string		(FuPlugin	*self,
-							 guint8		 structure_type,
-							 guint8		 offset);
-GBytes		*fu_plugin_get_smbios_data		(FuPlugin	*self,
-							 guint8		 structure_type);
 void		 fu_plugin_add_rule			(FuPlugin	*self,
 							 FuPluginRule	 rule,
 							 const gchar	*name);
-void		 fu_plugin_add_udev_subsystem		(FuPlugin	*self,
-							 const gchar	*subsystem);
-FuQuirks	*fu_plugin_get_quirks			(FuPlugin	*self);
-const gchar	*fu_plugin_lookup_quirk_by_id		(FuPlugin	*self,
-							 const gchar	*group,
-							 const gchar	*key);
-guint64		 fu_plugin_lookup_quirk_by_id_as_uint64	(FuPlugin	*self,
-							 const gchar	*group,
-							 const gchar	*key);
 void		 fu_plugin_add_report_metadata		(FuPlugin	*self,
 							 const gchar	*key,
 							 const gchar	*value);
@@ -159,11 +129,5 @@ gchar		*fu_plugin_get_config_value		(FuPlugin	*self,
 							 const gchar	*key);
 gboolean	 fu_plugin_get_config_value_boolean	(FuPlugin	*self,
 							 const gchar	*key);
-void		 fu_plugin_add_runtime_version		(FuPlugin	*self,
-							 const gchar	*component_id,
-							 const gchar	*version);
-void		 fu_plugin_add_compile_version		(FuPlugin	*self,
-							 const gchar	*component_id,
-							 const gchar	*version);
 gboolean	 fu_plugin_has_custom_flag		(FuPlugin	*self,
 							 const gchar	*flag);

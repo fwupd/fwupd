@@ -159,7 +159,7 @@ fu_plugin_hash_func (gconstpointer user_data)
 	GError *error = NULL;
 	g_autofree gchar *pluginfn = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
-	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new (NULL);
 	gboolean ret = FALSE;
 
 	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
@@ -1003,7 +1003,7 @@ fu_engine_partial_hash_func (gconstpointer user_data)
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
-	g_autoptr(FuPlugin) plugin = fu_plugin_new ();
+	g_autoptr(FuPlugin) plugin = fu_plugin_new (NULL);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GError) error_none = NULL;
 	g_autoptr(GError) error_both = NULL;
@@ -2266,8 +2266,8 @@ fu_plugin_list_func (gconstpointer user_data)
 	GPtrArray *plugins;
 	FuPlugin *plugin;
 	g_autoptr(FuPluginList) plugin_list = fu_plugin_list_new ();
-	g_autoptr(FuPlugin) plugin1 = fu_plugin_new ();
-	g_autoptr(FuPlugin) plugin2 = fu_plugin_new ();
+	g_autoptr(FuPlugin) plugin1 = fu_plugin_new (NULL);
+	g_autoptr(FuPlugin) plugin2 = fu_plugin_new (NULL);
 	g_autoptr(GError) error = NULL;
 
 	fu_plugin_set_name (plugin1, "plugin1");
@@ -2298,8 +2298,8 @@ fu_plugin_list_depsolve_func (gconstpointer user_data)
 	FuPlugin *plugin;
 	gboolean ret;
 	g_autoptr(FuPluginList) plugin_list = fu_plugin_list_new ();
-	g_autoptr(FuPlugin) plugin1 = fu_plugin_new ();
-	g_autoptr(FuPlugin) plugin2 = fu_plugin_new ();
+	g_autoptr(FuPlugin) plugin1 = fu_plugin_new (NULL);
+	g_autoptr(FuPlugin) plugin2 = fu_plugin_new (NULL);
 	g_autoptr(GError) error = NULL;
 
 	fu_plugin_set_name (plugin1, "plugin1");
@@ -3044,7 +3044,7 @@ main (int argc, char **argv)
 	fu_self_test_mkroot ();
 
 	/* load the test plugin */
-	self->plugin = fu_plugin_new ();
+	self->plugin = fu_plugin_new (NULL);
 	pluginfn = g_build_filename (PLUGINBUILDDIR,
 				     "libfu_plugin_test." G_MODULE_SUFFIX,
 				     NULL);

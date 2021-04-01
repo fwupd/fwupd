@@ -23,6 +23,7 @@
 
 #include <locale.h>
 
+#include "fu-context-private.h"
 #include "fu-plugin-private.h"
 #include "fu-thunderbolt-firmware.h"
 #include "fu-thunderbolt-firmware-update.h"
@@ -904,7 +905,15 @@ test_set_up (ThunderboltTest *tt, gconstpointer params)
 	g_autofree gchar *pluginfn = NULL;
 	g_autofree gchar *sysfs = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new ();
 	const gchar *udev_subsystems[] = { "thunderbolt", NULL };
+
+	ret = fu_context_load_quirks (ctx,
+				      FU_QUIRKS_LOAD_FLAG_NO_CACHE |
+				      FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
+				      &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 
 	tt->bed = umockdev_testbed_new ();
 	g_assert_nonnull (tt->bed);
@@ -912,7 +921,7 @@ test_set_up (ThunderboltTest *tt, gconstpointer params)
 	sysfs = umockdev_testbed_get_sys_dir (tt->bed);
 	g_debug ("mock sysfs at %s", sysfs);
 
-	tt->plugin = fu_plugin_new ();
+	tt->plugin = fu_plugin_new (ctx);
 	g_assert_nonnull (tt->plugin);
 
 	pluginfn = g_build_filename (PLUGINBUILDDIR,

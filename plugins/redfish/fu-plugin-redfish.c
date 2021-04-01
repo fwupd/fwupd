@@ -48,12 +48,13 @@ gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	gboolean ca_check;
 	g_autofree gchar *redfish_uri = NULL;
 	g_autoptr(GBytes) smbios_data = NULL;
 
 	/* optional */
-	smbios_data = fu_plugin_get_smbios_data (plugin, REDFISH_SMBIOS_TABLE_TYPE);
+	smbios_data = fu_context_get_smbios_data (ctx, REDFISH_SMBIOS_TABLE_TYPE);
 
 	/* read the conf file */
 	redfish_uri = fu_plugin_get_config_value (plugin, "Uri");
