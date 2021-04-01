@@ -30,8 +30,6 @@
  * See also: #FuDevice
  */
 
-#define	FU_PLUGIN_COLDPLUG_DELAY_MAXIMUM	3000u	/* ms */
-
 static void fu_plugin_finalize			 (GObject *object);
 
 typedef struct {
@@ -59,7 +57,6 @@ enum {
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_REGISTER,
 	SIGNAL_RULES_CHANGED,
-	SIGNAL_SET_COLDPLUG_DELAY,
 	SIGNAL_CHECK_SUPPORTED,
 	SIGNAL_ADD_FIRMWARE_GTYPE,
 	SIGNAL_SECURITY_CHANGED,
@@ -963,43 +960,6 @@ fu_plugin_set_smbios (FuPlugin *self, FuSmbios *smbios)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	g_set_object (&priv->smbios, smbios);
-}
-
-/**
- * fu_plugin_set_coldplug_delay:
- * @self: A #FuPlugin
- * @duration: A delay in milliseconds
- *
- * Set the minimum time that should be waited in-between the call to
- * fu_plugin_coldplug_prepare() and fu_plugin_coldplug(). This is usually going
- * to be the minimum hardware initialization time from a datasheet.
- *
- * It is better to use this function rather than using a sleep() in the plugin
- * itself as then only one delay is done in the daemon rather than waiting for
- * each coldplug prepare in a serial way.
- *
- * Additionally, very long delays should be avoided as the daemon will be
- * blocked from processing requests whilst the coldplug delay is being
- * performed.
- *
- * Since: 0.8.0
- **/
-void
-fu_plugin_set_coldplug_delay (FuPlugin *self, guint duration)
-{
-	g_return_if_fail (FU_IS_PLUGIN (self));
-	g_return_if_fail (duration > 0);
-
-	/* check sanity */
-	if (duration > FU_PLUGIN_COLDPLUG_DELAY_MAXIMUM) {
-		g_warning ("duration of %ums is crazy, truncating to %ums",
-			   duration,
-			   FU_PLUGIN_COLDPLUG_DELAY_MAXIMUM);
-		duration = FU_PLUGIN_COLDPLUG_DELAY_MAXIMUM;
-	}
-
-	/* emit */
-	g_signal_emit (self, signals[SIGNAL_SET_COLDPLUG_DELAY], 0, duration);
 }
 
 static gboolean
@@ -2676,12 +2636,6 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, security_changed),
 			      NULL, NULL, g_cclosure_marshal_VOID__VOID,
 			      G_TYPE_NONE, 0);
-	signals[SIGNAL_SET_COLDPLUG_DELAY] =
-		g_signal_new ("set-coldplug-delay",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (FuPluginClass, set_coldplug_delay),
-			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
 	signals[SIGNAL_CHECK_SUPPORTED] =
 		g_signal_new ("check-supported",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,

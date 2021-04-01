@@ -54,7 +54,6 @@ LIBFWUPDPLUGIN_0.8.0 {
     fu_plugin_runner_unlock;
     fu_plugin_runner_update;
     fu_plugin_runner_verify;
-    fu_plugin_set_coldplug_delay;
     fu_plugin_set_name;
   local: *;
 } LIBFWUPDPLUGIN_0.7.2;

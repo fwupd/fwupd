@@ -95,7 +95,6 @@ struct _FuEngine
 	FuIdle			*idle;
 	XbSilo			*silo;
 	guint			 coldplug_id;
-	guint			 coldplug_delay;
 	FuPluginList		*plugin_list;
 	GPtrArray		*plugin_filter;
 	GPtrArray		*udev_subsystems;
@@ -5167,12 +5166,6 @@ fu_engine_plugins_coldplug (FuEngine *self)
 			g_warning ("failed to prepare coldplug: %s", error->message);
 	}
 
-	/* do this in one place */
-	if (self->coldplug_delay > 0) {
-		g_debug ("sleeping for %ums", self->coldplug_delay);
-		g_usleep (self->coldplug_delay * 1000);
-	}
-
 	/* exec */
 	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
@@ -5579,14 +5572,6 @@ fu_engine_plugin_device_removed_cb (FuPlugin *plugin,
 	fu_engine_emit_changed (self);
 }
 
-static void
-fu_engine_plugin_set_coldplug_delay_cb (FuPlugin *plugin, guint duration, FuEngine *self)
-{
-	self->coldplug_delay = MAX (self->coldplug_delay, duration);
-	g_debug ("got coldplug delay of %ums, global maximum is now %ums",
-		 duration, self->coldplug_delay);
-}
-
 /* this is called by the self tests as well */
 void
 fu_engine_add_plugin (FuEngine *self, FuPlugin *plugin)
@@ -5903,9 +5888,6 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 				  self);
 		g_signal_connect (plugin, "device-register",
 				  G_CALLBACK (fu_engine_plugin_device_register_cb),
-				  self);
-		g_signal_connect (plugin, "set-coldplug-delay",
-				  G_CALLBACK (fu_engine_plugin_set_coldplug_delay_cb),
 				  self);
 		g_signal_connect (plugin, "check-supported",
 				  G_CALLBACK (fu_engine_plugin_check_supported_cb),
