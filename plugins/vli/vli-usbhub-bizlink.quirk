@@ -1,15 +1,15 @@
 # BizLink USB-C Cayenne
-[DeviceInstanceId=USB\VID_06C4&PID_C304]
+[USB\VID_06C4&PID_C304]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3,has-shared-spi-pd
 CounterpartGuid = USB\VID_06C4&PID_C303
-[DeviceInstanceId=USB\VID_06C4&PID_C303]
+[USB\VID_06C4&PID_C303]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_06C4&PID_C304
-[DeviceInstanceId=USB\VID_06C4&PID_C305]
+[USB\VID_06C4&PID_C305]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
