@@ -292,31 +292,6 @@ fu_common_version_ensure_semver (const gchar *version)
 }
 
 /**
- * fu_common_version_parse:
- * @version: A version number
- *
- * Returns a dotted decimal version string from a version string. The supported
- * formats are:
- *
- * - Dotted decimal, e.g. "1.2.3"
- * - Base 16, a hex number *with* a 0x prefix, e.g. "0x10203"
- * - Base 10, a string containing just [0-9], e.g. "66051"
- * - Date in YYYYMMDD format, e.g. 20150915
- *
- * Anything with a '.' or that doesn't match [0-9] or 0x[a-f,0-9] is considered
- * a string and returned without modification.
- *
- * Returns: A version number, e.g. "1.0.3"
- *
- * Since: 1.2.0
- */
-gchar *
-fu_common_version_parse (const gchar *version)
-{
-	return fu_common_version_parse_from_format (version, FWUPD_VERSION_FORMAT_TRIPLET);
-}
-
-/**
  * fu_common_version_parse_from_format
  * @version: A version number
  * @fmt: A FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
@@ -539,23 +514,6 @@ fu_common_vercmp_safe (const gchar *version_a, const gchar *version_b)
 
 	/* we really shouldn't get here */
 	return 0;
-}
-
-/**
- * fu_common_vercmp:
- * @version_a: the semver release version, e.g. 1.2.3
- * @version_b: the semver release version, e.g. 1.2.3.1
- *
- * Compares version numbers for sorting.
- *
- * Returns: -1 if a < b, +1 if a > b, 0 if they are equal, and %G_MAXINT on error
- *
- * Since: 0.3.5
- */
-gint
-fu_common_vercmp (const gchar *version_a, const gchar *version_b)
-{
-	return fu_common_vercmp_safe (version_a, version_b);
 }
 
 /**

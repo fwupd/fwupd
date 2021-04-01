@@ -10,18 +10,12 @@ LIBFWUPDPLUGIN_0.1.0 {
   local: *;
 };
 
-LIBFWUPDPLUGIN_0.3.5 {
-  global:
-    fu_common_vercmp;
-  local: *;
-} LIBFWUPDPLUGIN_0.1.0;
-
 LIBFWUPDPLUGIN_0.6.1 {
   global:
     fu_device_get_equivalent_id;
     fu_device_set_equivalent_id;
   local: *;
-} LIBFWUPDPLUGIN_0.3.5;
+} LIBFWUPDPLUGIN_0.1.0;
 
 LIBFWUPDPLUGIN_0.7.1 {
   global:
@@ -47,7 +41,6 @@ LIBFWUPDPLUGIN_0.8.0 {
     fu_plugin_device_add;
     fu_plugin_device_remove;
     fu_plugin_get_data;
-    fu_plugin_get_enabled;
     fu_plugin_get_name;
     fu_plugin_get_type;
     fu_plugin_new;
@@ -63,7 +56,6 @@ LIBFWUPDPLUGIN_0.8.0 {
     fu_plugin_runner_update;
     fu_plugin_runner_verify;
     fu_plugin_set_coldplug_delay;
-    fu_plugin_set_enabled;
     fu_plugin_set_name;
   local: *;
 } LIBFWUPDPLUGIN_0.7.2;
@@ -324,7 +316,6 @@ LIBFWUPDPLUGIN_1.2.0 {
     fu_common_version_from_uint16;
     fu_common_version_from_uint32;
     fu_common_version_guess_format;
-    fu_common_version_parse;
   local: *;
 } LIBFWUPDPLUGIN_1.1.2;
 
