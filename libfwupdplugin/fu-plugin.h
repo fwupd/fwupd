@@ -105,11 +105,6 @@ const gchar	*fu_plugin_get_name			(FuPlugin	*self);
 FuPluginData	*fu_plugin_get_data			(FuPlugin	*self);
 FuPluginData	*fu_plugin_alloc_data			(FuPlugin	*self,
 							 gsize		 data_sz);
-gboolean	 fu_plugin_get_enabled			(FuPlugin	*self)
-G_DEPRECATED_FOR(fu_plugin_has_flag);
-void		 fu_plugin_set_enabled			(FuPlugin	*self,
-							 gboolean	 enabled)
-G_DEPRECATED_FOR(fu_plugin_add_flag);
 void		 fu_plugin_set_build_hash		(FuPlugin	*self,
 							 const gchar	*build_hash);
 void		 fu_plugin_device_add			(FuPlugin	*self,

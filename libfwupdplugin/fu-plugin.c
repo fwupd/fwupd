@@ -310,45 +310,6 @@ fu_plugin_alloc_data (FuPlugin *self, gsize data_sz)
 }
 
 /**
- * fu_plugin_get_enabled:
- * @self: A #FuPlugin
- *
- * Returns if the plugin is enabled. Plugins may self-disable using
- * fu_plugin_set_enabled() or can be disabled by the daemon.
- *
- * Returns: %TRUE if the plugin is currently enabled.
- *
- * Since: 0.8.0
- **/
-gboolean
-fu_plugin_get_enabled (FuPlugin *self)
-{
-	g_return_val_if_fail (FU_IS_PLUGIN (self), FALSE);
-	return !fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED);
-}
-
-/**
- * fu_plugin_set_enabled:
- * @self: A #FuPlugin
- * @enabled: the enabled value
- *
- * Enables or disables a plugin. Plugins can self-disable at any point.
- *
- * Since: 0.8.0
- **/
-void
-fu_plugin_set_enabled (FuPlugin *self, gboolean enabled)
-{
-	g_return_if_fail (FU_IS_PLUGIN (self));
-	if (enabled) {
-		fwupd_plugin_remove_flag (FWUPD_PLUGIN (self),
-					  FWUPD_PLUGIN_FLAG_DISABLED);
-	} else {
-		fu_plugin_add_flag (self, FWUPD_PLUGIN_FLAG_DISABLED);
-	}
-}
-
-/**
  * fu_plugin_guess_name_from_fn:
  * @filename: filename to guess
  *
