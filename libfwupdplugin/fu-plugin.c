@@ -59,7 +59,6 @@ enum {
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_REGISTER,
 	SIGNAL_RULES_CHANGED,
-	SIGNAL_RECOLDPLUG,
 	SIGNAL_SET_COLDPLUG_DELAY,
 	SIGNAL_CHECK_SUPPORTED,
 	SIGNAL_ADD_FIRMWARE_GTYPE,
@@ -557,22 +556,6 @@ fu_plugin_device_remove (FuPlugin *self, FuDevice *device)
 		 fu_plugin_get_name (self),
 		 fu_device_get_id (device));
 	g_signal_emit (self, signals[SIGNAL_DEVICE_REMOVED], 0, device);
-}
-
-/**
- * fu_plugin_request_recoldplug:
- * @self: A #FuPlugin
- *
- * Ask all the plugins to coldplug all devices, which will include the prepare()
- * and cleanup() phases. Duplicate devices added will be ignored.
- *
- * Since: 0.8.0
- **/
-void
-fu_plugin_request_recoldplug (FuPlugin *self)
-{
-	g_return_if_fail (FU_IS_PLUGIN (self));
-	g_signal_emit (self, signals[SIGNAL_RECOLDPLUG], 0);
 }
 
 /**
@@ -1340,54 +1323,6 @@ fu_plugin_runner_coldplug (FuPlugin *self, GError **error)
 		}
 		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
 					    "failed to coldplug using %s: ", fu_plugin_get_name (self));
-		return FALSE;
-	}
-	return TRUE;
-}
-
-/**
- * fu_plugin_runner_recoldplug:
- * @self: a #FuPlugin
- * @error: a #GError or NULL
- *
- * Runs the recoldplug routine for the plugin
- *
- * Returns: #TRUE for success, #FALSE for failure
- *
- * Since: 1.0.4
- **/
-gboolean
-fu_plugin_runner_recoldplug (FuPlugin *self, GError **error)
-{
-	FuPluginPrivate *priv = GET_PRIVATE (self);
-	FuPluginStartupFunc func = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	/* not enabled */
-	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED))
-		return TRUE;
-
-	/* no object loaded */
-	if (priv->module == NULL)
-		return TRUE;
-
-	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_recoldplug", (gpointer *) &func);
-	if (func == NULL)
-		return TRUE;
-	g_debug ("recoldplug(%s)", fu_plugin_get_name (self));
-	if (!func (self, &error_local)) {
-		if (error_local == NULL) {
-			g_critical ("unset plugin error in recoldplug(%s)",
-				    fu_plugin_get_name (self));
-			g_set_error_literal (&error_local,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
-					     "unspecified error");
-		}
-		g_propagate_prefixed_error (error, g_steal_pointer (&error_local),
-					    "failed to recoldplug using %s: ",
-					    fu_plugin_get_name (self));
 		return FALSE;
 	}
 	return TRUE;
@@ -2735,12 +2670,6 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, device_register),
 			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
 			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
-	signals[SIGNAL_RECOLDPLUG] =
-		g_signal_new ("recoldplug",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (FuPluginClass, recoldplug),
-			      NULL, NULL, g_cclosure_marshal_VOID__VOID,
-			      G_TYPE_NONE, 0);
 	signals[SIGNAL_SECURITY_CHANGED] =
 		g_signal_new ("security-changed",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,

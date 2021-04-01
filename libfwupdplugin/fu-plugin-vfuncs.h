@@ -101,17 +101,6 @@ gboolean	 fu_plugin_coldplug_prepare		(FuPlugin	*plugin,
 gboolean	 fu_plugin_coldplug_cleanup		(FuPlugin	*plugin,
 							 GError		**error);
 /**
- * fu_plugin_recoldplug:
- * @plugin: A #FuPlugin
- * @error: A #GError or NULL
- *
- * Re-runs the coldplug routine for devices.
- *
- * Since: 1.0.4
- **/
-gboolean	 fu_plugin_recoldplug			(FuPlugin	*plugin,
-							 GError		**error);
-/**
  * fu_plugin_update:
  * @plugin: A #FuPlugin
  * @dev: A #FuDevice
