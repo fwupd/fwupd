@@ -1,0 +1,12 @@
+#Analogix device
+
+# Analogix usb device
+[DeviceInstanceId=USB\VID_1F29&PID_7518]
+Plugin = anx_udev
+#Summary = Analogix Semiconductor USB Device
+Flags = updatable,usable-during-update
+
+
+
+
+
