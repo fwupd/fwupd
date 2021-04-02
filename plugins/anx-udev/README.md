@@ -4,7 +4,7 @@ Analogix Device Support
 Introduction
 ------------
 
-This plugin can flash the firmware on the Minibon Device.
+This plugin can flash the firmware of Analogix device.
 
 Firmware Format
 ---------------
