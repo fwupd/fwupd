@@ -6232,7 +6232,7 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	guint backend_cnt = 0;
 	g_autoptr(GPtrArray) checksums_approved = NULL;
 	g_autoptr(GPtrArray) checksums_blocked = NULL;
-#ifdef __linux__
+#ifndef _WIN32
 	g_autoptr(GError) error_local = NULL;
 #endif
 
