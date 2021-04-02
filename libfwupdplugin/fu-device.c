@@ -1252,13 +1252,6 @@ fu_device_set_quirk_kv (FuDevice *self,
 			return TRUE;
 		}
 		priv->specialized_gtype = g_type_from_name (value);
-		if (priv->specialized_gtype == G_TYPE_INVALID) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_FOUND,
-				     "device GType %s not supported", value);
-			return FALSE;
-		}
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_CHILDREN) == 0) {
