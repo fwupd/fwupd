@@ -221,11 +221,9 @@ fu_dfu_tool_get_default_device (FuDfuTool *self, GError **error)
 							    (guint16) pid,
 							    error);
 		if (usb_device == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "no device matches for %04x:%04x",
-				     (guint) vid, (guint) pid);
+			g_prefix_error (error,
+					"no device matches for %04x:%04x: ",
+					(guint) vid, (guint) pid);
 			return NULL;
 		}
 		device = fu_dfu_device_new (usb_device);
