@@ -7,7 +7,7 @@
 
 #include <string.h>
 
-//#include "fu-chunk.h"
+#include "fu-chunk.h"
 
 #include "fu-analogix-usbc-common.h"
 #include "fu-analogix-usbc-device.h"
@@ -30,12 +30,12 @@ struct _FuAnalogixUsbcDevice {
 G_DEFINE_TYPE (FuAnalogixUsbcDevice, fu_analogix_usbc_device, FU_TYPE_USB_DEVICE)
 static gboolean
 fu_analogix_usbc_device_send (FuAnalogixUsbcDevice *self,
-                       AnxBbRqtCode reqcode,
-                       guint16 val0code,
-                          guint16 index,
-                       guint8 *in,
-                       gsize in_len,
-                       GError **error)
+                        AnxBbRqtCode reqcode,
+                        guint16 val0code,
+                        guint16 index,
+                        guint8 *in,
+                        gsize in_len,
+                        GError **error)
 {
     gsize actual_len = 0;
     /* check size */
@@ -61,13 +61,19 @@ fu_analogix_usbc_device_send (FuAnalogixUsbcDevice *self,
             &actual_len, /* actual length */
             (guint)ANX_BB_TRANSACTION_TIMEOUT,
             NULL, error)) {
-        g_prefix_error (error, "send data error: ");
+        g_set_error (error,
+                    G_IO_ERROR,
+                    G_IO_ERROR_INVALID_DATA,
+                    "send data error");
         return FALSE;
     }
-     if (actual_len != in_len)
-     {
-        g_prefix_error (error, "send data error count: ");
-         return FALSE;
+     if (actual_len != in_len) {
+        g_prefix_error (error, "receive data error count: ");
+        g_set_error (error,
+                    G_IO_ERROR,
+                    G_IO_ERROR_INVALID_DATA,
+                    "send data length is incorrect");
+        return FALSE;
      }
     return TRUE;
 }
@@ -122,7 +128,7 @@ check_update_status(FuAnalogixUsbcDevice *self)
     AnxUpdateStatus status = UPDATE_STATUS_INVALID;
     gint times = 30000;
     while ((status == UPDATE_STATUS_INVALID) && times > 0) {
-        /*g_debug ("status:%d", (gint)status);*/
+        /* g_debug ("status:%d", (gint)status); */
         if (!fu_analogix_usbc_device_receive (self, ANX_BB_RQT_GET_UPDATE_STATUS, 0, 
         0, (guint8 *)&status,1, NULL))
             return FALSE;
@@ -136,11 +142,13 @@ check_update_status(FuAnalogixUsbcDevice *self)
 }
 
 static gboolean
-fu_analogix_usbc_device_open (FuUsbDevice *device, GError **error)
+fu_analogix_usbc_device_open (FuDevice *device, GError **error)
 {
-    GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+    GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
     FuAnalogixUsbcDevice *self = FU_ANALOGIX_USBC_DEVICE (device);
-
+    /* FuUsbDevice->open */
+    if (!FU_DEVICE_CLASS (fu_analogix_usbc_device_parent_class)->open (device, error))
+        return FALSE;
     if (!g_usb_device_claim_interface (usb_device, self->iface_idx,
                             G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
                             error)) {
@@ -157,11 +165,11 @@ fu_analogix_usbc_device_setup (FuDevice *device, GError **error)
 {
     FuAnalogixUsbcDevice *self = FU_ANALOGIX_USBC_DEVICE (device);
     guint8 fw_ver[2];
-    guint8 cus_ver[2];
+    guint8 cus_ver[2] = {0};
     guint16 fw_i_ver = 0;
     guint16 cus_i_ver = 0;
     g_autofree gchar *version = NULL;
-    /*get OCM version*/
+    /* get OCM version */
     if(!fu_analogix_usbc_device_receive (self, ANX_BB_RQT_READ_FW_VER, 0, 0,
                                     &fw_ver[1], 1, error))
         return FALSE;
@@ -169,7 +177,7 @@ fu_analogix_usbc_device_setup (FuDevice *device, GError **error)
     if(!fu_analogix_usbc_device_receive(self, ANX_BB_RQT_READ_FW_RVER, 0, 0,
                                         &fw_ver[0], 1, error))
         return FALSE;
-    /*TODO:get Custom Version*/
+    /* TODO:get Custom Version */
     fw_i_ver = (fw_ver[1] << 8) | fw_ver[0];
     cus_i_ver = (cus_ver[1] << 8) | cus_ver[0];
     version = g_strdup_printf ("%04x.%04x", cus_i_ver, fw_i_ver);
@@ -213,7 +221,7 @@ fu_analogix_usbc_device_find_interface (FuUsbDevice *device,
             endpoints = g_usb_interface_get_endpoints (intf);
             if (NULL == endpoints)
                     continue;
-            /*if (endpoints->len == 0)
+            /* if (endpoints->len == 0)
             {
                     ep = endpoints;
             }
@@ -224,28 +232,30 @@ fu_analogix_usbc_device_find_interface (FuUsbDevice *device,
             g_debug ("analogix_usbc:fu_analogix_usbc_device_find_interface, NULL != endpoints");
             self->iface_idx = g_usb_interface_get_number (intf);
             self->ep_num = g_usb_endpoint_get_address (ep) & 0x7f;
-            self->chunk_len = g_usb_endpoint_get_maximum_packet_size (ep);
-            */
+            self->chunk_len = g_usb_endpoint_get_maximum_packet_size (ep); */
             return TRUE;
         }
     }
     g_set_error_literal (error,
-                        FWUPD_ERROR,
-                        FWUPD_ERROR_NOT_FOUND,
-                        "no update interface found");
+        FWUPD_ERROR,
+        FWUPD_ERROR_NOT_FOUND,
+        "no update interface found");
     return FALSE;
 }
 
 static gboolean
-fu_analogix_usbc_device_probe (FuUsbDevice *device, GError **error)
+fu_analogix_usbc_device_probe (FuDevice *device, GError **error)
 {
     g_debug ("analogix_usbc:fu_analogix_usbc_device_probe");
-    if (!fu_analogix_usbc_device_find_interface (device, error)) {
+    /* FuUsbDevice->probe */
+    if (!FU_DEVICE_CLASS (fu_analogix_usbc_device_parent_class)->probe (device, error))
+        return FALSE;
+    if (!fu_analogix_usbc_device_find_interface (FU_USB_DEVICE (device), error)) {
         g_prefix_error (error, "failed to find update interface: ");
         return FALSE;
     }
     /* set name and vendor */
-    fu_device_set_summary (FU_DEVICE (device), "Analogix Phoenix-Lite");
+    fu_device_set_summary (FU_DEVICE (device), "Phoenix-Lite");
     fu_device_set_vendor (FU_DEVICE (device), "Analogix Semiconductor Inc.");
     /* success */
     return TRUE;
@@ -275,9 +285,9 @@ fu_analogix_usbc_device_prepare_firmware (FuDevice *device,
          return NULL;   
     }
 
-    /* get header*/
+    /* get header */
     fw_hdr = fu_firmware_get_image_by_id_bytes (firmware,
-                                            FU_FIRMWARE_IMAGE_ID_HEADER,
+                                            FU_FIRMWARE_ID_HEADER,
                                             error);
     if (fw_hdr == NULL) {
         g_set_error (error,
@@ -309,18 +319,26 @@ fu_analogix_usbc_device_prepare_firmware (FuDevice *device,
 static gboolean program_flash (guint32 start_addr, guint32 total_len,
                                 guint32 len, guint16 req_val,
                                 FuDevice *device, guint32 base,
-                                const guint8 *source_buf, GError **error)
+                                GBytes *source_buf, GError **error)
 {
     static guint32 wrote_len = 0;
-    guint32 packet_count;
-    guint32 left_count;
     guint32 packet_index = 0;
+    g_autoptr(GBytes) block_bytes = NULL;
+    g_autoptr(GPtrArray) chunks = NULL;
     FuAnalogixUsbcDevice *self = FU_ANALOGIX_USBC_DEVICE (device);
-    packet_count = len/BILLBOARD_MAX_PACKET_SIZE;
-    left_count = len%BILLBOARD_MAX_PACKET_SIZE;
     if (source_buf == NULL)
         return FALSE;
-    /*initialization*/
+    block_bytes =  fu_common_bytes_new_offset (source_buf,
+                                            base,
+                                            len,
+                                            error);
+    if (block_bytes == NULL)
+        return FALSE;
+    chunks = fu_chunk_array_new_from_bytes (block_bytes,
+                                            0x00,
+                                            0x00,
+                                            BILLBOARD_MAX_PACKET_SIZE);
+    /* initialization */
     if (!fu_analogix_usbc_device_send (self, ANX_BB_RQT_SEND_UPDATE_DATA, req_val, 0, 
                             (guint8 *)&len, 3, NULL)) {
         g_set_error (error,
@@ -329,8 +347,6 @@ static gboolean program_flash (guint32 start_addr, guint32 total_len,
             "Program initialized failed");
         return FALSE;
     }
-
-
     if (!check_update_status (self)) {
         g_set_error (error,
             G_IO_ERROR,
@@ -338,21 +354,18 @@ static gboolean program_flash (guint32 start_addr, guint32 total_len,
             "Program initialized failed");
         return FALSE;
     }
-    /*write data*/
-    for (packet_index = 0; packet_index < packet_count; packet_index++)
+    /* write data */
+    for (packet_index = 0; packet_index < chunks->len; packet_index++)
     {
+        FuChunk *chk = g_ptr_array_index (chunks, packet_index);
         fu_analogix_usbc_device_send (self, ANX_BB_RQT_SEND_UPDATE_DATA, req_val,
                                 packet_index+1, 
-            (guint8 *)&source_buf[packet_index*BILLBOARD_MAX_PACKET_SIZE+base],
-                                BILLBOARD_MAX_PACKET_SIZE, NULL);
+                                (guint8 *)fu_chunk_get_data (chk),
+                                fu_chunk_get_data_sz (chk), NULL);
         if (!check_update_status (self))
         {
             g_debug ("Update failed with packet: %d, base:%x",
                             (gint)packet_index, base);
-            for (gint i = 0; i < BILLBOARD_MAX_PACKET_SIZE; i++) {
-                g_debug ("index : %d, data :0x%x", i,
-                source_buf[packet_index*BILLBOARD_MAX_PACKET_SIZE+i+base]);
-            }
             if (!check_update_status (self)) {
                 g_set_error (error,
                     G_IO_ERROR,
@@ -361,17 +374,7 @@ static gboolean program_flash (guint32 start_addr, guint32 total_len,
                 return FALSE;
             }
         }
-        wrote_len += BILLBOARD_MAX_PACKET_SIZE;
-        fu_device_set_progress_full (device, wrote_len, total_len);
-    }
-    if (left_count > 0) {
-        fu_analogix_usbc_device_send (self, ANX_BB_RQT_SEND_UPDATE_DATA, req_val,
-                                packet_index+1, 
-            (guint8 *)&source_buf[packet_index*BILLBOARD_MAX_PACKET_SIZE+base],
-                                left_count, NULL);
-        if (!check_update_status (self))
-                return FALSE;
-        wrote_len += left_count;
+        wrote_len += fu_chunk_get_data_sz (chk);
         fu_device_set_progress_full (device, wrote_len, total_len);
     }
     return TRUE;
@@ -383,11 +386,10 @@ fu_analogix_usbc_device_write_firmware (FuDevice *device,
                                 FwupdInstallFlags flags,
                                 GError **error)
 {
-    /*FuAnalogixUsbcDevice *self = FU_ANALOGIX_USBC_DEVICE (device);*/
+    /* FuAnalogixUsbcDevice *self = FU_ANALOGIX_USBC_DEVICE (device); */
     g_autoptr(GBytes) fw_hdr = NULL;
     g_autoptr(GBytes) fw_payload = NULL;
     const AnxImgHeader *buf = NULL;
-    guint8 *fw_buf = NULL;
     guint32 payload_len;
     guint16 req_value = 0;
     guint32 base = 0;
@@ -396,16 +398,16 @@ fu_analogix_usbc_device_write_firmware (FuDevice *device,
     g_debug ("analogix_usbc:fu_analogix_usbc_device_write_firmware");
     /* get header and payload */
     fw_hdr = fu_firmware_get_image_by_id_bytes (firmware,
-                                            FU_FIRMWARE_IMAGE_ID_HEADER,
+                                            FU_FIRMWARE_ID_HEADER,
                                             error);
     if (fw_hdr == NULL)
         return FALSE;
     fw_payload = fu_firmware_get_image_by_id_bytes (firmware,
-                                                FU_FIRMWARE_IMAGE_ID_PAYLOAD,
+                                                FU_FIRMWARE_ID_PAYLOAD,
                                                 error);
     if (fw_payload == NULL)
         return FALSE;
-    /*g_debug ("get img");*/
+    /* g_debug ("get img"); */
     /* set up the firmware header */
     buf = (const AnxImgHeader *)g_bytes_get_data (fw_hdr, NULL);
     if (buf == NULL) {
@@ -425,7 +427,6 @@ fu_analogix_usbc_device_write_firmware (FuDevice *device,
     }
     g_debug ("payload_len:%d,buf->fw_start_addr:%d ", (gint)payload_len,
             (gint)buf->fw_start_addr);
-    fw_buf = (guint8 *)g_bytes_get_data (fw_payload, NULL);
     fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
     if ((buf->custom_start_addr == FLASH_CUSTOM_ADDR) &&
                     (buf->custom_payload_len > 0)) {
@@ -434,7 +435,7 @@ fu_analogix_usbc_device_write_firmware (FuDevice *device,
                         buf->secure_rx_payload_len;
         program_ret = program_flash (buf->custom_start_addr, payload_len,
                                     buf->custom_payload_len,
-                                    req_value, device, base,fw_buf,
+                                    req_value, device, base,fw_payload,
                                     &error_local);
         if (program_ret == FALSE)
         {
@@ -451,7 +452,7 @@ fu_analogix_usbc_device_write_firmware (FuDevice *device,
         base = buf->fw_payload_len;
         program_ret = program_flash (buf->secure_tx_start_addr, payload_len,
                                     buf->secure_tx_payload_len,
-                                    req_value, device, base,fw_buf,
+                                    req_value, device, base,fw_payload,
                                     &error_local);
         if (program_ret == FALSE)
         {
@@ -468,7 +469,7 @@ fu_analogix_usbc_device_write_firmware (FuDevice *device,
         base = buf->fw_payload_len + buf->secure_tx_payload_len;
         program_ret = program_flash (buf->secure_rx_start_addr,
                                     payload_len, buf->secure_rx_payload_len,
-                                    req_value, device, base,fw_buf,
+                                    req_value, device, base,fw_payload,
                                     &error_local);
         if (program_ret == FALSE)
         {
@@ -484,7 +485,7 @@ fu_analogix_usbc_device_write_firmware (FuDevice *device,
         base = 0;
         program_ret = program_flash (buf->fw_start_addr, payload_len,
                                     buf->fw_payload_len,
-                                    req_value, device, base, fw_buf,
+                                    req_value, device, base, fw_payload,
                                     &error_local);
         if (program_ret == FALSE)
         {
@@ -499,9 +500,9 @@ fu_analogix_usbc_device_write_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_analogix_usbc_device_close (FuUsbDevice *device, GError **error)
+fu_analogix_usbc_device_close (FuDevice *device, GError **error)
 {
-    GUsbDevice *usb_device = fu_usb_device_get_dev (device);
+    GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
     FuAnalogixUsbcDevice *self = FU_ANALOGIX_USBC_DEVICE (device);
     /* release interface */
     if (!g_usb_device_release_interface (usb_device, self->iface_idx,
@@ -511,15 +512,15 @@ fu_analogix_usbc_device_close (FuUsbDevice *device, GError **error)
         return FALSE;
     }
     g_debug ("analogix_usbc:fu_analogix_usbc_device_close");
-    /* success */
-    return TRUE;
+    /* FuUsbDevice->close */
+    return FU_DEVICE_CLASS (fu_analogix_usbc_device_parent_class)->close (device, error);
 }
 
 
 static void
 fu_analogix_usbc_device_init (FuAnalogixUsbcDevice *self)
 {
-    fu_device_set_protocol (FU_DEVICE (self), "com.analogix.bb");
+    fu_device_add_protocol (FU_DEVICE (self), "com.analogix.bb");
     fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
     fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 }
@@ -528,11 +529,10 @@ static void
 fu_analogix_usbc_device_class_init (FuAnalogixUsbcDeviceClass *klass)
 {
     FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-    FuUsbDeviceClass *klass_usb_device = FU_USB_DEVICE_CLASS (klass);
     klass_device->write_firmware = fu_analogix_usbc_device_write_firmware;
     klass_device->setup = fu_analogix_usbc_device_setup;
-    klass_usb_device->open = fu_analogix_usbc_device_open;
-    klass_usb_device->probe = fu_analogix_usbc_device_probe;
+    klass_device->open = fu_analogix_usbc_device_open;
+    klass_device->probe = fu_analogix_usbc_device_probe;
     klass_device->prepare_firmware = fu_analogix_usbc_device_prepare_firmware;
-    klass_usb_device->close = fu_analogix_usbc_device_close;
+    klass_device->close = fu_analogix_usbc_device_close;
 }

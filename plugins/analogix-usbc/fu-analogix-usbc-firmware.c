@@ -26,9 +26,9 @@ fu_analogix_usbc_firmware_parse (FuFirmware *firmware,
                            GError **error)
 {
     guint8* bin_buf = g_malloc0 (MAX_FILE_SIZE);
-    /*guint32 payload_len;*/
-    g_autoptr(FuFirmwareImage) img_hdr = fu_firmware_image_new (NULL);
-    g_autoptr(FuFirmwareImage) img_payload = fu_firmware_image_new (NULL);
+    /* guint32 payload_len; */
+    g_autoptr(FuFirmware) img_hdr = fu_firmware_new ();
+    g_autoptr(FuFirmware) img_payload = fu_firmware_new ();
     guchar colon = ':';
     guchar* hex_hdr;
     gsize fw_size = 0;
@@ -48,7 +48,7 @@ fu_analogix_usbc_firmware_parse (FuFirmware *firmware,
     }
     memset (bin_buf, 0xff, MAX_FILE_SIZE);
     memset (img_header, 0, sizeof(AnxImgHeader));
-    g_debug ("fw_size : %ld", fw_size);
+    g_debug ("fw_size : %ld", (long)fw_size);
     if (fw_size < HEX_LINE_HEADER_SIZE) {
         g_set_error_literal (error,
                         G_IO_ERROR,
@@ -70,17 +70,17 @@ fu_analogix_usbc_firmware_parse (FuFirmware *firmware,
     fw_payload = g_bytes_new_take (bin_buf, img_header->total_len);
     if ((fw_hdr == NULL) || (fw_payload == NULL))
         return FALSE;
-    fu_firmware_image_set_id (img_hdr, FU_FIRMWARE_IMAGE_ID_HEADER);
-    fu_firmware_image_set_bytes (img_hdr, fw_hdr);
+    fu_firmware_set_id (img_hdr, FU_FIRMWARE_ID_HEADER);
+    fu_firmware_set_bytes (img_hdr, fw_hdr);
     fu_firmware_add_image (firmware, img_hdr);
-    fu_firmware_image_set_id (img_payload, FU_FIRMWARE_IMAGE_ID_PAYLOAD);
+    fu_firmware_set_id (img_payload, FU_FIRMWARE_ID_PAYLOAD);
     if (img_header->fw_start_addr != 0)
-        fu_firmware_image_set_addr (img_payload, img_header->fw_start_addr);    
+        fu_firmware_set_addr (img_payload, img_header->fw_start_addr);    
     else if (img_header->custom_start_addr != 0)
-        fu_firmware_image_set_addr (img_payload,
+        fu_firmware_set_addr (img_payload,
                                     img_header->custom_start_addr);
     
-    fu_firmware_image_set_bytes (img_payload, fw_payload);
+    fu_firmware_set_bytes (img_payload, fw_payload);
     fu_firmware_add_image (firmware, img_payload);
     return TRUE;
 }

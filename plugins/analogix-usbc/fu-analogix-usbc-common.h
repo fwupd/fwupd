@@ -28,7 +28,7 @@
 #define FLASH_CUSTOM_ADDR                                0x38000
 #define OCM_FW_VERSION_ADDR             0x4FF0
 
-/*bRequest for Phoenix-Lite Billboard*/
+/* bRequest for Phoenix-Lite Billboard */
 typedef enum {
     ANX_BB_RQT_SEND_UPDATE_DATA = 0x01,
     ANX_BB_RQT_READ_UPDATE_DATA = 0x02,
@@ -36,22 +36,22 @@ typedef enum {
     ANX_BB_RQT_READ_FW_VER = 0x12,
     ANX_BB_RQT_READ_CUS_VER = 0x13,
     ANX_BB_RQT_READ_FW_RVER = 0x19
-}AnxBbRqtCode;
+} AnxBbRqtCode;
 
-/*wValue low byte*/
+/* wValue low byte */
 typedef enum{
     ANX_BB_WVAL_UPDATE_OCM = 0x06,
     ANX_BB_WVAL_UPDATE_CUSTOM_DEF = 0x07,
     ANX_BB_WVAL_UPDATE_SECURE_TX = 0x08,
     ANX_BB_WVAL_UPDATE_SECURE_RX = 0x09
-}AnxwValCode;
+} AnxwValCode;
 
 typedef enum {
     UPDATE_STATUS_INVALID = 0,
     UPDATE_STATUS_START,
     UPDATE_STATUS_FINISH,
     UPDATE_STATUS_ERROR = 0xFF
-}AnxUpdateStatus;
+} AnxUpdateStatus;
 
 #define HEX_LINE_HEADER_SIZE 9
 
@@ -68,7 +68,7 @@ typedef struct __attribute__ ((packed)){
     guint32 total_len;
     guint16 custom_ver;
     guint16 fw_ver;
-}AnxImgHeader;
+} AnxImgHeader;
 
 guint64 hex_str_to_dec (const gchar* str, guint8 len);
 gboolean parse_fw_hex_file (const guint8* fw_src, guint32 src_fw_size, 

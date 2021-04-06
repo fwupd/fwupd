@@ -42,7 +42,7 @@ gboolean parse_fw_hex_file (const guint8* fw_src, guint32 src_fw_size,
         (out_header == NULL) || (out_binary == NULL)) {
         return FALSE;
     }
-    /*caculate start addr*/
+    /* caculate start addr */
     while (end_of_file == FALSE) {
         if (new_line) {
             if (hex_hdr[fw_index] != colon)
@@ -64,7 +64,7 @@ gboolean parse_fw_hex_file (const guint8* fw_src, guint32 src_fw_size,
                                         (guint8)(start_addr & 0xff)
                                         + (guint8)((start_addr >> 8)&0xff);
                     if (addr_mode == 2) {
-                        /*extend mode*/
+                        /* extend mode */
                         start_addr = (most_high_addr << 4) +
                                     start_addr;
                         version_addr = (most_high_addr << 4) +
@@ -76,7 +76,7 @@ gboolean parse_fw_hex_file (const guint8* fw_src, guint32 src_fw_size,
                         version_addr = (most_high_addr << 16) +
                                         OCM_FW_VERSION_ADDR;
                     }
-                    /*g_debug  ("start_addr:0x%x", start_addr);*/
+                    /* g_debug  ("start_addr:0x%x", start_addr); */
                     switch (start_addr) {
                         case FLASH_OCM_ADDR:
                             img_header->fw_start_addr = start_addr;
@@ -161,7 +161,7 @@ gboolean parse_fw_hex_file (const guint8* fw_src, guint32 src_fw_size,
                     if ((start_addr == version_addr) &&
                         (fw_start_addr == FLASH_OCM_ADDR))
                     {
-                        /*get ocm version*/
+                        /* get ocm version */
                         img_header->fw_ver = (guint8)hex_str_to_dec(
                                                 (const gchar*)&hex_hdr[fw_index-16], 2);
                         img_header->fw_ver = img_header->fw_ver << 8;
@@ -200,12 +200,14 @@ gboolean parse_fw_hex_file (const guint8* fw_src, guint32 src_fw_size,
         if (end_of_file)
                 break;
         checksum = -checksum;
-        if (checksum != (guint8)hex_str_to_dec(
-                        (const gchar*)&hex_hdr[fw_index], 2))
-            return FALSE;
+        if (checksum != (guint8)hex_str_to_dec (
+                                (const gchar*)&hex_hdr[fw_index], 2))
             fw_index += 2;
+            return FALSE;
+
         }
         else {
+            fw_index += 2;
             if ((hex_hdr[fw_index] == 0x0D) ||
                 (hex_hdr[fw_index] == 0x0A)) {
                 fw_index ++;
@@ -216,7 +218,7 @@ gboolean parse_fw_hex_file (const guint8* fw_src, guint32 src_fw_size,
     }
     if ((img_header->fw_payload_len == 0) &&
         (img_header->fw_start_addr != 0)) {
-            /*only OCM*/
+            /* only OCM */
             img_header->fw_payload_len = fw_max_addr-fw_start_addr +
                                             last_len;
     }

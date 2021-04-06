@@ -10,8 +10,7 @@ Firmware Format
 ---------------
 
 The daemon will decompress the cabinet archive and extract a firmware blob in
-an unspecified binary file format. The binary file has a vendor-specific header
-that is used when flashing the image.
+a Intel Hex file format.
 
 This plugin supports the following protocol ID:
 
