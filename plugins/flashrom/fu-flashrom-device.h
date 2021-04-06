@@ -9,12 +9,12 @@
 #include "fu-plugin.h"
 
 struct _FuFlashromDeviceClass {
-	FuDeviceClass			 parent_class;
+	FuUdevDeviceClass		 parent_class;
 };
 
 #define FU_TYPE_FLASHROM_DEVICE (fu_flashrom_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuFlashromDevice, fu_flashrom_device, FU,
-			  FLASHROM_DEVICE, FuDevice)
+			  FLASHROM_DEVICE, FuUdevDevice)
 
 void		 fu_flashrom_device_set_programmer_name	(FuFlashromDevice *self,
 							 const gchar *name);

@@ -19,7 +19,7 @@ typedef struct {
 	struct flashrom_programmer	*flashprog;
 } FuFlashromDevicePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuFlashromDevice, fu_flashrom_device, FU_TYPE_DEVICE)
+G_DEFINE_TYPE_WITH_PRIVATE (FuFlashromDevice, fu_flashrom_device, FU_TYPE_UDEV_DEVICE)
 
 #define GET_PRIVATE(o) (fu_flashrom_device_get_instance_private (o))
 
@@ -103,9 +103,25 @@ fu_flashrom_device_set_quirk_kv (FuDevice *device,
 }
 
 static gboolean
-fu_flashrom_device_prepare (FuDevice *device,
-			    FwupdInstallFlags flags,
-			    GError **error)
+fu_flashrom_device_probe (FuDevice *device, GError **error)
+{
+	const gchar *dev_name = NULL;
+	g_autofree gchar *path = NULL;
+
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_flashrom_device_parent_class)->probe (device, error))
+		return FALSE;
+
+	path = g_strdup_printf ("DEVNAME=%s",
+				fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
+	fu_device_set_physical_id (device, path);
+	dev_name = fu_udev_device_get_sysfs_attr (FU_UDEV_DEVICE (device), "name", error);
+	fu_device_add_instance_id_full (device, dev_name, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	return TRUE;
+}
+
+static gboolean
+fu_flashrom_device_open (FuDevice *device, GError **error)
 {
 	FuFlashromDevicePrivate *priv = GET_PRIVATE (FU_FLASHROM_DEVICE (device));
 	gint rc;
@@ -161,9 +177,7 @@ fu_flashrom_device_prepare (FuDevice *device,
 }
 
 static gboolean
-fu_flashrom_device_cleanup (FuDevice *device,
-			    FwupdInstallFlags flags,
-			    GError **error)
+fu_flashrom_device_close (FuDevice *device, GError **error)
 {
 	FuFlashromDevicePrivate *priv = GET_PRIVATE (FU_FLASHROM_DEVICE (device));
 	flashrom_flash_release (priv->flashctx);
@@ -178,6 +192,7 @@ fu_flashrom_device_class_init (FuFlashromDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	object_class->finalize = fu_flashrom_device_finalize;
 	klass_device->set_quirk_kv = fu_flashrom_device_set_quirk_kv;
-	klass_device->prepare = fu_flashrom_device_prepare;
-	klass_device->cleanup = fu_flashrom_device_cleanup;
+	klass_device->probe = fu_flashrom_device_probe;
+	klass_device->open = fu_flashrom_device_open;
+	klass_device->close = fu_flashrom_device_close;
 }
