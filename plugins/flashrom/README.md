@@ -62,6 +62,15 @@ Vendor ID Security
 
 The vendor ID is set from the BIOS vendor, for example `DMI:Google`
 
+Quirk use
+---------
+This plugin uses the following plugin-specific quirks:
+
+| Quirk                  | Description                                 | Minimum fwupd version |
+|------------------------|---------------------------------------------|-----------------------|
+|`FlashromProgrammer`    | Used to specify the libflashrom programmer to be used.     | 1.5.9                 |
+
+
 External interface access
 ---
 This plugin requires access to all interfaces that `libflashrom` has been compiled for.
