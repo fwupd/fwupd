@@ -175,6 +175,96 @@ fu_flashrom_lspcon_i2c_spi_device_setup (FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_flashrom_lspcon_i2c_spi_device_write_firmware (FuDevice *device,
+						  FuFirmware *firmware,
+						  FwupdInstallFlags flags,
+						  GError **error)
+{
+	FuFlashromDevice *parent = FU_FLASHROM_DEVICE (device);
+	FuFlashromLspconI2cSpiDevice *self = FU_FLASHROM_LSPCON_I2C_SPI_DEVICE (device);
+	struct flashrom_flashctx *flashctx = fu_flashrom_device_get_flashctx (parent);
+	gsize flash_size = fu_flashrom_device_get_flash_size (parent);
+	g_autofree guint8 *newcontents = g_malloc0 (flash_size);
+	const guint8 target_partition = self->active_partition == 1 ? 2 : 1;
+	const gsize region_size = entries[target_partition].end -
+				  entries[target_partition].start + 1;
+	gsize sz = 0;
+	gint rc;
+	const guint8 *buf;
+	g_autoptr(GBytes) blob_fw = fu_firmware_get_bytes (firmware, error);
+	if (blob_fw == NULL)
+		return FALSE;
+
+	buf = g_bytes_get_data (blob_fw, &sz);
+
+	if (sz != region_size) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "invalid image size 0x%x, expected 0x%x",
+			     (guint) sz, (guint) flash_size);
+		return FALSE;
+	}
+	if (!fu_memcpy_safe (newcontents, flash_size,
+			     entries[target_partition].start, buf, sz, 0,
+			     region_size, error))
+		return FALSE;
+
+	flashrom_flag_set (flashctx, FLASHROM_FLAG_VERIFY_AFTER_WRITE, TRUE);
+	flashrom_layout_set (flashctx, &layout);
+
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_progress (device, 0); /* urgh */
+
+	/* only include target_partition on layout */
+	entries[0].included = FALSE;
+	entries[3].included = FALSE;
+	entries[4].included = FALSE;
+	entries[self->active_partition].included = FALSE;
+	entries[target_partition].included = TRUE;
+
+	/* write target_partition */
+	rc = flashrom_image_write (flashctx, (void *) newcontents, flash_size,
+				   NULL /* refbuffer */);
+	if (rc != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "image write failed, err=%i", rc);
+		return FALSE;
+	}
+
+	/* only include flag area on layout */
+	entries[0].included = TRUE;
+	entries[target_partition].included = FALSE;
+
+	/* Flag area is header bytes (0x55, 0xAA) followed by the bank ID to
+	 * boot from (1 or 2) and the two's complement inverse of that bank ID
+	 * (0 or 0xFF). We only write bytes 2 and 3, assuming the header is
+	 * already valid. */
+	newcontents[2] = (gint8) target_partition;
+	newcontents[3] = (gint8) -target_partition + 1;
+
+	/* libflashrom fails to verify a write of a layout smaller than the
+	 * block size. */
+	flashrom_flag_set (flashctx, FLASHROM_FLAG_VERIFY_AFTER_WRITE, FALSE);
+
+	/* write target_partition */
+	rc = flashrom_image_write (flashctx, (void *) newcontents, flash_size,
+				   NULL /* refbuffer */);
+	if (rc != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "flag write failed, err=%i", rc);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_flashrom_lspcon_i2c_spi_device_class_init (FuFlashromLspconI2cSpiDeviceClass *klass)
 {
@@ -182,4 +272,5 @@ fu_flashrom_lspcon_i2c_spi_device_class_init (FuFlashromLspconI2cSpiDeviceClass 
 	klass_device->probe = fu_flashrom_lspcon_i2c_spi_device_probe;
 	klass_device->open = fu_flashrom_lspcon_i2c_spi_device_open;
 	klass_device->setup = fu_flashrom_lspcon_i2c_spi_device_setup;
+	klass_device->write_firmware = fu_flashrom_lspcon_i2c_spi_device_write_firmware;
 }
