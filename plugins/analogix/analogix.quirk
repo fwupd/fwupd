@@ -1,7 +1,3 @@
-# Analogix device
-
-# Analogix usb device
+# Phoenix-Lite
 [USB\VID_1F29&PID_7518]
 Plugin = analogix
-Summary = Analogix Semiconductor Phoenix-Lite Device
-Flags = updatable,usable-during-update
