@@ -8,6 +8,8 @@
 
 #include <gio/gio.h>
 
+#include "fu-common.h"
+
 #define FU_TYPE_CONTEXT (fu_context_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuContext, fu_context, FU, CONTEXT, GObject)
 
@@ -59,3 +61,13 @@ gboolean	 fu_context_lookup_quirk_by_id_iter	(FuContext	*self,
 void		 fu_context_add_quirk_key		(FuContext	*self,
 							 const gchar	*key);
 void		 fu_context_security_changed		(FuContext	*self);
+
+FuBatteryState	 fu_context_get_battery_state		(FuContext	*self);
+void		 fu_context_set_battery_state		(FuContext	*self,
+							 FuBatteryState	 battery_state);
+guint		 fu_context_get_battery_level		(FuContext	*self);
+void		 fu_context_set_battery_level		(FuContext	*self,
+							 guint		 battery_level);
+guint		 fu_context_get_battery_threshold	(FuContext	*self);
+void		 fu_context_set_battery_threshold	(FuContext	*self,
+							 guint		 battery_threshold);

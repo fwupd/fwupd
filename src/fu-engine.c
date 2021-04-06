@@ -226,9 +226,33 @@ fu_engine_watch_device (FuEngine *self, FuDevice *device)
 }
 
 static void
+fu_engine_ensure_device_battery_inhibit (FuEngine *self, FuDevice *device)
+{
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
+	    (fu_context_get_battery_state (self->ctx) == FU_BATTERY_STATE_DISCHARGING ||
+	     fu_context_get_battery_state (self->ctx) == FU_BATTERY_STATE_EMPTY)) {
+		fu_device_inhibit (device, "battery-system",
+				   "Cannot install update when not on AC power");
+		return;
+	}
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
+	    fu_context_get_battery_level (self->ctx) != FU_BATTERY_VALUE_INVALID &&
+	    fu_context_get_battery_threshold (self->ctx) != FU_BATTERY_VALUE_INVALID &&
+	    fu_context_get_battery_level (self->ctx) < fu_context_get_battery_threshold (self->ctx)) {
+		g_autofree gchar *reason = NULL;
+		reason = g_strdup_printf ("Cannot install update when system battery is not at least %u%%",
+					  fu_context_get_battery_threshold (self->ctx));
+		fu_device_inhibit (device, "battery-system", reason);
+		return;
+	}
+	fu_device_uninhibit (device, "battery-system");
+}
+
+static void
 fu_engine_device_added_cb (FuDeviceList *device_list, FuDevice *device, FuEngine *self)
 {
 	fu_engine_watch_device (self, device);
+	fu_engine_ensure_device_battery_inhibit (self, device);
 	g_signal_emit (self, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
 
@@ -6471,6 +6495,18 @@ fu_engine_add_app_flag (FuEngine *self, FuAppFlags app_flags)
 }
 
 static void
+fu_engine_context_battery_changed_cb (FuContext *ctx, GParamSpec *pspec, FuEngine *self)
+{
+	g_autoptr(GPtrArray) devices = fu_device_list_get_all (self->device_list);
+
+	/* apply policy on any existing devices */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index (devices, i);
+		fu_engine_ensure_device_battery_inhibit (self, device);
+	}
+}
+
+static void
 fu_engine_idle_status_notify_cb (FuIdle *idle, GParamSpec *pspec, FuEngine *self)
 {
 	FwupdStatus status = fu_idle_get_status (idle);
@@ -6508,6 +6544,15 @@ fu_engine_init (FuEngine *self)
 
 	g_signal_connect (self->ctx, "security-changed",
 			  G_CALLBACK (fu_engine_context_security_changed_cb),
+			  self);
+	g_signal_connect (self->ctx, "notify::battery-state",
+			  G_CALLBACK (fu_engine_context_battery_changed_cb),
+			  self);
+	g_signal_connect (self->ctx, "notify::battery-level",
+			  G_CALLBACK (fu_engine_context_battery_changed_cb),
+			  self);
+	g_signal_connect (self->ctx, "notify::battery-threshold",
+			  G_CALLBACK (fu_engine_context_battery_changed_cb),
 			  self);
 
 	g_signal_connect (self->config, "changed",
