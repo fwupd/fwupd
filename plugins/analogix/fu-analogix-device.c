@@ -124,28 +124,23 @@ fu_analogix_device_receive (FuAnalogixDevice *self,
 }
 
 static gboolean
-fu_analogix_device_check_update_status (FuAnalogixDevice *self, GError **error)
+fu_analogix_device_get_update_status (FuAnalogixDevice *self,
+				      AnxUpdateStatus *status,
+				      GError **error)
 {
-	guint8 status = UPDATE_STATUS_INVALID;
-
 	for (guint i = 0; i < 3000; i++) {
+		guint8 status_tmp = UPDATE_STATUS_INVALID;
 		if (!fu_analogix_device_receive (self,
 						 ANX_BB_RQT_GET_UPDATE_STATUS,
 						 0, 0,
-						 &status, sizeof(status),
+						 &status_tmp, sizeof(status_tmp),
 						 error))
 			return FALSE;
-		if (status == UPDATE_STATUS_ERROR) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_FOUND,
-					     "update status was error");
-			return FALSE;
-		}
-
-		/* assumed success */
-		if (status != UPDATE_STATUS_INVALID)
+		if (status_tmp != UPDATE_STATUS_INVALID) {
+			if (status != NULL)
+				*status = status_tmp;
 			return TRUE;
+		}
 
 		/* wait 1ms */
 		g_usleep (1000);
@@ -302,6 +297,7 @@ fu_analogix_device_program_flash (FuAnalogixDevice *self,
 				  GBytes *source_buf,
 				  GError **error)
 {
+	AnxUpdateStatus status = UPDATE_STATUS_INVALID;
 	guint8 buf_init[4] = { 0x0 };
 	g_autoptr(GBytes) block_bytes = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -323,8 +319,16 @@ fu_analogix_device_program_flash (FuAnalogixDevice *self,
 		g_prefix_error (error, "program initialized failed: ");
 		return FALSE;
 	}
-	if (!fu_analogix_device_check_update_status (self, error))
+	if (!fu_analogix_device_get_update_status (self, &status, error))
 		return FALSE;
+	if (status != UPDATE_STATUS_START) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "update status was %s",
+			     fu_analogix_update_status_to_string (status));
+		return FALSE;
+	}
 
 	/* write data */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
@@ -342,8 +346,16 @@ fu_analogix_device_program_flash (FuAnalogixDevice *self,
 			g_prefix_error (error, "failed send on chk %u: ", i);
 			return FALSE;
 		}
-		if (!fu_analogix_device_check_update_status (self, error)) {
+		if (!fu_analogix_device_get_update_status (self, &status, error)) {
 			g_prefix_error (error, "failed status on chk %u: ", i);
+			return FALSE;
+		}
+		if (status != UPDATE_STATUS_FINISH) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_FOUND,
+				     "update status was %s",
+				     fu_analogix_update_status_to_string (status));
 			return FALSE;
 		}
 		fu_device_set_progress_full (FU_DEVICE (self), i, chunks->len - 1);
@@ -485,7 +497,6 @@ fu_analogix_device_init (FuAnalogixDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
-	fu_device_set_summary (FU_DEVICE (self), "Phoenix-Lite");
 	fu_device_set_vendor (FU_DEVICE (self), "Analogix Semiconductor Inc.");
 }
 

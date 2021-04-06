@@ -229,3 +229,17 @@ parse_fw_hex_file (const guint8 *fw_src, guint32 src_fw_size,
 		 img_header->custom_payload_len);
 	return TRUE;
 }
+
+const gchar *
+fu_analogix_update_status_to_string (AnxUpdateStatus status)
+{
+	if (status == UPDATE_STATUS_INVALID)
+		return "invalid";
+	if (status == UPDATE_STATUS_START)
+		return "start";
+	if (status == UPDATE_STATUS_FINISH)
+		return "finish";
+	if (status == UPDATE_STATUS_ERROR)
+		return "error";
+	return NULL;
+}
