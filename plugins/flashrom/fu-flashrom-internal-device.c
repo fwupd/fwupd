@@ -42,12 +42,6 @@ fu_flashrom_internal_device_prepare (FuDevice *device,
 	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *basename = NULL;
 
-	/* FuFlashromDevice->prepare */
-	if (!FU_DEVICE_CLASS
-	    (fu_flashrom_internal_device_parent_class)->prepare(device, flags,
-								error))
-		return FALSE;
-
 	/* if the original firmware doesn't exist, grab it now */
 	basename = g_strdup_printf ("flashrom-%s.bin", fu_device_get_id (device));
 	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR_PKG);
