@@ -9,9 +9,9 @@
 
 #define FU_TYPE_ANALOGIX_USBC_DEVICE (fu_analogix_usbc_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuAnalogixUsbcDevice, fu_analogix_usbc_device, FU,\
-                            ANALOGIX_USBC_DEVICE, FuUsbDevice)
+		      ANALOGIX_USBC_DEVICE, FuUsbDevice)
 
 struct _FuAnalogixUsbcDeviceClass
 {
-    FuUsbDeviceClass   parent_class;
+	FuUsbDeviceClass parent_class;
 };

@@ -11,5 +11,6 @@
 
 #define FU_TYPE_ANALOGIX_USBC_FIRMWARE (fu_analogix_usbc_firmware_get_type ())
 G_DECLARE_FINAL_TYPE (FuAnalogixUsbcFirmware, fu_analogix_usbc_firmware, FU,\
-                        ANALOGIX_USBC_FIRMWARE, FuFirmware)
-FuFirmware    *fu_analogix_usbc_firmware_new (void);
+		      ANALOGIX_USBC_FIRMWARE, FuFirmware)
+
+FuFirmware		*fu_analogix_usbc_firmware_new		(void);

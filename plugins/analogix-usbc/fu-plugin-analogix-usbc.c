@@ -26,8 +26,8 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 void
 fu_plugin_init (FuPlugin *plugin)
 {
-    fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-    fu_plugin_set_device_gtype (plugin, FU_TYPE_ANALOGIX_USBC_DEVICE);
-    fu_plugin_add_firmware_gtype (plugin, "analogix-usbc",
-                                    FU_TYPE_ANALOGIX_USBC_FIRMWARE);
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+	fu_plugin_set_device_gtype (plugin, FU_TYPE_ANALOGIX_USBC_DEVICE);
+	fu_plugin_add_firmware_gtype (plugin, "analogix-usbc",
+				      FU_TYPE_ANALOGIX_USBC_FIRMWARE);
 }
