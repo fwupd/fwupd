@@ -9,7 +9,12 @@
 #include "fu-firmware.h"
 
 #define FU_TYPE_SREC_FIRMWARE (fu_srec_firmware_get_type ())
-G_DECLARE_FINAL_TYPE (FuSrecFirmware, fu_srec_firmware, FU, SREC_FIRMWARE, FuFirmware)
+G_DECLARE_DERIVABLE_TYPE (FuSrecFirmware, fu_srec_firmware, FU, SREC_FIRMWARE, FuFirmware)
+
+struct _FuSrecFirmwareClass
+{
+	FuFirmwareClass		 parent_class;
+};
 
 typedef enum {
 	FU_FIRMWARE_SREC_RECORD_KIND_S0_HEADER,
