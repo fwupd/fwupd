@@ -307,7 +307,7 @@ fu_analogix_device_prepare_firmware (FuDevice *device,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "parse firmware file error");
-		return FALSE;
+		return NULL;
 	}
 
 	buf = (const AnxImgHeader *) g_bytes_get_data (fw_hdr, NULL);
@@ -316,7 +316,7 @@ fu_analogix_device_prepare_firmware (FuDevice *device,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "read image header error");
-		return FALSE;
+		return NULL;
 	}
 	/* parse version */
 	main_ocm_ver = buf->fw_ver;
