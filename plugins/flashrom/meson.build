@@ -9,6 +9,7 @@ shared_module('fu_plugin_flashrom',
   fu_hash,
   sources : [
     'fu-flashrom-device.c',
+    'fu-flashrom-internal-device.c',
     'fu-plugin-flashrom.c',
   ],
   include_directories : [
