@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
-#include "fu-analogix-usbc-common.h"
+#include "fu-analogix-common.h"
 
 guint64
 hex_str_to_dec (const gchar *str, guint8 len)

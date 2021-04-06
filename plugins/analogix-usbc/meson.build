@@ -1,16 +1,16 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginANXUsbc"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginAnalogix"']
 
-install_data(['analogix-usbc.quirk'],
+install_data(['analogix.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
-shared_module('fu_plugin_analogix_usbc',
+shared_module('fu_plugin_analogix',
   fu_hash,
   sources : [
-    'fu-plugin-analogix-usbc.c',
-    'fu-analogix-usbc-device.c',
-    'fu-analogix-usbc-common.c',
-    'fu-analogix-usbc-firmware.c',
+    'fu-plugin-analogix.c',
+    'fu-analogix-device.c',
+    'fu-analogix-common.c',
+    'fu-analogix-firmware.c',
   ],
   include_directories : [
     root_incdir,

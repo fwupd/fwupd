@@ -9,8 +9,8 @@
 #include "fu-plugin-vfuncs.h"
 #include "fu-hash.h"
 
-#include "fu-analogix-usbc-device.h"
-#include "fu-analogix-usbc-firmware.h"
+#include "fu-analogix-device.h"
+#include "fu-analogix-firmware.h"
 
 /*#define MINIBONS_PARENT_GUID                "cfc5f783-2f3c-5db0-9d09-d5a3044eabd9"*/
 
@@ -27,7 +27,7 @@ void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_ANALOGIX_USBC_DEVICE);
-	fu_plugin_add_firmware_gtype (plugin, "analogix-usbc",
-				      FU_TYPE_ANALOGIX_USBC_FIRMWARE);
+	fu_plugin_set_device_gtype (plugin, FU_TYPE_ANALOGIX_DEVICE);
+	fu_plugin_add_firmware_gtype (plugin, "analogix",
+				      FU_TYPE_ANALOGIX_FIRMWARE);
 }

@@ -6,23 +6,23 @@
 
 #include "config.h"
 
-#include "fu-analogix-usbc-common.h"
-#include "fu-analogix-usbc-firmware.h"
+#include "fu-analogix-common.h"
+#include "fu-analogix-firmware.h"
 
 
-struct _FuAnalogixUsbcFirmware {
+struct _FuAnalogixFirmware {
 	FuFirmwareClass parent_instance;
 };
 
-G_DEFINE_TYPE (FuAnalogixUsbcFirmware, fu_analogix_usbc_firmware, FU_TYPE_FIRMWARE)
+G_DEFINE_TYPE (FuAnalogixFirmware, fu_analogix_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_analogix_usbc_firmware_parse (FuFirmware *firmware,
-				 GBytes *fw,
-				 guint64 addr_start,
-				 guint64 addr_end,
-				 FwupdInstallFlags flags,
-				 GError **error)
+fu_analogix_firmware_parse (FuFirmware *firmware,
+			    GBytes *fw,
+			    guint64 addr_start,
+			    guint64 addr_end,
+			    FwupdInstallFlags flags,
+			    GError **error)
 {
 	guint8 *bin_buf = g_malloc0 (MAX_FILE_SIZE);
 	/* guint32 payload_len; */
@@ -35,7 +35,7 @@ fu_analogix_usbc_firmware_parse (FuFirmware *firmware,
 	g_autoptr(GBytes) fw_hdr = NULL;
 	g_autoptr(GBytes) fw_payload = NULL;
 
-	g_debug ("fu_analogix_usbc_firmware_parse, start:%d, end:%d, flag =%d",
+	g_debug ("fu_analogix_firmware_parse, start:%d, end:%d, flag =%d",
 		 (gint) addr_start, (gint) addr_end, (gint) flags);
 
 	/* corrupt */
@@ -92,20 +92,20 @@ fu_analogix_usbc_firmware_parse (FuFirmware *firmware,
 }
 
 static void
-fu_analogix_usbc_firmware_init (FuAnalogixUsbcFirmware *self)
+fu_analogix_firmware_init (FuAnalogixFirmware *self)
 {
 
 }
 
 static void
-fu_analogix_usbc_firmware_class_init (FuAnalogixUsbcFirmwareClass *klass)
+fu_analogix_firmware_class_init (FuAnalogixFirmwareClass *klass)
 {
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
-	klass_firmware->parse = fu_analogix_usbc_firmware_parse;
+	klass_firmware->parse = fu_analogix_firmware_parse;
 }
 
 FuFirmware *
-fu_analogix_usbc_firmware_new (void)
+fu_analogix_firmware_new (void)
 {
-	return FU_FIRMWARE (g_object_new (FU_TYPE_ANALOGIX_USBC_FIRMWARE, NULL));
+	return FU_FIRMWARE (g_object_new (FU_TYPE_ANALOGIX_FIRMWARE, NULL));
 }

@@ -2,6 +2,6 @@
 
 # Analogix usb device
 [USB\VID_1F29&PID_7518]
-Plugin = analogix_usbc
+Plugin = analogix
 Summary = Analogix Semiconductor Phoenix-Lite Device
 Flags = updatable,usable-during-update
