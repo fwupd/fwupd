@@ -133,7 +133,6 @@ fu_thunderbolt_firmware_export (FuFirmware *firmware,
 {
 	FuThunderboltFirmware *self = FU_THUNDERBOLT_FIRMWARE (firmware);
 	FuThunderboltFirmwarePrivate *priv = GET_PRIVATE (self);
-	g_autoptr(XbBuilderNode) bc = NULL;
 
 	fu_xmlb_builder_insert_kv (bn, "family",
 				   fu_thunderbolt_firmware_family_to_string (priv->family));

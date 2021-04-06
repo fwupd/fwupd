@@ -120,7 +120,6 @@ fu_solokey_firmware_write (FuFirmware *firmware, GError **error)
 {
 	g_autofree gchar *buf_base64 = NULL;
 	g_autoptr(FuFirmware) img = NULL;
-	g_autoptr(GByteArray) buf = g_byte_array_new ();
 	g_autoptr(GBytes) buf_blob = NULL;
 	g_autoptr(GString) str = g_string_new (NULL);
 	g_autoptr(JsonBuilder) builder = json_builder_new ();
