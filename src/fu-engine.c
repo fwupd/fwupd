@@ -5663,7 +5663,6 @@ static gchar *
 fu_engine_attrs_calculate_hsi_for_chassis (FuEngine *self)
 {
 	guint val;
-	g_autoptr(GError) error = NULL;
 
 	/* get chassis type from SMBIOS data */
 	val = fu_context_get_smbios_integer (self->ctx,
