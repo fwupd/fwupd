@@ -23,12 +23,13 @@
  * See also: #FuFirmware
  */
 
-struct _FuIhexFirmware {
+typedef struct {
 	FuFirmware		 parent_instance;
 	GPtrArray		*records;
-};
+} FuIhexFirmwarePrivate;
 
-G_DEFINE_TYPE (FuIhexFirmware, fu_ihex_firmware, FU_TYPE_FIRMWARE)
+G_DEFINE_TYPE_WITH_PRIVATE (FuIhexFirmware, fu_ihex_firmware, FU_TYPE_FIRMWARE)
+#define GET_PRIVATE(o) (fu_ihex_firmware_get_instance_private (o))
 
 /**
  * fu_ihex_firmware_get_records:
@@ -46,8 +47,9 @@ G_DEFINE_TYPE (FuIhexFirmware, fu_ihex_firmware, FU_TYPE_FIRMWARE)
 GPtrArray *
 fu_ihex_firmware_get_records (FuIhexFirmware *self)
 {
+	FuIhexFirmwarePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_IHEX_FIRMWARE (self), NULL);
-	return self->records;
+	return priv->records;
 }
 
 static void
@@ -165,6 +167,7 @@ fu_ihex_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 			   FwupdInstallFlags flags, GError **error)
 {
 	FuIhexFirmware *self = FU_IHEX_FIRMWARE (firmware);
+	FuIhexFirmwarePrivate *priv = GET_PRIVATE (self);
 	gsize sz = 0;
 	const gchar *data = g_bytes_get_data (fw, &sz);
 	g_auto(GStrv) lines = fu_common_strnsplit (data, sz, "\n", -1);
@@ -181,7 +184,7 @@ fu_ihex_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 			g_prefix_error (error, "invalid line %u: ", ln + 1);
 			return FALSE;
 		}
-		g_ptr_array_add (self->records, g_steal_pointer (&rcd));
+		g_ptr_array_add (priv->records, g_steal_pointer (&rcd));
 	}
 	return TRUE;
 }
@@ -195,6 +198,7 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 			GError **error)
 {
 	FuIhexFirmware *self = FU_IHEX_FIRMWARE (firmware);
+	FuIhexFirmwarePrivate *priv = GET_PRIVATE (self);
 	gboolean got_eof = FALSE;
 	gboolean got_sig = FALSE;
 	guint32 abs_addr = 0x0;
@@ -205,8 +209,8 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
 
 	/* parse records */
-	for (guint k = 0; k < self->records->len; k++) {
-		FuIhexFirmwareRecord *rcd = g_ptr_array_index (self->records, k);
+	for (guint k = 0; k < priv->records->len; k++) {
+		FuIhexFirmwareRecord *rcd = g_ptr_array_index (priv->records, k);
 		guint16 addr16 = 0;
 		guint32 addr = rcd->addr + seg_addr + abs_addr;
 		guint32 len_hole;
@@ -473,14 +477,16 @@ static void
 fu_ihex_firmware_finalize (GObject *object)
 {
 	FuIhexFirmware *self = FU_IHEX_FIRMWARE (object);
-	g_ptr_array_unref (self->records);
+	FuIhexFirmwarePrivate *priv = GET_PRIVATE (self);
+	g_ptr_array_unref (priv->records);
 	G_OBJECT_CLASS (fu_ihex_firmware_parent_class)->finalize (object);
 }
 
 static void
 fu_ihex_firmware_init (FuIhexFirmware *self)
 {
-	self->records = g_ptr_array_new_with_free_func ((GFreeFunc) fu_ihex_firmware_record_free);
+	FuIhexFirmwarePrivate *priv = GET_PRIVATE (self);
+	priv->records = g_ptr_array_new_with_free_func ((GFreeFunc) fu_ihex_firmware_record_free);
 	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 }
 
