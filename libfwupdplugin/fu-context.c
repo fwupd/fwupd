@@ -8,7 +8,6 @@
 
 #include "config.h"
 
-#include "fu-common.h"
 #include "fu-context-private.h"
 #include "fu-hwids.h"
 #include "fu-smbios-private.h"
@@ -29,11 +28,22 @@ typedef struct {
 	GHashTable		*compile_versions;
 	GPtrArray		*udev_subsystems;
 	GHashTable		*firmware_gtypes;
+	FuBatteryState		 battery_state;
+	guint			 battery_level;
+	guint			 battery_threshold;
 } FuContextPrivate;
 
 enum {
 	SIGNAL_SECURITY_CHANGED,
 	SIGNAL_LAST
+};
+
+enum {
+	PROP_0,
+	PROP_BATTERY_STATE,
+	PROP_BATTERY_LEVEL,
+	PROP_BATTERY_THRESHOLD,
+	PROP_LAST
 };
 
 static guint signals[SIGNAL_LAST] = { 0 };
@@ -546,6 +556,169 @@ fu_context_load_quirks (FuContext *self, FuQuirksLoadFlags flags, GError **error
 	return TRUE;
 }
 
+/**
+ * fu_context_get_battery_state:
+ * @self: A #FuContext
+ *
+ * Gets if the system is on battery power, e.g. UPS or laptop battery.
+ *
+ * Returns: a #FuBatteryState, e.g. %FU_BATTERY_STATE_DISCHARGING
+ *
+ * Since: 1.6.0
+ **/
+FuBatteryState
+fu_context_get_battery_state (FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_CONTEXT (self), FALSE);
+	return priv->battery_state;
+}
+
+/**
+ * fu_context_set_battery_state:
+ * @self: A #FuContext
+ * @battery_state: a #FuBatteryState, e.g. %FU_BATTERY_STATE_DISCHARGING
+ *
+ * Sets if the system is on battery power, e.g. UPS or laptop battery.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_context_set_battery_state (FuContext *self, FuBatteryState battery_state)
+{
+	FuContextPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_CONTEXT (self));
+	if (priv->battery_state == battery_state)
+		return;
+	priv->battery_state = battery_state;
+	g_debug ("battery state now %s",
+		 fu_battery_state_to_string (battery_state));
+	g_object_notify (G_OBJECT (self), "battery-state");
+}
+
+/**
+ * fu_context_get_battery_level:
+ * @self: A #FuContext
+ *
+ * Gets the system battery level in percent.
+ *
+ * Returns: percentage value, or %FU_BATTERY_VALUE_INVALID for unknown
+ *
+ * Since: 1.6.0
+ **/
+guint
+fu_context_get_battery_level (FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_CONTEXT (self), G_MAXUINT);
+	return priv->battery_level;
+}
+
+/**
+ * fu_context_set_battery_level:
+ * @self: A #FuContext
+ * @battery_level: value
+ *
+ * Sets the system battery level in percent.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_context_set_battery_level (FuContext *self, guint battery_level)
+{
+	FuContextPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_CONTEXT (self));
+	g_return_if_fail (battery_level <= FU_BATTERY_VALUE_INVALID);
+	if (priv->battery_level == battery_level)
+		return;
+	priv->battery_level = battery_level;
+	g_debug ("battery level now %u", battery_level);
+	g_object_notify (G_OBJECT (self), "battery-level");
+}
+
+/**
+ * fu_context_get_battery_threshold:
+ * @self: A #FuContext
+ *
+ * Gets the system battery threshold in percent.
+ *
+ * Returns: percentage value, or %FU_BATTERY_VALUE_INVALID for unknown
+ *
+ * Since: 1.6.0
+ **/
+guint
+fu_context_get_battery_threshold (FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_CONTEXT (self), G_MAXUINT);
+	return priv->battery_threshold;
+}
+
+/**
+ * fu_context_set_battery_threshold:
+ * @self: A #FuContext
+ * @battery_threshold: value
+ *
+ * Sets the system battery threshold in percent.
+ *
+ * Since: 1.6.0
+ **/
+void
+fu_context_set_battery_threshold (FuContext *self, guint battery_threshold)
+{
+	FuContextPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_CONTEXT (self));
+	g_return_if_fail (battery_threshold <= FU_BATTERY_VALUE_INVALID);
+	if (priv->battery_threshold == battery_threshold)
+		return;
+	priv->battery_threshold = battery_threshold;
+	g_debug ("battery threshold now %u", battery_threshold);
+	g_object_notify (G_OBJECT (self), "battery-threshold");
+}
+
+static void
+fu_context_get_property (GObject *object, guint prop_id,
+			 GValue *value, GParamSpec *pspec)
+{
+	FuContext *self = FU_CONTEXT (object);
+	FuContextPrivate *priv = GET_PRIVATE (self);
+	switch (prop_id) {
+	case PROP_BATTERY_STATE:
+		g_value_set_uint (value, priv->battery_state);
+		break;
+	case PROP_BATTERY_LEVEL:
+		g_value_set_uint (value, priv->battery_level);
+		break;
+	case PROP_BATTERY_THRESHOLD:
+		g_value_set_uint (value, priv->battery_threshold);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fu_context_set_property (GObject *object, guint prop_id,
+			 const GValue *value, GParamSpec *pspec)
+{
+	FuContext *self = FU_CONTEXT (object);
+	switch (prop_id) {
+	case PROP_BATTERY_STATE:
+		fu_context_set_battery_state (self, g_value_get_uint (value));
+		break;
+	case PROP_BATTERY_LEVEL:
+		fu_context_set_battery_level (self, g_value_get_uint (value));
+		break;
+	case PROP_BATTERY_THRESHOLD:
+		fu_context_set_battery_threshold (self, g_value_get_uint (value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
 static void
 fu_context_finalize (GObject *object)
 {
@@ -565,6 +738,34 @@ static void
 fu_context_class_init (FuContextClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	GParamSpec *pspec;
+
+	object_class->get_property = fu_context_get_property;
+	object_class->set_property = fu_context_set_property;
+
+	pspec = g_param_spec_uint ("battery-state", NULL, NULL,
+				   FU_BATTERY_STATE_UNKNOWN,
+				   FU_BATTERY_STATE_LAST,
+				   FU_BATTERY_STATE_UNKNOWN,
+				   G_PARAM_READWRITE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_BATTERY_STATE, pspec);
+
+	pspec = g_param_spec_uint ("battery-level", NULL, NULL,
+				   0,
+				   FU_BATTERY_VALUE_INVALID,
+				   FU_BATTERY_VALUE_INVALID,
+				   G_PARAM_READWRITE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_BATTERY_LEVEL, pspec);
+
+	pspec = g_param_spec_uint ("battery-threshold", NULL, NULL,
+				   0,
+				   FU_BATTERY_VALUE_INVALID,
+				   FU_BATTERY_VALUE_INVALID,
+				   G_PARAM_READWRITE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_BATTERY_THRESHOLD, pspec);
 
 	signals[SIGNAL_SECURITY_CHANGED] =
 		g_signal_new ("security-changed",
@@ -580,6 +781,8 @@ static void
 fu_context_init (FuContext *self)
 {
 	FuContextPrivate *priv = GET_PRIVATE (self);
+	priv->battery_level = FU_BATTERY_VALUE_INVALID;
+	priv->battery_threshold = FU_BATTERY_VALUE_INVALID;
 	priv->smbios = fu_smbios_new ();
 	priv->hwids = fu_hwids_new ();
 	priv->udev_subsystems = g_ptr_array_new_with_free_func (g_free);

@@ -101,6 +101,34 @@ typedef enum {
 	FU_CPU_VENDOR_LAST
 } FuCpuVendor;
 
+/**
+ * FU_BATTERY_VALUE_INVALID:
+ *
+ * This value signifies the battery level is either unset, or the value cannot
+ * be discovered.
+ */
+#define FU_BATTERY_VALUE_INVALID			101
+
+/**
+ * FuBatteryState:
+ * @FU_BATTERY_STATE_UNKNOWN:		Unknown
+ * @FU_BATTERY_STATE_CHARGING:		Charging
+ * @FU_BATTERY_STATE_DISCHARGING:	Discharging
+ * @FU_BATTERY_STATE_EMPTY:		Empty
+ * @FU_BATTERY_STATE_FULLY_CHARGED:	Fully charged
+ *
+ * The device battery state.
+ **/
+typedef enum {
+	FU_BATTERY_STATE_UNKNOWN,
+	FU_BATTERY_STATE_CHARGING,
+	FU_BATTERY_STATE_DISCHARGING,
+	FU_BATTERY_STATE_EMPTY,
+	FU_BATTERY_STATE_FULLY_CHARGED,
+	/*< private >*/
+	FU_BATTERY_STATE_LAST
+} FuBatteryState;
+
 typedef void	(*FuOutputHandler)		(const gchar	*line,
 						 gpointer	 user_data);
 
@@ -364,6 +392,7 @@ guint32		 fu_common_crc32_full		(const guint8	*buf,
 gchar		*fu_common_uri_get_scheme	(const gchar	*uri);
 gsize		 fu_common_align_up		(gsize		 value,
 						 guint8		 alignment);
+const gchar	*fu_battery_state_to_string	(FuBatteryState	 battery_state);
 
 void		 fu_xmlb_builder_insert_kv	(XbBuilderNode	*bn,
 						 const gchar	*key,

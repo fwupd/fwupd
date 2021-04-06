@@ -11,9 +11,7 @@
 #define MINIMUM_BATTERY_PERCENTAGE_FALLBACK	10
 
 struct FuPluginData {
-	GDBusProxy		*upower_proxy;
-	GDBusProxy		*display_proxy;
-	guint64			 minimum_battery;
+	GDBusProxy		*proxy;		/* nullable */
 };
 
 void
@@ -27,113 +25,112 @@ void
 fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	if (data->upower_proxy != NULL)
-		g_object_unref (data->upower_proxy);
-	if (data->display_proxy != NULL)
-		g_object_unref (data->display_proxy);
+	if (data->proxy != NULL)
+		g_object_unref (data->proxy);
+}
+
+static void
+fu_plugin_upower_rescan (FuPlugin *plugin)
+{
+	FuContext *ctx = fu_plugin_get_context (plugin);
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	g_autoptr(GVariant) percentage_val = NULL;
+	g_autoptr(GVariant) type_val = NULL;
+	g_autoptr(GVariant) state_val = NULL;
+
+	/* check that we "have" a battery */
+	type_val = g_dbus_proxy_get_cached_property (data->proxy, "Type");
+	if (type_val == NULL) {
+		g_warning ("failed to query power type");
+		fu_context_set_battery_state (ctx, FU_BATTERY_STATE_UNKNOWN);
+		fu_context_set_battery_level (ctx, FU_BATTERY_VALUE_INVALID);
+		return;
+	}
+	state_val = g_dbus_proxy_get_cached_property (data->proxy, "State");
+	if (state_val == NULL) {
+		g_warning ("failed to query power state");
+		fu_context_set_battery_state (ctx, FU_BATTERY_STATE_UNKNOWN);
+		fu_context_set_battery_level (ctx, FU_BATTERY_VALUE_INVALID);
+		return;
+	}
+	fu_context_set_battery_state (ctx, g_variant_get_uint32 (state_val));
+
+	/* get percentage */
+	percentage_val = g_dbus_proxy_get_cached_property (data->proxy, "Percentage");
+	if (percentage_val == NULL) {
+		g_warning ("failed to query power percentage level");
+		fu_context_set_battery_level (ctx, FU_BATTERY_VALUE_INVALID);
+		return;
+	}
+	fu_context_set_battery_level (ctx, g_variant_get_double (percentage_val));
+}
+
+static void
+fu_plugin_upower_proxy_changed_cb (GDBusProxy *proxy,
+				   GVariant *changed_properties,
+				   GStrv invalidated_properties,
+				   FuPlugin *plugin)
+{
+	fu_plugin_upower_rescan (plugin);
 }
 
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_get_data (plugin);
+	guint64 minimum_battery;
 	g_autofree gchar *name_owner = NULL;
 	g_autofree gchar *battery_str = NULL;
-	data->upower_proxy =
+
+	data->proxy =
 		g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
-					       G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
-					       NULL,
-					       "org.freedesktop.UPower",
-					       "/org/freedesktop/UPower",
-					       "org.freedesktop.UPower",
-					       NULL,
-					       error);
-	if (data->upower_proxy == NULL) {
-		g_prefix_error (error, "failed to connect to upower: ");
-		return FALSE;
-	}
-	name_owner = g_dbus_proxy_get_name_owner (data->upower_proxy);
-	if (name_owner == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "no owner for %s",
-			     g_dbus_proxy_get_name (data->upower_proxy));
-		return FALSE;
-	}
-	data->display_proxy =
-		g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
-					       G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS,
+					       G_DBUS_PROXY_FLAGS_NONE,
 					       NULL,
 					       "org.freedesktop.UPower",
 					       "/org/freedesktop/UPower/devices/DisplayDevice",
 					       "org.freedesktop.UPower.Device",
 					       NULL,
 					       error);
-	if (data->display_proxy == NULL) {
+	if (data->proxy == NULL) {
 		g_prefix_error (error, "failed to connect to upower: ");
 		return FALSE;
 	}
-
-	battery_str = fu_plugin_get_config_value (plugin, "BatteryThreshold");
-	if (battery_str == NULL)
-		data->minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
-	else
-		data->minimum_battery = fu_common_strtoull (battery_str);
-	if (data->minimum_battery > 100) {
-		g_warning ("Invalid minimum battery level specified: %" G_GUINT64_FORMAT,
-			   data->minimum_battery);
-		data->minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_plugin_upower_check_percentage_level (FuPlugin *plugin)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	gdouble level;
-	guint power_type;
-	g_autoptr(GVariant) percentage_val = NULL;
-	g_autoptr(GVariant) type_val = NULL;
-
-	/* check that we "have" a battery */
-	type_val = g_dbus_proxy_get_cached_property (data->display_proxy, "Type");
-	if (type_val == NULL) {
-		g_warning ("Failed to query power type, assume AC power");
-		return TRUE;
-	}
-	power_type = g_variant_get_uint32 (type_val);
-	if (power_type != 2) {
-		g_debug ("Not running on battery (Type: %u)", power_type);
-		return TRUE;
-	}
-
-	/* check percentage high enough */
-	percentage_val = g_dbus_proxy_get_cached_property (data->display_proxy, "Percentage");
-	if (percentage_val == NULL) {
-		g_warning ("Failed to query power percentage level, assume enough charge");
-		return TRUE;
-	}
-	level = g_variant_get_double (percentage_val);
-	g_debug ("System power source is %.1f%%", level);
-
-	return level >= data->minimum_battery;
-}
-
-static gboolean
-fu_plugin_upower_check_on_battery (FuPlugin *plugin)
-{
-	FuPluginData *data = fu_plugin_get_data (plugin);
-	g_autoptr(GVariant) value = NULL;
-
-	value = g_dbus_proxy_get_cached_property (data->upower_proxy, "OnBattery");
-	if (value == NULL) {
-		g_warning ("failed to get OnBattery value, assume on AC power");
+	name_owner = g_dbus_proxy_get_name_owner (data->proxy);
+	if (name_owner == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "no owner for %s",
+			     g_dbus_proxy_get_name (data->proxy));
 		return FALSE;
 	}
-	return g_variant_get_boolean (value);
+	g_signal_connect (data->proxy, "g-properties-changed",
+			  G_CALLBACK (fu_plugin_upower_proxy_changed_cb), plugin);
+
+	battery_str = fu_plugin_get_config_value (plugin, "BatteryThreshold");
+	if (battery_str == NULL) {
+		const gchar *vendor = fu_context_get_hwid_replace_value (ctx,
+									 FU_HWIDS_KEY_MANUFACTURER,
+									 NULL);
+		battery_str = g_strdup (fu_context_lookup_quirk_by_id (ctx,
+								       vendor,
+								       FU_QUIRKS_BATTERY_THRESHOLD));
+	}
+	if (battery_str == NULL)
+		minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
+	else
+		minimum_battery = fu_common_strtoull (battery_str);
+	if (minimum_battery > 100) {
+		g_warning ("invalid minimum battery level specified: %" G_GUINT64_FORMAT,
+			   minimum_battery);
+		minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
+	}
+	fu_context_set_battery_threshold (ctx, minimum_battery);
+	fu_plugin_upower_rescan (plugin);
+
+	/* success */
+	return TRUE;
 }
 
 gboolean
@@ -142,13 +139,17 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 			  FuDevice *device,
 			  GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
+
 	/* not all devices need this */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC))
 		return TRUE;
+	if (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER)
+		return TRUE;
 
-	/* determine if operating on AC or battery */
-	if (fu_plugin_upower_check_on_battery (plugin) &&
-	    (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER) == 0) {
+	/* not charging */
+	if (fu_context_get_battery_state (ctx) == FU_BATTERY_STATE_DISCHARGING ||
+	    fu_context_get_battery_state (ctx) == FU_BATTERY_STATE_EMPTY) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_AC_POWER_REQUIRED,
@@ -157,17 +158,17 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 		return FALSE;
 	}
 
-	/* determine if battery high enough */
-	if (!fu_plugin_upower_check_percentage_level (plugin) &&
-	   (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER) == 0) {
-		FuPluginData *data = fu_plugin_get_data (plugin);
+	/* not enough just in case */
+	if (fu_context_get_battery_level (ctx) < fu_context_get_battery_threshold (ctx)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW,
 			     "Cannot install update when system battery "
-			     "is not at least %" G_GUINT64_FORMAT "%% unless forced",
-			      data->minimum_battery);
+			     "is not at least %u%% unless forced",
+			      fu_context_get_battery_threshold (ctx));
 		return FALSE;
 	}
+
+	/* success */
 	return TRUE;
 }

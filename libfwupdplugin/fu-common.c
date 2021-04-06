@@ -3281,6 +3281,32 @@ fu_common_align_up (gsize value, guint8 alignment)
 }
 
 /**
+ * fu_battery_state_to_string:
+ * @battery_state: a #FuBatteryState, e.g. %FU_BATTERY_STATE_FULLY_CHARGED
+ *
+ * Converts an enumerated type to a string.
+ *
+ * Returns: a string, or %NULL for invalid
+ *
+ * Since: 1.6.0
+ **/
+const gchar *
+fu_battery_state_to_string (FuBatteryState battery_state)
+{
+	if (battery_state == FU_BATTERY_STATE_UNKNOWN)
+		return "unknown";
+	if (battery_state == FU_BATTERY_STATE_CHARGING)
+		return "charging";
+	if (battery_state == FU_BATTERY_STATE_DISCHARGING)
+		return "discharging";
+	if (battery_state == FU_BATTERY_STATE_EMPTY)
+		return "empty";
+	if (battery_state == FU_BATTERY_STATE_FULLY_CHARGED)
+		return "fully-charged";
+	return NULL;
+}
+
+/**
  * fu_xmlb_builder_insert_kv:
  * @bn: #JsonBuilder
  * @key: string key

@@ -1,6 +1,9 @@
 if host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginUpower"']
 
+install_data(['upower.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
+
 shared_module('fu_plugin_upower',
   fu_hash,
   sources : [

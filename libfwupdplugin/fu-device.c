@@ -2665,9 +2665,8 @@ static void
 fu_device_ensure_battery_inhibit (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	if (priv->battery_level == 0)
-		return;
-	if (priv->battery_level >= fu_device_get_battery_threshold (self)) {
+	if (priv->battery_level == FU_BATTERY_VALUE_INVALID ||
+	    priv->battery_level >= fu_device_get_battery_threshold (self)) {
 		fu_device_uninhibit (self, "battery");
 		return;
 	}
@@ -2688,7 +2687,7 @@ guint
 fu_device_get_battery_level (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
+	g_return_val_if_fail (FU_IS_DEVICE (self), FU_BATTERY_VALUE_INVALID);
 	return priv->battery_level;
 }
 
@@ -2697,8 +2696,10 @@ fu_device_get_battery_level (FuDevice *self)
  * @self: A #FuDevice
  * @battery_level: the percentage value
  *
- * Sets the battery level, or 0 for invalid. Setting this allows fwupd to show
- * a warning if the device change is too low to perform the update.
+ * Sets the battery level, or %FU_BATTERY_VALUE_INVALID.
+ *
+ * Setting this allows fwupd to show a warning if the device change is too low
+ * to perform the update.
  *
  * Since: 1.5.8
  **/
@@ -2707,7 +2708,7 @@ fu_device_set_battery_level (FuDevice *self, guint battery_level)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
-	g_return_if_fail (battery_level <= 100);
+	g_return_if_fail (battery_level <= FU_BATTERY_VALUE_INVALID);
 	if (priv->battery_level == battery_level)
 		return;
 	priv->battery_level = battery_level;
@@ -2733,10 +2734,10 @@ guint
 fu_device_get_battery_threshold (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
+	g_return_val_if_fail (FU_IS_DEVICE (self), FU_BATTERY_VALUE_INVALID);
 
 	/* default value */
-	if (priv->battery_threshold == 0)
+	if (priv->battery_threshold == FU_BATTERY_VALUE_INVALID)
 		return FU_DEVICE_DEFAULT_BATTERY_THRESHOLD;
 
 	return priv->battery_threshold;
@@ -2747,8 +2748,10 @@ fu_device_get_battery_threshold (FuDevice *self)
  * @self: A #FuDevice
  * @battery_threshold: the percentage value
  *
- * Sets the battery level, or 0 for the default. Setting this allows fwupd to
- * show a warning if the device change is too low to perform the update.
+ * Sets the battery level, or %FU_BATTERY_VALUE_INVALID for the default.
+ *
+ * Setting this allows fwupd to show a warning if the device change is too low
+ * to perform the update.
  *
  * Since: 1.6.0
  **/
@@ -2757,7 +2760,7 @@ fu_device_set_battery_threshold (FuDevice *self, guint battery_threshold)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
-	g_return_if_fail (battery_threshold <= 100);
+	g_return_if_fail (battery_threshold <= FU_BATTERY_VALUE_INVALID);
 	if (priv->battery_threshold == battery_threshold)
 		return;
 	priv->battery_threshold = battery_threshold;
@@ -2796,9 +2799,9 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt + 1, "ProxyId", fu_device_get_id (priv->proxy));
 	if (priv->proxy_guid != NULL)
 		fu_common_string_append_kv (str, idt + 1, "ProxyGuid", priv->proxy_guid);
-	if (priv->battery_level != 0)
+	if (priv->battery_level != FU_BATTERY_VALUE_INVALID)
 		fu_common_string_append_ku (str, idt + 1, "BatteryLevel", priv->battery_level);
-	if (priv->battery_threshold != 0)
+	if (priv->battery_threshold != FU_BATTERY_VALUE_INVALID)
 		fu_common_string_append_ku (str, idt + 1, "BatteryThreshold", priv->battery_threshold);
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_min);
@@ -3891,13 +3894,17 @@ fu_device_class_init (FuDeviceClass *klass)
 	g_object_class_install_property (object_class, PROP_PROGRESS, pspec);
 
 	pspec = g_param_spec_uint ("battery-level", NULL, NULL,
-				   0, 100, 0,
+				   0,
+				   FU_BATTERY_VALUE_INVALID,
+				   FU_BATTERY_VALUE_INVALID,
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_BATTERY_LEVEL, pspec);
 
 	pspec = g_param_spec_uint ("battery-threshold", NULL, NULL,
-				   0, 100, 0,
+				   0,
+				   FU_BATTERY_VALUE_INVALID,
+				   FU_BATTERY_VALUE_INVALID,
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_BATTERY_THRESHOLD, pspec);
@@ -3921,6 +3928,8 @@ fu_device_init (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	priv->order = G_MAXINT;
+	priv->battery_level = FU_BATTERY_VALUE_INVALID;
+	priv->battery_threshold = FU_BATTERY_VALUE_INVALID;
 	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
 	priv->possible_plugins = g_ptr_array_new_with_free_func (g_free);
 	priv->retry_recs = g_ptr_array_new_with_free_func (g_free);
