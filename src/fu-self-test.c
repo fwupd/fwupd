@@ -1730,6 +1730,7 @@ fu_engine_history_inherit (gconstpointer user_data)
 	fu_engine_set_silo (engine, silo_empty);
 	fu_engine_add_plugin (engine, self->plugin);
 	device = fu_device_new ();
+	fu_device_add_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION);
 	fu_device_set_id (device, "test_device");
 	fu_device_add_vendor_id (device, "USB:FFFF");
 	fu_device_add_protocol (device, "com.acme");
@@ -1739,6 +1740,24 @@ fu_engine_history_inherit (gconstpointer user_data)
 	fu_device_set_version (device, "1.2.2");
 	fu_engine_add_device (engine, device);
 	g_assert_true (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+
+	/* emulate not getting the flag */
+	g_object_unref (engine);
+	g_object_unref (device);
+	engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	fu_engine_set_silo (engine, silo_empty);
+	fu_engine_add_plugin (engine, self->plugin);
+	device = fu_device_new ();
+	fu_device_set_id (device, "test_device");
+	fu_device_add_vendor_id (device, "USB:FFFF");
+	fu_device_add_protocol (device, "com.acme");
+	fu_device_set_name (device, "Test Device");
+	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
+	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version (device, "1.2.2");
+	fu_engine_add_device (engine, device);
+	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
+
 }
 
 static void

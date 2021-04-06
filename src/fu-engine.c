@@ -5362,7 +5362,8 @@ fu_engine_device_inherit_history (FuEngine *self, FuDevice *device)
 	/* the device is still running the old firmware version and so if it
 	 * required activation before, it still requires it now -- note:
 	 * we can't just check for version_new=version to allow for re-installs */
-	if (fu_device_has_flag (device_history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+	if (fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION) &&
+	    fu_device_has_flag (device_history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 		FwupdRelease *release = fu_device_get_release_default (device_history);
 		if (fu_common_vercmp_full (fu_device_get_version (device),
 					   fwupd_release_get_version (release),
