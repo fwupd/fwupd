@@ -374,18 +374,6 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 		img_header->secure_tx_payload_len +
 		img_header->secure_rx_payload_len +
 		img_header->custom_payload_len;
-	g_debug ("total len:0x%x", img_header->total_len);
-	g_debug ("OCM start: 0x%x, len:0x%x", img_header->fw_start_addr,
-		 img_header->fw_payload_len);
-	g_debug ("Secure OCM TX start: 0x%x, len:0x%x",
-		 img_header->secure_tx_start_addr,
-		 img_header->secure_tx_payload_len);
-	g_debug ("Secure OCM RX start: 0x%x, len:0x%x",
-		 img_header->secure_rx_start_addr,
-		 img_header->secure_rx_payload_len);
-	g_debug ("Custom start: 0x%x, len:0x%x",
-		 img_header->custom_start_addr,
-		 img_header->custom_payload_len);
 
 	/* add image header and payload */
 	fu_firmware_set_id (fw_hdr, FU_FIRMWARE_ID_HEADER);
@@ -401,6 +389,48 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 	payload_bytes = g_byte_array_free_to_bytes (payload);
 	fu_firmware_set_bytes (fw_payload, payload_bytes);
 	fu_firmware_add_image (firmware, fw_payload);
+
+	return TRUE;
+}
+
+/*
+ * TODO: Not used yet.
+ */
+static gboolean
+fu_analogix_firmware_to_string (FuFirmware *firmware,
+				GString *str)
+{
+	g_autoptr(GBytes) header_bytes = NULL;
+	g_autoptr(GError) error = NULL;
+	const AnxImgHeader *header = NULL;
+
+	header_bytes = fu_firmware_get_image_by_id_bytes (firmware,
+							  FU_FIRMWARE_ID_HEADER,
+							  &error);
+	if (header_bytes == NULL)
+		return FALSE;
+	header = (const AnxImgHeader *) g_bytes_get_data (header_bytes, NULL);
+	if (header == NULL) {
+		g_set_error (&error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "Error reading firmware header");
+		return FALSE;
+	}
+
+	g_string_append_printf (str, "Total len: 0x%0x\n", header->total_len);
+	g_string_append_printf (str, "OCM start: 0x%x, len:0x%x",
+				header->fw_start_addr,
+				header->fw_payload_len);
+	g_string_append_printf (str, "Secure OCM TX start: 0x%x, len:0x%x",
+				header->secure_tx_start_addr,
+				header->secure_tx_payload_len);
+	g_string_append_printf (str, "Secure OCM RX start: 0x%x, len:0x%x",
+				header->secure_rx_start_addr,
+				header->secure_rx_payload_len);
+	g_string_append_printf (str, "Custom start: 0x%x, len:0x%x",
+				header->custom_start_addr,
+				header->custom_payload_len);
 
 	return TRUE;
 }
