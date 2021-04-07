@@ -1,2 +1,5 @@
 [LENOVO]
 BatteryThreshold = 25
+
+[Star Labs]
+BatteryThreshold = 30
