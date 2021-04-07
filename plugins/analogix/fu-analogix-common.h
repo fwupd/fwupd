@@ -70,11 +70,5 @@ typedef struct __attribute__ ((packed)){
 	guint16 fw_ver;
 } AnxImgHeader;
 
-guint64		hex_str_to_dec		(const gchar	*str,
-					 guint8		 len);
-gboolean	parse_fw_hex_file	(const guint8	*fw_src,
-					 guint32	 src_fw_size,
-					 AnxImgHeader	*out_header,
-					 guint8		*out_binary);
 
 const gchar	*fu_analogix_update_status_to_string	(AnxUpdateStatus	 status);
