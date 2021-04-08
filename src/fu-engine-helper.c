@@ -80,4 +80,3 @@ fu_engine_update_motd (FuEngine *self, GError **error)
 				_("Run `fwupdmgr get-upgrades` for more information."));
 	return g_file_set_contents (target, str->str, str->len, error);
 }
-

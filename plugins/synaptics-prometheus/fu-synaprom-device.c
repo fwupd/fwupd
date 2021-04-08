@@ -147,7 +147,7 @@ fu_synaprom_device_set_version (FuSynapromDevice *self,
 {
 	g_autofree gchar *str = NULL;
 
-	/* We decide to skip 10.02.xxxxxx firmware, so we force the minor version from 0x02 
+	/* We decide to skip 10.02.xxxxxx firmware, so we force the minor version from 0x02
 	** to 0x01 to make the devices with 0x02 minor version firmware allow to be updated
 	** back to minor version 0x01. */
 	if (vmajor == 0x0a && vminor == 0x02) {

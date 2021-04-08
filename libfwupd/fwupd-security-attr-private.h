@@ -51,4 +51,3 @@ void		 fwupd_security_attr_to_json		(FwupdSecurityAttr	*self,
 							 JsonBuilder		*builder);
 
 G_END_DECLS
-
