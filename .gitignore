@@ -21,6 +21,7 @@
 /*.dsc
 /*.xz
 /*.gz
+/venv
 __pycache__
 plugins/acpi-dmar/tests/
 plugins/acpi-facp/tests/
