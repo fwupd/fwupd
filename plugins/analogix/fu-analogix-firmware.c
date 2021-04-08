@@ -143,26 +143,8 @@ fu_analogix_firmware_parse_data_rcd (FuIhexFirmwareRecord *rcd,
 		ctx->last_len = rcd->byte_cnt;
 	}
 	g_byte_array_append (payload_bytes, rcd->data->data, rcd->data->len);
-	if (addr == version_addr && ctx->fw_start_addr == FLASH_OCM_ADDR) {
-		guint8 version_hi;
-		guint8 version_lo;
-
-		/* get ocm version */
-		if (!fu_firmware_strparse_uint8_safe ((const gchar *) rcd->data->data,
-						 rcd->data->len,
-						 8,
-						 &version_hi,
-						 error))
-			return FALSE;
-		if (!fu_firmware_strparse_uint8_safe ((const gchar *) rcd->data->data,
-						 rcd->data->len,
-						 12,
-						 &version_lo,
-						 error))
-			return FALSE;
-		img_header->fw_ver = version_hi << 8 | version_lo;
-	}
-
+	if (addr == version_addr && ctx->fw_start_addr == FLASH_OCM_ADDR)
+		img_header->fw_ver = rcd->data->data[8] << 8 | rcd->data->data[12];
 	return TRUE;
 }
 
