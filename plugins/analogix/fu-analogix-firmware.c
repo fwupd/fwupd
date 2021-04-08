@@ -143,8 +143,11 @@ fu_analogix_firmware_parse_data_rcd (FuIhexFirmwareRecord *rcd,
 		ctx->last_len = rcd->byte_cnt;
 	}
 	g_byte_array_append (payload_bytes, rcd->data->data, rcd->data->len);
-	if (addr == version_addr && ctx->fw_start_addr == FLASH_OCM_ADDR)
-		img_header->fw_ver = rcd->data->data[8] << 8 | rcd->data->data[12];
+	if (addr == version_addr && ctx->fw_start_addr == FLASH_OCM_ADDR) {
+		if (rcd->data->len == 16)
+			img_header->fw_ver = rcd->data->data[8] << 8 | rcd->data->data[12];
+	}
+
 	return TRUE;
 }
 
