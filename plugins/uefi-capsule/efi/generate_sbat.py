@@ -81,40 +81,18 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--cc",
-        default="gcc",
-        help="Compiler to use for generating sbat object",
+        "--cc", default="gcc", help="Compiler to use for generating sbat object"
     )
     parser.add_argument(
-        "--objcopy",
-        default="objcopy",
-        help="Binary file to use for objcopy",
+        "--objcopy", default="objcopy", help="Binary file to use for objcopy"
     )
+    parser.add_argument("--project-name", help="SBAT project name")
+    parser.add_argument("--project-version", help="SBAT project version")
+    parser.add_argument("--sbat-version", default=1, type=int, help="SBAT version")
     parser.add_argument(
-        "--project-name",
-        help="SBAT project name",
+        "--sbat-generation", default=1, type=int, help="SBAT generation"
     )
-    parser.add_argument(
-        "--project-version",
-        help="SBAT project version",
-    )
-    parser.add_argument(
-        "--sbat-version",
-        default=1,
-        type=int,
-        help="SBAT version",
-    )
-    parser.add_argument(
-        "--sbat-generation",
-        default=1,
-        type=int,
-        help="SBAT generation",
-    )
-    parser.add_argument(
-        "--sbat-distro-id",
-        default=None,
-        help="SBAT distribution ID"
-    )
+    parser.add_argument("--sbat-distro-id", default=None, help="SBAT distribution ID")
     parser.add_argument(
         "--sbat-distro-generation",
         default=None,
@@ -122,29 +100,16 @@ if __name__ == "__main__":
         help="SBAT distribution generation",
     )
     parser.add_argument(
-        "--sbat-distro-summary",
-        default=None,
-        help="SBAT distribution summary",
+        "--sbat-distro-summary", default=None, help="SBAT distribution summary"
     )
     parser.add_argument(
-        "--sbat-distro-pkgname",
-        default=None,
-        help="SBAT distribution package name",
+        "--sbat-distro-pkgname", default=None, help="SBAT distribution package name"
     )
     parser.add_argument(
-        "--sbat-distro-version",
-        default=None,
-        help="SBAT distribution version",
+        "--sbat-distro-version", default=None, help="SBAT distribution version"
     )
-    parser.add_argument(
-        "--sbat-distro-url",
-        default=None,
-        help="SBAT distribution URL",
-    )
-    parser.add_argument(
-        "outfile",
-        help="Output file",
-    )
+    parser.add_argument("--sbat-distro-url", default=None, help="SBAT distribution URL")
+    parser.add_argument("outfile", help="Output file")
     _args = parser.parse_args()
     _generate_sbat(_args)
 

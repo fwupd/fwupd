@@ -13,7 +13,7 @@ import xml.etree.ElementTree as etree
 
 def parse_dependencies(OS, SUBOS, requested_type):
     deps = []
-    dep = ''
+    dep = ""
     directory = os.path.dirname(sys.argv[0])
     tree = etree.parse(os.path.join(directory, "dependencies.xml"))
     root = tree.getroot()
@@ -28,9 +28,9 @@ def parse_dependencies(OS, SUBOS, requested_type):
             packages = distro.findall("package")
             for package in packages:
                 if SUBOS:
-                    if 'variant' not in package.attrib:
+                    if "variant" not in package.attrib:
                         continue
-                    if package.attrib['variant'] != SUBOS:
+                    if package.attrib["variant"] != SUBOS:
                         continue
                 if package.text:
                     dep = package.text
@@ -41,7 +41,7 @@ def parse_dependencies(OS, SUBOS, requested_type):
     return deps
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     try:
         import distro
@@ -60,15 +60,15 @@ if __name__ == '__main__':
     )
     args = parser.parse_args()
 
-    target = os.getenv('OS', args.os)
+    target = os.getenv("OS", args.os)
     if target is None:
         print("Missing OS environment variable")
         sys.exit(1)
 
     _os = target.lower()
-    _sub_os = ''
-    split = target.split('-')
+    _sub_os = ""
+    split = target.split("-")
     if len(split) >= 2:
         _os, _sub_os = split[:2]
     dependencies = parse_dependencies(_os, _sub_os, "build")
-    print(*dependencies, sep='\n')
+    print(*dependencies, sep="\n")

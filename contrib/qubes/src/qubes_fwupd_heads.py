@@ -18,20 +18,13 @@ FWUPDTOOL = "/bin/fwupdtool"
 BOOT = "/boot"
 HEADS_UPDATES_DIR = os.path.join(BOOT, "updates")
 
-EXIT_CODES = {
-    "ERROR": 1,
-    "SUCCESS": 0,
-    "NOTHING_TO_DO": 2,
-}
+EXIT_CODES = {"ERROR": 1, "SUCCESS": 0, "NOTHING_TO_DO": 2}
 
 
 class FwupdHeads:
     def _get_hwids(self):
         cmd_hwids = [FWUPDTOOL, "hwids"]
-        p = subprocess.Popen(
-            cmd_hwids,
-            stdout=subprocess.PIPE
-        )
+        p = subprocess.Popen(cmd_hwids, stdout=subprocess.PIPE)
         self.dom0_hwids_info = p.communicate()[0].decode()
         if p.returncode != 0:
             raise Exception("fwudp-qubes: Getting hwids info failed")
@@ -46,12 +39,8 @@ class FwupdHeads:
             for line in hwids:
                 if line.startswith("BiosVersion: CBET4000 "):
                     self.heads_version = line.replace(
-                        "BiosVersion: CBET4000 ",
-                        ""
-                    ).replace(
-                        " heads",
-                        ""
-                    )
+                        "BiosVersion: CBET4000 ", ""
+                    ).replace(" heads", "")
         else:
             print("Device is not running under the heads firmware!!")
             print("Exiting...")
@@ -62,10 +51,7 @@ class FwupdHeads:
         Parse metadata info.
         """
         cmd_metadata = ["zcat", metadata_file]
-        p = subprocess.Popen(
-            cmd_metadata,
-            stdout=subprocess.PIPE
-        )
+        p = subprocess.Popen(cmd_metadata, stdout=subprocess.PIPE)
         self.metadata_info = p.communicate()[0].decode()
         if p.returncode != 0:
             raise Exception("fwudp-qubes: Parsing metadata failed")
@@ -90,14 +76,18 @@ class FwupdHeads:
             return EXIT_CODES["NOTHING_TO_DO"]
         for release in heads_metadata_info.find("releases").findall("release"):
             release_ver = release.get("version")
-            if (self.heads_version == "heads" or
-                    l_ver(release_ver) > l_ver(self.heads_version)):
-                if (not self.heads_update_version or
-                        l_ver(release_ver) > l_ver(self.heads_update_version)):
+            if self.heads_version == "heads" or l_ver(release_ver) > l_ver(
+                self.heads_version
+            ):
+                if not self.heads_update_version or l_ver(release_ver) > l_ver(
+                    self.heads_update_version
+                ):
                     self.heads_update_url = release.find("location").text
                     for sha in release.findall("checksum"):
-                        if (".cab" in sha.attrib["filename"]
-                                and sha.attrib["type"] == "sha256"):
+                        if (
+                            ".cab" in sha.attrib["filename"]
+                            and sha.attrib["type"] == "sha256"
+                        ):
                             self.heads_update_sha = sha.text
                     self.heads_update_version = release_ver
         if self.heads_update_url:
@@ -110,23 +100,14 @@ class FwupdHeads:
         """
         Copies heads update to the boot path
         """
-        heads_boot_path = os.path.join(
-            HEADS_UPDATES_DIR,
-            self.heads_update_version
-        )
+        heads_boot_path = os.path.join(HEADS_UPDATES_DIR, self.heads_update_version)
         update_path = arch_path.replace(".cab", "/firmware.rom")
 
-        heads_update_path = os.path.join(
-            heads_boot_path,
-            "firmware.rom"
-        )
+        heads_update_path = os.path.join(heads_boot_path, "firmware.rom")
         if not os.path.exists(HEADS_UPDATES_DIR):
             os.mkdir(HEADS_UPDATES_DIR)
         if os.path.exists(heads_update_path):
-            print(
-                f"Heads Update == {self.heads_update_version} "
-                "already downloaded."
-            )
+            print(f"Heads Update == {self.heads_update_version} " "already downloaded.")
             return EXIT_CODES["NOTHING_TO_DO"]
         else:
             os.mkdir(heads_boot_path)

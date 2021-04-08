@@ -6,7 +6,7 @@ import os
 import gi
 from gi.repository import GLib
 
-gi.require_version('Fwupd', '2.0')
+gi.require_version("Fwupd", "2.0")
 from gi.repository import Fwupd  # pylint: disable=wrong-import-position
 
 
@@ -35,14 +35,14 @@ class Progress:
             status_str = "["
             for i in range(0, 50):
                 if i < percent / 2:
-                    status_str += '*'
+                    status_str += "*"
                 else:
-                    status_str += ' '
+                    status_str += " "
             status_str += "] %d%% %s" % (percent, status)
             self.erase = len(status_str)
             sys.stdout.write(status_str)
             sys.stdout.flush()
-            if 'idle' in status:
+            if "idle" in status:
                 sys.stdout.write("\n")
 
 
@@ -66,8 +66,8 @@ def parse_args():
         choices=["get-devices", "get-details", "install", "refresh"],
         help="What to do",
     )
-    parser.add_argument('cab', nargs='?', help='CAB file')
-    parser.add_argument('deviceid', nargs='?', help='DeviceID to operate on(optional)')
+    parser.add_argument("cab", nargs="?", help="CAB file")
+    parser.add_argument("deviceid", nargs="?", help="DeviceID to operate on(optional)")
     args = parser.parse_args()
     return args
 
@@ -114,7 +114,7 @@ def install(client, cab, target, older, reinstall):
     """Use fwupd client to install CAB file to applicable devices"""
     # FWUPD_DEVICE_ID_ANY
     if not target:
-        target = '*'
+        target = "*"
     flags = Fwupd.InstallFlags.NONE
     if older:
         flags |= Fwupd.InstallFlags.ALLOW_OLDER
@@ -122,13 +122,13 @@ def install(client, cab, target, older, reinstall):
         flags |= Fwupd.InstallFlags.ALLOW_REINSTALL
     progress = Progress()
     parent = super(client.__class__, client)
-    parent.connect('device-changed', device_changed, progress)
-    parent.connect('notify::percentage', status_changed, progress)
-    parent.connect('notify::status', status_changed, progress)
+    parent.connect("device-changed", device_changed, progress)
+    parent.connect("notify::percentage", status_changed, progress)
+    parent.connect("notify::status", status_changed, progress)
     try:
         client.install(target, cab, flags, None)
     except GLib.Error as glib_err:  # pylint: disable=catching-non-exception
-        progress.status_changed(0, 'idle')
+        progress.status_changed(0, "idle")
         print("%s" % glib_err)
         sys.exit(1)
     print("\n")
@@ -144,7 +144,7 @@ def check_exists(cab):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ARGS = parse_args()
     CLIENT = Fwupd.Client()
     CLIENT.connect()
