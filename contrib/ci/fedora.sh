@@ -7,6 +7,15 @@ if ! ./contrib/ci/check-null-false-returns.py; then
     exit 1
 fi
 
+# check for CRLF DOS-style line endings
+all=`find . -type f -not -path "./.git/*"`
+for fn in $all; do
+    if grep -IU $'\x0D' $fn; then
+        echo "DOS line endings detected"
+        exit 1
+    fi
+done
+
 # these are deprecated in favor of INTERNAL flags
 deprecated="FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS
             FWUPD_DEVICE_FLAG_ONLY_SUPPORTED
