@@ -18,4 +18,3 @@ void		 fwupd_release_to_json			(FwupdRelease *release,
 							 JsonBuilder *builder);
 
 G_END_DECLS
-

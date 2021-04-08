@@ -17,4 +17,3 @@ void		 fwupd_plugin_to_json			(FwupdPlugin	*plugin,
 							 JsonBuilder	*builder);
 
 G_END_DECLS
-

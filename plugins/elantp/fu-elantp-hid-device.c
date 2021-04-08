@@ -248,7 +248,7 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 			     ic_type);
 		return FALSE;
 	}
-	
+
 	/* The ic_page_count is based on 64 bytes/page. */
 	fu_device_set_firmware_size (device, (guint64) self->ic_page_count * (guint64) 64);
 
@@ -389,7 +389,7 @@ fu_elantp_hid_device_detach (FuDevice *device, GError **error)
 	guint16 ic_type;
 	guint8 buf[2] = { 0x0 };
 	guint16 tmp;
-	
+
 	/* sanity check */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug ("in bootloader mode, reset IC");
@@ -401,7 +401,7 @@ fu_elantp_hid_device_detach (FuDevice *device, GError **error)
 			return FALSE;
 		g_usleep (ELANTP_DELAY_RESET * 1000);
 	}
-	
+
 	/* get OSM version */
 	if (!fu_elantp_hid_device_read_cmd (self, ETP_CMD_I2C_OSM_VERSION, buf, sizeof(buf), error)) {
 		g_prefix_error (error, "failed to read OSM version: ");
@@ -438,7 +438,7 @@ fu_elantp_hid_device_detach (FuDevice *device, GError **error)
 			} else {
 				self->fw_page_size = 128;
 			}
-			
+
 			if (!fu_elantp_hid_device_write_cmd (self,
 							     ETP_CMD_I2C_IAP_TYPE,
 							     self->fw_page_size / 2,

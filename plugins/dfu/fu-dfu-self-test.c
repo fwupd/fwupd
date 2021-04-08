@@ -162,4 +162,3 @@ main (int argc, char **argv)
 	g_test_add_func ("/dfu/target(DfuSe}", fu_dfu_target_dfuse_func);
 	return g_test_run ();
 }
-

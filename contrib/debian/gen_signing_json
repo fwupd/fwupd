@@ -26,4 +26,3 @@ printf '      ]\n' >> $OUT
 printf '    }\n' >> $OUT
 printf '  }\n' >> $OUT
 printf '}\n' >> $OUT
-

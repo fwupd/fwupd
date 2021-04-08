@@ -106,4 +106,3 @@ main (int argc, char **argv)
 	g_test_add_func ("/wac/firmware{xml}", fu_wac_firmware_xml_func);
 	return g_test_run ();
 }
-

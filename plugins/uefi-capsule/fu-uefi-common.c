@@ -251,7 +251,7 @@ fu_uefi_get_esp_path_for_os (FuDevice *device, const gchar *base)
 			g_debug ("Using ID_LIKE key from os-release");
 			return g_steal_pointer (&id_like_path);
 		}
-	} 
+	}
 	/* try to fallback to use UEFI removable path if ID_LIKE path doesn't exist */
 	if (fu_device_get_metadata_boolean (device, "FallbacktoRemovablePath")) {
 		esp_path = g_build_filename (base, "EFI", "boot", NULL);

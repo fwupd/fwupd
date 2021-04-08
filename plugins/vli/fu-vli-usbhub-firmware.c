@@ -188,7 +188,7 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 				g_prefix_error (error, "failed to get Q7/Q8 offset mapping: ");
 				return FALSE;
 			}
-			if (!fu_common_read_uint8_safe (buf, bufsz, adr_ofs + 0x2000 + 0x05, 
+			if (!fu_common_read_uint8_safe (buf, bufsz, adr_ofs + 0x2000 + 0x05,
 						 	&tmp, error)) {
 				g_prefix_error (error, "failed to get offset version: ");
 				return FALSE;

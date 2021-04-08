@@ -22,4 +22,3 @@ void		 fwupd_device_to_json			(FwupdDevice *device,
 							 JsonBuilder *builder);
 
 G_END_DECLS
-
