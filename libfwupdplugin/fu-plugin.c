@@ -930,6 +930,10 @@ fu_plugin_runner_coldplug (FuPlugin *self, GError **error)
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED))
 		return TRUE;
 
+	/* no HwId */
+	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_REQUIRE_HWID))
+		return TRUE;
+
 	/* no object loaded */
 	if (priv->module == NULL)
 		return TRUE;
