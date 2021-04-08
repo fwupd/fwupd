@@ -148,23 +148,15 @@ fu_analogix_firmware_parse_data_rcd (FuIhexFirmwareRecord *rcd,
 		guint8 version_lo;
 
 		/* get ocm version */
-		/* TODO: Find the appropriate offsets in the data bytes */
-		/* Original version with offsets starting from the end
-		 * of the array:
-
-		img_header->fw_ver = (guint8) hex_str_to_dec ((const gchar*) &hex_hdr[fw_index - 16], 2);
-		img_header->fw_ver = img_header->fw_ver << 8;
-		img_header->fw_ver |= (guint8) hex_str_to_dec ((const gchar*) &hex_hdr[fw_index - 8], 2);
-		*/
 		if (!fu_firmware_strparse_uint8_safe ((const gchar *) rcd->data->data,
 						 rcd->data->len,
-						 0 /* FIXME */,
+						 8,
 						 &version_hi,
 						 error))
 			return FALSE;
 		if (!fu_firmware_strparse_uint8_safe ((const gchar *) rcd->data->data,
 						 rcd->data->len,
-						 0 /* FIXME */,
+						 12,
 						 &version_lo,
 						 error))
 			return FALSE;
@@ -185,7 +177,6 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 	FuIhexFirmware *self = FU_IHEX_FIRMWARE (firmware);
 	GPtrArray *records = fu_ihex_firmware_get_records (self);
 	gboolean got_eof = FALSE;
-	gboolean got_sig = FALSE;
 	guint32 addr_last = 0x0;
 	guint32 img_addr = G_MAXUINT32;
 	g_autoptr(GBytes) hdr_bytes = NULL;
@@ -194,6 +185,7 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 	g_autoptr(FuFirmware) fw_hdr = fu_firmware_new ();
 	g_autoptr(FuFirmware) fw_payload = fu_firmware_new ();
 	data_rcd_parser_ctx ctx = {0};
+	g_autofree gchar *version = NULL;
 	AnxImgHeader *img_header = g_malloc0 (sizeof(*img_header));
 
 	/* parse records */
@@ -301,12 +293,6 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 			ctx.abs_addr = (guint32) addr16 << 16;
 			g_debug ("  abs_addr:\t0x%02x on line %u", ctx.abs_addr, rcd->ln);
 			break;
-		case FU_IHEX_FIRMWARE_RECORD_TYPE_START_LINEAR:
-			if (!fu_common_read_uint32_safe (rcd->data->data, rcd->data->len,
-							 0x0, &ctx.abs_addr, G_BIG_ENDIAN, error))
-				return FALSE;
-			g_debug ("  abs_addr:\t0x%08x on line %u", ctx.abs_addr, rcd->ln);
-			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_SEGMENT:
 			if (!fu_common_read_uint16_safe (rcd->data->data, rcd->data->len,
 							 0x0, &addr16, G_BIG_ENDIAN, error))
@@ -314,30 +300,6 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 			/* segment base address, so ~1Mb addressable */
 			ctx.seg_addr = (guint32) addr16 * 16;
 			g_debug ("  seg_addr:\t0x%08x on line %u", ctx.seg_addr, rcd->ln);
-			break;
-		case FU_IHEX_FIRMWARE_RECORD_TYPE_START_SEGMENT:
-			/* initial content of the CS:IP registers */
-			if (!fu_common_read_uint32_safe (rcd->data->data, rcd->data->len,
-							 0x0, &ctx.seg_addr, G_BIG_ENDIAN, error))
-				return FALSE;
-			g_debug ("  seg_addr:\t0x%02x on line %u", ctx.seg_addr, rcd->ln);
-			break;
-		case FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE:
-			if (got_sig) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "duplicate signature, perhaps "
-						     "corrupt file");
-				return FALSE;
-			}
-			if (rcd->data->len > 0) {
-				g_autoptr(GBytes) data_sig = g_bytes_new (rcd->data->data, rcd->data->len);
-				g_autoptr(FuFirmware) img_sig = fu_firmware_new_from_bytes (data_sig);
-				fu_firmware_set_id (img_sig, FU_FIRMWARE_ID_SIGNATURE);
-				fu_firmware_add_image (firmware, img_sig);
-			}
-			got_sig = TRUE;
 			break;
 		default:
 			/* vendors sneak in nonstandard sections past the EOF */
@@ -374,6 +336,10 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 		img_header->secure_tx_payload_len +
 		img_header->secure_rx_payload_len +
 		img_header->custom_payload_len;
+	/* set firmware version */
+	version = g_strdup_printf ("%04x.%04x", img_header->custom_ver,
+								img_header->fw_ver);
+	fu_firmware_set_version (firmware, version);
 
 	/* add image header and payload */
 	fu_firmware_set_id (fw_hdr, FU_FIRMWARE_ID_HEADER);
@@ -394,9 +360,9 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 }
 
 /*
- * TODO: Not used yet.
+ * Not used.
  */
-static gboolean
+/* static gboolean
 fu_analogix_firmware_to_string (FuFirmware *firmware,
 				GString *str)
 {
@@ -433,7 +399,7 @@ fu_analogix_firmware_to_string (FuFirmware *firmware,
 				header->custom_payload_len);
 
 	return TRUE;
-}
+} */
 
 static void
 fu_analogix_firmware_init (FuAnalogixFirmware *self)
