@@ -8,13 +8,13 @@ import subprocess
 
 def _do_msgattrib(fn):
     argv = [
-        'msgattrib',
-        '--no-location',
-        '--translated',
-        '--no-wrap',
-        '--sort-output',
+        "msgattrib",
+        "--no-location",
+        "--translated",
+        "--no-wrap",
+        "--sort-output",
         fn,
-        '--output-file=' + fn,
+        "--output-file=" + fn,
     ]
     ret = subprocess.run(argv)
     if ret.returncode != 0:
@@ -33,7 +33,7 @@ def _do_nukeheader(fn):
         if line.startswith('"Last-Translator:'):
             continue
         clean_lines.append(line)
-    with open(fn, 'w') as f:
+    with open(fn, "w") as f:
         f.writelines(clean_lines)
 
 
@@ -42,15 +42,15 @@ def _process_file(fn):
     _do_nukeheader(fn)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) == 1:
-        print('path required')
+        print("path required")
         sys.exit(1)
     try:
         dirname = sys.argv[1]
         for fn in os.listdir(dirname):
-            if fn.endswith('.po'):
+            if fn.endswith(".po"):
                 _process_file(os.path.join(dirname, fn))
     except NotADirectoryError as _:
-        print('path required')
+        print("path required")
         sys.exit(2)

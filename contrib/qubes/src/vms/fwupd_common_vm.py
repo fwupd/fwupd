@@ -16,7 +16,7 @@ import subprocess
 FWUPD_VM_DIR = "/home/user/.cache/fwupd"
 FWUPD_VM_UPDATES_DIR = os.path.join(FWUPD_VM_DIR, "updates")
 FWUPD_VM_METADATA_DIR = os.path.join(FWUPD_VM_DIR, "metadata")
-WARNING_COLOR = '\033[93m'
+WARNING_COLOR = "\033[93m"
 FWUPD_PKI = "/etc/pki/fwupd"
 
 
@@ -27,7 +27,7 @@ class FwupdVmCommon:
         Keyword arguments:
         *args -- paths to be created
         """
-        qubes_gid = grp.getgrnam('qubes').gr_gid
+        qubes_gid = grp.getgrnam("qubes").gr_gid
         self.old_umask = os.umask(0o002)
         if args is None:
             raise Exception("Creating directories failed, no paths given.")
@@ -49,14 +49,11 @@ class FwupdVmCommon:
         file_path -- absolute path to the file
         sha -- SHA256 checksum of the file
         """
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             c_sha = hashlib.sha256(f.read()).hexdigest()
         if c_sha != sha:
             self.clean_vm_cache()
-            raise ValueError(
-                "Computed checksum %s did NOT match %s. " %
-                (c_sha, sha)
-            )
+            raise ValueError("Computed checksum %s did NOT match %s. " % (c_sha, sha))
 
     def validate_vm_dirs(self):
         """Validates and creates directories"""
@@ -80,25 +77,16 @@ class FwupdVmCommon:
         file_path -- absolute path to jcat file
         file_directory -- absolute path to the directory to jcat file location
         """
-        cmd_jcat = [
-            "jcat-tool",
-            "verify",
-            f"{file_path}",
-            "--public-keys",
-            FWUPD_PKI
-        ]
+        cmd_jcat = ["jcat-tool", "verify", f"{file_path}", "--public-keys", FWUPD_PKI]
         p = subprocess.Popen(
-            cmd_jcat,
-            cwd=file_directory,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            cmd_jcat, cwd=file_directory, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         stdout, __ = p.communicate()
-        verification = stdout.decode('utf-8')
+        verification = stdout.decode("utf-8")
         print(verification)
         if p.returncode != 0:
             self.clean_vm_cache()
-            raise Exception('jcat-tool: Verification failed')
+            raise Exception("jcat-tool: Verification failed")
 
     def clean_vm_cache(self):
         """Removes updates data"""

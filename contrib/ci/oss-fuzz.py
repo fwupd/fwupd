@@ -119,14 +119,7 @@ class Builder:
         if not os.path.exists(fullsrc):
             fullsrc = os.path.join(self.builddir, src)
         dst = os.path.basename(src).replace(".c", ".o")
-        argv.extend(
-            [
-                "-c",
-                fullsrc,
-                "-o",
-                os.path.join(self.builddir, dst),
-            ]
-        )
+        argv.extend(["-c", fullsrc, "-o", os.path.join(self.builddir, dst)])
         print("building {} into {}".format(src, dst))
         try:
             subprocess.run(argv, cwd=self.srcdir, check=True)
@@ -169,11 +162,9 @@ class Builder:
 
     def makezip(self, dst: str, globstr: str) -> None:
         """ create a zip file archive from a glob """
-        argv = [
-            "zip",
-            "--junk-paths",
-            os.path.join(self.installdir, dst),
-        ] + glob.glob(os.path.join(self.srcdir, globstr))
+        argv = ["zip", "--junk-paths", os.path.join(self.installdir, dst)] + glob.glob(
+            os.path.join(self.srcdir, globstr)
+        )
         print("assembling {}".format(dst))
         subprocess.run(argv, cwd=self.srcdir, check=True)
 
@@ -240,16 +231,10 @@ def _build(bld: Builder) -> None:
 
     # JSON-GLib
     src = bld.checkout_source(
-        "json-glib",
-        url="https://gitlab.gnome.org/GNOME/json-glib.git",
+        "json-glib", url="https://gitlab.gnome.org/GNOME/json-glib.git"
     )
     bld.build_meson_project(
-        src,
-        [
-            "-Dgtk_doc=disabled",
-            "-Dtests=false",
-            "-Dintrospection=disabled",
-        ],
+        src, ["-Dgtk_doc=disabled", "-Dtests=false", "-Dintrospection=disabled"]
     )
     bld.add_work_includedir("include/json-glib-1.0/json-glib")
     bld.add_work_includedir("include/json-glib-1.0")
@@ -258,12 +243,7 @@ def _build(bld: Builder) -> None:
     # libxmlb
     src = bld.checkout_source("libxmlb", url="https://github.com/hughsie/libxmlb.git")
     bld.build_meson_project(
-        src,
-        [
-            "-Dgtkdoc=false",
-            "-Dintrospection=false",
-            "-Dtests=false",
-        ],
+        src, ["-Dgtkdoc=false", "-Dintrospection=false", "-Dtests=false"]
     )
     bld.add_work_includedir("include/libxmlb-2")
     bld.add_work_includedir("include/libxmlb-2/libxmlb")

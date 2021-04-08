@@ -41,12 +41,7 @@ class DownloadData(FwupdVmCommon):
             metadata_url = METADATA_URL
         else:
             metadata_url = self.custom_url
-        cmd_metadata = [
-            "wget",
-            "-P",
-            FWUPD_VM_METADATA_DIR,
-            metadata_url
-        ]
+        cmd_metadata = ["wget", "-P", FWUPD_VM_METADATA_DIR, metadata_url]
         p = subprocess.Popen(cmd_metadata)
         p.wait()
         if p.returncode != 0:
@@ -62,12 +57,7 @@ class DownloadData(FwupdVmCommon):
             metadata_url = METADATA_URL
         else:
             metadata_url = self.custom_url
-        cmd_metadata = [
-            "wget",
-            "-P",
-            FWUPD_VM_METADATA_DIR,
-            f"{metadata_url}.jcat"
-        ]
+        cmd_metadata = ["wget", "-P", FWUPD_VM_METADATA_DIR, f"{metadata_url}.jcat"]
         p = subprocess.Popen(cmd_metadata)
         p.wait()
         if p.returncode != 0:
@@ -81,20 +71,13 @@ class DownloadData(FwupdVmCommon):
         """Downloads default metadata and its signatures"""
         if url is not None:
             self.custom_url = url
-            custom_metadata_name = url.replace(
-                FWUPD_DOWNLOAD_PREFIX,
-                ""
-            )
+            custom_metadata_name = url.replace(FWUPD_DOWNLOAD_PREFIX, "")
             self.metadata_file = os.path.join(
-                FWUPD_VM_METADATA_DIR,
-                custom_metadata_name
+                FWUPD_VM_METADATA_DIR, custom_metadata_name
             )
         else:
             self.custom_url = None
-            self.metadata_file = os.path.join(
-                FWUPD_VM_METADATA_DIR,
-                "firmware.xml.gz"
-            )
+            self.metadata_file = os.path.join(FWUPD_VM_METADATA_DIR, "firmware.xml.gz")
         self.validate_vm_dirs()
         self._download_metadata_file()
         self._download_metadata_jcat()
@@ -110,12 +93,7 @@ class DownloadData(FwupdVmCommon):
         self.arch_name = url.replace("https://fwupd.org/downloads/", "")
         self._decrypt_update_url(url)
         update_path = os.path.join(FWUPD_VM_UPDATES_DIR, self.arch_name)
-        cmd_update = [
-            "wget",
-            "-O",
-            update_path,
-            self.dec_url
-        ]
+        cmd_update = ["wget", "-O", update_path, self.dec_url]
         p = subprocess.Popen(cmd_update)
         p.wait()
         if p.returncode != 0:
@@ -145,5 +123,5 @@ def main():
         raise Exception("Invalid command!!!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

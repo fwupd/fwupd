@@ -10,25 +10,25 @@ import xml.etree.ElementTree as etree
 
 
 def parse_control_dependencies(requested_type):
-    TARGET = os.getenv('OS')
-    QUBES = os.getenv('QUBES')
+    TARGET = os.getenv("OS")
+    QUBES = os.getenv("QUBES")
     deps = []
-    dep = ''
+    dep = ""
 
-    if TARGET == '':
+    if TARGET == "":
         print("Missing OS environment variable")
         sys.exit(1)
     OS = TARGET
-    SUBOS = ''
+    SUBOS = ""
     if TARGET:
-        split = TARGET.split('-')
+        split = TARGET.split("-")
         if len(split) >= 2:
             OS = split[0]
             SUBOS = split[1]
     else:
         import lsb_release
 
-        OS = lsb_release.get_distro_information()['ID'].lower()
+        OS = lsb_release.get_distro_information()["ID"].lower()
         import platform
 
         SUBOS = platform.machine()
@@ -49,33 +49,33 @@ def parse_control_dependencies(requested_type):
             packages = distro.findall("package")
             for package in packages:
                 if SUBOS:
-                    if not 'variant' in package.attrib:
+                    if not "variant" in package.attrib:
                         continue
-                    if package.attrib['variant'] != SUBOS:
+                    if package.attrib["variant"] != SUBOS:
                         continue
                 if package.text:
                     dep = package.text
                 else:
                     dep = child.attrib["id"]
                 if child.attrib["type"] == requested_type and dep:
-                    version = control.find('version')
+                    version = control.find("version")
                     if version is not None:
                         dep = "%s %s" % (dep, version.text)
-                    inclusions = control.findall('inclusive')
+                    inclusions = control.findall("inclusive")
                     if inclusions:
                         for i in range(0, len(inclusions)):
-                            prefix = ''
-                            suffix = ' '
+                            prefix = ""
+                            suffix = " "
                             if i == 0:
                                 prefix = " ["
                             if i == len(inclusions) - 1:
                                 suffix = "]"
                             dep = "%s%s%s%s" % (dep, prefix, inclusions[i].text, suffix)
-                    exclusions = control.findall('exclusive')
+                    exclusions = control.findall("exclusive")
                     if exclusions:
                         for i in range(0, len(exclusions)):
-                            prefix = '!'
-                            suffix = ' '
+                            prefix = "!"
+                            suffix = " "
                             if i == 0:
                                 prefix = " [!"
                             if i == len(exclusions) - 1:
@@ -86,26 +86,26 @@ def parse_control_dependencies(requested_type):
 
 
 def update_debian_control(target):
-    control_in = os.path.join(target, 'control.in')
-    control_out = os.path.join(target, 'control')
+    control_in = os.path.join(target, "control.in")
+    control_out = os.path.join(target, "control")
 
     if not os.path.exists(control_in):
         print("Missing file %s" % control_in)
         sys.exit(1)
 
-    with open(control_in, 'r') as rfd:
+    with open(control_in, "r") as rfd:
         lines = rfd.readlines()
 
     deps, QUBES = parse_control_dependencies("build")
     deps.sort()
 
     if QUBES:
-        lines += '\n'
-        control_qubes_in = os.path.join(target, 'control.qubes.in')
-        with open(control_qubes_in, 'r') as rfd:
+        lines += "\n"
+        control_qubes_in = os.path.join(target, "control.qubes.in")
+        with open(control_qubes_in, "r") as rfd:
             lines += rfd.readlines()
 
-    with open(control_out, 'w') as wfd:
+    with open(control_out, "w") as wfd:
         for line in lines:
             if line.startswith("Build-Depends: %%%DYNAMIC%%%"):
                 wfd.write("Build-Depends:\n")
@@ -118,8 +118,8 @@ def update_debian_control(target):
 
 
 def update_debian_copyright(directory):
-    copyright_in = os.path.join(directory, 'copyright.in')
-    copyright_out = os.path.join(directory, 'copyright')
+    copyright_in = os.path.join(directory, "copyright.in")
+    copyright_out = os.path.join(directory, "copyright")
 
     if not os.path.exists(copyright_in):
         print("Missing file %s" % copyright_in)
@@ -127,14 +127,14 @@ def update_debian_copyright(directory):
 
     # Assume all files are remaining LGPL-2.1+
     copyrights = []
-    for root, dirs, files in os.walk('.'):
+    for root, dirs, files in os.walk("."):
         for file in files:
             target = os.path.join(root, file)
             # skip translations and license file
-            if target.startswith('./po/') or file == "COPYING":
+            if target.startswith("./po/") or file == "COPYING":
                 continue
             try:
-                with open(target, 'r') as rfd:
+                with open(target, "r") as rfd:
                     # read about the first few lines of the file only
                     lines = rfd.readlines(220)
             except UnicodeDecodeError:
@@ -142,17 +142,17 @@ def update_debian_copyright(directory):
             except FileNotFoundError:
                 continue
             for line in lines:
-                if 'Copyright (C) ' in line:
-                    parts = line.split('Copyright (C)')[
+                if "Copyright (C) " in line:
+                    parts = line.split("Copyright (C)")[
                         1
                     ].strip()  # split out the copyright header
-                    partition = parts.partition(' ')[2]  # remove the year string
+                    partition = parts.partition(" ")[2]  # remove the year string
                     copyrights += ["%s" % partition]
     copyrights = "\n\t   ".join(sorted(set(copyrights)))
-    with open(copyright_in, 'r') as rfd:
+    with open(copyright_in, "r") as rfd:
         lines = rfd.readlines()
 
-    with open(copyright_out, 'w') as wfd:
+    with open(copyright_out, "w") as wfd:
         for line in lines:
             if line.startswith("%%%DYNAMIC%%%"):
                 wfd.write("Files: *\n")
@@ -163,6 +163,6 @@ def update_debian_copyright(directory):
                 wfd.write(line)
 
 
-directory = os.path.join(os.getcwd(), 'debian')
+directory = os.path.join(os.getcwd(), "debian")
 update_debian_control(directory)
 update_debian_copyright(directory)

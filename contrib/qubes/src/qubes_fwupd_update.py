@@ -17,10 +17,10 @@ FWUPD_VM_DOWNLOAD = "/usr/libexec/qubes-fwupd/fwupd_download_updates.py"
 FWUPD_DOM0_UPDATES_DIR = os.path.join(FWUPD_DOM0_DIR, "updates")
 FWUPD_DOWNLOAD_PREFIX = "https://fwupd.org/downloads/"
 
-SPECIAL_CHAR_REGEX = re.compile(r'%20|&|\||#')
-UPDATEVM_REGEX = re.compile(r'^sys-')
+SPECIAL_CHAR_REGEX = re.compile(r"%20|&|\||#")
+UPDATEVM_REGEX = re.compile(r"^sys-")
 
-WARNING_COLOR = '\033[93m'
+WARNING_COLOR = "\033[93m"
 
 
 class FwupdUpdate:
@@ -30,7 +30,7 @@ class FwupdUpdate:
         Keyword arguments:
         *args -- paths to be created
         """
-        qubes_gid = grp.getgrnam('qubes').gr_gid
+        qubes_gid = grp.getgrnam("qubes").gr_gid
         self.old_umask = os.umask(0o002)
         if args is None:
             raise Exception("Creating directories failed, no paths given.")
@@ -46,15 +46,8 @@ class FwupdUpdate:
                 )
 
     def _specify_updatevm(self):
-        cmd_updatevm = [
-            "qubes-prefs",
-            "--force-root",
-            "updatevm",
-        ]
-        p = subprocess.Popen(
-            cmd_updatevm,
-            stdout=subprocess.PIPE
-        )
+        cmd_updatevm = ["qubes-prefs", "--force-root", "updatevm"]
+        p = subprocess.Popen(cmd_updatevm, stdout=subprocess.PIPE)
         self.updatevm = p.communicate()[0].decode().split("\n")[0]
         if p.returncode != 0 and not UPDATEVM_REGEX.match(self.updatevm):
             self.updatevm = None
@@ -62,14 +55,8 @@ class FwupdUpdate:
 
     def _check_updatevm(self):
         """Checks if usbvm is running"""
-        cmd_xl_list = [
-            "xl",
-            "list"
-        ]
-        p = subprocess.Popen(
-                cmd_xl_list,
-                stdout=subprocess.PIPE
-            )
+        cmd_xl_list = ["xl", "list"]
+        p = subprocess.Popen(cmd_xl_list, stdout=subprocess.PIPE)
         output = p.communicate()[0].decode()
         if p.returncode != 0:
             raise Exception("fwudp-qubes: Firmware downgrade failed")
@@ -112,10 +99,10 @@ class FwupdUpdate:
                 "--pass-io",
                 self.updatevm,
                 (
-                    'script --quiet --return --command '
+                    "script --quiet --return --command "
                     f'"{FWUPD_VM_DOWNLOAD} --metadata'
                     f' --url={metadata_url}"'
-                )
+                ),
             ]
         else:
             cmd_metadata = [
@@ -123,9 +110,9 @@ class FwupdUpdate:
                 "--pass-io",
                 self.updatevm,
                 (
-                    'script --quiet --return --command '
+                    "script --quiet --return --command "
                     f'"{FWUPD_VM_DOWNLOAD} --metadata"'
-                )
+                ),
             ]
         p = subprocess.Popen(cmd_metadata)
         p.wait()
@@ -155,10 +142,10 @@ class FwupdUpdate:
                 "--pass-io",
                 self.updatevm,
                 (
-                    'script --quiet --return --command '
+                    "script --quiet --return --command "
                     f'"{FWUPD_VM_DOWNLOAD} --url={self.enc_url}'
                     f' --sha={sha}"'
-                )
+                ),
             ]
             p = subprocess.Popen(cmd_firmware_download)
             p.wait()
