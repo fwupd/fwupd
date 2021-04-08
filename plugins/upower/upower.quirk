@@ -3,3 +3,6 @@ BatteryThreshold = 25
 
 [Star Labs]
 BatteryThreshold = 30
+
+[HP]
+BatteryThreshold = 50
