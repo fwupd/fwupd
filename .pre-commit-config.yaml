@@ -1,0 +1,37 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    -   id: no-commit-to-branch
+        args: [--branch, master, --pattern, 1_.*_X]
+    -   id: check-yaml
+    -   id: check-json
+    -   id: check-symlinks
+    -   id: check-xml
+    -   id: end-of-file-fixer
+        types_or: [c, shell, python]
+    -   id: trailing-whitespace
+        types_or: [c, shell, python]
+    -   id: check-docstring-first
+    -   id: check-merge-conflict
+    -   id: mixed-line-ending
+        args: [--fix=lf]
+-   repo: https://github.com/ambv/black
+    rev: 20.8b1
+    hooks:
+    - id: black
+-   repo: local
+    hooks:
+    - id: check-deprecated
+      name: check for use of any deprecated items
+      language: script
+      entry: ./contrib/ci/check-deprecated.sh
+    - id: check-null-false-returns
+      name: check for null / false return mistmatch
+      language: script
+      entry: ./contrib/ci/check-null-false-returns.py
+    - id: shellcheck
+      name: check shellscript style
+      language: system
+      entry: shellcheck --severity=error -e SC2068
+      types: [shell]
