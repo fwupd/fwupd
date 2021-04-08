@@ -2,6 +2,9 @@
 set -e
 set -x
 
+#install missing deps
+dnf install libappstream-glib-devel
+
 #generate a tarball
 git config tar.tar.xz.command "xz -c"
 mkdir -p build && pushd build

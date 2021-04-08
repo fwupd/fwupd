@@ -23,6 +23,9 @@ sed s/quilt/native/ debian/source/format -i
 #generate control file
 ./contrib/ci/generate_debian.py
 
+#install deps only used on 1.1.x or older
+apt install libappstream-glib-dev libsoup2.4-dev -y || true
+
 #disable unit tests if fwupd is already installed (may cause problems)
 if [ -x /usr/lib/fwupd/fwupd ]; then
 	export DEB_BUILD_OPTIONS=nocheck
