@@ -1,11 +1,9 @@
 #!/usr/bin/python3
+# SPDX-License-Identifier: LGPL-2.1+
+
 """ This parses avrdude.conf and generates quirks for fwupd """
 
 # pylint: disable=wrong-import-position,pointless-string-statement
-
-"""
-SPDX-License-Identifier: LGPL-2.1+
-"""
 
 import sys
 from difflib import SequenceMatcher
