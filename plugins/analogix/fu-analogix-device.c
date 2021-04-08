@@ -189,8 +189,8 @@ fu_analogix_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 
 	/* TODO: get custom version */
-	self->fw_version = fu_common_read_uint16 (buf_fw, G_BIG_ENDIAN);
-	self->custom_version = fu_common_read_uint16 (buf_custom, G_BIG_ENDIAN);
+	self->fw_version = fu_common_read_uint16 (buf_fw, G_LITTLE_ENDIAN);
+	self->custom_version = fu_common_read_uint16 (buf_custom, G_LITTLE_ENDIAN);
 
 	/* device version is both versions as a pair */
 	version = g_strdup_printf ("%04x.%04x", self->custom_version, self->fw_version);
@@ -213,16 +213,17 @@ fu_analogix_device_find_interface (FuUsbDevice *device, GError **error)
 		if (g_usb_interface_get_class (intf) == BILLBOARD_CLASS &&
 		    g_usb_interface_get_subclass (intf) == BILLBOARD_SUBCLASS &&
 		    g_usb_interface_get_protocol (intf) == BILLBOARD_PROTOCOL) {
-			GUsbEndpoint *ep;
+			/* GUsbEndpoint *ep; */
 			g_autoptr(GPtrArray) endpoints = NULL;
 
 			endpoints = g_usb_interface_get_endpoints (intf);
-			if (endpoints == NULL || endpoints->len == 0)
+			if (endpoints == NULL)
 				continue;
-			ep = g_ptr_array_index (endpoints, 0);
+				/* only endpoint 0 is used*/
+			/* ep = g_ptr_array_index (endpoints, 0); */
 			self->iface_idx = g_usb_interface_get_number (intf);
-			self->ep_num = g_usb_endpoint_get_address (ep) & 0x7f;
-			self->chunk_len = g_usb_endpoint_get_maximum_packet_size (ep);
+			/* self->ep_num = g_usb_endpoint_get_address (ep) & 0x7f; */
+			self->chunk_len = BILLBOARD_MAX_PACKET_SIZE;
 			return TRUE;
 		}
 	}
@@ -254,36 +255,11 @@ fu_analogix_device_prepare_firmware (FuDevice *device,
 				     FwupdInstallFlags flags,
 				     GError **error)
 {
-	FuAnalogixDevice *self = FU_ANALOGIX_DEVICE (device);
-	guint16 main_ocm_ver = 0;
-	guint16 custom_fw_version = 0;
-	const AnxImgHeader *hdr = NULL;
-	g_autofree gchar *version = NULL;
 	g_autoptr(FuFirmware) firmware = fu_analogix_firmware_new ();
-	g_autoptr(GBytes) fw_hdr = NULL;
 
 	/* get header */
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
-	fw_hdr = fu_firmware_get_image_by_id_bytes (firmware,
-						    FU_FIRMWARE_ID_HEADER,
-						    error);
-	if (fw_hdr == NULL)
-		return NULL;
-
-	/* TODO: move these as accessors as fu_analogix_firmware_get_foo() etc and hide AnxImgHeader from FuAnalogixDevice */
-	hdr = (const AnxImgHeader *) g_bytes_get_data (fw_hdr, NULL);
-
-	/* parse version: TODO: move to FuAnalogixFirmware->parse */
-	main_ocm_ver = hdr->fw_ver;
-	if (main_ocm_ver == 0)
-		main_ocm_ver = self->fw_version;
-	custom_fw_version = hdr->custom_ver;
-	if (custom_fw_version == 0)
-		custom_fw_version = self->custom_version;
-	version = g_strdup_printf ("%04x.%04x", custom_fw_version, main_ocm_ver);
-	fu_firmware_set_version (firmware, version);
-
 	return g_steal_pointer (&firmware);
 }
 
