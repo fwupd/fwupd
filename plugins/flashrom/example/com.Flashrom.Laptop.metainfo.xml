@@ -28,7 +28,7 @@
     </release>
   </releases>
 
-  <!-- this script is run with bubblewrap -- the old firmware is in /boot -->
+  <!-- this script is run with bubblewrap, the old firmware is in /boot -->
   <custom>
     <value key="fwupd::BuilderScript">startup.sh</value>
     <value key="fwupd::BuilderOutput">firmware.bin</value>
