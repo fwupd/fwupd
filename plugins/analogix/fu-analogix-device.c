@@ -18,6 +18,7 @@ struct _FuAnalogixDevice {
 	guint16		 chunk_len;		/* wMaxPacketSize */
 	guint16		 custom_version;
 	guint16		 fw_version;
+	guint32      fw_wrote_len;
 };
 
 G_DEFINE_TYPE (FuAnalogixDevice, fu_analogix_device, FU_TYPE_USB_DEVICE)
@@ -136,12 +137,12 @@ fu_analogix_device_get_update_status (FuAnalogixDevice *self,
 						 &status_tmp, sizeof(status_tmp),
 						 error))
 			return FALSE;
-		if (status_tmp != UPDATE_STATUS_INVALID) {
+		if ((status_tmp != UPDATE_STATUS_ERROR) &&
+			(status_tmp != UPDATE_STATUS_INVALID)) {
 			if (status != NULL)
 				*status = status_tmp;
 			return TRUE;
 		}
-
 		/* wait 1ms */
 		g_usleep (1000);
 	}
@@ -188,7 +189,13 @@ fu_analogix_device_setup (FuDevice *device, GError **error)
 				         &buf_fw[0], 1, error))
 		return FALSE;
 
-	/* TODO: get custom version */
+	/*  get custom version */
+	if (!fu_analogix_device_receive (self, ANX_BB_RQT_READ_CUS_VER, 0, 0,
+					 &buf_custom[1], 1, error))
+		return FALSE;
+	if (!fu_analogix_device_receive (self, ANX_BB_RQT_READ_CUS_RVER, 0, 0,
+				         &buf_custom[0], 1, error))
+		return FALSE;
 	self->fw_version = fu_common_read_uint16 (buf_fw, G_LITTLE_ENDIAN);
 	self->custom_version = fu_common_read_uint16 (buf_custom, G_LITTLE_ENDIAN);
 
@@ -213,16 +220,12 @@ fu_analogix_device_find_interface (FuUsbDevice *device, GError **error)
 		if (g_usb_interface_get_class (intf) == BILLBOARD_CLASS &&
 		    g_usb_interface_get_subclass (intf) == BILLBOARD_SUBCLASS &&
 		    g_usb_interface_get_protocol (intf) == BILLBOARD_PROTOCOL) {
-			/* GUsbEndpoint *ep; */
 			g_autoptr(GPtrArray) endpoints = NULL;
 
 			endpoints = g_usb_interface_get_endpoints (intf);
 			if (endpoints == NULL)
 				continue;
-				/* only endpoint 0 is used*/
-			/* ep = g_ptr_array_index (endpoints, 0); */
 			self->iface_idx = g_usb_interface_get_number (intf);
-			/* self->ep_num = g_usb_endpoint_get_address (ep) & 0x7f; */
 			self->chunk_len = BILLBOARD_MAX_PACKET_SIZE;
 			return TRUE;
 		}
@@ -256,8 +259,6 @@ fu_analogix_device_prepare_firmware (FuDevice *device,
 				     GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_analogix_firmware_new ();
-
-	/* get header */
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 	return g_steal_pointer (&firmware);
@@ -290,21 +291,13 @@ fu_analogix_device_program_flash (FuAnalogixDevice *self,
 				      req_val,
 				      0,
 				      buf_init,
-				      3,	/* TODO: check this is correct */
+				      3,
 				      error)) {
 		g_prefix_error (error, "program initialized failed: ");
 		return FALSE;
 	}
 	if (!fu_analogix_device_get_update_status (self, &status, error))
 		return FALSE;
-	if (status != UPDATE_STATUS_START) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "update status was %s",
-			     fu_analogix_update_status_to_string (status));
-		return FALSE;
-	}
 
 	/* write data */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
@@ -326,15 +319,9 @@ fu_analogix_device_program_flash (FuAnalogixDevice *self,
 			g_prefix_error (error, "failed status on chk %u: ", i);
 			return FALSE;
 		}
-		if (status != UPDATE_STATUS_FINISH) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_FOUND,
-				     "update status was %s",
-				     fu_analogix_update_status_to_string (status));
-			return FALSE;
-		}
-		fu_device_set_progress_full (FU_DEVICE (self), i, chunks->len - 1);
+		self->fw_wrote_len += fu_chunk_get_data_sz (chk);
+		fu_device_set_progress_full (FU_DEVICE (self),
+							self->fw_wrote_len, total_len);
 	}
 
 	/* success */
@@ -352,7 +339,7 @@ fu_analogix_device_write_firmware (FuDevice *device,
 	guint32 base = 0;
 	g_autoptr(GBytes) fw_hdr = NULL;
 	g_autoptr(GBytes) fw_payload = NULL;
-
+	self->fw_wrote_len = 0;
 	/* get header and payload */
 	fw_hdr = fu_firmware_get_image_by_id_bytes (firmware,
 						    FU_FIRMWARE_ID_HEADER,
