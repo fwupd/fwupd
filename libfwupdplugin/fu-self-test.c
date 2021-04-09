@@ -1069,6 +1069,45 @@ fu_common_store_cab_error_missing_file_func (void)
 }
 
 static void
+fu_common_bytes_get_data_func (void)
+{
+	const gchar *fn = "/tmp/fwupdzero";
+	const guint8 *buf;
+	gboolean ret;
+	g_autoptr(GBytes) bytes1 = NULL;
+	g_autoptr(GBytes) bytes2 = NULL;
+	g_autoptr(GBytes) bytes3 = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GMappedFile) mmap = NULL;
+
+	/* create file with zero size */
+	ret = g_file_set_contents (fn, NULL, 0, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	/* check we got zero sized data */
+	bytes1 = fu_common_get_contents_bytes (fn, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (bytes1);
+	g_assert_cmpint (g_bytes_get_size (bytes1), ==, 0);
+	g_assert_nonnull (g_bytes_get_data (bytes1, NULL));
+
+	/* do the same with an mmap mapping, which returns NULL on empty file */
+	mmap = g_mapped_file_new (fn, FALSE, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (mmap);
+	bytes2 = g_mapped_file_get_bytes (mmap);
+	g_assert_nonnull (bytes2);
+	g_assert_cmpint (g_bytes_get_size (bytes2), ==, 0);
+	g_assert_null (g_bytes_get_data (bytes2, NULL));
+
+	/* use the safe function */
+	buf = fu_bytes_get_data_safe (bytes2, NULL, &error);
+	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_null (buf);
+}
+
+static void
 fu_common_store_cab_error_size_func (void)
 {
 	g_autoptr(XbSilo) silo = NULL;
@@ -2664,6 +2703,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/common{cab-error-wrong-checksum}", fu_common_store_cab_error_wrong_checksum_func);
 	g_test_add_func ("/fwupd/common{cab-error-missing-file}", fu_common_store_cab_error_missing_file_func);
 	g_test_add_func ("/fwupd/common{cab-error-size}", fu_common_store_cab_error_size_func);
+	g_test_add_func ("/fwupd/common{bytes-get-data}", fu_common_bytes_get_data_func);
 	g_test_add_func ("/fwupd/common{spawn)", fu_common_spawn_func);
 	g_test_add_func ("/fwupd/common{spawn-timeout)", fu_common_spawn_timeout_func);
 	g_test_add_func ("/fwupd/common{firmware-builder}", fu_common_firmware_builder_func);
