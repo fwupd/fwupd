@@ -190,12 +190,12 @@ fu_analogix_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 
 	/*  get custom version */
-	if (!fu_analogix_device_receive (self, ANX_BB_RQT_READ_CUS_VER, 0, 0,
-					 &buf_custom[1], 1, error))
-		return FALSE;
-	if (!fu_analogix_device_receive (self, ANX_BB_RQT_READ_CUS_RVER, 0, 0,
-				         &buf_custom[0], 1, error))
-		return FALSE;
+//	if (!fu_analogix_device_receive (self, ANX_BB_RQT_READ_CUS_VER, 0, 0,
+//					 &buf_custom[1], 1, error))
+//		return FALSE;
+//	if (!fu_analogix_device_receive (self, ANX_BB_RQT_READ_CUS_RVER, 0, 0,
+//				         &buf_custom[0], 1, error))
+//		return FALSE;
 	self->fw_version = fu_common_read_uint16 (buf_fw, G_LITTLE_ENDIAN);
 	self->custom_version = fu_common_read_uint16 (buf_custom, G_LITTLE_ENDIAN);
 
