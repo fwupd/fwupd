@@ -17,9 +17,6 @@ if [ -n "$PS1" ] || [[ $- == *i* ]] || [ -f /dev/.cros_milestone ]; then
     read -p  "Install build dependencies? (y/n) " question
     if [ "$question" = "y" ]; then
         DEPS=$(./contrib/ci/generate_dependencies.py)
-        if ! which shellcheck >/dev/null 2>&1; then
-            DEPS="$DEPS shellcheck"
-        fi
         OS=$(python3 -c "import distro; print(distro.linux_distribution()[0].split()[0].lower())")
         if [ "$OS" = "debian" ] || [ "$OS" = "ubuntu" ]; then
             if ! python3 -c "import venv"; then
