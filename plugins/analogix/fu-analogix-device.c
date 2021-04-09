@@ -18,7 +18,6 @@ struct _FuAnalogixDevice {
 	guint16		 chunk_len;		/* wMaxPacketSize */
 	guint16		 custom_version;
 	guint16		 fw_version;
-	guint32      fw_wrote_len;
 };
 
 G_DEFINE_TYPE (FuAnalogixDevice, fu_analogix_device, FU_TYPE_USB_DEVICE)
@@ -265,14 +264,10 @@ fu_analogix_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_analogix_device_program_flash (FuAnalogixDevice *self,
-				  guint32 start_addr,
-				  guint32 total_len,
-				  guint32 len,
-				  guint16 req_val,
-				  guint32 base,
-				  GBytes *source_buf,
-				  GError **error)
+fu_analogix_device_write_image (FuAnalogixDevice *self,
+				FuFirmware *image,
+				guint16 req_val,
+				GError **error)
 {
 	AnxUpdateStatus status = UPDATE_STATUS_INVALID;
 	guint8 buf_init[4] = { 0x0 };
@@ -280,12 +275,12 @@ fu_analogix_device_program_flash (FuAnalogixDevice *self,
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* offset into firmware */
-	block_bytes = fu_common_bytes_new_offset (source_buf, base, len, error);
+	block_bytes = fu_firmware_get_bytes (image, error);
 	if (block_bytes == NULL)
 		return FALSE;
 
 	/* initialization */
-	fu_common_write_uint32 (buf_init, len, G_LITTLE_ENDIAN);
+	fu_common_write_uint32 (buf_init, g_bytes_get_size (block_bytes), G_LITTLE_ENDIAN);
 	if (!fu_analogix_device_send (self,
 				      ANX_BB_RQT_SEND_UPDATE_DATA,
 				      req_val,
@@ -319,9 +314,7 @@ fu_analogix_device_program_flash (FuAnalogixDevice *self,
 			g_prefix_error (error, "failed status on chk %u: ", i);
 			return FALSE;
 		}
-		self->fw_wrote_len += fu_chunk_get_data_sz (chk);
-		fu_device_set_progress_full (FU_DEVICE (self),
-							self->fw_wrote_len, total_len);
+		fu_device_set_progress_full (FU_DEVICE (self), i, chunks->len - 1);
 	}
 
 	/* success */
@@ -335,97 +328,48 @@ fu_analogix_device_write_firmware (FuDevice *device,
 				   GError **error)
 {
 	FuAnalogixDevice *self = FU_ANALOGIX_DEVICE (device);
-	const AnxImgHeader *hdr = NULL;
-	guint32 base = 0;
-	g_autoptr(GBytes) fw_hdr = NULL;
-	g_autoptr(GBytes) fw_payload = NULL;
-	self->fw_wrote_len = 0;
-	/* get header and payload */
-	fw_hdr = fu_firmware_get_image_by_id_bytes (firmware,
-						    FU_FIRMWARE_ID_HEADER,
-						    error);
-	if (fw_hdr == NULL)
-		return FALSE;
-	fw_payload = fu_firmware_get_image_by_id_bytes (firmware,
-							FU_FIRMWARE_ID_PAYLOAD,
-							error);
-	if (fw_payload == NULL)
-		return FALSE;
+	g_autoptr(FuFirmware) fw_cus = NULL;
+	g_autoptr(FuFirmware) fw_ocm = NULL;
+	g_autoptr(FuFirmware) fw_srx = NULL;
+	g_autoptr(FuFirmware) fw_stx = NULL;
 
-	/* set up the firmware header */
-	hdr = (const AnxImgHeader *) g_bytes_get_data (fw_hdr, NULL);
-	if (hdr == NULL) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "read image header error");
+	/* get header and payload */
+	if (fw_ocm == NULL)
 		return FALSE;
-	}
-	if (hdr->total_len > MAX_FILE_SIZE) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "invalid payload length of firmware");
-		return FALSE;
-	}
-	g_debug ("payload_len:0x%x,hdr->fw_start_addr:0x%x", hdr->total_len, hdr->fw_start_addr);
 
 	/* OCM -> SECURE_TX -> SECURE_RX -> CUSTOM_DEF */
-	if (hdr->custom_start_addr == FLASH_CUSTOM_ADDR &&
-	    hdr->custom_payload_len > 0) {
-		base = hdr->fw_payload_len + hdr->secure_tx_payload_len + hdr->secure_rx_payload_len;
-		if (!fu_analogix_device_program_flash (self,
-						       hdr->custom_start_addr,
-						       hdr->total_len,
-						       hdr->custom_payload_len,
-						       ANX_BB_WVAL_UPDATE_CUSTOM_DEF,
-						       base,
-						       fw_payload,
-						       error)) {
+	fw_cus = fu_firmware_get_image_by_id (firmware, "custom", NULL);
+	if (fw_cus != NULL) {
+		if (!fu_analogix_device_write_image (self, fw_cus,
+						     ANX_BB_WVAL_UPDATE_CUSTOM_DEF,
+						     error)) {
 			g_prefix_error (error, "program custom define failed: ");
 			return FALSE;
 		}
 	}
-	if (hdr->secure_tx_start_addr == FLASH_TXFW_ADDR &&
-	    hdr->secure_tx_payload_len > 0) {
-		base = hdr->fw_payload_len;
-		if (!fu_analogix_device_program_flash (self,
-						       hdr->secure_tx_start_addr,
-						       hdr->total_len,
-						       hdr->secure_tx_payload_len,
-						       ANX_BB_WVAL_UPDATE_SECURE_TX,
-						       base,
-						       fw_payload,
-						       error)) {
-			g_prefix_error (error, "program secure OCM TX failed: ");
+	fw_srx = fu_firmware_get_image_by_id (firmware, "srx", NULL);
+	if (fw_srx != NULL) {
+		if (!fu_analogix_device_write_image (self, fw_srx,
+						     ANX_BB_WVAL_UPDATE_SECURE_TX,
+						     error)) {
+			g_prefix_error (error, "program secure RX failed: ");
 			return FALSE;
 		}
 	}
-	if (hdr->secure_rx_start_addr == FLASH_RXFW_ADDR &&
-	    hdr->secure_rx_payload_len > 0) {
-		base = hdr->fw_payload_len + hdr->secure_tx_payload_len;
-		if (!fu_analogix_device_program_flash (self,
-						       hdr->secure_rx_start_addr,
-						       hdr->total_len,
-						       hdr->secure_rx_payload_len,
-						       ANX_BB_WVAL_UPDATE_SECURE_RX,
-						       base,
-						       fw_payload,
-						       error)) {
-			g_prefix_error (error, "program secure OCM RX failed: ");
+	fw_stx = fu_firmware_get_image_by_id (firmware, "stx", NULL);
+	if (fw_stx != NULL) {
+		if (!fu_analogix_device_write_image (self, fw_stx,
+						     ANX_BB_WVAL_UPDATE_SECURE_RX,
+						     error)) {
+			g_prefix_error (error, "program secure TX failed: ");
 			return FALSE;
 		}
 	}
-	if (hdr->fw_start_addr == FLASH_OCM_ADDR && hdr->fw_payload_len > 0) {
-		base = 0;
-		if (!fu_analogix_device_program_flash (self,
-						       hdr->fw_start_addr,
-						       hdr->total_len,
-						       hdr->fw_payload_len,
-						       ANX_BB_WVAL_UPDATE_OCM,
-						       base,
-						       fw_payload,
-						       error)) {
+	fw_ocm = fu_firmware_get_image_by_id (firmware, "ocm", NULL);
+	if (fw_ocm != NULL) {
+		if (!fu_analogix_device_write_image (self, fw_ocm,
+						     ANX_BB_WVAL_UPDATE_OCM,
+						     error)) {
 			g_prefix_error (error, "program OCM failed: ");
 			return FALSE;
 		}

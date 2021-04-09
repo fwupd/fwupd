@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-firmware-common.h"
 #include "fu-analogix-common.h"
 #include "fu-analogix-firmware.h"
 
@@ -16,151 +15,6 @@ struct _FuAnalogixFirmware {
 
 G_DEFINE_TYPE (FuAnalogixFirmware, fu_analogix_firmware, FU_TYPE_IHEX_FIRMWARE)
 
-typedef struct {
-	guint32 base_index;
-	guint32 fw_max_addr;
-	guint32 fw_start_addr;
-	guint32 last_len;
-	guint32 abs_addr;
-	guint32 seg_addr;
-	gboolean new_section;
-} data_rcd_parser_ctx;
-
-static void
-fu_analogix_firmware_parse_ocm (FuIhexFirmwareRecord *rcd,
-				data_rcd_parser_ctx *ctx,
-				AnxImgHeader *img_header)
-{
-	img_header->fw_start_addr = FLASH_OCM_ADDR;
-	ctx->fw_start_addr = FLASH_OCM_ADDR;
-	ctx->fw_max_addr = FLASH_OCM_ADDR;
-	ctx->last_len = rcd->byte_cnt;
-	ctx->base_index = 0;
-}
-
-static void
-fu_analogix_firmware_parse_txfw (FuIhexFirmwareRecord *rcd,
-				 data_rcd_parser_ctx *ctx,
-				 AnxImgHeader *img_header)
-{
-	img_header->secure_tx_start_addr = FLASH_TXFW_ADDR;
-	img_header->fw_end_addr = ctx->fw_max_addr;
-	if (ctx->fw_max_addr > ctx->fw_start_addr &&
-	    img_header->fw_start_addr != 0) {
-		img_header->fw_payload_len =
-			ctx->fw_max_addr - ctx->fw_start_addr + ctx->last_len;
-	}
-	ctx->fw_start_addr = FLASH_TXFW_ADDR;
-	ctx->fw_max_addr = FLASH_TXFW_ADDR;
-	ctx->last_len = rcd->byte_cnt;
-	ctx->base_index = img_header->fw_payload_len;
-}
-
-static void
-fu_analogix_firmware_parse_rxfw (FuIhexFirmwareRecord *rcd,
-				 data_rcd_parser_ctx *ctx,
-				 AnxImgHeader *img_header)
-{
-	img_header->secure_rx_start_addr = FLASH_RXFW_ADDR;
-	if (ctx->fw_max_addr > ctx->fw_start_addr &&
-	    img_header->fw_start_addr > 0 &&
-	    img_header->fw_payload_len == 0) {
-		img_header->fw_payload_len =
-			ctx->fw_max_addr - ctx->fw_start_addr + ctx->last_len;
-	}
-
-	if (ctx->fw_max_addr > ctx->fw_start_addr &&
-	    img_header->secure_tx_start_addr > 0) {
-		img_header->secure_tx_payload_len =
-			ctx->fw_max_addr - ctx->fw_start_addr + ctx->last_len;
-	}
-	ctx->fw_start_addr = FLASH_RXFW_ADDR;
-	ctx->fw_max_addr = FLASH_RXFW_ADDR;
-	ctx->last_len = rcd->byte_cnt;
-	ctx->base_index = img_header->secure_tx_payload_len + img_header->fw_payload_len;
-}
-
-static void
-fu_analogix_firmware_parse_custom (FuIhexFirmwareRecord *rcd,
-				   data_rcd_parser_ctx *ctx,
-				   AnxImgHeader *img_header)
-{
-	img_header->custom_start_addr = FLASH_CUSTOM_ADDR;
-	if (ctx->fw_max_addr > ctx->fw_start_addr &&
-	    img_header->fw_start_addr > 0 &&
-	    img_header->fw_payload_len == 0) {
-		img_header->fw_payload_len =
-			ctx->fw_max_addr - ctx->fw_start_addr + ctx->last_len;
-	}
-	if (ctx->fw_max_addr > ctx->fw_start_addr &&
-	    img_header->secure_tx_start_addr > 0 &&
-	    img_header->secure_tx_payload_len == 0) {
-		img_header->secure_tx_payload_len =
-			ctx->fw_max_addr - ctx->fw_start_addr + ctx->last_len;
-	}
-
-	if (ctx->fw_max_addr > ctx->fw_start_addr &&
-	    img_header->secure_rx_start_addr > 0) {
-		img_header->secure_rx_payload_len =
-			ctx->fw_max_addr - ctx->fw_start_addr + ctx->last_len;
-	}
-	ctx->fw_start_addr = FLASH_CUSTOM_ADDR;
-	ctx->fw_max_addr = FLASH_CUSTOM_ADDR;
-	ctx->last_len = rcd->byte_cnt;
-	ctx->base_index = img_header->secure_rx_payload_len +
-		img_header->secure_tx_payload_len +
-		img_header->fw_payload_len;
-}
-
-static gboolean
-fu_analogix_firmware_parse_data_rcd (FuIhexFirmwareRecord *rcd,
-				     data_rcd_parser_ctx *ctx,
-				     AnxImgHeader *img_header,
-				     GByteArray *payload_bytes,
-				     GError **error)
-{
-	g_autoptr(GBytes) fw_hdr = NULL;
-	guint32 addr = rcd->addr + ctx->seg_addr + ctx->abs_addr;
-	guint32 version_addr = OCM_FW_VERSION_ADDR + ctx->seg_addr + ctx->abs_addr;
-
-	switch (addr) {
-	case FLASH_OCM_ADDR:
-		fu_analogix_firmware_parse_ocm (rcd, ctx, img_header);
-		break;
-	case FLASH_TXFW_ADDR:
-		fu_analogix_firmware_parse_txfw (rcd, ctx, img_header);
-		break;
-	case FLASH_RXFW_ADDR:
-		fu_analogix_firmware_parse_rxfw (rcd, ctx, img_header);
-		break;
-	case FLASH_CUSTOM_ADDR:
-		fu_analogix_firmware_parse_custom (rcd, ctx, img_header);
-		break;
-	default:
-		break;
-	}
-	if (addr > ctx->fw_max_addr) {
-		ctx->fw_max_addr = addr;
-		ctx->last_len = rcd->byte_cnt;
-	}
-	g_byte_array_append (payload_bytes, rcd->data->data, rcd->data->len);
-	if (addr == version_addr && ctx->fw_start_addr == FLASH_OCM_ADDR) {
-		if (rcd->data->len == 16)
-			img_header->fw_ver = rcd->data->data[8] << 8 | rcd->data->data[12];
-	}
-	switch (ctx->fw_max_addr + ctx->last_len) {
-	case FLASH_OCM_ADDR + OCM_FLASH_SZIE:
-	case FLASH_TXFW_ADDR + SECURE_OCM_TX_SIZE:
-	case FLASH_RXFW_ADDR + SECURE_OCM_RX_SIZE:
-	case FLASH_CUSTOM_ADDR + CUSTOM_FLASH_SIZE:
-		ctx->new_section = TRUE;
-		break;
-	default:
-		break;
-	}
-	return TRUE;
-}
-
 static gboolean
 fu_analogix_firmware_parse (FuFirmware *firmware,
 			    GBytes *fw,
@@ -169,233 +23,96 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
-	FuIhexFirmware *self = FU_IHEX_FIRMWARE (firmware);
-	GPtrArray *records = fu_ihex_firmware_get_records (self);
-	gboolean got_eof = FALSE;
-	guint32 addr_last = 0x0;
-	guint32 img_addr = G_MAXUINT32;
-	g_autoptr(GBytes) hdr_bytes = NULL;
-	g_autoptr(GBytes) payload_bytes = NULL;
-	g_autoptr(GByteArray) payload = g_byte_array_new ();
-	g_autoptr(FuFirmware) fw_hdr = fu_firmware_new ();
-	g_autoptr(FuFirmware) fw_payload = fu_firmware_new ();
-	data_rcd_parser_ctx ctx = {0};
+	FuFirmwareClass *klass = FU_FIRMWARE_CLASS (fu_analogix_firmware_parent_class);
+	const guint8 *buf = NULL;
+	gsize bufsz = 0;
+	guint16 ocm_version;
+	guint8 version_hi = 0;
+	guint8 version_lo = 0;
 	g_autofree gchar *version = NULL;
-	AnxImgHeader *img_header = g_malloc0 (sizeof(*img_header));
-	/* parse records */
-	for (guint k = 0; k < records->len; k++) {
-		FuIhexFirmwareRecord *rcd = g_ptr_array_index (records, k);
-		guint16 addr16 = 0;
-		guint32 addr = rcd->addr + ctx.seg_addr + ctx.abs_addr;
-		guint32 len_hole;
+	g_autoptr(FuFirmware) fw_ocm = NULL;
+	g_autoptr(GBytes) blob_cus = NULL;
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob_ocm = NULL;
+	g_autoptr(GBytes) blob_srx = NULL;
+	g_autoptr(GBytes) blob_stx = NULL;
 
-		/* sanity check */
-		if (rcd->record_type != FU_IHEX_FIRMWARE_RECORD_TYPE_EOF &&
-		    rcd->data->len == 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "record 0x%x had zero size", k);
-			return FALSE;
-		}
-		/* process different record types */
-		switch (rcd->record_type) {
-		case FU_IHEX_FIRMWARE_RECORD_TYPE_DATA:
-			/* does not make sense */
-			if (got_eof) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "cannot process data after EOF");
-				return FALSE;
-			}
-			if (rcd->data->len == 0) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "cannot parse invalid data");
-				return FALSE;
-			}
-			/* base address for element */
-			if (img_addr == G_MAXUINT32)
-				img_addr = addr;
-			/* does not make sense */
-			if (addr < addr_last) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "invalid address 0x%x, last was 0x%x on line %u",
-					     (guint) addr,
-					     (guint) addr_last,
-					     rcd->ln);
-				return FALSE;
-			}
-			if (ctx.new_section == TRUE) {
-				/* don't fill the hole among sections */
-				addr_last = 0;
-				ctx.new_section = FALSE;
-			}
-			/* any holes in the hex record */
-			len_hole = addr - addr_last;
-			if (addr_last > 0 && len_hole > 0x100000) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "hole of 0x%x bytes too large to fill on line %u",
-					     (guint) len_hole,
-					     rcd->ln);
-				return FALSE;
-			}
-			if (addr_last > 0x0 && len_hole > 1) {
-				g_debug ("filling address 0x%08x to 0x%08x on line %u",
-					 addr_last + 1, addr_last + len_hole - 1, rcd->ln);
-				for (guint j = 1; j < len_hole; j++) {
-					/* although 0xff might be clearer,
-					 * we can't write 0xffff to pic14 */
-					fu_byte_array_append_uint8 (payload, 0xff);
-				}
-			}
-			addr_last = addr + rcd->data->len - 1;
-			if (addr_last < addr) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "overflow of address 0x%x on line %u",
-					     (guint) addr, rcd->ln);
-				return FALSE;
-			}
-			if (!fu_analogix_firmware_parse_data_rcd (rcd,
-						&ctx,
-						img_header,
-						payload,
-						error))
-				return FALSE;
-			break;
-		case FU_IHEX_FIRMWARE_RECORD_TYPE_EOF:
-			if (got_eof) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "duplicate EOF, perhaps "
-						     "corrupt file");
-				return FALSE;
-			}
-			got_eof = TRUE;
-			break;
-		case FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_LINEAR:
-			if (!fu_common_read_uint16_safe (rcd->data->data, rcd->data->len,
-							 0x0, &addr16, G_BIG_ENDIAN, error))
-				return FALSE;
-			ctx.abs_addr = (guint32) addr16 << 16;
-			g_debug ("  abs_addr:\t0x%02x on line %u", ctx.abs_addr, rcd->ln);
-			break;
-		case FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_SEGMENT:
-			if (!fu_common_read_uint16_safe (rcd->data->data, rcd->data->len,
-							 0x0, &addr16, G_BIG_ENDIAN, error))
-				return FALSE;
-			/* segment base address, so ~1Mb addressable */
-			ctx.seg_addr = (guint32) addr16 * 16;
-			g_debug ("  seg_addr:\t0x%08x on line %u", ctx.seg_addr, rcd->ln);
-			break;
-		default:
-			/* vendors sneak in nonstandard sections past the EOF */
-			if (got_eof)
-				break;
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "invalid ihex record type %i on line %u",
-				     rcd->record_type, rcd->ln);
-			return FALSE;
-		}
-	}
-
-	/* no EOF */
-	if (!got_eof) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no EOF, perhaps truncated file");
+	/* convert to binary with FuIhexFirmware->parse */
+	if (!klass->parse (firmware, fw, addr_start, addr_end, flags, error))
 		return FALSE;
+	blob = fu_firmware_get_bytes (firmware, error);
+	if (blob == NULL)
+		return FALSE;
+
+	/* OCM section only, or multiple sections */
+	if (g_bytes_get_size (blob) == OCM_FLASH_SIZE) {
+		blob_ocm = g_bytes_ref (blob);
+	} else {
+		blob_ocm = fu_common_bytes_new_offset (blob,
+						       FLASH_OCM_ADDR,
+						       OCM_FLASH_SIZE,
+						       error);
+		if (blob_ocm == NULL)
+			return FALSE;
+	}
+	fw_ocm = fu_firmware_new_from_bytes (blob_ocm);
+	fu_firmware_set_id (fw_ocm, "ocm");
+	fu_firmware_set_addr (fw_ocm, FLASH_OCM_ADDR);
+	fu_firmware_add_image (firmware, fw_ocm);
+
+	/* get OCM version */
+	buf = g_bytes_get_data (blob_ocm, &bufsz);
+	if (!fu_common_read_uint8_safe (buf, bufsz, OCM_FW_VERSION_ADDR + 8,
+					&version_hi, error))
+		return FALSE;
+	if (!fu_common_read_uint8_safe (buf, bufsz, OCM_FW_VERSION_ADDR + 12,
+					&version_lo, error))
+		return FALSE;
+
+	ocm_version = ((guint16) version_hi) << 8 | version_lo;
+	fu_firmware_set_version_raw (fw_ocm, ocm_version);
+	version = g_strdup_printf ("%02x.%02x", version_hi, version_lo);
+	fu_firmware_set_version (fw_ocm, version);
+
+	/* TXFW is optional */
+	blob_stx = fu_common_bytes_new_offset (blob,
+					       FLASH_TXFW_ADDR,
+					       SECURE_OCM_TX_SIZE,
+					       NULL);
+	if (blob_stx != NULL && !fu_common_bytes_is_empty (blob_stx)) {
+		g_autoptr(FuFirmware) fw2 = fu_firmware_new_from_bytes (blob_stx);
+		fu_firmware_set_id (fw2, "stx");
+		fu_firmware_set_addr (fw2, FLASH_TXFW_ADDR);
+		fu_firmware_add_image (firmware, fw2);
 	}
 
-	/* only OCM */
-	if (img_header->fw_payload_len == 0 && img_header->fw_start_addr != 0)
-		img_header->fw_payload_len = ctx.fw_max_addr - ctx.fw_start_addr + ctx.last_len;
-	if (img_header->secure_tx_start_addr != 0 && img_header->secure_tx_payload_len == 0)
-		img_header->secure_tx_payload_len = ctx.fw_max_addr - ctx.fw_start_addr + ctx.last_len;
-	if (img_header->secure_rx_start_addr != 0 && img_header->secure_rx_payload_len == 0)
-		img_header->secure_rx_payload_len = ctx.fw_max_addr - ctx.fw_start_addr + ctx.last_len;
-	if (img_header->custom_start_addr != 0 && img_header->custom_payload_len == 0)
-		img_header->custom_payload_len = ctx.fw_max_addr - ctx.fw_start_addr + ctx.last_len;
-	img_header->total_len = img_header->fw_payload_len +
-		img_header->secure_tx_payload_len +
-		img_header->secure_rx_payload_len +
-		img_header->custom_payload_len;
-	/* set firmware version */
-	version = g_strdup_printf ("%04x.%04x", img_header->custom_ver,
-								img_header->fw_ver);
-	fu_firmware_set_version (firmware, version);
+	/* RXFW is optional */
+	blob_srx = fu_common_bytes_new_offset (blob,
+					       FLASH_RXFW_ADDR,
+					       SECURE_OCM_RX_SIZE,
+					       NULL);
+	if (blob_srx != NULL && !fu_common_bytes_is_empty (blob_srx)) {
+		g_autoptr(FuFirmware) fw2 = fu_firmware_new_from_bytes (blob_srx);
+		fu_firmware_set_id (fw2, "srx");
+		fu_firmware_set_addr (fw2, FLASH_RXFW_ADDR);
+		fu_firmware_add_image (firmware, fw2);
+	}
 
-	/* add image header and payload */
-	fu_firmware_set_id (fw_hdr, FU_FIRMWARE_ID_HEADER);
-	hdr_bytes = g_bytes_new_take (img_header, sizeof(*img_header));
-	fu_firmware_set_bytes (fw_hdr, hdr_bytes);
-	fu_firmware_add_image (firmware, fw_hdr);
+	/* custom is optional */
+	blob_cus = fu_common_bytes_new_offset (blob,
+					       FLASH_CUSTOM_ADDR,
+					       CUSTOM_FLASH_SIZE,
+					       NULL);
+	if (blob_cus != NULL && !fu_common_bytes_is_empty (blob_cus)) {
+		g_autoptr(FuFirmware) fw2 = fu_firmware_new_from_bytes (blob_cus);
+		fu_firmware_set_id (fw2, "custom");
+		fu_firmware_set_addr (fw2, FLASH_CUSTOM_ADDR);
+		fu_firmware_add_image (firmware, fw2);
+	}
 
-	fu_firmware_set_id (fw_payload, FU_FIRMWARE_ID_PAYLOAD);
-	if (img_header->fw_start_addr != 0)
-		fu_firmware_set_addr (fw_payload, img_header->fw_start_addr);
-	else if (img_header->custom_start_addr != 0)
-		fu_firmware_set_addr (fw_payload, img_header->custom_start_addr);
-	payload_bytes = g_byte_array_free_to_bytes (payload);
-	fu_firmware_set_bytes (fw_payload, payload_bytes);
-	fu_firmware_add_image (firmware, fw_payload);
-
+	/* success */
 	return TRUE;
 }
-
-/*
- * Not used.
- */
-/* static gboolean
-fu_analogix_firmware_to_string (FuFirmware *firmware,
-				GString *str)
-{
-	g_autoptr(GBytes) header_bytes = NULL;
-	g_autoptr(GError) error = NULL;
-	const AnxImgHeader *header = NULL;
-
-	header_bytes = fu_firmware_get_image_by_id_bytes (firmware,
-							  FU_FIRMWARE_ID_HEADER,
-							  &error);
-	if (header_bytes == NULL)
-		return FALSE;
-	header = (const AnxImgHeader *) g_bytes_get_data (header_bytes, NULL);
-	if (header == NULL) {
-		g_set_error (&error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_FAILED,
-			     "Error reading firmware header");
-		return FALSE;
-	}
-
-	g_string_append_printf (str, "Total len: 0x%0x\n", header->total_len);
-	g_string_append_printf (str, "OCM start: 0x%x, len:0x%x",
-				header->fw_start_addr,
-				header->fw_payload_len);
-	g_string_append_printf (str, "Secure OCM TX start: 0x%x, len:0x%x",
-				header->secure_tx_start_addr,
-				header->secure_tx_payload_len);
-	g_string_append_printf (str, "Secure OCM RX start: 0x%x, len:0x%x",
-				header->secure_rx_start_addr,
-				header->secure_rx_payload_len);
-	g_string_append_printf (str, "Custom start: 0x%x, len:0x%x",
-				header->custom_start_addr,
-				header->custom_payload_len);
-
-	return TRUE;
-} */
 
 static void
 fu_analogix_firmware_init (FuAnalogixFirmware *self)
