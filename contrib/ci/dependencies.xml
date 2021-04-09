@@ -1092,6 +1092,12 @@
       <package />
     </distro>
   </dependency>
+  <!-- TODO: Drop python3-pil build dependency after 1.6.0 release -->
+  <dependency type="build" id="python3-pil">
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>    
   <dependency type="build" id="python3-requests">
     <distro id="fedora">
       <package />
