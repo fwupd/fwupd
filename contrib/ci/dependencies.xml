@@ -1097,7 +1097,7 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
-  </dependency>    
+  </dependency>
   <dependency type="build" id="python3-requests">
     <distro id="fedora">
       <package />
@@ -1378,6 +1378,14 @@
   <dependency type="build" id="libgcrypt-devel">
     <distro id="fedora">
       <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="shellcheck">
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package>ShellCheck</package>
     </distro>
   </dependency>
 </dependencies>
