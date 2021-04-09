@@ -23,6 +23,7 @@ typedef struct {
 	guint32 last_len;
 	guint32 abs_addr;
 	guint32 seg_addr;
+	gboolean new_section;
 } data_rcd_parser_ctx;
 
 static void
@@ -147,7 +148,16 @@ fu_analogix_firmware_parse_data_rcd (FuIhexFirmwareRecord *rcd,
 		if (rcd->data->len == 16)
 			img_header->fw_ver = rcd->data->data[8] << 8 | rcd->data->data[12];
 	}
-
+	switch (ctx->fw_max_addr + ctx->last_len) {
+	case FLASH_OCM_ADDR + OCM_FLASH_SZIE:
+	case FLASH_TXFW_ADDR + SECURE_OCM_TX_SIZE:
+	case FLASH_RXFW_ADDR + SECURE_OCM_RX_SIZE:
+	case FLASH_CUSTOM_ADDR + CUSTOM_FLASH_SIZE:
+		ctx->new_section = TRUE;
+		break;
+	default:
+		break;
+	}
 	return TRUE;
 }
 
@@ -172,7 +182,6 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 	data_rcd_parser_ctx ctx = {0};
 	g_autofree gchar *version = NULL;
 	AnxImgHeader *img_header = g_malloc0 (sizeof(*img_header));
-
 	/* parse records */
 	for (guint k = 0; k < records->len; k++) {
 		FuIhexFirmwareRecord *rcd = g_ptr_array_index (records, k);
@@ -207,11 +216,9 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 						     "cannot parse invalid data");
 				return FALSE;
 			}
-
 			/* base address for element */
 			if (img_addr == G_MAXUINT32)
 				img_addr = addr;
-
 			/* does not make sense */
 			if (addr < addr_last) {
 				g_set_error (error,
@@ -223,7 +230,11 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 					     rcd->ln);
 				return FALSE;
 			}
-
+			if (ctx.new_section == TRUE) {
+				/* don't fill the hole among sections */
+				addr_last = 0;
+				ctx.new_section = FALSE;
+			}
 			/* any holes in the hex record */
 			len_hole = addr - addr_last;
 			if (addr_last > 0 && len_hole > 0x100000) {
@@ -241,7 +252,7 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 				for (guint j = 1; j < len_hole; j++) {
 					/* although 0xff might be clearer,
 					 * we can't write 0xffff to pic14 */
-					fu_byte_array_append_uint8 (payload, 0x00);
+					fu_byte_array_append_uint8 (payload, 0xff);
 				}
 			}
 			addr_last = addr + rcd->data->len - 1;
@@ -254,10 +265,10 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 				return FALSE;
 			}
 			if (!fu_analogix_firmware_parse_data_rcd (rcd,
-								  &ctx,
-								  img_header,
-								  payload,
-								  error))
+						&ctx,
+						img_header,
+						payload,
+						error))
 				return FALSE;
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_EOF:
