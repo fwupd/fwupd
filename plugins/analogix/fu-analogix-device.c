@@ -14,8 +14,6 @@
 struct _FuAnalogixDevice {
 	FuUsbDevice	 parent_instance;
 	guint8		 iface_idx;		/* bInterfaceNumber */
-	guint8		 ep_num;		/* bEndpointAddress */
-	guint16		 chunk_len;		/* wMaxPacketSize */
 	guint16		 custom_version;
 	guint16		 fw_version;
 };
@@ -27,8 +25,6 @@ fu_analogix_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuAnalogixDevice *self = FU_ANALOGIX_DEVICE (device);
 	fu_common_string_append_kx (str, idt, "IfaceIdx", self->iface_idx);
-	fu_common_string_append_kx (str, idt, "EpNum", self->ep_num);
-	fu_common_string_append_kx (str, idt, "ChunkLen", self->chunk_len);
 	fu_common_string_append_kx (str, idt, "CustomVersion", self->custom_version);
 	fu_common_string_append_kx (str, idt, "FwVersion", self->fw_version);
 }
@@ -225,7 +221,6 @@ fu_analogix_device_find_interface (FuUsbDevice *device, GError **error)
 			if (endpoints == NULL)
 				continue;
 			self->iface_idx = g_usb_interface_get_number (intf);
-			self->chunk_len = BILLBOARD_MAX_PACKET_SIZE;
 			return TRUE;
 		}
 	}
