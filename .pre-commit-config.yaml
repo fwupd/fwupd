@@ -11,7 +11,7 @@ repos:
     -   id: end-of-file-fixer
         types_or: [c, shell, python]
     -   id: trailing-whitespace
-        types_or: [c, shell, python]
+        types_or: [c, shell, python, xml]
     -   id: check-docstring-first
     -   id: check-merge-conflict
     -   id: mixed-line-ending
