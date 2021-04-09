@@ -16,6 +16,8 @@ import argparse
 import tarfile
 import math
 import io
+import struct
+
 from typing import Dict, Optional, Any
 
 import cairo
@@ -24,7 +26,6 @@ import gi
 gi.require_version("Pango", "1.0")
 gi.require_version("PangoCairo", "1.0")
 from gi.repository import Pango, PangoCairo
-from PIL import Image
 
 
 def languages(podir: str):
@@ -58,6 +59,33 @@ class PotFile:
                     self.msgs[lang_en] = value[1:-1]
                     lang_en = None
                     continue
+
+
+def _cairo_surface_write_to_bmp(img: cairo.ImageSurface) -> bytes:
+
+    data = bytes(img.get_data())
+    return (
+        b"BM"
+        + struct.pack(
+            "<ihhiiiihhiiiiii",
+            54 + len(data),  # size of BMP file
+            0,  # unused
+            0,  # unused
+            54,  # pixel array offset
+            40,  # DIB header
+            img.get_width(),  # width
+            -img.get_height(),  # height (top down)
+            1,  # planes
+            32,  # BPP
+            0,  # no compression
+            len(data),  # size of the raw bitmap data
+            2835,  # 72DPI H
+            2835,  # 72DPI V
+            0,  # palette
+            0,  # all colors are important
+        )
+        + data
+    )
 
 
 def main(args) -> int:
@@ -164,20 +192,14 @@ def main(args) -> int:
                 fs.foreach(do_write, None)
                 img.flush()
 
-                # write PNG
-                with io.BytesIO() as io_png:
-                    img.write_to_png(io_png)
-                    io_png.seek(0)
-
-                    # convert to BMP and add to archive
-                    with io.BytesIO() as io_bmp:
-                        pimg = Image.open(io_png)
-                        pimg.save(io_bmp, format="BMP")
-                        filename = "fwupd-{}-{}-{}.bmp".format(lang, width, height)
-                        tarinfo = tarfile.TarInfo(filename)
-                        tarinfo.size = io_bmp.tell()
-                        io_bmp.seek(0)
-                        tar.addfile(tarinfo, fileobj=io_bmp)
+                # convert to BMP and add to archive
+                with io.BytesIO() as io_bmp:
+                    io_bmp.write(_cairo_surface_write_to_bmp(img))
+                    filename = "fwupd-{}-{}-{}.bmp".format(lang, width, height)
+                    tarinfo = tarfile.TarInfo(filename)
+                    tarinfo.size = io_bmp.tell()
+                    io_bmp.seek(0)
+                    tar.addfile(tarinfo, fileobj=io_bmp)
 
     # success
     return 0

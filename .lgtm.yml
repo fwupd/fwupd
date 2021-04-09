@@ -8,7 +8,6 @@ extraction:
       - python3-gi
       - libarchive-tools
       - libcogl-pango-dev
-      - python3-pil
       - python3-pip
       - python3-setuptools
       - python3-wheel
