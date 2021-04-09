@@ -328,10 +328,6 @@ fu_analogix_device_write_firmware (FuDevice *device,
 	g_autoptr(FuFirmware) fw_srx = NULL;
 	g_autoptr(FuFirmware) fw_stx = NULL;
 
-	/* get header and payload */
-	if (fw_ocm == NULL)
-		return FALSE;
-
 	/* OCM -> SECURE_TX -> SECURE_RX -> CUSTOM_DEF */
 	fw_cus = fu_firmware_get_image_by_id (firmware, "custom", NULL);
 	if (fw_cus != NULL) {
