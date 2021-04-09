@@ -716,6 +716,7 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_battery_state_to_string;
     fu_byte_array_align_up;
     fu_byte_array_set_size_full;
+    fu_bytes_get_data_safe;
     fu_common_align_up;
     fu_context_add_compile_version;
     fu_context_add_firmware_gtype;

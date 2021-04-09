@@ -110,7 +110,9 @@ fu_efi_image_new (GBytes *data, GError **error)
 	g_autoptr(GPtrArray) checksum_regions = NULL;
 
 	/* verify this is a DOS file */
-	buf = g_bytes_get_data (data, &bufsz);
+	buf = fu_bytes_get_data_safe (data, &bufsz, error);
+	if (buf == NULL)
+		return NULL;
 	if (!fu_common_read_uint16_safe (buf, bufsz,
 					 _DOS_OFFSET_SIGNATURE,
 					 &dos_sig, G_LITTLE_ENDIAN, error))

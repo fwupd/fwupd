@@ -3307,6 +3307,38 @@ fu_battery_state_to_string (FuBatteryState battery_state)
 }
 
 /**
+ * fu_bytes_get_data_safe:
+ * @bytes: a #GBytes
+ * @bufsz: (out) (optional): location to return size of byte data
+ * @error: A #GError or %NULL
+ *
+ * Get the byte data in the #GBytes. This data should not be modified.
+ * This function will always return the same pointer for a given #GBytes.
+ *
+ * If the size of @bytes is zero, then %NULL is returned and the @error is set,
+ * which differs in behaviour to that of g_bytes_get_data().
+ *
+ * This may be useful when calling g_mapped_file_new() on a zero-length file.
+ *
+ * Returns: a pointer to the byte data, or %NULL.
+ *
+ * Since: 1.6.0
+ **/
+const guint8 *
+fu_bytes_get_data_safe (GBytes *bytes, gsize *bufsz, GError **error)
+{
+	const guint8 *buf = g_bytes_get_data (bytes, bufsz);
+	if (buf == NULL) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "invalid data");
+		return NULL;
+	}
+	return buf;
+}
+
+/**
  * fu_xmlb_builder_insert_kv:
  * @bn: #JsonBuilder
  * @key: string key

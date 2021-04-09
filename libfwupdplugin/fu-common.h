@@ -201,6 +201,9 @@ void		 fu_common_dump_bytes		(const gchar	*log_domain,
 GBytes		*fu_common_bytes_align		(GBytes		*bytes,
 						 gsize		 blksz,
 						 gchar		 padval);
+const guint8	*fu_bytes_get_data_safe		(GBytes		*bytes,
+						 gsize		*bufsz,
+						 GError		**error);
 gboolean	 fu_common_bytes_is_empty	(GBytes		*bytes);
 gboolean	 fu_common_bytes_compare	(GBytes		*bytes1,
 						 GBytes		*bytes2,
