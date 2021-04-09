@@ -1092,24 +1092,6 @@
       <package />
     </distro>
   </dependency>
-  <dependency type="build" id="python3-pil">
-    <distro id="arch">
-      <package>python-pillow</package>
-    </distro>
-    <distro id="fedora">
-      <package>python3-pillow</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency type="build" id="python3-requests">
     <distro id="fedora">
       <package />

@@ -163,7 +163,6 @@ parts:
     stage-packages:
       - python3-gi
       - python3-gi-cairo
-      - python3-pil
     prime:
       - -etc
       - -usr

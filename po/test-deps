@@ -35,12 +35,6 @@ except ValueError:
     err = 1
 
 try:
-    from PIL import Image
-except ImportError:
-    print("Error: missing dependency python pillow (python3-pil)")
-    err = 1
-
-try:
     import cairo
 except ImportError:
     print("Error: missing dependency python cairo (python3-cairo)")

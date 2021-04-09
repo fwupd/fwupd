@@ -9,7 +9,7 @@ arch=('i686' 'x86_64')
 url='https://github.com/fwupd/fwupd'
 license=('GPL2')
 depends=('libgusb' 'modemmanager' 'tpm2-tss')
-makedepends=('meson' 'valgrind' 'gobject-introspection' 'gtk-doc' 'python-pillow' 'git'
+makedepends=('meson' 'valgrind' 'gobject-introspection' 'gtk-doc' 'git'
              'python-cairo' 'noto-fonts' 'noto-fonts-cjk' 'python-gobject' 'vala'
              'curl' 'polkit' 'gcab' 'xz')
 
