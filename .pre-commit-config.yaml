@@ -1,9 +1,13 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+    rev: v3.4.0
     hooks:
     -   id: no-commit-to-branch
         args: [--branch, master, --pattern, 1_.*_X]
+    -   id: check-added-large-files
+    -   id: check-byte-order-marker
+    -   id: check-executables-have-shebangs
+    -   id: forbid-new-submodules
     -   id: check-yaml
     -   id: check-json
     -   id: check-symlinks
