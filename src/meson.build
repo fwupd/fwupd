@@ -195,55 +195,31 @@ fwupdtool = executable(
 )
 
 if get_option('man')
-  help2man = find_program('help2man')
   if build_daemon
-    custom_target('fwupdmgr-man',
-      input : fwupdmgr,
+    configure_file(
+      input : 'fwupdmgr.1',
       output : 'fwupdmgr.1',
-      command : [
-        help2man, '@INPUT@',
-        '--no-info',
-        '--output', '@OUTPUT@',
-        '--name', 'Firmware update manager client utility',
-        '--manual', 'User Commands',
-        '--include', join_paths(meson.current_source_dir(), 'scripting.txt'),
-        '--version-string', fwupd_version,
-      ],
-      install : true,
-      install_dir : join_paths(mandir, 'man1'),
+      configuration : conf,
+      install: true,
+      install_dir: join_paths(mandir, 'man1'),
     )
   endif
   if get_option('agent')
-    custom_target('fwupdagent-man',
-      input : fwupdagent,
+    configure_file(
+      input : 'fwupdagent.1',
       output : 'fwupdagent.1',
-      command : [
-        help2man, '@INPUT@',
-        '--no-info',
-        '--output', '@OUTPUT@',
-        '--name', 'Firmware updating agent',
-        '--manual', 'User Commands',
-        '--include', join_paths(meson.current_source_dir(), 'scripting.txt'),
-        '--version-string', fwupd_version,
-      ],
-      install : true,
-      install_dir : join_paths(mandir, 'man1'),
+      configuration : conf,
+      install: true,
+      install_dir: join_paths(mandir, 'man1'),
     )
   endif
   if build_standalone
-    custom_target('fwupdtool-man',
-      input : fwupdtool,
+    configure_file(
+      input : 'fwupdtool.1',
       output : 'fwupdtool.1',
-      command : [
-        help2man, '@INPUT@',
-        '--no-info',
-        '--output', '@OUTPUT@',
-        '--name', 'Standalone firmware update utility',
-        '--manual', 'User Commands',
-        '--version-string', fwupd_version,
-      ],
-      install : true,
-      install_dir : join_paths(mandir, 'man1'),
+      configuration : conf,
+      install: true,
+      install_dir: join_paths(mandir, 'man1'),
     )
   endif
 endif

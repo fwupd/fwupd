@@ -1,0 +1,25 @@
+.\" Report problems in https://github.com/fwupd/fwupd
+.TH man 8 "11 April 2021" @PACKAGE_VERSION@ "fwupdtool man page"
+.SH NAME
+fwupdtool \- standalone firmware update utility
+.SH SYNOPSIS
+fwupdtool [CMD]
+.SH DESCRIPTION
+This tool allows an administrator to use the fwupd plugins without being
+installed on the host system.
+.PP
+Additionally \fBdfu-tool\fR can be used to convert firmware from various different formats,
+or to modify the images contained inside the container firmware file.
+For example, you can convert DFU or Intel HEX firmware into the vendor-specific format.
+.SH OPTIONS
+The fwupdtool command takes various options depending on the action.
+Run \fBfwupdtool --help\fR for the full list.
+.SH EXIT STATUS
+Commands that successfully execute will return "0", but commands that have no
+actions but successfully execute will return "2".
+.SH SEE ALSO
+fwupdagent(1), fwupdmgr(1)
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Richard Hughes (richard@hughsie.com)

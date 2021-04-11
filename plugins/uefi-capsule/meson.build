@@ -78,19 +78,12 @@ fwupdate = executable(
 )
 
 if get_option('man')
-  custom_target('fwupdate-man',
-    input : fwupdate,
+  configure_file(
+    input : 'fwupdate.1',
     output : 'fwupdate.1',
-    command : [
-      help2man, '@INPUT@',
-      '--no-info',
-      '--output', '@OUTPUT@',
-      '--name', 'Debugging utility for UEFI firmware updates',
-      '--manual', 'User Commands',
-      '--version-string', fwupd_version,
-    ],
-    install : true,
-    install_dir : join_paths(mandir, 'man1'),
+    configuration : conf,
+    install: true,
+    install_dir: join_paths(mandir, 'man1'),
   )
 endif
 
