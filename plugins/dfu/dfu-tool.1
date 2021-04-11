@@ -1,0 +1,31 @@
+.\" Report problems in https://github.com/fwupd/fwupd
+.TH man 8 "11 April 2021" @PACKAGE_VERSION@ "dfu-tool man page"
+.SH NAME
+dfu-tool \- write firmware to DFU devices
+.SH SYNOPSIS
+dfu-tool [CMD]
+.SH DESCRIPTION
+.PP
+This manual page documents briefly the \fBdfu-tool\fR command.
+.PP
+\fBdfu-tool\fR allows a user to write various kinds of
+firmware onto devices supporting the USB Device Firmware Upgrade protocol.
+This tool can be used to switch the device from the normal runtime mode
+to `DFU mode' which allows the user to read and write firmware.
+Either the whole device can be written in one operation, or individual
+`targets' can be specified with the alternative name or number.
+.PP
+All synchronous actions can be safely cancelled and on failure will return
+errors with both a type and a full textual description.
+libdfu supports DFU 1.0, DFU 1.1 and the ST DfuSe vendor extension, and
+handles many device `quirks' necessary for the real-world implementations
+of DFU\&.
+.SH OPTIONS
+The dfu-tool command takes various options depending on the action.
+Run \fBdfu-tool --help\fR for the full list.
+.SH SEE ALSO
+fwupdtool(1), fwupdmgr(1)
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Richard Hughes (richard@hughsie.com)

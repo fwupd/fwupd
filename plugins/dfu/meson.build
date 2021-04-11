@@ -87,22 +87,12 @@ fu_dfu_tool = executable(
 )
 
 if get_option('man')
-  help2man = find_program('help2man')
-  extra = join_paths(meson.current_source_dir(), 'fu-dfu-tool.h2m')
-  custom_target('dfu-tool-man',
-    input : fu_dfu_tool,
+  configure_file(
+    input : 'dfu-tool.1',
     output : 'dfu-tool.1',
-    command : [
-      help2man, '@INPUT@',
-      '--no-info',
-      '--output', '@OUTPUT@',
-      '--name', 'dfu-tool',
-      '--manual', 'User Commands',
-      '--version-string', fwupd_version,
-      '--include', extra,
-    ],
-    install : true,
-    install_dir : join_paths(mandir, 'man1'),
+    configuration : conf,
+    install: true,
+    install_dir: join_paths(mandir, 'man1'),
   )
 endif
 
