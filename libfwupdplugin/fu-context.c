@@ -725,6 +725,10 @@ fu_context_finalize (GObject *object)
 	FuContext *self = FU_CONTEXT (object);
 	FuContextPrivate *priv = GET_PRIVATE (self);
 
+	if (priv->runtime_versions != NULL)
+		g_hash_table_unref (priv->runtime_versions);
+	if (priv->compile_versions != NULL)
+		g_hash_table_unref (priv->compile_versions);
 	g_object_unref (priv->hwids);
 	g_object_unref (priv->quirks);
 	g_object_unref (priv->smbios);
