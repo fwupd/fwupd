@@ -10,6 +10,9 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_ERRNO_H
+#include <errno.h>
+#endif
 
 #include <gio/gunixinputstream.h>
 
@@ -117,8 +120,12 @@ fu_intel_spi_device_open (FuDevice *device, GError **error)
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
+#ifdef HAVE_ERRNO_H
 			     "failed to open /dev/mem: %s",
 			     strerror (errno));
+#else
+			     "failed to open /dev/mem");
+#endif
 		return FALSE;
 	}
 	istr = g_unix_input_stream_new (fd, TRUE);
@@ -137,8 +144,12 @@ fu_intel_spi_device_open (FuDevice *device, GError **error)
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
-			     "failed to open mmap SPIBAR: %s",
+#ifdef HAVE_ERRNO_H
+			     "failed to mmap SPIBAR: %s",
 			     strerror (errno));
+#else
+			     "failed to mmap SPIBAR");
+#endif
 		return FALSE;
 	}
 
@@ -157,8 +168,12 @@ fu_intel_spi_device_close (FuDevice *device, GError **error)
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
-				     "failed to unmap spibar: %s",
+#ifdef HAVE_ERRNO_H
+				     "failed to unmap SPIBAR: %s",
 				     strerror (errno));
+#else
+				     "failed to unmap SPIBAR");
+#endif
 			return FALSE;
 		}
 		self->spibar = NULL;
