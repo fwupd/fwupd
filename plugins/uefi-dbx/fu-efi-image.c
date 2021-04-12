@@ -111,6 +111,13 @@ fu_efi_image_new (GBytes *data, GError **error)
 
 	/* verify this is a DOS file */
 	buf = g_bytes_get_data (data, &bufsz);
+	if (buf == NULL) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid data");
+		return NULL;
+	}
 	if (!fu_common_read_uint16_safe (buf, bufsz,
 					 _DOS_OFFSET_SIGNATURE,
 					 &dos_sig, G_LITTLE_ENDIAN, error))
