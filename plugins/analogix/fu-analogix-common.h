@@ -35,7 +35,8 @@ typedef enum {
 	ANX_BB_RQT_GET_UPDATE_STATUS		= 0x10,
 	ANX_BB_RQT_READ_FW_VER			= 0x12,
 	ANX_BB_RQT_READ_CUS_VER			= 0x13,
-	ANX_BB_RQT_READ_FW_RVER			= 0x19
+	ANX_BB_RQT_READ_FW_RVER			= 0x19,
+	ANX_BB_RQT_READ_CUS_RVER        = 0x1c
 } AnxBbRqtCode;
 
 /* wValue low byte */
