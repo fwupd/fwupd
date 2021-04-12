@@ -18,7 +18,7 @@
 #define OCM_FLASH_SIZE				0x18000
 #define SECURE_OCM_TX_SIZE			0x3000
 #define SECURE_OCM_RX_SIZE			0x3000
-#define CUSTOM_FLASH_SIZE			0x1000
+#define CUSTOM_FLASH_SIZE			0x2000
 #define MAX_FILE_SIZE (OCM_FLASH_SIZE+SECURE_OCM_TX_SIZE+ \
 		       SECURE_OCM_RX_SIZE+CUSTOM_FLASH_SIZE+0x1000)
 
@@ -26,7 +26,7 @@
 #define FLASH_TXFW_ADDR				0x31000
 #define FLASH_RXFW_ADDR				0x34000
 #define FLASH_CUSTOM_ADDR			0x38000
-#define OCM_FW_VERSION_ADDR			0x4FF0
+#define OCM_FW_VERSION_ADDR			0x14FF0
 
 /* bRequest for Phoenix-Lite Billboard */
 typedef enum {
