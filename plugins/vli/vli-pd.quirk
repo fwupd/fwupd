@@ -65,6 +65,7 @@ GType = FuVliPdDevice
 [USB\VID_17EF&PID_7223]
 Plugin = vli
 GType = FuVliPdDevice
+Flags = dual-image
 
 # Samsung
 [USB\VID_04E8&PID_A025]
