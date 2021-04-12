@@ -565,6 +565,9 @@
   </dependency>
   <!-- TODO: Drop help2man build dependency after 1.6.0 release -->
   <dependency type="build" id="help2man">
+    <distro id="arch">
+      <package />
+    </distro>
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
