@@ -6,10 +6,10 @@
 
 #include "config.h"
 
-#include <string.h>
 #include <gio/gio.h>
 
 #include "fu-chunk.h"
+#include "fu-common.h"
 #include "fu-wacom-common.h"
 #include "fu-wacom-aes-device.h"
 
@@ -197,7 +197,10 @@ fu_wacom_aes_device_write_block (FuWacomAesDevice *self,
 			     (guint) datasz, (guint) blocksz);
 		return FALSE;
 	}
-	memcpy (&req.data, data, datasz);
+	if (!fu_memcpy_safe ((guint8 *) &req.data, sizeof(req.data), 0x0,	/* dst */
+			     data, datasz, 0x0,					/* src */
+			     datasz, error))
+		return FALSE;
 
 	/* write */
 	if (!fu_wacom_device_cmd (FU_WACOM_DEVICE (self), &req, &rsp, 1000,
