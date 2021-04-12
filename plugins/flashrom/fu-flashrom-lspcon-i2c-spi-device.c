@@ -9,7 +9,12 @@
 #include "fu-flashrom-device.h"
 #include "fu-flashrom-lspcon-i2c-spi-device.h"
 
+#include <errno.h>
+#include <fcntl.h>
+#include <glib/gstdio.h>
 #include <libflashrom.h>
+#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
 
 #define I2C_PATH_REGEX "/i2c-([0-9]+)/"
 #define HID_LENGTH 8
@@ -37,12 +42,13 @@ struct flashrom_layout {
 	gsize			 num_entries;
 };
 
-static const struct romentry ENTRIES_TEMPLATE[5] = {
+static const struct romentry ENTRIES_TEMPLATE[6] = {
 	{ .start = 0x00002, .end = 0x00003, .included = FALSE, .name = "FLAG" },
 	{ .start = 0x10000, .end = 0x1ffff, .included = FALSE, .name = "PAR1" },
 	{ .start = 0x20000, .end = 0x2ffff, .included = FALSE, .name = "PAR2" },
 	{ .start = 0x15000, .end = 0x15002, .included = FALSE, .name = "VER1" },
 	{ .start = 0x25000, .end = 0x25002, .included = FALSE, .name = "VER2" },
+	{ .start = 0x35000, .end = 0x35002, .included = FALSE, .name = "VERBOOT" },
 };
 
 typedef struct flashrom_layout FlashromLayout;
@@ -118,12 +124,51 @@ fu_flashrom_lspcon_i2c_spi_device_open (FuDevice *device,
 	FuDeviceClass *klass =
 		FU_DEVICE_CLASS (fu_flashrom_lspcon_i2c_spi_device_parent_class);
 	g_autofree gchar *temp = NULL;
+	g_autofree gchar *bus_path = NULL;
+	gint bus_fd = -1;
 
 	/* flashrom_programmer_init() mutates the programmer_args string. */
 	temp = g_strdup_printf ("bus=%d", self->bus_number);
 	fu_flashrom_device_set_programmer_args (flashrom_device, temp);
 
+	/* open the bus, not the device represented by self */
+	bus_path = g_strdup_printf ("/dev/i2c-%d", self->bus_number);
+	g_debug ("communicating with device on %s", bus_path);
+	if ((bus_fd = g_open (bus_path, O_RDWR, 0)) == -1) {
+		g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errno),
+			     "failed to open %s read-write", bus_path);
+		return FALSE;
+	}
+	fu_udev_device_set_fd (FU_UDEV_DEVICE (self), bus_fd);
+	fu_udev_device_set_flags (FU_UDEV_DEVICE (self), FU_UDEV_DEVICE_FLAG_NONE);
+
 	return klass->open (device, error);
+}
+
+static gboolean
+probe_active_flash_partition (FuFlashromLspconI2cSpiDevice *self,
+			      guint8 *partition,
+			      GError **error)
+{
+	guint8 data;
+
+	/* read register 0x0e on page 5, which is set to the currently-running
+	 * flash partition number */
+	if (!fu_udev_device_ioctl (FU_UDEV_DEVICE (self),
+				   I2C_SLAVE, (guint8 *) (0x9a >> 1), NULL, error)) {
+		g_prefix_error (error, "failed to set I2C slave address: ");
+		return FALSE;
+	}
+	if (!fu_udev_device_pwrite (FU_UDEV_DEVICE (self), 0, 0x0e, error)) {
+		g_prefix_error (error, "failed to write register address: ");
+		return FALSE;
+	}
+	if (!fu_udev_device_pread (FU_UDEV_DEVICE (self), 0, &data, error)) {
+		g_prefix_error (error, "failed to read register value: ");
+		return FALSE;
+	}
+	*partition = data;
+	return TRUE;
 }
 
 static gboolean
@@ -142,10 +187,19 @@ fu_flashrom_lspcon_i2c_spi_device_set_version (FuDevice *device, GError **error)
 	flashctx = fu_flashrom_device_get_flashctx (flashrom_device);
 	flashrom_layout_set (flashctx, layout);
 
-	/* only include flag and version regions on layout */
-	layout->entries[0].included = TRUE;
-	layout->entries[3].included = TRUE;
-	layout->entries[4].included = TRUE;
+	/* get the active partition */
+	if (!probe_active_flash_partition (self, &self->active_partition, error))
+		return FALSE;
+	g_debug ("device reports running from partition %d", self->active_partition);
+	if (self->active_partition < 1 || self->active_partition > 3) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_BROKEN_SYSTEM,
+			     "Unexpected active flash partition: %d",
+			     self->active_partition);
+		return FALSE;
+	}
+
+	/* read version bytes for the active partition from device flash */
+	layout->entries[self->active_partition + 2].included = TRUE;
 
 	/* read the current flash contents */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
@@ -157,17 +211,9 @@ fu_flashrom_lspcon_i2c_spi_device_set_version (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* grab the active partition */
-	self->active_partition = contents[layout->entries[0].start];
-
-	if (self->active_partition != 1 && self->active_partition != 2) {
-		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_READ,
-				     "failed to read active partition");
-		return FALSE;
-	}
-
-	/* find the current version for the active partition */
+	/* extract the active partition's version number */
 	addr = layout->entries[self->active_partition + 2].start;
+	g_return_val_if_fail (addr < (flash_size - 2), FALSE);
 	version = g_strdup_printf ("%d.%d", contents[addr], contents[addr + 2]);
 	fu_device_set_version (device, version);
 
@@ -217,6 +263,8 @@ fu_flashrom_lspcon_i2c_spi_device_write_firmware (FuDevice *device,
 	gsize flash_size = fu_flashrom_device_get_flash_size (parent);
 	g_autofree guint8 *newcontents = g_malloc0 (flash_size);
 	g_autoptr(FlashromLayout) layout = create_flash_layout ();
+	/* if the boot partition is active we could flash either, but prefer
+	 * the first */
 	const guint8 target_partition = self->active_partition == 1 ? 2 : 1;
 	const gsize region_size = layout->entries[target_partition].end -
 				  layout->entries[target_partition].start + 1;
