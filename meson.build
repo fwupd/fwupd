@@ -366,7 +366,6 @@ if build_standalone and get_option('plugin_uefi_capsule')
   freetype = cc.find_library('freetype')
   efiboot = dependency('efiboot')
   objcopy = find_program ('objcopy')
-  readelf = find_program ('readelf')
   genpeimg = find_program ('genpeimg', required: false)
 
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
