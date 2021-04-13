@@ -10,7 +10,7 @@
 
 #include "fu-plugin.h"
 
-#define ANX_BB_TRANSACTION_TIMEOUT		1000 /* ms */
+#define ANX_BB_TRANSACTION_TIMEOUT		5000 /* ms */
 #define BILLBOARD_CLASS				0x11
 #define BILLBOARD_SUBCLASS			0x00
 #define BILLBOARD_PROTOCOL			0x00
@@ -18,7 +18,7 @@
 #define OCM_FLASH_SIZE				0x18000
 #define SECURE_OCM_TX_SIZE			0x3000
 #define SECURE_OCM_RX_SIZE			0x3000
-#define CUSTOM_FLASH_SIZE			0x2000
+#define CUSTOM_FLASH_SIZE			0x1000
 
 #define FLASH_OCM_ADDR				0x1000
 #define FLASH_TXFW_ADDR				0x31000

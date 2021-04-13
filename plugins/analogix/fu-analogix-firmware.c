@@ -48,8 +48,8 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 	if (g_bytes_get_size (blob) == OCM_FLASH_SIZE) {
 		blob_ocm = g_bytes_ref (blob);
 	} else if (g_bytes_get_size (blob) == CUSTOM_FLASH_SIZE) {
-		/* custom, only first 4K bytes are needed */
-		blob_cus = fu_common_bytes_new_offset (blob, 0, CUSTOM_FLASH_SIZE / 2, error);
+		/* custom */
+		blob_cus = fu_common_bytes_new_offset (blob, 0, CUSTOM_FLASH_SIZE, error);
 	} else {
 		blob_ocm = fu_common_bytes_new_offset (blob, 0, OCM_FLASH_SIZE, error);
 		if (blob_ocm == NULL)
