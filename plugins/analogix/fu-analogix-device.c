@@ -338,21 +338,21 @@ fu_analogix_device_write_firmware (FuDevice *device,
 			return FALSE;
 		}
 	}
-	fw_srx = fu_firmware_get_image_by_id (firmware, "srx", NULL);
-	if (fw_srx != NULL) {
-		if (!fu_analogix_device_write_image (self, fw_srx,
-						     ANX_BB_WVAL_UPDATE_SECURE_TX,
-						     error)) {
-			g_prefix_error (error, "program secure RX failed: ");
-			return FALSE;
-		}
-	}
 	fw_stx = fu_firmware_get_image_by_id (firmware, "stx", NULL);
 	if (fw_stx != NULL) {
 		if (!fu_analogix_device_write_image (self, fw_stx,
-						     ANX_BB_WVAL_UPDATE_SECURE_RX,
+						     ANX_BB_WVAL_UPDATE_SECURE_TX,
 						     error)) {
 			g_prefix_error (error, "program secure TX failed: ");
+			return FALSE;
+		}
+	}
+	fw_srx = fu_firmware_get_image_by_id (firmware, "srx", NULL);
+	if (fw_srx != NULL) {
+		if (!fu_analogix_device_write_image (self, fw_srx,
+						     ANX_BB_WVAL_UPDATE_SECURE_RX,
+						     error)) {
+			g_prefix_error (error, "program secure RX failed: ");
 			return FALSE;
 		}
 	}
