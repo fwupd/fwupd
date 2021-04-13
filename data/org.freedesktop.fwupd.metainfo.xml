@@ -32,6 +32,23 @@
     <binary>fwupdmgr</binary>
   </provides>
   <releases>
+    <release version="1.4.8" date="2021-04-13">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Avoid runtime warning in dfu-tool</li>
+          <li>Detect SREC overflow to avoid adding ~4GB of padding</li>
+          <li>Do not show an invalid warning when the vendor-id requirement failed</li>
+          <li>Fix a crash when checking if the dbx update is safe to apply</li>
+          <li>Fix a possible crash if the user set WacomI2cFlashBlockSize manually</li>
+          <li>Fix array access when using fwupmgr verify-update</li>
+          <li>Include crt0 for arm and aarch64 that add a SBAT section</li>
+          <li>Retry the request to fix enumeration failure of Synaptics CXAudio</li>
+          <li>Set dual-bank property on more Lenovo display hardware</li>
+          <li>Tweak the SBAT output for a vendor string</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.4.7" date="2021-03-24">
       <description>
         <p>This release fixes the following bugs:</p>
