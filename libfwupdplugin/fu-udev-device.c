@@ -1747,6 +1747,50 @@ fu_udev_device_get_devtype (FuUdevDevice *self)
 #endif
 }
 
+/**
+ * fu_udev_device_get_siblings_with_subsystem
+ * @self: a #FuUdevDevice
+ * @subsystem: the name of a udev subsystem
+ *
+ * Get a list of devices that are siblings of self and have the
+ * provided subsystem.
+ *
+ * Returns (element-type FuUdevDevice) (transfer full): devices
+ *
+ * Since: 1.6.0
+ */
+GPtrArray *
+fu_udev_device_get_siblings_with_subsystem (FuUdevDevice *self,
+					    const gchar *const subsystem)
+{
+	g_autoptr(GPtrArray) out = g_ptr_array_new_with_free_func (g_object_unref);
+
+#ifdef HAVE_GUDEV
+	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GUdevDevice) udev_parent = g_udev_device_get_parent (priv->udev_device);
+	const gchar *udev_parent_path = g_udev_device_get_sysfs_path (udev_parent);
+	g_autoptr(GUdevClient) udev_client = g_udev_client_new (NULL);
+
+	g_autoptr(GList) enumerated = g_udev_client_query_by_subsystem (udev_client, subsystem);
+	for (GList *element = enumerated; element != NULL; element = element->next) {
+		g_autoptr(GUdevDevice) enumerated_device = element->data;
+		g_autoptr(GUdevDevice) enumerated_parent =
+			g_udev_device_get_parent (enumerated_device);
+		const gchar *enumerated_parent_path =
+			g_udev_device_get_sysfs_path (enumerated_parent);
+
+		/* if the sysfs path of self's parent is the same as that of the
+		 * located device's parent, they are siblings */
+		if (g_strcmp0 (udev_parent_path, enumerated_parent_path) == 0) {
+			g_ptr_array_add (out,
+					 fu_udev_device_new (g_steal_pointer (&enumerated_device)));
+		}
+	}
+#endif
+
+	return g_steal_pointer(&out);
+}
+
 static void
 fu_udev_device_get_property (GObject *object, guint prop_id,
 			    GValue *value, GParamSpec *pspec)

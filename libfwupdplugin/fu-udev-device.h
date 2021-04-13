@@ -118,3 +118,5 @@ gboolean	 fu_udev_device_write_sysfs		(FuUdevDevice	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
 const gchar	*fu_udev_device_get_devtype		(FuUdevDevice	*self);
+GPtrArray 	*fu_udev_device_get_siblings_with_subsystem (FuUdevDevice *self,
+							     const gchar *subsystem);

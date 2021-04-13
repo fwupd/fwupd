@@ -781,6 +781,7 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_firmware_write_chunk;
     fu_ihex_firmware_set_padding_value;
     fu_plugin_get_context;
+    fu_udev_device_get_siblings_with_subsystem;
     fu_xmlb_builder_insert_kb;
     fu_xmlb_builder_insert_kv;
     fu_xmlb_builder_insert_kx;
