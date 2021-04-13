@@ -37,7 +37,6 @@ fu_analogix_firmware_parse (FuFirmware *firmware,
 	g_autoptr(GBytes) blob_srx = NULL;
 	g_autoptr(GBytes) blob_stx = NULL;
 
-	fu_ihex_firmware_set_padding_value (FU_IHEX_FIRMWARE(firmware), 0xFF);
 	/* convert to binary with FuIhexFirmware->parse */
 	if (!klass->parse (firmware, fw, addr_start, addr_end, flags, error))
 		return FALSE;
