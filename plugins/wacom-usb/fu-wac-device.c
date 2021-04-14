@@ -634,6 +634,7 @@ fu_wac_device_add_modules_bluetooth (FuWacDevice *self, GError **error)
 	g_autoptr(FuWacModule) module = NULL;
 	guint8 buf[] = { [0] = FU_WAC_REPORT_ID_GET_FIRMWARE_VERSION_BLUETOOTH,
 			 [1 ... 14] = 0xff };
+	guint16 fw_ver;
 
 	buf[0] = FU_WAC_REPORT_ID_GET_FIRMWARE_VERSION_BLUETOOTH;
 	if (!fu_wac_device_get_feature_report (self, buf, sizeof(buf),
@@ -643,14 +644,19 @@ fu_wac_device_add_modules_bluetooth (FuWacDevice *self, GError **error)
 		return FALSE;
 	}
 
+	if (!fu_common_read_uint16_safe (buf, sizeof(buf), 1, &fw_ver,
+					 G_BIG_ENDIAN, error))
+		return FALSE;
+	version = fu_common_version_from_uint16 (fw_ver, FWUPD_VERSION_FORMAT_BCD);
+
 	/* success */
 	name = g_strdup_printf ("%s [Legacy Bluetooth Module]",
 				fu_device_get_name (FU_DEVICE (self)));
-	version = g_strdup_printf ("%x.%x", (guint) buf[2], (guint) buf[1]);
 	module = fu_wac_module_bluetooth_new (usb_device);
 	fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
 	fu_device_set_name (FU_DEVICE (module), name);
 	fu_device_set_version (FU_DEVICE (module), version);
+	fu_device_set_version_raw (FU_DEVICE (module), fw_ver);
 	return TRUE;
 }
 
@@ -673,6 +679,7 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 	g_autofree gchar *version_bootloader = NULL;
 	guint8 buf[] = { [0] = FU_WAC_REPORT_ID_FW_DESCRIPTOR,
 			 [1 ... 31] = 0xff };
+	guint16 boot_ver;
 
 	if (!fu_wac_device_get_feature_report (self, buf, sizeof(buf),
 					       FU_HID_DEVICE_FLAG_NONE,
@@ -700,8 +707,12 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 	}
 
 	/* bootloader version */
-	version_bootloader = g_strdup_printf ("%u.%u", buf[1], buf[2]);
+	if (!fu_common_read_uint16_safe (buf, sizeof(buf), 1, &boot_ver,
+					 G_BIG_ENDIAN, error))
+		return FALSE;
+	version_bootloader = fu_common_version_from_uint16 (boot_ver, FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_version_bootloader (FU_DEVICE (self), version_bootloader);
+	fu_device_set_version_bootloader_raw (FU_DEVICE (self), boot_ver);
 
 	/* get versions of each submodule */
 	for (guint8 i = 0; i < buf[3]; i++) {
@@ -709,9 +720,12 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 		g_autofree gchar *name = NULL;
 		g_autofree gchar *version = NULL;
 		g_autoptr(FuWacModule) module = NULL;
+		guint16 ver;
 
-		/* version number is decimal */
-		version = g_strdup_printf ("%u.%u", buf[(i * 4) + 5], buf[(i * 4) + 6]);
+		if (!fu_common_read_uint16_safe (buf, sizeof(buf), (i * 4) + 5,
+						 &ver, G_BIG_ENDIAN, error))
+			return FALSE;
+		version = fu_common_version_from_uint16 (ver, FWUPD_VERSION_FORMAT_BCD);
 
 		switch (fw_type) {
 		case FU_WAC_MODULE_FW_TYPE_TOUCH:
@@ -721,6 +735,7 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 			fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
 			fu_device_set_name (FU_DEVICE (module), name);
 			fu_device_set_version (FU_DEVICE (module), version);
+			fu_device_set_version_raw (FU_DEVICE (module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH:
 			module = fu_wac_module_bluetooth_new (usb_device);
@@ -729,9 +744,11 @@ fu_wac_device_add_modules (FuWacDevice *self, GError **error)
 			fu_device_add_child (FU_DEVICE (self), FU_DEVICE (module));
 			fu_device_set_name (FU_DEVICE (module), name);
 			fu_device_set_version (FU_DEVICE (module), version);
+			fu_device_set_version_raw (FU_DEVICE (module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_MAIN:
 			fu_device_set_version (FU_DEVICE (self), version);
+			fu_device_set_version_raw (FU_DEVICE (self), ver);
 			break;
 		default:
 			g_warning ("unknown submodule type 0x%0x", fw_type);
@@ -805,7 +822,7 @@ fu_wac_device_init (FuWacDevice *self)
 	fu_device_add_protocol (FU_DEVICE (self), "com.wacom.usb");
 	fu_device_add_icon (FU_DEVICE (self), "input-tablet");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_install_duration (FU_DEVICE (self), 10);
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
