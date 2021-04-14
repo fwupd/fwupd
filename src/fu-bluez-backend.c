@@ -117,6 +117,7 @@ typedef struct {
 	GDBusObjectManager	*object_manager;
 	GMainLoop		*loop;
 	GError			**error;
+	GCancellable		*cancellable;
 	guint			 timeout_id;
 } FuBluezBackendHelper;
 
@@ -127,6 +128,7 @@ fu_bluez_backend_helper_free (FuBluezBackendHelper *helper)
 		g_object_unref (helper->object_manager);
 	if (helper->timeout_id != 0)
 		g_source_remove (helper->timeout_id);
+	g_cancellable_cancel (helper->cancellable);
 	g_main_loop_unref (helper->loop);
 	g_free (helper);
 }
@@ -148,12 +150,7 @@ static gboolean
 fu_bluez_backend_timeout_cb (gpointer user_data)
 {
 	FuBluezBackendHelper *helper = (FuBluezBackendHelper *) user_data;
-	g_set_error (helper->error,
-		     G_IO_ERROR,
-		     G_IO_ERROR_TIMED_OUT,
-		     "failed to connect to Bluez after %ums",
-		     (guint) FU_BLUEZ_BACKEND_TIMEOUT);
-	g_main_loop_quit (helper->loop);
+	g_cancellable_cancel (helper->cancellable);
 	helper->timeout_id = 0;
 	return G_SOURCE_REMOVE;
 }
@@ -168,6 +165,7 @@ fu_bluez_backend_setup (FuBackend *backend, GError **error)
 	 * forever and make fwupd startup also fail */
 	helper->error = error;
 	helper->loop = g_main_loop_new (NULL, FALSE);
+	helper->cancellable = g_cancellable_new ();
 	helper->timeout_id = g_timeout_add (FU_BLUEZ_BACKEND_TIMEOUT,
 					    fu_bluez_backend_timeout_cb,
 					    helper);
@@ -176,7 +174,8 @@ fu_bluez_backend_setup (FuBackend *backend, GError **error)
 					G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE,
 					"org.bluez",
 					"/",
-					NULL, NULL, NULL, NULL,
+					NULL, NULL, NULL,
+					helper->cancellable,
 					fu_bluez_backend_connect_cb,
 					helper);
 	g_main_loop_run (helper->loop);
