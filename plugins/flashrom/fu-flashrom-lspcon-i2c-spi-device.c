@@ -246,11 +246,7 @@ fu_flashrom_lspcon_i2c_spi_device_write_firmware (FuDevice *device,
 	newcontents[2] = (gint8) target_partition;
 	newcontents[3] = (gint8) -target_partition + 1;
 
-	/* libflashrom fails to verify a write of a layout smaller than the
-	 * block size. */
-	flashrom_flag_set (flashctx, FLASHROM_FLAG_VERIFY_AFTER_WRITE, FALSE);
-
-	/* write target_partition */
+	/* write flag area */
 	rc = flashrom_image_write (flashctx, (void *) newcontents, flash_size,
 				   NULL /* refbuffer */);
 	if (rc != 0) {
