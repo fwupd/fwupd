@@ -65,6 +65,7 @@ struct FuUtilPrivate {
 	FwupdInstallFlags	 flags;
 	gboolean		 show_all;
 	gboolean		 disable_ssl_strict;
+	gint			 lock_fd;
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
 	FwupdDevice		*current_device;
@@ -262,6 +263,8 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->progressbar);
 	if (priv->context != NULL)
 		g_option_context_free (priv->context);
+	if (priv->lock_fd != 0)
+		g_close (priv->lock_fd, NULL);
 	g_free (priv->current_message);
 	g_free (priv);
 }
@@ -2781,6 +2784,48 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
 
+static gboolean
+fu_util_lock (FuUtilPrivate *priv, GError **error)
+{
+#ifdef HAVE_WRLCK
+	struct flock lockp = {
+		.l_type = F_WRLCK,
+		.l_whence = SEEK_SET,
+	};
+	g_autofree gchar *localstatedir = NULL;
+	g_autofree gchar *lockfn = NULL;
+
+	/* open file */
+	localstatedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR);
+	lockfn = g_build_filename (localstatedir, "run", "fwupdtool", NULL);
+	if (!fu_common_mkdir_parent (lockfn, error))
+		return FALSE;
+	priv->lock_fd = g_open (lockfn, O_RDWR | O_CREAT, S_IRWXU);
+	if (priv->lock_fd < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "failed to open %s",
+			     lockfn);
+		return FALSE;
+	}
+
+	/* write lock */
+	if (fcntl (priv->lock_fd, F_OFD_SETLK, &lockp) < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "another instance has locked %s",
+			     lockfn);
+		return FALSE;
+	}
+
+	/* success */
+	g_debug ("locked %s", lockfn);
+#endif
+	return TRUE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -2872,6 +2917,13 @@ main (int argc, char *argv[])
 	bindtextdomain (GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
+
+	/* ensure single instance */
+	if (!fu_util_lock (priv, &error)) {
+		/* TRANSLATORS: another fwupdtool instance is already running */
+		g_print ("%s: %s\n", _("Failed to lock"), error->message);
+		return EXIT_FAILURE;
+	}
 
 #ifdef HAVE_GETUID
 	/* ensure root user */
