@@ -38,11 +38,11 @@ struct flashrom_layout {
 };
 
 static struct romentry entries[5] = {
-	{ .start = 0x00002, .end = 0x00003, .included = TRUE, .name = "FLAG" },
-	{ .start = 0x10000, .end = 0x1ffff, .included = FALSE, .name = "PAR1" },
-	{ .start = 0x20000, .end = 0x2ffff, .included = FALSE, .name = "PAR2" },
-	{ .start = 0x15000, .end = 0x15002, .included = TRUE, .name = "VER1" },
-	{ .start = 0x25000, .end = 0x25002, .included = TRUE, .name = "VER2" },
+	{ .start = 0x00002, .end = 0x00003, .name = "FLAG" },
+	{ .start = 0x10000, .end = 0x1ffff, .name = "PAR1" },
+	{ .start = 0x20000, .end = 0x2ffff, .name = "PAR2" },
+	{ .start = 0x15000, .end = 0x15002, .name = "VER1" },
+	{ .start = 0x25000, .end = 0x25002, .name = "VER2" },
 };
 
 static struct flashrom_layout layout = {
@@ -110,43 +110,26 @@ fu_flashrom_lspcon_i2c_spi_device_open (FuDevice *device,
 }
 
 static gboolean
-fu_flashrom_lspcon_i2c_spi_device_setup (FuDevice *device, GError **error)
+fu_flashrom_lspcon_i2c_spi_device_set_version (FuDevice *device, GError **error)
 {
 	FuFlashromLspconI2cSpiDevice *self = FU_FLASHROM_LSPCON_I2C_SPI_DEVICE (device);
 	FuFlashromDevice *flashrom_device = FU_FLASHROM_DEVICE (device);
-	const gchar *hw_id = NULL;
-	g_autofree gchar *vid = NULL;
-	g_autofree gchar *pid = NULL;
-	g_autofree gchar *vendor_id = NULL;
-	g_autofree gchar *temp = NULL;
-	g_autofree gchar *version = NULL;
-	g_autofree gchar *guid = NULL;
 	g_autofree gchar *contents = NULL;
+	g_autofree gchar *version = NULL;
 	struct flashrom_flashctx *flashctx = NULL;
 	gsize flash_size;
 	guint32 addr;
 
-	hw_id = fu_udev_device_get_sysfs_attr (FU_UDEV_DEVICE (device), "name", error);
-	if (hw_id == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "HID not found");
-		return FALSE;
-	}
-	vid = g_strndup (hw_id, HID_LENGTH / 2);
-	pid = g_strndup (&hw_id[HID_LENGTH / 2], HID_LENGTH / 2);
-	vendor_id = g_strdup_printf ("I2C:%s", vid);
-	fu_device_add_vendor_id (device, vendor_id);
-
-	temp = g_strdup_printf (DEVICE_GUID_FORMAT, vid, pid);
-	fu_device_add_instance_id (device, temp);
-	guid = fwupd_guid_hash_string (temp);
-	fu_device_add_guid (device, guid);
-
 	/* set up flashrom layout */
 	flashctx = fu_flashrom_device_get_flashctx (flashrom_device);
 	flashrom_layout_set (flashctx, &layout);
+
+	/* only include flag and version regions on layout */
+	entries[0].included = TRUE;
+	entries[1].included = FALSE;
+	entries[2].included = FALSE;
+	entries[3].included = TRUE;
+	entries[4].included = TRUE;
 
 	/* read the current flash contents */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
@@ -173,6 +156,37 @@ fu_flashrom_lspcon_i2c_spi_device_setup (FuDevice *device, GError **error)
 	fu_device_set_version (device, version);
 
 	return TRUE;
+}
+
+static gboolean
+fu_flashrom_lspcon_i2c_spi_device_setup (FuDevice *device, GError **error)
+{
+	const gchar *hw_id = NULL;
+	g_autofree gchar *vid = NULL;
+	g_autofree gchar *pid = NULL;
+	g_autofree gchar *vendor_id = NULL;
+	g_autofree gchar *temp = NULL;
+	g_autofree gchar *guid = NULL;
+
+	hw_id = fu_udev_device_get_sysfs_attr (FU_UDEV_DEVICE (device), "name", error);
+	if (hw_id == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "HID not found");
+		return FALSE;
+	}
+	vid = g_strndup (hw_id, HID_LENGTH / 2);
+	pid = g_strndup (&hw_id[HID_LENGTH / 2], HID_LENGTH / 2);
+	vendor_id = g_strdup_printf ("I2C:%s", vid);
+	fu_device_add_vendor_id (device, vendor_id);
+
+	temp = g_strdup_printf (DEVICE_GUID_FORMAT, vid, pid);
+	fu_device_add_instance_id (device, temp);
+	guid = fwupd_guid_hash_string (temp);
+	fu_device_add_guid (device, guid);
+
+	return fu_flashrom_lspcon_i2c_spi_device_set_version (device, error);
 }
 
 static gboolean
@@ -269,4 +283,5 @@ fu_flashrom_lspcon_i2c_spi_device_class_init (FuFlashromLspconI2cSpiDeviceClass 
 	klass_device->open = fu_flashrom_lspcon_i2c_spi_device_open;
 	klass_device->setup = fu_flashrom_lspcon_i2c_spi_device_setup;
 	klass_device->write_firmware = fu_flashrom_lspcon_i2c_spi_device_write_firmware;
+	klass_device->reload = fu_flashrom_lspcon_i2c_spi_device_set_version;
 }
