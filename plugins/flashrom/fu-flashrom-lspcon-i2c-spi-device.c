@@ -37,17 +37,34 @@ struct flashrom_layout {
 	gsize			 num_entries;
 };
 
-static struct romentry entries[5] = {
-	{ .start = 0x00002, .end = 0x00003, .name = "FLAG" },
-	{ .start = 0x10000, .end = 0x1ffff, .name = "PAR1" },
-	{ .start = 0x20000, .end = 0x2ffff, .name = "PAR2" },
-	{ .start = 0x15000, .end = 0x15002, .name = "VER1" },
-	{ .start = 0x25000, .end = 0x25002, .name = "VER2" },
+static const struct romentry ENTRIES_TEMPLATE[5] = {
+	{ .start = 0x00002, .end = 0x00003, .included = FALSE, .name = "FLAG" },
+	{ .start = 0x10000, .end = 0x1ffff, .included = FALSE, .name = "PAR1" },
+	{ .start = 0x20000, .end = 0x2ffff, .included = FALSE, .name = "PAR2" },
+	{ .start = 0x15000, .end = 0x15002, .included = FALSE, .name = "VER1" },
+	{ .start = 0x25000, .end = 0x25002, .included = FALSE, .name = "VER2" },
 };
 
-static struct flashrom_layout layout = {
-	.entries = entries, .num_entries = sizeof(entries) / sizeof(entries[0])
-};
+typedef struct flashrom_layout FlashromLayout;
+
+static FlashromLayout *
+create_flash_layout (void)
+{
+	struct flashrom_layout *out = g_new (FlashromLayout, 1);
+	struct romentry *entries = g_memdup (ENTRIES_TEMPLATE, sizeof (ENTRIES_TEMPLATE));
+
+	out->entries = entries;
+	out->num_entries = sizeof (ENTRIES_TEMPLATE) / sizeof (*ENTRIES_TEMPLATE);
+	return out;
+}
+
+static void
+dispose_flash_layout (FlashromLayout *layout) {
+	g_free (layout->entries);
+	g_free (layout);
+}
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FlashromLayout, dispose_flash_layout);
 
 
 static void
@@ -117,19 +134,18 @@ fu_flashrom_lspcon_i2c_spi_device_set_version (FuDevice *device, GError **error)
 	g_autofree gchar *contents = NULL;
 	g_autofree gchar *version = NULL;
 	struct flashrom_flashctx *flashctx = NULL;
+	g_autoptr(FlashromLayout) layout = create_flash_layout ();
 	gsize flash_size;
 	guint32 addr;
 
 	/* set up flashrom layout */
 	flashctx = fu_flashrom_device_get_flashctx (flashrom_device);
-	flashrom_layout_set (flashctx, &layout);
+	flashrom_layout_set (flashctx, layout);
 
 	/* only include flag and version regions on layout */
-	entries[0].included = TRUE;
-	entries[1].included = FALSE;
-	entries[2].included = FALSE;
-	entries[3].included = TRUE;
-	entries[4].included = TRUE;
+	layout->entries[0].included = TRUE;
+	layout->entries[3].included = TRUE;
+	layout->entries[4].included = TRUE;
 
 	/* read the current flash contents */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
@@ -142,7 +158,7 @@ fu_flashrom_lspcon_i2c_spi_device_set_version (FuDevice *device, GError **error)
 	}
 
 	/* grab the active partition */
-	self->active_partition = contents[entries[0].start];
+	self->active_partition = contents[layout->entries[0].start];
 
 	if (self->active_partition != 1 && self->active_partition != 2) {
 		g_set_error_literal (error, FWUPD_ERROR, FWUPD_ERROR_READ,
@@ -151,7 +167,7 @@ fu_flashrom_lspcon_i2c_spi_device_set_version (FuDevice *device, GError **error)
 	}
 
 	/* find the current version for the active partition */
-	addr = entries[self->active_partition + 2].start;
+	addr = layout->entries[self->active_partition + 2].start;
 	version = g_strdup_printf ("%d.%d", contents[addr], contents[addr + 2]);
 	fu_device_set_version (device, version);
 
@@ -200,9 +216,10 @@ fu_flashrom_lspcon_i2c_spi_device_write_firmware (FuDevice *device,
 	struct flashrom_flashctx *flashctx = fu_flashrom_device_get_flashctx (parent);
 	gsize flash_size = fu_flashrom_device_get_flash_size (parent);
 	g_autofree guint8 *newcontents = g_malloc0 (flash_size);
+	g_autoptr(FlashromLayout) layout = create_flash_layout ();
 	const guint8 target_partition = self->active_partition == 1 ? 2 : 1;
-	const gsize region_size = entries[target_partition].end -
-				  entries[target_partition].start + 1;
+	const gsize region_size = layout->entries[target_partition].end -
+				  layout->entries[target_partition].start + 1;
 	gsize sz = 0;
 	gint rc;
 	const guint8 *buf;
@@ -221,24 +238,18 @@ fu_flashrom_lspcon_i2c_spi_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 	if (!fu_memcpy_safe (newcontents, flash_size,
-			     entries[target_partition].start, buf, sz, 0,
+			     layout->entries[target_partition].start, buf, sz, 0,
 			     region_size, error))
 		return FALSE;
 
 	flashrom_flag_set (flashctx, FLASHROM_FLAG_VERIFY_AFTER_WRITE, TRUE);
-	flashrom_layout_set (flashctx, &layout);
+	flashrom_layout_set (flashctx, layout);
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	fu_device_set_progress (device, 0); /* urgh */
 
-	/* only include target_partition on layout */
-	entries[0].included = FALSE;
-	entries[3].included = FALSE;
-	entries[4].included = FALSE;
-	entries[self->active_partition].included = FALSE;
-	entries[target_partition].included = TRUE;
-
-	/* write target_partition */
+	/* write target_partition only */
+	layout->entries[target_partition].included = TRUE;
 	rc = flashrom_image_write (flashctx, (void *) newcontents, flash_size,
 				   NULL /* refbuffer */);
 	if (rc != 0) {
@@ -250,8 +261,8 @@ fu_flashrom_lspcon_i2c_spi_device_write_firmware (FuDevice *device,
 	}
 
 	/* only include flag area on layout */
-	entries[0].included = TRUE;
-	entries[target_partition].included = FALSE;
+	layout->entries[0].included = TRUE;
+	layout->entries[target_partition].included = FALSE;
 
 	/* Flag area is header bytes (0x55, 0xAA) followed by the bank ID to
 	 * boot from (1 or 2) and the two's complement inverse of that bank ID
