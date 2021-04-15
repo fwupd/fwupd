@@ -1,12 +1,14 @@
 # RTS5423 Development Board
 [USB\VID_0BDA&PID_5423]
 Plugin = rts54hub
+GType = FuRts54HubDevice
 FirmwareSizeMin = 0x20000
 FirmwareSizeMax = 0x40000
 
 # Lenovo HotRod
 [USB\VID_17EF&PID_30BF]
 Plugin = rts54hub
+GType = FuRts54HubDevice
 Vendor = Lenovo
 FirmwareSizeMin = 0x20000
 FirmwareSizeMax = 0x40000

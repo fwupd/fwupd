@@ -21,9 +21,9 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_CCGX_FIRMWARE);
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_CCGX_DMC_FIRMWARE);
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_CCGX_HID_DEVICE);
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_CCGX_HPI_DEVICE);
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_CCGX_DMC_DEVICE);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_CCGX_HID_DEVICE);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_CCGX_HPI_DEVICE);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_CCGX_DMC_DEVICE);
 	fu_context_add_quirk_key (ctx, "CcgxFlashRowSize");
 	fu_context_add_quirk_key (ctx, "CcgxFlashSize");
 	fu_context_add_quirk_key (ctx, "CcgxImageKind");

@@ -423,7 +423,6 @@ LIBFWUPDPLUGIN_1.3.3 {
     fu_firmware_set_version;
     fu_firmware_write_file;
     fu_plugin_add_firmware_gtype;
-    fu_plugin_set_device_gtype;
     fu_quirks_lookup_by_id_iter;
     fu_udev_device_get_fd;
     fu_udev_device_ioctl;
@@ -780,6 +779,7 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_firmware_set_size;
     fu_firmware_write_chunk;
     fu_ihex_firmware_set_padding_value;
+    fu_plugin_add_device_gtype;
     fu_plugin_get_context;
     fu_udev_device_get_siblings_with_subsystem;
     fu_xmlb_builder_insert_kb;
