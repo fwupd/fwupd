@@ -64,6 +64,11 @@ jobs:
     runs-on: macos-latest
     name: Build fwupd from FreeBSD ports
     steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Find tag
+      id: tagger
+      uses: jimschubert/query-tag-action@v1
     - name: Build
       id: test
       uses: vmactions/freebsd-vm@v0.1.2
@@ -87,6 +92,8 @@ jobs:
           sed -i .old "s/#GH_TAGNAME=.*$/GH_TAGNAME=\t${GITHUB_SHA}/" Makefile
           sed -i .old "s/GH_ACCOUNT=.*$/GH_ACCOUNT=\t${GITHUB_REPOSITORY_OWNER}/" Makefile
           sed -i .old "s/GH_PROJECT=.*$/GH_PROJECT=\t${REPOSITORY_NAME}/" Makefile
+          sed -i .old "s/DISTVERSION=.*$/DISTVERSION=${{steps.tagger.outputs.tag}}/" Makefile
+          cat Makefile
           make makesum
           make package
           make install
