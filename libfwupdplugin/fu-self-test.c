@@ -13,6 +13,7 @@
 #include <libgcab.h>
 #include <glib/gstdio.h>
 
+#include "fu-cabinet.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
@@ -828,6 +829,33 @@ _build_cab (GCabCompression compression, ...)
 	g_assert_no_error (error);
 	g_assert (ret);
 	return g_memory_output_stream_steal_as_bytes (G_MEMORY_OUTPUT_STREAM (op));
+}
+
+static void
+fu_common_cabinet_func (void)
+{
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new ();
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) jcat_blob1 = g_bytes_new_static ("hello", 6);
+	g_autoptr(GBytes) jcat_blob2 = g_bytes_new_static ("hellX", 6);
+	g_autoptr(GError) error = NULL;
+
+	/* add */
+	fu_cabinet_add_file (cabinet, "firmware.jcat", jcat_blob1);
+
+	/* replace */
+	fu_cabinet_add_file (cabinet, "firmware.jcat", jcat_blob2);
+
+	/* get data */
+	blob = fu_cabinet_get_file (cabinet, "firmware.jcat", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (blob);
+	g_assert_cmpstr (g_bytes_get_data (blob, NULL), ==, "hellX");
+
+	/* get data that does not exist */
+	blob = fu_cabinet_get_file (cabinet, "foo.jcat", &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
+	g_assert_null (blob);
 }
 
 static void
@@ -2695,6 +2723,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/common{vercmp}", fu_common_vercmp_func);
 	g_test_add_func ("/fwupd/common{strstrip}", fu_common_strstrip_func);
 	g_test_add_func ("/fwupd/common{endian}", fu_common_endian_func);
+	g_test_add_func ("/fwupd/common{cabinet}", fu_common_cabinet_func);
 	g_test_add_func ("/fwupd/common{cab-success}", fu_common_store_cab_func);
 	g_test_add_func ("/fwupd/common{cab-success-unsigned}", fu_common_store_cab_unsigned_func);
 	g_test_add_func ("/fwupd/common{cab-success-folder}", fu_common_store_cab_folder_func);

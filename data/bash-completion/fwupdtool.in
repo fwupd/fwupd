@@ -9,6 +9,7 @@ _fwupdtool_cmd_list=(
 	'firmware-export'
 	'firmware-extract'
 	'firmware-parse'
+	'firmware-sign'
 	'get-updates'
 	'get-upgrades'
 	'get-details'

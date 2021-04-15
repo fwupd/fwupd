@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <jcat.h>
 
+#include "fu-cabinet.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
@@ -844,6 +845,53 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* success */
 	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
+}
+
+static gboolean
+fu_util_firmware_sign (FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new ();
+	g_autoptr(GBytes) archive_blob_new = NULL;
+	g_autoptr(GBytes) archive_blob_old = NULL;
+	g_autoptr(GBytes) cert = NULL;
+	g_autoptr(GBytes) privkey = NULL;
+
+	/* invalid args */
+	if (g_strv_length (values) != 3) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_ARGS,
+				     "Invalid arguments, expected firmware.cab "
+				     "certificate.pem privatekey.pfx");
+		return FALSE;
+	}
+
+	/* load arguments */
+	archive_blob_old = fu_common_get_contents_bytes (values[0], error);
+	if (archive_blob_old == NULL)
+		return FALSE;
+	cert = fu_common_get_contents_bytes (values[1], error);
+	if (cert == NULL)
+		return FALSE;
+	privkey = fu_common_get_contents_bytes (values[2], error);
+	if (privkey == NULL)
+		return FALSE;
+
+	/* load, sign, export */
+	if (!fu_cabinet_parse (cabinet, archive_blob_old,
+			       FU_CABINET_PARSE_FLAG_NONE,
+			       error))
+		return FALSE;
+	if (!fu_cabinet_sign (cabinet, cert, privkey,
+			      FU_CABINET_SIGN_FLAG_NONE,
+			      error))
+		return FALSE;
+	archive_blob_new = fu_cabinet_export (cabinet,
+					      FU_CABINET_EXPORT_FLAG_NONE,
+					      error);
+	if (archive_blob_new == NULL)
+		return FALSE;
+	return fu_common_set_contents_bytes (values[0], archive_blob_new, error);
 }
 
 static gboolean
@@ -3105,6 +3153,13 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Update the stored metadata with current contents"),
 		     fu_util_verify_update);
+	fu_util_cmd_array_add (cmd_array,
+		     "firmware-sign",
+		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+		     _("FILENAME CERTIFICATE PRIVATE-KEY"),
+		     /* TRANSLATORS: command description */
+		     _("Sign a firmware with a new key"),
+		     fu_util_firmware_sign);
 	fu_util_cmd_array_add (cmd_array,
 		     "firmware-dump",
 		     /* TRANSLATORS: command argument: uppercase, spaces->dashes */

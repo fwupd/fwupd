@@ -716,6 +716,10 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_byte_array_align_up;
     fu_byte_array_set_size_full;
     fu_bytes_get_data_safe;
+    fu_cabinet_add_file;
+    fu_cabinet_export;
+    fu_cabinet_get_file;
+    fu_cabinet_sign;
     fu_common_align_up;
     fu_context_add_compile_version;
     fu_context_add_firmware_gtype;
