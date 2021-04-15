@@ -356,6 +356,7 @@ fu_context_add_firmware_gtype (FuContext *self, const gchar *id, GType gtype)
 	g_return_if_fail (FU_IS_CONTEXT (self));
 	g_return_if_fail (id != NULL);
 	g_return_if_fail (gtype != G_TYPE_INVALID);
+	g_type_ensure (gtype);
 	g_hash_table_insert (priv->firmware_gtypes, g_strdup (id), GSIZE_TO_POINTER (gtype));
 }
 
