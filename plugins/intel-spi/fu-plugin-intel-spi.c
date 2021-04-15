@@ -34,7 +34,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_context_add_quirk_key (ctx, "IntelSpiBar");
 	fu_context_add_quirk_key (ctx, "IntelSpiBarProxy");
 	fu_context_add_quirk_key (ctx, "IntelSpiBiosCntl");
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_INTEL_SPI_DEVICE);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_INTEL_SPI_DEVICE);
 }
 
 gboolean

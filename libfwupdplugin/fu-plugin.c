@@ -43,7 +43,7 @@ typedef struct {
 	GHashTable		*runtime_versions;
 	GHashTable		*compile_versions;
 	FuContext		*ctx;
-	GType			 device_gtype;
+	GArray			*device_gtypes;		/* (nullable): of #GType */
 	GHashTable		*cache;			/* (nullable): platform_id:GObject */
 	GRWLock			 cache_mutex;
 	GHashTable		*report_metadata;	/* (nullable): key:value */
@@ -1238,24 +1238,31 @@ fu_plugin_runner_add_security_attrs (FuPlugin *self, FuSecurityAttrs *attrs)
 }
 
 /**
- * fu_plugin_set_device_gtype:
+ * fu_plugin_add_device_gtype:
  * @self: a #FuPlugin
  * @device_gtype: a #GType `FU_TYPE_DEVICE`
  *
- * Sets the device #GType which is used when creating devices.
+ * Adds the device #GType which is used when creating devices.
  *
  * If this method is used then fu_plugin_backend_device_added() is not called, and
  * instead the object is created in the daemon for the plugin.
  *
  * Plugins can use this method only in fu_plugin_init()
  *
- * Since: 1.3.3
+ * Since: 1.6.0
  **/
 void
-fu_plugin_set_device_gtype (FuPlugin *self, GType device_gtype)
+fu_plugin_add_device_gtype (FuPlugin *self, GType device_gtype)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
-	priv->device_gtype = device_gtype;
+
+	/* create as required */
+	if (priv->device_gtypes == NULL)
+		priv->device_gtypes = g_array_new (FALSE, FALSE, sizeof(GType));
+
+	/* ensure (to allow quirks to use it) then add */
+	g_type_ensure (device_gtype);
+	g_array_append_val (priv->device_gtypes, device_gtype);
 }
 
 static gchar *
@@ -1327,8 +1334,16 @@ fu_plugin_backend_device_added (FuPlugin *self, FuDevice *device, GError **error
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* fall back to plugin default */
-	if (device_gtype == G_TYPE_INVALID)
-		device_gtype = priv->device_gtype;
+	if (device_gtype == G_TYPE_INVALID) {
+		if (priv->device_gtypes->len > 1) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "too many GTypes to choose a default");
+			return FALSE;
+		}
+		device_gtype = g_array_index (priv->device_gtypes, GType, 0);
+	}
 
 	/* create new device and incorporate existing properties */
 	dev = g_object_new (device_gtype, NULL);
@@ -1392,7 +1407,7 @@ fu_plugin_runner_backend_device_added (FuPlugin *self, FuDevice *device, GError 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_backend_device_added", (gpointer *) &func);
 	if (func == NULL) {
-		if (priv->device_gtype != G_TYPE_INVALID ||
+		if (priv->device_gtypes != NULL ||
 		    fu_device_get_specialized_gtype (device) != G_TYPE_INVALID) {
 			return fu_plugin_backend_device_added (self, device, error);
 		}
@@ -2308,6 +2323,8 @@ fu_plugin_finalize (GObject *object)
 		g_hash_table_unref (priv->report_metadata);
 	if (priv->cache != NULL)
 		g_hash_table_unref (priv->cache);
+	if (priv->device_gtypes != NULL)
+		g_array_unref (priv->device_gtypes);
 	g_free (priv->build_hash);
 	g_free (priv->data);
 	/* Must happen as the last step to avoid prematurely

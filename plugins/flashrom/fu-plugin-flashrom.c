@@ -41,7 +41,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_CONFLICTS, "coreboot"); /* obsoleted */
 	fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_FLASHROM_LSPCON_I2C_SPI_DEVICE);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_FLASHROM_LSPCON_I2C_SPI_DEVICE);
 	fu_context_add_udev_subsystem (ctx, "i2c");
 	fu_context_add_quirk_key (ctx, "FlashromProgrammer");
 }

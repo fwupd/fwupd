@@ -1,6 +1,7 @@
 # RTS5423
 [USB\VID_0BDA&PID_1100]
 Plugin = rts54hid
+GType = FuRts54HidDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x40000
 Children = FuRts54HidModule|USB\VID_0BDA&PID_1100&I2C_01

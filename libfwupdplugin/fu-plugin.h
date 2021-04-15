@@ -106,7 +106,7 @@ void		 fu_plugin_device_remove		(FuPlugin	*self,
 							 FuDevice	*device);
 void		 fu_plugin_device_register		(FuPlugin	*self,
 							 FuDevice	*device);
-void		 fu_plugin_set_device_gtype		(FuPlugin	*self,
+void		 fu_plugin_add_device_gtype		(FuPlugin	*self,
 							 GType		 device_gtype);
 void		 fu_plugin_add_firmware_gtype		(FuPlugin	*self,
 							 const gchar	*id,

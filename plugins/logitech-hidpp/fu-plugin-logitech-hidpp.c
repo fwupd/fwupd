@@ -37,10 +37,8 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_context_add_udev_subsystem (ctx, "hidraw");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_CONFLICTS, "unifying");
-
-	/* register the custom types */
-	g_type_ensure (FU_TYPE_UNIFYING_BOOTLOADER_NORDIC);
-	g_type_ensure (FU_TYPE_UNIFYING_BOOTLOADER_TEXAS);
-	g_type_ensure (FU_TYPE_UNIFYING_PERIPHERAL);
-	g_type_ensure (FU_TYPE_UNIFYING_RUNTIME);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_UNIFYING_BOOTLOADER_NORDIC);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_UNIFYING_BOOTLOADER_TEXAS);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_UNIFYING_PERIPHERAL);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_UNIFYING_RUNTIME);
 }

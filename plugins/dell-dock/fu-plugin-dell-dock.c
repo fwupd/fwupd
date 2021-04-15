@@ -38,8 +38,8 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_context_add_quirk_key (ctx, "DellDockVersionLowest");
 
 	/* allow these to be built by quirks */
-	g_type_ensure (FU_TYPE_DELL_DOCK_STATUS);
-	g_type_ensure (FU_TYPE_DELL_DOCK_MST);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_DELL_DOCK_STATUS);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_DELL_DOCK_MST);
 
 	/* currently slower performance, but more reliable in corner cases */
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_BETTER_THAN, "synaptics_mst");

@@ -22,7 +22,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_context_add_udev_subsystem (ctx, "tpm");
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_TPM_DEVICE);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_TPM_DEVICE);
 }
 
 void

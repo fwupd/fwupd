@@ -37,6 +37,6 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_context_add_quirk_key (ctx, "ElantpI2cTargetAddress");
 	fu_context_add_quirk_key (ctx, "ElantpIapPassword");
 	fu_context_add_quirk_key (ctx, "ElantpIcPageCount");
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_ELANTP_I2C_DEVICE);
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_ELANTP_HID_DEVICE);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_ELANTP_I2C_DEVICE);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_ELANTP_HID_DEVICE);
 }
