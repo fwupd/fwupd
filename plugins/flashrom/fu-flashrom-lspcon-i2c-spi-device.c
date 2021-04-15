@@ -11,12 +11,13 @@
 
 #include <libflashrom.h>
 
+#define I2C_PATH_REGEX "/i2c-([0-9]+)/"
 #define HID_LENGTH 8
 #define DEVICE_GUID_FORMAT "FLASHROM-LSPCON-I2C-SPI\\VEN_%s&DEV_%s"
 
 struct _FuFlashromLspconI2cSpiDevice {
 	FuFlashromDevice	  parent_instance;
-	gchar			 *bus_path;
+	gint			  bus_number;
 	guint8			  active_partition;
 };
 
@@ -48,15 +49,6 @@ static struct flashrom_layout layout = {
 	.entries = entries, .num_entries = sizeof(entries) / sizeof(entries[0])
 };
 
-static void
-fu_flashrom_lspcon_i2c_spi_device_finalize(GObject *object)
-{
-	FuFlashromLspconI2cSpiDevice *self =
-		FU_FLASHROM_LSPCON_I2C_SPI_DEVICE (object);
-
-	g_free (self->bus_path);
-	G_OBJECT_CLASS (fu_flashrom_lspcon_i2c_spi_device_parent_class)->finalize (object);
-}
 
 static void
 fu_flashrom_lspcon_i2c_spi_device_init (FuFlashromLspconI2cSpiDevice *self)
@@ -72,7 +64,9 @@ fu_flashrom_lspcon_i2c_spi_device_probe (FuDevice *device, GError **error)
 	FuFlashromDevice *flashrom_device = FU_FLASHROM_DEVICE (device);
 	FuDeviceClass *klass =
 		FU_DEVICE_CLASS (fu_flashrom_lspcon_i2c_spi_device_parent_class);
-	g_autoptr(GPtrArray) sibling_buses = NULL;
+	g_autoptr(GRegex) regex = NULL;
+	g_autoptr(GMatchInfo) info = NULL;
+	const gchar *path = NULL;
 
 	/* FuFlashromDevice->probe */
 	if (!klass->probe (device, error))
@@ -87,35 +81,15 @@ fu_flashrom_lspcon_i2c_spi_device_probe (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* locate an I2C bus that is a sibling of this device, assumed to be
-	 * the bus the device is connected to */
-	sibling_buses = fu_udev_device_get_siblings_with_subsystem (FU_UDEV_DEVICE (self), "i2c-dev");
-	for (guint i = 0; i < sibling_buses->len; i++) {
-		FuUdevDevice *bus_device = g_ptr_array_index (sibling_buses, i);
-		const gchar *bus_path = fu_udev_device_get_device_file (bus_device);
-
-		if (bus_path == NULL) {
-			g_info ("ignoring bus %s with no device file",
-			        fu_udev_device_get_sysfs_path (bus_device));
-			continue;
-		}
-
-		self->bus_path = g_strdup (bus_path);
-		/* if there are other buses, ignore them (because we already
-		 * have one) but note they exist */
-		if (i < (sibling_buses->len - 1))
-			g_debug ("%u additional buses found but ignored",
-				 sibling_buses->len - i - 1);
-		break;
+	/* get bus number out of sysfs path */
+	path = fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device));
+	regex = g_regex_new (I2C_PATH_REGEX, 0, 0, error);
+	if (regex && g_regex_match_full (regex, path, -1, 0, 0, &info, error)) {
+		self->bus_number = g_ascii_strtoll ( g_match_info_fetch (info, 1),
+					       NULL, 10);
+		return TRUE;
 	}
-
-	if (self->bus_path == NULL) {
-		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND,
-			     "Failed to identify I2C bus corresponding to %s",
-			     fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (self)));
-		return FALSE;
-	}
-	return TRUE;
+	return FALSE;
 }
 
 static gboolean
@@ -129,7 +103,7 @@ fu_flashrom_lspcon_i2c_spi_device_open (FuDevice *device,
 	g_autofree gchar *temp = NULL;
 
 	/* flashrom_programmer_init() mutates the programmer_args string. */
-	temp = g_strdup_printf ("devpath=%s", self->bus_path);
+	temp = g_strdup_printf ("bus=%d", self->bus_number);
 	fu_flashrom_device_set_programmer_args (flashrom_device, temp);
 
 	return klass->open (device, error);
@@ -304,10 +278,7 @@ fu_flashrom_lspcon_i2c_spi_device_write_firmware (FuDevice *device,
 static void
 fu_flashrom_lspcon_i2c_spi_device_class_init (FuFlashromLspconI2cSpiDeviceClass *klass)
 {
-	GObjectClass *klass_object = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-
-	klass_object->finalize = fu_flashrom_lspcon_i2c_spi_device_finalize;
 	klass_device->probe = fu_flashrom_lspcon_i2c_spi_device_probe;
 	klass_device->open = fu_flashrom_lspcon_i2c_spi_device_open;
 	klass_device->setup = fu_flashrom_lspcon_i2c_spi_device_setup;
