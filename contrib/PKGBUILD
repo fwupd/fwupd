@@ -30,11 +30,7 @@ build() {
     arch-meson -D b_lto=false $CI ../build \
         -Dplugin_intel_spi=true \
         -Dlzma=true \
-        -Defi_sbat_distro_id="arch" \
-        -Defi_sbat_distro_summary="Arch Linux" \
-        -Defi_sbat_distro_pkgname="${pkgname}" \
-        -Defi_sbat_distro_version="${pkgver}" \
-        -Defi_sbat_distro_url="https://archlinux.org/packages/community/x86_64/${pkgname}/" \
+        -Defi_binary=false \
         -Dsupported_build=true
 
     ninja -v -C ../build

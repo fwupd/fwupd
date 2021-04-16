@@ -368,29 +368,23 @@ endif
 
 if build_standalone and get_option('plugin_uefi_capsule')
   efiboot = dependency('efiboot')
-  objcopy = find_program ('objcopy')
-  genpeimg = find_program ('genpeimg', required: false)
-
-  efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
-  conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
 
   if host_cpu == 'x86'
           EFI_MACHINE_TYPE_NAME = 'ia32'
-          gnu_efi_arch = 'ia32'
   elif host_cpu == 'x86_64'
           EFI_MACHINE_TYPE_NAME = 'x64'
-          gnu_efi_arch = 'x86_64'
   elif host_cpu == 'arm'
           EFI_MACHINE_TYPE_NAME = 'arm'
-          gnu_efi_arch = 'arm'
   elif host_cpu == 'aarch64'
           EFI_MACHINE_TYPE_NAME = 'aa64'
-          gnu_efi_arch = 'aarch64'
   else
           EFI_MACHINE_TYPE_NAME = ''
-          gnu_efi_arch = ''
   endif
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
+
+  if get_option('efi_binary')
+    efi_binary = dependency ('fwupd-efi', fallback: ['fwupd-efi', 'fwupd_efi_dep'])
+  endif
 
   if get_option('plugin_uefi_capsule_splash')
     r = run_command([python3, 'po/test-deps'])
