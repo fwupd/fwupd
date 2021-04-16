@@ -459,6 +459,10 @@ fu_wac_device_write_firmware (FuDevice *device,
 	g_autoptr(FuFirmware) img = NULL;
 	g_autoptr(GHashTable) fd_blobs = NULL;
 
+	/* get current selected device */
+	if (!fu_wac_device_ensure_firmware_index (self, error))
+		return FALSE;
+
 	/* use the correct image from the firmware */
 	img = fu_firmware_get_image_by_idx (firmware, self->firmware_index == 1 ? 1 : 0, error);
 	if (img == NULL)
@@ -467,10 +471,6 @@ fu_wac_device_write_firmware (FuDevice *device,
 
 	/* enter flash mode */
 	if (!fu_wac_device_switch_to_flash_loader (self, error))
-		return FALSE;
-
-	/* get current selected device */
-	if (!fu_wac_device_ensure_firmware_index (self, error))
 		return FALSE;
 
 	/* get firmware parameters (page sz and transfer sz) */
@@ -569,6 +569,15 @@ fu_wac_device_write_firmware (FuDevice *device,
 
 		/* update device progress */
 		fu_device_set_progress_full (device, blocks_done++, blocks_total);
+	}
+
+	/* check at least one block was written */
+	if (blocks_done == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "empty firmware image or all blocks write-protected");
+		return FALSE;
 	}
 
 	/* calculate CRC inside device */
