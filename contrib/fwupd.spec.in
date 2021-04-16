@@ -94,9 +94,7 @@ BuildRequires: cairo-devel cairo-gobject-devel
 BuildRequires: freetype
 BuildRequires: fontconfig
 BuildRequires: google-noto-sans-cjk-ttc-fonts
-BuildRequires: gnu-efi-devel
 BuildRequires: tpm2-tss-devel >= 2.2.3
-BuildRequires: pesign
 %endif
 
 %if 0%{?have_dell}
@@ -249,12 +247,8 @@ fwupd wrapper for Qubes OS
 %if 0%{?have_uefi}
     -Dplugin_uefi_capsule=true \
     -Dplugin_uefi_pk=true \
-    -Defi_sbat_distro_id="fedora" \
-    -Defi_sbat_distro_summary="The Fedora Project" \
-    -Defi_sbat_distro_pkgname="%{name}" \
-    -Defi_sbat_distro_version="%{version}" \
-    -Defi_sbat_distro_url="https://src.fedoraproject.org/rpms/%{name}" \
     -Dplugin_tpm=true \
+    -Defi_binary=false \
 %else
     -Dplugin_uefi_capsule=false \
     -Dplugin_uefi_pk=false \
@@ -291,21 +285,6 @@ fwupd wrapper for Qubes OS
 
 %install
 %meson_install
-
-# sign fwupd.efi loader
-%if 0%{?have_uefi}
-%ifarch x86_64
-%global efiarch x64
-%endif
-%ifarch aarch64
-%global efiarch aa64
-%endif
-%global fwup_efi_fn $RPM_BUILD_ROOT%{_libexecdir}/fwupd/efi/fwupd%{efiarch}.efi
-%pesign -s -i %{fwup_efi_fn} -o %{fwup_efi_fn}.tmp
-%define __pesign_client_cert fwupd-signer
-%pesign -s -i %{fwup_efi_fn}.tmp -o %{fwup_efi_fn}.signed
-rm -vf %{fwup_efi_fn}.tmp
-%endif
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
@@ -348,8 +327,6 @@ done
 %endif
 %{_libexecdir}/fwupd/fwupdoffline
 %if 0%{?have_uefi}
-%{_libexecdir}/fwupd/efi/*.efi
-%{_libexecdir}/fwupd/efi/*.efi.signed
 %{_bindir}/fwupdate
 %{_bindir}/fwupdtpmevlog
 %endif

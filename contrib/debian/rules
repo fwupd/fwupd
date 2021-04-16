@@ -16,29 +16,14 @@ ifneq ($(CI),)
 	CONFARGS += --werror --wrap-mode=default
 endif
 
-SB_STYLE := debian
-deb_version := $(shell dpkg-parsechangelog --show-field Version)
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
-	SB_STYLE := ubuntu
-	tar_name := fwupd_$(deb_version)_$(DEB_HOST_ARCH).tar.gz
 	CONFARGS += -Dplugin_flashrom=false
-	CONFARGS += -Defi_sbat_distro_id=ubuntu
-	CONFARGS += -Defi_sbat_distro_summary=Ubuntu
-	CONFARGS += -Defi_sbat_distro_pkgname=fwupd
-	CONFARGS += -Defi_sbat_distro_version=$(deb_version)
-	CONFARGS += -Defi_sbat_distro_url="https://launchpad.net/ubuntu/+source/fwupd"
 else
-	TMPLDIR  := debian/fwupd-$(DEB_HOST_ARCH)-signed-template/usr/share/code-signing/fwupd-$(DEB_HOST_ARCH)-signed-template
 	ifneq ($(DEB_HOST_ARCH_CPU),ia64)
 		CONFARGS += -Dplugin_flashrom=true
 	else
 		CONFARGS += -Dplugin_flashrom=false
 	endif
-	CONFARGS += -Defi_sbat_distro_id=debian
-	CONFARGS += -Defi_sbat_distro_summary=Debian
-	CONFARGS += -Defi_sbat_distro_pkgname=fwupd
-	CONFARGS += -Defi_sbat_distro_version=$(deb_version)
-	CONFARGS += -Defi_sbat_distro_url="https://tracker.debian.org/pkg/fwupd"
 endif
 
 ifeq (yes,$(shell pkg-config --exists libsmbios_c && echo yes))
@@ -48,7 +33,7 @@ else
 endif
 
 ifeq (yes,$(shell pkg-config --exists efivar && echo yes))
-	CONFARGS += -Dplugin_uefi_capsule=true
+	CONFARGS += -Dplugin_uefi_capsule=true -Defi_binary=false
 else
 	CONFARGS += -Dplugin_uefi_capsule=false
 endif
@@ -71,9 +56,6 @@ CONFARGS += -Dplugin_dummy=true -Dgtkdoc=true -Dsupported_build=true
 override_dh_auto_clean:
 	rm -fr obj-*
 	rm -fr debian/build
-ifeq (ubuntu,$(SB_STYLE))
-	rm -rf debian/fwupd-images
-endif
 
 override_dh_auto_configure:
 	dh_auto_configure -- $(CONFARGS)
@@ -82,8 +64,6 @@ override_dh_install:
 	find debian/tmp/usr -type f -name "*a" -print | xargs rm -f
 	sed -i 's,wheel,sudo,' debian/tmp/usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
 	dh_install
-	#install the EFI binaries if needed
-	[ ! -d debian/tmp/usr/libexec/fwupd/efi/ ] || dh_install -pfwupd usr/libexec/fwupd/efi
 	#install MSR conf if needed (depending on distro)
 	[ ! -d debian/tmp/usr/lib/modules-load.d ] || dh_install -pfwupd usr/lib/modules-load.d
 	[ ! -d debian/tmp/lib/modules-load.d ] || dh_install -pfwupd lib/modules-load.d
@@ -95,23 +75,6 @@ override_dh_install:
 	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-3/libfu_plugin_invalid.so
 	rm -f debian/fwupd/etc/fwupd/remotes.d/fwupd-tests.conf
 
-ifeq (debian,$(SB_STYLE))
-	# Generate the template source for the Debian signing service to use
-	mkdir -p $(TMPLDIR)/source-template/debian
-	cp -a debian/signing-template/* $(TMPLDIR)/source-template/debian
-	cp debian/README.Debian $(TMPLDIR)/source-template/debian
-	find $(TMPLDIR)/source-template/debian -type f | xargs sed -i "s,SIGNARCH,$(DEB_HOST_ARCH),"
-	find $(TMPLDIR)/source-template/debian -type f | xargs sed -i "s,SIGNVERSION,$(deb_version),"
-	set -e; for file in $$(find $(TMPLDIR)/source-template/debian -type f -name '*SIGNARCH*'); do \
-		file1=$$(echo $$file | sed "s,SIGNARCH,$(DEB_HOST_ARCH),"); \
-		mv -v $$file $$file1; \
-	done
-	install -m 0755 debian/fwupd.postinst $(TMPLDIR)/source-template/debian/fwupd-$(DEB_HOST_ARCH)-signed.postinst
-	install -m 0755 debian/fwupd.postrm $(TMPLDIR)/source-template/debian/fwupd-$(DEB_HOST_ARCH)-signed.postrm
-	debian/gen_signing_changelog $(TMPLDIR)/source-template/debian fwupd $(DEB_HOST_ARCH)
-	debian/gen_signing_json $(TMPLDIR) fwupd ${DEB_HOST_ARCH}
-endif
-
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xfirmware-example.xml.gz
 
@@ -122,12 +85,3 @@ endif
 
 override_dh_builddeb:
 	dh_builddeb
-ifeq (ubuntu,$(SB_STYLE))
-	set -e; if [ -d debian/tmp/usr/libexec/fwupd/efi/ ]; then \
-		mkdir -p debian/fwupd-images/$(deb_version); \
-		cp debian/tmp/usr/libexec/fwupd/efi/fwupd*.efi debian/fwupd-images/$(deb_version); \
-		echo $(deb_version) > debian/fwupd-images/$(deb_version)/version; \
-		tar -C debian/fwupd-images -czvf ../$(tar_name) .; \
-		dpkg-distaddfile $(tar_name) raw-uefi -; \
-	fi
-endif

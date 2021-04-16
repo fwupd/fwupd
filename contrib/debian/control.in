@@ -52,6 +52,7 @@ Recommends: python3,
 	    dbus,
 	    secureboot-db,
 	    udisks2,
+	    fwupd-unsigned,
 	    fwupd-signed
 Suggests: gir1.2-fwupd-2.0
 Provides: fwupdate
@@ -187,31 +188,3 @@ Description: GObject introspection data for libfwupdplugin
  .
  It can be used by packages using the GIRepository format to generate
  dynamic bindings.
-
-Package: fwupd-amd64-signed-template
-Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, make | build-essential | dpkg-dev
-Description: Template for signed fwupd package
- This package is used to control code signing by the Debian signing
- service.
-
-Package: fwupd-i386-signed-template
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, make | build-essential | dpkg-dev
-Description: Template for signed fwupd package
- This package is used to control code signing by the Debian signing
- service.
-
-Package: fwupd-armhf-signed-template
-Architecture: armhf
-Depends: ${shlibs:Depends}, ${misc:Depends}, make | build-essential | dpkg-dev
-Description: Template for signed fwupd package
- This package is used to control code signing by the Debian signing
- service.
-
-Package: fwupd-arm64-signed-template
-Architecture: arm64
-Depends: ${shlibs:Depends}, ${misc:Depends}, make | build-essential | dpkg-dev
-Description: Template for signed fwupd package
- This package is used to control code signing by the Debian signing
- service.
