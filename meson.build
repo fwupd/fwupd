@@ -443,7 +443,7 @@ if build_standalone and get_option('plugin_thunderbolt')
   conf.set('HAVE_THUNDERBOLT', '1')
 endif
 
-if build_standalone and get_option('plugin_flashrom')
+if build_standalone and (get_option('plugin_flashrom') or get_option('plugin_realtek_mst'))
   libflashrom = dependency('flashrom', fallback : ['flashrom', 'flashrom_dep'])
 endif
 

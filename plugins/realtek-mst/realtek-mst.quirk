@@ -1,0 +1,9 @@
+# match all devices with this udev subsystem
+[I2C]
+Plugin = realtek_mst
+
+[REALTEK-MST\Name_10EC2142:00]
+Name = RTD2142
+
+[REALTEK-MST\Name_10EC2142:00&Family_Google_Hatch]
+RealtekMstDpAuxName = DPDDC-C
