@@ -127,6 +127,14 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 						     idx, header_infos->len);
 					return FALSE;
 				}
+				if (idx - 1 != images_cnt) {
+					g_set_error (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INTERNAL,
+						     "headline %u is not in sorted order",
+						     idx);
+					return FALSE;
+				}
 				hdr = g_ptr_array_index (header_infos, idx - 1);
 				if (!fu_firmware_strparse_uint32_safe (lines[i],
 								       cmdlen,
