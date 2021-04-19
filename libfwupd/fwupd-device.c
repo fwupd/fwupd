@@ -162,7 +162,7 @@ fwupd_device_get_summary (FwupdDevice *device)
 /**
  * fwupd_device_set_summary:
  * @device: A #FwupdDevice
- * @summary: the device one line summary
+ * @summary: (nullable): the device one line summary
  *
  * Sets the device summary.
  *
@@ -203,7 +203,7 @@ fwupd_device_get_branch (FwupdDevice *device)
 /**
  * fwupd_device_set_branch:
  * @device: A #FwupdDevice
- * @branch: the device one line branch
+ * @branch: (nullable): the device one line branch
  *
  * Sets the current device branch.
  *
@@ -244,7 +244,7 @@ fwupd_device_get_serial (FwupdDevice *device)
 /**
  * fwupd_device_set_serial:
  * @device: A #FwupdDevice
- * @serial: the device serial number
+ * @serial: (nullable): the device serial number
  *
  * Sets the serial number for the device.
  *
@@ -285,7 +285,7 @@ fwupd_device_get_id (FwupdDevice *device)
 /**
  * fwupd_device_set_id:
  * @device: A #FwupdDevice
- * @id: the device ID, e.g. `USB:foo`
+ * @id: (nullable): the device ID, e.g. `USB:foo`
  *
  * Sets the ID.
  *
@@ -326,7 +326,7 @@ fwupd_device_get_parent_id (FwupdDevice *device)
 /**
  * fwupd_device_set_parent_id:
  * @device: A #FwupdDevice
- * @parent_id: the device ID, e.g. `USB:foo`
+ * @parent_id: (nullable): the device ID, e.g. `USB:foo`
  *
  * Sets the parent ID.
  *
@@ -653,7 +653,7 @@ fwupd_device_get_name (FwupdDevice *device)
 /**
  * fwupd_device_set_name:
  * @device: A #FwupdDevice
- * @name: the device name, e.g. `ColorHug2`
+ * @name: (nullable): the device name, e.g. `ColorHug2`
  *
  * Sets the device name.
  *
@@ -694,7 +694,7 @@ fwupd_device_get_vendor (FwupdDevice *device)
 /**
  * fwupd_device_set_vendor:
  * @device: A #FwupdDevice
- * @vendor: the description
+ * @vendor: (nullable): the description
  *
  * Sets the device vendor.
  *
@@ -857,7 +857,7 @@ fwupd_device_get_description (FwupdDevice *device)
 /**
  * fwupd_device_set_description:
  * @device: A #FwupdDevice
- * @description: the description in AppStream markup format
+ * @description: (nullable): the description in AppStream markup format
  *
  * Sets the device description.
  *
@@ -898,7 +898,7 @@ fwupd_device_get_version (FwupdDevice *device)
 /**
  * fwupd_device_set_version:
  * @device: A #FwupdDevice
- * @version: the device version, e.g. `1.2.3`
+ * @version: (nullable): the device version, e.g. `1.2.3`
  *
  * Sets the device version.
  *
@@ -939,7 +939,7 @@ fwupd_device_get_version_lowest (FwupdDevice *device)
 /**
  * fwupd_device_set_version_lowest:
  * @device: A #FwupdDevice
- * @version_lowest: the description
+ * @version_lowest: (nullable): the version
  *
  * Sets the lowest version of firmware the device will accept.
  *
@@ -1015,7 +1015,7 @@ fwupd_device_get_version_bootloader (FwupdDevice *device)
 /**
  * fwupd_device_set_version_bootloader:
  * @device: A #FwupdDevice
- * @version_bootloader: the description
+ * @version_bootloader: (nullable): the version
  *
  * Sets the bootloader version.
  *
@@ -1161,7 +1161,7 @@ fwupd_device_get_plugin (FwupdDevice *device)
 /**
  * fwupd_device_set_plugin:
  * @device: A #FwupdDevice
- * @plugin: the plugin name, e.g. `colorhug`
+ * @plugin: (nullable): the plugin name, e.g. `colorhug`
  *
  * Sets the plugin that created the device.
  *
@@ -2159,7 +2159,7 @@ fwupd_device_get_update_message (FwupdDevice *device)
 /**
  * fwupd_device_set_update_message:
  * @device: A #FwupdDevice
- * @update_message: the update message string
+ * @update_message: (nullable): the update message string
  *
  * Sets the update message.
  *
@@ -2200,7 +2200,7 @@ fwupd_device_get_update_image (FwupdDevice *device)
 /**
  * fwupd_device_set_update_image:
  * @device: A #FwupdDevice
- * @update_image: the update image URL
+ * @update_image: (nullable): the update image URL
  *
  * Sets the update image.
  *
@@ -2241,7 +2241,7 @@ fwupd_device_get_update_error (FwupdDevice *device)
 /**
  * fwupd_device_set_update_error:
  * @device: A #FwupdDevice
- * @update_error: the update error string
+ * @update_error: (nullable): the update error string
  *
  * Sets the update error.
  *
