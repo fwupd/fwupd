@@ -122,3 +122,5 @@ gboolean	 fu_udev_device_write_sysfs		(FuUdevDevice	*self,
 const gchar	*fu_udev_device_get_devtype		(FuUdevDevice	*self);
 GPtrArray 	*fu_udev_device_get_siblings_with_subsystem (FuUdevDevice *self,
 							     const gchar *subsystem);
+GPtrArray 	*fu_udev_device_get_children_with_subsystem (FuUdevDevice *self,
+							     const gchar *subsystem);
