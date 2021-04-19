@@ -2811,6 +2811,7 @@ fu_util_lock (FuUtilPrivate *priv, GError **error)
 	}
 
 	/* write lock */
+#ifdef HAVE_OFD
 	if (fcntl (priv->lock_fd, F_OFD_SETLK, &lockp) < 0) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -2819,6 +2820,16 @@ fu_util_lock (FuUtilPrivate *priv, GError **error)
 			     lockfn);
 		return FALSE;
 	}
+#else
+	if (fcntl (priv->lock_fd, F_SETLK, &lockp) < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "another instance has locked %s",
+			     lockfn);
+		return FALSE;
+	}
+#endif
 
 	/* success */
 	g_debug ("locked %s", lockfn);
