@@ -1371,7 +1371,7 @@ fu_util_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_LEGACY_BIOS) {
 		/* TRANSLATORS: system is not booted in UEFI mode */
-		return _("Firmware can not be updated in legacy BIOS mode");
+		return _("UEFI firmware can not be updated in legacy BIOS mode");
 	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED) {
 		/* TRANSLATORS: capsule updates are an optional BIOS feature */
