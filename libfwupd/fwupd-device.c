@@ -464,6 +464,7 @@ fwupd_device_has_guid (FwupdDevice *device, const gchar *guid)
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 
 	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (guid != NULL, FALSE);
 
 	for (guint i = 0; i < priv->guids->len; i++) {
 		const gchar *guid_tmp = g_ptr_array_index (priv->guids, i);
@@ -487,6 +488,7 @@ fwupd_device_add_guid (FwupdDevice *device, const gchar *guid)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (guid != NULL);
 	if (fwupd_device_has_guid (device, guid))
 		return;
 	g_ptr_array_add (priv->guids, g_strdup (guid));
@@ -547,6 +549,7 @@ fwupd_device_has_instance_id (FwupdDevice *device, const gchar *instance_id)
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 
 	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (instance_id != NULL, FALSE);
 
 	for (guint i = 0; i < priv->instance_ids->len; i++) {
 		const gchar *instance_id_tmp = g_ptr_array_index (priv->instance_ids, i);
@@ -570,6 +573,7 @@ fwupd_device_add_instance_id (FwupdDevice *device, const gchar *instance_id)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (instance_id != NULL);
 	if (fwupd_device_has_instance_id (device, instance_id))
 		return;
 	g_ptr_array_add (priv->instance_ids, g_strdup (instance_id));
@@ -622,6 +626,7 @@ fwupd_device_add_icon (FwupdDevice *device, const gchar *icon)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (device);
 	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (icon != NULL);
 	if (fwupd_device_has_icon (device, icon))
 		return;
 	g_ptr_array_add (priv->icons, g_strdup (icon));

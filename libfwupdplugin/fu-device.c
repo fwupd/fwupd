@@ -1028,8 +1028,11 @@ fu_device_has_parent_guid (FuDevice *self, const gchar *guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new (&priv->parent_guids_mutex);
+
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (guid != NULL, FALSE);
 	g_return_val_if_fail (locker != NULL, FALSE);
+
 	for (guint i = 0; i < priv->parent_guids->len; i++) {
 		const gchar *guid_tmp = g_ptr_array_index (priv->parent_guids, i);
 		if (g_strcmp0 (guid_tmp, guid) == 0)
@@ -1460,6 +1463,10 @@ fu_device_add_instance_id_full (FuDevice *self,
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autofree gchar *guid = NULL;
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (instance_id != NULL);
+
 	if (fwupd_guid_is_valid (instance_id)) {
 		g_warning ("use fu_device_add_guid(\"%s\") instead!", instance_id);
 		fu_device_add_guid_safe (self, instance_id);
