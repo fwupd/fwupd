@@ -1874,7 +1874,7 @@ fu_device_set_version_format (FuDevice *self, FwupdVersionFormat fmt)
 /**
  * fu_device_set_version:
  * @self: A #FuDevice
- * @version: (allow-none): a string, e.g. `1.2.3`
+ * @version: (nullable): a string, e.g. `1.2.3`
  *
  * Sets the device version, sanitizing the string if required.
  *
@@ -1917,7 +1917,7 @@ fu_device_set_version (FuDevice *self, const gchar *version)
 /**
  * fu_device_set_version_lowest:
  * @self: A #FuDevice
- * @version: (allow-none): a string, e.g. `1.2.3`
+ * @version: (nullable): a string, e.g. `1.2.3`
  *
  * Sets the device lowest version, sanitizing the string if required.
  *
@@ -1960,7 +1960,7 @@ fu_device_set_version_lowest (FuDevice *self, const gchar *version)
 /**
  * fu_device_set_version_bootloader:
  * @self: A #FuDevice
- * @version: (allow-none): a string, e.g. `1.2.3`
+ * @version: (nullable): a string, e.g. `1.2.3`
  *
  * Sets the device bootloader version, sanitizing the string if required.
  *
@@ -2051,7 +2051,7 @@ fu_device_ensure_inhibits (FuDevice *self)
  * fu_device_inhibit:
  * @self: A #FuDevice
  * @inhibit_id: an ID used for uninhibiting, e.g. `low-power`
- * @reason: (allow-none): a string, e.g. `Cannot update as foo [bar] needs reboot`
+ * @reason: (nullable): a string, e.g. `Cannot update as foo [bar] needs reboot`
  *
  * Prevent the device from being updated, changing it from %FWUPD_DEVICE_FLAG_UPDATABLE
  * to %FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN if not already inhibited.
