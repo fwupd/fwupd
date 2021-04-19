@@ -1353,7 +1353,7 @@ fu_udev_device_close (FuDevice *device, GError **error)
  * @self: A #FuUdevDevice
  * @request: request number
  * @buf: A buffer to use, which *must* be large enough for the request
- * @rc: (out) (allow-none): the raw return value from the ioctl
+ * @rc: (out) (nullable): the raw return value from the ioctl
  * @error: A #GError, or %NULL
  *
  * Control a device using a low-level request.

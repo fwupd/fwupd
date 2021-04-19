@@ -917,7 +917,7 @@ fwupd_security_attr_array_from_variant (GVariant *value)
 
 /**
  * fwupd_security_attr_new:
- * @appstream_id: (allow-none): the AppStream component ID, e.g. `com.intel.BiosGuard`
+ * @appstream_id: (nullable): the AppStream component ID, e.g. `com.intel.BiosGuard`
  *
  * Creates a new self.
  *

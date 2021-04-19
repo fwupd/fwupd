@@ -2120,7 +2120,7 @@ fu_memdup_safe (const guint8 *src, gsize n, GError **error)
  * @buf: source buffer
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`
  * @offset: offset in bytes into @buf to copy from
- * @value: (out) (allow-none): the parsed value
+ * @value: (out) (nullable): the parsed value
  * @error: A #GError or %NULL
  *
  * Read a value from a buffer in a safe way.
@@ -2159,7 +2159,7 @@ fu_common_read_uint8_safe (const guint8 *buf,
  * @buf: source buffer
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`
  * @offset: offset in bytes into @buf to copy from
- * @value: (out) (allow-none): the parsed value
+ * @value: (out) (nullable): the parsed value
  * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  * @error: A #GError or %NULL
  *
@@ -2200,7 +2200,7 @@ fu_common_read_uint16_safe (const guint8 *buf,
  * @buf: source buffer
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`
  * @offset: offset in bytes into @buf to copy from
- * @value: (out) (allow-none): the parsed value
+ * @value: (out) (nullable): the parsed value
  * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  * @error: A #GError or %NULL
  *
@@ -2241,7 +2241,7 @@ fu_common_read_uint32_safe (const guint8 *buf,
  * @buf: source buffer
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`
  * @offset: offset in bytes into @buf to copy from
- * @value: (out) (allow-none): the parsed value
+ * @value: (out) (nullable): the parsed value
  * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
  * @error: A #GError or %NULL
  *
