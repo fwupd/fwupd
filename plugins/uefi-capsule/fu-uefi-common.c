@@ -227,7 +227,7 @@ fu_uefi_get_esp_path_for_os (FuDevice *device, const gchar *base)
 {
 #ifndef EFI_OS_DIR
 	const gchar *os_release_id = NULL;
-	const gchar *id_like_id = NULL;
+	const gchar *id_like = NULL;
 	g_autofree gchar *esp_path = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GHashTable) os_release = fwupd_get_os_release (&error_local);
@@ -244,12 +244,15 @@ fu_uefi_get_esp_path_for_os (FuDevice *device, const gchar *base)
 	if (g_file_test (esp_path, G_FILE_TEST_IS_DIR) || os_release == NULL)
 		return g_steal_pointer (&esp_path);
 	/* if ID key doesn't exist, try ID_LIKE */
-	id_like_id = g_hash_table_lookup (os_release, "ID_LIKE");
-	if (id_like_id != NULL) {
-		g_autofree gchar* id_like_path = g_build_filename (base, "EFI", id_like_id, NULL);
-		if (g_file_test (id_like_path, G_FILE_TEST_IS_DIR)) {
-			g_debug ("Using ID_LIKE key from os-release");
-			return g_steal_pointer (&id_like_path);
+	id_like = g_hash_table_lookup (os_release, "ID_LIKE");
+	if (id_like != NULL) {
+		g_auto(GStrv) split = g_strsplit (id_like, " ", -1);
+		for (guint i = 0; split[i] != NULL; i++) {
+			g_autofree gchar *id_like_path = g_build_filename (base, "EFI", split[i], NULL);
+			if (g_file_test (id_like_path, G_FILE_TEST_IS_DIR)) {
+				g_debug ("Using ID_LIKE key from os-release");
+				return g_steal_pointer (&id_like_path);
+			}
 		}
 	}
 	/* try to fallback to use UEFI removable path if ID_LIKE path doesn't exist */
