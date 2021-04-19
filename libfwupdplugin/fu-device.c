@@ -665,7 +665,7 @@ fu_device_get_equivalent_id (FuDevice *self)
 /**
  * fu_device_set_equivalent_id:
  * @self: A #FuDevice
- * @equivalent_id: A string
+ * @equivalent_id: (nullable): A string
  *
  * Sets any equivalent ID for a device
  *
@@ -707,7 +707,7 @@ fu_device_get_alternate_id (FuDevice *self)
 /**
  * fu_device_set_alternate_id:
  * @self: A #FuDevice
- * @alternate_id: Another #FuDevice
+ * @alternate_id: (nullable): Another #FuDevice ID
  *
  * Sets any alternate device ID. An alternate device may be linked to the primary
  * device in some way.
