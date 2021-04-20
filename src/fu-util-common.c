@@ -1136,12 +1136,12 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	GPtrArray *guids = fwupd_device_get_guids (dev);
 	GPtrArray *vendor_ids = fwupd_device_get_vendor_ids (dev);
 	GPtrArray *instance_ids = fwupd_device_get_instance_ids (dev);
-	GString *str = g_string_new (NULL);
 	const gchar *tmp;
 	const gchar *tmp2;
 	guint64 flags = fwupd_device_get_flags (dev);
 	guint64 modified = fwupd_device_get_modified (dev);
 	g_autoptr(GHashTable) ids = NULL;
+	g_autoptr(GString) str = g_string_new (NULL);
 
 	/* some fields are intentionally not included and are only shown in --verbose */
 	if (g_getenv ("FWUPD_VERBOSE") != NULL) {
@@ -1318,7 +1318,7 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		}
 	}
 
-	return g_string_free (str, FALSE);
+	return g_string_free (g_steal_pointer (&str), FALSE);
 }
 
 const gchar *
