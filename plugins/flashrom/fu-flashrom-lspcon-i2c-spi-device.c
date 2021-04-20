@@ -13,7 +13,6 @@
 
 #define I2C_PATH_REGEX "/i2c-([0-9]+)/"
 #define HID_LENGTH 8
-#define DEVICE_GUID_FORMAT "FLASHROM-LSPCON-I2C-SPI\\VEN_%s&DEV_%s"
 
 struct _FuFlashromLspconI2cSpiDevice {
 	FuFlashromDevice	  parent_instance;
@@ -165,8 +164,7 @@ fu_flashrom_lspcon_i2c_spi_device_setup (FuDevice *device, GError **error)
 	g_autofree gchar *vid = NULL;
 	g_autofree gchar *pid = NULL;
 	g_autofree gchar *vendor_id = NULL;
-	g_autofree gchar *temp = NULL;
-	g_autofree gchar *guid = NULL;
+	g_autofree gchar *instance_id = NULL;
 
 	hw_id = fu_udev_device_get_sysfs_attr (FU_UDEV_DEVICE (device), "name", error);
 	if (hw_id == NULL) {
@@ -181,10 +179,8 @@ fu_flashrom_lspcon_i2c_spi_device_setup (FuDevice *device, GError **error)
 	vendor_id = g_strdup_printf ("I2C:%s", vid);
 	fu_device_add_vendor_id (device, vendor_id);
 
-	temp = g_strdup_printf (DEVICE_GUID_FORMAT, vid, pid);
-	fu_device_add_instance_id (device, temp);
-	guid = fwupd_guid_hash_string (temp);
-	fu_device_add_guid (device, guid);
+	instance_id = g_strdup_printf ("FLASHROM-LSPCON-I2C-SPI\\VEN_%s&DEV_%s", vid, pid);
+	fu_device_add_instance_id (device, instance_id);
 
 	return fu_flashrom_lspcon_i2c_spi_device_set_version (device, error);
 }
