@@ -11,7 +11,6 @@
 #include <libflashrom.h>
 
 typedef struct {
-	FuFlashromDevice		 parent_instance;
 	gchar				*programmer_name;
 	gchar				*programmer_args;
 	gsize				 flash_size;
