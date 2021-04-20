@@ -118,8 +118,11 @@ fu_flashrom_device_probe (FuDevice *device, GError **error)
 	path = g_strdup_printf ("DEVNAME=%s",
 				fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
 	fu_device_set_physical_id (device, path);
-	dev_name = fu_udev_device_get_sysfs_attr (FU_UDEV_DEVICE (device), "name", error);
-	fu_device_add_instance_id_full (device, dev_name, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	dev_name = fu_udev_device_get_sysfs_attr (FU_UDEV_DEVICE (device), "name", NULL);
+	if (dev_name != NULL) {
+		fu_device_add_instance_id_full (device, dev_name,
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	}
 	return TRUE;
 }
 
