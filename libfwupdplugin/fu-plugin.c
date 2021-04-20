@@ -13,9 +13,6 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
-#ifdef HAVE_VALGRIND
-#include <valgrind.h>
-#endif /* HAVE_VALGRIND */
 
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
@@ -2954,14 +2951,6 @@ fu_plugin_finalize (GObject *object)
 		g_hash_table_unref (priv->cache);
 	g_free (priv->build_hash);
 	g_free (priv->data);
-	/* Must happen as the last step to avoid prematurely
-	 * freeing memory held by the plugin */
-#ifdef RUNNING_ON_VALGRIND
-	if (priv->module != NULL && RUNNING_ON_VALGRIND == 0)
-#else
-	if (priv->module != NULL)
-#endif
-		g_module_close (priv->module);
 
 	G_OBJECT_CLASS (fu_plugin_parent_class)->finalize (object);
 }
