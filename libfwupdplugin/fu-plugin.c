@@ -234,6 +234,7 @@ fu_plugin_cache_add (FuPlugin *self, const gchar *id, gpointer dev)
 	g_autoptr(GRWLockWriterLocker) locker = g_rw_lock_writer_locker_new (&priv->cache_mutex);
 	g_return_if_fail (FU_IS_PLUGIN (self));
 	g_return_if_fail (id != NULL);
+	g_return_if_fail (G_IS_OBJECT (dev));
 	g_return_if_fail (locker != NULL);
 	if (priv->cache == NULL) {
 		priv->cache = g_hash_table_new_full (g_str_hash,
