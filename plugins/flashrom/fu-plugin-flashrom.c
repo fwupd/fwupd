@@ -191,7 +191,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 
 	/* success */
 	fu_plugin_device_add (plugin, device);
-	fu_plugin_cache_add (plugin, fu_device_get_id (device), device);
 	return TRUE;
 }
 
