@@ -42,6 +42,10 @@ Plugin = pixart_rf
 [HIDRAW\VEN_0461&DEV_4EF5]
 Plugin = pixart_rf
 
-# Chicony Cheetos
+# Chicony Cheetos keyboard
 [HIDRAW\VEN_04F2&DEV_2051]
+Plugin = pixart_rf
+
+# Chicony Cheetos mouse
+[HIDRAW\VEN_04F2&DEV_2103]
 Plugin = pixart_rf
