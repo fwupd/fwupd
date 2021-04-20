@@ -17,9 +17,9 @@ G_DECLARE_DERIVABLE_TYPE (FuFlashromDevice, fu_flashrom_device, FU,
 			  FLASHROM_DEVICE, FuUdevDevice)
 
 void		 fu_flashrom_device_set_programmer_name	(FuFlashromDevice *self,
-							 const gchar *name);
-gchar		*fu_flashrom_device_get_programmer_name (FuFlashromDevice *self);
+							 const gchar	*name);
+const gchar	*fu_flashrom_device_get_programmer_name (FuFlashromDevice *self);
 void		 fu_flashrom_device_set_programmer_args	(FuFlashromDevice *self,
-							 const gchar *args);
+							 const gchar	*args);
 gsize		 fu_flashrom_device_get_flash_size	(FuFlashromDevice *self);
 struct flashrom_flashctx *fu_flashrom_device_get_flashctx (FuFlashromDevice *self);

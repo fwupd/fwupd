@@ -27,11 +27,13 @@ fu_flashrom_device_set_programmer_name (FuFlashromDevice *self, const gchar *nam
 {
 	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_FLASHROM_DEVICE (self));
+	if (g_strcmp0 (priv->programmer_name, name) == 0)
+		return;
 	g_free (priv->programmer_name);
 	priv->programmer_name = g_strdup (name);
 }
 
-gchar *
+const gchar *
 fu_flashrom_device_get_programmer_name (FuFlashromDevice *self)
 {
 	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
@@ -44,6 +46,8 @@ fu_flashrom_device_set_programmer_args (FuFlashromDevice *self, const gchar *arg
 {
 	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_FLASHROM_DEVICE (self));
+	if (g_strcmp0 (priv->programmer_args, args) == 0)
+		return;
 	g_free (priv->programmer_args);
 	priv->programmer_args = g_strdup (args);
 }
