@@ -27,7 +27,7 @@ shared_module('fu_plugin_cpu',
   ],
 )
 
-if cc.has_argument('-fcf-protection')
+if cc.has_argument('-fcf-protection') and host_machine.system() != 'dragonfly'
   libfwupdcethelper = static_library('fwupdcethelper',
     sources : [
       'fu-cpu-helper-cet-common.c',
