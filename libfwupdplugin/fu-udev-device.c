@@ -1755,7 +1755,7 @@ fu_udev_device_get_devtype (FuUdevDevice *self)
  * Get a list of devices that are siblings of self and have the
  * provided subsystem.
  *
- * Returns (element-type FuUdevDevice) (transfer full): devices
+ * Returns: (element-type FuUdevDevice) (transfer full): devices
  *
  * Since: 1.6.0
  */
