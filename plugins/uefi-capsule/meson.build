@@ -1,5 +1,11 @@
 if get_option('plugin_uefi_capsule')
-subdir('efi')
+
+if get_option('efi_binary')
+  efi_binary = dependency('fwupd-efi', required: false)
+  if not efi_binary.found()
+    subdir('efi')
+  endif
+endif
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']
 
