@@ -1,4 +1,9 @@
-subdir('efi')
+if get_option('efi_binary')
+  efi_binary = dependency('fwupd-efi', required: false)
+  if not efi_binary.found()
+    subdir('efi')
+  endif
+endif
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefi"']
 cargs += '-DEFI_APP_LOCATION_BUILD="' + app.full_path() + '"'
