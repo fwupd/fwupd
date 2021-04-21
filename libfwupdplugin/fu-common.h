@@ -68,6 +68,7 @@ typedef guint FuEndianType;
  * @FU_PATH_KIND_ACPI_TABLES:		The location of the ACPI tables
  * @FU_PATH_KIND_LOCKDIR:		The lock directory (IE /run/lock)
  * @FU_PATH_KIND_SYSFSDIR_FW_ATTRIB	The firmware attributes directory (IE /sys/class/firmware-attributes)
+ * @FU_PATH_KIND_FIRMWARE_SEARCH:	The path to configure the kernel policy for runtime loading other than /lib/firmware (IE /sys/module/firmware_class/parameters/path)
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -90,6 +91,7 @@ typedef enum {
 	FU_PATH_KIND_ACPI_TABLES,
 	FU_PATH_KIND_LOCKDIR,
 	FU_PATH_KIND_SYSFSDIR_FW_ATTRIB,
+	FU_PATH_KIND_FIRMWARE_SEARCH,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;
