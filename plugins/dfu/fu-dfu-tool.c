@@ -229,7 +229,7 @@ fu_dfu_tool_get_default_device (FuDfuTool *self, GError **error)
 		}
 		device = fu_dfu_device_new (usb_device);
 		fu_device_set_context (FU_DEVICE (device), self->ctx);
-		return device;
+		return g_steal_pointer (&device);
 	}
 
 	/* auto-detect first device */
