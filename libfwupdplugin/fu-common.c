@@ -1175,6 +1175,12 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup (tmp);
 		return g_strdup ("/sys/firmware/acpi/tables");
+	/* /sys/module/firmware_class/parameters/path */
+	case FU_PATH_KIND_FIRMWARE_SEARCH:
+		tmp = g_getenv ("FWUPD_FIRMWARESEARCH");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/module/firmware_class/parameters/path");
 	/* /etc */
 	case FU_PATH_KIND_SYSCONFDIR:
 		tmp = g_getenv ("FWUPD_SYSCONFDIR");
