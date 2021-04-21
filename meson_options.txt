@@ -51,3 +51,4 @@ option('efi_sbat_distro_summary', type : 'string', value : '', description : 'SB
 option('efi_sbat_distro_pkgname', type : 'string', value : '', description : 'SBAT distribution package name, e.g. fwupd')
 option('efi_sbat_distro_version', type : 'string', value : '', description : 'SBAT distribution version, e.g. fwupd-1.5.6.fc33')
 option('efi_sbat_distro_url', type : 'string', value : '', description : 'SBAT distribution URL, e.g. https://src.fedoraproject.org/rpms/fwupd')
+option('efi_binary', type: 'boolean', value: 'true', description : 'build included UEFI binary if missing')
