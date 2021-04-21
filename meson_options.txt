@@ -24,3 +24,4 @@ option('efi-ld', type : 'string', value : 'ld', description : 'the linker to use
 option('efi-libdir', type : 'string', description : 'path to the EFI lib directory')
 option('efi-ldsdir', type : 'string', description : 'path to the EFI lds directory')
 option('efi-includedir', type : 'string', value : '/usr/include/efi', description : 'path to the EFI header directory')
+option('efi_binary', type: 'boolean', value: 'true', description : 'build included UEFI binary if missing')
