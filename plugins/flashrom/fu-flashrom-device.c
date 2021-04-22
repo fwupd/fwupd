@@ -109,15 +109,18 @@ static gboolean
 fu_flashrom_device_probe (FuDevice *device, GError **error)
 {
 	const gchar *dev_name = NULL;
-	g_autofree gchar *path = NULL;
+	const gchar *sysfs_path = NULL;
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS (fu_flashrom_device_parent_class)->probe (device, error))
 		return FALSE;
 
-	path = g_strdup_printf ("DEVNAME=%s",
-				fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
-	fu_device_set_physical_id (device, path);
+	sysfs_path = fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device));
+	if (sysfs_path != NULL) {
+		g_autofree gchar *physical_id = NULL;
+		physical_id = g_strdup_printf ("DEVNAME=%s", sysfs_path);
+		fu_device_set_physical_id (device, physical_id);
+	}
 	dev_name = fu_udev_device_get_sysfs_attr (FU_UDEV_DEVICE (device), "name", NULL);
 	if (dev_name != NULL) {
 		fu_device_add_instance_id_full (device, dev_name,
