@@ -422,8 +422,8 @@ fu_util_modify_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError 
 	if (warning_plain == NULL)
 		return FALSE;
 
-	/* show and ask user to confirm */
-	fu_util_warning_box (warning_plain, 80);
+	/* TRANSLATORS: a remote here is like a 'repo' or software source */
+	fu_util_warning_box (_("Enable new remote?"), warning_plain, 80);
 	if (!priv->assume_yes) {
 		/* ask for permission */
 		g_print ("\n%s [Y|n]: ",
