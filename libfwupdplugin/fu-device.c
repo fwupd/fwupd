@@ -2203,6 +2203,16 @@ fu_device_set_logical_id (FuDevice *self, const gchar *logical_id)
 	if (g_strcmp0 (priv->logical_id, logical_id) == 0)
 		return;
 
+	/* not allowed after ->probe() and ->setup() have completed */
+	if (priv->done_setup) {
+		g_warning ("cannot change %s logical ID from %s to %s as "
+			   "FuDevice->setup() has already completed",
+			   fu_device_get_id (self),
+			   priv->logical_id,
+			   logical_id);
+		return;
+	}
+
 	g_free (priv->logical_id);
 	priv->logical_id = g_strdup (logical_id);
 	priv->device_id_valid = FALSE;
@@ -2326,6 +2336,16 @@ fu_device_set_physical_id (FuDevice *self, const gchar *physical_id)
 	/* not changed */
 	if (g_strcmp0 (priv->physical_id, physical_id) == 0)
 		return;
+
+	/* not allowed after ->probe() and ->setup() have completed */
+	if (priv->done_setup) {
+		g_warning ("cannot change %s physical ID from %s to %s as "
+			   "FuDevice->setup() has already completed",
+			   fu_device_get_id (self),
+			   priv->physical_id,
+			   physical_id);
+		return;
+	}
 
 	g_free (priv->physical_id);
 	priv->physical_id = g_strdup (physical_id);
