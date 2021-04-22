@@ -182,6 +182,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_get_summary(d)		fwupd_device_get_summary(FWUPD_DEVICE(d))
 #define fu_device_get_branch(d)			fwupd_device_get_branch(FWUPD_DEVICE(d))
 #define fu_device_get_id(d)			fwupd_device_get_id(FWUPD_DEVICE(d))
+#define fu_device_get_composite_id(d)		fwupd_device_get_composite_id(FWUPD_DEVICE(d))
 #define fu_device_get_plugin(d)			fwupd_device_get_plugin(FWUPD_DEVICE(d))
 #define fu_device_get_update_error(d)		fwupd_device_get_update_error(FWUPD_DEVICE(d))
 #define fu_device_get_update_state(d)		fwupd_device_get_update_state(FWUPD_DEVICE(d))

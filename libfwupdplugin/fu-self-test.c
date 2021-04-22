@@ -1251,6 +1251,35 @@ fu_device_instance_ids_func (void)
 }
 
 static void
+fu_device_composite_id_func (void)
+{
+	g_autoptr(FuDevice) dev1 = fu_device_new ();
+	g_autoptr(FuDevice) dev2 = fu_device_new ();
+	g_autoptr(FuDevice) dev3 = fu_device_new ();
+	g_autoptr(FuDevice) dev4 = fu_device_new ();
+
+	/* single device */
+	fu_device_set_id (dev1, "dev1");
+	g_assert_cmpstr (fu_device_get_composite_id (dev1), ==, "3b42553c4e3241e8f3f8fbc19a69fa2f95708a9d");
+	fu_device_set_id (dev2, "dev2");
+
+	/* one child */
+	fu_device_add_child (dev1, dev2);
+	g_assert_cmpstr (fu_device_get_composite_id (dev1), ==, "3b42553c4e3241e8f3f8fbc19a69fa2f95708a9d");
+	g_assert_cmpstr (fu_device_get_composite_id (dev2), ==, "3b42553c4e3241e8f3f8fbc19a69fa2f95708a9d");
+
+	/* add a different "family" */
+	fu_device_set_id (dev3, "dev3");
+	fu_device_set_id (dev4, "dev4");
+	fu_device_add_child (dev3, dev4);
+	fu_device_add_child (dev2, dev3);
+	g_assert_cmpstr (fu_device_get_composite_id (dev1), ==, "3b42553c4e3241e8f3f8fbc19a69fa2f95708a9d");
+	g_assert_cmpstr (fu_device_get_composite_id (dev2), ==, "3b42553c4e3241e8f3f8fbc19a69fa2f95708a9d");
+	g_assert_cmpstr (fu_device_get_composite_id (dev3), ==, "3b42553c4e3241e8f3f8fbc19a69fa2f95708a9d");
+	g_assert_cmpstr (fu_device_get_composite_id (dev4), ==, "3b42553c4e3241e8f3f8fbc19a69fa2f95708a9d");
+}
+
+static void
 fu_device_inhibit_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
@@ -2764,6 +2793,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/archive{cab}", fu_archive_cab_func);
 	g_test_add_func ("/fwupd/device", fu_device_func);
 	g_test_add_func ("/fwupd/device{instance-ids}", fu_device_instance_ids_func);
+	g_test_add_func ("/fwupd/device{composite-id}", fu_device_composite_id_func);
 	g_test_add_func ("/fwupd/device{flags}", fu_device_flags_func);
 	g_test_add_func ("/fwupd/device{inhibit}", fu_device_inhibit_func);
 	g_test_add_func ("/fwupd/device{parent}", fu_device_parent_func);

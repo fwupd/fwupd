@@ -18,6 +18,7 @@ G_BEGIN_DECLS
 #define FWUPD_RESULT_KEY_DETACH_IMAGE		"DetachImage"	/* s */
 #define FWUPD_RESULT_KEY_DEVICE_ID		"DeviceId"	/* s */
 #define FWUPD_RESULT_KEY_PARENT_DEVICE_ID	"ParentDeviceId"/* s */
+#define FWUPD_RESULT_KEY_COMPOSITE_ID		"CompositeId"	/* s */
 #define FWUPD_RESULT_KEY_FILENAME		"Filename"	/* s */
 #define FWUPD_RESULT_KEY_PROTOCOL		"Protocol"	/* s */
 #define FWUPD_RESULT_KEY_CATEGORIES		"Categories"	/* as */

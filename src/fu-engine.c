@@ -4208,6 +4208,47 @@ fu_engine_get_devices_by_guid (FuEngine *self, const gchar *guid, GError **error
 	return g_steal_pointer (&devices);
 }
 
+/**
+ * fu_engine_get_devices_by_composite_id:
+ * @self: A #FuEngine
+ * @composite_id: A device ID
+ * @error: A #GError, or %NULL
+ *
+ * Gets all devices that match a specific composite ID.
+ *
+ * Returns: (transfer full) (element-type FuDevice): devices
+ **/
+GPtrArray *
+fu_engine_get_devices_by_composite_id (FuEngine *self,
+				       const gchar *composite_id,
+				       GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(GPtrArray) devices_tmp = NULL;
+
+	/* find the devices by composite ID */
+	devices_tmp = fu_device_list_get_all (self->device_list);
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < devices_tmp->len; i++) {
+		FuDevice *dev_tmp = g_ptr_array_index (devices_tmp, i);
+		if (g_strcmp0 (fu_device_get_composite_id (dev_tmp), composite_id) == 0)
+			g_ptr_array_add (devices, g_object_ref (dev_tmp));
+	}
+
+	/* nothing */
+	if (devices->len == 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_FOUND,
+			     "failed to find any device with composite ID %s",
+			     composite_id);
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer (&devices);
+}
+
 static void
 fu_engine_get_history_set_hsi_attrs (FuEngine *self, FuDevice *device)
 {
