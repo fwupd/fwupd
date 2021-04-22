@@ -767,23 +767,40 @@ fu_util_warning_box_line (const gchar *start,
 }
 
 void
-fu_util_warning_box (const gchar *str, guint width)
+fu_util_warning_box (const gchar *title, const gchar *body, guint width)
 {
-	g_auto(GStrv) split = g_strsplit (str, "\n", -1);
+	/* nothing to do */
+	if (title == NULL && body == NULL)
+		return;
 
 	/* header */
 	fu_util_warning_box_line ("╔", NULL, "╗", "═", width);
 
-	/* body */
-	for (guint i = 0; split[i] != NULL; i++) {
-		g_autoptr(GPtrArray) lines = fu_util_strsplit_words (split[i], width - 4);
-		if (lines == NULL)
-			continue;
+	/* optional title */
+	if (title != NULL) {
+		g_autoptr(GPtrArray) lines = fu_util_strsplit_words (title, width - 4);
 		for (guint j = 0; j < lines->len; j++) {
 			const gchar *line = g_ptr_array_index (lines, j);
 			fu_util_warning_box_line ("║ ", line, " ║", " ", width);
 		}
-		fu_util_warning_box_line ("║", NULL, "║", " ", width);
+	}
+
+	/* join */
+	if (title != NULL && body != NULL)
+		fu_util_warning_box_line ("╠", NULL, "╣", "═", width);
+
+	/* optional body */
+	if (body != NULL) {
+		g_auto(GStrv) split = g_strsplit (body, "\n", -1);
+		for (guint i = 0; split[i] != NULL; i++) {
+			g_autoptr(GPtrArray) lines = fu_util_strsplit_words (split[i], width - 4);
+			if (lines == NULL)
+				continue;
+			for (guint j = 0; j < lines->len; j++) {
+				const gchar *line = g_ptr_array_index (lines, j);
+				fu_util_warning_box_line ("║ ", line, " ║", " ", width);
+			}
+		}
 	}
 
 	/* footer */
@@ -1992,6 +2009,7 @@ fu_util_switch_branch_warning (FwupdDevice *dev,
 {
 	const gchar *desc_markup = NULL;
 	g_autofree gchar *desc_plain = NULL;
+	g_autofree gchar *title = NULL;
 	g_autoptr(GString) desc_full = g_string_new (NULL);
 
 	/* warn the user if the vendor is different */
@@ -2019,8 +2037,12 @@ fu_util_switch_branch_warning (FwupdDevice *dev,
 		return FALSE;
 	g_string_append (desc_full, desc_plain);
 
-	/* show and ask user to confirm */
-	fu_util_warning_box (desc_full->str, 80);
+	/* TRANSLATORS: show and ask user to confirm --
+	 * %1 is the old branch name, %2 is the new branch name */
+	title = g_strdup_printf (_("Switch branch from %s to %s?"),
+				 fu_util_branch_for_display (fwupd_device_get_branch (dev)),
+				 fu_util_branch_for_display (fwupd_release_get_branch (rel)));
+	fu_util_warning_box (title, desc_full->str, 80);
 	if (!assume_yes) {
 		/* ask for permission */
 		g_print ("\n%s [y|N]: ",
