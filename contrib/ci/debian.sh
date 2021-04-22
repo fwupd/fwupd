@@ -26,7 +26,7 @@ VERSION=`git describe | sed 's/-/+r/;s/-/+/'`
 rm -rf build/
 mkdir -p build
 shopt -s extglob
-cp -lR !(build|dist) build/
+cp -lR !(build|dist|venv) build/
 pushd build
 mv contrib/debian .
 sed s/quilt/native/ debian/source/format -i
