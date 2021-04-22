@@ -833,10 +833,26 @@ fu_device_get_root (FuDevice *self)
 	return g_object_ref (self);
 }
 
+static void
+fu_device_set_composite_id (FuDevice *self, const gchar *composite_id)
+{
+	GPtrArray *children;
+
+	/* subclassed simple setter */
+	fwupd_device_set_composite_id (FWUPD_DEVICE (self), composite_id);
+
+	/* all children */
+	children = fu_device_get_children (self);
+	for (guint i = 0; i < children->len; i++) {
+		FuDevice *child_tmp = g_ptr_array_index (children, i);
+		fu_device_set_composite_id (child_tmp, composite_id);
+	}
+}
+
 /**
  * fu_device_set_parent:
  * @self: A #FuDevice
- * @parent: A #FuDevice
+ * @parent: (nullable): A #FuDevice
  *
  * Sets any parent device. An parent device is logically "above" the current
  * device and this may be reflected in client tools.
@@ -850,6 +866,10 @@ void
 fu_device_set_parent (FuDevice *self, FuDevice *parent)
 {
 	g_return_if_fail (FU_IS_DEVICE (self));
+
+	/* set the composite ID on the children and grandchildren */
+	if (parent != NULL)
+		fu_device_set_composite_id (self, fu_device_get_composite_id (parent));
 
 	/* if the parent has a context, make the child inherit it */
 	if (parent != NULL) {

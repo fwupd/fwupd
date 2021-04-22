@@ -30,6 +30,7 @@ static void fwupd_device_finalize	 (GObject *object);
 typedef struct {
 	gchar				*id;
 	gchar				*parent_id;
+	gchar				*composite_id;
 	guint64				 created;
 	guint64				 modified;
 	guint64				 flags;
@@ -344,6 +345,53 @@ fwupd_device_set_parent_id (FwupdDevice *device, const gchar *parent_id)
 
 	g_free (priv->parent_id);
 	priv->parent_id = g_strdup (parent_id);
+}
+
+/**
+ * fwupd_device_get_composite_id:
+ * @device: A #FwupdDevice
+ *
+ * Gets the composite ID, falling back to the device ID if unset.
+ *
+ * The composite ID will be the same value for all parent, child and sibling
+ * devices.
+ *
+ * Returns: (nullable): the composite ID
+ *
+ * Since: 1.6.0
+ **/
+const gchar *
+fwupd_device_get_composite_id (FwupdDevice *device)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	if (priv->composite_id != NULL)
+		return priv->composite_id;
+	return priv->id;
+}
+
+/**
+ * fwupd_device_set_composite_id:
+ * @device: A #FwupdDevice
+ * @composite_id: (nullable): a device ID
+ *
+ * Sets the composite ID, which is usually a SHA1 hash of a grandparent or
+ * parent device.
+ *
+ * Since: 1.6.0
+ **/
+void
+fwupd_device_set_composite_id (FwupdDevice *device, const gchar *composite_id)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	g_return_if_fail (FWUPD_IS_DEVICE (device));
+
+	/* not changed */
+	if (g_strcmp0 (priv->composite_id, composite_id) == 0)
+		return;
+
+	g_free (priv->composite_id);
+	priv->composite_id = g_strdup (composite_id);
 }
 
 /**
@@ -1506,6 +1554,8 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_id (self, priv_donor->id);
 	if (priv->parent_id == NULL)
 		fwupd_device_set_parent_id (self, priv_donor->parent_id);
+	if (priv->composite_id == NULL)
+		fwupd_device_set_composite_id (self, priv_donor->composite_id);
 	if (priv->name == NULL)
 		fwupd_device_set_name (self, priv_donor->name);
 	if (priv->serial == NULL)
@@ -1599,6 +1649,11 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_PARENT_DEVICE_ID,
 				       g_variant_new_string (priv->parent_id));
+	}
+	if (priv->composite_id != NULL) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_COMPOSITE_ID,
+				       g_variant_new_string (priv->composite_id));
 	}
 	if (priv->guids->len > 0) {
 		const gchar * const *tmp = (const gchar * const *) priv->guids->pdata;
@@ -1832,6 +1887,10 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_PARENT_DEVICE_ID) == 0) {
 		fwupd_device_set_parent_id (device, g_variant_get_string (value, NULL));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_COMPOSITE_ID) == 0) {
+		fwupd_device_set_composite_id (device, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_FLAGS) == 0) {
@@ -2400,6 +2459,8 @@ fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_PARENT_DEVICE_ID,
 				      priv->parent_id);
+	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_COMPOSITE_ID,
+				      priv->composite_id);
 	if (priv->guids->len > 0) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_GUID);
 		json_builder_begin_array (builder);
@@ -2533,7 +2594,9 @@ fwupd_device_to_string (FwupdDevice *device)
 	else
 		str = g_string_append (str, "Unknown Device\n");
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, priv->parent_id);
+	if (g_strcmp0 (priv->composite_id, priv->parent_id) != 0)
+		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, priv->parent_id);
+	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_COMPOSITE_ID, priv->composite_id);
 	if (priv->status != FWUPD_STATUS_UNKNOWN) {
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_STATUS,
 				  fwupd_status_to_string (priv->status));
@@ -2778,6 +2841,7 @@ fwupd_device_finalize (GObject *object)
 	g_free (priv->description);
 	g_free (priv->id);
 	g_free (priv->parent_id);
+	g_free (priv->composite_id);
 	g_free (priv->name);
 	g_free (priv->serial);
 	g_free (priv->summary);
