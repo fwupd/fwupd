@@ -2931,7 +2931,7 @@ main (int argc, char *argv[])
 			_("Ignore requirement of external power source"), NULL },
 		{ "no-reboot-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_reboot_check,
 			/* TRANSLATORS: command line option */
-			_("Do not check for reboot after update"), NULL },
+			_("Do not check or prompt for reboot after update"), NULL },
 		{ "no-safety-check", '\0', 0, G_OPTION_ARG_NONE, &priv->no_safety_check,
 			/* TRANSLATORS: command line option */
 			_("Do not perform device safety checks"), NULL },
