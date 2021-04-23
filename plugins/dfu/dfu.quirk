@@ -20,7 +20,7 @@ Flags = detach-for-attach
 # Openmoko Freerunner / GTA02
 [USB\VID_1D50&PID_5119]
 Plugin = dfu
-Flags = ignore-polltimeout,no-pid-change,no-fu-dfu-runtime,needs-bootloader,no-get-status-upload
+Flags = ignore-polltimeout,no-pid-change,no-dfu-runtime,needs-bootloader,no-get-status-upload
 
 # OpenPCD Reader
 [USB\VID_16C0&PID_076B]
@@ -68,7 +68,7 @@ Flags = attach-upload-download
 # HydraBus
 [USB\VID_1D50&PID_60A7]
 Plugin = dfu
-Flags = no-fu-dfu-runtime,needs-bootloader
+Flags = no-dfu-runtime,needs-bootloader
 
 # Jabra 410 [appIDLE & dfuIDLE]
 [USB\VID_0B0E&PID_0411]
