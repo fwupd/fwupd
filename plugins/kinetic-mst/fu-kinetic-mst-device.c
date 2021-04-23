@@ -16,6 +16,8 @@
 #include "fu-kinetic-mst-firmware.h"
 #include "fu-kinetic-secure-aux-isp.h"
 
+#define INIT_CRC16 0x1021
+
 struct _FuKineticMstDevice {
     FuUdevDevice        parent_instance;
     gchar *             system_type;
@@ -50,42 +52,6 @@ fu_kinetic_mst_device_init (FuKineticMstDevice *self)
                               FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 }
 
-static gboolean
-fu_kinetic_mst_device_enable_rc(FuKineticMstDevice *self, GError **error)
-{
-    // <TODO> is this function neccessary?
-	return TRUE;
-}
-
-static gboolean
-fu_kinetic_mst_device_disable_rc(FuKineticMstDevice *self, GError **error)
-{
-	// <TODO> is this function neccessary?
-	return TRUE;
-}
-
-static gboolean
-fu_kinetic_mst_device_restart (FuKineticMstDevice *self, GError **error)
-{
-	g_autoptr(FuKineticMstConnection) connection = NULL;
-	//g_autoptr(GError) error_local = NULL;
-
-	/* issue the reboot command, ignore return code (triggers before returning) */
-#if 0
-	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
-						                         self->layer, self->rad);
-	if (!fu_synaptics_mst_connection_rc_set_command (connection,
-							 UPDC_WRITE_TO_MEMORY,
-							 4, (gint) 0x2000FC, (guint8*) &buf,
-							 &error_local))
-		g_debug ("failed to restart: %s", error_local->message);
-#else
-    // <TODO> implement for Kinetic's reset command
-#endif
-
-	return TRUE;
-}
-
 static FuFirmware *
 fu_kinetic_mst_device_prepare_firmware(FuDevice *device,
                                        GBytes *fw,
@@ -118,102 +84,42 @@ fu_kinetic_mst_device_prepare_firmware(FuDevice *device,
 	return fu_firmware_new_from_bytes(fw);
 }
 
-#define SIZE_1KB        (1   * 1024)
-#define SIZE_4KB        (4   * 1024)
-#define SIZE_8KB        (8   * 1024)
-#define SIZE_16KB       (16  * 1024)
-#define SIZE_24KB       (24  * 1024)
-#define SIZE_32KB       (32  * 1024)
-#define SIZE_248KB      (248 * 1024)
-#define SIZE_256KB      (256 * 1024)
-#define SIZE_128KB      (128 * 1024)
-#define SIZE_144KB      (144 * 1024)
-#define SIZE_240KB      (240 * 1024)
-#define SIZE_360KB      (360 * 1024)
-#define SIZE_384KB      (384 * 1024)
-#define SIZE_512KB      (512 * 1024)
-#define SIZE_640KB      (640 * 1024)
-#define SIZE_1MB        (1024 * 1024)
+// OUI of MegaChips America
+#define MCA_OUI_BYTE_0                          0x00
+#define MCA_OUI_BYTE_1                          0x60
+#define MCA_OUI_BYTE_2                          0xAD
 
-// Flash Memory Map
-#define STD_FW_PAYLOAD_SIZE                 SIZE_1MB
-#define STD_APP_ID_SIZE                     32
-#define STD_FW_SIGNATURE_OFFSET             (STD_FW_PAYLOAD_SIZE - STD_APP_ID_SIZE + 4)  // 0xFFFE4
-#define STD_FW_VER_OFFSET                   (STD_FW_PAYLOAD_SIZE - STD_APP_ID_SIZE + 12) // 0xFFFEC
-#define STD_FW_VER_SIZE                     3
-#define CUSTOMER_PROJ_ID_OFFSET             (STD_FW_PAYLOAD_SIZE - STD_APP_ID_SIZE + 15) // 0xFFFEF
-#define CUSTOMER_FW_VER_OFFSET              (STD_FW_PAYLOAD_SIZE - STD_APP_ID_SIZE + 16) // 0xFFFF0
-#define CUSTOMER_FW_VER_SIZE                2
+/* Native DPCD fields defined in DP spec. */
+#define DPCD_ADDR_IEEE_OUI                      0x00300
+#define DPCD_SIZE_IEEE_OUI                      3   
+#define DPCD_ADDR_BRANCH_DEV_ID_STR             0x00503
+#define DPCD_SIZE_BRANCH_DEV_ID_STR             6
+#define DPCD_ADDR_BRANCH_HW_REV                 0x00509
+#define DPCD_SIZE_BRANCH_HW_REV                 1
 
-#define FW_CERTIFICATE_SIZE                 SIZE_1KB
-#define FW_RSA_SIGNATURE_SIZE               256
-#define FW_RSA_SIGNATURE_BLOCK_SIZE         SIZE_1KB
-#define ESM_PAYLOAD_BLOCK_SIZE              SIZE_256KB
-#define APP_CODE_NORMAL_BLOCK_SIZE          SIZE_384KB
-#define APP_CODE_EXTEND_BLOCK_SIZE          SIZE_640KB
-#define APP_INIT_DATA_BLOCK_SIZE            SIZE_24KB
-#define CMDB_BLOCK_SIZE                     SIZE_4KB
+/* Kinetic proprietary DPCD fields for Jaguar/Mustang, for both application and ISP driver */
+#define DPCD_ADDR_FLOAT_CMD_STATUS_REG          0x0050D
+#define DPCD_ADDR_FLOAT_PARAM_REG               0x0050E
 
-#define SPI_ESM_CERTIFICATE_START           0
-#define SPI_APP_CERTIFICATE_START           (SPI_ESM_CERTIFICATE_START + FW_CERTIFICATE_SIZE)           // 0x00400
-#define SPI_ESM_RSA_SIGNATURE_START         (SPI_APP_CERTIFICATE_START + FW_CERTIFICATE_SIZE)           // 0x00800
-#define SPI_APP_RSA_SIGNATURE_START         (SPI_ESM_RSA_SIGNATURE_START + FW_RSA_SIGNATURE_BLOCK_SIZE) // 0x00C00
-#define SPI_ESM_PAYLOAD_START               (SPI_APP_RSA_SIGNATURE_START + FW_RSA_SIGNATURE_BLOCK_SIZE) // 0x01000
-#define SPI_APP_PAYLOAD_START               (SPI_ESM_PAYLOAD_START + ESM_PAYLOAD_BLOCK_SIZE)            // 0x41000
-#define SPI_APP_NORMAL_INIT_DATA_START      (SPI_APP_PAYLOAD_START + APP_CODE_NORMAL_BLOCK_SIZE)        // 0xA1000
-#define SPI_APP_EXTEND_INIT_DATA_START      (SPI_APP_PAYLOAD_START + APP_CODE_EXTEND_BLOCK_SIZE)        // 0xE1000
-#define SPI_CMDB_BLOCK_START                0xFE000UL
-#define SPI_APP_ID_DATA_START               (STD_FW_PAYLOAD_SIZE - STD_APP_ID_SIZE)
+/* Below DPCD registers are used while runnig application */
+#define DPCD_ADDR_FLOAT_CUSTOMER_FW_MIN_REV     0x00514
+#define DPCD_SIZE_FLOAT_CUSTOMER_FW_MIN_REV     1
+#define DPCD_ADDR_FLOAT_CUSTOMER_PROJ_ID        0x00515
+#define DPCD_SIZE_FLOAT_CUSTOMER_PROJ_ID        1
+#define DPCD_ADDR_FLOAT_PRODUCT_TYPE            0x00516
+#define DPCD_SIZE_FLOAT_PRODUCT_TYPE            1
 
-#define FLASH_PROGRAM_COUNT                 100000
-#define WAIT_PROG_INTERVAL_MS               500
+/* Below DPCD registers are used while runnig ISP driver */
+#define DPCD_ADDR_FLOAT_ISP_REPLY_LEN_REG       0x00513
+#define DPCD_SIZE_FLOAT_ISP_REPLY_LEN_REG       1           // 0x00513
 
-// Native DPCD fields defined in spec.
-#define DPCD_ADDR_BRANCH_ID_STR         0x00503
-#define DPCD_ADDR_IEEE_OUI              0x00300
+#define DPCD_ADDR_FLOAT_ISP_REPLY_DATA_REG      0x00514     // While running ISP driver
+#define DPCD_SIZE_FLOAT_ISP_REPLY_DATA_REG      12          // 0x00514 ~ 0x0051F
 
-#define DPCD_FIELD_SIZE_IEEE_OUI        3
+#define DPCD_ADDR_KT_AUX_WIN			        0x80000ul
+#define DPCD_SIZE_KT_AUX_WIN                    0x8000ul    // 0x80000ul ~ 0x87FFF
+#define DPCD_ADDR_KT_AUX_WIN_END		        (DPCD_ADDR_KT_AUX_WIN +  DPCD_SIZE_KT_AUX_WIN - 1)
 
-#define MCA_OUI_BYTE_0                  0x00        // MegaChips OUI
-#define MCA_OUI_BYTE_1                  0x60
-#define MCA_OUI_BYTE_2                  0xAD
-// Kinetic proprietary DPCD fields
-#define DPCD_ADDR_KT_CMD_STATUS_REG     0x0050D
-#define DPCD_ADDR_KT_PARAM_REG          0x0050E
-
-#define DPCD_ADDR_KT_REPLY_LEN_REG      0x00513
-#define DPCD_SIZE_KT_REPLY_LEN_REG      1           // 0x00513
-
-#define DPCD_ADDR_KT_REPLY_DATA_REG     0x00514
-#define DPCD_SIZE_KT_REPLY_DATA_REG     12          // 0x00514 ~ 0x0051F
-
-#define DPCD_ADDR_KT_AUX_WIN			0x80000ul
-#define DPCD_SIZE_KT_AUX_WIN            0x8000ul    // 0x80000ul ~ 0x87FFF
-#define DPCD_ADDR_KT_AUX_WIN_END		(DPCD_ADDR_KT_AUX_WIN +  DPCD_SIZE_KT_AUX_WIN - 1)
-
-#define INIT_CRC16                      0x1021
-
-typedef enum
-{
-    MCDP_CHIP_NONE      = 0,
-    MCDP_BOBCAT_2800    = 1,
-    MCDP_BOBCAT_2850    = 2,
-    MCDP_PEGASUS        = 3,
-    MCDP_MYSTIQUE       = 4,
-    MCDP_DP2VGA         = 5,
-    MCDP_PUMA_2900      = 6,
-    MCDP_PUMA_2920      = 7,
-    MCDP_JAGUAR_5000    = 8,
-    MCDP_MUSTANG_5200   = 9,
-} KineticChipId;
-
-typedef enum
-{
-    FU_KT_IMG_IDX_ISP_DRV   = 0,
-    FU_KT_IMG_IDX_APP       = 1,
-} FuKineticImgIdx;
-
-//static MCDP_CHIP_ID_e target_chip_id;
 
 static guint32 esm_payload_size;
 static guint32 arm_app_code_size;
@@ -221,11 +127,7 @@ static guint32 app_init_data_size;
 static guint32 cmdb_block_size;
 static gboolean is_fw_esm_xip_enabled;
 
-static guint32 isp_drv_bin_size;
-static guint16 isp_drv_run_delay_time;
-
 static guint16 read_flash_prog_time;
-static guint16 user_flash_prog_time;
 static guint16 flash_id;
 static guint16 flash_size;
 
@@ -234,46 +136,119 @@ static guint32 isp_procd_size;
 static guint32 isp_total_data_size;
 static gboolean is_isp_secure_auth_mode = TRUE;
 
-static gboolean kt_aux_read_src_oui(FuKineticMstDevice *self, guint8 *buf, GError **error)
+typedef enum
 {
-    g_autoptr(FuKineticMstConnection) connection = NULL;
+    BANK_A      = 0,
+    BANK_B      = 1,
+    BANK_TOTAL  = 2,
 
-    connection = fu_kinetic_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE (self)));
+    BANK_NONE   = 0xFF
+} KtFlashBankIdx;
 
-    if (!fu_kinetic_mst_connection_read(connection, DPCD_ADDR_IEEE_OUI, buf, DPCD_FIELD_SIZE_IEEE_OUI, error))
+typedef struct
+{
+    guint32 std_fw_ver;
+    guint16 boot_code_ver;
+    guint16 std_cmdb_ver;
+    guint32 cmdb_rev;
+    guint16 customer_fw_ver;
+    guint8  customer_project_id;
+} KtDpFwInfo;
+
+typedef struct
+{
+    KtChipId       chip_id;
+    guint16        chip_rev;
+    guint8         chip_type;
+    guint32        chip_sn;
+    KtFwRunState   fw_run_state;
+    KtDpFwInfo     fw_info;
+    guint8         branch_id_str[DPCD_SIZE_BRANCH_DEV_ID_STR];
+    gboolean       is_dual_bank_supported;
+    KtFlashBankIdx flash_bank_idx;
+} KtDpDevInfo;
+
+typedef struct
+{
+	KtChipId     chip_id;
+    KtFwRunState fw_run_state;
+    guint8       id_str[DPCD_SIZE_BRANCH_DEV_ID_STR];
+    guint8       str_len;
+} KtChipBrIdStrTable;
+
+// ---------------------------------------------------------------
+// Kinetic chip DPCD branch ID string table
+// ---------------------------------------------------------------
+static const KtChipBrIdStrTable kt_dp_branch_dev_info_table[] = 
+{
+    // Jaguar MCDP50x0
+    { KT_CHIP_JAGUAR_5000,  KT_FW_STATE_RUN_IROM, {'5', '0', '1', '0', 'I', 'R'}, 6},
+    { KT_CHIP_JAGUAR_5000,  KT_FW_STATE_RUN_APP,  {'D', 'P', '5', '0', 'X', '0'}, 6},
+    // Mustang MCDP52x0
+    { KT_CHIP_MUSTANG_5200, KT_FW_STATE_RUN_IROM, {'5', '2', '1', '0', 'I', 'R'}, 6},
+    { KT_CHIP_MUSTANG_5200, KT_FW_STATE_RUN_APP,  {'D', 'P', '5', '2', 'X', '0'}, 6},
+        
+    { KT_CHIP_NONE,         KT_FW_STATE_RUN_NONE, {' ', ' ', ' ', ' ', ' ', ' '}, 6}
+};
+
+static const gchar *kt_dp_fw_run_state_strs[KT_FW_STATE_NUM] =
+{
+    "iROM",
+    "App",
+    "Boot-Code",
+    "Unknown"
+};
+
+static KtDpDevInfo dp_dev_infos[MAX_DEV_NUM];
+static KtChipId dp_root_dev_chip_id = KT_CHIP_NONE; // <TODO> declare as a private member of FuKineticMstDevice?
+static KtFwRunState dp_root_dev_state = KT_FW_STATE_RUN_NONE; // <TODO> declare as a private member of FuKineticMstDevice?
+
+static gboolean kt_aux_read_dpcd_oui(FuKineticMstConnection *connection, guint8 *buf, guint32 buf_size, GError **error)
+{
+    if (buf_size < DPCD_SIZE_IEEE_OUI)
+        return FALSE;
+
+    if (!fu_kinetic_mst_connection_read(connection, DPCD_ADDR_IEEE_OUI, buf, DPCD_SIZE_IEEE_OUI, error))
     {
-        g_prefix_error (error, "Reading source OUI failed!");
+        g_prefix_error (error, "Failed to read source OUI!");
         return FALSE;
     }
 
     return TRUE;
 }
 
-static gboolean kt_aux_write_src_oui(FuKineticMstDevice *self, const guint8 *buf, GError **error)
+static gboolean kt_aux_write_dpcd_oui(FuKineticMstConnection *connection, const guint8 *buf, GError **error)
 {
-    g_autoptr(FuKineticMstConnection) connection = NULL;
-
-    connection = fu_kinetic_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE (self)));
-
-	if (!fu_kinetic_mst_connection_write(connection, DPCD_ADDR_IEEE_OUI, buf, DPCD_FIELD_SIZE_IEEE_OUI, error))
+	if (!fu_kinetic_mst_connection_write(connection, DPCD_ADDR_IEEE_OUI, buf, DPCD_SIZE_IEEE_OUI, error))
 	{
-		g_prefix_error (error, "Writing source OUI failed!");
+		g_prefix_error (error, "Failed to write source OUI!");
         return FALSE;
 	}
 
     return TRUE;
 }
 
-static const gchar *_get_chip_id_str(KineticChipId chip_id)
+static gboolean kt_aux_read_dpcd_branch_id_str(FuKineticMstConnection *connection,
+                                               guint8 *buf,
+                                               guint32 buf_size,
+                                               GError **error)
 {
-    if (chip_id == MCDP_JAGUAR_5000)
-        return "Jaguar";
+    if (buf_size < DPCD_SIZE_BRANCH_DEV_ID_STR)
+        return FALSE;
 
-    if (chip_id == MCDP_MUSTANG_5200)
-        return "Mustang";
-    
-    return "";
+    // Clear the buffer to all 0s as DP spec mentioned
+    memset(buf, 0, DPCD_SIZE_BRANCH_DEV_ID_STR);
+
+    if (!fu_kinetic_mst_connection_read(connection, DPCD_ADDR_BRANCH_DEV_ID_STR, buf, DPCD_SIZE_BRANCH_DEV_ID_STR, error))
+    {
+        g_prefix_error (error, "Failed to read branch device ID string!");
+        return FALSE;
+    }
+
+    return TRUE;
 }
+
+
 
 static guint16 _gen_crc16(guint16 accum, guint8 data_in)
 {
@@ -305,9 +280,25 @@ static void _accumulate_crc16(guint16 *prev_crc16, const guint8 *in_data_ptr, gu
     }
 }
 
+static inline const gchar *sec_aux_isp_get_chip_id_str(KtChipId chip_id)
+{
+    if (chip_id == KT_CHIP_JAGUAR_5000)
+        return "Jaguar";
+
+    if (chip_id == KT_CHIP_MUSTANG_5200)
+        return "Mustang";
+    
+    return "";
+}
+
+static inline const gchar *sec_aux_isp_get_fw_run_state_str(KtFwRunState fw_run_state)
+{
+    return (fw_run_state < KT_FW_STATE_NUM) ? kt_dp_fw_run_state_strs[fw_run_state] : NULL;
+}
+
 static gboolean sec_aux_isp_read_param_reg(FuKineticMstConnection *self, guint8 *dpcd_val, GError **error)
 {
-	if (!fu_kinetic_mst_connection_read(self, DPCD_ADDR_KT_PARAM_REG, dpcd_val, 1, error))
+	if (!fu_kinetic_mst_connection_read(self, DPCD_ADDR_FLOAT_PARAM_REG, dpcd_val, 1, error))
 	{
 		g_prefix_error (error, "Failed to read DPCD_MCA_PARAMETER_REG!");
 		return FALSE;
@@ -317,13 +308,27 @@ static gboolean sec_aux_isp_read_param_reg(FuKineticMstConnection *self, guint8 
 }
 
 static gboolean
-sec_aux_isp_write_kt_prop_cmd(FuKineticMstConnection *self, guint8 cmd_id, GError **error)
+sec_aux_isp_write_kt_prop_cmd(FuKineticMstConnection *connection, guint8 cmd_id, GError **error)
 {
     cmd_id |= DPCD_KT_CONFIRMATION_BIT;
 
-    if (!fu_kinetic_mst_connection_write(self, DPCD_ADDR_KT_CMD_STATUS_REG, &cmd_id, 1, error))
+    if (!fu_kinetic_mst_connection_write(connection, DPCD_ADDR_FLOAT_CMD_STATUS_REG, &cmd_id, sizeof(cmd_id), error))
     {
         g_prefix_error (error, "Failed to write DPCD_MCA_CMD_REG!");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+sec_aux_isp_clear_kt_prop_cmd(FuKineticMstConnection *connection, GError **error)
+{
+    guint8 cmd_id = KT_DPCD_CMD_STS_NONE;
+
+    if (!fu_kinetic_mst_connection_write(connection, DPCD_ADDR_FLOAT_CMD_STATUS_REG, &cmd_id, sizeof(cmd_id), error))
+    {
+        g_prefix_error(error, "Failed to write DPCD_MCA_CMD_REG!");
         return FALSE;
     }
 
@@ -348,7 +353,7 @@ sec_aux_isp_send_kt_prop_cmd(FuKineticMstConnection *self,
 
     while (max_time_ms != 0)
     {
-        if (!fu_kinetic_mst_connection_read(self, DPCD_ADDR_KT_CMD_STATUS_REG, (guint8 *)&dpcd_val,
+        if (!fu_kinetic_mst_connection_read(self, DPCD_ADDR_FLOAT_CMD_STATUS_REG, (guint8 *)&dpcd_val,
                                             1, error))
         {
             return FALSE;
@@ -407,18 +412,18 @@ static gboolean sec_aux_isp_write_dpcd_reply_data_reg(FuKineticMstConnection *se
     gboolean ret = FALSE;
     gboolean res;
 
-    if (len > DPCD_SIZE_KT_REPLY_DATA_REG)
+    if (len > DPCD_SIZE_FLOAT_ISP_REPLY_DATA_REG)
         //return MCTRL_STS_INVALID_PARAM;
         return FALSE;
 
-    res = fu_kinetic_mst_connection_write(self, DPCD_ADDR_KT_REPLY_DATA_REG, buf, len, error);
+    res = fu_kinetic_mst_connection_write(self, DPCD_ADDR_FLOAT_ISP_REPLY_DATA_REG, buf, len, error);
     if (!res)
     {
         g_prefix_error (error, "Failed to write DPCD_KT_REPLY_DATA_REG!");
         len = 0;    // Clear reply data length to 0 if failed to write reply data
     }
 
-    if (fu_kinetic_mst_connection_write(self, DPCD_ADDR_KT_REPLY_LEN_REG, &len, DPCD_SIZE_KT_REPLY_LEN_REG, error) &&
+    if (fu_kinetic_mst_connection_write(self, DPCD_ADDR_FLOAT_ISP_REPLY_LEN_REG, &len, DPCD_SIZE_FLOAT_ISP_REPLY_LEN_REG, error) &&
         TRUE == res)
     {
         // Both reply data and reply length are written successfully
@@ -428,9 +433,17 @@ static gboolean sec_aux_isp_write_dpcd_reply_data_reg(FuKineticMstConnection *se
     return ret;
 }
 
+static gboolean sec_aux_isp_write_mca_oui(FuKineticMstConnection *connection, GError **error)
+{
+    guint8 mca_oui[DPCD_SIZE_IEEE_OUI] = {MCA_OUI_BYTE_0, MCA_OUI_BYTE_1, MCA_OUI_BYTE_2};
+
+    return kt_aux_write_dpcd_oui(connection, mca_oui, error);
+}
+
 static gboolean
 sec_aux_isp_enter_code_loading_mode(FuKineticMstConnection *self,
                                     gboolean is_app_mode,
+                                    const guint32 code_size,
                                     GError **error)
 {
     guint8 status;
@@ -443,7 +456,7 @@ sec_aux_isp_enter_code_loading_mode(FuKineticMstConnection *self,
     }
     
     // Update payload size to DPCD reply data reg first
-    if (!sec_aux_isp_write_dpcd_reply_data_reg(self, (guint8 *)&isp_drv_bin_size, sizeof(isp_drv_bin_size), error))
+    if (!sec_aux_isp_write_dpcd_reply_data_reg(self, (guint8 *)&code_size, sizeof(code_size), error))
         return FALSE;
 
     if (!sec_aux_isp_send_kt_prop_cmd(self, KT_DPCD_CMD_ENTER_CODE_LOADING_MODE, 500, 10, &status, error))
@@ -536,7 +549,7 @@ sec_aux_isp_wait_dpcd_cmd_cleared(FuKineticMstConnection *self,
     while (wait_time_ms > 0)
     {
         if (!fu_kinetic_mst_connection_read(self,
-                                            DPCD_ADDR_KT_CMD_STATUS_REG,
+                                            DPCD_ADDR_FLOAT_CMD_STATUS_REG,
                                             (guint8 *)&dpcd_val,
                                             1,
                                             error))
@@ -645,7 +658,7 @@ static gboolean sec_aux_isp_send_isp_drv(FuKineticMstConnection *self,
 {
     g_message("Sending ISP driver payload... started");
 
-    if (sec_aux_isp_enter_code_loading_mode(self, is_app_mode, error) == FALSE)
+    if (sec_aux_isp_enter_code_loading_mode(self, is_app_mode, isp_drv_len, error) == FALSE)
     {
         g_prefix_error(error, "Enabling code-loading mode... failed!");
         return FALSE;
@@ -822,7 +835,7 @@ sec_aux_isp_install_fw_images(FuKineticMstConnection *self, GError **error)
 
     while (wait_count-- > 0)
     {
-        if (!fu_kinetic_mst_connection_read(self, DPCD_ADDR_KT_CMD_STATUS_REG, &status, 1, error))
+        if (!fu_kinetic_mst_connection_read(self, DPCD_ADDR_FLOAT_CMD_STATUS_REG, &status, 1, error))
         {
             g_prefix_error(error, "Reading DPCD_MCA_CMD_REG... failed!");
             return FALSE;
@@ -861,11 +874,11 @@ sec_aux_isp_install_fw_images(FuKineticMstConnection *self, GError **error)
 }
 
 static gboolean
-sec_aux_isp_send_reset_command(FuKineticMstConnection *self, GError **error)
+sec_aux_isp_send_reset_command(FuKineticMstConnection *connection, GError **error)
 {
 	g_message("Resetting system...");
 
-    if (!sec_aux_isp_write_kt_prop_cmd(self, KT_DPCD_CMD_RESET_SYSTEM, error))
+    if (!sec_aux_isp_write_kt_prop_cmd(connection, KT_DPCD_CMD_RESET_SYSTEM, error))
     {
         g_prefix_error(error, "Resetting system... failed!");
         return FALSE;
@@ -875,16 +888,121 @@ sec_aux_isp_send_reset_command(FuKineticMstConnection *self, GError **error)
 }
 
 static gboolean
-sec_aux_isp_update_firmware(FuKineticMstDevice *self,
-                            FuFirmware *firmware,
-                            GError **error)
+sec_aux_isp_enable_aux_forward(FuKineticMstConnection *connection,
+                               KtDpDevPort target_port,
+                               GError **error)
+{
+    gboolean ret;
+    guint8 status;
+    guint8 cmd_id;
+
+    if (!sec_aux_isp_write_mca_oui(connection, error))
+        return FALSE;
+
+    cmd_id = (guint8)target_port;
+    if (!fu_kinetic_mst_connection_write(connection, DPCD_ADDR_FLOAT_PARAM_REG, &cmd_id, sizeof(cmd_id), error))
+        return FALSE;
+
+    ret = sec_aux_isp_send_kt_prop_cmd(connection, KT_DPCD_CMD_ENABLE_AUX_FORWARD, 1000, 20, &status, error);
+
+    // Clear CMD_STS_REG
+    cmd_id = KT_DPCD_CMD_STS_NONE;
+    fu_kinetic_mst_connection_write(connection, DPCD_ADDR_FLOAT_CMD_STATUS_REG, &cmd_id, sizeof(cmd_id), error);
+
+    return ret;
+}
+
+static gboolean
+sec_aux_isp_disable_aux_forward(FuKineticMstConnection *connection, GError **error)
+{
+    gboolean ret;
+    guint8 status;
+    guint8 cmd_id;
+
+    if (!sec_aux_isp_write_mca_oui(connection, error))
+        return FALSE;
+
+    ret = sec_aux_isp_send_kt_prop_cmd(connection, KT_DPCD_CMD_DISABLE_AUX_FORWARD, 1000, 20, &status, error);
+
+    // Clear CMD_STS_REG
+    cmd_id = KT_DPCD_CMD_STS_NONE;
+    fu_kinetic_mst_connection_write(connection, DPCD_ADDR_FLOAT_CMD_STATUS_REG, &cmd_id, sizeof(cmd_id), error);
+
+    return ret;
+}
+
+static KtFlashBankIdx
+sec_aux_isp_get_flash_bank_idx(FuKineticMstConnection *connection, GError **error)
+{
+    guint8 status;
+    guint8 prev_src_oui[DPCD_SIZE_IEEE_OUI] = {0};
+    guint8 res = BANK_NONE;
+
+    if (!kt_aux_read_dpcd_oui(connection, prev_src_oui, sizeof(prev_src_oui), error))
+        return BANK_NONE;
+
+    if (!sec_aux_isp_write_mca_oui(connection, error))
+        return BANK_NONE;
+
+    if (sec_aux_isp_send_kt_prop_cmd(connection, KT_DPCD_CMD_GET_ACTIVE_FLASH_BANK, 100, 20, &status, error))
+    {
+        if (!sec_aux_isp_read_param_reg(connection, &res, error))
+            res = BANK_NONE;
+    }
+
+    sec_aux_isp_clear_kt_prop_cmd(connection, error);
+
+    // Restore previous source OUI
+    kt_aux_write_dpcd_oui(connection, prev_src_oui, error);
+
+    return (KtFlashBankIdx)res;
+}
+
+static gboolean
+sec_aux_isp_get_device_info(FuKineticMstConnection *connection, KtDpDevInfo *dev_info, GError **error)
+{
+    // ---------------------------------------------------------------
+    // Chip ID, FW work state, and branch ID string are known
+    // ---------------------------------------------------------------
+    guint8 dpcd_buf[16] = {0};
+
+    if (!fu_kinetic_mst_connection_read(connection,
+                                        DPCD_ADDR_BRANCH_HW_REV,
+                                        dpcd_buf,
+                                        sizeof(dpcd_buf),
+                                        error))
+    {
+        return FALSE;
+    }
+    
+    dev_info->chip_rev = dpcd_buf[0];  // DPCD 0x509
+    dev_info->fw_info.std_fw_ver = (guint32)dpcd_buf[1] << 16 | (guint32)dpcd_buf[2] << 8 | dpcd_buf[3];  // DPCD 0x50A ~ 0x50C
+    dev_info->fw_info.customer_project_id = dpcd_buf[12];   // DPCD 0x515
+    dev_info->fw_info.customer_fw_ver = (guint16)dpcd_buf[6] << 8 | (guint16)dpcd_buf[11];  // DPCD (0x50F | 0x514)
+    dev_info->chip_type = dpcd_buf[13];  // DPCD 0x516
+
+    if (KT_FW_STATE_RUN_APP == dev_info->fw_run_state)
+    {
+        dev_info->is_dual_bank_supported = TRUE;
+        dev_info->flash_bank_idx = sec_aux_isp_get_flash_bank_idx(connection, error);
+    }
+
+    dev_info->fw_info.boot_code_ver = 0;
+    // <TODO> Add function to read CMDB information
+    dev_info->fw_info.std_cmdb_ver = 0;
+    dev_info->fw_info.cmdb_rev = 0;
+
+	return TRUE;
+}
+
+static gboolean
+sec_aux_isp_start_isp(FuKineticMstDevice *self,
+                      FuFirmware *firmware,
+                      const KtDpDevInfo *dev_info,
+                      GError **error)
 {
     gboolean ret = FALSE;
-#if 0   // <TODO> Port the functions to get chip info
-    gboolean is_app_mode = (DeviceInfo_In.FwRunState == MCDP_RUN_APP)? TRUE : FALSE;
-#else
-    gboolean is_app_mode = TRUE;
-#endif
+    gboolean is_app_mode = (KT_FW_STATE_RUN_APP == dev_info->fw_run_state)? TRUE : FALSE;
     g_autoptr(GBytes) isp_drv = NULL;
     g_autoptr(GBytes) app = NULL;
 	const guint8 *payload_data;
@@ -892,28 +1010,25 @@ sec_aux_isp_update_firmware(FuKineticMstDevice *self,
 	g_autoptr(FuDeviceLocker) locker = NULL;
     g_autoptr(FuKineticMstConnection) connection = NULL;
     g_autoptr(FuFirmwareImage) img = NULL;
-    guint8 mca_oui[DPCD_FIELD_SIZE_IEEE_OUI] = {MCA_OUI_BYTE_0, MCA_OUI_BYTE_1, MCA_OUI_BYTE_2};
 
-    connection = fu_kinetic_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)));
+    connection = fu_kinetic_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE (self)));
 
     isp_procd_size = 0;
 
-#if 0   // <TODO> Port the functions to get chip info
-    g_message("Start secure AUX-ISP [%s]...", _get_chip_id_str(DeviceInfo_In.ChipId));
-#endif
+    g_message("Start secure AUX-ISP [%s]...", sec_aux_isp_get_chip_id_str(dev_info->chip_id));
 
     // Write MCA OUI
-    if (!kt_aux_write_src_oui(self, mca_oui, error))
+    if (!sec_aux_isp_write_mca_oui(connection, error))
         goto SECURE_AUX_ISP_END;
 
     // Send ISP driver and execute it
-    img = fu_firmware_get_image_by_idx(firmware, FU_KT_IMG_IDX_ISP_DRV, error);
+    img = fu_firmware_get_image_by_idx(firmware, FU_KT_FW_IMG_IDX_ISP_DRV, error);
     if (NULL == img)
         return FALSE;
-    isp_drv = fu_firmware_image_write (img, error);
+    isp_drv = fu_firmware_image_write(img, error);
 	if (isp_drv == NULL)
 		return FALSE;
-	payload_data = g_bytes_get_data (isp_drv, &payload_len);
+	payload_data = g_bytes_get_data(isp_drv, &payload_len);
 
     if (payload_len)
     {
@@ -926,13 +1041,13 @@ sec_aux_isp_update_firmware(FuKineticMstDevice *self,
         goto SECURE_AUX_ISP_END;
 
     // Send FW image
-    img = fu_firmware_get_image_by_idx(firmware, FU_KT_IMG_IDX_APP, error);
+    img = fu_firmware_get_image_by_idx(firmware, FU_KT_FW_IMG_IDX_APP, error);
     if (NULL == img)
         return FALSE;
     app = fu_firmware_image_write(img, error);
 	if (app == NULL)
 		return FALSE;
-	payload_data = g_bytes_get_data (app, &payload_len);
+	payload_data = g_bytes_get_data(app, &payload_len);
     if (!sec_aux_isp_send_fw_payload(connection, payload_data, payload_len, error))
         goto SECURE_AUX_ISP_END;
 
@@ -953,6 +1068,189 @@ SECURE_AUX_ISP_END:
     return ret;
 }
 
+static gboolean
+sec_aux_isp_update_firmware(FuKineticMstDevice *self,
+                            FuFirmware *firmware,
+                            GError **error)
+{
+    /* <TODO> test ISP for host device now
+     *        ISP for DFP devices is not implemented yet
+     */
+    return sec_aux_isp_start_isp(self, firmware, &dp_dev_infos[DEV_HOST], error);;
+}
+
+gboolean kt_dp_get_dev_info_from_branch_id(guint8 *br_id_str_buf, guint8 br_id_str_buf_size, KtDpDevInfo *dev_info)
+{
+    guint8 i = 0;
+
+    dev_info->chip_id = KT_CHIP_NONE;
+    dev_info->fw_run_state = KT_FW_STATE_RUN_NONE;
+    memset(dev_info->branch_id_str, 0, DPCD_SIZE_BRANCH_DEV_ID_STR);    // Clear the buffer to all 0s as DP spec mentioned
+
+    // Find the device info by branch ID string
+    while (kt_dp_branch_dev_info_table[i].chip_id != KT_CHIP_NONE)
+    {
+        if (0 == memcmp(br_id_str_buf, kt_dp_branch_dev_info_table[i].id_str, kt_dp_branch_dev_info_table[i].str_len))  // Found the chip
+        {
+            dev_info->chip_id = kt_dp_branch_dev_info_table[i].chip_id;
+            dev_info->fw_run_state = kt_dp_branch_dev_info_table[i].fw_run_state;
+            memcpy(dev_info->branch_id_str, br_id_str_buf, br_id_str_buf_size);
+
+            return TRUE;
+        }
+
+        i++;
+    }
+
+    return FALSE;
+}
+
+gboolean kt_dp_read_chip_id_and_state(FuKineticMstConnection *connection,
+                                      /*KtDpDevPort dev_port,*/
+                                      KtDpDevInfo *dev_info,
+                                      GError **error)
+{
+    guint8 branch_id[DPCD_SIZE_BRANCH_DEV_ID_STR] = {0};
+
+    // Detail information is from DPCD branch ID string
+    if (!kt_aux_read_dpcd_branch_id_str(connection, branch_id, DPCD_SIZE_BRANCH_DEV_ID_STR, error))
+    {
+        return FALSE;
+    }
+
+    if (!kt_dp_get_dev_info_from_branch_id(branch_id, DPCD_SIZE_BRANCH_DEV_ID_STR, dev_info))
+        return FALSE;
+
+    return TRUE;
+}
+
+gboolean kt_dp_enable_aux_forward(FuKineticMstConnection *connection,
+                                  KtChipId root_dev_chip_id,
+                                  KtFwRunState root_dev_state,
+                                  KtDpDevPort target_port,
+                                  GError **error)
+{
+    if (root_dev_state == KT_FW_STATE_RUN_APP)
+    {
+        if ((root_dev_chip_id == KT_CHIP_JAGUAR_5000) || (root_dev_chip_id == KT_CHIP_MUSTANG_5200))
+        {
+            if (!sec_aux_isp_enable_aux_forward(connection, target_port, error))
+            {
+                g_prefix_error(error, "Failed to enable AUX forwarding!");
+                return FALSE;
+            }
+
+            g_usleep(10 * 1000);    // Wait 10ms for host processing AUX forwarding command
+
+            return TRUE;
+        }
+
+        g_prefix_error(error, "Host device [%s] doesn't support AUX forwarding!",
+                              sec_aux_isp_get_chip_id_str(dp_root_dev_chip_id));
+    }
+    else
+    {
+        g_prefix_error(error, "Host device [%s %s] doesn't support AUX forwarding!",
+                              sec_aux_isp_get_chip_id_str(dp_root_dev_chip_id),
+                              sec_aux_isp_get_fw_run_state_str(dp_root_dev_state));
+    }
+
+    return FALSE;
+}
+
+// ---------------------------------------------------------------
+// ---------------------------------------------------------------
+gboolean kt_dp_disable_aux_forward(FuKineticMstConnection *connection,
+                                   KtChipId root_dev_chip_id,
+                                   KtFwRunState root_dev_state,
+                                   GError **error)
+{
+    if (root_dev_state != KT_FW_STATE_RUN_APP)
+        return FALSE;
+
+    if (root_dev_chip_id == KT_CHIP_JAGUAR_5000)
+    {
+        g_usleep(5 * 1000); // Wait 5ms
+        return sec_aux_isp_disable_aux_forward(connection, error);
+    }
+
+    return FALSE;
+}
+
+gboolean kt_dp_read_device_info(FuKineticMstDevice *self,
+                                KtDpDevPort target_port,
+                                KtDpDevInfo *dev_info,
+                                GError **error)
+{
+    g_autoptr(FuKineticMstConnection) connection = NULL;
+    gboolean is_read_success = FALSE;
+    gboolean is_dev_read = FALSE;
+
+    if (dev_info == NULL)
+        return FALSE;
+
+    dev_info->chip_id = KT_CHIP_NONE;
+    dev_info->chip_type = 0;
+    dev_info->chip_sn = 0;
+    dev_info->fw_run_state = KT_FW_STATE_RUN_NONE;
+    dev_info->fw_info.std_fw_ver = 0;
+    dev_info->fw_info.std_cmdb_ver = 0;
+    dev_info->fw_info.cmdb_rev = 0;
+    dev_info->fw_info.boot_code_ver = 0;
+    dev_info->fw_info.customer_project_id = 0;
+    dev_info->fw_info.customer_fw_ver = 0;
+    dev_info->is_dual_bank_supported = FALSE;
+    dev_info->flash_bank_idx = BANK_NONE;
+
+    // Get basic chip information (Chip ID, F/W work state)
+#if 0   // <TODO> AUX-ISP for DFP device
+    if ((KT_CHIP_NONE == dp_root_dev_chip_id) && (target_port != DEV_HOST))
+    {
+        // Acquire information of root device(host)
+        is_read_success = kt_dp_read_chip_id_and_state(connection, dev_info, error);
+        if (is_read_success)
+        {
+            dp_root_dev_chip_id = dev_info->chip_id;
+            dp_root_dev_state = dev_info->fw_run_state;
+            is_dev_read = TRUE;
+        }
+    }
+
+    if (target_port != DEV_HOST)
+    {
+        if (!kt_dp_enable_aux_forward(connection, dp_root_dev_chip_id, dp_root_dev_state, target_port, error))
+            return FALSE;
+    }
+#endif
+
+    connection = fu_kinetic_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)));
+
+    if (is_dev_read == FALSE)
+        is_read_success = kt_dp_read_chip_id_and_state(connection, dev_info, error);
+
+    if (is_read_success)
+    {
+        // Get more information from each control library
+        /* <TODO> Make the control a derivable class to support different behaviors and DPCD definitions
+         *        while processing ISP. (if needed)
+         */
+        sec_aux_isp_get_device_info(connection, dev_info, error);
+        //memcpy(&mcdp_DeviceInfo[target_port], dev_info, sizeof(KtDpDevInfo));
+    }
+
+#if 0   // <TODO> AUX-ISP for DFP device
+    if (target_port != DEV_HOST)
+        kt_dp_disable_aux_forward(connection, dp_root_dev_chip_id, dp_root_dev_state, error);
+#endif
+
+    if (dp_root_dev_chip_id == KT_CHIP_NONE)
+    {
+        dp_root_dev_chip_id = dev_info->chip_id;
+        dp_root_dev_state = dev_info->fw_run_state;
+    }
+
+    return is_read_success;
+}
 
 static gboolean
 fu_kinetic_mst_device_write_firmware(FuDevice *device,
@@ -1017,28 +1315,44 @@ fu_kinetic_mst_device_write_firmware(FuDevice *device,
 }
 
 FuKineticMstDevice *
-fu_kinetic_mst_device_new (FuUdevDevice *device)
+fu_kinetic_mst_device_new(FuUdevDevice *device)
 {
-	FuKineticMstDevice *self = g_object_new (FU_TYPE_KINETIC_MST_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), FU_DEVICE (device));
+	FuKineticMstDevice *self = g_object_new(FU_TYPE_KINETIC_MST_DEVICE, NULL);
+	fu_device_incorporate(FU_DEVICE (self), FU_DEVICE (device));
 	return self;
 }
 
 void
-fu_kinetic_mst_device_set_system_type (FuKineticMstDevice *self, const gchar *system_type)
+fu_kinetic_mst_device_set_system_type(FuKineticMstDevice *self, const gchar *system_type)
 {
-	g_return_if_fail (FU_IS_KINETIC_MST_DEVICE (self));
-	self->system_type = g_strdup (system_type);
+	g_return_if_fail(FU_IS_KINETIC_MST_DEVICE (self));
+	self->system_type = g_strdup(system_type);
+}
+
+static gboolean
+fu_kinetic_mst_device_rescan(FuDevice *device, GError **error)
+{
+	FuKineticMstDevice *self = FU_KINETIC_MST_DEVICE(device);
+	g_autoptr(FuKineticMstConnection) connection = NULL;
+
+    if (!kt_dp_read_device_info(self, DEV_HOST, &dp_dev_infos[DEV_HOST], error))
+    {
+        return FALSE;
+    }
+
+	return TRUE;
 }
 
 static void
-fu_kinetic_mst_device_class_init (FuKineticMstDeviceClass *klass)
+fu_kinetic_mst_device_class_init(FuKineticMstDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+
 	object_class->finalize = fu_kinetic_mst_device_finalize;
+
 	//klass_device->to_string = fu_kinetic_mst_device_to_string;
-	//klass_device->rescan = fu_kinetic_mst_device_rescan;
+	klass_device->rescan = fu_kinetic_mst_device_rescan;
 	klass_device->write_firmware = fu_kinetic_mst_device_write_firmware;
 	klass_device->prepare_firmware = fu_kinetic_mst_device_prepare_firmware;
 	//klass_device->probe = fu_kinetic_mst_device_probe;

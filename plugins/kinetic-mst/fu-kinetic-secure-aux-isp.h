@@ -9,6 +9,56 @@
 #define DPCD_KT_CONFIRMATION_BIT        0x80
 #define DPCD_KT_COMMAND_MASK            0x7F
 
+#define SIZE_1KB        (1   * 1024)
+#define SIZE_4KB        (4   * 1024)
+#define SIZE_8KB        (8   * 1024)
+#define SIZE_16KB       (16  * 1024)
+#define SIZE_24KB       (24  * 1024)
+#define SIZE_32KB       (32  * 1024)
+#define SIZE_248KB      (248 * 1024)
+#define SIZE_256KB      (256 * 1024)
+#define SIZE_128KB      (128 * 1024)
+#define SIZE_144KB      (144 * 1024)
+#define SIZE_240KB      (240 * 1024)
+#define SIZE_360KB      (360 * 1024)
+#define SIZE_384KB      (384 * 1024)
+#define SIZE_512KB      (512 * 1024)
+#define SIZE_640KB      (640 * 1024)
+#define SIZE_1MB        (1024 * 1024)
+
+// Flash Memory Map
+#define STD_FW_PAYLOAD_SIZE                 SIZE_1MB
+#define STD_APP_ID_SIZE                     32
+#define STD_FW_SIGNATURE_OFFSET             (STD_FW_PAYLOAD_SIZE - STD_APP_ID_SIZE + 4)  // 0xFFFE4
+#define STD_FW_VER_OFFSET                   (STD_FW_PAYLOAD_SIZE - STD_APP_ID_SIZE + 12) // 0xFFFEC
+#define STD_FW_VER_SIZE                     3
+#define CUSTOMER_PROJ_ID_OFFSET             (STD_FW_PAYLOAD_SIZE - STD_APP_ID_SIZE + 15) // 0xFFFEF
+#define CUSTOMER_FW_VER_OFFSET              (STD_FW_PAYLOAD_SIZE - STD_APP_ID_SIZE + 16) // 0xFFFF0
+#define CUSTOMER_FW_VER_SIZE                2
+
+#define FW_CERTIFICATE_SIZE                 SIZE_1KB
+#define FW_RSA_SIGNATURE_SIZE               256
+#define FW_RSA_SIGNATURE_BLOCK_SIZE         SIZE_1KB
+#define ESM_PAYLOAD_BLOCK_SIZE              SIZE_256KB
+#define APP_CODE_NORMAL_BLOCK_SIZE          SIZE_384KB
+#define APP_CODE_EXTEND_BLOCK_SIZE          SIZE_640KB
+#define APP_INIT_DATA_BLOCK_SIZE            SIZE_24KB
+#define CMDB_BLOCK_SIZE                     SIZE_4KB
+
+#define SPI_ESM_CERTIFICATE_START           0
+#define SPI_APP_CERTIFICATE_START           (SPI_ESM_CERTIFICATE_START + FW_CERTIFICATE_SIZE)           // 0x00400
+#define SPI_ESM_RSA_SIGNATURE_START         (SPI_APP_CERTIFICATE_START + FW_CERTIFICATE_SIZE)           // 0x00800
+#define SPI_APP_RSA_SIGNATURE_START         (SPI_ESM_RSA_SIGNATURE_START + FW_RSA_SIGNATURE_BLOCK_SIZE) // 0x00C00
+#define SPI_ESM_PAYLOAD_START               (SPI_APP_RSA_SIGNATURE_START + FW_RSA_SIGNATURE_BLOCK_SIZE) // 0x01000
+#define SPI_APP_PAYLOAD_START               (SPI_ESM_PAYLOAD_START + ESM_PAYLOAD_BLOCK_SIZE)            // 0x41000
+#define SPI_APP_NORMAL_INIT_DATA_START      (SPI_APP_PAYLOAD_START + APP_CODE_NORMAL_BLOCK_SIZE)        // 0xA1000
+#define SPI_APP_EXTEND_INIT_DATA_START      (SPI_APP_PAYLOAD_START + APP_CODE_EXTEND_BLOCK_SIZE)        // 0xE1000
+#define SPI_CMDB_BLOCK_START                0xFE000UL
+#define SPI_APP_ID_DATA_START               (STD_FW_PAYLOAD_SIZE - STD_APP_ID_SIZE)
+
+#define FLASH_PROGRAM_COUNT                 100000
+#define WAIT_PROG_INTERVAL_MS               500
+
 typedef enum {
 	// Status
     KT_DPCD_CMD_STS_NONE                = 0x0,
@@ -35,5 +85,40 @@ typedef enum {
 
     // 0x70 ~ 0x7F are reserved for other usage
     KT_DPCD_CMD_RESERVED                = 0x7F,
-} KineticSecureAuxIspCmdAndStatus;
+} KtSecureAuxIspCmdAndStatus;
+
+typedef enum
+{
+    KT_CHIP_NONE          = 0,
+    KT_CHIP_BOBCAT_2800   = 1,
+    KT_CHIP_BOBCAT_2850   = 2,
+    KT_CHIP_PEGASUS       = 3,
+    KT_CHIP_MYSTIQUE      = 4,
+    KT_CHIP_DP2VGA        = 5,
+    KT_CHIP_PUMA_2900     = 6,
+    KT_CHIP_PUMA_2920     = 7,
+    KT_CHIP_JAGUAR_5000   = 8,
+    KT_CHIP_MUSTANG_5200  = 9,
+} KtChipId;
+
+typedef enum
+{
+    KT_FW_STATE_RUN_NONE       = 0,
+    KT_FW_STATE_RUN_IROM       = 1,
+    KT_FW_STATE_RUN_BOOT_CODE  = 2,
+    KT_FW_STATE_RUN_APP        = 3,
+
+    KT_FW_STATE_NUM            = 4
+} KtFwRunState;
+
+typedef enum
+{
+    DEV_HOST    = 0,
+    DEV_PORT1   = 1,
+    DEV_PORT2   = 2,
+    DEV_PORT3   = 3,
+
+    MAX_DEV_NUM = 4,
+    DEV_ALL     = 0xFF
+} KtDpDevPort;
 
