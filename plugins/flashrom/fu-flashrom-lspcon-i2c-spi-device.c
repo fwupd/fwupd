@@ -56,9 +56,11 @@ static FlashromLayout *
 create_flash_layout (void)
 {
 	struct flashrom_layout *out = g_new (FlashromLayout, 1);
-	struct romentry *entries = g_memdup (ENTRIES_TEMPLATE, sizeof (ENTRIES_TEMPLATE));
-
-	out->entries = entries;
+#if GLIB_CHECK_VERSION(2,67,3)
+	out->entries = g_memdup2 (ENTRIES_TEMPLATE, sizeof (ENTRIES_TEMPLATE));
+#else
+	out->entries = g_memdup (ENTRIES_TEMPLATE, sizeof (ENTRIES_TEMPLATE));
+#endif
 	out->num_entries = sizeof (ENTRIES_TEMPLATE) / sizeof (*ENTRIES_TEMPLATE);
 	return out;
 }
