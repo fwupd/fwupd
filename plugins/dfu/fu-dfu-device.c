@@ -35,7 +35,7 @@
  * * `ignore-polltimeout`:	Ignore the device download timeout
  * * `ignore-runtime`:		Device has broken DFU runtime support
  * * `ignore-upload`:		Uploading from the device is broken
- * * `no-fu-dfu-runtime`:		No DFU runtime interface is provided
+ * * `no-dfu-runtime`:		No DFU runtime interface is provided
  * * `no-get-status-upload`:	Do not do GetStatus when uploading
  * * `no-pid-change`:		Accept the same VID:PID when changing modes
  * * `use-any-interface`:	Use any interface for DFU
@@ -402,7 +402,7 @@ fu_dfu_device_add_targets (FuDfuDevice *self, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->targets->len == 0 &&
-	    fu_device_has_custom_flag (FU_DEVICE (self), "no-fu-dfu-runtime")) {
+	    fu_device_has_custom_flag (FU_DEVICE (self), "no-dfu-runtime")) {
 		g_debug ("no DFU runtime, so faking device");
 		fu_dfu_device_set_state (self, FU_DFU_STATE_APP_IDLE);
 		priv->iface_number = 0xff;
@@ -871,7 +871,7 @@ fu_dfu_device_refresh (FuDfuDevice *self, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
-	    fu_device_has_custom_flag (FU_DEVICE (self), "no-fu-dfu-runtime"))
+	    fu_device_has_custom_flag (FU_DEVICE (self), "no-dfu-runtime"))
 		return TRUE;
 
 	/* ensure interface is claimed */
@@ -1019,7 +1019,7 @@ fu_dfu_device_detach (FuDevice *device, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
-	    fu_device_has_custom_flag (FU_DEVICE (self), "no-fu-dfu-runtime"))
+	    fu_device_has_custom_flag (FU_DEVICE (self), "no-dfu-runtime"))
 		return TRUE;
 
 	/* ensure interface is claimed */
@@ -1076,7 +1076,7 @@ fu_dfu_device_abort (FuDfuDevice *self, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
-	    fu_device_has_custom_flag (FU_DEVICE (self), "no-fu-dfu-runtime")) {
+	    fu_device_has_custom_flag (FU_DEVICE (self), "no-dfu-runtime")) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1143,7 +1143,7 @@ fu_dfu_device_clear_status (FuDfuDevice *self, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
-	    fu_device_has_custom_flag (FU_DEVICE (self), "no-fu-dfu-runtime")) {
+	    fu_device_has_custom_flag (FU_DEVICE (self), "no-dfu-runtime")) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1217,7 +1217,7 @@ fu_dfu_device_open (FuDevice *device, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
-	    fu_device_has_custom_flag (device, "no-fu-dfu-runtime")) {
+	    fu_device_has_custom_flag (device, "no-dfu-runtime")) {
 		fu_dfu_device_set_state (self, FU_DFU_STATE_APP_IDLE);
 		priv->status = FU_DFU_STATUS_OK;
 	}
