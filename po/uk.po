@@ -24,11 +24,22 @@ msgstr[1] "Лишилося %.0f хвилини"
 msgstr[2] "Лишилося %.0f хвилин"
 msgstr[3] "Лишилася %.0f хвилина"
 
+#. TRANSLATORS: battery refers to the system power source
+#, c-format
+msgid "%s Battery Update"
+msgstr "Оновлення для акумуляторів %s"
+
 #. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
 #. * at system bootup
 #, c-format
 msgid "%s CPU Microcode Update"
 msgstr "Оновлення мікропрограми процесора %s"
+
+#. TRANSLATORS: camera can refer to the laptop internal
+#. * camera in the bezel or external USB webcam
+#, c-format
+msgid "%s Camera Update"
+msgstr "Оновлення для камери %s"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Secure Boot`
@@ -67,11 +78,21 @@ msgstr "Оновлення для пристрою %s"
 msgid "%s Embedded Controller Update"
 msgstr "Оновлення для вбудованого контролера %s"
 
+#. TRANSLATORS: Keyboard refers to an input device for typing
+#, c-format
+msgid "%s Keyboard Update"
+msgstr "Оновлення для клавіатури %s"
+
 #. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s ME Update"
 msgstr "Оновлення ME %s"
+
+#. TRANSLATORS: Mouse refers to a handheld input device
+#, c-format
+msgid "%s Mouse Update"
+msgstr "Оновлення для миші %s"
 
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -79,12 +100,22 @@ msgstr "Оновлення ME %s"
 msgid "%s System Update"
 msgstr "Оновлення системи %s"
 
+#. TRANSLATORS: TPM refers to a Trusted Platform Module
+#, c-format
+msgid "%s TPM Update"
+msgstr "Оновлення для TPM %s"
+
 #. TRANSLATORS: the Thunderbolt controller is a device that
 #. * has other high speed Thunderbolt devices plugged into it;
 #. * the first %s is the system name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Thunderbolt Controller Update"
 msgstr "Оновлення контролера Thunderbolt %s"
+
+#. TRANSLATORS: TouchPad refers to a flat input device
+#, c-format
+msgid "%s Touchpad Update"
+msgstr "Оновлення для сенсорної панелі %s"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -585,10 +616,6 @@ msgid "Do not check for old metadata"
 msgstr "Не перевіряти, чи є застарілі метадані"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Не перевіряти, чи слід перезавантажуватися після оновлення"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Не перевіряти, чи є ненадіслані звіти у журналі"
 
@@ -608,20 +635,6 @@ msgstr "Не включати префікс часової позначки"
 msgid "Do not perform device safety checks"
 msgstr "Не виконувати перевірок безпечності для пристрою"
 
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Не вивантажувати звіт цього разу, але запитати знову, якщо надалі з'являться оновлення"
-msgstr[1] "Не вивантажувати звіти цього разу, але запитати знову, якщо надалі з'являться оновлення"
-msgstr[2] "Не вивантажувати звіти цього разу, але запитати знову, якщо надалі з'являться оновлення"
-msgstr[3] "Не вивантажувати звіти цього разу, але запитати знову, якщо надалі з'являться оновлення"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "Не вивантажувати звіт цього разу і ніколи згодом про це не запитувати, якщо колись з'являться оновлення"
-msgstr[1] "Не вивантажувати звіти цього разу і ніколи згодом про це не запитувати, якщо колись з'являться оновлення"
-msgstr[2] "Не вивантажувати звіти цього разу і ніколи згодом про це не запитувати, якщо колись з'являться оновлення"
-msgstr[3] "Не вивантажувати звіти цього разу і ніколи згодом про це не запитувати, якщо колись з'являться оновлення"
-
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Не записувати дані до бази даних журналу"
@@ -629,6 +642,18 @@ msgstr "Не записувати дані до бази даних журнал
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Чи розумієте ви наслідки зміни гілки мікропрограми?"
+
+#. TRANSLATORS: offer to disable this nag
+msgid "Do you want to disable this feature for future updates?"
+msgstr "Хочете вимкнути цю можливість для наступних оновлень?"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Do you want to refresh this remote now?"
+msgstr "Хочете освіжити це віддалене сховище зараз?"
+
+#. TRANSLATORS: offer to stop asking the question
+msgid "Do you want to upload reports automatically for future updates?"
+msgstr "Хочете вивантажувати звіти автоматично для наступних оновлень?"
 
 #. TRANSLATORS: success
 #. success
@@ -720,6 +745,10 @@ msgid "Exit after the engine has loaded"
 msgstr "Завершити роботу після завантаження рушія"
 
 #. TRANSLATORS: command description
+msgid "Export a firmware file structure to XML"
+msgstr "Експортувати структуру файла мікропрограми до XML"
+
+#. TRANSLATORS: command description
 msgid "Extract a firmware blob to images"
 msgstr "Видобувати бінарну мікропрограму до образів"
 
@@ -738,6 +767,10 @@ msgstr "ВХІДНИЙ_ФАЙЛ ВИХІДНИЙ_ФАЙЛ [СКРИПТ] [ВИВ
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
 msgstr "НАЗВА_ФАЙЛА"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME CERTIFICATE PRIVATE-KEY"
+msgstr "НАЗВА-ФАЙЛА СЕРТИФІКАТ ЗАКРИТИЙ-КЛЮЧ"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
@@ -796,6 +829,10 @@ msgstr "Не вдалося завантажити коригування"
 #. TRANSLATORS: could not read existing system data
 msgid "Failed to load system dbx"
 msgstr "Не вдалося завантажити системний dbx"
+
+#. TRANSLATORS: another fwupdtool instance is already running
+msgid "Failed to lock"
+msgstr "Не вдалося заблокувати"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -865,10 +902,6 @@ msgstr "Засіб роботи з мікропрограмами"
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
 msgstr "Засвідчення мікропрограми"
-
-#. TRANSLATORS: system is not booted in UEFI mode
-msgid "Firmware can not be updated in legacy BIOS mode"
-msgstr "У режимі сумісності із застарілим BIOS не можна оновити мікропрограму"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
@@ -1536,6 +1569,10 @@ msgid "Runtime Suffix"
 msgstr "Динамічний суфікс"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS Descriptor"
+msgstr "Дескриптор SPI BIOS"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS region"
 msgstr "Регіон BIOS SPI"
 
@@ -1648,6 +1685,10 @@ msgstr "Показати дані щодо стану оновлення мік�
 msgid "Shutdown now?"
 msgstr "Вимкнути зараз?"
 
+#. TRANSLATORS: command description
+msgid "Sign a firmware with a new key"
+msgstr "Підписати мікропрограму новим ключем"
+
 msgid "Sign data using the client certificate"
 msgstr "Підписування даних клієнтським сертифікатом"
 
@@ -1697,6 +1738,10 @@ msgstr "Успішно вимкнено запис віддаленого схо
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
 msgstr "Успішно отримано нові метадані:"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled and refreshed remote"
+msgstr "Успішно увімкнено і освіжено віддалене сховище"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
@@ -1888,6 +1933,10 @@ msgstr "Капсульні оновлення UEFI є недоступними �
 msgid "UEFI dbx Utility"
 msgstr "Засіб роботи з dbx UEFI"
 
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "UEFI firmware can not be updated in legacy BIOS mode"
+msgstr "У режимі сумісності із застарілим BIOS не можна оновити мікропрограму UEFI"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
 msgstr "Ключ платформи UEFI"
@@ -2023,23 +2072,9 @@ msgstr "Оновлюємо %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Виявлено оновлення для %s з %s до %s"
 
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Вивантажити звіт цього разу, але запитати знову, якщо надалі з'являться оновлення"
-msgstr[1] "Вивантажити звіти цього разу, але запитати знову, якщо надалі з'являться оновлення"
-msgstr[2] "Вивантажити звіти цього разу, але запитати знову, якщо надалі з'являться оновлення"
-msgstr[3] "Вивантажити звіти цього разу, але запитати знову, якщо надалі з'являться оновлення"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Вивантажити звіт зараз?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Вивантажити звіт цього разу і автоматично вивантажувати звіти, якщо надалі з'являться оновлення"
-msgstr[1] "Вивантажити звіти цього разу і автоматично вивантажувати звіти, якщо надалі з'являться оновлення"
-msgstr[2] "Вивантажити звіти цього разу і автоматично вивантажувати звіти, якщо надалі з'являться оновлення"
-msgstr[3] "Вивантажити звіти цього разу і автоматично вивантажувати звіти, якщо надалі з'являться оновлення"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

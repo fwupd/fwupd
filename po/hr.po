@@ -565,10 +565,6 @@ msgid "Do not check for old metadata"
 msgstr "Ne provjeravaj stare metapodatke"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Ne provjeravaj za ponovno pokretanje nakon nadopune"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Ne provjeravaj neprijavljenu povijest"
 
@@ -583,18 +579,6 @@ msgstr "Ne uključuj prefiks vremena"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Nemoj izvoditi provjere sigurnosti uređaja"
-
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Ne šaljite izvještaj u ovo vrijeme, ali upitaj ponovno za buduće nadopune"
-msgstr[1] "Ne šaljite izvještaje u ovo vrijeme, ali upitaj ponovno za buduće nadopune"
-msgstr[2] "Ne šaljite izvještaje u ovo vrijeme, ali upitaj ponovno za buduće nadopune"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "Ne šaljite izvještaj, i nemoj nikada upitati za slanje izvještaja za buduće nadopune"
-msgstr[1] "Ne šaljite izvještaje, i nemoj nikada upitati za slanje izvještaja za buduće nadopune"
-msgstr[2] "Ne šaljite izvještaje, i nemoj nikada upitati za slanje izvještaja za buduće nadopune"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -799,10 +783,6 @@ msgstr "Firmver pomagalo"
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
 msgstr "Frimver provjera"
-
-#. TRANSLATORS: system is not booted in UEFI mode
-msgid "Firmware can not be updated in legacy BIOS mode"
-msgstr "Firmver se ne može aktualizirati u starom BIOS modusu"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
@@ -1861,21 +1841,9 @@ msgstr "Nadopunjujem %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Nadopuna je dostupna za %s sa %s na %s"
 
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Pošalji izvještaj samo ovaj puta, ali upitaj ponovno za buduće nadopune"
-msgstr[1] "Pošalji izvještaje samo ovaj puta, ali upitaj ponovno za buduće nadopune"
-msgstr[2] "Pošalji izvještaje samo ovaj puta, ali upitaj ponovno za buduće nadopune"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Pošalji izvještaj odmah?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Pošalji izvještaj samo ovaj puta i automatski pošalji izvještaje nakon završetka buduće nadopne"
-msgstr[1] "Pošalji izvještaje samo ovaj puta i automatski pošalji izvještaje nakon završetka buduće nadopne"
-msgstr[2] "Pošalji izvještaje samo ovaj puta i automatski pošalji izvještaje nakon završetka buduće nadopne"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

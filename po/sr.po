@@ -147,10 +147,6 @@ msgid "Do not check for old metadata"
 msgstr "Не проверавај старе метаподатке"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Не проверавај да ли је потребно поновно покретање након ажурирања"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Не проверавај непослати историјат"
 

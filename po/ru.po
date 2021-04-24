@@ -325,10 +325,6 @@ msgid "Do not check for old metadata"
 msgstr "Не проверять старые метаданные"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Не проверять перезагрузку после обновления"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Не проверять незарегистрированную историю"
 

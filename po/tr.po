@@ -8,6 +8,7 @@
 # Sabri Ünal <libreajans@gmail.com>, 2019-2020
 # Sabri Ünal <yakushabb@gmail.com>, 2020
 # Serdar Sağlam <teknomobil@msn.com>, 2020
+# yunus kaba <yunuskaba@gmail.com>, 2021
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -227,6 +228,9 @@ msgstr "Aygıtın saklanan sağlama toplamlarını güncellemek için kimlik do�
 msgid "Automatic Reporting"
 msgstr "Otomatik Raporla"
 
+msgid "BYTES"
+msgstr "BYTES"
+
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
 msgstr "Önyükleyici Sürümü"
@@ -234,6 +238,10 @@ msgstr "Önyükleyici Sürümü"
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Ürün yazılımını korumalı alan kullanarak oluştur"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -343,10 +351,6 @@ msgid "Do not check for old metadata"
 msgstr "Eski üst verileri kontrol etme"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Güncellemeden sonra yeniden başlatmayı kontrol etme"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Bildirilmeyen geçmişi kontrol etme"
 
@@ -431,6 +435,14 @@ msgstr "Siliniyor…"
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
 msgstr "Küçük bir gecikme sonrası çık"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE"
+msgstr "FILE"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME"
+msgstr "FILENAME"
 
 #. TRANSLATORS: we could not talk to the fwupd daemon
 msgid "Failed to connect to daemon"
@@ -549,6 +561,10 @@ msgstr "Bir aygıt için sürümleri alır"
 msgid "Gets the results from the last update"
 msgstr "Son güncellemeden sonuçları alır"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "HWIDS-FILE"
+msgstr "HWIDS-FILE"
+
 #. TRANSLATORS: The hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "Donanım yeniden takılmayı bekliyor"
@@ -556,6 +572,11 @@ msgstr "Donanım yeniden takılmayı bekliyor"
 #. TRANSLATORS: the release urgency
 msgid "High"
 msgstr "Yüksek"
+
+#. TRANSLATORS: Title:
+#. https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+msgid "IOMMU"
+msgstr "IOMMU"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -597,6 +618,19 @@ msgstr "Ürün yazılımını güncellemesi kuruluyor…"
 msgid "Installing on %s…"
 msgstr "Kuruluyor %s…"
 
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard"
+msgstr "Intel BootGuard"
+
+#. TRANSLATORS: Title: Direct Connect Interface (DCI) allows
+#. * debugging of Intel processors using the USB3 port
+msgid "Intel DCI debugger"
+msgstr "Intel DCI debugger"
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "Intel SMAP"
+msgstr "Intel SMAP"
+
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
 msgstr "Dahili aygıt"
@@ -606,6 +640,10 @@ msgid "Issue"
 msgid_plural "Issues"
 msgstr[0] "Sorunlar"
 msgstr[1] "Sorunlar"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "KEY,VALUE"
+msgstr "KEY,VALUE"
 
 msgid "Keyring"
 msgstr "Anahtarlık"
@@ -627,6 +665,18 @@ msgstr "Linux Tedarikçi Ürün Yazılımı Hizmeti (kararlı ürün yazılımı
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
 msgstr "Linux Tedarikçi Ürün Yazılımı Hizmeti (test ürün yazılımı)"
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux kernel"
+msgstr "Linux kernel"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux kernel lockdown"
+msgstr "Linux kernel lockdown"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux swap"
+msgstr "Linux swap"
 
 #. TRANSLATORS: command line option
 msgid "List supported firmware updates"
@@ -765,6 +815,10 @@ msgstr "Sahipli"
 msgid "Query for firmware update support"
 msgstr "Yazılım güncelleme desteği için sorgu"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID"
+msgstr "REMOTE-ID"
+
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
 msgstr "Ürün yazılımını aygıttan dosyaya oku"
@@ -822,6 +876,10 @@ msgstr "Değişikliklerin etkili olması için artalan süreci yeniden başlatı
 #. TRANSLATORS: restarting the device to pick up new F/W
 msgid "Restarting device…"
 msgstr "Aygıt yeniden başlatılıyor…"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI lock"
+msgstr "SPI lock"
 
 #. TRANSLATORS: command line option
 msgid "Schedule installation for next reboot when possible"
@@ -961,6 +1019,22 @@ msgstr "Özet"
 msgid "Supported on remote server"
 msgstr "Uzak sunucuda desteklenir"
 
+#. TRANSLATORS: Title: a better sleep state
+msgid "Suspend-to-idle"
+msgstr "Suspend-to-idle"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend-to-ram"
+msgstr "Suspend-to-ram"
+
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM PCR0 reconstruction"
+msgstr "TPM PCR0 reconstruction"
+
+#. TRANSLATORS: Title: TPM = Trusted Platform Module
+msgid "TPM v2.0"
+msgstr "TPM v2.0"
+
 msgid "Target"
 msgstr "Hedef"
 
@@ -987,6 +1061,18 @@ msgstr "Tür"
 #. TRANSLATORS: program name
 msgid "UEFI Firmware Utility"
 msgstr "UEFI Ürün Yazılımı Yardımcı Programı"
+
+#. TRANSLATORS: program name
+msgid "UEFI dbx Utility"
+msgstr "UEFI dbx Utility"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI platform key"
+msgstr "UEFI platform key"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI secure boot"
+msgstr "UEFI secure boot"
 
 #. TRANSLATORS: current daemon status is unknown
 #. TRANSLATORS: we don't know the license of the update
@@ -1071,6 +1157,9 @@ msgstr "Kullanıcı bilgilendirildi"
 msgid "Username"
 msgstr "Kullanıcı adı"
 
+msgid "VID:PID"
+msgstr "VID:PID"
+
 #. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
 msgid "Variant"
 msgstr "Türev"
@@ -1110,6 +1199,10 @@ msgstr "Yazılıyor…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Hizmet sağlayıcınız, sisteminizle veya bağlı aygıtlarla uyumluluk için herhangi bir ürün yazılımı güncellemesini doğrulamamış olabilir."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID]"
+msgstr "[DEVICE-ID|GUID]"
 
 #. TRANSLATORS: program name
 msgid "fwupd TPM event log utility"

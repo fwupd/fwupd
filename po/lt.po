@@ -297,10 +297,6 @@ msgid "Do not check for old metadata"
 msgstr "Netikrinti ar yra senų metaduomenų"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Po atnaujinimo netikrinti ar buvo paleidimas iš naujo"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Netikrinti ar yra istorijos apie kurią nepranešta"
 

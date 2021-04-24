@@ -182,10 +182,6 @@ msgid "Do not check for old metadata"
 msgstr "不要檢查中介資料是否老舊"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "不要檢查是否更新後要重新開機"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "不要檢查是否有尚未報告的歷史"
 

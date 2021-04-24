@@ -570,10 +570,6 @@ msgid "Do not check for old metadata"
 msgstr "Non controlla i metadati vecchi"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Non controlla se è necessario riavviare dopo un aggiornamento"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Non controlla la cronologia non segnalata "
 
@@ -592,16 +588,6 @@ msgstr "Non include il prefisso della marcatura temporale"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Non esegue i controlli di sicurezza del dispositivo"
-
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Non caricare il rapporto ora, ma chiedere nuovamente con i prossimi aggiornamenti"
-msgstr[1] "Non caricare i rapporti ora, ma chiedere nuovamente con i prossimi aggiornamenti"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "Non caricare il rapporto e non chiedere nuovamente con i prossimi aggiornamenti"
-msgstr[1] "Non caricare i rapporti e non chiedere nuovamente con i prossimi aggiornamenti"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -846,10 +832,6 @@ msgstr "Strumento gestione firmware"
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
 msgstr "Convalida firmware"
-
-#. TRANSLATORS: system is not booted in UEFI mode
-msgid "Firmware can not be updated in legacy BIOS mode"
-msgstr "Impossibile aggiornare il firmware in modalità BIOS legacy"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
@@ -1996,19 +1978,9 @@ msgstr "Aggiornamento di %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Aggiornamento disponibile per %s da %s a %s"
 
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Caricare il rapporto ora e chiedere nuovamente con i prossimi aggiornamenti"
-msgstr[1] "Caricare i rapporti ora e chiedere nuovamente con i prossimi aggiornamenti"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Caricare il rapporto ora?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Caricare il rapporto ora e caricare automaticamente con i prossimi aggiornamenti"
-msgstr[1] "Caricare i rapporti ora e caricare automaticamente con i prossimi aggiornamenti"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

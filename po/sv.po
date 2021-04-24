@@ -7,7 +7,7 @@
 # Andreas Henriksson <andreas@fatal.se>, 2017
 # Josef Andersson <josef.andersson@fripost.org>, 2015,2017-2018
 # Josef Andersson <l10nl18nsweja@gmail.com>, 2015,2017
-# Luna Jernberg <bittin@cafe8bitar.se>, 2020
+# Luna Jernberg <bittin@cafe8bitar.se>, 2020-2021
 # Sebastian Rasmussen <sebras@gmail.com>, 2019-2020
 # Sebastian Rasmussen <sebras@gmail.com>, 2018
 msgid ""
@@ -299,6 +299,9 @@ msgstr "Autentisering krävs för att uppdatera den lagrade kontrollsumman för 
 msgid "Automatic Reporting"
 msgstr "Automatisk rapportering"
 
+msgid "BYTES"
+msgstr "BYTES"
+
 #. TRANSLATORS: there follows a list of hashes
 msgid "Blocked firmware files:"
 msgstr "Blockerad fast programvaru fil:"
@@ -489,6 +492,10 @@ msgstr "Enheter som inte uppdaterades korrekt:"
 msgid "Devices with no available firmware updates: "
 msgstr "Enheter med inga tillgängliga uppdateringar för fast programvara"
 
+#. TRANSLATORS: message letting the user know no device upgrade available
+msgid "Devices with the latest available firmware version:"
+msgstr "Enheter med den senaste tillgängliga uppdateringar för fast programvara:"
+
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
 msgid "Disabled"
@@ -510,10 +517,6 @@ msgid "Do not check for old metadata"
 msgstr "Kontrollera inte gammal metadata"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Kontrollera inte om det krävs omstart efter uppdatering"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Kontrollera inte ej rapporterad historik"
 
@@ -528,16 +531,6 @@ msgstr "Inkludera inte tidsstämpelprefix"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Utför inte säkerhetskontroller för enheter"
-
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Skicka inte rapport denna gången, men fråga igen vid framtida uppdateringar"
-msgstr[1] "Skicka inte rapporter denna gången, men fråga igen vid framtida uppdateringar"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "Skicka inte rapport, och fråga aldrig om att skicka rapport vid framtida uppdateringar"
-msgstr[1] "Skicka inte rapporter, och fråga aldrig om att skicka rapporter vid framtida uppdateringar"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -631,6 +624,14 @@ msgstr "Avsluta efter en kort fördröjning"
 #. TRANSLATORS: exit straight away, used for automatic profiling
 msgid "Exit after the engine has loaded"
 msgstr "Avsluta efter att motorn har lästs in"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE"
+msgstr "FIL"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME"
+msgstr "FILNAMN"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: The update state of the specific device
@@ -805,6 +806,10 @@ msgstr "Erhåll utgåvan för en enhet"
 #. TRANSLATORS: command description
 msgid "Gets the results from the last update"
 msgstr "Hämtar resultaten från senaste uppdateringen"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "HWIDS-FILE"
+msgstr "HWIDS-FIL"
 
 #. TRANSLATORS: The hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
@@ -1076,6 +1081,10 @@ msgstr "Åsidosätt standardsökväg för ESP"
 msgid "Override warnings and force the action"
 msgstr "Åsidosätt varningar och tvinga åtgärden"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "PATH"
+msgstr "SÖKVÄG"
+
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
 msgstr "Tolka och visa detaljer om en fastprogramvarufil"
@@ -1236,6 +1245,11 @@ msgstr "Schemalägg om möjligt installationen till nästa uppstart"
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Schemalägger…"
+
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "Se %s för mer information."
 
 #. TRANSLATORS: Device has been chosen by the daemon for the user
 msgid "Selected device"
@@ -1407,6 +1421,10 @@ msgstr "Stöds på fjärrserver"
 msgid "System requires external power source"
 msgstr "Systemet kräver extern strömkälla"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "TEXT"
+msgstr "TEXT"
+
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
 msgstr "TPM v2.0"
@@ -1565,19 +1583,9 @@ msgstr "Uppdaterar %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Uppgradering tillgänglig för %s från %s till %s"
 
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Skicka rapport endast denna gång, men fråga igen vid framtida uppdateringar"
-msgstr[1] "Skicka rapporter endast denna gång, men fråga igen vid framtida uppdateringar"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Skicka upp rapport nu?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Skicka rapport och skicka den automatiskt efter att framtida uppdateringar färdigställts"
-msgstr[1] "Skicka rapporter och skicka dem automatiskt efter att framtida uppdateringar färdigställts"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -1602,6 +1610,9 @@ msgstr "Användare har aviserats"
 #. TRANSLATORS: remote filename base
 msgid "Username"
 msgstr "Användarnamn"
+
+msgid "VID:PID"
+msgstr "VID:PID"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Valid"
@@ -1654,6 +1665,10 @@ msgstr "Skriver…"
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
 msgstr "Din distributör kanske inte har verifierat någon av uppdateringarna av fastprogramvara för kompatibilitet med ditt system eller anslutna enheter."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[SMBIOS-FILE|HWIDS-FILE]"
+msgstr "[SMBIOS-FIL|HWIDS-FIL]"
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

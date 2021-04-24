@@ -23,11 +23,22 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minute remaining"
 msgstr[1] "%.0f minutes remaining"
 
+#. TRANSLATORS: battery refers to the system power source
+#, c-format
+msgid "%s Battery Update"
+msgstr "%s Battery Update"
+
 #. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
 #. * at system bootup
 #, c-format
 msgid "%s CPU Microcode Update"
 msgstr "%s CPU Microcode Update"
+
+#. TRANSLATORS: camera can refer to the laptop internal
+#. * camera in the bezel or external USB webcam
+#, c-format
+msgid "%s Camera Update"
+msgstr "%s Camera Update"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Secure Boot`
@@ -66,11 +77,21 @@ msgstr "%s Device Update"
 msgid "%s Embedded Controller Update"
 msgstr "%s Embedded Controller Update"
 
+#. TRANSLATORS: Keyboard refers to an input device for typing
+#, c-format
+msgid "%s Keyboard Update"
+msgstr "%s Keyboard Update"
+
 #. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s ME Update"
 msgstr "%s ME Update"
+
+#. TRANSLATORS: Mouse refers to a handheld input device
+#, c-format
+msgid "%s Mouse Update"
+msgstr "%s Mouse Update"
 
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -78,12 +99,22 @@ msgstr "%s ME Update"
 msgid "%s System Update"
 msgstr "%s System Update"
 
+#. TRANSLATORS: TPM refers to a Trusted Platform Module
+#, c-format
+msgid "%s TPM Update"
+msgstr "%s TPM Update"
+
 #. TRANSLATORS: the Thunderbolt controller is a device that
 #. * has other high speed Thunderbolt devices plugged into it;
 #. * the first %s is the system name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Thunderbolt Controller Update"
 msgstr "%s Thunderbolt Controller Update"
+
+#. TRANSLATORS: TouchPad refers to a flat input device
+#, c-format
+msgid "%s Touchpad Update"
+msgstr "%s Touchpad Update"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -570,10 +601,6 @@ msgid "Do not check for old metadata"
 msgstr "Do not check for old metadata"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Do not check for reboot after update"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Do not check for unreported history"
 
@@ -593,16 +620,6 @@ msgstr "Do not include timestamp prefix"
 msgid "Do not perform device safety checks"
 msgstr "Do not perform device safety checks"
 
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Do not upload report at this time, but prompt again for future updates"
-msgstr[1] "Do not upload reports at this time, but prompt again for future updates"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "Do not upload report, and never ask to upload reports for future updates"
-msgstr[1] "Do not upload reports, and never ask to upload reports for future updates"
-
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Do not write to the history database"
@@ -610,6 +627,18 @@ msgstr "Do not write to the history database"
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Do you understand the consequences of changing the firmware branch?"
+
+#. TRANSLATORS: offer to disable this nag
+msgid "Do you want to disable this feature for future updates?"
+msgstr "Do you want to disable this feature for future updates?"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Do you want to refresh this remote now?"
+msgstr "Do you want to refresh this remote now?"
+
+#. TRANSLATORS: offer to stop asking the question
+msgid "Do you want to upload reports automatically for future updates?"
+msgstr "Do you want to upload reports automatically for future updates?"
 
 #. TRANSLATORS: success
 #. success
@@ -701,6 +730,10 @@ msgid "Exit after the engine has loaded"
 msgstr "Exit after the engine has loaded"
 
 #. TRANSLATORS: command description
+msgid "Export a firmware file structure to XML"
+msgstr "Export a firmware file structure to XML"
+
+#. TRANSLATORS: command description
 msgid "Extract a firmware blob to images"
 msgstr "Extract a firmware blob to images"
 
@@ -719,6 +752,10 @@ msgstr "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
 msgstr "FILENAME"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME CERTIFICATE PRIVATE-KEY"
+msgstr "FILENAME CERTIFICATE PRIVATE-KEY"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
@@ -777,6 +814,10 @@ msgstr "Failed to load quirks"
 #. TRANSLATORS: could not read existing system data
 msgid "Failed to load system dbx"
 msgstr "Failed to load system dbx"
+
+#. TRANSLATORS: another fwupdtool instance is already running
+msgid "Failed to lock"
+msgstr "Failed to lock"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -846,10 +887,6 @@ msgstr "Firmware Utility"
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
 msgstr "Firmware attestation"
-
-#. TRANSLATORS: system is not booted in UEFI mode
-msgid "Firmware can not be updated in legacy BIOS mode"
-msgstr "Firmware can not be updated in legacy BIOS mode"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
@@ -1511,6 +1548,10 @@ msgid "Runtime Suffix"
 msgstr "Runtime Suffix"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS Descriptor"
+msgstr "SPI BIOS Descriptor"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS region"
 msgstr "SPI BIOS region"
 
@@ -1623,6 +1664,10 @@ msgstr "Show the information of firmware update status"
 msgid "Shutdown now?"
 msgstr "Shutdown now?"
 
+#. TRANSLATORS: command description
+msgid "Sign a firmware with a new key"
+msgstr "Sign a firmware with a new key"
+
 msgid "Sign data using the client certificate"
 msgstr "Sign data using the client certificate"
 
@@ -1672,6 +1717,10 @@ msgstr "Successfully disabled remote"
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
 msgstr "Successfully downloaded new metadata: "
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled and refreshed remote"
+msgstr "Successfully enabled and refreshed remote"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
@@ -1861,6 +1910,10 @@ msgstr "UEFI capsule updates not available or enabled in firmware setup"
 msgid "UEFI dbx Utility"
 msgstr "UEFI dbx Utility"
 
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "UEFI firmware can not be updated in legacy BIOS mode"
+msgstr "UEFI firmware can not be updated in legacy BIOS mode"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
 msgstr "UEFI platform key"
@@ -1996,19 +2049,9 @@ msgstr "Updating %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Upgrade available for %s from %s to %s"
 
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Upload report just this one time, but prompt again for future updates"
-msgstr[1] "Upload reports just this one time, but prompt again for future updates"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Upload report now?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Upload report this time and automatically upload reports after completing future updates"
-msgstr[1] "Upload reports this time and automatically upload reports after completing future updates"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

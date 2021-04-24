@@ -221,10 +221,6 @@ msgstr "Dispositîfs che no son stâts inzornâts ben:"
 msgid "Disabled fwupdate debugging"
 msgstr "Disabilite il debug di fwupdate"
 
-#. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "No sta controlâ se si scugne tornâ a inviâ daspò un inzornament"
-
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
 msgstr "No sta includi il prefìs il domini dal regjistri"
@@ -236,16 +232,6 @@ msgstr "No sta includi il prefìs date/ore"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "No sta eseguî i controi di sigurece dal dispositîf"
-
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Pal moment no sta inviâ il rapuart, ma torne domande pai inzornaments futûrs"
-msgstr[1] "Pal moment no sta inviâ i rapuarts, ma torne domande pai inzornaments futûrs"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "No sta inviâ il rapuart e no sta domandâ plui di inviâ i rapuarts pai inzornaments futûrs"
-msgstr[1] "No sta inviâ i rapuarts e no sta domandâ plui di inviâ i rapuarts pai inzornaments futûrs"
 
 #. TRANSLATORS: success
 #. success
@@ -863,19 +849,9 @@ msgstr "Daûr a inzornâ %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Inzornament disponibil par %s di %s a %s"
 
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Invie il rapuart dome cheste volte, ma torne domande pai inzornaments futûrs"
-msgstr[1] "Invie i rapuarts dome cheste volte, ma torne domande pai inzornaments futûrs"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Inviâ il rapuart cumò?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Invie il rapuart par cheste volte e invie in automatic i rapuarts dopo vê completât i inzornaments futûrs"
-msgstr[1] "Invie i rapuarts par cheste volte e invie in automatic i rapuarts dopo vê completât i inzornaments futûrs"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

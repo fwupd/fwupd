@@ -23,11 +23,22 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "Manca %.0f minut"
 msgstr[1] "Manquen %.0f minuts"
 
+#. TRANSLATORS: battery refers to the system power source
+#, c-format
+msgid "%s Battery Update"
+msgstr "%s Actualització de la bateria"
+
 #. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
 #. * at system bootup
 #, c-format
 msgid "%s CPU Microcode Update"
 msgstr "%s Actualitza el microprogramari de la CPU"
+
+#. TRANSLATORS: camera can refer to the laptop internal
+#. * camera in the bezel or external USB webcam
+#, c-format
+msgid "%s Camera Update"
+msgstr "%s Actualització de la càmera"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Secure Boot`
@@ -66,11 +77,21 @@ msgstr "Actualització del dispositiu %s"
 msgid "%s Embedded Controller Update"
 msgstr "Actualització del controlador incorporat %s"
 
+#. TRANSLATORS: Keyboard refers to an input device for typing
+#, c-format
+msgid "%s Keyboard Update"
+msgstr "%s Actualització del teclat"
+
 #. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s ME Update"
 msgstr "Actualització ME de %s"
+
+#. TRANSLATORS: Mouse refers to a handheld input device
+#, c-format
+msgid "%s Mouse Update"
+msgstr "%s Actualització del ratolí"
 
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -78,12 +99,22 @@ msgstr "Actualització ME de %s"
 msgid "%s System Update"
 msgstr "Actualització del sistema %s"
 
+#. TRANSLATORS: TPM refers to a Trusted Platform Module
+#, c-format
+msgid "%s TPM Update"
+msgstr "%s Actualització del TPM"
+
 #. TRANSLATORS: the Thunderbolt controller is a device that
 #. * has other high speed Thunderbolt devices plugged into it;
 #. * the first %s is the system name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Thunderbolt Controller Update"
 msgstr "Actualització del controlador Thunderbolt %s"
+
+#. TRANSLATORS: TouchPad refers to a flat input device
+#, c-format
+msgid "%s Touchpad Update"
+msgstr "%s Actualització del ratolí tàctil"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -570,10 +601,6 @@ msgid "Do not check for old metadata"
 msgstr "No comprovar si hi ha metadades antigues"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "No realitzis el reinici després de l'actualització"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "No comprovar si hi ha un historial sense informar"
 
@@ -593,16 +620,6 @@ msgstr "No incloure el prefix de la marca de temps"
 msgid "Do not perform device safety checks"
 msgstr "No realitzar les comprovacions de seguretat al dispositiu"
 
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "No enviar l'informe en aquest moment, però sol·licita-ho de nou en les futures actualitzacions"
-msgstr[1] "No enviar els informes en aquest moment, però sol·licita-ho de nou en les futures actualitzacions"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "No enviar l'informe, i no sol·licitar-ho mai per a les futures actualitzacions"
-msgstr[1] "No enviar els informes, i no sol·licitar-ho mai per a les futures actualitzacions"
-
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "No escriure a la base de dades de l'historial"
@@ -610,6 +627,18 @@ msgstr "No escriure a la base de dades de l'historial"
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Enteneu les conseqüències de canviar la branca del microprogramari?"
+
+#. TRANSLATORS: offer to disable this nag
+msgid "Do you want to disable this feature for future updates?"
+msgstr "Voleu inhabilitar aquesta característica per a futures actualitzacions?"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Do you want to refresh this remote now?"
+msgstr "Voleu refrescar ara aquest remot?"
+
+#. TRANSLATORS: offer to stop asking the question
+msgid "Do you want to upload reports automatically for future updates?"
+msgstr "Voleu pujar automàticament els informes per a futures actualitzacions?"
 
 #. TRANSLATORS: success
 #. success
@@ -701,6 +730,10 @@ msgid "Exit after the engine has loaded"
 msgstr "Sur una vegada s'hagi carregat el motor"
 
 #. TRANSLATORS: command description
+msgid "Export a firmware file structure to XML"
+msgstr "Exporta a XML una estructura de fitxers del microprogramari"
+
+#. TRANSLATORS: command description
 msgid "Extract a firmware blob to images"
 msgstr "Extreu un blob de microprogramari en imatges."
 
@@ -719,6 +752,10 @@ msgstr "FITXER_ENTRADA FITXER_SORTIDA [SCRIPT] [SORTIDA]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
 msgstr "NOM_FITXER"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME CERTIFICATE PRIVATE-KEY"
+msgstr "NOM_FITXER CERTIFICAT CLAU_PRIVADA"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
@@ -777,6 +814,10 @@ msgstr "No s'han pogut carregar les peculiaritats"
 #. TRANSLATORS: could not read existing system data
 msgid "Failed to load system dbx"
 msgstr "Ha fallat en carregar una dbx del sistema"
+
+#. TRANSLATORS: another fwupdtool instance is already running
+msgid "Failed to lock"
+msgstr "Ha fallat en bloquejar"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -846,10 +887,6 @@ msgstr "Utilitat per al microprogramari"
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
 msgstr "Atestat del microprogramari"
-
-#. TRANSLATORS: system is not booted in UEFI mode
-msgid "Firmware can not be updated in legacy BIOS mode"
-msgstr "El microprogramari no es pot actualitzar en el mode BIOS heretat"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
@@ -1511,8 +1548,12 @@ msgid "Runtime Suffix"
 msgstr "Sufix d'execució"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS Descriptor"
+msgstr "Descriptor del BIOS per a l'SPI"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS region"
-msgstr "regió del BIOS per a l'SPI"
+msgstr "Regió del BIOS per a l'SPI"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI lock"
@@ -1623,6 +1664,10 @@ msgstr "Mostra la informació sobre l'estat de l'actualització del microprogram
 msgid "Shutdown now?"
 msgstr "Aturar-lo ara?"
 
+#. TRANSLATORS: command description
+msgid "Sign a firmware with a new key"
+msgstr "Signa un microprogramari amb una clau nova"
+
 msgid "Sign data using the client certificate"
 msgstr "Signa les dades emprant el certificat del client"
 
@@ -1672,6 +1717,10 @@ msgstr "El remot s'ha inhabilitat correctament"
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
 msgstr "S'han baixat les metadades noves amb èxit:"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled and refreshed remote"
+msgstr "S'ha habilitat i refrescat el remot amb èxit"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
@@ -1861,6 +1910,10 @@ msgstr "Les actualitzacions de la càpsula UEFI no estan disponibles o habilitad
 msgid "UEFI dbx Utility"
 msgstr "Utilitat dbx UEFI"
 
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "UEFI firmware can not be updated in legacy BIOS mode"
+msgstr "El microprogramari UEFI no es pot actualitzar en el mode BIOS heretat"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
 msgstr "Clau de la plataforma UEFI"
@@ -1996,19 +2049,9 @@ msgstr "S'està actualitzant %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Actualització disponible per a %s des de %s a %s"
 
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Envia l'informe només aquesta vegada, però sol·licita-ho de nou en les futures actualitzacions"
-msgstr[1] "Envia els informes només aquesta vegada, però sol·licita-ho de nou en les futures actualitzacions"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Envio l'informe ara?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Envia l'informe aquesta vegada i torna a carregar-lo després de completar les futures actualitzacions"
-msgstr[1] "Envia els informes aquesta vegada i torna a carregar-los després de completar les futures actualitzacions"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

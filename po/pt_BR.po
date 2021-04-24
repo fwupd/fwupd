@@ -26,11 +26,22 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minuto restante"
 msgstr[1] "%.0f minutos restantes"
 
+#. TRANSLATORS: battery refers to the system power source
+#, c-format
+msgid "%s Battery Update"
+msgstr "Atualização da bateria para %s"
+
 #. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
 #. * at system bootup
 #, c-format
 msgid "%s CPU Microcode Update"
-msgstr "Atualização de microcódigo de CPU %s"
+msgstr "Atualização de microcódigo de CPU para %s"
+
+#. TRANSLATORS: camera can refer to the laptop internal
+#. * camera in the bezel or external USB webcam
+#, c-format
+msgid "%s Camera Update"
+msgstr "Atualização de câmera para %s"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Secure Boot`
@@ -69,11 +80,21 @@ msgstr "Atualização do dispositivo %s"
 msgid "%s Embedded Controller Update"
 msgstr "Atualização do controlador embarcado %s"
 
+#. TRANSLATORS: Keyboard refers to an input device for typing
+#, c-format
+msgid "%s Keyboard Update"
+msgstr "Atualização do teclado para %s"
+
 #. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s ME Update"
 msgstr "Atualização de ME para %s"
+
+#. TRANSLATORS: Mouse refers to a handheld input device
+#, c-format
+msgid "%s Mouse Update"
+msgstr "Atualização do mouse para %s"
 
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -81,12 +102,22 @@ msgstr "Atualização de ME para %s"
 msgid "%s System Update"
 msgstr "Atualização do sistema %s"
 
+#. TRANSLATORS: TPM refers to a Trusted Platform Module
+#, c-format
+msgid "%s TPM Update"
+msgstr "Atualização de TPM para %s"
+
 #. TRANSLATORS: the Thunderbolt controller is a device that
 #. * has other high speed Thunderbolt devices plugged into it;
 #. * the first %s is the system name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Thunderbolt Controller Update"
 msgstr "Atualização de controlador Thunderbolt para %s"
+
+#. TRANSLATORS: TouchPad refers to a flat input device
+#, c-format
+msgid "%s Touchpad Update"
+msgstr "Atualização do touchpad para %s"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -573,10 +604,6 @@ msgid "Do not check for old metadata"
 msgstr "Não verifica por metadados antigos"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Não verifica por reinicialização após atualizar"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Não verifica por histórico não relatado"
 
@@ -596,16 +623,6 @@ msgstr "Não inclui prefixo com marca de tempo"
 msgid "Do not perform device safety checks"
 msgstr "Não realiza verificações de segurança de dispositivo"
 
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Não enviar relatório neste momento, mas solicitar novamente para atualizações futuras"
-msgstr[1] "Não enviar relatórios neste momento, mas solicitar novamente para atualizações futuras"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "Não enviar relatório e nunca solicitar para enviar relatórios em atualizações futuras"
-msgstr[1] "Não enviar relatórios e nunca solicitar para enviar relatórios em atualizações futuras"
-
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Não escreve no banco de dados de histórico"
@@ -613,6 +630,18 @@ msgstr "Não escreve no banco de dados de histórico"
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Você entende as consequências de trocar a ramificação do firmware?"
+
+#. TRANSLATORS: offer to disable this nag
+msgid "Do you want to disable this feature for future updates?"
+msgstr "Você deseja desabilitar este recurso para atualizações futuras?"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Do you want to refresh this remote now?"
+msgstr "Você deseja atualizar este remoto agora?"
+
+#. TRANSLATORS: offer to stop asking the question
+msgid "Do you want to upload reports automatically for future updates?"
+msgstr "Você deseja enviar relatórios automaticamente para atualizações futuras?"
 
 #. TRANSLATORS: success
 #. success
@@ -704,6 +733,10 @@ msgid "Exit after the engine has loaded"
 msgstr "Sair após o carregamento do motor"
 
 #. TRANSLATORS: command description
+msgid "Export a firmware file structure to XML"
+msgstr "Exporta a estrutura de arquivo de um firmware para XML"
+
+#. TRANSLATORS: command description
 msgid "Extract a firmware blob to images"
 msgstr "Extrai um blob de firmware para imagens"
 
@@ -722,6 +755,10 @@ msgstr "ARQUIVO-ENTRADA ARQUIVO-SAÍDA [SCRIPT] [SAÍDA]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
 msgstr "NOME-DE-ARQUIVO"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME CERTIFICATE PRIVATE-KEY"
+msgstr "NOME-DE-ARQUIVO CERTIFICADO CHAVE-PRIVADA"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
@@ -780,6 +817,10 @@ msgstr "Falha ao carregar peculiaridades"
 #. TRANSLATORS: could not read existing system data
 msgid "Failed to load system dbx"
 msgstr "Falha ao carregar o dbx do sistema"
+
+#. TRANSLATORS: another fwupdtool instance is already running
+msgid "Failed to lock"
+msgstr "Falha ao bloquear"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -849,10 +890,6 @@ msgstr "Utilitário de Firmware"
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
 msgstr "Atestação de firmware"
-
-#. TRANSLATORS: system is not booted in UEFI mode
-msgid "Firmware can not be updated in legacy BIOS mode"
-msgstr "O firmware não pode ser atualizado no modo BIOS legado"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
@@ -1514,6 +1551,10 @@ msgid "Runtime Suffix"
 msgstr "Sufixo de tempo de execução"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS Descriptor"
+msgstr "Descritor de BIOS do SPI"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS region"
 msgstr "Região BIOS do SPI"
 
@@ -1626,6 +1667,10 @@ msgstr "Mostra as informações do status de atualização de firmware"
 msgid "Shutdown now?"
 msgstr "Desligar agora?"
 
+#. TRANSLATORS: command description
+msgid "Sign a firmware with a new key"
+msgstr "Assina um firmware com uma nova chave"
+
 msgid "Sign data using the client certificate"
 msgstr "Assina dados usando o certificado cliente"
 
@@ -1675,6 +1720,10 @@ msgstr "Remoto desabilitado com sucesso"
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
 msgstr "Baixados com sucesso novos metadados:"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled and refreshed remote"
+msgstr "Remoto habilitado e atualizado com sucesso"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
@@ -1864,6 +1913,10 @@ msgstr "Atualizações de cápsula UEFI não disponíveis ou habilitadas na conf
 msgid "UEFI dbx Utility"
 msgstr "Utilitário de dbx UEFI"
 
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "UEFI firmware can not be updated in legacy BIOS mode"
+msgstr "Firmware UEFI não pode ser atualizado no modo BIOS legado"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
 msgstr "Chave de plataforma UEFI"
@@ -1999,19 +2052,9 @@ msgstr "Atualizando %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Atualização disponível para %s de %s para %s"
 
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Enviar relatório apenas desta vez, mas solicitar novamente para atualizações futuras"
-msgstr[1] "Enviar relatórios apenas desta vez, mas solicitar novamente para atualizações futuras"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Enviar relatório agora?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Enviar relatório neste momento e enviar relatórios automaticamente após concluir atualizações futuras"
-msgstr[1] "Enviar relatórios neste momento e enviar relatórios automaticamente após concluir atualizações futuras"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

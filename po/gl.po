@@ -219,10 +219,6 @@ msgstr "Desactivar a depuración de fwupdate"
 msgid "Display version"
 msgstr "Mostrar versión"
 
-#. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Non marcar para reiniciar despois de actualizar"
-
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
 msgstr "Non incluír o dominio do rexistro"
@@ -234,11 +230,6 @@ msgstr "Non incluír o prefixo de marca de tempo"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Non levar a cabo comprobacións de dispositivo"
-
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Non subir reporte esta vez, pero preguntar de novo en futuras actualizacións"
-msgstr[1] "Non subir reportes esta vez, pero preguntar de novo en futuras actualizacións"
 
 #. TRANSLATORS: success
 #. success

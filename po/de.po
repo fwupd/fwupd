@@ -161,10 +161,6 @@ msgid "Do not check for old metadata"
 msgstr "Nicht auf alte Metadaten prüfen"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Nach der Aktualisierung nicht auf einen Neustart prüfen"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Nicht auf nicht erfassten Verlauf prüfen"
 

@@ -584,10 +584,6 @@ msgid "Do not check for old metadata"
 msgstr "Nekontrolovat stáří metadat"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Nekontrolovat restart po aktualizaci"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Nekontrolovat nenahlášení historie"
 
@@ -606,20 +602,6 @@ msgstr "Nepřidávat příponu s datem a časem"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Neprovádět kontroly bezpečnosti zařízení"
-
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Nyní hlášení neodesílat, ale při budoucích aktualizacích se znovu zeptat"
-msgstr[1] "Nyní hlášení neodesílat, ale při budoucích aktualizacích se znovu zeptat"
-msgstr[2] "Nyní hlášení neodesílat, ale při budoucích aktualizacích se znovu zeptat"
-msgstr[3] "Nyní hlášení neodesílat, ale při budoucích aktualizacích se znovu zeptat"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "Neodesílat hlášení, a  nikdy se neptat na odesílání hlášení u budoucích aktualizací"
-msgstr[1] "Neodesílat hlášení, a nikdy se neptat na odesílání hlášení u budoucích aktualizací"
-msgstr[2] "Neodesílat hlášení, a nikdy se neptat na odesílání hlášení u budoucích aktualizací"
-msgstr[3] "Neodesílat hlášení, a nikdy se neptat na odesílání hlášení u budoucích aktualizací"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -852,10 +834,6 @@ msgstr "Nástroj pro práci s firmwarem"
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
 msgstr "Atestace firmware"
-
-#. TRANSLATORS: system is not booted in UEFI mode
-msgid "Firmware can not be updated in legacy BIOS mode"
-msgstr "Firmware není možné aktualizovat v původním BIOS režimu"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
@@ -2006,23 +1984,9 @@ msgstr "Aktualizace %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Je k dispozici aktualizace pro %s z verze %s na %s"
 
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Nyní hlášení odeslat, ale při budoucích aktualizacích se znovu zeptat"
-msgstr[1] "Nyní hlášení odeslat, ale při budoucích aktualizacích se znovu zeptat"
-msgstr[2] "Nyní hlášení odeslat, ale při budoucích aktualizacích se znovu zeptat"
-msgstr[3] "Nyní hlášení odeslat, ale při budoucích aktualizacích se znovu zeptat"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Nahrát hlášení nyní?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Nyní hlášení odeslat a nadále po dokončení budoucích aktualizací odesílat automaticky"
-msgstr[1] "Nyní hlášení odeslat a nadále po dokončení budoucích aktualizací odesílat automaticky"
-msgstr[2] "Nyní hlášení odeslat a nadále po dokončení budoucích aktualizací odesílat automaticky"
-msgstr[3] "Nyní hlášení odeslat a nadále po dokončení budoucích aktualizací odesílat automaticky"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

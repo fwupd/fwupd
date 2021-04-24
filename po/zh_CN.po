@@ -566,10 +566,6 @@ msgid "Do not check for old metadata"
 msgstr "不要查找老的元数据"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "不要在更新后检查是否需要重启"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "不要查找未报告历史"
 
@@ -588,14 +584,6 @@ msgstr "不包含时间戳前缀"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "不要执行设备安全检查"
-
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "这次不要上传报告，但以后更新时再次提示"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "不要上传报告，并且以后更新时也不再询问"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -840,10 +828,6 @@ msgstr "固件实用程序"
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
 msgstr "固件证明"
-
-#. TRANSLATORS: system is not booted in UEFI mode
-msgid "Firmware can not be updated in legacy BIOS mode"
-msgstr "固件无法在传统 BIOS 模式下更新"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
@@ -1942,17 +1926,9 @@ msgstr "正在更新 %s……"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "%s 有从版本 %s 到 %s 的升级"
 
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "仅这次上传报告，但以后更新时再次提示"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "要上传报告吗？"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "此次上传报告，并且以后完成更新后自动上传报告"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

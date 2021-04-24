@@ -23,11 +23,22 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minuutti jäljellä"
 msgstr[1] "%.0f minuuttia jäljellä"
 
+#. TRANSLATORS: battery refers to the system power source
+#, c-format
+msgid "%s Battery Update"
+msgstr "%s Akku päivitys"
+
 #. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
 #. * at system bootup
 #, c-format
 msgid "%s CPU Microcode Update"
 msgstr "Laitteen %s suorittimen mikrokoodipäivitys"
+
+#. TRANSLATORS: camera can refer to the laptop internal
+#. * camera in the bezel or external USB webcam
+#, c-format
+msgid "%s Camera Update"
+msgstr "%s Kamera päivitys"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Secure Boot`
@@ -66,11 +77,21 @@ msgstr "Laitteen %s laitepäivitys"
 msgid "%s Embedded Controller Update"
 msgstr "Laitteen %s sulautetun ohjaimen päivitys"
 
+#. TRANSLATORS: Keyboard refers to an input device for typing
+#, c-format
+msgid "%s Keyboard Update"
+msgstr "%s Näppäimistö päivitys"
+
 #. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s ME Update"
 msgstr "Laitteen %s ME-päivitys"
+
+#. TRANSLATORS: Mouse refers to a handheld input device
+#, c-format
+msgid "%s Mouse Update"
+msgstr "%s Hiiri päivitys"
 
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -78,12 +99,22 @@ msgstr "Laitteen %s ME-päivitys"
 msgid "%s System Update"
 msgstr "Laitteen %s järjestelmäpäivitys"
 
+#. TRANSLATORS: TPM refers to a Trusted Platform Module
+#, c-format
+msgid "%s TPM Update"
+msgstr "%s TPM päivitys"
+
 #. TRANSLATORS: the Thunderbolt controller is a device that
 #. * has other high speed Thunderbolt devices plugged into it;
 #. * the first %s is the system name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Thunderbolt Controller Update"
 msgstr "Laitteen %s Thunderbolt-ohjaimen päivitys"
+
+#. TRANSLATORS: TouchPad refers to a flat input device
+#, c-format
+msgid "%s Touchpad Update"
+msgstr "%s Tasohiiri päivitys"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -570,10 +601,6 @@ msgid "Do not check for old metadata"
 msgstr "Älä tarkista vanhoja metatietoja"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Älä tarkista käynnistystä uudelleen päivityksen jälkeen"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Älä tarkista ilmoittamattomasta historiasta"
 
@@ -593,16 +620,6 @@ msgstr "Älä sisällytä aikaleiman etuliitettä"
 msgid "Do not perform device safety checks"
 msgstr "Älä suorita laitteen turvallisuustarkastuksia"
 
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Älä lähetä raportteja tällä hetkellä, mutta kysy uudelleen tulevissa päivityksissä"
-msgstr[1] "Älä lähetä raportteja tällä hetkellä, mutta kysy uudelleen tulevissa päivityksissä"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "Älä lähetä raportteja äläkä koskaan pyydä lähettämään raportteja tulevissa päivityksissä"
-msgstr[1] "Älä lähetä raportteja äläkä koskaan pyydä lähettämään raportteja tulevissa päivityksissä"
-
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Älä kirjoita historiatietokantaan"
@@ -610,6 +627,18 @@ msgstr "Älä kirjoita historiatietokantaan"
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Ymmärrätkö laiteohjelmiston haaran vaihtamisen seuraukset?"
+
+#. TRANSLATORS: offer to disable this nag
+msgid "Do you want to disable this feature for future updates?"
+msgstr "Haluatko poistaa tämän ominaisuuden käytöstä tulevia päivityksiä varten?"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Do you want to refresh this remote now?"
+msgstr "Haluatko päivittää tämän etäkoneen nyt?"
+
+#. TRANSLATORS: offer to stop asking the question
+msgid "Do you want to upload reports automatically for future updates?"
+msgstr "Haluatko lähettää raportteja automaattisesti tulevia päivityksiä varten?"
 
 #. TRANSLATORS: success
 #. success
@@ -701,6 +730,10 @@ msgid "Exit after the engine has loaded"
 msgstr "Poistu kun moottori on ladattu"
 
 #. TRANSLATORS: command description
+msgid "Export a firmware file structure to XML"
+msgstr "Vie firmwaren tiedostorakenne XML-muotoon"
+
+#. TRANSLATORS: command description
 msgid "Extract a firmware blob to images"
 msgstr "Laiteohjelmiston blob purkaminen kuvaksi "
 
@@ -719,6 +752,10 @@ msgstr "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
 msgstr "FILENAME"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME CERTIFICATE PRIVATE-KEY"
+msgstr "TIEDOSTONIMEN SERTIFIKAATTI YKSITYINEN AVAIN"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
@@ -777,6 +814,10 @@ msgstr "Quirksin lataaminen epäonnistui"
 #. TRANSLATORS: could not read existing system data
 msgid "Failed to load system dbx"
 msgstr "Järjestelmän dbx-tiedoston lataus epäonnistui"
+
+#. TRANSLATORS: another fwupdtool instance is already running
+msgid "Failed to lock"
+msgstr "Lukitseminen epäonnistui"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -846,10 +887,6 @@ msgstr "Firmware-työkalu"
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
 msgstr "Firmware-aitoustodistus"
-
-#. TRANSLATORS: system is not booted in UEFI mode
-msgid "Firmware can not be updated in legacy BIOS mode"
-msgstr "Laiteohjelmistoa ei voi päivittää legacy BIOS-tilassa"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
@@ -1310,6 +1347,10 @@ msgid "Only show single PCR value"
 msgstr "Näytä vain yksi PCR-arvo"
 
 #. TRANSLATORS: command line option
+msgid "Only use IPFS when downloading files"
+msgstr "Käytä vain IPFS:ää kun lataat tiedostoja"
+
+#. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Ohita oletusarvoinen ESP-polku"
 
@@ -1507,6 +1548,10 @@ msgid "Runtime Suffix"
 msgstr "Suoritusaika"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS Descriptor"
+msgstr "SPI BIOS tunnus"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS region"
 msgstr "SPI BIOS-alue"
 
@@ -1619,6 +1664,10 @@ msgstr "Näytä tiedot laiteohjelmiston 'firmware' päivitystilasta"
 msgid "Shutdown now?"
 msgstr "Sammuta nyt?"
 
+#. TRANSLATORS: command description
+msgid "Sign a firmware with a new key"
+msgstr "Allekirjoita firmware uudella avaimella"
+
 msgid "Sign data using the client certificate"
 msgstr "Allekirjoita tietoja käyttämällä asiakkaan sertifikaattia"
 
@@ -1668,6 +1717,10 @@ msgstr "Onnistuneesti poistettu etäkone"
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
 msgstr "Uusien metatietojen lataus onnistui:"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled and refreshed remote"
+msgstr "Etäkone otettu käyttöön ja päivitetty onnistuneesti"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
@@ -1857,6 +1910,10 @@ msgstr "UEFI-kapselipäivitykset eivät ole saatavilla tai käytössä laiteohje
 msgid "UEFI dbx Utility"
 msgstr "UEFI dbx-apuohjelma"
 
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "UEFI firmware can not be updated in legacy BIOS mode"
+msgstr "UEFI firmwaren päivitys ei onnistu legacy BIOS-tilassa"
+
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
 msgstr "UEFI-alustan avain"
@@ -1992,19 +2049,9 @@ msgstr "Päivittää laitetta %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Päivitys saatavilla %s alkaen %s kohde %s"
 
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Lataa raportit vain tällä kertaa, mutta pyydä uudelleen tulevissa päivityksissä"
-msgstr[1] "Lataa raportit vain tällä kertaa, mutta pyydä uudelleen tulevissa päivityksissä"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Lähetetäänkö raportti nyt?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Lataa raportit tällä kertaa ja lähetä raportit automaattisesti, kun olet suorittanut tulevat päivitykset"
-msgstr[1] "Lataa raportit tällä kertaa ja lähetä raportit automaattisesti, kun olet suorittanut tulevat päivitykset"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

@@ -411,10 +411,6 @@ msgid "Do not check for old metadata"
 msgstr "Jangan periksa untuk metadata lama"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Jangan periksa untuk boot ulang setelah pembaruan"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Jangan periksa untuk riwayat yang tak dilaporkan"
 
@@ -429,14 +425,6 @@ msgstr "Jangan sertakan awalan stempel waktu"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Jangan melakukan pemeriksaan keamanan perangkat"
-
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Jangan mengunggah laporan saat ini, tetapi minta lagi untuk pembaruan di masa mendatang"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "Jangan unggah laporan, dan jangan pernah meminta untuk mengunggah laporan untuk pembaruan di masa mendatang"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -1285,17 +1273,9 @@ msgstr "Memutakhirkan %s…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "Pembaruan tersedia untuk %s dari %s ke %s"
 
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Unggah laporan hanya sekali ini saja, tetapi minta lagi untuk pembaruan di masa mendatang"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Unggah laporan sekarang?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Unggah laporan saat ini dan unggah laporan secara otomatis setelah menyelesaikan pembaruan di masa mendatang"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

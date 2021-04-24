@@ -143,6 +143,7 @@ Recommends: %{name}-plugin-modem-manager
 Recommends: %{name}-plugin-flashrom
 %endif
 %if 0%{?have_uefi}
+Recommends: %{name}-efi
 Recommends: %{name}-plugin-uefi-capsule-data
 %endif
 

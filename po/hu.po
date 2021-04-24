@@ -408,10 +408,6 @@ msgid "Do not check for old metadata"
 msgstr "Ne ellenőrizze a régi metaadatokat"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Ne ellenőrizze az újraindítást a frissítés után"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Ne ellenőrizze a nem jelentett előzményeket"
 
@@ -426,16 +422,6 @@ msgstr "Ne tartalmazza az időbélyeg előtagot"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Ne végezzen eszköz biztonsági ellenőrzéseket"
-
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Most ne töltsön fel jelentést, de kérdezzen rá a jövőben"
-msgstr[1] "Most ne töltsön fel jelentéseket, de kérdezzen rá a jövőben"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "Ne töltsön fel jelentést, és sose kérdezzen rá a jövőben"
-msgstr[1] "Ne töltsön fel jelentéseket, és sose kérdezzen rá a jövőben"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -1271,19 +1257,9 @@ msgstr "%s frissítése…"
 msgid "Upgrade available for %s from %s to %s"
 msgstr "%s frissítés érhető el, erről: %s, erre: %s"
 
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Most töltse fel a jelentést, de kérdezzen rá a jövőben"
-msgstr[1] "Most töltse fel a jelentéseket, de kérdezzen rá a jövőben"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Feltölti most a jelentést?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Most töltse fel a jelentést, és automatikusan tegye meg ezt a jövőben"
-msgstr[1] "Most töltse fel a jelentéseket, és automatikusan tegye meg ezt a jövőben"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
