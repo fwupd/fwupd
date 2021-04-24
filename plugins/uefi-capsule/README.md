@@ -12,7 +12,7 @@ If you don't want or need this functionality you can use the
 `-Dplugin_uefi_capsule=false` option.
 
 When this plugin is enabled, the companion UEFI binary may also be built from the [fwupd-efi](https://github.com/fwupd/fwupd-efi) project if not already present on the filesystem.
-This behavior can be overriden using the meson option `-Defi_binary=false`.
+This behavior can be overridden using the meson option `-Defi_binary=false`.
 
 For this companion binary to work with secure boot, it will need to be signed by an authority trusted with shim and/or the host environment.
 

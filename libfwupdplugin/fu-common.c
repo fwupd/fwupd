@@ -3316,7 +3316,7 @@ fu_battery_state_to_string (FuBatteryState battery_state)
  * This function will always return the same pointer for a given #GBytes.
  *
  * If the size of @bytes is zero, then %NULL is returned and the @error is set,
- * which differs in behaviour to that of g_bytes_get_data().
+ * which differs in behavior to that of g_bytes_get_data().
  *
  * This may be useful when calling g_mapped_file_new() on a zero-length file.
  *
