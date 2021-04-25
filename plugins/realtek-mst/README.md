@@ -1,10 +1,10 @@
-Flashrom
-========
+Realtek MST
+===========
 
 Introduction
 ------------
 
-This plugin uses `libflashrom` to update the firmware of DisplayPort MST hub
+This plugin updates the firmware of DisplayPort MST hub
 devices made by Realtek, such as the RTD2141b and RTD2142.
 
 These devices communicate over I2C, via the DisplayPort aux channel. Devices
@@ -34,6 +34,7 @@ Devices use custom DeviceInstanceId values derived from device names
 provided by system firmware and read from sysfs, like:
 
  * REALTEK-MST\Name_10EC2142:00
+ * REALTEK-MST\Name_10EC2142:00&Family_Google_Hatch
 
 Quirk use
 ---------
@@ -41,7 +42,7 @@ This plugin uses the following plugin-specific quirks:
 
 | Quirk                  | Description                                 | Minimum fwupd version |
 |------------------------|---------------------------------------------|-----------------------|
-| `RealtekMstDpAuxName`  | Specifies the name of the drm_dp_aux_dev device over which the device should be reached. | 1.6.0 |
+| `RealtekMstDpAuxName`  | Specifies the name of the drm_dp_aux_dev channel over which the device should be reached. | 1.6.2 |
 
 Vendor ID security
 ------------------

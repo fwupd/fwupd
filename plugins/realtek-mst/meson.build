@@ -28,7 +28,6 @@ shared_module('fu_plugin_realtek_mst',
   ],
   dependencies : [
     plugin_deps,
-    libflashrom,
   ],
 )
 endif

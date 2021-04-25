@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-udev-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_REALTEK_MST_DEVICE \
 	(fu_realtek_mst_device_get_type ())
