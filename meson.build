@@ -230,6 +230,10 @@ if get_option('curl')
     conf.set('HAVE_LIBCURL_7_62_0', '1')
   endif
 endif
+if get_option('proxy')
+  libproxy = dependency('libproxy-1.0')
+  conf.set('HAVE_LIBPROXY', '1')
+endif
 if build_daemon
   if get_option('polkit')
     polkit = dependency('polkit-gobject-1', version : '>= 0.103')

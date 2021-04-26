@@ -15,6 +15,9 @@
 #ifdef HAVE_GIO_UNIX
 #include <gio/gunixfdlist.h>
 #endif
+#ifdef HAVE_LIBPROXY
+#include <proxy.h>
+#endif
 
 #include <fcntl.h>
 #include <string.h>
@@ -74,6 +77,9 @@ typedef struct {
 	CURL				*curl;
 	curl_mime			*mime;
 	struct curl_slist		*headers;
+#ifdef HAVE_LIBPROXY
+	pxProxyFactory			*libproxy_factory;
+#endif
 } FwupdCurlHelper;
 #endif
 
@@ -121,6 +127,10 @@ fwupd_client_curl_helper_free (FwupdCurlHelper *helper)
 		curl_slist_free_all (helper->headers);
 	if (helper->urls != NULL)
 		g_ptr_array_unref (helper->urls);
+#ifdef HAVE_LIBPROXY
+	if (helper->libproxy_factory != NULL)
+		px_proxy_factory_free (helper->libproxy_factory);
+#endif
 	g_free (helper);
 }
 
@@ -537,11 +547,33 @@ fwupd_client_progress_callback_cb (void *clientp,
 	return 0;
 }
 
+
+static void
+fwupd_client_curl_helper_set_proxy (FwupdCurlHelper *helper, const gchar *url)
+{
+	const gchar *http_proxy = NULL;
+#ifdef HAVE_LIBPROXY
+	g_auto(GStrv) proxies = NULL;
+	proxies = px_proxy_factory_get_proxies (helper->libproxy_factory, url);
+	if (proxies != NULL && g_strcmp0 (proxies[0], "direct://") != 0)
+		http_proxy = proxies[0];
+#else
+	http_proxy = g_getenv ("https_proxy");
+	if (http_proxy == NULL)
+		http_proxy = g_getenv ("HTTPS_PROXY");
+	if (http_proxy == NULL)
+		http_proxy = g_getenv ("http_proxy");
+	if (http_proxy == NULL)
+		http_proxy = g_getenv ("HTTP_PROXY");
+#endif
+	if (http_proxy != NULL && strlen (http_proxy) > 0)
+		curl_easy_setopt (helper->curl, CURLOPT_PROXY, http_proxy);
+}
+
 static FwupdCurlHelper *
 fwupd_client_curl_new (FwupdClient *self, GError **error)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
-	const gchar *http_proxy;
 	g_autoptr(FwupdCurlHelper) helper = g_new0 (FwupdCurlHelper, 1);
 
 	/* check the user agent is sane */
@@ -569,16 +601,10 @@ fwupd_client_curl_new (FwupdClient *self, GError **error)
 	if (g_getenv ("DISABLE_SSL_STRICT") != NULL)
 		curl_easy_setopt (helper->curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
-	/* set the proxy */
-	http_proxy = g_getenv ("https_proxy");
-	if (http_proxy == NULL)
-		http_proxy = g_getenv ("HTTPS_PROXY");
-	if (http_proxy == NULL)
-		http_proxy = g_getenv ("http_proxy");
-	if (http_proxy == NULL)
-		http_proxy = g_getenv ("HTTP_PROXY");
-	if (http_proxy != NULL && strlen (http_proxy) > 0)
-		curl_easy_setopt (helper->curl, CURLOPT_PROXY, http_proxy);
+#ifdef HAVE_LIBPROXY
+	/* use libproxy to get system-wide proxy settings */
+	helper->libproxy_factory = px_proxy_factory_new ();
+#endif
 
 	/* this disables the double-compression of the firmware.xml.gz file */
 	curl_easy_setopt (helper->curl, CURLOPT_HTTP_CONTENT_DECODING, 0L);
@@ -4445,6 +4471,7 @@ fwupd_client_download_bytes_thread_cb (GTask *task,
 		const gchar *url = g_ptr_array_index (helper->urls, i);
 		g_autoptr(GError) error = NULL;
 		g_debug ("downloading %s", url);
+		fwupd_client_curl_helper_set_proxy (helper, url);
 		if (fwupd_client_is_url_http (url)) {
 			blob = fwupd_client_download_http (self, helper->curl, url, &error);
 			if (blob != NULL)
