@@ -1593,6 +1593,9 @@ fu_dfu_device_download (FuDfuDevice *self,
 	if (FU_IS_DFU_FIRMWARE (firmware)) {
 		firmware_vid = fu_dfu_firmware_get_vid (FU_DFU_FIRMWARE (firmware));
 		firmware_pid = fu_dfu_firmware_get_pid (FU_DFU_FIRMWARE (firmware));
+	} else {
+		flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_VID;
+		flags |= DFU_TARGET_TRANSFER_FLAG_WILDCARD_PID;
 	}
 
 	/* do we allow wildcard VID:PID matches */
