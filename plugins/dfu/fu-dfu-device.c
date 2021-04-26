@@ -1649,13 +1649,8 @@ fu_dfu_device_download (FuDfuDevice *self,
 
 	/* download each target */
 	images = fu_firmware_get_images (firmware);
-	if (images->len == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no images in firmware file");
-		return FALSE;
-	}
+	if (images->len == 0)
+		g_ptr_array_add (images, g_object_ref (firmware));
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *image = g_ptr_array_index (images, i);
 		FuDfuTargetTransferFlags flags_local = DFU_TARGET_TRANSFER_FLAG_NONE;
