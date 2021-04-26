@@ -40,6 +40,7 @@ option('elogind', type : 'boolean', value : false, description : 'enable elogind
 option('tests', type : 'boolean', value : true, description : 'enable tests')
 option('soup_session_compat', type : 'boolean', value : true, description : 'enable SoupSession runtime compatibility support')
 option('curl', type : 'boolean', value : true, description : 'enable libcurl support')
+option('proxy', type : 'boolean', value : true, description : 'enable libproxy support')
 option('udevdir', type: 'string', value: '', description: 'Directory for udev rules')
 option('efi_os_dir', type: 'string', description : 'the hardcoded name of OS directory in ESP, e.g. fedora')
 option('efi_binary', type: 'boolean', value : true, description : 'generate uefi binary if missing')

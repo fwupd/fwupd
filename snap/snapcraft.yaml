@@ -211,6 +211,7 @@ parts:
       - libpango1.0-dev
       - libpci-dev
       - libpolkit-gobject-1-dev
+      - libproxy-dev
       - libsmbios-dev
       - libsqlite3-dev
       - libsystemd-dev
@@ -231,6 +232,7 @@ parts:
       - libgpgme11
       - libjson-glib-1.0-0
       - libpolkit-gobject-1-0
+      - libproxy1v5
       - libsmbios-c2
       - glib-networking
       - libglib2.0-bin
