@@ -4,7 +4,16 @@ Flashrom
 Introduction
 ------------
 
-This plugin uses `flashrom` to update the system firmware.
+This plugin uses `libflashrom` to update various types of device:
+
+ * system firmware
+ * Parade Technologies DisplayPort-to-HDMI converters
+
+Though these devices are very dissimilar, they must currently be handled in a
+single plugin because the underlying APIs in `libflashrom` are not reentrant:
+it has internal global state that means it cannot be safely used from multiple
+points in a single process, as it may be if multiple plugins were to use the
+library.
 
 Firmware Format
 ---------------

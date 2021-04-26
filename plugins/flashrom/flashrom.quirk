@@ -40,6 +40,7 @@ Plugin = flashrom
 # Parade PS175
 [1AF80175:00]
 Plugin=flashrom
+GType=FuFlashromLspconI2cSpiDevice
 FlashromProgrammer=lspcon_i2c_spi
 Name=PS175
 Vendor=Parade

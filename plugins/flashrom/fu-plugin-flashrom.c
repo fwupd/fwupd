@@ -195,6 +195,47 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 }
 
 gboolean
+fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **error)
+{
+	FuUdevDevice *udev_device;
+	const gchar *dev_name;
+	GType specialized_type;
+	g_autoptr(FuDevice) specialized_device = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* doesn't handle non-udev devices */
+	if (!FU_IS_UDEV_DEVICE (device))
+		return TRUE;
+	udev_device = FU_UDEV_DEVICE (device);
+
+	/* only care about i2c devices */
+	if (g_strcmp0 (fu_udev_device_get_subsystem (udev_device), "i2c") != 0)
+		return TRUE;
+
+	/* find device quirks by sysfs name */
+	dev_name = fu_udev_device_get_sysfs_attr (FU_UDEV_DEVICE (device), "name", NULL);
+	if (dev_name != NULL) {
+		fu_device_add_instance_id_full (device, dev_name,
+						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	}
+
+	/* construct an instance of the specialized device type from quirks */
+	if ((specialized_type = fu_device_get_specialized_gtype (device)) == G_TYPE_INVALID) {
+		g_debug ("no GType set for %s: ignoring", dev_name);
+		return TRUE;
+	}
+	specialized_device = g_object_new (specialized_type, NULL);
+	fu_device_incorporate (specialized_device, device);
+
+	/* register created device */
+	locker = fu_device_locker_new (specialized_device, error);
+	if (locker == NULL)
+		return FALSE;
+	fu_plugin_device_add (plugin, specialized_device);
+	return TRUE;
+}
+
+gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	if (flashrom_init (SELFCHECK_TRUE)) {
