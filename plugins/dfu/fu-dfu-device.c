@@ -1302,8 +1302,12 @@ fu_dfu_device_close (FuDevice *device, GError **error)
 		if (!g_usb_device_release_interface (usb_device,
 						     (gint) priv->iface_number,
 						     0, &error_local)) {
-			g_warning ("failed to release interface: %s",
-				   error_local->message);
+			if (!g_error_matches (error_local,
+					      G_USB_DEVICE_ERROR,
+					      G_USB_DEVICE_ERROR_NO_DEVICE)) {
+				g_warning ("failed to release interface: %s",
+					   error_local->message);
+			}
 		}
 		priv->claimed_interface = FALSE;
 	}
