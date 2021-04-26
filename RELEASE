@@ -2,7 +2,7 @@ fwupd Release Notes
 
 Write release entries:
 
-git log --format="%s" --cherry-pick --right-only 1.5.7... | grep -i -v trivial | grep -v Merge | sort | uniq
+git log --format="%s" --cherry-pick --right-only 1.6.0... | grep -i -v trivial | grep -v Merge | sort | uniq
 Add any user visible changes into ../data/org.freedesktop.fwupd.metainfo.xml
 appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > NEWS
 
@@ -17,7 +17,7 @@ git add ../po/*.po
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
-export release_ver="1.6.0"
+export release_ver="1.6.1"
 
 git commit -a -m "Release fwupd ${release_ver}"
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
@@ -41,5 +41,5 @@ scp meson-dist/fwupd-${release_ver}.tar.* hughsient@people.freedesktop.org:~/pub
 
 6. Commit changes:
 
-git commit -a -m "trivial: post release version bump"
+git commit -a -m "trivial: post release version bump" --no-verify
 git push
