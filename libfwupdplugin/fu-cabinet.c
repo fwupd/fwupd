@@ -14,6 +14,7 @@
 #include "fu-cabinet.h"
 #include "fu-common.h"
 
+#include "fwupd-common.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
 
@@ -285,9 +286,11 @@ fu_cabinet_parse_release (FuCabinet *self, XbNode *release, GError **error)
 
 	/* set if unspecified, but error out if specified and incorrect */
 	if (csum_tmp != NULL && xb_node_get_text (csum_tmp) != NULL) {
+		const gchar *checksum_old = xb_node_get_text (csum_tmp);
+		GChecksumType checksum_type = fwupd_checksum_guess_kind (checksum_old);
 		g_autofree gchar *checksum = NULL;
-		checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, blob);
-		if (g_strcmp0 (checksum, xb_node_get_text (csum_tmp)) != 0) {
+		checksum = g_compute_checksum_for_bytes (checksum_type, blob);
+		if (g_strcmp0 (checksum, checksum_old) != 0) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,

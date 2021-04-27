@@ -982,6 +982,31 @@ fu_common_store_cab_unsigned_func (void)
 }
 
 static void
+fu_common_store_cab_sha256_func (void)
+{
+	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* create silo */
+	blob = _build_cab (GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+	"<component type=\"firmware\">\n"
+	"  <id>com.acme.example.firmware</id>\n"
+	"  <releases>\n"
+	"    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+	"      <checksum target=\"content\" type=\"sha256\">486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7</checksum>\n"
+	"    </release>\n"
+	"  </releases>\n"
+	"</component>",
+			   "firmware.bin", "world",
+			   NULL);
+	silo = fu_common_cab_build_silo (blob, 10240, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+}
+
+static void
 fu_common_store_cab_folder_func (void)
 {
 	GBytes *blob_tmp;
@@ -2756,6 +2781,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/common{cab-success}", fu_common_store_cab_func);
 	g_test_add_func ("/fwupd/common{cab-success-unsigned}", fu_common_store_cab_unsigned_func);
 	g_test_add_func ("/fwupd/common{cab-success-folder}", fu_common_store_cab_folder_func);
+	g_test_add_func ("/fwupd/common{cab-success-sha256}", fu_common_store_cab_sha256_func);
 	g_test_add_func ("/fwupd/common{cab-error-no-metadata}", fu_common_store_cab_error_no_metadata_func);
 	g_test_add_func ("/fwupd/common{cab-error-wrong-size}", fu_common_store_cab_error_wrong_size_func);
 	g_test_add_func ("/fwupd/common{cab-error-wrong-checksum}", fu_common_store_cab_error_wrong_checksum_func);
