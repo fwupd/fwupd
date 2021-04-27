@@ -220,6 +220,7 @@ fu_cabinet_parse_release (FuCabinet *self, XbNode *release, GError **error)
 	GBytes *blob;
 	const gchar *csum_filename = NULL;
 	g_autofree gchar *basename = NULL;
+	g_autoptr(XbNode) artifact = NULL;
 	g_autoptr(XbNode) csum_tmp = NULL;
 	g_autoptr(XbNode) metadata_trust = NULL;
 	g_autoptr(XbNode) nsize = NULL;
@@ -232,10 +233,18 @@ fu_cabinet_parse_release (FuCabinet *self, XbNode *release, GError **error)
 	if (metadata_trust != NULL)
 		release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_METADATA;
 
-	/* ensure we always have a content checksum */
-	csum_tmp = xb_node_query_first (release, "checksum[@target='content']", NULL);
-	if (csum_tmp != NULL)
-		csum_filename = xb_node_get_attr (csum_tmp, "filename");
+	/* look for source artifact first */
+	artifact = xb_node_query_first (release, "artifacts/artifact[@type='binary']", NULL);
+	if (artifact != NULL) {
+		csum_filename = xb_node_query_text (artifact, "filename", NULL);
+		csum_tmp = xb_node_query_first (artifact, "checksum[@type='sha256']", NULL);
+		if (csum_tmp == NULL)
+			csum_tmp = xb_node_query_first (artifact, "checksum", NULL);
+	} else {
+		csum_tmp = xb_node_query_first (release, "checksum[@target='content']", NULL);
+		if (csum_tmp != NULL)
+			csum_filename = xb_node_get_attr (csum_tmp, "filename");
+	}
 
 	/* if this isn't true, a firmware needs to set in the metainfo.xml file
 	 * something like: <checksum target="content" filename="FLASH.ROM"/> */
