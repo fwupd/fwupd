@@ -369,6 +369,9 @@ endif
 if build_standalone and get_option('plugin_uefi_capsule')
   efiboot = dependency('efiboot')
 
+  efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
+  conf.set_quoted('EFI_APP_LOCATION', efi_app_location)
+
   if host_cpu == 'x86'
           EFI_MACHINE_TYPE_NAME = 'ia32'
   elif host_cpu == 'x86_64'
