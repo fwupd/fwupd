@@ -802,8 +802,12 @@ fu_main_install_with_helper (FuMainAuthHelper *helper_ref, GError **error)
 		if (devices_possible == NULL)
 			return FALSE;
 	} else {
+		g_autoptr(FuDevice) device = NULL;
+		device = fu_engine_get_device (priv->engine, helper->device_id, error);
+		if (device == NULL)
+			return FALSE;
 		devices_possible = fu_engine_get_devices_by_composite_id (priv->engine,
-									  helper->device_id,
+									  fu_device_get_composite_id (device),
 									  error);
 		if (devices_possible == NULL)
 			return FALSE;
