@@ -37,10 +37,6 @@ if get_option('curl')
   libfwupd_deps += libcurl
 endif
 
-if get_option('proxy')
-  libfwupd_deps += libproxy
-endif
-
 libfwupd_src = [
   'fwupd-client.c',
   'fwupd-client-sync.c',
