@@ -828,27 +828,6 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="libproxy-dev">
-    <distro id="arch">
-      <package>libproxy</package>
-    </distro>
-    <distro id="centos">
-      <package>libproxy-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package>libproxy-devel</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libproxy-dev:s390x</package>
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency type="build" id="libtool-bin">
     <distro id="debian">
       <control />
