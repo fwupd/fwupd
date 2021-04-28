@@ -2331,6 +2331,7 @@ fu_plugin_finalize (GObject *object)
 
 /**
  * fu_plugin_new:
+ * @ctx: (nullable): A #FuContext
  *
  * Creates a new #FuPlugin
  *

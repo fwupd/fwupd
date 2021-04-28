@@ -532,6 +532,7 @@ fu_context_load_hwinfo (FuContext *self, GError **error)
 /**
  * fu_context_load_quirks:
  * @self: A #FuContext
+ * @flags: a #FuQuirksLoadFlags, e.g. %FU_QUIRKS_LOAD_FLAG_READONLY_FS
  * @error: (nullable): A #GError, or %NULL
  *
  * Loads all quirks into the context.

@@ -450,6 +450,7 @@ fu_bluez_device_read_string (FuBluezDevice *self, const gchar *uuid, GError **er
  * fu_bluez_device_write:
  * @self: A #FuBluezDevice
  * @uuid: The UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
+ * @buf: a #GByteArray
  * @error: A #GError, or %NULL
  *
  * Writes to a UUID on the device.
@@ -507,6 +508,7 @@ fu_bluez_device_write (FuBluezDevice *self,
 
 /**
  * fu_bluez_device_notify_start:
+ * @self: A #FuBluezDevice
  * @uuid: The UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
  * @error: A #GError, or %NULL
  *
@@ -543,6 +545,7 @@ fu_bluez_device_notify_start (FuBluezDevice *self, const gchar *uuid, GError **e
 
 /**
  * fu_bluez_device_notify_stop:
+ * @self: A #FuBluezDevice
  * @uuid: The UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
  * @error: A #GError, or %NULL
  *
