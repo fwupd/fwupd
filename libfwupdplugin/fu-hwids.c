@@ -234,7 +234,7 @@ fu_hwids_get_replace_keys (FuHwids *self, const gchar *key)
  * fu_hwids_add_smbios_override:
  * @self: A #FuHwids
  * @key: A key, e.g. %FU_HWIDS_KEY_PRODUCT_SKU
- * @value: (nullable): A new value, e.g. "ExampleModel" or %NULL
+ * @value: (nullable): A new value, e.g. "ExampleModel"
  *
  * Sets SMBIOS override values so you can emulate another system.
  *
@@ -254,7 +254,7 @@ fu_hwids_add_smbios_override (FuHwids *self, const gchar *key, const gchar *valu
  * fu_hwids_get_replace_values:
  * @self: A #FuHwids
  * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the replacement values for a HardwareID key or plain key.
  *
@@ -298,7 +298,7 @@ fu_hwids_get_replace_values (FuHwids *self, const gchar *keys, GError **error)
  * fu_hwids_get_guid:
  * @self: A #FuHwids
  * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the GUID for a specific key.
  *
@@ -364,8 +364,8 @@ fu_hwids_convert_integer_cb (FuSmbios *smbios,
 /**
  * fu_hwids_setup:
  * @self: A #FuHwids
- * @smbios: (nullable): A #FuSmbios or %NULL
- * @error: A #GError or %NULL
+ * @smbios: (nullable): A #FuSmbios
+ * @error: (nullable): optional return location for an error
  *
  * Reads all the SMBIOS values from the hardware.
  *

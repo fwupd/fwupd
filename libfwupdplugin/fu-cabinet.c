@@ -175,7 +175,7 @@ fu_cabinet_add_file (FuCabinet *self, const gchar *basename, GBytes *data)
  * fu_cabinet_get_file:
  * @self: A #FuCabinet
  * @basename: filename
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets a file from the archive.
  *
@@ -728,7 +728,7 @@ fu_cabinet_decompress (FuCabinet *self, GBytes *data, GError **error)
  * fu_cabinet_export:
  * @self: A #FuCabinet
  * @flags: A #FuCabinetExportFlags, e.g. %FU_CABINET_EXPORT_FLAG_NONE
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Exports the cabinet archive.
  *
@@ -863,7 +863,7 @@ fu_cabinet_sign_enumerate_firmware (FuCabinet *self, GPtrArray *files, GError **
  * @cert: A #GBytes of a PCKS#7 certificate
  * @privkey: A #GBytes of a private key
  * @flags: A #FuCabinetSignFlags, e.g. %FU_CABINET_SIGN_FLAG_NONE
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Sign the cabinet archive using JCat.
  *
@@ -936,7 +936,7 @@ fu_cabinet_sign (FuCabinet *self,
  * @self: A #FuCabinet
  * @data: A #GBytes
  * @flags: A #FuCabinetParseFlags, e.g. %FU_CABINET_PARSE_FLAG_NONE
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Parses the cabinet archive.
  *

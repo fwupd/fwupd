@@ -450,7 +450,7 @@ fu_quirks_lookup_by_id_iter (FuQuirks *self, const gchar *group,
  * fu_quirks_load: (skip)
  * @self: A #FuQuirks
  * @load_flags: A #FuQuirksLoadFlags
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Loads the various files that define the hardware quirks used in plugins.
  *
@@ -543,7 +543,7 @@ fu_quirks_finalize (GObject *obj)
  *
  * Creates a new quirks object.
  *
- * Return value: a new #FuQuirks
+ * Returns: a new #FuQuirks
  *
  * Since: 1.0.1
  **/

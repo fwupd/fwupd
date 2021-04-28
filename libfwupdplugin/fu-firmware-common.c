@@ -19,12 +19,12 @@
  * @datasz: size of @data, typcally the same as `strlen(data)`
  * @offset: offset in chars into @data to read
  * @value: (out) (nullable): parsed value
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Parses a base 16 number from a string of 1 character in length.
  * The returned @value will range from from 0 to 0xf.
  *
- * Return value: %TRUE if parsed, %FALSE otherwise
+ * Returns: %TRUE if parsed, %FALSE otherwise
  *
  * Since: 1.5.6
  **/
@@ -51,12 +51,12 @@ fu_firmware_strparse_uint4_safe (const gchar *data,
  * @datasz: size of @data, typcally the same as `strlen(data)`
  * @offset: offset in chars into @data to read
  * @value: (out) (nullable): parsed value
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Parses a base 16 number from a string of 2 characters in length.
  * The returned @value will range from from 0 to 0xff.
  *
- * Return value: %TRUE if parsed, %FALSE otherwise
+ * Returns: %TRUE if parsed, %FALSE otherwise
  *
  * Since: 1.5.6
  **/
@@ -83,12 +83,12 @@ fu_firmware_strparse_uint8_safe (const gchar *data,
  * @datasz: size of @data, typcally the same as `strlen(data)`
  * @offset: offset in chars into @data to read
  * @value: (out) (nullable): parsed value
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Parses a base 16 number from a string of 4 characters in length.
  * The returned @value will range from from 0 to 0xffff.
  *
- * Return value: %TRUE if parsed, %FALSE otherwise
+ * Returns: %TRUE if parsed, %FALSE otherwise
  *
  * Since: 1.5.6
  **/
@@ -115,12 +115,12 @@ fu_firmware_strparse_uint16_safe (const gchar *data,
  * @datasz: size of @data, typcally the same as `strlen(data)`
  * @offset: offset in chars into @data to read
  * @value: (out) (nullable): parsed value
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Parses a base 16 number from a string of 6 characters in length.
  * The returned @value will range from from 0 to 0xffffff.
  *
- * Return value: %TRUE if parsed, %FALSE otherwise
+ * Returns: %TRUE if parsed, %FALSE otherwise
  *
  * Since: 1.5.6
  **/
@@ -147,12 +147,12 @@ fu_firmware_strparse_uint24_safe (const gchar *data,
  * @datasz: size of @data, typcally the same as `strlen(data)`
  * @offset: offset in chars into @data to read
  * @value: (out) (nullable): parsed value
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Parses a base 16 number from a string of 8 characters in length.
  * The returned @value will range from from 0 to 0xffffffff.
  *
- * Return value: %TRUE if parsed, %FALSE otherwise
+ * Returns: %TRUE if parsed, %FALSE otherwise
  *
  * Since: 1.5.6
  **/

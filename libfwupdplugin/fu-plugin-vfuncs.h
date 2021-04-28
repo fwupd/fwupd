@@ -108,7 +108,7 @@ gboolean	 fu_plugin_coldplug_cleanup		(FuPlugin	*plugin,
  * @dev: A #FuDevice
  * @blob_fw: A #GBytes
  * @flags: A #FwupdInstallFlags
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Updates the firmware on the device with blob_fw
  *
@@ -124,7 +124,7 @@ gboolean	 fu_plugin_update			(FuPlugin	*plugin,
  * @plugin: A #FuPlugin
  * @dev: A #FuDevice
  * @flags: A #FuPluginVerifyFlags
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Verifies the firmware on the device matches the value stored in the database
  *
@@ -138,7 +138,7 @@ gboolean	 fu_plugin_verify			(FuPlugin	*plugin,
  * fu_plugin_unlock:
  * @plugin: A #FuPlugin
  * @dev: A #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Unlocks the device for writes.
  *
@@ -151,7 +151,7 @@ gboolean	 fu_plugin_unlock			(FuPlugin	*plugin,
  * fu_plugin_activate:
  * @plugin: A #FuPlugin
  * @dev: A #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Activates the new firmware on the device.
  *
@@ -167,7 +167,7 @@ gboolean	 fu_plugin_activate			(FuPlugin	*plugin,
  * fu_plugin_clear_results:
  * @plugin: A #FuPlugin
  * @dev: A #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Clears stored update results for the device.
  *
@@ -180,7 +180,7 @@ gboolean	 fu_plugin_clear_results		(FuPlugin	*plugin,
  * fu_plugin_get_results:
  * @plugin: A #FuPlugin
  * @dev: A #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Obtains historical update results for the device.
  *
@@ -193,7 +193,7 @@ gboolean	 fu_plugin_get_results			(FuPlugin	*plugin,
  * fu_plugin_update_attach:
  * @plugin: A #FuPlugin
  * @dev: A #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Swaps the device from bootloader mode to runtime mode.
  *
@@ -206,7 +206,7 @@ gboolean	 fu_plugin_update_attach		(FuPlugin	*plugin,
  * fu_plugin_update_detach:
  * @plugin: A #FuPlugin
  * @dev: A #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Swaps the device from runtime mode to bootloader mode.
  *
@@ -220,7 +220,7 @@ gboolean	 fu_plugin_update_detach		(FuPlugin	*plugin,
  * @plugin: A #FuPlugin
  * @flags: A #FwupdInstallFlags
  * @dev: A #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Prepares the device to receive an update.
  *
@@ -235,7 +235,7 @@ gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
  * @plugin: A #FuPlugin
  * @flags: A #FwupdInstallFlags
  * @dev: A #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Cleans up the device after receiving an update.
  *
@@ -249,7 +249,7 @@ gboolean	 fu_plugin_update_cleanup		(FuPlugin	*plugin,
  * fu_plugin_composite_prepare
  * @plugin: A #FuPlugin
  * @devices: A #GPtrArray of #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Function run before updating group of composite devices.
  *
@@ -262,7 +262,7 @@ gboolean	 fu_plugin_composite_prepare		(FuPlugin	*plugin,
  * fu_plugin_composite_cleanup
  * @plugin: A #FuPlugin
  * @devices: A #GPtrArray of #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Function run after updating group of composite devices.
  *
@@ -275,7 +275,7 @@ gboolean	 fu_plugin_composite_cleanup		(FuPlugin	*plugin,
  * fu_plugin_backend_device_added
  * @plugin: A #FuPlugin
  * @device: A #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Function to run after a device is added by a backend, e.g. by USB or Udev.
  *
@@ -288,7 +288,7 @@ gboolean	 fu_plugin_backend_device_added		(FuPlugin	*plugin,
  * fu_plugin_backend_device_changed
  * @plugin: A #FuPlugin
  * @device: A #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Function run when the device changed.
  *
@@ -301,7 +301,7 @@ gboolean	 fu_plugin_backend_device_changed	(FuPlugin	*plugin,
  * fu_plugin_backend_device_removed
  * @plugin: A #FuPlugin
  * @device: A #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Function to run when device is physically removed.
  *
@@ -325,7 +325,7 @@ void		 fu_plugin_device_added			(FuPlugin	*plugin,
  * fu_plugin_device_created
  * @plugin: A #FuPlugin
  * @dev: A #FuDevice
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Function run when the subclassed device has been created.
  *

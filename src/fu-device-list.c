@@ -706,7 +706,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
  * fu_device_list_get_by_guid:
  * @self: A #FuDeviceList
  * @guid: A device GUID
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Finds a specific device that has the matching GUID.
  *
@@ -751,7 +751,7 @@ fu_device_list_devices_wait_removed (FuDeviceList *self)
  * fu_device_list_wait_for_replug:
  * @self: A #FuDeviceList
  * @device: A #FuDevice
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Waits for a specific device to replug if %FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG
  * is set.
@@ -857,7 +857,7 @@ fu_device_list_wait_for_replug (FuDeviceList *self, FuDevice *device, GError **e
  * fu_device_list_get_by_id:
  * @self: A #FuDeviceList
  * @device_id: A device ID, typically a SHA1 hash
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Finds a specific device using the ID string. This function also supports
  * using abbreviated hashes.

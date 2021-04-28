@@ -23,7 +23,7 @@
  *
  * Converts an enumerated value to a string.
  *
- * Return value: a string
+ * Returns: a string
  **/
 const gchar *
 fu_dfu_state_to_string (FuDfuState state)
@@ -59,7 +59,7 @@ fu_dfu_state_to_string (FuDfuState state)
  *
  * Converts an enumerated value to a string.
  *
- * Return value: a string
+ * Returns: a string
  **/
 const gchar *
 fu_dfu_status_to_string (FuDfuStatus status)
@@ -105,7 +105,7 @@ fu_dfu_status_to_string (FuDfuStatus status)
  *
  * Creates a monolithic block of memory from an array of #GBytes.
  *
- * Return value: (transfer full): a new GBytes
+ * Returns: (transfer full): a new GBytes
  **/
 GBytes *
 fu_dfu_utils_bytes_join_array (GPtrArray *chunks)

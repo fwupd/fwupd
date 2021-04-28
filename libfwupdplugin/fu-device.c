@@ -173,7 +173,7 @@ fu_device_set_property (GObject *object, guint prop_id,
  *
  * Converts a #FuDeviceInternalFlags to a string.
  *
- * Return value: identifier string
+ * Returns: identifier string
  *
  * Since: 1.5.5
  **/
@@ -209,7 +209,7 @@ fu_device_internal_flag_to_string (FuDeviceInternalFlags flag)
  *
  * Converts a string to a #FuDeviceInternalFlags.
  *
- * Return value: enumerated value
+ * Returns: enumerated value
  *
  * Since: 1.5.5
  **/
@@ -513,7 +513,7 @@ fu_device_retry (FuDevice *self,
 /**
  * fu_device_poll:
  * @self: A #FuDevice
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Polls a device, typically querying the hardware for status.
  *
@@ -2921,7 +2921,7 @@ fu_device_to_string (FuDevice *self)
 /**
  * fu_device_set_context:
  * @self: A #FuDevice
- * @ctx: A #FuContext, or %NULL
+ * @ctx: (nullable): optional #FuContext
  *
  * Sets the optional context which may be useful to this device.
  * This is typically set after the #FuDevice has been created, but before
@@ -3327,7 +3327,7 @@ fu_device_open_cb (FuDevice *self, gpointer user_data, GError **error)
 /**
  * fu_device_open:
  * @self: A #FuDevice
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Opens a device, optionally running a object-specific vfunc.
  *
@@ -3392,7 +3392,7 @@ fu_device_open (FuDevice *self, GError **error)
 /**
  * fu_device_close:
  * @self: A #FuDevice
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Closes a device, optionally running a object-specific vfunc.
  *
@@ -3442,7 +3442,7 @@ fu_device_close (FuDevice *self, GError **error)
 /**
  * fu_device_probe:
  * @self: A #FuDevice
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Probes a device, setting parameters on the object that does not need
  * the device open or the interface claimed.
@@ -3477,7 +3477,7 @@ fu_device_probe (FuDevice *self, GError **error)
 /**
  * fu_device_rescan:
  * @self: A #FuDevice
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Rescans a device, re-adding GUIDs or flags based on some hardware change.
  *
@@ -3542,7 +3542,7 @@ fu_device_convert_instance_ids (FuDevice *self)
 /**
  * fu_device_setup:
  * @self: A #FuDevice
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Sets up a device, setting parameters on the object that requires
  * the device to be open and have the interface claimed.
@@ -3590,7 +3590,7 @@ fu_device_setup (FuDevice *self, GError **error)
 /**
  * fu_device_activate:
  * @self: A #FuDevice
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Activates up a device, which normally means the device switches to a new
  * firmware version. This should only be called when data loss cannot occur.
@@ -3720,7 +3720,7 @@ fu_device_add_security_attrs (FuDevice *self, FuSecurityAttrs *attrs)
  * @self: A #FuDevice
  * @subsystem: A subsystem string, e.g. `pci`
  * @driver: A kernel module name, e.g. `tg3`
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Binds a driver to the device, which normally means the kernel driver takes
  * control of the hardware.
@@ -3758,7 +3758,7 @@ fu_device_bind_driver (FuDevice *self,
 /**
  * fu_device_unbind_driver:
  * @self: A #FuDevice
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Unbinds the driver from the device, which normally means the kernel releases
  * the hardware so it can be used from userspace.

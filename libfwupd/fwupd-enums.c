@@ -24,7 +24,7 @@
  *
  * Converts a #FwupdStatus to a string.
  *
- * Return value: identifier string
+ * Returns: identifier string
  *
  * Since: 0.1.1
  **/
@@ -68,7 +68,7 @@ fwupd_status_to_string (FwupdStatus status)
  *
  * Converts a string to a #FwupdStatus.
  *
- * Return value: enumerated value
+ * Returns: enumerated value
  *
  * Since: 0.1.1
  **/
@@ -112,7 +112,7 @@ fwupd_status_from_string (const gchar *status)
  *
  * Converts a #FwupdDeviceFlags to a string.
  *
- * Return value: identifier string
+ * Returns: identifier string
  *
  * Since: 0.7.0
  **/
@@ -214,7 +214,7 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
  *
  * Converts a string to a #FwupdDeviceFlags.
  *
- * Return value: enumerated value
+ * Returns: enumerated value
  *
  * Since: 0.7.0
  **/
@@ -316,7 +316,7 @@ fwupd_device_flag_from_string (const gchar *device_flag)
  *
  * Converts a #FwupdDeviceFlags to a string.
  *
- * Return value: identifier string
+ * Returns: identifier string
  *
  * Since: 1.5.0
  **/
@@ -358,7 +358,7 @@ fwupd_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
  *
  * Converts a string to a #FwupdPluginFlags.
  *
- * Return value: enumerated value
+ * Returns: enumerated value
  *
  * Since: 1.5.0
  **/
@@ -398,7 +398,7 @@ fwupd_plugin_flag_from_string (const gchar *plugin_flag)
  *
  * Converts a #FwupdUpdateState to a string.
  *
- * Return value: identifier string
+ * Returns: identifier string
  *
  * Since: 0.7.0
  **/
@@ -426,7 +426,7 @@ fwupd_update_state_to_string (FwupdUpdateState update_state)
  *
  * Converts a string to a #FwupdUpdateState.
  *
- * Return value: enumerated value
+ * Returns: enumerated value
  *
  * Since: 0.7.0
  **/
@@ -454,7 +454,7 @@ fwupd_update_state_from_string (const gchar *update_state)
  *
  * Converts a #FwupdTrustFlags to a string.
  *
- * Return value: identifier string
+ * Returns: identifier string
  *
  * Since: 0.7.0
  **/
@@ -476,7 +476,7 @@ fwupd_trust_flag_to_string (FwupdTrustFlags trust_flag)
  *
  * Converts a string to a #FwupdTrustFlags.
  *
- * Return value: enumerated value
+ * Returns: enumerated value
  *
  * Since: 0.7.0
  **/
@@ -498,7 +498,7 @@ fwupd_trust_flag_from_string (const gchar *trust_flag)
  *
  * Converts a #FwupdFeatureFlags to a string.
  *
- * Return value: identifier string
+ * Returns: identifier string
  *
  * Since: 1.4.5
  **/
@@ -524,7 +524,7 @@ fwupd_feature_flag_to_string (FwupdFeatureFlags feature_flag)
  *
  * Converts a string to a #FwupdFeatureFlags.
  *
- * Return value: enumerated value
+ * Returns: enumerated value
  *
  * Since: 1.4.5
  **/
@@ -598,7 +598,7 @@ fwupd_keyring_kind_to_string (FwupdKeyringKind keyring_kind)
  *
  * Converts a #FwupdReleaseFlags to a string.
  *
- * Return value: identifier string
+ * Returns: identifier string
  *
  * Since: 1.2.6
  **/
@@ -630,7 +630,7 @@ fwupd_release_flag_to_string (FwupdReleaseFlags release_flag)
  *
  * Converts a string to a #FwupdReleaseFlags.
  *
- * Return value: enumerated value
+ * Returns: enumerated value
  *
  * Since: 1.2.6
  **/
@@ -660,7 +660,7 @@ fwupd_release_flag_from_string (const gchar *release_flag)
  *
  * Converts an enumerated value to a string.
  *
- * Return value: identifier string
+ * Returns: identifier string
  *
  * Since: 1.4.0
  **/
@@ -684,7 +684,7 @@ fwupd_release_urgency_to_string (FwupdReleaseUrgency release_urgency)
  *
  * Converts a string to an enumerated value.
  *
- * Return value: enumerated value
+ * Returns: enumerated value
  *
  * Since: 1.4.0
  **/

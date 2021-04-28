@@ -969,7 +969,7 @@ fu_util_convert_description (const gchar *xml, GError **error)
  *
  * Converts a timestamp to a 'pretty' translated string
  *
- * Return value: (transfer full): A string
+ * Returns: (transfer full): A string
  *
  * Since: 1.3.7
  **/

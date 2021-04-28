@@ -183,7 +183,7 @@ fu_volume_get_mount_point (FuVolume *self)
  * fu_volume_check_free_space:
  * @self: a @FuVolume
  * @required: size in bytes
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Checks the volume for required space.
  *
@@ -276,7 +276,7 @@ fu_volume_is_encrypted (FuVolume *self)
 /**
  * fu_volume_mount:
  * @self: a @FuVolume
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Mounts the VOLUME ready for use.
  *
@@ -359,7 +359,7 @@ fu_volume_get_id_type (FuVolume *self)
 /**
  * fu_volume_unmount:
  * @self: a @FuVolume
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Unmounts the volume after use.
  *
@@ -397,7 +397,7 @@ fu_volume_unmount (FuVolume *self, GError **error)
 /**
  * fu_volume_locker:
  * @self: a @FuVolume
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Locks the volume, mounting it and unmounting it as required. If the volume is
  * already mounted then it is is _not_ unmounted when the locker is closed.

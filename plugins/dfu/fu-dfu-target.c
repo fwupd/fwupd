@@ -388,7 +388,7 @@ fu_dfu_target_parse_sectors (FuDfuTarget *self, const gchar *alt_name, GError **
  * Creates a new DFU target, which represents an alt-setting on a
  * DFU-capable device.
  *
- * Return value: a #FuDfuTarget
+ * Returns: a #FuDfuTarget
  **/
 FuDfuTarget *
 fu_dfu_target_new (void)
@@ -404,7 +404,7 @@ fu_dfu_target_new (void)
  *
  * Gets the sectors exported by the target.
  *
- * Return value: (transfer none) (element-type FuDfuSector): sectors
+ * Returns: (transfer none) (element-type FuDfuSector): sectors
  **/
 GPtrArray *
 fu_dfu_target_get_sectors (FuDfuTarget *self)
@@ -420,7 +420,7 @@ fu_dfu_target_get_sectors (FuDfuTarget *self)
  *
  * Gets the default (first) sector exported by the target.
  *
- * Return value: (transfer none): a #FuDfuSector, or %NULL
+ * Returns: (transfer none): a #FuDfuSector, or %NULL
  **/
 FuDfuSector *
 fu_dfu_target_get_sector_default (FuDfuTarget *self)
@@ -438,7 +438,7 @@ fu_dfu_target_get_sector_default (FuDfuTarget *self)
  *
  * Converts an enumerated value to an error description.
  *
- * Return value: a string
+ * Returns: a string
  **/
 static const gchar *
 fu_dfu_target_status_to_error_msg (FuDfuStatus status)
@@ -580,11 +580,11 @@ fu_dfu_target_check_status (FuDfuTarget *self, GError **error)
 /**
  * fu_dfu_target_use_alt_setting:
  * @self: a #FuDfuTarget
- * @error: a #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Opens a DFU-capable target.
  *
- * Return value: %TRUE for success
+ * Returns: %TRUE for success
  **/
 static gboolean
 fu_dfu_target_use_alt_setting (FuDfuTarget *self, GError **error)
@@ -647,11 +647,11 @@ fu_dfu_target_set_device (FuDfuTarget *self, FuDfuDevice *device)
 /**
  * fu_dfu_target_setup:
  * @self: a #FuDfuTarget
- * @error: a #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Opens a DFU-capable target.
  *
- * Return value: %TRUE for success
+ * Returns: %TRUE for success
  **/
 gboolean
 fu_dfu_target_setup (FuDfuTarget *self, GError **error)
@@ -748,13 +748,13 @@ fu_dfu_target_setup (FuDfuTarget *self, GError **error)
 /**
  * fu_dfu_target_mass_erase:
  * @self: a #FuDfuTarget
- * @error: a #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Mass erases the device clearing all SRAM and EEPROM memory.
  *
  * IMPORTANT: This only works on STM32 devices from ST and AVR32 devices from Atmel.
  *
- * Return value: %TRUE for success
+ * Returns: %TRUE for success
  **/
 gboolean
 fu_dfu_target_mass_erase (FuDfuTarget *self, GError **error)
@@ -1301,12 +1301,12 @@ fu_dfu_target_download_element (FuDfuTarget *self,
  * @self: a #FuDfuTarget
  * @image: a #FuFirmware
  * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
- * @error: a #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Downloads firmware from the host to the target, optionally verifying
  * the transfer.
  *
- * Return value: %TRUE for success
+ * Returns: %TRUE for success
  **/
 gboolean
 fu_dfu_target_download (FuDfuTarget *self,
@@ -1387,7 +1387,7 @@ fu_dfu_target_download (FuDfuTarget *self,
  *
  * Gets the alternate setting to use for this interface.
  *
- * Return value: the alternative setting, typically zero
+ * Returns: the alternative setting, typically zero
  **/
 guint8
 fu_dfu_target_get_alt_setting (FuDfuTarget *self)
@@ -1400,11 +1400,11 @@ fu_dfu_target_get_alt_setting (FuDfuTarget *self)
 /**
  * fu_dfu_target_get_alt_name:
  * @self: a #FuDfuTarget
- * @error: a #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the alternate setting name to use for this interface.
  *
- * Return value: the alternative setting name, typically %NULL
+ * Returns: the alternative setting name, typically %NULL
  **/
 const gchar *
 fu_dfu_target_get_alt_name (FuDfuTarget *self, GError **error)
@@ -1431,12 +1431,12 @@ fu_dfu_target_get_alt_name (FuDfuTarget *self, GError **error)
 /**
  * fu_dfu_target_get_alt_name_for_display:
  * @self: a #FuDfuTarget
- * @error: a #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the alternate setting name to use for this interface that can be
  * shown on the display.
  *
- * Return value: the alternative setting name
+ * Returns: the alternative setting name
  **/
 const gchar *
 fu_dfu_target_get_alt_name_for_display (FuDfuTarget *self, GError **error)

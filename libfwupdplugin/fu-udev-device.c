@@ -975,7 +975,7 @@ fu_udev_device_get_parent_subsystems (FuUdevDevice *self)
  * fu_udev_device_set_physical_id:
  * @self: A #FuUdevDevice
  * @subsystems: A subsystem string, e.g. `pci,usb`
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Sets the physical ID from the device subsystem. Plugins should choose the
  * subsystem that is "deepest" in the udev tree, for instance choosing 'usb'
@@ -1097,7 +1097,7 @@ fu_udev_device_set_physical_id (FuUdevDevice *self, const gchar *subsystems, GEr
  * fu_udev_device_set_logical_id:
  * @self: A #FuUdevDevice
  * @subsystem: A subsystem string, e.g. `pci,usb`
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Sets the logical ID from the device subsystem. Plugins should choose the
  * subsystem that most relevant in the udev tree, for instance choosing 'hid'
@@ -1354,7 +1354,7 @@ fu_udev_device_close (FuDevice *device, GError **error)
  * @request: request number
  * @buf: A buffer to use, which *must* be large enough for the request
  * @rc: (out) (nullable): the raw return value from the ioctl
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Control a device using a low-level request.
  *
@@ -1430,7 +1430,7 @@ fu_udev_device_ioctl (FuUdevDevice *self,
  * @port: offset address
  * @buf: (in): data
  * @bufsz: size of @buf
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Read a buffer from a file descriptor at a given offset.
  *
@@ -1486,7 +1486,7 @@ fu_udev_device_pread_full (FuUdevDevice *self, goffset port,
  * @port: offset address
  * @buf: (out): data
  * @bufsz: size of @data
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Write a buffer to a file descriptor at a given offset.
  *
@@ -1540,7 +1540,7 @@ fu_udev_device_pwrite_full (FuUdevDevice *self, goffset port,
  * @self: A #FuUdevDevice
  * @port: offset address
  * @data: value
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Write to a file descriptor at a given offset.
  *
@@ -1584,7 +1584,7 @@ fu_udev_device_get_parent_name (FuUdevDevice *self)
  * fu_udev_device_get_sysfs_attr:
  * @self: A #FuUdevDevice
  * @attr: name of attribute to get
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Reads an arbitrary sysfs attribute 'attr' associated with UDEV device
  *
@@ -1637,7 +1637,7 @@ fu_udev_device_get_sysfs_attr (FuUdevDevice *self, const gchar *attr,
  * @self: A #FuUdevDevice
  * @port: offset address
  * @data: (out): value
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Read from a file descriptor at a given offset.
  *
@@ -1657,7 +1657,7 @@ fu_udev_device_pread (FuUdevDevice *self, goffset port, guint8 *data, GError **e
  * @self: A #FuUdevDevice
  * @attribute: sysfs attribute name
  * @val: data to write into the attribute
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Writes data into a sysfs attribute
  *

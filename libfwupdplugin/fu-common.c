@@ -62,7 +62,7 @@
 /**
  * fu_common_rmtree:
  * @directory: a directory name
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Recursively removes a directory.
  *
@@ -140,7 +140,7 @@ fu_common_get_file_list_internal (GPtrArray *files, const gchar *directory, GErr
 /**
  * fu_common_get_files_recursive:
  * @path: a directory name
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Returns every file found under @directory, and any subdirectory.
  * If any path under @directory cannot be accessed due to permissions an error
@@ -165,7 +165,7 @@ fu_common_get_files_recursive (const gchar *path, GError **error)
 /**
  * fu_common_mkdir_parent:
  * @filename: A full pathname
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Creates any required directories, including any parent directories.
  *
@@ -199,7 +199,7 @@ fu_common_mkdir_parent (const gchar *filename, GError **error)
  * fu_common_set_contents_bytes:
  * @filename: A filename
  * @bytes: The data to write
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Writes a blob of data to a filename, creating the parent directories as
  * required.
@@ -234,7 +234,7 @@ fu_common_set_contents_bytes (const gchar *filename, GBytes *bytes, GError **err
 /**
  * fu_common_get_contents_bytes:
  * @filename: A filename
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Reads a blob of data from a file.
  *
@@ -261,7 +261,7 @@ fu_common_get_contents_bytes (const gchar *filename, GError **error)
  * fu_common_get_contents_fd:
  * @fd: A file descriptor
  * @count: The maximum number of bytes to read
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Reads a blob from a specific file descriptor.
  *
@@ -351,7 +351,7 @@ fu_common_extract_archive_entry (struct archive_entry *entry, const gchar *dir)
  * fu_common_extract_archive:
  * @blob: a #GBytes archive as a blob
  * @dir: a directory name to extract to
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Extracts an archive to a directory.
  *
@@ -456,7 +456,7 @@ fu_common_add_argv (GPtrArray *argv, const gchar *fmt, ...)
 /**
  * fu_common_find_program_in_path:
  * @basename: The program to search
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Looks for a program in the PATH variable
  *
@@ -510,7 +510,7 @@ fu_common_test_namespace_support (GError **error)
  * @bytes: The data to use
  * @script_fn: Name of the script to run in the tarball, e.g. `startup.sh`
  * @output_fn: Name of the generated firmware, e.g. `firmware.bin`
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Builds a firmware file using tools from the host session in a bubblewrap
  * jail. Several things happen during build:
@@ -734,11 +734,11 @@ fu_common_spawn_cancelled_cb (GCancellable *cancellable, FuCommonSpawnHelper *he
 /**
  * fu_common_spawn_sync:
  * @argv: The argument list to run
- * @handler_cb: (scope call): A #FuOutputHandler or %NULL
- * @handler_user_data: the user data to pass to @handler_cb
+ * @handler_cb: (scope call) (nullable): optional #FuOutputHandler
+ * @handler_user_data: (nullable): the user data to pass to @handler_cb
  * @timeout_ms: a timeout in ms, or 0 for no limit
- * @cancellable: a #GCancellable, or %NULL
- * @error: A #GError or %NULL
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
  *
  * Runs a subprocess and waits for it to exit. Any output on standard out or
  * standard error will be forwarded to @handler_cb as whole lines.
@@ -1470,8 +1470,8 @@ fu_common_string_append_kb (GString *str, guint idt, const gchar *key, gboolean 
 
 /**
  * fu_common_dump_full:
- * @log_domain: log domain, typically %G_LOG_DOMAIN or %NULL
- * @title: prefix title, or %NULL
+ * @log_domain: (nullable): optional log domain, typically %G_LOG_DOMAIN
+ * @title: (nullable): optional prefix title
  * @data: buffer to print
  * @len: the size of @data
  * @columns: break new lines after this many bytes
@@ -1538,8 +1538,8 @@ fu_common_dump_full (const gchar *log_domain,
 
 /**
  * fu_common_dump_raw:
- * @log_domain: log domain, typically %G_LOG_DOMAIN or %NULL
- * @title: prefix title, or %NULL
+ * @log_domain: (nullable): optional log domain, typically %G_LOG_DOMAIN
+ * @title: (nullable): optional prefix title
  * @data: buffer to print
  * @len: the size of @data
  *
@@ -1561,8 +1561,8 @@ fu_common_dump_raw (const gchar *log_domain,
 
 /**
  * fu_common_dump_bytes:
- * @log_domain: log domain, typically %G_LOG_DOMAIN or %NULL
- * @title: prefix title, or %NULL
+ * @log_domain: (nullable): optional log domain, typically %G_LOG_DOMAIN
+ * @title: (nullable): optional prefix title
  * @bytes: a #GBytes
  *
  * Dumps a byte buffer to the screen.
@@ -1623,7 +1623,7 @@ fu_common_bytes_align (GBytes *bytes, gsize blksz, gchar padval)
  *
  * Checks if a byte array are just empty (0xff) bytes.
  *
- * Return value: %TRUE if @bytes is empty
+ * Returns: %TRUE if @bytes is empty
  *
  * Since: 1.2.6
  **/
@@ -1645,11 +1645,11 @@ fu_common_bytes_is_empty (GBytes *bytes)
  * @bufsz1: sizeof @buf1
  * @buf2: another buffer
  * @bufsz2: sizeof @buf2
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Compares the buffers for equality.
  *
- * Return value: %TRUE if @buf1 and @buf2 are identical
+ * Returns: %TRUE if @buf1 and @buf2 are identical
  *
  * Since: 1.3.2
  **/
@@ -1692,11 +1692,11 @@ fu_common_bytes_compare_raw (const guint8 *buf1, gsize bufsz1,
  * fu_common_bytes_compare:
  * @bytes1: a #GBytes
  * @bytes2: another #GBytes
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Compares the buffers for equality.
  *
- * Return value: %TRUE if @bytes1 and @bytes2 are identical
+ * Returns: %TRUE if @bytes1 and @bytes2 are identical
  *
  * Since: 1.2.6
  **/
@@ -1724,7 +1724,7 @@ fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
  *
  * Pads a GBytes to a minimum @sz with `0xff`.
  *
- * Return value: (transfer full): a #GBytes
+ * Returns: (transfer full): a #GBytes
  *
  * Since: 1.3.1
  **/
@@ -1755,11 +1755,11 @@ fu_common_bytes_pad (GBytes *bytes, gsize sz)
  * @bytes: a #GBytes
  * @offset: where subsection starts at
  * @length: length of subsection
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Creates a #GBytes which is a subsection of another #GBytes.
  *
- * Return value: (transfer full): a #GBytes, or #NULL if range is invalid
+ * Returns: (transfer full): a #GBytes, or #NULL if range is invalid
  *
  * Since: 1.5.4
  **/
@@ -1790,11 +1790,11 @@ fu_common_bytes_new_offset (GBytes *bytes,
 /**
  * fu_common_realpath:
  * @filename: a filename
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Finds the canonicalized absolute filename for a path.
  *
- * Return value: A filename, or %NULL if invalid or not found
+ * Returns: A filename, or %NULL if invalid or not found
  *
  * Since: 1.2.6
  **/
@@ -1836,7 +1836,7 @@ fu_common_realpath (const gchar *filename, GError **error)
  *
  * Matches a string against a glob pattern.
  *
- * Return value: %TRUE if the string matched
+ * Returns: %TRUE if the string matched
  *
  * Since: 1.3.5
  **/
@@ -1866,12 +1866,12 @@ fu_common_filename_glob_sort_cb (gconstpointer a, gconstpointer b)
  * fu_common_filename_glob:
  * @directory: a directory path
  * @pattern: a glob pattern, e.g. `*foo*`
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Returns all the filenames that match a specific glob pattern.
  * Any results are sorted. No matching files will set @error.
  *
- * Return value:  (element-type utf8) (transfer container): matching files, or %NULL
+ * Returns:  (element-type utf8) (transfer container): matching files, or %NULL
  *
  * Since: 1.5.0
  **/
@@ -1916,7 +1916,7 @@ fu_common_filename_glob (const gchar *directory, const gchar *pattern, GError **
  * delimiter. If @max_tokens is reached, the remainder of string is appended
  * to the last token.
  *
- * Return value: (transfer full): a newly-allocated NULL-terminated array of strings
+ * Returns: (transfer full): a newly-allocated NULL-terminated array of strings
  *
  * Since: 1.3.1
  **/
@@ -1938,7 +1938,7 @@ fu_common_strnsplit (const gchar *str, gsize sz,
  *
  * Converts a string into something that can be safely printed.
  *
- * Return value: (transfer full): safe string, or %NULL if there was nothing valid
+ * Returns: (transfer full): safe string, or %NULL if there was nothing valid
  *
  * Since: 1.5.5
  **/
@@ -1973,7 +1973,7 @@ fu_common_strsafe (const gchar *str, gsize maxsz)
 
 /**
  * fu_common_strjoin_array:
- * @separator: (nullable): string to insert between each of the strings, or %NULL
+ * @separator: (nullable): string to insert between each of the strings
  * @array: (element-type utf8): A #GPtrArray
  *
  * Joins an array of strings together to form one long string, with the optional
@@ -2009,7 +2009,7 @@ fu_common_strjoin_array (const gchar *separator, GPtrArray *array)
  * @src_sz: maximum size of @dst, typically `sizeof(src)`
  * @src_offset: offset in bytes into @src to copy from
  * @n: number of bytes to copy from @src+@offset from
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Copies some memory using memcpy in a safe way. Providing the buffer sizes
  * of both the destination and the source allows us to check for buffer overflow.
@@ -2022,7 +2022,7 @@ fu_common_strjoin_array (const gchar *separator, GPtrArray *array)
  * you use it when performance is a concern. Only us it when you're not sure if
  * malicious data from a device or firmware could cause memory corruption.
  *
- * Return value: %TRUE if the bytes were copied, %FALSE otherwise
+ * Returns: %TRUE if the bytes were copied, %FALSE otherwise
  *
  * Since: 1.3.1
  **/
@@ -2080,7 +2080,7 @@ fu_memcpy_safe (guint8 *dst, gsize dst_sz, gsize dst_offset,
  * fu_memdup_safe:
  * @src: source buffer
  * @n: number of bytes to copy from @src
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Duplicates some memory using memdup in a safe way.
  *
@@ -2090,7 +2090,7 @@ fu_memcpy_safe (guint8 *dst, gsize dst_sz, gsize dst_offset,
  *
  * NOTE: This function intentionally limits allocation size to 1GB.
  *
- * Return value: (transfer full): block of allocated memory, or %NULL for an error.
+ * Returns: (transfer full): block of allocated memory, or %NULL for an error.
  *
  * Since: 1.5.6
  **/
@@ -2121,7 +2121,7 @@ fu_memdup_safe (const guint8 *src, gsize n, GError **error)
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`
  * @offset: offset in bytes into @buf to copy from
  * @value: (out) (nullable): the parsed value
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Read a value from a buffer in a safe way.
  *
@@ -2129,7 +2129,7 @@ fu_memdup_safe (const guint8 *src, gsize n, GError **error)
  * you use it when performance is a concern. Only us it when you're not sure if
  * malicious data from a device or firmware could cause memory corruption.
  *
- * Return value: %TRUE if @value was set, %FALSE otherwise
+ * Returns: %TRUE if @value was set, %FALSE otherwise
  *
  * Since: 1.3.3
  **/
@@ -2161,7 +2161,7 @@ fu_common_read_uint8_safe (const guint8 *buf,
  * @offset: offset in bytes into @buf to copy from
  * @value: (out) (nullable): the parsed value
  * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Read a value from a buffer using a specified endian in a safe way.
  *
@@ -2169,7 +2169,7 @@ fu_common_read_uint8_safe (const guint8 *buf,
  * you use it when performance is a concern. Only us it when you're not sure if
  * malicious data from a device or firmware could cause memory corruption.
  *
- * Return value: %TRUE if @value was set, %FALSE otherwise
+ * Returns: %TRUE if @value was set, %FALSE otherwise
  *
  * Since: 1.3.3
  **/
@@ -2202,7 +2202,7 @@ fu_common_read_uint16_safe (const guint8 *buf,
  * @offset: offset in bytes into @buf to copy from
  * @value: (out) (nullable): the parsed value
  * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Read a value from a buffer using a specified endian in a safe way.
  *
@@ -2210,7 +2210,7 @@ fu_common_read_uint16_safe (const guint8 *buf,
  * you use it when performance is a concern. Only us it when you're not sure if
  * malicious data from a device or firmware could cause memory corruption.
  *
- * Return value: %TRUE if @value was set, %FALSE otherwise
+ * Returns: %TRUE if @value was set, %FALSE otherwise
  *
  * Since: 1.3.3
  **/
@@ -2243,7 +2243,7 @@ fu_common_read_uint32_safe (const guint8 *buf,
  * @offset: offset in bytes into @buf to copy from
  * @value: (out) (nullable): the parsed value
  * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Read a value from a buffer using a specified endian in a safe way.
  *
@@ -2251,7 +2251,7 @@ fu_common_read_uint32_safe (const guint8 *buf,
  * you use it when performance is a concern. Only us it when you're not sure if
  * malicious data from a device or firmware could cause memory corruption.
  *
- * Return value: %TRUE if @value was set, %FALSE otherwise
+ * Returns: %TRUE if @value was set, %FALSE otherwise
  *
  * Since: 1.5.8
  **/
@@ -2283,7 +2283,7 @@ fu_common_read_uint64_safe (const guint8 *buf,
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`
  * @offset: offset in bytes into @buf to write to
  * @value: the value to write
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Write a value to a buffer in a safe way.
  *
@@ -2291,7 +2291,7 @@ fu_common_read_uint64_safe (const guint8 *buf,
  * you use it when performance is a concern. Only us it when you're not sure if
  * malicious data from a device or firmware could cause memory corruption.
  *
- * Return value: %TRUE if @value was written, %FALSE otherwise
+ * Returns: %TRUE if @value was written, %FALSE otherwise
  *
  * Since: 1.5.8
  **/
@@ -2317,7 +2317,7 @@ fu_common_write_uint8_safe (guint8 *buf,
  * @offset: offset in bytes into @buf to write to
  * @value: the value to write
  * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Write a value to a buffer using a specified endian in a safe way.
  *
@@ -2325,7 +2325,7 @@ fu_common_write_uint8_safe (guint8 *buf,
  * you use it when performance is a concern. Only us it when you're not sure if
  * malicious data from a device or firmware could cause memory corruption.
  *
- * Return value: %TRUE if @value was written, %FALSE otherwise
+ * Returns: %TRUE if @value was written, %FALSE otherwise
  *
  * Since: 1.5.8
  **/
@@ -2355,7 +2355,7 @@ fu_common_write_uint16_safe (guint8 *buf,
  * @offset: offset in bytes into @buf to write to
  * @value: the value to write
  * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Write a value to a buffer using a specified endian in a safe way.
  *
@@ -2363,7 +2363,7 @@ fu_common_write_uint16_safe (guint8 *buf,
  * you use it when performance is a concern. Only us it when you're not sure if
  * malicious data from a device or firmware could cause memory corruption.
  *
- * Return value: %TRUE if @value was written, %FALSE otherwise
+ * Returns: %TRUE if @value was written, %FALSE otherwise
  *
  * Since: 1.5.8
  **/
@@ -2393,7 +2393,7 @@ fu_common_write_uint32_safe (guint8 *buf,
  * @offset: offset in bytes into @buf to write to
  * @value: the value to write
  * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Write a value to a buffer using a specified endian in a safe way.
  *
@@ -2401,7 +2401,7 @@ fu_common_write_uint32_safe (guint8 *buf,
  * you use it when performance is a concern. Only us it when you're not sure if
  * malicious data from a device or firmware could cause memory corruption.
  *
- * Return value: %TRUE if @value was written, %FALSE otherwise
+ * Returns: %TRUE if @value was written, %FALSE otherwise
  *
  * Since: 1.5.8
  **/
@@ -2604,11 +2604,11 @@ fu_common_kernel_locked_down (void)
  * @ebx: (out) (nullable): EBX register
  * @ecx: (out) (nullable): ECX register
  * @edx: (out) (nullable): EDX register
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Calls CPUID and returns the registers for the given leaf.
  *
- * Return value: %TRUE if the registers are set.
+ * Returns: %TRUE if the registers are set.
  *
  * Since: 1.5.0
  **/
@@ -2653,7 +2653,7 @@ fu_common_cpuid (guint32 leaf,
  *
  * Uses CPUID to discover the CPU vendor.
  *
- * Return value: a #FuCpuVendor, e.g. %FU_CPU_VENDOR_AMD if the vendor was AMD.
+ * Returns: a #FuCpuVendor, e.g. %FU_CPU_VENDOR_AMD if the vendor was AMD.
  *
  * Since: 1.5.5
  **/
@@ -2821,7 +2821,7 @@ fu_common_convert_to_gpt_type (const gchar *type)
 /**
  * fu_common_get_volumes_by_kind:
  * @kind: A volume kind, typically a GUID
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Finds all volumes of a specific partition type
  *
@@ -2905,7 +2905,7 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 /**
  * fu_common_get_volume_by_device:
  * @device: A device string, typcically starting with `/dev/`
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Finds the first volume from the specified device.
  *
@@ -2950,7 +2950,7 @@ fu_common_get_volume_by_device (const gchar *device, GError **error)
 /**
  * fu_common_get_volume_by_devnum:
  * @devnum: A device number
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Finds the first volume from the specified device.
  *
@@ -2993,7 +2993,7 @@ fu_common_get_volume_by_devnum (guint32 devnum, GError **error)
 
 /**
  * fu_common_get_esp_default:
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the platform default ESP
  *
@@ -3081,7 +3081,7 @@ fu_common_get_esp_default (GError **error)
 /**
  * fu_common_get_esp_for_path:
  * @esp_path: A path to the ESP
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the platform ESP using a UNIX or UDisks path
  *
@@ -3310,7 +3310,7 @@ fu_battery_state_to_string (FuBatteryState battery_state)
  * fu_bytes_get_data_safe:
  * @bytes: a #GBytes
  * @bufsz: (out) (optional): location to return size of byte data
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Get the byte data in the #GBytes. This data should not be modified.
  * This function will always return the same pointer for a given #GBytes.

@@ -186,7 +186,7 @@ fu_install_task_check_requirements_version_check (FuInstallTask *self, GError **
  * fu_install_task_check_requirements:
  * @self: A #FuInstallTask
  * @flags: A #FwupdInstallFlags, e.g. #FWUPD_INSTALL_FLAG_ALLOW_OLDER
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Checks any requirements of this task. This will typically involve checking
  * that the device can accept the component (the GUIDs match) and that the

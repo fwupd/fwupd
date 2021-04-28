@@ -80,7 +80,7 @@ fu_plugin_list_add (FuPluginList *self, FuPlugin *plugin)
  * fu_plugin_list_find_by_name:
  * @self: A #FuPluginList
  * @name: A #FuPlugin name, e.g. "dfu"
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Finds a specific plugin using the plugin name.
  *
@@ -117,7 +117,7 @@ fu_plugin_list_sort_cb (gconstpointer a, gconstpointer b)
 /**
  * fu_plugin_list_depsolve:
  * @self: A #FuPluginList
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Depsolves the list of plugins into the correct order. Some plugin methods
  * are called on all plugins and for some situations the order they are called

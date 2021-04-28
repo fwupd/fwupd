@@ -141,7 +141,7 @@ fwupd_checksum_get_best (GPtrArray *checksums)
 
 /**
  * fwupd_get_os_release:
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Loads information from the system os-release file.
  *
@@ -338,8 +338,8 @@ fwupd_build_user_agent (const gchar *package_name, const gchar *package_version)
 
 /**
  * fwupd_build_machine_id:
- * @salt: The salt, or %NULL for none
- * @error: A #GError or %NULL
+ * @salt: (nullable): optional salt
+ * @error: (nullable): optional return location for an error
  *
  * Gets a salted hash of the /etc/machine-id contents. This can be used to
  * identify a specific machine. It is not possible to recover the original
@@ -524,7 +524,7 @@ fwupd_build_history_report_json_metadata (JsonBuilder *builder, GError **error)
 /**
  * fwupd_build_history_report_json:
  * @devices: (element-type FwupdDevice): devices
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Builds a JSON report for the list of devices. No filtering is done on the
  * @devices array, and it is expected that the caller will filter to something
@@ -718,7 +718,7 @@ g_ascii_string_to_unsigned (const gchar *str,
  * @guidstr: (nullable): a GUID, e.g. `00112233-4455-6677-8899-aabbccddeeff`
  * @guid: a #fwupd_guid_t, or NULL to just check the GUID
  * @flags: some %FwupdGuidFlags, e.g. %FWUPD_GUID_FLAG_MIXED_ENDIAN
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Converts a string GUID into its binary encoding. All string GUIDs are
  * formatted as big endian but on-disk can be encoded in different ways.
