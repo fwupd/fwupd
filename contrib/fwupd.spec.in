@@ -309,7 +309,6 @@ done
 
 %postun
 %systemd_postun_with_restart fwupd.service
-%systemd_postun_with_restart pesign.service
 
 %files -f %{name}.lang
 %doc README.md AUTHORS
