@@ -14,7 +14,7 @@
  *
  * Converts a #FuIfdRegion to a string.
  *
- * Return value: identifier string
+ * Returns: identifier string
  *
  * Since: 1.6.0
  **/
@@ -50,7 +50,7 @@ fu_ifd_region_to_string (FuIfdRegion region)
  *
  * Converts a #FuIfdRegion to a name the user might recognize.
  *
- * Return value: identifier string
+ * Returns: identifier string
  *
  * Since: 1.6.0
  **/
@@ -86,7 +86,7 @@ fu_ifd_region_to_name (FuIfdRegion region)
  *
  * Converts a #FuIfdAccess to a string.
  *
- * Return value: identifier string
+ * Returns: identifier string
  *
  * Since: 1.6.0
  **/

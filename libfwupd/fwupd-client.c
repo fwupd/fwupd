@@ -437,7 +437,7 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
  * Gets the internal #GMainContext to use for synchronous methods.
  * By default the value is set a new #GMainContext.
  *
- * Return value: (transfer full): the #GMainContext
+ * Returns: (transfer full): the #GMainContext
  *
  * Since: 1.5.3
  **/
@@ -473,7 +473,7 @@ fwupd_client_set_main_context (FwupdClient *self, GMainContext *main_ctx)
 /**
  * fwupd_client_ensure_networking:
  * @self: A #FwupdClient
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Sets up the client networking support ready for use. Most other download and
  * upload methods call this automatically, and do you only need to call this if
@@ -664,7 +664,7 @@ fwupd_client_connect_get_proxy_cb (GObject *source,
 /**
  * fwupd_client_connect_async:
  * @self: A #FwupdClient
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -710,7 +710,7 @@ fwupd_client_connect_async (FwupdClient *self, GCancellable *cancellable,
  * fwupd_client_connect_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_connect_async().
  *
@@ -785,7 +785,7 @@ fwupd_client_get_host_security_attrs_cb (GObject *source,
 /**
  * fwupd_client_get_host_security_attrs_async:
  * @self: A #FwupdClient
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -823,7 +823,7 @@ fwupd_client_get_host_security_attrs_async (FwupdClient *self,
  * fwupd_client_get_host_security_attrs_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_host_security_attrs_async().
  *
@@ -886,7 +886,7 @@ fwupd_client_get_report_metadata_cb (GObject *source,
 /**
  * fwupd_client_get_report_metadata_async:
  * @self: A #FwupdClient
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -924,7 +924,7 @@ fwupd_client_get_report_metadata_async (FwupdClient *self,
  * fwupd_client_get_report_metadata_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_report_metadata_async().
  *
@@ -966,7 +966,7 @@ fwupd_client_get_devices_cb (GObject *source,
 /**
  * fwupd_client_get_devices_async:
  * @self: A #FwupdClient
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -1001,7 +1001,7 @@ fwupd_client_get_devices_async (FwupdClient *self, GCancellable *cancellable,
  * fwupd_client_get_devices_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_devices_async().
  *
@@ -1043,7 +1043,7 @@ fwupd_client_get_plugins_cb (GObject *source,
 /**
  * fwupd_client_get_plugins_async:
  * @self: A #FwupdClient
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -1078,7 +1078,7 @@ fwupd_client_get_plugins_async (FwupdClient *self, GCancellable *cancellable,
  * fwupd_client_get_plugins_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_plugins_async().
  *
@@ -1120,7 +1120,7 @@ fwupd_client_get_history_cb (GObject *source,
 /**
  * fwupd_client_get_history_async:
  * @self: A #FwupdClient
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -1155,7 +1155,7 @@ fwupd_client_get_history_async (FwupdClient *self, GCancellable *cancellable,
  * fwupd_client_get_history_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_history_async().
  *
@@ -1210,7 +1210,7 @@ fwupd_client_get_device_by_id_cb (GObject *source,
  * fwupd_client_get_device_by_id_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -1247,7 +1247,7 @@ fwupd_client_get_device_by_id_async (FwupdClient *self, const gchar *device_id,
  * fwupd_client_get_device_by_id_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_device_by_id_async().
  *
@@ -1309,7 +1309,7 @@ fwupd_client_get_devices_by_guid_cb (GObject *source,
  * fwupd_client_get_devices_by_guid_async:
  * @self: A #FwupdClient
  * @guid: the GUID, e.g. `e22c4520-43dc-5bb3-8245-5787fead9b63`
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -1347,7 +1347,7 @@ fwupd_client_get_devices_by_guid_async (FwupdClient *self, const gchar *guid,
  * fwupd_client_get_devices_by_guid_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_devices_by_guid_async().
  *
@@ -1390,7 +1390,7 @@ fwupd_client_get_releases_cb (GObject *source,
  * fwupd_client_get_releases_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -1429,7 +1429,7 @@ fwupd_client_get_releases_async (FwupdClient *self, const gchar *device_id,
  * fwupd_client_get_releases_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_releases_async().
  *
@@ -1472,7 +1472,7 @@ fwupd_client_get_downgrades_cb (GObject *source,
  * fwupd_client_get_downgrades_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -1511,7 +1511,7 @@ fwupd_client_get_downgrades_async (FwupdClient *self, const gchar *device_id,
  * fwupd_client_get_downgrades_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_downgrades_async().
  *
@@ -1554,7 +1554,7 @@ fwupd_client_get_upgrades_cb (GObject *source,
  * fwupd_client_get_upgrades_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -1593,7 +1593,7 @@ fwupd_client_get_upgrades_async (FwupdClient *self, const gchar *device_id,
  * fwupd_client_get_upgrades_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_upgrades_async().
  *
@@ -1635,7 +1635,7 @@ fwupd_client_modify_config_cb (GObject *source,
  * @self: A #FwupdClient
  * @key: key, e.g. `DisabledPlugins`
  * @value: value, e.g. `*`
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -1675,7 +1675,7 @@ fwupd_client_modify_config_async (FwupdClient *self,
  * fwupd_client_modify_config_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_modify_config_async().
  *
@@ -1716,7 +1716,7 @@ fwupd_client_activate_cb (GObject *source,
  * fwupd_client_activate_async:
  * @self: A #FwupdClient
  * @device_id: a device
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -1754,7 +1754,7 @@ fwupd_client_activate_async (FwupdClient *self,
  * fwupd_client_activate_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_activate_async().
  *
@@ -1795,7 +1795,7 @@ fwupd_client_verify_cb (GObject *source,
  * fwupd_client_verify_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -1832,7 +1832,7 @@ fwupd_client_verify_async (FwupdClient *self,
  * fwupd_client_verify_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_verify_async().
  *
@@ -1873,7 +1873,7 @@ fwupd_client_verify_update_cb (GObject *source,
  * fwupd_client_verify_update_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -1910,7 +1910,7 @@ fwupd_client_verify_update_async (FwupdClient *self,
  * fwupd_client_verify_update_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_verify_update_async().
  *
@@ -1951,7 +1951,7 @@ fwupd_client_unlock_cb (GObject *source,
  * fwupd_client_unlock_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -1988,7 +1988,7 @@ fwupd_client_unlock_async (FwupdClient *self,
  * fwupd_client_unlock_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_unlock_async().
  *
@@ -2029,7 +2029,7 @@ fwupd_client_clear_results_cb (GObject *source,
  * fwupd_client_clear_results_async:
  * @self: A #FwupdClient
  * @device_id: a device
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -2066,7 +2066,7 @@ fwupd_client_clear_results_async (FwupdClient *self,
  * fwupd_client_clear_results_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_clear_results_async().
  *
@@ -2109,7 +2109,7 @@ fwupd_client_get_results_cb (GObject *source,
  * fwupd_client_get_results_async:
  * @self: A #FwupdClient
  * @device_id: the device ID
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -2148,7 +2148,7 @@ fwupd_client_get_results_async (FwupdClient *self, const gchar *device_id,
  * fwupd_client_get_results_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_results_async().
  *
@@ -2275,7 +2275,7 @@ fwupd_client_install_stream_async (FwupdClient *self,
  * @device_id: the device ID
  * @bytes: #GBytes
  * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -2330,7 +2330,7 @@ fwupd_client_install_bytes_async (FwupdClient *self,
  * fwupd_client_install_bytes_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_install_bytes_async().
  *
@@ -2353,7 +2353,7 @@ fwupd_client_install_bytes_finish (FwupdClient *self, GAsyncResult *res, GError 
  * @device_id: the device ID
  * @filename: the filename to install
  * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -2410,7 +2410,7 @@ fwupd_client_install_async (FwupdClient *self,
  * fwupd_client_install_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_install_async().
  *
@@ -2647,7 +2647,7 @@ fwupd_client_filter_locations (GPtrArray *locations,
  * @release: A #FwupdRelease
  * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @download_flags: the #FwupdClientDownloadFlags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_DISABLE_IPFS
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -2713,7 +2713,7 @@ fwupd_client_install_release2_async (FwupdClient *self,
  * @device: A #FwupdDevice
  * @release: A #FwupdRelease
  * @install_flags: the #FwupdInstallFlags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -2744,7 +2744,7 @@ fwupd_client_install_release_async (FwupdClient *self,
  * fwupd_client_install_release_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_install_release_async().
  *
@@ -2828,7 +2828,7 @@ fwupd_client_get_details_stream_async (FwupdClient *self,
  * fwupd_client_get_details_bytes_async:
  * @self: A #FwupdClient
  * @bytes: a #GBytes for the firmware, e.g. `firmware.cab`
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -2876,7 +2876,7 @@ fwupd_client_get_details_bytes_async (FwupdClient *self,
  * fwupd_client_get_details_bytes_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_details_bytes_async().
  *
@@ -3109,7 +3109,7 @@ fwupd_client_update_metadata_stream_async (FwupdClient *self,
  * @remote_id: remote ID, e.g. `lvfs-testing`
  * @metadata: XML metadata data
  * @signature: signature data
- * @cancellable: #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -3179,7 +3179,7 @@ fwupd_client_update_metadata_bytes_async (FwupdClient *self,
  * fwupd_client_update_metadata_bytes_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_update_metadata_bytes_async().
  *
@@ -3315,7 +3315,7 @@ fwupd_client_refresh_remote_signature_cb (GObject *source,
  * fwupd_client_refresh_remote_async:
  * @self: A #FwupdClient
  * @remote: A #FwupdRemote
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -3362,7 +3362,7 @@ fwupd_client_refresh_remote_async (FwupdClient *self,
  * fwupd_client_refresh_remote_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_refresh_remote_async().
  *
@@ -3404,7 +3404,7 @@ fwupd_client_get_remotes_cb (GObject *source,
 /**
  * fwupd_client_get_remotes_async:
  * @self: A #FwupdClient
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -3439,7 +3439,7 @@ fwupd_client_get_remotes_async (FwupdClient *self, GCancellable *cancellable,
  * fwupd_client_get_remotes_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_remotes_async().
  *
@@ -3487,7 +3487,7 @@ fwupd_client_get_approved_firmware_cb (GObject *source,
 /**
  * fwupd_client_get_approved_firmware_async:
  * @self: A #FwupdClient
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -3525,7 +3525,7 @@ fwupd_client_get_approved_firmware_async (FwupdClient *self,
  * fwupd_client_get_approved_firmware_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_approved_firmware_async().
  *
@@ -3566,7 +3566,7 @@ fwupd_client_set_approved_firmware_cb (GObject *source,
  * fwupd_client_set_approved_firmware_async:
  * @self: A #FwupdClient
  * @checksums: (element-type utf8): firmware checksums
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -3608,7 +3608,7 @@ fwupd_client_set_approved_firmware_async (FwupdClient *self,
  * fwupd_client_set_approved_firmware_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_set_approved_firmware_async().
  *
@@ -3656,7 +3656,7 @@ fwupd_client_get_blocked_firmware_cb (GObject *source,
 /**
  * fwupd_client_get_blocked_firmware_async:
  * @self: A #FwupdClient
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -3694,7 +3694,7 @@ fwupd_client_get_blocked_firmware_async (FwupdClient *self,
  * fwupd_client_get_blocked_firmware_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_blocked_firmware_async().
  *
@@ -3735,7 +3735,7 @@ fwupd_client_set_blocked_firmware_cb (GObject *source,
  * fwupd_client_set_blocked_firmware_async:
  * @self: A #FwupdClient
  * @checksums: (element-type utf8): firmware checksums
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -3777,7 +3777,7 @@ fwupd_client_set_blocked_firmware_async (FwupdClient *self,
  * fwupd_client_set_blocked_firmware_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_set_blocked_firmware_async().
  *
@@ -3818,7 +3818,7 @@ fwupd_client_set_feature_flags_cb (GObject *source,
  * fwupd_client_set_feature_flags_async:
  * @self: A #FwupdClient
  * @feature_flags: #FwupdFeatureFlags, e.g. %FWUPD_FEATURE_FLAG_UPDATE_TEXT
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -3856,7 +3856,7 @@ fwupd_client_set_feature_flags_async (FwupdClient *self,
  * fwupd_client_set_feature_flags_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_set_feature_flags_async().
  *
@@ -3900,7 +3900,7 @@ fwupd_client_self_sign_cb (GObject *source, GAsyncResult *res, gpointer user_dat
  * @self: A #FwupdClient
  * @value: A string to sign, typically a JSON blob
  * @flags: #FwupdSelfSignFlags, e.g. %FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -3954,7 +3954,7 @@ fwupd_client_self_sign_async (FwupdClient *self,
  * fwupd_client_self_sign_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_self_sign_async().
  *
@@ -3997,7 +3997,7 @@ fwupd_client_modify_remote_cb (GObject *source,
  * @remote_id: the remote ID, e.g. `lvfs-testing`
  * @key: the key, e.g. `Enabled`
  * @value: the key, e.g. `true`
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -4038,7 +4038,7 @@ fwupd_client_modify_remote_async (FwupdClient *self,
  * fwupd_client_modify_remote_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_modify_remote_async().
  *
@@ -4081,7 +4081,7 @@ fwupd_client_modify_device_cb (GObject *source,
  * @device_id: the device ID
  * @key: the key, e.g. `Flags`
  * @value: the key, e.g. `reported`
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -4123,7 +4123,7 @@ fwupd_client_modify_device_async (FwupdClient *self,
  * fwupd_client_modify_device_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_modify_device_async().
  *
@@ -4188,7 +4188,7 @@ fwupd_client_get_remote_by_id_cb (GObject *source,
  * fwupd_client_get_remote_by_id_async:
  * @self: A #FwupdClient
  * @remote_id: the remote ID, e.g. `lvfs-testing`
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -4223,7 +4223,7 @@ fwupd_client_get_remote_by_id_async (FwupdClient *self,
  * fwupd_client_get_remote_by_id_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_get_remote_by_id_async().
  *
@@ -4537,7 +4537,7 @@ fwupd_client_download_bytes2_async (FwupdClient *self,
  * @self: A #FwupdClient
  * @url: the remote URL
  * @flags: #FwupdClientDownloadFlags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -4579,7 +4579,7 @@ fwupd_client_download_bytes_async (FwupdClient *self,
  * fwupd_client_download_bytes_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_download_bytes_async().
  *
@@ -4647,7 +4647,7 @@ fwupd_client_upload_bytes_thread_cb (GTask *task,
  * @payload: payload string
  * @signature: (nullable): signature string
  * @flags: #FwupdClientDownloadFlags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
- * @cancellable: the #GCancellable, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
@@ -4733,7 +4733,7 @@ fwupd_client_upload_bytes_async (FwupdClient *self,
  * fwupd_client_upload_bytes_finish:
  * @self: A #FwupdClient
  * @res: the #GAsyncResult
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the result of fwupd_client_upload_bytes_async().
  *

@@ -59,11 +59,11 @@ fu_dfu_target_stm_mass_erase (FuDfuTarget *target, GError **error)
  * fu_dfu_target_stm_set_address:
  * @target: a #FuDfuTarget
  * @address: memory address
- * @error: a #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Sets the address used for the next download or upload request.
  *
- * Return value: %TRUE for success
+ * Returns: %TRUE for success
  **/
 static gboolean
 fu_dfu_target_stm_set_address (FuDfuTarget *target, guint32 address, GError **error)
@@ -215,11 +215,11 @@ fu_dfu_target_stm_upload_element (FuDfuTarget *target,
  * fu_dfu_target_stm_erase_address:
  * @target: a #FuDfuTarget
  * @address: memory address
- * @error: a #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Erases a memory sector at a given address.
  *
- * Return value: %TRUE for success
+ * Returns: %TRUE for success
  **/
 static gboolean
 fu_dfu_target_stm_erase_address (FuDfuTarget *target, guint32 address, GError **error)

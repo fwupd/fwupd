@@ -415,7 +415,7 @@ fwupd_device_get_parent (FwupdDevice *device)
 /**
  * fwupd_device_set_parent:
  * @device: A #FwupdDevice
- * @parent: another #FwupdDevice, or %NULL
+ * @parent: (nullable): another #FwupdDevice
  *
  * Sets the parent. Only used internally.
  *

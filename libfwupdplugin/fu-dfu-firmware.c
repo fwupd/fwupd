@@ -61,7 +61,7 @@ fu_dfu_firmware_get_footer_len (FuDfuFirmware *self)
  *
  * Gets the vendor ID, or 0xffff for no restriction.
  *
- * Return value: integer
+ * Returns: integer
  *
  * Since: 1.3.3
  **/
@@ -79,7 +79,7 @@ fu_dfu_firmware_get_vid (FuDfuFirmware *self)
  *
  * Gets the product ID, or 0xffff for no restriction.
  *
- * Return value: integer
+ * Returns: integer
  *
  * Since: 1.3.3
  **/
@@ -97,7 +97,7 @@ fu_dfu_firmware_get_pid (FuDfuFirmware *self)
  *
  * Gets the device ID, or 0xffff for no restriction.
  *
- * Return value: integer
+ * Returns: integer
  *
  * Since: 1.3.3
  **/
@@ -115,7 +115,7 @@ fu_dfu_firmware_get_release (FuDfuFirmware *self)
  *
  * Gets the file format version with is 0x0100 by default.
  *
- * Return value: integer
+ * Returns: integer
  *
  * Since: 1.3.3
  **/

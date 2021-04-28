@@ -391,8 +391,8 @@ fwupd_remote_set_filename_cache (FwupdRemote *self, const gchar *filename)
  * fwupd_remote_load_from_filename:
  * @self: A #FwupdRemote
  * @filename: A filename
- * @cancellable: the #GCancellable, or %NULL
- * @error: the #GError, or %NULL
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
  *
  * Sets up the remote ready for use. Most other methods call this
  * for you, and do you only need to call this if you are just watching
@@ -926,7 +926,7 @@ fwupd_remote_get_checksum (FwupdRemote *self)
  * fwupd_remote_build_firmware_uri:
  * @self: A #FwupdRemote
  * @url: the URL to use
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Builds a URI for the URL using the username and password set for the remote,
  * including any basename URI substitution.
@@ -1045,7 +1045,7 @@ fwupd_remote_load_signature_jcat (FwupdRemote *self, JcatFile *jcat_file, GError
  * fwupd_remote_load_signature_bytes:
  * @self: A #FwupdRemote
  * @bytes: A #GBytes
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Parses the signature, updating the metadata URI as appropriate.
  *
@@ -1086,7 +1086,7 @@ fwupd_remote_load_signature_bytes (FwupdRemote *self, GBytes *bytes, GError **er
  * fwupd_remote_load_signature:
  * @self: A #FwupdRemote
  * @filename: A filename
- * @error: the #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Parses the signature, updating the metadata URI as appropriate.
  *

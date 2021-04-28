@@ -290,7 +290,7 @@ fu_hid_device_set_report_internal_cb (FuDevice *device, gpointer user_data, GErr
  * @bufsz: Size of @buf
  * @timeout: timeout in ms
  * @flags: #FuHidDeviceFlags e.g. %FU_HID_DEVICE_FLAG_ALLOW_TRUNC
- * @error: a #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Calls SetReport on the hardware.
  *
@@ -403,7 +403,7 @@ fu_hid_device_get_report_internal_cb (FuDevice *device, gpointer user_data, GErr
  * @bufsz: Size of @buf
  * @timeout: timeout in ms
  * @flags: #FuHidDeviceFlags e.g. %FU_HID_DEVICE_FLAG_ALLOW_TRUNC
- * @error: a #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Calls GetReport on the hardware.
  *

@@ -28,7 +28,7 @@
  *
  * Converts a #FwupdError to a string.
  *
- * Return value: identifier string
+ * Returns: identifier string
  *
  * Since: 0.7.0
  **/
@@ -78,7 +78,7 @@ fwupd_error_to_string (FwupdError error)
  *
  * Converts a string to a #FwupdError.
  *
- * Return value: enumerated value
+ * Returns: enumerated value
  *
  * Since: 0.7.0
  **/
@@ -125,7 +125,7 @@ fwupd_error_from_string (const gchar *error)
 /**
  * fwupd_error_quark:
  *
- * Return value: An error quark.
+ * Returns: An error quark.
  *
  * Since: 0.1.1
  **/

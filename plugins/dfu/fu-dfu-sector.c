@@ -61,7 +61,7 @@ fu_dfu_sector_init (FuDfuSector *self)
  *
  * Creates a new DFU sector object.
  *
- * Return value: a new #FuDfuSector
+ * Returns: a new #FuDfuSector
  **/
 FuDfuSector *
 fu_dfu_sector_new (guint32 address, guint32 size, guint32 size_left,
@@ -86,7 +86,7 @@ fu_dfu_sector_new (guint32 address, guint32 size, guint32 size_left,
  *
  * Gets the alternate setting.
  *
- * Return value: integer, or 0x00 for unset
+ * Returns: integer, or 0x00 for unset
  **/
 guint32
 fu_dfu_sector_get_address (FuDfuSector *self)
@@ -102,7 +102,7 @@ fu_dfu_sector_get_address (FuDfuSector *self)
  *
  * Gets the sector size.
  *
- * Return value: integer, or 0x00 for unset
+ * Returns: integer, or 0x00 for unset
  **/
 guint32
 fu_dfu_sector_get_size (FuDfuSector *self)
@@ -118,7 +118,7 @@ fu_dfu_sector_get_size (FuDfuSector *self)
  *
  * Gets the size of the rest of the sector.
  *
- * Return value: integer, or 0x00 for unset
+ * Returns: integer, or 0x00 for unset
  **/
 guint32
 fu_dfu_sector_get_size_left (FuDfuSector *self)
@@ -134,7 +134,7 @@ fu_dfu_sector_get_size_left (FuDfuSector *self)
  *
  * Gets the sector zone number.
  *
- * Return value: integer, or 0x00 for unset
+ * Returns: integer, or 0x00 for unset
  **/
 guint16
 fu_dfu_sector_get_zone (FuDfuSector *self)
@@ -150,7 +150,7 @@ fu_dfu_sector_get_zone (FuDfuSector *self)
  *
  * Gets the sector index number.
  *
- * Return value: integer, or 0x00 for unset
+ * Returns: integer, or 0x00 for unset
  **/
 guint16
 fu_dfu_sector_get_number (FuDfuSector *self)
@@ -168,7 +168,7 @@ fu_dfu_sector_get_number (FuDfuSector *self)
  * You can use this number to check if the segment is the 'same' as the last
  * written or read sector.
  *
- * Return value: integer ID, or 0x00 for unset
+ * Returns: integer ID, or 0x00 for unset
  **/
 guint32
 fu_dfu_sector_get_id (FuDfuSector *self)
@@ -185,7 +185,7 @@ fu_dfu_sector_get_id (FuDfuSector *self)
  *
  * Finds out if the sector has the required capability.
  *
- * Return value: %TRUE if the sector has the capabilily
+ * Returns: %TRUE if the sector has the capabilily
  **/
 gboolean
 fu_dfu_sector_has_cap (FuDfuSector *self, FuDfuSectorCap cap)
@@ -214,7 +214,7 @@ fu_dfu_sector_cap_to_string (FuDfuSectorCap cap)
  *
  * Returns a string representation of the object.
  *
- * Return value: NULL terminated string, or %NULL for invalid
+ * Returns: NULL terminated string, or %NULL for invalid
  **/
 gchar *
 fu_dfu_sector_to_string (FuDfuSector *self)

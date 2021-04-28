@@ -437,7 +437,7 @@ fu_usb_device_get_platform_id (FuUsbDevice *self)
  *
  * Gets the string USB revision for the device.
  *
- * Return value: a specification revision in BCD format, or 0x0 if not supported
+ * Returns: a specification revision in BCD format, or 0x0 if not supported
  *
  * Since: 1.3.4
  **/
@@ -458,7 +458,7 @@ fu_usb_device_get_spec (FuUsbDevice *self)
 /**
  * fu_usb_device_set_dev:
  * @device: A #FuUsbDevice
- * @usb_device: A #GUsbDevice, or %NULL
+ * @usb_device(nullable): optional #GUsbDevice
  *
  * Sets the #GUsbDevice to use.
  *
@@ -491,7 +491,7 @@ fu_usb_device_set_dev (FuUsbDevice *device, GUsbDevice *usb_device)
 /**
  * fu_usb_device_find_udev_device:
  * @device: A #FuUsbDevice
- * @error: A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the matching #GUdevDevice for the #GUsbDevice.
  *

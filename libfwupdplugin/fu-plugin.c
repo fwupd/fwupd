@@ -326,7 +326,7 @@ fu_plugin_guess_name_from_fn (const gchar *filename)
  * fu_plugin_open:
  * @self: A #FuPlugin
  * @filename: The shared object filename to open
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Opens the plugin module
  *
@@ -1606,7 +1606,7 @@ fu_plugin_runner_device_created (FuPlugin *self, FuDevice *device, GError **erro
  * @self: a #FuPlugin
  * @device: a #FuDevice
  * @flags: #FuPluginVerifyFlags
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Call into the plugin's verify routine
  *
@@ -1703,7 +1703,7 @@ fu_plugin_runner_verify (FuPlugin *self,
  * fu_plugin_runner_activate:
  * @self: a #FuPlugin
  * @device: a #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Call into the plugin's activate routine
  *
@@ -1748,7 +1748,7 @@ fu_plugin_runner_activate (FuPlugin *self, FuDevice *device, GError **error)
  * fu_plugin_runner_unlock:
  * @self: a #FuPlugin
  * @device: a #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Call into the plugin's unlock routine
  *
@@ -1795,7 +1795,7 @@ fu_plugin_runner_unlock (FuPlugin *self, FuDevice *device, GError **error)
  * @device: a #FuDevice
  * @blob_fw: A #GBytes
  * @flags: A #FwupdInstallFlags
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Call into the plugin's update routine
  *
@@ -1868,7 +1868,7 @@ fu_plugin_runner_update (FuPlugin *self,
  * fu_plugin_runner_clear_results:
  * @self: a #FuPlugin
  * @device: a #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Call into the plugin's clear results routine
  *
@@ -1921,7 +1921,7 @@ fu_plugin_runner_clear_results (FuPlugin *self, FuDevice *device, GError **error
  * fu_plugin_runner_get_results:
  * @self: a #FuPlugin
  * @device: a #FuDevice
- * @error: A #GError or NULL
+ * @error: (nullable): optional return location for an error
  *
  * Call into the plugin's get results routine
  *

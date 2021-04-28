@@ -180,7 +180,7 @@ fu_context_get_hwid_value (FuContext *self, const gchar *key)
  * fu_context_get_hwid_replace_value:
  * @self: A #FuContext
  * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
- * @error: A #GError or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Gets the replacement value for a specific key. All hardware IDs on a
  * specific system can be shown using the `fwupdmgr hwids` command.
@@ -502,7 +502,7 @@ fu_context_security_changed (FuContext *self)
 /**
  * fu_context_load_hwinfo:
  * @self: A #FuContext
- * @error: (nullable): A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Loads all hardware information parts of the context.
  *
@@ -533,7 +533,7 @@ fu_context_load_hwinfo (FuContext *self, GError **error)
  * fu_context_load_quirks:
  * @self: A #FuContext
  * @flags: a #FuQuirksLoadFlags, e.g. %FU_QUIRKS_LOAD_FLAG_READONLY_FS
- * @error: (nullable): A #GError, or %NULL
+ * @error: (nullable): optional return location for an error
  *
  * Loads all quirks into the context.
  *

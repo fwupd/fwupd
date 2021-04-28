@@ -14,7 +14,7 @@
  *
  * Converts a GUID to the known nice name.
  *
- * Return value: identifier string, or %NULL if unknown
+ * Returns: identifier string, or %NULL if unknown
  *
  * Since: 1.6.0
  **/

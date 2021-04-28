@@ -246,7 +246,7 @@ fu_ifd_firmware_parse (FuFirmware *firmware,
  *
  * Checks a JEDEC command to see if it has been put on the "illegal_jedec" list.
  *
- * Return value: %TRUE if the command is allowed
+ * Returns: %TRUE if the command is allowed
  *
  * Since: 1.6.0
  **/

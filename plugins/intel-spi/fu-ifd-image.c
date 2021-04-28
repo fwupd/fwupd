@@ -58,7 +58,7 @@ fu_ifd_image_set_access (FuIfdImage *self, FuIfdRegion region, FuIfdAccess acces
  *
  * Gets the access control for a specific reason.
  *
- * Return value: a #FuIfdAccess, e.g. %FU_IFD_ACCESS_NONE
+ * Returns: a #FuIfdAccess, e.g. %FU_IFD_ACCESS_NONE
  *
  * Since: 1.6.0
  **/
