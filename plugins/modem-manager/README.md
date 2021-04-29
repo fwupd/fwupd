@@ -15,11 +15,15 @@ These device use the ModemManager "Firmware Device IDs" as the GUID, e.g.
  * `USB\VID_413C&PID_81D7&REV_0318`
  * `USB\VID_413C&PID_81D7`
  * `USB\VID_413C`
+ * `PCI\VID_105B&PID_E0AB&REV_0000&CARRIER_VODAFONE`
+ * `PCI\VID_105B&PID_E0AB&REV_0000`
+ * `PCI\VID_105B&PID_E0AB`
+ * `PCI\VID_105B`
 
 Vendor ID Security
 ------------------
 
-The vendor ID is set from the USB vendor, for example `USB:0x413C`
+The vendor ID is set from the USB or PCI vendor, for example `USB:0x413C` `PCI:0x105B`
 
 Update method: fastboot
 -----------------------
@@ -55,6 +59,18 @@ Update protocol: com.qualcomm.qmi_pdc
 For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
 the fastboot and runtime modes are treated as the same device.
 
+Update method: mbim-qdu
+----------------------
+
+If the device supports the 'mbim-qdu' update method, the contents of the CAB
+file should include package named as 'Firmware_*.7z' which is compressed by 
+ota.bin and will be downloaded to the ota partition of the device.
+
+Update protocol: com.qualcomm.mbim_qdu
+
+For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
+the fastboot and runtime modes are treated as the same device.
+
 External interface access
 -------------------------
-This plugin requires read/write access to `/dev/bus/usb`.
+This plugin requires read/write access to `/dev/bus/usb` and `/dev/bus/pci`.

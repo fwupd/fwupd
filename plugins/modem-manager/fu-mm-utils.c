@@ -46,6 +46,23 @@ fu_mm_utils_get_udev_port_info (GUdevDevice	 *device,
 		g_set_object (&parent, next);
 	}
 
+	if (!device_sysfs_path && g_strcmp0 (g_udev_device_get_subsystem (device), "wwan") == 0) {
+		parent = g_udev_device_get_parent (device);
+		while (parent != NULL) {
+			g_autoptr(GUdevDevice) next = NULL;
+
+			if (g_strcmp0 (g_udev_device_get_subsystem (parent), "pci") == 0) {
+				device_sysfs_path = g_strdup (g_udev_device_get_sysfs_path (parent));
+				break;
+			}
+
+			/* check next parent */
+			next = g_udev_device_get_parent (parent);
+			g_set_object (&parent, next);
+		}
+
+	}
+
 	if (parent == NULL) {
 		g_set_error (error,
 			     G_IO_ERROR,

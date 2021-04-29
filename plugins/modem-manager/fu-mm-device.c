@@ -14,6 +14,7 @@
 #include "fu-device-private.h"
 #include "fu-mm-utils.h"
 #include "fu-qmi-pdc-updater.h"
+#include "fu-mbim-qdu-updater.h"
 
 /* Amount of time for the modem to boot in fastboot mode. */
 #define FU_MM_DEVICE_REMOVE_DELAY_RE_ENUMERATE	20000	/* ms */
@@ -54,6 +55,10 @@ struct _FuMmDevice {
 	FuQmiPdcUpdater			*qmi_pdc_updater;
 	GArray				*qmi_pdc_active_id;
 	guint				 attach_idle;
+
+	/* mbim-qdu update logic */
+	gchar				*port_mbim;
+	FuMbimQduUpdater		*mbim_qdu_updater;
 };
 
 enum {
@@ -73,6 +78,8 @@ fu_mm_device_to_string (FuDevice *device, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt, "AtPort", self->port_at);
 	if (self->port_qmi != NULL)
 		fu_common_string_append_kv (str, idt, "QmiPort", self->port_qmi);
+	if (self->port_mbim != NULL)
+		fu_common_string_append_kv (str, idt, "MbimPort", self->port_mbim);
 }
 
 const gchar *
@@ -116,6 +123,7 @@ validate_firmware_update_method (MMModemFirmwareUpdateMethod methods, GError **e
 	static const MMModemFirmwareUpdateMethod supported_combinations[] = {
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC | MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
+		MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU,
 	};
 	g_autofree gchar *methods_str = NULL;
 
@@ -144,6 +152,7 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 	guint n_ports = 0;
 	g_autoptr(MMFirmwareUpdateSettings) update_settings = NULL;
 	g_autofree gchar *device_sysfs_path = NULL;
+	gboolean is_mhi_dev = FALSE;
 
 	/* inhibition uid is the modem interface 'Device' property, which may
 	 * be the device sysfs path or a different user-provided id */
@@ -228,6 +237,15 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 		if (fu_device_get_protocols (device)->len == 0)
 			fu_device_add_protocol (device, "com.qualcomm.qmi_pdc");
 	}
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU) {
+		for (guint i = 0; i < n_ports; i++) {
+			if (ports[i].type == MM_MODEM_PORT_TYPE_MBIM) {
+				self->port_mbim = g_strdup_printf ("/dev/%s", ports[i].name);
+				break;
+			}
+		}
+		fu_device_add_protocol (device, "com.qualcomm.mbim_qdu");
+	}
 	mm_modem_port_info_array_free (ports, n_ports);
 
 	/* an at port is required for fastboot */
@@ -250,6 +268,16 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* a mbim port is required for mbim-qdu */
+	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU) &&
+	    (self->port_mbim == NULL)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "failed to find MBIM port");
+		return FALSE;
+	}
+
 	if (self->port_at != NULL) {
 		fu_mm_utils_get_port_info (self->port_at, &device_sysfs_path, &self->port_at_ifnum, NULL);
 	}
@@ -265,6 +293,18 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 			return FALSE;
 		}
 	}
+	if (self->port_mbim != NULL) {
+		g_autofree gchar *mbim_device_sysfs_path = NULL;
+		fu_mm_utils_get_port_info (self->port_mbim, &mbim_device_sysfs_path, NULL, NULL);
+		if (device_sysfs_path == NULL && mbim_device_sysfs_path != NULL) {
+			device_sysfs_path = g_steal_pointer (&mbim_device_sysfs_path);
+		} else if (g_strcmp0 (device_sysfs_path, mbim_device_sysfs_path) != 0) {
+			g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+				     "mismatched device sysfs path: %s != %s",
+				     device_sysfs_path, mbim_device_sysfs_path);
+			return FALSE;
+		}
+	}
 
 	/* if no device sysfs file, error out */
 	if (device_sysfs_path == NULL) {
@@ -273,6 +313,18 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "failed to find device sysfs path");
 		return FALSE;
+	}
+
+	/* Flag for mhi-based mbim device */
+	if (device_sysfs_path) {
+		g_autofree gchar *u_path = g_build_filename (device_sysfs_path, "uevent", NULL);
+		g_autofree gchar *d_value = NULL;
+		g_autoptr(GError) error_local_tmp = NULL;
+
+		if (g_file_get_contents (u_path, &d_value, NULL, &error_local_tmp)) {
+			if (g_strrstr (d_value, "DRIVER=mhi"))
+				is_mhi_dev = TRUE;
+		}
 	}
 
 	/* add properties to fwupd device */
@@ -284,7 +336,7 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 	fu_device_set_version (device, version);
 	for (guint i = 0; device_ids[i] != NULL; i++)
 		fu_device_add_instance_id (device, device_ids[i]);
-	if (fu_device_get_vendor_ids (device) == NULL) {
+	if (fu_device_get_vendor_ids (device) != NULL && !is_mhi_dev) {
 		g_autofree gchar *path = g_build_filename (device_sysfs_path, "idVendor", NULL);
 		g_autofree gchar *value = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -293,6 +345,19 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 			g_warning ("failed to set vendor ID: %s", error_local->message);
 		} else {
 			g_autofree gchar *vendor_id = g_strdup_printf ("USB:0x%s", g_strchomp (value));
+			fu_device_add_vendor_id (device, vendor_id);
+		}
+	}
+
+	if (fu_device_get_vendor_ids (device) != NULL && is_mhi_dev) {
+		g_autofree gchar *path = g_build_filename (device_sysfs_path, "vendor", NULL);
+		g_autofree gchar *value = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		if (!g_file_get_contents (path, &value, NULL, &error_local)) {
+			g_warning ("failed to set vendor ID: %s", error_local->message);
+		} else {
+			g_autofree gchar *vendor_id = g_strdup_printf ("PCI:0x%s", g_ascii_strup (g_strchomp(value+2), -1));
 			fu_device_add_vendor_id (device, vendor_id);
 		}
 	}
@@ -325,6 +390,16 @@ fu_mm_device_probe_udev (FuDevice *device, GError **error)
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
 				     "failed to find QMI port");
+		return FALSE;
+	}
+
+	/* a mbim port is required for mbim-qdu */
+	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU) &&
+	    (self->port_mbim == NULL)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "failed to find MBIM port");
 		return FALSE;
 	}
 
@@ -654,6 +729,86 @@ fu_mm_device_write_firmware_qmi_pdc (FuDevice *device, GBytes *fw, GArray **acti
 }
 
 static gboolean
+fu_mm_device_mbim_open (FuMmDevice *self, GError **error)
+{
+	self->mbim_qdu_updater = fu_mbim_qdu_updater_new (self->port_mbim);
+	return fu_mbim_qdu_updater_open (self->mbim_qdu_updater, error);
+}
+
+static gboolean
+fu_mm_device_mbim_close (FuMmDevice *self, GError **error)
+{
+	g_autoptr(FuMbimQduUpdater) updater = NULL;
+
+	updater = g_steal_pointer (&self->mbim_qdu_updater);
+	return fu_mbim_qdu_updater_close (updater, error);
+}
+
+static gboolean
+fu_mm_device_write_firmware_mbim_qdu (FuDevice *device, GBytes *fw, GError **error)
+{
+	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	GBytes *data;
+	g_autoptr(XbBuilder) builder = xb_builder_new ();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(GPtrArray) parts = NULL;
+	XbNode *part = NULL;
+	const gchar *filename = NULL;
+	const gchar *csum;
+	g_autofree gchar *csum_actual = NULL;
+	FuMmDevice *self = FU_MM_DEVICE (device);
+
+	/* decompress entire archive ahead of time */
+	archive = fu_archive_new (fw, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
+	if (archive == NULL)
+		return FALSE;
+
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) fu_mm_device_mbim_open,
+					    (FuDeviceLockerFunc) fu_mm_device_mbim_close,
+					    error);
+	if (locker == NULL)
+		return FALSE;
+
+	/* load the manifest of operations */
+	data = fu_archive_lookup_by_fn (archive, "flashfile.xml", error);
+	if (data == NULL)
+		return FALSE;
+	if (!xb_builder_source_load_bytes (source, data,
+					   XB_BUILDER_SOURCE_FLAG_NONE, error))
+		return FALSE;
+	xb_builder_import_source (builder, source);
+	silo = xb_builder_compile (builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
+	if (silo == NULL)
+		return FALSE;
+
+	/* get all the operation parts */
+	parts = xb_silo_query (silo, "parts/part", 0, error);
+	if (parts == NULL)
+		return FALSE;
+	part = g_ptr_array_index (parts, 0);
+	filename = xb_node_get_attr (part, "filename");
+	csum = xb_node_get_attr (part, "MD5");
+	data = fu_archive_lookup_by_fn (archive, filename, error);
+	if (data == NULL)
+		return FALSE;
+	csum_actual = g_compute_checksum_for_bytes (G_CHECKSUM_MD5, data);
+	if (g_strcmp0 (csum, csum_actual) != 0) {
+		g_debug ("MD5 not matched");
+		return FALSE;
+	} else {
+		g_debug ("MD5 matched");
+	}
+	
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_mbim_qdu_updater_write (self->mbim_qdu_updater, filename, data, error, device);
+
+	return TRUE;
+}
+
+static gboolean
 fu_mm_device_write_firmware (FuDevice *device,
 			     FuFirmware *firmware,
 			     FwupdInstallFlags flags,
@@ -678,6 +833,11 @@ fu_mm_device_write_firmware (FuDevice *device,
 	/* qmi pdc write operation */
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC)
 		return fu_mm_device_write_firmware_qmi_pdc (device, fw, &self->qmi_pdc_active_id, error);
+
+	/* mbim qdu write operation */
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU) {
+		return fu_mm_device_write_firmware_mbim_qdu (device, fw, error);
+	}
 
 	g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
 		     "unsupported update method");
@@ -752,7 +912,9 @@ fu_mm_device_attach (FuDevice *device, GError **error)
 
 	/* wait for re-probing after uninhibiting */
 	fu_device_set_remove_delay (device, FU_MM_DEVICE_REMOVE_DELAY_REPROBE);
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	if (!(self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU))
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
 	return TRUE;
 }
 
@@ -781,6 +943,7 @@ fu_mm_device_finalize (GObject *object)
 	g_free (self->detach_fastboot_at);
 	g_free (self->port_at);
 	g_free (self->port_qmi);
+	g_free (self->port_mbim);
 	g_free (self->inhibition_uid);
 	G_OBJECT_CLASS (fu_mm_device_parent_class)->finalize (object);
 }
@@ -861,6 +1024,23 @@ fu_mm_device_udev_new (MMManager *manager,
 	fu_device_set_name (FU_DEVICE (self), info->name);
 	fu_device_set_version (FU_DEVICE (self), info->version);
 	self->update_methods = info->update_methods;
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU) {
+		g_autofree gchar *device_sysfs_path = NULL;
+		g_autofree gchar *path = NULL;
+		g_autofree gchar *value = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		device_sysfs_path = g_strdup (info->physical_id);
+		path = g_build_filename (device_sysfs_path, "vendor", NULL);
+		if (!g_file_get_contents (path, &value, NULL, &error_local)) {
+			g_warning ("failed to set vendor ID: %s", error_local->message);
+		} else {
+			g_autofree gchar *vendor_id = g_strdup_printf ("PCI:0x%s", g_ascii_strup (g_strchomp(value+2), -1));
+			fu_device_add_vendor_id (FU_DEVICE (self), vendor_id);
+		}
+
+		fu_device_add_protocol (FU_DEVICE (self), "com.qualcomm.mbim_qdu");
+	}
 	self->detach_fastboot_at = g_strdup (info->detach_fastboot_at);
 	self->port_at_ifnum = info->port_at_ifnum;
 	self->port_qmi_ifnum = info->port_qmi_ifnum;
@@ -894,6 +1074,13 @@ fu_mm_device_udev_add_port (FuMmDevice	*self,
 	    ifnum == self->port_at_ifnum) {
 		g_debug ("added AT port %s (%s)", path, subsystem);
 		self->port_at = g_strdup (path);
+		return;
+	}
+
+	if (g_str_equal (subsystem, "wwan") &&
+	    self->port_mbim == NULL) {
+		g_debug ("added MBIM port %s (%s)", path, subsystem);
+		self->port_mbim = g_strdup (path);
 		return;
 	}
 

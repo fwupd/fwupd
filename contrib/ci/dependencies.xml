@@ -1019,6 +1019,27 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="libmbim-glib-dev">
+    <distro id="centos">
+      <package>libmbim-devel</package>
+    </distro>
+    <distro id="fedora">
+      <package>libmbim-devel</package>
+    </distro>
+    <distro id="arch">
+      <package>libmbim</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libmbim-glib-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="libpolkit-gobject-1-dev">
     <distro id="centos">
       <package>polkit-devel</package>

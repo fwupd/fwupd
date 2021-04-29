@@ -31,6 +31,8 @@ struct FuPluginData {
 	FuPluginMmInhibitedDeviceInfo *inhibited;
 };
 
+static gchar *mbim_mm_object_path = NULL; /* the inhibited mm for update */
+
 static void
 fu_plugin_mm_udev_device_removed (FuPlugin *plugin)
 {
@@ -162,8 +164,22 @@ fu_plugin_mm_udev_uevent_cb (GUdevClient	*udev,
 	if (g_strcmp0 (device_sysfs_path, priv->inhibited->physical_id) != 0)
 		return TRUE;
 
+	/* Remove the inhibited mbim device from the plugin once the first wwan device remove is detected */
+	if (g_str_equal (subsystem, "wwan") && g_str_equal (action, "remove") && mbim_mm_object_path != NULL) {
+		FuMmDevice *existing;
+		existing = fu_plugin_cache_lookup (plugin, mbim_mm_object_path);
+		if (existing != NULL) {
+			fu_plugin_cache_remove (plugin, mbim_mm_object_path);
+			fu_plugin_device_remove (plugin, FU_DEVICE (existing));
+			mbim_mm_object_path = NULL;
+		}
+	}
+
 	/* ignore non-cdc-wdm usbmisc ports */
 	if (g_str_equal (subsystem, "usbmisc") && !g_str_has_prefix (name, "cdc-wdm"))
+		return TRUE;
+
+	if (g_str_equal (subsystem, "wwan") && !g_str_has_prefix (name, "wwan"))
 		return TRUE;
 
 	path = g_strdup_printf ("/dev/%s", name);
@@ -182,7 +198,7 @@ fu_plugin_mm_udev_uevent_cb (GUdevClient	*udev,
 static gboolean
 fu_plugin_mm_inhibit_device (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	static const gchar *subsystems[] = { "tty", "usbmisc", NULL };
+	static const gchar *subsystems[] = { "tty", "usbmisc", "wwan", NULL };
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FuPluginMmInhibitedDeviceInfo) info = NULL;
 
@@ -199,7 +215,8 @@ fu_plugin_mm_inhibit_device (FuPlugin *plugin, FuDevice *device, GError **error)
 
 	/* only do modem port monitoring using udev if the module is expected
 	 * to reset itself into a fully different layout, e.g. a fastboot device */
-	if (fu_mm_device_get_update_methods (FU_MM_DEVICE (device)) & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
+	if (fu_mm_device_get_update_methods (FU_MM_DEVICE (device)) & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT ||
+	    fu_mm_device_get_update_methods (FU_MM_DEVICE (device)) & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU) {
 		priv->udev_client = g_udev_client_new (subsystems);
 		g_signal_connect (priv->udev_client, "uevent",
 				  G_CALLBACK (fu_plugin_mm_udev_uevent_cb), plugin);
@@ -239,11 +256,17 @@ fu_plugin_mm_device_removed_cb (MMManager *manager, MMObject *modem, FuPlugin *p
 {
 	const gchar *object_path = mm_object_get_path (modem);
 	FuMmDevice *dev = fu_plugin_cache_lookup (plugin, object_path);
+	MMModemFirmwareUpdateMethod dev_update_methods = fu_mm_device_get_update_methods(dev);
 	if (dev == NULL)
 		return;
 	g_debug ("removed modem: %s", mm_object_get_path (modem));
-	fu_plugin_cache_remove (plugin, object_path);
-	fu_plugin_device_remove (plugin, FU_DEVICE (dev));
+	mbim_mm_object_path = g_strdup (object_path);
+	
+	/* later removed the inhibited mbim device from the plugin */
+	if (!(dev_update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU)) {
+		fu_plugin_cache_remove (plugin, object_path);
+		fu_plugin_device_remove (plugin, FU_DEVICE (dev));
+	}
 }
 
 static void
