@@ -22,35 +22,6 @@ struct FuPluginData {
     guint       drm_changed_id;
 };
 
-/* see https://github.com/fwupd/fwupd/issues/1121 for more details */
-static gboolean
-fu_kinetic_mst_check_amdgpu_safe (GError **error)
-{
-	gsize bufsz = 0;
-	g_autofree gchar *buf = NULL;
-	g_auto(GStrv) lines = NULL;
-
-	/* no module support in the kernel, we can't test for amdgpu module */
-	if (!g_file_test ("/proc/modules", G_FILE_TEST_EXISTS))
-		return TRUE;
-
-	if (!g_file_get_contents ("/proc/modules", &buf, &bufsz, error))
-		return FALSE;
-
-	lines = g_strsplit (buf, "\n", -1);
-	for (guint i = 0; lines[i] != NULL; i++) {
-		if (g_str_has_prefix (lines[i], "amdgpu ")) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "amdgpu has known issues with kinetic_mst");
-			return FALSE;
-		}
-	}
-
-	return TRUE;
-}
-
 static void
 fu_plugin_kinetic_mst_device_rescan (FuPlugin *plugin, FuDevice *device)
 {
@@ -100,61 +71,62 @@ fu_plugin_kinetic_mst_rescan_cb (gpointer user_data)
 gboolean
 fu_plugin_backend_device_changed (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuPluginData *priv = fu_plugin_get_data (plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 
 	/* interesting device? */
-	if (!FU_IS_UDEV_DEVICE (device))
+	if (!FU_IS_UDEV_DEVICE(device))
 		return TRUE;
-	if (g_strcmp0 (fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)), "drm") != 0)
+	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE (device)), "drm") != 0)
 		return TRUE;
 
 	/* recoldplug all drm_dp_aux_dev devices after a *long* delay */
 	if (priv->drm_changed_id != 0)
-		g_source_remove (priv->drm_changed_id);
-	priv->drm_changed_id = g_timeout_add_seconds (FU_KINETIC_MST_DRM_REPLUG_DELAY,
-						      fu_plugin_kinetic_mst_rescan_cb,
-						      plugin);
+		g_source_remove(priv->drm_changed_id);
+	priv->drm_changed_id = g_timeout_add_seconds(FU_KINETIC_MST_DRM_REPLUG_DELAY,
+                                                 fu_plugin_kinetic_mst_rescan_cb,
+                                                 plugin);
 	return TRUE;
 }
 
 gboolean
-fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuPluginData *priv = fu_plugin_get_data (plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuKineticMstDevice) dev = NULL;
 
 	/* interesting device? */
-	if (!FU_IS_UDEV_DEVICE (device))
+	if (!FU_IS_UDEV_DEVICE(device))
 		return TRUE;
 
-	dev = fu_kinetic_mst_device_new (FU_UDEV_DEVICE (device));
-	locker = fu_device_locker_new (dev, error);
+	dev = fu_kinetic_mst_device_new(FU_UDEV_DEVICE(device));
+	locker = fu_device_locker_new(dev, error);
 	if (locker == NULL)
 		return FALSE;
 
 	/* for DeviceKind=system devices */
-	fu_kinetic_mst_device_set_system_type (FU_KINETIC_MST_DEVICE (dev),
-                                           fu_plugin_get_dmi_value (plugin, FU_HWIDS_KEY_PRODUCT_SKU));
+	fu_kinetic_mst_device_set_system_type(FU_KINETIC_MST_DEVICE (dev),
+                                          fu_plugin_get_dmi_value(plugin, FU_HWIDS_KEY_PRODUCT_SKU));
 
 	/* this might fail if there is nothing connected */
-	fu_plugin_kinetic_mst_device_rescan (plugin, FU_DEVICE (dev));
-	g_ptr_array_add (priv->devices, g_steal_pointer (&dev));
+	fu_plugin_kinetic_mst_device_rescan(plugin, FU_DEVICE (dev));
+	g_ptr_array_add(priv->devices, g_steal_pointer(&dev));
+
 	return TRUE;
 }
 
 gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
+fu_plugin_startup(FuPlugin *plugin, GError **error)
 {
-	return fu_kinetic_mst_check_amdgpu_safe (error);
+	return TRUE;
 }
 
 gboolean
 fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *device,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
+                  FuDevice *device,
+                  GBytes *blob_fw,
+                  FwupdInstallFlags flags,
+                  GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
 	if (locker == NULL)

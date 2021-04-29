@@ -40,16 +40,34 @@ fu_kinetic_mst_device_finalize (GObject *object)
 static void
 fu_kinetic_mst_device_init (FuKineticMstDevice *self)
 {
-	fu_device_set_protocol (FU_DEVICE (self), "com.kinetic.mst");
-	fu_device_set_vendor (FU_DEVICE (self), "Kinetic");
-	fu_device_add_vendor_id (FU_DEVICE (self), "DRM_DP_AUX_DEV:0x06CB");    // <TODO> How to determine the vendor ID?
-	fu_device_set_summary (FU_DEVICE (self), "Multi-Stream Transport Device");
-	fu_device_add_icon (FU_DEVICE (self), "video-display");
-	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);  // <TODO> What's Kinetic's version format?
-	fu_udev_device_set_flags (FU_UDEV_DEVICE (self),
-                              FU_UDEV_DEVICE_FLAG_OPEN_READ |
-                              FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
-                              FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+	fu_device_set_protocol(FU_DEVICE (self), "com.kinetic.mst");
+	fu_device_set_vendor(FU_DEVICE (self), "Kinetic");
+	fu_device_add_vendor_id(FU_DEVICE (self), "DRM_DP_AUX_DEV:0x06CB");    // <TODO> How to determine the vendor ID?
+	fu_device_set_summary(FU_DEVICE (self), "Multi-Stream Transport Device");
+	fu_device_add_icon(FU_DEVICE(self), "video-display");
+	fu_device_set_version_format(FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);  // <TODO> What's Kinetic's version format?
+	fu_udev_device_set_flags(FU_UDEV_DEVICE (self),
+                             FU_UDEV_DEVICE_FLAG_OPEN_READ |
+                             FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
+                             FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+}
+
+static gboolean
+fu_kinetic_mst_device_probe(FuDevice *device, GError **error)
+{
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_kinetic_mst_device_parent_class)->probe (device, error))
+		return FALSE;
+
+	/* get from sysfs if not set from tests */
+	if (fu_device_get_logical_id(device) == NULL)
+	{
+		g_autofree gchar *logical_id = NULL;
+		logical_id = g_path_get_basename(fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
+		fu_device_set_logical_id(device, logical_id);
+	}
+
+	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE (device), "pci,drm_dp_aux_dev", error);
 }
 
 static FuFirmware *
@@ -1318,7 +1336,7 @@ FuKineticMstDevice *
 fu_kinetic_mst_device_new(FuUdevDevice *device)
 {
 	FuKineticMstDevice *self = g_object_new(FU_TYPE_KINETIC_MST_DEVICE, NULL);
-	fu_device_incorporate(FU_DEVICE (self), FU_DEVICE (device));
+	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(device));
 	return self;
 }
 
@@ -1340,6 +1358,14 @@ fu_kinetic_mst_device_rescan(FuDevice *device, GError **error)
         return FALSE;
     }
 
+    g_debug("[JEFFREY DEBUG]branch_id_str=%s", dp_dev_infos[DEV_HOST].branch_id_str);
+
+    /* read firmware version */
+    // <TODO>
+
+    /* read board chip_id */
+    // <TODO>
+
 	return TRUE;
 }
 
@@ -1355,6 +1381,6 @@ fu_kinetic_mst_device_class_init(FuKineticMstDeviceClass *klass)
 	klass_device->rescan = fu_kinetic_mst_device_rescan;
 	klass_device->write_firmware = fu_kinetic_mst_device_write_firmware;
 	klass_device->prepare_firmware = fu_kinetic_mst_device_prepare_firmware;
-	//klass_device->probe = fu_kinetic_mst_device_probe;
+	klass_device->probe = fu_kinetic_mst_device_probe;
 }
 
