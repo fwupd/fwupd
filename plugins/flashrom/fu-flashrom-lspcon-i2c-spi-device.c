@@ -77,6 +77,9 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FlashromLayout, dispose_flash_layout);
 static void
 fu_flashrom_lspcon_i2c_spi_device_init (FuFlashromLspconI2cSpiDevice *self)
 {
+	fu_flashrom_device_set_flags (FU_FLASHROM_DEVICE (self),
+				      FU_FLASHROM_DEVICE_FLAG_OPEN_PROGRAMMER);
+
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 }
@@ -141,7 +144,6 @@ fu_flashrom_lspcon_i2c_spi_device_open (FuDevice *device,
 		return FALSE;
 	}
 	fu_udev_device_set_fd (FU_UDEV_DEVICE (self), bus_fd);
-	fu_udev_device_set_flags (FU_UDEV_DEVICE (self), FU_UDEV_DEVICE_FLAG_NONE);
 
 	return klass->open (device, error);
 }

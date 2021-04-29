@@ -16,11 +16,28 @@ typedef struct {
 	gsize				 flash_size;
 	struct flashrom_flashctx	*flashctx;
 	struct flashrom_programmer	*flashprog;
+	FuFlashromDeviceFlags 		flags;
 } FuFlashromDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuFlashromDevice, fu_flashrom_device, FU_TYPE_UDEV_DEVICE)
 
 #define GET_PRIVATE(o) (fu_flashrom_device_get_instance_private (o))
+
+FuFlashromDeviceFlags
+fu_flashrom_device_get_flags (FuFlashromDevice *self)
+{
+	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_FLASHROM_DEVICE (self), FU_FLASHROM_DEVICE_FLAG_NONE);
+	return priv->flags;
+}
+
+void
+fu_flashrom_device_set_flags (FuFlashromDevice *self, FuFlashromDeviceFlags flags)
+{
+	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_FLASHROM_DEVICE (self));
+	priv->flags = flags;
+}
 
 void
 fu_flashrom_device_set_programmer_name (FuFlashromDevice *self, const gchar *name)
@@ -71,13 +88,20 @@ fu_flashrom_device_get_flashctx (FuFlashromDevice *self)
 static void
 fu_flashrom_device_init (FuFlashromDevice *self)
 {
+	fu_udev_device_set_flags (FU_UDEV_DEVICE (self), FU_UDEV_DEVICE_FLAG_NONE);
 	fu_device_add_protocol (FU_DEVICE (self), "org.flashrom");
 }
 
 static void
 fu_flashrom_device_finalize (GObject *object)
 {
-	FuFlashromDevicePrivate *priv = GET_PRIVATE (FU_FLASHROM_DEVICE (object));
+	FuFlashromDevice *self = FU_FLASHROM_DEVICE (object);
+	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
+
+	if (priv->flashprog != NULL) {
+		g_warning ("flashrom device programmer not closed before finalization");
+		fu_flashrom_device_close_programmer (self);
+	}
 	g_free (priv->programmer_name);
 	g_free (priv->programmer_args);
 	G_OBJECT_CLASS (fu_flashrom_device_parent_class)->finalize (object);
@@ -129,11 +153,16 @@ fu_flashrom_device_probe (FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_flashrom_device_open (FuDevice *device, GError **error)
+gboolean
+fu_flashrom_device_open_programmer (FuFlashromDevice *self, GError **error)
 {
-	FuFlashromDevicePrivate *priv = GET_PRIVATE (FU_FLASHROM_DEVICE (device));
+	FuFlashromDevicePrivate *priv = GET_PRIVATE (FU_FLASHROM_DEVICE (self));
 	gint rc;
+
+	if (priv->flashprog != NULL) {
+		g_debug ("device is already open; not reopening");
+		return TRUE;
+	}
 
 	if (priv->programmer_name == NULL) {
 		g_set_error_literal (error,
@@ -152,6 +181,9 @@ fu_flashrom_device_open (FuDevice *device, GError **error)
 		return FALSE;
 	}
 	rc = flashrom_flash_probe (&priv->flashctx, priv->flashprog, NULL);
+	if (rc != 0)
+		/* clean up flashprog */
+		fu_flashrom_device_close_programmer (self);
 	if (rc == 3) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -186,12 +218,39 @@ fu_flashrom_device_open (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_flashrom_device_close (FuDevice *device, GError **error)
+fu_flashrom_device_open (FuDevice *device, GError **error)
+{
+	FuFlashromDevice *self = FU_FLASHROM_DEVICE (device);
+
+	if ((fu_flashrom_device_get_flags (self)
+		& FU_FLASHROM_DEVICE_FLAG_OPEN_PROGRAMMER) != 0) {
+		if (!fu_flashrom_device_open_programmer (self, error))
+			return FALSE;
+	}
+	return FU_DEVICE_CLASS (fu_flashrom_device_parent_class)->open (device, error);
+}
+
+void
+fu_flashrom_device_close_programmer (FuFlashromDevice *device)
 {
 	FuFlashromDevicePrivate *priv = GET_PRIVATE (FU_FLASHROM_DEVICE (device));
-	flashrom_flash_release (priv->flashctx);
-	flashrom_programmer_shutdown (priv->flashprog);
-	return TRUE;
+
+	if (priv->flashctx != NULL)
+		flashrom_flash_release (priv->flashctx);
+	priv->flashctx = NULL;
+	if (priv->flashprog != NULL)
+		flashrom_programmer_shutdown (priv->flashprog);
+	priv->flashprog = NULL;
+}
+
+static gboolean
+fu_flashrom_device_close (FuDevice *device, GError **error)
+{
+	if ((fu_flashrom_device_get_flags (FU_FLASHROM_DEVICE (device)) &
+		FU_FLASHROM_DEVICE_FLAG_OPEN_PROGRAMMER) != 0) {
+		fu_flashrom_device_close_programmer (FU_FLASHROM_DEVICE (device));
+	}
+	return FU_DEVICE_CLASS (fu_flashrom_device_parent_class)->close (device, error);
 }
 
 static void

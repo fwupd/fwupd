@@ -21,6 +21,9 @@ G_DEFINE_TYPE (FuFlashromInternalDevice, fu_flashrom_internal_device,
 static void
 fu_flashrom_internal_device_init (FuFlashromInternalDevice *self)
 {
+	fu_flashrom_device_set_flags (FU_FLASHROM_DEVICE (self),
+				      FU_FLASHROM_DEVICE_FLAG_OPEN_PROGRAMMER);
+
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
