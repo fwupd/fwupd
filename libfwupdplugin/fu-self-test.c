@@ -593,21 +593,26 @@ fu_plugin_quirks_device_func (void)
 static void fu_common_kernel_lockdown_func (void)
 {
 	gboolean ret;
-	g_autofree gchar *old_kernel_dir = g_build_filename (TESTDATADIR_SRC,
-							     "lockdown", NULL);
-	g_autofree gchar *locked_dir = g_build_filename (TESTDATADIR_SRC,
-							 "lockdown", "locked", NULL);
-	g_autofree gchar *none_dir = g_build_filename (TESTDATADIR_SRC,
-							"lockedown", "none", NULL);
+	g_autofree gchar *locked_dir = NULL;
+	g_autofree gchar *none_dir = NULL;
+	g_autofree gchar *old_kernel_dir = NULL;
 
+#ifndef __linux__
+	g_test_skip ("only works on Linux");
+	return;
+#endif
+
+	old_kernel_dir = g_build_filename (TESTDATADIR_SRC, "lockdown", NULL);
 	g_setenv ("FWUPD_SYSFSSECURITYDIR", old_kernel_dir, TRUE);
 	ret = fu_common_kernel_locked_down ();
 	g_assert_false (ret);
 
+	locked_dir = g_build_filename (TESTDATADIR_SRC, "lockdown", "locked", NULL);
 	g_setenv ("FWUPD_SYSFSSECURITYDIR", locked_dir, TRUE);
 	ret = fu_common_kernel_locked_down ();
 	g_assert_true (ret);
 
+	none_dir = g_build_filename (TESTDATADIR_SRC, "lockdown", "none", NULL);
 	g_setenv ("FWUPD_SYSFSSECURITYDIR", none_dir, TRUE);
 	ret = fu_common_kernel_locked_down ();
 	g_assert_false (ret);
