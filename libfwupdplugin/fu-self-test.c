@@ -2001,6 +2001,11 @@ fu_firmware_fmap_func (void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) images = NULL;
 
+#ifndef HAVE_MEMMEM
+	g_test_skip ("no memmem()");
+	return;
+#endif
+
 	/* load firmware */
 	filename = g_build_filename (TESTDATADIR_SRC, "firmware.fmap", NULL);
 	g_assert (filename != NULL);
