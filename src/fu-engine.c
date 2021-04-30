@@ -3488,8 +3488,10 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 	xmlbfn = g_build_filename (cachedirpkg, "metadata.xmlb", NULL);
 	xmlb = g_file_new_for_path (xmlbfn);
 	self->silo = xb_builder_ensure (builder, xmlb, compile_flags, NULL, error);
-	if (self->silo == NULL)
+	if (self->silo == NULL) {
+		g_prefix_error (error, "cannot create file %s: ", xmlbfn);
 		return FALSE;
+	}
 
 	/* print what we've got */
 	components = xb_silo_query (self->silo,
