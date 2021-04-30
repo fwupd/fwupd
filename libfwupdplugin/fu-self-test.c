@@ -2238,6 +2238,11 @@ fu_efivar_func (void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) names = NULL;
 
+#ifndef __linux__
+	g_test_skip ("only works on Linux");
+	return;
+#endif
+
 	/* check supported */
 	ret = fu_efivar_supported (&error);
 	g_assert_no_error (error);
