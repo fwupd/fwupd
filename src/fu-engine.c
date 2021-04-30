@@ -52,6 +52,7 @@
 #include "fu-security-attr.h"
 #include "fu-security-attrs-private.h"
 #include "fu-udev-device-private.h"
+#include "fu-version.h"
 
 #ifdef HAVE_GUDEV
 #include "fu-udev-backend.h"
@@ -6302,6 +6303,26 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	/* avoid re-loading a second time if fu-tool or fu-util request to */
 	if (self->loaded)
 		return TRUE;
+
+	/* sanity check libraries are in sync with daemon */
+	if (g_strcmp0 (fwupd_version_string (), VERSION) != 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVAL,
+			     "libfwupd version %s does not match daemon %s",
+			     fwupd_version_string (),
+			     VERSION);
+		return FALSE;
+	}
+	if (g_strcmp0 (fu_version_string (), VERSION) != 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVAL,
+			     "libfwupdplugin version %s does not match daemon %s",
+			     fu_version_string (),
+			     VERSION);
+		return FALSE;
+	}
 
 /* TODO: Read registry key [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography] "MachineGuid" */
 #ifndef _WIN32

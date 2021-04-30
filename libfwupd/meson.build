@@ -48,6 +48,7 @@ libfwupd_src = [
   'fwupd-release.c',        # fuzzing
   'fwupd-plugin.c',
   'fwupd-remote.c',
+  'fwupd-version.c',
 ]
 
 fwupd_mapfile = 'fwupd.map'

@@ -663,3 +663,9 @@ LIBFWUPD_1.6.0 {
     fwupd_device_set_composite_id;
   local: *;
 } LIBFWUPD_1.5.8;
+
+LIBFWUPD_1.6.1 {
+  global:
+    fwupd_version_string;
+  local: *;
+} LIBFWUPD_1.6.0;

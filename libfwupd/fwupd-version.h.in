@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <glib.h>
+
 /**
  * SECTION:fwupd-version
  * @short_description: Obtains the version for the installed fwupd
@@ -59,3 +61,5 @@
      (FWUPD_MAJOR_VERSION == (major) && FWUPD_MINOR_VERSION > (minor)) || \
      (FWUPD_MAJOR_VERSION == (major) && FWUPD_MINOR_VERSION == (minor) && \
       FWUPD_MICRO_VERSION >= (micro)))
+
+const gchar	*fwupd_version_string			(void);
