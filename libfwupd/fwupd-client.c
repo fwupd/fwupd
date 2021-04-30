@@ -61,6 +61,7 @@ typedef struct {
 	gchar				*host_security_id;
 	GMutex				 proxy_mutex;	/* for @proxy */
 	GDBusProxy			*proxy;
+	GProxyResolver			*proxy_resolver;
 	gchar				*user_agent;
 #ifdef SOUP_SESSION_COMPAT
 	GObject				*soup_session;
@@ -74,7 +75,6 @@ typedef struct {
 	CURL				*curl;
 	curl_mime			*mime;
 	struct curl_slist		*headers;
-	GProxyResolver			*proxy_resolver;
 } FwupdCurlHelper;
 #endif
 
@@ -122,8 +122,6 @@ fwupd_client_curl_helper_free (FwupdCurlHelper *helper)
 		curl_slist_free_all (helper->headers);
 	if (helper->urls != NULL)
 		g_ptr_array_unref (helper->urls);
-	if (helper->proxy_resolver != NULL)
-		g_object_unref (helper->proxy_resolver);
 	g_free (helper);
 }
 
@@ -541,12 +539,15 @@ fwupd_client_progress_callback_cb (void *clientp,
 }
 
 static void
-fwupd_client_curl_helper_set_proxy (FwupdCurlHelper *helper, const gchar *url)
+fwupd_client_curl_helper_set_proxy (FwupdClient *self,
+				    FwupdCurlHelper *helper,
+				    const gchar *url)
 {
+	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	g_auto(GStrv) proxies = NULL;
 	g_autoptr(GError) error_local = NULL;
 
-	proxies = g_proxy_resolver_lookup (helper->proxy_resolver, url,
+	proxies = g_proxy_resolver_lookup (priv->proxy_resolver, url,
 					   NULL, &error_local);
 	if (proxies == NULL) {
 		g_warning ("failed to lookup proxy for %s: %s",
@@ -587,9 +588,6 @@ fwupd_client_curl_new (FwupdClient *self, GError **error)
 	/* relax the SSL checks for broken corporate proxies */
 	if (g_getenv ("DISABLE_SSL_STRICT") != NULL)
 		curl_easy_setopt (helper->curl, CURLOPT_SSL_VERIFYPEER, 0L);
-
-	/* get system-wide proxy settings */
-	helper->proxy_resolver = g_proxy_resolver_get_default ();
 
 	/* this disables the double-compression of the firmware.xml.gz file */
 	curl_easy_setopt (helper->curl, CURLOPT_HTTP_CONTENT_DECODING, 0L);
@@ -4456,7 +4454,7 @@ fwupd_client_download_bytes_thread_cb (GTask *task,
 		const gchar *url = g_ptr_array_index (helper->urls, i);
 		g_autoptr(GError) error = NULL;
 		g_debug ("downloading %s", url);
-		fwupd_client_curl_helper_set_proxy (helper, url);
+		fwupd_client_curl_helper_set_proxy (self, helper, url);
 		if (fwupd_client_is_url_http (url)) {
 			blob = fwupd_client_download_http (self, helper->curl, url, &error);
 			if (blob != NULL)
@@ -5062,6 +5060,7 @@ fwupd_client_init (FwupdClient *self)
 	g_mutex_init (&priv->proxy_mutex);
 	g_mutex_init (&priv->idle_mutex);
 	priv->idle_sources = g_ptr_array_new_with_free_func ((GDestroyNotify) fwupd_client_context_helper_free);
+	priv->proxy_resolver = g_proxy_resolver_get_default ();
 }
 
 static void
