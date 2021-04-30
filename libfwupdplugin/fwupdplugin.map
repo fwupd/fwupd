@@ -791,3 +791,9 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_xmlb_builder_insert_kx;
   local: *;
 } LIBFWUPDPLUGIN_1.5.8;
+
+LIBFWUPDPLUGIN_1.6.1 {
+  global:
+    fu_version_string;
+  local: *;
+} LIBFWUPDPLUGIN_1.6.0;

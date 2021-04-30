@@ -30,6 +30,7 @@ fwupdplugin_src = [
   'fu-udev-device.c',
   'fu-usb-device.c',
   'fu-hid-device.c',
+  'fu-version.c',
 ]
 
 fwupdplugin_headers = [
