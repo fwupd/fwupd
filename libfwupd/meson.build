@@ -122,6 +122,8 @@ if get_option('introspection')
       'fwupd-remote.c',
       'fwupd-remote.h',
       'fwupd-remote-private.h',
+      'fwupd-version.c',
+      fwupd_version_h,
     ],
     nsversion : '2.0',
     namespace : 'Fwupd',

@@ -93,6 +93,7 @@ fwupdplugin_headers_private = [
   'fu-security-attrs-private.h',
   'fu-smbios-private.h',
   'fu-usb-device-private.h',
+  'fu-version.h',
 ]
 
 introspection_deps = [
