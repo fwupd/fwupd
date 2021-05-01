@@ -209,6 +209,7 @@ FuDevice	*fu_device_new				(void);
  * @FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN:			Retry the device open up to 5 times if it fails
  * @FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID:		Match GUIDs on device replug where the physical and logical IDs will be different
  * @FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION:		Inherit activation status from the history database on startup
+ * @FU_DEVICE_INTERNAL_FLAG_IS_OPEN:			The device opened successfully and ready to use
  *
  * The device internal flags.
  **/
@@ -224,6 +225,7 @@ typedef enum {
 	FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN		= (1llu << 7),	/* Since: 1.5.5 */
 	FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID	= (1llu << 8),	/* Since: 1.5.8 */
 	FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION	= (1llu << 9),  /* Since: 1.5.9 */
+	FU_DEVICE_INTERNAL_FLAG_IS_OPEN			= (1llu << 10),	/* Since: 1.6.1 */
 	/*< private >*/
 	FU_DEVICE_INTERNAL_FLAG_UNKNOWN			= G_MAXUINT64,
 } FuDeviceInternalFlags;

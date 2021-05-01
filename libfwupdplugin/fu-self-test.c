@@ -684,17 +684,19 @@ fu_device_locker_func (void)
 }
 
 static gboolean
-_fail_open_cb (GObject *device, GError **error)
+_fail_open_cb (FuDevice *device, GError **error)
 {
+	fu_device_set_metadata_boolean (device, "Test::Open", TRUE);
 	g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED, "fail");
 	return FALSE;
 }
 
 static gboolean
-_fail_close_cb (GObject *device, GError **error)
+_fail_close_cb (FuDevice *device, GError **error)
 {
-	g_assert_not_reached ();
-	return TRUE;
+	fu_device_set_metadata_boolean (device, "Test::Close", TRUE);
+	g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_BUSY, "busy");
+	return FALSE;
 }
 
 static void
@@ -702,10 +704,16 @@ fu_device_locker_fail_func (void)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GObject) device = g_object_new (G_TYPE_OBJECT, NULL);
-	locker = fu_device_locker_new_full (device, _fail_open_cb, _fail_close_cb, &error);
+	g_autoptr(FuDevice) device = fu_device_new ();
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) _fail_open_cb,
+					    (FuDeviceLockerFunc) _fail_close_cb,
+					    &error);
 	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_FAILED);
 	g_assert_null (locker);
+	g_assert_true (fu_device_get_metadata_boolean (device, "Test::Open"));
+	g_assert_true (fu_device_get_metadata_boolean (device, "Test::Close"));
+	g_assert_false (fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_IS_OPEN));
 }
 
 static void

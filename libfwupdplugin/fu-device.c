@@ -3137,6 +3137,13 @@ fu_device_open_cb (FuDevice *self, gpointer user_data, GError **error)
  * It is expected that plugins issue the same number of fu_device_open() and
  * fu_device_close() methods when using a specific @self.
  *
+ * If the `->probe()`, `->open()` and `->setup()` actions all complete
+ * successfully the internal device flag %FU_DEVICE_INTERNAL_FLAG_IS_OPEN will
+ * be set.
+ *
+ * NOTE: It is important to still call fu_device_close() even if this function
+ * fails as the device may still be partially initialized.
+ *
  * Returns: %TRUE for success
  *
  * Since: 1.1.2
@@ -3186,6 +3193,7 @@ fu_device_open (FuDevice *self, GError **error)
 		return FALSE;
 
 	/* success */
+	fu_device_add_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_IS_OPEN);
 	return TRUE;
 }
 
@@ -3204,6 +3212,9 @@ fu_device_open (FuDevice *self, GError **error)
  *
  * An error is returned if this method is called without having used the
  * fu_device_open() method beforehand.
+ *
+ * If the close action completed successfully the internal device flag
+ * %FU_DEVICE_INTERNAL_FLAG_IS_OPEN will be cleared.
  *
  * Returns: %TRUE for success
  *
@@ -3236,6 +3247,7 @@ fu_device_close (FuDevice *self, GError **error)
 	}
 
 	/* success */
+	fu_device_remove_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_IS_OPEN);
 	return TRUE;
 }
 
