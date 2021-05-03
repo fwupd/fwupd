@@ -8,7 +8,7 @@ if [ -z "$ROOT" ]; then
 fi
 
 # build in tree
-rm -rf build ${ROOT}/dist
+sudo rm -rf build ${ROOT}/dist
 meson build --prefix=${ROOT}/dist -Dsystemd=false -Dudevdir=${ROOT}/dist
 ninja -C build install
 
@@ -16,7 +16,7 @@ ninja -C build install
 TEMPLATE=${SOURCE}/launcher.sh
 sed "s,#ROOT#,${ROOT},; s,#EXECUTABLE#,libexec/fwupd/fwupd," \
         ${TEMPLATE} > ${ROOT}/dist/fwupd.sh
-sed "s,#ROOT#,${ROOT},; s,#EXECUTABLE#,libexec/fwupd/fwupdtool," \
+sed "s,#ROOT#,${ROOT},; s,#EXECUTABLE#,bin/fwupdtool," \
         ${TEMPLATE} > ${ROOT}/dist/fwupdtool.sh
 sed "s,#ROOT#,${ROOT},; s,#EXECUTABLE#,bin/fwupdmgr," \
         ${TEMPLATE} > ${ROOT}/dist/fwupdmgr.sh
