@@ -23,7 +23,7 @@ Rts54I2cSpeed = 0x2
 Rts54RegisterAddrLen = 0x04
 Rts21xxFwUpdateMode = 1
 
-# Lenovo 2
+# for-testing ID
 [USB\VID_0BDA&PID_5420]
 Plugin = rts54hub
 GType = FuRts54HubDevice
@@ -33,7 +33,7 @@ FirmwareSizeMax = 0x70000
 Children = FuRts54hubRtd21xxDevice|USB\VID_0BDA&PID_5420&I2C_01
 [USB\VID_0BDA&PID_5420&I2C_01]
 Plugin = rts54hub
-Name = HDMI Converter1
+Name = HDMI Converter
 Flags = updatable
 FirmwareSize = 0x70000
 Rts54TargetAddr = 0x20
