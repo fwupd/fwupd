@@ -126,6 +126,18 @@ fu_plugin_backend_device_added (FuPlugin *plugin,
 	if (!FU_IS_USB_DEVICE (device))
 		return TRUE;
 
+	/* GR controller internal USB HUB */
+	if ((guint) fu_usb_device_get_vid (FU_USB_DEVICE (device)) == GR_USB_VID &&
+	    (guint) fu_usb_device_get_pid (FU_USB_DEVICE (device)) == GR_USB_PID) {
+		g_autoptr(FuDellDockUsb4) usb4_dev = NULL;
+		usb4_dev = fu_dell_dock_usb4_new (FU_USB_DEVICE (device));
+		locker = fu_device_locker_new (FU_DEVICE (usb4_dev), error);
+		if (locker == NULL)
+			return FALSE;
+		fu_plugin_device_add (plugin, FU_DEVICE (usb4_dev));
+		return TRUE;
+	}
+
 	hub = fu_dell_dock_hub_new (FU_USB_DEVICE (device));
 	locker = fu_device_locker_new (FU_DEVICE (hub), error);
 	if (locker == NULL)
@@ -163,6 +175,15 @@ void
 fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 {
 	/* thunderbolt plugin */
+	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") == 0 &&
+	    fu_device_has_guid (device, DELL_DOCK_USB4_INSTANCE_ID)) {
+		g_autofree gchar *msg = NULL;
+		msg = g_strdup_printf ("firmware update inhibited by [%s] plugin",
+				       fu_plugin_get_name (plugin));
+		fu_device_inhibit (device, "usb4-blocked", msg);
+		return;
+	}
+
 	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") != 0 ||
 	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INTERNAL))
 		return;
@@ -244,7 +265,8 @@ fu_plugin_composite_cleanup (FuPlugin *plugin,
 	/* if thunderbolt is in the transaction it needs to be activated separately */
 	for (guint i = 0; i < devices->len; i++) {
 		dev = g_ptr_array_index (devices, i);
-		if (g_strcmp0 (fu_device_get_plugin (dev), "thunderbolt") == 0 &&
+		if ((g_strcmp0 (fu_device_get_plugin (dev), "thunderbolt") == 0 ||
+		     g_strcmp0 (fu_device_get_plugin (dev), "dell_dock") == 0) &&
 		    fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
 			/* the kernel and/or thunderbolt plugin have been configured to let HW finish the update */
 			if (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
