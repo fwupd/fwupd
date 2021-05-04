@@ -881,11 +881,9 @@ fu_rts54hub_rtd21xx_device_write_firmware (FuDevice *device,
 {
 
 	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE (device);
-	if (self->fwupdate_mode == FW_UPDATE_BACKGROUND_MODE)
-		return fu_rts54hub_rtd21xx_device_write_firmware_background (device, firmware, flags, error);
-	else
-		return fu_rts54hub_rtd21xx_device_write_firmware_foreground (device, firmware, flags, error);
-	return TRUE;
+	return (self->fwupdate_mode == FW_UPDATE_BACKGROUND_MODE) ?
+		fu_rts54hub_rtd21xx_device_write_firmware_background (device, firmware, flags, error) :
+		fu_rts54hub_rtd21xx_device_write_firmware_foreground (device, firmware, flags, error);
 }
 
 static gboolean
