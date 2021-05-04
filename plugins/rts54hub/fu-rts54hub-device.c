@@ -324,7 +324,7 @@ fu_rts54hub_device_ensure_status (FuRts54HubDevice *self, GError **error)
 					    0x09,		/* request */
 					    0x0,		/* value */
 					    0x0,		/* idx */
-					    data, sizeof(data),
+					    data, sizeof (data),
 					    &actual_len,	/* actual */
 					    FU_RTS54HUB_DEVICE_TIMEOUT,
 					    NULL, error)) {
@@ -400,8 +400,8 @@ fu_rts54hub_device_write_firmware (FuDevice *device,
 				   GError **error)
 {
 	FuRts54HubDevice *self = FU_RTS54HUB_DEVICE (device);
-	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr (GBytes) fw = NULL;
+	g_autoptr (GPtrArray) chunks = NULL;
 
 	/* get default image */
 	fw = fu_firmware_get_bytes (firmware, error);
