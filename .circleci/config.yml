@@ -18,7 +18,7 @@ jobs:
 
   build-windows:
     docker:
-      - image: fedora:latest
+      - image: fedora:33
     steps:
       - run:
           name: "Install deps"
