@@ -1253,6 +1253,9 @@ fu_common_get_path (FuPathKind path_kind)
 			return g_build_filename (tmp, NULL);
 		basedir = fu_common_get_path (FU_PATH_KIND_LOCALSTATEDIR);
 		return g_build_filename (basedir, "cache", PACKAGE_NAME, NULL);
+	/* /run/lock */
+	case FU_PATH_KIND_LOCKDIR:
+		return g_strdup ("/run/lock");
 	case FU_PATH_KIND_OFFLINE_TRIGGER:
 		tmp = g_getenv ("FWUPD_OFFLINE_TRIGGER");
 		if (tmp != NULL)
