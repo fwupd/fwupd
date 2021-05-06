@@ -49,3 +49,7 @@ Plugin = pixart_rf
 # Chicony Cheetos mouse
 [HIDRAW\VEN_04F2&DEV_2103]
 Plugin = pixart_rf
+
+# Primax Black Mocha KB
+[HIDRAW\VEN_0461&DEV_4EFA]
+Plugin = pixart_rf
