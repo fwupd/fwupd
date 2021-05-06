@@ -243,8 +243,10 @@ fu_fastboot_device_getvar (FuDevice *device, const gchar *key, gchar **str, GErr
 	if (!fu_fastboot_device_writestr (device, tmp, error))
 		return FALSE;
 	if (!fu_fastboot_device_read (device, str,
-				      FU_FASTBOOT_DEVICE_READ_FLAG_NONE, error))
+				      FU_FASTBOOT_DEVICE_READ_FLAG_NONE, error)) {
+		g_prefix_error (error, "failed to getvar %s: ", key);
 		return FALSE;
+	}
 	return TRUE;
 }
 
