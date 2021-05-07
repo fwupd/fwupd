@@ -62,7 +62,7 @@ fu_srec_firmware_record_free (FuSrecFirmwareRecord *rcd)
 /**
  * fu_srec_firmware_record_new: (skip):
  * @ln: unsigned integer
- * @kind: #FuFirmwareSrecRecordKind
+ * @kind: a record kind, e.g. #FU_FIRMWARE_SREC_RECORD_KIND_S3_DATA_32
  * @addr: unsigned integer
  *
  * Returns a single firmware record
@@ -531,7 +531,7 @@ fu_srec_firmware_class_init (FuSrecFirmwareClass *klass)
 /**
  * fu_srec_firmware_new:
  *
- * Creates a new #FuFirmware of sub type Srec
+ * Creates a new #FuFirmware of type SREC
  *
  * Since: 1.3.2
  **/

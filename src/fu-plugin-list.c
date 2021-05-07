@@ -39,7 +39,7 @@ G_DEFINE_TYPE (FuPluginList, fu_plugin_list, G_TYPE_OBJECT)
 
 /**
  * fu_plugin_list_get_all:
- * @self: A #FuPluginList
+ * @self: a #FuPluginList
  *
  * Gets all the plugins that have been added.
  *
@@ -56,8 +56,8 @@ fu_plugin_list_get_all (FuPluginList *self)
 
 /**
  * fu_plugin_list_add:
- * @self: A #FuPluginList
- * @plugin: A #FuPlugin
+ * @self: a #FuPluginList
+ * @plugin: a plugin
  *
  * Adds a plugin to the list. The plugin name is used for a hash key and must
  * be set before calling this function.
@@ -78,8 +78,8 @@ fu_plugin_list_add (FuPluginList *self, FuPlugin *plugin)
 
 /**
  * fu_plugin_list_find_by_name:
- * @self: A #FuPluginList
- * @name: A #FuPlugin name, e.g. "dfu"
+ * @self: a #FuPluginList
+ * @name: a plugin name, e.g. `dfu`
  * @error: (nullable): optional return location for an error
  *
  * Finds a specific plugin using the plugin name.
@@ -116,7 +116,7 @@ fu_plugin_list_sort_cb (gconstpointer a, gconstpointer b)
 
 /**
  * fu_plugin_list_depsolve:
- * @self: A #FuPluginList
+ * @self: a #FuPluginList
  * @error: (nullable): optional return location for an error
  *
  * Depsolves the list of plugins into the correct order. Some plugin methods

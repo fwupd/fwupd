@@ -19,12 +19,12 @@
 
 /**
  * fu_common_version_from_uint64:
- * @val: A raw version number
+ * @val: a raw version number
  * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_QUAD
  *
  * Returns a dotted decimal version string from a 64 bit number.
  *
- * Returns: A version number, e.g. "1.2.3.4", or %NULL if not supported
+ * Returns: a version number, e.g. `1.2.3.4`, or %NULL if not supported
  *
  * Since: 1.3.6
  **/
@@ -64,12 +64,12 @@ fu_common_version_from_uint64 (guint64 val, FwupdVersionFormat kind)
 
 /**
  * fu_common_version_from_uint32:
- * @val: A uint32le version number
+ * @val: a uint32le version number
  * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
  * Returns a dotted decimal version string from a 32 bit number.
  *
- * Returns: A version number, e.g. "1.0.3", or %NULL if not supported
+ * Returns: a version number, e.g. `1.0.3`, or %NULL if not supported
  *
  * Since: 1.2.0
  **/
@@ -158,12 +158,12 @@ fu_common_version_from_uint32 (guint32 val, FwupdVersionFormat kind)
 
 /**
  * fu_common_version_from_uint16:
- * @val: A uint16le version number
+ * @val: a uint16le version number
  * @kind: version kind used for formatting, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
  * Returns a dotted decimal version string from a 16 bit number.
  *
- * Returns: A version number, e.g. "1.3", or %NULL if not supported
+ * Returns: a version number, e.g. `1.3`, or %NULL if not supported
  *
  * Since: 1.2.0
  **/
@@ -240,11 +240,11 @@ _g_ascii_is_digits (const gchar *str)
 
 /**
  * fu_common_version_ensure_semver:
- * @version: A version number, e.g. ` V1.2.3 `
+ * @version: a version number, e.g. ` V1.2.3 `
  *
  * Builds a semver from the possibly crazy version number.
  *
- * Returns: A version number, e.g. "1.2.3", or %NULL if the version was not valid
+ * Returns: a version number, e.g. `1.2.3`, or %NULL if the version was not valid
  *
  * Since: 1.2.9
  */
@@ -293,21 +293,21 @@ fu_common_version_ensure_semver (const gchar *version)
 
 /**
  * fu_common_version_parse_from_format
- * @version: A version number
- * @fmt: A FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
+ * @version: a version number
+ * @fmt: a version format, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
- * Returns a dotted decimal version string from a version string using fmt.
+ * Returns a dotted decimal version string from a version string using @fmt.
  * The supported formats are:
  *
- * - Dotted decimal, e.g. "1.2.3"
- * - Base 16, a hex number *with* a 0x prefix, e.g. "0x10203"
- * - Base 10, a string containing just [0-9], e.g. "66051"
- * - Date in YYYYMMDD format, e.g. 20150915
+ * - Dotted decimal, e.g. `1.2.3`
+ * - Base 16, a hex number *with* a 0x prefix, e.g. `0x10203`
+ * - Base 10, a string containing just [0-9], e.g. `66051`
+ * - Date in YYYYMMDD format, e.g. `20150915`
  *
- * Anything with a '.' or that doesn't match [0-9] or 0x[a-f,0-9] is considered
+ * Anything with a `.` or that doesn't match `[0-9]` or `0x[a-f,0-9]` is considered
  * a string and returned without modification.
  *
- * Returns: A version number, e.g. "1.0.3"
+ * Returns: a version number, e.g. `1.0.3`
  *
  * Since: 1.3.3
  */
@@ -350,7 +350,7 @@ fu_common_version_parse_from_format (const gchar *version, FwupdVersionFormat fm
 
 /**
  * fu_common_version_guess_format:
- * @version: A version number, e.g. "1.2.3"
+ * @version: a version number, e.g. `1.2.3`
  *
  * Guesses the version format from the version number. This is only a heuristic
  * and plugins and components should explicitly set the version format whenever
@@ -359,7 +359,7 @@ fu_common_version_parse_from_format (const gchar *version, FwupdVersionFormat fm
  * If the version format cannot be guessed with any degree of accuracy, the
  * %FWUPD_VERSION_FORMAT_UNKNOWN constant is returned.
  *
- * Returns: A #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_QUAD
+ * Returns: a version format, e.g. %FWUPD_VERSION_FORMAT_QUAD
  *
  * Since: 1.2.0
  */
@@ -418,8 +418,8 @@ fu_common_version_convert_base (FwupdVersionFormat fmt)
 
 /**
  * fu_common_version_verify_format:
- * @version: A string, e.g. "0x1234"
- * @fmt: a #FwupdVersionFormat
+ * @version: a string, e.g. `0x1234`
+ * @fmt: a version format
  * @error: (nullable): optional return location for an error
  *
  * Verifies if a version matches the input format.
@@ -518,9 +518,9 @@ fu_common_vercmp_safe (const gchar *version_a, const gchar *version_b)
 
 /**
  * fu_common_vercmp_full:
- * @version_a: the semver release version, e.g. 1.2.3
- * @version_b: the semver release version, e.g. 1.2.3.1
- * @fmt: a #FwupdVersionFormat, e.g. %FWUPD_VERSION_FORMAT_PLAIN
+ * @version_a: the semver release version, e.g. `1.2.3`
+ * @version_b: the semver release version, e.g. `1.2.3.1`
+ * @fmt: a version format, e.g. %FWUPD_VERSION_FORMAT_PLAIN
  *
  * Compares version numbers for sorting taking into account the version format
  * if required.

@@ -54,16 +54,16 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuContext, fu_context, G_TYPE_OBJECT)
 
 /**
  * fu_context_get_smbios_string:
- * @self: A #FuContext
- * @structure_type: A SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
- * @offset: A SMBIOS offset
+ * @self: a #FuContext
+ * @structure_type: a SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ * @offset: a SMBIOS offset
  *
  * Gets a hardware SMBIOS string.
  *
  * The @type and @offset can be referenced from the DMTF SMBIOS specification:
  * https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.1.1.pdf
  *
- * Returns: A string, or %NULL
+ * Returns: a string, or %NULL
  *
  * Since: 1.6.0
  **/
@@ -77,12 +77,12 @@ fu_context_get_smbios_string (FuContext *self, guint8 structure_type, guint8 off
 
 /**
  * fu_context_get_smbios_data:
- * @self: A #FuContext
- * @structure_type: A SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ * @self: a #FuContext
+ * @structure_type: a SMBIOS structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
  *
  * Gets a hardware SMBIOS data.
  *
- * Returns: (transfer full): A #GBytes, or %NULL
+ * Returns: (transfer full): a #GBytes, or %NULL
  *
  * Since: 1.6.0
  **/
@@ -96,9 +96,9 @@ fu_context_get_smbios_data (FuContext *self, guint8 structure_type)
 
 /**
  * fu_context_get_smbios_integer:
- * @self: A #FuContext
- * @type: A structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
- * @offset: A structure offset
+ * @self: a #FuContext
+ * @type: a structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ * @offset: a structure offset
  *
  * Reads an integer value from the SMBIOS string table of a specific structure.
  *
@@ -119,8 +119,8 @@ fu_context_get_smbios_integer (FuContext *self, guint8 type, guint8 offset)
 
 /**
  * fu_context_has_hwid_guid:
- * @self: A #FuContext
- * @guid: A GUID, e.g. `059eb22d-6dc7-59af-abd3-94bbe017f67c`
+ * @self: a #FuContext
+ * @guid: a GUID, e.g. `059eb22d-6dc7-59af-abd3-94bbe017f67c`
  *
  * Finds out if a hardware GUID exists.
  *
@@ -138,12 +138,12 @@ fu_context_has_hwid_guid (FuContext *self, const gchar *guid)
 
 /**
  * fu_context_get_hwid_guids:
- * @self: A #FuContext
+ * @self: a #FuContext
  *
  * Returns all the HWIDs defined in the system. All hardware IDs on a
  * specific system can be shown using the `fwupdmgr hwids` command.
  *
- * Returns: (transfer none) (element-type utf8): An array of GUIDs
+ * Returns: (transfer none) (element-type utf8): an array of GUIDs
  *
  * Since: 1.6.0
  **/
@@ -157,8 +157,8 @@ fu_context_get_hwid_guids (FuContext *self)
 
 /**
  * fu_context_get_hwid_value:
- * @self: A #FuContext
- * @key: A DMI ID, e.g. `BiosVersion`
+ * @self: a #FuContext
+ * @key: a DMI ID, e.g. `BiosVersion`
  *
  * Gets the cached value for one specific key that is valid ASCII and suitable
  * for display.
@@ -178,8 +178,8 @@ fu_context_get_hwid_value (FuContext *self, const gchar *key)
 
 /**
  * fu_context_get_hwid_replace_value:
- * @self: A #FuContext
- * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
+ * @self: a #FuContext
+ * @keys: a key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
  * @error: (nullable): optional return location for an error
  *
  * Gets the replacement value for a specific key. All hardware IDs on a
@@ -200,9 +200,9 @@ fu_context_get_hwid_replace_value (FuContext *self, const gchar *keys, GError **
 
 /**
  * fu_context_add_runtime_version:
- * @self: A #FuContext
- * @component_id: An AppStream component id, e.g. "org.gnome.Software"
- * @version: A version string, e.g. "1.2.3"
+ * @self: a #FuContext
+ * @component_id: an AppStream component id, e.g. `org.gnome.Software`
+ * @version: a version string, e.g. `1.2.3`
  *
  * Sets a runtime version of a specific dependency.
  *
@@ -228,10 +228,10 @@ fu_context_add_runtime_version (FuContext *self,
 
 /**
  * fu_context_set_runtime_versions:
- * @self: A #FuContext
- * @runtime_versions: A #GHashTables
+ * @self: a #FuContext
+ * @runtime_versions: (element-type utf8 utf8): dictionary of versions
  *
- * Sets the runtime versions for a plugin
+ * Sets the runtime versions for a plugin.
  *
  * Since: 1.6.0
  **/
@@ -246,9 +246,9 @@ fu_context_set_runtime_versions (FuContext *self, GHashTable *runtime_versions)
 
 /**
  * fu_context_add_compile_version:
- * @self: A #FuContext
- * @component_id: An AppStream component id, e.g. "org.gnome.Software"
- * @version: A version string, e.g. "1.2.3"
+ * @self: a #FuContext
+ * @component_id: an AppStream component id, e.g. `org.gnome.Software`
+ * @version: a version string, e.g. `1.2.3`
  *
  * Sets a compile-time version of a specific dependency.
  *
@@ -274,10 +274,10 @@ fu_context_add_compile_version (FuContext *self,
 
 /**
  * fu_context_set_compile_versions:
- * @self: A #FuContext
- * @compile_versions: A #GHashTables
+ * @self: a #FuContext
+ * @compile_versions: (element-type utf8 utf8): dictionary of versions
  *
- * Sets the compile time versions for a plugin
+ * Sets the compile time versions for a plugin.
  *
  * Since: 1.6.0
  **/
@@ -320,7 +320,7 @@ fu_context_add_udev_subsystem (FuContext *self, const gchar *subsystem)
 
 /**
  * fu_context_get_udev_subsystems:
- * @self: A #FuContext
+ * @self: a #FuContext
  *
  * Gets the udev subsystems required by all plugins.
  *
@@ -339,7 +339,7 @@ fu_context_get_udev_subsystems (FuContext *self)
 /**
  * fu_context_add_firmware_gtype:
  * @self: a #FuContext
- * @id: (nullable): An optional string describing the type, e.g. "ihex"
+ * @id: (nullable): an optional string describing the type, e.g. `ihex`
  * @gtype: a #GType e.g. `FU_TYPE_FOO_FIRMWARE`
  *
  * Adds a firmware #GType which is used when creating devices. If @id is not
@@ -363,7 +363,7 @@ fu_context_add_firmware_gtype (FuContext *self, const gchar *id, GType gtype)
 /**
  * fu_context_get_firmware_gtype_by_id:
  * @self: a #FuContext
- * @id: An string describing the type, e.g. "ihex"
+ * @id: an string describing the type, e.g. `ihex`
  *
  * Returns the #GType using the firmware @id.
  *
@@ -418,7 +418,7 @@ fu_context_get_firmware_gtype_ids (FuContext *self)
 /**
  * fu_context_add_quirk_key:
  * @self: a #FuContext
- * @key: A quirk string, e.g. `DfuVersion`
+ * @key: a quirk string, e.g. `DfuVersion`
  *
  * Adds a possible quirk key. If added by a plugin it should be namespaced
  * using the plugin name, where possible.
@@ -440,9 +440,9 @@ fu_context_add_quirk_key (FuContext *self, const gchar *key)
 
 /**
  * fu_context_lookup_quirk_by_id:
- * @self: A #FuContext
+ * @self: a #FuContext
  * @guid: GUID to lookup
- * @key: An ID to match the entry, e.g. "Summary"
+ * @key: an ID to match the entry, e.g. `Summary`
  *
  * Looks up an entry in the hardware database using a string value.
  *
@@ -462,9 +462,9 @@ fu_context_lookup_quirk_by_id (FuContext *self, const gchar *guid, const gchar *
 
 /**
  * fu_context_lookup_quirk_by_id_iter:
- * @self: A #FuContext
+ * @self: a #FuContext
  * @guid: GUID to lookup
- * @iter_cb: (scope async): A #FuContextLookupIter
+ * @iter_cb: (scope async): a function to call for each result
  * @user_data: user data passed to @iter_cb
  *
  * Looks up all entries in the hardware database using a GUID value.
@@ -486,7 +486,7 @@ fu_context_lookup_quirk_by_id_iter (FuContext *self, const gchar *guid,
 
 /**
  * fu_context_security_changed:
- * @self: A #FuContext
+ * @self: a #FuContext
  *
  * Informs the daemon that the HSI state may have changed.
  *
@@ -501,7 +501,7 @@ fu_context_security_changed (FuContext *self)
 
 /**
  * fu_context_load_hwinfo:
- * @self: A #FuContext
+ * @self: a #FuContext
  * @error: (nullable): optional return location for an error
  *
  * Loads all hardware information parts of the context.
@@ -531,8 +531,8 @@ fu_context_load_hwinfo (FuContext *self, GError **error)
 
 /**
  * fu_context_load_quirks:
- * @self: A #FuContext
- * @flags: a #FuQuirksLoadFlags, e.g. %FU_QUIRKS_LOAD_FLAG_READONLY_FS
+ * @self: a #FuContext
+ * @flags: quirks load flags, e.g. %FU_QUIRKS_LOAD_FLAG_READONLY_FS
  * @error: (nullable): optional return location for an error
  *
  * Loads all quirks into the context.
@@ -560,11 +560,11 @@ fu_context_load_quirks (FuContext *self, FuQuirksLoadFlags flags, GError **error
 
 /**
  * fu_context_get_battery_state:
- * @self: A #FuContext
+ * @self: a #FuContext
  *
  * Gets if the system is on battery power, e.g. UPS or laptop battery.
  *
- * Returns: a #FuBatteryState, e.g. %FU_BATTERY_STATE_DISCHARGING
+ * Returns: a battery state, e.g. %FU_BATTERY_STATE_DISCHARGING
  *
  * Since: 1.6.0
  **/
@@ -578,8 +578,8 @@ fu_context_get_battery_state (FuContext *self)
 
 /**
  * fu_context_set_battery_state:
- * @self: A #FuContext
- * @battery_state: a #FuBatteryState, e.g. %FU_BATTERY_STATE_DISCHARGING
+ * @self: a #FuContext
+ * @battery_state: a battery state, e.g. %FU_BATTERY_STATE_DISCHARGING
  *
  * Sets if the system is on battery power, e.g. UPS or laptop battery.
  *
@@ -600,7 +600,7 @@ fu_context_set_battery_state (FuContext *self, FuBatteryState battery_state)
 
 /**
  * fu_context_get_battery_level:
- * @self: A #FuContext
+ * @self: a #FuContext
  *
  * Gets the system battery level in percent.
  *
@@ -618,7 +618,7 @@ fu_context_get_battery_level (FuContext *self)
 
 /**
  * fu_context_set_battery_level:
- * @self: A #FuContext
+ * @self: a #FuContext
  * @battery_level: value
  *
  * Sets the system battery level in percent.
@@ -640,7 +640,7 @@ fu_context_set_battery_level (FuContext *self, guint battery_level)
 
 /**
  * fu_context_get_battery_threshold:
- * @self: A #FuContext
+ * @self: a #FuContext
  *
  * Gets the system battery threshold in percent.
  *
@@ -658,7 +658,7 @@ fu_context_get_battery_threshold (FuContext *self)
 
 /**
  * fu_context_set_battery_threshold:
- * @self: A #FuContext
+ * @self: a #FuContext
  * @battery_threshold: value
  *
  * Sets the system battery threshold in percent.
@@ -801,7 +801,7 @@ fu_context_init (FuContext *self)
  *
  * Creates a new #FuContext
  *
- * Returns: the object
+ * Returns: (transfer full): the object
  *
  * Since: 1.6.0
  **/

@@ -121,7 +121,6 @@ gboolean	 fwupd_client_install_release		(FwupdClient	*self,
 							 FwupdInstallFlags install_flags,
 							 GCancellable	*cancellable,
 							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT
 G_DEPRECATED_FOR(fwupd_client_install_release2);
 gboolean	 fwupd_client_install_release2		(FwupdClient	*self,
 							 FwupdDevice	*device,

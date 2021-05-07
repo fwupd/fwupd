@@ -29,7 +29,7 @@ G_DEFINE_TYPE (FuInstallTask, fu_install_task, G_TYPE_OBJECT)
 
 /**
  * fu_install_task_get_device:
- * @self: A #FuInstallTask
+ * @self: a #FuInstallTask
  *
  * Gets the device for this task.
  *
@@ -44,7 +44,7 @@ fu_install_task_get_device (FuInstallTask *self)
 
 /**
  * fu_install_task_get_component:
- * @self: A #FuInstallTask
+ * @self: a #FuInstallTask
  *
  * Gets the component for this task.
  *
@@ -59,7 +59,7 @@ fu_install_task_get_component (FuInstallTask *self)
 
 /**
  * fu_install_task_get_trust_flags:
- * @self: A #FuInstallTask
+ * @self: a #FuInstallTask
  *
  * Gets the trust flags for this task.
  *
@@ -77,7 +77,7 @@ fu_install_task_get_trust_flags (FuInstallTask *self)
 
 /**
  * fu_install_task_get_is_downgrade:
- * @self: A #FuInstallTask
+ * @self: a #FuInstallTask
  *
  * Gets if this task is to downgrade firmware.
  *
@@ -184,8 +184,8 @@ fu_install_task_check_requirements_version_check (FuInstallTask *self, GError **
 
 /**
  * fu_install_task_check_requirements:
- * @self: A #FuInstallTask
- * @flags: A #FwupdInstallFlags, e.g. #FWUPD_INSTALL_FLAG_ALLOW_OLDER
+ * @self: a #FuInstallTask
+ * @flags: install flags, e.g. #FWUPD_INSTALL_FLAG_ALLOW_OLDER
  * @error: (nullable): optional return location for an error
  *
  * Checks any requirements of this task. This will typically involve checking
@@ -426,7 +426,7 @@ fu_install_task_check_requirements (FuInstallTask *self,
 
 /**
  * fu_install_task_get_action_id:
- * @self: A #FuEngine
+ * @self: a #FuEngine
  *
  * Gets the PolicyKit action ID to use for the install operation.
  *
@@ -480,8 +480,8 @@ fu_install_task_class_init (FuInstallTaskClass *klass)
 
 /**
  * fu_install_task_compare:
- * @task1: first #FuInstallTask to compare.
- * @task2: second #FuInstallTask to compare.
+ * @task1: first task to compare.
+ * @task2: second task to compare.
  *
  * Compares two install tasks.
  *
@@ -501,8 +501,8 @@ fu_install_task_compare (FuInstallTask *task1, FuInstallTask *task2)
 
 /**
  * fu_install_task_new:
- * @device: A #FuDevice
- * @component: a #XbNode
+ * @device: a device
+ * @component: a Xmlb node
  *
  * Creates a new install task that may or may not be valid.
  *

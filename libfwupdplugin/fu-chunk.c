@@ -198,9 +198,9 @@ fu_chunk_get_data_sz (FuChunk *self)
 /**
  * fu_chunk_set_bytes:
  * @self: a #FuChunk
- * @bytes: (nullable): a #GBytes
+ * @bytes: (nullable): data
  *
- * Sets the GBytes blob
+ * Sets the data to use for the chunk.
  *
  * Since: 1.5.6
  **/
@@ -228,9 +228,9 @@ fu_chunk_set_bytes (FuChunk *self, GBytes *bytes)
  * fu_chunk_get_bytes:
  * @self: a #FuChunk
  *
- * Gets the data as bytes of the chunk.
+ * Gets the data of the chunk.
  *
- * Returns: (transfer full): a #GBytes
+ * Returns: (transfer full): data
  *
  * Since: 1.5.6
  **/
@@ -275,7 +275,7 @@ fu_chunk_new (guint32 idx,
 
 /**
  * fu_chunk_bytes_new:
- * @bytes: (nullable): a #GBytes
+ * @bytes: (nullable): data
  *
  * Creates a new packet of data.
  *
@@ -317,7 +317,7 @@ fu_chunk_export (FuChunk *self, FuFirmwareExportFlags flags, XbBuilderNode *bn)
  *
  * Converts the chunked packet to a string representation.
  *
- * Returns: (transfer full): A string
+ * Returns: (transfer full): a string
  *
  * Since: 1.1.2
  **/
@@ -337,11 +337,11 @@ fu_chunk_to_string (FuChunk *self)
 
 /**
  * fu_chunk_array_to_string:
- * @chunks: (element-type FuChunk): array of packets
+ * @chunks: (element-type FuChunk): array of chunks
  *
  * Converts all the chunked packets in an array to a string representation.
  *
- * Returns: (transfer full): A string
+ * Returns: (transfer full): a string
  *
  * Since: 1.0.1
  **/
@@ -486,7 +486,7 @@ fu_chunk_array_new (const guint8 *data,
 
 /**
  * fu_chunk_array_new_from_bytes:
- * @blob: a #GBytes
+ * @blob: data
  * @addr_start: the hardware address offset, or 0
  * @page_sz: the hardware page size, or 0
  * @packet_sz: the transfer size, or 0

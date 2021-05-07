@@ -39,7 +39,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (FwupdPlugin, fwupd_plugin, G_TYPE_OBJECT)
 
 /**
  * fwupd_plugin_get_name:
- * @plugin: A #FwupdPlugin
+ * @plugin: a #FwupdPlugin
  *
  * Gets the plugin name.
  *
@@ -57,7 +57,7 @@ fwupd_plugin_get_name (FwupdPlugin *plugin)
 
 /**
  * fwupd_plugin_set_name:
- * @plugin: A #FwupdPlugin
+ * @plugin: a #FwupdPlugin
  * @name: the plugin name, e.g. `bios`
  *
  * Sets the plugin name.
@@ -82,11 +82,11 @@ fwupd_plugin_set_name (FwupdPlugin *plugin, const gchar *name)
 
 /**
  * fwupd_plugin_get_flags:
- * @plugin: A #FwupdPlugin
+ * @plugin: a #FwupdPlugin
  *
  * Gets the plugin flags.
  *
- * Returns: the plugin flags, or 0 if unset
+ * Returns: plugin flags, or 0 if unset
  *
  * Since: 1.5.0
  **/
@@ -100,8 +100,8 @@ fwupd_plugin_get_flags (FwupdPlugin *plugin)
 
 /**
  * fwupd_plugin_set_flags:
- * @plugin: A #FwupdPlugin
- * @flags: the plugin flags, e.g. %FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED
+ * @plugin: a #FwupdPlugin
+ * @flags: plugin flags, e.g. %FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED
  *
  * Sets the plugin flags.
  *
@@ -120,7 +120,7 @@ fwupd_plugin_set_flags (FwupdPlugin *plugin, guint64 flags)
 
 /**
  * fwupd_plugin_add_flag:
- * @plugin: A #FwupdPlugin
+ * @plugin: a #FwupdPlugin
  * @flag: the #FwupdPluginFlags
  *
  * Adds a specific plugin flag to the plugin.
@@ -142,8 +142,8 @@ fwupd_plugin_add_flag (FwupdPlugin *plugin, FwupdPluginFlags flag)
 
 /**
  * fwupd_plugin_remove_flag:
- * @plugin: A #FwupdPlugin
- * @flag: the #FwupdPluginFlags
+ * @plugin: a #FwupdPlugin
+ * @flag: a plugin flag
  *
  * Removes a specific plugin flag from the plugin.
  *
@@ -164,8 +164,8 @@ fwupd_plugin_remove_flag (FwupdPlugin *plugin, FwupdPluginFlags flag)
 
 /**
  * fwupd_plugin_has_flag:
- * @plugin: A #FwupdPlugin
- * @flag: the #FwupdPluginFlags
+ * @plugin: a #FwupdPlugin
+ * @flag: a plugin flag
  *
  * Finds if the plugin has a specific plugin flag.
  *
@@ -183,11 +183,11 @@ fwupd_plugin_has_flag (FwupdPlugin *plugin, FwupdPluginFlags flag)
 
 /**
  * fwupd_plugin_to_variant:
- * @plugin: A #FwupdPlugin
+ * @plugin: a #FwupdPlugin
  *
- * Creates a GVariant from the plugin data omitting sensitive fields
+ * Serialize the plugin data omitting sensitive fields
  *
- * Returns: the GVariant, or %NULL for error
+ * Returns: the serialized data, or %NULL for error
  *
  * Since: 1.5.0
  **/
@@ -268,8 +268,8 @@ fwupd_plugin_json_add_string (JsonBuilder *builder, const gchar *key, const gcha
 
 /**
  * fwupd_plugin_to_json:
- * @plugin: A #FwupdPlugin
- * @builder: A #JsonBuilder
+ * @plugin: a #FwupdPlugin
+ * @builder: a JSON builder
  *
  * Adds a fwupd plugin to a JSON builder
  *
@@ -300,7 +300,7 @@ fwupd_plugin_to_json (FwupdPlugin *plugin, JsonBuilder *builder)
 
 /**
  * fwupd_plugin_to_string:
- * @plugin: A #FwupdPlugin
+ * @plugin: a #FwupdPlugin
  *
  * Builds a text representation of the object.
  *
@@ -410,9 +410,9 @@ fwupd_plugin_set_from_variant_iter (FwupdPlugin *plugin, GVariantIter *iter)
 
 /**
  * fwupd_plugin_from_variant:
- * @value: a #GVariant
+ * @value: the serialized data
  *
- * Creates a new plugin using packed data.
+ * Creates a new plugin using serialized data.
  *
  * Returns: (transfer full): a new #FwupdPlugin, or %NULL if @value was invalid
  *
@@ -443,9 +443,9 @@ fwupd_plugin_from_variant (GVariant *value)
 
 /**
  * fwupd_plugin_array_from_variant:
- * @value: a #GVariant
+ * @value: the serialized data
  *
- * Creates an array of new plugins using packed data.
+ * Creates an array of new plugins using serialized data.
  *
  * Returns: (transfer container) (element-type FwupdPlugin): plugins, or %NULL if @value was invalid
  *

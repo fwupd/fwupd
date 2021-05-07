@@ -67,7 +67,7 @@ fu_device_locker_init (FuDeviceLocker *self)
 
 /**
  * fu_device_locker_close:
- * @self: A #FuDeviceLocker
+ * @self: a #FuDeviceLocker
  * @error: (nullable): optional return location for an error
  *
  * Closes the locker before it gets cleaned up.
@@ -110,7 +110,7 @@ fu_device_locker_close (FuDeviceLocker *self, GError **error)
 
 /**
  * fu_device_locker_new:
- * @device: A #GObject
+ * @device: a #GObject
  * @error: (nullable): optional return location for an error
  *
  * Opens the device for use. When the #FuDeviceLocker is deallocated the device
@@ -128,7 +128,7 @@ fu_device_locker_close (FuDeviceLocker *self, GError **error)
  *
  * Think of this object as the device ownership.
  *
- * Returns: a #FuDeviceLocker, or %NULL if the @open_func failed.
+ * Returns: a device locker, or %NULL if the @open_func failed.
  *
  * Since: 1.0.0
  **/
@@ -164,9 +164,9 @@ fu_device_locker_new (gpointer device, GError **error)
 
 /**
  * fu_device_locker_new_full:
- * @device: A #GObject
- * @open_func: (scope async): A function to open the device
- * @close_func: (scope async): A function to close the device
+ * @device: a #GObject
+ * @open_func: (scope async): a function to open the device
+ * @close_func: (scope async): a function to close the device
  * @error: (nullable): optional return location for an error
  *
  * Opens the device for use. When the #FuDeviceLocker is deallocated the device
@@ -178,7 +178,7 @@ fu_device_locker_new (gpointer device, GError **error)
  *
  * Think of this object as the device ownership.
  *
- * Returns: a #FuDeviceLocker, or %NULL if the @open_func failed.
+ * Returns: a device locker, or %NULL if the @open_func failed.
  *
  * Since: 1.0.0
  **/

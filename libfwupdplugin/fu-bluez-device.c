@@ -370,8 +370,8 @@ fu_bluez_device_probe (FuDevice *device, GError **error)
 
 /**
  * fu_bluez_device_read:
- * @self: A #FuBluezDevice
- * @uuid: The UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
+ * @self: a #FuBluezDevice
+ * @uuid: the UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
  * @error: (nullable): optional return location for an error
  *
  * Reads from a UUID on the device.
@@ -427,8 +427,8 @@ fu_bluez_device_read (FuBluezDevice *self, const gchar *uuid, GError **error)
 
 /**
  * fu_bluez_device_read_string:
- * @self: A #FuBluezDevice
- * @uuid: The UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
+ * @self: a #FuBluezDevice
+ * @uuid: the UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
  * @error: (nullable): optional return location for an error
  *
  * Reads a string from a UUID on the device.
@@ -448,9 +448,9 @@ fu_bluez_device_read_string (FuBluezDevice *self, const gchar *uuid, GError **er
 
 /**
  * fu_bluez_device_write:
- * @self: A #FuBluezDevice
- * @uuid: The UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
- * @buf: a #GByteArray
+ * @self: a #FuBluezDevice
+ * @uuid: the UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
+ * @buf: data array
  * @error: (nullable): optional return location for an error
  *
  * Writes to a UUID on the device.
@@ -508,8 +508,8 @@ fu_bluez_device_write (FuBluezDevice *self,
 
 /**
  * fu_bluez_device_notify_start:
- * @self: A #FuBluezDevice
- * @uuid: The UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
+ * @self: a #FuBluezDevice
+ * @uuid: the UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
  * @error: (nullable): optional return location for an error
  *
  * Enables notifications for property changes in a UUID (StartNotify
@@ -545,8 +545,8 @@ fu_bluez_device_notify_start (FuBluezDevice *self, const gchar *uuid, GError **e
 
 /**
  * fu_bluez_device_notify_stop:
- * @self: A #FuBluezDevice
- * @uuid: The UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
+ * @self: a #FuBluezDevice
+ * @uuid: the UUID, e.g. `00cde35c-7062-11eb-9439-0242ac130002`
  * @error: (nullable): optional return location for an error
  *
  * Disables notifications for property changes in a UUID (StopNotify

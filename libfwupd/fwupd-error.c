@@ -24,9 +24,9 @@
 
 /**
  * fwupd_error_to_string:
- * @error: A #FwupdError, e.g. %FWUPD_ERROR_VERSION_NEWER
+ * @error: an enumerated error, e.g. %FWUPD_ERROR_VERSION_NEWER
  *
- * Converts a #FwupdError to a string.
+ * Converts an enumerated error to a string.
  *
  * Returns: identifier string
  *
@@ -74,9 +74,9 @@ fwupd_error_to_string (FwupdError error)
 
 /**
  * fwupd_error_from_string:
- * @error: A string, e.g. `org.freedesktop.fwupd.VersionNewer`
+ * @error: a string, e.g. `org.freedesktop.fwupd.VersionNewer`
  *
- * Converts a string to a #FwupdError.
+ * Converts a string to an enumerated error.
  *
  * Returns: enumerated value
  *
@@ -125,7 +125,7 @@ fwupd_error_from_string (const gchar *error)
 /**
  * fwupd_error_quark:
  *
- * Returns: An error quark.
+ * Returns: an error quark
  *
  * Since: 0.1.1
  **/

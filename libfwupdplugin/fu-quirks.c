@@ -294,9 +294,9 @@ fu_quirks_check_silo (FuQuirks *self, GError **error)
 
 /**
  * fu_quirks_lookup_by_id:
- * @self: A #FuPlugin
- * @group: A string group, e.g. "DeviceInstanceId=USB\VID_1235&PID_AB11"
- * @key: An ID to match the entry, e.g. "Name"
+ * @self: a #FuQuirks
+ * @group: a string group, e.g. `DeviceInstanceId=USB\VID_1235&PID_AB11`
+ * @key: an ID to match the entry, e.g. `Name`
  *
  * Looks up an entry in the hardware database using a string value.
  *
@@ -369,9 +369,9 @@ fu_quirks_lookup_by_id (FuQuirks *self, const gchar *group, const gchar *key)
 
 /**
  * fu_quirks_lookup_by_id_iter:
- * @self: A #FuQuirks
+ * @self: a #FuQuirks
  * @group: string of group to lookup
- * @iter_cb: (scope async): A #FuQuirksIter
+ * @iter_cb: (scope async): a function to call for each result
  * @user_data: user data passed to @iter_cb
  *
  * Looks up all entries in the hardware database using a GUID value.
@@ -448,8 +448,8 @@ fu_quirks_lookup_by_id_iter (FuQuirks *self, const gchar *group,
 
 /**
  * fu_quirks_load: (skip)
- * @self: A #FuQuirks
- * @load_flags: A #FuQuirksLoadFlags
+ * @self: a #FuQuirks
+ * @load_flags: load flags
  * @error: (nullable): optional return location for an error
  *
  * Loads the various files that define the hardware quirks used in plugins.
@@ -469,8 +469,8 @@ fu_quirks_load (FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 
 /**
  * fu_quirks_add_possible_key:
- * @self: A #FuQuirks
- * @possible_key: A key name, e.g. `Flags`
+ * @self: a #FuQuirks
+ * @possible_key: a key name, e.g. `Flags`
  *
  * Adds a possible quirk key. If added by a plugin it should be namespaced
  * using the plugin name, where possible.

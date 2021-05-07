@@ -30,8 +30,8 @@ G_DEFINE_TYPE (FuHwids, fu_hwids, G_TYPE_OBJECT)
 
 /**
  * fu_hwids_get_value:
- * @self: A #FuHwids
- * @key: A DMI ID, e.g. `BiosVersion`
+ * @self: a #FuHwids
+ * @key: a DMI ID, e.g. `BiosVersion`
  *
  * Gets the cached value for one specific key that is valid ASCII and suitable
  * for display.
@@ -48,8 +48,8 @@ fu_hwids_get_value (FuHwids *self, const gchar *key)
 
 /**
  * fu_hwids_has_guid:
- * @self: A #FuHwids
- * @guid: A GUID, e.g. `059eb22d-6dc7-59af-abd3-94bbe017f67c`
+ * @self: a #FuHwids
+ * @guid: a GUID, e.g. `059eb22d-6dc7-59af-abd3-94bbe017f67c`
  *
  * Finds out if a hardware GUID exists.
  *
@@ -65,11 +65,11 @@ fu_hwids_has_guid (FuHwids *self, const gchar *guid)
 
 /**
  * fu_hwids_get_guids:
- * @self: A #FuHwids
+ * @self: a #FuHwids
  *
  * Returns all the defined HWIDs
  *
- * Returns: (transfer none) (element-type utf8): An array of GUIDs
+ * Returns: (transfer none) (element-type utf8): an array of GUIDs
  *
  * Since: 0.9.3
  **/
@@ -81,7 +81,7 @@ fu_hwids_get_guids (FuHwids *self)
 
 /**
  * fu_hwids_get_keys:
- * @self: A #FuHwids
+ * @self: a #FuHwids
  *
  * Returns all the defined HWID keys.
  *
@@ -142,8 +142,8 @@ fu_hwids_get_guid_for_str (const gchar *str, GError **error)
 
 /**
  * fu_hwids_get_replace_keys:
- * @self: A #FuHwids
- * @key: A HardwareID key, e.g. `HardwareID-3`
+ * @self: a #FuHwids
+ * @key: a HardwareID key, e.g. `HardwareID-3`
  *
  * Gets the replacement key for a well known value.
  *
@@ -232,9 +232,9 @@ fu_hwids_get_replace_keys (FuHwids *self, const gchar *key)
 
 /**
  * fu_hwids_add_smbios_override:
- * @self: A #FuHwids
- * @key: A key, e.g. %FU_HWIDS_KEY_PRODUCT_SKU
- * @value: (nullable): A new value, e.g. "ExampleModel"
+ * @self: a #FuHwids
+ * @key: a key, e.g. %FU_HWIDS_KEY_PRODUCT_SKU
+ * @value: (nullable): a new value, e.g. `ExampleModel`
  *
  * Sets SMBIOS override values so you can emulate another system.
  *
@@ -252,8 +252,8 @@ fu_hwids_add_smbios_override (FuHwids *self, const gchar *key, const gchar *valu
 
 /**
  * fu_hwids_get_replace_values:
- * @self: A #FuHwids
- * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
+ * @self: a #FuHwids
+ * @keys: a key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
  * @error: (nullable): optional return location for an error
  *
  * Gets the replacement values for a HardwareID key or plain key.
@@ -296,8 +296,8 @@ fu_hwids_get_replace_values (FuHwids *self, const gchar *keys, GError **error)
 
 /**
  * fu_hwids_get_guid:
- * @self: A #FuHwids
- * @keys: A key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
+ * @self: a #FuHwids
+ * @keys: a key, e.g. `HardwareID-3` or %FU_HWIDS_KEY_PRODUCT_SKU
  * @error: (nullable): optional return location for an error
  *
  * Gets the GUID for a specific key.
@@ -363,8 +363,8 @@ fu_hwids_convert_integer_cb (FuSmbios *smbios,
 
 /**
  * fu_hwids_setup:
- * @self: A #FuHwids
- * @smbios: (nullable): A #FuSmbios
+ * @self: a #FuHwids
+ * @smbios: (nullable): a #FuSmbios
  * @error: (nullable): optional return location for an error
  *
  * Reads all the SMBIOS values from the hardware.

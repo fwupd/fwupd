@@ -155,7 +155,7 @@ fu_engine_get_context (FuEngine *self)
 
 /**
  * fu_engine_get_status:
- * @self: A #FuEngine
+ * @self: a #FuEngine
  *
  * Gets the current engine status.
  *
@@ -584,8 +584,8 @@ fu_engine_get_remote_id_for_checksum (FuEngine *self, const gchar *csum)
 
 /**
  * fu_engine_unlock:
- * @self: A #FuEngine
- * @device_id: A device ID
+ * @self: a #FuEngine
+ * @device_id: a device ID
  * @error: (nullable): optional return location for an error
  *
  * Unlocks a device.
@@ -658,8 +658,8 @@ fu_engine_modify_config (FuEngine *self, const gchar *key, const gchar *value, G
 
 /**
  * fu_engine_modify_remote:
- * @self: A #FuEngine
- * @remote_id: A remote ID
+ * @self: a #FuEngine
+ * @remote_id: a remote ID
  * @key: the key, e.g. `Enabled`
  * @value: the key, e.g. `true`
  * @error: (nullable): optional return location for an error
@@ -700,8 +700,8 @@ fu_engine_modify_remote (FuEngine *self,
 
 /**
  * fu_engine_modify_device:
- * @self: A #FuEngine
- * @device_id: A device ID
+ * @self: a #FuEngine
+ * @device_id: a device ID
  * @key: the key, e.g. `Flags`
  * @value: the key, e.g. `reported`
  * @error: (nullable): optional return location for an error
@@ -725,7 +725,7 @@ fu_engine_modify_device (FuEngine *self,
 	if (device == NULL)
 		return FALSE;
 
-	/* support adding a subset of the device flags */
+	/* support adding a subset of device flags */
 	if (g_strcmp0 (key, "Flags") == 0) {
 		FwupdDeviceFlags flag = fwupd_device_flag_from_string (value);
 		if (flag == FWUPD_DEVICE_FLAG_UNKNOWN) {
@@ -769,8 +769,8 @@ fu_engine_checksum_type_to_string (GChecksumType checksum_type)
 
 /**
  * fu_engine_verify_update:
- * @self: A #FuEngine
- * @device_id: A device ID
+ * @self: a #FuEngine
+ * @device_id: a device ID
  * @error: (nullable): optional return location for an error
  *
  * Updates the verification silo entry for a specific device.
@@ -1015,8 +1015,8 @@ fu_engine_verify_from_system_metadata (FuEngine *self,
 
 /**
  * fu_engine_verify:
- * @self: A #FuEngine
- * @device_id: A device ID
+ * @self: a #FuEngine
+ * @device_id: a device ID
  * @error: (nullable): optional return location for an error
  *
  * Verifies a device firmware checksum using the verification silo entry.
@@ -1849,7 +1849,7 @@ fu_engine_get_report_metadata (FuEngine *self, GError **error)
 
 /**
  * fu_engine_composite_prepare:
- * @self: A #FuEngine
+ * @self: a #FuEngine
  * @devices: (element-type #FuDevice): devices that will be updated
  * @error: (nullable): optional return location for an error
  *
@@ -1873,7 +1873,7 @@ fu_engine_composite_prepare (FuEngine *self, GPtrArray *devices, GError **error)
 
 /**
  * fu_engine_composite_cleanup:
- * @self: A #FuEngine
+ * @self: a #FuEngine
  * @devices: (element-type #FuDevice): devices that will be updated
  * @error: (nullable): optional return location for an error
  *
@@ -1895,11 +1895,11 @@ fu_engine_composite_cleanup (FuEngine *self, GPtrArray *devices, GError **error)
 
 /**
  * fu_engine_install_tasks:
- * @self: A #FuEngine
- * @request: A #FuEngineRequest
- * @install_tasks: (element-type FuInstallTask): A #FuDevice
- * @blob_cab: The #GBytes of the .cab file
- * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
+ * @self: a #FuEngine
+ * @request: a #FuEngineRequest
+ * @install_tasks: (element-type FuInstallTask): a device
+ * @blob_cab: the #GBytes of the .cab file
+ * @flags: install flags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
  * @error: (nullable): optional return location for an error
  *
  * Installs a specific firmware file on one or more install tasks.
@@ -2119,10 +2119,10 @@ fu_engine_offline_invalidate (GError **error)
 /**
  * fu_engine_schedule_update:
  * @self: a #FuEngine
- * @device: a #FuDevice
- * @release: A #FwupdRelease
- * @blob_cab: A #GBytes
- * @flags: #FwupdInstallFlags
+ * @device: a device
+ * @release: a release
+ * @blob_cab: a data blob
+ * @flags: install flags
  * @error: (nullable): optional return location for an error
  *
  * Schedule an offline update for the device
@@ -2395,10 +2395,10 @@ fu_engine_sort_releases (FuEngine *self, FuDevice *device, GPtrArray *rels, GErr
 
 /**
  * fu_engine_install:
- * @self: A #FuEngine
- * @task: A #FuInstallTask
- * @blob_cab: The #GBytes of the .cab file
- * @flags: The #FwupdInstallFlags, e.g. %FWUPD_DEVICE_FLAG_UPDATABLE
+ * @self: a #FuEngine
+ * @task: a #FuInstallTask
+ * @blob_cab: the #GBytes of the .cab file
+ * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_OLDER
  * @error: (nullable): optional return location for an error
  *
  * Installs a specific firmware file on a device.
@@ -2536,7 +2536,7 @@ fu_engine_install (FuEngine *self,
 
 /**
  * fu_engine_get_plugins:
- * @self: A #FuPluginList
+ * @self: a #FuPluginList
  *
  * Gets all the plugins that have been added.
  *
@@ -2553,8 +2553,8 @@ fu_engine_get_plugins (FuEngine *self)
 
 /**
  * fu_engine_get_device:
- * @self: A #FuEngine
- * @device_id: A device ID
+ * @self: a #FuEngine
+ * @device_id: a device ID
  * @error: (nullable): optional return location for an error
  *
  * Gets a specific device.
@@ -3658,8 +3658,8 @@ fu_engine_validate_result_timestamp (JcatResult *jcat_result,
 
 /**
  * fu_engine_update_metadata_bytes:
- * @self: A #FuEngine
- * @remote_id: A remote ID, e.g. `lvfs`
+ * @self: a #FuEngine
+ * @remote_id: a remote ID, e.g. `lvfs`
  * @bytes_raw: Blob of metadata
  * @bytes_sig: Blob of metadata signature, typically Jcat binary format
  * @error: (nullable): optional return location for an error
@@ -3793,8 +3793,8 @@ fu_engine_update_metadata_bytes (FuEngine *self, const gchar *remote_id,
 
 /**
  * fu_engine_update_metadata:
- * @self: A #FuEngine
- * @remote_id: A remote ID, e.g. `lvfs`
+ * @self: a #FuEngine
+ * @remote_id: a remote ID, e.g. `lvfs`
  * @fd: file descriptor of the metadata
  * @fd_sig: file descriptor of the metadata signature
  * @error: (nullable): optional return location for an error
@@ -3850,8 +3850,8 @@ fu_engine_update_metadata (FuEngine *self, const gchar *remote_id,
 
 /**
  * fu_engine_get_silo_from_blob:
- * @self: A #FuEngine
- * @blob_cab: A #GBytes
+ * @self: a #FuEngine
+ * @blob_cab: a data blob
  * @error: (nullable): optional return location for an error
  *
  * Creates a silo from a .cab file blob.
@@ -4016,9 +4016,9 @@ fu_engine_get_details_sort_cb (gconstpointer a, gconstpointer b)
 
 /**
  * fu_engine_get_details:
- * @self: A #FuEngine
- * @request: A #FuEngineRequest
- * @fd: A file descriptor
+ * @self: a #FuEngine
+ * @request: a #FuEngineRequest
+ * @fd: a file descriptor
  * @error: (nullable): optional return location for an error
  *
  * Gets the details about a local file.
@@ -4146,7 +4146,7 @@ fu_engine_sort_devices_by_priority_name (gconstpointer a, gconstpointer b)
 
 /**
  * fu_engine_get_devices:
- * @self: A #FuEngine
+ * @self: a #FuEngine
  * @error: (nullable): optional return location for an error
  *
  * Gets the list of devices.
@@ -4175,8 +4175,8 @@ fu_engine_get_devices (FuEngine *self, GError **error)
 
 /**
  * fu_engine_get_devices_by_guid:
- * @self: A #FuEngine
- * @guid: A GUID
+ * @self: a #FuEngine
+ * @guid: a GUID
  * @error: (nullable): optional return location for an error
  *
  * Gets a specific device.
@@ -4213,8 +4213,8 @@ fu_engine_get_devices_by_guid (FuEngine *self, const gchar *guid, GError **error
 
 /**
  * fu_engine_get_devices_by_composite_id:
- * @self: A #FuEngine
- * @composite_id: A device ID
+ * @self: a #FuEngine
+ * @composite_id: a device ID
  * @error: (nullable): optional return location for an error
  *
  * Gets all devices that match a specific composite ID.
@@ -4275,7 +4275,7 @@ fu_engine_get_history_set_hsi_attrs (FuEngine *self, FuDevice *device)
 
 /**
  * fu_engine_get_history:
- * @self: A #FuEngine
+ * @self: a #FuEngine
  * @error: (nullable): optional return location for an error
  *
  * Gets the list of history.
@@ -4350,7 +4350,7 @@ g_ptr_array_copy (GPtrArray *array, GCopyFunc func, gpointer user_data)
 
 /**
  * fu_engine_get_remotes:
- * @self: A #FuEngine
+ * @self: a #FuEngine
  * @error: (nullable): optional return location for an error
  *
  * Gets the list of remotes in use by the engine.
@@ -4380,8 +4380,8 @@ fu_engine_get_remotes (FuEngine *self, GError **error)
 
 /**
  * fu_engine_get_remote_by_id:
- * @self: A #FuEngine
- * @remote_id: A string representation of a remote
+ * @self: a #FuEngine
+ * @remote_id: a string representation of a remote
  * @error: (nullable): optional return location for an error
  *
  * Gets the FwupdRemote object.
@@ -4712,9 +4712,9 @@ fu_engine_get_releases_for_device (FuEngine *self,
 
 /**
  * fu_engine_get_releases:
- * @self: A #FuEngine
- * @request: A #FuEngineRequest
- * @device_id: A device ID
+ * @self: a #FuEngine
+ * @request: a #FuEngineRequest
+ * @device_id: a device ID
  * @error: (nullable): optional return location for an error
  *
  * Gets the releases available for a specific device.
@@ -4756,9 +4756,9 @@ fu_engine_get_releases (FuEngine *self,
 
 /**
  * fu_engine_get_downgrades:
- * @self: A #FuEngine
- * @request: A #FuEngineRequest
- * @device_id: A device ID
+ * @self: a #FuEngine
+ * @request: a #FuEngineRequest
+ * @device_id: a device ID
  * @error: (nullable): optional return location for an error
  *
  * Gets the downgrades available for a specific device.
@@ -4965,9 +4965,9 @@ fu_engine_self_sign (FuEngine *self,
 
 /**
  * fu_engine_get_upgrades:
- * @self: A #FuEngine
- * @request: A #FuEngineRequest
- * @device_id: A device ID
+ * @self: a #FuEngine
+ * @request: a #FuEngineRequest
+ * @device_id: a device ID
  * @error: (nullable): optional return location for an error
  *
  * Gets the upgrades available for a specific device.
@@ -5078,8 +5078,8 @@ fu_engine_get_upgrades (FuEngine *self,
 
 /**
  * fu_engine_clear_results:
- * @self: A #FuEngine
- * @device_id: A device ID
+ * @self: a #FuEngine
+ * @device_id: a device ID
  * @error: (nullable): optional return location for an error
  *
  * Clear the historical state of a specific device operation.
@@ -5126,13 +5126,13 @@ fu_engine_clear_results (FuEngine *self, const gchar *device_id, GError **error)
 
 /**
  * fu_engine_get_results:
- * @self: A #FuEngine
- * @device_id: A device ID
+ * @self: a #FuEngine
+ * @device_id: a device ID
  * @error: (nullable): optional return location for an error
  *
  * Gets the historical state of a specific device operation.
  *
- * Returns: (transfer container): a #FwupdDevice, or %NULL
+ * Returns: (transfer container): a device, or %NULL
  **/
 FwupdDevice *
 fu_engine_get_results (FuEngine *self, const gchar *device_id, GError **error)
@@ -6280,8 +6280,8 @@ fu_engine_ensure_client_certificate (FuEngine *self)
 
 /**
  * fu_engine_load:
- * @self: A #FuEngine
- * @flags: #FuEngineLoadFlags, e.g. %FU_ENGINE_LOAD_FLAG_READONLY
+ * @self: a #FuEngine
+ * @flags: engine load flags, e.g. %FU_ENGINE_LOAD_FLAG_READONLY
  * @error: (nullable): optional return location for an error
  *
  * Load the firmware update engine so it is ready for use.
