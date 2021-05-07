@@ -153,7 +153,12 @@ GHashTable *
 fwupd_get_os_release (GError **error)
 {
 	const gchar *filename = NULL;
-	const gchar *paths[] = { "/etc/os-release", "/usr/lib/os-release", NULL };
+	const gchar *paths[] = {
+		"/etc/os-release",
+		"/usr/lib/os-release",
+		"/etc/lsb-release",
+		NULL, /* last entry */
+	};
 	g_autofree gchar *buf = NULL;
 	g_auto(GStrv) lines = NULL;
 	g_autoptr(GHashTable) hash = NULL;
