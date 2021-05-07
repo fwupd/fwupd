@@ -23,27 +23,27 @@ struct FuPluginData {
 };
 
 static void
-fu_plugin_kinetic_mst_device_rescan (FuPlugin *plugin, FuDevice *device)
+fu_plugin_kinetic_mst_device_rescan(FuPlugin *plugin, FuDevice *device)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* open fd */
-	locker = fu_device_locker_new (device, &error_local);
-	if (locker == NULL) {
-		g_debug ("failed to open device %s: %s",
-			 fu_device_get_logical_id (device),
-			 error_local->message);
+	locker = fu_device_locker_new(device, &error_local);
+	if (locker == NULL)
+	{
+		g_debug("failed to open device %s: %s", fu_device_get_logical_id(device), error_local->message);
 		return;
 	}
-	if (!fu_device_rescan (device, &error_local)) {
-		g_debug ("no device found on %s: %s",
-			 fu_device_get_logical_id (device),
-			 error_local->message);
-		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
-			fu_plugin_device_remove (plugin, device);
-	} else {
-		fu_plugin_device_add (plugin, device);
+
+	if (!fu_device_rescan(device, &error_local))
+	{
+		g_debug("no device found on %s: %s", fu_device_get_logical_id(device), error_local->message);
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED))
+			fu_plugin_device_remove(plugin, device);
+	} else
+	{
+		fu_plugin_device_add(plugin, device);
 	}
 }
 

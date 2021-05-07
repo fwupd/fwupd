@@ -56,14 +56,14 @@ static gboolean
 fu_kinetic_mst_device_probe(FuDevice *device, GError **error)
 {
 	/* FuUdevDevice->probe */
-	if (!FU_DEVICE_CLASS (fu_kinetic_mst_device_parent_class)->probe (device, error))
+	if (!FU_DEVICE_CLASS(fu_kinetic_mst_device_parent_class)->probe(device, error))
 		return FALSE;
 
 	/* get from sysfs if not set from tests */
 	if (fu_device_get_logical_id(device) == NULL)
 	{
 		g_autofree gchar *logical_id = NULL;
-		logical_id = g_path_get_basename(fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
+		logical_id = g_path_get_basename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
 		fu_device_set_logical_id(device, logical_id);
 	}
 
