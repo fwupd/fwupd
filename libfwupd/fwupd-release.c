@@ -69,7 +69,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (FwupdRelease, fwupd_release, G_TYPE_OBJECT)
 
 /**
  * fwupd_release_get_remote_id:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the remote ID that can be used for downloading.
  *
@@ -87,7 +87,7 @@ fwupd_release_get_remote_id (FwupdRelease *release)
 
 /**
  * fwupd_release_set_remote_id:
- * @release: A #FwupdRelease
+ * @release: a release
  * @remote_id: the release ID, e.g. `USB:foo`
  *
  * Sets the remote ID that can be used for downloading.
@@ -110,7 +110,7 @@ fwupd_release_set_remote_id (FwupdRelease *release, const gchar *remote_id)
 
 /**
  * fwupd_release_get_version:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update version.
  *
@@ -128,7 +128,7 @@ fwupd_release_get_version (FwupdRelease *release)
 
 /**
  * fwupd_release_set_version:
- * @release: A #FwupdRelease
+ * @release: a release
  * @version: the update version, e.g. `1.2.4`
  *
  * Sets the update version.
@@ -151,7 +151,7 @@ fwupd_release_set_version (FwupdRelease *release, const gchar *version)
 
 /**
  * fwupd_release_get_filename:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update filename.
  *
@@ -169,7 +169,7 @@ fwupd_release_get_filename (FwupdRelease *release)
 
 /**
  * fwupd_release_set_filename:
- * @release: A #FwupdRelease
+ * @release: a release
  * @filename: the update filename on disk
  *
  * Sets the update filename.
@@ -192,7 +192,7 @@ fwupd_release_set_filename (FwupdRelease *release, const gchar *filename)
 
 /**
  * fwupd_release_get_update_message:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update message.
  *
@@ -210,8 +210,8 @@ fwupd_release_get_update_message (FwupdRelease *release)
 
 /**
  * fwupd_release_set_update_message:
- * @release: A #FwupdRelease
- * @update_message: the update message string
+ * @release: a release
+ * @update_message: (nullable): the update message string
  *
  * Sets the update message.
  *
@@ -233,7 +233,7 @@ fwupd_release_set_update_message (FwupdRelease *release, const gchar *update_mes
 
 /**
  * fwupd_release_get_update_image:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update image.
  *
@@ -251,8 +251,8 @@ fwupd_release_get_update_image (FwupdRelease *release)
 
 /**
  * fwupd_release_set_update_image:
- * @release: A #FwupdRelease
- * @update_image: the update image URL
+ * @release: a release
+ * @update_image: (nullable): the update image URL
  *
  * Sets the update image.
  *
@@ -274,7 +274,7 @@ fwupd_release_set_update_image (FwupdRelease *release, const gchar *update_image
 
 /**
  * fwupd_release_get_protocol:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update protocol.
  *
@@ -292,8 +292,8 @@ fwupd_release_get_protocol (FwupdRelease *release)
 
 /**
  * fwupd_release_set_protocol:
- * @release: A #FwupdRelease
- * @protocol: the update protocol, e.g. `org.usb.dfu`
+ * @release: a release
+ * @protocol: (nullable): the update protocol, e.g. `org.usb.dfu`
  *
  * Sets the update protocol.
  *
@@ -315,7 +315,7 @@ fwupd_release_set_protocol (FwupdRelease *release, const gchar *protocol)
 
 /**
  * fwupd_release_get_issues:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the list of issues fixed in this release.
  *
@@ -333,7 +333,7 @@ fwupd_release_get_issues (FwupdRelease *release)
 
 /**
  * fwupd_release_add_issue:
- * @release: A #FwupdRelease
+ * @release: a release
  * @issue: the update issue, e.g. `CVE-2019-12345`
  *
  * Adds an resolved issue to this release.
@@ -356,7 +356,7 @@ fwupd_release_add_issue (FwupdRelease *release, const gchar *issue)
 
 /**
  * fwupd_release_get_categories:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the release categories.
  *
@@ -374,7 +374,7 @@ fwupd_release_get_categories (FwupdRelease *release)
 
 /**
  * fwupd_release_add_category:
- * @release: A #FwupdRelease
+ * @release: a release
  * @category: the update category, e.g. `X-EmbeddedController`
  *
  * Adds the update category.
@@ -397,7 +397,7 @@ fwupd_release_add_category (FwupdRelease *release, const gchar *category)
 
 /**
  * fwupd_release_has_category:
- * @release: A #FwupdRelease
+ * @release: a release
  * @category: the update category, e.g. `X-EmbeddedController`
  *
  * Finds out if the release has the update category.
@@ -422,7 +422,7 @@ fwupd_release_has_category (FwupdRelease *release, const gchar *category)
 
 /**
  * fwupd_release_get_checksums:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the release checksums.
  *
@@ -440,7 +440,7 @@ fwupd_release_get_checksums (FwupdRelease *release)
 
 /**
  * fwupd_release_add_checksum:
- * @release: A #FwupdRelease
+ * @release: a release
  * @checksum: the update checksum
  *
  * Sets the update checksum.
@@ -463,7 +463,7 @@ fwupd_release_add_checksum (FwupdRelease *release, const gchar *checksum)
 
 /**
  * fwupd_release_has_checksum:
- * @release: A #FwupdRelease
+ * @release: a release
  * @checksum: the update checksum
  *
  * Finds out if the release has the update checksum.
@@ -488,7 +488,7 @@ fwupd_release_has_checksum (FwupdRelease *release, const gchar *checksum)
 
 /**
  * fwupd_release_get_metadata:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the release metadata.
  *
@@ -506,7 +506,7 @@ fwupd_release_get_metadata (FwupdRelease *release)
 
 /**
  * fwupd_release_add_metadata_item:
- * @release: A #FwupdRelease
+ * @release: a release
  * @key: the key
  * @value: the value
  *
@@ -526,7 +526,7 @@ fwupd_release_add_metadata_item (FwupdRelease *release, const gchar *key, const 
 
 /**
  * fwupd_release_add_metadata:
- * @release: A #FwupdRelease
+ * @release: a release
  * @hash: the key-values
  *
  * Sets multiple release metadata items.
@@ -553,7 +553,7 @@ fwupd_release_add_metadata (FwupdRelease *release, GHashTable *hash)
 
 /**
  * fwupd_release_get_metadata_item:
- * @release: A #FwupdRelease
+ * @release: a release
  * @key: the key
  *
  * Gets a release metadata item.
@@ -573,7 +573,7 @@ fwupd_release_get_metadata_item (FwupdRelease *release, const gchar *key)
 
 /**
  * fwupd_release_get_uri:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the default update URI.
  *
@@ -594,7 +594,7 @@ fwupd_release_get_uri (FwupdRelease *release)
 
 /**
  * fwupd_release_set_uri:
- * @release: A #FwupdRelease
+ * @release: a release
  * @uri: the update URI
  *
  * Sets the update URI, i.e. where you can download the firmware from.
@@ -613,7 +613,7 @@ fwupd_release_set_uri (FwupdRelease *release, const gchar *uri)
 
 /**
  * fwupd_release_get_locations:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update URI, i.e. where you can download the firmware from.
  *
@@ -634,7 +634,7 @@ fwupd_release_get_locations (FwupdRelease *release)
 
 /**
  * fwupd_release_add_location:
- * @release: A #FwupdRelease
+ * @release: a release
  * @location: the update URI
  *
  * Adds an update URI, i.e. where you can download the firmware from.
@@ -657,7 +657,7 @@ fwupd_release_add_location (FwupdRelease *release, const gchar *location)
 
 /**
  * fwupd_release_get_homepage:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update homepage.
  *
@@ -675,10 +675,10 @@ fwupd_release_get_homepage (FwupdRelease *release)
 
 /**
  * fwupd_release_set_homepage:
- * @release: A #FwupdRelease
- * @homepage: the description
+ * @release: a release
+ * @homepage: (nullable): the URL
  *
- * Sets the update homepage.
+ * Sets the update homepage URL.
  *
  * Since: 0.9.3
  **/
@@ -698,7 +698,7 @@ fwupd_release_set_homepage (FwupdRelease *release, const gchar *homepage)
 
 /**
  * fwupd_release_get_details_url:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the URL for the online update notes.
  *
@@ -716,8 +716,8 @@ fwupd_release_get_details_url (FwupdRelease *release)
 
 /**
  * fwupd_release_set_details_url:
- * @release: A #FwupdRelease
- * @details_url: the URL
+ * @release: a release
+ * @details_url: (nullable): the URL
  *
  * Sets the URL for the online update notes.
  *
@@ -739,7 +739,7 @@ fwupd_release_set_details_url (FwupdRelease *release, const gchar *details_url)
 
 /**
  * fwupd_release_get_source_url:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the URL of the source code used to build this release.
  *
@@ -757,8 +757,8 @@ fwupd_release_get_source_url (FwupdRelease *release)
 
 /**
  * fwupd_release_set_source_url:
- * @release: A #FwupdRelease
- * @source_url: the URL
+ * @release: a release
+ * @source_url: (nullable): the URL
  *
  * Sets the URL of the source code used to build this release.
  *
@@ -780,7 +780,7 @@ fwupd_release_set_source_url (FwupdRelease *release, const gchar *source_url)
 
 /**
  * fwupd_release_get_description:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update description in AppStream markup format.
  *
@@ -798,8 +798,8 @@ fwupd_release_get_description (FwupdRelease *release)
 
 /**
  * fwupd_release_set_description:
- * @release: A #FwupdRelease
- * @description: the update description in AppStream markup format
+ * @release: a release
+ * @description: (nullable): the update description in AppStream markup format
  *
  * Sets the update description.
  *
@@ -821,7 +821,7 @@ fwupd_release_set_description (FwupdRelease *release, const gchar *description)
 
 /**
  * fwupd_release_get_appstream_id:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the AppStream ID.
  *
@@ -839,8 +839,8 @@ fwupd_release_get_appstream_id (FwupdRelease *release)
 
 /**
  * fwupd_release_set_appstream_id:
- * @release: A #FwupdRelease
- * @appstream_id: the AppStream component ID, e.g. `org.hughski.ColorHug2.firmware`
+ * @release: a release
+ * @appstream_id: (nullable): the AppStream component ID, e.g. `org.hughski.ColorHug2.firmware`
  *
  * Sets the AppStream ID.
  *
@@ -862,7 +862,7 @@ fwupd_release_set_appstream_id (FwupdRelease *release, const gchar *appstream_id
 
 /**
  * fwupd_release_get_detach_caption:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the optional text caption used to manually detach the device.
  *
@@ -880,8 +880,8 @@ fwupd_release_get_detach_caption (FwupdRelease *release)
 
 /**
  * fwupd_release_set_detach_caption:
- * @release: A #FwupdRelease
- * @detach_caption: string caption
+ * @release: a release
+ * @detach_caption: (nullable): string caption
  *
  * Sets the optional text caption used to manually detach the device.
  *
@@ -903,7 +903,7 @@ fwupd_release_set_detach_caption (FwupdRelease *release, const gchar *detach_cap
 
 /**
  * fwupd_release_get_detach_image:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the optional image used to manually detach the device.
  *
@@ -921,8 +921,8 @@ fwupd_release_get_detach_image (FwupdRelease *release)
 
 /**
  * fwupd_release_set_detach_image:
- * @release: A #FwupdRelease
- * @detach_image: a fully qualified URI
+ * @release: a release
+ * @detach_image: (nullable): a fully qualified URI
  *
  * Sets the optional image used to manually detach the device.
  *
@@ -944,7 +944,7 @@ fwupd_release_set_detach_image (FwupdRelease *release, const gchar *detach_image
 
 /**
  * fwupd_release_get_size:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update size.
  *
@@ -962,7 +962,7 @@ fwupd_release_get_size (FwupdRelease *release)
 
 /**
  * fwupd_release_set_size:
- * @release: A #FwupdRelease
+ * @release: a release
  * @size: the update size in bytes
  *
  * Sets the update size.
@@ -979,7 +979,7 @@ fwupd_release_set_size (FwupdRelease *release, guint64 size)
 
 /**
  * fwupd_release_get_created:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets when the update was created.
  *
@@ -997,7 +997,7 @@ fwupd_release_get_created (FwupdRelease *release)
 
 /**
  * fwupd_release_set_created:
- * @release: A #FwupdRelease
+ * @release: a release
  * @created: UTC timestamp in UNIX format
  *
  * Sets when the update was created.
@@ -1014,7 +1014,7 @@ fwupd_release_set_created (FwupdRelease *release, guint64 created)
 
 /**
  * fwupd_release_get_summary:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update summary.
  *
@@ -1032,8 +1032,8 @@ fwupd_release_get_summary (FwupdRelease *release)
 
 /**
  * fwupd_release_set_summary:
- * @release: A #FwupdRelease
- * @summary: the update one line summary
+ * @release: a release
+ * @summary: (nullable): the update one line summary
  *
  * Sets the update summary.
  *
@@ -1055,7 +1055,7 @@ fwupd_release_set_summary (FwupdRelease *release, const gchar *summary)
 
 /**
  * fwupd_release_get_branch:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update branch.
  *
@@ -1073,8 +1073,8 @@ fwupd_release_get_branch (FwupdRelease *release)
 
 /**
  * fwupd_release_set_branch:
- * @release: A #FwupdRelease
- * @branch: the update one line branch
+ * @release: a release
+ * @branch: (nullable): the update one line branch
  *
  * Sets the alternate branch.
  *
@@ -1096,7 +1096,7 @@ fwupd_release_set_branch (FwupdRelease *release, const gchar *branch)
 
 /**
  * fwupd_release_get_vendor:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update vendor.
  *
@@ -1114,8 +1114,8 @@ fwupd_release_get_vendor (FwupdRelease *release)
 
 /**
  * fwupd_release_set_vendor:
- * @release: A #FwupdRelease
- * @vendor: the vendor name, e.g. `Hughski Limited`
+ * @release: a release
+ * @vendor: (nullable): the vendor name, e.g. `Hughski Limited`
  *
  * Sets the update vendor.
  *
@@ -1137,7 +1137,7 @@ fwupd_release_set_vendor (FwupdRelease *release, const gchar *vendor)
 
 /**
  * fwupd_release_get_license:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update license.
  *
@@ -1155,8 +1155,8 @@ fwupd_release_get_license (FwupdRelease *release)
 
 /**
  * fwupd_release_set_license:
- * @release: A #FwupdRelease
- * @license: the description
+ * @release: a release
+ * @license: (nullable): the description
  *
  * Sets the update license.
  *
@@ -1178,7 +1178,7 @@ fwupd_release_set_license (FwupdRelease *release, const gchar *license)
 
 /**
  * fwupd_release_get_name:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update name.
  *
@@ -1196,8 +1196,8 @@ fwupd_release_get_name (FwupdRelease *release)
 
 /**
  * fwupd_release_set_name:
- * @release: A #FwupdRelease
- * @name: the description
+ * @release: a release
+ * @name: (nullable): the description
  *
  * Sets the update name.
  *
@@ -1219,7 +1219,7 @@ fwupd_release_set_name (FwupdRelease *release, const gchar *name)
 
 /**
  * fwupd_release_get_name_variant_suffix:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the update variant suffix.
  *
@@ -1237,8 +1237,8 @@ fwupd_release_get_name_variant_suffix (FwupdRelease *release)
 
 /**
  * fwupd_release_set_name_variant_suffix:
- * @release: A #FwupdRelease
- * @name_variant_suffix: the description
+ * @release: a release
+ * @name_variant_suffix: (nullable): the description
  *
  * Sets the update variant suffix.
  *
@@ -1260,7 +1260,7 @@ fwupd_release_set_name_variant_suffix (FwupdRelease *release, const gchar *name_
 
 /**
  * fwupd_release_get_trust_flags:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the trust level of the release.
  *
@@ -1278,7 +1278,7 @@ fwupd_release_get_trust_flags (FwupdRelease *release)
 
 /**
  * fwupd_release_set_trust_flags:
- * @release: A #FwupdRelease
+ * @release: a release
  * @trust_flags: the bitfield, e.g. #FWUPD_TRUST_FLAG_PAYLOAD
  *
  * Sets the trust level of the release.
@@ -1298,11 +1298,11 @@ fwupd_release_set_trust_flags (FwupdRelease *release, FwupdTrustFlags trust_flag
 
 /**
  * fwupd_release_get_flags:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the release flags.
  *
- * Returns: the release flags, or 0 if unset
+ * Returns: release flags, or 0 if unset
  *
  * Since: 1.2.6
  **/
@@ -1316,8 +1316,8 @@ fwupd_release_get_flags (FwupdRelease *release)
 
 /**
  * fwupd_release_set_flags:
- * @release: A #FwupdRelease
- * @flags: the release flags, e.g. %FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD
+ * @release: a release
+ * @flags: release flags, e.g. %FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD
  *
  * Sets the release flags.
  *
@@ -1333,7 +1333,7 @@ fwupd_release_set_flags (FwupdRelease *release, FwupdReleaseFlags flags)
 
 /**
  * fwupd_release_add_flag:
- * @release: A #FwupdRelease
+ * @release: a release
  * @flag: the #FwupdReleaseFlags
  *
  * Adds a specific release flag to the release.
@@ -1350,7 +1350,7 @@ fwupd_release_add_flag (FwupdRelease *release, FwupdReleaseFlags flag)
 
 /**
  * fwupd_release_remove_flag:
- * @release: A #FwupdRelease
+ * @release: a release
  * @flag: the #FwupdReleaseFlags
  *
  * Removes a specific release flag from the release.
@@ -1367,7 +1367,7 @@ fwupd_release_remove_flag (FwupdRelease *release, FwupdReleaseFlags flag)
 
 /**
  * fwupd_release_has_flag:
- * @release: A #FwupdRelease
+ * @release: a release
  * @flag: the #FwupdReleaseFlags
  *
  * Finds if the release has a specific release flag.
@@ -1386,7 +1386,7 @@ fwupd_release_has_flag (FwupdRelease *release, FwupdReleaseFlags flag)
 
 /**
  * fwupd_release_get_urgency:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the release urgency.
  *
@@ -1404,7 +1404,7 @@ fwupd_release_get_urgency (FwupdRelease *release)
 
 /**
  * fwupd_release_set_urgency:
- * @release: A #FwupdRelease
+ * @release: a release
  * @urgency: the release urgency, e.g. %FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD
  *
  * Sets the release urgency.
@@ -1421,7 +1421,7 @@ fwupd_release_set_urgency (FwupdRelease *release, FwupdReleaseUrgency urgency)
 
 /**
  * fwupd_release_get_install_duration:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Gets the time estimate for firmware installation (in seconds)
  *
@@ -1439,8 +1439,8 @@ fwupd_release_get_install_duration (FwupdRelease *release)
 
 /**
  * fwupd_release_set_install_duration:
- * @release: A #FwupdRelease
- * @duration: The amount of time
+ * @release: a release
+ * @duration: amount of time in seconds
  *
  * Sets the time estimate for firmware installation (in seconds)
  *
@@ -1456,11 +1456,11 @@ fwupd_release_set_install_duration (FwupdRelease *release, guint32 duration)
 
 /**
  * fwupd_release_to_variant:
- * @release: A #FwupdRelease
+ * @release: a release
  *
- * Creates a GVariant from the release data.
+ * Serialize the release data.
  *
- * Returns: the GVariant, or %NULL for error
+ * Returns: the serialized data, or %NULL for error
  *
  * Since: 1.0.0
  **/
@@ -1855,8 +1855,8 @@ fwupd_release_json_add_int (JsonBuilder *builder, const gchar *key, guint64 num)
 
 /**
  * fwupd_release_to_json:
- * @release: A #FwupdRelease
- * @builder: A #JsonBuilder
+ * @release: a release
+ * @builder: a JSON builder
  *
  * Adds a fwupd release to a JSON builder
  *
@@ -1954,7 +1954,7 @@ fwupd_release_to_json (FwupdRelease *release, JsonBuilder *builder)
 
 /**
  * fwupd_release_to_string:
- * @release: A #FwupdRelease
+ * @release: a release
  *
  * Builds a text representation of the object.
  *
@@ -2092,9 +2092,9 @@ fwupd_release_set_from_variant_iter (FwupdRelease *release, GVariantIter *iter)
 
 /**
  * fwupd_release_from_variant:
- * @value: a #GVariant
+ * @value: the serialized data
  *
- * Creates a new release using packed data.
+ * Creates a new release using serialized data.
  *
  * Returns: (transfer full): a new #FwupdRelease, or %NULL if @value was invalid
  *
@@ -2125,9 +2125,9 @@ fwupd_release_from_variant (GVariant *value)
 
 /**
  * fwupd_release_array_from_variant:
- * @value: a #GVariant
+ * @value: the serialized data
  *
- * Creates an array of new releases using packed data.
+ * Creates an array of new releases using serialized data.
  *
  * Returns: (transfer container) (element-type FwupdRelease): releases, or %NULL if @value was invalid
  *

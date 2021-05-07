@@ -85,7 +85,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (FwupdDevice, fwupd_device, G_TYPE_OBJECT)
 
 /**
  * fwupd_device_get_checksums:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the device checksums.
  *
@@ -103,7 +103,7 @@ fwupd_device_get_checksums (FwupdDevice *device)
 
 /**
  * fwupd_device_add_checksum:
- * @device: A #FwupdDevice
+ * @device: a device
  * @checksum: the device checksum
  *
  * Sets the device checksum.
@@ -126,7 +126,7 @@ fwupd_device_add_checksum (FwupdDevice *device, const gchar *checksum)
 
 /**
  * fwupd_device_get_children:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the device children. These can only be assigned using fwupd_device_set_parent().
  *
@@ -144,7 +144,7 @@ fwupd_device_get_children (FwupdDevice *device)
 
 /**
  * fwupd_device_get_summary:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the device summary.
  *
@@ -162,7 +162,7 @@ fwupd_device_get_summary (FwupdDevice *device)
 
 /**
  * fwupd_device_set_summary:
- * @device: A #FwupdDevice
+ * @device: a device
  * @summary: (nullable): the device one line summary
  *
  * Sets the device summary.
@@ -185,7 +185,7 @@ fwupd_device_set_summary (FwupdDevice *device, const gchar *summary)
 
 /**
  * fwupd_device_get_branch:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the current device branch.
  *
@@ -203,7 +203,7 @@ fwupd_device_get_branch (FwupdDevice *device)
 
 /**
  * fwupd_device_set_branch:
- * @device: A #FwupdDevice
+ * @device: a device
  * @branch: (nullable): the device one line branch
  *
  * Sets the current device branch.
@@ -226,7 +226,7 @@ fwupd_device_set_branch (FwupdDevice *device, const gchar *branch)
 
 /**
  * fwupd_device_get_serial:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the serial number for the device.
  *
@@ -244,7 +244,7 @@ fwupd_device_get_serial (FwupdDevice *device)
 
 /**
  * fwupd_device_set_serial:
- * @device: A #FwupdDevice
+ * @device: a device
  * @serial: (nullable): the device serial number
  *
  * Sets the serial number for the device.
@@ -267,7 +267,7 @@ fwupd_device_set_serial (FwupdDevice *device, const gchar *serial)
 
 /**
  * fwupd_device_get_id:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the ID.
  *
@@ -285,7 +285,7 @@ fwupd_device_get_id (FwupdDevice *device)
 
 /**
  * fwupd_device_set_id:
- * @device: A #FwupdDevice
+ * @device: a device
  * @id: (nullable): the device ID, e.g. `USB:foo`
  *
  * Sets the ID.
@@ -308,7 +308,7 @@ fwupd_device_set_id (FwupdDevice *device, const gchar *id)
 
 /**
  * fwupd_device_get_parent_id:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the ID.
  *
@@ -326,7 +326,7 @@ fwupd_device_get_parent_id (FwupdDevice *device)
 
 /**
  * fwupd_device_set_parent_id:
- * @device: A #FwupdDevice
+ * @device: a device
  * @parent_id: (nullable): the device ID, e.g. `USB:foo`
  *
  * Sets the parent ID.
@@ -349,7 +349,7 @@ fwupd_device_set_parent_id (FwupdDevice *device, const gchar *parent_id)
 
 /**
  * fwupd_device_get_composite_id:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the composite ID, falling back to the device ID if unset.
  *
@@ -372,7 +372,7 @@ fwupd_device_get_composite_id (FwupdDevice *device)
 
 /**
  * fwupd_device_set_composite_id:
- * @device: A #FwupdDevice
+ * @device: a device
  * @composite_id: (nullable): a device ID
  *
  * Sets the composite ID, which is usually a SHA1 hash of a grandparent or
@@ -396,7 +396,7 @@ fwupd_device_set_composite_id (FwupdDevice *device, const gchar *composite_id)
 
 /**
  * fwupd_device_get_parent:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the parent.
  *
@@ -414,7 +414,7 @@ fwupd_device_get_parent (FwupdDevice *device)
 
 /**
  * fwupd_device_set_parent:
- * @device: A #FwupdDevice
+ * @device: a device
  * @parent: (nullable): another #FwupdDevice
  *
  * Sets the parent. Only used internally.
@@ -449,7 +449,7 @@ fwupd_device_child_finalized_cb (gpointer data, GObject *where_the_object_was)
 
 /**
  * fwupd_device_add_child:
- * @device: A #FwupdDevice
+ * @device: a device
  * @child: Another #FwupdDevice
  *
  * Adds a child device. An child device is logically linked to the primary
@@ -479,7 +479,7 @@ fwupd_device_add_child (FwupdDevice *device, FwupdDevice *child)
 
 /**
  * fwupd_device_get_guids:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the GUIDs.
  *
@@ -497,7 +497,7 @@ fwupd_device_get_guids (FwupdDevice *device)
 
 /**
  * fwupd_device_has_guid:
- * @device: A #FwupdDevice
+ * @device: a device
  * @guid: the GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Finds out if the device has this specific GUID.
@@ -524,7 +524,7 @@ fwupd_device_has_guid (FwupdDevice *device, const gchar *guid)
 
 /**
  * fwupd_device_add_guid:
- * @device: A #FwupdDevice
+ * @device: a device
  * @guid: the GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Adds the GUID if it does not already exist.
@@ -544,7 +544,7 @@ fwupd_device_add_guid (FwupdDevice *device, const gchar *guid)
 
 /**
  * fwupd_device_get_guid_default:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the default GUID.
  *
@@ -564,7 +564,7 @@ fwupd_device_get_guid_default (FwupdDevice *device)
 
 /**
  * fwupd_device_get_instance_ids:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the InstanceIDs.
  *
@@ -582,7 +582,7 @@ fwupd_device_get_instance_ids (FwupdDevice *device)
 
 /**
  * fwupd_device_has_instance_id:
- * @device: A #FwupdDevice
+ * @device: a device
  * @instance_id: the InstanceID, e.g. `PCI\VEN_10EC&DEV_525A`
  *
  * Finds out if the device has this specific InstanceID.
@@ -609,7 +609,7 @@ fwupd_device_has_instance_id (FwupdDevice *device, const gchar *instance_id)
 
 /**
  * fwupd_device_add_instance_id:
- * @device: A #FwupdDevice
+ * @device: a device
  * @instance_id: the GUID, e.g. `PCI\VEN_10EC&DEV_525A`
  *
  * Adds the InstanceID if it does not already exist.
@@ -629,7 +629,7 @@ fwupd_device_add_instance_id (FwupdDevice *device, const gchar *instance_id)
 
 /**
  * fwupd_device_get_icons:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the icon names to use for the device.
  *
@@ -662,7 +662,7 @@ fwupd_device_has_icon (FwupdDevice *device, const gchar *icon)
 
 /**
  * fwupd_device_add_icon:
- * @device: A #FwupdDevice
+ * @device: a device
  * @icon: the name, e.g. `input-mouse` or `/usr/share/icons/foo.png`
  *
  * Adds the icon name if it does not already exist.
@@ -682,7 +682,7 @@ fwupd_device_add_icon (FwupdDevice *device, const gchar *icon)
 
 /**
  * fwupd_device_get_name:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the device name.
  *
@@ -700,7 +700,7 @@ fwupd_device_get_name (FwupdDevice *device)
 
 /**
  * fwupd_device_set_name:
- * @device: A #FwupdDevice
+ * @device: a device
  * @name: (nullable): the device name, e.g. `ColorHug2`
  *
  * Sets the device name.
@@ -723,7 +723,7 @@ fwupd_device_set_name (FwupdDevice *device, const gchar *name)
 
 /**
  * fwupd_device_get_vendor:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the device vendor.
  *
@@ -741,7 +741,7 @@ fwupd_device_get_vendor (FwupdDevice *device)
 
 /**
  * fwupd_device_set_vendor:
- * @device: A #FwupdDevice
+ * @device: a device
  * @vendor: (nullable): the description
  *
  * Sets the device vendor.
@@ -764,7 +764,7 @@ fwupd_device_set_vendor (FwupdDevice *device, const gchar *vendor)
 
 /**
  * fwupd_device_get_vendor_id:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the combined device vendor ID.
  *
@@ -784,7 +784,7 @@ fwupd_device_get_vendor_id (FwupdDevice *device)
 
 /**
  * fwupd_device_set_vendor_id:
- * @device: A #FwupdDevice
+ * @device: a device
  * @vendor_id: the ID, e.g. 'USB:0x1234' or 'USB:0x1234|PCI:0x5678'
  *
  * Sets the device vendor ID.
@@ -809,7 +809,7 @@ fwupd_device_set_vendor_id (FwupdDevice *device, const gchar *vendor_id)
 
 /**
  * fwupd_device_get_vendor_ids:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the device vendor ID.
  *
@@ -827,7 +827,7 @@ fwupd_device_get_vendor_ids (FwupdDevice *device)
 
 /**
  * fwupd_device_has_vendor_id:
- * @device: A #FwupdDevice
+ * @device: a device
  * @vendor_id: the ID, e.g. 'USB:0x1234'
  *
  * Finds out if the device has this specific vendor ID.
@@ -854,7 +854,7 @@ fwupd_device_has_vendor_id (FwupdDevice *device, const gchar *vendor_id)
 
 /**
  * fwupd_device_add_vendor_id:
- * @device: A #FwupdDevice
+ * @device: a device
  * @vendor_id: the ID, e.g. 'USB:0x1234'
  *
  * Adds a device vendor ID.
@@ -886,7 +886,7 @@ fwupd_device_add_vendor_id (FwupdDevice *device, const gchar *vendor_id)
 
 /**
  * fwupd_device_get_description:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the device description in AppStream markup format.
  *
@@ -904,7 +904,7 @@ fwupd_device_get_description (FwupdDevice *device)
 
 /**
  * fwupd_device_set_description:
- * @device: A #FwupdDevice
+ * @device: a device
  * @description: (nullable): the description in AppStream markup format
  *
  * Sets the device description.
@@ -927,7 +927,7 @@ fwupd_device_set_description (FwupdDevice *device, const gchar *description)
 
 /**
  * fwupd_device_get_version:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the device version.
  *
@@ -945,7 +945,7 @@ fwupd_device_get_version (FwupdDevice *device)
 
 /**
  * fwupd_device_set_version:
- * @device: A #FwupdDevice
+ * @device: a device
  * @version: (nullable): the device version, e.g. `1.2.3`
  *
  * Sets the device version.
@@ -968,7 +968,7 @@ fwupd_device_set_version (FwupdDevice *device, const gchar *version)
 
 /**
  * fwupd_device_get_version_lowest:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the lowest version of firmware the device will accept.
  *
@@ -986,7 +986,7 @@ fwupd_device_get_version_lowest (FwupdDevice *device)
 
 /**
  * fwupd_device_set_version_lowest:
- * @device: A #FwupdDevice
+ * @device: a device
  * @version_lowest: (nullable): the version
  *
  * Sets the lowest version of firmware the device will accept.
@@ -1009,7 +1009,7 @@ fwupd_device_set_version_lowest (FwupdDevice *device, const gchar *version_lowes
 
 /**
  * fwupd_device_get_version_lowest_raw:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the lowest version of firmware the device will accept in raw format.
  *
@@ -1027,7 +1027,7 @@ fwupd_device_get_version_lowest_raw (FwupdDevice *device)
 
 /**
  * fwupd_device_set_version_lowest_raw:
- * @device: A #FwupdDevice
+ * @device: a device
  * @version_lowest_raw: the raw hardware version
  *
  * Sets the raw lowest version number from the hardware before converted to a string.
@@ -1044,7 +1044,7 @@ fwupd_device_set_version_lowest_raw (FwupdDevice *device, guint64 version_lowest
 
 /**
  * fwupd_device_get_version_bootloader:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the version of the bootloader.
  *
@@ -1062,7 +1062,7 @@ fwupd_device_get_version_bootloader (FwupdDevice *device)
 
 /**
  * fwupd_device_set_version_bootloader:
- * @device: A #FwupdDevice
+ * @device: a device
  * @version_bootloader: (nullable): the version
  *
  * Sets the bootloader version.
@@ -1085,7 +1085,7 @@ fwupd_device_set_version_bootloader (FwupdDevice *device, const gchar *version_b
 
 /**
  * fwupd_device_get_version_bootloader_raw:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the bootloader version of firmware the device will accept in raw format.
  *
@@ -1103,7 +1103,7 @@ fwupd_device_get_version_bootloader_raw (FwupdDevice *device)
 
 /**
  * fwupd_device_set_version_bootloader_raw:
- * @device: A #FwupdDevice
+ * @device: a device
  * @version_bootloader_raw: the raw hardware version
  *
  * Sets the raw bootloader version number from the hardware before converted to a string.
@@ -1120,7 +1120,7 @@ fwupd_device_set_version_bootloader_raw (FwupdDevice *device, guint64 version_bo
 
 /**
  * fwupd_device_get_flashes_left:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the number of flash cycles left on the device
  *
@@ -1138,7 +1138,7 @@ fwupd_device_get_flashes_left (FwupdDevice *device)
 
 /**
  * fwupd_device_set_flashes_left:
- * @device: A #FwupdDevice
+ * @device: a device
  * @flashes_left: the description
  *
  * Sets the number of flash cycles left on the device
@@ -1155,7 +1155,7 @@ fwupd_device_set_flashes_left (FwupdDevice *device, guint32 flashes_left)
 
 /**
  * fwupd_device_get_install_duration:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the time estimate for firmware installation (in seconds)
  *
@@ -1173,8 +1173,8 @@ fwupd_device_get_install_duration (FwupdDevice *device)
 
 /**
  * fwupd_device_set_install_duration:
- * @device: A #FwupdDevice
- * @duration: The amount of time
+ * @device: a device
+ * @duration: the amount of time
  *
  * Sets the time estimate for firmware installation (in seconds)
  *
@@ -1190,7 +1190,7 @@ fwupd_device_set_install_duration (FwupdDevice *device, guint32 duration)
 
 /**
  * fwupd_device_get_plugin:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the plugin that created the device.
  *
@@ -1208,7 +1208,7 @@ fwupd_device_get_plugin (FwupdDevice *device)
 
 /**
  * fwupd_device_set_plugin:
- * @device: A #FwupdDevice
+ * @device: a device
  * @plugin: (nullable): the plugin name, e.g. `colorhug`
  *
  * Sets the plugin that created the device.
@@ -1231,7 +1231,7 @@ fwupd_device_set_plugin (FwupdDevice *device, const gchar *plugin)
 
 /**
  * fwupd_device_get_protocol:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the protocol that the device uses for updating.
  *
@@ -1251,7 +1251,7 @@ fwupd_device_get_protocol (FwupdDevice *device)
 
 /**
  * fwupd_device_set_protocol:
- * @device: A #FwupdDevice
+ * @device: a device
  * @protocol: the protocol name, e.g. `com.hughski.colorhug`
  *
  * Sets the protocol that is used to update the device.
@@ -1276,7 +1276,7 @@ fwupd_device_set_protocol (FwupdDevice *device, const gchar *protocol)
 
 /**
  * fwupd_device_get_protocols:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the device protocol.
  *
@@ -1294,7 +1294,7 @@ fwupd_device_get_protocols (FwupdDevice *device)
 
 /**
  * fwupd_device_has_protocol:
- * @device: A #FwupdDevice
+ * @device: a device
  * @protocol: the ID, e.g. 'USB:0x1234'
  *
  * Finds out if the device has this specific protocol.
@@ -1321,7 +1321,7 @@ fwupd_device_has_protocol (FwupdDevice *device, const gchar *protocol)
 
 /**
  * fwupd_device_add_protocol:
- * @device: A #FwupdDevice
+ * @device: a device
  * @protocol: the ID, e.g. 'USB:0x1234'
  *
  * Adds a device protocol.
@@ -1353,11 +1353,11 @@ fwupd_device_add_protocol (FwupdDevice *device, const gchar *protocol)
 
 /**
  * fwupd_device_get_flags:
- * @device: A #FwupdDevice
+ * @device: a device
  *
- * Gets the device flags.
+ * Gets device flags.
  *
- * Returns: the device flags, or 0 if unset
+ * Returns: device flags, or 0 if unset
  *
  * Since: 0.9.3
  **/
@@ -1371,10 +1371,10 @@ fwupd_device_get_flags (FwupdDevice *device)
 
 /**
  * fwupd_device_set_flags:
- * @device: A #FwupdDevice
- * @flags: the device flags, e.g. %FWUPD_DEVICE_FLAG_REQUIRE_AC
+ * @device: a device
+ * @flags: device flags, e.g. %FWUPD_DEVICE_FLAG_REQUIRE_AC
  *
- * Sets the device flags.
+ * Sets device flags.
  *
  * Since: 0.9.3
  **/
@@ -1391,7 +1391,7 @@ fwupd_device_set_flags (FwupdDevice *device, guint64 flags)
 
 /**
  * fwupd_device_add_flag:
- * @device: A #FwupdDevice
+ * @device: a device
  * @flag: the #FwupdDeviceFlags
  *
  * Adds a specific device flag to the device.
@@ -1413,7 +1413,7 @@ fwupd_device_add_flag (FwupdDevice *device, FwupdDeviceFlags flag)
 
 /**
  * fwupd_device_remove_flag:
- * @device: A #FwupdDevice
+ * @device: a device
  * @flag: the #FwupdDeviceFlags
  *
  * Removes a specific device flag from the device.
@@ -1435,7 +1435,7 @@ fwupd_device_remove_flag (FwupdDevice *device, FwupdDeviceFlags flag)
 
 /**
  * fwupd_device_has_flag:
- * @device: A #FwupdDevice
+ * @device: a device
  * @flag: the #FwupdDeviceFlags
  *
  * Finds if the device has a specific device flag.
@@ -1454,7 +1454,7 @@ fwupd_device_has_flag (FwupdDevice *device, FwupdDeviceFlags flag)
 
 /**
  * fwupd_device_get_created:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets when the device was created.
  *
@@ -1472,7 +1472,7 @@ fwupd_device_get_created (FwupdDevice *device)
 
 /**
  * fwupd_device_set_created:
- * @device: A #FwupdDevice
+ * @device: a device
  * @created: the UNIX time
  *
  * Sets when the device was created.
@@ -1489,7 +1489,7 @@ fwupd_device_set_created (FwupdDevice *device, guint64 created)
 
 /**
  * fwupd_device_get_modified:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets when the device was modified.
  *
@@ -1507,7 +1507,7 @@ fwupd_device_get_modified (FwupdDevice *device)
 
 /**
  * fwupd_device_set_modified:
- * @device: A #FwupdDevice
+ * @device: a device
  * @modified: the UNIX time
  *
  * Sets when the device was modified.
@@ -1524,7 +1524,7 @@ fwupd_device_set_modified (FwupdDevice *device, guint64 modified)
 
 /**
  * fwupd_device_incorporate:
- * @self: A #FwupdDevice
+ * @self: a device
  * @donor: Another #FwupdDevice
  *
  * Copy all properties from the donor object if they have not already been set.
@@ -1620,13 +1620,13 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 
 /**
  * fwupd_device_to_variant_full:
- * @device: A #FwupdDevice
- * @flags: #FwupdDeviceFlags for the call
+ * @device: a device
+ * @flags: device flags
  *
- * Creates a GVariant from the device data.
+ * Serialize the device data.
  * Optionally provides additional data based upon flags
  *
- * Returns: the GVariant, or %NULL for error
+ * Returns: the serialized data, or %NULL for error
  *
  * Since: 1.1.2
  **/
@@ -1852,11 +1852,11 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 
 /**
  * fwupd_device_to_variant:
- * @device: A #FwupdDevice
+ * @device: a device
  *
- * Creates a GVariant from the device data omitting sensitive fields
+ * Serialize the device data omitting sensitive fields
  *
- * Returns: the GVariant, or %NULL for error
+ * Returns: the serialized data, or %NULL for error
  *
  * Since: 1.0.0
  **/
@@ -2091,7 +2091,7 @@ fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
 
 /**
  * fwupd_device_get_update_state:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the update state.
  *
@@ -2109,7 +2109,7 @@ fwupd_device_get_update_state (FwupdDevice *device)
 
 /**
  * fwupd_device_set_update_state:
- * @device: A #FwupdDevice
+ * @device: a device
  * @update_state: the state, e.g. %FWUPD_UPDATE_STATE_PENDING
  *
  * Sets the update state.
@@ -2129,7 +2129,7 @@ fwupd_device_set_update_state (FwupdDevice *device, FwupdUpdateState update_stat
 
 /**
  * fwupd_device_get_version_format:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the update state.
  *
@@ -2147,7 +2147,7 @@ fwupd_device_get_version_format (FwupdDevice *device)
 
 /**
  * fwupd_device_set_version_format:
- * @device: A #FwupdDevice
+ * @device: a device
  * @version_format: the state, e.g. %FWUPD_VERSION_FORMAT_PENDING
  *
  * Sets the update state.
@@ -2164,7 +2164,7 @@ fwupd_device_set_version_format (FwupdDevice *device, FwupdVersionFormat version
 
 /**
  * fwupd_device_get_version_raw:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the raw version number from the hardware before converted to a string.
  *
@@ -2182,7 +2182,7 @@ fwupd_device_get_version_raw (FwupdDevice *device)
 
 /**
  * fwupd_device_set_version_raw:
- * @device: A #FwupdDevice
+ * @device: a device
  * @version_raw: the raw hardware version
  *
  * Sets the raw version number from the hardware before converted to a string.
@@ -2199,7 +2199,7 @@ fwupd_device_set_version_raw (FwupdDevice *device, guint64 version_raw)
 
 /**
  * fwupd_device_get_update_message:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the update message.
  *
@@ -2217,7 +2217,7 @@ fwupd_device_get_update_message (FwupdDevice *device)
 
 /**
  * fwupd_device_set_update_message:
- * @device: A #FwupdDevice
+ * @device: a device
  * @update_message: (nullable): the update message string
  *
  * Sets the update message.
@@ -2240,7 +2240,7 @@ fwupd_device_set_update_message (FwupdDevice *device, const gchar *update_messag
 
 /**
  * fwupd_device_get_update_image:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the update image.
  *
@@ -2258,7 +2258,7 @@ fwupd_device_get_update_image (FwupdDevice *device)
 
 /**
  * fwupd_device_set_update_image:
- * @device: A #FwupdDevice
+ * @device: a device
  * @update_image: (nullable): the update image URL
  *
  * Sets the update image.
@@ -2281,7 +2281,7 @@ fwupd_device_set_update_image (FwupdDevice *device, const gchar *update_image)
 
 /**
  * fwupd_device_get_update_error:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the update error.
  *
@@ -2299,7 +2299,7 @@ fwupd_device_get_update_error (FwupdDevice *device)
 
 /**
  * fwupd_device_set_update_error:
- * @device: A #FwupdDevice
+ * @device: a device
  * @update_error: (nullable): the update error string
  *
  * Sets the update error.
@@ -2322,7 +2322,7 @@ fwupd_device_set_update_error (FwupdDevice *device, const gchar *update_error)
 
 /**
  * fwupd_device_get_release_default:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets the default release for this device.
  *
@@ -2342,7 +2342,7 @@ fwupd_device_get_release_default (FwupdDevice *device)
 
 /**
  * fwupd_device_get_releases:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Gets all the releases for this device.
  *
@@ -2360,8 +2360,8 @@ fwupd_device_get_releases (FwupdDevice *device)
 
 /**
  * fwupd_device_add_release:
- * @device: A #FwupdDevice
- * @release: a #FwupdRelease
+ * @device: a device
+ * @release: a release
  *
  * Adds a release for this device.
  *
@@ -2376,7 +2376,7 @@ fwupd_device_add_release (FwupdDevice *device, FwupdRelease *release)
 }
 /**
  * fwupd_device_get_status:
- * @self: A #FwupdDevice
+ * @self: a device
  *
  * Returns what the device is currently doing.
  *
@@ -2394,7 +2394,7 @@ fwupd_device_get_status (FwupdDevice *self)
 
 /**
  * fwupd_device_set_status:
- * @self: A #FwupdDevice
+ * @self: a device
  * @status: the status value, e.g. %FWUPD_STATUS_DEVICE_WRITE
  *
  * Sets what the device is currently doing.
@@ -2440,8 +2440,8 @@ fwupd_device_json_add_int (JsonBuilder *builder, const gchar *key, guint64 num)
 
 /**
  * fwupd_device_to_json:
- * @device: A #FwupdDevice
- * @builder: A #JsonBuilder
+ * @device: a device
+ * @builder: a JSON builder
  *
  * Adds a fwupd device to a JSON builder
  *
@@ -2572,7 +2572,7 @@ fwupd_device_verstr_raw (guint64 value_raw)
 
 /**
  * fwupd_device_to_string:
- * @device: A #FwupdDevice
+ * @device: a device
  *
  * Builds a text representation of the object.
  *
@@ -2881,9 +2881,9 @@ fwupd_device_set_from_variant_iter (FwupdDevice *device, GVariantIter *iter)
 
 /**
  * fwupd_device_from_variant:
- * @value: a #GVariant
+ * @value: the serialized data
  *
- * Creates a new device using packed data.
+ * Creates a new device using serialized data.
  *
  * Returns: (transfer full): a new #FwupdDevice, or %NULL if @value was invalid
  *
@@ -2951,9 +2951,9 @@ fwupd_device_array_ensure_parents (GPtrArray *devices)
 
 /**
  * fwupd_device_array_from_variant:
- * @value: a #GVariant
+ * @value: the serialized data
  *
- * Creates an array of new devices using packed data.
+ * Creates an array of new devices using serialized data.
  *
  * Returns: (transfer container) (element-type FwupdDevice): devices, or %NULL if @value was invalid
  *
@@ -2986,8 +2986,8 @@ fwupd_device_array_from_variant (GVariant *value)
 
 /**
  * fwupd_device_compare:
- * @device1: a #FwupdDevice
- * @device2: a #FwupdDevice
+ * @device1: a device
+ * @device2: a different device
  *
  * Comparison function for comparing two FwupdDevice objects.
  *

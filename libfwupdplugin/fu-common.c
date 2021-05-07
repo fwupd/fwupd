@@ -164,7 +164,7 @@ fu_common_get_files_recursive (const gchar *path, GError **error)
 }
 /**
  * fu_common_mkdir_parent:
- * @filename: A full pathname
+ * @filename: a full pathname
  * @error: (nullable): optional return location for an error
  *
  * Creates any required directories, including any parent directories.
@@ -197,8 +197,8 @@ fu_common_mkdir_parent (const gchar *filename, GError **error)
 
 /**
  * fu_common_set_contents_bytes:
- * @filename: A filename
- * @bytes: The data to write
+ * @filename: a filename
+ * @bytes: data to write
  * @error: (nullable): optional return location for an error
  *
  * Writes a blob of data to a filename, creating the parent directories as
@@ -233,7 +233,7 @@ fu_common_set_contents_bytes (const gchar *filename, GBytes *bytes, GError **err
 
 /**
  * fu_common_get_contents_bytes:
- * @filename: A filename
+ * @filename: a filename
  * @error: (nullable): optional return location for an error
  *
  * Reads a blob of data from a file.
@@ -259,8 +259,8 @@ fu_common_get_contents_bytes (const gchar *filename, GError **error)
 
 /**
  * fu_common_get_contents_fd:
- * @fd: A file descriptor
- * @count: The maximum number of bytes to read
+ * @fd: a file descriptor
+ * @count: the maximum number of bytes to read
  * @error: (nullable): optional return location for an error
  *
  * Reads a blob from a specific file descriptor.
@@ -349,7 +349,7 @@ fu_common_extract_archive_entry (struct archive_entry *entry, const gchar *dir)
 
 /**
  * fu_common_extract_archive:
- * @blob: a #GBytes archive as a blob
+ * @blob: data archive as a blob
  * @dir: a directory name to extract to
  * @error: (nullable): optional return location for an error
  *
@@ -455,7 +455,7 @@ fu_common_add_argv (GPtrArray *argv, const gchar *fmt, ...)
 
 /**
  * fu_common_find_program_in_path:
- * @basename: The program to search
+ * @basename: the program to search
  * @error: (nullable): optional return location for an error
  *
  * Looks for a program in the PATH variable
@@ -507,7 +507,7 @@ fu_common_test_namespace_support (GError **error)
 
 /**
  * fu_common_firmware_builder:
- * @bytes: The data to use
+ * @bytes: the data to use
  * @script_fn: Name of the script to run in the tarball, e.g. `startup.sh`
  * @output_fn: Name of the generated firmware, e.g. `firmware.bin`
  * @error: (nullable): optional return location for an error
@@ -733,7 +733,7 @@ fu_common_spawn_cancelled_cb (GCancellable *cancellable, FuCommonSpawnHelper *he
 
 /**
  * fu_common_spawn_sync:
- * @argv: The argument list to run
+ * @argv: the argument list to run
  * @handler_cb: (scope call) (nullable): optional #FuOutputHandler
  * @handler_user_data: (nullable): the user data to pass to @handler_cb
  * @timeout_ms: a timeout in ms, or 0 for no limit
@@ -802,9 +802,9 @@ fu_common_spawn_sync (const gchar * const * argv,
 
 /**
  * fu_common_write_uint16:
- * @buf: A writable buffer
+ * @buf: a writable buffer
  * @val_native: a value in host byte-order
- * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  *
  * Writes a value to a buffer using a specified endian.
  *
@@ -829,9 +829,9 @@ fu_common_write_uint16 (guint8 *buf, guint16 val_native, FuEndianType endian)
 
 /**
  * fu_common_write_uint32:
- * @buf: A writable buffer
+ * @buf: a writable buffer
  * @val_native: a value in host byte-order
- * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  *
  * Writes a value to a buffer using a specified endian.
  *
@@ -856,9 +856,9 @@ fu_common_write_uint32 (guint8 *buf, guint32 val_native, FuEndianType endian)
 
 /**
  * fu_common_write_uint64:
- * @buf: A writable buffer
+ * @buf: a writable buffer
  * @val_native: a value in host byte-order
- * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  *
  * Writes a value to a buffer using a specified endian.
  *
@@ -883,8 +883,8 @@ fu_common_write_uint64 (guint8 *buf, guint64 val_native, FuEndianType endian)
 
 /**
  * fu_common_read_uint16:
- * @buf: A readable buffer
- * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @buf: a readable buffer
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  *
  * Read a value from a buffer using a specified endian.
  *
@@ -912,8 +912,8 @@ fu_common_read_uint16 (const guint8 *buf, FuEndianType endian)
 
 /**
  * fu_common_read_uint32:
- * @buf: A readable buffer
- * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @buf: a readable buffer
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  *
  * Read a value from a buffer using a specified endian.
  *
@@ -941,8 +941,8 @@ fu_common_read_uint32 (const guint8 *buf, FuEndianType endian)
 
 /**
  * fu_common_read_uint64:
- * @buf: A readable buffer
- * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @buf: a readable buffer
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  *
  * Read a value from a buffer using a specified endian.
  *
@@ -970,7 +970,7 @@ fu_common_read_uint64 (const guint8 *buf, FuEndianType endian)
 
 /**
  * fu_common_strtoull:
- * @str: A string, e.g. "0x1234"
+ * @str: a string, e.g. `0x1234`
  *
  * Converts a string value to an integer. Values are assumed base 10, unless
  * prefixed with "0x" where they are parsed as base 16.
@@ -994,7 +994,7 @@ fu_common_strtoull (const gchar *str)
 
 /**
  * fu_common_strstrip:
- * @str: A string, e.g. " test "
+ * @str: a string, e.g. ` test `
  *
  * Removes leading and trailing whitespace from a constant string.
  *
@@ -1131,7 +1131,7 @@ fu_common_error_array_get_best (GPtrArray *errors)
 
 /**
  * fu_common_get_path:
- * @path_kind: A #FuPathKind e.g. %FU_PATH_KIND_DATADIR_PKG
+ * @path_kind: a #FuPathKind e.g. %FU_PATH_KIND_DATADIR_PKG
  *
  * Gets a fwupd-specific system path. These can be overridden with various
  * environment variables, for instance %FWUPD_DATADIR.
@@ -1277,9 +1277,9 @@ fu_common_get_path (FuPathKind path_kind)
 
 /**
  * fu_common_string_replace:
- * @string: The #GString to operate on
- * @search: The text to search for
- * @replace: The text to use for substitutions
+ * @string: the #GString to operate on
+ * @search: the text to search for
+ * @replace: the text to use for substitutions
  *
  * Performs multiple search and replace operations on the given string.
  *
@@ -1342,7 +1342,7 @@ fu_common_string_replace (GString *string, const gchar *search, const gchar *rep
 
 /**
  * fu_common_strwidth:
- * @text: The string to operate on
+ * @text: the string to operate on
  *
  * Returns the width of the string in displayed characters on the console.
  *
@@ -1371,9 +1371,9 @@ fu_common_strwidth (const gchar *text)
 
 /**
  * fu_common_string_append_kv:
- * @str: A #GString
- * @idt: The indent
- * @key: A string to append
+ * @str: a #GString
+ * @idt: the indent
+ * @key: a string to append
  * @value: a string to append
  *
  * Appends a key and string value to a string
@@ -1420,9 +1420,9 @@ fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gch
 
 /**
  * fu_common_string_append_ku:
- * @str: A #GString
- * @idt: The indent
- * @key: A string to append
+ * @str: a #GString
+ * @idt: the indent
+ * @key: a string to append
  * @value: guint64
  *
  * Appends a key and unsigned integer to a string
@@ -1438,9 +1438,9 @@ fu_common_string_append_ku (GString *str, guint idt, const gchar *key, guint64 v
 
 /**
  * fu_common_string_append_kx:
- * @str: A #GString
- * @idt: The indent
- * @key: A string to append
+ * @str: a #GString
+ * @idt: the indent
+ * @key: a string to append
  * @value: guint64
  *
  * Appends a key and hex integer to a string
@@ -1456,9 +1456,9 @@ fu_common_string_append_kx (GString *str, guint idt, const gchar *key, guint64 v
 
 /**
  * fu_common_string_append_kb:
- * @str: A #GString
- * @idt: The indent
- * @key: A string to append
+ * @str: a #GString
+ * @idt: the indent
+ * @key: a string to append
  * @value: Boolean
  *
  * Appends a key and boolean value to a string
@@ -1478,7 +1478,7 @@ fu_common_string_append_kb (GString *str, guint idt, const gchar *key, gboolean 
  * @data: buffer to print
  * @len: the size of @data
  * @columns: break new lines after this many bytes
- * @flags: some #FuDumpFlags, e.g. %FU_DUMP_FLAGS_SHOW_ASCII
+ * @flags: dump flags, e.g. %FU_DUMP_FLAGS_SHOW_ASCII
  *
  * Dumps a raw buffer to the screen.
  *
@@ -1566,7 +1566,7 @@ fu_common_dump_raw (const gchar *log_domain,
  * fu_common_dump_bytes:
  * @log_domain: (nullable): optional log domain, typically %G_LOG_DOMAIN
  * @title: (nullable): optional prefix title
- * @bytes: a #GBytes
+ * @bytes: data blob
  *
  * Dumps a byte buffer to the screen.
  *
@@ -1584,7 +1584,7 @@ fu_common_dump_bytes (const gchar *log_domain,
 
 /**
  * fu_common_bytes_align:
- * @bytes: a #GBytes
+ * @bytes: data blob
  * @blksz: block size in bytes
  * @padval: the byte used to pad the byte buffer
  *
@@ -1622,7 +1622,7 @@ fu_common_bytes_align (GBytes *bytes, gsize blksz, gchar padval)
 
 /**
  * fu_common_bytes_is_empty:
- * @bytes: a #GBytes
+ * @bytes: data blob
  *
  * Checks if a byte array are just empty (0xff) bytes.
  *
@@ -1693,7 +1693,7 @@ fu_common_bytes_compare_raw (const guint8 *buf1, gsize bufsz1,
 
 /**
  * fu_common_bytes_compare:
- * @bytes1: a #GBytes
+ * @bytes1: a data blob
  * @bytes2: another #GBytes
  * @error: (nullable): optional return location for an error
  *
@@ -1722,12 +1722,12 @@ fu_common_bytes_compare (GBytes *bytes1, GBytes *bytes2, GError **error)
 
 /**
  * fu_common_bytes_pad:
- * @bytes: a #GBytes
+ * @bytes: data blob
  * @sz: the desired size in bytes
  *
  * Pads a GBytes to a minimum @sz with `0xff`.
  *
- * Returns: (transfer full): a #GBytes
+ * Returns: (transfer full): a data blob
  *
  * Since: 1.3.1
  **/
@@ -1755,7 +1755,7 @@ fu_common_bytes_pad (GBytes *bytes, gsize sz)
 
 /**
  * fu_common_bytes_new_offset:
- * @bytes: a #GBytes
+ * @bytes: data blob
  * @offset: where subsection starts at
  * @length: length of subsection
  * @error: (nullable): optional return location for an error
@@ -1797,7 +1797,7 @@ fu_common_bytes_new_offset (GBytes *bytes,
  *
  * Finds the canonicalized absolute filename for a path.
  *
- * Returns: A filename, or %NULL if invalid or not found
+ * Returns: a filename, or %NULL if invalid or not found
  *
  * Since: 1.2.6
  **/
@@ -1977,7 +1977,7 @@ fu_common_strsafe (const gchar *str, gsize maxsz)
 /**
  * fu_common_strjoin_array:
  * @separator: (nullable): string to insert between each of the strings
- * @array: (element-type utf8): A #GPtrArray
+ * @array: (element-type utf8): a #GPtrArray
  *
  * Joins an array of strings together to form one long string, with the optional
  * separator inserted between each of them.
@@ -2163,7 +2163,7 @@ fu_common_read_uint8_safe (const guint8 *buf,
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`
  * @offset: offset in bytes into @buf to copy from
  * @value: (out) (nullable): the parsed value
- * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  * @error: (nullable): optional return location for an error
  *
  * Read a value from a buffer using a specified endian in a safe way.
@@ -2204,7 +2204,7 @@ fu_common_read_uint16_safe (const guint8 *buf,
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`
  * @offset: offset in bytes into @buf to copy from
  * @value: (out) (nullable): the parsed value
- * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  * @error: (nullable): optional return location for an error
  *
  * Read a value from a buffer using a specified endian in a safe way.
@@ -2245,7 +2245,7 @@ fu_common_read_uint32_safe (const guint8 *buf,
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`
  * @offset: offset in bytes into @buf to copy from
  * @value: (out) (nullable): the parsed value
- * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  * @error: (nullable): optional return location for an error
  *
  * Read a value from a buffer using a specified endian in a safe way.
@@ -2319,7 +2319,7 @@ fu_common_write_uint8_safe (guint8 *buf,
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`
  * @offset: offset in bytes into @buf to write to
  * @value: the value to write
- * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  * @error: (nullable): optional return location for an error
  *
  * Write a value to a buffer using a specified endian in a safe way.
@@ -2357,7 +2357,7 @@ fu_common_write_uint16_safe (guint8 *buf,
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`
  * @offset: offset in bytes into @buf to write to
  * @value: the value to write
- * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  * @error: (nullable): optional return location for an error
  *
  * Write a value to a buffer using a specified endian in a safe way.
@@ -2395,7 +2395,7 @@ fu_common_write_uint32_safe (guint8 *buf,
  * @bufsz: maximum size of @buf, typically `sizeof(buf)`
  * @offset: offset in bytes into @buf to write to
  * @value: the value to write
- * @endian: A #FuEndianType, e.g. %G_LITTLE_ENDIAN
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
  * @error: (nullable): optional return location for an error
  *
  * Write a value to a buffer using a specified endian in a safe way.
@@ -2429,10 +2429,10 @@ fu_common_write_uint64_safe (guint8 *buf,
 
 /**
  * fu_byte_array_append_uint8:
- * @array: A #GByteArray
- * @data:  #guint8
+ * @array: a #GByteArray
+ * @data: value
  *
- * Adds a 8 bit integer to a byte array
+ * Adds a 8 bit integer to a byte array.
  *
  * Since: 1.3.1
  **/
@@ -2444,11 +2444,11 @@ fu_byte_array_append_uint8 (GByteArray *array, guint8 data)
 
 /**
  * fu_byte_array_append_uint16:
- * @array: A #GByteArray
- * @data:  #guint16
- * @endian: #FuEndianType
+ * @array: a #GByteArray
+ * @data: value
+ * @endian: endian type, e.g. #G_LITTLE_ENDIAN
  *
- * Adds a 16 bit integer to a byte array
+ * Adds a 16 bit integer to a byte array.
  *
  * Since: 1.3.1
  **/
@@ -2462,11 +2462,11 @@ fu_byte_array_append_uint16 (GByteArray *array, guint16 data, FuEndianType endia
 
 /**
  * fu_byte_array_append_uint32:
- * @array: A #GByteArray
- * @data:  #guint32
- * @endian: #FuEndianType
+ * @array: a #GByteArray
+ * @data: value
+ * @endian: endian type, e.g. #G_LITTLE_ENDIAN
  *
- * Adds a 32 bit integer to a byte array
+ * Adds a 32 bit integer to a byte array.
  *
  * Since: 1.3.1
  **/
@@ -2480,11 +2480,11 @@ fu_byte_array_append_uint32 (GByteArray *array, guint32 data, FuEndianType endia
 
 /**
  * fu_byte_array_append_uint64:
- * @array: A #GByteArray
- * @data:  #guint64
- * @endian: #FuEndianType
+ * @array: a #GByteArray
+ * @data: value
+ * @endian: endian type, e.g. #G_LITTLE_ENDIAN
  *
- * Adds a 64 bit integer to a byte array
+ * Adds a 64 bit integer to a byte array.
  *
  * Since: 1.5.8
  **/
@@ -2498,10 +2498,10 @@ fu_byte_array_append_uint64 (GByteArray *array, guint64 data, FuEndianType endia
 
 /**
  * fu_byte_array_append_bytes:
- * @array: A #GByteArray
- * @bytes:  A #GBytes
+ * @array: a #GByteArray
+ * @bytes: data blob
  *
- * Adds the contents of a GBytes to a byte array
+ * Adds the contents of a GBytes to a byte array.
  *
  * Since: 1.5.8
  **/
@@ -2535,7 +2535,7 @@ fu_byte_array_set_size_full (GByteArray *array, guint length, guint8 data)
 /**
  * fu_byte_array_set_size:
  * @array: a #GByteArray
- * @length:  the new size of the GByteArray
+ * @length: the new size of the GByteArray
  *
  * Sets the size of the GByteArray, expanding it with NULs if necessary.
  *
@@ -2602,7 +2602,7 @@ fu_common_kernel_locked_down (void)
 
 /**
  * fu_common_cpuid:
- * @leaf: The CPUID level, now called the 'leaf' by Intel
+ * @leaf: the CPUID level, now called the 'leaf' by Intel
  * @eax: (out) (nullable): EAX register
  * @ebx: (out) (nullable): EBX register
  * @ecx: (out) (nullable): ECX register
@@ -2656,7 +2656,7 @@ fu_common_cpuid (guint32 leaf,
  *
  * Uses CPUID to discover the CPU vendor.
  *
- * Returns: a #FuCpuVendor, e.g. %FU_CPU_VENDOR_AMD if the vendor was AMD.
+ * Returns: a CPU vendor, e.g. %FU_CPU_VENDOR_AMD if the vendor was AMD.
  *
  * Since: 1.5.5
  **/
@@ -2823,7 +2823,7 @@ fu_common_convert_to_gpt_type (const gchar *type)
 
 /**
  * fu_common_get_volumes_by_kind:
- * @kind: A volume kind, typically a GUID
+ * @kind: a volume kind, typically a GUID
  * @error: (nullable): optional return location for an error
  *
  * Finds all volumes of a specific partition type
@@ -2907,12 +2907,12 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 
 /**
  * fu_common_get_volume_by_device:
- * @device: A device string, typcically starting with `/dev/`
+ * @device: a device string, typically starting with `/dev/`
  * @error: (nullable): optional return location for an error
  *
  * Finds the first volume from the specified device.
  *
- * Returns: (transfer full): a #GPtrArray, or %NULL if the kind was not found
+ * Returns: (transfer full): a volume, or %NULL if the device was not found
  *
  * Since: 1.5.1
  **/
@@ -2952,12 +2952,12 @@ fu_common_get_volume_by_device (const gchar *device, GError **error)
 
 /**
  * fu_common_get_volume_by_devnum:
- * @devnum: A device number
+ * @devnum: a device number
  * @error: (nullable): optional return location for an error
  *
  * Finds the first volume from the specified device.
  *
- * Returns: (transfer full): a #GPtrArray, or %NULL if the kind was not found
+ * Returns: (transfer full): a volume, or %NULL if the device was not found
  *
  * Since: 1.5.1
  **/
@@ -3000,7 +3000,7 @@ fu_common_get_volume_by_devnum (guint32 devnum, GError **error)
  *
  * Gets the platform default ESP
  *
- * Returns: (transfer full): a #FuVolume, or %NULL if the ESP was not found
+ * Returns: (transfer full): a volume, or %NULL if the ESP was not found
  *
  * Since: 1.4.6
  **/
@@ -3083,12 +3083,12 @@ fu_common_get_esp_default (GError **error)
 
 /**
  * fu_common_get_esp_for_path:
- * @esp_path: A path to the ESP
+ * @esp_path: a path to the ESP
  * @error: (nullable): optional return location for an error
  *
  * Gets the platform ESP using a UNIX or UDisks path
  *
- * Returns: (transfer full): a #FuVolume, or %NULL if the ESP was not found
+ * Returns: (transfer full): a #volume, or %NULL if the ESP was not found
  *
  * Since: 1.4.6
  **/
@@ -3128,7 +3128,7 @@ fu_common_get_esp_for_path (const gchar *esp_path, GError **error)
 /**
  * fu_common_crc8:
  * @buf: memory buffer
- * @bufsz: sizeof buf
+ * @bufsz: size of @buf
  *
  * Returns the cyclic redundancy check value for the given memory buffer.
  *
@@ -3154,7 +3154,7 @@ fu_common_crc8 (const guint8 *buf, gsize bufsz)
 /**
  * fu_common_crc16:
  * @buf: memory buffer
- * @bufsz: sizeof buf
+ * @bufsz: size of @buf
  *
  * Returns the cyclic redundancy check value for the given memory buffer.
  *
@@ -3182,7 +3182,7 @@ fu_common_crc16 (const guint8 *buf, gsize bufsz)
 /**
  * fu_common_crc32_full:
  * @buf: memory buffer
- * @bufsz: sizeof buf
+ * @bufsz: size of @buf
  * @crc: initial CRC value, typically 0xFFFFFFFF
  * @polynomial: CRC polynomial, typically 0xEDB88320
  *
@@ -3209,7 +3209,7 @@ fu_common_crc32_full (const guint8 *buf, gsize bufsz, guint32 crc, guint32 polyn
 /**
  * fu_common_crc32:
  * @buf: memory buffer
- * @bufsz: sizeof buf
+ * @bufsz: size of @buf
  *
  * Returns the cyclic redundancy check value for the given memory buffer.
  *
@@ -3285,7 +3285,7 @@ fu_common_align_up (gsize value, guint8 alignment)
 
 /**
  * fu_battery_state_to_string:
- * @battery_state: a #FuBatteryState, e.g. %FU_BATTERY_STATE_FULLY_CHARGED
+ * @battery_state: a battery state, e.g. %FU_BATTERY_STATE_FULLY_CHARGED
  *
  * Converts an enumerated type to a string.
  *
@@ -3311,7 +3311,7 @@ fu_battery_state_to_string (FuBatteryState battery_state)
 
 /**
  * fu_bytes_get_data_safe:
- * @bytes: a #GBytes
+ * @bytes: data blob
  * @bufsz: (out) (optional): location to return size of byte data
  * @error: (nullable): optional return location for an error
  *
@@ -3366,7 +3366,7 @@ fu_xmlb_builder_insert_kv (XbBuilderNode *bn, const gchar *key, const gchar *val
  * @key: string key
  * @value: integer value
  *
- * Convenience function to add an XML node with a integer value. If @value is 0
+ * Convenience function to add an XML node with an integer value. If @value is 0
  * then no member is added.
  *
  * Since: 1.6.0

@@ -99,8 +99,8 @@ fwupd_remote_set_title (FwupdRemote *self, const gchar *title)
 
 /**
  * fwupd_remote_set_agreement:
- * @self: A #FwupdRemote
- * @agreement: Agreement markup
+ * @self: a #FwupdRemote
+ * @agreement: (nullable): agreement markup text
  *
  * Sets the remote agreement in AppStream markup format
  *
@@ -156,8 +156,8 @@ fwupd_remote_set_kind (FwupdRemote *self, FwupdRemoteKind kind)
 
 /**
  * fwupd_remote_set_keyring_kind:
- * @self: A #FwupdRemote
- * @keyring_kind: #FwupdKeyringKind e.g. #FWUPD_KEYRING_KIND_PKCS7
+ * @self: a #FwupdRemote
+ * @keyring_kind: keyring kind e.g. #FWUPD_KEYRING_KIND_PKCS7
  *
  * Sets the keyring kind
  *
@@ -389,8 +389,8 @@ fwupd_remote_set_filename_cache (FwupdRemote *self, const gchar *filename)
 
 /**
  * fwupd_remote_load_from_filename:
- * @self: A #FwupdRemote
- * @filename: A filename
+ * @self: a #FwupdRemote
+ * @filename: a filename
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -593,7 +593,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 
 /**
  * fwupd_remote_get_order_after:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the list of remotes this plugin should be ordered after.
  *
@@ -611,7 +611,7 @@ fwupd_remote_get_order_after (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_order_before:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the list of remotes this plugin should be ordered before.
  *
@@ -629,7 +629,7 @@ fwupd_remote_get_order_before (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_filename_cache:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the path and filename that the remote is using for a cache.
  *
@@ -647,7 +647,7 @@ fwupd_remote_get_filename_cache (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_filename_cache_sig:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the path and filename that the remote is using for a signature cache.
  *
@@ -665,7 +665,7 @@ fwupd_remote_get_filename_cache_sig (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_filename_source:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the path and filename of the remote itself, typically a `.conf` file.
  *
@@ -683,7 +683,7 @@ fwupd_remote_get_filename_source (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_priority:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the priority of the remote, where bigger numbers are better.
  *
@@ -701,7 +701,7 @@ fwupd_remote_get_priority (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_kind:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the kind of the remote.
  *
@@ -719,7 +719,7 @@ fwupd_remote_get_kind (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_keyring_kind:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the keyring kind of the remote.
  *
@@ -737,7 +737,7 @@ fwupd_remote_get_keyring_kind (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_age:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the age of the remote in seconds.
  *
@@ -759,8 +759,8 @@ fwupd_remote_get_age (FwupdRemote *self)
 
 /**
  * fwupd_remote_set_remotes_dir:
- * @self: A #FwupdRemote
- * @directory: Remotes directory
+ * @self: a #FwupdRemote
+ * @directory: (nullable): Remotes directory
  *
  * Sets the directory to store remote data
  *
@@ -782,7 +782,7 @@ fwupd_remote_set_remotes_dir (FwupdRemote *self, const gchar *directory)
 
 /**
  * fwupd_remote_set_priority:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  * @priority: an integer, where 1 is better
  *
  * Sets the plugin priority.
@@ -799,8 +799,8 @@ fwupd_remote_set_priority (FwupdRemote *self, gint priority)
 
 /**
  * fwupd_remote_set_mtime:
- * @self: A #FwupdRemote
- * @mtime: a UNIX itmestamp
+ * @self: a #FwupdRemote
+ * @mtime: a UNIX timestamp
  *
  * Sets the plugin modification time.
  *
@@ -816,7 +816,7 @@ fwupd_remote_set_mtime (FwupdRemote *self, guint64 mtime)
 
 /**
  * fwupd_remote_get_username:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the username configured for the remote.
  *
@@ -834,7 +834,7 @@ fwupd_remote_get_username (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_password:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the password configured for the remote.
  *
@@ -852,7 +852,7 @@ fwupd_remote_get_password (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_title:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the remote title, e.g. `Linux Vendor Firmware Service`.
  *
@@ -870,7 +870,7 @@ fwupd_remote_get_title (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_agreement:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the remote agreement in AppStream markup format
  *
@@ -888,7 +888,7 @@ fwupd_remote_get_agreement (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_remotes_dir:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the base directory for storing remote metadata
  *
@@ -906,7 +906,7 @@ fwupd_remote_get_remotes_dir (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_checksum:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the remote checksum.
  *
@@ -924,7 +924,7 @@ fwupd_remote_get_checksum (FwupdRemote *self)
 
 /**
  * fwupd_remote_build_firmware_uri:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  * @url: the URL to use
  * @error: (nullable): optional return location for an error
  *
@@ -946,7 +946,7 @@ fwupd_remote_build_firmware_uri (FwupdRemote *self, const gchar *url, GError **e
 
 /**
  * fwupd_remote_get_report_uri:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the URI for the remote reporting.
  *
@@ -964,7 +964,7 @@ fwupd_remote_get_report_uri (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_security_report_uri:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the URI for the security report.
  *
@@ -982,7 +982,7 @@ fwupd_remote_get_security_report_uri (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_metadata_uri:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the URI for the remote metadata.
  *
@@ -1043,8 +1043,8 @@ fwupd_remote_load_signature_jcat (FwupdRemote *self, JcatFile *jcat_file, GError
 
 /**
  * fwupd_remote_load_signature_bytes:
- * @self: A #FwupdRemote
- * @bytes: A #GBytes
+ * @self: a #FwupdRemote
+ * @bytes: data blob
  * @error: (nullable): optional return location for an error
  *
  * Parses the signature, updating the metadata URI as appropriate.
@@ -1084,8 +1084,8 @@ fwupd_remote_load_signature_bytes (FwupdRemote *self, GBytes *bytes, GError **er
 
 /**
  * fwupd_remote_load_signature:
- * @self: A #FwupdRemote
- * @filename: A filename
+ * @self: a #FwupdRemote
+ * @filename: a filename
  * @error: (nullable): optional return location for an error
  *
  * Parses the signature, updating the metadata URI as appropriate.
@@ -1113,7 +1113,7 @@ fwupd_remote_load_signature (FwupdRemote *self, const gchar *filename, GError **
 
 /**
  * fwupd_remote_get_metadata_uri_sig:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the URI for the remote metadata signature.
  *
@@ -1131,7 +1131,7 @@ fwupd_remote_get_metadata_uri_sig (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_firmware_base_uri:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the base URI for firmware.
  *
@@ -1149,7 +1149,7 @@ fwupd_remote_get_firmware_base_uri (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_enabled:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets if the remote is enabled and should be used.
  *
@@ -1167,7 +1167,7 @@ fwupd_remote_get_enabled (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_automatic_reports:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets if reports should be automatically uploaded to this remote
  *
@@ -1185,7 +1185,7 @@ fwupd_remote_get_automatic_reports (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_automatic_security_reports:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets if security reports should be automatically uploaded to this remote
  *
@@ -1203,7 +1203,7 @@ fwupd_remote_get_automatic_security_reports (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_approval_required:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets if firmware from the remote should be checked against the list
  * of a approved checksums.
@@ -1222,7 +1222,7 @@ fwupd_remote_get_approval_required (FwupdRemote *self)
 
 /**
  * fwupd_remote_get_id:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
  * Gets the remote ID, e.g. `lvfs-testing`.
  *
@@ -1299,11 +1299,11 @@ fwupd_remote_set_from_variant_iter (FwupdRemote *self, GVariantIter *iter)
 
 /**
  * fwupd_remote_to_variant:
- * @self: A #FwupdRemote
+ * @self: a #FwupdRemote
  *
- * Creates a GVariant from the remote data.
+ * Serialize the remote data.
  *
- * Returns: the GVariant, or %NULL for error
+ * Returns: the serialized data, or %NULL for error
  *
  * Since: 1.0.0
  **/
@@ -1555,9 +1555,9 @@ fwupd_remote_finalize (GObject *obj)
 
 /**
  * fwupd_remote_from_variant:
- * @value: a #GVariant
+ * @value: the serialized data
  *
- * Creates a new remote using packed data.
+ * Creates a new remote using serialized data.
  *
  * Returns: (transfer full): a new #FwupdRemote, or %NULL if @value was invalid
  *
@@ -1588,9 +1588,9 @@ fwupd_remote_from_variant (GVariant *value)
 
 /**
  * fwupd_remote_array_from_variant:
- * @value: a #GVariant
+ * @value: the serialized data
  *
- * Creates an array of new devices using packed data.
+ * Creates an array of new devices using serialized data.
  *
  * Returns: (transfer container) (element-type FwupdRemote): remotes, or %NULL if @value was invalid
  *

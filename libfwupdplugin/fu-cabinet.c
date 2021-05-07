@@ -65,7 +65,7 @@ fu_cabinet_init (FuCabinet *self)
 
 /**
  * fu_cabinet_set_size_max:
- * @self: A #FuCabinet
+ * @self: a #FuCabinet
  * @size_max: size in bytes
  *
  * Sets the maximum size of the decompressed cabinet file.
@@ -81,8 +81,8 @@ fu_cabinet_set_size_max (FuCabinet *self, guint64 size_max)
 
 /**
  * fu_cabinet_set_jcat_context: (skip):
- * @self: A #FuCabinet
- * @jcat_context: (nullable): A #JcatContext
+ * @self: a #FuCabinet
+ * @jcat_context: (nullable): a Jcat context
  *
  * Sets the Jcat context, which is used for setting the trust flags on the
  * each release in the archive.
@@ -99,9 +99,9 @@ fu_cabinet_set_jcat_context (FuCabinet *self, JcatContext *jcat_context)
 
 /**
  * fu_cabinet_get_silo: (skip):
- * @self: A #FuCabinet
+ * @self: a #FuCabinet
  *
- * Gets the silo that represents the supset metadata of all the metainfo files
+ * Gets the silo that represents the superset metadata of all the metainfo files
  * found in the archive.
  *
  * Returns: (transfer full): a #XbSilo, or %NULL if the archive has not been parsed
@@ -132,9 +132,9 @@ fu_cabinet_get_file_by_name (FuCabinet *self, const gchar *basename)
 
 /**
  * fu_cabinet_add_file:
- * @self: A #FuCabinet
+ * @self: a #FuCabinet
  * @basename: filename
- * @data: #GBytes
+ * @data: file data
  *
  * Adds a file to the silo.
  *
@@ -173,7 +173,7 @@ fu_cabinet_add_file (FuCabinet *self, const gchar *basename, GBytes *data)
 
 /**
  * fu_cabinet_get_file:
- * @self: A #FuCabinet
+ * @self: a #FuCabinet
  * @basename: filename
  * @error: (nullable): optional return location for an error
  *
@@ -735,13 +735,13 @@ fu_cabinet_decompress (FuCabinet *self, GBytes *data, GError **error)
 
 /**
  * fu_cabinet_export:
- * @self: A #FuCabinet
- * @flags: A #FuCabinetExportFlags, e.g. %FU_CABINET_EXPORT_FLAG_NONE
+ * @self: a #FuCabinet
+ * @flags: export flags, e.g. %FU_CABINET_EXPORT_FLAG_NONE
  * @error: (nullable): optional return location for an error
  *
  * Exports the cabinet archive.
  *
- * Returns: (transfer full): A #GBytes
+ * Returns: (transfer full): a data blob
  *
  * Since: 1.6.0
  **/
@@ -868,10 +868,10 @@ fu_cabinet_sign_enumerate_firmware (FuCabinet *self, GPtrArray *files, GError **
 
 /**
  * fu_cabinet_sign:
- * @self: A #FuCabinet
- * @cert: A #GBytes of a PCKS#7 certificate
- * @privkey: A #GBytes of a private key
- * @flags: A #FuCabinetSignFlags, e.g. %FU_CABINET_SIGN_FLAG_NONE
+ * @self: a #FuCabinet
+ * @cert: a PCKS#7 certificate
+ * @privkey: a private key
+ * @flags: signing flags, e.g. %FU_CABINET_SIGN_FLAG_NONE
  * @error: (nullable): optional return location for an error
  *
  * Sign the cabinet archive using JCat.
@@ -942,9 +942,9 @@ fu_cabinet_sign (FuCabinet *self,
 
 /**
  * fu_cabinet_parse:
- * @self: A #FuCabinet
- * @data: A #GBytes
- * @flags: A #FuCabinetParseFlags, e.g. %FU_CABINET_PARSE_FLAG_NONE
+ * @self: a #FuCabinet
+ * @data: cabinet archive
+ * @flags: parse flags, e.g. %FU_CABINET_PARSE_FLAG_NONE
  * @error: (nullable): optional return location for an error
  *
  * Parses the cabinet archive.

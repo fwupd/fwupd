@@ -284,9 +284,9 @@ fu_efivar_exists (const gchar *guid, const gchar *name)
  * @guid: Globally unique identifier
  * @name: Variable name
  * @data: Data to set
- * @data_sz: Size of data
+ * @data_sz: size of data
  * @attr: Attributes
- * @error: A #GError
+ * @error: (nullable): optional return location for an error
  *
  * Gets the data from a UEFI variable in NVRAM
  *
@@ -373,7 +373,7 @@ fu_efivar_get_data (const gchar *guid, const gchar *name, guint8 **data,
  * @guid: Globally unique identifier
  * @name: Variable name
  * @attr: (nullable): Attributes
- * @error: A #GError
+ * @error: (nullable): optional return location for an error
  *
  * Gets the data from a UEFI variable in NVRAM
  *
@@ -402,7 +402,7 @@ fu_efivar_get_data_bytes (const gchar *guid,
 /**
  * fu_efivar_get_names:
  * @guid: Globally unique identifier
- * @error: A #GError
+ * @error: (nullable): optional return location for an error
  *
  * Gets the list of names where the GUID matches. An error is set if there are
  * no names matching the GUID.
@@ -453,7 +453,7 @@ fu_efivar_get_names (const gchar *guid, GError **error)
  * fu_efivar_get_monitor:
  * @guid: Globally unique identifier
  * @name: Variable name
- * @error: A #GError
+ * @error: (nullable): optional return location for an error
  *
  * Returns a file monitor for a specific key.
  *
@@ -482,7 +482,7 @@ fu_efivar_get_monitor (const gchar *guid, const gchar *name, GError **error)
 
 /**
  * fu_efivar_space_used:
- * @error: A #GError
+ * @error: (nullable): optional return location for an error
  *
  * Gets the total size used by all EFI variables. This may be less than the size reported by the
  * kernel as some (hopefully small) variables are hidden from userspace.
@@ -532,9 +532,9 @@ fu_efivar_space_used (GError **error)
  * @guid: Globally unique identifier
  * @name: Variable name
  * @data: Data to set
- * @sz: Size of data
+ * @sz: size of @data
  * @attr: Attributes
- * @error: A #GError
+ * @error: (nullable): optional return location for an error
  *
  * Sets the data to a UEFI variable in NVRAM
  *
@@ -619,11 +619,11 @@ fu_efivar_set_data (const gchar *guid, const gchar *name, const guint8 *data,
 
 /**
  * fu_efivar_set_data_bytes:
- * @guid: Globally unique identifier
- * @name: Variable name
- * @bytes: a #GBytes
- * @attr: Attributes
- * @error: A #GError
+ * @guid: globally unique identifier
+ * @name: variable name
+ * @bytes: data blob
+ * @attr: attributes
+ * @error: (nullable): optional return location for an error
  *
  * Sets the data to a UEFI variable in NVRAM
  *
@@ -649,7 +649,7 @@ fu_efivar_set_data_bytes (const gchar *guid, const gchar *name, GBytes *bytes,
 
 /**
  * fu_efivar_secure_boot_enabled_full:
- * @error: A #GError
+ * @error: (nullable): optional return location for an error
  *
  * Determines if secure boot was enabled
  *

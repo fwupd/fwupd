@@ -1300,7 +1300,7 @@ fu_dfu_target_download_element (FuDfuTarget *self,
  * fu_dfu_target_download:
  * @self: a #FuDfuTarget
  * @image: a #FuFirmware
- * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
+ * @flags: DFU target flags, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
  * @error: (nullable): optional return location for an error
  *
  * Downloads firmware from the host to the target, optionally verifying

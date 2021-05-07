@@ -402,7 +402,7 @@ fu_volume_unmount (FuVolume *self, GError **error)
  * Locks the volume, mounting it and unmounting it as required. If the volume is
  * already mounted then it is is _not_ unmounted when the locker is closed.
  *
- * Returns: (transfer full): a #FuDeviceLocker for success, or %NULL
+ * Returns: (transfer full): a device locker for success, or %NULL
  *
  * Since: 1.4.6
  **/

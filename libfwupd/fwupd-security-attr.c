@@ -38,7 +38,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (FwupdSecurityAttr, fwupd_security_attr, G_TYPE_OBJEC
 
 /**
  * fwupd_security_attr_flag_to_string:
- * @flag: A #FwupdSecurityAttrFlags, e.g. %FWUPD_SECURITY_ATTR_FLAG_SUCCESS
+ * @flag: security attribute flags, e.g. %FWUPD_SECURITY_ATTR_FLAG_SUCCESS
  *
  * Returns the printable string for the flag.
  *
@@ -66,7 +66,7 @@ fwupd_security_attr_flag_to_string (FwupdSecurityAttrFlags flag)
 
 /**
  * fwupd_security_attr_result_to_string:
- * @result: A #FwupdSecurityAttrResult, e.g. %FWUPD_SECURITY_ATTR_RESULT_ENABLED
+ * @result: security attribute result, e.g. %FWUPD_SECURITY_ATTR_RESULT_ENABLED
  *
  * Returns the printable string for the result enum.
  *
@@ -110,7 +110,7 @@ fwupd_security_attr_result_to_string (FwupdSecurityAttrResult result)
 
 /**
  * fwupd_security_attr_flag_to_suffix:
- * @flag: A #FwupdSecurityAttrFlags, e.g. %FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES
+ * @flag: security attribute flags, e.g. %FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES
  *
  * Returns the string suffix for the flag.
  *
@@ -132,7 +132,7 @@ fwupd_security_attr_flag_to_suffix (FwupdSecurityAttrFlags flag)
 
 /**
  * fwupd_security_attr_get_obsoletes:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  *
  * Gets the list of attribute obsoletes. The obsoleted attributes will not
  * contribute to the calculated HSI value or be visible in command line tools.
@@ -151,7 +151,7 @@ fwupd_security_attr_get_obsoletes (FwupdSecurityAttr *self)
 
 /**
  * fwupd_security_attr_add_obsolete:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  * @appstream_id: the appstream_id or plugin name
  *
  * Adds an attribute appstream_id to obsolete. The obsoleted attribute will not
@@ -172,7 +172,7 @@ fwupd_security_attr_add_obsolete (FwupdSecurityAttr *self, const gchar *appstrea
 
 /**
  * fwupd_security_attr_has_obsolete:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  * @appstream_id: the attribute appstream_id
  *
  * Finds out if the attribute obsoletes a specific appstream_id.
@@ -197,7 +197,7 @@ fwupd_security_attr_has_obsolete (FwupdSecurityAttr *self, const gchar *appstrea
 
 /**
  * fwupd_security_attr_get_appstream_id:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  *
  * Gets the AppStream ID.
  *
@@ -215,8 +215,8 @@ fwupd_security_attr_get_appstream_id (FwupdSecurityAttr *self)
 
 /**
  * fwupd_security_attr_set_appstream_id:
- * @self: A #FwupdSecurityAttr
- * @appstream_id: the AppStream component ID, e.g. `com.intel.BiosGuard`
+ * @self: a #FwupdSecurityAttr
+ * @appstream_id: (nullable): the AppStream component ID, e.g. `com.intel.BiosGuard`
  *
  * Sets the AppStream ID.
  *
@@ -242,7 +242,7 @@ fwupd_security_attr_set_appstream_id (FwupdSecurityAttr *self, const gchar *apps
 
 /**
  * fwupd_security_attr_get_url:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  *
  * Gets the attribute URL.
  *
@@ -260,8 +260,8 @@ fwupd_security_attr_get_url (FwupdSecurityAttr *self)
 
 /**
  * fwupd_security_attr_set_name:
- * @self: A #FwupdSecurityAttr
- * @name: the attribute name
+ * @self: a #FwupdSecurityAttr
+ * @name: (nullable): the attribute name
  *
  * Sets the attribute name.
  *
@@ -283,8 +283,8 @@ fwupd_security_attr_set_name (FwupdSecurityAttr *self, const gchar *name)
 
 /**
  * fwupd_security_attr_set_plugin:
- * @self: A #FwupdSecurityAttr
- * @plugin: the plugin name
+ * @self: a #FwupdSecurityAttr
+ * @plugin: (nullable): the plugin name
  *
  * Sets the plugin that created the attribute.
  *
@@ -306,8 +306,8 @@ fwupd_security_attr_set_plugin (FwupdSecurityAttr *self, const gchar *plugin)
 
 /**
  * fwupd_security_attr_set_url:
- * @self: A #FwupdSecurityAttr
- * @url: the attribute URL
+ * @self: a #FwupdSecurityAttr
+ * @url: (nullable): the attribute URL
  *
  * Sets the attribute result.
  *
@@ -329,7 +329,7 @@ fwupd_security_attr_set_url (FwupdSecurityAttr *self, const gchar *url)
 
 /**
  * fwupd_security_attr_get_name:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  *
  * Gets the attribute name.
  *
@@ -347,7 +347,7 @@ fwupd_security_attr_get_name (FwupdSecurityAttr *self)
 
 /**
  * fwupd_security_attr_get_plugin:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  *
  * Gets the plugin that created the attribute.
  *
@@ -365,11 +365,11 @@ fwupd_security_attr_get_plugin (FwupdSecurityAttr *self)
 
 /**
  * fwupd_security_attr_get_flags:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  *
  * Gets the self flags.
  *
- * Returns: the self flags, or 0 if unset
+ * Returns: security attribute flags, or 0 if unset
  *
  * Since: 1.5.0
  **/
@@ -383,10 +383,10 @@ fwupd_security_attr_get_flags (FwupdSecurityAttr *self)
 
 /**
  * fwupd_security_attr_set_flags:
- * @self: A #FwupdSecurityAttr
- * @flags: the self flags, e.g. %FWUPD_SECURITY_ATTR_FLAG_OBSOLETED
+ * @self: a #FwupdSecurityAttr
+ * @flags: security attribute flags, e.g. %FWUPD_SECURITY_ATTR_FLAG_OBSOLETED
  *
- * Sets the self flags.
+ * Sets the attribute flags.
  *
  * Since: 1.5.0
  **/
@@ -400,10 +400,10 @@ fwupd_security_attr_set_flags (FwupdSecurityAttr *self, FwupdSecurityAttrFlags f
 
 /**
  * fwupd_security_attr_add_flag:
- * @self: A #FwupdSecurityAttr
- * @flag: the #FwupdSecurityAttrFlags
+ * @self: a #FwupdSecurityAttr
+ * @flag: the #FwupdSecurityAttrFlags, e.g. %FWUPD_SECURITY_ATTR_FLAG_OBSOLETED
  *
- * Adds a specific self flag to the self.
+ * Adds a specific attribute flag to the attribute.
  *
  * Since: 1.5.0
  **/
@@ -417,10 +417,10 @@ fwupd_security_attr_add_flag (FwupdSecurityAttr *self, FwupdSecurityAttrFlags fl
 
 /**
  * fwupd_security_attr_has_flag:
- * @self: A #FwupdSecurityAttr
- * @flag: the #FwupdSecurityAttrFlags
+ * @self: a #FwupdSecurityAttr
+ * @flag: the attribute flag, e.g. %FWUPD_SECURITY_ATTR_FLAG_OBSOLETED
  *
- * Finds if the self has a specific self flag.
+ * Finds if the attribute has a specific attribute flag.
  *
  * Returns: %TRUE if the flag is set
  *
@@ -436,11 +436,11 @@ fwupd_security_attr_has_flag (FwupdSecurityAttr *self, FwupdSecurityAttrFlags fl
 
 /**
  * fwupd_security_attr_get_level:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  *
  * Gets the HSI level.
  *
- * Returns: the #FwupdSecurityAttrLevel, or %FWUPD_SECURITY_ATTR_LEVEL_NONE if unset
+ * Returns: the security attribute level, or %FWUPD_SECURITY_ATTR_LEVEL_NONE if unset
  *
  * Since: 1.5.0
  **/
@@ -454,8 +454,8 @@ fwupd_security_attr_get_level (FwupdSecurityAttr *self)
 
 /**
  * fwupd_security_attr_set_level:
- * @self: A #FwupdSecurityAttr
- * @level: A #FwupdSecurityAttrLevel, e.g. %FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT
+ * @self: a #FwupdSecurityAttr
+ * @level: a security attribute level, e.g. %FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT
  *
  * Sets the HSI level. A @level of %FWUPD_SECURITY_ATTR_LEVEL_NONE is not used
  * for the HSI calculation.
@@ -472,8 +472,8 @@ fwupd_security_attr_set_level (FwupdSecurityAttr *self, FwupdSecurityAttrLevel l
 
 /**
  * fwupd_security_attr_set_result:
- * @self: A #FwupdSecurityAttr
- * @result: A #FwupdSecurityAttrResult, e.g. %FWUPD_SECURITY_ATTR_LEVEL_LOCKED
+ * @self: a #FwupdSecurityAttr
+ * @result: a security attribute result, e.g. %FWUPD_SECURITY_ATTR_LEVEL_LOCKED
  *
  * Sets the optional HSI result. This is required because some attributes may
  * be a "success" when something is `locked` or may be "failed" if `found`.
@@ -490,7 +490,7 @@ fwupd_security_attr_set_result (FwupdSecurityAttr *self, FwupdSecurityAttrResult
 
 /**
  * fwupd_security_attr_get_result:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  *
  * Gets the optional HSI result.
  *
@@ -508,11 +508,11 @@ fwupd_security_attr_get_result (FwupdSecurityAttr *self)
 
 /**
  * fwupd_security_attr_to_variant:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  *
- * Creates a GVariant from the self data.
+ * Serialize the security attribute.
  *
- * Returns: the GVariant, or %NULL for error
+ * Returns: the serialized data, or %NULL for error
  *
  * Since: 1.5.0
  **/
@@ -573,7 +573,7 @@ fwupd_security_attr_to_variant (FwupdSecurityAttr *self)
 
 /**
  * fwupd_security_attr_get_metadata:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  * @key: metadata key
  *
  * Gets private metadata from the attribute which may be used in the name.
@@ -597,7 +597,7 @@ fwupd_security_attr_get_metadata (FwupdSecurityAttr *self, const gchar *key)
 
 /**
  * fwupd_security_attr_add_metadata:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  * @key: metadata key
  * @value: (nullable): metadata value
  *
@@ -721,10 +721,10 @@ fwupd_security_attr_json_add_int (JsonBuilder *builder, const gchar *key, guint6
 
 /**
  * fwupd_security_attr_to_json:
- * @self: A #FwupdSecurityAttr
- * @builder: A #JsonBuilder
+ * @self: a #FwupdSecurityAttr
+ * @builder: a JSON builder
  *
- * Adds a fwupd self to a JSON builder
+ * Adds a fwupd security attribute to a JSON builder
  *
  * Since: 1.5.0
  **/
@@ -767,7 +767,7 @@ fwupd_security_attr_to_json (FwupdSecurityAttr *self, JsonBuilder *builder)
 
 /**
  * fwupd_security_attr_to_string:
- * @self: A #FwupdSecurityAttr
+ * @self: a #FwupdSecurityAttr
  *
  * Builds a text representation of the object.
  *
@@ -853,9 +853,9 @@ fwupd_security_attr_set_from_variant_iter (FwupdSecurityAttr *self, GVariantIter
 
 /**
  * fwupd_security_attr_from_variant:
- * @value: a #GVariant
+ * @value: the serialized data
  *
- * Creates a new self using packed data.
+ * Creates a new security attribute using serialized data.
  *
  * Returns: (transfer full): a new #FwupdSecurityAttr, or %NULL if @value was invalid
  *
@@ -885,9 +885,9 @@ fwupd_security_attr_from_variant (GVariant *value)
 
 /**
  * fwupd_security_attr_array_from_variant:
- * @value: a #GVariant
+ * @value: the serialized data
  *
- * Creates an array of new security_attrs using packed data.
+ * Creates an array of new security attributes using serialized data.
  *
  * Returns: (transfer container) (element-type FwupdSecurityAttr): attributes, or %NULL if @value was invalid
  *
@@ -919,7 +919,7 @@ fwupd_security_attr_array_from_variant (GVariant *value)
  * fwupd_security_attr_new:
  * @appstream_id: (nullable): the AppStream component ID, e.g. `com.intel.BiosGuard`
  *
- * Creates a new self.
+ * Creates a new security attribute.
  *
  * Returns: a new #FwupdSecurityAttr
  *

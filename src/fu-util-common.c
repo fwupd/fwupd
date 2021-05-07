@@ -1121,7 +1121,7 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		return _("Is in bootloader mode");
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG) {
-		/* TRANSLATORS: The hardware is waiting to be replugged */
+		/* TRANSLATORS: the hardware is waiting to be replugged */
 		return _("Hardware is waiting to be replugged");
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_IGNORE_VALIDATION) {
@@ -1194,23 +1194,23 @@ static const gchar *
 fu_util_update_state_to_string (FwupdUpdateState update_state)
 {
 	if (update_state == FWUPD_UPDATE_STATE_PENDING) {
-		/* TRANSLATORS: The update state of the specific device */
+		/* TRANSLATORS: the update state of the specific device */
 		return _("Pending");
 	}
 	if (update_state == FWUPD_UPDATE_STATE_SUCCESS) {
-		/* TRANSLATORS: The update state of the specific device */
+		/* TRANSLATORS: the update state of the specific device */
 		return _("Success");
 	}
 	if (update_state == FWUPD_UPDATE_STATE_FAILED) {
-		/* TRANSLATORS: The update state of the specific device */
+		/* TRANSLATORS: the update state of the specific device */
 		return _("Failed");
 	}
 	if (update_state == FWUPD_UPDATE_STATE_FAILED_TRANSIENT) {
-		/* TRANSLATORS: The update state of the specific device */
+		/* TRANSLATORS: the update state of the specific device */
 		return _("Transient failure");
 	}
 	if (update_state == FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
-		/* TRANSLATORS: The update state of the specific device */
+		/* TRANSLATORS: the update state of the specific device */
 		return _("Needs reboot");
 	}
 	return NULL;

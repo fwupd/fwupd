@@ -117,8 +117,8 @@ fu_device_list_depsolve_order_full (FuDeviceList *self, FuDevice *device, guint 
 
 /**
  * fu_device_list_depsolve_order:
- * @self: A #FuDeviceList
- * @device: A #FuDevice
+ * @self: a device list
+ * @device: a device
  *
  * Sets the device order using the logical parent->child relationships -- by default
  * the child is updated first, unless the device has set flag
@@ -135,7 +135,7 @@ fu_device_list_depsolve_order (FuDeviceList *self, FuDevice *device)
 
 /**
  * fu_device_list_get_all:
- * @self: A #FuDeviceList
+ * @self: a device list
  *
  * Returns all the devices that have been added to the device list.
  * This includes devices that are no longer active, for instance where a
@@ -169,7 +169,7 @@ fu_device_list_get_all (FuDeviceList *self)
 
 /**
  * fu_device_list_get_active:
- * @self: A #FuDeviceList
+ * @self: a device list
  *
  * Returns all the active devices that have been added to the device list.
  * An active device is defined as a device that is currently connected and has
@@ -319,8 +319,8 @@ fu_device_list_find_by_id (FuDeviceList *self,
 
 /**
  * fu_device_list_get_old:
- * @self: A #FuDeviceList
- * @device: A #FuDevice
+ * @self: a device list
+ * @device: a device
  *
  * Returns the old device associated with the currently active device.
  *
@@ -423,8 +423,8 @@ fu_device_list_remove_with_delay (FuDeviceItem *item)
 
 /**
  * fu_device_list_remove:
- * @self: A #FuDeviceList
- * @device: A #FuDevice
+ * @self: a device list
+ * @device: a device
  *
  * Removes a specific device from the list if it exists.
  *
@@ -623,8 +623,8 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 
 /**
  * fu_device_list_add:
- * @self: A #FuDeviceList
- * @device: A #FuDevice
+ * @self: a device list
+ * @device: a device
  *
  * Adds a specific device to the device list if not already present.
  *
@@ -704,8 +704,8 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 
 /**
  * fu_device_list_get_by_guid:
- * @self: A #FuDeviceList
- * @guid: A device GUID
+ * @self: a device list
+ * @guid: a device GUID
  * @error: (nullable): optional return location for an error
  *
  * Finds a specific device that has the matching GUID.
@@ -749,8 +749,8 @@ fu_device_list_devices_wait_removed (FuDeviceList *self)
 
 /**
  * fu_device_list_wait_for_replug:
- * @self: A #FuDeviceList
- * @device: A #FuDevice
+ * @self: a device list
+ * @device: a device
  * @error: (nullable): optional return location for an error
  *
  * Waits for a specific device to replug if %FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG
@@ -855,8 +855,8 @@ fu_device_list_wait_for_replug (FuDeviceList *self, FuDevice *device, GError **e
 
 /**
  * fu_device_list_get_by_id:
- * @self: A #FuDeviceList
- * @device_id: A device ID, typically a SHA1 hash
+ * @self: a device list
+ * @device_id: a device ID, typically a SHA1 hash
  * @error: (nullable): optional return location for an error
  *
  * Finds a specific device using the ID string. This function also supports
@@ -958,7 +958,7 @@ fu_device_list_finalize (GObject *obj)
  *
  * Creates a new device list.
  *
- * Returns: (transfer full): a #FuDeviceList
+ * Returns: (transfer full): a device list
  *
  * Since: 1.0.2
  **/

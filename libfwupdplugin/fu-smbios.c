@@ -203,8 +203,8 @@ fu_smbios_setup_from_data (FuSmbios *self, const guint8 *buf, gsize sz, GError *
 
 /**
  * fu_smbios_setup_from_file:
- * @self: A #FuSmbios
- * @filename: A filename
+ * @self: a #FuSmbios
+ * @filename: a filename
  * @error: (nullable): optional return location for an error
  *
  * Reads all the SMBIOS values from a DMI blob.
@@ -410,8 +410,8 @@ fu_smbios_parse (FuFirmware *firmware,
 
 /**
  * fu_smbios_setup_from_path:
- * @self: A #FuSmbios
- * @path: A path, e.g. `/sys/firmware/dmi/tables`
+ * @self: a #FuSmbios
+ * @path: a path, e.g. `/sys/firmware/dmi/tables`
  * @error: (nullable): optional return location for an error
  *
  * Reads all the SMBIOS values from a specific path.
@@ -438,7 +438,7 @@ fu_smbios_setup_from_path (FuSmbios *self, const gchar *path, GError **error)
 
 /**
  * fu_smbios_setup:
- * @self: A #FuSmbios
+ * @self: a #FuSmbios
  * @error: (nullable): optional return location for an error
  *
  * Reads all the SMBIOS values from the hardware.
@@ -503,7 +503,7 @@ fu_smbios_export (FuFirmware *firmware,
 
 /**
  * fu_smbios_to_string:
- * @self: A #FuSmbios
+ * @self: a #FuSmbios
  *
  * Dumps the parsed SMBIOS data to a string.
  *
@@ -531,8 +531,8 @@ fu_smbios_get_item_for_type (FuSmbios *self, guint8 type)
 
 /**
  * fu_smbios_get_data:
- * @self: A #FuSmbios
- * @type: A structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ * @self: a #FuSmbios
+ * @type: a structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
  * @error: (nullable): optional return location for an error
  *
  * Reads a SMBIOS data blob, which includes the SMBIOS section header.
@@ -562,9 +562,9 @@ fu_smbios_get_data (FuSmbios *self, guint8 type, GError **error)
 
 /**
  * fu_smbios_get_integer:
- * @self: A #FuSmbios
- * @type: A structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
- * @offset: A structure offset
+ * @self: a #FuSmbios
+ * @type: a structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ * @offset: a structure offset
  * @error: (nullable): optional return location for an error
  *
  * Reads an integer value from the SMBIOS string table of a specific structure.
@@ -610,9 +610,9 @@ fu_smbios_get_integer (FuSmbios *self, guint8 type, guint8 offset, GError **erro
 
 /**
  * fu_smbios_get_string:
- * @self: A #FuSmbios
- * @type: A structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
- * @offset: A structure offset
+ * @self: a #FuSmbios
+ * @type: a structure type, e.g. %FU_SMBIOS_STRUCTURE_TYPE_BIOS
+ * @offset: a structure offset
  * @error: (nullable): optional return location for an error
  *
  * Reads a string from the SMBIOS string table of a specific structure.

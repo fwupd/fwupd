@@ -144,7 +144,7 @@ fu_dfu_device_to_string (FuDevice *device, guint idt, GString *str)
 
 /**
  * fu_dfu_device_get_transfer_size:
- * @device: a #GUsbDevice
+ * @device: a USB device
  *
  * Gets the transfer size in bytes.
  *
@@ -511,7 +511,7 @@ fu_dfu_device_get_state (FuDfuDevice *self)
 
 /**
  * fu_dfu_device_get_status:
- * @device: a #GUsbDevice
+ * @device: a USB device
  *
  * Gets the device status.
  *
@@ -528,7 +528,7 @@ fu_dfu_device_get_status (FuDfuDevice *self)
 /**
  * fu_dfu_device_has_attribute: (skip)
  * @self: a #FuDfuDevice
- * @attribute: A #FuDfuDeviceAttrs, e.g. %FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD
+ * @attribute: a device attribute, e.g. %FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD
  *
  * Returns if an attribute set for the device.
  *
@@ -545,7 +545,7 @@ fu_dfu_device_has_attribute (FuDfuDevice *self, FuDfuDeviceAttrs attribute)
 /**
  * fu_dfu_device_remove_attribute: (skip)
  * @self: a #FuDfuDevice
- * @attribute: A #FuDfuDeviceAttrs, e.g. %FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD
+ * @attribute: a device attribute, e.g. %FU_DFU_DEVICE_ATTR_CAN_DOWNLOAD
  *
  * Removes an attribute from the device.
  **/
@@ -1468,7 +1468,7 @@ fu_dfu_device_action_cb (FuDfuTarget *target, FwupdStatus action, FuDfuDevice *s
 /**
  * fu_dfu_device_upload:
  * @self: a #FuDfuDevice
- * @flags: flags to use, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
+ * @flags: DFU target flags, e.g. %DFU_TARGET_TRANSFER_FLAG_VERIFY
  * @error: (nullable): optional return location for an error
  *
  * Uploads firmware from the target to the host.
