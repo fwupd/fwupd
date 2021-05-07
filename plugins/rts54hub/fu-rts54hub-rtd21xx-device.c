@@ -12,13 +12,19 @@
 #include "fu-rts54hub-rtd21xx-device.h"
 #include "fu-rts54hub-device.h"
 
+typedef enum {
+    FW_UPDATE_FOREGROUND_MODE = 0x01,
+    FW_UPDATE_BACKGROUND_MODE,
+    FW_UPDATE_LAST_MODE,
+} FuRt21xxFwUpdaMode;
+
 struct _FuRts54hubRtd21xxDevice
 {
 	FuDevice 		 parent_instance;
 	guint8			 target_addr;
 	guint8			 i2c_speed;
 	guint8			 register_addr_len;
-	guint8			 fwupdate_mode;
+	FuRt21xxFwUpdaMode       fwupdate_mode;
 };
 
 G_DEFINE_TYPE (FuRts54hubRtd21xxDevice, fu_rts54hub_rtd21xx_device, FU_TYPE_DEVICE)
@@ -42,11 +48,6 @@ typedef enum {
 	ISP_STATUS_IDLE_FAILURE		 = 0x12,	/* previous command failed */
 } IspStatus;
 
-typedef enum {
-    FW_UPDATE_FOREGROUND_MODE		= 0x01,
-    FW_UPDATE_BACKGROUND_MODE,
-    FW_UPDATE_LAST_MODE,
-} FuRt21xxFwUpdaMode;
 
 typedef enum {
 	ISP_BG_CMD_FW_UPDATE_START	= 0x01,
@@ -228,39 +229,6 @@ fu_rts54hub_rtd21xx_device_i2c_read (FuRts54hubRtd21xxDevice *self,
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_device_exit_background (FuRts54hubRtd21xxDevice *self, GError **error)
-{
-
-	guint8 buf[] = { ISP_BG_CMD_FW_UPDATE_EXIT };
-
-	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
-						   UC_ISP_SLAVE_ADDR,
-						   UC_BACKGROUND_OPCODE,
-						   buf, sizeof(buf),
-						   error)) {
-		g_prefix_error (error, "failed to ISP_BG_CMD_FW_UPDATE_EXIT: ");
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_rts54hub_rtd21xx_device_exit_foreground (FuRts54hubRtd21xxDevice *self, GError **error)
-{
-	guint8 buf[] = { ISP_CMD_FW_UPDATE_EXIT };
-
-	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
-						   UC_ISP_SLAVE_ADDR,
-						   UC_FOREGROUND_OPCODE,
-						   buf, sizeof(buf),
-						   error)) {
-		g_prefix_error (error, "failed to ISP_BG_CMD_FW_UPDATE_EXIT: ");
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_rts54hub_rtd21xx_device_read_status_raw (FuRts54hubRtd21xxDevice *self,
 					    guint8 *status,
 					    GError **error)
@@ -269,7 +237,7 @@ fu_rts54hub_rtd21xx_device_read_status_raw (FuRts54hubRtd21xxDevice *self,
 	if (!fu_rts54hub_rtd21xx_device_i2c_read (self,
 						  UC_ISP_SLAVE_ADDR,
 						  UC_FOREGROUND_STATUS,
-						  &buf, sizeof(buf),
+						  &buf, sizeof (buf),
 						  error))
 		return FALSE;
 	if (status != NULL)
@@ -318,24 +286,23 @@ fu_rts54hub_rtd21xx_ensure_version_foreground (FuRts54hubRtd21xxDevice *self,
 {
 	guint8 buf_rep[7] = { 0x00 };
 	guint8 buf_req[] = { ISP_CMD_GET_FW_INFO };
-	guint8 buf[] = { ISP_CMD_FW_UPDATE_RESET };
 	g_autofree gchar *version = NULL;
 
 	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
 						   UC_ISP_SLAVE_ADDR,
 						   UC_FOREGROUND_OPCODE,
-						   buf_req, sizeof(buf_req),
+						   buf_req, sizeof (buf_req),
 						   error)) {
 		g_prefix_error (error, "failed to get version number: ");
 		return FALSE;
 	}
 
 	/* wait for device ready */
-	g_usleep (300000);
+	g_usleep(300000);
 	if (!fu_rts54hub_rtd21xx_device_i2c_read (self,
 						  UC_ISP_SLAVE_ADDR,
 						  0x00,
-						  buf_rep, sizeof(buf_rep),
+						  buf_rep, sizeof (buf_rep),
 						  error)) {
 		g_prefix_error (error, "failed to get version number: ");
 		return FALSE;
@@ -343,15 +310,6 @@ fu_rts54hub_rtd21xx_ensure_version_foreground (FuRts54hubRtd21xxDevice *self,
 	/* set version */
 	version = g_strdup_printf ("%u.%u", buf_rep[1], buf_rep[2]);
 	fu_device_set_version (FU_DEVICE (self), version);
-
-	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
-						   UC_ISP_SLAVE_ADDR,
-						   UC_FOREGROUND_OPCODE,
-						   buf, sizeof(buf),
-						   error)) {
-		g_prefix_error (error, "failed to ISP_CMD_FW_UPDATE_RESET: ");
-		return FALSE;
-	}
 
 	return TRUE;
 }
@@ -362,24 +320,23 @@ fu_rts54hub_rtd21xx_ensure_version_background (FuRts54hubRtd21xxDevice *self,
 {
 	guint8 buf_rep[7] = { 0x00 };
 	guint8 buf_req[] = { ISP_BG_CMD_GET_FW_INFO };
-	guint8 buf[] = { ISP_BG_CMD_FW_UPDATE_EXIT };
 	g_autofree gchar *version = NULL;
 
 	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
 						   UC_ISP_SLAVE_ADDR,
 						   UC_BACKGROUND_OPCODE,
-						   buf_req, sizeof(buf_req),
+						   buf_req, sizeof (buf_req),
 						   error)) {
 		g_prefix_error (error, "failed to get version number: ");
 		return FALSE;
 	}
 
 	/* wait for device ready */
-	g_usleep (300000);
+	g_usleep(300000);
 	if (!fu_rts54hub_rtd21xx_device_i2c_read (self,
 						  UC_ISP_SLAVE_ADDR,
 						  0x00,
-						  buf_rep, sizeof(buf_rep),
+						  buf_rep, sizeof (buf_rep),
 						  error)) {
 		g_prefix_error (error, "failed to get version number: ");
 		return FALSE;
@@ -388,15 +345,6 @@ fu_rts54hub_rtd21xx_ensure_version_background (FuRts54hubRtd21xxDevice *self,
 	version = g_strdup_printf ("%u.%u", buf_rep[1], buf_rep[2]);
 	fu_device_set_version (FU_DEVICE (self), version);
 
-	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
-						   UC_ISP_SLAVE_ADDR,
-						   UC_BACKGROUND_OPCODE,
-						   buf, sizeof(buf),
-						   error)) {
-		g_prefix_error (error, "failed to ISP_CMD_FW_UPDATE_RESET: ");
-		return FALSE;
-	}
-
 	return TRUE;
 }
 
@@ -404,30 +352,24 @@ static gboolean
 fu_rts54hub_rtd21xx_ensure_version_unlocked (FuRts54hubRtd21xxDevice *self,
 					     GError **error)
 {
-
-	if (self->fwupdate_mode == FW_UPDATE_BACKGROUND_MODE)
-		return fu_rts54hub_rtd21xx_ensure_version_background (self, error);
-	else
-		return fu_rts54hub_rtd21xx_ensure_version_foreground (self, error);
-	return TRUE;
+	return (self->fwupdate_mode == FW_UPDATE_BACKGROUND_MODE) ?
+		fu_rts54hub_rtd21xx_ensure_version_background(self, error) :
+		fu_rts54hub_rtd21xx_ensure_version_foreground(self, error);
 }
 
 static gboolean
 fu_rts54hub_rtd21xx_device_detach_raw (FuRts54hubRtd21xxDevice *self, GError **error)
 {
-	guint8 buf = 0x03;
+	guint8 buf = 0x00;
 
-	if (self->fwupdate_mode == FW_UPDATE_BACKGROUND_MODE)
-		buf = 0x02;
-	else
-		buf = 0x03;
+	buf = (self->fwupdate_mode == FW_UPDATE_BACKGROUND_MODE) ? 0x02: 0x03;
 
 	if (!fu_rts54hub_rtd21xx_device_i2c_write (self, 0x6A, 0x31,
-						   &buf, sizeof(buf), error)) {
+						   &buf, sizeof (buf), error)) {
 		g_prefix_error (error, "failed to detach: ");
 		return FALSE;
 	}
-	g_usleep (300000);
+	g_usleep(300000);
 	return TRUE;
 }
 
@@ -459,7 +401,7 @@ static gboolean
 fu_rts54hub_rtd21xx_device_setup (FuDevice *device, GError **error)
 {
 	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE (device);
-	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr (FuDeviceLocker) locker = NULL;
 
 	/* get version */
 	locker = fu_device_locker_new_full (device,
@@ -479,7 +421,7 @@ static gboolean
 fu_rts54hub_rtd21xx_device_reload (FuDevice *device, GError **error)
 {
 	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE (fu_device_get_parent (device));
-	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr (FuDeviceLocker) locker = NULL;
 
 	/* open parent device */
 	locker = fu_device_locker_new (parent, error);
@@ -492,7 +434,7 @@ static gboolean
 fu_rts54hub_rtd21xx_device_detach (FuDevice *device, GError **error)
 {
 	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE (fu_device_get_parent (device));
-	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr (FuDeviceLocker) locker = NULL;
 
 	/* open device */
 	locker = fu_device_locker_new (parent, error);
@@ -505,12 +447,57 @@ fu_rts54hub_rtd21xx_device_detach (FuDevice *device, GError **error)
 
 	return TRUE;
 }
+static gboolean
+fu_rts54hub_rtd21xx_device_attach (FuDevice *device, GError **error)
+{
+	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE (fu_device_get_parent (device));
+	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE (device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	guint8 buf[] = {0xFF};
+
+	/* open device */
+	locker = fu_device_locker_new (parent, error);
+	if (locker == NULL)
+		return FALSE;
+	if(self->fwupdate_mode == FW_UPDATE_BACKGROUND_MODE){
+		buf[0] = ISP_BG_CMD_FW_UPDATE_EXIT ;
+		if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
+							   UC_ISP_SLAVE_ADDR,
+							   UC_BACKGROUND_OPCODE,
+							   buf, sizeof (buf),
+							   error))
+			g_prefix_error (error, "failed to attach: ");
+		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE))
+			fu_device_sleep_with_progress (device, 1);
+	} else {
+		(fu_device_has_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) ?
+			(buf[0] = ISP_CMD_FW_UPDATE_EXIT) : (buf[0] = ISP_CMD_FW_UPDATE_RESET);
+
+		if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
+							   UC_ISP_SLAVE_ADDR,
+							   UC_FOREGROUND_OPCODE,
+							   buf, sizeof (buf),
+							   error))
+			g_prefix_error (error, "failed to failed to attach: : ");
+
+		if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
+			/* the device needs some time to restart with the new firmware before
+			* it can be queried again */
+			fu_device_sleep_with_progress (device, 60);
+			fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+		}
+	}
+
+	/* success */
+	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
+	return TRUE;
+}
 
 static gboolean
 fu_rts54hub_rtd21xx_device_write_firmware_background (FuDevice *device,
-						      FuFirmware *firmware,
-						      FwupdInstallFlags flags,
-						      GError **error)
+					   FuFirmware *firmware,
+					   FwupdInstallFlags flags,
+					   GError **error)
 {
 	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE (device);
 	const guint8 *fwbuf;
@@ -519,23 +506,19 @@ fu_rts54hub_rtd21xx_device_write_firmware_background (FuDevice *device,
 	guint8 project_id_count;
 	guint8 read_buf[10] = { 0x0 };
 	guint8 write_buf[ISP_PACKET_SIZE] = { 0x0 };
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr (FuDeviceLocker) locker = NULL;
+	g_autoptr (GBytes) fw = NULL;
+	g_autoptr (GPtrArray) chunks = NULL;
 
 	/* open device */
 	locker = fu_device_locker_new (self, error);
-	if (locker == NULL) {
-		return fu_rts54hub_rtd21xx_device_exit_background (self, error);
+	if (locker == NULL)
 		return FALSE;
-	}
 
 	/* simple image */
 	fw = fu_firmware_get_bytes (firmware, error);
-	if (fw == NULL) {
-		fu_rts54hub_rtd21xx_device_exit_background (self, error);
+	if (fw == NULL)
 		return FALSE;
-	}
 
 	fwbuf = g_bytes_get_data (fw, &fwbufsz);
 
@@ -548,7 +531,6 @@ fu_rts54hub_rtd21xx_device_write_firmware_background (FuDevice *device,
 						   write_buf, 1,
 						   error)) {
 		g_prefix_error (error, "failed to get project ID address: ");
-		fu_rts54hub_rtd21xx_device_exit_background (self, error);
 		return FALSE;
 	}
 
@@ -560,14 +542,12 @@ fu_rts54hub_rtd21xx_device_write_firmware_background (FuDevice *device,
 						  read_buf, 6,
 						  error)) {
 		g_prefix_error (error, "failed to read project ID: ");
-		fu_rts54hub_rtd21xx_device_exit_background (self, error);
 		return FALSE;
 	}
 	if (read_buf[0] != ISP_STATUS_IDLE_SUCCESS) {
 		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
 			     "failed project ID with error 0x%02x: ",
 			     read_buf[0]);
-		fu_rts54hub_rtd21xx_device_exit_background (self, error);
 		return FALSE;
 	}
 
@@ -575,13 +555,12 @@ fu_rts54hub_rtd21xx_device_write_firmware_background (FuDevice *device,
 	project_addr = fu_common_read_uint32 (read_buf + 1, G_BIG_ENDIAN);
 	project_id_count = read_buf[5];
 	write_buf[0] = ISP_BG_CMD_SYNC_IDENTIFY_CODE;
-	if (!fu_memcpy_safe (write_buf, sizeof(write_buf), 0x1, /* dst */
+	if (!fu_memcpy_safe (write_buf, sizeof (write_buf), 0x1, /* dst */
 			     fwbuf, fwbufsz, project_addr,	/* src */
 			     project_id_count, error)) {
 		g_prefix_error (error,
 				"failed to write project ID from 0x%04x: ",
 				project_addr);
-		fu_rts54hub_rtd21xx_device_exit_background (self, error);
 		return FALSE;
 	}
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
@@ -592,14 +571,12 @@ fu_rts54hub_rtd21xx_device_write_firmware_background (FuDevice *device,
 						   project_id_count + 1,
 						   error)) {
 		g_prefix_error (error, "failed to send fw update start cmd: ");
-		fu_rts54hub_rtd21xx_device_exit_background (self, error);
 		return FALSE;
 	}
-	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error)) {
-		fu_rts54hub_rtd21xx_device_exit_background (self, error);
+	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error))
 		return FALSE;
-	}
 
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	/* background FW update start command */
 	write_buf[0] = ISP_BG_CMD_FW_UPDATE_START;
 	fu_common_write_uint16 (write_buf + 1, ISP_BACKGROUND_DATA_BLOCKSIZE, G_BIG_ENDIAN);
@@ -609,7 +586,6 @@ fu_rts54hub_rtd21xx_device_write_firmware_background (FuDevice *device,
 						   write_buf, 3,
 						   error)) {
 		g_prefix_error (error, "failed to send fw update start cmd: ");
-		fu_rts54hub_rtd21xx_device_exit_background (self, error);
 		return FALSE;
 	}
 
@@ -621,10 +597,9 @@ fu_rts54hub_rtd21xx_device_write_firmware_background (FuDevice *device,
 						ISP_BACKGROUND_DATA_BLOCKSIZE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error)) {
-			fu_rts54hub_rtd21xx_device_exit_background (self, error);
+		if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error))
 			return FALSE;
-		}
+
 		if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
 							   UC_ISP_SLAVE_ADDR,
 							   UC_BACKGROUND_ISP_DATA_OPCODE,
@@ -634,7 +609,6 @@ fu_rts54hub_rtd21xx_device_write_firmware_background (FuDevice *device,
 			g_prefix_error (error,
 					"failed to write @0x%04x: ",
 					fu_chunk_get_address (chk));
-			fu_rts54hub_rtd21xx_device_exit_background (self, error);
 			return FALSE;
 		}
 
@@ -644,10 +618,9 @@ fu_rts54hub_rtd21xx_device_write_firmware_background (FuDevice *device,
 
 	/* update finish command */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
-	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error)) {
-		fu_rts54hub_rtd21xx_device_exit_background (self, error);
+	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error))
 		return FALSE;
-	}
+
 	write_buf[0] = ISP_BG_CMD_FW_UPDATE_ISP_DONE;
 	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
 						   UC_ISP_SLAVE_ADDR,
@@ -655,31 +628,14 @@ fu_rts54hub_rtd21xx_device_write_firmware_background (FuDevice *device,
 						   write_buf, 1,
 						   error)) {
 		g_prefix_error (error, "failed update finish cmd: ");
-		fu_rts54hub_rtd21xx_device_exit_background (self, error);
 		return FALSE;
 	}
 
 	/* exit background-fw mode */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_set_progress (device, 0);
-	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error)) {
-		fu_rts54hub_rtd21xx_device_exit_background (self, error);
+	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error))
 		return FALSE;
-	}
-
-	write_buf[0] = ISP_BG_CMD_FW_UPDATE_EXIT;
-	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
-						   UC_ISP_SLAVE_ADDR,
-						   UC_BACKGROUND_OPCODE,
-						   write_buf, 1,
-						   error)) {
-		g_prefix_error (error, "exit background-fw mode: ");
-		return FALSE;
-	}
-
-	/* the device needs some time to restart with the new firmware before
-	* it can be queried again */
-	fu_device_sleep_with_progress (device, 1);
 
 	/* success */
 	return TRUE;
@@ -687,9 +643,9 @@ fu_rts54hub_rtd21xx_device_write_firmware_background (FuDevice *device,
 
 static gboolean
 fu_rts54hub_rtd21xx_device_write_firmware_foreground (FuDevice *device,
-						      FuFirmware *firmware,
-						      FwupdInstallFlags flags,
-						      GError **error)
+					   FuFirmware *firmware,
+					   FwupdInstallFlags flags,
+					   GError **error)
 {
 	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE (device);
 	const guint8 *fwbuf;
@@ -698,23 +654,19 @@ fu_rts54hub_rtd21xx_device_write_firmware_foreground (FuDevice *device,
 	guint8 project_id_count;
 	guint8 read_buf[10] = { 0x0 };
 	guint8 write_buf[ISP_PACKET_SIZE] = { 0x0 };
-	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
+	g_autoptr (FuDeviceLocker) locker = NULL;
+	g_autoptr (GBytes) fw = NULL;
+	g_autoptr (GPtrArray) chunks = NULL;
 
 	/* open device */
 	locker = fu_device_locker_new (self, error);
-	if (locker == NULL) {
-		fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
+	if (locker == NULL)
 		return FALSE;
-	}
 
 	/* simple image */
 	fw = fu_firmware_get_bytes (firmware, error);
-	if (fw == NULL) {
-		fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
+	if (fw == NULL)
 		return FALSE;
-	}
 
 	fwbuf = g_bytes_get_data (fw, &fwbufsz);
 
@@ -728,13 +680,11 @@ fu_rts54hub_rtd21xx_device_write_firmware_foreground (FuDevice *device,
 						   write_buf, 2,
 						   error)) {
 		g_prefix_error (error, "failed to enable ISP: ");
-		fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
 		return FALSE;
 	}
-	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error)) {
-		fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
+	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error))
 		return FALSE;
-	}
+
 	/* get project ID address */
 	write_buf[0] = ISP_CMD_GET_PROJECT_ID_ADDR;
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
@@ -744,7 +694,6 @@ fu_rts54hub_rtd21xx_device_write_firmware_foreground (FuDevice *device,
 						   write_buf, 1,
 						   error)) {
 		g_prefix_error (error, "failed to get project ID address: ");
-		fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
 		return FALSE;
 	}
 
@@ -756,14 +705,12 @@ fu_rts54hub_rtd21xx_device_write_firmware_foreground (FuDevice *device,
 						  read_buf, 6,
 						  error)) {
 		g_prefix_error (error, "failed to read project ID: ");
-		fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
 		return FALSE;
 	}
 	if (read_buf[0] != ISP_STATUS_IDLE_SUCCESS) {
 		g_set_error (error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA,
 			     "failed project ID with error 0x%02x: ",
 			     read_buf[0]);
-		fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
 		return FALSE;
 	}
 
@@ -771,13 +718,12 @@ fu_rts54hub_rtd21xx_device_write_firmware_foreground (FuDevice *device,
 	project_addr = fu_common_read_uint32 (read_buf + 1, G_BIG_ENDIAN);
 	project_id_count = read_buf[5];
 	write_buf[0] = ISP_CMD_SYNC_IDENTIFY_CODE;
-	if (!fu_memcpy_safe (write_buf, sizeof(write_buf), 0x1, /* dst */
+	if (!fu_memcpy_safe (write_buf, sizeof (write_buf), 0x1, /* dst */
 			     fwbuf, fwbufsz, project_addr,	/* src */
 			     project_id_count, error)) {
 		g_prefix_error (error,
 				"failed to write project ID from 0x%04x: ",
 				project_addr);
-		fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
 		return FALSE;
 	}
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
@@ -790,10 +736,10 @@ fu_rts54hub_rtd21xx_device_write_firmware_foreground (FuDevice *device,
 		g_prefix_error (error, "failed to send fw update start cmd: ");
 		return FALSE;
 	}
-	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error)) {
-		fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
+	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error))
 		return FALSE;
-	}
+
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	/* background FW update start command */
 	write_buf[0] = ISP_CMD_FW_UPDATE_START;
 	fu_common_write_uint16 (write_buf + 1, ISP_FOREGROUND_DATA_BLOCKSIZE, G_BIG_ENDIAN);
@@ -814,10 +760,9 @@ fu_rts54hub_rtd21xx_device_write_firmware_foreground (FuDevice *device,
 						ISP_FOREGROUND_DATA_BLOCKSIZE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error)) {
-			fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
+		if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error))
 			return FALSE;
-		}
+
 		if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
 							   UC_ISP_SLAVE_ADDR,
 							   UC_FOREGROUND_ISP_DATA_OPCODE,
@@ -827,7 +772,6 @@ fu_rts54hub_rtd21xx_device_write_firmware_foreground (FuDevice *device,
 			g_prefix_error (error,
 					"failed to write @0x%04x: ",
 					fu_chunk_get_address (chk));
-			fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
 			return FALSE;
 		}
 
@@ -837,10 +781,9 @@ fu_rts54hub_rtd21xx_device_write_firmware_foreground (FuDevice *device,
 
 	/* update finish command */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
-	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error)) {
-		fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
+	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error))
 		return FALSE;
-	}
+
 	write_buf[0] = ISP_CMD_FW_UPDATE_ISP_DONE;
 	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
 						   UC_ISP_SLAVE_ADDR,
@@ -848,32 +791,15 @@ fu_rts54hub_rtd21xx_device_write_firmware_foreground (FuDevice *device,
 						   write_buf, 1,
 						   error)) {
 		g_prefix_error (error, "failed update finish cmd: ");
-		fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
 		return FALSE;
 	}
 
 	/* exit background-fw mode */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_set_progress (device, 0);
-	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error)) {
-		fu_rts54hub_rtd21xx_device_exit_foreground (self, error);
+	if (!fu_rts54hub_rtd21xx_device_read_status (self, NULL, error))
 		return FALSE;
-	}
-	write_buf[0] = ISP_CMD_FW_UPDATE_EXIT;
-	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
-						   UC_ISP_SLAVE_ADDR,
-						   UC_FOREGROUND_OPCODE,
-						   write_buf, 1,
-						   error)) {
-		g_prefix_error (error, "exit background-fw mode: ");
-		return FALSE;
-	}
 
-	/* the device needs some time to restart with the new firmware before
-	* it can be queried again */
-	fu_device_sleep_with_progress (device, 60);
-
-	/* success */
 	return TRUE;
 }
 
@@ -886,9 +812,10 @@ fu_rts54hub_rtd21xx_device_write_firmware (FuDevice *device,
 {
 
 	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE (device);
-	if (self->fwupdate_mode == FW_UPDATE_BACKGROUND_MODE)
-		return fu_rts54hub_rtd21xx_device_write_firmware_background (device, firmware, flags, error);
-	return fu_rts54hub_rtd21xx_device_write_firmware_foreground (device, firmware, flags, error);
+
+	return (self->fwupdate_mode == FW_UPDATE_BACKGROUND_MODE) ?
+		fu_rts54hub_rtd21xx_device_write_firmware_background(device, firmware, flags, error) :
+		fu_rts54hub_rtd21xx_device_write_firmware_foreground(device, firmware, flags, error);
 }
 
 static gboolean
@@ -939,6 +866,7 @@ fu_rts54hub_rtd21xx_device_class_init (FuRts54hubRtd21xxDeviceClass *klass)
 	klass_device->setup = fu_rts54hub_rtd21xx_device_setup;
 	klass_device->reload = fu_rts54hub_rtd21xx_device_reload;
 	klass_device->detach = fu_rts54hub_rtd21xx_device_detach;
+	klass_device->attach = fu_rts54hub_rtd21xx_device_attach;
 	klass_device->write_firmware = fu_rts54hub_rtd21xx_device_write_firmware;
 	klass_device->to_string = fu_rts54hub_rtd21xx_device_to_string;
 	klass_device->set_quirk_kv = fu_rts54hub_rtd21xx_device_set_quirk_kv;
