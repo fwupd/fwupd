@@ -37,24 +37,26 @@ fu_kinetic_mst_connection_class_init (FuKineticMstConnectionClass *klass)
 
 static gboolean
 fu_kinetic_mst_connection_aux_node_read (FuKineticMstConnection *self,
-					  guint32 offset, guint8 *buf,
-					  gint length, GError **error)
+                                         guint32 offset, guint8 *buf,
+                                         gint length, GError **error)
 {
-	if (lseek (self->fd, offset, SEEK_SET) != offset) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "failed to lseek to 0x%x",
-			     offset);
+	if (lseek(self->fd, offset, SEEK_SET) != offset)
+	{
+        g_set_error(error,
+                    G_IO_ERROR,
+                    G_IO_ERROR_INVALID_DATA,
+                    "failed to lseek to 0x%x",
+                    offset);
 		return FALSE;
 	}
 
-	if (read (self->fd, buf, length) != length) {
-		g_set_error (error,
-			     G_IO_ERROR,
-			     G_IO_ERROR_INVALID_DATA,
-			     "failed to read 0x%x bytes",
-			     (guint) length);
+	if (read(self->fd, buf, length) != length)
+	{
+        g_set_error(error,
+                    G_IO_ERROR,
+                    G_IO_ERROR_INVALID_DATA,
+                    "failed to read 0x%x bytes",
+                    (guint) length);
 		return FALSE;
 	}
 

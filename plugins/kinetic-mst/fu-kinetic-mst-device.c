@@ -201,10 +201,10 @@ static const KtChipBrIdStrTable kt_dp_branch_dev_info_table[] =
 {
     // Jaguar MCDP50x0
     { KT_CHIP_JAGUAR_5000,  KT_FW_STATE_RUN_IROM, {'5', '0', '1', '0', 'I', 'R'}, 6},
-    { KT_CHIP_JAGUAR_5000,  KT_FW_STATE_RUN_APP,  {'D', 'P', '5', '0', 'X', '0'}, 6},
+    { KT_CHIP_JAGUAR_5000,  KT_FW_STATE_RUN_APP,  {'K', 'T', '5', '0', 'X', '0'}, 6},
     // Mustang MCDP52x0
     { KT_CHIP_MUSTANG_5200, KT_FW_STATE_RUN_IROM, {'5', '2', '1', '0', 'I', 'R'}, 6},
-    { KT_CHIP_MUSTANG_5200, KT_FW_STATE_RUN_APP,  {'D', 'P', '5', '2', 'X', '0'}, 6},
+    { KT_CHIP_MUSTANG_5200, KT_FW_STATE_RUN_APP,  {'K', 'T', '5', '2', 'X', '0'}, 6},
         
     { KT_CHIP_NONE,         KT_FW_STATE_RUN_NONE, {' ', ' ', ' ', ' ', ' ', ' '}, 6}
 };
@@ -265,8 +265,6 @@ static gboolean kt_aux_read_dpcd_branch_id_str(FuKineticMstConnection *connectio
 
     return TRUE;
 }
-
-
 
 static guint16 _gen_crc16(guint16 accum, guint8 data_in)
 {
@@ -1355,6 +1353,11 @@ fu_kinetic_mst_device_rescan(FuDevice *device, GError **error)
 
     if (!kt_dp_read_device_info(self, DEV_HOST, &dp_dev_infos[DEV_HOST], error))
     {
+        // <TODO> Correct the usage to create GError in functions
+        g_set_error_literal(error,
+                            G_IO_ERROR,
+						    G_IO_ERROR_INVALID_DATA,
+						    "failed to read device info");
         return FALSE;
     }
 
