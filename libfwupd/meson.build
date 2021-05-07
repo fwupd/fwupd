@@ -51,6 +51,12 @@ libfwupd_src = [
   'fwupd-version.c',
 ]
 
+if get_option('chromeos')
+  extra_args = ['-DOS_CHROMEOS']
+else
+  extra_args = []
+endif
+
 fwupd_mapfile = 'fwupd.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupd_mapfile)
 fwupd = library(
@@ -62,7 +68,7 @@ fwupd = library(
   c_args : [
       '-DG_LOG_DOMAIN="Fwupd"',
       '-DLOCALSTATEDIR="' + localstatedir + '"',
-    ],
+    ] + extra_args,
   include_directories : root_incdir,
   link_args : vflag,
   link_depends : fwupd_mapfile,
@@ -194,7 +200,7 @@ if get_option('tests')
       '-DTESTDATADIR="' + testdatadir + '"',
       '-DFU_SELF_TEST_REMOTES_DIR="' + testdatadir + '"',
       '-DFU_LOCAL_REMOTE_DIR="' + localremotetestdir + '"',
-    ],
+    ] + extra_args,
   )
   test('fwupd-self-test', e, timeout: 60)
   if gio.version().version_compare ('>= 2.64.0')
@@ -212,7 +218,7 @@ if get_option('tests')
       link_with : fwupd,
       c_args : [
         '-DG_LOG_DOMAIN="Fwupd"',
-      ],
+      ] + extra_args,
     )
     test('fwupd-thread-test', e, timeout: 60)
     e = executable(
@@ -229,7 +235,7 @@ if get_option('tests')
       link_with : fwupd,
       c_args : [
         '-DG_LOG_DOMAIN="Fwupd"',
-      ],
+      ] + extra_args,
     )
     test('fwupd-context-test', e, timeout: 60)
   endif

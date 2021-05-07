@@ -43,3 +43,4 @@ option('curl', type : 'boolean', value : true, description : 'enable libcurl sup
 option('udevdir', type: 'string', value: '', description: 'Directory for udev rules')
 option('efi_os_dir', type: 'string', description : 'the hardcoded name of OS directory in ESP, e.g. fedora')
 option('efi_binary', type: 'boolean', value : true, description : 'generate uefi binary if missing')
+option('chromeos', type: 'boolean', value : false, description : 'enable ChromeOS support')

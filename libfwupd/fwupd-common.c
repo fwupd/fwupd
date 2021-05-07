@@ -183,6 +183,10 @@ fwupd_get_os_release (GError **error)
 		g_hash_table_insert (hash,
 				     g_strdup ("OS"),
 				     g_strdup ("OpenBSD"));
+#elif defined(OS_CHROMEOS)
+		g_hash_table_insert (hash,
+				     g_strdup ("OS"),
+				     g_strdup ("ChromeOS"));
 #endif
 		if (g_hash_table_size (hash) > 0)
 			return g_steal_pointer (&hash);
