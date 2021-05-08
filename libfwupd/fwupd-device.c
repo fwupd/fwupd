@@ -85,7 +85,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (FwupdDevice, fwupd_device, G_TYPE_OBJECT)
 
 /**
  * fwupd_device_get_checksums:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the device checksums.
  *
@@ -94,16 +94,16 @@ G_DEFINE_TYPE_WITH_PRIVATE (FwupdDevice, fwupd_device, G_TYPE_OBJECT)
  * Since: 0.9.3
  **/
 GPtrArray *
-fwupd_device_get_checksums (FwupdDevice *device)
+fwupd_device_get_checksums (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->checksums;
 }
 
 /**
  * fwupd_device_add_checksum:
- * @device: a device
+ * @self: a #FwupdDevice
  * @checksum: the device checksum
  *
  * Sets the device checksum.
@@ -111,10 +111,10 @@ fwupd_device_get_checksums (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_add_checksum (FwupdDevice *device, const gchar *checksum)
+fwupd_device_add_checksum (FwupdDevice *self, const gchar *checksum)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	g_return_if_fail (checksum != NULL);
 	for (guint i = 0; i < priv->checksums->len; i++) {
 		const gchar *checksum_tmp = g_ptr_array_index (priv->checksums, i);
@@ -126,7 +126,7 @@ fwupd_device_add_checksum (FwupdDevice *device, const gchar *checksum)
 
 /**
  * fwupd_device_get_children:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the device children. These can only be assigned using fwupd_device_set_parent().
  *
@@ -135,16 +135,16 @@ fwupd_device_add_checksum (FwupdDevice *device, const gchar *checksum)
  * Since: 1.3.7
  **/
 GPtrArray *
-fwupd_device_get_children (FwupdDevice *device)
+fwupd_device_get_children (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->children;
 }
 
 /**
  * fwupd_device_get_summary:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the device summary.
  *
@@ -153,16 +153,16 @@ fwupd_device_get_children (FwupdDevice *device)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_device_get_summary (FwupdDevice *device)
+fwupd_device_get_summary (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->summary;
 }
 
 /**
  * fwupd_device_set_summary:
- * @device: a device
+ * @self: a #FwupdDevice
  * @summary: (nullable): the device one line summary
  *
  * Sets the device summary.
@@ -170,10 +170,10 @@ fwupd_device_get_summary (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_set_summary (FwupdDevice *device, const gchar *summary)
+fwupd_device_set_summary (FwupdDevice *self, const gchar *summary)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->summary, summary) == 0)
@@ -185,7 +185,7 @@ fwupd_device_set_summary (FwupdDevice *device, const gchar *summary)
 
 /**
  * fwupd_device_get_branch:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the current device branch.
  *
@@ -194,16 +194,16 @@ fwupd_device_set_summary (FwupdDevice *device, const gchar *summary)
  * Since: 1.5.0
  **/
 const gchar *
-fwupd_device_get_branch (FwupdDevice *device)
+fwupd_device_get_branch (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->branch;
 }
 
 /**
  * fwupd_device_set_branch:
- * @device: a device
+ * @self: a #FwupdDevice
  * @branch: (nullable): the device one line branch
  *
  * Sets the current device branch.
@@ -211,10 +211,10 @@ fwupd_device_get_branch (FwupdDevice *device)
  * Since: 1.5.0
  **/
 void
-fwupd_device_set_branch (FwupdDevice *device, const gchar *branch)
+fwupd_device_set_branch (FwupdDevice *self, const gchar *branch)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->branch, branch) == 0)
@@ -226,7 +226,7 @@ fwupd_device_set_branch (FwupdDevice *device, const gchar *branch)
 
 /**
  * fwupd_device_get_serial:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the serial number for the device.
  *
@@ -235,16 +235,16 @@ fwupd_device_set_branch (FwupdDevice *device, const gchar *branch)
  * Since: 1.1.2
  **/
 const gchar *
-fwupd_device_get_serial (FwupdDevice *device)
+fwupd_device_get_serial (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->serial;
 }
 
 /**
  * fwupd_device_set_serial:
- * @device: a device
+ * @self: a #FwupdDevice
  * @serial: (nullable): the device serial number
  *
  * Sets the serial number for the device.
@@ -252,10 +252,10 @@ fwupd_device_get_serial (FwupdDevice *device)
  * Since: 1.1.2
  **/
 void
-fwupd_device_set_serial (FwupdDevice *device, const gchar *serial)
+fwupd_device_set_serial (FwupdDevice *self, const gchar *serial)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->serial, serial) == 0)
@@ -267,7 +267,7 @@ fwupd_device_set_serial (FwupdDevice *device, const gchar *serial)
 
 /**
  * fwupd_device_get_id:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the ID.
  *
@@ -276,16 +276,16 @@ fwupd_device_set_serial (FwupdDevice *device, const gchar *serial)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_device_get_id (FwupdDevice *device)
+fwupd_device_get_id (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->id;
 }
 
 /**
  * fwupd_device_set_id:
- * @device: a device
+ * @self: a #FwupdDevice
  * @id: (nullable): the device ID, e.g. `USB:foo`
  *
  * Sets the ID.
@@ -293,10 +293,10 @@ fwupd_device_get_id (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_set_id (FwupdDevice *device, const gchar *id)
+fwupd_device_set_id (FwupdDevice *self, const gchar *id)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->id, id) == 0)
@@ -308,7 +308,7 @@ fwupd_device_set_id (FwupdDevice *device, const gchar *id)
 
 /**
  * fwupd_device_get_parent_id:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the ID.
  *
@@ -317,16 +317,16 @@ fwupd_device_set_id (FwupdDevice *device, const gchar *id)
  * Since: 1.0.8
  **/
 const gchar *
-fwupd_device_get_parent_id (FwupdDevice *device)
+fwupd_device_get_parent_id (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->parent_id;
 }
 
 /**
  * fwupd_device_set_parent_id:
- * @device: a device
+ * @self: a #FwupdDevice
  * @parent_id: (nullable): the device ID, e.g. `USB:foo`
  *
  * Sets the parent ID.
@@ -334,10 +334,10 @@ fwupd_device_get_parent_id (FwupdDevice *device)
  * Since: 1.0.8
  **/
 void
-fwupd_device_set_parent_id (FwupdDevice *device, const gchar *parent_id)
+fwupd_device_set_parent_id (FwupdDevice *self, const gchar *parent_id)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->parent_id, parent_id) == 0)
@@ -349,7 +349,7 @@ fwupd_device_set_parent_id (FwupdDevice *device, const gchar *parent_id)
 
 /**
  * fwupd_device_get_composite_id:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the composite ID, falling back to the device ID if unset.
  *
@@ -361,10 +361,10 @@ fwupd_device_set_parent_id (FwupdDevice *device, const gchar *parent_id)
  * Since: 1.6.0
  **/
 const gchar *
-fwupd_device_get_composite_id (FwupdDevice *device)
+fwupd_device_get_composite_id (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	if (priv->composite_id != NULL)
 		return priv->composite_id;
 	return priv->id;
@@ -372,7 +372,7 @@ fwupd_device_get_composite_id (FwupdDevice *device)
 
 /**
  * fwupd_device_set_composite_id:
- * @device: a device
+ * @self: a #FwupdDevice
  * @composite_id: (nullable): a device ID
  *
  * Sets the composite ID, which is usually a SHA1 hash of a grandparent or
@@ -381,10 +381,10 @@ fwupd_device_get_composite_id (FwupdDevice *device)
  * Since: 1.6.0
  **/
 void
-fwupd_device_set_composite_id (FwupdDevice *device, const gchar *composite_id)
+fwupd_device_set_composite_id (FwupdDevice *self, const gchar *composite_id)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->composite_id, composite_id) == 0)
@@ -396,7 +396,7 @@ fwupd_device_set_composite_id (FwupdDevice *device, const gchar *composite_id)
 
 /**
  * fwupd_device_get_parent:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the parent.
  *
@@ -405,16 +405,16 @@ fwupd_device_set_composite_id (FwupdDevice *device, const gchar *composite_id)
  * Since: 1.0.8
  **/
 FwupdDevice *
-fwupd_device_get_parent (FwupdDevice *device)
+fwupd_device_get_parent (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->parent;
 }
 
 /**
  * fwupd_device_set_parent:
- * @device: a device
+ * @self: a #FwupdDevice
  * @parent: (nullable): another #FwupdDevice
  *
  * Sets the parent. Only used internally.
@@ -422,10 +422,10 @@ fwupd_device_get_parent (FwupdDevice *device)
  * Since: 1.0.8
  **/
 void
-fwupd_device_set_parent (FwupdDevice *device, FwupdDevice *parent)
+fwupd_device_set_parent (FwupdDevice *self, FwupdDevice *parent)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	if (priv->parent != NULL)
 		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
@@ -434,22 +434,22 @@ fwupd_device_set_parent (FwupdDevice *device, FwupdDevice *parent)
 	priv->parent = parent;
 
 	/* this is what goes over D-Bus */
-	fwupd_device_set_parent_id (device, parent != NULL ? fwupd_device_get_id (parent) : NULL);
+	fwupd_device_set_parent_id (self, parent != NULL ? fwupd_device_get_id (parent) : NULL);
 }
 
 static void
 fwupd_device_child_finalized_cb (gpointer data, GObject *where_the_object_was)
 {
-	FwupdDevice *device = FWUPD_DEVICE (data);
+	FwupdDevice *self = FWUPD_DEVICE (data);
 	g_critical ("FuDevice child %p was finalized while still having parent %s [%s]!",
 		    where_the_object_was,
-		    fwupd_device_get_name (device),
-		    fwupd_device_get_id (device));
+		    fwupd_device_get_name (self),
+		    fwupd_device_get_id (self));
 }
 
 /**
  * fwupd_device_add_child:
- * @device: a device
+ * @self: a #FwupdDevice
  * @child: Another #FwupdDevice
  *
  * Adds a child device. An child device is logically linked to the primary
@@ -461,9 +461,9 @@ fwupd_device_child_finalized_cb (gpointer data, GObject *where_the_object_was)
  * Since: 1.5.1
  **/
 void
-fwupd_device_add_child (FwupdDevice *device, FwupdDevice *child)
+fwupd_device_add_child (FwupdDevice *self, FwupdDevice *child)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 
 	/* add if the child does not already exist */
 	for (guint i = 0; i < priv->children->len; i++) {
@@ -473,13 +473,13 @@ fwupd_device_add_child (FwupdDevice *device, FwupdDevice *child)
 	}
 	g_object_weak_ref (G_OBJECT (child),
 			   fwupd_device_child_finalized_cb,
-			   device);
+			   self);
 	g_ptr_array_add (priv->children, g_object_ref (child));
 }
 
 /**
  * fwupd_device_get_guids:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the GUIDs.
  *
@@ -488,16 +488,16 @@ fwupd_device_add_child (FwupdDevice *device, FwupdDevice *child)
  * Since: 0.9.3
  **/
 GPtrArray *
-fwupd_device_get_guids (FwupdDevice *device)
+fwupd_device_get_guids (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->guids;
 }
 
 /**
  * fwupd_device_has_guid:
- * @device: a device
+ * @self: a #FwupdDevice
  * @guid: the GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Finds out if the device has this specific GUID.
@@ -507,11 +507,11 @@ fwupd_device_get_guids (FwupdDevice *device)
  * Since: 0.9.3
  **/
 gboolean
-fwupd_device_has_guid (FwupdDevice *device, const gchar *guid)
+fwupd_device_has_guid (FwupdDevice *self, const gchar *guid)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (guid != NULL, FALSE);
 
 	for (guint i = 0; i < priv->guids->len; i++) {
@@ -524,7 +524,7 @@ fwupd_device_has_guid (FwupdDevice *device, const gchar *guid)
 
 /**
  * fwupd_device_add_guid:
- * @device: a device
+ * @self: a #FwupdDevice
  * @guid: the GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Adds the GUID if it does not already exist.
@@ -532,19 +532,19 @@ fwupd_device_has_guid (FwupdDevice *device, const gchar *guid)
  * Since: 0.9.3
  **/
 void
-fwupd_device_add_guid (FwupdDevice *device, const gchar *guid)
+fwupd_device_add_guid (FwupdDevice *self, const gchar *guid)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	g_return_if_fail (guid != NULL);
-	if (fwupd_device_has_guid (device, guid))
+	if (fwupd_device_has_guid (self, guid))
 		return;
 	g_ptr_array_add (priv->guids, g_strdup (guid));
 }
 
 /**
  * fwupd_device_get_guid_default:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the default GUID.
  *
@@ -553,10 +553,10 @@ fwupd_device_add_guid (FwupdDevice *device, const gchar *guid)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_device_get_guid_default (FwupdDevice *device)
+fwupd_device_get_guid_default (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	if (priv->guids->len == 0)
 		return NULL;
 	return g_ptr_array_index (priv->guids, 0);
@@ -564,7 +564,7 @@ fwupd_device_get_guid_default (FwupdDevice *device)
 
 /**
  * fwupd_device_get_instance_ids:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the InstanceIDs.
  *
@@ -573,16 +573,16 @@ fwupd_device_get_guid_default (FwupdDevice *device)
  * Since: 1.2.5
  **/
 GPtrArray *
-fwupd_device_get_instance_ids (FwupdDevice *device)
+fwupd_device_get_instance_ids (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->instance_ids;
 }
 
 /**
  * fwupd_device_has_instance_id:
- * @device: a device
+ * @self: a #FwupdDevice
  * @instance_id: the InstanceID, e.g. `PCI\VEN_10EC&DEV_525A`
  *
  * Finds out if the device has this specific InstanceID.
@@ -592,11 +592,11 @@ fwupd_device_get_instance_ids (FwupdDevice *device)
  * Since: 1.2.5
  **/
 gboolean
-fwupd_device_has_instance_id (FwupdDevice *device, const gchar *instance_id)
+fwupd_device_has_instance_id (FwupdDevice *self, const gchar *instance_id)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (instance_id != NULL, FALSE);
 
 	for (guint i = 0; i < priv->instance_ids->len; i++) {
@@ -609,7 +609,7 @@ fwupd_device_has_instance_id (FwupdDevice *device, const gchar *instance_id)
 
 /**
  * fwupd_device_add_instance_id:
- * @device: a device
+ * @self: a #FwupdDevice
  * @instance_id: the GUID, e.g. `PCI\VEN_10EC&DEV_525A`
  *
  * Adds the InstanceID if it does not already exist.
@@ -617,19 +617,19 @@ fwupd_device_has_instance_id (FwupdDevice *device, const gchar *instance_id)
  * Since: 1.2.5
  **/
 void
-fwupd_device_add_instance_id (FwupdDevice *device, const gchar *instance_id)
+fwupd_device_add_instance_id (FwupdDevice *self, const gchar *instance_id)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	g_return_if_fail (instance_id != NULL);
-	if (fwupd_device_has_instance_id (device, instance_id))
+	if (fwupd_device_has_instance_id (self, instance_id))
 		return;
 	g_ptr_array_add (priv->instance_ids, g_strdup (instance_id));
 }
 
 /**
  * fwupd_device_get_icons:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the icon names to use for the device.
  *
@@ -641,17 +641,17 @@ fwupd_device_add_instance_id (FwupdDevice *device, const gchar *instance_id)
  * Since: 0.9.8
  **/
 GPtrArray *
-fwupd_device_get_icons (FwupdDevice *device)
+fwupd_device_get_icons (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->icons;
 }
 
 static gboolean
-fwupd_device_has_icon (FwupdDevice *device, const gchar *icon)
+fwupd_device_has_icon (FwupdDevice *self, const gchar *icon)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 	for (guint i = 0; i < priv->icons->len; i++) {
 		const gchar *icon_tmp = g_ptr_array_index (priv->icons, i);
 		if (g_strcmp0 (icon, icon_tmp) == 0)
@@ -662,7 +662,7 @@ fwupd_device_has_icon (FwupdDevice *device, const gchar *icon)
 
 /**
  * fwupd_device_add_icon:
- * @device: a device
+ * @self: a #FwupdDevice
  * @icon: the name, e.g. `input-mouse` or `/usr/share/icons/foo.png`
  *
  * Adds the icon name if it does not already exist.
@@ -670,19 +670,19 @@ fwupd_device_has_icon (FwupdDevice *device, const gchar *icon)
  * Since: 0.9.8
  **/
 void
-fwupd_device_add_icon (FwupdDevice *device, const gchar *icon)
+fwupd_device_add_icon (FwupdDevice *self, const gchar *icon)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	g_return_if_fail (icon != NULL);
-	if (fwupd_device_has_icon (device, icon))
+	if (fwupd_device_has_icon (self, icon))
 		return;
 	g_ptr_array_add (priv->icons, g_strdup (icon));
 }
 
 /**
  * fwupd_device_get_name:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the device name.
  *
@@ -691,16 +691,16 @@ fwupd_device_add_icon (FwupdDevice *device, const gchar *icon)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_device_get_name (FwupdDevice *device)
+fwupd_device_get_name (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->name;
 }
 
 /**
  * fwupd_device_set_name:
- * @device: a device
+ * @self: a #FwupdDevice
  * @name: (nullable): the device name, e.g. `ColorHug2`
  *
  * Sets the device name.
@@ -708,10 +708,10 @@ fwupd_device_get_name (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_set_name (FwupdDevice *device, const gchar *name)
+fwupd_device_set_name (FwupdDevice *self, const gchar *name)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->name, name) == 0)
@@ -723,7 +723,7 @@ fwupd_device_set_name (FwupdDevice *device, const gchar *name)
 
 /**
  * fwupd_device_get_vendor:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the device vendor.
  *
@@ -732,16 +732,16 @@ fwupd_device_set_name (FwupdDevice *device, const gchar *name)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_device_get_vendor (FwupdDevice *device)
+fwupd_device_get_vendor (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->vendor;
 }
 
 /**
  * fwupd_device_set_vendor:
- * @device: a device
+ * @self: a #FwupdDevice
  * @vendor: (nullable): the description
  *
  * Sets the device vendor.
@@ -749,10 +749,10 @@ fwupd_device_get_vendor (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_set_vendor (FwupdDevice *device, const gchar *vendor)
+fwupd_device_set_vendor (FwupdDevice *self, const gchar *vendor)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->vendor, vendor) == 0)
@@ -764,7 +764,7 @@ fwupd_device_set_vendor (FwupdDevice *device, const gchar *vendor)
 
 /**
  * fwupd_device_get_vendor_id:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the combined device vendor ID.
  *
@@ -775,16 +775,16 @@ fwupd_device_set_vendor (FwupdDevice *device, const gchar *vendor)
  * Deprecated: 1.5.5: Use fwupd_device_get_vendor_ids() instead.
  **/
 const gchar *
-fwupd_device_get_vendor_id (FwupdDevice *device)
+fwupd_device_get_vendor_id (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->vendor_id;
 }
 
 /**
  * fwupd_device_set_vendor_id:
- * @device: a device
+ * @self: a #FwupdDevice
  * @vendor_id: the ID, e.g. 'USB:0x1234' or 'USB:0x1234|PCI:0x5678'
  *
  * Sets the device vendor ID.
@@ -794,22 +794,22 @@ fwupd_device_get_vendor_id (FwupdDevice *device)
  * Deprecated: 1.5.5: Use fwupd_device_add_vendor_id() instead.
  **/
 void
-fwupd_device_set_vendor_id (FwupdDevice *device, const gchar *vendor_id)
+fwupd_device_set_vendor_id (FwupdDevice *self, const gchar *vendor_id)
 {
 	g_auto(GStrv) vendor_ids = NULL;
 
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	g_return_if_fail (vendor_id != NULL);
 
 	/* add all */
 	vendor_ids = g_strsplit (vendor_id, "|", -1);
 	for (guint i = 0; vendor_ids[i] != NULL; i++)
-		fwupd_device_add_vendor_id (device, vendor_ids[i]);
+		fwupd_device_add_vendor_id (self, vendor_ids[i]);
 }
 
 /**
  * fwupd_device_get_vendor_ids:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the device vendor ID.
  *
@@ -818,16 +818,16 @@ fwupd_device_set_vendor_id (FwupdDevice *device, const gchar *vendor_id)
  * Since: 1.5.5
  **/
 GPtrArray *
-fwupd_device_get_vendor_ids (FwupdDevice *device)
+fwupd_device_get_vendor_ids (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->vendor_ids;
 }
 
 /**
  * fwupd_device_has_vendor_id:
- * @device: a device
+ * @self: a #FwupdDevice
  * @vendor_id: the ID, e.g. 'USB:0x1234'
  *
  * Finds out if the device has this specific vendor ID.
@@ -837,11 +837,11 @@ fwupd_device_get_vendor_ids (FwupdDevice *device)
  * Since: 1.5.5
  **/
 gboolean
-fwupd_device_has_vendor_id (FwupdDevice *device, const gchar *vendor_id)
+fwupd_device_has_vendor_id (FwupdDevice *self, const gchar *vendor_id)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (vendor_id != NULL, FALSE);
 
 	for (guint i = 0; i < priv->vendor_ids->len; i++) {
@@ -854,7 +854,7 @@ fwupd_device_has_vendor_id (FwupdDevice *device, const gchar *vendor_id)
 
 /**
  * fwupd_device_add_vendor_id:
- * @device: a device
+ * @self: a #FwupdDevice
  * @vendor_id: the ID, e.g. 'USB:0x1234'
  *
  * Adds a device vendor ID.
@@ -862,15 +862,15 @@ fwupd_device_has_vendor_id (FwupdDevice *device, const gchar *vendor_id)
  * Since: 1.5.5
  **/
 void
-fwupd_device_add_vendor_id (FwupdDevice *device, const gchar *vendor_id)
+fwupd_device_add_vendor_id (FwupdDevice *self, const gchar *vendor_id)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 	g_auto(GStrv) vendor_ids_tmp = NULL;
 
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	g_return_if_fail (vendor_id != NULL);
 
-	if (fwupd_device_has_vendor_id (device, vendor_id))
+	if (fwupd_device_has_vendor_id (self, vendor_id))
 		return;
 	g_ptr_array_add (priv->vendor_ids, g_strdup (vendor_id));
 
@@ -886,7 +886,7 @@ fwupd_device_add_vendor_id (FwupdDevice *device, const gchar *vendor_id)
 
 /**
  * fwupd_device_get_description:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the device description in AppStream markup format.
  *
@@ -895,16 +895,16 @@ fwupd_device_add_vendor_id (FwupdDevice *device, const gchar *vendor_id)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_device_get_description (FwupdDevice *device)
+fwupd_device_get_description (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->description;
 }
 
 /**
  * fwupd_device_set_description:
- * @device: a device
+ * @self: a #FwupdDevice
  * @description: (nullable): the description in AppStream markup format
  *
  * Sets the device description.
@@ -912,10 +912,10 @@ fwupd_device_get_description (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_set_description (FwupdDevice *device, const gchar *description)
+fwupd_device_set_description (FwupdDevice *self, const gchar *description)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->description, description) == 0)
@@ -927,7 +927,7 @@ fwupd_device_set_description (FwupdDevice *device, const gchar *description)
 
 /**
  * fwupd_device_get_version:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the device version.
  *
@@ -936,16 +936,16 @@ fwupd_device_set_description (FwupdDevice *device, const gchar *description)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_device_get_version (FwupdDevice *device)
+fwupd_device_get_version (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->version;
 }
 
 /**
  * fwupd_device_set_version:
- * @device: a device
+ * @self: a #FwupdDevice
  * @version: (nullable): the device version, e.g. `1.2.3`
  *
  * Sets the device version.
@@ -953,10 +953,10 @@ fwupd_device_get_version (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_set_version (FwupdDevice *device, const gchar *version)
+fwupd_device_set_version (FwupdDevice *self, const gchar *version)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->version, version) == 0)
@@ -968,7 +968,7 @@ fwupd_device_set_version (FwupdDevice *device, const gchar *version)
 
 /**
  * fwupd_device_get_version_lowest:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the lowest version of firmware the device will accept.
  *
@@ -977,16 +977,16 @@ fwupd_device_set_version (FwupdDevice *device, const gchar *version)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_device_get_version_lowest (FwupdDevice *device)
+fwupd_device_get_version_lowest (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->version_lowest;
 }
 
 /**
  * fwupd_device_set_version_lowest:
- * @device: a device
+ * @self: a #FwupdDevice
  * @version_lowest: (nullable): the version
  *
  * Sets the lowest version of firmware the device will accept.
@@ -994,10 +994,10 @@ fwupd_device_get_version_lowest (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_set_version_lowest (FwupdDevice *device, const gchar *version_lowest)
+fwupd_device_set_version_lowest (FwupdDevice *self, const gchar *version_lowest)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->version_lowest, version_lowest) == 0)
@@ -1009,7 +1009,7 @@ fwupd_device_set_version_lowest (FwupdDevice *device, const gchar *version_lowes
 
 /**
  * fwupd_device_get_version_lowest_raw:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the lowest version of firmware the device will accept in raw format.
  *
@@ -1018,16 +1018,16 @@ fwupd_device_set_version_lowest (FwupdDevice *device, const gchar *version_lowes
  * Since: 1.4.0
  **/
 guint64
-fwupd_device_get_version_lowest_raw (FwupdDevice *device)
+fwupd_device_get_version_lowest_raw (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), 0);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), 0);
 	return priv->version_lowest_raw;
 }
 
 /**
  * fwupd_device_set_version_lowest_raw:
- * @device: a device
+ * @self: a #FwupdDevice
  * @version_lowest_raw: the raw hardware version
  *
  * Sets the raw lowest version number from the hardware before converted to a string.
@@ -1035,16 +1035,16 @@ fwupd_device_get_version_lowest_raw (FwupdDevice *device)
  * Since: 1.4.0
  **/
 void
-fwupd_device_set_version_lowest_raw (FwupdDevice *device, guint64 version_lowest_raw)
+fwupd_device_set_version_lowest_raw (FwupdDevice *self, guint64 version_lowest_raw)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	priv->version_lowest_raw = version_lowest_raw;
 }
 
 /**
  * fwupd_device_get_version_bootloader:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the version of the bootloader.
  *
@@ -1053,16 +1053,16 @@ fwupd_device_set_version_lowest_raw (FwupdDevice *device, guint64 version_lowest
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_device_get_version_bootloader (FwupdDevice *device)
+fwupd_device_get_version_bootloader (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->version_bootloader;
 }
 
 /**
  * fwupd_device_set_version_bootloader:
- * @device: a device
+ * @self: a #FwupdDevice
  * @version_bootloader: (nullable): the version
  *
  * Sets the bootloader version.
@@ -1070,10 +1070,10 @@ fwupd_device_get_version_bootloader (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_set_version_bootloader (FwupdDevice *device, const gchar *version_bootloader)
+fwupd_device_set_version_bootloader (FwupdDevice *self, const gchar *version_bootloader)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->version_bootloader, version_bootloader) == 0)
@@ -1085,7 +1085,7 @@ fwupd_device_set_version_bootloader (FwupdDevice *device, const gchar *version_b
 
 /**
  * fwupd_device_get_version_bootloader_raw:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the bootloader version of firmware the device will accept in raw format.
  *
@@ -1094,16 +1094,16 @@ fwupd_device_set_version_bootloader (FwupdDevice *device, const gchar *version_b
  * Since: 1.4.0
  **/
 guint64
-fwupd_device_get_version_bootloader_raw (FwupdDevice *device)
+fwupd_device_get_version_bootloader_raw (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), 0);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), 0);
 	return priv->version_bootloader_raw;
 }
 
 /**
  * fwupd_device_set_version_bootloader_raw:
- * @device: a device
+ * @self: a #FwupdDevice
  * @version_bootloader_raw: the raw hardware version
  *
  * Sets the raw bootloader version number from the hardware before converted to a string.
@@ -1111,16 +1111,16 @@ fwupd_device_get_version_bootloader_raw (FwupdDevice *device)
  * Since: 1.4.0
  **/
 void
-fwupd_device_set_version_bootloader_raw (FwupdDevice *device, guint64 version_bootloader_raw)
+fwupd_device_set_version_bootloader_raw (FwupdDevice *self, guint64 version_bootloader_raw)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	priv->version_bootloader_raw = version_bootloader_raw;
 }
 
 /**
  * fwupd_device_get_flashes_left:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the number of flash cycles left on the device
  *
@@ -1129,16 +1129,16 @@ fwupd_device_set_version_bootloader_raw (FwupdDevice *device, guint64 version_bo
  * Since: 0.9.3
  **/
 guint32
-fwupd_device_get_flashes_left (FwupdDevice *device)
+fwupd_device_get_flashes_left (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), 0);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), 0);
 	return priv->flashes_left;
 }
 
 /**
  * fwupd_device_set_flashes_left:
- * @device: a device
+ * @self: a #FwupdDevice
  * @flashes_left: the description
  *
  * Sets the number of flash cycles left on the device
@@ -1146,16 +1146,16 @@ fwupd_device_get_flashes_left (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_set_flashes_left (FwupdDevice *device, guint32 flashes_left)
+fwupd_device_set_flashes_left (FwupdDevice *self, guint32 flashes_left)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	priv->flashes_left = flashes_left;
 }
 
 /**
  * fwupd_device_get_install_duration:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the time estimate for firmware installation (in seconds)
  *
@@ -1164,16 +1164,16 @@ fwupd_device_set_flashes_left (FwupdDevice *device, guint32 flashes_left)
  * Since: 1.1.3
  **/
 guint32
-fwupd_device_get_install_duration (FwupdDevice *device)
+fwupd_device_get_install_duration (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), 0);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), 0);
 	return priv->install_duration;
 }
 
 /**
  * fwupd_device_set_install_duration:
- * @device: a device
+ * @self: a #FwupdDevice
  * @duration: the amount of time
  *
  * Sets the time estimate for firmware installation (in seconds)
@@ -1181,16 +1181,16 @@ fwupd_device_get_install_duration (FwupdDevice *device)
  * Since: 1.1.3
  **/
 void
-fwupd_device_set_install_duration (FwupdDevice *device, guint32 duration)
+fwupd_device_set_install_duration (FwupdDevice *self, guint32 duration)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	priv->install_duration = duration;
 }
 
 /**
  * fwupd_device_get_plugin:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the plugin that created the device.
  *
@@ -1199,16 +1199,16 @@ fwupd_device_set_install_duration (FwupdDevice *device, guint32 duration)
  * Since: 1.0.0
  **/
 const gchar *
-fwupd_device_get_plugin (FwupdDevice *device)
+fwupd_device_get_plugin (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->plugin;
 }
 
 /**
  * fwupd_device_set_plugin:
- * @device: a device
+ * @self: a #FwupdDevice
  * @plugin: (nullable): the plugin name, e.g. `colorhug`
  *
  * Sets the plugin that created the device.
@@ -1216,10 +1216,10 @@ fwupd_device_get_plugin (FwupdDevice *device)
  * Since: 1.0.0
  **/
 void
-fwupd_device_set_plugin (FwupdDevice *device, const gchar *plugin)
+fwupd_device_set_plugin (FwupdDevice *self, const gchar *plugin)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->plugin, plugin) == 0)
@@ -1231,7 +1231,7 @@ fwupd_device_set_plugin (FwupdDevice *device, const gchar *plugin)
 
 /**
  * fwupd_device_get_protocol:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the protocol that the device uses for updating.
  *
@@ -1242,16 +1242,16 @@ fwupd_device_set_plugin (FwupdDevice *device, const gchar *plugin)
  * Deprecated: 1.5.8: Use fwupd_device_get_protocols() instead.
  **/
 const gchar *
-fwupd_device_get_protocol (FwupdDevice *device)
+fwupd_device_get_protocol (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->protocol;
 }
 
 /**
  * fwupd_device_set_protocol:
- * @device: a device
+ * @self: a #FwupdDevice
  * @protocol: the protocol name, e.g. `com.hughski.colorhug`
  *
  * Sets the protocol that is used to update the device.
@@ -1261,22 +1261,22 @@ fwupd_device_get_protocol (FwupdDevice *device)
  * Deprecated: 1.5.8: Use fwupd_device_add_protocol() instead.
  **/
 void
-fwupd_device_set_protocol (FwupdDevice *device, const gchar *protocol)
+fwupd_device_set_protocol (FwupdDevice *self, const gchar *protocol)
 {
 	g_auto(GStrv) protocols = NULL;
 
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	g_return_if_fail (protocol != NULL);
 
 	/* add all */
 	protocols = g_strsplit (protocol, "|", -1);
 	for (guint i = 0; protocols[i] != NULL; i++)
-		fwupd_device_add_protocol (device, protocols[i]);
+		fwupd_device_add_protocol (self, protocols[i]);
 }
 
 /**
  * fwupd_device_get_protocols:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the device protocol.
  *
@@ -1285,16 +1285,16 @@ fwupd_device_set_protocol (FwupdDevice *device, const gchar *protocol)
  * Since: 1.5.8
  **/
 GPtrArray *
-fwupd_device_get_protocols (FwupdDevice *device)
+fwupd_device_get_protocols (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->protocols;
 }
 
 /**
  * fwupd_device_has_protocol:
- * @device: a device
+ * @self: a #FwupdDevice
  * @protocol: the ID, e.g. 'USB:0x1234'
  *
  * Finds out if the device has this specific protocol.
@@ -1304,11 +1304,11 @@ fwupd_device_get_protocols (FwupdDevice *device)
  * Since: 1.5.8
  **/
 gboolean
-fwupd_device_has_protocol (FwupdDevice *device, const gchar *protocol)
+fwupd_device_has_protocol (FwupdDevice *self, const gchar *protocol)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FALSE);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (protocol != NULL, FALSE);
 
 	for (guint i = 0; i < priv->protocols->len; i++) {
@@ -1321,7 +1321,7 @@ fwupd_device_has_protocol (FwupdDevice *device, const gchar *protocol)
 
 /**
  * fwupd_device_add_protocol:
- * @device: a device
+ * @self: a #FwupdDevice
  * @protocol: the ID, e.g. 'USB:0x1234'
  *
  * Adds a device protocol.
@@ -1329,15 +1329,15 @@ fwupd_device_has_protocol (FwupdDevice *device, const gchar *protocol)
  * Since: 1.5.8
  **/
 void
-fwupd_device_add_protocol (FwupdDevice *device, const gchar *protocol)
+fwupd_device_add_protocol (FwupdDevice *self, const gchar *protocol)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 	g_auto(GStrv) protocols_tmp = NULL;
 
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	g_return_if_fail (protocol != NULL);
 
-	if (fwupd_device_has_protocol (device, protocol))
+	if (fwupd_device_has_protocol (self, protocol))
 		return;
 	g_ptr_array_add (priv->protocols, g_strdup (protocol));
 
@@ -1353,7 +1353,7 @@ fwupd_device_add_protocol (FwupdDevice *device, const gchar *protocol)
 
 /**
  * fwupd_device_get_flags:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets device flags.
  *
@@ -1362,16 +1362,16 @@ fwupd_device_add_protocol (FwupdDevice *device, const gchar *protocol)
  * Since: 0.9.3
  **/
 guint64
-fwupd_device_get_flags (FwupdDevice *device)
+fwupd_device_get_flags (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), 0);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), 0);
 	return priv->flags;
 }
 
 /**
  * fwupd_device_set_flags:
- * @device: a device
+ * @self: a #FwupdDevice
  * @flags: device flags, e.g. %FWUPD_DEVICE_FLAG_REQUIRE_AC
  *
  * Sets device flags.
@@ -1379,19 +1379,19 @@ fwupd_device_get_flags (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_set_flags (FwupdDevice *device, guint64 flags)
+fwupd_device_set_flags (FwupdDevice *self, guint64 flags)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	if (priv->flags == flags)
 		return;
 	priv->flags = flags;
-	g_object_notify (G_OBJECT (device), "flags");
+	g_object_notify (G_OBJECT (self), "flags");
 }
 
 /**
  * fwupd_device_add_flag:
- * @device: a device
+ * @self: a #FwupdDevice
  * @flag: the #FwupdDeviceFlags
  *
  * Adds a specific device flag to the device.
@@ -1399,21 +1399,21 @@ fwupd_device_set_flags (FwupdDevice *device, guint64 flags)
  * Since: 0.9.3
  **/
 void
-fwupd_device_add_flag (FwupdDevice *device, FwupdDeviceFlags flag)
+fwupd_device_add_flag (FwupdDevice *self, FwupdDeviceFlags flag)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	if (flag == 0)
 		return;
 	if ((priv->flags | flag) == priv->flags)
 		return;
 	priv->flags |= flag;
-	g_object_notify (G_OBJECT (device), "flags");
+	g_object_notify (G_OBJECT (self), "flags");
 }
 
 /**
  * fwupd_device_remove_flag:
- * @device: a device
+ * @self: a #FwupdDevice
  * @flag: the #FwupdDeviceFlags
  *
  * Removes a specific device flag from the device.
@@ -1421,21 +1421,21 @@ fwupd_device_add_flag (FwupdDevice *device, FwupdDeviceFlags flag)
  * Since: 0.9.3
  **/
 void
-fwupd_device_remove_flag (FwupdDevice *device, FwupdDeviceFlags flag)
+fwupd_device_remove_flag (FwupdDevice *self, FwupdDeviceFlags flag)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	if (flag == 0)
 		return;
 	if ((priv->flags & flag) == 0)
 		return;
 	priv->flags &= ~flag;
-	g_object_notify (G_OBJECT (device), "flags");
+	g_object_notify (G_OBJECT (self), "flags");
 }
 
 /**
  * fwupd_device_has_flag:
- * @device: a device
+ * @self: a #FwupdDevice
  * @flag: the #FwupdDeviceFlags
  *
  * Finds if the device has a specific device flag.
@@ -1445,16 +1445,16 @@ fwupd_device_remove_flag (FwupdDevice *device, FwupdDeviceFlags flag)
  * Since: 0.9.3
  **/
 gboolean
-fwupd_device_has_flag (FwupdDevice *device, FwupdDeviceFlags flag)
+fwupd_device_has_flag (FwupdDevice *self, FwupdDeviceFlags flag)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FALSE);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), FALSE);
 	return (priv->flags & flag) > 0;
 }
 
 /**
  * fwupd_device_get_created:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets when the device was created.
  *
@@ -1463,16 +1463,16 @@ fwupd_device_has_flag (FwupdDevice *device, FwupdDeviceFlags flag)
  * Since: 0.9.3
  **/
 guint64
-fwupd_device_get_created (FwupdDevice *device)
+fwupd_device_get_created (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), 0);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), 0);
 	return priv->created;
 }
 
 /**
  * fwupd_device_set_created:
- * @device: a device
+ * @self: a #FwupdDevice
  * @created: the UNIX time
  *
  * Sets when the device was created.
@@ -1480,16 +1480,16 @@ fwupd_device_get_created (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_set_created (FwupdDevice *device, guint64 created)
+fwupd_device_set_created (FwupdDevice *self, guint64 created)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	priv->created = created;
 }
 
 /**
  * fwupd_device_get_modified:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets when the device was modified.
  *
@@ -1498,16 +1498,16 @@ fwupd_device_set_created (FwupdDevice *device, guint64 created)
  * Since: 0.9.3
  **/
 guint64
-fwupd_device_get_modified (FwupdDevice *device)
+fwupd_device_get_modified (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), 0);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), 0);
 	return priv->modified;
 }
 
 /**
  * fwupd_device_set_modified:
- * @device: a device
+ * @self: a #FwupdDevice
  * @modified: the UNIX time
  *
  * Sets when the device was modified.
@@ -1515,16 +1515,16 @@ fwupd_device_get_modified (FwupdDevice *device)
  * Since: 0.9.3
  **/
 void
-fwupd_device_set_modified (FwupdDevice *device, guint64 modified)
+fwupd_device_set_modified (FwupdDevice *self, guint64 modified)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	priv->modified = modified;
 }
 
 /**
  * fwupd_device_incorporate:
- * @self: a device
+ * @self: a #FwupdDevice
  * @donor: Another #FwupdDevice
  *
  * Copy all properties from the donor object if they have not already been set.
@@ -1620,7 +1620,7 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 
 /**
  * fwupd_device_to_variant_full:
- * @device: a device
+ * @self: a #FwupdDevice
  * @flags: device flags
  *
  * Serialize the device data.
@@ -1631,12 +1631,12 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
  * Since: 1.1.2
  **/
 GVariant *
-fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
+fwupd_device_to_variant_full (FwupdDevice *self, FwupdDeviceFlags flags)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 	GVariantBuilder builder;
 
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
@@ -1852,7 +1852,7 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
 
 /**
  * fwupd_device_to_variant:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Serialize the device data omitting sensitive fields
  *
@@ -1861,13 +1861,13 @@ fwupd_device_to_variant_full (FwupdDevice *device, FwupdDeviceFlags flags)
  * Since: 1.0.0
  **/
 GVariant *
-fwupd_device_to_variant (FwupdDevice *device)
+fwupd_device_to_variant (FwupdDevice *self)
 {
-	return fwupd_device_to_variant_full (device, FWUPD_DEVICE_FLAG_NONE);
+	return fwupd_device_to_variant_full (self, FWUPD_DEVICE_FLAG_NONE);
 }
 
 static void
-fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *value)
+fwupd_device_from_key_value (FwupdDevice *self, const gchar *key, GVariant *value)
 {
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_RELEASE) == 0) {
 		GVariantIter iter;
@@ -1876,82 +1876,82 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		while ((child = g_variant_iter_next_value (&iter))) {
 			g_autoptr(FwupdRelease) release = fwupd_release_from_variant (child);
 			if (release != NULL)
-				fwupd_device_add_release (device, release);
+				fwupd_device_add_release (self, release);
 			g_variant_unref (child);
 		}
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DEVICE_ID) == 0) {
-		fwupd_device_set_id (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_id (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_PARENT_DEVICE_ID) == 0) {
-		fwupd_device_set_parent_id (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_parent_id (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_COMPOSITE_ID) == 0) {
-		fwupd_device_set_composite_id (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_composite_id (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_FLAGS) == 0) {
-		fwupd_device_set_flags (device, g_variant_get_uint64 (value));
+		fwupd_device_set_flags (self, g_variant_get_uint64 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_CREATED) == 0) {
-		fwupd_device_set_created (device, g_variant_get_uint64 (value));
+		fwupd_device_set_created (self, g_variant_get_uint64 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_MODIFIED) == 0) {
-		fwupd_device_set_modified (device, g_variant_get_uint64 (value));
+		fwupd_device_set_modified (self, g_variant_get_uint64 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_GUID) == 0) {
 		g_autofree const gchar **guids = g_variant_get_strv (value, NULL);
 		for (guint i = 0; guids != NULL && guids[i] != NULL; i++)
-			fwupd_device_add_guid (device, guids[i]);
+			fwupd_device_add_guid (self, guids[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_INSTANCE_IDS) == 0) {
 		g_autofree const gchar **instance_ids = g_variant_get_strv (value, NULL);
 		for (guint i = 0; instance_ids != NULL && instance_ids[i] != NULL; i++)
-			fwupd_device_add_instance_id (device, instance_ids[i]);
+			fwupd_device_add_instance_id (self, instance_ids[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_ICON) == 0) {
 		g_autofree const gchar **icons = g_variant_get_strv (value, NULL);
 		for (guint i = 0; icons != NULL && icons[i] != NULL; i++)
-			fwupd_device_add_icon (device, icons[i]);
+			fwupd_device_add_icon (self, icons[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_NAME) == 0) {
-		fwupd_device_set_name (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_name (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VENDOR) == 0) {
-		fwupd_device_set_vendor (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_vendor (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VENDOR_ID) == 0) {
 		g_auto(GStrv) vendor_ids = NULL;
 		vendor_ids = g_strsplit (g_variant_get_string (value, NULL), "|", -1);
 		for (guint i = 0; vendor_ids[i] != NULL; i++)
-			fwupd_device_add_vendor_id (device, vendor_ids[i]);
+			fwupd_device_add_vendor_id (self, vendor_ids[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SERIAL) == 0) {
-		fwupd_device_set_serial (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_serial (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
-		fwupd_device_set_summary (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_summary (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_BRANCH) == 0) {
-		fwupd_device_set_branch (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_branch (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
-		fwupd_device_set_description (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_description (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
@@ -1959,75 +1959,75 @@ fwupd_device_from_key_value (FwupdDevice *device, const gchar *key, GVariant *va
 		if (checksums != NULL) {
 			g_auto(GStrv) split = g_strsplit (checksums, ",", -1);
 			for (guint i = 0; split[i] != NULL; i++)
-				fwupd_device_add_checksum (device, split[i]);
+				fwupd_device_add_checksum (self, split[i]);
 		}
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_PLUGIN) == 0) {
-		fwupd_device_set_plugin (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_plugin (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_PROTOCOL) == 0) {
 		g_auto(GStrv) protocols = NULL;
 		protocols = g_strsplit (g_variant_get_string (value, NULL), "|", -1);
 		for (guint i = 0; protocols[i] != NULL; i++)
-			fwupd_device_add_protocol (device, protocols[i]);
+			fwupd_device_add_protocol (self, protocols[i]);
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION) == 0) {
-		fwupd_device_set_version (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_version (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_LOWEST) == 0) {
-		fwupd_device_set_version_lowest (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_version_lowest (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_BOOTLOADER) == 0) {
-		fwupd_device_set_version_bootloader (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_version_bootloader (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_FLASHES_LEFT) == 0) {
-		fwupd_device_set_flashes_left (device, g_variant_get_uint32 (value));
+		fwupd_device_set_flashes_left (self, g_variant_get_uint32 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_INSTALL_DURATION) == 0) {
-		fwupd_device_set_install_duration (device, g_variant_get_uint32 (value));
+		fwupd_device_set_install_duration (self, g_variant_get_uint32 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_ERROR) == 0) {
-		fwupd_device_set_update_error (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_update_error (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_MESSAGE) == 0) {
-		fwupd_device_set_update_message (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_update_message (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_IMAGE) == 0) {
-		fwupd_device_set_update_image (device, g_variant_get_string (value, NULL));
+		fwupd_device_set_update_image (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_STATE) == 0) {
-		fwupd_device_set_update_state (device, g_variant_get_uint32 (value));
+		fwupd_device_set_update_state (self, g_variant_get_uint32 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_STATUS) == 0) {
-		fwupd_device_set_status (device, g_variant_get_uint32 (value));
+		fwupd_device_set_status (self, g_variant_get_uint32 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_FORMAT) == 0) {
-		fwupd_device_set_version_format (device, g_variant_get_uint32 (value));
+		fwupd_device_set_version_format (self, g_variant_get_uint32 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_RAW) == 0) {
-		fwupd_device_set_version_raw (device, g_variant_get_uint64 (value));
+		fwupd_device_set_version_raw (self, g_variant_get_uint64 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW) == 0) {
-		fwupd_device_set_version_lowest_raw (device, g_variant_get_uint64 (value));
+		fwupd_device_set_version_lowest_raw (self, g_variant_get_uint64 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW) == 0) {
-		fwupd_device_set_version_bootloader_raw (device, g_variant_get_uint64 (value));
+		fwupd_device_set_version_bootloader_raw (self, g_variant_get_uint64 (value));
 		return;
 	}
 }
@@ -2091,7 +2091,7 @@ fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
 
 /**
  * fwupd_device_get_update_state:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the update state.
  *
@@ -2100,16 +2100,16 @@ fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
  * Since: 0.9.8
  **/
 FwupdUpdateState
-fwupd_device_get_update_state (FwupdDevice *device)
+fwupd_device_get_update_state (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FWUPD_UPDATE_STATE_UNKNOWN);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), FWUPD_UPDATE_STATE_UNKNOWN);
 	return priv->update_state;
 }
 
 /**
  * fwupd_device_set_update_state:
- * @device: a device
+ * @self: a #FwupdDevice
  * @update_state: the state, e.g. %FWUPD_UPDATE_STATE_PENDING
  *
  * Sets the update state.
@@ -2117,19 +2117,19 @@ fwupd_device_get_update_state (FwupdDevice *device)
  * Since: 0.9.8
  **/
 void
-fwupd_device_set_update_state (FwupdDevice *device, FwupdUpdateState update_state)
+fwupd_device_set_update_state (FwupdDevice *self, FwupdUpdateState update_state)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	if (priv->update_state == update_state)
 		return;
 	priv->update_state = update_state;
-	g_object_notify (G_OBJECT (device), "update-state");
+	g_object_notify (G_OBJECT (self), "update-state");
 }
 
 /**
  * fwupd_device_get_version_format:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the update state.
  *
@@ -2138,16 +2138,16 @@ fwupd_device_set_update_state (FwupdDevice *device, FwupdUpdateState update_stat
  * Since: 1.2.9
  **/
 FwupdVersionFormat
-fwupd_device_get_version_format (FwupdDevice *device)
+fwupd_device_get_version_format (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), FWUPD_VERSION_FORMAT_UNKNOWN);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), FWUPD_VERSION_FORMAT_UNKNOWN);
 	return priv->version_format;
 }
 
 /**
  * fwupd_device_set_version_format:
- * @device: a device
+ * @self: a #FwupdDevice
  * @version_format: the state, e.g. %FWUPD_VERSION_FORMAT_PENDING
  *
  * Sets the update state.
@@ -2155,16 +2155,16 @@ fwupd_device_get_version_format (FwupdDevice *device)
  * Since: 1.2.9
  **/
 void
-fwupd_device_set_version_format (FwupdDevice *device, FwupdVersionFormat version_format)
+fwupd_device_set_version_format (FwupdDevice *self, FwupdVersionFormat version_format)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	priv->version_format = version_format;
 }
 
 /**
  * fwupd_device_get_version_raw:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the raw version number from the hardware before converted to a string.
  *
@@ -2173,16 +2173,16 @@ fwupd_device_set_version_format (FwupdDevice *device, FwupdVersionFormat version
  * Since: 1.3.6
  **/
 guint64
-fwupd_device_get_version_raw (FwupdDevice *device)
+fwupd_device_get_version_raw (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), 0);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), 0);
 	return priv->version_raw;
 }
 
 /**
  * fwupd_device_set_version_raw:
- * @device: a device
+ * @self: a #FwupdDevice
  * @version_raw: the raw hardware version
  *
  * Sets the raw version number from the hardware before converted to a string.
@@ -2190,16 +2190,16 @@ fwupd_device_get_version_raw (FwupdDevice *device)
  * Since: 1.3.6
  **/
 void
-fwupd_device_set_version_raw (FwupdDevice *device, guint64 version_raw)
+fwupd_device_set_version_raw (FwupdDevice *self, guint64 version_raw)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	priv->version_raw = version_raw;
 }
 
 /**
  * fwupd_device_get_update_message:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the update message.
  *
@@ -2208,16 +2208,16 @@ fwupd_device_set_version_raw (FwupdDevice *device, guint64 version_raw)
  * Since: 1.2.4
  **/
 const gchar *
-fwupd_device_get_update_message (FwupdDevice *device)
+fwupd_device_get_update_message (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->update_message;
 }
 
 /**
  * fwupd_device_set_update_message:
- * @device: a device
+ * @self: a #FwupdDevice
  * @update_message: (nullable): the update message string
  *
  * Sets the update message.
@@ -2225,10 +2225,10 @@ fwupd_device_get_update_message (FwupdDevice *device)
  * Since: 1.2.4
  **/
 void
-fwupd_device_set_update_message (FwupdDevice *device, const gchar *update_message)
+fwupd_device_set_update_message (FwupdDevice *self, const gchar *update_message)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->update_message, update_message) == 0)
@@ -2240,7 +2240,7 @@ fwupd_device_set_update_message (FwupdDevice *device, const gchar *update_messag
 
 /**
  * fwupd_device_get_update_image:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the update image.
  *
@@ -2249,16 +2249,16 @@ fwupd_device_set_update_message (FwupdDevice *device, const gchar *update_messag
  * Since: 1.4.5
  **/
 const gchar *
-fwupd_device_get_update_image (FwupdDevice *device)
+fwupd_device_get_update_image (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->update_image;
 }
 
 /**
  * fwupd_device_set_update_image:
- * @device: a device
+ * @self: a #FwupdDevice
  * @update_image: (nullable): the update image URL
  *
  * Sets the update image.
@@ -2266,10 +2266,10 @@ fwupd_device_get_update_image (FwupdDevice *device)
  * Since: 1.4.5
  **/
 void
-fwupd_device_set_update_image (FwupdDevice *device, const gchar *update_image)
+fwupd_device_set_update_image (FwupdDevice *self, const gchar *update_image)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->update_image, update_image) == 0)
@@ -2281,7 +2281,7 @@ fwupd_device_set_update_image (FwupdDevice *device, const gchar *update_image)
 
 /**
  * fwupd_device_get_update_error:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the update error.
  *
@@ -2290,16 +2290,16 @@ fwupd_device_set_update_image (FwupdDevice *device, const gchar *update_image)
  * Since: 0.9.8
  **/
 const gchar *
-fwupd_device_get_update_error (FwupdDevice *device)
+fwupd_device_get_update_error (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->update_error;
 }
 
 /**
  * fwupd_device_set_update_error:
- * @device: a device
+ * @self: a #FwupdDevice
  * @update_error: (nullable): the update error string
  *
  * Sets the update error.
@@ -2307,10 +2307,10 @@ fwupd_device_get_update_error (FwupdDevice *device)
  * Since: 0.9.8
  **/
 void
-fwupd_device_set_update_error (FwupdDevice *device, const gchar *update_error)
+fwupd_device_set_update_error (FwupdDevice *self, const gchar *update_error)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 
 	/* not changed */
 	if (g_strcmp0 (priv->update_error, update_error) == 0)
@@ -2322,7 +2322,7 @@ fwupd_device_set_update_error (FwupdDevice *device, const gchar *update_error)
 
 /**
  * fwupd_device_get_release_default:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets the default release for this device.
  *
@@ -2331,10 +2331,10 @@ fwupd_device_set_update_error (FwupdDevice *device, const gchar *update_error)
  * Since: 0.9.8
  **/
 FwupdRelease *
-fwupd_device_get_release_default (FwupdDevice *device)
+fwupd_device_get_release_default (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	if (priv->releases->len == 0)
 		return NULL;
 	return FWUPD_RELEASE (g_ptr_array_index (priv->releases, 0));
@@ -2342,7 +2342,7 @@ fwupd_device_get_release_default (FwupdDevice *device)
 
 /**
  * fwupd_device_get_releases:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Gets all the releases for this device.
  *
@@ -2351,16 +2351,16 @@ fwupd_device_get_release_default (FwupdDevice *device)
  * Since: 0.9.8
  **/
 GPtrArray *
-fwupd_device_get_releases (FwupdDevice *device)
+fwupd_device_get_releases (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 	return priv->releases;
 }
 
 /**
  * fwupd_device_add_release:
- * @device: a device
+ * @self: a #FwupdDevice
  * @release: a release
  *
  * Adds a release for this device.
@@ -2368,15 +2368,15 @@ fwupd_device_get_releases (FwupdDevice *device)
  * Since: 0.9.8
  **/
 void
-fwupd_device_add_release (FwupdDevice *device, FwupdRelease *release)
+fwupd_device_add_release (FwupdDevice *self, FwupdRelease *release)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	g_ptr_array_add (priv->releases, g_object_ref (release));
 }
 /**
  * fwupd_device_get_status:
- * @self: a device
+ * @self: a #FwupdDevice
  *
  * Returns what the device is currently doing.
  *
@@ -2394,7 +2394,7 @@ fwupd_device_get_status (FwupdDevice *self)
 
 /**
  * fwupd_device_set_status:
- * @self: a device
+ * @self: a #FwupdDevice
  * @status: the status value, e.g. %FWUPD_STATUS_DEVICE_WRITE
  *
  * Sets what the device is currently doing.
@@ -2440,7 +2440,7 @@ fwupd_device_json_add_int (JsonBuilder *builder, const gchar *key, guint64 num)
 
 /**
  * fwupd_device_to_json:
- * @device: a device
+ * @self: a #FwupdDevice
  * @builder: a JSON builder
  *
  * Adds a fwupd device to a JSON builder
@@ -2448,11 +2448,11 @@ fwupd_device_json_add_int (JsonBuilder *builder, const gchar *key, guint64 num)
  * Since: 1.2.6
  **/
 void
-fwupd_device_to_json (FwupdDevice *device, JsonBuilder *builder)
+fwupd_device_to_json (FwupdDevice *self, JsonBuilder *builder)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 
-	g_return_if_fail (FWUPD_IS_DEVICE (device));
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	g_return_if_fail (builder != NULL);
 
 	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_NAME, priv->name);
@@ -2572,7 +2572,7 @@ fwupd_device_verstr_raw (guint64 value_raw)
 
 /**
  * fwupd_device_to_string:
- * @device: a device
+ * @self: a #FwupdDevice
  *
  * Builds a text representation of the object.
  *
@@ -2581,12 +2581,12 @@ fwupd_device_verstr_raw (guint64 value_raw)
  * Since: 0.9.3
  **/
 gchar *
-fwupd_device_to_string (FwupdDevice *device)
+fwupd_device_to_string (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 	GString *str;
 
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device), NULL);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 
 	str = g_string_new ("");
 	if (priv->name != NULL)
@@ -2810,9 +2810,9 @@ fwupd_device_class_init (FwupdDeviceClass *klass)
 }
 
 static void
-fwupd_device_init (FwupdDevice *device)
+fwupd_device_init (FwupdDevice *self)
 {
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 	priv->guids = g_ptr_array_new_with_free_func (g_free);
 	priv->instance_ids = g_ptr_array_new_with_free_func (g_free);
 	priv->icons = g_ptr_array_new_with_free_func (g_free);
@@ -2826,8 +2826,8 @@ fwupd_device_init (FwupdDevice *device)
 static void
 fwupd_device_finalize (GObject *object)
 {
-	FwupdDevice *device = FWUPD_DEVICE (object);
-	FwupdDevicePrivate *priv = GET_PRIVATE (device);
+	FwupdDevice *self = FWUPD_DEVICE (object);
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 
 	if (priv->parent != NULL)
 		g_object_remove_weak_pointer (G_OBJECT (priv->parent), (gpointer *) &priv->parent);
@@ -2835,7 +2835,7 @@ fwupd_device_finalize (GObject *object)
 		FwupdDevice *child = g_ptr_array_index (priv->children, i);
 		g_object_weak_unref (G_OBJECT (child),
 				     fwupd_device_child_finalized_cb,
-				     device);
+				     self);
 	}
 
 	g_free (priv->description);
@@ -2869,12 +2869,12 @@ fwupd_device_finalize (GObject *object)
 }
 
 static void
-fwupd_device_set_from_variant_iter (FwupdDevice *device, GVariantIter *iter)
+fwupd_device_set_from_variant_iter (FwupdDevice *self, GVariantIter *iter)
 {
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next (iter, "{&sv}", &key, &value)) {
-		fwupd_device_from_key_value (device, key, value);
+		fwupd_device_from_key_value (self, key, value);
 		g_variant_unref (value);
 	}
 }
@@ -2986,22 +2986,22 @@ fwupd_device_array_from_variant (GVariant *value)
 
 /**
  * fwupd_device_compare:
- * @device1: a device
- * @device2: a different device
+ * @self1: a device
+ * @self2: a different device
  *
- * Comparison function for comparing two FwupdDevice objects.
+ * Comparison function for comparing two device objects.
  *
  * Returns: negative, 0 or positive
  *
  * Since: 1.1.1
  **/
 gint
-fwupd_device_compare (FwupdDevice *device1, FwupdDevice *device2)
+fwupd_device_compare (FwupdDevice *self1, FwupdDevice *self2)
 {
-	FwupdDevicePrivate *priv1 = GET_PRIVATE (device1);
-	FwupdDevicePrivate *priv2 = GET_PRIVATE (device2);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device1), 0);
-	g_return_val_if_fail (FWUPD_IS_DEVICE (device2), 0);
+	FwupdDevicePrivate *priv1 = GET_PRIVATE (self1);
+	FwupdDevicePrivate *priv2 = GET_PRIVATE (self2);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self1), 0);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self2), 0);
 	return g_strcmp0 (priv1->id, priv2->id);
 }
 
@@ -3017,7 +3017,7 @@ fwupd_device_compare (FwupdDevice *device1, FwupdDevice *device2)
 FwupdDevice *
 fwupd_device_new (void)
 {
-	FwupdDevice *device;
-	device = g_object_new (FWUPD_TYPE_DEVICE, NULL);
-	return FWUPD_DEVICE (device);
+	FwupdDevice *self;
+	self = g_object_new (FWUPD_TYPE_DEVICE, NULL);
+	return FWUPD_DEVICE (self);
 }
