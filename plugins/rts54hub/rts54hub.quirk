@@ -12,12 +12,28 @@ GType = FuRts54HubDevice
 Vendor = Lenovo
 FirmwareSizeMin = 0x20000
 FirmwareSizeMax = 0x40000
-Children = FuRts54hubRtd21xxDevice|USB\VID_17EF&PID_30BF&I2C_01
+Children = FuRts54hubRtd21xxForeground|USB\VID_17EF&PID_30BF&I2C_01
 [USB\VID_17EF&PID_30BF&I2C_01]
 Plugin = rts54hub
 Name = HDMI Converter
 Flags = updatable
 FirmwareSize = 0x30000
+Rts54TargetAddr = 0x20
+Rts54I2cSpeed = 0x2
+Rts54RegisterAddrLen = 0x04
+
+# for-testing ID
+[USB\VID_0BDA&PID_5420]
+Plugin = rts54hub
+GType = FuRts54HubDevice
+FirmwareSizeMin = 0x20000
+FirmwareSizeMax = 0x70000
+Children = FuRts54hubRtd21xxBackground|USB\VID_0BDA&PID_5420&I2C_01
+[USB\VID_0BDA&PID_5420&I2C_01]
+Plugin = rts54hub
+Name = Honeybuns Dock
+Flags = updatable
+FirmwareSize = 0x70000
 Rts54TargetAddr = 0x20
 Rts54I2cSpeed = 0x2
 Rts54RegisterAddrLen = 0x04
