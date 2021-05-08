@@ -13,6 +13,7 @@ run_test()
 
 run_test acpi-dmar-self-test
 run_test acpi-facp-self-test
+run_test acpi-phat-self-test
 run_test ata-self-test
 run_test nitrokey-self-test
 run_test linux-swap-self-test

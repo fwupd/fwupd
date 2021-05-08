@@ -1,0 +1,35 @@
+<firmware gtype="FuAcpiPhat">
+  <id>SUDODAVE</id>
+  <version_raw>0x1</version_raw>
+  <oem_id>HUGHES</oem_id>
+  <firmware gtype="FuAcpiPhatVersionRecord">
+    <version_raw>0x1</version_raw>
+    <firmware gtype="FuAcpiPhatVersionElement">
+      <version_raw>0x123</version_raw>
+      <guid>40338ceb-b966-4eae-adae-9c32edfcc484</guid>
+      <producer_id>HUGH</producer_id>
+    </firmware>
+    <firmware gtype="FuAcpiPhatVersionElement">
+      <version_raw>0x124</version_raw>
+      <guid>2082b5e0-7a64-478a-b1b2-e3404fab6dad</guid>
+      <producer_id>LENO</producer_id>
+    </firmware>
+  </firmware>
+  <firmware gtype="FuAcpiPhatVersionRecord">
+    <version_raw>0x1</version_raw>
+    <firmware gtype="FuAcpiPhatVersionElement">
+      <version_raw>0x125</version_raw>
+      <guid>dfbaaded-754b-5214-a5f2-46aa3331e8ce</guid>
+      <producer_id>DELL</producer_id>
+    </firmware>
+  </firmware>
+  <firmware gtype="FuAcpiPhatVersionRecord">
+    <version_raw>0x1</version_raw>
+  </firmware>
+  <firmware gtype="FuAcpiPhatHealthRecord">
+    <version_raw>0x1</version_raw>
+    <am_healthy>0x1</am_healthy>
+    <guid>dfbaaded-754b-5214-a5f2-46aa3331e8ce</guid>
+    <device_path>/dev/foo</device_path>
+  </firmware>
+</firmware>

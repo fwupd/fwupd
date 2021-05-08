@@ -13,6 +13,7 @@ import subprocess
 if __name__ == "__main__":
 
     for fn_src, fn_dst in [
+        ("acpi-phat.builder.xml", "acpi-phat.bin"),
         ("bcm57xx.builder.xml", "bcm57xx.bin"),
         ("ccgx.builder.xml", "ccgx.cyacd"),
         ("ccgx-dmc.builder.xml", "ccgx-dmc.bin"),
@@ -45,6 +46,7 @@ if __name__ == "__main__":
         print("INFO: converting {} into {}".format(fn_src, fn_dst))
         try:
             argv = [
+                "sudo",
                 "../../build/src/fwupdtool",
                 "firmware-build",
                 fn_src,
