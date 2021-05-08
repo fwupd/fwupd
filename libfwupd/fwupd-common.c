@@ -745,7 +745,7 @@ fwupd_guid_from_string (const gchar *guidstr,
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "is not valid format");
+				     "GUID is not valid format");
 		return FALSE;
 	}
 	split = g_strsplit (guidstr, "-", 5);
@@ -753,7 +753,7 @@ fwupd_guid_from_string (const gchar *guidstr,
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "is not valid format, no dashes");
+				     "GUID is not valid format, no dashes");
 		return FALSE;
 	}
 	if (strlen (split[0]) != 8 && strlen (split[1]) != 4 &&
@@ -762,7 +762,7 @@ fwupd_guid_from_string (const gchar *guidstr,
 		g_set_error_literal (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_INVALID_DATA,
-				     "is not valid format, not GUID");
+				     "GUID is not valid format, not GUID");
 		return FALSE;
 	}
 
