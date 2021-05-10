@@ -87,4 +87,4 @@ if __name__ == "__main__":
 # flatpak run --command=sh --devel org.freedesktop.fwupd
 
 # to run fwupdtool as root:
-# sudo flatpak run org.freedesktop.fwupd --verbose get-devices
+# sudo -i flatpak run org.freedesktop.fwupd --verbose get-devices
