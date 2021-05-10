@@ -29,19 +29,19 @@ struct _FwupdPluginClass
 };
 
 FwupdPlugin	*fwupd_plugin_new			(void);
-gchar		*fwupd_plugin_to_string			(FwupdPlugin	*plugin);
+gchar		*fwupd_plugin_to_string			(FwupdPlugin	*self);
 
-const gchar	*fwupd_plugin_get_name			(FwupdPlugin	*plugin);
-void		 fwupd_plugin_set_name			(FwupdPlugin	*plugin,
+const gchar	*fwupd_plugin_get_name			(FwupdPlugin	*self);
+void		 fwupd_plugin_set_name			(FwupdPlugin	*self,
 							 const gchar	*name);
-guint64		 fwupd_plugin_get_flags			(FwupdPlugin	*plugin);
-void		 fwupd_plugin_set_flags			(FwupdPlugin	*plugin,
+guint64		 fwupd_plugin_get_flags			(FwupdPlugin	*self);
+void		 fwupd_plugin_set_flags			(FwupdPlugin	*self,
 							 guint64	 flags);
-void		 fwupd_plugin_add_flag			(FwupdPlugin	*plugin,
+void		 fwupd_plugin_add_flag			(FwupdPlugin	*self,
 							 FwupdPluginFlags flag);
-void		 fwupd_plugin_remove_flag		(FwupdPlugin	*plugin,
+void		 fwupd_plugin_remove_flag		(FwupdPlugin	*self,
 							 FwupdPluginFlags flag);
-gboolean	 fwupd_plugin_has_flag			(FwupdPlugin	*plugin,
+gboolean	 fwupd_plugin_has_flag			(FwupdPlugin	*self,
 							 FwupdPluginFlags flag);
 
 FwupdPlugin	*fwupd_plugin_from_variant		(GVariant	*value);
