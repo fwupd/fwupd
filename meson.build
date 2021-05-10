@@ -219,6 +219,10 @@ if get_option('libarchive')
   libarchive = dependency('libarchive')
   conf.set('HAVE_LIBARCHIVE', '1')
 endif
+if get_option('libflashrom')
+  libflashrom = dependency('flashrom', fallback : ['flashrom', 'flashrom_dep'])
+  conf.set('HAVE_LIBFLASHROM', '1')
+endif
 endif
 libjcat = dependency('jcat', version : '>= 0.1.0', fallback : ['libjcat', 'libjcat_dep'])
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
@@ -426,10 +430,6 @@ if build_standalone and get_option('plugin_thunderbolt')
   conf.set('HAVE_THUNDERBOLT', '1')
 endif
 
-if build_standalone and get_option('plugin_flashrom')
-  libflashrom = dependency('flashrom', fallback : ['flashrom', 'flashrom_dep'])
-endif
-
 if build_standalone and get_option('systemd')
   systemd = dependency('systemd', version : '>= 211')
   libsystemd = dependency('libsystemd')
@@ -524,6 +524,10 @@ endif
 
 if get_option('libarchive')
   plugin_deps += libarchive
+endif
+
+if get_option('libflashrom')
+  plugin_deps += libflashrom
 endif
 
 root_incdir = include_directories('.')

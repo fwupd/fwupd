@@ -7,6 +7,7 @@ option('introspection', type : 'boolean', value : true, description : 'generate 
 option('lvfs', type : 'boolean', value : true, description : 'enable LVFS remotes')
 option('man', type : 'boolean', value : true, description : 'enable man pages')
 option('libarchive', type : 'boolean', value : true, description : 'enable libarchive support')
+option('libflashrom', type : 'boolean', value : true, description : 'enable libflashrom support')
 option('gudev', type : 'boolean', value : true, description : 'enable GUdev support')
 option('gusb', type : 'boolean', value : true, description : 'enable GUsb support')
 option('bluez', type : 'boolean', value : false, description : 'enable BlueZ support')

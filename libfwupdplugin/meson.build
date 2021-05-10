@@ -15,6 +15,8 @@ fwupdplugin_src = [
   'fu-firmware.c',          # fuzzing
   'fu-firmware-common.c',   # fuzzing
   'fu-dfuse-firmware.c',    # fuzzing
+  'fu-flashrom-context.c',
+  'fu-flashrom-opener.c',
   'fu-fmap-firmware.c',     # fuzzing
   'fu-hwids.c',             # fuzzing
   'fu-ihex-firmware.c',     # fuzzing
@@ -51,6 +53,7 @@ fwupdplugin_headers = [
   'fu-volume.h',
   'fu-firmware.h',
   'fu-firmware-common.h',
+  'fu-flashrom-context.h',
   'fu-fmap-firmware.h',
   'fu-dfuse-firmware.h',
   'fu-hwids.h',
@@ -123,6 +126,10 @@ library_deps = [
 
 if get_option('libarchive')
   library_deps += libarchive
+endif
+
+if get_option('libflashrom')
+  library_deps += libflashrom
 endif
 
 fwupdplugin_mapfile = 'fwupdplugin.map'

@@ -794,6 +794,21 @@ LIBFWUPDPLUGIN_1.6.0 {
 
 LIBFWUPDPLUGIN_1.6.1 {
   global:
+    fu_flashrom_context_get_flash_size;
+    fu_flashrom_context_get_type;
+    fu_flashrom_context_read_image;
+    fu_flashrom_context_open;
+    fu_flashrom_context_set_included_regions;
+    fu_flashrom_context_verify_image;
+    fu_flashrom_context_write_image;
+    fu_flashrom_opener_get_layout;
+    fu_flashrom_opener_get_programmer;
+    fu_flashrom_opener_get_programmer_args;
+    fu_flashrom_opener_new;
+    fu_flashrom_opener_set_layout;
+    fu_flashrom_opener_set_layout_from_ifd;
+    fu_flashrom_opener_set_programmer;
+    fu_flashrom_opener_set_programmer_args;
     fu_srec_firmware_record_get_type;
     fu_version_string;
   local: *;
