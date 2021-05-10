@@ -40,7 +40,6 @@ fu_rts54hub_rtd21xx_ensure_version_unlocked (FuRts54hubRtd21xxForeground *self,
 {
 	guint8 buf_rep[7] = { 0x00 };
 	guint8 buf_req[] = { ISP_CMD_GET_FW_INFO };
-	guint8 buf[] = { ISP_CMD_FW_UPDATE_RESET };
 	g_autofree gchar *version = NULL;
 
 	if (!fu_rts54hub_rtd21xx_device_i2c_write (FU_RTS54HUB_RTD21XX_DEVICE (self),
@@ -65,16 +64,6 @@ fu_rts54hub_rtd21xx_ensure_version_unlocked (FuRts54hubRtd21xxForeground *self,
 	/* set version */
 	version = g_strdup_printf ("%u.%u", buf_rep[1], buf_rep[2]);
 	fu_device_set_version (FU_DEVICE (self), version);
-
-	if (!fu_rts54hub_rtd21xx_device_i2c_write (FU_RTS54HUB_RTD21XX_DEVICE (self),
-						   UC_ISP_SLAVE_ADDR,
-						   UC_FOREGROUND_OPCODE,
-						   buf, sizeof(buf),
-						   error)) {
-		g_prefix_error (error, "failed to ISP_CMD_FW_UPDATE_RESET: ");
-		return FALSE;
-	}
-
 	return TRUE;
 }
 
@@ -87,6 +76,8 @@ fu_rts54hub_rtd21xx_foreground_detach_raw (FuRts54hubRtd21xxForeground *self, GE
 		g_prefix_error (error, "failed to detach: ");
 		return FALSE;
 	}
+	/* wait for device ready */
+	g_usleep (300000);
 	return TRUE;
 }
 
@@ -135,7 +126,7 @@ fu_rts54hub_rtd21xx_foreground_attach (FuDevice *device, GError **error)
 {
 	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE (fu_device_get_parent (device));
 	FuRts54hubRtd21xxForeground *self = FU_RTS54HUB_RTD21XX_FOREGROUND (device);
-	guint8 write_buf[ISP_PACKET_SIZE] = { 0x0 };
+	guint8 buf[] = { ISP_CMD_FW_UPDATE_RESET };
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open device */
@@ -149,13 +140,12 @@ fu_rts54hub_rtd21xx_foreground_attach (FuDevice *device, GError **error)
 	if (!fu_rts54hub_rtd21xx_device_read_status (FU_RTS54HUB_RTD21XX_DEVICE (self),
 						     NULL, error))
 		return FALSE;
-	write_buf[0] = ISP_CMD_FW_UPDATE_EXIT;
 	if (!fu_rts54hub_rtd21xx_device_i2c_write (FU_RTS54HUB_RTD21XX_DEVICE (self),
 						   UC_ISP_SLAVE_ADDR,
 						   UC_FOREGROUND_OPCODE,
-						   write_buf, 1,
+						   buf, sizeof(buf),
 						   error)) {
-		g_prefix_error (error, "exit foreground-fw mode: ");
+		g_prefix_error (error, "failed to ISP_CMD_FW_UPDATE_RESET: ");
 		return FALSE;
 	}
 

@@ -59,6 +59,7 @@ fu_rts54hub_rtd21xx_ensure_version_unlocked (FuRts54hubRtd21xxBackground *self,
 		g_prefix_error (error, "failed to get version number: ");
 		return FALSE;
 	}
+
 	/* set version */
 	version = g_strdup_printf ("%u.%u", buf_rep[1], buf_rep[2]);
 	fu_device_set_version (FU_DEVICE (self), version);
@@ -75,6 +76,9 @@ fu_rts54hub_rtd21xx_background_detach_raw (FuRts54hubRtd21xxBackground *self, GE
 		g_prefix_error (error, "failed to detach: ");
 		return FALSE;
 	}
+
+	/* wait for device ready */
+	g_usleep (300000);
 	return TRUE;
 }
 
@@ -124,14 +128,12 @@ fu_rts54hub_rtd21xx_background_attach (FuDevice *device, GError **error)
 	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE (fu_device_get_parent (device));
 	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	guint8 buf[] = { 0xFF };
+	guint8 buf[] = { ISP_CMD_FW_UPDATE_EXIT };
 
 	/* open device */
 	locker = fu_device_locker_new (parent, error);
 	if (locker == NULL)
 		return FALSE;
-
-	buf[0] = ISP_CMD_FW_UPDATE_EXIT ;
 	if (!fu_rts54hub_rtd21xx_device_i2c_write (self,
 						   UC_ISP_SLAVE_ADDR,
 						   UC_BACKGROUND_OPCODE,
@@ -140,8 +142,7 @@ fu_rts54hub_rtd21xx_background_attach (FuDevice *device, GError **error)
 		g_prefix_error (error, "failed to attach: ");
 		return FALSE;
 	}
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE))
-		fu_device_sleep_with_progress (device, 1);
+	fu_device_sleep_with_progress (device, 1);
 
 	/* success */
 	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
