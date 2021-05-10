@@ -39,7 +39,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (FwupdPlugin, fwupd_plugin, G_TYPE_OBJECT)
 
 /**
  * fwupd_plugin_get_name:
- * @plugin: a #FwupdPlugin
+ * @self: a #FwupdPlugin
  *
  * Gets the plugin name.
  *
@@ -48,16 +48,16 @@ G_DEFINE_TYPE_WITH_PRIVATE (FwupdPlugin, fwupd_plugin, G_TYPE_OBJECT)
  * Since: 1.5.0
  **/
 const gchar *
-fwupd_plugin_get_name (FwupdPlugin *plugin)
+fwupd_plugin_get_name (FwupdPlugin *self)
 {
-	FwupdPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_val_if_fail (FWUPD_IS_PLUGIN (plugin), NULL);
+	FwupdPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_PLUGIN (self), NULL);
 	return priv->name;
 }
 
 /**
  * fwupd_plugin_set_name:
- * @plugin: a #FwupdPlugin
+ * @self: a #FwupdPlugin
  * @name: the plugin name, e.g. `bios`
  *
  * Sets the plugin name.
@@ -65,10 +65,10 @@ fwupd_plugin_get_name (FwupdPlugin *plugin)
  * Since: 1.5.0
  **/
 void
-fwupd_plugin_set_name (FwupdPlugin *plugin, const gchar *name)
+fwupd_plugin_set_name (FwupdPlugin *self, const gchar *name)
 {
-	FwupdPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_if_fail (FWUPD_IS_PLUGIN (plugin));
+	FwupdPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_PLUGIN (self));
 	g_return_if_fail (name != NULL);
 
 	/* not changed */
@@ -77,12 +77,12 @@ fwupd_plugin_set_name (FwupdPlugin *plugin, const gchar *name)
 
 	g_free (priv->name);
 	priv->name = g_strdup (name);
-	g_object_notify (G_OBJECT (plugin), "name");
+	g_object_notify (G_OBJECT (self), "name");
 }
 
 /**
  * fwupd_plugin_get_flags:
- * @plugin: a #FwupdPlugin
+ * @self: a #FwupdPlugin
  *
  * Gets the plugin flags.
  *
@@ -91,16 +91,16 @@ fwupd_plugin_set_name (FwupdPlugin *plugin, const gchar *name)
  * Since: 1.5.0
  **/
 guint64
-fwupd_plugin_get_flags (FwupdPlugin *plugin)
+fwupd_plugin_get_flags (FwupdPlugin *self)
 {
-	FwupdPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_val_if_fail (FWUPD_IS_PLUGIN (plugin), 0);
+	FwupdPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_PLUGIN (self), 0);
 	return priv->flags;
 }
 
 /**
  * fwupd_plugin_set_flags:
- * @plugin: a #FwupdPlugin
+ * @self: a #FwupdPlugin
  * @flags: plugin flags, e.g. %FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED
  *
  * Sets the plugin flags.
@@ -108,19 +108,19 @@ fwupd_plugin_get_flags (FwupdPlugin *plugin)
  * Since: 1.5.0
  **/
 void
-fwupd_plugin_set_flags (FwupdPlugin *plugin, guint64 flags)
+fwupd_plugin_set_flags (FwupdPlugin *self, guint64 flags)
 {
-	FwupdPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_if_fail (FWUPD_IS_PLUGIN (plugin));
+	FwupdPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_PLUGIN (self));
 	if (priv->flags == flags)
 		return;
 	priv->flags = flags;
-	g_object_notify (G_OBJECT (plugin), "flags");
+	g_object_notify (G_OBJECT (self), "flags");
 }
 
 /**
  * fwupd_plugin_add_flag:
- * @plugin: a #FwupdPlugin
+ * @self: a #FwupdPlugin
  * @flag: the #FwupdPluginFlags
  *
  * Adds a specific plugin flag to the plugin.
@@ -128,21 +128,21 @@ fwupd_plugin_set_flags (FwupdPlugin *plugin, guint64 flags)
  * Since: 1.5.0
  **/
 void
-fwupd_plugin_add_flag (FwupdPlugin *plugin, FwupdPluginFlags flag)
+fwupd_plugin_add_flag (FwupdPlugin *self, FwupdPluginFlags flag)
 {
-	FwupdPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_if_fail (FWUPD_IS_PLUGIN (plugin));
+	FwupdPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_PLUGIN (self));
 	if (flag == 0)
 		return;
 	if ((priv->flags & flag) > 0)
 		return;
 	priv->flags |= flag;
-	g_object_notify (G_OBJECT (plugin), "flags");
+	g_object_notify (G_OBJECT (self), "flags");
 }
 
 /**
  * fwupd_plugin_remove_flag:
- * @plugin: a #FwupdPlugin
+ * @self: a #FwupdPlugin
  * @flag: a plugin flag
  *
  * Removes a specific plugin flag from the plugin.
@@ -150,21 +150,21 @@ fwupd_plugin_add_flag (FwupdPlugin *plugin, FwupdPluginFlags flag)
  * Since: 1.5.0
  **/
 void
-fwupd_plugin_remove_flag (FwupdPlugin *plugin, FwupdPluginFlags flag)
+fwupd_plugin_remove_flag (FwupdPlugin *self, FwupdPluginFlags flag)
 {
-	FwupdPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_if_fail (FWUPD_IS_PLUGIN (plugin));
+	FwupdPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_PLUGIN (self));
 	if (flag == 0)
 		return;
 	if ((priv->flags & flag) == 0)
 		return;
 	priv->flags &= ~flag;
-	g_object_notify (G_OBJECT (plugin), "flags");
+	g_object_notify (G_OBJECT (self), "flags");
 }
 
 /**
  * fwupd_plugin_has_flag:
- * @plugin: a #FwupdPlugin
+ * @self: a #FwupdPlugin
  * @flag: a plugin flag
  *
  * Finds if the plugin has a specific plugin flag.
@@ -174,16 +174,16 @@ fwupd_plugin_remove_flag (FwupdPlugin *plugin, FwupdPluginFlags flag)
  * Since: 1.5.0
  **/
 gboolean
-fwupd_plugin_has_flag (FwupdPlugin *plugin, FwupdPluginFlags flag)
+fwupd_plugin_has_flag (FwupdPlugin *self, FwupdPluginFlags flag)
 {
-	FwupdPluginPrivate *priv = GET_PRIVATE (plugin);
-	g_return_val_if_fail (FWUPD_IS_PLUGIN (plugin), FALSE);
+	FwupdPluginPrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_PLUGIN (self), FALSE);
 	return (priv->flags & flag) > 0;
 }
 
 /**
  * fwupd_plugin_to_variant:
- * @plugin: a #FwupdPlugin
+ * @self: a #FwupdPlugin
  *
  * Serialize the plugin data omitting sensitive fields
  *
@@ -192,12 +192,12 @@ fwupd_plugin_has_flag (FwupdPlugin *plugin, FwupdPluginFlags flag)
  * Since: 1.5.0
  **/
 GVariant *
-fwupd_plugin_to_variant (FwupdPlugin *plugin)
+fwupd_plugin_to_variant (FwupdPlugin *self)
 {
-	FwupdPluginPrivate *priv = GET_PRIVATE (plugin);
+	FwupdPluginPrivate *priv = GET_PRIVATE (self);
 	GVariantBuilder builder;
 
-	g_return_val_if_fail (FWUPD_IS_PLUGIN (plugin), NULL);
+	g_return_val_if_fail (FWUPD_IS_PLUGIN (self), NULL);
 
 	/* create an array with all the metadata in */
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
@@ -215,14 +215,14 @@ fwupd_plugin_to_variant (FwupdPlugin *plugin)
 }
 
 static void
-fwupd_plugin_from_key_value (FwupdPlugin *plugin, const gchar *key, GVariant *value)
+fwupd_plugin_from_key_value (FwupdPlugin *self, const gchar *key, GVariant *value)
 {
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_NAME) == 0) {
-		fwupd_plugin_set_name (plugin, g_variant_get_string (value, NULL));
+		fwupd_plugin_set_name (self, g_variant_get_string (value, NULL));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_FLAGS) == 0) {
-		fwupd_plugin_set_flags (plugin, g_variant_get_uint64 (value));
+		fwupd_plugin_set_flags (self, g_variant_get_uint64 (value));
 		return;
 	}
 }
@@ -268,7 +268,7 @@ fwupd_plugin_json_add_string (JsonBuilder *builder, const gchar *key, const gcha
 
 /**
  * fwupd_plugin_to_json:
- * @plugin: a #FwupdPlugin
+ * @self: a #FwupdPlugin
  * @builder: a JSON builder
  *
  * Adds a fwupd plugin to a JSON builder
@@ -276,11 +276,11 @@ fwupd_plugin_json_add_string (JsonBuilder *builder, const gchar *key, const gcha
  * Since: 1.5.0
  **/
 void
-fwupd_plugin_to_json (FwupdPlugin *plugin, JsonBuilder *builder)
+fwupd_plugin_to_json (FwupdPlugin *self, JsonBuilder *builder)
 {
-	FwupdPluginPrivate *priv = GET_PRIVATE (plugin);
+	FwupdPluginPrivate *priv = GET_PRIVATE (self);
 
-	g_return_if_fail (FWUPD_IS_PLUGIN (plugin));
+	g_return_if_fail (FWUPD_IS_PLUGIN (self));
 	g_return_if_fail (builder != NULL);
 
 	fwupd_plugin_json_add_string (builder, FWUPD_RESULT_KEY_NAME, priv->name);
@@ -300,7 +300,7 @@ fwupd_plugin_to_json (FwupdPlugin *plugin, JsonBuilder *builder)
 
 /**
  * fwupd_plugin_to_string:
- * @plugin: a #FwupdPlugin
+ * @self: a #FwupdPlugin
  *
  * Builds a text representation of the object.
  *
@@ -309,12 +309,12 @@ fwupd_plugin_to_json (FwupdPlugin *plugin, JsonBuilder *builder)
  * Since: 1.5.0
  **/
 gchar *
-fwupd_plugin_to_string (FwupdPlugin *plugin)
+fwupd_plugin_to_string (FwupdPlugin *self)
 {
-	FwupdPluginPrivate *priv = GET_PRIVATE (plugin);
+	FwupdPluginPrivate *priv = GET_PRIVATE (self);
 	GString *str;
 
-	g_return_val_if_fail (FWUPD_IS_PLUGIN (plugin), NULL);
+	g_return_val_if_fail (FWUPD_IS_PLUGIN (self), NULL);
 
 	str = g_string_new (NULL);
 	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_NAME, priv->name);
@@ -384,26 +384,26 @@ fwupd_plugin_class_init (FwupdPluginClass *klass)
 }
 
 static void
-fwupd_plugin_init (FwupdPlugin *plugin)
+fwupd_plugin_init (FwupdPlugin *self)
 {
 }
 
 static void
 fwupd_plugin_finalize (GObject *object)
 {
-	FwupdPlugin *plugin = FWUPD_PLUGIN (object);
-	FwupdPluginPrivate *priv = GET_PRIVATE (plugin);
+	FwupdPlugin *self = FWUPD_PLUGIN (object);
+	FwupdPluginPrivate *priv = GET_PRIVATE (self);
 	g_free (priv->name);
 	G_OBJECT_CLASS (fwupd_plugin_parent_class)->finalize (object);
 }
 
 static void
-fwupd_plugin_set_from_variant_iter (FwupdPlugin *plugin, GVariantIter *iter)
+fwupd_plugin_set_from_variant_iter (FwupdPlugin *self, GVariantIter *iter)
 {
 	GVariant *value;
 	const gchar *key;
 	while (g_variant_iter_next (iter, "{&sv}", &key, &value)) {
-		fwupd_plugin_from_key_value (plugin, key, value);
+		fwupd_plugin_from_key_value (self, key, value);
 		g_variant_unref (value);
 	}
 }
@@ -421,24 +421,24 @@ fwupd_plugin_set_from_variant_iter (FwupdPlugin *plugin, GVariantIter *iter)
 FwupdPlugin *
 fwupd_plugin_from_variant (GVariant *value)
 {
-	FwupdPlugin *plugin = NULL;
+	FwupdPlugin *self = NULL;
 	const gchar *type_string;
 	g_autoptr(GVariantIter) iter = NULL;
 
 	/* format from GetDetails */
 	type_string = g_variant_get_type_string (value);
 	if (g_strcmp0 (type_string, "(a{sv})") == 0) {
-		plugin = fwupd_plugin_new ();
+		self = fwupd_plugin_new ();
 		g_variant_get (value, "(a{sv})", &iter);
-		fwupd_plugin_set_from_variant_iter (plugin, iter);
+		fwupd_plugin_set_from_variant_iter (self, iter);
 	} else if (g_strcmp0 (type_string, "a{sv}") == 0) {
-		plugin = fwupd_plugin_new ();
+		self = fwupd_plugin_new ();
 		g_variant_get (value, "a{sv}", &iter);
-		fwupd_plugin_set_from_variant_iter (plugin, iter);
+		fwupd_plugin_set_from_variant_iter (self, iter);
 	} else {
 		g_warning ("type %s not known", type_string);
 	}
-	return plugin;
+	return self;
 }
 
 /**
@@ -462,13 +462,13 @@ fwupd_plugin_array_from_variant (GVariant *value)
 	untuple = g_variant_get_child_value (value, 0);
 	sz = g_variant_n_children (untuple);
 	for (guint i = 0; i < sz; i++) {
-		FwupdPlugin *plugin;
+		FwupdPlugin *self;
 		g_autoptr(GVariant) data = NULL;
 		data = g_variant_get_child_value (untuple, i);
-		plugin = fwupd_plugin_from_variant (data);
-		if (plugin == NULL)
+		self = fwupd_plugin_from_variant (data);
+		if (self == NULL)
 			continue;
-		g_ptr_array_add (array, plugin);
+		g_ptr_array_add (array, self);
 	}
 	return array;
 }
@@ -485,7 +485,7 @@ fwupd_plugin_array_from_variant (GVariant *value)
 FwupdPlugin *
 fwupd_plugin_new (void)
 {
-	FwupdPlugin *plugin;
-	plugin = g_object_new (FWUPD_TYPE_PLUGIN, NULL);
-	return FWUPD_PLUGIN (plugin);
+	FwupdPlugin *self;
+	self = g_object_new (FWUPD_TYPE_PLUGIN, NULL);
+	return FWUPD_PLUGIN (self);
 }
