@@ -7,15 +7,13 @@
 #include "config.h"
 
 #include "fu-flashrom-device.h"
+#include "fu-flashrom-context.h"
 
 #include <libflashrom.h>
 
 typedef struct {
-	gchar				*programmer_name;
-	gchar				*programmer_args;
-	gsize				 flash_size;
-	struct flashrom_flashctx	*flashctx;
-	struct flashrom_programmer	*flashprog;
+	FuFlashromOpener *opener;
+	FuFlashromContext *flashctx;
 } FuFlashromDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (FuFlashromDevice, fu_flashrom_device, FU_TYPE_UDEV_DEVICE)
@@ -27,10 +25,7 @@ fu_flashrom_device_set_programmer_name (FuFlashromDevice *self, const gchar *nam
 {
 	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_FLASHROM_DEVICE (self));
-	if (g_strcmp0 (priv->programmer_name, name) == 0)
-		return;
-	g_free (priv->programmer_name);
-	priv->programmer_name = g_strdup (name);
+	fu_flashrom_opener_set_programmer (priv->opener, name);
 }
 
 const gchar *
@@ -38,7 +33,7 @@ fu_flashrom_device_get_programmer_name (FuFlashromDevice *self)
 {
 	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_FLASHROM_DEVICE (self), NULL);
-	return priv->programmer_name;
+	return fu_flashrom_opener_get_programmer (priv->opener);
 }
 
 void
@@ -46,31 +41,16 @@ fu_flashrom_device_set_programmer_args (FuFlashromDevice *self, const gchar *arg
 {
 	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_FLASHROM_DEVICE (self));
-	if (g_strcmp0 (priv->programmer_args, args) == 0)
-		return;
-	g_free (priv->programmer_args);
-	priv->programmer_args = g_strdup (args);
-}
-
-gsize
-fu_flashrom_device_get_flash_size (FuFlashromDevice *self)
-{
-	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_IS_FLASHROM_DEVICE (self), 0);
-	return priv->flash_size;
-}
-
-struct flashrom_flashctx *
-fu_flashrom_device_get_flashctx (FuFlashromDevice *self)
-{
-	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_IS_FLASHROM_DEVICE (self), NULL);
-	return priv->flashctx;
+	fu_flashrom_opener_set_programmer_args (priv->opener, args);
 }
 
 static void
 fu_flashrom_device_init (FuFlashromDevice *self)
 {
+	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
+
+	priv->opener = fu_flashrom_opener_new ();
+	priv->flashctx = NULL;
 	fu_device_add_protocol (FU_DEVICE (self), "org.flashrom");
 }
 
@@ -78,9 +58,31 @@ static void
 fu_flashrom_device_finalize (GObject *object)
 {
 	FuFlashromDevicePrivate *priv = GET_PRIVATE (FU_FLASHROM_DEVICE (object));
-	g_free (priv->programmer_name);
-	g_free (priv->programmer_args);
+	if (priv->flashctx != NULL) {
+		/* should have been closed in close() */
+		g_warn_if_reached();
+		g_object_unref (priv->flashctx);
+	}
+	g_object_unref (priv->opener);
 	G_OBJECT_CLASS (fu_flashrom_device_parent_class)->finalize (object);
+}
+
+FuFlashromOpener *
+fu_flashrom_device_get_opener (FuFlashromDevice *self)
+{
+	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
+
+	return priv->opener;
+}
+
+FuFlashromContext *
+fu_flashrom_device_get_context (FuFlashromDevice *self)
+{
+	FuFlashromDevicePrivate *priv = GET_PRIVATE (self);
+
+	/* attempting to use context without device open */
+	g_warn_if_fail(priv->flashctx != NULL);
+	return priv->flashctx;
 }
 
 static gboolean
@@ -101,7 +103,7 @@ fu_flashrom_device_set_quirk_kv (FuDevice *device,
 	g_set_error_literal (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_NOT_SUPPORTED,
-			     "no supported");
+			     "not supported");
 	return FALSE;
 }
 
@@ -133,64 +135,18 @@ static gboolean
 fu_flashrom_device_open (FuDevice *device, GError **error)
 {
 	FuFlashromDevicePrivate *priv = GET_PRIVATE (FU_FLASHROM_DEVICE (device));
-	gint rc;
 
-	if (priv->programmer_name == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "programmer not specified");
-		return FALSE;
-	}
-
-	if (flashrom_programmer_init (&priv->flashprog, priv->programmer_name,
-				      priv->programmer_args)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "programmer initialization failed");
-		return FALSE;
-	}
-	rc = flashrom_flash_probe (&priv->flashctx, priv->flashprog, NULL);
-	if (rc == 3) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "flash probe failed: multiple chips were found");
-		return FALSE;
-	}
-	if (rc == 2) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "flash probe failed: no chip was found");
-		return FALSE;
-	}
-	if (rc != 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "flash probe failed: unknown error");
-		return FALSE;
-	}
-	priv->flash_size = flashrom_flash_getsize (priv->flashctx);
-	if (priv->flash_size == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "flash size zero");
-		return FALSE;
-	}
-
-	return TRUE;
+	if (priv->flashctx != NULL)
+		return TRUE;
+	return fu_flashrom_context_open (priv->opener, &priv->flashctx, error);
 }
 
 static gboolean
 fu_flashrom_device_close (FuDevice *device, GError **error)
 {
 	FuFlashromDevicePrivate *priv = GET_PRIVATE (FU_FLASHROM_DEVICE (device));
-	flashrom_flash_release (priv->flashctx);
-	flashrom_programmer_shutdown (priv->flashprog);
+
+	g_clear_object (&priv->flashctx);
 	return TRUE;
 }
 

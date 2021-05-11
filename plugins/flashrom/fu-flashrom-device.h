@@ -7,6 +7,7 @@
 #pragma once
 
 #include "fu-plugin.h"
+#include "fu-flashrom-context.h"
 
 struct _FuFlashromDeviceClass {
 	FuUdevDeviceClass		 parent_class;
@@ -21,5 +22,5 @@ void		 fu_flashrom_device_set_programmer_name	(FuFlashromDevice *self,
 const gchar	*fu_flashrom_device_get_programmer_name (FuFlashromDevice *self);
 void		 fu_flashrom_device_set_programmer_args	(FuFlashromDevice *self,
 							 const gchar	*args);
-gsize		 fu_flashrom_device_get_flash_size	(FuFlashromDevice *self);
-struct flashrom_flashctx *fu_flashrom_device_get_flashctx (FuFlashromDevice *self);
+FuFlashromOpener *fu_flashrom_device_get_opener (FuFlashromDevice *self);
+FuFlashromContext *fu_flashrom_device_get_context (FuFlashromDevice *self);

@@ -9,8 +9,6 @@
 #include "fu-flashrom-device.h"
 #include "fu-flashrom-internal-device.h"
 
-#include <libflashrom.h>
-
 struct _FuFlashromInternalDevice {
 	FuFlashromDevice		 parent_instance;
 };
@@ -21,6 +19,8 @@ G_DEFINE_TYPE (FuFlashromInternalDevice, fu_flashrom_internal_device,
 static void
 fu_flashrom_internal_device_init (FuFlashromInternalDevice *self)
 {
+	FuFlashromOpener *opener = fu_flashrom_device_get_opener (FU_FLASHROM_DEVICE (self));
+
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
@@ -31,6 +31,9 @@ fu_flashrom_internal_device_init (FuFlashromInternalDevice *self)
 	fu_device_set_logical_id (FU_DEVICE (self), "bios");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_icon (FU_DEVICE (self), "computer");
+
+	fu_flashrom_opener_set_programmer (opener, "internal");
+	fu_flashrom_opener_set_layout_from_ifd (opener);
 }
 
 static gboolean
@@ -49,21 +52,15 @@ fu_flashrom_internal_device_prepare (FuDevice *device,
 	if (!fu_common_mkdir_parent (firmware_orig, error))
 		return FALSE;
 	if (!g_file_test (firmware_orig, G_FILE_TEST_EXISTS)) {
-		FuFlashromDevice *parent = FU_FLASHROM_DEVICE (device);
-		struct flashrom_flashctx *flashctx = fu_flashrom_device_get_flashctx (parent);
-		gsize flash_size = fu_flashrom_device_get_flash_size (parent);
-		g_autofree guint8 *newcontents = g_malloc0 (flash_size);
+		g_autoptr(FuFlashromContext) ctx =
+			fu_flashrom_device_get_context (FU_FLASHROM_DEVICE (device));
 		g_autoptr(GBytes) buf = NULL;
 
-		fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
-		if (flashrom_image_read (flashctx, newcontents, flash_size)) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_READ,
-					     "failed to back up original firmware");
+		if (!fu_flashrom_context_read_image (ctx, &buf, error)) {
+			g_prefix_error(error, "failed to back up original firmware: ");
 			return FALSE;
 		}
-		buf = g_bytes_new_static (newcontents, flash_size);
+
 		if (!fu_common_set_contents_bytes (firmware_orig, buf, error))
 			return FALSE;
 	}
@@ -77,67 +74,25 @@ fu_flashrom_internal_device_write_firmware (FuDevice *device,
 					    FwupdInstallFlags flags,
 					    GError **error)
 {
-	FuFlashromDevice *parent = FU_FLASHROM_DEVICE (device);
-	struct flashrom_flashctx *flashctx = fu_flashrom_device_get_flashctx (parent);
-	gsize flash_size = fu_flashrom_device_get_flash_size (parent);
-	struct flashrom_layout *layout;
-	gsize sz = 0;
-	gint rc;
-	const guint8 *buf;
 	g_autoptr(GBytes) blob_fw = fu_firmware_get_bytes (firmware, error);
+	FuFlashromContext *flashctx = fu_flashrom_device_get_context(
+		FU_FLASHROM_DEVICE (device));
+
 	if (blob_fw == NULL)
 		return FALSE;
 
-	buf = g_bytes_get_data (blob_fw, &sz);
-
-	if (flashrom_layout_read_from_ifd (&layout, flashctx, NULL, 0)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_READ,
-				     "failed to read layout from Intel ICH descriptor");
+	if (!fu_flashrom_context_set_included_regions (flashctx, error,
+						       "bios", NULL))
 		return FALSE;
-	}
-
-	/* include bios region for safety reasons */
-	if (flashrom_layout_include_region (layout, "bios")) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "invalid region name");
-		return FALSE;
-	}
-
-	/* write region */
-	flashrom_layout_set (flashctx, layout);
-	if (sz != flash_size) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "invalid image size 0x%x, expected 0x%x",
-			     (guint) sz, (guint) flash_size);
-		return FALSE;
-	}
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	fu_device_set_progress (device, 0); /* urgh */
-	rc = flashrom_image_write (flashctx, (void *) buf, sz, NULL /* refbuffer */);
-	if (rc != 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "image write failed, err=%i", rc);
+	if (!fu_flashrom_context_write_image (flashctx, blob_fw, FALSE, error))
 		return FALSE;
-	}
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
-	if (flashrom_image_verify (flashctx, (void *) buf, sz)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "image verify failed");
+	if (!fu_flashrom_context_verify_image (flashctx, blob_fw, error))
 		return FALSE;
-	}
-	flashrom_layout_release (layout);
 
 	/* success */
 	return TRUE;

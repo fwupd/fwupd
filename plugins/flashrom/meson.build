@@ -1,4 +1,7 @@
 if get_option('plugin_flashrom')
+if not get_option('libflashrom')
+  error('libflashrom is required for plugin_flashrom')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginFlashrom"']
 
 install_data(['flashrom.quirk'],
@@ -30,7 +33,6 @@ shared_module('fu_plugin_flashrom',
   ],
   dependencies : [
     plugin_deps,
-    libflashrom,
   ],
 )
 endif
