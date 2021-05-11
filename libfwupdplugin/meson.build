@@ -232,6 +232,7 @@ if get_option('introspection') and get_option('gusb')
       '@INPUT@',
       '@OUTPUT@',
       '--override', 'fu_chunk_get_type', '1.5.6',
+      '--override', 'fu_srec_firmware_record_get_type', '1.6.1',
     ],
   )
 

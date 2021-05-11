@@ -82,6 +82,37 @@ fu_srec_firmware_record_new (guint ln, FuFirmareSrecRecordKind kind, guint32 add
 	return rcd;
 }
 
+static FuSrecFirmwareRecord *
+fu_srec_firmware_record_dup (const FuSrecFirmwareRecord *rcd)
+{
+	FuSrecFirmwareRecord *dest;
+	g_return_val_if_fail (rcd != NULL, NULL);
+	dest = fu_srec_firmware_record_new (rcd->ln, rcd->kind, rcd->addr);
+	dest->buf = g_byte_array_ref (rcd->buf);
+	return dest;
+}
+
+/**
+ * fu_srec_firmware_record_get_type:
+ *
+ * Gets a specific type.
+ *
+ * Return value: a #GType
+ *
+ * Since: 1.6.1
+ **/
+GType
+fu_srec_firmware_record_get_type (void)
+{
+	static GType type_id = 0;
+	if (!type_id) {
+		type_id = g_boxed_type_register_static ("FuSrecFirmwareRecord",
+							(GBoxedCopyFunc) fu_srec_firmware_record_dup,
+							(GBoxedFreeFunc) fu_srec_firmware_record_free);
+	}
+	return type_id;
+}
+
 static gboolean
 fu_srec_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 			   FwupdInstallFlags flags, GError **error)

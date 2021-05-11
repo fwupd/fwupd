@@ -9,6 +9,7 @@
 #include "fu-firmware.h"
 
 #define FU_TYPE_SREC_FIRMWARE (fu_srec_firmware_get_type ())
+#define FU_TYPE_SREC_FIRMWARE_RECORD (fu_srec_firmware_record_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuSrecFirmware, fu_srec_firmware, FU, SREC_FIRMWARE, FuFirmware)
 
 struct _FuSrecFirmwareClass
@@ -42,6 +43,7 @@ typedef struct {
 
 FuFirmware		*fu_srec_firmware_new		(void);
 GPtrArray		*fu_srec_firmware_get_records	(FuSrecFirmware	*self);
+GType			 fu_srec_firmware_record_get_type (void);
 FuSrecFirmwareRecord	*fu_srec_firmware_record_new	(guint		 ln,
 							 FuFirmareSrecRecordKind kind,
 							 guint32	 addr);
