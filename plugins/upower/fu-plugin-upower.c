@@ -57,7 +57,7 @@ fu_plugin_upower_rescan (FuPlugin *plugin)
 
 	/* get percentage */
 	percentage_val = g_dbus_proxy_get_cached_property (data->proxy, "Percentage");
-	if (percentage_val == NULL || g_variant_get_uint32 (percentage_val) == 0) {
+	if (percentage_val == NULL) {
 		g_warning ("failed to query power percentage level");
 		fu_context_set_battery_level (ctx, FU_BATTERY_VALUE_INVALID);
 		return;
