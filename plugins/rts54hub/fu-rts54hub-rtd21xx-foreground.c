@@ -128,7 +128,7 @@ fu_rts54hub_rtd21xx_foreground_attach (FuDevice *device, GError **error)
 	FuRts54hubRtd21xxForeground *self = FU_RTS54HUB_RTD21XX_FOREGROUND (device);
 	guint8 write_buf[ISP_PACKET_SIZE] = { 0x0 };
 	g_autoptr(FuDeviceLocker) locker = NULL;
-
+	g_debug("******fu_rts54hub_rtd21xx_foreground_attach************");
 	/* open device */
 	locker = fu_device_locker_new (parent, error);
 	if (locker == NULL)
