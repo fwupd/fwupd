@@ -21,6 +21,15 @@ struct _FuContextClass {
 	gpointer	 padding[30];
 };
 
+/**
+ * FuContextLookupIter:
+ * @self: a #FuContext
+ * @key: a key
+ * @value: a value
+ * @user_data: user data
+ *
+ * The context lookup iteration callback.
+ */
 typedef void	(*FuContextLookupIter)			(FuContext	*self,
 							 const gchar	*key,
 							 const gchar	*value,

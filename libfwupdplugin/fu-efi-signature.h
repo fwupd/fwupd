@@ -13,6 +13,14 @@
 #define FU_TYPE_EFI_SIGNATURE (fu_efi_signature_get_type ())
 G_DECLARE_FINAL_TYPE (FuEfiSignature, fu_efi_signature, FU, EFI_SIGNATURE, FuFirmware)
 
+/**
+ * FuEfiSignatureKind:
+ * @FU_EFI_SIGNATURE_KIND_UNKNOWN:	No signature
+ * @FU_EFI_SIGNATURE_KIND_SHA256:	SHA256 hash
+ * @FU_EFI_SIGNATURE_KIND_X509:		X509 certificate
+ *
+ * The kind of EFI signature.
+ **/
 typedef enum {
 	FU_EFI_SIGNATURE_KIND_UNKNOWN,
 	FU_EFI_SIGNATURE_KIND_SHA256,

@@ -30,6 +30,15 @@ typedef enum {
 	FU_QUIRKS_LOAD_FLAG_LAST
 } FuQuirksLoadFlags;
 
+/**
+ * FuQuirksIter:
+ * @self: a #FuQuirks
+ * @key: a key
+ * @value: a value
+ * @user_data: user data
+ *
+ * The quirks iteration callback.
+ */
 typedef void	(*FuQuirksIter)				(FuQuirks	*self,
 							 const gchar	*key,
 							 const gchar	*value,

@@ -90,6 +90,11 @@ typedef enum {
 	FU_PLUGIN_RULE_LAST
 } FuPluginRule;
 
+/**
+ * FuPluginData:
+ *
+ * The plugin-allocated private data.
+ **/
 typedef struct	FuPluginData	FuPluginData;
 
 /* for plugins to use */

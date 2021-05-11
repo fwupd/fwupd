@@ -22,6 +22,11 @@ FuSmbios	*fu_smbios_new			(void);
 #define FU_SMBIOS_STRUCTURE_TYPE_CHASSIS	0x03
 #define FU_SMBIOS_STRUCTURE_TYPE_LAST		0x04
 
+/**
+ * FuSmbiosChassisKind:
+ *
+ * The system chassis kind.
+ **/
 typedef enum {
 	FU_SMBIOS_CHASSIS_KIND_OTHER		= 0x01,
 	FU_SMBIOS_CHASSIS_KIND_UNKNOWN		= 0x02,

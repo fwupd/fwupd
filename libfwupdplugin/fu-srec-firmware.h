@@ -16,6 +16,21 @@ struct _FuSrecFirmwareClass
 	FuFirmwareClass		 parent_class;
 };
 
+/**
+ * FuFirmareSrecRecordKind:
+ * @FU_FIRMWARE_SREC_RECORD_KIND_S0_HEADER:		Header
+ * @FU_FIRMWARE_SREC_RECORD_KIND_S1_DATA_16:		16 bit data
+ * @FU_FIRMWARE_SREC_RECORD_KIND_S2_DATA_24:		24 bit data
+ * @FU_FIRMWARE_SREC_RECORD_KIND_S3_DATA_32:		32 bit data
+ * @FU_FIRMWARE_SREC_RECORD_KIND_S4_RESERVED:		Reserved value
+ * @FU_FIRMWARE_SREC_RECORD_KIND_S5_COUNT_16:		16 bit count
+ * @FU_FIRMWARE_SREC_RECORD_KIND_S6_COUNT_24:		24 bit count
+ * @FU_FIRMWARE_SREC_RECORD_KIND_S7_COUNT_32:		32 bit count
+ * @FU_FIRMWARE_SREC_RECORD_KIND_S8_TERMINATION_24:	24 bit termination
+ * @FU_FIRMWARE_SREC_RECORD_KIND_S9_TERMINATION_16:	16 bit termination
+ *
+ * The kind of SREC record kind.
+ **/
 typedef enum {
 	FU_FIRMWARE_SREC_RECORD_KIND_S0_HEADER,
 	FU_FIRMWARE_SREC_RECORD_KIND_S1_DATA_16,
@@ -27,11 +42,14 @@ typedef enum {
 	FU_FIRMWARE_SREC_RECORD_KIND_S7_COUNT_32,
 	FU_FIRMWARE_SREC_RECORD_KIND_S8_TERMINATION_24,
 	FU_FIRMWARE_SREC_RECORD_KIND_S9_TERMINATION_16,
+	/*< private >*/
 	FU_FIRMWARE_SREC_RECORD_KIND_LAST
 } FuFirmareSrecRecordKind;
 
 /**
- * FuSrecFirmwareRecord: (skip):
+ * FuSrecFirmwareRecord:
+ *
+ * A single SREC record.
  **/
 typedef struct {
 	guint			 ln;

@@ -16,6 +16,11 @@ struct _FuIhexFirmwareClass
 	FuFirmwareClass		 parent_class;
 };
 
+/**
+ * FuIhexFirmwareRecord:
+ *
+ * A single Intel HEX record.
+ **/
 typedef struct {
 	guint		 ln;
 	GString		*buf;

@@ -41,6 +41,11 @@ typedef enum {
 	FU_DUMP_FLAGS_LAST
 } FuDumpFlags;
 
+/**
+ * FuEndianType:
+ *
+ * The endian type, e.g. %G_LITTLE_ENDIAN
+ **/
 typedef guint FuEndianType;
 
 /**
@@ -131,6 +136,13 @@ typedef enum {
 	FU_BATTERY_STATE_LAST
 } FuBatteryState;
 
+/**
+ * FuOutputHandler:
+ * @line: text data
+ * @user_data: user data
+ *
+ * The process spawn iteration callback.
+ */
 typedef void	(*FuOutputHandler)		(const gchar	*line,
 						 gpointer	 user_data);
 

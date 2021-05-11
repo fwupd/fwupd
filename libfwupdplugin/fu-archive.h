@@ -28,13 +28,13 @@ typedef enum {
 
 /**
  * FuArchiveIterateFunc:
- * @self: A #FuArchive.
- * @filename: A filename.
- * @bytes: The blob referenced by @filename.
- * @user_data: User data.
+ * @self: a #FuArchive
+ * @filename: a filename
+ * @bytes: the blob referenced by @filename
+ * @user_data: user data
  * @error: a #GError or NULL
  *
- * Specifies the type of archive iteration function.
+ * The archive iteration callback.
  */
 typedef gboolean (*FuArchiveIterateFunc)	(FuArchive		*self,
 						 const gchar		*filename,
