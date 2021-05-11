@@ -1407,15 +1407,14 @@ fu_common_string_append_kv (GString *str, guint idt, const gchar *key, const gch
 				for (gsize j = keysz; j < align; j++)
 					g_string_append (str, " ");
 			} else {
+				g_string_append (str, "\n");
 				for (gsize j = 0; j < idt; j++)
 					g_string_append (str, "  ");
 			}
 			g_string_append (str, split[i]);
-			g_string_append (str, "\n");
 		}
-	} else {
-		g_string_append (str, "\n");
 	}
+	g_string_append (str, "\n");
 }
 
 /**
