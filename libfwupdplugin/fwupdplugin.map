@@ -794,6 +794,7 @@ LIBFWUPDPLUGIN_1.6.0 {
 
 LIBFWUPDPLUGIN_1.6.1 {
   global:
+    fu_srec_firmware_record_get_type;
     fu_version_string;
   local: *;
 } LIBFWUPDPLUGIN_1.6.0;
