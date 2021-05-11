@@ -27,7 +27,11 @@ struct _FuFmapFirmwareClass
 	gpointer		 padding[14];
 };
 
-/* mapping of volatile and static regions in firmware binary */
+/**
+ * FuFmapArea:
+ *
+ * Specific area of volatile and static regions in firmware binary.
+ **/
 typedef struct  __attribute__((packed)) {
 	guint32	offset;                /* offset relative to base */
 	guint32	size;                  /* size in bytes */
@@ -35,6 +39,11 @@ typedef struct  __attribute__((packed)) {
 	guint16	flags;                 /* flags for this area */
 } FuFmapArea;
 
+/**
+ * FuFmap:
+ *
+ * Mapping of volatile and static regions in firmware binary.
+ **/
 typedef struct __attribute__((packed)) {
 	guint8		signature[8];		/* "__FMAP__" (0x5F5F464D41505F5F) */
 	guint8		ver_major;		/* major version */
