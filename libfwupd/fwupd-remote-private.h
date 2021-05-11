@@ -26,6 +26,8 @@ gchar		**fwupd_remote_get_order_before		(FwupdRemote	*self);
 
 void		 fwupd_remote_set_remotes_dir		(FwupdRemote	*self,
 							 const gchar	*directory);
+void		 fwupd_remote_set_filename_source	(FwupdRemote	*self,
+							 const gchar	*filename_source);
 void		 fwupd_remote_set_keyring_kind		(FwupdRemote	*self,
 							 FwupdKeyringKind keyring_kind);
 

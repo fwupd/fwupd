@@ -185,7 +185,16 @@ fwupd_remote_set_id (FwupdRemote *self, const gchar *id)
 	g_strdelimit (priv->id, ".", '\0');
 }
 
-static void
+/**
+ * fwupd_remote_set_filename_source:
+ * @self: a #FwupdRemote
+ * @filename_source: (nullable): filename
+ *
+ * Sets the source filename. This is typically a file in `/etc/fwupd/remotes/`.
+ *
+ * Since: 1.6.1
+ **/
+void
 fwupd_remote_set_filename_source (FwupdRemote *self, const gchar *filename_source)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
