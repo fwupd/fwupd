@@ -134,7 +134,7 @@ fu_rts54hub_rtd21xx_foreground_attach (FuDevice *device, GError **error)
 	if (locker == NULL)
 		return FALSE;
 
-	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		write_buf[0] = ISP_CMD_FW_UPDATE_EXIT;
 		if (!fu_rts54hub_rtd21xx_device_i2c_write (FU_RTS54HUB_RTD21XX_DEVICE (self),
 						   UC_ISP_SLAVE_ADDR,
@@ -164,7 +164,7 @@ fu_rts54hub_rtd21xx_foreground_attach (FuDevice *device, GError **error)
 		/* the device needs some time to restart with the new firmware before
 		* it can be queried again */
 		fu_device_sleep_with_progress (device, 60);
-		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	}
 	/* success */
 	return TRUE;
@@ -302,7 +302,7 @@ fu_rts54hub_rtd21xx_foreground_write_firmware (FuDevice *device,
 						     NULL, error))
 		return FALSE;
 
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	/* foreground FW update start command */
 	write_buf[0] = ISP_CMD_FW_UPDATE_START;
 	fu_common_write_uint16 (write_buf + 1, ISP_DATA_BLOCKSIZE, G_BIG_ENDIAN);
