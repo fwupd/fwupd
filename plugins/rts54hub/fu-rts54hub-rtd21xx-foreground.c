@@ -30,8 +30,8 @@ typedef enum {
 	ISP_CMD_GET_FW_INFO		= 0x04,
 	ISP_CMD_FW_UPDATE_START		= 0x05,
 	ISP_CMD_FW_UPDATE_ISP_DONE	= 0x06,
-	ISP_CMD_FW_UPDATE_EXIT		= 0x07,
-	ISP_CMD_FW_UPDATE_RESET		= 0x08,
+	ISP_CMD_FW_UPDATE_RESET		= 0x07,
+	ISP_CMD_FW_UPDATE_EXIT		= 0x08,
 } IspCmd;
 
 static gboolean
@@ -126,33 +126,46 @@ fu_rts54hub_rtd21xx_foreground_attach (FuDevice *device, GError **error)
 {
 	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE (fu_device_get_parent (device));
 	FuRts54hubRtd21xxForeground *self = FU_RTS54HUB_RTD21XX_FOREGROUND (device);
-	guint8 buf[] = { ISP_CMD_FW_UPDATE_RESET };
+	guint8 write_buf[ISP_PACKET_SIZE] = { 0x0 };
 	g_autoptr(FuDeviceLocker) locker = NULL;
-
+	g_debug("******fu_rts54hub_rtd21xx_foreground_attach************");
 	/* open device */
 	locker = fu_device_locker_new (parent, error);
 	if (locker == NULL)
 		return FALSE;
 
-	/* exit fw mode */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_progress (device, 0);
-	if (!fu_rts54hub_rtd21xx_device_read_status (FU_RTS54HUB_RTD21XX_DEVICE (self),
-						     NULL, error))
-		return FALSE;
-	if (!fu_rts54hub_rtd21xx_device_i2c_write (FU_RTS54HUB_RTD21XX_DEVICE (self),
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
+		write_buf[0] = ISP_CMD_FW_UPDATE_EXIT;
+		if (!fu_rts54hub_rtd21xx_device_i2c_write (FU_RTS54HUB_RTD21XX_DEVICE (self),
 						   UC_ISP_SLAVE_ADDR,
 						   UC_FOREGROUND_OPCODE,
-						   buf, sizeof(buf),
+						   write_buf, 1,
 						   error)) {
-		g_prefix_error (error, "failed to ISP_CMD_FW_UPDATE_RESET: ");
-		return FALSE;
+			g_prefix_error (error, "failed to ISP_CMD_FW_UPDATE_RESET: ");
+			return FALSE;
+		}
+	} else {
+		/* exit fw mode */
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+		fu_device_set_progress (device, 0);
+		if (!fu_rts54hub_rtd21xx_device_read_status (FU_RTS54HUB_RTD21XX_DEVICE (self),
+							     NULL, error))
+			return FALSE;
+		write_buf[0] = ISP_CMD_FW_UPDATE_RESET;
+		if (!fu_rts54hub_rtd21xx_device_i2c_write (FU_RTS54HUB_RTD21XX_DEVICE (self),
+							   UC_ISP_SLAVE_ADDR,
+							   UC_FOREGROUND_OPCODE,
+							   write_buf, 1,
+							   error)) {
+			g_prefix_error (error, "exit foreground-fw mode: ");
+			return FALSE;
+		}
+
+		/* the device needs some time to restart with the new firmware before
+		* it can be queried again */
+		fu_device_sleep_with_progress (device, 60);
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	}
-
-	/* the device needs some time to restart with the new firmware before
-	* it can be queried again */
-	fu_device_sleep_with_progress (device, 60);
-
 	/* success */
 	return TRUE;
 }
@@ -289,6 +302,7 @@ fu_rts54hub_rtd21xx_foreground_write_firmware (FuDevice *device,
 						     NULL, error))
 		return FALSE;
 
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	/* foreground FW update start command */
 	write_buf[0] = ISP_CMD_FW_UPDATE_START;
 	fu_common_write_uint16 (write_buf + 1, ISP_DATA_BLOCKSIZE, G_BIG_ENDIAN);
