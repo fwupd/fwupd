@@ -79,8 +79,12 @@ static void
 fwupd_remote_set_username (FwupdRemote *self, const gchar *username)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
-	if (username != NULL && username[0] == '\0')
-		username = NULL;
+
+	/* not changed */
+	if (g_strcmp0 (priv->username, username) == 0)
+		return;
+
+	g_free (priv->username);
 	priv->username = g_strdup (username);
 }
 
@@ -141,8 +145,6 @@ fwupd_remote_set_password (FwupdRemote *self, const gchar *password)
 	if (g_strcmp0 (priv->password, password) == 0)
 		return;
 
-	if (password != NULL && password[0] == '\0')
-		password = NULL;
 	g_free (priv->password);
 	priv->password = g_strdup (password);
 }
@@ -312,6 +314,12 @@ static void
 fwupd_remote_set_firmware_base_uri (FwupdRemote *self, const gchar *firmware_base_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->firmware_base_uri, firmware_base_uri) == 0)
+		return;
+
+	g_free (priv->firmware_base_uri);
 	priv->firmware_base_uri = g_strdup (firmware_base_uri);
 }
 
@@ -319,6 +327,12 @@ static void
 fwupd_remote_set_report_uri (FwupdRemote *self, const gchar *report_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->report_uri, report_uri) == 0)
+		return;
+
+	g_free (priv->report_uri);
 	priv->report_uri = g_strdup (report_uri);
 }
 
@@ -326,6 +340,12 @@ static void
 fwupd_remote_set_security_report_uri (FwupdRemote *self, const gchar *security_report_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+
+	/* not changed */
+	if (g_strcmp0 (priv->security_report_uri, security_report_uri) == 0)
+		return;
+
+	g_free (priv->security_report_uri);
 	priv->security_report_uri = g_strdup (security_report_uri);
 }
 
@@ -396,6 +416,24 @@ fwupd_remote_set_filename_cache (FwupdRemote *self, const gchar *filename)
 	}
 }
 
+static void
+fwupd_remote_set_order_before (FwupdRemote *self, const gchar *order_before)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_clear_pointer (&priv->order_before, g_strfreev);
+	if (order_before != NULL)
+		priv->order_before = g_strsplit_set (order_before, ",:;", -1);
+}
+
+static void
+fwupd_remote_set_order_after (FwupdRemote *self, const gchar *order_after)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_clear_pointer (&priv->order_after, g_strfreev);
+	if (order_after != NULL)
+		priv->order_after = g_strsplit_set (order_after, ",:;", -1);
+}
+
 /**
  * fwupd_remote_load_from_filename:
  * @self: a #FwupdRemote
@@ -419,14 +457,7 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 	const gchar *group = "fwupd Remote";
-	g_autofree gchar *firmware_base_uri = NULL;
 	g_autofree gchar *id = NULL;
-	g_autofree gchar *keyring_kind = NULL;
-	g_autofree gchar *metadata_uri = NULL;
-	g_autofree gchar *order_after = NULL;
-	g_autofree gchar *order_before = NULL;
-	g_autofree gchar *report_uri = NULL;
-	g_autofree gchar *security_report_uri = NULL;
 	g_autoptr(GKeyFile) kf = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
@@ -443,100 +474,101 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	if (!g_key_file_load_from_file (kf, filename, G_KEY_FILE_NONE, error))
 		return FALSE;
 
-	/* get verification type, falling back to GPG */
-	keyring_kind = g_key_file_get_string (kf, group, "Keyring", NULL);
-	if (keyring_kind == NULL) {
-		priv->keyring_kind = FWUPD_KEYRING_KIND_JCAT;
-	} else {
-		priv->keyring_kind = fwupd_keyring_kind_from_string (keyring_kind);
+	/* optional verification type */
+	if (g_key_file_has_key (kf, group, "Keyring", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string (kf, group, "Keyring", NULL);
+		priv->keyring_kind = fwupd_keyring_kind_from_string (tmp);
 		if (priv->keyring_kind == FWUPD_KEYRING_KIND_UNKNOWN) {
 			g_set_error (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse type '%s'",
-				     keyring_kind);
+				     "keyring kind '%s' unknown",
+				     tmp);
 			return FALSE;
 		}
 	}
 
-	/* all remotes need a URI, even if it's file:// to the cache */
-	metadata_uri = g_key_file_get_string (kf, group, "MetadataURI", error);
-	if (metadata_uri == NULL)
-		return FALSE;
-	if (g_str_has_prefix (metadata_uri, "file://")) {
-		const gchar *filename_cache = metadata_uri;
-		if (g_str_has_prefix (filename_cache, "file://"))
-			filename_cache += 7;
-		fwupd_remote_set_filename_cache (self, filename_cache);
-		if (g_file_test (filename_cache, G_FILE_TEST_IS_DIR))
-			priv->kind = FWUPD_REMOTE_KIND_DIRECTORY;
-		else
-			priv->kind = FWUPD_REMOTE_KIND_LOCAL;
-	} else if (g_str_has_prefix (metadata_uri, "http://") ||
-		   g_str_has_prefix (metadata_uri, "https://") ||
-		   g_str_has_prefix (metadata_uri, "ipfs://") ||
-		   g_str_has_prefix (metadata_uri, "ipns://")) {
-		priv->kind = FWUPD_REMOTE_KIND_DOWNLOAD;
-	} else {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "Failed to parse MetadataURI type '%s'",
-			     metadata_uri);
-		return FALSE;
+	/* the first remote sets the URI, even if it's file:// to the cache */
+	if (g_key_file_has_key (kf, group, "MetadataURI", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string (kf, group, "MetadataURI", NULL);
+		if (g_str_has_prefix (tmp, "file://")) {
+			const gchar *filename_cache = tmp;
+			if (g_str_has_prefix (filename_cache, "file://"))
+				filename_cache += 7;
+			fwupd_remote_set_filename_cache (self, filename_cache);
+			if (g_file_test (filename_cache, G_FILE_TEST_IS_DIR))
+				priv->kind = FWUPD_REMOTE_KIND_DIRECTORY;
+			else
+				priv->kind = FWUPD_REMOTE_KIND_LOCAL;
+		} else if (g_str_has_prefix (tmp, "http://") ||
+			   g_str_has_prefix (tmp, "https://") ||
+			   g_str_has_prefix (tmp, "ipfs://") ||
+			   g_str_has_prefix (tmp, "ipns://")) {
+			priv->kind = FWUPD_REMOTE_KIND_DOWNLOAD;
+			fwupd_remote_set_metadata_uri (self, tmp);
+		}
 	}
 
-	/* extract data */
-	priv->enabled = g_key_file_get_boolean (kf, group, "Enabled", NULL);
-	priv->approval_required = g_key_file_get_boolean (kf, group, "ApprovalRequired", NULL);
-	priv->title = g_key_file_get_string (kf, group, "Title", NULL);
+	/* all keys are optional */
+	if (g_key_file_has_key (kf, group, "Enabled", NULL))
+		priv->enabled = g_key_file_get_boolean (kf, group, "Enabled", NULL);
+	if (g_key_file_has_key (kf, group, "ApprovalRequired", NULL))
+		priv->approval_required = g_key_file_get_boolean (kf, group, "ApprovalRequired", NULL);
+	if (g_key_file_has_key (kf, group, "Title", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string (kf, group, "Title", NULL);
+		fwupd_remote_set_title (self, tmp);
+	}
+	if (g_key_file_has_key (kf, group, "ReportURI", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string (kf, group, "ReportURI", NULL);
+		fwupd_remote_set_report_uri (self, tmp);
+	}
+	if (g_key_file_has_key (kf, group, "SecurityReportURI", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string (kf, group, "SecurityReportURI", NULL);
+		fwupd_remote_set_security_report_uri (self, tmp);
+	}
+	if (g_key_file_has_key (kf, group, "Username", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string (kf, group, "Username", NULL);
+		fwupd_remote_set_username (self, tmp);
+	}
+	if (g_key_file_has_key (kf, group, "Password", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string (kf, group, "Password", NULL);
+		fwupd_remote_set_password (self, tmp);
+	}
+	if (g_key_file_has_key (kf, group, "FirmwareBaseURI", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string (kf, group, "FirmwareBaseURI", NULL);
+		fwupd_remote_set_firmware_base_uri (self, tmp);
+	}
+	if (g_key_file_has_key (kf, group, "OrderBefore", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string (kf, group, "OrderBefore", NULL);
+		fwupd_remote_set_order_before (self, tmp);
+	}
+	if (g_key_file_has_key (kf, group, "OrderAfter", NULL)) {
+		g_autofree gchar *tmp = g_key_file_get_string (kf, group, "OrderAfter", NULL);
+		fwupd_remote_set_order_after (self, tmp);
+	}
+	if (g_key_file_has_key (kf, group, "AutomaticReports", NULL))
+		priv->automatic_reports = g_key_file_get_boolean (kf, group, "AutomaticReports", NULL);
+	if (g_key_file_has_key (kf, group, "AutomaticSecurityReports", NULL))
+		priv->automatic_security_reports = g_key_file_get_boolean (kf, group, "AutomaticSecurityReports", NULL);
 
-	/* reporting is optional */
-	report_uri = g_key_file_get_string (kf, group, "ReportURI", NULL);
-	if (report_uri != NULL && report_uri[0] != '\0')
-		fwupd_remote_set_report_uri (self, report_uri);
-
-	/* security reporting is optional */
-	security_report_uri = g_key_file_get_string (kf, group, "SecurityReportURI", NULL);
-	if (security_report_uri != NULL && security_report_uri[0] != '\0')
-		fwupd_remote_set_security_report_uri (self, security_report_uri);
-
-	/* automatic report uploading */
-	priv->automatic_reports = g_key_file_get_boolean (kf, group, "AutomaticReports", NULL);
-	priv->automatic_security_reports = g_key_file_get_boolean (kf, group, "AutomaticSecurityReports", NULL);
-
-	/* DOWNLOAD-type remotes */
-	if (priv->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
-		g_autofree gchar *filename_cache = NULL;
-		g_autofree gchar *username = NULL;
-		g_autofree gchar *password = NULL;
-
-		/* the client has to download this and the signature */
-		fwupd_remote_set_metadata_uri (self, metadata_uri);
-
-		/* check the URI was valid */
-		if (priv->metadata_uri == NULL) {
-			g_set_error (error,
+	/* we can override, hence the extra section */
+	if (priv->kind == FWUPD_REMOTE_KIND_UNKNOWN) {
+		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to parse URI '%s' in %s",
-				     metadata_uri, filename);
-			return FALSE;
-		}
+				     "metadata kind invalid");
+		return FALSE;
+	}
 
-		/* username and password are optional */
-		username = g_key_file_get_string (kf, group, "Username", NULL);
-		if (username != NULL)
-			fwupd_remote_set_username (self, username);
-		password = g_key_file_get_string (kf, group, "Password", NULL);
-		if (password != NULL)
-			fwupd_remote_set_password (self, password);
+	/* some validation for DOWNLOAD types */
+	if (priv->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
+		g_autofree gchar *filename_cache = NULL;
 
 		if (priv->remotes_dir == NULL) {
 			g_set_error_literal (error,
 					     FWUPD_ERROR,
 					     FWUPD_ERROR_INTERNAL,
-					     "Remotes directory not set");
+					     "remotes directory not set");
 			return FALSE;
 		}
 		/* set cache to /var/lib... */
@@ -545,6 +577,25 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 						   "metadata.xml.gz",
 						   NULL);
 		fwupd_remote_set_filename_cache (self, filename_cache);
+	}
+
+	/* some validation for DIRECTORY types */
+	if (priv->kind == FWUPD_REMOTE_KIND_DIRECTORY) {
+		if (priv->keyring_kind != FWUPD_KEYRING_KIND_NONE) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "keyring kind %s is not supported with directory remote",
+				     fwupd_keyring_kind_to_string (priv->keyring_kind));
+			return FALSE;
+		}
+		if (priv->firmware_base_uri != NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Directory remotes don't support firmware base URI");
+			return FALSE;
+		}
 	}
 
 	/* load the checksum */
@@ -562,38 +613,6 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 	} else {
 		fwupd_remote_set_checksum (self, NULL);
 	}
-
-	/* the base URI is optional */
-	firmware_base_uri = g_key_file_get_string (kf, group, "FirmwareBaseURI", NULL);
-	if (firmware_base_uri != NULL)
-		fwupd_remote_set_firmware_base_uri (self, firmware_base_uri);
-
-	/* some validation around DIRECTORY types */
-	if (priv->kind == FWUPD_REMOTE_KIND_DIRECTORY) {
-		if (priv->keyring_kind != FWUPD_KEYRING_KIND_NONE) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Keyring kind %s is not supported with directory remote",
-				     fwupd_keyring_kind_to_string (priv->keyring_kind));
-			return FALSE;
-		}
-		if (firmware_base_uri != NULL) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "Directory remotes don't support firmware base URI");
-			return FALSE;
-		}
-	}
-
-	/* dep logic */
-	order_before = g_key_file_get_string (kf, group, "OrderBefore", NULL);
-	if (order_before != NULL)
-		priv->order_before = g_strsplit_set (order_before, ",:;", -1);
-	order_after = g_key_file_get_string (kf, group, "OrderAfter", NULL);
-	if (order_after != NULL)
-		priv->order_after = g_strsplit_set (order_after, ",:;", -1);
 
 	/* success */
 	fwupd_remote_set_filename_source (self, filename);
@@ -1533,6 +1552,8 @@ fwupd_remote_class_init (FwupdRemoteClass *klass)
 static void
 fwupd_remote_init (FwupdRemote *self)
 {
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	priv->keyring_kind = FWUPD_KEYRING_KIND_JCAT;
 }
 
 static void
