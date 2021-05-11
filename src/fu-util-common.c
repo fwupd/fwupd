@@ -1771,6 +1771,11 @@ fu_util_remote_to_string (FwupdRemote *remote, guint idt)
 		/* TRANSLATORS: filename of the local file */
 		fu_common_string_append_kv (str, idt + 1, _("Filename Signature"), tmp);
 	}
+	tmp = fwupd_remote_get_filename_source (remote);
+	if (tmp != NULL) {
+		/* TRANSLATORS: full path of the remote.conf file */
+		fu_common_string_append_kv (str, idt + 1, _("Filename Source"), tmp);
+	}
 	tmp = fwupd_remote_get_metadata_uri (remote);
 	if (tmp != NULL) {
 		/* TRANSLATORS: remote URI */
