@@ -20,6 +20,7 @@ G_DECLARE_DERIVABLE_TYPE (FuDevice, fu_device, FU, DEVICE, FwupdDevice)
 struct _FuDeviceClass
 {
 	FwupdDeviceClass	 parent_class;
+#ifndef __GI_SCANNER__
 	void			 (*to_string)		(FuDevice	*self,
 							 guint		 indent,
 							 GString	*str);
@@ -100,6 +101,7 @@ struct _FuDeviceClass
 							 FuSecurityAttrs *attrs);
 	/*< private >*/
 	gpointer	padding[10];
+#endif
 };
 
 /**
