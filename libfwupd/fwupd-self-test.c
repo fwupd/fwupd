@@ -235,6 +235,30 @@ fwupd_remote_baseuri_func (void)
 	g_assert_cmpstr (firmware_uri, ==, "https://my.fancy.cdn/firmware.cab");
 }
 
+static void
+fwupd_remote_duplicate_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *fn2 = NULL;
+	g_autofree gchar *fn = NULL;
+	g_autoptr(FwupdRemote) remote = fwupd_remote_new ();
+	g_autoptr(GError) error = NULL;
+
+	fn = g_build_filename (TESTDATADIR, "tests", "remotes.d", "stable.conf", NULL);
+	ret = fwupd_remote_load_from_filename (remote, fn, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	fn2 = g_build_filename (TESTDATADIR, "tests", "disabled.conf", NULL);
+	ret = fwupd_remote_load_from_filename (remote, fn2, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	g_assert_false (fwupd_remote_get_enabled (remote));
+	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_NONE);
+	g_assert_cmpstr (fwupd_remote_get_username (remote), ==, NULL);
+	g_assert_cmpstr (fwupd_remote_get_password (remote), ==, "");
+	g_assert_cmpstr (fwupd_remote_get_filename_cache (remote), ==, "/tmp/fwupd-self-test/stable.xml");
+}
+
 /* verify we used the metadata path for firmware */
 static void
 fwupd_remote_nopath_func (void)
@@ -686,6 +710,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/remote{base-uri}", fwupd_remote_baseuri_func);
 	g_test_add_func ("/fwupd/remote{no-path}", fwupd_remote_nopath_func);
 	g_test_add_func ("/fwupd/remote{local}", fwupd_remote_local_func);
+	g_test_add_func ("/fwupd/remote{duplicate}", fwupd_remote_duplicate_func);
 	if (fwupd_has_system_bus ()) {
 		g_test_add_func ("/fwupd/client{remotes}", fwupd_client_remotes_func);
 		g_test_add_func ("/fwupd/client{devices}", fwupd_client_devices_func);
