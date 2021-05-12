@@ -23,6 +23,7 @@ struct _FuKineticMstDevice {
     gchar *             system_type;
     FuKineticMstFamily  family;
     FuKineticMstMode    mode;
+    guint16             chip_id;
 };
 
 G_DEFINE_TYPE (FuKineticMstDevice, fu_kinetic_mst_device, FU_TYPE_UDEV_DEVICE)
@@ -1095,6 +1096,15 @@ sec_aux_isp_update_firmware(FuKineticMstDevice *self,
     return sec_aux_isp_start_isp(self, firmware, &dp_dev_infos[DEV_HOST], error);;
 }
 
+guint16 kt_dp_get_numeric_chip_id(KtChipId chip_id)
+{
+    if (chip_id == KT_CHIP_MUSTANG_5200)
+        return 0x5200U;
+    if (chip_id == KT_CHIP_JAGUAR_5000)
+        return 0x5000U;
+    return 0;
+}
+
 gboolean kt_dp_get_dev_info_from_branch_id(guint8 *br_id_str_buf, guint8 br_id_str_buf_size, KtDpDevInfo *dev_info)
 {
     guint8 i = 0;
@@ -1268,6 +1278,17 @@ gboolean kt_dp_read_device_info(FuKineticMstDevice *self,
     return is_read_success;
 }
 
+/* <TODO> put to fu-kinetic-mst-common.c */
+FuKineticMstFamily
+fu_kinetic_mst_family_from_chip_id(KtChipId chip_id)
+{
+	if (chip_id == KT_CHIP_MUSTANG_5200)
+		return FU_KINETIC_MST_FAMILY_MUSTANG;
+	if (chip_id == KT_CHIP_JAGUAR_5000)
+		return FU_KINETIC_MST_FAMILY_JAGUAR;
+	return FU_KINETIC_MST_FAMILY_UNKNOWN;
+}
+
 static gboolean
 fu_kinetic_mst_device_write_firmware(FuDevice *device,
                				         FuFirmware *firmware,
@@ -1349,11 +1370,21 @@ static gboolean
 fu_kinetic_mst_device_rescan(FuDevice *device, GError **error)
 {
 	FuKineticMstDevice *self = FU_KINETIC_MST_DEVICE(device);
+	FuQuirks *quirks;
 	g_autoptr(FuKineticMstConnection) connection = NULL;
+	g_autofree gchar *group = NULL;
+	g_autofree gchar *name = NULL;
+	g_autofree gchar *guid1 = NULL;
+	g_autofree gchar *guid2 = NULL;
+	const gchar *name_parent;
+	const gchar *name_family;
+	const gchar *plugin;
 
-    if (!kt_dp_read_device_info(self, DEV_HOST, &dp_dev_infos[DEV_HOST], error))
+	KtDpDevInfo *dp_dev_info = &dp_dev_infos[DEV_HOST];  // <TODO> Now it's for test AUX-ISP protocol
+
+    if (!kt_dp_read_device_info(self, DEV_HOST, dp_dev_info, error))
     {
-        // <TODO> Correct the usage to create GError in functions
+        // <TODO> Correct the way to create GError in functions
         g_set_error_literal(error,
                             G_IO_ERROR,
 						    G_IO_ERROR_INVALID_DATA,
@@ -1361,13 +1392,65 @@ fu_kinetic_mst_device_rescan(FuDevice *device, GError **error)
         return FALSE;
     }
 
-    g_debug("[JEFFREY DEBUG]branch_id_str=%s", dp_dev_infos[DEV_HOST].branch_id_str);
+    g_debug("[JEFFREY DEBUG] branch_id_str=%s", dp_dev_info->branch_id_str);   // <JEFFREY DEBUG>
 
     /* read firmware version */
     // <TODO>
 
-    /* read board chip_id */
-    // <TODO>
+    self->family = fu_kinetic_mst_family_from_chip_id(dp_dev_info->chip_id);
+
+    /* Convert Kinetic chip id to numeric representation */
+    self->chip_id = kt_dp_get_numeric_chip_id(dp_dev_info->chip_id);
+
+    /* set up the device name via quirks */
+	group = g_strdup_printf("CustomerProjectID=%u", dp_dev_info->fw_info.customer_project_id);
+	quirks = fu_device_get_quirks(FU_DEVICE(self));
+	name_parent = fu_quirks_lookup_by_id(quirks, group, FU_QUIRKS_NAME);
+	if (name_parent != NULL)
+	{
+		name = g_strdup_printf("KT%04x inside %s", self->chip_id, name_parent);
+	}
+	else
+	{
+		name = g_strdup_printf("KT%04x", self->chip_id);
+	}
+	fu_device_set_name(FU_DEVICE(self), name);
+
+	plugin = fu_quirks_lookup_by_id(quirks, group, FU_QUIRKS_PLUGIN);
+	if (plugin != NULL && g_strcmp0(plugin, "kinetic_mst") != 0)
+	{
+		g_set_error(error,
+    			    FWUPD_ERROR,
+    			    FWUPD_ERROR_NOT_SUPPORTED,
+    			    "%s is only supported by %s",
+    			    name, plugin);
+		return FALSE;
+	}
+
+    /* detect chip family */
+    switch (self->family)
+    {
+    case FU_KINETIC_MST_FAMILY_JAGUAR:
+        //fu_device_set_firmware_size_max(device, 0x10000);    // <TODO> Determine max firmware size for Jaguar
+        fu_device_add_instance_id_full(device, "KTDP-KT50X0", FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+        break;
+    case FU_KINETIC_MST_FAMILY_MUSTANG:
+    	//fu_device_set_firmware_size_max (device, 0x10000);    // <TODO> Determine max firmware size for Mustang
+    	fu_device_add_instance_id_full (device, "KTDP-KT52X0", FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+        break;
+    default:
+        break;
+    }
+
+    /* add non-standard GUIDs */
+    name_family = fu_kinetic_mst_family_to_string(self->family);
+    guid1 = g_strdup_printf("KTDP-%s-kt%04x", name_family, self->chip_id);
+    fu_device_add_instance_id(FU_DEVICE(self), guid1);
+    guid2 = g_strdup_printf("KTDP-%s", name_family);
+    fu_device_add_instance_id(FU_DEVICE(self), guid2);
+
+    // <TODO> check if a valid device to update?
+    fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	return TRUE;
 }

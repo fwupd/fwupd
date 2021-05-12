@@ -12,6 +12,7 @@ shared_module('fu_plugin_kinetic_mst',
   fu_hash,
   sources : [
     'fu-plugin-kinetic-mst.c',
+    'fu-kinetic-mst-common.c',
     'fu-kinetic-mst-connection.c',
     'fu-kinetic-mst-device.c',
     'fu-kinetic-mst-firmware.c',      # fuzzing

@@ -21,25 +21,12 @@ fu_kinetic_mst_mode_to_string (FuKineticMstMode mode)
 }
 
 const gchar *
-fu_kinetic_mst_family_to_string (FuKineticMstFamily family)
+fu_kinetic_mst_family_to_string(FuKineticMstFamily family)
 {
-	if (family == FU_KINETIC_MST_FAMILY_TESLA)
-		return "tesla";
-	if (family == FU_KINETIC_MST_FAMILY_LEAF)
-		return "leaf";
-	if (family == FU_KINETIC_MST_FAMILY_PANAMERA)
-		return "panamera";
+	if (family == FU_KINETIC_MST_FAMILY_MUSTANG)
+		return "mustang";
+	if (family == FU_KINETIC_MST_FAMILY_JAGUAR)
+		return "jaguar";
 	return NULL;
 }
 
-FuKineticMstFamily
-fu_kinetic_mst_family_from_chip_id (guint16 chip_id)
-{
-	if (chip_id >= 0x5000 && chip_id < 0x6000)
-		return FU_KINETIC_MST_FAMILY_PANAMERA;
-	if (chip_id >= 0x3000 && chip_id < 0x4000)
-		return FU_KINETIC_MST_FAMILY_LEAF;
-	if (chip_id >= 0x2000 && chip_id < 0x3000)
-		return FU_KINETIC_MST_FAMILY_TESLA;
-	return FU_KINETIC_MST_FAMILY_UNKNOWN;
-}

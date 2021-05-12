@@ -24,7 +24,7 @@
 typedef enum {
     FU_KINETIC_MST_MODE_UNKNOWN,
     FU_KINETIC_MST_MODE_DIRECT,
-    //FU_KINETIC_MST_MODE_REMOTE,   // <TODO> Confirm if remote mode is needed?
+    FU_KINETIC_MST_MODE_REMOTE,
     /*< private >*/
     FU_KINETIC_MST_MODE_LAST
 } FuKineticMstMode;
@@ -48,5 +48,4 @@ typedef enum {
 
 const gchar *fu_kinetic_mst_mode_to_string(FuKineticMstMode	 mode);
 const gchar *fu_kinetic_mst_family_to_string(FuKineticMstFamily	 family);
-FuKineticMstFamily fu_kinetic_mst_family_from_chip_id(guint16 chip_id);
 
