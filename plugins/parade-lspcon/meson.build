@@ -1,19 +1,18 @@
-if get_option('plugin_flashrom')
+if get_option('plugin_parade_lspcon')
 if not get_option('libflashrom')
-  error('libflashrom is required for plugin_flashrom')
+  error('libflashrom is required for plugin_parade_lspcon')
 endif
-cargs = ['-DG_LOG_DOMAIN="FuPluginFlashrom"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginParadeLspcon"']
 
-install_data(['flashrom.quirk'],
+install_data(['parade-lspcon.quirk'],
   install_dir: join_paths(get_option('datadir'), 'fwupd', 'quirks.d')
 )
 
-shared_module('fu_plugin_flashrom',
+shared_module('fu_plugin_parade_lspcon',
   fu_hash,
   sources : [
-    'fu-flashrom-device.c',
-    'fu-flashrom-internal-device.c',
-    'fu-plugin-flashrom.c',
+    'fu-parade-lspcon-device.c',
+    'fu-plugin-parade-lspcon.c',
   ],
   include_directories : [
     root_incdir,

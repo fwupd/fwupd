@@ -1,0 +1,6 @@
+# match all devices with this udev subsystem
+[I2C]
+Plugin = parade_lspcon
+
+[PARADE-LSPCON\NAME_1AF80175:00]
+Name = PS175

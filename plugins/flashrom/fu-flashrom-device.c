@@ -9,8 +9,6 @@
 #include "fu-flashrom-device.h"
 #include "fu-flashrom-context.h"
 
-#include <libflashrom.h>
-
 typedef struct {
 	FuFlashromOpener *opener;
 	FuFlashromContext *flashctx;

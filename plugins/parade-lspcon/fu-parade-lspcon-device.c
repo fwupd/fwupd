@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2021 Peter Marheine <pmarheine@chromium.org>
  * Copyright (C) 2021 Daniel Campello <campello@chromium.org>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -6,27 +7,27 @@
 
 #include "config.h"
 
-#include "fu-flashrom-device.h"
-#include "fu-flashrom-lspcon-i2c-spi-device.h"
+#include "fu-flashrom-context.h"
+#include "fu-parade-lspcon-device.h"
 
 #include <errno.h>
 #include <fcntl.h>
 #include <glib/gstdio.h>
-#include <libflashrom.h>
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
 
 #define I2C_PATH_REGEX "/i2c-([0-9]+)/"
 #define HID_LENGTH 8
 
-struct _FuFlashromLspconI2cSpiDevice {
-	FuFlashromDevice	  parent_instance;
+struct _FuParadeLspconDevice {
+	FuUdevDevice	  	  parent_instance;
+	FuFlashromOpener 	 *opener;
 	gint			  bus_number;
 	guint8			  active_partition;
 };
 
-G_DEFINE_TYPE (FuFlashromLspconI2cSpiDevice, fu_flashrom_lspcon_i2c_spi_device,
-	       FU_TYPE_FLASHROM_DEVICE)
+G_DEFINE_TYPE (FuParadeLspconDevice, fu_parade_lspcon_device,
+	       FU_TYPE_UDEV_DEVICE)
 
 static const struct fu_flashrom_opener_layout_region FLASH_REGIONS[] = {
 	{ .offset = 0x00002, .size = 2, .name = "FLAG" },
@@ -38,68 +39,97 @@ static const struct fu_flashrom_opener_layout_region FLASH_REGIONS[] = {
 };
 
 static void
-fu_flashrom_lspcon_i2c_spi_device_init (FuFlashromLspconI2cSpiDevice *self)
+fu_parade_lspcon_device_init (FuParadeLspconDevice *self)
 {
-	FuFlashromOpener *opener = fu_flashrom_device_get_opener (FU_FLASHROM_DEVICE (self));
-
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_add_vendor_id (FU_DEVICE(self), "PCI:0x1AF8");
+	fu_device_set_vendor (FU_DEVICE (self), "Parade Technologies");
+	fu_device_add_protocol (FU_DEVICE (self), "com.paradetech.ps175");
 
-	fu_flashrom_opener_set_layout (opener, FLASH_REGIONS,
+	self->opener = fu_flashrom_opener_new();
+	fu_flashrom_opener_set_programmer (self->opener, "lspcon_i2c_spi");
+	fu_flashrom_opener_set_layout (self->opener, FLASH_REGIONS,
 				       sizeof (FLASH_REGIONS) / sizeof (*FLASH_REGIONS));
 }
 
 static gboolean
-fu_flashrom_lspcon_i2c_spi_device_probe (FuDevice *device, GError **error)
+lspcon_device_set_instance_ids (FuParadeLspconDevice *self, GError **error)
 {
-	FuFlashromLspconI2cSpiDevice *self = FU_FLASHROM_LSPCON_I2C_SPI_DEVICE (device);
-	FuFlashromDevice *flashrom_device = FU_FLASHROM_DEVICE (device);
-	FuDeviceClass *klass =
-		FU_DEVICE_CLASS (fu_flashrom_lspcon_i2c_spi_device_parent_class);
-	g_autoptr(GRegex) regex = NULL;
-	g_autoptr(GMatchInfo) info = NULL;
-	const gchar *path = NULL;
-
-	/* FuFlashromDevice->probe */
-	if (!klass->probe (device, error))
-		return FALSE;
-
-	if (g_strcmp0 (fu_flashrom_device_get_programmer_name (flashrom_device),
-		       "lspcon_i2c_spi") != 0) {
+	g_autofree gchar *vid;
+	g_autofree gchar *pid;
+	g_autofree gchar *instance_id;
+	g_autofree gchar *physical_id;
+	const gchar *hw_id = fu_udev_device_get_sysfs_attr (FU_UDEV_DEVICE (self),
+							    "name", error);
+	if (hw_id == NULL) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "invalid programmer");
+				     "HID not found");
+		return FALSE;
+	}
+	vid = g_strndup (hw_id, HID_LENGTH / 2);
+	pid = g_strndup (&hw_id[HID_LENGTH / 2], HID_LENGTH / 2);
+
+	instance_id = g_strdup_printf ("PARADE-LSPCON\\NAME_%s", hw_id);
+	fu_device_add_instance_id (FU_DEVICE (self), instance_id);
+	g_free (instance_id);
+	instance_id = g_strdup_printf ("FLASHROM-LSPCON-I2C-SPI\\VEN_%s&DEV_%s", vid, pid);
+	fu_device_add_instance_id (FU_DEVICE (self), instance_id);
+
+	physical_id = g_strdup_printf ("DEVNAME=%s",
+				       fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (self)));
+	fu_device_set_physical_id (FU_DEVICE (self), physical_id);
+	return TRUE;
+}
+
+static gboolean
+fu_parade_lspcon_device_probe (FuDevice *device, GError **error)
+{
+	FuParadeLspconDevice *self = FU_PARADE_LSPCON_DEVICE (device);
+	FuDeviceClass *klass =
+		FU_DEVICE_CLASS (fu_parade_lspcon_device_parent_class);
+	g_autoptr(GRegex) regex = NULL;
+	g_autoptr(GMatchInfo) info = NULL;
+	const gchar *path = NULL;
+	g_autofree gchar *programmer_args = NULL;
+
+	if (!lspcon_device_set_instance_ids (FU_PARADE_LSPCON_DEVICE (self),
+					     error))
+		return FALSE;
+	if (g_strcmp0 (fu_device_get_name (device), "PS175") != 0) {
+		g_set_error_literal (error, FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "only PS175 devices are supported");
 		return FALSE;
 	}
 
 	/* get bus number out of sysfs path */
 	path = fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device));
 	regex = g_regex_new (I2C_PATH_REGEX, 0, 0, error);
-	if (regex && g_regex_match_full (regex, path, -1, 0, 0, &info, error)) {
-		self->bus_number = g_ascii_strtoll ( g_match_info_fetch (info, 1),
-					       NULL, 10);
-		return TRUE;
-	}
-	return FALSE;
+	if (!regex || !g_regex_match_full (regex, path, -1, 0, 0, &info,
+					   error))
+		return FALSE;
+	self->bus_number = g_ascii_strtoll (g_match_info_fetch (info, 1),
+					    NULL, 10);
+
+	/* set up opener to use detected bus */
+	programmer_args = g_strdup_printf ("bus=%d", self->bus_number);
+	fu_flashrom_opener_set_programmer_args (self->opener, programmer_args);
+
+	return klass->probe (device, error);
 }
 
 static gboolean
-fu_flashrom_lspcon_i2c_spi_device_open (FuDevice *device,
-					GError **error)
+fu_parade_lspcon_device_open (FuDevice *device, GError **error)
 {
-	FuFlashromLspconI2cSpiDevice *self = FU_FLASHROM_LSPCON_I2C_SPI_DEVICE (device);
-	FuFlashromDevice *flashrom_device = FU_FLASHROM_DEVICE (device);
+	FuParadeLspconDevice *self = FU_PARADE_LSPCON_DEVICE (device);
 	FuDeviceClass *klass =
-		FU_DEVICE_CLASS (fu_flashrom_lspcon_i2c_spi_device_parent_class);
-	g_autofree gchar *temp = NULL;
+		FU_DEVICE_CLASS (fu_parade_lspcon_device_parent_class);
 	g_autofree gchar *bus_path = NULL;
-	gint bus_fd = -1;
-
-	/* flashrom_programmer_init() mutates the programmer_args string. */
-	temp = g_strdup_printf ("bus=%d", self->bus_number);
-	fu_flashrom_device_set_programmer_args (flashrom_device, temp);
+	gint bus_fd;
 
 	/* open the bus, not the device represented by self */
 	bus_path = g_strdup_printf ("/dev/i2c-%d", self->bus_number);
@@ -116,7 +146,7 @@ fu_flashrom_lspcon_i2c_spi_device_open (FuDevice *device,
 }
 
 static gboolean
-probe_active_flash_partition (FuFlashromLspconI2cSpiDevice *self,
+probe_active_flash_partition (FuParadeLspconDevice *self,
 			      guint8 *partition,
 			      GError **error)
 {
@@ -142,17 +172,19 @@ probe_active_flash_partition (FuFlashromLspconI2cSpiDevice *self,
 }
 
 static gboolean
-fu_flashrom_lspcon_i2c_spi_device_set_version (FuDevice *device, GError **error)
+fu_parade_lspcon_device_set_version (FuDevice *device, GError **error)
 {
-	FuFlashromLspconI2cSpiDevice *self = FU_FLASHROM_LSPCON_I2C_SPI_DEVICE (device);
-	FuFlashromDevice *flashrom_device = FU_FLASHROM_DEVICE (device);
-	FuFlashromContext *context = fu_flashrom_device_get_context (flashrom_device);
+	FuParadeLspconDevice *self = FU_PARADE_LSPCON_DEVICE (device);
+	g_autoptr(FuFlashromContext) context = NULL;
 	const gchar *active_partition_name;
 	g_autoptr(GBytes) contents = NULL;
 	const guint8 *contents_buf;
 	gsize contents_size;
 	guint32 version_addr;
 	g_autofree gchar *version = NULL;
+
+	if (!fu_flashrom_context_open (self->opener, &context, error))
+		return FALSE;
 
 	/* get the active partition */
 	if (!probe_active_flash_partition (self, &self->active_partition, error))
@@ -196,45 +228,16 @@ fu_flashrom_lspcon_i2c_spi_device_set_version (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_flashrom_lspcon_i2c_spi_device_setup (FuDevice *device, GError **error)
-{
-	const gchar *hw_id = NULL;
-	g_autofree gchar *vid = NULL;
-	g_autofree gchar *pid = NULL;
-	g_autofree gchar *vendor_id = NULL;
-	g_autofree gchar *instance_id = NULL;
-
-	hw_id = fu_udev_device_get_sysfs_attr (FU_UDEV_DEVICE (device), "name", error);
-	if (hw_id == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "HID not found");
-		return FALSE;
-	}
-	vid = g_strndup (hw_id, HID_LENGTH / 2);
-	pid = g_strndup (&hw_id[HID_LENGTH / 2], HID_LENGTH / 2);
-	vendor_id = g_strdup_printf ("I2C:%s", vid);
-	fu_device_add_vendor_id (device, vendor_id);
-
-	instance_id = g_strdup_printf ("FLASHROM-LSPCON-I2C-SPI\\VEN_%s&DEV_%s", vid, pid);
-	fu_device_add_instance_id (device, instance_id);
-
-	return fu_flashrom_lspcon_i2c_spi_device_set_version (device, error);
-}
-
-static gboolean
-fu_flashrom_lspcon_i2c_spi_device_write_firmware (FuDevice *device,
+fu_parade_lspcon_device_write_firmware (FuDevice *device,
 						  FuFirmware *firmware,
 						  FwupdInstallFlags flags,
 						  GError **error)
 {
-	FuFlashromDevice *parent = FU_FLASHROM_DEVICE (device);
-	FuFlashromLspconI2cSpiDevice *self = FU_FLASHROM_LSPCON_I2C_SPI_DEVICE (device);
-	FuFlashromContext *context = fu_flashrom_device_get_context (parent);
-	gsize flash_size = fu_flashrom_context_get_flash_size (context);
-	guint8 *flash_contents_buf = g_malloc0 (flash_size);
-	g_autoptr(GBytes) flash_contents = g_bytes_new_take (flash_contents_buf, flash_size);
+	FuParadeLspconDevice *self = FU_PARADE_LSPCON_DEVICE (device);
+	g_autoptr(FuFlashromContext) context = NULL;
+	gsize flash_size;
+	guint8 *flash_contents_buf;
+	g_autoptr(GBytes) flash_contents = NULL;
 	/* if the boot partition is active we could flash either, but prefer
 	 * the first */
 	const guint8 target_partition = self->active_partition == 1 ? 2 : 1;
@@ -244,6 +247,12 @@ fu_flashrom_lspcon_i2c_spi_device_write_firmware (FuDevice *device,
 	g_autoptr(GBytes) blob_fw = fu_firmware_get_bytes (firmware, error);
 	if (blob_fw == NULL)
 		return FALSE;
+
+	if (!fu_flashrom_context_open (self->opener, &context, error))
+		return FALSE;
+	flash_size = fu_flashrom_context_get_flash_size (context);
+	flash_contents_buf = g_malloc0 (flash_size);
+	flash_contents = g_bytes_new_take (flash_contents_buf, flash_size);
 
 	/* copy firmware blob to flash image at position of target partition */
 	fw_buf = g_bytes_get_data (blob_fw, &fw_size);
@@ -266,8 +275,8 @@ fu_flashrom_lspcon_i2c_spi_device_write_firmware (FuDevice *device,
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	fu_device_set_progress (device, 0); /* urgh */
 	if (!fu_flashrom_context_set_included_regions (context, error,
-						  FLASH_REGIONS[target_partition].name,
-						  NULL))
+						       FLASH_REGIONS[target_partition].name,
+						       NULL))
 		return FALSE;
 	if (!fu_flashrom_context_write_image (context, flash_contents, TRUE, error))
 		return FALSE;
@@ -291,12 +300,12 @@ fu_flashrom_lspcon_i2c_spi_device_write_firmware (FuDevice *device,
 }
 
 static void
-fu_flashrom_lspcon_i2c_spi_device_class_init (FuFlashromLspconI2cSpiDeviceClass *klass)
+fu_parade_lspcon_device_class_init (FuParadeLspconDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	klass_device->probe = fu_flashrom_lspcon_i2c_spi_device_probe;
-	klass_device->open = fu_flashrom_lspcon_i2c_spi_device_open;
-	klass_device->setup = fu_flashrom_lspcon_i2c_spi_device_setup;
-	klass_device->write_firmware = fu_flashrom_lspcon_i2c_spi_device_write_firmware;
-	klass_device->reload = fu_flashrom_lspcon_i2c_spi_device_set_version;
+	klass_device->probe = fu_parade_lspcon_device_probe;
+	klass_device->open = fu_parade_lspcon_device_open;
+	klass_device->setup = fu_parade_lspcon_device_set_version;
+	klass_device->write_firmware = fu_parade_lspcon_device_write_firmware;
+	klass_device->reload = fu_parade_lspcon_device_set_version;
 }
