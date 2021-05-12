@@ -667,6 +667,7 @@ LIBFWUPD_1.6.0 {
 LIBFWUPD_1.6.1 {
   global:
     fwupd_remote_set_filename_source;
+    fwupd_remote_setup;
     fwupd_version_string;
   local: *;
 } LIBFWUPD_1.6.0;

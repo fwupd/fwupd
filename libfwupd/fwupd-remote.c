@@ -435,15 +435,101 @@ fwupd_remote_set_order_after (FwupdRemote *self, const gchar *order_after)
 }
 
 /**
+ * fwupd_remote_setup:
+ * @self: a #FwupdRemote
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets up the remote ready for use, checking that required parameters have
+ * been set. Calling this method multiple times has no effect.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.6.1
+ **/
+gboolean
+fwupd_remote_setup (FwupdRemote *self, GError **error)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+
+	g_return_val_if_fail (FWUPD_IS_REMOTE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* we can override, hence the extra section */
+	if (priv->kind == FWUPD_REMOTE_KIND_UNKNOWN) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "metadata kind invalid");
+		return FALSE;
+	}
+
+	/* some validation for DOWNLOAD types */
+	if (priv->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
+		g_autofree gchar *filename_cache = NULL;
+
+		if (priv->remotes_dir == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INTERNAL,
+					     "remotes directory not set");
+			return FALSE;
+		}
+		/* set cache to /var/lib... */
+		filename_cache = g_build_filename (priv->remotes_dir,
+						   priv->id,
+						   "metadata.xml.gz",
+						   NULL);
+		fwupd_remote_set_filename_cache (self, filename_cache);
+	}
+
+	/* some validation for DIRECTORY types */
+	if (priv->kind == FWUPD_REMOTE_KIND_DIRECTORY) {
+		if (priv->keyring_kind != FWUPD_KEYRING_KIND_NONE) {
+			g_set_error (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "keyring kind %s is not supported with directory remote",
+				     fwupd_keyring_kind_to_string (priv->keyring_kind));
+			return FALSE;
+		}
+		if (priv->firmware_base_uri != NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "Directory remotes don't support firmware base URI");
+			return FALSE;
+		}
+	}
+
+	/* load the checksum */
+	if (priv->filename_cache_sig != NULL &&
+	    g_file_test (priv->filename_cache_sig, G_FILE_TEST_EXISTS)) {
+		gsize sz = 0;
+		g_autofree gchar *buf = NULL;
+		g_autoptr(GChecksum) checksum = g_checksum_new (G_CHECKSUM_SHA256);
+		if (!g_file_get_contents (priv->filename_cache_sig, &buf, &sz, error)) {
+			g_prefix_error (error, "failed to get checksum: ");
+			return FALSE;
+		}
+		g_checksum_update (checksum, (guchar *) buf, (gssize) sz);
+		fwupd_remote_set_checksum (self, g_checksum_get_string (checksum));
+	} else {
+		fwupd_remote_set_checksum (self, NULL);
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
  * fwupd_remote_load_from_filename:
  * @self: a #FwupdRemote
  * @filename: a filename
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
- * Sets up the remote ready for use. Most other methods call this
- * for you, and do you only need to call this if you are just watching
- * the self.
+ * Loads metadata about the remote from a keyfile.
+ * This can be called zero or multiple times for each remote.
  *
  * Returns: %TRUE for success
  *
@@ -550,69 +636,6 @@ fwupd_remote_load_from_filename (FwupdRemote *self,
 		priv->automatic_reports = g_key_file_get_boolean (kf, group, "AutomaticReports", NULL);
 	if (g_key_file_has_key (kf, group, "AutomaticSecurityReports", NULL))
 		priv->automatic_security_reports = g_key_file_get_boolean (kf, group, "AutomaticSecurityReports", NULL);
-
-	/* we can override, hence the extra section */
-	if (priv->kind == FWUPD_REMOTE_KIND_UNKNOWN) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "metadata kind invalid");
-		return FALSE;
-	}
-
-	/* some validation for DOWNLOAD types */
-	if (priv->kind == FWUPD_REMOTE_KIND_DOWNLOAD) {
-		g_autofree gchar *filename_cache = NULL;
-
-		if (priv->remotes_dir == NULL) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
-					     "remotes directory not set");
-			return FALSE;
-		}
-		/* set cache to /var/lib... */
-		filename_cache = g_build_filename (priv->remotes_dir,
-						   priv->id,
-						   "metadata.xml.gz",
-						   NULL);
-		fwupd_remote_set_filename_cache (self, filename_cache);
-	}
-
-	/* some validation for DIRECTORY types */
-	if (priv->kind == FWUPD_REMOTE_KIND_DIRECTORY) {
-		if (priv->keyring_kind != FWUPD_KEYRING_KIND_NONE) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "keyring kind %s is not supported with directory remote",
-				     fwupd_keyring_kind_to_string (priv->keyring_kind));
-			return FALSE;
-		}
-		if (priv->firmware_base_uri != NULL) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "Directory remotes don't support firmware base URI");
-			return FALSE;
-		}
-	}
-
-	/* load the checksum */
-	if (priv->filename_cache_sig != NULL &&
-	    g_file_test (priv->filename_cache_sig, G_FILE_TEST_EXISTS)) {
-		gsize sz = 0;
-		g_autofree gchar *buf = NULL;
-		g_autoptr(GChecksum) checksum = g_checksum_new (G_CHECKSUM_SHA256);
-		if (!g_file_get_contents (priv->filename_cache_sig, &buf, &sz, error)) {
-			g_prefix_error (error, "failed to get checksum: ");
-			return FALSE;
-		}
-		g_checksum_update (checksum, (guchar *) buf, (gssize) sz);
-		fwupd_remote_set_checksum (self, g_checksum_get_string (checksum));
-	} else {
-		fwupd_remote_set_checksum (self, NULL);
-	}
 
 	/* success */
 	fwupd_remote_set_filename_source (self, filename);

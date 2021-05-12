@@ -190,6 +190,10 @@ fu_remote_list_add_for_path (FuRemoteList *self, const gchar *path, GError **err
 			g_prefix_error (error, "failed to load %s: ", filename);
 			return FALSE;
 		}
+		if (!fwupd_remote_setup (remote, error)) {
+			g_prefix_error (error, "failed to setup %s: ", filename);
+			return FALSE;
+		}
 
 		/* watch the remote_list file and the XML file itself */
 		if (!fu_remote_list_add_inotify (self, filename, error))

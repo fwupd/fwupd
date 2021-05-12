@@ -187,6 +187,9 @@ fwupd_remote_download_func (void)
 	ret = fwupd_remote_load_from_filename (remote, fn, NULL, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
+	ret = fwupd_remote_setup (remote, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 	g_assert_cmpint (fwupd_remote_get_kind (remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
 	g_assert_cmpint (fwupd_remote_get_keyring_kind (remote), ==, FWUPD_KEYRING_KIND_JCAT);
 	g_assert_cmpint (fwupd_remote_get_priority (remote), ==, 0);
@@ -250,6 +253,12 @@ fwupd_remote_duplicate_func (void)
 	g_assert_true (ret);
 	fn2 = g_build_filename (TESTDATADIR, "tests", "disabled.conf", NULL);
 	ret = fwupd_remote_load_from_filename (remote, fn2, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fwupd_remote_setup (remote, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fwupd_remote_setup (remote, &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 	g_assert_false (fwupd_remote_get_enabled (remote));

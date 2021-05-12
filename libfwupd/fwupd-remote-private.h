@@ -30,5 +30,7 @@ void		 fwupd_remote_set_filename_source	(FwupdRemote	*self,
 							 const gchar	*filename_source);
 void		 fwupd_remote_set_keyring_kind		(FwupdRemote	*self,
 							 FwupdKeyringKind keyring_kind);
+gboolean	 fwupd_remote_setup			(FwupdRemote	*self,
+							 GError		**error);
 
 G_END_DECLS
