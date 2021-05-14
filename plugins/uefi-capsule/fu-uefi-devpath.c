@@ -13,6 +13,14 @@
 
 #include "fwupd-error.h"
 
+#ifndef EFIDP_END_TYPE
+#define EFIDP_END_TYPE      0x7f
+#endif
+
+#ifndef EFIDP_END_ENTIRE
+#define EFIDP_END_ENTIRE    0xff
+#endif
+
 typedef struct {
 	guint8	 type;
 	guint8	 subtype;
