@@ -27,7 +27,17 @@ shared_module('fu_plugin_cpu',
   ],
 )
 
+# verify the compiler knows what to do
 if cc.has_argument('-fcf-protection')
+  build_fwupdcethelper = cc.compiles(
+    'static void __attribute__((noinline,noclone)) f(void) {}',
+    name : '__attribute__((noinline,noclone))',
+  )
+else
+  build_fwupdcethelper = false
+endif
+
+if build_fwupdcethelper
   libfwupdcethelper = static_library('fwupdcethelper',
     sources : [
       'fu-cpu-helper-cet-common.c',
