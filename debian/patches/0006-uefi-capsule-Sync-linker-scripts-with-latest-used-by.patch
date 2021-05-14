@@ -1,0 +1,332 @@
+From 1e52f8f71bc068e037c52c016cc8a8726895d6da Mon Sep 17 00:00:00 2001
+From: Javier Martinez Canillas <javierm@redhat.com>
+Date: Tue, 30 Mar 2021 11:15:29 +0200
+Subject: [PATCH] uefi-capsule: Sync linker scripts with latest used by shim
+
+The linker scripts used in the project were copied from the shim project,
+but there were a few fixes made after this original copy.
+
+Until binutils have proper pei-aarch64 support, the linker scripts should
+be kept in sync to make sure that the PE32+ binaries are built correctly.
+
+The fixes included in this change are the following:
+
+ * Include missing .text sections in PE/COFF binary (Chris Coulson)
+ * Put .sbat after _edata (Peter Jones)
+ * Fix some PE headers for arm and aarch64 (Peter Jones)
+ * Include the aligned part in SizeOfRawData of sbat for arm and aarch64 (Gary Lin)
+ * Swizzle some sections to make old sbsign happier for arm and aarch64 (Peter Jones)
+ * Put .rel* and .dyn* in .rodata for arm and aarch64 (Peter Jones)
+---
+ .../uefi-capsule/efi/lds/elf_aarch64_efi.lds  | 68 ++++++++++++-------
+ plugins/uefi-capsule/efi/lds/elf_arm_efi.lds  | 66 +++++++++++++-----
+ plugins/uefi-capsule/efi/lds/elf_ia32_efi.lds | 17 +++--
+ .../uefi-capsule/efi/lds/elf_x86_64_efi.lds   | 18 +++--
+ 4 files changed, 115 insertions(+), 54 deletions(-)
+
+diff --git a/plugins/uefi-capsule/efi/lds/elf_aarch64_efi.lds b/plugins/uefi-capsule/efi/lds/elf_aarch64_efi.lds
+index c2c925df..353b24a0 100644
+--- a/plugins/uefi-capsule/efi/lds/elf_aarch64_efi.lds
++++ b/plugins/uefi-capsule/efi/lds/elf_aarch64_efi.lds
+@@ -9,24 +9,12 @@ SECTIONS
+     *(.text)
+     *(.text.*)
+     *(.gnu.linkonce.t.*)
+-    *(.srodata)
+-    *(.rodata*)
+-    . = ALIGN(16);
+-    _etext = .;
+-  }
+-
+-  . = ALIGN(4096);
+-  .dynamic  : { *(.dynamic) }
+-
+-  . = ALIGN(4096);
+-  .note.gnu.build-id : {
+-    *(.note.gnu.build-id)
+-  }
+-
+-  . = ALIGN(4096);
+-  .data.ident : {
+-    *(.data.ident)
++    _evtext = .;
++    . = ALIGN(4096);
+   }
++  _etext = .;
++  _text_size = . - _text;
++  _text_vsize = _evtext - _text;
+ 
+   . = ALIGN(4096);
+   .data :
+@@ -39,6 +27,8 @@ SECTIONS
+    *(.got.plt)
+    *(.got)
+ 
++   *(.dynamic)
++
+    /* the EFI loader doesn't seem to like a .bss section, so we stick
+       it all into .data: */
+    . = ALIGN(16);
+@@ -48,10 +38,21 @@ SECTIONS
+    *(.dynbss)
+    *(.bss)
+    *(COMMON)
+-   . = ALIGN(16);
++   _evdata = .;
++   . = ALIGN(4096);
+    _bss_end = .;
+   }
++  _edata = .;
++  _data_vsize = _evdata - _data;
++  _data_size = . - _data;
+ 
++  /*
++   * Note that _sbat must be the beginning of the data, and _esbat must be the
++   * end and must be before any section padding.  The sbat self-check uses
++   * _esbat to find the bounds of the data, and if the padding is included, the
++   * CSV parser (correctly) rejects the data as having NUL values in one of the
++   * required columns.
++   */
+   . = ALIGN(4096);
+   .sbat :
+   {
+@@ -59,24 +60,39 @@ SECTIONS
+     *(.sbat)
+     *(.sbat.*)
+     _esbat = .;
++    . = ALIGN(4096);
++    _epsbat = .;
+   }
++  _sbat_size = _epsbat - _sbat;
++  _sbat_vsize = _esbat - _sbat;
++
+   . = ALIGN(4096);
+-  .rela :
++  .rodata :
+   {
++    _rodata = .;
+     *(.rela.dyn)
+     *(.rela.plt)
+     *(.rela.got)
+     *(.rela.data)
+     *(.rela.data*)
++
++    *(.rodata*)
++    *(.srodata)
++    *(.dynsym)
++    *(.dynstr)
++    . = ALIGN(16);
++    *(.note.gnu.build-id)
++    . = ALIGN(4096);
++    *(.vendor_cert)
++    *(.data.ident)
++    _evrodata = .;
++    . = ALIGN(4096);
+   }
+-  _edata = .;
+-  _data_size = . - _data;
++  _erodata = .;
++  _rodata_size = . - _rodata;
++  _rodata_vsize = _evrodata - _rodata;
++  _alldata_size = . - _data;
+ 
+-  . = ALIGN(4096);
+-  .dynsym   : { *(.dynsym) }
+-  . = ALIGN(4096);
+-  .dynstr   : { *(.dynstr) }
+-  . = ALIGN(4096);
+   /DISCARD/ :
+   {
+     *(.rel.reloc)
+diff --git a/plugins/uefi-capsule/efi/lds/elf_arm_efi.lds b/plugins/uefi-capsule/efi/lds/elf_arm_efi.lds
+index 80cce416..e4e29bdf 100644
+--- a/plugins/uefi-capsule/efi/lds/elf_arm_efi.lds
++++ b/plugins/uefi-capsule/efi/lds/elf_arm_efi.lds
+@@ -9,13 +9,14 @@ SECTIONS
+     *(.text)
+     *(.text.*)
+     *(.gnu.linkonce.t.*)
+-    *(.srodata)
+-    *(.rodata*)
+-    . = ALIGN(16);
++    _evtext = .;
++    . = ALIGN(4096);
+   }
+   _etext = .;
+   _text_size = . - _text;
+-  .dynamic  : { *(.dynamic) }
++  _text_vsize = _evtext - _text;
++
++  . = ALIGN(4096);
+   .data :
+   {
+    _data = .;
+@@ -26,6 +27,8 @@ SECTIONS
+    *(.got.plt)
+    *(.got)
+ 
++   *(.dynamic)
++
+    /* the EFI loader doesn't seem to like a .bss section, so we stick
+       it all into .data: */
+    . = ALIGN(16);
+@@ -34,12 +37,22 @@ SECTIONS
+    *(.scommon)
+    *(.dynbss)
+    *(.bss)
+-   *(.bss.*)
+    *(COMMON)
+-   . = ALIGN(16);
++   _evdata = .;
++   . = ALIGN(4096);
+    _bss_end = .;
+   }
++  _edata = .;
++  _data_vsize = _evdata - _data;
++  _data_size = . - _data;
+ 
++  /*
++   * Note that _sbat must be the beginning of the data, and _esbat must be the
++   * end and must be before any section padding.  The sbat self-check uses
++   * _esbat to find the bounds of the data, and if the padding is included, the
++   * CSV parser (correctly) rejects the data as having NUL values in one of the
++   * required columns.
++   */
+   . = ALIGN(4096);
+   .sbat :
+   {
+@@ -47,22 +60,39 @@ SECTIONS
+     *(.sbat)
+     *(.sbat.*)
+     _esbat = .;
++    . = ALIGN(4096);
++    _epsbat = .;
+   }
++  _sbat_size = _epsbat - _sbat;
++  _sbat_vsize = _esbat - _sbat;
+ 
+   . = ALIGN(4096);
+-  .rel.dyn : { *(.rel.dyn) }
+-  .rel.plt : { *(.rel.plt) }
+-  .rel.got : { *(.rel.got) }
+-  .rel.data : { *(.rel.data) *(.rel.data*) }
+-  _edata = .;
+-  _data_size = . - _etext;
++  .rodata :
++  {
++    _rodata = .;
++    *(.rel.dyn)
++    *(.rel.plt)
++    *(.rel.got)
++    *(.rel.data)
++    *(.rel.data*)
++
++    *(.rodata*)
++    *(.srodata)
++    *(.dynsym)
++    *(.dynstr)
++    . = ALIGN(16);
++    *(.note.gnu.build-id)
++    . = ALIGN(4096);
++    *(.vendor_cert)
++    *(.data.ident)
++    _evrodata = .;
++    . = ALIGN(4096);
++  }
++  _erodata = .;
++  _rodata_size = . - _rodata;
++  _rodata_vsize = _evrodata - _rodata;
++  _alldata_size = . - _data;
+ 
+-  . = ALIGN(4096);
+-  .dynsym   : { *(.dynsym) }
+-  . = ALIGN(4096);
+-  .dynstr   : { *(.dynstr) }
+-  . = ALIGN(4096);
+-  .note.gnu.build-id : { *(.note.gnu.build-id) }
+   /DISCARD/ :
+   {
+     *(.rel.reloc)
+diff --git a/plugins/uefi-capsule/efi/lds/elf_ia32_efi.lds b/plugins/uefi-capsule/efi/lds/elf_ia32_efi.lds
+index bafd1d37..742e0a47 100644
+--- a/plugins/uefi-capsule/efi/lds/elf_ia32_efi.lds
++++ b/plugins/uefi-capsule/efi/lds/elf_ia32_efi.lds
+@@ -49,12 +49,9 @@ SECTIONS
+   }
+ 
+   . = ALIGN(4096);
+-  .sbat :
++  .vendor_cert :
+   {
+-    _sbat = .;
+-    *(.sbat)
+-    *(.sbat.*)
+-    _esbat = .;
++   *(.vendor_cert)
+   }
+   . = ALIGN(4096);
+   .dynamic  : { *(.dynamic) }
+@@ -72,6 +69,16 @@ SECTIONS
+   }
+   _edata = .;
+   _data_size = . - _data;
++  . = ALIGN(4096);
++  .sbat :
++  {
++    _sbat = .;
++    *(.sbat)
++    *(.sbat.*)
++  }
++  _esbat = .;
++  _sbat_size = . - _sbat;
++
+   . = ALIGN(4096);
+   .dynsym   : { *(.dynsym) }
+   . = ALIGN(4096);
+diff --git a/plugins/uefi-capsule/efi/lds/elf_x86_64_efi.lds b/plugins/uefi-capsule/efi/lds/elf_x86_64_efi.lds
+index 69a46184..bcc65270 100644
+--- a/plugins/uefi-capsule/efi/lds/elf_x86_64_efi.lds
++++ b/plugins/uefi-capsule/efi/lds/elf_x86_64_efi.lds
+@@ -17,6 +17,8 @@ SECTIONS
+   {
+    _text = .;
+    *(.text)
++   *(.text.*)
++   *(.gnu.linkonce.t.*)
+    _etext = .;
+   }
+   . = ALIGN(4096);
+@@ -54,12 +56,9 @@ SECTIONS
+   }
+ 
+   . = ALIGN(4096);
+-  .sbat :
++  .vendor_cert :
+   {
+-    _sbat = .;
+-    *(.sbat)
+-    *(.sbat.*)
+-    _esbat = .;
++   *(.vendor_cert)
+   }
+   . = ALIGN(4096);
+   .dynamic  : { *(.dynamic) }
+@@ -72,6 +71,15 @@ SECTIONS
+   }
+   _edata = .;
+   _data_size = . - _data;
++  . = ALIGN(4096);
++  .sbat :
++  {
++    _sbat = .;
++    *(.sbat)
++    *(.sbat.*)
++  }
++  _esbat = .;
++  _sbat_size = . - _sbat;
+ 
+   . = ALIGN(4096);
+   .dynsym   : { *(.dynsym) }
+-- 
+2.20.1
+

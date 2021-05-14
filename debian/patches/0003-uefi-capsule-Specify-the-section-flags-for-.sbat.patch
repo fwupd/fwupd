@@ -1,0 +1,34 @@
+From 2f3f2b243fcfc155dd1c779dbee59b826ac726b1 Mon Sep 17 00:00:00 2001
+From: Gary Lin <glin@suse.com>
+Date: Tue, 9 Mar 2021 15:26:20 +0800
+Subject: [PATCH] uefi-capsule: Specify the section flags for .sbat
+
+When using "objcopy -O binary" to generate AArch64 EFI images, it
+silently drops the sections without "alloc" or "load" or the sections
+with "unload", and this caused the content of .sbat was skipped in the
+final EFI image.
+
+This commit sets the common read-only data section flags to .sbat to
+make sure the content will be copied.
+
+Signed-off-by: Gary Lin <glin@suse.com>
+---
+ plugins/uefi-capsule/efi/generate_sbat.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/plugins/uefi-capsule/efi/generate_sbat.py b/plugins/uefi-capsule/efi/generate_sbat.py
+index 227bc841..18f7c4c7 100755
+--- a/plugins/uefi-capsule/efi/generate_sbat.py
++++ b/plugins/uefi-capsule/efi/generate_sbat.py
+@@ -70,6 +70,8 @@ def _generate_sbat(args):
+             args.objcopy,
+             "--add-section",
+             ".sbat={}".format(sfd.name),
++            "--set-section-flags",
++            ".sbat=contents,alloc,load,readonly,data",
+             args.outfile,
+         ]
+         subprocess.run(argv, check=True)
+-- 
+2.20.1
+

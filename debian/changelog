@@ -1,8 +1,8 @@
 fwupd (1.5.7-4) unstable; urgency=medium
 
-  * Fix generation of the vendor SBAT string
+  * Multiple fixes for working with UEFI SBAT
 
- -- Steve McIntyre <93sam@debian.org>  Fri, 26 Mar 2021 00:27:48 +0000
+ -- Steve McIntyre <93sam@debian.org>  Fri, 14 May 2021 00:32:00 +0100
 
 fwupd (1.5.7-3) unstable; urgency=medium
 
