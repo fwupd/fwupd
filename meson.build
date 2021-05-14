@@ -409,7 +409,6 @@ if build_standalone and get_option('plugin_modem_manager')
   libmm_glib = dependency('mm-glib', version : '>= 1.10.0')
   add_project_arguments('-DMM_REQUIRED_VERSION="1.10.0"', language : 'c')
   libqmi_glib = dependency('qmi-glib', version : '>= 1.23.1')
-  add_project_arguments('-DQMI_REQUIRED_VERSION="1.23.1"', language : 'c')
 endif
 
 if get_option('soup_session_compat')
