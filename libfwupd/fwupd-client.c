@@ -564,6 +564,8 @@ fwupd_client_curl_new (FwupdClient *self, GError **error)
 	curl_easy_setopt (helper->curl, CURLOPT_USERAGENT, priv->user_agent);
 	curl_easy_setopt (helper->curl, CURLOPT_CONNECTTIMEOUT, 60L);
 	curl_easy_setopt (helper->curl, CURLOPT_NOPROGRESS, 0L);
+	curl_easy_setopt (helper->curl, CURLOPT_FOLLOWLOCATION, 1L);
+	curl_easy_setopt (helper->curl, CURLOPT_MAXREDIRS, 5L);
 
 	/* relax the SSL checks for broken corporate proxies */
 	if (g_getenv ("DISABLE_SSL_STRICT") != NULL)
