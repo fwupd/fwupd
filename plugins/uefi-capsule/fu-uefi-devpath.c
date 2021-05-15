@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include <efivar.h>
+#include <efivar-dp.h>
 
 #include "fu-common.h"
 #include "fu-uefi-devpath.h"
