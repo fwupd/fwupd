@@ -204,11 +204,6 @@ if get_option('introspection') and get_option('gusb')
     ],
     install : true
   )
-  gnome.generate_vapi('fwupdplugin',
-    sources : fwupd_gir[0],
-    packages : ['gio-2.0'],
-    install : true,
-  )
 
   # Verify the map file is correct -- note we can't actually use the generated
   # file for two reasons:
