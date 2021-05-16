@@ -190,9 +190,11 @@ fwupd_remote_set_id (FwupdRemote *self, const gchar *id)
 /**
  * fwupd_remote_set_filename_source:
  * @self: a #FwupdRemote
- * @filename_source: (nullable): filename
+ * @filename_source: (nullable): The mutable filename
  *
- * Sets the source filename. This is typically a file in `/etc/fwupd/remotes/`.
+ * Sets the filename of the mutable metadata source.
+ * This is typically a location in /var/lib/fwupd/remotes.d rather than the
+ * possibly-read-only location in /etc/fwupd/remotes.d
  *
  * Since: 1.6.1
  **/

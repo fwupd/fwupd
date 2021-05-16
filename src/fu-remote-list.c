@@ -168,6 +168,7 @@ fu_remote_list_add_for_path (FuRemoteList *self, const gchar *path, GError **err
 		return FALSE;
 	while ((tmp = g_dir_read_name (dir)) != NULL) {
 		g_autofree gchar *filename = g_build_filename (path_remotes, tmp, NULL);
+		g_autofree gchar *filename_mut = NULL;
 		g_autoptr(FwupdRemote) remote = fwupd_remote_new ();
 		g_autofree gchar *localstatedir = NULL;
 		g_autofree gchar *remotesdir = NULL;
@@ -190,6 +191,16 @@ fu_remote_list_add_for_path (FuRemoteList *self, const gchar *path, GError **err
 			g_prefix_error (error, "failed to load %s: ", filename);
 			return FALSE;
 		}
+		filename_mut = g_build_filename (remotesdir, tmp, NULL);
+		if (g_file_test (filename_mut, G_FILE_TEST_EXISTS)) {
+			if (!fwupd_remote_load_from_filename (remote, filename_mut,
+							      NULL, error)) {
+				g_prefix_error (error, "failed to load %s: ", filename);
+				return FALSE;
+			}
+		} else {
+			fwupd_remote_set_filename_source (remote, filename_mut);
+		}
 		if (!fwupd_remote_setup (remote, error)) {
 			g_prefix_error (error, "failed to setup %s: ", filename);
 			return FALSE;
@@ -197,6 +208,8 @@ fu_remote_list_add_for_path (FuRemoteList *self, const gchar *path, GError **err
 
 		/* watch the remote_list file and the XML file itself */
 		if (!fu_remote_list_add_inotify (self, filename, error))
+			return FALSE;
+		if (!fu_remote_list_add_inotify (self, filename_mut, error))
 			return FALSE;
 		if (!fu_remote_list_add_inotify (self, fwupd_remote_get_filename_cache (remote), error))
 			return FALSE;
@@ -260,13 +273,17 @@ fu_remote_list_set_key_value (FuRemoteList *self,
 
 	/* modify the remote */
 	filename = fwupd_remote_get_filename_source (remote);
-	if (!g_key_file_load_from_file (keyfile, filename,
-					G_KEY_FILE_KEEP_COMMENTS,
-					error)) {
-		g_prefix_error (error, "failed to load %s: ", filename);
-		return FALSE;
+	if (g_file_test (filename, G_FILE_TEST_EXISTS)) {
+		if (!g_key_file_load_from_file (keyfile, filename,
+						G_KEY_FILE_KEEP_COMMENTS,
+						error)) {
+			g_prefix_error (error, "failed to load %s: ", filename);
+			return FALSE;
+		}
 	}
 	g_key_file_set_string (keyfile, "fwupd Remote", key, value);
+	if (!fu_common_mkdir_parent (filename, error))
+		return FALSE;
 	if (!g_key_file_save_to_file (keyfile, filename, error))
 		return FALSE;
 
