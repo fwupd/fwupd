@@ -3342,7 +3342,7 @@ fu_bytes_get_data_safe (GBytes *bytes, gsize *bufsz, GError **error)
 
 /**
  * fu_xmlb_builder_insert_kv:
- * @bn: #JsonBuilder
+ * @bn: #XbBuilderNode
  * @key: string key
  * @value: string value
  *
@@ -3361,7 +3361,7 @@ fu_xmlb_builder_insert_kv (XbBuilderNode *bn, const gchar *key, const gchar *val
 
 /**
  * fu_xmlb_builder_insert_kx:
- * @bn: #JsonBuilder
+ * @bn: #XbBuilderNode
  * @key: string key
  * @value: integer value
  *
@@ -3382,7 +3382,7 @@ fu_xmlb_builder_insert_kx (XbBuilderNode *bn, const gchar *key, guint64 value)
 
 /**
  * fu_xmlb_builder_insert_kb:
- * @bn: #JsonBuilder
+ * @bn: #XbBuilderNode
  * @key: string key
  * @value: boolean value
  *
