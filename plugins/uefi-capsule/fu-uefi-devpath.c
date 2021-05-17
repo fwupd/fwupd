@@ -6,19 +6,20 @@
 
 #include "config.h"
 
+#if defined(__linux__)
+#include <efivar.h>
+#elif defined(__FreeBSD__)
 #include <efivar.h>
 #include <efivar-dp.h>
+#endif
 
 #include "fu-common.h"
 #include "fu-uefi-devpath.h"
 
 #include "fwupd-error.h"
 
-#ifndef EFIDP_END_TYPE
+#if defined(__FreeBSD__)
 #define EFIDP_END_TYPE      0x7f
-#endif
-
-#ifndef EFIDP_END_ENTIRE
 #define EFIDP_END_ENTIRE    0xff
 #endif
 
