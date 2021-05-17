@@ -171,10 +171,70 @@ fu_util_show_plugin_warnings (FuUtilPrivate *priv)
 }
 
 static gboolean
+fu_util_lock (FuUtilPrivate *priv, GError **error)
+{
+#ifdef HAVE_WRLCK
+	struct flock lockp = {
+		.l_type = F_WRLCK,
+		.l_whence = SEEK_SET,
+	};
+	g_autofree gchar *lockdir = NULL;
+	g_autofree gchar *lockfn = NULL;
+
+	/* open file */
+	lockdir = fu_common_get_path (FU_PATH_KIND_LOCKDIR);
+	lockfn = g_build_filename (lockdir, "fwupdtool", NULL);
+	if (!fu_common_mkdir_parent (lockfn, error))
+		return FALSE;
+	priv->lock_fd = g_open (lockfn, O_RDWR | O_CREAT, S_IRWXU);
+	if (priv->lock_fd < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "failed to open %s",
+			     lockfn);
+		return FALSE;
+	}
+
+	/* write lock */
+#ifdef HAVE_OFD
+	if (fcntl (priv->lock_fd, F_OFD_SETLK, &lockp) < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "another instance has locked %s",
+			     lockfn);
+		return FALSE;
+	}
+#else
+	if (fcntl (priv->lock_fd, F_SETLK, &lockp) < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "another instance has locked %s",
+			     lockfn);
+		return FALSE;
+	}
+#endif
+
+	/* success */
+	g_debug ("locked %s", lockfn);
+#endif
+	return TRUE;
+}
+
+static gboolean
 fu_util_start_engine (FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **error)
 {
 #ifdef HAVE_SYSTEMD
 	g_autoptr(GError) error_local = NULL;
+#endif
+	if (!fu_util_lock (priv, error)) {
+		/* TRANSLATORS: another fwupdtool instance is already running */
+		g_prefix_error (error, "%s: ", _("Failed to lock"));
+		return FALSE;
+	}
+#ifdef HAVE_SYSTEMD
 	if (!fu_systemd_unit_stop (fu_util_get_systemd_unit (), &error_local))
 		g_debug ("Failed to stop daemon: %s", error_local->message);
 #endif
@@ -2833,59 +2893,6 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
 
-static gboolean
-fu_util_lock (FuUtilPrivate *priv, GError **error)
-{
-#ifdef HAVE_WRLCK
-	struct flock lockp = {
-		.l_type = F_WRLCK,
-		.l_whence = SEEK_SET,
-	};
-	g_autofree gchar *lockdir = NULL;
-	g_autofree gchar *lockfn = NULL;
-
-	/* open file */
-	lockdir = fu_common_get_path (FU_PATH_KIND_LOCKDIR);
-	lockfn = g_build_filename (lockdir, "fwupdtool", NULL);
-	if (!fu_common_mkdir_parent (lockfn, error))
-		return FALSE;
-	priv->lock_fd = g_open (lockfn, O_RDWR | O_CREAT, S_IRWXU);
-	if (priv->lock_fd < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "failed to open %s",
-			     lockfn);
-		return FALSE;
-	}
-
-	/* write lock */
-#ifdef HAVE_OFD
-	if (fcntl (priv->lock_fd, F_OFD_SETLK, &lockp) < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "another instance has locked %s",
-			     lockfn);
-		return FALSE;
-	}
-#else
-	if (fcntl (priv->lock_fd, F_SETLK, &lockp) < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "another instance has locked %s",
-			     lockfn);
-		return FALSE;
-	}
-#endif
-
-	/* success */
-	g_debug ("locked %s", lockfn);
-#endif
-	return TRUE;
-}
-
 int
 main (int argc, char *argv[])
 {
@@ -2977,13 +2984,6 @@ main (int argc, char *argv[])
 	bindtextdomain (GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 	textdomain (GETTEXT_PACKAGE);
-
-	/* ensure single instance */
-	if (!fu_util_lock (priv, &error)) {
-		/* TRANSLATORS: another fwupdtool instance is already running */
-		g_print ("%s: %s\n", _("Failed to lock"), error->message);
-		return EXIT_FAILURE;
-	}
 
 #ifdef HAVE_GETUID
 	/* ensure root user */
