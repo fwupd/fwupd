@@ -435,9 +435,11 @@ fu_mm_device_io_open (FuMmDevice *self, GError **error)
 static gboolean
 fu_mm_device_io_close (FuMmDevice *self, GError **error)
 {
-	if (!fu_io_channel_shutdown (self->io_channel, error))
-		return FALSE;
-	g_clear_object (&self->io_channel);
+	if (self->io_channel != NULL) {
+		if (!fu_io_channel_shutdown (self->io_channel, error))
+			return FALSE;
+		g_clear_object (&self->io_channel);
+	}
 	return TRUE;
 }
 
