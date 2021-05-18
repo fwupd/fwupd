@@ -23,6 +23,7 @@
 #include <glib/gstdio.h>
 
 #include "fu-device-private.h"
+#include "fu-i2c-device.h"
 #include "fu-udev-device-private.h"
 
 /**
@@ -227,21 +228,6 @@ fu_udev_device_get_vendor_fallback (GUdevDevice *udev_device)
 #endif
 
 #ifdef HAVE_GUDEV
-static gboolean
-fu_udev_device_probe_i2c_dev (FuUdevDevice *self, GError **error)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
-	const gchar *name = g_udev_device_get_sysfs_attr (priv->udev_device, "name");
-	if (name != NULL) {
-		g_autofree gchar *devid = NULL;
-		g_autofree gchar *name_safe = g_strdup (name);
-		g_strdelimit (name_safe, " /\\\"", '-');
-		devid = g_strdup_printf ("I2C\\NAME_%s", name_safe);
-		fu_device_add_instance_id (FU_DEVICE (self), devid);
-	}
-	return TRUE;
-}
-
 static gboolean
 fu_udev_device_probe_serio (FuUdevDevice *self, GError **error)
 {
@@ -469,12 +455,6 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	if (subsystem != NULL) {
 		fu_device_add_instance_id_full (device, subsystem,
 						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
-	}
-
-	/* i2c devices all expose a name */
-	if (g_strcmp0 (g_udev_device_get_subsystem (priv->udev_device), "i2c-dev") == 0) {
-		if (!fu_udev_device_probe_i2c_dev (self, error))
-			return FALSE;
 	}
 
 	/* add firmware_id */
@@ -1929,8 +1909,15 @@ fu_udev_device_class_init (FuUdevDeviceClass *klass)
 FuUdevDevice *
 fu_udev_device_new (GUdevDevice *udev_device)
 {
-	FuUdevDevice *self = g_object_new (FU_TYPE_UDEV_DEVICE,
-					   "udev-device", udev_device,
-					   NULL);
-	return FU_UDEV_DEVICE (self);
+#ifdef HAVE_GUDEV
+	/* create the correct object depending on the subsystem */
+	if (g_strcmp0 (g_udev_device_get_subsystem (udev_device), "i2c-dev") == 0) {
+		return FU_UDEV_DEVICE (g_object_new (FU_TYPE_I2C_DEVICE,
+						     "udev-device", udev_device,
+						     NULL));
+	}
+#endif
+	return FU_UDEV_DEVICE (g_object_new (FU_TYPE_UDEV_DEVICE,
+					     "udev-device", udev_device,
+					     NULL));
 }
