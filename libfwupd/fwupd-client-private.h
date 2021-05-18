@@ -12,6 +12,13 @@
 #include <gio/gunixinputstream.h>
 #endif
 
+void		 fwupd_client_download_bytes2_async	(FwupdClient	*self,
+							 GPtrArray	*urls,
+							 FwupdClientDownloadFlags flags,
+							 GCancellable	*cancellable,
+							 GAsyncReadyCallback callback,
+							 gpointer	 callback_data);
+
 #ifdef HAVE_GIO_UNIX
 void		 fwupd_client_get_details_stream_async	(FwupdClient	*self,
 							 GUnixInputStream *istr,
@@ -30,12 +37,6 @@ void		 fwupd_client_update_metadata_stream_async(FwupdClient	*self,
 							 const gchar	*remote_id,
 							 GUnixInputStream *istr,
 							 GUnixInputStream *istr_sig,
-							 GCancellable	*cancellable,
-							 GAsyncReadyCallback callback,
-							 gpointer	 callback_data);
-void		 fwupd_client_download_bytes2_async	(FwupdClient	*self,
-							 GPtrArray	*urls,
-							 FwupdClientDownloadFlags flags,
 							 GCancellable	*cancellable,
 							 GAsyncReadyCallback callback,
 							 gpointer	 callback_data);
