@@ -318,6 +318,9 @@ endif
 if cc.has_header('fnmatch.h')
   conf.set('HAVE_FNMATCH_H', '1')
 endif
+if cc.has_header('kenv.h')
+  conf.set('HAVE_KENV_H', '1')
+endif
 if cc.has_header('malloc.h')
   conf.set('HAVE_MALLOC_H', '1')
   if cc.has_function('malloc_trim', prefix: '#include <malloc.h>')
