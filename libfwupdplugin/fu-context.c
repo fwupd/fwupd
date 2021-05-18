@@ -454,7 +454,10 @@ const gchar *
 fu_context_lookup_quirk_by_id (FuContext *self, const gchar *guid, const gchar *key)
 {
 	FuContextPrivate *priv = GET_PRIVATE (self);
+
 	g_return_val_if_fail (FU_IS_CONTEXT (self), NULL);
+	g_return_val_if_fail (guid != NULL, NULL);
+	g_return_val_if_fail (key != NULL, NULL);
 
 	/* exact ID */
 	return fu_quirks_lookup_by_id (priv->quirks, guid, key);

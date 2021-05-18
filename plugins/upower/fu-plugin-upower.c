@@ -113,9 +113,11 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		const gchar *vendor = fu_context_get_hwid_replace_value (ctx,
 									 FU_HWIDS_KEY_MANUFACTURER,
 									 NULL);
-		battery_str = g_strdup (fu_context_lookup_quirk_by_id (ctx,
-								       vendor,
-								       FU_QUIRKS_BATTERY_THRESHOLD));
+		if (vendor != NULL) {
+			battery_str = g_strdup (fu_context_lookup_quirk_by_id (ctx,
+									       vendor,
+									       FU_QUIRKS_BATTERY_THRESHOLD));
+		}
 	}
 	if (battery_str == NULL)
 		minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
