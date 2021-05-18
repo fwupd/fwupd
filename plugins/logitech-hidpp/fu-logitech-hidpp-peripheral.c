@@ -180,9 +180,11 @@ static gboolean
 fu_logitech_hidpp_peripheral_close (FuDevice *device, GError **error)
 {
 	FuLogitechHidPpPeripheral *self = FU_UNIFYING_PERIPHERAL (device);
-	if (!fu_io_channel_shutdown (self->io_channel, error))
-		return FALSE;
-	g_clear_object (&self->io_channel);
+	if (self->io_channel != NULL) {
+		if (!fu_io_channel_shutdown (self->io_channel, error))
+			return FALSE;
+		g_clear_object (&self->io_channel);
+	}
 	return TRUE;
 }
 
