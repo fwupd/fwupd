@@ -187,11 +187,13 @@ fu_altos_device_tty_open (FuAltosDevice *self, GError **error)
 static gboolean
 fu_altos_device_tty_close (FuAltosDevice *self, GError **error)
 {
-	tcsetattr (fu_io_channel_unix_get_fd (self->io_channel),
-		   TCSAFLUSH, &self->tty_termios);
-	if (!fu_io_channel_shutdown (self->io_channel, error))
-		return FALSE;
-	g_clear_object (&self->io_channel);
+	if (self->io_channel != NULL) {
+		tcsetattr (fu_io_channel_unix_get_fd (self->io_channel),
+			   TCSAFLUSH, &self->tty_termios);
+		if (!fu_io_channel_shutdown (self->io_channel, error))
+			return FALSE;
+		g_clear_object (&self->io_channel);
+	}
 	return TRUE;
 }
 
