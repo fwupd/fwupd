@@ -11,6 +11,10 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#ifdef HAVE_KENV_H
+#include <kenv.h>
+#endif
+
 #include "fu-common.h"
 #include "fu-smbios-private.h"
 #include "fwupd-error.h"
@@ -88,6 +92,117 @@ fu_smbios_convert_dt_string (FuSmbios *self, guint8 type, guint8 offset,
 	g_ptr_array_add (item->strings, g_strndup (buf, bufsz));
 	fu_smbios_convert_dt_value (self, type, offset, item->strings->len);
 }
+
+#ifdef HAVE_KENV_H
+static void
+fu_smbios_kenv_sysctl_string (FuSmbios *self, guint8 type, guint8 offset,
+			      const gchar *buf, gsize bufsz)
+{
+	FuSmbiosItem *item = g_ptr_array_index (self->items, type);
+
+	/* add to strtab */
+	g_ptr_array_add (item->strings, g_strndup (buf, bufsz));
+	fu_smbios_convert_dt_value (self, type, offset, item->strings->len);
+}
+
+static gboolean
+fu_smbios_kenv_lookup (const gchar *sminfo, gchar *buf, gsize bufsz, GError **error)
+{
+	if (kenv (KENV_GET, sminfo, buf, bufsz - 1) == -1) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
+			     "cannot get DMI request for %s",
+			     sminfo);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_smbios_convert_kenv_string (FuSmbios *self, guint8 type, guint8 offset,
+			       const gchar *sminfo, GError **error)
+{
+	gchar buf[128] = { '\0' }; /* maximum value length - 128 */
+	if (!fu_smbios_kenv_lookup (sminfo, buf, sizeof(buf), error))
+		return FALSE;
+	fu_smbios_kenv_sysctl_string (self, type, offset, buf, sizeof(buf));
+	return TRUE;
+}
+
+static gboolean
+fu_smbios_setup_from_kenv (FuSmbios *self, GError **error)
+{
+	gboolean is_valid = FALSE;
+	g_autoptr(GError) error_local = NULL;
+
+	/* add all four faked structures */
+	for (guint i = 0; i < FU_SMBIOS_STRUCTURE_TYPE_LAST; i++) {
+		FuSmbiosItem *item = g_new0 (FuSmbiosItem, 1);
+		item->type = i;
+		item->buf = g_byte_array_new ();
+		item->strings = g_ptr_array_new_with_free_func (g_free);
+		g_ptr_array_add (self->items, item);
+	}
+
+	/* DMI:Manufacturer */
+	if (!fu_smbios_convert_kenv_string (self, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
+					    0x04, "smbios.bios.vendor", &error_local)) {
+		g_debug ("ignoring: %s", error_local->message);
+		g_clear_error (&error_local);
+	} else {
+		is_valid = TRUE;
+	}
+
+	/* DMI:BiosVersion */
+	if (!fu_smbios_convert_kenv_string (self, FU_SMBIOS_STRUCTURE_TYPE_BIOS,
+					    0x05, "smbios.bios.version", &error_local)) {
+		g_debug ("ignoring: %s", error_local->message);
+		g_clear_error (&error_local);
+	} else {
+		is_valid = TRUE;
+	}
+
+	/* DMI:Family */
+	if (!fu_smbios_convert_kenv_string (self, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
+					    0x1a, "smbios.system.family", &error_local)) {
+		g_debug ("ignoring: %s", error_local->message);
+		g_clear_error (&error_local);
+	} else {
+		is_valid = TRUE;
+	}
+
+	/* DMI:ProductName */
+	if (!fu_smbios_convert_kenv_string (self, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
+					    0x05, "smbios.planar.product", &error_local)) {
+		g_debug ("ignoring: %s", error_local->message);
+		g_clear_error (&error_local);
+	} else {
+		is_valid = TRUE;
+	}
+
+	/* DMI:BaseboardManufacturer */
+	if (!fu_smbios_convert_kenv_string (self, FU_SMBIOS_STRUCTURE_TYPE_BASEBOARD,
+					    0x04, "smbios.planar.maker", &error_local)) {
+		g_debug ("ignoring: %s", error_local->message);
+		g_clear_error (&error_local);
+	} else {
+		is_valid = TRUE;
+	}
+
+	/* we got no data */
+	if (!is_valid) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_READ,
+			     "no SMBIOS information provided");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+#endif
 
 static gboolean
 fu_smbios_setup_from_path_dt (FuSmbios *self, const gchar *path, GError **error)
@@ -468,6 +583,11 @@ fu_smbios_setup (FuSmbios *self, GError **error)
 	path_dt = g_build_filename (sysfsfwdir, "devicetree", "base", NULL);
 	if (g_file_test (path_dt, G_FILE_TEST_EXISTS))
 		return fu_smbios_setup_from_path (self, path_dt, error);
+
+#ifdef HAVE_KENV_H
+	/* kenv */
+	return fu_smbios_setup_from_kenv (self, error);
+#endif
 
 	/* neither found */
 	g_set_error_literal (error,
