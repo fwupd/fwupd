@@ -887,7 +887,7 @@ fu_pxi_device_setup_guid (FuPxiDevice *self, GError **error)
 		devid2 = g_strdup_printf ("HIDRAW\\VEN_%04X&DEV_%04X&MODEL_%s",
 					 (guint) hid_raw_info.vendor,
 					 (guint) hid_raw_info.product,
-					 dev_name->str);
+					 model_name->str);
 		fu_device_add_instance_id (FU_DEVICE (self), devid2);
 	}
 #endif
