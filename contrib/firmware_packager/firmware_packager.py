@@ -22,8 +22,7 @@ def cd(path):
     os.chdir(prev_cwd)
 
 
-firmware_metainfo_template = """
-<?xml version="1.0" encoding="UTF-8"?>
+firmware_metainfo_template = """<?xml version="1.0" encoding="UTF-8"?>
 <component type="firmware">
   <id>org.{developer_name}.guid{firmware_id}</id>
   <name>{firmware_name}</name>
