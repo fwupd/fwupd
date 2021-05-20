@@ -559,8 +559,17 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	if (tmp != NULL)
 		fwupd_release_set_detach_caption (rel, tmp);
 	tmp = xb_node_query_text (component, "screenshots/screenshot/image", NULL);
-	if (tmp != NULL)
-		fwupd_release_set_detach_image (rel, tmp);
+	if (tmp != NULL) {
+		if (remote != NULL) {
+			g_autofree gchar *img = NULL;
+			img = fwupd_remote_build_firmware_uri (remote, tmp, error);
+			if (img == NULL)
+				return FALSE;
+			fwupd_release_set_detach_image (rel, img);
+		} else {
+			fwupd_release_set_detach_image (rel, tmp);
+		}
+	}
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateProtocol']", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_protocol (rel, tmp);
@@ -568,8 +577,17 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 	if (tmp != NULL)
 		fwupd_release_set_update_message (rel, tmp);
 	tmp = xb_node_query_text (component, "custom/value[@key='LVFS::UpdateImage']", NULL);
-	if (tmp != NULL)
-		fwupd_release_set_update_image (rel, tmp);
+	if (tmp != NULL) {
+		if (remote != NULL) {
+			g_autofree gchar *img = NULL;
+			img = fwupd_remote_build_firmware_uri (remote, tmp, error);
+			if (img == NULL)
+				return FALSE;
+			fwupd_release_set_update_image (rel, img);
+		} else {
+			fwupd_release_set_update_image (rel, tmp);
+		}
+	}
 
 	/* sort the locations by scheme */
 	g_ptr_array_sort_with_data (fwupd_release_get_locations (rel),
