@@ -1,9 +1,17 @@
 /*
  * Copyright (C) 2019 Mario Limonciello <mario.limonciello@dell.com>
+ * Copyright (C) 2021 Intel Corporation
  *
  * SPDX-License-Identifier: GPL-2+
  */
 
+#include <sys/utsname.h>
+#include <stdio.h>
+#include <glib.h>
+#include <glib/gstdio.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "config.h"
 
 #include <fwupdplugin.h>
@@ -11,11 +19,16 @@
 #include "fu-cpu-device.h"
 
 struct _FuCpuDevice {
-	FuDevice		 parent_instance;
-	FuCpuDeviceFlag		 flags;
+	FuDevice		parent_instance;
+	FuCpuDeviceFlag		flags;
+	guint32			family_id;
+	guint32			model_id;
+	guint32			stepping_id;
 };
 
 G_DEFINE_TYPE (FuCpuDevice, fu_cpu_device, FU_TYPE_DEVICE)
+
+#define UCODE_BKP_EXTN	".bkp"
 
 gboolean
 fu_cpu_device_has_flag (FuCpuDevice *self, FuCpuDeviceFlag flag)
@@ -95,12 +108,34 @@ fu_cpu_device_convert_vendor (const gchar *vendor)
 	return vendor;
 }
 
+static gboolean
+fu_cpu_is_updatable (GError** error)
+{
+	if (g_access ("/lib/firmware/intel-ucode", R_OK|W_OK) < 0)
+		return FALSE;
+
+	/* This path may not be present on older kernels and wont be supported */
+	if (g_access ("/sys/devices/system/cpu/microcode/reload", R_OK|W_OK) < 0)
+		return FALSE;
+
+	/* check if /boot is writable for initramfs update */
+	if (g_access ("/boot", R_OK|W_OK) < 0)
+		return FALSE;
+
+	return TRUE;
+}
+
 static void
 fu_cpu_device_init (FuCpuDevice *self)
 {
 	fu_device_add_guid_full (FU_DEVICE (self), "cpu",
 				 FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
+	/* only Intel supported as of now */
+	if (fu_common_get_cpu_vendor () == FU_CPU_VENDOR_INTEL) {
+		fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_add_protocol (FU_DEVICE (self), "com.intel");
+	}
 	fu_device_add_icon (FU_DEVICE (self), "computer");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_HEX);
 	fu_device_set_physical_id (FU_DEVICE (self), "cpu:0");
@@ -109,6 +144,7 @@ fu_cpu_device_init (FuCpuDevice *self)
 static gboolean
 fu_cpu_device_add_instance_ids (FuDevice *device, GError **error)
 {
+	FuCpuDevice *self = FU_CPU_DEVICE (device);
 	guint32 eax = 0;
 	guint32 family_id;
 	guint32 family_id_ext;
@@ -135,6 +171,10 @@ fu_cpu_device_add_instance_ids (FuDevice *device, GError **error)
 		model_id |= model_id_ext << 4;
 	if (family_id == 15)
 		family_id += family_id_ext;
+
+	self->family_id		= family_id;
+	self->model_id		= model_id;
+	self->stepping_id	= stepping_id;
 
 	devid1 = g_strdup_printf ("CPUID\\PRO_%01X&FAM_%02X",
 				  processor_id,
@@ -176,6 +216,9 @@ fu_cpu_device_probe_manufacturer_id (FuDevice *device, GError **error)
 			     sizeof(guint32), error))
 		return FALSE;
 	fu_device_set_vendor (device, fu_cpu_device_convert_vendor (str));
+
+	/* TODO: what is the right vendor_id to set ? */
+	fu_device_add_vendor_id (device, fu_cpu_device_convert_vendor (str));
 	return TRUE;
 }
 
@@ -382,6 +425,250 @@ fu_cpu_device_add_security_attrs (FuDevice *device, FuSecurityAttrs *attrs)
 	fu_cpu_device_add_security_attrs_intel_smap (self, attrs);
 }
 
+static gboolean
+fu_cpu_exec_cmd (const gchar* command, GError** error)
+{
+	gint exit_status;
+
+	if (!g_spawn_command_line_sync (command, NULL, NULL, &exit_status, error)) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "failed to execute command: %s", command);
+		return FALSE;
+	}
+
+	if (!g_spawn_check_exit_status(exit_status, error)) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_FAILED,
+				     "failed to early load microcode");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_cpu_late_load_microcode (GError** error)
+{
+	char reload_char = '1';
+	int fd;
+	const gchar* late_load_path = "/sys/devices/system/cpu/microcode/reload";
+
+	fd = open (late_load_path, O_WRONLY);
+	if (fd < 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "failed to open %s", late_load_path);
+		return FALSE;
+	}
+	if (write (fd, &reload_char, 1) < 0) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "failed to write to %s", late_load_path);
+		close (fd);
+		return FALSE;
+	}
+
+	close (fd);
+	return TRUE;
+}
+
+static gboolean
+fu_cpu_update_initrd_microcode (GError** error)
+{
+	const gchar* debian_cmd = "update-initramfs -u -k ";
+	const gchar* fedora_cmd = "dracut -f";
+	struct utsname kernel_name;
+	g_autofree gchar* cmd = NULL;
+	gsize cmdsz = 0;
+
+	if (g_find_program_in_path ("update-initramfs")) {
+		memset (&kernel_name, 0, sizeof(struct utsname));
+		if (uname (&kernel_name) < 0) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_FAILED,
+					     "failed to read current kernel version");
+			return FALSE;
+		}
+		cmdsz = strlen(debian_cmd) + strlen(kernel_name.release) + 1;
+		cmd = (gchar*) g_malloc (cmdsz);
+		if (cmd == NULL) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_FAILED,
+					     "failed to allocate memory for initramfs command");
+			return FALSE;
+		}
+		g_snprintf (cmd, cmdsz, "%s%s", debian_cmd, kernel_name.release);
+
+	} else if (g_find_program_in_path ("dracut")) {
+		cmdsz = strlen (fedora_cmd) + 1;
+		cmd = (gchar*) g_malloc (cmdsz);
+		if (cmd == NULL) {
+			g_set_error_literal (error,
+					     G_IO_ERROR,
+					     G_IO_ERROR_FAILED,
+					     "failed to allocate memory for dracut command");
+			return FALSE;
+		}
+		g_snprintf (cmd, cmdsz, "%s", fedora_cmd);
+	} else {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_SUPPORTED,
+				     "couldn't find a tool to update the initial ramdisk with the new microcode");
+		return FALSE;
+	}
+
+	return fu_cpu_exec_cmd (cmd, error);
+}
+
+static gboolean
+fu_cpu_restore_microcode (const gchar* ucode_path)
+{
+	g_autofree gchar *ucode_bkp_path = NULL;
+
+	if (ucode_path == NULL)
+		return FALSE;
+
+	if (!g_remove (ucode_path))
+		return FALSE;
+
+	/* Now restore from backup if it exists */
+	ucode_bkp_path = g_strdup_printf ("%s%s", ucode_path, UCODE_BKP_EXTN);
+
+	if (ucode_bkp_path == NULL)
+		return FALSE;
+
+	if (!g_file_test (ucode_bkp_path, G_FILE_TEST_EXISTS))
+		return TRUE;
+
+	if (g_rename (ucode_bkp_path, ucode_path) < 0)
+		return FALSE;
+
+	return TRUE;
+}
+
+static void
+do_fu_cpu_wr_fw_cleanup (GError **error, const gchar *msg, FuDevice *device)
+{
+	if (msg) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_FAILED,
+				     msg);
+	}
+	fu_device_set_status (device, FWUPD_STATUS_IDLE);
+}
+
+#define fu_cpu_wr_fw_cleanup(msg)	do_fu_cpu_wr_fw_cleanup(error, msg, device)
+
+static gboolean
+fu_cpu_device_write_firmware (FuDevice *device, FuFirmware *firmware,
+				FwupdInstallFlags flags, GError **error)
+{
+	const gchar *ucode_dir = "/lib/firmware/intel-ucode";
+	FuCpuDevice *self = FU_CPU_DEVICE (device);
+	g_autoptr(GOutputStream) ostream = NULL;
+	g_autofree gchar *ucode_bkp_path = NULL;
+	g_autofree gchar *ucode_path = NULL;
+	g_autoptr(GBytes) ucode_blob = NULL;
+	GFile* ucode_fd;
+	gssize size;
+
+	/* how do we set fw version using MSR plugin ? */
+
+	/* check device updatable */
+	if (!fu_cpu_is_updatable (error)) {
+		fu_cpu_wr_fw_cleanup ("device not updatable");
+		return FALSE;
+	}
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
+
+	if (firmware == NULL) {
+		fu_cpu_wr_fw_cleanup ("firmware is NULL");
+		return FALSE;
+	}
+	ucode_blob = fu_firmware_get_bytes (firmware, error);
+	if (ucode_blob == NULL) {
+		fu_cpu_wr_fw_cleanup ("firmware blob is NULL");
+		return FALSE;
+	}
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+
+	if (g_getenv ("FWUPD_CPU_VERBOSE") != NULL)
+		fu_common_dump_bytes (G_LOG_DOMAIN, "microcode", ucode_blob);
+
+	ucode_path = g_strdup_printf ("%s/%02x-%02x-%02x", ucode_dir,
+					self->family_id, self->model_id,
+					self->stepping_id);
+	ucode_bkp_path = g_strdup_printf ("%s%s", ucode_path, UCODE_BKP_EXTN);
+
+	if (ucode_path == NULL || ucode_bkp_path == NULL) {
+		fu_cpu_wr_fw_cleanup ("failed to allocate memory");
+		return FALSE;
+	}
+
+	/* only do update if we can make backup of existing microcode */
+	if (g_file_test (ucode_path, G_FILE_TEST_EXISTS)) {
+		if (g_rename (ucode_path, ucode_bkp_path) < 0) {
+			fu_cpu_wr_fw_cleanup ("failed to create backup of existing microcode");
+			return FALSE;
+		}
+	}
+
+	ucode_fd = g_file_new_for_path (ucode_path);
+	ostream = G_OUTPUT_STREAM (g_file_replace (ucode_fd, NULL, FALSE,
+					G_FILE_CREATE_NONE, NULL, error));
+
+	if (ostream == NULL) {
+		fu_cpu_wr_fw_cleanup ("failed to create ucode file");
+		/* restore previous microcode */
+		if (!fu_cpu_restore_microcode (ucode_path))
+			g_prefix_error (error, "failed to restore previous microcode\n");
+		return FALSE;
+	}
+
+	size = g_output_stream_write_bytes (ostream, ucode_blob, NULL, error);
+	if (!g_output_stream_close (ostream, NULL, error)) {
+		fu_cpu_wr_fw_cleanup ("failed to close ostream");
+		if (!fu_cpu_restore_microcode (ucode_path))
+			g_prefix_error (error, "failed to restore previous microcode\n");
+		return FALSE;
+	}
+	if (size < 0) {
+		fu_cpu_wr_fw_cleanup ("failed to write ucode file");
+		if (!fu_cpu_restore_microcode (ucode_path))
+			g_prefix_error (error, "failed to restore previous microcode\n");
+		return FALSE;
+	}
+
+	if (!fu_cpu_late_load_microcode (error)) {
+		fu_cpu_wr_fw_cleanup ("microcode late load failed");
+		if (!fu_cpu_restore_microcode (ucode_path))
+			g_prefix_error (error, "failed to restore microcode after late load failure\n");
+		return FALSE;
+	}
+
+	/* TODO again how to check the microcode version? check if updated and set it */
+
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	if (!fu_cpu_update_initrd_microcode (error)) {
+		fu_cpu_wr_fw_cleanup ("microcode initrd update failed");
+		if (!fu_cpu_restore_microcode (ucode_path))
+			g_prefix_error (error, "failed to restore microcode after initrd update failure\n");
+		return FALSE;
+	}
+
+	fu_device_set_status (device, FWUPD_STATUS_IDLE);
+	return TRUE;
+}
+
 static void
 fu_cpu_device_class_init (FuCpuDeviceClass *klass)
 {
@@ -390,6 +677,7 @@ fu_cpu_device_class_init (FuCpuDeviceClass *klass)
 	klass_device->probe = fu_cpu_device_probe;
 	klass_device->set_quirk_kv = fu_cpu_device_set_quirk_kv;
 	klass_device->add_security_attrs = fu_cpu_device_add_security_attrs;
+	klass_device->write_firmware = fu_cpu_device_write_firmware;
 }
 
 FuCpuDevice *
