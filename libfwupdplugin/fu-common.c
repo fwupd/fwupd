@@ -1181,6 +1181,12 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup (tmp);
 		return g_strdup ("/sys/module/firmware_class/parameters/path");
+	/* /sys/devices/system/cpu/microcode/reload */
+	case FU_PATH_KIND_MICROCODE_RELOAD:
+		tmp = g_getenv ("FWUPD_MICROCODE_RELOAD");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/devices/system/cpu/microcode/reload");
 	/* /etc */
 	case FU_PATH_KIND_SYSCONFDIR:
 		tmp = g_getenv ("FWUPD_SYSCONFDIR");
