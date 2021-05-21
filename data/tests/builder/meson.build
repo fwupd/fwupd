@@ -1,5 +1,5 @@
 if get_option('tests')
-  tar = find_program('tar')
+  tar = find_program('gtar', 'tar')
   builder_test_firmware = custom_target('builder-test-firmware',
     input : [
       'source.bin',
