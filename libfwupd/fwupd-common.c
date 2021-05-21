@@ -12,9 +12,11 @@
 #include "fwupd-release.h"
 
 #ifdef HAVE_GIO_UNIX
+#include <glib/gstdio.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/mman.h>
+#include <unistd.h>
 #endif
 
 #include <locale.h>
@@ -1054,11 +1056,33 @@ fwupd_input_stream_read_bytes_finish (GInputStream *stream,
 GUnixInputStream *
 fwupd_unix_input_stream_from_bytes (GBytes *bytes, GError **error)
 {
-#ifdef HAVE_MEMFD_CREATE
 	gint fd;
 	gssize rc;
+#ifndef HAVE_MEMFD_CREATE
+	gchar tmp_file[] = "/tmp/fwupd.XXXXXX";
+#endif
 
+#ifdef HAVE_MEMFD_CREATE
 	fd = memfd_create ("fwupd", MFD_CLOEXEC);
+#else
+	/* emulate in-memory file by an unlinked temporary file */
+	fd = g_mkstemp (tmp_file);
+	if (fd != -1) {
+		rc = g_unlink (tmp_file);
+		if (rc != 0) {
+			if (!g_close (fd, error)) {
+				g_prefix_error (error, "failed to close temporary file: ");
+				return NULL;
+			}
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_INVALID_FILE,
+					     "failed to unlink temporary file");
+			return NULL;
+		}
+	}
+#endif
+
 	if (fd < 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -1082,13 +1106,6 @@ fwupd_unix_input_stream_from_bytes (GBytes *bytes, GError **error)
 		return NULL;
 	}
 	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
-#else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "memfd_create() not available");
-	return NULL;
-#endif
 }
 
 /**
