@@ -57,6 +57,7 @@ VendorId = ATA:0x144D
 [OUI\0026b7]
 Vendor = Kingston
 VendorId = ATA:0x2646
+Flags = needs-shutdown
 
 [OUI\00a075]
 Vendor = Micron
@@ -65,10 +66,6 @@ VendorId = ATA:0x1344
 [OUI\030302]
 Vendor = SK hynix
 VendorId = ATA:0x1C5C
-
-[OUI\550380]
-Vendor = Kingston
-VendorId = ATA:0x2646
 
 [OUI\5cd2e4]
 Vendor = Intel
