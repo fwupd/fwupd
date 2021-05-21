@@ -2769,7 +2769,6 @@ main (int argc, char *argv[])
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
 	g_autoptr(GDateTime) dt_now = g_date_time_new_now_utc ();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GError) error_polkit = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new ();
 	g_autofree gchar *cmd_descriptions = NULL;
 	g_autofree gchar *filter = NULL;
@@ -3183,6 +3182,7 @@ main (int argc, char *argv[])
 #ifdef HAVE_POLKIT
 	/* start polkit tty agent to listen for password requests */
 	if (is_interactive) {
+		g_autoptr(GError) error_polkit = NULL;
 		if (!fu_polkit_agent_open (&error_polkit)) {
 			g_printerr ("Failed to open polkit agent: %s\n",
 				    error_polkit->message);
