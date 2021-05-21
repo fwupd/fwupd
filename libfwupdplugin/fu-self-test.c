@@ -1173,7 +1173,6 @@ fu_common_bytes_get_data_func (void)
 	gboolean ret;
 	g_autoptr(GBytes) bytes1 = NULL;
 	g_autoptr(GBytes) bytes2 = NULL;
-	g_autoptr(GBytes) bytes3 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GMappedFile) mmap = NULL;
 
