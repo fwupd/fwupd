@@ -77,30 +77,13 @@ fu_kinetic_mst_device_prepare_firmware(FuDevice *device,
                                        FwupdInstallFlags flags,
                                        GError **error)
 {
-	//FuKineticMstDevice *self = FU_KINETIC_MST_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_kinetic_mst_firmware_new();
 
-#if 0
-	/* check firmware and board ID match */
-	if (!fu_firmware_parse (firmware, fw, flags, error))
-		return NULL;
-	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
-	    !fu_device_has_custom_flag (device, "ignore-board-id")) {
-		guint16 board_id = fu_synaptics_mst_firmware_get_board_id (FU_SYNAPTICS_MST_FIRMWARE (firmware));
-		if (board_id != self->board_id) {
-			g_set_error (error,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_DATA,
-				     "board ID mismatch, got 0x%04x, expected 0x%04x",
-				     board_id, self->board_id);
-			return NULL;
-		}
-	}
-#else
-    // <TODO> check firmware according to Kinetic's Fw image
-#endif
+    /* parse input firmware file to two images */
+    if (!fu_firmware_parse(firmware, fw, flags, error))
+        return NULL;
 
-	return fu_firmware_new_from_bytes(fw);
+    return g_steal_pointer(&firmware);
 }
 
 // OUI of MegaChips America
@@ -206,7 +189,7 @@ static const KtChipBrIdStrTable kt_dp_branch_dev_info_table[] =
     // Mustang MCDP52x0
     { KT_CHIP_MUSTANG_5200, KT_FW_STATE_RUN_IROM, {'5', '2', '1', '0', 'I', 'R'}, 6},
     { KT_CHIP_MUSTANG_5200, KT_FW_STATE_RUN_APP,  {'K', 'T', '5', '2', 'X', '0'}, 6},
-        
+
     { KT_CHIP_NONE,         KT_FW_STATE_RUN_NONE, {' ', ' ', ' ', ' ', ' ', ' '}, 6}
 };
 
