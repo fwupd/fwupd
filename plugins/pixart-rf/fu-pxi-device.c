@@ -17,59 +17,7 @@
 
 #include "fu-pxi-device.h"
 #include "fu-pxi-firmware.h"
-
-#define PXI_HID_DEV_OTA_INPUT_REPORT_ID		0x05
-#define PXI_HID_DEV_OTA_RETRANSMIT_REPORT_ID	0x06
-#define PXI_HID_DEV_OTA_FEATURE_REPORT_ID	0x07
-
-#define PXI_HID_DEV_OTA_REPORT_USAGE_PAGE	0xff02u
-#define PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE	0xff01u
-
-#define FU_PXI_DEVICE_CMD_FW_OTA_INIT		0x10u
-#define FU_PXI_DEVICE_CMD_FW_WRITE		0x17u
-#define FU_PXI_DEVICE_CMD_FW_UPGRADE		0x18u
-#define FU_PXI_DEVICE_CMD_FW_MCU_RESET		0x22u
-#define FU_PXI_DEVICE_CMD_FW_GET_INFO		0x23u
-#define FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE	0x25u
-#define FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW	0x27u
-#define FU_PXI_DEVICE_CMD_FW_OTA_RETRANSMIT	0x28u
-#define FU_PXI_DEVICE_CMD_FW_OTA_DISCONNECT	0x29u
-#define FU_PXI_DEVICE_CMD_FW_OTA_GET_MODEL	0x2bu
-#define ERR_COMMAND_SUCCESS			0x0
-
-#define FU_PXI_DEVICE_OBJECT_SIZE_MAX		4096	/* bytes */
-#define FU_PXI_DEVICE_OTA_BUF_SZ		512	/* bytes */
-#define FU_PXI_DEVICE_NOTTFY_RET_LEN		4	/* bytes */
-#define FU_PXI_DEVICE_FW_INFO_RET_LEN		8	/* bytes */
-
-#define FU_PXI_DEVICE_NOTIFY_TIMEOUT_MS		5000
-
-#define FU_PXI_DEVICE_SET_REPORT_RETRIES	10
-
-/* OTA target selection */
-enum ota_process_setting {
-	OTA_MAIN_FW,				/* Main firmware */
-	OTA_HELPER_FW,				/* Helper firmware */
-	OTA_EXTERNAL_RESOURCE,			/* External resource */
-};
-
-/* OTA spec check result */
-enum ota_spec_check_result {
-	OTA_SPEC_CHECK_OK		= 1,	/* Spec check ok */
-	OTA_FW_OUT_OF_BOUNDS		= 2,	/* OTA firmware size out of bound */
-	OTA_PROCESS_ILLEGAL		= 3,	/* Illegal OTA process */
-	OTA_RECONNECT			= 4,	/* Inform OTA app do reconnect */
-	OTA_FW_IMG_VERSION_ERROR	= 5,	/* FW image file version check error */
-	OTA_DEVICE_LOW_BATTERY		= 6,	/* Device is under low battery */
-	OTA_SPEC_CHECK_MAX_NUM,			/* Max number of OTA driver defined error code */
-};
-
-/* OTA disconnect reason */
-enum ota_disconnect_reason {
-	OTA_CODE_JUMP			= 1,	/* OTA code jump */
-	OTA_UPDATE_DONE			= 2,	/* OTA update done */
-	OTA_RESET,				/* OTA reset */
-};
+#include "fu-pxi-common.h"
 
 struct _FuPxiDevice {
 	FuUdevDevice	 parent_instance;
@@ -238,15 +186,6 @@ fu_pxi_device_get_feature (FuPxiDevice *self, guint8 *buf, guint bufsz, GError *
 #endif
 }
 
-static guint16
-fu_pxi_device_calculate_checksum (const guint8 *buf, gsize bufsz)
-{
-	guint16 checksum = 0;
-	for (gsize idx = 0; idx < bufsz; idx++)
-		checksum += (guint16) buf[idx];
-	return checksum;
-}
-
 static gboolean
 fu_pxi_device_search_hid_usage_page (guint8 *report_descriptor, gint size,
 				     guint8 *usage_page, guint8 usage_page_sz)
@@ -370,7 +309,7 @@ fu_pxi_device_check_support_resume (FuPxiDevice *self,
 	/* calculate device current checksum */
 	for (guint i = 0; i < self->offset; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		checksum_tmp += fu_pxi_device_calculate_checksum (fu_chunk_get_data (chk),
+		checksum_tmp += fu_pxi_common_calculate_16bit_checksum (fu_chunk_get_data (chk),
 								  fu_chunk_get_data_sz (chk));
 	}
 
@@ -537,7 +476,7 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, FuChunk *chk, GError **error)
 	}
 
 	/* the last chunk */
-	checksum = fu_pxi_device_calculate_checksum (fu_chunk_get_data (chk),
+	checksum = fu_pxi_common_calculate_16bit_checksum (fu_chunk_get_data (chk),
 						     fu_chunk_get_data_sz (chk));
 	self->checksum += checksum;
 	if (checksum_device != self->checksum ) {
@@ -666,7 +605,7 @@ fu_pxi_device_fw_upgrade (FuPxiDevice *self, FuFirmware *firmware, GError **erro
 	if (fw == NULL)
 		return FALSE;
 	buf = g_bytes_get_data (fw, &bufsz);
-	checksum = fu_pxi_device_calculate_checksum (buf, bufsz);
+	checksum = fu_pxi_common_calculate_16bit_checksum (buf, bufsz);
 	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
 	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_UPGRADE);
 	fu_byte_array_append_uint32 (req, bufsz, G_LITTLE_ENDIAN);
@@ -956,3 +895,4 @@ fu_pxi_device_class_init (FuPxiDeviceClass *klass)
 	klass_device->write_firmware = fu_pxi_device_write_firmware;
 	klass_device->prepare_firmware = fu_pxi_device_prepare_firmware;
 }
+
