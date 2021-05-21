@@ -150,6 +150,7 @@ add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language : 'c')
 
 # needed for symlink() and BYTE_ORDER
 add_project_arguments('-D_BSD_SOURCE', language : 'c')
+add_project_arguments('-D_BSD_VISIBLE', language : 'c')
 add_project_arguments('-D_XOPEN_SOURCE=700', language : 'c')
 
 # needed for memfd_create()
