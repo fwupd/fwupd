@@ -144,15 +144,22 @@ fu_uefi_bitmap_func (void)
 	g_assert_cmpint (height, ==, 24);
 }
 
+#ifdef __linux__
+
 static void
 fu_uefi_device_func (void)
 {
-	g_autofree gchar *fn = NULL;
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuUefiEsrt) esrt = fu_uefi_esrt_new ();
+	FuUefiEsrtEntry *entry = NULL;
 
-	fn = g_build_filename (TESTDATADIR, "efi/esrt/entries/entry0", NULL);
-	dev = fu_uefi_device_new_from_entry (fn, &error);
+	g_assert_true (fu_uefi_esrt_setup (esrt, &error));
+	g_assert_no_error (error);
+	g_assert_true (fu_uefi_esrt_get_entry_count (esrt) > 0);
+
+	entry = fu_uefi_esrt_get_entry (esrt, 0);
+	dev = fu_uefi_device_new_from_entry (entry, &error);
 	g_assert_nonnull (dev);
 	g_assert_no_error (error);
 
@@ -174,25 +181,24 @@ static void
 fu_uefi_plugin_func (void)
 {
 	FuUefiDevice *dev;
-	g_autofree gchar *esrt_path = NULL;
-	g_autofree gchar *sysfsfwdir = NULL;
+	guint entry_count;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GPtrArray) entries = NULL;
+	g_autoptr(FuUefiEsrt) esrt = fu_uefi_esrt_new ();
+
+	g_assert_true (fu_uefi_esrt_setup (esrt, &error));
+	g_assert_no_error (error);
+	entry_count = fu_uefi_esrt_get_entry_count (esrt);
 
 	/* add each device */
-	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-	esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
-	entries = fu_uefi_get_esrt_entry_paths (esrt_path, &error);
-	g_assert_no_error (error);
-	g_assert_nonnull (entries);
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	for (guint i = 0; i < entries->len; i++) {
-		const gchar *path = g_ptr_array_index (entries, i);
+	for (guint i = 0; i < entry_count; i++) {
+		FuUefiEsrtEntry *entry = fu_uefi_esrt_get_entry (esrt, i);
 		g_autoptr(GError) error_local = NULL;
-		g_autoptr(FuUefiDevice) dev_tmp = fu_uefi_device_new_from_entry (path, &error_local);
+		g_autoptr(FuUefiDevice) dev_tmp = fu_uefi_device_new_from_entry (entry, &error_local);
 		if (dev_tmp == NULL) {
-			g_debug ("failed to add %s: %s", path, error_local->message);
+			const gchar *id = fu_uefi_esrt_entry_get_id (entry);
+			g_debug ("failed to add %s: %s", id, error_local->message);
 			continue;
 		}
 		g_ptr_array_add (devices, g_object_ref (dev_tmp));
@@ -223,13 +229,18 @@ fu_uefi_plugin_func (void)
 static void
 fu_uefi_update_info_func (void)
 {
-	g_autofree gchar *fn = NULL;
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autoptr(FuUefiUpdateInfo) info = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuUefiEsrt) esrt = fu_uefi_esrt_new ();
+	FuUefiEsrtEntry *entry = NULL;
 
-	fn = g_build_filename (TESTDATADIR, "efi/esrt/entries/entry0", NULL);
-	dev = fu_uefi_device_new_from_entry (fn, &error);
+	g_assert_true (fu_uefi_esrt_setup (esrt, &error));
+	g_assert_no_error (error);
+	g_assert_true (fu_uefi_esrt_get_entry_count (esrt) > 0);
+
+	entry = fu_uefi_esrt_get_entry (esrt, 0);
+	dev = fu_uefi_device_new_from_entry (entry, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);
 	g_assert_cmpint (fu_uefi_device_get_kind (dev), ==, FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
@@ -245,6 +256,8 @@ fu_uefi_update_info_func (void)
 	g_assert_cmpstr (fu_uefi_update_info_get_capsule_fn (info), ==,
 			 "/EFI/fedora/fw/fwupd-697bd920-12cf-4da9-8385-996909bc6559.cap");
 }
+
+#endif
 
 int
 main (int argc, char **argv)
@@ -264,8 +277,11 @@ main (int argc, char **argv)
 	g_test_add_func ("/uefi/bgrt", fu_uefi_bgrt_func);
 	g_test_add_func ("/uefi/framebuffer", fu_uefi_framebuffer_func);
 	g_test_add_func ("/uefi/bitmap", fu_uefi_bitmap_func);
+	/* on linux ESRT data can be faked easily */
+#ifdef __linux__
 	g_test_add_func ("/uefi/device", fu_uefi_device_func);
 	g_test_add_func ("/uefi/update-info", fu_uefi_update_info_func);
 	g_test_add_func ("/uefi/plugin", fu_uefi_plugin_func);
+#endif
 	return g_test_run ();
 }
