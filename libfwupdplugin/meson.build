@@ -24,6 +24,7 @@ fwupdplugin_src = [
   'fu-security-attrs.c',
   'fu-smbios.c',            # fuzzing
   'fu-srec-firmware.c',     # fuzzing
+  'fu-kenv.c',              # fuzzing
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
   'fu-efivar.c',
@@ -91,6 +92,7 @@ fwupdplugin_headers_private = [
   fu_hash,
   'fu-context-private.h',
   'fu-device-private.h',
+  'fu-kenv.h',
   'fu-plugin-private.h',
   'fu-security-attrs-private.h',
   'fu-smbios-private.h',
