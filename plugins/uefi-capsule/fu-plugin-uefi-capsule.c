@@ -19,6 +19,7 @@
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
+#include "fu-uefi-esrt.h"
 #include "fu-efivar.h"
 
 #ifndef HAVE_GIO_2_55_0
@@ -794,19 +795,17 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *str;
-	g_autofree gchar *esrt_path = NULL;
-	g_autofree gchar *sysfsfwdir = NULL;
+	guint entry_count;
 	g_autoptr(GError) error_udisks2 = NULL;
 	g_autoptr(GError) error_efivarfs = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GPtrArray) entries = NULL;
+	g_autoptr(FuUefiEsrt) esrt = fu_uefi_esrt_new ();
 
-	/* get the directory of ESRT entries */
-	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-	esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
-	entries = fu_uefi_get_esrt_entry_paths (esrt_path, error);
-	if (entries == NULL)
+	/* obtain ESRT entries */
+	if (!fu_uefi_esrt_setup (esrt, error))
 		return FALSE;
+
+	entry_count = fu_uefi_esrt_get_entry_count (esrt);
 
 	/* make sure that efivarfs is rw */
 	if (!fu_plugin_uefi_capsule_ensure_efivarfs_rw (&error_efivarfs)) {
@@ -827,14 +826,16 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 
 	/* add each device */
-	for (guint i = 0; i < entries->len; i++) {
-		const gchar *path = g_ptr_array_index (entries, i);
+	for (guint i = 0; i < entry_count; i++) {
+		FuUefiEsrtEntry *entry = fu_uefi_esrt_get_entry (esrt, i);
 		g_autoptr(GError) error_parse = NULL;
-		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path, &error_parse);
+		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (entry, &error_parse);
 		if (dev == NULL) {
-			g_warning ("failed to add %s: %s", path, error_parse->message);
+			const gchar *id = fu_uefi_esrt_entry_get_id (entry);
+			g_warning ("failed to add %s: %s", id, error_parse->message);
 			continue;
 		}
+
 		fu_device_set_context (FU_DEVICE (dev), ctx);
 		if (data->esp != NULL)
 			fu_uefi_device_set_esp (FU_UEFI_DEVICE (dev), data->esp);

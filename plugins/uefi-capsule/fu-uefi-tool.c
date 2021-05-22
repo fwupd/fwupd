@@ -16,6 +16,7 @@
 #include "fu-ucs2.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
+#include "fu-uefi-esrt.h"
 #include "fu-uefi-update-info.h"
 #include "fu-efivar.h"
 
@@ -201,29 +202,28 @@ main (int argc, char *argv[])
 	}
 
 	if (action_list || action_supported || action_info) {
-		g_autoptr(GPtrArray) entries = NULL;
-		g_autofree gchar *esrt_path = NULL;
-		g_autofree gchar *sysfsfwdir = NULL;
+		g_autoptr(FuUefiEsrt) esrt = fu_uefi_esrt_new();
 		g_autoptr(GError) error_local = NULL;
+		guint entry_count;
 
-		/* get the directory of ESRT entries */
-		sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-		esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
-		entries = fu_uefi_get_esrt_entry_paths (esrt_path, &error_local);
-		if (entries == NULL) {
+		/* obtain ESRT entries */
+		if (!fu_uefi_esrt_setup (esrt, &error_local)) {
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
 
+		entry_count = fu_uefi_esrt_get_entry_count (esrt);
+
 		/* add each device */
 		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-		for (guint i = 0; i < entries->len; i++) {
-			const gchar *path = g_ptr_array_index (entries, i);
+		for (guint i = 0; i < entry_count; i++) {
+			FuUefiEsrtEntry *entry = fu_uefi_esrt_get_entry (esrt, i);
 			g_autoptr(GError) error_parse = NULL;
-			g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path, &error_parse);
+			g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (entry, &error_parse);
 			if (dev == NULL) {
+				const gchar *id = fu_uefi_esrt_entry_get_id (entry);
 				g_warning ("failed to parse %s: %s",
-					   path, error_parse->message);
+					   id, error_parse->message);
 				continue;
 			}
 			fu_uefi_device_set_esp (dev, esp);

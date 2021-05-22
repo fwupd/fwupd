@@ -10,6 +10,8 @@ endif
 install_data(['uefi-capsule.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
 
+esrt_impl_source = 'fu-uefi-esrt-@0@.c'.format(host_machine.system())
+
 shared_module('fu_plugin_uefi_capsule',
   fu_hash,
   sources : [
@@ -22,6 +24,7 @@ shared_module('fu_plugin_uefi_capsule',
     'fu-uefi-devpath.c',
     'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
+    esrt_impl_source,
   ],
   include_directories : [
     root_incdir,
@@ -56,6 +59,7 @@ fwupdate = executable(
     'fu-uefi-devpath.c',
     'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
+    esrt_impl_source,
   ],
   include_directories : [
     root_incdir,
@@ -136,6 +140,7 @@ if get_option('tests')
       'fu-uefi-pcrs.c',
       'fu-uefi-update-info.c',
       'fu-ucs2.c',
+      esrt_impl_source,
     ],
     include_directories : [
       root_incdir,

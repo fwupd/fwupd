@@ -18,6 +18,7 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-devpath.h"
+#include "fu-uefi-esrt.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-pcrs.h"
 #include "fu-efivar.h"
@@ -754,13 +755,12 @@ fu_uefi_device_class_init (FuUefiDeviceClass *klass)
 }
 
 FuUefiDevice *
-fu_uefi_device_new_from_entry (const gchar *entry_path, GError **error)
+fu_uefi_device_new_from_entry (FuUefiEsrtEntry *entry, GError **error)
 {
 	g_autoptr(FuUefiDevice) self = NULL;
-	g_autofree gchar *fw_class_fn = NULL;
 	g_autofree gchar *id = NULL;
 
-	g_return_val_if_fail (entry_path != NULL, NULL);
+	g_return_val_if_fail (entry != NULL, NULL);
 
 	/* create object */
 	self = g_object_new (FU_TYPE_UEFI_DEVICE, NULL);
@@ -768,16 +768,14 @@ fu_uefi_device_new_from_entry (const gchar *entry_path, GError **error)
 	/* assume a uint64_t unless told otherwise by a quirk entry or metadata */
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_NUMBER);
 
-	/* read values from sysfs */
-	fw_class_fn = g_build_filename (entry_path, "fw_class", NULL);
-	if (g_file_get_contents (fw_class_fn, &self->fw_class, NULL, NULL))
-		g_strdelimit (self->fw_class, "\n", '\0');
-	self->capsule_flags = fu_uefi_read_file_as_uint64 (entry_path, "capsule_flags");
-	self->kind = fu_uefi_read_file_as_uint64 (entry_path, "fw_type");
-	self->fw_version = fu_uefi_read_file_as_uint64 (entry_path, "fw_version");
-	self->last_attempt_status = fu_uefi_read_file_as_uint64 (entry_path, "last_attempt_status");
-	self->last_attempt_version = fu_uefi_read_file_as_uint64 (entry_path, "last_attempt_version");
-	self->fw_version_lowest = fu_uefi_read_file_as_uint64 (entry_path, "lowest_supported_fw_version");
+	self->fw_class = fu_uefi_esrt_entry_get_class (entry);
+
+	self->capsule_flags = fu_uefi_esrt_entry_get_capsule_flags (entry);
+	self->kind = fu_uefi_esrt_entry_get_kind (entry);
+	self->fw_version = fu_uefi_esrt_entry_get_version (entry);
+	self->last_attempt_status = fu_uefi_esrt_entry_get_status (entry);
+	self->last_attempt_version = fu_uefi_esrt_entry_get_version_error (entry);
+	self->fw_version_lowest = fu_uefi_esrt_entry_get_version_lowest (entry);
 
 	/* the hardware instance is not in the ESRT table and we should really
 	 * write the EFI stub to query with FMP -- but we still have not ever
