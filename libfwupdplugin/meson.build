@@ -176,10 +176,16 @@ fwupdplugin_pkgg.generate(
 
 if get_option('introspection') and get_option('gusb')
   gir_dep = declare_dependency(sources: fwupd_gir)
+  girtargets = []
   if gusb.type_name() == 'internal'
-    libgusb_girtarget = subproject('gusb').get_variable('libgusb_girtarget')[0]
+    girtargets += subproject('gusb').get_variable('libgusb_girtarget')[0]
   else
-    libgusb_girtarget = 'GUsb-1.0'
+    girtargets += 'GUsb-1.0'
+  endif
+  if libxmlb.type_name() == 'internal'
+    girtargets += subproject('libxmlb').get_variable('gir')[0]
+  elif libxmlb.version().version_compare ('>= 0.3.2')
+    girtargets += 'Xmlb-2.0'
   endif
   fwupdplugin_gir = gnome.generate_gir(fwupd,
     sources : [
@@ -206,7 +212,7 @@ if get_option('introspection') and get_option('gusb')
     includes : [
       'Gio-2.0',
       'GObject-2.0',
-      libgusb_girtarget,
+      girtargets,
       fwupd_gir[0],
     ],
     install : true
