@@ -40,6 +40,7 @@
 #include "fu-engine-helper.h"
 #include "fu-engine-request.h"
 #include "fu-idle.h"
+#include "fu-kenv.h"
 #include "fu-keyring-utils.h"
 #include "fu-hash.h"
 #include "fu-history.h"
@@ -1703,11 +1704,12 @@ fu_engine_get_report_metadata_os_release (GHashTable *hash, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_engine_get_report_metadata_kernel_cmdline (GHashTable *hash, GError **error)
+static gchar *
+fu_engine_get_proc_cmdline (GError **error)
 {
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
+	g_autoptr(GString) cmdline_safe = g_string_new (NULL);
 	const gchar *ignore[] = {
 		"",
 		"auto",
@@ -1773,10 +1775,9 @@ fu_engine_get_report_metadata_kernel_cmdline (GHashTable *hash, GError **error)
 
 	/* get a PII-safe kernel command line */
 	if (!g_file_get_contents ("/proc/cmdline", &buf, &bufsz, error))
-		return FALSE;
+		return NULL;
 	if (bufsz > 0) {
 		g_auto(GStrv) tokens = fu_common_strnsplit (buf, bufsz - 1, " ", -1);
-		g_autoptr(GString) cmdline_safe = g_string_new (NULL);
 		for (guint i = 0; tokens[i] != NULL; i++) {
 			g_auto(GStrv) kv = NULL;
 			if (strlen (tokens[i]) == 0)
@@ -1788,11 +1789,31 @@ fu_engine_get_report_metadata_kernel_cmdline (GHashTable *hash, GError **error)
 				g_string_append (cmdline_safe, " ");
 			g_string_append (cmdline_safe, tokens[i]);
 		}
-		if (cmdline_safe->len > 0) {
-			g_hash_table_insert (hash,
-					     g_strdup ("KernelCmdline"),
-					     g_strdup (cmdline_safe->str));
-		}
+	}
+	return g_string_free (g_steal_pointer (&cmdline_safe), FALSE);
+}
+
+static gchar *
+fu_engine_get_kernel_cmdline (GError **error)
+{
+	/* Linuxish */
+	if (g_file_test ("/proc/cmdline", G_FILE_TEST_EXISTS))
+		return fu_engine_get_proc_cmdline (error);
+
+	/* BSDish */
+	return fu_kenv_get_string ("kernel_options", error);
+}
+
+static gboolean
+fu_engine_get_report_metadata_kernel_cmdline (GHashTable *hash, GError **error)
+{
+	g_autofree gchar *cmdline = fu_engine_get_kernel_cmdline (error);
+	if (cmdline == NULL)
+		return FALSE;
+	if (cmdline[0] != '\0') {
+		g_hash_table_insert (hash,
+				     g_strdup ("KernelCmdline"),
+				     g_steal_pointer (&cmdline));
 	}
 	return TRUE;
 }

@@ -23,6 +23,10 @@
 #include <sysinfoapi.h>
 #endif
 
+#ifdef HAVE_KENV_H
+#include <kenv.h>
+#endif
+
 #ifdef HAVE_CPUID_H
 #include <cpuid.h>
 #endif

@@ -11,11 +11,8 @@
 #include <gio/gio.h>
 #include <string.h>
 
-#ifdef HAVE_KENV_H
-#include <kenv.h>
-#endif
-
 #include "fu-common.h"
+#include "fu-kenv.h"
 #include "fu-smbios-private.h"
 #include "fwupd-error.h"
 
@@ -96,37 +93,23 @@ fu_smbios_convert_dt_string (FuSmbios *self, guint8 type, guint8 offset,
 #ifdef HAVE_KENV_H
 static void
 fu_smbios_kenv_sysctl_string (FuSmbios *self, guint8 type, guint8 offset,
-			      const gchar *buf, gsize bufsz)
+			      const gchar *buf)
 {
 	FuSmbiosItem *item = g_ptr_array_index (self->items, type);
 
 	/* add to strtab */
-	g_ptr_array_add (item->strings, g_strndup (buf, bufsz));
+	g_ptr_array_add (item->strings, g_strdup (buf));
 	fu_smbios_convert_dt_value (self, type, offset, item->strings->len);
-}
-
-static gboolean
-fu_smbios_kenv_lookup (const gchar *sminfo, gchar *buf, gsize bufsz, GError **error)
-{
-	if (kenv (KENV_GET, sminfo, buf, bufsz - 1) == -1) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_READ,
-			     "cannot get DMI request for %s",
-			     sminfo);
-		return FALSE;
-	}
-	return TRUE;
 }
 
 static gboolean
 fu_smbios_convert_kenv_string (FuSmbios *self, guint8 type, guint8 offset,
 			       const gchar *sminfo, GError **error)
 {
-	gchar buf[128] = { '\0' }; /* maximum value length - 128 */
-	if (!fu_smbios_kenv_lookup (sminfo, buf, sizeof(buf), error))
+	g_autofree gchar *value = fu_kenv_get_string (sminfo, error);
+	if (value == NULL)
 		return FALSE;
-	fu_smbios_kenv_sysctl_string (self, type, offset, buf, sizeof(buf));
+	fu_smbios_kenv_sysctl_string (self, type, offset, value);
 	return TRUE;
 }
 
