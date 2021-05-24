@@ -262,7 +262,7 @@ fu_ebitdo_device_validate (FuEbitdoDevice *self, GError **error)
 		     G_IO_ERROR,
 		     G_IO_ERROR_INVALID_DATA,
 		     "vendor '%s' did not match allowlist, "
-		     "probably not a 8Bitdo device…", ven);
+		     "probably not a 8BitDo device…", ven);
 	return FALSE;
 }
 
@@ -276,7 +276,7 @@ fu_ebitdo_device_open (FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS (fu_ebitdo_device_parent_class)->open (device, error))
 		return FALSE;
 
-	/* open, then ensure this is actually 8Bitdo hardware */
+	/* open, then ensure this is actually 8BitDo hardware */
 	if (!fu_ebitdo_device_validate (self, error))
 		return FALSE;
 	if (!g_usb_device_claim_interface (usb_device, 0, /* 0 = idx? */
@@ -565,7 +565,7 @@ fu_ebitdo_device_probe (FuDevice *device, GError **error)
 
 	/* set name and vendor */
 	fu_device_set_summary (device, "A redesigned classic game controller");
-	fu_device_set_vendor (device, "8Bitdo");
+	fu_device_set_vendor (device, "8BitDo");
 
 	/* add a hardcoded icon name */
 	fu_device_add_icon (device, "input-gaming");
