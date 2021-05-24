@@ -1176,7 +1176,7 @@
           <li>Catch invalid Dell dock component requests</li>
           <li>Correctly output Intel HEX files with &gt; 16bit offset addresses</li>
           <li>Do not try to verify the element write if upload is unsupported</li>
-          <li>Fix a double-unref when updating any 8Bitdo device</li>
+          <li>Fix a double-unref when updating any 8BitDo device</li>
           <li>Fix crash when enumerating with Dell dock connected but with no UEFI</li>
           <li>Fix uploading large firmware files over DFU</li>
           <li>Format the BCD USB revision numbers correctly</li>
@@ -1189,7 +1189,7 @@
             fwupdmgr
           </li>
           <li>Use the correct wDetachTimeOut when writing DFU firmware</li>
-          <li>Verify devices with legacy VIDs are actually 8Bitdo controllers</li>
+          <li>Verify devices with legacy VIDs are actually 8BitDo controllers</li>
         </ul>
       </description>
     </release>
