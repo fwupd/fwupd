@@ -795,7 +795,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *str;
-	guint entry_count;
+	GPtrArray *entries;
 	g_autoptr(GError) error_udisks2 = NULL;
 	g_autoptr(GError) error_efivarfs = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -805,7 +805,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	if (!fu_uefi_esrt_setup (esrt, error))
 		return FALSE;
 
-	entry_count = fu_uefi_esrt_get_entry_count (esrt);
+	entries = fu_uefi_esrt_get_entries (esrt);
 
 	/* make sure that efivarfs is rw */
 	if (!fu_plugin_uefi_capsule_ensure_efivarfs_rw (&error_efivarfs)) {
@@ -826,8 +826,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 
 	/* add each device */
-	for (guint i = 0; i < entry_count; i++) {
-		FuUefiEsrtEntry *entry = fu_uefi_esrt_get_entry (esrt, i);
+	for (guint i = 0; i < entries->len; i++) {
+		FuUefiEsrtEntry *entry = g_ptr_array_index (entries, i);
 		g_autoptr(GError) error_parse = NULL;
 		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (entry, &error_parse);
 		if (dev == NULL) {

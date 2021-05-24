@@ -120,21 +120,12 @@ fu_uefi_esrt_new (void)
 	return FU_UEFI_ESRT (self);
 }
 
-guint
-fu_uefi_esrt_get_entry_count (FuUefiEsrt *self)
-{
-	g_return_val_if_fail (FU_IS_UEFI_ESRT (self), 0);
-
-	return self->entries->len;
-}
-
-FuUefiEsrtEntry *
-fu_uefi_esrt_get_entry (FuUefiEsrt *self, guint idx)
+GPtrArray *
+fu_uefi_esrt_get_entries (FuUefiEsrt *self)
 {
 	g_return_val_if_fail (FU_IS_UEFI_ESRT (self), NULL);
-	g_return_val_if_fail (idx < self->entries->len, NULL);
 
-	return FU_UEFI_ESRT_ENTRY (g_ptr_array_index (self->entries, idx));
+	return self->entries;
 }
 
 const gchar *

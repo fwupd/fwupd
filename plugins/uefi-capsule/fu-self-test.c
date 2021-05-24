@@ -147,10 +147,11 @@ fu_uefi_bitmap_func (void)
 static void
 fu_uefi_device_func (void)
 {
+	GPtrArray *entries;
+	FuUefiEsrtEntry *entry;
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuUefiEsrt) esrt = fu_uefi_esrt_new ();
-	FuUefiEsrtEntry *entry = NULL;
 
 #ifndef __linux__
 	g_test_skip ("ESRT data is mocked only on Linux");
@@ -159,9 +160,11 @@ fu_uefi_device_func (void)
 
 	g_assert_true (fu_uefi_esrt_setup (esrt, &error));
 	g_assert_no_error (error);
-	g_assert_true (fu_uefi_esrt_get_entry_count (esrt) > 0);
 
-	entry = fu_uefi_esrt_get_entry (esrt, 0);
+	entries = fu_uefi_esrt_get_entries (esrt);
+	g_assert_true (entries->len > 0);
+
+	entry = g_ptr_array_index (entries, 0);
 	dev = fu_uefi_device_new_from_entry (entry, &error);
 	g_assert_nonnull (dev);
 	g_assert_no_error (error);
@@ -184,7 +187,7 @@ static void
 fu_uefi_plugin_func (void)
 {
 	FuUefiDevice *dev;
-	guint entry_count;
+	GPtrArray *entries;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(FuUefiEsrt) esrt = fu_uefi_esrt_new ();
@@ -196,12 +199,12 @@ fu_uefi_plugin_func (void)
 
 	g_assert_true (fu_uefi_esrt_setup (esrt, &error));
 	g_assert_no_error (error);
-	entry_count = fu_uefi_esrt_get_entry_count (esrt);
+	entries = fu_uefi_esrt_get_entries (esrt);
 
 	/* add each device */
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	for (guint i = 0; i < entry_count; i++) {
-		FuUefiEsrtEntry *entry = fu_uefi_esrt_get_entry (esrt, i);
+	for (guint i = 0; i < entries->len; i++) {
+		FuUefiEsrtEntry *entry = g_ptr_array_index (entries, i);
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(FuUefiDevice) dev_tmp = fu_uefi_device_new_from_entry (entry, &error_local);
 		if (dev_tmp == NULL) {
@@ -237,11 +240,12 @@ fu_uefi_plugin_func (void)
 static void
 fu_uefi_update_info_func (void)
 {
+	GPtrArray *entries;
+	FuUefiEsrtEntry *entry;
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autoptr(FuUefiUpdateInfo) info = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuUefiEsrt) esrt = fu_uefi_esrt_new ();
-	FuUefiEsrtEntry *entry = NULL;
 
 #ifndef __linux__
 	g_test_skip ("ESRT data is mocked only on Linux");
@@ -250,9 +254,11 @@ fu_uefi_update_info_func (void)
 
 	g_assert_true (fu_uefi_esrt_setup (esrt, &error));
 	g_assert_no_error (error);
-	g_assert_true (fu_uefi_esrt_get_entry_count (esrt) > 0);
 
-	entry = fu_uefi_esrt_get_entry (esrt, 0);
+	entries = fu_uefi_esrt_get_entries (esrt);
+	g_assert_true (entries->len > 0);
+
+	entry = g_ptr_array_index (entries, 0);
 	dev = fu_uefi_device_new_from_entry (entry, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);

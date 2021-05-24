@@ -202,9 +202,9 @@ main (int argc, char *argv[])
 	}
 
 	if (action_list || action_supported || action_info) {
+		GPtrArray *entries;
 		g_autoptr(FuUefiEsrt) esrt = fu_uefi_esrt_new();
 		g_autoptr(GError) error_local = NULL;
-		guint entry_count;
 
 		/* obtain ESRT entries */
 		if (!fu_uefi_esrt_setup (esrt, &error_local)) {
@@ -212,12 +212,12 @@ main (int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 
-		entry_count = fu_uefi_esrt_get_entry_count (esrt);
+		entries = fu_uefi_esrt_get_entries (esrt);
 
 		/* add each device */
 		devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-		for (guint i = 0; i < entry_count; i++) {
-			FuUefiEsrtEntry *entry = fu_uefi_esrt_get_entry (esrt, i);
+		for (guint i = 0; i < entries->len; i++) {
+			FuUefiEsrtEntry *entry = g_ptr_array_index (entries, i);
 			g_autoptr(GError) error_parse = NULL;
 			g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (entry, &error_parse);
 			if (dev == NULL) {
