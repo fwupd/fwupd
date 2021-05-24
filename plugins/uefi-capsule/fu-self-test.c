@@ -144,8 +144,6 @@ fu_uefi_bitmap_func (void)
 	g_assert_cmpint (height, ==, 24);
 }
 
-#ifdef __linux__
-
 static void
 fu_uefi_device_func (void)
 {
@@ -153,6 +151,11 @@ fu_uefi_device_func (void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuUefiEsrt) esrt = fu_uefi_esrt_new ();
 	FuUefiEsrtEntry *entry = NULL;
+
+#ifndef __linux__
+	g_test_skip ("ESRT data is mocked only on Linux");
+	return;
+#endif
 
 	g_assert_true (fu_uefi_esrt_setup (esrt, &error));
 	g_assert_no_error (error);
@@ -185,6 +188,11 @@ fu_uefi_plugin_func (void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(FuUefiEsrt) esrt = fu_uefi_esrt_new ();
+
+#ifndef __linux__
+	g_test_skip ("ESRT data is mocked only on Linux");
+	return;
+#endif
 
 	g_assert_true (fu_uefi_esrt_setup (esrt, &error));
 	g_assert_no_error (error);
@@ -235,6 +243,11 @@ fu_uefi_update_info_func (void)
 	g_autoptr(FuUefiEsrt) esrt = fu_uefi_esrt_new ();
 	FuUefiEsrtEntry *entry = NULL;
 
+#ifndef __linux__
+	g_test_skip ("ESRT data is mocked only on Linux");
+	return;
+#endif
+
 	g_assert_true (fu_uefi_esrt_setup (esrt, &error));
 	g_assert_no_error (error);
 	g_assert_true (fu_uefi_esrt_get_entry_count (esrt) > 0);
@@ -257,8 +270,6 @@ fu_uefi_update_info_func (void)
 			 "/EFI/fedora/fw/fwupd-697bd920-12cf-4da9-8385-996909bc6559.cap");
 }
 
-#endif
-
 int
 main (int argc, char **argv)
 {
@@ -277,11 +288,8 @@ main (int argc, char **argv)
 	g_test_add_func ("/uefi/bgrt", fu_uefi_bgrt_func);
 	g_test_add_func ("/uefi/framebuffer", fu_uefi_framebuffer_func);
 	g_test_add_func ("/uefi/bitmap", fu_uefi_bitmap_func);
-	/* on linux ESRT data can be faked easily */
-#ifdef __linux__
 	g_test_add_func ("/uefi/device", fu_uefi_device_func);
 	g_test_add_func ("/uefi/update-info", fu_uefi_update_info_func);
 	g_test_add_func ("/uefi/plugin", fu_uefi_plugin_func);
-#endif
 	return g_test_run ();
 }
