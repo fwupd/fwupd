@@ -35,7 +35,6 @@ fu_uefi_esrt_entry_new (gchar *path)
 static void
 fu_uefi_esrt_entry_init (FuUefiEsrtEntry *self)
 {
-	self->path = NULL;
 }
 
 static void
@@ -83,7 +82,7 @@ fu_uefi_esrt_setup (FuUefiEsrt *self, GError **error)
 	while ((fn = g_dir_read_name (dir)) != NULL) {
 		gchar *path = g_build_filename (esrt_entries, fn, NULL);
 		g_ptr_array_add (self->entries, fu_uefi_esrt_entry_new (path));
-    }
+	}
 
 	/* sort by name */
 	g_ptr_array_sort (self->entries, fu_uefi_entry_sort_cb);

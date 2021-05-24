@@ -38,7 +38,6 @@ fu_uefi_esrt_entry_new (gint idx)
 static void
 fu_uefi_esrt_entry_init (FuUefiEsrtEntry *self)
 {
-	self->sysctl_name = NULL;
 }
 
 static void
