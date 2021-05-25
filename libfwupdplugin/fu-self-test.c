@@ -1504,6 +1504,45 @@ fu_device_incorporate_func (void)
 }
 
 static void
+fu_backend_func (void)
+{
+	FuDevice *dev;
+	gboolean ret;
+	g_autoptr(FuBackend) backend = g_object_new (FU_TYPE_BACKEND, NULL);
+	g_autoptr(FuDevice) dev1 = fu_device_new ();
+	g_autoptr(FuDevice) dev2 = fu_device_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* defaults */
+	g_assert_null (fu_backend_get_name (backend));
+	g_assert_true (fu_backend_get_enabled (backend));
+
+	/* load */
+	ret = fu_backend_setup (backend, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_backend_coldplug (backend, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
+	/* add two devices, then remove one of them */
+	fu_device_set_physical_id (dev1, "dev1");
+	fu_backend_device_added (backend, dev1);
+	fu_device_set_physical_id (dev2, "dev2");
+	fu_backend_device_added (backend, dev2);
+	fu_backend_device_changed (backend, dev2);
+	fu_backend_device_removed (backend, dev2);
+
+	dev = fu_backend_lookup_by_id (backend, "dev1");
+	g_assert_nonnull (dev);
+	g_assert (dev == dev1);
+
+	/* should have been removed */
+	dev = fu_backend_lookup_by_id (backend, "dev2");
+	g_assert_null (dev);
+}
+
+static void
 fu_chunk_func (void)
 {
 	g_autofree gchar *chunked1_str = NULL;
@@ -2819,6 +2858,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
 	g_test_add_func ("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);
 	g_test_add_func ("/fwupd/plugin{quirks-device}", fu_plugin_quirks_device_func);
+	g_test_add_func ("/fwupd/backend", fu_backend_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
 	g_test_add_func ("/fwupd/common{align-up}", fu_common_align_up_func);
 	g_test_add_func ("/fwupd/common{byte-array}", fu_common_byte_array_func);

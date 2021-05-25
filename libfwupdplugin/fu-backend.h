@@ -14,12 +14,15 @@ G_DECLARE_DERIVABLE_TYPE (FuBackend, fu_backend, FU, BACKEND, GObject)
 struct _FuBackendClass
 {
 	GObjectClass		 parent_class;
+	/* signals */
 	gboolean		 (*setup)		(FuBackend	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*coldplug)		(FuBackend	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
+	/*< private >*/
+	gpointer		 padding[29];
 };
 
 const gchar	*fu_backend_get_name			(FuBackend	*self);

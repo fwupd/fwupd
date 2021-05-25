@@ -50,7 +50,6 @@ daemon_src = [
   'fu-install-task.c',
   'fu-keyring-utils.c',
   'fu-plugin-list.c',
-  'fu-backend.c',
   'fu-remote-list.c',
   'fu-security-attr.c',
 ] + systemd_src

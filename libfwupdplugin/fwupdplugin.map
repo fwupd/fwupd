@@ -794,6 +794,16 @@ LIBFWUPDPLUGIN_1.6.0 {
 
 LIBFWUPDPLUGIN_1.6.1 {
   global:
+    fu_backend_coldplug;
+    fu_backend_device_added;
+    fu_backend_device_changed;
+    fu_backend_device_removed;
+    fu_backend_get_enabled;
+    fu_backend_get_name;
+    fu_backend_get_type;
+    fu_backend_lookup_by_id;
+    fu_backend_set_enabled;
+    fu_backend_setup;
     fu_i2c_device_get_bus_number;
     fu_i2c_device_get_type;
     fu_i2c_device_read;
