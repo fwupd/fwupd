@@ -9,6 +9,7 @@
 #include <fwupd.h>
 
 #include "fu-ucs2.h"
+#include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
@@ -147,24 +148,6 @@ fu_uefi_bitmap_func (void)
 static void
 fu_uefi_device_func (void)
 {
-	g_autofree gchar *fn = NULL;
-	g_autoptr(FuUefiDevice) dev = NULL;
-	g_autoptr(GError) error = NULL;
-
-	fn = g_build_filename (TESTDATADIR, "efi/esrt/entries/entry0", NULL);
-	dev = fu_uefi_device_new_from_entry (fn, &error);
-	g_assert_nonnull (dev);
-	g_assert_no_error (error);
-
-	g_assert_cmpint (fu_uefi_device_get_kind (dev), ==, FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
-	g_assert_cmpstr (fu_uefi_device_get_guid (dev), ==, "ddc0ee61-e7f0-4e7d-acc5-c070a398838e");
-	g_assert_cmpint (fu_uefi_device_get_hardware_instance (dev), ==, 0x0);
-	g_assert_cmpint (fu_uefi_device_get_version (dev), ==, 65586);
-	g_assert_cmpint (fu_uefi_device_get_version_lowest (dev), ==, 65582);
-	g_assert_cmpint (fu_uefi_device_get_version_error (dev), ==, 18472960);
-	g_assert_cmpint (fu_uefi_device_get_capsule_flags (dev), ==, 0xfe);
-	g_assert_cmpint (fu_uefi_device_get_status (dev), ==, FU_UEFI_DEVICE_STATUS_ERROR_UNSUCCESSFUL);
-
 	/* check enums all converted */
 	for (guint i = 0; i < FU_UEFI_DEVICE_STATUS_LAST; i++)
 		g_assert_nonnull (fu_uefi_device_status_to_string (i));
@@ -174,35 +157,26 @@ static void
 fu_uefi_plugin_func (void)
 {
 	FuUefiDevice *dev;
-	g_autofree gchar *esrt_path = NULL;
-	g_autofree gchar *sysfsfwdir = NULL;
+	gboolean ret;
+	g_autoptr(FuBackend) backend = fu_uefi_backend_new ();
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GPtrArray) entries = NULL;
 
 	/* add each device */
-	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-	esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
-	entries = fu_uefi_get_esrt_entry_paths (esrt_path, &error);
+	ret = fu_backend_coldplug (backend, &error);
 	g_assert_no_error (error);
-	g_assert_nonnull (entries);
-	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	for (guint i = 0; i < entries->len; i++) {
-		const gchar *path = g_ptr_array_index (entries, i);
-		g_autoptr(GError) error_local = NULL;
-		g_autoptr(FuUefiDevice) dev_tmp = fu_uefi_device_new_from_entry (path, &error_local);
-		if (dev_tmp == NULL) {
-			g_debug ("failed to add %s: %s", path, error_local->message);
-			continue;
-		}
-		g_ptr_array_add (devices, g_object_ref (dev_tmp));
-	}
-	g_assert_cmpint (devices->len, ==, 2);
+	g_assert_true (ret);
+	devices = fu_backend_get_devices (backend);
+	g_assert_cmpint (devices->len, ==, 3);
 
 	/* system firmware */
 	dev = g_ptr_array_index (devices, 0);
+	ret = fu_device_probe (FU_DEVICE (dev), &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 	g_assert_cmpint (fu_uefi_device_get_kind (dev), ==, FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
 	g_assert_cmpstr (fu_uefi_device_get_guid (dev), ==, "ddc0ee61-e7f0-4e7d-acc5-c070a398838e");
+	g_assert_cmpint (fu_uefi_device_get_hardware_instance (dev), ==, 0x0);
 	g_assert_cmpint (fu_uefi_device_get_version (dev), ==, 65586);
 	g_assert_cmpint (fu_uefi_device_get_version_lowest (dev), ==, 65582);
 	g_assert_cmpint (fu_uefi_device_get_version_error (dev), ==, 18472960);
@@ -211,6 +185,9 @@ fu_uefi_plugin_func (void)
 
 	/* system firmware */
 	dev = g_ptr_array_index (devices, 1);
+	ret = fu_device_probe (FU_DEVICE (dev), &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 	g_assert_cmpint (fu_uefi_device_get_kind (dev), ==, FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE);
 	g_assert_cmpstr (fu_uefi_device_get_guid (dev), ==, "671d19d0-d43c-4852-98d9-1ce16f9967e4");
 	g_assert_cmpint (fu_uefi_device_get_version (dev), ==, 3090287969);
@@ -218,20 +195,32 @@ fu_uefi_plugin_func (void)
 	g_assert_cmpint (fu_uefi_device_get_version_error (dev), ==, 0);
 	g_assert_cmpint (fu_uefi_device_get_capsule_flags (dev), ==, 32784);
 	g_assert_cmpint (fu_uefi_device_get_status (dev), ==, FU_UEFI_DEVICE_STATUS_SUCCESS);
+
+	/* invalid */
+	dev = g_ptr_array_index (devices, 2);
+	ret = fu_device_probe (FU_DEVICE (dev), &error);
+	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_false (ret);
 }
 
 static void
 fu_uefi_update_info_func (void)
 {
-	g_autofree gchar *fn = NULL;
-	g_autoptr(FuUefiDevice) dev = NULL;
+	FuUefiDevice *dev;
+	gboolean ret;
+	g_autoptr(FuBackend) backend = fu_uefi_backend_new ();
 	g_autoptr(FuUefiUpdateInfo) info = NULL;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
 
-	fn = g_build_filename (TESTDATADIR, "efi/esrt/entries/entry0", NULL);
-	dev = fu_uefi_device_new_from_entry (fn, &error);
+	/* add each device */
+	ret = fu_backend_coldplug (backend, &error);
 	g_assert_no_error (error);
-	g_assert_nonnull (dev);
+	g_assert_true (ret);
+
+	devices = fu_backend_get_devices (backend);
+	g_assert_cmpint (devices->len, ==, 3);
+	dev = g_ptr_array_index (devices, 0);
 	g_assert_cmpint (fu_uefi_device_get_kind (dev), ==, FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE);
 	g_assert_cmpstr (fu_uefi_device_get_guid (dev), ==, "ddc0ee61-e7f0-4e7d-acc5-c070a398838e");
 	info = fu_uefi_device_load_update_info (dev, &error);

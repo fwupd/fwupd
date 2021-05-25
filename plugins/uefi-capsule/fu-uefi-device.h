@@ -37,8 +37,6 @@ typedef enum {
 } FuUefiDeviceStatus;
 
 FuUefiDevice	*fu_uefi_device_new_from_guid		(const gchar	*guid);
-FuUefiDevice	*fu_uefi_device_new_from_entry		(const gchar	*entry_path,
-							 GError		**error);
 FuUefiDevice	*fu_uefi_device_new_from_dev		(FuDevice	*dev);
 void		 fu_uefi_device_set_esp			(FuUefiDevice	*self,
 							 FuVolume	*esp);
