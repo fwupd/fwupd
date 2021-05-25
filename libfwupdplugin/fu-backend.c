@@ -34,6 +34,15 @@ static guint signals[SIGNAL_LAST] = { 0 };
 G_DEFINE_TYPE_WITH_PRIVATE (FuBackend, fu_backend, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_backend_get_instance_private (o))
 
+/**
+ * fu_backend_device_added:
+ * @self: a #FuBackend
+ * @device: a device
+ *
+ * Emits a signal that indicates the device has been added.
+ *
+ * Since: 1.6.1
+ **/
 void
 fu_backend_device_added (FuBackend *self, FuDevice *device)
 {
@@ -46,6 +55,15 @@ fu_backend_device_added (FuBackend *self, FuDevice *device)
 	g_signal_emit (self, signals[SIGNAL_ADDED], 0, device);
 }
 
+/**
+ * fu_backend_device_removed:
+ * @self: a #FuBackend
+ * @device: a device
+ *
+ * Emits a signal that indicates the device has been removed.
+ *
+ * Since: 1.6.1
+ **/
 void
 fu_backend_device_removed (FuBackend *self, FuDevice *device)
 {
@@ -56,6 +74,15 @@ fu_backend_device_removed (FuBackend *self, FuDevice *device)
 	g_hash_table_remove (priv->devices, fu_device_get_backend_id (device));
 }
 
+/**
+ * fu_backend_device_changed:
+ * @self: a #FuBackend
+ * @device: a device
+ *
+ * Emits a signal that indicates the device has been changed.
+ *
+ * Since: 1.6.1
+ **/
 void
 fu_backend_device_changed (FuBackend *self, FuDevice *device)
 {
@@ -64,6 +91,18 @@ fu_backend_device_changed (FuBackend *self, FuDevice *device)
 	g_signal_emit (self, signals[SIGNAL_CHANGED], 0, device);
 }
 
+/**
+ * fu_backend_setup:
+ * @self: a #FuBackend
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets up the backend ready for use, which typically calls the subclassed setup
+ * function. No devices should be added or removed at this point.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.6.1
+ **/
 gboolean
 fu_backend_setup (FuBackend *self, GError **error)
 {
@@ -82,6 +121,17 @@ fu_backend_setup (FuBackend *self, GError **error)
 	return TRUE;
 }
 
+/**
+ * fu_backend_coldplug:
+ * @self: a #FuBackend
+ * @error: (nullable): optional return location for an error
+ *
+ * Adds devices using the subclassed backend.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.6.1
+ **/
 gboolean
 fu_backend_coldplug (FuBackend *self, GError **error)
 {
@@ -93,6 +143,16 @@ fu_backend_coldplug (FuBackend *self, GError **error)
 	return klass->coldplug (self, error);
 }
 
+/**
+ * fu_backend_get_name:
+ * @self: a #FuBackend
+ *
+ * Return the name of the backend, which is normally set by the subclass.
+ *
+ * Returns: backend name
+ *
+ * Since: 1.6.1
+ **/
 const gchar *
 fu_backend_get_name (FuBackend *self)
 {
@@ -101,6 +161,16 @@ fu_backend_get_name (FuBackend *self)
 	return priv->name;
 }
 
+/**
+ * fu_backend_get_enabled:
+ * @self: a #FuBackend
+ *
+ * Return the boolean value of a key if it's been configured
+ *
+ * Returns: %TRUE if the backend is enabled
+ *
+ * Since: 1.6.1
+ **/
 gboolean
 fu_backend_get_enabled (FuBackend *self)
 {
@@ -109,6 +179,15 @@ fu_backend_get_enabled (FuBackend *self)
 	return priv->enabled;
 }
 
+/**
+ * fu_backend_set_enabled:
+ * @self: a #FuBackend
+ * @enabled: enabled state
+ *
+ * Sets the backend enabled state.
+ *
+ * Since: 1.6.1
+ **/
 void
 fu_backend_set_enabled (FuBackend *self, gboolean enabled)
 {
@@ -117,7 +196,17 @@ fu_backend_set_enabled (FuBackend *self, gboolean enabled)
 	priv->enabled = FALSE;
 }
 
-/* (transfer none) */
+/**
+ * fu_backend_lookup_by_id:
+ * @self: a #FuBackend
+ * @device_id: a DeviceID
+ *
+ * Gets a device previously added by the backend.
+ *
+ * Returns: (transfer none): device, or %NULL if not found
+ *
+ * Since: 1.6.1
+ **/
 FuDevice *
 fu_backend_lookup_by_id (FuBackend *self, const gchar *device_id)
 {
