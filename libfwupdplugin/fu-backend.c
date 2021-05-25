@@ -13,6 +13,7 @@
 typedef struct {
 	gchar				*name;
 	gboolean			 enabled;
+	gboolean			 done_setup;
 	GHashTable			*devices;	/* device_id : * FuDevice */
 } FuBackendPrivate;
 
@@ -112,12 +113,15 @@ fu_backend_setup (FuBackend *self, GError **error)
 	g_return_val_if_fail (FU_IS_BACKEND (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	if (klass->setup == NULL)
+	if (priv->done_setup)
 		return TRUE;
-	if (!klass->setup (self, error)) {
-		priv->enabled = FALSE;
-		return FALSE;
+	if (klass->setup != NULL) {
+		if (!klass->setup (self, error)) {
+			priv->enabled = FALSE;
+			return FALSE;
+		}
 	}
+	priv->done_setup = TRUE;
 	return TRUE;
 }
 
@@ -126,7 +130,8 @@ fu_backend_setup (FuBackend *self, GError **error)
  * @self: a #FuBackend
  * @error: (nullable): optional return location for an error
  *
- * Adds devices using the subclassed backend.
+ * Adds devices using the subclassed backend. If fu_backend_setup() has not
+ * already been called then it is run before this function automatically.
  *
  * Returns: %TRUE for success
  *
@@ -138,6 +143,8 @@ fu_backend_coldplug (FuBackend *self, GError **error)
 	FuBackendClass *klass = FU_BACKEND_GET_CLASS (self);
 	g_return_val_if_fail (FU_IS_BACKEND (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	if (!fu_backend_setup (self, error))
+		return FALSE;
 	if (klass->coldplug == NULL)
 		return TRUE;
 	return klass->coldplug (self, error);
