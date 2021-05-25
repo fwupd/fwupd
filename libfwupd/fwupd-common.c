@@ -15,8 +15,11 @@
 #include <glib/gstdio.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <sys/mman.h>
 #include <unistd.h>
+#endif
+
+#ifdef HAVE_MEMFD_CREATE
+#include <sys/mman.h>
 #endif
 
 #include <locale.h>
