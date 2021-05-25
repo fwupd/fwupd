@@ -41,6 +41,19 @@ struct _FuUefiDevice {
 
 G_DEFINE_TYPE (FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE)
 
+enum {
+	PROP_0,
+	PROP_FW_CLASS,
+	PROP_KIND,
+	PROP_CAPSULE_FLAGS,
+	PROP_FW_VERSION,
+	PROP_FW_VERSION_LOWEST,
+	PROP_LAST_ATTEMPT_STATUS,
+	PROP_LAST_ATTEMPT_VERSION,
+	PROP_FMP_HARDWARE_INSTANCE,
+	PROP_LAST
+};
+
 void
 fu_uefi_device_set_esp (FuUefiDevice *self, FuVolume *esp)
 {
@@ -719,6 +732,42 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 }
 
 static void
+fu_uefi_device_set_property (GObject *object, guint prop_id,
+			     const GValue *value, GParamSpec *pspec)
+{
+	FuUefiDevice *self = FU_UEFI_DEVICE (object);
+	switch (prop_id) {
+	case PROP_FW_CLASS:
+		self->fw_class = g_value_dup_string (value);
+		break;
+	case PROP_KIND:
+		self->kind = g_value_get_uint (value);
+		break;
+	case PROP_CAPSULE_FLAGS:
+		self->capsule_flags = g_value_get_uint (value);
+		break;
+	case PROP_FW_VERSION:
+		self->fw_version = g_value_get_uint (value);
+		break;
+	case PROP_FW_VERSION_LOWEST:
+		self->fw_version_lowest = g_value_get_uint (value);
+		break;
+	case PROP_LAST_ATTEMPT_STATUS:
+		self->last_attempt_status = g_value_get_uint (value);
+		break;
+	case PROP_LAST_ATTEMPT_VERSION:
+		self->last_attempt_version = g_value_get_uint (value);
+		break;
+	case PROP_FMP_HARDWARE_INSTANCE:
+		self->fmp_hardware_instance = g_value_get_uint64 (value);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+		break;
+	}
+}
+
+static void
 fu_uefi_device_init (FuUefiDevice *self)
 {
 	fu_device_add_protocol (FU_DEVICE (self), "org.uefi.capsule");
@@ -742,7 +791,10 @@ static void
 fu_uefi_device_class_init (FuUefiDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	GParamSpec *pspec;
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+
+	object_class->set_property = fu_uefi_device_set_property;
 	object_class->finalize = fu_uefi_device_finalize;
 	klass_device->to_string = fu_uefi_device_to_string;
 	klass_device->probe = fu_uefi_device_probe;
@@ -751,6 +803,58 @@ fu_uefi_device_class_init (FuUefiDeviceClass *klass)
 	klass_device->cleanup = fu_uefi_device_cleanup;
 	klass_device->report_metadata_pre = fu_uefi_device_report_metadata_pre;
 	klass_device->report_metadata_post = fu_uefi_device_report_metadata_post;
+
+	pspec = g_param_spec_string ("fw-class", NULL, NULL, NULL,
+				     G_PARAM_CONSTRUCT_ONLY |
+				     G_PARAM_WRITABLE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_FW_CLASS, pspec);
+	pspec = g_param_spec_uint ("kind", NULL, NULL,
+				   FU_UEFI_DEVICE_KIND_UNKNOWN,
+				   FU_UEFI_DEVICE_KIND_LAST - 1,
+				   FU_UEFI_DEVICE_KIND_UNKNOWN,
+				   G_PARAM_CONSTRUCT_ONLY |
+				   G_PARAM_WRITABLE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_KIND, pspec);
+	pspec = g_param_spec_uint ("capsule-flags", NULL, NULL,
+				   0, G_MAXUINT32, 0,
+				   G_PARAM_CONSTRUCT_ONLY |
+				   G_PARAM_WRITABLE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_CAPSULE_FLAGS, pspec);
+	pspec = g_param_spec_uint ("fw-version", NULL, NULL,
+				   0, G_MAXUINT32, 0,
+				   G_PARAM_CONSTRUCT_ONLY |
+				   G_PARAM_WRITABLE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_FW_VERSION, pspec);
+	pspec = g_param_spec_uint ("fw-version-lowest", NULL, NULL,
+				   0, G_MAXUINT32, 0,
+				   G_PARAM_CONSTRUCT_ONLY |
+				   G_PARAM_WRITABLE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_FW_VERSION_LOWEST, pspec);
+	pspec = g_param_spec_uint ("last-attempt-status", NULL, NULL,
+				   FU_UEFI_DEVICE_STATUS_SUCCESS,
+				   FU_UEFI_DEVICE_STATUS_LAST - 1,
+				   FU_UEFI_DEVICE_STATUS_SUCCESS,
+				   G_PARAM_CONSTRUCT_ONLY |
+				   G_PARAM_WRITABLE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_LAST_ATTEMPT_STATUS, pspec);
+	pspec = g_param_spec_uint ("last-attempt-version", NULL, NULL,
+				   0, G_MAXUINT32, 0,
+				   G_PARAM_CONSTRUCT_ONLY |
+				   G_PARAM_WRITABLE |
+				   G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_LAST_ATTEMPT_VERSION, pspec);
+	pspec = g_param_spec_uint64 ("fmp-hardware-instance", NULL, NULL,
+				     0, G_MAXUINT64, 0,
+				     G_PARAM_CONSTRUCT_ONLY |
+				     G_PARAM_WRITABLE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_FMP_HARDWARE_INSTANCE, pspec);
 }
 
 FuUefiDevice *
