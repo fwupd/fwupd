@@ -90,6 +90,7 @@ fwupdplugin_headers_private = [
   'fu-plugin-private.h',
   'fu-security-attrs-private.h',
   'fu-smbios-private.h',
+  'fu-udev-device-private.h',
   'fu-usb-device-private.h',
 ]
 
@@ -104,7 +105,6 @@ if get_option('gusb')
 endif
 
 if get_option('gudev')
-  fwupdplugin_headers_private += 'fu-udev-device-private.h'
   introspection_deps += gudev
 endif
 
