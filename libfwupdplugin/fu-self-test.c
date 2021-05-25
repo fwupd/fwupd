@@ -1512,6 +1512,7 @@ fu_backend_func (void)
 	g_autoptr(FuDevice) dev1 = fu_device_new ();
 	g_autoptr(FuDevice) dev2 = fu_device_new ();
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
 
 	/* defaults */
 	g_assert_null (fu_backend_get_name (backend));
@@ -1540,6 +1541,14 @@ fu_backend_func (void)
 	/* should have been removed */
 	dev = fu_backend_lookup_by_id (backend, "dev2");
 	g_assert_null (dev);
+
+	/* get linear array */
+	devices = fu_backend_get_devices (backend);
+	g_assert_nonnull (devices);
+	g_assert_cmpint (devices->len, ==, 1);
+	dev = g_ptr_array_index (devices, 0);
+	g_assert_nonnull (dev);
+	g_assert (dev == dev1);
 }
 
 static void
