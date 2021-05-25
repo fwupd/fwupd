@@ -215,6 +215,42 @@ fu_backend_lookup_by_id (FuBackend *self, const gchar *device_id)
 	return g_hash_table_lookup (priv->devices, device_id);
 }
 
+static gint
+fu_backend_get_devices_sort_cb (gconstpointer a, gconstpointer b)
+{
+	FuDevice *deva = *((FuDevice **) a);
+	FuDevice *devb = *((FuDevice **) b);
+	return g_strcmp0 (fu_device_get_backend_id (deva),
+			  fu_device_get_backend_id (devb));
+}
+
+/**
+ * fu_backend_get_devices:
+ * @self: a #FuBackend
+ *
+ * Gets all the devices added by the backend.
+ *
+ * Returns: (transfer container) (element-type FuDevice): devices
+ *
+ * Since: 1.6.1
+ **/
+GPtrArray *
+fu_backend_get_devices (FuBackend *self)
+{
+	FuBackendPrivate *priv = GET_PRIVATE (self);
+	g_autoptr(GList) values = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
+
+	g_return_val_if_fail (FU_IS_BACKEND (self), NULL);
+
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	values = g_hash_table_get_values (priv->devices);
+	for (GList *l = values; l != NULL; l = l->next)
+		g_ptr_array_add (devices, g_object_ref (l->data));
+	g_ptr_array_sort (devices, fu_backend_get_devices_sort_cb);
+	return g_steal_pointer (&devices);
+}
+
 static void
 fu_backend_get_property (GObject *object, guint prop_id,
 			 GValue *value, GParamSpec *pspec)

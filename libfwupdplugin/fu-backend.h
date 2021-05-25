@@ -29,6 +29,7 @@ const gchar	*fu_backend_get_name			(FuBackend	*self);
 gboolean	 fu_backend_get_enabled			(FuBackend	*self);
 void		 fu_backend_set_enabled			(FuBackend	*self,
 							 gboolean	 enabled);
+GPtrArray	*fu_backend_get_devices			(FuBackend	*self);
 FuDevice	*fu_backend_lookup_by_id		(FuBackend	*self,
 							 const gchar	*device_id);
 gboolean	 fu_backend_setup			(FuBackend	*self,
