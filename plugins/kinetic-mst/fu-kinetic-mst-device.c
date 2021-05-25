@@ -1187,78 +1187,61 @@ gboolean kt_dp_disable_aux_forward(FuKineticMstConnection *connection,
 }
 
 gboolean kt_dp_read_device_info(FuKineticMstDevice *self,
-                                KtDpDevPort target_port,
+                                /*KtDpDevPort target_port,*/    // <TODO> AUX-ISP for DFP device
                                 KtDpDevInfo *dev_info,
                                 GError **error)
 {
     g_autoptr(FuKineticMstConnection) connection = NULL;
-    gboolean is_read_success = FALSE;
-    gboolean is_dev_read = FALSE;
+    KtDpDevInfo dev_info_local;
 
     if (dev_info == NULL)
         return FALSE;
 
-    dev_info->chip_id = KT_CHIP_NONE;
-    dev_info->chip_type = 0;
-    dev_info->chip_sn = 0;
-    dev_info->fw_run_state = KT_FW_STATE_RUN_NONE;
-    dev_info->fw_info.std_fw_ver = 0;
-    dev_info->fw_info.std_cmdb_ver = 0;
-    dev_info->fw_info.cmdb_rev = 0;
-    dev_info->fw_info.boot_code_ver = 0;
-    dev_info->fw_info.customer_project_id = 0;
-    dev_info->fw_info.customer_fw_ver = 0;
-    dev_info->is_dual_bank_supported = FALSE;
-    dev_info->flash_bank_idx = BANK_NONE;
+    dev_info_local.chip_id = KT_CHIP_NONE;
+    dev_info_local.chip_type = 0;
+    dev_info_local.chip_sn = 0;
+    dev_info_local.fw_run_state = KT_FW_STATE_RUN_NONE;
+    dev_info_local.fw_info.std_fw_ver = 0;
+    dev_info_local.fw_info.std_cmdb_ver = 0;
+    dev_info_local.fw_info.cmdb_rev = 0;
+    dev_info_local.fw_info.boot_code_ver = 0;
+    dev_info_local.fw_info.customer_project_id = 0;
+    dev_info_local.fw_info.customer_fw_ver = 0;
+    dev_info_local.is_dual_bank_supported = FALSE;
+    dev_info_local.flash_bank_idx = BANK_NONE;
 
     // Get basic chip information (Chip ID, F/W work state)
-#if 0   // <TODO> AUX-ISP for DFP device
-    if ((KT_CHIP_NONE == dp_root_dev_chip_id) && (target_port != DEV_HOST))
-    {
-        // Acquire information of root device(host)
-        is_read_success = kt_dp_read_chip_id_and_state(connection, dev_info, error);
-        if (is_read_success)
-        {
-            dp_root_dev_chip_id = dev_info->chip_id;
-            dp_root_dev_state = dev_info->fw_run_state;
-            is_dev_read = TRUE;
-        }
-    }
-
-    if (target_port != DEV_HOST)
-    {
-        if (!kt_dp_enable_aux_forward(connection, dp_root_dev_chip_id, dp_root_dev_state, target_port, error))
-            return FALSE;
-    }
-#endif
-
     connection = fu_kinetic_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)));
 
-    if (is_dev_read == FALSE)
-        is_read_success = kt_dp_read_chip_id_and_state(connection, dev_info, error);
-
-    if (is_read_success)
+#if 1
+    if (!kt_dp_read_chip_id_and_state(connection, &dev_info_local, error))
     {
-        // Get more information from each control library
-        /* <TODO> Make the control a derivable class to support different behaviors and DPCD definitions
-         *        while processing ISP. (if needed)
-         */
-        sec_aux_isp_get_device_info(connection, dev_info, error);
-        //memcpy(&mcdp_DeviceInfo[target_port], dev_info, sizeof(KtDpDevInfo));
+        g_prefix_error(error, "Failed to read chip ID and state: ");
+        return FALSE;
     }
 
-#if 0   // <TODO> AUX-ISP for DFP device
-    if (target_port != DEV_HOST)
-        kt_dp_disable_aux_forward(connection, dp_root_dev_chip_id, dp_root_dev_state, error);
-#endif
+    // Get more information from each control library
+    /* <TODO> Make the control a derivable class to support different behaviors and DPCD definitions
+     *        while processing ISP. (if needed)
+     */
+    if (!sec_aux_isp_get_device_info(connection, &dev_info_local, error))
+    {
+        g_prefix_error (error, "Failed to read other device information: ");
+        return FALSE;
+    }
 
     if (dp_root_dev_chip_id == KT_CHIP_NONE)
     {
-        dp_root_dev_chip_id = dev_info->chip_id;
-        dp_root_dev_state = dev_info->fw_run_state;
+        dp_root_dev_chip_id = dev_info_local.chip_id;
+        dp_root_dev_state = dev_info_local.fw_run_state;
     }
+#else
+    // <TODO> AUX-ISP for DFP device
+#endif
 
-    return is_read_success;
+    memcpy(dev_info, &dev_info_local, sizeof(KtDpDevInfo));
+    
+    return TRUE;
 }
 
 /* <TODO> put to fu-kinetic-mst-common.c */
@@ -1365,7 +1348,7 @@ fu_kinetic_mst_device_rescan(FuDevice *device, GError **error)
 
 	KtDpDevInfo *dp_dev_info = &dp_dev_infos[DEV_HOST];  // <TODO> Now it's for test AUX-ISP protocol
 
-    if (!kt_dp_read_device_info(self, DEV_HOST, dp_dev_info, error))
+    if (!kt_dp_read_device_info(self, /*DEV_HOST,*/ dp_dev_info, error))
     {
         // <TODO> Correct the way to create GError in functions
         g_set_error_literal(error,
