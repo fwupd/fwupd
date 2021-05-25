@@ -75,3 +75,20 @@ jobs:
       with:
         name: artifacts
         path: ./out/artifacts
+
+  build-freebsd:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Build
+      id: test
+      uses: vmactions/freebsd-vm@v0.1.4
+      with:
+        usesh: true
+        mem: 8192
+        prepare: |
+          pkg install -y git gtar python3 glib meson pkgconf gobject-introspection \
+            json-glib gnutls gtk-doc vala sqlite3 curl gcab libarchive libelf \
+            gettext-tools gnutls usbids polkit
+        run: ./contrib/ci/build_freebsd.sh
