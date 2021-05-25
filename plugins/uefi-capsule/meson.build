@@ -13,6 +13,8 @@ install_data(['uefi-capsule.quirk'],
 backend_srcs = []
 if host_machine.system() == 'linux'
   backend_srcs += 'fu-uefi-backend-linux.c'
+elif host_machine.system() == 'freebsd'
+  backend_srcs += 'fu-uefi-backend-freebsd.c'
 else
   error('no ESRT support for @0@'.format(host_machine.system()))
 endif
