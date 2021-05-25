@@ -15,6 +15,7 @@
 #include "fu-device-metadata.h"
 #include "fu-plugin-vfuncs.h"
 
+#include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
@@ -794,19 +795,11 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *str;
-	g_autofree gchar *esrt_path = NULL;
-	g_autofree gchar *sysfsfwdir = NULL;
 	g_autoptr(GError) error_udisks2 = NULL;
 	g_autoptr(GError) error_efivarfs = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GPtrArray) entries = NULL;
-
-	/* get the directory of ESRT entries */
-	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-	esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
-	entries = fu_uefi_get_esrt_entry_paths (esrt_path, error);
-	if (entries == NULL)
-		return FALSE;
+	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(FuBackend) backend = fu_uefi_backend_new ();
 
 	/* make sure that efivarfs is rw */
 	if (!fu_plugin_uefi_capsule_ensure_efivarfs_rw (&error_efivarfs)) {
@@ -827,17 +820,14 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 
 	/* add each device */
-	for (guint i = 0; i < entries->len; i++) {
-		const gchar *path = g_ptr_array_index (entries, i);
-		g_autoptr(GError) error_parse = NULL;
-		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_entry (path, &error_parse);
-		if (dev == NULL) {
-			g_warning ("failed to add %s: %s", path, error_parse->message);
-			continue;
-		}
+	if (!fu_backend_coldplug (backend, error))
+		return FALSE;
+	devices = fu_backend_get_devices (backend);
+	for (guint i = 0; i < devices->len; i++) {
+		FuUefiDevice *dev = g_ptr_array_index (devices, i);
 		fu_device_set_context (FU_DEVICE (dev), ctx);
 		if (data->esp != NULL)
-			fu_uefi_device_set_esp (FU_UEFI_DEVICE (dev), data->esp);
+			fu_uefi_device_set_esp (dev, data->esp);
 		if (!fu_plugin_uefi_capsule_coldplug_device (plugin, dev, error))
 			return FALSE;
 		fu_device_add_flag (FU_DEVICE (dev), FWUPD_DEVICE_FLAG_UPDATABLE);

@@ -675,6 +675,15 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* this is invalid */
+	if (!fwupd_guid_is_valid (self->fw_class)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "ESRT GUID '%s' was not valid", self->fw_class);
+		return FALSE;
+	}
+
 	/* add GUID first, as quirks may set the version format */
 	fu_device_add_guid (device, self->fw_class);
 
@@ -855,54 +864,6 @@ fu_uefi_device_class_init (FuUefiDeviceClass *klass)
 				     G_PARAM_WRITABLE |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_FMP_HARDWARE_INSTANCE, pspec);
-}
-
-FuUefiDevice *
-fu_uefi_device_new_from_entry (const gchar *entry_path, GError **error)
-{
-	g_autoptr(FuUefiDevice) self = NULL;
-	g_autofree gchar *fw_class_fn = NULL;
-	g_autofree gchar *id = NULL;
-
-	g_return_val_if_fail (entry_path != NULL, NULL);
-
-	/* create object */
-	self = g_object_new (FU_TYPE_UEFI_DEVICE, NULL);
-
-	/* assume a uint64_t unless told otherwise by a quirk entry or metadata */
-	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_NUMBER);
-
-	/* read values from sysfs */
-	fw_class_fn = g_build_filename (entry_path, "fw_class", NULL);
-	if (g_file_get_contents (fw_class_fn, &self->fw_class, NULL, NULL))
-		g_strdelimit (self->fw_class, "\n", '\0');
-	self->capsule_flags = fu_uefi_read_file_as_uint64 (entry_path, "capsule_flags");
-	self->kind = fu_uefi_read_file_as_uint64 (entry_path, "fw_type");
-	self->fw_version = fu_uefi_read_file_as_uint64 (entry_path, "fw_version");
-	self->last_attempt_status = fu_uefi_read_file_as_uint64 (entry_path, "last_attempt_status");
-	self->last_attempt_version = fu_uefi_read_file_as_uint64 (entry_path, "last_attempt_version");
-	self->fw_version_lowest = fu_uefi_read_file_as_uint64 (entry_path, "lowest_supported_fw_version");
-
-	/* the hardware instance is not in the ESRT table and we should really
-	 * write the EFI stub to query with FMP -- but we still have not ever
-	 * seen a PCIe device with FMP support... */
-	self->fmp_hardware_instance = 0x0;
-
-	/* set ID */
-	id = g_strdup_printf ("UEFI-%s-dev%" G_GUINT64_FORMAT,
-			      self->fw_class, self->fmp_hardware_instance);
-	fu_device_set_id (FU_DEVICE (self), id);
-
-	/* this is invalid */
-	if (!fwupd_guid_is_valid (self->fw_class)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "ESRT GUID '%s' was not valid", self->fw_class);
-		return NULL;
-	}
-
-	return g_steal_pointer (&self);
 }
 
 FuUefiDevice *
