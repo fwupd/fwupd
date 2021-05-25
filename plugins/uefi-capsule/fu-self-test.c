@@ -162,6 +162,11 @@ fu_uefi_plugin_func (void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
+#ifndef __linux__
+	g_test_skip ("ESRT data is mocked only on Linux");
+	return;
+#endif
+
 	/* add each device */
 	ret = fu_backend_coldplug (backend, &error);
 	g_assert_no_error (error);
@@ -212,6 +217,11 @@ fu_uefi_update_info_func (void)
 	g_autoptr(FuUefiUpdateInfo) info = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
+
+#ifndef __linux__
+	g_test_skip ("ESRT data is mocked only on Linux");
+	return;
+#endif
 
 	/* add each device */
 	ret = fu_backend_coldplug (backend, &error);
