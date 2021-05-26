@@ -368,12 +368,12 @@ sec_aux_isp_send_kt_prop_cmd(FuKineticMstConnection *self,
                 if (*status == KT_DPCD_STS_CRC_FAILURE)
                 {
                     //ret = MCTRL_STS_CHKSUM_ERROR;
-                    g_prefix_error (error, "Chunk data CRC checking failed!");
+                    g_prefix_error(error, "Chunk data CRC checking failed!");
                 }
                 else
                 {
                     //ret = MCTRL_STS_INVALID_REPLY;
-                    g_prefix_error (error, "Invalid DPCD_Cmd_Sts_Reg reply! (0x%X)", *status);
+                    g_prefix_error(error, "Invalid DPCD_Cmd_Sts_Reg reply! (0x%X)", *status);
                 }
             }
             else    // dpcd_val == cmd_id
@@ -404,22 +404,59 @@ sec_aux_isp_send_kt_prop_cmd(FuKineticMstConnection *self,
     return ret;
 }
 
-static gboolean sec_aux_isp_write_dpcd_reply_data_reg(FuKineticMstConnection *self,
-                                                      guint8 *buf,
-                                                      guint8 len,
-                                                      GError **error)
+static gboolean
+sec_aux_isp_read_dpcd_reply_data_reg(FuKineticMstConnection *self,
+                                     guint8 *buf,
+                                     const guint8 buf_size,
+                                     guint8 *read_len,
+                                     GError **error)
+{
+    guint8 read_data_len;
+
+    *read_len = 0;  // Set the output to 0
+
+    if (!fu_kinetic_mst_connection_read(self, DPCD_ADDR_FLOAT_ISP_REPLY_LEN_REG, &read_data_len, 1, error))
+    {
+        g_prefix_error(error, "Failed to read DPCD_ISP_REPLY_DATA_LEN_REG!");
+        return FALSE;
+    }
+
+    if (buf_size < read_data_len)
+    {
+        g_prefix_error(error, "Buffer size is not enough to read DPCD_ISP_REPLY_DATA_REG!");
+        return FALSE;
+    }
+
+    if (read_data_len > 0)
+    {
+        if (!fu_kinetic_mst_connection_read(self, DPCD_ADDR_FLOAT_ISP_REPLY_DATA_REG, buf, read_data_len, error))
+        {
+            g_prefix_error(error, "Failed to read DPCD_ISP_REPLY_DATA_REG!");
+            return FALSE;
+        }
+
+        *read_len = read_data_len;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+sec_aux_isp_write_dpcd_reply_data_reg(FuKineticMstConnection *self,
+                                      const guint8 *buf,
+                                      guint8 len,
+                                      GError **error)
 {
     gboolean ret = FALSE;
     gboolean res;
 
     if (len > DPCD_SIZE_FLOAT_ISP_REPLY_DATA_REG)
-        //return MCTRL_STS_INVALID_PARAM;
         return FALSE;
 
     res = fu_kinetic_mst_connection_write(self, DPCD_ADDR_FLOAT_ISP_REPLY_DATA_REG, buf, len, error);
     if (!res)
     {
-        g_prefix_error (error, "Failed to write DPCD_KT_REPLY_DATA_REG!");
+        g_prefix_error(error, "Failed to write DPCD_KT_REPLY_DATA_REG!");
         len = 0;    // Clear reply data length to 0 if failed to write reply data
     }
 
@@ -493,7 +530,7 @@ sec_aux_isp_send_payload(FuKineticMstConnection *self,
         {
             if (!sec_aux_isp_write_dpcd_reply_data_reg(self, (guint8 *)&crc16, sizeof(crc16), error))
             {
-                g_prefix_error (error, "Failed to send CRC16 to reply data register");
+                g_prefix_error(error, "Failed to send CRC16 to reply data register");
 
                 return FALSE;
             }
@@ -504,7 +541,7 @@ sec_aux_isp_send_payload(FuKineticMstConnection *self,
         // Send 16 bytes payload in each AUX transaction
         if (!fu_kinetic_mst_connection_write(self, aux_win_addr, temp_buf, aux_wr_size, error))
         {
-            g_prefix_error (error, "Failed to send payload on AUX write %u", isp_procd_size);
+            g_prefix_error(error, "Failed to send payload on AUX write %u", isp_procd_size);
 
             return FALSE;
         }
@@ -579,7 +616,7 @@ sec_aux_isp_wait_dpcd_cmd_cleared(FuKineticMstConnection *self,
         }
         else
         {
-            g_prefix_error (error, "Waiting DPCD_Isp_Sink_Status_Reg timed-out!");
+            g_prefix_error(error, "Waiting DPCD_Isp_Sink_Status_Reg timed-out!");
 
             return FALSE;
         }
@@ -595,6 +632,8 @@ static gboolean
 sec_aux_isp_execute_isp_drv(FuKineticMstConnection *self, GError **error)
 {
     guint8 status;
+    guint8 read_len;
+    guint8 reply_data[6] = {0};
 
     flash_id = 0;
     flash_size = 0;
@@ -616,38 +655,36 @@ sec_aux_isp_execute_isp_drv(FuKineticMstConnection *self, GError **error)
     if (!sec_aux_isp_read_param_reg(self, &status, error))
         return FALSE;
 
-    if (KT_DPCD_STS_SECURE_ENABLED == status || KT_DPCD_STS_SECURE_DISABLED == status)
+    if (status != KT_DPCD_STS_SECURE_ENABLED && status != KT_DPCD_STS_SECURE_DISABLED)
     {
-        guint8 reply_data[6] = {0};
-
-        if (KT_DPCD_STS_SECURE_ENABLED == status)
-            is_isp_secure_auth_mode = TRUE;
-        else
-        {
-            is_isp_secure_auth_mode = FALSE;
-            isp_total_data_size -= (FW_CERTIFICATE_SIZE * 2 + FW_RSA_SIGNATURE_BLOCK_SIZE * 2);
-        }
-
-        if (!sec_aux_isp_write_dpcd_reply_data_reg(self, reply_data, sizeof(reply_data), error))
-        {
-            flash_id = (guint16)reply_data[0] << 8 | reply_data[1];
-            flash_size = (guint16)reply_data[2] << 8 | reply_data[3];
-            read_flash_prog_time = (guint16)reply_data[4] << 8 | reply_data[5];
-
-			if (read_flash_prog_time == 0)
-				read_flash_prog_time = 10;
-
-            return TRUE;
-        }
-
-        g_prefix_error (error, "Reading flash ID... failed!");
-
+        g_prefix_error(error, "Waiting for ISP driver ready... failed!");
         return FALSE;
     }
 
-    g_prefix_error (error, "Waiting for ISP driver ready... failed!");
+    if (KT_DPCD_STS_SECURE_ENABLED == status)
+    {
+        is_isp_secure_auth_mode = TRUE;
+    }
+    else
+    {
+        is_isp_secure_auth_mode = FALSE;
+        isp_total_data_size -= (FW_CERTIFICATE_SIZE * 2 + FW_RSA_SIGNATURE_BLOCK_SIZE * 2);
+    }
 
-    return FALSE;
+    if (!sec_aux_isp_read_dpcd_reply_data_reg(self, reply_data, sizeof(reply_data), &read_len, error))
+    {
+        g_prefix_error(error, "Failed to read flash ID and size!");
+        return FALSE;
+    }
+
+    flash_id = (guint16)reply_data[0] << 8 | reply_data[1];
+    flash_size = (guint16)reply_data[2] << 8 | reply_data[3];
+    read_flash_prog_time = (guint16)reply_data[4] << 8 | reply_data[5];
+
+	if (read_flash_prog_time == 0)
+		read_flash_prog_time = 10;
+
+    return TRUE;        
 }
 
 static gboolean sec_aux_isp_send_isp_drv(FuKineticMstConnection *self,
@@ -683,9 +720,9 @@ static gboolean sec_aux_isp_send_isp_drv(FuKineticMstConnection *self,
     if (flash_size)
     {
         if (flash_size < 2048)    // One bank size in Jaguar is 1024KB
-            g_message("(%d KB, Dual Bank not supported!)", flash_size);
+            g_message("Flash Size: %d KB, Dual Bank not supported!", flash_size);
         else
-            g_message("(%d KB)", flash_size);
+            g_message("Flash Size: %d KB)", flash_size);
     }
     else
     {
@@ -1011,7 +1048,7 @@ sec_aux_isp_start_isp(FuKineticMstDevice *self,
     g_autoptr(FuKineticMstConnection) connection = NULL;
     g_autoptr(FuFirmwareImage) img = NULL;
 
-    connection = fu_kinetic_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE (self)));
+    connection = fu_kinetic_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)));
 
     isp_procd_size = 0;
 
@@ -1025,11 +1062,12 @@ sec_aux_isp_start_isp(FuKineticMstDevice *self,
     img = fu_firmware_get_image_by_idx(firmware, FU_KT_FW_IMG_IDX_ISP_DRV, error);
     if (NULL == img)
         return FALSE;
+
     isp_drv = fu_firmware_image_write(img, error);
 	if (isp_drv == NULL)
 		return FALSE;
-	payload_data = g_bytes_get_data(isp_drv, &payload_len);
 
+	payload_data = g_bytes_get_data(isp_drv, &payload_len);
     if (payload_len)
     {
         if (!sec_aux_isp_send_isp_drv(connection, is_app_mode, payload_data, payload_len, error))
@@ -1044,9 +1082,11 @@ sec_aux_isp_start_isp(FuKineticMstDevice *self,
     img = fu_firmware_get_image_by_idx(firmware, FU_KT_FW_IMG_IDX_APP, error);
     if (NULL == img)
         return FALSE;
+
     app = fu_firmware_image_write(img, error);
 	if (app == NULL)
 		return FALSE;
+
 	payload_data = g_bytes_get_data(app, &payload_len);
     if (!sec_aux_isp_send_fw_payload(connection, payload_data, payload_len, error))
         goto SECURE_AUX_ISP_END;

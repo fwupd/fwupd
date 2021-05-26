@@ -42,7 +42,7 @@ fu_kinetic_mst_firmware_parse(FuFirmware *firmware,
 	g_autoptr(FuFirmwareImage) app_fw_img = NULL;
 
     /* Parse firmware according to Kinetic's FW image format
-     * FW binary = 4 bytes header + ISP driver + app FW
+     * FW binary = 4 bytes header(Little-Endian) + ISP driver + app FW
      * 4 bytes: size of ISP driver
      */
     buf = g_bytes_get_data(fw, &bufsz);
