@@ -895,4 +895,3 @@ fu_pxi_device_class_init (FuPxiDeviceClass *klass)
 	klass_device->write_firmware = fu_pxi_device_write_firmware;
 	klass_device->prepare_firmware = fu_pxi_device_prepare_firmware;
 }
-

@@ -109,4 +109,3 @@ fu_pxi_common_wireless_module_cmd_result_to_string (guint8 result)
 		return "ota response error";
 	return NULL;
 }
-

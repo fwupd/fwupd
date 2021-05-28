@@ -128,4 +128,3 @@ gboolean	fu_pxi_common_composite_module_cmd 	(guint8 opcode,
 						     			GError **error);
 const gchar *	fu_pxi_common_spec_check_result_to_string (guint8 spec_check_result);
 const gchar *	fu_pxi_common_wireless_module_cmd_result_to_string (guint8 result);
-
