@@ -84,14 +84,14 @@ enum ota_disconnect_reason {
 
 /* ota rsp code for wireless module */
 enum wireless_module_ota_rsp_code {
-	OTA_RSP_OK,				
-	OTA_RSP_FINISH,				
-	OTA_RSP_FAIL,				
+	OTA_RSP_OK,
+	OTA_RSP_FINISH,
+	OTA_RSP_FAIL,
 	OTA_RSP_CODE_ERROR,
 	OTA_RSP_WRITE_PKT_LEN_ERROR,
 	OTA_RSP_WRITE_PKT_TOTAL_SIZE_ERROR,
 	OTA_RSP_READ_PKT_LEN_ERROR,
-	OTA_RSP_NOT_READY,	
+	OTA_RSP_NOT_READY,
 };
 
 /* ota rsp code for wireless module */
@@ -124,8 +124,8 @@ gboolean	fu_pxi_common_composite_module_cmd 	(guint8 opcode,
 						     			guint8 sn,
 						     			guint8 target,
 						     			GByteArray *wireless_mod_cmd,
-						     			GByteArray *ota_cmd, 
+						     			GByteArray *ota_cmd,
 						     			GError **error);
-const gchar *	fu_pxi_common_spec_check_result_to_string (guint8 spec_check_result);		
+const gchar *	fu_pxi_common_spec_check_result_to_string (guint8 spec_check_result);
 const gchar *	fu_pxi_common_wireless_module_cmd_result_to_string (guint8 result);
 

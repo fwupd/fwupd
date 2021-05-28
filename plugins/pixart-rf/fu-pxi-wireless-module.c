@@ -134,15 +134,15 @@ fu_pxi_wireless_module_close (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_pxi_wireless_module_get_cmd_response (FuPxiWirelessModule *device, guint8 *res, guint sz, GError **error) 
+fu_pxi_wireless_module_get_cmd_response (FuPxiWirelessModule *device, guint8 *res, guint sz, GError **error)
 {
-	
+
 	FuPxiWirelessDevice *parent = fu_pxi_wireless_module_get_parent (FU_DEVICE (device) ,error);
 	guint16 retry = 0;
 	guint8 status = 0x0;
 
 	while (1)
-	{	
+	{
 		guint8 sn = 0x0;
 		memset (res, 0, sz);
 		res[0] = PXI_HID_WIRELESS_DEV_OTA_REPORT_ID;
@@ -183,24 +183,24 @@ fu_pxi_wireless_module_get_cmd_response (FuPxiWirelessModule *device, guint8 *re
 
 static gboolean
 fu_pxi_wireless_module_check_crc (FuDevice *device, guint16 checksum, GError **error)
-{	
-	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();	
+{
+	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new ();
 	FuPxiWirelessDevice *parent = fu_pxi_wireless_module_get_parent (device ,error);
 	FuPxiWirelessModule *self = FU_PXI_WIRELESS_MODULE (device);
 	guint8 res[FU_PXI_WIRELESS_MODULE_OTA_BUF_SZ] = { 0x0 };
 	guint16 checksum_device = 0x0;
-	guint8 status = 0x0;	
+	guint8 status = 0x0;
 	g_debug ("fu_pxi_wireless_module_check_crc");
-	
+
 	/* ota check crc command */
 	fu_byte_array_append_uint8 (ota_cmd, 0x3);					/* ota command length */
 	fu_byte_array_append_uint8 (ota_cmd, FU_PXI_DEVICE_CMD_FW_OTA_CHECK_CRC);	/* ota command */
 	fu_byte_array_append_uint16 (ota_cmd, checksum, G_LITTLE_ENDIAN);		/* checkesum */
-	
+
 	/* increase the serial number */
 	self->sn++;
-	
+
 	if (!fu_pxi_common_composite_module_cmd (FU_PXI_DEVICE_CMD_FW_OTA_CHECK_CRC,
 							self->sn,
 							self->model.target,
@@ -208,8 +208,8 @@ fu_pxi_wireless_module_check_crc (FuDevice *device, guint16 checksum, GError **e
 							ota_cmd, error))
 		return FALSE;
 
-	if (!fu_pxi_wireless_module_set_feature (FU_DEVICE (parent), 
-						 wireless_module_cmd->data, 
+	if (!fu_pxi_wireless_module_set_feature (FU_DEVICE (parent),
+						 wireless_module_cmd->data,
 						 wireless_module_cmd->len, error))
 		return FALSE;
 
@@ -219,7 +219,7 @@ fu_pxi_wireless_module_check_crc (FuDevice *device, guint16 checksum, GError **e
 	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x5, &status, error))
 			return FALSE;
 
-	if (!fu_common_read_uint16_safe (res, sizeof(res), 0x6, 
+	if (!fu_common_read_uint16_safe (res, sizeof(res), 0x6,
 					&checksum_device, G_LITTLE_ENDIAN, error))
 			return FALSE;
 
@@ -243,18 +243,18 @@ fu_pxi_wireless_module_check_crc (FuDevice *device, guint16 checksum, GError **e
 static gboolean
 fu_pxi_wireless_module_fw_object_create (FuDevice *device, FuChunk *chk, GError **error)
 {
-	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();	
+	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new ();
 	FuPxiWirelessModule *self = FU_PXI_WIRELESS_MODULE (device);
 	FuPxiWirelessDevice *parent = fu_pxi_wireless_module_get_parent (device ,error);
-	
+
 	/* ota object create command */
 	fu_byte_array_append_uint8 (ota_cmd, 0x9);					/* ota command length */
 	fu_byte_array_append_uint8 (ota_cmd, FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE);	/* ota command */
 	fu_byte_array_append_uint32 (ota_cmd, fu_chunk_get_address (chk), G_LITTLE_ENDIAN);
 	fu_byte_array_append_uint32 (ota_cmd, fu_chunk_get_data_sz (chk), G_LITTLE_ENDIAN);
-	
-	/* increase the serial number */	
+
+	/* increase the serial number */
 	self->sn++;
 
 	/* get pixart wireless module for ota object create command */
@@ -278,18 +278,18 @@ fu_pxi_wireless_module_fw_object_create (FuDevice *device, FuChunk *chk, GError 
 static gboolean
 fu_pxi_wireless_module_write_payload (FuDevice *device, FuChunk *chk, GError **error)
 {
-	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();	
+	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new ();
 	FuPxiWirelessDevice *parent = fu_pxi_wireless_module_get_parent (device ,error);
 	FuPxiWirelessModule *self = FU_PXI_WIRELESS_MODULE (device);
 	g_autoptr(GTimer) timer = g_timer_new ();
 	guint8 res[FU_PXI_WIRELESS_MODULE_OTA_BUF_SZ] = { 0x0 };
 	guint8 status = 0x0;
-	
+
 	/* ota write payload command */
 	fu_byte_array_append_uint8 (ota_cmd, fu_chunk_get_data_sz (chk));			/* ota command length */
 	g_byte_array_append (ota_cmd, fu_chunk_get_data (chk), fu_chunk_get_data_sz (chk));	/* payload content */
-	
+
 	/* increase the serial number */
 	self->sn++;
 
@@ -297,13 +297,13 @@ fu_pxi_wireless_module_write_payload (FuDevice *device, FuChunk *chk, GError **e
 	if (!fu_pxi_common_composite_module_cmd (FU_PXI_DEVICE_CMD_FW_OTA_PAYLOPD_CONTENT,
 							self->sn,
 							self->model.target,
-							wireless_module_cmd, 
+							wireless_module_cmd,
 							ota_cmd, error))
 		return FALSE;
-	
+
 	if (!fu_pxi_wireless_module_set_feature (FU_DEVICE (parent), wireless_module_cmd->data, wireless_module_cmd->len, error))
 		return FALSE;
-	
+
 	/* delay for wireless module device get command response*/
 	g_usleep (50 * 1000);
 
@@ -324,7 +324,7 @@ fu_pxi_wireless_module_write_payload (FuDevice *device, FuChunk *chk, GError **e
 	}
 
 	/* success */
-	return TRUE;	
+	return TRUE;
 }
 
 static gboolean
@@ -334,7 +334,7 @@ fu_pxi_wireless_module_write_chunk (FuDevice *device, FuChunk *chk, GError **err
 	guint16 checksum;
 	g_autoptr(GPtrArray) chunks = NULL;
 	FuPxiWirelessModule *self = FU_PXI_WIRELESS_MODULE (device);
-	
+
 	/* send create fw object command */
 	if (!fu_pxi_wireless_module_fw_object_create (device, chk, error))
 		return FALSE;
@@ -348,9 +348,9 @@ fu_pxi_wireless_module_write_chunk (FuDevice *device, FuChunk *chk, GError **err
 	/* the checksum of chunk */
 	checksum = fu_pxi_common_calculate_16bit_checksum (fu_chunk_get_data (chk),
 						     fu_chunk_get_data_sz (chk));
-	/* calculate checksum */		
-	self->checksum += checksum; 
-	
+	/* calculate checksum */
+	self->checksum += checksum;
+
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk2 = g_ptr_array_index (chunks, i);
 		if (!fu_pxi_wireless_module_write_payload (device, chk2, error))
@@ -372,11 +372,11 @@ static gboolean
 fu_pxi_wireless_module_fw_ota_init_new (FuDevice *device, gsize bufsz, GError **error)
 {
 	guint8 fw_version[10] = { 0x0 };
-	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();	
+	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new ();
 	FuPxiWirelessDevice *parent = fu_pxi_wireless_module_get_parent (device ,error);
 	FuPxiWirelessModule *self = FU_PXI_WIRELESS_MODULE (device);
-	
+
 	fu_byte_array_append_uint8 (ota_cmd, 0X06);					/* ota init new command length */
 	fu_byte_array_append_uint8 (ota_cmd, FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW);	/* ota ota init new op code */
 	fu_byte_array_append_uint32 (ota_cmd, bufsz, G_LITTLE_ENDIAN);			/* fw size */
@@ -403,19 +403,19 @@ static gboolean
 fu_pxi_wireless_module_fw_ota_ini_new_check (FuDevice *device, GError **error)
 {
 
-	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();	
-	g_autoptr(GByteArray) ota_cmd = g_byte_array_new ();	
+	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();
+	g_autoptr(GByteArray) ota_cmd = g_byte_array_new ();
 	FuPxiWirelessDevice *parent = fu_pxi_wireless_module_get_parent (device ,error);
 	guint8 res[FU_PXI_WIRELESS_MODULE_OTA_BUF_SZ] = { 0x0 };
 	FuPxiWirelessModule *self = FU_PXI_WIRELESS_MODULE (device);
 	guint8 status = 0x0;
-	
+
 	/* ota command */
 	fu_byte_array_append_uint8 (ota_cmd, 0x1);					/* ota command length */
 	fu_byte_array_append_uint8 (ota_cmd, FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW_CHECK);	/* ota command */
-	
+
 	/* increase the serial number */
-	self->sn++;	
+	self->sn++;
 	/* get pixart wireless module ota command */
 	if (!fu_pxi_common_composite_module_cmd (FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW_CHECK,
 							self->sn,
@@ -423,7 +423,7 @@ fu_pxi_wireless_module_fw_ota_ini_new_check (FuDevice *device, GError **error)
 							wireless_module_cmd,
 							ota_cmd, error))
 		return FALSE;
-	if (!fu_pxi_wireless_module_set_feature (FU_DEVICE (parent), wireless_module_cmd->data, 
+	if (!fu_pxi_wireless_module_set_feature (FU_DEVICE (parent), wireless_module_cmd->data,
 							wireless_module_cmd->len, error))
 		return FALSE;
 	/* delay for wireless module device get command response*/
@@ -470,7 +470,7 @@ fu_pxi_wireless_module_fw_ota_ini_new_check (FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x11 + 0x6,
 					&self->spec_check_result, error))
-		return FALSE;	
+		return FALSE;
 
 
 	return TRUE;
@@ -485,11 +485,11 @@ fu_pxi_wireless_module_fw_upgrade (FuDevice *device, FuFirmware *firmware, GErro
 	guint8 fw_version[5] = { 0x0 };
 	guint16 checksum = 0x0;
 	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();	
-	g_autoptr(GByteArray) ota_cmd = g_byte_array_new ();	
+	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();
+	g_autoptr(GByteArray) ota_cmd = g_byte_array_new ();
 	FuPxiWirelessDevice *parent = fu_pxi_wireless_module_get_parent (device ,error);
 	FuPxiWirelessModule *self = FU_PXI_WIRELESS_MODULE (device);
-	
+
 	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
@@ -497,14 +497,14 @@ fu_pxi_wireless_module_fw_upgrade (FuDevice *device, FuFirmware *firmware, GErro
 
 	buf = g_bytes_get_data (fw, &bufsz);
 	checksum = fu_pxi_common_calculate_16bit_checksum (buf, bufsz);
-	
-	
+
+
 	/* ota fw upgrade command */
 	fu_byte_array_append_uint8 (ota_cmd, 0x0c);					/* ota fw upgrade command length */
 	fu_byte_array_append_uint8 (ota_cmd, FU_PXI_DEVICE_CMD_FW_UPGRADE);		/* ota fw upgrade command opccode */
 	fu_byte_array_append_uint32 (ota_cmd, bufsz, G_LITTLE_ENDIAN);			/* ota fw upgrade command fw size */
 	fu_byte_array_append_uint16 (ota_cmd, checksum, G_LITTLE_ENDIAN);		/* ota fw upgrade command checksum */
-	
+
 	version = fu_firmware_get_version (firmware);
 	if (!fu_memcpy_safe (fw_version, sizeof(fw_version), 0x0,	/* dst */
 			     (guint8 *) version, strlen (version), 0x0,	/* src */
@@ -523,13 +523,13 @@ fu_pxi_wireless_module_fw_upgrade (FuDevice *device, FuFirmware *firmware, GErro
 		return FALSE;
 	/* update device status */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
-	
+
 
 	/* send ota  fw upgrade command */
-	if (!fu_pxi_wireless_module_set_feature (FU_DEVICE (parent), wireless_module_cmd->data, 
+	if (!fu_pxi_wireless_module_set_feature (FU_DEVICE (parent), wireless_module_cmd->data,
 							wireless_module_cmd->len, error))
 		return FALSE;
-		
+
 
 	/* success */
 	return TRUE;
@@ -538,17 +538,17 @@ fu_pxi_wireless_module_fw_upgrade (FuDevice *device, FuFirmware *firmware, GErro
 static gboolean
 fu_pxi_wireless_module_reset (FuDevice *device, GError **error)
 {
-	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();	
-	g_autoptr(GByteArray) ota_cmd = g_byte_array_new ();	
+	g_autoptr(GByteArray) wireless_module_cmd = g_byte_array_new ();
+	g_autoptr(GByteArray) ota_cmd = g_byte_array_new ();
 	FuPxiWirelessDevice *parent = fu_pxi_wireless_module_get_parent (device ,error);
 	FuPxiWirelessModule *self = FU_PXI_WIRELESS_MODULE (device);
-	
+
 	/* ota mcu reset command */
 	fu_byte_array_append_uint8 (ota_cmd, 0x1);					/* ota mcu reset command */
 	fu_byte_array_append_uint8 (ota_cmd, FU_PXI_DEVICE_CMD_FW_MCU_RESET);		/* ota mcu reset command op code */
 	fu_byte_array_append_uint8 (ota_cmd, OTA_RESET);				/* ota mcu reset command reason */
-	
-	self->sn++;	
+
+	self->sn++;
 	/* get pixart wireless module ota command */
 	if (!fu_pxi_common_composite_module_cmd (FU_PXI_DEVICE_CMD_FW_MCU_RESET,
 							self->sn,
@@ -557,15 +557,15 @@ fu_pxi_wireless_module_reset (FuDevice *device, GError **error)
 							ota_cmd, error))
 		return FALSE;
 	/* update device status */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_RESTART);					
-	
+	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_RESTART);
+
 
 	/* send ota mcu reset command */
-	if (!fu_pxi_wireless_module_set_feature (FU_DEVICE (parent), wireless_module_cmd->data, 
+	if (!fu_pxi_wireless_module_set_feature (FU_DEVICE (parent), wireless_module_cmd->data,
 							wireless_module_cmd->len, error))
 		return FALSE;
 
-	
+
 	/* success */
 	return TRUE;
 }
@@ -599,20 +599,20 @@ fu_pxi_wireless_module_write_firmware (FuDevice *device,
 	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
-		
+
 	/* send fw ota init command */
 	if (!fu_pxi_wireless_module_fw_ota_init_new (device, g_bytes_get_size (fw), error))
 		return FALSE;
-	
+
 	if (!fu_pxi_wireless_module_fw_ota_ini_new_check (device ,error))
 		return FALSE;
-	
-	chunks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);	
+
+	chunks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
 	/* prepare write fw into device */
 	self->offset = 0;
 	self->checksum = 0;
-	
-	
+
+
 	/* write fw into device */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = self->offset; i < chunks->len; i++) {
