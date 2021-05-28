@@ -521,8 +521,7 @@ fu_pxi_dongle_module_fw_upgrade (FuDevice *device, FuFirmware *firmware, GError 
 							wireless_module_cmd,
 							ota_cmd, error))
 		return FALSE;
-	fu_common_dump_raw (G_LOG_DOMAIN, "version ", version, 5);
-	fu_common_dump_raw (G_LOG_DOMAIN, "fw_version ", fw_version, 5);		
+	
 	/* update device status */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
 	/* send ota  fw upgrade command */
