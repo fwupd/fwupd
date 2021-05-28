@@ -122,3 +122,25 @@ typedef enum
     DEV_ALL     = 0xFF
 } KtDpDevPort;
 
+typedef enum
+{
+    KT_FW_BIN_FLAG_NONE = 0,
+    KT_FW_BIN_FLAG_XIP  = 1,
+} KtFwBinFlag;
+
+typedef struct
+{
+	guint32 app_id_struct_ver;
+	guint8  app_id[4];
+	guint32 app_ver_id;
+	guint8  fw_major_ver_num;
+	guint8 	fw_minor_ver_num;
+	guint8 	fw_rev_num;
+	guint8 	customer_fw_project_id;
+	guint8 	customer_fw_major_ver_num;
+	guint8 	customer_fw_minor_ver_num;
+	guint8 	chip_rev;
+	guint8  is_fpga_enabled;
+	guint8  reserved[12];
+} KtJaguarAppId;
+

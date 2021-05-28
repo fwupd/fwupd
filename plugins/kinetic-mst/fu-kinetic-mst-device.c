@@ -24,30 +24,50 @@ struct _FuKineticMstDevice {
     FuKineticMstFamily  family;
     FuKineticMstMode    mode;
     guint16             chip_id;
+
+    // <TODO> Declare as private member
+    guint32 isp_payload_procd_size;
+    guint32 isp_procd_size;
+    guint32 isp_total_data_size;
+
+    guint16 read_flash_prog_time;
+    guint16 flash_id;
+    guint16 flash_size;
+
+    gboolean is_isp_secure_auth_mode;
 };
 
 G_DEFINE_TYPE (FuKineticMstDevice, fu_kinetic_mst_device, FU_TYPE_UDEV_DEVICE)
 
 static void
-fu_kinetic_mst_device_finalize (GObject *object)
+fu_kinetic_mst_device_finalize(GObject *object)
 {
-	FuKineticMstDevice *self = FU_KINETIC_MST_DEVICE (object);
+	FuKineticMstDevice *self = FU_KINETIC_MST_DEVICE(object);
 
-	g_free (self->system_type);
+	g_free(self->system_type);
 
-	G_OBJECT_CLASS (fu_kinetic_mst_device_parent_class)->finalize (object);
+	G_OBJECT_CLASS(fu_kinetic_mst_device_parent_class)->finalize(object);
 }
 
 static void
-fu_kinetic_mst_device_init (FuKineticMstDevice *self)
+fu_kinetic_mst_device_init(FuKineticMstDevice *self)
 {
-	fu_device_set_protocol(FU_DEVICE (self), "com.kinetic.mst");
-	fu_device_set_vendor(FU_DEVICE (self), "Kinetic");
-	fu_device_add_vendor_id(FU_DEVICE (self), "DRM_DP_AUX_DEV:0x06CB");    // <TODO> How to determine the vendor ID?
-	fu_device_set_summary(FU_DEVICE (self), "Multi-Stream Transport Device");
+    self->read_flash_prog_time = 10;
+    self->flash_id = 0;
+    self->flash_size = 0;
+
+    self->isp_payload_procd_size = 0;
+    self->isp_procd_size = 0;
+    self->isp_total_data_size = 0;
+    self->is_isp_secure_auth_mode = TRUE;
+
+	fu_device_set_protocol(FU_DEVICE(self), "com.kinetic.mst");
+	fu_device_set_vendor(FU_DEVICE(self), "Kinetic");
+	fu_device_add_vendor_id(FU_DEVICE(self), "DRM_DP_AUX_DEV:0x[TBD]");    // <TODO> How to determine the vendor ID?
+	fu_device_set_summary(FU_DEVICE(self), "Multi-Stream Transport Device");
 	fu_device_add_icon(FU_DEVICE(self), "video-display");
-	fu_device_set_version_format(FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);  // <TODO> What's Kinetic's version format?
-	fu_udev_device_set_flags(FU_UDEV_DEVICE (self),
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
                              FU_UDEV_DEVICE_FLAG_OPEN_READ |
                              FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
                              FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
@@ -122,22 +142,6 @@ fu_kinetic_mst_device_prepare_firmware(FuDevice *device,
 #define DPCD_SIZE_KT_AUX_WIN                    0x8000ul    // 0x80000ul ~ 0x87FFF
 #define DPCD_ADDR_KT_AUX_WIN_END		        (DPCD_ADDR_KT_AUX_WIN +  DPCD_SIZE_KT_AUX_WIN - 1)
 
-
-static guint32 esm_payload_size;
-static guint32 arm_app_code_size;
-static guint32 app_init_data_size;
-static guint32 cmdb_block_size;
-static gboolean is_fw_esm_xip_enabled;
-
-static guint16 read_flash_prog_time;
-static guint16 flash_id;
-static guint16 flash_size;
-
-static guint32 isp_payload_procd_size = 0;
-static guint32 isp_procd_size;
-static guint32 isp_total_data_size;
-static gboolean is_isp_secure_auth_mode = TRUE;
-
 typedef enum
 {
     BANK_A      = 0,
@@ -176,12 +180,12 @@ typedef struct
     KtFwRunState fw_run_state;
     guint8       id_str[DPCD_SIZE_BRANCH_DEV_ID_STR];
     guint8       str_len;
-} KtChipBrIdStrTable;
+} KtDpChipBrIdStrTable;
 
 // ---------------------------------------------------------------
 // Kinetic chip DPCD branch ID string table
 // ---------------------------------------------------------------
-static const KtChipBrIdStrTable kt_dp_branch_dev_info_table[] = 
+static const KtDpChipBrIdStrTable kt_dp_branch_dev_info_table[] = 
 {
     // Jaguar MCDP50x0
     { KT_CHIP_JAGUAR_5000,  KT_FW_STATE_RUN_IROM, {'5', '0', '1', '0', 'I', 'R'}, 6},
@@ -503,7 +507,8 @@ sec_aux_isp_enter_code_loading_mode(FuKineticMstConnection *self,
 }
 
 static gboolean
-sec_aux_isp_send_payload(FuKineticMstConnection *self,
+sec_aux_isp_send_payload(FuKineticMstDevice *self,
+                         FuKineticMstConnection *connection,
                          const guint8 *buf,
                          guint32 payload_size,
                          guint32 wait_time_ms,
@@ -528,7 +533,7 @@ sec_aux_isp_send_payload(FuKineticMstConnection *self,
         if ((aux_win_addr + aux_wr_size) > DPCD_ADDR_KT_AUX_WIN_END ||
             (remain_len - aux_wr_size) == 0)
         {
-            if (!sec_aux_isp_write_dpcd_reply_data_reg(self, (guint8 *)&crc16, sizeof(crc16), error))
+            if (!sec_aux_isp_write_dpcd_reply_data_reg(connection, (guint8 *)&crc16, sizeof(crc16), error))
             {
                 g_prefix_error(error, "Failed to send CRC16 to reply data register");
 
@@ -539,9 +544,9 @@ sec_aux_isp_send_payload(FuKineticMstConnection *self,
         }
 
         // Send 16 bytes payload in each AUX transaction
-        if (!fu_kinetic_mst_connection_write(self, aux_win_addr, temp_buf, aux_wr_size, error))
+        if (!fu_kinetic_mst_connection_write(connection, aux_win_addr, temp_buf, aux_wr_size, error))
         {
-            g_prefix_error(error, "Failed to send payload on AUX write %u", isp_procd_size);
+            g_prefix_error(error, "Failed to send payload on AUX write %u", self->isp_procd_size);
 
             return FALSE;
         }
@@ -549,15 +554,15 @@ sec_aux_isp_send_payload(FuKineticMstConnection *self,
         buf += aux_wr_size;
         aux_win_addr += aux_wr_size;
         remain_len -= aux_wr_size;
-        isp_procd_size += aux_wr_size;
-        isp_payload_procd_size += aux_wr_size;
+        self->isp_procd_size += aux_wr_size;
+        self->isp_payload_procd_size += aux_wr_size;
 
         if ((aux_win_addr > DPCD_ADDR_KT_AUX_WIN_END) || (remain_len == 0))
         {
             // 32KB payload has been sent AUX window
             aux_win_addr = DPCD_ADDR_KT_AUX_WIN;
 
-            if (!sec_aux_isp_send_kt_prop_cmd(self, KT_DPCD_CMD_CHUNK_DATA_PROCESSED, wait_time_ms,
+            if (!sec_aux_isp_send_kt_prop_cmd(connection, KT_DPCD_CMD_CHUNK_DATA_PROCESSED, wait_time_ms,
                                               wait_interval_ms, &status, error))
             {
                 if (status == KT_DPCD_STS_CRC_FAILURE)
@@ -629,20 +634,22 @@ sec_aux_isp_wait_dpcd_cmd_cleared(FuKineticMstConnection *self,
 // In Jaguar, it takes about 1000 ms to boot up and initialize
 // ---------------------------------------------------------------
 static gboolean
-sec_aux_isp_execute_isp_drv(FuKineticMstConnection *self, GError **error)
+sec_aux_isp_execute_isp_drv(FuKineticMstDevice *self,
+                            FuKineticMstConnection *connection,
+                            GError **error)
 {
     guint8 status;
     guint8 read_len;
     guint8 reply_data[6] = {0};
 
-    flash_id = 0;
-    flash_size = 0;
-    read_flash_prog_time = 10;
+    self->flash_id = 0;
+    self->flash_size = 0;
+    self->read_flash_prog_time = 10;
 
-    if (!sec_aux_isp_write_kt_prop_cmd(self, KT_DPCD_CMD_EXECUTE_RAM_CODE, error))
+    if (!sec_aux_isp_write_kt_prop_cmd(connection, KT_DPCD_CMD_EXECUTE_RAM_CODE, error))
         return FALSE;
 
-    if (!sec_aux_isp_wait_dpcd_cmd_cleared(self, 1500, 100, &status, error))
+    if (!sec_aux_isp_wait_dpcd_cmd_cleared(connection, 1500, 100, &status, error))
     {
         if (KT_DPCD_STS_INVALID_IMAGE == status)
             g_prefix_error (error, "Invalid ISP driver!");
@@ -652,7 +659,7 @@ sec_aux_isp_execute_isp_drv(FuKineticMstConnection *self, GError **error)
         return FALSE;
     }
     
-    if (!sec_aux_isp_read_param_reg(self, &status, error))
+    if (!sec_aux_isp_read_param_reg(connection, &status, error))
         return FALSE;
 
     if (status != KT_DPCD_STS_SECURE_ENABLED && status != KT_DPCD_STS_SECURE_DISABLED)
@@ -663,45 +670,47 @@ sec_aux_isp_execute_isp_drv(FuKineticMstConnection *self, GError **error)
 
     if (KT_DPCD_STS_SECURE_ENABLED == status)
     {
-        is_isp_secure_auth_mode = TRUE;
+        self->is_isp_secure_auth_mode = TRUE;
     }
     else
     {
-        is_isp_secure_auth_mode = FALSE;
-        isp_total_data_size -= (FW_CERTIFICATE_SIZE * 2 + FW_RSA_SIGNATURE_BLOCK_SIZE * 2);
+        self->is_isp_secure_auth_mode = FALSE;
+        self->isp_total_data_size -= (FW_CERTIFICATE_SIZE * 2 + FW_RSA_SIGNATURE_BLOCK_SIZE * 2);
     }
 
-    if (!sec_aux_isp_read_dpcd_reply_data_reg(self, reply_data, sizeof(reply_data), &read_len, error))
+    if (!sec_aux_isp_read_dpcd_reply_data_reg(connection, reply_data, sizeof(reply_data), &read_len, error))
     {
         g_prefix_error(error, "Failed to read flash ID and size!");
         return FALSE;
     }
 
-    flash_id = (guint16)reply_data[0] << 8 | reply_data[1];
-    flash_size = (guint16)reply_data[2] << 8 | reply_data[3];
-    read_flash_prog_time = (guint16)reply_data[4] << 8 | reply_data[5];
+    self->flash_id = (guint16)reply_data[0] << 8 | reply_data[1];
+    self->flash_size = (guint16)reply_data[2] << 8 | reply_data[3];
+    self->read_flash_prog_time = (guint16)reply_data[4] << 8 | reply_data[5];
 
-	if (read_flash_prog_time == 0)
-		read_flash_prog_time = 10;
+	if (self->read_flash_prog_time == 0)
+		self->read_flash_prog_time = 10;
 
     return TRUE;        
 }
 
-static gboolean sec_aux_isp_send_isp_drv(FuKineticMstConnection *self,
-                                         gboolean is_app_mode,
-                                         const guint8 *isp_drv_data,
-                                         guint32 isp_drv_len,
-                                         GError **error)
+static gboolean
+sec_aux_isp_send_isp_drv(FuKineticMstDevice *self,
+                         FuKineticMstConnection *connection,
+                         gboolean is_app_mode,
+                         const guint8 *isp_drv_data,
+                         guint32 isp_drv_len,
+                         GError **error)
 {
     g_message("Sending ISP driver payload... started");
 
-    if (sec_aux_isp_enter_code_loading_mode(self, is_app_mode, isp_drv_len, error) == FALSE)
+    if (sec_aux_isp_enter_code_loading_mode(connection, is_app_mode, isp_drv_len, error) == FALSE)
     {
         g_prefix_error(error, "Enabling code-loading mode... failed!");
         return FALSE;
     }
     
-    if (!sec_aux_isp_send_payload(self, isp_drv_data, isp_drv_len, 10000, 50, error))
+    if (!sec_aux_isp_send_payload(self, connection, isp_drv_data, isp_drv_len, 10000, 50, error))
     {
         g_prefix_error(error, "Sending ISP driver payload... failed!");
         return FALSE;
@@ -709,24 +718,24 @@ static gboolean sec_aux_isp_send_isp_drv(FuKineticMstConnection *self,
 
     g_message("Sending ISP driver payload... done!");
 
-    if (!sec_aux_isp_execute_isp_drv(self, error))
+    if (!sec_aux_isp_execute_isp_drv(self, connection, error))
     {
         g_prefix_error(error, "ISP driver booting up... failed!");
         return FALSE;
     }
 
-    g_message("Flash ID: 0x%04X  ", flash_id);
+    g_message("Flash ID: 0x%04X  ", self->flash_id);
 
-    if (flash_size)
+    if (self->flash_size)
     {
-        if (flash_size < 2048)    // One bank size in Jaguar is 1024KB
-            g_message("Flash Size: %d KB, Dual Bank not supported!", flash_size);
+        if (self->flash_size < 2048)    // One bank size in Jaguar is 1024KB
+            g_message("Flash Size: %d KB, Dual Bank is not supported!", self->flash_size);
         else
-            g_message("Flash Size: %d KB)", flash_size);
+            g_message("Flash Size: %d KB", self->flash_size);
     }
     else
     {
-        if (flash_id)
+        if (self->flash_id)
             g_message("(SPI flash not supported)");
         else
             g_message("(SPI flash not connected)");
@@ -736,7 +745,9 @@ static gboolean sec_aux_isp_send_isp_drv(FuKineticMstConnection *self,
 }
 
 static gboolean
-sec_aux_isp_enable_fw_update_mode(FuKineticMstConnection *self, GError **error)
+sec_aux_isp_enable_fw_update_mode(FuKineticMstFirmware *firmware,
+                                  FuKineticMstConnection *connection,
+                                  GError **error)
 {
     guint8 status;
     guint8 pl_size_data[12] = {0};
@@ -744,18 +755,19 @@ sec_aux_isp_enable_fw_update_mode(FuKineticMstConnection *self, GError **error)
     g_message("Entering F/W loading mode...");
 
     // Send payload size to DPCD_MCA_REPLY_DATA_REG
-    *(guint32 *)pl_size_data = esm_payload_size;
-    *(guint32 *)&pl_size_data[4] = arm_app_code_size;
-    *(guint16 *)&pl_size_data[8] = (guint16)app_init_data_size;
-    *(guint16 *)&pl_size_data[10] = (guint16)cmdb_block_size | (is_fw_esm_xip_enabled << 15);
+    *(guint32 *)pl_size_data = fu_kinetic_mst_firmware_get_esm_payload_size(firmware);
+    *(guint32 *)&pl_size_data[4] = fu_kinetic_mst_firmware_get_arm_app_code_size(firmware);
+    *(guint16 *)&pl_size_data[8] = (guint16)fu_kinetic_mst_firmware_get_app_init_data_size(firmware);
+    *(guint16 *)&pl_size_data[10] = (guint16)fu_kinetic_mst_firmware_get_cmdb_block_size(firmware) |
+                                     (fu_kinetic_mst_firmware_get_is_fw_esm_xip_enabled(firmware) << 15);
 
-    if (!sec_aux_isp_write_dpcd_reply_data_reg(self, pl_size_data, sizeof(pl_size_data), error))
+    if (!sec_aux_isp_write_dpcd_reply_data_reg(connection, pl_size_data, sizeof(pl_size_data), error))
     {
         g_prefix_error(error, "Send payload size failed!");
         return FALSE;
     }
 
-    if (!sec_aux_isp_send_kt_prop_cmd(self, KT_DPCD_CMD_ENTER_FW_UPDATE_MODE, 200000, 500, &status, error))
+    if (!sec_aux_isp_send_kt_prop_cmd(connection, KT_DPCD_CMD_ENTER_FW_UPDATE_MODE, 200000, 500, &status, error))
     {
         g_prefix_error(error, "Entering F/W update mode... failed!");
         return FALSE;
@@ -768,19 +780,21 @@ sec_aux_isp_enable_fw_update_mode(FuKineticMstConnection *self, GError **error)
 
 
 static gboolean
-sec_aux_isp_send_fw_payload(FuKineticMstConnection *self,
+sec_aux_isp_send_fw_payload(FuKineticMstDevice *self,
+                            FuKineticMstConnection *connection,
+                            FuKineticMstFirmware *firmware,
                             const guint8 *fw_data,
                             guint32 fw_len,
                             GError **error)
 {
     guint8 *ptr;
 
-    if (is_isp_secure_auth_mode)
+    if (self->is_isp_secure_auth_mode)
     {
         g_message("Sending Certificates... started!");
         // Send ESM and App Certificates & RSA Signatures
         ptr = (guint8 *)fw_data;
-        if (!sec_aux_isp_send_payload(self, ptr, FW_CERTIFICATE_SIZE * 2 + FW_RSA_SIGNATURE_BLOCK_SIZE * 2, 10000, 200, error))
+        if (!sec_aux_isp_send_payload(self, connection, ptr, FW_CERTIFICATE_SIZE * 2 + FW_RSA_SIGNATURE_BLOCK_SIZE * 2, 10000, 200, error))
         {
             g_prefix_error(error, "Sending Certificates... failed!");
             return FALSE;
@@ -793,7 +807,7 @@ sec_aux_isp_send_fw_payload(FuKineticMstConnection *self,
     g_message("Sending ESM... started!");
 
     ptr = (guint8 *)fw_data + SPI_ESM_PAYLOAD_START;
-    if (!sec_aux_isp_send_payload(self, ptr, esm_payload_size, 10000, 200, error))
+    if (!sec_aux_isp_send_payload(self, connection, ptr, fu_kinetic_mst_firmware_get_esm_payload_size(firmware), 10000, 200, error))
     {
         g_prefix_error(error, "Sending ESM... failed!");
         return FALSE;
@@ -805,7 +819,7 @@ sec_aux_isp_send_fw_payload(FuKineticMstConnection *self,
     g_message("Sending App... started!");
 
     ptr = (guint8 *)fw_data + SPI_APP_PAYLOAD_START;
-    if (!sec_aux_isp_send_payload(self, ptr, arm_app_code_size, 10000, 200, error))
+    if (!sec_aux_isp_send_payload(self, connection, ptr, fu_kinetic_mst_firmware_get_arm_app_code_size(firmware), 10000, 200, error))
     {
         g_prefix_error(error, "Sending App... failed!");
         return FALSE;
@@ -813,28 +827,25 @@ sec_aux_isp_send_fw_payload(FuKineticMstConnection *self,
 
     g_message("Sending App... done!");
 
-    if (app_init_data_size) // It should not be zero in normal case. Just patch for GDB issue.
+    // Send App initialized data
+    g_message("Sending App init data... started!");
+
+    ptr = (guint8 *)fw_data + (fu_kinetic_mst_firmware_get_is_fw_esm_xip_enabled(firmware) ? SPI_APP_EXTEND_INIT_DATA_START : SPI_APP_NORMAL_INIT_DATA_START);
+    if (!sec_aux_isp_send_payload(self, connection, ptr, fu_kinetic_mst_firmware_get_app_init_data_size(firmware), 10000, 200, error))
     {
-        // Send App initialized data
-        g_message("Sending App init data... started!");
-
-        ptr = (guint8 *)fw_data + ((is_fw_esm_xip_enabled) ? SPI_APP_EXTEND_INIT_DATA_START : SPI_APP_NORMAL_INIT_DATA_START);
-        if (!sec_aux_isp_send_payload(self, ptr, app_init_data_size, 10000, 200, error))
-        {
-            g_prefix_error(error, "Sending App init data... failed!");
-            return FALSE;
-        }
-
-        g_message("Sending App init data... done!");
+        g_prefix_error(error, "Sending App init data... failed!");
+        return FALSE;
     }
 
-    if (cmdb_block_size)
+    g_message("Sending App init data... done!");
+
+    if (fu_kinetic_mst_firmware_get_cmdb_block_size(firmware))
     {
         // Send CMDB
         g_message("Sending CMDB... started!");
 
         ptr = (guint8 *)fw_data + SPI_CMDB_BLOCK_START;
-        if (!sec_aux_isp_send_payload(self, ptr, cmdb_block_size, 10000, 200, error))
+        if (!sec_aux_isp_send_payload(self, connection, ptr, fu_kinetic_mst_firmware_get_cmdb_block_size(firmware), 10000, 200, error))
         {
             g_prefix_error(error, "Sending CMDB... failed!");
             return FALSE;
@@ -843,28 +854,32 @@ sec_aux_isp_send_fw_payload(FuKineticMstConnection *self,
         g_message("Sending CMDB... done!");
     }
 
+    // Send Application Identifier
     ptr = (guint8 *)fw_data + SPI_APP_ID_DATA_START;
-    if (!sec_aux_isp_send_payload(self, ptr, STD_APP_ID_SIZE, 10000, 200, error))
+    if (!sec_aux_isp_send_payload(self, connection, ptr, STD_APP_ID_SIZE, 10000, 200, error))
     {
         g_prefix_error(error, "Sending App ID data... failed!");
         return FALSE;
     }
+
     g_message("Sending App ID data... done!");
     
     return TRUE;
 }
 
 static gboolean
-sec_aux_isp_install_fw_images(FuKineticMstConnection *self, GError **error)
+sec_aux_isp_install_fw_images(FuKineticMstDevice *self,
+                              FuKineticMstConnection *connection,
+                              GError **error)
 {
     guint8 cmd_id = KT_DPCD_CMD_INSTALL_IMAGES;
     guint8 status;
     guint16 wait_count = 1500;
-    guint16 progress_inc = FLASH_PROGRAM_COUNT / ((read_flash_prog_time * 1000) / WAIT_PROG_INTERVAL_MS);
+    guint16 progress_inc = FLASH_PROGRAM_COUNT / ((self->read_flash_prog_time * 1000) / WAIT_PROG_INTERVAL_MS);
 
     g_message("Installing F/W payload... started");
 
-    if (!sec_aux_isp_write_kt_prop_cmd(self, cmd_id, error))
+    if (!sec_aux_isp_write_kt_prop_cmd(connection, cmd_id, error))
     {
         g_prefix_error(error, "Sending DPCD command... failed!");
         return FALSE;
@@ -872,7 +887,7 @@ sec_aux_isp_install_fw_images(FuKineticMstConnection *self, GError **error)
 
     while (wait_count-- > 0)
     {
-        if (!fu_kinetic_mst_connection_read(self, DPCD_ADDR_FLOAT_CMD_STATUS_REG, &status, 1, error))
+        if (!fu_kinetic_mst_connection_read(connection, DPCD_ADDR_FLOAT_CMD_STATUS_REG, &status, 1, error))
         {
             g_prefix_error(error, "Reading DPCD_MCA_CMD_REG... failed!");
             return FALSE;
@@ -882,7 +897,7 @@ sec_aux_isp_install_fw_images(FuKineticMstConnection *self, GError **error)
         {
             if (status == cmd_id)   // Confirmation bit if cleared
             {
-                isp_payload_procd_size += (isp_total_data_size - isp_procd_size);
+                self->isp_payload_procd_size += (self->isp_total_data_size - self->isp_procd_size);
                 g_message("Programming F/W payload... done!");
 
                 return TRUE;
@@ -895,10 +910,10 @@ sec_aux_isp_install_fw_images(FuKineticMstConnection *self, GError **error)
             }
         }
 
-        if (isp_procd_size < isp_total_data_size)
+        if (self->isp_procd_size < self->isp_total_data_size)
         {
-            isp_procd_size += progress_inc;
-            isp_payload_procd_size += progress_inc;
+            self->isp_procd_size += progress_inc;
+            self->isp_payload_procd_size += progress_inc;
         }
         
         // Wait 50ms
@@ -1038,6 +1053,7 @@ sec_aux_isp_start_isp(FuKineticMstDevice *self,
                       const KtDpDevInfo *dev_info,
                       GError **error)
 {
+    FuKineticMstFirmware *firmware_self = FU_KINETIC_MST_FIRMWARE(firmware);
     gboolean ret = FALSE;
     gboolean is_app_mode = (KT_FW_STATE_RUN_APP == dev_info->fw_run_state)? TRUE : FALSE;
     g_autoptr(GBytes) isp_drv = NULL;
@@ -1050,7 +1066,7 @@ sec_aux_isp_start_isp(FuKineticMstDevice *self,
 
     connection = fu_kinetic_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)));
 
-    isp_procd_size = 0;
+    self->isp_procd_size = 0;
 
     g_message("Start secure AUX-ISP [%s]...", sec_aux_isp_get_chip_id_str(dev_info->chip_id));
 
@@ -1070,16 +1086,16 @@ sec_aux_isp_start_isp(FuKineticMstDevice *self,
 	payload_data = g_bytes_get_data(isp_drv, &payload_len);
     if (payload_len)
     {
-        if (!sec_aux_isp_send_isp_drv(connection, is_app_mode, payload_data, payload_len, error))
+        if (!sec_aux_isp_send_isp_drv(self, connection, is_app_mode, payload_data, payload_len, error))
             goto SECURE_AUX_ISP_END;
     }
 
     // Enable FW update mode
-    if (!sec_aux_isp_enable_fw_update_mode(connection, error))
+    if (!sec_aux_isp_enable_fw_update_mode(firmware_self, connection, error))
         goto SECURE_AUX_ISP_END;
 
     // Send FW image
-    img = fu_firmware_get_image_by_idx(firmware, FU_KT_FW_IMG_IDX_APP, error);
+    img = fu_firmware_get_image_by_idx(firmware, FU_KT_FW_IMG_IDX_APP_FW, error);
     if (NULL == img)
         return FALSE;
 
@@ -1088,11 +1104,11 @@ sec_aux_isp_start_isp(FuKineticMstDevice *self,
 		return FALSE;
 
 	payload_data = g_bytes_get_data(app, &payload_len);
-    if (!sec_aux_isp_send_fw_payload(connection, payload_data, payload_len, error))
+    if (!sec_aux_isp_send_fw_payload(self, connection, firmware_self, payload_data, payload_len, error))
         goto SECURE_AUX_ISP_END;
 
     // Install FW images
-    ret = sec_aux_isp_install_fw_images(connection, error);
+    ret = sec_aux_isp_install_fw_images(self, connection, error);
 
 SECURE_AUX_ISP_END:
 #if 0
@@ -1301,46 +1317,17 @@ fu_kinetic_mst_device_write_firmware(FuDevice *device,
                				         FwupdInstallFlags flags,
                				         GError **error)
 {
-	FuKineticMstDevice *self = FU_KINETIC_MST_DEVICE (device);
+	FuKineticMstDevice *self = FU_KINETIC_MST_DEVICE(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 
 	/* update firmware */
-#if 0
-	if (self->family == FU_SYNAPTICS_MST_FAMILY_PANAMERA) {
-		if (!fu_synaptics_mst_device_panamera_prepare_write (self, error)) {
-			g_prefix_error (error, "Failed to prepare for write: ");
-			return FALSE;
-		}
-		if (!fu_synaptics_mst_device_update_esm (self,
-							 payload_data,
-							 error)) {
-			g_prefix_error (error, "ESM update failed: ");
-			return FALSE;
-		}
-		if (!fu_synaptics_mst_device_update_panamera_firmware (self,
-								       payload_len,
-								       payload_data,
-								       error)) {
-			g_prefix_error (error, "Firmware update failed: ");
-			return FALSE;
-		}
-	} else {
-		if (!fu_synaptics_mst_device_update_tesla_leaf_firmware (self,
-									 payload_len,
-									 payload_data,
-									 error)) {
-			g_prefix_error (error, "Firmware update failed: ");
-			return FALSE;
-		}
-	}
-#else
     if (self->family == FU_KINETIC_MST_FAMILY_JAGUAR || self->family == FU_KINETIC_MST_FAMILY_MUSTANG)
     {
         if (!sec_aux_isp_update_firmware(self, firmware, error))
         {
-            g_prefix_error (error, "Firmware update failed: ");
+            g_prefix_error(error, "Firmware update failed: ");
 			return FALSE;
         }
     }
@@ -1348,11 +1335,10 @@ fu_kinetic_mst_device_write_firmware(FuDevice *device,
     {
         // <TODO> support older chips?
     }
-#endif
 
 	/* wait for flash clear to settle */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_sleep_with_progress (device, 2);
+	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_sleep_with_progress(device, 2);
 
 	return TRUE;
 }
@@ -1442,7 +1428,7 @@ fu_kinetic_mst_device_rescan(FuDevice *device, GError **error)
         break;
     case FU_KINETIC_MST_FAMILY_MUSTANG:
     	//fu_device_set_firmware_size_max (device, 0x10000);    // <TODO> Determine max firmware size for Mustang
-    	fu_device_add_instance_id_full (device, "KTDP-KT52X0", FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+    	fu_device_add_instance_id_full(device, "KTDP-KT52X0", FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
         break;
     default:
         break;
@@ -1464,8 +1450,8 @@ fu_kinetic_mst_device_rescan(FuDevice *device, GError **error)
 static void
 fu_kinetic_mst_device_class_init(FuKineticMstDeviceClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 
 	object_class->finalize = fu_kinetic_mst_device_finalize;
 
