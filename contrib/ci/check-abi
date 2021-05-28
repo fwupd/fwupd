@@ -88,6 +88,7 @@ def build_install(revision):
                 "--libdir=lib",
                 "-Db_coverage=false",
                 "-Dgtkdoc=false",
+                "-Dgusb:docs=false",
                 "-Dtests=false",
             ]
         )
