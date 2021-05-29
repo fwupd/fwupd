@@ -102,3 +102,4 @@ InstallDuration = 120
 Plugin = ebitdo
 Flags = ~is-bootloader
 InstallDuration = 120
+
