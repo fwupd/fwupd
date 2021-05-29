@@ -97,3 +97,8 @@ Plugin = ebitdo
 Flags = ~is-bootloader
 InstallDuration = 120
 
+# SN30v2
+[USB\VID_2DC8&PID_9012]
+Plugin = ebitdo
+Flags = ~is-bootloader
+InstallDuration = 120
