@@ -389,6 +389,7 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 		case 0xab12: /* NES30 */
 		case 0xab21: /* SFC30 */
 		case 0xab20: /* SNES30 */
+		case 0x9012: /* SN30v2 */
 			g_string_append (msg, "hold down L+R+START for 3 seconds until "
 					      "both LED lights flashing, ");
 			break;
