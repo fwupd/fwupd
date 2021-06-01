@@ -28,7 +28,6 @@ fwupdplugin_src = [
   'fu-kenv.c',              # fuzzing
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
-  'fu-efivar.c',
   'fu-udev-device.c',
   'fu-i2c-device.c',
   'fu-usb-device.c',
@@ -139,6 +138,12 @@ library_deps = [
 
 if get_option('libarchive')
   library_deps += libarchive
+endif
+
+if host_machine.system() == 'freebsd'
+  fwupdplugin_src += 'fu-efivar-freebsd.c'
+else
+  fwupdplugin_src += 'fu-efivar.c'
 endif
 
 fwupdplugin_mapfile = 'fwupdplugin.map'
