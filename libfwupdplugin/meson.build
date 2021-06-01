@@ -37,11 +37,14 @@ fwupdplugin_src = [
 ]
 
 if host_machine.system() == 'linux'
-  fwupdplugin_src += 'fu-common-linux.c'  # fuzzing
+  fwupdplugin_src += 'fu-common-linux.c'    # fuzzing
+  fwupdplugin_src += 'fu-efivar-linux.c'
 elif host_machine.system() == 'freebsd'
   fwupdplugin_src += 'fu-common-freebsd.c'
+  fwupdplugin_src += 'fu-efivar-freebsd.c'
 elif host_machine.system() == 'windows'
   fwupdplugin_src += 'fu-common-windows.c'
+  fwupdplugin_src += 'fu-efivar-windows.c'  # fuzzing
 else
   error('no OS support for @0@'.format(host_machine.system()))
 endif
