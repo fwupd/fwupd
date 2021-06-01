@@ -280,6 +280,9 @@ if get_option('default_library') != 'static'
   if host_machine.system() == 'windows'
     platform_deps += cc.find_library('shlwapi')
   endif
+  if host_machine.system() == 'freebsd'
+    platform_deps += cc.find_library('efivar')
+  endif
 endif
 
 if valgrind.found()
