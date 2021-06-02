@@ -410,6 +410,10 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 			g_string_append (msg, "press and hold L1+R1+START for 3 seconds "
 					      "until the LED on top blinks red, ");
 			break;
+		case 0x2100: /* SN30 for Android */
+			g_string_append (msg, "press and hold LB+RB+Xbox buttons "
+					      "both white LED and green LED blink, ");
+			break;
 		default:
 			g_string_append (msg, "do what it says in the manual, ");
 			break;
