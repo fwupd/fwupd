@@ -64,26 +64,28 @@ fu_kinetic_mst_connection_aux_node_read (FuKineticMstConnection *self,
 }
 
 static gboolean
-fu_kinetic_mst_connection_aux_node_write (FuKineticMstConnection *self,
-                                          guint32 offset, const guint8 *buf,
-                                          gint length, GError **error)
+fu_kinetic_mst_connection_aux_node_write(FuKineticMstConnection *self,
+                                         guint32 offset,
+                                         const guint8 *buf,
+                                         gint length,
+                                         GError **error)
 {
-	if (lseek (self->fd, offset, SEEK_SET) != offset)
+	if (lseek(self->fd, offset, SEEK_SET) != offset)
 	{
 		g_set_error(error,
                     G_IO_ERROR,
                     G_IO_ERROR_INVALID_DATA,
-                    "failed to lseek to 0x%x",
+                    "Failed to lseek to 0x%x",
                     offset);
 		return FALSE;
 	}
 
-	if (write (self->fd, buf, length) != length)
+	if (write(self->fd, buf, length) != length)
 	{
 		g_set_error(error,
                     G_IO_ERROR,
                     G_IO_ERROR_INVALID_DATA,
-                    "failed to write 0x%x bytes",
+                    "Failed to write 0x%x bytes",
                     (guint) length);
 		return FALSE;
 	}

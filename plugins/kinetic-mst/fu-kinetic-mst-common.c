@@ -24,9 +24,9 @@ const gchar *
 fu_kinetic_mst_family_to_string(FuKineticMstFamily family)
 {
 	if (family == FU_KINETIC_MST_FAMILY_MUSTANG)
-		return "mustang";
+		return "MUSTANG";
 	if (family == FU_KINETIC_MST_FAMILY_JAGUAR)
-		return "jaguar";
+		return "JAGUAR";
 	return NULL;
 }
 

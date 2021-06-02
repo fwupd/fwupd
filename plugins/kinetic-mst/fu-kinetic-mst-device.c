@@ -144,11 +144,11 @@ fu_kinetic_mst_device_prepare_firmware(FuDevice *device,
 
 typedef enum
 {
-    BANK_A      = 0,
-    BANK_B      = 1,
-    BANK_TOTAL  = 2,
+    BANK_A     = 0,
+    BANK_B     = 1,
+    BANK_TOTAL = 2,
 
-    BANK_NONE   = 0xFF
+    BANK_NONE  = 0xFF
 } KtFlashBankIdx;
 
 typedef struct
@@ -227,7 +227,7 @@ static gboolean kt_aux_write_dpcd_oui(FuKineticMstConnection *connection, const 
 {
 	if (!fu_kinetic_mst_connection_write(connection, DPCD_ADDR_IEEE_OUI, buf, DPCD_SIZE_IEEE_OUI, error))
 	{
-		g_prefix_error (error, "Failed to write source OUI!");
+		g_prefix_error(error, "Failed to write source OUI: ");
         return FALSE;
 	}
 
@@ -247,7 +247,7 @@ static gboolean kt_aux_read_dpcd_branch_id_str(FuKineticMstConnection *connectio
 
     if (!fu_kinetic_mst_connection_read(connection, DPCD_ADDR_BRANCH_DEV_ID_STR, buf, DPCD_SIZE_BRANCH_DEV_ID_STR, error))
     {
-        g_prefix_error (error, "Failed to read branch device ID string!");
+        g_prefix_error(error, "Failed to read branch device ID string: ");
         return FALSE;
     }
 
@@ -304,7 +304,7 @@ static gboolean sec_aux_isp_read_param_reg(FuKineticMstConnection *self, guint8 
 {
 	if (!fu_kinetic_mst_connection_read(self, DPCD_ADDR_FLOAT_PARAM_REG, dpcd_val, 1, error))
 	{
-		g_prefix_error (error, "Failed to read DPCD_MCA_PARAMETER_REG!");
+		g_prefix_error (error, "Failed to read DPCD_KT_PARAM_REG: ");
 		return FALSE;
 	}
 
@@ -318,7 +318,7 @@ sec_aux_isp_write_kt_prop_cmd(FuKineticMstConnection *connection, guint8 cmd_id,
 
     if (!fu_kinetic_mst_connection_write(connection, DPCD_ADDR_FLOAT_CMD_STATUS_REG, &cmd_id, sizeof(cmd_id), error))
     {
-        g_prefix_error (error, "Failed to write DPCD_MCA_CMD_REG!");
+        g_prefix_error(error, "Failed to write DPCD_KT_CMD_STATUS_REG: ");
         return FALSE;
     }
 
@@ -332,7 +332,7 @@ sec_aux_isp_clear_kt_prop_cmd(FuKineticMstConnection *connection, GError **error
 
     if (!fu_kinetic_mst_connection_write(connection, DPCD_ADDR_FLOAT_CMD_STATUS_REG, &cmd_id, sizeof(cmd_id), error))
     {
-        g_prefix_error(error, "Failed to write DPCD_MCA_CMD_REG!");
+        g_prefix_error(error, "Failed to write DPCD_KT_CMD_STATUS_REG:");
         return FALSE;
     }
 
@@ -357,8 +357,7 @@ sec_aux_isp_send_kt_prop_cmd(FuKineticMstConnection *self,
 
     while (max_time_ms != 0)
     {
-        if (!fu_kinetic_mst_connection_read(self, DPCD_ADDR_FLOAT_CMD_STATUS_REG, (guint8 *)&dpcd_val,
-                                            1, error))
+        if (!fu_kinetic_mst_connection_read(self, DPCD_ADDR_FLOAT_CMD_STATUS_REG, (guint8 *)&dpcd_val, 1, error))
         {
             return FALSE;
         }
@@ -369,15 +368,13 @@ sec_aux_isp_send_kt_prop_cmd(FuKineticMstConnection *self,
             {
                 *status = dpcd_val & DPCD_KT_COMMAND_MASK;
 
-                if (*status == KT_DPCD_STS_CRC_FAILURE)
+                if (KT_DPCD_STS_CRC_FAILURE == *status)
                 {
-                    //ret = MCTRL_STS_CHKSUM_ERROR;
                     g_prefix_error(error, "Chunk data CRC checking failed!");
                 }
                 else
                 {
-                    //ret = MCTRL_STS_INVALID_REPLY;
-                    g_prefix_error(error, "Invalid DPCD_Cmd_Sts_Reg reply! (0x%X)", *status);
+                    g_prefix_error(error, "Invalid replied value in DPCD_KT_CMD_STATUS_REG: 0x%X!", *status);
                 }
             }
             else    // dpcd_val == cmd_id
@@ -398,8 +395,7 @@ sec_aux_isp_send_kt_prop_cmd(FuKineticMstConnection *self,
         else
         {
             max_time_ms = 0;
-            //ret = MCTRL_STS_TIMEOUT;
-            g_prefix_error (error, "Waiting DPCD_Cmd_Sts_Reg timed-out!");
+            g_prefix_error(error, "Waiting DPCD_KT_CMD_STATUS_REG timed-out!");
 
             return FALSE;
         }
@@ -960,7 +956,7 @@ sec_aux_isp_enable_aux_forward(FuKineticMstConnection *connection,
     // Clear CMD_STS_REG
     cmd_id = KT_DPCD_CMD_STS_NONE;
     fu_kinetic_mst_connection_write(connection, DPCD_ADDR_FLOAT_CMD_STATUS_REG, &cmd_id, sizeof(cmd_id), error);
-
+                                   
     return ret;
 }
 
@@ -1144,9 +1140,19 @@ guint16 kt_dp_get_numeric_chip_id(KtChipId chip_id)
     return 0;
 }
 
-gboolean kt_dp_get_dev_info_from_branch_id(guint8 *br_id_str_buf, guint8 br_id_str_buf_size, KtDpDevInfo *dev_info)
+gboolean
+kt_dp_get_dev_info_from_branch_id(const guint8 *br_id_str_buf,
+                                  const guint8 br_id_str_buf_size,
+                                  KtDpDevInfo *dev_info,
+                                  GError **error)
 {
     guint8 i = 0;
+    g_autofree gchar *str = NULL;   // Just for printing error log
+
+    g_return_val_if_fail(br_id_str_buf != NULL, FALSE);
+    g_return_val_if_fail(br_id_str_buf_size >= DPCD_SIZE_BRANCH_DEV_ID_STR, FALSE);
+    g_return_val_if_fail(dev_info != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     dev_info->chip_id = KT_CHIP_NONE;
     dev_info->fw_run_state = KT_FW_STATE_RUN_NONE;
@@ -1155,17 +1161,26 @@ gboolean kt_dp_get_dev_info_from_branch_id(guint8 *br_id_str_buf, guint8 br_id_s
     // Find the device info by branch ID string
     while (kt_dp_branch_dev_info_table[i].chip_id != KT_CHIP_NONE)
     {
-        if (0 == memcmp(br_id_str_buf, kt_dp_branch_dev_info_table[i].id_str, kt_dp_branch_dev_info_table[i].str_len))  // Found the chip
+        if (0 == memcmp(br_id_str_buf, kt_dp_branch_dev_info_table[i].id_str, kt_dp_branch_dev_info_table[i].str_len))
         {
+            // Found the chip in the table
             dev_info->chip_id = kt_dp_branch_dev_info_table[i].chip_id;
             dev_info->fw_run_state = kt_dp_branch_dev_info_table[i].fw_run_state;
-            memcpy(dev_info->branch_id_str, br_id_str_buf, br_id_str_buf_size);
+            memcpy(dev_info->branch_id_str, br_id_str_buf, DPCD_SIZE_BRANCH_DEV_ID_STR);
 
             return TRUE;
         }
 
         i++;
     }
+
+    // There might not always be null-terminated character '\0' in DPCD branch ID string (when length is 6)
+    str = g_strndup((const gchar *)br_id_str_buf, DPCD_SIZE_BRANCH_DEV_ID_STR);
+    g_set_error(error,
+                FWUPD_ERROR,
+	            FWUPD_ERROR_INTERNAL,
+	            "%s is not a Kinetic device",
+	            str);
 
     return FALSE;
 }
@@ -1183,7 +1198,7 @@ gboolean kt_dp_read_chip_id_and_state(FuKineticMstConnection *connection,
         return FALSE;
     }
 
-    if (!kt_dp_get_dev_info_from_branch_id(branch_id, DPCD_SIZE_BRANCH_DEV_ID_STR, dev_info))
+    if (!kt_dp_get_dev_info_from_branch_id(branch_id, DPCD_SIZE_BRANCH_DEV_ID_STR, dev_info, error))
         return FALSE;
 
     return TRUE;
@@ -1282,7 +1297,7 @@ gboolean kt_dp_read_device_info(FuKineticMstDevice *self,
      */
     if (!sec_aux_isp_get_device_info(connection, &dev_info_local, error))
     {
-        g_prefix_error (error, "Failed to read other device information: ");
+        g_prefix_error(error, "Failed to read other device information: ");
         return FALSE;
     }
 
@@ -1376,15 +1391,11 @@ fu_kinetic_mst_device_rescan(FuDevice *device, GError **error)
 
     if (!kt_dp_read_device_info(self, /*DEV_HOST,*/ dp_dev_info, error))
     {
-        // <TODO> Correct the way to create GError in functions
-        g_set_error_literal(error,
-                            G_IO_ERROR,
-						    G_IO_ERROR_INVALID_DATA,
-						    "failed to read device info");
+        g_prefix_error(error, "Failed to read device info: ");
         return FALSE;
     }
 
-    g_debug("[JEFFREY DEBUG] branch_id_str=%s", dp_dev_info->branch_id_str);   // <JEFFREY DEBUG>
+    g_debug("branch_id_str = %s", dp_dev_info->branch_id_str);
 
     /* read firmware version */
     // <TODO>
@@ -1436,9 +1447,9 @@ fu_kinetic_mst_device_rescan(FuDevice *device, GError **error)
 
     /* add non-standard GUIDs */
     name_family = fu_kinetic_mst_family_to_string(self->family);
-    guid1 = g_strdup_printf("KTDP-%s-kt%04x", name_family, self->chip_id);
+    guid1 = g_strdup_printf("KT-DP-%s-KT%04x", name_family, self->chip_id);
     fu_device_add_instance_id(FU_DEVICE(self), guid1);
-    guid2 = g_strdup_printf("KTDP-%s", name_family);
+    guid2 = g_strdup_printf("KT-DP-%s", name_family);
     fu_device_add_instance_id(FU_DEVICE(self), guid2);
 
     // <TODO> check if a valid device to update?
