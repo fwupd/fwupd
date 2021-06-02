@@ -1412,7 +1412,35 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req, FuDevice *dev
 			if (device_tmp == NULL)
 				return FALSE;
 			g_set_object (&device_actual, device_tmp);
-
+		/* look for a sibling */
+		} else if (depth == 0) {
+			FuDevice *child = NULL;
+			FuDevice *parent = fu_device_get_parent (device_actual);
+			GPtrArray *children;
+			if (parent == NULL) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "No parent specified for device %s",
+					     fu_device_get_name (device_actual));
+				return FALSE;
+			}
+			children = fu_device_get_children (parent);
+			for (guint i = 0 ; i < children->len; i++) {
+				child = g_ptr_array_index (children, i);
+				if (fu_device_has_guid (child, guid))
+					break;
+				child = NULL;
+			}
+			if (child == NULL) {
+				g_set_error (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "No sibling found with GUID of %s",
+					     guid);
+				return FALSE;
+			}
+			g_set_object (&device_actual, child);
 		/* verify the parent device has the GUID */
 		} else {
 			if (!fu_device_has_guid (device_actual, guid)) {
