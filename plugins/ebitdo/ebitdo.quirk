@@ -108,4 +108,8 @@ InstallDuration = 120
 Plugin = ebitdo
 Flags = ~is-bootloader
 InstallDuration = 120
+[USB\VID_2DC8&PID_2101]
+Plugin = ebitdo
+Flags = ~is-bootloader
+InstallDuration = 120
 
