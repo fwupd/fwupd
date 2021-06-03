@@ -411,6 +411,7 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 					      "until the LED on top blinks red, ");
 			break;
 		case 0x2100: /* SN30 for Android */
+		case 0x2101: /* SN30 for Android */
 			g_string_append (msg, "press and hold LB+RB+Xbox buttons "
 					      "both white LED and green LED blink, ");
 			break;
