@@ -563,24 +563,6 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <!-- TODO: Drop help2man build dependency after 1.6.0 release -->
-  <dependency type="build" id="help2man">
-    <distro id="arch">
-      <package />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
-  <dependency type="build" id="jq">
-    <distro id="centos">
-      <package />
-    </distro>
-    <distro id="fedora">
-      <package />
-    </distro>
-  </dependency>
   <dependency type="build" id="libxmlb-dev">
     <distro id="arch">
       <package>libxmlb</package>
@@ -1079,12 +1061,6 @@
     </distro>
     <distro id="fedora">
       <package />
-    </distro>
-  </dependency>
-  <!-- TODO: Drop python3-pil build dependency after 1.6.0 release -->
-  <dependency type="build" id="python3-pil">
-    <distro id="ubuntu">
-      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="python3-requests">
