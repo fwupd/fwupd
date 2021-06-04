@@ -70,11 +70,6 @@
     <xi:include href="xml/fu-usb-device.xml"/>
   </reference>
 
-  <xi:include href="tutorial.xml"/>
-<!--
-  <xi:include href="hsi.xml"/>
--->
-
   <index id="api-index-full">
     <title>API Index</title>
     <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
