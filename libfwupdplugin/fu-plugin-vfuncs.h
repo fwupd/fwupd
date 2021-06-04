@@ -20,17 +20,6 @@
 #endif
 
 /**
- * SECTION:fu-plugin-vfuncs
- * @short_description: Virtual functions for plugins
- *
- * Optional functions that a plugin can implement.  If implemented they will
- * be automatically called by the daemon as part of the plugin lifecycle.
- *
- * See also: #FuPlugin
- */
-
-
-/**
  * fu_plugin_init:
  * @plugin: A #FuPlugin
  *

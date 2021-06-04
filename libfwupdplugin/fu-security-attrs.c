@@ -14,6 +14,12 @@
 #include "fu-security-attrs-private.h"
 #include "fwupd-security-attr-private.h"
 
+/**
+ * FuSecurityAttrs:
+ *
+ * An object that represents one specific HSI attribute.
+ */
+
 struct _FuSecurityAttrs {
 	GObject			 parent_instance;
 	GPtrArray		*attrs;

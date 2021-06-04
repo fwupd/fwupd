@@ -311,7 +311,7 @@ fwupd_build_user_agent_system (void)
  * Before freaking out about theoretical privacy implications, much more data
  * than this is sent to each and every website you visit.
  *
- * Rather that using this function you should use fwupd_client_set_user_agent_for_package()
+ * Rather that using this function you should use [method@Client.set_user_agent_for_package]
  * which uses the *runtime* version of the daemon rather than the *build-time*
  * version.
  *

@@ -16,9 +16,9 @@
 #include "fu-volume-private.h"
 
 /**
- * SECTION:fu-volume
- * @title: FuVolume
- * @short_description: Volume abstraction that uses UDisks
+ * FuVolume:
+ *
+ * Volume abstraction that uses UDisks
  */
 
 struct _FuVolume {

@@ -5,8 +5,7 @@
  */
 
 /**
- * SECTION:fu-dfu-sector
- * @short_description: Object representing a sector on a chip
+ * FuDfuSector:
  *
  * This object represents an sector of memory at a specific address on the
  * device itself.
@@ -17,7 +16,7 @@
  * You can think of these objects as flash segments on devices, where a
  * complete block can be erased and then written to.
  *
- * See also: #DfuElement
+ * See also: [class@FuChunk]
  */
 
 #include "config.h"

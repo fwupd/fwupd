@@ -14,11 +14,9 @@
 #include "fu-common.h"
 
 /**
- * SECTION:fu-chunk
- * @short_description: A packet of chunked data
+ * FuChunk:
  *
- * An object that represents a packet of data.
- *
+ * An object that represents a packet of chunked data.
  */
 
 struct _FuChunk {

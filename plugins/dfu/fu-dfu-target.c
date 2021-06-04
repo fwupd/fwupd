@@ -5,8 +5,7 @@
  */
 
 /**
- * SECTION:fu-dfu-target
- * @short_description: Object representing a DFU-capable target
+ * FuDfuTarget:
  *
  * This object allows uploading and downloading an image onto a
  * specific DFU-capable target.
@@ -15,7 +14,7 @@
  * want to update one target on the device. Most users will want to
  * update all the targets on the device at the same time.
  *
- * See also: #FuDfuDevice, #FuFirmware
+ * See also: [class@FuDfuDevice], [class@FuFirmware]
  */
 
 #include "config.h"

@@ -18,12 +18,11 @@
 #define DEFAULT_PROXY_TIMEOUT	5000
 
 /**
- * SECTION:fu-bluez-device
- * @short_description: a BlueZ Bluetooth device
+ * FuBluezDevice:
  *
  * An object that represents a BlueZ Bluetooth device.
  *
- * See also: #FuBluezDevice
+ * See also: [class@FuDevice]
  */
 
 typedef struct {

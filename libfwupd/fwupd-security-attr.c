@@ -14,7 +14,7 @@
 #include "fwupd-security-attr-private.h"
 
 /**
- * SECTION:fwupd-security-attr
+ * FwupdSecurityAttr:
  *
  * An object that represents an Host Security ID attribute.
  */

@@ -27,12 +27,11 @@
 #include "fu-udev-device-private.h"
 
 /**
- * SECTION:fu-udev-device
- * @short_description: a udev device
+ * FuUdevDevice:
  *
  * An object that represents a udev device.
  *
- * See also: #FuDevice
+ * See also: [class@FuDevice]
  */
 
 typedef struct

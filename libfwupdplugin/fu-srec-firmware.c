@@ -15,12 +15,11 @@
 #include "fu-srec-firmware.h"
 
 /**
- * SECTION:fu-srec-firmware
- * @short_description: SREC firmware image
+ * FuSrecFirmware:
  *
  * An object that represents a SREC firmware image.
  *
- * See also: #FuFirmware
+ * See also: [class@FuFirmware]
  */
 
 typedef struct {

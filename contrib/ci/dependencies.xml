@@ -543,6 +543,7 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <!-- TODO: Drop build dependency after switching to gidoc-gen -->
   <dependency type="build" id="gtk-doc-tools">
     <distro id="arch">
       <package>gtk-doc</package>
@@ -1052,6 +1053,60 @@
     </distro>
     <distro id="ubuntu">
       <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <!-- These are needed for gi-docgen -->
+  <dependency type="build" id="python3-pygments">
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-typogrify">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-toml">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-markdown">
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-jinja2">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
   </dependency>

@@ -19,9 +19,9 @@
 #include "fwupd-error.h"
 
 /**
- * SECTION:fu-archive
- * @title: FuArchive
- * @short_description: an in-memory archive decompressor
+ * FuArchive:
+ *
+ * An in-memory archive decompressor
  */
 
 struct _FuArchive {

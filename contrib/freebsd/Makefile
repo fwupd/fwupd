@@ -54,6 +54,7 @@ MESON_ARGS=	-Dgudev=false \
 		-Dpolkit=false \
 		-Dsystemd=false \
 		-Dtests=false \
+		-Ddocs=gtkdoc \
 		-Defi_binary=false
 
 .include <bsd.port.mk>

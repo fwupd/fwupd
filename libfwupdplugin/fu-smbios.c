@@ -16,6 +16,15 @@
 #include "fu-smbios-private.h"
 #include "fwupd-error.h"
 
+/**
+ * FuSmbios:
+ *
+ * An object that collects the SMBIOS data on the system, either using DMI or
+ * Device Tree.
+ *
+ * See also: [class@FuHwids]
+ */
+
 struct _FuSmbios {
 	FuFirmware		 parent_instance;
 	guint32			 structure_table_len;

@@ -16,12 +16,11 @@
 #include "fu-dfuse-firmware.h"
 
 /**
- * SECTION:fu-dfuse-firmware
- * @short_description: DfuSe firmware image
+ * FuDfuseFirmware:
  *
  * An object that represents a DfuSe firmware image.
  *
- * See also: #FuDfuFirmware
+ * See also: [class@FuDfuFirmware]
  */
 
 G_DEFINE_TYPE (FuDfuseFirmware, fu_dfuse_firmware, FU_TYPE_DFU_FIRMWARE)

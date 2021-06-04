@@ -13,11 +13,10 @@
 #include "fu-firmware.h"
 
 /**
- * SECTION:fu-firmware
- * @short_description: a firmware file
+ * FuFirmware:
  *
  * An object that represents a firmware file.
- * See also: #FuDfuFirmware, #FuIhexFirmware, #FuSrecFirmware
+ * See also: [class@FuDfuFirmware], [class@FuIhexFirmware], [class@FuSrecFirmware]
  */
 
 typedef struct {
