@@ -13,7 +13,7 @@ endif
 CONFARGS =
 
 ifneq ($(CI),)
-	CONFARGS += --werror --wrap-mode=default
+	CONFARGS += --werror
 endif
 
 SB_STYLE := debian
