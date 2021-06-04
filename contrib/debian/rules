@@ -13,7 +13,7 @@ endif
 CONFARGS =
 
 ifneq ($(CI),)
-	CONFARGS += --werror --wrap-mode=default
+	CONFARGS += --werror
 endif
 
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
