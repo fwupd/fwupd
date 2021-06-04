@@ -7,10 +7,6 @@ gnome.gtkdoc(
     join_paths(meson.build_root(), 'libfwupdplugin'),
     join_paths(meson.current_source_dir()),
   ],
-  content_files : [
-    'tutorial.xml',
-    'hsi.xml',
-  ],
   main_xml : 'fwupd-docs.xml',
   install : true
 )
