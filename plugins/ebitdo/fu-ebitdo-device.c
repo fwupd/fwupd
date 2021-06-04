@@ -415,6 +415,9 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 			g_string_append (msg, "press and hold LB+RB+Xbox buttons "
 					      "both white LED and green LED blink, ");
 			break;
+		case 0x9015: /* N30 Pro 2 */
+		    g_string_append (msg, "press and hold L1+R1+START buttons "
+					      "until the yellow LED blinks, ");
 		default:
 			g_string_append (msg, "do what it says in the manual, ");
 			break;
