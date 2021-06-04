@@ -2,6 +2,7 @@
 /build-win32
 /dist
 /.vscode
+.vscode-ctags
 /build-dir
 /.flatpak-builder
 /repo
