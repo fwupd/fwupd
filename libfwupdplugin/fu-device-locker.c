@@ -17,14 +17,12 @@
 #include "fu-usb-device.h"
 
 /**
- * SECTION:fu-device-locker
- * @title: FuDeviceLocker
- * @short_description: a device helper object
+ * FuDeviceLocker:
  *
  * An object that makes it easy to close a device when an object goes out of
  * scope.
  *
- * See also: #FuDevice
+ * See also: [class@FuDevice]
  */
 
 struct _FuDeviceLocker {

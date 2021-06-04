@@ -11,12 +11,11 @@
 #include "fu-ifd-bios.h"
 
 /**
- * SECTION:fu-ifd-bios
- * @short_description: Intel BIOS section
+ * FuIfdBios:
  *
  * An object that represents an Intel BIOS section.
  *
- * See also: #FuFirmware
+ * See also: [class@FuFirmware]
  */
 
 G_DEFINE_TYPE (FuIfdBios, fu_ifd_bios, FU_TYPE_IFD_IMAGE)

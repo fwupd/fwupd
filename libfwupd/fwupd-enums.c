@@ -9,16 +9,6 @@
 #include "fwupd-enums.h"
 
 /**
- * SECTION:fwupd-enums
- * @short_description: enumerated values shared by the daemon and library
- *
- * This file also provides helper functions to map enums to strings and back
- * again.
- *
- * See also: #fwupd-error
- */
-
-/**
  * fwupd_status_to_string:
  * @status: a status, e.g. %FWUPD_STATUS_DECOMPRESSING
  *

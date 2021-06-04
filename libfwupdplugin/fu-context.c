@@ -13,8 +13,7 @@
 #include "fu-smbios-private.h"
 
 /**
- * SECTION:fu-context
- * @short_description: a context shared between all the plugins and the daemon
+ * FuContext:
  *
  * An object that represents the shared system state. This object is shared
  * between the engine, the plugins and the devices.

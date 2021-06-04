@@ -6,11 +6,6 @@
 
 #pragma once
 
-/**
- * SECTION:fwupd
- * @short_description: Helper objects for accessing fwupd
- */
-
 #define __FWUPD_H_INSIDE__
 
 #include <libfwupd/fwupd-client.h>

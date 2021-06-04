@@ -12,12 +12,11 @@
 #include "fu-usb-device-private.h"
 
 /**
- * SECTION:fu-usb-device
- * @short_description: a USB device
+ * FuUsbDevice:
  *
  * An object that represents a USB device.
  *
- * See also: #FuDevice
+ * See also: [class@FuDevice]
  */
 
 typedef struct

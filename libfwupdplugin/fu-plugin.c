@@ -20,12 +20,11 @@
 #include "fu-mutex.h"
 
 /**
- * SECTION:fu-plugin
- * @short_description: a daemon plugin
+ * FuPlugin:
  *
  * An object that represents a plugin run by the daemon.
  *
- * See also: #FuDevice
+ * See also: [class@FuDevice]
  */
 
 static void fu_plugin_finalize			 (GObject *object);
@@ -2048,7 +2047,7 @@ fu_plugin_set_priority (FuPlugin *self, guint priority)
  * for example the plugin specified by @name will be ordered after this plugin
  * when %FU_PLUGIN_RULE_RUN_AFTER is used.
  *
- * NOTE: the depsolver is iterative and may not solve overly-complicated rules;
+ * NOTE: The depsolver is iterative and may not solve overly-complicated rules;
  * If depsolving fails then fwupd will not start.
  *
  * Since: 1.0.0

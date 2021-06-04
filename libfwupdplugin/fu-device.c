@@ -27,12 +27,11 @@
 #define FU_DEVICE_DEFAULT_BATTERY_THRESHOLD		10 /* % */
 
 /**
- * SECTION:fu-device
- * @short_description: a physical or logical device
+ * FuDevice:
  *
  * An object that represents a physical or logical device.
  *
- * See also: #FuDeviceLocker
+ * See also: [class@FuDeviceLocker]
  */
 
 static void fu_device_finalize			 (GObject *object);

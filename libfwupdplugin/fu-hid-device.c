@@ -20,12 +20,11 @@
 #define FU_HID_DEVICE_RETRIES				10
 
 /**
- * SECTION:fu-hid-device
- * @short_description: a HID device
+ * FuHidDevice:
  *
  * An object that represents a HID device.
  *
- * See also: #FuDevice
+ * See also: [class@FuDevice]
  */
 
 typedef struct

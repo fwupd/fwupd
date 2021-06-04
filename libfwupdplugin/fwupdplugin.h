@@ -6,11 +6,6 @@
 
 #pragma once
 
-/**
- * SECTION:fwupdplugin
- * @short_description: Helper objects for plugins interacting with fwupd daemon
- */
-
 #define __FWUPDPLUGIN_H_INSIDE__
 
 #include <libfwupdplugin/fu-archive.h>

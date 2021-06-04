@@ -15,7 +15,7 @@ if [ "$QUBES" = "true" ]; then
 fi
 
 meson .. \
-    -Dgtkdoc=true \
+    -Dgtkdoc=false \
     -Dman=true \
     -Dtests=true \
     -Dgusb:tests=false \

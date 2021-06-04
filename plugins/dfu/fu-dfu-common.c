@@ -4,13 +4,6 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-/**
- * SECTION:fu-dfu-common
- * @short_description: Common functions for DFU
- *
- * These helper objects allow converting from enum values to strings.
- */
-
 #include "config.h"
 
 #include <string.h>

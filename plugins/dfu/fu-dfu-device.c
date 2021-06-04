@@ -5,8 +5,7 @@
  */
 
 /**
- * SECTION:fu-dfu-device
- * @short_description: Object representing a DFU-capable device
+ * FuDfuDevice:
  *
  * This object allows two things:
  *
@@ -17,7 +16,7 @@
  *    file. The file format is chosen automatically, with DfuSe being
  *    chosen if the device contains more than one target.
  *
- * See also: #FuDfuTarget, #FuDfuseFirmware
+ * See also: [class@FuDfuTarget], [class@FuDfuseFirmware]
  */
 
 /**
