@@ -9,17 +9,6 @@
 #include <glib.h>
 
 /**
- * SECTION:fu-device-metadata
- * @short_description: a device helper object
- *
- * An object that makes it easy to close a device when an object goes out of
- * scope.
- *
- * See also: #FuDevice
- */
-
-
-/**
  * FU_DEVICE_METADATA_TBT_IS_SAFE_MODE:
  *
  * If the Thunderbolt hardware is stuck in safe mode.

@@ -17,12 +17,11 @@
 #include "fwupd-release-private.h"
 
 /**
- * SECTION:fwupd-device
- * @short_description: a hardware device
+ * FwupdDevice:
  *
  * An object that represents a physical device on the host.
  *
- * See also: #FwupdRelease
+ * See also: [class@FwupdRelease]
  */
 
 static void fwupd_device_finalize	 (GObject *object);

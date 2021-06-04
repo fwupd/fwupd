@@ -14,12 +14,11 @@
 #include "fu-dfu-firmware-private.h"
 
 /**
- * SECTION:fu-dfu-firmware
- * @short_description: DFU firmware image
+ * FuDfuFirmware:
  *
  * An object that represents a DFU firmware image.
  *
- * See also: #FuFirmware
+ * See also: [class@FuFirmware]
  */
 
 typedef struct {

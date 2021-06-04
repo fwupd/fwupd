@@ -214,7 +214,7 @@ if get_option('introspection') and get_option('gusb')
     namespace : 'FwupdPlugin',
     symbol_prefix : 'fu',
     identifier_prefix : 'Fu',
-    export_packages : 'fu',
+    export_packages : 'fwupdplugin',
     extra_args : '-DHAVE_GUSB',
     include_directories : [
       fwupd_incdir,

@@ -23,7 +23,7 @@ meson .. \
 	-Dplugin_msr=false \
 	-Dplugin_redfish=false \
 	-Dintrospection=false \
-	-Dgtkdoc=false \
+	-Ddocs=none \
 	-Dlibxmlb:introspection=false \
 	-Dlibxmlb:gtkdoc=false \
 	-Dman=false

@@ -20,7 +20,7 @@ meson .. \
 	-Dplugin_synaptics_mst=true \
 	-Dplugin_flashrom=true \
 	-Dintrospection=true \
-	-Dgtkdoc=true \
+	-Ddocs=gtkdoc \
 	-Dpkcs7=false \
 	-Dman=true
 ninja-build -v

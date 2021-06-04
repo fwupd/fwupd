@@ -17,6 +17,16 @@
 #include "fwupd-common.h"
 #include "fwupd-error.h"
 
+/**
+ * FuHwids:
+ *
+ * An object that represents a the hardware IDs on the system.
+ * Note, these are called "CHIDs" in Microsoft Windows and the results here
+ * will match that of `ComputerHardwareIds.exe`.
+ *
+ * See also: [class@FuSmbios]
+ */
+
 struct _FuHwids {
 	GObject			 parent_instance;
 	GHashTable		*hash_dmi_hw;		/* BiosVersion->"1.2.3 " */

@@ -12,12 +12,11 @@
 #include "fwupd-plugin-private.h"
 
 /**
- * SECTION:fwupd-plugin
- * @short_description: a hardware plugin
+ * FwupdPlugin:
  *
  * An object that represents a fwupd plugin.
  *
- * See also: #FwupdRelease
+ * See also: [class@FwupdRelease]
  */
 
 static void fwupd_plugin_finalize	 (GObject *object);

@@ -22,8 +22,7 @@
 #include "fwupd-remote-private.h"
 
 /**
- * SECTION:fu-quirks
- * @short_description: device quirks
+ * FuQuirks:
  *
  * Quirks can be used to modify device behavior.
  * When fwupd is installed in long-term support distros it's very hard to
@@ -43,7 +42,7 @@
  * obviously need code changes, but allows us to get most existing devices working
  * in an easy way without the user compiling anything.
  *
- * See also: #FuDevice, #FuPlugin
+ * See also: [class@FuDevice], [class@FuPlugin]
  */
 
 static void fu_quirks_finalize	 (GObject *obj);

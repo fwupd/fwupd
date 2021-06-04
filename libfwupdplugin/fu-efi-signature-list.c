@@ -14,12 +14,11 @@
 #include "fu-efi-signature-list.h"
 
 /**
- * SECTION:fu-efi-signature-list
- * @short_description: Parser for EFI_SIGNATURE_LIST
+ * FuEfiSignatureList:
  *
  * An object that represents a UEFI SignatureList.
  *
- * See also: #FuFirmware
+ * See also: [class@FuFirmware]
  */
 
 struct _FuEfiSignatureList {

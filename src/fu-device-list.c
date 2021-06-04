@@ -18,8 +18,7 @@
 #include "fwupd-error.h"
 
 /**
- * SECTION:fu-device-list
- * @short_description: a list of devices
+ * FuDeviceList:
  *
  * This list of devices provides a way to find a device using either the
  * device-id or a GUID.
@@ -28,7 +27,7 @@
  * has been changed. If the #FuDevice has changed during a device replug then
  * the ::changed signal will be emitted instead of ::added and then ::removed.
  *
- * See also: #FuDevice
+ * See also: [class@FuDevice]
  */
 
 static void fu_device_list_finalize	 (GObject *obj);

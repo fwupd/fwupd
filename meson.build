@@ -535,10 +535,16 @@ endif
 
 root_incdir = include_directories('.')
 
-if get_option('gtkdoc')
-  gtkdocscan = find_program('gtkdoc-scan', required : true)
-  subdir('docs')
+if get_option('docs') == 'gtkdoc'
+  gtkdocscan = find_program('gtkdoc-scan')
+elif get_option('docs') == 'docgen'
+  gidocgen_dep = dependency('gi-docgen',
+    version: '>= 2021.1',
+    fallback: ['gi-docgen', 'dummy_dep'],
+  )
+  gidocgen = find_program('gi-docgen')
 endif
+
 subdir('libfwupd')
 if build_daemon and get_option('polkit')
   subdir('policy')
@@ -551,6 +557,7 @@ if build_standalone
   subdir('plugins')
   subdir('contrib')
 endif
+subdir('docs')
 
 if get_option('systemd') and build_daemon
   meson.add_install_script('meson_post_install.sh', systemdunitdir, localstatedir)

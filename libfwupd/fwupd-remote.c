@@ -17,12 +17,11 @@
 #include "fwupd-remote-private.h"
 
 /**
- * SECTION:fwupd-remote
- * @short_description: a source of firmware
+ * FwupdRemote:
  *
  * An object that represents a source of metadata that provides firmware.
  *
- * See also: #FwupdClient
+ * See also: [class@FwupdClient]
  */
 
 static void fwupd_remote_finalize	 (GObject *obj);

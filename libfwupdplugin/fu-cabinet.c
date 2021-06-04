@@ -18,6 +18,14 @@
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
 
+/**
+ * FuCabinet:
+ *
+ * Cabinet archive parser and writer.
+ *
+ * See also: [class@FuArchive]
+ */
+
 struct _FuCabinet {
 	GObject			 parent_instance;
 	guint64			 size_max;

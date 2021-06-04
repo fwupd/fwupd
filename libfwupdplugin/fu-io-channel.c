@@ -22,6 +22,12 @@
 #include "fu-common.h"
 #include "fu-io-channel.h"
 
+/**
+ * FuIOChannel:
+ *
+ * An object that represents a bidirectional IO channel.
+ */
+
 struct _FuIOChannel {
 	GObject			 parent_instance;
 	gint			 fd;

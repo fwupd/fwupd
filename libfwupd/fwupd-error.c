@@ -13,16 +13,6 @@
 #include "fwupd-error.h"
 
 /**
- * SECTION:fwupd-error
- * @short_description: an error domain shared by the daemon and library
- *
- * This file also provides helper functions to map errors to strings and back
- * again.
- *
- * See also: #fwupd-enums
- */
-
-/**
  * fwupd_error_to_string:
  * @error: an enumerated error, e.g. %FWUPD_ERROR_VERSION_NEWER
  *

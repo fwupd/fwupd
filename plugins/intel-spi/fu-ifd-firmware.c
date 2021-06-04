@@ -12,12 +12,11 @@
 #include "fu-ifd-bios.h"
 
 /**
- * SECTION:fu-ifd-firmware
- * @short_description: IFD firmware image
+ * FuIfdFirmware:
  *
  * An object that represents a Intel Flash Descriptor.
  *
- * See also: #FuFirmware
+ * See also: [class@FuFirmware]
  */
 
 typedef struct {

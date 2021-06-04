@@ -16,14 +16,13 @@
 #include "fwupd-release-private.h"
 
 /**
- * SECTION:fwupd-release
- * @short_description: a firmware release
+ * FwupdRelease:
  *
  * An object that represents a firmware release with a specific version.
  * Devices can have more than one release, and the releases are typically
  * ordered by their version.
  *
- * See also: #FwupdDevice
+ * See also: [class@FwupdDevice]
  */
 
 static void fwupd_release_finalize	 (GObject *object);
