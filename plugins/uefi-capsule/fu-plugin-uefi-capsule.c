@@ -710,6 +710,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
+#ifdef __linux__
 static gboolean
 fu_plugin_uefi_capsule_ensure_efivarfs_rw (GError **error)
 {
@@ -734,6 +735,7 @@ fu_plugin_uefi_capsule_ensure_efivarfs_rw (GError **error)
 
 	return TRUE;
 }
+#endif
 
 gboolean
 fu_plugin_unlock (FuPlugin *plugin, FuDevice *device, GError **error)
@@ -839,11 +841,14 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *str;
 	g_autoptr(GError) error_udisks2 = NULL;
+#ifdef __linux__
 	g_autoptr(GError) error_efivarfs = NULL;
+#endif
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(FuBackend) backend = fu_uefi_backend_new ();
 
+#ifdef __linux__
 	/* make sure that efivarfs is rw */
 	if (!fu_plugin_uefi_capsule_ensure_efivarfs_rw (&error_efivarfs)) {
 		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED);
@@ -851,6 +856,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
 		g_warning ("%s", error_efivarfs->message);
 	}
+#endif
 
 	if (data->esp == NULL) {
 		data->esp = fu_common_get_esp_default (&error_udisks2);
