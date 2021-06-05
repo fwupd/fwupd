@@ -2737,7 +2737,7 @@ fu_common_get_block_devices (GError **error)
 		if (error != NULL)
 			g_dbus_error_strip_remote_error (*error);
 		g_prefix_error (error, "failed to call %s.%s(): ",
-				UDISKS_DBUS_SERVICE,
+				UDISKS_DBUS_MANAGER_INTERFACE,
 				"GetBlockDevices");
 		return NULL;
 	}
