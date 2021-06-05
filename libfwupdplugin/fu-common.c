@@ -2728,11 +2728,11 @@ fu_common_get_block_devices (GError **error)
 		return NULL;
 	}
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
-	output =  g_dbus_proxy_call_sync (proxy,
-					  "GetBlockDevices",
-					  g_variant_new ("(a{sv})", &builder),
-					  G_DBUS_CALL_FLAGS_NONE,
-					  -1, NULL, error);
+	output = g_dbus_proxy_call_sync (proxy,
+					 "GetBlockDevices",
+					 g_variant_new ("(a{sv})", &builder),
+					 G_DBUS_CALL_FLAGS_NONE,
+					 -1, NULL, error);
 	if (output == NULL) {
 		if (error != NULL)
 			g_dbus_error_strip_remote_error (*error);
@@ -2757,7 +2757,6 @@ fu_common_get_block_devices (GError **error)
 		}
 		g_ptr_array_add (devices, g_steal_pointer (&proxy_blk));
 	}
-
 
 	return g_steal_pointer (&devices);
 }
