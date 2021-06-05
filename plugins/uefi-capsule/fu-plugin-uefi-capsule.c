@@ -583,14 +583,14 @@ fu_plugin_uefi_capsule_smbios_enabled (FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 	data = g_bytes_get_data (bios_information, &sz);
-	if (sz < 0x13) {
+	if (sz < 0x14) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
 			     "offset bigger than size %" G_GSIZE_FORMAT, sz);
 		return FALSE;
 	}
-	if (data[1] < 0x13) {
+	if (data[1] < 0x14) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
