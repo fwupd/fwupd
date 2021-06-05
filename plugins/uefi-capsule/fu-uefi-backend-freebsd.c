@@ -94,7 +94,7 @@ fu_uefi_backend_coldplug (FuBackend *backend, GError **error)
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "not supported");
+				     "ESRT kernel support is missing");
 		return FALSE;
 	}
 	for (guint i = 0; i < entry_count; i++) {
