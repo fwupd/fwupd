@@ -15,6 +15,11 @@
 #include "fu-device-metadata.h"
 #include "fu-plugin-vfuncs.h"
 
+#ifdef __FreeBSD__
+#include "fu-common-version.h"
+#include "fu-kenv.h"
+#endif
+
 #include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-bootmgr.h"
@@ -607,11 +612,32 @@ fu_plugin_uefi_capsule_smbios_enabled (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
+#ifdef __FreeBSD__
+static gboolean
+fu_plugin_uefi_capsule_kenv_enabled (GError **error)
+{
+	g_autofree gchar *efi_ver = fu_kenv_get_string ("efi-version", error);
+	if (efi_ver == NULL)
+		return FALSE;
+
+	if (fu_common_vercmp_full (efi_ver, "2.0.0.0", FWUPD_VERSION_FORMAT_QUAD) < 0) {
+	    g_set_error_literal (error,
+				 FWUPD_ERROR,
+				 FWUPD_ERROR_NOT_SUPPORTED,
+				 "System does not support UEFI mode");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+#endif
+
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	guint64 nvram_total;
+	gboolean uefi_supported = FALSE;
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *nvram_total_str = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -629,7 +655,10 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		return TRUE;
 
 	/* check SMBIOS for 'UEFI Specification is supported' */
-	if (!fu_plugin_uefi_capsule_smbios_enabled (plugin, &error_local)) {
+	if (fu_plugin_uefi_capsule_smbios_enabled (plugin, &error_local)) {
+		uefi_supported = TRUE;
+	} else {
+#ifdef __linux__
 		g_autofree gchar *fw = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
 		g_autofree gchar *fn = g_build_filename (fw, "efi", NULL);
 		if (g_file_test (fn, G_FILE_TEST_EXISTS)) {
@@ -638,6 +667,20 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 				   fn, error_local->message);
 			return TRUE;
 		}
+#endif
+	}
+
+#ifdef __FreeBSD__
+	if (!uefi_supported) {
+		g_error_free (error_local);
+		error_local = NULL;
+
+		/* check kenv for UEFI information */
+		uefi_supported = fu_plugin_uefi_capsule_kenv_enabled (&error_local);
+	}
+#endif
+
+	if (!uefi_supported) {
 		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
 	}
