@@ -48,11 +48,19 @@
 #include "fu-volume-private.h"
 
 #define UDISKS_DBUS_SERVICE			"org.freedesktop.UDisks2"
-#define UDISKS_DBUS_PATH			"/org/freedesktop/UDisks2/Manager"
-#define UDISKS_DBUS_MANAGER_INTERFACE		"org.freedesktop.UDisks2.Manager"
 #define UDISKS_DBUS_INTERFACE_PARTITION 	"org.freedesktop.UDisks2.Partition"
 #define UDISKS_DBUS_INTERFACE_FILESYSTEM	"org.freedesktop.UDisks2.Filesystem"
 #define UDISKS_DBUS_INTERFACE_BLOCK		"org.freedesktop.UDisks2.Block"
+
+#ifndef __FreeBSD__
+#define UDISKS_DBUS_PATH			"/org/freedesktop/UDisks2/Manager"
+#define UDISKS_DBUS_MANAGER_INTERFACE		"org.freedesktop.UDisks2.Manager"
+#else
+/* bsdisks doesn't provide Manager object */
+#define UDISKS_DBUS_PATH			"/org/freedesktop/UDisks2"
+#define UDISKS_DBUS_MANAGER_INTERFACE		"org.freedesktop.DBus.ObjectManager"
+#define UDISKS_BLOCK_DEVICE_PATH		"/org/freedesktop/UDisks2/block_devices/"
+#endif
 
 /**
  * SECTION:fu-common
@@ -2748,12 +2756,18 @@ fu_common_get_memory_size (void)
 static GPtrArray *
 fu_common_get_block_devices (GError **error)
 {
+#ifndef __FreeBSD__
 	GVariantBuilder builder;
+#else
+	GVariant *ifaces;
+	const size_t device_path_len = strlen(UDISKS_BLOCK_DEVICE_PATH);
+#endif
+
 	const gchar *obj;
 	g_autoptr(GVariant) output = NULL;
 	g_autoptr(GDBusProxy) proxy = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GVariantIter) iter = NULL;
+	g_autoptr(GVariantIter) obj_iter = NULL;
 	g_autoptr(GDBusConnection) connection = NULL;
 
 	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
@@ -2771,6 +2785,10 @@ fu_common_get_block_devices (GError **error)
 		g_prefix_error (error, "failed to find %s: ", UDISKS_DBUS_SERVICE);
 		return NULL;
 	}
+
+	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+
+#ifndef __FreeBSD__
 	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
 	output = g_dbus_proxy_call_sync (proxy,
 					 "GetBlockDevices",
@@ -2785,9 +2803,9 @@ fu_common_get_block_devices (GError **error)
 				"GetBlockDevices");
 		return NULL;
 	}
-	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	g_variant_get (output, "(ao)", &iter);
-	while (g_variant_iter_next (iter, "&o", &obj)) {
+
+	g_variant_get (output, "(ao)", &obj_iter);
+	while (g_variant_iter_next (obj_iter, "&o", &obj)) {
 		g_autoptr(GDBusProxy) proxy_blk = NULL;
 		proxy_blk = g_dbus_proxy_new_sync (connection,
 						   G_DBUS_PROXY_FLAGS_NONE, NULL,
@@ -2801,6 +2819,58 @@ fu_common_get_block_devices (GError **error)
 		}
 		g_ptr_array_add (devices, g_steal_pointer (&proxy_blk));
 	}
+#else
+	output = g_dbus_proxy_call_sync (proxy,
+					 "GetManagedObjects",
+					 NULL,
+					 G_DBUS_CALL_FLAGS_NONE,
+					 -1, NULL, error);
+	if (output == NULL) {
+		if (error != NULL)
+			g_dbus_error_strip_remote_error (*error);
+		g_prefix_error (error, "failed to call %s.%s(): ",
+				UDISKS_DBUS_MANAGER_INTERFACE,
+				"GetManagedObjects");
+		return NULL;
+	}
+
+	g_variant_get (output, "(a{oa{sa{sv}}})", &obj_iter);
+	while (g_variant_iter_next (obj_iter, "{&o@a{sa{sv}}}", &obj, &ifaces)) {
+		const gchar *iface;
+		GVariant *props;
+		GVariantIter iface_iter;
+
+		if (strncmp (obj, UDISKS_BLOCK_DEVICE_PATH, device_path_len) != 0)
+			continue;
+
+		g_variant_iter_init (&iface_iter, ifaces);
+		while (g_variant_iter_next (&iface_iter, "{&s@a{sv}}", &iface, &props)) {
+			g_autoptr(GDBusProxy) proxy_blk = NULL;
+
+			g_variant_unref (props);
+
+			if (strcmp (iface, UDISKS_DBUS_INTERFACE_BLOCK) != 0)
+				continue;
+
+			proxy_blk = g_dbus_proxy_new_sync (connection,
+							   G_DBUS_PROXY_FLAGS_NONE,
+							   NULL,
+							   UDISKS_DBUS_SERVICE,
+							   obj,
+							   UDISKS_DBUS_INTERFACE_BLOCK,
+							   NULL,
+							   error);
+			if (proxy_blk == NULL) {
+				g_prefix_error (error,
+						"failed to initialize d-bus proxy for %s: ",
+						obj);
+				return NULL;
+			}
+			g_ptr_array_add (devices, g_steal_pointer (&proxy_blk));
+		}
+		g_variant_unref (ifaces);
+	}
+#endif
 
 	return g_steal_pointer (&devices);
 }
@@ -2812,6 +2882,11 @@ fu_common_convert_to_gpt_type (const gchar *type)
 		const gchar *mbr;
 		const gchar *gpt;
 	} typeguids[] = {
+#ifdef __FreeBSD__
+		{ "efi",	"c12a7328-f81f-11d2-ba4b-00a0c93ec93b" },	/* esp */
+		{ "fat32",	"ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" },	/* fat32 */
+		{ "fat32lba",	"ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" },	/* fat32 */
+#endif
 		{ "0xef",	"c12a7328-f81f-11d2-ba4b-00a0c93ec93b" },	/* esp */
 		{ "0x0b",	"ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" },	/* fat32 */
 		{ NULL, NULL }
@@ -2887,7 +2962,7 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 				    "proxy-filesystem", proxy_fs,
 				    NULL);
 
-		/* convert MBR type to GPT type */
+		/* convert reported type to GPT type */
 		type_str = fu_common_convert_to_gpt_type (type_str);
 		g_debug ("device %s, type: %s, internal: %d, fs: %s",
 			 g_dbus_proxy_get_object_path (proxy_blk), type_str,
