@@ -1,0 +1,9 @@
+Make firmware updates automatic, safe, and reliable.
+
+fwupd is a simple daemon to allow session software to update device firmware on
+your local machine.  It is designed for desktops, but also usable on phones and
+headless servers.  You can either use a GUI software manager like GNOME Software
+to view and apply updates, the command-line tool, or the system D-Bus interface
+directly.
+
+WWW: https://fwupd.org/
