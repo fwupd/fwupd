@@ -36,6 +36,16 @@ fwupdplugin_src = [
   'fu-version.c',
 ]
 
+if host_machine.system() == 'linux'
+  fwupdplugin_src += 'fu-common-linux.c'  # fuzzing
+elif host_machine.system() == 'freebsd'
+  fwupdplugin_src += 'fu-common-freebsd.c'
+elif host_machine.system() == 'windows'
+  fwupdplugin_src += 'fu-common-windows.c'
+else
+  error('no OS support for @0@'.format(host_machine.system()))
+endif
+
 fwupdplugin_headers = [
   'fu-archive.h',
   'fu-backend.h',

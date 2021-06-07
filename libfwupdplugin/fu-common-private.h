@@ -8,5 +8,12 @@
 
 #include "fu-common.h"
 
+#define UDISKS_DBUS_SERVICE			"org.freedesktop.UDisks2"
+#define UDISKS_DBUS_INTERFACE_PARTITION 	"org.freedesktop.UDisks2.Partition"
+#define UDISKS_DBUS_INTERFACE_FILESYSTEM	"org.freedesktop.UDisks2.Filesystem"
+#define UDISKS_DBUS_INTERFACE_BLOCK		"org.freedesktop.UDisks2.Block"
+
+GPtrArray	*fu_common_get_block_devices	(GError		**error);
+
 /* for self tests */
 const gchar	*fu_common_convert_to_gpt_type	(const gchar	*type);

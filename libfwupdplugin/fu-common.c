@@ -47,13 +47,6 @@
 #include "fu-firmware.h"
 #include "fu-volume-private.h"
 
-#define UDISKS_DBUS_SERVICE			"org.freedesktop.UDisks2"
-#define UDISKS_DBUS_PATH			"/org/freedesktop/UDisks2/Manager"
-#define UDISKS_DBUS_MANAGER_INTERFACE		"org.freedesktop.UDisks2.Manager"
-#define UDISKS_DBUS_INTERFACE_PARTITION 	"org.freedesktop.UDisks2.Partition"
-#define UDISKS_DBUS_INTERFACE_FILESYSTEM	"org.freedesktop.UDisks2.Filesystem"
-#define UDISKS_DBUS_INTERFACE_BLOCK		"org.freedesktop.UDisks2.Block"
-
 /**
  * SECTION:fu-common
  * @short_description: common functionality for plugins to use
@@ -2743,66 +2736,6 @@ fu_common_get_memory_size (void)
 #else
 	return (guint64) sysconf (_SC_PHYS_PAGES) * (guint64) sysconf (_SC_PAGE_SIZE);
 #endif
-}
-
-static GPtrArray *
-fu_common_get_block_devices (GError **error)
-{
-	GVariantBuilder builder;
-	const gchar *obj;
-	g_autoptr(GVariant) output = NULL;
-	g_autoptr(GDBusProxy) proxy = NULL;
-	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GVariantIter) iter = NULL;
-	g_autoptr(GDBusConnection) connection = NULL;
-
-	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (connection == NULL) {
-		g_prefix_error (error, "failed to get system bus: ");
-		return NULL;
-	}
-	proxy = g_dbus_proxy_new_sync (connection,
-				       G_DBUS_PROXY_FLAGS_NONE, NULL,
-				       UDISKS_DBUS_SERVICE,
-				       UDISKS_DBUS_PATH,
-				       UDISKS_DBUS_MANAGER_INTERFACE,
-				       NULL, error);
-	if (proxy == NULL) {
-		g_prefix_error (error, "failed to find %s: ", UDISKS_DBUS_SERVICE);
-		return NULL;
-	}
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
-	output = g_dbus_proxy_call_sync (proxy,
-					 "GetBlockDevices",
-					 g_variant_new ("(a{sv})", &builder),
-					 G_DBUS_CALL_FLAGS_NONE,
-					 -1, NULL, error);
-	if (output == NULL) {
-		if (error != NULL)
-			g_dbus_error_strip_remote_error (*error);
-		g_prefix_error (error, "failed to call %s.%s(): ",
-				UDISKS_DBUS_MANAGER_INTERFACE,
-				"GetBlockDevices");
-		return NULL;
-	}
-	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	g_variant_get (output, "(ao)", &iter);
-	while (g_variant_iter_next (iter, "&o", &obj)) {
-		g_autoptr(GDBusProxy) proxy_blk = NULL;
-		proxy_blk = g_dbus_proxy_new_sync (connection,
-						   G_DBUS_PROXY_FLAGS_NONE, NULL,
-						   UDISKS_DBUS_SERVICE,
-						   obj,
-						   UDISKS_DBUS_INTERFACE_BLOCK,
-						   NULL, error);
-		if (proxy_blk == NULL) {
-			g_prefix_error (error, "failed to initialize d-bus proxy for %s: ", obj);
-			return NULL;
-		}
-		g_ptr_array_add (devices, g_steal_pointer (&proxy_blk));
-	}
-
-	return g_steal_pointer (&devices);
 }
 
 const gchar *
