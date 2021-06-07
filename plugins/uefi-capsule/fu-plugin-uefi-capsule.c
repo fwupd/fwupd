@@ -8,7 +8,6 @@
 #include "config.h"
 
 #include <fcntl.h>
-#include <gio/gunixmounts.h>
 #include <glib/gi18n.h>
 
 #include "fu-archive.h"
@@ -22,22 +21,18 @@
 #include "fu-uefi-device.h"
 #include "fu-efivar.h"
 
-#ifndef HAVE_GIO_2_55_0
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUnixMountEntry, g_unix_mount_free)
-#pragma clang diagnostic pop
-#endif
-
 struct FuPluginData {
 	FuUefiBgrt		*bgrt;
 	FuVolume		*esp;
+	FuBackend		*backend;
 };
 
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	data->backend = fu_uefi_backend_new (ctx);
 	data->bgrt = fu_uefi_bgrt_new ();
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
 	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "tpm");
@@ -55,6 +50,7 @@ fu_plugin_destroy (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	if (data->esp != NULL)
 		g_object_unref (data->esp);
+	g_object_unref (data->backend);
 	g_object_unref (data->bgrt);
 }
 
@@ -565,48 +561,6 @@ fu_plugin_uefi_capsule_test_secure_boot (FuPlugin *plugin)
 	fu_plugin_add_report_metadata (plugin, "SecureBoot", result_str);
 }
 
-static gboolean
-fu_plugin_uefi_capsule_smbios_enabled (FuPlugin *plugin, GError **error)
-{
-	FuContext *ctx = fu_plugin_get_context (plugin);
-	const guint8 *data;
-	gsize sz;
-	g_autoptr(GBytes) bios_information = fu_context_get_smbios_data (ctx, 0);
-	if (bios_information == NULL) {
-		const gchar *tmp = g_getenv ("FWUPD_DELL_FAKE_SMBIOS");
-		if (tmp != NULL)
-			return TRUE;
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "SMBIOS not supported");
-		return FALSE;
-	}
-	data = g_bytes_get_data (bios_information, &sz);
-	if (sz < 0x14) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "offset bigger than size %" G_GSIZE_FORMAT, sz);
-		return FALSE;
-	}
-	if (data[1] < 0x14) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "SMBIOS 2.3 not supported");
-		return FALSE;
-	}
-	if (!(data[0x13] & (1 << 3))) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "System does not support UEFI mode");
-		return FALSE;
-	}
-	return TRUE;
-}
-
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
@@ -628,15 +582,12 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	if (fu_plugin_has_custom_flag (plugin, "uefi-force-enable"))
 		return TRUE;
 
-	/* check SMBIOS for 'UEFI Specification is supported' */
-	if (!fu_plugin_uefi_capsule_smbios_enabled (plugin, &error_local)) {
-		g_autofree gchar *fw = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-		g_autofree gchar *fn = g_build_filename (fw, "efi", NULL);
-		if (g_file_test (fn, G_FILE_TEST_EXISTS)) {
-			g_warning ("SMBIOS BIOS Characteristics Extension Byte 2 is invalid -- "
-				   "UEFI Specification is unsupported, but %s exists: %s",
-				   fn, error_local->message);
-			return TRUE;
+	/* check we can use this backend */
+	if (!fu_backend_setup (data->backend, &error_local)) {
+		if (g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_WRITE)) {
+			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED);
+			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
+			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
 		}
 		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
@@ -664,31 +615,6 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 
 	/* test for invalid ESP in coldplug, and set the update-error rather
 	 * than showing no output if the plugin had self-disabled here */
-	return TRUE;
-}
-
-static gboolean
-fu_plugin_uefi_capsule_ensure_efivarfs_rw (GError **error)
-{
-	g_autofree gchar *sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-	g_autofree gchar *sysfsefivardir = g_build_filename (sysfsfwdir, "efi", "efivars", NULL);
-	g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (sysfsefivardir, NULL);
-
-	if (mount == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "%s was not mounted", sysfsefivardir);
-		return FALSE;
-	}
-	if (g_unix_mount_is_readonly (mount)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "%s is read only", sysfsefivardir);
-		return FALSE;
-	}
-
 	return TRUE;
 }
 
@@ -796,18 +722,8 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *str;
 	g_autoptr(GError) error_udisks2 = NULL;
-	g_autoptr(GError) error_efivarfs = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(FuBackend) backend = fu_uefi_backend_new ();
-
-	/* make sure that efivarfs is rw */
-	if (!fu_plugin_uefi_capsule_ensure_efivarfs_rw (&error_efivarfs)) {
-		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED);
-		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
-		fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
-		g_warning ("%s", error_efivarfs->message);
-	}
 
 	if (data->esp == NULL) {
 		data->esp = fu_common_get_esp_default (&error_udisks2);
@@ -820,9 +736,9 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 
 	/* add each device */
-	if (!fu_backend_coldplug (backend, error))
+	if (!fu_backend_coldplug (data->backend, error))
 		return FALSE;
-	devices = fu_backend_get_devices (backend);
+	devices = fu_backend_get_devices (data->backend);
 	for (guint i = 0; i < devices->len; i++) {
 		FuUefiDevice *dev = g_ptr_array_index (devices, i);
 		fu_device_set_context (FU_DEVICE (dev), ctx);

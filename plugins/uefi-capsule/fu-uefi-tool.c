@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "fu-context-private.h"
 #include "fu-ucs2.h"
 #include "fu-uefi-backend.h"
 #include "fu-uefi-common.h"
@@ -202,7 +203,8 @@ main (int argc, char *argv[])
 	}
 
 	if (action_list || action_supported || action_info) {
-		g_autoptr(FuBackend) backend = fu_uefi_backend_new ();
+		g_autoptr(FuContext) ctx = fu_context_new ();
+		g_autoptr(FuBackend) backend = fu_uefi_backend_new (ctx);
 		g_autoptr(GError) error_local = NULL;
 
 		/* add each device */

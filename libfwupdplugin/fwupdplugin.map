@@ -798,6 +798,7 @@ LIBFWUPDPLUGIN_1.6.1 {
     fu_backend_device_added;
     fu_backend_device_changed;
     fu_backend_device_removed;
+    fu_backend_get_context;
     fu_backend_get_devices;
     fu_backend_get_enabled;
     fu_backend_get_name;

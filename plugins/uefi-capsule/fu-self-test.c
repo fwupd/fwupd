@@ -8,6 +8,8 @@
 
 #include <fwupd.h>
 
+#include "fu-context-private.h"
+
 #include "fu-ucs2.h"
 #include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"
@@ -158,7 +160,8 @@ fu_uefi_plugin_func (void)
 {
 	FuUefiDevice *dev;
 	gboolean ret;
-	g_autoptr(FuBackend) backend = fu_uefi_backend_new ();
+	g_autoptr(FuContext) ctx = fu_context_new ();
+	g_autoptr(FuBackend) backend = fu_uefi_backend_new (ctx);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -213,7 +216,8 @@ fu_uefi_update_info_func (void)
 {
 	FuUefiDevice *dev;
 	gboolean ret;
-	g_autoptr(FuBackend) backend = fu_uefi_backend_new ();
+	g_autoptr(FuContext) ctx = fu_context_new ();
+	g_autoptr(FuBackend) backend = fu_uefi_backend_new (ctx);
 	g_autoptr(FuUefiUpdateInfo) info = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
