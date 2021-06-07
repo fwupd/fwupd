@@ -1,4 +1,4 @@
-if build_daemon and get_option('lvfs')
+if build_standalone and get_option('lvfs')
   install_data([
       'lvfs.conf',
       'lvfs-testing.conf',
