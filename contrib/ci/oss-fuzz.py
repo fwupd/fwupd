@@ -175,16 +175,22 @@ class Builder:
             for line in f.read().split("\n"):
                 if line.find(token) == -1:
                     continue
-                srcs.append(
-                    os.path.join(
-                        src,
-                        line.strip()
-                        .replace("'", "")
-                        .replace(",", "")
-                        .replace(" ", "")
-                        .split("#")[0],
-                    )
-                )
+
+                # get rid of token
+                line = line.split("#")[0]
+
+                # get rid of variable
+                try:
+                    line = line.split("=")[1]
+                except IndexError as _:
+                    pass
+
+                # get rid of whitespace
+                for char in ["'", ",", " "]:
+                    line = line.replace(char, "")
+
+                # all done
+                srcs.append(os.path.join(src, line))
         return srcs
 
 
