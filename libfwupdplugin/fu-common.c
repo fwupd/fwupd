@@ -43,7 +43,7 @@
 
 #include "fwupd-error.h"
 
-#include "fu-common.h"
+#include "fu-common-private.h"
 #include "fu-firmware.h"
 #include "fu-volume-private.h"
 
@@ -2805,20 +2805,24 @@ fu_common_get_block_devices (GError **error)
 	return g_steal_pointer (&devices);
 }
 
-static const gchar *
+const gchar *
 fu_common_convert_to_gpt_type (const gchar *type)
 {
 	struct {
-		const gchar *mbr;
 		const gchar *gpt;
+		const gchar *mbrs[4];
 	} typeguids[] = {
-		{ "0xef",	"c12a7328-f81f-11d2-ba4b-00a0c93ec93b" },	/* esp */
-		{ "0x0b",	"ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" },	/* fat32 */
-		{ NULL, NULL }
+		{ "c12a7328-f81f-11d2-ba4b-00a0c93ec93b",	/* esp */
+			{ "0xef", "efi", NULL }},
+		{ "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",	/* fat32 */
+			{ "0x0b", "fat32", "fat32lba", NULL }},
+		{ NULL, { NULL } }
 	};
-	for (guint i = 0; typeguids[i].mbr != NULL; i++) {
-		if (g_strcmp0 (type, typeguids[i].mbr) == 0)
-			return typeguids[i].gpt;
+	for (guint i = 0; typeguids[i].gpt != NULL; i++) {
+		for (guint j = 0; typeguids[i].mbrs[j] != NULL; j++) {
+			if (g_strcmp0 (type, typeguids[i].mbrs[j]) == 0)
+				return typeguids[i].gpt;
+		}
 	}
 	return type;
 }
@@ -2887,7 +2891,7 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 				    "proxy-filesystem", proxy_fs,
 				    NULL);
 
-		/* convert MBR type to GPT type */
+		/* convert reported type to GPT type */
 		type_str = fu_common_convert_to_gpt_type (type_str);
 		g_debug ("device %s, type: %s, internal: %d, fs: %s",
 			 g_dbus_proxy_get_object_path (proxy_blk), type_str,
