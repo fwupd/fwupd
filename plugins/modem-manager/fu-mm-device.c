@@ -13,6 +13,10 @@
 #include "fu-mm-utils.h"
 #include "fu-qmi-pdc-updater.h"
 
+#if MM_CHECK_VERSION(1, 17, 2)
+#include "fu-firehose-updater.h"
+#endif
+
 /* Amount of time for the modem to boot in fastboot mode. */
 #define FU_MM_DEVICE_REMOVE_DELAY_RE_ENUMERATE	20000	/* ms */
 
@@ -52,6 +56,13 @@ struct _FuMmDevice {
 	FuQmiPdcUpdater			*qmi_pdc_updater;
 	GArray				*qmi_pdc_active_id;
 	guint				 attach_idle;
+
+	/* firehose update handling */
+	gchar				*port_qcdm;
+	gchar				*port_edl;
+#if MM_CHECK_VERSION(1, 17, 2)
+	FuFirehoseUpdater	*firehose_updater;
+#endif
 };
 
 enum {
@@ -71,6 +82,8 @@ fu_mm_device_to_string (FuDevice *device, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt, "AtPort", self->port_at);
 	if (self->port_qmi != NULL)
 		fu_common_string_append_kv (str, idt, "QmiPort", self->port_qmi);
+	if (self->port_qcdm != NULL)
+		fu_common_string_append_kv (str, idt, "QcdmPort", self->port_qcdm);
 }
 
 const gchar *
@@ -114,6 +127,9 @@ validate_firmware_update_method (MMModemFirmwareUpdateMethod methods, GError **e
 	static const MMModemFirmwareUpdateMethod supported_combinations[] = {
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC | MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
+#if MM_CHECK_VERSION (1, 17, 2)
+		MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE,
+#endif
 	};
 	g_autofree gchar *methods_str = NULL;
 
@@ -227,6 +243,18 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 		if (fu_device_get_protocols (device)->len == 0)
 			fu_device_add_protocol (device, "com.qualcomm.qmi_pdc");
 	}
+#if MM_CHECK_VERSION (1, 17, 2)
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE) {
+		for (guint i = 0; i < n_ports; i++) {
+			if (ports[i].type == MM_MODEM_PORT_TYPE_QCDM) {
+				self->port_qcdm = g_strdup_printf ("/dev/%s", ports[i].name);
+				break;
+			}
+		}
+		fu_device_add_protocol (device, "com.qualcomm.firehose");
+	}
+#endif
+
 	mm_modem_port_info_array_free (ports, n_ports);
 
 	/* an at port is required for fastboot */
@@ -248,6 +276,18 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 				     "failed to find QMI port");
 		return FALSE;
 	}
+
+#if MM_CHECK_VERSION (1, 17, 2)
+	/* a qcdm port is required for firehose */
+	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE) &&
+		(self->port_qcdm == NULL)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "failed to find QCDM port");
+		return FALSE;
+	}
+#endif
 
 	if (self->port_at != NULL) {
 		fu_mm_utils_get_port_info (self->port_at, &device_bus, &device_sysfs_path, &self->port_at_ifnum, NULL);
@@ -276,6 +316,28 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 		}
 	}
 
+	if (self->port_qcdm != NULL) {
+		g_autofree gchar *qcdm_device_sysfs_path = NULL;
+		g_autofree gchar *qcdm_device_bus = NULL;
+		fu_mm_utils_get_port_info (self->port_qcdm, &qcdm_device_bus, &qcdm_device_sysfs_path, NULL, NULL);
+		if (device_sysfs_path == NULL && qcdm_device_sysfs_path != NULL) {
+			device_sysfs_path = g_steal_pointer (&qcdm_device_sysfs_path);
+		} else if (g_strcmp0 (device_sysfs_path, qcdm_device_sysfs_path) != 0) {
+			g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+				     "mismatched device sysfs path: %s != %s",
+				     device_sysfs_path, qcdm_device_sysfs_path);
+			return FALSE;
+		}
+		if (device_bus == NULL && qcdm_device_bus != NULL) {
+			device_bus = g_steal_pointer (&qcdm_device_bus);
+		} else if (g_strcmp0 (device_bus, qcdm_device_bus) != 0) {
+			g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+				     "mismatched device bus: %s != %s",
+				     device_bus, qcdm_device_bus);
+			return FALSE;
+		}
+	}
+
 	/* if no device sysfs file, error out */
 	if (device_sysfs_path == NULL || device_bus == NULL) {
 		g_set_error_literal (error,
@@ -294,7 +356,7 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 	fu_device_set_version (device, version);
 	for (guint i = 0; device_ids[i] != NULL; i++)
 		fu_device_add_instance_id (device, device_ids[i]);
-	if (fu_device_get_vendor_ids (device) == NULL) {
+	if (fu_device_get_vendor_ids (device) == NULL || fu_device_get_vendor_ids (device)->len == 0) {
 		g_autofree gchar *path = NULL;
 		g_autofree gchar *value_str = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -366,6 +428,59 @@ fu_mm_device_probe (FuDevice *device, GError **error)
 		return fu_mm_device_probe_udev (device, error);
 	}
 }
+
+
+#if MM_CHECK_VERSION(1, 17, 2)
+static gboolean
+fu_mm_device_io_open_qcdm (FuMmDevice *self, GError **error)
+{
+	/* open device */
+	self->io_channel = fu_io_channel_new_file (self->port_qcdm, error);
+	if (self->io_channel == NULL)
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_mm_device_qcdm_cmd (FuMmDevice *self, const guint8 *cmd, gsize cmd_len, GError **error)
+{
+	g_autoptr(GBytes) qcdm_req  = NULL;
+	g_autoptr(GBytes) qcdm_res  = NULL;
+
+	/* command */
+	qcdm_req = g_bytes_new (cmd, cmd_len);
+	if (g_getenv ("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
+		fu_common_dump_bytes (G_LOG_DOMAIN, "writing", qcdm_req);
+	if (!fu_io_channel_write_bytes (self->io_channel, qcdm_req, 1500,
+					FU_IO_CHANNEL_FLAG_FLUSH_INPUT, error)) {
+		g_prefix_error (error, "failed to write qcdm command: ");
+		return FALSE;
+	}
+
+	/* response */
+	qcdm_res = fu_io_channel_read_bytes (self->io_channel, -1, 1500,
+					     FU_IO_CHANNEL_FLAG_SINGLE_SHOT, error);
+	if (qcdm_res == NULL) {
+		g_prefix_error (error, "failed to read qcdm response: ");
+		return FALSE;
+	}
+	if (g_getenv ("FWUPD_MODEM_MANAGER_VERBOSE") != NULL)
+		fu_common_dump_bytes (G_LOG_DOMAIN, "read", qcdm_res);
+
+	/* command == response */
+	if (g_bytes_compare (qcdm_res, qcdm_req) != 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "failed to read valid qcdm response");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+#endif // MM_CHECK_VERSION(1, 17, 2)
 
 static gboolean
 fu_mm_device_at_cmd (FuMmDevice *self, const gchar *cmd, GError **error)
@@ -464,6 +579,69 @@ fu_mm_device_detach_fastboot (FuDevice *device, GError **error)
 	return TRUE;
 }
 
+#if MM_CHECK_VERSION (1, 17, 2)
+static gboolean
+fu_mm_device_find_edl_port (FuDevice *device, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE (device);
+
+	for (guint i = 0; i < 30; i++) {
+		if (fu_mm_utils_find_device_file (fu_device_get_physical_id (
+						FU_DEVICE (self)), "wwan", &self->port_edl, NULL))
+			return TRUE;
+
+		g_usleep (250 * 1000);
+	}
+
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "Couldn't switch device to embedded downloader execution environment");
+	return FALSE;
+}
+
+static gboolean
+fu_mm_device_qcdm_switch_to_edl (FuDevice *device, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE (device);
+	static const guint8 emergency_download[] = { 0x4b, 0x65, 0x01, 0x00, 0x54, 0x0f, 0x7e };
+
+	/* trigger emergency download mode, up to 30s retrying until the QCDM
+	 * port goes away; this takes us to the EDL (embedded downloader) execution
+	 * environment */
+
+	for (guint i = 0; i < 30; i++) {
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FuDeviceLocker) locker = NULL;
+
+		if (i > 0)
+			g_usleep (G_USEC_PER_SEC);
+
+		locker = fu_device_locker_new_full (self,
+						    (FuDeviceLockerFunc) fu_mm_device_io_open_qcdm,
+						    (FuDeviceLockerFunc) fu_mm_device_io_close,
+						    &error_local);
+		if (locker == NULL) {
+			if (i > 0 && g_error_matches (error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
+				return fu_mm_device_find_edl_port (device, error);
+			g_debug ("couldn't open QCDM port to switch to EDL mode: %s", error_local->message);
+			break;
+		}
+
+		if (!fu_mm_device_qcdm_cmd (self, emergency_download, G_N_ELEMENTS (emergency_download), &error_local)) {
+			g_debug ("couldn't send QCDM command to switch to EDL mode: %s", error_local->message);
+			break;
+		}
+	}
+
+	g_set_error_literal (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_FAILED,
+			     "Couldn't switch device to embedded downloader execution environment");
+	return FALSE;
+}
+#endif // MM_CHECK_VERSION(1, 17, 2)
+
 static gboolean
 fu_mm_device_detach (FuDevice *device, GError **error)
 {
@@ -474,9 +652,9 @@ fu_mm_device_detach (FuDevice *device, GError **error)
 	if (locker == NULL)
 		return FALSE;
 
-	/* This plugin supports currently two methods to download firmware:
-	 * fastboot and qmi-pdc. A modem may require one of those, or both,
-	 * depending on the update type or the modem type.
+	/* This plugin supports several methods to download firmware:
+	 * fastboot, qmi-pdc, firehose. A modem may require one of those,
+	 * or several, depending on the update type or the modem type.
 	 *
 	 * The first time this detach() method is executed is always for a
 	 * FuMmDevice that was created from a MM-exposed modem, which is the
@@ -488,6 +666,7 @@ fu_mm_device_detach (FuDevice *device, GError **error)
 	 *  b) we support both fastboot and qmi-pdc, we will set the
 	 *     ANOTHER_WRITE_REQUIRED flag in the device and we'll trigger
 	 *     the fastboot detach.
+	 *  c) we only support firehose, we then switch to the EDL mode
 	 *
 	 * If the FuMmModem is created from udev events...
 	 *  c) it means we're in the extra required write that was flagged
@@ -507,6 +686,14 @@ fu_mm_device_detach (FuDevice *device, GError **error)
 		/* fastboot */
 		if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT)
 			return fu_mm_device_detach_fastboot (device, error);
+#if MM_CHECK_VERSION (1, 17, 2)
+		/* firehose */
+		if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE) {
+			/* QCDM operation will restart the device to EDL mode */
+			fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_RESTART);
+			return fu_mm_device_qcdm_switch_to_edl (device, error);
+		}
+#endif
 		/* otherwise, assume we don't need any detach */
 		return TRUE;
 	}
@@ -679,6 +866,98 @@ fu_mm_device_write_firmware_qmi_pdc (FuDevice *device, GBytes *fw, GArray **acti
 	return TRUE;
 }
 
+#if MM_CHECK_VERSION(1, 17, 2)
+static gboolean
+fu_mm_device_firehose_open (FuMmDevice *self, GError **error)
+{
+	self->firehose_updater = fu_firehose_updater_new (self->port_edl);
+	return fu_firehose_updater_open (self->firehose_updater, error);
+}
+
+static gboolean
+fu_mm_device_firehose_close (FuMmDevice *self, GError **error)
+{
+	g_autoptr(FuFirehoseUpdater) updater = NULL;
+
+	updater = g_steal_pointer (&self->firehose_updater);
+	return fu_firehose_updater_close (updater, error);
+}
+
+static gboolean
+fu_mm_device_firehose_write (FuMmDevice *self, XbSilo *rawprogram_silo,
+			     GPtrArray *rawprogram_actions, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	guint progress_signal_id;
+	gboolean write_result;
+
+	locker = fu_device_locker_new_full (self,
+					    (FuDeviceLockerFunc) fu_mm_device_firehose_open,
+					    (FuDeviceLockerFunc) fu_mm_device_firehose_close,
+					    error);
+	if (locker == NULL)
+		return FALSE;
+
+	progress_signal_id = g_signal_connect_swapped (self->firehose_updater, "write-progress",
+						       G_CALLBACK (fu_device_set_progress), self);
+
+	write_result = fu_firehose_updater_write (self->firehose_updater,
+						  rawprogram_silo,
+						  rawprogram_actions,
+						  error);
+
+	g_signal_handler_disconnect (self->firehose_updater, progress_signal_id);
+
+	return write_result;
+}
+
+static gboolean
+fu_mm_device_write_firmware_firehose (FuDevice *device, GBytes *fw, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE (device);
+
+	GBytes *firehose_rawprogram;
+	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(XbSilo) firehose_rawprogram_silo = NULL;
+	g_autoptr(GPtrArray) firehose_rawprogram_actions = NULL;
+
+	/* decompress entire archive ahead of time */
+	archive = fu_archive_new (fw, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
+	if (archive == NULL)
+		return FALSE;
+
+	/* lookup and validate firehose-rawprogram actions */
+	firehose_rawprogram = fu_archive_lookup_by_fn (archive, "firehose-rawprogram.xml", error);
+	if (firehose_rawprogram == NULL)
+		return FALSE;
+	if (!fu_firehose_validate_rawprogram (firehose_rawprogram, archive,
+					      &firehose_rawprogram_silo,
+					      &firehose_rawprogram_actions,
+					      error)) {
+		g_prefix_error (error, "Invalid firehose rawprogram manifest: ");
+		return FALSE;
+	}
+
+	/* flag as write */
+	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
+
+	/* download all files in the firehose-rawprogram manifest via Firehose */
+	if (!fu_mm_device_firehose_write (self,
+					  firehose_rawprogram_silo,
+					  firehose_rawprogram_actions,
+					  error))
+		return FALSE;
+
+	g_debug ("firehose operation finished successfully");
+
+	/* flag as restart again, the module is switching to modem mode */
+	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_RESTART);
+
+	return TRUE;
+}
+
+#endif // MM_CHECK_VERSION(1, 17, 2)
+
 static gboolean
 fu_mm_device_write_firmware (FuDevice *device,
 			     FuFirmware *firmware,
@@ -704,6 +983,12 @@ fu_mm_device_write_firmware (FuDevice *device,
 	/* qmi pdc write operation */
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC)
 		return fu_mm_device_write_firmware_qmi_pdc (device, fw, &self->qmi_pdc_active_id, error);
+
+#if MM_CHECK_VERSION (1, 17, 2)
+	/* firehose operation */
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE)
+		return fu_mm_device_write_firmware_firehose (device, fw, error);
+#endif
 
 	g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
 		     "unsupported update method");
@@ -807,6 +1092,7 @@ fu_mm_device_finalize (GObject *object)
 	g_free (self->detach_fastboot_at);
 	g_free (self->port_at);
 	g_free (self->port_qmi);
+	g_free (self->port_qcdm);
 	g_free (self->inhibition_uid);
 	G_OBJECT_CLASS (fu_mm_device_parent_class)->finalize (object);
 }

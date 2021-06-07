@@ -15,6 +15,10 @@ These device use the ModemManager "Firmware Device IDs" as the GUID, e.g.
  * `USB\VID_413C&PID_81D7&REV_0318`
  * `USB\VID_413C&PID_81D7`
  * `USB\VID_413C`
+ * `PCI\VID_1EAC&PID_1001`
+ * `PCI\VID_1EAC&PID_1002`
+ * `PCI\VID_1EAC`
+
 
 Vendor ID Security
 ------------------
@@ -54,6 +58,14 @@ Update protocol: com.qualcomm.qmi_pdc
 
 For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
 the fastboot and runtime modes are treated as the same device.
+
+Update method: firehose
+-----------------------
+
+If the device supports the 'firehose' update method, it should have QCDM port
+exposed and the contents of the CAB file should contain 'firehose-rawprogram.xml'.
+The device is then switched to the emergencly download mode (EDL) and flashed
+with files described in 'firehose-rawprogram.xml'.
 
 External interface access
 -------------------------
