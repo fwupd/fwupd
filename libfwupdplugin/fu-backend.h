@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "fu-context.h"
 #include "fu-device.h"
 
 #define FU_TYPE_BACKEND (fu_backend_get_type ())
@@ -26,6 +27,7 @@ struct _FuBackendClass
 };
 
 const gchar	*fu_backend_get_name			(FuBackend	*self);
+FuContext	*fu_backend_get_context			(FuBackend	*self);
 gboolean	 fu_backend_get_enabled			(FuBackend	*self);
 void		 fu_backend_set_enabled			(FuBackend	*self,
 							 gboolean	 enabled);

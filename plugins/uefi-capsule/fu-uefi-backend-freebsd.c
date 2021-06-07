@@ -10,6 +10,9 @@
 #include <sys/types.h>
 #include <sys/sysctl.h>
 
+#include "fu-common-version.h"
+#include "fu-kenv.h"
+
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-backend.h"
@@ -85,6 +88,25 @@ fu_uefi_backend_device_new (guint64 idx)
 }
 
 static gboolean
+fu_uefi_backend_setup (FuBackend *backend, GError **error)
+{
+	g_autofree gchar *efi_ver = fu_kenv_get_string ("efi-version", error);
+	if (efi_ver == NULL) {
+		g_prefix_error (error, "System does not support UEFI mode, no efi-version kenv: ");
+		return FALSE;
+	}
+	if (fu_common_vercmp_full (efi_ver, "2.0.0.0", FWUPD_VERSION_FORMAT_QUAD) < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "System does not support UEFI mode, got efi-version of %s",
+			     efi_ver);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_uefi_backend_coldplug (FuBackend *backend, GError **error)
 {
 	guint64 entry_count = 0;
@@ -115,11 +137,15 @@ static void
 fu_uefi_backend_class_init (FuUefiBackendClass *klass)
 {
 	FuBackendClass *klass_backend = FU_BACKEND_CLASS (klass);
+	klass_backend->setup = fu_uefi_backend_setup;
 	klass_backend->coldplug = fu_uefi_backend_coldplug;
 }
 
 FuBackend *
-fu_uefi_backend_new (void)
+fu_uefi_backend_new (FuContext *ctx)
 {
-	return FU_BACKEND (g_object_new (FU_TYPE_UEFI_BACKEND, "name", "uefi", NULL));
+	return FU_BACKEND (g_object_new (FU_TYPE_UEFI_BACKEND,
+					 "name", "uefi",
+					 "context", ctx,
+					 NULL));
 }
