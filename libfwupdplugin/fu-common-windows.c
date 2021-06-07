@@ -9,6 +9,8 @@
 #include <config.h>
 
 #include <gio/gio.h>
+#include <shlwapi.h>
+#include <sysinfoapi.h>
 
 #include "fu-common-private.h"
 
@@ -20,4 +22,21 @@ fu_common_get_block_devices (GError **error)
 		     G_IO_ERROR_NOT_SUPPORTED,
 		     "not supported");
 	return NULL;
+}
+
+gboolean
+fu_common_fnmatch_impl (const gchar *pattern, const gchar *str)
+{
+	g_return_val_if_fail (pattern != NULL, FALSE);
+	g_return_val_if_fail (str != NULL, FALSE);
+	return PathMatchSpecA (str, pattern);
+}
+
+guint64
+fu_common_get_memory_size_impl (void)
+{
+	MEMORYSTATUSEX status;
+	status.dwLength = sizeof(status);
+	GlobalMemoryStatusEx (&status);
+	return (guint64) status.ullTotalPhys;
 }

@@ -13,16 +13,6 @@
 #endif
 #include <glib/gstdio.h>
 
-#ifdef HAVE_FNMATCH_H
-#include <fnmatch.h>
-#elif _WIN32
-#include <shlwapi.h>
-#endif
-
-#ifdef _WIN32
-#include <sysinfoapi.h>
-#endif
-
 #ifdef HAVE_KENV_H
 #include <kenv.h>
 #endif
@@ -1844,15 +1834,7 @@ fu_common_fnmatch (const gchar *pattern, const gchar *str)
 {
 	g_return_val_if_fail (pattern != NULL, FALSE);
 	g_return_val_if_fail (str != NULL, FALSE);
-#ifdef HAVE_FNMATCH_H
-	return fnmatch (pattern, str, FNM_NOESCAPE) == 0;
-#elif _WIN32
-	g_return_val_if_fail (strlen (pattern) < MAX_PATH, FALSE);
-	g_return_val_if_fail (strlen (str) < MAX_PATH, FALSE);
-	return PathMatchSpecA (str, pattern);
-#else
-	return g_strcmp0 (pattern, str) == 0;
-#endif
+	return fu_common_fnmatch_impl (pattern, str);
 }
 
 static gint
@@ -2728,14 +2710,7 @@ fu_common_is_live_media (void)
 guint64
 fu_common_get_memory_size (void)
 {
-#ifdef _WIN32
-	MEMORYSTATUSEX status;
-	status.dwLength = sizeof(status);
-	GlobalMemoryStatusEx (&status);
-	return (guint64) status.ullTotalPhys;
-#else
-	return (guint64) sysconf (_SC_PHYS_PAGES) * (guint64) sysconf (_SC_PAGE_SIZE);
-#endif
+	return fu_common_get_memory_size_impl ();
 }
 
 const gchar *
