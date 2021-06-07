@@ -14,6 +14,9 @@
 #define UDISKS_DBUS_INTERFACE_BLOCK		"org.freedesktop.UDisks2.Block"
 
 GPtrArray	*fu_common_get_block_devices	(GError		**error);
+gboolean	 fu_common_fnmatch_impl		(const gchar	*pattern,
+						 const gchar	*str);
+guint64		 fu_common_get_memory_size_impl	(void);
 
 /* for self tests */
 const gchar	*fu_common_convert_to_gpt_type	(const gchar	*type);

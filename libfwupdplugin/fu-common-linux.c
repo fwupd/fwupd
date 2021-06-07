@@ -8,7 +8,12 @@
 
 #include <config.h>
 
+#include <unistd.h>
 #include <gio/gio.h>
+
+#ifdef HAVE_FNMATCH_H
+#include <fnmatch.h>
+#endif
 
 #include "fu-common-private.h"
 
@@ -74,4 +79,20 @@ fu_common_get_block_devices (GError **error)
 		g_ptr_array_add (devices, g_steal_pointer (&proxy_blk));
 	}
 	return g_steal_pointer (&devices);
+}
+
+gboolean
+fu_common_fnmatch_impl (const gchar *pattern, const gchar *str)
+{
+#ifdef HAVE_FNMATCH_H
+	return fnmatch (pattern, str, FNM_NOESCAPE) == 0;
+#else
+	return g_strcmp0 (pattern, str) == 0;
+#endif
+}
+
+guint64
+fu_common_get_memory_size_impl (void)
+{
+	return (guint64) sysconf (_SC_PHYS_PAGES) * (guint64) sysconf (_SC_PAGE_SIZE);
 }
