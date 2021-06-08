@@ -41,3 +41,4 @@ guint32		 fu_dell_dock_ec_get_status_version	(FuDevice *device);
 gboolean	 fu_dell_dock_ec_commit_package 	(FuDevice *device,
 							 GBytes *blob_fw,
 							 GError **error);
+gboolean	 fu_dell_dock_module_is_usb4		(FuDevice *device);

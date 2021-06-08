@@ -78,9 +78,13 @@ jobs:
 
   build-freebsd:
     runs-on: macos-latest
+    name: build-freebsd-package
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+    - name: Find tag
+      id: tagger
+      uses: jimschubert/query-tag-action@v1
     - name: Build
       id: test
       uses: vmactions/freebsd-vm@v0.1.4
@@ -88,7 +92,20 @@ jobs:
         usesh: true
         mem: 8192
         prepare: |
-          pkg install -y git gtar python3 glib meson pkgconf gobject-introspection \
-            json-glib gnutls gtk-doc vala sqlite3 curl gcab libarchive libelf \
-            gettext-tools gnutls usbids polkit
-        run: ./contrib/ci/build_freebsd.sh
+          pkg install -y git python3 glib meson pkgconf gobject-introspection \
+            vala gtk-doc json-glib gpgme gnutls sqlite3 curl gcab libarchive \
+            libelf libgpg-error gettext-tools gtk-update-icon-cache atk pango \
+            binutils gcc
+        sync: rsync
+        run: ./contrib/ci/build_freebsd_package.sh
+          --GITHUB_SHA=${GITHUB_SHA}
+          --GITHUB_REPOSITORY_OWNER=${GITHUB_REPOSITORY_OWNER}
+          --GITHUB_REPOSITORY=${GITHUB_REPOSITORY}
+          --GITHUB_TAG=${{steps.tagger.outputs.tag}}
+    - name: Upload fwupd binary artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Binary package
+        path: |
+          fwupd*.txz
+

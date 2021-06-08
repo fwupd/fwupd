@@ -13,16 +13,6 @@
 #endif
 #include <glib/gstdio.h>
 
-#ifdef HAVE_FNMATCH_H
-#include <fnmatch.h>
-#elif _WIN32
-#include <shlwapi.h>
-#endif
-
-#ifdef _WIN32
-#include <sysinfoapi.h>
-#endif
-
 #ifdef HAVE_KENV_H
 #include <kenv.h>
 #endif
@@ -43,16 +33,9 @@
 
 #include "fwupd-error.h"
 
-#include "fu-common.h"
+#include "fu-common-private.h"
 #include "fu-firmware.h"
 #include "fu-volume-private.h"
-
-#define UDISKS_DBUS_SERVICE			"org.freedesktop.UDisks2"
-#define UDISKS_DBUS_PATH			"/org/freedesktop/UDisks2/Manager"
-#define UDISKS_DBUS_MANAGER_INTERFACE		"org.freedesktop.UDisks2.Manager"
-#define UDISKS_DBUS_INTERFACE_PARTITION 	"org.freedesktop.UDisks2.Partition"
-#define UDISKS_DBUS_INTERFACE_FILESYSTEM	"org.freedesktop.UDisks2.Filesystem"
-#define UDISKS_DBUS_INTERFACE_BLOCK		"org.freedesktop.UDisks2.Block"
 
 /**
  * SECTION:fu-common
@@ -1851,15 +1834,7 @@ fu_common_fnmatch (const gchar *pattern, const gchar *str)
 {
 	g_return_val_if_fail (pattern != NULL, FALSE);
 	g_return_val_if_fail (str != NULL, FALSE);
-#ifdef HAVE_FNMATCH_H
-	return fnmatch (pattern, str, FNM_NOESCAPE) == 0;
-#elif _WIN32
-	g_return_val_if_fail (strlen (pattern) < MAX_PATH, FALSE);
-	g_return_val_if_fail (strlen (str) < MAX_PATH, FALSE);
-	return PathMatchSpecA (str, pattern);
-#else
-	return g_strcmp0 (pattern, str) == 0;
-#endif
+	return fu_common_fnmatch_impl (pattern, str);
 }
 
 static gint
@@ -2735,91 +2710,27 @@ fu_common_is_live_media (void)
 guint64
 fu_common_get_memory_size (void)
 {
-#ifdef _WIN32
-	MEMORYSTATUSEX status;
-	status.dwLength = sizeof(status);
-	GlobalMemoryStatusEx (&status);
-	return (guint64) status.ullTotalPhys;
-#else
-	return (guint64) sysconf (_SC_PHYS_PAGES) * (guint64) sysconf (_SC_PAGE_SIZE);
-#endif
+	return fu_common_get_memory_size_impl ();
 }
 
-static GPtrArray *
-fu_common_get_block_devices (GError **error)
-{
-	GVariantBuilder builder;
-	const gchar *obj;
-	g_autoptr(GVariant) output = NULL;
-	g_autoptr(GDBusProxy) proxy = NULL;
-	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GVariantIter) iter = NULL;
-	g_autoptr(GDBusConnection) connection = NULL;
-
-	connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, error);
-	if (connection == NULL) {
-		g_prefix_error (error, "failed to get system bus: ");
-		return NULL;
-	}
-	proxy = g_dbus_proxy_new_sync (connection,
-				       G_DBUS_PROXY_FLAGS_NONE, NULL,
-				       UDISKS_DBUS_SERVICE,
-				       UDISKS_DBUS_PATH,
-				       UDISKS_DBUS_MANAGER_INTERFACE,
-				       NULL, error);
-	if (proxy == NULL) {
-		g_prefix_error (error, "failed to find %s: ", UDISKS_DBUS_SERVICE);
-		return NULL;
-	}
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
-	output =  g_dbus_proxy_call_sync (proxy,
-					  "GetBlockDevices",
-					  g_variant_new ("(a{sv})", &builder),
-					  G_DBUS_CALL_FLAGS_NONE,
-					  -1, NULL, error);
-	if (output == NULL) {
-		if (error != NULL)
-			g_dbus_error_strip_remote_error (*error);
-		g_prefix_error (error, "failed to call %s.%s(): ",
-				UDISKS_DBUS_SERVICE,
-				"GetBlockDevices");
-		return NULL;
-	}
-	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	g_variant_get (output, "(ao)", &iter);
-	while (g_variant_iter_next (iter, "&o", &obj)) {
-		g_autoptr(GDBusProxy) proxy_blk = NULL;
-		proxy_blk = g_dbus_proxy_new_sync (connection,
-						   G_DBUS_PROXY_FLAGS_NONE, NULL,
-						   UDISKS_DBUS_SERVICE,
-						   obj,
-						   UDISKS_DBUS_INTERFACE_BLOCK,
-						   NULL, error);
-		if (proxy_blk == NULL) {
-			g_prefix_error (error, "failed to initialize d-bus proxy for %s: ", obj);
-			return NULL;
-		}
-		g_ptr_array_add (devices, g_steal_pointer (&proxy_blk));
-	}
-
-
-	return g_steal_pointer (&devices);
-}
-
-static const gchar *
+const gchar *
 fu_common_convert_to_gpt_type (const gchar *type)
 {
 	struct {
-		const gchar *mbr;
 		const gchar *gpt;
+		const gchar *mbrs[4];
 	} typeguids[] = {
-		{ "0xef",	"c12a7328-f81f-11d2-ba4b-00a0c93ec93b" },	/* esp */
-		{ "0x0b",	"ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" },	/* fat32 */
-		{ NULL, NULL }
+		{ "c12a7328-f81f-11d2-ba4b-00a0c93ec93b",	/* esp */
+			{ "0xef", "efi", NULL }},
+		{ "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7",	/* fat32 */
+			{ "0x0b", "fat32", "fat32lba", NULL }},
+		{ NULL, { NULL } }
 	};
-	for (guint i = 0; typeguids[i].mbr != NULL; i++) {
-		if (g_strcmp0 (type, typeguids[i].mbr) == 0)
-			return typeguids[i].gpt;
+	for (guint i = 0; typeguids[i].gpt != NULL; i++) {
+		for (guint j = 0; typeguids[i].mbrs[j] != NULL; j++) {
+			if (g_strcmp0 (type, typeguids[i].mbrs[j]) == 0)
+				return typeguids[i].gpt;
+		}
 	}
 	return type;
 }
@@ -2888,7 +2799,7 @@ fu_common_get_volumes_by_kind (const gchar *kind, GError **error)
 				    "proxy-filesystem", proxy_fs,
 				    NULL);
 
-		/* convert MBR type to GPT type */
+		/* convert reported type to GPT type */
 		type_str = fu_common_convert_to_gpt_type (type_str);
 		g_debug ("device %s, type: %s, internal: %d, fs: %s",
 			 g_dbus_proxy_get_object_path (proxy_blk), type_str,

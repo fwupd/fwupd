@@ -11,6 +11,7 @@
 #include "fu-backend.h"
 
 typedef struct {
+	FuContext			*ctx;
 	gchar				*name;
 	gboolean			 enabled;
 	gboolean			 done_setup;
@@ -27,6 +28,7 @@ enum {
 enum {
 	PROP_0,
 	PROP_NAME,
+	PROP_CONTEXT,
 	PROP_LAST
 };
 
@@ -169,6 +171,23 @@ fu_backend_get_name (FuBackend *self)
 }
 
 /**
+ * fu_backend_get_context:
+ * @self: a #FuBackend
+ *
+ * Gets the context for a backend.
+ *
+ * Returns: (transfer none): a #FuContext or %NULL if not set
+ *
+ * Since: 1.6.1
+ **/
+FuContext *
+fu_backend_get_context (FuBackend *self)
+{
+	FuBackendPrivate *priv = GET_PRIVATE (self);
+	return priv->ctx;
+}
+
+/**
  * fu_backend_get_enabled:
  * @self: a #FuBackend
  *
@@ -268,6 +287,9 @@ fu_backend_get_property (GObject *object, guint prop_id,
 	case PROP_NAME:
 		g_value_set_string (value, priv->name);
 		break;
+	case PROP_CONTEXT:
+		g_value_set_object (value, priv->ctx);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -283,6 +305,9 @@ fu_backend_set_property (GObject *object, guint prop_id,
 	switch (prop_id) {
 	case PROP_NAME:
 		priv->name = g_value_dup_string (value);
+		break;
+	case PROP_CONTEXT:
+		g_set_object (&priv->ctx, g_value_get_object (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -305,6 +330,8 @@ fu_backend_finalize (GObject *object)
 {
 	FuBackend *self = FU_BACKEND (object);
 	FuBackendPrivate *priv = GET_PRIVATE (self);
+	if (priv->ctx != NULL)
+		g_object_unref (priv->ctx);
 	g_free (priv->name);
 	g_hash_table_unref (priv->devices);
 	G_OBJECT_CLASS (fu_backend_parent_class)->finalize (object);
@@ -325,6 +352,13 @@ fu_backend_class_init (FuBackendClass *klass)
 				     G_PARAM_READWRITE |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_NAME, pspec);
+
+	pspec = g_param_spec_object ("context", NULL, NULL,
+				     FU_TYPE_CONTEXT,
+				     G_PARAM_CONSTRUCT_ONLY |
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_CONTEXT, pspec);
 
 	signals[SIGNAL_ADDED] =
 		g_signal_new ("device-added",

@@ -14,6 +14,7 @@
 #include <glib/gstdio.h>
 
 #include "fu-cabinet.h"
+#include "fu-common-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
@@ -119,6 +120,15 @@ fu_archive_cab_func (void)
 	data_tmp = fu_archive_lookup_by_fn (archive, "NOTGOINGTOEXIST.xml", &error);
 	g_assert_error (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND);
 	g_assert_null (data_tmp);
+}
+
+static void
+fu_common_gpt_type_func (void)
+{
+	g_assert_cmpstr (fu_common_convert_to_gpt_type ("0xef"), ==, "c12a7328-f81f-11d2-ba4b-00a0c93ec93b");
+	g_assert_cmpstr (fu_common_convert_to_gpt_type ("0x0b"), ==, "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7");
+	g_assert_cmpstr (fu_common_convert_to_gpt_type ("fat32lba"), ==, "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7");
+	g_assert_cmpstr (fu_common_convert_to_gpt_type ("0x00"), ==, "0x00");
 }
 
 static void
@@ -2870,6 +2880,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/backend", fu_backend_func);
 	g_test_add_func ("/fwupd/chunk", fu_chunk_func);
 	g_test_add_func ("/fwupd/common{align-up}", fu_common_align_up_func);
+	g_test_add_func ("/fwupd/common{gpt-type}", fu_common_gpt_type_func);
 	g_test_add_func ("/fwupd/common{byte-array}", fu_common_byte_array_func);
 	g_test_add_func ("/fwupd/common{crc}", fu_common_crc_func);
 	g_test_add_func ("/fwupd/common{string-append-kv}", fu_common_string_append_kv_func);
