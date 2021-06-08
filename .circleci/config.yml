@@ -42,6 +42,7 @@ jobs:
                                   mingw64-libarchive
                                   mingw64-json-glib
                                   mingw64-curl
+                                  mingw64-dbus
                                   wine
       - checkout
       - run:
