@@ -88,6 +88,7 @@ enum {
 	PROP_BACKEND_ID,
 	PROP_CONTEXT,
 	PROP_PROXY,
+	PROP_PARENT,
 	PROP_LAST
 };
 
@@ -125,6 +126,9 @@ fu_device_get_property (GObject *object, guint prop_id,
 	case PROP_PROXY:
 		g_value_set_object (value, priv->proxy);
 		break;
+	case PROP_PARENT:
+		g_value_set_object (value, fu_device_get_parent (self));
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -160,6 +164,9 @@ fu_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PROXY:
 		fu_device_set_proxy (self, g_value_get_object (value));
+		break;
+	case PROP_PARENT:
+		fu_device_set_parent (self, g_value_get_object (value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3980,6 +3987,13 @@ fu_device_class_init (FuDeviceClass *klass)
 				     G_PARAM_CONSTRUCT |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_PROXY, pspec);
+
+	pspec = g_param_spec_object ("parent", NULL, NULL,
+				     FU_TYPE_DEVICE,
+				     G_PARAM_READWRITE |
+				     G_PARAM_CONSTRUCT |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_PARENT, pspec);
 }
 
 static void
