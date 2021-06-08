@@ -1,4 +1,4 @@
-FROM archlinux/base
+FROM archlinux:latest
 %%%OS%%%
 ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
