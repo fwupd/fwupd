@@ -15,7 +15,7 @@
 %global enable_ci 0
 %global enable_tests 1
 %global enable_dummy 1
-%global __meson_wrap_mode default
+%global __meson_wrap_mode nodownload
 
 # fwupd.efi is only available on these arches
 %ifarch x86_64 aarch64
