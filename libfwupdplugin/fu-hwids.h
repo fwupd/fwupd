@@ -20,6 +20,8 @@ G_DECLARE_FINAL_TYPE (FuHwids, fu_hwids, FU, HWIDS, GObject)
 #define FU_HWIDS_KEY_BIOS_MINOR_RELEASE		"BiosMinorRelease"
 #define FU_HWIDS_KEY_BIOS_VENDOR		"BiosVendor"
 #define FU_HWIDS_KEY_BIOS_VERSION		"BiosVersion"
+#define FU_HWIDS_KEY_FIRMWARE_MAJOR_RELEASE		"FirmwareMajorRelease"
+#define FU_HWIDS_KEY_FIRMWARE_MINOR_RELEASE		"FirmwareMinorRelease"
 #define FU_HWIDS_KEY_ENCLOSURE_KIND		"EnclosureKind"
 #define FU_HWIDS_KEY_FAMILY			"Family"
 #define FU_HWIDS_KEY_MANUFACTURER		"Manufacturer"
