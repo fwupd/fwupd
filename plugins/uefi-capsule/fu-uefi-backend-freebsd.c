@@ -9,7 +9,16 @@
 
 #include <fwupdplugin.h>
 #include <sys/types.h>
-#include <sys/sysctl.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <uuid.h>
+
+#ifdef HAVE_FREEBSD_ESRT
+#include <sys/efi.h>
+#include <sys/efiio.h>
+#endif
+
+#include <glib/gstdio.h>
 
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
@@ -21,59 +30,35 @@ struct _FuUefiBackend {
 
 G_DEFINE_TYPE (FuUefiBackend, fu_uefi_backend, FU_TYPE_BACKEND)
 
-static gchar *
-fu_uefi_backend_get_sysctl_string (const gchar *name)
-{
-	gsize len = 0;
-	g_autofree gchar *value = NULL;
-
-	if (sysctlbyname (name, NULL, &len, NULL, 0))
-		return NULL;
-	value = g_malloc0 (len);
-	if (sysctlbyname (name, value, &len, NULL, 0))
-		return NULL;
-	return g_steal_pointer (&value);
-}
-
-static guint64
-fu_uefi_backend_get_sysctl_uint64 (const gchar *name)
-{
-	g_autofree gchar *value = fu_uefi_backend_get_sysctl_string (name);
-	if (value == NULL)
-		return G_MAXUINT64;
-	return fu_common_strtoull (value);
-}
-
-/* yes, unsized uint_t */
-static guint
-fu_uefi_backend_get_entry_field (const gchar *sysctl_name, const gchar *field_name)
-{
-	g_autofree gchar *name = g_build_path (".", sysctl_name, field_name, NULL);
-	return (guint) fu_uefi_backend_get_sysctl_uint64 (name);
-}
+#ifdef HAVE_FREEBSD_ESRT
 
 static FuUefiDevice *
-fu_uefi_backend_device_new (guint64 idx)
+fu_uefi_backend_device_new (struct efi_esrt_entry_v1 *entry, guint64 idx, GError **error)
 {
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autofree gchar *fw_class = NULL;
-	g_autofree gchar *fw_class_fn = NULL;
 	g_autofree gchar *id = NULL;
-	g_autofree gchar *sysctl_name = NULL;
+	g_autofree gchar *phys_id = NULL;
+	uint32_t status;
 
-	sysctl_name = g_strdup_printf ("hw.efi.esrt.entry%u", (guint) idx);
-	fw_class_fn = g_build_path (".", sysctl_name, "fw_class", NULL);
-	fw_class = fu_uefi_backend_get_sysctl_string (fw_class_fn);
+	uuid_to_string (&entry->fw_class, &fw_class, &status);
+	if (status != uuid_s_ok) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "uuid_to_string error");
+		return NULL;
+	}
 
 	/* create object */
 	dev = g_object_new (FU_TYPE_UEFI_DEVICE,
 			    "fw-class", fw_class,
-			    "capsule-flags", fu_uefi_backend_get_entry_field (sysctl_name, "capsule_flags"),
-			    "kind", fu_uefi_backend_get_entry_field (sysctl_name, "fw_type"),
-			    "fw-version", fu_uefi_backend_get_entry_field (sysctl_name, "fw_version"),
-			    "last-attempt-status", fu_uefi_backend_get_entry_field (sysctl_name, "last_attempt_status"),
-			    "last-attempt-version", fu_uefi_backend_get_entry_field (sysctl_name, "last_attempt_version"),
-			    "fw-version-lowest", fu_uefi_backend_get_entry_field (sysctl_name, "lowest_supported_fw_version"),
+			    "capsule-flags", entry->capsule_flags,
+			    "kind", entry->fw_type,
+			    "fw-version", entry->fw_version,
+			    "last-attempt-status", entry->last_attempt_status,
+			    "last-attempt-version", entry->last_attempt_version,
+			    "fw-version-lowest", entry->lowest_supported_fw_version,
 			    "fmp-hardware-instance", (guint64) 0x0,
 			    "version-format", FWUPD_VERSION_FORMAT_NUMBER,
 			    NULL);
@@ -81,9 +66,12 @@ fu_uefi_backend_device_new (guint64 idx)
 	/* set ID */
 	id = g_strdup_printf ("UEFI-%s-dev0", fw_class);
 	fu_device_set_id (FU_DEVICE (dev), id);
-	fu_device_set_physical_id (FU_DEVICE (dev), sysctl_name);
+	phys_id = g_strdup_printf ("ESRT/%u", (guint)idx);
+	fu_device_set_physical_id (FU_DEVICE (dev), phys_id);
 	return g_steal_pointer (&dev);
 }
+
+#endif
 
 static gboolean
 fu_uefi_backend_setup (FuBackend *backend, GError **error)
@@ -107,23 +95,73 @@ fu_uefi_backend_setup (FuBackend *backend, GError **error)
 static gboolean
 fu_uefi_backend_coldplug (FuBackend *backend, GError **error)
 {
-	guint64 entry_count = 0;
+#ifdef HAVE_FREEBSD_ESRT
+	struct efi_get_table_ioc table = {
+		.uuid = EFI_TABLE_ESRT
+	};
+	gint efi_fd;
+	struct efi_esrt_entry_v1 *entries;
+	g_autofree struct efi_esrt_table *esrt = NULL;
 
-	entry_count = fu_uefi_backend_get_sysctl_uint64 ("hw.efi.esrt.fw_resource_count");
-	if (entry_count == G_MAXUINT64) {
+	efi_fd = g_open ("/dev/efi", O_RDONLY, 0);
+	if (efi_fd < 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "ESRT kernel support is missing");
+				     "Cannot open /dev/efi");
 		return FALSE;
 	}
-	for (guint i = 0; i < entry_count; i++) {
-		g_autoptr(FuUefiDevice) dev = fu_uefi_backend_device_new (i);
+
+	if (ioctl (efi_fd, EFIIOC_GET_TABLE, &table) == -1) {
+		g_close (efi_fd, NULL);
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Cannot determine size of ESRT table");
+		return FALSE;
+	}
+
+	esrt = g_malloc (table.table_len);
+	if (esrt == NULL) {
+		g_close (efi_fd, NULL);
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Cannot allocate memory for ESRT table");
+		return FALSE;
+	}
+
+	table.buf = esrt;
+	table.buf_len = table.table_len;
+	if (ioctl (efi_fd, EFIIOC_GET_TABLE, &table) == -1) {
+		g_close (efi_fd, NULL);
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "Cannot fill ESRT table");
+		return FALSE;
+	}
+
+	entries = (struct efi_esrt_entry_v1 *)esrt->entries;
+	for (guint i = 0; i < esrt->fw_resource_count; i++) {
+		g_autoptr(FuUefiDevice) dev = fu_uefi_backend_device_new (&entries[i],
+									  i,
+									  error);
+		if (dev == NULL)
+			return FALSE;
+
 		fu_backend_device_added (backend, FU_DEVICE (dev));
 	}
 
 	/* success */
 	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "ESRT access API is missing from the kernel");
+	return FALSE;
+#endif
 }
 
 static void
