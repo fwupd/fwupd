@@ -82,8 +82,6 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_add_device_gtype (plugin, FU_TYPE_THUNDERBOLT_DEVICE);
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_THUNDERBOLT_FIRMWARE);
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_THUNDERBOLT_FIRMWARE_UPDATE);
-	/* dell-dock plugin uses a slower bus for flashing */
-	fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_BETTER_THAN, "dell_dock");
 }
 
 gboolean
