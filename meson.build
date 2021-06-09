@@ -366,6 +366,12 @@ if cc.has_function('pwrite', args : '-D_XOPEN_SOURCE')
   conf.set('HAVE_PWRITE', '1')
 endif
 
+if host_machine.system() == 'freebsd'
+  if cc.has_type('struct efi_esrt_entry_v1', prefix: '#include <sys/types.h>\n#include <sys/efiio.h>')
+    conf.set('HAVE_FREEBSD_ESRT', '1')
+  endif
+endif
+
 if build_standalone and get_option('plugin_tpm')
   tpm2tss = dependency('tss2-esys', version : '>= 2.0')
   conf.set('HAVE_TSS2', '1')
