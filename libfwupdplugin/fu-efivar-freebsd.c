@@ -11,6 +11,7 @@
 
 #include <efivar.h>
 
+#include "fu-common.h"
 #include "fu-efivar-impl.h"
 
 #include "fwupd-error.h"
@@ -55,7 +56,7 @@ fu_efivar_delete_with_glob_impl (const gchar *guid, const gchar *name_glob, GErr
 	efi_str_to_guid (guid, &guid_to_delete);
 
 	while (efi_get_next_variable_name (&guidt, &name)) {
-		if (memcmp (&guid_to_delete, guidt, sizeof (guidt)) != 0)
+		if (memcmp (&guid_to_delete, guidt, sizeof (guid_to_delete)) != 0)
 			continue;
 		if (!fu_common_fnmatch (name, name_glob))
 			continue;
@@ -105,7 +106,6 @@ fu_efivar_get_data_impl (const gchar *guid, const gchar *name, guint8 **data,
 GPtrArray *
 fu_efivar_get_names_impl (const gchar *guid, GError **error)
 {
-	const gchar *name_guid;
 	g_autoptr(GPtrArray) names = g_ptr_array_new_with_free_func (g_free);
 	efi_guid_t *guidt = NULL;
 	gchar *name = NULL;
@@ -172,7 +172,7 @@ fu_efivar_set_data_impl (const gchar *guid, const gchar *name, const guint8 *dat
 	efi_guid_t guidt;
 	efi_str_to_guid (guid, &guidt);
 
-	if (efi_set_variable (guidt, name, data, sz, attr) != 0) {
+	if (efi_set_variable (guidt, name, (guint8 *)data, sz, attr) != 0) {
 		g_set_error (error,
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
