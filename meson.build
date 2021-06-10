@@ -538,6 +538,10 @@ root_incdir = include_directories('.')
 if get_option('docs') == 'gtkdoc'
   gtkdocscan = find_program('gtkdoc-scan')
 elif get_option('docs') == 'docgen'
+  r = run_command([python3, 'docs/test-deps.py'])
+  if r.returncode() != 0
+    error(r.stdout())
+  endif
   gidocgen_dep = dependency('gi-docgen',
     version: '>= 2021.1',
     fallback: ['gi-docgen', 'dummy_dep'],
