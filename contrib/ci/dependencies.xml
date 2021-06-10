@@ -564,6 +564,14 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="jq">
+    <distro id="centos">
+      <package />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
   <dependency type="build" id="libxmlb-dev">
     <distro id="arch">
       <package>libxmlb</package>
