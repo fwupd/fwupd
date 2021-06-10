@@ -10,6 +10,7 @@
 #include "fu-plugin.h"
 #include "fu-pxi-common.h"
 
-#define FU_TYPE_PXI_WIRELESS_DEVICE (fu_pxi_wireless_device_get_type ())
+#define FU_TYPE_PXI_DONGLE_RECEIVER (fu_pxi_dongle_receiver_get_type ())
 
-G_DECLARE_FINAL_TYPE (FuPxiWirelessDevice, fu_pxi_wireless_device, FU, PXI_WIRELESS_DEVICE, FuUdevDevice)
+G_DECLARE_FINAL_TYPE (FuPxiDongleReceiver, fu_pxi_dongle_receiver, FU, PXI_DONGLE_RECEIVER, FuUdevDevice)
+

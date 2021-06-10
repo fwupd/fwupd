@@ -49,10 +49,10 @@
 #define FU_PXI_DEVICE_NOTTFY_RET_LEN			4	/* bytes */
 #define FU_PXI_DEVICE_FW_INFO_RET_LEN			8	/* bytes */
 
-#define FU_PXI_DEVICE_NOTIFY_TIMEOUT_MS			5000
-#define FU_PXI_WIRELESS_MODULE_OTA_BUF_SZ		32	/* bytes */
-#define FU_PXI_WIRELESS_MODULE_RETRY_MAXIMUM		1000
-#define FU_PXI_WIRELESS_MODULE_TARGET_DONGLE		0
+#define FU_PXI_DEVICE_NOTIFY_TIMEOUT_MS		5000
+#define FU_PXI_DONGLE_RECEIVER_OTA_BUF_SZ		32	/* bytes */
+#define FU_PXI_WIRELESS_PERIPHERAL_RETRY_MAXIMUM	1000
+#define FU_PXI_WIRELESS_PERIPHERAL_TARGET_DONGLE	0
 
 #define FU_PXI_DEVICE_NOTIFY_TIMEOUT_MS		5000
 #define FU_PXI_DEVICE_SET_REPORT_RETRIES		10
@@ -120,11 +120,12 @@ struct ota_fw_info {
 /* share common function */
 guint8		fu_pxi_common_calculate_8bit_checksum 		(const guint8 *buf, gsize bufsz);
 guint16		fu_pxi_common_calculate_16bit_checksum 		(const guint8 *buf, gsize bufsz);
-gboolean	fu_pxi_common_composite_module_cmd 	(guint8 opcode,
+gboolean	fu_pxi_common_composite_dongle_cmd 	(guint8 opcode,
 						     			guint8 sn,
 						     			guint8 target,
 						     			GByteArray *wireless_mod_cmd,
 						     			GByteArray *ota_cmd,
 						     			GError **error);
 const gchar *	fu_pxi_common_spec_check_result_to_string (guint8 spec_check_result);
-const gchar *	fu_pxi_common_wireless_module_cmd_result_to_string (guint8 result);
+const gchar *	fu_pxi_common_dongle_cmd_result_to_string (guint8 result);
+

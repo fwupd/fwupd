@@ -29,7 +29,7 @@ fu_pxi_common_calculate_16bit_checksum (const guint8 *buf, gsize bufsz)
 }
 
 gboolean
-fu_pxi_common_composite_module_cmd (guint8 opcode, guint8 sn, guint8 target, GByteArray *wireless_mod_cmd, GByteArray *ota_cmd, GError **error)
+fu_pxi_common_composite_dongle_cmd (guint8 opcode, guint8 sn, guint8 target, GByteArray *wireless_mod_cmd, GByteArray *ota_cmd, GError **error)
 {
 	guint8 checksum = 0x0;
 	guint8 rf_cmd_code = FU_PXI_DEVICE_RF_CMD_CODE;
@@ -97,7 +97,7 @@ fu_pxi_common_spec_check_result_to_string (guint8 spec_check_result)
 }
 
 const gchar *
-fu_pxi_common_wireless_module_cmd_result_to_string (guint8 result)
+fu_pxi_common_dongle_cmd_result_to_string (guint8 result)
 {
 	if (result == OTA_RSP_OK)
 		return "ok";
