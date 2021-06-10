@@ -16,7 +16,7 @@
 /**
  * FuDfuFirmware:
  *
- * An object that represents a DFU firmware image.
+ * A DFU firmware image.
  *
  * See also: [class@FuFirmware]
  */

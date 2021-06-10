@@ -13,7 +13,7 @@
 /**
  * FuEfiFirmwareFilesystem:
  *
- * An object that represents a UEFI FFS volume.
+ * A UEFI filesystem.
  *
  * See also: [class@FuFirmware]
  */

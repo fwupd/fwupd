@@ -20,7 +20,8 @@
 /**
  * FuHwids:
  *
- * An object that represents a the hardware IDs on the system.
+ * A the hardware IDs on the system.
+ *
  * Note, these are called "CHIDs" in Microsoft Windows and the results here
  * will match that of `ComputerHardwareIds.exe`.
  *

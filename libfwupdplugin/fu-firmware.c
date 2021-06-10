@@ -15,7 +15,8 @@
 /**
  * FuFirmware:
  *
- * An object that represents a firmware file.
+ * A firmware file which can have children which represent the images within.
+ *
  * See also: [class@FuDfuFirmware], [class@FuIhexFirmware], [class@FuSrecFirmware]
  */
 

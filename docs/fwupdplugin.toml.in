@@ -39,3 +39,41 @@ content_images = [
   "../data/org.freedesktop.fwupd.svg",
 ]
 urlmap_file = "urlmap.js"
+
+[[object]]
+name = "Device"
+
+  [[object.method]]
+  name = "incorporate_from_component"
+  hidden = true
+
+[[object]]
+name = "Cabinet"
+
+  [[object.method]]
+  name = "set_jcat_context"
+  hidden = true
+
+  [[object.method]]
+  name = "get_silo"
+  hidden = true
+
+[[object.function]]
+name = "common_cab_build_silo"
+hidden = true
+
+[[object]]
+name = "Fmap"
+hidden = true
+
+[[object]]
+name = "FmapArea"
+hidden = true
+
+[[object]]
+name = "IhexFirmwareRecord"
+hidden = true
+
+[[object]]
+name = "SrecFirmwareRecord"
+hidden = true

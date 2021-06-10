@@ -19,7 +19,10 @@
 /**
  * FwupdRemote:
  *
- * An object that represents a source of metadata that provides firmware.
+ * A source of metadata that provides firmware.
+ *
+ * Remotes can be local (e.g. folders on a disk) or remote (e.g. downloaded
+ * over HTTP or IPFS).
  *
  * See also: [class@FwupdClient]
  */

@@ -11,7 +11,7 @@
 /**
  * FuEfiSignature:
  *
- * An object that represents a UEFI Signature.
+ * A UEFI Signature as found in an `EFI_SIGNATURE_LIST`.
  *
  * See also: [class@FuFirmware]
  */

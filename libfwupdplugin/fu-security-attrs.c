@@ -17,7 +17,7 @@
 /**
  * FuSecurityAttrs:
  *
- * An object that represents one specific HSI attribute.
+ * A set of Host Security ID attributes that represents the system state.
  */
 
 struct _FuSecurityAttrs {

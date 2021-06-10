@@ -16,7 +16,7 @@
 /**
  * FuChunk:
  *
- * An object that represents a packet of chunked data.
+ * A optionally mutable packet of chunked data with address, page and index.
  */
 
 struct _FuChunk {

@@ -17,7 +17,7 @@
 /**
  * FuSrecFirmware:
  *
- * An object that represents a SREC firmware image.
+ * A SREC firmware image.
  *
  * See also: [class@FuFirmware]
  */

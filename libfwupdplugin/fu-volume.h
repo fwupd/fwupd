@@ -15,7 +15,21 @@
 
 G_DECLARE_FINAL_TYPE (FuVolume, fu_volume, FU, VOLUME, GObject)
 
+/**
+ * FU_VOLUME_KIND_ESP:
+ *
+ * The GUID for the ESP.
+ *
+ * Since: 1.5.0
+ **/
 #define FU_VOLUME_KIND_ESP		"c12a7328-f81f-11d2-ba4b-00a0c93ec93b"
+/**
+ * FU_VOLUME_KIND_BDP:
+ *
+ * The GUID for the BDP.
+ *
+ * Since: 1.5.3
+ **/
 #define FU_VOLUME_KIND_BDP		"ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"
 
 const gchar	*fu_volume_get_id		(FuVolume	*self);

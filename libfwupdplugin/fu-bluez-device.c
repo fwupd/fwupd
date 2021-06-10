@@ -20,7 +20,7 @@
 /**
  * FuBluezDevice:
  *
- * An object that represents a BlueZ Bluetooth device.
+ * A BlueZ Bluetooth device.
  *
  * See also: [class@FuDevice]
  */

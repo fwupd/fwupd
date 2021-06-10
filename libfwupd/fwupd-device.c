@@ -19,7 +19,7 @@
 /**
  * FwupdDevice:
  *
- * An object that represents a physical device on the host.
+ * A physical device on the host with optionally updatable firmware.
  *
  * See also: [class@FwupdRelease]
  */

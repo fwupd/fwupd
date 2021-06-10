@@ -15,7 +15,7 @@
 /**
  * FuContext:
  *
- * An object that represents the shared system state. This object is shared
+ * A context that represents the shared system state. This object is shared
  * between the engine, the plugins and the devices.
  */
 

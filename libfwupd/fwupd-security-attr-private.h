@@ -18,8 +18,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for ACPI DMAR table
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_ACPI_DMAR		"org.fwupd.hsi.AcpiDmar"
 /**
@@ -27,8 +26,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute indiciating encrypted RAM available
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM		"org.fwupd.hsi.EncryptedRam"
 /**
@@ -36,8 +34,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for attesation
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION	"org.fwupd.hsi.Fwupd.Attestation"
 /**
@@ -45,8 +42,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for plugins
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS		"org.fwupd.hsi.Fwupd.Plugins"
 /**
@@ -54,8 +50,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for updates
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES		"org.fwupd.hsi.Fwupd.Updates"
 /**
@@ -63,8 +58,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel Bootguard enabled
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED	"org.fwupd.hsi.IntelBootguard.Enabled"
 /**
@@ -72,8 +66,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel Bootguard verified
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED	"org.fwupd.hsi.IntelBootguard.Verified"
 /**
@@ -81,8 +74,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel Bootguard ACM
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM	"org.fwupd.hsi.IntelBootguard.Acm"
 /**
@@ -90,8 +82,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel Bootguard policy
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY	"org.fwupd.hsi.IntelBootguard.Policy"
 /**
@@ -99,8 +90,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel Bootguard OTP fuse
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP	"org.fwupd.hsi.IntelBootguard.Otp"
 /**
@@ -108,8 +98,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel CET enabled
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED	"org.fwupd.hsi.IntelCet.Enabled"
 /**
@@ -117,8 +106,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel CET active
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE		"org.fwupd.hsi.IntelCet.Active"
 /**
@@ -126,8 +114,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel SMAP
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_INTEL_SMAP		"org.fwupd.hsi.IntelSmap"
 /**
@@ -135,8 +122,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for IOMMU
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_IOMMU			"org.fwupd.hsi.Iommu"
 /**
@@ -144,8 +130,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for kernel lockdown
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN		"org.fwupd.hsi.Kernel.Lockdown"
 /**
@@ -153,8 +138,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for kernel swap
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP		"org.fwupd.hsi.Kernel.Swap"
 /**
@@ -162,8 +146,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for kernel taint
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED		"org.fwupd.hsi.Kernel.Tainted"
 /**
@@ -171,8 +154,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel ME manufacturing mode
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE	"org.fwupd.hsi.Mei.ManufacturingMode"
 /**
@@ -180,8 +162,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel ME override strap
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP	"org.fwupd.hsi.Mei.OverrideStrap"
 /**
@@ -189,8 +170,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel ME version
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_MEI_VERSION		"org.fwupd.hsi.Mei.Version"
 /**
@@ -198,8 +178,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel SPI BIOSWE configuration
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE		"org.fwupd.hsi.Spi.Bioswe"
 /**
@@ -207,8 +186,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel SPI BLE configuration
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_SPI_BLE			"org.fwupd.hsi.Spi.Ble"
 /**
@@ -216,8 +194,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel SPI SMM BWP
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP		"org.fwupd.hsi.Spi.SmmBwp"
 /**
@@ -225,8 +202,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel SPI descriptor
  *
- * Since 1.6.0
- *
+ * Since: 1.6.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR		"org.fwupd.hsi.Spi.Descriptor"
 /**
@@ -234,8 +210,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Suspend to Idle
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE		"org.fwupd.hsi.SuspendToIdle"
 /**
@@ -243,8 +218,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Suspend to RAM
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM		"org.fwupd.hsi.SuspendToRam"
 /**
@@ -252,8 +226,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for TPM PCR0 reconstruction
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0	"org.fwupd.hsi.Tpm.ReconstructionPcr0"
 /**
@@ -261,8 +234,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for TPM 2.0
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20		"org.fwupd.hsi.Tpm.Version20"
 /**
@@ -270,8 +242,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for UEFI secure boot
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT		"org.fwupd.hsi.Uefi.SecureBoot"
 /**
@@ -279,8 +250,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel DCI enabled
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_ENABLED	"org.fwupd.hsi.IntelDci.Enabled"
 /**
@@ -288,8 +258,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for Intel DCI locked
  *
- * Since 1.5.0
- *
+ * Since: 1.5.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_LOCKED		"org.fwupd.hsi.IntelDci.Locked"
 /**
@@ -297,8 +266,7 @@ G_BEGIN_DECLS
  *
  * Host Security ID attribute for UEFI PK
  *
- * Since 1.5.5
- *
+ * Since: 1.5.5
  **/
 #define FWUPD_SECURITY_ATTR_ID_UEFI_PK			"org.fwupd.hsi.Uefi.Pk"
 

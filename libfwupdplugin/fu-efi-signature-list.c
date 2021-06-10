@@ -16,7 +16,7 @@
 /**
  * FuEfiSignatureList:
  *
- * An object that represents a UEFI SignatureList.
+ * A UEFI signature list typically found in the `PK` and `KEK` keys.
  *
  * See also: [class@FuFirmware]
  */

@@ -38,7 +38,7 @@ typedef GObject		*(*FwupdClientObjectNewFunc)	(void);
 /**
  * FwupdClient:
  *
- * An object that allows client code to call the daemon methods synchronously.
+ * Allow client code to call the daemon methods.
  *
  * See also: [class@FwupdDevice]
  */

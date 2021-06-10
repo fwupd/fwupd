@@ -22,9 +22,9 @@
 /**
  * FuHidDevice:
  *
- * An object that represents a HID device.
+ * A Human Interface Device (HID) device.
  *
- * See also: [class@FuDevice]
+ * See also: [class@FuDevice], [class@FuUsbDevice]
  */
 
 typedef struct

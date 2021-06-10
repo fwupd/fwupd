@@ -14,7 +14,7 @@
 /**
  * FuIfdFirmware:
  *
- * An object that represents a Intel Flash Descriptor.
+ * An Intel Flash Descriptor.
  *
  * See also: [class@FuFirmware]
  */

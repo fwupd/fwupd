@@ -14,9 +14,9 @@
 /**
  * FuUsbDevice:
  *
- * An object that represents a USB device.
+ * A USB device.
  *
- * See also: [class@FuDevice]
+ * See also: [class@FuDevice], [class@FuHidDevice]
  */
 
 typedef struct

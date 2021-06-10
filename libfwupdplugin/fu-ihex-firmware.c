@@ -17,7 +17,7 @@
 /**
  * FuIhexFirmware:
  *
- * An object that represents a Intel hex (ihex) firmware image.
+ * A Intel hex (ihex) firmware image.
  *
  * See also: [class@FuFirmware]
  */

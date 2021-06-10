@@ -10,6 +10,14 @@
 
 #include "fu-backend.h"
 
+/**
+ * FuBackend:
+ *
+ * An device discovery backend, for instance USB, BlueZ or UDev.
+ *
+ * See also: [class@FuDevice]
+ */
+
 typedef struct {
 	FuContext			*ctx;
 	gchar				*name;

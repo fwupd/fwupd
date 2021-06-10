@@ -19,8 +19,7 @@
 /**
  * FuSmbios:
  *
- * An object that collects the SMBIOS data on the system, either using DMI or
- * Device Tree.
+ * Enumerate the SMBIOS data on the system, either using DMI or Device Tree.
  *
  * See also: [class@FuHwids]
  */

@@ -25,7 +25,7 @@
 /**
  * FuIOChannel:
  *
- * An object that represents a bidirectional IO channel.
+ * A bidirectional IO channel which can be read from and written to.
  */
 
 struct _FuIOChannel {

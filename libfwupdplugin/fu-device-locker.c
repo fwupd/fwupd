@@ -19,7 +19,7 @@
 /**
  * FuDeviceLocker:
  *
- * An object that makes it easy to close a device when an object goes out of
+ * Easily close a shared resource (such as a device) when an object goes out of
  * scope.
  *
  * See also: [class@FuDevice]

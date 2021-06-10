@@ -19,10 +19,9 @@
 #include "fu-i2c-device.h"
 
 /**
- * SECTION:fu-i2c-device
- * @short_description: a I²C device
+ * FuI2cDevice
  *
- * An object that represents a I²C device.
+ * A I²C device with an assigned bus number.
  *
  * See also: #FuUdevDevice
  */

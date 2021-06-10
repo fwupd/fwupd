@@ -14,7 +14,7 @@
 /**
  * FuEfiFirmwareVolume:
  *
- * An object that represents a UEFI file volume.
+ * A UEFI file volume.
  *
  * See also: [class@FuFirmware]
  */

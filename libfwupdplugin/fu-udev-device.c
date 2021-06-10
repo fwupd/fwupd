@@ -29,7 +29,7 @@
 /**
  * FuUdevDevice:
  *
- * An object that represents a udev device.
+ * A UDev device, typically only available on Linux.
  *
  * See also: [class@FuDevice]
  */

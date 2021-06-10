@@ -14,30 +14,25 @@ G_BEGIN_DECLS
  * FWUPD_DBUS_PATH:
  *
  * The dbus path
- *
  **/
 #define FWUPD_DBUS_PATH			"/"
 /**
  * FWUPD_DBUS_SERVICE:
  *
  * The dbus service
- *
  **/
 #define FWUPD_DBUS_SERVICE		"org.freedesktop.fwupd"
 /**
  * FWUPD_DBUS_INTERFACE:
  *
  * The dbus interface
- *
  **/
-
 #define FWUPD_DBUS_INTERFACE		"org.freedesktop.fwupd"
 
 /**
  * FWUPD_DEVICE_ID_ANY:
  *
  * Wildcard used for matching all device ids in fwupd
- *
  **/
 #define FWUPD_DEVICE_ID_ANY		"*"
 

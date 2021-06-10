@@ -29,9 +29,9 @@
 /**
  * FuDevice:
  *
- * An object that represents a physical or logical device.
+ * A physical or logical device that is exported to the daemon.
  *
- * See also: [class@FuDeviceLocker]
+ * See also: [class@FuDeviceLocker], [class@Fwupd.Device]
  */
 
 static void fu_device_finalize			 (GObject *object);

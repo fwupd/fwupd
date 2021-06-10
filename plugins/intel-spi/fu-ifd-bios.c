@@ -13,7 +13,7 @@
 /**
  * FuIfdBios:
  *
- * An object that represents an Intel BIOS section.
+ * An Intel BIOS section.
  *
  * See also: [class@FuFirmware]
  */

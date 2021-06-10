@@ -18,7 +18,8 @@
 /**
  * FwupdRelease:
  *
- * An object that represents a firmware release with a specific version.
+ * A firmware release with a specific version.
+ *
  * Devices can have more than one release, and the releases are typically
  * ordered by their version.
  *

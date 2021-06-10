@@ -33,3 +33,23 @@ base_url = "https://github.com/fwupd/fwupd/blob/master/"
 content_images = [
   "../data/org.freedesktop.fwupd.svg",
 ]
+
+[[object]]
+name = "build_user_agent_system"
+hidden = true
+
+[[object]]
+name = "hash_kv_to_variant"
+hidden = true
+
+[[object]]
+name = "variant_to_hash_kv"
+hidden = true
+
+[[object]]
+name = "input_stream_read_bytes_async"
+hidden = true
+
+[[object]]
+name = "input_stream_read_bytes_finish"
+hidden = true

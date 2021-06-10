@@ -22,9 +22,9 @@
 /**
  * FuPlugin:
  *
- * An object that represents a plugin run by the daemon.
+ * A plugin which is used by fwupd to enumerate and update devices.
  *
- * See also: [class@FuDevice]
+ * See also: [class@FuDevice], [class@Fwupd.Plugin]
  */
 
 static void fu_plugin_finalize			 (GObject *object);

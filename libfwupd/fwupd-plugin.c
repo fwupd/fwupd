@@ -14,7 +14,7 @@
 /**
  * FwupdPlugin:
  *
- * An object that represents a fwupd plugin.
+ * A plugin which is used by fwupd to enumerate and update devices.
  *
  * See also: [class@FwupdRelease]
  */

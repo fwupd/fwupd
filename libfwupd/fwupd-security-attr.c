@@ -16,7 +16,7 @@
 /**
  * FwupdSecurityAttr:
  *
- * An object that represents an Host Security ID attribute.
+ * A Host Security ID attribute that represents something that was measured.
  */
 
 static void fwupd_security_attr_finalize	 (GObject *object);

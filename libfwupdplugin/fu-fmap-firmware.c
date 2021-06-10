@@ -14,7 +14,7 @@
 /**
  * FuFmapFirmware:
  *
- * An object that represents a FMAP firmware image.
+ * A FMAP firmware image.
  *
  * See also: [class@FuFirmware]
  */
