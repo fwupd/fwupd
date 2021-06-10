@@ -1,17 +1,16 @@
-if get_option('plugin_flashrom') or get_option('plugin_tuxec')
-cargs = ['-DG_LOG_DOMAIN="FuPluginFlashrom"']
+if get_option('plugin_tuxec')
+cargs = ['-DG_LOG_DOMAIN="FuPluginTuxec"']
 
-install_data(['flashrom.quirk'],
+install_data(['tuxec.quirk'],
   install_dir: join_paths(get_option('datadir'), 'fwupd', 'quirks.d')
 )
 
-shared_module('fu_plugin_flashrom',
+shared_module('fu_plugin_tuxec',
   fu_hash,
   sources : [
-    'fu-flashrom-device.c',
-    'fu-flashrom-internal-device.c',
-    'fu-flashrom-lspcon-i2c-spi-device.c',
-    'fu-plugin-flashrom.c',
+    'fu-tuxec-device.c',
+    'fu-tuxec-internal-device.c',
+    'fu-plugin-tuxec.c',
   ],
   include_directories : [
     root_incdir,
