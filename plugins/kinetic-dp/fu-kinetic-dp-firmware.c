@@ -9,11 +9,11 @@
 
 #include "fu-common.h"
 
-#include "fu-kinetic-mst-connection.h"
-#include "fu-kinetic-mst-firmware.h"
+#include "fu-kinetic-dp-connection.h"
+#include "fu-kinetic-dp-firmware.h"
 #include "fu-kinetic-secure-aux-isp.h"
 
-struct _FuKineticMstFirmware {
+struct _FuKineticDpFirmware {
     FuFirmwareClass parent_instance;
 
     // <TODO> Declare as private member
@@ -25,10 +25,10 @@ struct _FuKineticMstFirmware {
     gboolean is_fw_esm_xip_enabled;
 };
 
-G_DEFINE_TYPE (FuKineticMstFirmware, fu_kinetic_mst_firmware, FU_TYPE_FIRMWARE)
+G_DEFINE_TYPE(FuKineticDpFirmware, fu_kinetic_dp_firmware, FU_TYPE_FIRMWARE)
 
 #define HEADER_LEN_ISP_DRV_SIZE 4
-#define APP_ID_STR_LEN         4
+#define APP_ID_STR_LEN          4
 
 typedef struct
 {
@@ -94,7 +94,7 @@ kt_dp_get_chip_id_from_fw_buf(const guint8 *fw_bin_buf, const guint32 fw_bin_siz
     return FALSE;
 }
 
-static gboolean sec_aux_isp_parse_app_fw(FuKineticMstFirmware *firmware,
+static gboolean sec_aux_isp_parse_app_fw(FuKineticDpFirmware *firmware,
                                          const guint8 *fw_bin_buf,
                                          const guint32 fw_bin_size,
                                          const KtChipId chip_id,
@@ -145,54 +145,54 @@ static gboolean sec_aux_isp_parse_app_fw(FuKineticMstFirmware *firmware,
 }
 
 guint32
-fu_kinetic_mst_firmware_get_esm_payload_size(FuKineticMstFirmware *self)
+fu_kinetic_dp_firmware_get_esm_payload_size(FuKineticDpFirmware *self)
 {
-	g_return_val_if_fail(FU_KINETIC_MST_FIRMWARE(self), 0);
+	g_return_val_if_fail(FU_KINETIC_DP_FIRMWARE(self), 0);
 	return self->esm_payload_size;
 }
 
 guint32
-fu_kinetic_mst_firmware_get_arm_app_code_size(FuKineticMstFirmware *self)
+fu_kinetic_dp_firmware_get_arm_app_code_size(FuKineticDpFirmware *self)
 {
-	g_return_val_if_fail(FU_KINETIC_MST_FIRMWARE(self), 0);
+	g_return_val_if_fail(FU_KINETIC_DP_FIRMWARE(self), 0);
 	return self->arm_app_code_size;
 }
 
 guint32
-fu_kinetic_mst_firmware_get_app_init_data_size(FuKineticMstFirmware *self)
+fu_kinetic_dp_firmware_get_app_init_data_size(FuKineticDpFirmware *self)
 {
-	g_return_val_if_fail(FU_KINETIC_MST_FIRMWARE(self), 0);
+	g_return_val_if_fail(FU_KINETIC_DP_FIRMWARE(self), 0);
 	return self->app_init_data_size;
 }
 
 guint32
-fu_kinetic_mst_firmware_get_cmdb_block_size(FuKineticMstFirmware *self)
+fu_kinetic_dp_firmware_get_cmdb_block_size(FuKineticDpFirmware *self)
 {
-	g_return_val_if_fail(FU_KINETIC_MST_FIRMWARE(self), 0);
+	g_return_val_if_fail(FU_KINETIC_DP_FIRMWARE(self), 0);
 	return self->cmdb_block_size;
 }
 
 gboolean
-fu_kinetic_mst_firmware_get_is_fw_esm_xip_enabled(FuKineticMstFirmware *self)
+fu_kinetic_dp_firmware_get_is_fw_esm_xip_enabled(FuKineticDpFirmware *self)
 {
-	g_return_val_if_fail(FU_KINETIC_MST_FIRMWARE(self), 0);
+	g_return_val_if_fail(FU_KINETIC_DP_FIRMWARE(self), 0);
 	return self->is_fw_esm_xip_enabled;
 }
 
 static void
-fu_kinetic_mst_firmware_to_string(FuFirmware *firmware, guint idt, GString *str)
+fu_kinetic_dp_firmware_to_string(FuFirmware *firmware, guint idt, GString *str)
 {
 }
 
 static gboolean
-fu_kinetic_mst_firmware_parse(FuFirmware *firmware,
+fu_kinetic_dp_firmware_parse(FuFirmware *firmware,
                               GBytes *fw,
                               guint64 addr_start,
                               guint64 addr_end,
                               FwupdInstallFlags flags,
                               GError **error)
 {
-    FuKineticMstFirmware *fw_self = FU_KINETIC_MST_FIRMWARE(firmware);
+    FuKineticDpFirmware *fw_self = FU_KINETIC_DP_FIRMWARE(firmware);
 	const guint8 *buf;
 	gsize bufsz;
 	guint32 isp_drv_payload_size = 0, app_fw_payload_size = 0;
@@ -249,7 +249,7 @@ fu_kinetic_mst_firmware_parse(FuFirmware *firmware,
 }
 
 static void
-fu_kinetic_mst_firmware_init(FuKineticMstFirmware *self)
+fu_kinetic_dp_firmware_init(FuKineticDpFirmware *self)
 {
     self->esm_payload_size = 0;
     self->arm_app_code_size = 0;
@@ -259,16 +259,16 @@ fu_kinetic_mst_firmware_init(FuKineticMstFirmware *self)
 }
 
 static void
-fu_kinetic_mst_firmware_class_init(FuKineticMstFirmwareClass *klass)
+fu_kinetic_dp_firmware_class_init(FuKineticDpFirmwareClass *klass)
 {
     FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
-    klass_firmware->parse = fu_kinetic_mst_firmware_parse;
-    klass_firmware->to_string = fu_kinetic_mst_firmware_to_string;
+    klass_firmware->parse = fu_kinetic_dp_firmware_parse;
+    klass_firmware->to_string = fu_kinetic_dp_firmware_to_string;
 }
 
 FuFirmware *
-fu_kinetic_mst_firmware_new(void)
+fu_kinetic_dp_firmware_new(void)
 {
-	return FU_FIRMWARE(g_object_new(FU_TYPE_KINETIC_MST_FIRMWARE, NULL));
+	return FU_FIRMWARE(g_object_new(FU_TYPE_KINETIC_DP_FIRMWARE, NULL));
 }
 

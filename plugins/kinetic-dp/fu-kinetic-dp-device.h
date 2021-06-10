@@ -9,9 +9,9 @@
 
 #include "fu-plugin.h"
 
-#define FU_TYPE_KINETIC_MST_DEVICE (fu_kinetic_mst_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuKineticMstDevice, fu_kinetic_mst_device, FU, KINETIC_MST_DEVICE, FuUdevDevice)
+#define FU_TYPE_KINETIC_DP_DEVICE (fu_kinetic_dp_device_get_type())
+G_DECLARE_FINAL_TYPE(FuKineticDpDevice, fu_kinetic_dp_device, FU, KINETIC_DP_DEVICE, FuUdevDevice)
 
-FuKineticMstDevice *fu_kinetic_mst_device_new (FuUdevDevice	*device);
-void fu_kinetic_mst_device_set_system_type	(FuKineticMstDevice	*self,
-                                                        const gchar *system_type);
+FuKineticDpDevice *fu_kinetic_dp_device_new(FuUdevDevice *device);
+void fu_kinetic_dp_device_set_system_type(FuKineticDpDevice	*self,
+                                          const gchar *system_type);

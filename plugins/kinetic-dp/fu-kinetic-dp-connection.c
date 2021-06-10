@@ -9,13 +9,13 @@
 
 #include "config.h"
 
-#include "fu-kinetic-mst-connection.h"
-#include "fu-kinetic-mst-common.h"
+#include "fu-kinetic-dp-connection.h"
+#include "fu-kinetic-dp-common.h"
 
 #define UNIT_SIZE       32
 #define MAX_WAIT_TIME   3  /* unit : second */
 
-struct _FuKineticMstConnection {
+struct _FuKineticDpConnection {
     GObject     parent_instance;
     gint        fd;        /* not owned by the connection */
     //guint8      layer;
@@ -23,22 +23,24 @@ struct _FuKineticMstConnection {
     //guint8      rad;
 };
 
-G_DEFINE_TYPE (FuKineticMstConnection, fu_kinetic_mst_connection, G_TYPE_OBJECT)
+G_DEFINE_TYPE (FuKineticDpConnection, fu_kinetic_dp_connection, G_TYPE_OBJECT)
 
 static void
-fu_kinetic_mst_connection_init (FuKineticMstConnection *self)
+fu_kinetic_dp_connection_init(FuKineticDpConnection *self)
 {
 }
 
 static void
-fu_kinetic_mst_connection_class_init (FuKineticMstConnectionClass *klass)
+fu_kinetic_dp_connection_class_init(FuKineticDpConnectionClass *klass)
 {
 }
 
 static gboolean
-fu_kinetic_mst_connection_aux_node_read (FuKineticMstConnection *self,
-                                         guint32 offset, guint8 *buf,
-                                         gint length, GError **error)
+fu_kinetic_dp_connection_aux_node_read(FuKineticDpConnection *self,
+                                       guint32 offset,
+                                       guint8 *buf,
+                                       gint length,
+                                       GError **error)
 {
 	if (lseek(self->fd, offset, SEEK_SET) != offset)
 	{
@@ -64,11 +66,11 @@ fu_kinetic_mst_connection_aux_node_read (FuKineticMstConnection *self,
 }
 
 static gboolean
-fu_kinetic_mst_connection_aux_node_write(FuKineticMstConnection *self,
-                                         guint32 offset,
-                                         const guint8 *buf,
-                                         gint length,
-                                         GError **error)
+fu_kinetic_dp_connection_aux_node_write(FuKineticDpConnection *self,
+                                        guint32 offset,
+                                        const guint8 *buf,
+                                        gint length,
+                                        GError **error)
 {
 	if (lseek(self->fd, offset, SEEK_SET) != offset)
 	{
@@ -94,29 +96,29 @@ fu_kinetic_mst_connection_aux_node_write(FuKineticMstConnection *self,
 }
 
 static gboolean
-fu_kinetic_mst_connection_bus_read(FuKineticMstConnection *self,
+fu_kinetic_dp_connection_bus_read(FuKineticDpConnection *self,
                				       guint32 offset,
                				       guint8 *buf,
                				       guint32 length,
                				       GError **error)
 {
-	return fu_kinetic_mst_connection_aux_node_read(self, offset, buf, length, error);
+	return fu_kinetic_dp_connection_aux_node_read(self, offset, buf, length, error);
 }
 
 static gboolean
-fu_kinetic_mst_connection_bus_write(FuKineticMstConnection *self,
+fu_kinetic_dp_connection_bus_write(FuKineticDpConnection *self,
                                     guint32 offset,
                                     const guint8 *buf,
                                     guint32 length,
                                     GError **error)
 {
-	return fu_kinetic_mst_connection_aux_node_write(self, offset, buf, length, error);
+	return fu_kinetic_dp_connection_aux_node_write(self, offset, buf, length, error);
 }
 
-FuKineticMstConnection *
-fu_kinetic_mst_connection_new(gint fd)
+FuKineticDpConnection *
+fu_kinetic_dp_connection_new(gint fd)
 {
-	FuKineticMstConnection *self = g_object_new(FU_TYPE_KINETIC_MST_CONNECTION, NULL);
+	FuKineticDpConnection *self = g_object_new(FU_TYPE_KINETIC_DP_CONNECTION, NULL);
 
 	self->fd = fd;
 #if 0
@@ -129,7 +131,7 @@ fu_kinetic_mst_connection_new(gint fd)
 }
 
 gboolean
-fu_kinetic_mst_connection_read(FuKineticMstConnection *self,
+fu_kinetic_dp_connection_read(FuKineticDpConnection *self,
              				   guint32 offset,
              				   guint8 *buf,
              				   guint32 length,
@@ -142,7 +144,7 @@ fu_kinetic_mst_connection_read(FuKineticMstConnection *self,
 
 		self->remain_layer--;
 		node = (self->rad >> self->remain_layer * 2) & 0x03;
-		result = fu_kinetic_mst_connection_rc_get_command(self,
+		result = fu_kinetic_dp_connection_rc_get_command(self,
                                                           UPDC_READ_FROM_TX_DPCD + node,
                                                           length, offset, (guint8 *)buf,
                                                           error);
@@ -151,11 +153,11 @@ fu_kinetic_mst_connection_read(FuKineticMstConnection *self,
 	}
 #endif
 
-	return fu_kinetic_mst_connection_bus_read(self, offset, buf, length, error);
+	return fu_kinetic_dp_connection_bus_read(self, offset, buf, length, error);
 }
 
 gboolean
-fu_kinetic_mst_connection_write(FuKineticMstConnection *self,
+fu_kinetic_dp_connection_write(FuKineticDpConnection *self,
             				    guint32 offset,
             				    const guint8 *buf,
             				    guint32 length,
@@ -168,7 +170,7 @@ fu_kinetic_mst_connection_write(FuKineticMstConnection *self,
 
 		self->remain_layer--;
 		node = (self->rad >> self->remain_layer * 2) & 0x03;
-		result =  fu_kinetic_mst_connection_rc_set_command (self,
+		result =  fu_kinetic_dp_connection_rc_set_command (self,
 								      UPDC_WRITE_TO_TX_DPCD + node,
 								      length, offset, (guint8 *)buf,
 								      error);
@@ -177,6 +179,6 @@ fu_kinetic_mst_connection_write(FuKineticMstConnection *self,
 	}
 #endif
 
-	return fu_kinetic_mst_connection_bus_write(self, offset, buf, length, error);
+	return fu_kinetic_dp_connection_bus_write(self, offset, buf, length, error);
 }
 

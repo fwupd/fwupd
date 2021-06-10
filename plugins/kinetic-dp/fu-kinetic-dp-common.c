@@ -8,24 +8,24 @@
 
 #include "config.h"
 
-#include "fu-kinetic-mst-common.h"
+#include "fu-kinetic-dp-common.h"
 
 const gchar *
-fu_kinetic_mst_mode_to_string (FuKineticMstMode mode)
+fu_kinetic_dp_mode_to_string(FuKineticDpMode mode)
 {
-	if (mode == FU_KINETIC_MST_MODE_DIRECT)
+	if (mode == FU_KINETIC_DP_MODE_DIRECT)
 		return "DIRECT";
-	if (mode == FU_KINETIC_MST_MODE_REMOTE)
+	if (mode == FU_KINETIC_DP_MODE_REMOTE)
 		return "REMOTE";
 	return NULL;
 }
 
 const gchar *
-fu_kinetic_mst_family_to_string(FuKineticMstFamily family)
+fu_kinetic_dp_family_to_string(FuKineticDpFamily family)
 {
-	if (family == FU_KINETIC_MST_FAMILY_MUSTANG)
+	if (family == FU_KINETIC_DP_FAMILY_MUSTANG)
 		return "MUSTANG";
-	if (family == FU_KINETIC_MST_FAMILY_JAGUAR)
+	if (family == FU_KINETIC_DP_FAMILY_JAGUAR)
 		return "JAGUAR";
 	return NULL;
 }

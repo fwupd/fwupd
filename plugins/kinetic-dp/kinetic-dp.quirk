@@ -1,7 +1,7 @@
 # Used to make plugin probe the devices
 # match all devices with this udev subsystem
 [DeviceInstanceId=DRM_DP_AUX_DEV]
-Plugin = kinetic_mst
+Plugin = kinetic_dp
 
-# GUID generation for Kinetic MST plugin
+# GUID generation for Kinetic DP plugin
 

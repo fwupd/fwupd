@@ -14,38 +14,38 @@
 #define KINETIC_FLASH_MODE_DELAY	3	/* seconds */
 
 /**
- * FuKineticMstMode:
- * @FU_KINETIC_MST_MODE_UNKNOWN:    Type invalid or not known
- * @FU_KINETIC_MST_MODE_DIRECT:     Directly addressable
- * @FU_KINETIC_MST_MODE_REMOTE:     Requires remote register work
+ * FuKineticDpMode:
+ * @FU_KINETIC_DP_MODE_UNKNOWN:    Type invalid or not known
+ * @FU_KINETIC_DP_MODE_DIRECT:     Directly addressable
+ * @FU_KINETIC_DP_MODE_REMOTE:     Requires remote register work
  *
  * The device type.
  **/
 typedef enum {
-    FU_KINETIC_MST_MODE_UNKNOWN,
-    FU_KINETIC_MST_MODE_DIRECT,
-    FU_KINETIC_MST_MODE_REMOTE,
+    FU_KINETIC_DP_MODE_UNKNOWN,
+    FU_KINETIC_DP_MODE_DIRECT,
+    FU_KINETIC_DP_MODE_REMOTE,
     /*< private >*/
-    FU_KINETIC_MST_MODE_LAST
-} FuKineticMstMode;
+    FU_KINETIC_DP_MODE_LAST
+} FuKineticDpMode;
 
 /**
- * FuKineticMstFamily:
- * @FU_KINETIC_MST_FAMILY_UNKNOWN:  Family invalid or not known
- * @FU_KINETIC_MST_FAMILY_MUSTANG:  Mustang
- * @FU_KINETIC_MST_FAMILY_JAGUAR:   Jaguar
+ * FuKineticDpFamily:
+ * @FU_KINETIC_DP_FAMILY_UNKNOWN:  Family invalid or not known
+ * @FU_KINETIC_DP_FAMILY_MUSTANG:  Mustang
+ * @FU_KINETIC_DP_FAMILY_JAGUAR:   Jaguar
  *
  * The chip family.
  **/
 typedef enum {
-    FU_KINETIC_MST_FAMILY_UNKNOWN,
+    FU_KINETIC_DP_FAMILY_UNKNOWN,
 
-    FU_KINETIC_MST_FAMILY_MUSTANG,
-    FU_KINETIC_MST_FAMILY_JAGUAR,
+    FU_KINETIC_DP_FAMILY_MUSTANG,
+    FU_KINETIC_DP_FAMILY_JAGUAR,
     /*<private >*/
-    FU_KINETIC_MST_FAMILY_LAST
-} FuKineticMstFamily;
+    FU_KINETIC_DP_FAMILY_LAST
+} FuKineticDpFamily;
 
-const gchar *fu_kinetic_mst_mode_to_string(FuKineticMstMode	 mode);
-const gchar *fu_kinetic_mst_family_to_string(FuKineticMstFamily	 family);
+const gchar *fu_kinetic_dp_mode_to_string(FuKineticDpMode mode);
+const gchar *fu_kinetic_dp_family_to_string(FuKineticDpFamily family);
 
