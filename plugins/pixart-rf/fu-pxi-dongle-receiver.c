@@ -839,4 +839,3 @@ fu_pxi_dongle_receiver_class_init (FuPxiDongleReceiverClass *klass)
 	klass_device->write_firmware = fu_pxi_dongle_receiver_write_firmware;
 	klass_device->prepare_firmware = fu_pxi_dongle_receiver_prepare_firmware;
 }
-

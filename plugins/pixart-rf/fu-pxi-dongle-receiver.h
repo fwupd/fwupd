@@ -13,4 +13,3 @@
 #define FU_TYPE_PXI_DONGLE_RECEIVER (fu_pxi_dongle_receiver_get_type ())
 
 G_DECLARE_FINAL_TYPE (FuPxiDongleReceiver, fu_pxi_dongle_receiver, FU, PXI_DONGLE_RECEIVER, FuUdevDevice)
-

@@ -15,4 +15,3 @@
 G_DECLARE_FINAL_TYPE (FuPxiWirelessPeripheral, fu_pxi_wireless_peripheral, FU, PXI_WIRELESS_PERIPHERAL, FuDevice)
 
 FuPxiWirelessPeripheral *fu_pxi_wireless_peripheral_new	(struct ota_fw_dev_model *model);
-

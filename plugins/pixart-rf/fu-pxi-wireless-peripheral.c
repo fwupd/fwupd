@@ -666,4 +666,3 @@ fu_pxi_wireless_peripheral_new (struct ota_fw_dev_model *model)
 	self->sn = model->target;
 	return self;
 }
-
