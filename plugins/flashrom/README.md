@@ -72,6 +72,7 @@ This plugin uses the following plugin-specific quirks:
 | Quirk                  | Description                                 | Minimum fwupd version |
 |------------------------|---------------------------------------------|-----------------------|
 |`FlashromProgrammer`    | Used to specify the libflashrom programmer to be used.     | 1.5.9                 |
+|`ParadeLspconAuxDeviceName` | sysfs name of the drm_dp_aux_dev device over which to read LSPCON version | 1.6.1 |
 
 
 External interface access

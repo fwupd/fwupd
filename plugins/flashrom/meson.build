@@ -1,6 +1,10 @@
 if get_option('plugin_flashrom')
 cargs = ['-DG_LOG_DOMAIN="FuPluginFlashrom"']
 
+if not get_option('gudev')
+  warning('gudev is required for LSPCON version detection')
+endif
+
 install_data(['flashrom.quirk'],
   install_dir: join_paths(get_option('datadir'), 'fwupd', 'quirks.d')
 )

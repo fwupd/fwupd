@@ -43,3 +43,6 @@ Plugin=flashrom
 FlashromProgrammer=lspcon_i2c_spi
 Name=PS175
 Vendor=Parade
+
+[FLASHROM-LSPCON-I2C-SPI\HwidFamily=Google_Hatch]
+ParadeLspconAuxDeviceName=DPDDC-B

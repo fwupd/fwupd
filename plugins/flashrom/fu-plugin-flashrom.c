@@ -44,6 +44,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_add_device_gtype (plugin, FU_TYPE_FLASHROM_LSPCON_I2C_SPI_DEVICE);
 	fu_context_add_udev_subsystem (ctx, "i2c");
 	fu_context_add_quirk_key (ctx, "FlashromProgrammer");
+	fu_context_add_quirk_key (ctx, "ParadeLspconAuxDeviceName");
 }
 
 static int
