@@ -212,51 +212,6 @@ static KtDpDevInfo dp_dev_infos[MAX_DEV_NUM];
 static KtChipId dp_root_dev_chip_id = KT_CHIP_NONE; // <TODO> declare as a private member of FuKineticDpDevice?
 static KtFwRunState dp_root_dev_state = KT_FW_STATE_RUN_NONE; // <TODO> declare as a private member of FuKineticDpDevice?
 
-static gboolean kt_aux_read_dpcd_oui(FuKineticDpConnection *connection, guint8 *buf, guint32 buf_size, GError **error)
-{
-    if (buf_size < DPCD_SIZE_IEEE_OUI)
-        return FALSE;
-
-    if (!fu_kinetic_dp_connection_read(connection, DPCD_ADDR_IEEE_OUI, buf, DPCD_SIZE_IEEE_OUI, error))
-    {
-        g_prefix_error (error, "Failed to read source OUI!");
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-static gboolean kt_aux_write_dpcd_oui(FuKineticDpConnection *connection, const guint8 *buf, GError **error)
-{
-	if (!fu_kinetic_dp_connection_write(connection, DPCD_ADDR_IEEE_OUI, buf, DPCD_SIZE_IEEE_OUI, error))
-	{
-		g_prefix_error(error, "Failed to write source OUI: ");
-        return FALSE;
-	}
-
-    return TRUE;
-}
-
-static gboolean kt_aux_read_dpcd_branch_id_str(FuKineticDpConnection *connection,
-                                               guint8 *buf,
-                                               guint32 buf_size,
-                                               GError **error)
-{
-    if (buf_size < DPCD_SIZE_BRANCH_DEV_ID_STR)
-        return FALSE;
-
-    // Clear the buffer to all 0s as DP spec mentioned
-    memset(buf, 0, DPCD_SIZE_BRANCH_DEV_ID_STR);
-
-    if (!fu_kinetic_dp_connection_read(connection, DPCD_ADDR_BRANCH_DEV_ID_STR, buf, DPCD_SIZE_BRANCH_DEV_ID_STR, error))
-    {
-        g_prefix_error(error, "Failed to read branch device ID string: ");
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
 static guint16 _gen_crc16(guint16 accum, guint8 data_in)
 {
     guint8 i, flag;
@@ -477,7 +432,7 @@ static gboolean sec_aux_isp_write_mca_oui(FuKineticDpConnection *connection, GEr
 {
     guint8 mca_oui[DPCD_SIZE_IEEE_OUI] = {MCA_OUI_BYTE_0, MCA_OUI_BYTE_1, MCA_OUI_BYTE_2};
 
-    return kt_aux_write_dpcd_oui(connection, mca_oui, error);
+    return fu_kinetic_dp_aux_dpcd_write_oui(connection, mca_oui, error);
 }
 
 static gboolean
@@ -989,7 +944,7 @@ sec_aux_isp_get_flash_bank_idx(FuKineticDpConnection *connection, GError **error
     guint8 prev_src_oui[DPCD_SIZE_IEEE_OUI] = {0};
     guint8 res = BANK_NONE;
 
-    if (!kt_aux_read_dpcd_oui(connection, prev_src_oui, sizeof(prev_src_oui), error))
+    if (!fu_kinetic_dp_aux_dpcd_read_oui(connection, prev_src_oui, sizeof(prev_src_oui), error))
         return BANK_NONE;
 
     if (!sec_aux_isp_write_mca_oui(connection, error))
@@ -1004,7 +959,7 @@ sec_aux_isp_get_flash_bank_idx(FuKineticDpConnection *connection, GError **error
     sec_aux_isp_clear_kt_prop_cmd(connection, error);
 
     // Restore previous source OUI
-    kt_aux_write_dpcd_oui(connection, prev_src_oui, error);
+    fu_kinetic_dp_aux_dpcd_write_oui(connection, prev_src_oui, error);
 
     return (KtFlashBankIdx)res;
 }

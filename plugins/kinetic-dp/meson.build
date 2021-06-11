@@ -16,6 +16,7 @@ shared_module('fu_plugin_kinetic_dp',
     'fu-kinetic-dp-connection.c',
     'fu-kinetic-dp-device.c',
     'fu-kinetic-dp-firmware.c',
+    'fu-kinetic-dp-aux-dpcd.c',
   ],
   include_directories : [
     root_incdir,
