@@ -122,8 +122,20 @@ introspection_deps = [
   giounix,
 ]
 
+pkgg_requires = [ 'gio-2.0',
+                  'gmodule-2.0',
+                  'gobject-2.0',
+                  'fwupd',
+                  'json-glib-1.0',
+                  'libarchive',
+                  'libgcab-1.0',
+                  'xmlb',
+                  'jcat',
+]
+
 if get_option('gusb')
   introspection_deps += gusb
+  pkgg_requires +=  'gusb'
 endif
 
 if get_option('gudev')
@@ -173,17 +185,7 @@ fwupdplugin = library(
 fwupdplugin_pkgg = import('pkgconfig')
 fwupdplugin_pkgg.generate(
   libraries : fwupdplugin,
-  requires : [ 'gio-2.0',
-               'gmodule-2.0',
-               'gobject-2.0',
-               'gusb',
-               'fwupd',
-               'json-glib-1.0',
-               'libarchive',
-               'libgcab-1.0',
-               'xmlb',
-               'jcat',
-  ],
+  requires : pkgg_requires,
   subdirs : 'fwupd-1',
   version : meson.project_version(),
   name : 'fwupdplugin',
