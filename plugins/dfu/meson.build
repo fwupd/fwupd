@@ -17,11 +17,8 @@ dfu = static_library(
     'fu-dfu-target-avr.c',
   ],
   dependencies : [
-    giounix,
+    plugin_deps,
     libm,
-    libxmlb,
-    gusb,
-    gudev,
   ],
   link_with : [
     fwupd,
@@ -50,6 +47,7 @@ shared_module('fu_plugin_dfu',
   c_args : cargs,
   dependencies : [
     plugin_deps,
+    libm,
   ],
   link_with : [
     fwupd,
@@ -70,11 +68,7 @@ fu_dfu_tool = executable(
     fwupdplugin_incdir,
   ],
   dependencies : [
-    libxmlb,
-    giounix,
-    libm,
-    gusb,
-    gudev,
+    plugin_deps,
   ],
   link_with : [
     dfu,
@@ -112,10 +106,7 @@ if get_option('tests')
       fwupdplugin_incdir,
     ],
     dependencies : [
-      libxmlb,
-      gio,
-      gusb,
-      gudev,
+      plugin_deps,
       libm,
     ],
     link_with : [
