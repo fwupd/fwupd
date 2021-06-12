@@ -484,14 +484,14 @@ fu_engine_set_release_from_appstream (FuEngine *self,
 			if (uri == NULL)
 				uri = g_strdup (tmp);
 			fwupd_release_add_location (rel, uri);
-		} else if (remote != NULL &&
-			   fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
-			g_autofree gchar *uri = NULL;
-			tmp = xb_node_query_text (component, "../custom/value[@key='fwupd::FilenameCache']", NULL);
-			if (tmp != NULL)  {
-				uri = g_strdup_printf ("file://%s", tmp);
-				fwupd_release_add_location (rel, uri);
-			}
+		}
+	}
+	if (fwupd_release_get_locations(rel)->len == 0 && remote != NULL &&
+	    fwupd_remote_get_kind (remote) == FWUPD_REMOTE_KIND_DIRECTORY) {
+		tmp = xb_node_query_text (component, "../custom/value[@key='fwupd::FilenameCache']", NULL);
+		if (tmp != NULL)  {
+			g_autofree gchar *uri = g_strdup_printf ("file://%s", tmp);
+			fwupd_release_add_location (rel, uri);
 		}
 	}
 	if (artifact == NULL) {
