@@ -68,6 +68,10 @@ if get_option('docs') == 'docgen'
  install_data(['index.html'],
     install_dir : join_paths(datadir, 'doc', 'fwupd')
   )
+ install_data(['urlmap.js'],
+    install_dir : join_paths(datadir, 'doc', 'fwupd')
+  )
+
 elif get_option('docs') == 'gtkdoc'
   gnome.gtkdoc(
     'fwupd',

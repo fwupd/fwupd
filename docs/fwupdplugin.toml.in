@@ -7,7 +7,13 @@ authors = "fwupd Development Team"
 logo_url = "org.freedesktop.fwupd.svg"
 license = "LGPL-2.1-or-later"
 description = "Functionality available to fwupd plugins"
-dependencies = [ "GObject-2.0", "Gio-2.0"]
+dependencies = [
+                "GObject-2.0",
+                "Gio-2.0",
+                "Fwupd-2.0",
+                "Xmlb-2.0",
+                "GUsb-1.0"
+]
 devhelp = true
 search_index = true
 
@@ -20,6 +26,11 @@ search_index = true
   name = "Gio"
   description = "A modern, easy-to-use VFS API"
   docs_url = "https://developer.gnome.org/gio/stable/"
+
+  [dependencies."Fwupd-2.0"]
+  name = "Fwupd"
+  description = "Firmware update daemon client library"
+  docs_url = "../libfwupd/index.html"
 
 [theme]
 name = "basic"
@@ -38,7 +49,7 @@ content_images = [
   "architecture-plan.svg",
   "../data/org.freedesktop.fwupd.svg",
 ]
-urlmap_file = "urlmap.js"
+urlmap_file = "../urlmap.js"
 
 [[object]]
 name = "Device"

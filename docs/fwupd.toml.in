@@ -7,7 +7,11 @@ authors = "fwupd Development Team"
 logo_url = "org.freedesktop.fwupd.svg"
 license = "LGPL-2.1-or-later"
 description = "Functionality exported by libfwupd for client applications"
-dependencies = [ "GObject-2.0", "Gio-2.0"]
+dependencies = [
+                "GObject-2.0",
+                "Gio-2.0",
+                "Json-1.0"
+]
 devhelp = true
 search_index = true
 
@@ -21,6 +25,11 @@ search_index = true
   description = "A modern, easy-to-use VFS API"
   docs_url = "https://developer.gnome.org/gio/stable/"
 
+  [dependencies."Json-1.0"]
+  name = "Json"
+  description = "API for efficient parsing and writing of JSON (JavaScript Object Notation) streams"
+  docs_url = "https://developer.gnome.org/json-glib/stable/"
+
 [theme]
 name = "basic"
 show_index_summary = true
@@ -33,6 +42,7 @@ base_url = "https://github.com/fwupd/fwupd/blob/master/"
 content_images = [
   "../data/org.freedesktop.fwupd.svg",
 ]
+urlmap_file = "../urlmap.js"
 
 [[object]]
 name = "build_user_agent_system"
