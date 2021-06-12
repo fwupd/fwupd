@@ -219,6 +219,7 @@ if get_option('introspection') and get_option('gusb')
     include_directories : [
       fwupd_incdir,
     ],
+    header : 'fwupdplugin.h',
     dependencies : [
       gir_dep,
       introspection_deps
