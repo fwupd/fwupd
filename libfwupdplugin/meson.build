@@ -193,13 +193,17 @@ fwupdplugin_pkgg.generate(
   description : 'library for plugins to use to interact with fwupd daemon',
 )
 
-if get_option('introspection') and get_option('gusb')
+if get_option('introspection')
   gir_dep = declare_dependency(sources: fwupd_gir)
   girtargets = []
-  if gusb.type_name() == 'internal'
-    girtargets += subproject('gusb').get_variable('libgusb_girtarget')[0]
-  else
-    girtargets += 'GUsb-1.0'
+  extra_args = []
+  if get_option('gusb')
+    if gusb.type_name() == 'internal'
+      girtargets += subproject('gusb').get_variable('libgusb_girtarget')[0]
+    else
+      girtargets += 'GUsb-1.0'
+    endif
+    extra_args += '-DHAVE_GUSB'
   endif
   if libxmlb.type_name() == 'internal'
     girtargets += subproject('libxmlb').get_variable('gir')[0]
@@ -217,7 +221,7 @@ if get_option('introspection') and get_option('gusb')
     symbol_prefix : 'fu',
     identifier_prefix : 'Fu',
     export_packages : 'fwupdplugin',
-    extra_args : '-DHAVE_GUSB',
+    extra_args : extra_args,
     include_directories : [
       fwupd_incdir,
     ],
