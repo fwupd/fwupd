@@ -13,7 +13,7 @@
 #include "fu-dfu-common.h"
 #include "fu-dfu-sector.h"
 #include "fu-dfu-target-avr.h"
-#include "fu-dfu-target-private.h"
+#include "fu-dfu-target-private.h" /* waive-pre-commit */
 #include "fu-dfu-device.h"
 
 /**

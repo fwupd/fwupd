@@ -14,7 +14,7 @@
 #include "fu-dfu-common.h"
 #include "fu-dfu-sector.h"
 #include "fu-dfu-target-stm.h"
-#include "fu-dfu-target-private.h"
+#include "fu-dfu-target-private.h" /* waive-pre-commit */
 
 G_DEFINE_TYPE (FuDfuTargetStm, fu_dfu_target_stm, FU_TYPE_DFU_TARGET)
 
