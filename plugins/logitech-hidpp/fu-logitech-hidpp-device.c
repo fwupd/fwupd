@@ -164,7 +164,7 @@ fu_logitech_hidpp_device_ping (FuLogitechHidPpDevice *self, GError **error)
 			     G_IO_ERROR,
 			     G_IO_ERROR_FAILED,
 			     "failed to ping %s: %s",
-			     fu_device_get_name (FU_DEVICE (priv)),
+			     fu_device_get_name (FU_DEVICE (self)),
 			     error_local->message);
 		return FALSE;
 	}
