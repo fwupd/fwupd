@@ -6,10 +6,9 @@
 
 #pragma once
 
+#include <fwupdplugin.h>
 #include <gio/gio.h>
 #include <tss2/tss2_tpm2_types.h>
-
-#include "fu-plugin.h"
 
 typedef enum {
 	EV_PREBOOT_CERT				= 0x00000000,

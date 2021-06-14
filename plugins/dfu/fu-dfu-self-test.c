@@ -6,13 +6,12 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
 #include "fu-dfu-device.h"
 #include "fu-dfu-sector.h"
 #include "fu-dfu-target-private.h"
-
-#include "fu-common.h"
 
 static void
 fu_dfu_enums_func (void)

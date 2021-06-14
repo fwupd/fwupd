@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_BCM57XX_FIRMWARE (fu_bcm57xx_firmware_get_type ())
 G_DECLARE_FINAL_TYPE (FuBcm57xxFirmware, fu_bcm57xx_firmware, FU, BCM57XX_FIRMWARE, FuFirmware)

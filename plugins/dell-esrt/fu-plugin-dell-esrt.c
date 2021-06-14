@@ -8,13 +8,12 @@
 #include "config.h"
 
 #include <fcntl.h>
+#include <fwupdplugin.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
 #include <smbios_c/token.h>
 #include <smbios_c/smi.h>
-
-#include "fu-plugin-vfuncs.h"
 
 /* allowed smbios class/select commands */
 #define CLASS_ADMIN_PROP	10

@@ -8,13 +8,9 @@
 #include "config.h"
 
 #include <efivar.h>
+#include <fwupdplugin.h>
 
-#include "fu-common.h"
 #include "fu-uefi-common.h"
-#include "fu-efivar.h"
-
-#include "fwupd-common.h"
-#include "fwupd-error.h"
 
 static const gchar *
 fu_uefi_bootmgr_get_suffix (GError **error)

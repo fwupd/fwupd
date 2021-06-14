@@ -8,12 +8,10 @@
 
 #include "config.h"
 
-#include "fu-chunk.h"
-#include "fu-common.h"
+#include <fwupdplugin.h>
+
 #include "fu-synaptics-rmi-firmware.h"
 #include "fu-synaptics-rmi-v5-device.h"
-
-#include "fwupd-error.h"
 
 #define RMI_F34_WRITE_FW_BLOCK				0x02
 #define RMI_F34_ERASE_ALL				0x03

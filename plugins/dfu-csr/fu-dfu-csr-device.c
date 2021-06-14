@@ -6,11 +6,10 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-chunk.h"
 #include "fu-dfu-csr-device.h"
-#include "fu-dfu-firmware.h"
 #include "fu-dfu-common.h"
 
 /**

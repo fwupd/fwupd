@@ -6,10 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-firmware-common.h"
-#include "fu-hid-device.h"
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-bootloader.h"
 #include "fu-logitech-hidpp-hidpp.h"

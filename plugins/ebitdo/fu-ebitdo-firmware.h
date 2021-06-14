@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_EBITDO_FIRMWARE (fu_ebitdo_firmware_get_type ())
 G_DECLARE_FINAL_TYPE (FuEbitdoFirmware, fu_ebitdo_firmware, FU, EBITDO_FIRMWARE, FuFirmware)

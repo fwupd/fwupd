@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 #include <glib/gstdio.h>
 #include <stdlib.h>
 
@@ -14,7 +14,6 @@
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
 #include "fu-plugin-dell.h"
-#include "fu-plugin-vfuncs.h"
 
 typedef struct {
 	FuPlugin		*plugin_uefi_capsule;

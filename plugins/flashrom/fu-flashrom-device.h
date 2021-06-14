@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 struct _FuFlashromDeviceClass {
 	FuUdevDeviceClass		 parent_class;

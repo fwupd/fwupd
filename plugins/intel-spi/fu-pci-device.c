@@ -7,9 +7,8 @@
 #include "config.h"
 
 #include <errno.h>
+#include <fwupdplugin.h>
 #include <sys/io.h>
-
-#include "fu-common.h"
 
 #include "fu-pci-device.h"
 

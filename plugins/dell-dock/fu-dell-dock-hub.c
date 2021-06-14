@@ -15,8 +15,7 @@
 
 #include "config.h"
 
-#include "fu-usb-device.h"
-#include "fwupd-error.h"
+#include <fwupdplugin.h>
 
 #include "fu-dell-dock-common.h"
 

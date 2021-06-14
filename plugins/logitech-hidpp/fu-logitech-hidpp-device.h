@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-udev-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_HIDPP_DEVICE (fu_logitech_hidpp_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuLogitechHidPpDevice, fu_logitech_hidpp_device, FU, HIDPP_DEVICE, FuUdevDevice)

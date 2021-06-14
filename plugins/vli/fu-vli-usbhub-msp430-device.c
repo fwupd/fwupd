@@ -7,8 +7,7 @@
 
 #include "config.h"
 
-#include "fu-firmware-common.h"
-#include "fu-ihex-firmware.h"
+#include <fwupdplugin.h>
 
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-device.h"

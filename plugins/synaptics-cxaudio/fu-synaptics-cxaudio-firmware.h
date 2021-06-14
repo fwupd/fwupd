@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include "fu-srec-firmware.h"
+#include <fwupdplugin.h>
+
 #include "fu-synaptics-cxaudio-common.h"
 
 #define FU_TYPE_SYNAPTICS_CXAUDIO_FIRMWARE (fu_synaptics_cxaudio_firmware_get_type ())

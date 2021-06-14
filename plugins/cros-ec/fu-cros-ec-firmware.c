@@ -6,7 +6,8 @@
 
 #include "config.h"
 
-#include "fu-fmap-firmware.h"
+#include <fwupdplugin.h>
+
 #include "fu-cros-ec-common.h"
 #include "fu-cros-ec-firmware.h"
 

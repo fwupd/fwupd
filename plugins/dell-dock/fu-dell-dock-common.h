@@ -17,7 +17,8 @@
 
 #include "config.h"
 
-#include "fu-device.h"
+#include <fwupdplugin.h>
+
 #include "fu-dell-dock-i2c-ec.h"
 #include "fu-dell-dock-i2c-mst.h"
 #include "fu-dell-dock-i2c-tbt.h"

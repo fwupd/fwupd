@@ -6,8 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include "fu-cpu-device.h"
-#include "fu-plugin-vfuncs.h"
 
 struct _FuCpuDevice {
 	FuDevice		 parent_instance;

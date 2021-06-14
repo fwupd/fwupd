@@ -6,9 +6,7 @@
 
 #include "config.h"
 
-#include <fwupd.h>
-
-#include "fu-common.h"
+#include <fwupdplugin.h>
 
 #include "fu-acpi-facp.h"
 

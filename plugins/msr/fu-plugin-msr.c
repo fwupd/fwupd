@@ -7,8 +7,7 @@
 #include "config.h"
 
 #include <cpuid.h>
-
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 typedef union {
 	guint32 data;

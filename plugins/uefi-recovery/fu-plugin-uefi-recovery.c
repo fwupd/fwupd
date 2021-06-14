@@ -6,8 +6,7 @@
 
 #include "config.h"
 
-#include "fu-device-metadata.h"
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 void
 fu_plugin_init (FuPlugin *plugin)

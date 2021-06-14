@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 #include "fu-vli-common.h"
 

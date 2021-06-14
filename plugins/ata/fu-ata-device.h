@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_ATA_DEVICE (fu_ata_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuAtaDevice, fu_ata_device, FU, ATA_DEVICE, FuUdevDevice)

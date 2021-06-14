@@ -8,10 +8,11 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include "fu-elantp-common.h"
 #include "fu-elantp-firmware.h"
 #include "fu-elantp-i2c-device.h"
-#include "fu-chunk.h"
 
 struct _FuElantpI2cDevice {
 	FuUdevDevice		 parent_instance;

@@ -6,9 +6,8 @@
 
 #pragma once
 
+#include <fwupdplugin.h>
 #include <gio/gio.h>
-
-#include "fu-efi-signature-list.h"
 
 gchar		*fu_uefi_dbx_get_authenticode_hash	(const gchar	*fn,
 							 GError		**error);

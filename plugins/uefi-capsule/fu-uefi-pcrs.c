@@ -6,13 +6,12 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #ifdef HAVE_TSS2
 #include <tss2/tss2_esys.h>
 #endif
 
-#include "fu-common.h"
 #include "fu-uefi-pcrs.h"
-#include "fwupd-error.h"
 
 typedef struct {
 	guint		 idx;

@@ -5,7 +5,7 @@
  */
 #include "config.h"
 
-#include "fu-chunk.h"
+#include <fwupdplugin.h>
 
 #include "fu-analogix-common.h"
 #include "fu-analogix-device.h"

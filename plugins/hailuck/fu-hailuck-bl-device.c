@@ -6,7 +6,8 @@
 
 #include "config.h"
 
-#include "fu-chunk.h"
+#include <fwupdplugin.h>
+
 #include "fu-hailuck-common.h"
 #include "fu-hailuck-bl-device.h"
 #include "fu-hailuck-kbd-firmware.h"

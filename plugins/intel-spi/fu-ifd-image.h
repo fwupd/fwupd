@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
+
 #include "fu-ifd-common.h"
 
 #define FU_TYPE_IFD_IMAGE (fu_ifd_image_get_type ())

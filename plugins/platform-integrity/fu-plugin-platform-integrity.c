@@ -6,8 +6,7 @@
 
 #include "config.h"
 
-
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 struct FuPluginData {
 	gchar			*sysfs_path;

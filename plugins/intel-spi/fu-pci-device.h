@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_PCI_DEVICE (fu_pci_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuPciDevice, fu_pci_device, FU, PCI_DEVICE, FuDevice)

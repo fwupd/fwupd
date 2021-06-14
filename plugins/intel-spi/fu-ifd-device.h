@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "fu-device.h"
+#include <fwupdplugin.h>
+
 #include "fu-ifd-common.h"
 
 #define FU_TYPE_IFD_DEVICE (fu_ifd_device_get_type ())

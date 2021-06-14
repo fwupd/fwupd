@@ -7,17 +7,14 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 #include <glib/gi18n.h>
 #include <glib-unix.h>
 #include <locale.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "fu-common.h"
-#include "fu-efivar.h"
 #include "fu-uefi-dbx-common.h"
-#include "fu-efi-signature.h"
 
 /* custom return code */
 #define EXIT_NOTHING_TO_DO		2

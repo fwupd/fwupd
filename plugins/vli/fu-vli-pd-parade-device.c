@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-#include "fu-chunk.h"
+#include <fwupdplugin.h>
 
 #include "fu-vli-pd-device.h"
 #include "fu-vli-pd-parade-device.h"

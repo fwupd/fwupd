@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 #include <glib/gi18n.h>
 #include <locale.h>
 #include <stdio.h>

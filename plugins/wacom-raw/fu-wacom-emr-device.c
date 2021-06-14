@@ -7,9 +7,9 @@
 #include "config.h"
 
 #include <string.h>
+#include <fwupdplugin.h>
 #include <gio/gio.h>
 
-#include "fu-chunk.h"
 #include "fu-wacom-common.h"
 #include "fu-wacom-emr-device.h"
 

@@ -15,9 +15,7 @@
 
 #include "config.h"
 
-#include "fu-device.h"
-#include "fwupd-error.h"
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 #include "fu-dell-dock-common.h"
 

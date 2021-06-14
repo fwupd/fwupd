@@ -6,7 +6,8 @@
 
 #include "config.h"
 
-#include "fu-common.h"
+#include <fwupdplugin.h>
+
 #include "fu-ifd-common.h"
 #include "fu-ifd-firmware.h"
 #include "fu-ifd-bios.h"

@@ -6,11 +6,10 @@
 
 #pragma once
 
+#include <fwupdplugin.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <gusb.h>
-
-#include "fu-usb-device.h"
 
 #include "fu-dfu-common.h"
 #include "fu-dfu-target.h"

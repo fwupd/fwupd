@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_SYNAPROM_DEVICE (fu_synaprom_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuSynapromDevice, fu_synaprom_device, FU, SYNAPROM_DEVICE, FuUsbDevice)

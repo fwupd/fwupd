@@ -6,9 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-chunk.h"
 #include "fu-wac-device.h"
 #include "fu-wac-common.h"
 #include "fu-wac-firmware.h"

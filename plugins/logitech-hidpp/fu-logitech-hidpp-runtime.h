@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-udev-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_UNIFYING_RUNTIME (fu_logitech_hidpp_runtime_get_type ())
 G_DECLARE_FINAL_TYPE (FuLogitechHidPpRuntime, fu_logitech_hidpp_runtime, FU, UNIFYING_RUNTIME, FuUdevDevice)

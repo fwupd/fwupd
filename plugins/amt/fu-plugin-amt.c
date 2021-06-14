@@ -9,12 +9,11 @@
 #include "config.h"
 
 #include <errno.h>
+#include <fwupdplugin.h>
 #include <fcntl.h>
 #include <linux/mei.h>
 #include <string.h>
 #include <sys/ioctl.h>
-
-#include "fu-plugin-vfuncs.h"
 
 typedef struct {
 	uuid_le guid;

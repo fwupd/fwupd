@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 #include "fu-rts54hub-device.h"
 #include "fu-rts54hub-rtd21xx-background.h"

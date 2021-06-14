@@ -6,18 +6,15 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 #include <stdio.h>
-
-#include "fu-chunk.h"
 
 #include "fu-dfu-common.h"
 #include "fu-dfu-sector.h"
 #include "fu-dfu-target-avr.h"
 #include "fu-dfu-target-private.h"
 #include "fu-dfu-device.h"
-
-#include "fwupd-error.h"
 
 /**
  * FU_QUIRKS_DFU_AVR_ALT_NAME:

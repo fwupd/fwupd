@@ -6,11 +6,12 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include "fu-acpi-phat.h"
 #include "fu-acpi-phat-health-record.h"
 #include "fu-acpi-phat-version-element.h"
 #include "fu-acpi-phat-version-record.h"
-#include "fu-plugin-vfuncs.h"
 
 void
 fu_plugin_init (FuPlugin *plugin)

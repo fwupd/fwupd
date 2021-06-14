@@ -17,7 +17,7 @@
 
 #include "config.h"
 
-#include "fu-hid-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_DELL_DOCK_HUB (fu_dell_dock_hub_get_type ())
 G_DECLARE_FINAL_TYPE (FuDellDockHub, fu_dell_dock_hub, FU, DELL_DOCK_HUB, FuHidDevice)

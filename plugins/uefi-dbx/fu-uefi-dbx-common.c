@@ -6,11 +6,9 @@
 
 #include "config.h"
 
-#include "fwupd-error.h"
+#include <fwupdplugin.h>
 
-#include "fu-common.h"
 #include "fu-efi-image.h"
-#include "fu-volume.h"
 
 #include "fu-uefi-dbx-common.h"
 

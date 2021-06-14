@@ -10,17 +10,13 @@
 #include <string.h>
 #include <efivar.h>
 #include <efivar/efiboot.h>
-
-#include "fu-device-metadata.h"
-
-#include "fu-common.h"
+#include <fwupdplugin.h>
 
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-devpath.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-pcrs.h"
-#include "fu-efivar.h"
 
 struct _FuUefiDevice {
 	FuDevice		 parent_instance;

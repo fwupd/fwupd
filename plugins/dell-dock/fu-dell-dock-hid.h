@@ -18,9 +18,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <glib-object.h>
-
-#include "fu-device.h"
 
 typedef struct __attribute__ ((packed)) {
 	guint8 i2ctargetaddr;

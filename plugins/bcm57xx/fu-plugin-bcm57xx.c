@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 #include "fu-bcm57xx-device.h"
 #include "fu-bcm57xx-dict-image.h"

@@ -6,10 +6,10 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include "fu-synaprom-device.h"
 #include "fu-synaprom-firmware.h"
-
-#include "fu-plugin-vfuncs.h"
 
 void
 fu_plugin_init (FuPlugin *plugin)

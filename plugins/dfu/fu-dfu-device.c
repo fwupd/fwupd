@@ -69,6 +69,7 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
 #include "fu-dfu-common.h"
@@ -77,12 +78,7 @@
 #include "fu-dfu-target-private.h"
 #include "fu-dfu-target-stm.h"
 
-#include "fu-device-locker.h"
 #include "fu-dfu-firmware-private.h"
-#include "fu-dfuse-firmware.h"
-#include "fu-firmware-common.h"
-
-#include "fwupd-error.h"
 
 static void fu_dfu_device_finalize			 (GObject *object);
 

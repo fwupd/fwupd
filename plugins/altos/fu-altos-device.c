@@ -8,10 +8,10 @@
 
 #include <fcntl.h>
 #include <poll.h>
+#include <fwupdplugin.h>
 #include <string.h>
 #include <termios.h>
 
-#include "fu-io-channel.h"
 #include "fu-altos-device.h"
 #include "fu-altos-firmware.h"
 

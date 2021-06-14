@@ -8,8 +8,6 @@
 
 #include <fwupd.h>
 
-#include "fu-plugin-private.h"
-
 #include "fu-redfish-common.h"
 
 static void

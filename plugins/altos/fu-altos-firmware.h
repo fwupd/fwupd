@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_ALTOS_FIRMWARE (fu_altos_firmware_get_type ())
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_ACPI_PHAT (fu_acpi_phat_get_type ())
 G_DECLARE_FINAL_TYPE (FuAcpiPhat, fu_acpi_phat, FU, ACPI_PHAT, FuFirmware)

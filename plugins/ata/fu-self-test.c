@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 
 #include "fu-ata-device.h"
 #include "fu-device-private.h"

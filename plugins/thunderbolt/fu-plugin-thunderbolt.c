@@ -6,9 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <sys/utsname.h>
 
-#include "fu-plugin-vfuncs.h"
 #include "fu-thunderbolt-device.h"
 #include "fu-thunderbolt-firmware.h"
 #include "fu-thunderbolt-firmware-update.h"

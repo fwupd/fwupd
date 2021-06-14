@@ -6,9 +6,8 @@
 
 #pragma once
 
+#include <fwupdplugin.h>
 #include <glib.h>
-
-#include "fu-plugin.h"
 
 #define UPDATE_PROTOCOL_VERSION 6
 #define FU_CROS_EC_STRLEN	32

@@ -7,10 +7,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
-
-#include "fu-chunk.h"
-#include "fu-srec-firmware.h"
 
 #include "fu-synaptics-cxaudio-common.h"
 #include "fu-synaptics-cxaudio-device.h"

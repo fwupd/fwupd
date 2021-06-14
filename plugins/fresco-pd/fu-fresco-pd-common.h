@@ -7,6 +7,6 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 gchar		*fu_fresco_pd_version_from_buf		(const guint8	ver[4]);

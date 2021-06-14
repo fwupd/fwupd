@@ -8,9 +8,8 @@
 #ifndef __FU_MM_DEVICE_H
 #define __FU_MM_DEVICE_H
 
+#include <fwupdplugin.h>
 #include <libmm-glib.h>
-
-#include "fu-plugin.h"
 
 #define FU_TYPE_MM_DEVICE (fu_mm_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuDevice)

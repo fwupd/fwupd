@@ -6,11 +6,10 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <linux/hidraw.h>
 #include <sys/ioctl.h>
 
-#include "fu-chunk.h"
-#include "fu-ihex-firmware.h"
 #include "fu-wacom-common.h"
 #include "fu-wacom-device.h"
 

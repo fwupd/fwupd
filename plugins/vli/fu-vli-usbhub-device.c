@@ -7,10 +7,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
-
-#include "fu-chunk.h"
-#include "fu-firmware.h"
 
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-device.h"
