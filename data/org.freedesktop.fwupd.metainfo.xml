@@ -35,6 +35,34 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.5.10" date="2021-06-14">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add an option to avoid building UEFI binary</li>
+          <li>Add more supported 8BitDo devices</li>
+          <li>Add more supported Pixart devices</li>
+          <li>Add more supported Synaptics Prometheus devices</li>
+          <li>Add support for Kingston ATA and NVMe devices</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Cancel the GDBusObjectManager operation to fix a potential crash</li>
+          <li>Do not show an invalid DFU warning on attach</li>
+          <li>Fall back to binary files when flashing STM32 hardware</li>
+          <li>Fix a crash when shutting down the daemon</li>
+          <li>Fix /etc/os-release ID_LIKE field parsing</li>
+          <li>Fix pixart-rf GUID generation</li>
+          <li>Fix the VLI i2c device enumeration, e.g. MSP430</li>
+          <li>Follow HTTP 3XX redirects when downloading files</li>
+          <li>Force the device locker to close() an aborted open()</li>
+          <li>Mark the Lenovo VL103 no-power USB-C dongle as dual-image</li>
+          <li>Read current Wacom firmware index before finding image to write</li>
+          <li>Support all hash types when loading cabinet archives</li>
+          <li>Support mirroring the detach and update images</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.9" date="2021-04-13">
       <description>
         <p>This release fixes the following bugs:</p>
