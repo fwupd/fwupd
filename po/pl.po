@@ -466,10 +466,6 @@ msgstr "Usuwa wyniki z ostatniej aktualizacji"
 msgid "Command not found"
 msgstr "Nie odnaleziono polecenia"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Kontynuować aktualizację?"
-
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "Konwertuje plik oprogramowania sprzętowego"
@@ -623,6 +619,10 @@ msgstr "Bez sprawdzania niezgłoszonej historii"
 msgid "Do not check if download remotes should be enabled"
 msgstr "Bez sprawdzania, czy repozytoria pobierania mają być włączone"
 
+#. TRANSLATORS: command line option
+msgid "Do not check or prompt for reboot after update"
+msgstr "Bez sprawdzania ani pytania o ponowne uruchomienie po aktualizacji"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
 msgstr "Bez dołączania przedrostka domeny dziennika"
@@ -660,6 +660,12 @@ msgstr "Automatycznie wysyłać zgłoszenia dla przyszłych aktualizacji?"
 msgid "Done!"
 msgstr "Gotowe."
 
+#. TRANSLATORS: message letting the user know an downgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Downgrade %s from %s to %s?"
+msgstr "Zainstalować poprzednią wersję urządzenia %s z %s do %s?"
+
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "Instaluje poprzednią wersję oprogramowania sprzętowego urządzenia"
@@ -695,6 +701,10 @@ msgstr "Podana partycja ESP nie jest prawidłowa"
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Włącza obsługę aktualizacji oprogramowania sprzętowego na obsługiwanych systemach"
+
+#. TRANSLATORS: a remote here is like a 'repo' or software source
+msgid "Enable new remote?"
+msgstr "Włączyć nowe repozytorium?"
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
@@ -797,7 +807,7 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "NAZWA-PLIKU-ŹRÓDŁOWEGO NAZWA-PLIKU-DOCELOWEGO [TYP-ŹRÓDŁOWEGO-OPROGRAMOWANIA-SPRZĘTOWEGO] [TYP-DOCELOWEGO-OPROGRAMOWANIA-SPRZĘTOWEGO]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Failed"
 msgstr "Nie powiodło się"
 
@@ -870,6 +880,10 @@ msgstr "Nazwa pliku"
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
 msgstr "Podpis nazwy pliku"
+
+#. TRANSLATORS: full path of the remote.conf file
+msgid "Filename Source"
+msgstr "Źródło nazwy pliku"
 
 #. TRANSLATORS: user did not include a filename parameter
 msgid "Filename required"
@@ -1015,7 +1029,7 @@ msgstr "Uzyskuje wyniki z ostatniej aktualizacji"
 msgid "HWIDS-FILE"
 msgstr "PLIK-HWIDS"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "Sprzęt czeka na ponowne podłączenie"
 
@@ -1301,7 +1315,7 @@ msgstr "Montuje MSP"
 msgid "Needs a reboot after installation"
 msgstr "Wymaga ponownego uruchomienia po instalacji"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Wymaga ponownego uruchomienia"
 
@@ -1402,13 +1416,17 @@ msgstr "Hasło"
 msgid "Payload"
 msgstr "Dane"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Pending"
 msgstr "Oczekujące"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Percentage complete"
 msgstr "Procent ukończenia"
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "Wykonać działanie?"
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1484,6 +1502,12 @@ msgstr "Ponowne uruchamianie…"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Odświeża metadane ze zdalnego serwera"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 is a version string
+#, c-format
+msgid "Reinstall %s to %s?"
+msgstr "Ponownie zainstalować urządzenie %s do wersji %s?"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
@@ -1721,7 +1745,7 @@ msgstr "Podaje plik bazy dbx"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Podaje liczbę bajtów na przesyłanie USB"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Powodzenie"
 
@@ -1800,6 +1824,12 @@ msgstr "Uśpienie do trybu bezczynności"
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend-to-ram"
 msgstr "Uśpienie do pamięci RAM"
+
+#. TRANSLATORS: show and ask user to confirm --
+#. * %1 is the old branch name, %2 is the new branch name
+#, c-format
+msgid "Switch branch from %s to %s?"
+msgstr "Przełączyć gałąź z %s na %s?"
 
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
@@ -1909,7 +1939,7 @@ msgstr "To narzędzie odczyta i przetworzy dziennik zdarzeń TPM z oprogramowa
 msgid "Timeout in milliseconds for each parse"
 msgstr "Czas oczekiwania w milisekundach dla każdego przetworzenia"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Przejściowe niepowodzenie"
 
@@ -2069,8 +2099,8 @@ msgstr "Aktualizowanie urządzenia %s…"
 #. TRANSLATORS: message letting the user know an upgrade is available
 #. * %1 is the device name and %2 and %3 are version strings
 #, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "Dostępna jest aktualizacja urządzenia %s z wersji %s do %s"
+msgid "Upgrade %s from %s to %s?"
+msgstr "Zaktualizować urządzenie %s z wersji %s na %s?"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"

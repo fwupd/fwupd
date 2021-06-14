@@ -451,10 +451,6 @@ msgstr "Esborra els resultats de l'última actualització."
 msgid "Command not found"
 msgstr "No s'ha trobat cap ordre"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Continuo amb l'actualització?"
-
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "Converteix un fitxer de microprogramari."
@@ -608,6 +604,10 @@ msgstr "No comprovar si hi ha un historial sense informar"
 msgid "Do not check if download remotes should be enabled"
 msgstr "No comprovar si la baixada des del remot ha d'estar habilitada"
 
+#. TRANSLATORS: command line option
+msgid "Do not check or prompt for reboot after update"
+msgstr "No verifiquis ni demanis reiniciar després d'actualitzar"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
 msgstr "No incloure el prefix de domini del registre"
@@ -645,6 +645,12 @@ msgstr "Voleu pujar automàticament els informes per a futures actualitzacions?"
 msgid "Done!"
 msgstr "Fet!"
 
+#. TRANSLATORS: message letting the user know an downgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Downgrade %s from %s to %s?"
+msgstr "Desactualitzo %s des de %s a %s?"
+
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "Desactualitza el microprogramari en un dispositiu."
@@ -680,6 +686,10 @@ msgstr "L'ESP especificat no era vàlid"
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Habilita el suport per a l'actualització del microprogramari sobre sistemes compatibles"
+
+#. TRANSLATORS: a remote here is like a 'repo' or software source
+msgid "Enable new remote?"
+msgstr "Habilito el remot nou?"
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
@@ -782,7 +792,7 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "NOM_FITXER_ORIG NOM_FITXER_DEST [TIPUS_MICROPROGRAMARI_ORIG] [TIPUS_MICROPROGRAMARI_DEST]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Failed"
 msgstr "Ha fallat"
 
@@ -855,6 +865,10 @@ msgstr "Nom del fitxer"
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
 msgstr "Signatura del nom del fitxer"
+
+#. TRANSLATORS: full path of the remote.conf file
+msgid "Filename Source"
+msgstr "Nom del fitxer d'origen:"
 
 #. TRANSLATORS: user did not include a filename parameter
 msgid "Filename required"
@@ -996,7 +1010,7 @@ msgstr "Obté els resultats de l'última actualització."
 msgid "HWIDS-FILE"
 msgstr "FITXER-HWIDS"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "El maquinari està esperant a ser endollat"
 
@@ -1280,7 +1294,7 @@ msgstr "Munta l'ESP."
 msgid "Needs a reboot after installation"
 msgstr "Requereix un reinici després de la instal·lació"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Cal reiniciar"
 
@@ -1381,13 +1395,17 @@ msgstr "Contrasenya"
 msgid "Payload"
 msgstr "Carrega útil"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Pending"
 msgstr "Pendent"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Percentage complete"
 msgstr "Percentatge completat"
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "Realitzo l'operació?"
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1463,6 +1481,12 @@ msgstr "S'està tornant a arrencar..."
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Refresca les metadades des del servidor remot."
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 is a version string
+#, c-format
+msgid "Reinstall %s to %s?"
+msgstr "Reinstal·lo %s a %s?"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
@@ -1700,7 +1724,7 @@ msgstr "Especifica el fitxer de base de dades dbx."
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Especifiqueu el nombre de bytes per a la transferència USB"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Amb èxit"
 
@@ -1777,6 +1801,12 @@ msgstr "Suspensió a inactiu"
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend-to-ram"
 msgstr "Suspensió a la RAM"
+
+#. TRANSLATORS: show and ask user to confirm --
+#. * %1 is the old branch name, %2 is the new branch name
+#, c-format
+msgid "Switch branch from %s to %s?"
+msgstr "Canvio la branca des de %s a %s?"
 
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
@@ -1886,7 +1916,7 @@ msgstr "Aquesta eina llegirà i analitzarà el registre d'esdeveniments TPM des 
 msgid "Timeout in milliseconds for each parse"
 msgstr "Temps d'espera en mil·lisegons per a cada anàlisi"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Fallada transitòria"
 
@@ -2046,8 +2076,8 @@ msgstr "S'està actualitzant %s…"
 #. TRANSLATORS: message letting the user know an upgrade is available
 #. * %1 is the device name and %2 and %3 are version strings
 #, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "Actualització disponible per a %s des de %s a %s"
+msgid "Upgrade %s from %s to %s?"
+msgstr "Actualitzo %s des de %s a %s?"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"

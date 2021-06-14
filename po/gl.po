@@ -301,7 +301,7 @@ msgid "Exit after the engine has loaded"
 msgstr "Saír despois de que se cargue o motor"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Failed"
 msgstr "Fallido"
 

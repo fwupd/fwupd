@@ -283,10 +283,6 @@ msgstr "Son güncellemenin sonuçlarını temizler"
 msgid "Command not found"
 msgstr "Komut bulunamadı"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Güncellemeye devam edilsin mi?"
-
 #. TRANSLATORS: the release urgency
 msgid "Critical"
 msgstr "Kritik"
@@ -565,7 +561,7 @@ msgstr "Son güncellemeden sonuçları alır"
 msgid "HWIDS-FILE"
 msgstr "HWIDS-FILE"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "Donanım yeniden takılmayı bekliyor"
 

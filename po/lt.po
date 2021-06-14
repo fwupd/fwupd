@@ -387,7 +387,7 @@ msgid "Exit after the engine has loaded"
 msgstr "Išeiti, įkėlus modulį"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Failed"
 msgstr "Patyrė nesėkmę"
 

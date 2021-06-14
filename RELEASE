@@ -19,7 +19,7 @@ git add ../po/*.po
 # MAKE SURE THIS IS CORRECT
 export release_ver="1.6.1"
 
-git commit -a -m "Release fwupd ${release_ver}"
+git commit -a -m "Release fwupd ${release_ver}" --no-verify
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
 <wait>
 git push --tags

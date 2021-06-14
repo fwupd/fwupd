@@ -416,10 +416,6 @@ msgstr "清除从最后一次更新获取的结果"
 msgid "Command not found"
 msgstr "未找到命令"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "继续更新？"
-
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "转换固件文件"
@@ -727,7 +723,7 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "源文件名 目标文件名 [源固件类型] [目标固件类型]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Failed"
 msgstr "已失败"
 
@@ -931,7 +927,7 @@ msgstr "获取用于设备的发行版本"
 msgid "Gets the results from the last update"
 msgstr "从最后一次更新中获取结果"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "硬件正等待重新插入"
 
@@ -1919,12 +1915,6 @@ msgstr "正在更新 %s，从 %s 到 %s…"
 #, c-format
 msgid "Updating %s…"
 msgstr "正在更新 %s……"
-
-#. TRANSLATORS: message letting the user know an upgrade is available
-#. * %1 is the device name and %2 and %3 are version strings
-#, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "%s 有从版本 %s 到 %s 的升级"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"

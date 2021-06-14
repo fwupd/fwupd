@@ -451,10 +451,6 @@ msgstr "Rydder resultaterne fra den sidste opdatering"
 msgid "Command not found"
 msgstr "Kommandoen blev ikke fundet"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Fortsæt opdateringen?"
-
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "Konverter en firmwarefil"
@@ -608,6 +604,10 @@ msgstr "Tjek ikke efter historik som ikke er blevet rapporteret"
 msgid "Do not check if download remotes should be enabled"
 msgstr "Tjek ikke om download af fjerne skal aktiveres"
 
+#. TRANSLATORS: command line option
+msgid "Do not check or prompt for reboot after update"
+msgstr "Tjek ikke eller spørg om genstart, efter opdatering"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
 msgstr "Medtag ikke præfiks for logdomæne"
@@ -645,6 +645,12 @@ msgstr "Vil du uploade rapporter automatisk for fremtidige opdateringer?"
 msgid "Done!"
 msgstr "Færdig!"
 
+#. TRANSLATORS: message letting the user know an downgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Downgrade %s from %s to %s?"
+msgstr "Nedgrader %s fra %s til %s?"
+
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "Nedgraderer firmwaren på en enhed"
@@ -680,6 +686,10 @@ msgstr "Angivet ESP var ikke gyldig"
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Aktivér understøttelse af firmwareopdateringer på systemer som understøtter det"
+
+#. TRANSLATORS: a remote here is like a 'repo' or software source
+msgid "Enable new remote?"
+msgstr "Aktivér ny fjern?"
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
@@ -782,7 +792,7 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "FILNAVN-KILDE FILNAVN-DST [FIRMWARETYPE-KILDE] [FIRMWARE-TYPE-DST]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Failed"
 msgstr "Mislykkedes"
 
@@ -855,6 +865,10 @@ msgstr "Filnavn"
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
 msgstr "Filnavnets underskrift"
+
+#. TRANSLATORS: full path of the remote.conf file
+msgid "Filename Source"
+msgstr "Filnavnets kilde"
 
 #. TRANSLATORS: user did not include a filename parameter
 msgid "Filename required"
@@ -996,7 +1010,7 @@ msgstr "Henter resultaterne fra den sidste opdatering"
 msgid "HWIDS-FILE"
 msgstr "HWID'ER-FIL"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "Hardwaren venter på at bliver gentilkoblet"
 
@@ -1280,7 +1294,7 @@ msgstr "Monterer ESP'en"
 msgid "Needs a reboot after installation"
 msgstr "Genstart efter installation er nødvendig"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Genstart er nødvendig"
 
@@ -1381,13 +1395,17 @@ msgstr "Adgangskode"
 msgid "Payload"
 msgstr "Nyttelast"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Pending"
 msgstr "Afventer"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Percentage complete"
 msgstr "Procent fuldført"
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "Udfør handling?"
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1463,6 +1481,12 @@ msgstr "Genstarter …"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Genopfrisk metadata fra fjernserver"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 is a version string
+#, c-format
+msgid "Reinstall %s to %s?"
+msgstr "Geninstaller %s til %s?"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
@@ -1700,7 +1724,7 @@ msgstr "Angiv dbx-databasefilen"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Angiv antal bytes pr. USB-overførsel"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Lykkedes"
 
@@ -1777,6 +1801,12 @@ msgstr "Suspender-til-inaktiv"
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend-to-ram"
 msgstr "Suspender-til-ram"
+
+#. TRANSLATORS: show and ask user to confirm --
+#. * %1 is the old branch name, %2 is the new branch name
+#, c-format
+msgid "Switch branch from %s to %s?"
+msgstr "Skift gren fra %s til %s?"
 
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
@@ -1886,7 +1916,7 @@ msgstr "Værktøjet læser og fortolker TPM-hændelsesloggen fra systemfirmwaren
 msgid "Timeout in milliseconds for each parse"
 msgstr "Timeout i millisekunder til hver fortolkning"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Forbigående mislykkedes"
 
@@ -2046,8 +2076,8 @@ msgstr "Opdaterer %s …"
 #. TRANSLATORS: message letting the user know an upgrade is available
 #. * %1 is the device name and %2 and %3 are version strings
 #, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "Opgradering tilgængelig for %s fra %s til %s"
+msgid "Upgrade %s from %s to %s?"
+msgstr "Opgrader %s fra %s til %s?"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
