@@ -30,3 +30,13 @@ fu_kinetic_dp_family_to_string(FuKineticDpFamily family)
 	return NULL;
 }
 
+FuKineticDpFamily
+fu_kinetic_dp_chip_id_to_family(KtChipId chip_id)
+{
+	if (chip_id == KT_CHIP_MUSTANG_5200)
+		return FU_KINETIC_DP_FAMILY_MUSTANG;
+	if (chip_id == KT_CHIP_JAGUAR_5000)
+		return FU_KINETIC_DP_FAMILY_JAGUAR;
+	return FU_KINETIC_DP_FAMILY_UNKNOWN;
+}
+

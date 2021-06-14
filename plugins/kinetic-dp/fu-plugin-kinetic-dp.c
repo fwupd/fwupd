@@ -105,8 +105,8 @@ fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **erro
 		return FALSE;
 
 	/* for DeviceKind=system devices */
-	fu_kinetic_dp_device_set_system_type(FU_KINETIC_DP_DEVICE (dev),
-                                          fu_plugin_get_dmi_value(plugin, FU_HWIDS_KEY_PRODUCT_SKU));
+	fu_kinetic_dp_device_set_system_type(FU_KINETIC_DP_DEVICE(dev),
+                                         fu_plugin_get_dmi_value(plugin, FU_HWIDS_KEY_PRODUCT_SKU));
 
 	/* this might fail if there is nothing connected */
 	fu_plugin_kinetic_dp_device_rescan(plugin, FU_DEVICE (dev));

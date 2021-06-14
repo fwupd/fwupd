@@ -11,6 +11,8 @@
 
 #include <glib.h>
 
+#include "fu-kinetic-dp-aux-isp.h"
+
 #define KINETIC_FLASH_MODE_DELAY	3	/* seconds */
 
 /**
@@ -48,4 +50,5 @@ typedef enum {
 
 const gchar *fu_kinetic_dp_mode_to_string(FuKineticDpMode mode);
 const gchar *fu_kinetic_dp_family_to_string(FuKineticDpFamily family);
+FuKineticDpFamily fu_kinetic_dp_chip_id_to_family(KtChipId chip_id);
 

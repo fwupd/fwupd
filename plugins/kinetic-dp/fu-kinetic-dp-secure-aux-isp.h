@@ -6,6 +6,12 @@
 
 #pragma once
 
+#include <glib-object.h>
+
+#include "fu-kinetic-dp-device.h"
+#include "fu-kinetic-dp-firmware.h"
+#include "fu-kinetic-dp-aux-isp.h"
+
 #define DPCD_KT_CONFIRMATION_BIT        0x80
 #define DPCD_KT_COMMAND_MASK            0x7F
 
@@ -89,41 +95,6 @@ typedef enum {
 
 typedef enum
 {
-    KT_CHIP_NONE          = 0,
-    KT_CHIP_BOBCAT_2800   = 1,
-    KT_CHIP_BOBCAT_2850   = 2,
-    KT_CHIP_PEGASUS       = 3,
-    KT_CHIP_MYSTIQUE      = 4,
-    KT_CHIP_DP2VGA        = 5,
-    KT_CHIP_PUMA_2900     = 6,
-    KT_CHIP_PUMA_2920     = 7,
-    KT_CHIP_JAGUAR_5000   = 8,
-    KT_CHIP_MUSTANG_5200  = 9,
-} KtChipId;
-
-typedef enum
-{
-    KT_FW_STATE_RUN_NONE       = 0,
-    KT_FW_STATE_RUN_IROM       = 1,
-    KT_FW_STATE_RUN_BOOT_CODE  = 2,
-    KT_FW_STATE_RUN_APP        = 3,
-
-    KT_FW_STATE_NUM            = 4
-} KtFwRunState;
-
-typedef enum
-{
-    DEV_HOST    = 0,
-    DEV_PORT1   = 1,
-    DEV_PORT2   = 2,
-    DEV_PORT3   = 3,
-
-    MAX_DEV_NUM = 4,
-    DEV_ALL     = 0xFF
-} KtDpDevPort;
-
-typedef enum
-{
     KT_FW_BIN_FLAG_NONE = 0,
     KT_FW_BIN_FLAG_XIP  = 1,
 } KtFwBinFlag;
@@ -143,4 +114,17 @@ typedef struct
 	guint8  is_fpga_enabled;
 	guint8  reserved[12];
 } KtJaguarAppId;
+
+void fu_kinetic_dp_secure_aux_isp_init(void);
+gboolean fu_kinetic_dp_secure_aux_isp_get_device_info(FuKineticDpConnection *connection,
+                                                      KtDpDevInfo *dev_info,
+                                                      GError **error);
+gboolean fu_kinetic_dp_secure_aux_isp_enable_aux_forward(FuKineticDpConnection *connection,
+                                                         KtDpDevPort target_port,
+                                                         GError **error);
+gboolean fu_kinetic_dp_secure_aux_isp_disable_aux_forward(FuKineticDpConnection *connection, GError **error);
+gboolean fu_kinetic_dp_secure_aux_isp_update_firmware(FuKineticDpDevice *self,
+                                                      FuFirmware *firmware,
+                                                      const KtDpDevInfo *dev_info,
+                                                      GError **error);
 

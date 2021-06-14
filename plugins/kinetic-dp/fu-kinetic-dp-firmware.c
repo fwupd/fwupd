@@ -11,7 +11,8 @@
 
 #include "fu-kinetic-dp-connection.h"
 #include "fu-kinetic-dp-firmware.h"
-#include "fu-kinetic-secure-aux-isp.h"
+#include "fu-kinetic-dp-aux-isp.h"
+#include "fu-kinetic-dp-secure-aux-isp.h"
 
 struct _FuKineticDpFirmware {
     FuFirmwareClass parent_instance;
