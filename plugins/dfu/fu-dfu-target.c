@@ -28,8 +28,6 @@
 #include "fu-dfu-sector.h"
 #include "fu-dfu-target-private.h"
 
-#include "fu-dfu-firmware-private.h"
-
 #define DFU_TARGET_MANIFEST_MAX_POLLING_TRIES	200
 
 static void fu_dfu_target_finalize			 (GObject *object);
@@ -550,7 +548,7 @@ fu_dfu_target_check_status (FuDfuTarget *self, GError **error)
 
 	/* STM32-specific long errors */
 	status = fu_dfu_device_get_status (priv->device);
-	if (fu_dfu_device_get_version (priv->device) == DFU_VERSION_DFUSE) {
+	if (fu_dfu_device_get_version (priv->device) == FU_DFU_FIRMARE_VERSION_DFUSE) {
 		if (status == FU_DFU_STATUS_ERR_VENDOR) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -806,7 +804,7 @@ fu_dfu_target_download_chunk (FuDfuTarget *self, guint16 index, GBytes *bytes, G
 	}
 
 	/* for STM32 devices, the action only occurs when we do GetStatus */
-	if (fu_dfu_device_get_version (priv->device) == DFU_VERSION_DFUSE) {
+	if (fu_dfu_device_get_version (priv->device) == FU_DFU_FIRMARE_VERSION_DFUSE) {
 		if (!fu_dfu_device_refresh (priv->device, error))
 			return FALSE;
 	}

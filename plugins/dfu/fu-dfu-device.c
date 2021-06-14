@@ -78,8 +78,6 @@
 #include "fu-dfu-target-private.h"
 #include "fu-dfu-target-stm.h"
 
-#include "fu-dfu-firmware-private.h"
-
 static void fu_dfu_device_finalize			 (GObject *object);
 
 typedef struct {
@@ -159,7 +157,7 @@ fu_dfu_device_get_transfer_size (FuDfuDevice *self)
  *
  * Gets the DFU specification version supported by the device.
  *
- * Returns: integer, or 0 for unknown, e.g. %DFU_VERSION_DFU_1_1
+ * Returns: integer, or 0 for unknown, e.g. %FU_DFU_FIRMARE_VERSION_DFU_1_1
  **/
 guint16
 fu_dfu_device_get_version (FuDfuDevice *self)
@@ -228,7 +226,7 @@ fu_dfu_device_parse_iface_data (FuDfuDevice *self, GBytes *iface_data, GError **
 	} else if (sz == sizeof(DfuFuncDescriptor) - 2) {
 		g_warning ("truncated DFU interface data, no bcdDFUVersion");
 		memcpy (&desc, buf, sz);
-		desc.bcdDFUVersion = DFU_VERSION_DFU_1_1;
+		desc.bcdDFUVersion = FU_DFU_FIRMARE_VERSION_DFU_1_1;
 	} else {
 		g_autoptr(GString) bufstr = g_string_new (NULL);
 		for (gsize i = 0; i < sz; i++)
@@ -249,7 +247,7 @@ fu_dfu_device_parse_iface_data (FuDfuDevice *self, GBytes *iface_data, GError **
 	priv->version = GUINT16_FROM_LE (desc.bcdDFUVersion);
 
 	/* ST-specific */
-	if (priv->version == DFU_VERSION_DFUSE &&
+	if (priv->version == FU_DFU_FIRMARE_VERSION_DFUSE &&
 	    desc.bmAttributes & FU_DFU_DEVICE_ATTR_CAN_ACCELERATE)
 		priv->transfer_size = 0x1000;
 
@@ -327,24 +325,24 @@ fu_dfu_device_add_targets (FuDfuDevice *self, GError **error)
 		/* fix up the version */
 		if (priv->force_version > 0)
 			priv->version = priv->force_version;
-		if (priv->version == DFU_VERSION_DFU_1_0 ||
-		    priv->version == DFU_VERSION_DFU_1_1) {
+		if (priv->version == FU_DFU_FIRMARE_VERSION_DFU_1_0 ||
+		    priv->version == FU_DFU_FIRMARE_VERSION_DFU_1_1) {
 			g_debug ("DFU v1.1");
-		} else if (priv->version == DFU_VERSION_ATMEL_AVR) {
+		} else if (priv->version == FU_DFU_FIRMARE_VERSION_ATMEL_AVR) {
 			g_debug ("AVR-DFU support");
-			priv->version = DFU_VERSION_ATMEL_AVR;
-		} else if (priv->version == DFU_VERSION_DFUSE) {
+			priv->version = FU_DFU_FIRMARE_VERSION_ATMEL_AVR;
+		} else if (priv->version == FU_DFU_FIRMARE_VERSION_DFUSE) {
 			g_debug ("STM-DFU support");
 		} else if (priv->version == 0x0101) {
 			g_debug ("DFU v1.1 assumed");
-			priv->version = DFU_VERSION_DFU_1_1;
+			priv->version = FU_DFU_FIRMARE_VERSION_DFU_1_1;
 		} else {
 			g_warning ("DFU version 0x%04x invalid, v1.1 assumed", priv->version);
-			priv->version = DFU_VERSION_DFU_1_1;
+			priv->version = FU_DFU_FIRMARE_VERSION_DFU_1_1;
 		}
 
 		/* set expected protocol */
-		if (priv->version == DFU_VERSION_DFUSE) {
+		if (priv->version == FU_DFU_FIRMARE_VERSION_DFUSE) {
 			fu_device_add_protocol (FU_DEVICE (self), "com.st.dfuse");
 		} else {
 			fu_device_add_protocol (FU_DEVICE (self), "org.usb.dfu");
@@ -367,10 +365,10 @@ fu_dfu_device_add_targets (FuDfuDevice *self, GError **error)
 
 		/* create a target of the required type */
 		switch (priv->version) {
-		case DFU_VERSION_DFUSE:
+		case FU_DFU_FIRMARE_VERSION_DFUSE:
 			target = fu_dfu_target_stm_new ();
 			break;
-		case DFU_VERSION_ATMEL_AVR:
+		case FU_DFU_FIRMARE_VERSION_ATMEL_AVR:
 			target = fu_dfu_target_avr_new ();
 			break;
 		default:
