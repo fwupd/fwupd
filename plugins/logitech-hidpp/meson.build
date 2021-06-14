@@ -21,6 +21,7 @@ shared_module('fu_plugin_logitech_hidpp',
     'fu-logitech-hidpp-hidpp-msg.c',
     'fu-logitech-hidpp-peripheral.c',
     'fu-logitech-hidpp-runtime.c',
+    'fu-logitech-hidpp-runtime-unifying.c',
   ],
   include_directories : [
     root_incdir,

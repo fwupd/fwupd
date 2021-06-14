@@ -1,7 +1,7 @@
 # Unifying Receiver
 [HIDRAW\VEN_046D&DEV_C52B]
 Plugin = logitech_hidpp
-GType = FuLogitechHidPpRuntime
+GType = FuLogitechHidPpRuntimeUnifying
 VendorId=USB:0x046D
 InstallDuration = 30
 
