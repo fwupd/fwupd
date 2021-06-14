@@ -51,11 +51,7 @@ if get_option('tests')
       fwupdplugin_incdir,
     ],
     dependencies : [
-      libxmlb,
-      gio,
-      gusb,
-      gudev,
-      libm,
+      plugin_deps,
     ],
     link_with : [
       fwupd,
