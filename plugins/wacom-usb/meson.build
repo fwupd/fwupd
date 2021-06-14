@@ -9,6 +9,7 @@ shared_module('fu_plugin_wacom_usb',
   fu_hash,
   sources : [
     'fu-wac-common.c',
+    'fu-wac-android-device.c',
     'fu-wac-device.c',
     'fu-wac-firmware.c',          # fuzzing
     'fu-wac-module.c',
