@@ -7,11 +7,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
-
-#include "fu-common-version.h"
-#include "fu-kenv.h"
 
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"

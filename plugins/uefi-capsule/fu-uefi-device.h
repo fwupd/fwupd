@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
+
 #include "fu-uefi-device.h"
 #include "fu-uefi-update-info.h"
 

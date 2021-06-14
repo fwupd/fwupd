@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_CPU_DEVICE (fu_cpu_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuCpuDevice, fu_cpu_device, FU, CPU_DEVICE, FuDevice)

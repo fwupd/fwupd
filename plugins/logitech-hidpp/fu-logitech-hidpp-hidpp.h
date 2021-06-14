@@ -6,9 +6,8 @@
 
 #pragma once
 
+#include <fwupdplugin.h>
 #include <gio/gio.h>
-
-#include "fu-io-channel.h"
 
 /*
  * Based on the HID++ documentation provided by Nestor Lopez Casado at:

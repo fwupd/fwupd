@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include <fcntl.h>
+#include <fwupdplugin.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -15,9 +16,6 @@
 #endif
 
 #include <gio/gunixinputstream.h>
-
-#include "fu-device-locker.h"
-#include "fu-plugin-vfuncs.h"
 
 #include "fu-pci-device.h"
 

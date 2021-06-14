@@ -7,11 +7,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
-
-#include "fu-common.h"
-#include "fu-common-version.h"
-#include "fu-firmware-common.h"
 
 #include "fu-ccgx-common.h"
 #include "fu-ccgx-firmware.h"

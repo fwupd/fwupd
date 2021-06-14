@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-hid-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_UNIFYING_BOOTLOADER (fu_logitech_hidpp_bootloader_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuLogitechHidPpBootloader, fu_logitech_hidpp_bootloader, FU, UNIFYING_BOOTLOADER, FuHidDevice)

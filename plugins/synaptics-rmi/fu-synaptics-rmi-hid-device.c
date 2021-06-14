@@ -8,10 +8,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <sys/ioctl.h>
 #include <linux/hidraw.h>
-
-#include "fu-io-channel.h"
 
 #include "fu-synaptics-rmi-hid-device.h"
 #include "fu-synaptics-rmi-v5-device.h"

@@ -7,15 +7,13 @@
 #include "config.h"
 
 #include <efivar/efiboot.h>
+#include <fwupdplugin.h>
 #include <gio/gio.h>
 #include <stdio.h>
-
-#include "fwupd-error.h"
 
 #include "fu-ucs2.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
-#include "fu-efivar.h"
 
 /* XXX PJFIX: this should be in efiboot-loadopt.h in efivar */
 #define LOAD_OPTION_ACTIVE      0x00000001

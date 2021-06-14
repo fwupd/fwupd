@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_RTS54HUB_DEVICE (fu_rts54hub_device_get_type ())
 

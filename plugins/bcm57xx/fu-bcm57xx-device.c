@@ -24,8 +24,7 @@
 #include <sys/socket.h>
 #endif
 
-#include "fu-chunk.h"
-#include "fu-common.h"
+#include <fwupdplugin.h>
 
 #include "fu-bcm57xx-common.h"
 #include "fu-bcm57xx-device.h"

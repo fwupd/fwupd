@@ -7,7 +7,8 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
+
 #include "fu-goodixmoc-device.h"
 
 void

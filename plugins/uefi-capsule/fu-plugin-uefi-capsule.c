@@ -7,19 +7,15 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <fcntl.h>
 #include <glib/gi18n.h>
-
-#include "fu-archive.h"
-#include "fu-device-metadata.h"
-#include "fu-plugin-vfuncs.h"
 
 #include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
-#include "fu-efivar.h"
 
 struct FuPluginData {
 	FuUefiBgrt		*bgrt;

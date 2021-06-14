@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fwupd-error.h"
+#include <fwupdplugin.h>
 
 #include "fu-redfish-common.h"
 

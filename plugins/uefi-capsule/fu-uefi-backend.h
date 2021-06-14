@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-backend.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_UEFI_BACKEND (fu_uefi_backend_get_type ())
 G_DECLARE_FINAL_TYPE (FuUefiBackend, fu_uefi_backend, FU, UEFI_BACKEND, FuBackend)

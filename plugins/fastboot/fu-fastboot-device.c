@@ -6,11 +6,10 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 #include <xmlb.h>
 
-#include "fu-archive.h"
-#include "fu-chunk.h"
 #include "fu-fastboot-device.h"
 
 #define FASTBOOT_REMOVE_DELAY_RE_ENUMERATE	60000 /* ms */

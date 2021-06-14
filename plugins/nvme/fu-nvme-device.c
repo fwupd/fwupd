@@ -6,10 +6,10 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <sys/ioctl.h>
 #include <linux/nvme_ioctl.h>
 
-#include "fu-chunk.h"
 #include "fu-nvme-common.h"
 #include "fu-nvme-device.h"
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_WAC_MODULE (fu_wac_module_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuWacModule, fu_wac_module, FU, WAC_MODULE, FuDevice)

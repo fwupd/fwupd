@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 typedef enum {
 	FU_MEI_FAMILY_UNKNOWN,

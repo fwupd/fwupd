@@ -6,7 +6,8 @@
 
 #include "config.h"
 
-#include "fu-chunk.h"
+#include <fwupdplugin.h>
+
 #include "fu-superio-common.h"
 #include "fu-superio-it85-device.h"
 

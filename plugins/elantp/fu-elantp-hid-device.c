@@ -6,14 +6,13 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <linux/hidraw.h>
 #include <linux/input.h>
 
 #include "fu-elantp-common.h"
 #include "fu-elantp-firmware.h"
 #include "fu-elantp-hid-device.h"
-
-#include "fu-chunk.h"
 
 struct _FuElantpHidDevice {
 	FuUdevDevice		 parent_instance;

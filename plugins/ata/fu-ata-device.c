@@ -6,10 +6,10 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <scsi/sg.h>
 
 #include "fu-ata-device.h"
-#include "fu-chunk.h"
 
 #define FU_ATA_IDENTIFY_SIZE	512	/* bytes */
 #define FU_ATA_BLOCK_SIZE	512	/* bytes */

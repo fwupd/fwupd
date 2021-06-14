@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "fu-firmware.h"
-#include "fu-fmap-firmware.h"
+#include <fwupdplugin.h>
+
 #include "fu-cros-ec-common.h"
 
 #define FU_TYPE_CROS_EC_FIRMWARE (fu_cros_ec_firmware_get_type ())

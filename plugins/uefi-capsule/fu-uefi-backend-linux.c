@@ -6,9 +6,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <gio/gunixmounts.h>
-
-#include "fu-common.h"
 
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"

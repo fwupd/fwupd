@@ -6,9 +6,8 @@
 
 #include "config.h"
 
-#include "fu-efivar.h"
+#include <fwupdplugin.h>
 
-#include "fu-efi-signature.h"
 #include "fu-uefi-dbx-common.h"
 #include "fu-uefi-dbx-device.h"
 

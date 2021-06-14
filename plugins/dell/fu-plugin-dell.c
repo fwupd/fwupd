@@ -16,11 +16,9 @@
 #ifdef HAVE_TSS2
 #include <tss2/tss2_esys.h>
 #endif
+#include <fwupdplugin.h>
 
-#include "fwupd-common.h"
 #include "fu-plugin-dell.h"
-#include "fu-plugin-vfuncs.h"
-#include "fu-device-metadata.h"
 
 /* These are used to indicate the status of a previous DELL flash */
 #define DELL_SUCCESS			0x0000

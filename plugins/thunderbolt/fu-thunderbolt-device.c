@@ -7,6 +7,7 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -15,12 +16,9 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include "fu-common.h"
-#include "fu-device-metadata.h"
 #include "fu-thunderbolt-device.h"
 #include "fu-thunderbolt-firmware.h"
 #include "fu-thunderbolt-firmware-update.h"
-#include "fu-udev-device-private.h"
 
 typedef enum {
 	FU_THUNDERBOLT_DEVICE_TYPE_DEVICE_CONTROLLER,

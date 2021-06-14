@@ -16,11 +16,9 @@
 
 #include "config.h"
 
-#include <string.h>
 #include <errno.h>
-
-#include "fu-hid-device.h"
-#include "fwupd-error.h"
+#include <fwupdplugin.h>
+#include <string.h>
 
 #include "fu-dell-dock-hid.h"
 

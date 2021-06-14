@@ -6,15 +6,12 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "fu-common.h"
-#include "fu-srec-firmware.h"
 #include "fu-wac-common.h"
 #include "fu-wac-firmware.h"
-
-#include "fwupd-error.h"
 
 static void
 fu_wac_firmware_parse_func (void)

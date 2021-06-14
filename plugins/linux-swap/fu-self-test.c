@@ -10,8 +10,6 @@
 
 #include "fu-linux-swap.h"
 
-#include "fwupd-error.h"
-
 static void
 fu_linux_swap_none_func (void)
 {

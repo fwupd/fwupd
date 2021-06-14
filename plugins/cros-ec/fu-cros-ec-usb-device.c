@@ -6,9 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-chunk.h"
 #include "fu-cros-ec-usb-device.h"
 #include "fu-cros-ec-common.h"
 #include "fu-cros-ec-firmware.h"

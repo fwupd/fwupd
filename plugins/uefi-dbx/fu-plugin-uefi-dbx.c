@@ -6,8 +6,8 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
-#include "fu-efi-signature-list.h"
+#include <fwupdplugin.h>
+
 #include "fu-uefi-dbx-device.h"
 
 void

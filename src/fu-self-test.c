@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <xmlb.h>
-#include <fwupd.h>
 #include <fwupdplugin.h>
 #include <glib-object.h>
 #include <glib/gstdio.h>
@@ -26,7 +25,6 @@
 #include "fu-progressbar.h"
 #include "fu-hash.h"
 #include "fu-security-attr.h"
-#include "fu-security-attrs.h"
 #include "fu-smbios-private.h"
 
 typedef struct {

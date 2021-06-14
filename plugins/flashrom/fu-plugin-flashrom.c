@@ -22,9 +22,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-plugin-vfuncs.h"
 #include "fu-flashrom-internal-device.h"
 #include "fu-flashrom-lspcon-i2c-spi-device.h"
 

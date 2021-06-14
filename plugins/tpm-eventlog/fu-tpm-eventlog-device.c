@@ -6,9 +6,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <tss2/tss2_esys.h>
-
-#include "fu-common.h"
 
 #include "fu-tpm-eventlog-device.h"
 #include "fu-tpm-eventlog-parser.h"

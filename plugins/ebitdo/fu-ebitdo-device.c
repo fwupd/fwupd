@@ -6,9 +6,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
-
-#include "fu-chunk.h"
 
 #include "fu-ebitdo-common.h"
 #include "fu-ebitdo-device.h"

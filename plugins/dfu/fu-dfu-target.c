@@ -19,6 +19,7 @@
 
 #include "config.h"
 
+#include <fwupd.h>
 #include <string.h>
 #include <math.h>
 
@@ -28,8 +29,6 @@
 #include "fu-dfu-target-private.h"
 
 #include "fu-dfu-firmware-private.h"
-
-#include "fwupd-error.h"
 
 #define DFU_TARGET_MANIFEST_MAX_POLLING_TRIES	200
 

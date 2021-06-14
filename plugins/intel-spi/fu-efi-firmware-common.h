@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 gboolean	fu_efi_firmware_parse_sections		(FuFirmware	*firmware,
 							 GBytes		*fw,

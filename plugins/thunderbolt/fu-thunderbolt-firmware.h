@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_THUNDERBOLT_FIRMWARE (fu_thunderbolt_firmware_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuThunderboltFirmware, fu_thunderbolt_firmware, FU,THUNDERBOLT_FIRMWARE, FuFirmware)

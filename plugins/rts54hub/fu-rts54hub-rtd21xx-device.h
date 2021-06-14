@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_RTS54HUB_RTD21XX_DEVICE (fu_rts54hub_rtd21xx_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuRts54hubRtd21xxDevice, fu_rts54hub_rtd21xx_device, FU, RTS54HUB_RTD21XX_DEVICE, FuDevice)

@@ -6,10 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-io-channel.h"
-#include "fu-archive.h"
 #include "fu-mm-device.h"
 #include "fu-device-private.h"
 #include "fu-mm-utils.h"

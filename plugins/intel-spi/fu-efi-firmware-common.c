@@ -10,7 +10,8 @@
 #include <lzma.h>
 #endif
 
-#include "fu-common.h"
+#include <fwupdplugin.h>
+
 #include "fu-efi-firmware-common.h"
 #include "fu-efi-firmware-section.h"
 

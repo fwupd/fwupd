@@ -13,10 +13,9 @@
 #include <efivar-dp.h>
 #endif
 
-#include "fu-common.h"
-#include "fu-uefi-devpath.h"
+#include <fwupdplugin.h>
 
-#include "fwupd-error.h"
+#include "fu-uefi-devpath.h"
 
 #if defined(__FreeBSD__)
 #define EFIDP_END_TYPE      0x7f

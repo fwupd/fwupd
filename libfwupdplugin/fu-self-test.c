@@ -8,7 +8,6 @@
 
 #include <string.h>
 #include <xmlb.h>
-#include <fwupd.h>
 #include <fwupdplugin.h>
 #include <libgcab.h>
 #include <glib/gstdio.h>

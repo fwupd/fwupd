@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_SYNAPTICS_MST_FIRMWARE (fu_synaptics_mst_firmware_get_type ())
 G_DECLARE_FINAL_TYPE (FuSynapticsMstFirmware, fu_synaptics_mst_firmware, FU, SYNAPTICS_MST_FIRMWARE, FuFirmware)

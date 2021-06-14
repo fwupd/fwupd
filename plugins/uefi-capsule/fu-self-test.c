@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 
 #include "fu-context-private.h"
 
@@ -16,8 +16,6 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-pcrs.h"
-
-#include "fwupd-error.h"
 
 static void
 fu_uefi_pcrs_1_2_func (void)

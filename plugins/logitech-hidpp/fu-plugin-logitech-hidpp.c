@@ -6,9 +6,7 @@
 
 #include "config.h"
 
-#include <fwupd.h>
-
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 #include "fu-logitech-hidpp-bootloader-nordic.h"
 #include "fu-logitech-hidpp-bootloader-texas.h"

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 #define FU_PXI_DEVICE_MODEL_NAME_LEN		12	/* bytes */
 

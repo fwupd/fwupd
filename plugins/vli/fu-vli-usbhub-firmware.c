@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-#include "fu-common.h"
+#include <fwupdplugin.h>
 
 #include "fu-vli-usbhub-firmware.h"
 

@@ -6,9 +6,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
-
-#include "fu-firmware-common.h"
 
 #include "fu-jabra-device.h"
 

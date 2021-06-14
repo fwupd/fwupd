@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 #include "fu-fresco-pd-device.h"
 #include "fu-fresco-pd-firmware.h"

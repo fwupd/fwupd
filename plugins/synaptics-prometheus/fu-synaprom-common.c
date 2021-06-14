@@ -7,10 +7,10 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <gio/gio.h>
 #include <string.h>
 
-#include "fu-common.h"
 #include "fu-synaprom-common.h"
 
 enum {

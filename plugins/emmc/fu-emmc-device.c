@@ -6,10 +6,10 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <sys/ioctl.h>
 #include <linux/mmc/ioctl.h>
 
-#include "fu-chunk.h"
 #include "fu-emmc-device.h"
 
 /* From kernel linux/major.h */

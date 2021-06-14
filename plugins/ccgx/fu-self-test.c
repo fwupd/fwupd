@@ -6,7 +6,8 @@
 
 #include "config.h"
 
-#include "fu-common.h"
+#include <fwupdplugin.h>
+
 #include "fu-ccgx-firmware.h"
 #include "fu-ccgx-dmc-firmware.h"
 

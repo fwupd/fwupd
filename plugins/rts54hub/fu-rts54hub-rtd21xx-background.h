@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
+
 #include "fu-rts54hub-rtd21xx-device.h"
 
 #define FU_TYPE_RTS54HUB_RTD21XX_BACKGROUND (fu_rts54hub_rtd21xx_background_get_type ())

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "fu-udev-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_PXI_DEVICE (fu_pxi_device_get_type ())
 

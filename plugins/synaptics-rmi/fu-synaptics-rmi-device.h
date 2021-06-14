@@ -6,8 +6,9 @@
 
 #pragma once
 
+#include <fwupdplugin.h>
+
 #include "fu-synaptics-rmi-common.h"
-#include "fu-udev-device.h"
 
 #define FU_TYPE_SYNAPTICS_RMI_DEVICE (fu_synaptics_rmi_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuSynapticsRmiDevice, fu_synaptics_rmi_device, FU, SYNAPTICS_RMI_DEVICE, FuUdevDevice)

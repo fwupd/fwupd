@@ -6,7 +6,8 @@
 
 #include "config.h"
 
-#include "fu-common.h"
+#include <fwupdplugin.h>
+
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-common.h"
 

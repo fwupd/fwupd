@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
-#include "fu-hid-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_HAILUCK_KBD_DEVICE (fu_hailuck_kbd_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuHailuckKbdDevice, fu_hailuck_kbd_device, FU, HAILUCK_KBD_DEVICE, FuHidDevice)

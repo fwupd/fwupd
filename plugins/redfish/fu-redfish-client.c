@@ -10,11 +10,7 @@
 #include <curl/curl.h>
 #include <string.h>
 
-#include "fwupd-error.h"
-#include "fwupd-enums.h"
-
-#include "fu-device.h"
-#include "fu-efivar.h"
+#include <fwupdplugin.h>
 
 #include "fu-redfish-client.h"
 #include "fu-redfish-common.h"

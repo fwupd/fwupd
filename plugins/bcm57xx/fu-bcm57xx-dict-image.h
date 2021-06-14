@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_BCM57XX_DICT_IMAGE (fu_bcm57xx_dict_image_get_type ())
 G_DECLARE_FINAL_TYPE (FuBcm57xxDictImage, fu_bcm57xx_dict_image, FU, BCM57XX_DICT_IMAGE, FuFirmware)

@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
-#include "fu-hid-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_WAC_DEVICE (fu_wac_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuWacDevice, fu_wac_device, FU, WAC_DEVICE, FuHidDevice)

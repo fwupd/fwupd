@@ -7,9 +7,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
-
-#include "fu-chunk.h"
 
 #include "fu-ccgx-common.h"
 #include "fu-ccgx-hpi-common.h"

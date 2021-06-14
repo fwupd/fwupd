@@ -17,7 +17,7 @@
 
 #include "config.h"
 
-#include "fu-device.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_DELL_DOCK_EC (fu_dell_dock_ec_get_type ())
 G_DECLARE_FINAL_TYPE (FuDellDockEc, fu_dell_dock_ec, FU, DELL_DOCK_EC, FuDevice)

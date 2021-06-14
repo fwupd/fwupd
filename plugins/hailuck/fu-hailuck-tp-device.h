@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_HAILUCK_TP_DEVICE (fu_hailuck_tp_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuHailuckTpDevice, fu_hailuck_tp_device, FU, HAILUCK_TP_DEVICE, FuDevice)

@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
+
 #include "fu-synaprom-device.h"
 
 #define FU_TYPE_SYNAPROM_CONFIG (fu_synaprom_config_get_type ())

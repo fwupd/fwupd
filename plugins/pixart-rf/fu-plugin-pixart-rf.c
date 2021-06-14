@@ -6,8 +6,7 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
-
+#include <fwupdplugin.h>
 
 #include "fu-pxi-device.h"
 #include "fu-pxi-firmware.h"

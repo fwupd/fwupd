@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_THELIO_IO_DEVICE (fu_thelio_io_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuThelioIoDevice, fu_thelio_io_device, FU, THELIO_IO_DEVICE, FuUsbDevice)

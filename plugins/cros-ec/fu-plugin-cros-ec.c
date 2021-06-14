@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 #include "fu-cros-ec-usb-device.h"
 #include "fu-cros-ec-firmware.h"

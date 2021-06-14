@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_GOODIXMOC_DEVICE (fu_goodixmoc_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuGoodixMocDevice, fu_goodixmoc_device, FU, GOODIXMOC_DEVICE, FuUsbDevice)

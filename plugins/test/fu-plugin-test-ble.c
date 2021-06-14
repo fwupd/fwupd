@@ -6,9 +6,9 @@
 
 #include "config.h"
 
-#include "fu-test-ble-device.h"
+#include <fwupdplugin.h>
 
-#include "fu-plugin-vfuncs.h"
+#include "fu-test-ble-device.h"
 
 void
 fu_plugin_init (FuPlugin *plugin)

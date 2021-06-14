@@ -6,7 +6,8 @@
 
 #include "config.h"
 
-#include "fu-chunk.h"
+#include <fwupdplugin.h>
+
 #include "fu-ep963x-common.h"
 #include "fu-ep963x-device.h"
 #include "fu-ep963x-firmware.h"

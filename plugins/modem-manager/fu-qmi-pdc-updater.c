@@ -6,9 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-common.h"
 #include "fu-qmi-pdc-updater.h"
 
 #define FU_QMI_PDC_MAX_OPEN_ATTEMPTS 8

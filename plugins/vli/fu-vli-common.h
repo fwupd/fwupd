@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 typedef enum {
 	FU_VLI_DEVICE_KIND_UNKNOWN		= 0x0000,

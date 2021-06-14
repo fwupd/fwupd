@@ -8,9 +8,9 @@
 #include "config.h"
 
 #include <string.h>
+#include <fwupdplugin.h>
 #include <gio/gio.h>
 
-#include "fu-common.h"
 #include "fu-synaprom-firmware.h"
 
 struct _FuSynapromFirmware {

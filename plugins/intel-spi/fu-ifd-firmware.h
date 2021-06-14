@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_IFD_FIRMWARE (fu_ifd_firmware_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuIfdFirmware, fu_ifd_firmware, FU, IFD_FIRMWARE, FuFirmware)
