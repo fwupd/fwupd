@@ -330,7 +330,7 @@ fu_dfuse_firmware_write (FuFirmware *firmware, GError **error)
 static void
 fu_dfuse_firmware_init (FuDfuseFirmware *self)
 {
-	fu_dfu_firmware_set_version (FU_DFU_FIRMWARE (self), DFU_VERSION_DFUSE);
+	fu_dfu_firmware_set_version (FU_DFU_FIRMWARE (self), FU_DFU_FIRMARE_VERSION_DFUSE);
 }
 
 static void
