@@ -34,6 +34,10 @@ repos:
       name: check for null / false return mistmatch
       language: script
       entry: ./contrib/ci/check-null-false-returns.py
+    - id: check-headers
+      name: check for superfluous includes
+      language: script
+      entry: ./contrib/ci/check-headers.py
     - id: shellcheck
       name: check shellscript style
       language: system
