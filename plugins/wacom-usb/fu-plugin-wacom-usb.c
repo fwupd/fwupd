@@ -8,6 +8,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-wac-android-device.h"
 #include "fu-wac-device.h"
 #include "fu-wac-firmware.h"
 
@@ -16,6 +17,7 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_device_gtype (plugin, FU_TYPE_WAC_DEVICE);
+	fu_plugin_add_device_gtype (plugin, FU_TYPE_WAC_ANDROID_DEVICE);
 	fu_plugin_add_firmware_gtype (plugin, "wacom", FU_TYPE_WAC_FIRMWARE);
 }
 

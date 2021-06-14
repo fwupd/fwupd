@@ -2,33 +2,60 @@
 # Intuos Pro medium (2nd-gen USB) [PTH-660]
 [USB\VID_056A&PID_0357]
 Plugin = wacom_usb
+GType = FuWacDevice
 Flags = use-runtime-version
 
 # Intuos Pro large (2nd-gen USB) [PTH-860]
 [USB\VID_056A&PID_0358]
 Plugin = wacom_usb
+GType = FuWacDevice
 Flags = use-runtime-version
 
 # Intuos S 3rd-gen (USB) [CTL-4100]
 [USB\VID_056A&PID_0374]
 Plugin = wacom_usb
+GType = FuWacDevice
 Flags = use-runtime-version
 
-# Intuos M 3rd-gen (USB) [NA]
+# Intuos S 3rd-gen (USB) [CTL-4100 - Android Mode]
+[USB\VID_2D1F&PID_0374]
+Plugin = wacom_usb
+GType = FuWacAndroidDevice
+
+# Intuos M 3rd-gen (USB) [CTL-6100]
 [USB\VID_056A&PID_0375]
 Plugin = wacom_usb
+GType = FuWacDevice
 Flags = use-runtime-version
+
+# Intuos M 3rd-gen (USB) [CTL-6100 - Android Mode]
+[USB\VID_2D1F&PID_0375]
+Plugin = wacom_usb
+GType = FuWacAndroidDevice
 
 # Intuos BT S 3rd-gen (USB) [CTL-4100WL]
 [USB\VID_056A&PID_0376]
 Plugin = wacom_usb
+GType = FuWacDevice
 Flags = use-runtime-version
+
+# Intuos BT S 3rd-gen (USB) [CTL-4100WL - Android Mode]
+[USB\VID_2D1F&PID_0376]
+Plugin = wacom_usb
+GType = FuWacAndroidDevice
 
 # Intuos BT M 3rd-gen (USB) [CTL-6100WL]
 [USB\VID_056A&PID_0378]
 Plugin = wacom_usb
+GType = FuWacDevice
 Flags = use-runtime-version
+
+# Intuos BT M 3rd-gen (USB) [CTL-6100WL - Android Mode]
+[USB\VID_2D1F&PID_0378]
+Plugin = wacom_usb
+GType = FuWacAndroidDevice
 
 # Intuos Pro Small (2nd-gen USB) [PTH-460]
 [USB\VID_056A&PID_0392]
+GType = FuWacDevice
 Plugin = wacom_usb
