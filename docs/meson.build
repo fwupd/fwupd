@@ -1,6 +1,10 @@
 if get_option('docs') == 'docgen'
   toml_conf = configuration_data()
-  toml_conf.set('version', meson.project_version())
+  docgen_version = source_version
+  if git.found() and source_version != fwupd_version
+    docgen_version = run_command(git, 'branch', '--show-current').stdout().strip()
+  endif
+  toml_conf.set('version', docgen_version)
 
   fwupd_toml = configure_file(
     input: 'fwupd.toml.in',

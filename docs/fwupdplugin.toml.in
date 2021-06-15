@@ -38,7 +38,7 @@ show_index_summary = true
 show_class_hierarchy = true
 
 [source-location]
-base_url = "https://github.com/fwupd/fwupd/blob/master/"
+base_url = "https://github.com/fwupd/fwupd/blob/@version@/"
 
 [extra]
 content_files = [
