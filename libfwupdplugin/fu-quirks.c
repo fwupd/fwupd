@@ -508,6 +508,7 @@ fu_quirks_init (FuQuirks *self)
 	fu_quirks_add_possible_key (self, FU_QUIRKS_GTYPE);
 	fu_quirks_add_possible_key (self, FU_QUIRKS_GUID);
 	fu_quirks_add_possible_key (self, FU_QUIRKS_ICON);
+	fu_quirks_add_possible_key (self, FU_QUIRKS_INHIBIT);
 	fu_quirks_add_possible_key (self, FU_QUIRKS_INSTALL_DURATION);
 	fu_quirks_add_possible_key (self, FU_QUIRKS_NAME);
 	fu_quirks_add_possible_key (self, FU_QUIRKS_PARENT_GUID);

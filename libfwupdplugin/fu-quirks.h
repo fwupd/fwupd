@@ -267,3 +267,11 @@ void		 fu_quirks_add_possible_key		(FuQuirks	*self,
  * Since: 1.5.0
  **/
 #define	FU_QUIRKS_REMOVE_DELAY			"RemoveDelay"
+/**
+ * FU_QUIRKS_INHIBIT:
+ *
+ * The quirk key to inhibit the UPDATABLE flag and to set an update error.
+ *
+ * Since: 1.6.2
+ **/
+#define	FU_QUIRKS_INHIBIT			"Inhibit"
