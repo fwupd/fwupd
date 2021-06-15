@@ -1,18 +1,22 @@
 # Pixart 2801
 [HIDRAW\VEN_093A&DEV_2801]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Pixart 2860
 [HIDRAW\VEN_093A&DEV_2860]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Pixart 2802
 [HIDRAW\VEN_093A&DEV_2802]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Pixart 2822
 [HIDRAW\VEN_093A&DEV_2822]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Pixart 2861
 [HIDRAW\VEN_093A&DEV_2861]
@@ -29,27 +33,34 @@ Plugin = pixart_rf
 # Primax Mouse
 [HIDRAW\VEN_0461&DEV_4EEF]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Primax US KB
 [HIDRAW\VEN_0461&DEV_4EEE]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Primax UK KB
 [HIDRAW\VEN_0461&DEV_4EF4]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Primax JP KB
 [HIDRAW\VEN_0461&DEV_4EF5]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Chicony Cheetos keyboard
 [HIDRAW\VEN_04F2&DEV_2051]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Chicony Cheetos mouse
 [HIDRAW\VEN_04F2&DEV_2103]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Primax Black Mocha KB
 [HIDRAW\VEN_0461&DEV_4EFA]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
