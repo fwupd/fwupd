@@ -1278,6 +1278,13 @@ fu_device_set_quirk_kv (FuDevice *self,
 		fu_device_set_version_format (self, fwupd_version_format_from_string (value));
 		return TRUE;
 	}
+	if (g_strcmp0 (key, FU_QUIRKS_INHIBIT) == 0) {
+		if (value != NULL)
+			fu_device_inhibit (self, "quirk", value);
+		else
+			fu_device_uninhibit (self, "quirk");
+		return TRUE;
+	}
 	if (g_strcmp0 (key, FU_QUIRKS_GTYPE) == 0) {
 		if (priv->specialized_gtype != G_TYPE_INVALID) {
 			g_debug ("already set GType to %s, ignoring %s",
