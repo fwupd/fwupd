@@ -254,7 +254,7 @@ void		 fu_quirks_add_possible_key		(FuQuirks	*self,
 /**
  * FU_QUIRKS_BATTERY_THRESHOLD:
  *
- * The quirk key for the battery theshold in percent.
+ * The quirk key for the battery threshold in percent.
  *
  * Since: 1.6.0
  **/

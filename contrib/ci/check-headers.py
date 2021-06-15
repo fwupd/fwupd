@@ -42,7 +42,7 @@ def test_files() -> int:
         for fn in glob.glob("**/*.[c|h]", recursive=True):
             includes = __get_includes(fn)
 
-            # we do not need both toplevel haders
+            # we do not need both toplevel headers
             if set(toplevel_headers_nopath).issubset(set(includes)):
                 print(
                     "{} contains both {}".format(fn, ", ".join(toplevel_headers_nopath))

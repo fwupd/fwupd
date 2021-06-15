@@ -24,7 +24,7 @@ G_BEGIN_DECLS
 /**
  * FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM:
  *
- * Host Security ID attribute indiciating encrypted RAM available
+ * Host Security ID attribute indicating encrypted RAM available
  *
  * Since: 1.5.0
  **/

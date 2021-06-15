@@ -92,7 +92,7 @@ fu_firmware_flag_from_string (const gchar *flag)
 /**
  * fu_firmware_add_flag:
  * @firmware: a #FuFirmware
- * @flag: the firmare flag
+ * @flag: the firmware flag
  *
  * Adds a specific firmware flag to the firmware.
  *
@@ -110,7 +110,7 @@ fu_firmware_add_flag (FuFirmware *firmware, FuFirmwareFlags flag)
 /**
  * fu_firmware_has_flag:
  * @firmware: a #FuFirmware
- * @flag: the firmare flag
+ * @flag: the firmware flag
  *
  * Finds if the firmware has a specific firmware flag.
  *
