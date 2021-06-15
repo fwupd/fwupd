@@ -1395,6 +1395,14 @@ fu_device_flags_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
 
+	/* bitfield */
+	for (guint64 i = 1; i < FU_DEVICE_INTERNAL_FLAG_UNKNOWN; i *= 2) {
+		const gchar *tmp = fu_device_internal_flag_to_string (i);
+		if (tmp == NULL)
+			break;
+		g_assert_cmpint (fu_device_internal_flag_from_string (tmp), ==, i);
+	}
+
 	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_NONE);
 
 	/* remove IS_BOOTLOADER if is a BOOTLOADER */
