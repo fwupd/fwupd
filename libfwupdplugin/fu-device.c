@@ -206,6 +206,8 @@ fu_device_internal_flag_to_string (FuDeviceInternalFlags flag)
 		return "replug-match-guid";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION)
 		return "inherit-activation";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_IS_OPEN)
+		return "is-open";
 	return NULL;
 }
 
@@ -238,8 +240,12 @@ fu_device_internal_flag_from_string (const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER;
 	if (g_strcmp0 (flag, "retry-open") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN;
-	if (g_strcmp0 (flag, "inherit-activation"))
+	if (g_strcmp0 (flag, "replug-match-guid") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID;
+	if (g_strcmp0 (flag, "inherit-activation") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION;
+	if (g_strcmp0 (flag, "is-open") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_IS_OPEN;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
