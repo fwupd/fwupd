@@ -3593,6 +3593,10 @@ fu_device_setup (FuDevice *self, GError **error)
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* should have already been called */
+	if (!fu_device_probe (self, error))
+		return FALSE;
+
 	/* already done */
 	if (priv->done_setup)
 		return TRUE;
