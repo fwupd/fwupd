@@ -14,6 +14,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-pxi-common.h"
 #include "fu-pxi-device.h"
 #include "fu-pxi-firmware.h"
 
@@ -38,7 +39,7 @@
 
 #define FU_PXI_DEVICE_OBJECT_SIZE_MAX		4096	/* bytes */
 #define FU_PXI_DEVICE_OTA_BUF_SZ		512	/* bytes */
-#define FU_PXI_DEVICE_NOTTFY_RET_LEN		4	/* bytes */
+#define FU_PXI_DEVICE_NOTIFY_RET_LEN		4	/* bytes */
 #define FU_PXI_DEVICE_FW_INFO_RET_LEN		8	/* bytes */
 
 #define FU_PXI_DEVICE_NOTIFY_TIMEOUT_MS		5000
@@ -237,15 +238,6 @@ fu_pxi_device_get_feature (FuPxiDevice *self, guint8 *buf, guint bufsz, GError *
 #endif
 }
 
-static guint16
-fu_pxi_device_calculate_checksum (const guint8 *buf, gsize bufsz)
-{
-	guint16 checksum = 0;
-	for (gsize idx = 0; idx < bufsz; idx++)
-		checksum += (guint16) buf[idx];
-	return checksum;
-}
-
 static gboolean
 fu_pxi_device_search_hid_usage_page (guint8 *report_descriptor, gint size,
 				     guint8 *usage_page, guint8 usage_page_sz)
@@ -369,7 +361,7 @@ fu_pxi_device_check_support_resume (FuPxiDevice *self,
 	/* calculate device current checksum */
 	for (guint i = 0; i < self->offset; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
-		checksum_tmp += fu_pxi_device_calculate_checksum (fu_chunk_get_data (chk),
+		checksum_tmp += fu_pxi_common_sum16 (fu_chunk_get_data (chk),
 								  fu_chunk_get_data_sz (chk));
 	}
 
@@ -403,7 +395,7 @@ fu_pxi_device_wait_notify (FuPxiDevice *self,
 	/* skip the wrong report id ,and keep polling until result is correct */
 	while (g_timer_elapsed (timer, NULL) * 1000.f < FU_PXI_DEVICE_NOTIFY_TIMEOUT_MS) {
 		if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (self),
-						port, res, (FU_PXI_DEVICE_NOTTFY_RET_LEN + 1) - port,
+						port, res, (FU_PXI_DEVICE_NOTIFY_RET_LEN + 1) - port,
 						error))
 			return FALSE;
 		if (res[0] == PXI_HID_DEV_OTA_INPUT_REPORT_ID)
@@ -536,7 +528,7 @@ fu_pxi_device_write_chunk (FuPxiDevice *self, FuChunk *chk, GError **error)
 	}
 
 	/* the last chunk */
-	checksum = fu_pxi_device_calculate_checksum (fu_chunk_get_data (chk),
+	checksum = fu_pxi_common_sum16 (fu_chunk_get_data (chk),
 						     fu_chunk_get_data_sz (chk));
 	self->checksum += checksum;
 	if (checksum_device != self->checksum ) {
@@ -665,7 +657,7 @@ fu_pxi_device_fw_upgrade (FuPxiDevice *self, FuFirmware *firmware, GError **erro
 	if (fw == NULL)
 		return FALSE;
 	buf = g_bytes_get_data (fw, &bufsz);
-	checksum = fu_pxi_device_calculate_checksum (buf, bufsz);
+	checksum = fu_pxi_common_sum16 (buf, bufsz);
 	fu_byte_array_append_uint8 (req, PXI_HID_DEV_OTA_FEATURE_REPORT_ID);
 	fu_byte_array_append_uint8 (req, FU_PXI_DEVICE_CMD_FW_UPGRADE);
 	fu_byte_array_append_uint32 (req, bufsz, G_LITTLE_ENDIAN);
