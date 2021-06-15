@@ -10,7 +10,7 @@ shared_module('fu_plugin_pixart_rf',
   sources : [
     'fu-plugin-pixart-rf.c',
     'fu-pxi-common.c',
-    'fu-pxi-device.c',
+    'fu-pxi-ble-device.c',
     'fu-pxi-firmware.c',      # fuzzing
   ],
   include_directories : [
