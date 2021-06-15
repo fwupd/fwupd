@@ -221,10 +221,6 @@ fu_synaprom_device_setup (FuDevice *device, GError **error)
 	    !fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER) &&
 	    pkt.security[1] & FU_SYNAPROM_SECURITY1_PROD_SENSOR) {
 		g_autoptr(FuSynapromConfig) cfg = fu_synaprom_config_new (self);
-		if (!fu_device_setup (FU_DEVICE (cfg), error)) {
-			g_prefix_error (error, "failed to get config version: ");
-			return FALSE;
-		}
 		fu_device_add_child (FU_DEVICE (device), FU_DEVICE (cfg));
 	}
 
