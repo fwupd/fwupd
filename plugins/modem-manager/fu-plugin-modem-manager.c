@@ -220,7 +220,7 @@ fu_plugin_mm_device_add (FuPlugin *plugin, MMObject *modem)
 		return;
 	}
 	dev = fu_mm_device_new (priv->manager, modem);
-	if (!fu_device_probe (FU_DEVICE (dev), &error)) {
+	if (!fu_device_setup (FU_DEVICE (dev), &error)) {
 		g_warning ("failed to probe MM device: %s", error->message);
 		return;
 	}

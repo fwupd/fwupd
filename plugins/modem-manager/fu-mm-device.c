@@ -10,7 +10,6 @@
 #include <string.h>
 
 #include "fu-mm-device.h"
-#include "fu-device-private.h"
 #include "fu-mm-utils.h"
 #include "fu-qmi-pdc-updater.h"
 
@@ -324,9 +323,6 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 			}
 		}
 	}
-
-	/* convert the instance IDs to GUIDs */
-	fu_device_convert_instance_ids (device);
 
 	return TRUE;
 }
