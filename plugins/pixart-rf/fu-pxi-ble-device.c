@@ -53,17 +53,6 @@ enum ota_process_setting {
 	OTA_EXTERNAL_RESOURCE,			/* External resource */
 };
 
-/* OTA spec check result */
-enum ota_spec_check_result {
-	OTA_SPEC_CHECK_OK		= 1,	/* Spec check ok */
-	OTA_FW_OUT_OF_BOUNDS		= 2,	/* OTA firmware size out of bound */
-	OTA_PROCESS_ILLEGAL		= 3,	/* Illegal OTA process */
-	OTA_RECONNECT			= 4,	/* Inform OTA app do reconnect */
-	OTA_FW_IMG_VERSION_ERROR	= 5,	/* FW image file version check error */
-	OTA_DEVICE_LOW_BATTERY		= 6,	/* Device is under low battery */
-	OTA_SPEC_CHECK_MAX_NUM,			/* Max number of OTA driver defined error code */
-};
-
 /* OTA disconnect reason */
 enum ota_disconnect_reason {
 	OTA_CODE_JUMP			= 1,	/* OTA code jump */
@@ -73,15 +62,8 @@ enum ota_disconnect_reason {
 
 struct _FuPxiBleDevice {
 	FuUdevDevice		 parent_instance;
+	struct ota_fw_state	 fwstate;
 	guint8			 retransmit_id;
-	guint8			 status;
-	guint8			 new_flow;
-	guint16			 offset;
-	guint16			 checksum;
-	guint32			 max_object_size;
-	guint16			 mtu_size;
-	guint16			 prn_threshold;
-	guint8			 spec_check_result;
 	gchar			*model_name;
 };
 
@@ -100,24 +82,6 @@ fu_pxi_ble_device_get_raw_info (FuPxiBleDevice *self, struct hidraw_devinfo *inf
 }
 #endif
 
-static const gchar *
-fu_pxi_ble_device_spec_check_result_to_string (guint8 spec_check_result)
-{
-	if (spec_check_result == OTA_SPEC_CHECK_OK)
-		return "ok";
-	if (spec_check_result == OTA_FW_OUT_OF_BOUNDS)
-		return "fw-out-of-bounds";
-	if (spec_check_result == OTA_PROCESS_ILLEGAL)
-		return "process-illegal";
-	if (spec_check_result == OTA_RECONNECT)
-		return "reconnect";
-	if (spec_check_result == OTA_FW_IMG_VERSION_ERROR)
-		return "fw-img-version-error";
-	if (spec_check_result == OTA_DEVICE_LOW_BATTERY)
-		return "device battery is too low";
-	return NULL;
-}
-
 static void
 fu_pxi_ble_device_to_string (FuDevice *device, guint idt, GString *str)
 {
@@ -127,15 +91,7 @@ fu_pxi_ble_device_to_string (FuDevice *device, guint idt, GString *str)
 	FU_DEVICE_CLASS (fu_pxi_ble_device_parent_class)->to_string (device, idt, str);
 
 	fu_common_string_append_kv (str, idt, "ModelName", self->model_name);
-	fu_common_string_append_kx (str, idt, "Status", self->status);
-	fu_common_string_append_kx (str, idt, "NewFlow", self->new_flow);
-	fu_common_string_append_kx (str, idt, "CurrentObjectOffset", self->offset);
-	fu_common_string_append_kx (str, idt, "CurrentChecksum", self->checksum);
-	fu_common_string_append_kx (str, idt, "MaxObjectSize", self->max_object_size);
-	fu_common_string_append_kx (str, idt, "MtuSize", self->mtu_size);
-	fu_common_string_append_kx (str, idt, "PacketReceiptNotificationThreshold", self->prn_threshold);
-	fu_common_string_append_kv (str, idt, "SpecCheckResult",
-				    fu_pxi_ble_device_spec_check_result_to_string (self->spec_check_result));
+	fu_pxi_ota_fw_state_to_string (&self->fwstate, idt, str);
 	fu_common_string_append_kx (str, idt, "RetransmitID", self->retransmit_id);
 }
 
@@ -345,32 +301,32 @@ fu_pxi_ble_device_check_support_resume (FuPxiBleDevice *self,
 
 	/* check offset is invalid or not */
 	chunks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
-	if (self->offset > chunks->len) {
+	if (self->fwstate.offset > chunks->len) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
 			     "offset from device is invalid: "
 			     "got 0x%x, current maximum 0x%x",
-			     self->offset,
+			     self->fwstate.offset,
 			     chunks->len);
 		return FALSE;
 	}
 
 	/* calculate device current checksum */
-	for (guint i = 0; i < self->offset; i++) {
+	for (guint i = 0; i < self->fwstate.offset; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		checksum_tmp += fu_pxi_common_sum16 (fu_chunk_get_data (chk),
 								  fu_chunk_get_data_sz (chk));
 	}
 
 	/* check current file is different with previous fw bin or not */
-	if (self->checksum != checksum_tmp) {
+	if (self->fwstate.checksum != checksum_tmp) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
 			     "checksum is different from previous fw: "
 			     "got 0x%04x, expected 0x%04x",
-			     self->checksum,
+			     self->fwstate.checksum,
 			     checksum_tmp);
 		return FALSE;
 	}
@@ -498,7 +454,7 @@ fu_pxi_ble_device_write_chunk (FuPxiBleDevice *self, FuChunk *chk, GError **erro
 	chunks = fu_chunk_array_new (fu_chunk_get_data (chk),
 				     fu_chunk_get_data_sz (chk),
 				     fu_chunk_get_address (chk),
-				     0x0, self->mtu_size);
+				     0x0, self->fwstate.mtu_size);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk2 = g_ptr_array_index (chunks, i);
 		if (!fu_pxi_ble_device_write_payload (self, chk2, error))
@@ -506,7 +462,7 @@ fu_pxi_ble_device_write_chunk (FuPxiBleDevice *self, FuChunk *chk, GError **erro
 		prn++;
 		/* wait notify from device when PRN over threshold write or
 		 * offset reach max object sz or write offset reach fw length */
-		if (prn >= self->prn_threshold || i == chunks->len - 1) {
+		if (prn >= self->fwstate.prn_threshold || i == chunks->len - 1) {
 			guint8 opcode = 0;
 			if (!fu_pxi_ble_device_wait_notify (self, 0x0,
 							    &opcode,
@@ -528,8 +484,8 @@ fu_pxi_ble_device_write_chunk (FuPxiBleDevice *self, FuChunk *chk, GError **erro
 	/* the last chunk */
 	checksum = fu_pxi_common_sum16 (fu_chunk_get_data (chk),
 						     fu_chunk_get_data_sz (chk));
-	self->checksum += checksum;
-	if (checksum_device != self->checksum ) {
+	self->fwstate.checksum += checksum;
+	if (checksum_device != self->fwstate.checksum ) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
@@ -599,39 +555,15 @@ fu_pxi_ble_device_fw_ota_init_new (FuPxiBleDevice *self, gsize bufsz, GError **e
 		return FALSE;
 
 	/* shared state */
-	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x5,
-					&self->status, error))
+	if (!fu_pxi_ota_fw_state_parse (&self->fwstate, res, sizeof(res), 0x05, error))
 		return FALSE;
-	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x6,
-					&self->new_flow, error))
-		return FALSE;
-	if (!fu_common_read_uint16_safe (res, sizeof(res), 0x7,
-					 &self->offset, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (!fu_common_read_uint16_safe (res, sizeof(res), 0x9,
-					 &self->checksum, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (!fu_common_read_uint32_safe (res, sizeof(res), 0xb,
-					 &self->max_object_size, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (!fu_common_read_uint16_safe (res, sizeof(res), 0xf,
-					 &self->mtu_size, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (!fu_common_read_uint16_safe (res, sizeof(res), 0x11,
-					 &self->prn_threshold, G_LITTLE_ENDIAN, error))
-		return FALSE;
-	if (!fu_common_read_uint8_safe (res, sizeof(res), 0x13,
-					&self->spec_check_result, error))
-		return FALSE;
-
-	/* sanity check */
-	if (self->spec_check_result != OTA_SPEC_CHECK_OK) {
+	if (self->fwstate.spec_check_result != OTA_SPEC_CHECK_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_READ,
 			     "FwInitNew spec check fail: %s [0x%02x]",
-			     fu_pxi_ble_device_spec_check_result_to_string (self->spec_check_result),
-			     self->spec_check_result);
+			     fu_pxi_spec_check_result_to_string (self->fwstate.spec_check_result),
+			     self->fwstate.spec_check_result);
 		return FALSE;
 	}
 
@@ -729,13 +661,13 @@ fu_pxi_ble_device_write_firmware (FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
 	if (!fu_pxi_ble_device_check_support_resume (self, firmware, &error_local)) {
 		g_debug ("do not resume: %s", error_local->message);
-		self->offset = 0;
-		self->checksum = 0;
+		self->fwstate.offset = 0;
+		self->fwstate.checksum = 0;
 	}
 
 	/* write fw into device */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	for (guint i = self->offset; i < chunks->len; i++) {
+	for (guint i = self->fwstate.offset; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_pxi_ble_device_write_chunk (self, chk, error))
 			return FALSE;
