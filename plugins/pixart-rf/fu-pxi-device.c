@@ -900,6 +900,7 @@ fu_pxi_device_setup (FuDevice *device, GError **error)
 
 	if (!fu_pxi_device_check_support_report_id (self, error)) {
 		g_prefix_error (error, "failed to check report id: ");
+		return FALSE;
 	}
 	if (!fu_pxi_device_fw_ota_check_retransmit (self, error)) {
 		g_prefix_error (error, "failed to OTA check retransmit: ");
