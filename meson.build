@@ -547,6 +547,9 @@ elif get_option('docs') == 'docgen'
     fallback: ['gi-docgen', 'dummy_dep'],
   )
   gidocgen = find_program('gi-docgen')
+  if not get_option('introspection')
+    error('introspection is needed for docgen')
+  endif
 endif
 
 subdir('libfwupd')
