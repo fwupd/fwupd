@@ -589,17 +589,3 @@ if makensis.found()
       join_paths(meson.source_root(), 'contrib', 'setup-win32.nsi'),
   ])
 endif
-
-codespell = find_program('codespell', required : false)
-if codespell.found()
-run_target('codespell',
-  command: [
-    codespell,
-    meson.source_root(),
-    '--write-changes',
-    '--builtin', 'clear,informal,en-GB_to_en-US',
-    '--skip', '*.po,*.csv,*.svg,*.p7c,subprojects,.git,pcrs,build*,.ossfuzz',
-    '--ignore-words-list', 'conexant,Conexant,gir,GIR,hsi,HSI,cancelled,Cancelled,te',
-  ]
-)
-endif
