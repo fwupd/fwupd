@@ -4,9 +4,9 @@ if not get_option('gudev')
 endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginKineticDp"']
 
-#install_data(['kinetic-dp.quirk'],
-#  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
-#)
+install_data(['kinetic-dp.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
 
 shared_module('fu_plugin_kinetic_dp',
   fu_hash,
