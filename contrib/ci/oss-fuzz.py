@@ -51,13 +51,13 @@ class Builder:
         os.makedirs(self.installdir, exist_ok=True)
 
     def _ensure_environ(self, key: str, value: str) -> str:
-        """ set the environment unless already set """
+        """set the environment unless already set"""
         if key not in os.environ:
             os.environ[key] = value
         return os.environ[key]
 
     def checkout_source(self, name: str, url: str, commit: Optional[str] = None) -> str:
-        """ checkout source tree, optionally to a specific commit """
+        """checkout source tree, optionally to a specific commit"""
         srcdir_name = os.path.join(self.srcdir, name)
         if os.path.exists(srcdir_name):
             return srcdir_name
@@ -67,7 +67,7 @@ class Builder:
         return srcdir_name
 
     def build_meson_project(self, srcdir: str, argv) -> None:
-        """ configure and build the meson project """
+        """configure and build the meson project"""
         srcdir_build = os.path.join(srcdir, DEFAULT_BUILDDIR)
         if not os.path.exists(srcdir_build):
             subprocess.run(
@@ -88,19 +88,19 @@ class Builder:
             subprocess.run(["ninja", "install"], cwd=srcdir_build, check=True)
 
     def add_work_includedir(self, value: str) -> None:
-        """ add a CFLAG """
+        """add a CFLAG"""
         self.cflags.append("-I{}/{}".format(self.builddir, value))
 
     def add_src_includedir(self, value: str) -> None:
-        """ add a CFLAG """
+        """add a CFLAG"""
         self.cflags.append("-I{}/{}".format(self.srcdir, value))
 
     def add_build_ldflag(self, value: str) -> None:
-        """ add a LDFLAG """
+        """add a LDFLAG"""
         self.ldflags.append(os.path.join(self.builddir, value))
 
     def substitute(self, src: str, replacements: Dict[str, str]) -> str:
-        """ map changes """
+        """map changes"""
 
         dst = os.path.basename(src).replace(".in", "")
         with open(os.path.join(self.srcdir, src), "r") as f:
@@ -112,7 +112,7 @@ class Builder:
         return dst
 
     def compile(self, src: str) -> str:
-        """ compile a specific source file """
+        """compile a specific source file"""
         argv = [self.cc]
         argv.extend(self.cflags)
         fullsrc = os.path.join(self.srcdir, src)
@@ -129,7 +129,7 @@ class Builder:
         return os.path.join(self.builddir, "{}".format(dst))
 
     def link(self, objs: List[str], dst: str) -> None:
-        """ link multiple obects into a binary """
+        """link multiple obects into a binary"""
         argv = [self.cxx] + self.cxxflags
         for obj in objs:
             if obj.startswith("-"):
@@ -144,7 +144,7 @@ class Builder:
     def write_header(
         self, dst: str, defines: Dict[str, Optional[Union[str, int]]]
     ) -> None:
-        """ write a header file """
+        """write a header file"""
         dstdir = os.path.join(self.builddir, os.path.dirname(dst))
         os.makedirs(dstdir, exist_ok=True)
         print("writing {}".format(dst))
@@ -161,7 +161,7 @@ class Builder:
         self.add_work_includedir(os.path.dirname(dst))
 
     def makezip(self, dst: str, globstr: str) -> None:
-        """ create a zip file archive from a glob """
+        """create a zip file archive from a glob"""
         argv = ["zip", "--junk-paths", os.path.join(self.installdir, dst)] + glob.glob(
             os.path.join(self.srcdir, globstr)
         )
@@ -169,7 +169,7 @@ class Builder:
         subprocess.run(argv, cwd=self.srcdir, check=True)
 
     def grep_meson(self, src: str, token: str = "fuzzing") -> List[str]:
-        """ find source files tagged with a specific comment """
+        """find source files tagged with a specific comment"""
         srcs = []
         with open(os.path.join(self.srcdir, src, "meson.build"), "r") as f:
             for line in f.read().split("\n"):
