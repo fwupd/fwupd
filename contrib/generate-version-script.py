@@ -16,7 +16,7 @@ XMLNS_C = "{http://www.gtk.org/introspection/c/1.0}"
 
 
 def usage(return_code):
-    """ print usage and exit with the supplied return code """
+    """print usage and exit with the supplied return code"""
     if return_code == 0:
         out = sys.stdout
     else:
@@ -26,7 +26,7 @@ def usage(return_code):
 
 
 class LdVersionScript:
-    """ Rasterize some text """
+    """Rasterize some text"""
 
     def __init__(self, library_name):
         self.library_name = library_name
