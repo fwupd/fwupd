@@ -815,3 +815,9 @@ LIBFWUPDPLUGIN_1.6.1 {
     fu_version_string;
   local: *;
 } LIBFWUPDPLUGIN_1.6.0;
+
+LIBFWUPDPLUGIN_1.6.2 {
+  global:
+    fu_common_check_kernel_version;
+  local: *;
+} LIBFWUPDPLUGIN_1.6.1;

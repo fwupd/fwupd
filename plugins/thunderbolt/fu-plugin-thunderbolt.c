@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <fwupdplugin.h>
-#include <sys/utsname.h>
 
 #include "fu-thunderbolt-device.h"
 #include "fu-thunderbolt-firmware.h"
@@ -17,33 +16,13 @@ static gboolean
 fu_plugin_thunderbolt_safe_kernel (FuPlugin *plugin, GError **error)
 {
 	g_autofree gchar *minimum_kernel = NULL;
-	struct utsname name_tmp;
-
-	memset (&name_tmp, 0, sizeof(struct utsname));
-	if (uname (&name_tmp) < 0) {
-		g_debug ("Failed to read current kernel version");
-		return TRUE;
-	}
 
 	minimum_kernel = fu_plugin_get_config_value (plugin, "MinimumKernelVersion");
 	if (minimum_kernel == NULL) {
 		g_debug ("Ignoring kernel safety checks");
 		return TRUE;
 	}
-
-	if (fu_common_vercmp_full (name_tmp.release,
-				   minimum_kernel,
-				   FWUPD_VERSION_FORMAT_TRIPLET) < 0) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "kernel %s may not have full Thunderbolt support",
-			     name_tmp.release);
-		return FALSE;
-	}
-	g_debug ("Using kernel %s (minimum %s)", name_tmp.release, minimum_kernel);
-
-	return TRUE;
+	return fu_common_check_kernel_version (minimum_kernel, error);
 }
 
 gboolean
