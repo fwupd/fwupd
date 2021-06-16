@@ -982,7 +982,7 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 	/* add if the child does not already exist */
 	fwupd_device_add_child (FWUPD_DEVICE (self), FWUPD_DEVICE (child));
 
-	/* ensure the parent has the MAX() of the childrens removal delay  */
+	/* ensure the parent has the MAX() of the children's removal delay  */
 	children = fu_device_get_children (self);
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *child_tmp = g_ptr_array_index (children, i);
