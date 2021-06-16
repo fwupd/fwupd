@@ -371,6 +371,8 @@ gchar		*fu_common_strsafe		(const gchar	*str,
 gchar		*fu_common_strjoin_array	(const gchar	*separator,
 						 GPtrArray	*array);
 gboolean	 fu_common_kernel_locked_down	(void);
+gboolean	 fu_common_check_kernel_version	(const gchar	*minimum_kernel,
+						 GError		**error);
 gboolean	 fu_common_cpuid		(guint32	 leaf,
 						 guint32	*eax,
 						 guint32	*ebx,
