@@ -61,6 +61,7 @@ const gchar	*fwupd_checksum_get_best		(GPtrArray	*checksums);
 const gchar	*fwupd_checksum_get_by_kind		(GPtrArray	*checksums,
 							 GChecksumType	 kind);
 GChecksumType	 fwupd_checksum_guess_kind		(const gchar	*checksum);
+gchar		*fwupd_checksum_format_for_display	(const gchar	*checksum);
 gchar		*fwupd_build_user_agent			(const gchar	*package_name,
 							 const gchar	*package_version)
 G_DEPRECATED_FOR(fwupd_client_set_user_agent_for_package);
