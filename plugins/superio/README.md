@@ -29,7 +29,7 @@ Update Behavior
 The firmware is deployed when the device is in normal runtime mode, but it is
 only activated on machine reboot. The firmware write is normally scheduled to be
 done very early in the boot process to minimize the chance the EC chip locking
-up if the user is actually using the kerboard controller.
+up if the user is actually using the keyboard controller.
 
 Vendor ID Security
 ------------------
