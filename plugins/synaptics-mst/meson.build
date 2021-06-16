@@ -36,6 +36,10 @@ shared_module('fu_plugin_synaptics_mst',
   ],
 )
 
+install_data(['synaptics_mst.conf'],
+  install_dir:  join_paths(sysconfdir, 'fwupd')
+)
+
 if get_option('tests')
   testdatadirs = environment()
   testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())

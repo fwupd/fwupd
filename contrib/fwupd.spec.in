@@ -319,6 +319,7 @@ done
 %config(noreplace)%{_sysconfdir}/fwupd/uefi_capsule.conf
 %endif
 %config(noreplace)%{_sysconfdir}/fwupd/redfish.conf
+%config(noreplace)%{_sysconfdir}/fwupd/synaptics_mst.conf
 %config(noreplace)%{_sysconfdir}/fwupd/thunderbolt.conf
 %dir %{_libexecdir}/fwupd
 %{_libexecdir}/fwupd/fwupd

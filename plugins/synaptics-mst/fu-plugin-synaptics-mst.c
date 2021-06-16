@@ -23,11 +23,18 @@ struct FuPluginData {
 
 /* see https://github.com/fwupd/fwupd/issues/1121 for more details */
 static gboolean
-fu_synaptics_mst_check_amdgpu_safe (GError **error)
+fu_synaptics_mst_check_amdgpu_safe (FuPlugin *plugin, GError **error)
 {
 	gsize bufsz = 0;
+	g_autofree gchar *minimum_kernel = NULL;
 	g_autofree gchar *buf = NULL;
 	g_auto(GStrv) lines = NULL;
+
+	minimum_kernel = fu_plugin_get_config_value (plugin, "MinimumAmdGpuKernelVersion");
+	if (minimum_kernel == NULL) {
+		g_debug ("Ignoring kernel safety checks");
+		return TRUE;
+	}
 
 	/* no module support in the kernel, we can't test for amdgpu module */
 	if (!g_file_test ("/proc/modules", G_FILE_TEST_EXISTS))
@@ -38,13 +45,8 @@ fu_synaptics_mst_check_amdgpu_safe (GError **error)
 
 	lines = g_strsplit (buf, "\n", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
-		if (g_str_has_prefix (lines[i], "amdgpu ")) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_NOT_SUPPORTED,
-					     "amdgpu has known issues with synaptics_mst");
-			return FALSE;
-		}
+		if (g_str_has_prefix (lines[i], "amdgpu "))
+			return fu_common_check_kernel_version (minimum_kernel, error);
 	}
 
 	return TRUE;
@@ -146,7 +148,7 @@ fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **err
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
-	return fu_synaptics_mst_check_amdgpu_safe (error);
+	return fu_synaptics_mst_check_amdgpu_safe (plugin, error);
 }
 
 gboolean
