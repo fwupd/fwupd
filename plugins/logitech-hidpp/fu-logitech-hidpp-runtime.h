@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include "fu-udev-device.h"
-#include "fu-io-channel.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_HIDPP_RUNTIME (fu_logitech_hidpp_runtime_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuLogitechHidPpRuntime, fu_logitech_hidpp_runtime, FU, HIDPP_RUNTIME, FuUdevDevice)
