@@ -21,14 +21,17 @@ GType = FuPxiBleDevice
 # Pixart 2861
 [HIDRAW\VEN_093A&DEV_2861]
 Plugin = pixart_rf
+GType = FuPxiReceiverDevice
 
 # Pixart 2862
 [HIDRAW\VEN_093A&DEV_2862]
 Plugin = pixart_rf
+GType = FuPxiReceiverDevice
 
 # Pixart 2452
 [HIDRAW\VEN_093A&DEV_2452]
 Plugin = pixart_rf
+GType = FuPxiReceiverDevice
 
 # Primax Mouse
 [HIDRAW\VEN_0461&DEV_4EEF]

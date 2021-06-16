@@ -45,6 +45,20 @@ fu_pxi_spec_check_result_to_string (guint8 spec_check_result)
 	return NULL;
 }
 
+const gchar *
+fu_pxi_receiver_cmd_result_to_string (guint8 result)
+{
+	if (result == OTA_RSP_OK)
+		return "ok";
+	if (result == OTA_RSP_FINISH)
+		return "ota-response-finish";
+	if (result == OTA_RSP_FAIL)
+		return "ota-response-fail";
+	if (result == OTA_RSP_CODE_ERROR)
+		return "ota-response-error";
+	return NULL;
+}
+
 void
 fu_pxi_ota_fw_state_to_string (struct ota_fw_state *fwstate, guint idt, GString *str)
 {
@@ -92,5 +106,51 @@ fu_pxi_ota_fw_state_parse (struct ota_fw_state *fwstate,
 		return FALSE;
 
 	/* success */
+	return TRUE;
+}
+gboolean
+fu_pxi_composite_receiver_cmd (guint8 opcode, guint8 sn, guint8 target,
+			       GByteArray *wireless_mod_cmd,
+			       GByteArray *ota_cmd,
+			       GError **error)
+{
+	guint8 checksum = 0x0;
+	guint8 hid_sn = sn;
+	guint8 len = 0x0;
+	guint8 ota_sn = sn + 1;
+	guint8 rf_cmd_code = FU_PXI_BLE_DEVICE_RF_CMD_CODE;
+	guint8 rid = PXI_HID_WIRELESS_DEV_OTA_REPORT_ID;
+
+	if (ota_cmd == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "ota cmd is NULL");
+		return FALSE;
+	}
+
+	/* append ota dispatch header */
+	fu_byte_array_append_uint8 (wireless_mod_cmd, opcode); 	/* wirelss module ota op code */
+	fu_byte_array_append_uint8 (wireless_mod_cmd, ota_sn);	/* wirelss module ota command sn */
+
+	/* append ota command length and content  */
+	for(guint idx = 0; idx < ota_cmd->len; idx++)
+		fu_byte_array_append_uint8 (wireless_mod_cmd, ota_cmd->data[idx]);
+
+	/* append target of wireless module and hid command serial number */
+	g_byte_array_prepend (wireless_mod_cmd, &target, 0x01); /* target */
+	g_byte_array_prepend (wireless_mod_cmd, &hid_sn, 0x01); /* hid command sn */
+
+	/* prepend length and rf command code */
+	len = wireless_mod_cmd->len;
+	g_byte_array_prepend (wireless_mod_cmd, &len, 0x01);
+	g_byte_array_prepend (wireless_mod_cmd, &rf_cmd_code, 0x01); /* command code */
+
+	/* prepend checksum */
+	checksum = fu_pxi_common_sum8 (wireless_mod_cmd->data ,wireless_mod_cmd->len);
+	g_byte_array_prepend (wireless_mod_cmd, &checksum, 0x01);
+
+	/* prepend feature report id */
+	g_byte_array_prepend (wireless_mod_cmd, &rid, 0x01);
 	return TRUE;
 }
