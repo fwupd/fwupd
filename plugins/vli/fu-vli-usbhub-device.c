@@ -587,7 +587,7 @@ fu_vli_usbhub_device_rtd21xx_setup (FuVliUsbhubDevice *self, GError **error)
 }
 
 static gboolean
-fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
+fu_vli_usbhub_device_ready (FuDevice *device, GError **error)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE (device);
 	g_autoptr(GError) error_tmp = NULL;
@@ -1006,7 +1006,7 @@ fu_vli_usbhub_device_class_init (FuVliUsbhubDeviceClass *klass)
 	klass_device->prepare_firmware = fu_vli_usbhub_device_prepare_firmware;
 	klass_device->attach = fu_vli_usbhub_device_attach;
 	klass_device->to_string = fu_vli_usbhub_device_to_string;
-	klass_vli_device->setup = fu_vli_usbhub_device_setup;
+	klass_device->ready = fu_vli_usbhub_device_ready;
 	klass_vli_device->spi_chip_erase = fu_vli_usbhub_device_spi_chip_erase;
 	klass_vli_device->spi_sector_erase = fu_vli_usbhub_device_spi_sector_erase;
 	klass_vli_device->spi_read_data = fu_vli_usbhub_device_spi_read_data;

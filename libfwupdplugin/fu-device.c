@@ -3618,6 +3618,12 @@ fu_device_setup (FuDevice *self, GError **error)
 	/* convert the instance IDs to GUIDs */
 	fu_device_convert_instance_ids (self);
 
+	/* subclassed */
+	if (klass->ready != NULL) {
+		if (!klass->ready (self, error))
+			return FALSE;
+	}
+
 	priv->done_setup = TRUE;
 	return TRUE;
 }
