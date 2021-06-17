@@ -2590,7 +2590,7 @@ fu_common_check_kernel_version (const gchar *minimum_kernel, GError **error)
 	struct utsname name_tmp;
 
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-	g_return_val_if_fail (minimum_kernel == NULL, FALSE);
+	g_return_val_if_fail (minimum_kernel != NULL, FALSE);
 
 	memset (&name_tmp, 0, sizeof(struct utsname));
 	if (uname (&name_tmp) < 0) {
