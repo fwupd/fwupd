@@ -2491,7 +2491,7 @@ fu_device_set_custom_flag (FuDevice *self, const gchar *hint)
 		fu_device_add_flag (self, flag);
 	internal_flag = fu_device_internal_flag_from_string (hint);
 	if (internal_flag != FU_DEVICE_INTERNAL_FLAG_UNKNOWN)
-		fu_device_remove_internal_flag (self, internal_flag);
+		fu_device_add_internal_flag (self, internal_flag);
 }
 
 /**
