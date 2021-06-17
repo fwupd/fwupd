@@ -474,11 +474,16 @@ fu_vli_device_get_offset (FuVliDevice *self)
 static void
 fu_vli_device_to_string (FuDevice *device, guint idt, GString *str)
 {
-	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (device);
 	FuVliDevice *self = FU_VLI_DEVICE (device);
 	FuVliDevicePrivate *priv = GET_PRIVATE (self);
-	fu_common_string_append_kv (str, idt, "DeviceKind",
-				    fu_vli_common_device_kind_to_string (priv->kind));
+
+	/* parent */
+	FU_DEVICE_CLASS (fu_vli_device_parent_class)->to_string (device, idt, str);
+
+	if (priv->kind != FU_VLI_DEVICE_KIND_UNKNOWN) {
+		fu_common_string_append_kv (str, idt, "DeviceKind",
+					    fu_vli_common_device_kind_to_string (priv->kind));
+	}
 	fu_common_string_append_kb (str, idt, "SpiAutoDetect", priv->spi_auto_detect);
 	if (priv->flash_id != 0x0) {
 		g_autofree gchar *tmp = fu_vli_device_get_flash_id_str (self);
@@ -489,10 +494,6 @@ fu_vli_device_to_string (FuDevice *device, guint idt, GString *str)
 					    fu_vli_device_spi_req_to_string (i),
 					    priv->spi_cmds[i]);
 	}
-
-	/* subclassed further */
-	if (klass->to_string != NULL)
-		return klass->to_string (self, idt, str);
 }
 
 static gboolean

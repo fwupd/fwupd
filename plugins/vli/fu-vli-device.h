@@ -18,9 +18,6 @@ struct _FuVliDeviceClass
 	FuUsbDeviceClass	parent_class;
 	gboolean		 (*setup)		(FuVliDevice	*self,
 							 GError		**error);
-	void			 (*to_string)		(FuVliDevice	*self,
-							 guint		 idt,
-							 GString 	*str);
 	gboolean		 (*spi_chip_erase)	(FuVliDevice	*self,
 							 GError		**error);
 	gboolean		 (*spi_sector_erase)	(FuVliDevice	*self,
