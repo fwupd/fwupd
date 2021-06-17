@@ -625,6 +625,70 @@ fu_usb_device_new (GUsbDevice *usb_device)
 	return FU_USB_DEVICE (device);
 }
 
+#ifdef HAVE_GUSB
+static const gchar *
+fu_usb_device_class_code_to_string (GUsbDeviceClassCode code)
+{
+	if (code == G_USB_DEVICE_CLASS_INTERFACE_DESC)
+		return "interface-desc";
+	if (code == G_USB_DEVICE_CLASS_AUDIO)
+		return "audio";
+	if (code == G_USB_DEVICE_CLASS_COMMUNICATIONS)
+		return "communications";
+	if (code == G_USB_DEVICE_CLASS_HID)
+		return "hid";
+	if (code == G_USB_DEVICE_CLASS_PHYSICAL)
+		return "physical";
+	if (code == G_USB_DEVICE_CLASS_IMAGE)
+		return "image";
+	if (code == G_USB_DEVICE_CLASS_PRINTER)
+		return "printer";
+	if (code == G_USB_DEVICE_CLASS_MASS_STORAGE)
+		return "mass-storage";
+	if (code == G_USB_DEVICE_CLASS_HUB)
+		return "hub";
+	if (code == G_USB_DEVICE_CLASS_CDC_DATA)
+		return "cdc-data";
+	if (code == G_USB_DEVICE_CLASS_SMART_CARD)
+		return "smart-card";
+	if (code == G_USB_DEVICE_CLASS_CONTENT_SECURITY)
+		return "content-security";
+	if (code == G_USB_DEVICE_CLASS_VIDEO)
+		return "video";
+	if (code == G_USB_DEVICE_CLASS_PERSONAL_HEALTHCARE)
+		return "personal-healthcare";
+	if (code == G_USB_DEVICE_CLASS_AUDIO_VIDEO)
+		return "audio-video";
+	if (code == G_USB_DEVICE_CLASS_BILLBOARD)
+		return "billboard";
+	if (code == G_USB_DEVICE_CLASS_DIAGNOSTIC)
+		return "diagnostic";
+	if (code == G_USB_DEVICE_CLASS_WIRELESS_CONTROLLER)
+		return "wireless-controller";
+	if (code == G_USB_DEVICE_CLASS_MISCELLANEOUS)
+		return "miscellaneous";
+	if (code == G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
+		return "application-specific";
+	if (code == G_USB_DEVICE_CLASS_VENDOR_SPECIFIC)
+		return "vendor-specific";
+	return NULL;
+}
+#endif
+
+static void
+fu_usb_device_to_string (FuDevice *device, guint idt, GString *str)
+{
+#ifdef HAVE_GUSB
+	FuUsbDevice *self = FU_USB_DEVICE (device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
+	if (priv->usb_device != NULL) {
+		GUsbDeviceClassCode code = g_usb_device_get_device_class (priv->usb_device);
+		fu_common_string_append_kv (str, idt, "UsbDeviceClass",
+					    fu_usb_device_class_code_to_string (code));
+	}
+#endif
+}
+
 static void
 fu_usb_device_class_init (FuUsbDeviceClass *klass)
 {
@@ -638,6 +702,7 @@ fu_usb_device_class_init (FuUsbDeviceClass *klass)
 	device_class->open = fu_usb_device_open;
 	device_class->close = fu_usb_device_close;
 	device_class->probe = fu_usb_device_probe;
+	device_class->to_string = fu_usb_device_to_string;
 	device_class->incorporate = fu_usb_device_incorporate;
 	device_class->bind_driver = fu_udev_device_bind_driver;
 	device_class->unbind_driver = fu_udev_device_unbind_driver;
