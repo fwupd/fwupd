@@ -14,8 +14,6 @@ G_DECLARE_DERIVABLE_TYPE (FuLogitechHidPpBootloader, fu_logitech_hidpp_bootloade
 struct _FuLogitechHidPpBootloaderClass
 {
 	FuHidDeviceClass	parent_class;
-	gboolean		 (*setup)		(FuLogitechHidPpBootloader	*self,
-							 GError			**error);
 };
 
 typedef enum {

@@ -221,9 +221,12 @@ fu_logitech_hidpp_bootloader_texas_write_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_logitech_hidpp_bootloader_texas_setup (FuLogitechHidPpBootloader *self, GError **error)
+fu_logitech_hidpp_bootloader_texas_setup (FuDevice *device, GError **error)
 {
-	fu_device_set_version (FU_DEVICE (self), "RQR24.00_B0000");
+	/* FuLogitechHidPpBootloader->setup */
+	if (!FU_DEVICE_CLASS (fu_logitech_hidpp_bootloader_texas_parent_class)->setup (device, error))
+		return FALSE;
+	fu_device_set_version (device, "RQR24.00_B0000");
 	return TRUE;
 }
 
@@ -231,9 +234,8 @@ static void
 fu_logitech_hidpp_bootloader_texas_class_init (FuLogitechHidPpBootloaderTexasClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuLogitechHidPpBootloaderClass *klass_device_bootloader = FU_UNIFYING_BOOTLOADER_CLASS (klass);
 	klass_device->write_firmware = fu_logitech_hidpp_bootloader_texas_write_firmware;
-	klass_device_bootloader->setup = fu_logitech_hidpp_bootloader_texas_setup;
+	klass_device->setup = fu_logitech_hidpp_bootloader_texas_setup;
 }
 
 static void
