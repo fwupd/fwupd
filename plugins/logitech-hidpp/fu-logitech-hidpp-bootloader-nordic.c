@@ -53,11 +53,16 @@ fu_logitech_hidpp_bootloader_nordic_get_fw_version (FuLogitechHidPpBootloader *s
 }
 
 static gboolean
-fu_logitech_hidpp_bootloader_nordic_setup (FuLogitechHidPpBootloader *self, GError **error)
+fu_logitech_hidpp_bootloader_nordic_setup (FuDevice *device, GError **error)
 {
+	FuLogitechHidPpBootloader *self = FU_UNIFYING_BOOTLOADER (device);
 	g_autofree gchar *hw_platform_id = NULL;
 	g_autofree gchar *version_fw = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	/* FuLogitechHidPpBootloader->setup */
+	if (!FU_DEVICE_CLASS (fu_logitech_hidpp_bootloader_nordic_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* get MCU */
 	hw_platform_id = fu_logitech_hidpp_bootloader_nordic_get_hw_platform_id (self, error);
@@ -70,9 +75,9 @@ fu_logitech_hidpp_bootloader_nordic_setup (FuLogitechHidPpBootloader *self, GErr
 	if (version_fw == NULL) {
 		g_warning ("failed to get firmware version: %s",
 			   error_local->message);
-		fu_device_set_version (FU_DEVICE (self), "RQR12.00_B0000");
+		fu_device_set_version (device, "RQR12.00_B0000");
 	} else {
-		fu_device_set_version (FU_DEVICE (self), version_fw);
+		fu_device_set_version (device, version_fw);
 	}
 
 	return TRUE;
@@ -273,9 +278,8 @@ static void
 fu_logitech_hidpp_bootloader_nordic_class_init (FuLogitechHidPpBootloaderNordicClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	FuLogitechHidPpBootloaderClass *klass_device_bootloader = FU_UNIFYING_BOOTLOADER_CLASS (klass);
 	klass_device->write_firmware = fu_logitech_hidpp_bootloader_nordic_write_firmware;
-	klass_device_bootloader->setup = fu_logitech_hidpp_bootloader_nordic_setup;
+	klass_device->setup = fu_logitech_hidpp_bootloader_nordic_setup;
 }
 
 static void

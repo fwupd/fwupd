@@ -281,7 +281,6 @@ fu_logitech_hidpp_bootloader_open (FuDevice *device, GError **error)
 static gboolean
 fu_logitech_hidpp_bootloader_setup (FuDevice *device, GError **error)
 {
-	FuLogitechHidPpBootloaderClass *klass = FU_UNIFYING_BOOTLOADER_GET_CLASS (device);
 	FuLogitechHidPpBootloader *self = FU_UNIFYING_BOOTLOADER (device);
 	FuLogitechHidPpBootloaderPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
@@ -311,15 +310,7 @@ fu_logitech_hidpp_bootloader_setup (FuDevice *device, GError **error)
 	priv->flash_blocksize = fu_common_read_uint16 (req->data + 4, G_BIG_ENDIAN);
 
 	/* get bootloader version */
-	if (!fu_logitech_hidpp_bootloader_set_bl_version (self, error))
-		return FALSE;
-
-	/* subclassed further */
-	if (klass->setup != NULL)
-		return klass->setup (self, error);
-
-	/* success */
-	return TRUE;
+	return fu_logitech_hidpp_bootloader_set_bl_version (self, error);
 }
 
 static gboolean
