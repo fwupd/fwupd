@@ -310,6 +310,10 @@ fu_goodixmoc_device_setup (FuDevice *device, GError **error)
 {
 	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE (device);
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_goodixmoc_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* ensure version */
 	if (!fu_goodixmoc_device_setup_version (self, error)) {
 		g_prefix_error (error, "failed to get firmware version: ");

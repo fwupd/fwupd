@@ -368,6 +368,10 @@ fu_synaptics_cxaudio_device_setup (FuDevice *device, GError **error)
 	g_autofree gchar *version_fw = NULL;
 	g_autofree gchar *version_patch = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_synaptics_cxaudio_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* get the ChipID */
 	if (!fu_synaptics_cxaudio_device_operation (self,
 						    FU_SYNAPTICS_CXAUDIO_OPERATION_READ,

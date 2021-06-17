@@ -358,6 +358,10 @@ fu_colorhug_device_setup (FuDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_colorhug_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* using the USB descriptor and old firmware */
 	if (fu_device_get_version_format (device) == FWUPD_VERSION_FORMAT_BCD) {
 		g_autofree gchar *version = NULL;

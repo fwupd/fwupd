@@ -161,6 +161,10 @@ fu_elantp_hid_device_setup (FuDevice *device, GError **error)
 	g_autofree gchar *version_bl = NULL;
 	g_autofree gchar *version = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_elantp_hid_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* get pattern */
 	if (!fu_elantp_hid_device_read_cmd (self,
 					    ETP_CMD_I2C_GET_HID_ID,

@@ -78,6 +78,10 @@ fu_system76_launch_device_setup (FuDevice *device, GError **error)
 	guint8 data[32] = { 0 };
 	g_autofree gchar *version = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_system76_launch_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* execute version command */
 	data[0] = SYSTEM76_LAUNCH_CMD_VERSION;
 	if (!fu_system76_launch_device_command (device, data, sizeof(data), error)) {

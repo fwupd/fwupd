@@ -389,6 +389,10 @@ fu_solokey_device_setup (FuDevice *device, GError **error)
 {
 	FuSolokeyDevice *self = FU_SOLOKEY_DEVICE (device);
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_solokey_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* get channel ID */
 	if (!fu_solokey_device_setup_cid (self, error))
 		return FALSE;

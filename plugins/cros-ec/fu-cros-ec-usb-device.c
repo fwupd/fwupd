@@ -374,6 +374,10 @@ fu_cros_ec_usb_device_setup (FuDevice *device, GError **error)
 	START_RESP start_resp;
 	g_auto(GStrv) config_split = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_cros_ec_usb_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	if (!fu_cros_ec_usb_device_recovery (device, error))
 		return FALSE;
 

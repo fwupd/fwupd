@@ -594,6 +594,10 @@ fu_ccgx_dmc_device_setup (FuDevice *device, GError **error)
 	guint32 version_raw = 0;
 	g_autofree gchar *version = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_ccgx_dmc_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* get dock identity */
 	if (!fu_ccgx_dmc_device_get_dock_id (self, &dock_id, error))
 		return FALSE;

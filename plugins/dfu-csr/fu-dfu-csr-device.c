@@ -422,6 +422,10 @@ fu_dfu_csr_device_setup (FuDevice *device, GError **error)
 {
 	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE (device);
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_dfu_csr_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	if (!fu_dfu_csr_device_clear_status (self, error))
 		return FALSE;
 

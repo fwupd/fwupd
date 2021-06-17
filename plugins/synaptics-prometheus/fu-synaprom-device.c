@@ -182,6 +182,10 @@ fu_synaprom_device_setup (FuDevice *device, GError **error)
 	g_autoptr(GByteArray) request = NULL;
 	g_autoptr(GByteArray) reply = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_synaprom_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* get version */
 	request = fu_synaprom_request_new (FU_SYNAPROM_CMD_GET_VERSION, NULL, 0);
 	reply = fu_synaprom_reply_new (sizeof(FuSynapromReplyGetVersion));

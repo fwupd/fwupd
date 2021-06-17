@@ -1370,6 +1370,10 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 	guint8 mode = 0;
 	g_autoptr(GError) error_local = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_ccgx_hpi_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* set the new config */
 	if (!fu_ccgx_hpi_device_get_i2c_config (self, &i2c_config, error)) {
 		g_prefix_error (error, "get config error: ");

@@ -160,11 +160,10 @@ fu_usb_device_query_hub (FuUsbDevice *self, GError **error)
 static gboolean
 fu_usb_device_open (FuDevice *device, GError **error)
 {
+#ifdef HAVE_GUSB
 	FuUsbDevice *self = FU_USB_DEVICE (device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-#ifdef HAVE_GUSB
-	guint idx;
 
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -177,6 +176,23 @@ fu_usb_device_open (FuDevice *device, GError **error)
 	locker = fu_device_locker_new (priv->usb_device, error);
 	if (locker == NULL)
 		return FALSE;
+
+	/* success */
+	priv->usb_device_locker = g_steal_pointer (&locker);
+#endif
+	return TRUE;
+}
+
+static gboolean
+fu_usb_device_setup (FuDevice *device, GError **error)
+{
+#ifdef HAVE_GUSB
+	FuUsbDevice *self = FU_USB_DEVICE (device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
+	guint idx;
+
+	g_return_val_if_fail (FU_IS_USB_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* get vendor */
 	if (fu_device_get_vendor (device) == NULL) {
@@ -264,7 +280,6 @@ fu_usb_device_open (FuDevice *device, GError **error)
 #endif
 
 	/* success */
-	priv->usb_device_locker = g_steal_pointer (&locker);
 	return TRUE;
 }
 
@@ -700,6 +715,7 @@ fu_usb_device_class_init (FuUsbDeviceClass *klass)
 	object_class->get_property = fu_usb_device_get_property;
 	object_class->set_property = fu_usb_device_set_property;
 	device_class->open = fu_usb_device_open;
+	device_class->setup = fu_usb_device_setup;
 	device_class->close = fu_usb_device_close;
 	device_class->probe = fu_usb_device_probe;
 	device_class->to_string = fu_usb_device_to_string;
