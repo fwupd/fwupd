@@ -252,13 +252,17 @@ fu_vli_pd_device_parade_setup (FuVliPdDevice *self, GError **error)
 }
 
 static gboolean
-fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
+fu_vli_pd_device_setup (FuDevice *device, GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
 	guint32 version_raw;
 	guint8 verbuf[4] = { 0x0 };
 	guint8 tmp = 0;
 	g_autofree gchar *version_str = NULL;
+
+	/* FuVliDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_vli_pd_device_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* get version */
 	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
@@ -279,22 +283,22 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 	fu_device_set_version (FU_DEVICE (self), version_str);
 
 	/* get device kind if not already in ROM mode */
-	if (fu_vli_device_get_kind (device) == FU_VLI_DEVICE_KIND_UNKNOWN) {
+	if (fu_vli_device_get_kind (FU_VLI_DEVICE (self)) == FU_VLI_DEVICE_KIND_UNKNOWN) {
 		if (!fu_vli_pd_device_read_reg (self, 0x0018, &tmp, error))
 			return FALSE;
 		switch (tmp & 0xF0) {
 		case 0x00:
-			fu_vli_device_set_kind (device, FU_VLI_DEVICE_KIND_VL100);
+			fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL100);
 			break;
 		case 0x10:
 			/* this is also the code for VL101, but VL102 is more likely */
-			fu_vli_device_set_kind (device, FU_VLI_DEVICE_KIND_VL102);
+			fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL102);
 			break;
 		case 0x80:
-			fu_vli_device_set_kind (device, FU_VLI_DEVICE_KIND_VL103);
+			fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL103);
 			break;
 		case 0x90:
-			fu_vli_device_set_kind (device, FU_VLI_DEVICE_KIND_VL104);
+			fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL104);
 			break;
 		default:
 			g_set_error (error,
@@ -700,7 +704,7 @@ fu_vli_pd_device_class_init (FuVliPdDeviceClass *klass)
 	klass_device->prepare_firmware = fu_vli_pd_device_prepare_firmware;
 	klass_device->attach = fu_vli_pd_device_attach;
 	klass_device->detach = fu_vli_pd_device_detach;
-	klass_vli_device->setup = fu_vli_pd_device_setup;
+	klass_device->setup = fu_vli_pd_device_setup;
 	klass_vli_device->spi_chip_erase = fu_vli_pd_device_spi_chip_erase;
 	klass_vli_device->spi_sector_erase = fu_vli_pd_device_spi_sector_erase;
 	klass_vli_device->spi_read_data = fu_vli_pd_device_spi_read_data;

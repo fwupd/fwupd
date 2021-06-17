@@ -99,6 +99,9 @@ struct _FuDeviceClass
 							 G_GNUC_WARN_UNUSED_RESULT;
 	void			 (*add_security_attrs)	(FuDevice	*self,
 							 FuSecurityAttrs *attrs);
+	gboolean		 (*ready)		(FuDevice	*self,
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	/*< private >*/
 	gpointer	padding[10];
 #endif

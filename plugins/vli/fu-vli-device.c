@@ -448,6 +448,17 @@ fu_vli_device_set_kind (FuVliDevice *self, FuVliDeviceKind device_kind)
 	sz = fu_vli_common_device_kind_get_size (device_kind);
 	if (sz > 0x0)
 		fu_device_set_firmware_size_max (FU_DEVICE (self), sz);
+
+	/* add extra DEV GUID too */
+	if (priv->kind != FU_VLI_DEVICE_KIND_UNKNOWN) {
+		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
+		g_autofree gchar *devid1 = NULL;
+		devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&DEV_%s",
+					  g_usb_device_get_vid (usb_device),
+					  g_usb_device_get_pid (usb_device),
+					  fu_vli_common_device_kind_to_string (priv->kind));
+		fu_device_add_instance_id (FU_DEVICE (self), devid1);
+	}
 }
 
 void
@@ -542,7 +553,6 @@ fu_vli_device_setup (FuDevice *device, GError **error)
 {
 	FuVliDevice *self = FU_VLI_DEVICE (device);
 	FuVliDevicePrivate *priv = GET_PRIVATE (self);
-	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (device);
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS (fu_vli_device_parent_class)->setup (device, error))
@@ -579,23 +589,6 @@ fu_vli_device_setup (FuDevice *device, GError **error)
 						  flash_id);
 			fu_device_add_instance_id (device, devid1);
 		}
-	}
-
-	/* subclassed further */
-	if (klass->setup != NULL) {
-		if (!klass->setup (self, error))
-			return FALSE;
-	}
-
-	/* add extra DEV GUID too */
-	if (priv->kind != FU_VLI_DEVICE_KIND_UNKNOWN) {
-		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
-		g_autofree gchar *devid1 = NULL;
-		devid1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&DEV_%s",
-					  g_usb_device_get_vid (usb_device),
-					  g_usb_device_get_pid (usb_device),
-					  fu_vli_common_device_kind_to_string (priv->kind));
-		fu_device_add_instance_id (device, devid1);
 	}
 
 	/* success */
