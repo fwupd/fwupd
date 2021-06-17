@@ -23,7 +23,4 @@ shared_module('fu_plugin_upower',
   ],
 )
 
-install_data(['upower.conf'],
-  install_dir:  join_paths(sysconfdir, 'fwupd')
-)
 endif
