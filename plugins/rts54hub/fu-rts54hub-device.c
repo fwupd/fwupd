@@ -350,6 +350,10 @@ fu_rts54hub_device_setup (FuDevice *device, GError **error)
 {
 	FuRts54HubDevice *self = FU_RTS54HUB_DEVICE (device);
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_rts54hub_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* check this device is correct */
 	if (!fu_rts54hub_device_vendor_cmd (self, FU_RTS54HUB_VENDOR_CMD_STATUS, error)) {
 		g_prefix_error (error, "failed to vendor enable: ");

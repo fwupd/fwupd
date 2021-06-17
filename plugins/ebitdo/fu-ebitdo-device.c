@@ -296,6 +296,10 @@ fu_ebitdo_device_setup (FuDevice *device, GError **error)
 	guint32 version_tmp = 0;
 	guint32 serial_tmp[9] = {0};
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_ebitdo_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* in firmware mode */
 	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		if (!fu_ebitdo_device_send (self,

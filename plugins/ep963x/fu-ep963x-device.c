@@ -155,6 +155,10 @@ fu_ep963x_device_setup (FuDevice *device, GError **error)
 	guint8 buf[] = { 0x0 };
 	g_autofree gchar *version = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_ep963x_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* get version */
 	if (!fu_ep963x_device_write_icp (self, FU_EP963_UF_CMD_VERSION,
 					 NULL, 0,		/* in */

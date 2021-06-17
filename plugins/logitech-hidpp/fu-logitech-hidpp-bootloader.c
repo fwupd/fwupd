@@ -286,6 +286,10 @@ fu_logitech_hidpp_bootloader_setup (FuDevice *device, GError **error)
 	FuLogitechHidPpBootloaderPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_logitech_hidpp_bootloader_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* get memory map */
 	req->cmd = FU_UNIFYING_BOOTLOADER_CMD_GET_MEMINFO;
 	if (!fu_logitech_hidpp_bootloader_request (self, req, error)) {

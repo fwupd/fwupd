@@ -176,6 +176,10 @@ fu_analogix_device_setup (FuDevice *device, GError **error)
 	guint8 buf_custom[2] = { 0x0 };
 	g_autofree gchar *version = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_analogix_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* get OCM version */
 	if (!fu_analogix_device_receive (self, ANX_BB_RQT_READ_FW_VER, 0, 0,
 					 &buf_fw[1], 1, error))

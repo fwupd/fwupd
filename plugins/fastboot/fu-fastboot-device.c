@@ -314,6 +314,10 @@ fu_fastboot_device_setup (FuDevice *device, GError **error)
 	g_autofree gchar *secure = NULL;
 	g_autofree gchar *version_bootloader = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_fastboot_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* product */
 	if (!fu_fastboot_device_getvar (device, "product", &product, error))
 		return FALSE;

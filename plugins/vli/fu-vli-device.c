@@ -544,6 +544,10 @@ fu_vli_device_setup (FuDevice *device, GError **error)
 	FuVliDevicePrivate *priv = GET_PRIVATE (self);
 	FuVliDeviceClass *klass = FU_VLI_DEVICE_GET_CLASS (device);
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_vli_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* get the flash chip attached */
 	if (priv->spi_auto_detect) {
 		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
