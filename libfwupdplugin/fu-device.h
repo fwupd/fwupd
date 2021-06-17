@@ -465,3 +465,4 @@ GHashTable	*fu_device_report_metadata_pre		(FuDevice	*self);
 GHashTable	*fu_device_report_metadata_post		(FuDevice	*self);
 void		 fu_device_add_security_attrs		(FuDevice	*self,
 							 FuSecurityAttrs *attrs);
+void		 fu_device_convert_instance_ids		(FuDevice	*self);
