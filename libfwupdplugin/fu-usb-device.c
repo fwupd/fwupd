@@ -287,6 +287,7 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 	g_autofree gchar *devid0 = NULL;
 	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *devid2 = NULL;
+	g_autofree gchar *platform_id = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(GPtrArray) intfs = NULL;
 
@@ -343,6 +344,18 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 					  g_usb_interface_get_class (intf));
 		fu_device_add_instance_id_full (device, intid3,
 						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	}
+
+	/* add 2 levels of parent IDs */
+	platform_id = g_strdup (g_usb_device_get_platform_id (priv->usb_device));
+	for (guint i = 0; i < 2; i++) {
+		gchar *tok = g_strrstr (platform_id, ":");
+		if (tok == NULL)
+			break;
+		*tok = '\0';
+		if (g_strcmp0 (platform_id, "usb") == 0)
+			break;
+		fu_device_add_parent_physical_id (device, platform_id);
 	}
 #endif
 

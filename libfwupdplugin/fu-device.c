@@ -51,6 +51,7 @@ typedef struct {
 	GRWLock				 metadata_mutex;
 	GPtrArray			*parent_guids;
 	GRWLock				 parent_guids_mutex;
+	GPtrArray			*parent_physical_ids;	/* (nullable) */
 	guint				 remove_delay;	/* ms */
 	guint				 progress;
 	guint				 battery_level;
@@ -210,6 +211,8 @@ fu_device_internal_flag_to_string (FuDeviceInternalFlags flag)
 		return "is-open";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER)
 		return "no-serial-number";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN)
+		return "auto-parent-children";
 	return NULL;
 }
 
@@ -250,6 +253,8 @@ fu_device_internal_flag_from_string (const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_IS_OPEN;
 	if (g_strcmp0 (flag, "no-serial-number") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER;
+	if (g_strcmp0 (flag, "auto-parent-children") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -883,6 +888,13 @@ fu_device_set_parent (FuDevice *self, FuDevice *parent)
 {
 	g_return_if_fail (FU_IS_DEVICE (self));
 
+	/* debug */
+	if (parent != NULL) {
+		g_debug ("setting parent of %s [%s] to be %s [%s]",
+			 fu_device_get_name (self), fu_device_get_id (self),
+			 fu_device_get_name (parent), fu_device_get_id (parent));
+	}
+
 	/* set the composite ID on the children and grandchildren */
 	if (parent != NULL)
 		fu_device_set_composite_id (self, fu_device_get_composite_id (parent));
@@ -1118,6 +1130,86 @@ fu_device_add_parent_guid (FuDevice *self, const gchar *guid)
 	locker = g_rw_lock_writer_locker_new (&priv->parent_guids_mutex);
 	g_return_if_fail (locker != NULL);
 	g_ptr_array_add (priv->parent_guids, g_strdup (guid));
+}
+
+/**
+ * fu_device_get_parent_physical_ids:
+ * @self: a #FuDevice
+ *
+ * Gets any parent device IDs. If a device is added to the daemon that matches
+ * the physical ID added from fu_device_add_parent_physical_id() then this
+ * device is marked the parent of @self.
+ *
+ * Returns: (transfer none) (element-type utf8) (nullable): a list of IDs
+ *
+ * Since: 1.6.2
+ **/
+GPtrArray *
+fu_device_get_parent_physical_ids (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	return priv->parent_physical_ids;
+}
+
+/**
+ * fu_device_has_parent_physical_id:
+ * @self: a #FuDevice
+ * @physical_id: a device physical ID
+ *
+ * Searches the list of parent IDs for a string match.
+ *
+ * Returns: %TRUE if the parent ID exists
+ *
+ * Since: 1.6.2
+ **/
+gboolean
+fu_device_has_parent_physical_id (FuDevice *self, const gchar *physical_id)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (physical_id != NULL, FALSE);
+
+	if (priv->parent_physical_ids == NULL)
+		return FALSE;
+	for (guint i = 0; i < priv->parent_physical_ids->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv->parent_physical_ids, i);
+		if (g_strcmp0 (tmp, physical_id) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * fu_device_add_parent_physical_id:
+ * @self: a #FuDevice
+ * @physical_id: a device physical ID
+ *
+ * Sets any parent device using the physical ID. An parent device is logically
+ * linked to the primary device in some way and can be added before or after @self.
+ *
+ * The IDs are searched in order, and so the order of adding IDs may be
+ * important if more than one parent device might match.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_device_add_parent_physical_id (FuDevice *self, const gchar *physical_id)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (physical_id != NULL);
+
+	/* ensure exists */
+	if (priv->parent_physical_ids == NULL)
+		priv->parent_physical_ids = g_ptr_array_new_with_free_func (g_free);
+
+	/* already present */
+	if (fu_device_has_parent_physical_id (self, physical_id))
+		return;
+	g_ptr_array_add (priv->parent_physical_ids, g_strdup (physical_id));
 }
 
 static gboolean
@@ -2897,6 +2989,10 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		const gchar *name = g_ptr_array_index (priv->possible_plugins, i);
 		fu_common_string_append_kv (str, idt + 1, "PossiblePlugin", name);
 	}
+	if (priv->parent_physical_ids != NULL && priv->parent_physical_ids->len > 0) {
+		g_autofree gchar *flags = fu_common_strjoin_array (",", priv->parent_physical_ids);
+		fu_common_string_append_kv (str, idt + 1, "ParentPhysicalIds", flags);
+	}
 	if (priv->internal_flags != FU_DEVICE_INTERNAL_FLAG_NONE) {
 		g_autoptr(GString) tmp2 = g_string_new ("");
 		for (guint i = 0; i < 64; i++) {
@@ -3853,6 +3949,7 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 	FuDevicePrivate *priv_donor = GET_PRIVATE (donor);
 	GPtrArray *instance_ids = fu_device_get_instance_ids (donor);
 	GPtrArray *parent_guids = fu_device_get_parent_guids (donor);
+	GPtrArray *parent_physical_ids = fu_device_get_parent_physical_ids (donor);
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (FU_IS_DEVICE (donor));
@@ -3878,6 +3975,12 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 	for (guint i = 0; i < parent_guids->len; i++)
 		fu_device_add_parent_guid (self, g_ptr_array_index (parent_guids, i));
 	g_rw_lock_reader_unlock (&priv_donor->parent_guids_mutex);
+	if (parent_physical_ids != NULL) {
+		for (guint i = 0; i < parent_physical_ids->len; i++) {
+			const gchar *tmp = g_ptr_array_index (parent_physical_ids, i);
+			fu_device_add_parent_physical_id (self, tmp);
+		}
+	}
 	g_rw_lock_reader_lock (&priv_donor->metadata_mutex);
 	if (priv->metadata != NULL) {
 		g_autoptr(GList) keys = g_hash_table_get_keys (priv_donor->metadata);
@@ -4057,6 +4160,8 @@ fu_device_finalize (GObject *object)
 		g_hash_table_unref (priv->metadata);
 	if (priv->inhibits != NULL)
 		g_hash_table_unref (priv->inhibits);
+	if (priv->parent_physical_ids != NULL)
+		g_ptr_array_unref (priv->parent_physical_ids);
 	g_ptr_array_unref (priv->parent_guids);
 	g_ptr_array_unref (priv->possible_plugins);
 	g_ptr_array_unref (priv->retry_recs);
