@@ -37,3 +37,6 @@ gchar		*fu_device_get_guids_as_str		(FuDevice	*self);
 GPtrArray	*fu_device_get_possible_plugins		(FuDevice	*self);
 void		 fu_device_add_possible_plugin		(FuDevice	*self,
 							 const gchar	*plugin);
+guint64		 fu_device_get_private_flags		(FuDevice	*self);
+void		 fu_device_set_private_flags		(FuDevice	*self,
+							 guint64	 flag);

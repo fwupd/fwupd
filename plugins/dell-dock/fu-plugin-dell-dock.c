@@ -144,7 +144,7 @@ fu_plugin_backend_device_added (FuPlugin *plugin,
 		return FALSE;
 	fu_plugin_device_add (plugin, FU_DEVICE (hub));
 
-	if (fu_device_has_custom_flag (FU_DEVICE (hub), "has-bridge")) {
+	if (fu_device_has_private_flag (FU_DEVICE (hub), FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE)) {
 		g_autoptr(GError) error_local = NULL;
 
 		/* only add the device with parent to cache */

@@ -106,6 +106,115 @@ typedef enum {
 	FU_DFU_STATE_LAST
 } FuDfuState;
 
+/**
+ * FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET:
+ *
+ * Device needs resetting twice for attach.
+ */
+#define FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET			(1 << 0)
+/**
+ * FU_DFU_DEVICE_FLAG_ATTACH_UPLOAD_DOWNLOAD:
+ *
+ * An upload or download is required for attach.
+ */
+#define FU_DFU_DEVICE_FLAG_ATTACH_UPLOAD_DOWNLOAD		(1 << 1)
+/**
+ * FU_DFU_DEVICE_FLAG_FORCE_DFU_MODE:
+ *
+ * Force DFU mode.
+ */
+#define FU_DFU_DEVICE_FLAG_FORCE_DFU_MODE			(1 << 2)
+/**
+ * FU_DFU_DEVICE_FLAG_IGNORE_POLLTIMEOUT:
+ *
+ * Ignore the device download timeout.
+ */
+#define FU_DFU_DEVICE_FLAG_IGNORE_POLLTIMEOUT			(1 << 3)
+/**
+ * FU_DFU_DEVICE_FLAG_IGNORE_RUNTIME:
+ *
+ * Device has broken DFU runtime support.
+ */
+#define FU_DFU_DEVICE_FLAG_IGNORE_RUNTIME			(1 << 4)
+/**
+ * FU_DFU_DEVICE_FLAG_IGNORE_UPLOAD:
+ *
+ * Uploading from the device is broken.
+ */
+#define FU_DFU_DEVICE_FLAG_IGNORE_UPLOAD			(1 << 5)
+/**
+ * FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME:
+ *
+ * No DFU runtime interface is provided.
+ */
+#define FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME			(1 << 6)
+/**
+ * FU_DFU_DEVICE_FLAG_NO_GET_STATUS_UPLOAD:
+ *
+ * Do not do GetStatus when uploading.
+ */
+#define FU_DFU_DEVICE_FLAG_NO_GET_STATUS_UPLOAD			(1 << 7)
+/**
+ * FU_DFU_DEVICE_FLAG_NO_PID_CHANGE:
+ *
+ * Accept the same VID:PID when changing modes.
+ */
+#define FU_DFU_DEVICE_FLAG_NO_PID_CHANGE			(1 << 8)
+/**
+ * FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE:
+ *
+ * Use any interface for DFU.
+ */
+#define FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE			(1 << 9)
+/**
+ * FU_DFU_DEVICE_FLAG_USE_ATMEL_AVR:
+ *
+ * Device uses the ATMEL bootloader.
+ */
+#define FU_DFU_DEVICE_FLAG_USE_ATMEL_AVR			(1 << 10)
+/**
+ * FU_DFU_DEVICE_FLAG_USE_PROTOCOL_ZERO:
+ *
+ * Fix up the protocol number.
+ */
+#define FU_DFU_DEVICE_FLAG_USE_PROTOCOL_ZERO			(1 << 11)
+/**
+ * FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL:
+ *
+ * Use a legacy protocol version.
+ */
+#define FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL			(1 << 12)
+/**
+ * FU_DFU_DEVICE_FLAG_DETACH_FOR_ATTACH:
+ *
+ * Requires a FU_DFU_REQUEST_DETACH to attach.
+ */
+#define FU_DFU_DEVICE_FLAG_DETACH_FOR_ATTACH			(1 << 13)
+/**
+ * FU_DFU_DEVICE_FLAG_ABSENT_SECTOR_SIZE:
+ *
+ * In absence of sector size, assume byte.
+ */
+#define FU_DFU_DEVICE_FLAG_ABSENT_SECTOR_SIZE			(1 << 14)
+/**
+ * FU_DFU_DEVICE_FLAG_MANIFEST_POLL:
+ *
+ * Requires polling via GetStatus in dfuManifest state.
+ */
+#define FU_DFU_DEVICE_FLAG_MANIFEST_POLL			(1 << 15)
+/**
+ * FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH:
+ *
+ * Do not require a bus reset to attach to normal.
+ */
+#define FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH			(1 << 16)
+/**
+ * FU_DFU_DEVICE_FLAG_GD32:
+ *
+ * Uses the slightly weird GD32 variant of DFU.
+ */
+#define FU_DFU_DEVICE_FLAG_GD32					(1 << 17)
+
 const gchar	*fu_dfu_state_to_string			(FuDfuState	 state);
 const gchar	*fu_dfu_status_to_string		(FuDfuStatus	 status);
 
