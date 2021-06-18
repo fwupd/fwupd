@@ -248,30 +248,6 @@ fu_usb_device_setup (FuDevice *device, GError **error)
 		}
 	}
 
-	/* get version number, falling back to the USB device release */
-	idx = g_usb_device_get_custom_index (priv->usb_device,
-					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
-					     'F', 'W', NULL);
-	if (idx != 0x00) {
-		g_autofree gchar *tmp = NULL;
-		tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
-		/* although guessing is a route to insanity, if the device has
-		 * provided the extra data it's because the BCD type was not
-		 * suitable -- and INTEL_ME is not relevant here */
-		fu_device_set_version_format (device, fu_common_version_guess_format (tmp));
-		fu_device_set_version (device, tmp);
-	}
-
-	/* get GUID from the descriptor if set */
-	idx = g_usb_device_get_custom_index (priv->usb_device,
-					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
-					     'G', 'U', NULL);
-	if (idx != 0x00) {
-		g_autofree gchar *tmp = NULL;
-		tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
-		fu_device_add_guid (device, tmp);
-	}
-
 	/* get the hub descriptor if this is a hub */
 	if (g_usb_device_get_device_class (priv->usb_device) == G_USB_DEVICE_CLASS_HUB) {
 		if (!fu_usb_device_query_hub (self, error))
