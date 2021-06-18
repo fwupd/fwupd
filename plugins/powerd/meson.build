@@ -1,13 +1,13 @@
 if host_machine.system() == 'linux'
-cargs = ['-DG_LOG_DOMAIN="FuPluginUpower"']
+  #cargs = ['-DG_LOG_DOMAIN="FuPluginPowerd"']
 
-install_data(['upower.quirk'],
-  install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
+#install_data(['daemon.quirk'],
+  #install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
 
-shared_module('fu_plugin_upower',
+'''shared_module('fu_plugin_cros_powerd',
   fu_hash,
   sources : [
-    'fu-plugin-upower.c',
+    'fu-plugin-cros-powerd.c',
   ],
   include_directories : [
     root_incdir,
@@ -20,13 +20,10 @@ shared_module('fu_plugin_upower',
     fwupd,
     fwupdplugin,
   ],
-  c_args : cargs,
-  dependencies : [
+  '''c_args : cargs,'''
+ ''' dependencies : [
     plugin_deps,
   ],
-)
+)'''
 
-install_data(['upower.conf'],
-  install_dir:  join_paths(sysconfdir, 'fwupd')
-)
 endif
