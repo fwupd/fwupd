@@ -229,6 +229,7 @@ FuDevice	*fu_device_new				(void);
  * @FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION:		Inherit activation status from the history database on startup
  * @FU_DEVICE_INTERNAL_FLAG_IS_OPEN:			The device opened successfully and ready to use
  * @FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER:		Do not attempt to read the device serial number
+ * @FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN:	Automatically assign the parent for children of this device
  *
  * The device internal flags.
  **/
@@ -246,6 +247,7 @@ typedef enum {
 	FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION	= (1llu << 9),  /* Since: 1.5.9 */
 	FU_DEVICE_INTERNAL_FLAG_IS_OPEN			= (1llu << 10),	/* Since: 1.6.1 */
 	FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER	= (1llu << 11),	/* Since: 1.6.2 */
+	FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN	= (1llu << 12),	/* Since: 1.6.2 */
 	/*< private >*/
 	FU_DEVICE_INTERNAL_FLAG_UNKNOWN			= G_MAXUINT64,
 } FuDeviceInternalFlags;
@@ -275,6 +277,8 @@ void		 fu_device_add_child			(FuDevice	*self,
 							 FuDevice	*child);
 void		 fu_device_add_parent_guid		(FuDevice	*self,
 							 const gchar	*guid);
+void		 fu_device_add_parent_physical_id	(FuDevice	*self,
+							 const gchar	*physical_id);
 void		 fu_device_add_counterpart_guid		(FuDevice	*self,
 							 const gchar	*guid);
 FuDevice	*fu_device_get_proxy			(FuDevice	*self);
