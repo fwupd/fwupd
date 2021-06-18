@@ -357,10 +357,36 @@ static gboolean
 fu_colorhug_device_setup (FuDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
+	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+	guint idx;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS (fu_colorhug_device_parent_class)->setup (device, error))
 		return FALSE;
+
+	/* get version number, falling back to the USB device release */
+	idx = g_usb_device_get_custom_index (usb_device,
+					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
+					     'F', 'W', NULL);
+	if (idx != 0x00) {
+		g_autofree gchar *tmp = NULL;
+		tmp = g_usb_device_get_string_descriptor (usb_device, idx, NULL);
+		/* although guessing is a route to insanity, if the device has
+		 * provided the extra data it's because the BCD type was not
+		 * suitable -- and INTEL_ME is not relevant here */
+		fu_device_set_version_format (device, fu_common_version_guess_format (tmp));
+		fu_device_set_version (device, tmp);
+	}
+
+	/* get GUID from the descriptor if set */
+	idx = g_usb_device_get_custom_index (usb_device,
+					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
+					     'G', 'U', NULL);
+	if (idx != 0x00) {
+		g_autofree gchar *tmp = NULL;
+		tmp = g_usb_device_get_string_descriptor (usb_device, idx, NULL);
+		fu_device_add_guid (device, tmp);
+	}
 
 	/* using the USB descriptor and old firmware */
 	if (fu_device_get_version_format (device) == FWUPD_VERSION_FORMAT_BCD) {
