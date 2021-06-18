@@ -646,21 +646,25 @@ fu_wac_device_add_modules_bluetooth (FuWacDevice *self, GError **error)
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuWacModule) module = NULL;
-	guint8 buf[] = { [0] = FU_WAC_REPORT_ID_GET_FIRMWARE_VERSION_BLUETOOTH,
-			 [1 ... 14] = 0xff };
 	guint16 fw_ver;
 
-	buf[0] = FU_WAC_REPORT_ID_GET_FIRMWARE_VERSION_BLUETOOTH;
-	if (!fu_wac_device_get_feature_report (self, buf, sizeof(buf),
-					       FU_HID_DEVICE_FLAG_NONE,
-					       error)) {
-		g_prefix_error (error, "Failed to get GetFirmwareVersionBluetooth: ");
-		return FALSE;
+	/* it can take up to 5s to get the new version after a fw update */
+	for (guint i = 0; i < 5; i++) {
+		guint8 buf[] = { [0] = FU_WAC_REPORT_ID_GET_FIRMWARE_VERSION_BLUETOOTH,
+				 [1 ... 14] = 0xff };
+		if (!fu_wac_device_get_feature_report (self, buf, sizeof(buf),
+						       FU_HID_DEVICE_FLAG_NONE,
+						       error)) {
+			g_prefix_error (error, "Failed to get GetFirmwareVersionBluetooth: ");
+			return FALSE;
+		}
+		if (!fu_common_read_uint16_safe (buf, sizeof(buf), 1, &fw_ver,
+						 G_LITTLE_ENDIAN, error))
+			return FALSE;
+		if (fw_ver != 0)
+			break;
+		g_usleep (G_USEC_PER_SEC);
 	}
-
-	if (!fu_common_read_uint16_safe (buf, sizeof(buf), 1, &fw_ver,
-					 G_LITTLE_ENDIAN, error))
-		return FALSE;
 	version = fu_common_version_from_uint16 (fw_ver, FWUPD_VERSION_FORMAT_BCD);
 
 	/* success */
