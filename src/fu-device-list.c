@@ -541,8 +541,8 @@ fu_device_list_item_set_device (FuDeviceItem *item, FuDevice *device)
 static void
 fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 {
-	const gchar *custom_flags;
 	GPtrArray *vendor_ids;
+	g_autofree gchar *custom_flags = NULL;
 
 	/* clear timeout if scheduled */
 	if (item->remove_id != 0) {

@@ -508,11 +508,9 @@ fu_plugin_uefi_capsule_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GEr
 	if (!fu_device_setup (FU_DEVICE (dev), error))
 		return FALSE;
 
-	/* if not already set by quirks */
-	if (fu_device_get_custom_flags (FU_DEVICE (dev)) == NULL &&
-	    fu_plugin_has_custom_flag (plugin, "use-legacy-bootmgr-desc")) {
-		fu_device_set_custom_flags (FU_DEVICE (dev), "use-legacy-bootmgr-desc");
-	}
+	/* propagate from plugin flag to device flag */
+	if (fu_plugin_has_custom_flag (plugin, "use-legacy-bootmgr-desc"))
+		fu_device_add_custom_flag (FU_DEVICE (dev), "use-legacy-bootmgr-desc");
 
 	/* set fallback name if nothing else is set */
 	device_kind = fu_uefi_device_get_kind (dev);

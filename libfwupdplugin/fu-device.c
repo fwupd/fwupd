@@ -51,6 +51,7 @@ typedef struct {
 	GRWLock				 metadata_mutex;
 	GPtrArray			*parent_guids;
 	GRWLock				 parent_guids_mutex;
+	GPtrArray			*custom_flags;	/* (nullable) */
 	guint				 remove_delay;	/* ms */
 	guint				 progress;
 	guint				 battery_level;
@@ -1178,6 +1179,128 @@ fu_device_add_child_by_kv (FuDevice *self, const gchar *str, GError **error)
 }
 
 static gboolean
+fu_device_maybe_add_flag (FuDevice *self, const gchar *hint)
+{
+	FwupdDeviceFlags flag;
+	FuDeviceInternalFlags internal_flag;
+
+	/* is this a known device flag */
+	flag = fwupd_device_flag_from_string (hint);
+	if (flag != FWUPD_DEVICE_FLAG_UNKNOWN) {
+		fu_device_add_flag (self, flag);
+		return TRUE;
+	}
+	internal_flag = fu_device_internal_flag_from_string (hint);
+	if (internal_flag != FU_DEVICE_INTERNAL_FLAG_UNKNOWN) {
+		fu_device_add_internal_flag (self, internal_flag);
+		return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
+fu_device_maybe_remove_flag (FuDevice *self, const gchar *hint)
+{
+	FwupdDeviceFlags flag;
+	FuDeviceInternalFlags internal_flag;
+
+	/* this a negated device flag */
+	flag = fwupd_device_flag_from_string (hint);
+	if (flag != FWUPD_DEVICE_FLAG_UNKNOWN) {
+		fu_device_remove_flag (self, flag);
+		return TRUE;
+	}
+	internal_flag = fu_device_internal_flag_from_string (hint);
+	if (internal_flag != FU_DEVICE_INTERNAL_FLAG_UNKNOWN) {
+		fu_device_remove_internal_flag (self, internal_flag);
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * fu_device_add_custom_flag:
+ * @self: a #FuDevice
+ * @custom_flag: a string
+ *
+ * Adds a custom flag that can be used to modify device behavior.
+ * The actual string format is defined by the plugin.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_device_add_custom_flag (FuDevice *self, const gchar *custom_flag)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (custom_flag != NULL);
+
+	/* ensure exists */
+	if (priv->custom_flags == NULL)
+		priv->custom_flags = g_ptr_array_new_with_free_func (g_free);
+
+	/* add if already exists */
+	if (fu_device_has_custom_flag (self, custom_flag))
+		return;
+	g_ptr_array_add (priv->custom_flags, g_strdup (custom_flag));
+}
+
+/**
+ * fu_device_remove_custom_flag:
+ * @self: a #FuDevice
+ * @custom_flag: a string
+ *
+ * Removes a custom flag that can be used to modify device behavior.
+ * The actual string format is defined by the plugin.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_device_remove_custom_flag (FuDevice *self, const gchar *custom_flag)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (custom_flag != NULL);
+
+	/* ensure exists */
+	if (priv->custom_flags == NULL)
+		return;
+
+	/* remove if already exists */
+	for (guint i = 0; i < priv->custom_flags->len; i++) {
+		const gchar *tmp = g_ptr_array_index (priv->custom_flags, i);
+		if (g_strcmp0 (custom_flag, tmp) == 0) {
+			g_ptr_array_remove_index (priv->custom_flags, i);
+			break;
+		}
+	}
+}
+
+static void
+fu_device_set_custom_flags_full (FuDevice *self, const gchar *custom_flags)
+{
+	g_auto(GStrv) hints = NULL;
+
+	/* nothing to do */
+	if (custom_flags == NULL)
+		return;
+
+	/* look for any standard FwupdDeviceFlags */
+	hints = g_strsplit (custom_flags, ",", -1);
+	for (guint i = 0; hints[i] != NULL; i++) {
+		if (g_str_has_prefix (hints[i], "~")) {
+			if (!fu_device_maybe_remove_flag (self, hints[i] + 1))
+				fu_device_remove_custom_flag (self, hints[i] + 1);
+		} else {
+			if (!fu_device_maybe_add_flag (self, hints[i]))
+				fu_device_add_custom_flag (self, hints[i]);
+		}
+	}
+}
+
+static gboolean
 fu_device_set_quirk_kv (FuDevice *self,
 			const gchar *key,
 			const gchar *value,
@@ -1191,7 +1314,7 @@ fu_device_set_quirk_kv (FuDevice *self,
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_FLAGS) == 0) {
-		fu_device_set_custom_flags (self, value);
+		fu_device_set_custom_flags_full (self, value);
 		return TRUE;
 	}
 	if (g_strcmp0 (key, FU_QUIRKS_NAME) == 0) {
@@ -2468,32 +2591,6 @@ fu_device_add_flag (FuDevice *self, FwupdDeviceFlags flag)
 		fu_device_inhibit (self, "needs-activation", "Pending activation");
 }
 
-static void
-fu_device_set_custom_flag (FuDevice *self, const gchar *hint)
-{
-	FwupdDeviceFlags flag;
-	FuDeviceInternalFlags internal_flag;
-
-	/* is this a negated device flag */
-	if (g_str_has_prefix (hint, "~")) {
-		flag = fwupd_device_flag_from_string (hint + 1);
-		if (flag != FWUPD_DEVICE_FLAG_UNKNOWN)
-			fu_device_remove_flag (self, flag);
-		internal_flag = fu_device_internal_flag_from_string (hint + 1);
-		if (internal_flag != FU_DEVICE_INTERNAL_FLAG_UNKNOWN)
-			fu_device_remove_internal_flag (self, internal_flag);
-		return;
-	}
-
-	/* is this a known device flag */
-	flag = fwupd_device_flag_from_string (hint);
-	if (flag != FWUPD_DEVICE_FLAG_UNKNOWN)
-		fu_device_add_flag (self, flag);
-	internal_flag = fu_device_internal_flag_from_string (hint);
-	if (internal_flag != FU_DEVICE_INTERNAL_FLAG_UNKNOWN)
-		fu_device_add_internal_flag (self, internal_flag);
-}
-
 /**
  * fu_device_set_custom_flags:
  * @self: a #FuDevice
@@ -2507,18 +2604,17 @@ fu_device_set_custom_flag (FuDevice *self, const gchar *hint)
 void
 fu_device_set_custom_flags (FuDevice *self, const gchar *custom_flags)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (custom_flags != NULL);
 
-	/* display what was set when converting to a string */
-	fu_device_set_metadata (self, "CustomFlags", custom_flags);
+	/* preserve behavior of *overwriting* value */
+	if (priv->custom_flags != NULL)
+		g_ptr_array_set_size (priv->custom_flags, 0);
 
-	/* look for any standard FwupdDeviceFlags */
-	if (custom_flags != NULL) {
-		g_auto(GStrv) hints = g_strsplit (custom_flags, ",", -1);
-		for (guint i = 0; hints[i] != NULL; i++)
-			fu_device_set_custom_flag (self, hints[i]);
-	}
+	/* append */
+	fu_device_set_custom_flags_full (self, custom_flags);
 }
 
 /**
@@ -2531,11 +2627,14 @@ fu_device_set_custom_flags (FuDevice *self, const gchar *custom_flags)
  *
  * Since: 1.1.0
  **/
-const gchar *
+gchar *
 fu_device_get_custom_flags (FuDevice *self)
 {
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
-	return fu_device_get_metadata (self, "CustomFlags");
+	if (priv->custom_flags == NULL || priv->custom_flags->len == 0)
+		return NULL;
+	return fu_common_strjoin_array (",", priv->custom_flags);
 }
 
 /**
@@ -2545,9 +2644,6 @@ fu_device_get_custom_flags (FuDevice *self)
  *
  * Checks if the custom flag exists for the device from the quirk system.
  *
- * It may be more efficient to call fu_device_get_custom_flags() and split the
- * string locally if checking for lots of different flags.
- *
  * Returns: %TRUE if the hint exists
  *
  * Since: 1.1.0
@@ -2555,18 +2651,20 @@ fu_device_get_custom_flags (FuDevice *self)
 gboolean
 fu_device_has_custom_flag (FuDevice *self, const gchar *hint)
 {
-	const gchar *hint_str;
-	g_auto(GStrv) hints = NULL;
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (hint != NULL, FALSE);
 
 	/* no hint is perfectly valid */
-	hint_str = fu_device_get_custom_flags (self);
-	if (hint_str == NULL)
+	if (priv->custom_flags == NULL)
 		return FALSE;
-	hints = g_strsplit (hint_str, ",", -1);
-	return g_strv_contains ((const gchar * const *) hints, hint);
+	for (guint i = 0; i < priv->custom_flags->len; i++) {
+		const gchar *custom_flag = g_ptr_array_index (priv->custom_flags, i);
+		if (g_strcmp0 (custom_flag, hint) == 0)
+			return TRUE;
+	}
+	return FALSE;
 }
 
 /**
@@ -2892,6 +2990,10 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 	for (guint i = 0; i < priv->possible_plugins->len; i++) {
 		const gchar *name = g_ptr_array_index (priv->possible_plugins, i);
 		fu_common_string_append_kv (str, idt + 1, "PossiblePlugin", name);
+	}
+	if (priv->custom_flags != NULL && priv->custom_flags->len > 0) {
+		g_autofree gchar *flags = fu_common_strjoin_array (",", priv->custom_flags);
+		fu_common_string_append_kv (str, idt + 1, "CustomFlags", flags);
 	}
 	if (priv->internal_flags != FU_DEVICE_INTERNAL_FLAG_NONE) {
 		g_autoptr(GString) tmp2 = g_string_new ("");
@@ -4053,6 +4155,8 @@ fu_device_finalize (GObject *object)
 		g_hash_table_unref (priv->metadata);
 	if (priv->inhibits != NULL)
 		g_hash_table_unref (priv->inhibits);
+	if (priv->custom_flags != NULL)
+		g_ptr_array_unref (priv->custom_flags);
 	g_ptr_array_unref (priv->parent_guids);
 	g_ptr_array_unref (priv->possible_plugins);
 	g_ptr_array_unref (priv->retry_recs);

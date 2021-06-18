@@ -1393,6 +1393,7 @@ fu_device_inhibit_func (void)
 static void
 fu_device_flags_func (void)
 {
+	g_autofree gchar *custom_flags = NULL;
 	g_autoptr(FuDevice) device = fu_device_new ();
 
 	/* bitfield */
@@ -1424,6 +1425,29 @@ fu_device_flags_func (void)
 							   FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_custom_flags (device, "~is-bootloader");
 	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_UPDATABLE);
+
+	/* custom */
+	custom_flags = fu_device_get_custom_flags (device);
+	g_assert_cmpstr (custom_flags, ==, NULL);
+	fu_device_set_custom_flags (device, "foo,bar,baz");
+	fu_device_set_custom_flags (device, "baz,baz");
+	custom_flags = fu_device_get_custom_flags (device);
+	g_assert_cmpstr (custom_flags, ==, "baz");
+	g_assert_true (fu_device_has_custom_flag (device, "baz"));
+	g_assert_false (fu_device_has_custom_flag (device, "foo"));
+
+	/* custom negation */
+	fu_device_set_custom_flags (device, "baz,~baz");
+	g_assert_false (fu_device_has_custom_flag (device, "baz"));
+
+	/* custom add and remove */
+	fu_device_add_custom_flag (device, "foo");
+	fu_device_add_custom_flag (device, "bar");
+	g_assert_true (fu_device_has_custom_flag (device, "foo"));
+	g_assert_true (fu_device_has_custom_flag (device, "bar"));
+	fu_device_remove_custom_flag (device, "bar");
+	g_assert_true (fu_device_has_custom_flag (device, "foo"));
+	g_assert_false (fu_device_has_custom_flag (device, "bar"));
 }
 
 static void
