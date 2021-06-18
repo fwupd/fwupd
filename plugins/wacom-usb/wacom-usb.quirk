@@ -37,7 +37,7 @@ GType = FuWacAndroidDevice
 [USB\VID_056A&PID_0376]
 Plugin = wacom_usb
 GType = FuWacDevice
-Flags = use-runtime-version
+Flags = use-runtime-version,no-serial-number
 
 # Intuos BT S 3rd-gen (USB) [CTL-4100WL - Android Mode]
 [USB\VID_2D1F&PID_0376]
@@ -48,7 +48,7 @@ GType = FuWacAndroidDevice
 [USB\VID_056A&PID_0378]
 Plugin = wacom_usb
 GType = FuWacDevice
-Flags = use-runtime-version
+Flags = use-runtime-version,no-serial-number
 
 # Intuos BT M 3rd-gen (USB) [CTL-6100WL - Android Mode]
 [USB\VID_2D1F&PID_0378]
