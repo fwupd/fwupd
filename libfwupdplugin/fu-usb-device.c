@@ -231,7 +231,8 @@ fu_usb_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* get serial number */
-	if (fu_device_get_serial (device) == NULL) {
+	if (!fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER) &&
+	    fu_device_get_serial (device) == NULL) {
 		idx = g_usb_device_get_serial_number_index (priv->usb_device);
 		if (idx != 0x00) {
 			g_autofree gchar *tmp = NULL;

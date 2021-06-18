@@ -366,7 +366,8 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* set serial */
-	if (fu_device_get_serial (device) == NULL) {
+	if (!fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER) &&
+	    fu_device_get_serial (device) == NULL) {
 		tmp = g_udev_device_get_property (priv->udev_device, "ID_SERIAL_SHORT");
 		if (tmp == NULL)
 			tmp = g_udev_device_get_property (priv->udev_device, "ID_SERIAL");

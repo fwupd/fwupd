@@ -208,6 +208,8 @@ fu_device_internal_flag_to_string (FuDeviceInternalFlags flag)
 		return "inherit-activation";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_IS_OPEN)
 		return "is-open";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER)
+		return "no-serial-number";
 	return NULL;
 }
 
@@ -246,6 +248,8 @@ fu_device_internal_flag_from_string (const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION;
 	if (g_strcmp0 (flag, "is-open") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_IS_OPEN;
+	if (g_strcmp0 (flag, "no-serial-number") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
