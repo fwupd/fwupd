@@ -310,7 +310,7 @@ fu_plugin_uefi_capsule_update_splash (FuPlugin *plugin, FuDevice *device, GError
 	};
 
 	/* no UX capsule support, so deleting var if it exists */
-	if (fu_device_has_custom_flag (device, "no-ux-capsule")) {
+	if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE)) {
 		g_debug ("not providing UX capsule");
 		return fu_efivar_delete (FU_EFIVAR_GUID_FWUPDATE,
 					    "fwupd-ux-capsule", error);
@@ -509,9 +509,9 @@ fu_plugin_uefi_capsule_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GEr
 		return FALSE;
 
 	/* if not already set by quirks */
-	if (fu_device_get_custom_flags (FU_DEVICE (dev)) == NULL &&
-	    fu_plugin_has_custom_flag (plugin, "use-legacy-bootmgr-desc")) {
-		fu_device_set_custom_flags (FU_DEVICE (dev), "use-legacy-bootmgr-desc");
+	if (fu_plugin_has_custom_flag (plugin, "use-legacy-bootmgr-desc")) {
+		fu_device_add_private_flag (FU_DEVICE (dev),
+					    FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
 	}
 
 	/* set fallback name if nothing else is set */

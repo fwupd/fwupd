@@ -541,7 +541,7 @@ fu_device_list_item_set_device (FuDeviceItem *item, FuDevice *device)
 static void
 fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 {
-	const gchar *custom_flags;
+	guint64 private_flags;
 	GPtrArray *vendor_ids;
 
 	/* clear timeout if scheduled */
@@ -562,10 +562,10 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 	}
 
 	/* copy over custom flags */
-	custom_flags = fu_device_get_custom_flags (item->device);
-	if (custom_flags != NULL) {
-		g_debug ("copying old custom flags %s to new device", custom_flags);
-		fu_device_set_custom_flags (device, custom_flags);
+	private_flags = fu_device_get_private_flags (item->device);
+	if (private_flags != 0) {
+		g_debug ("copying old custom flags 0x%x to new device", (guint) private_flags);
+		fu_device_set_private_flags (device, private_flags);
 	}
 
 	/* copy over the version strings if not set */

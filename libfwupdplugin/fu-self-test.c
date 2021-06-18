@@ -1390,6 +1390,39 @@ fu_device_inhibit_func (void)
 	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 }
 
+#define TEST_FLAG_FOO	(1 << 0)
+#define TEST_FLAG_BAR	(1 << 1)
+#define TEST_FLAG_BAZ	(1 << 2)
+
+static void
+fu_device_private_flags_func (void)
+{
+	g_autofree gchar *tmp = NULL;
+	g_autoptr(FuDevice) device = fu_device_new ();
+
+	fu_device_register_private_flag (device, TEST_FLAG_FOO, "foo");
+	fu_device_register_private_flag (device, TEST_FLAG_BAR, "bar");
+
+	fu_device_set_custom_flags (device, "foo");
+	g_assert_cmpint (fu_device_get_private_flags (device), ==, TEST_FLAG_FOO);
+	fu_device_set_custom_flags (device, "bar");
+	g_assert_cmpint (fu_device_get_private_flags (device), ==, TEST_FLAG_FOO | TEST_FLAG_BAR);
+	fu_device_set_custom_flags (device, "~bar");
+	g_assert_cmpint (fu_device_get_private_flags (device), ==, TEST_FLAG_FOO);
+	fu_device_set_custom_flags (device, "baz");
+	g_assert_cmpint (fu_device_get_private_flags (device), ==, TEST_FLAG_FOO);
+	fu_device_add_private_flag (device, TEST_FLAG_BAZ);
+	g_assert_cmpint (fu_device_get_private_flags (device), ==, TEST_FLAG_FOO | TEST_FLAG_BAZ);
+
+	tmp = fu_device_to_string (device);
+	g_assert_cmpstr (tmp, ==,
+		"FuDevice:\n"
+		"Unknown Device\n"
+		"  Flags:                none\n"
+		"  CustomFlags:          baz\n" /* compat */
+		"  PrivateFlags:         foo\n");
+}
+
 static void
 fu_device_flags_func (void)
 {
@@ -2942,6 +2975,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device{instance-ids}", fu_device_instance_ids_func);
 	g_test_add_func ("/fwupd/device{composite-id}", fu_device_composite_id_func);
 	g_test_add_func ("/fwupd/device{flags}", fu_device_flags_func);
+	g_test_add_func ("/fwupd/device{custom-flags}", fu_device_private_flags_func);
 	g_test_add_func ("/fwupd/device{inhibit}", fu_device_inhibit_func);
 	g_test_add_func ("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func ("/fwupd/device{children}", fu_device_children_func);

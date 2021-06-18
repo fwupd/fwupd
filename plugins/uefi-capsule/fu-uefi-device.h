@@ -37,6 +37,25 @@ typedef enum {
 	FU_UEFI_DEVICE_STATUS_LAST
 } FuUefiDeviceStatus;
 
+/**
+ * FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE:
+ *
+ * No not use the additional UX capsule.
+ */
+#define FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE		(1 << 0)
+/**
+ * FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE:
+ *
+ * Use a unique shim filename to work around a common BIOS bug.
+ */
+#define FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE		(1 << 1)
+/**
+ * FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC:
+ *
+ * Use the legacy boot manager description to work around a Lenovo BIOS bug.
+ */
+#define FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC	(1 << 2)
+
 FuUefiDevice	*fu_uefi_device_new_from_guid		(const gchar	*guid);
 FuUefiDevice	*fu_uefi_device_new_from_dev		(FuDevice	*dev);
 void		 fu_uefi_device_set_esp			(FuUefiDevice	*self,

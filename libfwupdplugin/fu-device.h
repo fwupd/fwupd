@@ -339,7 +339,8 @@ void		 fu_device_remove_flag			(FuDevice	*self,
 							 FwupdDeviceFlags flag);
 const gchar	*fu_device_get_custom_flags		(FuDevice	*self);
 gboolean	 fu_device_has_custom_flag		(FuDevice	*self,
-							 const gchar	*hint);
+							 const gchar	*hint)
+							 G_DEPRECATED_FOR(fu_device_has_private_flag);
 void		 fu_device_set_custom_flags		(FuDevice	*self,
 							 const gchar	*custom_flags);
 void		 fu_device_set_name			(FuDevice	*self,
@@ -476,3 +477,12 @@ GHashTable	*fu_device_report_metadata_pre		(FuDevice	*self);
 GHashTable	*fu_device_report_metadata_post		(FuDevice	*self);
 void		 fu_device_add_security_attrs		(FuDevice	*self,
 							 FuSecurityAttrs *attrs);
+void		 fu_device_register_private_flag	(FuDevice	*self,
+							 guint64	 value,
+							 const gchar	*value_str);
+void		 fu_device_add_private_flag		(FuDevice	*self,
+							 guint64	 flag);
+void		 fu_device_remove_private_flag		(FuDevice	*self,
+							 guint64	 flag);
+gboolean	 fu_device_has_private_flag		(FuDevice	*self,
+							 guint64	 flag);

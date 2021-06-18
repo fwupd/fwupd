@@ -20,7 +20,7 @@
  *
  * Since: 1.0.3
  */
-#define FU_COLORHUG_DEVICE_FLAG_HALFSIZE	"halfsize"
+#define FU_COLORHUG_DEVICE_FLAG_HALFSIZE	(1 << 0)
 
 struct _FuColorhugDevice {
 	FuUsbDevice		 parent_instance;
@@ -321,7 +321,7 @@ fu_colorhug_device_probe (FuDevice *device, GError **error)
 		return FALSE;
 
 	/* compact memory layout */
-	if (fu_device_has_custom_flag (device, FU_COLORHUG_DEVICE_FLAG_HALFSIZE))
+	if (fu_device_has_private_flag (device, FU_COLORHUG_DEVICE_FLAG_HALFSIZE))
 		self->start_addr = CH_EEPROM_ADDR_RUNCODE_ALS;
 
 	/* add hardcoded bits */
@@ -534,6 +534,9 @@ fu_colorhug_device_init (FuColorhugDevice *self)
 				    FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_COLORHUG_DEVICE_FLAG_HALFSIZE,
+					 "halfsize");
 }
 
 static void

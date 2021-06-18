@@ -70,6 +70,8 @@ typedef struct {
 	GPtrArray			*retry_recs;	/* of FuDeviceRetryRecovery */
 	guint				 retry_delay;
 	FuDeviceInternalFlags		 internal_flags;
+	guint64				 private_flags;
+	GPtrArray			*private_flag_items;	/* (nullable) */
 } FuDevicePrivate;
 
 typedef struct {
@@ -311,6 +313,92 @@ fu_device_has_internal_flag (FuDevice *self, FuDeviceInternalFlags flag)
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	return (priv->internal_flags & flag) > 0;
+}
+
+/**
+ * fu_device_add_private_flag:
+ * @self: a #FuDevice
+ * @flag: a device flag
+ *
+ * Adds a private flag that can be used by the plugin for any purpose.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_device_add_private_flag (FuDevice *self, guint64 flag)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	priv->private_flags |= flag;
+}
+
+/**
+ * fu_device_remove_private_flag:
+ * @self: a #FuDevice
+ * @flag: a device flag
+ *
+ * Removes a private flag that can be used by the plugin for any purpose.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_device_remove_private_flag (FuDevice *self, guint64 flag)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	priv->private_flags &= ~flag;
+}
+
+/**
+ * fu_device_has_private_flag:
+ * @self: a #FuDevice
+ * @flag: a device flag
+ *
+ * Tests for a private flag that can be used by the plugin for any purpose.
+ *
+ * Since: 1.6.2
+ **/
+gboolean
+fu_device_has_private_flag (FuDevice *self, guint64 flag)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	return (priv->private_flags & flag) > 0;
+}
+
+/**
+ * fu_device_get_private_flags:
+ * @self: a #FuDevice
+ *
+ * Returns all the private flags that can be used by the plugin for any purpose.
+ *
+ * Returns: flags
+ *
+ * Since: 1.6.2
+ **/
+guint64
+fu_device_get_private_flags (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), G_MAXUINT64);
+	return priv->private_flags;
+}
+
+/**
+ * fu_device_set_private_flags:
+ * @self: a #FuDevice
+ * @flag: flags
+ *
+ * Sets private flags that can be used by the plugin for any purpose.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_device_set_private_flags (FuDevice *self, guint64 flag)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_DEVICE (self));
+	priv->private_flags = flag;
 }
 
 /**
@@ -2568,30 +2656,124 @@ fu_device_add_flag (FuDevice *self, FwupdDeviceFlags flag)
 		fu_device_inhibit (self, "needs-activation", "Pending activation");
 }
 
+typedef struct {
+	guint64		 value;
+	gchar		*value_str;
+} FuDevicePrivateFlagItem;
+
+static void
+fu_device_private_flag_item_free (FuDevicePrivateFlagItem *item)
+{
+	g_free (item->value_str);
+	g_free (item);
+}
+
+static FuDevicePrivateFlagItem *
+fu_device_private_flag_item_find_by_str (FuDevice *self, const gchar *value_str)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	if (priv->private_flag_items == NULL)
+		return NULL;
+	for (guint i = 0; i < priv->private_flag_items->len; i++) {
+		FuDevicePrivateFlagItem *item = g_ptr_array_index (priv->private_flag_items, i);
+		if (g_strcmp0 (item->value_str, value_str) == 0)
+			return item;
+	}
+	return NULL;
+}
+
+static FuDevicePrivateFlagItem *
+fu_device_private_flag_item_find_by_val (FuDevice *self, guint64 value)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	if (priv->private_flag_items == NULL)
+		return NULL;
+	for (guint i = 0; i < priv->private_flag_items->len; i++) {
+		FuDevicePrivateFlagItem *item = g_ptr_array_index (priv->private_flag_items, i);
+		if (item->value == value)
+			return item;
+	}
+	return NULL;
+}
+
+/**
+ * fu_device_register_private_flag:
+ * @self: a #FuDevice
+ * @value: an integer value
+ * @value_str: a string that represents @value
+ *
+ * Registers a private device flag so that it can be set from quirk files.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_device_register_private_flag (FuDevice *self,
+				 guint64 value,
+				 const gchar *value_str)
+{
+	FuDevicePrivateFlagItem *item;
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (value != 0);
+	g_return_if_fail (value_str != NULL);
+
+	/* ensure exists */
+	if (priv->private_flag_items == NULL)
+		priv->private_flag_items = g_ptr_array_new_with_free_func ((GDestroyNotify) fu_device_private_flag_item_free);
+
+	item = g_new0 (FuDevicePrivateFlagItem, 1);
+	item->value = value;
+	item->value_str = g_strdup (value_str);
+	g_ptr_array_add (priv->private_flag_items, item);
+}
+
 static void
 fu_device_set_custom_flag (FuDevice *self, const gchar *hint)
 {
 	FwupdDeviceFlags flag;
+	FuDevicePrivateFlagItem *item;
 	FuDeviceInternalFlags internal_flag;
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 
 	/* is this a negated device flag */
 	if (g_str_has_prefix (hint, "~")) {
 		flag = fwupd_device_flag_from_string (hint + 1);
-		if (flag != FWUPD_DEVICE_FLAG_UNKNOWN)
+		if (flag != FWUPD_DEVICE_FLAG_UNKNOWN) {
 			fu_device_remove_flag (self, flag);
+			return;
+		}
 		internal_flag = fu_device_internal_flag_from_string (hint + 1);
-		if (internal_flag != FU_DEVICE_INTERNAL_FLAG_UNKNOWN)
+		if (internal_flag != FU_DEVICE_INTERNAL_FLAG_UNKNOWN) {
 			fu_device_remove_internal_flag (self, internal_flag);
+			return;
+		}
+		item = fu_device_private_flag_item_find_by_str (self, hint + 1);
+		if (item != NULL) {
+			priv->private_flags &= ~item->value;
+			return;
+		}
+		g_debug ("failed to find registered custom flag %s", hint + 1);
 		return;
 	}
 
 	/* is this a known device flag */
 	flag = fwupd_device_flag_from_string (hint);
-	if (flag != FWUPD_DEVICE_FLAG_UNKNOWN)
+	if (flag != FWUPD_DEVICE_FLAG_UNKNOWN) {
 		fu_device_add_flag (self, flag);
+		return;
+	}
 	internal_flag = fu_device_internal_flag_from_string (hint);
-	if (internal_flag != FU_DEVICE_INTERNAL_FLAG_UNKNOWN)
+	if (internal_flag != FU_DEVICE_INTERNAL_FLAG_UNKNOWN) {
 		fu_device_add_internal_flag (self, internal_flag);
+		return;
+	}
+	item = fu_device_private_flag_item_find_by_str (self, hint);
+	if (item != NULL) {
+		priv->private_flags |= item->value;
+		return;
+	}
+	g_debug ("failed to find registered custom flag %s", hint);
 }
 
 /**
@@ -3008,6 +3190,22 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		if (tmp2->len > 0)
 			g_string_truncate (tmp2, tmp2->len - 1);
 		fu_common_string_append_kv (str, idt + 1, "InternalFlags", tmp2->str);
+	}
+	if (priv->private_flags > 0) {
+		g_autoptr(GPtrArray) tmpv = g_ptr_array_new ();
+		g_autofree gchar *tmps = NULL;
+		for (guint64 i = 0; i < 64; i++) {
+			FuDevicePrivateFlagItem *item;
+			guint64 value = 1ull << i;
+			if ((priv->private_flags & value) == 0)
+				continue;
+			item = fu_device_private_flag_item_find_by_val (self, value);
+			if (item == NULL)
+				continue;
+			g_ptr_array_add (tmpv, item->value_str);
+		}
+		tmps = fu_common_strjoin_array (",", tmpv);
+		fu_common_string_append_kv (str, idt + 1, "PrivateFlags", tmps);
 	}
 
 	/* subclassed */
@@ -4166,6 +4364,8 @@ fu_device_finalize (GObject *object)
 		g_hash_table_unref (priv->inhibits);
 	if (priv->parent_physical_ids != NULL)
 		g_ptr_array_unref (priv->parent_physical_ids);
+	if (priv->private_flag_items != NULL)
+		g_ptr_array_unref (priv->private_flag_items);
 	g_ptr_array_unref (priv->parent_guids);
 	g_ptr_array_unref (priv->possible_plugins);
 	g_ptr_array_unref (priv->retry_recs);

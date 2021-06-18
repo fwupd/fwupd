@@ -21,6 +21,13 @@ struct _FuNvmeDevice {
 	guint64			 write_block_size;
 };
 
+/**
+ * FU_NVME_DEVICE_FLAG_FORCE_ALIGN:
+ *
+ * Force alignment of the firmware file.
+ */
+#define FU_NVME_DEVICE_FLAG_FORCE_ALIGN		(1 << 0)
+
 G_DEFINE_TYPE (FuNvmeDevice, fu_nvme_device, FU_TYPE_UDEV_DEVICE)
 
 static void
@@ -330,7 +337,7 @@ fu_nvme_device_write_firmware (FuDevice *device,
 
 	/* some vendors provide firmware files whose sizes are not multiples
 	 * of blksz *and* the device won't accept blocks of different sizes */
-	if (fu_device_has_custom_flag (device, "force-align")) {
+	if (fu_device_has_private_flag (device, FU_NVME_DEVICE_FLAG_FORCE_ALIGN)) {
 		fw2 = fu_common_bytes_align (fw, block_size, 0xff);
 	} else {
 		fw2 = g_bytes_ref (fw);
@@ -403,6 +410,9 @@ fu_nvme_device_init (FuNvmeDevice *self)
 	fu_udev_device_set_flags (FU_UDEV_DEVICE (self),
 				  FU_UDEV_DEVICE_FLAG_OPEN_READ |
 				  FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_NVME_DEVICE_FLAG_FORCE_ALIGN,
+					 "force-align");
 }
 
 static void

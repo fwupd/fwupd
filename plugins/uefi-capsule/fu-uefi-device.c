@@ -599,11 +599,11 @@ fu_uefi_device_write_firmware (FuDevice *device,
 	/* update the firmware before the bootloader runs */
 	if (fu_device_get_metadata_boolean (device, "RequireShimForSecureBoot"))
 		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
-	if (fu_device_has_custom_flag (device, "use-shim-unique"))
+	if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE))
 		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE;
 
 	/* some legacy devices use the old name to deduplicate boot entries */
-	if (fu_device_has_custom_flag (device, "use-legacy-bootmgr-desc"))
+	if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC))
 		bootmgr_desc = "Linux-Firmware-Updater";
 	if (!fu_uefi_bootmgr_bootnext (device, esp_path, bootmgr_desc, flags, error))
 		return FALSE;
@@ -776,6 +776,15 @@ static void
 fu_uefi_device_init (FuUefiDevice *self)
 {
 	fu_device_add_protocol (FU_DEVICE (self), "org.uefi.capsule");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE,
+					 "no-ux-capsule");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE,
+					 "use-shim-unique");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC,
+					 "use-legacy-bootmgr-desc");
 }
 
 static void
