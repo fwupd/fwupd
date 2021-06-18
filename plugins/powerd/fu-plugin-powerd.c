@@ -17,8 +17,8 @@ struct FuPluginData {
 void
 fu_plugin_init (FuPlugin *plugin)
 {
-	//fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	//fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
         
         return;
 }
@@ -36,37 +36,47 @@ fu_plugin_powerd_rescan (FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	
-      
+	g_autoptr(GVariant) percentage_val = NULL;
+	g_autoptr(GVariant) type_val = NULL;
+	g_autoptr(GVariant) state_val = NULL;
+
+        type_val = g_dbus_proxy_get_cached_property (data->proxy, "Type");
 	state_val = g_dbus_proxy_get_cached_property (data->proxy, "State");
-	
 	fu_context_set_battery_state (ctx, g_variant_get_uint32 (state_val));
 
 	/* get percentage */
 	percentage_val = g_dbus_proxy_get_cached_property (data->proxy, "Percentage");
-    
 	fu_context_set_battery_level (ctx, g_variant_get_double (percentage_val));
 }
 
 static void
-fu_plugin_upower_proxy_changed_cb (GDBusProxy *proxy,
+fu_plugin_powerd_proxy_changed_cb (GDBusProxy *proxy,
 				   GVariant *changed_properties,
 				   GStrv invalidated_properties,
 				   FuPlugin *plugin)
 {
-	//fu_plugin_upower_rescan (plugin);
 }
 
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
-	
+	FuContext *ctx = fu_plugin_get_context (plugin);
+	FuPluginData *data = fu_plugin_get_data (plugin);
+	const gchar *vendor;
+	guint64 minimum_battery;
 	g_autofree gchar *name_owner = NULL;
 	g_autofree gchar *battery_str = NULL;
 
+	name_owner = g_dbus_proxy_get_name_owner (data->proxy);
+	vendor = fu_context_get_hwid_replace_value (ctx, FU_HWIDS_KEY_MANUFACTURER, NULL);
+		if (vendor != NULL) {
+			battery_str = g_strdup (fu_context_lookup_quirk_by_id (ctx,
+					  				       vendor,
+									       FU_QUIRKS_BATTERY_THRESHOLD));
+		}
+
 	minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
-	
-	
+
         /* success */
 	return TRUE;
 }
@@ -77,6 +87,5 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 			  FuDevice *device,
 			  GError **error)
 {
-
 	return TRUE;
 }
