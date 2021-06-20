@@ -3,7 +3,7 @@ name: Bug report (Dell WD19)
 about: Create a report to help us improve
 title: 'Dell WD19 upgrade issue'
 labels: bug
-assignees: 'superm1'
+assignees: 'cragw'
 
 ---
 
