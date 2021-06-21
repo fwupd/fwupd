@@ -213,6 +213,8 @@ fu_device_internal_flag_to_string (FuDeviceInternalFlags flag)
 		return "no-serial-number";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN)
 		return "auto-parent-children";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET)
+		return "attach-extra-reset";
 	return NULL;
 }
 
@@ -255,6 +257,8 @@ fu_device_internal_flag_from_string (const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER;
 	if (g_strcmp0 (flag, "auto-parent-children") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN;
+	if (g_strcmp0 (flag, "attach-extra-reset") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 

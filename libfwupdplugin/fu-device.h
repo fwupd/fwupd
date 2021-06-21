@@ -230,6 +230,7 @@ FuDevice	*fu_device_new				(void);
  * @FU_DEVICE_INTERNAL_FLAG_IS_OPEN:			The device opened successfully and ready to use
  * @FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER:		Do not attempt to read the device serial number
  * @FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN:	Automatically assign the parent for children of this device
+ * @FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET:		Device needs resetting twice for attach after the firmware update
  *
  * The device internal flags.
  **/
@@ -248,6 +249,7 @@ typedef enum {
 	FU_DEVICE_INTERNAL_FLAG_IS_OPEN			= (1llu << 10),	/* Since: 1.6.1 */
 	FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER	= (1llu << 11),	/* Since: 1.6.2 */
 	FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN	= (1llu << 12),	/* Since: 1.6.2 */
+	FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET	= (1llu << 13),	/* Since: 1.6.2 */
 	/*< private >*/
 	FU_DEVICE_INTERNAL_FLAG_UNKNOWN			= G_MAXUINT64,
 } FuDeviceInternalFlags;
