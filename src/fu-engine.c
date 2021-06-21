@@ -1645,6 +1645,28 @@ fu_engine_check_trust (FuInstallTask *task, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_engine_check_soft_requirement (FuEngine *self,
+				  FuEngineRequest *request,
+				  XbNode *req,
+				  FuDevice *device,
+				  FwupdInstallFlags flags,
+				  GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+	if (!fu_engine_check_requirement (self, request, req, device,
+					  flags, &error_local)) {
+		if (flags & FWUPD_INSTALL_FLAG_FORCE) {
+			g_debug ("ignoring soft-requirement due to --force: %s",
+				 error_local->message);
+			return TRUE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 gboolean
 fu_engine_check_requirements (FuEngine *self,
 			      FuEngineRequest *request,
@@ -1671,6 +1693,24 @@ fu_engine_check_requirements (FuEngine *self,
 			if (!fu_engine_check_requirement (self, request,
 							  req, device,
 							  flags, error))
+				return FALSE;
+		}
+	} else if (!g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
+		   !g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+			g_propagate_error (error, g_steal_pointer (&error_local));
+			return FALSE;
+	}
+
+	/* soft requirements */
+	g_clear_error (&error_local);
+	reqs = xb_node_query (fu_install_task_get_component (task),
+			      "suggests/*|recommends/*", 0, &error_local);
+	if (reqs != NULL) {
+		for (guint i = 0; i < reqs->len; i++) {
+			XbNode *req = g_ptr_array_index (reqs, i);
+			if (!fu_engine_check_soft_requirement (self, request,
+							       req, device,
+							       flags, error))
 				return FALSE;
 		}
 	} else if (!g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
