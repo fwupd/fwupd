@@ -212,6 +212,9 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	g_autoptr(GPtrArray) provides = NULL;
 	g_autoptr(GPtrArray) verfmts = NULL;
 	g_autoptr(XbNode) release = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
 
 	g_return_val_if_fail (FU_IS_INSTALL_TASK (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -334,7 +337,17 @@ fu_install_task_check_requirements (FuInstallTask *self,
 	}
 
 	/* get latest release */
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	query = xb_query_new_full (xb_node_get_silo (self->component),
+				   "releases/release",
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				   error);
+	if (query == NULL)
+		return FALSE;
+	release = xb_node_query_first_full (self->component, query, NULL);
+#else
 	release = xb_node_query_first (self->component, "releases/release", NULL);
+#endif
 	if (release == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
