@@ -221,6 +221,43 @@ fu_engine_requirements_missing_func (gconstpointer user_data)
 }
 
 static void
+fu_engine_requirements_soft_func (gconstpointer user_data)
+{
+	gboolean ret;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+	const gchar *xml =
+		"<component>"
+		"  <suggests>"
+		"    <id compare=\"ge\" version=\"1.2.3\">not.going.to.exist</id>"
+		"  </suggests>"
+		"</component>";
+
+	/* set up a dummy version */
+	fu_engine_add_runtime_version (engine, "org.test.dummy", "1.2.3");
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+
+	/* check this passes */
+	task = fu_install_task_new (NULL, component);
+	ret = fu_engine_check_requirements (engine, request, task,
+					    FWUPD_INSTALL_FLAG_FORCE,
+					    &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+}
+
+static void
 fu_engine_requirements_client_fail_func (gconstpointer user_data)
 {
 	gboolean ret;
@@ -3289,6 +3326,8 @@ main (int argc, char **argv)
 			      fu_engine_downgrade_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-success}", self,
 			      fu_engine_requirements_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-soft}", self,
+			      fu_engine_requirements_soft_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-missing}", self,
 			      fu_engine_requirements_missing_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-client-fail}", self,
