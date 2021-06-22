@@ -1239,6 +1239,12 @@ fu_common_get_path (FuPathKind path_kind)
 	/* /run/lock */
 	case FU_PATH_KIND_LOCKDIR:
 		return g_strdup ("/run/lock");
+	/* /sys/class/firmware-attributes */
+	case FU_PATH_KIND_SYSFSDIR_FW_ATTRIB:
+		tmp = g_getenv ("FWUPD_SYSFSFWATTRIBDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/class/firmware-attributes");
 	case FU_PATH_KIND_OFFLINE_TRIGGER:
 		tmp = g_getenv ("FWUPD_OFFLINE_TRIGGER");
 		if (tmp != NULL)
