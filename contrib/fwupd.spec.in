@@ -314,7 +314,6 @@ done
 %doc README.md AUTHORS
 %license COPYING
 %config(noreplace)%{_sysconfdir}/fwupd/daemon.conf
-%config(noreplace)%{_sysconfdir}/fwupd/upower.conf
 %if 0%{?have_uefi}
 %config(noreplace)%{_sysconfdir}/fwupd/uefi_capsule.conf
 %endif

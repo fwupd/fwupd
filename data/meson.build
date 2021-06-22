@@ -19,6 +19,8 @@ if build_standalone
   install_data(['daemon.conf'],
     install_dir : join_paths(sysconfdir, 'fwupd')
   )
+  install_data(['power.quirk'],
+    install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
 endif
 
 install_data(['org.freedesktop.fwupd.metainfo.xml'],

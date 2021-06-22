@@ -231,7 +231,8 @@ fu_usb_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* get serial number */
-	if (fu_device_get_serial (device) == NULL) {
+	if (!fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER) &&
+	    fu_device_get_serial (device) == NULL) {
 		idx = g_usb_device_get_serial_number_index (priv->usb_device);
 		if (idx != 0x00) {
 			g_autofree gchar *tmp = NULL;
@@ -246,30 +247,6 @@ fu_usb_device_setup (FuDevice *device, GError **error)
 					 g_usb_device_get_address (priv->usb_device),
 					 error_local->message);
 		}
-	}
-
-	/* get version number, falling back to the USB device release */
-	idx = g_usb_device_get_custom_index (priv->usb_device,
-					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
-					     'F', 'W', NULL);
-	if (idx != 0x00) {
-		g_autofree gchar *tmp = NULL;
-		tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
-		/* although guessing is a route to insanity, if the device has
-		 * provided the extra data it's because the BCD type was not
-		 * suitable -- and INTEL_ME is not relevant here */
-		fu_device_set_version_format (device, fu_common_version_guess_format (tmp));
-		fu_device_set_version (device, tmp);
-	}
-
-	/* get GUID from the descriptor if set */
-	idx = g_usb_device_get_custom_index (priv->usb_device,
-					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
-					     'G', 'U', NULL);
-	if (idx != 0x00) {
-		g_autofree gchar *tmp = NULL;
-		tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
-		fu_device_add_guid (device, tmp);
 	}
 
 	/* get the hub descriptor if this is a hub */
@@ -310,6 +287,7 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 	g_autofree gchar *devid0 = NULL;
 	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *devid2 = NULL;
+	g_autofree gchar *platform_id = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(GPtrArray) intfs = NULL;
 
@@ -366,6 +344,18 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 					  g_usb_interface_get_class (intf));
 		fu_device_add_instance_id_full (device, intid3,
 						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	}
+
+	/* add 2 levels of parent IDs */
+	platform_id = g_strdup (g_usb_device_get_platform_id (priv->usb_device));
+	for (guint i = 0; i < 2; i++) {
+		gchar *tok = g_strrstr (platform_id, ":");
+		if (tok == NULL)
+			break;
+		*tok = '\0';
+		if (g_strcmp0 (platform_id, "usb") == 0)
+			break;
+		fu_device_add_parent_physical_id (device, platform_id);
 	}
 #endif
 

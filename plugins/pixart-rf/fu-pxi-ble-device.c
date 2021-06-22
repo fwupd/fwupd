@@ -25,16 +25,6 @@
 #define PXI_HID_DEV_OTA_REPORT_USAGE_PAGE	0xff02u
 #define PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE	0xff01u
 
-#define FU_PXI_DEVICE_CMD_FW_OTA_INIT		0x10u
-#define FU_PXI_DEVICE_CMD_FW_WRITE		0x17u
-#define FU_PXI_DEVICE_CMD_FW_UPGRADE		0x18u
-#define FU_PXI_DEVICE_CMD_FW_MCU_RESET		0x22u
-#define FU_PXI_DEVICE_CMD_FW_GET_INFO		0x23u
-#define FU_PXI_DEVICE_CMD_FW_OBJECT_CREATE	0x25u
-#define FU_PXI_DEVICE_CMD_FW_OTA_INIT_NEW	0x27u
-#define FU_PXI_DEVICE_CMD_FW_OTA_RETRANSMIT	0x28u
-#define FU_PXI_DEVICE_CMD_FW_OTA_DISCONNECT	0x29u
-#define FU_PXI_DEVICE_CMD_FW_OTA_GET_MODEL	0x2bu
 #define ERR_COMMAND_SUCCESS			0x0
 
 #define FU_PXI_DEVICE_OBJECT_SIZE_MAX	4096	/* bytes */
@@ -51,13 +41,6 @@ enum ota_process_setting {
 	OTA_MAIN_FW,				/* Main firmware */
 	OTA_HELPER_FW,				/* Helper firmware */
 	OTA_EXTERNAL_RESOURCE,			/* External resource */
-};
-
-/* OTA disconnect reason */
-enum ota_disconnect_reason {
-	OTA_CODE_JUMP			= 1,	/* OTA code jump */
-	OTA_UPDATE_DONE			= 2,	/* OTA update done */
-	OTA_RESET,				/* OTA reset */
 };
 
 struct _FuPxiBleDevice {
@@ -219,7 +202,7 @@ fu_pxi_ble_device_search_hid_usage_page (guint8 *report_descriptor, gint size,
 			continue;
 		}
 
-		memmove (usage_page, &report_descriptor[pos + 1], report_size);
+		memmove (usage_page_tmp, &report_descriptor[pos + 1], report_size);
 		if (memcmp (usage_page, usage_page_tmp, usage_page_sz) == 0) {
 			if (g_getenv ("FWUPD_PIXART_RF_VERBOSE") != NULL) {
 				g_debug ("hit item: %x  ",item);

@@ -28,7 +28,6 @@
  * DFU 1.0 or 1.1 specification. The list of supported quirks is thus:
  *
  * * `none`:			No device quirks
- * * `attach-extra-reset`:	Device needs resetting twice for attach
  * * `attach-upload-download`:	An upload or download is required for attach
  * * `force-dfu-mode`:		Force DFU mode
  * * `ignore-polltimeout`:	Ignore the device download timeout
@@ -1336,7 +1335,7 @@ fu_dfu_device_probe (FuDevice *device, GError **error)
 
 	/* hardware from Jabra literally reboots if you try to retry a failed
 	 * write -- there's no way to avoid blocking the daemon like this... */
-	if (fu_device_has_custom_flag (device, "attach-extra-reset"))
+	if (fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET))
 		fu_device_sleep_with_progress (device, 10); /* seconds */
 
 	/* success */

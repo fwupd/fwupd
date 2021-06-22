@@ -221,6 +221,43 @@ fu_engine_requirements_missing_func (gconstpointer user_data)
 }
 
 static void
+fu_engine_requirements_soft_func (gconstpointer user_data)
+{
+	gboolean ret;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+	const gchar *xml =
+		"<component>"
+		"  <suggests>"
+		"    <id compare=\"ge\" version=\"1.2.3\">not.going.to.exist</id>"
+		"  </suggests>"
+		"</component>";
+
+	/* set up a dummy version */
+	fu_engine_add_runtime_version (engine, "org.test.dummy", "1.2.3");
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+
+	/* check this passes */
+	task = fu_install_task_new (NULL, component);
+	ret = fu_engine_check_requirements (engine, request, task,
+					    FWUPD_INSTALL_FLAG_FORCE,
+					    &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+}
+
+static void
 fu_engine_requirements_client_fail_func (gconstpointer user_data)
 {
 	gboolean ret;
@@ -1046,7 +1083,7 @@ fu_engine_requirements_parent_device_func (gconstpointer user_data)
 }
 
 static void
-fu_engine_device_parent_func (gconstpointer user_data)
+fu_engine_device_parent_guid_func (gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new ();
 	g_autoptr(FuDevice) device2 = fu_device_new ();
@@ -1096,6 +1133,75 @@ fu_engine_device_parent_func (gconstpointer user_data)
 	g_assert_cmpint (fu_device_get_order (device1), ==, -1);
 	g_assert_cmpint (fu_device_get_order (device2), ==, 0);
 	g_assert_cmpint (fu_device_get_order (device3), ==, -1);
+}
+
+static void
+fu_engine_device_parent_id_func (gconstpointer user_data)
+{
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) device3 = fu_device_new ();
+	g_autoptr(FuDevice) device4 = fu_device_new ();
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
+
+	/* add child */
+	fu_device_set_id (device1, "child1");
+	fu_device_set_name (device1, "Child1");
+	fu_device_set_physical_id (device1, "child-ID1");
+	fu_device_add_vendor_id (device1, "USB:FFFF");
+	fu_device_add_protocol (device1, "com.acme");
+	fu_device_add_instance_id (device1, "child-GUID-1");
+	fu_device_add_parent_physical_id (device1, "parent-ID-notfound");
+	fu_device_add_parent_physical_id (device1, "parent-ID");
+	fu_device_convert_instance_ids (device1);
+	fu_engine_add_device (engine, device1);
+
+	/* parent */
+	fu_device_set_id (device2, "parent");
+	fu_device_set_name (device2, "Parent");
+	fu_device_set_physical_id (device2, "parent-ID");
+	fu_device_add_vendor_id (device2, "USB:FFFF");
+	fu_device_add_protocol (device2, "com.acme");
+	fu_device_add_instance_id (device2, "parent-GUID");
+	fu_device_set_vendor (device2, "oem");
+	fu_device_add_internal_flag (device2, FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN);
+	fu_device_convert_instance_ids (device2);
+
+	/* add another child */
+	fu_device_set_id (device3, "child2");
+	fu_device_set_name (device3, "Child2");
+	fu_device_set_physical_id (device3, "child-ID2");
+	fu_device_add_instance_id (device3, "child-GUID-2");
+	fu_device_add_parent_physical_id (device3, "parent-ID");
+	fu_device_convert_instance_ids (device3);
+	fu_device_add_child (device2, device3);
+
+	/* add two together */
+	fu_engine_add_device (engine, device2);
+
+	/* add non-child */
+	fu_device_set_id (device4, "child4");
+	fu_device_set_name (device4, "Child4");
+	fu_device_set_physical_id (device4, "child-ID4");
+	fu_device_add_vendor_id (device4, "USB:FFFF");
+	fu_device_add_protocol (device4, "com.acme");
+	fu_device_add_instance_id (device4, "child-GUID-4");
+	fu_device_add_parent_physical_id (device4, "parent-ID");
+	fu_device_convert_instance_ids (device4);
+	fu_engine_add_device (engine, device4);
+
+	/* this is normally done by fu_plugin_device_add() */
+	fu_engine_add_device (engine, device4);
+
+	/* verify both children were adopted */
+	g_assert (fu_device_get_parent (device3) == device2);
+	g_assert (fu_device_get_parent (device4) == device2);
+	g_assert (fu_device_get_parent (device1) == device2);
+	g_assert_cmpstr (fu_device_get_vendor (device3), ==, "oem");
 }
 
 static void
@@ -3220,6 +3326,8 @@ main (int argc, char **argv)
 			      fu_engine_downgrade_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-success}", self,
 			      fu_engine_requirements_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-soft}", self,
+			      fu_engine_requirements_soft_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-missing}", self,
 			      fu_engine_requirements_missing_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-client-fail}", self,
@@ -3246,8 +3354,10 @@ main (int argc, char **argv)
 			      fu_engine_requirements_device_plain_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-version-format}", self,
 			      fu_engine_requirements_version_format_func);
-	g_test_add_data_func ("/fwupd/engine{device-auto-parent}", self,
-			      fu_engine_device_parent_func);
+	g_test_add_data_func ("/fwupd/engine{device-auto-parent-id}", self,
+			      fu_engine_device_parent_id_func);
+	g_test_add_data_func ("/fwupd/engine{device-auto-parent-guid}", self,
+			      fu_engine_device_parent_guid_func);
 	g_test_add_data_func ("/fwupd/engine{install-duration}", self,
 			      fu_engine_install_duration_func);
 	g_test_add_data_func ("/fwupd/engine{generate-md}", self,

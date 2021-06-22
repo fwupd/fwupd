@@ -1645,6 +1645,28 @@ fu_engine_check_trust (FuInstallTask *task, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_engine_check_soft_requirement (FuEngine *self,
+				  FuEngineRequest *request,
+				  XbNode *req,
+				  FuDevice *device,
+				  FwupdInstallFlags flags,
+				  GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+	if (!fu_engine_check_requirement (self, request, req, device,
+					  flags, &error_local)) {
+		if (flags & FWUPD_INSTALL_FLAG_FORCE) {
+			g_debug ("ignoring soft-requirement due to --force: %s",
+				 error_local->message);
+			return TRUE;
+		}
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 gboolean
 fu_engine_check_requirements (FuEngine *self,
 			      FuEngineRequest *request,
@@ -1671,6 +1693,24 @@ fu_engine_check_requirements (FuEngine *self,
 			if (!fu_engine_check_requirement (self, request,
 							  req, device,
 							  flags, error))
+				return FALSE;
+		}
+	} else if (!g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
+		   !g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+			g_propagate_error (error, g_steal_pointer (&error_local));
+			return FALSE;
+	}
+
+	/* soft requirements */
+	g_clear_error (&error_local);
+	reqs = xb_node_query (fu_install_task_get_component (task),
+			      "suggests/*|recommends/*", 0, &error_local);
+	if (reqs != NULL) {
+		for (guint i = 0; i < reqs->len; i++) {
+			XbNode *req = g_ptr_array_index (reqs, i);
+			if (!fu_engine_check_soft_requirement (self, request,
+							       req, device,
+							       flags, error))
 				return FALSE;
 		}
 	} else if (!g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
@@ -5350,27 +5390,49 @@ fu_engine_adopt_children (FuEngine *self, FuDevice *device)
 	GPtrArray *guids;
 	g_autoptr(GPtrArray) devices = fu_device_list_get_active (self->device_list);
 
-	/* find the parent GUID in any existing device */
-	guids = fu_device_get_parent_guids (device);
-	for (guint j = 0; j < guids->len; j++) {
-		const gchar *guid = g_ptr_array_index (guids, j);
+	/* find the parent in any existing device */
+	if (fu_device_get_parent (device) == NULL) {
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index (devices, i);
-			if (fu_device_get_parent (device) != NULL)
+			if (!fu_device_has_internal_flag (device_tmp, FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN))
 				continue;
-			if (fu_device_has_guid (device_tmp, guid)) {
-				g_debug ("setting parent of %s [%s] to be %s [%s]",
-					 fu_device_get_name (device),
-					 fu_device_get_id (device),
-					 fu_device_get_name (device_tmp),
-					 fu_device_get_id (device_tmp));
+			if (fu_device_get_physical_id (device_tmp) == NULL)
+				continue;
+			if (fu_device_has_parent_physical_id (device, fu_device_get_physical_id (device_tmp))) {
 				fu_device_set_parent (device, device_tmp);
 				break;
 			}
 		}
 	}
+	if (fu_device_get_parent (device) == NULL) {
+		guids = fu_device_get_parent_guids (device);
+		for (guint j = 0; j < guids->len; j++) {
+			const gchar *guid = g_ptr_array_index (guids, j);
+			for (guint i = 0; i < devices->len; i++) {
+				FuDevice *device_tmp = g_ptr_array_index (devices, i);
+				if (fu_device_has_guid (device_tmp, guid)) {
+					fu_device_set_parent (device, device_tmp);
+					break;
+				}
+			}
+		}
+	}
 
 	/* the new device is the parent to an existing child */
+	for (guint j = 0; j < devices->len; j++) {
+		GPtrArray *parent_physical_ids = NULL;
+		FuDevice *device_tmp = g_ptr_array_index (devices, j);
+		if (fu_device_get_parent (device_tmp) != NULL)
+			continue;
+		parent_physical_ids = fu_device_get_parent_physical_ids (device_tmp);
+		if (parent_physical_ids == NULL)
+			continue;
+		for (guint i = 0; i < parent_physical_ids->len; i++) {
+			const gchar *parent_physical_id = g_ptr_array_index (parent_physical_ids, i);
+			if (g_strcmp0 (parent_physical_id, fu_device_get_physical_id (device)) == 0)
+				fu_device_set_parent (device_tmp, device);
+		}
+	}
 	guids = fu_device_get_guids (device);
 	for (guint j = 0; j < guids->len; j++) {
 		const gchar *guid = g_ptr_array_index (guids, j);
@@ -5378,14 +5440,8 @@ fu_engine_adopt_children (FuEngine *self, FuDevice *device)
 			FuDevice *device_tmp = g_ptr_array_index (devices, i);
 			if (fu_device_get_parent (device_tmp) != NULL)
 				continue;
-			if (fu_device_has_parent_guid (device_tmp, guid)) {
-				g_debug ("setting parent of %s [%s] to be %s [%s]",
-					 fu_device_get_name (device_tmp),
-					 fu_device_get_id (device_tmp),
-					 fu_device_get_name (device),
-					 fu_device_get_id (device));
+			if (fu_device_has_parent_guid (device_tmp, guid))
 				fu_device_set_parent (device_tmp, device);
-			}
 		}
 	}
 }

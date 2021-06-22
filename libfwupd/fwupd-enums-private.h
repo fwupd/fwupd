@@ -259,14 +259,6 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_PLUGIN			"Plugin"
 /**
- * FWUPD_RESULT_KEY_PROTOCOL:
- *
- * Result key to represent Protocol
- *
- * The D-Bus type signature string is 's' i.e. a string.
- **/
-#define FWUPD_RESULT_KEY_PROTOCOL		"Protocol"
-/**
  * FWUPD_RESULT_KEY_RELEASE:
  *
  * Result key to represent Release

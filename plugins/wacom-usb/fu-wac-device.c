@@ -122,11 +122,13 @@ fu_wac_device_to_string (FuDevice *device, guint idt, GString *str)
 		g_autofree gchar *tmp = g_strdup_printf ("0x%04x", (guint) self->configuration);
 		fu_common_string_append_kv (str, idt, "Configuration", tmp);
 	}
-	for (guint i = 0; i < self->flash_descriptors->len; i++) {
-		FuWacFlashDescriptor *fd = g_ptr_array_index (self->flash_descriptors, i);
-		g_autofree gchar *title = g_strdup_printf ("FlashDescriptor%02u", i);
-		fu_common_string_append_kv (str, idt, title, NULL);
-		fu_wac_device_flash_descriptor_to_string (fd, idt + 1, str);
+	if (g_getenv ("FWUPD_WACOM_USB_VERBOSE") != NULL) {
+		for (guint i = 0; i < self->flash_descriptors->len; i++) {
+			FuWacFlashDescriptor *fd = g_ptr_array_index (self->flash_descriptors, i);
+			g_autofree gchar *title = g_strdup_printf ("FlashDescriptor%02u", i);
+			fu_common_string_append_kv (str, idt, title, NULL);
+			fu_wac_device_flash_descriptor_to_string (fd, idt + 1, str);
+		}
 	}
 	status_str = fu_wac_device_status_to_string (self->status_word);
 	fu_common_string_append_kv (str, idt, "Status", status_str->str);
@@ -258,7 +260,8 @@ fu_wac_device_ensure_checksums (FuWacDevice *self, GError **error)
 	g_array_set_size (self->checksums, 0);
 	for (guint i = 0; i < self->nr_flash_blocks; i++) {
 		guint32 csum = fu_common_read_uint32 (buf + 5 + (i * 4), G_LITTLE_ENDIAN);
-		g_debug ("checksum block %02u: 0x%08x", i, (guint) csum);
+		if (g_getenv ("FWUPD_WACOM_USB_VERBOSE") != NULL)
+			g_debug ("checksum block %02u: 0x%08x", i, (guint) csum);
 		g_array_append_val (self->checksums, csum);
 	}
 	g_debug ("added %u checksums", self->flash_descriptors->len);
@@ -563,7 +566,8 @@ fu_wac_device_write_firmware (FuDevice *device,
 
 		/* calculate expected checksum and save to device RAM */
 		csum_local[i] = fu_wac_calculate_checksum32le_bytes (blob_block);
-		g_debug ("block checksum %02u: 0x%08x", i, csum_local[i]);
+		if (g_getenv ("FWUPD_WACOM_USB_VERBOSE") != NULL)
+			g_debug ("block checksum %02u: 0x%08x", i, csum_local[i]);
 		if (!fu_wac_device_set_checksum_of_block (self, i, csum_local[i], error))
 			return FALSE;
 
@@ -619,7 +623,8 @@ fu_wac_device_write_firmware (FuDevice *device,
 				     (guint) csum_rom, (guint) csum_local[i]);
 			return FALSE;
 		}
-		g_debug ("matched checksum at block %u of 0x%08x", i, csum_rom);
+		if (g_getenv ("FWUPD_WACOM_USB_VERBOSE") != NULL)
+			g_debug ("matched checksum at block %u of 0x%08x", i, csum_rom);
 	}
 
 	/* update device progress */
@@ -641,21 +646,25 @@ fu_wac_device_add_modules_bluetooth (FuWacDevice *self, GError **error)
 	g_autofree gchar *name = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuWacModule) module = NULL;
-	guint8 buf[] = { [0] = FU_WAC_REPORT_ID_GET_FIRMWARE_VERSION_BLUETOOTH,
-			 [1 ... 14] = 0xff };
 	guint16 fw_ver;
 
-	buf[0] = FU_WAC_REPORT_ID_GET_FIRMWARE_VERSION_BLUETOOTH;
-	if (!fu_wac_device_get_feature_report (self, buf, sizeof(buf),
-					       FU_HID_DEVICE_FLAG_NONE,
-					       error)) {
-		g_prefix_error (error, "Failed to get GetFirmwareVersionBluetooth: ");
-		return FALSE;
+	/* it can take up to 5s to get the new version after a fw update */
+	for (guint i = 0; i < 5; i++) {
+		guint8 buf[] = { [0] = FU_WAC_REPORT_ID_GET_FIRMWARE_VERSION_BLUETOOTH,
+				 [1 ... 14] = 0xff };
+		if (!fu_wac_device_get_feature_report (self, buf, sizeof(buf),
+						       FU_HID_DEVICE_FLAG_NONE,
+						       error)) {
+			g_prefix_error (error, "Failed to get GetFirmwareVersionBluetooth: ");
+			return FALSE;
+		}
+		if (!fu_common_read_uint16_safe (buf, sizeof(buf), 1, &fw_ver,
+						 G_LITTLE_ENDIAN, error))
+			return FALSE;
+		if (fw_ver != 0)
+			break;
+		g_usleep (G_USEC_PER_SEC);
 	}
-
-	if (!fu_common_read_uint16_safe (buf, sizeof(buf), 1, &fw_ver,
-					 G_LITTLE_ENDIAN, error))
-		return FALSE;
 	version = fu_common_version_from_uint16 (fw_ver, FWUPD_VERSION_FORMAT_BCD);
 
 	/* success */
