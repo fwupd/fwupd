@@ -240,6 +240,14 @@ fu_vli_usbhub_pd_device_attach (FuDevice *device, GError **error)
 	return fu_device_attach (parent, error);
 }
 
+static gboolean
+fu_vli_usbhub_pd_device_probe (FuDevice *device, GError **error)
+{
+	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
+	fu_device_set_physical_id (device, fu_device_get_physical_id (FU_DEVICE (parent)));
+	return TRUE;
+}
+
 static void
 fu_vli_usbhub_pd_device_init (FuVliUsbhubPdDevice *self)
 {
@@ -258,6 +266,7 @@ fu_vli_usbhub_pd_device_class_init (FuVliUsbhubPdDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_vli_usbhub_pd_device_to_string;
+	klass_device->probe = fu_vli_usbhub_pd_device_probe;
 	klass_device->setup = fu_vli_usbhub_pd_device_setup;
 	klass_device->reload = fu_vli_usbhub_pd_device_reload;
 	klass_device->attach = fu_vli_usbhub_pd_device_attach;
