@@ -1336,15 +1336,17 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		if (state == FWUPD_UPDATE_STATE_SUCCESS) {
 			tmp = fwupd_device_get_update_message (dev);
 			if (tmp != NULL) {
+				g_autofree gchar *color = fu_util_term_format (tmp, FU_UTIL_CLI_COLOR_BLUE);
 				/* TRANSLATORS: helpful messages from last update */
-				fu_common_string_append_kv (str, idt + 1, _("Update Message"), tmp);
+				fu_common_string_append_kv (str, idt + 1, _("Update Message"), color);
 			}
 		}
 	}
 	tmp = fwupd_device_get_update_error (dev);
 	if (tmp != NULL) {
+		g_autofree gchar *color = fu_util_term_format (tmp, FU_UTIL_TERM_COLOR_RED);
 		/* TRANSLATORS: error message from last update attempt */
-		fu_common_string_append_kv (str, idt + 1, _("Update Error"), tmp);
+		fu_common_string_append_kv (str, idt + 1, _("Update Error"), color);
 	}
 
 	/* modified date: for history devices */
