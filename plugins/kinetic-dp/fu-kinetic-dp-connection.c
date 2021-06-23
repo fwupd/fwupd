@@ -12,83 +12,53 @@
 #include "fu-kinetic-dp-connection.h"
 #include "fu-kinetic-dp-common.h"
 
-#define UNIT_SIZE       32
-#define MAX_WAIT_TIME   3  /* unit : second */
+#define UNIT_SIZE	32
+#define MAX_WAIT_TIME	3	/* unit : second */
 
 struct _FuKineticDpConnection {
-    GObject     parent_instance;
-    gint        fd;        /* not owned by the connection */
-    //guint8      layer;
-    //guint8      remain_layer;
-    //guint8      rad;
+	GObject		parent_instance;
+	gint		fd;        /* not owned by the connection */
+	//guint8      layer;
+	//guint8      remain_layer;
+	//guint8      rad;
 };
 
 G_DEFINE_TYPE (FuKineticDpConnection, fu_kinetic_dp_connection, G_TYPE_OBJECT)
 
 static void
-fu_kinetic_dp_connection_init(FuKineticDpConnection *self)
+fu_kinetic_dp_connection_init (FuKineticDpConnection *self)
 {
 }
 
 static void
-fu_kinetic_dp_connection_class_init(FuKineticDpConnectionClass *klass)
+fu_kinetic_dp_connection_class_init (FuKineticDpConnectionClass *klass)
 {
 }
 
 static gboolean
-fu_kinetic_dp_connection_aux_node_read(FuKineticDpConnection *self,
-                                       guint32 offset,
-                                       guint8 *buf,
-                                       gint length,
-                                       GError **error)
+fu_kinetic_dp_connection_aux_node_read (FuKineticDpConnection *self,
+					guint32 offset,
+					guint8 *buf,
+					gint length,
+					GError **error)
 {
-	if (lseek(self->fd, offset, SEEK_SET) != offset)
+	if (lseek (self->fd, offset, SEEK_SET) != offset)
 	{
-        g_set_error(error,
-                    G_IO_ERROR,
-                    G_IO_ERROR_INVALID_DATA,
-                    "failed to lseek to 0x%x",
-                    offset);
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "Failed to lseek to 0x%x",
+			     offset);
 		return FALSE;
 	}
 
-	if (read(self->fd, buf, length) != length)
+	if (read (self->fd, buf, length) != length)
 	{
-        g_set_error(error,
-                    G_IO_ERROR,
-                    G_IO_ERROR_INVALID_DATA,
-                    "failed to read 0x%x bytes",
-                    (guint) length);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_kinetic_dp_connection_aux_node_write(FuKineticDpConnection *self,
-                                        guint32 offset,
-                                        const guint8 *buf,
-                                        gint length,
-                                        GError **error)
-{
-	if (lseek(self->fd, offset, SEEK_SET) != offset)
-	{
-		g_set_error(error,
-                    G_IO_ERROR,
-                    G_IO_ERROR_INVALID_DATA,
-                    "Failed to lseek to 0x%x",
-                    offset);
-		return FALSE;
-	}
-
-	if (write(self->fd, buf, length) != length)
-	{
-		g_set_error(error,
-                    G_IO_ERROR,
-                    G_IO_ERROR_INVALID_DATA,
-                    "Failed to write 0x%x bytes",
-                    (guint) length);
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "Failed to read 0x%x bytes",
+			     (guint) length);
 		return FALSE;
 	}
 
@@ -96,46 +66,71 @@ fu_kinetic_dp_connection_aux_node_write(FuKineticDpConnection *self,
 }
 
 static gboolean
-fu_kinetic_dp_connection_bus_read(FuKineticDpConnection *self,
-               				       guint32 offset,
-               				       guint8 *buf,
-               				       guint32 length,
-               				       GError **error)
+fu_kinetic_dp_connection_aux_node_write (FuKineticDpConnection *self,
+					 guint32 offset,
+					 const guint8 *buf,
+					 gint length,
+					 GError **error)
 {
-	return fu_kinetic_dp_connection_aux_node_read(self, offset, buf, length, error);
+	if (lseek (self->fd, offset, SEEK_SET) != offset)
+	{
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "Failed to lseek to 0x%x",
+			     offset);
+		return FALSE;
+	}
+
+	if (write (self->fd, buf, length) != length)
+	{
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "Failed to write 0x%x bytes",
+			    (guint) length);
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 static gboolean
-fu_kinetic_dp_connection_bus_write(FuKineticDpConnection *self,
-                                    guint32 offset,
-                                    const guint8 *buf,
-                                    guint32 length,
-                                    GError **error)
+fu_kinetic_dp_connection_bus_read (FuKineticDpConnection *self,
+				   guint32 offset,
+				   guint8 *buf,
+				   guint32 length,
+				   GError **error)
 {
-	return fu_kinetic_dp_connection_aux_node_write(self, offset, buf, length, error);
+	return fu_kinetic_dp_connection_aux_node_read (self, offset, buf, length, error);
+}
+
+static gboolean
+fu_kinetic_dp_connection_bus_write (FuKineticDpConnection *self,
+				    guint32 offset,
+				    const guint8 *buf,
+				    guint32 length,
+				    GError **error)
+{
+	return fu_kinetic_dp_connection_aux_node_write (self, offset, buf, length, error);
 }
 
 FuKineticDpConnection *
-fu_kinetic_dp_connection_new(gint fd)
+fu_kinetic_dp_connection_new (gint fd)
 {
-	FuKineticDpConnection *self = g_object_new(FU_TYPE_KINETIC_DP_CONNECTION, NULL);
+	FuKineticDpConnection *self = g_object_new (FU_TYPE_KINETIC_DP_CONNECTION, NULL);
 
 	self->fd = fd;
-#if 0
-	self->layer = layer;
-	self->remain_layer = layer;
-	self->rad = rad;
-#endif
 
 	return self;
 }
 
 gboolean
-fu_kinetic_dp_connection_read(FuKineticDpConnection *self,
-             				   guint32 offset,
-             				   guint8 *buf,
-             				   guint32 length,
-             				   GError **error)
+fu_kinetic_dp_connection_read (FuKineticDpConnection *self,
+			       guint32 offset,
+			       guint8 *buf,
+			       guint32 length,
+			       GError **error)
 {
 #if 0
 	if (self->layer && self->remain_layer) {
@@ -144,24 +139,24 @@ fu_kinetic_dp_connection_read(FuKineticDpConnection *self,
 
 		self->remain_layer--;
 		node = (self->rad >> self->remain_layer * 2) & 0x03;
-		result = fu_kinetic_dp_connection_rc_get_command(self,
-                                                          UPDC_READ_FROM_TX_DPCD + node,
-                                                          length, offset, (guint8 *)buf,
-                                                          error);
+		result = fu_kinetic_dp_connection_rc_get_command (self,
+								  UPDC_READ_FROM_TX_DPCD + node,
+								  length, offset, (guint8 *)buf,
+								  error);
 		self->remain_layer++;
 		return result;
 	}
 #endif
 
-	return fu_kinetic_dp_connection_bus_read(self, offset, buf, length, error);
+	return fu_kinetic_dp_connection_bus_read (self, offset, buf, length, error);
 }
 
 gboolean
-fu_kinetic_dp_connection_write(FuKineticDpConnection *self,
-            				    guint32 offset,
-            				    const guint8 *buf,
-            				    guint32 length,
-            				    GError **error)
+fu_kinetic_dp_connection_write (FuKineticDpConnection *self,
+				guint32 offset,
+				const guint8 *buf,
+				guint32 length,
+				GError **error)
 {
 #if 0
 	if (self->layer && self->remain_layer) {
@@ -171,14 +166,14 @@ fu_kinetic_dp_connection_write(FuKineticDpConnection *self,
 		self->remain_layer--;
 		node = (self->rad >> self->remain_layer * 2) & 0x03;
 		result =  fu_kinetic_dp_connection_rc_set_command (self,
-								      UPDC_WRITE_TO_TX_DPCD + node,
-								      length, offset, (guint8 *)buf,
-								      error);
+								   UPDC_WRITE_TO_TX_DPCD + node,
+								   length, offset, (guint8 *)buf,
+								   error);
 		self->remain_layer++;
 		return result;
 	}
 #endif
 
-	return fu_kinetic_dp_connection_bus_write(self, offset, buf, length, error);
+	return fu_kinetic_dp_connection_bus_write (self, offset, buf, length, error);
 }
 

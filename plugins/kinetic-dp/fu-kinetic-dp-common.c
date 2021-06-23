@@ -11,7 +11,7 @@
 #include "fu-kinetic-dp-common.h"
 
 const gchar *
-fu_kinetic_dp_mode_to_string(FuKineticDpMode mode)
+fu_kinetic_dp_mode_to_string (FuKineticDpMode mode)
 {
 	if (mode == FU_KINETIC_DP_MODE_DIRECT)
 		return "DIRECT";
@@ -21,7 +21,7 @@ fu_kinetic_dp_mode_to_string(FuKineticDpMode mode)
 }
 
 const gchar *
-fu_kinetic_dp_family_to_string(FuKineticDpFamily family)
+fu_kinetic_dp_family_to_string (FuKineticDpFamily family)
 {
 	if (family == FU_KINETIC_DP_FAMILY_MUSTANG)
 		return "MUSTANG";
@@ -31,7 +31,7 @@ fu_kinetic_dp_family_to_string(FuKineticDpFamily family)
 }
 
 FuKineticDpFamily
-fu_kinetic_dp_chip_id_to_family(KtChipId chip_id)
+fu_kinetic_dp_chip_id_to_family (KtChipId chip_id)
 {
 	if (chip_id == KT_CHIP_MUSTANG_5200)
 		return FU_KINETIC_DP_FAMILY_MUSTANG;

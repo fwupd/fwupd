@@ -12,20 +12,20 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#define FU_TYPE_KINETIC_DP_CONNECTION (fu_kinetic_dp_connection_get_type())
-G_DECLARE_FINAL_TYPE(FuKineticDpConnection, fu_kinetic_dp_connection, FU, KINETIC_DP_CONNECTION, GObject)
+#define FU_TYPE_KINETIC_DP_CONNECTION (fu_kinetic_dp_connection_get_type ())
+G_DECLARE_FINAL_TYPE (FuKineticDpConnection, fu_kinetic_dp_connection, FU, KINETIC_DP_CONNECTION, GObject)
 
-FuKineticDpConnection *fu_kinetic_dp_connection_new(gint fd);
+FuKineticDpConnection	*fu_kinetic_dp_connection_new	(gint			fd);
 
-gboolean fu_kinetic_dp_connection_read(FuKineticDpConnection *self,
-                                       guint32 offset,
-                                       guint8 *buf,
-                                       guint32 length,
-                                       GError **error);
 
-gboolean fu_kinetic_dp_connection_write(FuKineticDpConnection *self,
-                                        guint32 offset,
-                                        const guint8 *buf,
-                                        guint32 length,
-                                        GError **error);
+gboolean		fu_kinetic_dp_connection_read	(FuKineticDpConnection	*self,
+							 guint32		offset,
+							 guint8			*buf,
+							 guint32		length,
+							 GError			**error);
+gboolean		fu_kinetic_dp_connection_write	(FuKineticDpConnection	*self,
+							 guint32		offset,
+							 const guint8		*buf,
+							 guint32		length,
+							 GError			**error);
 

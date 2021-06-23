@@ -24,11 +24,11 @@
  * The device type.
  **/
 typedef enum {
-    FU_KINETIC_DP_MODE_UNKNOWN,
-    FU_KINETIC_DP_MODE_DIRECT,
-    FU_KINETIC_DP_MODE_REMOTE,
-    /*< private >*/
-    FU_KINETIC_DP_MODE_LAST
+	FU_KINETIC_DP_MODE_UNKNOWN,
+	FU_KINETIC_DP_MODE_DIRECT,
+	FU_KINETIC_DP_MODE_REMOTE,
+	/*< private >*/
+	FU_KINETIC_DP_MODE_LAST
 } FuKineticDpMode;
 
 /**
@@ -40,15 +40,15 @@ typedef enum {
  * The chip family.
  **/
 typedef enum {
-    FU_KINETIC_DP_FAMILY_UNKNOWN,
+	FU_KINETIC_DP_FAMILY_UNKNOWN,
 
-    FU_KINETIC_DP_FAMILY_MUSTANG,
-    FU_KINETIC_DP_FAMILY_JAGUAR,
-    /*<private >*/
-    FU_KINETIC_DP_FAMILY_LAST
+	FU_KINETIC_DP_FAMILY_MUSTANG,
+	FU_KINETIC_DP_FAMILY_JAGUAR,
+	/*<private >*/
+	FU_KINETIC_DP_FAMILY_LAST
 } FuKineticDpFamily;
 
-const gchar *fu_kinetic_dp_mode_to_string(FuKineticDpMode mode);
-const gchar *fu_kinetic_dp_family_to_string(FuKineticDpFamily family);
-FuKineticDpFamily fu_kinetic_dp_chip_id_to_family(KtChipId chip_id);
+const gchar		*fu_kinetic_dp_mode_to_string		(FuKineticDpMode	mode);
+const gchar		*fu_kinetic_dp_family_to_string		(FuKineticDpFamily	family);
+FuKineticDpFamily	fu_kinetic_dp_chip_id_to_family		(KtChipId		chip_id);
 
