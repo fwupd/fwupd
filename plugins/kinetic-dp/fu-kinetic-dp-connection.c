@@ -18,9 +18,6 @@
 struct _FuKineticDpConnection {
 	GObject		parent_instance;
 	gint		fd;        /* not owned by the connection */
-	//guint8      layer;
-	//guint8      remain_layer;
-	//guint8      rad;
 };
 
 G_DEFINE_TYPE (FuKineticDpConnection, fu_kinetic_dp_connection, G_TYPE_OBJECT)
@@ -132,22 +129,6 @@ fu_kinetic_dp_connection_read (FuKineticDpConnection *self,
 			       guint32 length,
 			       GError **error)
 {
-#if 0
-	if (self->layer && self->remain_layer) {
-		guint8 node;
-		gboolean result;
-
-		self->remain_layer--;
-		node = (self->rad >> self->remain_layer * 2) & 0x03;
-		result = fu_kinetic_dp_connection_rc_get_command (self,
-								  UPDC_READ_FROM_TX_DPCD + node,
-								  length, offset, (guint8 *)buf,
-								  error);
-		self->remain_layer++;
-		return result;
-	}
-#endif
-
 	return fu_kinetic_dp_connection_bus_read (self, offset, buf, length, error);
 }
 
@@ -158,22 +139,6 @@ fu_kinetic_dp_connection_write (FuKineticDpConnection *self,
 				guint32 length,
 				GError **error)
 {
-#if 0
-	if (self->layer && self->remain_layer) {
-		guint8 node;
-		gboolean result;
-
-		self->remain_layer--;
-		node = (self->rad >> self->remain_layer * 2) & 0x03;
-		result =  fu_kinetic_dp_connection_rc_set_command (self,
-								   UPDC_WRITE_TO_TX_DPCD + node,
-								   length, offset, (guint8 *)buf,
-								   error);
-		self->remain_layer++;
-		return result;
-	}
-#endif
-
 	return fu_kinetic_dp_connection_bus_write (self, offset, buf, length, error);
 }
 

@@ -7,8 +7,6 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#include "config.h"
-
 #include "fu-plugin-vfuncs.h"
 
 #include "fu-kinetic-dp-common.h"
@@ -111,12 +109,6 @@ fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **err
 	fu_plugin_kinetic_dp_device_rescan (plugin, FU_DEVICE (dev));
 	g_ptr_array_add (priv->devices, g_steal_pointer  (&dev));
 
-	return TRUE;
-}
-
-gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
-{
 	return TRUE;
 }
 

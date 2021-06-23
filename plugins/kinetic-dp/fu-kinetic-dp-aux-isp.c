@@ -4,10 +4,9 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#include "fu-kinetic-dp-aux-isp.h"
-
 #include <fwupd.h>
 
+#include "fu-kinetic-dp-aux-isp.h"
 #include "fu-kinetic-dp-secure-aux-isp.h"
 
 typedef struct
@@ -23,14 +22,12 @@ typedef struct
 // ---------------------------------------------------------------
 static const KtDpChipBrIdStrTable kt_dp_branch_dev_info_table[] = 
 {
-	// Jaguar MCDP50x0
+	/* Jaguar MCDP50x0 */
 	{KT_CHIP_JAGUAR_5000,	KT_FW_STATE_RUN_IROM,	{'5', '0', '1', '0', 'I', 'R'},	6},
 	{KT_CHIP_JAGUAR_5000,	KT_FW_STATE_RUN_APP,	{'K', 'T', '5', '0', 'X', '0'},	6},
-	// Mustang MCDP52x0
+	/* Mustang MCDP52x0 */
 	{KT_CHIP_MUSTANG_5200,	KT_FW_STATE_RUN_IROM,	{'5', '2', '1', '0', 'I', 'R'},	6},
 	{KT_CHIP_MUSTANG_5200,	KT_FW_STATE_RUN_APP,	{'K', 'T', '5', '2', 'X', '0'},	6},
-
-	{KT_CHIP_NONE,		KT_FW_STATE_RUN_NONE,	{' ', ' ', ' ', ' ', ' ', ' '},	6}
 };
 
 static KtDpDevInfo dp_dev_infos[MAX_DEV_NUM];
@@ -75,7 +72,8 @@ fu_kinetic_dp_aux_isp_get_dev_info_from_branch_id (const guint8 *br_id_str_buf,
 						   KtDpDevInfo *dev_info,
 						   GError **error)
 {
-	guint8 i = 0;
+	guint32 i = 0;
+	guint32 num = sizeof (kt_dp_branch_dev_info_table) / sizeof (kt_dp_branch_dev_info_table[0]);
 	g_autofree gchar *str = NULL;   // Just for printing error log
 
 	g_return_val_if_fail (br_id_str_buf != NULL, FALSE);
@@ -88,17 +86,18 @@ fu_kinetic_dp_aux_isp_get_dev_info_from_branch_id (const guint8 *br_id_str_buf,
 	memset (dev_info->branch_id_str, 0, DPCD_SIZE_BRANCH_DEV_ID_STR);	// Clear the buffer to all 0s as DP spec mentioned
 
 	// Find the device info by branch ID string
-	while (kt_dp_branch_dev_info_table[i].chip_id != KT_CHIP_NONE) {
+	for (i = 0; i < num; i++) {
 		if (0 == memcmp (br_id_str_buf, kt_dp_branch_dev_info_table[i].id_str, kt_dp_branch_dev_info_table[i].str_len)) {
 			// Found the chip in the table
 			dev_info->chip_id = kt_dp_branch_dev_info_table[i].chip_id;
 			dev_info->fw_run_state = kt_dp_branch_dev_info_table[i].fw_run_state;
-			memcpy (dev_info->branch_id_str, br_id_str_buf, DPCD_SIZE_BRANCH_DEV_ID_STR);
+			if (!fu_memcpy_safe (dev_info->branch_id_str, sizeof(dev_info->branch_id_str), 0x0,	/* dst */
+					     br_id_str_buf, br_id_str_buf_size, br_id_str_buf_size,		/* src */
+					     DPCD_SIZE_BRANCH_DEV_ID_STR, error))
+				return FALSE;
 
 			return TRUE;
 		}
-
-		i++;
 	}
 
 	// There might not always be null-terminated character '\0' in DPCD branch ID string (when length is 6)
@@ -138,25 +137,33 @@ fu_kinetic_dp_aux_isp_enable_aux_forward (FuKineticDpConnection *connection,
 					  KtDpDevPort target_port,
 					  GError **error)
 {
-	if (root_dev_state == KT_FW_STATE_RUN_APP) {
-		if ((root_dev_chip_id == KT_CHIP_JAGUAR_5000) || (root_dev_chip_id == KT_CHIP_MUSTANG_5200)) {
-			if (!fu_kinetic_dp_secure_aux_isp_enable_aux_forward (connection, target_port, error)) {
-				g_prefix_error (error, "Failed to enable AUX forwarding!");
-				return FALSE;
-			}
+	if (root_dev_state != KT_FW_STATE_RUN_APP) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Host device [%s %s] doesn't support to enable AUX forwarding!",
+			     fu_kinetic_dp_aux_isp_get_chip_id_str (root_dev_chip_id),
+			     fu_kinetic_dp_aux_isp_get_fw_run_state_str (root_dev_state));
 
-			g_usleep (10 * 1000);	// Wait 10ms for host processing AUX forwarding command
+		return FALSE;
+	}
 
-			return TRUE;
+	if (root_dev_chip_id == KT_CHIP_JAGUAR_5000 || root_dev_chip_id == KT_CHIP_MUSTANG_5200) {
+		if (!fu_kinetic_dp_secure_aux_isp_enable_aux_forward (connection, target_port, error)) {
+			g_prefix_error (error, "Failed to enable AUX forwarding: ");
+			return FALSE;
 		}
 
-		g_prefix_error (error, "Host device [%s] doesn't support AUX forwarding!",
-				       fu_kinetic_dp_aux_isp_get_chip_id_str (dp_root_dev_chip_id));
-	} else {
-		g_prefix_error (error, "Host device [%s %s] doesn't support AUX forwarding!",
-				       fu_kinetic_dp_aux_isp_get_chip_id_str (dp_root_dev_chip_id),
-				       fu_kinetic_dp_aux_isp_get_fw_run_state_str (dp_root_dev_state));
+		g_usleep (10 * 1000);	// Wait 10ms for host to process AUX forwarding command
+
+		return TRUE;
 	}
+
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_INTERNAL,
+		     "Host device [%s] doesn't support to enable AUX forwarding!",
+		     fu_kinetic_dp_aux_isp_get_chip_id_str (root_dev_chip_id));
 
 	return FALSE;
 }
@@ -167,13 +174,27 @@ fu_kinetic_dp_aux_isp_disable_aux_forward (FuKineticDpConnection *connection,
 					   KtFwRunState root_dev_state,
 					   GError **error)
 {
-	if (root_dev_state != KT_FW_STATE_RUN_APP)
-		return FALSE;
+	if (root_dev_state != KT_FW_STATE_RUN_APP) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Host device [%s %s] doesn't support to disable AUX forwarding!",
+			     fu_kinetic_dp_aux_isp_get_chip_id_str (root_dev_chip_id),
+			     fu_kinetic_dp_aux_isp_get_fw_run_state_str (root_dev_state));
 
-	if (root_dev_chip_id == KT_CHIP_JAGUAR_5000) {
+		return FALSE;
+	}
+
+	if (root_dev_chip_id == KT_CHIP_JAGUAR_5000 || root_dev_chip_id == KT_CHIP_MUSTANG_5200) {
 		g_usleep (5 * 1000);	// Wait 5ms
 		return fu_kinetic_dp_secure_aux_isp_disable_aux_forward (connection, error);
 	}
+
+	g_set_error (error,
+		     FWUPD_ERROR,
+		     FWUPD_ERROR_INTERNAL,
+		     "Host device [%s] doesn't support to disable AUX forwarding!",
+		     fu_kinetic_dp_aux_isp_get_chip_id_str (root_dev_chip_id));
 
 	return FALSE;
 }
@@ -203,7 +224,9 @@ fu_kinetic_dp_aux_isp_read_device_info (FuKineticDpDevice *self,
 	// Get basic chip information (Chip ID, F/W work state)
 	connection = fu_kinetic_dp_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)));
 
-#if 1
+	/* <TODO> AUX-ISP for DFP device
+	 *	  Only AUX-ISP for host chip is considered in current implementation
+	 */
 	if (!fu_kinetic_dp_aux_isp_read_chip_id_and_state (connection, &dev_info_local, error)) {
 		g_prefix_error (error, "Failed to read chip ID and state: ");
 		return FALSE;
@@ -227,11 +250,14 @@ fu_kinetic_dp_aux_isp_read_device_info (FuKineticDpDevice *self,
 		dp_root_dev_chip_id = dev_info_local.chip_id;
 		dp_root_dev_state = dev_info_local.fw_run_state;
 	}
-#else
-	// <TODO> AUX-ISP for DFP device
-#endif
 
-	memcpy (&dp_dev_infos[target_port], &dev_info_local, sizeof(KtDpDevInfo));
+	// Store read info to static allocated structure
+	if (!fu_memcpy_safe((guint8 *)&dp_dev_infos[target_port], sizeof (dp_dev_infos[target_port]), 0x0,	/* dst */
+			     (guint8 *)&dev_info_local, sizeof(dev_info_local), 0x0,				/* src */
+			     sizeof(KtDpDevInfo), error))							/* size */
+		return FALSE;
+
+	// Assign pointer to specified structure to output parameter
 	*dev_info = &dp_dev_infos[target_port];
 
 	return TRUE;

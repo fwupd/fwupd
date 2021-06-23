@@ -35,7 +35,7 @@
 #define DPCD_SIZE_FLOAT_ISP_REPLY_DATA_REG	12		// 0x00514 ~ 0x0051F
 
 #define DPCD_ADDR_KT_AUX_WIN			0x80000ul
-#define DPCD_SIZE_KT_AUX_WIN			0x8000ul	// 0x80000ul ~ 0x87FFF
+#define DPCD_SIZE_KT_AUX_WIN			0x8000ul	// 0x80000ul ~ 0x87FFF, 32 KB
 #define DPCD_ADDR_KT_AUX_WIN_END		(DPCD_ADDR_KT_AUX_WIN +  DPCD_SIZE_KT_AUX_WIN - 1)
 
 #define INIT_CRC16				0x1021
@@ -264,24 +264,28 @@ fu_kinetic_dp_secure_aux_isp_enter_code_loading_mode (FuKineticDpConnection *sel
 
 static gboolean
 fu_kinetic_dp_secure_aux_isp_send_payload (FuKineticDpConnection *connection,
-					   const guint8 *buf,
-					   guint32 payload_size,
+					   const guint8 *payload,
+					   const guint32 payload_size,
 					   guint32 wait_time_ms,
 					   gint32 wait_interval_ms,
 					   GError **error)
 {
 	guint32 aux_win_addr = DPCD_ADDR_KT_AUX_WIN;
 	guint8 temp_buf[16];
+	guint8 *remain_payload = (guint8 *)payload;
 	guint32 remain_len = payload_size;
 	guint32 crc16 = INIT_CRC16;
 	guint8 status;
 
-	while (remain_len) {
+	while (remain_len > 0) {
 		guint8 aux_wr_size = (remain_len < 16) ? ((guint8)remain_len) : 16;
 
-		memcpy (temp_buf, buf, aux_wr_size);
+		if (!fu_memcpy_safe (temp_buf, 16, 0x0,			/* dst */
+				     remain_payload, remain_len, 0x0,	/* src */
+				     aux_wr_size, error))		/* size */
+			return FALSE;
 
-		_accumulate_crc16 ((guint16 *)&crc16, buf, aux_wr_size);
+		_accumulate_crc16 ((guint16 *)&crc16, temp_buf, aux_wr_size);
 
 		// Put accumulated CRC16 of current 32KB chunk to DPCD_REPLY_DATA_REG
 		if ((aux_win_addr + aux_wr_size) > DPCD_ADDR_KT_AUX_WIN_END ||
@@ -295,32 +299,30 @@ fu_kinetic_dp_secure_aux_isp_send_payload (FuKineticDpConnection *connection,
 			crc16 = INIT_CRC16; // Reset to initial CRC16 value for new chunk
 		}
 
-		// Send 16 bytes payload in each AUX transaction
+		// Send payload in each AUX write transaction whose maximum length is 16 bytes
 		if (!fu_kinetic_dp_connection_write(connection, aux_win_addr, temp_buf, aux_wr_size, error)) {
 			g_prefix_error (error, "Failed to send payload on AUX write %u", isp_procd_size);
 
 			return FALSE;
 		}
 
-		buf += aux_wr_size;
-		aux_win_addr += aux_wr_size;
+		remain_payload += aux_wr_size;
 		remain_len -= aux_wr_size;
+		aux_win_addr += aux_wr_size;
 		isp_procd_size += aux_wr_size;
 		isp_payload_procd_size += aux_wr_size;
 
 		if ((aux_win_addr > DPCD_ADDR_KT_AUX_WIN_END) || (remain_len == 0)) {
-			// 32KB payload has been sent AUX window
-			aux_win_addr = DPCD_ADDR_KT_AUX_WIN;
-
+			// Notify that a 32KB chunk of payload has been sent to AUX window
 			if (!fu_kinetic_dp_secure_aux_isp_send_kt_prop_cmd (connection,
 									    KT_DPCD_CMD_CHUNK_DATA_PROCESSED,
 									    wait_time_ms,
 									    wait_interval_ms,
 									    &status,
-									    error)) {
-				if (status == KT_DPCD_STS_CRC_FAILURE)	// Check CRC failed
-					return FALSE;
-			}
+									    error))
+				return FALSE;
+
+			aux_win_addr = DPCD_ADDR_KT_AUX_WIN;	// Reset AUX window wrtie address to start address
 		}
 	}
 

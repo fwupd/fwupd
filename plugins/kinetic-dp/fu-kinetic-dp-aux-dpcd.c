@@ -6,6 +6,8 @@
 
 #include "fu-kinetic-dp-aux-dpcd.h"
 
+#include "fwupd-error.h"
+
 gboolean
 fu_kinetic_dp_aux_dpcd_read_oui (FuKineticDpConnection *connection,
 				 guint8 *buf,
@@ -13,10 +15,18 @@ fu_kinetic_dp_aux_dpcd_read_oui (FuKineticDpConnection *connection,
 				 GError **error)
 {
 	if (buf_size < DPCD_SIZE_IEEE_OUI)
+	{
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Buffer size [%u] is too small to read IEEE OUI",
+			     buf_size);
+
 		return FALSE;
+	}
 
 	if (!fu_kinetic_dp_connection_read (connection, DPCD_ADDR_IEEE_OUI, buf, DPCD_SIZE_IEEE_OUI, error)) {
-		g_prefix_error (error, "Failed to read source OUI!");
+		g_prefix_error (error, "Failed to read source OUI: ");
 		return FALSE;
 	}
 
@@ -43,7 +53,15 @@ fu_kinetic_dp_aux_dpcd_read_branch_id_str (FuKineticDpConnection *connection,
 					   GError **error)
 {
 	if (buf_size < DPCD_SIZE_BRANCH_DEV_ID_STR)
+	{
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "Buffer size [%u] is too small to read branch ID string",
+			     buf_size);
+
 		return FALSE;
+	}
 
 	// Clear the buffer to all 0s as DP spec mentioned
 	memset (buf, 0, DPCD_SIZE_BRANCH_DEV_ID_STR);
