@@ -986,7 +986,10 @@ fu_util_firmware_dump (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_COLDPLUG, error))
+	if (!fu_util_start_engine (priv,
+				   FU_ENGINE_LOAD_FLAG_COLDPLUG |
+				   FU_ENGINE_LOAD_FLAG_HWINFO,
+				   error))
 		return FALSE;
 
 	/* get device */
