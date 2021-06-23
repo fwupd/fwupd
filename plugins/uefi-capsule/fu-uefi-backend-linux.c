@@ -81,7 +81,6 @@ fu_uefi_backend_coldplug (FuBackend *backend, GError **error)
 	g_autofree gchar *esrt_path = NULL;
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autoptr(GDir) dir = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	/* get the directory of ESRT entries */
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
@@ -172,7 +171,6 @@ static gboolean
 fu_uefi_backend_setup (FuBackend *backend, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GError) error_efivarfs = NULL;
 
 	/* using a pre-cooked SMBIOS */
 	if (g_getenv ("FWUPD_SYSFSFWDIR") != NULL)
