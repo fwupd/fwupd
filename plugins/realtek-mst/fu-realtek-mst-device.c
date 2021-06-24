@@ -105,14 +105,12 @@ struct dual_bank_info {
 };
 
 struct _FuRealtekMstDevice {
-	FuUdevDevice		 parent_instance;
+	FuI2cDevice		 parent_instance;
 	gchar			*dp_aux_dev_name;
-	FuUdevDevice		*bus_device;
 	enum flash_bank		 active_bank;
 };
 
-// TODO implement in terms of FuI2cDevice?
-G_DEFINE_TYPE (FuRealtekMstDevice, fu_realtek_mst_device, FU_TYPE_UDEV_DEVICE)
+G_DEFINE_TYPE (FuRealtekMstDevice, fu_realtek_mst_device, FU_TYPE_I2C_DEVICE)
 
 static gboolean
 fu_realtek_mst_device_set_quirk_kv (FuDevice *device,
@@ -132,12 +130,12 @@ fu_realtek_mst_device_set_quirk_kv (FuDevice *device,
 	return TRUE;
 }
 
-static FuUdevDevice *
-fu_realtek_mst_device_locate_bus (FuRealtekMstDevice *self, GError **error)
+static gboolean
+fu_realtek_mst_device_override_dev (FuRealtekMstDevice *self, GError **error)
 {
+	gboolean found = FALSE;
 	g_autoptr(GUdevClient) udev_client = g_udev_client_new (NULL);
 	g_autoptr(GUdevEnumerator) udev_enumerator = g_udev_enumerator_new (udev_client);
-	g_autoptr(FuUdevDevice) bus_device = NULL;
 	g_autoptr(GList) matches = NULL;
 
 	g_udev_enumerator_add_match_subsystem (udev_enumerator, "drm_dp_aux_dev");
@@ -153,7 +151,7 @@ fu_realtek_mst_device_locate_bus (FuRealtekMstDevice *self, GError **error)
 		g_autoptr(FuUdevDevice) device = fu_udev_device_new (element->data);
 		g_autoptr(GPtrArray) i2c_devices = NULL;
 
-		if (bus_device != NULL) {
+		if (found) {
 			g_debug ("Ignoring additional aux device %s",
 				 fu_udev_device_get_sysfs_path (device));
 			continue;
@@ -162,6 +160,7 @@ fu_realtek_mst_device_locate_bus (FuRealtekMstDevice *self, GError **error)
 		i2c_devices = fu_udev_device_get_siblings_with_subsystem (device, "i2c");
 		for (guint i = 0; i < i2c_devices->len; i++) {
 			FuUdevDevice *i2c_device = g_ptr_array_index (i2c_devices, i);
+			FuUdevDevice *bus_device;
 			g_autoptr(GPtrArray) i2c_buses =
 				fu_udev_device_get_children_with_subsystem (i2c_device, "i2c-dev");
 
@@ -176,22 +175,25 @@ fu_realtek_mst_device_locate_bus (FuRealtekMstDevice *self, GError **error)
 					 fu_udev_device_get_sysfs_path (i2c_device));
 			}
 
-			bus_device = g_ptr_array_steal_index_fast (i2c_buses, 0);
-			g_debug ("Found I2C bus at %s",
+			bus_device = g_ptr_array_index (i2c_buses, 0);
+			g_debug ("Found I2C bus at %s, using this device",
 				 fu_udev_device_get_sysfs_path (bus_device));
-			break;
+//			fu_udev_device_set_dev (FU_UDEV_DEVICE (self),	//FIXME export?
+//						fu_udev_device_get_dev (bus_device));
+			g_object_set (self, "udev-device", fu_udev_device_get_dev (bus_device), NULL);
+			found = TRUE;
 		}
 	}
 
-	if (bus_device == NULL) {
+	if (!found) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "did not find an i2c-dev associated with DP aux \"%s\"",
 			     self->dp_aux_dev_name);
-		return NULL;
+		return FALSE;
 	}
-	return g_steal_pointer (&bus_device);
+	return TRUE;
 }
 
 static gboolean
@@ -206,9 +208,8 @@ static gboolean
 mst_write_register (FuRealtekMstDevice *self, guint8 address, guint8 value, GError **error)
 {
 	const guint8 command[] = { address, value };
-
-	return fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0, command,
-					   sizeof(command), error);
+	return fu_i2c_device_write_full (FU_I2C_DEVICE (self), command,
+					 sizeof(command), error);
 }
 
 static gboolean
@@ -218,8 +219,8 @@ mst_write_register_multi (FuRealtekMstDevice *self, guint8 address,
 	g_autofree guint8 *command = g_malloc0 (count + 1);
 	memcpy (command + 1, data, count);
 	command[0] = address;
-	return fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0,
-					   command, count + 1, error);
+	return fu_i2c_device_write_full (FU_I2C_DEVICE (self),
+					 command, count + 1, error);
 
 }
 
@@ -230,11 +231,9 @@ mst_read_register (FuRealtekMstDevice *self,
 		   guint8 *value,
 		   GError **error)
 {
-	FuUdevDevice *udev_device = FU_UDEV_DEVICE (self);
-
-	if (!fu_udev_device_pwrite (udev_device, 0, address, error))
+	if (!fu_i2c_device_write (FU_I2C_DEVICE (self), address, error))
 		return FALSE;
-	return fu_udev_device_pread (udev_device, 0, value, error);
+	return fu_i2c_device_read (FU_I2C_DEVICE (self), value, error);
 }
 
 static gboolean
@@ -331,14 +330,6 @@ fu_realtek_mst_device_probe (FuDevice *device, GError **error)
 	const gchar *quirk_name = NULL;
 	g_autofree gchar *family_instance_id = NULL;
 	g_autofree gchar *instance_id = NULL;
-	g_autofree gchar *physical_id = NULL;
-
-	if (!FU_DEVICE_CLASS (fu_realtek_mst_device_parent_class)->probe (device, error))
-		return FALSE;
-
-	physical_id = g_strdup_printf ("I2C_PATH=%s",
-				       fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
-	fu_device_set_physical_id (device, physical_id);
 
 	/* set custom instance ID and load matching quirks */
 	instance_id = g_strdup_printf ("REALTEK-MST\\NAME_%s",
@@ -346,8 +337,6 @@ fu_realtek_mst_device_probe (FuDevice *device, GError **error)
 					       FU_UDEV_DEVICE (device),
 					       "name",
 					       NULL));
-	fu_device_add_instance_id (device, instance_id);
-
 	hardware_family = fu_context_get_hwid_value (context, FU_HWIDS_KEY_FAMILY);
 	family_instance_id = g_strdup_printf ("%s&FAMILY_%s", instance_id, hardware_family);
 	fu_device_add_instance_id_full (device, family_instance_id,
@@ -370,37 +359,16 @@ fu_realtek_mst_device_probe (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	self->bus_device = fu_realtek_mst_device_locate_bus (self, error);
-	if (self->bus_device == NULL)
+	/* locate its sibling i2c device and use that instead */
+	if (!fu_realtek_mst_device_override_dev (self, error))
 		return FALSE;
 
+	/* FuI2cDevice */
+	if (!FU_DEVICE_CLASS (fu_realtek_mst_device_parent_class)->probe (device, error))
+		return FALSE;
+
+	/* success */
 	return TRUE;
-}
-
-static gboolean
-fu_realtek_mst_device_open (FuDevice *device, GError **error)
-{
-	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE (device);
-	const gchar *bus_path = fu_udev_device_get_device_file (self->bus_device);
-	gint bus_fd;
-
-	/* open the bus and not self */
-	if ((bus_fd = g_open (bus_path, O_RDWR)) == -1) {
-		g_set_error (error, G_IO_ERROR,
-#ifdef HAVE_ERRNO_H
-			     g_io_error_from_errno (errno),
-#else
-			     G_IO_ERROR_FAILED,
-#endif
-			     "failed to open %s", bus_path);
-
-		return FALSE;
-	}
-	fu_udev_device_set_fd (FU_UDEV_DEVICE (self), bus_fd);
-	fu_udev_device_set_flags (FU_UDEV_DEVICE (device),
-				  FU_UDEV_DEVICE_FLAG_NONE);
-
-	return FU_DEVICE_CLASS (fu_realtek_mst_device_parent_class)->open (device, error);
 }
 
 static gboolean
@@ -408,7 +376,6 @@ fu_realtek_mst_device_get_dual_bank_info (FuRealtekMstDevice *self,
 					  struct dual_bank_info *info,
 					  GError **error)
 {
-	FuUdevDevice *device = FU_UDEV_DEVICE (self);
 	guint8 response[11] = { 0x0 };
 
 	if (!mst_ensure_device_address (self, I2C_ADDR_DEBUG, error))
@@ -422,9 +389,9 @@ fu_realtek_mst_device_get_dual_bank_info (FuRealtekMstDevice *self,
 	g_usleep (200 * G_TIME_SPAN_MILLISECOND);
 
 	/* request dual bank state and read back */
-	if (!fu_udev_device_pwrite (device, 0, 0x01, error))
+	if (!fu_i2c_device_write (FU_I2C_DEVICE (self), 0x01, error))
 		return FALSE;
-	if (!fu_udev_device_pread_full (device, 0, response, sizeof(response), error))
+	if (!fu_i2c_device_read_full (FU_I2C_DEVICE (self), response, sizeof(response), error))
 		return FALSE;
 
 	if (response[0] != 0xca || response[1] != 9) {
@@ -544,9 +511,9 @@ flash_iface_read (FuRealtekMstDevice *self,
 		return FALSE;
 
 	/* ignore first byte of data */
-	if (!fu_udev_device_pwrite (FU_UDEV_DEVICE (self), 0, 0x70, error))
+	if (!fu_i2c_device_write (FU_I2C_DEVICE (self), 0x70, error))
 		return FALSE;
-	if (!fu_udev_device_pread (FU_UDEV_DEVICE (self), 0, &byte, error))
+	if (!fu_i2c_device_read (FU_I2C_DEVICE (self), &byte, error))
 		return FALSE;
 
 	while (bytes_read < buf_size) {
@@ -555,9 +522,9 @@ flash_iface_read (FuRealtekMstDevice *self,
 		if (read_len > 256)
 			read_len = 256;
 
-		if (!fu_udev_device_pread_full (FU_UDEV_DEVICE (self), 0,
-						buf + bytes_read, read_len,
-						error))
+		if (!fu_i2c_device_read_full (FU_I2C_DEVICE (self),
+					      buf + bytes_read, read_len,
+					      error))
 			return FALSE;
 
 		bytes_read += read_len;
@@ -870,8 +837,6 @@ fu_realtek_mst_device_finalize (GObject *object)
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE (object);
 	g_free (self->dp_aux_dev_name);
-	if (self->bus_device != NULL)
-		g_object_unref (self->bus_device);
 	G_OBJECT_CLASS (fu_realtek_mst_device_parent_class)->finalize (object);
 }
 
@@ -884,7 +849,6 @@ fu_realtek_mst_device_class_init (FuRealtekMstDeviceClass *klass)
 	klass_object->finalize = fu_realtek_mst_device_finalize;
 	klass_device->probe = fu_realtek_mst_device_probe;
 	klass_device->set_quirk_kv = fu_realtek_mst_device_set_quirk_kv;
-	klass_device->open = fu_realtek_mst_device_open;
 	klass_device->setup = fu_realtek_mst_device_probe_version;
 	klass_device->detach = fu_realtek_mst_device_detach;
 	klass_device->attach = fu_realtek_mst_device_attach;
