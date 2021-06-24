@@ -91,8 +91,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	for (guint i = 0; i < hwids->len; i++) {
 		const gchar *tmp;
 		const gchar *guid = g_ptr_array_index (hwids, i);
-		g_autofree gchar *key = g_strdup_printf ("%s", guid);
-		tmp = fu_context_lookup_quirk_by_id (ctx, key, FU_QUIRKS_SUPERIO_CHIPSETS);
+		tmp = fu_context_lookup_quirk_by_id (ctx, guid, FU_QUIRKS_SUPERIO_CHIPSETS);
 		if (tmp == NULL)
 			continue;
 		if (!fu_plugin_superio_coldplug_chipset (plugin, tmp, error))
