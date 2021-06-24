@@ -1292,7 +1292,7 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	/* vendor */
 	tmp = fwupd_device_get_vendor (dev);
 	if (tmp != NULL && vendor_ids->len > 0) {
-		g_autofree gchar *strv = fu_common_strjoin_array ("|", vendor_ids);
+		g_autofree gchar *strv = fu_common_strjoin_array (", ", vendor_ids);
 		g_autofree gchar *both = g_strdup_printf ("%s (%s)", tmp, strv);
 		/* TRANSLATORS: manufacturer of hardware */
 		fu_common_string_append_kv (str, idt + 1, _("Vendor"), both);
