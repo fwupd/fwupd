@@ -8,10 +8,12 @@
 
 #include <fwupdplugin.h>
 #include <string.h>
+#include <fcntl.h>
 
 #include "fu-mm-device.h"
 #include "fu-mm-utils.h"
 #include "fu-qmi-pdc-updater.h"
+#include "fu-mbim-qdu-updater.h"
 
 /* Amount of time for the modem to boot in fastboot mode. */
 #define FU_MM_DEVICE_REMOVE_DELAY_RE_ENUMERATE	20000	/* ms */
@@ -22,6 +24,9 @@
  * may be very slow) and also where carrier config switching is explicitly
  * required (e.g. if switching from the default (DF) to generic (GC).*/
 #define FU_MM_DEVICE_REMOVE_DELAY_REPROBE	120000	/* ms */
+
+/* Amount of time for the modem to get firmware version */
+#define MAX_WAIT_TIME_SECS 			150     /* s */
 
 struct _FuMmDevice {
 	FuDevice			 parent_instance;
@@ -52,6 +57,12 @@ struct _FuMmDevice {
 	FuQmiPdcUpdater			*qmi_pdc_updater;
 	GArray				*qmi_pdc_active_id;
 	guint				 attach_idle;
+
+	/* mbim-qdu update logic */
+	gchar				*port_mbim;
+#if MBIM_CHECK_VERSION(1,25,3)
+	FuMbimQduUpdater		*mbim_qdu_updater;
+#endif /* MBIM_CHECK_VERSION(1,25,3) */
 };
 
 enum {
@@ -71,6 +82,8 @@ fu_mm_device_to_string (FuDevice *device, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt, "AtPort", self->port_at);
 	if (self->port_qmi != NULL)
 		fu_common_string_append_kv (str, idt, "QmiPort", self->port_qmi);
+	if (self->port_mbim != NULL)
+		fu_common_string_append_kv (str, idt, "MbimPort", self->port_mbim);
 }
 
 const gchar *
@@ -114,6 +127,9 @@ validate_firmware_update_method (MMModemFirmwareUpdateMethod methods, GError **e
 	static const MMModemFirmwareUpdateMethod supported_combinations[] = {
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC | MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT,
+#if MM_CHECK_VERSION(1,17,1)
+		MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU,
+#endif /* MM_CHECK_VERSION(1,17,1) */
 	};
 	g_autofree gchar *methods_str = NULL;
 
@@ -140,6 +156,7 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 	const gchar **device_ids;
 	const gchar *version;
 	guint n_ports = 0;
+	GPtrArray *vendors;
 	g_autoptr(MMFirmwareUpdateSettings) update_settings = NULL;
 	g_autofree gchar *device_sysfs_path = NULL;
 	g_autofree gchar *device_bus = NULL;
@@ -227,6 +244,17 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 		if (fu_device_get_protocols (device)->len == 0)
 			fu_device_add_protocol (device, "com.qualcomm.qmi_pdc");
 	}
+#if MM_CHECK_VERSION(1,17,1)
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU) {
+		for (guint i = 0; i < n_ports; i++) {
+			if (ports[i].type == MM_MODEM_PORT_TYPE_MBIM) {
+				self->port_mbim = g_strdup_printf ("/dev/%s", ports[i].name);
+				break;
+			}
+		}
+		fu_device_add_protocol (device, "com.qualcomm.mbim_qdu");
+	}
+#endif /* MM_CHECK_VERSION(1,17,1) */
 	mm_modem_port_info_array_free (ports, n_ports);
 
 	/* an at port is required for fastboot */
@@ -249,6 +277,18 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+#if MM_CHECK_VERSION(1,17,1)
+	/* a mbim port is required for mbim-qdu */
+	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU) &&
+	    (self->port_mbim == NULL)) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "failed to find MBIM port");
+		return FALSE;
+	}
+
+#endif /* MM_CHECK_VERSION(1,17,1) */
 	if (self->port_at != NULL) {
 		fu_mm_utils_get_port_info (self->port_at, &device_bus, &device_sysfs_path, &self->port_at_ifnum, NULL);
 	}
@@ -275,6 +315,29 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 			return FALSE;
 		}
 	}
+	if (self->port_mbim != NULL) {
+		g_autofree gchar *mbim_device_sysfs_path = NULL;
+		g_autofree gchar *mbim_device_bus = NULL;
+		fu_mm_utils_get_port_info (self->port_mbim, &mbim_device_bus, &mbim_device_sysfs_path, NULL, NULL);
+		if (device_sysfs_path == NULL && mbim_device_sysfs_path != NULL) {
+			device_sysfs_path = g_steal_pointer (&mbim_device_sysfs_path);
+		} else if (g_strcmp0 (device_sysfs_path, mbim_device_sysfs_path) != 0) {
+			g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+				     "mismatched device sysfs path: %s != %s",
+				     device_sysfs_path, mbim_device_sysfs_path);
+			return FALSE;
+		}
+		if (device_bus == NULL && mbim_device_bus != NULL) {
+			device_bus = g_steal_pointer (&mbim_device_bus);
+		} else if (g_strcmp0 (device_bus, mbim_device_bus) != 0) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_FAILED,
+				     "mismatched device bus: %s != %s",
+				     device_bus, mbim_device_bus);
+			return FALSE;
+		}
+	}
 
 	/* if no device sysfs file, error out */
 	if (device_sysfs_path == NULL || device_bus == NULL) {
@@ -294,7 +357,8 @@ fu_mm_device_probe_default (FuDevice *device, GError **error)
 	fu_device_set_version (device, version);
 	for (guint i = 0; device_ids[i] != NULL; i++)
 		fu_device_add_instance_id (device, device_ids[i]);
-	if (fu_device_get_vendor_ids (device) == NULL) {
+	vendors = fu_device_get_vendor_ids (device);
+	if (vendors == NULL || vendors->len == 0) {
 		g_autofree gchar *path = NULL;
 		g_autofree gchar *value_str = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -679,6 +743,194 @@ fu_mm_device_write_firmware_qmi_pdc (FuDevice *device, GBytes *fw, GArray **acti
 	return TRUE;
 }
 
+#if MM_CHECK_VERSION(1,17,1) && MBIM_CHECK_VERSION(1,25,3)
+typedef struct {
+	FuDevice	*device;
+	GMainLoop	*mainloop;
+	gchar 		*version;
+	GError		*error;
+} FuMmGetFirmwareVersionCtx;
+
+static gboolean
+fu_mm_device_mbim_open (FuMmDevice *self, GError **error)
+{
+	self->mbim_qdu_updater = fu_mbim_qdu_updater_new (self->port_mbim);
+	return fu_mbim_qdu_updater_open (self->mbim_qdu_updater, error);
+}
+
+static gboolean
+fu_mm_device_mbim_close (FuMmDevice *self, GError **error)
+{
+	g_autoptr(FuMbimQduUpdater) updater = NULL;
+	updater = g_steal_pointer (&self->mbim_qdu_updater);
+	return fu_mbim_qdu_updater_close (updater, error);
+}
+
+static gboolean
+fu_mm_device_locker_new_timeout (gpointer user_data)
+{
+	FuMmGetFirmwareVersionCtx *ctx = user_data;
+
+	g_main_loop_quit (ctx->mainloop);
+
+	return G_SOURCE_REMOVE;
+}
+
+static gboolean
+fu_mm_device_get_firmware_version_mbim_timeout (gpointer user_data)
+{
+	FuMmGetFirmwareVersionCtx *ctx = user_data;
+	FuMmDevice *self = FU_MM_DEVICE (ctx->device);
+
+	g_clear_error (&ctx->error);
+	ctx->version = fu_mbim_qdu_updater_check_ready (self->mbim_qdu_updater, &ctx->error);
+	g_main_loop_quit (ctx->mainloop);
+
+	return G_SOURCE_REMOVE;
+}
+
+static gchar *
+fu_mm_device_get_firmware_version_mbim (FuDevice *device, GError **error)
+{
+	GTimer *timer = g_timer_new ();
+	g_autoptr(GMainLoop) mainloop = g_main_loop_new (NULL, FALSE);
+	FuMmGetFirmwareVersionCtx ctx = {
+		.device = device,
+		.mainloop = mainloop,
+		.version = NULL,
+		.error = NULL,
+	};
+
+	while (ctx.version == NULL && g_timer_elapsed (timer, NULL) < MAX_WAIT_TIME_SECS) {
+		g_autoptr(FuDeviceLocker) locker = NULL;
+
+		g_clear_error (&ctx.error);
+		locker = fu_device_locker_new_full (device,
+						    (FuDeviceLockerFunc) fu_mm_device_mbim_open,
+						    (FuDeviceLockerFunc) fu_mm_device_mbim_close,
+						    &ctx.error);
+
+		if (locker == NULL) {
+			g_timeout_add_seconds (20, fu_mm_device_locker_new_timeout, &ctx);
+			g_main_loop_run (mainloop);
+			continue;
+		}
+
+		g_timeout_add_seconds (10, fu_mm_device_get_firmware_version_mbim_timeout, &ctx);
+		g_main_loop_run (mainloop);
+	}
+
+	g_timer_destroy (timer);
+
+	if (ctx.version == NULL && ctx.error != NULL) {
+		g_propagate_error (error, ctx.error);
+		return NULL;
+	}
+
+	return ctx.version;
+}
+
+static gboolean
+fu_mm_device_writeln (const gchar *fn, const gchar *buf, GError **error)
+{
+	int fd;
+	g_autoptr(FuIOChannel) io = NULL;
+
+	fd = open (fn, O_WRONLY);
+	if (fd < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INVALID_FILE,
+			     "could not open %s", fn);
+		return FALSE;
+	}
+	io = fu_io_channel_unix_new (fd);
+	return fu_io_channel_write_raw (io, (const guint8 *) buf, strlen (buf),
+					1000, FU_IO_CHANNEL_FLAG_NONE, error);
+}
+
+static gboolean
+fu_mm_device_write_firmware_mbim_qdu (FuDevice *device, GBytes *fw, GError **error)
+{
+	GBytes *data;
+	XbNode *part = NULL;
+	const gchar *filename = NULL;
+	const gchar *csum;
+	FuMmDevice *self = FU_MM_DEVICE (device);
+	g_autofree gchar *device_sysfs_path = NULL;
+	g_autofree gchar *autosuspend_delay_filename = NULL;
+	g_autofree gchar *csum_actual = NULL;
+	g_autofree gchar *version = NULL;
+	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(XbBuilder) builder = xb_builder_new ();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* decompress entire archive ahead of time */
+	archive = fu_archive_new (fw, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
+	if (archive == NULL)
+		return FALSE;
+
+	locker = fu_device_locker_new_full (device,
+					    (FuDeviceLockerFunc) fu_mm_device_mbim_open,
+					    (FuDeviceLockerFunc) fu_mm_device_mbim_close,
+					    error);
+	if (locker == NULL)
+		return FALSE;
+
+	/* load the manifest of operations */
+	data = fu_archive_lookup_by_fn (archive, "flashfile.xml", error);
+	if (data == NULL)
+		return FALSE;
+	if (!xb_builder_source_load_bytes (source, data,
+					   XB_BUILDER_SOURCE_FLAG_NONE, error))
+		return FALSE;
+	xb_builder_import_source (builder, source);
+	silo = xb_builder_compile (builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
+	if (silo == NULL)
+		return FALSE;
+
+	part = xb_silo_query_first (silo, "parts/part", error);
+	if (part == NULL)
+		return FALSE;
+	filename = xb_node_get_attr (part, "filename");
+	csum = xb_node_get_attr (part, "MD5");
+	data = fu_archive_lookup_by_fn (archive, filename, error);
+	if (data == NULL)
+		return FALSE;
+	csum_actual = g_compute_checksum_for_bytes (G_CHECKSUM_MD5, data);
+	if (g_strcmp0 (csum, csum_actual) != 0) {
+		g_debug ("[%s] MD5 not matched", filename);
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "[%s] MD5 not matched", filename);
+		return FALSE;
+	} else {
+		g_debug ("[%s] MD5 matched", filename);
+	}
+
+	/* autosuspend delay updated for a proper firmware update */
+	fu_mm_utils_get_port_info (self->port_mbim, NULL, &device_sysfs_path, NULL, NULL);
+	autosuspend_delay_filename = g_build_filename (device_sysfs_path, "/power/autosuspend_delay_ms", NULL);
+	if(!fu_mm_device_writeln (autosuspend_delay_filename, "10000", error))
+		return FALSE;
+
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_mbim_qdu_updater_write (self->mbim_qdu_updater, filename, data, device, error);
+	if (!fu_device_locker_close (locker, error))
+		return FALSE;
+
+	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
+	version = fu_mm_device_get_firmware_version_mbim (device, error);
+	if (version == NULL)
+		return FALSE;
+
+	return TRUE;
+}
+
+#endif /* MM_CHECK_VERSION(1,17,1) && MBIM_CHECK_VERSION(1,25,3) */
 static gboolean
 fu_mm_device_write_firmware (FuDevice *device,
 			     FuFirmware *firmware,
@@ -705,6 +957,12 @@ fu_mm_device_write_firmware (FuDevice *device,
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_QMI_PDC)
 		return fu_mm_device_write_firmware_qmi_pdc (device, fw, &self->qmi_pdc_active_id, error);
 
+#if MM_CHECK_VERSION(1,17,1) && MBIM_CHECK_VERSION(1,25,3)
+	/* mbim qdu write operation */
+	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU)
+		return fu_mm_device_write_firmware_mbim_qdu (device, fw, error);
+
+#endif /* MM_CHECK_VERSION(1,17,1) && MBIM_CHECK_VERSION(1,25,3) */
 	g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
 		     "unsupported update method");
 	return FALSE;
@@ -807,6 +1065,7 @@ fu_mm_device_finalize (GObject *object)
 	g_free (self->detach_fastboot_at);
 	g_free (self->port_at);
 	g_free (self->port_qmi);
+	g_free (self->port_mbim);
 	g_free (self->inhibition_uid);
 	G_OBJECT_CLASS (fu_mm_device_parent_class)->finalize (object);
 }
