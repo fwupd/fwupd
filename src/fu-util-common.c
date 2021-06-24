@@ -1336,7 +1336,7 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		if (state == FWUPD_UPDATE_STATE_SUCCESS) {
 			tmp = fwupd_device_get_update_message (dev);
 			if (tmp != NULL) {
-				g_autofree gchar *color = fu_util_term_format (tmp, FU_UTIL_CLI_COLOR_BLUE);
+				g_autofree gchar *color = fu_util_term_format (tmp, FU_UTIL_TERM_COLOR_BLUE);
 				/* TRANSLATORS: helpful messages from last update */
 				fu_common_string_append_kv (str, idt + 1, _("Update Message"), color);
 			}
@@ -1473,11 +1473,11 @@ fu_util_plugin_flag_to_cli_text (FwupdPluginFlags plugin_flag)
 		return NULL;
 	case FWUPD_PLUGIN_FLAG_NONE:
 		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
-					    FU_UTIL_CLI_COLOR_GREEN);
+					    FU_UTIL_TERM_COLOR_GREEN);
 	case FWUPD_PLUGIN_FLAG_DISABLED:
 	case FWUPD_PLUGIN_FLAG_NO_HARDWARE:
 		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
-					    FU_UTIL_CLI_COLOR_BLACK);
+					    FU_UTIL_TERM_COLOR_BLACK);
 	case FWUPD_PLUGIN_FLAG_LEGACY_BIOS:
 	case FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED:
 	case FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED:
@@ -2117,7 +2117,7 @@ fu_util_show_unsupported_warn (void)
 #ifndef SUPPORTED_BUILD
 	g_autofree gchar *fmt = NULL;
 	/* TRANSLATORS: this is a prefix on the console */
-	fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_CLI_COLOR_YELLOW);
+	fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_YELLOW);
 	/* TRANSLATORS: unsupported build of the package */
 	g_printerr ("%s %s\n", fmt, _("This package has not been validated, it may not work properly."));
 #endif
