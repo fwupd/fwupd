@@ -23,34 +23,34 @@ fu_superio_it89_device_read_ec_register (FuSuperioDevice *self,
 					 guint8 *outval,
 					 GError **error)
 {
-	if (!fu_superio_device_regwrite (self,
+	if (!fu_superio_device_io_write (self,
 					 SIO_LDNxx_IDX_D2ADR,
 					 SIO_DEPTH2_I2EC_ADDRH,
 					 error))
 		return FALSE;
-	if (!fu_superio_device_regwrite (self,
+	if (!fu_superio_device_io_write (self,
 					 SIO_LDNxx_IDX_D2DAT,
 					 addr >> 8,
 					 error))
 		return FALSE;
-	if (!fu_superio_device_regwrite (self,
+	if (!fu_superio_device_io_write (self,
 					 SIO_LDNxx_IDX_D2ADR,
 					 SIO_DEPTH2_I2EC_ADDRL,
 					 error))
 		return FALSE;
-	if (!fu_superio_device_regwrite (self,
+	if (!fu_superio_device_io_write (self,
 					 SIO_LDNxx_IDX_D2DAT,
 					 addr & 0xff, error))
 		return FALSE;
-	if (!fu_superio_device_regwrite (self,
+	if (!fu_superio_device_io_write (self,
 					 SIO_LDNxx_IDX_D2ADR,
 					 SIO_DEPTH2_I2EC_DATA,
 					 error))
 		return FALSE;
-	return fu_superio_device_regval (self,
-					 SIO_LDNxx_IDX_D2DAT,
-					 outval,
-					 error);
+	return fu_superio_device_io_read (self,
+					  SIO_LDNxx_IDX_D2DAT,
+					  outval,
+					  error);
 }
 
 static gboolean
@@ -108,11 +108,11 @@ fu_superio_it89_device_setup (FuDevice *device, GError **error)
 	}
 
 	/* get version */
-	if (!fu_superio_device_ec_get_param (self, 0x00, &version_tmp[0], error)) {
+	if (!fu_superio_device_reg_read (self, 0x00, &version_tmp[0], error)) {
 		g_prefix_error (error, "failed to get version major: ");
 		return FALSE;
 	}
-	if (!fu_superio_device_ec_get_param (self, 0x01, &version_tmp[1], error)) {
+	if (!fu_superio_device_reg_read (self, 0x01, &version_tmp[1], error)) {
 		g_prefix_error (error, "failed to get version minor: ");
 		return FALSE;
 	}
@@ -130,9 +130,9 @@ fu_superio_it89_device_setup (FuDevice *device, GError **error)
 static gboolean
 fu_superio_it89_device_ec_pm1do_sci (FuSuperioDevice *self, guint8 val, GError **error)
 {
-	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DOSCI, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DOSCI, error))
 		return FALSE;
-	if (!fu_superio_device_ec_write1 (self, val, error))
+	if (!fu_superio_device_ec_write_cmd (self, val, error))
 		return FALSE;
 	return TRUE;
 }
@@ -140,9 +140,9 @@ fu_superio_it89_device_ec_pm1do_sci (FuSuperioDevice *self, guint8 val, GError *
 static gboolean
 fu_superio_it89_device_ec_pm1do_smi (FuSuperioDevice *self, guint8 val, GError **error)
 {
-	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DOCMI, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DOCMI, error))
 		return FALSE;
-	if (!fu_superio_device_ec_write1 (self, val, error))
+	if (!fu_superio_device_ec_write_cmd (self, val, error))
 		return FALSE;
 	return TRUE;
 }
@@ -153,21 +153,21 @@ fu_superio_device_ec_read_status (FuSuperioDevice *self, GError **error)
 	guint8 tmp = 0x00;
 
 	/* read status register */
-	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DO, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DO, error))
 		return FALSE;
 	if (!fu_superio_it89_device_ec_pm1do_sci (self, SIO_SPI_CMD_RDSR, error))
 		return FALSE;
 
 	/* wait for write */
 	do {
-		if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DI, error))
+		if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DI, error))
 			return FALSE;
-		if (!fu_superio_device_ec_read (self, &tmp, error))
+		if (!fu_superio_device_ec_read_data (self, &tmp, error))
 			return FALSE;
 	} while ((tmp & SIO_STATUS_EC_OBF) != 0);
 
 	/* watch SCI events */
-	return fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DISCI, error);
+	return fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DISCI, error);
 }
 
 static gboolean
@@ -180,27 +180,27 @@ fu_superio_device_ec_write_disable (FuSuperioDevice *self, GError **error)
 		return FALSE;
 
 	/* write disable */
-	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DO, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DO, error))
 		return FALSE;
 	if (!fu_superio_it89_device_ec_pm1do_sci (self, SIO_SPI_CMD_WRDI, error))
 		return FALSE;
 
 	/* read status register */
-	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DO, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DO, error))
 		return FALSE;
 	if (!fu_superio_it89_device_ec_pm1do_sci (self, SIO_SPI_CMD_RDSR, error))
 		return FALSE;
 
 	/* wait for read */
 	do {
-		if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DI, error))
+		if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DI, error))
 			return FALSE;
-		if (!fu_superio_device_ec_read (self, &tmp, error))
+		if (!fu_superio_device_ec_read_data (self, &tmp, error))
 			return FALSE;
 	} while ((tmp & SIO_STATUS_EC_IBF) != 0);
 
 	/* watch SCI events */
-	return fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DISCI, error);
+	return fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DISCI, error);
 }
 
 static gboolean
@@ -213,27 +213,27 @@ fu_superio_device_ec_write_enable (FuSuperioDevice *self, GError **error)
 		return FALSE;
 
 	/* write enable */
-	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DO, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DO, error))
 		return FALSE;
 	if (!fu_superio_it89_device_ec_pm1do_sci (self, SIO_SPI_CMD_WREN, error))
 		return FALSE;
 
 	/* read status register */
-	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DO, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DO, error))
 		return FALSE;
 	if (!fu_superio_it89_device_ec_pm1do_sci (self, SIO_SPI_CMD_RDSR, error))
 		return FALSE;
 
 	/* wait for !BUSY */
 	do {
-		if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DI, error))
+		if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DI, error))
 			return FALSE;
-		if (!fu_superio_device_ec_read (self, &tmp, error))
+		if (!fu_superio_device_ec_read_data (self, &tmp, error))
 			return FALSE;
 	} while ((tmp & 3) != SIO_STATUS_EC_IBF);
 
 	/* watch SCI events */
-	return fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DISCI, error);
+	return fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DISCI, error);
 }
 
 static GBytes *
@@ -252,7 +252,7 @@ fu_superio_it89_device_read_addr (FuSuperioDevice *self,
 		return NULL;
 
 	/* high speed read */
-	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DO, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DO, error))
 		return NULL;
 	if (!fu_superio_it89_device_ec_pm1do_sci (self, SIO_SPI_CMD_HS_READ, error))
 		return NULL;
@@ -272,9 +272,9 @@ fu_superio_it89_device_read_addr (FuSuperioDevice *self,
 	/* read out data */
 	buf = g_malloc0 (size);
 	for (guint i = 0; i < size; i++) {
-		if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DI, error))
+		if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DI, error))
 			return NULL;
-		if (!fu_superio_device_ec_read (self, &buf[i], error))
+		if (!fu_superio_device_ec_read_data (self, &buf[i], error))
 			return NULL;
 
 		/* update progress */
@@ -324,7 +324,7 @@ fu_superio_it89_device_write_addr (FuSuperioDevice *self, guint addr, GBytes *fw
 		return FALSE;
 
 	/* write DWORDs */
-	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DO, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DO, error))
 		return FALSE;
 	if (!fu_superio_it89_device_ec_pm1do_sci (self, SIO_SPI_CMD_WRITE_WORD, error))
 		return FALSE;
@@ -342,7 +342,7 @@ fu_superio_it89_device_write_addr (FuSuperioDevice *self, guint addr, GBytes *fw
 		if (i > 0) {
 			if (!fu_superio_device_ec_read_status (self, error))
 				return FALSE;
-			if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DO, error))
+			if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DO, error))
 				return FALSE;
 			if (!fu_superio_it89_device_ec_pm1do_sci (self,
 								  SIO_SPI_CMD_WRITE_WORD,
@@ -369,7 +369,7 @@ fu_superio_it89_device_erase_addr (FuSuperioDevice *self, guint addr, GError **e
 		return FALSE;
 
 	/* sector erase */
-	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DO, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DO, error))
 		return FALSE;
 	if (!fu_superio_it89_device_ec_pm1do_sci (self, SIO_SPI_CMD_4K_SECTOR_ERASE, error))
 		return FALSE;
@@ -383,7 +383,7 @@ fu_superio_it89_device_erase_addr (FuSuperioDevice *self, guint addr, GError **e
 		return FALSE;
 
 	/* watch SCI events */
-	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DISCI, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DISCI, error))
 		return FALSE;
 	return fu_superio_device_ec_read_status (self, error);
 }
@@ -464,7 +464,7 @@ fu_superio_it89_device_attach (FuDevice *device, GError **error)
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 
 	/* re-enable HOSTWA -- use 0xfd for LCFC */
-	if (!fu_superio_device_ec_write1 (self, SIO_CMD_EC_ENABLE_HOST_WA, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_CMD_EC_ENABLE_HOST_WA, error))
 		return FALSE;
 
 	/* success */
@@ -479,9 +479,9 @@ fu_superio_it89_device_detach (FuDevice *device, GError **error)
 	guint8 tmp = 0x00;
 
 	/* turn off HOSTWA bit, keeping HSEMIE and HSEMW high */
-	if (!fu_superio_device_ec_write1 (self, SIO_CMD_EC_DISABLE_HOST_WA, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_CMD_EC_DISABLE_HOST_WA, error))
 		return FALSE;
-	if (!fu_superio_device_ec_read (self, &tmp, error))
+	if (!fu_superio_device_ec_read_data (self, &tmp, error))
 		return FALSE;
 	if (tmp != 0x33) {
 		g_set_error (error,
@@ -605,21 +605,21 @@ fu_superio_it89_device_get_jedec_id (FuSuperioDevice *self, guint8 *id, GError *
 	/* read status register */
 	if (!fu_superio_device_ec_read_status (self, error))
 		return FALSE;
-	if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DO, error))
+	if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DO, error))
 		return FALSE;
 	if (!fu_superio_it89_device_ec_pm1do_sci (self, SIO_SPI_CMD_JEDEC_ID, error))
 		return FALSE;
 
 	/* wait for reads */
 	for (guint i = 0; i < 4; i++) {
-		if (!fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DI, error))
+		if (!fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DI, error))
 			return FALSE;
-		if (!fu_superio_device_ec_read (self, &id[i], error))
+		if (!fu_superio_device_ec_read_data (self, &id[i], error))
 			return FALSE;
 	}
 
 	/* watch SCI events */
-	return fu_superio_device_ec_write1 (self, SIO_EC_PMC_PM1DISCI, error);
+	return fu_superio_device_ec_write_cmd (self, SIO_EC_PMC_PM1DISCI, error);
 }
 
 static gboolean
