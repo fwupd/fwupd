@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2021, TUXEDO Computers GmbH
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -9,11 +10,12 @@
 #include "fu-superio-common.h"
 #include "fu-superio-device.h"
 
-#define FU_PLUGIN_SUPERIO_TIMEOUT	0.25 /* s */
+#define FU_PLUGIN_SUPERIO_DEFAULT_TIMEOUT	250 /* ms */
 
 typedef struct
 {
 	gchar			*chipset;
+	guint			 timeout_ms;
 	guint16			 port;
 	guint16			 data_port;
 	guint16			 control_port;
@@ -35,6 +37,15 @@ fu_superio_device_io_read (FuSuperioDevice *self, guint8 addr,
 			   guint8 *data, GError **error)
 {
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
+
+	if (priv->port == 0) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_SUPPORTED,
+				     "port isn't set");
+		return FALSE;
+	}
+
 	if (!fu_udev_device_pwrite (FU_UDEV_DEVICE (self), priv->port, addr, error))
 		return FALSE;
 	if (!fu_udev_device_pread (FU_UDEV_DEVICE (self), priv->port + 1, data, error))
@@ -61,6 +72,15 @@ fu_superio_device_io_write (FuSuperioDevice *self, guint8 addr,
 			    guint8 data, GError **error)
 {
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
+
+	if (priv->port == 0) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_NOT_SUPPORTED,
+				     "port isn't set");
+		return FALSE;
+	}
+
 	if (!fu_udev_device_pwrite (FU_UDEV_DEVICE (self), priv->port, addr, error))
 		return FALSE;
 	if (!fu_udev_device_pwrite (FU_UDEV_DEVICE (self), priv->port + 1, data, error))
@@ -139,6 +159,10 @@ fu_superio_device_check_id (FuSuperioDevice *self, GError **error)
 		return FALSE;
 	}
 
+	/* can't check the ID, assume it's correct */
+	if (priv->port == 0)
+		return TRUE;
+
 	/* check ID, which can be done from any LDN */
 	if (!fu_superio_device_io_read16 (self, SIO_LDNxx_IDX_CHIPID1, &id_tmp, error))
 		return FALSE;
@@ -163,7 +187,7 @@ fu_superio_device_wait_for (FuSuperioDevice *self, guint8 mask, gboolean set, GE
 		guint8 status = 0x00;
 		if (!fu_udev_device_pread (FU_UDEV_DEVICE (self), priv->control_port, &status, error))
 			return FALSE;
-		if (g_timer_elapsed (timer, NULL) > FU_PLUGIN_SUPERIO_TIMEOUT)
+		if (g_timer_elapsed (timer, NULL) * 1000.0f > priv->timeout_ms)
 			break;
 		if (set && (status & mask) != 0)
 			return TRUE;
@@ -218,7 +242,7 @@ fu_superio_device_ec_flush (FuSuperioDevice *self, GError **error)
 			break;
 		if (!fu_udev_device_pread (FU_UDEV_DEVICE (self), priv->data_port, &unused, error))
 			return FALSE;
-		if (g_timer_elapsed (timer, NULL) > FU_PLUGIN_SUPERIO_TIMEOUT) {
+		if (g_timer_elapsed (timer, NULL) * 1000.f > priv->timeout_ms) {
 			g_set_error_literal (error,
 					     G_IO_ERROR,
 					     G_IO_ERROR_TIMED_OUT,
@@ -278,27 +302,37 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* dump LDNs */
-	if (g_getenv ("FWUPD_SUPERIO_VERBOSE") != NULL) {
-		for (guint j = 0; j < SIO_LDN_LAST; j++) {
-			if (!fu_superio_device_regdump (self, j, error))
-				return FALSE;
+	/* discover the data port and control port from PM1 */
+	if (priv->data_port == 0 && priv->control_port == 0) {
+
+		/* dump LDNs */
+		if (g_getenv ("FWUPD_SUPERIO_VERBOSE") != NULL) {
+			for (guint j = 0; j < SIO_LDN_LAST; j++) {
+				if (!fu_superio_device_regdump (self, j, error))
+					return FALSE;
+			}
 		}
+
+		/* set Power Management I/F Channel 1 LDN */
+		if (!fu_superio_device_set_ldn (self, SIO_LDN_PM1, error))
+			return FALSE;
+
+		/* get the PM1 IOBAD0 address */
+		if (!fu_superio_device_io_read16 (self, SIO_LDNxx_IDX_IOBAD0,
+						  &priv->data_port, error))
+			return FALSE;
+
+		/* get the PM1 IOBAD1 address */
+		if (!fu_superio_device_io_read16 (self, SIO_LDNxx_IDX_IOBAD1,
+						  &priv->control_port, error))
+			return FALSE;
 	}
 
-	/* set Power Management I/F Channel 1 LDN */
-	if (!fu_superio_device_set_ldn (self, SIO_LDN_PM1, error))
+	/* sanity check that EC is usable */
+	if (!fu_superio_device_wait_for (self, SIO_STATUS_EC_IBF, FALSE, error)) {
+		g_prefix_error (error, "sanity check: ");
 		return FALSE;
-
-	/* get the PM1 IOBAD0 address */
-	if (!fu_superio_device_io_read16 (self, SIO_LDNxx_IDX_IOBAD0,
-					  &priv->data_port, error))
-		return FALSE;
-
-	/* get the PM1 IOBAD1 address */
-	if (!fu_superio_device_io_read16 (self, SIO_LDNxx_IDX_IOBAD1,
-					  &priv->control_port, error))
-		return FALSE;
+	}
 
 	/* drain */
 	if (!fu_superio_device_ec_flush (self, error)) {
@@ -391,6 +425,8 @@ fu_superio_device_set_quirk_kv (FuDevice *device,
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
 
+	if (g_strcmp0 (key, "SuperioAutoloadAction") == 0)
+		return TRUE;
 	if (g_strcmp0 (key, "SuperioId") == 0) {
 		guint64 tmp = fu_common_strtoull (value);
 		if (tmp < G_MAXUINT16) {
@@ -415,6 +451,42 @@ fu_superio_device_set_quirk_kv (FuDevice *device,
 				     "invalid value");
 		return FALSE;
 	}
+	if (g_strcmp0 (key, "SuperioControlPort") == 0) {
+		guint64 tmp = fu_common_strtoull (value);
+		if (tmp < G_MAXUINT16) {
+			priv->control_port = tmp;
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid value");
+		return FALSE;
+	}
+	if (g_strcmp0 (key, "SuperioDataPort") == 0) {
+		guint64 tmp = fu_common_strtoull (value);
+		if (tmp < G_MAXUINT16) {
+			priv->data_port = tmp;
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid value");
+		return FALSE;
+	}
+	if (g_strcmp0 (key, "SuperioTimeout") == 0) {
+		guint64 tmp = fu_common_strtoull (value);
+		if (tmp < G_MAXUINT) {
+			priv->timeout_ms = tmp;
+			return TRUE;
+		}
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "invalid value");
+		return FALSE;
+	}
 
 	/* failed */
 	g_set_error_literal (error,
@@ -427,6 +499,10 @@ fu_superio_device_set_quirk_kv (FuDevice *device,
 static void
 fu_superio_device_init (FuSuperioDevice *self)
 {
+	FuSuperioDevicePrivate *priv = GET_PRIVATE (self);
+
+	priv->timeout_ms = FU_PLUGIN_SUPERIO_DEFAULT_TIMEOUT;
+
 	fu_device_set_physical_id (FU_DEVICE (self), "/dev/port");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);

@@ -30,7 +30,7 @@ gboolean	 fu_superio_device_reg_read	(FuSuperioDevice	*self,
 						 guint8			*data,
 						 GError			**error);
 gboolean	 fu_superio_device_reg_write	(FuSuperioDevice	*self,
-						 guint8			 param,
+						 guint8			 address,
 						 guint8			 data,
 						 GError			**error);
 gboolean	 fu_superio_device_io_read	(FuSuperioDevice	*self,

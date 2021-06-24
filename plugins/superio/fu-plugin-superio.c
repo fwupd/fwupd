@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2021, TUXEDO Computers GmbH
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -8,6 +9,7 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-superio-it55-device.h"
 #include "fu-superio-it85-device.h"
 #include "fu-superio-it89-device.h"
 
@@ -21,7 +23,7 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 	g_autoptr(FuSuperioDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	/* create IT89xx or IT89xx */
+	/* create IT89xx, IT89xx or IT5570 */
 	if (g_strcmp0 (chipset, "IT8587") == 0) {
 		dev = g_object_new (FU_TYPE_SUPERIO_IT85_DEVICE,
 				    "device-file", "/dev/port",
@@ -34,6 +36,12 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 				    "chipset", chipset,
 				    "context", ctx,
 				    NULL);
+	} else if (g_strcmp0 (chipset, "IT5570") == 0) {
+		dev = g_object_new (FU_TYPE_EC_IT55_DEVICE,
+				    "device-file", "/dev/port",
+				    "chipset", chipset,
+				    "context", ctx,
+				    NULL);
 	} else {
 		g_set_error (error,
 			     G_IO_ERROR,
@@ -42,7 +50,7 @@ fu_plugin_superio_coldplug_chipset (FuPlugin *plugin, const gchar *chipset, GErr
 		return FALSE;
 	}
 
-	/* set ID and port via quirks */
+	/* set ID and ports via quirks */
 	if (!fu_device_probe (FU_DEVICE (dev), error))
 		return FALSE;
 
@@ -71,6 +79,9 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_context_add_quirk_key (ctx, "SuperioChipsets");
 	fu_context_add_quirk_key (ctx, "SuperioId");
 	fu_context_add_quirk_key (ctx, "SuperioPort");
+	fu_context_add_quirk_key (ctx, "SuperioControlPort");
+	fu_context_add_quirk_key (ctx, "SuperioDataPort");
+	fu_context_add_quirk_key (ctx, "SuperioTimeout");
 }
 
 gboolean

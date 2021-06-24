@@ -36,6 +36,18 @@ Vendor ID Security
 
 The vendor ID is set from the baseboard vendor, for example `DMI:Star Labs`
 
+Quirk use
+---------
+
+This plugin uses the following plugin-specific quirks:
+
+| Quirk                   | Description                                                       | Minimum fwupd version |
+|-------------------------|-------------------------------------------------------------------|-----------------------|
+| `SuperioControlPort`    | Control (status/command) port number, e.g. `0x66`                 | 1.6.2                 |
+| `SuperioDataPort`       | Data port number, e.g. `0x62`                                     | 1.6.2                 |
+| `SuperioAutoloadAction` | Autoload action, specified by ITE: `none`, `disable`, `on`, `off` | 1.6.2                 |
+| `SuperioTimeout`        | Maximum wait time in ms (default value is `250`)                  | 1.6.2                 |
+
 External interface access
 -------------------------
 This plugin requires access to raw system memory via `inb`/`outb`.
