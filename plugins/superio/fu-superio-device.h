@@ -16,28 +16,32 @@ struct _FuSuperioDeviceClass
 	FuUdevDeviceClass	parent_class;
 };
 
-gboolean	 fu_superio_device_ec_read	(FuSuperioDevice	*self,
+gboolean	 fu_superio_device_ec_read_data	(FuSuperioDevice	*self,
 						 guint8			*data,
 						 GError			**error);
-gboolean	 fu_superio_device_ec_write0	(FuSuperioDevice	*self,
+gboolean	 fu_superio_device_ec_write_data(FuSuperioDevice	*self,
 						 guint8			 data,
 						 GError			**error);
-gboolean	 fu_superio_device_ec_write1	(FuSuperioDevice	*self,
-						 guint8			 data,
+gboolean	 fu_superio_device_ec_write_cmd	(FuSuperioDevice	*self,
+						 guint8			 cmd,
 						 GError			**error);
-gboolean	 fu_superio_device_ec_get_param	(FuSuperioDevice	*self,
+gboolean	 fu_superio_device_reg_read	(FuSuperioDevice	*self,
+						 guint8			 address,
+						 guint8			*data,
+						 GError			**error);
+gboolean	 fu_superio_device_reg_write	(FuSuperioDevice	*self,
 						 guint8			 param,
-						 guint8			*data,
+						 guint8			 data,
 						 GError			**error);
-gboolean	 fu_superio_device_regval	(FuSuperioDevice	*self,
+gboolean	 fu_superio_device_io_read	(FuSuperioDevice	*self,
 						 guint8			 addr,
 						 guint8			*data,
 						 GError			**error);
-gboolean	 fu_superio_device_regval16	(FuSuperioDevice	*self,
+gboolean	 fu_superio_device_io_read16	(FuSuperioDevice	*self,
 						 guint8			 addr,
 						 guint16		*data,
 						 GError			**error);
-gboolean	 fu_superio_device_regwrite	(FuSuperioDevice	*self,
+gboolean	 fu_superio_device_io_write	(FuSuperioDevice	*self,
 						 guint8			 addr,
 						 guint8			 data,
 						 GError			**error);
