@@ -7,7 +7,7 @@ Introduction
 This plugin updates the firmware of DisplayPort MST hub
 devices made by Realtek, such as the RTD2141b and RTD2142.
 
-These devices communicate over I2C, via the DisplayPort aux channel. Devices
+These devices communicate over I²C, via the DisplayPort aux channel. Devices
 are declared by system firmware, and quirks specify the aux channel to which
 the device is connected for a given system.
 
@@ -33,8 +33,8 @@ GUID Generation
 Devices use custom DeviceInstanceId values derived from device names
 provided by system firmware and read from sysfs, like:
 
- * REALTEK-MST\Name_10EC2142:00
- * REALTEK-MST\Name_10EC2142:00&Family_Google_Hatch
+ * REALTEK-MST\NAME_10EC2142:00
+ * REALTEK-MST\NAME_10EC2142:00&FAMILY_Google_Hatch
 
 Quirk use
 ---------

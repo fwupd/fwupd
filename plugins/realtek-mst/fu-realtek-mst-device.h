@@ -8,8 +8,7 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_REALTEK_MST_DEVICE \
-	(fu_realtek_mst_device_get_type ())
+#define FU_TYPE_REALTEK_MST_DEVICE (fu_realtek_mst_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuRealtekMstDevice,
 		      fu_realtek_mst_device, FU,
 		      REALTEK_MST_DEVICE, FuUdevDevice)

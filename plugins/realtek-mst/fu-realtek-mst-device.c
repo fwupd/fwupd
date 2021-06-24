@@ -16,108 +16,109 @@
 #include "fu-realtek-mst-device.h"
 
 /* firmware debug address */
-#define I2C_ADDR_DEBUG 0x35
+#define I2C_ADDR_DEBUG			0x35
 /* programming address */
-#define I2C_ADDR_ISP 0x4a
+#define I2C_ADDR_ISP			0x4a
 
 /* some kind of operation attribute bits */
-#define REG_CMD_ATTR 0x60
+#define REG_CMD_ATTR			0x60
 /* write set to begin executing, cleared when done */
-#define CMD_ERASE_BUSY 0x01
+#define CMD_ERASE_BUSY			0x01
 
 /* 24-bit address for commands */
-#define REG_CMD_ADDR_HI 0x64
-#define REG_CMD_ADDR_MID 0x65
-#define REG_CMD_ADDR_LO 0x66
+#define REG_CMD_ADDR_HI			0x64
+#define REG_CMD_ADDR_MID		0x65
+#define REG_CMD_ADDR_LO			0x66
 
 /* register for erase commands */
-#define REG_ERASE_OPCODE 0x61
-#define CMD_OPCODE_ERASE_SECTOR 0x20
-#define CMD_OPCODE_ERASE_BLOCK 0xD8
+#define REG_ERASE_OPCODE		0x61
+#define CMD_OPCODE_ERASE_SECTOR		0x20
+#define CMD_OPCODE_ERASE_BLOCK		0xD8
 
 /* register for read commands */
-#define REG_READ_OPCODE 0x6A
-#define CMD_OPCODE_READ 0x03
+#define REG_READ_OPCODE			0x6A
+#define CMD_OPCODE_READ			0x03
 
 /* register for write commands */
-#define REG_WRITE_OPCODE 0x6D
-#define CMD_OPCODE_WRITE 0x02
+#define REG_WRITE_OPCODE		0x6D
+#define CMD_OPCODE_WRITE		0x02
 
 /* mode register address */
-#define REG_MCU_MODE 0x6F
+#define REG_MCU_MODE			0x6F
 /* when bit is set in mode register, ISP mode is active */
-#define MCU_MODE_ISP (1 << 7)
+#define MCU_MODE_ISP			(1 << 7)
 /* write set to begin write, reset by device when complete */
-#define MCU_MODE_WRITE_BUSY (1 << 5)
+#define MCU_MODE_WRITE_BUSY		(1 << 5)
 /* when bit is clear, write buffer contains data */
-#define MCU_MODE_WRITE_BUF (1 << 4)
+#define MCU_MODE_WRITE_BUF		(1 << 4)
 
 /* write data into write buffer */
-#define REG_WRITE_FIFO 0x70
+#define REG_WRITE_FIFO			0x70
 /* number of bytes to write minus 1 (0xff means 256 bytes) */
-#define REG_WRITE_LEN 0x71
+#define REG_WRITE_LEN			0x71
 
 /* Indirect registers allow access to registers with 16-bit addresses. Write
  * 0x9F to the LO register, then the top byte of the address to HI, the
  * bottom byte of the address to LO, then read or write HI to read or write
  * the value of the target register. */
-#define REG_INDIRECT_LO 0xF4
-#define REG_INDIRECT_HI 0xF5
+#define REG_INDIRECT_LO			0xF4
+#define REG_INDIRECT_HI			0xF5
 
 /* GPIO configuration/access registers */
-#define REG_GPIO88_CONFIG 0x104F
-#define REG_GPIO88_VALUE 0xFE3F
+#define REG_GPIO88_CONFIG		0x104F
+#define REG_GPIO88_VALUE		0xFE3F
 
 /* flash chip properties */
-#define FLASH_SIZE 0x100000
-#define FLASH_SECTOR_SIZE 4096
-#define FLASH_BLOCK_SIZE 65536
+#define FLASH_SIZE			0x100000
+#define FLASH_SECTOR_SIZE		4096
+#define FLASH_BLOCK_SIZE		65536
 
 /* MST flash layout */
-#define FLASH_USER1_ADDR 0x10000
-#define FLASH_FLAG1_ADDR 0xfe304
-#define FLASH_USER2_ADDR 0x80000
-#define FLASH_FLAG2_ADDR 0xff304
-#define FLASH_USER_SIZE 0x70000
+#define FLASH_USER1_ADDR		0x10000
+#define FLASH_FLAG1_ADDR		0xfe304
+#define FLASH_USER2_ADDR		0x80000
+#define FLASH_FLAG2_ADDR		0xff304
+#define FLASH_USER_SIZE			0x70000
 
 enum dual_bank_mode {
-  DUAL_BANK_USER_ONLY = 0,
-  DUAL_BANK_DIFF = 1,
-  DUAL_BANK_COPY = 2,
-  DUAL_BANK_USER_ONLY_FLAG = 3,
-  DUAL_BANK_MAX_VALUE = 3,
+	DUAL_BANK_USER_ONLY		= 0,
+	DUAL_BANK_DIFF			= 1,
+	DUAL_BANK_COPY			= 2,
+	DUAL_BANK_USER_ONLY_FLAG	= 3,
+	DUAL_BANK_MAX_VALUE		= 3,
 };
 
 enum flash_bank {
-  FLASH_BANK_BOOT = 0,
-  FLASH_BANK_USER1 = 1,
-  FLASH_BANK_USER2 = 2,
-  FLASH_BANK_MAX_VALUE = 2,
-  FLASH_BANK_INVALID = 255,
+	FLASH_BANK_BOOT			= 0,
+	FLASH_BANK_USER1		= 1,
+	FLASH_BANK_USER2		= 2,
+	FLASH_BANK_MAX_VALUE		= 2,
+	FLASH_BANK_INVALID		= 255,
 };
 
 struct dual_bank_info {
-	gboolean is_enabled;
-	enum dual_bank_mode mode;
-	enum flash_bank active_bank;
-	guint8 user1_version[2];
-	guint8 user2_version[2];
+	gboolean		 is_enabled;
+	enum dual_bank_mode	 mode;
+	enum flash_bank		 active_bank;
+	guint8			 user1_version[2];
+	guint8			 user2_version[2];
 };
 
 struct _FuRealtekMstDevice {
-	FuUdevDevice parent_instance;
-	gchar *dp_aux_dev_name;
-	FuUdevDevice *bus_device;
-	enum flash_bank active_bank;
+	FuUdevDevice		 parent_instance;
+	gchar			*dp_aux_dev_name;
+	FuUdevDevice		*bus_device;
+	enum flash_bank		 active_bank;
 };
 
 // TODO implement in terms of FuI2cDevice?
 G_DEFINE_TYPE (FuRealtekMstDevice, fu_realtek_mst_device, FU_TYPE_UDEV_DEVICE)
 
-static gboolean fu_realtek_mst_device_set_quirk_kv (FuDevice *device,
-						    const gchar *key,
-						    const gchar *value,
-						    GError **error)
+static gboolean
+fu_realtek_mst_device_set_quirk_kv (FuDevice *device,
+				    const gchar *key,
+				    const gchar *value,
+				    GError **error)
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE (device);
 
@@ -131,19 +132,16 @@ static gboolean fu_realtek_mst_device_set_quirk_kv (FuDevice *device,
 	return TRUE;
 }
 
-static FuUdevDevice *fu_realtek_mst_device_locate_bus (FuRealtekMstDevice *self,
-						       GError **error)
+static FuUdevDevice *
+fu_realtek_mst_device_locate_bus (FuRealtekMstDevice *self, GError **error)
 {
 	g_autoptr(GUdevClient) udev_client = g_udev_client_new (NULL);
-	g_autoptr(GUdevEnumerator)
-		udev_enumerator = g_udev_enumerator_new (udev_client);
-	g_autoptr(GList) matches = NULL;
+	g_autoptr(GUdevEnumerator) udev_enumerator = g_udev_enumerator_new (udev_client);
 	g_autoptr(FuUdevDevice) bus_device = NULL;
+	g_autoptr(GList) matches = NULL;
 
-	g_udev_enumerator_add_match_subsystem (udev_enumerator,
-					       "drm_dp_aux_dev");
-	g_udev_enumerator_add_match_sysfs_attr (udev_enumerator,
-						"name",
+	g_udev_enumerator_add_match_subsystem (udev_enumerator, "drm_dp_aux_dev");
+	g_udev_enumerator_add_match_sysfs_attr (udev_enumerator, "name",
 						self->dp_aux_dev_name);
 	matches = g_udev_enumerator_execute (udev_enumerator);
 
@@ -152,8 +150,7 @@ static FuUdevDevice *fu_realtek_mst_device_locate_bus (FuRealtekMstDevice *self,
 	 * I2C bus that runs over DPDDC on the port represented by the
 	 * drm_dp_aux_dev */
 	for (GList *element = matches; element != NULL; element = element->next) {
-		g_autoptr(FuUdevDevice)
-			device = fu_udev_device_new (element->data);
+		g_autoptr(FuUdevDevice) device = fu_udev_device_new (element->data);
 		g_autoptr(GPtrArray) i2c_devices = NULL;
 
 		if (bus_device != NULL) {
@@ -208,17 +205,17 @@ mst_ensure_device_address (FuRealtekMstDevice *self, guint8 address, GError **er
 static gboolean
 mst_write_register (FuRealtekMstDevice *self, guint8 address, guint8 value, GError **error)
 {
-	const guint8 command[] = {address, value};
+	const guint8 command[] = { address, value };
 
 	return fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0, command,
-					   sizeof (command), error);
+					   sizeof(command), error);
 }
 
 static gboolean
 mst_write_register_multi (FuRealtekMstDevice *self, guint8 address,
 			  const guint8 *data, gsize count, GError **error)
 {
-	g_autofree guint8 *command = g_malloc (count + 1);
+	g_autofree guint8 *command = g_malloc0 (count + 1);
 	memcpy (command + 1, data, count);
 	command[0] = address;
 	return fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0,
@@ -290,7 +287,6 @@ mst_poll_register (FuRealtekMstDevice *self,
 	while ((value & mask) != expected
 		&& g_timer_elapsed (timer, NULL) <= timeout_seconds) {
 		g_usleep(G_TIME_SPAN_MILLISECOND);
-
 		if (!mst_read_register (self, address, &value, error))
 			return FALSE;
 	}
@@ -331,22 +327,21 @@ fu_realtek_mst_device_probe (FuDevice *device, GError **error)
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE (device);
 	FuContext *context = fu_device_get_context (device);
-	const gchar *quirk_name = NULL;
 	const gchar *hardware_family = NULL;
-	g_autofree gchar *physical_id = NULL;
-	g_autofree gchar *instance_id = NULL;
+	const gchar *quirk_name = NULL;
 	g_autofree gchar *family_instance_id = NULL;
+	g_autofree gchar *instance_id = NULL;
+	g_autofree gchar *physical_id = NULL;
 
 	if (!FU_DEVICE_CLASS (fu_realtek_mst_device_parent_class)->probe (device, error))
 		return FALSE;
 
 	physical_id = g_strdup_printf ("I2C_PATH=%s",
-				       fu_udev_device_get_sysfs_path (
-					       FU_UDEV_DEVICE (device)));
+				       fu_udev_device_get_sysfs_path (FU_UDEV_DEVICE (device)));
 	fu_device_set_physical_id (device, physical_id);
 
 	/* set custom instance ID and load matching quirks */
-	instance_id = g_strdup_printf ("REALTEK-MST\\Name_%s",
+	instance_id = g_strdup_printf ("REALTEK-MST\\NAME_%s",
 				       fu_udev_device_get_sysfs_attr (
 					       FU_UDEV_DEVICE (device),
 					       "name",
@@ -354,7 +349,7 @@ fu_realtek_mst_device_probe (FuDevice *device, GError **error)
 	fu_device_add_instance_id (device, instance_id);
 
 	hardware_family = fu_context_get_hwid_value (context, FU_HWIDS_KEY_FAMILY);
-	family_instance_id = g_strdup_printf ("%s&Family_%s", instance_id, hardware_family);
+	family_instance_id = g_strdup_printf ("%s&FAMILY_%s", instance_id, hardware_family);
 	fu_device_add_instance_id_full (device, family_instance_id,
 					FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 
@@ -375,7 +370,8 @@ fu_realtek_mst_device_probe (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	if ((self->bus_device = fu_realtek_mst_device_locate_bus (self, error)) == NULL)
+	self->bus_device = fu_realtek_mst_device_locate_bus (self, error);
+	if (self->bus_device == NULL)
 		return FALSE;
 
 	return TRUE;
@@ -394,7 +390,7 @@ fu_realtek_mst_device_open (FuDevice *device, GError **error)
 #ifdef HAVE_ERRNO_H
 			     g_io_error_from_errno (errno),
 #else
-	       		     G_IO_ERROR_FAILED,
+			     G_IO_ERROR_FAILED,
 #endif
 			     "failed to open %s", bus_path);
 
@@ -403,7 +399,6 @@ fu_realtek_mst_device_open (FuDevice *device, GError **error)
 	fu_udev_device_set_fd (FU_UDEV_DEVICE (self), bus_fd);
 	fu_udev_device_set_flags (FU_UDEV_DEVICE (device),
 				  FU_UDEV_DEVICE_FLAG_NONE);
-	g_debug ("bus opened");
 
 	return FU_DEVICE_CLASS (fu_realtek_mst_device_parent_class)->open (device, error);
 }
@@ -414,7 +409,7 @@ fu_realtek_mst_device_get_dual_bank_info (FuRealtekMstDevice *self,
 					  GError **error)
 {
 	FuUdevDevice *device = FU_UDEV_DEVICE (self);
-	guint8 response[11];
+	guint8 response[11] = { 0x0 };
 
 	if (!mst_ensure_device_address (self, I2C_ADDR_DEBUG, error))
 		return FALSE;
@@ -429,7 +424,7 @@ fu_realtek_mst_device_get_dual_bank_info (FuRealtekMstDevice *self,
 	/* request dual bank state and read back */
 	if (!fu_udev_device_pwrite (device, 0, 0x01, error))
 		return FALSE;
-	if (!fu_udev_device_pread_full (device, 0, response, sizeof (response), error))
+	if (!fu_udev_device_pread_full (device, 0, response, sizeof(response), error))
 		return FALSE;
 
 	if (response[0] != 0xca || response[1] != 9) {
@@ -475,7 +470,7 @@ static gboolean
 fu_realtek_mst_device_probe_version (FuDevice *device, GError **error)
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE (device);
-	struct dual_bank_info info;
+	struct dual_bank_info info = { 0x0 };
 	guint8 *active_version;
 	g_autofree gchar *version_str = NULL;
 
@@ -518,10 +513,8 @@ fu_realtek_mst_device_probe_version (FuDevice *device, GError **error)
 		/* only user bank versions are reported, can't tell otherwise */
 		return TRUE;
 
-	version_str = g_strdup_printf ("%u.%u",
-				       active_version[0], active_version[1]);
+	version_str = g_strdup_printf ("%u.%u", active_version[0], active_version[1]);
 	fu_device_set_version (FU_DEVICE (self), version_str);
-
 	return TRUE;
 }
 
@@ -532,8 +525,10 @@ flash_iface_read (FuRealtekMstDevice *self,
 {
 	gsize bytes_read = 0;
 	guint8 byte;
-	g_return_val_if_fail(address < FLASH_SIZE, FALSE);
-	g_return_val_if_fail(buf_size <= FLASH_SIZE, FALSE);
+
+	g_return_val_if_fail (address < FLASH_SIZE, FALSE);
+	g_return_val_if_fail (buf_size <= FLASH_SIZE, FALSE);
+
 	g_debug ("read %#" G_GSIZE_MODIFIER "x bytes from %#08x", buf_size, address);
 
 	/* read must start one byte prior to the desired address and ignore the
@@ -576,7 +571,7 @@ flash_iface_erase_sector (FuRealtekMstDevice *self, guint32 address,
 			  GError **error)
 {
 	/* address must be 4k-aligned */
-	g_return_val_if_fail((address & 0xFFF) == 0, FALSE);
+	g_return_val_if_fail ((address & 0xFFF) == 0, FALSE);
 	g_debug ("sector erase %#08x-%#08x", address, address + FLASH_SECTOR_SIZE);
 
 	/* sector address */
@@ -601,7 +596,7 @@ static gboolean
 flash_iface_erase_block (FuRealtekMstDevice *self, guint32 address, GError **error)
 {
 	/* address must be 64k-aligned */
-	g_return_val_if_fail((address & 0xFFFF) == 0, FALSE);
+	g_return_val_if_fail ((address & 0xFFFF) == 0, FALSE);
 	g_debug ("block erase %#08x-%#08x", address, address + FLASH_BLOCK_SIZE);
 
 	/* block address */
@@ -681,6 +676,7 @@ static gboolean
 fu_realtek_mst_device_detach (FuDevice *device, GError **error)
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE (device);
+
 	if (!mst_ensure_device_address (self, I2C_ADDR_ISP, error))
 		return FALSE;
 
@@ -718,9 +714,10 @@ fu_realtek_mst_device_write_firmware (FuDevice *device,
 	guint32 base_addr = self->active_bank == FLASH_BANK_USER1 ? FLASH_USER2_ADDR : FLASH_USER1_ADDR;
 	guint32 flag_addr = self->active_bank == FLASH_BANK_USER1 ? FLASH_FLAG2_ADDR : FLASH_FLAG1_ADDR;
 	GBytes *firmware_bytes = fu_firmware_get_bytes (firmware, error);
-	g_autofree guint8 *readback_buf = g_malloc (FLASH_USER_SIZE);
 	const guint8 flag_data[] = {0xaa, 0xaa, 0xaa, 0xff, 0xff};
-	g_return_val_if_fail(g_bytes_get_size (firmware_bytes) == FLASH_USER_SIZE, FALSE);
+	g_autofree guint8 *readback_buf = g_malloc0 (FLASH_USER_SIZE);
+
+	g_return_val_if_fail (g_bytes_get_size (firmware_bytes) == FLASH_USER_SIZE, FALSE);
 
 	if (!mst_ensure_device_address (self, I2C_ADDR_ISP, error))
 		return FALSE;
@@ -757,7 +754,7 @@ fu_realtek_mst_device_write_firmware (FuDevice *device,
 		return FALSE;
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	return flash_iface_write (self, flag_addr,
-				  g_bytes_new_static (flag_data, sizeof (flag_data)),
+				  g_bytes_new_static (flag_data, sizeof(flag_data)),
 				  error);
 }
 
@@ -765,8 +762,8 @@ static FuFirmware*
 fu_realtek_mst_device_read_firmware (FuDevice *device, GError **error)
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE (device);
-	g_autofree void *image_bytes = NULL;
 	guint32 bank_address;
+	g_autofree guint8 *image_bytes = NULL;
 
 	if (self->active_bank == FLASH_BANK_USER1)
 		bank_address = FLASH_USER1_ADDR;
@@ -779,7 +776,7 @@ fu_realtek_mst_device_read_firmware (FuDevice *device, GError **error)
 		return NULL;
 	}
 
-	image_bytes = g_malloc (FLASH_USER_SIZE);
+	image_bytes = g_malloc0 (FLASH_USER_SIZE);
 	if (!mst_ensure_device_address (self, I2C_ADDR_ISP, error))
 		return NULL;
 	if (!flash_iface_read (self, bank_address, image_bytes, FLASH_USER_SIZE, error))
@@ -791,7 +788,7 @@ static GBytes*
 fu_realtek_mst_device_dump_firmware (FuDevice *device, GError **error)
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE (device);
-	g_autofree void *flash_contents = g_malloc(FLASH_SIZE);
+	g_autofree guint8 *flash_contents = g_malloc0 (FLASH_SIZE);
 
 	if (!mst_ensure_device_address (self, I2C_ADDR_ISP, error))
 		return NULL;
@@ -830,13 +827,14 @@ fu_realtek_mst_device_attach (FuDevice *device, GError **error)
 		mst_write_register (self, 0xEE, value | 2, NULL);
 
 		/* allow device some time to reset */
-		g_usleep(G_TIME_SPAN_SECOND);
+		g_usleep (G_USEC_PER_SEC);
 
 		/* verify device has exited programming mode and actually reset */
 		if (!mst_read_register (self, REG_MCU_MODE, &value, error))
 			return FALSE;
 		if ((value & MCU_MODE_ISP) == MCU_MODE_ISP) {
-			g_set_error_literal (error, FWUPD_ERROR,
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
 					     FWUPD_ERROR_NEEDS_USER_ACTION,
 					     "device failed to reset when requested");
 			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN);
@@ -854,21 +852,17 @@ fu_realtek_mst_device_attach (FuDevice *device, GError **error)
 static void
 fu_realtek_mst_device_init (FuRealtekMstDevice *self)
 {
-	FuDevice *device = FU_DEVICE (self);
-	self->dp_aux_dev_name = NULL;
-	self->bus_device = NULL;
 	self->active_bank = FLASH_BANK_INVALID;
 
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_PAIR);
-	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
-
-	fu_device_add_protocol (device, "com.realtek.rtd2142");
-	fu_device_set_vendor (device, "Realtek");
-	fu_device_add_vendor_id (device, "PCI:0x10EC");
-	fu_device_set_summary (device, "DisplayPort MST hub");
-	fu_device_add_icon (device, "video-display");
-	fu_device_set_firmware_size (device, FLASH_USER_SIZE);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_protocol (FU_DEVICE (self), "com.realtek.rtd2142");
+	fu_device_set_vendor (FU_DEVICE (self), "Realtek");
+	fu_device_add_vendor_id (FU_DEVICE (self), "PCI:0x10EC");
+	fu_device_set_summary (FU_DEVICE (self), "DisplayPort MST hub");
+	fu_device_add_icon (FU_DEVICE (self), "video-display");
+	fu_device_set_firmware_size (FU_DEVICE (self), FLASH_USER_SIZE);
 }
 
 static void

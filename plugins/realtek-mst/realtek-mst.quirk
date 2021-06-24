@@ -2,8 +2,8 @@
 [I2C]
 Plugin = realtek_mst
 
-[REALTEK-MST\Name_10EC2142:00]
+[REALTEK-MST\NAME_10EC2142:00]
 Name = RTD2142
 
-[REALTEK-MST\Name_10EC2142:00&Family_Google_Hatch]
+[REALTEK-MST\NAME_10EC2142:00&FAMILY_Google_Hatch]
 RealtekMstDpAuxName = DPDDC-C
