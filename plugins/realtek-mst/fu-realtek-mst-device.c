@@ -627,26 +627,28 @@ static gboolean
 flash_iface_write (FuRealtekMstDevice *self, guint32 address,
 		   GBytes *data, GError **error)
 {
-	gsize total_size;
-	gsize remaining_size;
-	const guint8 *data_bytes = g_bytes_get_data (data, &total_size);
-	remaining_size = total_size;
+	gsize bytes_written = 0;
+	gsize total_size = g_bytes_get_size (data);
+	g_autoptr(GPtrArray) chunks = fu_chunk_array_new_from_bytes (data, address, 0, 256);
 
-	g_debug ("write %#" G_GSIZE_MODIFIER "x bytes at %#08x", remaining_size, address);
-	while (remaining_size > 0) {
-		gsize chunk_size = remaining_size > 256 ? 256 : remaining_size;
+	g_debug ("write %#" G_GSIZE_MODIFIER "x bytes at %#08x", total_size, address);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chunk = g_ptr_array_index (chunks, i);
+		guint32 chunk_address = fu_chunk_get_address (chunk);
+		guint32 chunk_size = fu_chunk_get_data_sz (chunk);
+
 		/* write opcode */
 		if (!mst_write_register (self, REG_WRITE_OPCODE, CMD_OPCODE_WRITE, error))
 			return FALSE;
 		/* write length */
-		if (!mst_write_register (self, REG_WRITE_LEN, chunk_size - 1, error))
+		if (!mst_write_register (self, REG_WRITE_LEN, chunk_size, error))
 			return FALSE;
 		/* target address */
-		if (!mst_write_register (self, REG_CMD_ADDR_HI, address >> 16, error))
+		if (!mst_write_register (self, REG_CMD_ADDR_HI, chunk_address >> 16, error))
 			return FALSE;
-		if (!mst_write_register (self, REG_CMD_ADDR_MID, address >> 8, error))
+		if (!mst_write_register (self, REG_CMD_ADDR_MID, chunk_address >> 8, error))
 			return FALSE;
-		if (!mst_write_register (self, REG_CMD_ADDR_LO, address, error))
+		if (!mst_write_register (self, REG_CMD_ADDR_LO, chunk_address, error))
 			return FALSE;
 		/* ensure write buffer is empty */
 		if (!mst_poll_register (self, REG_MCU_MODE, MCU_MODE_WRITE_BUF, MCU_MODE_WRITE_BUF, 10, error)) {
@@ -654,7 +656,9 @@ flash_iface_write (FuRealtekMstDevice *self, guint32 address,
 			return FALSE;
 		}
 		/* write data into FIFO */
-		if (!mst_write_register_multi (self, REG_WRITE_FIFO, data_bytes, chunk_size, error))
+		if (!mst_write_register_multi (self, REG_WRITE_FIFO,
+				 	       fu_chunk_get_data (chunk),
+				 	       chunk_size, error))
 			return FALSE;
 		/* begin operation and wait for completion */
 		if (!mst_write_register (self, REG_MCU_MODE, MCU_MODE_ISP | MCU_MODE_WRITE_BUSY, error))
@@ -666,10 +670,8 @@ flash_iface_write (FuRealtekMstDevice *self, guint32 address,
 			return FALSE;
 		}
 
-		remaining_size -= chunk_size;
-		data_bytes += chunk_size;
-		address += chunk_size;
-		fu_device_set_progress_full (FU_DEVICE (self), total_size - remaining_size, total_size);
+		bytes_written += chunk_size;
+		fu_device_set_progress_full (FU_DEVICE (self), bytes_written, total_size);
 	}
 
 	return TRUE;
