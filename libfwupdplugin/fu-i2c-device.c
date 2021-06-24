@@ -129,6 +129,10 @@ fu_i2c_device_probe (FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS (fu_i2c_device_parent_class)->probe (device, error))
 		return FALSE;
 
+	/* set physical ID */
+	if (!fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "i2c", error))
+		return FALSE;
+
 #ifdef HAVE_GUDEV
 	/* i2c devices all expose a name */
 	tmp = g_udev_device_get_sysfs_attr (udev_device, "name");
