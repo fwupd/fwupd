@@ -494,7 +494,17 @@ fu_udev_device_get_miscdev0 (FuUdevDevice *self)
 }
 #endif
 
-static void
+/**
+ * fu_udev_device_set_dev:
+ * @self: a #FuUdevDevice
+ * @udev_device: a #GUdevDevice
+ *
+ * Sets the #GUdevDevice. This may need to be used to replace the actual device
+ * used for reads and writes before the device is probed.
+ *
+ * Since: 1.6.2
+ **/
+void
 fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
