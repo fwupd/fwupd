@@ -283,22 +283,13 @@ mst_poll_register (FuRealtekMstDevice *self,
 		   GError **error)
 {
 	guint8 value;
-	struct timespec deadline;
-	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC, &now);
-	deadline = (struct timespec){
-		.tv_sec = now.tv_sec + timeout_seconds,
-		.tv_nsec = now.tv_nsec,
-	};
+	g_autoptr(GTimer) timer = g_timer_new ();
 
 	if (!mst_read_register (self, address, &value, error))
 		return FALSE;
 	while ((value & mask) != expected
-		&& (now.tv_sec < deadline.tv_sec ||
-			(now.tv_sec == deadline.tv_sec
-				&& now.tv_nsec <= deadline.tv_nsec))) {
+		&& g_timer_elapsed (timer, NULL) <= timeout_seconds) {
 		g_usleep(G_TIME_SPAN_MILLISECOND);
-		clock_gettime(CLOCK_MONOTONIC, &now);
 
 		if (!mst_read_register (self, address, &value, error))
 			return FALSE;
