@@ -169,8 +169,25 @@ guint
 fu_i2c_device_get_bus_number (FuI2cDevice *self)
 {
 	FuI2cDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_I2C_DEVICE (self), G_MAXUINT);
+	g_return_val_if_fail (FU_IS_I2C_DEVICE (self), G_MAXUINT);
 	return priv->bus_number;
+}
+
+/**
+ * fu_i2c_device_set_bus_number:
+ * @self: a #FuI2cDevice
+ * @bus_number: integer, typically the output of g_udev_device_get_number()
+ *
+ * Sets the I²C bus number.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_i2c_device_set_bus_number (FuI2cDevice *self, guint bus_number)
+{
+	FuI2cDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_I2C_DEVICE (self));
+	priv->bus_number = bus_number;
 }
 
 /**
