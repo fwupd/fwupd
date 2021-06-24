@@ -1,4 +1,4 @@
-if get_option('plugin_realtek_mst')
+if get_option('gudev') and get_option('plugin_realtek_mst')
 cargs = ['-DG_LOG_DOMAIN="FuPluginRealtekMst"']
 
 install_data(['realtek-mst.quirk'],
