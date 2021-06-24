@@ -30,3 +30,13 @@ gboolean	 fu_i2c_device_write			(FuI2cDevice	*self,
 							 guint8		 data,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
+gboolean	 fu_i2c_device_read_full		(FuI2cDevice	*self,
+							 guint8		*buf,
+							 gsize		 bufsz,
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
+gboolean	 fu_i2c_device_write_full		(FuI2cDevice	*self,
+							 const guint8	*buf,
+							 gsize		 bufsz,
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
