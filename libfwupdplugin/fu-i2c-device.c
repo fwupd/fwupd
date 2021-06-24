@@ -226,6 +226,44 @@ fu_i2c_device_read (FuI2cDevice *self, guint8 *data, GError **error)
 	return fu_udev_device_pread_full (FU_UDEV_DEVICE (self), 0x0, data, 0x1, error);
 }
 
+/**
+ * fu_i2c_device_write_full:
+ * @self: a #FuI2cDevice
+ * @buf: (out): data
+ * @bufsz: size of @data
+ * @error: (nullable): optional return location for an error
+ *
+ * Write multiple bytes to the I²C device.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.6.2
+ **/
+gboolean
+fu_i2c_device_write_full (FuI2cDevice *self, const guint8 *buf, gsize bufsz, GError **error)
+{
+	return fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0x0, buf, bufsz, error);
+}
+
+/**
+ * fu_i2c_device_read_full:
+ * @self: a #FuI2cDevice
+ * @buf: (out): data
+ * @bufsz: size of @data
+ * @error: (nullable): optional return location for an error
+ *
+ * Read multiple bytes from the I²C device.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.6.2
+ **/
+gboolean
+fu_i2c_device_read_full (FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)
+{
+	return fu_udev_device_pread_full (FU_UDEV_DEVICE (self), 0x0, buf, bufsz, error);
+}
+
 static void
 fu_i2c_device_init (FuI2cDevice *self)
 {
