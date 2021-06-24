@@ -84,6 +84,7 @@ BuildRequires: flashrom-devel >= 1.2-2
 %if 0%{?have_modem_manager}
 BuildRequires: ModemManager-glib-devel >= 1.10.0
 BuildRequires: libqmi-devel >= 1.22.0
+BuildRequires: libmbim-devel
 %endif
 
 %if 0%{?have_uefi}

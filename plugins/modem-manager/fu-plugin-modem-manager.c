@@ -182,7 +182,7 @@ fu_plugin_mm_udev_uevent_cb (GUdevClient	*udev,
 static gboolean
 fu_plugin_mm_inhibit_device (FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	static const gchar *subsystems[] = { "tty", "usbmisc", NULL };
+	static const gchar *subsystems[] = { "tty", "usbmisc", "wwan", NULL };
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FuPluginMmInhibitedDeviceInfo) info = NULL;
 
@@ -365,6 +365,12 @@ fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
+#if MM_CHECK_VERSION(1,17,1)
+	/* skip update_detach, as MBIM modem doesn't change port layout. */
+	if (fu_mm_device_get_update_methods (FU_MM_DEVICE (device)) & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU)
+		return TRUE;
+
+#endif /* MM_CHECK_VERSION(1,17,1) */
 	/* open device */
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
@@ -401,6 +407,12 @@ fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
+#if MM_CHECK_VERSION(1,17,1)
+	/* skip update_attach, as MBIM modem doesn't change port layout. */
+	if (fu_mm_device_get_update_methods (FU_MM_DEVICE (device)) & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU)
+		return TRUE;
+
+#endif /* MM_CHECK_VERSION(1,17,1) */
 	/* open device */
 	locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
