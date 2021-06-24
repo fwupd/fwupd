@@ -36,7 +36,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuI2cDevice, fu_i2c_device, FU_TYPE_UDEV_DEVICE)
 
 enum {
 	PROP_0,
-	PROP_INTERFACE,
+	PROP_BUS_NUMBER,
 	PROP_LAST
 };
 
@@ -57,7 +57,7 @@ fu_i2c_device_get_property (GObject *object, guint prop_id,
 	FuI2cDevice *self = FU_I2C_DEVICE (object);
 	FuI2cDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
-	case PROP_INTERFACE:
+	case PROP_BUS_NUMBER:
 		g_value_set_uint (value, priv->bus_number);
 		break;
 	default:
@@ -73,7 +73,7 @@ fu_i2c_device_set_property (GObject *object, guint prop_id,
 	FuI2cDevice *self = FU_I2C_DEVICE (object);
 	FuI2cDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
-	case PROP_INTERFACE:
+	case PROP_BUS_NUMBER:
 		priv->bus_number = g_value_get_uint (value);
 		break;
 	default:
@@ -231,5 +231,5 @@ fu_i2c_device_class_init (FuI2cDeviceClass *klass)
 				   0x0, G_MAXUINT, 0x0,
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_INTERFACE, pspec);
+	g_object_class_install_property (object_class, PROP_BUS_NUMBER, pspec);
 }
