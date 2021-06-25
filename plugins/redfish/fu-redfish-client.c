@@ -374,63 +374,6 @@ fu_redfish_client_coldplug (FuRedfishClient *self, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_redfish_client_set_uefi_credentials (FuRedfishClient *self, GError **error)
-{
-	guint32 indications_le;
-	g_autofree gchar *userpass_safe = NULL;
-	g_auto(GStrv) split = NULL;
-	g_autoptr(GBytes) indications = NULL;
-	g_autoptr(GBytes) userpass = NULL;
-
-	/* get the uint32 specifying if there are EFI variables set */
-	indications = fu_efivar_get_data_bytes (REDFISH_EFI_INFORMATION_GUID,
-						REDFISH_EFI_INFORMATION_INDICATIONS,
-						NULL, error);
-	if (indications == NULL)
-		return FALSE;
-	if (g_bytes_get_size (indications) != 4) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "invalid value for %s, got %" G_GSIZE_FORMAT " bytes",
-			     REDFISH_EFI_INFORMATION_INDICATIONS,
-			     g_bytes_get_size (indications));
-		return FALSE;
-	}
-	memcpy (&indications_le, g_bytes_get_data (indications, NULL), 4);
-	if ((indications_le & REDFISH_EFI_INDICATIONS_OS_CREDENTIALS) == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no indications for OS credentials");
-		return FALSE;
-	}
-
-	/* read the correct EFI var for runtime */
-	userpass = fu_efivar_get_data_bytes (REDFISH_EFI_INFORMATION_GUID,
-					     REDFISH_EFI_INFORMATION_OS_CREDENTIALS,
-					     NULL, error);
-	if (userpass == NULL)
-		return FALSE;
-
-	/* it might not be NUL terminated */
-	userpass_safe = g_strndup (g_bytes_get_data (userpass, NULL),
-				   g_bytes_get_size (userpass));
-	split = g_strsplit (userpass_safe, ":", -1);
-	if (g_strv_length (split) != 2) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "invalid format for username:password, got '%s'",
-			     userpass_safe);
-		return FALSE;
-	}
-	fu_redfish_client_set_username (self, split[0]);
-	fu_redfish_client_set_password (self, split[1]);
-	return TRUE;
-}
-
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curl_mime, curl_mime_free)
 
 gboolean
@@ -524,7 +467,7 @@ fu_redfish_client_update (FuRedfishClient *self, FuDevice *device, GBytes *blob_
 }
 
 gboolean
-fu_redfish_client_setup (FuRedfishClient *self, GBytes *smbios_table, GError **error)
+fu_redfish_client_setup (FuRedfishClient *self, GError **error)
 {
 	JsonNode *node_root;
 	JsonObject *obj_root = NULL;
@@ -558,38 +501,6 @@ fu_redfish_client_setup (FuRedfishClient *self, GBytes *smbios_table, GError **e
 	curl_easy_setopt (self->curl, CURLOPT_CONNECTTIMEOUT, 60L);
 	if (self->cacheck == FALSE)
 		curl_easy_setopt (self->curl, CURLOPT_SSL_VERIFYPEER , 0L);
-
-	/* this is optional */
-	if (smbios_table != NULL) {
-		g_autoptr(GError) error_smbios = NULL;
-		g_autoptr(GError) error_uefi = NULL;
-		g_autoptr(FuRedfishSmbios) redfish_smbios = fu_redfish_smbios_new ();
-
-		if (!fu_firmware_parse (FU_FIRMWARE (redfish_smbios),
-					smbios_table,
-					FWUPD_INSTALL_FLAG_NONE,
-					&error_smbios)) {
-			g_debug ("failed to get connection URI automatically: %s",
-				 error_smbios->message);
-		} else {
-			const gchar *hostname = fu_redfish_smbios_get_ip_addr (redfish_smbios);
-			if (hostname == NULL)
-				hostname = fu_redfish_smbios_get_hostname (redfish_smbios);
-			if (hostname == NULL) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "no hostname");
-				return FALSE;
-			}
-			fu_redfish_client_set_hostname (self, hostname);
-			fu_redfish_client_set_port (self, fu_redfish_smbios_get_port (redfish_smbios));
-		}
-		if (!fu_redfish_client_set_uefi_credentials (self, &error_uefi)) {
-			g_debug ("failed to get username and password automatically: %s",
-				 error_uefi->message);
-		}
-	}
 	if (self->hostname != NULL)
 		g_debug ("Hostname: %s", self->hostname);
 	if (self->port != 0)

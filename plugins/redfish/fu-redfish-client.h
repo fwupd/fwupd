@@ -30,7 +30,6 @@ gboolean	 fu_redfish_client_update       (FuRedfishClient	*self,
 						 GBytes			*blob_fw,
 						 GError			**error);
 gboolean	 fu_redfish_client_setup	(FuRedfishClient	*self,
-						 GBytes			*smbios_table,
 						 GError			**error);
 gboolean	 fu_redfish_client_coldplug	(FuRedfishClient	*self,
 						 GError			**error);

@@ -10,6 +10,7 @@ shared_module('fu_plugin_redfish',
     'fu-plugin-redfish.c',
     'fu-redfish-client.c',
     'fu-redfish-common.c',     # fuzzing
+    'fu-redfish-network.c',
     'fu-redfish-smbios.c',     # fuzzing
   ],
   include_directories : [
@@ -42,6 +43,7 @@ if get_option('tests')
       'fu-self-test.c',
       'fu-redfish-client.c',
       'fu-redfish-common.c',
+      'fu-redfish-network.c',
       'fu-redfish-smbios.c',
     ],
     include_directories : [

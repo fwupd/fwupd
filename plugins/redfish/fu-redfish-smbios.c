@@ -45,10 +45,28 @@ fu_redfish_smbios_get_port (FuRedfishSmbios *self)
 	return self->port;
 }
 
+guint16
+fu_redfish_smbios_get_vid (FuRedfishSmbios *self)
+{
+	return self->vid;
+}
+
+guint16
+fu_redfish_smbios_get_pid (FuRedfishSmbios *self)
+{
+	return self->pid;
+}
+
 const gchar *
 fu_redfish_smbios_get_hostname (FuRedfishSmbios *self)
 {
 	return self->hostname;
+}
+
+const gchar *
+fu_redfish_smbios_get_mac_addr (FuRedfishSmbios *self)
+{
+	return self->mac_addr;
 }
 
 const gchar *

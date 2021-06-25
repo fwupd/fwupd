@@ -9,6 +9,7 @@
 #include <fwupd.h>
 
 #include "fu-redfish-common.h"
+#include "fu-redfish-network.h"
 
 static void
 fu_test_redfish_common_func (void)
@@ -27,11 +28,47 @@ fu_test_redfish_common_func (void)
 	g_assert_cmpstr (maca, ==, "00:01:02:03:04:05");
 }
 
+static void
+fu_test_redfish_network_mac_addr_func (void)
+{
+	g_autofree gchar *ip_addr = NULL;
+	g_autoptr(GError) error = NULL;
+
+	ip_addr = fu_redfish_network_ip_for_mac_addr ("00:13:F7:29:C2:D8", &error);
+	if (ip_addr == NULL &&
+	    g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+		g_test_skip ("no hardware");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert_nonnull (ip_addr);
+}
+
+static void
+fu_test_redfish_network_vid_pid_func (void)
+{
+	g_autofree gchar *ip_addr = NULL;
+	g_autoptr(GError) error = NULL;
+
+	ip_addr = fu_redfish_network_ip_for_vid_pid (0x0707, 0x0201, &error);
+	if (ip_addr == NULL &&
+	    g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+		g_test_skip ("no hardware");
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert_nonnull (ip_addr);
+}
+
 int
 main (int argc, char **argv)
 {
+	g_autoptr(GError) error = NULL;
+	g_setenv ("FWUPD_REDFISH_VERBOSE", "1", TRUE);
 	g_test_init (&argc, &argv, NULL);
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_test_add_func ("/redfish/common", fu_test_redfish_common_func);
+	g_test_add_func ("/redfish/network{mac_addr}", fu_test_redfish_network_mac_addr_func);
+	g_test_add_func ("/redfish/network{vid_pid}", fu_test_redfish_network_vid_pid_func);
 	return g_test_run ();
 }
