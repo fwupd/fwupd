@@ -14,6 +14,7 @@
 
 #include "fu-redfish-client.h"
 #include "fu-redfish-common.h"
+#include "fu-redfish-smbios.h"
 
 struct _FuRedfishClient
 {
@@ -428,166 +429,6 @@ fu_redfish_client_set_uefi_credentials (FuRedfishClient *self, GError **error)
 	return TRUE;
 }
 
-static void
-fu_redfish_client_parse_interface_data (const guint8 *buf, guint8 sz)
-{
-	switch (buf[0]) {
-	case REDFISH_INTERFACE_TYPE_USB_NEWORK:
-		g_debug ("USB Network Interface");
-		/*
-		 * uint16	idVendor(2-bytes)
-		 * uint16	idProduct(2-bytes)
-		 * uint8	SerialNumberLen:
-		 * uint8	DescriptorType:
-		 * uint8*	SerialNumber:
-		 */
-		break;
-	case REDFISH_INTERFACE_TYPE_PCI_NEWORK:
-		g_debug ("PCI Network Interface");
-		/*
-		 * uint16	VendorID
-		 * uint16	DeviceID
-		 * uint16	Subsystem_Vendor_ID
-		 * uint16	Subsystem_ID
-		 */
-		break;
-	default:
-		break;
-	}
-}
-
-typedef struct __attribute__((packed)) {
-	guint8		 service_uuid[16];
-	guint8		 host_ip_assignment_type;
-	guint8		 host_ip_address_format;
-	guint8		 host_ip_address[16];
-	guint8		 host_ip_mask[16];
-	guint8		 service_ip_assignment_type;
-	guint8		 service_ip_address_format;
-	guint8		 service_ip_address[16];
-	guint8		 service_ip_mask[16];
-	guint16		 service_ip_port;
-	guint32		 service_ip_vlan_id;
-	guint8		 service_hostname_len;
-	/*		 service_hostname; */
-} RedfishProtocolDataOverIp;
-
-static gboolean
-fu_redfish_client_parse_protocol_data (FuRedfishClient *self,
-				       const guint8 *buf,
-				       guint8 sz,
-				       GError **error)
-{
-	RedfishProtocolDataOverIp *pr;
-	if (sz < sizeof(RedfishProtocolDataOverIp)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "protocol data too small");
-		return FALSE;
-	}
-	pr = (RedfishProtocolDataOverIp *) buf;
-
-	/* parse the hostname and port */
-	if (pr->service_ip_assignment_type == REDFISH_IP_ASSIGNMENT_TYPE_STATIC ||
-	    pr->service_ip_assignment_type == REDFISH_IP_ASSIGNMENT_TYPE_AUTO_CONFIG) {
-		if (pr->service_ip_address_format == REDFISH_IP_ADDRESS_FORMAT_V4) {
-			g_autofree gchar *tmp = NULL;
-			tmp = fu_redfish_common_buffer_to_ipv4 (pr->service_ip_address);
-			fu_redfish_client_set_hostname (self, tmp);
-		} else if (pr->service_ip_address_format == REDFISH_IP_ADDRESS_FORMAT_V6) {
-			g_autofree gchar *tmp = NULL;
-			tmp = fu_redfish_common_buffer_to_ipv6 (pr->service_ip_address);
-			fu_redfish_client_set_hostname (self, tmp);
-		} else {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "address format is invalid");
-			return FALSE;
-		}
-		fu_redfish_client_set_port (self, pr->service_ip_port);
-	} else {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "DHCP address formats not supported (%0x2)",
-			     pr->service_ip_assignment_type);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_redfish_client_set_smbios_interfaces (FuRedfishClient *self,
-					 GBytes *smbios_table,
-					 GError **error)
-{
-	const guint8 *buf;
-	gsize sz = 0;
-
-	/* check size */
-	buf = g_bytes_get_data (smbios_table, &sz);
-	if (sz < 0x09) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "SMBIOS entry too small: %" G_GSIZE_FORMAT,
-			     sz);
-		return FALSE;
-	}
-
-	/* check interface type */
-	if (buf[0x04] != REDFISH_CONTROLLER_INTERFACE_TYPE_NETWORK_HOST) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "only Network Host Interface supported");
-		return FALSE;
-	}
-
-	/* check length */
-	if (buf[0x05] > sz - 0x08) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "interface specific data too large %u > %" G_GSIZE_FORMAT,
-			     buf[0x05], sz - 0x08);
-		return FALSE;
-	}
-
-	/* parse data, for not just for debugging */
-	if (buf[0x05] > 0)
-		fu_redfish_client_parse_interface_data (&buf[0x06], buf[0x05]);
-
-	/* parse protocol records */
-	for (guint8 i = 0x07 + buf[0x05]; i < sz - 1; i++) {
-		guint8 protocol_id = buf[i];
-		guint8 protocol_sz = buf[i+1];
-		if (protocol_sz > sz - buf[0x05] + 0x07) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "protocol length too large");
-			return FALSE;
-		}
-		if (protocol_id == REDFISH_PROTOCOL_REDFISH_OVER_IP) {
-			if (!fu_redfish_client_parse_protocol_data (self,
-								    &buf[i+2],
-								    protocol_sz,
-								    error))
-				return FALSE;
-		} else {
-			g_debug ("ignoring unsupported protocol ID %02x",
-				 protocol_id);
-		}
-		i += protocol_sz - 1;
-	}
-
-	return TRUE;
-}
-
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curl_mime, curl_mime_free)
 
 gboolean
@@ -720,11 +561,27 @@ fu_redfish_client_setup (FuRedfishClient *self, GBytes *smbios_table, GError **e
 	if (smbios_table != NULL) {
 		g_autoptr(GError) error_smbios = NULL;
 		g_autoptr(GError) error_uefi = NULL;
-		if (!fu_redfish_client_set_smbios_interfaces (self,
-							   smbios_table,
-							   &error_smbios)) {
+		g_autoptr(FuRedfishSmbios) redfish_smbios = fu_redfish_smbios_new ();
+
+		if (!fu_firmware_parse (FU_FIRMWARE (redfish_smbios),
+					smbios_table,
+					FWUPD_INSTALL_FLAG_NONE,
+					&error_smbios)) {
 			g_debug ("failed to get connection URI automatically: %s",
 				 error_smbios->message);
+		} else {
+			const gchar *hostname = fu_redfish_smbios_get_ip_addr (redfish_smbios);
+			if (hostname == NULL)
+				hostname = fu_redfish_smbios_get_hostname (redfish_smbios);
+			if (hostname == NULL) {
+				g_set_error_literal (error,
+						     FWUPD_ERROR,
+						     FWUPD_ERROR_INVALID_FILE,
+						     "no hostname");
+				return FALSE;
+			}
+			fu_redfish_client_set_hostname (self, hostname);
+			fu_redfish_client_set_port (self, fu_redfish_smbios_get_port (redfish_smbios));
 		}
 		if (!fu_redfish_client_set_uefi_credentials (self, &error_uefi)) {
 			g_debug ("failed to get username and password automatically: %s",
