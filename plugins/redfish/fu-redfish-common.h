@@ -43,3 +43,9 @@
 gchar		*fu_redfish_common_buffer_to_ipv4	(const guint8	*buffer);
 gchar		*fu_redfish_common_buffer_to_ipv6	(const guint8	*buffer);
 gchar		*fu_redfish_common_buffer_to_mac	(const guint8	*buffer);
+
+gchar		*fu_redfish_common_fix_version		(const gchar	*version);
+gboolean	 fu_redfish_common_parse_version_lenovo	(const gchar	*version,
+							 gchar		**out_build,
+							 gchar		**out_version,
+							 GError		**error);

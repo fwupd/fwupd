@@ -23,8 +23,15 @@ This plugin supports the following protocol ID:
 GUID Generation
 ---------------
 
-These devices use the provided GUID provided in the `SoftwareId` parameter
-without modification. Devices without GUIDs are not supported.
+These devices use the provided GUID provided in the `SoftwareId` property
+without modification if it is a valid GUID. If the property is not a GUID then
+the vendor instance ID is used instead:
+
+* `REDFISH\\VENDOR_${RedfishManufacturer}&SOFTWAREID_${RedfishSoftwareId}`
+
+Additionally, this Instance ID is added for quirk and parent matching:
+
+* `REDFISH\VENDOR_${RedfishManufacturer}&ID_${RedfishId}`
 
 Update Behavior
 ---------------
@@ -41,7 +48,7 @@ Setting Service IP Manually
 ---------------------------
 
 The service IP may not be automatically discoverable due to the absence of
-Type 0x42 entry in SMBIOS. In this case, you have to specify the service IP
+Type 42 entry in SMBIOS. In this case, you have to specify the service IP
 to RedfishUri in /etc/fwupd/redfish.conf
 
 Take HPE Gen10 for example, the service IP can be found with the following
