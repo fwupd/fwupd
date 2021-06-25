@@ -17,11 +17,14 @@ fu_test_redfish_common_func (void)
 				 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f  };
 	g_autofree gchar *ipv4 = NULL;
 	g_autofree gchar *ipv6 = NULL;
+	g_autofree gchar *maca = NULL;
 
 	ipv4 = fu_redfish_common_buffer_to_ipv4 (buf);
 	g_assert_cmpstr (ipv4, ==, "0.1.2.3");
 	ipv6 = fu_redfish_common_buffer_to_ipv6 (buf);
 	g_assert_cmpstr (ipv6, ==, "00010203:04050607:08090a0b:0c0d0e0f");
+	maca = fu_redfish_common_buffer_to_mac (buf);
+	g_assert_cmpstr (maca, ==, "00:01:02:03:04:05");
 }
 
 int

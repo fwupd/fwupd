@@ -313,6 +313,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("hailuck-kbd", srcdir="hailuck", globstr="ihex*"),
         Fuzzer("ifd", srcdir="intel-spi"),
         Fuzzer("pixart", srcdir="pixart-rf", pattern="pxi-firmware"),
+        Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
         Fuzzer("solokey"),
         Fuzzer("synaprom", srcdir="synaptics-prometheus"),
         Fuzzer("synaptics-mst"),

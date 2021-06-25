@@ -36,4 +36,16 @@ fu_redfish_common_buffer_to_ipv6 (const guint8 *buffer)
 	return g_string_free (str, FALSE);
 }
 
+gchar *
+fu_redfish_common_buffer_to_mac (const guint8 *buffer)
+{
+	GString *str = g_string_new (NULL);
+	for (guint i = 0; i < 6; i++) {
+		g_string_append_printf (str, "%02X", buffer[i]);
+		if (i != 5)
+			g_string_append (str, ":");
+	}
+	return g_string_free (str, FALSE);
+}
+
 /* vim: set noexpandtab: */

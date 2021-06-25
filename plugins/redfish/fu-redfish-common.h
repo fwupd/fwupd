@@ -15,8 +15,10 @@
 
 #define REDFISH_CONTROLLER_INTERFACE_TYPE_NETWORK_HOST	0x40
 
-#define REDFISH_INTERFACE_TYPE_USB_NEWORK		0x02
-#define REDFISH_INTERFACE_TYPE_PCI_NEWORK		0x03
+#define REDFISH_INTERFACE_TYPE_USB_NETWORK		0x02
+#define REDFISH_INTERFACE_TYPE_PCI_NETWORK		0x03
+#define REDFISH_INTERFACE_TYPE_USB_NETWORK_V2		0x04
+#define REDFISH_INTERFACE_TYPE_PCI_NETWORK_V2		0x05
 
 #define REDFISH_IP_ASSIGNMENT_TYPE_STATIC		0x00
 #define REDFISH_IP_ASSIGNMENT_TYPE_DHCP			0x02
@@ -40,3 +42,4 @@
 /* shared */
 gchar		*fu_redfish_common_buffer_to_ipv4	(const guint8	*buffer);
 gchar		*fu_redfish_common_buffer_to_ipv6	(const guint8	*buffer);
+gchar		*fu_redfish_common_buffer_to_mac	(const guint8	*buffer);

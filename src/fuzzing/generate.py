@@ -31,6 +31,7 @@ if __name__ == "__main__":
         ("ifd-no-bios.builder.xml", "ifd-no-bios.bin"),
         ("ihex.builder.xml", "ihex.hex"),
         ("pixart.builder.xml", "pixart.bin"),
+        ("redfish-smbios.builder.xml", "redfish-smbios.bin"),
         ("rmi-0x.builder.xml", "synaptics-rmi-0x.img"),
         ("rmi-10.builder.xml", "synaptics-rmi-10.img"),
         ("solokey.builder.xml", "solokey.json"),

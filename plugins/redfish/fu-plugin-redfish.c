@@ -10,6 +10,7 @@
 
 #include "fu-redfish-client.h"
 #include "fu-redfish-common.h"
+#include "fu-redfish-smbios.h"
 
 struct FuPluginData {
 	FuRedfishClient		*client;
@@ -118,6 +119,7 @@ fu_plugin_init (FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	data->client = fu_redfish_client_new ();
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_REDFISH_SMBIOS);
 }
 
 void
