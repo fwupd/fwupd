@@ -37,7 +37,7 @@ jobs:
                                   mingw64-pkg-config
                                   mingw64-glib2
                                   mingw64-gnutls
-                                  mingw64-libgusb
+                                  mingw64-libusbx
                                   mingw64-sqlite
                                   mingw64-libarchive
                                   mingw64-json-glib
