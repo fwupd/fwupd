@@ -8,6 +8,8 @@
 
 #include <fwupdplugin.h>
 
+#include "fu-redfish-request.h"
+
 #define FU_REDFISH_TYPE_BACKEND (fu_redfish_backend_get_type ())
 
 G_DECLARE_FINAL_TYPE (FuRedfishBackend, fu_redfish_backend, FU, REDFISH_BACKEND, FuBackend)
@@ -25,7 +27,5 @@ void		 fu_redfish_backend_set_https		(FuRedfishBackend	*self,
 							 gboolean		 use_https);
 void		 fu_redfish_backend_set_cacheck		(FuRedfishBackend	*self,
 							 gboolean		 cacheck);
-gboolean	 fu_redfish_backend_update		(FuRedfishBackend	*self,
-							 FuDevice		*device,
-							 GBytes			*blob_fw,
-							 GError			**error);
+const gchar	*fu_redfish_backend_get_push_uri_path	(FuRedfishBackend	*self);
+FuRedfishRequest *fu_redfish_backend_request_new	(FuRedfishBackend	*self);
