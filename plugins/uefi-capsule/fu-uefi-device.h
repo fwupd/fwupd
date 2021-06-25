@@ -79,6 +79,12 @@ typedef enum {
  * Use shim to load fwupdx64.efi when SecureBoot is turned on.
  */
 #define FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB		(1 << 5)
+/**
+ * FU_UEFI_DEVICE_FLAG_CHAINLOAD_FROM_GRUB:
+ *
+ * Use grub to chainload fwupdx64.efi.
+ */
+#define FU_UEFI_DEVICE_FLAG_CHAINLOAD_FROM_GRUB		(1 << 6)
 
 FuUefiDevice	*fu_uefi_device_new_from_guid		(const gchar	*guid);
 FuUefiDevice	*fu_uefi_device_new_from_dev		(FuDevice	*dev);

@@ -376,6 +376,10 @@ fu_plugin_uefi_capsule_load_config (FuPlugin *plugin, FuDevice *device)
 	if (!disable_shim)
 		fu_device_add_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB);
 
+	/* Use GRUB to load updates */
+	if (fu_plugin_get_config_value_boolean (plugin, "EnableGrubChainLoad"))
+		fu_device_add_private_flag (device, FU_UEFI_DEVICE_FLAG_CHAINLOAD_FROM_GRUB);
+
 	/* check if using UEFI removable path */
 	fallback_removable_path = fu_plugin_get_config_value_boolean (plugin, "FallbacktoRemovablePath");
 	if (fallback_removable_path)

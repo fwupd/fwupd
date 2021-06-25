@@ -393,6 +393,7 @@ done
 %dir %{_datadir}/fwupd/quirks.d
 %{_datadir}/fwupd/quirks.d/*.quirk
 %{_datadir}/doc/fwupd/builder/README.md
+%{_sysconfdir}/grub.d/35_fwupd
 %{_libdir}/libfwupd*.so.*
 %{_libdir}/girepository-1.0/Fwupd-2.0.typelib
 %{_libdir}/girepository-1.0/FwupdPlugin-1.0.typelib

@@ -616,10 +616,14 @@ fu_uefi_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* update the firmware before the bootloader runs */
-	if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB))
-		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
-	if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE))
-		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE;
+	if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_CHAINLOAD_FROM_GRUB)) {
+		flags = FU_UEFI_BOOTMGR_FLAG_GRUB_CHAINLOAD;
+	} else {
+		if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB))
+			flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
+		if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE))
+			flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE;
+	}
 
 	/* some legacy devices use the old name to deduplicate boot entries */
 	if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC))
@@ -867,6 +871,9 @@ fu_uefi_device_init (FuUefiDevice *self)
 	fu_device_register_private_flag (FU_DEVICE (self),
 					 FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH,
 					 "fallback-to-removable-path");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_UEFI_DEVICE_FLAG_CHAINLOAD_FROM_GRUB,
+					 "chainload-from-grub");
 }
 
 static void
