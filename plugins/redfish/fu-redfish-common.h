@@ -9,7 +9,7 @@
 #include <gio/gio.h>
 
 /* SMBIOS */
-#define REDFISH_SMBIOS_TABLE_TYPE			0x42
+#define REDFISH_SMBIOS_TABLE_TYPE			0x2a	/* 42 */
 
 #define REDFISH_PROTOCOL_REDFISH_OVER_IP		0x04
 
