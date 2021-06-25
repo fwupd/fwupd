@@ -46,6 +46,7 @@ option('plugin_intel_spi', type : 'boolean', value : false, description : 'enabl
 option('plugin_uf2', type : 'boolean', value : true, description : 'enable support for UF2')
 option('plugin_upower', type : 'boolean', value : true, description : 'enable support for UPower')
 option('plugin_powerd', type : 'boolean', value : true, description : 'enable support for powerd')
+option('plugin_kinetic_dp', type: 'boolean', value: true, description : 'enable Kinetic SST/MST DisplayPort converter support')
 option('qubes', type : 'boolean', value : false, description : 'build packages for Qubes OS')
 option('supported_build', type : 'boolean', value : false, description: 'distribution package with upstream support')
 option('systemd', type : 'boolean', value : true, description : 'enable systemd support')

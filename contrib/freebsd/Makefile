@@ -50,6 +50,7 @@ MESON_ARGS=	-Dgudev=false \
 		-Dplugin_synaptics_mst=false \
 		-Dplugin_synaptics_rmi=false \
 		-Dplugin_realtek_mst=false \
+		-Dplugin_kinetic_dp=false \
 		-Dplugin_thunderbolt=false \
 		-Dplugin_tpm=false \
 		-Dpolkit=false \
