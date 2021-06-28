@@ -1789,7 +1789,7 @@ fu_udev_device_get_siblings_with_subsystem (FuUdevDevice *self,
  * Get a list of devices that are children of self and have the
  * provided subsystem.
  *
- * Returns (element-type FuUdevDevice) (transfer full): devices
+ * Returns: (element-type FuUdevDevice) (transfer full): devices
  *
  * Since: 1.6.2
  */
