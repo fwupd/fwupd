@@ -54,7 +54,6 @@ REPOSITORY_NAME=$(echo "${GITHUB_REPOSITORY}" | awk -F / '{print $2}')
 sed -i .old "s/GH_TAGNAME=.*$/GH_TAGNAME=\t${GITHUB_SHA}/" Makefile
 sed -i .old "s/GH_ACCOUNT=.*$/GH_ACCOUNT=\t${GITHUB_REPOSITORY_OWNER}/" Makefile
 sed -i .old "s/DISTVERSION=.*$/DISTVERSION=\t${GITHUB_TAG}/" Makefile
-sed -i .old "s/-Dplugin_synaptics_mst=false/-Dplugin_synaptics_mst=false -Dplugin_realtek_mst=false/" Makefile
 make makesum
 make clean
 make
