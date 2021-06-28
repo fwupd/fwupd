@@ -605,7 +605,7 @@ flash_iface_write (FuRealtekMstDevice *self, guint32 address,
 		if (!mst_write_register (self, REG_WRITE_OPCODE, CMD_OPCODE_WRITE, error))
 			return FALSE;
 		/* write length */
-		if (!mst_write_register (self, REG_WRITE_LEN, chunk_size, error))
+		if (!mst_write_register (self, REG_WRITE_LEN, chunk_size - 1, error))
 			return FALSE;
 		/* target address */
 		if (!mst_write_register (self, REG_CMD_ADDR_HI, chunk_address >> 16, error))
