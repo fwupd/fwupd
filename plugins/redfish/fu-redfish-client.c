@@ -64,7 +64,7 @@ fu_redfish_client_fetch_data (FuRedfishClient *self, const gchar *uri_path, GErr
 	/* create URI */
 #ifdef HAVE_LIBCURL_7_62_0
 	uri = curl_url ();
-	curl_url_set (uri, CURLU_DEFAULT_SCHEME, self->use_https ? "https" : "http", 0);
+	curl_url_set (uri, CURLUPART_SCHEME, self->use_https ? "https" : "http", 0);
 	curl_url_set (uri, CURLUPART_PATH, uri_path, 0);
 	curl_url_set (uri, CURLUPART_HOST, self->hostname, 0);
 	curl_url_set (uri, CURLUPART_PORT, port, 0);
@@ -625,7 +625,7 @@ fu_redfish_client_update (FuRedfishClient *self, FuDevice *device, GBytes *blob_
 
 	/* create URI */
 #ifdef HAVE_LIBCURL_7_62_0
-	curl_url_set (uri, CURLU_DEFAULT_SCHEME, self->use_https ? "https" : "http", 0);
+	curl_url_set (uri, CURLUPART_SCHEME, self->use_https ? "https" : "http", 0);
 	curl_url_set (uri, CURLUPART_PATH, self->push_uri_path, 0);
 	curl_url_set (uri, CURLUPART_HOST, self->hostname, 0);
 	curl_url_set (uri, CURLUPART_PORT, port, 0);
