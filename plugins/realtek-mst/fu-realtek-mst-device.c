@@ -337,6 +337,8 @@ fu_realtek_mst_device_probe (FuDevice *device, GError **error)
 					       FU_UDEV_DEVICE (device),
 					       "name",
 					       NULL));
+	fu_device_add_instance_id (device, instance_id);
+
 	hardware_family = fu_context_get_hwid_value (context, FU_HWIDS_KEY_FAMILY);
 	family_instance_id = g_strdup_printf ("%s&FAMILY_%s", instance_id, hardware_family);
 	fu_device_add_instance_id_full (device, family_instance_id,
