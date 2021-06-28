@@ -122,6 +122,7 @@ fu_redfish_client_coldplug_member (FuRedfishClient *self,
 {
 	g_autoptr(FuDevice) dev = NULL;
 	const gchar *guid = NULL;
+	g_autofree gchar *guid_lower = NULL;
 	g_autofree gchar *id = NULL;
 
 	if (json_object_has_member (member, "SoftwareId")) {
@@ -146,7 +147,8 @@ fu_redfish_client_coldplug_member (FuRedfishClient *self,
 	fu_device_set_id (dev, id);
 	fu_device_add_protocol (dev, "org.dmtf.redfish");
 
-	fu_device_add_guid (dev, guid);
+	guid_lower = g_ascii_strdown (guid, -1);
+	fu_device_add_guid (dev, guid_lower);
 	if (json_object_has_member (member, "Name"))
 		fu_device_set_name (dev, json_object_get_string_member (member, "Name"));
 	fu_device_set_summary (dev, "Redfish device");
