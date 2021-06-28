@@ -49,6 +49,7 @@ MESON_ARGS=	-Dgudev=false \
 		-Dplugin_redfish=false \
 		-Dplugin_synaptics_mst=false \
 		-Dplugin_synaptics_rmi=false \
+		-Dplugin_realtek_mst=false \
 		-Dplugin_thunderbolt=false \
 		-Dplugin_tpm=false \
 		-Dpolkit=false \
