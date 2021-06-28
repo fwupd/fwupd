@@ -250,6 +250,13 @@ fu_efivar_get_data_impl (const gchar *guid, const gchar *name, guint8 **data,
 
 	/* read out the data */
 	data_sz_tmp = sz - sizeof(attr_tmp);
+	if (data_sz_tmp == 0) {
+		g_set_error_literal (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "no data to read");
+		return FALSE;
+	}
 	if (data_sz != NULL)
 		*data_sz = data_sz_tmp;
 	if (data != NULL) {
