@@ -35,6 +35,22 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.5.11" date="2021-06-29">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add support for the Dell dock USB4 module</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add Redfish GUIDs lowercase to match all the other plugins</li>
+          <li>Fix a Redfish download warning for newer versions of libcurl</li>
+          <li>Fix regression in enumerating the VLI PD device</li>
+          <li>Fix vendor-directory remotes for firmware with an artifact section</li>
+          <li>Fix Wacom USB Legacy Bluetooth module version number</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.10" date="2021-06-14">
       <description>
         <p>This release adds the following features:</p>
