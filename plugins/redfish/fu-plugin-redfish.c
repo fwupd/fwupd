@@ -8,13 +8,13 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-redfish-client.h"
+#include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-network.h"
 #include "fu-redfish-smbios.h"
 
 struct FuPluginData {
-	FuRedfishClient		*client;
+	FuRedfishBackend	*backend;
 };
 
 gboolean
@@ -26,19 +26,19 @@ fu_plugin_update (FuPlugin *plugin,
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 
-	return fu_redfish_client_update (data->client, device, blob_fw, error);
+	return fu_redfish_backend_update (data->backend, device, blob_fw, error);
 }
 
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	GPtrArray *devices;
+	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get the list of devices */
-	if (!fu_redfish_client_coldplug (data->client, error))
+	if (!fu_backend_coldplug (FU_BACKEND (data->backend), error))
 		return FALSE;
-	devices = fu_redfish_client_get_devices (data->client);
+	devices = fu_backend_get_devices (FU_BACKEND (data->backend));
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index (devices, i);
 		fu_plugin_device_add (plugin, device);
@@ -93,8 +93,8 @@ fu_redfish_plugin_discover_uefi_credentials (FuPlugin *plugin, GError **error)
 			     userpass_safe);
 		return FALSE;
 	}
-	fu_redfish_client_set_username (data->client, split[0]);
-	fu_redfish_client_set_password (data->client, split[1]);
+	fu_redfish_backend_set_username (data->backend, split[0]);
+	fu_redfish_backend_set_password (data->backend, split[1]);
 	return TRUE;
 }
 
@@ -145,8 +145,8 @@ fu_redfish_plugin_discover_smbios_table (FuPlugin *plugin, GError **error)
 				     "no hostname");
 		return FALSE;
 	}
-	fu_redfish_client_set_hostname (data->client, hostname);
-	fu_redfish_client_set_port (data->client, fu_redfish_smbios_get_port (redfish_smbios));
+	fu_redfish_backend_set_hostname (data->backend, hostname);
+	fu_redfish_backend_set_port (data->backend, fu_redfish_smbios_get_port (redfish_smbios));
 	return TRUE;
 }
 
@@ -176,10 +176,10 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		guint64 port;
 
 		if (g_str_has_prefix (redfish_uri, "https://")) {
-			fu_redfish_client_set_https (data->client, TRUE);
+			fu_redfish_backend_set_https (data->backend, TRUE);
 			ip_str = redfish_uri + strlen ("https://");
 		} else if (g_str_has_prefix (redfish_uri, "http://")) {
-			fu_redfish_client_set_https (data->client, FALSE);
+			fu_redfish_backend_set_https (data->backend, FALSE);
 			ip_str = redfish_uri + strlen ("http://");
 		} else {
 			g_set_error_literal (error,
@@ -190,7 +190,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		}
 
 		split = g_strsplit (ip_str, ":", 2);
-		fu_redfish_client_set_hostname (data->client, split[0]);
+		fu_redfish_backend_set_hostname (data->backend, split[0]);
 		port = g_ascii_strtoull (split[1], NULL, 10);
 		if (port == 0) {
 			g_set_error_literal (error,
@@ -199,27 +199,28 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 					     "no port specified");
 			return FALSE;
 		}
-		fu_redfish_client_set_port (data->client, port);
+		fu_redfish_backend_set_port (data->backend, port);
 	}
 	username = fu_plugin_get_config_value (plugin, "Username");
 	if (username != NULL)
-		fu_redfish_client_set_username (data->client, username);
+		fu_redfish_backend_set_username (data->backend, username);
 	password = fu_plugin_get_config_value (plugin, "Password");
 	if (password != NULL)
-		fu_redfish_client_set_password (data->client, password);
+		fu_redfish_backend_set_password (data->backend, password);
 	ca_check_str = fu_plugin_get_config_value (plugin, "CACheck");
 	if (ca_check_str != NULL) {
 		gboolean ca_check = fu_plugin_get_config_value_boolean (plugin, "CACheck");
-		fu_redfish_client_set_cacheck (data->client, ca_check);
+		fu_redfish_backend_set_cacheck (data->backend, ca_check);
 	}
-	return fu_redfish_client_setup (data->client, error);
+	return fu_backend_setup (FU_BACKEND (data->backend), error);
 }
 
 void
 fu_plugin_init (FuPlugin *plugin)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
-	data->client = fu_redfish_client_new ();
+	data->backend = fu_redfish_backend_new (ctx);
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_REDFISH_SMBIOS);
 }
@@ -228,5 +229,5 @@ void
 fu_plugin_destroy (FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	g_object_unref (data->client);
+	g_object_unref (data->backend);
 }

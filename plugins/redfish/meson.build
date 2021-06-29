@@ -8,7 +8,7 @@ shared_module('fu_plugin_redfish',
   fu_hash,
   sources : [
     'fu-plugin-redfish.c',
-    'fu-redfish-client.c',
+    'fu-redfish-backend.c',
     'fu-redfish-common.c',     # fuzzing
     'fu-redfish-network.c',
     'fu-redfish-smbios.c',     # fuzzing
@@ -41,7 +41,7 @@ if get_option('tests')
     fu_hash,
     sources : [
       'fu-self-test.c',
-      'fu-redfish-client.c',
+      'fu-redfish-backend.c',
       'fu-redfish-common.c',
       'fu-redfish-network.c',
       'fu-redfish-smbios.c',

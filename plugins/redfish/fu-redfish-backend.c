@@ -6,19 +6,18 @@
 
 #include "config.h"
 
-#include <json-glib/json-glib.h>
 #include <curl/curl.h>
 #include <string.h>
 
 #include <fwupdplugin.h>
 
-#include "fu-redfish-client.h"
+#include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-smbios.h"
 
-struct _FuRedfishClient
+struct _FuRedfishBackend
 {
-	GObject			 parent_instance;
+	FuBackend		 parent_instance;
 	CURL			*curl;
 	gchar			*hostname;
 	guint			 port;
@@ -26,10 +25,9 @@ struct _FuRedfishClient
 	gchar			*push_uri_path;
 	gboolean		 use_https;
 	gboolean		 cacheck;
-	GPtrArray		*devices;
 };
 
-G_DEFINE_TYPE (FuRedfishClient, fu_redfish_client, G_TYPE_OBJECT)
+G_DEFINE_TYPE (FuRedfishBackend, fu_redfish_backend, FU_TYPE_BACKEND)
 
 #ifdef HAVE_LIBCURL_7_62_0
 typedef gchar curlptr;
@@ -38,7 +36,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
 #endif
 
 static size_t
-fu_redfish_client_fetch_data_cb (char *ptr, size_t size, size_t nmemb, void *userdata)
+fu_redfish_backend_fetch_data_cb (char *ptr, size_t size, size_t nmemb, void *userdata)
 {
 	GByteArray *buf = (GByteArray *) userdata;
 	gsize realsize = size * nmemb;
@@ -47,7 +45,7 @@ fu_redfish_client_fetch_data_cb (char *ptr, size_t size, size_t nmemb, void *use
 }
 
 static GBytes *
-fu_redfish_client_fetch_data (FuRedfishClient *self, const gchar *uri_path, GError **error)
+fu_redfish_backend_fetch_data (FuRedfishBackend *self, const gchar *uri_path, GError **error)
 {
 	CURLcode res;
 	g_autofree gchar *port = g_strdup_printf ("%u", self->port);
@@ -86,7 +84,7 @@ fu_redfish_client_fetch_data (FuRedfishClient *self, const gchar *uri_path, GErr
 		return NULL;
 	}
 #endif
-	curl_easy_setopt (self->curl, CURLOPT_WRITEFUNCTION, fu_redfish_client_fetch_data_cb);
+	curl_easy_setopt (self->curl, CURLOPT_WRITEFUNCTION, fu_redfish_backend_fetch_data_cb);
 	curl_easy_setopt (self->curl, CURLOPT_WRITEDATA, buf);
 	res = curl_easy_perform (self->curl);
 	if (res != CURLE_OK) {
@@ -116,11 +114,11 @@ fu_redfish_client_fetch_data (FuRedfishClient *self, const gchar *uri_path, GErr
 }
 
 static gboolean
-fu_redfish_client_coldplug_member (FuRedfishClient *self,
-				   JsonObject *member,
-				   GError **error)
+fu_redfish_backend_coldplug_member (FuRedfishBackend *self,
+				    JsonObject *member,
+				    GError **error)
 {
-	g_autoptr(FuDevice) dev = NULL;
+	g_autoptr(FuDevice) dev = fu_device_new ();
 	const gchar *guid = NULL;
 	g_autofree gchar *guid_lower = NULL;
 	g_autofree gchar *id = NULL;
@@ -139,8 +137,6 @@ fu_redfish_client_coldplug_member (FuRedfishClient *self,
 	/* skip the devices without guid */
 	if (guid == NULL)
 		return TRUE;
-
-	dev = fu_device_new ();
 
 	id = g_strdup_printf ("Redfish-Inventory-%s",
 			      json_object_get_string_member (member, "Id"));
@@ -167,14 +163,14 @@ fu_redfish_client_coldplug_member (FuRedfishClient *self,
 	}
 
 	/* success */
-	g_ptr_array_add (self->devices, g_steal_pointer (&dev));
+	fu_backend_device_added (FU_BACKEND (self), dev);
 	return TRUE;
 }
 
 static gboolean
-fu_redfish_client_coldplug_collection (FuRedfishClient *self,
-				       JsonObject *collection,
-				       GError **error)
+fu_redfish_backend_coldplug_collection (FuRedfishBackend *self,
+					JsonObject *collection,
+					GError **error)
 {
 	JsonArray *members;
 	JsonNode *node_root;
@@ -198,7 +194,7 @@ fu_redfish_client_coldplug_collection (FuRedfishClient *self,
 		}
 
 		/* try to connect */
-		blob = fu_redfish_client_fetch_data (self, member_uri, error);
+		blob = fu_redfish_backend_fetch_data (self, member_uri, error);
 		if (blob == NULL)
 			return FALSE;
 
@@ -228,16 +224,16 @@ fu_redfish_client_coldplug_collection (FuRedfishClient *self,
 		}
 
 		/* Create the device for the member */
-		if (!fu_redfish_client_coldplug_member (self, member, error))
+		if (!fu_redfish_backend_coldplug_member (self, member, error))
 			return FALSE;
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_redfish_client_coldplug_inventory (FuRedfishClient *self,
-				      JsonObject *inventory,
-				      GError **error)
+fu_redfish_backend_coldplug_inventory (FuRedfishBackend *self,
+				       JsonObject *inventory,
+				       GError **error)
 {
 	g_autoptr(JsonParser) parser = json_parser_new ();
 	g_autoptr(GBytes) blob = NULL;
@@ -263,7 +259,7 @@ fu_redfish_client_coldplug_inventory (FuRedfishClient *self,
 	}
 
 	/* try to connect */
-	blob = fu_redfish_client_fetch_data (self, collection_uri, error);
+	blob = fu_redfish_backend_fetch_data (self, collection_uri, error);
 	if (blob == NULL)
 		return FALSE;
 
@@ -292,12 +288,13 @@ fu_redfish_client_coldplug_inventory (FuRedfishClient *self,
 		return FALSE;
 	}
 
-	return fu_redfish_client_coldplug_collection (self, collection, error);
+	return fu_redfish_backend_coldplug_collection (self, collection, error);
 }
 
-gboolean
-fu_redfish_client_coldplug (FuRedfishClient *self, GError **error)
+static gboolean
+fu_redfish_backend_coldplug (FuBackend *backend, GError **error)
 {
+	FuRedfishBackend *self = FU_REDFISH_BACKEND (backend);
 	JsonNode *node_root;
 	JsonObject *obj_root = NULL;
 	g_autoptr(GBytes) blob = NULL;
@@ -313,7 +310,7 @@ fu_redfish_client_coldplug (FuRedfishClient *self, GError **error)
 	}
 
 	/* try to connect */
-	blob = fu_redfish_client_fetch_data (self, self->update_uri_path, error);
+	blob = fu_redfish_backend_fetch_data (self, self->update_uri_path, error);
 	if (blob == NULL)
 		return FALSE;
 
@@ -365,11 +362,11 @@ fu_redfish_client_coldplug (FuRedfishClient *self, GError **error)
 	}
 	if (json_object_has_member (obj_root, "FirmwareInventory")) {
 		JsonObject *tmp = json_object_get_object_member (obj_root, "FirmwareInventory");
-		return fu_redfish_client_coldplug_inventory (self, tmp, error);
+		return fu_redfish_backend_coldplug_inventory (self, tmp, error);
 	}
 	if (json_object_has_member (obj_root, "SoftwareInventory")) {
 		JsonObject *tmp = json_object_get_object_member (obj_root, "SoftwareInventory");
-		return fu_redfish_client_coldplug_inventory (self, tmp, error);
+		return fu_redfish_backend_coldplug_inventory (self, tmp, error);
 	}
 	return TRUE;
 }
@@ -377,7 +374,7 @@ fu_redfish_client_coldplug (FuRedfishClient *self, GError **error)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curl_mime, curl_mime_free)
 
 gboolean
-fu_redfish_client_update (FuRedfishClient *self, FuDevice *device, GBytes *blob_fw,
+fu_redfish_backend_update (FuRedfishBackend *self, FuDevice *device, GBytes *blob_fw,
 			  GError **error)
 {
 	CURLcode res;
@@ -466,9 +463,10 @@ fu_redfish_client_update (FuRedfishClient *self, FuDevice *device, GBytes *blob_
 	return TRUE;
 }
 
-gboolean
-fu_redfish_client_setup (FuRedfishClient *self, GError **error)
+static gboolean
+fu_redfish_backend_setup (FuBackend *backend, GError **error)
 {
+	FuRedfishBackend *self = FU_REDFISH_BACKEND (backend);
 	JsonNode *node_root;
 	JsonObject *obj_root = NULL;
 	JsonObject *obj_update_service = NULL;
@@ -507,7 +505,7 @@ fu_redfish_client_setup (FuRedfishClient *self, GError **error)
 		g_debug ("Port:     %u", self->port);
 
 	/* try to connect */
-	blob = fu_redfish_client_fetch_data (self, "/redfish/v1/", error);
+	blob = fu_redfish_backend_fetch_data (self, "/redfish/v1/", error);
 	if (blob == NULL)
 		return FALSE;
 
@@ -567,73 +565,68 @@ fu_redfish_client_setup (FuRedfishClient *self, GError **error)
 	return TRUE;
 }
 
-GPtrArray *
-fu_redfish_client_get_devices (FuRedfishClient *self)
-{
-	return self->devices;
-}
-
 void
-fu_redfish_client_set_hostname (FuRedfishClient *self, const gchar *hostname)
+fu_redfish_backend_set_hostname (FuRedfishBackend *self, const gchar *hostname)
 {
 	g_free (self->hostname);
 	self->hostname = g_strdup (hostname);
 }
 
 void
-fu_redfish_client_set_port (FuRedfishClient *self, guint port)
+fu_redfish_backend_set_port (FuRedfishBackend *self, guint port)
 {
 	self->port = port;
 }
 
 void
-fu_redfish_client_set_https (FuRedfishClient *self, gboolean use_https)
+fu_redfish_backend_set_https (FuRedfishBackend *self, gboolean use_https)
 {
 	self->use_https = use_https;
 }
 
 void
-fu_redfish_client_set_cacheck (FuRedfishClient *self, gboolean cacheck)
+fu_redfish_backend_set_cacheck (FuRedfishBackend *self, gboolean cacheck)
 {
 	self->cacheck = cacheck;
 }
 
 void
-fu_redfish_client_set_username (FuRedfishClient *self, const gchar *username)
+fu_redfish_backend_set_username (FuRedfishBackend *self, const gchar *username)
 {
 	curl_easy_setopt (self->curl, CURLOPT_USERNAME, username);
 }
 
 void
-fu_redfish_client_set_password (FuRedfishClient *self, const gchar *password)
+fu_redfish_backend_set_password (FuRedfishBackend *self, const gchar *password)
 {
 	curl_easy_setopt (self->curl, CURLOPT_PASSWORD, password);
 }
 
 static void
-fu_redfish_client_finalize (GObject *object)
+fu_redfish_backend_finalize (GObject *object)
 {
-	FuRedfishClient *self = FU_REDFISH_CLIENT (object);
+	FuRedfishBackend *self = FU_REDFISH_BACKEND (object);
 	if (self->curl != NULL)
 		curl_easy_cleanup (self->curl);
 	g_free (self->update_uri_path);
 	g_free (self->push_uri_path);
 	g_free (self->hostname);
-	g_ptr_array_unref (self->devices);
-	G_OBJECT_CLASS (fu_redfish_client_parent_class)->finalize (object);
+	G_OBJECT_CLASS (fu_redfish_backend_parent_class)->finalize (object);
 }
 
 static void
-fu_redfish_client_class_init (FuRedfishClientClass *klass)
+fu_redfish_backend_class_init (FuRedfishBackendClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	object_class->finalize = fu_redfish_client_finalize;
+	FuBackendClass *klass_backend = FU_BACKEND_CLASS (klass);
+	klass_backend->coldplug = fu_redfish_backend_coldplug;
+	klass_backend->setup = fu_redfish_backend_setup;
+	object_class->finalize = fu_redfish_backend_finalize;
 }
 
 static void
-fu_redfish_client_init (FuRedfishClient *self)
+fu_redfish_backend_init (FuRedfishBackend *self)
 {
-	self->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	self->curl = curl_easy_init ();
 
 	/* since DSP0266 makes Basic Authorization a requirement,
@@ -641,12 +634,11 @@ fu_redfish_client_init (FuRedfishClient *self)
 	curl_easy_setopt (self->curl, CURLOPT_HTTPAUTH, (glong) CURLAUTH_BASIC);
 }
 
-FuRedfishClient *
-fu_redfish_client_new (void)
+FuRedfishBackend *
+fu_redfish_backend_new (FuContext *ctx)
 {
-	FuRedfishClient *self;
-	self = g_object_new (REDFISH_TYPE_CLIENT, NULL);
-	return FU_REDFISH_CLIENT (self);
+	return FU_REDFISH_BACKEND (g_object_new (FU_REDFISH_TYPE_BACKEND,
+						 "name", "redfish",
+						 "context", ctx,
+						 NULL));
 }
-
-/* vim: set noexpandtab: */
