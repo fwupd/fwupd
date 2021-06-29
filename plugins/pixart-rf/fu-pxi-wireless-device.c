@@ -282,7 +282,6 @@ fu_pxi_wireless_device_write_payload (FuDevice *device, FuChunk *chk, GError **e
 	guint8 status = 0x0;
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new ();
 	g_autoptr(GByteArray) receiver_cmd = g_byte_array_new ();
-	g_autoptr(GTimer) timer = g_timer_new ();
 
 	/* proxy */
 	parent = fu_pxi_wireless_device_get_parent (device, error);
@@ -574,7 +573,6 @@ fu_pxi_wireless_device_write_firmware (FuDevice *device,
 	FuPxiWirelessDevice *self = FU_PXI_WIRELESS_DEVICE (device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	/* get the default image */
 	fw = fu_firmware_get_bytes (firmware, error);

@@ -306,7 +306,6 @@ fu_pxi_receiver_device_write_payload (FuDevice *device, FuChunk *chk, GError **e
 	guint8 status = 0x0;
 	g_autoptr(GByteArray) ota_cmd = g_byte_array_new ();
 	g_autoptr(GByteArray) receiver_device_cmd = g_byte_array_new ();
-	g_autoptr(GTimer) timer = g_timer_new ();
 
 	/* ota write payload command */
 	fu_byte_array_append_uint8 (ota_cmd, fu_chunk_get_data_sz (chk));			/* ota command length */
