@@ -26,7 +26,7 @@ Rts54RegisterAddrLen = 0x04
 [USB\VID_0BDA&PID_5420]
 Plugin = rts54hub
 GType = FuRts54HubDevice
-FirmwareSizeMin = 0x20000
+FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x70000
 Children = FuRts54hubRtd21xxBackground|USB\VID_0BDA&PID_5420&I2C_01
 [USB\VID_0BDA&PID_5420&I2C_01]
