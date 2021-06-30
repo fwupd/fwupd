@@ -1992,6 +1992,40 @@ fu_device_set_metadata_integer (FuDevice *self, const gchar *key, guint value)
 	fu_device_set_metadata (self, key, tmp);
 }
 
+/* ensure the name does not have the vendor name as the prefix */
+static void
+fu_device_fixup_vendor_name (FuDevice *self)
+{
+	const gchar *name = fu_device_get_name (self);
+	const gchar *vendor = fu_device_get_vendor (self);
+	if (name != NULL && vendor != NULL) {
+		if (g_str_has_prefix (name, vendor)) {
+			gsize vendor_len = strlen (vendor);
+			g_autofree gchar *name1 = g_strdup (name + vendor_len);
+			g_autofree gchar *name2 = fu_common_strstrip (name1);
+			g_debug ("removing vendor prefix of '%s' from '%s'",
+				 vendor, name);
+			fwupd_device_set_name (FWUPD_DEVICE (self), name2);
+		}
+	}
+}
+
+/**
+ * fu_device_set_vendor:
+ * @self: a #FuDevice
+ * @vendor: a device vendor
+ *
+ * Sets the vendor name on the device.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_device_set_vendor (FuDevice *self, const gchar *vendor)
+{
+	fwupd_device_set_vendor (FWUPD_DEVICE (self), vendor);
+	fu_device_fixup_vendor_name (self);
+}
+
 /**
  * fu_device_set_name:
  * @self: a #FuDevice
@@ -2029,6 +2063,7 @@ fu_device_set_name (FuDevice *self, const gchar *value)
 	g_strdelimit (new->str, "_", ' ');
 	fu_common_string_replace (new, "(TM)", "™");
 	fwupd_device_set_name (FWUPD_DEVICE (self), new->str);
+	fu_device_fixup_vendor_name (self);
 }
 
 /**
