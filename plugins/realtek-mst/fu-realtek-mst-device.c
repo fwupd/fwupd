@@ -107,6 +107,7 @@ struct dual_bank_info {
 struct _FuRealtekMstDevice {
 	FuI2cDevice		 parent_instance;
 	gchar			*dp_aux_dev_name;
+	gchar *dp_card_kernel_name;
 	enum flash_bank		 active_bank;
 };
 
@@ -122,6 +123,8 @@ fu_realtek_mst_device_set_quirk_kv (FuDevice *device,
 
 	if (g_strcmp0 (key, "RealtekMstDpAuxName") == 0) {
 		self->dp_aux_dev_name = g_strdup (value);
+	} else if (g_strcmp0(key, "RealtekMstDrmCardKernelName") == 0) {
+		self->dp_card_kernel_name = g_strdup(value);
 	} else {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
 			     "unsupported quirk key: %s", key);
@@ -130,13 +133,41 @@ fu_realtek_mst_device_set_quirk_kv (FuDevice *device,
 	return TRUE;
 }
 
-static gboolean
-fu_realtek_mst_device_override_dev (FuRealtekMstDevice *self, GError **error)
+static FuUdevDevice *
+locate_i2c_bus(const GPtrArray *i2c_devices)
 {
-	gboolean found = FALSE;
+	for (guint i = 0; i < i2c_devices->len; i++) {
+		FuUdevDevice *i2c_device = g_ptr_array_index(i2c_devices, i);
+		FuUdevDevice *bus_device;
+		g_autoptr(GPtrArray) i2c_buses =
+		    fu_udev_device_get_children_with_subsystem(i2c_device, "i2c-dev");
+
+		if (i2c_buses->len == 0) {
+			g_debug("no i2c-dev found under %s",
+				fu_udev_device_get_sysfs_path(i2c_device));
+			continue;
+		}
+		if (i2c_buses->len > 1) {
+			g_debug("ignoring %u additional i2c-dev under %s",
+				i2c_buses->len - 1,
+				fu_udev_device_get_sysfs_path(i2c_device));
+		}
+
+		bus_device = g_object_ref(g_ptr_array_index(i2c_buses, 0));
+		g_debug("Found I2C bus at %s, using this device",
+			fu_udev_device_get_sysfs_path(bus_device));
+		return bus_device;
+	}
+	return NULL;
+}
+
+static gboolean
+fu_realtek_mst_device_use_aux_dev(FuRealtekMstDevice *self, GError **error)
+{
 	g_autoptr(GUdevClient) udev_client = g_udev_client_new (NULL);
 	g_autoptr(GUdevEnumerator) udev_enumerator = g_udev_enumerator_new (udev_client);
 	g_autoptr(GList) matches = NULL;
+	FuUdevDevice *bus_device = NULL;
 
 	g_udev_enumerator_add_match_subsystem (udev_enumerator, "drm_dp_aux_dev");
 	g_udev_enumerator_add_match_sysfs_attr (udev_enumerator, "name",
@@ -151,40 +182,17 @@ fu_realtek_mst_device_override_dev (FuRealtekMstDevice *self, GError **error)
 		g_autoptr(FuUdevDevice) device = fu_udev_device_new (element->data);
 		g_autoptr(GPtrArray) i2c_devices = NULL;
 
-		if (found) {
+		if (bus_device != NULL) {
 			g_debug ("Ignoring additional aux device %s",
 				 fu_udev_device_get_sysfs_path (device));
 			continue;
 		}
 
 		i2c_devices = fu_udev_device_get_siblings_with_subsystem (device, "i2c");
-		for (guint i = 0; i < i2c_devices->len; i++) {
-			FuUdevDevice *i2c_device = g_ptr_array_index (i2c_devices, i);
-			FuUdevDevice *bus_device;
-			g_autoptr(GPtrArray) i2c_buses =
-				fu_udev_device_get_children_with_subsystem (i2c_device, "i2c-dev");
-
-			if (i2c_buses->len == 0) {
-				g_debug ("no i2c-dev found under %s",
-					 fu_udev_device_get_sysfs_path (i2c_device));
-				continue;
-			}
-			if (i2c_buses->len > 1) {
-				g_debug ("ignoring %u additional i2c-dev under %s",
-					 i2c_buses->len - 1,
-					 fu_udev_device_get_sysfs_path (i2c_device));
-			}
-
-			bus_device = g_ptr_array_index (i2c_buses, 0);
-			g_debug ("Found I2C bus at %s, using this device",
-				 fu_udev_device_get_sysfs_path (bus_device));
-			fu_udev_device_set_dev (FU_UDEV_DEVICE (self),
-						fu_udev_device_get_dev (bus_device));
-			found = TRUE;
-		}
+		bus_device = locate_i2c_bus(i2c_devices);
 	}
 
-	if (!found) {
+	if (bus_device == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_SUPPORTED,
@@ -192,6 +200,47 @@ fu_realtek_mst_device_override_dev (FuRealtekMstDevice *self, GError **error)
 			     self->dp_aux_dev_name);
 		return FALSE;
 	}
+	fu_udev_device_set_dev(FU_UDEV_DEVICE(self), fu_udev_device_get_dev(bus_device));
+	return TRUE;
+}
+
+static gboolean
+fu_realtek_mst_device_use_drm_card(FuRealtekMstDevice *self, GError **error)
+{
+	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL);
+	g_autoptr(GUdevEnumerator) enumerator = g_udev_enumerator_new(udev_client);
+	g_autoptr(GList) drm_devices = NULL;
+	g_autoptr(FuUdevDevice) bus_device = NULL;
+
+	/* from a drm device with the given name, find an i2c device under it
+	 * and in turn an i2c-dev device representing the DPDDC bus */
+	g_debug("search for DRM device with name %s", self->dp_card_kernel_name);
+	g_udev_enumerator_add_match_subsystem(enumerator, "drm");
+	g_udev_enumerator_add_match_name(enumerator, self->dp_card_kernel_name);
+	drm_devices = g_udev_enumerator_execute(enumerator);
+	for (GList *element = drm_devices; element != NULL; element = element->next) {
+		g_autoptr(FuUdevDevice) drm_device = fu_udev_device_new(element->data);
+		g_autoptr(GPtrArray) i2c_devices = NULL;
+
+		if (bus_device != NULL) {
+			g_debug("Ignoring additional drm device %s",
+				fu_udev_device_get_sysfs_path(drm_device));
+			continue;
+		}
+
+		i2c_devices = fu_udev_device_get_children_with_subsystem(drm_device, "i2c");
+		bus_device = locate_i2c_bus(i2c_devices);
+	}
+
+	if (bus_device == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "did not find an i2c-dev associated with drm device %s",
+			    self->dp_card_kernel_name);
+		return FALSE;
+	}
+	fu_udev_device_set_dev(FU_UDEV_DEVICE(self), fu_udev_device_get_dev(bus_device));
 	return TRUE;
 }
 
@@ -345,24 +394,31 @@ fu_realtek_mst_device_probe (FuDevice *device, GError **error)
 
 	/* having loaded quirks, check this device is supported */
 	quirk_name = fu_device_get_name (device);
-	if (g_strcmp0 (quirk_name, "RTD2142") != 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "only RTD2142 is supported");
+	if (g_strcmp0(quirk_name, "RTD2142") != 0 && g_strcmp0(quirk_name, "RTD2141B") != 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "device name %s is not supported",
+			    quirk_name);
 		return FALSE;
 	}
 
-	if (self->dp_aux_dev_name == NULL) {
-		g_set_error_literal (error, FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "RealtekMstDpAuxName must be specified");
+	if (self->dp_aux_dev_name != NULL) {
+		if (!fu_realtek_mst_device_use_aux_dev(self, error))
+			return FALSE;
+	} else if (self->dp_card_kernel_name != NULL) {
+		if (!fu_realtek_mst_device_use_drm_card(self, error))
+			return FALSE;
+	} else {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "one of RealtekMstDpAuxName or RealtekMstDrmCardKernelName"
+				    " must be specified");
 		return FALSE;
 	}
 
 	/* locate its sibling i2c device and use that instead */
-	if (!fu_realtek_mst_device_override_dev (self, error))
-		return FALSE;
 
 	/* FuI2cDevice */
 	if (!FU_DEVICE_CLASS (fu_realtek_mst_device_parent_class)->probe (device, error))
@@ -843,6 +899,7 @@ fu_realtek_mst_device_finalize (GObject *object)
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE (object);
 	g_free (self->dp_aux_dev_name);
+	g_free(self->dp_card_kernel_name);
 	G_OBJECT_CLASS (fu_realtek_mst_device_parent_class)->finalize (object);
 }
 
