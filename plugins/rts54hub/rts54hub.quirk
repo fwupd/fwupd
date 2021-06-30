@@ -27,13 +27,14 @@ Rts54RegisterAddrLen = 0x04
 Plugin = rts54hub
 GType = FuRts54HubDevice
 FirmwareSizeMin = 0x10000
-FirmwareSizeMax = 0x70000
+FirmwareSizeMax = 0x40000
 Children = FuRts54hubRtd21xxBackground|USB\VID_0BDA&PID_5420&I2C_01
 [USB\VID_0BDA&PID_5420&I2C_01]
 Plugin = rts54hub
 Name = Honeybuns Dock
 Flags = updatable
-FirmwareSize = 0x70000
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x90000
 Rts54TargetAddr = 0x20
 Rts54I2cSpeed = 0x2
 Rts54RegisterAddrLen = 0x04
