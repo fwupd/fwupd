@@ -237,6 +237,25 @@ fu_device_open_refcount_func (void)
 }
 
 static void
+fu_device_name_func (void)
+{
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+
+	/* vendor then name */
+	fu_device_set_vendor (device1, "Hughski");
+	fu_device_set_name (device1, "Hughski ColorHug(TM)_Pro");
+	g_assert_cmpstr (fu_device_get_vendor (device1), ==, "Hughski");
+	g_assert_cmpstr (fu_device_get_name (device1), ==, "ColorHug™ Pro");
+
+	/* name then vendor */
+	fu_device_set_name (device2, "Hughski ColorHug(TM)_Pro");
+	fu_device_set_vendor (device2, "Hughski");
+	g_assert_cmpstr (fu_device_get_vendor (device2), ==, "Hughski");
+	g_assert_cmpstr (fu_device_get_name (device2), ==, "ColorHug™ Pro");
+}
+
+static void
 fu_device_metadata_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
@@ -2984,6 +3003,7 @@ main (int argc, char **argv)
 		g_test_add_func ("/fwupd/device{poll}", fu_device_poll_func);
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
+	g_test_add_func ("/fwupd/device{name}", fu_device_name_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func ("/fwupd/device{open-refcount}", fu_device_open_refcount_func);
 	g_test_add_func ("/fwupd/device{version-format}", fu_device_version_format_func);

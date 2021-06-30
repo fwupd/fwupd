@@ -176,7 +176,6 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_set_update_image(d,v)		fwupd_device_set_update_image(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_error(d,v)		fwupd_device_set_update_error(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_state(d,v)		fwupd_device_set_update_state(FWUPD_DEVICE(d),v)
-#define fu_device_set_vendor(d,v)		fwupd_device_set_vendor(FWUPD_DEVICE(d),v)
 #define fu_device_add_vendor_id(d,v)		fwupd_device_add_vendor_id(FWUPD_DEVICE(d),v)
 #define fu_device_add_protocol(d,v)		fwupd_device_add_protocol(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_raw(d,v)		fwupd_device_set_version_raw(FWUPD_DEVICE(d),v)
@@ -345,6 +344,8 @@ void		 fu_device_set_custom_flags		(FuDevice	*self,
 							 const gchar	*custom_flags);
 void		 fu_device_set_name			(FuDevice	*self,
 							 const gchar	*value);
+void		 fu_device_set_vendor			(FuDevice	*self,
+							 const gchar	*vendor);
 guint		 fu_device_get_remove_delay		(FuDevice	*self);
 void		 fu_device_set_remove_delay		(FuDevice	*self,
 							 guint		 remove_delay);
