@@ -45,8 +45,22 @@ fu_acpi_phat_health_record_parse (FuFirmware *firmware,
 {
 	FuAcpiPhatHealthRecord *self = FU_ACPI_PHAT_HEALTH_RECORD (firmware);
 	gsize bufsz = 0;
+	guint16 rcdlen = 0;
+	guint32 dataoff = 0x0;
 	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
 	fwupd_guid_t guid = { 0x0 };
+
+	/* record length */
+	if (!fu_common_read_uint16_safe (buf, bufsz, 2, &rcdlen, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if (rcdlen != bufsz) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_INVALID_DATA,
+			     "record length not valid: %" G_GUINT16_FORMAT,
+			     rcdlen);
+		return FALSE;
+	}
 
 	/* am healthy */
 	if (!fu_common_read_uint8_safe (buf, bufsz, 7, &self->am_healthy, error))
@@ -59,12 +73,39 @@ fu_acpi_phat_health_record_parse (FuFirmware *firmware,
 		return FALSE;
 	self->guid = fwupd_guid_to_string (&guid, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 
+	/* read the data offset to work out the size of the middle part */
+	if (!fu_common_read_uint32_safe (buf, bufsz, 24, &dataoff, G_LITTLE_ENDIAN, error))
+		return FALSE;
+
 	/* device path */
 	if (bufsz > 28) {
-		self->device_path = g_utf16_to_utf8 ((const gunichar2 *) (buf + 28),
-						     (bufsz - 28) / 2,
-						     NULL, NULL,
-						     error);
+		gsize ubufsz;	/* bytes */
+		g_autofree gunichar2 *ubuf = NULL;
+
+		/* header -> devicepath -> data */
+		if (dataoff == 0x0) {
+			ubufsz = bufsz - 28;
+		} else {
+			ubufsz = dataoff - 28;
+		}
+
+		/* check this is an even number of bytes */
+		if (ubufsz % 2 != 0) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "device path not valid: %" G_GSIZE_FORMAT,
+				     ubufsz);
+			return FALSE;
+		}
+
+		/* align and convert */
+		ubuf = g_new0 (gunichar2, ubufsz / 2);
+		if (!fu_memcpy_safe ((guint8 *) ubuf, ubufsz, 0x0,	/* dst */
+				     buf, bufsz, 28,			/* src */
+				     ubufsz, error))
+			return FALSE;
+		self->device_path = g_utf16_to_utf8 (ubuf, ubufsz / 2, NULL, NULL, error);
 		if (self->device_path == NULL)
 			return FALSE;
 	}
