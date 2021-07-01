@@ -490,6 +490,7 @@ static void
 fu_plugin_devices_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) child = fu_device_new ();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new (NULL);
 	GPtrArray *devices;
 
@@ -498,9 +499,20 @@ fu_plugin_devices_func (void)
 	g_assert_cmpint (devices->len, ==, 0);
 
 	fu_device_set_id (device, "testdev");
+	fu_device_set_name (device, "testdev");
 	fu_plugin_device_add (plugin, device);
 	g_assert_cmpint (devices->len, ==, 1);
 	fu_plugin_device_remove (plugin, device);
+	g_assert_cmpint (devices->len, ==, 0);
+
+	/* add a child after adding the parent to the plugin */
+	fu_device_set_id (child, "child");
+	fu_device_set_name (child, "child");
+	fu_device_add_child (device, child);
+	g_assert_cmpint (devices->len, ==, 1);
+
+	/* remove said child */
+	fu_device_remove_child (device, child);
 	g_assert_cmpint (devices->len, ==, 0);
 }
 

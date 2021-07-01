@@ -102,8 +102,12 @@ struct _FuDeviceClass
 	gboolean		 (*ready)		(FuDevice	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
+	void			 (*child_added)		(FuDevice	*self,	/* signal */
+							 FuDevice	*child);
+	void			 (*child_removed)	(FuDevice	*self,	/* signal */
+							 FuDevice	*child);
 	/*< private >*/
-	gpointer	padding[9];
+	gpointer	padding[7];
 #endif
 };
 
@@ -275,6 +279,8 @@ FuDevice	*fu_device_get_root			(FuDevice	*self);
 FuDevice	*fu_device_get_parent			(FuDevice	*self);
 GPtrArray	*fu_device_get_children			(FuDevice	*self);
 void		 fu_device_add_child			(FuDevice	*self,
+							 FuDevice	*child);
+void		 fu_device_remove_child			(FuDevice	*self,
 							 FuDevice	*child);
 void		 fu_device_add_parent_guid		(FuDevice	*self,
 							 const gchar	*guid);

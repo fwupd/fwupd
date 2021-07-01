@@ -401,6 +401,24 @@ fu_plugin_ensure_devices (FuPlugin *self)
 	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 }
 
+static void
+fu_plugin_device_child_added_cb (FuDevice *device, FuDevice *child, FuPlugin *self)
+{
+	g_debug ("child %s added to parent %s after setup, adding to daemon",
+		 fu_device_get_id (child),
+		 fu_device_get_id (device));
+	fu_plugin_device_add (self, child);
+}
+
+static void
+fu_plugin_device_child_removed_cb (FuDevice *device, FuDevice *child, FuPlugin *self)
+{
+	g_debug ("child %s removed from parent %s after setup, removing from daemon",
+		 fu_device_get_id (child),
+		 fu_device_get_id (device));
+	fu_plugin_device_remove (self, child);
+}
+
 /**
  * fu_plugin_device_add:
  * @self: a #FuPlugin
@@ -465,6 +483,12 @@ fu_plugin_device_add (FuPlugin *self, FuDevice *device)
 		if (fu_device_get_created (child) == 0)
 			fu_plugin_device_add (self, child);
 	}
+
+	/* watch to see if children are added or removed at runtime */
+	g_signal_connect (device, "child-added",
+			  G_CALLBACK (fu_plugin_device_child_added_cb), self);
+	g_signal_connect (device, "child-removed",
+			  G_CALLBACK (fu_plugin_device_child_removed_cb), self);
 }
 
 /**
