@@ -671,3 +671,9 @@ LIBFWUPD_1.6.1 {
     fwupd_version_string;
   local: *;
 } LIBFWUPD_1.6.0;
+
+LIBFWUPD_1.6.2 {
+  global:
+    fwupd_device_remove_child;
+  local: *;
+} LIBFWUPD_1.6.1;

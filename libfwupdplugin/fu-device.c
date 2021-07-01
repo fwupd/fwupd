@@ -94,6 +94,14 @@ enum {
 	PROP_LAST
 };
 
+enum {
+	SIGNAL_CHILD_ADDED,
+	SIGNAL_CHILD_REMOVED,
+	SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST] = { 0 };
+
 G_DEFINE_TYPE_WITH_PRIVATE (FuDevice, fu_device, FWUPD_TYPE_DEVICE)
 #define GET_PRIVATE(o) (fu_device_get_instance_private (o))
 
@@ -1129,6 +1137,31 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 
 	/* ensure the parent is also set on the child */
 	fu_device_set_parent (child, self);
+
+	/* signal to the plugin in case this is done after setup */
+	g_signal_emit (self, signals[SIGNAL_CHILD_ADDED], 0, child);
+}
+
+/**
+ * fu_device_remove_child:
+ * @self: a #FuDevice
+ * @child: Another #FuDevice
+ *
+ * Removes child device.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_device_remove_child (FuDevice *self, FuDevice *child)
+{
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (FU_IS_DEVICE (child));
+
+	/* proxy */
+	fwupd_device_remove_child (FWUPD_DEVICE (self), FWUPD_DEVICE (child));
+
+	/* signal to the plugin */
+	g_signal_emit (self, signals[SIGNAL_CHILD_REMOVED], 0, child);
 }
 
 /**
@@ -4303,6 +4336,19 @@ fu_device_class_init (FuDeviceClass *klass)
 	object_class->finalize = fu_device_finalize;
 	object_class->get_property = fu_device_get_property;
 	object_class->set_property = fu_device_set_property;
+
+	signals[SIGNAL_CHILD_ADDED] =
+		g_signal_new ("child-added",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuDeviceClass, child_added),
+			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
+	signals[SIGNAL_CHILD_REMOVED] =
+		g_signal_new ("child-removed",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuDeviceClass, child_removed),
+			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
 
 	pspec = g_param_spec_string ("physical-id", NULL, NULL, NULL,
 				     G_PARAM_READWRITE |

@@ -477,6 +477,36 @@ fwupd_device_add_child (FwupdDevice *self, FwupdDevice *child)
 }
 
 /**
+ * fwupd_device_remove_child:
+ * @self: a #FwupdDevice
+ * @child: Another #FwupdDevice
+ *
+ * Removes a child device.
+ *
+ * NOTE: You should never call this function from user code, it is for daemon
+ * use only.
+ *
+ * Since: 1.6.2
+ **/
+void
+fwupd_device_remove_child (FwupdDevice *self, FwupdDevice *child)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+
+	/* remove if the child exists */
+	for (guint i = 0; i < priv->children->len; i++) {
+		FwupdDevice *child_tmp = g_ptr_array_index (priv->children, i);
+		if (child_tmp == child) {
+			g_object_weak_unref (G_OBJECT (child),
+					     fwupd_device_child_finalized_cb,
+					     self);
+			g_ptr_array_remove_index (priv->children, i);
+			return;
+		}
+	}
+}
+
+/**
  * fwupd_device_get_guids:
  * @self: a #FwupdDevice
  *
