@@ -16,14 +16,10 @@ ifneq ($(CI),)
 	CONFARGS += --werror
 endif
 
-ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
-	CONFARGS += -Dplugin_flashrom=false
+ifneq ($(DEB_HOST_ARCH_CPU),ia64)
+	CONFARGS += -Dplugin_flashrom=true
 else
-	ifneq ($(DEB_HOST_ARCH_CPU),ia64)
-		CONFARGS += -Dplugin_flashrom=true
-	else
-		CONFARGS += -Dplugin_flashrom=false
-	endif
+	CONFARGS += -Dplugin_flashrom=false
 endif
 
 ifeq (yes,$(shell pkg-config --exists libsmbios_c && echo yes))
