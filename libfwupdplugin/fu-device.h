@@ -103,7 +103,7 @@ struct _FuDeviceClass
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
 	/*< private >*/
-	gpointer	padding[10];
+	gpointer	padding[9];
 #endif
 };
 
