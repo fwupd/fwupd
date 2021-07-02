@@ -6107,6 +6107,43 @@ fu_engine_backend_device_removed_cb (FuBackend *backend, FuDevice *device, FuEng
 	}
 }
 
+static gboolean
+fu_engine_check_device_safe (FuEngine *self, FuDevice *device, GError **error)
+{
+#ifdef __linux__
+	/* see https://github.com/fwupd/fwupd/issues/1121 for more details */
+	if (FU_IS_UDEV_DEVICE (device) &&
+	    g_strcmp0 (fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)), "drm_dp_aux_dev") == 0) {
+		gsize bufsz = 0;
+		const gchar *minimum_kernel;
+		g_autofree gchar *buf = NULL;
+		g_auto(GStrv) lines = NULL;
+
+		minimum_kernel = fu_config_get_minimum_amdgpu_dpaux (self->config);
+		if (minimum_kernel == NULL) {
+			g_debug ("Ignoring kernel safety checks for %s",
+				 fu_device_get_name (device));
+			return TRUE;
+		}
+
+		/* no module support in the kernel, we can't test for amdgpu module */
+		if (!g_file_test ("/proc/modules", G_FILE_TEST_EXISTS))
+			return TRUE;
+
+		if (!g_file_get_contents ("/proc/modules", &buf, &bufsz, error))
+			return FALSE;
+
+		lines = g_strsplit (buf, "\n", -1);
+		for (guint i = 0; lines[i] != NULL; i++) {
+			if (g_str_has_prefix (lines[i], "amdgpu "))
+				return fu_common_check_kernel_version (minimum_kernel, error);
+		}
+
+	}
+#endif
+	return TRUE;
+}
+
 static void
 fu_engine_backend_device_added_cb (FuBackend *backend, FuDevice *device, FuEngine *self)
 {
@@ -6117,6 +6154,14 @@ fu_engine_backend_device_added_cb (FuBackend *backend, FuDevice *device, FuEngin
 	if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
 		g_autofree gchar *str = fu_device_to_string (FU_DEVICE (device));
 		g_debug ("%s added %s", fu_backend_get_name (backend), str);
+	}
+
+	/* engine safety checks */
+	if (!fu_engine_check_device_safe (self, device, &error_local)) {
+		g_warning ("skipping unsafe device %s: %s",
+			   fu_device_get_backend_id (device),
+			   error_local->message);
+		return;
 	}
 
 	/* add any extra quirks */

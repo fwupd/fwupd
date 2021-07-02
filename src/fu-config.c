@@ -37,6 +37,7 @@ struct _FuConfig
 	gchar			*config_file;
 	gboolean		 update_motd;
 	gboolean		 enumerate_all_devices;
+	gchar			*minimum_amdgpu_dpaux;
 };
 
 G_DEFINE_TYPE (FuConfig, fu_config, G_TYPE_OBJECT)
@@ -59,6 +60,7 @@ fu_config_reload (FuConfig *self, GError **error)
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autofree gchar *domains = NULL;
+	g_autofree gchar *amdgpu = NULL;
 	g_autoptr(GKeyFile) keyfile = g_key_file_new ();
 	g_autoptr(GError) error_update_motd = NULL;
 	g_autoptr(GError) error_enumerate_all = NULL;
@@ -202,6 +204,14 @@ fu_config_reload (FuConfig *self, GError **error)
 		self->enumerate_all_devices = TRUE;
 	}
 
+	/* minimum kernel to allow use of dpaux */
+	amdgpu = g_key_file_get_string (keyfile,
+					 "fwupd",
+					 "MinimumAmdGpuKernelVersion",
+					 NULL);
+	if (amdgpu != NULL && amdgpu[0] != '\0')
+		self->minimum_amdgpu_dpaux = g_steal_pointer (&amdgpu);
+
 	return TRUE;
 }
 
@@ -338,6 +348,13 @@ fu_config_get_enumerate_all_devices (FuConfig *self)
 	return self->enumerate_all_devices;
 }
 
+const gchar *
+fu_config_get_minimum_amdgpu_dpaux (FuConfig *self)
+{
+	g_return_val_if_fail (FU_IS_CONFIG (self), NULL);
+	return self->minimum_amdgpu_dpaux;
+}
+
 static void
 fu_config_class_init (FuConfigClass *klass)
 {
@@ -376,6 +393,7 @@ fu_config_finalize (GObject *obj)
 	g_ptr_array_unref (self->blocked_firmware);
 	g_ptr_array_unref (self->uri_schemes);
 	g_free (self->config_file);
+	g_free (self->minimum_amdgpu_dpaux);
 
 	G_OBJECT_CLASS (fu_config_parent_class)->finalize (obj);
 }

@@ -31,3 +31,4 @@ guint		 fu_config_get_uri_scheme_prio		(FuConfig	*self,
 							 const gchar	*protocol);
 gboolean	 fu_config_get_update_motd		(FuConfig	*self);
 gboolean	 fu_config_get_enumerate_all_devices	(FuConfig	*self);
+const gchar	*fu_config_get_minimum_amdgpu_dpaux	(FuConfig	*self);
