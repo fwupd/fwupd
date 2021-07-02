@@ -609,6 +609,15 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 		fu_device_set_parent (device, parent);
 	}
 
+	/* copy the update state if known */
+	if (fu_device_get_update_state (item->device) != FWUPD_UPDATE_STATE_UNKNOWN &&
+	    fu_device_get_update_state (device) == FWUPD_UPDATE_STATE_UNKNOWN) {
+		FwupdUpdateState update_state = fu_device_get_update_state (item->device);
+		g_debug ("copying update state %s to new device",
+			 fwupd_update_state_to_string (update_state));
+		fu_device_set_update_state (device, update_state);
+	}
+
 	/* assign the new device */
 	g_set_object (&item->device_old, item->device);
 	fu_device_list_item_set_device (item, device);
