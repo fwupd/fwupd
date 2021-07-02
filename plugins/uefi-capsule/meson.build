@@ -185,4 +185,24 @@ if get_option('tests')
   )
   test('uefi-self-test', e, env: env)
 endif
+
+# to use these do `sudo systemctl edit fwupd.service` and set
+# Environment="FWUPD_SYSFSFWDIR=/usr/share/installed-tests/fwupd"
+install_data([
+    'tests/efi/esrt/entries/entry0/capsule_flags',
+    'tests/efi/esrt/entries/entry0/fw_class',
+    'tests/efi/esrt/entries/entry0/fw_type',
+    'tests/efi/esrt/entries/entry0/fw_version',
+    'tests/efi/esrt/entries/entry0/last_attempt_status',
+    'tests/efi/esrt/entries/entry0/last_attempt_version',
+    'tests/efi/esrt/entries/entry0/lowest_supported_fw_version',
+  ],
+  install_dir : join_paths(installed_test_datadir, 'efi/esrt/entries/entry0'),
+)
+install_data([
+    'tests/efi/efivars/CapsuleMax-39b68c46-f7fb-441b-b6ec-16b0f69821f3',
+  ],
+  install_dir : join_paths(installed_test_datadir, 'efi/efivars'),
+)
+
 endif
