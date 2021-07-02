@@ -88,6 +88,14 @@ fu_acpi_phat_health_record_parse (FuFirmware *firmware,
 		} else {
 			ubufsz = dataoff - 28;
 		}
+		if (ubufsz > bufsz) {
+			g_set_error (error,
+				     G_IO_ERROR,
+				     G_IO_ERROR_INVALID_DATA,
+				     "device path too large: 0x%x",
+				     (guint) ubufsz);
+			return FALSE;
+		}
 
 		/* check this is an even number of bytes */
 		if (ubufsz % 2 != 0) {
