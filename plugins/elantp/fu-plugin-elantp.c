@@ -31,8 +31,8 @@ fu_plugin_init (FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context (plugin);
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_context_add_udev_subsystem (ctx, "i2c-dev");
-	fu_context_add_udev_subsystem (ctx, "hidraw");
+	fu_plugin_add_udev_subsystem (plugin, "i2c-dev");
+	fu_plugin_add_udev_subsystem (plugin, "hidraw");
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_ELANTP_FIRMWARE);
 	fu_context_add_quirk_key (ctx, "ElantpI2cTargetAddress");
 	fu_context_add_quirk_key (ctx, "ElantpIapPassword");

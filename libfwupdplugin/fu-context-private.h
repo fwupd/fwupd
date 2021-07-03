@@ -26,4 +26,6 @@ void		 fu_context_add_firmware_gtype		(FuContext	*self,
 GPtrArray	*fu_context_get_firmware_gtype_ids	(FuContext	*self);
 GType		 fu_context_get_firmware_gtype_by_id	(FuContext	*self,
 							 const gchar	*id);
+void		 fu_context_add_udev_subsystem		(FuContext	*self,
+							 const gchar	*subsystem);
 GPtrArray	*fu_context_get_udev_subsystems		(FuContext	*self);

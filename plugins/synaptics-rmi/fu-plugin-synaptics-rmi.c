@@ -15,10 +15,9 @@
 void
 fu_plugin_init (FuPlugin *plugin)
 {
-	FuContext *ctx = fu_plugin_get_context (plugin);
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_context_add_udev_subsystem (ctx, "hidraw");
-	fu_context_add_udev_subsystem (ctx, "serio");
+	fu_plugin_add_udev_subsystem (plugin, "hidraw");
+	fu_plugin_add_udev_subsystem (plugin, "serio");
 	fu_plugin_add_device_gtype (plugin, FU_TYPE_SYNAPTICS_RMI_HID_DEVICE);
 	fu_plugin_add_device_gtype (plugin, FU_TYPE_SYNAPTICS_RMI_PS2_DEVICE);
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_SYNAPTICS_RMI_FIRMWARE);

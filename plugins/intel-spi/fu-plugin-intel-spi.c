@@ -29,7 +29,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_EFI_FIRMWARE_VOLUME);
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_IFD_BIOS);
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_IFD_FIRMWARE);
-	fu_context_add_udev_subsystem (ctx, "pci");
+	fu_plugin_add_udev_subsystem (plugin, "pci");
 	fu_context_add_quirk_key (ctx, "IntelSpiKind");
 	fu_context_add_quirk_key (ctx, "IntelSpiBar");
 	fu_context_add_quirk_key (ctx, "IntelSpiBarProxy");

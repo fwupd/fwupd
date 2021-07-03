@@ -21,37 +21,6 @@ struct FuPluginData {
 	guint			 drm_changed_id;
 };
 
-/* see https://github.com/fwupd/fwupd/issues/1121 for more details */
-static gboolean
-fu_synaptics_mst_check_amdgpu_safe (FuPlugin *plugin, GError **error)
-{
-	gsize bufsz = 0;
-	g_autofree gchar *minimum_kernel = NULL;
-	g_autofree gchar *buf = NULL;
-	g_auto(GStrv) lines = NULL;
-
-	minimum_kernel = fu_plugin_get_config_value (plugin, "MinimumAmdGpuKernelVersion");
-	if (minimum_kernel == NULL) {
-		g_debug ("Ignoring kernel safety checks");
-		return TRUE;
-	}
-
-	/* no module support in the kernel, we can't test for amdgpu module */
-	if (!g_file_test ("/proc/modules", G_FILE_TEST_EXISTS))
-		return TRUE;
-
-	if (!g_file_get_contents ("/proc/modules", &buf, &bufsz, error))
-		return FALSE;
-
-	lines = g_strsplit (buf, "\n", -1);
-	for (guint i = 0; lines[i] != NULL; i++) {
-		if (g_str_has_prefix (lines[i], "amdgpu "))
-			return fu_common_check_kernel_version (minimum_kernel, error);
-	}
-
-	return TRUE;
-}
-
 static void
 fu_plugin_synaptics_mst_device_rescan (FuPlugin *plugin, FuDevice *device)
 {
@@ -146,12 +115,6 @@ fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **err
 }
 
 gboolean
-fu_plugin_startup (FuPlugin *plugin, GError **error)
-{
-	return fu_synaptics_mst_check_amdgpu_safe (plugin, error);
-}
-
-gboolean
 fu_plugin_update (FuPlugin *plugin,
 		  FuDevice *device,
 		  GBytes *blob_fw,
@@ -178,8 +141,8 @@ fu_plugin_init (FuPlugin *plugin)
 	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_context_add_udev_subsystem (ctx, "drm");	/* used for uevent only */
-	fu_context_add_udev_subsystem (ctx, "drm_dp_aux_dev");
+	fu_plugin_add_udev_subsystem (plugin, "drm");	/* used for uevent only */
+	fu_plugin_add_udev_subsystem (plugin, "drm_dp_aux_dev");
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_SYNAPTICS_MST_FIRMWARE);
 	fu_context_add_quirk_key (ctx, "SynapticsMstDeviceKind");
 }

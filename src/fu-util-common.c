@@ -1457,6 +1457,10 @@ fu_util_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
 		/* TRANSLATORS: Failed to open plugin, hey Arch users */
 		return _("Plugin dependencies missing");
 	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD) {
+		/* TRANSLATORS: The kernel does not support this plugin */
+		return _("Running kernel is too old");
+	}
 
 	/* fall back for unknown types */
 	return fwupd_plugin_flag_to_string (plugin_flag);
@@ -1483,6 +1487,7 @@ fu_util_plugin_flag_to_cli_text (FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED:
 	case FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:
 	case FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:
+	case FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD:
 		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
 					    FU_UTIL_TERM_COLOR_RED);
 	default:

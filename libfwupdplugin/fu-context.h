@@ -58,8 +58,6 @@ void		 fu_context_add_runtime_version		(FuContext	*self,
 void		 fu_context_add_compile_version		(FuContext	*self,
 							 const gchar	*component_id,
 							 const gchar	*version);
-void		 fu_context_add_udev_subsystem		(FuContext	*self,
-							 const gchar	*subsystem);
 const gchar	*fu_context_lookup_quirk_by_id		(FuContext	*self,
 							 const gchar	*guid,
 							 const gchar	*key);
