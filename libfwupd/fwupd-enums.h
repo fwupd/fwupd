@@ -668,6 +668,14 @@ typedef enum {
  */
 #define FWUPD_PLUGIN_FLAG_REQUIRE_HWID		(1u << 10)
 /**
+ * FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD:
+ *
+ * The feature is not supported as the kernel is too old.
+ *
+ * Since: 1.6.2
+ */
+#define FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD	(1u << 11)
+/**
  * FWUPD_PLUGIN_FLAG_UNKNOWN:
  *
  * The plugin flag is Unknown.

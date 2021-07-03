@@ -18,7 +18,7 @@ fu_plugin_init (FuPlugin *plugin)
 	FuContext *ctx = fu_plugin_get_context (plugin);
 	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_context_add_udev_subsystem (ctx, "platform-integrity");
+	fu_plugin_add_udev_subsystem (plugin, "platform-integrity");
 }
 
 void

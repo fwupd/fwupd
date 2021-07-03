@@ -1303,6 +1303,62 @@ fu_common_string_uncamelcase (const gchar *str)
 	return g_string_free (tmp, FALSE);
 }
 
+
+static gboolean
+fu_plugin_check_amdgpu_dpaux (FuPlugin *self, GError **error)
+{
+#ifdef __linux__
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+	g_auto(GStrv) lines = NULL;
+
+	/* no module support in the kernel, we can't test for amdgpu module */
+	if (!g_file_test ("/proc/modules", G_FILE_TEST_EXISTS))
+		return TRUE;
+	if (!g_file_get_contents ("/proc/modules", &buf, &bufsz, error))
+		return FALSE;
+	lines = g_strsplit (buf, "\n", -1);
+	for (guint i = 0; lines[i] != NULL; i++) {
+		if (g_str_has_prefix (lines[i], "amdgpu ")) {
+			/* released 2019! */
+			return fu_common_check_kernel_version ("5.2.0", error);
+		}
+	}
+#endif
+	return TRUE;
+}
+
+/**
+ * fu_plugin_add_udev_subsystem:
+ * @self: a #FuPlugin
+ * @subsystem: a subsystem name, e.g. `pciport`
+ *
+ * Registers the udev subsystem to be watched by the daemon.
+ *
+ * Plugins can use this method only in fu_plugin_init()
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_plugin_add_udev_subsystem (FuPlugin *self, const gchar *subsystem)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+
+	/* see https://github.com/fwupd/fwupd/issues/1121 for more details */
+	if (g_strcmp0 (subsystem, "drm_dp_aux_dev") == 0) {
+		g_autoptr(GError) error = NULL;
+		if (!fu_plugin_check_amdgpu_dpaux (self, &error)) {
+			g_warning ("failed to add subsystem: %s", error->message);
+			fu_plugin_add_flag (self, FWUPD_PLUGIN_FLAG_DISABLED);
+			fu_plugin_add_flag (self, FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD);
+			return;
+		}
+	}
+
+	/* proxy */
+	fu_context_add_udev_subsystem (priv->ctx, subsystem);
+}
+
 /**
  * fu_plugin_add_firmware_gtype:
  * @self: a #FuPlugin

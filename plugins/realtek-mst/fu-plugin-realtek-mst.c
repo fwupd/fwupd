@@ -16,6 +16,6 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_context_add_quirk_key (ctx, "RealtekMstDpAuxName");
 
-	fu_context_add_udev_subsystem (ctx, "i2c");
+	fu_plugin_add_udev_subsystem (plugin, "i2c");
 	fu_plugin_add_device_gtype (plugin, FU_TYPE_REALTEK_MST_DEVICE);
 }
