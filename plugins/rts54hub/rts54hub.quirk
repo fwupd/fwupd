@@ -43,7 +43,6 @@ Rts54RegisterAddrLen = 0x04
 [USB\VID_2BEF&PID_1009]
 Plugin = rts54hub
 GType = FuRts54HubDevice
-Vendor = Realtek
 Name = Acer D501 Dock USB Hub
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x40000
