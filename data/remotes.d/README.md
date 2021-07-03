@@ -48,7 +48,7 @@ by configuring it to be a *directory* type. This is very convenient if you want 
 
 To enable this:
 * Change `/etc/fwupd/remotes.d/vendor-directory.conf` to have `Enabled=true`
-* Change `/etc/fwupd/remotes.d/vendor.conf-directory` to have the correct `Title`
+* Change `/etc/fwupd/remotes.d/vendor-directory.conf` to have the correct `Title`
 * Deploy the firmware to `/usr/share/fwupd/remotes.d/vendor/firmware`
 * Change `MetadataURI` to that of the directory (Eg `/usr/share/fwupd/remotes.d/vendor/`)
 
