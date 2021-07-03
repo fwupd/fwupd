@@ -38,3 +38,23 @@ FirmwareSizeMax = 0x90000
 Rts54TargetAddr = 0x20
 Rts54I2cSpeed = 0x2
 Rts54RegisterAddrLen = 0x04
+
+# Acer D501 Dock
+[USB\VID_2BEF&PID_1009]
+Plugin = rts54hub
+GType = FuRts54HubDevice
+Name = Acer D501 Dock USB Hub
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x40000
+Children = FuRts54hubRtd21xxBackground|USB\VID_2BEF&PID_1009&I2C_01
+[USB\VID_2BEF&PID_1009&I2C_01]
+Plugin = rts54hub
+Vendor = Realtek
+Name = Acer D501 Dock HDMI Converter
+Flags = updatable
+FirmwareSizeMin = 0x10000
+FirmwareSizeMax = 0x90000
+Rts54TargetAddr = 0x20
+Rts54I2cSpeed = 0x2
+Rts54RegisterAddrLen = 0x04
+
