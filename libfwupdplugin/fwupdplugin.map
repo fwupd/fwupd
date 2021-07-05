@@ -820,6 +820,9 @@ LIBFWUPDPLUGIN_1.6.2 {
   global:
     fu_common_check_kernel_version;
     fu_common_crc16_full;
+    fu_common_get_firmware_search_path;
+    fu_common_reset_firmware_search_path;
+    fu_common_set_firmware_search_path;
     fu_device_add_guid_full;
     fu_device_add_parent_physical_id;
     fu_device_add_private_flag;
