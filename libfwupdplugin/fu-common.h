@@ -419,6 +419,10 @@ guint32		 fu_common_crc32_full		(const guint8	*buf,
 gchar		*fu_common_uri_get_scheme	(const gchar	*uri);
 gsize		 fu_common_align_up		(gsize		 value,
 						 guint8		 alignment);
+gchar		*fu_common_get_firmware_search_path	(GError		**error);
+gboolean	 fu_common_set_firmware_search_path	(const gchar	*path,
+							 GError		**error);
+gboolean	 fu_common_reset_firmware_search_path	(GError		**error);
 const gchar	*fu_battery_state_to_string	(FuBatteryState	 battery_state);
 
 void		 fu_xmlb_builder_insert_kv	(XbBuilderNode	*bn,

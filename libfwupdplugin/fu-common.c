@@ -3384,3 +3384,118 @@ fu_xmlb_builder_insert_kb (XbBuilderNode *bn, const gchar *key, gboolean value)
 {
 	xb_builder_node_insert_text (bn, key, value ? "true" : "false", NULL);
 }
+
+/**
+ * fu_common_get_firmware_search_path:
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads the FU_PATH_KIND_FIRMWARE_SEARCH and
+ * returns its contents
+ *
+ * Returns: a pointer to a gchar array
+ *
+ * Since: 1.6.2
+ **/
+gchar *
+fu_common_get_firmware_search_path (GError **error)
+{
+	gsize sz = 0;
+	g_autofree gchar *sys_fw_search_path = NULL;
+	g_autofree gchar *contents = NULL;
+
+	sys_fw_search_path = fu_common_get_path (FU_PATH_KIND_FIRMWARE_SEARCH);
+	if (!g_file_get_contents(sys_fw_search_path, &contents, &sz, error))
+		return NULL;
+
+	/* remove newline character */
+	if (contents != NULL && sz > 0 && contents[sz - 1] == '\n')
+		contents[sz - 1] = 0;
+
+	g_debug ("read firmware search path (%" G_GSIZE_FORMAT "): %s", sz, contents);
+
+	return g_steal_pointer (&contents);
+}
+
+/**
+ * fu_common_set_firmware_search_path:
+ * @path: NUL-terminated string
+ * @error: (nullable): optional return location for an error
+ *
+ * Writes path to the FU_PATH_KIND_FIRMWARE_SEARCH
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.6.2
+ **/
+gboolean
+fu_common_set_firmware_search_path (const gchar *path, GError **error)
+{
+#if GLIB_CHECK_VERSION(2,66,0)
+	g_autofree gchar *sys_fw_search_path_prm = NULL;
+
+	g_return_val_if_fail (path != NULL, FALSE);
+	g_return_val_if_fail (strlen (path) < PATH_MAX, FALSE);
+
+	sys_fw_search_path_prm = fu_common_get_path (FU_PATH_KIND_FIRMWARE_SEARCH);
+
+	g_debug ("writing firmware search path (%" G_GSIZE_FORMAT "): %s", strlen (path), path);
+
+	return g_file_set_contents_full (sys_fw_search_path_prm, path, strlen (path),
+				G_FILE_SET_CONTENTS_NONE, 0644, error);
+#else
+	FILE *fd;
+	gsize res;
+	g_autofree gchar *sys_fw_search_path_prm = NULL;
+
+	g_return_val_if_fail (path != NULL, FALSE);
+	g_return_val_if_fail (strlen (path) < PATH_MAX, FALSE);
+
+	sys_fw_search_path_prm = fu_common_get_path (FU_PATH_KIND_FIRMWARE_SEARCH);
+	/* g_file_set_contents will try to create backup files in sysfs, so use fopen here */
+	fd = fopen (sys_fw_search_path_prm, "w");
+	if (fd == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "Failed to open %s: %s",
+			     sys_fw_search_path_prm,
+			     g_strerror (errno));
+		return FALSE;
+	}
+
+	g_debug ("writing firmware search path (%" G_GSIZE_FORMAT "): %s", strlen (path), path);
+
+	res = fwrite (path, sizeof (gchar), strlen (path), fd);
+
+	fclose (fd);
+
+	if (res != strlen (path)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "Failed to write firmware search path: %s",
+			     g_strerror (errno));
+		return FALSE;
+	}
+
+	return TRUE;
+#endif
+}
+
+/**
+ * fu_common_reset_firmware_search_path:
+ * @error: (nullable): optional return location for an error
+ *
+ * Resets the FU_PATH_KIND_FIRMWARE_SEARCH to an empty string
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.6.2
+ **/
+gboolean
+fu_common_reset_firmware_search_path (GError **error)
+{
+	const gchar *contents = " ";
+
+	return fu_common_set_firmware_search_path (contents, error);
+}
