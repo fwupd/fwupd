@@ -20,5 +20,9 @@ gboolean	fu_mm_utils_get_port_info	(const gchar	 *path,
 						 gchar		**device_sysfs_path,
 						 gint		 *port_usb_ifnum,
 						 GError		**error);
+gboolean	fu_mm_utils_find_device_file	(const gchar	 *device_sysfs_path,
+						 const gchar	 *subsystem,
+						 gchar		**out_device_file,
+						 GError		**error);
 
 #endif /* __FU_MM_UTILS_H */

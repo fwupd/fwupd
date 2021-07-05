@@ -19,6 +19,10 @@ These device use the ModemManager "Firmware Device IDs" as the GUID, e.g.
  * `PCI\VID_105B&PID_E0AB&REV_0000`
  * `PCI\VID_105B&PID_E0AB`
  * `PCI\VID_105B`
+ * `PCI\VID_1EAC&PID_1001`
+ * `PCI\VID_1EAC&PID_1002`
+ * `PCI\VID_1EAC`
+
 
 Vendor ID Security
 ------------------
@@ -67,6 +71,16 @@ file should include a package named as 'Firmware_*.7z' which is a compressed
 ota.bin file that will be downloaded to the ota partition of the device.
 
 Update protocol: com.qualcomm.mbim_qdu
+
+Update method: firehose
+-----------------------
+
+If the device supports the 'firehose' update method, it should have QCDM port
+exposed and the contents of the CAB file should contain 'firehose-rawprogram.xml'.
+The device is then switched to the emergencly download mode (EDL) and flashed
+with files described in 'firehose-rawprogram.xml'.
+
+Update protocol: com.qualcomm.firehose
 
 External interface access
 -------------------------
