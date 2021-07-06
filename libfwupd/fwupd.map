@@ -674,6 +674,7 @@ LIBFWUPD_1.6.1 {
 
 LIBFWUPD_1.6.2 {
   global:
+    fwupd_device_has_icon;
     fwupd_device_remove_child;
   local: *;
 } LIBFWUPD_1.6.1;

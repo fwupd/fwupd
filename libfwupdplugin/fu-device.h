@@ -168,6 +168,7 @@ FuDevice	*fu_device_new				(void);
 #define fu_device_add_checksum(d,v)		fwupd_device_add_checksum(FWUPD_DEVICE(d),v)
 #define fu_device_add_release(d,v)		fwupd_device_add_release(FWUPD_DEVICE(d),v)
 #define fu_device_add_icon(d,v)			fwupd_device_add_icon(FWUPD_DEVICE(d),v)
+#define fu_device_has_icon(d,v)			fwupd_device_has_icon(FWUPD_DEVICE(d),v)
 #define fu_device_set_created(d,v)		fwupd_device_set_created(FWUPD_DEVICE(d),v)
 #define fu_device_set_description(d,v)		fwupd_device_set_description(FWUPD_DEVICE(d),v)
 #define fu_device_set_flags(d,v)		fwupd_device_set_flags(FWUPD_DEVICE(d),v)
