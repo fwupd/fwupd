@@ -383,6 +383,8 @@ fu_plugin_build_device_update_error (FuPlugin *self)
 		return "Not updatable as UEFI capsule updates not enabled in firmware setup";
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED))
 		return "Not updatable as requires unlock";
+	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_AUTH_REQUIRED))
+		return "Not updatable as requires authentication";
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED))
 		return "Not updatable as efivarfs was not found";
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND))
