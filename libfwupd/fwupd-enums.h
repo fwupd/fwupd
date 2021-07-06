@@ -676,6 +676,15 @@ typedef enum {
  */
 #define FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD	(1u << 11)
 /**
+ * FWUPD_PLUGIN_FLAG_AUTH_REQUIRED:
+ *
+ * The plugin requires the user to provide authentication details.
+ * Supported clients will display this information to a user.
+ *
+ * Since: 1.6.2
+ */
+#define FWUPD_PLUGIN_FLAG_AUTH_REQUIRED		(1u << 12)
+/**
  * FWUPD_PLUGIN_FLAG_UNKNOWN:
  *
  * The plugin flag is Unknown.

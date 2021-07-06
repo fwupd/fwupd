@@ -1447,6 +1447,10 @@ fu_util_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
 		/* TRANSLATORS: user needs to run a command */
 		return _("Firmware updates disabled; run 'fwupdmgr unlock' to enable");
 	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_AUTH_REQUIRED) {
+		/* TRANSLATORS: user needs to run a command */
+		return _("Authentication details are required");
+	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED) {
 		/* TRANSLATORS: the user is using Gentoo/Arch and has screwed something up */
 		return _("Required efivarfs filesystem was not found");
@@ -1487,6 +1491,7 @@ fu_util_plugin_flag_to_cli_text (FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_LEGACY_BIOS:
 	case FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED:
 	case FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED:
+	case FWUPD_PLUGIN_FLAG_AUTH_REQUIRED:
 	case FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:
 	case FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:
 	case FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD:
