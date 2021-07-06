@@ -1263,6 +1263,8 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	if (tmp != NULL) {
 		g_autofree gchar *desc = NULL;
 		desc = fu_util_convert_description (tmp, NULL);
+		if (desc == NULL)
+			desc = g_strdup (tmp);
 		/* TRANSLATORS: multiline description of device */
 		fu_common_string_append_kv (str, idt + 1, _("Description"), desc);
 	}
@@ -1669,6 +1671,8 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 	if (fwupd_release_get_description (rel) != NULL) {
 		g_autofree gchar *desc = NULL;
 		desc = fu_util_convert_description (fwupd_release_get_description (rel), NULL);
+		if (desc == NULL)
+			desc = g_strdup (fwupd_release_get_description (rel));
 		/* TRANSLATORS: multiline description of device */
 		fu_common_string_append_kv (str, idt + 1, _("Description"), desc);
 	}
