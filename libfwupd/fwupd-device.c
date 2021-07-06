@@ -677,7 +677,19 @@ fwupd_device_get_icons (FwupdDevice *self)
 	return priv->icons;
 }
 
-static gboolean
+
+/**
+ * fwupd_device_has_icon:
+ * @self: a #FwupdDevice
+ * @icon: the name, e.g. `input-mouse` or `/usr/share/icons/foo.png`
+ *
+ * Finds out if the device has this specific icon.
+ *
+ * Returns: %TRUE if the icon is found
+ *
+ * Since: 1.6.2
+ **/
+gboolean
 fwupd_device_has_icon (FwupdDevice *self, const gchar *icon)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (self);

@@ -148,6 +148,8 @@ gboolean	 fwupd_device_has_instance_id		(FwupdDevice	*self,
 GPtrArray	*fwupd_device_get_instance_ids		(FwupdDevice	*self);
 void		 fwupd_device_add_icon			(FwupdDevice	*self,
 							 const gchar	*icon);
+gboolean	 fwupd_device_has_icon			(FwupdDevice	*self,
+							 const gchar	*icon);
 GPtrArray	*fwupd_device_get_icons			(FwupdDevice	*self);
 
 FwupdUpdateState fwupd_device_get_update_state		(FwupdDevice	*self);
