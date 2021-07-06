@@ -29,4 +29,3 @@ gboolean	 fu_redfish_backend_update		(FuRedfishBackend	*self,
 							 FuDevice		*device,
 							 GBytes			*blob_fw,
 							 GError			**error);
-
