@@ -82,6 +82,9 @@ void		 fwupd_device_set_version_bootloader_raw (FwupdDevice	*self,
 guint64		 fwupd_device_get_version_raw		(FwupdDevice	*self);
 void		 fwupd_device_set_version_raw		(FwupdDevice	*self,
 							 guint64	version_raw);
+guint64		 fwupd_device_get_version_build_date	(FwupdDevice	*self);
+void		 fwupd_device_set_version_build_date	(FwupdDevice	*self,
+							 guint64	 version_build_date);
 FwupdVersionFormat fwupd_device_get_version_format	(FwupdDevice	*self);
 void		 fwupd_device_set_version_format	(FwupdDevice	*self,
 							 FwupdVersionFormat version_format);

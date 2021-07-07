@@ -434,6 +434,22 @@ fu_redfish_device_probe (FuDevice *dev, GError **error)
 			fu_redfish_device_set_version (self, tmp);
 	}
 
+	/* ReleaseDate may or may not have a timezone */
+	if (json_object_has_member (member, "ReleaseDate")) {
+		const gchar *tmp = json_object_get_string_member (member, "ReleaseDate");
+		if (tmp != NULL && tmp[0] != '\0') {
+			g_autoptr(GDateTime) dt = NULL;
+			g_autoptr(GTimeZone) tz = g_time_zone_new_utc ();
+			dt = g_date_time_new_from_iso8601 (tmp, tz);
+			if (dt != NULL) {
+				guint64 unixtime = (guint64) g_date_time_to_unix (dt);
+				fu_device_set_version_build_date (dev, unixtime);
+			} else {
+				g_warning ("failed to parse ISO8601 %s", tmp);
+			}
+		}
+	}
+
 	/* some vendors use a GUID, others use an ID like BMC-AFBT-10 */
 	guid_lower = g_ascii_strdown (guid, -1);
 	if (fwupd_guid_is_valid (guid_lower)) {

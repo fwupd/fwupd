@@ -53,6 +53,7 @@ typedef struct {
 	gchar				*version_bootloader;
 	FwupdVersionFormat		 version_format;
 	guint64				 version_raw;
+	guint64				 version_build_date;
 	guint64				 version_lowest_raw;
 	guint64				 version_bootloader_raw;
 	GPtrArray			*checksums;
@@ -1583,6 +1584,8 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_created (self, priv_donor->created);
 	if (priv->modified == 0)
 		fwupd_device_set_modified (self, priv_donor->modified);
+	if (priv->version_build_date == 0)
+		fwupd_device_set_version_build_date (self, priv_donor->version_build_date);
 	if (priv->flashes_left == 0)
 		fwupd_device_set_flashes_left (self, priv_donor->flashes_left);
 	if (priv->install_duration == 0)
@@ -1744,6 +1747,11 @@ fwupd_device_to_variant_full (FwupdDevice *self, FwupdDeviceFlags flags)
 		g_variant_builder_add (&builder, "{sv}",
 				       FWUPD_RESULT_KEY_MODIFIED,
 				       g_variant_new_uint64 (priv->modified));
+	}
+	if (priv->version_build_date > 0) {
+		g_variant_builder_add (&builder, "{sv}",
+				       FWUPD_RESULT_KEY_VERSION_BUILD_DATE,
+				       g_variant_new_uint64 (priv->version_build_date));
 	}
 
 	if (priv->description != NULL) {
@@ -1944,6 +1952,10 @@ fwupd_device_from_key_value (FwupdDevice *self, const gchar *key, GVariant *valu
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_MODIFIED) == 0) {
 		fwupd_device_set_modified (self, g_variant_get_uint64 (value));
+		return;
+	}
+	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION_BUILD_DATE) == 0) {
+		fwupd_device_set_version_build_date (self, g_variant_get_uint64 (value));
 		return;
 	}
 	if (g_strcmp0 (key, FWUPD_RESULT_KEY_GUID) == 0) {
@@ -2236,6 +2248,41 @@ fwupd_device_set_version_raw (FwupdDevice *self, guint64 version_raw)
 	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	priv->version_raw = version_raw;
+}
+
+/**
+ * fwupd_device_get_version_build_date:
+ * @self: a #FwupdDevice
+ *
+ * Gets the date when the firmware was built.
+ *
+ * Returns: the UNIX time, or 0 if unset
+ *
+ * Since: 1.6.2
+ **/
+guint64
+fwupd_device_get_version_build_date (FwupdDevice *self)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FWUPD_IS_DEVICE (self), 0);
+	return priv->version_build_date;
+}
+
+/**
+ * fwupd_device_set_version_build_date:
+ * @self: a #FwupdDevice
+ * @version_build_date: the UNIX time
+ *
+ * Sets the date when the firmware was built.
+ *
+ * Since: 1.6.2
+ **/
+void
+fwupd_device_set_version_build_date (FwupdDevice *self, guint64 version_build_date)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FWUPD_IS_DEVICE (self));
+	priv->version_build_date = version_build_date;
 }
 
 /**
@@ -2570,6 +2617,8 @@ fwupd_device_to_json (FwupdDevice *self, JsonBuilder *builder)
 		fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW, priv->version_lowest_raw);
 	if (priv->version_bootloader_raw > 0)
 		fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW, priv->version_bootloader_raw);
+	if (priv->version_build_date > 0)
+		fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_BUILD_DATE, priv->version_build_date);
 	if (priv->icons->len > 0) {
 		json_builder_set_member_name (builder, "Icons");
 		json_builder_begin_array (builder);
@@ -2707,6 +2756,10 @@ fwupd_device_to_string (FwupdDevice *self)
 	if (priv->version_lowest_raw > 0) {
 		g_autofree gchar *tmp = fwupd_device_verstr_raw (priv->version_lowest_raw);
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW, tmp);
+	}
+	if (priv->version_build_date > 0) {
+		fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_VERSION_BUILD_DATE,
+				  priv->version_build_date);
 	}
 	if (priv->version_bootloader_raw > 0) {
 		g_autofree gchar *tmp = fwupd_device_verstr_raw (priv->version_bootloader_raw);
