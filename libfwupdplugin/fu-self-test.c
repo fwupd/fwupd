@@ -517,6 +517,43 @@ fu_plugin_devices_func (void)
 }
 
 static void
+fu_plugin_device_inhibit_children_func (void)
+{
+	g_autoptr(FuDevice) parent = fu_device_new ();
+	g_autoptr(FuDevice) child1 = fu_device_new ();
+	g_autoptr(FuDevice) child2 = fu_device_new ();
+
+	fu_device_set_id (parent, "testdev");
+	fu_device_set_name (parent, "testdev");
+	fu_device_add_flag (parent, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_id (child1, "child1");
+	fu_device_set_name (child1, "child1");
+	fu_device_add_flag (child1, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_child (parent, child1);
+
+	/* inhibit the parent */
+	fu_device_inhibit (parent, "test", "because");
+	g_assert_false (fu_device_has_flag (parent, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_true (fu_device_has_flag (child1, FWUPD_DEVICE_FLAG_UPDATABLE));
+	fu_device_uninhibit (parent, "test");
+
+	/* make the inhibit propagate to children */
+	fu_device_add_internal_flag (parent, FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN);
+	fu_device_inhibit (parent, "test", "because");
+	g_assert_false (fu_device_has_flag (parent, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false (fu_device_has_flag (child1, FWUPD_DEVICE_FLAG_UPDATABLE));
+
+	/* add a child after the inhibit, which should also be inhibited too */
+	fu_device_set_id (child2, "child2");
+	fu_device_set_name (child2, "child2");
+	fu_device_add_flag (child2, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_child (parent, child2);
+	g_assert_false (fu_device_has_flag (parent, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false (fu_device_has_flag (child1, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false (fu_device_has_flag (child2, FWUPD_DEVICE_FLAG_UPDATABLE));
+}
+
+static void
 fu_plugin_delay_func (void)
 {
 	FuDevice *device_tmp;
@@ -2944,6 +2981,7 @@ main (int argc, char **argv)
 
 	g_test_add_func ("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
 	g_test_add_func ("/fwupd/plugin{devices}", fu_plugin_devices_func);
+	g_test_add_func ("/fwupd/plugin{device-inhibit-children}", fu_plugin_device_inhibit_children_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
 	g_test_add_func ("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);
