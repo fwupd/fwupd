@@ -674,7 +674,9 @@ LIBFWUPD_1.6.1 {
 
 LIBFWUPD_1.6.2 {
   global:
+    fwupd_device_get_version_build_date;
     fwupd_device_has_icon;
     fwupd_device_remove_child;
+    fwupd_device_set_version_build_date;
   local: *;
 } LIBFWUPD_1.6.1;

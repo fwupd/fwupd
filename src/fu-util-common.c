@@ -1272,12 +1272,19 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	/* versions */
 	tmp = fwupd_device_get_version (dev);
 	if (tmp != NULL) {
+		g_autoptr(GString) verstr = g_string_new (tmp);
+		if (fwupd_device_get_version_build_date (dev) != 0) {
+			guint64 value = fwupd_device_get_version_build_date (dev);
+			g_autoptr(GDateTime) date = g_date_time_new_from_unix_utc ((gint64) value);
+			g_autofree gchar *datestr = g_date_time_format (date, "%F");
+			g_string_append_printf (verstr, " [%s]", datestr);
+		}
 		if (flags & FWUPD_DEVICE_FLAG_HISTORICAL) {
 			/* TRANSLATORS: version number of previous firmware */
-			fu_common_string_append_kv (str, idt + 1, _("Previous version"), tmp);
+			fu_common_string_append_kv (str, idt + 1, _("Previous version"), verstr->str);
 		} else {
 			/* TRANSLATORS: version number of current firmware */
-			fu_common_string_append_kv (str, idt + 1, _("Current version"), tmp);
+			fu_common_string_append_kv (str, idt + 1, _("Current version"), verstr->str);
 		}
 	}
 	tmp = fwupd_device_get_version_lowest (dev);

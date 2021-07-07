@@ -102,6 +102,7 @@ def firmware_inventory_bmc():
         "UefiDevicePaths": ["BMC(0x1,0x0ABCDEF)"],
         "Updateable": True,
         "Version": "11A-1.02",
+        "ReleaseDate": "2019-03-15T00:00:00",
     }
     return Response(json.dumps(res), status=200, mimetype="application/json")
 
@@ -171,6 +172,7 @@ def firmware_inventory_bios():
         "SoftwareId": "FEE82A67-6CE2-4625-9F44-237AD2402C28",
         "Updateable": True,
         "Version": "P79 v1.45",
+        "ReleaseDate": "2019-03-15T00:00:00Z",
     }
     return Response(json.dumps(res), status=200, mimetype="application/json")
 

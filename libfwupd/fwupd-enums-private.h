@@ -227,6 +227,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_MODIFIED		"Modified"
 /**
+ * FWUPD_RESULT_KEY_VERSION_BUILD_DATE:
+ *
+ * Result key to represent VersionBuildDate
+ *
+ * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
+ **/
+#define FWUPD_RESULT_KEY_VERSION_BUILD_DATE	"VersionBuildDate"
+/**
  * FWUPD_RESULT_KEY_METADATA:
  *
  * Result key to represent Metadata
