@@ -80,6 +80,11 @@ typedef struct {
 	FuDeviceRetryFunc		 recovery_func;
 } FuDeviceRetryRecovery;
 
+typedef struct {
+	gchar		*inhibit_id;
+	gchar		*reason;
+} FuDeviceInhibit;
+
 enum {
 	PROP_0,
 	PROP_PROGRESS,
@@ -225,6 +230,8 @@ fu_device_internal_flag_to_string (FuDeviceInternalFlags flag)
 		return "auto-parent-children";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET)
 		return "attach-extra-reset";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN)
+		return "inhibit-children";
 	return NULL;
 }
 
@@ -269,6 +276,8 @@ fu_device_internal_flag_from_string (const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN;
 	if (g_strcmp0 (flag, "attach-extra-reset") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET;
+	if (g_strcmp0 (flag, "inhibit-children") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -1097,6 +1106,15 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 
 	/* add if the child does not already exist */
 	fwupd_device_add_child (FWUPD_DEVICE (self), FWUPD_DEVICE (child));
+
+	/* propagate inhibits to children */
+	if (fu_device_has_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN)) {
+		g_autoptr(GList) values = g_hash_table_get_values (priv->inhibits);
+		for (GList *l = values; l != NULL; l = l->next) {
+			FuDeviceInhibit *inhibit = (FuDeviceInhibit *) l->data;
+			fu_device_inhibit (child, inhibit->inhibit_id, inhibit->reason);
+		}
+	}
 
 	/* ensure the parent has the MAX() of the children's removal delay  */
 	children = fu_device_get_children (self);
@@ -2295,11 +2313,6 @@ fu_device_set_version_bootloader (FuDevice *self, const gchar *version)
 	}
 }
 
-typedef struct {
-	gchar		*inhibit_id;
-	gchar		*reason;
-} FuDeviceInhibit;
-
 static void
 fu_device_inhibit_free (FuDeviceInhibit *inhibit)
 {
@@ -2386,6 +2399,15 @@ fu_device_inhibit (FuDevice *self, const gchar *inhibit_id, const gchar *reason)
 
 	/* refresh */
 	fu_device_ensure_inhibits (self);
+
+	/* propagate to children */
+	if (fu_device_has_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN)) {
+		GPtrArray *children = fu_device_get_children (self);
+		for (guint i = 0; i < children->len; i++) {
+			FuDevice *child = g_ptr_array_index (children, i);
+			fu_device_inhibit (child, inhibit_id, reason);
+		}
+	}
 }
 
 /**
@@ -2413,6 +2435,15 @@ fu_device_uninhibit (FuDevice *self, const gchar *inhibit_id)
 		return;
 	if (g_hash_table_remove (priv->inhibits, inhibit_id))
 		fu_device_ensure_inhibits (self);
+
+	/* propagate to children */
+	if (fu_device_has_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN)) {
+		GPtrArray *children = fu_device_get_children (self);
+		for (guint i = 0; i < children->len; i++) {
+			FuDevice *child = g_ptr_array_index (children, i);
+			fu_device_uninhibit (child, inhibit_id);
+		}
+	}
 }
 
 /**
