@@ -82,6 +82,7 @@ fu_plugin_init (FuPlugin *plugin)
 	fu_context_add_quirk_key (ctx, "SuperioControlPort");
 	fu_context_add_quirk_key (ctx, "SuperioDataPort");
 	fu_context_add_quirk_key (ctx, "SuperioTimeout");
+	fu_context_add_quirk_key (ctx, "SuperioAutoloadAction");
 }
 
 gboolean
