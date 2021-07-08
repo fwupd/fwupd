@@ -689,7 +689,7 @@ fu_vli_pd_device_init (FuVliPdDevice *self)
 {
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
 	fu_device_add_protocol (FU_DEVICE (self), "com.vli.pd");
-	fu_device_set_summary (FU_DEVICE (self), "USB PD");
+	fu_device_set_summary (FU_DEVICE (self), "USB power distribution device");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);

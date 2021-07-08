@@ -258,7 +258,7 @@ fu_vli_usbhub_pd_device_init (FuVliUsbhubPdDevice *self)
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_install_duration (FU_DEVICE (self), 15); /* seconds */
 	fu_device_set_logical_id (FU_DEVICE (self), "PD");
-	fu_device_set_summary (FU_DEVICE (self), "USB-C Power Delivery Device");
+	fu_device_set_summary (FU_DEVICE (self), "USB-C power delivery device");
 }
 
 static void

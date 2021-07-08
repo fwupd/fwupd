@@ -775,6 +775,7 @@ fu_uefi_device_set_property (GObject *object, guint prop_id,
 static void
 fu_uefi_device_init (FuUefiDevice *self)
 {
+	fu_device_set_summary (FU_DEVICE (self), "UEFI ESRT device");
 	fu_device_add_protocol (FU_DEVICE (self), "org.uefi.capsule");
 	fu_device_register_private_flag (FU_DEVICE (self),
 					 FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE,
