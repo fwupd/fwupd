@@ -327,7 +327,7 @@ fu_vli_usbhub_msp430_device_init (FuVliUsbhubMsp430Device *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_logical_id (FU_DEVICE (self), "I2C");
-	fu_device_set_summary (FU_DEVICE (self), "I²C Dock Management Device");
+	fu_device_set_summary (FU_DEVICE (self), "I²C dock management device");
 
 	/* the MSP device reboot takes down the entire hub for ~60 seconds */
 	fu_device_set_remove_delay (FU_DEVICE (self), 120 * 1000);

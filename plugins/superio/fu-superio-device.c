@@ -507,7 +507,7 @@ fu_superio_device_init (FuSuperioDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_protocol (FU_DEVICE (self), "tw.com.ite.superio");
-	fu_device_set_summary (FU_DEVICE (self), "Embedded Controller");
+	fu_device_set_summary (FU_DEVICE (self), "Embedded controller");
 	fu_device_add_icon (FU_DEVICE (self), "computer");
 }
 

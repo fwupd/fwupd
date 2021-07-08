@@ -500,7 +500,7 @@ fu_solokey_device_init (FuSolokeyDevice *self)
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_protocol (FU_DEVICE (self), "com.solokeys");
 	fu_device_set_name (FU_DEVICE (self), "Solo Secure");
-	fu_device_set_summary (FU_DEVICE (self), "An open source FIDO2 security key");
+	fu_device_set_summary (FU_DEVICE (self), "Open source FIDO2 security key");
 	fu_device_add_icon (FU_DEVICE (self), "applications-internet");
 }
 

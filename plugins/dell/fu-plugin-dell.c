@@ -271,9 +271,9 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 	fu_device_set_name (dev, dock_name);
 	fu_device_set_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "device-firmware");
 	if (type == DOCK_TYPE_TB16) {
-		fu_device_set_summary (dev, "A Thunderbolt™ 3 docking station");
+		fu_device_set_summary (dev, "Thunderbolt™ 3 docking station");
 	} else if (type == DOCK_TYPE_WD15) {
-		fu_device_set_summary (dev, "A USB type-C docking station");
+		fu_device_set_summary (dev, "USB type-C docking station");
 	}
 	fu_device_add_icon (dev, "computer");
 	fu_device_add_guid (dev, component_guid);
