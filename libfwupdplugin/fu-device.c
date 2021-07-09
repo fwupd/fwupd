@@ -1102,6 +1102,7 @@ void
 fu_device_add_child (FuDevice *self, FuDevice *child)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
+	FuDevicePrivate *priv_child = GET_PRIVATE (child);
 	GPtrArray *children;
 	g_autoptr(GError) error = NULL;
 
@@ -1136,6 +1137,8 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 	if (fu_device_get_physical_id (child) == NULL &&
 	    fu_device_get_physical_id (self) != NULL)
 		fu_device_set_physical_id (child, fu_device_get_physical_id (self));
+	if (priv_child->backend_id == NULL && priv->backend_id != NULL)
+		fu_device_set_backend_id (child, priv->backend_id);
 	if (fu_device_get_vendor (child) == NULL)
 		fu_device_set_vendor (child, fu_device_get_vendor (self));
 	if (fu_device_get_vendor_ids(child)->len == 0) {
