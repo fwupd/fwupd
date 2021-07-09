@@ -3258,8 +3258,10 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		g_autofree gchar *sz = g_strdup_printf ("%" G_GUINT64_FORMAT, priv->size_max);
 		fu_common_string_append_kv (str, idt + 1, "FirmwareSizeMax", sz);
 	}
-	if (priv->order != G_MAXINT)
-		fu_common_string_append_ku (str, idt + 1, "Order", priv->order);
+	if (priv->order != G_MAXINT) {
+		g_autofree gchar *order = g_strdup_printf ("%i", priv->order);
+		fu_common_string_append_kv (str, idt + 1, "Order", order);
+	}
 	if (priv->priority > 0)
 		fu_common_string_append_ku (str, idt + 1, "Priority", priv->priority);
 	if (priv->metadata != NULL) {
