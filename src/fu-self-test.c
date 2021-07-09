@@ -2084,6 +2084,38 @@ _device_list_count_cb (FuDeviceList *device_list, FuDevice *device, gpointer use
 }
 
 static void
+fu_device_list_no_auto_remove_children_func (gconstpointer user_data)
+{
+	g_autoptr(FuDevice) child = fu_device_new ();
+	g_autoptr(FuDevice) parent = fu_device_new ();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
+	g_autoptr(GPtrArray) active1 = NULL;
+	g_autoptr(GPtrArray) active2 = NULL;
+	g_autoptr(GPtrArray) active3 = NULL;
+
+	/* normal behavior, remove child with parent */
+	fu_device_set_id (parent, "parent");
+	fu_device_set_id (child, "child");
+	fu_device_add_child (parent, child);
+	fu_device_list_add (device_list, parent);
+	fu_device_list_add (device_list, child);
+	fu_device_list_remove (device_list, parent);
+	active1 = fu_device_list_get_active (device_list);
+	g_assert_cmpint (active1->len, ==, 0);
+
+	/* new-style behavior, do not remove child */
+	fu_device_add_internal_flag (parent, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN);
+	fu_device_list_add (device_list, parent);
+	fu_device_list_add (device_list, child);
+	fu_device_list_remove (device_list, parent);
+	active2 = fu_device_list_get_active (device_list);
+	g_assert_cmpint (active2->len, ==, 1);
+	fu_device_list_remove (device_list, child);
+	active3 = fu_device_list_get_active (device_list);
+	g_assert_cmpint (active3->len, ==, 0);
+}
+
+static void
 fu_device_list_delay_func (gconstpointer user_data)
 {
 	g_autoptr(FuDevice) device1 = fu_device_new ();
@@ -3296,6 +3328,8 @@ main (int argc, char **argv)
 			      fu_device_list_func);
 	g_test_add_data_func ("/fwupd/device-list{delay}", self,
 			      fu_device_list_delay_func);
+	g_test_add_data_func ("/fwupd/device-list{no-auto-remove-children}", self,
+			      fu_device_list_no_auto_remove_children_func);
 	g_test_add_data_func ("/fwupd/device-list{compatible}", self,
 			      fu_device_list_compatible_func);
 	g_test_add_data_func ("/fwupd/device-list{remove-chain}", self,

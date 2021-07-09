@@ -232,6 +232,8 @@ fu_device_internal_flag_to_string (FuDeviceInternalFlags flag)
 		return "attach-extra-reset";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN)
 		return "inhibit-children";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN)
+		return "no-auto-remove-children";
 	return NULL;
 }
 
@@ -278,6 +280,8 @@ fu_device_internal_flag_from_string (const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET;
 	if (g_strcmp0 (flag, "inhibit-children") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN;
+	if (g_strcmp0 (flag, "no-auto-remove-children") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 

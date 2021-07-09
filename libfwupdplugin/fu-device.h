@@ -238,6 +238,7 @@ FuDevice	*fu_device_new				(void);
  * @FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN:	Automatically assign the parent for children of this device
  * @FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET:		Device needs resetting twice for attach after the firmware update
  * @FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN:		Children of the device are inhibited by the parent
+ * @FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN:	Do not auto-remove clildren in the device list
  *
  * The device internal flags.
  **/
@@ -258,6 +259,7 @@ typedef enum {
 	FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN	= (1llu << 12),	/* Since: 1.6.2 */
 	FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET	= (1llu << 13),	/* Since: 1.6.2 */
 	FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN	= (1llu << 14),	/* Since: 1.6.2 */
+	FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN	= (1llu << 15),	/* Since: 1.6.2 */
 	/*< private >*/
 	FU_DEVICE_INTERNAL_FLAG_UNKNOWN			= G_MAXUINT64,
 } FuDeviceInternalFlags;
