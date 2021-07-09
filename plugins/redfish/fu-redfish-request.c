@@ -11,7 +11,11 @@
 struct _FuRedfishRequest {
 	GObject			 parent_instance;
 	CURL			*curl;
+#ifdef HAVE_LIBCURL_7_62_0
 	CURLU			*uri;
+#else
+	gchar			*uri_base;
+#endif
 	GByteArray		*buf;
 	glong			 status_code;
 	JsonParser		*json_parser;
@@ -38,12 +42,21 @@ fu_redfish_request_get_curl (FuRedfishRequest *self)
 	return self->curl;
 }
 
+#ifdef HAVE_LIBCURL_7_62_0
 CURLU *
 fu_redfish_request_get_uri (FuRedfishRequest *self)
 {
 	g_return_val_if_fail (FU_IS_REDFISH_REQUEST (self), NULL);
 	return self->uri;
 }
+#else
+void
+fu_redfish_request_set_uri_base (FuRedfishRequest *self, const gchar *uri_base)
+{
+	g_return_if_fail (FU_IS_REDFISH_REQUEST (self));
+	self->uri_base = g_strdup (uri_base);
+}
+#endif
 
 glong
 fu_redfish_request_get_status_code (FuRedfishRequest *self)
@@ -142,7 +155,11 @@ fu_redfish_request_perform (FuRedfishRequest *self,
 			    GError **error)
 {
 	CURLcode res;
+#ifdef HAVE_LIBCURL_7_62_0
 	g_autoptr(curlptr) uri_str = NULL;
+#else
+	g_autofree gchar *uri_str = NULL;
+#endif
 
 	g_return_val_if_fail (FU_IS_REDFISH_REQUEST (self), FALSE);
 	g_return_val_if_fail (path != NULL, FALSE);
@@ -163,8 +180,19 @@ fu_redfish_request_perform (FuRedfishRequest *self,
 	}
 
 	/* do request */
+#ifdef HAVE_LIBCURL_7_62_0
 	curl_url_set (self->uri, CURLUPART_PATH, path, 0);
 	curl_url_get (self->uri, CURLUPART_URL, &uri_str, 0);
+#else
+	uri_str = g_strdup_printf ("%s%s", self->uri_base, path);
+	if (curl_easy_setopt (self->curl, CURLOPT_URL, uri_str) != CURLE_OK) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INVALID_FILE,
+				     "failed to create message for URI");
+		return FALSE;
+	}
+#endif
 	res = curl_easy_perform (self->curl);
 	curl_easy_getinfo (self->curl, CURLINFO_RESPONSE_CODE, &self->status_code);
 	if (g_getenv ("FWUPD_REDFISH_VERBOSE") != NULL) {
@@ -235,7 +263,9 @@ static void
 fu_redfish_request_init (FuRedfishRequest *self)
 {
 	self->curl = curl_easy_init ();
+#ifdef HAVE_LIBCURL_7_62_0
 	self->uri = curl_url ();
+#endif
 	self->buf = g_byte_array_new ();
 	self->json_parser = json_parser_new ();
 	curl_easy_setopt (self->curl, CURLOPT_WRITEFUNCTION, fu_redfish_request_write_cb);
@@ -251,7 +281,11 @@ fu_redfish_request_finalize (GObject *object)
 	g_object_unref (self->json_parser);
 	g_byte_array_unref (self->buf);
 	curl_easy_cleanup (self->curl);
+#ifdef HAVE_LIBCURL_7_62_0
 	curl_url_cleanup (self->uri);
+#else
+	g_free (self->uri_base);
+#endif
 	G_OBJECT_CLASS (fu_redfish_request_parent_class)->finalize (object);
 }
 

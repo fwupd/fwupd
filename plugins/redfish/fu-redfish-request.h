@@ -10,10 +10,6 @@
 
 #include <curl/curl.h>
 
-#ifndef HAVE_LIBCURL_7_62_0
-#error libcurl >= 7.62.0 required
-#endif
-
 #define FU_TYPE_REDFISH_REQUEST (fu_redfish_request_get_type ())
 G_DECLARE_FINAL_TYPE (FuRedfishRequest, fu_redfish_request, FU, REDFISH_REQUEST, GObject)
 
@@ -31,7 +27,12 @@ JsonObject	*fu_redfish_request_get_json_object	(FuRedfishRequest	*self);
 CURL		*fu_redfish_request_get_curl		(FuRedfishRequest	*self);
 void		 fu_redfish_request_set_curlsh		(FuRedfishRequest	*self,
 							 CURLSH			*curlsh);
+#ifdef HAVE_LIBCURL_7_62_0
 CURLU		*fu_redfish_request_get_uri		(FuRedfishRequest	*self);
+#else
+void		 fu_redfish_request_set_uri_base	(FuRedfishRequest	*self,
+							 const gchar		*uri_base);
+#endif
 glong		 fu_redfish_request_get_status_code	(FuRedfishRequest	*self);
 void		 fu_redfish_request_set_cache		(FuRedfishRequest	*self,
 							 GHashTable		*cache);
