@@ -402,8 +402,8 @@ fwupd_device_func (void)
 	ret = fu_test_compare_lines (str_ascii->str,
 		"ColorHug2\n"
 		"  DeviceId:             USB:foo\n"
-		"  Guid:                 00000000-0000-0000-0000-000000000000\n"
 		"  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
+		"  Guid:                 00000000-0000-0000-0000-000000000000\n"
 		"  Flags:                updatable|require-ac\n"
 		"  Checksum:             SHA1(beefdead)\n"
 		"  Icon:                 input-gaming,input-mouse\n"
