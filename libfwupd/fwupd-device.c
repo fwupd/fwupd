@@ -2660,6 +2660,30 @@ fwupd_device_verstr_raw (guint64 value_raw)
 	return g_strdup_printf ("0x%08x", (guint) value_raw);
 }
 
+typedef struct {
+	gchar		*guid;
+	gchar		*instance_id;
+} FwupdDeviceGuidHelper;
+
+static void
+fwupd_device_guid_helper_new (FwupdDeviceGuidHelper *helper)
+{
+	g_free (helper->guid);
+	g_free (helper->instance_id);
+	g_free (helper);
+}
+
+static FwupdDeviceGuidHelper *
+fwupd_device_guid_helper_array_find (GPtrArray *array, const gchar *guid)
+{
+	for (guint i = 0; i < array->len; i++) {
+		FwupdDeviceGuidHelper *helper = g_ptr_array_index (array, i);
+		if (g_strcmp0 (helper->guid, guid) == 0)
+			return helper;
+	}
+	return NULL;
+}
+
 /**
  * fwupd_device_to_string:
  * @self: a #FwupdDevice
@@ -2675,10 +2699,7 @@ fwupd_device_to_string (FwupdDevice *self)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE (self);
 	GString *str;
-	GHashTableIter iter;
-	gpointer key = NULL;
-	gpointer value = NULL;
-	g_autoptr(GHashTable) instance_ids_by_guid = NULL;
+	g_autoptr(GPtrArray) guid_helpers = NULL;
 
 	g_return_val_if_fail (FWUPD_IS_DEVICE (self), NULL);
 
@@ -2697,27 +2718,28 @@ fwupd_device_to_string (FwupdDevice *self)
 	}
 
 	/* show InstanceIDs optionally mapped to GUIDs, and also "standalone" GUIDs */
-	instance_ids_by_guid = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	guid_helpers = g_ptr_array_new_with_free_func ((GDestroyNotify) fwupd_device_guid_helper_new);
 	for (guint i = 0; i < priv->instance_ids->len; i++) {
+		FwupdDeviceGuidHelper *helper = g_new0 (FwupdDeviceGuidHelper, 1);
 		const gchar *instance_id = g_ptr_array_index (priv->instance_ids, i);
-		g_hash_table_insert (instance_ids_by_guid,
-				     fwupd_guid_hash_string (instance_id),
-				     g_strdup (instance_id));
+		helper->guid = fwupd_guid_hash_string (instance_id);
+		helper->instance_id = g_strdup (instance_id);
+		g_ptr_array_add (guid_helpers, helper);
 	}
 	for (guint i = 0; i < priv->guids->len; i++) {
 		const gchar *guid = g_ptr_array_index (priv->guids, i);
-		if (g_hash_table_contains (instance_ids_by_guid, guid))
-			continue;
-		g_hash_table_insert (instance_ids_by_guid, g_strdup (guid), NULL);
+		if (fwupd_device_guid_helper_array_find (guid_helpers, guid) == NULL) {
+			FwupdDeviceGuidHelper *helper = g_new0 (FwupdDeviceGuidHelper, 1);
+			helper->guid = g_strdup (guid);
+			g_ptr_array_add (guid_helpers, helper);
+		}
 	}
-	g_hash_table_iter_init (&iter, instance_ids_by_guid);
-	while (g_hash_table_iter_next (&iter, &key, &value)) {
-		const gchar *guid = (const gchar *) key;
-		const gchar *instance_id = (const gchar *) value;
-		g_autoptr(GString) tmp = g_string_new (guid);
-		if (instance_id != NULL)
-			g_string_append_printf (tmp, " ← %s", instance_id);
-		if (!fwupd_device_has_guid (self, guid))
+	for (guint i = 0; i < guid_helpers->len; i++) {
+		FwupdDeviceGuidHelper *helper = g_ptr_array_index (guid_helpers, i);
+		g_autoptr(GString) tmp = g_string_new (helper->guid);
+		if (helper->instance_id != NULL)
+			g_string_append_printf (tmp, " ← %s", helper->instance_id);
+		if (!fwupd_device_has_guid (self, helper->guid))
 			g_string_append (tmp, " ⚠");
 		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_GUID, tmp->str);
 	}
