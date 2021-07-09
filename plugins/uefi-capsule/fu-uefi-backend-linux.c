@@ -39,7 +39,6 @@ fu_uefi_backend_device_new (const gchar *path)
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autofree gchar *fw_class = NULL;
 	g_autofree gchar *fw_class_fn = NULL;
-	g_autofree gchar *id = NULL;
 
 	g_return_val_if_fail (path != NULL, NULL);
 
@@ -67,8 +66,6 @@ fu_uefi_backend_device_new (const gchar *path)
 			    NULL);
 
 	/* set ID */
-	id = g_strdup_printf ("UEFI-%s-dev0", fw_class);
-	fu_device_set_id (FU_DEVICE (dev), id);
 	fu_device_set_physical_id (FU_DEVICE (dev), path);
 	return g_steal_pointer (&dev);
 }

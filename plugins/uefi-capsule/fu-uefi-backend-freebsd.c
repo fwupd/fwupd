@@ -37,7 +37,6 @@ fu_uefi_backend_device_new (struct efi_esrt_entry_v1 *entry, guint64 idx, GError
 {
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autofree gchar *fw_class = NULL;
-	g_autofree gchar *id = NULL;
 	g_autofree gchar *phys_id = NULL;
 	uint32_t status;
 
@@ -64,8 +63,6 @@ fu_uefi_backend_device_new (struct efi_esrt_entry_v1 *entry, guint64 idx, GError
 			    NULL);
 
 	/* set ID */
-	id = g_strdup_printf ("UEFI-%s-dev0", fw_class);
-	fu_device_set_id (FU_DEVICE (dev), id);
 	phys_id = g_strdup_printf ("ESRT/%u", (guint)idx);
 	fu_device_set_physical_id (FU_DEVICE (dev), phys_id);
 	return g_steal_pointer (&dev);
