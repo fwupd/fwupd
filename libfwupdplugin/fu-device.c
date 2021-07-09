@@ -1141,6 +1141,8 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 		fu_device_set_backend_id (child, priv->backend_id);
 	if (fu_device_get_vendor (child) == NULL)
 		fu_device_set_vendor (child, fu_device_get_vendor (self));
+	if (priv_child->remove_delay == 0 && priv->remove_delay != 0)
+		fu_device_set_remove_delay (child, priv->remove_delay);
 	if (fu_device_get_vendor_ids(child)->len == 0) {
 		GPtrArray *vendor_ids = fu_device_get_vendor_ids (self);
 		for (guint i = 0; i < vendor_ids->len; i++) {
