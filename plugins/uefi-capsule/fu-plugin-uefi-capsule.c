@@ -413,6 +413,8 @@ fu_plugin_uefi_capsule_load_config (FuPlugin *plugin, FuDevice *device)
 {
 	gboolean disable_shim;
 	gboolean fallback_removable_path;
+	gboolean capsule_on_disk;
+	gboolean ignore_os_indications;
 	guint64 sz_reqd = FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE;
 	g_autofree gchar *require_esp_free_space = NULL;
 
@@ -433,6 +435,22 @@ fu_plugin_uefi_capsule_load_config (FuPlugin *plugin, FuDevice *device)
 	fu_device_set_metadata_boolean (device,
 					"FallbacktoRemovablePath",
 					fallback_removable_path);
+
+	/* delivery of Capsules via file on Mass Storage device */
+	capsule_on_disk = fu_plugin_get_config_value_boolean (plugin, "EnableCapsuleUpdateOnDisk");
+	fu_device_set_metadata_boolean (device,
+					"EnableCapsuleUpdateOnDisk",
+					capsule_on_disk);
+	/*
+	 * some firmware implementations don't support SetVariable at runtime
+	 * but they can ignore OsIndications before applying the capsule on
+	 * reboot (e.g U-Boot). If you have such a firmware set this to true
+	 */
+	ignore_os_indications = fu_plugin_get_config_value_boolean (plugin, "IgnoreOsIndications");
+	fu_device_set_metadata_boolean (device,
+					"IgnoreOsIndications",
+					ignore_os_indications);
+
 }
 
 static void
