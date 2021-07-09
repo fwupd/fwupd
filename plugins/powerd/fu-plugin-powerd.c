@@ -20,6 +20,43 @@ fu_plugin_init(FuPlugin *plugin)
 	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 }
 
+static gboolean
+fu_plugin_powerd_create_suspend_file(GError **error)
+{
+	g_autofree gchar *lockdir = NULL;
+	g_autofree gchar *inhibitsuspend_filename = NULL;
+	g_autofree gchar *getpid_str = NULL;
+
+	lockdir = fu_common_get_path(FU_PATH_KIND_LOCKDIR);
+	inhibitsuspend_filename = g_build_filename(lockdir, "power_override", "fwupd.lock", NULL);
+	getpid_str = g_strdup_printf("%d", getpid());
+	if (!g_file_set_contents(inhibitsuspend_filename, getpid_str, -1, error)) {
+		g_prefix_error(error, "lock file unable to be created");
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_plugin_powerd_delete_suspend_file(GError **error)
+{
+	g_autoptr(GError) local_error = NULL;
+	g_autofree gchar *lockdir = NULL;
+	g_autoptr(GFile) inhibitsuspend_file = NULL;
+
+	lockdir = fu_common_get_path(FU_PATH_KIND_LOCKDIR);
+	inhibitsuspend_file =
+	    g_file_new_build_filename(lockdir, "power_override", "fwupd.lock", NULL);
+	if (!g_file_delete(inhibitsuspend_file, NULL, &local_error) &&
+	    !g_error_matches(local_error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+		g_propagate_prefixed_error(error,
+					   g_steal_pointer(&local_error),
+					   "lock file unable to be deleted");
+		return FALSE;
+	}
+	return TRUE;
+}
+
 void
 fu_plugin_destroy(FuPlugin *plugin)
 {
@@ -70,6 +107,9 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *name_owner = NULL;
 
+	if (!fu_plugin_powerd_delete_suspend_file(error))
+		return FALSE;
+
 	/* establish proxy for method call to powerd */
 	data->proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
 						    G_DBUS_PROXY_FLAGS_NONE,
@@ -98,4 +138,16 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	g_timeout_add_seconds(5, G_SOURCE_FUNC(fu_plugin_powerd_refresh_cb), plugin);
 
 	return TRUE;
+}
+
+gboolean
+fu_plugin_update_prepare(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *dev, GError **error)
+{
+	return fu_plugin_powerd_create_suspend_file(error);
+}
+
+gboolean
+fu_plugin_update_cleanup(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *dev, GError **error)
+{
+	return fu_plugin_powerd_delete_suspend_file(error);
 }
