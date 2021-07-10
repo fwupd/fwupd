@@ -270,7 +270,7 @@ fu_efi_firmware_section_class_init (FuEfiFirmwareSectionClass *klass)
  *
  * Creates a new #FuFirmware
  *
- * Since: 1.6.0
+ * Since: 1.6.2
  **/
 FuFirmware *
 fu_efi_firmware_section_new (void)

@@ -28,6 +28,16 @@ fwupdplugin_src = [
   'fu-kenv.c',              # fuzzing
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
+  'fu-efi-common.c',              # fuzzing
+  'fu-efi-firmware-common.c',     # fuzzing
+  'fu-efi-firmware-file.c',       # fuzzing
+  'fu-efi-firmware-filesystem.c', # fuzzing
+  'fu-efi-firmware-section.c',    # fuzzing
+  'fu-efi-firmware-volume.c',     # fuzzing
+  'fu-ifd-bios.c',                # fuzzing
+  'fu-ifd-common.c',              # fuzzing
+  'fu-ifd-firmware.c',            # fuzzing
+  'fu-ifd-image.c',               # fuzzing
   'fu-efivar.c',
   'fu-udev-device.c',
   'fu-i2c-device.c',
@@ -65,6 +75,15 @@ fwupdplugin_headers = [
   'fu-device-metadata.h',
   'fu-device-locker.h',
   'fu-dfu-firmware.h',
+  'fu-efi-common.h',
+  'fu-efi-firmware-file.h',
+  'fu-efi-firmware-filesystem.h',
+  'fu-efi-firmware-section.h',
+  'fu-efi-firmware-volume.h',
+  'fu-ifd-bios.h',
+  'fu-ifd-common.h',
+  'fu-ifd-firmware.h',
+  'fu-ifd-image.h',
   'fu-volume.h',
   'fu-firmware.h',
   'fu-firmware-common.h',
@@ -154,6 +173,10 @@ library_deps = [
 
 if get_option('libarchive')
   library_deps += libarchive
+endif
+
+if get_option('lzma')
+  library_deps += lzma
 endif
 
 fwupdplugin_mapfile = 'fwupdplugin.map'

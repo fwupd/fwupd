@@ -285,7 +285,15 @@ def _build(bld: Builder) -> None:
         built_objs.append(bld.compile("fwupd/libfwupdplugin/fu-fuzzer-main.c"))
 
     # built in formats
-    for fzr in [Fuzzer("dfuse"), Fuzzer("fmap"), Fuzzer("ihex"), Fuzzer("srec")]:
+    for fzr in [
+        Fuzzer("dfuse"),
+        Fuzzer("fmap"),
+        Fuzzer("ihex"),
+        Fuzzer("srec"),
+        Fuzzer("efi-filesystem", pattern="efi-firmware-filesystem"),
+        Fuzzer("efi-volume", pattern="efi-firmware-volume"),
+        Fuzzer("ifd"),
+    ]:
         src = bld.substitute(
             "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
             {
@@ -307,11 +315,8 @@ def _build(bld: Builder) -> None:
         Fuzzer("ccgx", globstr="ccgx*.cyacd"),
         Fuzzer("cros-ec"),
         Fuzzer("ebitdo"),
-        Fuzzer("efi-filesystem", srcdir="intel-spi", pattern="efi-firmware-filesystem"),
-        Fuzzer("efi-volume", srcdir="intel-spi", pattern="efi-firmware-volume"),
         Fuzzer("elantp"),
         Fuzzer("hailuck-kbd", srcdir="hailuck", globstr="ihex*"),
-        Fuzzer("ifd", srcdir="intel-spi"),
         Fuzzer("pixart", srcdir="pixart-rf", pattern="pxi-firmware"),
         Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
         Fuzzer("solokey"),

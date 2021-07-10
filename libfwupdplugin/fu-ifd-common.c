@@ -16,7 +16,7 @@
  *
  * Returns: identifier string
  *
- * Since: 1.6.0
+ * Since: 1.6.2
  **/
 const gchar *
 fu_ifd_region_to_string (FuIfdRegion region)
@@ -52,7 +52,7 @@ fu_ifd_region_to_string (FuIfdRegion region)
  *
  * Returns: identifier string
  *
- * Since: 1.6.0
+ * Since: 1.6.2
  **/
 const gchar *
 fu_ifd_region_to_name (FuIfdRegion region)
@@ -88,7 +88,7 @@ fu_ifd_region_to_name (FuIfdRegion region)
  *
  * Returns: identifier string
  *
- * Since: 1.6.0
+ * Since: 1.6.2
  **/
 const gchar *
 fu_ifd_access_to_string (FuIfdAccess access)
@@ -104,14 +104,26 @@ fu_ifd_access_to_string (FuIfdAccess access)
 	return NULL;
 }
 
+/**
+ * fu_ifd_region_to_access:
+ * @region: A #FuIfdRegion, e.g. %FU_IFD_REGION_BIOS
+ * @flash_master: flash master number
+ * @new_layout: if Skylake or newer
+ *
+ * Converts a #FuIfdRegion to an access level.
+ *
+ * Returns: access
+ *
+ * Since: 1.6.2
+ **/
 FuIfdAccess
-fu_ifd_region_to_access (FuIfdRegion region, guint32 flash_master, gboolean is_skylake)
+fu_ifd_region_to_access (FuIfdRegion region, guint32 flash_master, gboolean new_layout)
 {
 	guint8 bit_r = 0;
 	guint8 bit_w = 0;
 
 	/* new layout */
-	if (is_skylake) {
+	if (new_layout) {
 		bit_r = (flash_master >> (region + 8)) & 0b1;
 		bit_w = (flash_master >> (region + 20)) & 0b1;
 		return (bit_r ? FU_IFD_ACCESS_READ : FU_IFD_ACCESS_NONE) |

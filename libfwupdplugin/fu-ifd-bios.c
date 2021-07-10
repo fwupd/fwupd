@@ -9,7 +9,6 @@
 #include <fwupdplugin.h>
 
 #include "fu-efi-firmware-volume.h"
-#include "fu-ifd-bios.h"
 
 /**
  * FuIfdBios:
@@ -98,7 +97,7 @@ fu_ifd_bios_class_init (FuIfdBiosClass *klass)
  *
  * Creates a new #FuFirmware
  *
- * Since: 1.6.0
+ * Since: 1.6.2
  **/
 FuFirmware *
 fu_ifd_bios_new (void)
