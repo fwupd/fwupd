@@ -15,6 +15,19 @@
 #include "fu-efi-firmware-common.h"
 #include "fu-efi-firmware-section.h"
 
+/**
+ * fu_efi_firmware_parse_sections:
+ * @firmware: #FuFirmware
+ * @fw: data
+ * @flags: flags
+ * @error: (nullable): optional return location for an error
+ *
+ * Parses a UEFI section.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.6.2
+ **/
 gboolean
 fu_efi_firmware_parse_sections (FuFirmware *firmware,
 				GBytes *fw,
@@ -55,6 +68,17 @@ fu_efi_firmware_parse_sections (FuFirmware *firmware,
 	return TRUE;
 }
 
+/**
+ * fu_efi_firmware_decompress_lzma:
+ * @blob: data
+ * @error: (nullable): optional return location for an error
+ *
+ * Decompresses a LZMA stream.
+ *
+ * Returns: decompressed data
+ *
+ * Since: 1.6.2
+ **/
 GBytes *
 fu_efi_firmware_decompress_lzma (GBytes *blob, GError **error)
 {

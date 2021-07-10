@@ -42,7 +42,7 @@ fu_ifd_image_export (FuFirmware *firmware,
  *
  * Sets the access control for a specific reason.
  *
- * Since: 1.6.0
+ * Since: 1.6.2
  **/
 void
 fu_ifd_image_set_access (FuIfdImage *self, FuIfdRegion region, FuIfdAccess access)
@@ -60,7 +60,7 @@ fu_ifd_image_set_access (FuIfdImage *self, FuIfdRegion region, FuIfdAccess acces
  *
  * Returns: a #FuIfdAccess, e.g. %FU_IFD_ACCESS_NONE
  *
- * Since: 1.6.0
+ * Since: 1.6.2
  **/
 FuIfdAccess
 fu_ifd_image_get_access (FuIfdImage *self, FuIfdRegion region)
@@ -120,7 +120,7 @@ fu_ifd_image_class_init (FuIfdImageClass *klass)
  *
  * Creates a new #FuFirmware
  *
- * Since: 1.6.0
+ * Since: 1.6.2
  **/
 FuFirmware *
 fu_ifd_image_new (void)

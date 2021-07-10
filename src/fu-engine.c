@@ -36,6 +36,12 @@
 #include "fu-debug.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
+#include "fu-ifd-firmware.h"
+#include "fu-ifd-bios.h"
+#include "fu-efi-firmware-file.h"
+#include "fu-efi-firmware-filesystem.h"
+#include "fu-efi-firmware-section.h"
+#include "fu-efi-firmware-volume.h"
 #include "fu-engine.h"
 #include "fu-engine-helper.h"
 #include "fu-engine-request.h"
@@ -6529,6 +6535,12 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	fu_context_add_firmware_gtype (self->ctx, "ihex", FU_TYPE_IHEX_FIRMWARE);
 	fu_context_add_firmware_gtype (self->ctx, "srec", FU_TYPE_SREC_FIRMWARE);
 	fu_context_add_firmware_gtype (self->ctx, "smbios", FU_TYPE_SMBIOS);
+	fu_context_add_firmware_gtype (self->ctx, "efi-firmware-file", FU_TYPE_EFI_FIRMWARE_FILE);
+	fu_context_add_firmware_gtype (self->ctx, "efi-firmware-filesystem", FU_TYPE_EFI_FIRMWARE_FILESYSTEM);
+	fu_context_add_firmware_gtype (self->ctx, "efi-firmware-section", FU_TYPE_EFI_FIRMWARE_SECTION);
+	fu_context_add_firmware_gtype (self->ctx, "efi-firmware-colume", FU_TYPE_EFI_FIRMWARE_VOLUME);
+	fu_context_add_firmware_gtype (self->ctx, "ifd-bios", FU_TYPE_IFD_BIOS);
+	fu_context_add_firmware_gtype (self->ctx, "ifd-firmware", FU_TYPE_IFD_FIRMWARE);
 
 	/* set up backends */
 	for (guint i = 0; i < self->backends->len; i++) {

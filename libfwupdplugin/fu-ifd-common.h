@@ -37,4 +37,4 @@ const gchar	*fu_ifd_access_to_string	(FuIfdAccess	 access);
 
 FuIfdAccess	 fu_ifd_region_to_access	(FuIfdRegion	 region,
 						 guint32	 flash_master,
-						 gboolean	 is_skylake);
+						 gboolean	 new_layout);

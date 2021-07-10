@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-ifd-common.h"
-
 #define FU_TYPE_IFD_DEVICE (fu_ifd_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuIfdDevice, fu_ifd_device, FU, IFD_DEVICE, FuDevice)
 

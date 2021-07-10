@@ -375,7 +375,7 @@ fu_efi_firmware_volume_class_init (FuEfiFirmwareVolumeClass *klass)
  *
  * Creates a new #FuFirmware
  *
- * Since: 1.6.0
+ * Since: 1.6.2
  **/
 FuFirmware *
 fu_efi_firmware_volume_new (void)

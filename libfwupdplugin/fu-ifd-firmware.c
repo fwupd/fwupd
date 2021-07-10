@@ -9,8 +9,6 @@
 #include <fwupdplugin.h>
 
 #include "fu-ifd-common.h"
-#include "fu-ifd-firmware.h"
-#include "fu-ifd-bios.h"
 
 /**
  * FuIfdFirmware:
@@ -21,7 +19,7 @@
  */
 
 typedef struct {
-	gboolean		 is_skylake;
+	gboolean		 new_layout;
 	guint32			 descriptor_map0;
 	guint32			 descriptor_map1;
 	guint32			 descriptor_map2;
@@ -230,7 +228,7 @@ fu_ifd_firmware_parse (FuFirmware *firmware,
 		/* is writable by anything other than the region itself */
 		for (FuIfdRegion r = 1; r <= 3; r++) {
 			FuIfdAccess acc;
-			acc = fu_ifd_region_to_access (i, priv->flash_master[r], priv->is_skylake);
+			acc = fu_ifd_region_to_access (i, priv->flash_master[r], priv->new_layout);
 			fu_ifd_image_set_access (FU_IFD_IMAGE (img), r, acc);
 		}
 	}
@@ -248,7 +246,7 @@ fu_ifd_firmware_parse (FuFirmware *firmware,
  *
  * Returns: %TRUE if the command is allowed
  *
- * Since: 1.6.0
+ * Since: 1.6.2
  **/
 gboolean
 fu_ifd_firmware_check_jedec_cmd (FuIfdFirmware *self, guint8 cmd)
@@ -414,7 +412,7 @@ fu_ifd_firmware_init (FuIfdFirmware *self)
 	FuIfdFirmwarePrivate *priv = GET_PRIVATE (self);
 
 	/* some good defaults */
-	priv->is_skylake = TRUE;
+	priv->new_layout = TRUE;
 	priv->num_regions = 10;
 	priv->flash_region_base_addr = 0x40;
 	priv->flash_component_base_addr = 0x30;
@@ -453,7 +451,7 @@ fu_ifd_firmware_class_init (FuIfdFirmwareClass *klass)
  *
  * Creates a new #FuFirmware of sub type Ifd
  *
- * Since: 1.6.0
+ * Since: 1.6.2
  **/
 FuFirmware *
 fu_ifd_firmware_new (void)

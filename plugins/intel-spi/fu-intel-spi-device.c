@@ -22,9 +22,7 @@
 #include "fu-intel-spi-common.h"
 #include "fu-intel-spi-device.h"
 
-#include "fu-ifd-common.h"
 #include "fu-ifd-device.h"
-#include "fu-ifd-firmware.h"
 
 struct _FuIntelSpiDevice {
 	FuDevice		 parent_instance;

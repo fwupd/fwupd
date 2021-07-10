@@ -16,7 +16,7 @@
  *
  * Returns: identifier string, or %NULL if unknown
  *
- * Since: 1.6.0
+ * Since: 1.6.2
  **/
 const gchar *
 fu_efi_guid_to_name (const gchar *guid)
