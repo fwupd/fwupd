@@ -331,6 +331,9 @@ fu_pxi_receiver_device_write_payload (FuDevice *device, FuChunk *chk, GError **e
 	if (!fu_pxi_receiver_device_get_cmd_response (self, buf, sizeof(buf), error))
 		return FALSE;
 
+	if (!fu_common_read_uint8_safe (buf, sizeof(buf), 0x5, &status, error))
+		return FALSE;
+
 	if (status != OTA_RSP_OK) {
 		g_set_error (error,
 			     FWUPD_ERROR,
