@@ -351,7 +351,7 @@ fu_superio_device_setup (FuDevice *device, GError **error)
 				continue;
 			}
 		}
-		fu_common_dump_raw (G_LOG_DOMAIN, "EC Registers", buf, 0x100);
+		fu_common_dump_raw (G_LOG_DOMAIN, "EC Registers", buf, sizeof(buf));
 	}
 
 	/* success */
