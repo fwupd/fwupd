@@ -784,6 +784,8 @@ fu_realtek_mst_device_attach (FuDevice *device, GError **error)
 	if (!mst_read_register (self, REG_MCU_MODE, &value, error))
 		return FALSE;
 	if ((value & MCU_MODE_ISP) != 0) {
+		g_autoptr(GError) error_local = NULL;
+
 		g_debug ("resetting device to exit ISP mode");
 		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 
@@ -792,7 +794,10 @@ fu_realtek_mst_device_attach (FuDevice *device, GError **error)
 		 * no longer in programming mode after giving it time to reset. */
 		if (!mst_read_register (self, 0xEE, &value, error))
 			return FALSE;
-		mst_write_register (self, 0xEE, value | 2, NULL);
+		if (!mst_write_register (self, 0xEE, value | 2, &error_local)) {
+			g_debug ("write spuriously failed, ignoring: %s",
+				 error_local->message);
+		}
 
 		/* allow device some time to reset */
 		g_usleep (G_USEC_PER_SEC);
