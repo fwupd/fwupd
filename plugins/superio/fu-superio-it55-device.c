@@ -92,12 +92,12 @@ fu_superio_it55_device_ec_project (FuSuperioDevice *device, GError **error)
 static gboolean
 fu_superio_it55_device_ec_version (FuSuperioDevice *self, GError **error)
 {
-	gchar version[16] = "1.";
+	gchar version[16] = { '1', '.', '\0' };
 
 	if (!fu_superio_device_ec_write_cmd (self, SIO_CMD_EC_GET_VERSION_STR, error))
 		return FALSE;
 
-	for (guint i = 2; i < sizeof(version) - 1; ++i) {
+	for (guint i = 2; i < sizeof(version) - 1; i++) {
 		guint8 tmp = 0;
 		if (!fu_superio_device_ec_read_data (self, &tmp, error)) {
 			g_prefix_error (error, "failed to read firmware version: ");
