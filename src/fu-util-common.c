@@ -2137,6 +2137,9 @@ fu_util_show_unsupported_warn (void)
 {
 #ifndef SUPPORTED_BUILD
 	g_autofree gchar *fmt = NULL;
+
+	if (g_getenv ("FWUPD_SUPPORTED") != NULL)
+                return;
 	/* TRANSLATORS: this is a prefix on the console */
 	fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_YELLOW);
 	/* TRANSLATORS: unsupported build of the package */
