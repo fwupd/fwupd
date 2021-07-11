@@ -194,34 +194,6 @@ fu_rts54hid_module_set_quirk_kv (FuDevice *device,
 }
 
 static gboolean
-fu_rts54hid_module_open (FuDevice *device, GError **error)
-{
-	FuDevice *parent = fu_device_get_parent (device);
-	if (parent == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "no parent device");
-		return FALSE;
-	}
-	return fu_device_open (parent, error);
-}
-
-static gboolean
-fu_rts54hid_module_close (FuDevice *device, GError **error)
-{
-	FuDevice *parent = fu_device_get_parent (device);
-	if (parent == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "no parent device");
-		return FALSE;
-	}
-	return fu_device_close (parent, error);
-}
-
-static gboolean
 fu_rts54hid_module_write_firmware (FuDevice *module,
 				   FuFirmware *firmware,
 				   FwupdInstallFlags flags,
@@ -272,6 +244,7 @@ fu_rts54hid_module_write_firmware (FuDevice *module,
 static void
 fu_rts54hid_module_init (FuRts54HidModule *self)
 {
+	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 }
 
 static void
@@ -281,8 +254,6 @@ fu_rts54hid_module_class_init (FuRts54HidModuleClass *klass)
 	klass_device->write_firmware = fu_rts54hid_module_write_firmware;
 	klass_device->to_string = fu_rts54hid_module_to_string;
 	klass_device->set_quirk_kv = fu_rts54hid_module_set_quirk_kv;
-	klass_device->open = fu_rts54hid_module_open;
-	klass_device->close = fu_rts54hid_module_close;
 }
 
 FuRts54HidModule *

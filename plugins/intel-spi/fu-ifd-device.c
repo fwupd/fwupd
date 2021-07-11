@@ -59,18 +59,6 @@ fu_ifd_device_set_access (FuIfdDevice *self, FuIfdRegion region, FuIfdAccess acc
 	priv->access[region] = access;
 }
 
-static gboolean
-fu_ifd_device_open (FuDevice *device, GError **error)
-{
-	return fu_device_open (fu_device_get_parent (device), error);
-}
-
-static gboolean
-fu_ifd_device_close (FuDevice *device, GError **error)
-{
-	return fu_device_close (fu_device_get_parent (device), error);
-}
-
 static void
 fu_ifd_device_to_string (FuDevice *device, guint idt, GString *str)
 {
@@ -131,6 +119,7 @@ fu_ifd_device_init (FuIfdDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 	fu_device_add_icon (FU_DEVICE (self), "computer");
 }
 
@@ -141,8 +130,6 @@ fu_ifd_device_class_init (FuIfdDeviceClass *klass)
 	klass_device->to_string = fu_ifd_device_to_string;
 	klass_device->dump_firmware = fu_ifd_device_dump_firmware;
 	klass_device->read_firmware = fu_ifd_device_read_firmware;
-	klass_device->open = fu_ifd_device_open;
-	klass_device->close = fu_ifd_device_close;
 }
 
 FuDevice *
