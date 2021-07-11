@@ -217,34 +217,6 @@ fu_rts54hub_rtd21xx_device_read_status (FuRts54hubRtd21xxDevice *self,
 				4200, status, error);
 }
 
-static gboolean
-fu_rts54hub_rtd21xx_device_open (FuDevice *device, GError **error)
-{
-	FuDevice *parent = fu_device_get_parent (device);
-	if (parent == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "no parent device");
-		return FALSE;
-	}
-	return fu_device_open (parent, error);
-}
-
-static gboolean
-fu_rts54hub_rtd21xx_device_close (FuDevice *device, GError **error)
-{
-	FuDevice *parent = fu_device_get_parent (device);
-	if (parent == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "no parent device");
-		return FALSE;
-	}
-	return fu_device_close (parent, error);
-}
-
 static void
 fu_rts54hub_rtd21xx_device_init (FuRts54hubRtd21xxDevice *self)
 {
@@ -252,6 +224,7 @@ fu_rts54hub_rtd21xx_device_init (FuRts54hubRtd21xxDevice *self)
 	fu_device_add_protocol (FU_DEVICE (self), "com.realtek.rts54.i2c");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_install_duration (FU_DEVICE (self), 100); /* seconds */
 	fu_device_set_logical_id (FU_DEVICE (self), "I2C");
@@ -264,6 +237,4 @@ fu_rts54hub_rtd21xx_device_class_init (FuRts54hubRtd21xxDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->to_string = fu_rts54hub_rtd21xx_device_to_string;
 	klass_device->set_quirk_kv = fu_rts54hub_rtd21xx_device_set_quirk_kv;
-	klass_device->open = fu_rts54hub_rtd21xx_device_open;
-	klass_device->close = fu_rts54hub_rtd21xx_device_close;
 }

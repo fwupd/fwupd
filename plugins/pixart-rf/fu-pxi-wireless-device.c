@@ -97,24 +97,6 @@ fu_pxi_wireless_device_get_parent (FuDevice *self, GError **error)
 }
 
 static gboolean
-fu_pxi_wireless_device_open (FuDevice *device, GError **error)
-{
-	FuPxiReceiverDevice *parent = fu_pxi_wireless_device_get_parent (device, error);
-	if (parent == NULL)
-		return FALSE;
-	return fu_device_open (FU_DEVICE (parent), error);
-}
-
-static gboolean
-fu_pxi_wireless_device_close (FuDevice *device, GError **error)
-{
-	FuPxiReceiverDevice *parent = fu_pxi_wireless_device_get_parent (device, error);
-	if (parent == NULL)
-		return FALSE;
-	return fu_device_close (FU_DEVICE (parent), error);
-}
-
-static gboolean
 fu_pxi_wireless_device_get_cmd_response (FuPxiWirelessDevice *device,
 					 guint8 *buf, guint bufsz,
 					 GError **error)
@@ -612,6 +594,7 @@ static void
 fu_pxi_wireless_device_init (FuPxiWirelessDevice *self)
 {
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_vendor_id (FU_DEVICE (self), "USB:0x093A");
 	fu_device_add_protocol (FU_DEVICE (self), "com.pixart.rf");
@@ -621,8 +604,6 @@ static void
 fu_pxi_wireless_device_class_init (FuPxiWirelessDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
-	klass_device->open = fu_pxi_wireless_device_open;
-	klass_device->close = fu_pxi_wireless_device_close;
 	klass_device->write_firmware = fu_pxi_wireless_device_write_firmware;
 	klass_device->prepare_firmware = fu_pxi_wireless_device_prepare_firmware;
 	klass_device->to_string = fu_pxi_wireless_device_to_string;

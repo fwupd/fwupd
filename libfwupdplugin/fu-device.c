@@ -234,6 +234,8 @@ fu_device_internal_flag_to_string (FuDeviceInternalFlags flag)
 		return "inhibit-children";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN)
 		return "no-auto-remove-children";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN)
+		return "use-parent-for-open";
 	return NULL;
 }
 
@@ -282,6 +284,8 @@ fu_device_internal_flag_from_string (const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN;
 	if (g_strcmp0 (flag, "no-auto-remove-children") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN;
+	if (g_strcmp0 (flag, "use-parent-for-open") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -3755,38 +3759,11 @@ fu_device_open_cb (FuDevice *self, gpointer user_data, GError **error)
 	return klass->open (self, error);
 }
 
-/**
- * fu_device_open:
- * @self: a #FuDevice
- * @error: (nullable): optional return location for an error
- *
- * Opens a device, optionally running a object-specific vfunc.
- *
- * Plugins can call fu_device_open() multiple times without calling
- * fu_device_close(), but only the first call will actually invoke the vfunc.
- *
- * It is expected that plugins issue the same number of fu_device_open() and
- * fu_device_close() methods when using a specific @self.
- *
- * If the `->probe()`, `->open()` and `->setup()` actions all complete
- * successfully the internal device flag %FU_DEVICE_INTERNAL_FLAG_IS_OPEN will
- * be set.
- *
- * NOTE: It is important to still call fu_device_close() even if this function
- * fails as the device may still be partially initialized.
- *
- * Returns: %TRUE for success
- *
- * Since: 1.1.2
- **/
-gboolean
-fu_device_open (FuDevice *self, GError **error)
+static gboolean
+fu_device_open_internal (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-
-	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* already open */
 	g_atomic_int_inc (&priv->open_refcount);
@@ -3826,6 +3803,49 @@ fu_device_open (FuDevice *self, GError **error)
 	/* success */
 	fu_device_add_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_IS_OPEN);
 	return TRUE;
+}
+
+/**
+ * fu_device_open:
+ * @self: a #FuDevice
+ * @error: (nullable): optional return location for an error
+ *
+ * Opens a device, optionally running a object-specific vfunc.
+ *
+ * Plugins can call fu_device_open() multiple times without calling
+ * fu_device_close(), but only the first call will actually invoke the vfunc.
+ *
+ * It is expected that plugins issue the same number of fu_device_open() and
+ * fu_device_close() methods when using a specific @self.
+ *
+ * If the `->probe()`, `->open()` and `->setup()` actions all complete
+ * successfully the internal device flag %FU_DEVICE_INTERNAL_FLAG_IS_OPEN will
+ * be set.
+ *
+ * NOTE: It is important to still call fu_device_close() even if this function
+ * fails as the device may still be partially initialized.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.1.2
+ **/
+gboolean
+fu_device_open (FuDevice *self, GError **error)
+{
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	if (fu_device_has_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN)) {
+		FuDevice *parent = fu_device_get_parent (self);
+		if (parent == NULL) {
+			g_set_error_literal (error,
+					     FWUPD_ERROR,
+					     FWUPD_ERROR_NOT_SUPPORTED,
+					     "no parent device");
+			return FALSE;
+		}
+		return fu_device_open_internal (parent, error);
+	}
+	return fu_device_open_internal (self, error);
 }
 
 /**
