@@ -78,6 +78,35 @@ fu_device_list_emit_device_changed (FuDeviceList *self, FuDevice *device)
 	g_signal_emit (self, signals[SIGNAL_CHANGED], 0, device);
 }
 
+static gchar *
+fu_device_list_to_string (FuDeviceList *self)
+{
+	GString *str = g_string_new (NULL);
+	g_rw_lock_reader_lock (&self->devices_mutex);
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
+		gboolean wfr;
+
+		g_string_append_printf (str, "%u [%p]\n", i, item);
+		wfr = fu_device_has_flag (item->device,
+					  FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		g_string_append_printf (str, "new: %s [%p] %s\n",
+					fu_device_get_id (item->device),
+					item->device,
+					wfr ? "WAIT_FOR_REPLUG" : "");
+		if (item->device_old != NULL) {
+			wfr = fu_device_has_flag (item->device_old,
+						  FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+			g_string_append_printf (str, "old: %s [%p] %s\n",
+						fu_device_get_id (item->device_old),
+						item->device_old,
+						wfr ? "WAIT_FOR_REPLUG" : "");
+		}
+	}
+	g_rw_lock_reader_unlock (&self->devices_mutex);
+	return g_string_free (str, FALSE);
+}
+
 /* we cannot use fu_device_get_children() as this will not find "parent-only"
  * logical relationships added using fu_device_add_parent_guid() */
 static GPtrArray *
@@ -545,6 +574,25 @@ fu_device_list_item_set_device (FuDeviceItem *item, FuDevice *device)
 }
 
 static void
+fu_device_list_clear_wait_for_replug (FuDeviceList *self, FuDeviceItem *item)
+{
+	if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
+		g_debug ("%s device came back, clearing flag", fu_device_get_id (item->device));
+		fu_device_remove_flag (item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	}
+	if (item->device_old != NULL) {
+		if (fu_device_has_flag (item->device_old, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
+			g_debug ("%s old device came back, clearing flag", fu_device_get_id (item->device_old));
+			fu_device_remove_flag (item->device_old, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		}
+	}
+	if (g_getenv ("FWUPD_DEVICE_LIST_VERBOSE") != NULL) {
+		g_autofree gchar *str = fu_device_list_to_string (self);
+		g_debug ("\n%s", str);
+	}
+}
+
+static void
 fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 {
 	guint64 private_flags;
@@ -627,12 +675,13 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 	g_set_object (&item->device_old, item->device);
 	fu_device_list_item_set_device (item, device);
 	fu_device_list_emit_device_changed (self, device);
+	if (g_getenv ("FWUPD_DEVICE_LIST_VERBOSE") != NULL) {
+		g_autofree gchar *str = fu_device_list_to_string (self);
+		g_debug ("\n%s", str);
+	}
 
 	/* we were waiting for this... */
-	if (fu_device_has_flag (item->device_old, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
-		g_debug ("device came back, clearing flag");
-		fu_device_remove_flag (item->device_old, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	}
+	fu_device_list_clear_wait_for_replug (self, item);
 }
 
 /**
@@ -668,6 +717,33 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 	/* is the device waiting to be replugged? */
 	item = fu_device_list_find_by_id (self, fu_device_get_id (device), NULL);
 	if (item != NULL) {
+
+		/* literally the same object */
+		if (g_strcmp0 (fu_device_get_id (device),
+			       fu_device_get_id (item->device)) == 0) {
+			g_debug ("found existing device %s",
+				 fu_device_get_id (device));
+			if (device != item->device)
+				fu_device_list_item_set_device (item, device);
+			fu_device_list_clear_wait_for_replug (self, item);
+			fu_device_list_emit_device_changed (self, device);
+			return;
+		}
+
+		/* the old device again */
+		if (item->device_old != NULL &&
+		    g_strcmp0 (fu_device_get_id (device),
+			       fu_device_get_id (item->device_old)) == 0) {
+			g_debug ("found old device %s, swapping",
+				 fu_device_get_id (device));
+			g_set_object (&item->device_old, item->device);
+			fu_device_list_item_set_device (item, device);
+			fu_device_list_clear_wait_for_replug (self, item);
+			fu_device_list_emit_device_changed (self, device);
+			return;
+		}
+
+		/* same ID, different object */
 		g_debug ("found existing device %s, reusing item",
 			 fu_device_get_id (item->device));
 		fu_device_list_replace (self, item, device);
