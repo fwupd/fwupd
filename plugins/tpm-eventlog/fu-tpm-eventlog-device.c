@@ -96,14 +96,16 @@ fu_tpm_eventlog_device_class_init (FuTpmEventlogDeviceClass *klass)
 }
 
 FuTpmEventlogDevice *
-fu_tpm_eventlog_device_new (const guint8 *buf, gsize bufsz, GError **error)
+fu_tpm_eventlog_device_new (FuContext *ctx,
+			    const guint8 *buf, gsize bufsz,
+			    GError **error)
 {
 	g_autoptr(FuTpmEventlogDevice) self = NULL;
 
 	g_return_val_if_fail (buf != NULL, NULL);
 
 	/* create object */
-	self = g_object_new (FU_TYPE_TPM_EVENTLOG_DEVICE, NULL);
+	self = g_object_new (FU_TYPE_TPM_EVENTLOG_DEVICE, "context", ctx, NULL);
 	self->items = fu_tpm_eventlog_parser_new (buf, bufsz,
 						  FU_TPM_EVENTLOG_PARSER_FLAG_NONE,
 						  error);

@@ -19,6 +19,6 @@ typedef enum {
 	FU_CPU_DEVICE_FLAG_SMAP		= 1 << 3,
 } FuCpuDeviceFlag;
 
-FuCpuDevice		*fu_cpu_device_new		(void);
+FuCpuDevice		*fu_cpu_device_new		(FuContext	*ctx);
 gboolean		 fu_cpu_device_has_flag		(FuCpuDevice	*self,
 							 FuCpuDeviceFlag flag);

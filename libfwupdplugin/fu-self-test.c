@@ -1380,7 +1380,8 @@ static void
 fu_device_instance_ids_func (void)
 {
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuContext) ctx = fu_context_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (ctx);
 	g_autoptr(GError) error = NULL;
 
 	/* sanity check */
@@ -1536,8 +1537,9 @@ static void
 fu_device_children_func (void)
 {
 	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(FuDevice) child = fu_device_new ();
-	g_autoptr(FuDevice) parent = fu_device_new ();
+	g_autoptr(FuDevice) parent = fu_device_new_with_context (ctx);
 	g_autoptr(GError) error = NULL;
 
 	fu_device_set_physical_id (child, "dummy");

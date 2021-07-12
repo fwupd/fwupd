@@ -392,9 +392,9 @@ fu_cpu_device_class_init (FuCpuDeviceClass *klass)
 }
 
 FuCpuDevice *
-fu_cpu_device_new (void)
+fu_cpu_device_new (FuContext *ctx)
 {
 	FuCpuDevice *device = NULL;
-	device = g_object_new (FU_TYPE_CPU_DEVICE, NULL);
+	device = g_object_new (FU_TYPE_CPU_DEVICE, "context", ctx, NULL);
 	return device;
 }
