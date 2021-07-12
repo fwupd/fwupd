@@ -26,7 +26,7 @@ class Builder:
             "OUT", os.path.realpath(os.path.join(DEFAULT_BUILDDIR, "out"))
         )
         self.srcdir = self._ensure_environ("SRC", os.path.realpath(".."))
-        self.ldflags = ["-lpthread", "-lresolv", "-ldl", "-lffi", "-lz"]
+        self.ldflags = ["-lpthread", "-lresolv", "-ldl", "-lffi", "-lz", "-llzma"]
 
         # defined in env
         self.cflags = ["-Wno-deprecated-declarations"]
@@ -331,6 +331,18 @@ def _build(bld: Builder) -> None:
 
 
 if __name__ == "__main__":
+
+    # install missing deps here rather than patching the Dockerfile in oss-fuzz
+    try:
+        subprocess.check_call(
+            ["apt-get", "install", "-y", "liblzma-dev"], stdout=open(os.devnull, "wb")
+        )
+    except FileNotFoundError:
+        pass
+    except subprocess.CalledProcessError as e:
+        print(e.output)
+        sys.exit(1)
+
     _builder = Builder()
     _build(_builder)
     sys.exit(0)
