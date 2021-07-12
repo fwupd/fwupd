@@ -73,7 +73,8 @@ fu_tpm_eventlog_device_init (FuTpmEventlogDevice *self)
 	fu_device_set_physical_id (FU_DEVICE (self), "DEVNAME=/dev/tpm0");
 	fu_device_set_logical_id (FU_DEVICE (self), "eventlog");
 	fu_device_add_parent_guid (FU_DEVICE (self), "system-tpm");
-	fu_device_add_instance_id (FU_DEVICE (self), "system-tpm-eventlog");
+	fu_device_add_instance_id_full (FU_DEVICE (self), "system-tpm-eventlog",
+					FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS);
 }
 
 static void

@@ -115,12 +115,14 @@ struct _FuDeviceClass
  * FuDeviceInstanceFlags:
  * @FU_DEVICE_INSTANCE_FLAG_NONE:		No flags set
  * @FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS:	Only use instance ID for quirk matching
+ * @FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS:		Do no quirk matching
  *
  * The flags to use when interacting with a device instance
  **/
 typedef enum {
 	FU_DEVICE_INSTANCE_FLAG_NONE		= 0,
 	FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS	= 1 << 0,
+	FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS	= 1 << 1,
 	/*< private >*/
 	FU_DEVICE_INSTANCE_FLAG_LAST
 } FuDeviceInstanceFlags;
