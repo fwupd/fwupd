@@ -279,7 +279,7 @@ fu_quirks_check_silo (FuQuirks *self, GError **error)
 		g_autofree gchar *str = NULL;
 		g_ptr_array_sort (self->invalid_keys, fu_quirks_strcasecmp_cb);
 		str = fu_common_strjoin_array (",", self->invalid_keys);
-		g_warning ("invalid key names: %s", str);
+		g_debug ("invalid key names: %s", str);
 	}
 
 	/* success */
