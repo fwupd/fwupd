@@ -761,14 +761,24 @@ fu_device_list_devices_wait_removed (FuDeviceList *self)
 	return cnt;
 }
 
+static GPtrArray *
+fu_device_list_get_wait_for_replug (FuDeviceList *self)
+{
+	GPtrArray *devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+	for (guint i = 0; i < self->devices->len; i++) {
+		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
+		if (fu_device_has_flag (item_tmp->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG))
+			g_ptr_array_add (devices, g_object_ref (item_tmp->device));
+	}
+	return devices;
+}
+
 /**
  * fu_device_list_wait_for_replug:
  * @self: a device list
- * @device: a device
  * @error: (nullable): optional return location for an error
  *
- * Waits for a specific device to replug if %FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG
- * is set.
+ * Waits for all the devices with %FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG to replug.
  *
  * If the device does not exist this function returns without an error.
  *
@@ -777,49 +787,37 @@ fu_device_list_devices_wait_removed (FuDeviceList *self)
  * Since: 1.1.2
  **/
 gboolean
-fu_device_list_wait_for_replug (FuDeviceList *self, FuDevice *device, GError **error)
+fu_device_list_wait_for_replug (FuDeviceList *self, GError **error)
 {
-	FuDeviceItem *item;
-	guint remove_delay;
+	guint remove_delay = 0;
 	guint wait_removed;
 	guint wait_removed_old = 0;
 	g_autoptr(GTimer) timer = g_timer_new ();
+	g_autoptr(GPtrArray) devices_wfr1 = NULL;
+	g_autoptr(GPtrArray) devices_wfr2 = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE_LIST (self), FALSE);
-	g_return_val_if_fail (FU_IS_DEVICE (device), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	/* not found */
-	item = fu_device_list_find_by_device (self, device);
-	if (item == NULL)
-		return TRUE;
-
 	/* not required, or possibly literally just happened */
-	if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
+	devices_wfr1 = fu_device_list_get_wait_for_replug (self);
+	if (devices_wfr1->len == 0) {
 		g_debug ("no replug or re-enumerate required");
 		return TRUE;
 	}
 
-	/* check that no other devices are waiting for replug too */
-	for (guint i = 0; i < self->devices->len; i++) {
-		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
-		if (item_tmp->device != device &&
-		    fu_device_has_flag (item_tmp->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
-			g_warning ("%s is wait-for-replug when %s scheduled, unsetting",
-				   fu_device_get_id (item_tmp->device),
-				   fu_device_get_id (device));
-			fu_device_remove_flag (item_tmp->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-		}
+	/* use the maximum of all the devices */
+	for (guint i = 0; i < devices_wfr1->len; i++) {
+		FuDevice *device_tmp = g_ptr_array_index (devices_wfr1, i);
+		if (fu_device_get_remove_delay (device_tmp) > remove_delay)
+			remove_delay = fu_device_get_remove_delay (device_tmp);
 	}
 
 	/* plugin did not specify */
-	remove_delay = fu_device_get_remove_delay (device);
 	if (remove_delay == 0) {
 		remove_delay = FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE;
-		g_warning ("plugin %s did not specify a remove delay for %s, "
+		g_warning ("plugin did not specify a remove delay, "
 			   "so guessing we should wait %ums for replug",
-			   fu_device_get_plugin (device),
-			   fu_device_get_id (device),
 			   remove_delay);
 	} else {
 		g_debug ("waiting %ums for replug", remove_delay);
@@ -827,6 +825,8 @@ fu_device_list_wait_for_replug (FuDeviceList *self, FuDevice *device, GError **e
 
 	/* time to unplug and then re-plug */
 	do {
+		g_autoptr(GPtrArray) devices_wfr_tmp = NULL;
+
 		/* count how many devices are in the remove waiting state */
 		wait_removed = fu_device_list_devices_wait_removed (self);
 		if (wait_removed != wait_removed_old) {
@@ -836,30 +836,31 @@ fu_device_list_wait_for_replug (FuDeviceList *self, FuDevice *device, GError **e
 		}
 		g_usleep (1000);
 		g_main_context_iteration (NULL, FALSE);
-		if (!fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG) &&
-		    wait_removed == 0)
+		devices_wfr_tmp = fu_device_list_get_wait_for_replug (self);
+		if (devices_wfr_tmp->len == 0 && wait_removed == 0)
 			break;
 	} while (g_timer_elapsed (timer, NULL) * 1000.f < remove_delay);
 
-	/* device was not added back to the device list */
-	if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
+	/* check that no other devices are still waiting for replug */
+	devices_wfr2 = fu_device_list_get_wait_for_replug (self);
+	if (devices_wfr2->len > 0) {
+		g_autoptr(GPtrArray) device_ids = g_ptr_array_new_with_free_func (g_free);
+		g_autofree gchar *device_ids_str = NULL;
+
+		/* unset and build error string */
+		for (guint i = 0; i < devices_wfr2->len; i++) {
+			FuDevice *device_tmp = g_ptr_array_index (devices_wfr2, i);
+			fu_device_remove_flag (device_tmp, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+			g_ptr_array_add (device_ids,
+					 g_strdup (fu_device_get_id (device_tmp)));
+		}
+		device_ids_str = fu_common_strjoin_array (",", device_ids);
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_NOT_FOUND,
 			     "device %s did not come back",
-			     fu_device_get_id (device));
-		fu_device_remove_flag (item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+			     device_ids_str);
 		return FALSE;
-	}
-
-	/* check that no other devices are waiting for replug instead */
-	for (guint i = 0; i < self->devices->len; i++) {
-		FuDeviceItem *item_tmp = g_ptr_array_index (self->devices, i);
-		if (fu_device_has_flag (item_tmp->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
-			g_warning ("%s is wait-for-replug when %s performed",
-				   fu_device_get_id (item_tmp->device),
-				   fu_device_get_id (device));
-		}
 	}
 
 	/* the loop was quit without the timer */
