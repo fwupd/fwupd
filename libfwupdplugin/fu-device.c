@@ -1771,7 +1771,8 @@ fu_device_add_instance_id_full (FuDevice *self,
 	 * so the plugin is set, but not the LVFS metadata to match firmware
 	 * until we're sure the device isn't using _NO_AUTO_INSTANCE_IDS */
 	guid = fwupd_guid_hash_string (instance_id);
-	fu_device_add_guid_quirks (self, guid);
+	if ((flags & FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS) == 0)
+		fu_device_add_guid_quirks (self, guid);
 	if ((flags & FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS) == 0)
 		fwupd_device_add_instance_id (FWUPD_DEVICE (self), instance_id);
 
