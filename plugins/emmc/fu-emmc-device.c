@@ -176,17 +176,8 @@ fu_emmc_device_probe (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* add instance IDs */
-	tmp = g_udev_device_get_property (udev_device, "ID_NAME");
-	if (tmp == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "has no ID_NAME");
-		return FALSE;
-	}
-
 	/* name */
+	tmp = g_udev_device_get_sysfs_attr (udev_parent, "name");
 	fu_device_set_name (device, tmp);
 	name_only = g_strdup_printf ("EMMC\\%s", fu_device_get_name (device));
 	fu_device_add_instance_id (device, name_only);
