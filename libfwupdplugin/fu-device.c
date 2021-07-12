@@ -1609,8 +1609,11 @@ static void
 fu_device_add_guid_quirks (FuDevice *self, const gchar *guid)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
-	if (priv->ctx == NULL)
+	if (priv->ctx == NULL) {
+		g_autofree gchar *str = fu_device_to_string (self);
+		g_critical ("no FuContext assigned for %s", str);
 		return;
+	}
 	fu_context_lookup_quirk_by_id_iter (priv->ctx, guid, fu_device_quirks_iter_cb, self);
 }
 
