@@ -38,7 +38,7 @@ build() {
 }
 
 check() {
-    ninja -C build test
+    CACHE_DIRECTORY=/tmp ninja -C build test
 }
 
 package() {
