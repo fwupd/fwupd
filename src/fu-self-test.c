@@ -2294,6 +2294,7 @@ fu_device_list_replug_user_func (gconstpointer user_data)
 
 	/* fake devices */
 	fu_device_set_id (device1, "device1");
+	fu_device_set_name (device1, "device1");
 	fu_device_add_internal_flag (device1, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_instance_id (device1, "foo");
 	fu_device_add_instance_id (device1, "bar");
@@ -2301,6 +2302,7 @@ fu_device_list_replug_user_func (gconstpointer user_data)
 	fu_device_set_remove_delay (device1, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_convert_instance_ids (device1);
 	fu_device_set_id (device2, "device2");
+	fu_device_set_name (device2, "device2");
 	fu_device_add_internal_flag (device2, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_instance_id (device2, "baz");
 	fu_device_add_instance_id (device2, "bar"); /* matches */
@@ -2315,6 +2317,11 @@ fu_device_list_replug_user_func (gconstpointer user_data)
 
 	/* add device */
 	fu_device_list_add (device_list, device1);
+
+	/* add duplicate */
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_list_add (device_list, device1);
+	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
 
 	/* not waiting */
 	ret = fu_device_list_wait_for_replug (device_list, &error);
@@ -2332,6 +2339,21 @@ fu_device_list_replug_user_func (gconstpointer user_data)
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+
+	/* should not be possible, but here we are */
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_list_add (device_list, device1);
+	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+	g_assert_false (fu_device_has_flag (device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+
+	/* add back the old device */
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_list_remove (device_list, device2);
+	fu_device_list_add (device_list, device1);
+	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+	g_assert_false (fu_device_has_flag (device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
 }
 
 static void
@@ -3322,6 +3344,7 @@ main (int argc, char **argv)
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_setenv ("G_MESSAGES_DEBUG", "all", TRUE);
+	g_setenv ("FWUPD_DEVICE_LIST_VERBOSE", "1", TRUE);
 	g_setenv ("FWUPD_DATADIR", TESTDATADIR_SRC, TRUE);
 	g_setenv ("FWUPD_PLUGINDIR", TESTDATADIR_SRC, TRUE);
 	g_setenv ("FWUPD_SYSCONFDIR", TESTDATADIR_SRC, TRUE);
