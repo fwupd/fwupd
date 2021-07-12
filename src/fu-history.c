@@ -99,7 +99,7 @@ fu_history_device_from_stmt (sqlite3_stmt *stmt)
 	/* guid_default */
 	tmp = (const gchar *) sqlite3_column_text (stmt, 9);
 	if (tmp != NULL)
-		fu_device_add_guid (device, tmp);
+		fu_device_add_guid_full (device, tmp, FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS);
 
 	/* update_state */
 	fu_device_set_update_state (device, sqlite3_column_int (stmt, 10));

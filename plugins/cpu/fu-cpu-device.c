@@ -98,7 +98,8 @@ fu_cpu_device_convert_vendor (const gchar *vendor)
 static void
 fu_cpu_device_init (FuCpuDevice *self)
 {
-	fu_device_add_guid (FU_DEVICE (self), "cpu");
+	fu_device_add_guid_full (FU_DEVICE (self), "cpu",
+				 FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon (FU_DEVICE (self), "computer");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_HEX);

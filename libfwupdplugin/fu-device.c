@@ -1703,12 +1703,14 @@ fu_device_get_firmware_size_max (FuDevice *self)
 }
 
 static void
-fu_device_add_guid_safe (FuDevice *self, const gchar *guid)
+fu_device_add_guid_safe (FuDevice *self, const gchar *guid, FuDeviceInstanceFlags flags)
 {
 	/* add the device GUID before adding additional GUIDs from quirks
 	 * to ensure the bootloader GUID is listed after the runtime GUID */
-	fwupd_device_add_guid (FWUPD_DEVICE (self), guid);
-	fu_device_add_guid_quirks (self, guid);
+	if ((flags & FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS) == 0)
+		fwupd_device_add_guid (FWUPD_DEVICE (self), guid);
+	if ((flags & FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS) == 0)
+		fu_device_add_guid_quirks (self, guid);
 }
 
 /**
@@ -1762,7 +1764,7 @@ fu_device_add_instance_id_full (FuDevice *self,
 
 	if (fwupd_guid_is_valid (instance_id)) {
 		g_warning ("use fu_device_add_guid(\"%s\") instead!", instance_id);
-		fu_device_add_guid_safe (self, instance_id);
+		fu_device_add_guid_safe (self, instance_id, flags);
 		return;
 	}
 
@@ -1818,7 +1820,30 @@ fu_device_add_guid (FuDevice *self, const gchar *guid)
 		fu_device_add_instance_id (self, guid);
 		return;
 	}
-	fu_device_add_guid_safe (self, guid);
+	fu_device_add_guid_safe (self, guid, FU_DEVICE_INSTANCE_FLAG_NONE);
+}
+
+/**
+ * fu_device_add_guid_full:
+ * @self: a #FuDevice
+ * @guid: a GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
+ * @flags: instance ID flags
+ *
+ * Adds a GUID to the device. If the @guid argument is not a valid GUID then it
+ * is converted to a GUID using fwupd_guid_hash_string().
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_device_add_guid_full (FuDevice *self, const gchar *guid, FuDeviceInstanceFlags flags)
+{
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (guid != NULL);
+	if (!fwupd_guid_is_valid (guid)) {
+		fu_device_add_instance_id_full (self, guid, flags);
+		return;
+	}
+	fu_device_add_guid_safe (self, guid, flags);
 }
 
 /**
