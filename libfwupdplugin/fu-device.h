@@ -279,6 +279,9 @@ void		 fu_device_set_equivalent_id		(FuDevice	*self,
 							 const gchar	*equivalent_id);
 void		 fu_device_add_guid			(FuDevice	*self,
 							 const gchar	*guid);
+void		 fu_device_add_guid_full		(FuDevice	*self,
+							 const gchar	*guid,
+							 FuDeviceInstanceFlags flags);
 gboolean	 fu_device_has_guid			(FuDevice	*self,
 							 const gchar	*guid);
 void		 fu_device_add_instance_id		(FuDevice	*self,
