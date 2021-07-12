@@ -37,6 +37,7 @@ fu_plugin_destroy (FuPlugin *plugin)
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	gsize bufsz = 0;
 	const gchar *fn = "/sys/kernel/security/tpm0/binary_bios_measurements";
@@ -53,7 +54,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			     "failed to read data from %s", fn);
 		return FALSE;
 	}
-	dev = fu_tpm_eventlog_device_new (buf, bufsz, error);
+	dev = fu_tpm_eventlog_device_new (ctx, buf, bufsz, error);
 	if (dev == NULL)
 		return FALSE;
 	if (!fu_device_setup (FU_DEVICE (dev), error))

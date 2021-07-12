@@ -8,6 +8,7 @@
 
 #include <fwupd.h>
 
+#include "fu-context-private.h"
 #include "fu-device-private.h"
 #include "fu-nvme-device.h"
 
@@ -19,6 +20,7 @@ fu_nvme_cns_func (void)
 	const gchar *ci = g_getenv ("CI_NETWORK");
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *path = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(FuNvmeDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -31,7 +33,7 @@ fu_nvme_cns_func (void)
 	ret = g_file_get_contents (path, &data, &sz, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	dev = fu_nvme_device_new_from_blob ((guint8 *)data, sz, &error);
+	dev = fu_nvme_device_new_from_blob (ctx, (guint8 *)data, sz, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);
 	fu_device_convert_instance_ids (FU_DEVICE (dev));
@@ -46,6 +48,7 @@ fu_nvme_cns_all_func (void)
 {
 	const gchar *fn;
 	g_autofree gchar *path = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(GDir) dir = NULL;
 
 	/* may or may not exist */
@@ -66,7 +69,7 @@ fu_nvme_cns_all_func (void)
 			g_print ("failed to load %s: %s\n", filename, error->message);
 			continue;
 		}
-		dev = fu_nvme_device_new_from_blob ((guint8 *) data, sz, &error);
+		dev = fu_nvme_device_new_from_blob (ctx, (guint8 *) data, sz, &error);
 		if (dev == NULL) {
 			g_print ("failed to load %s: %s\n", filename, error->message);
 			continue;

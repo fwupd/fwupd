@@ -161,9 +161,9 @@ fu_uefi_dbx_device_class_init (FuUefiDbxDeviceClass *klass)
 }
 
 FuUefiDbxDevice *
-fu_uefi_dbx_device_new (void)
+fu_uefi_dbx_device_new (FuContext *ctx)
 {
 	FuUefiDbxDevice *self;
-	self = g_object_new (FU_TYPE_UEFI_DBX_DEVICE, NULL);
+	self = g_object_new (FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
 	return self;
 }

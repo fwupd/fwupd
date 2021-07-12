@@ -21,8 +21,7 @@ gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context (plugin);
-	g_autoptr(FuCpuDevice) dev = fu_cpu_device_new ();
-	fu_device_set_context (FU_DEVICE (dev), ctx);
+	g_autoptr(FuCpuDevice) dev = fu_cpu_device_new (ctx);
 	if (!fu_device_probe (FU_DEVICE (dev), error))
 		return FALSE;
 	if (!fu_device_setup (FU_DEVICE (dev), error))

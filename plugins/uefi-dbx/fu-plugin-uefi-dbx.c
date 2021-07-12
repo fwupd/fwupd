@@ -21,7 +21,8 @@ fu_plugin_init (FuPlugin *plugin)
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
-	g_autoptr(FuUefiDbxDevice) device = fu_uefi_dbx_device_new ();
+	FuContext *ctx = fu_plugin_get_context (plugin);
+	g_autoptr(FuUefiDbxDevice) device = fu_uefi_dbx_device_new (ctx);
 	if (!fu_device_probe (FU_DEVICE (device), error))
 		return FALSE;
 	if (!fu_device_setup (FU_DEVICE (device), error))

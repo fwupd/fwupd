@@ -8,6 +8,7 @@
 
 #include <fwupd.h>
 
+#include "fu-context-private.h"
 #include "fu-tpm-eventlog-common.h"
 #include "fu-tpm-eventlog-device.h"
 
@@ -24,6 +25,7 @@ fu_test_tpm_eventlog_parse_v1_func (void)
 	g_autoptr(FuTpmEventlogDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new ();
 
 	fn = g_test_build_filename (G_TEST_DIST, "tests", "binary_bios_measurements-v1", NULL);
 	if (!g_file_test (fn, G_FILE_TEST_EXISTS) && ci == NULL) {
@@ -34,7 +36,7 @@ fu_test_tpm_eventlog_parse_v1_func (void)
 	g_assert_no_error (error);
 	g_assert_true (ret);
 
-	dev = fu_tpm_eventlog_device_new (buf, bufsz, &error);
+	dev = fu_tpm_eventlog_device_new (ctx, buf, bufsz, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);
 	str = fu_device_to_string (FU_DEVICE (dev));
@@ -63,6 +65,7 @@ fu_test_tpm_eventlog_parse_v2_func (void)
 	g_autoptr(FuTpmEventlogDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new ();
 
 	fn = g_test_build_filename (G_TEST_DIST, "tests", "binary_bios_measurements-v2", NULL);
 	if (!g_file_test (fn, G_FILE_TEST_EXISTS) && ci == NULL) {
@@ -73,7 +76,7 @@ fu_test_tpm_eventlog_parse_v2_func (void)
 	g_assert_no_error (error);
 	g_assert_true (ret);
 
-	dev = fu_tpm_eventlog_device_new (buf, bufsz, &error);
+	dev = fu_tpm_eventlog_device_new (ctx, buf, bufsz, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);
 	str = fu_device_to_string (FU_DEVICE (dev));

@@ -435,9 +435,12 @@ fu_nvme_device_class_init (FuNvmeDeviceClass *klass)
 }
 
 FuNvmeDevice *
-fu_nvme_device_new_from_blob (const guint8 *buf, gsize sz, GError **error)
+fu_nvme_device_new_from_blob (FuContext *ctx,
+			      const guint8 *buf, gsize sz,
+			      GError **error)
 {
-	g_autoptr(FuNvmeDevice) self = g_object_new (FU_TYPE_NVME_DEVICE, NULL);
+	g_autoptr(FuNvmeDevice) self = NULL;
+	self = g_object_new (FU_TYPE_NVME_DEVICE, "context", ctx, NULL);
 	if (!fu_nvme_device_parse_cns (self, buf, sz, error))
 		return NULL;
 	return g_steal_pointer (&self);

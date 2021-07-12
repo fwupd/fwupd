@@ -1143,6 +1143,8 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 		fu_device_set_physical_id (child, fu_device_get_physical_id (self));
 	if (priv_child->backend_id == NULL && priv->backend_id != NULL)
 		fu_device_set_backend_id (child, priv->backend_id);
+	if (priv_child->ctx == NULL && priv->ctx != NULL)
+		fu_device_set_context (child, priv->ctx);
 	if (fu_device_get_vendor (child) == NULL)
 		fu_device_set_vendor (child, fu_device_get_vendor (self));
 	if (priv_child->remove_delay == 0 && priv->remove_delay != 0)
@@ -4532,6 +4534,21 @@ fu_device_finalize (GObject *object)
 FuDevice *
 fu_device_new (void)
 {
-	FuDevice *self = g_object_new (FU_TYPE_DEVICE, NULL);
+	return fu_device_new_with_context (NULL);
+}
+
+/**
+ * fu_device_new_with_context:
+ *
+ * Creates a new #Fudevice
+ *
+ * Since: 1.6.2
+ **/
+FuDevice *
+fu_device_new_with_context (FuContext *ctx)
+{
+	FuDevice *self = g_object_new (FU_TYPE_DEVICE,
+				       "context", ctx,
+				       NULL);
 	return FU_DEVICE (self);
 }
