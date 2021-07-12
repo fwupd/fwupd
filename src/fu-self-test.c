@@ -2222,7 +2222,7 @@ fu_device_list_replug_auto_func (gconstpointer user_data)
 	fu_device_set_remove_delay (device2, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 
 	/* not yet added */
-	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -2230,7 +2230,7 @@ fu_device_list_replug_auto_func (gconstpointer user_data)
 	fu_device_list_add (device_list, device1);
 
 	/* not waiting */
-	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -2241,7 +2241,7 @@ fu_device_list_replug_auto_func (gconstpointer user_data)
 	g_timeout_add (100, fu_device_list_remove_cb, &helper);
 	g_timeout_add (200, fu_device_list_add_cb, &helper);
 	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
@@ -2251,10 +2251,10 @@ fu_device_list_replug_auto_func (gconstpointer user_data)
 
 	/* waiting, failed */
 	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	ret = fu_device_list_wait_for_replug (device_list, device2, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (!ret);
-	g_assert_true (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
 }
 
 static void
@@ -2284,7 +2284,7 @@ fu_device_list_replug_user_func (gconstpointer user_data)
 	fu_device_convert_instance_ids (device2);
 
 	/* not yet added */
-	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -2292,7 +2292,7 @@ fu_device_list_replug_user_func (gconstpointer user_data)
 	fu_device_list_add (device_list, device1);
 
 	/* not waiting */
-	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -2303,7 +2303,7 @@ fu_device_list_replug_user_func (gconstpointer user_data)
 	g_timeout_add (100, fu_device_list_remove_cb, &helper);
 	g_timeout_add (200, fu_device_list_add_cb, &helper);
 	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));

@@ -29,7 +29,6 @@ FuDevice	*fu_device_list_get_by_guid		(FuDeviceList	*self,
 							 const gchar	*guid,
 							 GError		**error);
 gboolean	 fu_device_list_wait_for_replug		(FuDeviceList	*self,
-							 FuDevice	*device,
 							 GError		**error);
 void		 fu_device_list_depsolve_order		(FuDeviceList	*self,
 							 FuDevice	*device);

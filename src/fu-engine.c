@@ -2674,41 +2674,23 @@ fu_engine_get_plugins (FuEngine *self)
 FuDevice *
 fu_engine_get_device (FuEngine *self, const gchar *device_id, GError **error)
 {
-	g_autoptr(FuDevice) device1 = NULL;
-	g_autoptr(FuDevice) device2 = NULL;
-	g_autoptr(FuDevice) root = NULL;
+	g_autoptr(FuDevice) device = NULL;
 
-	/* find device */
-	device1 = fu_device_list_get_by_id (self->device_list, device_id, error);
-	if (device1 == NULL)
+	/* wait for any device to disconnect and reconnect */
+	if (!fu_device_list_wait_for_replug (self->device_list, error)) {
+		g_prefix_error (error, "failed to wait for detach replug: ");
 		return NULL;
-
-	/* wait for device to disconnect and reconnect */
-	root = fu_device_get_root (device1);
-	if (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
-		if (!fu_device_list_wait_for_replug (self->device_list, device1, error)) {
-			g_prefix_error (error, "failed to wait for detach replug: ");
-			return NULL;
-		}
-	} else if (fu_device_has_flag (root, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
-		if (!fu_device_list_wait_for_replug (self->device_list, root, error)) {
-			g_prefix_error (error, "failed to wait for detach replug: ");
-			return NULL;
-		}
-	} else {
-		/* no replug required */
-		return g_steal_pointer (&device1);
 	}
 
 	/* get the new device */
-	device2 = fu_device_list_get_by_id (self->device_list, device_id, error);
-	if (device2 == NULL) {
+	device = fu_device_list_get_by_id (self->device_list, device_id, error);
+	if (device == NULL) {
 		g_prefix_error (error, "failed to get device after replug: ");
 		return NULL;
 	}
 
 	/* success */
-	return g_steal_pointer (&device2);
+	return g_steal_pointer (&device);
 }
 
 /* same as FuDevice->prepare, but with the device open */
@@ -2789,11 +2771,9 @@ fu_engine_update_prepare (FuEngine *self,
 	}
 
 	/* wait for device to disconnect and reconnect */
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
-		if (!fu_device_list_wait_for_replug (self->device_list, device, error)) {
-			g_prefix_error (error, "failed to wait for prepare replug: ");
-			return FALSE;
-		}
+	if (!fu_device_list_wait_for_replug (self->device_list, error)) {
+		g_prefix_error (error, "failed to wait for prepare replug: ");
+		return FALSE;
 	}
 	return TRUE;
 }
@@ -2823,11 +2803,9 @@ fu_engine_update_cleanup (FuEngine *self,
 	}
 
 	/* wait for device to disconnect and reconnect */
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
-		if (!fu_device_list_wait_for_replug (self->device_list, device, error)) {
-			g_prefix_error (error, "failed to wait for cleanup replug: ");
-			return FALSE;
-		}
+	if (!fu_device_list_wait_for_replug (self->device_list, error)) {
+		g_prefix_error (error, "failed to wait for cleanup replug: ");
+		return FALSE;
 	}
 	return TRUE;
 }
