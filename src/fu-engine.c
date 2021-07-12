@@ -6046,7 +6046,9 @@ fu_engine_backend_device_removed_cb (FuBackend *backend, FuDevice *device, FuEng
 		FuDevice *device_tmp = g_ptr_array_index (devices, i);
 		if (g_strcmp0 (fu_device_get_backend_id (device_tmp),
 			       fu_device_get_backend_id (device)) == 0) {
-			g_debug ("auto-removing backend device");
+			g_debug ("auto-removing backend device %s [%s]",
+				 fu_device_get_name (device_tmp),
+				 fu_device_get_id (device_tmp));
 			fu_device_list_remove (self->device_list, device_tmp);
 		}
 	}
