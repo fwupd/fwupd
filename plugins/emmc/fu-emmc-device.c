@@ -178,6 +178,14 @@ fu_emmc_device_probe (FuDevice *device, GError **error)
 
 	/* name */
 	tmp = g_udev_device_get_sysfs_attr (udev_parent, "name");
+	if (tmp == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "%s does not have 'name' sysattr",
+			     fu_device_get_name (device));
+		return FALSE;
+	}
 	fu_device_set_name (device, tmp);
 	name_only = g_strdup_printf ("EMMC\\%s", fu_device_get_name (device));
 	fu_device_add_instance_id (device, name_only);
