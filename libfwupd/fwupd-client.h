@@ -11,6 +11,7 @@
 
 #include "fwupd-enums.h"
 #include "fwupd-device.h"
+#include "fwupd-request.h"
 #include "fwupd-plugin.h"
 #include "fwupd-remote.h"
 
@@ -31,6 +32,8 @@ struct _FwupdClientClass
 							 FwupdDevice	*result);
 	void			(*device_changed)	(FwupdClient	*client,
 							 FwupdDevice	*result);
+	void			(*device_request)	(FwupdClient	*client,
+							 FwupdRequest	*request);
 	/*< private >*/
 	void (*_fwupd_reserved1)	(void);
 	void (*_fwupd_reserved2)	(void);
@@ -38,7 +41,6 @@ struct _FwupdClientClass
 	void (*_fwupd_reserved4)	(void);
 	void (*_fwupd_reserved5)	(void);
 	void (*_fwupd_reserved6)	(void);
-	void (*_fwupd_reserved7)	(void);
 };
 
 /**

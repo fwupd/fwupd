@@ -121,6 +121,7 @@ enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_CHANGED,
+	SIGNAL_DEVICE_REQUEST,
 	SIGNAL_STATUS_CHANGED,
 	SIGNAL_PERCENTAGE_CHANGED,
 	SIGNAL_LAST
@@ -222,6 +223,14 @@ fu_engine_generic_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self
 }
 
 static void
+fu_engine_device_request_cb (FuDevice *device, FwupdRequest *request, FuEngine *self)
+{
+	g_debug ("Emitting DeviceRequest('Message'='%s')",
+		 fwupd_request_get_message (request));
+	g_signal_emit (self, signals[SIGNAL_DEVICE_REQUEST], 0, request);
+}
+
+static void
 fu_engine_watch_device (FuEngine *self, FuDevice *device)
 {
 	g_autoptr(FuDevice) device_old = fu_device_list_get_old (self->device_list, device);
@@ -231,6 +240,9 @@ fu_engine_watch_device (FuEngine *self, FuDevice *device)
 						      self);
 		g_signal_handlers_disconnect_by_func (device_old,
 						      fu_engine_status_notify_cb,
+						      self);
+		g_signal_handlers_disconnect_by_func (device_old,
+						      fu_engine_device_request_cb,
 						      self);
 	}
 	g_signal_connect (device, "notify::progress",
@@ -243,6 +255,8 @@ fu_engine_watch_device (FuEngine *self, FuDevice *device)
 			  G_CALLBACK (fu_engine_generic_notify_cb), self);
 	g_signal_connect (device, "notify::update-image",
 			  G_CALLBACK (fu_engine_generic_notify_cb), self);
+	g_signal_connect (device, "request",
+			  G_CALLBACK (fu_engine_device_request_cb), self);
 }
 
 static void
@@ -2046,6 +2060,7 @@ fu_engine_install_tasks (FuEngine *self,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
+	FwupdFeatureFlags feature_flags = fu_engine_request_get_feature_flags (request);
 	g_autoptr(FuIdleLocker) locker = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_new = NULL;
@@ -2070,7 +2085,9 @@ fu_engine_install_tasks (FuEngine *self,
 	/* all authenticated, so install all the things */
 	for (guint i = 0; i < install_tasks->len; i++) {
 		FuInstallTask *task = g_ptr_array_index (install_tasks, i);
-		if (!fu_engine_install (self, task, blob_cab, flags, error)) {
+		if (!fu_engine_install (self, task, blob_cab,
+					flags, feature_flags,
+					error)) {
 			g_autoptr(GError) error_local = NULL;
 			if (!fu_engine_composite_cleanup (self, devices, &error_local)) {
 				g_warning ("failed to cleanup failed composite action: %s",
@@ -2332,6 +2349,7 @@ fu_engine_install_release (FuEngine *self,
 			   XbNode *component,
 			   XbNode *rel,
 			   FwupdInstallFlags flags,
+			   FwupdFeatureFlags feature_flags,
 			   GError **error)
 {
 	FuPlugin *plugin;
@@ -2402,7 +2420,9 @@ fu_engine_install_release (FuEngine *self,
 
 	/* install firmware blob */
 	version_orig = g_strdup (fu_device_get_version (device));
-	if (!fu_engine_install_blob (self, device, blob_fw2, flags, &error_local)) {
+	if (!fu_engine_install_blob (self, device, blob_fw2,
+				     flags, feature_flags,
+				     &error_local)) {
 		fu_device_set_status (device, FWUPD_STATUS_IDLE);
 		if (g_error_matches (error_local,
 				     FWUPD_ERROR,
@@ -2527,6 +2547,7 @@ fu_engine_sort_releases (FuEngine *self, FuDevice *device, GPtrArray *rels, GErr
  * @task: a #FuInstallTask
  * @blob_cab: the #GBytes of the .cab file
  * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_OLDER
+ * @feature_flags: feature flags, e.g. %FWUPD_FEATURE_FLAG_NONE
  * @error: (nullable): optional return location for an error
  *
  * Installs a specific firmware file on a device.
@@ -2542,6 +2563,7 @@ fu_engine_install (FuEngine *self,
 		   FuInstallTask *task,
 		   GBytes *blob_cab,
 		   FwupdInstallFlags flags,
+		   FwupdFeatureFlags feature_flags,
 		   GError **error)
 {
 	XbNode *component = fu_install_task_get_component (task);
@@ -2559,28 +2581,16 @@ fu_engine_install (FuEngine *self,
 
 	/* not in bootloader mode */
 	device = g_object_ref (fu_install_task_get_device (task));
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
-		const gchar *caption = NULL;
-		caption = xb_node_query_text (component,
-					      "screenshots/screenshot/caption",
-					      NULL);
-		if (caption != NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NEEDS_USER_ACTION,
-				     "Device %s needs to manually be put in update mode: %s",
-				     fu_device_get_name (device), caption);
-		} else {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NEEDS_USER_ACTION,
-				     "Device %s needs to manually be put in update mode",
-				     fu_device_get_name (device));
-		}
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
-		if (error != NULL)
-			fu_device_set_update_error (device, (*error)->message);
-		return FALSE;
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
+		const gchar *tmp = NULL;
+
+		/* both optional; the plugin can specify a fallback */
+		tmp = xb_node_query_text (component, "screenshots/screenshot/caption", NULL);
+		if (tmp != NULL)
+			fu_device_set_update_message (device, tmp);
+		tmp = xb_node_query_text (component, "screenshots/screenshot/image", NULL);
+		if (tmp != NULL)
+			fu_device_set_update_image (device, tmp);
 	}
 
 	/* get the newest version */
@@ -2649,11 +2659,23 @@ fu_engine_install (FuEngine *self,
 			return FALSE;
 		for (guint i = 0; i < rels->len; i++) {
 			XbNode *rel = g_ptr_array_index (rels, i);
-			if (!fu_engine_install_release (self, device, component, rel, flags, error))
+			if (!fu_engine_install_release (self,
+							device,
+							component,
+							rel,
+							flags,
+							feature_flags,
+							error))
 				return FALSE;
 		}
 	} else {
-		if (!fu_engine_install_release (self, device, component, rel_newest, flags, error))
+		if (!fu_engine_install_release (self,
+						device,
+						component,
+						rel_newest,
+						flags,
+						feature_flags,
+						error))
 			return FALSE;
 	}
 
@@ -2829,7 +2851,10 @@ fu_engine_update_cleanup (FuEngine *self,
 }
 
 static gboolean
-fu_engine_update_detach (FuEngine *self, const gchar *device_id, GError **error)
+fu_engine_update_detach (FuEngine *self,
+			 const gchar *device_id,
+			 FwupdFeatureFlags feature_flags,
+			 GError **error)
 {
 	FuPlugin *plugin;
 	g_autofree gchar *str = NULL;
@@ -2848,6 +2873,29 @@ fu_engine_update_detach (FuEngine *self, const gchar *device_id, GError **error)
 		return FALSE;
 	if (!fu_plugin_runner_update_detach (plugin, device, error))
 		return FALSE;
+
+	/* support older clients without the ability to do immediate requests */
+	if ((feature_flags & FWUPD_FEATURE_FLAG_REQUESTS) == 0 &&
+	    fu_device_get_request_cnt (device, FWUPD_REQUEST_KIND_IMMEDIATE) > 0) {
+
+		/* fallback to something sane */
+		if (fu_device_get_update_message (device) == NULL) {
+			g_autofree gchar *tmp = NULL;
+			tmp = g_strdup_printf ("Device %s needs to manually be put in update mode",
+					       fu_device_get_name (device));
+			fu_device_set_update_message (device, tmp);
+		}
+
+		/* abort and require client to re-submit */
+		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NEEDS_USER_ACTION,
+				     fu_device_get_update_message (device));
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -3043,6 +3091,7 @@ fu_engine_install_blob (FuEngine *self,
 			FuDevice *device,
 			GBytes *blob_fw,
 			FwupdInstallFlags flags,
+			FwupdFeatureFlags feature_flags,
 			GError **error)
 {
 	guint retries = 0;
@@ -3081,7 +3130,7 @@ fu_engine_install_blob (FuEngine *self,
 			return FALSE;
 
 		/* detach to bootloader mode */
-		if (!fu_engine_update_detach (self, device_id, error))
+		if (!fu_engine_update_detach (self, device_id, feature_flags, error))
 			return FALSE;
 
 		/* install */
@@ -4681,7 +4730,7 @@ fu_engine_add_releases_for_device_component (FuEngine *self,
 		update_message = fwupd_release_get_update_message (rel);
 		if (fwupd_device_get_update_message (FWUPD_DEVICE (device)) == NULL &&
 		    update_message != NULL) {
-			fwupd_device_set_update_message (FWUPD_DEVICE (device), update_message);
+			fu_device_set_update_message (device, update_message);
 		}
 		update_image = fwupd_release_get_update_image (rel);
 		if (fwupd_device_get_update_image (FWUPD_DEVICE (device)) == NULL &&
@@ -6656,6 +6705,11 @@ fu_engine_class_init (FuEngineClass *klass)
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
 			      0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
 			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
+	signals[SIGNAL_DEVICE_REQUEST] =
+		g_signal_new ("device-request",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+			      G_TYPE_NONE, 1, FWUPD_TYPE_REQUEST);
 	signals[SIGNAL_STATUS_CHANGED] =
 		g_signal_new ("status-changed",
 			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,

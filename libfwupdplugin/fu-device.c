@@ -56,6 +56,7 @@ typedef struct {
 	guint				 progress;
 	guint				 battery_level;
 	guint				 battery_threshold;
+	guint				 request_cnts[FWUPD_REQUEST_KIND_LAST];
 	gint				 order;
 	guint				 priority;
 	guint				 poll_id;
@@ -102,6 +103,7 @@ enum {
 enum {
 	SIGNAL_CHILD_ADDED,
 	SIGNAL_CHILD_REMOVED,
+	SIGNAL_REQUEST,
 	SIGNAL_LAST
 };
 
@@ -407,6 +409,27 @@ fu_device_get_private_flags (FuDevice *self)
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), G_MAXUINT64);
 	return priv->private_flags;
+}
+
+/**
+ * fu_device_get_request_cnt:
+ * @self: a #FuDevice
+ * @request_kind: the type of request
+ *
+ * Returns the number of requests of a specific kind. This function is only
+ * useful to the daemon, which uses it to synthesize artificial events for
+ * plugins not yet ported to [class@FwupdRequest].
+ *
+ * Returns: integer, usually 0
+ *
+ * Since: 1.6.2
+ **/
+guint
+fu_device_get_request_cnt (FuDevice *self, FwupdRequestKind request_kind)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), G_MAXUINT);
+	return priv->request_cnts[request_kind];
 }
 
 /**
@@ -3464,6 +3487,7 @@ fu_device_write_firmware (FuDevice *self,
 			  GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autofree gchar *str = NULL;
 
@@ -3487,7 +3511,23 @@ fu_device_write_firmware (FuDevice *self,
 	g_debug ("installing onto %s:\n%s", fu_device_get_id (self), str);
 
 	/* call vfunc */
-	return klass->write_firmware (self, firmware, flags, error);
+	if (!klass->write_firmware (self, firmware, flags, error))
+		return FALSE;
+
+	/* the device set an UpdateMessage (possibly from a quirk, or XML file)
+	 * but did not do an event; guess something */
+	if (priv->request_cnts[FWUPD_REQUEST_KIND_POST] == 0 &&
+	    fu_device_get_update_message (self) != NULL) {
+		g_autoptr(FwupdRequest) request = fwupd_request_new ();
+		fwupd_request_set_kind (request, FWUPD_REQUEST_KIND_POST);
+		fwupd_request_set_id (request, FWPUD_REQUEST_ID_REMOVE_REPLUG);
+		fwupd_request_set_message (request, fu_device_get_update_message (self));
+		fwupd_request_set_image (request, fu_device_get_update_image (self));
+		fu_device_emit_request (self, request);
+	}
+
+	/* success */
+	return TRUE;
 }
 
 /**
@@ -4421,6 +4461,47 @@ fu_device_incorporate_from_component (FuDevice *self, XbNode *component)
 		fwupd_device_set_update_image (FWUPD_DEVICE (self), tmp);
 }
 
+/**
+ * fu_device_emit_request:
+ * @self: a device
+ * @request: a request
+ *
+ * Emit a request from a plugin to the client.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_device_emit_request (FuDevice *self, FwupdRequest *request)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FU_IS_DEVICE (self));
+	g_return_if_fail (FWUPD_IS_REQUEST (request));
+
+	/* sanity check */
+	if (fwupd_request_get_kind (request) == FWUPD_REQUEST_KIND_UNKNOWN) {
+		g_critical ("a request must have an assigned kind");
+		return;
+	}
+	if (fwupd_request_get_id (request) == NULL) {
+		g_critical ("a request must have an assigned ID");
+		return;
+	}
+
+	/* ensure set */
+	fwupd_request_set_device_id (request, fu_device_get_id (self));
+
+	/* for compatibility with older clients */
+	if (fwupd_request_get_kind (request) == FWUPD_REQUEST_KIND_POST) {
+		fu_device_set_update_message (self, fwupd_request_get_message (request));
+		fu_device_set_update_image (self, fwupd_request_get_image (request));
+	}
+
+	/* proxy to the engine */
+	g_signal_emit (self, signals[SIGNAL_REQUEST], 0, request);
+	priv->request_cnts[fwupd_request_get_kind (request)]++;
+}
+
 static void
 fu_device_class_init (FuDeviceClass *klass)
 {
@@ -4442,6 +4523,12 @@ fu_device_class_init (FuDeviceClass *klass)
 			      G_STRUCT_OFFSET (FuDeviceClass, child_removed),
 			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
 			      G_TYPE_NONE, 1, FU_TYPE_DEVICE);
+	signals[SIGNAL_REQUEST] =
+		g_signal_new ("request",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FuDeviceClass, request),
+			      NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+			      G_TYPE_NONE, 1, FWUPD_TYPE_REQUEST);
 
 	pspec = g_param_spec_string ("physical-id", NULL, NULL, NULL,
 				     G_PARAM_READWRITE |
