@@ -77,6 +77,8 @@ enum {
 	PROP_STATUS,
 	PROP_PARENT,
 	PROP_UPDATE_STATE,
+	PROP_UPDATE_MESSAGE,
+	PROP_UPDATE_IMAGE,
 	PROP_LAST
 };
 
@@ -2324,6 +2326,7 @@ fwupd_device_set_update_message (FwupdDevice *self, const gchar *update_message)
 
 	g_free (priv->update_message);
 	priv->update_message = g_strdup (update_message);
+	g_object_notify (G_OBJECT (self), "update-message");
 }
 
 /**
@@ -2365,6 +2368,7 @@ fwupd_device_set_update_image (FwupdDevice *self, const gchar *update_image)
 
 	g_free (priv->update_image);
 	priv->update_image = g_strdup (update_image);
+	g_object_notify (G_OBJECT (self), "update-image");
 }
 
 /**
@@ -2830,6 +2834,12 @@ fwupd_device_get_property (GObject *object, guint prop_id,
 	case PROP_PROTOCOL:
 		g_value_set_string (value, priv->protocol);
 		break;
+	case PROP_UPDATE_MESSAGE:
+		g_value_set_string (value, priv->update_message);
+		break;
+	case PROP_UPDATE_IMAGE:
+		g_value_set_string (value, priv->update_image);
+		break;
 	case PROP_STATUS:
 		g_value_set_uint (value, priv->status);
 		break;
@@ -2859,6 +2869,12 @@ fwupd_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_PROTOCOL:
 		fwupd_device_add_protocol (self, g_value_get_string (value));
+		break;
+	case PROP_UPDATE_MESSAGE:
+		fwupd_device_set_update_message (self, g_value_get_string (value));
+		break;
+	case PROP_UPDATE_IMAGE:
+		fwupd_device_set_update_image (self, g_value_get_string (value));
 		break;
 	case PROP_STATUS:
 		fwupd_device_set_status (self, g_value_get_uint (value));
@@ -2928,6 +2944,16 @@ fwupd_device_class_init (FwupdDeviceClass *klass)
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_UPDATE_STATE, pspec);
+
+	pspec = g_param_spec_string ("update-message", NULL, NULL, NULL,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_UPDATE_MESSAGE, pspec);
+
+	pspec = g_param_spec_string ("update-image", NULL, NULL, NULL,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_UPDATE_IMAGE, pspec);
 }
 
 static void
