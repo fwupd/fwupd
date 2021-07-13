@@ -2812,6 +2812,7 @@ main (int argc, char *argv[])
 	/* create helper object */
 	priv->main_ctx = g_main_context_new ();
 	priv->progressbar = fu_progressbar_new ();
+	fu_progressbar_set_main_context (priv->progressbar, priv->main_ctx);
 
 	/* add commands */
 	fu_util_cmd_array_add (cmd_array,
