@@ -106,8 +106,10 @@ struct _FuDeviceClass
 							 FuDevice	*child);
 	void			 (*child_removed)	(FuDevice	*self,	/* signal */
 							 FuDevice	*child);
+	void			 (*request)		(FuDevice	*self,	/* signal */
+							 FwupdRequest	*request);
 	/*< private >*/
-	gpointer	padding[7];
+	gpointer	padding[6];
 #endif
 };
 
@@ -209,6 +211,8 @@ FuDevice	*fu_device_new_with_context		(FuContext	*ctx);
 #define fu_device_get_plugin(d)			fwupd_device_get_plugin(FWUPD_DEVICE(d))
 #define fu_device_get_update_error(d)		fwupd_device_get_update_error(FWUPD_DEVICE(d))
 #define fu_device_get_update_state(d)		fwupd_device_get_update_state(FWUPD_DEVICE(d))
+#define fu_device_get_update_message(d)		fwupd_device_get_update_message(FWUPD_DEVICE(d))
+#define fu_device_get_update_image(d)		fwupd_device_get_update_image(FWUPD_DEVICE(d))
 #define fu_device_get_vendor(d)			fwupd_device_get_vendor(FWUPD_DEVICE(d))
 #define fu_device_get_version(d)		fwupd_device_get_version(FWUPD_DEVICE(d))
 #define fu_device_get_version_lowest(d)		fwupd_device_get_version_lowest(FWUPD_DEVICE(d))
@@ -508,3 +512,5 @@ void		 fu_device_remove_private_flag		(FuDevice	*self,
 							 guint64	 flag);
 gboolean	 fu_device_has_private_flag		(FuDevice	*self,
 							 guint64	 flag);
+void		 fu_device_emit_request			(FuDevice	*self,
+							 FwupdRequest	*request);

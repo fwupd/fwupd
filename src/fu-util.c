@@ -66,7 +66,7 @@ struct FuUtilPrivate {
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
 	FwupdDevice		*current_device;
-	gchar			*current_message;
+	GPtrArray		*post_requests;
 	FwupdDeviceFlags	 completion_flags;
 	FwupdDeviceFlags	 filter_include;
 	FwupdDeviceFlags	 filter_exclude;
@@ -82,6 +82,32 @@ fu_util_client_notify_cb (GObject *object,
 	fu_progressbar_update (priv->progressbar,
 			       fwupd_client_get_status (priv->client),
 			       fwupd_client_get_percentage (priv->client));
+}
+
+static void
+fu_util_update_device_request_cb (FwupdClient *client,
+				  FwupdRequest *request,
+				  FuUtilPrivate *priv)
+{
+	/* nothing sensible to show */
+	if (fwupd_request_get_message (request) == NULL)
+		return;
+
+	/* show this now */
+	if (fwupd_request_get_kind (request) == FWUPD_REQUEST_KIND_IMMEDIATE) {
+		g_autofree gchar *fmt = NULL;
+		g_autofree gchar *tmp = NULL;
+
+		/* TRANSLATORS: the user needs to do something, e.g. remove the device */
+		fmt = fu_util_term_format (_("Action Required:"), FU_UTIL_TERM_COLOR_RED);
+		tmp = g_strdup_printf ("%s %s", fmt,
+				       fwupd_request_get_message (request));
+		fu_progressbar_set_title (priv->progressbar, tmp);
+	}
+
+	/* save for later */
+	if (fwupd_request_get_kind (request) == FWUPD_REQUEST_KIND_POST)
+		g_ptr_array_add (priv->post_requests, g_object_ref (request));
 }
 
 static void
@@ -131,12 +157,6 @@ fu_util_update_device_changed_cb (FwupdClient *client,
 		g_warning ("no FuUtilOperation set");
 	}
 	g_set_object (&priv->current_device, device);
-
-	if (priv->current_message == NULL) {
-		const gchar *tmp = fwupd_device_get_update_message (priv->current_device);
-		if (tmp != NULL)
-			priv->current_message = g_strdup (tmp);
-	}
 }
 
 static gboolean
@@ -551,14 +571,14 @@ fu_util_download_if_required (FuUtilPrivate *priv, const gchar *perhapsfn, GErro
 static void
 fu_util_display_current_message (FuUtilPrivate *priv)
 {
-	if (priv->current_message == NULL) {
-		/* TRANSLATORS: success message */
-		g_print ("%s\n", _("Successfully installed firmware"));
-		return;
-	}
 	/* TRANSLATORS: success message */
-	g_print ("%s: %s\n", _("Successfully installed firmware"), priv->current_message);
-	g_clear_pointer (&priv->current_message, g_free);
+	g_print ("%s\n", _("Successfully installed firmware"));
+
+	/* print all POST requests */
+	for (guint i = 0; i < priv->post_requests->len; i++) {
+		FwupdRequest *request = g_ptr_array_index (priv->post_requests, i);
+		g_print ("%s\n", fwupd_request_get_message (request));
+	}
 }
 
 static gboolean
@@ -583,6 +603,8 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
 	g_signal_connect (priv->client, "device-changed",
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+	g_signal_connect (priv->client, "device-request",
+			  G_CALLBACK (fu_util_update_device_request_cb), priv);
 
 	/* install with flags chosen by the user */
 	filename = fu_util_download_if_required (priv, values[0], error);
@@ -1581,6 +1603,8 @@ fu_util_update_all (FuUtilPrivate *priv, GError **error)
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
 	g_signal_connect (priv->client, "device-changed",
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+	g_signal_connect (priv->client, "device-request",
+			  G_CALLBACK (fu_util_update_device_request_cb), priv);
 	g_ptr_array_sort (devices, fu_util_sort_devices_by_flags_cb);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
@@ -1667,6 +1691,8 @@ fu_util_update_by_id (FuUtilPrivate *priv, const gchar *device_id, GError **erro
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
 	g_signal_connect (priv->client, "device-changed",
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+	g_signal_connect (priv->client, "device-request",
+			  G_CALLBACK (fu_util_update_device_request_cb), priv);
 
 	/* get the releases for this device and filter for validity */
 	rels = fwupd_client_get_upgrades (priv->client,
@@ -1874,6 +1900,8 @@ fu_util_downgrade (FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->current_operation = FU_UTIL_OPERATION_DOWNGRADE;
 	g_signal_connect (priv->client, "device-changed",
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+	g_signal_connect (priv->client, "device-request",
+			  G_CALLBACK (fu_util_update_device_request_cb), priv);
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	if (!fu_util_update_device_with_release (priv, dev, rel, error))
 		return FALSE;
@@ -1935,6 +1963,8 @@ fu_util_reinstall (FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
 	g_signal_connect (priv->client, "device-changed",
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+	g_signal_connect (priv->client, "device-request",
+			  G_CALLBACK (fu_util_update_device_request_cb), priv);
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	if (!fu_util_update_device_with_release (priv, dev, rel, error))
 		return FALSE;
@@ -2059,6 +2089,8 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
 	g_signal_connect (priv->client, "device-changed",
 			  G_CALLBACK (fu_util_update_device_changed_cb), priv);
+	g_signal_connect (priv->client, "device-request",
+			  G_CALLBACK (fu_util_update_device_request_cb), priv);
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
 	if (!fu_util_update_device_with_release (priv, dev, rel, error))
@@ -2485,7 +2517,7 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_object_unref (priv->client);
 	if (priv->current_device != NULL)
 		g_object_unref (priv->current_device);
-	g_free (priv->current_message);
+	g_ptr_array_unref (priv->post_requests);
 	g_main_context_unref (priv->main_ctx);
 	g_object_unref (priv->cancellable);
 	g_object_unref (priv->progressbar);
@@ -2852,6 +2884,7 @@ main (int argc, char *argv[])
 	/* create helper object */
 	priv->main_ctx = g_main_context_new ();
 	priv->progressbar = fu_progressbar_new ();
+	priv->post_requests = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	fu_progressbar_set_main_context (priv->progressbar, priv->main_ctx);
 
 	/* add commands */
@@ -3267,6 +3300,7 @@ main (int argc, char *argv[])
 		if (!fwupd_client_set_feature_flags (priv->client,
 						     FWUPD_FEATURE_FLAG_CAN_REPORT |
 						     FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
+						     FWUPD_FEATURE_FLAG_REQUESTS |
 						     FWUPD_FEATURE_FLAG_UPDATE_ACTION |
 						     FWUPD_FEATURE_FLAG_DETACH_ACTION,
 						     priv->cancellable, &error)) {

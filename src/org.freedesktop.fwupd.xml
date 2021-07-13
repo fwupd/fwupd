@@ -831,5 +831,23 @@
       </doc:doc>
     </signal>
 
+    <!--***********************************************************-->
+    <signal name='DeviceRequest'>
+      <arg type='a{sv}' name='request' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>A device request.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            A device request to the client.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
   </interface>
 </node>

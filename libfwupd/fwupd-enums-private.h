@@ -139,6 +139,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_URGENCY		"Urgency"
 /**
+ * FWUPD_RESULT_KEY_REQUEST_KIND:
+ *
+ * Result key to represent RequestKind
+ *
+ * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
+ **/
+#define FWUPD_RESULT_KEY_REQUEST_KIND		"RequestKind"
+/**
  * FWUPD_RESULT_KEY_HSI_LEVEL:
  *
  * Result key to represent HsiLevel

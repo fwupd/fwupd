@@ -32,6 +32,7 @@
 #include "fwupd-security-attr-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
+#include "fwupd-request-private.h"
 
 typedef GObject		*(*FwupdClientObjectNewFunc)	(void);
 
@@ -83,6 +84,7 @@ enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_CHANGED,
+	SIGNAL_DEVICE_REQUEST,
 	SIGNAL_LAST
 };
 
@@ -131,13 +133,13 @@ typedef struct {
 	FwupdClient	*self;
 	gchar		*property_name;
 	guint		 signal_id;
-	FwupdDevice	*device;
+	GObject		*payload;
 } FwupdClientContextHelper;
 
 static void
 fwupd_client_context_helper_free (FwupdClientContextHelper *helper)
 {
-	g_clear_object (&helper->device);
+	g_clear_object (&helper->payload);
 	g_object_unref (helper->self);
 	g_free (helper->property_name);
 	g_free (helper);
@@ -176,9 +178,9 @@ fwupd_client_context_idle_cb (gpointer user_data)
 		if (helper->property_name != NULL)
 			fwupd_client_context_object_notify (self, helper->property_name);
 
-		/* device signal */
-		if (helper->signal_id !=0 && helper->device != NULL)
-			g_signal_emit (self, signals[helper->signal_id], 0, helper->device);
+		/* payload signal */
+		if (helper->signal_id != 0 && helper->payload != NULL)
+			g_signal_emit (self, signals[helper->signal_id], 0, helper->payload);
 	}
 
 	/* all done */
@@ -228,14 +230,14 @@ fwupd_client_object_notify (FwupdClient *self, const gchar *property_name)
 
 /* run callback in the correct thread */
 static void
-fwupd_client_signal_emit_device (FwupdClient *self, guint signal_id, FwupdDevice *device)
+fwupd_client_signal_emit_object (FwupdClient *self, guint signal_id, GObject *payload)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	FwupdClientContextHelper *helper = NULL;
 
 	/* shortcut */
 	if (g_main_context_is_owner (priv->main_ctx)) {
-		g_signal_emit (self, signals[signal_id], 0, device);
+		g_signal_emit (self, signals[signal_id], 0, payload);
 		return;
 	}
 
@@ -243,7 +245,7 @@ fwupd_client_signal_emit_device (FwupdClient *self, guint signal_id, FwupdDevice
 	helper = g_new0 (FwupdClientContextHelper, 1);
 	helper->self = g_object_ref (self);
 	helper->signal_id = signal_id;
-	helper->device = g_object_ref (device);
+	helper->payload = g_object_ref (payload);
 	fwupd_client_context_helper (self, helper);
 }
 
@@ -407,21 +409,36 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 		dev = fwupd_device_from_variant (parameters);
 		g_debug ("Emitting ::device-added(%s)",
 			 fwupd_device_get_id (dev));
-		fwupd_client_signal_emit_device (self, SIGNAL_DEVICE_ADDED, dev);
+		fwupd_client_signal_emit_object (self,
+						 SIGNAL_DEVICE_ADDED,
+						 G_OBJECT (dev));
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
 		dev = fwupd_device_from_variant (parameters);
 		g_debug ("Emitting ::device-removed(%s)",
 			 fwupd_device_get_id (dev));
-		fwupd_client_signal_emit_device (self, SIGNAL_DEVICE_REMOVED, dev);
+		fwupd_client_signal_emit_object (self,
+						 SIGNAL_DEVICE_REMOVED,
+						 G_OBJECT (dev));
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceChanged") == 0) {
 		dev = fwupd_device_from_variant (parameters);
 		g_debug ("Emitting ::device-changed(%s)",
 			 fwupd_device_get_id (dev));
-		fwupd_client_signal_emit_device (self, SIGNAL_DEVICE_CHANGED, dev);
+		fwupd_client_signal_emit_object (self,
+						 SIGNAL_DEVICE_CHANGED,
+						 G_OBJECT (dev));
+		return;
+	}
+	if (g_strcmp0 (signal_name, "DeviceRequest") == 0) {
+		g_autoptr(FwupdRequest) req = fwupd_request_from_variant (parameters);
+		g_debug ("Emitting ::device-request(%s)",
+			 fwupd_request_get_id (req));
+		fwupd_client_signal_emit_object (self,
+						 SIGNAL_DEVICE_REQUEST,
+						 G_OBJECT (req));
 		return;
 	}
 	g_debug ("Unknown signal name '%s' from %s", signal_name, sender_name);
@@ -4951,6 +4968,23 @@ fwupd_client_class_init (FwupdClientClass *klass)
 			      G_STRUCT_OFFSET (FwupdClientClass, device_changed),
 			      NULL, NULL, g_cclosure_marshal_generic,
 			      G_TYPE_NONE, 1, FWUPD_TYPE_DEVICE);
+
+	/**
+	 * FwupdClient::device-request:
+	 * @self: the #FwupdClient instance that emitted the signal
+	 * @msg: the #FwupdRequest
+	 *
+	 * The ::device-request signal is emitted when a device has been
+	 * emitted some kind of event, e.g. a manual action is required.
+	 *
+	 * Since: 1.6.2
+	 **/
+	signals [SIGNAL_DEVICE_REQUEST] =
+		g_signal_new ("device-request",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FwupdClientClass, device_changed),
+			      NULL, NULL, g_cclosure_marshal_generic,
+			      G_TYPE_NONE, 1, FWUPD_TYPE_REQUEST);
 
 	/**
 	 * FwupdClient:status:

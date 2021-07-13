@@ -826,8 +826,10 @@ LIBFWUPDPLUGIN_1.6.2 {
     fu_device_add_guid_full;
     fu_device_add_parent_physical_id;
     fu_device_add_private_flag;
+    fu_device_emit_request;
     fu_device_get_parent_physical_ids;
     fu_device_get_private_flags;
+    fu_device_get_request_cnt;
     fu_device_has_parent_physical_id;
     fu_device_has_private_flag;
     fu_device_new_with_context;
