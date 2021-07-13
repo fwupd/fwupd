@@ -87,7 +87,9 @@ fu_device_list_to_string (FuDeviceList *self)
 		FuDeviceItem *item = g_ptr_array_index (self->devices, i);
 		gboolean wfr;
 
-		g_string_append_printf (str, "%u [%p]\n", i, item);
+		g_string_append_printf (str, "%u [%p] %s\n",
+					i, item,
+					item->remove_id != 0 ? "IN_TIMEOUT" : "");
 		wfr = fu_device_has_flag (item->device,
 					  FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		g_string_append_printf (str, "new: %s [%p] %s\n",
@@ -576,6 +578,13 @@ fu_device_list_item_set_device (FuDeviceItem *item, FuDevice *device)
 static void
 fu_device_list_clear_wait_for_replug (FuDeviceList *self, FuDeviceItem *item)
 {
+	/* clear timeout if scheduled */
+	if (item->remove_id != 0) {
+		g_source_remove (item->remove_id);
+		item->remove_id = 0;
+	}
+
+	/* remove flag on both old and new devices */
 	if (fu_device_has_flag (item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
 		g_debug ("%s device came back, clearing flag", fu_device_get_id (item->device));
 		fu_device_remove_flag (item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -586,6 +595,8 @@ fu_device_list_clear_wait_for_replug (FuDeviceList *self, FuDeviceItem *item)
 			fu_device_remove_flag (item->device_old, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		}
 	}
+
+	/* optional debug */
 	if (g_getenv ("FWUPD_DEVICE_LIST_VERBOSE") != NULL) {
 		g_autofree gchar *str = fu_device_list_to_string (self);
 		g_debug ("\n%s", str);
@@ -597,12 +608,6 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 {
 	guint64 private_flags;
 	GPtrArray *vendor_ids;
-
-	/* clear timeout if scheduled */
-	if (item->remove_id != 0) {
-		g_source_remove (item->remove_id);
-		item->remove_id = 0;
-	}
 
 	/* copy over any GUIDs that used to exist */
 	fu_device_list_add_missing_guids (device, item->device);
