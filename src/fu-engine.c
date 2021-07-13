@@ -216,6 +216,12 @@ fu_engine_status_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
 }
 
 static void
+fu_engine_generic_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
+{
+	fu_engine_emit_device_changed (self, device);
+}
+
+static void
 fu_engine_watch_device (FuEngine *self, FuDevice *device)
 {
 	g_autoptr(FuDevice) device_old = fu_device_list_get_old (self->device_list, device);
@@ -231,6 +237,12 @@ fu_engine_watch_device (FuEngine *self, FuDevice *device)
 			  G_CALLBACK (fu_engine_progress_notify_cb), self);
 	g_signal_connect (device, "notify::status",
 			  G_CALLBACK (fu_engine_status_notify_cb), self);
+	g_signal_connect (device, "notify::flags",
+			  G_CALLBACK (fu_engine_generic_notify_cb), self);
+	g_signal_connect (device, "notify::update-message",
+			  G_CALLBACK (fu_engine_generic_notify_cb), self);
+	g_signal_connect (device, "notify::update-image",
+			  G_CALLBACK (fu_engine_generic_notify_cb), self);
 }
 
 static void
