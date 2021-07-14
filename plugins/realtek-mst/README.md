@@ -1,8 +1,6 @@
-Realtek MST
-===========
+# Realtek MST
 
-Introduction
-------------
+## Introduction
 
 This plugin updates the firmware of DisplayPort MST hub devices made by Realtek,
 such as the RTD2141b and RTD2142.
@@ -16,8 +14,7 @@ identified partially through the presence of Realtek's OUI in the Branch
 Device OUI fields of DPCD (DisplayPort Configuration Data), they do not have
 unique Device Identification strings.
 
-Firmware Format
----------------
+## Firmware Format
 
 The daemon will decompress the cabinet archive and extract a firmware blob in
 an unspecified binary file format, which is written to the partition of the
@@ -25,32 +22,31 @@ device flash that is not currently running.
 
 This plugin supports the following protocol ID:
 
- * com.realtek.rtd2142
+* com.realtek.rtd2142
 
-GUID Generation
----------------
+## GUID Generation
 
 Devices use custom DeviceInstanceId values derived from device names
 provided by system firmware and read from sysfs, like:
 
- * REALTEK-MST\NAME_10EC2142:00
- * REALTEK-MST\NAME_10EC2142:00&FAMILY_Google_Hatch
+* REALTEK-MST\NAME_10EC2142:00
+* REALTEK-MST\NAME_10EC2142:00&FAMILY_Google_Hatch
 
-Quirk use
----------
+## Quirk Use
+
 This plugin uses the following plugin-specific quirks:
 
-| Quirk                  | Description                                 | Minimum fwupd version |
-|------------------------|---------------------------------------------|-----------------------|
-| `RealtekMstDpAuxName`  | Specifies the name of the drm_dp_aux_dev channel over which the device should be reached. | 1.6.2 |
+### RealtekMstDpAuxName
 
-Vendor ID security
-------------------
+Specifies the name of the drm_dp_aux_dev channel over which the device should be reached.
+
+Since: 1.6.2
+
+## Vendor ID security
 
 The vendor ID is specified by system firmware (such as ACPI tables).
 
-External interface access
----
+## External Interface Access
 
 This plugin requires access to i2c buses associated with the specified
 DisplayPort aux channel, usually `/dev/i2c-5` or similar.

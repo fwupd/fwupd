@@ -1,8 +1,6 @@
-Parade LSPCON
-=============
+# Parade LSPCON
 
-Introduction
-------------
+## Introduction
 
 This plugin updates the firmware of HDMI level shifter and protocol converter
 (LSPCON) devices made by Parade Technologies, such as the PS175.
@@ -17,41 +15,39 @@ The attached flash is assumed to be compatible with the W25Q20 series of
 devices, in particular supporting a 64k Block Erase command (0xD8) with 24-bit
 address and Write Enable for Volatile Status Register (0x05).
 
-Firmware Format
----------------
+## Firmware Format
 
 The device firmware is in an unspecified binary format that is written directly
 to an inactive partition of the Flash attached to the device.
 
 This plugin supports the following protocol ID:
 
- * com.paradetech.ps176
+* com.paradetech.ps176
 
-GUID Generation
----------------
+## GUID Generation
 
 The plugin uses a custom DeviceInstanceId value derived from the device name
 provided by system firmware and read from sysfs, such as:
 
- * `PARADE-LSPCON\NAME_1AF80175:00`
- * `PARADE-LSPCON\NAME_1AF80175:00&FAMILY_Google_Hatch`
+* `PARADE-LSPCON\NAME_1AF80175:00`
+* `PARADE-LSPCON\NAME_1AF80175:00&FAMILY_Google_Hatch`
 
-Quirk use
----------
+## Quirk Use
 
 This plugin uses the following plugin-specific quirks:
 
-| Quirk                       | Description                                                                 | Minimum fwupd version |
-| `ParadeLspconAuxDeviceName` | sysfs name of the `drm_dp_aux_dev` over which device version should be read | 1.6.2 |
+### ParadeLspconAuxDeviceName
 
-Vendor ID security
-------------------
+The sysfs name of the `drm_dp_aux_dev` over which device version should be read.
+
+Since: 1.6.2
+
+## Vendor ID security
 
 The vendor ID is specified by system firmware (such as ACPI tables) and is
 part of the device's name as read from sysfs.
 
-External interface access
--------------------------
+## External Interface Access
 
 This plugin requires access to the DisplayPort aux channel to read DPCD, such
 as `/dev/drm_dp_aux0` as well as the i2c bus attached to the device, such as
