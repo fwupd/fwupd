@@ -237,6 +237,7 @@ fu_ebitdo_device_validate (FuEbitdoDevice *self, GError **error)
 	const gchar *ven;
 	const gchar *allowlist[] = {
 		"8Bitdo",
+		"8BitDo",
 		"SFC30",
 		NULL };
 
