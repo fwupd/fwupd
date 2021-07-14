@@ -10,18 +10,17 @@ assignees: 'cragw'
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-
 **Steps to Reproduce**
 Steps to reproduce the behavior.
-
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
 **fwupd version information**
 Please provide the version of the daemon and client.
+
 ```shell
-$ fwupdmgr --version
+fwupdmgr --version
 ```
 
 Please note how you installed it (`apt`, `dnf`, `pacman`, source, etc):
@@ -30,7 +29,7 @@ Please note how you installed it (`apt`, `dnf`, `pacman`, source, etc):
 Please provide the output of the external fwupd devices recognized in your system.
 
 ```shell
-$ fwupdmgr get-devices --filter=~internal
+fwupdmgr get-devices --filter=~internal
 ```
 
 **Dock SKU**
@@ -46,19 +45,21 @@ including USB devices, hubs, monitors, and downstream type-C devices.
 
 **Verbose daemon logs**
 First enable daemon verbose logs collection.
+
 ```shell
 fwupdmgr modify-config "VerboseDomains" "*"
 ```
 
 Then try to reproduce the issue.  Even if it doesn't reproduce, please attach the
 daemon verbose logs collected from the system journal.
+
 ```shell
 journalctl -b -u fwupd.service
 ```
 
 **Additional questions**
+
 - Operating system and version:
 - Have you tried unplugging the dock or any peripherals from your machine?
 - Have you tried to power cycle the dock from the AC adapter?
 - Is this a regression?
-

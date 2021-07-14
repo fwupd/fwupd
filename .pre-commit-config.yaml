@@ -52,4 +52,4 @@ repos:
     rev: v0.27.1
     hooks:
     - id: markdownlint
-      args: ['-f']
+      args: ['--fix', '--ignore', '.github']

@@ -1,13 +1,10 @@
-Fastboot Support
-================
+# Fastboot
 
-Introduction
-------------
+## Introduction
 
 This plugin is used to update hardware that uses the fastboot protocol.
 
-Firmware Format
----------------
+## Firmware Format
 
 The daemon will decompress the cabinet archive and extract a firmware blob in
 ZIP file format. Inside the zip file must be all the firmware images for each
@@ -20,19 +17,17 @@ be updated.
 
 This plugin supports the following protocol ID:
 
- * com.google.fastboot
+* com.google.fastboot
 
-GUID Generation
----------------
+## GUID Generation
 
 These devices use the standard USB DeviceInstanceId values, e.g.
 
- * `USB\VID_18D1&PID_4EE0&REV_0001`
- * `USB\VID_18D1&PID_4EE0`
- * `USB\VID_18D1`
+* `USB\VID_18D1&PID_4EE0&REV_0001`
+* `USB\VID_18D1&PID_4EE0`
+* `USB\VID_18D1`
 
-Update Behavior
----------------
+## Update Behavior
 
 A fastboot device usually presents in runtime mode (or with no interface),
 but if the user puts the device into fastboot mode using a physical button
@@ -42,19 +37,20 @@ runtime mode which *may* mean the device "goes away".
 For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
 the bootloader and runtime modes are treated as the same device.
 
-Quirk use
----------
+## Quirk Use
+
 This plugin uses the following plugin-specific quirk:
 
-| Quirk                  | Description                      | Minimum fwupd version |
-|------------------------|----------------------------------|-----------------------|
-| `FastbootBlockSize`    | Block size to use for transfers  | 1.2.2                 |
+### FastbootBlockSize
 
-Vendor ID Security
-------------------
+Block size to use for transfers.
+
+Since: 1.2.2
+
+## Vendor ID Security
 
 The vendor ID is set from the USB vendor, for example `USB:0x18D1`
 
-External interface access
--------------------------
+## External Interface Access
+
 This plugin requires read/write access to `/dev/bus/usb`.

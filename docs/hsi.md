@@ -1,4 +1,4 @@
-Title: Host Security ID Specification
+# Host Security ID Specification
 
 ---
 
@@ -15,8 +15,7 @@ Authors:
 
 ---
 
-Introduction
-============
+## Introduction
 
 Not all system vendors prioritize building a secure platform.
 The truth is that **security costs money**.
@@ -28,15 +27,13 @@ The Linux Vendor Firmware Service (LVFS) could provide some **easy-to-understand
 The service already knows a huge amount of information about machines from signed reports uploaded to the LVFS and from analyzing firmware binaries.
 However this information alone does not explain firmware security to the user in a way they can actually interpret.
 
-Other Tools
------------
+### Other Tools
 
 Traditionally, figuring out the true security of your hardware and firmware requires sifting through the marketing documentation provided by the OEM and in many cases just "trusting" they did it right.
 Tools such as Chipsec can check the hardware configuration, but they do not work out of the box and use technical jargon that an average user cannot interpret.
 Unfortunately, running a tool like Chipsec requires that you actively turn off some security layers such as UEFI Secure Boot, and allow 3rd party unsigned kernel modules to be loaded.
 
-Verifying Host Firmware Security {#verifying}
-================================
+## Verifying Host Firmware Security {#verifying}
 
 To start out some core protections must be assigned a relative
 importance.
@@ -56,38 +53,32 @@ For this reason HSI will only measure security protections that can be verified 
 The HSI specification is primarily designed for laptop and desktop hardware, although some tests *may* still make sense on server or embedded hardware.
 It is not expected that non-consumer hardware will publish an HSI number.
 
-Runtime Behavior {#runtime-behaviour}
-----------------
+## Runtime Behavior {#runtime-behaviour}
 
 Orthogonal to the security features provided by the firmware there are other security considerations related to the firmware which may require internet access to discover or that runtime OS changes directly affect the security of the firmware.
 It would not make sense to have *have updates on the LVFS* as a requirement for a specific security level as this would mean offline the platform might be a higher level initially but as soon as it is brought online it is downgraded which would be really confusing to users.
 The *core* security level will not change at Operating System runtime, but the suffix may.
 
-HSI:0 (Insecure) {#hsi-level0}
-----------------
+### HSI:0 (Insecure) {#hsi-level0}
 
 The lowest security level with little or no detected firmware protections.
 This is the default security level if no tests can be run or some tests in the next security level have failed.
 
-HSI:1 (Critical) {#hsi-level1}
-----------------
+### HSI:1 (Critical) {#hsi-level1}
 
 This security level corresponds to the most basic of security protections considered essential by security professionals.
 Any failures at this level would have critical security impact and could likely be used to compromise the system firmware without physical access.
 
-HSI:3 (Theoretical) {#hsi-level2}
--------------------
+### HSI:3 (Theoretical) {#hsi-level2}
 
 This security level corresponds to firmware security issues that pose a theoretical concern or where any exploit would be difficult or impractical to use.
 At this level various technologies may be employed to protect the boot process from modification by an attacker with local access to the machine.
 
-HSI:4 (System Protection) {#hsi-level4}
--------------------------
+### HSI:4 (System Protection) {#hsi-level4}
 
 This security level corresponds to out-of-band protection of the system firmware perhaps including recovery.
 
-HSI:5 (System Attestation) {#hsi-level5}
---------------------------
+### HSI:5 (System Attestation) {#hsi-level5}
 
 This security level corresponds to out-of-band attestation of the system firmware.
 There are currently no tests implemented for HSI:5 and so this security level cannot yet be obtained.
@@ -106,8 +97,7 @@ A runtime security issue detected.
 
 - The installed fwupd is running with [custom or modified plugins](https://github.com/fwupd/fwupd/tree/master/plugins). *[v1.5.0]*
 
-Tests included in fwupd {#tests}
------------------------
+## Tests included in fwupd {#tests}
 
 The set of tests is currently x86 UEFI-centric, but will be expanded in the future for various ARM or RISC-V firmware protections as required.
 Where the requirement is architecture or processor specific it has been noted.
@@ -122,7 +112,7 @@ Secure Boot requires that each binary loaded at boot is validated against truste
 
 See also:
 
-- [https://wiki.ubuntu.com/UEFI/SecureBoot]()
+- [Ubuntu SecureBoot Wiki Page](https://wiki.ubuntu.com/UEFI/SecureBoot)
 
 ### UEFI PK {#org.fwupd.hsi.Uefi.Pk}
 
@@ -133,7 +123,7 @@ This should not be a test key, e.g. `DO NOT TRUST - AMI Test PK`
 
 See also:
 
-- [https://wiki.ubuntu.com/UEFI/SecureBoot/Testing]()
+- [Ubuntu SecureBoot Wiki Page](https://wiki.ubuntu.com/UEFI/SecureBoot/Testing)
 
 ### BIOS Write Enable (BWE) {#org.fwupd.hsi.Spi.Bioswe}
 
@@ -184,7 +174,7 @@ A TPM securely stores platform specific secrets that can only be divulged to tru
 
 See also:
 
-- [https://en.wikipedia.org/wiki/Trusted_Platform_Module]()
+- [TPM Wikipedia Page](https://en.wikipedia.org/wiki/Trusted_Platform_Module)
 
 ### ME not in manufacturing mode {#org.fwupd.hsi.Mei.ManufacturingMode}
 
@@ -258,7 +248,7 @@ The ACPI DMAR table is used to set up pre-boot DMA protection which eliminates s
 
 See also:
 
-- [https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit]()
+- [IOMMU Wikipedia Page](https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit)
 
 ### Intel BootGuard {#org.fwupd.hsi.IntelBootguard}
 
@@ -282,7 +272,7 @@ This means that the memory modules can be physically removed and the contents re
 
 See also:
 
-- [https://en.wikipedia.org/wiki/Cold_boot_attack]()
+- [Cold Boot Attack Wikipedia Page](https://en.wikipedia.org/wiki/Cold_boot_attack)
 
 ### Intel CET Available {#org.fwupd.hsi.IntelCet}
 
@@ -315,7 +305,7 @@ This can make exploits easier to write, as it allows the kernel to access user-s
 
 See also:
 
-- [https://en.wikipedia.org/wiki/Supervisor_Mode_Access_Prevention]()
+- [SMAP Wikipedia Page](https://en.wikipedia.org/wiki/Supervisor_Mode_Access_Prevention)
 
 ### Kernel DMA protection {#org.fwupd.hsi.Iommu}
 
@@ -327,7 +317,7 @@ Common implementations are Intel VT-d and AMD-Vi.
 
 See also:
 
-- [https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit]()
+- [IOMMU Wikipedia Page](https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit)
 
 ### Suspend-to-Idle {#org.fwupd.hsi.SuspendToIdle}
 
@@ -335,8 +325,7 @@ The platform should be set up with Suspend-to-Idle as the default S3 sleep state
 
 - For HSI-3 this should be set *[v1.5.0]*
 
-Conclusion {#conclusions}
-==========
+## Conclusion {#conclusions}
 
 Any system with a Host Security ID of `0` can easily be modified from userspace.
 PCs with confidential documents should have a `HSI:3` or higher level of protection.
@@ -356,8 +345,7 @@ In some cases security level measurements will only be possible on systems with 
 The long term goal is to increase the `HSI:x` level of systems being sold to consumers.
 By making some of the `HSI:x` attributes part of the LVFS uploaded report we can allow users to compare vendors and models before purchasing hardware.
 
-Intentional Omissions {#ommissions}
----------------------
+## Intentional Omissions {#ommissions}
 
 ### Intel SGX
 
@@ -367,8 +355,7 @@ This is not widely used as it has several high severity security issues.
 
 MPX support was removed from GCC and the Linux kernel in 2019 and it is now considered obsolete.
 
-Further Work
-============
+## Further Work
 
 More internal and external devices should be factored into the security equation.
 For now the focus for further tests should be around internal device firmware as it is what can be most directly controlled by fwupd and the hardware manufacturer.
