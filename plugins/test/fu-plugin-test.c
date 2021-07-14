@@ -151,6 +151,7 @@ fu_plugin_update (FuPlugin *plugin,
 {
 	const gchar *test = g_getenv ("FWUPD_PLUGIN_TEST");
 	gboolean requires_activation = g_strcmp0 (test, "requires-activation") == 0;
+	gboolean requires_reboot = g_strcmp0 (test, "requires-reboot") == 0;
 	if (g_strcmp0 (test, "fail") == 0) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
@@ -189,6 +190,8 @@ fu_plugin_update (FuPlugin *plugin,
 	/* upgrade, or downgrade */
 	if (requires_activation) {
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+	} else if (requires_reboot) {
+		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 	} else {
 		g_autofree gchar *ver = fu_plugin_test_get_version (blob_fw);
 		fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
