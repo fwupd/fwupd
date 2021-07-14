@@ -182,7 +182,7 @@ class Builder:
                 # get rid of variable
                 try:
                     line = line.split("=")[1]
-                except IndexError as _:
+                except IndexError:
                     pass
 
                 # get rid of whitespace

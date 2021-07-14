@@ -50,7 +50,7 @@ class PotFile:
                     continue
                 try:
                     key, value = line.split(" ", maxsplit=1)
-                except ValueError as _:
+                except ValueError:
                     continue
                 if key == "msgid":
                     lang_en = value[1:-1]
@@ -101,7 +101,7 @@ def main(args) -> int:
                 potfile = PotFile(os.path.join(args.podir, "{}.po".format(lang)))
                 try:
                     label_translated = potfile.msgs[args.label]
-                except KeyError as _:
+                except KeyError:
                     continue
                 if label_translated == args.label:
                     continue
