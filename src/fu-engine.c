@@ -2691,8 +2691,14 @@ fu_engine_install (FuEngine *self,
 			return FALSE;
 	}
 
-	/* success */
-	fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
+	/* mark success unless needs a reboot */
+	if (fu_device_get_update_state (device) != FWUPD_UPDATE_STATE_NEEDS_REBOOT) {
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
+	}
+
+	/* make the UI update */
+	fu_engine_emit_changed (self);
+
 	return TRUE;
 }
 
