@@ -140,6 +140,7 @@ fu_emmc_device_probe (FuDevice *device, GError **error)
 	g_autofree gchar *man_oem = NULL;
 	g_autofree gchar *man_oem_name = NULL;
 	g_autofree gchar *vendor_id = NULL;
+	g_autoptr(GRegex) dev_regex = NULL;
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS (fu_emmc_device_parent_class)->probe (device, error))
@@ -161,6 +162,25 @@ fu_emmc_device_probe (FuDevice *device, GError **error)
 			     FWUPD_ERROR_NOT_SUPPORTED,
 			     "is not correct devtype=%s, expected disk",
 			     g_udev_device_get_devtype (udev_device));
+		return FALSE;
+	}
+
+	/* ignore *rpmb and *boot* mmc block devices */
+	dev_regex = g_regex_new ("mmcblk\\d$", 0, 0, NULL);
+	tmp = g_udev_device_get_name (udev_device);
+	if (tmp == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "device has no name");
+		return FALSE;
+	}
+	if (!g_regex_match (dev_regex, tmp, 0, NULL)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "is not raw mmc block device, devname=%s",
+			     g_udev_device_get_name (udev_device));
 		return FALSE;
 	}
 
