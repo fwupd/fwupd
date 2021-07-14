@@ -214,6 +214,13 @@ fu_redfish_device_probe_related_item (FuRedfishDevice *self,
 		if (tmp != NULL && tmp[0] != '\0' && g_strcmp0 (tmp, "N/A") != 0)
 			fu_device_set_serial (FU_DEVICE (self), tmp);
 	}
+	if (json_object_has_member (json_obj, "HotPluggable")) {
+		/* this is better than the heuristic we get from the device name */
+		if (json_object_get_boolean_member (json_obj, "HotPluggable"))
+			fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
+		else
+			fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
+	}
 
 	/* sometimes an array, sometimes an object! */
 	if (json_object_has_member (json_obj, "PCIeFunctions")) {
