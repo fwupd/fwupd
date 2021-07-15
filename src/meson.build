@@ -94,34 +94,13 @@ fwupdmgr = executable(
   install : true,
   install_dir : bindir
 )
-endif
 
-if get_option('agent')
-fwupdagent = executable(
-  'fwupdagent',
-  sources : [
-    'fu-agent.c',
-    'fu-security-attr.c',
-    'fu-util-common.c',
-    systemd_src,
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  dependencies : [
-    libfwupd_deps,
-    libxmlb,
-    client_dep,
-  ],
-  link_with : [
-    fwupd,
-    fwupdplugin,
-  ],
-  install : true,
-  install_dir : bindir
-)
+# for compatibility
+meson.add_install_script(
+  'sh', '-c',
+  'ln -fs fwupdmgr @0@@1@'.format(
+      '${DESTDIR}',
+      join_paths(get_option('prefix'), get_option('bindir'), 'fwupdagent')))
 endif
 
 if get_option('systemd')
@@ -202,8 +181,6 @@ if get_option('man')
       install: true,
       install_dir: join_paths(mandir, 'man1'),
     )
-  endif
-  if get_option('agent')
     configure_file(
       input : 'fwupdagent.1',
       output : 'fwupdagent.1',

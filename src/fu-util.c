@@ -30,6 +30,7 @@
 #include "fu-security-attrs.h"
 #include "fu-util-common.h"
 #include "fwupd-common-private.h"
+#include "fwupd-device-private.h"
 
 #ifdef HAVE_SYSTEMD
 #include "fu-systemd.h"
@@ -63,6 +64,7 @@ struct FuUtilPrivate {
 	gboolean		 sign;
 	gboolean		 show_all;
 	gboolean		 disable_ssl_strict;
+	gboolean		 as_json;
 	/* only valid in update and downgrade */
 	FuUtilOperation		 current_operation;
 	FwupdDevice		*current_device;
@@ -460,6 +462,32 @@ fu_util_modify_remote_warning (FuUtilPrivate *priv, FwupdRemote *remote, GError 
 	return TRUE;
 }
 
+static gboolean
+fu_util_print_builder (JsonBuilder *builder, GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonNode) json_root = NULL;
+
+	/* export as a string */
+	json_root = json_builder_get_root (builder);
+	json_generator = json_generator_new ();
+	json_generator_set_pretty (json_generator, TRUE);
+	json_generator_set_root (json_generator, json_root);
+	data = json_generator_to_data (json_generator, NULL);
+	if (data == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "Failed to convert to JSON string");
+		return FALSE;
+	}
+
+	/* just print */
+	g_print ("%s\n", data);
+	return TRUE;
+}
+
 static void
 fu_util_build_device_tree (FuUtilPrivate *priv, GNode *root, GPtrArray *devs, FwupdDevice *dev)
 {
@@ -487,6 +515,43 @@ fu_util_get_tree_title (FuUtilPrivate *priv)
 }
 
 static gboolean
+fu_util_get_devices_as_json (FuUtilPrivate *priv, GPtrArray *devs, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new ();
+	json_builder_begin_object (builder);
+	json_builder_set_member_name (builder, "Devices");
+	json_builder_begin_array (builder);
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devs, i);
+		g_autoptr(GPtrArray) rels = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* add all releases that could be applied */
+		rels = fwupd_client_get_releases (priv->client,
+						  fwupd_device_get_id (dev),
+						  priv->cancellable,
+						  &error_local);
+		if (rels == NULL) {
+			g_debug ("not adding releases to device: %s",
+				 error_local->message);
+		} else {
+			for (guint j = 0; j < rels->len; j++) {
+				FwupdRelease *rel = g_ptr_array_index (rels, j);
+				fwupd_device_add_release (dev, rel);
+			}
+		}
+
+		/* add to builder */
+		json_builder_begin_object (builder);
+		fwupd_device_to_json (dev, builder);
+		json_builder_end_object (builder);
+	}
+	json_builder_end_array (builder);
+	json_builder_end_object (builder);
+	return fu_util_print_builder (builder, error);
+}
+
+static gboolean
 fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new (NULL);
@@ -497,10 +562,14 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 	devs = fwupd_client_get_devices (priv->client, NULL, error);
 	if (devs == NULL)
 		return FALSE;
-	if (devs->len > 0)
-		fu_util_build_device_tree (priv, root, devs, NULL);
+
+	/* not for human consumption */
+	if (priv->as_json)
+		return fu_util_get_devices_as_json (priv, devs, error);
 
 	/* print */
+	if (devs->len > 0)
+		fu_util_build_device_tree (priv, root, devs, NULL);
 	if (g_node_n_children (root) == 0) {
 		/* TRANSLATORS: nothing attached that can be upgraded */
 		g_print ("%s\n", _("No hardware detected with firmware update capability"));
@@ -1346,6 +1415,46 @@ fu_util_perhaps_refresh_remotes (FuUtilPrivate *priv, GError **error)
 }
 
 static gboolean
+fu_util_get_updates_as_json (FuUtilPrivate *priv, GPtrArray *devices, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new ();
+	json_builder_begin_object (builder);
+	json_builder_set_member_name (builder, "Devices");
+	json_builder_begin_array (builder);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devices, i);
+		g_autoptr(GPtrArray) rels = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* not going to have results, so save a D-Bus round-trip */
+		if (!fwupd_device_has_flag (dev, FWUPD_DEVICE_FLAG_SUPPORTED))
+			continue;
+
+		/* get the releases for this device and filter for validity */
+		rels = fwupd_client_get_upgrades (priv->client,
+						  fwupd_device_get_id (dev),
+						  NULL, &error_local);
+		if (rels == NULL) {
+			g_debug ("no upgrades: %s", error_local->message);
+			continue;
+		}
+		for (guint j = 0; j < rels->len; j++) {
+			FwupdRelease *rel = g_ptr_array_index (rels, j);
+			fwupd_device_add_release (dev, rel);
+		}
+
+		/* add to builder */
+		json_builder_begin_object (builder);
+		fwupd_device_to_json (dev, builder);
+		json_builder_end_object (builder);
+	}
+	json_builder_end_array (builder);
+	json_builder_end_object (builder);
+	return fu_util_print_builder (builder, error);
+}
+
+
+static gboolean
 fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1378,6 +1487,11 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 	g_ptr_array_sort (devices, fu_util_sort_devices_by_flags_cb);
+
+	/* not for human consumption */
+	if (priv->as_json)
+		return fu_util_get_updates_as_json (priv, devices, error);
+
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index (devices, i);
 		g_autoptr(GPtrArray) rels = NULL;
@@ -2450,6 +2564,24 @@ fu_util_upload_security (FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 }
 
 static gboolean
+fu_util_security_as_json (FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new ();
+	json_builder_begin_object (builder);
+	json_builder_set_member_name (builder, "HostSecurityAttributes");
+	json_builder_begin_array (builder);
+	for (guint i = 0; i < attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index (attrs, i);
+		json_builder_begin_object (builder);
+		fwupd_security_attr_to_json (attr, builder);
+		json_builder_end_object (builder);
+	}
+	json_builder_end_array (builder);
+	json_builder_end_object (builder);
+	return fu_util_print_builder (builder, error);
+}
+
+static gboolean
 fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
@@ -2466,16 +2598,20 @@ fu_util_security (FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
-	/* TRANSLATORS: this is a string like 'HSI:2-U' */
-	g_print ("%s \033[1m%s\033[0m\n", _("Host Security ID:"),
-		 fwupd_client_get_host_security_id (priv->client));
-
-	/* print the "why" */
+	/* the "why" */
 	attrs = fwupd_client_get_host_security_attrs (priv->client,
 						      priv->cancellable,
 						      error);
 	if (attrs == NULL)
 		return FALSE;
+
+	/* not for human consumption */
+	if (priv->as_json)
+		return fu_util_security_as_json (priv, attrs, error);
+
+	/* TRANSLATORS: this is a string like 'HSI:2-U' */
+	g_print ("%s \033[1m%s\033[0m\n", _("Host Security ID:"),
+		 fwupd_client_get_host_security_id (priv->client));
 
 	/* show or hide different elements */
 	if (priv->show_all) {
@@ -2869,6 +3005,9 @@ main (int argc, char *argv[])
 		{ "ignore-power", '\0', 0, G_OPTION_ARG_NONE, &ignore_power,
 			/* TRANSLATORS: command line option */
 			_("Ignore requirement of external power source"), NULL },
+		{ "json", '\0', 0, G_OPTION_ARG_NONE, &priv->as_json,
+			/* TRANSLATORS: command line option */
+			_("Output in JSON format"), NULL },
 		{ NULL}
 	};
 
@@ -2880,6 +3019,13 @@ main (int argc, char *argv[])
 
 	/* ensure D-Bus errors are registered */
 	fwupd_error_quark ();
+
+	/* this is an old command which is possibly a symlink */
+	if (g_str_has_suffix (argv[0], "fwupdagent")) {
+		g_printerr ("INFO: The fwupdagent command is deprecated, "
+			    "use `fwupdmgr --json` instead\n");
+		priv->as_json = TRUE;
+	}
 
 	/* create helper object */
 	priv->main_ctx = g_main_context_new ();

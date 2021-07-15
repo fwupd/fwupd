@@ -1,5 +1,4 @@
 option('build', type : 'combo', choices : ['all', 'standalone', 'library'], value : 'all', description : 'build type')
-option('agent', type : 'boolean', value : true, description : 'enable the fwupd agent')
 option('consolekit', type : 'boolean', value : true, description : 'enable ConsoleKit support')
 option('firmware-packager', type : 'boolean', value : true, description : 'enable firmware-packager installation')
 option('docs', type : 'combo', choices : ['none', 'gtkdoc', 'docgen'], value : 'docgen', description : 'developer documentation type')
