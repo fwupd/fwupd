@@ -31,6 +31,7 @@
 #include "fu-util-common.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
+#include "fwupd-remote-private.h"
 
 #ifdef HAVE_SYSTEMD
 #include "fu-systemd.h"
@@ -1566,6 +1567,25 @@ fu_util_get_updates (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_get_remotes_as_json (FuUtilPrivate *priv, GPtrArray *remotes, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new ();
+	json_builder_begin_object (builder);
+	json_builder_set_member_name (builder, "Remotes");
+	json_builder_begin_array (builder);
+	for (guint i = 0; i < remotes->len; i++) {
+		FwupdRemote *remote = g_ptr_array_index (remotes, i);
+		json_builder_begin_object (builder);
+		fwupd_remote_to_json (remote, builder);
+		json_builder_end_object (builder);
+	}
+	json_builder_end_array (builder);
+	json_builder_end_object (builder);
+	return fu_util_print_builder (builder, error);
+}
+
+
+static gboolean
 fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GNode) root = g_node_new (NULL);
@@ -1575,6 +1595,8 @@ fu_util_get_remotes (FuUtilPrivate *priv, gchar **values, GError **error)
 	remotes = fwupd_client_get_remotes (priv->client, NULL, error);
 	if (remotes == NULL)
 		return FALSE;
+	if (priv->as_json)
+		return fu_util_get_remotes_as_json (priv, remotes, error);
 
 	if (remotes->len == 0) {
 		/* TRANSLATORS: no repositories to download from */
