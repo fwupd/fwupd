@@ -1128,3 +1128,52 @@ fwupd_unix_input_stream_from_fn (const gchar *fn, GError **error)
 	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
 }
 #endif
+
+/**
+ * fwupd_common_json_add_string: (skip):
+ **/
+void
+fwupd_common_json_add_string (JsonBuilder *builder, const gchar *key, const gchar *value)
+{
+	if (value == NULL)
+		return;
+	json_builder_set_member_name (builder, key);
+	json_builder_add_string_value (builder, value);
+}
+
+/**
+ * fwupd_common_json_add_int: (skip):
+ **/
+void
+fwupd_common_json_add_int (JsonBuilder *builder, const gchar *key, guint64 value)
+{
+	if (value == 0)
+		return;
+	json_builder_set_member_name (builder, key);
+	json_builder_add_int_value (builder, value);
+}
+
+/**
+ * fwupd_common_json_add_boolean: (skip):
+ **/
+void
+fwupd_common_json_add_boolean (JsonBuilder *builder, const gchar *key, gboolean value)
+{
+	json_builder_set_member_name (builder, key);
+	json_builder_add_string_value (builder, value ? "true" : "false");
+}
+
+/**
+ * fwupd_common_json_add_stringv: (skip):
+ **/
+void
+fwupd_common_json_add_stringv (JsonBuilder *builder, const gchar *key, gchar **value)
+{
+	if (value == NULL)
+		return;
+	json_builder_set_member_name (builder, key);
+	json_builder_begin_array (builder);
+	for (guint i = 0; value[i] != NULL; i++)
+		json_builder_add_string_value (builder, value[i]);
+	json_builder_end_array (builder);
+}

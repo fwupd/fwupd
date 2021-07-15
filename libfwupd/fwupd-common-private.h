@@ -12,6 +12,8 @@
 #include <gio/gunixinputstream.h>
 #endif
 
+#include <json-glib/json-glib.h>
+
 #include "fwupd-common.h"
 
 G_BEGIN_DECLS
@@ -28,6 +30,19 @@ GBytes		*fwupd_input_stream_read_bytes_finish	(GInputStream	*stream,
 							 GAsyncResult	*res,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
+
+void		 fwupd_common_json_add_string		(JsonBuilder	*builder,
+							 const gchar	*key,
+							 const gchar	*value);
+void		 fwupd_common_json_add_stringv		(JsonBuilder	*builder,
+							 const gchar	*key,
+							 gchar		**value);
+void		 fwupd_common_json_add_int		(JsonBuilder	*builder,
+							 const gchar	*key,
+							 guint64	 value);
+void		 fwupd_common_json_add_boolean		(JsonBuilder	*builder,
+							 const gchar	*key,
+							 gboolean	 value);
 
 #ifdef HAVE_GIO_UNIX
 GUnixInputStream *fwupd_unix_input_stream_from_bytes	(GBytes		*bytes,

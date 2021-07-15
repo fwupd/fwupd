@@ -2512,24 +2512,6 @@ fwupd_pad_kv_ups (GString *str, const gchar *key, FwupdUpdateState value)
 	fwupd_pad_kv_str (str, key, fwupd_update_state_to_string (value));
 }
 
-static void
-fwupd_device_json_add_string (JsonBuilder *builder, const gchar *key, const gchar *str)
-{
-	if (str == NULL)
-		return;
-	json_builder_set_member_name (builder, key);
-	json_builder_add_string_value (builder, str);
-}
-
-static void
-fwupd_device_json_add_int (JsonBuilder *builder, const gchar *key, guint64 num)
-{
-	if (num == 0)
-		return;
-	json_builder_set_member_name (builder, key);
-	json_builder_add_int_value (builder, num);
-}
-
 /**
  * fwupd_device_to_json:
  * @self: a #FwupdDevice
@@ -2547,11 +2529,11 @@ fwupd_device_to_json (FwupdDevice *self, JsonBuilder *builder)
 	g_return_if_fail (FWUPD_IS_DEVICE (self));
 	g_return_if_fail (builder != NULL);
 
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_PARENT_DEVICE_ID,
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_PARENT_DEVICE_ID,
 				      priv->parent_id);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_COMPOSITE_ID,
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_COMPOSITE_ID,
 				      priv->composite_id);
 	if (priv->guids->len > 0) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_GUID);
@@ -2562,12 +2544,12 @@ fwupd_device_to_json (FwupdDevice *self, JsonBuilder *builder)
 		}
 		json_builder_end_array (builder);
 	}
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_SERIAL, priv->serial);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_SERIAL, priv->serial);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	if (priv->protocols->len > 1) { /* --> 0 when bumping API */
 		json_builder_set_member_name (builder, "VendorIds");
 		json_builder_begin_array (builder);
@@ -2598,8 +2580,8 @@ fwupd_device_to_json (FwupdDevice *self, JsonBuilder *builder)
 		}
 		json_builder_end_array (builder);
 	}
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_VENDOR_ID, priv->vendor_id);
 	if (priv->vendor_ids->len > 1) { /* --> 0 when bumping API */
 		json_builder_set_member_name (builder, "VendorIds");
 		json_builder_begin_array (builder);
@@ -2609,20 +2591,20 @@ fwupd_device_to_json (FwupdDevice *self, JsonBuilder *builder)
 		}
 		json_builder_end_array (builder);
 	}
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VERSION, priv->version);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_LOWEST, priv->version_lowest);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_BOOTLOADER, priv->version_bootloader);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_FORMAT,
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_VERSION, priv->version);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_LOWEST, priv->version_lowest);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_BOOTLOADER, priv->version_bootloader);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_FORMAT,
 				      fwupd_version_format_to_string (priv->version_format));
-	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_FLASHES_LEFT, priv->flashes_left);
+	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_FLASHES_LEFT, priv->flashes_left);
 	if (priv->version_raw > 0)
-		fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_RAW, priv->version_raw);
+		fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_RAW, priv->version_raw);
 	if (priv->version_lowest_raw > 0)
-		fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW, priv->version_lowest_raw);
+		fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_LOWEST_RAW, priv->version_lowest_raw);
 	if (priv->version_bootloader_raw > 0)
-		fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW, priv->version_bootloader_raw);
+		fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW, priv->version_bootloader_raw);
 	if (priv->version_build_date > 0)
-		fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_BUILD_DATE, priv->version_build_date);
+		fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_BUILD_DATE, priv->version_build_date);
 	if (priv->icons->len > 0) {
 		json_builder_set_member_name (builder, "Icons");
 		json_builder_begin_array (builder);
@@ -2632,14 +2614,14 @@ fwupd_device_to_json (FwupdDevice *self, JsonBuilder *builder)
 		}
 		json_builder_end_array (builder);
 	}
-	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
-	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_CREATED, priv->created);
-	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
-	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
-	fwupd_device_json_add_int (builder, FWUPD_RESULT_KEY_STATUS, priv->status);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
-	fwupd_device_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
+	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
+	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_CREATED, priv->created);
+	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
+	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
+	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_STATUS, priv->status);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 	if (priv->releases->len > 0) {
 		json_builder_set_member_name (builder, "Releases");
 		json_builder_begin_array (builder);
