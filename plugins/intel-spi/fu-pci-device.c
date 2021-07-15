@@ -13,7 +13,6 @@
 #include "fu-pci-device.h"
 
 typedef struct {
-	FuDevice		 parent_instance;
 	guint32			 bus;
 	guint32			 dev;
 	guint32			 fun;
