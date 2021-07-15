@@ -43,22 +43,22 @@ typedef enum {
 } FwupdRequestKind;
 
 /**
- * FWPUD_REQUEST_ID_REMOVE_REPLUG:
+ * FWUPD_REQUEST_ID_REMOVE_REPLUG:
  *
  * The user needs to remove and reinsert the device.
  *
  * Since 1.6.2
  */
-#define FWPUD_REQUEST_ID_REMOVE_REPLUG			"org.freedesktop.fwupd.request.remove-replug"
+#define FWUPD_REQUEST_ID_REMOVE_REPLUG			"org.freedesktop.fwupd.request.remove-replug"
 
 /**
- * FWPUD_REQUEST_ID_PRESS_UNLOCK:
+ * FWUPD_REQUEST_ID_PRESS_UNLOCK:
  *
  * The user needs to press unlock on the device.
  *
  * Since 1.6.2
  */
-#define FWPUD_REQUEST_ID_PRESS_UNLOCK			"org.freedesktop.fwupd.request.press-unlock"
+#define FWUPD_REQUEST_ID_PRESS_UNLOCK			"org.freedesktop.fwupd.request.press-unlock"
 
 const gchar	*fwupd_request_kind_to_string		(FwupdRequestKind kind);
 FwupdRequestKind fwupd_request_kind_from_string		(const gchar	*kind);

@@ -424,7 +424,7 @@ fu_ebitdo_device_detach (FuDevice *device, GError **error)
 
 	/* emit request */
 	fwupd_request_set_kind (request, FWUPD_REQUEST_KIND_IMMEDIATE);
-	fwupd_request_set_id (request, FWPUD_REQUEST_ID_REMOVE_REPLUG);
+	fwupd_request_set_id (request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
 	fwupd_request_set_message (request, fu_device_get_update_message (device));
 	fwupd_request_set_image (request, fu_device_get_update_image (device));
 	fu_device_emit_request (device, request);

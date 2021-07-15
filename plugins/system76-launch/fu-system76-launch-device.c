@@ -136,7 +136,7 @@ fu_system76_launch_device_detach (FuDevice *device, GError **error)
 
 	/* the user has to do something */
 	fwupd_request_set_kind (request, FWUPD_REQUEST_KIND_IMMEDIATE);
-	fwupd_request_set_id (request, FWPUD_REQUEST_ID_PRESS_UNLOCK);
+	fwupd_request_set_id (request, FWUPD_REQUEST_ID_PRESS_UNLOCK);
 	fwupd_request_set_message (request, fu_device_get_update_message (device));
 	fu_device_emit_request (device, request);
 

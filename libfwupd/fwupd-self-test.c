@@ -361,7 +361,7 @@ fwupd_request_func (void)
 
 	/* create dummy */
 	fwupd_request_set_kind (request, FWUPD_REQUEST_KIND_IMMEDIATE);
-	fwupd_request_set_id (request, FWPUD_REQUEST_ID_REMOVE_REPLUG);
+	fwupd_request_set_id (request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
 	fwupd_request_set_message (request, "foo");
 	fwupd_request_set_image (request, "bar");
 	str = fwupd_request_to_string (request);
@@ -375,7 +375,7 @@ fwupd_request_func (void)
 	request2 = fwupd_request_from_variant (data);
 	g_assert_cmpint (fwupd_request_get_kind (request2), ==, FWUPD_REQUEST_KIND_IMMEDIATE);
 	g_assert_cmpint (fwupd_request_get_created (request2), >, 0);
-	g_assert_cmpstr (fwupd_request_get_id (request2), ==, FWPUD_REQUEST_ID_REMOVE_REPLUG);
+	g_assert_cmpstr (fwupd_request_get_id (request2), ==, FWUPD_REQUEST_ID_REMOVE_REPLUG);
 	g_assert_cmpstr (fwupd_request_get_message (request2), ==, "foo");
 	g_assert_cmpstr (fwupd_request_get_image (request2), ==, "bar");
 }

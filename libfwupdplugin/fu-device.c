@@ -3520,7 +3520,7 @@ fu_device_write_firmware (FuDevice *self,
 	    fu_device_get_update_message (self) != NULL) {
 		g_autoptr(FwupdRequest) request = fwupd_request_new ();
 		fwupd_request_set_kind (request, FWUPD_REQUEST_KIND_POST);
-		fwupd_request_set_id (request, FWPUD_REQUEST_ID_REMOVE_REPLUG);
+		fwupd_request_set_id (request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
 		fwupd_request_set_message (request, fu_device_get_update_message (self));
 		fwupd_request_set_image (request, fu_device_get_update_image (self));
 		fu_device_emit_request (self, request);
