@@ -97,6 +97,7 @@ struct _FuEngine
 	FuDeviceList		*device_list;
 	FwupdStatus		 status;
 	gboolean		 tainted;
+	gboolean		 write_history;
 	guint			 percentage;
 	FuHistory		*history;
 	FuIdle			*idle;
@@ -223,6 +224,20 @@ fu_engine_generic_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self
 }
 
 static void
+fu_engine_history_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
+{
+	if (self->write_history) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_history_modify_device (self->history, device, &error_local)) {
+			g_warning ("failed to record history for %s: %s",
+				   fu_device_get_id (device),
+				   error_local->message);
+		}
+	}
+	fu_engine_emit_device_changed (self, device);
+}
+
+static void
 fu_engine_device_request_cb (FuDevice *device, FwupdRequest *request, FuEngine *self)
 {
 	g_debug ("Emitting DeviceRequest('Message'='%s')",
@@ -242,6 +257,9 @@ fu_engine_watch_device (FuEngine *self, FuDevice *device)
 						      fu_engine_status_notify_cb,
 						      self);
 		g_signal_handlers_disconnect_by_func (device_old,
+						      fu_engine_history_notify_cb,
+						      self);
+		g_signal_handlers_disconnect_by_func (device_old,
 						      fu_engine_device_request_cb,
 						      self);
 	}
@@ -255,6 +273,10 @@ fu_engine_watch_device (FuEngine *self, FuDevice *device)
 			  G_CALLBACK (fu_engine_generic_notify_cb), self);
 	g_signal_connect (device, "notify::update-image",
 			  G_CALLBACK (fu_engine_generic_notify_cb), self);
+	g_signal_connect (device, "notify::update-state",
+			  G_CALLBACK (fu_engine_history_notify_cb), self);
+	g_signal_connect (device, "notify::update-error",
+			  G_CALLBACK (fu_engine_history_notify_cb), self);
 	g_signal_connect (device, "request",
 			  G_CALLBACK (fu_engine_device_request_cb), self);
 }
@@ -2363,6 +2385,9 @@ fu_engine_install_release (FuEngine *self,
 	g_autoptr(GBytes) blob_fw2 = NULL;
 	g_autoptr(GError) error_local = NULL;
 
+	/* set this for the callback */
+	self->write_history = (flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0;
+
 	/* get per-release firmware blob */
 	blob_fw = xb_node_get_data (rel, "fwupd::FirmwareBlob");
 	if (blob_fw == NULL) {
@@ -2436,15 +2461,11 @@ fu_engine_install_release (FuEngine *self,
 		    g_error_matches (error_local,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_BROKEN_SYSTEM)) {
-			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+			fu_device_set_update_state (device_orig, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
 		} else {
-			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+			fu_device_set_update_state (device_orig, FWUPD_UPDATE_STATE_FAILED);
 		}
-		fu_device_set_update_error (device, error_local->message);
-		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
-		    !fu_history_modify_device (self->history, device, error)) {
-			return FALSE;
-		}
+		fu_device_set_update_error (device_orig, error_local->message);
 		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
 	}
@@ -2459,14 +2480,10 @@ fu_engine_install_release (FuEngine *self,
 	}
 	g_set_object (&device, device_tmp);
 
-	/* update database */
+	/* update state (which updates the database if required) */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT) ||
 	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN)) {
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
-		if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
-		    !fu_history_modify_device (self->history, device, error))
-			return FALSE;
-		/* success */
+		fu_device_set_update_state (device_orig, FWUPD_UPDATE_STATE_NEEDS_REBOOT);
 		return TRUE;
 	}
 
@@ -2484,11 +2501,6 @@ fu_engine_install_release (FuEngine *self,
 	}
 
 	/* success */
-	if ((flags & FWUPD_INSTALL_FLAG_NO_HISTORY) == 0 &&
-	    !fu_history_modify_device (self->history, device, error))
-		return FALSE;
-
-	/* make the UI update */
 	fu_engine_emit_changed (self);
 
 	return TRUE;
