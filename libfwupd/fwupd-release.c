@@ -1835,24 +1835,6 @@ fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
 	fwupd_pad_kv_str (str, key, tmp);
 }
 
-static void
-fwupd_release_json_add_string (JsonBuilder *builder, const gchar *key, const gchar *str)
-{
-	if (str == NULL)
-		return;
-	json_builder_set_member_name (builder, key);
-	json_builder_add_string_value (builder, str);
-}
-
-static void
-fwupd_release_json_add_int (JsonBuilder *builder, const gchar *key, guint64 num)
-{
-	if (num == 0)
-		return;
-	json_builder_set_member_name (builder, key);
-	json_builder_add_int_value (builder, num);
-}
-
 /**
  * fwupd_release_to_json:
  * @self: a #FwupdRelease
@@ -1871,14 +1853,14 @@ fwupd_release_to_json (FwupdRelease *self, JsonBuilder *builder)
 	g_return_if_fail (FWUPD_IS_RELEASE (self));
 	g_return_if_fail (builder != NULL);
 
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_VERSION, priv->version);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_FILENAME, priv->filename);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_VERSION, priv->version);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_FILENAME, priv->filename);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	if (priv->categories->len > 0) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_CATEGORIES);
 		json_builder_begin_array (builder);
@@ -1906,9 +1888,9 @@ fwupd_release_to_json (FwupdRelease *self, JsonBuilder *builder)
 		}
 		json_builder_end_array (builder);
 	}
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_LICENSE, priv->license);
-	fwupd_release_json_add_int (builder, FWUPD_RESULT_KEY_SIZE, priv->size);
-	fwupd_release_json_add_int (builder, FWUPD_RESULT_KEY_CREATED, priv->created);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_LICENSE, priv->license);
+	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_SIZE, priv->size);
+	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_CREATED, priv->created);
 	if (priv->locations->len > 0) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_LOCATIONS);
 		json_builder_begin_array (builder);
@@ -1918,13 +1900,13 @@ fwupd_release_to_json (FwupdRelease *self, JsonBuilder *builder)
 		}
 		json_builder_end_array (builder);
 		/* for compatibility */
-		fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_URI,
+		fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_URI,
 					       (const gchar *) g_ptr_array_index (priv->locations, 0));
 	}
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	if (priv->flags != FWUPD_RELEASE_FLAG_NONE) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_FLAGS);
 		json_builder_begin_array (builder);
@@ -1937,18 +1919,18 @@ fwupd_release_to_json (FwupdRelease *self, JsonBuilder *builder)
 		}
 		json_builder_end_array (builder);
 	}
-	fwupd_release_json_add_int (builder, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_DETACH_CAPTION, priv->detach_caption);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
-	fwupd_release_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
+	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_DETACH_CAPTION, priv->detach_caption);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 
 	/* metadata */
 	keys = g_hash_table_get_keys (priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
 		const gchar *value = g_hash_table_lookup (priv->metadata, key);
-		fwupd_release_json_add_string (builder, key, value);
+		fwupd_common_json_add_string (builder, key, value);
 	}
 }
 
