@@ -31,6 +31,7 @@
 #include "fu-util-common.h"
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
+#include "fwupd-plugin-private.h"
 #include "fwupd-remote-private.h"
 
 #ifdef HAVE_SYSTEMD
@@ -586,6 +587,26 @@ fu_util_get_devices (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_get_plugins_as_json (FuUtilPrivate *priv, GPtrArray *plugins, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new ();
+	json_builder_begin_object (builder);
+
+	json_builder_set_member_name (builder, "Plugins");
+	json_builder_begin_array (builder);
+	for (guint i = 0; i < plugins->len; i++) {
+		FwupdPlugin *plugin = g_ptr_array_index (plugins, i);
+		json_builder_begin_object (builder);
+		fwupd_plugin_to_json (plugin, builder);
+		json_builder_end_object (builder);
+	}
+	json_builder_end_array (builder);
+	json_builder_end_object (builder);
+	return fu_util_print_builder (builder, error);
+}
+
+
+static gboolean
 fu_util_get_plugins (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) plugins = NULL;
@@ -594,6 +615,8 @@ fu_util_get_plugins (FuUtilPrivate *priv, gchar **values, GError **error)
 	plugins = fwupd_client_get_plugins (priv->client, NULL, error);
 	if (plugins == NULL)
 		return FALSE;
+	if (priv->as_json)
+		return fu_util_get_plugins_as_json (priv, plugins, error);
 
 	/* print */
 	for (guint i = 0; i < plugins->len; i++) {
