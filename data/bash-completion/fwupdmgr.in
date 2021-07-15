@@ -57,6 +57,7 @@ _fwupdmgr_opts=(
 	'--disable-ssl-strict'
 	'--ipfs'
 	'--ignore-power'
+	'--json'
 )
 
 _show_filters()
