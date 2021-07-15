@@ -1257,6 +1257,16 @@ fu_util_refresh (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_get_results_as_json (FuUtilPrivate *priv, FwupdDevice *res, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new ();
+	json_builder_begin_object (builder);
+	fwupd_device_to_json (res, builder);
+	json_builder_end_object (builder);
+	return fu_util_print_builder (builder, error);
+}
+
+static gboolean
 fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autofree gchar *tmp = NULL;
@@ -1270,6 +1280,8 @@ fu_util_get_results (FuUtilPrivate *priv, gchar **values, GError **error)
 	rel = fwupd_client_get_results (priv->client, fwupd_device_get_id (dev), NULL, error);
 	if (rel == NULL)
 		return FALSE;
+	if (priv->as_json)
+		return fu_util_get_results_as_json (priv, rel, error);
 	tmp = fu_util_device_to_string (rel, 0);
 	g_print ("%s", tmp);
 	return TRUE;
