@@ -30,7 +30,6 @@
 static void fwupd_remote_finalize	 (GObject *obj);
 
 typedef struct {
-	GObject			 parent_instance;
 	FwupdRemoteKind		 kind;
 	FwupdKeyringKind	 keyring_kind;
 	gchar			*id;

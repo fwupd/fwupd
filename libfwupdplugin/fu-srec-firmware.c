@@ -23,7 +23,6 @@
  */
 
 typedef struct {
-	FuFirmware		 parent_instance;
 	GPtrArray		*records;
 } FuSrecFirmwarePrivate;
 

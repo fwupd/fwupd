@@ -13,7 +13,6 @@
 #include "fu-intel-spi-device.h"
 
 typedef struct {
-	FuDevice		 parent_instance;
 	FuIfdRegion		 region;
 	guint32			 offset;
 	FuIfdAccess		 access[FU_IFD_REGION_MAX];

@@ -28,7 +28,6 @@
 
 typedef struct
 {
-	FuUdevDevice		*udev_device;
 	guint			 bus_number;
 } FuI2cDevicePrivate;
 

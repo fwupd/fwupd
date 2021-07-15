@@ -12,7 +12,6 @@
 #include "fu-vli-device.h"
 
 typedef struct {
-	FuUsbDevice		 parent_instance;
 	FuVliDeviceKind		 kind;
 	gboolean		 spi_auto_detect;
 	FuVliDeviceSpiReq	 spi_cmds[FU_VLI_DEVICE_SPI_REQ_LAST];

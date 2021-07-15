@@ -29,7 +29,6 @@
 
 typedef struct
 {
-	FuUsbDevice		*usb_device;
 	guint8			 interface;
 	gboolean		 interface_autodetect;
 	FuHidDeviceFlags	 flags;

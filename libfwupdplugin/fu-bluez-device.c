@@ -26,7 +26,6 @@
  */
 
 typedef struct {
-	FuBluezDevice		 parent_instance;
 	GDBusObjectManager	*object_manager;
 	GDBusProxy		*proxy;
 	GHashTable		*uuids;		/* utf8 : FuBluezDeviceUuidHelper */
