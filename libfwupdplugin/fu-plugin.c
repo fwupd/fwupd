@@ -725,6 +725,25 @@ fu_plugin_device_write_firmware (FuPlugin *self, FuDevice *device,
 }
 
 static gboolean
+fu_plugin_device_get_results (FuPlugin *self, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error_local = NULL;
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	if (!fu_device_get_results (device, &error_local)) {
+		if (g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED))
+			return TRUE;
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_plugin_device_read_firmware (FuPlugin *self, FuDevice *device, GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
@@ -2045,8 +2064,10 @@ fu_plugin_runner_get_results (FuPlugin *self, FuDevice *device, GError **error)
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_get_results", (gpointer *) &func);
-	if (func == NULL)
-		return TRUE;
+	if (func == NULL) {
+		g_debug ("superclassed get_results(%s)", fu_plugin_get_name (self));
+		return fu_plugin_device_get_results (self, device, error);
+	}
 	g_debug ("get_results(%s)", fu_plugin_get_name (self));
 	if (!func (self, device, &error_local)) {
 		if (error_local == NULL) {
