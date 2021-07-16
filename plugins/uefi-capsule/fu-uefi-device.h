@@ -13,7 +13,12 @@
 #include "fu-uefi-update-info.h"
 
 #define FU_TYPE_UEFI_DEVICE (fu_uefi_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuUefiDevice, fu_uefi_device, FU, UEFI_DEVICE, FuDevice)
+G_DECLARE_DERIVABLE_TYPE (FuUefiDevice, fu_uefi_device, FU, UEFI_DEVICE, FuDevice)
+
+struct _FuUefiDeviceClass
+{
+	FuDeviceClass		parent_class;
+};
 
 typedef enum {
 	FU_UEFI_DEVICE_KIND_UNKNOWN,
