@@ -78,6 +78,7 @@ enum {
 	PROP_PARENT,
 	PROP_UPDATE_STATE,
 	PROP_UPDATE_MESSAGE,
+	PROP_UPDATE_ERROR,
 	PROP_UPDATE_IMAGE,
 	PROP_LAST
 };
@@ -2410,6 +2411,7 @@ fwupd_device_set_update_error (FwupdDevice *self, const gchar *update_error)
 
 	g_free (priv->update_error);
 	priv->update_error = g_strdup (update_error);
+	g_object_notify (G_OBJECT (self), "update-error");
 }
 
 /**
@@ -2819,6 +2821,9 @@ fwupd_device_get_property (GObject *object, guint prop_id,
 	case PROP_UPDATE_MESSAGE:
 		g_value_set_string (value, priv->update_message);
 		break;
+	case PROP_UPDATE_ERROR:
+		g_value_set_string (value, priv->update_error);
+		break;
 	case PROP_UPDATE_IMAGE:
 		g_value_set_string (value, priv->update_image);
 		break;
@@ -2854,6 +2859,9 @@ fwupd_device_set_property (GObject *object, guint prop_id,
 		break;
 	case PROP_UPDATE_MESSAGE:
 		fwupd_device_set_update_message (self, g_value_get_string (value));
+		break;
+	case PROP_UPDATE_ERROR:
+		fwupd_device_set_update_error (self, g_value_get_string (value));
 		break;
 	case PROP_UPDATE_IMAGE:
 		fwupd_device_set_update_image (self, g_value_get_string (value));
@@ -2931,6 +2939,11 @@ fwupd_device_class_init (FwupdDeviceClass *klass)
 				     G_PARAM_READWRITE |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_UPDATE_MESSAGE, pspec);
+
+	pspec = g_param_spec_string ("update-error", NULL, NULL, NULL,
+				     G_PARAM_READWRITE |
+				     G_PARAM_STATIC_NAME);
+	g_object_class_install_property (object_class, PROP_UPDATE_ERROR, pspec);
 
 	pspec = g_param_spec_string ("update-image", NULL, NULL, NULL,
 				     G_PARAM_READWRITE |
