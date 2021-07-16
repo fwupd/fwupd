@@ -108,8 +108,11 @@ struct _FuDeviceClass
 							 FuDevice	*child);
 	void			 (*request)		(FuDevice	*self,	/* signal */
 							 FwupdRequest	*request);
+	gboolean		 (*get_results)		(FuDevice	*self,
+							 GError		**error)
+							 G_GNUC_WARN_UNUSED_RESULT;
 	/*< private >*/
-	gpointer	padding[6];
+	gpointer	padding[5];
 #endif
 };
 
@@ -411,6 +414,8 @@ void		 fu_device_remove_internal_flag		(FuDevice	*self,
 							 FuDeviceInternalFlags flag);
 gboolean	 fu_device_has_internal_flag		(FuDevice	*self,
 							 FuDeviceInternalFlags flag);
+gboolean	 fu_device_get_results			(FuDevice	*self,
+							 GError		**error);
 gboolean	 fu_device_write_firmware		(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
