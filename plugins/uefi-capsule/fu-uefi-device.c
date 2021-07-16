@@ -758,6 +758,57 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_uefi_device_get_results (FuDevice *device, GError **error)
+{
+	FuUefiDevice *device_uefi = FU_UEFI_DEVICE (device);
+	FuUefiDeviceStatus status = fu_uefi_device_get_status (device_uefi);
+	const gchar *tmp;
+	g_autofree gchar *err_msg = NULL;
+	g_autofree gchar *version_str = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* trivial case */
+	if (status == FU_UEFI_DEVICE_STATUS_SUCCESS) {
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
+		return TRUE;
+	}
+
+	/* check if something rudely removed our BOOTXXXX entry */
+	if (!fu_uefi_bootmgr_verify_fwupd (&error_local)) {
+		if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK)) {
+			g_prefix_error (&error_local,
+					"boot entry missing; "
+					"perhaps 'Boot Order Lock' enabled in the BIOS: ");
+			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+		} else {
+			g_prefix_error (&error_local, "boot entry missing: ");
+			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+		}
+		fu_device_set_update_error (device, error_local->message);
+		return TRUE;
+	}
+
+	/* something went wrong */
+	if (status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_AC ||
+	    status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_BATT) {
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+	} else {
+		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
+	}
+	version_str = g_strdup_printf ("%u", fu_uefi_device_get_version_error (device_uefi));
+	tmp = fu_uefi_device_status_to_string (status);
+	if (tmp == NULL) {
+		err_msg = g_strdup_printf ("failed to update to %s",
+					   version_str);
+	} else {
+		err_msg = g_strdup_printf ("failed to update to %s: %s",
+					   version_str, tmp);
+	}
+	fu_device_set_update_error (device, err_msg);
+	return TRUE;
+}
+
 static void
 fu_uefi_device_set_property (GObject *object, guint prop_id,
 			     const GValue *value, GParamSpec *pspec)
@@ -809,6 +860,9 @@ fu_uefi_device_init (FuUefiDevice *self)
 	fu_device_register_private_flag (FU_DEVICE (self),
 					 FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC,
 					 "use-legacy-bootmgr-desc");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK,
+					 "supports-boot-order-lock");
 }
 
 static void
@@ -842,6 +896,7 @@ fu_uefi_device_class_init (FuUefiDeviceClass *klass)
 	klass_device->cleanup = fu_uefi_device_cleanup;
 	klass_device->report_metadata_pre = fu_uefi_device_report_metadata_pre;
 	klass_device->report_metadata_post = fu_uefi_device_report_metadata_post;
+	klass_device->get_results = fu_uefi_device_get_results;
 
 	pspec = g_param_spec_string ("fw-class", NULL, NULL, NULL,
 				     G_PARAM_CONSTRUCT_ONLY |
