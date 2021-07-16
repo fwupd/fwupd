@@ -377,6 +377,33 @@ fu_smbios_dt_func (void)
 }
 
 static void
+fu_smbios_class_func (void)
+{
+	g_autofree gchar *path = g_build_filename (TESTDATADIR_SRC, "dmi", "class", NULL);
+	g_autoptr(FuSmbios) smbios = fu_smbios_new ();
+	g_autoptr(GError) error = NULL;
+	gboolean ret;
+	const gchar *str;
+	guint8 byte;
+
+	ret = fu_smbios_setup_from_kernel (smbios, path, &error);
+	g_assert_no_error (error);
+	g_assert (ret);
+	if (g_getenv ("VERBOSE") != NULL) {
+		g_autofree gchar *dump = fu_smbios_to_string (smbios);
+		g_debug ("%s", dump);
+	}
+
+	str = fu_smbios_get_string (smbios, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 4, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (str, ==, "FwupdTest");
+
+	byte = fu_smbios_get_integer (smbios, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 5, &error);
+	g_assert_no_error (error);
+	g_assert_cmpuint(byte, ==, 16);
+}
+
+static void
 fu_common_strsafe_func (void)
 {
 	struct {
@@ -3220,6 +3247,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func ("/fwupd/smbios3", fu_smbios3_func);
 	g_test_add_func ("/fwupd/smbios{dt}", fu_smbios_dt_func);
+	g_test_add_func ("/fwupd/smbios{class}", fu_smbios_class_func);
 	g_test_add_func ("/fwupd/firmware", fu_firmware_func);
 	g_test_add_func ("/fwupd/firmware{dedupe}", fu_firmware_dedupe_func);
 	g_test_add_func ("/fwupd/firmware{build}", fu_firmware_build_func);

@@ -341,6 +341,146 @@ fu_smbios_setup_from_file (FuSmbios *self, const gchar *filename, GError **error
 	return fu_smbios_setup_from_data (self, (guint8 *) buf, sz, error);
 }
 
+
+static gboolean
+fu_smbios_encode_string_from_kernel (FuSmbios *self, const gchar *file_contents,
+				     guint8 smbios_type, guint8 smbios_offset,
+				     GError **error)
+{
+	FuSmbiosItem *item = g_ptr_array_index (self->items, smbios_type);
+
+	/* add value to string table */
+	g_ptr_array_add (item->strings, g_strdup (file_contents));
+	/* add string table index to SMBIOS table */
+	fu_smbios_convert_dt_value (self, smbios_type, smbios_offset, item->strings->len);
+	return TRUE;
+}
+
+static gboolean
+fu_smbios_encode_byte_from_kernel (FuSmbios *self, const gchar *file_contents,
+				   guint8 smbios_type, guint8 smbios_offset,
+				   GError **error)
+{
+	gchar *endp;
+	gint64 value = g_ascii_strtoll (file_contents, &endp, 10);
+
+	if (*endp != 0) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+			     "non-numeric values in numeric string: %s", endp);
+		return FALSE;
+	}
+	if (value < 0 || value > G_MAXUINT8) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+			     "value \"%s\" is not representable in a byte",
+			     file_contents);
+		return FALSE;
+	}
+
+	fu_smbios_convert_dt_value (self, smbios_type, smbios_offset, value);
+	return TRUE;
+}
+
+/*
+ * The mapping from SMBIOS field to sysfs name can be found by mapping
+ * the field to a kernel property name in dmi_decode()
+ * (drivers/firmware/dmi_scan.c), then the property name to sysfs entry
+ * in dmi_id_init_attr_table() (drivers/firmware/dmi-id.c). This table
+ * lists each attribute exposed in /sys/class/dmi when CONFIG_DMIID is
+ * enabled, mapping to the SMBIOS field and a function that can convert
+ * the textual version of the field back into the raw SMBIOS table
+ * representation.
+ */
+#define SYSFS_DMI_FIELD(_name, _type, _offset, kind) \
+	{ .name = _name, .type = _type, .offset = _offset, .encode = fu_smbios_encode_ ## kind ## _from_kernel }
+const struct kernel_dmi_field {
+	const gchar *name;
+	gboolean (*encode)(FuSmbios *, const gchar *, guint8, guint8, GError **);
+	guint8 type;
+	guint8 offset;
+} KERNEL_DMI_FIELDS[] = {
+	SYSFS_DMI_FIELD("bios_vendor", 0, 4, string),
+	SYSFS_DMI_FIELD("bios_version", 0, 5, string),
+	SYSFS_DMI_FIELD("bios_date", 0, 8, string),
+	SYSFS_DMI_FIELD("sys_vendor", 1, 4, string),
+	SYSFS_DMI_FIELD("product_name", 1, 5, string),
+	SYSFS_DMI_FIELD("product_version", 1, 6, string),
+	SYSFS_DMI_FIELD("product_serial", 1, 7, string),
+	/* SYSFS_DMI_FIELD("product_uuid", 1, 8, uuid) */
+	SYSFS_DMI_FIELD("product_family", 1, 26, string),
+	SYSFS_DMI_FIELD("product_sku", 1, 25, string),
+	SYSFS_DMI_FIELD("board_vendor", 2, 4, string),
+	SYSFS_DMI_FIELD("board_name", 2, 5, string),
+	SYSFS_DMI_FIELD("board_version", 2, 6, string),
+	SYSFS_DMI_FIELD("board_serial", 2, 7, string),
+	SYSFS_DMI_FIELD("board_asset_tag", 2, 8, string),
+	SYSFS_DMI_FIELD("chassis_vendor", 3, 4, string),
+	SYSFS_DMI_FIELD("chassis_type", 3, 5, byte),
+	SYSFS_DMI_FIELD("chassis_version", 3, 6, string),
+	SYSFS_DMI_FIELD("chassis_serial", 3, 7, string),
+	SYSFS_DMI_FIELD("chassis_asset_tag", 3, 8, string),
+};
+
+/**
+ * fu_smbios_setup_from_kernel:
+ * @self: a #FuSmbios
+ * @path: a directory path
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads SMBIOS value from DMI values provided by the kernel, such as in
+ * /sys/class/dmi on Linux.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.6.2
+ **/
+gboolean
+fu_smbios_setup_from_kernel (FuSmbios *self, const gchar *path, GError **error)
+{
+	gboolean any_success = FALSE;
+
+	/* add fake structures */
+	for (guint i = 0; i < FU_SMBIOS_STRUCTURE_TYPE_LAST; i++) {
+		FuSmbiosItem *item = g_new0 (FuSmbiosItem, 1);
+		item->type = i;
+		item->buf = g_byte_array_new ();
+		item->strings = g_ptr_array_new_with_free_func (g_free);
+		g_ptr_array_add (self->items, item);
+	}
+
+	/* parse every known field from the corresponding file */
+	for (gsize i = 0; i < G_N_ELEMENTS (KERNEL_DMI_FIELDS); i++) {
+		const struct kernel_dmi_field *field = &KERNEL_DMI_FIELDS[i];
+		gsize bufsz = 0;
+		g_autofree gchar *buf = NULL;
+		g_autofree gchar *fn = g_build_filename (path, field->name, NULL);
+		g_autoptr(GError) local_error = NULL;
+
+		if (!g_file_get_contents (fn, &buf, &bufsz, &local_error)) {
+			g_debug ("unable to read SMBIOS data from %s: %s", fn,
+				local_error->message);
+			continue;
+		}
+
+		/* trim trailing newline added by kernel */
+		if (buf[bufsz - 1] == '\n')
+			buf[bufsz - 1] = 0;
+
+		if (!field->encode (self, buf, field->type, field->offset, &local_error)) {
+			g_warning ("failed to parse SMBIOS data from %s: %s", fn,
+				   local_error->message);
+			continue;
+		}
+
+		any_success = TRUE;
+	}
+	if (!any_success) {
+		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+			     "failed to read any SMBIOS values from %s", path);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 static gboolean
 fu_smbios_parse_ep32 (FuSmbios *self, const gchar *buf, gsize sz, GError **error)
 {
@@ -559,6 +699,7 @@ fu_smbios_setup (FuSmbios *self, GError **error)
 	g_autofree gchar *path = NULL;
 	g_autofree gchar *path_dt = NULL;
 	g_autofree gchar *sysfsfwdir = NULL;
+	const gchar *path_dmi_class = "/sys/class/dmi/id";
 
 	g_return_val_if_fail (FU_IS_SMBIOS (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -567,8 +708,22 @@ fu_smbios_setup (FuSmbios *self, GError **error)
 
 	/* DMI */
 	path = g_build_filename (sysfsfwdir, "dmi", "tables", NULL);
-	if (g_file_test (path, G_FILE_TEST_EXISTS))
-		return fu_smbios_setup_from_path (self, path, error);
+	if (g_file_test (path, G_FILE_TEST_EXISTS)) {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_smbios_setup_from_path (self, path, &error_local)) {
+			if (!g_error_matches (error_local, G_FILE_ERROR, G_FILE_ERROR_ACCES)) {
+				g_propagate_error (error, g_steal_pointer (&error_local));
+				return FALSE;
+			}
+			g_debug ("ignoring %s", error_local->message);
+		}
+	}
+
+	/* the values the kernel parsed; these are world-readable */
+	if (g_file_test (path_dmi_class, G_FILE_TEST_IS_DIR)) {
+		g_debug ("trying to read %s", path_dmi_class);
+		return fu_smbios_setup_from_kernel (self, path_dmi_class, error);
+	}
 
 	/* DT */
 	path_dt = g_build_filename (sysfsfwdir, "devicetree", "base", NULL);
