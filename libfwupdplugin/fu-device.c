@@ -1098,6 +1098,26 @@ fu_device_get_proxy (FuDevice *self)
 }
 
 /**
+ * fu_device_get_proxy_with_fallback:
+ * @self: a #FuDevice
+ *
+ * Gets the proxy device, falling back to the device itself.
+ *
+ * Returns: (transfer none): a device
+ *
+ * Since: 1.6.2
+ **/
+FuDevice *
+fu_device_get_proxy_with_fallback (FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+	if (priv->proxy != NULL)
+		return priv->proxy;
+	return self;
+}
+
+/**
  * fu_device_get_children:
  * @self: a #FuDevice
  *

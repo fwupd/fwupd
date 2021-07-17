@@ -310,6 +310,7 @@ void		 fu_device_add_counterpart_guid		(FuDevice	*self,
 FuDevice	*fu_device_get_proxy			(FuDevice	*self);
 void		 fu_device_set_proxy			(FuDevice	*self,
 							 FuDevice	*proxy);
+FuDevice	*fu_device_get_proxy_with_fallback	(FuDevice	*self);
 const gchar	*fu_device_get_metadata			(FuDevice	*self,
 							 const gchar	*key);
 gboolean	 fu_device_get_metadata_boolean		(FuDevice	*self,

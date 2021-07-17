@@ -655,8 +655,9 @@ fu_plugin_get_context (FuPlugin *self)
 static gboolean
 fu_plugin_device_attach (FuPlugin *self, FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	locker = fu_device_locker_new (device, error);
+	locker = fu_device_locker_new (proxy, error);
 	if (locker == NULL)
 		return FALSE;
 	return fu_device_attach (device, error);
@@ -665,8 +666,9 @@ fu_plugin_device_attach (FuPlugin *self, FuDevice *device, GError **error)
 static gboolean
 fu_plugin_device_detach (FuPlugin *self, FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	locker = fu_device_locker_new (device, error);
+	locker = fu_device_locker_new (proxy, error);
 	if (locker == NULL)
 		return FALSE;
 	return fu_device_detach (device, error);
@@ -675,8 +677,9 @@ fu_plugin_device_detach (FuPlugin *self, FuDevice *device, GError **error)
 static gboolean
 fu_plugin_device_activate (FuPlugin *self, FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	locker = fu_device_locker_new (device, error);
+	locker = fu_device_locker_new (proxy, error);
 	if (locker == NULL)
 		return FALSE;
 	return fu_device_activate (device, error);
@@ -687,8 +690,9 @@ fu_plugin_device_write_firmware (FuPlugin *self, FuDevice *device,
 				 GBytes *fw, FwupdInstallFlags flags,
 				 GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	locker = fu_device_locker_new (device, error);
+	locker = fu_device_locker_new (proxy, error);
 	if (locker == NULL)
 		return FALSE;
 
@@ -723,6 +727,7 @@ fu_plugin_device_write_firmware (FuPlugin *self, FuDevice *device,
 static gboolean
 fu_plugin_device_read_firmware (FuPlugin *self, FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -730,7 +735,7 @@ fu_plugin_device_read_firmware (FuPlugin *self, FuDevice *device, GError **error
 		G_CHECKSUM_SHA1,
 		G_CHECKSUM_SHA256,
 		0 };
-	locker = fu_device_locker_new (device, error);
+	locker = fu_device_locker_new (proxy, error);
 	if (locker == NULL)
 		return FALSE;
 	if (!fu_device_detach (device, error))
@@ -1219,6 +1224,7 @@ fu_plugin_runner_update_detach (FuPlugin *self, FuDevice *device, GError **error
 gboolean
 fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* not enabled */
@@ -1226,7 +1232,7 @@ fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error
 		return TRUE;
 
 	/* no object loaded */
-	locker = fu_device_locker_new (device, error);
+	locker = fu_device_locker_new (proxy, error);
 	if (locker == NULL)
 		return FALSE;
 	return fu_device_reload (device, error);
@@ -1407,6 +1413,7 @@ fu_plugin_check_supported_device (FuPlugin *self, FuDevice *device)
 static gboolean
 fu_plugin_backend_device_added (FuPlugin *self, FuDevice *device, GError **error)
 {
+	FuDevice *proxy;
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	GType device_gtype = fu_device_get_specialized_gtype (FU_DEVICE (device));
 	g_autoptr(FuDevice) dev = NULL;
@@ -1444,6 +1451,13 @@ fu_plugin_backend_device_added (FuPlugin *self, FuDevice *device, GError **error
 	}
 
 	/* open and add */
+	proxy = fu_device_get_proxy (device);
+	if (proxy != NULL) {
+		g_autoptr(FuDeviceLocker) locker_proxy = NULL;
+		locker_proxy = fu_device_locker_new (proxy, error);
+		if (locker_proxy == NULL)
+			return FALSE;
+	}
 	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;
