@@ -299,8 +299,9 @@ fu_vli_usbhub_device_spi_write_data (FuVliDevice *self,
 #define VL817_ADDR_GPIO_GET_INPUT_DATA		0xF6A2	/* 0=low, 1=high */
 
 static gboolean
-fu_vli_usbhub_device_attach_full (FuDevice *device, FuDevice *proxy, GError **error)
+fu_vli_usbhub_device_attach (FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(GError) error_local = NULL;
 
 	/* update UI */
@@ -360,25 +361,6 @@ fu_vli_usbhub_device_attach_full (FuDevice *device, FuDevice *proxy, GError **er
 	/* success */
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
-}
-
-static gboolean
-fu_vli_usbhub_device_attach (FuDevice *device, GError **error)
-{
-	FuDevice *proxy = fu_device_get_proxy (device);
-
-	/* if we do this in another plugin, perhaps move to the engine? */
-	if (proxy != NULL) {
-		g_autoptr(FuDeviceLocker) locker = NULL;
-		g_debug ("using proxy device %s", fu_device_get_id (proxy));
-		locker = fu_device_locker_new (proxy, error);
-		if (locker == NULL)
-			return FALSE;
-		return fu_vli_usbhub_device_attach_full (device, proxy, error);
-	}
-
-	/* normal case */
-	return fu_vli_usbhub_device_attach_full (device, device, error);
 }
 
 /* disable hub sleep states -- not really required by 815~ hubs */
