@@ -720,6 +720,24 @@ fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_get_details_as_json (FuUtilPrivate *priv, GPtrArray *devs, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new ();
+	json_builder_begin_object (builder);
+	json_builder_set_member_name (builder, "Devices");
+	json_builder_begin_array (builder);
+	for (guint i = 0; i < devs->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index (devs, i);
+		json_builder_begin_object (builder);
+		fwupd_device_to_json (dev, builder);
+		json_builder_end_object (builder);
+	}
+	json_builder_end_array (builder);
+	json_builder_end_object (builder);
+	return fu_util_print_builder (builder, error);
+}
+
+static gboolean
 fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) array = NULL;
@@ -741,6 +759,9 @@ fu_util_get_details (FuUtilPrivate *priv, gchar **values, GError **error)
 	array = fwupd_client_get_details (priv->client, values[0], NULL, error);
 	if (array == NULL)
 		return FALSE;
+	if (priv->as_json)
+		return fu_util_get_details_as_json (priv, array, error);
+
 	fu_util_build_device_tree (priv, root, array, NULL);
 	fu_util_print_tree (root, title);
 
