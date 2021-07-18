@@ -6,7 +6,6 @@ plugins/tpm-eventlog/fu-tpm-eventlog.c
 plugins/uefi-capsule/fu-plugin-uefi-capsule.c
 plugins/uefi-capsule/fu-uefi-tool.c
 plugins/uefi-dbx/fu-dbxtool.c
-src/fu-agent.c
 src/fu-debug.c
 src/fu-engine-helper.c
 src/fu-firmware-dump.c
