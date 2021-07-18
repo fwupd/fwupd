@@ -2393,6 +2393,20 @@ fu_util_set_approved_firmware (FuUtilPrivate *priv, gchar **values, GError **err
 }
 
 static gboolean
+fu_util_get_checksums_as_json (FuUtilPrivate *priv, gchar **csums, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new ();
+	json_builder_begin_object (builder);
+	json_builder_set_member_name (builder, "Checksums");
+	json_builder_begin_array (builder);
+	for (guint i = 0; csums[i] != NULL; i++)
+		json_builder_add_string_value (builder, csums[i]);
+	json_builder_end_array (builder);
+	json_builder_end_object (builder);
+	return fu_util_print_builder (builder, error);
+}
+
+static gboolean
 fu_util_get_approved_firmware (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_auto(GStrv) checksums = NULL;
@@ -2412,6 +2426,8 @@ fu_util_get_approved_firmware (FuUtilPrivate *priv, gchar **values, GError **err
 							error);
 	if (checksums == NULL)
 		return FALSE;
+	if (priv->as_json)
+		return fu_util_get_checksums_as_json (priv, checksums, error);
 	if (g_strv_length (checksums) == 0) {
 		/* TRANSLATORS: approved firmware has been checked by
 		 * the domain administrator */
@@ -2929,6 +2945,8 @@ fu_util_get_blocked_firmware (FuUtilPrivate *priv, gchar **values, GError **erro
 	csums = fwupd_client_get_blocked_firmware (priv->client, priv->cancellable, error);
 	if (csums == NULL)
 		return FALSE;
+	if (priv->as_json)
+		return fu_util_get_checksums_as_json (priv, csums, error);
 
 	/* empty list */
 	if (g_strv_length (csums) == 0) {
