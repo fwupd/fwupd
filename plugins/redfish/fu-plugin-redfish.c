@@ -98,6 +98,7 @@ fu_redfish_plugin_discover_smbios_table (FuPlugin *plugin, GError **error)
 	FuContext *ctx = fu_plugin_get_context (plugin);
 	const gchar *smbios_data_fn;
 	g_autofree gchar *hostname = NULL;
+	g_autoptr(FuRedfishNetworkDevice) device = NULL;
 	g_autoptr(FuRedfishSmbios) redfish_smbios = fu_redfish_smbios_new ();
 	g_autoptr(GBytes) smbios_data = NULL;
 
@@ -122,19 +123,40 @@ fu_redfish_plugin_discover_smbios_table (FuPlugin *plugin, GError **error)
 	hostname = g_strdup (fu_redfish_smbios_get_ip_addr (redfish_smbios));
 	if (hostname == NULL)
 		hostname = g_strdup (fu_redfish_smbios_get_hostname (redfish_smbios));
-	if (hostname == NULL) {
+	if (device == NULL) {
 		const gchar *mac_addr = fu_redfish_smbios_get_mac_addr (redfish_smbios);
 		if (mac_addr != NULL) {
-			hostname = fu_redfish_network_ip_for_mac_addr (mac_addr, error);
-			if (hostname == NULL)
-				return FALSE;
+			g_autoptr(GError) error_network = NULL;
+			device = fu_redfish_network_device_for_mac_addr (mac_addr, &error_network);
+			if (device == NULL)
+				g_debug ("failed to get device: %s", error_network->message);
 		}
 	}
-	if (hostname == NULL) {
+	if (device == NULL) {
 		guint16 vid = fu_redfish_smbios_get_vid (redfish_smbios);
 		guint16 pid = fu_redfish_smbios_get_pid (redfish_smbios);
 		if (vid != 0x0 && pid != 0x0) {
-			hostname = fu_redfish_network_ip_for_vid_pid (vid, pid, error);
+			g_autoptr(GError) error_network = NULL;
+			device = fu_redfish_network_device_for_vid_pid (vid, pid, &error_network);
+			if (device == NULL)
+				g_debug ("failed to get device: %s", error_network->message);
+		}
+	}
+
+	/* autoconnect device if required */
+	if (device != NULL) {
+		FuRedfishNetworkDeviceState state = FU_REDFISH_NETWORK_DEVICE_STATE_UNKNOWN;
+		if (!fu_redfish_network_device_get_state (device, &state, error))
+			return FALSE;
+		if (g_getenv ("FWUPD_REDFISH_VERBOSE") != NULL) {
+			g_debug ("device state is now %u", state);
+		}
+		if (state == FU_REDFISH_NETWORK_DEVICE_STATE_DISCONNECTED) {
+			if (!fu_redfish_network_device_connect (device, error))
+				return FALSE;
+		}
+		if (hostname == NULL) {
+			hostname = fu_redfish_network_device_get_address (device, error);
 			if (hostname == NULL)
 				return FALSE;
 		}

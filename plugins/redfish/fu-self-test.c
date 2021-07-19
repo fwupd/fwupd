@@ -122,15 +122,35 @@ fu_test_redfish_common_lenovo_func (void)
 static void
 fu_test_redfish_network_mac_addr_func (void)
 {
+	FuRedfishNetworkDeviceState state = FU_REDFISH_NETWORK_DEVICE_STATE_UNKNOWN;
+	gboolean ret;
 	g_autofree gchar *ip_addr = NULL;
+	g_autoptr(FuRedfishNetworkDevice) device = NULL;
 	g_autoptr(GError) error = NULL;
 
-	ip_addr = fu_redfish_network_ip_for_mac_addr ("00:13:F7:29:C2:D8", &error);
-	if (ip_addr == NULL &&
-	    g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+	device = fu_redfish_network_device_for_mac_addr ("00:13:F7:29:C2:D8", &error);
+	if (device == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 		g_test_skip ("no hardware");
 		return;
 	}
+	if (device == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_autofree gchar *str = g_strdup_printf ("not supported: %s", error->message);
+		g_test_skip (str);
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert_nonnull (device);
+	ret = fu_redfish_network_device_get_state (device, &state, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_DISCONNECTED) {
+		ret = fu_redfish_network_device_connect (device, &error);
+		g_assert_no_error (error);
+		g_assert_true (ret);
+	}
+	ip_addr = fu_redfish_network_device_get_address (device, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (ip_addr);
 }
@@ -139,14 +159,24 @@ static void
 fu_test_redfish_network_vid_pid_func (void)
 {
 	g_autofree gchar *ip_addr = NULL;
+	g_autoptr(FuRedfishNetworkDevice) device = NULL;
 	g_autoptr(GError) error = NULL;
 
-	ip_addr = fu_redfish_network_ip_for_vid_pid (0x0707, 0x0201, &error);
-	if (ip_addr == NULL &&
-	    g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+	device = fu_redfish_network_device_for_vid_pid (0x0707, 0x0201, &error);
+	if (device == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 		g_test_skip ("no hardware");
 		return;
 	}
+	if (device == NULL &&
+	    g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_autofree gchar *str = g_strdup_printf ("not supported: %s", error->message);
+		g_test_skip (str);
+		return;
+	}
+	g_assert_no_error (error);
+	g_assert_nonnull (device);
+	ip_addr = fu_redfish_network_device_get_address (device, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (ip_addr);
 }
