@@ -831,6 +831,7 @@ LIBFWUPDPLUGIN_1.6.2 {
     fu_device_get_private_flags;
     fu_device_get_proxy_with_fallback;
     fu_device_get_request_cnt;
+    fu_device_get_results;
     fu_device_has_parent_physical_id;
     fu_device_has_private_flag;
     fu_device_new_with_context;

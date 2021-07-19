@@ -13,7 +13,12 @@
 #include "fu-uefi-update-info.h"
 
 #define FU_TYPE_UEFI_DEVICE (fu_uefi_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuUefiDevice, fu_uefi_device, FU, UEFI_DEVICE, FuDevice)
+G_DECLARE_DERIVABLE_TYPE (FuUefiDevice, fu_uefi_device, FU, UEFI_DEVICE, FuDevice)
+
+struct _FuUefiDeviceClass
+{
+	FuDeviceClass		parent_class;
+};
 
 typedef enum {
 	FU_UEFI_DEVICE_KIND_UNKNOWN,
@@ -55,6 +60,13 @@ typedef enum {
  * Use the legacy boot manager description to work around a Lenovo BIOS bug.
  */
 #define FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC	(1 << 2)
+/**
+ * FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK:
+ *
+ * The BIOS might have Boot Order Lock enabled which can cause failures when
+ * not using grub chainloading or capsule-on-disk.
+ */
+#define FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK	(1 << 3)
 
 FuUefiDevice	*fu_uefi_device_new_from_guid		(const gchar	*guid);
 FuUefiDevice	*fu_uefi_device_new_from_dev		(FuDevice	*dev);

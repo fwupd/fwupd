@@ -3488,6 +3488,38 @@ fu_device_get_release_default (FuDevice *self)
 }
 
 /**
+ * fu_device_get_results:
+ * @self: a #FuDevice
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the results of the last update operation on the device by calling a vfunc.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.6.2
+ **/
+gboolean
+fu_device_get_results (FuDevice *self, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+
+	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* no plugin-specific method */
+	if (klass->get_results == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "not supported");
+		return FALSE;
+	}
+
+	/* call vfunc */
+	return klass->get_results (self, error);
+}
+
+/**
  * fu_device_write_firmware:
  * @self: a #FuDevice
  * @fw: firmware blob
