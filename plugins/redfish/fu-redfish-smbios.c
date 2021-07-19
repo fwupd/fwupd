@@ -153,8 +153,8 @@ fu_redfish_smbios_parse_interface_data (FuRedfishSmbios *self,
 					GError **error)
 {
 	gsize bufsz = 0;
-	gsize offset_mac_addr = 0x0;
-	gsize offset_vid_pid = 0x0;
+	gsize offset_mac_addr = G_MAXSIZE;
+	gsize offset_vid_pid = G_MAXSIZE;
 	guint8 interface_type = 0x0;
 	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
 
@@ -182,11 +182,11 @@ fu_redfish_smbios_parse_interface_data (FuRedfishSmbios *self,
 	}
 
 	/* MAC address */
-	if (offset_mac_addr != 0x0) {
+	if (offset_mac_addr != G_MAXSIZE) {
 		guint8 mac_addr[6] = { 0x0 };
 		g_autofree gchar *mac_addr_str = NULL;
-		if (!fu_memcpy_safe (mac_addr, sizeof(mac_addr), 0x0,	/* dst */
-				     buf, bufsz, offset + offset_mac_addr,		/* src */
+		if (!fu_memcpy_safe (mac_addr, sizeof(mac_addr), 0x0,		/* dst */
+				     buf, bufsz, offset + offset_mac_addr,	/* src */
 				     sizeof(mac_addr), error))
 			return FALSE;
 		mac_addr_str = fu_redfish_common_buffer_to_mac (mac_addr);
@@ -194,7 +194,7 @@ fu_redfish_smbios_parse_interface_data (FuRedfishSmbios *self,
 	}
 
 	/* VID:PID */
-	if (offset_vid_pid != 0x0) {
+	if (offset_vid_pid != G_MAXSIZE) {
 		if (!fu_common_read_uint16_safe (buf, bufsz, offset + offset_vid_pid,
 						 &self->vid, G_LITTLE_ENDIAN, error))
 			return FALSE;
