@@ -122,15 +122,45 @@ fu_test_redfish_common_lenovo_func (void)
 static void
 fu_test_redfish_network_mac_addr_func (void)
 {
+	FuRedfishNetworkDeviceState state = FU_REDFISH_NETWORK_DEVICE_STATE_UNKNOWN;
+	gboolean ret;
 	g_autofree gchar *ip_addr = NULL;
+	g_autoptr(FuRedfishNetworkDevice) device = NULL;
 	g_autoptr(GError) error = NULL;
 
-	ip_addr = fu_redfish_network_ip_for_mac_addr ("00:13:F7:29:C2:D8", &error);
-	if (ip_addr == NULL &&
+	device = fu_redfish_network_device_for_mac_addr ("00:13:F7:29:C2:D8", &error);
+	if (device == NULL &&
 	    g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
 		g_test_skip ("no hardware");
 		return;
 	}
+	ret = fu_redfish_network_device_get_state (device, &state, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	if (state == FU_REDFISH_NETWORK_DEVICE_STATE_DISCONNECTED) {
+		ret = fu_redfish_network_device_connect (device, &error);
+		g_assert_no_error (error);
+		g_assert_true (ret);
+	}
+	ip_addr = fu_redfish_network_device_get_address (device, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (ip_addr);
+}
+
+static void
+fu_test_redfish_network_path_func (void)
+{
+	g_autofree gchar *ip_addr = NULL;
+	g_autoptr(FuRedfishNetworkDevice) device = NULL;
+	g_autoptr(GError) error = NULL;
+
+	device = fu_redfish_network_device_for_path ("pci-0000:09:00.0-usb-0:2.4:1.0", &error);
+	if (device == NULL &&
+	    g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+		g_test_skip ("no hardware");
+		return;
+	}
+	ip_addr = fu_redfish_network_device_get_address (device, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (ip_addr);
 }
@@ -139,14 +169,16 @@ static void
 fu_test_redfish_network_vid_pid_func (void)
 {
 	g_autofree gchar *ip_addr = NULL;
+	g_autoptr(FuRedfishNetworkDevice) device = NULL;
 	g_autoptr(GError) error = NULL;
 
-	ip_addr = fu_redfish_network_ip_for_vid_pid (0x0707, 0x0201, &error);
-	if (ip_addr == NULL &&
+	device = fu_redfish_network_device_for_vid_pid (0x0707, 0x0201, &error);
+	if (device == NULL &&
 	    g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
 		g_test_skip ("no hardware");
 		return;
 	}
+	ip_addr = fu_redfish_network_device_get_address (device, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (ip_addr);
 }
@@ -272,6 +304,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/redfish/common{version}", fu_test_redfish_common_version_func);
 	g_test_add_func ("/redfish/common{lenovo}", fu_test_redfish_common_lenovo_func);
 	g_test_add_func ("/redfish/network{mac_addr}", fu_test_redfish_network_mac_addr_func);
+	g_test_add_func ("/redfish/network{path}", fu_test_redfish_network_path_func);
 	g_test_add_func ("/redfish/network{vid_pid}", fu_test_redfish_network_vid_pid_func);
 	g_test_add_data_func ("/redfish/plugin{devices}", self, fu_test_redfish_devices_func);
 	g_test_add_data_func ("/redfish/plugin{update}", self, fu_test_redfish_update_func);

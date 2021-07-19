@@ -39,6 +39,23 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
+static gchar *
+fu_redfish_plugin_discover_device_path (FuPlugin *plugin)
+{
+	FuContext *ctx = fu_plugin_get_context (plugin);
+	GPtrArray *hwids;
+
+	hwids = fu_context_get_hwid_guids (ctx);
+	for (guint i = 0; i < hwids->len; i++) {
+		const gchar *tmp;
+		const gchar *guid = g_ptr_array_index (hwids, i);
+		tmp = fu_context_lookup_quirk_by_id (ctx, guid, "RedfishNetworkDevicePath");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+	}
+	return NULL;
+}
+
 static gboolean
 fu_redfish_plugin_discover_uefi_credentials (FuPlugin *plugin, GError **error)
 {
@@ -98,6 +115,7 @@ fu_redfish_plugin_discover_smbios_table (FuPlugin *plugin, GError **error)
 	FuContext *ctx = fu_plugin_get_context (plugin);
 	const gchar *smbios_data_fn;
 	g_autofree gchar *hostname = NULL;
+	g_autoptr(FuRedfishNetworkDevice) device = NULL;
 	g_autoptr(FuRedfishSmbios) redfish_smbios = fu_redfish_smbios_new ();
 	g_autoptr(GBytes) smbios_data = NULL;
 
@@ -122,19 +140,47 @@ fu_redfish_plugin_discover_smbios_table (FuPlugin *plugin, GError **error)
 	hostname = g_strdup (fu_redfish_smbios_get_ip_addr (redfish_smbios));
 	if (hostname == NULL)
 		hostname = g_strdup (fu_redfish_smbios_get_hostname (redfish_smbios));
-	if (hostname == NULL) {
+	if (device == NULL) {
 		const gchar *mac_addr = fu_redfish_smbios_get_mac_addr (redfish_smbios);
 		if (mac_addr != NULL) {
-			hostname = fu_redfish_network_ip_for_mac_addr (mac_addr, error);
-			if (hostname == NULL)
+			device = fu_redfish_network_device_for_mac_addr (mac_addr, error);
+			if (device == NULL)
 				return FALSE;
 		}
 	}
-	if (hostname == NULL) {
+	if (device == NULL) {
 		guint16 vid = fu_redfish_smbios_get_vid (redfish_smbios);
 		guint16 pid = fu_redfish_smbios_get_pid (redfish_smbios);
 		if (vid != 0x0 && pid != 0x0) {
-			hostname = fu_redfish_network_ip_for_vid_pid (vid, pid, error);
+			device = fu_redfish_network_device_for_vid_pid (vid, pid, error);
+			if (device == NULL)
+				return FALSE;
+		}
+	}
+	if (device == NULL) {
+		g_autofree gchar *device_path = NULL;
+		device_path = fu_redfish_plugin_discover_device_path (plugin);
+		if (device_path != NULL) {
+			device = fu_redfish_network_device_for_path (device_path, error);
+			if (device == NULL)
+				return FALSE;
+		}
+	}
+
+	/* autoconnect device if required */
+	if (device != NULL) {
+		FuRedfishNetworkDeviceState state = FU_REDFISH_NETWORK_DEVICE_STATE_UNKNOWN;
+		if (!fu_redfish_network_device_get_state (device, &state, error))
+			return FALSE;
+		if (g_getenv ("FWUPD_REDFISH_VERBOSE") != NULL) {
+			g_debug ("device state is now %u", state);
+		}
+		if (state == FU_REDFISH_NETWORK_DEVICE_STATE_DISCONNECTED) {
+			if (!fu_redfish_network_device_connect (device, error))
+				return FALSE;
+		}
+		if (hostname == NULL) {
+			hostname = fu_redfish_network_device_get_address (device, error);
 			if (hostname == NULL)
 				return FALSE;
 		}
@@ -224,6 +270,7 @@ fu_plugin_init (FuPlugin *plugin)
 	data->backend = fu_redfish_backend_new (ctx);
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
 	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_REDFISH_SMBIOS);
+	fu_context_add_quirk_key (ctx, "RedfishNetworkDevicePath");
 }
 
 void

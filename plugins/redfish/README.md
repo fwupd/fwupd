@@ -38,6 +38,16 @@ when the firmware will actually be written to the SPI device.
 
 No vendor ID is set as there is no vendor field in the schema.
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### RedfishNetworkDevicePath
+
+The NetworkManager-defined `Path` which is connected to the BMC.
+
+Since: 1.6.2
+
 ## Setting Service IP Manually
 
 The service IP may not be automatically discoverable due to the absence of
