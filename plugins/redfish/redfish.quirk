@@ -1,3 +1,7 @@
+# Lenovo ThinkSystem SR630 V2 MB
+[98dc06fa-a8aa-5493-87e3-10614777a77c]
+RedfishNetworkDevicePath=pci-0000:00:14.0-usb-0:1.6:1.0
+
 [REDFISH\VENDOR_Lenovo&ID_BMC-Backup]
 ParentGuid = REDFISH\VENDOR_Lenovo&ID_BMC-Primary
 Flags = dual-image,is-backup
