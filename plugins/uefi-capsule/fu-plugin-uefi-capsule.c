@@ -366,6 +366,7 @@ fu_plugin_uefi_capsule_update_splash (FuPlugin *plugin, FuDevice *device, GError
 	return fu_plugin_uefi_capsule_write_splash_data (plugin, device, image_bmp, error);
 }
 
+
 gboolean
 fu_plugin_update (FuPlugin *plugin,
 		  FuDevice *device,
@@ -413,6 +414,7 @@ fu_plugin_uefi_capsule_load_config (FuPlugin *plugin, FuDevice *device)
 {
 	gboolean disable_shim;
 	gboolean fallback_removable_path;
+	gboolean capsule_on_disk;
 	guint64 sz_reqd = FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE;
 	g_autofree gchar *require_esp_free_space = NULL;
 
@@ -433,6 +435,12 @@ fu_plugin_uefi_capsule_load_config (FuPlugin *plugin, FuDevice *device)
 	fu_device_set_metadata_boolean (device,
 					"FallbacktoRemovablePath",
 					fallback_removable_path);
+
+	/* delivery of Capsules via file on Mass Storage device */
+	capsule_on_disk = fu_plugin_get_config_value_boolean (plugin, "DisableCapsuleUpdateOnDisk");
+	fu_device_set_metadata_boolean (device,
+					"DisableCapsuleUpdateOnDisk",
+					capsule_on_disk);
 }
 
 static void

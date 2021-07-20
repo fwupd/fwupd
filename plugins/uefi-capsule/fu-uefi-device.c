@@ -538,6 +538,71 @@ fu_uefi_device_cleanup (FuDevice *device,
 }
 
 static gboolean
+fu_check_capsuleupdate_ondisk (FuDevice *device, GError **error)
+{
+	g_autofree guint64 *os_indications_supported = NULL;
+	guint32 attr;
+	gsize os_ind_size = 0;
+
+	if (!fu_device_get_metadata_boolean (device, "DisableCapsuleUpdateOnDisk")) {
+		g_set_error_literal (error,
+			     FWUPD_ERROR,
+                             FWUPD_ERROR_NOT_SUPPORTED,
+                             "Capsule update on-disk is disabled");
+		return FALSE;
+	}
+
+	/* check for capsuleupdate ondisk */
+	if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL,
+				 "OsIndicationsSupported",
+				 (guint8 **) &os_indications_supported,
+				 &os_ind_size, &attr, error)) {
+		g_prefix_error (error, "Failed to read OsIndicationsSupported: ");
+		return FALSE;
+	}
+
+	if (!(*os_indications_supported &
+	      EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED)) {
+		g_set_error_literal (error,
+			     FWUPD_ERROR,
+                             FWUPD_ERROR_NOT_SUPPORTED,
+                             "Firmware doesn't support capsule update on-disk");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_capsule_update_set_osindications (FuDevice *device, GError **error)
+{
+	g_autofree guint64 *os_indications = NULL;
+	guint32 attr;
+	gsize os_ind_size = 0;
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "OsIndications",
+			 (guint8 **) &os_indications,
+			 &os_ind_size, &attr, &error_local)) {
+		*os_indications = 0;
+		g_debug ("Failed to read OsIndications");
+	}
+	*os_indications |= EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED;
+	if (!fu_efivar_set_data (FU_EFIVAR_GUID_EFI_GLOBAL,
+				 "OsIndications", (guint8 *) os_indications,
+				 os_ind_size,
+				 FU_EFIVAR_ATTR_NON_VOLATILE |
+				 FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
+				 FU_EFIVAR_ATTR_RUNTIME_ACCESS,
+				 error)) {
+		g_prefix_error (error, "Could not set OsIndications variable");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_uefi_device_write_firmware (FuDevice *device,
 			       FuFirmware *firmware,
 			       FwupdInstallFlags install_flags,
@@ -553,6 +618,7 @@ fu_uefi_device_write_firmware (FuDevice *device,
 	g_autofree gchar *directory = NULL;
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *varname = fu_uefi_device_build_varname (self);
+	gboolean on_disk = FALSE;
 
 	/* ensure we have the existing state */
 	if (self->fw_class == NULL) {
@@ -567,11 +633,15 @@ fu_uefi_device_write_firmware (FuDevice *device,
 	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
 		return FALSE;
-
+	/* check if we want a capsule update on-disk */
+	on_disk = fu_check_capsuleupdate_ondisk(device, error);
 	/* save the blob to the ESP */
 	directory = fu_uefi_get_esp_path_for_os (device, esp_path);
 	basename = g_strdup_printf ("fwupd-%s.cap", self->fw_class);
-	fn = g_build_filename (directory, "fw", basename, NULL);
+	if (on_disk)
+		fn = g_build_filename (directory, "EFI/UpdateCapsule", basename, NULL);
+	else
+		fn = g_build_filename (directory, "fw", basename, NULL);
 	if (!fu_common_mkdir_parent (fn, error))
 		return FALSE;
 	fixed_fw = fu_uefi_device_fixup_firmware (device, fw, error);
@@ -592,6 +662,8 @@ fu_uefi_device_write_firmware (FuDevice *device,
 			return FALSE;
 	}
 
+	if (on_disk)
+		return fu_capsule_update_set_osindications (device, error);
 	/* set the blob header shared with fwupd.efi */
 	if (!fu_uefi_device_write_update_info (self, fn, varname, self->fw_class, error))
 		return FALSE;
