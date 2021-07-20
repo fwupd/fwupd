@@ -9,8 +9,6 @@
 
 #include <fwupdplugin.h>
 
-#define MINIMUM_BATTERY_PERCENTAGE_FALLBACK 10
-
 struct FuPluginData {
 	GDBusProxy	*proxy; /* nullable */
 };
@@ -68,6 +66,7 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 			  FuDevice *device,
 			  GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	guint32 power_type = 0;
 	guint32 current_state = 0;
@@ -105,13 +104,13 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 			     "unless forced ");
 		return FALSE;
 	}
-	if (current_level < MINIMUM_BATTERY_PERCENTAGE_FALLBACK) {
+	if (current_level < fu_context_get_battery_threshold (ctx)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW,
 			     "Cannot install update when system battery "
-			     "is not at least %i%% unless forced",
-			     MINIMUM_BATTERY_PERCENTAGE_FALLBACK);
+			     "is not at least %u%% unless forced",
+			     fu_context_get_battery_threshold (ctx));
 		return FALSE;
 	}
 	return TRUE;
