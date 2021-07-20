@@ -11,9 +11,7 @@ import sys
 import subprocess
 
 CLANG_FORMATTERS = [
-    "clang-format-6.0",
-    "clang-format-5.0",
-    "clang-format-4.0",
+    "clang-format-13",
     "clang-format",
 ]
 FIXUPS = {"g_autoptr (": "g_autoptr(", "sizeof (": "sizeof(", "g_auto (": "g_auto("}
@@ -43,6 +41,9 @@ def select_clang_version():
 def reformat_file(formatter, f):
     print("Reformatting %s using %s" % (f, formatter))
     ret = subprocess.check_call([formatter, "-i", "-style=file", f])
+    if ret:
+        print("Failed to run formatter")
+        sys.exit(1)
     lines = None
     with open(f, "r") as rfd:
         lines = rfd.readlines()
