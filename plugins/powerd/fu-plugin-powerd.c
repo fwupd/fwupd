@@ -74,6 +74,25 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_plugin_inhibit_suspend (GError **error)
+{
+	g_autofree gchar *lockdir = NULL;
+	g_autofree gchar *inhibitsuspend_filename = NULL;
+	g_autofree gchar *getpid_str = NULL;
+
+	lockdir = fu_common_get_path (FU_PATH_KIND_LOCKDIR);
+	inhibitsuspend_filename = g_build_filename (lockdir,
+						    "power_override",
+						    "fwupd.lock",
+						    NULL);
+	getpid_str = g_strdup_printf ("%d", getpid ());
+	return g_file_set_contents (inhibitsuspend_filename,
+				    getpid_str,
+				    -1,
+				    error);
+}
+
 gboolean
 fu_plugin_update_prepare (FuPlugin *plugin,
 			  FwupdInstallFlags flags,
@@ -133,5 +152,23 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 			     MINIMUM_BATTERY_PERCENTAGE_FALLBACK);
 		return FALSE;
 	}
-	return TRUE;
+	return fu_plugin_inhibit_suspend (error);
+}
+
+gboolean
+fu_plugin_update_cleanup (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
+			  FuDevice *dev,
+			  GError **error)
+{
+	g_autofree gchar *lockdir = NULL;
+	g_autofree GFile *inhibitsuspend_file = NULL;
+
+	lockdir = fu_common_get_path (FU_PATH_KIND_LOCKDIR);
+	inhibitsuspend_file = g_file_new_build_filename (lockdir,
+							 "power_override",
+							 "fwupd.lock",
+							 NULL);
+
+	return g_file_delete (inhibitsuspend_file, NULL, error);
 }
