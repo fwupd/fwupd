@@ -6,18 +6,17 @@
 
 #include "config.h"
 
+#include "fu-context-private.h"
+#include "fu-device-private.h"
+#include "fu-plugin-dell.h"
+#include "fu-plugin-private.h"
 #include <fwupdplugin.h>
 #include <glib/gstdio.h>
 #include <stdlib.h>
 
-#include "fu-context-private.h"
-#include "fu-device-private.h"
-#include "fu-plugin-private.h"
-#include "fu-plugin-dell.h"
-
 typedef struct {
-	FuPlugin		*plugin_uefi_capsule;
-	FuPlugin		*plugin_dell;
+	FuPlugin *plugin_uefi_capsule;
+	FuPlugin *plugin_dell;
 } FuTest;
 
 static FuDevice *
@@ -47,7 +46,8 @@ _plugin_device_added_cb (FuPlugin *plugin, FuDevice *device, gpointer user_data)
 {
 	GPtrArray *devices = (GPtrArray *) user_data;
 	if (fu_device_get_alternate_id (device) != NULL) {
-		FuDevice *device_alt = _find_device_by_id (devices, fu_device_get_alternate_id (device));
+		FuDevice *device_alt =
+		    _find_device_by_id (devices, fu_device_get_alternate_id (device));
 		if (device_alt != NULL)
 			fu_device_set_alternate (device, device_alt);
 	}
@@ -55,11 +55,9 @@ _plugin_device_added_cb (FuPlugin *plugin, FuDevice *device, gpointer user_data)
 }
 
 static void
-fu_engine_plugin_device_register_cb (FuPlugin *plugin_dell,
-				     FuDevice *device,
-				     gpointer user_data)
+fu_engine_plugin_device_register_cb (FuPlugin *plugin_dell, FuDevice *device, gpointer user_data)
 {
-	FuPlugin *plugin_uefi_capsule = FU_PLUGIN (user_data);
+	FuPlugin	 *plugin_uefi_capsule = FU_PLUGIN (user_data);
 	g_autofree gchar *dbg = fu_device_to_string (device);
 	g_debug ("registering device: %s", dbg);
 	fu_plugin_runner_device_register (plugin_uefi_capsule, device);
@@ -68,23 +66,23 @@ fu_engine_plugin_device_register_cb (FuPlugin *plugin_dell,
 static void
 fu_plugin_dell_tpm_func (gconstpointer user_data)
 {
-	FuTest *self = (FuTest *) user_data;
-	FuDevice *device_v12;
-	FuDevice *device_v20;
-	const guint8 fw[30] = { 'F', 'W', 0x00 };
-	gboolean ret;
-	gulong added_id;
-	gulong register_id;
+	FuTest	       *self = (FuTest *) user_data;
+	FuDevice	 *device_v12;
+	FuDevice	 *device_v20;
+	const guint8	  fw[30] = {'F', 'W', 0x00};
+	gboolean	  ret;
+	gulong		  added_id;
+	gulong		  register_id;
 	struct tpm_status tpm_out;
-	const gchar *tpm_server_running = g_getenv ("TPM_SERVER_RUNNING");
+	const gchar	    *tpm_server_running = g_getenv ("TPM_SERVER_RUNNING");
 	g_autoptr(GBytes) blob_fw = g_bytes_new_static (fw, sizeof(fw));
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
 #ifdef HAVE_GETUID
-	if (tpm_server_running == NULL &&
-	    (getuid () != 0 || geteuid () != 0)) {
-		g_test_skip ("TPM tests require simulated TPM2.0 running or need root access with physical TPM");
+	if (tpm_server_running == NULL && (getuid () != 0 || geteuid () != 0)) {
+		g_test_skip ("TPM tests require simulated TPM2.0 running or "
+			     "need root access with physical TPM");
 		return;
 	}
 #endif
@@ -92,24 +90,20 @@ fu_plugin_dell_tpm_func (gconstpointer user_data)
 	memset (&tpm_out, 0x0, sizeof(tpm_out));
 
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	added_id =
-	g_signal_connect (self->plugin_uefi_capsule, "device-added",
-			  G_CALLBACK (_plugin_device_added_cb),
-			  devices);
+	added_id = g_signal_connect (self->plugin_uefi_capsule, "device-added",
+				     G_CALLBACK (_plugin_device_added_cb), devices);
 
-	register_id =
-	g_signal_connect (self->plugin_dell, "device-register",
-			  G_CALLBACK (fu_engine_plugin_device_register_cb),
-			  self->plugin_uefi_capsule);
+	register_id = g_signal_connect (self->plugin_dell, "device-register",
+					G_CALLBACK (fu_engine_plugin_device_register_cb),
+					self->plugin_uefi_capsule);
 	ret = fu_plugin_runner_coldplug (self->plugin_dell, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	/* inject fake data (no TPM) */
 	tpm_out.ret = -2;
-	fu_plugin_dell_inject_fake_data (self->plugin_dell,
-					 (guint32 *) &tpm_out, 0, 0,
-					 NULL, FALSE);
+	fu_plugin_dell_inject_fake_data (self->plugin_dell, (guint32 *) &tpm_out,
+					 0, 0, NULL, FALSE);
 	ret = fu_plugin_dell_detect_tpm (self->plugin_dell, &error);
 	g_assert_no_error (error);
 	g_assert_false (ret);
@@ -126,8 +120,7 @@ fu_plugin_dell_tpm_func (gconstpointer user_data)
 	tpm_out.status = TPM_EN_MASK | (TPM_1_2_MODE << 8);
 	tpm_out.flashes_left = 0;
 	fu_plugin_dell_inject_fake_data (self->plugin_dell,
-					 (guint32 *) &tpm_out, 0, 0,
-					 NULL, TRUE);
+					 (guint32 *) &tpm_out, 0, 0, NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm (self->plugin_dell, &error);
 	g_assert_true (ret);
 	g_assert_cmpint (devices->len, ==, 2);
@@ -160,8 +153,7 @@ fu_plugin_dell_tpm_func (gconstpointer user_data)
 	tpm_out.status = TPM_EN_MASK | TPM_OWN_MASK | (TPM_1_2_MODE << 8);
 	tpm_out.flashes_left = 125;
 	fu_plugin_dell_inject_fake_data (self->plugin_dell,
-					 (guint32 *) &tpm_out, 0, 0,
-					 NULL, TRUE);
+					 (guint32 *) &tpm_out, 0, 0, NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm (self->plugin_dell, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -191,8 +183,7 @@ fu_plugin_dell_tpm_func (gconstpointer user_data)
 	tpm_out.status = TPM_EN_MASK | (TPM_1_2_MODE << 8);
 	tpm_out.flashes_left = 125;
 	fu_plugin_dell_inject_fake_data (self->plugin_dell,
-					 (guint32 *) &tpm_out, 0, 0,
-					 NULL, TRUE);
+					 (guint32 *) &tpm_out, 0, 0, NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm (self->plugin_dell, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -226,8 +217,7 @@ fu_plugin_dell_tpm_func (gconstpointer user_data)
 	tpm_out.status = TPM_EN_MASK | (TPM_2_0_MODE << 8);
 	tpm_out.flashes_left = 1;
 	fu_plugin_dell_inject_fake_data (self->plugin_dell,
-					 (guint32 *) &tpm_out, 0, 0,
-					 NULL, TRUE);
+					 (guint32 *) &tpm_out, 0, 0, NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm (self->plugin_dell, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -241,15 +231,15 @@ fu_plugin_dell_tpm_func (gconstpointer user_data)
 	g_assert_false (fu_device_has_flag (device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* With one flash left we need an override */
-	ret = fu_plugin_runner_update (self->plugin_uefi_capsule, device_v20, blob_fw,
-				       FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_plugin_runner_update (self->plugin_uefi_capsule, device_v20,
+				       blob_fw, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false (ret);
 	g_clear_error (&error);
 
 	/* test override */
-	ret = fu_plugin_runner_update (self->plugin_uefi_capsule, device_v20, blob_fw,
-				       FWUPD_INSTALL_FLAG_FORCE, &error);
+	ret = fu_plugin_runner_update (self->plugin_uefi_capsule, device_v20,
+				       blob_fw, FWUPD_INSTALL_FLAG_FORCE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -261,9 +251,9 @@ fu_plugin_dell_tpm_func (gconstpointer user_data)
 static void
 fu_plugin_dell_dock_func (gconstpointer user_data)
 {
-	FuTest *self = (FuTest *) user_data;
-	gboolean ret;
-	guint32 out[4] = { 0x0, 0x0, 0x0, 0x0 };
+	FuTest    *self = (FuTest *) user_data;
+	gboolean   ret;
+	guint32	   out[4] = {0x0, 0x0, 0x0, 0x0};
 	DOCK_UNION buf;
 	DOCK_INFO *dock_info;
 	g_autoptr(GError) error = NULL;
@@ -275,22 +265,17 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 	fu_device_set_context (FU_DEVICE (fake_usb_device),
 			       fu_plugin_get_context (self->plugin_dell));
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	added_id =
-	g_signal_connect (self->plugin_uefi_capsule, "device-added",
-			  G_CALLBACK (_plugin_device_added_cb),
-			  devices);
-	register_id =
-	g_signal_connect (self->plugin_dell, "device-register",
-			  G_CALLBACK (fu_engine_plugin_device_register_cb),
-			  self->plugin_uefi_capsule);
+	added_id = g_signal_connect (self->plugin_uefi_capsule, "device-added",
+				     G_CALLBACK (_plugin_device_added_cb), devices);
+	register_id = g_signal_connect (self->plugin_dell, "device-register",
+					G_CALLBACK (fu_engine_plugin_device_register_cb),
+					self->plugin_uefi_capsule);
 
 	/* make sure bad device doesn't trigger this */
-	fu_plugin_dell_inject_fake_data (self->plugin_dell,
-					   (guint32 *) &out,
-					   0x1234, 0x4321, NULL, FALSE);
+	fu_plugin_dell_inject_fake_data (self->plugin_dell, (guint32 *) &out,
+					 0x1234, 0x4321, NULL, FALSE);
 	ret = fu_plugin_backend_device_added (self->plugin_dell,
-					      FU_DEVICE (fake_usb_device),
-					      &error);
+					      FU_DEVICE (fake_usb_device), &error);
 	g_assert_false (ret);
 	g_clear_error (&error);
 	g_assert_cmpint (devices->len, ==, 0);
@@ -298,13 +283,10 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 	/* inject a USB dongle matching correct VID/PID */
 	out[0] = 0;
 	out[1] = 0;
-	fu_plugin_dell_inject_fake_data (self->plugin_dell,
-					   (guint32 *) &out,
-					   DOCK_NIC_VID, DOCK_NIC_PID,
-					   NULL, FALSE);
+	fu_plugin_dell_inject_fake_data (self->plugin_dell, (guint32 *) &out,
+					 DOCK_NIC_VID, DOCK_NIC_PID, NULL, FALSE);
 	ret = fu_plugin_backend_device_added (self->plugin_dell,
-					      FU_DEVICE (fake_usb_device),
-					      &error);
+					      FU_DEVICE (fake_usb_device), &error);
 	g_assert_true (ret);
 	g_clear_error (&error);
 	g_assert_cmpint (devices->len, ==, 0);
@@ -314,8 +296,7 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 	dock_info = &buf.record->dock_info;
 	buf.record->dock_info_header.dir_version = 1;
 	buf.record->dock_info_header.dock_type = DOCK_TYPE_TB16;
-	memcpy (dock_info->dock_description,
-		"BME_Dock", 8);
+	memcpy (dock_info->dock_description, "BME_Dock", 8);
 	dock_info->flash_pkg_version = 0x00ffffff;
 	dock_info->cable_type = CABLE_TYPE_TBT;
 	dock_info->location = 2;
@@ -334,13 +315,10 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 		"Dock1,Cable,Cyp,TBT_Cable,0 :Query 2 2 2 3 0", 44);
 	out[0] = 0;
 	out[1] = 1;
-	fu_plugin_dell_inject_fake_data (self->plugin_dell,
-					   (guint32 *) &out,
-					   DOCK_NIC_VID, DOCK_NIC_PID,
-					   buf.buf, FALSE);
+	fu_plugin_dell_inject_fake_data (self->plugin_dell, (guint32 *) &out,
+					 DOCK_NIC_VID, DOCK_NIC_PID, buf.buf, FALSE);
 	ret = fu_plugin_backend_device_added (self->plugin_dell,
-					      FU_DEVICE (fake_usb_device),
-					      NULL);
+					      FU_DEVICE (fake_usb_device), NULL);
 	g_assert (ret);
 	g_assert_cmpint (devices->len, ==, 4);
 	g_ptr_array_set_size (devices, 0);
@@ -351,8 +329,7 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 	dock_info = &buf.record->dock_info;
 	buf.record->dock_info_header.dir_version = 1;
 	buf.record->dock_info_header.dock_type = DOCK_TYPE_TB16;
-	memcpy (dock_info->dock_description,
-		"BME_Dock", 8);
+	memcpy (dock_info->dock_description, "BME_Dock", 8);
 	dock_info->flash_pkg_version = 0x43;
 	dock_info->cable_type = CABLE_TYPE_TBT;
 	dock_info->location = 2;
@@ -371,13 +348,10 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 		"Dock1,Cable,Cyp,TBT_Cable,0 :Query 2 2 2 3 0", 44);
 	out[0] = 0;
 	out[1] = 1;
-	fu_plugin_dell_inject_fake_data (self->plugin_dell,
-					   (guint32 *) &out,
-					   DOCK_NIC_VID, DOCK_NIC_PID,
-					   buf.buf, FALSE);
+	fu_plugin_dell_inject_fake_data (self->plugin_dell, (guint32 *) &out,
+					 DOCK_NIC_VID, DOCK_NIC_PID, buf.buf, FALSE);
 	ret = fu_plugin_backend_device_added (self->plugin_dell,
-					      FU_DEVICE (fake_usb_device),
-					      NULL);
+					      FU_DEVICE (fake_usb_device), NULL);
 	g_assert (ret);
 	g_assert_cmpint (devices->len, ==, 3);
 	g_ptr_array_set_size (devices, 0);
@@ -388,8 +362,7 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 	dock_info = &buf.record->dock_info;
 	buf.record->dock_info_header.dir_version = 1;
 	buf.record->dock_info_header.dock_type = DOCK_TYPE_WD15;
-	memcpy (dock_info->dock_description,
-		"IE_Dock", 7);
+	memcpy (dock_info->dock_description, "IE_Dock", 7);
 	dock_info->flash_pkg_version = 0x00ffffff;
 	dock_info->cable_type = CABLE_TYPE_LEGACY;
 	dock_info->location = 2;
@@ -405,13 +378,10 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 		"Dock1,Cable,Cyp,IE_Cable,0 :Query 2 2 2 1 0", 43);
 	out[0] = 0;
 	out[1] = 1;
-	fu_plugin_dell_inject_fake_data (self->plugin_dell,
-					   (guint32 *) &out,
-					   DOCK_NIC_VID, DOCK_NIC_PID,
-					   buf.buf, FALSE);
+	fu_plugin_dell_inject_fake_data (self->plugin_dell, (guint32 *) &out,
+					 DOCK_NIC_VID, DOCK_NIC_PID, buf.buf, FALSE);
 	ret = fu_plugin_backend_device_added (self->plugin_dell,
-					      FU_DEVICE (fake_usb_device),
-					      &error);
+					      FU_DEVICE (fake_usb_device), &error);
 	g_assert (ret);
 	g_assert_no_error (error);
 	g_assert_cmpint (devices->len, ==, 3);
@@ -423,8 +393,7 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 	dock_info = &buf.record->dock_info;
 	buf.record->dock_info_header.dir_version = 1;
 	buf.record->dock_info_header.dock_type = DOCK_TYPE_WD15;
-	memcpy (dock_info->dock_description,
-		"IE_Dock", 7);
+	memcpy (dock_info->dock_description, "IE_Dock", 7);
 	dock_info->flash_pkg_version = 0x43;
 	dock_info->cable_type = CABLE_TYPE_LEGACY;
 	dock_info->location = 2;
@@ -440,13 +409,10 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 		"Dock1,Cable,Cyp,IE_Cable,0 :Query 2 2 2 1 0", 43);
 	out[0] = 0;
 	out[1] = 1;
-	fu_plugin_dell_inject_fake_data (self->plugin_dell,
-					 (guint32 *) &out,
-					 DOCK_NIC_VID, DOCK_NIC_PID,
-					 buf.buf, FALSE);
+	fu_plugin_dell_inject_fake_data (self->plugin_dell, (guint32 *) &out,
+					 DOCK_NIC_VID, DOCK_NIC_PID, buf.buf, FALSE);
 	ret = fu_plugin_backend_device_added (self->plugin_dell,
-					      FU_DEVICE (fake_usb_device),
-					      &error);
+					      FU_DEVICE (fake_usb_device), &error);
 	g_assert (ret);
 	g_assert_no_error (error);
 	g_assert_cmpint (devices->len, ==, 2);
@@ -458,8 +424,7 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 	dock_info = &buf.record->dock_info;
 	buf.record->dock_info_header.dir_version = 1;
 	buf.record->dock_info_header.dock_type = 50;
-	memcpy (dock_info->dock_description,
-		"Future!", 8);
+	memcpy (dock_info->dock_description, "Future!", 8);
 	dock_info->flash_pkg_version = 0x00ffffff;
 	dock_info->cable_type = CABLE_TYPE_UNIV;
 	dock_info->location = 2;
@@ -469,13 +434,10 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 		"Dock1,EC,MIPS32,FUT_Dock,0 :Query 2 0 2 2 0", 43);
 	out[0] = 0;
 	out[1] = 1;
-	fu_plugin_dell_inject_fake_data (self->plugin_dell,
-					 (guint32 *) &out,
-					 DOCK_NIC_VID, DOCK_NIC_PID,
-					 buf.buf, FALSE);
+	fu_plugin_dell_inject_fake_data (self->plugin_dell, (guint32 *) &out,
+					 DOCK_NIC_VID, DOCK_NIC_PID, buf.buf, FALSE);
 	ret = fu_plugin_backend_device_added (self->plugin_dell,
-					      FU_DEVICE (fake_usb_device),
-					      &error);
+					      FU_DEVICE (fake_usb_device), &error);
 	g_assert_false (ret);
 	g_assert_cmpint (devices->len, ==, 0);
 	g_free (buf.record);
@@ -495,9 +457,9 @@ fu_test_self_init (FuTest *self)
 	g_autofree gchar *pluginfn_dell = NULL;
 
 	self->plugin_uefi_capsule = fu_plugin_new (ctx);
-	pluginfn_uefi = g_build_filename (PLUGINBUILDDIR, "..", "uefi-capsule",
-					  "libfu_plugin_uefi_capsule." G_MODULE_SUFFIX,
-					  NULL);
+	pluginfn_uefi =
+	    g_build_filename (PLUGINBUILDDIR, "..", "uefi-capsule",
+			      "libfu_plugin_uefi_capsule." G_MODULE_SUFFIX, NULL);
 	ret = fu_plugin_open (self->plugin_uefi_capsule, pluginfn_uefi, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -506,9 +468,8 @@ fu_test_self_init (FuTest *self)
 	g_assert (ret);
 
 	self->plugin_dell = fu_plugin_new (ctx);
-	pluginfn_dell = g_build_filename (PLUGINBUILDDIR,
-					  "libfu_plugin_dell." G_MODULE_SUFFIX,
-					  NULL);
+	pluginfn_dell =
+	    g_build_filename (PLUGINBUILDDIR, "libfu_plugin_dell." G_MODULE_SUFFIX, NULL);
 	ret = fu_plugin_open (self->plugin_dell, pluginfn_dell, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
@@ -529,7 +490,7 @@ fu_test_self_free (FuTest *self)
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuTest, fu_test_self_free)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (FuTest, fu_test_self_free)
 #pragma clang diagnostic pop
 
 int
@@ -552,7 +513,8 @@ main (int argc, char **argv)
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 
-	g_assert_cmpint (g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
+	g_assert_cmpint (
+	    g_mkdir_with_parents ("/tmp/fwupd-self-test/var/lib/fwupd", 0755), ==, 0);
 
 	/* tests go here */
 	fu_test_self_init (self);
