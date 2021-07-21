@@ -84,6 +84,8 @@
 #include "fu-systemd.h"
 #endif
 
+#define MINIMUM_BATTERY_PERCENTAGE_FALLBACK 10
+
 static void fu_engine_finalize	 (GObject *obj);
 static void fu_engine_ensure_security_attrs	(FuEngine *self);
 
@@ -6463,6 +6465,31 @@ fu_engine_ensure_client_certificate (FuEngine *self)
 	g_debug ("client certificate exists and working");
 }
 
+static void
+fu_engine_context_set_battery_threshold (FuContext *ctx)
+{
+	const gchar *vendor;
+	guint64 minimum_battery;
+	g_autofree gchar *battery_str = NULL;
+
+	vendor = fu_context_get_hwid_replace_value (ctx, FU_HWIDS_KEY_MANUFACTURER, NULL);
+	if (vendor != NULL) {
+		battery_str = g_strdup (fu_context_lookup_quirk_by_id (
+		    ctx, vendor, FU_QUIRKS_BATTERY_THRESHOLD));
+	}
+	if (battery_str == NULL)
+		minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
+	else
+		minimum_battery = fu_common_strtoull (battery_str);
+	if (minimum_battery > 100) {
+		g_warning ("invalid minimum battery level specified: "
+			   "%" G_GUINT64_FORMAT,
+			   minimum_battery);
+		minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
+	}
+	fu_context_set_battery_threshold (ctx, minimum_battery);
+}
+
 /**
  * fu_engine_load:
  * @self: a #FuEngine
@@ -6631,6 +6658,9 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
 		quirks_flags |= FU_QUIRKS_LOAD_FLAG_READONLY_FS;
 	fu_engine_load_quirks (self, quirks_flags);
+
+	/* set up battery threshold */
+	fu_engine_context_set_battery_threshold (self->ctx);
 
 	/* watch the device list for updates and proxy */
 	g_signal_connect (self->device_list, "added",

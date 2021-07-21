@@ -8,8 +8,6 @@
 
 #include <fwupdplugin.h>
 
-#define MINIMUM_BATTERY_PERCENTAGE_FALLBACK	10
-
 struct FuPluginData {
 	GDBusProxy		*proxy;		/* nullable */
 };
@@ -77,12 +75,8 @@ fu_plugin_upower_proxy_changed_cb (GDBusProxy *proxy,
 gboolean
 fu_plugin_startup (FuPlugin *plugin, GError **error)
 {
-	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	const gchar *vendor;
-	guint64 minimum_battery;
 	g_autofree gchar *name_owner = NULL;
-	g_autofree gchar *battery_str = NULL;
 
 	data->proxy =
 		g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
@@ -109,22 +103,6 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	g_signal_connect (data->proxy, "g-properties-changed",
 			  G_CALLBACK (fu_plugin_upower_proxy_changed_cb), plugin);
 
-	vendor = fu_context_get_hwid_replace_value (ctx, FU_HWIDS_KEY_MANUFACTURER, NULL);
-	if (vendor != NULL) {
-		battery_str = g_strdup (fu_context_lookup_quirk_by_id (ctx,
-								       vendor,
-								       FU_QUIRKS_BATTERY_THRESHOLD));
-	}
-	if (battery_str == NULL)
-		minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
-	else
-		minimum_battery = fu_common_strtoull (battery_str);
-	if (minimum_battery > 100) {
-		g_warning ("invalid minimum battery level specified: %" G_GUINT64_FORMAT,
-			   minimum_battery);
-		minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
-	}
-	fu_context_set_battery_threshold (ctx, minimum_battery);
 	fu_plugin_upower_rescan (plugin);
 
 	/* success */
