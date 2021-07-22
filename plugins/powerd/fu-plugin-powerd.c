@@ -74,6 +74,10 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 	gdouble current_level = 0;
 	g_autoptr(GVariant) powerd_response = NULL;
 
+	/* permit updates when the device does not care about power conditions */
+	if (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER)
+		return TRUE;
+
 	/* making method call to "GetBatteryState" through the proxy */
 	powerd_response = g_dbus_proxy_call_sync (data->proxy,
 						  "GetBatteryState",
@@ -86,10 +90,6 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 		g_prefix_error (error, "battery information was not loaded: ");
 		return FALSE;
 	}
-
-	/* permit updates when the device does not care about power conditions */
-	if (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER)
-		return TRUE;
 
 	/* parse and use for battery-check conditions */
 	g_variant_get (powerd_response,
