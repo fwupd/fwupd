@@ -27,5 +27,7 @@ void		 fu_redfish_backend_set_https		(FuRedfishBackend	*self,
 							 gboolean		 use_https);
 void		 fu_redfish_backend_set_cacheck		(FuRedfishBackend	*self,
 							 gboolean		 cacheck);
+void		 fu_redfish_backend_set_wildcard_targets(FuRedfishBackend	*self,
+							 gboolean		 wildcard_targets);
 const gchar	*fu_redfish_backend_get_push_uri_path	(FuRedfishBackend	*self);
 FuRedfishRequest *fu_redfish_backend_request_new	(FuRedfishBackend	*self);

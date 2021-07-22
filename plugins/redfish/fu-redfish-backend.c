@@ -28,6 +28,7 @@ struct _FuRedfishBackend
 	gchar			*push_uri_path;
 	gboolean		 use_https;
 	gboolean		 cacheck;
+	gboolean		 wildcard_targets;
 	gint64			 max_image_size;	/* bytes */
 	GType			 device_gtype;
 	GHashTable		*request_cache;		/* str:GByteArray */
@@ -101,6 +102,12 @@ fu_redfish_backend_coldplug_member (FuRedfishBackend *self,
 			    "backend", self,
 			    "member", member,
 			    NULL);
+
+	/* some vendors do not specify the Targets array when updating */
+	if (self->wildcard_targets)
+		fu_device_add_private_flag (dev, FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
+
+	/* probe + setup */
 	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;
@@ -331,6 +338,12 @@ void
 fu_redfish_backend_set_cacheck (FuRedfishBackend *self, gboolean cacheck)
 {
 	self->cacheck = cacheck;
+}
+
+void
+fu_redfish_backend_set_wildcard_targets (FuRedfishBackend *self, gboolean wildcard_targets)
+{
+	self->wildcard_targets = wildcard_targets;
 }
 
 void
