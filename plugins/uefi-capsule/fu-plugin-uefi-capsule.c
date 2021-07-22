@@ -462,7 +462,7 @@ fu_plugin_uefi_capsule_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GEr
 		fu_device_add_private_flag (FU_DEVICE (dev),
 					    FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
 	}
-	if (fu_plugin_has_custom_flag (plugin, "boot-order-lock")) {
+	if (fu_plugin_has_custom_flag (plugin, "supports-boot-order-lock")) {
 		fu_device_add_private_flag (FU_DEVICE (dev),
 					    FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
 	}
