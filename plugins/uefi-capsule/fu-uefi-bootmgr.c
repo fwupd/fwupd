@@ -14,6 +14,7 @@
 #include "fu-ucs2.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
+#include "fu-uefi-device.h"
 
 /* XXX PJFIX: this should be in efiboot-loadopt.h in efivar */
 #define LOAD_OPTION_ACTIVE      0x00000001
@@ -334,7 +335,7 @@ fu_uefi_bootmgr_bootnext (FuDevice *device,
 
 		/* try to fallback to use UEFI removable path if the shim path doesn't exist */
 		if (!g_file_test (shim_app, G_FILE_TEST_EXISTS)) {
-			if (fu_device_get_metadata_boolean (device, "FallbacktoRemovablePath")) {
+			if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH)) {
 				shim_app = fu_uefi_get_esp_app_path (device, esp_path, "boot", error);
 				if (shim_app == NULL)
 					return FALSE;

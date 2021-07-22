@@ -135,8 +135,6 @@ fu_uefi_device_to_string (FuDevice *device, guint idt, GString *str)
 	}
 	fu_common_string_append_ku (str, idt, "RequireESPFreeSpace",
 				    fu_device_get_metadata_integer (device, "RequireESPFreeSpace"));
-	fu_common_string_append_kb (str, idt, "RequireShimForSecureBoot",
-				    fu_device_get_metadata_boolean (device, "RequireShimForSecureBoot"));
 }
 
 static void
@@ -618,7 +616,7 @@ fu_uefi_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* update the firmware before the bootloader runs */
-	if (fu_device_get_metadata_boolean (device, "RequireShimForSecureBoot"))
+	if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB))
 		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
 	if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE))
 		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE;
@@ -863,6 +861,12 @@ fu_uefi_device_init (FuUefiDevice *self)
 	fu_device_register_private_flag (FU_DEVICE (self),
 					 FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK,
 					 "supports-boot-order-lock");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB,
+					 "use-shim-for-sb");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH,
+					 "fallback-to-removable-path");
 }
 
 static void

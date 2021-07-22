@@ -373,15 +373,13 @@ fu_plugin_uefi_capsule_load_config (FuPlugin *plugin, FuDevice *device)
 
 	/* shim used for SB or not? */
 	disable_shim = fu_plugin_get_config_value_boolean (plugin, "DisableShimForSecureBoot");
-	fu_device_set_metadata_boolean (device,
-					"RequireShimForSecureBoot",
-					!disable_shim);
+	if (!disable_shim)
+		fu_device_add_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB);
 
 	/* check if using UEFI removable path */
 	fallback_removable_path = fu_plugin_get_config_value_boolean (plugin, "FallbacktoRemovablePath");
-	fu_device_set_metadata_boolean (device,
-					"FallbacktoRemovablePath",
-					fallback_removable_path);
+	if (fallback_removable_path)
+		fu_device_add_private_flag (device, FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH);
 }
 
 static void

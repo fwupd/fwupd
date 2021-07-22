@@ -67,6 +67,18 @@ typedef enum {
  * not using grub chainloading or capsule-on-disk.
  */
 #define FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK	(1 << 3)
+/**
+ * FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH:
+ *
+ * Try to fallback to use UEFI removable path if the shim path doesn't exist.
+ */
+#define FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH	(1 << 4)
+/**
+ * FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB:
+ *
+ * Use shim to load fwupdx64.efi when SecureBoot is turned on.
+ */
+#define FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB		(1 << 5)
 
 FuUefiDevice	*fu_uefi_device_new_from_guid		(const gchar	*guid);
 FuUefiDevice	*fu_uefi_device_new_from_dev		(FuDevice	*dev);
