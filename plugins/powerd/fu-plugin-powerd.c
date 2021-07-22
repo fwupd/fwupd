@@ -86,6 +86,10 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 		return FALSE;
 	}
 
+	/* permit updates when the device does not care about power conditions */
+	if (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER)
+		return TRUE;
+
 	/* parse and use for battery-check conditions */
 	g_variant_get (powerd_response,
 		       "(uud)",
