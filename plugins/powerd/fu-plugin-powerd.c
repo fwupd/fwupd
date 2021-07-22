@@ -10,7 +10,7 @@
 #include <fwupdplugin.h>
 
 struct FuPluginData {
-	GDBusProxy	*proxy; /* nullable */
+	GDBusProxy *proxy; /* nullable */
 };
 
 void
@@ -35,14 +35,15 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	g_autofree gchar *name_owner = NULL;
 
 	/* establish proxy for method call to powerd */
-	data->proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
-						     G_DBUS_PROXY_FLAGS_NONE,
-						     NULL,
-						     "org.chromium.PowerManager",
-						     "/org/chromium/PowerManager",
-						     "org.chromium.PowerManager",
-						     NULL,
-						     error);
+	data->proxy =
+	    g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+					   G_DBUS_PROXY_FLAGS_NONE,
+					   NULL,
+					   "org.chromium.PowerManager",
+					   "/org/chromium/PowerManager",
+					   "org.chromium.PowerManager",
+					   NULL,
+					   error);
 
 	if (data->proxy == NULL) {
 		g_prefix_error (error, "failed to establish proxy: ");
