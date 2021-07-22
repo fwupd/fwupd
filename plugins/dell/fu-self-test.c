@@ -494,6 +494,11 @@ fu_test_self_init (FuTest *self)
 	g_autofree gchar *pluginfn_uefi = NULL;
 	g_autofree gchar *pluginfn_dell = NULL;
 
+	/* do not save silo */
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
 	self->plugin_uefi_capsule = fu_plugin_new (ctx);
 	pluginfn_uefi = g_build_filename (PLUGINBUILDDIR, "..", "uefi-capsule",
 					  "libfu_plugin_uefi_capsule." G_MODULE_SUFFIX,

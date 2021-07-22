@@ -3569,8 +3569,6 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 {
 	GPtrArray *remotes;
 	XbBuilderCompileFlags compile_flags = XB_BUILDER_COMPILE_FLAG_IGNORE_INVALID;
-	g_autofree gchar *cachedirpkg = NULL;
-	g_autofree gchar *xmlbfn = NULL;
 	g_autoptr(GFile) xmlb = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new ();
@@ -3653,12 +3651,19 @@ fu_engine_load_metadata_store (FuEngine *self, FuEngineLoadFlags flags, GError *
 		compile_flags |= XB_BUILDER_COMPILE_FLAG_IGNORE_GUID;
 
 	/* ensure silo is up to date */
-	cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
-	xmlbfn = g_build_filename (cachedirpkg, "metadata.xmlb", NULL);
-	xmlb = g_file_new_for_path (xmlbfn);
+	if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE) {
+		g_autoptr(GFileIOStream) iostr = NULL;
+		xmlb = g_file_new_tmp (NULL, &iostr, error);
+		if (xmlb == NULL)
+			return FALSE;
+	} else {
+		g_autofree gchar *cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
+		g_autofree gchar *xmlbfn = g_build_filename (cachedirpkg, "metadata.xmlb", NULL);
+		xmlb = g_file_new_for_path (xmlbfn);
+	}
 	self->silo = xb_builder_ensure (builder, xmlb, compile_flags, NULL, error);
 	if (self->silo == NULL) {
-		g_prefix_error (error, "cannot create file %s: ", xmlbfn);
+		g_prefix_error (error, "cannot create metadata.xmlb: ");
 		return FALSE;
 	}
 
@@ -6556,6 +6561,8 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		FuRemoteListLoadFlags remote_list_flags = FU_REMOTE_LIST_LOAD_FLAG_NONE;
 		if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
 			remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS;
+		if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
+			remote_list_flags |= FU_REMOTE_LIST_LOAD_FLAG_NO_CACHE;
 		if (!fu_remote_list_load (self->remote_list, remote_list_flags, error)) {
 			g_prefix_error (error, "Failed to load remotes: ");
 			return FALSE;
@@ -6657,6 +6664,8 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	/* on a read-only filesystem don't care about the cache GUID */
 	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
 		quirks_flags |= FU_QUIRKS_LOAD_FLAG_READONLY_FS;
+	if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
+		quirks_flags |= FU_QUIRKS_LOAD_FLAG_NO_CACHE;
 	fu_engine_load_quirks (self, quirks_flags);
 
 	/* set up battery threshold */

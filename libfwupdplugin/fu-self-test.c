@@ -596,7 +596,7 @@ fu_plugin_quirks_func (void)
 	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NONE, &error);
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -626,7 +626,7 @@ fu_plugin_quirks_performance_func (void)
 	g_autoptr(GError) error = NULL;
 	const gchar *keys[] = { "Name", "Children", "Flags", NULL };
 
-	ret = fu_quirks_load (quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
+	ret = fu_quirks_load (quirks, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -652,7 +652,7 @@ fu_plugin_quirks_device_func (void)
 	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NONE, &error);
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -1384,6 +1384,11 @@ fu_device_instance_ids_func (void)
 	g_autoptr(FuDevice) device = fu_device_new_with_context (ctx);
 	g_autoptr(GError) error = NULL;
 
+	/* do not save silo */
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
 	/* sanity check */
 	g_assert_false (fu_device_has_guid (device, "c0a26214-223b-572a-9477-cde897fe8619"));
 
@@ -1541,6 +1546,11 @@ fu_device_children_func (void)
 	g_autoptr(FuDevice) child = fu_device_new ();
 	g_autoptr(FuDevice) parent = fu_device_new_with_context (ctx);
 	g_autoptr(GError) error = NULL;
+
+	/* do not save silo */
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 
 	fu_device_set_physical_id (child, "dummy");
 	fu_device_set_physical_id (parent, "dummy");

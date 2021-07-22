@@ -168,6 +168,11 @@ fu_uefi_plugin_func (void)
 	return;
 #endif
 
+	/* do not save silo */
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
 	/* add each device */
 	ret = fu_backend_coldplug (backend, &error);
 	g_assert_no_error (error);
