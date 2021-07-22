@@ -293,10 +293,9 @@ fu_engine_ensure_device_battery_inhibit (FuEngine *self, FuDevice *device)
 				   "Cannot install update when not on AC power");
 		return;
 	}
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
-	    fu_context_get_battery_level (self->ctx) != FU_BATTERY_VALUE_INVALID &&
-	    fu_context_get_battery_threshold (self->ctx) != FU_BATTERY_VALUE_INVALID &&
-	    fu_context_get_battery_level (self->ctx) < fu_context_get_battery_threshold (self->ctx)) {
+	if (fu_context_get_battery_level(self->ctx) != FU_BATTERY_VALUE_INVALID &&
+	    fu_context_get_battery_threshold(self->ctx) != FU_BATTERY_VALUE_INVALID &&
+	    fu_context_get_battery_level(self->ctx) < fu_context_get_battery_threshold(self->ctx)) {
 		g_autofree gchar *reason = NULL;
 		reason = g_strdup_printf ("Cannot install update when system battery is not at least %u%%",
 					  fu_context_get_battery_threshold (self->ctx));
@@ -2799,6 +2798,44 @@ fu_engine_device_cleanup (FuEngine *self,
 }
 
 static gboolean
+fu_engine_device_check_power(FuEngine *self,
+			     FuDevice *device,
+			     FwupdInstallFlags flags,
+			     GError **error)
+{
+	if (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER)
+		return TRUE;
+
+	/* not charging */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
+	    (fu_context_get_battery_state(self->ctx) == FU_BATTERY_STATE_DISCHARGING ||
+	     fu_context_get_battery_state(self->ctx) == FU_BATTERY_STATE_EMPTY)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_AC_POWER_REQUIRED,
+				    "Cannot install update "
+				    "when not on AC power unless forced");
+		return FALSE;
+	}
+
+	/* not enough just in case */
+	if (fu_context_get_battery_level(self->ctx) != FU_BATTERY_VALUE_INVALID &&
+	    fu_context_get_battery_threshold(self->ctx) != FU_BATTERY_VALUE_INVALID &&
+	    fu_context_get_battery_level(self->ctx) < fu_context_get_battery_threshold(self->ctx)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW,
+			    "Cannot install update when system battery "
+			    "is not at least %u%% unless forced",
+			    fu_context_get_battery_threshold(self->ctx));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_engine_update_prepare (FuEngine *self,
 			  FwupdInstallFlags flags,
 			  const gchar *device_id,
@@ -2815,6 +2852,9 @@ fu_engine_update_prepare (FuEngine *self,
 
 	/* don't rely on a plugin clearing this */
 	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
+
+	if (!fu_engine_device_check_power(self, device, flags, error))
+		return FALSE;
 
 	str = fu_device_to_string (device);
 	g_debug ("prepare -> %s", str);
