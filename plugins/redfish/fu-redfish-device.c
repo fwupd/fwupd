@@ -28,20 +28,6 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuRedfishDevice, fu_redfish_device, FU_TYPE_DEVICE)
 
 #define GET_PRIVATE(o) (fu_redfish_device_get_instance_private (o))
 
-/**
- * FU_REDFISH_DEVICE_FLAG_IS_BACKUP:
- *
- * The device is the other half of a dual image firmware.
- */
-#define FU_REDFISH_DEVICE_FLAG_IS_BACKUP	(1 << 0)
-
-/**
- * FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD:
- *
- * Use unsigned development builds.
- */
-#define FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD	(1 << 1)
-
 static void
 fu_redfish_device_to_string (FuDevice *device, guint idt, GString *str)
 {
@@ -815,6 +801,9 @@ fu_redfish_device_init (FuRedfishDevice *self)
 	fu_device_register_private_flag (FU_DEVICE (self),
 					 FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD,
 					 "unsigned-build");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS,
+					 "wildcard-targets");
 }
 
 static void

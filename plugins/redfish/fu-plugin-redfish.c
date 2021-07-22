@@ -235,6 +235,8 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 		gboolean ca_check = fu_plugin_get_config_value_boolean (plugin, "CACheck");
 		fu_redfish_backend_set_cacheck (data->backend, ca_check);
 	}
+	if (fu_plugin_has_custom_flag (plugin, "wildcard-targets"))
+		fu_redfish_backend_set_wildcard_targets (data->backend, TRUE);
 	return fu_backend_setup (FU_BACKEND (data->backend), error);
 }
 

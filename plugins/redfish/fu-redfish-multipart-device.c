@@ -31,7 +31,11 @@ fu_redfish_multipart_device_get_parameters (FuRedfishMultipartDevice *self)
 	json_builder_begin_object (builder);
 	json_builder_set_member_name (builder, "Targets");
 	json_builder_begin_array (builder);
-	json_builder_add_string_value (builder, fu_device_get_logical_id (FU_DEVICE (self)));
+	if (!fu_device_has_private_flag (FU_DEVICE (self),
+					 FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS)) {
+		const gchar *logical_id = fu_device_get_logical_id (FU_DEVICE (self));
+		json_builder_add_string_value (builder, logical_id);
+	}
 	json_builder_end_array (builder);
 	json_builder_set_member_name (builder, "@Redfish.OperationApplyTime");
 	json_builder_add_string_value (builder, "Immediate");

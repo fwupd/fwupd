@@ -18,6 +18,31 @@ struct _FuRedfishDeviceClass
 	FuDeviceClass		 parent_class;
 };
 
+/**
+ * FU_REDFISH_DEVICE_FLAG_IS_BACKUP:
+ *
+ * The device is the other half of a dual image firmware.
+ */
+#define FU_REDFISH_DEVICE_FLAG_IS_BACKUP	(1 << 0)
+
+/**
+ * FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD:
+ *
+ * Use unsigned development builds.
+ */
+#define FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD	(1 << 1)
+
+/**
+ * FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS:
+ *
+ * Do not specify the `odata.id` in the multipart update Targets array and allow
+ * the BMC to deploy the firmware onto all compatible hardware.
+ *
+ * To use this option the payload must contain metadata that restricts it to a
+ * specific SoftwareId.
+ */
+#define FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS	(1 << 2)
+
 FuRedfishBackend *fu_redfish_device_get_backend		(FuRedfishDevice	*self);
 gboolean	 fu_redfish_device_poll_task		(FuRedfishDevice	*self,
 							 const gchar		*location,
