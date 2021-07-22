@@ -2,6 +2,9 @@
 [BLOCK]
 Plugin = ata
 
+[ThinkSystem M.2 VD]
+Flags = ~updatable
+
 [OUI\000039]
 Vendor = Toshiba
 VendorId = ATA:0x1179
