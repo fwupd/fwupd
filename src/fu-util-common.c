@@ -1180,6 +1180,11 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		/* TRANSLATORS: save the old firmware to disk before installing the new one */
 		return _("Device will backup firmware before installing");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_WILDCARD_INSTALL) {
+		/* TRANSLATORS: on some systems certain devices have to have matching versions,
+		 * e.g. the EFI driver for a given network card cannot be different */
+		return _("All devices of the same type will be updated at the same time");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
 		/* skip */
 		return NULL;

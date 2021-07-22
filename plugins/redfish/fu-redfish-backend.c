@@ -187,6 +187,28 @@ fu_redfish_backend_coldplug_inventory (FuRedfishBackend *self,
 	return fu_redfish_backend_coldplug_collection (self, json_obj, error);
 }
 
+static void
+fu_redfish_backend_check_wildcard_targets (FuRedfishBackend *self)
+{
+	g_autoptr(GPtrArray) devices = fu_backend_get_devices (FU_BACKEND (self));
+	g_autoptr(GHashTable) device_by_id0 = g_hash_table_new (g_str_hash, g_str_equal);
+
+	/* does the SoftwareId exist from a different device */
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device_old;
+		FuDevice *device_tmp = g_ptr_array_index (devices, i);
+		GPtrArray *ids =fu_device_get_instance_ids (device_tmp);
+		const gchar *id0 = g_ptr_array_index (ids, 0);
+		device_old = g_hash_table_lookup (device_by_id0, id0);
+		if (device_old == NULL) {
+			g_hash_table_insert (device_by_id0, (gpointer) device_tmp, (gpointer) id0);
+			continue;
+		}
+		fu_device_add_flag (device_tmp, FWUPD_DEVICE_FLAG_WILDCARD_INSTALL);
+		fu_device_add_flag (device_old, FWUPD_DEVICE_FLAG_WILDCARD_INSTALL);
+	}
+}
+
 static gboolean
 fu_redfish_backend_coldplug (FuBackend *backend, GError **error)
 {
@@ -253,6 +275,12 @@ fu_redfish_backend_coldplug (FuBackend *backend, GError **error)
 		JsonObject *tmp = json_object_get_object_member (json_obj, "SoftwareInventory");
 		return fu_redfish_backend_coldplug_inventory (self, tmp, error);
 	}
+
+	/* work out if we have multiple devices with the same SoftwareId */
+	if (self->wildcard_targets)
+		fu_redfish_backend_check_wildcard_targets (self);
+
+	/* success */
 	return TRUE;
 }
 

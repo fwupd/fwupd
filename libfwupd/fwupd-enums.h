@@ -450,6 +450,18 @@ typedef enum {
  */
 #define FWUPD_DEVICE_FLAG_MD_SET_ICON		(1llu << 41)
 /**
+ * FWUPD_DEVICE_FLAG_WILDCARD_INSTALL:
+ *
+ * All devices with matching GUIDs will be updated at the same time.
+ *
+ * For some devices it is not possible to have different versions of firmware
+ * for hardware of the same type. Updating one device will force update of
+ * others with exactly the same instance IDs.
+ *
+ * Since: 1.6.2
+ */
+#define FWUPD_DEVICE_FLAG_WILDCARD_INSTALL	(1llu << 42)
+/**
  * FWUPD_DEVICE_FLAG_UNKNOWN:
  *
  * This flag is not defined, this typically will happen from mismatched
