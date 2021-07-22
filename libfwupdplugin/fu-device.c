@@ -686,9 +686,14 @@ gboolean
 fu_device_poll (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* fall back to the proxy */
+	if (klass->poll == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* subclassed */
 	if (klass->poll != NULL) {
@@ -1605,6 +1610,10 @@ fu_device_set_quirk_kv (FuDevice *self,
 		}
 		return TRUE;
 	}
+
+	/* fall back to the proxy */
+	if (klass->set_quirk_kv == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* optional device-specific method */
 	if (klass->set_quirk_kv != NULL)
@@ -3416,6 +3425,10 @@ fu_device_add_string (FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv (str, idt + 1, "PrivateFlags", tmps);
 	}
 
+	/* fall back to the proxy */
+	if (klass->to_string == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
+
 	/* subclassed */
 	if (klass->to_string != NULL)
 		klass->to_string (self, idt + 1, str);
@@ -3566,6 +3579,10 @@ fu_device_write_firmware (FuDevice *self,
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
+	/* fall back to the proxy */
+	if (klass->write_firmware == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
+
 	/* no plugin-specific method */
 	if (klass->write_firmware == NULL) {
 		g_set_error_literal (error,
@@ -3636,6 +3653,10 @@ fu_device_prepare_firmware (FuDevice *self,
 	g_return_val_if_fail (fw != NULL, NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
+	/* fall back to the proxy */
+	if (klass->prepare_firmware == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
+
 	/* optionally subclassed */
 	if (klass->prepare_firmware != NULL) {
 		fu_device_set_status (self, FWUPD_STATUS_DECOMPRESSING);
@@ -3696,6 +3717,7 @@ FuFirmware *
 fu_device_read_firmware (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GBytes) fw = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
@@ -3709,6 +3731,10 @@ fu_device_read_firmware (FuDevice *self, GError **error)
 				     "not supported");
 		return NULL;
 	}
+
+	/* fall back to the proxy */
+	if (klass->read_firmware == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* call vfunc */
 	if (klass->read_firmware != NULL)
@@ -3739,9 +3765,14 @@ GBytes *
 fu_device_dump_firmware (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	/* fall back to the proxy */
+	if (klass->dump_firmware == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* use the default FuFirmware when only ->dump_firmware is provided */
 	if (klass->dump_firmware == NULL) {
@@ -3771,9 +3802,14 @@ gboolean
 fu_device_detach (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* fall back to the proxy */
+	if (klass->detach == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* no plugin-specific method */
 	if (klass->detach == NULL)
@@ -3798,9 +3834,14 @@ gboolean
 fu_device_attach (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* fall back to the proxy */
+	if (klass->attach == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* no plugin-specific method */
 	if (klass->attach == NULL)
@@ -3825,9 +3866,14 @@ gboolean
 fu_device_reload (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* fall back to the proxy */
+	if (klass->reload == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* no plugin-specific method */
 	if (klass->reload == NULL)
@@ -3854,9 +3900,14 @@ gboolean
 fu_device_prepare (FuDevice *self, FwupdInstallFlags flags, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* fall back to the proxy */
+	if (klass->prepare == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* no plugin-specific method */
 	if (klass->prepare == NULL)
@@ -3883,9 +3934,14 @@ gboolean
 fu_device_cleanup (FuDevice *self, FwupdInstallFlags flags, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* fall back to the proxy */
+	if (klass->cleanup == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* no plugin-specific method */
 	if (klass->cleanup == NULL)
@@ -3899,6 +3955,9 @@ static gboolean
 fu_device_open_cb (FuDevice *self, gpointer user_data, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	if (klass->open == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 	return klass->open (self, error);
 }
 
@@ -3920,6 +3979,10 @@ fu_device_open_internal (FuDevice *self, GError **error)
 	/* ensure the device ID is already setup */
 	if (!fu_device_ensure_id (self, error))
 		return FALSE;
+
+	/* fall back to the proxy */
+	if (klass->open == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* subclassed */
 	if (klass->open != NULL) {
@@ -4034,6 +4097,10 @@ fu_device_close (FuDevice *self, GError **error)
 	if (!g_atomic_int_dec_and_test (&priv->open_refcount))
 		return TRUE;
 
+	/* fall back to the proxy */
+	if (klass->close == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
+
 	/* subclassed */
 	if (klass->close != NULL) {
 		if (!klass->close (self, error))
@@ -4071,6 +4138,10 @@ fu_device_probe (FuDevice *self, GError **error)
 	if (priv->done_probe)
 		return TRUE;
 
+	/* fall back to the proxy */
+	if (klass->probe == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
+
 	/* subclassed */
 	if (klass->probe != NULL) {
 		if (!klass->probe (self, error))
@@ -4095,6 +4166,7 @@ gboolean
 fu_device_rescan (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -4102,6 +4174,10 @@ fu_device_rescan (FuDevice *self, GError **error)
 	/* remove all GUIDs */
 	g_ptr_array_set_size (fu_device_get_instance_ids (self), 0);
 	g_ptr_array_set_size (fu_device_get_guids (self), 0);
+
+	/* fall back to the proxy */
+	if (klass->rescan == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* subclassed */
 	if (klass->rescan != NULL) {
@@ -4176,6 +4252,10 @@ fu_device_setup (FuDevice *self, GError **error)
 	if (priv->done_setup)
 		return TRUE;
 
+	/* fall back to the proxy */
+	if (klass->setup == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
+
 	/* subclassed */
 	if (klass->setup != NULL) {
 		if (!klass->setup (self, error))
@@ -4219,9 +4299,14 @@ gboolean
 fu_device_activate (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* fall back to the proxy */
+	if (klass->activate == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* subclassed */
 	if (klass->activate != NULL) {
@@ -4268,9 +4353,14 @@ GHashTable *
 fu_device_report_metadata_pre (FuDevice *self)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GHashTable) metadata = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+
+	/* fall back to the proxy */
+	if (klass->report_metadata_pre == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* not implemented */
 	if (klass->report_metadata_pre == NULL)
@@ -4296,9 +4386,14 @@ GHashTable *
 fu_device_report_metadata_post (FuDevice *self)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GHashTable) metadata = NULL;
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), NULL);
+
+	/* fall back to the proxy */
+	if (klass->report_metadata_post == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* not implemented */
 	if (klass->report_metadata_post == NULL)
@@ -4323,8 +4418,13 @@ void
 fu_device_add_security_attrs (FuDevice *self, FuSecurityAttrs *attrs)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_if_fail (FU_IS_DEVICE (self));
+
+	/* fall back to the proxy */
+	if (klass->add_security_attrs == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* optional */
 	if (klass->add_security_attrs != NULL)
@@ -4352,11 +4452,16 @@ fu_device_bind_driver (FuDevice *self,
 		       GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (subsystem != NULL, FALSE);
 	g_return_val_if_fail (driver != NULL, FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* fall back to the proxy */
+	if (klass->bind_driver == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* not implemented */
 	if (klass->bind_driver == NULL) {
@@ -4390,9 +4495,14 @@ gboolean
 fu_device_unbind_driver (FuDevice *self, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+	/* fall back to the proxy */
+	if (klass->unbind_driver == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* not implemented */
 	if (klass->unbind_driver == NULL) {
@@ -4475,6 +4585,10 @@ fu_device_incorporate (FuDevice *self, FuDevice *donor)
 	/* set by the superclass */
 	if (fu_device_get_id (self) != NULL)
 		priv->device_id_valid = TRUE;
+
+	/* fall back to the proxy */
+	if (klass->incorporate == NULL && priv->proxy != NULL)
+		klass = FU_DEVICE_GET_CLASS(priv->proxy);
 
 	/* optional subclass */
 	if (klass->incorporate != NULL)
