@@ -17,12 +17,14 @@ G_DECLARE_FINAL_TYPE (FuRemoteList, fu_remote_list, FU, REMOTE_LIST, GObject)
  * FuRemoteListLoadFlags:
  * @FU_REMOTE_LIST_LOAD_FLAG_NONE:		No flags set
  * @FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS:	Ignore readonly filesystem errors
+ * @FU_REMOTE_LIST_LOAD_FLAG_NO_CACHE:		Do not save persistent xmlb silos
  *
  * The flags to use when loading a remote_listuration file.
  **/
 typedef enum {
 	FU_REMOTE_LIST_LOAD_FLAG_NONE		= 0,
 	FU_REMOTE_LIST_LOAD_FLAG_READONLY_FS	= 1 << 0,
+	FU_REMOTE_LIST_LOAD_FLAG_NO_CACHE	= 1 << 1,
 	/*< private >*/
 	FU_REMOTE_LIST_LOAD_FLAG_LAST
 } FuRemoteListLoadFlags;

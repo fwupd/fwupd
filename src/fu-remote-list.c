@@ -419,8 +419,6 @@ gboolean
 fu_remote_list_load (FuRemoteList *self, FuRemoteListLoadFlags flags, GError **error)
 {
 	const gchar *const *locales = g_get_language_names ();
-	g_autofree gchar *cachedirpkg = NULL;
-	g_autofree gchar *xmlbfn = NULL;
 	g_autoptr(GFile) xmlb = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new ();
 	XbBuilderCompileFlags compile_flags = XB_BUILDER_COMPILE_FLAG_SINGLE_LANG |
@@ -442,9 +440,16 @@ fu_remote_list_load (FuRemoteList *self, FuRemoteListLoadFlags flags, GError **e
 		compile_flags |= XB_BUILDER_COMPILE_FLAG_IGNORE_GUID;
 
 	/* build the metainfo silo */
-	cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
-	xmlbfn = g_build_filename (cachedirpkg, "metainfo.xmlb", NULL);
-	xmlb = g_file_new_for_path (xmlbfn);
+	if (flags & FU_REMOTE_LIST_LOAD_FLAG_NO_CACHE) {
+		g_autoptr(GFileIOStream) iostr = NULL;
+		xmlb = g_file_new_tmp (NULL, &iostr, error);
+		if (xmlb == NULL)
+			return FALSE;
+	} else {
+		g_autofree gchar *cachedirpkg = fu_common_get_path (FU_PATH_KIND_CACHEDIR_PKG);
+		g_autofree gchar *xmlbfn = g_build_filename (cachedirpkg, "metainfo.xmlb", NULL);
+		xmlb = g_file_new_for_path (xmlbfn);
+	}
 	self->silo = xb_builder_ensure (builder, xmlb, compile_flags, NULL, error);
 	if (self->silo == NULL)
 		return FALSE;
