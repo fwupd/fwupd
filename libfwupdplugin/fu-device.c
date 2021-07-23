@@ -3195,6 +3195,26 @@ fu_device_sleep_with_progress (FuDevice *self, guint delay_secs)
 	}
 }
 
+/**
+ * fu_device_set_update_state:
+ * @self: a #FuDevice
+ * @update_state: the state, e.g. %FWUPD_UPDATE_STATE_PENDING
+ *
+ * Sets the update state, clearing the update error as required.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_device_set_update_state (FuDevice *self, FwupdUpdateState update_state)
+{
+	g_return_if_fail (FU_IS_DEVICE (self));
+	if (update_state == FWUPD_UPDATE_STATE_SUCCESS ||
+	    update_state == FWUPD_UPDATE_STATE_PENDING ||
+	    update_state == FWUPD_UPDATE_STATE_NEEDS_REBOOT)
+		fu_device_set_update_error (self, NULL);
+	fwupd_device_set_update_state (FWUPD_DEVICE (self), update_state);
+}
+
 static void
 fu_device_ensure_battery_inhibit (FuDevice *self)
 {
