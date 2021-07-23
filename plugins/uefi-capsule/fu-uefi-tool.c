@@ -19,6 +19,7 @@
 #include "fu-uefi-backend.h"
 #include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
+#include "fu-uefi-grub-device.h"
 #include "fu-uefi-nvram-device.h"
 #include "fu-uefi-update-info.h"
 
@@ -169,7 +170,7 @@ main (int argc, char *argv[])
 	     &type,
 	     /* TRANSLATORS: command line option */
 	     _("Device update method"),
-	     "nvram|cod"},
+	     "nvram|cod|grub"},
 	    {"flags",
 	     'f',
 	     G_OPTION_FLAG_NONE,
@@ -395,6 +396,9 @@ main (int argc, char *argv[])
 			if (g_strcmp0(type, "nvram") == 0) {
 				fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(backend),
 								 FU_TYPE_UEFI_NVRAM_DEVICE);
+			} else if (g_strcmp0(type, "grub") == 0) {
+				fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(backend),
+								 FU_TYPE_UEFI_GRUB_DEVICE);
 			} else if (g_strcmp0(type, "cod") == 0) {
 				fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(backend),
 								 FU_TYPE_UEFI_COD_DEVICE);

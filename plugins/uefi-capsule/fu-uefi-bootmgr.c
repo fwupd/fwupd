@@ -247,51 +247,6 @@ fu_uefi_setup_bootnext_with_dp (const guint8 *dp_buf, guint8 *opt, gssize opt_si
 	return TRUE;
 }
 
-static gboolean
-fu_uefi_cmp_asset(const gchar *source, const gchar *target)
-{
-	gsize len = 0;
-	g_autofree gchar *source_checksum = NULL;
-	g_autofree gchar *source_data = NULL;
-	g_autofree gchar *target_checksum = NULL;
-	g_autofree gchar *target_data = NULL;
-
-	/* nothing in target yet */
-	if (!g_file_test(target, G_FILE_TEST_EXISTS))
-		return FALSE;
-
-	/* test if the file needs to be updated */
-	if (!g_file_get_contents(source, &source_data, &len, NULL))
-		return FALSE;
-	source_checksum =
-	    g_compute_checksum_for_data(G_CHECKSUM_SHA256, (guchar *)source_data, len);
-	if (!g_file_get_contents(target, &target_data, &len, NULL))
-		return FALSE;
-	target_checksum =
-	    g_compute_checksum_for_data(G_CHECKSUM_SHA256, (guchar *)target_data, len);
-	return g_strcmp0(target_checksum, source_checksum) == 0;
-}
-
-static gboolean
-fu_uefi_copy_asset(const gchar *source, const gchar *target, GError **error)
-{
-	g_autoptr(GFile) source_file = g_file_new_for_path(source);
-	g_autoptr(GFile) target_file = g_file_new_for_path(target);
-
-	if (!g_file_copy(source_file,
-			 target_file,
-			 G_FILE_COPY_OVERWRITE,
-			 NULL,
-			 NULL,
-			 NULL,
-			 error)) {
-		g_prefix_error(error, "Failed to copy %s to %s: ", source, target);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
 gboolean
 fu_uefi_bootmgr_bootnext (FuDevice *device,
 			   const gchar *esp_path,
