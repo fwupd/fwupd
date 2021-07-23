@@ -202,10 +202,10 @@ fu_common_store_from_cab_file (XbBuilder *builder, GCabCabinet *cabinet,
 				     "no GBytes from GCabFile");
 		return FALSE;
 	}
-	if (!xb_builder_source_load_xml (source,
-					 g_bytes_get_data (blob, NULL),
-					 XB_BUILDER_SOURCE_FLAG_NONE,
-					 &error_local)) {
+	if (!xb_builder_source_load_bytes (source,
+					   blob,
+					   XB_BUILDER_SOURCE_FLAG_NONE,
+					   &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
