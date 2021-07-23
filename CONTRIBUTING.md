@@ -55,3 +55,8 @@ from the PackageKit Coding Style.
 * Trailing whitespace is forbidden
 
 * Pointers should be checked for NULL explicitly, e.g. `foo != NULL` not `!foo`
+
+`./contrib/reformat-code.py` can be used in order to get automated
+formatting. Calling the script without arguments formats the current
+patch while passing filenames will do whole-file formatting on the
+specified files.
