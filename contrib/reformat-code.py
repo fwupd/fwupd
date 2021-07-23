@@ -11,8 +11,13 @@ import sys
 import subprocess
 
 CLANG_FORMATTERS = [
+    "clang-format-11",
     "clang-format-13",
     "clang-format",
+]
+CLANG_DIFF_FORMATTERS = [
+    "clang-format-diff-11",
+    "clang-format-diff-13",
 ]
 FIXUPS = {"g_autoptr (": "g_autoptr(", "sizeof (": "sizeof(", "g_auto (": "g_auto("}
 
@@ -21,21 +26,21 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Reformat code to match style")
     parser.add_argument("files", nargs="*", help="files to reformat")
     args = parser.parse_args()
-    if len(args.files) == 0:
-        parser.print_help()
-        sys.exit(0)
     return args
 
 
-def select_clang_version():
-    for formatter in CLANG_FORMATTERS:
+def select_clang_version(formatters):
+    for formatter in formatters:
         try:
-            ret = subprocess.check_call([formatter, "--version"])
+            ret = subprocess.check_call(
+                [formatter, "--help"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            )
             if ret == 0:
                 return formatter
         except FileNotFoundError:
             continue
-    return None
+    print("No clang formatter installed")
+    sys.exit(1)
 
 
 def reformat_file(formatter, f):
@@ -62,14 +67,9 @@ def reformat_file(formatter, f):
             wfd.writelines(formatted)
 
 
-## Entry Point ##
-if __name__ == "__main__":
-    args = parse_args()
-    formatter = select_clang_version()
-    if not formatter:
-        print("No clang formatter installed")
-        sys.exit(1)
-    for f in args.files:
+def reformat_files(files):
+    formatter = select_clang_version(CLANG_FORMATTERS)
+    for f in files:
         if not os.path.exists(f):
             print("%s does not exist" % f)
             sys.exit(1)
@@ -77,4 +77,43 @@ if __name__ == "__main__":
             print("Skipping %s" % f)
             continue
         reformat_file(formatter, f)
+
+
+def reformat_diff():
+    formatter = select_clang_version(CLANG_DIFF_FORMATTERS)
+    ret = subprocess.run(
+        ["git", "diff", "-U0", "HEAD"], capture_output=True, check=True, text=True
+    )
+    if ret.returncode:
+        print("Failed to run git diff")
+        sys.exit(1)
+    ret = subprocess.run(
+        [formatter, "-p1"], input=ret.stdout, capture_output=True, check=True, text=True
+    )
+    if ret.returncode:
+        print("Failed to run formatter")
+        sys.exit(1)
+    formatted = ret.stdout.splitlines(True)
+    for idx, line in enumerate(formatted):
+        if not line.startswith("+"):
+            continue
+        for fixup in FIXUPS:
+            if fixup in line:
+                formatted[idx] = line.replace(fixup, FIXUPS[fixup])
+    fixedup = "".join(formatted)
+    ret = subprocess.run(
+        ["patch", "-p0"], input=fixedup, capture_output=True, check=True, text=True
+    )
+    if ret.returncode:
+        print("Failed to run patch")
+        sys.exit(1)
+
+
+## Entry Point ##
+if __name__ == "__main__":
+    args = parse_args()
+    if len(args.files) == 0:
+        reformat_diff()
+    else:
+        reformat_files(args.files)
     sys.exit(0)
