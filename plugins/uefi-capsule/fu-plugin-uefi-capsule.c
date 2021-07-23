@@ -17,6 +17,7 @@
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
+#include "fu-uefi-grub-device.h"
 
 struct FuPluginData {
 	FuUefiBgrt		*bgrt;
@@ -530,6 +531,12 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 	/* some platforms have broken SMBIOS data */
 	if (fu_plugin_has_custom_flag (plugin, "uefi-force-enable"))
 		return TRUE;
+
+	/* use GRUB to load updates */
+	if (fu_plugin_get_config_value_boolean(plugin, "EnableGrubChainLoad")) {
+		fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(data->backend),
+						 FU_TYPE_UEFI_GRUB_DEVICE);
+	}
 
 	/* check we can use this backend */
 	if (!fu_backend_setup (data->backend, &error_local)) {

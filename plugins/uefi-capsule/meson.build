@@ -13,6 +13,16 @@ install_data(['uefi-capsule.quirk'],
 backend_srcs = ['fu-uefi-backend.c']
 if host_machine.system() == 'linux'
   backend_srcs += 'fu-uefi-backend-linux.c'
+  # replace @localstatedir@
+  con2 = configuration_data()
+  con2.set('localstatedir', localstatedir)
+  configure_file(
+    input : 'fwupd.grub.conf.in',
+    output : '35_fwupd',
+    configuration : con2,
+    install: true,
+    install_dir: join_paths(sysconfdir, 'grub.d')
+  )
 elif host_machine.system() == 'freebsd'
   backend_srcs += 'fu-uefi-backend-freebsd.c'
 else
@@ -29,6 +39,7 @@ shared_module('fu_plugin_uefi_capsule',
     'fu-uefi-common.c',
     'fu-uefi-cod-device.c',
     'fu-uefi-nvram-device.c',
+    'fu-uefi-grub-device.c',
     'fu-uefi-device.c',
     'fu-uefi-devpath.c',
     'fu-uefi-pcrs.c',
@@ -68,6 +79,7 @@ fwupdate = executable(
     'fu-uefi-device.c',
     'fu-uefi-cod-device.c',
     'fu-uefi-nvram-device.c',
+    'fu-uefi-grub-device.c',
     'fu-uefi-devpath.c',
     'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
@@ -151,6 +163,7 @@ if get_option('tests')
       'fu-uefi-device.c',
       'fu-uefi-cod-device.c',
       'fu-uefi-nvram-device.c',
+      'fu-uefi-grub-device.c',
       'fu-uefi-devpath.c',
       'fu-uefi-pcrs.c',
       'fu-uefi-update-info.c',

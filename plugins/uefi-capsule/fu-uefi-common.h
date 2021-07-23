@@ -76,3 +76,7 @@ gchar		*fu_uefi_get_esp_path_for_os	(FuDevice 	*device,
 						 const gchar	*esp_path);
 guint64		 fu_uefi_read_file_as_uint64	(const gchar	*path,
 						 const gchar	*attr_name);
+gboolean
+fu_uefi_cmp_asset(const gchar *source, const gchar *target);
+gboolean
+fu_uefi_copy_asset(const gchar *source, const gchar *target, GError **error);
