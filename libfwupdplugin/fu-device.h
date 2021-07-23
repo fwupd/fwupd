@@ -188,7 +188,6 @@ FuDevice	*fu_device_new_with_context		(FuContext	*ctx);
 #define fu_device_set_update_message(d,v)	fwupd_device_set_update_message(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_image(d,v)		fwupd_device_set_update_image(FWUPD_DEVICE(d),v)
 #define fu_device_set_update_error(d,v)		fwupd_device_set_update_error(FWUPD_DEVICE(d),v)
-#define fu_device_set_update_state(d,v)		fwupd_device_set_update_state(FWUPD_DEVICE(d),v)
 #define fu_device_add_vendor_id(d,v)		fwupd_device_add_vendor_id(FWUPD_DEVICE(d),v)
 #define fu_device_add_protocol(d,v)		fwupd_device_add_protocol(FWUPD_DEVICE(d),v)
 #define fu_device_set_version_raw(d,v)		fwupd_device_set_version_raw(FWUPD_DEVICE(d),v)
@@ -403,6 +402,8 @@ void		 fu_device_set_progress_full		(FuDevice	*self,
 							 gsize		 progress_total);
 void		 fu_device_sleep_with_progress		(FuDevice	*self,
 							 guint		 delay_secs);
+void		 fu_device_set_update_state		(FuDevice	*self,
+							 FwupdUpdateState update_state);
 void		 fu_device_set_context			(FuDevice	*self,
 							 FuContext	*ctx);
 FuContext	*fu_device_get_context			(FuDevice	*self);

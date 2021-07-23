@@ -6393,7 +6393,6 @@ fu_engine_update_history_device (FuEngine *self, FuDevice *dev_history, GError *
 		fu_device_set_version (dev_history, fu_device_get_version (dev));
 		fu_device_remove_flag (dev_history, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 		fu_device_set_update_state (dev_history, FWUPD_UPDATE_STATE_SUCCESS);
-		fu_device_set_update_error (dev_history, NULL);
 		return fu_history_modify_device (self->history, dev_history, error);
 	}
 
