@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-#include "fu-chunk.h"
+#include <fwupdplugin.h>
 
 #include "fu-goodixmoc-common.h"
 #include "fu-goodixmoc-device.h"
@@ -310,6 +310,10 @@ fu_goodixmoc_device_setup (FuDevice *device, GError **error)
 {
 	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE (device);
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_goodixmoc_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* ensure version */
 	if (!fu_goodixmoc_device_setup_version (self, error)) {
 		g_prefix_error (error, "failed to get firmware version: ");
@@ -415,7 +419,7 @@ fu_goodixmoc_device_init (FuGoodixMocDevice *self)
 	fu_device_set_remove_delay (FU_DEVICE(self), 5000);
 	fu_device_add_protocol (FU_DEVICE (self), "com.goodix.goodixmoc");
 	fu_device_set_name (FU_DEVICE(self), "Fingerprint Sensor");
-	fu_device_set_summary (FU_DEVICE(self), "Match-On-Chip Fingerprint Sensor");
+	fu_device_set_summary (FU_DEVICE(self), "Match-On-Chip fingerprint sensor");
 	fu_device_set_vendor (FU_DEVICE(self), "Goodix");
 	fu_device_set_install_duration (FU_DEVICE(self), 10);
 	fu_device_set_firmware_size_min (FU_DEVICE(self), 0x20000);

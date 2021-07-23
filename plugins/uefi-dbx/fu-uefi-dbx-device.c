@@ -6,9 +6,8 @@
 
 #include "config.h"
 
-#include "fu-efivar.h"
+#include <fwupdplugin.h>
 
-#include "fu-efi-signature.h"
 #include "fu-uefi-dbx-common.h"
 #include "fu-uefi-dbx-device.h"
 
@@ -139,7 +138,7 @@ fu_uefi_dbx_device_init (FuUefiDbxDevice *self)
 {
 	fu_device_set_physical_id (FU_DEVICE (self), "dbx");
 	fu_device_set_name (FU_DEVICE (self), "UEFI dbx");
-	fu_device_set_summary (FU_DEVICE (self), "UEFI Revocation Database");
+	fu_device_set_summary (FU_DEVICE (self), "UEFI revocation database");
 	fu_device_add_vendor_id (FU_DEVICE (self), "UEFI:Linux Foundation");
 	fu_device_add_protocol (FU_DEVICE (self), "org.uefi.dbx");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_NUMBER);
@@ -162,9 +161,9 @@ fu_uefi_dbx_device_class_init (FuUefiDbxDeviceClass *klass)
 }
 
 FuUefiDbxDevice *
-fu_uefi_dbx_device_new (void)
+fu_uefi_dbx_device_new (FuContext *ctx)
 {
 	FuUefiDbxDevice *self;
-	self = g_object_new (FU_TYPE_UEFI_DBX_DEVICE, NULL);
+	self = g_object_new (FU_TYPE_UEFI_DBX_DEVICE, "context", ctx, NULL);
 	return self;
 }

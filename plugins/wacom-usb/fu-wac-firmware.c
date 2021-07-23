@@ -6,14 +6,10 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-common.h"
-#include "fu-srec-firmware.h"
-#include "fu-firmware-common.h"
 #include "fu-wac-firmware.h"
-
-#include "fwupd-error.h"
 
 struct _FuWacFirmware {
 	FuFirmware		 parent_instance;

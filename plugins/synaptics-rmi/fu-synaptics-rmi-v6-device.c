@@ -8,10 +8,8 @@
 
 #include "config.h"
 
-#include "fu-common.h"
+#include <fwupdplugin.h>
 #include "fu-synaptics-rmi-v6-device.h"
-
-#include "fwupd-error.h"
 
 #define RMI_F34_CONFIG_BLOCKS_OFFSET			2
 

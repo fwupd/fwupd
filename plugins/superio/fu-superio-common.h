@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 /* for all LDNs */
 #define SIO_LDNxx_IDX_LDNSEL		0x07

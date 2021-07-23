@@ -5,8 +5,7 @@
  */
 
 /**
- * SECTION:fu-dfu-device
- * @short_description: Object representing a DFU-capable device
+ * FuDfuDevice:
  *
  * This object allows two things:
  *
@@ -17,41 +16,8 @@
  *    file. The file format is chosen automatically, with DfuSe being
  *    chosen if the device contains more than one target.
  *
- * See also: #FuDfuTarget, #FuDfuseFirmware
+ * See also: [class@FuDfuTarget], [class@FuDfuseFirmware]
  */
-
-/**
- * FU_QUIRKS_DFU_FLAGS:
- * @key: the USB device ID, e.g. `USB\VID_0763&PID_2806`
- * @value: a string, separated using `|`, e.g. `ignore-polltimeout|no-pid-change`
- *
- * Assigns optional quirks to use for a DFU device which does not follow the
- * DFU 1.0 or 1.1 specification. The list of supported quirks is thus:
- *
- * * `none`:			No device quirks
- * * `attach-extra-reset`:	Device needs resetting twice for attach
- * * `attach-upload-download`:	An upload or download is required for attach
- * * `force-dfu-mode`:		Force DFU mode
- * * `ignore-polltimeout`:	Ignore the device download timeout
- * * `ignore-runtime`:		Device has broken DFU runtime support
- * * `ignore-upload`:		Uploading from the device is broken
- * * `no-dfu-runtime`:		No DFU runtime interface is provided
- * * `no-get-status-upload`:	Do not do GetStatus when uploading
- * * `no-pid-change`:		Accept the same VID:PID when changing modes
- * * `use-any-interface`:	Use any interface for DFU
- * * `use-atmel-avr`:		Device uses the ATMEL bootloader
- * * `use-protocol-zero`:	Fix up the protocol number
- * * `legacy-protocol`:		Use a legacy protocol version
- * * `detach-for-attach`:	Requires a FU_DFU_REQUEST_DETACH to attach
- * * `absent-sector-size`:	In absence of sector size, assume byte
- * * `manifest-poll`:		Requires polling via GetStatus in dfuManifest state
- * * `no-bus-reset-attach`:	Do not require a bus reset to attach to normal
- *
- * Default value: `none`
- *
- * Since: 1.0.1
- */
-#define	FU_QUIRKS_DFU_FLAGS			"Flags"
 
 /**
  * FU_QUIRKS_DFU_FORCE_VERSION:
@@ -70,20 +36,14 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
 #include "fu-dfu-common.h"
 #include "fu-dfu-device.h"
 #include "fu-dfu-target-avr.h"
-#include "fu-dfu-target-private.h"
+#include "fu-dfu-target-private.h" /* waive-pre-commit */
 #include "fu-dfu-target-stm.h"
-
-#include "fu-device-locker.h"
-#include "fu-dfu-firmware-private.h"
-#include "fu-dfuse-firmware.h"
-#include "fu-firmware-common.h"
-
-#include "fwupd-error.h"
 
 static void fu_dfu_device_finalize			 (GObject *object);
 
@@ -164,7 +124,7 @@ fu_dfu_device_get_transfer_size (FuDfuDevice *self)
  *
  * Gets the DFU specification version supported by the device.
  *
- * Returns: integer, or 0 for unknown, e.g. %DFU_VERSION_DFU_1_1
+ * Returns: integer, or 0 for unknown, e.g. %FU_DFU_FIRMARE_VERSION_DFU_1_1
  **/
 guint16
 fu_dfu_device_get_version (FuDfuDevice *self)
@@ -233,7 +193,7 @@ fu_dfu_device_parse_iface_data (FuDfuDevice *self, GBytes *iface_data, GError **
 	} else if (sz == sizeof(DfuFuncDescriptor) - 2) {
 		g_warning ("truncated DFU interface data, no bcdDFUVersion");
 		memcpy (&desc, buf, sz);
-		desc.bcdDFUVersion = DFU_VERSION_DFU_1_1;
+		desc.bcdDFUVersion = FU_DFU_FIRMARE_VERSION_DFU_1_1;
 	} else {
 		g_autoptr(GString) bufstr = g_string_new (NULL);
 		for (gsize i = 0; i < sz; i++)
@@ -254,7 +214,7 @@ fu_dfu_device_parse_iface_data (FuDfuDevice *self, GBytes *iface_data, GError **
 	priv->version = GUINT16_FROM_LE (desc.bcdDFUVersion);
 
 	/* ST-specific */
-	if (priv->version == DFU_VERSION_DFUSE &&
+	if (priv->version == FU_DFU_FIRMARE_VERSION_DFUSE &&
 	    desc.bmAttributes & FU_DFU_DEVICE_ATTR_CAN_ACCELERATE)
 		priv->transfer_size = 0x1000;
 
@@ -267,7 +227,7 @@ static void
 fu_dfu_device_guess_state_from_iface (FuDfuDevice *self, GUsbInterface *iface)
 {
 	/* some devices use the wrong interface */
-	if (fu_device_has_custom_flag (FU_DEVICE (self), "force-dfu-mode")) {
+	if (fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_FORCE_DFU_MODE)) {
 		g_debug ("quirking device into DFU mode");
 		fu_dfu_device_set_state (self, FU_DFU_STATE_DFU_IDLE);
 		return;
@@ -308,7 +268,7 @@ fu_dfu_device_add_targets (FuDfuDevice *self, GError **error)
 		GUsbInterface *iface = g_ptr_array_index (ifaces, i);
 
 		/* some devices don't use the right class and subclass */
-		if (!fu_device_has_custom_flag (FU_DEVICE (self), "use-any-interface")) {
+		if (fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE)) {
 			if (g_usb_interface_get_class (iface) != G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
 				continue;
 			if (g_usb_interface_get_subclass (iface) != 0x01)
@@ -332,24 +292,24 @@ fu_dfu_device_add_targets (FuDfuDevice *self, GError **error)
 		/* fix up the version */
 		if (priv->force_version > 0)
 			priv->version = priv->force_version;
-		if (priv->version == DFU_VERSION_DFU_1_0 ||
-		    priv->version == DFU_VERSION_DFU_1_1) {
+		if (priv->version == FU_DFU_FIRMARE_VERSION_DFU_1_0 ||
+		    priv->version == FU_DFU_FIRMARE_VERSION_DFU_1_1) {
 			g_debug ("DFU v1.1");
-		} else if (priv->version == DFU_VERSION_ATMEL_AVR) {
+		} else if (priv->version == FU_DFU_FIRMARE_VERSION_ATMEL_AVR) {
 			g_debug ("AVR-DFU support");
-			priv->version = DFU_VERSION_ATMEL_AVR;
-		} else if (priv->version == DFU_VERSION_DFUSE) {
+			priv->version = FU_DFU_FIRMARE_VERSION_ATMEL_AVR;
+		} else if (priv->version == FU_DFU_FIRMARE_VERSION_DFUSE) {
 			g_debug ("STM-DFU support");
 		} else if (priv->version == 0x0101) {
 			g_debug ("DFU v1.1 assumed");
-			priv->version = DFU_VERSION_DFU_1_1;
+			priv->version = FU_DFU_FIRMARE_VERSION_DFU_1_1;
 		} else {
 			g_warning ("DFU version 0x%04x invalid, v1.1 assumed", priv->version);
-			priv->version = DFU_VERSION_DFU_1_1;
+			priv->version = FU_DFU_FIRMARE_VERSION_DFU_1_1;
 		}
 
 		/* set expected protocol */
-		if (priv->version == DFU_VERSION_DFUSE) {
+		if (priv->version == FU_DFU_FIRMARE_VERSION_DFUSE) {
 			fu_device_add_protocol (FU_DEVICE (self), "com.st.dfuse");
 		} else {
 			fu_device_add_protocol (FU_DEVICE (self), "org.usb.dfu");
@@ -372,10 +332,10 @@ fu_dfu_device_add_targets (FuDfuDevice *self, GError **error)
 
 		/* create a target of the required type */
 		switch (priv->version) {
-		case DFU_VERSION_DFUSE:
+		case FU_DFU_FIRMARE_VERSION_DFUSE:
 			target = fu_dfu_target_stm_new ();
 			break;
-		case DFU_VERSION_ATMEL_AVR:
+		case FU_DFU_FIRMARE_VERSION_ATMEL_AVR:
 			target = fu_dfu_target_avr_new ();
 			break;
 		default:
@@ -394,7 +354,7 @@ fu_dfu_device_add_targets (FuDfuDevice *self, GError **error)
 
 	/* save for reset */
 	if (priv->state == FU_DFU_STATE_APP_IDLE ||
-	    fu_device_has_custom_flag (FU_DEVICE (self), "no-pid-change")) {
+	    fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_NO_PID_CHANGE)) {
 		priv->runtime_vid = g_usb_device_get_vid (usb_device);
 		priv->runtime_pid = g_usb_device_get_pid (usb_device);
 		priv->runtime_release = g_usb_device_get_release (usb_device);
@@ -402,7 +362,7 @@ fu_dfu_device_add_targets (FuDfuDevice *self, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->targets->len == 0 &&
-	    fu_device_has_custom_flag (FU_DEVICE (self), "no-dfu-runtime")) {
+	    fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME)) {
 		g_debug ("no DFU runtime, so faking device");
 		fu_dfu_device_set_state (self, FU_DFU_STATE_APP_IDLE);
 		priv->iface_number = 0xff;
@@ -424,7 +384,7 @@ fu_dfu_device_add_targets (FuDfuDevice *self, GError **error)
 	}
 
 	/* the device upload is broken */
-	if (fu_device_has_custom_flag (FU_DEVICE (self), "ignore-upload"))
+	if (fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_IGNORE_UPLOAD))
 		priv->attributes &= ~FU_DFU_DEVICE_ATTR_CAN_UPLOAD;
 
 	return TRUE;
@@ -871,7 +831,7 @@ fu_dfu_device_refresh (FuDfuDevice *self, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
-	    fu_device_has_custom_flag (FU_DEVICE (self), "no-dfu-runtime"))
+	    fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME))
 		return TRUE;
 
 	/* ensure interface is claimed */
@@ -914,7 +874,7 @@ fu_dfu_device_refresh (FuDfuDevice *self, GError **error)
 	}
 
 	/* some devices use the wrong state value */
-	if (fu_device_has_custom_flag (FU_DEVICE (self), "force-dfu-mode") &&
+	if (fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_FORCE_DFU_MODE) &&
 	    fu_dfu_device_get_state (self) != FU_DFU_STATE_DFU_IDLE) {
 		g_debug ("quirking device into DFU mode");
 		fu_dfu_device_set_state (self, FU_DFU_STATE_DFU_IDLE);
@@ -924,7 +884,7 @@ fu_dfu_device_refresh (FuDfuDevice *self, GError **error)
 
 	/* status or state changed */
 	fu_dfu_device_set_status (self, buf[0]);
-	if (fu_device_has_custom_flag (FU_DEVICE (self), "ignore-polltimeout")) {
+	if (fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_IGNORE_POLLTIMEOUT)) {
 		priv->dnload_timeout = DFU_DEVICE_DNLOAD_TIMEOUT_DEFAULT;
 	} else {
 		priv->dnload_timeout = buf[1] +
@@ -1019,7 +979,7 @@ fu_dfu_device_detach (FuDevice *device, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
-	    fu_device_has_custom_flag (FU_DEVICE (self), "no-dfu-runtime"))
+	    fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME))
 		return TRUE;
 
 	/* ensure interface is claimed */
@@ -1076,7 +1036,7 @@ fu_dfu_device_abort (FuDfuDevice *self, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
-	    fu_device_has_custom_flag (FU_DEVICE (self), "no-dfu-runtime")) {
+	    fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1143,7 +1103,7 @@ fu_dfu_device_clear_status (FuDfuDevice *self, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
-	    fu_device_has_custom_flag (FU_DEVICE (self), "no-dfu-runtime")) {
+	    fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NOT_SUPPORTED,
@@ -1217,14 +1177,14 @@ fu_dfu_device_open (FuDevice *device, GError **error)
 
 	/* the device has no DFU runtime, so cheat */
 	if (priv->state == FU_DFU_STATE_APP_IDLE &&
-	    fu_device_has_custom_flag (device, "no-dfu-runtime")) {
+	    fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME)) {
 		fu_dfu_device_set_state (self, FU_DFU_STATE_APP_IDLE);
 		priv->status = FU_DFU_STATUS_OK;
 	}
 
 	/* GD32VF103 encodes the serial number in UTF-8 (rather than UTF-16)
 	 * and also uses the first two bytes as the model identifier */
-	if (fu_device_has_custom_flag (FU_DEVICE (device), "gd32")) {
+	if (fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_GD32)) {
 #if G_USB_CHECK_VERSION(0,3,6)
 		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 		const guint8 *buf;
@@ -1343,7 +1303,7 @@ fu_dfu_device_probe (FuDevice *device, GError **error)
 
 	/* hardware from Jabra literally reboots if you try to retry a failed
 	 * write -- there's no way to avoid blocking the daemon like this... */
-	if (fu_device_has_custom_flag (device, "attach-extra-reset"))
+	if (fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET))
 		fu_device_sleep_with_progress (device, 10); /* seconds */
 
 	/* success */
@@ -1412,7 +1372,7 @@ fu_dfu_device_attach (FuDevice *device, GError **error)
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 
 	/* handle weirdness */
-	if (fu_device_has_custom_flag (device, "detach-for-attach")) {
+	if (fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_DETACH_FOR_ATTACH)) {
 		if (!fu_dfu_device_request_detach (self, error))
 			return FALSE;
 		fu_device_set_status (device, FWUPD_STATUS_IDLE);
@@ -1422,7 +1382,7 @@ fu_dfu_device_attach (FuDevice *device, GError **error)
 
 	/* handle m-stack DFU bootloaders */
 	if (!priv->done_upload_or_download &&
-	    fu_device_has_custom_flag (device, "attach-upload-download")) {
+	    fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_ATTACH_UPLOAD_DOWNLOAD)) {
 		g_autoptr(GBytes) chunk = NULL;
 		g_autoptr(FuDfuTarget) target_zero = NULL;
 		g_debug ("doing dummy upload to work around m-stack quirk");
@@ -1440,7 +1400,7 @@ fu_dfu_device_attach (FuDevice *device, GError **error)
 		return FALSE;
 
 	/* normal DFU mode just needs a bus reset */
-	if (fu_device_has_custom_flag (device, "no-bus-reset-attach") &&
+	if (fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH) &&
 	    fu_dfu_device_has_attribute (self, FU_DFU_DEVICE_ATTR_WILL_DETACH))
 		g_debug ("Bus reset is not required. Device will reboot to normal");
 	else if (!fu_dfu_target_attach (target, error))
@@ -1950,4 +1910,59 @@ fu_dfu_device_init (FuDfuDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET,
+					 "attach-extra-reset");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_ATTACH_UPLOAD_DOWNLOAD,
+					 "attach-upload-download");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_FORCE_DFU_MODE,
+					 "force-dfu-mode");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_IGNORE_POLLTIMEOUT,
+					 "ignore-polltimeout");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_IGNORE_RUNTIME,
+					 "ignore-runtime");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_IGNORE_UPLOAD,
+					 "ignore-upload");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_NO_DFU_RUNTIME,
+					 "no-dfu-runtime");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_NO_GET_STATUS_UPLOAD,
+					 "no-get-status-upload");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_NO_PID_CHANGE,
+					 "no-pid-change");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE,
+					 "use-any-interface");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_USE_ATMEL_AVR,
+					 "use-atmel-avr");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_USE_PROTOCOL_ZERO,
+					 "use-protocol-zero");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL,
+					 "legacy-protocol");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_DETACH_FOR_ATTACH,
+					 "detach-for-attach");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_ABSENT_SECTOR_SIZE,
+					 "absent-sector-size");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_MANIFEST_POLL,
+					 "manifest-poll");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH,
+					 "no-bus-reset-attach");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DFU_DEVICE_FLAG_GD32,
+					 "gd32");
 }

@@ -7,11 +7,8 @@
 
 #pragma once
 
+#include <fwupdplugin.h>
 #include <glib.h>
-
-#include "fwupd-common.h"
-
-#include "fu-device.h"
 
 #define EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET	0x00010000
 #define EFI_CAPSULE_HEADER_FLAGS_POPULATE_SYSTEM_TABLE	0x00020000

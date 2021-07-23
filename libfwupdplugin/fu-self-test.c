@@ -8,7 +8,6 @@
 
 #include <string.h>
 #include <xmlb.h>
-#include <fwupd.h>
 #include <fwupdplugin.h>
 #include <libgcab.h>
 #include <glib/gstdio.h>
@@ -17,6 +16,11 @@
 #include "fu-common-private.h"
 #include "fu-context-private.h"
 #include "fu-device-private.h"
+#include "fu-efi-firmware-file.h"
+#include "fu-efi-firmware-filesystem.h"
+#include "fu-efi-firmware-section.h"
+#include "fu-efi-firmware-volume.h"
+#include "fu-ifd-image.h"
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
@@ -235,6 +239,25 @@ fu_device_open_refcount_func (void)
 	ret = fu_device_close (device, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
 	g_assert_false (ret);
+}
+
+static void
+fu_device_name_func (void)
+{
+	g_autoptr(FuDevice) device1 = fu_device_new ();
+	g_autoptr(FuDevice) device2 = fu_device_new ();
+
+	/* vendor then name */
+	fu_device_set_vendor (device1, "Hughski");
+	fu_device_set_name (device1, "Hughski ColorHug(TM)_Pro");
+	g_assert_cmpstr (fu_device_get_vendor (device1), ==, "Hughski");
+	g_assert_cmpstr (fu_device_get_name (device1), ==, "ColorHug™ Pro");
+
+	/* name then vendor */
+	fu_device_set_name (device2, "Hughski ColorHug(TM)_Pro");
+	fu_device_set_vendor (device2, "Hughski");
+	g_assert_cmpstr (fu_device_get_vendor (device2), ==, "Hughski");
+	g_assert_cmpstr (fu_device_get_name (device2), ==, "ColorHug™ Pro");
 }
 
 static void
@@ -472,6 +495,7 @@ static void
 fu_plugin_devices_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) child = fu_device_new ();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new (NULL);
 	GPtrArray *devices;
 
@@ -480,10 +504,58 @@ fu_plugin_devices_func (void)
 	g_assert_cmpint (devices->len, ==, 0);
 
 	fu_device_set_id (device, "testdev");
+	fu_device_set_name (device, "testdev");
 	fu_plugin_device_add (plugin, device);
 	g_assert_cmpint (devices->len, ==, 1);
 	fu_plugin_device_remove (plugin, device);
 	g_assert_cmpint (devices->len, ==, 0);
+
+	/* add a child after adding the parent to the plugin */
+	fu_device_set_id (child, "child");
+	fu_device_set_name (child, "child");
+	fu_device_add_child (device, child);
+	g_assert_cmpint (devices->len, ==, 1);
+
+	/* remove said child */
+	fu_device_remove_child (device, child);
+	g_assert_cmpint (devices->len, ==, 0);
+}
+
+static void
+fu_plugin_device_inhibit_children_func (void)
+{
+	g_autoptr(FuDevice) parent = fu_device_new ();
+	g_autoptr(FuDevice) child1 = fu_device_new ();
+	g_autoptr(FuDevice) child2 = fu_device_new ();
+
+	fu_device_set_id (parent, "testdev");
+	fu_device_set_name (parent, "testdev");
+	fu_device_add_flag (parent, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_id (child1, "child1");
+	fu_device_set_name (child1, "child1");
+	fu_device_add_flag (child1, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_child (parent, child1);
+
+	/* inhibit the parent */
+	fu_device_inhibit (parent, "test", "because");
+	g_assert_false (fu_device_has_flag (parent, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_true (fu_device_has_flag (child1, FWUPD_DEVICE_FLAG_UPDATABLE));
+	fu_device_uninhibit (parent, "test");
+
+	/* make the inhibit propagate to children */
+	fu_device_add_internal_flag (parent, FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN);
+	fu_device_inhibit (parent, "test", "because");
+	g_assert_false (fu_device_has_flag (parent, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false (fu_device_has_flag (child1, FWUPD_DEVICE_FLAG_UPDATABLE));
+
+	/* add a child after the inhibit, which should also be inhibited too */
+	fu_device_set_id (child2, "child2");
+	fu_device_set_name (child2, "child2");
+	fu_device_add_flag (child2, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_child (parent, child2);
+	g_assert_false (fu_device_has_flag (parent, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false (fu_device_has_flag (child1, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false (fu_device_has_flag (child2, FWUPD_DEVICE_FLAG_UPDATABLE));
 }
 
 static void
@@ -524,7 +596,7 @@ fu_plugin_quirks_func (void)
 	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NONE, &error);
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -554,7 +626,7 @@ fu_plugin_quirks_performance_func (void)
 	g_autoptr(GError) error = NULL;
 	const gchar *keys[] = { "Name", "Children", "Flags", NULL };
 
-	ret = fu_quirks_load (quirks, FU_QUIRKS_LOAD_FLAG_NONE, &error);
+	ret = fu_quirks_load (quirks, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -580,7 +652,7 @@ fu_plugin_quirks_device_func (void)
 	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(GError) error = NULL;
 
-	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NONE, &error);
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -1308,8 +1380,14 @@ static void
 fu_device_instance_ids_func (void)
 {
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuContext) ctx = fu_context_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (ctx);
 	g_autoptr(GError) error = NULL;
+
+	/* do not save silo */
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 
 	/* sanity check */
 	g_assert_false (fu_device_has_guid (device, "c0a26214-223b-572a-9477-cde897fe8619"));
@@ -1391,10 +1469,51 @@ fu_device_inhibit_func (void)
 	g_assert_false (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 }
 
+#define TEST_FLAG_FOO	(1 << 0)
+#define TEST_FLAG_BAR	(1 << 1)
+#define TEST_FLAG_BAZ	(1 << 2)
+
+static void
+fu_device_private_flags_func (void)
+{
+	g_autofree gchar *tmp = NULL;
+	g_autoptr(FuDevice) device = fu_device_new ();
+
+	fu_device_register_private_flag (device, TEST_FLAG_FOO, "foo");
+	fu_device_register_private_flag (device, TEST_FLAG_BAR, "bar");
+
+	fu_device_set_custom_flags (device, "foo");
+	g_assert_cmpint (fu_device_get_private_flags (device), ==, TEST_FLAG_FOO);
+	fu_device_set_custom_flags (device, "bar");
+	g_assert_cmpint (fu_device_get_private_flags (device), ==, TEST_FLAG_FOO | TEST_FLAG_BAR);
+	fu_device_set_custom_flags (device, "~bar");
+	g_assert_cmpint (fu_device_get_private_flags (device), ==, TEST_FLAG_FOO);
+	fu_device_set_custom_flags (device, "baz");
+	g_assert_cmpint (fu_device_get_private_flags (device), ==, TEST_FLAG_FOO);
+	fu_device_add_private_flag (device, TEST_FLAG_BAZ);
+	g_assert_cmpint (fu_device_get_private_flags (device), ==, TEST_FLAG_FOO | TEST_FLAG_BAZ);
+
+	tmp = fu_device_to_string (device);
+	g_assert_cmpstr (tmp, ==,
+		"FuDevice:\n"
+		"Unknown Device\n"
+		"  Flags:                none\n"
+		"  CustomFlags:          baz\n" /* compat */
+		"  PrivateFlags:         foo\n");
+}
+
 static void
 fu_device_flags_func (void)
 {
 	g_autoptr(FuDevice) device = fu_device_new ();
+
+	/* bitfield */
+	for (guint64 i = 1; i < FU_DEVICE_INTERNAL_FLAG_UNKNOWN; i *= 2) {
+		const gchar *tmp = fu_device_internal_flag_to_string (i);
+		if (tmp == NULL)
+			break;
+		g_assert_cmpint (fu_device_internal_flag_from_string (tmp), ==, i);
+	}
 
 	g_assert_cmpint (fu_device_get_flags (device), ==, FWUPD_DEVICE_FLAG_NONE);
 
@@ -1423,9 +1542,15 @@ static void
 fu_device_children_func (void)
 {
 	gboolean ret;
+	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(FuDevice) child = fu_device_new ();
-	g_autoptr(FuDevice) parent = fu_device_new ();
+	g_autoptr(FuDevice) parent = fu_device_new_with_context (ctx);
 	g_autoptr(GError) error = NULL;
+
+	/* do not save silo */
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 
 	fu_device_set_physical_id (child, "dummy");
 	fu_device_set_physical_id (parent, "dummy");
@@ -2856,10 +2981,191 @@ fu_firmware_fmap_xml_func (void)
 	g_assert_cmpstr (csum1, ==, csum2);
 }
 
+static void
+fu_efi_firmware_section_xml_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *csum1 = NULL;
+	g_autofree gchar *csum2 = NULL;
+	g_autofree gchar *xml_out = NULL;
+	g_autofree gchar *xml_src = NULL;
+	g_autoptr(FuFirmware) firmware1 = fu_efi_firmware_section_new ();
+	g_autoptr(FuFirmware) firmware2 = fu_efi_firmware_section_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* build and write */
+	ret = g_file_get_contents (FWUPD_FUZZINGSRCDIR "/efi-firmware-section.builder.xml",
+				   &xml_src, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_firmware_build_from_xml (firmware1, xml_src, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum1 = fu_firmware_get_checksum (firmware1, G_CHECKSUM_SHA1, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (csum1, ==, "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
+
+	/* ensure we can round-trip */
+	xml_out = fu_firmware_export_to_xml (firmware1,
+					     FU_FIRMWARE_EXPORT_FLAG_NONE,
+					     &error);
+	g_assert_no_error (error);
+	ret = fu_firmware_build_from_xml (firmware2, xml_out, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum2 = fu_firmware_get_checksum (firmware2, G_CHECKSUM_SHA1, &error);
+	g_assert_cmpstr (csum1, ==, csum2);
+}
+
+static void
+fu_efi_firmware_file_xml_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *csum1 = NULL;
+	g_autofree gchar *csum2 = NULL;
+	g_autofree gchar *xml_out = NULL;
+	g_autofree gchar *xml_src = NULL;
+	g_autoptr(FuFirmware) firmware1 = fu_efi_firmware_file_new ();
+	g_autoptr(FuFirmware) firmware2 = fu_efi_firmware_file_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* build and write */
+	ret = g_file_get_contents (FWUPD_FUZZINGSRCDIR "/efi-firmware-file.builder.xml",
+				   &xml_src, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_firmware_build_from_xml (firmware1, xml_src, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum1 = fu_firmware_get_checksum (firmware1, G_CHECKSUM_SHA1, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (csum1, ==, "1002c14b29a76069f3b7e35c50a55d2b0d197441");
+
+	/* ensure we can round-trip */
+	xml_out = fu_firmware_export_to_xml (firmware1,
+					     FU_FIRMWARE_EXPORT_FLAG_NONE,
+					     &error);
+	g_assert_no_error (error);
+	ret = fu_firmware_build_from_xml (firmware2, xml_out, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum2 = fu_firmware_get_checksum (firmware2, G_CHECKSUM_SHA1, &error);
+	g_assert_cmpstr (csum1, ==, csum2);
+}
+
+static void
+fu_efi_firmware_filesystem_xml_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *csum1 = NULL;
+	g_autofree gchar *csum2 = NULL;
+	g_autofree gchar *xml_out = NULL;
+	g_autofree gchar *xml_src = NULL;
+	g_autoptr(FuFirmware) firmware1 = fu_efi_firmware_filesystem_new ();
+	g_autoptr(FuFirmware) firmware2 = fu_efi_firmware_filesystem_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* build and write */
+	ret = g_file_get_contents (FWUPD_FUZZINGSRCDIR "/efi-firmware-filesystem.builder.xml",
+				   &xml_src, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_firmware_build_from_xml (firmware1, xml_src, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum1 = fu_firmware_get_checksum (firmware1, G_CHECKSUM_SHA1, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (csum1, ==, "d6fbadc1c303a3b4eede9db7fb0ddb353efffc86");
+
+	/* ensure we can round-trip */
+	xml_out = fu_firmware_export_to_xml (firmware1,
+					     FU_FIRMWARE_EXPORT_FLAG_NONE,
+					     &error);
+	g_assert_no_error (error);
+	ret = fu_firmware_build_from_xml (firmware2, xml_out, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum2 = fu_firmware_get_checksum (firmware2, G_CHECKSUM_SHA1, &error);
+	g_assert_cmpstr (csum1, ==, csum2);
+}
+
+static void
+fu_efi_firmware_volume_xml_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *csum1 = NULL;
+	g_autofree gchar *csum2 = NULL;
+	g_autofree gchar *xml_out = NULL;
+	g_autofree gchar *xml_src = NULL;
+	g_autoptr(FuFirmware) firmware1 = fu_efi_firmware_volume_new ();
+	g_autoptr(FuFirmware) firmware2 = fu_efi_firmware_volume_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* build and write */
+	ret = g_file_get_contents (FWUPD_FUZZINGSRCDIR "/efi-firmware-volume.builder.xml",
+				   &xml_src, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_firmware_build_from_xml (firmware1, xml_src, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum1 = fu_firmware_get_checksum (firmware1, G_CHECKSUM_SHA1, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (csum1, ==, "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed");
+
+	/* ensure we can round-trip */
+	xml_out = fu_firmware_export_to_xml (firmware1,
+					     FU_FIRMWARE_EXPORT_FLAG_NONE,
+					     &error);
+	g_assert_no_error (error);
+	ret = fu_firmware_build_from_xml (firmware2, xml_out, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum2 = fu_firmware_get_checksum (firmware2, G_CHECKSUM_SHA1, &error);
+	g_assert_cmpstr (csum1, ==, csum2);
+}
+
+static void
+fu_ifd_image_xml_func (void)
+{
+	gboolean ret;
+	g_autofree gchar *csum1 = NULL;
+	g_autofree gchar *csum2 = NULL;
+	g_autofree gchar *xml_out = NULL;
+	g_autofree gchar *xml_src = NULL;
+	g_autoptr(FuFirmware) firmware1 = fu_ifd_image_new ();
+	g_autoptr(FuFirmware) firmware2 = fu_ifd_image_new ();
+	g_autoptr(GError) error = NULL;
+
+	/* build and write */
+	ret = g_file_get_contents (FWUPD_FUZZINGSRCDIR "/ifd.builder.xml",
+				   &xml_src, NULL, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	ret = fu_firmware_build_from_xml (firmware1, xml_src, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum1 = fu_firmware_get_checksum (firmware1, G_CHECKSUM_SHA1, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (csum1, ==, "aebfb3845c9bc638de30360f5ece156958918ca2");
+
+	/* ensure we can round-trip */
+	xml_out = fu_firmware_export_to_xml (firmware1,
+					     FU_FIRMWARE_EXPORT_FLAG_NONE,
+					     &error);
+	g_assert_no_error (error);
+	ret = fu_firmware_build_from_xml (firmware2, xml_out, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+	csum2 = fu_firmware_get_checksum (firmware2, G_CHECKSUM_SHA1, &error);
+	g_assert_cmpstr (csum1, ==, csum2);
+}
+
 int
 main (int argc, char **argv)
 {
 	g_test_init (&argc, &argv, NULL);
+	g_type_ensure (FU_TYPE_IFD_BIOS);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
@@ -2873,6 +3179,7 @@ main (int argc, char **argv)
 
 	g_test_add_func ("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
 	g_test_add_func ("/fwupd/plugin{devices}", fu_plugin_devices_func);
+	g_test_add_func ("/fwupd/plugin{device-inhibit-children}", fu_plugin_device_inhibit_children_func);
 	g_test_add_func ("/fwupd/plugin{delay}", fu_plugin_delay_func);
 	g_test_add_func ("/fwupd/plugin{quirks}", fu_plugin_quirks_func);
 	g_test_add_func ("/fwupd/plugin{quirks-performance}", fu_plugin_quirks_performance_func);
@@ -2935,6 +3242,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/device{instance-ids}", fu_device_instance_ids_func);
 	g_test_add_func ("/fwupd/device{composite-id}", fu_device_composite_id_func);
 	g_test_add_func ("/fwupd/device{flags}", fu_device_flags_func);
+	g_test_add_func ("/fwupd/device{custom-flags}", fu_device_private_flags_func);
 	g_test_add_func ("/fwupd/device{inhibit}", fu_device_inhibit_func);
 	g_test_add_func ("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func ("/fwupd/device{children}", fu_device_children_func);
@@ -2943,11 +3251,17 @@ main (int argc, char **argv)
 		g_test_add_func ("/fwupd/device{poll}", fu_device_poll_func);
 	g_test_add_func ("/fwupd/device-locker{success}", fu_device_locker_func);
 	g_test_add_func ("/fwupd/device-locker{fail}", fu_device_locker_fail_func);
+	g_test_add_func ("/fwupd/device{name}", fu_device_name_func);
 	g_test_add_func ("/fwupd/device{metadata}", fu_device_metadata_func);
 	g_test_add_func ("/fwupd/device{open-refcount}", fu_device_open_refcount_func);
 	g_test_add_func ("/fwupd/device{version-format}", fu_device_version_format_func);
 	g_test_add_func ("/fwupd/device{retry-success}", fu_device_retry_success_func);
 	g_test_add_func ("/fwupd/device{retry-failed}", fu_device_retry_failed_func);
 	g_test_add_func ("/fwupd/device{retry-hardware}", fu_device_retry_hardware_func);
+	g_test_add_func ("/efi/firmware-section{xml}", fu_efi_firmware_section_xml_func);
+	g_test_add_func ("/efi/firmware-file{xml}", fu_efi_firmware_file_xml_func);
+	g_test_add_func ("/efi/firmware-filesystem{xml}", fu_efi_firmware_filesystem_xml_func);
+	g_test_add_func ("/efi/firmware-volume{xml}", fu_efi_firmware_volume_xml_func);
+	g_test_add_func ("/ifd/image{xml}", fu_ifd_image_xml_func);
 	return g_test_run ();
 }

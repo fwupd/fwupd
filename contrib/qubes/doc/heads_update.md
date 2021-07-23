@@ -16,7 +16,7 @@ will allow updates for other hardware.
 
 At first run the qubes-fwupd Heads update.
 
-```
+```shell
 sudo qubes-fwupdmgr update-heads --device=x230
 ```
 
@@ -42,7 +42,6 @@ Select a ROM file.
 
 Press yes to confirm the choice. The Heads update will begin.
 
-
 ![img](img/heads_flash_rom.jpg)
 
 Wait until the end of the update process.
@@ -60,6 +59,5 @@ privileges.
 
 ### Qubes OS R4.1
 
-```
+```shell
 # python3 -m unittest -v test.test_qubes_fwupd_heads
-```

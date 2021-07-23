@@ -1,8 +1,6 @@
-Altos Support
-=============
+# Altos
 
-Introduction
-------------
+## Introduction
 
 Altos is a 8051 operating system for Altus-Metrum projects.
 The ChaosKey is a hardware random number generator that attaches via USB.
@@ -15,27 +13,24 @@ The bootloader communication is not handled in the kernel, and a tty device is
 created so userspace can communicate with the hardware. Commands the bootloader
 accept are as follows:
 
-Firmware Format
----------------
+## Firmware Format
 
 The daemon will decompress the cabinet archive and extract a firmware blob in
 ELF file format. The firmware image is inserted into the `.text` section.
 
 This plugin supports the following protocol ID:
 
- * org.altusmetrum.altos
+* org.altusmetrum.altos
 
-GUID Generation
----------------
+## GUID Generation
 
 These devices use the standard USB DeviceInstanceId values, e.g.
 
- * `USB\VID_1D50&PID_60C6&REV_0001`
- * `USB\VID_1D50&PID_60C6`
- * `USB\VID_1D50`
+* `USB\VID_1D50&PID_60C6&REV_0001`
+* `USB\VID_1D50&PID_60C6`
+* `USB\VID_1D50`
 
-Update Behavior
----------------
+## Update Behavior
 
 The device usually presents in runtime mode, but on detach re-enumerates with a
 different USB PID in a bootloader mode. On attach the device again re-enumerates
@@ -44,21 +39,26 @@ back to the runtime mode.
 For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
 the bootloader and runtime modes are treated as the same device.
 
-Vendor ID Security
-------------------
+## Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x1D50`
+
+## External Interface Access
+
+This plugin requires read/write access to `/dev/bus/usb`.
 
 ### List Information
 
 Command:    `l\n`
 Several lines of text about the device are transferred to the host, e.g.
 
+```text
     altos-loader
     manufacturer     altusmetrum.org
     product          AltosFlash
     flash-range      08001000 08008000
     software-version 1.6.8
+```
 
 There doesn't appear to be any kind of end-of-message signal.
 
@@ -77,7 +77,3 @@ Command:    `W $addr\n` where `$addr` is a memory address `0x8001000->0x8008000`
 Command:    `v\n`
 The device will reboot into application mode. This is typically performed after
 flashing firmware completes successfully.
-
-External interface access
--------------------------
-This plugin requires read/write access to `/dev/bus/usb`.

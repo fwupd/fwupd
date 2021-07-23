@@ -543,6 +543,7 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <!-- TODO: Drop build dependency after switching to gidoc-gen -->
   <dependency type="build" id="gtk-doc-tools">
     <distro id="arch">
       <package>gtk-doc</package>
@@ -557,16 +558,6 @@
       <control />
       <package variant="x86_64" />
       <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
-  <!-- TODO: Drop help2man build dependency after 1.6.0 release -->
-  <dependency type="build" id="help2man">
-    <distro id="arch">
-      <package />
     </distro>
     <distro id="ubuntu">
       <control />
@@ -1024,6 +1015,27 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="libmbim-glib-dev">
+    <distro id="centos">
+      <package>libmbim-devel</package>
+    </distro>
+    <distro id="fedora">
+      <package>libmbim-devel</package>
+    </distro>
+    <distro id="arch">
+      <package>libmbim</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libmbim-glib-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="libpolkit-gobject-1-dev">
     <distro id="centos">
       <package>polkit-devel</package>
@@ -1073,18 +1085,66 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <!-- These are needed for gi-docgen -->
+  <dependency type="build" id="python3-pygments">
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-typogrify">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-toml">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-markdown">
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-jinja2">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="python3-gobject">
     <distro id="arch">
       <package>python-gobject</package>
     </distro>
     <distro id="fedora">
       <package />
-    </distro>
-  </dependency>
-  <!-- TODO: Drop python3-pil build dependency after 1.6.0 release -->
-  <dependency type="build" id="python3-pil">
-    <distro id="ubuntu">
-      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="python3-requests">

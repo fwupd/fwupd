@@ -15,16 +15,14 @@
 #include "fu-ihex-firmware.h"
 
 /**
- * SECTION:fu-ihex-firmware
- * @short_description: Ihex firmware image
+ * FuIhexFirmware:
  *
- * An object that represents a Ihex firmware image.
+ * A Intel hex (ihex) firmware image.
  *
- * See also: #FuFirmware
+ * See also: [class@FuFirmware]
  */
 
 typedef struct {
-	FuFirmware		 parent_instance;
 	GPtrArray		*records;
 	guint8			 padding_value;
 } FuIhexFirmwarePrivate;

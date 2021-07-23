@@ -4,12 +4,23 @@ if not get_option('curl')
 endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginRedfish"']
 
+install_data(['redfish.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_redfish',
   fu_hash,
   sources : [
     'fu-plugin-redfish.c',
-    'fu-redfish-client.c',
-    'fu-redfish-common.c',
+    'fu-redfish-backend.c',
+    'fu-redfish-common.c',     # fuzzing
+    'fu-redfish-device.c',
+    'fu-redfish-legacy-device.c',
+    'fu-redfish-multipart-device.c',
+    'fu-redfish-network.c',
+    'fu-redfish-network-device.c',
+    'fu-redfish-request.c',
+    'fu-redfish-smbios.c',     # fuzzing
   ],
   include_directories : [
     root_incdir,
@@ -26,7 +37,6 @@ shared_module('fu_plugin_redfish',
   dependencies : [
     plugin_deps,
     libcurl,
-    libjsonglib,
   ],
 )
 
@@ -35,13 +45,27 @@ install_data(['redfish.conf'],
 )
 
 if get_option('tests')
+  testdatadir = join_paths(meson.current_source_dir(), 'tests')
+  testdatadirs = environment()
+  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
+  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  testdatadirs.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
+  cargs += '-DTESTDATADIR="' + testdatadir + '"'
+  cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
   e = executable(
     'redfish-self-test',
     fu_hash,
     sources : [
       'fu-self-test.c',
-      'fu-redfish-client.c',
+      'fu-redfish-backend.c',
       'fu-redfish-common.c',
+      'fu-redfish-device.c',
+      'fu-redfish-legacy-device.c',
+      'fu-redfish-multipart-device.c',
+      'fu-redfish-network.c',
+      'fu-redfish-network-device.c',
+      'fu-redfish-request.c',
+      'fu-redfish-smbios.c',
     ],
     include_directories : [
       root_incdir,
@@ -51,7 +75,6 @@ if get_option('tests')
     dependencies : [
       plugin_deps,
       libcurl,
-      libjsonglib,
     ],
     link_with : [
       fwupd,

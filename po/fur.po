@@ -178,10 +178,6 @@ msgstr "Al nete i risultâts dal ultin inzornament"
 msgid "Command not found"
 msgstr "Comant no cjatât"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Continuâ cul inzornament?"
-
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
 msgstr "Utilitât DFU"
@@ -842,12 +838,6 @@ msgstr "Daûr a inzornâ %s di %s a %s... "
 #, c-format
 msgid "Updating %s…"
 msgstr "Daûr a inzornâ %s…"
-
-#. TRANSLATORS: message letting the user know an upgrade is available
-#. * %1 is the device name and %2 and %3 are version strings
-#, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "Inzornament disponibil par %s di %s a %s"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"

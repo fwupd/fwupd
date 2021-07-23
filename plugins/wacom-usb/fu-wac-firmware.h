@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_WAC_FIRMWARE (fu_wac_firmware_get_type ())
 G_DECLARE_FINAL_TYPE (FuWacFirmware, fu_wac_firmware, FU, WAC_FIRMWARE, FuFirmware)

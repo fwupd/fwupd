@@ -45,6 +45,10 @@ fu_steelseries_device_setup (FuDevice *device, GError **error)
 	guint8 data[32];
 	g_autofree gchar *version = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_steelseries_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	memset (data, 0x00, sizeof(data));
 	data[0] = 0x16;
 	ret = g_usb_device_control_transfer (usb_device,

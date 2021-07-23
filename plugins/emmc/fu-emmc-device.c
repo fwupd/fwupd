@@ -6,10 +6,10 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <sys/ioctl.h>
 #include <linux/mmc/ioctl.h>
 
-#include "fu-chunk.h"
 #include "fu-emmc-device.h"
 
 /* From kernel linux/major.h */
@@ -140,6 +140,7 @@ fu_emmc_device_probe (FuDevice *device, GError **error)
 	g_autofree gchar *man_oem = NULL;
 	g_autofree gchar *man_oem_name = NULL;
 	g_autofree gchar *vendor_id = NULL;
+	g_autoptr(GRegex) dev_regex = NULL;
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS (fu_emmc_device_parent_class)->probe (device, error))
@@ -164,6 +165,25 @@ fu_emmc_device_probe (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
+	/* ignore *rpmb and *boot* mmc block devices */
+	dev_regex = g_regex_new ("mmcblk\\d$", 0, 0, NULL);
+	tmp = g_udev_device_get_name (udev_device);
+	if (tmp == NULL) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED,
+				     "device has no name");
+		return FALSE;
+	}
+	if (!g_regex_match (dev_regex, tmp, 0, NULL)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "is not raw mmc block device, devname=%s",
+			     g_udev_device_get_name (udev_device));
+		return FALSE;
+	}
+
 	/* doesn't support FFU */
 	if (!fu_emmc_device_get_sysattr_guint64 (udev_parent, "ffu_capable", &flag, error))
 		return FALSE;
@@ -176,17 +196,16 @@ fu_emmc_device_probe (FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* add instance IDs */
-	tmp = g_udev_device_get_property (udev_device, "ID_NAME");
+	/* name */
+	tmp = g_udev_device_get_sysfs_attr (udev_parent, "name");
 	if (tmp == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "has no ID_NAME");
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_NOT_SUPPORTED,
+			     "%s does not have 'name' sysattr",
+			     fu_device_get_name (device));
 		return FALSE;
 	}
-
-	/* name */
 	fu_device_set_name (device, tmp);
 	name_only = g_strdup_printf ("EMMC\\%s", fu_device_get_name (device));
 	fu_device_add_instance_id (device, name_only);

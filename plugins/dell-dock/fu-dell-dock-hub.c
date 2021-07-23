@@ -15,8 +15,7 @@
 
 #include "config.h"
 
-#include "fu-usb-device.h"
-#include "fwupd-error.h"
+#include <fwupdplugin.h>
 
 #include "fu-dell-dock-common.h"
 
@@ -119,6 +118,15 @@ fu_dell_dock_hub_write_fw (FuDevice *device,
 }
 
 static gboolean
+fu_dell_dock_hub_setup (FuDevice *device, GError **error)
+{
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_dell_dock_hub_parent_class)->setup (device, error))
+		return FALSE;
+	return fu_dell_dock_hid_get_hub_version (device, error);
+}
+
+static gboolean
 fu_dell_dock_hub_set_quirk_kv (FuDevice *device,
 			       const gchar *key,
 			       const gchar *value,
@@ -165,6 +173,9 @@ static void
 fu_dell_dock_hub_init (FuDellDockHub *self)
 {
 	fu_device_retry_set_delay (FU_DEVICE (self), 1000);
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE,
+					 "has-bridge");
 }
 
 static void
@@ -173,7 +184,7 @@ fu_dell_dock_hub_class_init (FuDellDockHubClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	object_class->finalize = fu_dell_dock_hub_finalize;
-	klass_device->setup = fu_dell_dock_hid_get_hub_version;
+	klass_device->setup = fu_dell_dock_hub_setup;
 	klass_device->probe = fu_dell_dock_hub_probe;
 	klass_device->write_firmware = fu_dell_dock_hub_write_fw;
 	klass_device->set_quirk_kv = fu_dell_dock_hub_set_quirk_kv;

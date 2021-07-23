@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
+
 #include "fu-vli-usbhub-common.h"
 
 #define FU_TYPE_VLI_USBHUB_FIRMWARE (fu_vli_usbhub_firmware_get_type ())

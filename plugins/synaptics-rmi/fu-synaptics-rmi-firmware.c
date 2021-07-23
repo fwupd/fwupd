@@ -8,9 +8,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-common.h"
 #include "fu-synaptics-rmi-common.h"
 #include "fu-synaptics-rmi-firmware.h"
 

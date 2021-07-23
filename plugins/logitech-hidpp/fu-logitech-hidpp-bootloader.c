@@ -6,10 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-firmware-common.h"
-#include "fu-hid-device.h"
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-bootloader.h"
 #include "fu-logitech-hidpp-hidpp.h"
@@ -282,10 +281,13 @@ fu_logitech_hidpp_bootloader_open (FuDevice *device, GError **error)
 static gboolean
 fu_logitech_hidpp_bootloader_setup (FuDevice *device, GError **error)
 {
-	FuLogitechHidPpBootloaderClass *klass = FU_UNIFYING_BOOTLOADER_GET_CLASS (device);
 	FuLogitechHidPpBootloader *self = FU_UNIFYING_BOOTLOADER (device);
 	FuLogitechHidPpBootloaderPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FuLogitechHidPpBootloaderRequest) req = fu_logitech_hidpp_bootloader_request_new ();
+
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_logitech_hidpp_bootloader_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* get memory map */
 	req->cmd = FU_UNIFYING_BOOTLOADER_CMD_GET_MEMINFO;
@@ -308,15 +310,7 @@ fu_logitech_hidpp_bootloader_setup (FuDevice *device, GError **error)
 	priv->flash_blocksize = fu_common_read_uint16 (req->data + 4, G_BIG_ENDIAN);
 
 	/* get bootloader version */
-	if (!fu_logitech_hidpp_bootloader_set_bl_version (self, error))
-		return FALSE;
-
-	/* subclassed further */
-	if (klass->setup != NULL)
-		return klass->setup (self, error);
-
-	/* success */
-	return TRUE;
+	return fu_logitech_hidpp_bootloader_set_bl_version (self, error);
 }
 
 static gboolean
@@ -461,7 +455,7 @@ fu_logitech_hidpp_bootloader_init (FuLogitechHidPpBootloader *self)
 	fu_device_add_icon (FU_DEVICE (self), "preferences-desktop-keyboard");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_name (FU_DEVICE (self), "Unifying Receiver");
-	fu_device_set_summary (FU_DEVICE (self), "A miniaturised USB wireless receiver (bootloader)");
+	fu_device_set_summary (FU_DEVICE (self), "Miniaturised USB wireless receiver (bootloader)");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_UNIFYING_DEVICE_TIMEOUT_MS);
 }
 

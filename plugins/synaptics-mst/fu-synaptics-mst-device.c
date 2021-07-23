@@ -41,6 +41,13 @@
 
 #define FLASH_SETTLE_TIME		5000000	/* us */
 
+/**
+ * FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID:
+ *
+ * Ignore board ID firmware mismatch.
+ */
+#define FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID		(1 << 0)
+
 struct _FuSynapticsMstDevice {
 	FuUdevDevice		 parent_instance;
 	gchar			*device_kind;
@@ -74,13 +81,16 @@ fu_synaptics_mst_device_init (FuSynapticsMstDevice *self)
 	fu_device_add_protocol (FU_DEVICE (self), "com.synaptics.mst");
 	fu_device_set_vendor (FU_DEVICE (self), "Synaptics");
 	fu_device_add_vendor_id (FU_DEVICE (self), "DRM_DP_AUX_DEV:0x06CB");
-	fu_device_set_summary (FU_DEVICE (self), "Multi-Stream Transport Device");
+	fu_device_set_summary (FU_DEVICE (self), "Multi-stream transport device");
 	fu_device_add_icon (FU_DEVICE (self), "video-display");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_udev_device_set_flags (FU_UDEV_DEVICE (self),
 				  FU_UDEV_DEVICE_FLAG_OPEN_READ |
 				  FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
 				  FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID,
+					 "ignore-board-id");
 }
 
 static void
@@ -793,7 +803,7 @@ fu_synaptics_mst_device_prepare_firmware (FuDevice *device,
 	if (!fu_firmware_parse (firmware, fw, flags, error))
 		return NULL;
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_VID_PID) == 0 &&
-	    !fu_device_has_custom_flag (device, "ignore-board-id")) {
+	    !fu_device_has_private_flag (device, FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID)) {
 		guint16 board_id = fu_synaptics_mst_firmware_get_board_id (FU_SYNAPTICS_MST_FIRMWARE (firmware));
 		if (board_id != self->board_id) {
 			g_set_error (error,

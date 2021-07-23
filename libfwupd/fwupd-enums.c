@@ -9,16 +9,6 @@
 #include "fwupd-enums.h"
 
 /**
- * SECTION:fwupd-enums
- * @short_description: enumerated values shared by the daemon and library
- *
- * This file also provides helper functions to map enums to strings and back
- * again.
- *
- * See also: #fwupd-error
- */
-
-/**
  * fwupd_status_to_string:
  * @status: a status, e.g. %FWUPD_STATUS_DECOMPRESSING
  *
@@ -347,8 +337,12 @@ fwupd_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
 		return "failed-open";
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_REQUIRE_HWID)
 		return "require-hwid";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD)
+		return "kernel-too-old";
 	if (plugin_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_AUTH_REQUIRED)
+		return "auth-required";
 	return NULL;
 }
 
@@ -389,6 +383,10 @@ fwupd_plugin_flag_from_string (const gchar *plugin_flag)
 		return FWUPD_PLUGIN_FLAG_FAILED_OPEN;
 	if (g_strcmp0 (plugin_flag, "require-hwid") == 0)
 		return FWUPD_PLUGIN_FLAG_REQUIRE_HWID;
+	if (g_strcmp0 (plugin_flag, "kernel-too-old") == 0)
+		return FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD;
+	if (g_strcmp0 (plugin_flag, "auth-required") == 0)
+		return FWUPD_PLUGIN_FLAG_AUTH_REQUIRED;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 
@@ -515,6 +513,8 @@ fwupd_feature_flag_to_string (FwupdFeatureFlags feature_flag)
 		return "update-action";
 	if (feature_flag == FWUPD_FEATURE_FLAG_SWITCH_BRANCH)
 		return "switch-branch";
+	if (feature_flag == FWUPD_FEATURE_FLAG_REQUESTS)
+		return "requests";
 	return NULL;
 }
 
@@ -541,6 +541,8 @@ fwupd_feature_flag_from_string (const gchar *feature_flag)
 		return FWUPD_FEATURE_FLAG_UPDATE_ACTION;
 	if (g_strcmp0 (feature_flag, "switch-branch") == 0)
 		return FWUPD_FEATURE_FLAG_SWITCH_BRANCH;
+	if (g_strcmp0 (feature_flag, "requests") == 0)
+		return FWUPD_FEATURE_FLAG_REQUESTS;
 	return FWUPD_FEATURE_FLAG_LAST;
 }
 

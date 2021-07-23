@@ -9,12 +9,11 @@
 #include "fu-efi-signature-private.h"
 
 /**
- * SECTION:fu-efi-signature
- * @short_description: Parser for EFI_SIGNATURE
+ * FuEfiSignature:
  *
- * An object that represents a UEFI Signature.
+ * A UEFI Signature as found in an `EFI_SIGNATURE_LIST`.
  *
- * See also: #FuFirmware
+ * See also: [class@FuFirmware]
  */
 
 struct _FuEfiSignature {

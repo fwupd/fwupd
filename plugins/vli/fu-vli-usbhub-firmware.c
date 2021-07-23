@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-#include "fu-common.h"
+#include <fwupdplugin.h>
 
 #include "fu-vli-usbhub-firmware.h"
 
@@ -182,15 +182,8 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 		if (tmp == 0xF0) {
 			self->device_kind = FU_VLI_DEVICE_KIND_VL822;
 		} else {
-			/* Q7/Q8 requires searching two addresses for offset value */
-			if (!fu_common_read_uint16_safe (buf, bufsz, 0x8018,
-						 &adr_ofs,G_BIG_ENDIAN, error)) {
-				g_prefix_error (error, "failed to get Q7/Q8 offset mapping: ");
-				return FALSE;
-			}
-			if (!fu_common_read_uint8_safe (buf, bufsz, adr_ofs + 0x2000 + 0x05,
-						 	&tmp, error)) {
-				g_prefix_error (error, "failed to get offset version: ");
+			if (!fu_common_read_uint8_safe (buf, bufsz, 0xf000, &tmp, error)) {
+				g_prefix_error (error, "failed to get Q7/Q8 difference: ");
 				return FALSE;
 			}
 			if (tmp & (1 << 0))

@@ -1,0 +1,16 @@
+[REDFISH\VENDOR_Lenovo&ID_BMC-Backup]
+ParentGuid = REDFISH\VENDOR_Lenovo&ID_BMC-Primary
+Flags = dual-image,is-backup
+
+[REDFISH\VENDOR_Lenovo&ID_BMC-Primary]
+ParentGuid = REDFISH\VENDOR_Lenovo&ID_BMC-Primary
+Flags = dual-image
+
+[REDFISH\VENDOR_Lenovo&ID_LXPM]
+Flags = ~updatable
+[REDFISH\VENDOR_Lenovo&ID_LXPMLinuxDriver]
+Flags = ~updatable
+ParentGuid = REDFISH\VENDOR_Lenovo&ID_LXPM
+[REDFISH\VENDOR_Lenovo&ID_LXPMWindowsDriver]
+Flags = ~updatable
+ParentGuid = REDFISH\VENDOR_Lenovo&ID_LXPM

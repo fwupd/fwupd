@@ -434,10 +434,6 @@ msgstr "Smazat výsledky z poslední aktualizace"
 msgid "Command not found"
 msgstr "Příkaz nebyl nalezen"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Pokračovat v aktualizaci?"
-
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "Převést soubor s firmware"
@@ -733,7 +729,7 @@ msgid "FILENAME [FIRMWARE-TYPE]"
 msgstr "NÁZEV-SOUBORU [TYP-FIRMWARE]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Failed"
 msgstr "Nezdařilo se"
 
@@ -943,7 +939,7 @@ msgstr "Vypsat vydání pro zařízení"
 msgid "Gets the results from the last update"
 msgstr "Vypsat výsledky z poslední aktualizace"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "Hardware čeká na opětovné připojení"
 
@@ -1229,7 +1225,7 @@ msgstr "Připojí ESP oddíl"
 msgid "Needs a reboot after installation"
 msgstr "Po instalaci vyžaduje restart"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Vyžaduje restart"
 
@@ -1330,7 +1326,7 @@ msgstr "Heslo"
 msgid "Payload"
 msgstr "Obsah"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Pending"
 msgstr "Čeká"
 
@@ -1641,7 +1637,7 @@ msgstr "Zadejte soubor dbx databáze"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Zadejte počet bajtů v jednotlivých přenosech přes USB sběrnici"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Úspěch"
 
@@ -1825,7 +1821,7 @@ msgstr "Tento nástroj načte a zpracuje záznam událostí ve správě TPM z fi
 msgid "Timeout in milliseconds for each parse"
 msgstr "Časový limit (v milisekundách) pro každé ze zpracovávání"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Přechodný nezdar"
 
@@ -1977,12 +1973,6 @@ msgstr "Aktualizuje se %s z verze %s na %s…"
 #, c-format
 msgid "Updating %s…"
 msgstr "Aktualizace %s…"
-
-#. TRANSLATORS: message letting the user know an upgrade is available
-#. * %1 is the device name and %2 and %3 are version strings
-#, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "Je k dispozici aktualizace pro %s z verze %s na %s"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"

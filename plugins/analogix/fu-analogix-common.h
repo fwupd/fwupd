@@ -6,9 +6,8 @@
 
 #pragma once
 
+#include <fwupdplugin.h>
 #include <glib.h>
-
-#include "fu-plugin.h"
 
 #define ANX_BB_TRANSACTION_TIMEOUT		5000 /* ms */
 #define BILLBOARD_CLASS				0x11

@@ -20,17 +20,15 @@
 #define FU_HID_DEVICE_RETRIES				10
 
 /**
- * SECTION:fu-hid-device
- * @short_description: a HID device
+ * FuHidDevice:
  *
- * An object that represents a HID device.
+ * A Human Interface Device (HID) device.
  *
- * See also: #FuDevice
+ * See also: [class@FuDevice], [class@FuUsbDevice]
  */
 
 typedef struct
 {
-	FuUsbDevice		*usb_device;
 	guint8			 interface;
 	gboolean		 interface_autodetect;
 	FuHidDeviceFlags	 flags;

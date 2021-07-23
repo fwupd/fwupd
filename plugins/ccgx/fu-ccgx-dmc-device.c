@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-#include "fu-chunk.h"
+#include <fwupdplugin.h>
 
 #include "fu-ccgx-common.h"
 #include "fu-ccgx-dmc-common.h"
@@ -25,6 +25,14 @@ struct _FuCcgxDmcDevice {
 	guint8			ep_bulk_out;
 	DmcUpdateModel		update_model;
 };
+
+
+/**
+ * FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG:
+ *
+ * Needs a manual replug from the end-user.
+ */
+#define FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG		(1 << 0)
 
 G_DEFINE_TYPE (FuCcgxDmcDevice, fu_ccgx_dmc_device, FU_TYPE_USB_DEVICE)
 
@@ -541,10 +549,9 @@ static gboolean
 fu_ccgx_dmc_device_attach (FuDevice *device, GError **error)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE (device);
-	gboolean manual_replug = FALSE;
+	gboolean manual_replug;
 
-	if (fu_device_has_custom_flag (device, "has-manual-replug"))
-		manual_replug = TRUE;
+	manual_replug = fu_device_has_private_flag (device, FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG);
 
 	if (fu_device_get_update_state (self) != FWUPD_UPDATE_STATE_SUCCESS)
 		return TRUE;
@@ -593,6 +600,10 @@ fu_ccgx_dmc_device_setup (FuDevice *device, GError **error)
 	DmcDockIdentity dock_id = {0};
 	guint32 version_raw = 0;
 	g_autofree gchar *version = NULL;
+
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_ccgx_dmc_device_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* get dock identity */
 	if (!fu_ccgx_dmc_device_get_dock_id (self, &dock_id, error))
@@ -653,6 +664,9 @@ fu_ccgx_dmc_device_init (FuCcgxDmcDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
 	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_CCGX_DMC_DEVICE_FLAG_HAS_MANUAL_REPLUG,
+					 "has-manual-replug");
 }
 
 static void

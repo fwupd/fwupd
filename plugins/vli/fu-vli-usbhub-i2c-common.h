@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 typedef enum {
 	FU_VLI_USBHUB_I2C_STATUS_OK		= 0x00,

@@ -451,10 +451,6 @@ msgstr "Clears the results from the last update"
 msgid "Command not found"
 msgstr "Command not found"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Continue with update?"
-
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "Convert a firmware file"
@@ -608,6 +604,10 @@ msgstr "Do not check for unreported history"
 msgid "Do not check if download remotes should be enabled"
 msgstr "Do not check if download remotes should be enabled"
 
+#. TRANSLATORS: command line option
+msgid "Do not check or prompt for reboot after update"
+msgstr "Do not check or prompt for reboot after update"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
 msgstr "Do not include log domain prefix"
@@ -645,6 +645,12 @@ msgstr "Do you want to upload reports automatically for future updates?"
 msgid "Done!"
 msgstr "Done!"
 
+#. TRANSLATORS: message letting the user know an downgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Downgrade %s from %s to %s?"
+msgstr "Downgrade %s from %s to %s?"
+
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "Downgrades the firmware on a device"
@@ -680,6 +686,10 @@ msgstr "ESP specified was not valid"
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Enable firmware update support on supported systems"
+
+#. TRANSLATORS: a remote here is like a 'repo' or software source
+msgid "Enable new remote?"
+msgstr "Enable new remote?"
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
@@ -782,7 +792,7 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Failed"
 msgstr "Failed"
 
@@ -855,6 +865,10 @@ msgstr "Filename"
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
 msgstr "Filename Signature"
+
+#. TRANSLATORS: full path of the remote.conf file
+msgid "Filename Source"
+msgstr "Filename Source"
 
 #. TRANSLATORS: user did not include a filename parameter
 msgid "Filename required"
@@ -996,7 +1010,7 @@ msgstr "Gets the results from the last update"
 msgid "HWIDS-FILE"
 msgstr "HWIDS-FILE"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "Hardware is waiting to be replugged"
 
@@ -1280,7 +1294,7 @@ msgstr "Mounts the ESP"
 msgid "Needs a reboot after installation"
 msgstr "Needs a reboot after installation"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Needs reboot"
 
@@ -1381,13 +1395,17 @@ msgstr "Password"
 msgid "Payload"
 msgstr "Payload"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Pending"
 msgstr "Pending"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Percentage complete"
 msgstr "Percentage complete"
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "Perform operation?"
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1463,6 +1481,12 @@ msgstr "Rebooting…"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Refresh metadata from remote server"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 is a version string
+#, c-format
+msgid "Reinstall %s to %s?"
+msgstr "Reinstall %s to %s?"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
@@ -1700,7 +1724,7 @@ msgstr "Specify the dbx database file"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Specify the number of bytes per USB transfer"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Success"
 
@@ -1777,6 +1801,12 @@ msgstr "Suspend-to-idle"
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend-to-ram"
 msgstr "Suspend-to-ram"
+
+#. TRANSLATORS: show and ask user to confirm --
+#. * %1 is the old branch name, %2 is the new branch name
+#, c-format
+msgid "Switch branch from %s to %s?"
+msgstr "Switch branch from %s to %s?"
 
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
@@ -1886,7 +1916,7 @@ msgstr "This tool will read and parse the TPM event log from the system firmware
 msgid "Timeout in milliseconds for each parse"
 msgstr "Timeout in milliseconds for each parse"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Transient failure"
 
@@ -2046,8 +2076,8 @@ msgstr "Updating %s…"
 #. TRANSLATORS: message letting the user know an upgrade is available
 #. * %1 is the device name and %2 and %3 are version strings
 #, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "Upgrade available for %s from %s to %s"
+msgid "Upgrade %s from %s to %s?"
+msgstr "Upgrade %s from %s to %s?"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"

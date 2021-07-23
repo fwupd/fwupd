@@ -7,8 +7,7 @@
 
 #include "config.h"
 
-#include "fu-firmware-common.h"
-#include "fu-ihex-firmware.h"
+#include <fwupdplugin.h>
 
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-device.h"
@@ -308,6 +307,7 @@ fu_vli_usbhub_msp430_device_probe (FuDevice *device, GError **error)
 	g_autofree gchar *instance_id = NULL;
 
 	fu_device_set_name (device, fu_vli_common_device_kind_to_string (device_kind));
+	fu_device_set_physical_id (device, fu_device_get_physical_id (FU_DEVICE (parent)));
 
 	/* add instance ID */
 	instance_id = g_strdup_printf ("USB\\VID_%04X&PID_%04X&I2C_%s",
@@ -327,7 +327,7 @@ fu_vli_usbhub_msp430_device_init (FuVliUsbhubMsp430Device *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_logical_id (FU_DEVICE (self), "I2C");
-	fu_device_set_summary (FU_DEVICE (self), "I²C Dock Management Device");
+	fu_device_set_summary (FU_DEVICE (self), "I²C dock management device");
 
 	/* the MSP device reboot takes down the entire hub for ~60 seconds */
 	fu_device_set_remove_delay (FU_DEVICE (self), 120 * 1000);

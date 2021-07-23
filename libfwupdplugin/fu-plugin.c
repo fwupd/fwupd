@@ -20,12 +20,11 @@
 #include "fu-mutex.h"
 
 /**
- * SECTION:fu-plugin
- * @short_description: a daemon plugin
+ * FuPlugin:
  *
- * An object that represents a plugin run by the daemon.
+ * A plugin which is used by fwupd to enumerate and update devices.
  *
- * See also: #FuDevice
+ * See also: [class@FuDevice], [class@Fwupd.Plugin]
  */
 
 static void fu_plugin_finalize			 (GObject *object);
@@ -384,6 +383,8 @@ fu_plugin_build_device_update_error (FuPlugin *self)
 		return "Not updatable as UEFI capsule updates not enabled in firmware setup";
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED))
 		return "Not updatable as requires unlock";
+	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_AUTH_REQUIRED))
+		return "Not updatable as requires authentication";
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED))
 		return "Not updatable as efivarfs was not found";
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND))
@@ -400,6 +401,24 @@ fu_plugin_ensure_devices (FuPlugin *self)
 	if (priv->devices != NULL)
 		return;
 	priv->devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
+}
+
+static void
+fu_plugin_device_child_added_cb (FuDevice *device, FuDevice *child, FuPlugin *self)
+{
+	g_debug ("child %s added to parent %s after setup, adding to daemon",
+		 fu_device_get_id (child),
+		 fu_device_get_id (device));
+	fu_plugin_device_add (self, child);
+}
+
+static void
+fu_plugin_device_child_removed_cb (FuDevice *device, FuDevice *child, FuPlugin *self)
+{
+	g_debug ("child %s removed from parent %s after setup, removing from daemon",
+		 fu_device_get_id (child),
+		 fu_device_get_id (device));
+	fu_plugin_device_remove (self, child);
 }
 
 /**
@@ -466,6 +485,12 @@ fu_plugin_device_add (FuPlugin *self, FuDevice *device)
 		if (fu_device_get_created (child) == 0)
 			fu_plugin_device_add (self, child);
 	}
+
+	/* watch to see if children are added or removed at runtime */
+	g_signal_connect (device, "child-added",
+			  G_CALLBACK (fu_plugin_device_child_added_cb), self);
+	g_signal_connect (device, "child-removed",
+			  G_CALLBACK (fu_plugin_device_child_removed_cb), self);
 }
 
 /**
@@ -630,8 +655,9 @@ fu_plugin_get_context (FuPlugin *self)
 static gboolean
 fu_plugin_device_attach (FuPlugin *self, FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	locker = fu_device_locker_new (device, error);
+	locker = fu_device_locker_new (proxy, error);
 	if (locker == NULL)
 		return FALSE;
 	return fu_device_attach (device, error);
@@ -640,8 +666,9 @@ fu_plugin_device_attach (FuPlugin *self, FuDevice *device, GError **error)
 static gboolean
 fu_plugin_device_detach (FuPlugin *self, FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	locker = fu_device_locker_new (device, error);
+	locker = fu_device_locker_new (proxy, error);
 	if (locker == NULL)
 		return FALSE;
 	return fu_device_detach (device, error);
@@ -650,8 +677,9 @@ fu_plugin_device_detach (FuPlugin *self, FuDevice *device, GError **error)
 static gboolean
 fu_plugin_device_activate (FuPlugin *self, FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	locker = fu_device_locker_new (device, error);
+	locker = fu_device_locker_new (proxy, error);
 	if (locker == NULL)
 		return FALSE;
 	return fu_device_activate (device, error);
@@ -662,8 +690,9 @@ fu_plugin_device_write_firmware (FuPlugin *self, FuDevice *device,
 				 GBytes *fw, FwupdInstallFlags flags,
 				 GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	locker = fu_device_locker_new (device, error);
+	locker = fu_device_locker_new (proxy, error);
 	if (locker == NULL)
 		return FALSE;
 
@@ -696,8 +725,28 @@ fu_plugin_device_write_firmware (FuPlugin *self, FuDevice *device,
 }
 
 static gboolean
+fu_plugin_device_get_results (FuPlugin *self, FuDevice *device, GError **error)
+{
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error_local = NULL;
+	locker = fu_device_locker_new (device, error);
+	if (locker == NULL)
+		return FALSE;
+	if (!fu_device_get_results (device, &error_local)) {
+		if (g_error_matches (error_local,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_NOT_SUPPORTED))
+			return TRUE;
+		g_propagate_error (error, g_steal_pointer (&error_local));
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
 fu_plugin_device_read_firmware (FuPlugin *self, FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -705,7 +754,7 @@ fu_plugin_device_read_firmware (FuPlugin *self, FuDevice *device, GError **error
 		G_CHECKSUM_SHA1,
 		G_CHECKSUM_SHA256,
 		0 };
-	locker = fu_device_locker_new (device, error);
+	locker = fu_device_locker_new (proxy, error);
 	if (locker == NULL)
 		return FALSE;
 	if (!fu_device_detach (device, error))
@@ -1194,6 +1243,7 @@ fu_plugin_runner_update_detach (FuPlugin *self, FuDevice *device, GError **error
 gboolean
 fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* not enabled */
@@ -1201,7 +1251,7 @@ fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error
 		return TRUE;
 
 	/* no object loaded */
-	locker = fu_device_locker_new (device, error);
+	locker = fu_device_locker_new (proxy, error);
 	if (locker == NULL)
 		return FALSE;
 	return fu_device_reload (device, error);
@@ -1280,6 +1330,62 @@ fu_common_string_uncamelcase (const gchar *str)
 	return g_string_free (tmp, FALSE);
 }
 
+
+static gboolean
+fu_plugin_check_amdgpu_dpaux (FuPlugin *self, GError **error)
+{
+#ifdef __linux__
+	gsize bufsz = 0;
+	g_autofree gchar *buf = NULL;
+	g_auto(GStrv) lines = NULL;
+
+	/* no module support in the kernel, we can't test for amdgpu module */
+	if (!g_file_test ("/proc/modules", G_FILE_TEST_EXISTS))
+		return TRUE;
+	if (!g_file_get_contents ("/proc/modules", &buf, &bufsz, error))
+		return FALSE;
+	lines = g_strsplit (buf, "\n", -1);
+	for (guint i = 0; lines[i] != NULL; i++) {
+		if (g_str_has_prefix (lines[i], "amdgpu ")) {
+			/* released 2019! */
+			return fu_common_check_kernel_version ("5.2.0", error);
+		}
+	}
+#endif
+	return TRUE;
+}
+
+/**
+ * fu_plugin_add_udev_subsystem:
+ * @self: a #FuPlugin
+ * @subsystem: a subsystem name, e.g. `pciport`
+ *
+ * Registers the udev subsystem to be watched by the daemon.
+ *
+ * Plugins can use this method only in fu_plugin_init()
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_plugin_add_udev_subsystem (FuPlugin *self, const gchar *subsystem)
+{
+	FuPluginPrivate *priv = GET_PRIVATE (self);
+
+	/* see https://github.com/fwupd/fwupd/issues/1121 for more details */
+	if (g_strcmp0 (subsystem, "drm_dp_aux_dev") == 0) {
+		g_autoptr(GError) error = NULL;
+		if (!fu_plugin_check_amdgpu_dpaux (self, &error)) {
+			g_warning ("failed to add subsystem: %s", error->message);
+			fu_plugin_add_flag (self, FWUPD_PLUGIN_FLAG_DISABLED);
+			fu_plugin_add_flag (self, FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD);
+			return;
+		}
+	}
+
+	/* proxy */
+	fu_context_add_udev_subsystem (priv->ctx, subsystem);
+}
+
 /**
  * fu_plugin_add_firmware_gtype:
  * @self: a #FuPlugin
@@ -1326,6 +1432,7 @@ fu_plugin_check_supported_device (FuPlugin *self, FuDevice *device)
 static gboolean
 fu_plugin_backend_device_added (FuPlugin *self, FuDevice *device, GError **error)
 {
+	FuDevice *proxy;
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	GType device_gtype = fu_device_get_specialized_gtype (FU_DEVICE (device));
 	g_autoptr(FuDevice) dev = NULL;
@@ -1363,6 +1470,13 @@ fu_plugin_backend_device_added (FuPlugin *self, FuDevice *device, GError **error
 	}
 
 	/* open and add */
+	proxy = fu_device_get_proxy (device);
+	if (proxy != NULL) {
+		g_autoptr(FuDeviceLocker) locker_proxy = NULL;
+		locker_proxy = fu_device_locker_new (proxy, error);
+		if (locker_proxy == NULL)
+			return FALSE;
+	}
 	locker = fu_device_locker_new (dev, error);
 	if (locker == NULL)
 		return FALSE;
@@ -1950,8 +2064,10 @@ fu_plugin_runner_get_results (FuPlugin *self, FuDevice *device, GError **error)
 
 	/* optional */
 	g_module_symbol (priv->module, "fu_plugin_get_results", (gpointer *) &func);
-	if (func == NULL)
-		return TRUE;
+	if (func == NULL) {
+		g_debug ("superclassed get_results(%s)", fu_plugin_get_name (self));
+		return fu_plugin_device_get_results (self, device, error);
+	}
 	g_debug ("get_results(%s)", fu_plugin_get_name (self));
 	if (!func (self, device, &error_local)) {
 		if (error_local == NULL) {
@@ -2048,7 +2164,7 @@ fu_plugin_set_priority (FuPlugin *self, guint priority)
  * for example the plugin specified by @name will be ordered after this plugin
  * when %FU_PLUGIN_RULE_RUN_AFTER is used.
  *
- * NOTE: the depsolver is iterative and may not solve overly-complicated rules;
+ * NOTE: The depsolver is iterative and may not solve overly-complicated rules;
  * If depsolving fails then fwupd will not start.
  *
  * Since: 1.0.0

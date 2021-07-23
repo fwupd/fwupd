@@ -14,9 +14,9 @@
 #include "fwupd-security-attr-private.h"
 
 /**
- * SECTION:fwupd-security-attr
+ * FwupdSecurityAttr:
  *
- * An object that represents an Host Security ID attribute.
+ * A Host Security ID attribute that represents something that was measured.
  */
 
 static void fwupd_security_attr_finalize	 (GObject *object);
@@ -701,24 +701,6 @@ fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
 	fwupd_pad_kv_str (str, key, tmp);
 }
 
-static void
-fwupd_security_attr_json_add_string (JsonBuilder *builder, const gchar *key, const gchar *str)
-{
-	if (str == NULL)
-		return;
-	json_builder_set_member_name (builder, key);
-	json_builder_add_string_value (builder, str);
-}
-
-static void
-fwupd_security_attr_json_add_int (JsonBuilder *builder, const gchar *key, guint64 num)
-{
-	if (num == 0)
-		return;
-	json_builder_set_member_name (builder, key);
-	json_builder_add_int_value (builder, num);
-}
-
 /**
  * fwupd_security_attr_to_json:
  * @self: a #FwupdSecurityAttr
@@ -736,13 +718,13 @@ fwupd_security_attr_to_json (FwupdSecurityAttr *self, JsonBuilder *builder)
 	g_return_if_fail (FWUPD_IS_SECURITY_ATTR (self));
 	g_return_if_fail (builder != NULL);
 
-	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
-	fwupd_security_attr_json_add_int (builder, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
-	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_HSI_RESULT,
-					     fwupd_security_attr_result_to_string (priv->result));
-	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_NAME, priv->name);
-	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
-	fwupd_security_attr_json_add_string (builder, FWUPD_RESULT_KEY_URI, priv->url);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_HSI_RESULT,
+				      fwupd_security_attr_result_to_string (priv->result));
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_URI, priv->url);
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_FLAGS);
 		json_builder_begin_array (builder);
@@ -760,7 +742,7 @@ fwupd_security_attr_to_json (FwupdSecurityAttr *self, JsonBuilder *builder)
 		for (GList *l = keys; l != NULL; l = l->next) {
 			const gchar *key = l->data;
 			const gchar *value = g_hash_table_lookup (priv->metadata, key);
-			fwupd_security_attr_json_add_string (builder, key, value);
+			fwupd_common_json_add_string (builder, key, value);
 		}
 	}
 }

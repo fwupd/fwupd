@@ -6,9 +6,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <gio/gunixmounts.h>
-
-#include "fu-common.h"
 
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
@@ -40,7 +39,6 @@ fu_uefi_backend_device_new (const gchar *path)
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autofree gchar *fw_class = NULL;
 	g_autofree gchar *fw_class_fn = NULL;
-	g_autofree gchar *id = NULL;
 
 	g_return_val_if_fail (path != NULL, NULL);
 
@@ -68,8 +66,6 @@ fu_uefi_backend_device_new (const gchar *path)
 			    NULL);
 
 	/* set ID */
-	id = g_strdup_printf ("UEFI-%s-dev0", fw_class);
-	fu_device_set_id (FU_DEVICE (dev), id);
 	fu_device_set_physical_id (FU_DEVICE (dev), path);
 	return g_steal_pointer (&dev);
 }
@@ -82,7 +78,6 @@ fu_uefi_backend_coldplug (FuBackend *backend, GError **error)
 	g_autofree gchar *esrt_path = NULL;
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autoptr(GDir) dir = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	/* get the directory of ESRT entries */
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
@@ -173,7 +168,6 @@ static gboolean
 fu_uefi_backend_setup (FuBackend *backend, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GError) error_efivarfs = NULL;
 
 	/* using a pre-cooked SMBIOS */
 	if (g_getenv ("FWUPD_SYSFSFWDIR") != NULL)

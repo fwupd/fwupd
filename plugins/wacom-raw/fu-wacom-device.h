@@ -6,8 +6,9 @@
 
 #pragma once
 
+#include <fwupdplugin.h>
+
 #include "fu-wacom-common.h"
-#include "fu-udev-device.h"
 
 #define FU_TYPE_WACOM_DEVICE (fu_wacom_device_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuWacomDevice, fu_wacom_device, FU, WACOM_DEVICE, FuUdevDevice)

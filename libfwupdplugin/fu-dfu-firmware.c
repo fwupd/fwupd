@@ -14,12 +14,11 @@
 #include "fu-dfu-firmware-private.h"
 
 /**
- * SECTION:fu-dfu-firmware
- * @short_description: DFU firmware image
+ * FuDfuFirmware:
  *
- * An object that represents a DFU firmware image.
+ * A DFU firmware image.
  *
- * See also: #FuFirmware
+ * See also: [class@FuFirmware]
  */
 
 typedef struct {
@@ -380,7 +379,7 @@ fu_dfu_firmware_init (FuDfuFirmware *self)
 	priv->vid = 0xffff;
 	priv->pid = 0xffff;
 	priv->release = 0xffff;
-	priv->dfu_version = DFU_VERSION_DFU_1_0;
+	priv->dfu_version = FU_DFU_FIRMARE_VERSION_DFU_1_0;
 	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_VID_PID);
 }

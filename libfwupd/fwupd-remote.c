@@ -11,24 +11,26 @@
 #endif
 #include <jcat.h>
 
+#include "fwupd-common-private.h"
 #include "fwupd-deprecated.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
 
 /**
- * SECTION:fwupd-remote
- * @short_description: a source of firmware
+ * FwupdRemote:
  *
- * An object that represents a source of metadata that provides firmware.
+ * A source of metadata that provides firmware.
  *
- * See also: #FwupdClient
+ * Remotes can be local (e.g. folders on a disk) or remote (e.g. downloaded
+ * over HTTP or IPFS).
+ *
+ * See also: [class@FwupdClient]
  */
 
 static void fwupd_remote_finalize	 (GObject *obj);
 
 typedef struct {
-	GObject			 parent_instance;
 	FwupdRemoteKind		 kind;
 	FwupdKeyringKind	 keyring_kind;
 	gchar			*id;
@@ -74,6 +76,56 @@ typedef gchar curlptr;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(curlptr, curl_free)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(CURLU, curl_url_cleanup)
 #endif
+
+/**
+ * fwupd_remote_to_json:
+ * @self: a #FwupdRemote
+ * @builder: a JSON builder
+ *
+ * Adds a fwupd remote to a JSON builder
+ *
+ * Since: 1.6.2
+ **/
+void
+fwupd_remote_to_json (FwupdRemote *self, JsonBuilder *builder)
+{
+	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+
+	g_return_if_fail (FWUPD_IS_REMOTE (self));
+	g_return_if_fail (builder != NULL);
+
+	fwupd_common_json_add_string (builder, "Id", priv->id);
+	if (priv->kind != FWUPD_REMOTE_KIND_UNKNOWN) {
+		fwupd_common_json_add_string (builder, "Kind",
+					      fwupd_remote_kind_to_string (priv->kind));
+	}
+	if (priv->keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
+		fwupd_common_json_add_string (builder, "KeyringKind",
+					      fwupd_keyring_kind_to_string (priv->keyring_kind));
+	}
+	fwupd_common_json_add_string (builder, "FirmwareBaseUri", priv->firmware_base_uri);
+	fwupd_common_json_add_string (builder, "ReportUri", priv->report_uri);
+	fwupd_common_json_add_string (builder, "SecurityReportUri", priv->security_report_uri);
+	fwupd_common_json_add_string (builder, "MetadataUri", priv->metadata_uri);
+	fwupd_common_json_add_string (builder, "MetadataUriSig", priv->metadata_uri_sig);
+	fwupd_common_json_add_string (builder, "Username", priv->username);
+	fwupd_common_json_add_string (builder, "Password", priv->password);
+	fwupd_common_json_add_string (builder, "Title", priv->title);
+	fwupd_common_json_add_string (builder, "Agreement", priv->agreement);
+	fwupd_common_json_add_string (builder, "Checksum", priv->checksum);
+	fwupd_common_json_add_string (builder, "FilenameCache", priv->filename_cache);
+	fwupd_common_json_add_string (builder, "FilenameCacheSig", priv->filename_cache_sig);
+	fwupd_common_json_add_string (builder, "FilenameSource", priv->filename_source);
+	fwupd_common_json_add_boolean (builder, "Enabled", priv->enabled);
+	fwupd_common_json_add_boolean (builder, "ApprovalRequired", priv->approval_required);
+	fwupd_common_json_add_boolean (builder, "AutomaticReports", priv->automatic_reports);
+	fwupd_common_json_add_boolean (builder, "AutomaticSecurityReports", priv->automatic_security_reports);
+	fwupd_common_json_add_int (builder, "Priority", priv->priority);
+	fwupd_common_json_add_int (builder, "Mtime", priv->mtime);
+	fwupd_common_json_add_string (builder, "RemotesDir", priv->remotes_dir);
+	fwupd_common_json_add_stringv (builder, "OrderAfter", priv->order_after);
+	fwupd_common_json_add_stringv (builder, "OrderBefore", priv->order_before);
+}
 
 static void
 fwupd_remote_set_username (FwupdRemote *self, const gchar *username)

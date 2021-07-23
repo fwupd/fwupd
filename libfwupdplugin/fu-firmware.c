@@ -13,11 +13,11 @@
 #include "fu-firmware.h"
 
 /**
- * SECTION:fu-firmware
- * @short_description: a firmware file
+ * FuFirmware:
  *
- * An object that represents a firmware file.
- * See also: #FuDfuFirmware, #FuIhexFirmware, #FuSrecFirmware
+ * A firmware file which can have children which represent the images within.
+ *
+ * See also: [class@FuDfuFirmware], [class@FuIhexFirmware], [class@FuSrecFirmware]
  */
 
 typedef struct {
@@ -92,7 +92,7 @@ fu_firmware_flag_from_string (const gchar *flag)
 /**
  * fu_firmware_add_flag:
  * @firmware: a #FuFirmware
- * @flag: the firmare flag
+ * @flag: the firmware flag
  *
  * Adds a specific firmware flag to the firmware.
  *
@@ -110,7 +110,7 @@ fu_firmware_add_flag (FuFirmware *firmware, FuFirmwareFlags flag)
 /**
  * fu_firmware_has_flag:
  * @firmware: a #FuFirmware
- * @flag: the firmare flag
+ * @flag: the firmware flag
  *
  * Finds if the firmware has a specific firmware flag.
  *
@@ -1503,7 +1503,16 @@ fu_firmware_export (FuFirmware *self,
 		if (flags & FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA) {
 			datastr = fu_common_strsafe ((const gchar *) buf, MIN (bufsz, 16));
 		} else {
+#if GLIB_CHECK_VERSION(2,61,0)
 			datastr = g_base64_encode (buf, bufsz);
+#else
+			/* older GLib versions can't cope with buf=NULL */
+			if (buf == NULL || bufsz == 0) {
+				datastr = g_strdup ("");
+			} else {
+				datastr = g_base64_encode (buf, bufsz);
+			}
+#endif
 		}
 		xb_builder_node_insert_text (bn, "data", datastr,
 					     "size", dataszstr,

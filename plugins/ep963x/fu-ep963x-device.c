@@ -6,7 +6,8 @@
 
 #include "config.h"
 
-#include "fu-chunk.h"
+#include <fwupdplugin.h>
+
 #include "fu-ep963x-common.h"
 #include "fu-ep963x-device.h"
 #include "fu-ep963x-firmware.h"
@@ -153,6 +154,10 @@ fu_ep963x_device_setup (FuDevice *device, GError **error)
 	FuEp963xDevice *self = FU_EP963X_DEVICE (device);
 	guint8 buf[] = { 0x0 };
 	g_autofree gchar *version = NULL;
+
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_ep963x_device_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* get version */
 	if (!fu_ep963x_device_write_icp (self, FU_EP963_UF_CMD_VERSION,

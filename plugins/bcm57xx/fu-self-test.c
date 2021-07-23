@@ -6,10 +6,9 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-common.h"
 #include "fu-bcm57xx-common.h"
 #include "fu-bcm57xx-dict-image.h"
 #include "fu-bcm57xx-firmware.h"

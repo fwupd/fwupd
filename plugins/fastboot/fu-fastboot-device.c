@@ -6,11 +6,10 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 #include <xmlb.h>
 
-#include "fu-archive.h"
-#include "fu-chunk.h"
 #include "fu-fastboot-device.h"
 
 #define FASTBOOT_REMOVE_DELAY_RE_ENUMERATE	60000 /* ms */
@@ -314,6 +313,10 @@ fu_fastboot_device_setup (FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 	g_autofree gchar *secure = NULL;
 	g_autofree gchar *version_bootloader = NULL;
+
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_fastboot_device_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* product */
 	if (!fu_fastboot_device_getvar (device, "product", &product, error))

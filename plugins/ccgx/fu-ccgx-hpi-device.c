@@ -7,9 +7,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
-
-#include "fu-chunk.h"
 
 #include "fu-ccgx-common.h"
 #include "fu-ccgx-hpi-common.h"
@@ -1370,6 +1369,10 @@ fu_ccgx_hpi_device_setup (FuDevice *device, GError **error)
 	guint32 hpi_event = 0;
 	guint8 mode = 0;
 	g_autoptr(GError) error_local = NULL;
+
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_ccgx_hpi_device_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* set the new config */
 	if (!fu_ccgx_hpi_device_get_i2c_config (self, &i2c_config, error)) {

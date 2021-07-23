@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 struct FuPluginData {
 	GMutex			 mutex;
@@ -30,16 +30,18 @@ fu_plugin_destroy (FuPlugin *plugin)
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	g_autoptr(FuDevice) device = NULL;
-	device = fu_device_new ();
+	device = fu_device_new_with_context (ctx);
 	fu_device_set_id (device, "FakeDevice");
 	fu_device_add_guid (device, "b585990a-003e-5270-89d5-3705a17f9a43");
 	fu_device_set_name (device, "Integrated_Webcam(TM)");
 	fu_device_add_icon (device, "preferences-desktop-keyboard");
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_protocol (device, "com.acme.test");
-	fu_device_set_summary (device, "A fake webcam");
+	fu_device_set_summary (device, "Fake webcam");
 	fu_device_set_vendor (device, "ACME Corp.");
 	fu_device_add_vendor_id (device, "USB:0x046D");
 	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
@@ -62,7 +64,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		g_autoptr(FuDevice) child1 = NULL;
 		g_autoptr(FuDevice) child2 = NULL;
 
-		child1 = fu_device_new ();
+		child1 = fu_device_new_with_context (ctx);
 		fu_device_add_vendor_id (child1, "USB:FFFF");
 		fu_device_add_protocol (child1, "com.acme");
 		fu_device_set_physical_id (child1, "fake");
@@ -75,7 +77,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		fu_device_add_flag (child1, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_plugin_device_add (plugin, child1);
 
-		child2 = fu_device_new ();
+		child2 = fu_device_new_with_context (ctx);
 		fu_device_add_vendor_id (child2, "USB:FFFF");
 		fu_device_add_protocol (child2, "com.acme");
 		fu_device_set_physical_id (child2, "fake");

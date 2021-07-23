@@ -6,8 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include "fu-cpu-device.h"
-#include "fu-plugin-vfuncs.h"
 
 struct _FuCpuDevice {
 	FuDevice		 parent_instance;
@@ -97,7 +98,8 @@ fu_cpu_device_convert_vendor (const gchar *vendor)
 static void
 fu_cpu_device_init (FuCpuDevice *self)
 {
-	fu_device_add_guid (FU_DEVICE (self), "cpu");
+	fu_device_add_guid_full (FU_DEVICE (self), "cpu",
+				 FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon (FU_DEVICE (self), "computer");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_HEX);
@@ -391,9 +393,9 @@ fu_cpu_device_class_init (FuCpuDeviceClass *klass)
 }
 
 FuCpuDevice *
-fu_cpu_device_new (void)
+fu_cpu_device_new (FuContext *ctx)
 {
 	FuCpuDevice *device = NULL;
-	device = g_object_new (FU_TYPE_CPU_DEVICE, NULL);
+	device = g_object_new (FU_TYPE_CPU_DEVICE, "context", ctx, NULL);
 	return device;
 }

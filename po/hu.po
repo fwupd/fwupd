@@ -304,10 +304,6 @@ msgstr "Törli a legutóbbi frissítésből származó eredményeket"
 msgid "Command not found"
 msgstr "A parancs nem található"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Folytatja a frissítést?"
-
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
 msgstr "Kriptográfiai hash ellenőrzés érhető el"
@@ -644,7 +640,7 @@ msgstr "Lekéri az eszközhöz tartozó kiadásokat"
 msgid "Gets the results from the last update"
 msgstr "A legutóbbi frissítésből származó eredményeket kéri le"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "A hardver újracsatlakoztatásra vár"
 
@@ -1250,12 +1246,6 @@ msgstr "%s frissítése: %s -> %s…"
 #, c-format
 msgid "Updating %s…"
 msgstr "%s frissítése…"
-
-#. TRANSLATORS: message letting the user know an upgrade is available
-#. * %1 is the device name and %2 and %3 are version strings
-#, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "%s frissítés érhető el, erről: %s, erre: %s"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"

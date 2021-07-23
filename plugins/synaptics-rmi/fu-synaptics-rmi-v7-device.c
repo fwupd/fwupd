@@ -8,11 +8,9 @@
 
 #include "config.h"
 
-#include "fu-common.h"
-#include "fu-chunk.h"
-#include "fu-synaptics-rmi-v7-device.h"
+#include <fwupdplugin.h>
 
-#include "fwupd-error.h"
+#include "fu-synaptics-rmi-v7-device.h"
 
 #define RMI_F34_ERASE_WAIT_MS				10000		/* ms */
 

@@ -14,6 +14,12 @@
 #include "fu-security-attrs-private.h"
 #include "fwupd-security-attr-private.h"
 
+/**
+ * FuSecurityAttrs:
+ *
+ * A set of Host Security ID attributes that represents the system state.
+ */
+
 struct _FuSecurityAttrs {
 	GObject			 parent_instance;
 	GPtrArray		*attrs;

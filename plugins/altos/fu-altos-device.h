@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_ALTOS_DEVICE (fu_altos_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuAltosDevice, fu_altos_device, FU, ALTOS_DEVICE, FuUsbDevice)

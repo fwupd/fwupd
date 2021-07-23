@@ -6,33 +6,25 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-chunk.h"
 #include "fu-dfu-csr-device.h"
-#include "fu-dfu-firmware.h"
 #include "fu-dfu-common.h"
 
 /**
- * FU_DFU_CSR_DEVICE_QUIRK_FLAG_REQUIRE_DELAY:
+ * FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY:
  *
  * Respect the write timeout value when performing actions. This is sometimes
  * set to a huge amount of time, and so is not used by default.
  *
  * Since: 1.0.3
  */
-#define FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY	"require-delay"
-
-typedef enum {
-	FU_DFU_CSR_DEVICE_QUIRK_NONE		= 0,
-	FU_DFU_CSR_DEVICE_QUIRK_REQUIRE_DELAY	= (1 << 0),
-	FU_DFU_CSR_DEVICE_QUIRK_LAST
-} FuDfuCsrDeviceQuirks;
+#define FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY		(1 << 0)
 
 struct _FuDfuCsrDevice
 {
 	FuHidDevice		 parent_instance;
-	FuDfuCsrDeviceQuirks	 quirks;
 	FuDfuState		 dfu_state;
 	guint32			 dnload_timeout;
 };
@@ -303,7 +295,8 @@ fu_dfu_csr_device_download_chunk (FuDfuCsrDevice *self, guint16 idx, GBytes *chu
 	}
 
 	/* wait for hardware */
-	if (self->quirks & FU_DFU_CSR_DEVICE_QUIRK_REQUIRE_DELAY) {
+	if (fu_device_has_private_flag (FU_DEVICE (self),
+					FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY)) {
 		g_debug ("sleeping for %ums", self->dnload_timeout);
 		g_usleep (self->dnload_timeout * 1000);
 	}
@@ -401,15 +394,9 @@ fu_dfu_csr_device_download (FuDevice *device,
 static gboolean
 fu_dfu_csr_device_probe (FuDevice *device, GError **error)
 {
-	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE (device);
-
 	/* FuUsbDevice->probe */
 	if (!FU_DEVICE_CLASS (fu_dfu_csr_device_parent_class)->probe (device, error))
 		return FALSE;
-
-	/* proxy the quirk delay */
-	if (fu_device_has_custom_flag (device, FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY))
-		self->quirks = FU_DFU_CSR_DEVICE_QUIRK_REQUIRE_DELAY;
 
 	/* hardcoded */
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -423,6 +410,10 @@ fu_dfu_csr_device_setup (FuDevice *device, GError **error)
 {
 	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE (device);
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_dfu_csr_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	if (!fu_dfu_csr_device_clear_status (self, error))
 		return FALSE;
 
@@ -435,6 +426,9 @@ fu_dfu_csr_device_init (FuDfuCsrDevice *self)
 {
 	fu_device_add_protocol (FU_DEVICE (self), "com.qualcomm.dfu");
 	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_register_private_flag (FU_DEVICE (self),
+					FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY,
+					"require-delay");
 }
 
 static void

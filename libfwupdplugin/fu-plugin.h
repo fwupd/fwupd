@@ -116,6 +116,8 @@ void		 fu_plugin_add_device_gtype		(FuPlugin	*self,
 void		 fu_plugin_add_firmware_gtype		(FuPlugin	*self,
 							 const gchar	*id,
 							 GType		 gtype);
+void		 fu_plugin_add_udev_subsystem		(FuPlugin	*self,
+							 const gchar	*subsystem);
 gpointer	 fu_plugin_cache_lookup			(FuPlugin	*self,
 							 const gchar	*id);
 void		 fu_plugin_cache_remove			(FuPlugin	*self,

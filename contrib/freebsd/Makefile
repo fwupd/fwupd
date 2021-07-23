@@ -46,14 +46,17 @@ MESON_ARGS=	-Dgudev=false \
 		-Dplugin_dell=false \
 		-Dplugin_emmc=false \
 		-Dplugin_nvme=false \
+		-Dplugin_parade_lspcon=false \
 		-Dplugin_redfish=false \
 		-Dplugin_synaptics_mst=false \
 		-Dplugin_synaptics_rmi=false \
+		-Dplugin_realtek_mst=false \
 		-Dplugin_thunderbolt=false \
 		-Dplugin_tpm=false \
 		-Dpolkit=false \
 		-Dsystemd=false \
 		-Dtests=false \
+		-Ddocs=gtkdoc \
 		-Defi_binary=false
 
 .include <bsd.port.mk>

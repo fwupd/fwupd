@@ -32,6 +32,7 @@
 #include "fwupd-security-attr-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
+#include "fwupd-request-private.h"
 #include "fwupd-resources.h"
 
 #include "fu-common.h"
@@ -158,6 +159,25 @@ fu_main_engine_device_changed_cb (FuEngine *engine,
 				       FWUPD_DBUS_PATH,
 				       FWUPD_DBUS_INTERFACE,
 				       "DeviceChanged",
+				       g_variant_new_tuple (&val, 1), NULL);
+}
+
+static void
+fu_main_engine_device_request_cb (FuEngine *engine,
+				  FwupdRequest *request,
+				  FuMainPrivate *priv)
+{
+	GVariant *val;
+
+	/* not yet connected */
+	if (priv->connection == NULL)
+		return;
+	val = fwupd_request_to_variant (FWUPD_REQUEST (request));
+	g_dbus_connection_emit_signal (priv->connection,
+				       NULL,
+				       FWUPD_DBUS_PATH,
+				       FWUPD_DBUS_INTERFACE,
+				       "DeviceRequest",
 				       g_variant_new_tuple (&val, 1), NULL);
 }
 
@@ -1938,6 +1958,9 @@ main (int argc, char *argv[])
 			  priv);
 	g_signal_connect (priv->engine, "device-changed",
 			  G_CALLBACK (fu_main_engine_device_changed_cb),
+			  priv);
+	g_signal_connect (priv->engine, "device-request",
+			  G_CALLBACK (fu_main_engine_device_request_cb),
 			  priv);
 	g_signal_connect (priv->engine, "status-changed",
 			  G_CALLBACK (fu_main_engine_status_changed_cb),

@@ -30,6 +30,7 @@ build() {
     arch-meson -D b_lto=false $CI ../build \
         -Dplugin_intel_spi=true \
         -Dlzma=true \
+        -Ddocs=gtkdoc \
         -Defi_binary=false \
         -Dsupported_build=true
 
@@ -37,7 +38,7 @@ build() {
 }
 
 check() {
-    ninja -C build test
+    CACHE_DIRECTORY=/tmp ninja -C build test
 }
 
 package() {

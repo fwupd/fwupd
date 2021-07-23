@@ -6,9 +6,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <tss2/tss2_esys.h>
-
-#include "fu-common.h"
 
 #include "fu-tpm-eventlog-device.h"
 #include "fu-tpm-eventlog-parser.h"
@@ -74,7 +73,8 @@ fu_tpm_eventlog_device_init (FuTpmEventlogDevice *self)
 	fu_device_set_physical_id (FU_DEVICE (self), "DEVNAME=/dev/tpm0");
 	fu_device_set_logical_id (FU_DEVICE (self), "eventlog");
 	fu_device_add_parent_guid (FU_DEVICE (self), "system-tpm");
-	fu_device_add_instance_id (FU_DEVICE (self), "system-tpm-eventlog");
+	fu_device_add_instance_id_full (FU_DEVICE (self), "system-tpm-eventlog",
+					FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS);
 }
 
 static void
@@ -97,14 +97,16 @@ fu_tpm_eventlog_device_class_init (FuTpmEventlogDeviceClass *klass)
 }
 
 FuTpmEventlogDevice *
-fu_tpm_eventlog_device_new (const guint8 *buf, gsize bufsz, GError **error)
+fu_tpm_eventlog_device_new (FuContext *ctx,
+			    const guint8 *buf, gsize bufsz,
+			    GError **error)
 {
 	g_autoptr(FuTpmEventlogDevice) self = NULL;
 
 	g_return_val_if_fail (buf != NULL, NULL);
 
 	/* create object */
-	self = g_object_new (FU_TYPE_TPM_EVENTLOG_DEVICE, NULL);
+	self = g_object_new (FU_TYPE_TPM_EVENTLOG_DEVICE, "context", ctx, NULL);
 	self->items = fu_tpm_eventlog_parser_new (buf, bufsz,
 						  FU_TPM_EVENTLOG_PARSER_FLAG_NONE,
 						  error);

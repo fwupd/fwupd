@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <json-glib/json-glib.h>
+
 #include "fwupd-remote.h"
 
 G_BEGIN_DECLS
@@ -32,5 +34,7 @@ void		 fwupd_remote_set_keyring_kind		(FwupdRemote	*self,
 							 FwupdKeyringKind keyring_kind);
 gboolean	 fwupd_remote_setup			(FwupdRemote	*self,
 							 GError		**error);
+void		 fwupd_remote_to_json			(FwupdRemote	*self,
+							 JsonBuilder	*builder);
 
 G_END_DECLS

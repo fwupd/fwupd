@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 /* usb */
 #define FU_SYNAPTICS_CXAUDIO_INPUT_REPORT_SIZE			35

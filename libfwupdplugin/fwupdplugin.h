@@ -6,11 +6,6 @@
 
 #pragma once
 
-/**
- * SECTION:fwupdplugin
- * @short_description: Helper objects for plugins interacting with fwupd daemon
- */
-
 #define __FWUPDPLUGIN_H_INSIDE__
 
 #include <libfwupdplugin/fu-archive.h>
@@ -30,6 +25,7 @@
 #include <libfwupdplugin/fu-firmware.h>
 #include <libfwupdplugin/fu-firmware-common.h>
 #include <libfwupdplugin/fu-fmap-firmware.h>
+#include <libfwupdplugin/fu-hid-device.h>
 #include <libfwupdplugin/fu-i2c-device.h>
 #include <libfwupdplugin/fu-ihex-firmware.h>
 #include <libfwupdplugin/fu-io-channel.h>
@@ -39,6 +35,8 @@
 #include <libfwupdplugin/fu-srec-firmware.h>
 #include <libfwupdplugin/fu-efi-signature.h>
 #include <libfwupdplugin/fu-efi-signature-list.h>
+#include <libfwupdplugin/fu-ifd-firmware.h>
+#include <libfwupdplugin/fu-ifd-bios.h>
 #include <libfwupdplugin/fu-efivar.h>
 #include <libfwupdplugin/fu-udev-device.h>
 #include <libfwupdplugin/fu-usb-device.h>

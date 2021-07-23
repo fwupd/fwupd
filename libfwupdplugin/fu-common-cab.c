@@ -19,7 +19,7 @@
  *
  * Create an AppStream silo from a cabinet archive.
  *
- * Returns: a #XbSilo, or %NULL on error
+ * Returns: (transfer full): a #XbSilo, or %NULL on error
  *
  * Since: 1.2.0
  **/

@@ -299,10 +299,6 @@ msgstr "Membersihkan hasil dari pemutakhiran terakhir"
 msgid "Command not found"
 msgstr "Perintah tidak ditemukan"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Lanjutkan dengan pembaruan?"
-
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
 msgstr "Verifikasi hash kriptografis tersedia"
@@ -649,7 +645,7 @@ msgstr "Mendapatkan rilis-rilis bagi sebuah peranti"
 msgid "Gets the results from the last update"
 msgstr "Mendapatkan hasil dari pemutakhiran terakhir"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "Perangkat keras sedang menunggu untuk ditancapkan kembali"
 
@@ -1266,12 +1262,6 @@ msgstr "Memutakhirkan %s dari %s ke %s... "
 #, c-format
 msgid "Updating %s…"
 msgstr "Memutakhirkan %s…"
-
-#. TRANSLATORS: message letting the user know an upgrade is available
-#. * %1 is the device name and %2 and %3 are version strings
-#, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "Pembaruan tersedia untuk %s dari %s ke %s"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"

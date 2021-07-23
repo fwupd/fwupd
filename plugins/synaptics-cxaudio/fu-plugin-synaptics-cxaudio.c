@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 #include "fu-synaptics-cxaudio-device.h"
 #include "fu-synaptics-cxaudio-firmware.h"

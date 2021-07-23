@@ -32,8 +32,10 @@ ParentGuid = TBT-01081720
 [USB\VID_17EF&PID_307F]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = usb3,has-msp430
+Flags = usb3
 CounterpartGuid = USB\VID_17EF&PID_3080
+[USB\VID_17EF&PID_307F&HUB_0002]
+Flags = usb3,has-msp430
 [USB\VID_17EF&PID_307F&HUB_0006]
 ParentGuid = USB\VID_17EF&PID_307F&HUB_0002
 [USB\VID_17EF&PID_3080]

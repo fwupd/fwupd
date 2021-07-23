@@ -7,10 +7,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
-
-#include "fu-chunk.h"
-#include "fu-firmware.h"
 
 #include "fu-vli-usbhub-common.h"
 #include "fu-vli-usbhub-device.h"
@@ -30,10 +28,57 @@ struct _FuVliUsbhubDevice
 
 G_DEFINE_TYPE (FuVliUsbhubDevice, fu_vli_usbhub_device, FU_TYPE_VLI_DEVICE)
 
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_GPIOB:
+ *
+ * Use GPIO-B reset to reset the device.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_GPIOB	(1 << 0)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_USB2:
+ *
+ * Device is USB-2 speed.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_USB2			(1 << 1)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_USB3:
+ *
+ * Device is USB-3 speed.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_USB3			(1 << 2)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813:
+ *
+ * Device type VL813 needs unlocking with a custom VDR request.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813	(1 << 3)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_HAS_SHARED_SPI_PD:
+ *
+ * Device shares the SPI device with the PD device.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_HAS_SHARED_SPI_PD	(1 << 4)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_HAS_MSP430:
+ *
+ * Device has a MSP430 attached via I²C.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_HAS_MSP430		(1 << 5)
+/**
+ * FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX:
+ *
+ * Device has a RTD21XX attached via I²C.
+ */
+#define FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX		(1 << 6)
+
 static void
-fu_vli_usbhub_device_to_string (FuVliDevice *device, guint idt, GString *str)
+fu_vli_usbhub_device_to_string (FuDevice *device, guint idt, GString *str)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE (device);
+
+	/* parent */
+	FU_DEVICE_CLASS (fu_vli_usbhub_device_parent_class)->to_string (device, idt, str);
+
 	fu_common_string_append_kb (str, idt, "DisablePowersave", self->disable_powersave);
 	fu_common_string_append_kx (str, idt, "UpdateProtocol", self->update_protocol);
 	if (self->update_protocol >= 0x2) {
@@ -254,8 +299,9 @@ fu_vli_usbhub_device_spi_write_data (FuVliDevice *self,
 #define VL817_ADDR_GPIO_GET_INPUT_DATA		0xF6A2	/* 0=low, 1=high */
 
 static gboolean
-fu_vli_usbhub_device_attach_full (FuDevice *device, FuDevice *proxy, GError **error)
+fu_vli_usbhub_device_attach (FuDevice *device, GError **error)
 {
+	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(GError) error_local = NULL;
 
 	/* update UI */
@@ -263,7 +309,7 @@ fu_vli_usbhub_device_attach_full (FuDevice *device, FuDevice *proxy, GError **er
 
 	/* some hardware has to toggle a GPIO to reset the entire PCB */
 	if (fu_vli_device_get_kind (FU_VLI_DEVICE (proxy)) == FU_VLI_DEVICE_KIND_VL817 &&
-	    fu_device_has_custom_flag (proxy, "attach-with-gpiob")) {
+	    fu_device_has_private_flag (device, FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_GPIOB)) {
 		guint8 tmp = 0x0;
 
 		/* set GPIOB output enable */
@@ -315,25 +361,6 @@ fu_vli_usbhub_device_attach_full (FuDevice *device, FuDevice *proxy, GError **er
 	/* success */
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
-}
-
-static gboolean
-fu_vli_usbhub_device_attach (FuDevice *device, GError **error)
-{
-	FuDevice *proxy = fu_device_get_proxy (device);
-
-	/* if we do this in another plugin, perhaps move to the engine? */
-	if (proxy != NULL) {
-		g_autoptr(FuDeviceLocker) locker = NULL;
-		g_debug ("using proxy device %s", fu_device_get_id (proxy));
-		locker = fu_device_locker_new (proxy, error);
-		if (locker == NULL)
-			return FALSE;
-		return fu_vli_usbhub_device_attach_full (device, proxy, error);
-	}
-
-	/* normal case */
-	return fu_vli_usbhub_device_attach_full (device, device, error);
 }
 
 /* disable hub sleep states -- not really required by 815~ hubs */
@@ -491,16 +518,22 @@ fu_vli_usbhub_device_probe (FuDevice *device, GError **error)
 {
 	guint16 usbver = fu_usb_device_get_spec (FU_USB_DEVICE (device));
 
+	/* FuUsbDevice->probe */
+	if (!FU_DEVICE_CLASS (fu_vli_usbhub_device_parent_class)->probe (device, error))
+		return FALSE;
+
 	/* quirks now applied... */
-	if (usbver > 0x0300 || fu_device_has_custom_flag (device, "usb3")) {
-		fu_device_set_summary (device, "USB 3.x Hub");
+	if (usbver > 0x0300 ||
+	    fu_device_has_private_flag (device, FU_VLI_USBHUB_DEVICE_FLAG_USB3)) {
+		fu_device_set_summary (device, "USB 3.x hub");
 		/* prefer to show the USB 3 device and only fall back to the
 		 * USB 2 version as a recovery */
 		fu_device_set_priority (device, 1);
-	} else if (usbver > 0x0200 || fu_device_has_custom_flag (device, "usb2")) {
-		fu_device_set_summary (device, "USB 2.x Hub");
+	} else if (usbver > 0x0200 ||
+		   fu_device_has_private_flag (device, FU_VLI_USBHUB_DEVICE_FLAG_USB2)) {
+		fu_device_set_summary (device, "USB 2.x hub");
 	} else {
-		fu_device_set_summary (device, "USB Hub");
+		fu_device_set_summary (device, "USB hub");
 	}
 	return TRUE;
 }
@@ -581,13 +614,13 @@ fu_vli_usbhub_device_rtd21xx_setup (FuVliUsbhubDevice *self, GError **error)
 }
 
 static gboolean
-fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
+fu_vli_usbhub_device_ready (FuDevice *device, GError **error)
 {
 	FuVliUsbhubDevice *self = FU_VLI_USBHUB_DEVICE (device);
 	g_autoptr(GError) error_tmp = NULL;
 
 	/* try to read a block of data which will fail for 813-type devices */
-	if (fu_device_has_custom_flag (FU_DEVICE (self), "needs-unlock-legacy813") &&
+	if (fu_device_has_private_flag (device, FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813) &&
 	    !fu_vli_device_spi_read_block (FU_VLI_DEVICE (self), 0x0, (guint8 *) &self->hd1_hdr,
 					   sizeof(self->hd1_hdr), &error_tmp)) {
 		g_warning ("failed to read, trying to unlock 813: %s", error_tmp->message);
@@ -653,18 +686,18 @@ fu_vli_usbhub_device_setup (FuVliDevice *device, GError **error)
 	}
 
 	/* detect the PD child */
-	if (fu_device_has_custom_flag (FU_DEVICE (self), "has-shared-spi-pd")) {
+	if (fu_device_has_private_flag (device, FU_VLI_USBHUB_DEVICE_FLAG_HAS_SHARED_SPI_PD)) {
 		if (!fu_vli_usbhub_device_pd_setup (self, error))
 			return FALSE;
 	}
 
 	/* detect the I²C child */
 	if (fu_usb_device_get_spec (FU_USB_DEVICE (self)) >= 0x0300 &&
-	    fu_device_has_custom_flag (FU_DEVICE (self), "has-msp430")) {
+	    fu_device_has_private_flag (device, FU_VLI_USBHUB_DEVICE_FLAG_HAS_MSP430)) {
 		if (!fu_vli_usbhub_device_msp430_setup (self, error))
 			return FALSE;
 	}
-	if (fu_device_has_custom_flag (FU_DEVICE (self), "has-rtd21xx")) {
+	if (fu_device_has_private_flag (device, FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX)) {
 		if (!fu_vli_usbhub_device_rtd21xx_setup (self, error))
 			return FALSE;
 	}
@@ -987,6 +1020,27 @@ fu_vli_usbhub_device_init (FuVliUsbhubDevice *self)
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
 	fu_device_add_protocol (FU_DEVICE (self), "com.vli.usbhub");
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_VLI_USBHUB_DEVICE_FLAG_ATTACH_WITH_GPIOB,
+					 "attach-with-gpiob");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_VLI_USBHUB_DEVICE_FLAG_USB2,
+					 "usb3");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_VLI_USBHUB_DEVICE_FLAG_USB3,
+					 "usb2");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_VLI_USBHUB_DEVICE_FLAG_UNLOCK_LEGACY813,
+					 "unlock-legacy813");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_VLI_USBHUB_DEVICE_FLAG_HAS_SHARED_SPI_PD,
+					 "has-shared-spi-pd");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_VLI_USBHUB_DEVICE_FLAG_HAS_MSP430,
+					 "has-msp430");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_VLI_USBHUB_DEVICE_FLAG_HAS_RTD21XX,
+					 "has-rtd21xx");
 }
 
 static void
@@ -999,8 +1053,8 @@ fu_vli_usbhub_device_class_init (FuVliUsbhubDeviceClass *klass)
 	klass_device->write_firmware = fu_vli_usbhub_device_write_firmware;
 	klass_device->prepare_firmware = fu_vli_usbhub_device_prepare_firmware;
 	klass_device->attach = fu_vli_usbhub_device_attach;
-	klass_vli_device->to_string = fu_vli_usbhub_device_to_string;
-	klass_vli_device->setup = fu_vli_usbhub_device_setup;
+	klass_device->to_string = fu_vli_usbhub_device_to_string;
+	klass_device->ready = fu_vli_usbhub_device_ready;
 	klass_vli_device->spi_chip_erase = fu_vli_usbhub_device_spi_chip_erase;
 	klass_vli_device->spi_sector_erase = fu_vli_usbhub_device_spi_sector_erase;
 	klass_vli_device->spi_read_data = fu_vli_usbhub_device_spi_read_data;

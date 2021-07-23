@@ -6,12 +6,11 @@
 
 #include "config.h"
 
+#include <fwupd.h>
 #include <string.h>
 
 #include "fu-ep963x-common.h"
 #include "fu-ep963x-firmware.h"
-
-#include "fwupd-error.h"
 
 struct _FuEp963xFirmware {
 	FuFirmware		 parent_instance;

@@ -6,10 +6,10 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <sys/ioctl.h>
 #include <linux/nvme_ioctl.h>
 
-#include "fu-chunk.h"
 #include "fu-nvme-common.h"
 #include "fu-nvme-device.h"
 
@@ -20,6 +20,13 @@ struct _FuNvmeDevice {
 	guint			 pci_depth;
 	guint64			 write_block_size;
 };
+
+/**
+ * FU_NVME_DEVICE_FLAG_FORCE_ALIGN:
+ *
+ * Force alignment of the firmware file.
+ */
+#define FU_NVME_DEVICE_FLAG_FORCE_ALIGN		(1 << 0)
 
 G_DEFINE_TYPE (FuNvmeDevice, fu_nvme_device, FU_TYPE_UDEV_DEVICE)
 
@@ -251,7 +258,7 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 static void
 fu_nvme_device_dump (const gchar *title, const guint8 *buf, gsize sz)
 {
-	if (g_getenv ("FWPUD_NVME_VERBOSE") == NULL)
+	if (g_getenv ("FWUPD_NVME_VERBOSE") == NULL)
 		return;
 	g_print ("%s (%" G_GSIZE_FORMAT "):", title, sz);
 	for (gsize i = 0; i < sz; i++) {
@@ -330,7 +337,7 @@ fu_nvme_device_write_firmware (FuDevice *device,
 
 	/* some vendors provide firmware files whose sizes are not multiples
 	 * of blksz *and* the device won't accept blocks of different sizes */
-	if (fu_device_has_custom_flag (device, "force-align")) {
+	if (fu_device_has_private_flag (device, FU_NVME_DEVICE_FLAG_FORCE_ALIGN)) {
 		fw2 = fu_common_bytes_align (fw, block_size, 0xff);
 	} else {
 		fw2 = g_bytes_ref (fw);
@@ -397,12 +404,15 @@ fu_nvme_device_init (FuNvmeDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
-	fu_device_set_summary (FU_DEVICE (self), "NVM Express Solid State Drive");
+	fu_device_set_summary (FU_DEVICE (self), "NVM Express solid state drive");
 	fu_device_add_icon (FU_DEVICE (self), "drive-harddisk");
 	fu_device_add_protocol (FU_DEVICE (self), "org.nvmexpress");
 	fu_udev_device_set_flags (FU_UDEV_DEVICE (self),
 				  FU_UDEV_DEVICE_FLAG_OPEN_READ |
 				  FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_NVME_DEVICE_FLAG_FORCE_ALIGN,
+					 "force-align");
 }
 
 static void
@@ -425,9 +435,12 @@ fu_nvme_device_class_init (FuNvmeDeviceClass *klass)
 }
 
 FuNvmeDevice *
-fu_nvme_device_new_from_blob (const guint8 *buf, gsize sz, GError **error)
+fu_nvme_device_new_from_blob (FuContext *ctx,
+			      const guint8 *buf, gsize sz,
+			      GError **error)
 {
-	g_autoptr(FuNvmeDevice) self = g_object_new (FU_TYPE_NVME_DEVICE, NULL);
+	g_autoptr(FuNvmeDevice) self = NULL;
+	self = g_object_new (FU_TYPE_NVME_DEVICE, "context", ctx, NULL);
 	if (!fu_nvme_device_parse_cns (self, buf, sz, error))
 		return NULL;
 	return g_steal_pointer (&self);

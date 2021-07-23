@@ -15,6 +15,7 @@ meson .. \
     --libexecdir=$target \
     --bindir=$target \
     -Dbuild=standalone \
+    -Ddocs=none \
     -Dpolkit=false \
     -Dplugin_flashrom=false \
     -Dplugin_uefi_capsule=false \
@@ -22,6 +23,8 @@ meson .. \
     -Dplugin_altos=false \
     -Dplugin_dell=false \
     -Dplugin_nvme=false \
+    -Dplugin_parade_lspcon=false \
+    -Dplugin_realtek_mst=false \
     -Dplugin_platform_integrity=false \
     -Dplugin_tpm=false \
     -Dsystemd=false \

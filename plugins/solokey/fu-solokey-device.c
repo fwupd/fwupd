@@ -6,9 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-chunk.h"
 #include "fu-solokey-device.h"
 #include "fu-solokey-firmware.h"
 
@@ -389,6 +389,10 @@ fu_solokey_device_setup (FuDevice *device, GError **error)
 {
 	FuSolokeyDevice *self = FU_SOLOKEY_DEVICE (device);
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_solokey_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* get channel ID */
 	if (!fu_solokey_device_setup_cid (self, error))
 		return FALSE;
@@ -496,7 +500,7 @@ fu_solokey_device_init (FuSolokeyDevice *self)
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_protocol (FU_DEVICE (self), "com.solokeys");
 	fu_device_set_name (FU_DEVICE (self), "Solo Secure");
-	fu_device_set_summary (FU_DEVICE (self), "An open source FIDO2 security key");
+	fu_device_set_summary (FU_DEVICE (self), "Open source FIDO2 security key");
 	fu_device_add_icon (FU_DEVICE (self), "applications-internet");
 }
 

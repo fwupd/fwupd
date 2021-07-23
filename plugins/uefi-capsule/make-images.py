@@ -50,7 +50,7 @@ class PotFile:
                     continue
                 try:
                     key, value = line.split(" ", maxsplit=1)
-                except ValueError as _:
+                except ValueError:
                     continue
                 if key == "msgid":
                     lang_en = value[1:-1]
@@ -101,7 +101,7 @@ def main(args) -> int:
                 potfile = PotFile(os.path.join(args.podir, "{}.po".format(lang)))
                 try:
                     label_translated = potfile.msgs[args.label]
-                except KeyError as _:
+                except KeyError:
                     continue
                 if label_translated == args.label:
                     continue
@@ -149,7 +149,7 @@ def main(args) -> int:
                 del img, cctx, pctx, layout
 
                 def find_size(fs, f, data):
-                    """ find our size, I hope... """
+                    """find our size, I hope..."""
                     (ink, log) = gs.extents(f)
                     if ink.height == 0 or ink.width == 0:
                         return False
@@ -182,7 +182,7 @@ def main(args) -> int:
                 cctx.move_to(x, y)
 
                 def do_write(fs, f, data):
-                    """ write out glyphs """
+                    """write out glyphs"""
                     ink = gs.extents(f)[0]
                     if ink.height == 0 or ink.width == 0:
                         return False

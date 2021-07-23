@@ -6,9 +6,8 @@
 
 #include "config.h"
 
-#include <libfwupd/fwupd-error.h>
+#include <fwupdplugin.h>
 
-#include "fu-common.h"
 #include "fu-thunderbolt-firmware.h"
 #include "fu-thunderbolt-firmware-update.h"
 

@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
+
 #include "fu-ccgx-dmc-common.h"
 
 #define FU_TYPE_CCGX_DMC_FIRMWARE (fu_ccgx_dmc_firmware_get_type ())

@@ -6,10 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <gio/gunixfdlist.h>
 #include <glib/gstdio.h>
-
-#include "fu-plugin-vfuncs.h"
 
 struct FuPluginData {
 	GDBusProxy		*logind_proxy;

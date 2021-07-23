@@ -173,7 +173,7 @@ parts:
     meson-parameters: [--prefix=/,
                        -Dtests=false,
                        -Dbuild=all,
-                       -Dgtkdoc=false,
+                       -Ddocs=none,
                        -Dintrospection=false,
                        -Dman=false,
                        -Dplugin_modem_manager=true,

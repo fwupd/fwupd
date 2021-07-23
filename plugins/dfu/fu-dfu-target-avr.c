@@ -6,18 +6,15 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 #include <stdio.h>
-
-#include "fu-chunk.h"
 
 #include "fu-dfu-common.h"
 #include "fu-dfu-sector.h"
 #include "fu-dfu-target-avr.h"
-#include "fu-dfu-target-private.h"
+#include "fu-dfu-target-private.h" /* waive-pre-commit */
 #include "fu-dfu-device.h"
-
-#include "fwupd-error.h"
 
 /**
  * FU_QUIRKS_DFU_AVR_ALT_NAME:
@@ -163,8 +160,8 @@ fu_dfu_target_avr_select_memory_unit (FuDfuTarget *target,
 	guint8 buf[4];
 
 	/* check legacy protocol quirk */
-	if (fu_device_has_custom_flag (FU_DEVICE (fu_dfu_target_get_device (target)),
-				       "legacy-protocol")) {
+	if (fu_device_has_private_flag (FU_DEVICE (fu_dfu_target_get_device (target)),
+					FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 		g_debug ("ignoring select memory unit as legacy protocol");
 		return TRUE;
 	}
@@ -423,8 +420,8 @@ fu_dfu_target_avr_setup (FuDfuTarget *target, GError **error)
 		return TRUE;
 
 	/* different methods for AVR vs. AVR32 */
-	if (fu_device_has_custom_flag (FU_DEVICE (fu_dfu_target_get_device (target)),
-				       "legacy-protocol")) {
+	if (fu_device_has_private_flag (FU_DEVICE (fu_dfu_target_get_device (target)),
+					FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 		chunk_sig = fu_dfu_target_avr_get_chip_signature (target, error);
 		if (chunk_sig == NULL)
 			return FALSE;
@@ -544,8 +541,8 @@ fu_dfu_target_avr_download_element (FuDfuTarget *target,
 	}
 
 	/* the original AVR protocol uses a half-size control block */
-	if (fu_device_has_custom_flag (FU_DEVICE (fu_dfu_target_get_device (target)),
-				       "legacy-protocol")) {
+	if (fu_device_has_private_flag (FU_DEVICE (fu_dfu_target_get_device (target)),
+					FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 		header_sz = ATMEL_AVR_CONTROL_BLOCK_SIZE;
 	}
 
@@ -568,8 +565,8 @@ fu_dfu_target_avr_download_element (FuDfuTarget *target,
 
 		/* select page if required */
 		if (fu_chunk_get_page (chk2) != page_last) {
-			if (fu_device_has_custom_flag (FU_DEVICE (fu_dfu_target_get_device (target)),
-						       "legacy-protocol")) {
+			if (fu_device_has_private_flag (FU_DEVICE (fu_dfu_target_get_device (target)),
+							FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 				if (!fu_dfu_target_avr_select_memory_page (target,
 									fu_chunk_get_page (chk2),
 									error))
@@ -666,8 +663,8 @@ fu_dfu_target_avr_upload_element (FuDfuTarget *target,
 
 		/* select page if required */
 		if (fu_chunk_get_page (chk) != page_last) {
-			if (fu_device_has_custom_flag (FU_DEVICE (fu_dfu_target_get_device (target)),
-						       "legacy-protocol")) {
+			if (fu_device_has_private_flag (FU_DEVICE (fu_dfu_target_get_device (target)),
+							FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 				if (!fu_dfu_target_avr_select_memory_page (target,
 									   fu_chunk_get_page (chk),
 									   error))

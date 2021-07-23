@@ -6,10 +6,10 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <scsi/sg.h>
 
 #include "fu-ata-device.h"
-#include "fu-chunk.h"
 
 #define FU_ATA_IDENTIFY_SIZE	512	/* bytes */
 #define FU_ATA_BLOCK_SIZE	512	/* bytes */
@@ -396,8 +396,14 @@ fu_ata_device_parse_id (FuAtaDevice *self, const guint8 *buf, gsize sz, GError *
 
 	/* if not already set using the vendor block or a OUI quirk */
 	name = fu_ata_device_get_string (id, 27, 46);
-	if (name != NULL && !has_oui_quirk)
-		fu_ata_device_parse_vendor_name (self, name);
+	if (name != NULL) {
+		/* use the name as-is */
+		if (has_oui_quirk) {
+			fu_device_set_name (FU_DEVICE (self), name);
+		} else {
+			fu_ata_device_parse_vendor_name (self, name);
+		}
+	}
 
 	/* 8 byte additional product identifier == SKU? */
 	sku = fu_ata_device_get_string (id, 170, 173);
@@ -825,7 +831,7 @@ fu_ata_device_init (FuAtaDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION);
-	fu_device_set_summary (FU_DEVICE (self), "ATA Drive");
+	fu_device_set_summary (FU_DEVICE (self), "ATA drive");
 	fu_device_add_icon (FU_DEVICE (self), "drive-harddisk");
 	fu_device_add_protocol (FU_DEVICE (self), "org.t13.ata");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
@@ -853,9 +859,13 @@ fu_ata_device_class_init (FuAtaDeviceClass *klass)
 }
 
 FuAtaDevice *
-fu_ata_device_new_from_blob (const guint8 *buf, gsize sz, GError **error)
+fu_ata_device_new_from_blob (FuContext *ctx,
+			     const guint8 *buf, gsize sz,
+			     GError **error)
 {
-	g_autoptr(FuAtaDevice) self = g_object_new (FU_TYPE_ATA_DEVICE, NULL);
+	g_autoptr(FuAtaDevice) self = NULL;
+
+	self = g_object_new (FU_TYPE_ATA_DEVICE, "context", ctx, NULL);
 	if (!fu_ata_device_parse_id (self, buf, sz, error))
 		return NULL;
 	return g_steal_pointer (&self);

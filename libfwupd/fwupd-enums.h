@@ -71,6 +71,7 @@ typedef enum {
  * @FWUPD_FEATURE_FLAG_DETACH_ACTION:		Can perform detach action, typically showing text
  * @FWUPD_FEATURE_FLAG_UPDATE_ACTION:		Can perform update action, typically showing text
  * @FWUPD_FEATURE_FLAG_SWITCH_BRANCH:		Can switch the firmware branch
+ * @FWUPD_FEATURE_FLAG_REQUESTS:		Can show interactive requests
  *
  * The flags to the feature capabilities of the front-end client.
  **/
@@ -80,6 +81,7 @@ typedef enum {
 	FWUPD_FEATURE_FLAG_DETACH_ACTION	= 1 << 1,	/* Since: 1.4.5 */
 	FWUPD_FEATURE_FLAG_UPDATE_ACTION	= 1 << 2,	/* Since: 1.4.5 */
 	FWUPD_FEATURE_FLAG_SWITCH_BRANCH	= 1 << 3,	/* Since: 1.5.0 */
+	FWUPD_FEATURE_FLAG_REQUESTS		= 1 << 4,	/* Since: 1.6.2 */
 	/*< private >*/
 	FWUPD_FEATURE_FLAG_LAST
 } FwupdFeatureFlags;
@@ -170,7 +172,7 @@ typedef enum {
  *
  * The success or failure of a previous update has been reported to a metadata server.
  *
- * Since 1.0.4
+ * Since: 1.0.4
  */
 #define FWUPD_DEVICE_FLAG_REPORTED		(1u << 9)
 /**
@@ -178,7 +180,7 @@ typedef enum {
  *
  * The user has been notified about a change in the device state.
  *
- * Since 1.0.5
+ * Since: 1.0.5
  */
 #define FWUPD_DEVICE_FLAG_NOTIFIED		(1u << 10)
 /**
@@ -186,7 +188,7 @@ typedef enum {
  *
  * The device will always display use the runtime version rather than the bootloader version.
  *
- * Since 1.0.6
+ * Since: 1.0.6
  */
 #define FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION	(1u << 11)
 /**
@@ -195,7 +197,7 @@ typedef enum {
  * The composite device requires installation of composite firmware on the parent before the child.
  * Normally the child is installed before the parent.
  *
- * Since 1.0.8
+ * Since: 1.0.8
  */
 #define FWUPD_DEVICE_FLAG_INSTALL_PARENT_FIRST	(1u << 12)
 /**
@@ -203,7 +205,7 @@ typedef enum {
  *
  * The device is currently in a read-only bootloader mode and not running application code.
  *
- * Since 1.0.8
+ * Since: 1.0.8
  */
 #define FWUPD_DEVICE_FLAG_IS_BOOTLOADER		(1u << 13)
 /**
@@ -211,7 +213,7 @@ typedef enum {
  *
  * The device is in the middle of and update and the hardware is waiting to be probed/replugged.
  *
- * Since 1.1.2
+ * Since: 1.1.2
  */
 #define FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG	(1u << 14)
 /**
@@ -219,7 +221,7 @@ typedef enum {
  *
  * When processing an update for the device, plugins should ignore all validation safety checks.
  *
- * Since 1.1.2
+ * Since: 1.1.2
  */
 #define FWUPD_DEVICE_FLAG_IGNORE_VALIDATION	(1u << 15)
 /**
@@ -228,7 +230,7 @@ typedef enum {
  * A trusted client is reading information about the device.
  * Extra metadata such as serial number can be exposed about this device.
  *
- * Since 1.1.2
+ * Since: 1.1.2
  */
 #define FWUPD_DEVICE_FLAG_TRUSTED		(1u << 16)
 /**
@@ -236,7 +238,7 @@ typedef enum {
  *
  * The device requires the system to be shutdown to finish application of new firmware.
  *
- * Since 1.2.4
+ * Since: 1.2.4
  */
 #define FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN	(1u << 17)
 /**
@@ -244,7 +246,7 @@ typedef enum {
  *
  * The device requires the update to be retried, possibly with a different plugin.
  *
- * Since 1.2.5
+ * Since: 1.2.5
  */
 #define FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED (1u << 18)
 /**
@@ -252,7 +254,7 @@ typedef enum {
  *
  * Deprecated, no not use
  *
- * Since 1.2.5
+ * Since: 1.2.5
  * Deprecated 1.5.5
  */
 #define FWUPD_DEVICE_FLAG_NO_AUTO_INSTANCE_IDS	(1u << 19)
@@ -263,7 +265,7 @@ typedef enum {
  * This process may occur automatically on shutdown in some operating systems
  * or when the device is unplugged with some devices.
  *
- * Since 1.2.6
+ * Since: 1.2.6
  */
 #define FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION	(1u << 20)
 /**
@@ -271,7 +273,7 @@ typedef enum {
  *
  * Deprecated, no not use
  *
- * Since 1.2.9
+ * Since: 1.2.9
  * Deprecate: 1.5.5
  */
 #define FWUPD_DEVICE_FLAG_ENSURE_SEMVER		(1u << 21)
@@ -280,7 +282,7 @@ typedef enum {
  *
  * The device is used for historical data only.
  *
- * Since 1.3.2
+ * Since: 1.3.2
  */
 #define FWUPD_DEVICE_FLAG_HISTORICAL		(1u << 22)
 /**
@@ -288,7 +290,7 @@ typedef enum {
  *
  * Deprecated, no not use
  *
- * Since 1.3.3
+ * Since: 1.3.3
  * Deprecated 1.5.5
  */
 #define FWUPD_DEVICE_FLAG_ONLY_SUPPORTED	(1u << 23)
@@ -298,7 +300,7 @@ typedef enum {
  * The device will disappear after the update is complete and success
  * or failure can't be verified.
  *
- * Since 1.3.3
+ * Since: 1.3.3
  */
 #define FWUPD_DEVICE_FLAG_WILL_DISAPPEAR	(1u << 24)
 /**
@@ -306,7 +308,7 @@ typedef enum {
  *
  * THe device checksums can be compared against metadata.
  *
- * Since 1.3.3
+ * Since: 1.3.3
  */
 #define FWUPD_DEVICE_FLAG_CAN_VERIFY		(1u << 25)
 /**
@@ -314,7 +316,7 @@ typedef enum {
  *
  * The device application firmware image can be dumped from device for verification.
  *
- * Since 1.3.3
+ * Since: 1.3.3
  */
 #define FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE	(1u << 26)
 /**
@@ -323,7 +325,7 @@ typedef enum {
  * The device firmware update architecture uses a redundancy mechanism such
  * as A/B partitions for updates.
  *
- * Since 1.3.3
+ * Since: 1.3.3
  */
 #define FWUPD_DEVICE_FLAG_DUAL_IMAGE		(1u << 27)
 /**
@@ -332,7 +334,7 @@ typedef enum {
  * In flashing mode, the device will only accept intended payloads and will
  * revert back to a valid firmware image if an invalid or incomplete payload was sent.
  *
- * Since 1.3.3
+ * Since: 1.3.3
  */
 #define FWUPD_DEVICE_FLAG_SELF_RECOVERY		(1u << 28)
 /**
@@ -341,7 +343,7 @@ typedef enum {
  * The device remains usable while the update flashes or schedules the update.
  * The update will implicitly be applied next time the device is power cycled or possibly activated.
  *
- * Since 1.3.3
+ * Since: 1.3.3
  */
 #define FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE	(1u << 29)
 /**
@@ -349,7 +351,7 @@ typedef enum {
  *
  * All firmware updates for this device require a firmware version check.
  *
- * Since 1.3.7
+ * Since: 1.3.7
  */
 #define FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED (1u << 30)
 /**
@@ -357,7 +359,7 @@ typedef enum {
  *
  * Install each intermediate releases for the device rather than jumping directly to the newest.
  *
- * Since 1.3.7
+ * Since: 1.3.7
  */
 #define FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES	(1u << 31)
 /**
@@ -365,7 +367,7 @@ typedef enum {
  *
  * Deprecated, no not use
  *
- * Since 1.4.0
+ * Since: 1.4.0
  * Deprecated 1.5.5
  */
 #define FWUPD_DEVICE_FLAG_MD_SET_NAME		(1llu << 32)
@@ -374,7 +376,7 @@ typedef enum {
  *
  * Deprecated, no not use
  *
- * Since 1.4.0
+ * Since: 1.4.0
  * Deprecated 1.5.5
  */
 #define FWUPD_DEVICE_FLAG_MD_SET_NAME_CATEGORY	(1llu << 33)
@@ -383,7 +385,7 @@ typedef enum {
  *
  * Deprecated, no not use
  *
- * Since 1.4.0
+ * Since: 1.4.0
  * Deprecated 1.5.5
  */
 #define FWUPD_DEVICE_FLAG_MD_SET_VERFMT		(1llu << 34)
@@ -393,7 +395,7 @@ typedef enum {
  * The device will add counterpart GUIDs from an alternate mode like bootloader.
  * This flag is typically specified in a quirk.
  *
- * Since 1.4.0
+ * Since: 1.4.0
  */
 #define FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS	(1llu << 35)
 /**
@@ -401,7 +403,7 @@ typedef enum {
  *
  * Deprecated, no not use
  *
- * Since 1.4.1
+ * Since: 1.4.1
  * Deprecated 1.5.8
  */
 #define FWUPD_DEVICE_FLAG_NO_GUID_MATCHING	(1llu << 36)
@@ -411,7 +413,7 @@ typedef enum {
  * The device is updatable but is currently inhbitied from updates in the client.
  * Reasons include but are not limited to low power or requiring reboot from a previous update.
  *
- * Since 1.4.1
+ * Since: 1.4.1
  */
 #define FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN	(1llu << 37)
 /**
@@ -419,7 +421,7 @@ typedef enum {
  *
  * The device relies upon activation or power cycle to load firmware.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_DEVICE_FLAG_SKIPS_RESTART		(1llu << 38)
 /**
@@ -427,7 +429,7 @@ typedef enum {
  *
  * The device supports switching to a different stream of firmware.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES	(1llu << 39)
 /**
@@ -435,7 +437,7 @@ typedef enum {
  *
  * The device firmware should be saved before installing firmware.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL	(1llu << 40)
 /**
@@ -443,7 +445,7 @@ typedef enum {
  *
  *Deprecated, no not use
  *
- * Since 1.5.2
+ * Since: 1.5.2
  * Deprecated 1.5.5
  */
 #define FWUPD_DEVICE_FLAG_MD_SET_ICON		(1llu << 41)
@@ -456,90 +458,90 @@ typedef enum {
  * Since 0.7.3
  */
 #define FWUPD_DEVICE_FLAG_UNKNOWN		G_MAXUINT64
- /**
-  * FwupdDeviceFlags:
-  *
-  * Flags used to represent device attributes
-  */
+/**
+ * FwupdDeviceFlags:
+ *
+ * Flags used to represent device attributes
+ */
 typedef guint64 FwupdDeviceFlags;
 
- /**
-  * FWUPD_RELEASE_FLAG_NONE:
-  *
-  * No flags are set.
-  *
-  * Since 1.2.6
-  */
+/**
+ * FWUPD_RELEASE_FLAG_NONE:
+ *
+ * No flags are set.
+ *
+ * Since: 1.2.6
+ */
 #define FWUPD_RELEASE_FLAG_NONE			(0u)
- /**
-  * FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD:
-  *
-  * The payload binary is trusted.
-  *
-  * Since 1.2.6
-  */
+/**
+ * FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD:
+ *
+ * The payload binary is trusted.
+ *
+ * Since: 1.2.6
+ */
 #define FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD	(1u << 0)
- /**
-  * FWUPD_RELEASE_FLAG_TRUSTED_METADATA:
-  *
-  * The payload metadata is trusted.
-  *
-  * Since 1.2.6
-  */
+/**
+ * FWUPD_RELEASE_FLAG_TRUSTED_METADATA:
+ *
+ * The payload metadata is trusted.
+ *
+ * Since: 1.2.6
+ */
 #define FWUPD_RELEASE_FLAG_TRUSTED_METADATA	(1u << 1)
- /**
-  * FWUPD_RELEASE_FLAG_IS_UPGRADE:
-  *
-  * The release is newer than the device version.
-  *
-  * Since 1.2.6
-  */
+/**
+ * FWUPD_RELEASE_FLAG_IS_UPGRADE:
+ *
+ * The release is newer than the device version.
+ *
+ * Since: 1.2.6
+ */
 #define FWUPD_RELEASE_FLAG_IS_UPGRADE		(1u << 2)
- /**
-  * FWUPD_RELEASE_FLAG_IS_DOWNGRADE:
-  *
-  * The release is older than the device version.
-  *
-  * Since 1.2.6
-  */
+/**
+ * FWUPD_RELEASE_FLAG_IS_DOWNGRADE:
+ *
+ * The release is older than the device version.
+ *
+ * Since: 1.2.6
+ */
 #define FWUPD_RELEASE_FLAG_IS_DOWNGRADE		(1u << 3)
- /**
-  * FWUPD_RELEASE_FLAG_BLOCKED_VERSION:
-  *
-  * The installation of the release is blocked as below device version-lowest.
-  *
-  * Since 1.2.6
-  */
+/**
+ * FWUPD_RELEASE_FLAG_BLOCKED_VERSION:
+ *
+ * The installation of the release is blocked as below device version-lowest.
+ *
+ * Since: 1.2.6
+ */
 #define FWUPD_RELEASE_FLAG_BLOCKED_VERSION	(1u << 4)
- /**
-  * FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL:
-  *
-  * The installation of the release is blocked as release not approved by an administrator.
-  *
-  * Since 1.2.6
-  */
+/**
+ * FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL:
+ *
+ * The installation of the release is blocked as release not approved by an administrator.
+ *
+ * Since: 1.2.6
+ */
 #define FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL	(1u << 5)
- /**
-  * FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH:
-  *
-  * The release is an alternate branch of firmware.
-  *
-  * Since 1.5.0
-  */
+/**
+ * FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH:
+ *
+ * The release is an alternate branch of firmware.
+ *
+ * Since: 1.5.0
+ */
 #define FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH	(1u << 6)
- /**
-  * FWUPD_RELEASE_FLAG_UNKNOWN:
-  *
-  * The release flag is unknown, typically caused by using mismatched client and daemon.
-  *
-  * Since 1.2.6
-  */
+/**
+ * FWUPD_RELEASE_FLAG_UNKNOWN:
+ *
+ * The release flag is unknown, typically caused by using mismatched client and daemon.
+ *
+ * Since: 1.2.6
+ */
 #define FWUPD_RELEASE_FLAG_UNKNOWN		G_MAXUINT64
- /**
-  * FwupdReleaseFlags:
-  *
-  * Flags used to represent release attributes
-  */
+/**
+ * FwupdReleaseFlags:
+ *
+ * Flags used to represent release attributes
+ */
 typedef guint64 FwupdReleaseFlags;
 
 /**
@@ -567,7 +569,7 @@ typedef enum {
  *
  * No plugin flags are set.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_PLUGIN_FLAG_NONE			(0u)
 /**
@@ -575,7 +577,7 @@ typedef enum {
  *
  * The plugin has been disabled, either by daemon configuration or a problem.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_PLUGIN_FLAG_DISABLED		(1u << 0)
 /**
@@ -583,7 +585,7 @@ typedef enum {
  *
  * The plugin has a problem and would like to show a user warning to a supported client.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_PLUGIN_FLAG_USER_WARNING		(1u << 1)
 /**
@@ -592,7 +594,7 @@ typedef enum {
  * When the plugin loads it should clear the UPDATABLE flag from any devices.
  * This typically happens when the device requires a system restart.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE	(1u << 2)
 /**
@@ -602,7 +604,7 @@ typedef enum {
  * This typically happens with plugins designed for a specific platform design
  * (such as the dell plugin only works on Dell systems).
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_PLUGIN_FLAG_NO_HARDWARE		(1u << 3)
 /**
@@ -611,7 +613,7 @@ typedef enum {
  * The plugin discovered that UEFI UpdateCapsule are unsupported.
  * Supported clients will display this information to a user.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED	(1u << 4)
 /**
@@ -620,7 +622,7 @@ typedef enum {
  * The plugin discovered that hardware unlock is required.
  * Supported clients will display this information to a user.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED	(1u << 5)
 /**
@@ -629,7 +631,7 @@ typedef enum {
  * The plugin discovered the efivar filesystem is not found and is required for this plugin.
  * Supported clients will display this information to a user.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED	(1u << 6)
 /**
@@ -638,7 +640,7 @@ typedef enum {
  * The plugins discovered that the EFI system partition was not found.
  * Supported clients will display this information to a user.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND		(1u << 7)
 /**
@@ -647,7 +649,7 @@ typedef enum {
  * The plugin discovered the system is running in legacy CSM mode.
  * Supported clients will display this information to a user.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_PLUGIN_FLAG_LEGACY_BIOS		(1u << 8)
 /**
@@ -656,7 +658,7 @@ typedef enum {
  * Failed to open plugin (missing dependency).
  * Supported clients will display this information to a user.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_PLUGIN_FLAG_FAILED_OPEN		(1u << 9)
 /**
@@ -664,16 +666,33 @@ typedef enum {
  *
  * A specific HWID is required to use this plugin.
  *
- * Since 1.5.8
+ * Since: 1.5.8
  */
 #define FWUPD_PLUGIN_FLAG_REQUIRE_HWID		(1u << 10)
+/**
+ * FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD:
+ *
+ * The feature is not supported as the kernel is too old.
+ *
+ * Since: 1.6.2
+ */
+#define FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD	(1u << 11)
+/**
+ * FWUPD_PLUGIN_FLAG_AUTH_REQUIRED:
+ *
+ * The plugin requires the user to provide authentication details.
+ * Supported clients will display this information to a user.
+ *
+ * Since: 1.6.2
+ */
+#define FWUPD_PLUGIN_FLAG_AUTH_REQUIRED		(1u << 12)
 /**
  * FWUPD_PLUGIN_FLAG_UNKNOWN:
  *
  * The plugin flag is Unknown.
  * This is usually caused by a mismatched libfwupdplugin and daemon.
  *
- * Since 1.5.0
+ * Since: 1.5.0
  */
 #define FWUPD_PLUGIN_FLAG_UNKNOWN		G_MAXUINT64
  /**

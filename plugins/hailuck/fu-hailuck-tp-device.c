@@ -6,8 +6,7 @@
 
 #include "config.h"
 
-#include "fu-chunk.h"
-#include "fu-hid-device.h"
+#include <fwupdplugin.h>
 
 #include "fu-hailuck-common.h"
 #include "fu-hailuck-tp-device.h"
@@ -35,20 +34,6 @@ fu_hailuck_tp_device_probe (FuDevice *device, GError **error)
 	fu_device_add_instance_id (device, devid2);
 
 	return TRUE;
-}
-
-static gboolean
-fu_hailuck_tp_device_open (FuDevice *device, GError **error)
-{
-	FuDevice *parent = fu_device_get_parent (device);
-	return fu_device_open (parent, error);
-}
-
-static gboolean
-fu_hailuck_tp_device_close (FuDevice *device, GError **error)
-{
-	FuDevice *parent = fu_device_get_parent (device);
-	return fu_device_close (parent, error);
 }
 
 typedef struct {
@@ -207,6 +192,7 @@ fu_hailuck_tp_device_init (FuHailuckTpDevice *self)
 	fu_device_set_name (FU_DEVICE (self), "Touchpad");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 	fu_device_add_icon (FU_DEVICE (self), "input-touchpad");
 	fu_device_set_remove_delay (FU_DEVICE (self),
 				    FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
@@ -217,8 +203,6 @@ fu_hailuck_tp_device_class_init (FuHailuckTpDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_hailuck_tp_device_write_firmware;
-	klass_device->open = fu_hailuck_tp_device_open;
-	klass_device->close = fu_hailuck_tp_device_close;
 	klass_device->probe = fu_hailuck_tp_device_probe;
 }
 

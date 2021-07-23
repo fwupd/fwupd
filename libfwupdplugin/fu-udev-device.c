@@ -27,12 +27,11 @@
 #include "fu-udev-device-private.h"
 
 /**
- * SECTION:fu-udev-device
- * @short_description: a udev device
+ * FuUdevDevice:
  *
- * An object that represents a udev device.
+ * A UDev device, typically only available on Linux.
  *
- * See also: #FuDevice
+ * See also: [class@FuDevice]
  */
 
 typedef struct
@@ -367,7 +366,8 @@ fu_udev_device_probe (FuDevice *device, GError **error)
 	}
 
 	/* set serial */
-	if (fu_device_get_serial (device) == NULL) {
+	if (!fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER) &&
+	    fu_device_get_serial (device) == NULL) {
 		tmp = g_udev_device_get_property (priv->udev_device, "ID_SERIAL_SHORT");
 		if (tmp == NULL)
 			tmp = g_udev_device_get_property (priv->udev_device, "ID_SERIAL");
@@ -494,7 +494,17 @@ fu_udev_device_get_miscdev0 (FuUdevDevice *self)
 }
 #endif
 
-static void
+/**
+ * fu_udev_device_set_dev:
+ * @self: a #FuUdevDevice
+ * @udev_device: a #GUdevDevice
+ *
+ * Sets the #GUdevDevice. This may need to be used to replace the actual device
+ * used for reads and writes before the device is probed.
+ *
+ * Since: 1.6.2
+ **/
+void
 fu_udev_device_set_dev (FuUdevDevice *self, GUdevDevice *udev_device)
 {
 	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
@@ -1769,6 +1779,48 @@ fu_udev_device_get_siblings_with_subsystem (FuUdevDevice *self,
 #endif
 
 	return g_steal_pointer(&out);
+}
+
+/**
+ * fu_udev_device_get_children_with_subsystem
+ * @self: a #FuUdevDevice
+ * @subsystem: the name of a udev subsystem
+ *
+ * Get a list of devices that are children of self and have the
+ * provided subsystem.
+ *
+ * Returns: (element-type FuUdevDevice) (transfer full): devices
+ *
+ * Since: 1.6.2
+ */
+GPtrArray *
+fu_udev_device_get_children_with_subsystem (FuUdevDevice *self,
+					    const gchar *const subsystem)
+{
+	g_autoptr(GPtrArray) out = g_ptr_array_new_with_free_func (g_object_unref);
+
+#ifdef HAVE_GUDEV
+	const gchar *self_path = fu_udev_device_get_sysfs_path (self);
+	g_autoptr(GUdevClient) udev_client = g_udev_client_new (NULL);
+
+	g_autoptr(GList) enumerated = g_udev_client_query_by_subsystem (udev_client, subsystem);
+	for (GList *element = enumerated; element != NULL; element = element->next) {
+		g_autoptr(GUdevDevice) enumerated_device = element->data;
+		g_autoptr(GUdevDevice) enumerated_parent =
+			g_udev_device_get_parent (enumerated_device);
+		const gchar *enumerated_parent_path =
+			g_udev_device_get_sysfs_path (enumerated_parent);
+
+		/* enumerated device is a child of self if its parent is the
+		 * same as self */
+		if (g_strcmp0 (self_path, enumerated_parent_path) == 0) {
+			g_ptr_array_add (out,
+					 fu_udev_device_new (g_steal_pointer (&enumerated_device)));
+		}
+	}
+#endif
+
+	return g_steal_pointer (&out);
 }
 
 static void

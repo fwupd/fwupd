@@ -3,13 +3,6 @@ if bashcomp.found()
     define_variable: bashcomp.version().version_compare('>= 2.10') ? ['datadir', datadir] : ['prefix', prefix],
   )
 
-
-if get_option('agent')
-    install_data(['fwupdagent'],
-      install_dir : completions_dir,
-    )
-endif # get_option('agent')
-
 # replace @libexecdir@
 fwupdtool_path = join_paths(libexecdir, 'fwupd')
 con2 = configuration_data()
@@ -21,13 +14,16 @@ configure_file(
   install: true,
   install_dir: completions_dir)
 
-if build_daemon and get_option('agent')
+if build_daemon
+install_data(['fwupdagent'],
+  install_dir : completions_dir,
+)
 configure_file(
   input : 'fwupdmgr.in',
   output : 'fwupdmgr',
   configuration : con2,
   install: true,
   install_dir: completions_dir)
-endif # build_daemon and get_option('agent')
+endif # build_daemon
 
 endif # bashcomp.found()

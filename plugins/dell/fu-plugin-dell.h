@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 #include "fu-dell-smi.h"
 
 struct FuPluginData {

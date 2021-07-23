@@ -17,6 +17,17 @@
 #include "fwupd-common.h"
 #include "fwupd-error.h"
 
+/**
+ * FuHwids:
+ *
+ * A the hardware IDs on the system.
+ *
+ * Note, these are called "CHIDs" in Microsoft Windows and the results here
+ * will match that of `ComputerHardwareIds.exe`.
+ *
+ * See also: [class@FuSmbios]
+ */
+
 struct _FuHwids {
 	GObject			 parent_instance;
 	GHashTable		*hash_dmi_hw;		/* BiosVersion->"1.2.3 " */
@@ -99,6 +110,8 @@ fu_hwids_get_keys (FuHwids *self)
 		FU_HWIDS_KEY_BIOS_VERSION,
 		FU_HWIDS_KEY_BIOS_MAJOR_RELEASE,
 		FU_HWIDS_KEY_BIOS_MINOR_RELEASE,
+		FU_HWIDS_KEY_FIRMWARE_MAJOR_RELEASE,
+		FU_HWIDS_KEY_FIRMWARE_MINOR_RELEASE,
 		FU_HWIDS_KEY_MANUFACTURER,
 		FU_HWIDS_KEY_FAMILY,
 		FU_HWIDS_KEY_PRODUCT_NAME,
@@ -399,6 +412,10 @@ fu_hwids_setup (FuHwids *self, FuSmbios *smbios, GError **error)
 		{ FU_HWIDS_KEY_BIOS_MAJOR_RELEASE,	FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x14,
 							fu_hwids_convert_padded_integer_cb },
 		{ FU_HWIDS_KEY_BIOS_MINOR_RELEASE,	FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x15,
+							fu_hwids_convert_padded_integer_cb },
+		{ FU_HWIDS_KEY_FIRMWARE_MAJOR_RELEASE,	FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x16,
+							fu_hwids_convert_padded_integer_cb },
+		{ FU_HWIDS_KEY_FIRMWARE_MINOR_RELEASE,	FU_SMBIOS_STRUCTURE_TYPE_BIOS, 0x17,
 							fu_hwids_convert_padded_integer_cb },
 		{ FU_HWIDS_KEY_BASEBOARD_MANUFACTURER,	FU_SMBIOS_STRUCTURE_TYPE_BASEBOARD, 0x04,
 							fu_hwids_convert_string_table_cb },

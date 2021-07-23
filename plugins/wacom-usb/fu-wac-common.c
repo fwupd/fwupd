@@ -6,9 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-common.h"
 #include "fu-wac-common.h"
 
 guint32

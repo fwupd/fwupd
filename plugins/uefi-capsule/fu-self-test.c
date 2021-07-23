@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 
 #include "fu-context-private.h"
 
@@ -16,8 +16,6 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-pcrs.h"
-
-#include "fwupd-error.h"
 
 static void
 fu_uefi_pcrs_1_2_func (void)
@@ -169,6 +167,11 @@ fu_uefi_plugin_func (void)
 	g_test_skip ("ESRT data is mocked only on Linux");
 	return;
 #endif
+
+	/* do not save silo */
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 
 	/* add each device */
 	ret = fu_backend_coldplug (backend, &error);

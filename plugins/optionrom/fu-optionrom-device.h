@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_OPTIONROM_DEVICE (fu_optionrom_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuOptionromDevice, fu_optionrom_device, FU, OPTIONROM_DEVICE, FuUdevDevice)

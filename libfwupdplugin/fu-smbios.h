@@ -16,10 +16,45 @@ G_DECLARE_FINAL_TYPE (FuSmbios, fu_smbios, FU, SMBIOS, FuFirmware)
 
 FuSmbios	*fu_smbios_new			(void);
 
+/**
+ * FU_SMBIOS_STRUCTURE_TYPE_BIOS:
+ *
+ * The SMBIOS structure type for the BIOS.
+ *
+ * Since: 1.5.5
+ **/
 #define FU_SMBIOS_STRUCTURE_TYPE_BIOS		0x00
+/**
+ * FU_SMBIOS_STRUCTURE_TYPE_SYSTEM:
+ *
+ * The SMBIOS structure type for the system as a whole.
+ *
+ * Since: 1.5.5
+ **/
 #define FU_SMBIOS_STRUCTURE_TYPE_SYSTEM		0x01
+/**
+ * FU_SMBIOS_STRUCTURE_TYPE_BASEBOARD:
+ *
+ * The SMBIOS structure type for the baseboard (motherboard).
+ *
+ * Since: 1.5.5
+ **/
 #define FU_SMBIOS_STRUCTURE_TYPE_BASEBOARD	0x02
+/**
+ * FU_SMBIOS_STRUCTURE_TYPE_CHASSIS:
+ *
+ * The SMBIOS structure type for the chassis.
+ *
+ * Since: 1.5.5
+ **/
 #define FU_SMBIOS_STRUCTURE_TYPE_CHASSIS	0x03
+/**
+ * FU_SMBIOS_STRUCTURE_TYPE_LAST:
+ *
+ * The last possible SMBIOS structure type.
+ *
+ * Since: 1.5.5
+ **/
 #define FU_SMBIOS_STRUCTURE_TYPE_LAST		0x04
 
 /**

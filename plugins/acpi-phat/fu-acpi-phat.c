@@ -6,10 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-common.h"
-#include "fu-firmware-common.h"
 #include "fu-acpi-phat.h"
 #include "fu-acpi-phat-health-record.h"
 #include "fu-acpi-phat-version-record.h"

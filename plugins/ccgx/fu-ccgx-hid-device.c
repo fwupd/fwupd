@@ -54,6 +54,10 @@ fu_ccgx_hid_device_detach (FuDevice *device, GError **error)
 static gboolean
 fu_ccgx_hid_device_setup (FuDevice *device, GError **error)
 {
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_ccgx_hid_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* This seems insane... but we need to switch the device from HID
 	 * mode to HPI mode at startup. The device continues to function
 	 * exactly as before and no user-visible effects are noted */

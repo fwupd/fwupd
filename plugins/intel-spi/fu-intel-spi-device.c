@@ -7,6 +7,7 @@
 #include "config.h"
 
 #include <fcntl.h>
+#include <fwupdplugin.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -16,17 +17,12 @@
 
 #include <gio/gunixinputstream.h>
 
-#include "fu-device-locker.h"
-#include "fu-plugin-vfuncs.h"
-
 #include "fu-pci-device.h"
 
 #include "fu-intel-spi-common.h"
 #include "fu-intel-spi-device.h"
 
-#include "fu-ifd-common.h"
 #include "fu-ifd-device.h"
-#include "fu-ifd-firmware.h"
 
 struct _FuIntelSpiDevice {
 	FuDevice		 parent_instance;
@@ -52,6 +48,19 @@ struct _FuIntelSpiDevice {
 #define FU_INTEL_SPI_READ_TIMEOUT		10	/* ms */
 
 #define PCI_BASE_ADDRESS_0			0x0010
+
+/**
+ * FU_INTEL_SPI_DEVICE_FLAG_ICH:
+ *
+ * Device is an I/O Controller Hub.
+ */
+#define FU_INTEL_SPI_DEVICE_FLAG_ICH			(1 << 0)
+/**
+ * FU_INTEL_SPI_DEVICE_FLAG_PCH:
+ *
+ * Device is a Platform Controller Hub.
+ */
+#define FU_INTEL_SPI_DEVICE_FLAG_PCH			(1 << 1)
 
 G_DEFINE_TYPE (FuIntelSpiDevice, fu_intel_spi_device, FU_TYPE_DEVICE)
 
@@ -293,7 +302,7 @@ fu_intel_spi_device_setup (FuDevice *device, GError **error)
 	guint64 total_size = 0;
 	guint8 comp1_density;
 	guint8 comp2_density;
-	guint16 reg_pr0 = fu_device_has_custom_flag (device, "ICH") ? ICH9_REG_PR0 : PCH100_REG_FPR0;
+	guint16 reg_pr0 = fu_device_has_private_flag (device, FU_INTEL_SPI_DEVICE_FLAG_ICH) ? ICH9_REG_PR0 : PCH100_REG_FPR0;
 
 	/* dump everything */
 	if (g_getenv ("FWUPD_INTEL_SPI_VERBOSE") != NULL) {
@@ -503,6 +512,12 @@ fu_intel_spi_device_init (FuIntelSpiDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_icon (FU_DEVICE (self), "computer");
 	fu_device_set_physical_id (FU_DEVICE (self), "intel_spi");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_INTEL_SPI_DEVICE_FLAG_ICH,
+					 "ICH");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_INTEL_SPI_DEVICE_FLAG_PCH,
+					 "PCH");
 }
 
 static void

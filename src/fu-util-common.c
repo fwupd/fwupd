@@ -1263,6 +1263,8 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	if (tmp != NULL) {
 		g_autofree gchar *desc = NULL;
 		desc = fu_util_convert_description (tmp, NULL);
+		if (desc == NULL)
+			desc = g_strdup (tmp);
 		/* TRANSLATORS: multiline description of device */
 		fu_common_string_append_kv (str, idt + 1, _("Description"), desc);
 	}
@@ -1270,12 +1272,19 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	/* versions */
 	tmp = fwupd_device_get_version (dev);
 	if (tmp != NULL) {
+		g_autoptr(GString) verstr = g_string_new (tmp);
+		if (fwupd_device_get_version_build_date (dev) != 0) {
+			guint64 value = fwupd_device_get_version_build_date (dev);
+			g_autoptr(GDateTime) date = g_date_time_new_from_unix_utc ((gint64) value);
+			g_autofree gchar *datestr = g_date_time_format (date, "%F");
+			g_string_append_printf (verstr, " [%s]", datestr);
+		}
 		if (flags & FWUPD_DEVICE_FLAG_HISTORICAL) {
 			/* TRANSLATORS: version number of previous firmware */
-			fu_common_string_append_kv (str, idt + 1, _("Previous version"), tmp);
+			fu_common_string_append_kv (str, idt + 1, _("Previous version"), verstr->str);
 		} else {
 			/* TRANSLATORS: version number of current firmware */
-			fu_common_string_append_kv (str, idt + 1, _("Current version"), tmp);
+			fu_common_string_append_kv (str, idt + 1, _("Current version"), verstr->str);
 		}
 	}
 	tmp = fwupd_device_get_version_lowest (dev);
@@ -1292,7 +1301,7 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 	/* vendor */
 	tmp = fwupd_device_get_vendor (dev);
 	if (tmp != NULL && vendor_ids->len > 0) {
-		g_autofree gchar *strv = fu_common_strjoin_array ("|", vendor_ids);
+		g_autofree gchar *strv = fu_common_strjoin_array (", ", vendor_ids);
 		g_autofree gchar *both = g_strdup_printf ("%s (%s)", tmp, strv);
 		/* TRANSLATORS: manufacturer of hardware */
 		fu_common_string_append_kv (str, idt + 1, _("Vendor"), both);
@@ -1336,15 +1345,17 @@ fu_util_device_to_string (FwupdDevice *dev, guint idt)
 		if (state == FWUPD_UPDATE_STATE_SUCCESS) {
 			tmp = fwupd_device_get_update_message (dev);
 			if (tmp != NULL) {
+				g_autofree gchar *color = fu_util_term_format (tmp, FU_UTIL_TERM_COLOR_BLUE);
 				/* TRANSLATORS: helpful messages from last update */
-				fu_common_string_append_kv (str, idt + 1, _("Update Message"), tmp);
+				fu_common_string_append_kv (str, idt + 1, _("Update Message"), color);
 			}
 		}
 	}
 	tmp = fwupd_device_get_update_error (dev);
 	if (tmp != NULL) {
+		g_autofree gchar *color = fu_util_term_format (tmp, FU_UTIL_TERM_COLOR_RED);
 		/* TRANSLATORS: error message from last update attempt */
-		fu_common_string_append_kv (str, idt + 1, _("Update Error"), tmp);
+		fu_common_string_append_kv (str, idt + 1, _("Update Error"), color);
 	}
 
 	/* modified date: for history devices */
@@ -1443,6 +1454,10 @@ fu_util_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
 		/* TRANSLATORS: user needs to run a command */
 		return _("Firmware updates disabled; run 'fwupdmgr unlock' to enable");
 	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_AUTH_REQUIRED) {
+		/* TRANSLATORS: user needs to run a command */
+		return _("Authentication details are required");
+	}
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED) {
 		/* TRANSLATORS: the user is using Gentoo/Arch and has screwed something up */
 		return _("Required efivarfs filesystem was not found");
@@ -1454,6 +1469,10 @@ fu_util_plugin_flag_to_string (FwupdPluginFlags plugin_flag)
 	if (plugin_flag == FWUPD_PLUGIN_FLAG_FAILED_OPEN) {
 		/* TRANSLATORS: Failed to open plugin, hey Arch users */
 		return _("Plugin dependencies missing");
+	}
+	if (plugin_flag == FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD) {
+		/* TRANSLATORS: The kernel does not support this plugin */
+		return _("Running kernel is too old");
 	}
 
 	/* fall back for unknown types */
@@ -1471,16 +1490,18 @@ fu_util_plugin_flag_to_cli_text (FwupdPluginFlags plugin_flag)
 		return NULL;
 	case FWUPD_PLUGIN_FLAG_NONE:
 		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
-					    FU_UTIL_CLI_COLOR_GREEN);
+					    FU_UTIL_TERM_COLOR_GREEN);
 	case FWUPD_PLUGIN_FLAG_DISABLED:
 	case FWUPD_PLUGIN_FLAG_NO_HARDWARE:
 		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
-					    FU_UTIL_CLI_COLOR_BLACK);
+					    FU_UTIL_TERM_COLOR_BLACK);
 	case FWUPD_PLUGIN_FLAG_LEGACY_BIOS:
 	case FWUPD_PLUGIN_FLAG_CAPSULES_UNSUPPORTED:
 	case FWUPD_PLUGIN_FLAG_UNLOCK_REQUIRED:
+	case FWUPD_PLUGIN_FLAG_AUTH_REQUIRED:
 	case FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:
 	case FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:
+	case FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD:
 		return fu_util_term_format (fu_util_plugin_flag_to_string (plugin_flag),
 					    FU_UTIL_TERM_COLOR_RED);
 	default:
@@ -1662,6 +1683,8 @@ fu_util_release_to_string (FwupdRelease *rel, guint idt)
 	if (fwupd_release_get_description (rel) != NULL) {
 		g_autofree gchar *desc = NULL;
 		desc = fu_util_convert_description (fwupd_release_get_description (rel), NULL);
+		if (desc == NULL)
+			desc = g_strdup (fwupd_release_get_description (rel));
 		/* TRANSLATORS: multiline description of device */
 		fu_common_string_append_kv (str, idt + 1, _("Description"), desc);
 	}
@@ -2114,8 +2137,11 @@ fu_util_show_unsupported_warn (void)
 {
 #ifndef SUPPORTED_BUILD
 	g_autofree gchar *fmt = NULL;
+
+	if (g_getenv ("FWUPD_SUPPORTED") != NULL)
+                return;
 	/* TRANSLATORS: this is a prefix on the console */
-	fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_CLI_COLOR_YELLOW);
+	fmt = fu_util_term_format (_("WARNING:"), FU_UTIL_TERM_COLOR_YELLOW);
 	/* TRANSLATORS: unsupported build of the package */
 	g_printerr ("%s %s\n", fmt, _("This package has not been validated, it may not work properly."));
 #endif

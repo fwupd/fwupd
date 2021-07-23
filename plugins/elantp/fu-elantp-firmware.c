@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fu-common.h"
+#include <fwupdplugin.h>
 
 #include "fu-elantp-common.h"
 #include "fu-elantp-firmware.h"

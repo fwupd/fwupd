@@ -8,14 +8,13 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 #include <glib/gi18n.h>
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "fwupd-common-private.h"
 #include "fu-tpm-eventlog-parser.h"
 
 static gint

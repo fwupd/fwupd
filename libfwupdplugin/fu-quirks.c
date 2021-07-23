@@ -22,8 +22,7 @@
 #include "fwupd-remote-private.h"
 
 /**
- * SECTION:fu-quirks
- * @short_description: device quirks
+ * FuQuirks:
  *
  * Quirks can be used to modify device behavior.
  * When fwupd is installed in long-term support distros it's very hard to
@@ -43,7 +42,7 @@
  * obviously need code changes, but allows us to get most existing devices working
  * in an easy way without the user compiling anything.
  *
- * See also: #FuDevice, #FuPlugin
+ * See also: [class@FuDevice], [class@FuPlugin]
  */
 
 static void fu_quirks_finalize	 (GObject *obj);
@@ -285,7 +284,7 @@ fu_quirks_check_silo (FuQuirks *self, GError **error)
 		g_autofree gchar *str = NULL;
 		g_ptr_array_sort (self->invalid_keys, fu_quirks_strcasecmp_cb);
 		str = fu_common_strjoin_array (",", self->invalid_keys);
-		g_warning ("invalid key names: %s", str);
+		g_debug ("invalid key names: %s", str);
 	}
 
 	/* success */
@@ -509,6 +508,7 @@ fu_quirks_init (FuQuirks *self)
 	fu_quirks_add_possible_key (self, FU_QUIRKS_GTYPE);
 	fu_quirks_add_possible_key (self, FU_QUIRKS_GUID);
 	fu_quirks_add_possible_key (self, FU_QUIRKS_ICON);
+	fu_quirks_add_possible_key (self, FU_QUIRKS_INHIBIT);
 	fu_quirks_add_possible_key (self, FU_QUIRKS_INSTALL_DURATION);
 	fu_quirks_add_possible_key (self, FU_QUIRKS_NAME);
 	fu_quirks_add_possible_key (self, FU_QUIRKS_PARENT_GUID);

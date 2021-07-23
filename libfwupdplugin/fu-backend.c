@@ -10,6 +10,14 @@
 
 #include "fu-backend.h"
 
+/**
+ * FuBackend:
+ *
+ * An device discovery backend, for instance USB, BlueZ or UDev.
+ *
+ * See also: [class@FuDevice]
+ */
+
 typedef struct {
 	FuContext			*ctx;
 	gchar				*name;
@@ -52,6 +60,12 @@ fu_backend_device_added (FuBackend *self, FuDevice *device)
 	FuBackendPrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_BACKEND (self));
 	g_return_if_fail (FU_IS_DEVICE (device));
+
+	/* assign context if unset */
+	if (fu_device_get_context (device) == NULL)
+		fu_device_set_context (device, priv->ctx);
+
+	/* add */
 	g_hash_table_insert (priv->devices,
 			     g_strdup (fu_device_get_backend_id (device)),
 			     g_object_ref (device));

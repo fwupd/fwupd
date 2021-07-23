@@ -16,12 +16,11 @@
 #include "fu-dfuse-firmware.h"
 
 /**
- * SECTION:fu-dfuse-firmware
- * @short_description: DfuSe firmware image
+ * FuDfuseFirmware:
  *
- * An object that represents a DfuSe firmware image.
+ * A DfuSe firmware image.
  *
- * See also: #FuDfuFirmware
+ * See also: [class@FuDfuFirmware]
  */
 
 G_DEFINE_TYPE (FuDfuseFirmware, fu_dfuse_firmware, FU_TYPE_DFU_FIRMWARE)
@@ -331,7 +330,7 @@ fu_dfuse_firmware_write (FuFirmware *firmware, GError **error)
 static void
 fu_dfuse_firmware_init (FuDfuseFirmware *self)
 {
-	fu_dfu_firmware_set_version (FU_DFU_FIRMWARE (self), DFU_VERSION_DFUSE);
+	fu_dfu_firmware_set_version (FU_DFU_FIRMWARE (self), FU_DFU_FIRMARE_VERSION_DFUSE);
 }
 
 static void

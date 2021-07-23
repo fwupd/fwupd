@@ -16,14 +16,13 @@
 #include "fwupd-error.h"
 
 /**
- * SECTION:fu-plugin-list
- * @short_description: a list of plugins
+ * FuPluginList:
  *
  * This list of plugins provides a way to get the specific plugin quickly using
  * a hash table and also any plugin-list specific functionality such as
  * sorting by dependency order.
  *
- * See also: #FuPlugin
+ * See also: [class@FuPlugin]
  */
 
 static void fu_plugin_list_finalize	 (GObject *obj);

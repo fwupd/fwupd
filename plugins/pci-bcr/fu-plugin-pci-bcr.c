@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 struct FuPluginData {
 	gboolean		 has_device;
@@ -24,7 +24,7 @@ fu_plugin_init (FuPlugin *plugin)
 	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *priv = fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_context_add_udev_subsystem (ctx, "pci");
+	fu_plugin_add_udev_subsystem (plugin, "pci");
 	fu_context_add_quirk_key (ctx, "PciBcrAddr");
 
 	/* this is true except for some Atoms */

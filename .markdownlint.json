@@ -1,0 +1,7 @@
+{
+  "default": true,
+  "MD013": {
+    "tables": false,
+    "line_length": 1000
+  }
+}

@@ -8,8 +8,7 @@
 
 #include <json-glib/json-glib.h>
 
-#include "fu-common.h"
-#include "fu-ihex-firmware.h"
+#include <fwupdplugin.h>
 
 #include "fu-solokey-firmware.h"
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 #include "fu-vli-common.h"
 
@@ -16,11 +16,6 @@ G_DECLARE_DERIVABLE_TYPE (FuVliDevice, fu_vli_device, FU, VLI_DEVICE, FuUsbDevic
 struct _FuVliDeviceClass
 {
 	FuUsbDeviceClass	parent_class;
-	gboolean		 (*setup)		(FuVliDevice	*self,
-							 GError		**error);
-	void			 (*to_string)		(FuVliDevice	*self,
-							 guint		 idt,
-							 GString 	*str);
 	gboolean		 (*spi_chip_erase)	(FuVliDevice	*self,
 							 GError		**error);
 	gboolean		 (*spi_sector_erase)	(FuVliDevice	*self,

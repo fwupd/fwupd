@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include <xmlb.h>
-#include <fwupd.h>
 #include <fwupdplugin.h>
 #include <glib-object.h>
 #include <glib/gstdio.h>
@@ -16,6 +15,7 @@
 #include <string.h>
 
 #include "fu-config.h"
+#include "fu-context-private.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
@@ -26,11 +26,11 @@
 #include "fu-progressbar.h"
 #include "fu-hash.h"
 #include "fu-security-attr.h"
-#include "fu-security-attrs.h"
 #include "fu-smbios-private.h"
 
 typedef struct {
 	FuPlugin	*plugin;
+	FuContext	*ctx;
 } FuTest;
 
 static GMainLoop *_test_loop = NULL;
@@ -101,7 +101,10 @@ fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
 static void
 fu_test_free (FuTest *self)
 {
-	g_object_unref (self->plugin);
+	if (self->ctx != NULL)
+		g_object_unref (self->ctx);
+	if (self->plugin != NULL)
+		g_object_unref (self->plugin);
 	g_free (self);
 }
 
@@ -113,10 +116,11 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuTest, fu_test_free)
 static void
 fu_engine_generate_md_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	const gchar *tmp;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GBytes) data = NULL;
 	g_autoptr(GError) error = NULL;
@@ -133,7 +137,10 @@ fu_engine_generate_md_func (gconstpointer user_data)
 	g_assert (ret);
 
 	/* load engine and check the device was found */
-	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_REMOTES, &error);
+	ret = fu_engine_load (engine,
+			      FU_ENGINE_LOAD_FLAG_REMOTES |
+			      FU_ENGINE_LOAD_FLAG_NO_CACHE,
+			      &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	fu_device_add_guid (device, "12345678-1234-1234-1234-123456789012");
@@ -162,7 +169,7 @@ fu_plugin_hash_func (gconstpointer user_data)
 	g_autoptr(FuPlugin) plugin = fu_plugin_new (NULL);
 	gboolean ret = FALSE;
 
-	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -220,6 +227,43 @@ fu_engine_requirements_missing_func (gconstpointer user_data)
 					    &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (!ret);
+}
+
+static void
+fu_engine_requirements_soft_func (gconstpointer user_data)
+{
+	gboolean ret;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+	const gchar *xml =
+		"<component>"
+		"  <suggests>"
+		"    <id compare=\"ge\" version=\"1.2.3\">not.going.to.exist</id>"
+		"  </suggests>"
+		"</component>";
+
+	/* set up a dummy version */
+	fu_engine_add_runtime_version (engine, "org.test.dummy", "1.2.3");
+
+	/* make the component require one thing */
+	silo = xb_silo_new_from_xml (xml, &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (silo);
+	component = xb_silo_query_first (silo, "component", &error);
+	g_assert_no_error (error);
+	g_assert_nonnull (component);
+
+	/* check this passes */
+	task = fu_install_task_new (NULL, component);
+	ret = fu_engine_check_requirements (engine, request, task,
+					    FWUPD_INSTALL_FLAG_FORCE,
+					    &error);
+	g_assert_no_error (error);
+	g_assert (ret);
 }
 
 static void
@@ -331,8 +375,9 @@ fu_engine_requirements_client_pass_func (gconstpointer user_data)
 static void
 fu_engine_requirements_version_require_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
@@ -417,8 +462,9 @@ fu_engine_requirements_unsupported_func (gconstpointer user_data)
 static void
 fu_engine_requirements_child_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuDevice) child = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
@@ -473,8 +519,9 @@ fu_engine_requirements_child_func (gconstpointer user_data)
 static void
 fu_engine_requirements_child_fail_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuDevice) child = fu_device_new ();
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
@@ -569,8 +616,9 @@ fu_engine_requirements_func (gconstpointer user_data)
 static void
 fu_engine_requirements_device_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
@@ -627,8 +675,9 @@ fu_engine_requirements_device_func (gconstpointer user_data)
 static void
 fu_engine_requirements_device_plain_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
@@ -674,8 +723,9 @@ fu_engine_requirements_device_plain_func (gconstpointer user_data)
 static void
 fu_engine_requirements_version_format_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
@@ -725,11 +775,12 @@ fu_engine_requirements_version_format_func (gconstpointer user_data)
 static void
 fu_engine_requirements_sibling_device_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
-	g_autoptr(FuDevice) device1 = fu_device_new ();
-	g_autoptr(FuDevice) device2 = fu_device_new ();
-	g_autoptr(FuDevice) unrelated_device3 = fu_device_new ();
-	g_autoptr(FuDevice) parent = fu_device_new ();
+	g_autoptr(FuDevice) device1 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) unrelated_device3 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) parent = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
@@ -829,9 +880,10 @@ fu_engine_requirements_sibling_device_func (gconstpointer user_data)
 static void
 fu_engine_requirements_other_device_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
-	g_autoptr(FuDevice) device1 = fu_device_new ();
-	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) device1 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
@@ -894,8 +946,9 @@ fu_engine_requirements_other_device_func (gconstpointer user_data)
 static void
 fu_engine_requirements_protocol_check_func (gconstpointer user_data)
 {
-	g_autoptr(FuDevice) device1 = fu_device_new ();
-	g_autoptr(FuDevice) device2 = fu_device_new ();
+	FuTest *self = (FuTest *) user_data;
+	g_autoptr(FuDevice) device1 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(GPtrArray) devices = NULL;
@@ -982,9 +1035,10 @@ fu_engine_requirements_protocol_check_func (gconstpointer user_data)
 static void
 fu_engine_requirements_parent_device_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
-	g_autoptr(FuDevice) device1 = fu_device_new ();
-	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) device1 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
@@ -1048,11 +1102,12 @@ fu_engine_requirements_parent_device_func (gconstpointer user_data)
 }
 
 static void
-fu_engine_device_parent_func (gconstpointer user_data)
+fu_engine_device_parent_guid_func (gconstpointer user_data)
 {
-	g_autoptr(FuDevice) device1 = fu_device_new ();
-	g_autoptr(FuDevice) device2 = fu_device_new ();
-	g_autoptr(FuDevice) device3 = fu_device_new ();
+	FuTest *self = (FuTest *) user_data;
+	g_autoptr(FuDevice) device1 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device3 = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
 
@@ -1101,11 +1156,82 @@ fu_engine_device_parent_func (gconstpointer user_data)
 }
 
 static void
+fu_engine_device_parent_id_func (gconstpointer user_data)
+{
+	FuTest *self = (FuTest *) user_data;
+	g_autoptr(FuDevice) device1 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device3 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device4 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+
+	/* no metadata in daemon */
+	fu_engine_set_silo (engine, silo_empty);
+
+	/* add child */
+	fu_device_set_id (device1, "child1");
+	fu_device_set_name (device1, "Child1");
+	fu_device_set_physical_id (device1, "child-ID1");
+	fu_device_add_vendor_id (device1, "USB:FFFF");
+	fu_device_add_protocol (device1, "com.acme");
+	fu_device_add_instance_id (device1, "child-GUID-1");
+	fu_device_add_parent_physical_id (device1, "parent-ID-notfound");
+	fu_device_add_parent_physical_id (device1, "parent-ID");
+	fu_device_convert_instance_ids (device1);
+	fu_engine_add_device (engine, device1);
+
+	/* parent */
+	fu_device_set_id (device2, "parent");
+	fu_device_set_name (device2, "Parent");
+	fu_device_set_physical_id (device2, "parent-ID");
+	fu_device_add_vendor_id (device2, "USB:FFFF");
+	fu_device_add_protocol (device2, "com.acme");
+	fu_device_add_instance_id (device2, "parent-GUID");
+	fu_device_set_vendor (device2, "oem");
+	fu_device_add_internal_flag (device2, FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN);
+	fu_device_convert_instance_ids (device2);
+
+	/* add another child */
+	fu_device_set_id (device3, "child2");
+	fu_device_set_name (device3, "Child2");
+	fu_device_set_physical_id (device3, "child-ID2");
+	fu_device_add_instance_id (device3, "child-GUID-2");
+	fu_device_add_parent_physical_id (device3, "parent-ID");
+	fu_device_convert_instance_ids (device3);
+	fu_device_add_child (device2, device3);
+
+	/* add two together */
+	fu_engine_add_device (engine, device2);
+
+	/* add non-child */
+	fu_device_set_id (device4, "child4");
+	fu_device_set_name (device4, "Child4");
+	fu_device_set_physical_id (device4, "child-ID4");
+	fu_device_add_vendor_id (device4, "USB:FFFF");
+	fu_device_add_protocol (device4, "com.acme");
+	fu_device_add_instance_id (device4, "child-GUID-4");
+	fu_device_add_parent_physical_id (device4, "parent-ID");
+	fu_device_convert_instance_ids (device4);
+	fu_engine_add_device (engine, device4);
+
+	/* this is normally done by fu_plugin_device_add() */
+	fu_engine_add_device (engine, device4);
+
+	/* verify both children were adopted */
+	g_assert (fu_device_get_parent (device3) == device2);
+	g_assert (fu_device_get_parent (device4) == device2);
+	g_assert (fu_device_get_parent (device1) == device2);
+	g_assert_cmpstr (fu_device_get_vendor (device3), ==, "oem");
+}
+
+static void
 fu_engine_partial_hash_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
-	g_autoptr(FuDevice) device1 = fu_device_new ();
-	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) device1 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuPlugin) plugin = fu_plugin_new (NULL);
 	g_autoptr(GError) error = NULL;
@@ -1171,9 +1297,10 @@ fu_engine_partial_hash_func (gconstpointer user_data)
 static void
 fu_engine_device_unlock_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GFile) file = NULL;
@@ -1182,7 +1309,7 @@ fu_engine_device_unlock_func (gconstpointer user_data)
 	g_autoptr(XbSilo) silo = NULL;
 
 	/* load engine to get FuConfig set up */
-	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -1216,9 +1343,10 @@ fu_engine_device_unlock_func (gconstpointer user_data)
 static void
 fu_engine_require_hwid_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(FuInstallTask) task = NULL;
@@ -1238,7 +1366,7 @@ fu_engine_require_hwid_func (gconstpointer user_data)
 	fu_engine_set_silo (engine, silo_empty);
 
 	/* load engine to get FuConfig set up */
-	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -1281,9 +1409,10 @@ fu_engine_require_hwid_func (gconstpointer user_data)
 static void
 fu_engine_downgrade_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	FwupdRelease *rel;
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(GError) error = NULL;
@@ -1368,7 +1497,10 @@ fu_engine_downgrade_func (gconstpointer user_data)
 	g_assert (ret);
 
 	g_setenv ("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
-	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_REMOTES, &error);
+	ret = fu_engine_load (engine,
+			      FU_ENGINE_LOAD_FLAG_REMOTES |
+			      FU_ENGINE_LOAD_FLAG_NO_CACHE,
+			      &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
@@ -1460,9 +1592,10 @@ fu_engine_downgrade_func (gconstpointer user_data)
 static void
 fu_engine_install_duration_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	FwupdRelease *rel;
 	gboolean ret;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new ();
 	g_autoptr(GError) error = NULL;
@@ -1497,7 +1630,10 @@ fu_engine_install_duration_func (gconstpointer user_data)
 	g_assert (ret);
 
 	g_setenv ("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
-	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_REMOTES, &error);
+	ret = fu_engine_load (engine,
+			      FU_ENGINE_LOAD_FLAG_REMOTES |
+			      FU_ENGINE_LOAD_FLAG_NO_CACHE,
+			      &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -1543,7 +1679,7 @@ fu_engine_history_func (gconstpointer user_data)
 	g_autofree gchar *device_str = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuInstallTask) task = NULL;
@@ -1566,7 +1702,7 @@ fu_engine_history_func (gconstpointer user_data)
 	fu_engine_add_plugin (engine, self->plugin);
 
 	g_setenv ("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
-	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
@@ -1610,7 +1746,9 @@ fu_engine_history_func (gconstpointer user_data)
 	/* install it */
 	task = fu_install_task_new (device, component);
 	ret = fu_engine_install (engine, task, blob_cab,
-				 FWUPD_INSTALL_FLAG_NONE, &error);
+				 FWUPD_INSTALL_FLAG_NONE,
+				 FWUPD_FEATURE_FLAG_NONE,
+				 &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -1674,7 +1812,7 @@ fu_engine_multiple_rels_func (gconstpointer user_data)
 	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
@@ -1693,7 +1831,7 @@ fu_engine_multiple_rels_func (gconstpointer user_data)
 	fu_engine_add_plugin (engine, self->plugin);
 
 	g_setenv ("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
-	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
@@ -1732,7 +1870,9 @@ fu_engine_multiple_rels_func (gconstpointer user_data)
 	/* install it */
 	task = fu_install_task_new (device, component);
 	ret = fu_engine_install (engine, task, blob_cab,
-				 FWUPD_INSTALL_FLAG_NONE, &error);
+				 FWUPD_INSTALL_FLAG_NONE,
+				 FWUPD_FEATURE_FLAG_NONE,
+				 &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -1747,7 +1887,7 @@ fu_engine_history_inherit (gconstpointer user_data)
 	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
 	g_autofree gchar *filename = NULL;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
@@ -1764,7 +1904,7 @@ fu_engine_history_inherit (gconstpointer user_data)
 	g_setenv ("FWUPD_PLUGIN_TEST", "fail", TRUE);
 	fu_engine_add_plugin (engine, self->plugin);
 	g_setenv ("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
-	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
@@ -1804,7 +1944,9 @@ fu_engine_history_inherit (gconstpointer user_data)
 	g_setenv ("FWUPD_PLUGIN_TEST", "requires-activation", TRUE);
 	task = fu_install_task_new (device, component);
 	ret = fu_engine_install (engine, task, blob_cab,
-				 FWUPD_INSTALL_FLAG_NONE, &error);
+				 FWUPD_INSTALL_FLAG_NONE,
+				 FWUPD_FEATURE_FLAG_NONE,
+				 &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -1825,7 +1967,9 @@ fu_engine_history_inherit (gconstpointer user_data)
 	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version (device, "1.2.2");
 	ret = fu_engine_install (engine, task, blob_cab,
-				 FWUPD_INSTALL_FLAG_NONE, &error);
+				 FWUPD_INSTALL_FLAG_NONE,
+				 FWUPD_FEATURE_FLAG_NONE,
+				 &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_object_unref (engine);
@@ -1833,7 +1977,7 @@ fu_engine_history_inherit (gconstpointer user_data)
 	engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	fu_engine_set_silo (engine, silo_empty);
 	fu_engine_add_plugin (engine, self->plugin);
-	device = fu_device_new ();
+	device = fu_device_new_with_context (self->ctx);
 	fu_device_add_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION);
 	fu_device_set_id (device, "test_device");
 	fu_device_add_vendor_id (device, "USB:FFFF");
@@ -1851,7 +1995,7 @@ fu_engine_history_inherit (gconstpointer user_data)
 	engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	fu_engine_set_silo (engine, silo_empty);
 	fu_engine_add_plugin (engine, self->plugin);
-	device = fu_device_new ();
+	device = fu_device_new_with_context (self->ctx);
 	fu_device_set_id (device, "test_device");
 	fu_device_add_vendor_id (device, "USB:FFFF");
 	fu_device_add_protocol (device, "com.acme");
@@ -1874,7 +2018,7 @@ fu_engine_history_error_func (gconstpointer user_data)
 	g_autofree gchar *device_str = NULL;
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) device2 = NULL;
-	g_autoptr(FuDevice) device = fu_device_new ();
+	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuInstallTask) task = NULL;
@@ -1894,7 +2038,7 @@ fu_engine_history_error_func (gconstpointer user_data)
 	fu_engine_add_plugin (engine, self->plugin);
 
 	g_setenv ("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
-	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
+	ret = fu_engine_load (engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (fu_engine_get_status (engine), ==, FWUPD_STATUS_IDLE);
@@ -1930,7 +2074,9 @@ fu_engine_history_error_func (gconstpointer user_data)
 	g_assert_nonnull (component);
 	task = fu_install_task_new (device, component);
 	ret = fu_engine_install (engine, task, blob_cab,
-				 FWUPD_INSTALL_FLAG_NONE, &error);
+				 FWUPD_INSTALL_FLAG_NONE,
+				 FWUPD_FEATURE_FLAG_NONE,
+				 &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert (error != NULL);
 	g_assert_cmpstr (error->message, ==,
@@ -1980,10 +2126,43 @@ _device_list_count_cb (FuDeviceList *device_list, FuDevice *device, gpointer use
 }
 
 static void
+fu_device_list_no_auto_remove_children_func (gconstpointer user_data)
+{
+	g_autoptr(FuDevice) child = fu_device_new ();
+	g_autoptr(FuDevice) parent = fu_device_new ();
+	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
+	g_autoptr(GPtrArray) active1 = NULL;
+	g_autoptr(GPtrArray) active2 = NULL;
+	g_autoptr(GPtrArray) active3 = NULL;
+
+	/* normal behavior, remove child with parent */
+	fu_device_set_id (parent, "parent");
+	fu_device_set_id (child, "child");
+	fu_device_add_child (parent, child);
+	fu_device_list_add (device_list, parent);
+	fu_device_list_add (device_list, child);
+	fu_device_list_remove (device_list, parent);
+	active1 = fu_device_list_get_active (device_list);
+	g_assert_cmpint (active1->len, ==, 0);
+
+	/* new-style behavior, do not remove child */
+	fu_device_add_internal_flag (parent, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN);
+	fu_device_list_add (device_list, parent);
+	fu_device_list_add (device_list, child);
+	fu_device_list_remove (device_list, parent);
+	active2 = fu_device_list_get_active (device_list);
+	g_assert_cmpint (active2->len, ==, 1);
+	fu_device_list_remove (device_list, child);
+	active3 = fu_device_list_get_active (device_list);
+	g_assert_cmpint (active3->len, ==, 0);
+}
+
+static void
 fu_device_list_delay_func (gconstpointer user_data)
 {
-	g_autoptr(FuDevice) device1 = fu_device_new ();
-	g_autoptr(FuDevice) device2 = fu_device_new ();
+	FuTest *self = (FuTest *) user_data;
+	g_autoptr(FuDevice) device1 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
 	guint added_cnt = 0;
 	guint changed_cnt = 0;
@@ -2086,7 +2265,7 @@ fu_device_list_replug_auto_func (gconstpointer user_data)
 	fu_device_set_remove_delay (device2, FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 
 	/* not yet added */
-	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -2094,7 +2273,7 @@ fu_device_list_replug_auto_func (gconstpointer user_data)
 	fu_device_list_add (device_list, device1);
 
 	/* not waiting */
-	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -2105,7 +2284,7 @@ fu_device_list_replug_auto_func (gconstpointer user_data)
 	g_timeout_add (100, fu_device_list_remove_cb, &helper);
 	g_timeout_add (200, fu_device_list_add_cb, &helper);
 	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
@@ -2115,24 +2294,26 @@ fu_device_list_replug_auto_func (gconstpointer user_data)
 
 	/* waiting, failed */
 	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	ret = fu_device_list_wait_for_replug (device_list, device2, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
 	g_assert (!ret);
-	g_assert_true (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
 }
 
 static void
 fu_device_list_replug_user_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	gboolean ret;
-	g_autoptr(FuDevice) device1 = fu_device_new ();
-	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) device1 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
 	g_autoptr(GError) error = NULL;
 	FuDeviceListReplugHelper helper;
 
 	/* fake devices */
 	fu_device_set_id (device1, "device1");
+	fu_device_set_name (device1, "device1");
 	fu_device_add_internal_flag (device1, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_instance_id (device1, "foo");
 	fu_device_add_instance_id (device1, "bar");
@@ -2140,6 +2321,7 @@ fu_device_list_replug_user_func (gconstpointer user_data)
 	fu_device_set_remove_delay (device1, FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_convert_instance_ids (device1);
 	fu_device_set_id (device2, "device2");
+	fu_device_set_name (device2, "device2");
 	fu_device_add_internal_flag (device2, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_instance_id (device2, "baz");
 	fu_device_add_instance_id (device2, "bar"); /* matches */
@@ -2148,15 +2330,20 @@ fu_device_list_replug_user_func (gconstpointer user_data)
 	fu_device_convert_instance_ids (device2);
 
 	/* not yet added */
-	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
 	/* add device */
 	fu_device_list_add (device_list, device1);
 
+	/* add duplicate */
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_list_add (device_list, device1);
+	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+
 	/* not waiting */
-	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -2167,17 +2354,33 @@ fu_device_list_replug_user_func (gconstpointer user_data)
 	g_timeout_add (100, fu_device_list_remove_cb, &helper);
 	g_timeout_add (200, fu_device_list_add_cb, &helper);
 	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	ret = fu_device_list_wait_for_replug (device_list, device1, &error);
+	ret = fu_device_list_wait_for_replug (device_list, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+
+	/* should not be possible, but here we are */
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_list_add (device_list, device1);
+	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+	g_assert_false (fu_device_has_flag (device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+
+	/* add back the old device */
+	fu_device_add_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_flag (device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_list_remove (device_list, device2);
+	fu_device_list_add (device_list, device1);
+	g_assert_false (fu_device_has_flag (device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
+	g_assert_false (fu_device_has_flag (device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
 }
 
 static void
 fu_device_list_compatible_func (gconstpointer user_data)
 {
-	g_autoptr(FuDevice) device1 = fu_device_new ();
-	g_autoptr(FuDevice) device2 = fu_device_new ();
+	FuTest *self = (FuTest *) user_data;
+	g_autoptr(FuDevice) device1 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuDevice) device_old = NULL;
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
 	g_autoptr(GPtrArray) devices_all = NULL;
@@ -2257,9 +2460,10 @@ fu_device_list_compatible_func (gconstpointer user_data)
 static void
 fu_device_list_remove_chain_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
-	g_autoptr(FuDevice) device_child = fu_device_new ();
-	g_autoptr(FuDevice) device_parent = fu_device_new ();
+	g_autoptr(FuDevice) device_child = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device_parent = fu_device_new_with_context (self->ctx);
 
 	guint added_cnt = 0;
 	guint changed_cnt = 0;
@@ -2304,9 +2508,10 @@ fu_device_list_remove_chain_func (gconstpointer user_data)
 static void
 fu_device_list_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	g_autoptr(FuDeviceList) device_list = fu_device_list_new ();
-	g_autoptr(FuDevice) device1 = fu_device_new ();
-	g_autoptr(FuDevice) device2 = fu_device_new ();
+	g_autoptr(FuDevice) device1 = fu_device_new_with_context (self->ctx);
+	g_autoptr(FuDevice) device2 = fu_device_new_with_context (self->ctx);
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices2 = NULL;
 	g_autoptr(GError) error = NULL;
@@ -2610,7 +2815,9 @@ fu_plugin_module_func (gconstpointer user_data)
 	fu_engine_add_device (engine, device);
 	fu_engine_add_plugin (engine, self->plugin);
 	ret = fu_engine_install_blob (engine, device, blob_cab,
-				      FWUPD_INSTALL_FLAG_NONE, &error);
+				      FWUPD_INSTALL_FLAG_NONE,
+				      FWUPD_FEATURE_FLAG_NONE,
+				      &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 4);
@@ -2653,6 +2860,7 @@ fu_plugin_module_func (gconstpointer user_data)
 static void
 fu_history_func (gconstpointer user_data)
 {
+	FuTest *self = (FuTest *) user_data;
 	GError *error = NULL;
 	GPtrArray *checksums;
 	gboolean ret;
@@ -2676,7 +2884,7 @@ fu_history_func (gconstpointer user_data)
 	g_unlink (filename);
 
 	/* add a device */
-	device = fu_device_new ();
+	device = fu_device_new_with_context (self->ctx);
 	fu_device_set_id (device, "self-test");
 	fu_device_set_name (device, "ColorHug"),
 	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
@@ -3156,6 +3364,7 @@ main (int argc, char **argv)
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_setenv ("G_MESSAGES_DEBUG", "all", TRUE);
+	g_setenv ("FWUPD_DEVICE_LIST_VERBOSE", "1", TRUE);
 	g_setenv ("FWUPD_DATADIR", TESTDATADIR_SRC, TRUE);
 	g_setenv ("FWUPD_PLUGINDIR", TESTDATADIR_SRC, TRUE);
 	g_setenv ("FWUPD_SYSCONFDIR", TESTDATADIR_SRC, TRUE);
@@ -3166,8 +3375,14 @@ main (int argc, char **argv)
 	/* ensure empty tree */
 	fu_self_test_mkroot ();
 
+	/* do not save silo */
+	self->ctx = fu_context_new ();
+	ret = fu_context_load_quirks (self->ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
+
 	/* load the test plugin */
-	self->plugin = fu_plugin_new (NULL);
+	self->plugin = fu_plugin_new (self->ctx);
 	pluginfn = g_build_filename (PLUGINBUILDDIR,
 				     "libfu_plugin_test." G_MODULE_SUFFIX,
 				     NULL);
@@ -3192,6 +3407,8 @@ main (int argc, char **argv)
 			      fu_device_list_func);
 	g_test_add_data_func ("/fwupd/device-list{delay}", self,
 			      fu_device_list_delay_func);
+	g_test_add_data_func ("/fwupd/device-list{no-auto-remove-children}", self,
+			      fu_device_list_no_auto_remove_children_func);
 	g_test_add_data_func ("/fwupd/device-list{compatible}", self,
 			      fu_device_list_compatible_func);
 	g_test_add_data_func ("/fwupd/device-list{remove-chain}", self,
@@ -3222,6 +3439,8 @@ main (int argc, char **argv)
 			      fu_engine_downgrade_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-success}", self,
 			      fu_engine_requirements_func);
+	g_test_add_data_func ("/fwupd/engine{requirements-soft}", self,
+			      fu_engine_requirements_soft_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-missing}", self,
 			      fu_engine_requirements_missing_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-client-fail}", self,
@@ -3248,8 +3467,10 @@ main (int argc, char **argv)
 			      fu_engine_requirements_device_plain_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-version-format}", self,
 			      fu_engine_requirements_version_format_func);
-	g_test_add_data_func ("/fwupd/engine{device-auto-parent}", self,
-			      fu_engine_device_parent_func);
+	g_test_add_data_func ("/fwupd/engine{device-auto-parent-id}", self,
+			      fu_engine_device_parent_id_func);
+	g_test_add_data_func ("/fwupd/engine{device-auto-parent-guid}", self,
+			      fu_engine_device_parent_guid_func);
 	g_test_add_data_func ("/fwupd/engine{install-duration}", self,
 			      fu_engine_install_duration_func);
 	g_test_add_data_func ("/fwupd/engine{generate-md}", self,

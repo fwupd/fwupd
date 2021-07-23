@@ -20,6 +20,7 @@
 #include "fwupd-device-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
+#include "fwupd-request-private.h"
 
 static gboolean
 fu_test_compare_lines (const gchar *txt1, const gchar *txt2, GError **error)
@@ -130,6 +131,11 @@ fwupd_enums_func (void)
 		const gchar *tmp = fwupd_trust_flag_to_string (i);
 		g_assert_cmpstr (tmp, !=, NULL);
 		g_assert_cmpint (fwupd_trust_flag_from_string (tmp), ==, i);
+	}
+	for (guint i = 0; i < FWUPD_REQUEST_KIND_LAST; i++) {
+		const gchar *tmp = fwupd_request_kind_to_string (i);
+		g_assert_cmpstr (tmp, !=, NULL);
+		g_assert_cmpint (fwupd_request_kind_from_string (tmp), ==, i);
 	}
 	for (guint i = FWUPD_RELEASE_URGENCY_UNKNOWN + 1; i < FWUPD_RELEASE_URGENCY_LAST; i++) {
 		const gchar *tmp = fwupd_release_urgency_to_string (i);
@@ -343,6 +349,35 @@ fwupd_release_func (void)
 	release2 = fwupd_release_from_variant (data);
 	g_assert_cmpstr (fwupd_release_get_metadata_item (release2, "foo"), ==, "bar");
 	g_assert_cmpstr (fwupd_release_get_metadata_item (release2, "baz"), ==, "bam");
+}
+
+static void
+fwupd_request_func (void)
+{
+	g_autofree gchar *str = NULL;
+	g_autoptr(FwupdRequest) request = fwupd_request_new ();
+	g_autoptr(FwupdRequest) request2 = NULL;
+	g_autoptr(GVariant) data = NULL;
+
+	/* create dummy */
+	fwupd_request_set_kind (request, FWUPD_REQUEST_KIND_IMMEDIATE);
+	fwupd_request_set_id (request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+	fwupd_request_set_message (request, "foo");
+	fwupd_request_set_image (request, "bar");
+	str = fwupd_request_to_string (request);
+	g_debug ("%s", str);
+
+	/* set in init */
+	g_assert_cmpint (fwupd_request_get_created (request), >, 0);
+
+	/* to serialized and back again */
+	data = fwupd_request_to_variant (request);
+	request2 = fwupd_request_from_variant (data);
+	g_assert_cmpint (fwupd_request_get_kind (request2), ==, FWUPD_REQUEST_KIND_IMMEDIATE);
+	g_assert_cmpint (fwupd_request_get_created (request2), >, 0);
+	g_assert_cmpstr (fwupd_request_get_id (request2), ==, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+	g_assert_cmpstr (fwupd_request_get_message (request2), ==, "foo");
+	g_assert_cmpstr (fwupd_request_get_image (request2), ==, "bar");
 }
 
 static void
@@ -714,6 +749,7 @@ main (int argc, char **argv)
 	g_test_add_func ("/fwupd/common{device-id}", fwupd_common_device_id_func);
 	g_test_add_func ("/fwupd/common{guid}", fwupd_common_guid_func);
 	g_test_add_func ("/fwupd/release", fwupd_release_func);
+	g_test_add_func ("/fwupd/request", fwupd_request_func);
 	g_test_add_func ("/fwupd/device", fwupd_device_func);
 	g_test_add_func ("/fwupd/remote{download}", fwupd_remote_download_func);
 	g_test_add_func ("/fwupd/remote{base-uri}", fwupd_remote_baseuri_func);

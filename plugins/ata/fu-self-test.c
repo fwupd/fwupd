@@ -6,8 +6,9 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 
+#include "fu-context-private.h"
 #include "fu-ata-device.h"
 #include "fu-device-private.h"
 
@@ -19,6 +20,7 @@ fu_ata_id_func (void)
 	const gchar *ci = g_getenv ("CI_NETWORK");
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *path = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(FuAtaDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -30,7 +32,7 @@ fu_ata_id_func (void)
 	ret = g_file_get_contents (path, &data, &sz, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	dev = fu_ata_device_new_from_blob ((guint8 *)data, sz, &error);
+	dev = fu_ata_device_new_from_blob (ctx, (guint8 *)data, sz, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);
 	g_assert_cmpint (fu_ata_device_get_transfer_mode (dev), ==, 0xe);
@@ -49,6 +51,7 @@ fu_ata_oui_func (void)
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *path = NULL;
 	g_autofree gchar *str = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(FuAtaDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -60,7 +63,7 @@ fu_ata_oui_func (void)
 	ret = g_file_get_contents (path, &data, &sz, &error);
 	g_assert_no_error (error);
 	g_assert (ret);
-	dev = fu_ata_device_new_from_blob ((guint8 *)data, sz, &error);
+	dev = fu_ata_device_new_from_blob (ctx, (guint8 *)data, sz, &error);
 	g_assert_no_error (error);
 	g_assert_nonnull (dev);
 	fu_device_convert_instance_ids (FU_DEVICE (dev));

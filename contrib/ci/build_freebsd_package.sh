@@ -32,13 +32,16 @@ if [ -z "$GITHUB_SHA" ] || [ -z "$GITHUB_REPOSITORY" ] || \
     exit 1
 fi
 
-set -e
+# Include-file of libefivar port uses GCC-specific builtin function
+export CC=gcc
+
+set -xe
 mkdir -p /usr/local/etc/pkg/repos/
 # Fix meson flag problem https://www.mail-archive.com/freebsd-ports@freebsd.org/msg86617.html
 cp /etc/pkg/FreeBSD.conf /usr/local/etc/pkg/repos/FreeBSD.conf
 sed -i .old 's|url: "pkg+http://pkg.FreeBSD.org/${ABI}/quarterly"|url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest"|' \
 /usr/local/etc/pkg/repos/FreeBSD.conf
-pkg install -y meson
+pkg install -y meson efivar
 pkg upgrade -y meson
 cd /usr
 git clone https://github.com/3mdeb/freebsd-ports.git --depth 1 -b fwupd ports
@@ -52,9 +55,10 @@ sed -i .old "s/GH_TAGNAME=.*$/GH_TAGNAME=\t${GITHUB_SHA}/" Makefile
 sed -i .old "s/GH_ACCOUNT=.*$/GH_ACCOUNT=\t${GITHUB_REPOSITORY_OWNER}/" Makefile
 sed -i .old "s/DISTVERSION=.*$/DISTVERSION=\t${GITHUB_TAG}/" Makefile
 make makesum
+make clean
+make
 make makeplist > plist
 sed -i "" "1d" plist
-make clean
 make package
 make install
 cp /usr/ports/sysutils/fwupd/work/pkg/fwupd*.txz \

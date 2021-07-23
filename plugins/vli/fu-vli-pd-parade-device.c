@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-#include "fu-chunk.h"
+#include <fwupdplugin.h>
 
 #include "fu-vli-pd-device.h"
 #include "fu-vli-pd-parade-device.h"
@@ -650,7 +650,7 @@ fu_vli_pd_parade_device_init (FuVliPdParadeDevice *self)
 	fu_device_add_protocol (FU_DEVICE (self), "com.vli.i2c");
 	fu_device_set_install_duration (FU_DEVICE (self), 15); /* seconds */
 	fu_device_set_logical_id (FU_DEVICE (self), "PS186");
-	fu_device_set_summary (FU_DEVICE (self), "DisplayPort 1.4a to HDMI 2.0b Protocol Converter");
+	fu_device_set_summary (FU_DEVICE (self), "DisplayPort 1.4a to HDMI 2.0b protocol converter");
 	fu_device_set_firmware_size (FU_DEVICE (self), 0x40000);
 }
 

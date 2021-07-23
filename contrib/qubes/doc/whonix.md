@@ -7,18 +7,17 @@ that sys-whonix has access to the network.
 
 ## Refresh
 
-```
-$ sudo qubes-fwupdmgr refresh --whonix
+```shell
+sudo qubes-fwupdmgr refresh --whonix
 ```
 
 ## Update
 
-```
-$ sudo qubes-fwupdmgr update --whonix
+```shell
+sudo qubes-fwupdmgr update --whonix
 ```
 
 ## Downgrade
 
-```
-$ sudo qubes-fwupdmgr downgrade --whonix
-```
+```shell
+sudo qubes-fwupdmgr downgrade --whonix

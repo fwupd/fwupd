@@ -12,6 +12,11 @@
 
 G_DECLARE_FINAL_TYPE (FuDeviceLocker, fu_device_locker, FU, DEVICE_LOCKER, GObject)
 
+/**
+ * FuDeviceLockerFunc:
+ *
+ * Callback to use when opening and closing using [ctor@DeviceLocker.new_full].
+ **/
 typedef gboolean (*FuDeviceLockerFunc)		(GObject		*device,
 						 GError			**error);
 

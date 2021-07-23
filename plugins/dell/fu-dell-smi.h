@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-device.h"
+#include <fwupdplugin.h>
 #include <smbios_c/smi.h>
 #include <smbios_c/obj/smi.h>
 

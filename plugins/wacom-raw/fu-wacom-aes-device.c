@@ -6,10 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <gio/gio.h>
 
-#include "fu-chunk.h"
-#include "fu-common.h"
 #include "fu-wacom-common.h"
 #include "fu-wacom-aes-device.h"
 

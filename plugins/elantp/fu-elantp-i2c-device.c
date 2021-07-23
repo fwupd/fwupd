@@ -8,10 +8,11 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include "fu-elantp-common.h"
 #include "fu-elantp-firmware.h"
 #include "fu-elantp-i2c-device.h"
-#include "fu-chunk.h"
 
 struct _FuElantpI2cDevice {
 	FuUdevDevice		 parent_instance;
@@ -629,7 +630,7 @@ fu_elantp_i2c_device_init (FuElantpI2cDevice *self)
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	fu_device_set_summary (FU_DEVICE (self), "Elan Touchpad (I²C Recovery)");
+	fu_device_set_summary (FU_DEVICE (self), "Touchpad (I²C recovery)");
 	fu_device_add_icon (FU_DEVICE (self), "input-touchpad");
 	fu_device_add_protocol (FU_DEVICE (self), "tw.com.emc.elantp");
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_HEX);

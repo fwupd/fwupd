@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#include "fu-chunk.h"
+#include <fwupdplugin.h>
 
 #include "fu-rts54hub-rtd21xx-background.h"
 #include "fu-rts54hub-device.h"

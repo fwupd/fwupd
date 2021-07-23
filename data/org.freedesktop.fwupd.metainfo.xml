@@ -35,6 +35,53 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.6.1" date="2021-06-14">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add FreeBSD UEFI Capsule support</li>
+          <li>Add generic ModemManager support for PCI based modems</li>
+          <li>Add initial support for USB4 module in the Dell dock</li>
+          <li>Add support for sibling requirements</li>
+          <li>Add support for the ACPI PHAT table</li>
+          <li>Allow building the documentation with gi-docgen and gtk-doc</li>
+          <li>Support binary artifact resources in cabinet archives</li>
+          <li>Use GProxyResolver to get the system proxy setting for a given URL</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Ask the user to confirm all CLI actions</li>
+          <li>Check the versions of libfwupd and libfwupdplugin at startup</li>
+          <li>Do not prevent firmware updates on desktop hardware</li>
+          <li>Do not show an invalid DFU warning on attach</li>
+          <li>Fail parsing if wacom firmware sections are not in sorted order</li>
+          <li>Fall back to binary files when flashing STM32 hardware</li>
+          <li>Fix a critical warning when downloading files</li>
+          <li>Fix a possible critical warning due to a bug in type casting</li>
+          <li>Fix a regression in updating the WD19TB dock</li>
+          <li>Fix GUID generation on pixart hardware</li>
+          <li>Fix the VLI i2c device enumeration, e.g. MSP430</li>
+          <li>Follow HTTP 3XX redirects when downloading files</li>
+          <li>Force the device locker to close() an aborted open()</li>
+          <li>Handle bsdisks' UDisks2 implementation on FreeBSD</li>
+          <li>Only lock fwupdtool when loading the engine</li>
+          <li>Read current Wacom firmware index before finding image to write</li>
+          <li>Support all hash types when loading cabinet archives</li>
+          <li>Support mirroring the detach and update images</li>
+          <li>Switch lock directory from /var/run to /run/lock</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Minibons devices</li>
+          <li>More 8BitDo hardware</li>
+          <li>More Synaptics Prometheus hardware</li>
+          <li>RTD21xx devices in background mode</li>
+          <li>Some Kingston SSD and NVMe hardware</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.6.0" date="2021-04-26">
       <description>
         <p>

@@ -28,6 +28,16 @@ fwupdplugin_src = [
   'fu-kenv.c',              # fuzzing
   'fu-efi-signature.c',
   'fu-efi-signature-list.c',
+  'fu-efi-common.c',              # fuzzing
+  'fu-efi-firmware-common.c',     # fuzzing
+  'fu-efi-firmware-file.c',       # fuzzing
+  'fu-efi-firmware-filesystem.c', # fuzzing
+  'fu-efi-firmware-section.c',    # fuzzing
+  'fu-efi-firmware-volume.c',     # fuzzing
+  'fu-ifd-bios.c',                # fuzzing
+  'fu-ifd-common.c',              # fuzzing
+  'fu-ifd-firmware.c',            # fuzzing
+  'fu-ifd-image.c',               # fuzzing
   'fu-efivar.c',
   'fu-udev-device.c',
   'fu-i2c-device.c',
@@ -37,11 +47,14 @@ fwupdplugin_src = [
 ]
 
 if host_machine.system() == 'linux'
-  fwupdplugin_src += 'fu-common-linux.c'  # fuzzing
+  fwupdplugin_src += 'fu-common-linux.c'    # fuzzing
+  fwupdplugin_src += 'fu-efivar-linux.c'
 elif host_machine.system() == 'freebsd'
   fwupdplugin_src += 'fu-common-freebsd.c'
+  fwupdplugin_src += 'fu-efivar-freebsd.c'
 elif host_machine.system() == 'windows'
   fwupdplugin_src += 'fu-common-windows.c'
+  fwupdplugin_src += 'fu-efivar-windows.c'  # fuzzing
 else
   error('no OS support for @0@'.format(host_machine.system()))
 endif
@@ -62,6 +75,15 @@ fwupdplugin_headers = [
   'fu-device-metadata.h',
   'fu-device-locker.h',
   'fu-dfu-firmware.h',
+  'fu-efi-common.h',
+  'fu-efi-firmware-file.h',
+  'fu-efi-firmware-filesystem.h',
+  'fu-efi-firmware-section.h',
+  'fu-efi-firmware-volume.h',
+  'fu-ifd-bios.h',
+  'fu-ifd-common.h',
+  'fu-ifd-firmware.h',
+  'fu-ifd-image.h',
   'fu-volume.h',
   'fu-firmware.h',
   'fu-firmware-common.h',
@@ -119,8 +141,20 @@ introspection_deps = [
   giounix,
 ]
 
+pkgg_requires = [ 'gio-2.0',
+                  'gmodule-2.0',
+                  'gobject-2.0',
+                  'fwupd',
+                  'json-glib-1.0',
+                  'libarchive',
+                  'libgcab-1.0',
+                  'xmlb',
+                  'jcat',
+]
+
 if get_option('gusb')
   introspection_deps += gusb
+  pkgg_requires +=  'gusb'
 endif
 
 if get_option('gudev')
@@ -139,6 +173,10 @@ library_deps = [
 
 if get_option('libarchive')
   library_deps += libarchive
+endif
+
+if get_option('lzma')
+  library_deps += lzma
 endif
 
 fwupdplugin_mapfile = 'fwupdplugin.map'
@@ -170,17 +208,7 @@ fwupdplugin = library(
 fwupdplugin_pkgg = import('pkgconfig')
 fwupdplugin_pkgg.generate(
   libraries : fwupdplugin,
-  requires : [ 'gio-2.0',
-               'gmodule-2.0',
-               'gobject-2.0',
-               'gusb',
-               'fwupd',
-               'json-glib-1.0',
-               'libarchive',
-               'libgcab-1.0',
-               'xmlb',
-               'jcat',
-  ],
+  requires : pkgg_requires,
   subdirs : 'fwupd-1',
   version : meson.project_version(),
   name : 'fwupdplugin',
@@ -188,13 +216,17 @@ fwupdplugin_pkgg.generate(
   description : 'library for plugins to use to interact with fwupd daemon',
 )
 
-if get_option('introspection') and get_option('gusb')
+if get_option('introspection')
   gir_dep = declare_dependency(sources: fwupd_gir)
   girtargets = []
-  if gusb.type_name() == 'internal'
-    girtargets += subproject('gusb').get_variable('libgusb_girtarget')[0]
-  else
-    girtargets += 'GUsb-1.0'
+  extra_args = []
+  if get_option('gusb')
+    if gusb.type_name() == 'internal'
+      girtargets += subproject('gusb').get_variable('libgusb_girtarget')[0]
+    else
+      girtargets += 'GUsb-1.0'
+    endif
+    extra_args += '-DHAVE_GUSB'
   endif
   if libxmlb.type_name() == 'internal'
     girtargets += subproject('libxmlb').get_variable('gir')[0]
@@ -211,11 +243,12 @@ if get_option('introspection') and get_option('gusb')
     namespace : 'FwupdPlugin',
     symbol_prefix : 'fu',
     identifier_prefix : 'Fu',
-    export_packages : 'fu',
-    extra_args : '-DHAVE_GUSB',
+    export_packages : 'fwupdplugin',
+    extra_args : extra_args,
     include_directories : [
       fwupd_incdir,
     ],
+    header : 'fwupdplugin.h',
     dependencies : [
       gir_dep,
       introspection_deps

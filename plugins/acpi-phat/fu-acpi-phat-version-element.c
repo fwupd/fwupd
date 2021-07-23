@@ -6,10 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-common.h"
-#include "fu-firmware-common.h"
 #include "fu-acpi-phat-version-element.h"
 
 struct _FuAcpiPhatVersionElement {
@@ -45,7 +44,6 @@ fu_acpi_phat_version_element_parse (FuFirmware *firmware,
 	gchar producer_id[4] = { '\0' };
 	gsize bufsz = 0;
 	guint64 version_value = 0;
-	g_autofree gchar *guid_str = NULL;
 	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
 
 	/* hardcoded */

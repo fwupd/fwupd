@@ -32,16 +32,16 @@
 #include "fwupd-security-attr-private.h"
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
+#include "fwupd-request-private.h"
 
 typedef GObject		*(*FwupdClientObjectNewFunc)	(void);
 
 /**
- * SECTION:fwupd-client
- * @short_description: a way of interfacing with the daemon
+ * FwupdClient:
  *
- * An object that allows client code to call the daemon methods synchronously.
+ * Allow client code to call the daemon methods.
  *
- * See also: #FwupdDevice
+ * See also: [class@FwupdDevice]
  */
 
 static void fwupd_client_finalize	 (GObject *object);
@@ -84,6 +84,7 @@ enum {
 	SIGNAL_DEVICE_ADDED,
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_CHANGED,
+	SIGNAL_DEVICE_REQUEST,
 	SIGNAL_LAST
 };
 
@@ -132,13 +133,13 @@ typedef struct {
 	FwupdClient	*self;
 	gchar		*property_name;
 	guint		 signal_id;
-	FwupdDevice	*device;
+	GObject		*payload;
 } FwupdClientContextHelper;
 
 static void
 fwupd_client_context_helper_free (FwupdClientContextHelper *helper)
 {
-	g_clear_object (&helper->device);
+	g_clear_object (&helper->payload);
 	g_object_unref (helper->self);
 	g_free (helper->property_name);
 	g_free (helper);
@@ -177,9 +178,9 @@ fwupd_client_context_idle_cb (gpointer user_data)
 		if (helper->property_name != NULL)
 			fwupd_client_context_object_notify (self, helper->property_name);
 
-		/* device signal */
-		if (helper->signal_id !=0 && helper->device != NULL)
-			g_signal_emit (self, signals[helper->signal_id], 0, helper->device);
+		/* payload signal */
+		if (helper->signal_id != 0 && helper->payload != NULL)
+			g_signal_emit (self, signals[helper->signal_id], 0, helper->payload);
 	}
 
 	/* all done */
@@ -229,14 +230,14 @@ fwupd_client_object_notify (FwupdClient *self, const gchar *property_name)
 
 /* run callback in the correct thread */
 static void
-fwupd_client_signal_emit_device (FwupdClient *self, guint signal_id, FwupdDevice *device)
+fwupd_client_signal_emit_object (FwupdClient *self, guint signal_id, GObject *payload)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE (self);
 	FwupdClientContextHelper *helper = NULL;
 
 	/* shortcut */
 	if (g_main_context_is_owner (priv->main_ctx)) {
-		g_signal_emit (self, signals[signal_id], 0, device);
+		g_signal_emit (self, signals[signal_id], 0, payload);
 		return;
 	}
 
@@ -244,7 +245,7 @@ fwupd_client_signal_emit_device (FwupdClient *self, guint signal_id, FwupdDevice
 	helper = g_new0 (FwupdClientContextHelper, 1);
 	helper->self = g_object_ref (self);
 	helper->signal_id = signal_id;
-	helper->device = g_object_ref (device);
+	helper->payload = g_object_ref (payload);
 	fwupd_client_context_helper (self, helper);
 }
 
@@ -408,21 +409,36 @@ fwupd_client_signal_cb (GDBusProxy *proxy,
 		dev = fwupd_device_from_variant (parameters);
 		g_debug ("Emitting ::device-added(%s)",
 			 fwupd_device_get_id (dev));
-		fwupd_client_signal_emit_device (self, SIGNAL_DEVICE_ADDED, dev);
+		fwupd_client_signal_emit_object (self,
+						 SIGNAL_DEVICE_ADDED,
+						 G_OBJECT (dev));
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceRemoved") == 0) {
 		dev = fwupd_device_from_variant (parameters);
 		g_debug ("Emitting ::device-removed(%s)",
 			 fwupd_device_get_id (dev));
-		fwupd_client_signal_emit_device (self, SIGNAL_DEVICE_REMOVED, dev);
+		fwupd_client_signal_emit_object (self,
+						 SIGNAL_DEVICE_REMOVED,
+						 G_OBJECT (dev));
 		return;
 	}
 	if (g_strcmp0 (signal_name, "DeviceChanged") == 0) {
 		dev = fwupd_device_from_variant (parameters);
 		g_debug ("Emitting ::device-changed(%s)",
 			 fwupd_device_get_id (dev));
-		fwupd_client_signal_emit_device (self, SIGNAL_DEVICE_CHANGED, dev);
+		fwupd_client_signal_emit_object (self,
+						 SIGNAL_DEVICE_CHANGED,
+						 G_OBJECT (dev));
+		return;
+	}
+	if (g_strcmp0 (signal_name, "DeviceRequest") == 0) {
+		g_autoptr(FwupdRequest) req = fwupd_request_from_variant (parameters);
+		g_debug ("Emitting ::device-request(%s)",
+			 fwupd_request_get_id (req));
+		fwupd_client_signal_emit_object (self,
+						 SIGNAL_DEVICE_REQUEST,
+						 G_OBJECT (req));
 		return;
 	}
 	g_debug ("Unknown signal name '%s' from %s", signal_name, sender_name);
@@ -475,7 +491,7 @@ fwupd_client_set_main_context (FwupdClient *self, GMainContext *main_ctx)
  *
  * Sets up the client networking support ready for use. Most other download and
  * upload methods call this automatically, and do you only need to call this if
- * the session is being used outside the #FwupdClient.
+ * the session is being used outside the [class@FwupdClient].
  *
  * Returns: %TRUE for success
  *
@@ -712,7 +728,7 @@ fwupd_client_connect_async (FwupdClient *self, GCancellable *cancellable,
  * @res: the asynchronous result
  * @error: (nullable): optional return location for an error
  *
- * Gets the result of fwupd_client_connect_async().
+ * Gets the result of [method@Client.connect_async].
  *
  * Returns: %TRUE for success
  *
@@ -791,7 +807,7 @@ fwupd_client_get_host_security_attrs_cb (GObject *source,
  *
  * Gets all the host security attributes from the daemon.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -892,7 +908,7 @@ fwupd_client_get_report_metadata_cb (GObject *source,
  *
  * Gets all the report metadata from the daemon.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -972,7 +988,7 @@ fwupd_client_get_devices_cb (GObject *source,
  *
  * Gets all the devices registered with the daemon.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -1049,7 +1065,7 @@ fwupd_client_get_plugins_cb (GObject *source,
  *
  * Gets all the plugins being used by the daemon.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -1126,7 +1142,7 @@ fwupd_client_get_history_cb (GObject *source,
  *
  * Gets all the history.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -1216,7 +1232,7 @@ fwupd_client_get_device_by_id_cb (GObject *source,
  *
  * Gets a device by it's device ID.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -1316,7 +1332,7 @@ fwupd_client_get_devices_by_guid_cb (GObject *source,
  * Gets any devices that provide a specific GUID. An error is returned if no
  * devices contains this GUID.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -1396,7 +1412,7 @@ fwupd_client_get_releases_cb (GObject *source,
  *
  * Gets all the releases for a specific device
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -1478,7 +1494,7 @@ fwupd_client_get_downgrades_cb (GObject *source,
  *
  * Gets all the downgrades for a specific device.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -1560,7 +1576,7 @@ fwupd_client_get_upgrades_cb (GObject *source,
  *
  * Gets all the upgrades for a specific device.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -2115,7 +2131,7 @@ fwupd_client_get_results_cb (GObject *source,
  *
  * Gets the results of a previous firmware update for a specific device.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -2283,7 +2299,7 @@ fwupd_client_install_stream_async (FwupdClient *self,
  *
  * NOTE: This method is thread-safe, but progress signals will be
  * emitted in the global default main context, if not explicitly set with
- * fwupd_client_set_main_context().
+ * [method@Client.set_main_context].
  *
  * Since: 1.5.0
  **/
@@ -2361,7 +2377,7 @@ fwupd_client_install_bytes_finish (FwupdClient *self, GAsyncResult *res, GError 
  *
  * NOTE: This method is thread-safe, but progress signals will be
  * emitted in the global default main context, if not explicitly set with
- * fwupd_client_set_main_context().
+ * [method@Client.set_main_context].
  *
  * Since: 1.5.0
  **/
@@ -2655,7 +2671,7 @@ fwupd_client_filter_locations (GPtrArray *locations,
  *
  * NOTE: This method is thread-safe, but progress signals will be
  * emitted in the global default main context, if not explicitly set with
- * fwupd_client_set_main_context().
+ * [method@Client.set_main_context].
  *
  * Since: 1.5.6
  **/
@@ -2721,7 +2737,7 @@ fwupd_client_install_release2_async (FwupdClient *self,
  *
  * NOTE: This method is thread-safe, but progress signals will be
  * emitted in the global default main context, if not explicitly set with
- * fwupd_client_set_main_context().
+ * [method@Client.set_main_context].
  *
  * Since: 1.5.0
  * Deprecated: 1.5.6
@@ -3122,7 +3138,7 @@ fwupd_client_update_metadata_stream_async (FwupdClient *self,
  *
  * NOTE: This method is thread-safe, but progress signals will be
  * emitted in the global default main context, if not explicitly set with
- * fwupd_client_set_main_context().
+ * [method@Client.set_main_context].
  *
  * Since: 1.5.0
  **/
@@ -3323,7 +3339,7 @@ fwupd_client_refresh_remote_signature_cb (GObject *source,
  *
  * NOTE: This method is thread-safe, but progress signals will be
  * emitted in the global default main context, if not explicitly set with
- * fwupd_client_set_main_context().
+ * [method@Client.set_main_context].
  *
  * Since: 1.5.0
  **/
@@ -3410,7 +3426,7 @@ fwupd_client_get_remotes_cb (GObject *source,
  *
  * Gets the list of remotes that have been configured for the system.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -3493,7 +3509,7 @@ fwupd_client_get_approved_firmware_cb (GObject *source,
  *
  * Gets the list of approved firmware.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -3662,7 +3678,7 @@ fwupd_client_get_blocked_firmware_cb (GObject *source,
  *
  * Gets the list of blocked firmware.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -3906,7 +3922,7 @@ fwupd_client_self_sign_cb (GObject *source, GAsyncResult *res, gpointer user_dat
  *
  * Signs the data using the client self-signed certificate.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * Since: 1.5.0
@@ -4541,15 +4557,15 @@ fwupd_client_download_bytes2_async (FwupdClient *self,
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
- * Downloads data from a remote server. The fwupd_client_set_user_agent() function
+ * Downloads data from a remote server. The [method@Client.set_user_agent] function
  * should be called before this method is used.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * NOTE: This method is thread-safe, but progress signals will be
  * emitted in the global default main context, if not explicitly set with
- * fwupd_client_set_main_context().
+ * [method@Client.set_main_context].
  *
  * Since: 1.5.0
  **/
@@ -4651,15 +4667,15 @@ fwupd_client_upload_bytes_thread_cb (GTask *task,
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
  *
- * Uploads data to a remote server. The fwupd_client_set_user_agent() function
+ * Uploads data to a remote server. The [method@Client.set_user_agent] function
  * should be called before this method is used.
  *
- * You must have called fwupd_client_connect_async() on @self before using
+ * You must have called [method@Client.connect_async] on @self before using
  * this method.
  *
  * NOTE: This method is thread-safe, but progress signals will be
  * emitted in the global default main context, if not explicitly set with
- * fwupd_client_set_main_context().
+ * [method@Client.set_main_context].
  *
  * Since: 1.5.0
  **/
@@ -4952,6 +4968,23 @@ fwupd_client_class_init (FwupdClientClass *klass)
 			      G_STRUCT_OFFSET (FwupdClientClass, device_changed),
 			      NULL, NULL, g_cclosure_marshal_generic,
 			      G_TYPE_NONE, 1, FWUPD_TYPE_DEVICE);
+
+	/**
+	 * FwupdClient::device-request:
+	 * @self: the #FwupdClient instance that emitted the signal
+	 * @msg: the #FwupdRequest
+	 *
+	 * The ::device-request signal is emitted when a device has been
+	 * emitted some kind of event, e.g. a manual action is required.
+	 *
+	 * Since: 1.6.2
+	 **/
+	signals [SIGNAL_DEVICE_REQUEST] =
+		g_signal_new ("device-request",
+			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
+			      G_STRUCT_OFFSET (FwupdClientClass, device_changed),
+			      NULL, NULL, g_cclosure_marshal_generic,
+			      G_TYPE_NONE, 1, FWUPD_TYPE_REQUEST);
 
 	/**
 	 * FwupdClient:status:

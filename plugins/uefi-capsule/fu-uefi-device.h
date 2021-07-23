@@ -7,12 +7,18 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
+
 #include "fu-uefi-device.h"
 #include "fu-uefi-update-info.h"
 
 #define FU_TYPE_UEFI_DEVICE (fu_uefi_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuUefiDevice, fu_uefi_device, FU, UEFI_DEVICE, FuDevice)
+G_DECLARE_DERIVABLE_TYPE (FuUefiDevice, fu_uefi_device, FU, UEFI_DEVICE, FuDevice)
+
+struct _FuUefiDeviceClass
+{
+	FuDeviceClass		parent_class;
+};
 
 typedef enum {
 	FU_UEFI_DEVICE_KIND_UNKNOWN,
@@ -35,6 +41,44 @@ typedef enum {
 	FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_BATT		= 0x07,
 	FU_UEFI_DEVICE_STATUS_LAST
 } FuUefiDeviceStatus;
+
+/**
+ * FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE:
+ *
+ * No not use the additional UX capsule.
+ */
+#define FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE		(1 << 0)
+/**
+ * FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE:
+ *
+ * Use a unique shim filename to work around a common BIOS bug.
+ */
+#define FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE		(1 << 1)
+/**
+ * FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC:
+ *
+ * Use the legacy boot manager description to work around a Lenovo BIOS bug.
+ */
+#define FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC	(1 << 2)
+/**
+ * FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK:
+ *
+ * The BIOS might have Boot Order Lock enabled which can cause failures when
+ * not using grub chainloading or capsule-on-disk.
+ */
+#define FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK	(1 << 3)
+/**
+ * FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH:
+ *
+ * Try to fallback to use UEFI removable path if the shim path doesn't exist.
+ */
+#define FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH	(1 << 4)
+/**
+ * FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB:
+ *
+ * Use shim to load fwupdx64.efi when SecureBoot is turned on.
+ */
+#define FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB		(1 << 5)
 
 FuUefiDevice	*fu_uefi_device_new_from_guid		(const gchar	*guid);
 FuUefiDevice	*fu_uefi_device_new_from_dev		(FuDevice	*dev);

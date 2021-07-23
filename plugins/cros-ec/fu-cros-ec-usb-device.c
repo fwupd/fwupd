@@ -6,9 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-chunk.h"
 #include "fu-cros-ec-usb-device.h"
 #include "fu-cros-ec-common.h"
 #include "fu-cros-ec-firmware.h"
@@ -69,6 +69,11 @@ typedef struct {
 	gsize offset;
 	gsize payload_size;
 } FuCrosEcUsbBlockInfo;
+
+#define FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN		(1 << 0)
+#define FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN		(1 << 1)
+#define FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO	(1 << 2)
+#define FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL		(1 << 3)
 
 static gboolean
 fu_cros_ec_usb_device_get_configuration (FuCrosEcUsbDevice *self,
@@ -373,6 +378,10 @@ fu_cros_ec_usb_device_setup (FuDevice *device, GError **error)
 	guint32 error_code;
 	START_RESP start_resp;
 	g_auto(GStrv) config_split = NULL;
+
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_cros_ec_usb_device_parent_class)->setup (device, error))
+		return FALSE;
 
 	if (!fu_cros_ec_usb_device_recovery (device, error))
 		return FALSE;
@@ -703,10 +712,7 @@ fu_cros_ec_usb_device_reset_to_ro (FuDevice *device, GError **error)
 	gsize response_size = 1;
 	g_autoptr(GError) error_local = NULL;
 
-	if (fu_device_has_custom_flag (device, "ro-written"))
-		fu_device_set_custom_flags (device, "ro-written,rebooting-to-ro");
-	else
-		fu_device_set_custom_flags (device, "rebooting-to-ro");
+	fu_device_add_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
 	if (!fu_cros_ec_usb_device_send_subcommand  (device, subcommand, command_body,
 				     command_body_size, &response,
 				     &response_size, FALSE, &error_local)) {
@@ -756,7 +762,9 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 	FuCrosEcFirmware *cros_ec_firmware = FU_CROS_EC_FIRMWARE (firmware);
 	gint num_txed_sections = 0;
 
-	if (fu_device_has_custom_flag (device, "rebooting-to-ro")) {
+	fu_device_remove_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
+
+	if (fu_device_has_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO)) {
 		gsize response_size = 1;
 		guint8 response;
 		guint16 subcommand = UPDATE_EXTRA_CMD_STAY_IN_RO;
@@ -764,6 +772,7 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 		gsize command_body_size = 0;
 		START_RESP start_resp;
 
+		fu_device_remove_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO);
 		if (!fu_cros_ec_usb_device_send_subcommand  (device, subcommand, command_body,
 							     command_body_size, &response,
 							     &response_size, FALSE, error)) {
@@ -785,15 +794,22 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 		}
 	}
 
-	if (fu_device_has_custom_flag (device, "rw-written") && self->in_bootloader) {
+	if (fu_device_has_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN) && self->in_bootloader) {
 		/*
-		 * we had previously written to the rw region but somehow
-		 * ended back up here while still in bootloader; this is
-		 * a transitory state due to the fact that we have to boot
-		 * through RO to get to RW. Set another write required to
-		 * allow the RO region to auto-jump to RW
+		 * We had previously written to the rw region (while we were
+		 * booted from ro region), but somehow landed in ro again after
+		 * a reboot. Since we wrote rw already, we wanted to jump
+		 * to the new rw so we could evaluate ro.
+		 *
+		 * This is a transitory state due to the fact that we have to
+		 * boot through RO to get to RW. Set another write required to
+		 * allow the RO region to auto-jump to RW.
+		 *
+		 * Special flow: write phase skips actual write -> attach skips
+		 * send of reset command, just sets wait for replug, and
+		 * device restart status.
 		 */
-		fu_device_set_custom_flags (device, "special,rw-written");
+		fu_device_add_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
 		return TRUE;
 	}
@@ -851,20 +867,14 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 
-	if (self->in_bootloader) {
-		if (fu_device_has_custom_flag (device, "ro-written"))
-			fu_device_set_custom_flags (device, "ro-written,rw-written");
-		else
-			fu_device_set_custom_flags (device, "rw-written");
-	} else if (fu_device_has_custom_flag (device, "rw-written")) {
-		fu_device_set_custom_flags (device, "ro-written,rw-written");
-	} else {
-		fu_device_set_custom_flags (device, "ro-written");
-	}
+	if (self->in_bootloader)
+		fu_device_add_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN);
+	else
+		fu_device_add_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
 
 	/* logical XOR */
-	if (fu_device_has_custom_flag (device, "rw-written") !=
-	    fu_device_has_custom_flag (device, "ro-written"))
+	if (fu_device_has_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN) !=
+	    fu_device_has_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN))
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
 
 	/* success */
@@ -917,16 +927,25 @@ fu_cros_ec_usb_device_attach (FuDevice *device, GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
 
-	if (self->in_bootloader && fu_device_has_custom_flag (device, "special")) {
-		fu_device_set_remove_delay (device, CROS_EC_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_remove_delay (device, CROS_EC_REMOVE_DELAY_RE_ENUMERATE);
+	if (self->in_bootloader &&
+	    fu_device_has_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL)) {
+
+		/*
+		 * attach after the SPECIAL flag was set. The EC will auto-jump
+		 * from ro -> rw, so we do not need to send an explicit
+		 * reset_to_ro. We just need to set for another wait for replug
+		 * as a detach + reenumeration is expected as we jump from
+		 * ro -> rw.
+		 */
+		fu_device_remove_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
 		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		return TRUE;
 	}
 
-	fu_device_set_remove_delay (device, CROS_EC_REMOVE_DELAY_RE_ENUMERATE);
-	if (fu_device_has_custom_flag (device, "ro-written") &&
-	    !fu_device_has_custom_flag (device, "rw-written")) {
+	if (fu_device_has_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN) &&
+	    !fu_device_has_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN)) {
 		if (!fu_cros_ec_usb_device_reset_to_ro (device, error)) {
 			return FALSE;
 		}
@@ -945,8 +964,8 @@ fu_cros_ec_usb_device_detach (FuDevice *device, GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
 
-	if (fu_device_has_custom_flag (device, "rw-written") &&
-	    !fu_device_has_custom_flag (device, "ro-written"))
+	if (fu_device_has_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN) &&
+	    !fu_device_has_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN))
 		return TRUE;
 
 	if (self->in_bootloader) {
@@ -955,7 +974,7 @@ fu_cros_ec_usb_device_detach (FuDevice *device, GError **error)
 		return TRUE;
 	} else if (self->targ.common.flash_protection != 0x0) {
 		/* in RW, and RO region is write protected, so jump to RO */
-		fu_device_set_custom_flags (device, "ro-written");
+		fu_device_add_private_flag (device, FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN);
 		fu_device_set_remove_delay (device, CROS_EC_REMOVE_DELAY_RE_ENUMERATE);
 		if (!fu_cros_ec_usb_device_reset_to_ro (device, error))
 			return FALSE;
@@ -969,13 +988,25 @@ fu_cros_ec_usb_device_detach (FuDevice *device, GError **error)
 }
 
 static void
-fu_cros_ec_usb_device_init (FuCrosEcUsbDevice *device)
+fu_cros_ec_usb_device_init (FuCrosEcUsbDevice *self)
 {
-	fu_device_add_protocol (FU_DEVICE (device), "com.google.usb.crosec");
-	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_internal_flag (FU_DEVICE (device), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
-	fu_device_set_version_format (FU_DEVICE (device), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_add_flag (FU_DEVICE (device), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+	fu_device_add_protocol (FU_DEVICE (self), "com.google.usb.crosec");
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN,
+					 "ro-written");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN,
+					 "rw-written");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_CROS_EC_USB_DEVICE_FLAG_REBOOTING_TO_RO,
+					 "rebooting-to-ro");
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL,
+					 "special");
 }
 
 static void

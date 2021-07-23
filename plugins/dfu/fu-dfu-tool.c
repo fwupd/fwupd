@@ -6,6 +6,7 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <libintl.h>
 #include <locale.h>
 #include <stdlib.h>
@@ -17,12 +18,7 @@
 #include "fu-dfu-device.h"
 #include "fu-dfu-sector.h"
 
-#include "fu-chunk.h"
 #include "fu-context-private.h"
-#include "fu-dfuse-firmware.h"
-#include "fu-device-locker.h"
-
-#include "fwupd-error.h"
 
 typedef struct {
 	GCancellable		*cancellable;

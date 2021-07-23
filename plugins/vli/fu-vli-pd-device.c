@@ -7,8 +7,7 @@
 
 #include "config.h"
 
-#include "fu-common.h"
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 #include "fu-vli-pd-device.h"
 #include "fu-vli-pd-firmware.h"
@@ -18,6 +17,13 @@ struct _FuVliPdDevice
 {
 	FuVliDevice		 parent_instance;
 };
+
+/**
+ * FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186:
+ *
+ * Device has a PS186 attached via I²C.
+ */
+#define FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186		(1 << 0)
 
 G_DEFINE_TYPE (FuVliPdDevice, fu_vli_pd_device, FU_TYPE_VLI_DEVICE)
 
@@ -253,13 +259,17 @@ fu_vli_pd_device_parade_setup (FuVliPdDevice *self, GError **error)
 }
 
 static gboolean
-fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
+fu_vli_pd_device_setup (FuDevice *device, GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
 	guint32 version_raw;
 	guint8 verbuf[4] = { 0x0 };
 	guint8 tmp = 0;
 	g_autofree gchar *version_str = NULL;
+
+	/* FuVliDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_vli_pd_device_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* get version */
 	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
@@ -280,22 +290,22 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 	fu_device_set_version (FU_DEVICE (self), version_str);
 
 	/* get device kind if not already in ROM mode */
-	if (fu_vli_device_get_kind (device) == FU_VLI_DEVICE_KIND_UNKNOWN) {
+	if (fu_vli_device_get_kind (FU_VLI_DEVICE (self)) == FU_VLI_DEVICE_KIND_UNKNOWN) {
 		if (!fu_vli_pd_device_read_reg (self, 0x0018, &tmp, error))
 			return FALSE;
 		switch (tmp & 0xF0) {
 		case 0x00:
-			fu_vli_device_set_kind (device, FU_VLI_DEVICE_KIND_VL100);
+			fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL100);
 			break;
 		case 0x10:
 			/* this is also the code for VL101, but VL102 is more likely */
-			fu_vli_device_set_kind (device, FU_VLI_DEVICE_KIND_VL102);
+			fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL102);
 			break;
 		case 0x80:
-			fu_vli_device_set_kind (device, FU_VLI_DEVICE_KIND_VL103);
+			fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL103);
 			break;
 		case 0x90:
-			fu_vli_device_set_kind (device, FU_VLI_DEVICE_KIND_VL104);
+			fu_vli_device_set_kind (FU_VLI_DEVICE (self), FU_VLI_DEVICE_KIND_VL104);
 			break;
 		default:
 			g_set_error (error,
@@ -316,7 +326,7 @@ fu_vli_pd_device_setup (FuVliDevice *device, GError **error)
 		fu_device_remove_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 
 	/* detect any I²C child, e.g. parade device */
-	if (fu_device_has_custom_flag (FU_DEVICE (self), "has-i2c-ps186")) {
+	if (fu_device_has_private_flag (device, FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186)) {
 		if (!fu_vli_pd_device_parade_setup (self, error))
 			return FALSE;
 	}
@@ -679,12 +689,15 @@ fu_vli_pd_device_init (FuVliPdDevice *self)
 {
 	fu_device_add_icon (FU_DEVICE (self), "audio-card");
 	fu_device_add_protocol (FU_DEVICE (self), "com.vli.pd");
-	fu_device_set_summary (FU_DEVICE (self), "USB PD");
+	fu_device_set_summary (FU_DEVICE (self), "USB power distribution device");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_remove_delay (FU_DEVICE (self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_QUAD);
 	fu_vli_device_set_spi_auto_detect (FU_VLI_DEVICE (self), FALSE);
+	fu_device_register_private_flag (FU_DEVICE (self),
+					 FU_VLI_PD_DEVICE_FLAG_HAS_I2C_PS186,
+					 "has-i2c-ps186");
 
 	/* connect up attach or detach vfuncs when kind is known */
 	g_signal_connect (self, "notify::kind",
@@ -701,7 +714,7 @@ fu_vli_pd_device_class_init (FuVliPdDeviceClass *klass)
 	klass_device->prepare_firmware = fu_vli_pd_device_prepare_firmware;
 	klass_device->attach = fu_vli_pd_device_attach;
 	klass_device->detach = fu_vli_pd_device_detach;
-	klass_vli_device->setup = fu_vli_pd_device_setup;
+	klass_device->setup = fu_vli_pd_device_setup;
 	klass_vli_device->spi_chip_erase = fu_vli_pd_device_spi_chip_erase;
 	klass_vli_device->spi_sector_erase = fu_vli_pd_device_spi_sector_erase;
 	klass_vli_device->spi_read_data = fu_vli_pd_device_spi_read_data;

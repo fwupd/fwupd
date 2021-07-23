@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_SYNAPTICS_MST_DEVICE (fu_synaptics_mst_device_get_type ())
 G_DECLARE_FINAL_TYPE (FuSynapticsMstDevice, fu_synaptics_mst_device, FU, SYNAPTICS_MST_DEVICE, FuUdevDevice)

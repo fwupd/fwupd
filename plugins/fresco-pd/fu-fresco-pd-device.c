@@ -171,6 +171,10 @@ fu_fresco_pd_device_setup (FuDevice *device, GError **error)
 	g_autofree gchar *instance_id = NULL;
 	g_autofree gchar *version = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_fresco_pd_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* read existing device version */
 	for (guint i = 0; i < 4; i++) {
 		if (!fu_fresco_pd_device_transfer_read (self, 0x3000 + i, &ver[i], 1, error)) {

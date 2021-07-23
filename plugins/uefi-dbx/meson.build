@@ -59,6 +59,7 @@ endif
 
 dbxtool = executable(
   'dbxtool',
+  fu_hash,
   sources : [
     'fu-dbxtool.c',
     'fu-uefi-dbx-common.c',

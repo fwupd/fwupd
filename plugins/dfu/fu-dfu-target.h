@@ -6,17 +6,13 @@
 
 #pragma once
 
+#include <fwupdplugin.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <gusb.h>
 
 #include "fu-dfu-common.h"
 #include "fu-dfu-sector.h"
-
-#include "fu-chunk.h"
-#include "fu-firmware.h"
-
-#include "fwupd-enums.h"
 
 #define FU_TYPE_DFU_TARGET (fu_dfu_target_get_type ())
 G_DECLARE_DERIVABLE_TYPE (FuDfuTarget, fu_dfu_target, FU, DFU_TARGET, GUsbDevice)

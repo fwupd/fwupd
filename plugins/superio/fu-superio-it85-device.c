@@ -6,7 +6,8 @@
 
 #include "config.h"
 
-#include "fu-chunk.h"
+#include <fwupdplugin.h>
+
 #include "fu-superio-common.h"
 #include "fu-superio-it85-device.h"
 
@@ -20,11 +21,11 @@ static gchar *
 fu_superio_it85_device_get_str (FuSuperioDevice *self, guint8 idx, GError **error)
 {
 	GString *str = g_string_new (NULL);
-	if (!fu_superio_device_ec_write1 (self, idx, error))
+	if (!fu_superio_device_ec_write_cmd (self, idx, error))
 		return NULL;
 	for (guint i = 0; i < 0xff; i++) {
 		guint8 c = 0;
-		if (!fu_superio_device_ec_read (self, &c, error))
+		if (!fu_superio_device_ec_read_data (self, &c, error))
 			return NULL;
 		if (c == '$')
 			break;
@@ -46,7 +47,7 @@ fu_superio_it85_device_setup (FuDevice *device, GError **error)
 		return FALSE;
 
 	/* get EC size */
-	if (!fu_superio_device_ec_get_param (self, 0xe5, &size_tmp, error)) {
+	if (!fu_superio_device_reg_read (self, 0xe5, &size_tmp, error)) {
 		g_prefix_error (error, "failed to get EC size: ");
 		return FALSE;
 	}

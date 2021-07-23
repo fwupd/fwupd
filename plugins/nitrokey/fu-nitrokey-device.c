@@ -110,6 +110,10 @@ fu_nitrokey_device_setup (FuDevice *device, GError **error)
 	guint8 buf_reply[NITROKEY_REPLY_DATA_LENGTH];
 	g_autofree gchar *version = NULL;
 
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_nitrokey_device_parent_class)->setup (device, error))
+		return FALSE;
+
 	/* get firmware version */
 	if (!nitrokey_execute_cmd_full (device,
 					NITROKEY_CMD_GET_DEVICE_STATUS,

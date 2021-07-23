@@ -7,14 +7,12 @@
 #include "config.h"
 
 #include <errno.h>
+#include <fwupdplugin.h>
 #include <sys/io.h>
-
-#include "fu-common.h"
 
 #include "fu-pci-device.h"
 
 typedef struct {
-	FuDevice		 parent_instance;
 	guint32			 bus;
 	guint32			 dev;
 	guint32			 fun;

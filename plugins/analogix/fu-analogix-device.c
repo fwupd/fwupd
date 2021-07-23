@@ -5,7 +5,7 @@
  */
 #include "config.h"
 
-#include "fu-chunk.h"
+#include <fwupdplugin.h>
 
 #include "fu-analogix-common.h"
 #include "fu-analogix-device.h"
@@ -175,6 +175,10 @@ fu_analogix_device_setup (FuDevice *device, GError **error)
 	guint8 buf_fw[2] = { 0x0 };
 	guint8 buf_custom[2] = { 0x0 };
 	g_autofree gchar *version = NULL;
+
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_analogix_device_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* get OCM version */
 	if (!fu_analogix_device_receive (self, ANX_BB_RQT_READ_FW_VER, 0, 0,

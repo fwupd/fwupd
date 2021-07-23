@@ -419,10 +419,6 @@ msgstr "Uklanja rezultate posljednje nadopune"
 msgid "Command not found"
 msgstr "Naredba nije pronađena"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Nastavi s nadopunom?"
-
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "Pretvori datoteku firmvera"
@@ -682,7 +678,7 @@ msgid "Extract a firmware blob to images"
 msgstr "Izdvoji blob firmvera u slike"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Failed"
 msgstr "Neuspjelo"
 
@@ -890,7 +886,7 @@ msgstr "Prikazuje izdanja za uređaj"
 msgid "Gets the results from the last update"
 msgstr "Prikaži rezultate posljednje nadopune"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "Hardver čeka da ponovno bude spojen"
 
@@ -1834,12 +1830,6 @@ msgstr "Nadopuna %s s inačice %s na inačicu %s... "
 #, c-format
 msgid "Updating %s…"
 msgstr "Nadopunjujem %s…"
-
-#. TRANSLATORS: message letting the user know an upgrade is available
-#. * %1 is the device name and %2 and %3 are version strings
-#, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "Nadopuna je dostupna za %s sa %s na %s"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"

@@ -6,9 +6,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
-
-#include "fu-chunk.h"
 
 #include "fu-ebitdo-common.h"
 #include "fu-ebitdo-device.h"
@@ -238,6 +237,7 @@ fu_ebitdo_device_validate (FuEbitdoDevice *self, GError **error)
 	const gchar *ven;
 	const gchar *allowlist[] = {
 		"8Bitdo",
+		"8BitDo",
 		"SFC30",
 		NULL };
 
@@ -296,6 +296,10 @@ fu_ebitdo_device_setup (FuDevice *device, GError **error)
 	gdouble tmp;
 	guint32 version_tmp = 0;
 	guint32 serial_tmp[9] = {0};
+
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_ebitdo_device_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* in firmware mode */
 	if (!fu_device_has_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -358,32 +362,19 @@ fu_ebitdo_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_ebitdo_device_write_firmware (FuDevice *device,
-				 FuFirmware *firmware,
-				 FwupdInstallFlags flags,
-				 GError **error)
+fu_ebitdo_device_detach (FuDevice *device, GError **error)
 {
-	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
-	const guint8 *buf;
-	gsize bufsz = 0;
-	guint32 serial_new[3];
-	g_autoptr(GBytes) fw_hdr = NULL;
-	g_autoptr(GBytes) fw_payload = NULL;
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
-	const guint32 app_key_index[16] = {
-		0x186976e5, 0xcac67acd, 0x38f27fee, 0x0a4948f1,
-		0xb75b7753, 0x1f8ffa5c, 0xbff8cf43, 0xc4936167,
-		0x92bd03f0, 0x5573c6ed, 0x57d8845b, 0x827197ac,
-		0xb91901c9, 0x3917edfe, 0xbcd6344f, 0xcf9e23b5
-	};
+	g_autoptr(FwupdRequest) request = fwupd_request_new ();
 
-	/* not in bootloader mode, so print what to do */
-	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER)) {
-		g_autoptr(GString) msg = g_string_new ("Not in bootloader mode: ");
-		g_string_append (msg, "Disconnect the controller, ");
-		g_print ("1. \n");
+	/* not required */
+	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
+		return TRUE;
+
+	/* generate a message if not already set from the metadata */
+	if (fu_device_get_update_message (device) == NULL) {
+		GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
+		g_autoptr(GString) msg = g_string_new (NULL);
+		g_string_append (msg, "Not in bootloader mode: Disconnect the controller, ");
 		switch (g_usb_device_get_pid (usb_device)) {
 		case 0xab11: /* FC30 */
 		case 0xab12: /* NES30 */
@@ -416,18 +407,57 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 					      "both white LED and green LED blink, ");
 			break;
 		case 0x9015: /* N30 Pro 2 */
- 		    g_string_append (msg, "press and hold L1+R1+START buttons "
- 					      "until the yellow LED blinks, ");
+		    g_string_append (msg, "press and hold L1+R1+START buttons "
+					  "until the yellow LED blinks, ");
 			break;
 		default:
 			g_string_append (msg, "do what it says in the manual, ");
 			break;
 		}
 		g_string_append (msg, "then re-connect controller");
+		fu_device_set_update_message (device, msg->str);
+	}
+
+	/* wait */
+	fu_device_set_progress (device, 0);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
+	/* emit request */
+	fwupd_request_set_kind (request, FWUPD_REQUEST_KIND_IMMEDIATE);
+	fwupd_request_set_id (request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+	fwupd_request_set_message (request, fu_device_get_update_message (device));
+	fwupd_request_set_image (request, fu_device_get_update_image (device));
+	fu_device_emit_request (device, request);
+	return TRUE;
+}
+
+static gboolean
+fu_ebitdo_device_write_firmware (FuDevice *device,
+				 FuFirmware *firmware,
+				 FwupdInstallFlags flags,
+				 GError **error)
+{
+	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
+	const guint8 *buf;
+	gsize bufsz = 0;
+	guint32 serial_new[3];
+	g_autoptr(GBytes) fw_hdr = NULL;
+	g_autoptr(GBytes) fw_payload = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
+	const guint32 app_key_index[16] = {
+		0x186976e5, 0xcac67acd, 0x38f27fee, 0x0a4948f1,
+		0xb75b7753, 0x1f8ffa5c, 0xbff8cf43, 0xc4936167,
+		0x92bd03f0, 0x5573c6ed, 0x57d8845b, 0x827197ac,
+		0xb91901c9, 0x3917edfe, 0xbcd6344f, 0xcf9e23b5
+	};
+
+	/* not in bootloader mode */
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_set_error_literal (error,
 				     FWUPD_ERROR,
 				     FWUPD_ERROR_NEEDS_USER_ACTION,
-				     msg->str);
+				     "Not in bootloader mode");
 		return FALSE;
 	}
 
@@ -582,7 +612,6 @@ fu_ebitdo_device_probe (FuDevice *device, GError **error)
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		fu_device_add_counterpart_guid (device, "USB\\VID_0483&PID_5750");
 		fu_device_add_counterpart_guid (device, "USB\\VID_2DC8&PID_5750");
-		fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 	}
 
 	/* success */
@@ -615,6 +644,7 @@ fu_ebitdo_device_class_init (FuEbitdoDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
 	klass_device->write_firmware = fu_ebitdo_device_write_firmware;
 	klass_device->setup = fu_ebitdo_device_setup;
+	klass_device->detach = fu_ebitdo_device_detach;
 	klass_device->attach = fu_ebitdo_device_attach;
 	klass_device->open = fu_ebitdo_device_open;
 	klass_device->probe = fu_ebitdo_device_probe;

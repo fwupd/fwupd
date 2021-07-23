@@ -11,6 +11,14 @@
 #include "fu-common.h"
 #include "fu-fmap-firmware.h"
 
+/**
+ * FuFmapFirmware:
+ *
+ * A FMAP firmware image.
+ *
+ * See also: [class@FuFirmware]
+ */
+
 #define FMAP_SIGNATURE		"__FMAP__"
 #define FMAP_AREANAME		"FMAP"
 

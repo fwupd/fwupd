@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 #include <glib/gi18n.h>
 #include <glib-unix.h>
 #include <locale.h>
@@ -19,7 +19,6 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-update-info.h"
-#include "fu-efivar.h"
 
 /* custom return code */
 #define EXIT_NOTHING_TO_DO		2

@@ -2034,7 +2034,7 @@ fwupd_client_download_bytes_cb (GObject *source, GAsyncResult *res, gpointer use
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
- * Downloads data from a remote server. The fwupd_client_set_user_agent() function
+ * Downloads data from a remote server. The [method@Client.set_user_agent] function
  * should be called before this method is used.
  *
  * Returns: (transfer full): downloaded data, or %NULL for error
@@ -2081,7 +2081,7 @@ fwupd_client_download_bytes (FwupdClient *self,
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
- * Downloads data from a remote server. The fwupd_client_set_user_agent() function
+ * Downloads data from a remote server. The [method@Client.set_user_agent] function
  * should be called before this method is used.
  *
  * Returns: %TRUE if the file was written
@@ -2141,7 +2141,7 @@ fwupd_client_upload_bytes_cb (GObject *source, GAsyncResult *res, gpointer user_
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
- * Uploads data to a remote server. The fwupd_client_set_user_agent() function
+ * Uploads data to a remote server. The [method@Client.set_user_agent] function
  * should be called before this method is used.
  *
  * Returns: (transfer full): response data, or %NULL for error

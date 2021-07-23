@@ -17,16 +17,35 @@
 G_DECLARE_DERIVABLE_TYPE (FuFirmware, fu_firmware, FU, FIRMWARE, GObject)
 
 /**
+ * FU_FIRMWARE_EXPORT_FLAG_NONE:
+ *
+ * No flags set.
+ *
+ * Since: 1.6.0
+ **/
+#define FU_FIRMWARE_EXPORT_FLAG_NONE			(0u)
+/**
+ * FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG:
+ *
+ * Include debug information when exporting.
+ *
+ * Since: 1.6.0
+ **/
+#define FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG		(1u << 0)
+/**
+ * FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA:
+ *
+ * Write the data as UTF-8 strings.
+ *
+ * Since: 1.6.0
+ **/
+#define FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA		(1u << 1)
+
+/**
  * FuFirmwareExportFlags:
- * @FU_FIRMWARE_EXPORT_FLAG_NONE:		No flags set
- * @FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG:	Include debug information when exporting
- * @FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA:		Write the data as UTF-8 strings
  *
  * The firmware export flags.
  **/
-#define FU_FIRMWARE_EXPORT_FLAG_NONE			(0u)		/* Since: 1.6.0 */
-#define FU_FIRMWARE_EXPORT_FLAG_INCLUDE_DEBUG		(1u << 0)	/* Since: 1.6.0 */
-#define FU_FIRMWARE_EXPORT_FLAG_ASCII_DATA		(1u << 1)	/* Since: 1.6.0 */
 typedef guint64 FuFirmwareExportFlags;
 
 struct _FuFirmwareClass
@@ -63,24 +82,76 @@ struct _FuFirmwareClass
 };
 
 /**
+ * FU_FIRMWARE_FLAG_NONE:
+ *
+ * No flags set.
+ *
+ * Since: 1.5.0
+ **/
+#define FU_FIRMWARE_FLAG_NONE			(0u)
+/**
+ * FU_FIRMWARE_FLAG_DEDUPE_ID:
+ *
+ * Dedupe imges by ID.
+ *
+ * Since: 1.5.0
+ **/
+#define FU_FIRMWARE_FLAG_DEDUPE_ID		(1u << 0)
+/**
+ * FU_FIRMWARE_FLAG_DEDUPE_IDX:
+ *
+ * Dedupe imges by IDX.
+ *
+ * Since: 1.5.0
+ **/
+#define FU_FIRMWARE_FLAG_DEDUPE_IDX		(1u << 1)
+/**
+ * FU_FIRMWARE_FLAG_HAS_CHECKSUM:
+ *
+ * Has a CRC or checksum to test internal consistency.
+ *
+ * Since: 1.5.6
+ **/
+#define FU_FIRMWARE_FLAG_HAS_CHECKSUM		(1u << 2)
+/**
+ * FU_FIRMWARE_FLAG_HAS_VID_PID:
+ *
+ * Has a vendor or product ID in the firmware.
+ *
+ * Since: 1.5.6
+ **/
+#define FU_FIRMWARE_FLAG_HAS_VID_PID		(1u << 3)
+
+/**
  * FuFirmwareFlags:
- * @FU_FIRMWARE_FLAG_NONE:			No flags set
- * @FU_FIRMWARE_FLAG_DEDUPE_ID:			Dedupe imges by ID
- * @FU_FIRMWARE_FLAG_DEDUPE_IDX:		Dedupe imges by IDX
- * @FU_FIRMWARE_FLAG_HAS_CHECKSUM:		Has a CRC or checksum to test internal consistency
- * @FU_FIRMWARE_FLAG_HAS_VID_PID:		Has a vendor or product ID in the firmware
  *
  * The firmware flags.
  **/
-#define FU_FIRMWARE_FLAG_NONE			(0u)		/* Since: 1.5.0 */
-#define FU_FIRMWARE_FLAG_DEDUPE_ID		(1u << 0)	/* Since: 1.5.0 */
-#define FU_FIRMWARE_FLAG_DEDUPE_IDX		(1u << 1)	/* Since: 1.5.0 */
-#define FU_FIRMWARE_FLAG_HAS_CHECKSUM		(1u << 2)	/* Since: 1.5.6 */
-#define FU_FIRMWARE_FLAG_HAS_VID_PID		(1u << 3)	/* Since: 1.5.6 */
 typedef guint64 FuFirmwareFlags;
 
+/**
+ * FU_FIRMWARE_ID_PAYLOAD:
+ *
+ * The usual firmware ID string for the payload.
+ *
+ * Since: 1.6.0
+ **/
 #define FU_FIRMWARE_ID_PAYLOAD			"payload"
+/**
+ * FU_FIRMWARE_ID_SIGNATURE:
+ *
+ * The usual firmware ID string for the signature.
+ *
+ * Since: 1.6.0
+ **/
 #define FU_FIRMWARE_ID_SIGNATURE		"signature"
+/**
+ * FU_FIRMWARE_ID_HEADER:
+ *
+ * The usual firmware ID string for the header.
+ *
+ * Since: 1.6.0
+ **/
 #define FU_FIRMWARE_ID_HEADER			"header"
 
 #define FU_FIRMWARE_ALIGNMENT_1			0x00

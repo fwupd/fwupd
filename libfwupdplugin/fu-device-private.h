@@ -17,6 +17,9 @@ FuDeviceInternalFlags fu_device_internal_flag_from_string (const gchar	*flag);
 GPtrArray	*fu_device_get_parent_guids		(FuDevice	*self);
 gboolean	 fu_device_has_parent_guid		(FuDevice	*self,
 							 const gchar	*guid);
+GPtrArray	*fu_device_get_parent_physical_ids	(FuDevice	*self);
+gboolean	 fu_device_has_parent_physical_id	(FuDevice	*self,
+							 const gchar	*physical_id);
 void		 fu_device_set_parent			(FuDevice	*self,
 							 FuDevice	*parent);
 gint		 fu_device_get_order			(FuDevice	*self);
@@ -34,3 +37,8 @@ gchar		*fu_device_get_guids_as_str		(FuDevice	*self);
 GPtrArray	*fu_device_get_possible_plugins		(FuDevice	*self);
 void		 fu_device_add_possible_plugin		(FuDevice	*self,
 							 const gchar	*plugin);
+guint		 fu_device_get_request_cnt		(FuDevice	*self,
+							 FwupdRequestKind request_kind);
+guint64		 fu_device_get_private_flags		(FuDevice	*self);
+void		 fu_device_set_private_flags		(FuDevice	*self,
+							 guint64	 flag);

@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 #include "fu-vli-pd-device.h"
 #include "fu-vli-pd-firmware.h"

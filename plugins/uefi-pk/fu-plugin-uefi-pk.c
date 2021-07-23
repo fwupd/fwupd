@@ -6,13 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <gnutls/crypto.h>
 #include <gnutls/abstract.h>
-
-#include "fu-efi-signature.h"
-#include "fu-efi-signature-list.h"
-#include "fu-efivar.h"
-#include "fu-plugin-vfuncs.h"
 
 struct FuPluginData {
 	gboolean		 has_pk_test_key;

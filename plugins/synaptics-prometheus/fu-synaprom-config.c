@@ -218,9 +218,12 @@ fu_synaprom_config_init (FuSynapromConfig *self)
 {
 	fu_device_add_protocol (FU_DEVICE (self), "com.synaptics.prometheus.config");
 	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_internal_flag (FU_DEVICE (self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_logical_id (FU_DEVICE (self), "cfg");
 	fu_device_set_name (FU_DEVICE (self), "Prometheus IOTA Config");
+	fu_device_set_summary (FU_DEVICE (self), "Fingerprint reader config");
+	fu_device_add_icon (FU_DEVICE (self), "touchpad-disabled");
 }
 
 static void
@@ -237,20 +240,6 @@ fu_synaprom_config_constructed (GObject *obj)
 	fu_device_add_instance_id (FU_DEVICE (self), devid);
 
 	G_OBJECT_CLASS (fu_synaprom_config_parent_class)->constructed (obj);
-}
-
-static gboolean
-fu_synaprom_config_open (FuDevice *device, GError **error)
-{
-	FuDevice *parent = fu_device_get_parent (device);
-	return fu_device_open (parent, error);
-}
-
-static gboolean
-fu_synaprom_config_close (FuDevice *device, GError **error)
-{
-	FuDevice *parent = fu_device_get_parent (device);
-	return fu_device_close (parent, error);
 }
 
 static gboolean
@@ -275,8 +264,6 @@ fu_synaprom_config_class_init (FuSynapromConfigClass *klass)
 	object_class->constructed = fu_synaprom_config_constructed;
 	klass_device->write_firmware = fu_synaprom_config_write_firmware;
 	klass_device->prepare_firmware = fu_synaprom_config_prepare_firmware;
-	klass_device->open = fu_synaprom_config_open;
-	klass_device->close = fu_synaprom_config_close;
 	klass_device->setup = fu_synaprom_config_setup;
 	klass_device->reload = fu_synaprom_config_setup;
 	klass_device->attach = fu_synaprom_config_attach;

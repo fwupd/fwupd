@@ -7,10 +7,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
-
-#include "fu-chunk.h"
-#include "fu-srec-firmware.h"
 
 #include "fu-synaptics-cxaudio-common.h"
 #include "fu-synaptics-cxaudio-device.h"
@@ -369,6 +367,10 @@ fu_synaptics_cxaudio_device_setup (FuDevice *device, GError **error)
 	g_autofree gchar *summary = NULL;
 	g_autofree gchar *version_fw = NULL;
 	g_autofree gchar *version_patch = NULL;
+
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_synaptics_cxaudio_device_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* get the ChipID */
 	if (!fu_synaptics_cxaudio_device_operation (self,

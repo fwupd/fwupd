@@ -8,13 +8,12 @@
 #include "config.h"
 
 #include <fcntl.h>
+#include <fwupdplugin.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
 #include <smbios_c/token.h>
 #include <smbios_c/smi.h>
-
-#include "fu-plugin-vfuncs.h"
 
 /* allowed smbios class/select commands */
 #define CLASS_ADMIN_PROP	10
@@ -161,7 +160,7 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	/* create a dummy device so we can unlock the feature */
 	fu_device_set_id (dev, "UEFI-dummy");
 	fu_device_set_name (dev, "Dell UEFI updates");
-	fu_device_set_summary (dev, "Enable UEFI Update Functionality");
+	fu_device_set_summary (dev, "UEFI update functionality");
 	fu_device_add_vendor_id (dev, "PCI:0x1028");
 	fu_device_add_instance_id (dev, "main-system-firmware");
 	fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");

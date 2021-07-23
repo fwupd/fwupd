@@ -451,10 +451,6 @@ msgstr "Tyhjennä viimeisimmän päivityksen tulokset"
 msgid "Command not found"
 msgstr "Komentoa ei löytynyt"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Jatketaanko päivitystä?"
-
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "Muunna laiteohjelmiston 'firmware' tiedosto"
@@ -608,6 +604,10 @@ msgstr "Älä tarkista ilmoittamattomasta historiasta"
 msgid "Do not check if download remotes should be enabled"
 msgstr "Älä tarkista, kannattaako etänä lataus ottaa käyttöön"
 
+#. TRANSLATORS: command line option
+msgid "Do not check or prompt for reboot after update"
+msgstr "Älä pyydä tai tarkista käynnistystä uudelleen päivityksen jälkeen"
+
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
 msgstr "Älä sisällytä lokiin toimialueen etuliitettä"
@@ -645,6 +645,12 @@ msgstr "Haluatko lähettää raportteja automaattisesti tulevia päivityksiä va
 msgid "Done!"
 msgstr "Valmis!"
 
+#. TRANSLATORS: message letting the user know an downgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Downgrade %s from %s to %s?"
+msgstr "Päivitä alas %s  %s:sta %s:een?"
+
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
 msgstr "Alentaa laitteen laiteohjelmistoa"
@@ -680,6 +686,10 @@ msgstr "Määritetty ESP ei ollut voimassa"
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Ota firmware-päivitystuki käyttöön tuetuissa järjestelmissä"
+
+#. TRANSLATORS: a remote here is like a 'repo' or software source
+msgid "Enable new remote?"
+msgstr "Uusi etäyhteys käyttöön?"
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
@@ -782,7 +792,7 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Failed"
 msgstr "Epäonnistui"
 
@@ -855,6 +865,10 @@ msgstr "Tiedostonimi"
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
 msgstr "Tiedoston allekirjoitus"
+
+#. TRANSLATORS: full path of the remote.conf file
+msgid "Filename Source"
+msgstr "Tiedostonimen lähde"
 
 #. TRANSLATORS: user did not include a filename parameter
 msgid "Filename required"
@@ -996,7 +1010,7 @@ msgstr "Saat viimeisimmän päivityksen tulokset"
 msgid "HWIDS-FILE"
 msgstr "HWIDS-FILE"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "Laitteisto odottaa uudelleen kytkemistä"
 
@@ -1280,7 +1294,7 @@ msgstr "Kytkee ESP:n käyttöön"
 msgid "Needs a reboot after installation"
 msgstr "Tarvitsee käynnistyksen asennuksen jälkeen"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Käynnistys tarvitaan"
 
@@ -1381,13 +1395,17 @@ msgstr "Salasana"
 msgid "Payload"
 msgstr "Tietosisältö"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Pending"
 msgstr "Odottaa"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Percentage complete"
 msgstr "Prosenttiosuus valmis"
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "Suoritetaanko toiminto?"
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1463,6 +1481,12 @@ msgstr "Käynnistää..."
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Päivitä etäpalvelimen metatiedot"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 is a version string
+#, c-format
+msgid "Reinstall %s to %s?"
+msgstr "Asennus uudelleen %s / %s?"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
@@ -1700,7 +1724,7 @@ msgstr "Määritä dbx-tietokantatiedosto"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Määritä tavujen määrä USB-siirtoa kohti"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Onnistui"
 
@@ -1777,6 +1801,12 @@ msgstr "Keskeytä-tyhjäkäynnille"
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend-to-ram"
 msgstr "Keskeytä-muistiin"
+
+#. TRANSLATORS: show and ask user to confirm --
+#. * %1 is the old branch name, %2 is the new branch name
+#, c-format
+msgid "Switch branch from %s to %s?"
+msgstr "Vaihdatko haaran %s kohteeseen %s?"
 
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
@@ -1886,7 +1916,7 @@ msgstr "Tämä työkalu lukee ja TPM-tapahtumalokin järjestelmän laiteohjelmis
 msgid "Timeout in milliseconds for each parse"
 msgstr "Aikakatkaisu millisekunteina kutakin jäsentämistä varten"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Ohimenevä häiriö"
 
@@ -2046,8 +2076,8 @@ msgstr "Päivittää laitetta %s…"
 #. TRANSLATORS: message letting the user know an upgrade is available
 #. * %1 is the device name and %2 and %3 are version strings
 #, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "Päivitys saatavilla %s alkaen %s kohde %s"
+msgid "Upgrade %s from %s to %s?"
+msgstr "Päivitä %s  %s:sta %s:een?"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"

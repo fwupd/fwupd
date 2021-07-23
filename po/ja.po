@@ -1,0 +1,162 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the fwupd package.
+#
+# Translators:
+# Takuro Onoue <kusanaginoturugi@gmail.com>, 2021
+# YOSHIDUMI, Rentaro, 2021
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: \n"
+"Language-Team: Japanese (http://www.transifex.com/freedesktop/fwupd/language/ja/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ja\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Activate the new firmware on the device"
+msgstr "機器上で新しいファームウェアを実行可能にする"
+
+#. TRANSLATORS: this is a command alias, e.g. 'get-devices'
+#, c-format
+msgid "Alias to %s"
+msgstr "%sの別名"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on a removable device"
+msgstr "外付け機器でファームウェアをダウングレードするには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a configured remote used for firmware updates"
+msgstr "ファームウェア更新用の遠隔構成を変更するには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "デーモン構成の変更には認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to set the list of approved firmware"
+msgstr "認証済みファームウェアの一覧を設定するには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to sign data using the client certificate"
+msgstr "クライアント証明書を用いてデータに署名するには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to switch to the new firmware version"
+msgstr "新版のファームウェアに切り替えるには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to unlock a device"
+msgstr "機器を開錠するには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on a removable device"
+msgstr "外付け機器でファームウェアを更新するには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on this machine"
+msgstr "当機でファームウェアを更新するには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the stored checksums for the device"
+msgstr "保存された機器の検査合計を更新するには認証が必要です"
+
+msgid "BYTES"
+msgstr "バイト数"
+
+#. TRANSLATORS: error message
+msgid "Command not found"
+msgstr "コマンドが見付かりません"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME"
+msgstr "ファイル名"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
+msgstr "ファイル名 機器の代替名|機器の代替ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
+msgstr "ファイル名 機器の代替名|機器の代替ID [イメージの代替名|イメージの代替ID]"
+
+msgid "Force the action ignoring all warnings"
+msgstr "警告を全て無視して処理を強行"
+
+msgid "Install old version of system firmware"
+msgstr "旧版のファームウェアを導入する"
+
+msgid "Install signed device firmware"
+msgstr "署名済みデバイスファームウェアを導入する"
+
+msgid "Install signed system firmware"
+msgstr "署名済みシステムファームウェアを導入する"
+
+msgid "Install unsigned device firmware"
+msgstr "署名のないデバイスファームウェアを導入する"
+
+msgid "Install unsigned system firmware"
+msgstr "署名のないシステムファームウェアを導入する"
+
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "Linux ベンダーファームウェアサービス (安定版ファームウェア)"
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "Linux ベンダーファームウェアサービス (試験版ファームウェア)"
+
+msgid "Modify a configured remote"
+msgstr "遠隔構成を変更する"
+
+msgid "Modify daemon configuration"
+msgstr "デーモン構成を変更する"
+
+msgid "Print the version number"
+msgstr "版数を表示する"
+
+msgid "Print verbose debug statements"
+msgstr "冗長な診断明細を表示する"
+
+#. TRANSLATORS: command description
+msgid "Read firmware from device into a file"
+msgstr "ファームウェアを機器からファイルに読み込む"
+
+#. TRANSLATORS: command description
+msgid "Read firmware from one partition into a file"
+msgstr "ファームウェアをひとつの領域からファイルに読み込む"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Sets the list of approved firmware"
+msgstr "認証済みファームウェアの一覧を設定する"
+
+msgid "Sign data using the client certificate"
+msgstr "クライアント証明書を用いてデータに署名する"
+
+msgctxt "command-description"
+msgid "Sign data using the client certificate"
+msgstr "クライアント証明書を用いてデータに署名する"
+
+msgid "Specify Vendor/Product ID(s) of DFU device"
+msgstr "DFU機器のベンダーまたは製品IDを指定してください"
+
+msgid "Specify the number of bytes per USB transfer"
+msgstr "USB伝送器ごとのバイト数を指定する"
+
+#. TRANSLATORS: do not translate the variables marked using $
+msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
+msgstr "LVFSは独立した法人として機能する無料のサービスであり、$OS_RELEASE:NAME$とは関係ありません。ディストリビューターは、システムまたは接続されているデバイスとの互換性について、ファームウェアの更新を確認していない可能性があります。すべてのファームウェアは、元の機器の製造元からのみ提供されています。"
+
+msgid "Unlock the device to allow access"
+msgstr "アクセスを許可するために機器を開錠してください"
+
+msgid "Update the stored device verification information"
+msgstr "保存された機器の検証情報を更新する"
+
+msgid "VID:PID"
+msgstr "ベンダーID:製品ID"
+
+#. TRANSLATORS: command description
+msgid "Write firmware from file into device"
+msgstr "ファームウェアをファイルから機器に書き込む"

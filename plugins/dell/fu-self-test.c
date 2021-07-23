@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
 #include <glib/gstdio.h>
 #include <stdlib.h>
 
@@ -14,7 +14,6 @@
 #include "fu-device-private.h"
 #include "fu-plugin-private.h"
 #include "fu-plugin-dell.h"
-#include "fu-plugin-vfuncs.h"
 
 typedef struct {
 	FuPlugin		*plugin_uefi_capsule;
@@ -273,6 +272,8 @@ fu_plugin_dell_dock_func (gconstpointer user_data)
 	gulong added_id;
 	gulong register_id;
 
+	fu_device_set_context (FU_DEVICE (fake_usb_device),
+			       fu_plugin_get_context (self->plugin_dell));
 	devices = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
 	added_id =
 	g_signal_connect (self->plugin_uefi_capsule, "device-added",
@@ -492,6 +493,11 @@ fu_test_self_init (FuTest *self)
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *pluginfn_uefi = NULL;
 	g_autofree gchar *pluginfn_dell = NULL;
+
+	/* do not save silo */
+	ret = fu_context_load_quirks (ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error (error);
+	g_assert_true (ret);
 
 	self->plugin_uefi_capsule = fu_plugin_new (ctx);
 	pluginfn_uefi = g_build_filename (PLUGINBUILDDIR, "..", "uefi-capsule",

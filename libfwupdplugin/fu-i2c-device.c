@@ -19,17 +19,15 @@
 #include "fu-i2c-device.h"
 
 /**
- * SECTION:fu-i2c-device
- * @short_description: a I²C device
+ * FuI2cDevice
  *
- * An object that represents a I²C device.
+ * A I²C device with an assigned bus number.
  *
  * See also: #FuUdevDevice
  */
 
 typedef struct
 {
-	FuUdevDevice		*udev_device;
 	guint			 bus_number;
 } FuI2cDevicePrivate;
 
@@ -37,7 +35,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuI2cDevice, fu_i2c_device, FU_TYPE_UDEV_DEVICE)
 
 enum {
 	PROP_0,
-	PROP_INTERFACE,
+	PROP_BUS_NUMBER,
 	PROP_LAST
 };
 
@@ -58,7 +56,7 @@ fu_i2c_device_get_property (GObject *object, guint prop_id,
 	FuI2cDevice *self = FU_I2C_DEVICE (object);
 	FuI2cDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
-	case PROP_INTERFACE:
+	case PROP_BUS_NUMBER:
 		g_value_set_uint (value, priv->bus_number);
 		break;
 	default:
@@ -74,7 +72,7 @@ fu_i2c_device_set_property (GObject *object, guint prop_id,
 	FuI2cDevice *self = FU_I2C_DEVICE (object);
 	FuI2cDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
-	case PROP_INTERFACE:
+	case PROP_BUS_NUMBER:
 		priv->bus_number = g_value_get_uint (value);
 		break;
 	default:
@@ -130,6 +128,10 @@ fu_i2c_device_probe (FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS (fu_i2c_device_parent_class)->probe (device, error))
 		return FALSE;
 
+	/* set physical ID */
+	if (!fu_udev_device_set_physical_id (FU_UDEV_DEVICE (device), "i2c", error))
+		return FALSE;
+
 #ifdef HAVE_GUDEV
 	/* i2c devices all expose a name */
 	tmp = g_udev_device_get_sysfs_attr (udev_device, "name");
@@ -170,8 +172,25 @@ guint
 fu_i2c_device_get_bus_number (FuI2cDevice *self)
 {
 	FuI2cDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_I2C_DEVICE (self), G_MAXUINT);
+	g_return_val_if_fail (FU_IS_I2C_DEVICE (self), G_MAXUINT);
 	return priv->bus_number;
+}
+
+/**
+ * fu_i2c_device_set_bus_number:
+ * @self: a #FuI2cDevice
+ * @bus_number: integer, typically the output of g_udev_device_get_number()
+ *
+ * Sets the I²C bus number.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_i2c_device_set_bus_number (FuI2cDevice *self, guint bus_number)
+{
+	FuI2cDevicePrivate *priv = GET_PRIVATE (self);
+	g_return_if_fail (FU_IS_I2C_DEVICE (self));
+	priv->bus_number = bus_number;
 }
 
 /**
@@ -210,6 +229,44 @@ fu_i2c_device_read (FuI2cDevice *self, guint8 *data, GError **error)
 	return fu_udev_device_pread_full (FU_UDEV_DEVICE (self), 0x0, data, 0x1, error);
 }
 
+/**
+ * fu_i2c_device_write_full:
+ * @self: a #FuI2cDevice
+ * @buf: (out): data
+ * @bufsz: size of @data
+ * @error: (nullable): optional return location for an error
+ *
+ * Write multiple bytes to the I²C device.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.6.2
+ **/
+gboolean
+fu_i2c_device_write_full (FuI2cDevice *self, const guint8 *buf, gsize bufsz, GError **error)
+{
+	return fu_udev_device_pwrite_full (FU_UDEV_DEVICE (self), 0x0, buf, bufsz, error);
+}
+
+/**
+ * fu_i2c_device_read_full:
+ * @self: a #FuI2cDevice
+ * @buf: (out): data
+ * @bufsz: size of @data
+ * @error: (nullable): optional return location for an error
+ *
+ * Read multiple bytes from the I²C device.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.6.2
+ **/
+gboolean
+fu_i2c_device_read_full (FuI2cDevice *self, guint8 *buf, gsize bufsz, GError **error)
+{
+	return fu_udev_device_pread_full (FU_UDEV_DEVICE (self), 0x0, buf, bufsz, error);
+}
+
 static void
 fu_i2c_device_init (FuI2cDevice *self)
 {
@@ -232,5 +289,5 @@ fu_i2c_device_class_init (FuI2cDeviceClass *klass)
 				   0x0, G_MAXUINT, 0x0,
 				   G_PARAM_READWRITE |
 				   G_PARAM_STATIC_NAME);
-	g_object_class_install_property (object_class, PROP_INTERFACE, pspec);
+	g_object_class_install_property (object_class, PROP_BUS_NUMBER, pspec);
 }

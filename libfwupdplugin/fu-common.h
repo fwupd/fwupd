@@ -67,6 +67,8 @@ typedef guint FuEndianType;
  * @FU_PATH_KIND_SYSFSDIR_SECURITY:	The sysfs security location (IE /sys/kernel/security)
  * @FU_PATH_KIND_ACPI_TABLES:		The location of the ACPI tables
  * @FU_PATH_KIND_LOCKDIR:		The lock directory (IE /run/lock)
+ * @FU_PATH_KIND_SYSFSDIR_FW_ATTRIB	The firmware attributes directory (IE /sys/class/firmware-attributes)
+ * @FU_PATH_KIND_FIRMWARE_SEARCH:	The path to configure the kernel policy for runtime loading other than /lib/firmware (IE /sys/module/firmware_class/parameters/path)
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -88,6 +90,8 @@ typedef enum {
 	FU_PATH_KIND_SYSFSDIR_SECURITY,
 	FU_PATH_KIND_ACPI_TABLES,
 	FU_PATH_KIND_LOCKDIR,
+	FU_PATH_KIND_SYSFSDIR_FW_ATTRIB,
+	FU_PATH_KIND_FIRMWARE_SEARCH,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;
@@ -371,6 +375,8 @@ gchar		*fu_common_strsafe		(const gchar	*str,
 gchar		*fu_common_strjoin_array	(const gchar	*separator,
 						 GPtrArray	*array);
 gboolean	 fu_common_kernel_locked_down	(void);
+gboolean	 fu_common_check_kernel_version	(const gchar	*minimum_kernel,
+						 GError		**error);
 gboolean	 fu_common_cpuid		(guint32	 leaf,
 						 guint32	*eax,
 						 guint32	*ebx,
@@ -400,6 +406,10 @@ guint8		 fu_common_crc8			(const guint8	*buf,
 						 gsize		 bufsz);
 guint16		 fu_common_crc16		(const guint8	*buf,
 						 gsize		 bufsz);
+guint16		 fu_common_crc16_full		(const guint8	*buf,
+						 gsize		 bufsz,
+						 guint16	 crc,
+						 guint16	 polynomial);
 guint32		 fu_common_crc32		(const guint8	*buf,
 						 gsize		 bufsz);
 guint32		 fu_common_crc32_full		(const guint8	*buf,
@@ -409,6 +419,10 @@ guint32		 fu_common_crc32_full		(const guint8	*buf,
 gchar		*fu_common_uri_get_scheme	(const gchar	*uri);
 gsize		 fu_common_align_up		(gsize		 value,
 						 guint8		 alignment);
+gchar		*fu_common_get_firmware_search_path	(GError		**error);
+gboolean	 fu_common_set_firmware_search_path	(const gchar	*path,
+							 GError		**error);
+gboolean	 fu_common_reset_firmware_search_path	(GError		**error);
 const gchar	*fu_battery_state_to_string	(FuBatteryState	 battery_state);
 
 void		 fu_xmlb_builder_insert_kv	(XbBuilderNode	*bn,

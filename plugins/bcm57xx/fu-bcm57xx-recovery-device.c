@@ -21,7 +21,7 @@
 #include <valgrind.h>
 #endif /* HAVE_VALGRIND */
 
-#include "fu-common.h"
+#include <fwupdplugin.h>
 
 #include "fu-bcm57xx-common.h"
 #include "fu-bcm57xx-recovery-device.h"

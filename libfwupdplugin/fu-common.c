@@ -21,6 +21,10 @@
 #include <cpuid.h>
 #endif
 
+#ifdef HAVE_UTSNAME_H
+#include <sys/utsname.h>
+#endif
+
 #ifdef HAVE_LIBARCHIVE
 #include <archive_entry.h>
 #include <archive.h>
@@ -34,17 +38,9 @@
 #include "fwupd-error.h"
 
 #include "fu-common-private.h"
+#include "fu-common-version.h"
 #include "fu-firmware.h"
 #include "fu-volume-private.h"
-
-/**
- * SECTION:fu-common
- * @short_description: common functionality for plugins to use
- *
- * Helper functions that can be used by the daemon and plugins.
- *
- * See also: #FuPlugin
- */
 
 /**
  * fu_common_rmtree:
@@ -1179,6 +1175,12 @@ fu_common_get_path (FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_strdup (tmp);
 		return g_strdup ("/sys/firmware/acpi/tables");
+	/* /sys/module/firmware_class/parameters/path */
+	case FU_PATH_KIND_FIRMWARE_SEARCH:
+		tmp = g_getenv ("FWUPD_FIRMWARESEARCH");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/module/firmware_class/parameters/path");
 	/* /etc */
 	case FU_PATH_KIND_SYSCONFDIR:
 		tmp = g_getenv ("FWUPD_SYSCONFDIR");
@@ -1243,6 +1245,12 @@ fu_common_get_path (FuPathKind path_kind)
 	/* /run/lock */
 	case FU_PATH_KIND_LOCKDIR:
 		return g_strdup ("/run/lock");
+	/* /sys/class/firmware-attributes */
+	case FU_PATH_KIND_SYSFSDIR_FW_ATTRIB:
+		tmp = g_getenv ("FWUPD_SYSFSFWATTRIBDIR");
+		if (tmp != NULL)
+			return g_strdup (tmp);
+		return g_strdup ("/sys/class/firmware-attributes");
 	case FU_PATH_KIND_OFFLINE_TRIGGER:
 		tmp = g_getenv ("FWUPD_OFFLINE_TRIGGER");
 		if (tmp != NULL)
@@ -2579,6 +2587,54 @@ fu_common_kernel_locked_down (void)
 }
 
 /**
+ * fu_common_check_kernel_version :
+ * @minimum_kernel: (not nullable): The minimum kernel version to check against
+ * @error: (nullable): optional return location for an error
+ *
+ * Determines if the system is running at least a certain required kernel version
+ *
+ * Since: 1.6.2
+ **/
+gboolean
+fu_common_check_kernel_version (const gchar *minimum_kernel, GError **error)
+{
+#ifdef HAVE_UTSNAME_H
+	struct utsname name_tmp;
+
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail (minimum_kernel != NULL, FALSE);
+
+	memset (&name_tmp, 0, sizeof(struct utsname));
+	if (uname (&name_tmp) < 0) {
+		g_set_error_literal (error,
+				     FWUPD_ERROR,
+				     FWUPD_ERROR_INTERNAL,
+				     "failed to read kernel version");
+		return FALSE;
+	}
+	if (fu_common_vercmp_full (name_tmp.release,
+				   minimum_kernel,
+				   FWUPD_VERSION_FORMAT_TRIPLET) < 0) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "kernel %s doesn't meet minimum %s",
+			     name_tmp.release, minimum_kernel);
+		return FALSE;
+	}
+
+	return TRUE;
+#else
+	g_set_error_literal (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_INTERNAL,
+			     "platform doesn't support checking for minimum Linux kernel");
+	return FALSE;
+#endif
+
+}
+
+/**
  * fu_common_cpuid:
  * @leaf: the CPUID level, now called the 'leaf' by Intel
  * @eax: (out) (nullable): EAX register
@@ -3066,11 +3122,40 @@ fu_common_crc8 (const guint8 *buf, gsize bufsz)
 }
 
 /**
+ * fu_common_crc16_full:
+ * @buf: memory buffer
+ * @bufsz: size of @buf
+ * @crc: initial CRC value, typically 0xFFFF
+ * @polynomial: CRC polynomial, typically 0xA001 for IBM or 0x1021 for CCITT
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * Returns: CRC value
+ *
+ * Since: 1.6.2
+ **/
+guint16
+fu_common_crc16_full (const guint8 *buf, gsize bufsz, guint16 crc, guint16 polynomial)
+{
+	for (gsize len = bufsz; len > 0; len--) {
+		crc = (guint16) (crc ^ (*buf++));
+		for (guint8 i = 0; i < 8; i++) {
+			if (crc & 0x1) {
+				crc = (crc >> 1) ^ polynomial;
+			} else {
+				crc >>= 1;
+			}
+		}
+	}
+	return ~crc;
+}
+
+/**
  * fu_common_crc16:
  * @buf: memory buffer
  * @bufsz: size of @buf
  *
- * Returns the cyclic redundancy check value for the given memory buffer.
+ * Returns the CRC-16-IBM cyclic redundancy value for the given memory buffer.
  *
  * Returns: CRC value
  *
@@ -3079,18 +3164,7 @@ fu_common_crc8 (const guint8 *buf, gsize bufsz)
 guint16
 fu_common_crc16 (const guint8 *buf, gsize bufsz)
 {
-	guint16 crc = 0xffff;
-	for (gsize len = bufsz; len > 0; len--) {
-		crc = (guint16) (crc ^ (*buf++));
-		for (guint8 i = 0; i < 8; i++) {
-			if (crc & 0x1) {
-				crc = (crc >> 1) ^ 0xa001;
-			} else {
-				crc >>= 1;
-			}
-		}
-	}
-	return ~crc;
+	return fu_common_crc16_full (buf, bufsz, 0xFFFF, 0xA001);
 }
 
 /**
@@ -3309,4 +3383,119 @@ void
 fu_xmlb_builder_insert_kb (XbBuilderNode *bn, const gchar *key, gboolean value)
 {
 	xb_builder_node_insert_text (bn, key, value ? "true" : "false", NULL);
+}
+
+/**
+ * fu_common_get_firmware_search_path:
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads the FU_PATH_KIND_FIRMWARE_SEARCH and
+ * returns its contents
+ *
+ * Returns: a pointer to a gchar array
+ *
+ * Since: 1.6.2
+ **/
+gchar *
+fu_common_get_firmware_search_path (GError **error)
+{
+	gsize sz = 0;
+	g_autofree gchar *sys_fw_search_path = NULL;
+	g_autofree gchar *contents = NULL;
+
+	sys_fw_search_path = fu_common_get_path (FU_PATH_KIND_FIRMWARE_SEARCH);
+	if (!g_file_get_contents(sys_fw_search_path, &contents, &sz, error))
+		return NULL;
+
+	/* remove newline character */
+	if (contents != NULL && sz > 0 && contents[sz - 1] == '\n')
+		contents[sz - 1] = 0;
+
+	g_debug ("read firmware search path (%" G_GSIZE_FORMAT "): %s", sz, contents);
+
+	return g_steal_pointer (&contents);
+}
+
+/**
+ * fu_common_set_firmware_search_path:
+ * @path: NUL-terminated string
+ * @error: (nullable): optional return location for an error
+ *
+ * Writes path to the FU_PATH_KIND_FIRMWARE_SEARCH
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.6.2
+ **/
+gboolean
+fu_common_set_firmware_search_path (const gchar *path, GError **error)
+{
+#if GLIB_CHECK_VERSION(2,66,0)
+	g_autofree gchar *sys_fw_search_path_prm = NULL;
+
+	g_return_val_if_fail (path != NULL, FALSE);
+	g_return_val_if_fail (strlen (path) < PATH_MAX, FALSE);
+
+	sys_fw_search_path_prm = fu_common_get_path (FU_PATH_KIND_FIRMWARE_SEARCH);
+
+	g_debug ("writing firmware search path (%" G_GSIZE_FORMAT "): %s", strlen (path), path);
+
+	return g_file_set_contents_full (sys_fw_search_path_prm, path, strlen (path),
+				G_FILE_SET_CONTENTS_NONE, 0644, error);
+#else
+	FILE *fd;
+	gsize res;
+	g_autofree gchar *sys_fw_search_path_prm = NULL;
+
+	g_return_val_if_fail (path != NULL, FALSE);
+	g_return_val_if_fail (strlen (path) < PATH_MAX, FALSE);
+
+	sys_fw_search_path_prm = fu_common_get_path (FU_PATH_KIND_FIRMWARE_SEARCH);
+	/* g_file_set_contents will try to create backup files in sysfs, so use fopen here */
+	fd = fopen (sys_fw_search_path_prm, "w");
+	if (fd == NULL) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_PERMISSION_DENIED,
+			     "Failed to open %s: %s",
+			     sys_fw_search_path_prm,
+			     g_strerror (errno));
+		return FALSE;
+	}
+
+	g_debug ("writing firmware search path (%" G_GSIZE_FORMAT "): %s", strlen (path), path);
+
+	res = fwrite (path, sizeof (gchar), strlen (path), fd);
+
+	fclose (fd);
+
+	if (res != strlen (path)) {
+		g_set_error (error,
+			     FWUPD_ERROR,
+			     FWUPD_ERROR_WRITE,
+			     "Failed to write firmware search path: %s",
+			     g_strerror (errno));
+		return FALSE;
+	}
+
+	return TRUE;
+#endif
+}
+
+/**
+ * fu_common_reset_firmware_search_path:
+ * @error: (nullable): optional return location for an error
+ *
+ * Resets the FU_PATH_KIND_FIRMWARE_SEARCH to an empty string
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.6.2
+ **/
+gboolean
+fu_common_reset_firmware_search_path (GError **error)
+{
+	const gchar *contents = " ";
+
+	return fu_common_set_firmware_search_path (contents, error);
 }

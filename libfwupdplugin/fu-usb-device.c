@@ -12,12 +12,11 @@
 #include "fu-usb-device-private.h"
 
 /**
- * SECTION:fu-usb-device
- * @short_description: a USB device
+ * FuUsbDevice:
  *
- * An object that represents a USB device.
+ * A USB device.
  *
- * See also: #FuDevice
+ * See also: [class@FuDevice], [class@FuHidDevice]
  */
 
 typedef struct
@@ -161,11 +160,10 @@ fu_usb_device_query_hub (FuUsbDevice *self, GError **error)
 static gboolean
 fu_usb_device_open (FuDevice *device, GError **error)
 {
+#ifdef HAVE_GUSB
 	FuUsbDevice *self = FU_USB_DEVICE (device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-#ifdef HAVE_GUSB
-	guint idx;
 
 	g_return_val_if_fail (FU_IS_USB_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
@@ -178,6 +176,23 @@ fu_usb_device_open (FuDevice *device, GError **error)
 	locker = fu_device_locker_new (priv->usb_device, error);
 	if (locker == NULL)
 		return FALSE;
+
+	/* success */
+	priv->usb_device_locker = g_steal_pointer (&locker);
+#endif
+	return TRUE;
+}
+
+static gboolean
+fu_usb_device_setup (FuDevice *device, GError **error)
+{
+#ifdef HAVE_GUSB
+	FuUsbDevice *self = FU_USB_DEVICE (device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
+	guint idx;
+
+	g_return_val_if_fail (FU_IS_USB_DEVICE (self), FALSE);
+	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* get vendor */
 	if (fu_device_get_vendor (device) == NULL) {
@@ -216,7 +231,8 @@ fu_usb_device_open (FuDevice *device, GError **error)
 	}
 
 	/* get serial number */
-	if (fu_device_get_serial (device) == NULL) {
+	if (!fu_device_has_internal_flag (device, FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER) &&
+	    fu_device_get_serial (device) == NULL) {
 		idx = g_usb_device_get_serial_number_index (priv->usb_device);
 		if (idx != 0x00) {
 			g_autofree gchar *tmp = NULL;
@@ -233,30 +249,6 @@ fu_usb_device_open (FuDevice *device, GError **error)
 		}
 	}
 
-	/* get version number, falling back to the USB device release */
-	idx = g_usb_device_get_custom_index (priv->usb_device,
-					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
-					     'F', 'W', NULL);
-	if (idx != 0x00) {
-		g_autofree gchar *tmp = NULL;
-		tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
-		/* although guessing is a route to insanity, if the device has
-		 * provided the extra data it's because the BCD type was not
-		 * suitable -- and INTEL_ME is not relevant here */
-		fu_device_set_version_format (device, fu_common_version_guess_format (tmp));
-		fu_device_set_version (device, tmp);
-	}
-
-	/* get GUID from the descriptor if set */
-	idx = g_usb_device_get_custom_index (priv->usb_device,
-					     G_USB_DEVICE_CLASS_VENDOR_SPECIFIC,
-					     'G', 'U', NULL);
-	if (idx != 0x00) {
-		g_autofree gchar *tmp = NULL;
-		tmp = g_usb_device_get_string_descriptor (priv->usb_device, idx, NULL);
-		fu_device_add_guid (device, tmp);
-	}
-
 	/* get the hub descriptor if this is a hub */
 	if (g_usb_device_get_device_class (priv->usb_device) == G_USB_DEVICE_CLASS_HUB) {
 		if (!fu_usb_device_query_hub (self, error))
@@ -265,7 +257,6 @@ fu_usb_device_open (FuDevice *device, GError **error)
 #endif
 
 	/* success */
-	priv->usb_device_locker = g_steal_pointer (&locker);
 	return TRUE;
 }
 
@@ -296,6 +287,7 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 	g_autofree gchar *devid0 = NULL;
 	g_autofree gchar *devid1 = NULL;
 	g_autofree gchar *devid2 = NULL;
+	g_autofree gchar *platform_id = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(GPtrArray) intfs = NULL;
 
@@ -352,6 +344,18 @@ fu_usb_device_probe (FuDevice *device, GError **error)
 					  g_usb_interface_get_class (intf));
 		fu_device_add_instance_id_full (device, intid3,
 						FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	}
+
+	/* add 2 levels of parent IDs */
+	platform_id = g_strdup (g_usb_device_get_platform_id (priv->usb_device));
+	for (guint i = 0; i < 2; i++) {
+		gchar *tok = g_strrstr (platform_id, ":");
+		if (tok == NULL)
+			break;
+		*tok = '\0';
+		if (g_strcmp0 (platform_id, "usb") == 0)
+			break;
+		fu_device_add_parent_physical_id (device, platform_id);
 	}
 #endif
 
@@ -626,6 +630,70 @@ fu_usb_device_new (GUsbDevice *usb_device)
 	return FU_USB_DEVICE (device);
 }
 
+#ifdef HAVE_GUSB
+static const gchar *
+fu_usb_device_class_code_to_string (GUsbDeviceClassCode code)
+{
+	if (code == G_USB_DEVICE_CLASS_INTERFACE_DESC)
+		return "interface-desc";
+	if (code == G_USB_DEVICE_CLASS_AUDIO)
+		return "audio";
+	if (code == G_USB_DEVICE_CLASS_COMMUNICATIONS)
+		return "communications";
+	if (code == G_USB_DEVICE_CLASS_HID)
+		return "hid";
+	if (code == G_USB_DEVICE_CLASS_PHYSICAL)
+		return "physical";
+	if (code == G_USB_DEVICE_CLASS_IMAGE)
+		return "image";
+	if (code == G_USB_DEVICE_CLASS_PRINTER)
+		return "printer";
+	if (code == G_USB_DEVICE_CLASS_MASS_STORAGE)
+		return "mass-storage";
+	if (code == G_USB_DEVICE_CLASS_HUB)
+		return "hub";
+	if (code == G_USB_DEVICE_CLASS_CDC_DATA)
+		return "cdc-data";
+	if (code == G_USB_DEVICE_CLASS_SMART_CARD)
+		return "smart-card";
+	if (code == G_USB_DEVICE_CLASS_CONTENT_SECURITY)
+		return "content-security";
+	if (code == G_USB_DEVICE_CLASS_VIDEO)
+		return "video";
+	if (code == G_USB_DEVICE_CLASS_PERSONAL_HEALTHCARE)
+		return "personal-healthcare";
+	if (code == G_USB_DEVICE_CLASS_AUDIO_VIDEO)
+		return "audio-video";
+	if (code == G_USB_DEVICE_CLASS_BILLBOARD)
+		return "billboard";
+	if (code == G_USB_DEVICE_CLASS_DIAGNOSTIC)
+		return "diagnostic";
+	if (code == G_USB_DEVICE_CLASS_WIRELESS_CONTROLLER)
+		return "wireless-controller";
+	if (code == G_USB_DEVICE_CLASS_MISCELLANEOUS)
+		return "miscellaneous";
+	if (code == G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
+		return "application-specific";
+	if (code == G_USB_DEVICE_CLASS_VENDOR_SPECIFIC)
+		return "vendor-specific";
+	return NULL;
+}
+#endif
+
+static void
+fu_usb_device_to_string (FuDevice *device, guint idt, GString *str)
+{
+#ifdef HAVE_GUSB
+	FuUsbDevice *self = FU_USB_DEVICE (device);
+	FuUsbDevicePrivate *priv = GET_PRIVATE (self);
+	if (priv->usb_device != NULL) {
+		GUsbDeviceClassCode code = g_usb_device_get_device_class (priv->usb_device);
+		fu_common_string_append_kv (str, idt, "UsbDeviceClass",
+					    fu_usb_device_class_code_to_string (code));
+	}
+#endif
+}
+
 static void
 fu_usb_device_class_init (FuUsbDeviceClass *klass)
 {
@@ -637,8 +705,10 @@ fu_usb_device_class_init (FuUsbDeviceClass *klass)
 	object_class->get_property = fu_usb_device_get_property;
 	object_class->set_property = fu_usb_device_set_property;
 	device_class->open = fu_usb_device_open;
+	device_class->setup = fu_usb_device_setup;
 	device_class->close = fu_usb_device_close;
 	device_class->probe = fu_usb_device_probe;
+	device_class->to_string = fu_usb_device_to_string;
 	device_class->incorporate = fu_usb_device_incorporate;
 	device_class->bind_driver = fu_udev_device_bind_driver;
 	device_class->unbind_driver = fu_udev_device_unbind_driver;

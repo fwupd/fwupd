@@ -16,11 +16,9 @@
 #ifdef HAVE_TSS2
 #include <tss2/tss2_esys.h>
 #endif
+#include <fwupdplugin.h>
 
-#include "fwupd-common.h"
 #include "fu-plugin-dell.h"
-#include "fu-plugin-vfuncs.h"
-#include "fu-device-metadata.h"
 
 /* These are used to indicate the status of a previous DELL flash */
 #define DELL_SUCCESS			0x0000
@@ -248,6 +246,7 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 		     const gchar *component_desc, const gchar *version,
 		     FwupdVersionFormat version_format)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	const gchar *dock_type;
 	g_autofree gchar *dock_name = NULL;
 	g_autoptr(FuDevice) dev = NULL;
@@ -258,7 +257,7 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 		return FALSE;
 	}
 
-	dev = fu_device_new ();
+	dev = fu_device_new_with_context (ctx);
 	fu_device_set_physical_id (dev, platform);
 	fu_device_set_logical_id (dev, component_guid);
 	if (component_desc != NULL) {
@@ -273,9 +272,9 @@ fu_plugin_dock_node (FuPlugin *plugin, const gchar *platform,
 	fu_device_set_name (dev, dock_name);
 	fu_device_set_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND, "device-firmware");
 	if (type == DOCK_TYPE_TB16) {
-		fu_device_set_summary (dev, "A Thunderbolt™ 3 docking station");
+		fu_device_set_summary (dev, "Thunderbolt™ 3 docking station");
 	} else if (type == DOCK_TYPE_WD15) {
-		fu_device_set_summary (dev, "A USB type-C docking station");
+		fu_device_set_summary (dev, "USB type-C docking station");
 	}
 	fu_device_add_icon (dev, "computer");
 	fu_device_add_guid (dev, component_guid);
@@ -638,6 +637,7 @@ fu_plugin_dell_add_tpm_model (FuDevice *dev, GError **error)
 gboolean
 fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context (plugin);
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	const gchar *tpm_mode;
 	const gchar *tpm_mode_alt;
@@ -724,7 +724,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 	pretty_tpm_name_alt = g_strdup_printf ("TPM %s", tpm_mode_alt);
 
 	/* build Standard device nodes */
-	dev = fu_device_new ();
+	dev = fu_device_new_with_context (ctx);
 	fu_device_set_physical_id (dev, "DEVNAME=/dev/tpm0");
 	fu_device_add_instance_id (dev, tpm_guid_raw);
 	fu_device_add_instance_id (dev, "system-tpm");
@@ -760,7 +760,7 @@ fu_plugin_dell_detect_tpm (FuPlugin *plugin, GError **error)
 
 	/* build alternate device node */
 	if (can_switch_modes) {
-		dev_alt = fu_device_new ();
+		dev_alt = fu_device_new_with_context (ctx);
 		fu_device_set_id (dev_alt, tpm_id_alt);
 		fu_device_add_instance_id (dev_alt, tpm_guid_raw_alt);
 		fu_device_set_vendor (dev, "Dell Inc.");

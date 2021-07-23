@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <fwupdplugin.h>
 
 #include <gio/gio.h>
 
@@ -19,11 +20,7 @@
 #include <gnutls/crypto.h>
 #endif
 
-#include "fu-common.h"
-#include "fu-io-channel.h"
 #include "fu-synaptics-rmi-common.h"
-
-#include "fwupd-error.h"
 
 #define RMI_FUNCTION_QUERY_OFFSET		0
 #define RMI_FUNCTION_COMMAND_OFFSET		1

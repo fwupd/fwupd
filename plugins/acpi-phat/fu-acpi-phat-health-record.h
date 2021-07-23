@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "fu-firmware.h"
+#include <fwupdplugin.h>
 
 #define FU_TYPE_ACPI_PHAT_HEALTH_RECORD (fu_acpi_phat_health_record_get_type ())
 G_DECLARE_FINAL_TYPE (FuAcpiPhatHealthRecord, fu_acpi_phat_health_record, FU, ACPI_PHAT_HEALTH_RECORD, FuFirmware)

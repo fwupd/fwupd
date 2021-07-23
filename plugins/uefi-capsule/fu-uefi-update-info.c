@@ -6,13 +6,12 @@
 
 #include "config.h"
 
-#include "fu-common.h"
+#include <fwupdplugin.h>
+
 #include "fu-uefi-devpath.h"
 #include "fu-uefi-update-info.h"
 #include "fu-uefi-common.h"
 #include "fu-ucs2.h"
-
-#include "fwupd-error.h"
 
 #define EFIDP_MEDIA_TYPE	0x04
 #define EFIDP_MEDIA_FILE	0x4

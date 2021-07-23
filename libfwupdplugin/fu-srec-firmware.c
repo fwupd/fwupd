@@ -15,16 +15,14 @@
 #include "fu-srec-firmware.h"
 
 /**
- * SECTION:fu-srec-firmware
- * @short_description: SREC firmware image
+ * FuSrecFirmware:
  *
- * An object that represents a SREC firmware image.
+ * A SREC firmware image.
  *
- * See also: #FuFirmware
+ * See also: [class@FuFirmware]
  */
 
 typedef struct {
-	FuFirmware		 parent_instance;
 	GPtrArray		*records;
 } FuSrecFirmwarePrivate;
 
@@ -272,10 +270,11 @@ fu_srec_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
 		default:
 			g_assert_not_reached ();
 		}
-
-		g_debug ("line %03u S%u addr:0x%04x datalen:0x%02x",
-			 ln + 1, rec_kind, rec_addr32,
-			 (guint) rec_count - addrsz - 1);
+		if (g_getenv ("FU_SREC_FIRMWARE_VERBOSE") != NULL) {
+			g_debug ("line %03u S%u addr:0x%04x datalen:0x%02x",
+				 ln + 1, rec_kind, rec_addr32,
+				 (guint) rec_count - addrsz - 1);
+		}
 
 		/* data */
 		rcd = fu_srec_firmware_record_new (ln + 1, rec_kind, rec_addr32);

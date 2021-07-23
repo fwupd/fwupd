@@ -7,19 +7,15 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <fcntl.h>
 #include <glib/gi18n.h>
-
-#include "fu-archive.h"
-#include "fu-device-metadata.h"
-#include "fu-plugin-vfuncs.h"
 
 #include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-bootmgr.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
-#include "fu-efivar.h"
 
 struct FuPluginData {
 	FuUefiBgrt		*bgrt;
@@ -59,57 +55,6 @@ fu_plugin_clear_results (FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuUefiDevice *device_uefi = FU_UEFI_DEVICE (device);
 	return fu_uefi_device_clear_status (device_uefi, error);
-}
-
-gboolean
-fu_plugin_get_results (FuPlugin *plugin, FuDevice *device, GError **error)
-{
-	FuUefiDevice *device_uefi = FU_UEFI_DEVICE (device);
-	FuUefiDeviceStatus status = fu_uefi_device_get_status (device_uefi);
-	const gchar *tmp;
-	g_autofree gchar *err_msg = NULL;
-	g_autofree gchar *version_str = NULL;
-	g_autoptr(GError) error_local = NULL;
-
-	/* trivial case */
-	if (status == FU_UEFI_DEVICE_STATUS_SUCCESS) {
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
-		return TRUE;
-	}
-
-	/* check if something rudely removed our BOOTXXXX entry */
-	if (!fu_uefi_bootmgr_verify_fwupd (&error_local)) {
-		if (fu_plugin_has_custom_flag (plugin, "boot-order-lock")) {
-			g_prefix_error (&error_local,
-					"boot entry missing; "
-					"perhaps 'Boot Order Lock' enabled in the BIOS: ");
-			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
-		} else {
-			g_prefix_error (&error_local, "boot entry missing: ");
-			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-		}
-		fu_device_set_update_error (device, error_local->message);
-		return TRUE;
-	}
-
-	/* something went wrong */
-	if (status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_AC ||
-	    status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_BATT) {
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
-	} else {
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-	}
-	version_str = g_strdup_printf ("%u", fu_uefi_device_get_version_error (device_uefi));
-	tmp = fu_uefi_device_status_to_string (status);
-	if (tmp == NULL) {
-		err_msg = g_strdup_printf ("failed to update to %s",
-					   version_str);
-	} else {
-		err_msg = g_strdup_printf ("failed to update to %s: %s",
-					   version_str, tmp);
-	}
-	fu_device_set_update_error (device, err_msg);
-	return TRUE;
 }
 
 void
@@ -314,7 +259,7 @@ fu_plugin_uefi_capsule_update_splash (FuPlugin *plugin, FuDevice *device, GError
 	};
 
 	/* no UX capsule support, so deleting var if it exists */
-	if (fu_device_has_custom_flag (device, "no-ux-capsule")) {
+	if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE)) {
 		g_debug ("not providing UX capsule");
 		return fu_efivar_delete (FU_EFIVAR_GUID_FWUPDATE,
 					    "fwupd-ux-capsule", error);
@@ -428,15 +373,13 @@ fu_plugin_uefi_capsule_load_config (FuPlugin *plugin, FuDevice *device)
 
 	/* shim used for SB or not? */
 	disable_shim = fu_plugin_get_config_value_boolean (plugin, "DisableShimForSecureBoot");
-	fu_device_set_metadata_boolean (device,
-					"RequireShimForSecureBoot",
-					!disable_shim);
+	if (!disable_shim)
+		fu_device_add_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB);
 
 	/* check if using UEFI removable path */
 	fallback_removable_path = fu_plugin_get_config_value_boolean (plugin, "FallbacktoRemovablePath");
-	fu_device_set_metadata_boolean (device,
-					"FallbacktoRemovablePath",
-					fallback_removable_path);
+	if (fallback_removable_path)
+		fu_device_add_private_flag (device, FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH);
 }
 
 static void
@@ -513,9 +456,13 @@ fu_plugin_uefi_capsule_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GEr
 		return FALSE;
 
 	/* if not already set by quirks */
-	if (fu_device_get_custom_flags (FU_DEVICE (dev)) == NULL &&
-	    fu_plugin_has_custom_flag (plugin, "use-legacy-bootmgr-desc")) {
-		fu_device_set_custom_flags (FU_DEVICE (dev), "use-legacy-bootmgr-desc");
+	if (fu_plugin_has_custom_flag (plugin, "use-legacy-bootmgr-desc")) {
+		fu_device_add_private_flag (FU_DEVICE (dev),
+					    FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
+	}
+	if (fu_plugin_has_custom_flag (plugin, "supports-boot-order-lock")) {
+		fu_device_add_private_flag (FU_DEVICE (dev),
+					    FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
 	}
 
 	/* set fallback name if nothing else is set */

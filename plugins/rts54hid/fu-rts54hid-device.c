@@ -6,9 +6,9 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <string.h>
 
-#include "fu-chunk.h"
 #include "fu-rts54hid-common.h"
 #include "fu-rts54hid-device.h"
 
@@ -220,6 +220,10 @@ static gboolean
 fu_rts54hid_device_setup (FuDevice *device, GError **error)
 {
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE (device);
+
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS (fu_rts54hid_device_parent_class)->setup (device, error))
+		return FALSE;
 
 	/* check this device is correct */
 	if (!fu_rts54hid_device_ensure_status (self, error))

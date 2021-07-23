@@ -30,6 +30,7 @@ G_DECLARE_FINAL_TYPE (FuEngine, fu_engine, FU, ENGINE, GObject)
  * @FU_ENGINE_LOAD_FLAG_COLDPLUG:	Enumerate devices
  * @FU_ENGINE_LOAD_FLAG_REMOTES:	Enumerate remotes
  * @FU_ENGINE_LOAD_FLAG_HWINFO:		Load details about the hardware
+ * @FU_ENGINE_LOAD_FLAG_NO_CACHE:	Do not save persistent xmlb silos
  *
  * The flags to use when loading the engine.
  **/
@@ -39,6 +40,7 @@ typedef enum {
 	FU_ENGINE_LOAD_FLAG_COLDPLUG		= 1 << 1,
 	FU_ENGINE_LOAD_FLAG_REMOTES		= 1 << 2,
 	FU_ENGINE_LOAD_FLAG_HWINFO		= 1 << 3,
+	FU_ENGINE_LOAD_FLAG_NO_CACHE		= 1 << 4,
 	/*< private >*/
 	FU_ENGINE_LOAD_FLAG_LAST
 } FuEngineLoadFlags;
@@ -146,11 +148,13 @@ gboolean	 fu_engine_install			(FuEngine	*self,
 							 FuInstallTask	*task,
 							 GBytes		*blob_cab,
 							 FwupdInstallFlags flags,
+							 FwupdFeatureFlags feature_flags,
 							 GError		**error);
 gboolean	 fu_engine_install_blob			(FuEngine	*self,
 							 FuDevice	*device,
 							 GBytes		*blob_fw,
 							 FwupdInstallFlags flags,
+							 FwupdFeatureFlags feature_flags,
 							 GError		**error);
 gboolean	 fu_engine_install_tasks		(FuEngine	*self,
 							 FuEngineRequest *request,

@@ -311,7 +311,7 @@ fwupd_build_user_agent_system (void)
  * Before freaking out about theoretical privacy implications, much more data
  * than this is sent to each and every website you visit.
  *
- * Rather that using this function you should use fwupd_client_set_user_agent_for_package()
+ * Rather that using this function you should use [method@Client.set_user_agent_for_package]
  * which uses the *runtime* version of the daemon rather than the *build-time*
  * version.
  *
@@ -1128,3 +1128,52 @@ fwupd_unix_input_stream_from_fn (const gchar *fn, GError **error)
 	return G_UNIX_INPUT_STREAM (g_unix_input_stream_new (fd, TRUE));
 }
 #endif
+
+/**
+ * fwupd_common_json_add_string: (skip):
+ **/
+void
+fwupd_common_json_add_string (JsonBuilder *builder, const gchar *key, const gchar *value)
+{
+	if (value == NULL)
+		return;
+	json_builder_set_member_name (builder, key);
+	json_builder_add_string_value (builder, value);
+}
+
+/**
+ * fwupd_common_json_add_int: (skip):
+ **/
+void
+fwupd_common_json_add_int (JsonBuilder *builder, const gchar *key, guint64 value)
+{
+	if (value == 0)
+		return;
+	json_builder_set_member_name (builder, key);
+	json_builder_add_int_value (builder, value);
+}
+
+/**
+ * fwupd_common_json_add_boolean: (skip):
+ **/
+void
+fwupd_common_json_add_boolean (JsonBuilder *builder, const gchar *key, gboolean value)
+{
+	json_builder_set_member_name (builder, key);
+	json_builder_add_string_value (builder, value ? "true" : "false");
+}
+
+/**
+ * fwupd_common_json_add_stringv: (skip):
+ **/
+void
+fwupd_common_json_add_stringv (JsonBuilder *builder, const gchar *key, gchar **value)
+{
+	if (value == NULL)
+		return;
+	json_builder_set_member_name (builder, key);
+	json_builder_begin_array (builder);
+	for (guint i = 0; value[i] != NULL; i++)
+		json_builder_add_string_value (builder, value[i]);
+	json_builder_end_array (builder);
+}

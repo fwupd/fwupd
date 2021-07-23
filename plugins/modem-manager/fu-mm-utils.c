@@ -6,9 +6,8 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
 #include <gio/gio.h>
-
-#include "fu-udev-device.h"
 
 #include "fu-mm-utils.h"
 
@@ -151,4 +150,41 @@ fu_mm_utils_get_port_info (const gchar	 *path,
 	}
 
 	return fu_mm_utils_get_udev_port_info (dev, out_device_bus, out_device_sysfs_path, out_port_usb_ifnum, error);
+}
+
+gboolean
+fu_mm_utils_find_device_file	(const gchar	 *device_sysfs_path,
+				 const gchar	 *subsystem,
+				 gchar		**out_device_file,
+				 GError		**error)
+{
+	GList *devices;
+	g_autoptr(GUdevClient) client = NULL;
+	g_autofree gchar *device_file = NULL;
+
+	g_return_val_if_fail (out_device_file != NULL, FALSE);
+
+	client = g_udev_client_new (NULL);
+	devices = g_udev_client_query_by_subsystem (client, subsystem);
+	for (GList *l = devices; l != NULL; l = g_list_next (l)) {
+		if (g_str_has_prefix (g_udev_device_get_sysfs_path (G_UDEV_DEVICE (l->data)), device_sysfs_path)) {
+			device_file = g_strdup (g_udev_device_get_device_file (l->data));
+			if (device_file != NULL)
+				break;
+		}
+	}
+	g_list_free_full (devices, g_object_unref);
+
+	if (device_file == NULL) {
+		g_set_error (error,
+			     G_IO_ERROR,
+			     G_IO_ERROR_NOT_FOUND,
+			     "failed to find %s port in device %s",
+			     subsystem, device_sysfs_path);
+		return FALSE;
+	}
+
+	*out_device_file = g_steal_pointer (&device_file);
+
+	return TRUE;
 }

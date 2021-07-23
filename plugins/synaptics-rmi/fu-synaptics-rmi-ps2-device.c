@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-#include "fu-io-channel.h"
+#include <fwupdplugin.h>
 
 #include "fu-synaptics-rmi-ps2-device.h"
 #include "fu-synaptics-rmi-v5-device.h"

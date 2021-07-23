@@ -8,16 +8,16 @@
 
 #include <string.h>
 
+#include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-plugin-private.h"
 
 /**
- * SECTION:fwupd-plugin
- * @short_description: a hardware plugin
+ * FwupdPlugin:
  *
- * An object that represents a fwupd plugin.
+ * A plugin which is used by fwupd to enumerate and update devices.
  *
- * See also: #FwupdRelease
+ * See also: [class@FwupdRelease]
  */
 
 static void fwupd_plugin_finalize	 (GObject *object);
@@ -257,15 +257,6 @@ fwupd_pad_kv_dfl (GString *str, const gchar *key, guint64 plugin_flags)
 	fwupd_pad_kv_str (str, key, tmp->str);
 }
 
-static void
-fwupd_plugin_json_add_string (JsonBuilder *builder, const gchar *key, const gchar *str)
-{
-	if (str == NULL)
-		return;
-	json_builder_set_member_name (builder, key);
-	json_builder_add_string_value (builder, str);
-}
-
 /**
  * fwupd_plugin_to_json:
  * @self: a #FwupdPlugin
@@ -283,7 +274,7 @@ fwupd_plugin_to_json (FwupdPlugin *self, JsonBuilder *builder)
 	g_return_if_fail (FWUPD_IS_PLUGIN (self));
 	g_return_if_fail (builder != NULL);
 
-	fwupd_plugin_json_add_string (builder, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_NAME, priv->name);
 	if (priv->flags != FWUPD_PLUGIN_FLAG_NONE) {
 		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_FLAGS);
 		json_builder_begin_array (builder);

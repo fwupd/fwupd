@@ -7,7 +7,7 @@
 
 #include "config.h"
 
-#include "fu-chunk.h"
+#include <fwupdplugin.h>
 
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-rtd21xx-device.h"
@@ -480,6 +480,7 @@ fu_vli_usbhub_rtd21xx_device_probe (FuDevice *device, GError **error)
 	g_autofree gchar *instance_id = NULL;
 
 	fu_device_set_name (device, fu_vli_common_device_kind_to_string (device_kind));
+	fu_device_set_physical_id (device, fu_device_get_physical_id (FU_DEVICE (parent)));
 
 	/* add instance ID */
 	instance_id = g_strdup_printf ("USB\\VID_%04X&PID_%04X&I2C_%s",

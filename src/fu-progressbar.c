@@ -19,6 +19,7 @@ static void fu_progressbar_finalize	 (GObject *obj);
 struct _FuProgressbar
 {
 	GObject			 parent_instance;
+	GMainContext		*main_ctx;
 	FwupdStatus		 status;
 	gboolean		 spinner_count_up;	/* chars */
 	guint			 spinner_idx;		/* chars */
@@ -26,7 +27,7 @@ struct _FuProgressbar
 	guint			 length_status;		/* chars */
 	guint			 percentage;
 	guint			 to_erase;		/* chars */
-	guint			 timer_id;
+	GSource			*timer_source;
 	gint64			 last_animated;		/* monotonic */
 	GTimer			*time_elapsed;
 	gdouble			 last_estimate;
@@ -223,6 +224,21 @@ fu_progressbar_set_title (FuProgressbar *self, const gchar *title)
 	fu_progressbar_refresh (self, self->status, self->percentage);
 }
 
+/**
+ * fu_progressbar_set_main_context:
+ * @self: A #FuProgressbar
+ * @main_ctx: (nullable): main context
+ *
+ * Sets progressbar main context to use for animations.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_progressbar_set_main_context (FuProgressbar *self, GMainContext *main_ctx)
+{
+	self->main_ctx = g_main_context_ref (main_ctx);
+}
+
 static void
 fu_progressbar_spin_inc (FuProgressbar *self)
 {
@@ -261,9 +277,9 @@ fu_progressbar_spin_cb (gpointer user_data)
 static void
 fu_progressbar_spin_end (FuProgressbar *self)
 {
-	if (self->timer_id != 0) {
-		g_source_remove (self->timer_id);
-		self->timer_id = 0;
+	if (self->timer_source != NULL) {
+		g_source_destroy (self->timer_source);
+		self->timer_source = NULL;
 
 		/* reset when the spinner has been stopped */
 		g_timer_start (self->time_elapsed);
@@ -277,9 +293,13 @@ fu_progressbar_spin_end (FuProgressbar *self)
 static void
 fu_progressbar_spin_start (FuProgressbar *self)
 {
-	if (self->timer_id != 0)
-		g_source_remove (self->timer_id);
-	self->timer_id = g_timeout_add (40, fu_progressbar_spin_cb, self);
+	if (self->timer_source != NULL)
+		g_source_destroy (self->timer_source);
+	self->timer_source = g_timeout_source_new (40);
+	g_source_set_callback (self->timer_source,
+			       fu_progressbar_spin_cb,
+			       self, NULL);
+	g_source_attach (self->timer_source, self->main_ctx);
 }
 
 /**
@@ -419,8 +439,10 @@ fu_progressbar_finalize (GObject *obj)
 {
 	FuProgressbar *self = FU_PROGRESSBAR (obj);
 
-	if (self->timer_id != 0)
-		g_source_remove (self->timer_id);
+	if (self->timer_source != 0)
+		g_source_destroy (self->timer_source);
+	if (self->main_ctx != NULL)
+		g_main_context_unref (self->main_ctx);
 	g_timer_destroy (self->time_elapsed);
 
 	G_OBJECT_CLASS (fu_progressbar_parent_class)->finalize (obj);

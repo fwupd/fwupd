@@ -16,6 +16,51 @@ struct _FuDfuFirmwareClass
 	FuFirmwareClass		 parent_class;
 };
 
+/**
+ * FU_DFU_FIRMARE_VERSION_UNKNOWN:
+ *
+ * Unknown version of the DFU standard in BCD format.
+ *
+ * Since: 1.6.1
+ **/
+#define FU_DFU_FIRMARE_VERSION_UNKNOWN			(0u)
+
+/**
+ * FU_DFU_FIRMARE_VERSION_DFU_1_0:
+ *
+ * The 1.0 version of the DFU standard in BCD format.
+ *
+ * Since: 1.6.1
+ **/
+#define FU_DFU_FIRMARE_VERSION_DFU_1_0			(0x0100)
+
+/**
+ * FU_DFU_FIRMARE_VERSION_DFU_1_1:
+ *
+ * The 1.1 version of the DFU standard in BCD format.
+ *
+ * Since: 1.6.1
+ **/
+#define FU_DFU_FIRMARE_VERSION_DFU_1_1			(0x0110)
+
+/**
+ * FU_DFU_FIRMARE_VERSION_DFUSE:
+ *
+ * The DfuSe version of the DFU standard in BCD format, defined by ST.
+ *
+ * Since: 1.6.1
+ **/
+#define FU_DFU_FIRMARE_VERSION_DFUSE			(0x011a)
+
+/**
+ * FU_DFU_FIRMARE_VERSION_ATMEL_AVR:
+ *
+ * The Atmel AVR version of the DFU standard in BCD format.
+ *
+ * Since: 1.6.1
+ **/
+#define FU_DFU_FIRMARE_VERSION_ATMEL_AVR		(0xff01)
+
 FuFirmware		*fu_dfu_firmware_new		(void);
 guint16			 fu_dfu_firmware_get_vid	(FuDfuFirmware	*self);
 guint16			 fu_dfu_firmware_get_pid	(FuDfuFirmware	*self);
