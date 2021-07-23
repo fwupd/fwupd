@@ -442,7 +442,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(mei_context, mei_context_free)
 #pragma clang diagnostic pop
 
 static FuDevice *
-fu_plugin_amt_create_device (GError **error)
+fu_plugin_amt_create_device (FuPlugin *plugin, GError **error)
 {
 	guint8 state;
 	struct amt_code_versions ver;
@@ -478,7 +478,7 @@ fu_plugin_amt_create_device (GError **error)
 	}
 	memcpy (&ver, response->data, sizeof(struct amt_code_versions));
 
-	dev = fu_device_new ();
+	dev = fu_device_new_with_context (fu_plugin_get_context (plugin));
 	fu_device_set_id (dev, "/dev/mei0");
 	fu_device_set_vendor (dev, "Intel Corporation");
 	fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_INTERNAL);
@@ -548,7 +548,7 @@ gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
 	g_autoptr(FuDevice) dev = NULL;
-	dev = fu_plugin_amt_create_device (error);
+	dev = fu_plugin_amt_create_device (plugin, error);
 	if (dev == NULL)
 		return FALSE;
 	fu_plugin_device_add (plugin, dev);
