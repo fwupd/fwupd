@@ -408,7 +408,7 @@ fu_ebitdo_device_detach (FuDevice *device, GError **error)
 			break;
 		case 0x9015: /* N30 Pro 2 */
 		    g_string_append (msg, "press and hold L1+R1+START buttons "
-					  "until the yellow LED blinks, ");
+					      "until the yellow LED blinks, ");
 			break;
 		default:
 			g_string_append (msg, "do what it says in the manual, ");
