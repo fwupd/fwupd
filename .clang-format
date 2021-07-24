@@ -37,8 +37,12 @@ PenaltyBreakAssignment: '3'
 PenaltyBreakBeforeFirstCallParameter: '15'
 
 IncludeCategories:
-  - Regex:           'config.h'
+  - Regex:           '^"config.h"$'
     Priority:        '0'
-  - Regex:           '.*'
+  - Regex:           '^<'
     Priority:        '1'
+  - Regex:           'fwupd'
+    Priority:        '2'
+  - Regex:           '.*'
+    Priority:        '3'
 ...
