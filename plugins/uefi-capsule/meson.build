@@ -10,7 +10,7 @@ endif
 install_data(['uefi-capsule.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
 
-backend_srcs = []
+backend_srcs = ['fu-uefi-backend.c']
 if host_machine.system() == 'linux'
   backend_srcs += 'fu-uefi-backend-linux.c'
 elif host_machine.system() == 'freebsd'
@@ -27,6 +27,8 @@ shared_module('fu_plugin_uefi_capsule',
     'fu-ucs2.c',
     'fu-uefi-bootmgr.c',
     'fu-uefi-common.c',
+    'fu-uefi-cod-device.c',
+    'fu-uefi-nvram-device.c',
     'fu-uefi-device.c',
     'fu-uefi-devpath.c',
     'fu-uefi-pcrs.c',
@@ -64,6 +66,8 @@ fwupdate = executable(
     'fu-uefi-bootmgr.c',
     'fu-uefi-common.c',
     'fu-uefi-device.c',
+    'fu-uefi-cod-device.c',
+    'fu-uefi-nvram-device.c',
     'fu-uefi-devpath.c',
     'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
@@ -145,6 +149,8 @@ if get_option('tests')
       'fu-uefi-bootmgr.c',
       'fu-uefi-common.c',
       'fu-uefi-device.c',
+      'fu-uefi-cod-device.c',
+      'fu-uefi-nvram-device.c',
       'fu-uefi-devpath.c',
       'fu-uefi-pcrs.c',
       'fu-uefi-update-info.c',

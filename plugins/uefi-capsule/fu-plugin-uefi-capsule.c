@@ -8,14 +8,15 @@
 #include "config.h"
 
 #include <fwupdplugin.h>
+
 #include <fcntl.h>
 #include <glib/gi18n.h>
 
 #include "fu-uefi-backend.h"
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-bootmgr.h"
+#include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
-#include "fu-uefi-device.h"
 
 struct FuPluginData {
 	FuUefiBgrt		*bgrt;
@@ -386,10 +387,11 @@ static void
 fu_plugin_uefi_capsule_register_proxy_device (FuPlugin *plugin, FuDevice *device)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
-	g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_dev (device);
+	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autoptr(GError) error_local = NULL;
 
 	/* load all configuration variables */
+	dev = fu_uefi_backend_device_new_from_dev(FU_UEFI_BACKEND(data->backend), device);
 	fu_plugin_uefi_capsule_load_config (plugin, FU_DEVICE (dev));
 	if (data->esp == NULL)
 		data->esp = fu_common_get_esp_default (&error_local);
@@ -662,6 +664,36 @@ fu_plugin_uefi_update_state_notify_cb (GObject *object,
 	}
 }
 
+static gboolean
+fu_backend_uefi_check_cod_support(GError **error)
+{
+	gsize bufsz = 0;
+	guint64 value = 0;
+	g_autofree guint8 *buf = NULL;
+
+	if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL,
+				"OsIndicationsSupported",
+				&buf,
+				&bufsz,
+				NULL,
+				error)) {
+		g_prefix_error(error, "failed to read EFI variable: ");
+		return FALSE;
+	}
+	if (!fu_common_read_uint64_safe(buf, bufsz, 0x0, &value, G_LITTLE_ENDIAN, error))
+		return FALSE;
+	if ((value & EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED) == 0) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "Capsule-on-Disk is not supported");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
@@ -679,6 +711,17 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE);
 			fu_plugin_add_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING);
 			g_warning ("cannot find default ESP: %s", error_udisks2->message);
+		}
+	}
+
+	/* firmware may lie */
+	if (!fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk")) {
+		g_autoptr(GError) error_cod = NULL;
+		if (!fu_backend_uefi_check_cod_support(&error_cod)) {
+			g_debug("not using CapsuleOnDisk support: %s", error_cod->message);
+		} else {
+			fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(data->backend),
+							 FU_TYPE_UEFI_COD_DEVICE);
 		}
 	}
 

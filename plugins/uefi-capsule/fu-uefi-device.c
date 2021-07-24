@@ -15,7 +15,6 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
 #include "fu-uefi-devpath.h"
-#include "fu-uefi-bootmgr.h"
 #include "fu-uefi-pcrs.h"
 
 typedef struct {
@@ -78,8 +77,8 @@ fu_uefi_device_kind_to_string (FuUefiDeviceKind kind)
 	return NULL;
 }
 
-static FuUefiDeviceKind
-fu_uefi_device_kind_from_string (const gchar *kind)
+FuUefiDeviceKind
+fu_uefi_device_kind_from_string(const gchar *kind)
 {
 	if (g_strcmp0 (kind, "system-firmware") == 0)
 		return FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE;
@@ -217,6 +216,42 @@ fu_uefi_device_get_status (FuUefiDevice *self)
 	return priv->last_attempt_status;
 }
 
+void
+fu_uefi_device_set_status(FuUefiDevice *self, FuUefiDeviceStatus status)
+{
+	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
+	const gchar *tmp;
+	g_autofree gchar *err_msg = NULL;
+	g_autofree gchar *version_str = NULL;
+
+	g_return_if_fail(FU_IS_UEFI_DEVICE(self));
+
+	/* cache for later */
+	priv->last_attempt_status = status;
+
+	/* all good */
+	if (status == FU_UEFI_DEVICE_STATUS_SUCCESS) {
+		fu_device_set_update_state(FU_DEVICE(self), FWUPD_UPDATE_STATE_SUCCESS);
+		return;
+	}
+
+	/* something went wrong */
+	if (status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_AC ||
+	    status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_BATT) {
+		fu_device_set_update_state(FU_DEVICE(self), FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
+	} else {
+		fu_device_set_update_state(FU_DEVICE(self), FWUPD_UPDATE_STATE_FAILED);
+	}
+	version_str = g_strdup_printf("%u", priv->last_attempt_version);
+	tmp = fu_uefi_device_status_to_string(status);
+	if (tmp == NULL) {
+		err_msg = g_strdup_printf("failed to update to %s", version_str);
+	} else {
+		err_msg = g_strdup_printf("failed to update to %s: %s", version_str, tmp);
+	}
+	fu_device_set_update_error(FU_DEVICE(self), err_msg);
+}
+
 guint32
 fu_uefi_device_get_capsule_flags (FuUefiDevice *self)
 {
@@ -233,8 +268,8 @@ fu_uefi_device_get_guid (FuUefiDevice *self)
 	return priv->fw_class;
 }
 
-static gchar *
-fu_uefi_device_build_varname (FuUefiDevice *self)
+gchar *
+fu_uefi_device_build_varname(FuUefiDevice *self)
 {
 	FuUefiDevicePrivate *priv = GET_PRIVATE (self);
 	return g_strdup_printf ("fwupd-%s-%"G_GUINT64_FORMAT,
@@ -356,10 +391,9 @@ fu_uefi_device_build_dp_buf (const gchar *path, gsize *bufsz, GError **error)
 	return g_steal_pointer (&dp_buf);
 }
 
-static GBytes *
-fu_uefi_device_fixup_firmware (FuDevice *device, GBytes *fw, GError **error)
+GBytes *
+fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 {
-	FuUefiDevice *self = FU_UEFI_DEVICE (device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE (self);
 	gsize fw_length;
 	const guint8 *data = g_bytes_get_data (fw, &fw_length);
@@ -556,82 +590,6 @@ fu_uefi_device_cleanup (FuDevice *device,
 }
 
 static gboolean
-fu_uefi_device_write_firmware (FuDevice *device,
-			       FuFirmware *firmware,
-			       FwupdInstallFlags install_flags,
-			       GError **error)
-{
-	FuUefiDevice *self = FU_UEFI_DEVICE (device);
-	FuUefiDevicePrivate *priv = GET_PRIVATE (self);
-	FuUefiBootmgrFlags flags = FU_UEFI_BOOTMGR_FLAG_NONE;
-	const gchar *bootmgr_desc = "Linux Firmware Updater";
-	g_autofree gchar *esp_path = fu_volume_get_mount_point (priv->esp);
-	g_autoptr(GBytes) fixed_fw = NULL;
-	g_autoptr(GBytes) fw = NULL;
-	g_autofree gchar *basename = NULL;
-	g_autofree gchar *directory = NULL;
-	g_autofree gchar *fn = NULL;
-	g_autofree gchar *varname = fu_uefi_device_build_varname (self);
-
-	/* ensure we have the existing state */
-	if (priv->fw_class == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "cannot update device info with no GUID");
-		return FALSE;
-	}
-
-	/* get default image */
-	fw = fu_firmware_get_bytes (firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
-	/* save the blob to the ESP */
-	directory = fu_uefi_get_esp_path_for_os (device, esp_path);
-	basename = g_strdup_printf ("fwupd-%s.cap", priv->fw_class);
-	fn = g_build_filename (directory, "fw", basename, NULL);
-	if (!fu_common_mkdir_parent (fn, error))
-		return FALSE;
-	fixed_fw = fu_uefi_device_fixup_firmware (device, fw, error);
-	if (fixed_fw == NULL)
-		return FALSE;
-	if (!fu_common_set_contents_bytes (fn, fixed_fw, error))
-		return FALSE;
-
-	/* delete the logs to save space; use fwupdate to debug the EFI binary */
-	if (fu_efivar_exists (FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_VERBOSE")) {
-		if (!fu_efivar_delete (FU_EFIVAR_GUID_FWUPDATE,
-				       "FWUPDATE_VERBOSE", error))
-			return FALSE;
-	}
-	if (fu_efivar_exists (FU_EFIVAR_GUID_FWUPDATE, "FWUPDATE_DEBUG_LOG")) {
-		if (!fu_efivar_delete (FU_EFIVAR_GUID_FWUPDATE,
-				       "FWUPDATE_DEBUG_LOG", error))
-			return FALSE;
-	}
-
-	/* set the blob header shared with fwupd.efi */
-	if (!fu_uefi_device_write_update_info (self, fn, varname, priv->fw_class, error))
-		return FALSE;
-
-	/* update the firmware before the bootloader runs */
-	if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB))
-		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB;
-	if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_SHIM_UNIQUE))
-		flags |= FU_UEFI_BOOTMGR_FLAG_USE_SHIM_UNIQUE;
-
-	/* some legacy devices use the old name to deduplicate boot entries */
-	if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC))
-		bootmgr_desc = "Linux-Firmware-Updater";
-	if (!fu_uefi_bootmgr_bootnext (device, esp_path, bootmgr_desc, flags, error))
-		return FALSE;
-
-	/* success! */
-	return TRUE;
-}
-
-static gboolean
 fu_uefi_device_add_system_checksum (FuDevice *device, GError **error)
 {
 	g_autoptr(FuUefiPcrs) pcrs = fu_uefi_pcrs_new ();
@@ -759,52 +717,19 @@ fu_uefi_device_probe (FuDevice *device, GError **error)
 static gboolean
 fu_uefi_device_get_results (FuDevice *device, GError **error)
 {
-	FuUefiDevice *device_uefi = FU_UEFI_DEVICE (device);
-	FuUefiDeviceStatus status = fu_uefi_device_get_status (device_uefi);
-	const gchar *tmp;
-	g_autofree gchar *err_msg = NULL;
-	g_autofree gchar *version_str = NULL;
-	g_autoptr(GError) error_local = NULL;
+	FuUefiDevice *self = FU_UEFI_DEVICE(device);
+	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 
-	/* trivial case */
-	if (status == FU_UEFI_DEVICE_STATUS_SUCCESS) {
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_SUCCESS);
-		return TRUE;
-	}
-
-	/* check if something rudely removed our BOOTXXXX entry */
-	if (!fu_uefi_bootmgr_verify_fwupd (&error_local)) {
-		if (fu_device_has_private_flag (device, FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK)) {
-			g_prefix_error (&error_local,
-					"boot entry missing; "
-					"perhaps 'Boot Order Lock' enabled in the BIOS: ");
-			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
-		} else {
-			g_prefix_error (&error_local, "boot entry missing: ");
-			fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-		}
-		fu_device_set_update_error (device, error_local->message);
-		return TRUE;
-	}
-
-	/* something went wrong */
-	if (status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_AC ||
-	    status == FU_UEFI_DEVICE_STATUS_ERROR_PWR_EVT_BATT) {
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED_TRANSIENT);
-	} else {
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
-	}
-	version_str = g_strdup_printf ("%u", fu_uefi_device_get_version_error (device_uefi));
-	tmp = fu_uefi_device_status_to_string (status);
-	if (tmp == NULL) {
-		err_msg = g_strdup_printf ("failed to update to %s",
-					   version_str);
-	} else {
-		err_msg = g_strdup_printf ("failed to update to %s: %s",
-					   version_str, tmp);
-	}
-	fu_device_set_update_error (device, err_msg);
+	/* just set the update error */
+	fu_uefi_device_set_status(self, priv->last_attempt_status);
 	return TRUE;
+}
+
+gchar *
+fu_uefi_device_get_esp_path(FuUefiDevice *self)
+{
+	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
+	return fu_volume_get_mount_point(priv->esp);
 }
 
 static void
@@ -830,7 +755,7 @@ fu_uefi_device_set_property (GObject *object, guint prop_id,
 		priv->fw_version_lowest = g_value_get_uint (value);
 		break;
 	case PROP_LAST_ATTEMPT_STATUS:
-		priv->last_attempt_status = g_value_get_uint (value);
+		fu_uefi_device_set_status(self, g_value_get_uint(value));
 		break;
 	case PROP_LAST_ATTEMPT_VERSION:
 		priv->last_attempt_version = g_value_get_uint (value);
@@ -867,6 +792,9 @@ fu_uefi_device_init (FuUefiDevice *self)
 	fu_device_register_private_flag (FU_DEVICE (self),
 					 FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH,
 					 "fallback-to-removable-path");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE,
+					"no-rt-set-variable");
 }
 
 static void
@@ -896,7 +824,6 @@ fu_uefi_device_class_init (FuUefiDeviceClass *klass)
 	klass_device->to_string = fu_uefi_device_to_string;
 	klass_device->probe = fu_uefi_device_probe;
 	klass_device->prepare = fu_uefi_device_prepare;
-	klass_device->write_firmware = fu_uefi_device_write_firmware;
 	klass_device->cleanup = fu_uefi_device_cleanup;
 	klass_device->report_metadata_pre = fu_uefi_device_report_metadata_pre;
 	klass_device->report_metadata_post = fu_uefi_device_report_metadata_post;
@@ -953,38 +880,4 @@ fu_uefi_device_class_init (FuUefiDeviceClass *klass)
 				     G_PARAM_WRITABLE |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_FMP_HARDWARE_INSTANCE, pspec);
-}
-
-FuUefiDevice *
-fu_uefi_device_new_from_dev (FuDevice *dev)
-{
-	const gchar *tmp;
-	FuUefiDevice *self;
-	FuUefiDevicePrivate *priv;
-
-	g_return_val_if_fail (fu_device_get_guid_default (dev) != NULL, NULL);
-
-	/* create virtual object not backed by an ESRT entry */
-	self = g_object_new (FU_TYPE_UEFI_DEVICE, NULL);
-	fu_device_incorporate (FU_DEVICE (self), dev);
-	priv = GET_PRIVATE (self);
-	priv->fw_class = g_strdup (fu_device_get_guid_default (dev));
-	tmp = fu_device_get_metadata (dev, FU_DEVICE_METADATA_UEFI_DEVICE_KIND);
-	priv->kind = fu_uefi_device_kind_from_string (tmp);
-	priv->capsule_flags = fu_device_get_metadata_integer (dev, FU_DEVICE_METADATA_UEFI_CAPSULE_FLAGS);
-	priv->fw_version = fu_device_get_metadata_integer (dev, FU_DEVICE_METADATA_UEFI_FW_VERSION);
-	g_assert (priv->fw_class != NULL);
-	return self;
-}
-
-FuUefiDevice *
-fu_uefi_device_new_from_guid (const gchar *guid)
-{
-	FuUefiDevice *self;
-	FuUefiDevicePrivate *priv;
-	self = g_object_new (FU_TYPE_UEFI_DEVICE, NULL);
-	priv = GET_PRIVATE (self);
-	priv->fw_class = g_strdup (guid);
-	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_NUMBER);
-	return self;
 }

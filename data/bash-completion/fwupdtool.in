@@ -53,6 +53,7 @@ _fwupdtool_opts=(
 	'--prepare'
 	'--cleanup'
 	'--filter'
+	'--method'
 	'--disable-ssl-strict'
 	'--no-safety-check'
 	'--ignore-checksum'

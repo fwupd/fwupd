@@ -20,20 +20,23 @@
 
 #include <glib/gstdio.h>
 
+#include "fu-uefi-backend-freebsd.h"
 #include "fu-uefi-common.h"
 #include "fu-uefi-device.h"
-#include "fu-uefi-backend.h"
 
-struct _FuUefiBackend {
-	FuBackend		 parent_instance;
+struct _FuUefiBackendFreebsd {
+	FuUefiBackend parent_instance;
 };
 
-G_DEFINE_TYPE (FuUefiBackend, fu_uefi_backend, FU_TYPE_BACKEND)
+G_DEFINE_TYPE(FuUefiBackendFreebsd, fu_uefi_backend_freebsd, FU_TYPE_UEFI_BACKEND)
 
 #ifdef HAVE_FREEBSD_ESRT
 
 static FuUefiDevice *
-fu_uefi_backend_device_new (struct efi_esrt_entry_v1 *entry, guint64 idx, GError **error)
+fu_uefi_backend_device_new(FuUefiBackend *self,
+			   struct efi_esrt_entry_v1 *entry,
+			   guint64 idx,
+			   GError **error)
 {
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autofree gchar *fw_class = NULL;
@@ -50,17 +53,26 @@ fu_uefi_backend_device_new (struct efi_esrt_entry_v1 *entry, guint64 idx, GError
 	}
 
 	/* create object */
-	dev = g_object_new (FU_TYPE_UEFI_DEVICE,
-			    "fw-class", fw_class,
-			    "capsule-flags", entry->capsule_flags,
-			    "kind", entry->fw_type,
-			    "fw-version", entry->fw_version,
-			    "last-attempt-status", entry->last_attempt_status,
-			    "last-attempt-version", entry->last_attempt_version,
-			    "fw-version-lowest", entry->lowest_supported_fw_version,
-			    "fmp-hardware-instance", (guint64) 0x0,
-			    "version-format", FWUPD_VERSION_FORMAT_NUMBER,
-			    NULL);
+	dev = g_object_new(fu_uefi_backend_get_device_gtype(self),
+			   "fw-class",
+			   fw_class,
+			   "capsule-flags",
+			   entry->capsule_flags,
+			   "kind",
+			   entry->fw_type,
+			   "fw-version",
+			   entry->fw_version,
+			   "last-attempt-status",
+			   entry->last_attempt_status,
+			   "last-attempt-version",
+			   entry->last_attempt_version,
+			   "fw-version-lowest",
+			   entry->lowest_supported_fw_version,
+			   "fmp-hardware-instance",
+			   (guint64)0x0,
+			   "version-format",
+			   FWUPD_VERSION_FORMAT_NUMBER,
+			   NULL);
 
 	/* set ID */
 	phys_id = g_strdup_printf ("ESRT/%u", (guint)idx);
@@ -71,7 +83,7 @@ fu_uefi_backend_device_new (struct efi_esrt_entry_v1 *entry, guint64 idx, GError
 #endif
 
 static gboolean
-fu_uefi_backend_setup (FuBackend *backend, GError **error)
+fu_uefi_backend_freebsd_setup(FuBackend *backend, GError **error)
 {
 	g_autofree gchar *efi_ver = fu_kenv_get_string ("efi-version", error);
 	if (efi_ver == NULL) {
@@ -90,9 +102,10 @@ fu_uefi_backend_setup (FuBackend *backend, GError **error)
 }
 
 static gboolean
-fu_uefi_backend_coldplug (FuBackend *backend, GError **error)
+fu_uefi_backend_freebsd_coldplug(FuBackend *backend, GError **error)
 {
 #ifdef HAVE_FREEBSD_ESRT
+	FuUefiBackend *self = FU_UEFI_BACKEND(backend);
 	struct efi_get_table_ioc table = {
 		.uuid = EFI_TABLE_ESRT
 	};
@@ -141,9 +154,8 @@ fu_uefi_backend_coldplug (FuBackend *backend, GError **error)
 
 	entries = (struct efi_esrt_entry_v1 *)esrt->entries;
 	for (guint i = 0; i < esrt->fw_resource_count; i++) {
-		g_autoptr(FuUefiDevice) dev = fu_uefi_backend_device_new (&entries[i],
-									  i,
-									  error);
+		g_autoptr(FuUefiDevice) dev = NULL;
+		dev = fu_uefi_backend_device_new(self, &entries[i], i, error);
 		if (dev == NULL)
 			return FALSE;
 
@@ -161,24 +173,26 @@ fu_uefi_backend_coldplug (FuBackend *backend, GError **error)
 #endif
 }
 
-static void
-fu_uefi_backend_init (FuUefiBackend *self)
+void
+fu_uefi_backend_freebsd_set_device_gtype(FuBackend *backend, GType device_gtype)
 {
 }
 
 static void
-fu_uefi_backend_class_init (FuUefiBackendClass *klass)
+fu_uefi_backend_freebsd_init(FuUefiBackendFreebsd *self)
+{
+}
+
+static void
+fu_uefi_backend_freebsd_class_init(FuUefiBackendFreebsdClass *klass)
 {
 	FuBackendClass *klass_backend = FU_BACKEND_CLASS (klass);
-	klass_backend->setup = fu_uefi_backend_setup;
-	klass_backend->coldplug = fu_uefi_backend_coldplug;
+	klass_backend->setup = fu_uefi_backend_freebsd_setup;
+	klass_backend->coldplug = fu_uefi_backend_freebsd_coldplug;
 }
 
 FuBackend *
 fu_uefi_backend_new (FuContext *ctx)
 {
-	return FU_BACKEND (g_object_new (FU_TYPE_UEFI_BACKEND,
-					 "name", "uefi",
-					 "context", ctx,
-					 NULL));
+	return g_object_new(FU_TYPE_UEFI_BACKEND_FREEBSD, "name", "uefi", "context", ctx, NULL);
 }

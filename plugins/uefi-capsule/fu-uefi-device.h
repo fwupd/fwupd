@@ -79,15 +79,26 @@ typedef enum {
  * Use shim to load fwupdx64.efi when SecureBoot is turned on.
  */
 #define FU_UEFI_DEVICE_FLAG_USE_SHIM_FOR_SB		(1 << 5)
+/**
+ * FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE:
+ *
+ * Do not use RT->SetVariable.
+ */
+#define FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE (1 << 6)
 
-FuUefiDevice	*fu_uefi_device_new_from_guid		(const gchar	*guid);
-FuUefiDevice	*fu_uefi_device_new_from_dev		(FuDevice	*dev);
+FuUefiDeviceKind
+fu_uefi_device_kind_from_string(const gchar *kind);
+
 void		 fu_uefi_device_set_esp			(FuUefiDevice	*self,
 							 FuVolume	*esp);
 gboolean	 fu_uefi_device_clear_status		(FuUefiDevice	*self,
 							 GError		**error);
 FuUefiDeviceKind fu_uefi_device_get_kind		(FuUefiDevice	*self);
 const gchar	*fu_uefi_device_get_guid		(FuUefiDevice	*self);
+gchar *
+fu_uefi_device_get_esp_path(FuUefiDevice *self);
+gchar *
+fu_uefi_device_build_varname(FuUefiDevice *self);
 guint32		 fu_uefi_device_get_version		(FuUefiDevice	*self);
 guint32		 fu_uefi_device_get_version_lowest	(FuUefiDevice	*self);
 guint32		 fu_uefi_device_get_version_error	(FuUefiDevice	*self);
@@ -103,3 +114,7 @@ gboolean	 fu_uefi_device_write_update_info	(FuUefiDevice	*self,
 							 const gchar	*varname,
 							 const gchar	*guid,
 							 GError		**error);
+GBytes *
+fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error);
+void
+fu_uefi_device_set_status(FuUefiDevice *self, FuUefiDeviceStatus status);
