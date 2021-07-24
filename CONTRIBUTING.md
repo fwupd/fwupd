@@ -22,9 +22,9 @@ from the PackageKit Coding Style.
 
 * 8-space tabs for indentation
 
-* Prefer lines of less than <= 80 columns
+* Prefer lines of less than <= 100 columns
 
-* 1-space between function name and braces (both calls and macro
+* No spaces between function name and braces (both calls and macro
    declarations)
 
 * If function signature/call fits in a single line, do not break it
@@ -39,7 +39,7 @@ from the PackageKit Coding Style.
    over-documenting the obvious. Here is an example of useless comment:
 
    // Fetch the document
-   fetch_the_document ();
+   fetch_the_document();
 
 * Comments should not start with a capital letter or end with a full stop and
    should be C-style, not C++-style, e.g. `/* this */` not `// this`

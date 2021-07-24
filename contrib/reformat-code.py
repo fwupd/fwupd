@@ -20,7 +20,7 @@ CLANG_DIFF_FORMATTERS = [
     "clang-format-diff-13",
     "clang-format-diff",
 ]
-FIXUPS = {"g_autoptr (": "g_autoptr(", "sizeof (": "sizeof(", "g_auto (": "g_auto("}
+FIXUPS = {}
 
 
 def parse_args():
