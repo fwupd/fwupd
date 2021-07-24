@@ -7,11 +7,13 @@
 #include "config.h"
 
 #include <fwupdplugin.h>
+
 #include <gio/gunixmounts.h>
 
+#include "fu-uefi-backend-linux.h"
+#include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
-#include "fu-uefi-device.h"
-#include "fu-uefi-backend.h"
+#include "fu-uefi-nvram-device.h"
 
 #ifndef HAVE_GIO_2_55_0
 #pragma clang diagnostic push
@@ -20,21 +22,22 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GUnixMountEntry, g_unix_mount_free)
 #pragma clang diagnostic pop
 #endif
 
-struct _FuUefiBackend {
-	FuBackend		 parent_instance;
+struct _FuUefiBackendLinux {
+	FuUefiBackend parent_instance;
+	gboolean use_rt_set_variable;
 };
 
-G_DEFINE_TYPE (FuUefiBackend, fu_uefi_backend, FU_TYPE_BACKEND)
+G_DEFINE_TYPE(FuUefiBackendLinux, fu_uefi_backend_linux, FU_TYPE_UEFI_BACKEND)
 
 /* yes, unsized uint_t */
 static guint
-fu_uefi_backend_read (const gchar *path, const gchar *filename)
+fu_uefi_backend_linux_read(const gchar *path, const gchar *filename)
 {
 	return fu_uefi_read_file_as_uint64 (path, filename);
 }
 
 static FuUefiDevice *
-fu_uefi_backend_device_new (const gchar *path)
+fu_uefi_backend_linux_device_new(FuUefiBackendLinux *self, const gchar *path)
 {
 	g_autoptr(FuUefiDevice) dev = NULL;
 	g_autofree gchar *fw_class = NULL;
@@ -53,17 +56,30 @@ fu_uefi_backend_device_new (const gchar *path)
 	 * The hardware instance is not in the ESRT table and we should really
 	 * write the EFI stub to query with FMP -- but we still have not ever
 	 * seen a PCIe device with FMP support... */
-	dev = g_object_new (FU_TYPE_UEFI_DEVICE,
-			    "fw-class", fw_class,
-			    "capsule-flags", fu_uefi_backend_read (path, "capsule_flags"),
-			    "kind", fu_uefi_backend_read (path, "fw_type"),
-			    "fw-version", fu_uefi_backend_read (path, "fw_version"),
-			    "last-attempt-status", fu_uefi_backend_read (path, "last_attempt_status"),
-			    "last-attempt-version", fu_uefi_backend_read (path, "last_attempt_version"),
-			    "fw-version-lowest", fu_uefi_backend_read (path, "lowest_supported_fw_version"),
-			    "fmp-hardware-instance", (guint64) 0x0,
-			    "version-format", FWUPD_VERSION_FORMAT_NUMBER,
-			    NULL);
+	dev = g_object_new(fu_uefi_backend_get_device_gtype(FU_UEFI_BACKEND(self)),
+			   "fw-class",
+			   fw_class,
+			   "capsule-flags",
+			   fu_uefi_backend_linux_read(path, "capsule_flags"),
+			   "kind",
+			   fu_uefi_backend_linux_read(path, "fw_type"),
+			   "fw-version",
+			   fu_uefi_backend_linux_read(path, "fw_version"),
+			   "last-attempt-status",
+			   fu_uefi_backend_linux_read(path, "last_attempt_status"),
+			   "last-attempt-version",
+			   fu_uefi_backend_linux_read(path, "last_attempt_version"),
+			   "fw-version-lowest",
+			   fu_uefi_backend_linux_read(path, "lowest_supported_fw_version"),
+			   "fmp-hardware-instance",
+			   (guint64)0x0,
+			   "version-format",
+			   FWUPD_VERSION_FORMAT_NUMBER,
+			   NULL);
+
+	/* u-boot for instance */
+	if (!self->use_rt_set_variable)
+		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE);
 
 	/* set ID */
 	fu_device_set_physical_id (FU_DEVICE (dev), path);
@@ -71,13 +87,55 @@ fu_uefi_backend_device_new (const gchar *path)
 }
 
 static gboolean
-fu_uefi_backend_coldplug (FuBackend *backend, GError **error)
+fu_uefi_backend_linux_check_efivarfs(FuUefiBackendLinux *self, GError **error)
 {
+	g_autofree gchar *sysfsfwdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_FW);
+	g_autofree gchar *sysfsefivardir = g_build_filename(sysfsfwdir, "efi", "efivars", NULL);
+	g_autoptr(GUnixMountEntry) mount = g_unix_mount_at(sysfsefivardir, NULL);
+
+	/* in the self tests */
+	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
+		return TRUE;
+
+	if (mount == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "%s was not mounted",
+			    sysfsefivardir);
+		return FALSE;
+	}
+	if (g_unix_mount_is_readonly(mount)) {
+		GType gtype = fu_uefi_backend_get_device_gtype(FU_UEFI_BACKEND(self));
+		if (gtype != FU_TYPE_UEFI_COD_DEVICE) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_WRITE,
+				    "%s is read only and no CoD",
+				    sysfsefivardir);
+			return FALSE;
+		}
+
+		/* this is fine! just do not use SetVariable... */
+		self->use_rt_set_variable = FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
+fu_uefi_backend_linux_coldplug(FuBackend *backend, GError **error)
+{
+	FuUefiBackendLinux *self = FU_UEFI_BACKEND_LINUX(backend);
 	const gchar *fn;
 	g_autofree gchar *esrt_entries = NULL;
 	g_autofree gchar *esrt_path = NULL;
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autoptr(GDir) dir = NULL;
+
+	/* make sure that efivarfs is suitable */
+	if (!fu_uefi_backend_linux_check_efivarfs(self, error))
+		return FALSE;
 
 	/* get the directory of ESRT entries */
 	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
@@ -90,7 +148,7 @@ fu_uefi_backend_coldplug (FuBackend *backend, GError **error)
 	/* add each device */
 	while ((fn = g_dir_read_name (dir)) != NULL) {
 		g_autofree gchar *path = g_build_filename (esrt_entries, fn, NULL);
-		g_autoptr(FuUefiDevice) dev = fu_uefi_backend_device_new (path);
+		g_autoptr(FuUefiDevice) dev = fu_uefi_backend_linux_device_new(self, path);
 		fu_backend_device_added (backend, FU_DEVICE (dev));
 	}
 
@@ -99,7 +157,7 @@ fu_uefi_backend_coldplug (FuBackend *backend, GError **error)
 }
 
 static gboolean
-fu_uefi_backend_check_smbios_enabled (FuContext *ctx, GError **error)
+fu_uefi_backend_linux_check_smbios_enabled(FuContext *ctx, GError **error)
 {
 	const guint8 *data;
 	gsize sz;
@@ -140,32 +198,7 @@ fu_uefi_backend_check_smbios_enabled (FuContext *ctx, GError **error)
 }
 
 static gboolean
-fu_uefi_backend_check_efivarfs_rw (GError **error)
-{
-	g_autofree gchar *sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-	g_autofree gchar *sysfsefivardir = g_build_filename (sysfsfwdir, "efi", "efivars", NULL);
-	g_autoptr(GUnixMountEntry) mount = g_unix_mount_at (sysfsefivardir, NULL);
-
-	if (mount == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "%s was not mounted", sysfsefivardir);
-		return FALSE;
-	}
-	if (g_unix_mount_is_readonly (mount)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_WRITE,
-			     "%s is read only", sysfsefivardir);
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-static gboolean
-fu_uefi_backend_setup (FuBackend *backend, GError **error)
+fu_uefi_backend_linux_setup(FuBackend *backend, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 
@@ -173,12 +206,9 @@ fu_uefi_backend_setup (FuBackend *backend, GError **error)
 	if (g_getenv ("FWUPD_SYSFSFWDIR") != NULL)
 		return TRUE;
 
-	/* make sure that efivarfs is rw */
-	if (!fu_uefi_backend_check_efivarfs_rw (error))
-		return FALSE;
-
 	/* check SMBIOS for 'UEFI Specification is supported' */
-	if (!fu_uefi_backend_check_smbios_enabled (fu_backend_get_context (backend), &error_local)) {
+	if (!fu_uefi_backend_linux_check_smbios_enabled(fu_backend_get_context(backend),
+							&error_local)) {
 		g_autofree gchar *fw = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
 		g_autofree gchar *fn = g_build_filename (fw, "efi", NULL);
 		if (g_file_test (fn, G_FILE_TEST_EXISTS)) {
@@ -194,23 +224,21 @@ fu_uefi_backend_setup (FuBackend *backend, GError **error)
 }
 
 static void
-fu_uefi_backend_init (FuUefiBackend *self)
+fu_uefi_backend_linux_init(FuUefiBackendLinux *self)
 {
+	self->use_rt_set_variable = TRUE;
 }
 
 static void
-fu_uefi_backend_class_init (FuUefiBackendClass *klass)
+fu_uefi_backend_linux_class_init(FuUefiBackendLinuxClass *klass)
 {
 	FuBackendClass *klass_backend = FU_BACKEND_CLASS (klass);
-	klass_backend->coldplug = fu_uefi_backend_coldplug;
-	klass_backend->setup = fu_uefi_backend_setup;
+	klass_backend->coldplug = fu_uefi_backend_linux_coldplug;
+	klass_backend->setup = fu_uefi_backend_linux_setup;
 }
 
 FuBackend *
 fu_uefi_backend_new (FuContext *ctx)
 {
-	return FU_BACKEND (g_object_new (FU_TYPE_UEFI_BACKEND,
-					 "name", "uefi",
-					 "context", ctx,
-					 NULL));
+	return g_object_new(FU_TYPE_UEFI_BACKEND_LINUX, "name", "uefi", "context", ctx, NULL);
 }

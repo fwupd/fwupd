@@ -7,8 +7,9 @@
 #include "config.h"
 
 #include <fwupdplugin.h>
-#include <glib/gi18n.h>
+
 #include <glib-unix.h>
+#include <glib/gi18n.h>
 #include <locale.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -16,8 +17,9 @@
 #include "fu-context-private.h"
 #include "fu-ucs2.h"
 #include "fu-uefi-backend.h"
+#include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
-#include "fu-uefi-device.h"
+#include "fu-uefi-nvram-device.h"
 #include "fu-uefi-update-info.h"
 
 /* custom return code */
@@ -62,6 +64,7 @@ main (int argc, char *argv[])
 	gboolean ret;
 	gboolean verbose = FALSE;
 	g_autofree gchar *apply = FALSE;
+	g_autofree gchar *type = FALSE;
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *flags = FALSE;
 	g_autoptr(FuUtilPrivate) priv = g_new0 (FuUtilPrivate, 1);
@@ -69,48 +72,113 @@ main (int argc, char *argv[])
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(FuVolume) esp = NULL;
 	const GOptionEntry options[] = {
-		{ "verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
-			/* TRANSLATORS: command line option */
-			_("Show extra debugging information"), NULL },
-		{ "version", '\0', 0, G_OPTION_ARG_NONE, &action_version,
-			/* TRANSLATORS: command line option */
-			_("Display version"), NULL },
-		{ "log", 'L', 0, G_OPTION_ARG_NONE, &action_log,
-			/* TRANSLATORS: command line option */
-			_("Show the debug log from the last attempted update"), NULL },
-		{ "list", 'l', 0, G_OPTION_ARG_NONE, &action_list,
-			/* TRANSLATORS: command line option */
-			_("List supported firmware updates"), NULL },
-		{ "supported", 's', 0, G_OPTION_ARG_NONE, &action_supported,
-			/* TRANSLATORS: command line option */
-			_("Query for firmware update support"), NULL },
-		{ "info", 'i', 0, G_OPTION_ARG_NONE, &action_info,
-			/* TRANSLATORS: command line option */
-			_("Show the information of firmware update status"), NULL },
-		{ "enable", 'e', 0, G_OPTION_ARG_NONE, &action_enable,
-			/* TRANSLATORS: command line option */
-			_("Enable firmware update support on supported systems"), NULL },
-		{ "esp-path", 'p', 0, G_OPTION_ARG_STRING, &esp_path,
-			/* TRANSLATORS: command line option */
-			_("Override the default ESP path"),
-			/* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			_("PATH") },
-		{ "set-debug", 'd', 0, G_OPTION_ARG_NONE, &action_set_debug,
-			/* TRANSLATORS: command line option */
-			_("Set the debugging flag during update"), NULL },
-		{ "unset-debug", 'D', 0, G_OPTION_ARG_NONE, &action_unset_debug,
-			/* TRANSLATORS: command line option */
-			_("Unset the debugging flag during update"), NULL },
-		{ "apply", 'a', 0, G_OPTION_ARG_STRING, &apply,
-			/* TRANSLATORS: command line option */
-			_("Apply firmware updates"),
-			/* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			C_("A single GUID", "GUID") },
-		{ "flags", 'f', 0, G_OPTION_ARG_STRING, &flags,
-			/* TRANSLATORS: command line option */
-			_("Use quirk flags when installing firmware"), NULL },
-		{ NULL}
-	};
+	    {"verbose",
+	     'v',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_NONE,
+	     &verbose,
+	     /* TRANSLATORS: command line option */
+	     _("Show extra debugging information"),
+	     NULL},
+	    {"version",
+	     '\0',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_NONE,
+	     &action_version,
+	     /* TRANSLATORS: command line option */
+	     _("Display version"),
+	     NULL},
+	    {"log",
+	     'L',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_NONE,
+	     &action_log,
+	     /* TRANSLATORS: command line option */
+	     _("Show the debug log from the last attempted update"),
+	     NULL},
+	    {"list",
+	     'l',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_NONE,
+	     &action_list,
+	     /* TRANSLATORS: command line option */
+	     _("List supported firmware updates"),
+	     NULL},
+	    {"supported",
+	     's',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_NONE,
+	     &action_supported,
+	     /* TRANSLATORS: command line option */
+	     _("Query for firmware update support"),
+	     NULL},
+	    {"info",
+	     'i',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_NONE,
+	     &action_info,
+	     /* TRANSLATORS: command line option */
+	     _("Show the information of firmware update status"),
+	     NULL},
+	    {"enable",
+	     'e',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_NONE,
+	     &action_enable,
+	     /* TRANSLATORS: command line option */
+	     _("Enable firmware update support on supported systems"),
+	     NULL},
+	    {"esp-path",
+	     'p',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_STRING,
+	     &esp_path,
+	     /* TRANSLATORS: command line option */
+	     _("Override the default ESP path"),
+	     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+	     _("PATH")},
+	    {"set-debug",
+	     'd',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_NONE,
+	     &action_set_debug,
+	     /* TRANSLATORS: command line option */
+	     _("Set the debugging flag during update"),
+	     NULL},
+	    {"unset-debug",
+	     'D',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_NONE,
+	     &action_unset_debug,
+	     /* TRANSLATORS: command line option */
+	     _("Unset the debugging flag during update"),
+	     NULL},
+	    {"apply",
+	     'a',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_STRING,
+	     &apply,
+	     /* TRANSLATORS: command line option */
+	     _("Apply firmware updates"),
+	     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+	     C_("A single GUID", "GUID")},
+	    {"method",
+	     'm',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_STRING,
+	     &type,
+	     /* TRANSLATORS: command line option */
+	     _("Device update method"),
+	     "nvram|cod"},
+	    {"flags",
+	     'f',
+	     G_OPTION_FLAG_NONE,
+	     G_OPTION_ARG_STRING,
+	     &flags,
+	     /* TRANSLATORS: command line option */
+	     _("Use quirk flags when installing firmware"),
+	     NULL},
+	    {NULL}};
 
 	setlocale (LC_ALL, "");
 
@@ -316,9 +384,25 @@ main (int argc, char *argv[])
 
 	/* apply firmware updates */
 	if (apply != NULL) {
-		g_autoptr(FuUefiDevice) dev = fu_uefi_device_new_from_guid (apply);
+		g_autoptr(FuContext) ctx = fu_context_new();
+		g_autoptr(FuBackend) backend = fu_uefi_backend_new(ctx);
+		g_autoptr(FuUefiDevice) dev = NULL;
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GBytes) fw = NULL;
+
+		/* type is specified, otherwise use default */
+		if (type != NULL) {
+			if (g_strcmp0(type, "nvram") == 0) {
+				fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(backend),
+								 FU_TYPE_UEFI_NVRAM_DEVICE);
+			} else if (g_strcmp0(type, "cod") == 0) {
+				fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(backend),
+								 FU_TYPE_UEFI_COD_DEVICE);
+			} else {
+				g_printerr("invalid type specified\n");
+				return EXIT_FAILURE;
+			}
+		}
 
 		if (argv[1] == NULL) {
 			g_printerr ("capsule filename required\n");
@@ -329,6 +413,7 @@ main (int argc, char *argv[])
 			g_printerr ("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
+		dev = fu_uefi_backend_device_new_from_guid(FU_UEFI_BACKEND(backend), apply);
 		fu_uefi_device_set_esp (dev, esp);
 		if (flags != NULL)
 			fu_device_set_custom_flags (FU_DEVICE (dev), flags);
