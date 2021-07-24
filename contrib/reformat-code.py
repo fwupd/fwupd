@@ -18,6 +18,7 @@ CLANG_FORMATTERS = [
 CLANG_DIFF_FORMATTERS = [
     "clang-format-diff-11",
     "clang-format-diff-13",
+    "clang-format-diff",
 ]
 FIXUPS = {"g_autoptr (": "g_autoptr(", "sizeof (": "sizeof(", "g_auto (": "g_auto("}
 
