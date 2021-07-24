@@ -32,9 +32,14 @@ def select_clang_version(formatters):
 
 ## Entry Point ##
 if __name__ == "__main__":
+    base = os.getenv("GITHUB_BASE_REF")
+    if base:
+        base = "origin/%s" % base
+    else:
+        base = "HEAD"
     formatter = select_clang_version(CLANG_DIFF_FORMATTERS)
     ret = subprocess.run(
-        ["git", "diff", "-U0", "HEAD"], capture_output=True, check=True, text=True
+        ["git", "diff", "-U0", base], capture_output=True, check=True, text=True
     )
     if ret.returncode:
         print("Failed to run git diff: %s" % ret.stderr)

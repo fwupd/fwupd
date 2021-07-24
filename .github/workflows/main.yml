@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Refresh dependencies
         run: sudo apt update
       - name: Install dependencies
