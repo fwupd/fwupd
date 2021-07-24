@@ -13,7 +13,7 @@ jobs:
       - name: Refresh dependencies
         run: sudo apt update
       - name: Install dependencies
-        run: sudo apt install shellcheck -y
+        run: sudo apt install shellcheck clang-format -y
       - name: Run pre-commit hooks
         run: |
           ./contrib/setup

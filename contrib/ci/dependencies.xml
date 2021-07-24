@@ -76,6 +76,17 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="clang-format">
+    <distro id="fedora">
+      <package>clang-tools-extra</package>
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="gcc-multilib-s390x-linux-gnu">
     <distro id="debian">
       <package variant="s390x" />
