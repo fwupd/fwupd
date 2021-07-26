@@ -28,6 +28,42 @@ fu_plugin_destroy(FuPlugin *plugin)
 		g_object_unref(data->proxy);
 }
 
+static gboolean
+fu_plugin_powerd_refresh_cb(FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	guint32 power_type;
+	guint32 current_state;
+	gdouble current_level;
+	g_autoptr(GVariant) powerd_response = NULL;
+
+	/* retrieving battery info from "GetBatteryState" method call to powerd */
+	powerd_response = g_dbus_proxy_call_sync(data->proxy,
+						 "GetBatteryState",
+						 NULL,
+						 G_DBUS_CALL_FLAGS_NONE,
+						 -1,
+						 NULL,
+						 G_SOURCE_REMOVE);
+	if (powerd_response == NULL) {
+		g_debug("battery information was not loaded");
+		return G_SOURCE_REMOVE;
+	}
+
+	/* parse and use for battery-check conditions */
+	g_variant_get(powerd_response, "(uud)", &power_type, &current_state, &current_level);
+
+	/* checking if percentage is invalid */
+	if (current_level < 1 || current_level > 100)
+		current_level = FU_BATTERY_VALUE_INVALID;
+
+	fu_context_set_battery_state(ctx, current_state);
+	fu_context_set_battery_level(ctx, current_level);
+
+	return G_SOURCE_CONTINUE;
+}
+
 gboolean
 fu_plugin_startup(FuPlugin *plugin, GError **error)
 {
@@ -57,67 +93,9 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 			    g_dbus_proxy_get_name(data->proxy));
 		return FALSE;
 	}
-	return TRUE;
-}
 
-gboolean
-fu_plugin_update_prepare(FuPlugin *plugin,
-			 FwupdInstallFlags flags,
-			 FuDevice *device,
-			 GError **error)
-{
-	FuContext *ctx = fu_plugin_get_context(plugin);
-	FuPluginData *data = fu_plugin_get_data(plugin);
-	guint32 power_type = 0;
-	guint32 current_state = 0;
-	gdouble current_level = 0;
-	g_autoptr(GVariant) powerd_response = NULL;
+	/* start a timer to repeatedly run fu_plugin_powerd_refresh_cb at a set interval */
+	g_timeout_add_seconds(5, G_SOURCE_FUNC(fu_plugin_powerd_refresh_cb), plugin);
 
-	/* permit updates when the device does not care about power conditions */
-	if (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER)
-		return TRUE;
-
-	/* making method call to "GetBatteryState" through the proxy */
-	powerd_response = g_dbus_proxy_call_sync(data->proxy,
-						 "GetBatteryState",
-						 NULL,
-						 G_DBUS_CALL_FLAGS_NONE,
-						 -1,
-						 NULL,
-						 error);
-	if (powerd_response == NULL) {
-		g_prefix_error(error, "battery information was not loaded: ");
-		return FALSE;
-	}
-
-	/* parse and use for battery-check conditions */
-	g_variant_get(powerd_response, "(uud)", &power_type, &current_state, &current_level);
-
-	/* checking if percentage is invalid */
-	if (current_level < 1 || current_level > 100)
-		current_level = FU_BATTERY_VALUE_INVALID;
-
-	/* blocking updates if there is no AC power or if battery
-	 * percentage is too low */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
-	    current_state == FU_BATTERY_STATE_DISCHARGING) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_AC_POWER_REQUIRED,
-			    "Cannot install update without external power "
-			    "unless forced ");
-		return FALSE;
-	}
-	if (fu_context_get_battery_threshold(ctx) != FU_BATTERY_VALUE_INVALID &&
-	    current_level != FU_BATTERY_VALUE_INVALID &&
-	    current_level < fu_context_get_battery_threshold(ctx)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW,
-			    "Cannot install update when system battery "
-			    "is not at least %u%% unless forced",
-			    fu_context_get_battery_threshold(ctx));
-		return FALSE;
-	}
 	return TRUE;
 }
