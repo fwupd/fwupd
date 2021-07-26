@@ -98,6 +98,10 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 		       &current_state,
 		       &current_level);
 
+	/* checking if percentage is invalid */
+	if (current_level < 1 || current_level > 100)
+		current_level = FU_BATTERY_VALUE_INVALID;
+
 	/* blocking updates if there is no AC power or if battery
 	 * percentage is too low */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
@@ -109,7 +113,9 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 			     "unless forced ");
 		return FALSE;
 	}
-	if (current_level < fu_context_get_battery_threshold (ctx)) {
+	if (fu_context_get_battery_threshold(ctx) != FU_BATTERY_VALUE_INVALID &&
+	    current_level != FU_BATTERY_VALUE_INVALID &&
+	    current_level < fu_context_get_battery_threshold(ctx)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW,
