@@ -675,6 +675,35 @@ fu_util_display_current_message (FuUtilPrivate *priv)
 }
 
 static gboolean
+fu_util_download(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	g_autofree gchar *basename = NULL;
+	g_autoptr(GBytes) blob = NULL;
+
+	/* one argument required */
+	if (g_strv_length(values) != 1) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	blob = fwupd_client_download_bytes(priv->client,
+					   values[0],
+					   priv->download_flags,
+					   priv->cancellable,
+					   error);
+	if (blob == NULL)
+		return FALSE;
+	basename = g_path_get_basename(values[0]);
+	return g_file_set_contents(basename,
+				   g_bytes_get_data(blob, NULL),
+				   g_bytes_get_size(blob),
+				   error);
+}
+
+static gboolean
 fu_util_install (FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *id;
@@ -3344,6 +3373,13 @@ main (int argc, char *argv[])
 		     /* TRANSLATORS: command description */
 		     _("Get all enabled plugins registered with the system"),
 		     fu_util_get_plugins);
+	fu_util_cmd_array_add(cmd_array,
+			      "download",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("LOCATION"),
+			      /* TRANSLATORS: command description */
+			      _("Download a file"),
+			      fu_util_download);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
