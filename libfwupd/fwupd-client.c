@@ -4395,6 +4395,7 @@ fwupd_client_download_http (FwupdClient *self,
 {
 	CURLcode res;
 	gchar errbuf[CURL_ERROR_SIZE] = { '\0' };
+	glong status_code = 0;
 	g_autoptr(GByteArray) buf = g_byte_array_new ();
 
 	fwupd_client_set_status (self, FWUPD_STATUS_DOWNLOADING);
@@ -4405,16 +4406,6 @@ fwupd_client_download_http (FwupdClient *self,
 	res = curl_easy_perform (curl);
 	fwupd_client_set_status (self, FWUPD_STATUS_IDLE);
 	if (res != CURLE_OK) {
-		glong status_code = 0;
-		curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &status_code);
-		g_debug ("status-code was %ld", status_code);
-		if (status_code == 429) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "Failed to download due to server limit");
-			return NULL;
-		}
 		if (errbuf[0] != '\0') {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -4430,6 +4421,26 @@ fwupd_client_download_http (FwupdClient *self,
 			     curl_easy_strerror (res));
 		return NULL;
 	}
+
+	/* check for server limit */
+	curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status_code);
+	g_debug("status-code was %ld", status_code);
+	if (status_code == 429) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "Failed to download due to server limit");
+		return NULL;
+	}
+	if (status_code >= 400) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "Failed to download, server response was %u",
+			    (guint)status_code);
+		return NULL;
+	}
+
 	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
 }
 
