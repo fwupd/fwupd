@@ -13,7 +13,7 @@ if [ ! -f "$SETTINGS_FILE" ]; then
 fi
 
 #if interactive install build deps
-if [ -n "$PS1" ] || [[ $- == *i* ]] || [ -f /dev/.cros_milestone ]; then
+if [ -t 2 ]; then
     read -p  "Install build dependencies? (y/n) " question
     if [ "$question" = "y" ]; then
         DEPS=$(./contrib/ci/generate_dependencies.py)
