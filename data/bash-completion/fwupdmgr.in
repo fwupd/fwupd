@@ -6,6 +6,7 @@ _fwupdmgr_cmd_list=(
 	'clear-results'
 	'disable-remote'
 	'downgrade'
+	'download'
 	'enable-remote'
 	'get-approved-firmware'
 	'get-blocked-firmware'
