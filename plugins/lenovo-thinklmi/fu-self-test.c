@@ -100,7 +100,6 @@ fu_plugin_lenovo_thinklmi_bootorder_locked (gconstpointer user_data)
 
 	dev = fu_test_probe_fake_esrt (self);
 	fu_plugin_runner_device_register(self->plugin_lenovo_thinklmi, dev);
-	g_assert_nonnull (fu_device_get_update_error (dev));
 	g_assert_true (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 }
 
@@ -117,7 +116,6 @@ fu_plugin_lenovo_thinklmi_bootorder_unlocked (gconstpointer user_data)
 
 	dev = fu_test_probe_fake_esrt (self);
 	fu_plugin_runner_device_register(self->plugin_lenovo_thinklmi, dev);
-	g_assert_null (fu_device_get_update_error (dev));
 	g_assert_true (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE));
 }
 
