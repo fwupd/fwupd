@@ -127,6 +127,14 @@ fwupd_remote_to_json (FwupdRemote *self, JsonBuilder *builder)
 	fwupd_common_json_add_stringv (builder, "OrderBefore", priv->order_before);
 }
 
+static gchar *
+fwupd_strdup_nonempty(const gchar *text)
+{
+	if (text == NULL || text[0] == '\0')
+		return NULL;
+	return g_strdup(text);
+}
+
 static void
 fwupd_remote_set_username (FwupdRemote *self, const gchar *username)
 {
@@ -379,26 +387,28 @@ static void
 fwupd_remote_set_report_uri (FwupdRemote *self, const gchar *report_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_autofree gchar *report_uri_safe = fwupd_strdup_nonempty(report_uri);
 
 	/* not changed */
-	if (g_strcmp0 (priv->report_uri, report_uri) == 0)
+	if (g_strcmp0(priv->report_uri, report_uri_safe) == 0)
 		return;
 
 	g_free (priv->report_uri);
-	priv->report_uri = g_strdup (report_uri);
+	priv->report_uri = g_steal_pointer(&report_uri_safe);
 }
 
 static void
 fwupd_remote_set_security_report_uri (FwupdRemote *self, const gchar *security_report_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
+	g_autofree gchar *security_report_uri_safe = fwupd_strdup_nonempty(security_report_uri);
 
 	/* not changed */
-	if (g_strcmp0 (priv->security_report_uri, security_report_uri) == 0)
+	if (g_strcmp0(priv->security_report_uri, security_report_uri_safe) == 0)
 		return;
 
 	g_free (priv->security_report_uri);
-	priv->security_report_uri = g_strdup (security_report_uri);
+	priv->security_report_uri = g_steal_pointer(&security_report_uri_safe);
 }
 
 /**
