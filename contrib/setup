@@ -18,6 +18,8 @@ setup_deps()
             sudo dnf install $DEPS
         elif [ "$OS" = "arch" ]; then
             pacman -Syu --noconfirm --needed $DEPS
+        elif [ "$OS" = "void" ]; then
+            xbps-install -Syu $DEPS
         fi
     fi
 }
@@ -55,10 +57,15 @@ setup_precommit()
 #if interactive install build deps and prepare environment
 if [ -t 2 ]; then
     OS=$(python3 -c "import distro; print(distro.linux_distribution()[0].split()[0].lower())")
-    if [ "$OS" = "debian" ] || [ "$OS" = "ubuntu" ] || [ "$OS" = "fedora" ] || [ "$OS" = "arch" ]; then
-        setup_deps $OS
-        setup_run_dev
-    fi
+    case $OS in
+        debian|ubuntu|arch|fedora)
+            setup_deps $OS
+            setup_run_dev
+            ;;
+        void)
+            setup_deps $OS
+            ;;
+    esac
     setup_vscode
 fi
 
