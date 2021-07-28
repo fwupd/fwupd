@@ -8,7 +8,8 @@ cleanup ()
 {
     sudo rm -f /etc/dbus-1/system-local.conf \
                /usr/share/polkit-1/actions/org.freedesktop.fwupd.policy \
-               /usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
+               /usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules \
+               /etc/grub.d/35_fwupd
 }
 
 install ()
@@ -24,6 +25,7 @@ EOF
                 /usr/share/polkit-1/actions/org.freedesktop.fwupd.policy
     sudo ln -s $1/polkit-1/rules.d/org.freedesktop.fwupd.rules \
                 /usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
+    sudo ln -s /usr/local/etc/grub.d/35_fwupd /etc/grub.d/35_fwupd
 }
 
 if [ "$PREFIX" = "/" ]; then
