@@ -355,7 +355,7 @@ Plugin = dfu
 Flags = manifest-poll
 RemoveDelay = 30000
 
-# Poly P30
+# Poly Studio P15
 [USB\VID_095D&PID_9290]
 Plugin = dfu
 Flags = manifest-poll
@@ -384,3 +384,33 @@ RemoveDelay = 9000
 Plugin = dfu
 Flags = manifest-poll
 RemoveDelay = 9000
+
+# Poly Studio R30
+[USB\VID_095D&PID_92B2]
+Plugin = dfu
+Flags = manifest-poll
+RemoveDelay = 60000
+[USB\VID_095D&PID_92B3]
+Plugin = dfu
+Flags = manifest-poll
+RemoveDelay = 60000
+
+# Poly Studio P5
+[USB\VID_095D&PID_9296]
+Plugin = dfu
+Flags = manifest-poll
+RemoveDelay = 9000
+[USB\VID_095D&PID_9297]
+Plugin = dfu
+Flags = manifest-poll
+RemoveDelay = 9000
+
+# Poly Studio E70
+[USB\VID_095D&PID_92A1]
+Plugin = dfu
+Flags = manifest-poll
+RemoveDelay = 90000
+[USB\VID_095D&PID_92A2]
+Plugin = dfu
+Flags = manifest-poll
+RemoveDelay = 90000
