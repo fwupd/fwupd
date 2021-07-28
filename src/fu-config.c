@@ -63,10 +63,13 @@ fu_config_reload (FuConfig *self, GError **error)
 	g_autoptr(GError) error_update_motd = NULL;
 	g_autoptr(GError) error_enumerate_all = NULL;
 
-	g_debug ("loading config values from %s", self->config_file);
-	if (!g_key_file_load_from_file (keyfile, self->config_file,
-					G_KEY_FILE_NONE, error))
-		return FALSE;
+	if (g_file_test(self->config_file, G_FILE_TEST_EXISTS)) {
+		g_debug("loading config values from %s", self->config_file);
+		if (!g_key_file_load_from_file(keyfile, self->config_file, G_KEY_FILE_NONE, error))
+			return FALSE;
+	} else {
+		g_warning("Daemon configuration %s not found", self->config_file);
+	}
 
 	/* get disabled devices */
 	g_ptr_array_set_size (self->disabled_devices, 0);
@@ -245,12 +248,8 @@ fu_config_load (FuConfig *self, GError **error)
 	/* load the main daemon config file */
 	configdir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR_PKG);
 	self->config_file = g_build_filename (configdir, "daemon.conf", NULL);
-	if (g_file_test (self->config_file, G_FILE_TEST_EXISTS)) {
-		if (!fu_config_reload (self, error))
-			return FALSE;
-	} else {
-		g_warning ("Daemon configuration %s not found", self->config_file);
-	}
+	if (!fu_config_reload(self, error))
+		return FALSE;
 
 	/* set up a notify watch */
 	file = g_file_new_for_path (self->config_file);
