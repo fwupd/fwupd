@@ -79,6 +79,7 @@ jobs:
 
   build-freebsd:
     runs-on: macos-latest
+    timeout-minutes: 20
     name: build-freebsd-package
     steps:
     - name: Checkout
