@@ -51,7 +51,7 @@ if get_option('systemd') and build_daemon
   con2.set('localstatedir', localstatedir)
   rw_directories = []
   if get_option('plugin_uefi_capsule')
-    rw_directories += ['-/boot/efi', '-/efi/EFI', '-/boot/EFI']
+    rw_directories += ['-/boot/efi', '-/efi/EFI', '-/boot/EFI', '-/boot/grub']
   endif
 
   dynamic_options = []
