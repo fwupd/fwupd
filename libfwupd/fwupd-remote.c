@@ -380,6 +380,12 @@ fwupd_remote_set_report_uri (FwupdRemote *self, const gchar *report_uri)
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 
+	if (strlen(report_uri) == 0) {
+		g_free(priv->report_uri);
+		priv->report_uri = NULL;
+		return;
+	}
+
 	/* not changed */
 	if (g_strcmp0 (priv->report_uri, report_uri) == 0)
 		return;
@@ -393,6 +399,11 @@ fwupd_remote_set_security_report_uri (FwupdRemote *self, const gchar *security_r
 {
 	FwupdRemotePrivate *priv = GET_PRIVATE (self);
 
+	if (strlen(security_report_uri) == 0) {
+		g_free(priv->security_report_uri);
+		priv->security_report_uri = NULL;
+		return;
+	}
 	/* not changed */
 	if (g_strcmp0 (priv->security_report_uri, security_report_uri) == 0)
 		return;
