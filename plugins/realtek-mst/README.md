@@ -14,6 +14,9 @@ identified partially through the presence of Realtek's OUI in the Branch
 Device OUI fields of DPCD (DisplayPort Configuration Data), they do not have
 unique Device Identification strings.
 
+This plugin was neither written, verified, supported or endorsed by Realtek
+Semiconductor Corp.
+
 ## Firmware Format
 
 The daemon will decompress the cabinet archive and extract a firmware blob in
