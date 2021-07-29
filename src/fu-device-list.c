@@ -928,6 +928,12 @@ fu_device_list_wait_for_replug (FuDeviceList *self, GError **error)
 		g_autoptr(GPtrArray) device_ids = g_ptr_array_new_with_free_func (g_free);
 		g_autofree gchar *device_ids_str = NULL;
 
+		/* dump to console */
+		if (g_getenv("FWUPD_DEVICE_LIST_VERBOSE") != NULL) {
+			g_autofree gchar *str = fu_device_list_to_string(self);
+			g_debug("\n%s", str);
+		}
+
 		/* unset and build error string */
 		for (guint i = 0; i < devices_wfr2->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index (devices_wfr2, i);
