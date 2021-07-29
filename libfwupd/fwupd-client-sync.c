@@ -76,7 +76,7 @@ fwupd_client_connect_cb (GObject *source, GAsyncResult *res, gpointer user_data)
 }
 
 /**
- * fwupd_client_connect:
+ * fwupd_client_connect: (skip)
  * @self: a #FwupdClient
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
