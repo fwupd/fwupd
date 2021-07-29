@@ -251,7 +251,7 @@ fu_nvme_device_parse_cns (FuNvmeDevice *self, const guint8 *buf, gsize sz, GErro
 static void
 fu_nvme_device_dump (const gchar *title, const guint8 *buf, gsize sz)
 {
-	if (g_getenv ("FWPUD_NVME_VERBOSE") == NULL)
+	if (g_getenv ("FWUPD_NVME_VERBOSE") == NULL)
 		return;
 	g_print ("%s (%" G_GSIZE_FORMAT "):", title, sz);
 	for (gsize i = 0; i < sz; i++) {
