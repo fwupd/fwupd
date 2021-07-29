@@ -38,6 +38,23 @@ def _get_cache_file(fn):
 
 
 class DeviceTest:
+    def _print_request(self, req):
+        self._info("ID: {}".format(req.get_id()))
+        self._info("Message: {}".format(req.get_message()))
+
+    def _device_request_cb(self, client, req):
+        if req.get_kind() == Fwupd.RequestKind.IMMEDIATE:
+            self._print_request(req)
+            return
+        if req.get_kind() == Fwupd.RequestKind.POST:
+            self._request_queue.append(req)
+
+    def _percentage_cb(self, client, _gparamstring):
+        self._info("Percentage: {}".format(client.get_percentage()))
+
+    def _status_cb(self, client, _gparamstring):
+        self._info("Status: {}".format(Fwupd.status_to_string(client.get_status())))
+
     def __init__(self, obj):
         self.client = Fwupd.Client.new()
         self.name = obj.get("name", "Unknown")
@@ -47,6 +64,17 @@ class DeviceTest:
         self.interactive = obj.get("interactive", False)
         self.disabled = obj.get("disabled", False)
         self.protocol = obj.get("protocol", None)
+        self._request_queue = []
+
+        # use a custom main context
+        main_ctx = GLib.MainContext.new()
+        self.client.set_main_context(main_ctx)
+
+        # support DeviceRequest
+        self.client.set_feature_flags(Fwupd.FeatureFlags.REQUESTS)
+        self.client.connect("device-request", self._device_request_cb)
+        self.client.connect("notify::percentage", self._percentage_cb)
+        self.client.connect("notify::status", self._status_cb)
 
     def _info(self, msg):
         print(colored("[INFO]".ljust(10), "blue"), msg)
@@ -109,6 +137,11 @@ class DeviceTest:
                         continue
                     self._failed("Could not install: {}".format(e))
                     return
+
+                # print POST requests
+                for req in self._request_queue:
+                    self._print_request(req)
+                self._request_queue.clear()
 
                 # verify version
                 if self.has_runtime:
