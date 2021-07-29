@@ -453,6 +453,16 @@ fu_cabinet_set_container_checksum_cb (XbBuilderFixup *builder_fixup,
 	return TRUE;
 }
 
+static gboolean
+fu_common_bytes_has_nul_suffix(GBytes *data)
+{
+	gsize bufsz = 0;
+	const guint8 *buf = g_bytes_get_data(data, &bufsz);
+	if (bufsz > 0 && buf[bufsz - 1] == '\0')
+		return TRUE;
+	return FALSE;
+}
+
 /* adds each GCabFile to the silo */
 static gboolean
 fu_cabinet_build_silo_file (FuCabinet *self,
@@ -461,6 +471,7 @@ fu_cabinet_build_silo_file (FuCabinet *self,
 			    GError **error)
 {
 	GBytes *blob;
+	g_autoptr(GBytes) blob_fixed = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
 	g_autoptr(XbBuilderNode) bn_info = xb_builder_node_new ("info");
@@ -485,10 +496,15 @@ fu_cabinet_build_silo_file (FuCabinet *self,
 				     "no GBytes from GCabFile");
 		return FALSE;
 	}
-	if (!xb_builder_source_load_bytes (source,
-					   blob,
-					   XB_BUILDER_SOURCE_FLAG_NONE,
-					   &error_local)) {
+	if (fu_common_bytes_has_nul_suffix(blob)) {
+		blob_fixed = g_bytes_new_from_bytes(blob, 0x0, g_bytes_get_size(blob) - 1);
+	} else {
+		blob_fixed = g_bytes_ref(blob);
+	}
+	if (!xb_builder_source_load_bytes(source,
+					  blob_fixed,
+					  XB_BUILDER_SOURCE_FLAG_NONE,
+					  &error_local)) {
 		g_set_error (error,
 			     FWUPD_ERROR,
 			     FWUPD_ERROR_INVALID_FILE,
