@@ -3012,6 +3012,7 @@ main (int argc, char *argv[])
 	priv->main_ctx = g_main_context_new ();
 	priv->loop = g_main_loop_new (priv->main_ctx, FALSE);
 	priv->progressbar = fu_progressbar_new ();
+	fu_progressbar_set_main_context(priv->progressbar, priv->main_ctx);
 	priv->request = fu_engine_request_new ();
 
 	/* add commands */
