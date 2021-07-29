@@ -242,6 +242,16 @@ fu_util_sigint_cb (gpointer user_data)
 #endif
 
 static void
+fu_util_setup_signal_handlers(FuUtilPrivate *priv)
+{
+#ifdef HAVE_GIO_UNIX
+	g_autoptr(GSource) source = g_unix_signal_source_new(SIGINT);
+	g_source_set_callback(source, fu_util_sigint_cb, priv, NULL);
+	g_source_attach(g_steal_pointer(&source), priv->main_ctx);
+#endif
+}
+
+static void
 fu_util_private_free (FuUtilPrivate *priv)
 {
 	if (priv->current_device != NULL)
@@ -3067,11 +3077,7 @@ main (int argc, char *argv[])
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new ();
-#ifdef HAVE_GIO_UNIX
-	g_unix_signal_add_full (G_PRIORITY_DEFAULT,
-				SIGINT, fu_util_sigint_cb,
-				priv, NULL);
-#endif
+	fu_util_setup_signal_handlers(priv);
 	g_signal_connect (priv->cancellable, "cancelled",
 			  G_CALLBACK (fu_util_cancelled_cb), priv);
 
