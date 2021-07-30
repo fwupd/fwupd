@@ -35,6 +35,27 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.5.12" date="2021-07-30">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add support for more Poly usb devices</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Ignore a virtual ATA M.2 device</li>
+          <li>Copy the device update state when replugging</li>
+          <li>Do not assume the metainfo file is NUL-terminated</li>
+          <li>Do not save invalid files on LVFS server error</li>
+          <li>Add the alternate 8BitDo vendor name into the allowlist</li>
+          <li>Use eMMC sysattr insted of udev attr lookup for device name</li>
+          <li>Fix the progressbar spinner to actually work</li>
+          <li>Fix a SuperIO buffer overread when using --verbose</li>
+          <li>Fix enumeration of the synaptics-prometheus config child</li>
+          <li>Fix the ctrl+c SIGINT signal handling</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.11" date="2021-06-29">
       <description>
         <p>This release adds the following features:</p>
