@@ -3977,7 +3977,9 @@ fu_device_open (FuDevice *self, GError **error)
 {
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-	if (fu_device_has_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN)) {
+
+	/* use parent */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN)) {
 		FuDevice *parent = fu_device_get_parent (self);
 		if (parent == NULL) {
 			g_set_error_literal (error,
