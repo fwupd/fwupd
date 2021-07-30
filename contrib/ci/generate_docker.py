@@ -64,7 +64,7 @@ with open("Dockerfile", "w") as wfd:
             elif OS == "arch":
                 wfd.write("RUN pacman -Syu --noconfirm --needed\\\n")
             elif OS == "void":
-                wfd.write("RUN xbps-install -Suy xbps && xbps-install -uy\\\n")
+                wfd.write("RUN xbps-install -Suy xbps \\\n")
             for i in range(0, len(deps)):
                 if i < len(deps) - 1:
                     wfd.write("\t%s \\\n" % deps[i])
