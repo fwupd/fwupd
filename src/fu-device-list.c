@@ -604,6 +604,23 @@ fu_device_list_clear_wait_for_replug (FuDeviceList *self, FuDeviceItem *item)
 }
 
 static void
+fu_device_incorporate_update_state(FuDevice *self, FuDevice *donor)
+{
+	if (fu_device_get_update_error(donor) != NULL && fu_device_get_update_error(self) == NULL) {
+		const gchar *update_error = fu_device_get_update_error(donor);
+		g_debug("copying update error %s to new device", update_error);
+		fu_device_set_update_error(self, update_error);
+	}
+	if (fu_device_get_update_state(donor) != FWUPD_UPDATE_STATE_UNKNOWN &&
+	    fu_device_get_update_state(self) == FWUPD_UPDATE_STATE_UNKNOWN) {
+		FwupdUpdateState update_state = fu_device_get_update_state(donor);
+		g_debug("copying update state %s to new device",
+			fwupd_update_state_to_string(update_state));
+		fu_device_set_update_state(self, update_state);
+	}
+}
+
+static void
 fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device)
 {
 	guint64 private_flags;
@@ -668,13 +685,7 @@ fu_device_list_replace (FuDeviceList *self, FuDeviceItem *item, FuDevice *device
 	}
 
 	/* copy the update state if known */
-	if (fu_device_get_update_state (item->device) != FWUPD_UPDATE_STATE_UNKNOWN &&
-	    fu_device_get_update_state (device) == FWUPD_UPDATE_STATE_UNKNOWN) {
-		FwupdUpdateState update_state = fu_device_get_update_state (item->device);
-		g_debug ("copying update state %s to new device",
-			 fwupd_update_state_to_string (update_state));
-		fu_device_set_update_state (device, update_state);
-	}
+	fu_device_incorporate_update_state(item->device, device);
 
 	/* assign the new device */
 	g_set_object (&item->device_old, item->device);
@@ -728,8 +739,10 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 			       fu_device_get_id (item->device)) == 0) {
 			g_debug ("found existing device %s",
 				 fu_device_get_id (device));
-			if (device != item->device)
+			if (device != item->device) {
+				fu_device_incorporate_update_state(device, item->device);
 				fu_device_list_item_set_device (item, device);
+			}
 			fu_device_list_clear_wait_for_replug (self, item);
 			fu_device_list_emit_device_changed (self, device);
 			return;
@@ -741,6 +754,7 @@ fu_device_list_add (FuDeviceList *self, FuDevice *device)
 			       fu_device_get_id (item->device_old)) == 0) {
 			g_debug ("found old device %s, swapping",
 				 fu_device_get_id (device));
+			fu_device_incorporate_update_state(device, item->device);
 			g_set_object (&item->device_old, item->device);
 			fu_device_list_item_set_device (item, device);
 			fu_device_list_clear_wait_for_replug (self, item);
