@@ -1,5 +1,5 @@
 #!/bin/sh
-
+set -x
 GITHUB_SHA=
 GITHUB_REPOSITORY=
 GITHUB_REPOSITORY_OWNER=
@@ -61,5 +61,6 @@ make makeplist > plist
 sed -i "" "1d" plist
 make package
 make install
+find /usr/ports/sysutils/fwupd
 cp /usr/ports/sysutils/fwupd/work/pkg/fwupd*.txz \
 ~/work/fwupd/fwupd/fwupd-freebsd-${GITHUB_TAG}-${GITHUB_SHA}.txz || exit 1
