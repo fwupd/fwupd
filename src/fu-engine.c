@@ -2439,7 +2439,6 @@ fu_engine_install_release (FuEngine *self,
 		if (tmp != NULL)
 			fwupd_release_add_checksum (release_tmp, tmp);
 		fwupd_release_set_version (release_tmp, version_rel);
-		fu_device_set_update_state (device, FWUPD_UPDATE_STATE_FAILED);
 		if (!fu_history_add_device (self->history, device, release_tmp, error))
 			return FALSE;
 	}
