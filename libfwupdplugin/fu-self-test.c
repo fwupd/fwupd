@@ -237,7 +237,7 @@ fu_device_open_refcount_func (void)
 	g_assert_no_error (error);
 	g_assert_true (ret);
 	ret = fu_device_close (device, &error);
-	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
 	g_assert_false (ret);
 }
 

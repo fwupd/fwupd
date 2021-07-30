@@ -203,8 +203,10 @@ fu_device_locker_new_full (gpointer device,
 	if (!self->open_func (device, error)) {
 		g_autoptr(GError) error_local = NULL;
 		if (!self->close_func (device, &error_local)) {
-			g_debug ("ignoring close error on aborted open: %s",
-				 error_local->message);
+			if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+				g_debug("ignoring close error on aborted open: %s",
+					error_local->message);
+			}
 		}
 		return NULL;
 	}
