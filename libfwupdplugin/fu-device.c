@@ -3993,6 +3993,34 @@ fu_device_open (FuDevice *self, GError **error)
 	return fu_device_open_internal (self, error);
 }
 
+static gboolean
+fu_device_close_internal(FuDevice *self, GError **error)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* not yet open */
+	if (priv->open_refcount == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "cannot close device, refcount already zero");
+		return FALSE;
+	}
+	if (!g_atomic_int_dec_and_test(&priv->open_refcount))
+		return TRUE;
+
+	/* subclassed */
+	if (klass->close != NULL) {
+		if (!klass->close(self, error))
+			return FALSE;
+	}
+
+	/* success */
+	fu_device_remove_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_IS_OPEN);
+	return TRUE;
+}
+
 /**
  * fu_device_close:
  * @self: a #FuDevice
@@ -4019,32 +4047,22 @@ fu_device_open (FuDevice *self, GError **error)
 gboolean
 fu_device_close (FuDevice *self, GError **error)
 {
-	FuDeviceClass *klass = FU_DEVICE_GET_CLASS (self);
-	FuDevicePrivate *priv = GET_PRIVATE (self);
-
 	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
-	/* not yet open */
-	if (priv->open_refcount == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "cannot close device, refcount already zero");
-		return FALSE;
-	}
-	if (!g_atomic_int_dec_and_test (&priv->open_refcount))
-		return TRUE;
-
-	/* subclassed */
-	if (klass->close != NULL) {
-		if (!klass->close (self, error))
+	/* use parent */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN)) {
+		FuDevice *parent = fu_device_get_parent(self);
+		if (parent == NULL) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no parent device");
 			return FALSE;
+		}
+		return fu_device_close_internal(parent, error);
 	}
-
-	/* success */
-	fu_device_remove_internal_flag (self, FU_DEVICE_INTERNAL_FLAG_IS_OPEN);
-	return TRUE;
+	return fu_device_close_internal(self, error);
 }
 
 /**
