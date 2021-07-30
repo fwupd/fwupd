@@ -1593,7 +1593,7 @@ fwupd_device_incorporate (FwupdDevice *self, FwupdDevice *donor)
 		fwupd_device_set_flashes_left (self, priv_donor->flashes_left);
 	if (priv->install_duration == 0)
 		fwupd_device_set_install_duration (self, priv_donor->install_duration);
-	if (priv->update_state == 0)
+	if (priv->update_state == FWUPD_UPDATE_STATE_UNKNOWN)
 		fwupd_device_set_update_state (self, priv_donor->update_state);
 	if (priv->description == NULL)
 		fwupd_device_set_description (self, priv_donor->description);
