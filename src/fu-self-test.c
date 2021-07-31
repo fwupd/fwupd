@@ -773,6 +773,54 @@ fu_engine_requirements_version_format_func (gconstpointer user_data)
 }
 
 static void
+fu_engine_requirements_only_upgrade_func(gconstpointer user_data)
+{
+	FuTest *self = (FuTest *)user_data;
+	gboolean ret;
+	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
+	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(XbNode) component = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+	const gchar *xml =
+	    "<component>"
+	    "  <provides>"
+	    "    <firmware type=\"flashed\">12345678-1234-1234-1234-123456789012</firmware>"
+	    "  </provides>"
+	    "  <releases>"
+	    "    <release version=\"1.2.3\"/>"
+	    "  </releases>"
+	    "</component>";
+
+	/* set up a dummy device */
+	fu_device_set_version(device, "1.2.4");
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
+	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
+
+	/* make the component require three things */
+	silo = xb_silo_new_from_xml(xml, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(silo);
+	component = xb_silo_query_first(silo, "component", &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(component);
+
+	/* check this fails */
+	task = fu_install_task_new(device, component);
+	ret = fu_engine_check_requirements(engine,
+					   request,
+					   task,
+					   FWUPD_INSTALL_FLAG_ALLOW_OLDER,
+					   &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
+	g_assert_nonnull(g_strstr_len(error->message, -1, "Device only supports version upgrades"));
+	g_assert(!ret);
+}
+
+static void
 fu_engine_requirements_sibling_device_func (gconstpointer user_data)
 {
 	FuTest *self = (FuTest *) user_data;
@@ -3551,6 +3599,9 @@ main (int argc, char **argv)
 			      fu_engine_requirements_device_plain_func);
 	g_test_add_data_func ("/fwupd/engine{requirements-version-format}", self,
 			      fu_engine_requirements_version_format_func);
+	g_test_add_data_func("/fwupd/engine{requirements-only-upgrade}",
+			     self,
+			     fu_engine_requirements_only_upgrade_func);
 	g_test_add_data_func ("/fwupd/engine{device-auto-parent-id}", self,
 			      fu_engine_device_parent_id_func);
 	g_test_add_data_func ("/fwupd/engine{device-auto-parent-guid}", self,

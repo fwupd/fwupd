@@ -462,6 +462,14 @@ typedef enum {
  */
 #define FWUPD_DEVICE_FLAG_WILDCARD_INSTALL	(1llu << 42)
 /**
+ * FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE:
+ *
+ * The device firmware can only be updated to a newer version and never downgraded or reinstalled.
+ *
+ * Since 1.6.2
+ */
+#define FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE (1llu << 43)
+/**
  * FWUPD_DEVICE_FLAG_UNKNOWN:
  *
  * This flag is not defined, this typically will happen from mismatched
