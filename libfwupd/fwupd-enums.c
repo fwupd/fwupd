@@ -195,6 +195,8 @@ fwupd_device_flag_to_string (FwupdDeviceFlags device_flag)
 		return "backup-before-install";
 	if (device_flag == FWUPD_DEVICE_FLAG_WILDCARD_INSTALL)
 		return "wildcard-install";
+	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE)
+		return "only-version-upgrade";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -301,6 +303,8 @@ fwupd_device_flag_from_string (const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_BACKUP_BEFORE_INSTALL;
 	if (g_strcmp0 (device_flag, "wildcard-install") == 0)
 		return FWUPD_DEVICE_FLAG_WILDCARD_INSTALL;
+	if (g_strcmp0(device_flag, "only-version-upgrade") == 0)
+		return FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

@@ -1185,6 +1185,11 @@ fu_util_device_flag_to_string (guint64 device_flag)
 		 * e.g. the EFI driver for a given network card cannot be different */
 		return _("All devices of the same type will be updated at the same time");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE) {
+		/* TRANSLATORS: some devices can only be updated to a new semver and cannot
+		 * be downgraded or reinstalled with the sexisting version */
+		return _("Only version upgrades are allowed");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
 		/* skip */
 		return NULL;
