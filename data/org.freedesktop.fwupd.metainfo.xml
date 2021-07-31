@@ -14,7 +14,7 @@
       apply updates, the command-line tool or the D-Bus interface directly.
     </p>
     <p>
-      The fwupd process is a simple daemon to allow session software to update
+      The fwupd process is a system daemon to allow session software to update
       device firmware on your local machine.
       It is designed for desktops, but this project is also usable on phones,
       tablets and on headless servers.
@@ -35,6 +35,64 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.6.2" date="2021-08-02">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a clang-format file and helper tool</li>
+          <li>Add a plugin to check Lenovo firmware settings</li>
+          <li>Add initial support for the powerd daemon</li>
+          <li>Add support for CapsuleOnDisk</li>
+          <li>Add support for installing UEFI updates from GRUB</li>
+          <li>Add support for soft-requirements that can be ignored with --force</li>
+          <li>Allow discovery of Redfish BMCs specified by VID-PID or MAC</li>
+          <li>Allow the daemon to request interactive action from the end user</li>
+          <li>Automatically connect the BMC network interface at startup</li>
+          <li>Show the build timestamp if set on the device</li>
+          <li>Show the user how to switch out of Wacom tablet Android-mode</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add the alternate vendor name into the 8BitDo allowlist</li>
+          <li>Allow multiple devices to set WAIT_FOR_REPLUG</li>
+          <li>Allow the client to watch for more property changes</li>
+          <li>Always ensure the SuperIO version string is NUL terminated</li>
+          <li>Automatically clear the update error as required</li>
+          <li>Do not assume the metainfo file is NUL-terminated</li>
+          <li>Do not save invalid files on LVFS server error</li>
+          <li>Fix a VLI regression in enumerating the PD device</li>
+          <li>Fix a VLI regression when installing VL820Q7 firmware</li>
+          <li>Fix enumeration of the Synaptics Prometheus config child</li>
+          <li>Fix parsing Redfish USB/PCI network VID/PIDs</li>
+          <li>Fix the fwupdmgr progressbar spinner to actually work</li>
+          <li>Fix version number for legacy Wacom Bluetooth modules</li>
+          <li>Ignore virtual M.2 ATA devices</li>
+          <li>Preserve NEEDS_REBOOT on successful update</li>
+          <li>Prevent a corrupt PHAT table from allocating lots of memory</li>
+          <li>Read the Redfish SMBIOS table when required</li>
+          <li>Remove the vendor string from the device name where required</li>
+          <li>Save the update state to the database correctly all of the time</li>
+          <li>Set the update state and error in more cases</li>
+          <li>Switch from sysctl to ioctl for ESRT on FreeBSD</li>
+          <li>Try reading from /sys/class/dmi if SMBIOS direct access fails</li>
+          <li>Watch for children added or removed after setup has been completed</li>
+          <li>Work around a XCC-ism on Lenovo hardware</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>ModemManager devices supporting Firehose or MBIM QDU</li>
+          <li>More models of RTS54HUB</li>
+          <li>More Poly DFU devices</li>
+          <li>Parade LSPCON</li>
+          <li>PixArt receiver and wireless hardware</li>
+          <li>Realtek MST with RTD2142</li>
+          <li>SuperIO IT5570</li>
+          <li>USB4 Dell dock</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.6.1" date="2021-06-14">
       <description>
         <p>

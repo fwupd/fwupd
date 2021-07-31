@@ -4,7 +4,7 @@
 pkgname=fwupd
 pkgver=dummy
 pkgrel=1
-pkgdesc='A simple daemon to allow session software to update firmware'
+pkgdesc='A system daemon to allow session software to update firmware'
 arch=('i686' 'x86_64')
 url='https://github.com/fwupd/fwupd'
 license=('GPL2')
