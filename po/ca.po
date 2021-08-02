@@ -4,7 +4,7 @@
 #
 # Translators:
 # Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2021
-# Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2017
+# Robert Antoni Buj i Gelonch <rbuj@fedoraproject.org>, 2017
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -878,10 +878,6 @@ msgstr "El nom del fitxer és obligatori"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtra amb un conjunt d'etiquetes del dispositiu amb un prefix «~» per a excloure, p. ex., «internal,~needs-reboot»"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Agent de microprogramari"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "URI base del microprogramari"
@@ -961,10 +957,6 @@ msgstr "GUID"
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Obté totes les etiquetes admeses per «fwupd»."
-
-#. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Obté tots els dispositius i possibles llançaments."
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -1367,10 +1359,6 @@ msgstr "Empra només IPFS quan es baixin els fitxers"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Preferència sobre el camí ESP predeterminat"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Anul·la els avisos i força l'acció"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
@@ -1899,10 +1887,6 @@ msgstr "Aquesta eina permet que un administrador consulti i controli el dimoni �
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Aquesta eina permet a un administrador usar els connectors de «fwupd» sense estar instal·lats en el sistema amfitrió."
-
-#. TRANSLATORS: CLI description
-msgid "This tool can be used from other tools and from shell scripts."
-msgstr "Aquesta eina es pot usar des d'altres eines i des de scripts de l'intèrpret d'ordres."
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"

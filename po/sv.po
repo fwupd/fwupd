@@ -8,7 +8,7 @@
 # Josef Andersson <josef.andersson@fripost.org>, 2015,2017-2018
 # Josef Andersson <l10nl18nsweja@gmail.com>, 2015,2017
 # Luna Jernberg <bittin@cafe8bitar.se>, 2020-2021
-# Sebastian Rasmussen <sebras@gmail.com>, 2019-2020
+# Sebastian Rasmussen <sebras@gmail.com>, 2018-2020
 # Sebastian Rasmussen <sebras@gmail.com>, 2018
 msgid ""
 msgstr ""
@@ -25,13 +25,13 @@ msgstr ""
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
-msgstr[0] "%.0fminut kvarstår"
+msgstr[0] "%.0f minut kvarstår"
 msgstr[1] "%.0f minuter kvarstår"
 
 #. TRANSLATORS: battery refers to the system power source
 #, c-format
 msgid "%s Battery Update"
-msgstr "%s Batteriuppdatering"
+msgstr "%s-batteriuppdatering"
 
 #. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
 #. * at system bootup
@@ -43,13 +43,13 @@ msgstr "%s CPU-mikrokodsuppdatering"
 #. * camera in the bezel or external USB webcam
 #, c-format
 msgid "%s Camera Update"
-msgstr "%s Kamerauppdatering"
+msgstr "%s-kamerauppdatering"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Secure Boot`
 #, c-format
 msgid "%s Configuration Update"
-msgstr "%s Konfigurationsuppdatering"
+msgstr "%s-konfigurationsuppdatering"
 
 #. TRANSLATORS: ME stands for Management Engine, where
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -74,7 +74,7 @@ msgstr "%s Corporate ME-uppdatering"
 #. * the first %s is the device name, e.g. 'Unifying Receiver`
 #, c-format
 msgid "%s Device Update"
-msgstr "%s Enhetsuppdatering"
+msgstr "%s-enhetsuppdatering"
 
 #. TRANSLATORS: the EC is typically the keyboard controller chip,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -85,7 +85,7 @@ msgstr "%s inbäddad styrenhetsuppdatering"
 #. TRANSLATORS: Keyboard refers to an input device for typing
 #, c-format
 msgid "%s Keyboard Update"
-msgstr "%s Tangentbordsuppdatering"
+msgstr "%s-tangentbordsuppdatering"
 
 #. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -96,18 +96,18 @@ msgstr "%s ME-uppdatering"
 #. TRANSLATORS: Mouse refers to a handheld input device
 #, c-format
 msgid "%s Mouse Update"
-msgstr "%s Mus uppdatering"
+msgstr "%s-musuppdatering"
 
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s System Update"
-msgstr "%s Systemuppdatering"
+msgstr "%s-systemuppdatering"
 
 #. TRANSLATORS: TPM refers to a Trusted Platform Module
 #, c-format
 msgid "%s TPM Update"
-msgstr "%s TPM uppdatering"
+msgstr "%s TPM-uppdatering"
 
 #. TRANSLATORS: the Thunderbolt controller is a device that
 #. * has other high speed Thunderbolt devices plugged into it;
@@ -119,7 +119,7 @@ msgstr "%s Thunderbolt-styrenhetsuppdatering"
 #. TRANSLATORS: TouchPad refers to a flat input device
 #, c-format
 msgid "%s Touchpad Update"
-msgstr "%s Pekplatta uppdatering"
+msgstr "%s-pekplatteuppdatering"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -127,7 +127,7 @@ msgstr "%s Pekplatta uppdatering"
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Update"
-msgstr "%s Uppdatering"
+msgstr "%s-uppdatering"
 
 #. TRANSLATORS: warn the user before updating, %1 is a device name
 #, c-format
@@ -137,22 +137,22 @@ msgstr "%s och alla anslutna enheter kanske inte går att använda under uppdate
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
-msgstr "%s tillverkningsläge"
+msgstr "%s-tillverkningsläge"
 
 #. TRANSLATORS: warn the user before updating, %1 is a device name
 #, c-format
 msgid "%s must remain connected for the duration of the update to avoid damage."
-msgstr "%s måste förbli anslutna under tiden som uppgraderingen pågår för att undvika skador."
+msgstr "%s måste förbli anslutna under tiden som uppdateringen pågår för att undvika skador."
 
 #. TRANSLATORS: warn the user before updating, %1 is a machine name
 #, c-format
 msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
-msgstr "%s måste förbli ansluten till en strömkälla under tiden som uppgraderingen pågår för att undvika skada."
+msgstr "%s måste förbli ansluten till en strömkälla under tiden som uppdateringen pågår för att undvika skada."
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s override"
-msgstr "%s åsidosätt"
+msgstr "%s-åsidosättning"
 
 #. TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
 #, c-format
@@ -162,7 +162,7 @@ msgstr "%s v%s"
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s version"
-msgstr "%s version"
+msgstr "%s-version"
 
 #. TRANSLATORS: duration in days!
 #, c-format
@@ -174,8 +174,8 @@ msgstr[1] "%u dagar"
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
-msgstr[0] "%u enhet har en fastprogramvaruuppdatering tillgänglig."
-msgstr[1] "%u enheter har en fastprogramvaruuppdatering tillgänglig."
+msgstr[0] "%u enhet har en uppgradering för fast programvara tillgänglig."
+msgstr[1] "%u enheter har en uppgradering för fast programvara tillgänglig."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -195,7 +195,7 @@ msgstr[1] "%u lokala enheter stöds"
 #, c-format
 msgid "%u minute"
 msgid_plural "%u minutes"
-msgstr[0] "%uminut"
+msgstr[0] "%u minut"
 msgstr[1] "%u minuter"
 
 #. TRANSLATORS: duration in seconds
@@ -234,7 +234,7 @@ msgstr "Ålder"
 
 #. TRANSLATORS: should the remote still be enabled
 msgid "Agree and enable the remote?"
-msgstr "Samtyck och aktivera fjärren?"
+msgstr "Samtyck och aktivera fjärrkällan?"
 
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
@@ -247,11 +247,11 @@ msgstr "Tillåt att nedgradera versioner av fast programvara"
 
 #. TRANSLATORS: command line option
 msgid "Allow reinstalling existing firmware versions"
-msgstr "Tillåt ominstallation av existerande fastprogramvaruversioner"
+msgstr "Tillåt ominstallation av befintliga versioner av fast programvara"
 
 #. TRANSLATORS: command line option
 msgid "Allow switching firmware branch"
-msgstr "Tillåt att byta fast programvara gren"
+msgstr "Tillåt att byta gren för fast programvara"
 
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
@@ -298,7 +298,7 @@ msgstr "Fäst till fast programvaruläge"
 
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
-msgstr "Autentiserar..."
+msgstr "Autentiserar…"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
@@ -310,7 +310,7 @@ msgstr "Autentisering krävs för att nedgradera den fasta programvaran på denn
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
-msgstr "Autenticering krävs för att få ändra en konfigurerad fjärrkälla som används för fast programvaru-uppdateringar."
+msgstr "Autentisering krävs för att ändra en konfigurerad fjärrkälla som används för uppdateringar av fast programvara"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify daemon configuration"
@@ -318,7 +318,7 @@ msgstr "Autentisering krävs för att modifiera demonkonfiguration"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to set the list of approved firmware"
-msgstr "Autentisering krävs för att sätta listan över godkända fasta progrmvaror"
+msgstr "Autentisering krävs för att sätta listan över godkänd fast programvara"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to sign data using the client certificate"
@@ -326,7 +326,7 @@ msgstr "Autentisering krävs för att signera data med klientcertifikatet"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to switch to the new firmware version"
-msgstr "Authentisering krävs för att växla till den nya fasta programvaruversionen"
+msgstr "Autentisering krävs för att växla till den nya fasta programvaruversionen"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to unlock a device"
@@ -342,7 +342,7 @@ msgstr "Autentisering krävs för att uppdatera den fasta programvaran för denn
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the stored checksums for the device"
-msgstr "Autentisering krävs för att uppdatera den lagrade kontrollsumman för enheten"
+msgstr "Autentisering krävs för att uppdatera lagrade kontrollsummor för enheten"
 
 #. TRANSLATORS: Boolean value to automatically send reports
 msgid "Automatic Reporting"
@@ -350,22 +350,30 @@ msgstr "Automatisk rapportering"
 
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
-msgstr "Ladda upp automatiskt varje gång?"
+msgstr "Skicka automatiskt varje gång?"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "BUILDER-XML FILENAME-DST"
+msgstr "BYGGAR-XML FILNAMN-MÅL"
 
 msgid "BYTES"
 msgstr "BYTE"
 
+#. TRANSLATORS: command description
+msgid "Bind new kernel driver"
+msgstr "Bind ny kärndrivrutin"
+
 #. TRANSLATORS: there follows a list of hashes
 msgid "Blocked firmware files:"
-msgstr "Blockerad fast programvaru fil:"
+msgstr "Blockerade fast programvarufiler:"
 
 #. TRANSLATORS: we will not offer this firmware to the user
 msgid "Blocking firmware:"
-msgstr "Blockera fast programvara: "
+msgstr "Blockera fast programvara:"
 
 #. TRANSLATORS: command description
 msgid "Blocks a specific firmware from being installed"
-msgstr "Blockerar en specifik fastprogramvara från att installeras"
+msgstr "Blockerar en specifik fast programvara från att installeras"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
@@ -377,11 +385,15 @@ msgstr "Gren"
 
 #. TRANSLATORS: command description
 msgid "Build a firmware file"
-msgstr "Bygg en fast programvaru fil"
+msgstr "Bygg en fast programvarufil"
 
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Bygg fast programvara med en sandlåda"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "KONTROLLSUMMA1[,KONTROLLSUMMA2][,KONTROLLSUMMA3]"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -397,7 +409,7 @@ msgstr "Kan inte tillämpa eftersom dbx-uppdatering redan har tillämpats."
 
 #. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
 msgid "Cannot apply updates on live media"
-msgstr "Kan inte tillämpa uppdateringar på live media"
+msgstr "Kan inte tillämpa uppdateringar på live-media"
 
 #. TRANSLATORS: this is when the daemon state changes
 msgid "Changed"
@@ -405,7 +417,7 @@ msgstr "Ändrad"
 
 #. TRANSLATORS: command description
 msgid "Checks cryptographic hash matches firmware"
-msgstr "Kontrollerar att kryptografisk hash matchar fastprogramvara"
+msgstr "Kontrollerar att kryptografisk hash matchar fast programvara"
 
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
@@ -422,7 +434,7 @@ msgstr "Välj en enhet:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a firmware type:"
-msgstr "Välj en typ av fastprogravara:"
+msgstr "Välj en typ av fast programvara:"
 
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a release:"
@@ -446,7 +458,7 @@ msgstr "Kommandot hittades inte"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
-msgstr "Konvertera en fast programvaru fil"
+msgstr "Konvertera en fast programvarufil"
 
 #. TRANSLATORS: when the update was built
 msgid "Created"
@@ -458,11 +470,15 @@ msgstr "Kritisk"
 
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
-msgstr "Kryptografiskt hashverifiering är tillgänglig"
+msgstr "Kryptografisk hashverifiering är tillgänglig"
 
 #. TRANSLATORS: version number of current firmware
 msgid "Current version"
 msgstr "Aktuell version"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "DEVICE-ID|GUID"
+msgstr "ENHETS-ID|GUID"
 
 #. TRANSLATORS: DFU stands for device firmware update
 msgid "DFU Utility"
@@ -510,7 +526,7 @@ msgstr "Enhet ändrad:"
 
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device firmware is required to have a version check"
-msgstr "Fastprogramvara för enhet krävs för att ha en versionskontroill"
+msgstr "Fast programvara för enhet krävs för att ha en versionskontroll"
 
 #. TRANSLATORS: Is locked and can be unlocked
 msgid "Device is locked"
@@ -518,11 +534,11 @@ msgstr "Enhet är låst"
 
 #. TRANSLATORS: a version check is required for all firmware
 msgid "Device is required to install all provided releases"
-msgstr "Enhet krävs för att installera alla tillgängliga versioner"
+msgstr "Enhet krävs för att installera alla tillgängliga utgåvor"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
-msgstr "Enhet är oanvändbart under tiden som uppgraderingen pågår"
+msgstr "Enhet är oanvändbar under tiden som uppdateringen pågår"
 
 #. TRANSLATORS: this is when a device is hotplugged
 msgid "Device removed:"
@@ -534,7 +550,7 @@ msgstr "Enhet genomför uppdatering i steg"
 
 #. TRANSLATORS: there is more than one supplier of the firmware
 msgid "Device supports switching to a different branch of firmware"
-msgstr "Enheten stöder byte till en annan gren av fastprogramvara"
+msgstr "Enheten stöder byte till en annan gren av fast programvara"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -542,7 +558,7 @@ msgstr "Enhetsuppdatering kräver aktivering"
 
 #. TRANSLATORS: save the old firmware to disk before installing the new one
 msgid "Device will backup firmware before installing"
-msgstr "Enheten kommer säkerhetskopiera fastprogramvara innan den installeras"
+msgstr "Enheten kommer säkerhetskopiera fast programvara innan den installeras"
 
 #. TRANSLATORS: Device will not return after update completes
 msgid "Device will not re-appear after update completes"
@@ -559,7 +575,7 @@ msgstr "Enheter som inte uppdaterades korrekt:"
 #. TRANSLATORS: message letting the user know no device upgrade available due
 #. to missing on LVFS
 msgid "Devices with no available firmware updates: "
-msgstr "Enheter med inga tillgängliga uppdateringar för fast programvara"
+msgstr "Enheter utan tillgängliga uppdateringar för fast programvara: "
 
 #. TRANSLATORS: message letting the user know no device upgrade available
 msgid "Devices with the latest available firmware version:"
@@ -575,7 +591,7 @@ msgstr "Inaktiverade fwupdate-felsökning"
 
 #. TRANSLATORS: command description
 msgid "Disables a given remote"
-msgstr "Inaktiverar en given fjärr."
+msgstr "Inaktiverar en given fjärrkälla"
 
 #. TRANSLATORS: command line option
 msgid "Display version"
@@ -590,8 +606,12 @@ msgid "Do not check for unreported history"
 msgstr "Kontrollera inte ej rapporterad historik"
 
 #. TRANSLATORS: command line option
+msgid "Do not check if download remotes should be enabled"
+msgstr "Kontrollera inte om fjärrkällor för hämtning ska aktiveras"
+
+#. TRANSLATORS: command line option
 msgid "Do not check or prompt for reboot after update"
-msgstr "Kontrollera inte eller uppmana inte om omstart efter uppdatering"
+msgstr "Varken kontrollera eller fråga om omstart efter uppdatering"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
@@ -611,15 +631,19 @@ msgstr "Skriv inte till historikdatabasen"
 
 #. TRANSLATORS: should the branch be changed
 msgid "Do you understand the consequences of changing the firmware branch?"
-msgstr "Förstår du konsekvenserna av att byta fastprogramvarugren?"
+msgstr "Förstår du konsekvenserna av att byta gren av fast programvara?"
 
 #. TRANSLATORS: offer to disable this nag
 msgid "Do you want to disable this feature for future updates?"
 msgstr "Vill du inaktivera den här funktionen för framtida uppdateringar?"
 
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Do you want to refresh this remote now?"
+msgstr "Vill du uppdatera den här fjärrkällan nu?"
+
 #. TRANSLATORS: offer to stop asking the question
 msgid "Do you want to upload reports automatically for future updates?"
-msgstr "Vill du ladda upp rapporter automatiskt för framtida uppdateringar?"
+msgstr "Vill du skicka rapporter automatiskt för framtida uppdateringar?"
 
 #. TRANSLATORS: success
 #. success
@@ -634,7 +658,7 @@ msgstr "Nedgradera %s från %s till %s?"
 
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
-msgstr "Nergradera fast programvara på en enhet"
+msgstr "Nedgradera fast programvara på en enhet"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
@@ -650,11 +674,11 @@ msgstr "Nedgraderar %s…"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
-msgstr "Laddar ner..."
+msgstr "Hämtar…"
 
 #. TRANSLATORS: command description
 msgid "Dump SMBIOS data from a file"
-msgstr "Dumpa SMBIOS data från en fil"
+msgstr "Dumpa SMBIOS-data från en fil"
 
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Duration"
@@ -670,11 +694,11 @@ msgstr "Aktivera stöd för uppdatering av fast programvara på system som stöd
 
 #. TRANSLATORS: a remote here is like a 'repo' or software source
 msgid "Enable new remote?"
-msgstr "Aktivera nytt fjärrarkiv?"
+msgstr "Aktivera ny fjärrkälla?"
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
-msgstr "Aktivera denna fjärr?"
+msgstr "Aktivera denna fjärrkälla?"
 
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is active and in use
@@ -687,14 +711,14 @@ msgstr "Aktiverade fwupdate-felsökning"
 
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
-msgstr "Aktiverar en given fjärr."
+msgstr "Aktiverar en given fjärrkälla"
 
 msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
 msgstr "Att aktivera denna funktionalitet görs på egen risk, vilket betyder att du måste kontakta den ursprungliga tillverkaren av din utrustning om problem som orsakas av dessa uppdateringar. Endast problem med själva uppdateringsprocessen ska rapporteras på $OS_RELEASE:BUG_REPORT_URL$."
 
 #. TRANSLATORS: show the user a warning
 msgid "Enabling this remote is done at your own risk."
-msgstr "Att aktivera denna fjärr görs på egen risk."
+msgstr "Att aktivera denna fjärrkälla görs på egen risk."
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Encrypted"
@@ -706,11 +730,11 @@ msgstr "Krypterat RAM"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
-msgstr "Ta bort alla historik för fast programvara"
+msgstr "Ta bort all historik för fast programvara"
 
 #. TRANSLATORS: erasing contents of the flash chips
 msgid "Erasing…"
-msgstr "Raderar..."
+msgstr "Raderar…"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
@@ -722,15 +746,55 @@ msgstr "Avsluta efter att motorn har lästs in"
 
 #. TRANSLATORS: command description
 msgid "Export a firmware file structure to XML"
-msgstr "Exportera en firmwarefilstruktur till XML"
+msgstr "Exportera en fast programvarufilstruktur till XML"
+
+#. TRANSLATORS: command description
+msgid "Extract a firmware blob to images"
+msgstr "Extrahera en fast programvaru-blob till avbilder"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE"
 msgstr "FIL"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE [DEVICE-ID|GUID]"
+msgstr "FIL [ENHETS-ID|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
+msgstr "INFIL UTFIL [SCRIPT] [UTMATNING]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
 msgstr "FILNAMN"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME CERTIFICATE PRIVATE-KEY"
+msgstr "FILNAMN CERTIFIKAT PRIVAT-NYCKEL"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
+msgstr "FILNAMN ENHET-ALT-NAMN|ENHET-ALT-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
+msgstr "FILNAMN ENHET-ALT-NAMN|ENHET-ALT-ID [AVBILD-ALT-NAMN|AVBILD-ALT-ID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME DEVICE-ID"
+msgstr "FILNAMN ENHETS-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [DEVICE-ID|GUID]"
+msgstr "FILNAMN [ENHETS-ID|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME [FIRMWARE-TYPE]"
+msgstr "FILNAMN [FAST-PROGRAMVARUTYP]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
+msgstr "FILNAMN-KÄL FILNAMN-MÅL [FAST-PROGRAMVARUTYP-KÄL] [FAST-PROGRAMVARUTYP-MÅL]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
@@ -764,7 +828,7 @@ msgstr "Misslyckades med att läsa in speciallösning"
 
 #. TRANSLATORS: could not read existing system data
 msgid "Failed to load system dbx"
-msgstr "Misslyckades med att läsa in system dbx"
+msgstr "Misslyckades med att läsa in system-dbx"
 
 #. TRANSLATORS: another fwupdtool instance is already running
 msgid "Failed to lock"
@@ -781,6 +845,10 @@ msgstr "Misslyckades med att tolka fil"
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse flags for --filter"
 msgstr "Misslyckades med att tolka --filter-flaggor"
+
+#. TRANSLATORS: could not parse file
+msgid "Failed to parse local dbx"
+msgstr "Misslyckades med att tolka lokal dbx"
 
 #. TRANSLATORS: we could not reboot for some reason
 msgid "Failed to reboot"
@@ -801,11 +869,11 @@ msgstr "Filnamn"
 
 #. TRANSLATORS: filename of the local file
 msgid "Filename Signature"
-msgstr "Filnamn Signatur"
+msgstr "Filnamnssignatur"
 
 #. TRANSLATORS: full path of the remote.conf file
 msgid "Filename Source"
-msgstr "Filnamn Källa"
+msgstr "Filnamnskälla"
 
 #. TRANSLATORS: user did not include a filename parameter
 msgid "Filename required"
@@ -813,11 +881,7 @@ msgstr "Filnamn krävs"
 
 #. TRANSLATORS: command line option
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
-msgstr "Filtrera via en uppsättning av enhetsflaggor genom att använda ett ~-prefix för att exkludera, t.e.x ”internal,~needs-reboot”"
-
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Fast programvaru-agent"
+msgstr "Filtrera via en uppsättning av enhetsflaggor genom att använda ett ~-prefix för att exkludera, t.ex. ”internal,~needs-reboot”"
 
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
@@ -825,11 +889,11 @@ msgstr "Fast programvara bas-URI"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
-msgstr "Firmware Update D-Bus-tjänst"
+msgstr "D-Bus-tjänst för uppdatering av fast programvara"
 
 #. TRANSLATORS: program name
 msgid "Firmware Update Daemon"
-msgstr "Uppgraderingsdemon för fast programvara"
+msgstr "Uppdateringsdemon för fast programvara"
 
 #. TRANSLATORS: program name
 msgid "Firmware Utility"
@@ -837,26 +901,26 @@ msgstr "Fast programvaruverktyg"
 
 #. TRANSLATORS: Title: if we can verify the firmware checksums
 msgid "Firmware attestation"
-msgstr "Fastprogramvaru-attestering"
+msgstr "Attestering av fast programvara"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
-msgstr "fast programvara är redan blockerad"
+msgstr "Fast programvara är redan blockerad"
 
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is not already blocked"
-msgstr "fast programvara är inte redan blockerad"
+msgstr "Fast programvara är inte redan blockerad"
 
 #. TRANSLATORS: the metadata is very out of date; %u is a number > 1
 #, c-format
 msgid "Firmware metadata has not been updated for %u day and may not be up to date."
 msgid_plural "Firmware metadata has not been updated for %u days and may not be up to date."
-msgstr[0] "Metadata för fast programvara har inte uppdaterats på %udag och kan vara utdaterad."
-msgstr[1] "Metadata för fast programvara har inte uppdaterats på %udagar och kan vara utdaterad."
+msgstr[0] "Metadata för fast programvara har inte uppdaterats på %u dag och kan vara inaktuell."
+msgstr[1] "Metadata för fast programvara har inte uppdaterats på %u dagar och kan vara inaktuell."
 
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
-msgstr "Fastprogramvaru uppdateringar"
+msgstr "Uppdateringar för fast programvara"
 
 msgid "Firmware updates are not supported on this machine."
 msgstr "Uppdateringar av fast programvara stöds inte på denna maskin."
@@ -866,12 +930,16 @@ msgstr "Uppdateringar av fast programvara stöds på denna maskin."
 
 #. TRANSLATORS: user needs to run a command
 msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
-msgstr "Fastprogramvaru-uppdateringar är inaktiverade; kör 'fwupdmgr unlock' för att aktivera"
+msgstr "Uppdateringar för fast programvara är inaktiverade; kör ”fwupdmgr unlock” för att aktivera"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
 #. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Flaggor"
+
+#. TRANSLATORS: command line option
+msgid "Force the action by relaxing some runtime checks"
+msgstr "Tvinga åtgärden genom att lätta på några kontroller vid körning"
 
 msgid "Force the action ignoring all warnings"
 msgstr "Tvinga åtgärden, ignorera alla varningar"
@@ -896,10 +964,6 @@ msgid "Get all device flags supported by fwupd"
 msgstr "Hämta alla enhetsflaggor som stöds av fwupd"
 
 #. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Hämta alla enheter och möjliga utgåvor"
-
-#. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Hämta alla enheter som stödjer uppdateringar av fast programvara"
 
@@ -915,13 +979,17 @@ msgstr "Hämtar detaljer om en fast programvarufil"
 msgid "Gets the configured remotes"
 msgstr "Ger de konfigurerade fjärrkällorna"
 
+#. TRANSLATORS: command description
+msgid "Gets the host security attributes"
+msgstr "Hämtar värdens säkerhetsattribut"
+
 #. TRANSLATORS: firmware approved by the admin
 msgid "Gets the list of approved firmware"
-msgstr "Hämtar lista över godkänd fast programvara."
+msgstr "Hämtar listan över godkänd fast programvara"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of blocked firmware"
-msgstr "Hämtar lista över blockerad fast programvara."
+msgstr "Hämtar listan över blockerad fast programvara"
 
 #. TRANSLATORS: command description
 msgid "Gets the list of updates for connected hardware"
@@ -949,7 +1017,7 @@ msgstr "Hög"
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
-msgstr "Värd säkerhets-ID:"
+msgstr "Säkerhets-ID för värd:"
 
 #. TRANSLATORS: Title:
 #. https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
@@ -962,11 +1030,15 @@ msgstr "Väntar…"
 
 #. TRANSLATORS: command line option
 msgid "Ignore SSL strict checks when downloading files"
-msgstr "Ignorera strika SSL-kontroller vid hämtning av filer"
+msgstr "Ignorera strikta SSL-kontroller vid hämtning av filer"
 
 #. TRANSLATORS: command line option
 msgid "Ignore firmware checksum failures"
 msgstr "Ignorera fel i kontrollsumman för fast programvara"
+
+#. TRANSLATORS: command line option
+msgid "Ignore firmware hardware mismatch failures"
+msgstr "Ignorera fel i matchning av hårdvara för fast programvara"
 
 #. TRANSLATORS: command line option
 msgid "Ignore requirement of external power source"
@@ -1034,19 +1106,29 @@ msgid "Intel BootGuard ACM protected"
 msgstr "Intel BootGuard ACM-skyddad"
 
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * OTP = one time programmable
+msgid "Intel BootGuard OTP fuse"
+msgstr "Intel BootGuard OTP-säkring"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
 #. * error policy is what to do on failure
 msgid "Intel BootGuard error policy"
-msgstr "Intel BootGuard felpolicy"
+msgstr "Intel BootGuard-felpolicy"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * verified boot refers to the way the boot process is verified
+msgid "Intel BootGuard verified boot"
+msgstr "Intel BootGuard verifierad uppstart"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * active means being used by the OS
 msgid "Intel CET Active"
-msgstr "Intel CET Aktiv"
+msgstr "Intel CET aktiv"
 
 #. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
 #. * enabled means supported by the processor
 msgid "Intel CET Enabled"
-msgstr "Intel CET Aktiverad"
+msgstr "Intel CET aktiverad"
 
 #. TRANSLATORS: Title: Direct Connect Interface (DCI) allows
 #. * debugging of Intel processors using the USB3 port
@@ -1075,6 +1157,10 @@ msgid_plural "Issues"
 msgstr[0] "Problem"
 msgstr[1] "Problem"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "KEY,VALUE"
+msgstr "NYCKEL,VÄRDE"
+
 msgid "Keyring"
 msgstr "Nyckelring"
 
@@ -1091,18 +1177,22 @@ msgid "License"
 msgstr "Licens"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
-msgstr "Linux Vendor Firmware Service (stabil fastprogramvara)"
+msgstr "Linux Vendor Firmware Service (stabil fast programvara)"
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
-msgstr "Linux Vendor Firmware Service (fastprogramvara för testning)"
+msgstr "Linux Vendor Firmware Service (fast programvara för testning)"
 
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux kernel"
-msgstr "Linux kärna"
+msgstr "Linux-kärna"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux kernel lockdown"
+msgstr "Lockdown för Linux-kärnan"
 
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
-msgstr "Linux swap"
+msgstr "Linux-växlingsutrymme"
 
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
@@ -1114,7 +1204,7 @@ msgstr "Lista uppdateringar för fast programvara som stöds"
 
 #. TRANSLATORS: command description
 msgid "List the available firmware types"
-msgstr "Lista tillgänliga fastprogramvutyper"
+msgstr "Lista de tillgängliga typerna av fast programvara"
 
 #. TRANSLATORS: command description
 msgid "Lists files on the ESP"
@@ -1136,12 +1226,19 @@ msgstr "Låg"
 msgid "MEI manufacturing mode"
 msgstr "MEI-tillverkningsläge"
 
+#. TRANSLATORS: Title: MEI = Intel Management Engine, and the
+#. * "override" is the physical PIN that can be driven to
+#. * logic high -- luckily it is probably not accessible to
+#. * end users on consumer boards
+msgid "MEI override"
+msgstr "MEI-åsidosättning"
+
 msgid "MEI version"
-msgstr "MEI version"
+msgstr "MEI-version"
 
 #. TRANSLATORS: command line option
 msgid "Manually enable specific plugins"
-msgstr "Manuellt aktivera specifika insticksmoduler"
+msgstr "Aktivera manuellt specifika insticksmoduler"
 
 #. TRANSLATORS: the release urgency
 msgid "Medium"
@@ -1153,7 +1250,7 @@ msgstr "Metadatasignatur"
 
 #. TRANSLATORS: remote URI
 msgid "Metadata URI"
-msgstr "Metadata URI"
+msgstr "Metadata-URI"
 
 #. TRANSLATORS: explain why no metadata available
 msgid "Metadata can be obtained from the Linux Vendor Firmware Service."
@@ -1167,6 +1264,10 @@ msgstr "Minimiversion"
 #, c-format
 msgid "Mismatched daemon and client, use %s instead"
 msgstr "Demon och klient stämmer inte, använd %s istället"
+
+#. TRANSLATORS: sets something in daemon.conf
+msgid "Modifies a daemon configuration value"
+msgstr "Modifierar ett konfigurationsvärde för demonen"
 
 #. TRANSLATORS: command description
 msgid "Modifies a given remote"
@@ -1214,7 +1315,7 @@ msgstr "Inga nedgraderingar för %s"
 
 #. TRANSLATORS: nothing found
 msgid "No firmware IDs found"
-msgstr "Inget fastprogramvaru-ID hittat"
+msgstr "Inget fast programvaru-ID hittat"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
@@ -1226,15 +1327,15 @@ msgstr "Inga insticksmoduler hittades"
 
 #. TRANSLATORS: no repositories to download from
 msgid "No releases available"
-msgstr "Inga versioner tillgängliga"
+msgstr "Inga utgåvor tillgängliga"
 
 #. TRANSLATORS: explain why no metadata available
 msgid "No remotes are currently enabled so no metadata is available."
-msgstr "Inga fjärrar är aktiverade för närvarande, så ingen metadata är tillgänglig."
+msgstr "Inga fjärrkällor är aktiverade för närvarande, så ingen metadata är tillgänglig."
 
 #. TRANSLATORS: no repositories to download from
 msgid "No remotes available"
-msgstr "Inga fjärrarkiv tillgängliga"
+msgstr "Inga fjärrkällor tillgängliga"
 
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
@@ -1258,15 +1359,11 @@ msgstr "Visa endast enkelt PCR-värde"
 
 #. TRANSLATORS: command line option
 msgid "Only use IPFS when downloading files"
-msgstr "Använd endast IPFS när du laddar ner filer"
+msgstr "Använd endast IPFS när du hämtar filer"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Åsidosätt standardsökväg för ESP"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Åsidosätt varningar och tvinga åtgärden"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
@@ -1274,7 +1371,15 @@ msgstr "SÖKVÄG"
 
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
-msgstr "Tolka och visa detaljer om en fastprogramvarufil"
+msgstr "Tolka och visa detaljer om en fast programvarufil"
+
+#. TRANSLATORS: reading new dbx from the update
+msgid "Parsing dbx update…"
+msgstr "Tolkar dbx-uppdatering…"
+
+#. TRANSLATORS: reading existing dbx from the system
+msgid "Parsing system dbx…"
+msgstr "Tolkar system-dbx…"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -1291,10 +1396,22 @@ msgstr "Väntande"
 msgid "Percentage complete"
 msgstr "Andel färdigställt"
 
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "Utför operationen?"
+
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
 msgid "Please enter a number from 0 to %u: "
 msgstr "Ange en siffra mellan 0 och %u: "
+
+#. TRANSLATORS: Failed to open plugin, hey Arch users
+msgid "Plugin dependencies missing"
+msgstr "Beroenden för insticksmodul saknas"
+
+#. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
+msgid "Pre-boot DMA protection"
+msgstr "DMA-skydd före uppstart"
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1321,9 +1438,17 @@ msgstr "Proprietär"
 msgid "Query for firmware update support"
 msgstr "Fråga efter stöd för uppdatering av fast programvara"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID"
+msgstr "FJÄRR-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "REMOTE-ID KEY VALUE"
+msgstr "FJÄRR-ID NYCKEL VÄRDE"
+
 #. TRANSLATORS: command description
 msgid "Read a firmware blob from a device"
-msgstr "Läs en fastprogramvara från en enhet"
+msgstr "Läs en fast programvaru-blob från en enhet"
 
 #. TRANSLATORS: command description
 msgid "Read firmware from device into a file"
@@ -1340,7 +1465,7 @@ msgstr "Läser från %s…"
 
 #. TRANSLATORS: reading from the flash chips
 msgid "Reading…"
-msgstr "Läser..."
+msgstr "Läser…"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Rebooting…"
@@ -1358,7 +1483,7 @@ msgstr "Återinstallera %s till %s?"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
-msgstr "Återinstallera aktuell fast programvara på enheten."
+msgstr "Återinstallera aktuell fast programvara på enheten"
 
 #. TRANSLATORS: command description
 msgid "Reinstall firmware on a device"
@@ -1371,10 +1496,14 @@ msgstr "Installera om fast programvara på en enhet"
 msgid "Reinstalling %s with %s... "
 msgstr "Återinstallerar %s med %s… "
 
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Release Branch"
+msgstr "Utgåvegren"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
-msgstr "Fjärrkälla-id"
+msgstr "Fjärrkälla-ID"
 
 #. TRANSLATORS: command description
 msgid "Replace data in an existing firmware file"
@@ -1382,7 +1511,7 @@ msgstr "Ersätt data i en befintlig fast programvarufil"
 
 #. TRANSLATORS: URI to send success/failure reports
 msgid "Report URI"
-msgstr "Rapport-uri"
+msgstr "Rapport-URI"
 
 #. TRANSLATORS: Has been reported to a metadata server
 msgid "Reported to remote server"
@@ -1418,22 +1547,30 @@ msgstr "Startar om enhet…"
 
 #. TRANSLATORS: command description
 msgid "Return all the hardware IDs for the machine"
-msgstr "Returnera alla hårdvaru-id för maskinen"
+msgstr "Returnera alla hårdvaru-ID:n för maskinen"
 
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Kör ”fwupdmgr get-upgrades” för vidare information."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
-msgstr "Kör uppstädningssammansättningsrutinen för insticksmodule när install-blob används"
+msgstr "Kör uppstädningssammansättningsrutin för insticksmodulen när install-blob används"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
-msgstr "Kör förberedelsesammansättningsrutinen för insticksmodule när install-blob används"
+msgstr "Kör förberedelsesammansättningsrutin för insticksmodulen när install-blob används"
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
-msgstr "Exekvering-suffix"
+msgstr "Exekveringssuffix"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS Descriptor"
+msgstr "SPI BIOS-beskrivare"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS region"
+msgstr "SPI BIOS-region"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI lock"
@@ -1442,6 +1579,14 @@ msgstr "SPI lås"
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI write"
 msgstr "SPI skriv"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "SUBSYSTEM DRIVER [DEVICE-ID|GUID]"
+msgstr "UNDERSYSTEM DRIVRUTIN [ENHETS-ID|GUID]"
+
+#. TRANSLATORS: command description
+msgid "Save a file that allows generation of hardware IDs"
+msgstr "Spara en fil som möjliggör generering av hårdvaru-ID:n"
 
 #. TRANSLATORS: command line option
 msgid "Save device state into a JSON file between executions"
@@ -1478,11 +1623,11 @@ msgstr "Ställ in felsökningsflaggan under uppdatering"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
-msgstr "Sätter listan av godkända fasta programvaror"
+msgstr "Sätter listan av godkänd fast programvara"
 
 #. TRANSLATORS: command description
 msgid "Share firmware history with the developers"
-msgstr "Dela fast programvaruhistorik med utvecklarna"
+msgstr "Dela historik för fast programvara med utvecklarna"
 
 #. TRANSLATORS: command line option
 msgid "Show all results"
@@ -1494,7 +1639,7 @@ msgstr "Visa klient- och demon-version"
 
 #. TRANSLATORS: this is for daemon development
 msgid "Show daemon verbose information for a particular domain"
-msgstr "Visa utförlig information från demonen för en specifikt domän"
+msgstr "Visa utförlig information från demonen för en specifik domän"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Show debugging information for all domains"
@@ -1514,7 +1659,7 @@ msgstr "Visa extra felsökningsinformation"
 
 #. TRANSLATORS: command description
 msgid "Show history of firmware updates"
-msgstr "Visa historik över fasta programvaruuppdateringar"
+msgstr "Visa historik över uppdateringar för fast programvara"
 
 #. TRANSLATORS: this is for plugin development
 msgid "Show plugin verbose information"
@@ -1549,7 +1694,7 @@ msgstr "Signera data med klientcertifikatet"
 
 #. TRANSLATORS: command line option
 msgid "Sign the uploaded data with the client certificate"
-msgstr "Signera den uppladdade datan med klientcertifikatet"
+msgstr "Signera skickade data med klientcertifikatet"
 
 msgid "Signature"
 msgstr "Signatur"
@@ -1583,20 +1728,24 @@ msgstr "Aktiverade framgångsrikt alla enheter"
 
 #. TRANSLATORS: success message
 msgid "Successfully disabled remote"
-msgstr "Inaktiverade framgångsrikt fjärrarkiv"
+msgstr "Inaktiverade framgångsrikt fjärrkälla"
 
 #. TRANSLATORS: success message -- where 'metadata' is information
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
-msgstr "Hämtade framgångsrikt ny metadata:"
+msgstr "Hämtade framgångsrikt ny metadata: "
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled and refreshed remote"
+msgstr "Aktiverade och uppdaterade framgångsrikt fjärrkälla"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
-msgstr "Aktiverade framgångsrikt fjärrarkiv"
+msgstr "Aktiverade framgångsrikt fjärrkälla"
 
 #. TRANSLATORS: success message
 msgid "Successfully installed firmware"
-msgstr "Installera fastprogramvara framgångsrikt"
+msgstr "Installerade framgångsrikt fast programvara"
 
 #. TRANSLATORS: success message -- a per-system setting value
 msgid "Successfully modified configuration value"
@@ -1604,7 +1753,7 @@ msgstr "Modifierade framgångsrikt konfigurationsvärde"
 
 #. TRANSLATORS: success message for a per-remote setting change
 msgid "Successfully modified remote"
-msgstr "Modifierade framgångsrikt fjärrarkiv"
+msgstr "Modifierade framgångsrikt fjärrkälla"
 
 #. TRANSLATORS: success message -- the user can do this by-hand too
 msgid "Successfully refreshed metadata manually"
@@ -1638,9 +1787,13 @@ msgstr "Stöds"
 msgid "Supported on remote server"
 msgstr "Stöds på fjärrserver"
 
+#. TRANSLATORS: Title: a better sleep state
+msgid "Suspend-to-idle"
+msgstr "Gå-till-inaktivt-läge"
+
 #. TRANSLATORS: Title: sleep state
 msgid "Suspend-to-ram"
-msgstr "Suspendera-till-ram"
+msgstr "Gå-till-vänteläge-i-ram"
 
 #. TRANSLATORS: show and ask user to confirm --
 #. * %1 is the old branch name, %2 is the new branch name
@@ -1650,7 +1803,7 @@ msgstr "Ändra gren från %s till %s?"
 
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
-msgstr "Ändra fastprogramvaru gren på enheten "
+msgstr "Ändra gren för fast programvara på enheten"
 
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
@@ -1660,33 +1813,45 @@ msgstr "Systemet kräver extern strömkälla"
 msgid "TEXT"
 msgstr "TEXT"
 
+#. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
+msgid "TPM PCR0 reconstruction"
+msgstr "TPM PCR0-rekonstruktion"
+
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
 msgstr "TPM v2.0"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Tainted"
+msgstr "Befläckad"
 
 msgid "Target"
 msgstr "Mål"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
-msgstr "LVFS är en fri tjänst som fungerar som en oberoende juridisk person och har ingen koppling till $OS_RELEASE:NAME$. Din distributör kanske inte har bekräftat att någon av de fasta programvaruuppdateringarna är kompatibla med ditt system eller anslutna enheter. All fast programvara tillhandahålls endast av den ursprungliga tillverkaren av utrustning."
+msgstr "LVFS är en fri tjänst som fungerar som en oberoende juridisk person och har ingen koppling till $OS_RELEASE:NAME$. Din distributör kanske inte har bekräftat att någon av uppdateringarna för fast programvara är kompatibla med ditt system eller anslutna enheter. All fast programvara tillhandahålls endast av den ursprungliga tillverkaren av utrustning."
 
 #. TRANSLATORS: this is more background on a security measurement problem
 msgid "The TPM PCR0 differs from reconstruction."
 msgstr "TPM PCR0 skiljer sig från rekonstruktion."
 
+#. TRANSLATORS: the user is SOL for support...
+msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
+msgstr "Demonen har läst in tredjepartskod och stöds inte längre av uppströmsutvecklarna!"
+
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
-msgstr "Denna fastprogramvara från %s levereras inte av %s, hårdvaruleverantören."
+msgstr "Fast programvara från %s levereras inte av %s, hårdvaruleverantören."
 
 #. TRANSLATORS: try to help
 msgid "The system clock has not been set correctly and downloading files may fail."
-msgstr "Systemklockan har inte ställts in korrekt och nedladdning av filer kan misslyckas."
+msgstr "Systemklockan har inte ställts in korrekt och hämtning av filer kan misslyckas."
 
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
-msgstr "Det finns inga blockerade fast programvaru filer"
+msgstr "Det finns inga blockerade fast programvarufiler"
 
 #. TRANSLATORS: approved firmware has been checked by
 #. * the domain administrator
@@ -1717,12 +1882,16 @@ msgid "This tool allows an administrator to apply UEFI dbx updates."
 msgstr "Detta verktyg gör det möjligt för en administratör att tillämpa UEFI dbx-uppdateringar."
 
 #. TRANSLATORS: CLI description
-msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
-msgstr "Detta verktyg tillåter en administratör att använda fwupd insticksmoduler utan att dessa är installerade på värdsystemet."
+msgid "This tool allows an administrator to debug UpdateCapsule operation."
+msgstr "Detta verktyg gör det möjligt för en administratör att felsöka en UpdateCapsule-operation."
 
 #. TRANSLATORS: CLI description
-msgid "This tool can be used from other tools and from shell scripts."
-msgstr "Detta verktyg kan användas från andra verktyg och från skalskript."
+msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
+msgstr "Detta verktyg låter en administratör ställa frågor till och styra fwupd-demonen, vilket låter dem utföra åtgärder som att installera eller nedgradera fast programvara."
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
+msgstr "Detta verktyg tillåter en administratör att använda fwupd-insticksmoduler utan att dessa är installerade på värdsystemet."
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
@@ -1731,6 +1900,14 @@ msgstr "Detta verktyg kan endast användas av administratörsanvändaren"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Detta verktyg läser och analyserar TPM-händelseloggen från systemets fasta programvara."
+
+#. TRANSLATORS: command line option
+msgid "Timeout in milliseconds for each parse"
+msgstr "Tidsgräns i millisekunder för varje tolkning"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Transient failure"
+msgstr "Tillfälligt misslyckande"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -1744,21 +1921,33 @@ msgstr "UEFI ESP-partition upptäcktes inte eller är inte konfigurerad"
 msgid "UEFI Firmware Utility"
 msgstr "Verktyg för fast UEFI-programvara"
 
+#. TRANSLATORS: capsule updates are an optional BIOS feature
+msgid "UEFI capsule updates not available or enabled in firmware setup"
+msgstr "UEFI-kapseluppdateringar är inte tillgängliga eller aktiverade i konfiguration för fast programvara"
+
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "UEFI dbx-verktyg"
 
 #. TRANSLATORS: system is not booted in UEFI mode
 msgid "UEFI firmware can not be updated in legacy BIOS mode"
-msgstr "UEFI-firmware kan inte uppdateras i äldre BIOS-läge"
+msgstr "Fast UEFI-programvara kan inte uppdateras i äldre BIOS-läge"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
 msgstr "UEFI-plattformsnyckel"
 
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI secure boot"
+msgstr "UEFI säkerhetsstart"
+
 #. TRANSLATORS: error message
 msgid "Unable to connect to service"
 msgstr "Misslyckades med att ansluta till tjänst"
+
+#. TRANSLATORS: command description
+msgid "Unbind current driver"
+msgstr "Lösgör aktuell drivrutin"
 
 #. TRANSLATORS: we will now offer this firmware to the user
 msgid "Unblocking firmware:"
@@ -1766,7 +1955,7 @@ msgstr "Avblockera fast programvara:"
 
 #. TRANSLATORS: command description
 msgid "Unblocks a specific firmware from being installed"
-msgstr "Avblockerar en specifik fastprogramvara från att installeras"
+msgstr "Avblockerar en specifik fast programvara från att installeras"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Unencrypted"
@@ -1804,7 +1993,11 @@ msgstr "Ta bort felsökningsflaggan under uppdatering"
 #. TRANSLATORS: error message
 #, c-format
 msgid "Unsupported daemon version %s, client version is %s"
-msgstr "Demonversion  %s stöds inte, klientversionen är %s"
+msgstr "Demonversion %s stöds inte, klientversionen är %s"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Untainted"
+msgstr "Obefläckad"
 
 #. TRANSLATORS: Device is updatable in this or any other mode
 msgid "Updatable"
@@ -1829,7 +2022,7 @@ msgstr "Uppdatera alla enheter som matchar lokal metadata"
 
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
-msgstr "Misslyckad uppdatering är ett känt fel, besök denna url för mer information:"
+msgstr "Misslyckad uppdatering är ett känt fel, besök denna URL för mer information:"
 
 #. TRANSLATORS: ask the user if we can update the metadata
 msgid "Update now?"
@@ -1841,7 +2034,7 @@ msgstr "Uppdatering kräver en omstart"
 
 #. TRANSLATORS: command description
 msgid "Update the stored cryptographic hash with current ROM contents"
-msgstr "Uppdaterade den lagrade krytografiska hashen med aktuellt ROM-innehåll"
+msgstr "Uppdatera den lagrade kryptografiska hashen med aktuellt ROM-innehåll"
 
 msgid "Update the stored device verification information"
 msgstr "Uppdatera den lagrade enhetens verifikationsinformation"
@@ -1862,7 +2055,7 @@ msgstr "Uppdaterar"
 #. * version numbers e.g. "1.2.3"
 #, c-format
 msgid "Updating %s from %s to %s... "
-msgstr "Uppdaterar %s från %s till %s... "
+msgstr "Uppdaterar %s från %s till %s… "
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -1873,7 +2066,7 @@ msgstr "Uppdaterar %s…"
 #. * %1 is the device name and %2 and %3 are version strings
 #, c-format
 msgid "Upgrade %s from %s to %s?"
-msgstr "Uppdatera %s från %s till %s?"
+msgstr "Uppgradera %s från %s till %s?"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
@@ -1881,7 +2074,7 @@ msgstr "Skicka upp rapport nu?"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
-msgstr "Att skicka upp rapporter för fastprogramvara hjälper hårdvaruförsäljare att snabbt identifiera trasiga och fungerande uppdateringar på riktiga enheter."
+msgstr "Att skicka upp rapporter för fast programvara hjälper hårdvarutillverkare att snabbt identifiera trasiga och fungerande uppdateringar på riktiga enheter."
 
 #. TRANSLATORS: how important the release is
 msgid "Urgency"
@@ -1897,7 +2090,7 @@ msgstr "Använd fwupdtool --help för hjälp"
 
 #. TRANSLATORS: command line option
 msgid "Use quirk flags when installing firmware"
-msgstr "Använd specialflaggor vid installation av fastprogramvara"
+msgstr "Använd specialflaggor vid installation av fast programvara"
 
 #. TRANSLATORS: User has been notified
 msgid "User has been notified"
@@ -1916,7 +2109,7 @@ msgstr "Giltig"
 
 #. TRANSLATORS: ESP refers to the EFI System Partition
 msgid "Validating ESP contents…"
-msgstr "Validerar ESP-innehåll..."
+msgstr "Validerar ESP-innehåll…"
 
 #. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
 msgid "Variant"
@@ -1940,7 +2133,7 @@ msgstr "VARNING:"
 
 #. TRANSLATORS: waiting for device to do something
 msgid "Waiting…"
-msgstr "Väntar..."
+msgstr "Väntar…"
 
 #. TRANSLATORS: command description
 msgid "Watch for hardware changes"
@@ -1964,12 +2157,28 @@ msgstr "Skriver…"
 
 #. TRANSLATORS: show the user a warning
 msgid "Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices."
-msgstr "Din distributör kanske inte har verifierat någon av uppdateringarna av fastprogramvara för kompatibilitet med ditt system eller anslutna enheter."
+msgstr "Din distributör kanske inte har verifierat någon av uppdateringarna av fast programvara för kompatibilitet med ditt system eller anslutna enheter."
 
 #. TRANSLATORS: %1 is the device vendor name
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
-msgstr "Din hårdvara kan skadas med den här fasta programvaran och installera denna release kan ogiltigförklara all garanti med %s."
+msgstr "Din hårdvara kan skadas med den här fasta programvaran och att installera denna utgåva kan ogiltigförklara all garanti hos %s."
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[CHECKSUM]"
+msgstr "[KONTROLLSUMMA]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID]"
+msgstr "[ENHETS-ID|GUID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[DEVICE-ID|GUID] [BRANCH]"
+msgstr "[ENHETS-ID|GUID] [GREN]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILE FILE_SIG REMOTE-ID]"
+msgstr "[FIL FILSIG FJÄRR-ID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"
@@ -1981,8 +2190,8 @@ msgstr "standard"
 
 #. TRANSLATORS: program name
 msgid "fwupd TPM event log utility"
-msgstr "fwupd TPM händelseloggverktyg"
+msgstr "fwupd TPM-händelseloggverktyg"
 
 #. TRANSLATORS: Title: if the fwupd plugins are all present and correct
 msgid "fwupd plugins"
-msgstr "fwupd insticksmoduler"
+msgstr "fwupd-insticksmoduler"

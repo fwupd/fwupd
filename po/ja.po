@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
+# Nobuhiro Iwamatsu <iwamatsu@nigauri.org>, 2021
 # Takuro Onoue <kusanaginoturugi@gmail.com>, 2021
 # YOSHIDUMI, Rentaro, 2021
 msgid ""
@@ -146,7 +147,7 @@ msgstr "USB伝送器ごとのバイト数を指定する"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
-msgstr "LVFSは独立した法人として機能する無料のサービスであり、$OS_RELEASE:NAME$とは関係ありません。ディストリビューターは、システムまたは接続されているデバイスとの互換性について、ファームウェアの更新を確認していない可能性があります。すべてのファームウェアは、元の機器の製造元からのみ提供されています。"
+msgstr "LVFS は独立した法人として機能する無料のサービスであり、$OS_RELEASE:NAME$ とは関係ありません。ディストリビューターは、システムまたは接続されているデバイスとの互換性について、ファームウェアの更新を確認していない可能性があります。すべてのファームウェアは、元の機器の製造元からのみ提供されています。"
 
 msgid "Unlock the device to allow access"
 msgstr "アクセスを許可するために機器を開錠してください"

@@ -439,10 +439,6 @@ msgstr "Failo pavadinimo parašas"
 msgid "Filename required"
 msgstr "Reikalingas failo pavadinimas"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Programinės aparatinės įrangos agentas"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Pagrindinis programinės aparatinės įrangos URI"
@@ -485,10 +481,6 @@ msgstr "Rastas"
 msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Gauti visus įrenginius ir galimas laidas"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"

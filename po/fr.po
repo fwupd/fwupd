@@ -385,10 +385,6 @@ msgstr "Source de nom de fichier"
 msgid "Filename required"
 msgstr "Nom de fichier obligatoire"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Agent de micrologiciel"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "URI de base du micrologiciel"
@@ -625,10 +621,6 @@ msgstr "OK"
 msgid "Only use IPFS when downloading files"
 msgstr "N'utiliser IPFS que lors du téléchargement de fichiers"
 
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Ignorer les avertissements et forcer l'action"
-
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
 msgstr "CHEMIN"
@@ -860,10 +852,6 @@ msgstr "Cet outil permet à un administrateur d'appliquer les mises à jour dbx 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to debug UpdateCapsule operation."
 msgstr "Cet outil permet à un administrateur de déboguer l'opération UpdateCapsule."
-
-#. TRANSLATORS: CLI description
-msgid "This tool can be used from other tools and from shell scripts."
-msgstr "Cet outil peut être utilisé depuis d'autres outils et depuis des scripts du shell."
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"

@@ -881,10 +881,6 @@ msgstr "Nome de arquivo necessário"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtra com um conjunto de opções de dispositivo usando um prefixo ~ para excluir, p.ex.  \"internal,~needs-reboot\""
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Agente de firmware"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "URI base de firmware"
@@ -964,10 +960,6 @@ msgstr "GUID"
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Obtém todas as opções de dispositivo suportadas pelo fwupd"
-
-#. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Obtém todos os dispositivos e lançamentos possíveis"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -1370,10 +1362,6 @@ msgstr "Usa apenas IPFS ao baixar arquivos"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Substitui o caminho padrão da ESP"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Anula avisos e força a ação"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
@@ -1902,10 +1890,6 @@ msgstr "Esta ferramenta permite que um administrador consulte e controle o daemo
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Esta ferramenta permite que um administrador use os plugins do fwupd sem estarem instalados no sistema host"
-
-#. TRANSLATORS: CLI description
-msgid "This tool can be used from other tools and from shell scripts."
-msgstr "Esta ferramenta pode ser usada para outras ferramentas e de scripts shell."
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"

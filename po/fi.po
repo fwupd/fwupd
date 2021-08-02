@@ -878,10 +878,6 @@ msgstr "Tiedostonimi vaaditaan"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Suodata laite lippuja käyttäen ~ etuliiteellä sulkea pois, esim. 'sisäiset, ~ vaatii käynnistyksen'"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Firmware-agentti"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Firmware pohja URI"
@@ -961,10 +957,6 @@ msgstr "GUID"
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Hanki kaikki fwupd -tukemat laiteliput"
-
-#. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Hanki kaikki laitteet ja mahdolliset julkaisut"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -1367,10 +1359,6 @@ msgstr "Käytä vain IPFS:ää kun lataat tiedostoja"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Ohita oletusarvoinen ESP-polku"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Ohita varoitukset ja pakota toiminto"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
@@ -1899,10 +1887,6 @@ msgstr "Tämän työkalun avulla järjestelmänvalvoja voi kysellä ja hallita f
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "Tämän työkalun avulla järjestelmänvalvoja voi käyttää fwupd-laajennuksia asentamatta sitä järjestelmään."
-
-#. TRANSLATORS: CLI description
-msgid "This tool can be used from other tools and from shell scripts."
-msgstr "Tätä työkalua voidaan käyttää muista työkaluista ja päätteellä. "
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"

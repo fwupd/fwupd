@@ -5,6 +5,7 @@
 # Translators:
 # dhead666 <myfoolishgames@gmail.com>, 2015
 # GenghisKhan <genghiskhan@gmx.ca>, 2015
+# Omer I.S. <omeritzicschwartz@gmail.com>, 2021
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -16,10 +17,18 @@ msgstr ""
 "Language: he\n"
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: (n % 10 == 0 && n % 1 == 0 && n > 10) ? 2 : 3;\n"
 
+#. TRANSLATORS: command description
+msgid "Activate devices"
+msgstr "התקנים זמיני"
+
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
 msgstr "כינוי עבור %s"
+
+#. TRANSLATORS: stop nagging the user
+msgid "Ask again next time?"
+msgstr "לשאול שוב בפעם הבאה?"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
@@ -107,6 +116,10 @@ msgstr "הצג אפשרויות ניפוי שגיאות"
 #. TRANSLATORS: command line option
 msgid "Show extra debugging information"
 msgstr "הצג מידע ניפוי שגיאות מורחב"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Update now?"
+msgstr "לעדכן עכשיו?"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are

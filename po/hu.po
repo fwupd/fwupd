@@ -548,10 +548,6 @@ msgstr "Fájlnév aláírása"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Szűrés eszközjelzők megadásával, ~ előtag a kihagyáshoz, például „internal,~needs-reboot”"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Firmware ügynök"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Firmware kiindulópont URI"
@@ -607,10 +603,6 @@ msgstr "GUID"
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Az fwupd által támogatott összes eszközjelző lekérése"
-
-#. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Összes eszköz és a lehetséges kiadások lekérése"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -833,10 +825,6 @@ msgstr "OK"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Az alapértelmezett ESP útvonal felülbírálása"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Figyelmeztetések felülbírálása, és a művelet kényszerítése"
 
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"

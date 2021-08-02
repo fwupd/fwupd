@@ -338,10 +338,6 @@ msgstr "Non file"
 msgid "Filename Signature"
 msgstr "Firme non file"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Agjent Firmware"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "URI de base dal firmware"
@@ -382,10 +378,6 @@ msgstr "Cjatât"
 msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Oten ducj i dispositîfs e lis pussibilis publicazions"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -531,10 +523,6 @@ msgstr "Mostre dome il valôr PCR"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Passe parsore al valôr dal percors ESP predefinît"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Ignore i avertiments e sfuarce la azion"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"

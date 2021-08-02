@@ -445,10 +445,6 @@ msgstr "Имя файла"
 msgid "Filename Signature"
 msgstr "Подпись имени файла"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Агент прошивки"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Базовый URI прошивки"
@@ -496,10 +492,6 @@ msgstr "Найдено"
 msgctxt "A single GUID"
 msgid "GUID"
 msgstr "GUID"
-
-#. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Получить все устройства и возможные выпуски"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -644,10 +636,6 @@ msgstr "ОК"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Переопределить путь ESP по умолчанию"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Отменить предупреждения и выполнить действие"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"

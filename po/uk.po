@@ -893,10 +893,6 @@ msgstr "Слід вказати назву файла"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Фільтрувати за набором прапорців пристроїв за допомогою префікса виключення ~, наприклад «internal,~needs-reboot»"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Агент мікропрограм"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Основна адреса мікропрограми"
@@ -980,10 +976,6 @@ msgstr "GUID"
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Отримати усі прапорці пристроїв, підтримку яких передбачено у fwupd"
-
-#. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Отримати список усіх пристроїв та можливих випусків"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -1388,10 +1380,6 @@ msgstr "Використовувати IPFS лише при отриманні �
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Перевизначити типовий шлях до ESP"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Не зважати на попередження і примусово виконати дію"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
@@ -1922,10 +1910,6 @@ msgstr "За допомогою цього інструмента адмініс
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "За допомогою цього інструмента адміністратор може скористатися додатками fwupd без встановлення їх до основної системи."
-
-#. TRANSLATORS: CLI description
-msgid "This tool can be used from other tools and from shell scripts."
-msgstr "Цим інструментом можна скористатися з інших інструментів та скриптів оболонки."
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"

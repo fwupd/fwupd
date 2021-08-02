@@ -480,10 +480,6 @@ msgstr "Dosya adı"
 msgid "Filename Signature"
 msgstr "Dosya Adı İmzası"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Ürün Yazılımı İstemcisi"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Ürün Yazılımı Temel URI"
@@ -532,10 +528,6 @@ msgstr "GUID"
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "fwupd tarafından desteklenen tüm aygıt bayraklarını getir"
-
-#. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Tüm aygıtları ve olası sürümleri edin"
 
 #. TRANSLATORS: command description
 msgid "Get all enabled plugins registered with the system"
@@ -772,10 +764,6 @@ msgstr "Yalnızca tek PCR değerini göster"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Öntanımlı ESP yolunu geçersiz kıl"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Uyarıları geçersiz kıl ve işlemi zorla"
 
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"

@@ -801,10 +801,6 @@ msgstr "需要文件名"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "筛选器为一组设备标志，使用 ~ 前缀来排除设备，示例 \"internal,~needs-reboot\""
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "固件代理"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "固件库 URI"
@@ -882,10 +878,6 @@ msgstr "GUID"
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "获取 fwupd 支持的全部设备标志"
-
-#. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "获取所有设备和可用版本"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -1275,10 +1267,6 @@ msgstr "只显示单 PCR 值"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "覆盖默认的 ESP 路径"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "覆盖警告并强制执行操作"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
@@ -1758,10 +1746,6 @@ msgstr "此工具允许管理员查询和控制 fwupd 守护进程，让其执�
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "此工具可以让管理员不用安装 fwupd 插件到主机系统上就可以使用它们。"
-
-#. TRANSLATORS: CLI description
-msgid "This tool can be used from other tools and from shell scripts."
-msgstr "此工具可被其他工具和 shell 脚本调用。"
 
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"

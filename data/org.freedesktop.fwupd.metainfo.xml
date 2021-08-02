@@ -41,12 +41,12 @@
           This release adds the following features:
         </p>
         <ul>
-          <li>Add a clang-format file and helper tool</li>
           <li>Add a plugin to check Lenovo firmware settings</li>
           <li>Add initial support for the powerd daemon</li>
           <li>Add support for CapsuleOnDisk</li>
           <li>Add support for installing UEFI updates from GRUB</li>
           <li>Add support for soft-requirements that can be ignored with --force</li>
+          <li>Allow devices to only accept version upgrades</li>
           <li>Allow discovery of Redfish BMCs specified by VID-PID or MAC</li>
           <li>Allow the daemon to request interactive action from the end user</li>
           <li>Automatically connect the BMC network interface at startup</li>
@@ -60,6 +60,7 @@
           <li>Allow the client to watch for more property changes</li>
           <li>Always ensure the SuperIO version string is NUL terminated</li>
           <li>Automatically clear the update error as required</li>
+          <li>Disable all UX capsules for Lenovo hardware</li>
           <li>Do not assume the metainfo file is NUL-terminated</li>
           <li>Do not save invalid files on LVFS server error</li>
           <li>Fix a VLI regression in enumerating the PD device</li>
@@ -74,7 +75,6 @@
           <li>Read the Redfish SMBIOS table when required</li>
           <li>Remove the vendor string from the device name where required</li>
           <li>Save the update state to the database correctly all of the time</li>
-          <li>Set the update state and error in more cases</li>
           <li>Switch from sysctl to ioctl for ESRT on FreeBSD</li>
           <li>Try reading from /sys/class/dmi if SMBIOS direct access fails</li>
           <li>Watch for children added or removed after setup has been completed</li>

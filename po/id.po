@@ -555,10 +555,6 @@ msgstr "Tanda Tangan Nama Berkas"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Memfilter dengan suatu set flag perangkat menggunakan awalan ~ untuk mengecualikan, mis. 'internal, ~needs-reboot'"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Agen Firmware"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "URI Basis Firmware"
@@ -612,10 +608,6 @@ msgstr "GUID"
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Dapatkan semua flag perangkat yang didukung oleh fwupd"
-
-#. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Dapatkan semua perangkat dan kemungkinan rilis"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -847,10 +839,6 @@ msgstr "Hanya tampilkan nilai PCR tunggal"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Timpa path ESP default"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Menimpa peringatan dan paksa aksi"
 
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"

@@ -756,10 +756,6 @@ msgstr "Potreban je naziv datoteke"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filter sa skupom oznaka uređaja koji koristi ~ prefiks za izuzimanje, npr. 'internal,~needs-reboot'"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Firmver agent"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Osnovni URI firmvera"
@@ -841,10 +837,6 @@ msgstr "GUID"
 #. TRANSLATORS: command description
 msgid "Get all device flags supported by fwupd"
 msgstr "Prikaži sve oznake uređaja koje podržava fwupd"
-
-#. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Prikaži sve uređaje i moguća izdanja"
 
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
@@ -1232,10 +1224,6 @@ msgstr "Prikaži samo jednu PRC vrijednost"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Zaobiđi zadanu ESP putanju"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Zaobiđi upozorenja i prisili radnju"
 
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
