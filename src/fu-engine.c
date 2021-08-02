@@ -6670,23 +6670,25 @@ fu_engine_load (FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	fu_context_add_firmware_gtype (self->ctx, "ifd-firmware", FU_TYPE_IFD_FIRMWARE);
 
 	/* set up backends */
-	for (guint i = 0; i < self->backends->len; i++) {
-		FuBackend *backend = g_ptr_array_index (self->backends, i);
-		g_autoptr(GError) error_backend = NULL;
-		if (!fu_backend_setup (backend, &error_backend)) {
-			g_debug ("failed to setup backend %s: %s",
-				 fu_backend_get_name (backend),
-				 error_backend->message);
-			continue;
+	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
+		for (guint i = 0; i < self->backends->len; i++) {
+			FuBackend *backend = g_ptr_array_index(self->backends, i);
+			g_autoptr(GError) error_backend = NULL;
+			if (!fu_backend_setup(backend, &error_backend)) {
+				g_debug("failed to setup backend %s: %s",
+					fu_backend_get_name(backend),
+					error_backend->message);
+				continue;
+			}
+			backend_cnt++;
 		}
-		backend_cnt++;
-	}
-	if (backend_cnt == 0) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "all backends failed setup");
-		return FALSE;
+		if (backend_cnt == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "all backends failed setup");
+			return FALSE;
+		}
 	}
 
 	/* delete old data files */
