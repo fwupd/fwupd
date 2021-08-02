@@ -467,6 +467,8 @@ fu_plugin_uefi_capsule_coldplug_device (FuPlugin *plugin, FuUefiDevice *dev, GEr
 		fu_device_add_private_flag (FU_DEVICE (dev),
 					    FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
 	}
+	if (fu_plugin_has_custom_flag(plugin, "no-ux-capsule"))
+		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE);
 
 	/* set fallback name if nothing else is set */
 	device_kind = fu_uefi_device_get_kind (dev);
