@@ -1,0 +1,24 @@
+# SRS TODO Leverage GType
+# GType = FuRallyBarMiniVideo
+# ParentGuid = USB\VID_046D&PID_08A4
+
+[USB\VID_046D&PID_089B]
+Plugin = logitech_bulkcontroller
+Vendor = Logitech
+InstallDuration = 1500
+VersionFormat = triplet
+Flags = none
+Name = Logitech Rally Bar
+Summary = Logitech Rally Bar device
+VendorId = USB:0x046D
+
+[USB\VID_046D&PID_08D3]
+Plugin = logitech_bulkcontroller
+Vendor = Logitech
+InstallDuration = 1500
+VersionFormat = triplet
+Flags = none
+Name = Logitech Rally Bar Mini
+Summary = Logitech Rally Bar Mini device
+VendorId = USB:0x046D
+

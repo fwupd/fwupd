@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="firmware">
+  <id>com.logitech.vc.rallybar.firmware</id>
+  <name>Logitech Rally Bar Firmware</name>
+  <name_variant_suffix>Room video conferencing device</name_variant_suffix>
+  <summary>Room video conferencing device</summary>
+  <description>
+    <p>
+    Updating the firmware on your this device improves performance, adds new features and fixes security issues.
+    </p>
+  </description>
+  <provides>
+    <firmware type="flashed">84f40464-9272-4ef7-9399-cd95f12da696</firmware>
+    <firmware type="flashed">12345678-1234-1234-1234-123456789012</firmware>
+  </provides>
+  <url type="homepage">https://www.logitech.com/en-us/video-collaboration/products</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <updatecontact>support@logitech.com</updatecontact>
+  <developer_name>Logitech VC team</developer_name>
+  <categories>
+   <category>X-Device</category>
+  </categories>
+  <releases>
+   <release version=“1.3.0” timestamp="1627602102">
+    <description>
+     <p>This release supports Google CFM:</p>
+     <ul>
+      <li>Initial release</li>
+     </ul>
+    </description>
+   </release>
+  </releases>
+  <!-- we can optionally restrict this update to specific fwupd versions,
+  or even previous firmware or bootloader versions -->
+  <requires>
+    <id compare="ge" version="1.5.0">org.freedesktop.fwupd</id>
+    <firmware compare="ge" version="1.5.0"/>
+  </requires>
+</component>

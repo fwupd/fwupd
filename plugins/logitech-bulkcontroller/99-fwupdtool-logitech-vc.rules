@@ -1,0 +1,11 @@
+# Copyright 2021 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# udev rules to start firmware update on the Logitech Rally Bar Video device.
+SUBSYSTEM=="usb", ACTION=="add", ATTR{name}=="USB\VID_046D&PID_089B", \
+  RUN+="/sbin/initctl emit fwupdtool-update PLUGIN=logitech_bulkcontroller GUID=9608c52f-e60f-597d-a813-84c6f2177a89"
+
+# udev rules to start firmware update on the Logitech Rally Bar Mini Video device.
+SUBSYSTEM=="usb", ACTION=="add", ATTR{name}=="USB\VID_046D&PID_08D3", \
+  RUN+="/sbin/initctl emit fwupdtool-update PLUGIN=logitech_bulkcontroller GUID=7da607b9-1f8f-597a-8f5e-5788d6f8bcb3"

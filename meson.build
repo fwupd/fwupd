@@ -223,6 +223,7 @@ endif
 endif
 libjcat = dependency('jcat', version : '>= 0.1.0', fallback : ['libjcat', 'libjcat_dep'])
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
+protobufc = dependency('libprotobuf-c')
 valgrind = dependency('valgrind', required: false)
 if get_option('curl')
   libcurl = dependency('libcurl', version : '>= 7.56.0')
@@ -543,6 +544,8 @@ endif
 if get_option('libarchive')
   plugin_deps += libarchive
 endif
+
+plugin_deps += protobufc
 
 root_incdir = include_directories('.')
 
