@@ -249,7 +249,7 @@ fu_device_name_func (void)
 
 	/* vendor then name */
 	fu_device_set_vendor (device1, "Hughski");
-	fu_device_set_name (device1, "Hughski ColorHug(TM)_Pro");
+	fu_device_set_name(device1, "Hughski  ColorHug(TM)__Pro  ");
 	g_assert_cmpstr (fu_device_get_vendor (device1), ==, "Hughski");
 	g_assert_cmpstr (fu_device_get_name (device1), ==, "ColorHug™ Pro");
 
@@ -258,6 +258,11 @@ fu_device_name_func (void)
 	fu_device_set_vendor (device2, "Hughski");
 	g_assert_cmpstr (fu_device_get_vendor (device2), ==, "Hughski");
 	g_assert_cmpstr (fu_device_get_name (device2), ==, "ColorHug™ Pro");
+
+	/* a real example */
+	fu_device_set_name(device2, "Intel(R) Core(TM) i7-10850H CPU @ 2.70GHz");
+	fu_device_set_vendor(device2, "Intel");
+	g_assert_cmpstr(fu_device_get_name(device2), ==, "Core™ i7-10850H CPU @ 2.70GHz");
 }
 
 static void
