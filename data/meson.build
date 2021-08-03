@@ -72,6 +72,11 @@ if get_option('systemd') and build_daemon
     dynamic_options += 'StateDirectory=fwupd'
     dynamic_options += 'CacheDirectory=fwupd'
   endif
+  if get_option('plugin_redfish')
+    dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX AF_INET AF_INET6'
+  else
+    dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX'
+  endif
   con2.set('dynamic_options', '\n'.join(dynamic_options))
   con2.set('motd_dir', motd_dir)
 

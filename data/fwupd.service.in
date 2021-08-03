@@ -13,6 +13,5 @@ ExecStart=@libexecdir@/fwupd/fwupd
 PrivateTmp=yes
 ProtectHome=yes
 ProtectSystem=full
-RestrictAddressFamilies=AF_NETLINK AF_UNIX
 SystemCallFilter=~@mount
 @dynamic_options@
