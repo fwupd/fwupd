@@ -9,7 +9,9 @@
 #include <fwupdplugin.h>
 
 struct FuPluginData {
-	GMutex			 mutex;
+	guint delay_decompress_ms;
+	guint delay_write_ms;
+	guint delay_verify_ms;
 };
 
 void
@@ -25,6 +27,51 @@ fu_plugin_destroy (FuPlugin *plugin)
 {
 	//FuPluginData *data = fu_plugin_get_data (plugin);
 	g_debug ("destroy");
+}
+
+static gboolean
+fu_plugin_test_load_xml(FuPlugin *plugin, const gchar *xml, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data(plugin);
+	g_autoptr(XbBuilder) builder = xb_builder_new();
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	g_autoptr(XbNode) delay_decompress_ms = NULL;
+	g_autoptr(XbNode) delay_verify_ms = NULL;
+	g_autoptr(XbNode) delay_write_ms = NULL;
+	g_autoptr(XbSilo) silo = NULL;
+
+	/* build silo */
+	if (!xb_builder_source_load_xml(source, xml, XB_BUILDER_SOURCE_FLAG_NONE, error))
+		return FALSE;
+	xb_builder_import_source(builder, source);
+	silo = xb_builder_compile(builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
+	if (silo == NULL)
+		return FALSE;
+
+	/* parse markup */
+	delay_decompress_ms = xb_silo_query_first(silo, "config/delay_decompress_ms", NULL);
+	if (delay_decompress_ms != NULL)
+		data->delay_decompress_ms = xb_node_get_text_as_uint(delay_decompress_ms);
+	delay_write_ms = xb_silo_query_first(silo, "config/delay_write_ms", NULL);
+	if (delay_write_ms != NULL)
+		data->delay_write_ms = xb_node_get_text_as_uint(delay_write_ms);
+	delay_verify_ms = xb_silo_query_first(silo, "config/delay_verify_ms", NULL);
+	if (delay_verify_ms != NULL)
+		data->delay_verify_ms = xb_node_get_text_as_uint(delay_verify_ms);
+
+	/* success */
+	return TRUE;
+}
+
+gboolean
+fu_plugin_startup(FuPlugin *plugin, GError **error)
+{
+	const gchar *xml = g_getenv("FWUPD_TEST_PLUGIN_XML");
+	if (xml != NULL) {
+		if (!fu_plugin_test_load_xml(plugin, xml, error))
+			return FALSE;
+	}
+	return TRUE;
 }
 
 gboolean
@@ -149,6 +196,7 @@ fu_plugin_update (FuPlugin *plugin,
 		  FwupdInstallFlags flags,
 		  GError **error)
 {
+	FuPluginData *data = fu_plugin_get_data(plugin);
 	const gchar *test = g_getenv ("FWUPD_PLUGIN_TEST");
 	gboolean requires_activation = g_strcmp0 (test, "requires-activation") == 0;
 	gboolean requires_reboot = g_strcmp0 (test, "requires-reboot") == 0;
@@ -160,19 +208,22 @@ fu_plugin_update (FuPlugin *plugin,
 		return FALSE;
 	}
 	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
-	for (guint i = 1; i <= 100; i++) {
+	for (guint i = 1; i <= data->delay_decompress_ms; i++) {
+		guint progress = (100 * i) / data->delay_decompress_ms;
 		g_usleep (1000);
-		fu_device_set_progress (device, i);
+		fu_device_set_progress(device, progress);
 	}
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	for (guint i = 1; i <= 100; i++) {
+	for (guint i = 1; i <= data->delay_write_ms; i++) {
+		guint progress = (100 * i) / data->delay_write_ms;
 		g_usleep (1000);
-		fu_device_set_progress (device, i);
+		fu_device_set_progress(device, progress);
 	}
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
-	for (guint i = 1; i <= 100; i++) {
+	for (guint i = 1; i <= data->delay_verify_ms; i++) {
+		guint progress = (100 * i) / data->delay_verify_ms;
 		g_usleep (1000);
-		fu_device_set_progress (device, i);
+		fu_device_set_progress(device, progress);
 	}
 
 	/* composite test, upgrade composite devices */
