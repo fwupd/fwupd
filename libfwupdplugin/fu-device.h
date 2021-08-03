@@ -231,49 +231,190 @@ FuDevice	*fu_device_new_with_context		(FuContext	*ctx);
 
 /**
  * FuDeviceInternalFlags:
- * @FU_DEVICE_INTERNAL_FLAG_NONE:			No flags set
- * @FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS:	Do not add instance IDs from the device baseclass
- * @FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER:		Ensure the version is a valid semantic version, e.g. numbers separated with dots
- * @FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED:		Only devices supported in the metadata will be opened
- * @FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME:		Set the device name from the metadata `name` if available
- * @FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY:	Set the device name from the metadata `category` if available
- * @FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT:		Set the device version format from the metadata if available
- * @FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON:		Set the device icon from the metadata if available
- * @FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN:			Retry the device open up to 5 times if it fails
- * @FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID:		Match GUIDs on device replug where the physical and logical IDs will be different
- * @FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION:		Inherit activation status from the history database on startup
- * @FU_DEVICE_INTERNAL_FLAG_IS_OPEN:			The device opened successfully and ready to use
- * @FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER:		Do not attempt to read the device serial number
- * @FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN:	Automatically assign the parent for children of this device
- * @FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET:		Device needs resetting twice for attach after the firmware update
- * @FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN:		Children of the device are inhibited by the parent
- * @FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN:	Do not auto-remove clildren in the device list
- * @FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN:	Use parent to open and close the device
  *
  * The device internal flags.
  **/
-typedef enum {
-	FU_DEVICE_INTERNAL_FLAG_NONE			= 0,
-	FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS	= (1llu << 0),	/* Since: 1.5.5 */
-	FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER		= (1llu << 1),	/* Since: 1.5.5 */
-	FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED		= (1llu << 2),	/* Since: 1.5.5 */
-	FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME		= (1llu << 3),	/* Since: 1.5.5 */
-	FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY	= (1llu << 4),	/* Since: 1.5.5 */
-	FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT		= (1llu << 5),	/* Since: 1.5.5 */
-	FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON		= (1llu << 6),	/* Since: 1.5.5 */
-	FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN		= (1llu << 7),	/* Since: 1.5.5 */
-	FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID	= (1llu << 8),	/* Since: 1.5.8 */
-	FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION	= (1llu << 9),  /* Since: 1.5.9 */
-	FU_DEVICE_INTERNAL_FLAG_IS_OPEN			= (1llu << 10),	/* Since: 1.6.1 */
-	FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER	= (1llu << 11),	/* Since: 1.6.2 */
-	FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN	= (1llu << 12),	/* Since: 1.6.2 */
-	FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET	= (1llu << 13),	/* Since: 1.6.2 */
-	FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN	= (1llu << 14),	/* Since: 1.6.2 */
-	FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN	= (1llu << 15),	/* Since: 1.6.2 */
-	FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN	= (1llu << 16),	/* Since: 1.6.2 */
-	/*< private >*/
-	FU_DEVICE_INTERNAL_FLAG_UNKNOWN			= G_MAXUINT64,
-} FuDeviceInternalFlags;
+typedef guint64 FuDeviceInternalFlags;
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_NONE:
+ *
+ * No flags set.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_INTERNAL_FLAG_NONE (0)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_UNKNOWN:
+ *
+ * Unknown flag value.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_INTERNAL_FLAG_UNKNOWN G_MAXUINT64
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS:
+ *
+ * Do not add instance IDs from the device baseclass.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS (1ull << 0)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER:
+ *
+ * Ensure the version is a valid semantic version, e.g. numbers separated with dots.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER (1ull << 1)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED:
+ *
+ * Only devices supported in the metadata will be opened
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_INTERNAL_FLAG_ONLY_SUPPORTED (1ull << 2)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME:
+ *
+ * Set the device name from the metadata `name` if available.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME (1ull << 3)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY:
+ *
+ * Set the device name from the metadata `category` if available.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME_CATEGORY (1ull << 4)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT:
+ *
+ * Set the device version format from the metadata if available.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT (1ull << 5)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON:
+ *
+ * Set the device icon from the metadata if available.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON (1ull << 6)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN:
+ *
+ * Retry the device open up to 5 times if it fails.
+ *
+ * Since: 1.5.5
+ */
+#define FU_DEVICE_INTERNAL_FLAG_RETRY_OPEN (1ull << 7)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID:
+ *
+ * Match GUIDs on device replug where the physical and logical IDs will be different.
+ *
+ * Since: 1.5.8
+ */
+#define FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID (1ull << 8)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION:
+ *
+ * Inherit activation status from the history database on startup.
+ *
+ * Since: 1.5.9
+ */
+#define FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION (1ull << 9)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_IS_OPEN:
+ *
+ * The device opened successfully and ready to use.
+ *
+ * Since: 1.6.1
+ */
+#define FU_DEVICE_INTERNAL_FLAG_IS_OPEN (1ull << 10)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER:
+ *
+ * Do not attempt to read the device serial number.
+ *
+ * Since: 1.6.2
+ */
+#define FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER (1ull << 11)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN:
+ *
+ * Automatically assign the parent for children of this device.
+ *
+ * Since: 1.6.2
+ */
+#define FU_DEVICE_INTERNAL_FLAG_AUTO_PARENT_CHILDREN (1ull << 12)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET:
+ *
+ * Device needs resetting twice for attach after the firmware update.
+ *
+ * Since: 1.6.2
+ */
+#define FU_DEVICE_INTERNAL_FLAG_ATTACH_EXTRA_RESET (1ull << 13)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN:
+ *
+ * Children of the device are inhibited by the parent.
+ *
+ * Since: 1.6.2
+ */
+#define FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN (1ull << 14)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN:
+ *
+ * Do not auto-remove clildren in the device list.
+ *
+ * Since: 1.6.2
+ */
+#define FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN (1ull << 15)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN:
+ *
+ * Use parent to open and close the device.
+ *
+ * Since: 1.6.2
+ */
+#define FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN (1ull << 16)
+
+/**
+ * FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY:
+ *
+ * Use parent for the battery level and threshold.
+ *
+ * Since: 1.6.3
+ */
+#define FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY (1ull << 17)
 
 /* accessors */
 gchar		*fu_device_to_string			(FuDevice	*self);

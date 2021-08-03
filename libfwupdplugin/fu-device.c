@@ -238,6 +238,8 @@ fu_device_internal_flag_to_string (FuDeviceInternalFlags flag)
 		return "no-auto-remove-children";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN)
 		return "use-parent-for-open";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY)
+		return "use-parent-for-battery";
 	return NULL;
 }
 
@@ -288,6 +290,8 @@ fu_device_internal_flag_from_string (const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE_CHILDREN;
 	if (g_strcmp0 (flag, "use-parent-for-open") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN;
+	if (g_strcmp0(flag, "use-parent-for-battery") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -3242,6 +3246,14 @@ fu_device_get_battery_level (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), FU_BATTERY_VALUE_INVALID);
+
+	/* use the parent if the child is unset */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY) &&
+	    priv->battery_level == FU_BATTERY_VALUE_INVALID) {
+		FuDevice *parent = fu_device_get_parent(self);
+		if (parent != NULL)
+			return fu_device_get_battery_level(parent);
+	}
 	return priv->battery_level;
 }
 
@@ -3289,6 +3301,14 @@ fu_device_get_battery_threshold (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), FU_BATTERY_VALUE_INVALID);
+
+	/* use the parent if the child is unset */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY) &&
+	    priv->battery_threshold == FU_BATTERY_VALUE_INVALID) {
+		FuDevice *parent = fu_device_get_parent(self);
+		if (parent != NULL)
+			return fu_device_get_battery_threshold(parent);
+	}
 
 	/* default value */
 	if (priv->battery_threshold == FU_BATTERY_VALUE_INVALID)
