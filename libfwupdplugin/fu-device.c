@@ -2164,6 +2164,39 @@ fu_device_set_vendor (FuDevice *self, const gchar *vendor)
 	fu_device_fixup_vendor_name (self);
 }
 
+static gchar *
+fu_device_sanitize_name(const gchar *value)
+{
+	gboolean last_was_space = FALSE;
+	guint last_non_space = 0;
+	g_autoptr(GString) new = g_string_new(NULL);
+
+	/* add each printable char with maximum of one whitespace char */
+	for (guint i = 0; value[i] != '\0'; i++) {
+		const gchar tmp = value[i];
+		if (!g_ascii_isprint(tmp))
+			continue;
+		if (g_ascii_isspace(tmp) || tmp == '_') {
+			if (new->len == 0)
+				continue;
+			if (last_was_space)
+				continue;
+			last_was_space = TRUE;
+			g_string_append_c(new, ' ');
+		} else {
+			last_was_space = FALSE;
+			g_string_append_c(new, tmp);
+			last_non_space = new->len;
+		}
+	}
+	g_string_truncate(new, last_non_space);
+	fu_common_string_replace(new, "(TM)", "™");
+	fu_common_string_replace(new, "(R)", "");
+	if (new->len == 0)
+		return NULL;
+	return g_string_free(g_steal_pointer(&new), FALSE);
+}
+
 /**
  * fu_device_set_name:
  * @self: a #FuDevice
@@ -2176,31 +2209,31 @@ fu_device_set_vendor (FuDevice *self, const gchar *vendor)
 void
 fu_device_set_name (FuDevice *self, const gchar *value)
 {
-	g_autoptr(GString) new = g_string_new (value);
+	g_autofree gchar *value_safe = NULL;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (value != NULL);
 
 	/* overwriting? */
-	if (g_strcmp0 (value, fu_device_get_name (self)) == 0) {
+	value_safe = fu_device_sanitize_name(value);
+	if (g_strcmp0(value_safe, fu_device_get_name(self)) == 0) {
 		const gchar *id = fu_device_get_id (self);
-		g_debug ("%s device overwriting same name value: %s",
-			 id != NULL ? id : "unknown", value);
+		g_debug("%s device overwriting same name value: %s",
+			id != NULL ? id : "unknown",
+			value_safe);
 		return;
 	}
 
 	/* changing */
 	if (fu_device_get_name (self) != NULL) {
 		const gchar *id = fu_device_get_id (self);
-		g_debug ("%s device overwriting name value: %s->%s",
+		g_debug("%s device overwriting name value: %s->%s",
 			id != NULL ? id : "unknown",
-			 fu_device_get_name (self),
-			 value);
+			fu_device_get_name(self),
+			value_safe);
 	}
 
-	g_strdelimit (new->str, "_", ' ');
-	fu_common_string_replace (new, "(TM)", "™");
-	fwupd_device_set_name (FWUPD_DEVICE (self), new->str);
+	fwupd_device_set_name(FWUPD_DEVICE(self), value_safe);
 	fu_device_fixup_vendor_name (self);
 }
 
