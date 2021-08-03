@@ -36,6 +36,10 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		FuDevice *device = g_ptr_array_index (devices, i);
 		fu_plugin_device_add (plugin, device);
 	}
+
+	/* this is no longer relevant */
+	if (devices->len > 0)
+		fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi_capsule");
 	return TRUE;
 }
 
