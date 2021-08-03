@@ -53,6 +53,27 @@ fu_plugin_list_get_all (FuPluginList *self)
 	return self->plugins;
 }
 
+static void
+fu_plugin_list_rules_changed_cb(FuPlugin *plugin, gpointer user_data)
+{
+	FuPluginList *self = FU_PLUGIN_LIST(user_data);
+	GPtrArray *rules = fu_plugin_get_rules(plugin, FU_PLUGIN_RULE_CONFLICTS);
+	if (rules == NULL)
+		return;
+	for (guint j = 0; j < rules->len; j++) {
+		const gchar *plugin_name = g_ptr_array_index(rules, j);
+		FuPlugin *dep = fu_plugin_list_find_by_name(self, plugin_name, NULL);
+		if (dep == NULL)
+			continue;
+		if (fu_plugin_has_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED))
+			continue;
+		g_debug("late disabling %s as conflicts with %s",
+			fu_plugin_get_name(dep),
+			fu_plugin_get_name(plugin));
+		fu_plugin_add_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED);
+	}
+}
+
 /**
  * fu_plugin_list_add:
  * @self: a #FuPluginList
@@ -73,6 +94,10 @@ fu_plugin_list_add (FuPluginList *self, FuPlugin *plugin)
 	g_hash_table_insert (self->plugins_hash,
 			     g_strdup (fu_plugin_get_name (plugin)),
 			     g_object_ref (plugin));
+	g_signal_connect(plugin,
+			 "rules-changed",
+			 G_CALLBACK(fu_plugin_list_rules_changed_cb),
+			 self);
 }
 
 /**
