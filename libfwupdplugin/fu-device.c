@@ -418,7 +418,7 @@ fu_device_get_private_flags (FuDevice *self)
  *
  * Returns the number of requests of a specific kind. This function is only
  * useful to the daemon, which uses it to synthesize artificial events for
- * plugins not yet ported to [class@FwupdRequest].
+ * plugins not yet ported to [class@Fwupd.Request].
  *
  * Returns: integer, usually 0
  *
