@@ -414,3 +414,13 @@ RemoveDelay = 90000
 Plugin = dfu
 Flags = manifest-poll
 RemoveDelay = 90000
+
+# Poly Studio P21
+[USB\VID_095D&PID_9298]
+Plugin = dfu
+Flags = manifest-poll
+RemoveDelay = 9000
+[USB\VID_095D&PID_9299]
+Plugin = dfu
+Flags = manifest-poll
+RemoveDelay = 9000
