@@ -16,17 +16,20 @@ PROTOBUF_C__BEGIN_DECLS
 
 #include "device_common.pb-c.h"
 
-typedef struct Logi__Device__Proto__AntiFlickerConfiguration Logi__Device__Proto__AntiFlickerConfiguration;
-typedef struct Logi__Device__Proto__SetAntiFlickerConfigurationRequest Logi__Device__Proto__SetAntiFlickerConfigurationRequest;
-typedef struct Logi__Device__Proto__SetAntiFlickerConfigurationResponse Logi__Device__Proto__SetAntiFlickerConfigurationResponse;
-
+typedef struct Logi__Device__Proto__AntiFlickerConfiguration
+    Logi__Device__Proto__AntiFlickerConfiguration;
+typedef struct Logi__Device__Proto__SetAntiFlickerConfigurationRequest
+    Logi__Device__Proto__SetAntiFlickerConfigurationRequest;
+typedef struct Logi__Device__Proto__SetAntiFlickerConfigurationResponse
+    Logi__Device__Proto__SetAntiFlickerConfigurationResponse;
 
 /* --- enums --- */
 
 typedef enum _Logi__Device__Proto__AntiFlickerConfiguration__Mode {
-  LOGI__DEVICE__PROTO__ANTI_FLICKER_CONFIGURATION__MODE__NTSC_60HZ = 0,
-  LOGI__DEVICE__PROTO__ANTI_FLICKER_CONFIGURATION__MODE__PAL_50HZ = 1
-    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(LOGI__DEVICE__PROTO__ANTI_FLICKER_CONFIGURATION__MODE)
+	LOGI__DEVICE__PROTO__ANTI_FLICKER_CONFIGURATION__MODE__NTSC_60HZ = 0,
+	LOGI__DEVICE__PROTO__ANTI_FLICKER_CONFIGURATION__MODE__PAL_50HZ =
+	    1 PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(
+		LOGI__DEVICE__PROTO__ANTI_FLICKER_CONFIGURATION__MODE)
 } Logi__Device__Proto__AntiFlickerConfiguration__Mode;
 
 /* --- messages --- */
@@ -36,118 +39,134 @@ typedef enum _Logi__Device__Proto__AntiFlickerConfiguration__Mode {
  * This message data structure holds information about the
  * current AntiFlicker configuration.
  */
-struct  Logi__Device__Proto__AntiFlickerConfiguration
-{
-  ProtobufCMessage base;
-  Logi__Device__Proto__AntiFlickerConfiguration__Mode mode;
+struct Logi__Device__Proto__AntiFlickerConfiguration {
+	ProtobufCMessage base;
+	Logi__Device__Proto__AntiFlickerConfiguration__Mode mode;
 };
-#define LOGI__DEVICE__PROTO__ANTI_FLICKER_CONFIGURATION__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&logi__device__proto__anti_flicker_configuration__descriptor) \
-    , LOGI__DEVICE__PROTO__ANTI_FLICKER_CONFIGURATION__MODE__NTSC_60HZ }
+#define LOGI__DEVICE__PROTO__ANTI_FLICKER_CONFIGURATION__INIT                                      \
+	{                                                                                          \
+		PROTOBUF_C_MESSAGE_INIT(                                                           \
+		    &logi__device__proto__anti_flicker_configuration__descriptor)                  \
+		, LOGI__DEVICE__PROTO__ANTI_FLICKER_CONFIGURATION__MODE__NTSC_60HZ                 \
+	}
 
-
-struct  Logi__Device__Proto__SetAntiFlickerConfigurationRequest
-{
-  ProtobufCMessage base;
-  Logi__Device__Proto__AntiFlickerConfiguration__Mode mode;
+struct Logi__Device__Proto__SetAntiFlickerConfigurationRequest {
+	ProtobufCMessage base;
+	Logi__Device__Proto__AntiFlickerConfiguration__Mode mode;
 };
-#define LOGI__DEVICE__PROTO__SET_ANTI_FLICKER_CONFIGURATION_REQUEST__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&logi__device__proto__set_anti_flicker_configuration_request__descriptor) \
-    , LOGI__DEVICE__PROTO__ANTI_FLICKER_CONFIGURATION__MODE__NTSC_60HZ }
+#define LOGI__DEVICE__PROTO__SET_ANTI_FLICKER_CONFIGURATION_REQUEST__INIT                          \
+	{                                                                                          \
+		PROTOBUF_C_MESSAGE_INIT(                                                           \
+		    &logi__device__proto__set_anti_flicker_configuration_request__descriptor)      \
+		, LOGI__DEVICE__PROTO__ANTI_FLICKER_CONFIGURATION__MODE__NTSC_60HZ                 \
+	}
 
-
-struct  Logi__Device__Proto__SetAntiFlickerConfigurationResponse
-{
-  ProtobufCMessage base;
-  protobuf_c_boolean success;
-  size_t n_errors;
-  Logi__Device__Proto__Error **errors;
+struct Logi__Device__Proto__SetAntiFlickerConfigurationResponse {
+	ProtobufCMessage base;
+	protobuf_c_boolean success;
+	size_t n_errors;
+	Logi__Device__Proto__Error **errors;
 };
-#define LOGI__DEVICE__PROTO__SET_ANTI_FLICKER_CONFIGURATION_RESPONSE__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&logi__device__proto__set_anti_flicker_configuration_response__descriptor) \
-    , 0, 0,NULL }
-
+#define LOGI__DEVICE__PROTO__SET_ANTI_FLICKER_CONFIGURATION_RESPONSE__INIT                         \
+	{                                                                                          \
+		PROTOBUF_C_MESSAGE_INIT(                                                           \
+		    &logi__device__proto__set_anti_flicker_configuration_response__descriptor)     \
+		, 0, 0, NULL                                                                       \
+	}
 
 /* Logi__Device__Proto__AntiFlickerConfiguration methods */
-void   logi__device__proto__anti_flicker_configuration__init
-                     (Logi__Device__Proto__AntiFlickerConfiguration         *message);
-size_t logi__device__proto__anti_flicker_configuration__get_packed_size
-                     (const Logi__Device__Proto__AntiFlickerConfiguration   *message);
-size_t logi__device__proto__anti_flicker_configuration__pack
-                     (const Logi__Device__Proto__AntiFlickerConfiguration   *message,
-                      uint8_t             *out);
-size_t logi__device__proto__anti_flicker_configuration__pack_to_buffer
-                     (const Logi__Device__Proto__AntiFlickerConfiguration   *message,
-                      ProtobufCBuffer     *buffer);
+void
+logi__device__proto__anti_flicker_configuration__init(
+    Logi__Device__Proto__AntiFlickerConfiguration *message);
+size_t
+logi__device__proto__anti_flicker_configuration__get_packed_size(
+    const Logi__Device__Proto__AntiFlickerConfiguration *message);
+size_t
+logi__device__proto__anti_flicker_configuration__pack(
+    const Logi__Device__Proto__AntiFlickerConfiguration *message,
+    uint8_t *out);
+size_t
+logi__device__proto__anti_flicker_configuration__pack_to_buffer(
+    const Logi__Device__Proto__AntiFlickerConfiguration *message,
+    ProtobufCBuffer *buffer);
 Logi__Device__Proto__AntiFlickerConfiguration *
-       logi__device__proto__anti_flicker_configuration__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   logi__device__proto__anti_flicker_configuration__free_unpacked
-                     (Logi__Device__Proto__AntiFlickerConfiguration *message,
-                      ProtobufCAllocator *allocator);
+logi__device__proto__anti_flicker_configuration__unpack(ProtobufCAllocator *allocator,
+							size_t len,
+							const uint8_t *data);
+void
+logi__device__proto__anti_flicker_configuration__free_unpacked(
+    Logi__Device__Proto__AntiFlickerConfiguration *message,
+    ProtobufCAllocator *allocator);
 /* Logi__Device__Proto__SetAntiFlickerConfigurationRequest methods */
-void   logi__device__proto__set_anti_flicker_configuration_request__init
-                     (Logi__Device__Proto__SetAntiFlickerConfigurationRequest         *message);
-size_t logi__device__proto__set_anti_flicker_configuration_request__get_packed_size
-                     (const Logi__Device__Proto__SetAntiFlickerConfigurationRequest   *message);
-size_t logi__device__proto__set_anti_flicker_configuration_request__pack
-                     (const Logi__Device__Proto__SetAntiFlickerConfigurationRequest   *message,
-                      uint8_t             *out);
-size_t logi__device__proto__set_anti_flicker_configuration_request__pack_to_buffer
-                     (const Logi__Device__Proto__SetAntiFlickerConfigurationRequest   *message,
-                      ProtobufCBuffer     *buffer);
+void
+logi__device__proto__set_anti_flicker_configuration_request__init(
+    Logi__Device__Proto__SetAntiFlickerConfigurationRequest *message);
+size_t
+logi__device__proto__set_anti_flicker_configuration_request__get_packed_size(
+    const Logi__Device__Proto__SetAntiFlickerConfigurationRequest *message);
+size_t
+logi__device__proto__set_anti_flicker_configuration_request__pack(
+    const Logi__Device__Proto__SetAntiFlickerConfigurationRequest *message,
+    uint8_t *out);
+size_t
+logi__device__proto__set_anti_flicker_configuration_request__pack_to_buffer(
+    const Logi__Device__Proto__SetAntiFlickerConfigurationRequest *message,
+    ProtobufCBuffer *buffer);
 Logi__Device__Proto__SetAntiFlickerConfigurationRequest *
-       logi__device__proto__set_anti_flicker_configuration_request__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   logi__device__proto__set_anti_flicker_configuration_request__free_unpacked
-                     (Logi__Device__Proto__SetAntiFlickerConfigurationRequest *message,
-                      ProtobufCAllocator *allocator);
+logi__device__proto__set_anti_flicker_configuration_request__unpack(ProtobufCAllocator *allocator,
+								    size_t len,
+								    const uint8_t *data);
+void
+logi__device__proto__set_anti_flicker_configuration_request__free_unpacked(
+    Logi__Device__Proto__SetAntiFlickerConfigurationRequest *message,
+    ProtobufCAllocator *allocator);
 /* Logi__Device__Proto__SetAntiFlickerConfigurationResponse methods */
-void   logi__device__proto__set_anti_flicker_configuration_response__init
-                     (Logi__Device__Proto__SetAntiFlickerConfigurationResponse         *message);
-size_t logi__device__proto__set_anti_flicker_configuration_response__get_packed_size
-                     (const Logi__Device__Proto__SetAntiFlickerConfigurationResponse   *message);
-size_t logi__device__proto__set_anti_flicker_configuration_response__pack
-                     (const Logi__Device__Proto__SetAntiFlickerConfigurationResponse   *message,
-                      uint8_t             *out);
-size_t logi__device__proto__set_anti_flicker_configuration_response__pack_to_buffer
-                     (const Logi__Device__Proto__SetAntiFlickerConfigurationResponse   *message,
-                      ProtobufCBuffer     *buffer);
+void
+logi__device__proto__set_anti_flicker_configuration_response__init(
+    Logi__Device__Proto__SetAntiFlickerConfigurationResponse *message);
+size_t
+logi__device__proto__set_anti_flicker_configuration_response__get_packed_size(
+    const Logi__Device__Proto__SetAntiFlickerConfigurationResponse *message);
+size_t
+logi__device__proto__set_anti_flicker_configuration_response__pack(
+    const Logi__Device__Proto__SetAntiFlickerConfigurationResponse *message,
+    uint8_t *out);
+size_t
+logi__device__proto__set_anti_flicker_configuration_response__pack_to_buffer(
+    const Logi__Device__Proto__SetAntiFlickerConfigurationResponse *message,
+    ProtobufCBuffer *buffer);
 Logi__Device__Proto__SetAntiFlickerConfigurationResponse *
-       logi__device__proto__set_anti_flicker_configuration_response__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   logi__device__proto__set_anti_flicker_configuration_response__free_unpacked
-                     (Logi__Device__Proto__SetAntiFlickerConfigurationResponse *message,
-                      ProtobufCAllocator *allocator);
+logi__device__proto__set_anti_flicker_configuration_response__unpack(ProtobufCAllocator *allocator,
+								     size_t len,
+								     const uint8_t *data);
+void
+logi__device__proto__set_anti_flicker_configuration_response__free_unpacked(
+    Logi__Device__Proto__SetAntiFlickerConfigurationResponse *message,
+    ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
-typedef void (*Logi__Device__Proto__AntiFlickerConfiguration_Closure)
-                 (const Logi__Device__Proto__AntiFlickerConfiguration *message,
-                  void *closure_data);
-typedef void (*Logi__Device__Proto__SetAntiFlickerConfigurationRequest_Closure)
-                 (const Logi__Device__Proto__SetAntiFlickerConfigurationRequest *message,
-                  void *closure_data);
-typedef void (*Logi__Device__Proto__SetAntiFlickerConfigurationResponse_Closure)
-                 (const Logi__Device__Proto__SetAntiFlickerConfigurationResponse *message,
-                  void *closure_data);
+typedef void (*Logi__Device__Proto__AntiFlickerConfiguration_Closure)(
+    const Logi__Device__Proto__AntiFlickerConfiguration *message,
+    void *closure_data);
+typedef void (*Logi__Device__Proto__SetAntiFlickerConfigurationRequest_Closure)(
+    const Logi__Device__Proto__SetAntiFlickerConfigurationRequest *message,
+    void *closure_data);
+typedef void (*Logi__Device__Proto__SetAntiFlickerConfigurationResponse_Closure)(
+    const Logi__Device__Proto__SetAntiFlickerConfigurationResponse *message,
+    void *closure_data);
 
 /* --- services --- */
-
 
 /* --- descriptors --- */
 
 extern const ProtobufCMessageDescriptor logi__device__proto__anti_flicker_configuration__descriptor;
-extern const ProtobufCEnumDescriptor    logi__device__proto__anti_flicker_configuration__mode__descriptor;
-extern const ProtobufCMessageDescriptor logi__device__proto__set_anti_flicker_configuration_request__descriptor;
-extern const ProtobufCMessageDescriptor logi__device__proto__set_anti_flicker_configuration_response__descriptor;
+extern const ProtobufCEnumDescriptor
+    logi__device__proto__anti_flicker_configuration__mode__descriptor;
+extern const ProtobufCMessageDescriptor
+    logi__device__proto__set_anti_flicker_configuration_request__descriptor;
+extern const ProtobufCMessageDescriptor
+    logi__device__proto__set_anti_flicker_configuration_response__descriptor;
 
 PROTOBUF_C__END_DECLS
 
-
-#endif  /* PROTOBUF_C_antiflicker_2eproto__INCLUDED */
+#endif /* PROTOBUF_C_antiflicker_2eproto__INCLUDED */

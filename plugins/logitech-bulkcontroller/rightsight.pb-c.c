@@ -7,334 +7,386 @@
 #endif
 
 #include "rightsight.pb-c.h"
-void   logi__device__proto__right_sight_configuration__init
-                     (Logi__Device__Proto__RightSightConfiguration         *message)
+void
+logi__device__proto__right_sight_configuration__init(
+    Logi__Device__Proto__RightSightConfiguration *message)
 {
-  static const Logi__Device__Proto__RightSightConfiguration init_value = LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__RightSightConfiguration init_value =
+	    LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__right_sight_configuration__get_packed_size
-                     (const Logi__Device__Proto__RightSightConfiguration *message)
+size_t
+logi__device__proto__right_sight_configuration__get_packed_size(
+    const Logi__Device__Proto__RightSightConfiguration *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__right_sight_configuration__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor ==
+	       &logi__device__proto__right_sight_configuration__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__right_sight_configuration__pack
-                     (const Logi__Device__Proto__RightSightConfiguration *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__right_sight_configuration__pack(
+    const Logi__Device__Proto__RightSightConfiguration *message,
+    uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__right_sight_configuration__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__right_sight_configuration__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__right_sight_configuration__pack_to_buffer
-                     (const Logi__Device__Proto__RightSightConfiguration *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__right_sight_configuration__pack_to_buffer(
+    const Logi__Device__Proto__RightSightConfiguration *message,
+    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__right_sight_configuration__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__right_sight_configuration__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__RightSightConfiguration *
-       logi__device__proto__right_sight_configuration__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__right_sight_configuration__unpack(ProtobufCAllocator *allocator,
+						       size_t len,
+						       const uint8_t *data)
 {
-  return (Logi__Device__Proto__RightSightConfiguration *)
-     protobuf_c_message_unpack (&logi__device__proto__right_sight_configuration__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__RightSightConfiguration *)protobuf_c_message_unpack(
+	    &logi__device__proto__right_sight_configuration__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__right_sight_configuration__free_unpacked
-                     (Logi__Device__Proto__RightSightConfiguration *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__right_sight_configuration__free_unpacked(
+    Logi__Device__Proto__RightSightConfiguration *message,
+    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__right_sight_configuration__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor ==
+	       &logi__device__proto__right_sight_configuration__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__set_right_sight_configuration_request__init
-                     (Logi__Device__Proto__SetRightSightConfigurationRequest         *message)
+void
+logi__device__proto__set_right_sight_configuration_request__init(
+    Logi__Device__Proto__SetRightSightConfigurationRequest *message)
 {
-  static const Logi__Device__Proto__SetRightSightConfigurationRequest init_value = LOGI__DEVICE__PROTO__SET_RIGHT_SIGHT_CONFIGURATION_REQUEST__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__SetRightSightConfigurationRequest init_value =
+	    LOGI__DEVICE__PROTO__SET_RIGHT_SIGHT_CONFIGURATION_REQUEST__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__set_right_sight_configuration_request__get_packed_size
-                     (const Logi__Device__Proto__SetRightSightConfigurationRequest *message)
+size_t
+logi__device__proto__set_right_sight_configuration_request__get_packed_size(
+    const Logi__Device__Proto__SetRightSightConfigurationRequest *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__set_right_sight_configuration_request__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor ==
+	       &logi__device__proto__set_right_sight_configuration_request__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__set_right_sight_configuration_request__pack
-                     (const Logi__Device__Proto__SetRightSightConfigurationRequest *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__set_right_sight_configuration_request__pack(
+    const Logi__Device__Proto__SetRightSightConfigurationRequest *message,
+    uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__set_right_sight_configuration_request__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__set_right_sight_configuration_request__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__set_right_sight_configuration_request__pack_to_buffer
-                     (const Logi__Device__Proto__SetRightSightConfigurationRequest *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__set_right_sight_configuration_request__pack_to_buffer(
+    const Logi__Device__Proto__SetRightSightConfigurationRequest *message,
+    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__set_right_sight_configuration_request__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__set_right_sight_configuration_request__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__SetRightSightConfigurationRequest *
-       logi__device__proto__set_right_sight_configuration_request__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__set_right_sight_configuration_request__unpack(ProtobufCAllocator *allocator,
+								   size_t len,
+								   const uint8_t *data)
 {
-  return (Logi__Device__Proto__SetRightSightConfigurationRequest *)
-     protobuf_c_message_unpack (&logi__device__proto__set_right_sight_configuration_request__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__SetRightSightConfigurationRequest *)protobuf_c_message_unpack(
+	    &logi__device__proto__set_right_sight_configuration_request__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__set_right_sight_configuration_request__free_unpacked
-                     (Logi__Device__Proto__SetRightSightConfigurationRequest *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__set_right_sight_configuration_request__free_unpacked(
+    Logi__Device__Proto__SetRightSightConfigurationRequest *message,
+    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__set_right_sight_configuration_request__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor ==
+	       &logi__device__proto__set_right_sight_configuration_request__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__set_right_sight_configuration_response__init
-                     (Logi__Device__Proto__SetRightSightConfigurationResponse         *message)
+void
+logi__device__proto__set_right_sight_configuration_response__init(
+    Logi__Device__Proto__SetRightSightConfigurationResponse *message)
 {
-  static const Logi__Device__Proto__SetRightSightConfigurationResponse init_value = LOGI__DEVICE__PROTO__SET_RIGHT_SIGHT_CONFIGURATION_RESPONSE__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__SetRightSightConfigurationResponse init_value =
+	    LOGI__DEVICE__PROTO__SET_RIGHT_SIGHT_CONFIGURATION_RESPONSE__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__set_right_sight_configuration_response__get_packed_size
-                     (const Logi__Device__Proto__SetRightSightConfigurationResponse *message)
+size_t
+logi__device__proto__set_right_sight_configuration_response__get_packed_size(
+    const Logi__Device__Proto__SetRightSightConfigurationResponse *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__set_right_sight_configuration_response__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor ==
+	       &logi__device__proto__set_right_sight_configuration_response__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__set_right_sight_configuration_response__pack
-                     (const Logi__Device__Proto__SetRightSightConfigurationResponse *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__set_right_sight_configuration_response__pack(
+    const Logi__Device__Proto__SetRightSightConfigurationResponse *message,
+    uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__set_right_sight_configuration_response__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__set_right_sight_configuration_response__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__set_right_sight_configuration_response__pack_to_buffer
-                     (const Logi__Device__Proto__SetRightSightConfigurationResponse *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__set_right_sight_configuration_response__pack_to_buffer(
+    const Logi__Device__Proto__SetRightSightConfigurationResponse *message,
+    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__set_right_sight_configuration_response__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__set_right_sight_configuration_response__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__SetRightSightConfigurationResponse *
-       logi__device__proto__set_right_sight_configuration_response__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__set_right_sight_configuration_response__unpack(ProtobufCAllocator *allocator,
+								    size_t len,
+								    const uint8_t *data)
 {
-  return (Logi__Device__Proto__SetRightSightConfigurationResponse *)
-     protobuf_c_message_unpack (&logi__device__proto__set_right_sight_configuration_response__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__SetRightSightConfigurationResponse *)protobuf_c_message_unpack(
+	    &logi__device__proto__set_right_sight_configuration_response__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__set_right_sight_configuration_response__free_unpacked
-                     (Logi__Device__Proto__SetRightSightConfigurationResponse *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__set_right_sight_configuration_response__free_unpacked(
+    Logi__Device__Proto__SetRightSightConfigurationResponse *message,
+    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__set_right_sight_configuration_response__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor ==
+	       &logi__device__proto__set_right_sight_configuration_response__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-static const ProtobufCEnumValue logi__device__proto__right_sight_configuration__mode__enum_values_by_number[3] =
-{
-  { "DO_NOT_USE", "LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__DO_NOT_USE", 0 },
-  { "DYNAMIC", "LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__DYNAMIC", 1 },
-  { "ON_CALL_START", "LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__ON_CALL_START", 2 },
+static const ProtobufCEnumValue
+    logi__device__proto__right_sight_configuration__mode__enum_values_by_number[3] = {
+	{"DO_NOT_USE", "LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__DO_NOT_USE", 0},
+	{"DYNAMIC", "LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__DYNAMIC", 1},
+	{"ON_CALL_START", "LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__ON_CALL_START", 2},
 };
-static const ProtobufCIntRange logi__device__proto__right_sight_configuration__mode__value_ranges[] = {
-{0, 0},{0, 3}
+static const ProtobufCIntRange
+    logi__device__proto__right_sight_configuration__mode__value_ranges[] = {{0, 0}, {0, 3}};
+static const ProtobufCEnumValueIndex
+    logi__device__proto__right_sight_configuration__mode__enum_values_by_name[3] = {
+	{"DO_NOT_USE", 0},
+	{"DYNAMIC", 1},
+	{"ON_CALL_START", 2},
 };
-static const ProtobufCEnumValueIndex logi__device__proto__right_sight_configuration__mode__enum_values_by_name[3] =
-{
-  { "DO_NOT_USE", 0 },
-  { "DYNAMIC", 1 },
-  { "ON_CALL_START", 2 },
-};
-const ProtobufCEnumDescriptor logi__device__proto__right_sight_configuration__mode__descriptor =
-{
-  PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
-  "logi.device.proto.RightSightConfiguration.Mode",
-  "Mode",
-  "Logi__Device__Proto__RightSightConfiguration__Mode",
-  "logi.device.proto",
-  3,
-  logi__device__proto__right_sight_configuration__mode__enum_values_by_number,
-  3,
-  logi__device__proto__right_sight_configuration__mode__enum_values_by_name,
-  1,
-  logi__device__proto__right_sight_configuration__mode__value_ranges,
-  NULL,NULL,NULL,NULL   /* reserved[1234] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__right_sight_configuration__field_descriptors[3] =
-{
-  {
-    "enabled",
-    1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_BOOL,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__RightSightConfiguration, enabled),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "mode",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__RightSightConfiguration, mode),
-    &logi__device__proto__right_sight_configuration__mode__descriptor,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "last_modified",
+const ProtobufCEnumDescriptor logi__device__proto__right_sight_configuration__mode__descriptor = {
+    PROTOBUF_C__ENUM_DESCRIPTOR_MAGIC,
+    "logi.device.proto.RightSightConfiguration.Mode",
+    "Mode",
+    "Logi__Device__Proto__RightSightConfiguration__Mode",
+    "logi.device.proto",
     3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT64,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__RightSightConfiguration, last_modified),
+    logi__device__proto__right_sight_configuration__mode__enum_values_by_number,
+    3,
+    logi__device__proto__right_sight_configuration__mode__enum_values_by_name,
+    1,
+    logi__device__proto__right_sight_configuration__mode__value_ranges,
     NULL,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL,
+    NULL /* reserved[1234] */
+};
+static const ProtobufCFieldDescriptor
+    logi__device__proto__right_sight_configuration__field_descriptors[3] = {
+	{
+	    "enabled",
+	    1,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_BOOL,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__RightSightConfiguration, enabled),
+	    NULL,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "mode",
+	    2,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_ENUM,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__RightSightConfiguration, mode),
+	    &logi__device__proto__right_sight_configuration__mode__descriptor,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "last_modified",
+	    3,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_UINT64,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__RightSightConfiguration, last_modified),
+	    NULL,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
 };
 static const unsigned logi__device__proto__right_sight_configuration__field_indices_by_name[] = {
-  0,   /* field[0] = enabled */
-  2,   /* field[2] = last_modified */
-  1,   /* field[1] = mode */
+    0, /* field[0] = enabled */
+    2, /* field[2] = last_modified */
+    1, /* field[1] = mode */
 };
-static const ProtobufCIntRange logi__device__proto__right_sight_configuration__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 3 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__right_sight_configuration__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.RightSightConfiguration",
-  "RightSightConfiguration",
-  "Logi__Device__Proto__RightSightConfiguration",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__RightSightConfiguration),
-  3,
-  logi__device__proto__right_sight_configuration__field_descriptors,
-  logi__device__proto__right_sight_configuration__field_indices_by_name,
-  1,  logi__device__proto__right_sight_configuration__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__right_sight_configuration__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__set_right_sight_configuration_request__field_descriptors[2] =
-{
-  {
-    "enabled",
+static const ProtobufCIntRange
+    logi__device__proto__right_sight_configuration__number_ranges[1 + 1] = {{1, 0}, {0, 3}};
+const ProtobufCMessageDescriptor logi__device__proto__right_sight_configuration__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.RightSightConfiguration",
+    "RightSightConfiguration",
+    "Logi__Device__Proto__RightSightConfiguration",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__RightSightConfiguration),
+    3,
+    logi__device__proto__right_sight_configuration__field_descriptors,
+    logi__device__proto__right_sight_configuration__field_indices_by_name,
     1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_BOOL,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SetRightSightConfigurationRequest, enabled),
+    logi__device__proto__right_sight_configuration__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__right_sight_configuration__init,
     NULL,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "mode",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_ENUM,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SetRightSightConfigurationRequest, mode),
-    &logi__device__proto__right_sight_configuration__mode__descriptor,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
 };
-static const unsigned logi__device__proto__set_right_sight_configuration_request__field_indices_by_name[] = {
-  0,   /* field[0] = enabled */
-  1,   /* field[1] = mode */
+static const ProtobufCFieldDescriptor
+    logi__device__proto__set_right_sight_configuration_request__field_descriptors[2] = {
+	{
+	    "enabled",
+	    1,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_BOOL,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SetRightSightConfigurationRequest, enabled),
+	    NULL,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "mode",
+	    2,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_ENUM,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SetRightSightConfigurationRequest, mode),
+	    &logi__device__proto__right_sight_configuration__mode__descriptor,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
 };
-static const ProtobufCIntRange logi__device__proto__set_right_sight_configuration_request__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 2 }
+static const unsigned
+    logi__device__proto__set_right_sight_configuration_request__field_indices_by_name[] = {
+	0, /* field[0] = enabled */
+	1, /* field[1] = mode */
 };
-const ProtobufCMessageDescriptor logi__device__proto__set_right_sight_configuration_request__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.SetRightSightConfigurationRequest",
-  "SetRightSightConfigurationRequest",
-  "Logi__Device__Proto__SetRightSightConfigurationRequest",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__SetRightSightConfigurationRequest),
-  2,
-  logi__device__proto__set_right_sight_configuration_request__field_descriptors,
-  logi__device__proto__set_right_sight_configuration_request__field_indices_by_name,
-  1,  logi__device__proto__set_right_sight_configuration_request__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__set_right_sight_configuration_request__init,
-  NULL,NULL,NULL    /* reserved[123] */
+static const ProtobufCIntRange
+    logi__device__proto__set_right_sight_configuration_request__number_ranges[1 + 1] = {{1, 0},
+											{0, 2}};
+const ProtobufCMessageDescriptor
+    logi__device__proto__set_right_sight_configuration_request__descriptor = {
+	PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+	"logi.device.proto.SetRightSightConfigurationRequest",
+	"SetRightSightConfigurationRequest",
+	"Logi__Device__Proto__SetRightSightConfigurationRequest",
+	"logi.device.proto",
+	sizeof(Logi__Device__Proto__SetRightSightConfigurationRequest),
+	2,
+	logi__device__proto__set_right_sight_configuration_request__field_descriptors,
+	logi__device__proto__set_right_sight_configuration_request__field_indices_by_name,
+	1,
+	logi__device__proto__set_right_sight_configuration_request__number_ranges,
+	(ProtobufCMessageInit)logi__device__proto__set_right_sight_configuration_request__init,
+	NULL,
+	NULL,
+	NULL /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor logi__device__proto__set_right_sight_configuration_response__field_descriptors[2] =
-{
-  {
-    "errors",
-    1,
-    PROTOBUF_C_LABEL_REPEATED,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__SetRightSightConfigurationResponse, n_errors),
-    offsetof(Logi__Device__Proto__SetRightSightConfigurationResponse, errors),
-    &logi__device__proto__error__descriptor,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "right_sight_configuration",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SetRightSightConfigurationResponse, right_sight_configuration),
-    &logi__device__proto__right_sight_configuration__descriptor,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+static const ProtobufCFieldDescriptor
+    logi__device__proto__set_right_sight_configuration_response__field_descriptors[2] = {
+	{
+	    "errors",
+	    1,
+	    PROTOBUF_C_LABEL_REPEATED,
+	    PROTOBUF_C_TYPE_MESSAGE,
+	    offsetof(Logi__Device__Proto__SetRightSightConfigurationResponse, n_errors),
+	    offsetof(Logi__Device__Proto__SetRightSightConfigurationResponse, errors),
+	    &logi__device__proto__error__descriptor,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "right_sight_configuration",
+	    2,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_MESSAGE,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SetRightSightConfigurationResponse,
+		     right_sight_configuration),
+	    &logi__device__proto__right_sight_configuration__descriptor,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
 };
-static const unsigned logi__device__proto__set_right_sight_configuration_response__field_indices_by_name[] = {
-  0,   /* field[0] = errors */
-  1,   /* field[1] = right_sight_configuration */
+static const unsigned
+    logi__device__proto__set_right_sight_configuration_response__field_indices_by_name[] = {
+	0, /* field[0] = errors */
+	1, /* field[1] = right_sight_configuration */
 };
-static const ProtobufCIntRange logi__device__proto__set_right_sight_configuration_response__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 2 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__set_right_sight_configuration_response__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.SetRightSightConfigurationResponse",
-  "SetRightSightConfigurationResponse",
-  "Logi__Device__Proto__SetRightSightConfigurationResponse",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__SetRightSightConfigurationResponse),
-  2,
-  logi__device__proto__set_right_sight_configuration_response__field_descriptors,
-  logi__device__proto__set_right_sight_configuration_response__field_indices_by_name,
-  1,  logi__device__proto__set_right_sight_configuration_response__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__set_right_sight_configuration_response__init,
-  NULL,NULL,NULL    /* reserved[123] */
+static const ProtobufCIntRange
+    logi__device__proto__set_right_sight_configuration_response__number_ranges[1 + 1] = {{1, 0},
+											 {0, 2}};
+const ProtobufCMessageDescriptor
+    logi__device__proto__set_right_sight_configuration_response__descriptor = {
+	PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+	"logi.device.proto.SetRightSightConfigurationResponse",
+	"SetRightSightConfigurationResponse",
+	"Logi__Device__Proto__SetRightSightConfigurationResponse",
+	"logi.device.proto",
+	sizeof(Logi__Device__Proto__SetRightSightConfigurationResponse),
+	2,
+	logi__device__proto__set_right_sight_configuration_response__field_descriptors,
+	logi__device__proto__set_right_sight_configuration_response__field_indices_by_name,
+	1,
+	logi__device__proto__set_right_sight_configuration_response__number_ranges,
+	(ProtobufCMessageInit)logi__device__proto__set_right_sight_configuration_response__init,
+	NULL,
+	NULL,
+	NULL /* reserved[123] */
 };

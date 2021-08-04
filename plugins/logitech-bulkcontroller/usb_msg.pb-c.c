@@ -7,1214 +7,1296 @@
 #endif
 
 #include "usb_msg.pb-c.h"
-void   logi__device__proto__header__init
-                     (Logi__Device__Proto__Header         *message)
+void
+logi__device__proto__header__init(Logi__Device__Proto__Header *message)
 {
-  static const Logi__Device__Proto__Header init_value = LOGI__DEVICE__PROTO__HEADER__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__Header init_value = LOGI__DEVICE__PROTO__HEADER__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__header__get_packed_size
-                     (const Logi__Device__Proto__Header *message)
+size_t
+logi__device__proto__header__get_packed_size(const Logi__Device__Proto__Header *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__header__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor == &logi__device__proto__header__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__header__pack
-                     (const Logi__Device__Proto__Header *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__header__pack(const Logi__Device__Proto__Header *message, uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__header__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor == &logi__device__proto__header__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__header__pack_to_buffer
-                     (const Logi__Device__Proto__Header *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__header__pack_to_buffer(const Logi__Device__Proto__Header *message,
+					    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__header__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor == &logi__device__proto__header__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__Header *
-       logi__device__proto__header__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__header__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data)
 {
-  return (Logi__Device__Proto__Header *)
-     protobuf_c_message_unpack (&logi__device__proto__header__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__Header *)protobuf_c_message_unpack(
+	    &logi__device__proto__header__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__header__free_unpacked
-                     (Logi__Device__Proto__Header *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__header__free_unpacked(Logi__Device__Proto__Header *message,
+					   ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__header__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor == &logi__device__proto__header__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__acknowledge__init
-                     (Logi__Device__Proto__Acknowledge         *message)
+void
+logi__device__proto__acknowledge__init(Logi__Device__Proto__Acknowledge *message)
 {
-  static const Logi__Device__Proto__Acknowledge init_value = LOGI__DEVICE__PROTO__ACKNOWLEDGE__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__Acknowledge init_value =
+	    LOGI__DEVICE__PROTO__ACKNOWLEDGE__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__acknowledge__get_packed_size
-                     (const Logi__Device__Proto__Acknowledge *message)
+size_t
+logi__device__proto__acknowledge__get_packed_size(const Logi__Device__Proto__Acknowledge *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__acknowledge__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor == &logi__device__proto__acknowledge__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__acknowledge__pack
-                     (const Logi__Device__Proto__Acknowledge *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__acknowledge__pack(const Logi__Device__Proto__Acknowledge *message,
+				       uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__acknowledge__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor == &logi__device__proto__acknowledge__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__acknowledge__pack_to_buffer
-                     (const Logi__Device__Proto__Acknowledge *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__acknowledge__pack_to_buffer(const Logi__Device__Proto__Acknowledge *message,
+						 ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__acknowledge__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor == &logi__device__proto__acknowledge__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__Acknowledge *
-       logi__device__proto__acknowledge__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__acknowledge__unpack(ProtobufCAllocator *allocator,
+					 size_t len,
+					 const uint8_t *data)
 {
-  return (Logi__Device__Proto__Acknowledge *)
-     protobuf_c_message_unpack (&logi__device__proto__acknowledge__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__Acknowledge *)protobuf_c_message_unpack(
+	    &logi__device__proto__acknowledge__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__acknowledge__free_unpacked
-                     (Logi__Device__Proto__Acknowledge *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__acknowledge__free_unpacked(Logi__Device__Proto__Acknowledge *message,
+						ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__acknowledge__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor == &logi__device__proto__acknowledge__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__kong_event__init
-                     (Logi__Device__Proto__KongEvent         *message)
+void
+logi__device__proto__kong_event__init(Logi__Device__Proto__KongEvent *message)
 {
-  static const Logi__Device__Proto__KongEvent init_value = LOGI__DEVICE__PROTO__KONG_EVENT__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__KongEvent init_value =
+	    LOGI__DEVICE__PROTO__KONG_EVENT__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__kong_event__get_packed_size
-                     (const Logi__Device__Proto__KongEvent *message)
+size_t
+logi__device__proto__kong_event__get_packed_size(const Logi__Device__Proto__KongEvent *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__kong_event__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor == &logi__device__proto__kong_event__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__kong_event__pack
-                     (const Logi__Device__Proto__KongEvent *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__kong_event__pack(const Logi__Device__Proto__KongEvent *message, uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__kong_event__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor == &logi__device__proto__kong_event__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__kong_event__pack_to_buffer
-                     (const Logi__Device__Proto__KongEvent *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__kong_event__pack_to_buffer(const Logi__Device__Proto__KongEvent *message,
+						ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__kong_event__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor == &logi__device__proto__kong_event__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__KongEvent *
-       logi__device__proto__kong_event__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__kong_event__unpack(ProtobufCAllocator *allocator,
+					size_t len,
+					const uint8_t *data)
 {
-  return (Logi__Device__Proto__KongEvent *)
-     protobuf_c_message_unpack (&logi__device__proto__kong_event__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__KongEvent *)protobuf_c_message_unpack(
+	    &logi__device__proto__kong_event__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__kong_event__free_unpacked
-                     (Logi__Device__Proto__KongEvent *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__kong_event__free_unpacked(Logi__Device__Proto__KongEvent *message,
+					       ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__kong_event__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor == &logi__device__proto__kong_event__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__handshake_event__init
-                     (Logi__Device__Proto__HandshakeEvent         *message)
+void
+logi__device__proto__handshake_event__init(Logi__Device__Proto__HandshakeEvent *message)
 {
-  static const Logi__Device__Proto__HandshakeEvent init_value = LOGI__DEVICE__PROTO__HANDSHAKE_EVENT__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__HandshakeEvent init_value =
+	    LOGI__DEVICE__PROTO__HANDSHAKE_EVENT__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__handshake_event__get_packed_size
-                     (const Logi__Device__Proto__HandshakeEvent *message)
+size_t
+logi__device__proto__handshake_event__get_packed_size(
+    const Logi__Device__Proto__HandshakeEvent *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__handshake_event__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor == &logi__device__proto__handshake_event__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__handshake_event__pack
-                     (const Logi__Device__Proto__HandshakeEvent *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__handshake_event__pack(const Logi__Device__Proto__HandshakeEvent *message,
+					   uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__handshake_event__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor == &logi__device__proto__handshake_event__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__handshake_event__pack_to_buffer
-                     (const Logi__Device__Proto__HandshakeEvent *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__handshake_event__pack_to_buffer(
+    const Logi__Device__Proto__HandshakeEvent *message,
+    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__handshake_event__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor == &logi__device__proto__handshake_event__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__HandshakeEvent *
-       logi__device__proto__handshake_event__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__handshake_event__unpack(ProtobufCAllocator *allocator,
+					     size_t len,
+					     const uint8_t *data)
 {
-  return (Logi__Device__Proto__HandshakeEvent *)
-     protobuf_c_message_unpack (&logi__device__proto__handshake_event__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__HandshakeEvent *)protobuf_c_message_unpack(
+	    &logi__device__proto__handshake_event__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__handshake_event__free_unpacked
-                     (Logi__Device__Proto__HandshakeEvent *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__handshake_event__free_unpacked(Logi__Device__Proto__HandshakeEvent *message,
+						    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__handshake_event__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor == &logi__device__proto__handshake_event__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__usb_msg__init
-                     (Logi__Device__Proto__UsbMsg         *message)
+void
+logi__device__proto__usb_msg__init(Logi__Device__Proto__UsbMsg *message)
 {
-  static const Logi__Device__Proto__UsbMsg init_value = LOGI__DEVICE__PROTO__USB_MSG__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__UsbMsg init_value = LOGI__DEVICE__PROTO__USB_MSG__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__usb_msg__get_packed_size
-                     (const Logi__Device__Proto__UsbMsg *message)
+size_t
+logi__device__proto__usb_msg__get_packed_size(const Logi__Device__Proto__UsbMsg *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__usb_msg__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor == &logi__device__proto__usb_msg__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__usb_msg__pack
-                     (const Logi__Device__Proto__UsbMsg *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__usb_msg__pack(const Logi__Device__Proto__UsbMsg *message, uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__usb_msg__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor == &logi__device__proto__usb_msg__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__usb_msg__pack_to_buffer
-                     (const Logi__Device__Proto__UsbMsg *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__usb_msg__pack_to_buffer(const Logi__Device__Proto__UsbMsg *message,
+					     ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__usb_msg__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor == &logi__device__proto__usb_msg__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__UsbMsg *
-       logi__device__proto__usb_msg__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__usb_msg__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data)
 {
-  return (Logi__Device__Proto__UsbMsg *)
-     protobuf_c_message_unpack (&logi__device__proto__usb_msg__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__UsbMsg *)protobuf_c_message_unpack(
+	    &logi__device__proto__usb_msg__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__usb_msg__free_unpacked
-                     (Logi__Device__Proto__UsbMsg *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__usb_msg__free_unpacked(Logi__Device__Proto__UsbMsg *message,
+					    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__usb_msg__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor == &logi__device__proto__usb_msg__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__request__init
-                     (Logi__Device__Proto__Request         *message)
+void
+logi__device__proto__request__init(Logi__Device__Proto__Request *message)
 {
-  static const Logi__Device__Proto__Request init_value = LOGI__DEVICE__PROTO__REQUEST__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__Request init_value = LOGI__DEVICE__PROTO__REQUEST__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__request__get_packed_size
-                     (const Logi__Device__Proto__Request *message)
+size_t
+logi__device__proto__request__get_packed_size(const Logi__Device__Proto__Request *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__request__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor == &logi__device__proto__request__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__request__pack
-                     (const Logi__Device__Proto__Request *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__request__pack(const Logi__Device__Proto__Request *message, uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__request__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor == &logi__device__proto__request__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__request__pack_to_buffer
-                     (const Logi__Device__Proto__Request *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__request__pack_to_buffer(const Logi__Device__Proto__Request *message,
+					     ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__request__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor == &logi__device__proto__request__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__Request *
-       logi__device__proto__request__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__request__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data)
 {
-  return (Logi__Device__Proto__Request *)
-     protobuf_c_message_unpack (&logi__device__proto__request__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__Request *)protobuf_c_message_unpack(
+	    &logi__device__proto__request__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__request__free_unpacked
-                     (Logi__Device__Proto__Request *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__request__free_unpacked(Logi__Device__Proto__Request *message,
+					    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__request__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor == &logi__device__proto__request__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__response__init
-                     (Logi__Device__Proto__Response         *message)
+void
+logi__device__proto__response__init(Logi__Device__Proto__Response *message)
 {
-  static const Logi__Device__Proto__Response init_value = LOGI__DEVICE__PROTO__RESPONSE__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__Response init_value = LOGI__DEVICE__PROTO__RESPONSE__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__response__get_packed_size
-                     (const Logi__Device__Proto__Response *message)
+size_t
+logi__device__proto__response__get_packed_size(const Logi__Device__Proto__Response *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__response__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor == &logi__device__proto__response__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__response__pack
-                     (const Logi__Device__Proto__Response *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__response__pack(const Logi__Device__Proto__Response *message, uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__response__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor == &logi__device__proto__response__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__response__pack_to_buffer
-                     (const Logi__Device__Proto__Response *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__response__pack_to_buffer(const Logi__Device__Proto__Response *message,
+					      ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__response__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor == &logi__device__proto__response__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__Response *
-       logi__device__proto__response__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__response__unpack(ProtobufCAllocator *allocator,
+				      size_t len,
+				      const uint8_t *data)
 {
-  return (Logi__Device__Proto__Response *)
-     protobuf_c_message_unpack (&logi__device__proto__response__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__Response *)protobuf_c_message_unpack(
+	    &logi__device__proto__response__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__response__free_unpacked
-                     (Logi__Device__Proto__Response *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__response__free_unpacked(Logi__Device__Proto__Response *message,
+					     ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__response__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor == &logi__device__proto__response__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__event__init
-                     (Logi__Device__Proto__Event         *message)
+void
+logi__device__proto__event__init(Logi__Device__Proto__Event *message)
 {
-  static const Logi__Device__Proto__Event init_value = LOGI__DEVICE__PROTO__EVENT__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__Event init_value = LOGI__DEVICE__PROTO__EVENT__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__event__get_packed_size
-                     (const Logi__Device__Proto__Event *message)
+size_t
+logi__device__proto__event__get_packed_size(const Logi__Device__Proto__Event *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__event__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor == &logi__device__proto__event__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__event__pack
-                     (const Logi__Device__Proto__Event *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__event__pack(const Logi__Device__Proto__Event *message, uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__event__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor == &logi__device__proto__event__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__event__pack_to_buffer
-                     (const Logi__Device__Proto__Event *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__event__pack_to_buffer(const Logi__Device__Proto__Event *message,
+					   ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__event__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor == &logi__device__proto__event__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__Event *
-       logi__device__proto__event__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__event__unpack(ProtobufCAllocator *allocator, size_t len, const uint8_t *data)
 {
-  return (Logi__Device__Proto__Event *)
-     protobuf_c_message_unpack (&logi__device__proto__event__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__Event *)protobuf_c_message_unpack(
+	    &logi__device__proto__event__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__event__free_unpacked
-                     (Logi__Device__Proto__Event *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__event__free_unpacked(Logi__Device__Proto__Event *message,
+					  ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__event__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor == &logi__device__proto__event__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-static const ProtobufCFieldDescriptor logi__device__proto__header__field_descriptors[2] =
-{
-  {
-    "id",
-    1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__Header, id),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "timestamp",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__Header, timestamp),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+static const ProtobufCFieldDescriptor logi__device__proto__header__field_descriptors[2] = {
+    {
+	"id",
+	1,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_STRING,
+	0, /* quantifier_offset */
+	offsetof(Logi__Device__Proto__Header, id),
+	NULL,
+	&protobuf_c_empty_string,
+	0, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"timestamp",
+	2,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_STRING,
+	0, /* quantifier_offset */
+	offsetof(Logi__Device__Proto__Header, timestamp),
+	NULL,
+	&protobuf_c_empty_string,
+	0, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned logi__device__proto__header__field_indices_by_name[] = {
-  0,   /* field[0] = id */
-  1,   /* field[1] = timestamp */
+    0, /* field[0] = id */
+    1, /* field[1] = timestamp */
 };
-static const ProtobufCIntRange logi__device__proto__header__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 2 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__header__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.Header",
-  "Header",
-  "Logi__Device__Proto__Header",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__Header),
-  2,
-  logi__device__proto__header__field_descriptors,
-  logi__device__proto__header__field_indices_by_name,
-  1,  logi__device__proto__header__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__header__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__acknowledge__field_descriptors[2] =
-{
-  {
-    "msgId",
-    1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__Acknowledge, msgid),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "success",
+static const ProtobufCIntRange logi__device__proto__header__number_ranges[1 + 1] = {{1, 0}, {0, 2}};
+const ProtobufCMessageDescriptor logi__device__proto__header__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.Header",
+    "Header",
+    "Logi__Device__Proto__Header",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__Header),
     2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_BOOL,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__Acknowledge, success),
+    logi__device__proto__header__field_descriptors,
+    logi__device__proto__header__field_indices_by_name,
+    1,
+    logi__device__proto__header__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__header__init,
     NULL,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor logi__device__proto__acknowledge__field_descriptors[2] = {
+    {
+	"msgId",
+	1,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_STRING,
+	0, /* quantifier_offset */
+	offsetof(Logi__Device__Proto__Acknowledge, msgid),
+	NULL,
+	&protobuf_c_empty_string,
+	0, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"success",
+	2,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_BOOL,
+	0, /* quantifier_offset */
+	offsetof(Logi__Device__Proto__Acknowledge, success),
+	NULL,
+	NULL,
+	0, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned logi__device__proto__acknowledge__field_indices_by_name[] = {
-  0,   /* field[0] = msgId */
-  1,   /* field[1] = success */
+    0, /* field[0] = msgId */
+    1, /* field[1] = success */
 };
-static const ProtobufCIntRange logi__device__proto__acknowledge__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 2 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__acknowledge__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.Acknowledge",
-  "Acknowledge",
-  "Logi__Device__Proto__Acknowledge",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__Acknowledge),
-  2,
-  logi__device__proto__acknowledge__field_descriptors,
-  logi__device__proto__acknowledge__field_indices_by_name,
-  1,  logi__device__proto__acknowledge__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__acknowledge__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__kong_event__field_descriptors[1] =
-{
-  {
-    "mqtt_event",
+static const ProtobufCIntRange logi__device__proto__acknowledge__number_ranges[1 + 1] = {{1, 0},
+											 {0, 2}};
+const ProtobufCMessageDescriptor logi__device__proto__acknowledge__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.Acknowledge",
+    "Acknowledge",
+    "Logi__Device__Proto__Acknowledge",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__Acknowledge),
+    2,
+    logi__device__proto__acknowledge__field_descriptors,
+    logi__device__proto__acknowledge__field_indices_by_name,
     1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__KongEvent, mqtt_event),
+    logi__device__proto__acknowledge__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__acknowledge__init,
     NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL,
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor logi__device__proto__kong_event__field_descriptors[1] = {
+    {
+	"mqtt_event",
+	1,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_STRING,
+	0, /* quantifier_offset */
+	offsetof(Logi__Device__Proto__KongEvent, mqtt_event),
+	NULL,
+	&protobuf_c_empty_string,
+	0, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned logi__device__proto__kong_event__field_indices_by_name[] = {
-  0,   /* field[0] = mqtt_event */
+    0, /* field[0] = mqtt_event */
 };
-static const ProtobufCIntRange logi__device__proto__kong_event__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 1 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__kong_event__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.KongEvent",
-  "KongEvent",
-  "Logi__Device__Proto__KongEvent",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__KongEvent),
-  1,
-  logi__device__proto__kong_event__field_descriptors,
-  logi__device__proto__kong_event__field_indices_by_name,
-  1,  logi__device__proto__kong_event__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__kong_event__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__handshake_event__field_descriptors[1] =
-{
-  {
-    "reserved",
+static const ProtobufCIntRange logi__device__proto__kong_event__number_ranges[1 + 1] = {{1, 0},
+											{0, 1}};
+const ProtobufCMessageDescriptor logi__device__proto__kong_event__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.KongEvent",
+    "KongEvent",
+    "Logi__Device__Proto__KongEvent",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__KongEvent),
     1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_BOOL,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__HandshakeEvent, reserved),
+    logi__device__proto__kong_event__field_descriptors,
+    logi__device__proto__kong_event__field_indices_by_name,
+    1,
+    logi__device__proto__kong_event__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__kong_event__init,
     NULL,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor logi__device__proto__handshake_event__field_descriptors[1] = {
+    {
+	"reserved",
+	1,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_BOOL,
+	0, /* quantifier_offset */
+	offsetof(Logi__Device__Proto__HandshakeEvent, reserved),
+	NULL,
+	NULL,
+	0, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned logi__device__proto__handshake_event__field_indices_by_name[] = {
-  0,   /* field[0] = reserved */
+    0, /* field[0] = reserved */
 };
-static const ProtobufCIntRange logi__device__proto__handshake_event__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 1 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__handshake_event__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.HandshakeEvent",
-  "HandshakeEvent",
-  "Logi__Device__Proto__HandshakeEvent",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__HandshakeEvent),
-  1,
-  logi__device__proto__handshake_event__field_descriptors,
-  logi__device__proto__handshake_event__field_indices_by_name,
-  1,  logi__device__proto__handshake_event__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__handshake_event__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__usb_msg__field_descriptors[5] =
-{
-  {
-    "header",
+static const ProtobufCIntRange logi__device__proto__handshake_event__number_ranges[1 + 1] = {
+    {1, 0},
+    {0, 1}};
+const ProtobufCMessageDescriptor logi__device__proto__handshake_event__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.HandshakeEvent",
+    "HandshakeEvent",
+    "Logi__Device__Proto__HandshakeEvent",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__HandshakeEvent),
     1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__UsbMsg, header),
-    &logi__device__proto__header__descriptor,
+    logi__device__proto__handshake_event__field_descriptors,
+    logi__device__proto__handshake_event__field_indices_by_name,
+    1,
+    logi__device__proto__handshake_event__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__handshake_event__init,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "ack",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__UsbMsg, message_case),
-    offsetof(Logi__Device__Proto__UsbMsg, ack),
-    &logi__device__proto__acknowledge__descriptor,
     NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "request",
-    3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__UsbMsg, message_case),
-    offsetof(Logi__Device__Proto__UsbMsg, request),
-    &logi__device__proto__request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "response",
-    4,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__UsbMsg, message_case),
-    offsetof(Logi__Device__Proto__UsbMsg, response),
-    &logi__device__proto__response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "event",
-    5,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__UsbMsg, message_case),
-    offsetof(Logi__Device__Proto__UsbMsg, event),
-    &logi__device__proto__event__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor logi__device__proto__usb_msg__field_descriptors[5] = {
+    {
+	"header",
+	1,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	0, /* quantifier_offset */
+	offsetof(Logi__Device__Proto__UsbMsg, header),
+	&logi__device__proto__header__descriptor,
+	NULL,
+	0, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"ack",
+	2,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__UsbMsg, message_case),
+	offsetof(Logi__Device__Proto__UsbMsg, ack),
+	&logi__device__proto__acknowledge__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"request",
+	3,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__UsbMsg, message_case),
+	offsetof(Logi__Device__Proto__UsbMsg, request),
+	&logi__device__proto__request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"response",
+	4,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__UsbMsg, message_case),
+	offsetof(Logi__Device__Proto__UsbMsg, response),
+	&logi__device__proto__response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"event",
+	5,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__UsbMsg, message_case),
+	offsetof(Logi__Device__Proto__UsbMsg, event),
+	&logi__device__proto__event__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned logi__device__proto__usb_msg__field_indices_by_name[] = {
-  1,   /* field[1] = ack */
-  4,   /* field[4] = event */
-  0,   /* field[0] = header */
-  2,   /* field[2] = request */
-  3,   /* field[3] = response */
+    1, /* field[1] = ack */
+    4, /* field[4] = event */
+    0, /* field[0] = header */
+    2, /* field[2] = request */
+    3, /* field[3] = response */
 };
-static const ProtobufCIntRange logi__device__proto__usb_msg__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 5 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__usb_msg__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.UsbMsg",
-  "UsbMsg",
-  "Logi__Device__Proto__UsbMsg",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__UsbMsg),
-  5,
-  logi__device__proto__usb_msg__field_descriptors,
-  logi__device__proto__usb_msg__field_indices_by_name,
-  1,  logi__device__proto__usb_msg__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__usb_msg__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__request__field_descriptors[18] =
-{
-  {
-    "get_device_info_request",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, get_device_info_request),
-    &logi__device__proto__get_device_info_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "update_now_request",
-    3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, update_now_request),
-    &logi__device__proto__update_now_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "crash_dump_request",
-    4,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, crash_dump_request),
-    &logi__device__proto__send_crash_dump_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "transition_to_devicemode_request",
+static const ProtobufCIntRange logi__device__proto__usb_msg__number_ranges[1 + 1] = {{1, 0},
+										     {0, 5}};
+const ProtobufCMessageDescriptor logi__device__proto__usb_msg__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.UsbMsg",
+    "UsbMsg",
+    "Logi__Device__Proto__UsbMsg",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__UsbMsg),
     5,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, transition_to_devicemode_request),
-    &logi__device__proto__transition_to_device_mode_request__descriptor,
+    logi__device__proto__usb_msg__field_descriptors,
+    logi__device__proto__usb_msg__field_indices_by_name,
+    1,
+    logi__device__proto__usb_msg__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__usb_msg__init,
     NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "get_certificate_chain_request",
-    6,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, get_certificate_chain_request),
-    &logi__device__proto__get_certificate_chain_request__descriptor,
     NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "set_right_sight_configuration_request",
-    7,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, set_right_sight_configuration_request),
-    &logi__device__proto__set_right_sight_configuration_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "get_manifest_body_request",
-    8,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, get_manifest_body_request),
-    &logi__device__proto__get_manifest_body_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "crash_dump_request_v2",
-    9,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, crash_dump_request_v2),
-    &logi__device__proto__send_crash_dump_requestv2__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "set_device_time_request",
-    10,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, set_device_time_request),
-    &logi__device__proto__set_device_time_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "set_anti_flicker_configuration_request",
-    11,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, set_anti_flicker_configuration_request),
-    &logi__device__proto__set_anti_flicker_configuration_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "set_ble_cfg_request",
-    12,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, set_ble_cfg_request),
-    &logi__device__proto__set_blecfg_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "set_deprovision_request",
-    13,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, set_deprovision_request),
-    &logi__device__proto__set_deprovision_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "reboot_device_request",
-    14,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, reboot_device_request),
-    &logi__device__proto__reboot_device_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "speaker_boost_request",
-    15,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, speaker_boost_request),
-    &logi__device__proto__set_speaker_boost_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "noise_reduction_request",
-    16,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, noise_reduction_request),
-    &logi__device__proto__set_noise_reduction_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "reverb_mode_request",
-    17,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, reverb_mode_request),
-    &logi__device__proto__set_reverb_mode_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "generate_bug_report_request",
-    18,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, generate_bug_report_request),
-    &logi__device__proto__generate_crash_dump_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "send_certificate_data_request",
-    19,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Request, payload_case),
-    offsetof(Logi__Device__Proto__Request, send_certificate_data_request),
-    &logi__device__proto__send_certificate_data_request__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor logi__device__proto__request__field_descriptors[18] = {
+    {
+	"get_device_info_request",
+	2,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, get_device_info_request),
+	&logi__device__proto__get_device_info_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"update_now_request",
+	3,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, update_now_request),
+	&logi__device__proto__update_now_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"crash_dump_request",
+	4,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, crash_dump_request),
+	&logi__device__proto__send_crash_dump_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"transition_to_devicemode_request",
+	5,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, transition_to_devicemode_request),
+	&logi__device__proto__transition_to_device_mode_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"get_certificate_chain_request",
+	6,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, get_certificate_chain_request),
+	&logi__device__proto__get_certificate_chain_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"set_right_sight_configuration_request",
+	7,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, set_right_sight_configuration_request),
+	&logi__device__proto__set_right_sight_configuration_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"get_manifest_body_request",
+	8,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, get_manifest_body_request),
+	&logi__device__proto__get_manifest_body_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"crash_dump_request_v2",
+	9,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, crash_dump_request_v2),
+	&logi__device__proto__send_crash_dump_requestv2__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"set_device_time_request",
+	10,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, set_device_time_request),
+	&logi__device__proto__set_device_time_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"set_anti_flicker_configuration_request",
+	11,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, set_anti_flicker_configuration_request),
+	&logi__device__proto__set_anti_flicker_configuration_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"set_ble_cfg_request",
+	12,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, set_ble_cfg_request),
+	&logi__device__proto__set_blecfg_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"set_deprovision_request",
+	13,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, set_deprovision_request),
+	&logi__device__proto__set_deprovision_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"reboot_device_request",
+	14,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, reboot_device_request),
+	&logi__device__proto__reboot_device_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"speaker_boost_request",
+	15,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, speaker_boost_request),
+	&logi__device__proto__set_speaker_boost_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"noise_reduction_request",
+	16,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, noise_reduction_request),
+	&logi__device__proto__set_noise_reduction_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"reverb_mode_request",
+	17,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, reverb_mode_request),
+	&logi__device__proto__set_reverb_mode_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"generate_bug_report_request",
+	18,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, generate_bug_report_request),
+	&logi__device__proto__generate_crash_dump_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"send_certificate_data_request",
+	19,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Request, payload_case),
+	offsetof(Logi__Device__Proto__Request, send_certificate_data_request),
+	&logi__device__proto__send_certificate_data_request__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned logi__device__proto__request__field_indices_by_name[] = {
-  2,   /* field[2] = crash_dump_request */
-  7,   /* field[7] = crash_dump_request_v2 */
-  16,   /* field[16] = generate_bug_report_request */
-  4,   /* field[4] = get_certificate_chain_request */
-  0,   /* field[0] = get_device_info_request */
-  6,   /* field[6] = get_manifest_body_request */
-  14,   /* field[14] = noise_reduction_request */
-  12,   /* field[12] = reboot_device_request */
-  15,   /* field[15] = reverb_mode_request */
-  17,   /* field[17] = send_certificate_data_request */
-  9,   /* field[9] = set_anti_flicker_configuration_request */
-  10,   /* field[10] = set_ble_cfg_request */
-  11,   /* field[11] = set_deprovision_request */
-  8,   /* field[8] = set_device_time_request */
-  5,   /* field[5] = set_right_sight_configuration_request */
-  13,   /* field[13] = speaker_boost_request */
-  3,   /* field[3] = transition_to_devicemode_request */
-  1,   /* field[1] = update_now_request */
+    2,	/* field[2] = crash_dump_request */
+    7,	/* field[7] = crash_dump_request_v2 */
+    16, /* field[16] = generate_bug_report_request */
+    4,	/* field[4] = get_certificate_chain_request */
+    0,	/* field[0] = get_device_info_request */
+    6,	/* field[6] = get_manifest_body_request */
+    14, /* field[14] = noise_reduction_request */
+    12, /* field[12] = reboot_device_request */
+    15, /* field[15] = reverb_mode_request */
+    17, /* field[17] = send_certificate_data_request */
+    9,	/* field[9] = set_anti_flicker_configuration_request */
+    10, /* field[10] = set_ble_cfg_request */
+    11, /* field[11] = set_deprovision_request */
+    8,	/* field[8] = set_device_time_request */
+    5,	/* field[5] = set_right_sight_configuration_request */
+    13, /* field[13] = speaker_boost_request */
+    3,	/* field[3] = transition_to_devicemode_request */
+    1,	/* field[1] = update_now_request */
 };
-static const ProtobufCIntRange logi__device__proto__request__number_ranges[1 + 1] =
-{
-  { 2, 0 },
-  { 0, 18 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__request__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.Request",
-  "Request",
-  "Logi__Device__Proto__Request",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__Request),
-  18,
-  logi__device__proto__request__field_descriptors,
-  logi__device__proto__request__field_indices_by_name,
-  1,  logi__device__proto__request__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__request__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__response__field_descriptors[17] =
-{
-  {
-    "get_device_info_response",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, get_device_info_response),
-    &logi__device__proto__get_device_info_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "update_now_response",
-    3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, update_now_response),
-    &logi__device__proto__update_now_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "crash_dump_response",
-    4,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, crash_dump_response),
-    &logi__device__proto__send_crash_dump_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "transition_to_devicemode_response",
-    5,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, transition_to_devicemode_response),
-    &logi__device__proto__transition_to_device_mode_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "get_certificate_chain_response",
-    6,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, get_certificate_chain_response),
-    &logi__device__proto__get_certificate_chain_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "set_right_sight_configuration_response",
-    7,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, set_right_sight_configuration_response),
-    &logi__device__proto__set_right_sight_configuration_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "get_manifest_body_response",
-    8,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, get_manifest_body_response),
-    &logi__device__proto__get_manifest_body_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "crash_dump_response_v2",
-    9,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, crash_dump_response_v2),
-    &logi__device__proto__send_crash_dump_responsev2__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "set_anti_flicker_configuration_response",
-    11,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, set_anti_flicker_configuration_response),
-    &logi__device__proto__set_anti_flicker_configuration_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "set_ble_cfg_response",
-    12,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, set_ble_cfg_response),
-    &logi__device__proto__set_blecfg_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "set_deprovision_response",
-    13,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, set_deprovision_response),
-    &logi__device__proto__set_deprovision_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "reboot_device_response",
-    14,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, reboot_device_response),
-    &logi__device__proto__reboot_device_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "speaker_boost_response",
-    15,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, speaker_boost_response),
-    &logi__device__proto__set_speaker_boost_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "noise_reduction_response",
-    16,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, noise_reduction_response),
-    &logi__device__proto__set_noise_reduction_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "reverb_mode_response",
-    17,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, reverb_mode_response),
-    &logi__device__proto__set_reverb_mode_response__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "generate_bug_report_response",
+static const ProtobufCIntRange logi__device__proto__request__number_ranges[1 + 1] = {{2, 0},
+										     {0, 18}};
+const ProtobufCMessageDescriptor logi__device__proto__request__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.Request",
+    "Request",
+    "Logi__Device__Proto__Request",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__Request),
     18,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, generate_bug_report_response),
-    &logi__device__proto__generate_crash_dump_response__descriptor,
+    logi__device__proto__request__field_descriptors,
+    logi__device__proto__request__field_indices_by_name,
+    1,
+    logi__device__proto__request__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__request__init,
     NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "send_certificate_data_response",
-    19,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Response, payload_case),
-    offsetof(Logi__Device__Proto__Response, send_certificate_data_response),
-    &logi__device__proto__send_certificate_data_response__descriptor,
     NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor logi__device__proto__response__field_descriptors[17] = {
+    {
+	"get_device_info_response",
+	2,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, get_device_info_response),
+	&logi__device__proto__get_device_info_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"update_now_response",
+	3,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, update_now_response),
+	&logi__device__proto__update_now_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"crash_dump_response",
+	4,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, crash_dump_response),
+	&logi__device__proto__send_crash_dump_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"transition_to_devicemode_response",
+	5,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, transition_to_devicemode_response),
+	&logi__device__proto__transition_to_device_mode_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"get_certificate_chain_response",
+	6,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, get_certificate_chain_response),
+	&logi__device__proto__get_certificate_chain_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"set_right_sight_configuration_response",
+	7,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, set_right_sight_configuration_response),
+	&logi__device__proto__set_right_sight_configuration_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"get_manifest_body_response",
+	8,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, get_manifest_body_response),
+	&logi__device__proto__get_manifest_body_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"crash_dump_response_v2",
+	9,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, crash_dump_response_v2),
+	&logi__device__proto__send_crash_dump_responsev2__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"set_anti_flicker_configuration_response",
+	11,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, set_anti_flicker_configuration_response),
+	&logi__device__proto__set_anti_flicker_configuration_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"set_ble_cfg_response",
+	12,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, set_ble_cfg_response),
+	&logi__device__proto__set_blecfg_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"set_deprovision_response",
+	13,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, set_deprovision_response),
+	&logi__device__proto__set_deprovision_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"reboot_device_response",
+	14,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, reboot_device_response),
+	&logi__device__proto__reboot_device_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"speaker_boost_response",
+	15,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, speaker_boost_response),
+	&logi__device__proto__set_speaker_boost_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"noise_reduction_response",
+	16,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, noise_reduction_response),
+	&logi__device__proto__set_noise_reduction_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"reverb_mode_response",
+	17,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, reverb_mode_response),
+	&logi__device__proto__set_reverb_mode_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"generate_bug_report_response",
+	18,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, generate_bug_report_response),
+	&logi__device__proto__generate_crash_dump_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"send_certificate_data_response",
+	19,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Response, payload_case),
+	offsetof(Logi__Device__Proto__Response, send_certificate_data_response),
+	&logi__device__proto__send_certificate_data_response__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned logi__device__proto__response__field_indices_by_name[] = {
-  2,   /* field[2] = crash_dump_response */
-  7,   /* field[7] = crash_dump_response_v2 */
-  15,   /* field[15] = generate_bug_report_response */
-  4,   /* field[4] = get_certificate_chain_response */
-  0,   /* field[0] = get_device_info_response */
-  6,   /* field[6] = get_manifest_body_response */
-  13,   /* field[13] = noise_reduction_response */
-  11,   /* field[11] = reboot_device_response */
-  14,   /* field[14] = reverb_mode_response */
-  16,   /* field[16] = send_certificate_data_response */
-  8,   /* field[8] = set_anti_flicker_configuration_response */
-  9,   /* field[9] = set_ble_cfg_response */
-  10,   /* field[10] = set_deprovision_response */
-  5,   /* field[5] = set_right_sight_configuration_response */
-  12,   /* field[12] = speaker_boost_response */
-  3,   /* field[3] = transition_to_devicemode_response */
-  1,   /* field[1] = update_now_response */
+    2,	/* field[2] = crash_dump_response */
+    7,	/* field[7] = crash_dump_response_v2 */
+    15, /* field[15] = generate_bug_report_response */
+    4,	/* field[4] = get_certificate_chain_response */
+    0,	/* field[0] = get_device_info_response */
+    6,	/* field[6] = get_manifest_body_response */
+    13, /* field[13] = noise_reduction_response */
+    11, /* field[11] = reboot_device_response */
+    14, /* field[14] = reverb_mode_response */
+    16, /* field[16] = send_certificate_data_response */
+    8,	/* field[8] = set_anti_flicker_configuration_response */
+    9,	/* field[9] = set_ble_cfg_response */
+    10, /* field[10] = set_deprovision_response */
+    5,	/* field[5] = set_right_sight_configuration_response */
+    12, /* field[12] = speaker_boost_response */
+    3,	/* field[3] = transition_to_devicemode_response */
+    1,	/* field[1] = update_now_response */
 };
-static const ProtobufCIntRange logi__device__proto__response__number_ranges[2 + 1] =
-{
-  { 2, 0 },
-  { 11, 8 },
-  { 0, 17 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__response__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.Response",
-  "Response",
-  "Logi__Device__Proto__Response",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__Response),
-  17,
-  logi__device__proto__response__field_descriptors,
-  logi__device__proto__response__field_indices_by_name,
-  2,  logi__device__proto__response__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__response__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__event__field_descriptors[4] =
-{
-  {
-    "kong_event",
-    1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Event, payload_case),
-    offsetof(Logi__Device__Proto__Event, kong_event),
-    &logi__device__proto__kong_event__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "send_crash_dump_event",
+static const ProtobufCIntRange logi__device__proto__response__number_ranges[2 + 1] = {{2, 0},
+										      {11, 8},
+										      {0, 17}};
+const ProtobufCMessageDescriptor logi__device__proto__response__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.Response",
+    "Response",
+    "Logi__Device__Proto__Response",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__Response),
+    17,
+    logi__device__proto__response__field_descriptors,
+    logi__device__proto__response__field_indices_by_name,
     2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Event, payload_case),
-    offsetof(Logi__Device__Proto__Event, send_crash_dump_event),
-    &logi__device__proto__send_crash_dump_event__descriptor,
+    logi__device__proto__response__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__response__init,
     NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "crash_dump_available_event",
-    3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Event, payload_case),
-    offsetof(Logi__Device__Proto__Event, crash_dump_available_event),
-    &logi__device__proto__crash_dump_available_event__descriptor,
     NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "handshake_event",
-    4,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    offsetof(Logi__Device__Proto__Event, payload_case),
-    offsetof(Logi__Device__Proto__Event, handshake_event),
-    &logi__device__proto__handshake_event__descriptor,
-    NULL,
-    0 | PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor logi__device__proto__event__field_descriptors[4] = {
+    {
+	"kong_event",
+	1,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Event, payload_case),
+	offsetof(Logi__Device__Proto__Event, kong_event),
+	&logi__device__proto__kong_event__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"send_crash_dump_event",
+	2,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Event, payload_case),
+	offsetof(Logi__Device__Proto__Event, send_crash_dump_event),
+	&logi__device__proto__send_crash_dump_event__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"crash_dump_available_event",
+	3,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Event, payload_case),
+	offsetof(Logi__Device__Proto__Event, crash_dump_available_event),
+	&logi__device__proto__crash_dump_available_event__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
+    {
+	"handshake_event",
+	4,
+	PROTOBUF_C_LABEL_NONE,
+	PROTOBUF_C_TYPE_MESSAGE,
+	offsetof(Logi__Device__Proto__Event, payload_case),
+	offsetof(Logi__Device__Proto__Event, handshake_event),
+	&logi__device__proto__handshake_event__descriptor,
+	NULL,
+	0 | PROTOBUF_C_FIELD_FLAG_ONEOF, /* flags */
+	0,
+	NULL,
+	NULL /* reserved1,reserved2, etc */
+    },
 };
 static const unsigned logi__device__proto__event__field_indices_by_name[] = {
-  2,   /* field[2] = crash_dump_available_event */
-  3,   /* field[3] = handshake_event */
-  0,   /* field[0] = kong_event */
-  1,   /* field[1] = send_crash_dump_event */
+    2, /* field[2] = crash_dump_available_event */
+    3, /* field[3] = handshake_event */
+    0, /* field[0] = kong_event */
+    1, /* field[1] = send_crash_dump_event */
 };
-static const ProtobufCIntRange logi__device__proto__event__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 4 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__event__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.Event",
-  "Event",
-  "Logi__Device__Proto__Event",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__Event),
-  4,
-  logi__device__proto__event__field_descriptors,
-  logi__device__proto__event__field_indices_by_name,
-  1,  logi__device__proto__event__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__event__init,
-  NULL,NULL,NULL    /* reserved[123] */
+static const ProtobufCIntRange logi__device__proto__event__number_ranges[1 + 1] = {{1, 0}, {0, 4}};
+const ProtobufCMessageDescriptor logi__device__proto__event__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.Event",
+    "Event",
+    "Logi__Device__Proto__Event",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__Event),
+    4,
+    logi__device__proto__event__field_descriptors,
+    logi__device__proto__event__field_indices_by_name,
+    1,
+    logi__device__proto__event__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__event__init,
+    NULL,
+    NULL,
+    NULL /* reserved[123] */
 };

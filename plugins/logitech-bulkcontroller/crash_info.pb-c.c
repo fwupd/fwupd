@@ -7,1023 +7,1163 @@
 #endif
 
 #include "crash_info.pb-c.h"
-void   logi__device__proto__send_crash_dump_request__init
-                     (Logi__Device__Proto__SendCrashDumpRequest         *message)
+void
+logi__device__proto__send_crash_dump_request__init(
+    Logi__Device__Proto__SendCrashDumpRequest *message)
 {
-  static const Logi__Device__Proto__SendCrashDumpRequest init_value = LOGI__DEVICE__PROTO__SEND_CRASH_DUMP_REQUEST__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__SendCrashDumpRequest init_value =
+	    LOGI__DEVICE__PROTO__SEND_CRASH_DUMP_REQUEST__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__send_crash_dump_request__get_packed_size
-                     (const Logi__Device__Proto__SendCrashDumpRequest *message)
+size_t
+logi__device__proto__send_crash_dump_request__get_packed_size(
+    const Logi__Device__Proto__SendCrashDumpRequest *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_request__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_request__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__send_crash_dump_request__pack
-                     (const Logi__Device__Proto__SendCrashDumpRequest *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__send_crash_dump_request__pack(
+    const Logi__Device__Proto__SendCrashDumpRequest *message,
+    uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_request__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_request__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__send_crash_dump_request__pack_to_buffer
-                     (const Logi__Device__Proto__SendCrashDumpRequest *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__send_crash_dump_request__pack_to_buffer(
+    const Logi__Device__Proto__SendCrashDumpRequest *message,
+    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_request__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_request__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__SendCrashDumpRequest *
-       logi__device__proto__send_crash_dump_request__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__send_crash_dump_request__unpack(ProtobufCAllocator *allocator,
+						     size_t len,
+						     const uint8_t *data)
 {
-  return (Logi__Device__Proto__SendCrashDumpRequest *)
-     protobuf_c_message_unpack (&logi__device__proto__send_crash_dump_request__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__SendCrashDumpRequest *)protobuf_c_message_unpack(
+	    &logi__device__proto__send_crash_dump_request__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__send_crash_dump_request__free_unpacked
-                     (Logi__Device__Proto__SendCrashDumpRequest *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__send_crash_dump_request__free_unpacked(
+    Logi__Device__Proto__SendCrashDumpRequest *message,
+    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_request__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_request__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__crash_dump_info__init
-                     (Logi__Device__Proto__CrashDumpInfo         *message)
+void
+logi__device__proto__crash_dump_info__init(Logi__Device__Proto__CrashDumpInfo *message)
 {
-  static const Logi__Device__Proto__CrashDumpInfo init_value = LOGI__DEVICE__PROTO__CRASH_DUMP_INFO__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__CrashDumpInfo init_value =
+	    LOGI__DEVICE__PROTO__CRASH_DUMP_INFO__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__crash_dump_info__get_packed_size
-                     (const Logi__Device__Proto__CrashDumpInfo *message)
+size_t
+logi__device__proto__crash_dump_info__get_packed_size(
+    const Logi__Device__Proto__CrashDumpInfo *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__crash_dump_info__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor == &logi__device__proto__crash_dump_info__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__crash_dump_info__pack
-                     (const Logi__Device__Proto__CrashDumpInfo *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__crash_dump_info__pack(const Logi__Device__Proto__CrashDumpInfo *message,
+					   uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__crash_dump_info__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor == &logi__device__proto__crash_dump_info__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__crash_dump_info__pack_to_buffer
-                     (const Logi__Device__Proto__CrashDumpInfo *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__crash_dump_info__pack_to_buffer(
+    const Logi__Device__Proto__CrashDumpInfo *message,
+    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__crash_dump_info__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor == &logi__device__proto__crash_dump_info__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__CrashDumpInfo *
-       logi__device__proto__crash_dump_info__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__crash_dump_info__unpack(ProtobufCAllocator *allocator,
+					     size_t len,
+					     const uint8_t *data)
 {
-  return (Logi__Device__Proto__CrashDumpInfo *)
-     protobuf_c_message_unpack (&logi__device__proto__crash_dump_info__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__CrashDumpInfo *)protobuf_c_message_unpack(
+	    &logi__device__proto__crash_dump_info__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__crash_dump_info__free_unpacked
-                     (Logi__Device__Proto__CrashDumpInfo *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__crash_dump_info__free_unpacked(Logi__Device__Proto__CrashDumpInfo *message,
+						    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__crash_dump_info__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor == &logi__device__proto__crash_dump_info__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__send_crash_dump_response__init
-                     (Logi__Device__Proto__SendCrashDumpResponse         *message)
+void
+logi__device__proto__send_crash_dump_response__init(
+    Logi__Device__Proto__SendCrashDumpResponse *message)
 {
-  static const Logi__Device__Proto__SendCrashDumpResponse init_value = LOGI__DEVICE__PROTO__SEND_CRASH_DUMP_RESPONSE__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__SendCrashDumpResponse init_value =
+	    LOGI__DEVICE__PROTO__SEND_CRASH_DUMP_RESPONSE__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__send_crash_dump_response__get_packed_size
-                     (const Logi__Device__Proto__SendCrashDumpResponse *message)
+size_t
+logi__device__proto__send_crash_dump_response__get_packed_size(
+    const Logi__Device__Proto__SendCrashDumpResponse *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_response__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_response__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__send_crash_dump_response__pack
-                     (const Logi__Device__Proto__SendCrashDumpResponse *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__send_crash_dump_response__pack(
+    const Logi__Device__Proto__SendCrashDumpResponse *message,
+    uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_response__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_response__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__send_crash_dump_response__pack_to_buffer
-                     (const Logi__Device__Proto__SendCrashDumpResponse *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__send_crash_dump_response__pack_to_buffer(
+    const Logi__Device__Proto__SendCrashDumpResponse *message,
+    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_response__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_response__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__SendCrashDumpResponse *
-       logi__device__proto__send_crash_dump_response__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__send_crash_dump_response__unpack(ProtobufCAllocator *allocator,
+						      size_t len,
+						      const uint8_t *data)
 {
-  return (Logi__Device__Proto__SendCrashDumpResponse *)
-     protobuf_c_message_unpack (&logi__device__proto__send_crash_dump_response__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__SendCrashDumpResponse *)protobuf_c_message_unpack(
+	    &logi__device__proto__send_crash_dump_response__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__send_crash_dump_response__free_unpacked
-                     (Logi__Device__Proto__SendCrashDumpResponse *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__send_crash_dump_response__free_unpacked(
+    Logi__Device__Proto__SendCrashDumpResponse *message,
+    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_response__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_response__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__send_crash_dump_requestv2__init
-                     (Logi__Device__Proto__SendCrashDumpRequestv2         *message)
+void
+logi__device__proto__send_crash_dump_requestv2__init(
+    Logi__Device__Proto__SendCrashDumpRequestv2 *message)
 {
-  static const Logi__Device__Proto__SendCrashDumpRequestv2 init_value = LOGI__DEVICE__PROTO__SEND_CRASH_DUMP_REQUESTV2__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__SendCrashDumpRequestv2 init_value =
+	    LOGI__DEVICE__PROTO__SEND_CRASH_DUMP_REQUESTV2__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__send_crash_dump_requestv2__get_packed_size
-                     (const Logi__Device__Proto__SendCrashDumpRequestv2 *message)
+size_t
+logi__device__proto__send_crash_dump_requestv2__get_packed_size(
+    const Logi__Device__Proto__SendCrashDumpRequestv2 *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_requestv2__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_requestv2__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__send_crash_dump_requestv2__pack
-                     (const Logi__Device__Proto__SendCrashDumpRequestv2 *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__send_crash_dump_requestv2__pack(
+    const Logi__Device__Proto__SendCrashDumpRequestv2 *message,
+    uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_requestv2__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_requestv2__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__send_crash_dump_requestv2__pack_to_buffer
-                     (const Logi__Device__Proto__SendCrashDumpRequestv2 *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__send_crash_dump_requestv2__pack_to_buffer(
+    const Logi__Device__Proto__SendCrashDumpRequestv2 *message,
+    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_requestv2__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_requestv2__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__SendCrashDumpRequestv2 *
-       logi__device__proto__send_crash_dump_requestv2__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__send_crash_dump_requestv2__unpack(ProtobufCAllocator *allocator,
+						       size_t len,
+						       const uint8_t *data)
 {
-  return (Logi__Device__Proto__SendCrashDumpRequestv2 *)
-     protobuf_c_message_unpack (&logi__device__proto__send_crash_dump_requestv2__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__SendCrashDumpRequestv2 *)protobuf_c_message_unpack(
+	    &logi__device__proto__send_crash_dump_requestv2__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__send_crash_dump_requestv2__free_unpacked
-                     (Logi__Device__Proto__SendCrashDumpRequestv2 *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__send_crash_dump_requestv2__free_unpacked(
+    Logi__Device__Proto__SendCrashDumpRequestv2 *message,
+    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_requestv2__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_requestv2__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__send_crash_dump_responsev2__init
-                     (Logi__Device__Proto__SendCrashDumpResponsev2         *message)
+void
+logi__device__proto__send_crash_dump_responsev2__init(
+    Logi__Device__Proto__SendCrashDumpResponsev2 *message)
 {
-  static const Logi__Device__Proto__SendCrashDumpResponsev2 init_value = LOGI__DEVICE__PROTO__SEND_CRASH_DUMP_RESPONSEV2__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__SendCrashDumpResponsev2 init_value =
+	    LOGI__DEVICE__PROTO__SEND_CRASH_DUMP_RESPONSEV2__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__send_crash_dump_responsev2__get_packed_size
-                     (const Logi__Device__Proto__SendCrashDumpResponsev2 *message)
+size_t
+logi__device__proto__send_crash_dump_responsev2__get_packed_size(
+    const Logi__Device__Proto__SendCrashDumpResponsev2 *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_responsev2__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_responsev2__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__send_crash_dump_responsev2__pack
-                     (const Logi__Device__Proto__SendCrashDumpResponsev2 *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__send_crash_dump_responsev2__pack(
+    const Logi__Device__Proto__SendCrashDumpResponsev2 *message,
+    uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_responsev2__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_responsev2__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__send_crash_dump_responsev2__pack_to_buffer
-                     (const Logi__Device__Proto__SendCrashDumpResponsev2 *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__send_crash_dump_responsev2__pack_to_buffer(
+    const Logi__Device__Proto__SendCrashDumpResponsev2 *message,
+    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_responsev2__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_responsev2__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__SendCrashDumpResponsev2 *
-       logi__device__proto__send_crash_dump_responsev2__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__send_crash_dump_responsev2__unpack(ProtobufCAllocator *allocator,
+							size_t len,
+							const uint8_t *data)
 {
-  return (Logi__Device__Proto__SendCrashDumpResponsev2 *)
-     protobuf_c_message_unpack (&logi__device__proto__send_crash_dump_responsev2__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__SendCrashDumpResponsev2 *)protobuf_c_message_unpack(
+	    &logi__device__proto__send_crash_dump_responsev2__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__send_crash_dump_responsev2__free_unpacked
-                     (Logi__Device__Proto__SendCrashDumpResponsev2 *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__send_crash_dump_responsev2__free_unpacked(
+    Logi__Device__Proto__SendCrashDumpResponsev2 *message,
+    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_responsev2__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor ==
+	       &logi__device__proto__send_crash_dump_responsev2__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__send_crash_dump_event__init
-                     (Logi__Device__Proto__SendCrashDumpEvent         *message)
+void
+logi__device__proto__send_crash_dump_event__init(Logi__Device__Proto__SendCrashDumpEvent *message)
 {
-  static const Logi__Device__Proto__SendCrashDumpEvent init_value = LOGI__DEVICE__PROTO__SEND_CRASH_DUMP_EVENT__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__SendCrashDumpEvent init_value =
+	    LOGI__DEVICE__PROTO__SEND_CRASH_DUMP_EVENT__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__send_crash_dump_event__get_packed_size
-                     (const Logi__Device__Proto__SendCrashDumpEvent *message)
+size_t
+logi__device__proto__send_crash_dump_event__get_packed_size(
+    const Logi__Device__Proto__SendCrashDumpEvent *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_event__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor == &logi__device__proto__send_crash_dump_event__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__send_crash_dump_event__pack
-                     (const Logi__Device__Proto__SendCrashDumpEvent *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__send_crash_dump_event__pack(
+    const Logi__Device__Proto__SendCrashDumpEvent *message,
+    uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_event__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor == &logi__device__proto__send_crash_dump_event__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__send_crash_dump_event__pack_to_buffer
-                     (const Logi__Device__Proto__SendCrashDumpEvent *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__send_crash_dump_event__pack_to_buffer(
+    const Logi__Device__Proto__SendCrashDumpEvent *message,
+    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_event__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor == &logi__device__proto__send_crash_dump_event__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__SendCrashDumpEvent *
-       logi__device__proto__send_crash_dump_event__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__send_crash_dump_event__unpack(ProtobufCAllocator *allocator,
+						   size_t len,
+						   const uint8_t *data)
 {
-  return (Logi__Device__Proto__SendCrashDumpEvent *)
-     protobuf_c_message_unpack (&logi__device__proto__send_crash_dump_event__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__SendCrashDumpEvent *)protobuf_c_message_unpack(
+	    &logi__device__proto__send_crash_dump_event__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__send_crash_dump_event__free_unpacked
-                     (Logi__Device__Proto__SendCrashDumpEvent *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__send_crash_dump_event__free_unpacked(
+    Logi__Device__Proto__SendCrashDumpEvent *message,
+    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__send_crash_dump_event__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor == &logi__device__proto__send_crash_dump_event__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__crash_dump_available_event__init
-                     (Logi__Device__Proto__CrashDumpAvailableEvent         *message)
+void
+logi__device__proto__crash_dump_available_event__init(
+    Logi__Device__Proto__CrashDumpAvailableEvent *message)
 {
-  static const Logi__Device__Proto__CrashDumpAvailableEvent init_value = LOGI__DEVICE__PROTO__CRASH_DUMP_AVAILABLE_EVENT__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__CrashDumpAvailableEvent init_value =
+	    LOGI__DEVICE__PROTO__CRASH_DUMP_AVAILABLE_EVENT__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__crash_dump_available_event__get_packed_size
-                     (const Logi__Device__Proto__CrashDumpAvailableEvent *message)
+size_t
+logi__device__proto__crash_dump_available_event__get_packed_size(
+    const Logi__Device__Proto__CrashDumpAvailableEvent *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__crash_dump_available_event__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor ==
+	       &logi__device__proto__crash_dump_available_event__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__crash_dump_available_event__pack
-                     (const Logi__Device__Proto__CrashDumpAvailableEvent *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__crash_dump_available_event__pack(
+    const Logi__Device__Proto__CrashDumpAvailableEvent *message,
+    uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__crash_dump_available_event__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__crash_dump_available_event__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__crash_dump_available_event__pack_to_buffer
-                     (const Logi__Device__Proto__CrashDumpAvailableEvent *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__crash_dump_available_event__pack_to_buffer(
+    const Logi__Device__Proto__CrashDumpAvailableEvent *message,
+    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__crash_dump_available_event__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__crash_dump_available_event__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__CrashDumpAvailableEvent *
-       logi__device__proto__crash_dump_available_event__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__crash_dump_available_event__unpack(ProtobufCAllocator *allocator,
+							size_t len,
+							const uint8_t *data)
 {
-  return (Logi__Device__Proto__CrashDumpAvailableEvent *)
-     protobuf_c_message_unpack (&logi__device__proto__crash_dump_available_event__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__CrashDumpAvailableEvent *)protobuf_c_message_unpack(
+	    &logi__device__proto__crash_dump_available_event__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__crash_dump_available_event__free_unpacked
-                     (Logi__Device__Proto__CrashDumpAvailableEvent *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__crash_dump_available_event__free_unpacked(
+    Logi__Device__Proto__CrashDumpAvailableEvent *message,
+    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__crash_dump_available_event__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor ==
+	       &logi__device__proto__crash_dump_available_event__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__generate_crash_dump_request__init
-                     (Logi__Device__Proto__GenerateCrashDumpRequest         *message)
+void
+logi__device__proto__generate_crash_dump_request__init(
+    Logi__Device__Proto__GenerateCrashDumpRequest *message)
 {
-  static const Logi__Device__Proto__GenerateCrashDumpRequest init_value = LOGI__DEVICE__PROTO__GENERATE_CRASH_DUMP_REQUEST__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__GenerateCrashDumpRequest init_value =
+	    LOGI__DEVICE__PROTO__GENERATE_CRASH_DUMP_REQUEST__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__generate_crash_dump_request__get_packed_size
-                     (const Logi__Device__Proto__GenerateCrashDumpRequest *message)
+size_t
+logi__device__proto__generate_crash_dump_request__get_packed_size(
+    const Logi__Device__Proto__GenerateCrashDumpRequest *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__generate_crash_dump_request__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor ==
+	       &logi__device__proto__generate_crash_dump_request__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__generate_crash_dump_request__pack
-                     (const Logi__Device__Proto__GenerateCrashDumpRequest *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__generate_crash_dump_request__pack(
+    const Logi__Device__Proto__GenerateCrashDumpRequest *message,
+    uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__generate_crash_dump_request__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__generate_crash_dump_request__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__generate_crash_dump_request__pack_to_buffer
-                     (const Logi__Device__Proto__GenerateCrashDumpRequest *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__generate_crash_dump_request__pack_to_buffer(
+    const Logi__Device__Proto__GenerateCrashDumpRequest *message,
+    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__generate_crash_dump_request__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__generate_crash_dump_request__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__GenerateCrashDumpRequest *
-       logi__device__proto__generate_crash_dump_request__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__generate_crash_dump_request__unpack(ProtobufCAllocator *allocator,
+							 size_t len,
+							 const uint8_t *data)
 {
-  return (Logi__Device__Proto__GenerateCrashDumpRequest *)
-     protobuf_c_message_unpack (&logi__device__proto__generate_crash_dump_request__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__GenerateCrashDumpRequest *)protobuf_c_message_unpack(
+	    &logi__device__proto__generate_crash_dump_request__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__generate_crash_dump_request__free_unpacked
-                     (Logi__Device__Proto__GenerateCrashDumpRequest *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__generate_crash_dump_request__free_unpacked(
+    Logi__Device__Proto__GenerateCrashDumpRequest *message,
+    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__generate_crash_dump_request__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor ==
+	       &logi__device__proto__generate_crash_dump_request__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-void   logi__device__proto__generate_crash_dump_response__init
-                     (Logi__Device__Proto__GenerateCrashDumpResponse         *message)
+void
+logi__device__proto__generate_crash_dump_response__init(
+    Logi__Device__Proto__GenerateCrashDumpResponse *message)
 {
-  static const Logi__Device__Proto__GenerateCrashDumpResponse init_value = LOGI__DEVICE__PROTO__GENERATE_CRASH_DUMP_RESPONSE__INIT;
-  *message = init_value;
+	static const Logi__Device__Proto__GenerateCrashDumpResponse init_value =
+	    LOGI__DEVICE__PROTO__GENERATE_CRASH_DUMP_RESPONSE__INIT;
+	*message = init_value;
 }
-size_t logi__device__proto__generate_crash_dump_response__get_packed_size
-                     (const Logi__Device__Proto__GenerateCrashDumpResponse *message)
+size_t
+logi__device__proto__generate_crash_dump_response__get_packed_size(
+    const Logi__Device__Proto__GenerateCrashDumpResponse *message)
 {
-  assert(message->base.descriptor == &logi__device__proto__generate_crash_dump_response__descriptor);
-  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+	assert(message->base.descriptor ==
+	       &logi__device__proto__generate_crash_dump_response__descriptor);
+	return protobuf_c_message_get_packed_size((const ProtobufCMessage *)(message));
 }
-size_t logi__device__proto__generate_crash_dump_response__pack
-                     (const Logi__Device__Proto__GenerateCrashDumpResponse *message,
-                      uint8_t       *out)
+size_t
+logi__device__proto__generate_crash_dump_response__pack(
+    const Logi__Device__Proto__GenerateCrashDumpResponse *message,
+    uint8_t *out)
 {
-  assert(message->base.descriptor == &logi__device__proto__generate_crash_dump_response__descriptor);
-  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__generate_crash_dump_response__descriptor);
+	return protobuf_c_message_pack((const ProtobufCMessage *)message, out);
 }
-size_t logi__device__proto__generate_crash_dump_response__pack_to_buffer
-                     (const Logi__Device__Proto__GenerateCrashDumpResponse *message,
-                      ProtobufCBuffer *buffer)
+size_t
+logi__device__proto__generate_crash_dump_response__pack_to_buffer(
+    const Logi__Device__Proto__GenerateCrashDumpResponse *message,
+    ProtobufCBuffer *buffer)
 {
-  assert(message->base.descriptor == &logi__device__proto__generate_crash_dump_response__descriptor);
-  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+	assert(message->base.descriptor ==
+	       &logi__device__proto__generate_crash_dump_response__descriptor);
+	return protobuf_c_message_pack_to_buffer((const ProtobufCMessage *)message, buffer);
 }
 Logi__Device__Proto__GenerateCrashDumpResponse *
-       logi__device__proto__generate_crash_dump_response__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data)
+logi__device__proto__generate_crash_dump_response__unpack(ProtobufCAllocator *allocator,
+							  size_t len,
+							  const uint8_t *data)
 {
-  return (Logi__Device__Proto__GenerateCrashDumpResponse *)
-     protobuf_c_message_unpack (&logi__device__proto__generate_crash_dump_response__descriptor,
-                                allocator, len, data);
+	return (Logi__Device__Proto__GenerateCrashDumpResponse *)protobuf_c_message_unpack(
+	    &logi__device__proto__generate_crash_dump_response__descriptor,
+	    allocator,
+	    len,
+	    data);
 }
-void   logi__device__proto__generate_crash_dump_response__free_unpacked
-                     (Logi__Device__Proto__GenerateCrashDumpResponse *message,
-                      ProtobufCAllocator *allocator)
+void
+logi__device__proto__generate_crash_dump_response__free_unpacked(
+    Logi__Device__Proto__GenerateCrashDumpResponse *message,
+    ProtobufCAllocator *allocator)
 {
-  if(!message)
-    return;
-  assert(message->base.descriptor == &logi__device__proto__generate_crash_dump_response__descriptor);
-  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+	if (!message)
+		return;
+	assert(message->base.descriptor ==
+	       &logi__device__proto__generate_crash_dump_response__descriptor);
+	protobuf_c_message_free_unpacked((ProtobufCMessage *)message, allocator);
 }
-static const ProtobufCFieldDescriptor logi__device__proto__send_crash_dump_request__field_descriptors[1] =
-{
-  {
-    "reserved",
-    1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_BOOL,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SendCrashDumpRequest, reserved),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+static const ProtobufCFieldDescriptor
+    logi__device__proto__send_crash_dump_request__field_descriptors[1] = {
+	{
+	    "reserved",
+	    1,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_BOOL,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SendCrashDumpRequest, reserved),
+	    NULL,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
 };
 static const unsigned logi__device__proto__send_crash_dump_request__field_indices_by_name[] = {
-  0,   /* field[0] = reserved */
+    0, /* field[0] = reserved */
 };
 static const ProtobufCIntRange logi__device__proto__send_crash_dump_request__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 1 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__send_crash_dump_request__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.SendCrashDumpRequest",
-  "SendCrashDumpRequest",
-  "Logi__Device__Proto__SendCrashDumpRequest",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__SendCrashDumpRequest),
-  1,
-  logi__device__proto__send_crash_dump_request__field_descriptors,
-  logi__device__proto__send_crash_dump_request__field_indices_by_name,
-  1,  logi__device__proto__send_crash_dump_request__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__send_crash_dump_request__init,
-  NULL,NULL,NULL    /* reserved[123] */
+    {{1, 0}, {0, 1}};
+const ProtobufCMessageDescriptor logi__device__proto__send_crash_dump_request__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.SendCrashDumpRequest",
+    "SendCrashDumpRequest",
+    "Logi__Device__Proto__SendCrashDumpRequest",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__SendCrashDumpRequest),
+    1,
+    logi__device__proto__send_crash_dump_request__field_descriptors,
+    logi__device__proto__send_crash_dump_request__field_indices_by_name,
+    1,
+    logi__device__proto__send_crash_dump_request__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__send_crash_dump_request__init,
+    NULL,
+    NULL,
+    NULL /* reserved[123] */
 };
 static const ProtobufCFieldDescriptor logi__device__proto__crash_dump_info__field_descriptors[10] =
-{
-  {
-    "file_name",
-    1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__CrashDumpInfo, file_name),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "device_id",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__CrashDumpInfo, device_id),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "software_version",
-    3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__CrashDumpInfo, software_version),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "file_size",
-    4,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT64,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__CrashDumpInfo, file_size),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "timestamp",
-    5,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_UINT64,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__CrashDumpInfo, timestamp),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "md5",
-    6,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__CrashDumpInfo, md5),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "device_type",
-    7,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__CrashDumpInfo, device_type),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "device_mode",
-    8,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__CrashDumpInfo, device_mode),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "report_type",
-    9,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__CrashDumpInfo, report_type),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "content_type",
-    10,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__CrashDumpInfo, content_type),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    {
+	{
+	    "file_name",
+	    1,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__CrashDumpInfo, file_name),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "device_id",
+	    2,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__CrashDumpInfo, device_id),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "software_version",
+	    3,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__CrashDumpInfo, software_version),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "file_size",
+	    4,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_UINT64,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__CrashDumpInfo, file_size),
+	    NULL,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "timestamp",
+	    5,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_UINT64,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__CrashDumpInfo, timestamp),
+	    NULL,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "md5",
+	    6,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__CrashDumpInfo, md5),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "device_type",
+	    7,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__CrashDumpInfo, device_type),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "device_mode",
+	    8,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__CrashDumpInfo, device_mode),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "report_type",
+	    9,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__CrashDumpInfo, report_type),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "content_type",
+	    10,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__CrashDumpInfo, content_type),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
 };
 static const unsigned logi__device__proto__crash_dump_info__field_indices_by_name[] = {
-  9,   /* field[9] = content_type */
-  1,   /* field[1] = device_id */
-  7,   /* field[7] = device_mode */
-  6,   /* field[6] = device_type */
-  0,   /* field[0] = file_name */
-  3,   /* field[3] = file_size */
-  5,   /* field[5] = md5 */
-  8,   /* field[8] = report_type */
-  2,   /* field[2] = software_version */
-  4,   /* field[4] = timestamp */
+    9, /* field[9] = content_type */
+    1, /* field[1] = device_id */
+    7, /* field[7] = device_mode */
+    6, /* field[6] = device_type */
+    0, /* field[0] = file_name */
+    3, /* field[3] = file_size */
+    5, /* field[5] = md5 */
+    8, /* field[8] = report_type */
+    2, /* field[2] = software_version */
+    4, /* field[4] = timestamp */
 };
-static const ProtobufCIntRange logi__device__proto__crash_dump_info__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 10 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__crash_dump_info__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.CrashDumpInfo",
-  "CrashDumpInfo",
-  "Logi__Device__Proto__CrashDumpInfo",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__CrashDumpInfo),
-  10,
-  logi__device__proto__crash_dump_info__field_descriptors,
-  logi__device__proto__crash_dump_info__field_indices_by_name,
-  1,  logi__device__proto__crash_dump_info__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__crash_dump_info__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__send_crash_dump_response__field_descriptors[3] =
-{
-  {
-    "crash_dump_file",
+static const ProtobufCIntRange logi__device__proto__crash_dump_info__number_ranges[1 + 1] = {
+    {1, 0},
+    {0, 10}};
+const ProtobufCMessageDescriptor logi__device__proto__crash_dump_info__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.CrashDumpInfo",
+    "CrashDumpInfo",
+    "Logi__Device__Proto__CrashDumpInfo",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__CrashDumpInfo),
+    10,
+    logi__device__proto__crash_dump_info__field_descriptors,
+    logi__device__proto__crash_dump_info__field_indices_by_name,
     1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SendCrashDumpResponse, crash_dump_file),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "will_send_file",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_BOOL,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SendCrashDumpResponse, will_send_file),
+    logi__device__proto__crash_dump_info__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__crash_dump_info__init,
     NULL,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "crash_dump_info",
-    3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_MESSAGE,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SendCrashDumpResponse, crash_dump_info),
-    &logi__device__proto__crash_dump_info__descriptor,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor
+    logi__device__proto__send_crash_dump_response__field_descriptors[3] = {
+	{
+	    "crash_dump_file",
+	    1,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SendCrashDumpResponse, crash_dump_file),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "will_send_file",
+	    2,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_BOOL,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SendCrashDumpResponse, will_send_file),
+	    NULL,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "crash_dump_info",
+	    3,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_MESSAGE,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SendCrashDumpResponse, crash_dump_info),
+	    &logi__device__proto__crash_dump_info__descriptor,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
 };
 static const unsigned logi__device__proto__send_crash_dump_response__field_indices_by_name[] = {
-  0,   /* field[0] = crash_dump_file */
-  2,   /* field[2] = crash_dump_info */
-  1,   /* field[1] = will_send_file */
+    0, /* field[0] = crash_dump_file */
+    2, /* field[2] = crash_dump_info */
+    1, /* field[1] = will_send_file */
 };
 static const ProtobufCIntRange logi__device__proto__send_crash_dump_response__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 3 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__send_crash_dump_response__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.SendCrashDumpResponse",
-  "SendCrashDumpResponse",
-  "Logi__Device__Proto__SendCrashDumpResponse",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__SendCrashDumpResponse),
-  3,
-  logi__device__proto__send_crash_dump_response__field_descriptors,
-  logi__device__proto__send_crash_dump_response__field_indices_by_name,
-  1,  logi__device__proto__send_crash_dump_response__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__send_crash_dump_response__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__send_crash_dump_requestv2__field_descriptors[2] =
-{
-  {
-    "challenge",
+    {{1, 0}, {0, 3}};
+const ProtobufCMessageDescriptor logi__device__proto__send_crash_dump_response__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.SendCrashDumpResponse",
+    "SendCrashDumpResponse",
+    "Logi__Device__Proto__SendCrashDumpResponse",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__SendCrashDumpResponse),
+    3,
+    logi__device__proto__send_crash_dump_response__field_descriptors,
+    logi__device__proto__send_crash_dump_response__field_indices_by_name,
     1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SendCrashDumpRequestv2, challenge),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "ttl",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_INT32,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SendCrashDumpRequestv2, ttl),
+    logi__device__proto__send_crash_dump_response__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__send_crash_dump_response__init,
     NULL,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor
+    logi__device__proto__send_crash_dump_requestv2__field_descriptors[2] = {
+	{
+	    "challenge",
+	    1,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SendCrashDumpRequestv2, challenge),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "ttl",
+	    2,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_INT32,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SendCrashDumpRequestv2, ttl),
+	    NULL,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
 };
 static const unsigned logi__device__proto__send_crash_dump_requestv2__field_indices_by_name[] = {
-  0,   /* field[0] = challenge */
-  1,   /* field[1] = ttl */
+    0, /* field[0] = challenge */
+    1, /* field[1] = ttl */
 };
-static const ProtobufCIntRange logi__device__proto__send_crash_dump_requestv2__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 2 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__send_crash_dump_requestv2__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.SendCrashDumpRequestv2",
-  "SendCrashDumpRequestv2",
-  "Logi__Device__Proto__SendCrashDumpRequestv2",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__SendCrashDumpRequestv2),
-  2,
-  logi__device__proto__send_crash_dump_requestv2__field_descriptors,
-  logi__device__proto__send_crash_dump_requestv2__field_indices_by_name,
-  1,  logi__device__proto__send_crash_dump_requestv2__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__send_crash_dump_requestv2__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__send_crash_dump_responsev2__field_descriptors[4] =
-{
-  {
-    "crash_dump_file",
-    1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SendCrashDumpResponsev2, crash_dump_file),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "will_send_file",
+static const ProtobufCIntRange
+    logi__device__proto__send_crash_dump_requestv2__number_ranges[1 + 1] = {{1, 0}, {0, 2}};
+const ProtobufCMessageDescriptor logi__device__proto__send_crash_dump_requestv2__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.SendCrashDumpRequestv2",
+    "SendCrashDumpRequestv2",
+    "Logi__Device__Proto__SendCrashDumpRequestv2",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__SendCrashDumpRequestv2),
     2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_BOOL,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SendCrashDumpResponsev2, will_send_file),
+    logi__device__proto__send_crash_dump_requestv2__field_descriptors,
+    logi__device__proto__send_crash_dump_requestv2__field_indices_by_name,
+    1,
+    logi__device__proto__send_crash_dump_requestv2__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__send_crash_dump_requestv2__init,
     NULL,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "body",
-    3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SendCrashDumpResponsev2, body),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "signature",
-    4,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SendCrashDumpResponsev2, signature),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor
+    logi__device__proto__send_crash_dump_responsev2__field_descriptors[4] = {
+	{
+	    "crash_dump_file",
+	    1,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SendCrashDumpResponsev2, crash_dump_file),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "will_send_file",
+	    2,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_BOOL,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SendCrashDumpResponsev2, will_send_file),
+	    NULL,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "body",
+	    3,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SendCrashDumpResponsev2, body),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "signature",
+	    4,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SendCrashDumpResponsev2, signature),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
 };
 static const unsigned logi__device__proto__send_crash_dump_responsev2__field_indices_by_name[] = {
-  2,   /* field[2] = body */
-  0,   /* field[0] = crash_dump_file */
-  3,   /* field[3] = signature */
-  1,   /* field[1] = will_send_file */
+    2, /* field[2] = body */
+    0, /* field[0] = crash_dump_file */
+    3, /* field[3] = signature */
+    1, /* field[1] = will_send_file */
 };
-static const ProtobufCIntRange logi__device__proto__send_crash_dump_responsev2__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 4 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__send_crash_dump_responsev2__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.SendCrashDumpResponsev2",
-  "SendCrashDumpResponsev2",
-  "Logi__Device__Proto__SendCrashDumpResponsev2",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__SendCrashDumpResponsev2),
-  4,
-  logi__device__proto__send_crash_dump_responsev2__field_descriptors,
-  logi__device__proto__send_crash_dump_responsev2__field_indices_by_name,
-  1,  logi__device__proto__send_crash_dump_responsev2__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__send_crash_dump_responsev2__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__send_crash_dump_event__field_descriptors[2] =
-{
-  {
-    "crash_dump_file",
+static const ProtobufCIntRange
+    logi__device__proto__send_crash_dump_responsev2__number_ranges[1 + 1] = {{1, 0}, {0, 4}};
+const ProtobufCMessageDescriptor logi__device__proto__send_crash_dump_responsev2__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.SendCrashDumpResponsev2",
+    "SendCrashDumpResponsev2",
+    "Logi__Device__Proto__SendCrashDumpResponsev2",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__SendCrashDumpResponsev2),
+    4,
+    logi__device__proto__send_crash_dump_responsev2__field_descriptors,
+    logi__device__proto__send_crash_dump_responsev2__field_indices_by_name,
     1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SendCrashDumpEvent, crash_dump_file),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "success",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_BOOL,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__SendCrashDumpEvent, success),
+    logi__device__proto__send_crash_dump_responsev2__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__send_crash_dump_responsev2__init,
     NULL,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor
+    logi__device__proto__send_crash_dump_event__field_descriptors[2] = {
+	{
+	    "crash_dump_file",
+	    1,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SendCrashDumpEvent, crash_dump_file),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "success",
+	    2,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_BOOL,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__SendCrashDumpEvent, success),
+	    NULL,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
 };
 static const unsigned logi__device__proto__send_crash_dump_event__field_indices_by_name[] = {
-  0,   /* field[0] = crash_dump_file */
-  1,   /* field[1] = success */
+    0, /* field[0] = crash_dump_file */
+    1, /* field[1] = success */
 };
-static const ProtobufCIntRange logi__device__proto__send_crash_dump_event__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 2 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__send_crash_dump_event__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.SendCrashDumpEvent",
-  "SendCrashDumpEvent",
-  "Logi__Device__Proto__SendCrashDumpEvent",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__SendCrashDumpEvent),
-  2,
-  logi__device__proto__send_crash_dump_event__field_descriptors,
-  logi__device__proto__send_crash_dump_event__field_indices_by_name,
-  1,  logi__device__proto__send_crash_dump_event__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__send_crash_dump_event__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__crash_dump_available_event__field_descriptors[1] =
-{
-  {
-    "reserved",
+static const ProtobufCIntRange logi__device__proto__send_crash_dump_event__number_ranges[1 + 1] = {
+    {1, 0},
+    {0, 2}};
+const ProtobufCMessageDescriptor logi__device__proto__send_crash_dump_event__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.SendCrashDumpEvent",
+    "SendCrashDumpEvent",
+    "Logi__Device__Proto__SendCrashDumpEvent",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__SendCrashDumpEvent),
+    2,
+    logi__device__proto__send_crash_dump_event__field_descriptors,
+    logi__device__proto__send_crash_dump_event__field_indices_by_name,
     1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_BOOL,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__CrashDumpAvailableEvent, reserved),
+    logi__device__proto__send_crash_dump_event__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__send_crash_dump_event__init,
     NULL,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor
+    logi__device__proto__crash_dump_available_event__field_descriptors[1] = {
+	{
+	    "reserved",
+	    1,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_BOOL,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__CrashDumpAvailableEvent, reserved),
+	    NULL,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
 };
 static const unsigned logi__device__proto__crash_dump_available_event__field_indices_by_name[] = {
-  0,   /* field[0] = reserved */
+    0, /* field[0] = reserved */
 };
-static const ProtobufCIntRange logi__device__proto__crash_dump_available_event__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 1 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__crash_dump_available_event__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.CrashDumpAvailableEvent",
-  "CrashDumpAvailableEvent",
-  "Logi__Device__Proto__CrashDumpAvailableEvent",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__CrashDumpAvailableEvent),
-  1,
-  logi__device__proto__crash_dump_available_event__field_descriptors,
-  logi__device__proto__crash_dump_available_event__field_indices_by_name,
-  1,  logi__device__proto__crash_dump_available_event__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__crash_dump_available_event__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__generate_crash_dump_request__field_descriptors[3] =
-{
-  {
-    "challenge",
+static const ProtobufCIntRange
+    logi__device__proto__crash_dump_available_event__number_ranges[1 + 1] = {{1, 0}, {0, 1}};
+const ProtobufCMessageDescriptor logi__device__proto__crash_dump_available_event__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.CrashDumpAvailableEvent",
+    "CrashDumpAvailableEvent",
+    "Logi__Device__Proto__CrashDumpAvailableEvent",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__CrashDumpAvailableEvent),
     1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__GenerateCrashDumpRequest, challenge),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "ttl",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_INT32,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__GenerateCrashDumpRequest, ttl),
+    logi__device__proto__crash_dump_available_event__field_descriptors,
+    logi__device__proto__crash_dump_available_event__field_indices_by_name,
+    1,
+    logi__device__proto__crash_dump_available_event__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__crash_dump_available_event__init,
     NULL,
     NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "note",
-    3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__GenerateCrashDumpRequest, note),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor
+    logi__device__proto__generate_crash_dump_request__field_descriptors[3] = {
+	{
+	    "challenge",
+	    1,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__GenerateCrashDumpRequest, challenge),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "ttl",
+	    2,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_INT32,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__GenerateCrashDumpRequest, ttl),
+	    NULL,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "note",
+	    3,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__GenerateCrashDumpRequest, note),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
 };
 static const unsigned logi__device__proto__generate_crash_dump_request__field_indices_by_name[] = {
-  0,   /* field[0] = challenge */
-  2,   /* field[2] = note */
-  1,   /* field[1] = ttl */
+    0, /* field[0] = challenge */
+    2, /* field[2] = note */
+    1, /* field[1] = ttl */
 };
-static const ProtobufCIntRange logi__device__proto__generate_crash_dump_request__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 3 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__generate_crash_dump_request__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.GenerateCrashDumpRequest",
-  "GenerateCrashDumpRequest",
-  "Logi__Device__Proto__GenerateCrashDumpRequest",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__GenerateCrashDumpRequest),
-  3,
-  logi__device__proto__generate_crash_dump_request__field_descriptors,
-  logi__device__proto__generate_crash_dump_request__field_indices_by_name,
-  1,  logi__device__proto__generate_crash_dump_request__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__generate_crash_dump_request__init,
-  NULL,NULL,NULL    /* reserved[123] */
-};
-static const ProtobufCFieldDescriptor logi__device__proto__generate_crash_dump_response__field_descriptors[4] =
-{
-  {
-    "crash_dump_file",
-    1,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__GenerateCrashDumpResponse, crash_dump_file),
-    NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "will_send_file",
-    2,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_BOOL,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__GenerateCrashDumpResponse, will_send_file),
-    NULL,
-    NULL,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "body",
+static const ProtobufCIntRange
+    logi__device__proto__generate_crash_dump_request__number_ranges[1 + 1] = {{1, 0}, {0, 3}};
+const ProtobufCMessageDescriptor logi__device__proto__generate_crash_dump_request__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.GenerateCrashDumpRequest",
+    "GenerateCrashDumpRequest",
+    "Logi__Device__Proto__GenerateCrashDumpRequest",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__GenerateCrashDumpRequest),
     3,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__GenerateCrashDumpResponse, body),
+    logi__device__proto__generate_crash_dump_request__field_descriptors,
+    logi__device__proto__generate_crash_dump_request__field_indices_by_name,
+    1,
+    logi__device__proto__generate_crash_dump_request__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__generate_crash_dump_request__init,
     NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
-  {
-    "signature",
-    4,
-    PROTOBUF_C_LABEL_NONE,
-    PROTOBUF_C_TYPE_STRING,
-    0,   /* quantifier_offset */
-    offsetof(Logi__Device__Proto__GenerateCrashDumpResponse, signature),
     NULL,
-    &protobuf_c_empty_string,
-    0,             /* flags */
-    0,NULL,NULL    /* reserved1,reserved2, etc */
-  },
+    NULL /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor
+    logi__device__proto__generate_crash_dump_response__field_descriptors[4] = {
+	{
+	    "crash_dump_file",
+	    1,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__GenerateCrashDumpResponse, crash_dump_file),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "will_send_file",
+	    2,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_BOOL,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__GenerateCrashDumpResponse, will_send_file),
+	    NULL,
+	    NULL,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "body",
+	    3,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__GenerateCrashDumpResponse, body),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
+	{
+	    "signature",
+	    4,
+	    PROTOBUF_C_LABEL_NONE,
+	    PROTOBUF_C_TYPE_STRING,
+	    0, /* quantifier_offset */
+	    offsetof(Logi__Device__Proto__GenerateCrashDumpResponse, signature),
+	    NULL,
+	    &protobuf_c_empty_string,
+	    0, /* flags */
+	    0,
+	    NULL,
+	    NULL /* reserved1,reserved2, etc */
+	},
 };
 static const unsigned logi__device__proto__generate_crash_dump_response__field_indices_by_name[] = {
-  2,   /* field[2] = body */
-  0,   /* field[0] = crash_dump_file */
-  3,   /* field[3] = signature */
-  1,   /* field[1] = will_send_file */
+    2, /* field[2] = body */
+    0, /* field[0] = crash_dump_file */
+    3, /* field[3] = signature */
+    1, /* field[1] = will_send_file */
 };
-static const ProtobufCIntRange logi__device__proto__generate_crash_dump_response__number_ranges[1 + 1] =
-{
-  { 1, 0 },
-  { 0, 4 }
-};
-const ProtobufCMessageDescriptor logi__device__proto__generate_crash_dump_response__descriptor =
-{
-  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
-  "logi.device.proto.GenerateCrashDumpResponse",
-  "GenerateCrashDumpResponse",
-  "Logi__Device__Proto__GenerateCrashDumpResponse",
-  "logi.device.proto",
-  sizeof(Logi__Device__Proto__GenerateCrashDumpResponse),
-  4,
-  logi__device__proto__generate_crash_dump_response__field_descriptors,
-  logi__device__proto__generate_crash_dump_response__field_indices_by_name,
-  1,  logi__device__proto__generate_crash_dump_response__number_ranges,
-  (ProtobufCMessageInit) logi__device__proto__generate_crash_dump_response__init,
-  NULL,NULL,NULL    /* reserved[123] */
+static const ProtobufCIntRange
+    logi__device__proto__generate_crash_dump_response__number_ranges[1 + 1] = {{1, 0}, {0, 4}};
+const ProtobufCMessageDescriptor logi__device__proto__generate_crash_dump_response__descriptor = {
+    PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+    "logi.device.proto.GenerateCrashDumpResponse",
+    "GenerateCrashDumpResponse",
+    "Logi__Device__Proto__GenerateCrashDumpResponse",
+    "logi.device.proto",
+    sizeof(Logi__Device__Proto__GenerateCrashDumpResponse),
+    4,
+    logi__device__proto__generate_crash_dump_response__field_descriptors,
+    logi__device__proto__generate_crash_dump_response__field_indices_by_name,
+    1,
+    logi__device__proto__generate_crash_dump_response__number_ranges,
+    (ProtobufCMessageInit)logi__device__proto__generate_crash_dump_response__init,
+    NULL,
+    NULL,
+    NULL /* reserved[123] */
 };

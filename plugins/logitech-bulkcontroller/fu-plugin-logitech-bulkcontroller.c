@@ -5,15 +5,16 @@
  */
 
 #include "config.h"
-#include <fu-plugin.h>
+
 #include <fwupdplugin.h>
+
 #include "bulk_controller.h"
 #include "proto_manager.h"
 
-// Firmware upgrade time
-#define TIMEOUT_20M 1200 
+/* Firmware upgrade time */
+#define TIMEOUT_20M 1200
 
- //Callback prototypes
+/* Callback prototypes */
 void bulk_error_cb (gint error_code, BulkInterface bulk_int, const gchar *data, guint32 size, void *user_data);
 void read_sync_data_cb (const gchar *data, guint32 size, void *user_data);
 void read_upd_data_cb (const gchar *data, guint32 size, void *user_data);
@@ -32,37 +33,23 @@ bulk_error_cb (gint error_code, BulkInterface bulk_int, const gchar *data, guint
 void
 read_sync_data_cb (const gchar *data, guint32 size, void *user_data)
 {
-        //LOGFN;
-        Decoded_Data decoded_data;
-        Proto_id proto_id = proto_manager_decode_message(data, size, &decoded_data);
         g_debug("Length of data received %u", size);
-        g_debug("Received data %s ", data);
-        switch (proto_id) {
-        case kProtoId_GetDeviceInfoResponse:
-        {
-        	g_print("--> %s\n", decoded_data.device_info);
-        }
-        	break;
-        default:
-        	break;
-        };
 }
 
 void
 read_upd_data_cb (const gchar *data, guint32 size, void *user_data)
 {
-        LOGFN;
 }
 
 void
 send_data_sync_cb (gint error_code, gint status, gint id, void *data)
 {
         ApiUserData *user_data = (ApiUserData*) data;
-        LOGFN;
-        (status == TRANSFER_SUCCESS) ? g_debug("Send data sync success ID: %d ErrorCode: %d", id, error_code) :
-                                                              g_warning("Send data sync failed ID: %d ErrorCode: %d",
-                                                              id, error_code);
-        g_cond_signal(&user_data->test_upd_cond);
+
+	(status == TRANSFER_SUCCESS)
+	    ? g_debug("Send data sync success ID: %d ErrorCode: %d", id, error_code)
+	    : g_warning("Send data sync failed ID: %d ErrorCode: %d", id, error_code);
+	g_cond_signal(&user_data->test_upd_cond);
 }
 
 void
@@ -86,30 +73,29 @@ bulk_file_transfer_cb (FileTransferState state, gint progress, BulkInterface bul
                         break;
                 case TRANSFER_INPROGRESS:
                         if (BULK_INTERFACE_UPD == bulk_intf) {
-                                g_print ("\r[%s] : Interface: %u File uploaded : [%d%%]", user_data->prog_name, bulk_intf, progress);
-                                fflush(stdout);
-                                FuDevice *device = (FuDevice *)user_data->device_ptr;
-                                if (device)
-                                  fu_device_set_progress (device, progress);
-                        } else if (BULK_INTERFACE_SYNC == bulk_intf) {
-                                g_print("\r[%s] : Interface: %u File received : [%d%%]", user_data->prog_name, bulk_intf, progress);
-                                fflush(stdout);
-                        }
-                        if (progress == 100) {
-                                g_print("\n");
-                        }
-                        break;
-                case TRANSFER_COMPLETED:
-                        g_debug("[%s] :  File transfer completed for interface %u", user_data->prog_name, bulk_intf);
-                        g_cond_signal(&user_data->test_upd_cond);
-                        break;
-                default:
-                        break;
-        }
+				fflush(stdout);
+				FuDevice *device = (FuDevice *)user_data->device_ptr;
+				if (device)
+					fu_device_set_progress(device, progress);
+			} else if (BULK_INTERFACE_SYNC == bulk_intf) {
+				fflush(stdout);
+			}
+			if (progress == 100) {
+			}
+			break;
+		case TRANSFER_COMPLETED:
+			g_debug("[%s] :  File transfer completed for interface %u",
+				user_data->prog_name,
+				bulk_intf);
+			g_cond_signal(&user_data->test_upd_cond);
+			break;
+		default:
+			break;
+		}
 }
 
-static gchar *
-get_device_version (LogiBulkController *obj, void *data) 
+void
+get_device_version(LogiBulkController *obj, void *data)
 {
         Message message;
         gint ret;
@@ -118,28 +104,26 @@ get_device_version (LogiBulkController *obj, void *data)
         g_cond_init (&user_data->test_upd_cond);
         g_mutex_init (&user_data->test_upd_mutex);
         g_mutex_lock (&user_data->test_upd_mutex);
-        
-        memset(&message,'\0',sizeof(message));
-        
-        ret = proto_manager_generate_get_device_info_request(&message);
-        if (!ret && message.data) {
-                LOGFN;
-                g_debug("Sending %s\n", message.data);
-                
-                ret_val = logibulkcontroller_send_data_sync(obj, message.data, message.len);
-                if ((ERRORCODE_NO_ERROR != ret_val->error_code) || (ERRORCODE_SEND_DATA_REQUEST_PUSHED_TO_QUEUE != ret_val->error_code)) {
-                        g_warning ("Error in send data %u", ret_val->error_code);
-                }
-                g_free(message.data);
-        }
 
-        if (g_cond_wait_until (&user_data->test_upd_cond, &user_data->test_upd_mutex,
-                                                        g_get_monotonic_time () + 5 * G_TIME_SPAN_SECOND)) {
-                g_mutex_unlock (&user_data->test_upd_mutex);
-                g_mutex_lock (&user_data->test_upd_mutex);
-        }
-        sleep(3); // For testing
-        return "1.2.3";
+	memset(&message, '\0', sizeof(message));
+
+	ret = proto_manager_generate_get_device_info_request(&message);
+	if (!ret && message.data) {
+		ret_val = logibulkcontroller_send_data_sync(obj, message.data, message.len);
+		if ((ERRORCODE_NO_ERROR != ret_val->error_code) ||
+		    (ERRORCODE_SEND_DATA_REQUEST_PUSHED_TO_QUEUE != ret_val->error_code)) {
+			g_warning("Error in send data %u", ret_val->error_code);
+		}
+		g_free(message.data);
+	}
+
+	if (g_cond_wait_until(&user_data->test_upd_cond,
+			      &user_data->test_upd_mutex,
+			      g_get_monotonic_time() + 5 * G_TIME_SPAN_SECOND)) {
+		g_mutex_unlock(&user_data->test_upd_mutex);
+		g_mutex_lock(&user_data->test_upd_mutex);
+	}
+	return;
 }
 
 gboolean
@@ -154,73 +138,45 @@ fu_plugin_update (FuPlugin *plugin,
         BulkControllerCallbacks bulkcb = {bulk_error_cb, bulk_file_transfer_cb, read_upd_data_cb,
                                            read_sync_data_cb, send_data_sync_cb };
         g_setenv ("G_MESSAGES_DEBUG", "all", TRUE);
-        g_print ("\n SRS fu_plugin_update Entry \n");
-
-
-        g_print("\n SRS Firmware size = %lu\n", g_bytes_get_size(blob_fw));
-
         user_data.prog_name = g_strdup ("Logitech Rally Bar Mini");
         user_data.device_ptr = (FuDevice *)device;
-        obj = logibulkcontroller_create_bulk_controller (0x46d, 0x8d3, bulkcb, &user_data);
-        if (ERRORCODE_NO_ERROR != logibulkcontroller_open_device (obj)) {
-                g_warning("Unknown device\n");
-                return 0;
-        }
-
-        gchar * version_string = get_device_version(obj, &user_data);
-        g_print ("\n SRS version_string 1st time %s: \n", version_string);
-
-        g_print ("\n SRS Calling logibulkcontroller_send_file_upd \n");
-        fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-        logibulkcontroller_send_file_upd (obj, blob_fw, g_bytes_get_size(blob_fw), FALSE);
-        g_print ("\n SRS Called logibulkcontroller_send_file_upd \n");
-        if (g_cond_wait_until (&user_data.test_upd_cond, &user_data.test_upd_mutex,
-                                                        g_get_monotonic_time () + TIMEOUT_20M * G_TIME_SPAN_SECOND)) {
-                g_mutex_unlock (&user_data.test_upd_mutex);
-                g_mutex_lock (&user_data.test_upd_mutex);
-        }
-        fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
-        g_print ("\n SRS Calling logibulkcontroller_send_data_sync again \n");
-        version_string = get_device_version(obj, &user_data);
-                g_print ("\n SRS version_string 2nd time %s: \n", version_string);
-        sleep(3); //For testing
-        
-        g_print ("\n SRS Done with g_cond_wait_until \n");
-        logibulkcontroller_close_device (obj);
-        g_print ("\n SRS Done with logibulkcontroller_close_device \n");
-
-        fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
-        fu_device_set_version (device, "1.2.3");
-
-	g_print ("\n SRS fu_plugin_update Exit \n");
-        
-        return TRUE;
+	obj = logibulkcontroller_create_bulk_controller(0x46d, 0x8d3, bulkcb, &user_data);
+	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
+	logibulkcontroller_send_file_upd(obj, blob_fw, g_bytes_get_size(blob_fw), FALSE);
+	if (g_cond_wait_until(&user_data.test_upd_cond,
+			      &user_data.test_upd_mutex,
+			      g_get_monotonic_time() + TIMEOUT_20M * G_TIME_SPAN_SECOND)) {
+		g_mutex_unlock(&user_data.test_upd_mutex);
+		g_mutex_lock(&user_data.test_upd_mutex);
+	}
+	fu_device_set_status(device, FWUPD_STATUS_DEVICE_VERIFY);
+	logibulkcontroller_close_device(obj);
+	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version(device, "1.2.3");
+	return TRUE;
 }
 
 void
 fu_plugin_init (FuPlugin *plugin)
 {
 	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	g_debug ("Initializing Logitech bulk controller plugin\n");
 }
 
 void
 fu_plugin_destroy (FuPlugin *plugin)
 {
-        g_debug ("Terminating Logitech bulk controller plugin\n");
+	g_debug("Terminating Logitech bulk controller plugin");
 }
 
 gboolean
 fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 {
-        g_print ("\n SRS fu_plugin_coldplug entry \n");
 	FuContext *ctx = fu_plugin_get_context (plugin);
 	g_autoptr(FuDevice) device = NULL;
 	device = fu_device_new_with_context (ctx);
 	fu_device_set_id (device, "FakeDevice");
 	fu_device_add_guid (device, "b585990a-003e-5270-89d5-3705a17f9a43");
 	fu_device_set_name (device, "Rally Bar Mini");
-	//fu_device_add_icon (device, "preferences-desktop-keyboard");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_protocol (device, "com.acme.test");
 	fu_device_set_vendor (device, "Logitech");
@@ -228,7 +184,6 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version (device, "1.2.3");
 	if (g_strcmp0 (g_getenv ("FWUPD_PLUGIN_LOGITECH_BULKCONTROLLER"), "registration") == 0) {
-		g_print ("SRS fu_plugin_coldplug reg");
 		fu_plugin_device_register (plugin, device);
 		if (fu_device_get_metadata (device, "BestDevice") == NULL) {
 			g_set_error (error,
@@ -239,14 +194,12 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 		}
 	}
 	fu_plugin_device_add (plugin, device);
-        g_print ("\n SRS fu_plugin_coldplug exit \n");
 	return TRUE;
 }
 
 void
 fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 {
-	g_print ("\n SRS fu_plugin_device_registered \n");
 	fu_device_set_metadata (device, "BestDevice", "/dev/urandom");
 }
 
@@ -256,7 +209,6 @@ fu_plugin_verify (FuPlugin *plugin,
 		  FuPluginVerifyFlags flags,
 		  GError **error)
 {
-	g_print ("\n SRS fu_plugin_verify \n");
 	if (g_strcmp0 (fu_device_get_version (device), "1.2.2") == 0) {
 		fu_device_add_checksum (device, "90d0ad436d21e0687998cd2127b2411135e1f730");
 		fu_device_add_checksum (device, "921631916a60b295605dbae6a0309f9b64e2401b3de8e8506e109fc82c586e3a");
@@ -278,14 +230,3 @@ fu_plugin_verify (FuPlugin *plugin,
 		     "no checksum for %s", fu_device_get_version (device));
 	return FALSE;
 }
-
-/*
-static gchar *
-fu_plugin_logitech_bulkcontroller_get_version (GBytes *blob_fw)
-{
-	g_print ("\n SRS fu_plugin_logitech_bulkcontroller_get_version \n");
-		return "1.2.3";
-}
-*/
-
-

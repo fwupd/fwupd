@@ -31,7 +31,6 @@ and the device will reset when the new firmware has been written.
 
 ## Design Notes
 
-
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x046D`

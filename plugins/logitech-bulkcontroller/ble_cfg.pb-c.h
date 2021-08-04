@@ -19,87 +19,89 @@ PROTOBUF_C__BEGIN_DECLS
 typedef struct Logi__Device__Proto__SetBLECfgRequest Logi__Device__Proto__SetBLECfgRequest;
 typedef struct Logi__Device__Proto__SetBLECfgResponse Logi__Device__Proto__SetBLECfgResponse;
 
-
 /* --- enums --- */
-
 
 /* --- messages --- */
 
-struct  Logi__Device__Proto__SetBLECfgRequest
-{
-  ProtobufCMessage base;
-  /*
-   **
-   * (REQUIRED) If true, BLE is enabled and active otherwise disabled
-   */
-  protobuf_c_boolean ble_on;
+struct Logi__Device__Proto__SetBLECfgRequest {
+	ProtobufCMessage base;
+	/*
+	 **
+	 * (REQUIRED) If true, BLE is enabled and active otherwise disabled
+	 */
+	protobuf_c_boolean ble_on;
 };
-#define LOGI__DEVICE__PROTO__SET_BLECFG_REQUEST__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&logi__device__proto__set_blecfg_request__descriptor) \
-    , 0 }
+#define LOGI__DEVICE__PROTO__SET_BLECFG_REQUEST__INIT                                              \
+	{                                                                                          \
+		PROTOBUF_C_MESSAGE_INIT(&logi__device__proto__set_blecfg_request__descriptor)      \
+		, 0                                                                                \
+	}
 
-
-struct  Logi__Device__Proto__SetBLECfgResponse
-{
-  ProtobufCMessage base;
-  protobuf_c_boolean success;
-  size_t n_errors;
-  Logi__Device__Proto__Error **errors;
+struct Logi__Device__Proto__SetBLECfgResponse {
+	ProtobufCMessage base;
+	protobuf_c_boolean success;
+	size_t n_errors;
+	Logi__Device__Proto__Error **errors;
 };
-#define LOGI__DEVICE__PROTO__SET_BLECFG_RESPONSE__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&logi__device__proto__set_blecfg_response__descriptor) \
-    , 0, 0,NULL }
-
+#define LOGI__DEVICE__PROTO__SET_BLECFG_RESPONSE__INIT                                             \
+	{                                                                                          \
+		PROTOBUF_C_MESSAGE_INIT(&logi__device__proto__set_blecfg_response__descriptor)     \
+		, 0, 0, NULL                                                                       \
+	}
 
 /* Logi__Device__Proto__SetBLECfgRequest methods */
-void   logi__device__proto__set_blecfg_request__init
-                     (Logi__Device__Proto__SetBLECfgRequest         *message);
-size_t logi__device__proto__set_blecfg_request__get_packed_size
-                     (const Logi__Device__Proto__SetBLECfgRequest   *message);
-size_t logi__device__proto__set_blecfg_request__pack
-                     (const Logi__Device__Proto__SetBLECfgRequest   *message,
-                      uint8_t             *out);
-size_t logi__device__proto__set_blecfg_request__pack_to_buffer
-                     (const Logi__Device__Proto__SetBLECfgRequest   *message,
-                      ProtobufCBuffer     *buffer);
+void
+logi__device__proto__set_blecfg_request__init(Logi__Device__Proto__SetBLECfgRequest *message);
+size_t
+logi__device__proto__set_blecfg_request__get_packed_size(
+    const Logi__Device__Proto__SetBLECfgRequest *message);
+size_t
+logi__device__proto__set_blecfg_request__pack(const Logi__Device__Proto__SetBLECfgRequest *message,
+					      uint8_t *out);
+size_t
+logi__device__proto__set_blecfg_request__pack_to_buffer(
+    const Logi__Device__Proto__SetBLECfgRequest *message,
+    ProtobufCBuffer *buffer);
 Logi__Device__Proto__SetBLECfgRequest *
-       logi__device__proto__set_blecfg_request__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   logi__device__proto__set_blecfg_request__free_unpacked
-                     (Logi__Device__Proto__SetBLECfgRequest *message,
-                      ProtobufCAllocator *allocator);
+logi__device__proto__set_blecfg_request__unpack(ProtobufCAllocator *allocator,
+						size_t len,
+						const uint8_t *data);
+void
+logi__device__proto__set_blecfg_request__free_unpacked(
+    Logi__Device__Proto__SetBLECfgRequest *message,
+    ProtobufCAllocator *allocator);
 /* Logi__Device__Proto__SetBLECfgResponse methods */
-void   logi__device__proto__set_blecfg_response__init
-                     (Logi__Device__Proto__SetBLECfgResponse         *message);
-size_t logi__device__proto__set_blecfg_response__get_packed_size
-                     (const Logi__Device__Proto__SetBLECfgResponse   *message);
-size_t logi__device__proto__set_blecfg_response__pack
-                     (const Logi__Device__Proto__SetBLECfgResponse   *message,
-                      uint8_t             *out);
-size_t logi__device__proto__set_blecfg_response__pack_to_buffer
-                     (const Logi__Device__Proto__SetBLECfgResponse   *message,
-                      ProtobufCBuffer     *buffer);
+void
+logi__device__proto__set_blecfg_response__init(Logi__Device__Proto__SetBLECfgResponse *message);
+size_t
+logi__device__proto__set_blecfg_response__get_packed_size(
+    const Logi__Device__Proto__SetBLECfgResponse *message);
+size_t
+logi__device__proto__set_blecfg_response__pack(
+    const Logi__Device__Proto__SetBLECfgResponse *message,
+    uint8_t *out);
+size_t
+logi__device__proto__set_blecfg_response__pack_to_buffer(
+    const Logi__Device__Proto__SetBLECfgResponse *message,
+    ProtobufCBuffer *buffer);
 Logi__Device__Proto__SetBLECfgResponse *
-       logi__device__proto__set_blecfg_response__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   logi__device__proto__set_blecfg_response__free_unpacked
-                     (Logi__Device__Proto__SetBLECfgResponse *message,
-                      ProtobufCAllocator *allocator);
+logi__device__proto__set_blecfg_response__unpack(ProtobufCAllocator *allocator,
+						 size_t len,
+						 const uint8_t *data);
+void
+logi__device__proto__set_blecfg_response__free_unpacked(
+    Logi__Device__Proto__SetBLECfgResponse *message,
+    ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
-typedef void (*Logi__Device__Proto__SetBLECfgRequest_Closure)
-                 (const Logi__Device__Proto__SetBLECfgRequest *message,
-                  void *closure_data);
-typedef void (*Logi__Device__Proto__SetBLECfgResponse_Closure)
-                 (const Logi__Device__Proto__SetBLECfgResponse *message,
-                  void *closure_data);
+typedef void (*Logi__Device__Proto__SetBLECfgRequest_Closure)(
+    const Logi__Device__Proto__SetBLECfgRequest *message,
+    void *closure_data);
+typedef void (*Logi__Device__Proto__SetBLECfgResponse_Closure)(
+    const Logi__Device__Proto__SetBLECfgResponse *message,
+    void *closure_data);
 
 /* --- services --- */
-
 
 /* --- descriptors --- */
 
@@ -108,5 +110,4 @@ extern const ProtobufCMessageDescriptor logi__device__proto__set_blecfg_response
 
 PROTOBUF_C__END_DECLS
 
-
-#endif  /* PROTOBUF_C_ble_5fcfg_2eproto__INCLUDED */
+#endif /* PROTOBUF_C_ble_5fcfg_2eproto__INCLUDED */

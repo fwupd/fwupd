@@ -16,10 +16,12 @@ PROTOBUF_C__BEGIN_DECLS
 
 #include "device_common.pb-c.h"
 
-typedef struct Logi__Device__Proto__RightSightConfiguration Logi__Device__Proto__RightSightConfiguration;
-typedef struct Logi__Device__Proto__SetRightSightConfigurationRequest Logi__Device__Proto__SetRightSightConfigurationRequest;
-typedef struct Logi__Device__Proto__SetRightSightConfigurationResponse Logi__Device__Proto__SetRightSightConfigurationResponse;
-
+typedef struct Logi__Device__Proto__RightSightConfiguration
+    Logi__Device__Proto__RightSightConfiguration;
+typedef struct Logi__Device__Proto__SetRightSightConfigurationRequest
+    Logi__Device__Proto__SetRightSightConfigurationRequest;
+typedef struct Logi__Device__Proto__SetRightSightConfigurationResponse
+    Logi__Device__Proto__SetRightSightConfigurationResponse;
 
 /* --- enums --- */
 
@@ -28,25 +30,26 @@ typedef struct Logi__Device__Proto__SetRightSightConfigurationResponse Logi__Dev
  * Enumeration of modes that the RightSight service can be in.
  */
 typedef enum _Logi__Device__Proto__RightSightConfiguration__Mode {
-  /*
-   **
-   * This does not indicate a default value. 
-   * 
-   */
-  LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__DO_NOT_USE = 0,
-  /*
-   **
-   * The camera will continually pan, tilt, and zoom
-   * to properly frame everyone during a meeting.
-   */
-  LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__DYNAMIC = 1,
-  /*
-   **
-   * The camera will pan, tilt, and zoom to properly in 
-   * the meeting only when the call starts.
-   */
-  LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__ON_CALL_START = 2
-    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE)
+	/*
+	 **
+	 * This does not indicate a default value.
+	 *
+	 */
+	LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__DO_NOT_USE = 0,
+	/*
+	 **
+	 * The camera will continually pan, tilt, and zoom
+	 * to properly frame everyone during a meeting.
+	 */
+	LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__DYNAMIC = 1,
+	/*
+	 **
+	 * The camera will pan, tilt, and zoom to properly in
+	 * the meeting only when the call starts.
+	 */
+	LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__ON_CALL_START =
+	    2 PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(
+		LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE)
 } Logi__Device__Proto__RightSightConfiguration__Mode;
 
 /* --- messages --- */
@@ -56,183 +59,199 @@ typedef enum _Logi__Device__Proto__RightSightConfiguration__Mode {
  * This message data structure holds information about the
  * current RightSight configuration.
  */
-struct  Logi__Device__Proto__RightSightConfiguration
-{
-  ProtobufCMessage base;
-  /*
-   **
-   * (REQUIRED) If true, RightSight is enabled and active.
-   */
-  protobuf_c_boolean enabled;
-  /*
-   **
-   * (REQUIRED) The current mode that RightSight is in.
-   */
-  Logi__Device__Proto__RightSightConfiguration__Mode mode;
-  /*
-   **
-   * (REQUIRED) A timestamp indicating when the RightSight 
-   * settings were last modified. This is the number of 
-   * milliseconds since the epoch.
-   */
-  uint64_t last_modified;
+struct Logi__Device__Proto__RightSightConfiguration {
+	ProtobufCMessage base;
+	/*
+	 **
+	 * (REQUIRED) If true, RightSight is enabled and active.
+	 */
+	protobuf_c_boolean enabled;
+	/*
+	 **
+	 * (REQUIRED) The current mode that RightSight is in.
+	 */
+	Logi__Device__Proto__RightSightConfiguration__Mode mode;
+	/*
+	 **
+	 * (REQUIRED) A timestamp indicating when the RightSight
+	 * settings were last modified. This is the number of
+	 * milliseconds since the epoch.
+	 */
+	uint64_t last_modified;
 };
-#define LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&logi__device__proto__right_sight_configuration__descriptor) \
-    , 0, LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__DO_NOT_USE, 0 }
-
+#define LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__INIT                                       \
+	{                                                                                          \
+		PROTOBUF_C_MESSAGE_INIT(                                                           \
+		    &logi__device__proto__right_sight_configuration__descriptor)                   \
+		, 0, LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__DO_NOT_USE, 0           \
+	}
 
 /*
  **
- * RightSight is an auto-framing feature that is available in Kong. 
- * With RightSight enabled, your device will automatically pan, tilt, and zoom 
+ * RightSight is an auto-framing feature that is available in Kong.
+ * With RightSight enabled, your device will automatically pan, tilt, and zoom
  * the camera lens in order to capture all meeting participants
  * within the image frame. This feature can be set to one of two
  * modes: dynamic and on call start. When in dynamic mode, the
- * device will actively pan, tilt, and zoom the camera lens when 
+ * device will actively pan, tilt, and zoom the camera lens when
  * appropriate in order to keep all participants in frame during
- * the entire course of the meeting. When in on call start mode, 
- * the camera lens will pan, tilt, and zoom to capture everybody 
+ * the entire course of the meeting. When in on call start mode,
+ * the camera lens will pan, tilt, and zoom to capture everybody
  * in frame only when the meeting starts.
- * When RightSight is enabled, it is set 
- * to dynamic mode by default. 
- * This message requests that the RightSight configuration 
- * settings be changed. 
+ * When RightSight is enabled, it is set
+ * to dynamic mode by default.
+ * This message requests that the RightSight configuration
+ * settings be changed.
  * EXPECTED RESPONSE
  * SetRightSightConfigurationResponse
  */
-struct  Logi__Device__Proto__SetRightSightConfigurationRequest
-{
-  ProtobufCMessage base;
-  /*
-   **
-   * (REQUIRED) If true, requests that RightSight be 
-   * turned on. If false, indicates that 
-   * RightSight should be turned off.
-   */
-  protobuf_c_boolean enabled;
-  /*
-   **
-   * (REQUIRED) The mode for RightSight to be in. A value is
-   * required, but if none is provided, then this will 
-   * default to DYNAMIC mode.
-   * If enabled is set to false, then this will effectively
-   * do nothing as RightSight is turned off.
-   */
-  Logi__Device__Proto__RightSightConfiguration__Mode mode;
+struct Logi__Device__Proto__SetRightSightConfigurationRequest {
+	ProtobufCMessage base;
+	/*
+	 **
+	 * (REQUIRED) If true, requests that RightSight be
+	 * turned on. If false, indicates that
+	 * RightSight should be turned off.
+	 */
+	protobuf_c_boolean enabled;
+	/*
+	 **
+	 * (REQUIRED) The mode for RightSight to be in. A value is
+	 * required, but if none is provided, then this will
+	 * default to DYNAMIC mode.
+	 * If enabled is set to false, then this will effectively
+	 * do nothing as RightSight is turned off.
+	 */
+	Logi__Device__Proto__RightSightConfiguration__Mode mode;
 };
-#define LOGI__DEVICE__PROTO__SET_RIGHT_SIGHT_CONFIGURATION_REQUEST__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&logi__device__proto__set_right_sight_configuration_request__descriptor) \
-    , 0, LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__DO_NOT_USE }
-
+#define LOGI__DEVICE__PROTO__SET_RIGHT_SIGHT_CONFIGURATION_REQUEST__INIT                           \
+	{                                                                                          \
+		PROTOBUF_C_MESSAGE_INIT(                                                           \
+		    &logi__device__proto__set_right_sight_configuration_request__descriptor)       \
+		, 0, LOGI__DEVICE__PROTO__RIGHT_SIGHT_CONFIGURATION__MODE__DO_NOT_USE              \
+	}
 
 /*
  **
  * Response which contains the RightSight configuration that was
  * set as a result of the request.
  */
-struct  Logi__Device__Proto__SetRightSightConfigurationResponse
-{
-  ProtobufCMessage base;
-  /*
-   **
-   * (OPTIONAL) If any errors occurred while processing the
-   * request, then this field should be set accordingly.
-   */
-  size_t n_errors;
-  Logi__Device__Proto__Error **errors;
-  /*
-   **
-   * (REQUIRED) The RightSight configuration that was set on
-   * the product.
-   */
-  Logi__Device__Proto__RightSightConfiguration *right_sight_configuration;
+struct Logi__Device__Proto__SetRightSightConfigurationResponse {
+	ProtobufCMessage base;
+	/*
+	 **
+	 * (OPTIONAL) If any errors occurred while processing the
+	 * request, then this field should be set accordingly.
+	 */
+	size_t n_errors;
+	Logi__Device__Proto__Error **errors;
+	/*
+	 **
+	 * (REQUIRED) The RightSight configuration that was set on
+	 * the product.
+	 */
+	Logi__Device__Proto__RightSightConfiguration *right_sight_configuration;
 };
-#define LOGI__DEVICE__PROTO__SET_RIGHT_SIGHT_CONFIGURATION_RESPONSE__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&logi__device__proto__set_right_sight_configuration_response__descriptor) \
-    , 0,NULL, NULL }
-
+#define LOGI__DEVICE__PROTO__SET_RIGHT_SIGHT_CONFIGURATION_RESPONSE__INIT                          \
+	{                                                                                          \
+		PROTOBUF_C_MESSAGE_INIT(                                                           \
+		    &logi__device__proto__set_right_sight_configuration_response__descriptor)      \
+		, 0, NULL, NULL                                                                    \
+	}
 
 /* Logi__Device__Proto__RightSightConfiguration methods */
-void   logi__device__proto__right_sight_configuration__init
-                     (Logi__Device__Proto__RightSightConfiguration         *message);
-size_t logi__device__proto__right_sight_configuration__get_packed_size
-                     (const Logi__Device__Proto__RightSightConfiguration   *message);
-size_t logi__device__proto__right_sight_configuration__pack
-                     (const Logi__Device__Proto__RightSightConfiguration   *message,
-                      uint8_t             *out);
-size_t logi__device__proto__right_sight_configuration__pack_to_buffer
-                     (const Logi__Device__Proto__RightSightConfiguration   *message,
-                      ProtobufCBuffer     *buffer);
+void
+logi__device__proto__right_sight_configuration__init(
+    Logi__Device__Proto__RightSightConfiguration *message);
+size_t
+logi__device__proto__right_sight_configuration__get_packed_size(
+    const Logi__Device__Proto__RightSightConfiguration *message);
+size_t
+logi__device__proto__right_sight_configuration__pack(
+    const Logi__Device__Proto__RightSightConfiguration *message,
+    uint8_t *out);
+size_t
+logi__device__proto__right_sight_configuration__pack_to_buffer(
+    const Logi__Device__Proto__RightSightConfiguration *message,
+    ProtobufCBuffer *buffer);
 Logi__Device__Proto__RightSightConfiguration *
-       logi__device__proto__right_sight_configuration__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   logi__device__proto__right_sight_configuration__free_unpacked
-                     (Logi__Device__Proto__RightSightConfiguration *message,
-                      ProtobufCAllocator *allocator);
+logi__device__proto__right_sight_configuration__unpack(ProtobufCAllocator *allocator,
+						       size_t len,
+						       const uint8_t *data);
+void
+logi__device__proto__right_sight_configuration__free_unpacked(
+    Logi__Device__Proto__RightSightConfiguration *message,
+    ProtobufCAllocator *allocator);
 /* Logi__Device__Proto__SetRightSightConfigurationRequest methods */
-void   logi__device__proto__set_right_sight_configuration_request__init
-                     (Logi__Device__Proto__SetRightSightConfigurationRequest         *message);
-size_t logi__device__proto__set_right_sight_configuration_request__get_packed_size
-                     (const Logi__Device__Proto__SetRightSightConfigurationRequest   *message);
-size_t logi__device__proto__set_right_sight_configuration_request__pack
-                     (const Logi__Device__Proto__SetRightSightConfigurationRequest   *message,
-                      uint8_t             *out);
-size_t logi__device__proto__set_right_sight_configuration_request__pack_to_buffer
-                     (const Logi__Device__Proto__SetRightSightConfigurationRequest   *message,
-                      ProtobufCBuffer     *buffer);
+void
+logi__device__proto__set_right_sight_configuration_request__init(
+    Logi__Device__Proto__SetRightSightConfigurationRequest *message);
+size_t
+logi__device__proto__set_right_sight_configuration_request__get_packed_size(
+    const Logi__Device__Proto__SetRightSightConfigurationRequest *message);
+size_t
+logi__device__proto__set_right_sight_configuration_request__pack(
+    const Logi__Device__Proto__SetRightSightConfigurationRequest *message,
+    uint8_t *out);
+size_t
+logi__device__proto__set_right_sight_configuration_request__pack_to_buffer(
+    const Logi__Device__Proto__SetRightSightConfigurationRequest *message,
+    ProtobufCBuffer *buffer);
 Logi__Device__Proto__SetRightSightConfigurationRequest *
-       logi__device__proto__set_right_sight_configuration_request__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   logi__device__proto__set_right_sight_configuration_request__free_unpacked
-                     (Logi__Device__Proto__SetRightSightConfigurationRequest *message,
-                      ProtobufCAllocator *allocator);
+logi__device__proto__set_right_sight_configuration_request__unpack(ProtobufCAllocator *allocator,
+								   size_t len,
+								   const uint8_t *data);
+void
+logi__device__proto__set_right_sight_configuration_request__free_unpacked(
+    Logi__Device__Proto__SetRightSightConfigurationRequest *message,
+    ProtobufCAllocator *allocator);
 /* Logi__Device__Proto__SetRightSightConfigurationResponse methods */
-void   logi__device__proto__set_right_sight_configuration_response__init
-                     (Logi__Device__Proto__SetRightSightConfigurationResponse         *message);
-size_t logi__device__proto__set_right_sight_configuration_response__get_packed_size
-                     (const Logi__Device__Proto__SetRightSightConfigurationResponse   *message);
-size_t logi__device__proto__set_right_sight_configuration_response__pack
-                     (const Logi__Device__Proto__SetRightSightConfigurationResponse   *message,
-                      uint8_t             *out);
-size_t logi__device__proto__set_right_sight_configuration_response__pack_to_buffer
-                     (const Logi__Device__Proto__SetRightSightConfigurationResponse   *message,
-                      ProtobufCBuffer     *buffer);
+void
+logi__device__proto__set_right_sight_configuration_response__init(
+    Logi__Device__Proto__SetRightSightConfigurationResponse *message);
+size_t
+logi__device__proto__set_right_sight_configuration_response__get_packed_size(
+    const Logi__Device__Proto__SetRightSightConfigurationResponse *message);
+size_t
+logi__device__proto__set_right_sight_configuration_response__pack(
+    const Logi__Device__Proto__SetRightSightConfigurationResponse *message,
+    uint8_t *out);
+size_t
+logi__device__proto__set_right_sight_configuration_response__pack_to_buffer(
+    const Logi__Device__Proto__SetRightSightConfigurationResponse *message,
+    ProtobufCBuffer *buffer);
 Logi__Device__Proto__SetRightSightConfigurationResponse *
-       logi__device__proto__set_right_sight_configuration_response__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   logi__device__proto__set_right_sight_configuration_response__free_unpacked
-                     (Logi__Device__Proto__SetRightSightConfigurationResponse *message,
-                      ProtobufCAllocator *allocator);
+logi__device__proto__set_right_sight_configuration_response__unpack(ProtobufCAllocator *allocator,
+								    size_t len,
+								    const uint8_t *data);
+void
+logi__device__proto__set_right_sight_configuration_response__free_unpacked(
+    Logi__Device__Proto__SetRightSightConfigurationResponse *message,
+    ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
-typedef void (*Logi__Device__Proto__RightSightConfiguration_Closure)
-                 (const Logi__Device__Proto__RightSightConfiguration *message,
-                  void *closure_data);
-typedef void (*Logi__Device__Proto__SetRightSightConfigurationRequest_Closure)
-                 (const Logi__Device__Proto__SetRightSightConfigurationRequest *message,
-                  void *closure_data);
-typedef void (*Logi__Device__Proto__SetRightSightConfigurationResponse_Closure)
-                 (const Logi__Device__Proto__SetRightSightConfigurationResponse *message,
-                  void *closure_data);
+typedef void (*Logi__Device__Proto__RightSightConfiguration_Closure)(
+    const Logi__Device__Proto__RightSightConfiguration *message,
+    void *closure_data);
+typedef void (*Logi__Device__Proto__SetRightSightConfigurationRequest_Closure)(
+    const Logi__Device__Proto__SetRightSightConfigurationRequest *message,
+    void *closure_data);
+typedef void (*Logi__Device__Proto__SetRightSightConfigurationResponse_Closure)(
+    const Logi__Device__Proto__SetRightSightConfigurationResponse *message,
+    void *closure_data);
 
 /* --- services --- */
-
 
 /* --- descriptors --- */
 
 extern const ProtobufCMessageDescriptor logi__device__proto__right_sight_configuration__descriptor;
-extern const ProtobufCEnumDescriptor    logi__device__proto__right_sight_configuration__mode__descriptor;
-extern const ProtobufCMessageDescriptor logi__device__proto__set_right_sight_configuration_request__descriptor;
-extern const ProtobufCMessageDescriptor logi__device__proto__set_right_sight_configuration_response__descriptor;
+extern const ProtobufCEnumDescriptor
+    logi__device__proto__right_sight_configuration__mode__descriptor;
+extern const ProtobufCMessageDescriptor
+    logi__device__proto__set_right_sight_configuration_request__descriptor;
+extern const ProtobufCMessageDescriptor
+    logi__device__proto__set_right_sight_configuration_response__descriptor;
 
 PROTOBUF_C__END_DECLS
 
-
-#endif  /* PROTOBUF_C_rightsight_2eproto__INCLUDED */
+#endif /* PROTOBUF_C_rightsight_2eproto__INCLUDED */
