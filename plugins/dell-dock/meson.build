@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginDellDock"']
 
 install_data(['dell-dock.quirk'],
@@ -34,3 +35,4 @@ shared_module('fu_plugin_dell_dock',
     gudev,
   ],
 )
+endif
