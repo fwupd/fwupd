@@ -178,6 +178,14 @@ fu_io_channel_write_raw (FuIOChannel *self,
 	if (flags & FU_IO_CHANNEL_FLAG_USE_BLOCKING_IO) {
 		gssize wrote = write (self->fd, data, datasz);
 		if (wrote != (gssize) datasz) {
+			if (errno == EPROTO) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_FOUND,
+					    "failed to write: %s",
+					    strerror(errno));
+				return FALSE;
+			}
 			g_set_error (error,
 				     G_IO_ERROR,
 				     G_IO_ERROR_FAILED,
@@ -217,6 +225,14 @@ fu_io_channel_write_raw (FuIOChannel *self,
 				if (errno == EAGAIN) {
 					g_debug ("got EAGAIN, trying harder");
 					continue;
+				}
+				if (errno == EPROTO) {
+					g_set_error(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_NOT_FOUND,
+						    "failed to write: %s",
+						    strerror(errno));
+					return FALSE;
 				}
 				g_set_error (error,
 					     FWUPD_ERROR,
