@@ -37,7 +37,7 @@ fu_logitech_hidpp_format_version (const gchar *name, guint8 major, guint8 minor,
 {
 	GString *str = g_string_new (NULL);
 	for (guint i = 0; i < 3; i++) {
-		if (g_ascii_isspace (name[i]))
+		if (g_ascii_isspace(name[i]) || name[i] == '\0')
 			continue;
 		g_string_append_c (str, name[i]);
 	}
