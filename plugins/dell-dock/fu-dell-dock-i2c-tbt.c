@@ -47,10 +47,11 @@ struct _FuDellDockTbt {
 G_DEFINE_TYPE (FuDellDockTbt, fu_dell_dock_tbt, FU_TYPE_DEVICE)
 
 static gboolean
-fu_dell_dock_tbt_write_fw (FuDevice *device,
-			   FuFirmware *firmware,
-			   FwupdInstallFlags flags,
-			   GError **error)
+fu_dell_dock_tbt_write_fw(FuDevice *device,
+			  FuFirmware *firmware,
+			  FuProgress *progress,
+			  FwupdInstallFlags flags,
+			  GError **error)
 {
 	FuDellDockTbt *self = FU_DELL_DOCK_TBT (device);
 	guint32 start_offset = 0;
@@ -114,7 +115,7 @@ fu_dell_dock_tbt_write_fw (FuDevice *device,
 						 error))
 			return FALSE;
 
-		fu_device_set_progress_full (device, i, image_size);
+		fu_progress_set_percentage_full(progress, i, image_size);
 	}
 	g_debug ("writing took %f seconds",
 		 g_timer_elapsed (timer, NULL));

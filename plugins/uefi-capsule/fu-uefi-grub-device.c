@@ -109,6 +109,7 @@ fu_uefi_grub_device_mkconfig(FuDevice *device,
 static gboolean
 fu_uefi_grub_device_write_firmware(FuDevice *device,
 				   FuFirmware *firmware,
+				   FuProgress *progress,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {

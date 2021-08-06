@@ -450,10 +450,11 @@ fu_wac_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_wac_device_write_firmware (FuDevice *device,
-			      FuFirmware *firmware,
-			      FwupdInstallFlags flags,
-			      GError **error)
+fu_wac_device_write_firmware(FuDevice *device,
+			     FuFirmware *firmware,
+			     FuProgress *progress,
+			     FwupdInstallFlags flags,
+			     GError **error)
 {
 	FuWacDevice *self = FU_WAC_DEVICE (device);
 	gsize blocks_done = 0;
@@ -541,7 +542,7 @@ fu_wac_device_write_firmware (FuDevice *device,
 		/* ignore empty blocks */
 		if (fu_common_bytes_is_empty (blob_block)) {
 			g_debug ("empty block, ignoring");
-			fu_device_set_progress_full (device, blocks_done++, blocks_total);
+			fu_progress_set_percentage_full(progress, blocks_done++, blocks_total);
 			continue;
 		}
 
@@ -572,7 +573,7 @@ fu_wac_device_write_firmware (FuDevice *device,
 			return FALSE;
 
 		/* update device progress */
-		fu_device_set_progress_full (device, blocks_done++, blocks_total);
+		fu_progress_set_percentage_full(progress, blocks_done++, blocks_total);
 	}
 
 	/* check at least one block was written */
@@ -591,7 +592,7 @@ fu_wac_device_write_firmware (FuDevice *device,
 	}
 
 	/* update device progress */
-	fu_device_set_progress_full (device, blocks_done++, blocks_total);
+	fu_progress_set_percentage_full(progress, blocks_done++, blocks_total);
 
 	/* read all CRC of all pages and verify with local CRC */
 	if (!fu_wac_device_ensure_checksums (self, error))
@@ -628,14 +629,14 @@ fu_wac_device_write_firmware (FuDevice *device,
 	}
 
 	/* update device progress */
-	fu_device_set_progress_full (device, blocks_done++, blocks_total);
+	fu_progress_set_percentage_full(progress, blocks_done++, blocks_total);
 
 	/* store host CRC into flash */
 	if (!fu_wac_device_write_checksum_table (self, error))
 		return FALSE;
 
 	/* update progress */
-	fu_device_set_progress_full (device, blocks_total, blocks_total);
+	fu_progress_set_percentage_full(progress, blocks_total, blocks_total);
 	return TRUE;
 }
 

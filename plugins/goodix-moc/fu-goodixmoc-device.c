@@ -325,10 +325,11 @@ fu_goodixmoc_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_goodixmoc_device_write_firmware (FuDevice *device,
-				    FuFirmware *firmware,
-				    FwupdInstallFlags flags,
-				    GError  **error)
+fu_goodixmoc_device_write_firmware(FuDevice *device,
+				   FuFirmware *firmware,
+				   FuProgress *progress,
+				   FwupdInstallFlags flags,
+				   GError **error)
 {
 	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE(device);
 	GxPkgType pkg_eop = GX_PKG_TYPE_NORMAL;
@@ -402,7 +403,7 @@ fu_goodixmoc_device_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
+		fu_progress_set_percentage_full(progress, (gsize)i + 1, (gsize)chunks->len);
 	}
 
 	/* success! */

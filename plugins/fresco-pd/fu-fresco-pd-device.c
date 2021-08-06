@@ -247,10 +247,11 @@ fu_fresco_pd_device_panther_reset_device (FuFrescoPdDevice *self, GError **error
 }
 
 static gboolean
-fu_fresco_pd_device_write_firmware (FuDevice *device,
-				    FuFirmware *firmware,
-				    FwupdInstallFlags flags,
-				    GError **error)
+fu_fresco_pd_device_write_firmware(FuDevice *device,
+				   FuFirmware *firmware,
+				   FuProgress *progress,
+				   FwupdInstallFlags flags,
+				   GError **error)
 {
 	FuFrescoPdDevice *self = FU_FRESCO_PD_DEVICE (device);
 	const guint8 *buf;
@@ -333,7 +334,7 @@ fu_fresco_pd_device_write_firmware (FuDevice *device,
 	for (guint16 byte_index = 0; byte_index < 0x4000; byte_index++) {
 		if (!fu_fresco_pd_device_set_byte (self, byte_index + 0x2000, buf[byte_index], error))
 			return FALSE;
-		fu_device_set_progress_full (device, (gsize) byte_index, 0x4000);
+		fu_progress_set_percentage_full(progress, (gsize)byte_index, 0x4000);
 	}
 
 	/* write file buf 0x4200 ~ 0x4205, 6 bytes to internal address 0x6600 ~ 0x6605

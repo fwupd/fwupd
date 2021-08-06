@@ -931,6 +931,7 @@ static gboolean
 fu_synaptics_rmi_ps2_device_attach (FuDevice *device, GError **error)
 {
 	FuSynapticsRmiDevice *rmi_device = FU_SYNAPTICS_RMI_DEVICE (device);
+	g_autoptr(FuProgress) progress = fu_progress_new();
 
 	/* sanity check */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -943,7 +944,7 @@ fu_synaptics_rmi_ps2_device_attach (FuDevice *device, GError **error)
 
 	/* delay after writing */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_sleep_with_progress (device, 2);
+	fu_progress_sleep(progress, 2);
 
 	/* reset device */
 	if (!fu_synaptics_rmi_device_enter_iep_mode (rmi_device,
@@ -956,7 +957,7 @@ fu_synaptics_rmi_ps2_device_attach (FuDevice *device, GError **error)
 	}
 
 	/* delay after reset */
-	fu_device_sleep_with_progress (device, 5);
+	fu_progress_sleep(progress, 5);
 
 	/* back to psmouse */
 	if (!fu_udev_device_write_sysfs (FU_UDEV_DEVICE (device),

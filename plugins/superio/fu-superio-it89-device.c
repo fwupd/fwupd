@@ -237,11 +237,11 @@ fu_superio_device_ec_write_enable (FuSuperioDevice *self, GError **error)
 }
 
 static GBytes *
-fu_superio_it89_device_read_addr (FuSuperioDevice *self,
-				  guint32 addr,
-				  guint size,
-				  GFileProgressCallback progress_cb,
-				  GError **error)
+fu_superio_it89_device_read_addr(FuSuperioDevice *self,
+				 guint32 addr,
+				 guint size,
+				 FuProgress *progress,
+				 GError **error)
 {
 	g_autofree guint8 *buf = NULL;
 
@@ -278,8 +278,7 @@ fu_superio_it89_device_read_addr (FuSuperioDevice *self,
 			return NULL;
 
 		/* update progress */
-		if (progress_cb != NULL)
-			progress_cb ((goffset) i, (goffset) size, self);
+		fu_progress_set_percentage_full(progress, (goffset)i, (goffset)size);
 	}
 
 	/* check again... */
@@ -288,13 +287,6 @@ fu_superio_it89_device_read_addr (FuSuperioDevice *self,
 
 	/* success */
 	return g_bytes_new_take (g_steal_pointer (&buf), size);
-}
-
-static void
-fu_superio_it89_device_progress_cb (goffset current, goffset total, gpointer user_data)
-{
-	FuDevice *device = FU_DEVICE (user_data);
-	fu_device_set_progress_full (device, (gsize) current, (gsize) total);
 }
 
 static gboolean
@@ -426,7 +418,7 @@ fu_plugin_superio_fix_signature (FuSuperioDevice *self, GBytes *fw, GError **err
 }
 
 static GBytes *
-fu_superio_it89_device_dump_firmware (FuDevice *device, GError **error)
+fu_superio_it89_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	guint64 fwsize = fu_device_get_firmware_size_min (device);
@@ -441,19 +433,17 @@ fu_superio_it89_device_dump_firmware (FuDevice *device, GError **error)
 		return NULL;
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
-	return fu_superio_it89_device_read_addr (self, 0x0, fwsize,
-						 fu_superio_it89_device_progress_cb,
-						 error);
+	return fu_superio_it89_device_read_addr(self, 0x0, fwsize, progress, error);
 }
 
 static FuFirmware *
-fu_superio_it89_device_read_firmware (FuDevice *device, GError **error)
+fu_superio_it89_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
-	blob = fu_superio_it89_device_dump_firmware (device, error);
+	blob = fu_superio_it89_device_dump_firmware(device, progress, error);
 	fw = fu_plugin_superio_fix_signature (self, blob, error);
 	return fu_firmware_new_from_bytes (fw);
 }
@@ -503,10 +493,10 @@ fu_superio_it89_device_check_eflash (FuSuperioDevice *self, GError **error)
 	g_autoptr(GBytes) fw = NULL;
 	const guint64 fwsize = fu_device_get_firmware_size_min (FU_DEVICE (self));
 	const guint sigsz = 16;
+	g_autoptr(FuProgress) progress = fu_progress_new();
 
 	/* last 16 bytes of eeprom */
-	fw = fu_superio_it89_device_read_addr (self, fwsize - sigsz,
-					       sigsz, NULL, error);
+	fw = fu_superio_it89_device_read_addr(self, fwsize - sigsz, sigsz, progress, error);
 	if (fw == NULL) {
 		g_prefix_error (error, "failed to read signature bytes: ");
 		return FALSE;
@@ -536,6 +526,7 @@ fu_superio_it89_device_check_eflash (FuSuperioDevice *self, GError **error)
 static gboolean
 fu_superio_it89_device_write_chunk (FuSuperioDevice *self, FuChunk *chk, GError **error)
 {
+	g_autoptr(FuProgress) progress = fu_progress_new();
 	g_autoptr(GBytes) fw1 = NULL;
 	g_autoptr(GBytes) fw2 = NULL;
 	g_autoptr(GBytes) fw3 = NULL;
@@ -547,9 +538,11 @@ fu_superio_it89_device_write_chunk (FuSuperioDevice *self, FuChunk *chk, GError 
 	}
 
 	/* check erased */
-	fw1 = fu_superio_it89_device_read_addr (self, fu_chunk_get_address (chk),
-						fu_chunk_get_data_sz (chk), NULL,
-						error);
+	fw1 = fu_superio_it89_device_read_addr(self,
+					       fu_chunk_get_address(chk),
+					       fu_chunk_get_data_sz(chk),
+					       progress,
+					       error);
 	if (fw1 == NULL) {
 		g_prefix_error (error, "failed to read erased bytes @0x%04x: ",
 				(guint) fu_chunk_get_address (chk));
@@ -579,11 +572,11 @@ fu_superio_it89_device_write_chunk (FuSuperioDevice *self, FuChunk *chk, GError 
 	}
 
 	/* verify page */
-	fw3 = fu_superio_it89_device_read_addr (self,
-						fu_chunk_get_address (chk),
-						fu_chunk_get_data_sz (chk),
-						NULL,
-						error);
+	fw3 = fu_superio_it89_device_read_addr(self,
+					       fu_chunk_get_address(chk),
+					       fu_chunk_get_data_sz(chk),
+					       progress,
+					       error);
 	if (fw3 == NULL) {
 		g_prefix_error (error, "failed to read written "
 				"bytes @0x%04x: ", (guint) fu_chunk_get_address (chk));
@@ -623,10 +616,11 @@ fu_superio_it89_device_get_jedec_id (FuSuperioDevice *self, guint8 *id, GError *
 }
 
 static gboolean
-fu_superio_it89_device_write_firmware (FuDevice *device,
-				       FuFirmware *firmware,
-				       FwupdInstallFlags flags,
-				       GError **error)
+fu_superio_it89_device_write_firmware(FuDevice *device,
+				      FuFirmware *firmware,
+				      FuProgress *progress,
+				      FwupdInstallFlags flags,
+				      GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE (device);
 	guint8 id[4] = { 0x0 };
@@ -686,11 +680,11 @@ fu_superio_it89_device_write_firmware (FuDevice *device,
 		}
 
 		/* set progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len);
 	}
 
 	/* success */
-	fu_device_set_progress (device, 100);
+	fu_progress_set_percentage(progress, 100);
 	return TRUE;
 }
 

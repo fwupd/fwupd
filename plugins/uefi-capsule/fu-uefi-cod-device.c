@@ -148,6 +148,7 @@ fu_uefi_cod_device_get_results(FuDevice *device, GError **error)
 static gboolean
 fu_uefi_cod_device_write_firmware(FuDevice *device,
 				  FuFirmware *firmware,
+				  FuProgress *progress,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {

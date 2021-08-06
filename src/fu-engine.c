@@ -208,7 +208,6 @@ fu_engine_progress_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *sel
 {
 	if (fu_device_get_status (device) == FWUPD_STATUS_UNKNOWN)
 		return;
-	fu_engine_set_percentage (self, fu_device_get_progress (device));
 	fu_engine_emit_device_changed (self, device);
 }
 
@@ -860,6 +859,7 @@ fu_engine_verify_update (FuEngine *self, const gchar *device_id, GError **error)
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *localstatedir = NULL;
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new();
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new ();
 	g_autoptr(XbBuilderNode) component = NULL;
@@ -887,9 +887,11 @@ fu_engine_verify_update (FuEngine *self, const gchar *device_id, GError **error)
 	/* get the checksum */
 	checksums = fu_device_get_checksums (device);
 	if (checksums->len == 0) {
-		if (!fu_plugin_runner_verify (plugin, device,
-					      FU_PLUGIN_VERIFY_FLAG_NONE,
-					      error))
+		if (!fu_plugin_runner_verify(plugin,
+					     device,
+					     progress,
+					     FU_PLUGIN_VERIFY_FLAG_NONE,
+					     error))
 			return FALSE;
 		fu_engine_emit_device_changed (self, device);
 	}
@@ -1087,6 +1089,13 @@ fu_engine_verify_from_system_metadata (FuEngine *self,
 	return NULL;
 }
 
+static void
+fu_engine_progress_percentage_changed_cb(FuProgress *progress, guint percentage, FuEngine *self)
+{
+	/* this is global for all the tasks and divisions */
+	fu_engine_set_percentage(self, percentage);
+}
+
 /**
  * fu_engine_verify:
  * @self: a #FuEngine
@@ -1103,6 +1112,7 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 	FuPlugin *plugin;
 	GPtrArray *checksums;
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new();
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) xpath_csum = g_string_new (NULL);
 	g_autoptr(XbNode) csum = NULL;
@@ -1124,10 +1134,20 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 	if (plugin == NULL)
 		return FALSE;
 
+	/* progress */
+	fu_progress_set_profile(progress, g_getenv("FWUPD_PROGRESS_PROFILE") != NULL);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
+			 self);
+
 	/* update the device firmware hashes if possible */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)) {
-		if (!fu_plugin_runner_verify (plugin, device,
-					      FU_PLUGIN_VERIFY_FLAG_NONE, error))
+		if (!fu_plugin_runner_verify(plugin,
+					     device,
+					     progress,
+					     FU_PLUGIN_VERIFY_FLAG_NONE,
+					     error))
 			return FALSE;
 	}
 
@@ -2087,6 +2107,7 @@ fu_engine_install_tasks (FuEngine *self,
 	g_autoptr(FuIdleLocker) locker = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_new = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new();
 
 	/* do not allow auto-shutdown during this time */
 	locker = fu_idle_locker_new (self->idle, "update");
@@ -2106,11 +2127,21 @@ fu_engine_install_tasks (FuEngine *self,
 	}
 
 	/* all authenticated, so install all the things */
+	fu_progress_set_steps(progress, install_tasks->len);
+	fu_progress_set_profile(progress, g_getenv("FWUPD_PROGRESS_PROFILE") != NULL);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
+			 self);
 	for (guint i = 0; i < install_tasks->len; i++) {
 		FuInstallTask *task = g_ptr_array_index (install_tasks, i);
-		if (!fu_engine_install (self, task, blob_cab,
-					flags, feature_flags,
-					error)) {
+		if (!fu_engine_install(self,
+				       task,
+				       blob_cab,
+				       progress,
+				       flags,
+				       feature_flags,
+				       error)) {
 			g_autoptr(GError) error_local = NULL;
 			if (!fu_engine_composite_cleanup (self, devices, &error_local)) {
 				g_warning ("failed to cleanup failed composite action: %s",
@@ -2118,6 +2149,7 @@ fu_engine_install_tasks (FuEngine *self,
 			}
 			return FALSE;
 		}
+		fu_progress_step_done(progress);
 	}
 
 	/* set all the device statuses back to unknown */
@@ -2362,18 +2394,18 @@ fu_engine_schedule_update (FuEngine *self,
 		return FALSE;
 
 	/* next boot we run offline */
-	fu_device_set_progress (device, 100);
 	return fu_engine_offline_setup (error);
 }
 
 static gboolean
-fu_engine_install_release (FuEngine *self,
-			   FuDevice *device_orig,
-			   XbNode *component,
-			   XbNode *rel,
-			   FwupdInstallFlags flags,
-			   FwupdFeatureFlags feature_flags,
-			   GError **error)
+fu_engine_install_release(FuEngine *self,
+			  FuDevice *device_orig,
+			  XbNode *component,
+			  XbNode *rel,
+			  FuProgress *progress,
+			  FwupdInstallFlags flags,
+			  FwupdFeatureFlags feature_flags,
+			  GError **error)
 {
 	FuPlugin *plugin;
 	FwupdVersionFormat fmt;
@@ -2445,9 +2477,13 @@ fu_engine_install_release (FuEngine *self,
 
 	/* install firmware blob */
 	version_orig = g_strdup (fu_device_get_version (device));
-	if (!fu_engine_install_blob (self, device, blob_fw2,
-				     flags, feature_flags,
-				     &error_local)) {
+	if (!fu_engine_install_blob(self,
+				    device,
+				    blob_fw2,
+				    progress,
+				    flags,
+				    feature_flags,
+				    &error_local)) {
 		fu_device_set_status (device, FWUPD_STATUS_IDLE);
 		if (g_error_matches (error_local,
 				     FWUPD_ERROR,
@@ -2568,12 +2604,13 @@ fu_engine_sort_releases (FuEngine *self, FuDevice *device, GPtrArray *rels, GErr
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_install (FuEngine *self,
-		   FuInstallTask *task,
-		   GBytes *blob_cab,
-		   FwupdInstallFlags flags,
-		   FwupdFeatureFlags feature_flags,
-		   GError **error)
+fu_engine_install(FuEngine *self,
+		  FuInstallTask *task,
+		  GBytes *blob_cab,
+		  FuProgress *progress,
+		  FwupdInstallFlags flags,
+		  FwupdFeatureFlags feature_flags,
+		  GError **error)
 {
 	XbNode *component = fu_install_task_get_component (task);
 	g_autoptr(FuDevice) device = NULL;
@@ -2668,23 +2705,25 @@ fu_engine_install (FuEngine *self,
 			return FALSE;
 		for (guint i = 0; i < rels->len; i++) {
 			XbNode *rel = g_ptr_array_index (rels, i);
-			if (!fu_engine_install_release (self,
-							device,
-							component,
-							rel,
-							flags,
-							feature_flags,
-							error))
+			if (!fu_engine_install_release(self,
+						       device,
+						       component,
+						       rel,
+						       progress,
+						       flags,
+						       feature_flags,
+						       error))
 				return FALSE;
 		}
 	} else {
-		if (!fu_engine_install_release (self,
-						device,
-						component,
-						rel_newest,
-						flags,
-						feature_flags,
-						error))
+		if (!fu_engine_install_release(self,
+					       device,
+					       component,
+					       rel_newest,
+					       progress,
+					       flags,
+					       feature_flags,
+					       error))
 			return FALSE;
 	}
 
@@ -3044,6 +3083,7 @@ static gboolean
 fu_engine_write_firmware(FuEngine *self,
 			 const gchar *device_id,
 			 GBytes *blob_fw,
+			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -3070,7 +3110,7 @@ fu_engine_write_firmware(FuEngine *self,
 					      error);
 	if (plugin == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_write_firmware(plugin, device, blob_fw, flags, error)) {
+	if (!fu_plugin_runner_write_firmware(plugin, device, blob_fw, progress, flags, error)) {
 		g_autoptr(GError) error_attach = NULL;
 		g_autoptr(GError) error_cleanup = NULL;
 
@@ -3123,6 +3163,14 @@ fu_engine_firmware_dump (FuEngine *self,
 			 GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new();
+
+	/* progress */
+	fu_progress_set_profile(progress, g_getenv("FWUPD_PROGRESS_PROFILE") != NULL);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
+			 self);
 
 	/* open, read, close */
 	locker = fu_device_locker_new (device, error);
@@ -3130,16 +3178,17 @@ fu_engine_firmware_dump (FuEngine *self,
 		g_prefix_error (error, "failed to open device for firmware read: ");
 		return NULL;
 	}
-	return fu_device_dump_firmware (device, error);
+	return fu_device_dump_firmware(device, progress, error);
 }
 
 gboolean
-fu_engine_install_blob (FuEngine *self,
-			FuDevice *device,
-			GBytes *blob_fw,
-			FwupdInstallFlags flags,
-			FwupdFeatureFlags feature_flags,
-			GError **error)
+fu_engine_install_blob(FuEngine *self,
+		       FuDevice *device,
+		       GBytes *blob_fw,
+		       FuProgress *progress,
+		       FwupdInstallFlags flags,
+		       FwupdFeatureFlags feature_flags,
+		       GError **error)
 {
 	guint retries = 0;
 	g_autofree gchar *device_id = NULL;
@@ -3181,7 +3230,7 @@ fu_engine_install_blob (FuEngine *self,
 			return FALSE;
 
 		/* install */
-		if (!fu_engine_write_firmware(self, device_id, blob_fw, flags, error))
+		if (!fu_engine_write_firmware(self, device_id, blob_fw, progress, flags, error))
 			return FALSE;
 
 		/* attach into runtime mode */

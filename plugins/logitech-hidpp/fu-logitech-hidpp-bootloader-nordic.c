@@ -198,10 +198,11 @@ fu_logitech_hidpp_bootloader_nordic_erase (FuLogitechHidPpBootloader *self, guin
 }
 
 static gboolean
-fu_logitech_hidpp_bootloader_nordic_write_firmware (FuDevice *device,
-					      FuFirmware *firmware,
-					      FwupdInstallFlags flags,
-					      GError **error)
+fu_logitech_hidpp_bootloader_nordic_write_firmware(FuDevice *device,
+						   FuFirmware *firmware,
+						   FuProgress *progress,
+						   FwupdInstallFlags flags,
+						   GError **error)
 {
 	FuLogitechHidPpBootloader *self = FU_UNIFYING_BOOTLOADER (device);
 	const FuLogitechHidPpBootloaderRequest *payload;
@@ -248,7 +249,7 @@ fu_logitech_hidpp_bootloader_nordic_write_firmware (FuDevice *device,
 
 		if (!res)
 			return FALSE;
-		fu_device_set_progress_full (device, i * 32, reqs->len * 32);
+		fu_progress_set_percentage_full(progress, i * 32, reqs->len * 32);
 	}
 
 	/* send the first managed packet last, excluding the reset vector */
@@ -268,7 +269,7 @@ fu_logitech_hidpp_bootloader_nordic_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* mark as complete */
-	fu_device_set_progress_full (device, reqs->len * 32, reqs->len * 32);
+	fu_progress_set_percentage_full(progress, reqs->len * 32, reqs->len * 32);
 
 	/* success! */
 	return TRUE;

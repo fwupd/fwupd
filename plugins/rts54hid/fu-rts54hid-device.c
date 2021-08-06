@@ -111,7 +111,7 @@ fu_rts54hid_device_write_flash (FuRts54HidDevice *self,
 }
 
 static gboolean
-fu_rts54hid_device_verify_update_fw (FuRts54HidDevice *self, GError **error)
+fu_rts54hid_device_verify_update_fw(FuRts54HidDevice *self, FuProgress *progress, GError **error)
 {
 	const FuRts54HidCmdBuffer cmd_buffer = {
 		.cmd = FU_RTS54HID_CMD_WRITE_DATA,
@@ -132,7 +132,7 @@ fu_rts54hid_device_verify_update_fw (FuRts54HidDevice *self, GError **error)
 				       FU_HID_DEVICE_FLAG_NONE,
 				       error))
 		return FALSE;
-	fu_device_sleep_with_progress (FU_DEVICE (self), 4); /* seconds */
+	fu_progress_sleep(progress, 4); /* seconds */
 	if (!fu_hid_device_get_report (FU_HID_DEVICE (self), 0x0, buf, sizeof(buf),
 				       FU_RTS54HID_DEVICE_TIMEOUT,
 				       FU_HID_DEVICE_FLAG_NONE,
@@ -258,10 +258,11 @@ fu_rts54hid_device_close (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hid_device_write_firmware (FuDevice *device,
-				   FuFirmware *firmware,
-				   FwupdInstallFlags flags,
-				   GError **error)
+fu_rts54hid_device_write_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE (device);
 	g_autoptr(GBytes) fw = NULL;
@@ -300,11 +301,11 @@ fu_rts54hid_device_write_firmware (FuDevice *device,
 			return FALSE;
 
 		/* update progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len * 2);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len * 2);
 	}
 
 	/* get device to authenticate the firmware */
-	if (!fu_rts54hid_device_verify_update_fw (self, error))
+	if (!fu_rts54hid_device_verify_update_fw(self, progress, error))
 		return FALSE;
 
 	/* send software reset to run available flash code */

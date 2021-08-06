@@ -194,10 +194,11 @@ fu_rts54hid_module_set_quirk_kv (FuDevice *device,
 }
 
 static gboolean
-fu_rts54hid_module_write_firmware (FuDevice *module,
-				   FuFirmware *firmware,
-				   FwupdInstallFlags flags,
-				   GError **error)
+fu_rts54hid_module_write_firmware(FuDevice *module,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
 	FuRts54HidModule *self = FU_RTS54HID_MODULE (module);
 	g_autoptr(GBytes) fw = NULL;
@@ -234,7 +235,7 @@ fu_rts54hid_module_write_firmware (FuDevice *module,
 			return FALSE;
 
 		/* update progress */
-		fu_device_set_progress_full (module, (gsize) i, (gsize) chunks->len * 2);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len * 2);
 	}
 
 	/* success! */

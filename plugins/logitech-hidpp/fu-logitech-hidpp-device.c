@@ -947,10 +947,11 @@ fu_logitech_hidpp_device_write_firmware_pkt (FuLogitechHidPpDevice *self,
 }
 
 static gboolean
-fu_logitech_hidpp_device_write_firmware (FuDevice *device,
-				       FuFirmware *firmware,
-				       FwupdInstallFlags flags,
-				       GError **error)
+fu_logitech_hidpp_device_write_firmware(FuDevice *device,
+					FuFirmware *firmware,
+					FuProgress *progress,
+					FwupdInstallFlags flags,
+					GError **error)
 {
 	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE (device);
 	gsize sz = 0;
@@ -996,7 +997,7 @@ fu_logitech_hidpp_device_write_firmware (FuDevice *device,
 		cmd = (cmd + 1) % 4;
 
 		/* update progress-bar */
-		fu_device_set_progress_full (device, i * 16, sz);
+		fu_progress_set_percentage_full(progress, i * 16, sz);
 	}
 
 	return TRUE;

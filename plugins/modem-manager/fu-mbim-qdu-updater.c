@@ -250,6 +250,7 @@ typedef struct {
 	GPtrArray	*chunks;
 	guint 		 chunk_sent;
 	FuDevice 	*device;
+	FuProgress *progress;
 } WriteContext;
 
 static gboolean
@@ -283,7 +284,9 @@ fu_mbim_qdu_updater_file_write_ready (MbimDevice *device, GAsyncResult *res, gpo
 		return;
 	}
 
-	fu_device_set_progress_full (FU_DEVICE (ctx->device), (gsize) ctx->chunk_sent, (gsize) ctx->chunks->len);
+	fu_progress_set_percentage_full(ctx->progress,
+					(gsize)ctx->chunk_sent,
+					(gsize)ctx->chunks->len);
 	ctx->chunk_sent++;
 	if (ctx->chunk_sent < ctx->chunks->len) {
 		FuChunk *chk = g_ptr_array_index (ctx->chunks, ctx->chunk_sent);
@@ -298,7 +301,7 @@ fu_mbim_qdu_updater_file_write_ready (MbimDevice *device, GAsyncResult *res, gpo
 		return;
 	}
 
-	fu_device_set_progress (FU_DEVICE (ctx->device), 100);
+	fu_progress_set_percentage(ctx->progress, 100);
 	fu_device_set_status (FU_DEVICE (ctx->device), FWUPD_STATUS_DEVICE_RESTART);
 	/* device will auto reboot right after update finish */
 	g_timeout_add_seconds (10, fu_mbim_qdu_updater_reboot_timeout, ctx);
@@ -424,20 +427,26 @@ fu_mbim_qdu_updater_get_checksum (GBytes *blob)
 }
 
 GArray *
-fu_mbim_qdu_updater_write (FuMbimQduUpdater *self, const gchar *filename, GBytes *blob, FuDevice *device, GError **error)
+fu_mbim_qdu_updater_write(FuMbimQduUpdater *self,
+			  const gchar *filename,
+			  GBytes *blob,
+			  FuDevice *device,
+			  FuProgress *progress,
+			  GError **error)
 {
 	g_autoptr(GMainLoop) mainloop = g_main_loop_new (NULL, FALSE);
 	g_autoptr(GArray) digest = fu_mbim_qdu_updater_get_checksum (blob);
 	g_autoptr(GPtrArray) chunks = NULL;
 	WriteContext ctx = {
-		.mainloop = mainloop,
-		.mbim_device = self->mbim_device,
-		.error = NULL,
-		.blob = blob,
-		.digest = digest,
-		.chunks = chunks,
-		.chunk_sent = 0,
-		.device = device,
+	    .mainloop = mainloop,
+	    .mbim_device = self->mbim_device,
+	    .error = NULL,
+	    .blob = blob,
+	    .digest = digest,
+	    .chunks = chunks,
+	    .chunk_sent = 0,
+	    .device = device,
+	    .progress = progress,
 	};
 
 	fu_mbim_qdu_updater_set_update_session (self->mbim_device, &ctx);

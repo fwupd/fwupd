@@ -263,10 +263,11 @@ fu_analogix_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_analogix_device_write_image (FuAnalogixDevice *self,
-				FuFirmware *image,
-				guint16 req_val,
-				GError **error)
+fu_analogix_device_write_image(FuAnalogixDevice *self,
+			       FuFirmware *image,
+			       guint16 req_val,
+			       FuProgress *progress,
+			       GError **error)
 {
 	AnxUpdateStatus status = UPDATE_STATUS_INVALID;
 	guint8 buf_init[4] = { 0x0 };
@@ -313,7 +314,7 @@ fu_analogix_device_write_image (FuAnalogixDevice *self,
 			g_prefix_error (error, "failed status on chk %u: ", i);
 			return FALSE;
 		}
-		fu_device_set_progress_full (FU_DEVICE (self), i, chunks->len - 1);
+		fu_progress_set_percentage_full(progress, i, chunks->len - 1);
 	}
 
 	/* success */
@@ -321,10 +322,11 @@ fu_analogix_device_write_image (FuAnalogixDevice *self,
 }
 
 static gboolean
-fu_analogix_device_write_firmware (FuDevice *device,
-				   FuFirmware *firmware,
-				   FwupdInstallFlags flags,
-				   GError **error)
+fu_analogix_device_write_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
 	FuAnalogixDevice *self = FU_ANALOGIX_DEVICE (device);
 	g_autoptr(FuFirmware) fw_cus = NULL;
@@ -332,45 +334,71 @@ fu_analogix_device_write_firmware (FuDevice *device,
 	g_autoptr(FuFirmware) fw_srx = NULL;
 	g_autoptr(FuFirmware) fw_stx = NULL;
 
-	/* OCM -> SECURE_TX -> SECURE_RX -> CUSTOM_DEF */
+	/* progress */
+	fu_progress_set_custom_steps(progress,
+				     20 /* cus */,
+				     20 /* stx */,
+				     20 /* srx */,
+				     20 /* ocm */,
+				     -1);
+
+	/* CUSTOM_DEF */
 	fw_cus = fu_firmware_get_image_by_id (firmware, "custom", NULL);
 	if (fw_cus != NULL) {
-		if (!fu_analogix_device_write_image (self, fw_cus,
-						     ANX_BB_WVAL_UPDATE_CUSTOM_DEF,
-						     error)) {
+		if (!fu_analogix_device_write_image(self,
+						    fw_cus,
+						    ANX_BB_WVAL_UPDATE_CUSTOM_DEF,
+						    fu_progress_get_division(progress),
+						    error)) {
 			g_prefix_error (error, "program custom define failed: ");
 			return FALSE;
 		}
 	}
+	fu_progress_step_done(progress);
+
+	/* SECURE_TX */
 	fw_stx = fu_firmware_get_image_by_id (firmware, "stx", NULL);
 	if (fw_stx != NULL) {
-		if (!fu_analogix_device_write_image (self, fw_stx,
-						     ANX_BB_WVAL_UPDATE_SECURE_TX,
-						     error)) {
+		if (!fu_analogix_device_write_image(self,
+						    fw_stx,
+						    ANX_BB_WVAL_UPDATE_SECURE_TX,
+						    fu_progress_get_division(progress),
+						    error)) {
 			g_prefix_error (error, "program secure TX failed: ");
 			return FALSE;
 		}
 	}
+	fu_progress_step_done(progress);
+
+	/* SECURE_RX */
 	fw_srx = fu_firmware_get_image_by_id (firmware, "srx", NULL);
 	if (fw_srx != NULL) {
-		if (!fu_analogix_device_write_image (self, fw_srx,
-						     ANX_BB_WVAL_UPDATE_SECURE_RX,
-						     error)) {
+		if (!fu_analogix_device_write_image(self,
+						    fw_srx,
+						    ANX_BB_WVAL_UPDATE_SECURE_RX,
+						    fu_progress_get_division(progress),
+						    error)) {
 			g_prefix_error (error, "program secure RX failed: ");
 			return FALSE;
 		}
 	}
+	fu_progress_step_done(progress);
+
+	/* OCM */
 	fw_ocm = fu_firmware_get_image_by_id (firmware, "ocm", NULL);
 	if (fw_ocm != NULL) {
-		if (!fu_analogix_device_write_image (self, fw_ocm,
-						     ANX_BB_WVAL_UPDATE_OCM,
-						     error)) {
+		if (!fu_analogix_device_write_image(self,
+						    fw_ocm,
+						    ANX_BB_WVAL_UPDATE_OCM,
+						    fu_progress_get_division(progress),
+						    error)) {
 			g_prefix_error (error, "program OCM failed: ");
 			return FALSE;
 		}
 	}
 
 	/* success */
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 

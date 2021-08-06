@@ -752,10 +752,11 @@ fu_cros_ec_usb_device_jump_to_rw (FuDevice *device)
 }
 
 static gboolean
-fu_cros_ec_usb_device_write_firmware (FuDevice *device,
-				      FuFirmware *firmware,
-				      FwupdInstallFlags flags,
-				      GError **error)
+fu_cros_ec_usb_device_write_firmware(FuDevice *device,
+				     FuFirmware *firmware,
+				     FuProgress *progress,
+				     FwupdInstallFlags flags,
+				     GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
 	GPtrArray *sections;

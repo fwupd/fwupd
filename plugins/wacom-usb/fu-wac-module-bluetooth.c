@@ -108,10 +108,11 @@ fu_wac_module_bluetooth_parse_blocks (const guint8 *data, gsize sz, gboolean ski
 }
 
 static gboolean
-fu_wac_module_bluetooth_write_firmware (FuDevice *device,
-					FuFirmware *firmware,
-					FwupdInstallFlags flags,
-					GError **error)
+fu_wac_module_bluetooth_write_firmware(FuDevice *device,
+				       FuFirmware *firmware,
+				       FuProgress *progress,
+				       FwupdInstallFlags flags,
+				       GError **error)
 {
 	FuWacModule *self = FU_WAC_MODULE (device);
 	const guint8 *data;
@@ -140,7 +141,7 @@ fu_wac_module_bluetooth_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* update progress */
-	fu_device_set_progress_full (device, 1, blocks_total);
+	fu_progress_set_percentage_full(progress, 1, blocks_total);
 
 	/* data */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
@@ -161,7 +162,7 @@ fu_wac_module_bluetooth_write_firmware (FuDevice *device,
 			return FALSE;
 
 		/* update progress */
-		fu_device_set_progress_full (device, i + 1, blocks_total);
+		fu_progress_set_percentage_full(progress, i + 1, blocks_total);
 	}
 
 	/* end */
@@ -169,7 +170,7 @@ fu_wac_module_bluetooth_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* update progress */
-	fu_device_set_progress_full (device, blocks_total, blocks_total);
+	fu_progress_set_percentage_full(progress, blocks_total, blocks_total);
 	return TRUE;
 }
 

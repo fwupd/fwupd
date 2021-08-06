@@ -355,9 +355,12 @@ fu_dell_dock_usb4_hub_nvm_read (FuDevice *device, guint8 *buf, guint32 length,
 }
 
 static gboolean
-fu_dell_dock_usb4_hub_nvm_write (FuDevice *device, const guint8 *buf,
-				 guint32 length, guint32 nvm_addr,
-				 GError **error)
+fu_dell_dock_usb4_hub_nvm_write(FuDevice *device,
+				const guint8 *buf,
+				guint32 length,
+				guint32 nvm_addr,
+				FuProgress *progress,
+				GError **error)
 {
 	guint8 metadata[4];
 	guint32 bytes_done = 0;
@@ -392,7 +395,7 @@ fu_dell_dock_usb4_hub_nvm_write (FuDevice *device, const guint8 *buf,
 	}
 
 	/* 2 Write data in 64 byte blocks */
-	fu_device_set_progress_full (device, bytes_done, bytes_total);
+	fu_progress_set_percentage_full(progress, bytes_done, bytes_total);
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	while (length > 0)  {
 		/* write data to mbox data regs */
@@ -408,7 +411,7 @@ fu_dell_dock_usb4_hub_nvm_write (FuDevice *device, const guint8 *buf,
 		}
 		buf += 64;
 		length -= 64;
-		fu_device_set_progress_full (device, bytes_done += 64, bytes_total);
+		fu_progress_set_percentage_full(progress, bytes_done += 64, bytes_total);
 	}
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
 	return TRUE;
@@ -432,8 +435,11 @@ fu_dell_dock_usb4_activate (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dell_dock_usb4_write_fw (FuDevice *device, FuFirmware *firmware,
-			    FwupdInstallFlags flags, GError **error)
+fu_dell_dock_usb4_write_fw(FuDevice *device,
+			   FuFirmware *firmware,
+			   FuProgress *progress,
+			   FwupdInstallFlags flags,
+			   GError **error)
 {
 	const guint8 *fw_buf;
 	gsize fw_blob_size = 0;
@@ -516,7 +522,7 @@ fu_dell_dock_usb4_write_fw (FuDevice *device, FuFirmware *firmware,
 	/* firmware install */
 	fw_buf += fw_header_offset;
 	fw_blob_size -= fw_header_offset;
-	if (!fu_dell_dock_usb4_hub_nvm_write (device, fw_buf, fw_blob_size, 0, error))
+	if (!fu_dell_dock_usb4_hub_nvm_write(device, fw_buf, fw_blob_size, 0, progress, error))
 		return FALSE;
 
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);

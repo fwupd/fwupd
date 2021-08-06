@@ -346,11 +346,12 @@ fu_ccgx_dmc_get_image_write_status_cb (FuDevice *device, gpointer user_data, GEr
 }
 
 static gboolean
-fu_ccgx_dmc_write_firmware_image (FuDevice *device,
-				  FuCcgxDmcFirmwareRecord *img_rcd,
-				  gsize *fw_data_written,
-				  const gsize fw_data_size,
-				  GError **error)
+fu_ccgx_dmc_write_firmware_image(FuDevice *device,
+				 FuCcgxDmcFirmwareRecord *img_rcd,
+				 gsize *fw_data_written,
+				 const gsize fw_data_size,
+				 FuProgress *progress,
+				 GError **error)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE (device);
 	GPtrArray *seg_records;
@@ -388,7 +389,7 @@ fu_ccgx_dmc_write_firmware_image (FuDevice *device,
 
 			/* increase fw written size */
 			*fw_data_written += row_size;
-			fu_device_set_progress_full (device, *fw_data_written, fw_data_size);
+			fu_progress_set_percentage_full(progress, *fw_data_written, fw_data_size);
 
 			/* get status */
 			if (!fu_device_retry (FU_DEVICE (self),
@@ -402,10 +403,11 @@ fu_ccgx_dmc_write_firmware_image (FuDevice *device,
 }
 
 static gboolean
-fu_ccgx_dmc_write_firmware (FuDevice *device,
-			    FuFirmware *firmware,
-			    FwupdInstallFlags flags,
-			    GError **error)
+fu_ccgx_dmc_write_firmware(FuDevice *device,
+			   FuFirmware *firmware,
+			   FuProgress *progress,
+			   FwupdInstallFlags flags,
+			   GError **error)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE (device);
 	FuCcgxDmcFirmwareRecord *img_rcd = NULL;
@@ -476,8 +478,12 @@ fu_ccgx_dmc_write_firmware (FuDevice *device,
 
 		/* write image */
 		img_rcd = g_ptr_array_index (image_records, img_index);
-		if (!fu_ccgx_dmc_write_firmware_image (device, img_rcd, &fw_data_written,
-						       fw_data_size, error))
+		if (!fu_ccgx_dmc_write_firmware_image(device,
+						      img_rcd,
+						      &fw_data_written,
+						      fw_data_size,
+						      progress,
+						      error))
 			return FALSE;
 	}
 

@@ -318,10 +318,11 @@ fu_nvme_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_nvme_device_write_firmware (FuDevice *device,
-			       FuFirmware *firmware,
-			       FwupdInstallFlags flags,
-			       GError **error)
+fu_nvme_device_write_firmware(FuDevice *device,
+			      FuFirmware *firmware,
+			      FuProgress *progress,
+			      FwupdInstallFlags flags,
+			      GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
 	g_autoptr(GBytes) fw2 = NULL;
@@ -361,7 +362,7 @@ fu_nvme_device_write_firmware (FuDevice *device,
 			g_prefix_error (error, "failed to write chunk %u: ", i);
 			return FALSE;
 		}
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len + 1);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len + 1);
 	}
 
 	/* commit */
@@ -375,7 +376,7 @@ fu_nvme_device_write_firmware (FuDevice *device,
 	}
 
 	/* success! */
-	fu_device_set_progress (device, 100);
+	fu_progress_set_percentage(progress, 100);
 	return TRUE;
 }
 

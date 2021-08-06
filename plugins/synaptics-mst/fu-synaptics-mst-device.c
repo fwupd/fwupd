@@ -267,9 +267,10 @@ fu_synaptics_mst_device_set_flash_sector_erase (FuSynapticsMstDevice *self,
 }
 
 static gboolean
-fu_synaptics_mst_device_update_esm (FuSynapticsMstDevice *self,
-				    const guint8 *payload_data,
-				    GError **error)
+fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
+				   const guint8 *payload_data,
+				   FuProgress *progress,
+				   GError **error)
 {
 	guint32 checksum = 0;
 	guint32 esm_sz = ESM_CODE_SIZE;
@@ -332,9 +333,9 @@ fu_synaptics_mst_device_update_esm (FuSynapticsMstDevice *self,
 			}
 			write_offset += unit_sz;
 			write_idx += unit_sz;
-			fu_device_set_progress_full (FU_DEVICE (self),
-						     (goffset) i * 100,
-						     (goffset) (write_loops -1) * 100);
+			fu_progress_set_percentage_full(progress,
+							(goffset)i * 100,
+							(goffset)(write_loops - 1) * 100);
 		}
 
 		/* check ESM checksum */
@@ -369,10 +370,11 @@ fu_synaptics_mst_device_update_esm (FuSynapticsMstDevice *self,
 }
 
 static gboolean
-fu_synaptics_mst_device_update_tesla_leaf_firmware (FuSynapticsMstDevice *self,
-						    guint32 payload_len,
-						    const guint8 *payload_data,
-						    GError **error)
+fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
+						   guint32 payload_len,
+						   const guint8 *payload_data,
+						   FuProgress *progress,
+						   GError **error)
 {
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 	guint32 data_to_write = 0;
@@ -422,9 +424,9 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware (FuSynapticsMstDevice *self,
 			}
 			offset += length;
 			data_to_write -= length;
-			fu_device_set_progress_full (FU_DEVICE (self),
-						     (goffset) i * 100,
-						     (goffset) (write_loops -1) * 100);
+			fu_progress_set_percentage_full(progress,
+							(goffset)i * 100,
+							(goffset)(write_loops - 1) * 100);
 		}
 
 		/* check data just written */
@@ -480,10 +482,11 @@ fu_synaptics_mst_device_get_active_bank_panamera (FuSynapticsMstDevice *self, GE
 }
 
 static gboolean
-fu_synaptics_mst_device_update_panamera_firmware (FuSynapticsMstDevice *self,
-						  guint32 payload_len,
-						  const guint8 *payload_data,
-						  GError **error)
+fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
+						 guint32 payload_len,
+						 const guint8 *payload_data,
+						 FuProgress *progress,
+						 GError **error)
 {
 
 	guint16 crc_tmp = 0;
@@ -566,9 +569,9 @@ fu_synaptics_mst_device_update_panamera_firmware (FuSynapticsMstDevice *self,
 
 			write_offset += unit_sz;
 			write_idx += unit_sz;
-			fu_device_set_progress_full (FU_DEVICE (self),
-						     (goffset) i * 100,
-						     (goffset) (write_loops -1) * 100);
+			fu_progress_set_percentage_full(progress,
+							(goffset)i * 100,
+							(goffset)(write_loops - 1) * 100);
 		}
 
 		/* verify CRC */
@@ -818,10 +821,11 @@ fu_synaptics_mst_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_synaptics_mst_device_write_firmware (FuDevice *device,
-				        FuFirmware *firmware,
-				        FwupdInstallFlags flags,
-				        GError **error)
+fu_synaptics_mst_device_write_firmware(FuDevice *device,
+				       FuFirmware *firmware,
+				       FuProgress *progress,
+				       FwupdInstallFlags flags,
+				       GError **error)
 {
 	FuSynapticsMstDevice *self = FU_SYNAPTICS_MST_DEVICE (device);
 	g_autoptr(GBytes) fw = NULL;
@@ -858,24 +862,24 @@ fu_synaptics_mst_device_write_firmware (FuDevice *device,
 			g_prefix_error (error, "Failed to prepare for write: ");
 			return FALSE;
 		}
-		if (!fu_synaptics_mst_device_update_esm (self,
-							 payload_data,
-							 error)) {
+		if (!fu_synaptics_mst_device_update_esm(self, payload_data, progress, error)) {
 			g_prefix_error (error, "ESM update failed: ");
 			return FALSE;
 		}
-		if (!fu_synaptics_mst_device_update_panamera_firmware (self,
-								       payload_len,
-								       payload_data,
-								       error)) {
+		if (!fu_synaptics_mst_device_update_panamera_firmware(self,
+								      payload_len,
+								      payload_data,
+								      progress,
+								      error)) {
 			g_prefix_error (error, "Firmware update failed: ");
 			return FALSE;
 		}
 	} else {
-		if (!fu_synaptics_mst_device_update_tesla_leaf_firmware (self,
-									 payload_len,
-									 payload_data,
-									 error)) {
+		if (!fu_synaptics_mst_device_update_tesla_leaf_firmware(self,
+									payload_len,
+									payload_data,
+									progress,
+									error)) {
 			g_prefix_error (error, "Firmware update failed: ");
 			return FALSE;
 		}
@@ -883,7 +887,7 @@ fu_synaptics_mst_device_write_firmware (FuDevice *device,
 
 	/* wait for flash clear to settle */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_sleep_with_progress (device, 2);
+	fu_progress_sleep(progress, 2);
 	return TRUE;
 }
 

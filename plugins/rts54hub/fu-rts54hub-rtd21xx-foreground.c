@@ -128,6 +128,7 @@ fu_rts54hub_rtd21xx_foreground_attach (FuDevice *device, GError **error)
 	FuRts54hubRtd21xxForeground *self = FU_RTS54HUB_RTD21XX_FOREGROUND (device);
 	guint8 buf[] = { ISP_CMD_FW_UPDATE_RESET };
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new();
 
 	/* open device */
 	locker = fu_device_locker_new (parent, error);
@@ -136,7 +137,6 @@ fu_rts54hub_rtd21xx_foreground_attach (FuDevice *device, GError **error)
 
 	/* exit fw mode */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_progress (device, 0);
 	if (!fu_rts54hub_rtd21xx_device_read_status (FU_RTS54HUB_RTD21XX_DEVICE (self),
 						     NULL, error))
 		return FALSE;
@@ -151,7 +151,7 @@ fu_rts54hub_rtd21xx_foreground_attach (FuDevice *device, GError **error)
 
 	/* the device needs some time to restart with the new firmware before
 	* it can be queried again */
-	fu_device_sleep_with_progress (device, 60);
+	fu_progress_sleep(progress, 60);
 
 	/* success */
 	return TRUE;
@@ -218,10 +218,11 @@ fu_rts54hub_rtd21xx_foreground_reload (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_foreground_write_firmware (FuDevice *device,
-					       FuFirmware *firmware,
-					       FwupdInstallFlags flags,
-					       GError **error)
+fu_rts54hub_rtd21xx_foreground_write_firmware(FuDevice *device,
+					      FuFirmware *firmware,
+					      FuProgress *progress,
+					      FwupdInstallFlags flags,
+					      GError **error)
 {
 	FuRts54hubRtd21xxForeground *self = FU_RTS54HUB_RTD21XX_FOREGROUND (device);
 	const guint8 *fwbuf;
@@ -352,7 +353,7 @@ fu_rts54hub_rtd21xx_foreground_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len);
 	}
 
 	/* update finish command */

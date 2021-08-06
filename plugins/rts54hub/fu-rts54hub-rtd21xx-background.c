@@ -128,6 +128,7 @@ fu_rts54hub_rtd21xx_background_attach (FuDevice *device, GError **error)
 	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE (fu_device_get_parent (device));
 	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new();
 	guint8 buf[] = { ISP_CMD_FW_UPDATE_EXIT };
 
 	/* open device */
@@ -142,7 +143,7 @@ fu_rts54hub_rtd21xx_background_attach (FuDevice *device, GError **error)
 		g_prefix_error (error, "failed to attach: ");
 		return FALSE;
 	}
-	fu_device_sleep_with_progress (device, 1);
+	fu_progress_sleep(progress, 1);
 
 	/* success */
 	fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -183,10 +184,11 @@ fu_rts54hub_rtd21xx_background_reload (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_background_write_firmware (FuDevice *device,
-					       FuFirmware *firmware,
-					       FwupdInstallFlags flags,
-					       GError **error)
+fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
+					      FuFirmware *firmware,
+					      FuProgress *progress,
+					      FwupdInstallFlags flags,
+					      GError **error)
 {
 	FuRts54hubRtd21xxBackground *self = FU_RTS54HUB_RTD21XX_BACKGROUND (device);
 	const guint8 *fwbuf;
@@ -301,7 +303,7 @@ fu_rts54hub_rtd21xx_background_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len);
 	}
 
 	/* update finish command */
@@ -321,7 +323,7 @@ fu_rts54hub_rtd21xx_background_write_firmware (FuDevice *device,
 
 	/* exit fw mode */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_progress (device, 0);
+	fu_progress_set_percentage(progress, 0);
 	if (!fu_rts54hub_rtd21xx_device_read_status (FU_RTS54HUB_RTD21XX_DEVICE (self),
 						     NULL, error))
 		return FALSE;

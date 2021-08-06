@@ -79,10 +79,11 @@ fu_hailuck_tp_device_cmd_cb (FuDevice *device, gpointer user_data, GError **erro
 }
 
 static gboolean
-fu_hailuck_tp_device_write_firmware (FuDevice *device,
-				     FuFirmware *firmware,
-				     FwupdInstallFlags flags,
-				     GError **error)
+fu_hailuck_tp_device_write_firmware(FuDevice *device,
+				    FuFirmware *firmware,
+				    FuProgress *progress,
+				    FwupdInstallFlags flags,
+				    GError **error)
 {
 	FuDevice *parent = fu_device_get_parent (device);
 	const guint block_size = 1024;
@@ -150,7 +151,7 @@ fu_hailuck_tp_device_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, i, chunks->len - 1);
+		fu_progress_set_percentage_full(progress, i, chunks->len - 1);
 	}
 	g_usleep (50 * 1000);
 

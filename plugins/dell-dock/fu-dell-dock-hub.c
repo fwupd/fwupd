@@ -45,10 +45,11 @@ fu_dell_dock_hub_probe (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dell_dock_hub_write_fw (FuDevice *device,
-			   FuFirmware *firmware,
-			   FwupdInstallFlags flags,
-			   GError **error)
+fu_dell_dock_hub_write_fw(FuDevice *device,
+			  FuFirmware *firmware,
+			  FuProgress *progress,
+			  FwupdInstallFlags flags,
+			  GError **error)
 {
 	FuDellDockHub *self = FU_DELL_DOCK_HUB (device);
 	gsize fw_size = 0;
@@ -98,7 +99,7 @@ fu_dell_dock_hub_write_fw (FuDevice *device,
 		nwritten += write_size;
 		data += write_size;
 		address += write_size;
-		fu_device_set_progress_full (device, nwritten, fw_size);
+		fu_progress_set_percentage_full(progress, nwritten, fw_size);
 	} while (nwritten < fw_size);
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);

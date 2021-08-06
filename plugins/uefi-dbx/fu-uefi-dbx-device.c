@@ -18,10 +18,11 @@ struct _FuUefiDbxDevice {
 G_DEFINE_TYPE (FuUefiDbxDevice, fu_uefi_dbx_device, FU_TYPE_DEVICE)
 
 static gboolean
-fu_uefi_dbx_device_write_firmware (FuDevice *device,
-				   FuFirmware *firmware,
-				   FwupdInstallFlags install_flags,
-				   GError **error)
+fu_uefi_dbx_device_write_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags install_flags,
+				  GError **error)
 {
 	const guint8 *buf;
 	gsize bufsz = 0;

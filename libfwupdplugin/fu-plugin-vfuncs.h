@@ -6,9 +6,10 @@
 
 #pragma once
 
-#include "fu-plugin.h"
 #include "fu-device.h"
 #include "fu-hwids.h"
+#include "fu-plugin.h"
+#include "fu-progress.h"
 #include "fu-quirks.h"
 #include "fu-security-attrs.h"
 
@@ -107,6 +108,7 @@ gboolean
 fu_plugin_write_firmware(FuPlugin *plugin,
 			 FuDevice *dev,
 			 GBytes *blob_fw,
+			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error);
 /**
@@ -118,12 +120,14 @@ fu_plugin_write_firmware(FuPlugin *plugin,
  *
  * Verifies the firmware on the device matches the value stored in the database
  *
- * Since: 0.8.0
+ * Since: 1.6.3
  **/
-gboolean	 fu_plugin_verify			(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 FuPluginVerifyFlags flags,
-							 GError		**error);
+gboolean
+fu_plugin_verify(FuPlugin *plugin,
+		 FuDevice *dev,
+		 FuProgress *progress,
+		 FuPluginVerifyFlags flags,
+		 GError **error);
 /**
  * fu_plugin_unlock:
  * @plugin: a plugin

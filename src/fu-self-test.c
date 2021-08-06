@@ -1731,6 +1731,7 @@ fu_engine_history_func (gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new();
 	g_autoptr(FwupdDevice) device3 = NULL;
 	g_autoptr(FwupdDevice) device4 = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
@@ -1793,10 +1794,13 @@ fu_engine_history_func (gconstpointer user_data)
 
 	/* install it */
 	task = fu_install_task_new (device, component);
-	ret = fu_engine_install (engine, task, blob_cab,
-				 FWUPD_INSTALL_FLAG_NONE,
-				 FWUPD_FEATURE_FLAG_NONE,
-				 &error);
+	ret = fu_engine_install(engine,
+				task,
+				blob_cab,
+				progress,
+				FWUPD_INSTALL_FLAG_NONE,
+				FWUPD_FEATURE_FLAG_NONE,
+				&error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -1863,6 +1867,7 @@ fu_engine_multiple_rels_func (gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -1917,10 +1922,13 @@ fu_engine_multiple_rels_func (gconstpointer user_data)
 
 	/* install it */
 	task = fu_install_task_new (device, component);
-	ret = fu_engine_install (engine, task, blob_cab,
-				 FWUPD_INSTALL_FLAG_NONE,
-				 FWUPD_FEATURE_FLAG_NONE,
-				 &error);
+	ret = fu_engine_install(engine,
+				task,
+				blob_cab,
+				progress,
+				FWUPD_INSTALL_FLAG_NONE,
+				FWUPD_FEATURE_FLAG_NONE,
+				&error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -1940,6 +1948,7 @@ fu_engine_history_inherit (gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new();
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1998,10 +2007,13 @@ fu_engine_history_inherit (gconstpointer user_data)
 	/* install it */
 	g_setenv ("FWUPD_PLUGIN_TEST", "requires-activation", TRUE);
 	task = fu_install_task_new (device, component);
-	ret = fu_engine_install (engine, task, blob_cab,
-				 FWUPD_INSTALL_FLAG_NONE,
-				 FWUPD_FEATURE_FLAG_NONE,
-				 &error);
+	ret = fu_engine_install(engine,
+				task,
+				blob_cab,
+				progress,
+				FWUPD_INSTALL_FLAG_NONE,
+				FWUPD_FEATURE_FLAG_NONE,
+				&error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -2021,10 +2033,13 @@ fu_engine_history_inherit (gconstpointer user_data)
 	/* emulate getting the flag for a fresh boot on old firmware */
 	fu_device_set_version_format (device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version (device, "1.2.2");
-	ret = fu_engine_install (engine, task, blob_cab,
-				 FWUPD_INSTALL_FLAG_NONE,
-				 FWUPD_FEATURE_FLAG_NONE,
-				 &error);
+	ret = fu_engine_install(engine,
+				task,
+				blob_cab,
+				progress,
+				FWUPD_INSTALL_FLAG_NONE,
+				FWUPD_FEATURE_FLAG_NONE,
+				&error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_object_unref (engine);
@@ -2071,6 +2086,7 @@ fu_engine_install_needs_reboot (gconstpointer user_data)
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
+	g_autoptr(FuProgress) progress = fu_progress_new();
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
@@ -2125,10 +2141,13 @@ fu_engine_install_needs_reboot (gconstpointer user_data)
 	/* install it */
 	g_setenv ("FWUPD_PLUGIN_TEST", "requires-reboot", TRUE);
 	task = fu_install_task_new (device, component);
-	ret = fu_engine_install (engine, task, blob_cab,
-				 FWUPD_INSTALL_FLAG_NONE,
-				 FWUPD_FEATURE_FLAG_NONE,
-				 &error);
+	ret = fu_engine_install(engine,
+				task,
+				blob_cab,
+				progress,
+				FWUPD_INSTALL_FLAG_NONE,
+				FWUPD_FEATURE_FLAG_NONE,
+				&error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
@@ -2151,6 +2170,7 @@ fu_engine_history_error_func (gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new_with_context (self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new (FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new();
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error2 = NULL;
@@ -2203,10 +2223,13 @@ fu_engine_history_error_func (gconstpointer user_data)
 	g_assert_no_error (error);
 	g_assert_nonnull (component);
 	task = fu_install_task_new (device, component);
-	ret = fu_engine_install (engine, task, blob_cab,
-				 FWUPD_INSTALL_FLAG_NONE,
-				 FWUPD_FEATURE_FLAG_NONE,
-				 &error);
+	ret = fu_engine_install(engine,
+				task,
+				blob_cab,
+				progress,
+				FWUPD_INSTALL_FLAG_NONE,
+				FWUPD_FEATURE_FLAG_NONE,
+				&error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert (error != NULL);
 	g_assert_cmpstr (error->message, ==,
@@ -2870,6 +2893,7 @@ fu_plugin_module_func (gconstpointer user_data)
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new ();
+	g_autoptr(FuProgress) progress = fu_progress_new();
 
 	/* no metadata in daemon */
 	fu_engine_set_silo (engine, silo_empty);
@@ -2944,10 +2968,13 @@ fu_plugin_module_func (gconstpointer user_data)
 	/* lets do this online */
 	fu_engine_add_device (engine, device);
 	fu_engine_add_plugin (engine, self->plugin);
-	ret = fu_engine_install_blob (engine, device, blob_cab,
-				      FWUPD_INSTALL_FLAG_NONE,
-				      FWUPD_FEATURE_FLAG_NONE,
-				      &error);
+	ret = fu_engine_install_blob(engine,
+				     device,
+				     blob_cab,
+				     progress,
+				     FWUPD_INSTALL_FLAG_NONE,
+				     FWUPD_FEATURE_FLAG_NONE,
+				     &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 	g_assert_cmpint (cnt, ==, 4);

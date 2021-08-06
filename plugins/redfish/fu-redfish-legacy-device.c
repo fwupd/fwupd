@@ -105,10 +105,11 @@ fu_redfish_legacy_device_attach (FuDevice *dev, GError **error)
 }
 
 static gboolean
-fu_redfish_legacy_device_write_firmware (FuDevice *device,
-					 FuFirmware *firmware,
-					 FwupdInstallFlags flags,
-					 GError **error)
+fu_redfish_legacy_device_write_firmware(FuDevice *device,
+					FuFirmware *firmware,
+					FuProgress *progress,
+					FwupdInstallFlags flags,
+					GError **error)
 {
 	FuRedfishLegacyDevice *self = FU_REDFISH_LEGACY_DEVICE (device);
 	FuRedfishBackend *backend = fu_redfish_device_get_backend (FU_REDFISH_DEVICE (self));
@@ -147,8 +148,7 @@ fu_redfish_legacy_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 	location = json_object_get_string_member (json_obj, "@odata.id");
-	return fu_redfish_device_poll_task (FU_REDFISH_DEVICE (self),
-					    location, error);
+	return fu_redfish_device_poll_task(FU_REDFISH_DEVICE(self), location, progress, error);
 }
 
 static void

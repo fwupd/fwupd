@@ -569,10 +569,11 @@ fu_synaptics_cxaudio_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_synaptics_cxaudio_device_write_firmware (FuDevice *device,
-					    FuFirmware *firmware,
-					    FwupdInstallFlags flags,
-					    GError **error)
+fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
+					   FuFirmware *firmware,
+					   FuProgress *progress,
+					   FwupdInstallFlags flags,
+					   GError **error)
 {
 	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE (device);
 	GPtrArray *records = fu_srec_firmware_get_records (FU_SREC_FIRMWARE (firmware));
@@ -648,7 +649,7 @@ fu_synaptics_cxaudio_device_write_firmware (FuDevice *device,
 					rcd->addr, rcd->buf->len);
 			return FALSE;
 		}
-		fu_device_set_progress_full (device, (gsize) i, (gsize) records->len);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)records->len);
 	}
 
 	/* in case of a full FW upgrade invalidate the old FW patch (if any)

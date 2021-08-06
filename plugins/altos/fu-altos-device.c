@@ -238,10 +238,11 @@ fu_altos_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_altos_device_write_firmware (FuDevice *device,
-				FuFirmware *firmware,
-				FwupdInstallFlags flags,
-				GError **error)
+fu_altos_device_write_firmware(FuDevice *device,
+			       FuFirmware *firmware,
+			       FuProgress *progress,
+			       FwupdInstallFlags flags,
+			       GError **error)
 {
 	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
 	const gchar *data;
@@ -362,7 +363,7 @@ fu_altos_device_write_firmware (FuDevice *device,
 		}
 
 		/* progress */
-		fu_device_set_progress_full (device, i, flash_len);
+		fu_progress_set_percentage_full(progress, i, flash_len);
 		g_string_append_len (buf, str->str, str->len);
 	}
 
@@ -370,15 +371,12 @@ fu_altos_device_write_firmware (FuDevice *device,
 	if (!fu_altos_device_tty_write (self, "a\n", -1, error))
 		return FALSE;
 
-	/* progress complete */
-	fu_device_set_progress_full (device, flash_len, flash_len);
-
 	/* success */
 	return TRUE;
 }
 
 static GBytes *
-fu_altos_device_dump_firmware (FuDevice *device, GError **error)
+fu_altos_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
 	guint flash_len;
@@ -429,9 +427,9 @@ fu_altos_device_dump_firmware (FuDevice *device, GError **error)
 			return NULL;
 
 		/* progress */
-		fu_device_set_progress_full (device,
-					     i - self->addr_base,
-					     self->addr_bound - self->addr_base);
+		fu_progress_set_percentage_full(progress,
+						i - self->addr_base,
+						self->addr_bound - self->addr_base);
 		g_string_append_len (buf, str->str, str->len);
 	}
 

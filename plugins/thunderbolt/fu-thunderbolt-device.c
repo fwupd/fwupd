@@ -583,9 +583,10 @@ fu_thunderbolt_device_rescan (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_thunderbolt_device_write_data (FuThunderboltDevice	*self,
-				  GBytes		*blob_fw,
-				  GError		**error)
+fu_thunderbolt_device_write_data(FuThunderboltDevice *self,
+				 GBytes *blob_fw,
+				 FuProgress *progress,
+				 GError **error)
 {
 	gsize fw_size;
 	gsize nwritten;
@@ -607,7 +608,7 @@ fu_thunderbolt_device_write_data (FuThunderboltDevice	*self,
 
 	nwritten = 0;
 	fw_size = g_bytes_get_size (blob_fw);
-	fu_device_set_progress_full (FU_DEVICE (self), nwritten, fw_size);
+	fu_progress_set_percentage_full(progress, nwritten, fw_size);
 
 	do {
 		g_autoptr(GBytes) fw_data = NULL;
@@ -627,7 +628,7 @@ fu_thunderbolt_device_write_data (FuThunderboltDevice	*self,
 			return FALSE;
 
 		nwritten += n;
-		fu_device_set_progress_full (FU_DEVICE (self), nwritten, fw_size);
+		fu_progress_set_percentage_full(progress, nwritten, fw_size);
 
 	} while (nwritten < fw_size);
 
@@ -732,10 +733,11 @@ fu_thunderbolt_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_thunderbolt_device_write_firmware (FuDevice *device,
-				      FuFirmware *firmware,
-				      FwupdInstallFlags flags,
-				      GError **error)
+fu_thunderbolt_device_write_firmware(FuDevice *device,
+				     FuFirmware *firmware,
+				     FuProgress *progress,
+				     FwupdInstallFlags flags,
+				     GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE (device);
 	g_autoptr(GBytes) blob_fw = NULL;
@@ -746,7 +748,7 @@ fu_thunderbolt_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_thunderbolt_device_write_data (self, blob_fw, error)) {
+	if (!fu_thunderbolt_device_write_data(self, blob_fw, progress, error)) {
 		g_prefix_error (error,
 				"could not write firmware to thunderbolt device at %s: ",
 				self->devpath);

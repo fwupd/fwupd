@@ -513,10 +513,11 @@ fu_pxi_receiver_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_pxi_receiver_device_write_firmware (FuDevice *device,
-				       FuFirmware *firmware,
-				       FwupdInstallFlags flags,
-				       GError **error)
+fu_pxi_receiver_device_write_firmware(FuDevice *device,
+				      FuFirmware *firmware,
+				      FuProgress *progress,
+				      FwupdInstallFlags flags,
+				      GError **error)
 {
 	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE (device);
 	g_autoptr(GBytes) fw = NULL;
@@ -545,7 +546,7 @@ fu_pxi_receiver_device_write_firmware (FuDevice *device,
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_pxi_receiver_device_write_chunk (device, chk, error))
 			return FALSE;
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len);
 	}
 
 	/* fw upgrade command */

@@ -1221,10 +1221,11 @@ fu_ccgx_hpi_save_metadata (FuCcgxHpiDevice *self,
 }
 
 static gboolean
-fu_ccgx_hpi_write_firmware (FuDevice *device,
-			    FuFirmware *firmware,
-			    FwupdInstallFlags flags,
-			    GError **error)
+fu_ccgx_hpi_write_firmware(FuDevice *device,
+			   FuFirmware *firmware,
+			   FuProgress *progress,
+			   FwupdInstallFlags flags,
+			   GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE (device);
 	CCGxMetaData metadata = { 0x0 };
@@ -1264,7 +1265,7 @@ fu_ccgx_hpi_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) records->len - 1);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)records->len - 1);
 	}
 
 	/* validate fw */

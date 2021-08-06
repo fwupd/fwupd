@@ -336,10 +336,11 @@ fu_emmc_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_emmc_device_write_firmware (FuDevice *device,
-			       FuFirmware *firmware,
-			       FwupdInstallFlags flags,
-			       GError **error)
+fu_emmc_device_write_firmware(FuDevice *device,
+			      FuFirmware *firmware,
+			      FuProgress *progress,
+			      FwupdInstallFlags flags,
+			      GError **error)
 {
 	FuEmmcDevice *self= FU_EMMC_DEVICE (device);
 	gsize fw_size = 0;
@@ -445,7 +446,7 @@ fu_emmc_device_write_firmware (FuDevice *device,
 			}
 
 			/* update progress */
-			fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len - 1);
+			fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len - 1);
 		}
 	}
 

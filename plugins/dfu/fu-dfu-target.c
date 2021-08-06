@@ -45,7 +45,6 @@ typedef struct {
 } FuDfuTargetPrivate;
 
 enum {
-	SIGNAL_PERCENTAGE_CHANGED,
 	SIGNAL_ACTION_CHANGED,
 	SIGNAL_LAST
 };
@@ -59,20 +58,6 @@ static void
 fu_dfu_target_class_init (FuDfuTargetClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-	/**
-	 * FuDfuTarget::percentage-changed:
-	 * @device: the #FuDfuTarget instance that emitted the signal
-	 * @percentage: the new percentage
-	 *
-	 * The ::percentage-changed signal is emitted when the percentage changes.
-	 **/
-	signals [SIGNAL_PERCENTAGE_CHANGED] =
-		g_signal_new ("percentage-changed",
-			      G_TYPE_FROM_CLASS (object_class), G_SIGNAL_RUN_LAST,
-			      G_STRUCT_OFFSET (FuDfuTargetClass, percentage_changed),
-			      NULL, NULL, g_cclosure_marshal_VOID__UINT,
-			      G_TYPE_NONE, 1, G_TYPE_UINT);
 
 	/**
 	 * FuDfuTarget::action-changed:
@@ -914,33 +899,6 @@ fu_dfu_target_get_device (FuDfuTarget *self)
 	return priv->device;
 }
 
-void
-fu_dfu_target_set_percentage_raw (FuDfuTarget *self, guint percentage)
-{
-	FuDfuTargetPrivate *priv = GET_PRIVATE (self);
-	if (percentage == priv->old_percentage)
-		return;
-	g_debug ("setting percentage %u%% of %s",
-		 percentage, fwupd_status_to_string (priv->old_action));
-	g_signal_emit (self,
-		       signals[SIGNAL_PERCENTAGE_CHANGED],
-		       0, percentage);
-	priv->old_percentage = percentage;
-}
-
-void
-fu_dfu_target_set_percentage (FuDfuTarget *self, guint value, guint total)
-{
-	guint percentage;
-
-	g_return_if_fail (total > 0);
-
-	percentage = (value * 100) / total;
-	if (percentage >= 100)
-		return;
-	fu_dfu_target_set_percentage_raw (self, percentage);
-}
-
 gboolean
 fu_dfu_target_attach (FuDfuTarget *self, GError **error)
 {
@@ -960,11 +918,12 @@ fu_dfu_target_attach (FuDfuTarget *self, GError **error)
 }
 
 static FuChunk *
-fu_dfu_target_upload_element_dfu (FuDfuTarget *self,
-				  guint32 address,
-				  gsize expected_size,
-				  gsize maximum_size,
-				  GError **error)
+fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
+				 guint32 address,
+				 gsize expected_size,
+				 gsize maximum_size,
+				 FuProgress *progress,
+				 GError **error)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE (self);
 	GBytes *chunk_tmp;
@@ -1003,7 +962,7 @@ fu_dfu_target_upload_element_dfu (FuDfuTarget *self,
 
 		/* update UI */
 		if (chunk_size > 0)
-			fu_dfu_target_set_percentage (self, total_size, percentage_size);
+			fu_progress_set_percentage_full(progress, total_size, percentage_size);
 
 		/* detect short write as EOF */
 		if (chunk_size < transfer_size)
@@ -1024,7 +983,7 @@ fu_dfu_target_upload_element_dfu (FuDfuTarget *self,
 	}
 
 	/* done */
-	fu_dfu_target_set_percentage_raw (self, 100);
+	fu_progress_set_percentage(progress, 100);
 	fu_dfu_target_set_action (self, FWUPD_STATUS_IDLE);
 
 	/* create new image */
@@ -1033,24 +992,26 @@ fu_dfu_target_upload_element_dfu (FuDfuTarget *self,
 }
 
 static FuChunk *
-fu_dfu_target_upload_element (FuDfuTarget *self,
-			      guint32 address,
-			      gsize expected_size,
-			      gsize maximum_size,
-			      GError **error)
+fu_dfu_target_upload_element(FuDfuTarget *self,
+			     guint32 address,
+			     gsize expected_size,
+			     gsize maximum_size,
+			     FuProgress *progress,
+			     GError **error)
 {
 	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS (self);
 
 	/* implemented as part of a superclass */
 	if (klass->upload_element != NULL) {
-		return klass->upload_element (self, address, expected_size,
-					      maximum_size, error);
+		return klass
+		    ->upload_element(self, address, expected_size, maximum_size, progress, error);
 	}
-	return fu_dfu_target_upload_element_dfu (self,
-						 address,
-						 expected_size,
-						 maximum_size,
-						 error);
+	return fu_dfu_target_upload_element_dfu(self,
+						address,
+						expected_size,
+						maximum_size,
+						progress,
+						error);
 }
 
 static guint32
@@ -1069,10 +1030,11 @@ fu_dfu_target_get_size_of_zone (FuDfuTarget *self, guint16 zone)
 
 /* private */
 gboolean
-fu_dfu_target_upload (FuDfuTarget *self,
-		      FuFirmware *firmware,
-		      FuDfuTargetTransferFlags flags,
-		      GError **error)
+fu_dfu_target_upload(FuDfuTarget *self,
+		     FuFirmware *firmware,
+		     FuProgress *progress,
+		     FuDfuTargetTransferFlags flags,
+		     GError **error)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE (self);
 	FuDfuSector *sector;
@@ -1133,11 +1095,12 @@ fu_dfu_target_upload (FuDfuTarget *self,
 		g_debug ("starting upload from 0x%08x (0x%04x)",
 			 fu_dfu_sector_get_address (sector),
 			 zone_size);
-		chk = fu_dfu_target_upload_element (self,
-						    fu_dfu_sector_get_address (sector),
-						    0,		/* expected */
-						    zone_size,	/* maximum */
-						    error);
+		chk = fu_dfu_target_upload_element(self,
+						   fu_dfu_sector_get_address(sector),
+						   0,	      /* expected */
+						   zone_size, /* maximum */
+						   progress,
+						   error);
 		if (chk == NULL)
 			return FALSE;
 
@@ -1179,10 +1142,11 @@ _g_bytes_compare_verbose (GBytes *bytes1, GBytes *bytes2)
 }
 
 static gboolean
-fu_dfu_target_download_element_dfu (FuDfuTarget *self,
-				    FuChunk *chk,
-				    FuDfuTargetTransferFlags flags,
-				    GError **error)
+fu_dfu_target_download_element_dfu(FuDfuTarget *self,
+				   FuChunk *chk,
+				   FuProgress *progress,
+				   FuDfuTargetTransferFlags flags,
+				   GError **error)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE (self);
 	guint32 nr_chunks;
@@ -1229,11 +1193,11 @@ fu_dfu_target_download_element_dfu (FuDfuTarget *self,
 			return FALSE;
 
 		/* update UI */
-		fu_dfu_target_set_percentage (self, offset, g_bytes_get_size (bytes));
+		fu_progress_set_percentage_full(progress, offset, g_bytes_get_size(bytes));
 	}
 
 	/* done */
-	fu_dfu_target_set_percentage_raw (self, 100);
+	fu_progress_set_percentage(progress, 100);
 	fu_dfu_target_set_action (self, FWUPD_STATUS_IDLE);
 
 	/* success */
@@ -1241,23 +1205,21 @@ fu_dfu_target_download_element_dfu (FuDfuTarget *self,
 }
 
 static gboolean
-fu_dfu_target_download_element (FuDfuTarget *self,
-				FuChunk *chk,
-				FuDfuTargetTransferFlags flags,
-				GError **error)
+fu_dfu_target_download_element(FuDfuTarget *self,
+			       FuChunk *chk,
+			       FuProgress *progress,
+			       FuDfuTargetTransferFlags flags,
+			       GError **error)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE (self);
 	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS (self);
 
 	/* implemented as part of a superclass */
 	if (klass->download_element != NULL) {
-		if (!klass->download_element (self, chk, flags, error))
+		if (!klass->download_element(self, chk, progress, flags, error))
 			return FALSE;
 	} else {
-		if (!fu_dfu_target_download_element_dfu (self,
-							 chk,
-							 flags,
-							 error))
+		if (!fu_dfu_target_download_element_dfu(self, chk, progress, flags, error))
 			return FALSE;
 	}
 
@@ -1269,11 +1231,12 @@ fu_dfu_target_download_element (FuDfuTarget *self,
 		g_autoptr(FuChunk) chunk_tmp = NULL;
 		fu_dfu_target_set_action (self, FWUPD_STATUS_DEVICE_VERIFY);
 		bytes = fu_chunk_get_bytes (chk);
-		chunk_tmp = fu_dfu_target_upload_element (self,
-							  fu_chunk_get_address (chk),
-							  g_bytes_get_size (bytes),
-							  g_bytes_get_size (bytes),
-							  error);
+		chunk_tmp = fu_dfu_target_upload_element(self,
+							 fu_chunk_get_address(chk),
+							 g_bytes_get_size(bytes),
+							 g_bytes_get_size(bytes),
+							 progress,
+							 error);
 		if (chunk_tmp == NULL)
 			return FALSE;
 		bytes_tmp = fu_chunk_get_bytes (chunk_tmp);
@@ -1306,10 +1269,11 @@ fu_dfu_target_download_element (FuDfuTarget *self,
  * Returns: %TRUE for success
  **/
 gboolean
-fu_dfu_target_download (FuDfuTarget *self,
-			FuFirmware *image,
-			FuDfuTargetTransferFlags flags,
-			GError **error)
+fu_dfu_target_download(FuDfuTarget *self,
+		       FuFirmware *image,
+		       FuProgress *progress,
+		       FuDfuTargetTransferFlags flags,
+		       GError **error)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE (self);
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -1365,7 +1329,7 @@ fu_dfu_target_download (FuDfuTarget *self,
 		}
 
 		/* download to device */
-		if (!fu_dfu_target_download_element (self, chk, flags, error))
+		if (!fu_dfu_target_download_element(self, chk, progress, flags, error))
 			return FALSE;
 	}
 

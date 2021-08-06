@@ -390,11 +390,12 @@ fu_intel_spi_device_set_addr (FuIntelSpiDevice *self, guint32 addr)
 }
 
 GBytes *
-fu_intel_spi_device_dump (FuIntelSpiDevice *self,
-			  FuDevice *device,
-			  guint32 offset,
-			  guint32 length,
-			  GError **error)
+fu_intel_spi_device_dump(FuIntelSpiDevice *self,
+			 FuDevice *device,
+			 guint32 offset,
+			 guint32 length,
+			 FuProgress *progress,
+			 GError **error)
 {
 	guint8 block_len = 0x40;
 	g_autoptr(GByteArray) buf = g_byte_array_sized_new (length);
@@ -430,7 +431,7 @@ fu_intel_spi_device_dump (FuIntelSpiDevice *self,
 		}
 
 		/* progress */
-		fu_device_set_progress_full (device, addr - offset + block_len, length);
+		fu_progress_set_percentage_full(progress, addr - offset + block_len, length);
 	}
 
 	/* success */
@@ -438,22 +439,20 @@ fu_intel_spi_device_dump (FuIntelSpiDevice *self,
 }
 
 static GBytes *
-fu_intel_spi_device_dump_firmware (FuDevice *device, GError **error)
+fu_intel_spi_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuIntelSpiDevice *self = FU_INTEL_SPI_DEVICE (device);
 	guint64 total_size = fu_device_get_firmware_size_max (device);
-	return fu_intel_spi_device_dump (self, device,
-						       0x0, total_size,
-						       error);
+	return fu_intel_spi_device_dump(self, device, 0x0, total_size, progress, error);
 }
 
 static FuFirmware *
-fu_intel_spi_device_read_firmware (FuDevice *device, GError **error)
+fu_intel_spi_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_ifd_firmware_new ();
 	g_autoptr(GBytes) blob = NULL;
 
-	blob = fu_intel_spi_device_dump_firmware (device, error);
+	blob = fu_intel_spi_device_dump_firmware(device, progress, error);
 	if (blob == NULL)
 		return NULL;
 	if (!fu_firmware_parse (firmware, blob, FWUPD_INSTALL_FLAG_NONE, error))

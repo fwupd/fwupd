@@ -85,13 +85,15 @@ gboolean
 fu_plugin_runner_write_firmware(FuPlugin *self,
 				FuDevice *device,
 				GBytes *blob_fw,
+				FuProgress *progress,
 				FwupdInstallFlags flags,
 				GError **error) G_GNUC_WARN_UNUSED_RESULT;
-gboolean	 fu_plugin_runner_verify		(FuPlugin	*self,
-							 FuDevice	*device,
-							 FuPluginVerifyFlags flags,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_plugin_runner_verify(FuPlugin *self,
+			FuDevice *device,
+			FuProgress *progress,
+			FuPluginVerifyFlags flags,
+			GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_activate 		(FuPlugin *self,
 							 FuDevice *device,
 							 GError **error);

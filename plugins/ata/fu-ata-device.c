@@ -718,10 +718,11 @@ fu_ata_device_fw_download (FuAtaDevice *self,
 }
 
 static gboolean
-fu_ata_device_write_firmware (FuDevice *device,
-			      FuFirmware *firmware,
-			      FwupdInstallFlags flags,
-			      GError **error)
+fu_ata_device_write_firmware(FuDevice *device,
+			     FuFirmware *firmware,
+			     FuProgress *progress,
+			     FwupdInstallFlags flags,
+			     GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE (device);
 	guint32 chunksz = (guint32) self->transfer_blocks * FU_ATA_BLOCK_SIZE;
@@ -770,12 +771,11 @@ fu_ata_device_write_firmware (FuDevice *device,
 			g_prefix_error (error, "failed to write chunk %u: ", i);
 			return FALSE;
 		}
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len + 1);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len);
 	}
 
 	/* success! */
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-	fu_device_set_progress (device, 100);
 	return TRUE;
 }
 

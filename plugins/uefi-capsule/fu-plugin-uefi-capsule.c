@@ -321,6 +321,7 @@ gboolean
 fu_plugin_write_firmware(FuPlugin *plugin,
 			 FuDevice *device,
 			 GBytes *blob_fw,
+			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -356,7 +357,7 @@ fu_plugin_write_firmware(FuPlugin *plugin,
 			 error_splash->message);
 	}
 
-	return fu_device_write_firmware (device, blob_fw, flags, error);
+	return fu_device_write_firmware(device, blob_fw, progress, flags, error);
 }
 
 static void

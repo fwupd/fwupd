@@ -286,13 +286,13 @@ fu_parade_lspcon_poll_register (FuParadeLspconDevice *self,
 }
 
 static gboolean
-fu_parade_lspcon_flash_read (FuParadeLspconDevice *self,
-			     guint32 base_address,
-			     guint8 *data,
-			     const gsize len,
-			     GError **error)
+fu_parade_lspcon_flash_read(FuParadeLspconDevice *self,
+			    guint32 base_address,
+			    guint8 *data,
+			    const gsize len,
+			    FuProgress *progress,
+			    GError **error)
 {
-	FuDevice *device = FU_DEVICE (self);
 	FuI2cDevice *i2c_device = FU_I2C_DEVICE (self);
 	gsize offset = 0;
 
@@ -322,7 +322,7 @@ fu_parade_lspcon_flash_read (FuParadeLspconDevice *self,
 		base_address += page_data_take;
 		offset += page_data_take;
 
-		fu_device_set_progress_full (device, offset, len);
+		fu_progress_set_percentage_full(progress, offset, len);
 	}
 
 	return TRUE;
@@ -422,12 +422,12 @@ fu_parade_lspcon_flash_wait_ready (FuParadeLspconDevice *self, GError **error)
 }
 
 static gboolean
-fu_parade_lspcon_flash_write (FuParadeLspconDevice *self,
-	     guint32 base_address,
-	     GBytes *data,
-	     GError **error)
+fu_parade_lspcon_flash_write(FuParadeLspconDevice *self,
+			     guint32 base_address,
+			     GBytes *data,
+			     FuProgress *progress,
+			     GError **error)
 {
-	FuDevice *device = FU_DEVICE (self);
 	FuI2cDevice *i2c_device = FU_I2C_DEVICE (self);
 	const guint8 unlock_writes[] = { 0xaa, 0x55, 0x50, 0x41, 0x52, 0x44 };
 	gsize data_len = g_bytes_get_size (data);
@@ -484,7 +484,7 @@ fu_parade_lspcon_flash_write (FuParadeLspconDevice *self,
 					       error))
 			return FALSE;
 
-		fu_device_set_progress_full (device, address - base_address, data_len);
+		fu_progress_set_percentage_full(progress, address - base_address, data_len);
 	}
 
 	/* re-lock map writes */
@@ -647,10 +647,11 @@ fu_parade_lspcon_device_reload (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_parade_lspcon_device_write_firmware (FuDevice *device,
-					FuFirmware *firmware,
-					FwupdInstallFlags flags,
-					GError **error)
+fu_parade_lspcon_device_write_firmware(FuDevice *device,
+				       FuFirmware *firmware,
+				       FuProgress *progress,
+				       FwupdInstallFlags flags,
+				       GError **error)
 {
 	FuParadeLspconDevice *self = FU_PARADE_LSPCON_DEVICE (device);
 	const guint8 write_sr_volatile[] = { 0x50 };
@@ -718,7 +719,7 @@ fu_parade_lspcon_device_write_firmware (FuDevice *device,
 
 	/* write image */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_parade_lspcon_flash_write (self, target_address, blob_fw, error)) {
+	if (!fu_parade_lspcon_flash_write(self, target_address, blob_fw, progress, error)) {
 		g_prefix_error (error, "failed to write firmware to partition %d: ",
 				target_partition);
 		return FALSE;
@@ -727,9 +728,12 @@ fu_parade_lspcon_device_write_firmware (FuDevice *device,
 	/* read back written image to verify */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
 	readback_buf = g_malloc0 (bufsz);
-	if (!fu_parade_lspcon_flash_read (self, target_address,
-					  readback_buf, bufsz,
-					  error))
+	if (!fu_parade_lspcon_flash_read(self,
+					 target_address,
+					 readback_buf,
+					 bufsz,
+					 progress,
+					 error))
 		return FALSE;
 	if (!fu_common_bytes_compare_raw (buf, bufsz,
 					  readback_buf, bufsz,
@@ -746,14 +750,12 @@ fu_parade_lspcon_device_write_firmware (FuDevice *device,
 	/* write flag indicating device should boot the target partition */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	flag_data_bytes = g_bytes_new_static (flag_data, sizeof(flag_data));
-	if (!fu_parade_lspcon_flash_write (self, 0, flag_data_bytes, error))
+	if (!fu_parade_lspcon_flash_write(self, 0, flag_data_bytes, progress, error))
 		return FALSE;
 
 	/* verify flag partition */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
-	if (!fu_parade_lspcon_flash_read (self, 0,
-					  readback_buf, sizeof(flag_data),
-					  error))
+	if (!fu_parade_lspcon_flash_read(self, 0, readback_buf, sizeof(flag_data), progress, error))
 		return FALSE;
 	if (!fu_common_bytes_compare_raw (flag_data, sizeof(flag_data),
 					  readback_buf, MIN (sizeof(flag_data), bufsz),
@@ -807,14 +809,17 @@ fu_parade_lspcon_device_attach (FuDevice *device, GError **error)
 }
 
 static GBytes *
-fu_parade_lspcon_device_dump_firmware (FuDevice *device, GError **error)
+fu_parade_lspcon_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuParadeLspconDevice *self = FU_PARADE_LSPCON_DEVICE (device);
 	g_autofree guint8 *data = g_malloc0 (FLASH_BLOCK_SIZE);
 
-	if (!fu_parade_lspcon_flash_read (self,
-					  self->active_partition * FLASH_BLOCK_SIZE,
-					  data, FLASH_BLOCK_SIZE, error))
+	if (!fu_parade_lspcon_flash_read(self,
+					 self->active_partition * FLASH_BLOCK_SIZE,
+					 data,
+					 FLASH_BLOCK_SIZE,
+					 progress,
+					 error))
 		return NULL;
 	return g_bytes_new_take (g_steal_pointer (&data), FLASH_BLOCK_SIZE);
 }

@@ -436,10 +436,11 @@ fu_solokey_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_solokey_device_write_firmware (FuDevice *device,
-				  FuFirmware *firmware,
-				  FwupdInstallFlags flags,
-				  GError **error)
+fu_solokey_device_write_firmware(FuDevice *device,
+				 FuFirmware *firmware,
+				 FuProgress *progress,
+				 FwupdInstallFlags flags,
+				 GError **error)
 {
 	FuSolokeyDevice *self = FU_SOLOKEY_DEVICE (device);
 	g_autoptr(GBytes) fw = NULL;
@@ -479,7 +480,7 @@ fu_solokey_device_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len);
 	}
 
 	/* verify the signature and reboot back to runtime */

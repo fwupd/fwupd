@@ -57,6 +57,7 @@ struct FuUtilPrivate {
 	GOptionContext		*context;
 	FuEngine		*engine;
 	FuEngineRequest		*request;
+	FuProgress *progress;
 	FuProgressbar		*progressbar;
 	gboolean		 no_reboot_check;
 	gboolean		 no_safety_check;
@@ -332,6 +333,8 @@ fu_util_private_free (FuUtilPrivate *priv)
 		g_main_loop_unref (priv->loop);
 	if (priv->cancellable != NULL)
 		g_object_unref (priv->cancellable);
+	if (priv->progress != NULL)
+		g_object_unref(priv->progress);
 	if (priv->progressbar != NULL)
 		g_object_unref (priv->progressbar);
 	if (priv->context != NULL)
@@ -890,10 +893,13 @@ fu_util_install_blob (FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 	}
 	priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
-	if (!fu_engine_install_blob (priv->engine, device, blob_fw,
-				     priv->flags,
-				     fu_engine_request_get_feature_flags (priv->request),
-				     error))
+	if (!fu_engine_install_blob(priv->engine,
+				    device,
+				    blob_fw,
+				    priv->progress,
+				    priv->flags,
+				    fu_engine_request_get_feature_flags(priv->request),
+				    error))
 		return FALSE;
 	if (priv->cleanup_blob) {
 		g_autoptr(FuDevice) device_new = NULL;
@@ -2911,6 +2917,12 @@ fu_util_switch_branch (FuUtilPrivate *priv, gchar **values, GError **error)
 	return fu_util_prompt_complete (priv->completion_flags, TRUE, error);
 }
 
+static void
+fu_util_percentage_changed_cb(FuProgress *progress, guint percentage, FuUtilPrivate *priv)
+{
+	fu_progressbar_update(priv->progressbar, FWUPD_STATUS_UNKNOWN, percentage);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -3013,6 +3025,11 @@ main (int argc, char *argv[])
 	/* create helper object */
 	priv->main_ctx = g_main_context_new ();
 	priv->loop = g_main_loop_new (priv->main_ctx, FALSE);
+	priv->progress = fu_progress_new();
+	g_signal_connect(priv->progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_util_percentage_changed_cb),
+			 priv);
 	priv->progressbar = fu_progressbar_new ();
 	fu_progressbar_set_main_context(priv->progressbar, priv->main_ctx);
 	priv->request = fu_engine_request_new ();

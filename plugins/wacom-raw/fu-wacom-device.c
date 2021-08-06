@@ -206,10 +206,11 @@ fu_wacom_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_wacom_device_write_firmware (FuDevice *device,
-				FuFirmware *firmware,
-				FwupdInstallFlags flags,
-				GError **error)
+fu_wacom_device_write_firmware(FuDevice *device,
+			       FuFirmware *firmware,
+			       FuProgress *progress,
+			       FwupdInstallFlags flags,
+			       GError **error)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE (device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE (self);
@@ -252,7 +253,7 @@ fu_wacom_device_write_firmware (FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes (fw, priv->flash_base_addr,
 						0x00,	/* page_sz */
 						priv->flash_block_size);
-	return klass->write_firmware (device, chunks, error);
+	return klass->write_firmware(device, chunks, progress, error);
 }
 
 gboolean

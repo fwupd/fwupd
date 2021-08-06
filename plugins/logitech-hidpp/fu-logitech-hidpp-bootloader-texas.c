@@ -108,10 +108,11 @@ fu_logitech_hidpp_bootloader_texas_clear_ram_buffer (FuLogitechHidPpBootloader *
 }
 
 static gboolean
-fu_logitech_hidpp_bootloader_texas_write_firmware (FuDevice *device,
-					     FuFirmware *firmware,
-					     FwupdInstallFlags flags,
-					     GError **error)
+fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
+						  FuFirmware *firmware,
+						  FuProgress *progress,
+						  FwupdInstallFlags flags,
+						  GError **error)
 {
 	FuLogitechHidPpBootloader *self = FU_UNIFYING_BOOTLOADER (device);
 	const FuLogitechHidPpBootloaderRequest *payload;
@@ -206,7 +207,7 @@ fu_logitech_hidpp_bootloader_texas_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, i * 32, reqs->len * 32);
+		fu_progress_set_percentage_full(progress, i * 32, reqs->len * 32);
 	}
 
 	/* check CRC */
@@ -214,7 +215,7 @@ fu_logitech_hidpp_bootloader_texas_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* mark as complete */
-	fu_device_set_progress_full (device, reqs->len * 32, reqs->len * 32);
+	fu_progress_set_percentage_full(progress, reqs->len * 32, reqs->len * 32);
 
 	/* success! */
 	return TRUE;

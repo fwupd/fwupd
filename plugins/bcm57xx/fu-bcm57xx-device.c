@@ -307,6 +307,7 @@ fu_bcm57xx_device_activate (FuDevice *device, GError **error)
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE (device);
 	g_autoptr(FuDeviceLocker) locker1 = NULL;
 	g_autoptr(FuDeviceLocker) locker2 = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new();
 
 	/* the only way to do this is using the mmap method */
 	locker2 = fu_device_locker_new_full (FU_DEVICE (self->recovery),
@@ -331,12 +332,12 @@ fu_bcm57xx_device_activate (FuDevice *device, GError **error)
 
 	/* wait for the device to restart before calling reload() */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
-	fu_device_sleep_with_progress (device, 5); /* seconds */
+	fu_progress_sleep(progress, 5); /* seconds */
 	return TRUE;
 }
 
 static GBytes *
-fu_bcm57xx_device_dump_firmware (FuDevice *device, GError **error)
+fu_bcm57xx_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE (device);
 	const gsize bufsz = fu_device_get_firmware_size_max (FU_DEVICE (self));
@@ -352,7 +353,7 @@ fu_bcm57xx_device_dump_firmware (FuDevice *device, GError **error)
 						   fu_chunk_get_data_sz (chk),
 						   error))
 			return NULL;
-		fu_device_set_progress_full (device, i, chunks->len - 1);
+		fu_progress_set_percentage_full(progress, i, chunks->len - 1);
 	}
 
 	/* read from hardware */
@@ -360,13 +361,13 @@ fu_bcm57xx_device_dump_firmware (FuDevice *device, GError **error)
 }
 
 static FuFirmware *
-fu_bcm57xx_device_read_firmware (FuDevice *device, GError **error)
+fu_bcm57xx_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_bcm57xx_firmware_new ();
 	g_autoptr(GBytes) fw = NULL;
 
 	/* read from hardware */
-	fw = fu_bcm57xx_device_dump_firmware (device, error);
+	fw = fu_bcm57xx_device_dump_firmware(device, progress, error);
 	if (fw == NULL)
 		return NULL;
 	if (!fu_firmware_parse (firmware, fw, FWUPD_INSTALL_FLAG_NONE, error))
@@ -395,6 +396,7 @@ fu_bcm57xx_device_prepare_firmware (FuDevice *device,
 	g_autoptr(FuFirmware) img_ape = NULL;
 	g_autoptr(FuFirmware) img_stage1 = NULL;
 	g_autoptr(FuFirmware) img_stage2 = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(); // FIXME
 	g_autoptr(GPtrArray) images = NULL;
 
 	/* try to parse NVRAM, stage1 or APE */
@@ -423,7 +425,7 @@ fu_bcm57xx_device_prepare_firmware (FuDevice *device,
 	}
 
 	/* get the existing firmware from the device */
-	fw_old = fu_bcm57xx_device_dump_firmware (device, error);
+	fw_old = fu_bcm57xx_device_dump_firmware(device, progress, error);
 	if (fw_old == NULL)
 		return NULL;
 	if (!fu_firmware_parse (firmware, fw_old, flags, error)) {
@@ -465,10 +467,11 @@ fu_bcm57xx_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_bcm57xx_device_write_firmware (FuDevice *device,
-				  FuFirmware *firmware,
-				  FwupdInstallFlags flags,
-				  GError **error)
+fu_bcm57xx_device_write_firmware(FuDevice *device,
+				 FuFirmware *firmware,
+				 FuProgress *progress,
+				 FwupdInstallFlags flags,
+				 GError **error)
 {
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE (device);
 	g_autoptr(GBytes) blob = NULL;
@@ -491,12 +494,12 @@ fu_bcm57xx_device_write_firmware (FuDevice *device,
 						    fu_chunk_get_data_sz (chk),
 						    error))
 			return FALSE;
-		fu_device_set_progress_full (device, i, chunks->len - 1);
+		fu_progress_set_percentage_full(progress, i, chunks->len - 1);
 	}
 
 	/* verify */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
-	blob_verify = fu_bcm57xx_device_dump_firmware (device, error);
+	blob_verify = fu_bcm57xx_device_dump_firmware(device, progress, error);
 	if (blob_verify == NULL)
 		return FALSE;
 	if (!fu_common_bytes_compare (blob, blob_verify, error))

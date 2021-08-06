@@ -512,10 +512,11 @@ fu_dell_dock_mst_erase_bank (FuDevice *proxy, MSTBank bank, GError **error)
 }
 
 static gboolean
-fu_dell_dock_write_flash_bank (FuDevice *device,
-			       GBytes *blob_fw,
-			       MSTBank bank,
-			       GError **error)
+fu_dell_dock_write_flash_bank(FuDevice *device,
+			      GBytes *blob_fw,
+			      MSTBank bank,
+			      FuProgress *progress,
+			      GError **error)
 {
 	const MSTBankAttributes *attribs = NULL;
 	gsize write_size = 32;
@@ -541,9 +542,7 @@ fu_dell_dock_write_flash_bank (FuDevice *device,
 			    bank, i);
 			return FALSE;
 		}
-		fu_device_set_progress_full (device,
-					     i - attribs->start,
-					     end - attribs->start);
+		fu_progress_set_percentage_full(progress, i - attribs->start, end - attribs->start);
 	}
 
 	return TRUE;
@@ -732,10 +731,11 @@ fu_dell_dock_mst_invalidate_bank (FuDevice *proxy, MSTBank bank_in_use,
 }
 
 static gboolean
-fu_dell_dock_mst_write_fw (FuDevice *device,
-			   FuFirmware *firmware,
-			   FwupdInstallFlags flags,
-			   GError **error)
+fu_dell_dock_mst_write_fw(FuDevice *device,
+			  FuFirmware *firmware,
+			  FuProgress *progress,
+			  FwupdInstallFlags flags,
+			  GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST (device);
 	MSTBank bank_in_use = 0;
@@ -802,15 +802,18 @@ fu_dell_dock_mst_write_fw (FuDevice *device,
 		}
 		g_debug ("MST: bank %u needs to be updated", order[phase]);
 		for (guint i = 0; i < retries; i++) {
-			fu_device_set_progress_full (device, 0, 100);
+			fu_progress_set_percentage_full(progress, 0, 100);
 			fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 			if (!fu_dell_dock_mst_erase_bank (fu_device_get_proxy (device),
 							  order[phase],
 							  error))
 				return FALSE;
 			fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-			if (!fu_dell_dock_write_flash_bank (device, fw,
-						       order[phase], error))
+			if (!fu_dell_dock_write_flash_bank(device,
+							   fw,
+							   order[phase],
+							   progress,
+							   error))
 				return FALSE;
 			if (!fu_dell_dock_mst_checksum_bank (fu_device_get_proxy (device),
 							     fw,

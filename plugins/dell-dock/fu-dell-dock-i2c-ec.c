@@ -755,10 +755,11 @@ fu_dell_dock_ec_commit_package (FuDevice *device, GBytes *blob_fw,
 }
 
 static gboolean
-fu_dell_dock_ec_write_fw (FuDevice *device,
-			  FuFirmware *firmware,
-			  FwupdInstallFlags flags,
-			  GError **error)
+fu_dell_dock_ec_write_fw(FuDevice *device,
+			 FuFirmware *firmware,
+			 FuProgress *progress,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
 	gsize fw_size = 0;
@@ -817,7 +818,7 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 			g_prefix_error (error, "write over HID failed: ");
 			return FALSE;
 		}
-		fu_device_set_progress_full (device, nwritten, fw_size);
+		fu_progress_set_percentage_full(progress, nwritten, fw_size);
 		nwritten += write_size;
 		data += write_size;
 		address += write_size;

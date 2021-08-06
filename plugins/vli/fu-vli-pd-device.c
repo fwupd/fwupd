@@ -376,7 +376,7 @@ fu_vli_pd_device_prepare_firmware (FuDevice *device,
 }
 
 static GBytes *
-fu_vli_pd_device_dump_firmware (FuDevice *device, GError **error)
+fu_vli_pd_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -389,9 +389,11 @@ fu_vli_pd_device_dump_firmware (FuDevice *device, GError **error)
 	if (locker == NULL)
 		return NULL;
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_READ);
-	return fu_vli_device_spi_read (FU_VLI_DEVICE (self), 0x0,
-				       fu_device_get_firmware_size_max (device),
-				       error);
+	return fu_vli_device_spi_read(FU_VLI_DEVICE(self),
+				      0x0,
+				      fu_device_get_firmware_size_max(device),
+				      progress,
+				      error);
 }
 
 static gboolean
@@ -410,7 +412,10 @@ fu_vli_pd_device_write_gpios (FuVliPdDevice *self, GError **error)
 }
 
 static gboolean
-fu_vli_pd_device_write_dual_firmware (FuVliPdDevice *self, GBytes *fw, GError **error)
+fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
+				     GBytes *fw,
+				     FuProgress *progress,
+				     GError **error)
 {
 	const guint8 *buf = NULL;
 	const guint8 *sbuf = NULL;
@@ -423,10 +428,11 @@ fu_vli_pd_device_write_dual_firmware (FuVliPdDevice *self, GBytes *fw, GError **
 
 	/* check spi fw1 crc16 */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
-	spi_fw = fu_vli_device_spi_read (FU_VLI_DEVICE (self),
-					 fu_vli_device_get_offset (FU_VLI_DEVICE (self)),
-					 fu_device_get_firmware_size_max (FU_DEVICE (self)),
-					 error);
+	spi_fw = fu_vli_device_spi_read(FU_VLI_DEVICE(self),
+					fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
+					fu_device_get_firmware_size_max(FU_DEVICE(self)),
+					progress,
+					error);
 	if (spi_fw == NULL)
 		return FALSE;
 	sbuf = g_bytes_get_data (spi_fw, &sbufsz);
@@ -443,24 +449,36 @@ fu_vli_pd_device_write_dual_firmware (FuVliPdDevice *self, GBytes *fw, GError **
 	/* update fw2 first if fw1 correct */
 	buf = g_bytes_get_data (fw, &bufsz);
 	if (crc_actual == crc_file) {
-		if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
-					      sec_addr,
-					      buf, bufsz, error))
+		if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self),
+					     sec_addr,
+					     buf,
+					     bufsz,
+					     progress,
+					     error))
 			return FALSE;
-		if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
-					      fu_vli_device_get_offset (FU_VLI_DEVICE (self)),
-					      buf, bufsz, error))
+		if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self),
+					     fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
+					     buf,
+					     bufsz,
+					     progress,
+					     error))
 			return FALSE;
 
 	/* else update fw1 first */
 	} else {
-		if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
-					      fu_vli_device_get_offset (FU_VLI_DEVICE (self)),
-					      buf, bufsz, error))
+		if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self),
+					     fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
+					     buf,
+					     bufsz,
+					     progress,
+					     error))
 			return FALSE;
-		if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
-					      sec_addr,
-					      buf, bufsz, error))
+		if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self),
+					     sec_addr,
+					     buf,
+					     bufsz,
+					     progress,
+					     error))
 			return FALSE;
 	}
 
@@ -469,10 +487,11 @@ fu_vli_pd_device_write_dual_firmware (FuVliPdDevice *self, GBytes *fw, GError **
 }
 
 static gboolean
-fu_vli_pd_device_write_firmware (FuDevice *device,
-				 FuFirmware *firmware,
-				 FwupdInstallFlags flags,
-				 GError **error)
+fu_vli_pd_device_write_firmware(FuDevice *device,
+				FuFirmware *firmware,
+				FuProgress *progress,
+				FwupdInstallFlags flags,
+				GError **error)
 {
 	FuVliPdDevice *self = FU_VLI_PD_DEVICE (device);
 	gsize bufsz = 0;
@@ -498,19 +517,22 @@ fu_vli_pd_device_write_firmware (FuDevice *device,
 	/* dual image on VL103 */
 	if (fu_vli_device_get_kind (FU_VLI_DEVICE (device)) == FU_VLI_DEVICE_KIND_VL103 &&
 	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_DUAL_IMAGE))
-		return fu_vli_pd_device_write_dual_firmware (self, fw, error);
+		return fu_vli_pd_device_write_dual_firmware(self, fw, progress, error);
 
 	/* erase */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_vli_device_spi_erase_all (FU_VLI_DEVICE (self), error))
+	if (!fu_vli_device_spi_erase_all(FU_VLI_DEVICE(self), progress, error))
 		return FALSE;
 
 	/* write in chunks */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
 	buf = g_bytes_get_data (fw, &bufsz);
-	if (!fu_vli_device_spi_write (FU_VLI_DEVICE (self),
-				      fu_vli_device_get_offset (FU_VLI_DEVICE (self)),
-				      buf, bufsz, error))
+	if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self),
+				     fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
+				     buf,
+				     bufsz,
+				     progress,
+				     error))
 		return FALSE;
 
 	/* success */

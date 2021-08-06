@@ -196,10 +196,11 @@ fu_synaprom_config_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_synaprom_config_write_firmware (FuDevice *device,
-				   FuFirmware *firmware,
-				   FwupdInstallFlags flags,
-				   GError **error)
+fu_synaprom_config_write_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
 	FuDevice *parent = fu_device_get_parent (device);
 	g_autoptr(GBytes) fw = NULL;
@@ -210,7 +211,7 @@ fu_synaprom_config_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* I assume the CFG/MFW difference is detected in the device...*/
-	return fu_synaprom_device_write_fw (FU_SYNAPROM_DEVICE (parent), fw, error);
+	return fu_synaprom_device_write_fw(FU_SYNAPROM_DEVICE(parent), fw, progress, error);
 }
 
 static void

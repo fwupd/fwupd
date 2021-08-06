@@ -118,13 +118,14 @@ gboolean
 fu_plugin_write_firmware(FuPlugin *plugin,
 			 FuDevice *device,
 			 GBytes *blob_fw,
+			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_device_write_firmware (device, blob_fw, flags, error))
+	if (!fu_device_write_firmware(device, blob_fw, progress, flags, error))
 		return FALSE;
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_SKIPS_RESTART))
 		fu_plugin_device_remove (plugin, device);

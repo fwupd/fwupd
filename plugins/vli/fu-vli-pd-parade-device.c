@@ -430,10 +430,11 @@ fu_vli_pd_parade_device_block_read (FuVliPdParadeDevice *self,
 }
 
 static gboolean
-fu_vli_pd_parade_device_write_firmware (FuDevice *device,
-					FuFirmware *firmware,
-					FwupdInstallFlags flags,
-					GError **error)
+fu_vli_pd_parade_device_write_firmware(FuDevice *device,
+				       FuFirmware *firmware,
+				       FuProgress *progress,
+				       FwupdInstallFlags flags,
+				       GError **error)
 {
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE (device);
 	FuVliPdDevice *parent = FU_VLI_PD_DEVICE (fu_device_get_parent (device));
@@ -473,7 +474,7 @@ fu_vli_pd_parade_device_write_firmware (FuDevice *device,
 		FuChunk *chk = g_ptr_array_index (blocks, i);
 		if (!fu_vli_pd_parade_device_block_erase (self, fu_chunk_get_idx (chk), error))
 			return FALSE;
-		fu_device_set_progress_full (FU_DEVICE (self), i, blocks->len);
+		fu_progress_set_percentage_full(progress, i, blocks->len);
 	}
 
 	/*  load F/W to SPI ROM */
@@ -491,7 +492,7 @@ fu_vli_pd_parade_device_write_firmware (FuDevice *device,
 		FuChunk *chk = g_ptr_array_index (blocks, i);
 		if (!fu_vli_pd_parade_device_block_write (self, fu_chunk_get_idx (chk), fu_chunk_get_data (chk), error))
 			return FALSE;
-		fu_device_set_progress_full (FU_DEVICE (self), i, blocks->len);
+		fu_progress_set_percentage_full(progress, i, blocks->len);
 	}
 	if (!fu_vli_pd_parade_device_write_disable (self, error))
 		return FALSE;
@@ -516,7 +517,7 @@ fu_vli_pd_parade_device_write_firmware (FuDevice *device,
 							 error))
 			return FALSE;
 		g_byte_array_append (buf_verify, vbuf, bufsz);
-		fu_device_set_progress_full (FU_DEVICE (self), i, blocks->len);
+		fu_progress_set_percentage_full(progress, i, blocks->len);
 	}
 	fw_verify = g_byte_array_free_to_bytes (g_steal_pointer (&buf_verify));
 	if (!fu_common_bytes_compare (fw, fw_verify, error))
@@ -583,7 +584,7 @@ fu_vli_pd_parade_device_write_firmware (FuDevice *device,
 }
 
 static GBytes *
-fu_vli_pd_parade_device_dump_firmware (FuDevice *device, GError **error)
+fu_vli_pd_parade_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuVliPdDevice *parent = FU_VLI_PD_DEVICE (fu_device_get_parent (device));
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE (device);

@@ -290,10 +290,11 @@ fu_vli_usbhub_rtd21xx_device_attach (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_vli_usbhub_rtd21xx_device_write_firmware (FuDevice *device,
-					     FuFirmware *firmware,
-					     FwupdInstallFlags flags,
-					     GError **error)
+fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
+					    FuFirmware *firmware,
+					    FuProgress *progress,
+					    FwupdInstallFlags flags,
+					    GError **error)
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	FuVliUsbhubRtd21xxDevice *self = FU_VLI_USBHUB_RTD21XX_DEVICE (device);
@@ -419,7 +420,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len);
 	}
 
 	/* update finish command */
@@ -438,7 +439,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware (FuDevice *device,
 
 	/* exit background-fw mode */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_progress (device, 0);
+	fu_progress_set_percentage(progress, 0);
 	if (!fu_vli_usbhub_device_rtd21xx_read_status (self, NULL, error))
 		return FALSE;
 	write_buf[0] = ISP_CMD_FW_UPDATE_EXIT;
@@ -453,7 +454,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware (FuDevice *device,
 
 	/* the device needs some time to restart with the new firmware before
 	 * it can be queried again */
-	fu_device_sleep_with_progress (device, 20);
+	fu_progress_sleep(progress, 20);
 
 	/* success */
 	return TRUE;

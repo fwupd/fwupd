@@ -38,7 +38,7 @@ fu_optionrom_device_probe (FuDevice *device, GError **error)
 }
 
 static GBytes *
-fu_optionrom_device_dump_firmware (FuDevice *device, GError **error)
+fu_optionrom_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuUdevDevice *udev_device = FU_UDEV_DEVICE (device);
 	guint number_reads = 0;

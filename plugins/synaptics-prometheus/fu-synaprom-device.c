@@ -294,13 +294,16 @@ fu_synaprom_device_prepare_fw (FuDevice *device,
 }
 
 gboolean
-fu_synaprom_device_write_fw (FuSynapromDevice *self, GBytes *fw, GError **error)
+fu_synaprom_device_write_fw(FuSynapromDevice *self,
+			    GBytes *fw,
+			    FuProgress *progress,
+			    GError **error)
 {
 	const guint8 *buf;
 	gsize sz = 0;
 
 	/* write chunks */
-	fu_device_set_progress (FU_DEVICE (self), 10);
+	fu_progress_set_percentage(progress, 10);
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
 	buf = g_bytes_get_data (fw, &sz);
 	while (sz != 0) {
@@ -337,15 +340,16 @@ fu_synaprom_device_write_fw (FuSynapromDevice *self, GBytes *fw, GError **error)
 	}
 
 	/* success! */
-	fu_device_set_progress (FU_DEVICE (self), 100);
+	fu_progress_set_percentage(progress, 100);
 	return TRUE;
 }
 
 static gboolean
-fu_synaprom_device_write_firmware (FuDevice *device,
-				   FuFirmware *firmware,
-				   FwupdInstallFlags flags,
-				   GError **error)
+fu_synaprom_device_write_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
 	FuSynapromDevice *self = FU_SYNAPROM_DEVICE (device);
 	g_autoptr(GBytes) fw = NULL;
@@ -355,7 +359,7 @@ fu_synaprom_device_write_firmware (FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	return fu_synaprom_device_write_fw (self, fw, error);
+	return fu_synaprom_device_write_fw(self, fw, progress, error);
 }
 
 static gboolean

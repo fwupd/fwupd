@@ -6,11 +6,14 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
+#include <glib/gstdio.h>
+#include <libgcab.h>
 #include <string.h>
 #include <xmlb.h>
-#include <fwupdplugin.h>
-#include <libgcab.h>
-#include <glib/gstdio.h>
+
+#include "fwupd-security-attr-private.h"
 
 #include "fu-cabinet.h"
 #include "fu-common-private.h"
@@ -24,7 +27,6 @@
 #include "fu-plugin-private.h"
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
-#include "fwupd-security-attr-private.h"
 
 static GMainLoop *_test_loop = NULL;
 static guint _test_loop_timeout_id = 0;
@@ -3193,6 +3195,255 @@ fu_ifd_image_xml_func (void)
 	g_assert_cmpstr (csum1, ==, csum2);
 }
 
+typedef struct {
+	guint last_percentage;
+	guint updates;
+} FuProgressHelper;
+
+static void
+fu_progress_percentage_changed_cb(FuProgress *progress, guint percentage, gpointer data)
+{
+	FuProgressHelper *helper = (FuProgressHelper *)data;
+	helper->last_percentage = percentage;
+	helper->updates++;
+}
+
+static void
+fu_progress_func(void)
+{
+	FuProgressHelper helper = {0};
+	g_autoptr(FuProgress) progress = fu_progress_new();
+
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_progress_percentage_changed_cb),
+			 &helper);
+
+	fu_progress_set_steps(progress, 5);
+
+	fu_progress_step_done(progress);
+	g_assert_cmpint(helper.updates, ==, 1);
+	g_assert_cmpint(helper.last_percentage, ==, 20);
+
+	for (guint i = 0; i < 4; i++)
+		fu_progress_step_done(progress);
+	g_assert_cmpint(helper.last_percentage, ==, 100);
+	g_assert_cmpint(helper.updates, ==, 5);
+}
+
+static void
+fu_progress_child_func(void)
+{
+	FuProgressHelper helper = {0};
+	FuProgress *child;
+	g_autoptr(FuProgress) progress = fu_progress_new();
+
+	/* reset */
+	fu_progress_set_steps(progress, 2);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_progress_percentage_changed_cb),
+			 &helper);
+
+	/* parent: |-----------------------|-----------------------|
+	 * step1:  |-----------------------|
+	 * child:                          |-------------|---------|
+	 */
+
+	/* PARENT UPDATE */
+	g_debug("parent update #1");
+	fu_progress_step_done(progress);
+	g_assert_cmpint(helper.updates, ==, 1);
+	g_assert_cmpint(helper.last_percentage, ==, 50);
+
+	/* now test with a child */
+	child = fu_progress_get_division(progress);
+	fu_progress_set_steps(child, 2);
+
+	g_debug("child update #1");
+	fu_progress_step_done(child);
+	g_assert_cmpint(helper.updates, ==, 2);
+	g_assert_cmpint(helper.last_percentage, ==, 75);
+
+	/* child update */
+	g_debug("child update #2");
+	fu_progress_step_done(child);
+	g_assert_cmpint(helper.updates, ==, 3);
+	g_assert_cmpint(helper.last_percentage, ==, 100);
+
+	/* parent update */
+	g_debug("parent update #2");
+	fu_progress_step_done(progress);
+
+	/* ensure we ignored the duplicate */
+	g_assert_cmpint(helper.updates, ==, 3);
+	g_assert_cmpint(helper.last_percentage, ==, 100);
+}
+
+static void
+fu_progress_parent_one_step_proxy_func(void)
+{
+	FuProgressHelper helper = {0};
+	FuProgress *child;
+	g_autoptr(FuProgress) progress = fu_progress_new();
+
+	/* one step */
+	fu_progress_set_steps(progress, 1);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_progress_percentage_changed_cb),
+			 &helper);
+
+	/* now test with a child */
+	child = fu_progress_get_division(progress);
+	fu_progress_set_steps(child, 2);
+
+	/* child set value */
+	fu_progress_set_percentage(child, 33);
+
+	/* ensure 1 updates for progress with one step and ensure using child value as parent */
+	g_assert_cmpint(helper.updates, ==, 1);
+	g_assert_cmpint(helper.last_percentage, ==, 33);
+}
+
+static void
+fu_progress_non_equal_steps_func(void)
+{
+	g_autoptr(FuProgress) progress = fu_progress_new();
+	FuProgress *child;
+	FuProgress *grandchild;
+
+	/* test non-equal steps */
+	fu_progress_set_custom_steps(progress, 20, 60, 20, -1);
+	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 0);
+
+	/* child step should increment according to the custom steps */
+	child = fu_progress_get_division(progress);
+	fu_progress_set_steps(child, 2);
+
+	/* start child */
+	fu_progress_step_done(child);
+
+	/* verify 10% */
+	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 10);
+
+	/* finish child */
+	fu_progress_step_done(child);
+
+	fu_progress_step_done(progress);
+
+	/* verify 20% */
+	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 20);
+
+	/* child step should increment according to the custom steps */
+	child = fu_progress_get_division(progress);
+	fu_progress_set_custom_steps(child, 25, 75, -1);
+
+	/* start child */
+	fu_progress_step_done(child);
+
+	/* verify bilinear interpolation is working */
+	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 35);
+
+	/*
+	 * 0        20                             80         100
+	 * |---------||----------------------------||---------|
+	 *            |       35                   |
+	 *            |-------||-------------------| (25%)
+	 *                     |              75.5 |
+	 *                     |---------------||--| (90%)
+	 */
+	grandchild = fu_progress_get_division(child);
+	fu_progress_set_custom_steps(grandchild, 90, 10, -1);
+
+	fu_progress_step_done(grandchild);
+
+	/* verify bilinear interpolation (twice) is working for subpercentage */
+	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 75);
+
+	fu_progress_step_done(grandchild);
+
+	/* finish child */
+	fu_progress_step_done(child);
+
+	fu_progress_step_done(progress);
+
+	/* verify 80% */
+	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 80);
+
+	fu_progress_step_done(progress);
+
+	/* verify 100% */
+	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 100);
+}
+
+static void
+fu_progress_no_progress_func(void)
+{
+	FuProgress *child;
+	g_autoptr(FuProgress) progress = fu_progress_new();
+
+	/* test a progress where we don't care about progress */
+	fu_progress_set_enabled(progress, FALSE);
+
+	fu_progress_set_steps(progress, 3);
+	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 0);
+
+	fu_progress_step_done(progress);
+	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 0);
+
+	fu_progress_step_done(progress);
+
+	child = fu_progress_get_division(progress);
+	g_assert(child != NULL);
+	fu_progress_set_steps(child, 2);
+	fu_progress_step_done(child);
+	fu_progress_step_done(child);
+	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 0);
+}
+
+static void
+fu_progress_finish_func(void)
+{
+	FuProgress *child;
+	g_autoptr(FuProgress) progress = fu_progress_new();
+
+	/* check straight finish */
+	progress = fu_progress_new();
+	fu_progress_set_steps(progress, 3);
+
+	child = fu_progress_get_division(progress);
+	fu_progress_set_steps(child, 3);
+	fu_progress_finished(child);
+
+	/* parent step done after child finish */
+	fu_progress_step_done(progress);
+}
+
+static void
+fu_progress_finished_func(void)
+{
+	FuProgress *progress_local;
+	g_autoptr(FuProgress) progress = fu_progress_new();
+
+	progress = fu_progress_new();
+	fu_progress_set_custom_steps(progress, 90, 10, -1);
+	progress_local = fu_progress_get_division(progress);
+	fu_progress_set_enabled(progress_local, FALSE);
+
+	for (guint i = 0; i < 10; i++) {
+		/* check cancelled (okay to reuse as we called
+		 * fu_progress_set_enabled before)*/
+		fu_progress_step_done(progress_local);
+	}
+
+	/* turn checks back on */
+	fu_progress_set_enabled(progress_local, TRUE);
+	fu_progress_finished(progress_local);
+	fu_progress_step_done(progress);
+	fu_progress_step_done(progress);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -3209,6 +3460,13 @@ main (int argc, char **argv)
 	g_setenv ("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	g_setenv ("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
+	g_test_add_func("/fwupd/progress", fu_progress_func);
+	g_test_add_func("/fwupd/progress{child}", fu_progress_child_func);
+	g_test_add_func("/fwupd/progress{parent-1-step}", fu_progress_parent_one_step_proxy_func);
+	g_test_add_func("/fwupd/progress{no-equal}", fu_progress_non_equal_steps_func);
+	g_test_add_func("/fwupd/progress{no-progress}", fu_progress_no_progress_func);
+	g_test_add_func("/fwupd/progress{finish}", fu_progress_finish_func);
+	g_test_add_func("/fwupd/progress{finished}", fu_progress_finished_func);
 	g_test_add_func ("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
 	g_test_add_func ("/fwupd/plugin{devices}", fu_plugin_devices_func);
 	g_test_add_func ("/fwupd/plugin{device-inhibit-children}", fu_plugin_device_inhibit_children_func);

@@ -270,7 +270,7 @@ fu_fastboot_device_flash (FuDevice *device, const gchar *partition, GError **err
 }
 
 static gboolean
-fu_fastboot_device_download (FuDevice *device, GBytes *fw, GError **error)
+fu_fastboot_device_download(FuDevice *device, GBytes *fw, FuProgress *progress, GError **error)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE (device);
 	gsize sz = g_bytes_get_size (fw);
@@ -296,7 +296,7 @@ fu_fastboot_device_download (FuDevice *device, GBytes *fw, GError **error)
 					       fu_chunk_get_data_sz (chk),
 					       error))
 			return FALSE;
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len * 2);
+		fu_progress_set_percentage_full(progress, (gsize)i + 1, (gsize)chunks->len);
 	}
 	if (!fu_fastboot_device_read (device, NULL,
 				      FU_FASTBOOT_DEVICE_READ_FLAG_STATUS_POLL, error))
@@ -357,10 +357,11 @@ fu_fastboot_device_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_fastboot_device_write_qfil_part (FuDevice *device,
-				    FuArchive *archive,
-				    XbNode *part,
-				    GError **error)
+fu_fastboot_device_write_qfil_part(FuDevice *device,
+				   FuArchive *archive,
+				   XbNode *part,
+				   FuProgress *progress,
+				   GError **error)
 {
 	GBytes *data;
 	const gchar *fn;
@@ -384,16 +385,17 @@ fu_fastboot_device_write_qfil_part (FuDevice *device,
 		partition += 2;
 
 	/* flash the partition */
-	if (!fu_fastboot_device_download (device, data, error))
+	if (!fu_fastboot_device_download(device, data, progress, error))
 		return FALSE;
 	return fu_fastboot_device_flash (device, partition, error);
 }
 
 static gboolean
-fu_fastboot_device_write_motorola_part (FuDevice *device,
-					FuArchive *archive,
-					XbNode *part,
-					GError **error)
+fu_fastboot_device_write_motorola_part(FuDevice *device,
+				       FuArchive *archive,
+				       XbNode *part,
+				       FuProgress *progress,
+				       GError **error)
 {
 	const gchar *op = xb_node_get_attr (part, "operation");
 
@@ -509,7 +511,7 @@ fu_fastboot_device_write_motorola_part (FuDevice *device,
 		}
 
 		/* flash the partition */
-		if (!fu_fastboot_device_download (device, data, error))
+		if (!fu_fastboot_device_download(device, data, progress, error))
 			return FALSE;
 		return fu_fastboot_device_flash (device, partition, error);
 	}
@@ -534,9 +536,10 @@ fu_fastboot_device_write_motorola_part (FuDevice *device,
 }
 
 static gboolean
-fu_fastboot_device_write_motorola (FuDevice *device,
-				   FuArchive* archive,
-				   GError **error)
+fu_fastboot_device_write_motorola(FuDevice *device,
+				  FuArchive *archive,
+				  FuProgress *progress,
+				  GError **error)
 {
 	GBytes *data;
 	g_autoptr(GPtrArray) parts = NULL;
@@ -560,13 +563,16 @@ fu_fastboot_device_write_motorola (FuDevice *device,
 	parts = xb_silo_query (silo, "parts/part", 0, error);
 	if (parts == NULL)
 		return FALSE;
+	fu_progress_set_steps(progress, parts->len);
 	for (guint i = 0; i < parts->len; i++) {
 		XbNode *part = g_ptr_array_index (parts, i);
-		if (!fu_fastboot_device_write_motorola_part (device,
-							     archive,
-							     part,
-							     error))
+		if (!fu_fastboot_device_write_motorola_part(device,
+							    archive,
+							    part,
+							    fu_progress_get_division(progress),
+							    error))
 			return FALSE;
+		fu_progress_step_done(progress);
 	}
 
 	/* success */
@@ -574,7 +580,10 @@ fu_fastboot_device_write_motorola (FuDevice *device,
 }
 
 static gboolean
-fu_fastboot_device_write_qfil (FuDevice *device, FuArchive* archive, GError **error)
+fu_fastboot_device_write_qfil(FuDevice *device,
+			      FuArchive *archive,
+			      FuProgress *progress,
+			      GError **error)
 {
 	GBytes *data;
 	g_autoptr(GPtrArray) parts = NULL;
@@ -598,13 +607,16 @@ fu_fastboot_device_write_qfil (FuDevice *device, FuArchive* archive, GError **er
 	parts = xb_silo_query (silo, "nandboot/partitions/partition", 0, error);
 	if (parts == NULL)
 		return FALSE;
+	fu_progress_set_steps(progress, parts->len);
 	for (guint i = 0; i < parts->len; i++) {
 		XbNode *part = g_ptr_array_index (parts, i);
-		if (!fu_fastboot_device_write_qfil_part (device,
-							 archive,
-							 part,
-							 error))
+		if (!fu_fastboot_device_write_qfil_part(device,
+							archive,
+							part,
+							fu_progress_get_division(progress),
+							error))
 			return FALSE;
+		fu_progress_step_done(progress);
 	}
 
 	/* success */
@@ -612,10 +624,11 @@ fu_fastboot_device_write_qfil (FuDevice *device, FuArchive* archive, GError **er
 }
 
 static gboolean
-fu_fastboot_device_write_firmware (FuDevice *device,
-				   FuFirmware *firmware,
-				   FwupdInstallFlags flags,
-				   GError **error)
+fu_fastboot_device_write_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(GBytes) fw = NULL;
@@ -632,11 +645,9 @@ fu_fastboot_device_write_firmware (FuDevice *device,
 
 	/* load the manifest of operations */
 	if (fu_archive_lookup_by_fn (archive, "partition_nand.xml", NULL) != NULL)
-		return fu_fastboot_device_write_qfil (device, archive, error);
+		return fu_fastboot_device_write_qfil(device, archive, progress, error);
 	if (fu_archive_lookup_by_fn (archive, "flashfile.xml", NULL) != NULL) {
-		return fu_fastboot_device_write_motorola (device,
-							  archive,
-							  error);
+		return fu_fastboot_device_write_motorola(device, archive, progress, error);
 	}
 
 	/* not supported */

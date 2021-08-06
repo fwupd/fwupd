@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <glib-object.h>
 #include <fwupd.h>
+#include <glib-object.h>
 
+#include "fu-common-version.h"
 #include "fu-context.h"
 #include "fu-firmware.h"
-#include "fu-common-version.h"
+#include "fu-progress.h"
 #include "fu-security-attrs.h"
 
 #define FU_TYPE_DEVICE (fu_device_get_type ())
@@ -24,14 +25,14 @@ struct _FuDeviceClass
 	void			 (*to_string)		(FuDevice	*self,
 							 guint		 indent,
 							 GString	*str);
-	gboolean		 (*write_firmware)	(FuDevice	*self,
-							 FuFirmware	*firmware,
-							 FwupdInstallFlags flags,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
-	FuFirmware		*(*read_firmware)	(FuDevice	*self,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
+	gboolean (*write_firmware)(FuDevice *self,
+				   FuFirmware *firmware,
+				   FuProgress *progress,
+				   FwupdInstallFlags flags,
+				   GError **error) G_GNUC_WARN_UNUSED_RESULT;
+	FuFirmware *(*read_firmware)(FuDevice *self,
+				     FuProgress *progress,
+				     GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	gboolean		 (*detach)		(FuDevice	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
@@ -94,9 +95,9 @@ struct _FuDeviceClass
 	gboolean		 (*unbind_driver)	(FuDevice	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
-	GBytes			*(*dump_firmware)	(FuDevice	*self,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
+	GBytes *(*dump_firmware)(FuDevice *self,
+				 FuProgress *progress,
+				 GError **error)G_GNUC_WARN_UNUSED_RESULT;
 	void			 (*add_security_attrs)	(FuDevice	*self,
 							 FuSecurityAttrs *attrs);
 	gboolean		 (*ready)		(FuDevice	*self,
@@ -526,20 +527,12 @@ void		 fu_device_set_firmware_size_max	(FuDevice	*self,
 							 guint64	 size_max);
 guint64		 fu_device_get_firmware_size_min	(FuDevice	*self);
 guint64		 fu_device_get_firmware_size_max	(FuDevice	*self);
-guint		 fu_device_get_progress			(FuDevice	*self);
-void		 fu_device_set_progress			(FuDevice	*self,
-							 guint		 progress);
 guint		 fu_device_get_battery_level		(FuDevice	*self);
 void		 fu_device_set_battery_level		(FuDevice	*self,
 							 guint		 battery_level);
 guint		 fu_device_get_battery_threshold	(FuDevice	*self);
 void		 fu_device_set_battery_threshold	(FuDevice	*self,
 							 guint		 battery_threshold);
-void		 fu_device_set_progress_full		(FuDevice	*self,
-							 gsize		 progress_done,
-							 gsize		 progress_total);
-void		 fu_device_sleep_with_progress		(FuDevice	*self,
-							 guint		 delay_secs);
 void		 fu_device_set_update_state		(FuDevice	*self,
 							 FwupdUpdateState update_state);
 void		 fu_device_set_context			(FuDevice	*self,
@@ -555,22 +548,25 @@ gboolean	 fu_device_has_internal_flag		(FuDevice	*self,
 							 FuDeviceInternalFlags flag);
 gboolean	 fu_device_get_results			(FuDevice	*self,
 							 GError		**error);
-gboolean	 fu_device_write_firmware		(FuDevice	*self,
-							 GBytes		*fw,
-							 FwupdInstallFlags flags,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_device_write_firmware(FuDevice *self,
+			 GBytes *fw,
+			 FuProgress *progress,
+			 FwupdInstallFlags flags,
+			 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 FuFirmware	*fu_device_prepare_firmware		(FuDevice	*self,
 							 GBytes		*fw,
 							 FwupdInstallFlags flags,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
-FuFirmware	*fu_device_read_firmware		(FuDevice	*self,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
-GBytes		*fu_device_dump_firmware		(FuDevice	*self,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
+FuFirmware *
+fu_device_read_firmware(FuDevice *self,
+			FuProgress *progress,
+			GError **error) G_GNUC_WARN_UNUSED_RESULT;
+GBytes *
+fu_device_dump_firmware(FuDevice *self,
+			FuProgress *progress,
+			GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_device_attach			(FuDevice	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;

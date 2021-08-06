@@ -149,10 +149,11 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 }
 
 gboolean
-fu_plugin_verify (FuPlugin *plugin,
-		  FuDevice *device,
-		  FuPluginVerifyFlags flags,
-		  GError **error)
+fu_plugin_verify(FuPlugin *plugin,
+		 FuDevice *device,
+		 FuProgress *progress,
+		 FuPluginVerifyFlags flags,
+		 GError **error)
 {
 	if (g_strcmp0 (fu_device_get_version (device), "1.2.2") == 0) {
 		fu_device_add_checksum (device, "90d0ad436d21e0687998cd2127b2411135e1f730");
@@ -193,6 +194,7 @@ gboolean
 fu_plugin_write_firmware(FuPlugin *plugin,
 			 FuDevice *device,
 			 GBytes *blob_fw,
+			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -208,22 +210,19 @@ fu_plugin_write_firmware(FuPlugin *plugin,
 		return FALSE;
 	}
 	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
-	for (guint i = 1; i <= data->delay_decompress_ms; i++) {
-		guint progress = (100 * i) / data->delay_decompress_ms;
+	for (guint i = 0; i <= data->delay_decompress_ms; i++) {
 		g_usleep (1000);
-		fu_device_set_progress(device, progress);
+		fu_progress_set_percentage_full(progress, i, data->delay_decompress_ms);
 	}
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	for (guint i = 1; i <= data->delay_write_ms; i++) {
-		guint progress = (100 * i) / data->delay_write_ms;
+	for (guint i = 0; i <= data->delay_write_ms; i++) {
 		g_usleep (1000);
-		fu_device_set_progress(device, progress);
+		fu_progress_set_percentage_full(progress, i, data->delay_write_ms);
 	}
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
-	for (guint i = 1; i <= data->delay_verify_ms; i++) {
-		guint progress = (100 * i) / data->delay_verify_ms;
+	for (guint i = 0; i <= data->delay_verify_ms; i++) {
 		g_usleep (1000);
-		fu_device_set_progress(device, progress);
+		fu_progress_set_percentage_full(progress, i, data->delay_verify_ms);
 	}
 
 	/* composite test, upgrade composite devices */

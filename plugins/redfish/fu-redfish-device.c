@@ -525,6 +525,7 @@ typedef struct {
 	gchar			*location;
 	gboolean		 completed;
 	GHashTable		*messages_seen;
+	FuProgress *progress;
 } FuRedfishDevicePollCtx;
 
 static void
@@ -633,7 +634,7 @@ fu_redfish_device_poll_task_once (FuRedfishDevice *self,
 	if (json_object_has_member (json_obj, "PercentComplete")) {
 		gint64 pc = json_object_get_int_member (json_obj, "PercentComplete");
 		if (pc >= 0 && pc <= 100)
-			fu_device_set_progress (FU_DEVICE (self), (guint) pc);
+			fu_progress_set_percentage(ctx->progress, (guint)pc);
 	}
 
 	/* print all messages we've not seen yet */
@@ -698,12 +699,13 @@ fu_redfish_device_poll_task_once (FuRedfishDevice *self,
 }
 
 static FuRedfishDevicePollCtx *
-fu_redfish_device_poll_ctx_new (const gchar *location)
+fu_redfish_device_poll_ctx_new(FuProgress *progress, const gchar *location)
 {
 	FuRedfishDevicePollCtx *ctx = g_new0 (FuRedfishDevicePollCtx, 1);
 	ctx->messages_seen = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 	ctx->location = g_strdup (location);
 	ctx->error_code = FWUPD_ERROR_INTERNAL;
+	ctx->progress = g_object_ref(progress);
 	return ctx;
 }
 
@@ -711,6 +713,7 @@ static void
 fu_redfish_device_poll_ctx_free (FuRedfishDevicePollCtx *ctx)
 {
 	g_hash_table_unref (ctx->messages_seen);
+	g_object_unref(ctx->progress);
 	g_free (ctx->location);
 	g_free (ctx);
 }
@@ -721,13 +724,14 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuRedfishDevicePollCtx, fu_redfish_device_poll_ctx
 #pragma clang diagnostic pop
 
 gboolean
-fu_redfish_device_poll_task (FuRedfishDevice *self,
-			     const gchar *location,
-			     GError **error)
+fu_redfish_device_poll_task(FuRedfishDevice *self,
+			    const gchar *location,
+			    FuProgress *progress,
+			    GError **error)
 {
 	const guint timeout = 2400;
 	g_autoptr(GTimer) timer = g_timer_new ();
-	g_autoptr(FuRedfishDevicePollCtx) ctx = fu_redfish_device_poll_ctx_new (location);
+	g_autoptr(FuRedfishDevicePollCtx) ctx = fu_redfish_device_poll_ctx_new(progress, location);
 
 	/* sleep and then reprobe hardware */
 	do {

@@ -226,10 +226,11 @@ fu_synaptics_rmi_v5_device_secure_check (FuDevice *device,
 }
 
 gboolean
-fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
-					   FuFirmware *firmware,
-					   FwupdInstallFlags flags,
-					   GError **error)
+fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
+					  FuFirmware *firmware,
+					  FuProgress *progress,
+					  FwupdInstallFlags flags,
+					  GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash (self);
@@ -363,8 +364,9 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 			g_prefix_error (error, "failed to write bin block %u: ", fu_chunk_get_idx (chk));
 			return FALSE;
 		}
-		fu_device_set_progress_full (device, (gsize) i,
-					     (gsize) chunks_bin->len + chunks_cfg->len);
+		fu_progress_set_percentage_full(progress,
+						(gsize)i,
+						(gsize)chunks_bin->len + chunks_cfg->len);
 	}
 
 	/* payload signature */
@@ -392,8 +394,9 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 				g_prefix_error (error, "failed to write bin block %u: ", fu_chunk_get_idx (chk));
 				return FALSE;
 			}
-			fu_device_set_progress_full (device, (gsize) i,
-						     (gsize) chunks_bin->len + chunks_cfg->len);
+			fu_progress_set_percentage_full(progress,
+							(gsize)i,
+							(gsize)chunks_bin->len + chunks_cfg->len);
 		}
 		g_usleep (1000 * 1000);
 	}
@@ -421,9 +424,9 @@ fu_synaptics_rmi_v5_device_write_firmware (FuDevice *device,
 			g_prefix_error (error, "failed to write cfg block %u: ", fu_chunk_get_idx (chk));
 			return FALSE;
 		}
-		fu_device_set_progress_full (device,
-					     (gsize) chunks_bin->len + i,
-					     (gsize) chunks_bin->len + chunks_cfg->len);
+		fu_progress_set_percentage_full(progress,
+						(gsize)chunks_bin->len + i,
+						(gsize)chunks_bin->len + chunks_cfg->len);
 	}
 
 	/* success */

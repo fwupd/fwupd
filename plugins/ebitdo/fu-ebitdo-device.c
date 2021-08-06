@@ -425,7 +425,6 @@ fu_ebitdo_device_detach (FuDevice *device, GError **error)
 	}
 
 	/* wait */
-	fu_device_set_progress (device, 0);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* emit request */
@@ -438,10 +437,11 @@ fu_ebitdo_device_detach (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_ebitdo_device_write_firmware (FuDevice *device,
-				 FuFirmware *firmware,
-				 FwupdInstallFlags flags,
-				 GError **error)
+fu_ebitdo_device_write_firmware(FuDevice *device,
+				FuFirmware *firmware,
+				FuProgress *progress,
+				FwupdInstallFlags flags,
+				GError **error)
 {
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
 	const guint8 *buf;
@@ -521,7 +521,7 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 					fu_chunk_get_address (chk));
 			return FALSE;
 		}
-		fu_device_set_progress_full (device, fu_chunk_get_idx (chk), chunks->len);
+		fu_progress_set_percentage_full(progress, fu_chunk_get_idx(chk), chunks->len);
 	}
 
 	/* set the "encode id" which is likely a checksum, bluetooth pairing

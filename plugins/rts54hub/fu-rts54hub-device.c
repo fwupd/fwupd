@@ -398,10 +398,11 @@ fu_rts54hub_device_close (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hub_device_write_firmware (FuDevice *device,
-				   FuFirmware *firmware,
-				   FwupdInstallFlags flags,
-				   GError **error)
+fu_rts54hub_device_write_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
 	FuRts54HubDevice *self = FU_RTS54HUB_DEVICE (device);
 	g_autoptr(GBytes) fw = NULL;
@@ -458,7 +459,7 @@ fu_rts54hub_device_write_firmware (FuDevice *device,
 			return FALSE;
 
 		/* update progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len - 1);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len - 1);
 	}
 
 	/* get device to authenticate the firmware */

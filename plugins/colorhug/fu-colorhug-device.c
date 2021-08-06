@@ -417,14 +417,19 @@ ch_colorhug_device_calculate_checksum (const guint8 *data, guint32 len)
 }
 
 static gboolean
-fu_colorhug_device_write_firmware (FuDevice *device,
-				   FuFirmware *firmware,
-				   FwupdInstallFlags flags,
-				   GError **error)
+fu_colorhug_device_write_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
+	FuProgress *progress_local;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_custom_steps(progress, 19 /* erase */, 45 /* write */, 36 /* read */, -1);
 
 	/* get default image */
 	fw = fu_firmware_get_bytes (firmware, error);
@@ -445,8 +450,10 @@ fu_colorhug_device_write_firmware (FuDevice *device,
 	/* erase flash */
 	if (!fu_colorhug_device_erase (self, self->start_addr, g_bytes_get_size (fw), error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* write each block */
+	progress_local = fu_progress_get_division(progress);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		guint8 buf[CH_FLASH_TRANSFER_BLOCK_SIZE+4];
@@ -474,10 +481,14 @@ fu_colorhug_device_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len * 2);
+		fu_progress_set_percentage_full(progress_local, (gsize)i, (gsize)chunks->len);
 	}
 
+	/* progress */
+	fu_progress_step_done(progress);
+
 	/* verify each block */
+	progress_local = fu_progress_get_division(progress);
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
@@ -515,12 +526,11 @@ fu_colorhug_device_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device,
-					     (gsize) chunks->len + i,
-					     (gsize) chunks->len * 2);
+		fu_progress_set_percentage_full(progress_local, (gsize)i, (gsize)chunks->len);
 	}
 
 	/* success! */
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 

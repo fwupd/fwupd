@@ -134,6 +134,7 @@ fu_vli_usbhub_msp430_device_detach (FuDevice *device, GError **error)
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	FuVliUsbhubI2cStatus status = 0xff;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new();
 	const guint8 buf[] = {
 		I2C_ADDR_WRITE,
 		I2C_CMD_UPGRADE,
@@ -148,7 +149,7 @@ fu_vli_usbhub_msp430_device_detach (FuDevice *device, GError **error)
 
 	/* avoid power instability by waiting T1 */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_sleep_with_progress (device, 1); /* seconds */
+	fu_progress_sleep(progress, 1); /* seconds */
 
 	/* check the device came back */
 	if (!fu_vli_usbhub_device_i2c_read_status (parent, &status, error)) {
@@ -221,10 +222,11 @@ fu_vli_usbhub_msp430_device_write_firmware_cb (FuDevice *device, gpointer user_d
 }
 
 static gboolean
-fu_vli_usbhub_msp430_device_write_firmware (FuDevice *device,
-					    FuFirmware *firmware,
-					    FwupdInstallFlags flags,
-					    GError **error)
+fu_vli_usbhub_msp430_device_write_firmware(FuDevice *device,
+					   FuFirmware *firmware,
+					   FuProgress *progress,
+					   FwupdInstallFlags flags,
+					   GError **error)
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	GPtrArray *records = fu_ihex_firmware_get_records (FU_IHEX_FIRMWARE (firmware));
@@ -287,12 +289,12 @@ fu_vli_usbhub_msp430_device_write_firmware (FuDevice *device,
 				      fu_vli_usbhub_msp430_device_write_firmware_cb,
 				      5, &req, error))
 			return FALSE;
-		fu_device_set_progress_full (device, (gsize) j, (gsize) records->len);
+		fu_progress_set_percentage_full(progress, (gsize)j, (gsize)records->len);
 	}
 
 	/* the device automatically reboots */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_progress (device, 0);
+	fu_progress_set_percentage(progress, 0);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */

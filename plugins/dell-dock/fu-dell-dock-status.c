@@ -58,10 +58,11 @@ fu_dell_dock_status_setup (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dell_dock_status_write (FuDevice *device,
-			   FuFirmware *firmware,
-			   FwupdInstallFlags flags,
-			   GError **error)
+fu_dell_dock_status_write(FuDevice *device,
+			  FuFirmware *firmware,
+			  FuProgress *progress,
+			  FwupdInstallFlags flags,
+			  GError **error)
 {
 	FuDellDockStatus *self = FU_DELL_DOCK_STATUS (device);
 	FuDevice *parent;

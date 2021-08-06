@@ -243,10 +243,11 @@ fu_synaptics_rmi_v7_device_write_blocks (FuSynapticsRmiDevice *self,
 }
 
 static gboolean
-fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
-					    RmiPartitionId partition_id,
-					    GBytes *bytes,
-					    GError **error)
+fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
+					   RmiPartitionId partition_id,
+					   GBytes *bytes,
+					   FuProgress *progress,
+					   GError **error)
 {
 	FuSynapticsRmiFunction *f34;
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash (self);
@@ -317,16 +318,17 @@ fu_synaptics_rmi_v7_device_write_partition (FuSynapticsRmiDevice *self,
 							      fu_chunk_get_data_sz (chk),
 							      error))
 			return FALSE;
-		fu_device_set_progress_full (FU_DEVICE (self), (gsize) i, (gsize) chunks->len);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len);
 	}
 	return TRUE;
 }
 
 gboolean
-fu_synaptics_rmi_v7_device_write_firmware (FuDevice *device,
-					   FuFirmware *firmware,
-					   FwupdInstallFlags flags,
-					   GError **error)
+fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
+					  FuFirmware *firmware,
+					  FuProgress *progress,
+					  FwupdInstallFlags flags,
+					  GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash (self);
@@ -375,25 +377,28 @@ fu_synaptics_rmi_v7_device_write_firmware (FuDevice *device,
 
 	/* write flash config for v8 */
 	if (bytes_flashcfg != NULL) {
-		if (!fu_synaptics_rmi_v7_device_write_partition (self,
-								 RMI_PARTITION_ID_FLASH_CONFIG,
-								 bytes_flashcfg,
-								 error))
+		if (!fu_synaptics_rmi_v7_device_write_partition(self,
+								RMI_PARTITION_ID_FLASH_CONFIG,
+								bytes_flashcfg,
+								progress,
+								error))
 			return FALSE;
 	}
 
 	/* write core code */
-	if (!fu_synaptics_rmi_v7_device_write_partition (self,
-							 RMI_PARTITION_ID_CORE_CODE,
-							 bytes_bin,
-							 error))
+	if (!fu_synaptics_rmi_v7_device_write_partition(self,
+							RMI_PARTITION_ID_CORE_CODE,
+							bytes_bin,
+							progress,
+							error))
 		return FALSE;
 
 	/* write core config */
-	if (!fu_synaptics_rmi_v7_device_write_partition (self,
-							 RMI_PARTITION_ID_CORE_CONFIG,
-							 bytes_cfg,
-							 error))
+	if (!fu_synaptics_rmi_v7_device_write_partition(self,
+							RMI_PARTITION_ID_CORE_CONFIG,
+							bytes_cfg,
+							progress,
+							error))
 		return FALSE;
 
 	/* success */

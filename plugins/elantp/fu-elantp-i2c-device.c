@@ -338,10 +338,11 @@ fu_elantp_i2c_device_prepare_firmware (FuDevice *device,
 }
 
 static gboolean
-fu_elantp_i2c_device_write_firmware (FuDevice *device,
-				     FuFirmware *firmware,
-				     FwupdInstallFlags flags,
-				     GError **error)
+fu_elantp_i2c_device_write_firmware(FuDevice *device,
+				    FuFirmware *firmware,
+				    FuProgress *progress,
+				    FwupdInstallFlags flags,
+				    GError **error)
 {
 	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE (device);
 	FuElantpFirmware *firmware_elantp = FU_ELANTP_FIRMWARE (firmware);
@@ -405,7 +406,7 @@ fu_elantp_i2c_device_write_firmware (FuDevice *device,
 
 		/* update progress */
 		checksum += csum_tmp;
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
+		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len);
 	}
 
 	/* verify the written checksum */
@@ -426,7 +427,6 @@ fu_elantp_i2c_device_write_firmware (FuDevice *device,
 	}
 
 	/* wait for a reset */
-	fu_device_set_progress (device, 0);
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
 	g_usleep (ELANTP_DELAY_COMPLETE * 1000);
 	return TRUE;

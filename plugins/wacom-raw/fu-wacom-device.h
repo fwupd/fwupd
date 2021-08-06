@@ -16,9 +16,10 @@ G_DECLARE_DERIVABLE_TYPE (FuWacomDevice, fu_wacom_device, FU, WACOM_DEVICE, FuUd
 struct _FuWacomDeviceClass
 {
 	FuUdevDeviceClass	parent_class;
-	gboolean		 (*write_firmware)	(FuDevice	*self,
-							 GPtrArray	*chunks,
-							 GError		**error);
+	gboolean (*write_firmware)(FuDevice *self,
+				   GPtrArray *chunks,
+				   FuProgress *progress,
+				   GError **error);
 };
 
 typedef enum {

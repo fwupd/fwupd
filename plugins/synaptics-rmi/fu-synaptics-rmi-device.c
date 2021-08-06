@@ -801,25 +801,28 @@ fu_synaptics_rmi_device_disable_irqs (FuSynapticsRmiDevice *self, GError **error
 }
 
 static gboolean
-fu_synaptics_rmi_device_write_firmware (FuDevice *device,
-					FuFirmware *firmware,
-					FwupdInstallFlags flags,
-					GError **error)
+fu_synaptics_rmi_device_write_firmware(FuDevice *device,
+				       FuFirmware *firmware,
+				       FuProgress *progress,
+				       FwupdInstallFlags flags,
+				       GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE (device);
 	FuSynapticsRmiDevicePrivate *priv = GET_PRIVATE (self);
 	if (priv->f34->function_version == 0x0 ||
 	    priv->f34->function_version == 0x1) {
-		return fu_synaptics_rmi_v5_device_write_firmware (device,
-								  firmware,
-								  flags,
-								  error);
+		return fu_synaptics_rmi_v5_device_write_firmware(device,
+								 firmware,
+								 progress,
+								 flags,
+								 error);
 	}
 	if (priv->f34->function_version == 0x2) {
-		return fu_synaptics_rmi_v7_device_write_firmware (device,
-								  firmware,
-								  flags,
-								  error);
+		return fu_synaptics_rmi_v7_device_write_firmware(device,
+								 firmware,
+								 progress,
+								 flags,
+								 error);
 	}
 	g_set_error (error,
 		     FWUPD_ERROR,
