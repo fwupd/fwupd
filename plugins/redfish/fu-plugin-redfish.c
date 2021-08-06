@@ -40,8 +40,10 @@ fu_plugin_coldplug (FuPlugin *plugin, GError **error)
 	}
 
 	/* this is no longer relevant */
-	if (devices->len > 0)
+	if (devices->len > 0) {
+		fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "bios");
 		fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi_capsule");
+	}
 	return TRUE;
 }
 
