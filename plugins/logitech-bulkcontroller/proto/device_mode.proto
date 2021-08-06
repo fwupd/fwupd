@@ -1,0 +1,183 @@
+/*
+ * Copyright (c) 1999-2021 Logitech, Inc.
+ * All Rights Reserved
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+syntax = "proto3";
+
+package logi.device.proto;
+
+option java_package = "com.logitech.vc.proto";
+
+/**
+ * Behavior change as of 1/28/2021 EE
+ *   Kong sync-agent should not deprovision when this message is
+ *   received.  If would just start forwarding events to PC when message is
+ *   received.
+ *
+ * (Legacy)
+ * Request to transition to device mode
+ * Kong could be provisioned in Host mode.  This message
+ * will ask Kong to deprovisioned/remove host mode provisioning
+ * data.
+ * This is to be included in UsbMsg
+
+ * EXPECTED RESPONSE
+ * TransitionToDeviceModeResponse
+ */
+message TransitionToDeviceModeRequest
+{
+	/**
+	 * Unused. Reserved for future use.
+	 */
+	bool reserved = 1;
+}
+
+/**
+ * Request to transition to device mode response
+ */
+message TransitionToDeviceModeResponse
+{
+	/**
+	 * boolean value to indicate Kong was able to transition to
+	 * device mode.  If Kong is not provisioned, should just respond
+	 * with true value.
+	 * set to false if error was encountered during transition, and Kong
+	 * wasn't able to transition (is this possible?)
+	 */
+	bool success = 1;
+
+	/**
+	 * the error in integer if success was false
+	 */
+	int32 error = 2;
+
+	/**
+	 * the error description
+	 */
+	string error_description = 3;
+}
+
+/**
+ *  Added 1/28/2021 EE
+ *  Request to deprovision Kong
+ *  This request is sent by PC sync-agent when PC
+ *   is provisioned.
+ *  Kong sync-agent should deprovision (if provisioned)
+ *
+ * EXPECTED RESPONSE
+ * SetDeprovisionResponse
+ */
+message SetDeprovisionRequest
+{
+	/**
+	 * Unused. Reserved for future use.
+	 */
+	bool reserved = 1;
+}
+
+/**
+ * Response to deprovision request
+ */
+message SetDeprovisionResponse
+{
+	/**
+	 * boolean value to indicate Kong was able to deprovision Kong.
+	 * If Kong is not provisioned, should just respond
+	 * with true value.
+	 * set to false if error was encountered during deprovisioning.
+	 */
+	bool success = 1;
+
+	/**
+	 * the error in integer if success was false
+	 */
+	int32 error = 2;
+
+	/**
+	 * the error description
+	 */
+	string error_description = 3;
+}
+
+/**
+ *  Added 3/22/2021 EE
+ *  For sending a certificate as data.  There are currently
+ *   2 known certificate that will be transferred - Root CA, and 802.1x cert.
+ *  Upon receipt, sync-agent should  verify using the supplied hash
+ *   and write the data to the file system.
+ *
+ * EXPECTED RESPONSE
+ * SendCertificateDataResponse
+ */
+message SendCertificateDataRequest
+{
+	/**
+	 * The certificate type
+	 */
+	enum CertType {
+		/**
+		 * Reserved. Do not use.
+		 */
+		RESERVED = 0;
+		/**
+		 * Root CA
+		 */
+		ROOT_CA = 1;
+		/**
+		 * 802.1x cert
+		 */
+		NET_CONFIG = 2;
+	}
+
+	/**
+	 * (REQUIRED)
+	 * The certificate type
+	 */
+	CertType cert_type = 1;
+
+	/**
+	 * (REQUIRED)
+	 * the certificate file name
+	 */
+	string file_name = 2;
+
+	/**
+	 * (REQUIRED)
+	 * the certificate data
+	 */
+	bytes cert_data = 3;
+
+	/**
+	 * (REQUIRED)
+	 * the certificate md5 hash
+	 */
+	string md5 = 4;
+}
+
+/**
+ * Response to SendCertificateData Request
+ */
+message SendCertificateDataResponse
+{
+	/**
+	 * (REQUIRED)
+	 * boolean value to indicate data was received, hash verified .
+	 * set to false if error was encountered during transfer and verification.
+	 */
+	bool success = 1;
+
+	/**
+	 * (OPTIONAL)
+	 * the error in integer if success was false
+	 */
+	int32 error = 2;
+
+	/**
+	 * (OPTIONAL)
+	 * the error description if there are errors
+	 */
+	string error_description = 3;
+}

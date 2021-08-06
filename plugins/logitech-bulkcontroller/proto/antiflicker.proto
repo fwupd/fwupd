@@ -1,0 +1,41 @@
+/*
+ * Copyright (c) 1999-2021 Logitech, Inc.
+ * All Rights Reserved
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+syntax = "proto3";
+
+package logi.device.proto;
+
+option java_package = "com.logitech.vc.proto";
+
+import "device_common.proto";
+
+/**
+ * This message data structure holds information about the
+ * current AntiFlicker configuration.
+ *
+ */
+message AntiFlickerConfiguration
+{
+	enum Mode {
+		NTSC_60HZ = 0;
+		PAL_50HZ = 1;
+	}
+
+	Mode mode = 1;
+}
+
+message SetAntiFlickerConfigurationRequest
+{
+	AntiFlickerConfiguration.Mode mode = 1;
+}
+
+message SetAntiFlickerConfigurationResponse
+{
+	bool success = 1;
+
+	repeated Error errors = 2;
+}

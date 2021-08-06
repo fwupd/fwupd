@@ -1,0 +1,32 @@
+/*
+ * Copyright (c) 1999-2021 Logitech, Inc.
+ * All Rights Reserved
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+syntax = "proto3";
+
+package logi.device.proto;
+
+option java_package = "com.logitech.vc.proto";
+
+/**
+ * Request for setting device time
+ * This is to be included in UsbMsg
+ */
+message SetDeviceTimeRequest
+{
+	/**
+	 * utc timestamp.
+	 */
+	uint64 ts = 1;
+	/**
+	 * the time zone.
+	 */
+	string time_zone = 2;
+}
+
+/**
+ * Send an ack as the response
+ */
