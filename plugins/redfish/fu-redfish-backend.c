@@ -72,10 +72,10 @@ fu_redfish_backend_request_new (FuRedfishBackend *self)
 
 	/* since DSP0266 makes Basic Authorization a requirement,
 	* it is safe to use Basic Auth for all implementations */
-	curl_easy_setopt (curl, CURLOPT_HTTPAUTH, (glong) CURLAUTH_BASIC);
-	curl_easy_setopt (curl, CURLOPT_TIMEOUT, (glong) 30);
-	curl_easy_setopt (curl, CURLOPT_USERNAME, self->username);
-	curl_easy_setopt (curl, CURLOPT_PASSWORD, self->password);
+	curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (glong)CURLAUTH_BASIC);
+	curl_easy_setopt(curl, CURLOPT_TIMEOUT, (glong)180);
+	curl_easy_setopt(curl, CURLOPT_USERNAME, self->username);
+	curl_easy_setopt(curl, CURLOPT_PASSWORD, self->password);
 
 	/* setup networking */
 	user_agent = g_strdup_printf ("%s/%s", PACKAGE_NAME, PACKAGE_VERSION);
