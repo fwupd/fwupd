@@ -52,7 +52,6 @@ LIBFWUPDPLUGIN_0.8.0 {
     fu_plugin_runner_get_results;
     fu_plugin_runner_startup;
     fu_plugin_runner_unlock;
-    fu_plugin_runner_update;
     fu_plugin_runner_verify;
     fu_plugin_set_name;
   local: *;
@@ -256,11 +255,6 @@ LIBFWUPDPLUGIN_1.1.2 {
     fu_device_set_poll_interval;
     fu_device_setup;
     fu_plugin_runner_device_removed;
-    fu_plugin_runner_update_attach;
-    fu_plugin_runner_update_cleanup;
-    fu_plugin_runner_update_detach;
-    fu_plugin_runner_update_prepare;
-    fu_plugin_runner_update_reload;
     fu_udev_device_emit_changed;
     fu_udev_device_get_dev;
     fu_udev_device_get_model;
@@ -872,3 +866,14 @@ LIBFWUPDPLUGIN_1.6.2 {
     fu_udev_device_set_dev;
   local: *;
 } LIBFWUPDPLUGIN_1.6.1;
+
+LIBFWUPDPLUGIN_1.6.3 {
+  global:
+    fu_plugin_runner_attach;
+    fu_plugin_runner_cleanup;
+    fu_plugin_runner_detach;
+    fu_plugin_runner_prepare;
+    fu_plugin_runner_reload;
+    fu_plugin_runner_write_firmware;
+  local: *;
+} LIBFWUPDPLUGIN_1.6.2;

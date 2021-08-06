@@ -318,11 +318,11 @@ fu_plugin_uefi_capsule_update_splash (FuPlugin *plugin, FuDevice *device, GError
 }
 
 gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *device,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
+fu_plugin_write_firmware(FuPlugin *plugin,
+			 FuDevice *device,
+			 GBytes *blob_fw,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	const gchar *str;
 	guint32 flashes_left;

@@ -115,11 +115,11 @@ fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **err
 }
 
 gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *device,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
+fu_plugin_write_firmware(FuPlugin *plugin,
+			 FuDevice *device,
+			 GBytes *blob_fw,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new (device, error);
 	if (locker == NULL)

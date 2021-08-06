@@ -50,7 +50,7 @@ libfwupd_lt_current = '2'
 libfwupd_lt_revision = '0'
 libfwupd_lt_age = '0'
 libfwupd_lt_version = '@0@.@1@.@2@'.format(libfwupd_lt_current, libfwupd_lt_age, libfwupd_lt_revision)
-libfwupdplugin_lt_current = '2'
+libfwupdplugin_lt_current = '4'
 libfwupdplugin_lt_revision = '0'
 libfwupdplugin_lt_age = '0'
 libfwupdplugin_lt_version = '@0@.@1@.@2@'.format(libfwupdplugin_lt_current, libfwupdplugin_lt_age, libfwupdplugin_lt_revision)
@@ -500,9 +500,9 @@ conf.set_quoted('FWUPD_FUZZINGSRCDIR', join_paths(meson.source_root(), 'src', 'f
 
 if build_standalone
 if host_machine.system() == 'windows'
-  plugin_dir = 'fwupd-plugins-3'
+  plugin_dir = 'fwupd-plugins-@0@'.format(libfwupdplugin_lt_current)
 else
-  plugin_dir = join_paths(libdir, 'fwupd-plugins-3')
+  plugin_dir = join_paths(libdir, 'fwupd-plugins-@0@'.format(libfwupdplugin_lt_current))
 endif
 conf.set_quoted('FWUPD_PLUGINDIR', plugin_dir)
 endif

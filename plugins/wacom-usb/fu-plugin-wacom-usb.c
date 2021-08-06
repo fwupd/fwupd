@@ -22,8 +22,11 @@ fu_plugin_init (FuPlugin *plugin)
 }
 
 gboolean
-fu_plugin_update (FuPlugin *plugin, FuDevice *device, GBytes *blob_fw,
-		  FwupdInstallFlags flags, GError **error)
+fu_plugin_write_firmware(FuPlugin *plugin,
+			 FuDevice *device,
+			 GBytes *blob_fw,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	FuDevice *parent = fu_device_get_parent (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;

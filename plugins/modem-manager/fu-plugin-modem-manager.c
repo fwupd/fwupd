@@ -360,7 +360,7 @@ fu_plugin_destroy (FuPlugin *plugin)
 }
 
 gboolean
-fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_detach(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data (plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -403,7 +403,7 @@ fu_plugin_mm_device_attach_finished (gpointer user_data)
 }
 
 gboolean
-fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_attach(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 

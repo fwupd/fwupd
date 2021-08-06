@@ -241,15 +241,21 @@ fu_plugin_dell_tpm_func (gconstpointer user_data)
 	g_assert_false (fu_device_has_flag (device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
 
 	/* With one flash left we need an override */
-	ret = fu_plugin_runner_update (self->plugin_uefi_capsule, device_v20, blob_fw,
-				       FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_plugin_runner_write_firmware(self->plugin_uefi_capsule,
+					      device_v20,
+					      blob_fw,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false (ret);
 	g_clear_error (&error);
 
 	/* test override */
-	ret = fu_plugin_runner_update (self->plugin_uefi_capsule, device_v20, blob_fw,
-				       FWUPD_INSTALL_FLAG_FORCE, &error);
+	ret = fu_plugin_runner_write_firmware(self->plugin_uefi_capsule,
+					      device_v20,
+					      blob_fw,
+					      FWUPD_INSTALL_FLAG_FORCE,
+					      &error);
 	g_assert_no_error (error);
 	g_assert (ret);
 
