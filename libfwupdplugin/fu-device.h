@@ -506,9 +506,6 @@ void		 fu_device_add_flag			(FuDevice	*self,
 void		 fu_device_remove_flag			(FuDevice	*self,
 							 FwupdDeviceFlags flag);
 const gchar	*fu_device_get_custom_flags		(FuDevice	*self);
-gboolean	 fu_device_has_custom_flag		(FuDevice	*self,
-							 const gchar	*hint)
-							 G_DEPRECATED_FOR(fu_device_has_private_flag);
 void		 fu_device_set_custom_flags		(FuDevice	*self,
 							 const gchar	*custom_flags);
 void		 fu_device_set_name			(FuDevice	*self,

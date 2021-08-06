@@ -214,7 +214,6 @@ LIBFWUPDPLUGIN_1.1.0 {
   global:
     fu_device_get_alternate_id;
     fu_device_get_custom_flags;
-    fu_device_has_custom_flag;
     fu_device_incorporate;
     fu_device_set_alternate_id;
     fu_device_set_custom_flags;
@@ -423,7 +422,6 @@ LIBFWUPDPLUGIN_1.3.3 {
     fu_udev_device_pread;
     fu_udev_device_pwrite;
     fu_udev_device_set_fd;
-    fu_udev_device_set_readonly;
   local: *;
 } LIBFWUPDPLUGIN_1.3.2;
 

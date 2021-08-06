@@ -3044,37 +3044,6 @@ fu_device_get_custom_flags (FuDevice *self)
 }
 
 /**
- * fu_device_has_custom_flag:
- * @self: a #FuDevice
- * @hint: a string, e.g. `bootloader`
- *
- * Checks if the custom flag exists for the device from the quirk system.
- *
- * It may be more efficient to call fu_device_get_custom_flags() and split the
- * string locally if checking for lots of different flags.
- *
- * Returns: %TRUE if the hint exists
- *
- * Since: 1.1.0
- **/
-gboolean
-fu_device_has_custom_flag (FuDevice *self, const gchar *hint)
-{
-	const gchar *hint_str;
-	g_auto(GStrv) hints = NULL;
-
-	g_return_val_if_fail (FU_IS_DEVICE (self), FALSE);
-	g_return_val_if_fail (hint != NULL, FALSE);
-
-	/* no hint is perfectly valid */
-	hint_str = fu_device_get_custom_flags (self);
-	if (hint_str == NULL)
-		return FALSE;
-	hints = g_strsplit (hint_str, ",", -1);
-	return g_strv_contains ((const gchar * const *) hints, hint);
-}
-
-/**
  * fu_device_get_remove_delay:
  * @self: a #FuDevice
  *

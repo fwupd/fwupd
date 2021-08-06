@@ -16,6 +16,8 @@ Remember: Plugins should be upstream!
 * Migrate from FuUsbDevice->probe(), FuUsbDevice->open() and FuUsbDevice->close() to using the superclass helpers
 * Migrate from FuUdevDevice->to_string(), FuUdevDevice->probe(), FuUdevDevice->open() and FuUdevDevice->close() to using the superclass helpers
 * Migrate from fu_device_get_protocol() to fu_device_get_protocols() and fu_device_set_protocol() to fu_device_add_protocol()
+* Migrate from fu_device_has_custom_flag() to fu_device_has_private_flag()
+* Migrate from fu_udev_device_set_readonly() to fu_udev_device_set_flags()
 
 ## Planned API/ABI changes for next release
 

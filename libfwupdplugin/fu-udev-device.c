@@ -1202,26 +1202,6 @@ fu_udev_device_set_fd (FuUdevDevice *self, gint fd)
 }
 
 /**
- * fu_udev_device_set_readonly:
- * @self: a #FuUdevDevice
- * @readonly: %TRUE if the device file should be opened readonly
- *
- * Sets the open mode to `O_RDONLY` use when opening the device with
- * fu_device_open(). By default devices are opened with `O_RDWR`.
- *
- * Since: 1.3.3
- **/
-void
-fu_udev_device_set_readonly (FuUdevDevice *self, gboolean readonly)
-{
-	FuUdevDevicePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FU_IS_UDEV_DEVICE (self));
-	priv->flags = readonly ? FU_UDEV_DEVICE_FLAG_OPEN_READ :
-				 FU_UDEV_DEVICE_FLAG_OPEN_READ |
-				 FU_UDEV_DEVICE_FLAG_OPEN_WRITE;
-}
-
-/**
  * fu_udev_device_set_flags:
  * @self: a #FuUdevDevice
  * @flags: udev device flags, e.g. %FU_UDEV_DEVICE_FLAG_OPEN_READ
