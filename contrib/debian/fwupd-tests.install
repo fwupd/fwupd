@@ -5,7 +5,7 @@
 usr/share/installed-tests/*
 usr/libexec/installed-tests/fwupd/fwupd.sh
 usr/libexec/installed-tests/fwupd/*-self-test
-usr/lib/*/fwupd-plugins-3/libfu_plugin_test.so
-usr/lib/*/fwupd-plugins-3/libfu_plugin_invalid.so
+usr/lib/*/fwupd-plugins-*/libfu_plugin_test.so
+usr/lib/*/fwupd-plugins-*/libfu_plugin_invalid.so
 debian/lintian/fwupd-tests usr/share/lintian/overrides
 etc/fwupd/remotes.d/fwupd-tests.conf

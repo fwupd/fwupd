@@ -143,7 +143,7 @@ When this is done the daemon checks the update for compatibility with the device
 and then calls the vfuncs to update the device.
 
     gboolean
-    fu_plugin_update (FuPlugin *plugin,
+    fu_plugin_write_firmware (FuPlugin *plugin,
                       FuDevice *dev,
                       GBytes *blob_fw,
                       FwupdInstallFlags flags,
@@ -171,7 +171,7 @@ certain threshold, or it could be as complicated as ensuring a vendor-specific
 GPIO is asserted when specific types of hardware are updated.
 
     gboolean
-    fu_plugin_update_prepare (FuPlugin *plugin, FuDevice *device, GError **error)
+    fu_plugin_prepare (FuPlugin *plugin, FuDevice *device, GError **error)
     {
         if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC &&
             !on_ac_power ()) {
@@ -186,7 +186,7 @@ GPIO is asserted when specific types of hardware are updated.
     }
 
     gboolean
-    fu_plugin_update_cleanup (FuPlugin *plugin, FuDevice *device, GError **error)
+    fu_plugin_cleanup (FuPlugin *plugin, FuDevice *device, GError **error)
     {
         return g_file_set_contents ("/var/lib/fwupd/something",
                                     fu_device_get_id (device), -1, error);
@@ -212,7 +212,7 @@ handle the device ID, although the registered plugin can change during the
 attach and detach phases.
 
     gboolean
-    fu_plugin_update_detach (FuPlugin *plugin, FuDevice *device, GError **error)
+    fu_plugin_detach (FuPlugin *plugin, FuDevice *device, GError **error)
     {
         if (hardware_in_bootloader)
             return TRUE;
@@ -220,7 +220,7 @@ attach and detach phases.
     }
 
     gboolean
-    fu_plugin_update_attach (FuPlugin *plugin, FuDevice *device, GError **error)
+    fu_plugin_attach (FuPlugin *plugin, FuDevice *device, GError **error)
     {
         if (!hardware_in_bootloader)
             return TRUE;
@@ -228,7 +228,7 @@ attach and detach phases.
     }
 
     gboolean
-    fu_plugin_update_reload (FuPlugin *plugin, FuDevice *device, GError **error)
+    fu_plugin_reload (FuPlugin *plugin, FuDevice *device, GError **error)
     {
         g_autofree gchar *version = _get_version(plugin, device, error);
         if (version == NULL)

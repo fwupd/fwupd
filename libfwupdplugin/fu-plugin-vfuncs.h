@@ -92,7 +92,7 @@ gboolean	 fu_plugin_coldplug_prepare		(FuPlugin	*plugin,
 gboolean	 fu_plugin_coldplug_cleanup		(FuPlugin	*plugin,
 							 GError		**error);
 /**
- * fu_plugin_update:
+ * fu_plugin_write_firmware:
  * @plugin: a plugin
  * @dev: a device
  * @blob_fw: a data blob
@@ -101,13 +101,14 @@ gboolean	 fu_plugin_coldplug_cleanup		(FuPlugin	*plugin,
  *
  * Updates the firmware on the device with blob_fw
  *
- * Since: 0.9.7
+ * Since: 1.6.3
  **/
-gboolean	 fu_plugin_update			(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GBytes		*blob_fw,
-							 FwupdInstallFlags flags,
-							 GError		**error);
+gboolean
+fu_plugin_write_firmware(FuPlugin *plugin,
+			 FuDevice *dev,
+			 GBytes *blob_fw,
+			 FwupdInstallFlags flags,
+			 GError **error);
 /**
  * fu_plugin_verify:
  * @plugin: a plugin
@@ -179,7 +180,7 @@ gboolean	 fu_plugin_get_results			(FuPlugin	*plugin,
 							 FuDevice	*dev,
 							 GError		**error);
 /**
- * fu_plugin_update_attach:
+ * fu_plugin_attach:
  * @plugin: a plugin
  * @dev: a device
  * @error: (nullable): optional return location for an error
@@ -188,24 +189,22 @@ gboolean	 fu_plugin_get_results			(FuPlugin	*plugin,
  *
  * Since: 1.0.2
  **/
-gboolean	 fu_plugin_update_attach		(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GError		**error);
+gboolean
+fu_plugin_attach(FuPlugin *plugin, FuDevice *dev, GError **error);
 /**
- * fu_plugin_update_detach:
+ * fu_plugin_detach:
  * @plugin: a plugin
  * @dev: a device
  * @error: (nullable): optional return location for an error
  *
  * Swaps the device from runtime mode to bootloader mode.
  *
- * Since: 1.0.2
+ * Since: 1.6.3
  **/
-gboolean	 fu_plugin_update_detach		(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GError		**error);
+gboolean
+fu_plugin_detach(FuPlugin *plugin, FuDevice *dev, GError **error);
 /**
- * fu_plugin_update_prepare:
+ * fu_plugin_prepare:
  * @plugin: a plugin
  * @flags: install flags
  * @dev: a device
@@ -213,14 +212,12 @@ gboolean	 fu_plugin_update_detach		(FuPlugin	*plugin,
  *
  * Prepares the device to receive an update.
  *
- * Since: 0.8.0
+ * Since: 1.6.3
  **/
-gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
-							 FwupdInstallFlags flags,
-							 FuDevice	*dev,
-							 GError		**error);
+gboolean
+fu_plugin_prepare(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *dev, GError **error);
 /**
- * fu_plugin_update_cleanup
+ * fu_plugin_cleanup
  * @plugin: a plugin
  * @flags: install flags
  * @dev: a device
@@ -228,12 +225,10 @@ gboolean	 fu_plugin_update_prepare		(FuPlugin	*plugin,
  *
  * Cleans up the device after receiving an update.
  *
- * Since: 0.8.0
+ * Since: 1.6.3
  **/
-gboolean	 fu_plugin_update_cleanup		(FuPlugin	*plugin,
-							 FwupdInstallFlags flags,
-							 FuDevice	*dev,
-							 GError		**error);
+gboolean
+fu_plugin_cleanup(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *dev, GError **error);
 /**
  * fu_plugin_composite_prepare
  * @plugin: a plugin

@@ -255,15 +255,21 @@ fu_test_redfish_update_func (gconstpointer user_data)
 	/* BMC */
 	dev = g_ptr_array_index (devices, 1);
 	blob_fw = g_bytes_new_static ("hello", 5);
-	ret = fu_plugin_runner_update (self->plugin, dev, blob_fw,
-				       FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_plugin_runner_write_firmware(self->plugin,
+					      dev,
+					      blob_fw,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
 	g_assert_no_error (error);
 	g_assert_true (ret);
 	g_assert_true (fu_device_has_flag (dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
 
 	/* try again */
-	ret = fu_plugin_runner_update (self->plugin, dev, blob_fw,
-				       FWUPD_INSTALL_FLAG_NONE, &error);
+	ret = fu_plugin_runner_write_firmware(self->plugin,
+					      dev,
+					      blob_fw,
+					      FWUPD_INSTALL_FLAG_NONE,
+					      &error);
 	g_assert_error (error, FWUPD_ERROR, FWUPD_ERROR_WRITE);
 	g_assert_false (ret);
 

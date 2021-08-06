@@ -40,7 +40,7 @@ sed "s,#VERSION#,$RPMVERSION,;
      s,#ALPHATAG#,alpha,;
      s,enable_dummy 0,enable_dummy 1,;
      s,Source0.*,Source0:\tfwupd-$VERSION.tar.xz," \
-	contrib/fwupd.spec.in > build/fwupd.spec
+	build/contrib/fwupd.spec.in > build/fwupd.spec
 
 if [ -n "$CI" ]; then
 	sed -i "s,enable_ci 0,enable_ci 1,;" build/fwupd.spec

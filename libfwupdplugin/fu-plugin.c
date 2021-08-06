@@ -1143,7 +1143,7 @@ fu_plugin_runner_composite_cleanup (FuPlugin *self, GPtrArray *devices, GError *
 }
 
 /**
- * fu_plugin_runner_update_prepare:
+ * fu_plugin_runner_prepare:
  * @self: a #FuPlugin
  * @flags: install flags
  * @device: a device
@@ -1153,19 +1153,20 @@ fu_plugin_runner_composite_cleanup (FuPlugin *self, GPtrArray *devices, GError *
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 1.1.2
+ * Since: 1.6.3
  **/
 gboolean
-fu_plugin_runner_update_prepare (FuPlugin *self, FwupdInstallFlags flags, FuDevice *device,
-				 GError **error)
+fu_plugin_runner_prepare(FuPlugin *self, FwupdInstallFlags flags, FuDevice *device, GError **error)
 {
-	return fu_plugin_runner_flagged_device_generic (self, flags, device,
-							"fu_plugin_update_prepare",
-							error);
+	return fu_plugin_runner_flagged_device_generic(self,
+						       flags,
+						       device,
+						       "fu_plugin_prepare",
+						       error);
 }
 
 /**
- * fu_plugin_runner_update_cleanup:
+ * fu_plugin_runner_cleanup:
  * @self: a #FuPlugin
  * @flags: install flags
  * @device: a device
@@ -1175,19 +1176,20 @@ fu_plugin_runner_update_prepare (FuPlugin *self, FwupdInstallFlags flags, FuDevi
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 1.1.2
+ * Since: 1.6.3
  **/
 gboolean
-fu_plugin_runner_update_cleanup (FuPlugin *self, FwupdInstallFlags flags, FuDevice *device,
-				 GError **error)
+fu_plugin_runner_cleanup(FuPlugin *self, FwupdInstallFlags flags, FuDevice *device, GError **error)
 {
-	return fu_plugin_runner_flagged_device_generic (self, flags, device,
-							"fu_plugin_update_cleanup",
-							error);
+	return fu_plugin_runner_flagged_device_generic(self,
+						       flags,
+						       device,
+						       "fu_plugin_cleanup",
+						       error);
 }
 
 /**
- * fu_plugin_runner_update_attach:
+ * fu_plugin_runner_attach:
  * @self: a #FuPlugin
  * @device: a device
  * @error: (nullable): optional return location for an error
@@ -1196,19 +1198,20 @@ fu_plugin_runner_update_cleanup (FuPlugin *self, FwupdInstallFlags flags, FuDevi
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 1.1.2
+ * Since: 1.6.3
  **/
 gboolean
-fu_plugin_runner_update_attach (FuPlugin *self, FuDevice *device, GError **error)
+fu_plugin_runner_attach(FuPlugin *self, FuDevice *device, GError **error)
 {
-	return fu_plugin_runner_device_generic (self, device,
-						"fu_plugin_update_attach",
-						fu_plugin_device_attach,
-						error);
+	return fu_plugin_runner_device_generic(self,
+					       device,
+					       "fu_plugin_attach",
+					       fu_plugin_device_attach,
+					       error);
 }
 
 /**
- * fu_plugin_runner_update_detach:
+ * fu_plugin_runner_detach:
  * @self: a #FuPlugin
  * @device: a device
  * @error: (nullable): optional return location for an error
@@ -1217,19 +1220,20 @@ fu_plugin_runner_update_attach (FuPlugin *self, FuDevice *device, GError **error
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 1.1.2
+ * Since: 1.6.3
  **/
 gboolean
-fu_plugin_runner_update_detach (FuPlugin *self, FuDevice *device, GError **error)
+fu_plugin_runner_detach(FuPlugin *self, FuDevice *device, GError **error)
 {
-	return fu_plugin_runner_device_generic (self, device,
-						"fu_plugin_update_detach",
-						fu_plugin_device_detach,
-						error);
+	return fu_plugin_runner_device_generic(self,
+					       device,
+					       "fu_plugin_detach",
+					       fu_plugin_device_detach,
+					       error);
 }
 
 /**
- * fu_plugin_runner_update_reload:
+ * fu_plugin_runner_reload:
  * @self: a #FuPlugin
  * @device: a device
  * @error: (nullable): optional return location for an error
@@ -1238,10 +1242,10 @@ fu_plugin_runner_update_detach (FuPlugin *self, FuDevice *device, GError **error
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 1.1.2
+ * Since: 1.6.3
  **/
 gboolean
-fu_plugin_runner_update_reload (FuPlugin *self, FuDevice *device, GError **error)
+fu_plugin_runner_reload(FuPlugin *self, FuDevice *device, GError **error)
 {
 	FuDevice *proxy = fu_device_get_proxy_with_fallback (device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -1770,10 +1774,11 @@ fu_plugin_runner_verify (FuPlugin *self,
 	g_ptr_array_set_size (checksums, 0);
 
 	/* run additional detach */
-	if (!fu_plugin_runner_device_generic (self, device,
-					      "fu_plugin_update_detach",
-					      fu_plugin_device_detach,
-					      error))
+	if (!fu_plugin_runner_device_generic(self,
+					     device,
+					     "fu_plugin_detach",
+					     fu_plugin_device_detach,
+					     error))
 		return FALSE;
 
 	/* run vfunc */
@@ -1792,10 +1797,11 @@ fu_plugin_runner_verify (FuPlugin *self,
 					    "failed to verify using %s: ",
 					    fu_plugin_get_name (self));
 		/* make the device "work" again, but don't prefix the error */
-		if (!fu_plugin_runner_device_generic (self, device,
-						      "fu_plugin_update_attach",
-						      fu_plugin_device_attach,
-						      &error_attach)) {
+		if (!fu_plugin_runner_device_generic(self,
+						     device,
+						     "fu_plugin_attach",
+						     fu_plugin_device_attach,
+						     &error_attach)) {
 			g_warning ("failed to attach whilst aborting verify(): %s",
 				   error_attach->message);
 		}
@@ -1803,10 +1809,11 @@ fu_plugin_runner_verify (FuPlugin *self,
 	}
 
 	/* run optional attach */
-	if (!fu_plugin_runner_device_generic (self, device,
-					      "fu_plugin_update_attach",
-					      fu_plugin_device_attach,
-					      error))
+	if (!fu_plugin_runner_device_generic(self,
+					     device,
+					     "fu_plugin_attach",
+					     fu_plugin_device_attach,
+					     error))
 		return FALSE;
 
 	/* success */
@@ -1904,25 +1911,25 @@ fu_plugin_runner_unlock (FuPlugin *self, FuDevice *device, GError **error)
 }
 
 /**
- * fu_plugin_runner_update:
+ * fu_plugin_runner_write_firmware:
  * @self: a #FuPlugin
  * @device: a device
  * @blob_fw: a data blob
  * @flags: install flags
  * @error: (nullable): optional return location for an error
  *
- * Call into the plugin's update routine
+ * Call into the plugin's write firmware routine
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 0.8.0
+ * Since: 1.6.3
  **/
 gboolean
-fu_plugin_runner_update (FuPlugin *self,
-			 FuDevice *device,
-			 GBytes *blob_fw,
-			 FwupdInstallFlags flags,
-			 GError **error)
+fu_plugin_runner_write_firmware(FuPlugin *self,
+				FuDevice *device,
+				GBytes *blob_fw,
+				FwupdInstallFlags flags,
+				GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginUpdateFunc update_func;
@@ -1945,7 +1952,7 @@ fu_plugin_runner_update (FuPlugin *self,
 	}
 
 	/* optional */
-	g_module_symbol (priv->module, "fu_plugin_update", (gpointer *) &update_func);
+	g_module_symbol(priv->module, "fu_plugin_write_firmware", (gpointer *)&update_func);
 	if (update_func == NULL) {
 		g_debug ("superclassed write_firmware(%s)", fu_plugin_get_name (self));
 		return fu_plugin_device_write_firmware (self, device, blob_fw, flags, error);

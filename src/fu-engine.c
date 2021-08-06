@@ -2637,7 +2637,7 @@ fu_engine_install (FuEngine *self,
 		}
 		plugin = fu_plugin_list_find_by_name (self->plugin_list, "upower", NULL);
 		if (plugin != NULL) {
-			if (!fu_plugin_runner_update_prepare (plugin, flags, device, error))
+			if (!fu_plugin_runner_prepare(plugin, flags, device, error))
 				return FALSE;
 		}
 		release_tmp = fu_engine_create_release_metadata (self, device, plugin, error);
@@ -2835,10 +2835,7 @@ fu_engine_device_check_power(FuEngine *self,
 }
 
 static gboolean
-fu_engine_update_prepare (FuEngine *self,
-			  FwupdInstallFlags flags,
-			  const gchar *device_id,
-			  GError **error)
+fu_engine_prepare(FuEngine *self, FwupdInstallFlags flags, const gchar *device_id, GError **error)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
 	g_autofree gchar *str = NULL;
@@ -2861,7 +2858,7 @@ fu_engine_update_prepare (FuEngine *self,
 		return FALSE;
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-		if (!fu_plugin_runner_update_prepare (plugin_tmp, flags, device, error))
+		if (!fu_plugin_runner_prepare(plugin_tmp, flags, device, error))
 			return FALSE;
 	}
 
@@ -2874,10 +2871,7 @@ fu_engine_update_prepare (FuEngine *self,
 }
 
 static gboolean
-fu_engine_update_cleanup (FuEngine *self,
-			  FwupdInstallFlags flags,
-			  const gchar *device_id,
-			  GError **error)
+fu_engine_cleanup(FuEngine *self, FwupdInstallFlags flags, const gchar *device_id, GError **error)
 {
 	GPtrArray *plugins = fu_plugin_list_get_all (self->plugin_list);
 	g_autofree gchar *str = NULL;
@@ -2893,7 +2887,7 @@ fu_engine_update_cleanup (FuEngine *self,
 		return FALSE;
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-		if (!fu_plugin_runner_update_cleanup (plugin_tmp, flags, device, error))
+		if (!fu_plugin_runner_cleanup(plugin_tmp, flags, device, error))
 			return FALSE;
 	}
 
@@ -2906,10 +2900,10 @@ fu_engine_update_cleanup (FuEngine *self,
 }
 
 static gboolean
-fu_engine_update_detach (FuEngine *self,
-			 const gchar *device_id,
-			 FwupdFeatureFlags feature_flags,
-			 GError **error)
+fu_engine_detach(FuEngine *self,
+		 const gchar *device_id,
+		 FwupdFeatureFlags feature_flags,
+		 GError **error)
 {
 	FuPlugin *plugin;
 	g_autofree gchar *str = NULL;
@@ -2926,7 +2920,7 @@ fu_engine_update_detach (FuEngine *self,
 					      error);
 	if (plugin == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_update_detach (plugin, device, error))
+	if (!fu_plugin_runner_detach(plugin, device, error))
 		return FALSE;
 
 	/* support older clients without the ability to do immediate requests */
@@ -2955,7 +2949,7 @@ fu_engine_update_detach (FuEngine *self,
 }
 
 static gboolean
-fu_engine_update_attach (FuEngine *self, const gchar *device_id, GError **error)
+fu_engine_attach(FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuPlugin *plugin;
 	g_autofree gchar *str = NULL;
@@ -2975,7 +2969,7 @@ fu_engine_update_attach (FuEngine *self, const gchar *device_id, GError **error)
 	if (plugin == NULL)
 		return FALSE;
 
-	if (!fu_plugin_runner_update_attach (plugin, device, error))
+	if (!fu_plugin_runner_attach(plugin, device, error))
 		return FALSE;
 	return TRUE;
 }
@@ -3014,7 +3008,7 @@ fu_engine_activate (FuEngine *self, const gchar *device_id, GError **error)
 }
 
 static gboolean
-fu_engine_update_reload (FuEngine *self, const gchar *device_id, GError **error)
+fu_engine_reload(FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuPlugin *plugin;
 	g_autofree gchar *str = NULL;
@@ -3039,7 +3033,7 @@ fu_engine_update_reload (FuEngine *self, const gchar *device_id, GError **error)
 		return TRUE;
 	}
 
-	if (!fu_plugin_runner_update_reload (plugin, device, error)) {
+	if (!fu_plugin_runner_reload(plugin, device, error)) {
 		g_prefix_error (error, "failed to reload device: ");
 		return FALSE;
 	}
@@ -3047,11 +3041,11 @@ fu_engine_update_reload (FuEngine *self, const gchar *device_id, GError **error)
 }
 
 static gboolean
-fu_engine_update (FuEngine *self,
-		  const gchar *device_id,
-		  GBytes *blob_fw2,
-		  FwupdInstallFlags flags,
-		  GError **error)
+fu_engine_write_firmware(FuEngine *self,
+			 const gchar *device_id,
+			 GBytes *blob_fw,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	FuPlugin *plugin;
 	g_autofree gchar *str = NULL;
@@ -3076,18 +3070,16 @@ fu_engine_update (FuEngine *self,
 					      error);
 	if (plugin == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_update (plugin, device, blob_fw2, flags, error)) {
+	if (!fu_plugin_runner_write_firmware(plugin, device, blob_fw, flags, error)) {
 		g_autoptr(GError) error_attach = NULL;
 		g_autoptr(GError) error_cleanup = NULL;
 
 		/* attack back into runtime then cleanup */
-		if (!fu_plugin_runner_update_attach (plugin,
-						     device,
-						     &error_attach)) {
+		if (!fu_plugin_runner_attach(plugin, device, &error_attach)) {
 			g_warning ("failed to attach device after failed update: %s",
 				   error_attach->message);
 		}
-		if (!fu_engine_update_cleanup (self, flags, device_id, &error_cleanup)) {
+		if (!fu_engine_cleanup(self, flags, device_id, &error_cleanup)) {
 			g_warning ("failed to update-cleanup after failed update: %s",
 				   error_cleanup->message);
 		}
@@ -3181,19 +3173,19 @@ fu_engine_install_blob (FuEngine *self,
 		}
 
 		/* signal to all the plugins the update is about to happen */
-		if (!fu_engine_update_prepare (self, flags, device_id, error))
+		if (!fu_engine_prepare(self, flags, device_id, error))
 			return FALSE;
 
 		/* detach to bootloader mode */
-		if (!fu_engine_update_detach (self, device_id, feature_flags, error))
+		if (!fu_engine_detach(self, device_id, feature_flags, error))
 			return FALSE;
 
 		/* install */
-		if (!fu_engine_update (self, device_id, blob_fw, flags, error))
+		if (!fu_engine_write_firmware(self, device_id, blob_fw, flags, error))
 			return FALSE;
 
 		/* attach into runtime mode */
-		if (!fu_engine_update_attach (self, device_id, error))
+		if (!fu_engine_attach(self, device_id, error))
 			return FALSE;
 
 		/* the device and plugin both may have changed */
@@ -3206,11 +3198,11 @@ fu_engine_install_blob (FuEngine *self,
 	} while (TRUE);
 
 	/* get the new version number */
-	if (!fu_engine_update_reload (self, device_id, error))
+	if (!fu_engine_reload(self, device_id, error))
 		return FALSE;
 
 	/* signal to all the plugins the update has happened */
-	if (!fu_engine_update_cleanup (self, flags, device_id, error))
+	if (!fu_engine_cleanup(self, flags, device_id, error))
 		return FALSE;
 
 	/* make the UI update */

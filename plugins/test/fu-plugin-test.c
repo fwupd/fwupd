@@ -190,11 +190,11 @@ fu_plugin_test_get_version (GBytes *blob_fw)
 }
 
 gboolean
-fu_plugin_update (FuPlugin *plugin,
-		  FuDevice *device,
-		  GBytes *blob_fw,
-		  FwupdInstallFlags flags,
-		  GError **error)
+fu_plugin_write_firmware(FuPlugin *plugin,
+			 FuDevice *device,
+			 GBytes *blob_fw,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	const gchar *test = g_getenv ("FWUPD_PLUGIN_TEST");

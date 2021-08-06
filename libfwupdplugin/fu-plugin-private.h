@@ -43,16 +43,12 @@ gboolean	 fu_plugin_runner_coldplug_prepare	(FuPlugin	*self,
 gboolean	 fu_plugin_runner_coldplug_cleanup	(FuPlugin	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
-gboolean	 fu_plugin_runner_update_prepare	(FuPlugin	*self,
-							 FwupdInstallFlags flags,
-							 FuDevice	*device,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
-gboolean	 fu_plugin_runner_update_cleanup	(FuPlugin	*self,
-							 FwupdInstallFlags flags,
-							 FuDevice	*device,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_plugin_runner_prepare(FuPlugin *self, FwupdInstallFlags flags, FuDevice *device, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_plugin_runner_cleanup(FuPlugin *self, FwupdInstallFlags flags, FuDevice *device, GError **error)
+    G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_composite_prepare	(FuPlugin	*self,
 							 GPtrArray	*devices,
 							 GError		**error)
@@ -61,18 +57,12 @@ gboolean	 fu_plugin_runner_composite_cleanup	(FuPlugin	*self,
 							 GPtrArray	*devices,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
-gboolean	 fu_plugin_runner_update_attach		(FuPlugin	*self,
-							 FuDevice	*device,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
-gboolean	 fu_plugin_runner_update_detach		(FuPlugin	*self,
-							 FuDevice	*device,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
-gboolean	 fu_plugin_runner_update_reload		(FuPlugin	*self,
-							 FuDevice	*device,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_plugin_runner_attach(FuPlugin *self, FuDevice *device, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_plugin_runner_detach(FuPlugin *self, FuDevice *device, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_plugin_runner_reload(FuPlugin *self, FuDevice *device, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_backend_device_added	(FuPlugin	*self,
 							 FuDevice	*device,
 							 GError		**error)
@@ -91,12 +81,12 @@ void		 fu_plugin_runner_device_removed	(FuPlugin	*self,
 							 FuDevice	*device);
 void		 fu_plugin_runner_device_register	(FuPlugin	*self,
 							 FuDevice	*device);
-gboolean	 fu_plugin_runner_update		(FuPlugin	*self,
-							 FuDevice	*device,
-							 GBytes		*blob_fw,
-							 FwupdInstallFlags flags,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_plugin_runner_write_firmware(FuPlugin *self,
+				FuDevice *device,
+				GBytes *blob_fw,
+				FwupdInstallFlags flags,
+				GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_verify		(FuPlugin	*self,
 							 FuDevice	*device,
 							 FuPluginVerifyFlags flags,
