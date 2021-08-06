@@ -544,6 +544,12 @@ if get_option('libarchive')
   plugin_deps += libarchive
 endif
 
+if get_option('plugin_logitech_bulkcontroller')
+    protobufc = dependency('libprotobuf-c')
+    protoc = find_program('protoc', 'protoc-c')
+    plugin_deps += protobufc
+endif
+
 root_incdir = include_directories('.')
 
 if get_option('docs') == 'gtkdoc'

@@ -1,0 +1,28 @@
+/*
+ * Copyright (c) 1999-2021 Logitech, Inc.
+ * All Rights Reserved
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+syntax = "proto3";
+
+package logi.device.proto;
+
+option java_package = "com.logitech.vc.proto";
+
+import "device_common.proto";
+
+message SetBLECfgRequest
+{
+	/**
+	 * (REQUIRED) If true, BLE is enabled and active otherwise disabled
+	 */
+	bool BLE_ON = 1;
+}
+
+message SetBLECfgResponse
+{
+	bool success = 1;
+	repeated Error errors = 2;
+}

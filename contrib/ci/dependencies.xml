@@ -1553,4 +1553,41 @@
       <package>ShellCheck</package>
     </distro>
   </dependency>
+  <dependency type="build" id="libprotobuf-c-dev">
+    <distro id="arch">
+      <package>protobuf-c</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package>protobuf-c-devel</package>
+    </distro>
+    <distro id="void">
+      <package>protobuf-c-devel</package>
+    </distro>
+  </dependency>
+  <dependency type="build" id="protobuf-c-compiler">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="void">
+      <package>protobuf</package>
+    </distro>
+  </dependency>
 </dependencies>

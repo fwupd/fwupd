@@ -1,0 +1,123 @@
+/*
+ * Copyright (c) 1999-2021 Logitech, Inc.
+ * All Rights Reserved
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+syntax = "proto3";
+
+package logi.device.proto;
+
+option java_package = "com.logitech.vc.proto";
+
+import "device_common.proto";
+
+/**
+ * This message data structure holds information about the
+ * current RightSight configuration.
+ *
+ */
+message RightSightConfiguration
+{
+	/**
+	 * Enumeration of modes that the RightSight service can be in.
+	 */
+	enum Mode {
+		/**
+		 * This does not indicate a default value.
+		 *
+		 */
+		DO_NOT_USE = 0;
+
+		/**
+		 * The camera will continually pan, tilt, and zoom
+		 * to properly frame everyone during a meeting.
+		 */
+		DYNAMIC = 1;
+
+		/**
+		 * The camera will pan, tilt, and zoom to properly in
+		 * the meeting only when the call starts.
+		 */
+		ON_CALL_START = 2;
+	}
+
+	/**
+	 * (REQUIRED) If true, RightSight is enabled and active.
+	 */
+	bool enabled = 1;
+
+	/**
+	 * (REQUIRED) The current mode that RightSight is in.
+	 */
+	Mode mode = 2;
+
+	/**
+	 * (REQUIRED) A timestamp indicating when the RightSight
+	 * settings were last modified. This is the number of
+	 * milliseconds since the epoch.
+	 */
+	uint64 last_modified = 3;
+}
+
+/**
+ * RightSight is an auto-framing feature that is available in Kong.
+ * With RightSight enabled, your device will automatically pan, tilt, and zoom
+ * the camera lens in order to capture all meeting participants
+ * within the image frame. This feature can be set to one of two
+ * modes: dynamic and on call start. When in dynamic mode, the
+ * device will actively pan, tilt, and zoom the camera lens when
+ * appropriate in order to keep all participants in frame during
+ * the entire course of the meeting. When in on call start mode,
+ * the camera lens will pan, tilt, and zoom to capture everybody
+ * in frame only when the meeting starts.
+ *
+ * When RightSight is enabled, it is set
+ * to dynamic mode by default.
+ *
+ * This message requests that the RightSight configuration
+ * settings be changed.
+ *
+ * EXPECTED RESPONSE
+ * SetRightSightConfigurationResponse
+ *
+ */
+message SetRightSightConfigurationRequest
+{
+	/**
+	 * (REQUIRED) If true, requests that RightSight be
+	 * turned on. If false, indicates that
+	 * RightSight should be turned off.
+	 */
+	bool enabled = 1;
+
+	/**
+	 * (REQUIRED) The mode for RightSight to be in. A value is
+	 * required, but if none is provided, then this will
+	 * default to DYNAMIC mode.
+	 *
+	 * If enabled is set to false, then this will effectively
+	 * do nothing as RightSight is turned off.
+	 */
+	RightSightConfiguration.Mode mode = 2;
+}
+
+/**
+ * Response which contains the RightSight configuration that was
+ * set as a result of the request.
+ */
+message SetRightSightConfigurationResponse
+{
+	/**
+	 * (OPTIONAL) If any errors occurred while processing the
+	 * request, then this field should be set accordingly.
+	 */
+	repeated Error errors = 1;
+
+	/**
+	 * (REQUIRED) The RightSight configuration that was set on
+	 * the product.
+	 */
+	RightSightConfiguration right_sight_configuration = 2;
+}

@@ -481,6 +481,7 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_uefi_recovery.so
 %endif
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_logind.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_logitech_bulkcontroller.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_logitech_hidpp.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_upower.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_vli.so

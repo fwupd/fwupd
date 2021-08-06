@@ -26,6 +26,7 @@ LIB_DEPENDS=	libcurl.so:ftp/curl \
 		libgusb.so:devel/libgusb \
 		libjcat.so:textproc/libjcat \
 		libjson-glib-1.0.so:devel/json-glib \
+		libprotobuf-c.so:devel/protobuf-c \
 		libxmlb.so:textproc/libxmlb \
 		libefiboot.so:devel/gnu-efi
 

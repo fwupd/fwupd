@@ -7,6 +7,13 @@ export DESTDIR=${root}/dist
 build=$root/build-win32
 rm -rf $DESTDIR $build
 
+# For logitech bulk controller being disabled (-Dplugin_logitech_bulkcontroller=false):
+# See https://bugzilla.redhat.com/show_bug.cgi?id=1991749
+# When fixed need to do the following to enable:
+# 1. need to add mingw64-protobuf mingw64-protobuf-tools to CI build deps
+# 2. add protoc = /path/to/protoc-c.exe in mingw64.cross
+# 3. Only enable when not a tagged release (Unsupported by Logitech)
+
 #build
 mkdir -p $build $DESTDIR && cd $build
 meson .. \
@@ -22,6 +29,7 @@ meson .. \
     -Dplugin_redfish=false \
     -Dplugin_altos=false \
     -Dplugin_dell=false \
+    -Dplugin_logitech_bulkcontroller=false \
     -Dplugin_nvme=false \
     -Dplugin_parade_lspcon=false \
     -Dplugin_realtek_mst=false \

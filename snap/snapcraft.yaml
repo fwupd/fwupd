@@ -211,11 +211,13 @@ parts:
       - libpango1.0-dev
       - libpci-dev
       - libpolkit-gobject-1-dev
+      - libprotobuf-c-dev
       - libsmbios-dev
       - libsqlite3-dev
       - libsystemd-dev
       - locales
       - pkg-config
+      - protobuf-c-compiler
       - systemd
       - uuid-dev
     stage-packages:
