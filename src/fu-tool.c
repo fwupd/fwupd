@@ -134,6 +134,8 @@ fu_util_show_plugin_warnings (FuUtilPrivate *priv)
 	plugins = fu_engine_get_plugins (priv->engine);
 	for (guint i = 0; i < plugins->len; i++) {
 		FwupdPlugin *plugin = g_ptr_array_index (plugins, i);
+		if (fwupd_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED))
+			continue;
 		if (!fwupd_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_USER_WARNING))
 			continue;
 		flags |= fwupd_plugin_get_flags (plugin);
