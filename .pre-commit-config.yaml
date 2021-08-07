@@ -9,11 +9,12 @@ repos:
     -   id: check-executables-have-shebangs
     -   id: forbid-new-submodules
     -   id: check-yaml
+        exclude: '.clang-format'
     -   id: check-json
     -   id: check-symlinks
     -   id: check-xml
     -   id: end-of-file-fixer
-        types_or: [c, shell, python]
+        types_or: [c, shell, python, proto]
     -   id: trailing-whitespace
         types_or: [c, shell, python, xml]
     -   id: check-docstring-first
