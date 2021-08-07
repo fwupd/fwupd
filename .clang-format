@@ -21,7 +21,6 @@ IndentCaseLabels: 'false'
 IndentWidth: '8'
 IncludeBlocks: 'Regroup'
 KeepEmptyLinesAtTheStartOfBlocks: 'false'
-Language: 'Cpp'
 MaxEmptyLinesToKeep: '1'
 PointerAlignment: 'Right'
 SortIncludes: 'true'
@@ -32,10 +31,12 @@ SpaceInEmptyParentheses: 'false'
 SpacesInSquareBrackets: 'false'
 TabWidth: '8'
 UseTab: 'Always'
-
 PenaltyBreakAssignment: '3'
 PenaltyBreakBeforeFirstCallParameter: '15'
-
+---
+Language: 'Proto'
+---
+Language: 'Cpp'
 IncludeCategories:
   - Regex:           '^"config.h"$'
     Priority:        '0'
