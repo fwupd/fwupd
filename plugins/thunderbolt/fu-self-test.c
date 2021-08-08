@@ -957,6 +957,7 @@ test_tree_uuids (const MockTree *node, gpointer data)
 	g_debug ("Looking for %s", uuid);
 
 	found = mock_tree_find_uuid (root, uuid);
+	g_assert_nonnull (node);
 	g_assert_nonnull (found);
 	g_assert_cmpstr (node->uuid, ==, found->uuid);
 

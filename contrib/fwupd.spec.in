@@ -5,12 +5,15 @@
 %global systemd_version 231
 %global json_glib_version 1.1.1
 
+# although we ship a few tiny python files these are utilities that 99.99%
+# of users do not need -- use this to avoid dragging python onto CoreOS
+%global __requires_exclude ^%{python3}$
+
 %define alphatag                #ALPHATAG#
 
 %global enable_ci 0
 %global enable_tests 1
 %global enable_dummy 1
-%global enable_flashrom 1
 %global __meson_wrap_mode default
 
 # fwupd.efi is only available on these arches
@@ -69,6 +72,7 @@ BuildRequires: json-glib-devel >= %{json_glib_version}
 BuildRequires: vala
 BuildRequires: bash-completion
 BuildRequires: git-core
+BuildRequires: flashrom-devel >= 1.2-2
 
 %if 0%{?have_modem_manager}
 BuildRequires: ModemManager-glib-devel >= 1.10.0
@@ -150,9 +154,6 @@ Data files for installed tests.
 %build
 
 %meson \
-%if 0%{?enable_ci}
-    --werror \
-%endif
     -Dgtkdoc=true \
 %if 0%{?enable_tests}
     -Dtests=true \
@@ -164,11 +165,7 @@ Data files for installed tests.
 %else
     -Dplugin_dummy=false \
 %endif
-%if 0%{?enable_flashrom}
     -Dplugin_flashrom=true \
-%else
-    -Dplugin_flashrom=false \
-%endif
     -Dplugin_thunderbolt=true \
 %if 0%{?have_redfish}
     -Dplugin_redfish=true \
@@ -179,6 +176,12 @@ Data files for installed tests.
     -Dplugin_uefi=true \
     -Dplugin_nvme=true \
     -Dplugin_tpm=true \
+    -Defi_sbat_distro_id="fedora" \
+    -Defi_sbat_distro_summary="The Fedora Project" \
+    -Defi_sbat_distro_pkgname="%{name}" \
+    -Defi_sbat_distro_version="%{version}" \
+    -Defi_sbat_distro_url="https://src.fedoraproject.org/rpms/%{name}" \
+    -Dtpm=true \
 %else
     -Dplugin_uefi=false \
     -Dplugin_nvme=false \
@@ -221,14 +224,6 @@ Data files for installed tests.
 %endif
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
-
-%if 0%{?enable_flashrom}
-# delete most files from the subproject
-rm ${RPM_BUILD_ROOT}%{_includedir}/libflashrom.h
-rm ${RPM_BUILD_ROOT}%{_libdir}/libflashrom.so
-rm ${RPM_BUILD_ROOT}%{_libdir}/pkgconfig/flashrom.pc
-rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
-%endif
 
 %find_lang %{name}
 
@@ -337,9 +332,7 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_emmc.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fastboot.so
-%if 0%{?enable_flashrom}
 %{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
-%endif
 %{_libdir}/fwupd-plugins-3/libfu_plugin_fresco_pd.so
 %{_libdir}/fwupd-plugins-3/libfu_plugin_jabra.so
 %if 0%{?have_modem_manager}
@@ -386,11 +379,6 @@ rm ${RPM_BUILD_ROOT}%{_sbindir}/flashrom
 %ghost %{_localstatedir}/lib/fwupd/gnupg
 %if 0%{?have_uefi}
 %{_datadir}/locale/*/LC_IMAGES/fwupd*
-%endif
-
-%if 0%{?enable_flashrom}
-# eww, but just until the Fedora package ships these...
-%{_libdir}/libflashrom.so.1*
 %endif
 
 %files devel

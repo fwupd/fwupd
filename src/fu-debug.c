@@ -95,11 +95,12 @@ fu_debug_handler_cb (const gchar *log_domain,
 
 	/* to file */
 	if (!self->console) {
+		g_autofree gchar *ascii_message = g_str_to_ascii (message, NULL);
 		if (tmp != NULL)
 			g_printerr ("%s ", tmp);
 		if (domain != NULL)
 			g_printerr ("%s ", domain->str);
-		g_printerr ("%s\n", message);
+		g_printerr ("%s\n", ascii_message);
 		return;
 	}
 

@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.3.11',
+  version : '1.3.13',
   license : 'LGPL-2.1+',
   meson_version : '>=0.47.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -301,6 +301,8 @@ if build_standalone and get_option('plugin_uefi')
 
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
   conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
+
+  conf.set('EFI_OBJCOPY', get_option('efi-objcopy'))
 
   efi_arch = host_machine.cpu_family()
   if efi_arch == 'x86'

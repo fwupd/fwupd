@@ -99,7 +99,6 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 	}
 
 	/* urgh, this is unexpected */
-	fu_device_set_update_error (device,
-				    "TPM PCR0 differs from reconstruction, "
-				    "please see https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
+	g_warning ("TPM PCR0 differs from reconstruction, "
+		   "please see https://github.com/fwupd/fwupd/wiki/TPM-PCR0-differs-from-reconstruction");
 }

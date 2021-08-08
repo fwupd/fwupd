@@ -879,14 +879,23 @@ fu_engine_verify (FuEngine *self, const gchar *device_id, GError **error)
 		for (guint i = 0; i < guids->len; i++) {
 			const gchar *guid = g_ptr_array_index (guids, i);
 			g_autofree gchar *xpath2 = NULL;
+			g_autoptr(GError) error_local = NULL;
 			g_autoptr(GPtrArray) releases = NULL;
 			xpath2 = g_strdup_printf ("components/component/"
 						  "provides/firmware[@type='flashed'][text()='%s']/"
 						  "../../releases/release",
 						  guid);
-			releases = xb_silo_query (self->silo, xpath2, 0, error);
-			if (releases == NULL)
+			releases = xb_silo_query (self->silo, xpath2, 0, &error_local);
+			if (releases == NULL) {
+				if (g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
+				    g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+					g_debug ("could not find %s: %s",
+						 guid, error_local->message);
+					continue;
+				}
+				g_propagate_error (error, g_steal_pointer (&error_local));
 				return FALSE;
+			}
 			for (guint j = 0; j < releases->len; j++) {
 				XbNode *rel = g_ptr_array_index (releases, j);
 				const gchar *rel_ver = xb_node_get_attr (rel, "version");
@@ -1145,9 +1154,10 @@ fu_engine_check_requirement_firmware (FuEngine *self, XbNode *req,
 	}
 
 	/* vendor ID */
-	if (g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0 &&
-	    fu_device_get_vendor_id (device_actual) != NULL) {
+	if (g_strcmp0 (xb_node_get_text (req), "vendor-id") == 0) {
 		const gchar *version = fu_device_get_vendor_id (device_actual);
+		if (version == NULL)
+			return TRUE;
 		if (!fu_engine_require_vercmp (req, version,
 					       fu_device_get_version_format (device_actual),
 					       &error_local)) {
@@ -2010,6 +2020,9 @@ fu_engine_install (FuEngine *self,
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(XbNode) rel_newest = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
 
 	g_return_val_if_fail (FU_IS_ENGINE (self), FALSE);
 	g_return_val_if_fail (XB_IS_NODE (component), FALSE);
@@ -2043,7 +2056,17 @@ fu_engine_install (FuEngine *self,
 	}
 
 	/* get the newest version */
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	query = xb_query_new_full (xb_node_get_silo (component),
+				   "releases/release",
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				   error);
+	if (query == NULL)
+		return FALSE;
+	rel_newest = xb_node_query_first_full (component, query, &error_local);
+#else
 	rel_newest = xb_node_query_first (component, "releases/release", &error_local);
+#endif
 	if (rel_newest == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,
@@ -2081,7 +2104,11 @@ fu_engine_install (FuEngine *self,
 	/* install each intermediate release, or install only the newest version */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)) {
 		g_autoptr(GPtrArray) rels = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+		rels = xb_node_query_full (component, query, &error_local);
+#else
 		rels = xb_node_query (component, "releases/release", 0, &error_local);
+#endif
 		if (rels == NULL) {
 			g_set_error (error,
 				     FWUPD_ERROR,
@@ -3126,6 +3153,9 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 	g_autoptr(GPtrArray) provides = NULL;
 	g_autoptr(XbNode) description = NULL;
 	g_autoptr(XbNode) release = NULL;
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	g_autoptr(XbQuery) query = NULL;
+#endif
 
 	dev = fu_device_new ();
 	provides = xb_node_query (component,
@@ -3179,9 +3209,19 @@ fu_engine_get_result_from_component (FuEngine *self, XbNode *component, GError *
 		return NULL;
 
 	/* verify trust */
+#if LIBXMLB_CHECK_VERSION(0,2,0)
+	query = xb_query_new_full (xb_node_get_silo (component),
+				   "releases/release",
+				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+				   error);
+	if (query == NULL)
+		return NULL;
+	release = xb_node_query_first_full (component, query, &error_local);
+#else
 	release = xb_node_query_first (component,
 				       "releases/release",
 				       &error_local);
+#endif
 	if (release == NULL) {
 		g_set_error (error,
 			     FWUPD_ERROR,

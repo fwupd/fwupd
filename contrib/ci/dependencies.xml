@@ -1,17 +1,12 @@
 <?xml version="1.0"?>
 <dependencies>
-  <dependency type="build" id="libasan">
-    <distro id="fedora">
-      <package />
-    </distro>
-  </dependency>
   <dependency type="build" id="pesign">
     <distro id="fedora">
       <package />
     </distro>
   </dependency>
   <dependency type="build" id="abigail-tools">
-    <distro id="debian">
+    <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -71,12 +66,12 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="clang-6.0">
+  <dependency type="build" id="clang">
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
   </dependency>
-  <dependency type="build" id="clang-tools-6.0">
+  <dependency type="build" id="clang-tools">
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>

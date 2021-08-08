@@ -23,6 +23,15 @@ sed s/quilt/native/ debian/source/format -i
 #generate control file
 ./contrib/ci/generate_debian.py
 
+#check if we have all deps available
+#if some are missing, we're going to use subproject instead and
+#packaging CI will fail
+./contrib/ci/generate_dependencies.py  | xargs apt install -y || true
+if ! dpkg-checkbuilddeps; then
+	./contrib/ci/ubuntu.sh
+	exit 0
+fi
+
 #disable unit tests if fwupd is already installed (may cause problems)
 if [ -x /usr/lib/fwupd/fwupd ]; then
 	export DEB_BUILD_OPTIONS=nocheck
@@ -38,7 +47,6 @@ lintian ../*changes \
 	--pedantic \
 	--no-tag-display-limit \
 	--suppress-tags bad-distribution-in-changes-file \
-	--suppress-tags source-contains-unsafe-symlink \
 	--suppress-tags debian-watch-file-in-native-package \
 	--suppress-tags source-nmu-has-incorrect-version-number \
 	--suppress-tags no-symbols-control-file \
