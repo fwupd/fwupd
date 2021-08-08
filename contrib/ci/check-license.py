@@ -6,6 +6,7 @@
 # SPDX-License-Identifier: LGPL-2.1+
 
 import glob
+import os
 import sys
 
 
@@ -20,9 +21,17 @@ def __get_license(fn: str) -> str:
 def test_files() -> int:
 
     rc: int = 0
+    ignore = ""
 
     for fn in glob.glob("**/*.[c|h|py|sh]", recursive=True):
         if "meson-private" in fn:
+            continue
+        if os.path.isdir(fn):
+            continue
+        if "config.h" in fn:
+            ignore = os.path.dirname(fn)
+            continue
+        if fn.startswith(ignore):
             continue
         lic = __get_license(fn)
         if not lic:
