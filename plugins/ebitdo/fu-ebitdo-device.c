@@ -142,18 +142,18 @@ fu_ebitdo_device_receive (FuEbitdoDevice *self,
 	    hdr->subtype == FU_EBITDO_PKT_CMD_UPDATE_FIRMWARE_DATA &&
 	    hdr->cmd == FU_EBITDO_PKT_CMD_FW_GET_VERSION) {
 		if (out != NULL) {
-			if (hdr->payload_len != out_len) {
+			if (hdr->payload_len < out_len) {
 				g_set_error (error,
 					     G_IO_ERROR,
 					     G_IO_ERROR_INVALID_DATA,
-					     "outbuf size wrong, expected %" G_GSIZE_FORMAT " got %u",
+					     "payload too small, expected %" G_GSIZE_FORMAT " got %u",
 					     out_len,
 					     hdr->payload_len);
 				return FALSE;
 			}
 			if (!fu_memcpy_safe (out, out_len, 0x0,					/* dst */
 					     packet, sizeof(packet), sizeof(FuEbitdoPkt),	/* src */
-					     hdr->payload_len, error))
+					     out_len, error))
 				return FALSE;
 		}
 		return TRUE;
