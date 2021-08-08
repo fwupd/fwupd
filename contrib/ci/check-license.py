@@ -24,13 +24,13 @@ def test_files() -> int:
     for fn in glob.glob("**/*.[c|h|py|sh]", recursive=True):
         if "meson-private" in fn:
             continue
-        license = __get_license(fn)
-        if not license:
+        lic = __get_license(fn)
+        if not lic:
             print("{} does not specify a license".format(fn))
             rc = 1
             continue
-        if not "GPL" in license:
-            print("{} does not contain LGPL or GPL ({})".format(fn, license))
+        if not "GPL" in lic:
+            print("{} does not contain LGPL or GPL ({})".format(fn, lic))
             rc = 1
             continue
     return rc
