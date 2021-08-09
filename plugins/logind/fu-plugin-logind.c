@@ -65,7 +65,7 @@ fu_plugin_startup (FuPlugin *plugin, GError **error)
 }
 
 gboolean
-fu_plugin_prepare(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *device, GError **error)
+fu_plugin_prepare(FuPlugin *plugin, FuDevice *device, FwupdInstallFlags flags, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	g_autoptr(GError) error_local = NULL;
@@ -114,7 +114,7 @@ fu_plugin_prepare(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *device, G
 }
 
 gboolean
-fu_plugin_cleanup(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *device, GError **error)
+fu_plugin_cleanup(FuPlugin *plugin, FuDevice *device, FwupdInstallFlags flags, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data (plugin);
 	if (data->logind_fd == 0)
