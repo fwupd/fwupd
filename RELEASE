@@ -2,7 +2,7 @@ fwupd Release Notes
 
 Forking stable branch:
 
-When forking master into a stable 1_6_X, be sure to disable the following CI jobs:
+When forking master into a stable 1_7_X, be sure to disable the following CI jobs:
  * publish-docs
  * publish-stable
 
@@ -25,7 +25,7 @@ git add ../po/*.po
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
-export release_ver="1.6.3"
+export release_ver="1.7.0"
 
 git commit -a -m "Release fwupd ${release_ver}" --no-verify
 git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"

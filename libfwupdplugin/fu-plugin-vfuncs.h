@@ -101,7 +101,7 @@ gboolean	 fu_plugin_coldplug_cleanup		(FuPlugin	*plugin,
  *
  * Updates the firmware on the device with blob_fw
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 gboolean
 fu_plugin_write_firmware(FuPlugin *plugin,
@@ -199,7 +199,7 @@ fu_plugin_attach(FuPlugin *plugin, FuDevice *dev, GError **error);
  *
  * Swaps the device from runtime mode to bootloader mode.
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 gboolean
 fu_plugin_detach(FuPlugin *plugin, FuDevice *dev, GError **error);
@@ -212,7 +212,7 @@ fu_plugin_detach(FuPlugin *plugin, FuDevice *dev, GError **error);
  *
  * Prepares the device to receive an update.
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 gboolean
 fu_plugin_prepare(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *dev, GError **error);
@@ -225,7 +225,7 @@ fu_plugin_prepare(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *dev, GErr
  *
  * Cleans up the device after receiving an update.
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 gboolean
 fu_plugin_cleanup(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *dev, GError **error);
