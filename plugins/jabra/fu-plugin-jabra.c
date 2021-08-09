@@ -22,7 +22,7 @@ fu_plugin_init (FuPlugin *plugin)
 /* slightly weirdly, this takes us from appIDLE back into the actual
  * runtime mode where the device actually works */
 gboolean
-fu_plugin_cleanup(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *device, GError **error)
+fu_plugin_cleanup(FuPlugin *plugin, FuDevice *device, FwupdInstallFlags flags, GError **error)
 {
 	GUsbDevice *usb_device;
 	g_autoptr(FuDeviceLocker) locker = NULL;

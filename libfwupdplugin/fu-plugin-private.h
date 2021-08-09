@@ -44,10 +44,10 @@ gboolean	 fu_plugin_runner_coldplug_cleanup	(FuPlugin	*self,
 							 GError		**error)
 							 G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_plugin_runner_prepare(FuPlugin *self, FwupdInstallFlags flags, FuDevice *device, GError **error)
+fu_plugin_runner_prepare(FuPlugin *self, FuDevice *device, FwupdInstallFlags flags, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_plugin_runner_cleanup(FuPlugin *self, FwupdInstallFlags flags, FuDevice *device, GError **error)
+fu_plugin_runner_cleanup(FuPlugin *self, FuDevice *device, FwupdInstallFlags flags, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;
 gboolean	 fu_plugin_runner_composite_prepare	(FuPlugin	*self,
 							 GPtrArray	*devices,

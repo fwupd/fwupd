@@ -69,10 +69,10 @@ typedef void		 (*FuPluginDeviceRegisterFunc)	(FuPlugin	*self,
 typedef gboolean	 (*FuPluginDeviceFunc)		(FuPlugin	*self,
 							 FuDevice	*device,
 							 GError		**error);
-typedef gboolean	 (*FuPluginFlaggedDeviceFunc)	(FuPlugin	*self,
-							 FwupdInstallFlags flags,
-							 FuDevice	*device,
-							 GError		**error);
+typedef gboolean (*FuPluginFlaggedDeviceFunc)(FuPlugin *self,
+					      FuDevice *device,
+					      FwupdInstallFlags flags,
+					      GError **error);
 typedef gboolean	 (*FuPluginDeviceArrayFunc)	(FuPlugin	*self,
 							 GPtrArray	*devices,
 							 GError		**error);
@@ -878,9 +878,11 @@ fu_plugin_runner_device_generic (FuPlugin *self, FuDevice *device,
 }
 
 static gboolean
-fu_plugin_runner_flagged_device_generic (FuPlugin *self, FwupdInstallFlags flags,
-					 FuDevice *device,
-					 const gchar *symbol_name, GError **error)
+fu_plugin_runner_flagged_device_generic(FuPlugin *self,
+					FuDevice *device,
+					FwupdInstallFlags flags,
+					const gchar *symbol_name,
+					GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginFlaggedDeviceFunc func = NULL;
@@ -899,7 +901,7 @@ fu_plugin_runner_flagged_device_generic (FuPlugin *self, FwupdInstallFlags flags
 	if (func == NULL)
 		return TRUE;
 	g_debug ("%s(%s)", symbol_name + 10, fu_plugin_get_name (self));
-	if (!func (self, flags, device, &error_local)) {
+	if (!func(self, device, flags, &error_local)) {
 		if (error_local == NULL) {
 			g_critical ("unset plugin error in %s(%s)",
 				    fu_plugin_get_name (self), symbol_name + 10);
@@ -1156,11 +1158,11 @@ fu_plugin_runner_composite_cleanup (FuPlugin *self, GPtrArray *devices, GError *
  * Since: 1.7.0
  **/
 gboolean
-fu_plugin_runner_prepare(FuPlugin *self, FwupdInstallFlags flags, FuDevice *device, GError **error)
+fu_plugin_runner_prepare(FuPlugin *self, FuDevice *device, FwupdInstallFlags flags, GError **error)
 {
 	return fu_plugin_runner_flagged_device_generic(self,
-						       flags,
 						       device,
+						       flags,
 						       "fu_plugin_prepare",
 						       error);
 }
@@ -1179,11 +1181,11 @@ fu_plugin_runner_prepare(FuPlugin *self, FwupdInstallFlags flags, FuDevice *devi
  * Since: 1.7.0
  **/
 gboolean
-fu_plugin_runner_cleanup(FuPlugin *self, FwupdInstallFlags flags, FuDevice *device, GError **error)
+fu_plugin_runner_cleanup(FuPlugin *self, FuDevice *device, FwupdInstallFlags flags, GError **error)
 {
 	return fu_plugin_runner_flagged_device_generic(self,
-						       flags,
 						       device,
+						       flags,
 						       "fu_plugin_cleanup",
 						       error);
 }

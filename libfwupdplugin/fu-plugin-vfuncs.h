@@ -206,8 +206,8 @@ fu_plugin_detach(FuPlugin *plugin, FuDevice *dev, GError **error);
 /**
  * fu_plugin_prepare:
  * @plugin: a plugin
- * @flags: install flags
  * @dev: a device
+ * @flags: install flags
  * @error: (nullable): optional return location for an error
  *
  * Prepares the device to receive an update.
@@ -215,12 +215,12 @@ fu_plugin_detach(FuPlugin *plugin, FuDevice *dev, GError **error);
  * Since: 1.7.0
  **/
 gboolean
-fu_plugin_prepare(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *dev, GError **error);
+fu_plugin_prepare(FuPlugin *plugin, FuDevice *dev, FwupdInstallFlags flags, GError **error);
 /**
  * fu_plugin_cleanup
  * @plugin: a plugin
- * @flags: install flags
  * @dev: a device
+ * @flags: install flags
  * @error: (nullable): optional return location for an error
  *
  * Cleans up the device after receiving an update.
@@ -228,7 +228,7 @@ fu_plugin_prepare(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *dev, GErr
  * Since: 1.7.0
  **/
 gboolean
-fu_plugin_cleanup(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *dev, GError **error);
+fu_plugin_cleanup(FuPlugin *plugin, FuDevice *dev, FwupdInstallFlags flags, GError **error);
 /**
  * fu_plugin_composite_prepare
  * @plugin: a plugin

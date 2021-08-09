@@ -2637,7 +2637,7 @@ fu_engine_install (FuEngine *self,
 		}
 		plugin = fu_plugin_list_find_by_name (self->plugin_list, "upower", NULL);
 		if (plugin != NULL) {
-			if (!fu_plugin_runner_prepare(plugin, flags, device, error))
+			if (!fu_plugin_runner_prepare(plugin, device, flags, error))
 				return FALSE;
 		}
 		release_tmp = fu_engine_create_release_metadata (self, device, plugin, error);
@@ -2858,7 +2858,7 @@ fu_engine_prepare(FuEngine *self, FwupdInstallFlags flags, const gchar *device_i
 		return FALSE;
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-		if (!fu_plugin_runner_prepare(plugin_tmp, flags, device, error))
+		if (!fu_plugin_runner_prepare(plugin_tmp, device, flags, error))
 			return FALSE;
 	}
 
@@ -2887,7 +2887,7 @@ fu_engine_cleanup(FuEngine *self, FwupdInstallFlags flags, const gchar *device_i
 		return FALSE;
 	for (guint j = 0; j < plugins->len; j++) {
 		FuPlugin *plugin_tmp = g_ptr_array_index (plugins, j);
-		if (!fu_plugin_runner_cleanup(plugin_tmp, flags, device, error))
+		if (!fu_plugin_runner_cleanup(plugin_tmp, device, flags, error))
 			return FALSE;
 	}
 

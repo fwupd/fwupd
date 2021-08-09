@@ -141,13 +141,13 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 }
 
 gboolean
-fu_plugin_prepare(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *dev, GError **error)
+fu_plugin_prepare(FuPlugin *plugin, FuDevice *dev, FwupdInstallFlags flags, GError **error)
 {
 	return fu_plugin_powerd_create_suspend_file(error);
 }
 
 gboolean
-fu_plugin_cleanup(FuPlugin *plugin, FwupdInstallFlags flags, FuDevice *dev, GError **error)
+fu_plugin_cleanup(FuPlugin *plugin, FuDevice *dev, FwupdInstallFlags flags, GError **error)
 {
 	return fu_plugin_powerd_delete_suspend_file(error);
 }
