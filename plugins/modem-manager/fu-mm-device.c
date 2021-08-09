@@ -1109,6 +1109,8 @@ fu_mm_device_write_firmware_mbim_qdu (FuDevice *device, GBytes *fw, GError **err
 		return FALSE;
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
+	fu_device_set_remove_delay(device, MAX_WAIT_TIME_SECS * 1000);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	version = fu_mm_device_get_firmware_version_mbim (device, error);
 	if (version == NULL)
 		return FALSE;
