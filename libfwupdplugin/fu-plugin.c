@@ -1153,7 +1153,7 @@ fu_plugin_runner_composite_cleanup (FuPlugin *self, GPtrArray *devices, GError *
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 gboolean
 fu_plugin_runner_prepare(FuPlugin *self, FwupdInstallFlags flags, FuDevice *device, GError **error)
@@ -1176,7 +1176,7 @@ fu_plugin_runner_prepare(FuPlugin *self, FwupdInstallFlags flags, FuDevice *devi
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 gboolean
 fu_plugin_runner_cleanup(FuPlugin *self, FwupdInstallFlags flags, FuDevice *device, GError **error)
@@ -1198,7 +1198,7 @@ fu_plugin_runner_cleanup(FuPlugin *self, FwupdInstallFlags flags, FuDevice *devi
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 gboolean
 fu_plugin_runner_attach(FuPlugin *self, FuDevice *device, GError **error)
@@ -1220,7 +1220,7 @@ fu_plugin_runner_attach(FuPlugin *self, FuDevice *device, GError **error)
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 gboolean
 fu_plugin_runner_detach(FuPlugin *self, FuDevice *device, GError **error)
@@ -1242,7 +1242,7 @@ fu_plugin_runner_detach(FuPlugin *self, FuDevice *device, GError **error)
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 gboolean
 fu_plugin_runner_reload(FuPlugin *self, FuDevice *device, GError **error)
@@ -1922,7 +1922,7 @@ fu_plugin_runner_unlock (FuPlugin *self, FuDevice *device, GError **error)
  *
  * Returns: #TRUE for success, #FALSE for failure
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 gboolean
 fu_plugin_runner_write_firmware(FuPlugin *self,
