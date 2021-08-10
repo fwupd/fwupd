@@ -73,6 +73,7 @@ typedef struct {
 	FuDeviceInternalFlags		 internal_flags;
 	guint64				 private_flags;
 	GPtrArray			*private_flag_items;	/* (nullable) */
+	gulong notify_flags_handler_id;
 } FuDevicePrivate;
 
 typedef struct {
@@ -2451,6 +2452,10 @@ fu_device_ensure_inhibits (FuDevice *self)
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	guint nr_inhibits = g_hash_table_size (priv->inhibits);
 
+	/* disable */
+	if (priv->notify_flags_handler_id != 0)
+		g_signal_handler_block(self, priv->notify_flags_handler_id);
+
 	/* was okay -> not okay */
 	if (fu_device_has_flag (self, FWUPD_DEVICE_FLAG_UPDATABLE) &&
 	    nr_inhibits > 0) {
@@ -2477,6 +2482,10 @@ fu_device_ensure_inhibits (FuDevice *self)
 		fu_device_add_flag (self, FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_set_update_error (self, NULL);
 	}
+
+	/* enable */
+	if (priv->notify_flags_handler_id != 0)
+		g_signal_handler_unblock(self, priv->notify_flags_handler_id);
 }
 
 /**
@@ -4617,6 +4626,16 @@ fu_device_emit_request (FuDevice *self, FwupdRequest *request)
 }
 
 static void
+fu_device_flags_notify_cb(FuDevice *self, GParamSpec *pspec, gpointer user_data)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	/* we only inhibit when the flags contains UPDATABLE, and that might be discovered by
+	 * probing the hardware *after* the battery level has been set */
+	if (priv->inhibits != NULL)
+		fu_device_ensure_inhibits(self);
+}
+
+static void
 fu_device_class_init (FuDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -4714,6 +4733,8 @@ fu_device_init (FuDevice *self)
 	priv->retry_recs = g_ptr_array_new_with_free_func (g_free);
 	g_rw_lock_init (&priv->parent_guids_mutex);
 	g_rw_lock_init (&priv->metadata_mutex);
+	priv->notify_flags_handler_id =
+	    g_signal_connect(self, "notify::flags", G_CALLBACK(fu_device_flags_notify_cb), NULL);
 }
 
 static void
