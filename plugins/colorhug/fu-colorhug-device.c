@@ -424,7 +424,6 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 				  GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE (device);
-	FuProgress *progress_local;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -453,7 +452,6 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* write each block */
-	progress_local = fu_progress_get_division(progress);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		guint8 buf[CH_FLASH_TRANSFER_BLOCK_SIZE+4];
@@ -481,14 +479,15 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 		}
 
 		/* update progress */
-		fu_progress_set_percentage_full(progress_local, (gsize)i, (gsize)chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_division(progress),
+						(gsize)i,
+						(gsize)chunks->len);
 	}
 
 	/* progress */
 	fu_progress_step_done(progress);
 
 	/* verify each block */
-	progress_local = fu_progress_get_division(progress);
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
@@ -526,7 +525,9 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 		}
 
 		/* update progress */
-		fu_progress_set_percentage_full(progress_local, (gsize)i, (gsize)chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_division(progress),
+						(gsize)i,
+						(gsize)chunks->len);
 	}
 
 	/* success! */

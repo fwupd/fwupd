@@ -555,10 +555,12 @@ fu_progress_get_division(FuProgress *self)
 		return self;
 
 	/* already set child */
-	if (priv->child != NULL) {
-		g_signal_handler_disconnect(priv->child, priv->percentage_child_id);
-		g_object_unref(priv->child);
-	}
+	if (priv->child != NULL)
+		return priv->child;
+	//	{
+	//		g_signal_handler_disconnect(priv->child, priv->percentage_child_id);
+	//		g_object_unref(priv->child);
+	//	}
 
 	/* connect up signals */
 	child = fu_progress_new();
