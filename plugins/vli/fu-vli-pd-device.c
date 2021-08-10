@@ -426,12 +426,15 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 	guint32 sec_addr = 0x28000;
 	g_autoptr(GBytes) spi_fw = NULL;
 
+	/* progress */
+	fu_progress_set_custom_steps(progress, 10 /* crc */, 45 /* write */, 45 /* write */, -1);
+
 	/* check spi fw1 crc16 */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
 	spi_fw = fu_vli_device_spi_read(FU_VLI_DEVICE(self),
 					fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
 					fu_device_get_firmware_size_max(FU_DEVICE(self)),
-					progress,
+					fu_progress_get_division(progress),
 					error);
 	if (spi_fw == NULL)
 		return FALSE;
@@ -445,6 +448,7 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 	}
 	crc_actual = fu_common_crc16 (sbuf, sbufsz - 2);
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_step_done(progress);
 
 	/* update fw2 first if fw1 correct */
 	buf = g_bytes_get_data (fw, &bufsz);
@@ -453,33 +457,37 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 					     sec_addr,
 					     buf,
 					     bufsz,
-					     progress,
+					     fu_progress_get_division(progress),
 					     error))
 			return FALSE;
+		fu_progress_step_done(progress);
 		if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self),
 					     fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
 					     buf,
 					     bufsz,
-					     progress,
+					     fu_progress_get_division(progress),
 					     error))
 			return FALSE;
+		fu_progress_step_done(progress);
 
-	/* else update fw1 first */
+		/* else update fw1 first */
 	} else {
 		if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self),
 					     fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
 					     buf,
 					     bufsz,
-					     progress,
+					     fu_progress_get_division(progress),
 					     error))
 			return FALSE;
+		fu_progress_step_done(progress);
 		if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self),
 					     sec_addr,
 					     buf,
 					     bufsz,
-					     progress,
+					     fu_progress_get_division(progress),
 					     error))
 			return FALSE;
+		fu_progress_step_done(progress);
 	}
 
 	/* success */
@@ -519,10 +527,16 @@ fu_vli_pd_device_write_firmware(FuDevice *device,
 	    fu_device_has_flag (device, FWUPD_DEVICE_FLAG_DUAL_IMAGE))
 		return fu_vli_pd_device_write_dual_firmware(self, fw, progress, error);
 
+	/* progress */
+	fu_progress_set_custom_steps(progress, 50 /* erase */, 50 /* write */, -1);
+
 	/* erase */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_vli_device_spi_erase_all(FU_VLI_DEVICE(self), progress, error))
+	if (!fu_vli_device_spi_erase_all(FU_VLI_DEVICE(self),
+					 fu_progress_get_division(progress),
+					 error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* write in chunks */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
@@ -531,11 +545,12 @@ fu_vli_pd_device_write_firmware(FuDevice *device,
 				     fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
 				     buf,
 				     bufsz,
-				     progress,
+				     fu_progress_get_division(progress),
 				     error))
 		return FALSE;
 
 	/* success */
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 

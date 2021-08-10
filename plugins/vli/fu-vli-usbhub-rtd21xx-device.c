@@ -298,6 +298,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	FuVliUsbhubRtd21xxDevice *self = FU_VLI_USBHUB_RTD21XX_DEVICE (device);
+	FuProgress *progress_local;
 	const guint8 *fwbuf;
 	gsize fwbufsz = 0;
 	guint32 project_addr;
@@ -307,6 +308,9 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_custom_steps(progress, 50 /* write */, 50 /* restart */, -1);
 
 	/* open device */
 	locker = fu_device_locker_new (parent, error);
@@ -405,6 +409,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 						0x00,	/* start addr */
 						0x00,	/* page_sz */
 						ISP_DATA_BLOCKSIZE);
+	progress_local = fu_progress_get_division(progress);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_vli_usbhub_device_rtd21xx_read_status (self, NULL, error))
@@ -420,8 +425,9 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 		}
 
 		/* update progress */
-		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len);
+		fu_progress_set_percentage_full(progress_local, (gsize)i, (gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* update finish command */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
@@ -439,7 +445,6 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 
 	/* exit background-fw mode */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_progress_set_percentage(progress, 0);
 	if (!fu_vli_usbhub_device_rtd21xx_read_status (self, NULL, error))
 		return FALSE;
 	write_buf[0] = ISP_CMD_FW_UPDATE_EXIT;
@@ -457,6 +462,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	fu_progress_sleep(progress, 20);
 
 	/* success */
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 

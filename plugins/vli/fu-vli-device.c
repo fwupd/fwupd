@@ -367,6 +367,11 @@ fu_vli_device_spi_write(FuVliDevice *self,
 gboolean
 fu_vli_device_spi_erase_all(FuVliDevice *self, FuProgress *progress, GError **error)
 {
+	FuProgress *progress_local;
+
+	/* progress */
+	fu_progress_set_custom_steps(progress, 55 /* erase */, 45 /* verify */, -1);
+
 	if (!fu_vli_device_spi_write_enable (self, error))
 		return FALSE;
 	if (!fu_vli_device_spi_write_status (self, 0x00, error))
@@ -376,8 +381,10 @@ fu_vli_device_spi_erase_all(FuVliDevice *self, FuProgress *progress, GError **er
 	if (!fu_vli_device_spi_chip_erase (self, error))
 		return FALSE;
 	fu_progress_sleep(progress, 4); /* seconds */
+	fu_progress_step_done(progress);
 
 	/* verify chip was erased */
+	progress_local = fu_progress_get_division(progress);
 	for (guint addr = 0; addr < 0x10000; addr += 0x1000) {
 		guint8 buf[FU_VLI_DEVICE_TXSIZE] = { 0x0 };
 		if (!fu_vli_device_spi_read_block (self, addr, buf, sizeof(buf), error)) {
@@ -393,8 +400,9 @@ fu_vli_device_spi_erase_all(FuVliDevice *self, FuProgress *progress, GError **er
 				return FALSE;
 			}
 		}
-		fu_progress_set_percentage_full(progress, (gsize)addr, (gsize)0x10000);
+		fu_progress_set_percentage_full(progress_local, (gsize)addr, (gsize)0x10000);
 	}
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 

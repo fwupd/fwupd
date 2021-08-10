@@ -791,6 +791,9 @@ fu_vli_usbhub_device_update_v1(FuVliUsbhubDevice *self,
 	const guint8 *buf;
 	g_autoptr(GBytes) fw = NULL;
 
+	/* progress */
+	fu_progress_set_custom_steps(progress, 20 /* erase */, 80 /* write */, -1);
+
 	/* simple image */
 	fw = fu_firmware_get_bytes (firmware, error);
 	if (fw == NULL)
@@ -798,18 +801,27 @@ fu_vli_usbhub_device_update_v1(FuVliUsbhubDevice *self,
 
 	/* erase */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_vli_device_spi_erase_all(FU_VLI_DEVICE(self), progress, error)) {
+	if (!fu_vli_device_spi_erase_all(FU_VLI_DEVICE(self),
+					 fu_progress_get_division(progress),
+					 error)) {
 		g_prefix_error (error, "failed to erase chip: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* write in chunks */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
 	buf = g_bytes_get_data (fw, &bufsz);
-	if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self), 0x0, buf, bufsz, progress, error))
+	if (!fu_vli_device_spi_write(FU_VLI_DEVICE(self),
+				     0x0,
+				     buf,
+				     bufsz,
+				     fu_progress_get_division(progress),
+				     error))
 		return FALSE;
 
 	/* success */
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 
@@ -820,18 +832,24 @@ fu_vli_usbhub_device_update_v2_recovery(FuVliUsbhubDevice *self,
 					FuProgress *progress,
 					GError **error)
 {
+	FuProgress *progress_local;
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
 
+	/* progress */
+	fu_progress_set_custom_steps(progress, 20 /* erase */, 80 /* read */, -1);
+
 	/* erase */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
+	progress_local = fu_progress_get_division(progress);
 	for (guint32 addr = 0; addr < bufsz; addr += 0x1000) {
 		if (!fu_vli_device_spi_erase_sector (FU_VLI_DEVICE (self), addr, error)) {
 			g_prefix_error (error, "failed to erase sector @0x%x: ", addr);
 			return FALSE;
 		}
-		fu_progress_set_percentage_full(progress, (gsize)addr, bufsz);
+		fu_progress_set_percentage_full(progress_local, (gsize)addr, bufsz);
 	}
+	fu_progress_step_done(progress);
 
 	/* write in chunks */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
@@ -839,11 +857,12 @@ fu_vli_usbhub_device_update_v2_recovery(FuVliUsbhubDevice *self,
 				     VLI_USBHUB_FLASHMAP_ADDR_HD1,
 				     buf,
 				     bufsz,
-				     progress,
+				     fu_progress_get_division(progress),
 				     error))
 		return FALSE;
 
 	/* success */
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 
