@@ -35,6 +35,31 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.6.3" date="2021-08-10">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Fall back to the parent if the child does not have a battery level set</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Disable the uefi_capsule plugin if Redfish coldplug succeeded</li>
+          <li>Fix an elantp crash when starting the daemon</li>
+          <li>Fix compiling with old versions of libxmlb</li>
+          <li>Fix detection of 8Bitdo wireless usb adapter</li>
+          <li>Fix the 8bitdo N30 Pro 2 install duration</li>
+          <li>Fix the modem-manager report that failed to get device after update</li>
+          <li>Fix writing large redfish firmware files</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Poly Studio P21</li>
+          <li>Realtek RTD2141B</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.6.2" date="2021-08-02">
       <description>
         <p>
