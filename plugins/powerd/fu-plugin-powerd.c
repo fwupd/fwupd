@@ -65,31 +65,15 @@ fu_plugin_destroy(FuPlugin *plugin)
 		g_object_unref(data->proxy);
 }
 
-static gboolean
-fu_plugin_powerd_refresh_cb(FuPlugin *plugin)
+static void
+fu_plugin_powerd_rescan(FuPlugin *plugin, GVariant *parameters)
 {
-	FuPluginData *data = fu_plugin_get_data(plugin);
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	guint32 power_type;
 	guint32 current_state;
 	gdouble current_level;
-	g_autoptr(GVariant) powerd_response = NULL;
 
-	/* retrieving battery info from "GetBatteryState" method call to powerd */
-	powerd_response = g_dbus_proxy_call_sync(data->proxy,
-						 "GetBatteryState",
-						 NULL,
-						 G_DBUS_CALL_FLAGS_NONE,
-						 -1,
-						 NULL,
-						 G_SOURCE_REMOVE);
-	if (powerd_response == NULL) {
-		g_debug("battery information was not loaded");
-		return G_SOURCE_REMOVE;
-	}
-
-	/* parse and use for battery-check conditions */
-	g_variant_get(powerd_response, "(uud)", &power_type, &current_state, &current_level);
+	g_variant_get(parameters, "(uud)", &power_type, &current_state, &current_level);
 
 	/* checking if percentage is invalid */
 	if (current_level < 1 || current_level > 100)
@@ -97,8 +81,18 @@ fu_plugin_powerd_refresh_cb(FuPlugin *plugin)
 
 	fu_context_set_battery_state(ctx, current_state);
 	fu_context_set_battery_level(ctx, current_level);
+}
 
-	return G_SOURCE_CONTINUE;
+static void
+fu_plugin_powerd_proxy_changed_cb(GDBusProxy *proxy,
+				  gchar *sender_name,
+				  gchar *signal_name,
+				  GVariant *parameters,
+				  FuPlugin *plugin)
+{
+	if (!g_str_equal(signal_name, "BatteryStatePoll"))
+		return;
+	fu_plugin_powerd_rescan(plugin, parameters);
 }
 
 gboolean
@@ -121,7 +115,7 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 						    error);
 
 	if (data->proxy == NULL) {
-		g_prefix_error(error, "failed to establish proxy: ");
+		g_prefix_error(error, "failed to connect to powerd: ");
 		return FALSE;
 	}
 	name_owner = g_dbus_proxy_get_name_owner(data->proxy);
@@ -134,8 +128,19 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 		return FALSE;
 	}
 
-	/* start a timer to repeatedly run fu_plugin_powerd_refresh_cb at a set interval */
-	g_timeout_add_seconds(5, G_SOURCE_FUNC(fu_plugin_powerd_refresh_cb), plugin);
+	fu_plugin_powerd_rescan(plugin,
+				g_dbus_proxy_call_sync(data->proxy,
+						       "GetBatteryState",
+						       NULL,
+						       G_DBUS_CALL_FLAGS_NONE,
+						       -1,
+						       NULL,
+						       G_SOURCE_REMOVE));
+
+	g_signal_connect(data->proxy,
+			 "g-signal",
+			 G_CALLBACK(fu_plugin_powerd_proxy_changed_cb),
+			 plugin);
 
 	return TRUE;
 }
