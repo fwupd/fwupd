@@ -871,14 +871,11 @@ LIBFWUPDPLUGIN_1.7.0 {
     fu_plugin_runner_write_firmware;
     fu_progress_finished;
     fu_progress_get_child;
-    fu_progress_get_enabled;
-    fu_progress_get_id;
     fu_progress_get_percentage;
     fu_progress_get_type;
     fu_progress_new;
     fu_progress_reset;
     fu_progress_set_custom_steps_full;
-    fu_progress_set_enabled;
     fu_progress_set_percentage;
     fu_progress_set_percentage_full;
     fu_progress_set_profile;

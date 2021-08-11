@@ -480,7 +480,7 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 
 		/* update progress */
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
-						(gsize)i,
+						(gsize)i + 1,
 						(gsize)chunks->len);
 	}
 	fu_progress_step_done(progress);
@@ -524,7 +524,7 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 
 		/* update progress */
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
-						(gsize)i,
+						(gsize)i + 1,
 						(gsize)chunks->len);
 	}
 	fu_progress_step_done(progress);

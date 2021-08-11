@@ -3378,31 +3378,6 @@ fu_progress_non_equal_steps_func(void)
 }
 
 static void
-fu_progress_no_progress_func(void)
-{
-	FuProgress *child;
-	g_autoptr(FuProgress) progress = fu_progress_new();
-
-	/* test a progress where we don't care about progress */
-	fu_progress_set_enabled(progress, FALSE);
-
-	fu_progress_set_steps(progress, 3);
-	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 0);
-
-	fu_progress_step_done(progress);
-	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 0);
-
-	fu_progress_step_done(progress);
-
-	child = fu_progress_get_child(progress);
-	g_assert(child != NULL);
-	fu_progress_set_steps(child, 2);
-	fu_progress_step_done(child);
-	fu_progress_step_done(child);
-	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 0);
-}
-
-static void
 fu_progress_finish_func(void)
 {
 	FuProgress *child;
@@ -3417,30 +3392,6 @@ fu_progress_finish_func(void)
 	fu_progress_finished(child);
 
 	/* parent step done after child finish */
-	fu_progress_step_done(progress);
-}
-
-static void
-fu_progress_finished_func(void)
-{
-	FuProgress *progress_local;
-	g_autoptr(FuProgress) progress = fu_progress_new();
-
-	progress = fu_progress_new();
-	fu_progress_set_custom_steps(progress, 90, 10, -1);
-	progress_local = fu_progress_get_child(progress);
-	fu_progress_set_enabled(progress_local, FALSE);
-
-	for (guint i = 0; i < 10; i++) {
-		/* check cancelled (okay to reuse as we called
-		 * fu_progress_set_enabled before)*/
-		fu_progress_step_done(progress_local);
-	}
-
-	/* turn checks back on */
-	fu_progress_set_enabled(progress_local, TRUE);
-	fu_progress_finished(progress_local);
-	fu_progress_step_done(progress);
 	fu_progress_step_done(progress);
 }
 
@@ -3464,9 +3415,7 @@ main (int argc, char **argv)
 	g_test_add_func("/fwupd/progress{child}", fu_progress_child_func);
 	g_test_add_func("/fwupd/progress{parent-1-step}", fu_progress_parent_one_step_proxy_func);
 	g_test_add_func("/fwupd/progress{no-equal}", fu_progress_non_equal_steps_func);
-	g_test_add_func("/fwupd/progress{no-progress}", fu_progress_no_progress_func);
 	g_test_add_func("/fwupd/progress{finish}", fu_progress_finish_func);
-	g_test_add_func("/fwupd/progress{finished}", fu_progress_finished_func);
 	g_test_add_func ("/fwupd/security-attrs{hsi}", fu_security_attrs_hsi_func);
 	g_test_add_func ("/fwupd/plugin{devices}", fu_plugin_devices_func);
 	g_test_add_func ("/fwupd/plugin{device-inhibit-children}", fu_plugin_device_inhibit_children_func);

@@ -32,36 +32,30 @@
  * There are a few nice touches in this module, so that if a module only has
  * one progress step, the child progress is used for updates.
  *
- * <example>
- *   <title>Using a #FuProgress.</title>
- *   <programlisting>
- * static void
- * _do_something(FuProgress *self)
- * {
- *    // setup correct number of steps
- *    fu_progress_set_steps(self, 2);
+ *    static void
+ *    _do_something(FuProgress *self)
+ *    {
+ *       // setup correct number of steps
+ *       fu_progress_set_steps(self, 2);
  *
- *    // run a sub function
- *    _do_something_else1(fu_progress_get_child(self));
+ *       // run a sub function
+ *       _do_something_else1(fu_progress_get_child(self));
  *
- *    // this section done
- *    fu_progress_step_done(self);
+ *       // this section done
+ *       fu_progress_step_done(self);
  *
- *    // run another sub function
- *    _do_something_else2(fu_progress_get_child(self));
+ *       // run another sub function
+ *       _do_something_else2(fu_progress_get_child(self));
  *
- *    // this progress done (all complete)
- *    fu_progress_step_done(self);
- * }
- *   </programlisting>
- * </example>
+ *       // this progress done (all complete)
+ *       fu_progress_step_done(self);
+ *    }
  *
  * See also: [class@FuDevice]
  */
 
 typedef struct {
 	gchar *id;
-	gboolean enabled;
 	guint percentage;
 
 	gboolean profile;
@@ -74,76 +68,14 @@ typedef struct {
 	gulong percentage_child_id;
 	FuProgress *child;
 	FuProgress *parent; /* no-ref */
-
 } FuProgressPrivate;
 
 enum { SIGNAL_PERCENTAGE_CHANGED, SIGNAL_LAST };
-
-enum { PROP_0, PROP_ID, PROP_LAST };
 
 static guint signals[SIGNAL_LAST] = {0};
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuProgress, fu_progress, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_progress_get_instance_private(o))
-
-/**
- * fu_progress_get_id:
- * @self: a #FuProgress
- *
- * Return the id of the progress, which is normally set by the caller.
- *
- * Returns: progress ID
- *
- * Since: 1.6.3
- **/
-const gchar *
-fu_progress_get_id(FuProgress *self)
-{
-	FuProgressPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_PROGRESS(self), NULL);
-	return priv->id;
-}
-
-/**
- * fu_progress_get_enabled:
- * @self: a #FuProgress
- *
- * Get the progress enabled state
- *
- * Returns: %TRUE if the progress is enabled
- *
- * Since: 1.6.3
- **/
-gboolean
-fu_progress_get_enabled(FuProgress *self)
-{
-	FuProgressPrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_PROGRESS(self), FALSE);
-	return priv->enabled;
-}
-
-/**
- * fu_progress_set_enabled:
- * @self: a #FuProgress
- * @enabled: enabled state
- *
- * Sets the progress enabled state.
- *
- * Disabling progress tracking is generally a bad thing to do, except when you know you cannot guess
- * the number of steps in the progress.
- *
- * Using this function also reduced the amount of time spent getting a
- * child self using fu_progress_get_child() as a the parent is returned instead.
- *
- * Since: 1.6.3
- **/
-void
-fu_progress_set_enabled(FuProgress *self, gboolean enabled)
-{
-	FuProgressPrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_PROGRESS(self));
-	priv->enabled = enabled;
-}
 
 /**
  * fu_progress_get_percentage:
@@ -153,7 +85,7 @@ fu_progress_set_enabled(FuProgress *self, gboolean enabled)
  *
  * Return value: The percentage value, or %G_MAXUINT for error
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 guint
 fu_progress_get_percentage(FuProgress *self)
@@ -164,12 +96,17 @@ fu_progress_get_percentage(FuProgress *self)
 }
 
 static void
-fu_progress_print_parent_chain(FuProgress *self, guint level)
+fu_progress_build_parent_chain(FuProgress *self, GString *str, guint level)
 {
 	FuProgressPrivate *priv = GET_PRIVATE(self);
 	if (priv->parent != NULL)
-		fu_progress_print_parent_chain(priv->parent, level + 1);
-	g_print("%u) %s (%u/%u)\n", level, priv->id, priv->step_now, priv->step_max);
+		fu_progress_build_parent_chain(priv->parent, str, level + 1);
+	g_string_append_printf(str,
+			       "%u) %s (%u/%u)\n",
+			       level,
+			       priv->id,
+			       priv->step_now,
+			       priv->step_max);
 }
 
 /**
@@ -181,7 +118,7 @@ fu_progress_print_parent_chain(FuProgress *self, guint level)
  *
  * NOTE: this must be above what was previously set, or it will be rejected.
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 void
 fu_progress_set_percentage(FuProgress *self, guint percentage)
@@ -190,10 +127,6 @@ fu_progress_set_percentage(FuProgress *self, guint percentage)
 	g_return_if_fail(FU_IS_PROGRESS(self));
 	g_return_if_fail(percentage <= 100);
 
-	/* do we care */
-	if (!priv->enabled)
-		return;
-
 	/* is it the same */
 	if (percentage == priv->percentage)
 		return;
@@ -201,10 +134,12 @@ fu_progress_set_percentage(FuProgress *self, guint percentage)
 	/* is it less */
 	if (percentage < priv->percentage) {
 		if (priv->profile) {
-			fu_progress_print_parent_chain(self, 0);
-			g_critical("percentage should not go down from %u to %u!",
-				   priv->percentage,
-				   percentage);
+			g_autoptr(GString) str = g_string_new(NULL);
+			fu_progress_build_parent_chain(self, str, 0);
+			g_warning("percentage should not go down from %u to %u: %s",
+				  priv->percentage,
+				  percentage,
+				  str->str);
 		}
 		return;
 	}
@@ -228,7 +163,7 @@ fu_progress_set_percentage(FuProgress *self, guint percentage)
  *
  * Sets the progress completion using the raw progress values.
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 void
 fu_progress_set_percentage_full(FuProgress *self, gsize progress_done, gsize progress_total)
@@ -248,7 +183,7 @@ fu_progress_set_percentage_full(FuProgress *self, gsize progress_done, gsize pro
  * This enables profiling of FuProgress. This may be useful in development,
  * but be warned; enabling profiling makes #FuProgress very slow.
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 void
 fu_progress_set_profile(FuProgress *self, gboolean profile)
@@ -259,22 +194,37 @@ fu_progress_set_profile(FuProgress *self, gboolean profile)
 }
 
 /**
+ * fu_progress_get_profile:
+ * @self: A #FuProgress
+ * @profile:
+ *
+ * Returns if the profile is enabled for this progress.
+ *
+ * Return value: if profiling should be enabled
+ *
+ * Since: 1.7.0
+ **/
+static gboolean
+fu_progress_get_profile(FuProgress *self)
+{
+	FuProgressPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_PROGRESS(self), FALSE);
+	return priv->profile;
+}
+
+/**
  * fu_progress_reset:
  * @self: A #FuProgress
  *
  * Resets the #FuProgress object to unset
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 void
 fu_progress_reset(FuProgress *self)
 {
 	FuProgressPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_PROGRESS(self));
-
-	/* do we care */
-	if (!priv->enabled)
-		return;
 
 	/* reset values */
 	priv->step_max = 0;
@@ -311,7 +261,7 @@ fu_progress_reset(FuProgress *self)
  * The function will immediately return when the number of step_max is 0
  * or if fu_progress_set_enabled(FALSE) was previously called.
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 void
 fu_progress_set_steps_full(FuProgress *self, const gchar *id, guint step_max)
@@ -323,17 +273,15 @@ fu_progress_set_steps_full(FuProgress *self, const gchar *id, guint step_max)
 	if (step_max == 0)
 		return;
 
-	/* do we care */
-	if (!priv->enabled)
-		return;
-
 	/* did we call done on a self that did not have a size set? */
 	if (priv->step_max != 0) {
-		g_warning("step_max already set to %u, can't set %u! [%s]",
+		g_autoptr(GString) str = g_string_new(NULL);
+		fu_progress_build_parent_chain(self, str, 0);
+		g_warning("step_max already set to %u, can't set %u! [%s]: %s",
 			  priv->step_max,
 			  step_max,
-			  id);
-		fu_progress_print_parent_chain(self, 0);
+			  id,
+			  str->str);
 		return;
 	}
 
@@ -367,7 +315,7 @@ fu_progress_set_steps_full(FuProgress *self, const gchar *id, guint step_max)
  * All the values must add up to 100, and the list must end with -1.
  * Do not use this function directly, instead use the fu_progress_set_custom_steps() macro.
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 void
 fu_progress_set_custom_steps_full(FuProgress *self, const gchar *id, guint value, ...)
@@ -378,10 +326,6 @@ fu_progress_set_custom_steps_full(FuProgress *self, const gchar *id, guint value
 	guint i;
 
 	g_return_if_fail(FU_IS_PROGRESS(self));
-
-	/* do we care */
-	if (!priv->enabled)
-		return;
 
 	/* process the valist */
 	va_start(args, value);
@@ -395,7 +339,7 @@ fu_progress_set_custom_steps_full(FuProgress *self, const gchar *id, guint value
 
 	/* does not sum to 100% */
 	if (total != 100) {
-		g_critical("percentage not 100: %u", total);
+		g_warning("percentage not 100: %u", total);
 		return;
 	}
 
@@ -426,7 +370,7 @@ fu_progress_set_custom_steps_full(FuProgress *self, const gchar *id, guint value
  *
  * Called when the step_now sub-task wants to finish early and still complete.
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 void
 fu_progress_finished(FuProgress *self)
@@ -479,7 +423,7 @@ fu_progress_child_percentage_changed_cb(FuProgress *child, guint percentage, FuP
 
 	/* already at >= 100% */
 	if (priv->step_now >= priv->step_max) {
-		g_critical("already at %u/%u step_max", priv->step_now, priv->step_max);
+		g_warning("already at %u/%u step_max", priv->step_now, priv->step_max);
 		return;
 	}
 
@@ -520,57 +464,53 @@ out:
 	fu_progress_set_percentage(self, parent_percentage);
 }
 
-static void
-fu_progress_set_global_share(FuProgress *self, gdouble global_share)
+static gdouble
+fu_progress_get_global_share(FuProgress *self)
 {
 	FuProgressPrivate *priv = GET_PRIVATE(self);
-	priv->global_share = global_share;
+	return priv->global_share;
+}
+
+static void
+fu_progress_set_parent(FuProgress *self, FuProgress *parent)
+{
+	FuProgressPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_PROGRESS(self));
+	priv->parent = parent; /* no ref! */
+	priv->global_share = fu_progress_get_global_share(parent);
+	priv->profile = fu_progress_get_profile(parent);
 }
 
 /**
  * fu_progress_get_child:
  * @self: A #FuProgress
  *
- * Monitor a child division and proxy back up to the parent.
+ * Monitor a child and proxy back up to the parent with the correct percentage.
  *
  * Return value: (transfer none): A new %FuProgress or %NULL for failure
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 FuProgress *
 fu_progress_get_child(FuProgress *self)
 {
 	FuProgressPrivate *priv = GET_PRIVATE(self);
-	FuProgressPrivate *child_priv;
-	FuProgress *child = NULL;
 
 	g_return_val_if_fail(FU_IS_PROGRESS(self), NULL);
-
-	/* do we care */
-	if (!priv->enabled)
-		return self;
 
 	/* already created child */
 	if (priv->child != NULL)
 		return priv->child;
 
 	/* connect up signals */
-	child = fu_progress_new();
-	child_priv = GET_PRIVATE(child);
-	child_priv->parent = self; /* do not ref! */
-	priv->child = child;
+	priv->child = fu_progress_new();
 	priv->percentage_child_id =
-	    g_signal_connect(child,
+	    g_signal_connect(priv->child,
 			     "percentage-changed",
 			     G_CALLBACK(fu_progress_child_percentage_changed_cb),
 			     self);
-
-	/* set the global share on the new child */
-	fu_progress_set_global_share(child, priv->global_share);
-
-	/* set the profile self */
-	fu_progress_set_profile(child, priv->profile);
-	return child;
+	fu_progress_set_parent(priv->child, self);
+	return priv->child;
 }
 
 static void
@@ -620,7 +560,7 @@ fu_progress_show_profile(FuProgress *self)
  *
  * Called when the step_now sub-task has finished.
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 void
 fu_progress_step_done(FuProgress *self)
@@ -630,14 +570,11 @@ fu_progress_step_done(FuProgress *self)
 
 	g_return_if_fail(FU_IS_PROGRESS(self));
 
-	/* do we care */
-	if (!priv->enabled)
-		return;
-
 	/* did we call done on a self that did not have a size set? */
 	if (priv->step_max == 0) {
-		g_critical("progress done when no size set! [%s]", priv->id);
-		fu_progress_print_parent_chain(self, 0);
+		g_autoptr(GString) str = g_string_new(NULL);
+		fu_progress_build_parent_chain(self, str, 0);
+		g_warning("progress done when no size set! [%s]: %s", priv->id, str->str);
 		return;
 	}
 
@@ -651,8 +588,9 @@ fu_progress_step_done(FuProgress *self)
 
 	/* is already at 100%? */
 	if (priv->step_now >= priv->step_max) {
-		g_critical("already at 100%% [%s]", priv->id);
-		fu_progress_print_parent_chain(self, 0);
+		g_autoptr(GString) str = g_string_new(NULL);
+		fu_progress_build_parent_chain(self, str, 0);
+		g_warning("already at 100%% [%s]: %s", priv->id, str->str);
 		return;
 	}
 
@@ -660,11 +598,13 @@ fu_progress_step_done(FuProgress *self)
 	if (priv->child != NULL) {
 		FuProgressPrivate *child_priv = GET_PRIVATE(priv->child);
 		if (child_priv->step_now != child_priv->step_max) {
-			g_print("child is at %u/%u step_max and parent done [%s]\n",
-				child_priv->step_now,
-				child_priv->step_max,
-				priv->id);
-			fu_progress_print_parent_chain(priv->child, 0);
+			g_autoptr(GString) str = g_string_new(NULL);
+			fu_progress_build_parent_chain(priv->child, str, 0);
+			g_warning("child is at %u/%u step_max and parent done [%s]: %s",
+				  child_priv->step_now,
+				  child_priv->step_max,
+				  priv->id,
+				  str->str);
 			/* do not abort, as we want to clean this up */
 		}
 	}
@@ -699,7 +639,7 @@ fu_progress_step_done(FuProgress *self)
  * The value is given in whole seconds as it does not make sense to show the
  * progressbar advancing so quickly for durations of less than one second.
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 void
 fu_progress_sleep(FuProgress *self, guint delay_secs)
@@ -717,40 +657,9 @@ fu_progress_sleep(FuProgress *self, guint delay_secs)
 }
 
 static void
-fu_progress_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
-{
-	FuProgress *self = FU_PROGRESS(object);
-	FuProgressPrivate *priv = GET_PRIVATE(self);
-	switch (prop_id) {
-	case PROP_ID:
-		g_value_set_string(value, priv->id);
-		break;
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-		break;
-	}
-}
-
-static void
-fu_progress_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
-{
-	FuProgress *self = FU_PROGRESS(object);
-	FuProgressPrivate *priv = GET_PRIVATE(self);
-	switch (prop_id) {
-	case PROP_ID:
-		priv->id = g_value_dup_string(value);
-		break;
-	default:
-		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-		break;
-	}
-}
-
-static void
 fu_progress_init(FuProgress *self)
 {
 	FuProgressPrivate *priv = GET_PRIVATE(self);
-	priv->enabled = TRUE;
 	priv->global_share = 1.0f;
 	priv->timer = g_timer_new();
 }
@@ -774,15 +683,7 @@ static void
 fu_progress_class_init(FuProgressClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	GParamSpec *pspec;
-
-	object_class->get_property = fu_progress_get_property;
-	object_class->set_property = fu_progress_set_property;
 	object_class->finalize = fu_progress_finalize;
-
-	pspec =
-	    g_param_spec_string("id", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_ID, pspec);
 
 	signals[SIGNAL_PERCENTAGE_CHANGED] =
 	    g_signal_new("percentage-changed",
@@ -802,7 +703,7 @@ fu_progress_class_init(FuProgressClass *klass)
  *
  * Return value: A new #FuProgress instance.
  *
- * Since: 1.6.3
+ * Since: 1.7.0
  **/
 FuProgress *
 fu_progress_new(void)

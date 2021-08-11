@@ -25,12 +25,6 @@ struct _FuProgressClass {
 
 FuProgress *
 fu_progress_new(void);
-const gchar *
-fu_progress_get_id(FuProgress *self);
-gboolean
-fu_progress_get_enabled(FuProgress *self);
-void
-fu_progress_set_enabled(FuProgress *self, gboolean enabled);
 void
 fu_progress_set_percentage(FuProgress *self, guint percentage);
 void
