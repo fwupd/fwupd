@@ -301,12 +301,17 @@ fu_install_task_check_requirements (FuInstallTask *self,
 
 	/* no update abilities */
 	if (!fu_device_has_flag (self->device, FWUPD_DEVICE_FLAG_UPDATABLE)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "Device %s [%s] does not currently allow updates",
-			     fu_device_get_name (self->device),
-			     fu_device_get_id (self->device));
+		g_autoptr(GString) str = g_string_new(NULL);
+		g_string_append_printf(str,
+				       "Device %s [%s] does not currently allow updates",
+				       fu_device_get_name(self->device),
+				       fu_device_get_id(self->device));
+		if (fu_device_get_update_error(self->device) != NULL) {
+			g_string_append_printf(str,
+					       ": %s",
+					       fu_device_get_update_error(self->device));
+		}
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, str->str);
 		return FALSE;
 	}
 
