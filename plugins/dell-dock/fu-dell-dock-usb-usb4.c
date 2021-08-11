@@ -572,6 +572,7 @@ fu_dell_dock_usb4_probe (FuDevice *device, GError **error)
 	fu_device_set_logical_id (FU_DEVICE (device), "usb4");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION);
 	return TRUE;
 }
 
