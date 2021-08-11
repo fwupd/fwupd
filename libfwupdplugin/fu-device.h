@@ -6,12 +6,13 @@
 
 #pragma once
 
-#include <glib-object.h>
 #include <fwupd.h>
+#include <glib-object.h>
 
+#include "fu-common-version.h"
 #include "fu-context.h"
 #include "fu-firmware.h"
-#include "fu-common-version.h"
+#include "fu-progress.h"
 #include "fu-security-attrs.h"
 
 #define FU_TYPE_DEVICE (fu_device_get_type ())
@@ -439,6 +440,8 @@ void		 fu_device_add_instance_id_full		(FuDevice	*self,
 FuDevice	*fu_device_get_alternate		(FuDevice	*self);
 FuDevice	*fu_device_get_root			(FuDevice	*self);
 FuDevice	*fu_device_get_parent			(FuDevice	*self);
+FuProgress *
+fu_device_get_progress_helper(FuDevice *self);
 GPtrArray	*fu_device_get_children			(FuDevice	*self);
 void		 fu_device_add_child			(FuDevice	*self,
 							 FuDevice	*child);

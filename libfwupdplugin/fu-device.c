@@ -53,7 +53,6 @@ typedef struct {
 	GRWLock				 parent_guids_mutex;
 	GPtrArray			*parent_physical_ids;	/* (nullable) */
 	guint				 remove_delay;	/* ms */
-	guint				 progress;
 	guint				 battery_level;
 	guint				 battery_threshold;
 	guint				 request_cnts[FWUPD_REQUEST_KIND_LAST];
@@ -73,6 +72,7 @@ typedef struct {
 	FuDeviceInternalFlags		 internal_flags;
 	guint64				 private_flags;
 	GPtrArray			*private_flag_items;	/* (nullable) */
+	FuProgress *progress;
 	gulong notify_flags_handler_id;
 } FuDevicePrivate;
 
@@ -121,7 +121,7 @@ fu_device_get_property (GObject *object, guint prop_id,
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
 	case PROP_PROGRESS:
-		g_value_set_uint (value, priv->progress);
+		g_value_set_uint(value, fu_device_get_progress(self));
 		break;
 	case PROP_BATTERY_LEVEL:
 		g_value_set_uint (value, priv->battery_level);
@@ -435,6 +435,25 @@ fu_device_get_request_cnt (FuDevice *self, FwupdRequestKind request_kind)
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), G_MAXUINT);
 	return priv->request_cnts[request_kind];
+}
+
+/**
+ * fu_device_get_progress_helper:
+ * @self: a #FuDevice
+ *
+ * Returns the per-device progress helper which can be used to update the device with a consistent
+ * global progressbar with multiple variable speed stages.
+ *
+ * Returns: (transfer none): a #FuProgress
+ *
+ * Since: 1.7.0
+ **/
+FuProgress *
+fu_device_get_progress_helper(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	return priv->progress;
 }
 
 /**
@@ -3106,8 +3125,9 @@ fu_device_set_remove_delay (FuDevice *self, guint remove_delay)
 FwupdStatus
 fu_device_get_status (FuDevice *self)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
-	return fwupd_device_get_status (FWUPD_DEVICE (self));
+	return fu_progress_get_status(priv->progress);
 }
 
 /**
@@ -3122,8 +3142,9 @@ fu_device_get_status (FuDevice *self)
 void
 fu_device_set_status (FuDevice *self, FwupdStatus status)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail (FU_IS_DEVICE (self));
-	fwupd_device_set_status (FWUPD_DEVICE (self), status);
+	fu_progress_set_status(priv->progress, status);
 }
 
 /**
@@ -3141,7 +3162,7 @@ fu_device_get_progress (FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_val_if_fail (FU_IS_DEVICE (self), 0);
-	return priv->progress;
+	return fu_progress_get_percentage(priv->progress);
 }
 
 /**
@@ -3158,10 +3179,7 @@ fu_device_set_progress (FuDevice *self, guint progress)
 {
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	g_return_if_fail (FU_IS_DEVICE (self));
-	if (priv->progress == progress)
-		return;
-	priv->progress = progress;
-	g_object_notify (G_OBJECT (self), "progress");
+	fu_progress_set_percentage(priv->progress, progress);
 }
 
 /**
@@ -3177,11 +3195,9 @@ fu_device_set_progress (FuDevice *self, guint progress)
 void
 fu_device_set_progress_full (FuDevice *self, gsize progress_done, gsize progress_total)
 {
-	gdouble percentage = 0.f;
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail (FU_IS_DEVICE (self));
-	if (progress_total > 0)
-		percentage = (100.f * (gdouble) progress_done) / (gdouble) progress_total;
-	fu_device_set_progress (self, (guint) percentage);
+	fu_progress_set_percentage_full(priv->progress, progress_done, progress_total);
 }
 
 /**
@@ -4636,6 +4652,18 @@ fu_device_flags_notify_cb(FuDevice *self, GParamSpec *pspec, gpointer user_data)
 }
 
 static void
+fu_device_progress_percentage_changed_cb(FuProgress *progress, guint percentage, FuDevice *self)
+{
+	g_object_notify(G_OBJECT(self), "progress");
+}
+
+static void
+fu_device_progress_status_changed_cb(FuProgress *progress, FwupdStatus status, FuDevice *self)
+{
+	fwupd_device_set_status(FWUPD_DEVICE(self), status);
+}
+
+static void
 fu_device_class_init (FuDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -4731,10 +4759,22 @@ fu_device_init (FuDevice *self)
 	priv->parent_guids = g_ptr_array_new_with_free_func (g_free);
 	priv->possible_plugins = g_ptr_array_new_with_free_func (g_free);
 	priv->retry_recs = g_ptr_array_new_with_free_func (g_free);
+	priv->progress = fu_progress_new();
 	g_rw_lock_init (&priv->parent_guids_mutex);
 	g_rw_lock_init (&priv->metadata_mutex);
 	priv->notify_flags_handler_id =
 	    g_signal_connect(self, "notify::flags", G_CALLBACK(fu_device_flags_notify_cb), NULL);
+
+	/* allows more verbose profiling for plugin development */
+	fu_progress_set_profile(priv->progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	g_signal_connect(priv->progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_device_progress_percentage_changed_cb),
+			 self);
+	g_signal_connect(priv->progress,
+			 "status-changed",
+			 G_CALLBACK(fu_device_progress_status_changed_cb),
+			 self);
 }
 
 static void
@@ -4765,6 +4805,7 @@ fu_device_finalize (GObject *object)
 	g_ptr_array_unref (priv->parent_guids);
 	g_ptr_array_unref (priv->possible_plugins);
 	g_ptr_array_unref (priv->retry_recs);
+	g_object_unref(priv->progress);
 	g_free (priv->alternate_id);
 	g_free (priv->equivalent_id);
 	g_free (priv->physical_id);

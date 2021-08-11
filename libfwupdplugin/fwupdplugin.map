@@ -867,11 +867,29 @@ LIBFWUPDPLUGIN_1.6.2 {
 
 LIBFWUPDPLUGIN_1.7.0 {
   global:
+    fu_device_get_progress_helper;
     fu_plugin_runner_attach;
     fu_plugin_runner_cleanup;
     fu_plugin_runner_detach;
     fu_plugin_runner_prepare;
     fu_plugin_runner_reload;
     fu_plugin_runner_write_firmware;
+    fu_progress_add_step;
+    fu_progress_finished;
+    fu_progress_get_child;
+    fu_progress_get_id;
+    fu_progress_get_percentage;
+    fu_progress_get_status;
+    fu_progress_get_type;
+    fu_progress_new;
+    fu_progress_reset;
+    fu_progress_set_id;
+    fu_progress_set_percentage;
+    fu_progress_set_percentage_full;
+    fu_progress_set_profile;
+    fu_progress_set_status;
+    fu_progress_set_steps;
+    fu_progress_sleep;
+    fu_progress_step_done;
   local: *;
 } LIBFWUPDPLUGIN_1.6.2;
