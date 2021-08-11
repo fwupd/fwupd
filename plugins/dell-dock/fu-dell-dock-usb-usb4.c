@@ -266,6 +266,10 @@ fu_dell_dock_usb4_hub_operation (FuDevice *device, guint16 opcode,
 	if (!fu_dell_dock_usb4_hub_set_mmio (device, MBOX_REG, buf, error))
 		return FALSE;
 
+	/* leave early as successful USB4 AUTH resets the device immediately */
+	if (opcode == OP_NVM_AUTH_WRITE)
+		return TRUE;
+
 	for (gint i = 0; i <= max_tries; i++) {
 		g_autoptr (GError) error_local = NULL;
 		if (fu_dell_dock_usb4_hub_get_mmio (device,
@@ -413,11 +417,17 @@ fu_dell_dock_usb4_hub_nvm_write (FuDevice *device, const guint8 *buf,
 static gboolean
 fu_dell_dock_usb4_activate (FuDevice *device, GError **error)
 {
+	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
+	if (locker == NULL)
+		return FALSE;
+
 	if (!fu_dell_dock_usb4_hub_operation (device, OP_NVM_AUTH_WRITE,
 					      NULL, error)) {
 		g_prefix_error (error, "NVM authenticate failed: ");
+		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_FAILED);
 		return FALSE;
 	}
+	fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
 	return TRUE;
 }
 
@@ -562,6 +572,7 @@ fu_dell_dock_usb4_probe (FuDevice *device, GError **error)
 	fu_device_set_logical_id (FU_DEVICE (device), "usb4");
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION);
 	return TRUE;
 }
 

@@ -173,11 +173,29 @@ fu_plugin_backend_device_added (FuPlugin *plugin,
 void
 fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 {
-	/* thunderbolt plugin */
+	/* usb4 device from thunderbolt plugin */
 	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") == 0 &&
 	    fu_device_has_guid (device, DELL_DOCK_USB4_INSTANCE_ID)) {
 		fu_device_remove_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
 		return;
+	}
+
+	/* online activation is mutually exclusive between usb4 and ec */
+	if (g_strcmp0(fu_device_get_plugin(device), "dell_dock") == 0 &&
+	    FU_IS_DELL_DOCK_USB4(device) &&
+	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+		GPtrArray *devices = fu_plugin_get_devices(plugin);
+		for (guint i = 0; i < devices->len; i++) {
+			FuDevice *device_tmp = g_ptr_array_index(devices, i);
+			if (FU_IS_DELL_DOCK_EC(device_tmp) &&
+			    fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+				fu_device_remove_flag(FU_DEVICE(device_tmp),
+						      FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+				g_debug("activate for %s is inhibited by %s",
+					fu_device_get_name(device_tmp),
+					fu_device_get_name(device));
+			}
+		}
 	}
 
 	if (g_strcmp0 (fu_device_get_plugin (device), "thunderbolt") != 0 ||

@@ -5496,6 +5496,9 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 		fu_device_set_update_error (device, "No vendor ID set");
 	}
 
+	/* sometimes inherit flags from recent history */
+	fu_engine_device_inherit_history(self, device);
+
 	/* notify all plugins about this new device */
 	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REGISTERED))
 		fu_engine_plugin_device_register (self, device);
@@ -5520,9 +5523,6 @@ fu_engine_add_device (FuEngine *self, FuDevice *device)
 
 	/* match the metadata so clients can tell if the device is worthy */
 	fu_engine_ensure_device_supported (self, device);
-
-	/* sometimes inherit flags from recent history */
-	fu_engine_device_inherit_history (self, device);
 
 	fu_engine_emit_changed (self);
 }
