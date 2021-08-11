@@ -5762,6 +5762,14 @@ fu_engine_plugin_rules_changed_cb (FuPlugin *plugin, gpointer user_data)
 }
 
 static void
+fu_engine_plugin_config_changed_cb(FuPlugin *plugin, gpointer user_data)
+{
+	FuEngine *self = FU_ENGINE(user_data);
+	g_info("config file for %s changed, sending SHUTDOWN", fu_plugin_get_name(plugin));
+	fu_engine_set_status(self, FWUPD_STATUS_SHUTDOWN);
+}
+
+static void
 fu_engine_context_security_changed_cb (FuContext *ctx, gpointer user_data)
 {
 	FuEngine *self = FU_ENGINE (user_data);
@@ -6130,6 +6138,10 @@ fu_engine_load_plugins (FuEngine *self, GError **error)
 		g_signal_connect (plugin, "rules-changed",
 				  G_CALLBACK (fu_engine_plugin_rules_changed_cb),
 				  self);
+		g_signal_connect(plugin,
+				 "config-changed",
+				 G_CALLBACK(fu_engine_plugin_config_changed_cb),
+				 self);
 
 		/* add */
 		fu_engine_add_plugin (self, plugin);
