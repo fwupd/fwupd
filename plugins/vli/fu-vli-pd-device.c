@@ -434,7 +434,7 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 	spi_fw = fu_vli_device_spi_read(FU_VLI_DEVICE(self),
 					fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
 					fu_device_get_firmware_size_max(FU_DEVICE(self)),
-					fu_progress_get_division(progress),
+					fu_progress_get_child(progress),
 					error);
 	if (spi_fw == NULL)
 		return FALSE;
@@ -457,7 +457,7 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 					     sec_addr,
 					     buf,
 					     bufsz,
-					     fu_progress_get_division(progress),
+					     fu_progress_get_child(progress),
 					     error))
 			return FALSE;
 		fu_progress_step_done(progress);
@@ -465,7 +465,7 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 					     fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
 					     buf,
 					     bufsz,
-					     fu_progress_get_division(progress),
+					     fu_progress_get_child(progress),
 					     error))
 			return FALSE;
 		fu_progress_step_done(progress);
@@ -476,7 +476,7 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 					     fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
 					     buf,
 					     bufsz,
-					     fu_progress_get_division(progress),
+					     fu_progress_get_child(progress),
 					     error))
 			return FALSE;
 		fu_progress_step_done(progress);
@@ -484,7 +484,7 @@ fu_vli_pd_device_write_dual_firmware(FuVliPdDevice *self,
 					     sec_addr,
 					     buf,
 					     bufsz,
-					     fu_progress_get_division(progress),
+					     fu_progress_get_child(progress),
 					     error))
 			return FALSE;
 		fu_progress_step_done(progress);
@@ -533,7 +533,7 @@ fu_vli_pd_device_write_firmware(FuDevice *device,
 	/* erase */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_vli_device_spi_erase_all(FU_VLI_DEVICE(self),
-					 fu_progress_get_division(progress),
+					 fu_progress_get_child(progress),
 					 error))
 		return FALSE;
 	fu_progress_step_done(progress);
@@ -545,7 +545,7 @@ fu_vli_pd_device_write_firmware(FuDevice *device,
 				     fu_vli_device_get_offset(FU_VLI_DEVICE(self)),
 				     buf,
 				     bufsz,
-				     fu_progress_get_division(progress),
+				     fu_progress_get_child(progress),
 				     error))
 		return FALSE;
 

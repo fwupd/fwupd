@@ -488,12 +488,11 @@ fu_superio_it89_device_detach (FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_superio_it89_device_check_eflash (FuSuperioDevice *self, GError **error)
+fu_superio_it89_device_check_eflash(FuSuperioDevice *self, FuProgress *progress, GError **error)
 {
 	g_autoptr(GBytes) fw = NULL;
 	const guint64 fwsize = fu_device_get_firmware_size_min (FU_DEVICE (self));
 	const guint sigsz = 16;
-	g_autoptr(FuProgress) progress = fu_progress_new();
 
 	/* last 16 bytes of eeprom */
 	fw = fu_superio_it89_device_read_addr(self, fwsize - sigsz, sigsz, progress, error);
@@ -628,6 +627,9 @@ fu_superio_it89_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
+	/* progress */
+	fu_progress_set_custom_steps(progress, 5 /* check-eflash */, 95 /* write */, -1);
+
 	/* check JEDEC ID */
 	if (!fu_superio_it89_device_get_jedec_id (self, id, error)) {
 		g_prefix_error (error, "failed to get JEDEC ID: ");
@@ -643,8 +645,9 @@ fu_superio_it89_device_write_firmware(FuDevice *device,
 	}
 
 	/* check eflash is writable */
-	if (!fu_superio_it89_device_check_eflash (self, error))
+	if (!fu_superio_it89_device_check_eflash(self, fu_progress_get_child(progress), error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* get default image */
 	fw = fu_firmware_get_bytes (firmware, error);
@@ -680,11 +683,13 @@ fu_superio_it89_device_write_firmware(FuDevice *device,
 		}
 
 		/* set progress */
-		fu_progress_set_percentage_full(progress, (gsize)i, (gsize)chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* success */
-	fu_progress_set_percentage(progress, 100);
 	return TRUE;
 }
 

@@ -438,7 +438,6 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 {
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE (device);
 	FuVliPdDevice *parent = FU_VLI_PD_DEVICE (fu_device_get_parent (device));
-	FuProgress *progress_local;
 	FuChunk *chk0;
 	guint8 buf[0x20];
 	guint block_idx_tmp;
@@ -474,12 +473,11 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 	if (!fu_vli_pd_parade_device_wait_ready (self, error))
 		return FALSE;
 	blocks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, 0x10000);
-	progress_local = fu_progress_get_division(progress);
 	for (guint i = 1; i < blocks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (blocks, i);
 		if (!fu_vli_pd_parade_device_block_erase (self, fu_chunk_get_idx (chk), error))
 			return FALSE;
-		fu_progress_set_percentage_full(progress_local, i, blocks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress), i, blocks->len);
 	}
 	fu_progress_step_done(progress);
 
@@ -494,12 +492,11 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 
 	/* write blocks */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
-	progress_local = fu_progress_get_division(progress);
 	for (guint i = 1; i < blocks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (blocks, i);
 		if (!fu_vli_pd_parade_device_block_write (self, fu_chunk_get_idx (chk), fu_chunk_get_data (chk), error))
 			return FALSE;
-		fu_progress_set_percentage_full(progress_local, i, blocks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress), i, blocks->len);
 	}
 	if (!fu_vli_pd_parade_device_write_disable (self, error))
 		return FALSE;

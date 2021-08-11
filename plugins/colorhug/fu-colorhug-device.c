@@ -479,12 +479,10 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 		}
 
 		/* update progress */
-		fu_progress_set_percentage_full(fu_progress_get_division(progress),
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i,
 						(gsize)chunks->len);
 	}
-
-	/* progress */
 	fu_progress_step_done(progress);
 
 	/* verify each block */
@@ -525,13 +523,13 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 		}
 
 		/* update progress */
-		fu_progress_set_percentage_full(fu_progress_get_division(progress),
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						(gsize)i,
 						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* success! */
-	fu_progress_step_done(progress);
 	return TRUE;
 }
 

@@ -1486,7 +1486,7 @@ fu_dfu_device_upload(FuDfuDevice *self,
 					G_CALLBACK (fu_dfu_device_action_cb), self);
 		if (!fu_dfu_target_upload(target,
 					  firmware,
-					  fu_progress_get_division(progress),
+					  fu_progress_get_child(progress),
 					  DFU_TARGET_TRANSFER_FLAG_NONE,
 					  error))
 			return NULL;
@@ -1651,7 +1651,7 @@ fu_dfu_device_download(FuDfuDevice *self,
 					G_CALLBACK (fu_dfu_device_action_cb), self);
 		ret = fu_dfu_target_download(target_tmp,
 					     image,
-					     fu_progress_get_division(progress),
+					     fu_progress_get_child(progress),
 					     flags_local,
 					     error);
 		g_signal_handler_disconnect (target_tmp, id2);

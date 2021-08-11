@@ -348,7 +348,7 @@ fu_analogix_device_write_firmware(FuDevice *device,
 		if (!fu_analogix_device_write_image(self,
 						    fw_cus,
 						    ANX_BB_WVAL_UPDATE_CUSTOM_DEF,
-						    fu_progress_get_division(progress),
+						    fu_progress_get_child(progress),
 						    error)) {
 			g_prefix_error (error, "program custom define failed: ");
 			return FALSE;
@@ -362,7 +362,7 @@ fu_analogix_device_write_firmware(FuDevice *device,
 		if (!fu_analogix_device_write_image(self,
 						    fw_stx,
 						    ANX_BB_WVAL_UPDATE_SECURE_TX,
-						    fu_progress_get_division(progress),
+						    fu_progress_get_child(progress),
 						    error)) {
 			g_prefix_error (error, "program secure TX failed: ");
 			return FALSE;
@@ -376,7 +376,7 @@ fu_analogix_device_write_firmware(FuDevice *device,
 		if (!fu_analogix_device_write_image(self,
 						    fw_srx,
 						    ANX_BB_WVAL_UPDATE_SECURE_RX,
-						    fu_progress_get_division(progress),
+						    fu_progress_get_child(progress),
 						    error)) {
 			g_prefix_error (error, "program secure RX failed: ");
 			return FALSE;
@@ -390,7 +390,7 @@ fu_analogix_device_write_firmware(FuDevice *device,
 		if (!fu_analogix_device_write_image(self,
 						    fw_ocm,
 						    ANX_BB_WVAL_UPDATE_OCM,
-						    fu_progress_get_division(progress),
+						    fu_progress_get_child(progress),
 						    error)) {
 			g_prefix_error (error, "program OCM failed: ");
 			return FALSE;

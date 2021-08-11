@@ -25,7 +25,7 @@
  * so that as the sub-module progresses, so does the parent.
  * The child can be reused for each section, and chains can be deep.
  *
- * To get a child object, you should use fu_progress_get_division() and then
+ * To get a child object, you should use fu_progress_get_child() and then
  * use the result in any sub-process. You should ensure that the child
  * is not re-used without calling fu_progress_step_done().
  *
@@ -38,21 +38,17 @@
  * static void
  * _do_something(FuProgress *self)
  * {
- *    FuProgress *progress_local;
- *
  *    // setup correct number of steps
  *    fu_progress_set_steps(self, 2);
  *
  *    // run a sub function
- *    progress_local = fu_progress_get_division(self);
- *    _do_something_else1(progress_local);
+ *    _do_something_else1(fu_progress_get_child(self));
  *
  *    // this section done
  *    fu_progress_step_done(self);
  *
  *    // run another sub function
- *    progress_local = fu_progress_get_division(self);
- *    _do_something_else2(progress_local);
+ *    _do_something_else2(fu_progress_get_child(self));
  *
  *    // this progress done (all complete)
  *    fu_progress_step_done(self);
@@ -137,7 +133,7 @@ fu_progress_get_enabled(FuProgress *self)
  * the number of steps in the progress.
  *
  * Using this function also reduced the amount of time spent getting a
- * child self using fu_progress_get_division() as a the parent is returned instead.
+ * child self using fu_progress_get_child() as a the parent is returned instead.
  *
  * Since: 1.6.3
  **/
@@ -532,7 +528,7 @@ fu_progress_set_global_share(FuProgress *self, gdouble global_share)
 }
 
 /**
- * fu_progress_get_division:
+ * fu_progress_get_child:
  * @self: A #FuProgress
  *
  * Monitor a child division and proxy back up to the parent.
@@ -542,7 +538,7 @@ fu_progress_set_global_share(FuProgress *self, gdouble global_share)
  * Since: 1.6.3
  **/
 FuProgress *
-fu_progress_get_division(FuProgress *self)
+fu_progress_get_child(FuProgress *self)
 {
 	FuProgressPrivate *priv = GET_PRIVATE(self);
 	FuProgressPrivate *child_priv;
@@ -554,13 +550,9 @@ fu_progress_get_division(FuProgress *self)
 	if (!priv->enabled)
 		return self;
 
-	/* already set child */
+	/* already created child */
 	if (priv->child != NULL)
 		return priv->child;
-	//	{
-	//		g_signal_handler_disconnect(priv->child, priv->percentage_child_id);
-	//		g_object_unref(priv->child);
-	//	}
 
 	/* connect up signals */
 	child = fu_progress_new();

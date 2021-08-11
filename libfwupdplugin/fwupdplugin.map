@@ -870,7 +870,7 @@ LIBFWUPDPLUGIN_1.7.0 {
     fu_plugin_runner_reload;
     fu_plugin_runner_write_firmware;
     fu_progress_finished;
-    fu_progress_get_division;
+    fu_progress_get_child;
     fu_progress_get_enabled;
     fu_progress_get_id;
     fu_progress_get_percentage;

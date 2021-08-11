@@ -3257,7 +3257,7 @@ fu_progress_child_func(void)
 	g_assert_cmpint(helper.last_percentage, ==, 50);
 
 	/* now test with a child */
-	child = fu_progress_get_division(progress);
+	child = fu_progress_get_child(progress);
 	fu_progress_set_steps(child, 2);
 
 	g_debug("child update #1");
@@ -3295,7 +3295,7 @@ fu_progress_parent_one_step_proxy_func(void)
 			 &helper);
 
 	/* now test with a child */
-	child = fu_progress_get_division(progress);
+	child = fu_progress_get_child(progress);
 	fu_progress_set_steps(child, 2);
 
 	/* child set value */
@@ -3318,7 +3318,7 @@ fu_progress_non_equal_steps_func(void)
 	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 0);
 
 	/* child step should increment according to the custom steps */
-	child = fu_progress_get_division(progress);
+	child = fu_progress_get_child(progress);
 	fu_progress_set_steps(child, 2);
 
 	/* start child */
@@ -3336,7 +3336,7 @@ fu_progress_non_equal_steps_func(void)
 	g_assert_cmpint(fu_progress_get_percentage(progress), ==, 20);
 
 	/* child step should increment according to the custom steps */
-	child = fu_progress_get_division(progress);
+	child = fu_progress_get_child(progress);
 	fu_progress_set_custom_steps(child, 25, 75, -1);
 
 	/* start child */
@@ -3353,7 +3353,7 @@ fu_progress_non_equal_steps_func(void)
 	 *                     |              75.5 |
 	 *                     |---------------||--| (90%)
 	 */
-	grandchild = fu_progress_get_division(child);
+	grandchild = fu_progress_get_child(child);
 	fu_progress_set_custom_steps(grandchild, 90, 10, -1);
 
 	fu_progress_step_done(grandchild);
@@ -3394,7 +3394,7 @@ fu_progress_no_progress_func(void)
 
 	fu_progress_step_done(progress);
 
-	child = fu_progress_get_division(progress);
+	child = fu_progress_get_child(progress);
 	g_assert(child != NULL);
 	fu_progress_set_steps(child, 2);
 	fu_progress_step_done(child);
@@ -3412,7 +3412,7 @@ fu_progress_finish_func(void)
 	progress = fu_progress_new();
 	fu_progress_set_steps(progress, 3);
 
-	child = fu_progress_get_division(progress);
+	child = fu_progress_get_child(progress);
 	fu_progress_set_steps(child, 3);
 	fu_progress_finished(child);
 
@@ -3428,7 +3428,7 @@ fu_progress_finished_func(void)
 
 	progress = fu_progress_new();
 	fu_progress_set_custom_steps(progress, 90, 10, -1);
-	progress_local = fu_progress_get_division(progress);
+	progress_local = fu_progress_get_child(progress);
 	fu_progress_set_enabled(progress_local, FALSE);
 
 	for (guint i = 0; i < 10; i++) {

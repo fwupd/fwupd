@@ -50,6 +50,6 @@ fu_progress_finished(FuProgress *self);
 void
 fu_progress_step_done(FuProgress *self);
 FuProgress *
-fu_progress_get_division(FuProgress *self);
+fu_progress_get_child(FuProgress *self);
 void
 fu_progress_sleep(FuProgress *self, guint delay_secs);

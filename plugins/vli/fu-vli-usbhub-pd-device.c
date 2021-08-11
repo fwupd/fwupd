@@ -221,7 +221,7 @@ fu_vli_usbhub_pd_device_write_firmware(FuDevice *device,
 	if (!fu_vli_device_spi_erase(FU_VLI_DEVICE(parent),
 				     fu_vli_common_device_kind_get_offset(self->device_kind),
 				     bufsz,
-				     fu_progress_get_division(progress),
+				     fu_progress_get_child(progress),
 				     error))
 		return FALSE;
 
@@ -234,7 +234,7 @@ fu_vli_usbhub_pd_device_write_firmware(FuDevice *device,
 				     fu_vli_common_device_kind_get_offset(self->device_kind),
 				     buf,
 				     bufsz,
-				     fu_progress_get_division(progress),
+				     fu_progress_get_child(progress),
 				     error))
 		return FALSE;
 

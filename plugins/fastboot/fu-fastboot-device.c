@@ -569,7 +569,7 @@ fu_fastboot_device_write_motorola(FuDevice *device,
 		if (!fu_fastboot_device_write_motorola_part(device,
 							    archive,
 							    part,
-							    fu_progress_get_division(progress),
+							    fu_progress_get_child(progress),
 							    error))
 			return FALSE;
 		fu_progress_step_done(progress);
@@ -613,7 +613,7 @@ fu_fastboot_device_write_qfil(FuDevice *device,
 		if (!fu_fastboot_device_write_qfil_part(device,
 							archive,
 							part,
-							fu_progress_get_division(progress),
+							fu_progress_get_child(progress),
 							error))
 			return FALSE;
 		fu_progress_step_done(progress);

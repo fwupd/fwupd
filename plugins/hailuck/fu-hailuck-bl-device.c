@@ -200,7 +200,6 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 {
 	FuHailuckBlDevice *self = FU_HAILUCK_BL_DEVICE (device);
 	FuChunk *chk0;
-	FuProgress *progress_local;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_new = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -221,7 +220,7 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 
 	/* erase all contents */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_hailuck_bl_device_erase(self, fu_progress_get_division(progress), error))
+	if (!fu_hailuck_bl_device_erase(self, fu_progress_get_child(progress), error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -248,7 +247,6 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* send the rest of the chunks */
-	progress_local = fu_progress_get_division(progress);
 	for (guint i = 1; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_hailuck_bl_device_write_block (self,
@@ -256,7 +254,7 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 						       fu_chunk_get_data_sz (chk),
 						       error))
 			return FALSE;
-		fu_progress_set_percentage_full(progress_local, i, chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress), i, chunks->len);
 	}
 	fu_progress_step_done(progress);
 
@@ -271,8 +269,7 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* verify */
-	fw_new =
-	    fu_hailuck_bl_device_dump_firmware(device, fu_progress_get_division(progress), error);
+	fw_new = fu_hailuck_bl_device_dump_firmware(device, fu_progress_get_child(progress), error);
 	fu_progress_step_done(progress);
 	return fu_common_bytes_compare (fw, fw_new, error);
 }

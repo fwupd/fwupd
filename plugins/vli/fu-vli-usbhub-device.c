@@ -802,7 +802,7 @@ fu_vli_usbhub_device_update_v1(FuVliUsbhubDevice *self,
 	/* erase */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_vli_device_spi_erase_all(FU_VLI_DEVICE(self),
-					 fu_progress_get_division(progress),
+					 fu_progress_get_child(progress),
 					 error)) {
 		g_prefix_error (error, "failed to erase chip: ");
 		return FALSE;
@@ -816,7 +816,7 @@ fu_vli_usbhub_device_update_v1(FuVliUsbhubDevice *self,
 				     0x0,
 				     buf,
 				     bufsz,
-				     fu_progress_get_division(progress),
+				     fu_progress_get_child(progress),
 				     error))
 		return FALSE;
 
@@ -832,7 +832,6 @@ fu_vli_usbhub_device_update_v2_recovery(FuVliUsbhubDevice *self,
 					FuProgress *progress,
 					GError **error)
 {
-	FuProgress *progress_local;
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
 
@@ -841,13 +840,14 @@ fu_vli_usbhub_device_update_v2_recovery(FuVliUsbhubDevice *self,
 
 	/* erase */
 	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
-	progress_local = fu_progress_get_division(progress);
 	for (guint32 addr = 0; addr < bufsz; addr += 0x1000) {
 		if (!fu_vli_device_spi_erase_sector (FU_VLI_DEVICE (self), addr, error)) {
 			g_prefix_error (error, "failed to erase sector @0x%x: ", addr);
 			return FALSE;
 		}
-		fu_progress_set_percentage_full(progress_local, (gsize)addr, bufsz);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)addr,
+						bufsz);
 	}
 	fu_progress_step_done(progress);
 
@@ -857,7 +857,7 @@ fu_vli_usbhub_device_update_v2_recovery(FuVliUsbhubDevice *self,
 				     VLI_USBHUB_FLASHMAP_ADDR_HD1,
 				     buf,
 				     bufsz,
-				     fu_progress_get_division(progress),
+				     fu_progress_get_child(progress),
 				     error))
 		return FALSE;
 
