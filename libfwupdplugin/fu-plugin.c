@@ -43,6 +43,7 @@ typedef struct {
 	GHashTable		*cache;			/* (nullable): platform_id:GObject */
 	GRWLock			 cache_mutex;
 	GHashTable		*report_metadata;	/* (nullable): key:value */
+	GFileMonitor *config_monitor;
 	FuPluginData		*data;
 } FuPluginPrivate;
 
@@ -51,6 +52,7 @@ enum {
 	SIGNAL_DEVICE_REMOVED,
 	SIGNAL_DEVICE_REGISTER,
 	SIGNAL_RULES_CHANGED,
+	SIGNAL_CONFIG_CHANGED,
 	SIGNAL_CHECK_SUPPORTED,
 	SIGNAL_LAST
 };
@@ -419,6 +421,27 @@ fu_plugin_device_child_removed_cb (FuDevice *device, FuDevice *child, FuPlugin *
 		 fu_device_get_id (child),
 		 fu_device_get_id (device));
 	fu_plugin_device_remove (self, child);
+}
+
+static void
+fu_plugin_config_monitor_changed_cb(GFileMonitor *monitor,
+				    GFile *file,
+				    GFile *other_file,
+				    GFileMonitorEvent event_type,
+				    gpointer user_data)
+{
+	FuPlugin *self = FU_PLUGIN(user_data);
+	g_autofree gchar *fn = g_file_get_path(file);
+	g_debug("%s changed, sending signal", fn);
+	g_signal_emit(self, signals[SIGNAL_CONFIG_CHANGED], 0);
+}
+
+static gchar *
+fu_plugin_get_config_filename(FuPlugin *self)
+{
+	g_autofree gchar *conf_dir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
+	g_autofree gchar *conf_file = g_strdup_printf("%s.conf", fu_plugin_get_name(self));
+	return g_build_filename(conf_dir, conf_file, NULL);
 }
 
 /**
@@ -799,7 +822,9 @@ fu_plugin_runner_startup (FuPlugin *self, GError **error)
 {
 	FuPluginPrivate *priv = GET_PRIVATE (self);
 	FuPluginStartupFunc func = NULL;
+	g_autofree gchar *config_filename = fu_plugin_get_config_filename(self);
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GFile) file = g_file_new_for_path(config_filename);
 
 	/* not enabled */
 	if (fu_plugin_has_flag (self, FWUPD_PLUGIN_FLAG_DISABLED))
@@ -828,6 +853,17 @@ fu_plugin_runner_startup (FuPlugin *self, GError **error)
 					    fu_plugin_get_name (self));
 		return FALSE;
 	}
+
+	/* create a monitor on the config file */
+	priv->config_monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, error);
+	if (priv->config_monitor == NULL)
+		return FALSE;
+	g_signal_connect(priv->config_monitor,
+			 "changed",
+			 G_CALLBACK(fu_plugin_config_monitor_changed_cb),
+			 self);
+
+	/* success */
 	return TRUE;
 }
 
@@ -2289,23 +2325,15 @@ fu_plugin_get_report_metadata (FuPlugin *self)
 gchar *
 fu_plugin_get_config_value (FuPlugin *self, const gchar *key)
 {
-	g_autofree gchar *conf_dir = NULL;
-	g_autofree gchar *conf_file = NULL;
-	g_autofree gchar *conf_path = NULL;
+	g_autofree gchar *conf_path = fu_plugin_get_config_filename(self);
 	g_autoptr(GKeyFile) keyfile = NULL;
-	const gchar *plugin_name;
-
-	conf_dir = fu_common_get_path (FU_PATH_KIND_SYSCONFDIR_PKG);
-	plugin_name = fu_plugin_get_name (self);
-	conf_file = g_strdup_printf ("%s.conf", plugin_name);
-	conf_path = g_build_filename (conf_dir, conf_file,  NULL);
 	if (!g_file_test (conf_path, G_FILE_TEST_IS_REGULAR))
 		return NULL;
 	keyfile = g_key_file_new ();
 	if (!g_key_file_load_from_file (keyfile, conf_path,
 					G_KEY_FILE_NONE, NULL))
 		return NULL;
-	return g_key_file_get_string (keyfile, plugin_name, key, NULL);
+	return g_key_file_get_string(keyfile, fu_plugin_get_name(self), key, NULL);
 }
 
 /**
@@ -2403,6 +2431,16 @@ fu_plugin_class_init (FuPluginClass *klass)
 			      G_STRUCT_OFFSET (FuPluginClass, rules_changed),
 			      NULL, NULL, g_cclosure_marshal_VOID__VOID,
 			      G_TYPE_NONE, 0);
+	signals[SIGNAL_CONFIG_CHANGED] =
+	    g_signal_new("config-changed",
+			 G_TYPE_FROM_CLASS(object_class),
+			 G_SIGNAL_RUN_LAST,
+			 G_STRUCT_OFFSET(FuPluginClass, config_changed),
+			 NULL,
+			 NULL,
+			 g_cclosure_marshal_VOID__VOID,
+			 G_TYPE_NONE,
+			 0);
 }
 
 static void
@@ -2448,6 +2486,8 @@ fu_plugin_finalize (GObject *object)
 		g_hash_table_unref (priv->cache);
 	if (priv->device_gtypes != NULL)
 		g_array_unref (priv->device_gtypes);
+	if (priv->config_monitor != NULL)
+		g_object_unref(priv->config_monitor);
 	g_free (priv->build_hash);
 	g_free (priv->data);
 
