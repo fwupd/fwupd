@@ -39,7 +39,7 @@ fu_wac_module_touch_write_firmware (FuDevice *device,
 				    GError **error)
 {
 	FuWacModule *self = FU_WAC_MODULE (device);
-	gsize blocks_total = 0;
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -54,15 +54,11 @@ fu_wac_module_touch_write_firmware (FuDevice *device,
 						fu_firmware_get_addr (firmware),
 						0x0, /* page_sz */
 						128); /* packet_sz */
-	blocks_total = chunks->len + 2;
 
 	/* start, which will erase the module */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_wac_module_set_feature (self, FU_WAC_MODULE_COMMAND_START, NULL, error))
 		return FALSE;
-
-	/* update progress */
-	fu_device_set_progress_full (device, 1, blocks_total);
 
 	/* data */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
@@ -86,15 +82,14 @@ fu_wac_module_touch_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, i + 1, blocks_total);
+		fu_progress_set_percentage_full(progress, i + 1, chunks->len);
 	}
 
 	/* end */
 	if (!fu_wac_module_set_feature (self, FU_WAC_MODULE_COMMAND_END, NULL, error))
 		return FALSE;
 
-	/* update progress */
-	fu_device_set_progress_full (device, blocks_total, blocks_total);
+	/* success */
 	return TRUE;
 }
 

@@ -214,6 +214,7 @@ fu_wacom_device_write_firmware (FuDevice *device,
 	FuWacomDevice *self = FU_WACOM_DEVICE (device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE (self);
 	FuWacomDeviceClass *klass = FU_WACOM_DEVICE_GET_CLASS (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -252,7 +253,7 @@ fu_wacom_device_write_firmware (FuDevice *device,
 	chunks = fu_chunk_array_new_from_bytes (fw, priv->flash_base_addr,
 						0x00,	/* page_sz */
 						priv->flash_block_size);
-	return klass->write_firmware (device, chunks, error);
+	return klass->write_firmware(device, chunks, progress, error);
 }
 
 gboolean

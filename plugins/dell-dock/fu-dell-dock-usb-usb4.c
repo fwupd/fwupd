@@ -359,6 +359,7 @@ fu_dell_dock_usb4_hub_nvm_write (FuDevice *device, const guint8 *buf,
 				 guint32 length, guint32 nvm_addr,
 				 GError **error)
 {
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	guint8 metadata[4];
 	guint32 bytes_done = 0;
 	guint32 bytes_total = length;
@@ -392,7 +393,7 @@ fu_dell_dock_usb4_hub_nvm_write (FuDevice *device, const guint8 *buf,
 	}
 
 	/* 2 Write data in 64 byte blocks */
-	fu_device_set_progress_full (device, bytes_done, bytes_total);
+	fu_progress_set_percentage_full(progress, bytes_done, bytes_total);
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	while (length > 0)  {
 		/* write data to mbox data regs */
@@ -408,7 +409,7 @@ fu_dell_dock_usb4_hub_nvm_write (FuDevice *device, const guint8 *buf,
 		}
 		buf += 64;
 		length -= 64;
-		fu_device_set_progress_full (device, bytes_done += 64, bytes_total);
+		fu_progress_set_percentage_full(progress, bytes_done += 64, bytes_total);
 	}
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_BUSY);
 	return TRUE;

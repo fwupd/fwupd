@@ -197,6 +197,7 @@ fu_plugin_write_firmware(FuPlugin *plugin,
 			 GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	const gchar *test = g_getenv ("FWUPD_PLUGIN_TEST");
 	gboolean requires_activation = g_strcmp0 (test, "requires-activation") == 0;
 	gboolean requires_reboot = g_strcmp0 (test, "requires-reboot") == 0;
@@ -208,22 +209,19 @@ fu_plugin_write_firmware(FuPlugin *plugin,
 		return FALSE;
 	}
 	fu_device_set_status (device, FWUPD_STATUS_DECOMPRESSING);
-	for (guint i = 1; i <= data->delay_decompress_ms; i++) {
-		guint progress = (100 * i) / data->delay_decompress_ms;
+	for (guint i = 0; i <= data->delay_decompress_ms; i++) {
 		g_usleep (1000);
-		fu_device_set_progress(device, progress);
+		fu_progress_set_percentage_full(progress, i, data->delay_decompress_ms);
 	}
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	for (guint i = 1; i <= data->delay_write_ms; i++) {
-		guint progress = (100 * i) / data->delay_write_ms;
+	for (guint i = 0; i <= data->delay_write_ms; i++) {
 		g_usleep (1000);
-		fu_device_set_progress(device, progress);
+		fu_progress_set_percentage_full(progress, i, data->delay_write_ms);
 	}
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
-	for (guint i = 1; i <= data->delay_verify_ms; i++) {
-		guint progress = (100 * i) / data->delay_verify_ms;
+	for (guint i = 0; i <= data->delay_verify_ms; i++) {
 		g_usleep (1000);
-		fu_device_set_progress(device, progress);
+		fu_progress_set_percentage_full(progress, i, data->delay_verify_ms);
 	}
 
 	/* composite test, upgrade composite devices */

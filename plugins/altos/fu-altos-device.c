@@ -244,6 +244,7 @@ fu_altos_device_write_firmware (FuDevice *device,
 				GError **error)
 {
 	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	const gchar *data;
 	const gsize data_len;
 	guint flash_len;
@@ -259,6 +260,12 @@ fu_altos_device_write_firmware (FuDevice *device,
 				     "verification only supported in bootloader");
 		return FALSE;
 	}
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5); /* open */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5); /* attach */
 
 	/* check sizes */
 	if (self->addr_base == 0x0 || self->addr_bound == 0x0) {
@@ -312,6 +319,8 @@ fu_altos_device_write_firmware (FuDevice *device,
 					    error);
 	if (locker == NULL)
 		return FALSE;
+	fu_progress_step_done(progress);
+
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < flash_len; i+= 0x100) {
 		g_autoptr(GString) str = NULL;
@@ -362,16 +371,17 @@ fu_altos_device_write_firmware (FuDevice *device,
 		}
 
 		/* progress */
-		fu_device_set_progress_full (device, i, flash_len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						i + 0x100,
+						flash_len);
 		g_string_append_len (buf, str->str, str->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* go to application mode */
 	if (!fu_altos_device_tty_write (self, "a\n", -1, error))
 		return FALSE;
-
-	/* progress complete */
-	fu_device_set_progress_full (device, flash_len, flash_len);
+	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;
@@ -381,6 +391,7 @@ static GBytes *
 fu_altos_device_dump_firmware (FuDevice *device, GError **error)
 {
 	FuAltosDevice *self = FU_ALTOS_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	guint flash_len;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
 	g_autoptr(GString) buf = g_string_new (NULL);
@@ -429,9 +440,9 @@ fu_altos_device_dump_firmware (FuDevice *device, GError **error)
 			return NULL;
 
 		/* progress */
-		fu_device_set_progress_full (device,
-					     i - self->addr_base,
-					     self->addr_bound - self->addr_base);
+		fu_progress_set_percentage_full(progress,
+						i - self->addr_base,
+						self->addr_bound - self->addr_base);
 		g_string_append_len (buf, str->str, str->len);
 	}
 

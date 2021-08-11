@@ -200,6 +200,7 @@ fu_rts54hid_module_write_firmware (FuDevice *module,
 				   GError **error)
 {
 	FuRts54HidModule *self = FU_RTS54HID_MODULE (module);
+	FuProgress *progress = fu_device_get_progress_helper(module);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
@@ -234,7 +235,7 @@ fu_rts54hid_module_write_firmware (FuDevice *module,
 			return FALSE;
 
 		/* update progress */
-		fu_device_set_progress_full (module, (gsize) i, (gsize) chunks->len * 2);
+		fu_progress_set_percentage_full(progress, (gsize)i + 1, (gsize)chunks->len);
 	}
 
 	/* success! */

@@ -46,7 +46,6 @@
 #include "fu-dfu-target-stm.h"
 
 static void fu_dfu_device_finalize			 (GObject *object);
-
 typedef struct {
 	FuDfuDeviceAttrs	 attributes;
 	FuDfuState		 state;
@@ -1280,6 +1279,7 @@ static gboolean
 fu_dfu_device_probe (FuDevice *device, GError **error)
 {
 	FuDfuDevice *self = FU_DFU_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 
 	/* FuUsbDevice->probe */
@@ -1304,7 +1304,7 @@ fu_dfu_device_probe (FuDevice *device, GError **error)
 	/* hardware from Jabra literally reboots if you try to retry a failed
 	 * write -- there's no way to avoid blocking the daemon like this... */
 	if (fu_device_has_private_flag (FU_DEVICE (self), FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET))
-		fu_device_sleep_with_progress (device, 10); /* seconds */
+		fu_progress_sleep(progress, 10000);
 
 	/* success */
 	return TRUE;
@@ -1414,12 +1414,6 @@ fu_dfu_device_attach (FuDevice *device, GError **error)
 }
 
 static void
-fu_dfu_device_percentage_cb (FuDfuTarget *target, guint percentage, FuDfuDevice *self)
-{
-	fu_device_set_progress (FU_DEVICE (self), percentage);
-}
-
-static void
 fu_dfu_device_action_cb (FuDfuTarget *target, FwupdStatus action, FuDfuDevice *self)
 {
 	fu_device_set_status (FU_DEVICE (self), action);
@@ -1436,9 +1430,10 @@ fu_dfu_device_action_cb (FuDfuTarget *target, FwupdStatus action, FuDfuDevice *s
  * Returns: (transfer full): the uploaded firmware, or %NULL for error
  **/
 FuFirmware *
-fu_dfu_device_upload (FuDfuDevice *self,
-		      FuDfuTargetTransferFlags flags,
-		      GError **error)
+fu_dfu_device_upload(FuDfuDevice *self,
+		     FuProgress *progress,
+		     FuDfuTargetTransferFlags flags,
+		     GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
@@ -1470,10 +1465,10 @@ fu_dfu_device_upload (FuDfuDevice *self,
 	fu_dfu_firmware_set_release (FU_DFU_FIRMWARE (firmware), 0xffff);
 
 	/* upload from each target */
+	fu_progress_set_steps(progress, priv->targets->len);
 	for (guint i = 0; i < priv->targets->len; i++) {
 		FuDfuTarget *target;
 		const gchar *alt_name;
-		gulong id1;
 		gulong id2;
 
 		/* upload to target and proxy signals */
@@ -1486,17 +1481,16 @@ fu_dfu_device_upload (FuDfuDevice *self,
 			continue;
 		}
 
-		id1 = g_signal_connect (target, "percentage-changed",
-					G_CALLBACK (fu_dfu_device_percentage_cb), self);
 		id2 = g_signal_connect (target, "action-changed",
 					G_CALLBACK (fu_dfu_device_action_cb), self);
-		if (!fu_dfu_target_upload (target,
-					firmware,
-					DFU_TARGET_TRANSFER_FLAG_NONE,
-					error))
+		if (!fu_dfu_target_upload(target,
+					  firmware,
+					  fu_progress_get_child(progress),
+					  DFU_TARGET_TRANSFER_FLAG_NONE,
+					  error))
 			return NULL;
-		g_signal_handler_disconnect (target, id1);
 		g_signal_handler_disconnect (target, id2);
+		fu_progress_step_done(progress);
 	}
 
 	/* do not do the dummy upload for quirked devices */
@@ -1527,10 +1521,11 @@ fu_dfu_device_id_compatible (guint16 id_file, guint16 id_runtime, guint16 id_dev
 }
 
 static gboolean
-fu_dfu_device_download (FuDfuDevice *self,
-			FuFirmware *firmware,
-			FuDfuTargetTransferFlags flags,
-			GError **error)
+fu_dfu_device_download(FuDfuDevice *self,
+		       FuFirmware *firmware,
+		       FuProgress *progress,
+		       FuDfuTargetTransferFlags flags,
+		       GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE (self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (self));
@@ -1618,12 +1613,12 @@ fu_dfu_device_download (FuDfuDevice *self,
 	images = fu_firmware_get_images (firmware);
 	if (images->len == 0)
 		g_ptr_array_add (images, g_object_ref (firmware));
+	fu_progress_set_steps(progress, images->len);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *image = g_ptr_array_index (images, i);
 		FuDfuTargetTransferFlags flags_local = DFU_TARGET_TRANSFER_FLAG_NONE;
 		const gchar *alt_name;
 		guint8 alt;
-		gulong id1;
 		gulong id2;
 		g_autoptr(FuDfuTarget) target_tmp = NULL;
 		g_autoptr(GError) error_local = NULL;
@@ -1651,15 +1646,17 @@ fu_dfu_device_download (FuDfuDevice *self,
 		if (!FU_IS_DFU_FIRMWARE (firmware) ||
 		    fu_dfu_firmware_get_version (FU_DFU_FIRMWARE (firmware)) == 0x0)
 			flags_local |= DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC;
-		id1 = g_signal_connect (target_tmp, "percentage-changed",
-					G_CALLBACK (fu_dfu_device_percentage_cb), self);
 		id2 = g_signal_connect (target_tmp, "action-changed",
 					G_CALLBACK (fu_dfu_device_action_cb), self);
-		ret = fu_dfu_target_download (target_tmp, image, flags_local, error);
-		g_signal_handler_disconnect (target_tmp, id1);
+		ret = fu_dfu_target_download(target_tmp,
+					     image,
+					     fu_progress_get_child(progress),
+					     flags_local,
+					     error);
 		g_signal_handler_disconnect (target_tmp, id2);
 		if (!ret)
 			return FALSE;
+		fu_progress_step_done(progress);
 	}
 
 	/* do not do the dummy upload for quirked devices */
@@ -1713,6 +1710,7 @@ static GBytes *
 fu_dfu_device_dump_firmware (FuDevice *device, GError **error)
 {
 	FuDfuDevice *self = FU_DFU_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -1728,7 +1726,7 @@ fu_dfu_device_dump_firmware (FuDevice *device, GError **error)
 	g_debug ("uploading from device->host");
 	if (!fu_dfu_device_refresh_and_clear (self, error))
 		return NULL;
-	firmware = fu_dfu_device_upload (self, DFU_TARGET_TRANSFER_FLAG_NONE, error);
+	firmware = fu_dfu_device_upload(self, progress, DFU_TARGET_TRANSFER_FLAG_NONE, error);
 	if (firmware == NULL)
 		return NULL;
 
@@ -1757,6 +1755,7 @@ fu_dfu_device_write_firmware (FuDevice *device,
 {
 	FuDfuDevice *self = FU_DFU_DEVICE (device);
 	FuDfuTargetTransferFlags transfer_flags = DFU_TARGET_TRANSFER_FLAG_VERIFY;
+	FuProgress *progress = fu_device_get_progress_helper(device);
 
 	/* open it */
 	if (!fu_dfu_device_refresh_and_clear (self, error))
@@ -1767,7 +1766,7 @@ fu_dfu_device_write_firmware (FuDevice *device,
 	}
 
 	/* hit hardware */
-	return fu_dfu_device_download (self, firmware, transfer_flags, error);
+	return fu_dfu_device_download(self, firmware, progress, transfer_flags, error);
 }
 
 static gboolean

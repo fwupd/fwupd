@@ -553,8 +553,15 @@ fu_pxi_wireless_device_write_firmware (FuDevice *device,
 				       GError **error)
 {
 	FuPxiWirelessDevice *self = FU_PXI_WIRELESS_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 9); /* ota-init */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1);
 
 	/* get the default image */
 	fw = fu_firmware_get_bytes (firmware, error);
@@ -566,6 +573,7 @@ fu_pxi_wireless_device_write_firmware (FuDevice *device,
 		return FALSE;
 	if (!fu_pxi_wireless_device_fw_ota_ini_new_check (device ,error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	chunks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, FU_PXI_DEVICE_OBJECT_SIZE_MAX);
 	/* prepare write fw into device */
@@ -578,12 +586,16 @@ fu_pxi_wireless_device_write_firmware (FuDevice *device,
 		FuChunk *chk = g_ptr_array_index (chunks, i);
 		if (!fu_pxi_wireless_device_write_chunk (device, chk, error))
 			return FALSE;
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + self->fwstate.offset + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* fw upgrade command */
 	if (!fu_pxi_wireless_device_fw_upgrade (device, firmware, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* send device reset command */
 	g_usleep (FU_PXI_WIRELESS_DEV_DELAY_US);

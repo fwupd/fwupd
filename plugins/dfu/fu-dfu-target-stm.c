@@ -83,11 +83,12 @@ fu_dfu_target_stm_set_address (FuDfuTarget *target, guint32 address, GError **er
 }
 
 static FuChunk *
-fu_dfu_target_stm_upload_element (FuDfuTarget *target,
-				  guint32 address,
-				  gsize expected_size,
-				  gsize maximum_size,
-				  GError **error)
+fu_dfu_target_stm_upload_element(FuDfuTarget *target,
+				 guint32 address,
+				 gsize expected_size,
+				 gsize maximum_size,
+				 FuProgress *progress,
+				 GError **error)
 {
 	FuDfuDevice *device = fu_dfu_target_get_device (target);
 	FuDfuSector *sector;
@@ -159,7 +160,7 @@ fu_dfu_target_stm_upload_element (FuDfuTarget *target,
 
 		/* update UI */
 		if (chunk_size > 0)
-			fu_dfu_target_set_percentage (target, total_size, percentage_size);
+			fu_progress_set_percentage_full(progress, total_size, percentage_size);
 
 		/* detect short write as EOF */
 		if (chunk_size < transfer_size)
@@ -188,7 +189,6 @@ fu_dfu_target_stm_upload_element (FuDfuTarget *target,
 	}
 
 	/* done */
-	fu_dfu_target_set_percentage_raw (target, 100);
 	fu_dfu_target_set_action (target, FWUPD_STATUS_IDLE);
 
 	/* create new image */
@@ -239,10 +239,11 @@ fu_dfu_target_stm_erase_address (FuDfuTarget *target, guint32 address, GError **
 }
 
 static gboolean
-fu_dfu_target_stm_download_element (FuDfuTarget *target,
-				    FuChunk *chk,
-				    FuDfuTargetTransferFlags flags,
-				    GError **error)
+fu_dfu_target_stm_download_element(FuDfuTarget *target,
+				   FuChunk *chk,
+				   FuProgress *progress,
+				   FuDfuTargetTransferFlags flags,
+				   GError **error)
 {
 	FuDfuDevice *device = fu_dfu_target_get_device (target);
 	FuDfuSector *sector;
@@ -264,6 +265,12 @@ fu_dfu_target_stm_download_element (FuDfuTarget *target,
 				     "zero-length firmware");
 		return FALSE;
 	}
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 89);
 
 	/* 1st pass: work out which sectors need erasing */
 	sectors_array = g_ptr_array_new ();
@@ -307,6 +314,7 @@ fu_dfu_target_stm_download_element (FuDfuTarget *target,
 			offset_dev += fu_dfu_sector_get_size (sector);
 		}
 	}
+	fu_progress_step_done(progress);
 
 	/* 2nd pass: actually erase sectors */
 	fu_dfu_target_set_action (target, FWUPD_STATUS_DEVICE_ERASE);
@@ -318,10 +326,11 @@ fu_dfu_target_stm_download_element (FuDfuTarget *target,
 						      fu_dfu_sector_get_address (sector),
 						      error))
 			return FALSE;
-		fu_dfu_target_set_percentage (target, i + 1, sectors_array->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						i + 1,
+						sectors_array->len);
 	}
-	fu_dfu_target_set_percentage_raw (target, 100);
-	fu_dfu_target_set_action (target, FWUPD_STATUS_IDLE);
+	fu_progress_step_done(progress);
 
 	/* 3rd pass: write data */
 	fu_dfu_target_set_action (target, FWUPD_STATUS_DEVICE_WRITE);
@@ -375,11 +384,13 @@ fu_dfu_target_stm_download_element (FuDfuTarget *target,
 			return FALSE;
 
 		/* update UI */
-		fu_dfu_target_set_percentage (target, offset, g_bytes_get_size (bytes));
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						offset,
+						g_bytes_get_size(bytes));
 	}
+	fu_progress_step_done(progress);
 
 	/* done */
-	fu_dfu_target_set_percentage_raw (target, 100);
 	fu_dfu_target_set_action (target, FWUPD_STATUS_IDLE);
 
 	/* success */

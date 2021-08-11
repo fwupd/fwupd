@@ -85,6 +85,7 @@ fu_hailuck_tp_device_write_firmware (FuDevice *device,
 				     GError **error)
 {
 	FuDevice *parent = fu_device_get_parent (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	const guint block_size = 1024;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -92,6 +93,14 @@ fu_hailuck_tp_device_write_firmware (FuDevice *device,
 		.type = 0xff,
 		.success = 0xff,
 	};
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 85);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* end-program */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 3);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* pass */
 
 	/* get default image */
 	fw = fu_firmware_get_bytes (firmware, error);
@@ -106,6 +115,7 @@ fu_hailuck_tp_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 	g_usleep (10000);
+	fu_progress_step_done(progress);
 
 	/* write */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
@@ -150,9 +160,12 @@ fu_hailuck_tp_device_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, i, chunks->len - 1);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						i + 1,
+						chunks->len);
 	}
 	g_usleep (50 * 1000);
+	fu_progress_step_done(progress);
 
 	/* end-program */
 	req.type = FU_HAILUCK_CMD_I2C_END_PROGRAM;
@@ -161,6 +174,7 @@ fu_hailuck_tp_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 	g_usleep (50 * 1000);
+	fu_progress_step_done(progress);
 
 	/* verify checksum */
 	req.type = FU_HAILUCK_CMD_I2C_VERIFY_CHECKSUM;
@@ -169,6 +183,7 @@ fu_hailuck_tp_device_write_firmware (FuDevice *device,
 		return FALSE;
 	}
 	g_usleep (50 * 1000);
+	fu_progress_step_done(progress);
 
 	/* signal that programming has completed */
 	req.type = FU_HAILUCK_CMD_I2C_PROGRAMPASS;
@@ -177,6 +192,7 @@ fu_hailuck_tp_device_write_firmware (FuDevice *device,
 		g_prefix_error (error, "failed to program: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* success! */
 	return TRUE;

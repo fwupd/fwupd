@@ -1104,7 +1104,7 @@ fu_mm_device_write_firmware_mbim_qdu (FuDevice *device, GBytes *fw, GError **err
 		return FALSE;
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	fu_mbim_qdu_updater_write (self->mbim_qdu_updater, filename, data, device, error);
+	fu_mbim_qdu_updater_write(self->mbim_qdu_updater, filename, data, device, progress, error);
 	if (!fu_device_locker_close (locker, error))
 		return FALSE;
 
@@ -1152,8 +1152,10 @@ fu_mm_device_firehose_write (FuMmDevice *self, XbSilo *rawprogram_silo,
 	if (locker == NULL)
 		return FALSE;
 
-	progress_signal_id = g_signal_connect_swapped (self->firehose_updater, "write-percentage",
-						       G_CALLBACK (fu_device_set_progress), self);
+	// FIXME
+	//	progress_signal_id = g_signal_connect_swapped (self->firehose_updater,
+	//"write-percentage", 						       G_CALLBACK
+	//(fu_device_set_progress), self);
 
 	write_result = fu_firehose_updater_write (self->firehose_updater,
 						  rawprogram_silo,
@@ -1325,7 +1327,7 @@ fu_mm_device_write_firmware (FuDevice *device,
 #if MM_CHECK_VERSION(1,17,1) && MBIM_CHECK_VERSION(1,25,3)
 	/* mbim qdu write operation */
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU)
-		return fu_mm_device_write_firmware_mbim_qdu (device, fw, error);
+		return fu_mm_device_write_firmware_mbim_qdu(device, fw, progress, error);
 
 #endif /* MM_CHECK_VERSION(1,17,1) && MBIM_CHECK_VERSION(1,25,3) */
 #if MM_CHECK_VERSION(1,17,2)

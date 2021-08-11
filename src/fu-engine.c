@@ -2362,7 +2362,6 @@ fu_engine_schedule_update (FuEngine *self,
 		return FALSE;
 
 	/* next boot we run offline */
-	fu_device_set_progress (device, 100);
 	return fu_engine_offline_setup (error);
 }
 

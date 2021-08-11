@@ -953,6 +953,7 @@ fu_logitech_hidpp_device_write_firmware (FuDevice *device,
 				       GError **error)
 {
 	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	gsize sz = 0;
 	const guint8 *data;
 	guint8 cmd = 0x04;
@@ -996,7 +997,7 @@ fu_logitech_hidpp_device_write_firmware (FuDevice *device,
 		cmd = (cmd + 1) % 4;
 
 		/* update progress-bar */
-		fu_device_set_progress_full (device, i * 16, sz);
+		fu_progress_set_percentage_full(progress, (i + 1) * 16, sz);
 	}
 
 	return TRUE;

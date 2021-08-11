@@ -78,6 +78,7 @@ fu_flashrom_internal_device_write_firmware (FuDevice *device,
 					    GError **error)
 {
 	FuFlashromDevice *parent = FU_FLASHROM_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	struct flashrom_flashctx *flashctx = fu_flashrom_device_get_flashctx (parent);
 	gsize flash_size = fu_flashrom_device_get_flash_size (parent);
 	struct flashrom_layout *layout;
@@ -119,7 +120,7 @@ fu_flashrom_internal_device_write_firmware (FuDevice *device,
 	}
 
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	fu_device_set_progress (device, 0); /* urgh */
+	fu_progress_set_percentage(progress, 0); /* urgh */
 	rc = flashrom_image_write (flashctx, (void *) buf, sz, NULL /* refbuffer */);
 	if (rc != 0) {
 		g_set_error (error,

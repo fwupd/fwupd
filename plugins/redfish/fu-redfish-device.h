@@ -44,6 +44,8 @@ struct _FuRedfishDeviceClass
 #define FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS	(1 << 2)
 
 FuRedfishBackend *fu_redfish_device_get_backend		(FuRedfishDevice	*self);
-gboolean	 fu_redfish_device_poll_task		(FuRedfishDevice	*self,
-							 const gchar		*location,
-							 GError			**error);
+gboolean
+fu_redfish_device_poll_task(FuRedfishDevice *self,
+			    const gchar *location,
+			    FuProgress *progress,
+			    GError **error);

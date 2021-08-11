@@ -483,10 +483,11 @@ fu_dfu_target_avr_setup (FuDfuTarget *target, GError **error)
 }
 
 static gboolean
-fu_dfu_target_avr_download_element (FuDfuTarget *target,
-				    FuChunk *chk,
-				    FuDfuTargetTransferFlags flags,
-				    GError **error)
+fu_dfu_target_avr_download_element(FuDfuTarget *target,
+				   FuChunk *chk,
+				   FuProgress *progress,
+				   FuDfuTargetTransferFlags flags,
+				   GError **error)
 {
 	FuDfuSector *sector;
 	const guint8 *data;
@@ -597,21 +598,21 @@ fu_dfu_target_avr_download_element (FuDfuTarget *target,
 			return FALSE;
 
 		/* update UI */
-		fu_dfu_target_set_percentage (target, i + 1, chunks->len);
+		fu_progress_set_percentage_full(progress, i + 1, chunks->len);
 	}
 
 	/* done */
-	fu_dfu_target_set_percentage_raw (target, 100);
 	fu_dfu_target_set_action (target, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
 static FuChunk *
-fu_dfu_target_avr_upload_element (FuDfuTarget *target,
-				  guint32 address,
-				  gsize expected_size,
-				  gsize maximum_size,
-				  GError **error)
+fu_dfu_target_avr_upload_element(FuDfuTarget *target,
+				 guint32 address,
+				 gsize expected_size,
+				 gsize maximum_size,
+				 FuProgress *progress,
+				 GError **error)
 {
 	guint16 page_last = G_MAXUINT16;
 	guint chunk_valid = G_MAXUINT;
@@ -706,11 +707,10 @@ fu_dfu_target_avr_upload_element (FuDfuTarget *target,
 		}
 
 		/* update UI */
-		fu_dfu_target_set_percentage (target, i + 1, chunks->len);
+		fu_progress_set_percentage_full(progress, i + 1, chunks->len);
 	}
 
 	/* done */
-	fu_dfu_target_set_percentage_raw (target, 100);
 	fu_dfu_target_set_action (target, FWUPD_STATUS_IDLE);
 
 	/* truncate the image if any sectors are empty, i.e. all 0xff */

@@ -758,6 +758,7 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 				      GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	GPtrArray *sections;
 	FuCrosEcFirmware *cros_ec_firmware = FU_CROS_EC_FIRMWARE (firmware);
 	gint num_txed_sections = 0;
@@ -855,6 +856,7 @@ fu_cros_ec_usb_device_write_firmware (FuDevice *device,
 								  section->version.triplet);
 			}
 		}
+		fu_progress_set_percentage_full(progress, (gsize)i + 1, (gsize)sections->len);
 	}
 	/* send done */
 	fu_cros_ec_usb_device_send_done (device);

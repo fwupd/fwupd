@@ -543,9 +543,12 @@ fu_realtek_mst_device_probe_version (FuDevice *device, GError **error)
 }
 
 static gboolean
-flash_iface_read (FuRealtekMstDevice *self,
-		  guint32 address, guint8 *buf, const gsize buf_size,
-		  GError **error)
+flash_iface_read(FuRealtekMstDevice *self,
+		 guint32 address,
+		 guint8 *buf,
+		 const gsize buf_size,
+		 FuProgress *progress,
+		 GError **error)
 {
 	gsize bytes_read = 0;
 	guint8 byte;
@@ -585,7 +588,7 @@ flash_iface_read (FuRealtekMstDevice *self,
 			return FALSE;
 
 		bytes_read += read_len;
-		fu_device_set_progress_full (FU_DEVICE (self), bytes_read, buf_size);
+		fu_progress_set_percentage_full(progress, bytes_read, buf_size);
 	}
 	return TRUE;
 }
@@ -643,8 +646,11 @@ flash_iface_erase_block (FuRealtekMstDevice *self, guint32 address, GError **err
 }
 
 static gboolean
-flash_iface_write (FuRealtekMstDevice *self, guint32 address,
-		   GBytes *data, GError **error)
+flash_iface_write(FuRealtekMstDevice *self,
+		  guint32 address,
+		  GBytes *data,
+		  FuProgress *progress,
+		  GError **error)
 {
 	gsize bytes_written = 0;
 	gsize total_size = g_bytes_get_size (data);
@@ -690,7 +696,7 @@ flash_iface_write (FuRealtekMstDevice *self, guint32 address,
 		}
 
 		bytes_written += chunk_size;
-		fu_device_set_progress_full (FU_DEVICE (self), bytes_written, total_size);
+		fu_progress_set_percentage_full(progress, i + 1, chunks->len);
 	}
 
 	return TRUE;
@@ -733,6 +739,7 @@ fu_realtek_mst_device_write_firmware (FuDevice *device,
 				      GError **error)
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	/* write an inactive bank: USER2 if USER1 is active, otherwise USER1
 	 * (including if the boot bank is active) */
 	guint32 base_addr = self->active_bank == FLASH_BANK_USER1 ? FLASH_USER2_ADDR : FLASH_USER1_ADDR;
@@ -743,6 +750,13 @@ fu_realtek_mst_device_write_firmware (FuDevice *device,
 
 	g_return_val_if_fail (g_bytes_get_size (firmware_bytes) == FLASH_USER_SIZE, FALSE);
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 70);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 9);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* flag */
+
 	if (!mst_ensure_device_address (self, I2C_ADDR_ISP, error))
 		return FALSE;
 
@@ -750,25 +764,40 @@ fu_realtek_mst_device_write_firmware (FuDevice *device,
 	g_debug ("erase old image from %#x", base_addr);
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 	for (guint32 offset = 0; offset < FLASH_USER_SIZE; offset += FLASH_BLOCK_SIZE) {
-		fu_device_set_progress_full (device, offset, FLASH_USER_SIZE);
 		if (!flash_iface_erase_block (self, base_addr + offset, error))
 			return FALSE;
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						offset + FLASH_BLOCK_SIZE,
+						FLASH_USER_SIZE);
 	}
+	fu_progress_step_done(progress);
 
 	/* write new image */
 	g_debug ("write new image to %#x", base_addr);
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	if (!flash_iface_write (self, base_addr, firmware_bytes, error))
+	if (!flash_iface_write(self,
+			       base_addr,
+			       firmware_bytes,
+			       fu_progress_get_child(progress),
+			       error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
+	/* verify */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
-	if (!flash_iface_read (self, base_addr, readback_buf, FLASH_USER_SIZE, error))
+	if (!flash_iface_read(self,
+			      base_addr,
+			      readback_buf,
+			      FLASH_USER_SIZE,
+			      fu_progress_get_child(progress),
+			      error))
 		return FALSE;
 	if (memcmp (g_bytes_get_data (firmware_bytes, NULL), readback_buf, FLASH_USER_SIZE) != 0) {
 		g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_WRITE,
 			     "flash contents after write do not match firmware image");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* Erase old flag and write new one. The MST appears to modify the
 	 * flag value once booted, so we always write the same value here and
@@ -777,15 +806,23 @@ fu_realtek_mst_device_write_firmware (FuDevice *device,
 	if (!flash_iface_erase_sector (self, flag_addr & ~(FLASH_SECTOR_SIZE - 1), error))
 		return FALSE;
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	return flash_iface_write (self, flag_addr,
-				  g_bytes_new_static (flag_data, sizeof(flag_data)),
-				  error);
+	if (!flash_iface_write(self,
+			       flag_addr,
+			       g_bytes_new_static(flag_data, sizeof(flag_data)),
+			       fu_progress_get_child(progress),
+			       error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* success */
+	return TRUE;
 }
 
 static FuFirmware*
 fu_realtek_mst_device_read_firmware (FuDevice *device, GError **error)
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	guint32 bank_address;
 	g_autofree guint8 *image_bytes = NULL;
 
@@ -803,7 +840,7 @@ fu_realtek_mst_device_read_firmware (FuDevice *device, GError **error)
 	image_bytes = g_malloc0 (FLASH_USER_SIZE);
 	if (!mst_ensure_device_address (self, I2C_ADDR_ISP, error))
 		return NULL;
-	if (!flash_iface_read (self, bank_address, image_bytes, FLASH_USER_SIZE, error))
+	if (!flash_iface_read(self, bank_address, image_bytes, FLASH_USER_SIZE, progress, error))
 		return NULL;
 	return fu_firmware_new_from_bytes(g_bytes_new_take (g_steal_pointer (&image_bytes), FLASH_USER_SIZE));
 }
@@ -812,12 +849,13 @@ static GBytes*
 fu_realtek_mst_device_dump_firmware (FuDevice *device, GError **error)
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	g_autofree guint8 *flash_contents = g_malloc0 (FLASH_SIZE);
 
 	if (!mst_ensure_device_address (self, I2C_ADDR_ISP, error))
 		return NULL;
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_READ);
-	if (!flash_iface_read (self, 0, flash_contents, FLASH_SIZE, error))
+	if (!flash_iface_read(self, 0, flash_contents, FLASH_SIZE, progress, error))
 		return NULL;
 	fu_device_set_status (device, FWUPD_STATUS_IDLE);
 

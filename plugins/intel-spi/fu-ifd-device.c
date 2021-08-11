@@ -83,13 +83,15 @@ fu_ifd_device_dump_firmware (FuDevice *device, GError **error)
 {
 	FuIfdDevice *self = FU_IFD_DEVICE (device);
 	FuIfdDevicePrivate *priv = GET_PRIVATE (self);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	FuDevice *parent = fu_device_get_parent (device);
 	guint64 total_size = fu_device_get_firmware_size_max (device);
-	return fu_intel_spi_device_dump (FU_INTEL_SPI_DEVICE (parent),
-					 device,
-					 priv->offset,
-					 total_size,
-					 error);
+	return fu_intel_spi_device_dump(FU_INTEL_SPI_DEVICE(parent),
+					device,
+					priv->offset,
+					total_size,
+					progress,
+					error);
 }
 
 static FuFirmware *
@@ -100,7 +102,7 @@ fu_ifd_device_read_firmware (FuDevice *device, GError **error)
 	g_autoptr(FuFirmware) firmware = fu_ifd_image_new ();
 	g_autoptr(GBytes) blob = NULL;
 
-	blob = fu_ifd_device_dump_firmware (device, error);
+	blob = fu_ifd_device_dump_firmware(device, error);
 	if (blob == NULL)
 		return NULL;
 	if (priv->region == FU_IFD_REGION_BIOS)

@@ -172,6 +172,7 @@ fu_vli_usbhub_pd_device_dump_firmware (FuDevice *device, GError **error)
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* open device */
@@ -181,10 +182,11 @@ fu_vli_usbhub_pd_device_dump_firmware (FuDevice *device, GError **error)
 
 	/* read */
 	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_READ);
-	return fu_vli_device_spi_read (FU_VLI_DEVICE (parent),
-				       fu_vli_common_device_kind_get_offset (self->device_kind),
-				       fu_device_get_firmware_size_max (device),
-				       error);
+	return fu_vli_device_spi_read(FU_VLI_DEVICE(parent),
+				      fu_vli_common_device_kind_get_offset(self->device_kind),
+				      fu_device_get_firmware_size_max(device),
+				      progress,
+				      error);
 }
 
 static gboolean
@@ -195,10 +197,16 @@ fu_vli_usbhub_pd_device_write_firmware (FuDevice *device,
 {
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE (device);
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE (fu_device_get_parent (device));
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	gsize bufsz = 0;
 	const guint8 *buf;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GBytes) fw = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 40);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 60);
 
 	/* simple image */
 	fw = fu_firmware_get_bytes (firmware, error);
@@ -213,19 +221,28 @@ fu_vli_usbhub_pd_device_write_firmware (FuDevice *device,
 	/* erase */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 	buf = g_bytes_get_data (fw, &bufsz);
-	if (!fu_vli_device_spi_erase (FU_VLI_DEVICE (parent),
-				      fu_vli_common_device_kind_get_offset (self->device_kind),
-				      bufsz, error))
+	if (!fu_vli_device_spi_erase(FU_VLI_DEVICE(parent),
+				     fu_vli_common_device_kind_get_offset(self->device_kind),
+				     bufsz,
+				     fu_progress_get_child(progress),
+				     error))
 		return FALSE;
+
+	/* progress */
+	fu_progress_step_done(progress);
 
 	/* write */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_vli_device_spi_write (FU_VLI_DEVICE (parent),
-				      fu_vli_common_device_kind_get_offset (self->device_kind),
-				      buf, bufsz, error))
+	if (!fu_vli_device_spi_write(FU_VLI_DEVICE(parent),
+				     fu_vli_common_device_kind_get_offset(self->device_kind),
+				     buf,
+				     bufsz,
+				     fu_progress_get_child(progress),
+				     error))
 		return FALSE;
 
 	/* success */
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 

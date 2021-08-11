@@ -324,11 +324,17 @@ fu_nvme_device_write_firmware (FuDevice *device,
 			       GError **error)
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	g_autoptr(GBytes) fw2 = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 	guint64 block_size = self->write_block_size > 0 ?
 			     self->write_block_size : 0x1000;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10); /* commit */
 
 	/* get default image */
 	fw = fu_firmware_get_bytes (firmware, error);
@@ -361,8 +367,11 @@ fu_nvme_device_write_firmware (FuDevice *device,
 			g_prefix_error (error, "failed to write chunk %u: ", i);
 			return FALSE;
 		}
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len + 1);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* commit */
 	if (!fu_nvme_device_fw_commit (self,
@@ -373,9 +382,9 @@ fu_nvme_device_write_firmware (FuDevice *device,
 		g_prefix_error (error, "failed to commit to auto slot: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* success! */
-	fu_device_set_progress (device, 100);
 	return TRUE;
 }
 

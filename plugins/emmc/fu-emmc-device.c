@@ -342,6 +342,7 @@ fu_emmc_device_write_firmware (FuDevice *device,
 			       GError **error)
 {
 	FuEmmcDevice *self= FU_EMMC_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	gsize fw_size = 0;
 	gsize total_done;
 	guint32 arg;
@@ -351,6 +352,12 @@ fu_emmc_device_write_firmware (FuDevice *device,
 	g_autofree struct mmc_ioc_multi_cmd *multi_cmd = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5); /* ffu */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 50);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 45);
 
 	if (!fu_emmc_read_extcsd (FU_EMMC_DEVICE (device), ext_csd, sizeof (ext_csd), error))
 		return FALSE;
@@ -396,6 +403,7 @@ fu_emmc_device_write_firmware (FuDevice *device,
 				  EXT_CSD_CMD_SET_NORMAL;
 	multi_cmd->cmds[2].flags = MMC_RSP_SPI_R1B | MMC_RSP_R1B | MMC_CMD_AC;
 	multi_cmd->cmds[2].write_flag = 1;
+	fu_progress_step_done(progress);
 
 	/* build packets */
 	chunks = fu_chunk_array_new_from_bytes (fw,
@@ -445,9 +453,12 @@ fu_emmc_device_write_firmware (FuDevice *device,
 			}
 
 			/* update progress */
-			fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len - 1);
+			fu_progress_set_percentage_full(fu_progress_get_child(progress),
+							(gsize)i + 1,
+							(gsize)chunks->len);
 		}
 	}
+	fu_progress_step_done(progress);
 
 	/* sanity check */
 	total_done = (gsize) sect_done * (gsize) self->sect_size;
@@ -507,6 +518,7 @@ fu_emmc_device_write_firmware (FuDevice *device,
 			return FALSE;
 		}
 	}
+	fu_progress_step_done(progress);
 
 	return TRUE;
 }

@@ -345,6 +345,7 @@ fu_elantp_i2c_device_write_firmware (FuDevice *device,
 {
 	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE (device);
 	FuElantpFirmware *firmware_elantp = FU_ELANTP_FIRMWARE (firmware);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	gsize bufsz = 0;
 	guint16 checksum = 0;
 	guint16 checksum_device = 0;
@@ -362,6 +363,7 @@ fu_elantp_i2c_device_write_firmware (FuDevice *device,
 	/* detach */
 	if (!fu_elantp_i2c_device_detach (device, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* write each block */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
@@ -405,8 +407,11 @@ fu_elantp_i2c_device_write_firmware (FuDevice *device,
 
 		/* update progress */
 		checksum += csum_tmp;
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* verify the written checksum */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_VERIFY);
@@ -424,11 +429,12 @@ fu_elantp_i2c_device_write_firmware (FuDevice *device,
 			     checksum, checksum_device);
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* wait for a reset */
-	fu_device_set_progress (device, 0);
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
-	g_usleep (ELANTP_DELAY_COMPLETE * 1000);
+	fu_progress_sleep(progress, ELANTP_DELAY_COMPLETE);
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 

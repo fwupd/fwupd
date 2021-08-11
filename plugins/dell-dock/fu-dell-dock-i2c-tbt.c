@@ -53,6 +53,7 @@ fu_dell_dock_tbt_write_fw (FuDevice *device,
 			   GError **error)
 {
 	FuDellDockTbt *self = FU_DELL_DOCK_TBT (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	guint32 start_offset = 0;
 	gsize image_size = 0;
 	const guint8 *buffer;
@@ -114,7 +115,7 @@ fu_dell_dock_tbt_write_fw (FuDevice *device,
 						 error))
 			return FALSE;
 
-		fu_device_set_progress_full (device, i, image_size);
+		fu_progress_set_percentage_full(progress, i, image_size);
 	}
 	g_debug ("writing took %f seconds",
 		 g_timer_elapsed (timer, NULL));

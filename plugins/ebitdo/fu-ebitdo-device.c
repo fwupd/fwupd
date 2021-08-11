@@ -425,7 +425,6 @@ fu_ebitdo_device_detach (FuDevice *device, GError **error)
 	}
 
 	/* wait */
-	fu_device_set_progress (device, 0);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* emit request */
@@ -444,6 +443,7 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 				 GError **error)
 {
 	FuEbitdoDevice *self = FU_EBITDO_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	const guint8 *buf;
 	gsize bufsz = 0;
 	guint32 serial_new[3];
@@ -466,6 +466,12 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 				     "Not in bootloader mode");
 		return FALSE;
 	}
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2); /* header */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 2);
 
 	/* get header and payload */
 	fw_hdr = fu_firmware_get_image_by_id_bytes (firmware,
@@ -492,6 +498,7 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 		g_prefix_error (error, "failed to get ACK for fw update header: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* flash the firmware in 32 byte blocks */
 	chunks = fu_chunk_array_new_from_bytes (fw_payload, 0x0, 0x0, 32);
@@ -521,8 +528,11 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 					fu_chunk_get_address (chk));
 			return FALSE;
 		}
-		fu_device_set_progress_full (device, fu_chunk_get_idx (chk), chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						i + 1,
+						chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* set the "encode id" which is likely a checksum, bluetooth pairing
 	 * or maybe just security-through-obscurity -- also note:
@@ -561,6 +571,7 @@ fu_ebitdo_device_write_firmware (FuDevice *device,
 		g_propagate_error (error, g_steal_pointer (&error_local));
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* success! */
 	return TRUE;

@@ -111,7 +111,7 @@ fu_rts54hid_device_write_flash (FuRts54HidDevice *self,
 }
 
 static gboolean
-fu_rts54hid_device_verify_update_fw (FuRts54HidDevice *self, GError **error)
+fu_rts54hid_device_verify_update_fw(FuRts54HidDevice *self, FuProgress *progress, GError **error)
 {
 	const FuRts54HidCmdBuffer cmd_buffer = {
 		.cmd = FU_RTS54HID_CMD_WRITE_DATA,
@@ -132,7 +132,7 @@ fu_rts54hid_device_verify_update_fw (FuRts54HidDevice *self, GError **error)
 				       FU_HID_DEVICE_FLAG_NONE,
 				       error))
 		return FALSE;
-	fu_device_sleep_with_progress (FU_DEVICE (self), 4); /* seconds */
+	fu_progress_sleep(progress, 4000);
 	if (!fu_hid_device_get_report (FU_HID_DEVICE (self), 0x0, buf, sizeof(buf),
 				       FU_RTS54HID_DEVICE_TIMEOUT,
 				       FU_HID_DEVICE_FLAG_NONE,
@@ -264,8 +264,16 @@ fu_rts54hid_device_write_firmware (FuDevice *device,
 				   GError **error)
 {
 	FuRts54HidDevice *self = FU_RTS54HID_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 9);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* reset */
 
 	/* get default image */
 	fw = fu_firmware_get_bytes (firmware, error);
@@ -280,14 +288,13 @@ fu_rts54hid_device_write_firmware (FuDevice *device,
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_rts54hid_device_erase_spare_bank (self, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
-	/* build packets */
+	/* write each block */
 	chunks = fu_chunk_array_new_from_bytes (fw,
 						0x00,	/* start addr */
 						0x00,	/* page_sz */
 						FU_RTS54HID_TRANSFER_BLOCK_SIZE);
-
-	/* write each block */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index (chunks, i);
@@ -300,16 +307,21 @@ fu_rts54hid_device_write_firmware (FuDevice *device,
 			return FALSE;
 
 		/* update progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len * 2);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* get device to authenticate the firmware */
-	if (!fu_rts54hid_device_verify_update_fw (self, error))
+	if (!fu_rts54hid_device_verify_update_fw(self, fu_progress_get_child(progress), error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* send software reset to run available flash code */
 	if (!fu_rts54hid_device_reset_to_flash (self, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* success! */
 	return TRUE;

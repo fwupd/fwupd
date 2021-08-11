@@ -475,6 +475,7 @@ fu_dfu_tool_read_alt (FuDfuTool *self, gchar **values, GError **error)
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuDfuTarget) target = NULL;
 	g_autoptr(FuDeviceLocker) locker  = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new();
 	g_autoptr(GFile) file = NULL;
 
 	/* check args */
@@ -542,7 +543,11 @@ fu_dfu_tool_read_alt (FuDfuTool *self, gchar **values, GError **error)
 	firmware = fu_dfuse_firmware_new ();
 	fu_dfu_firmware_set_vid (FU_DFU_FIRMWARE (firmware), fu_dfu_device_get_runtime_vid (device));
 	fu_dfu_firmware_set_pid (FU_DFU_FIRMWARE (firmware), fu_dfu_device_get_runtime_pid (device));
-	if (!fu_dfu_target_upload (target, firmware, flags, error))
+	if (!fu_dfu_target_upload(target,
+				  firmware,
+				  fu_device_get_progress_helper(FU_DEVICE(device)),
+				  flags,
+				  error))
 		return FALSE;
 
 	/* do host reset */
@@ -610,7 +615,10 @@ fu_dfu_tool_read (FuDfuTool *self, gchar **values, GError **error)
 			  G_CALLBACK (fu_tool_action_changed_cb), self);
 	g_signal_connect (device, "notify::progress",
 			  G_CALLBACK (fu_tool_action_changed_cb), self);
-	firmware = fu_dfu_device_upload (device, flags, error);
+	firmware = fu_dfu_device_upload(device,
+					fu_device_get_progress_helper(FU_DEVICE(device)),
+					flags,
+					error);
 	if (firmware == NULL)
 		return FALSE;
 
@@ -742,7 +750,11 @@ fu_dfu_tool_write_alt (FuDfuTool *self, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	if (!fu_dfu_target_download (target, image, flags, error))
+	if (!fu_dfu_target_download(target,
+				    image,
+				    fu_device_get_progress_helper(FU_DEVICE(device)),
+				    flags,
+				    error))
 		return FALSE;
 
 	/* do host reset */
@@ -809,7 +821,10 @@ fu_dfu_tool_write (FuDfuTool *self, gchar **values, GError **error)
 			  G_CALLBACK (fu_tool_action_changed_cb), self);
 	g_signal_connect (device, "notify::progress",
 			  G_CALLBACK (fu_tool_action_changed_cb), self);
-	if (!fu_device_write_firmware (FU_DEVICE (device), fw, flags, error))
+	if (!fu_device_write_firmware(FU_DEVICE(device),
+				      fw,
+				      flags,
+				      error))
 		return FALSE;
 
 	/* do host reset */

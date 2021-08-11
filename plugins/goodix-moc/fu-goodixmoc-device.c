@@ -331,12 +331,18 @@ fu_goodixmoc_device_write_firmware (FuDevice *device,
 				    GError  **error)
 {
 	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE(device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	GxPkgType pkg_eop = GX_PKG_TYPE_NORMAL;
 	GxfpCmdResp rsp = { 0 };
 	gboolean wait_data_reply = FALSE;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* init */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99);
 
 	/* get default image */
 	fw = fu_firmware_get_bytes (firmware, error);
@@ -359,6 +365,7 @@ fu_goodixmoc_device_write_firmware (FuDevice *device,
 			     error_local->message);
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* write each block */
 	for (guint i = 0; i < chunks->len; i++) {
@@ -402,8 +409,11 @@ fu_goodixmoc_device_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* success! */
 	return TRUE;

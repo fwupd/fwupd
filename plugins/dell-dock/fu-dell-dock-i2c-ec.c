@@ -761,6 +761,7 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 			  GError **error)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	gsize fw_size = 0;
 	const guint8 *data;
 	gsize write_size = 0;
@@ -771,6 +772,11 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 
 	g_return_val_if_fail (device != NULL, FALSE);
 	g_return_val_if_fail (FU_IS_FIRMWARE (firmware), FALSE);
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80);
 
 	/* get default image */
 	fw = fu_firmware_get_bytes (firmware, error);
@@ -802,10 +808,13 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 	if (!fu_dell_dock_hid_raise_mcu_clock (fu_device_get_proxy (device), TRUE, error))
 		return FALSE;
 
+	/* erase */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_dell_dock_hid_erase_bank (fu_device_get_proxy (device), 0xff, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
+	/* write */
 	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
 	do {
 		/* last packet */
@@ -817,11 +826,12 @@ fu_dell_dock_ec_write_fw (FuDevice *device,
 			g_prefix_error (error, "write over HID failed: ");
 			return FALSE;
 		}
-		fu_device_set_progress_full (device, nwritten, fw_size);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress), nwritten, fw_size);
 		nwritten += write_size;
 		data += write_size;
 		address += write_size;
 	} while (nwritten < fw_size);
+	fu_progress_step_done(progress);
 
 	if (!fu_dell_dock_hid_raise_mcu_clock (fu_device_get_proxy (device), FALSE, error))
 		return FALSE;

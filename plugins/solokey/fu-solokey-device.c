@@ -442,9 +442,15 @@ fu_solokey_device_write_firmware (FuDevice *device,
 				  GError **error)
 {
 	FuSolokeyDevice *self = FU_SOLOKEY_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_sig = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10);
 
 	/* build packets */
 	fw = fu_firmware_get_bytes (firmware, error);
@@ -479,8 +485,11 @@ fu_solokey_device_write_firmware (FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full (device, (gsize) i, (gsize) chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* verify the signature and reboot back to runtime */
 	fw_sig = fu_firmware_get_image_by_id_bytes (firmware,
@@ -488,7 +497,12 @@ fu_solokey_device_write_firmware (FuDevice *device,
 						    error);
 	if (fw_sig == NULL)
 		return FALSE;
-	return fu_solokey_device_verify (self, fw_sig, error);
+	if (!fu_solokey_device_verify(self, fw_sig, error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* success */
+	return TRUE;
 }
 
 static void

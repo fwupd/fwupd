@@ -302,9 +302,12 @@ fu_bcm57xx_recovery_device_nvram_clear_done (FuBcm57xxRecoveryDevice *self, GErr
 }
 
 static gboolean
-fu_bcm57xx_recovery_device_nvram_read (FuBcm57xxRecoveryDevice *self,
-				       guint32 address, guint32 *buf, gsize bufsz,
-				       GError **error)
+fu_bcm57xx_recovery_device_nvram_read(FuBcm57xxRecoveryDevice *self,
+				      guint32 address,
+				      guint32 *buf,
+				      gsize bufsz,
+				      FuProgress *progress,
+				      GError **error)
 {
 	for (guint i = 0; i < bufsz; i++) {
 		BcmRegNVMCommand tmp = { 0 };
@@ -330,7 +333,7 @@ fu_bcm57xx_recovery_device_nvram_read (FuBcm57xxRecoveryDevice *self,
 			return FALSE;
 		buf[i] = GUINT32_FROM_BE(val32);
 		address += sizeof(guint32);
-		fu_device_set_progress_full (FU_DEVICE (self), i, bufsz);
+		fu_progress_set_percentage_full(progress, i + 1, bufsz);
 	}
 
 	/* success */
@@ -338,9 +341,12 @@ fu_bcm57xx_recovery_device_nvram_read (FuBcm57xxRecoveryDevice *self,
 }
 
 static gboolean
-fu_bcm57xx_recovery_device_nvram_write (FuBcm57xxRecoveryDevice *self,
-					guint32 address, const guint32 *buf, gsize bufsz_dwrds,
-					GError **error)
+fu_bcm57xx_recovery_device_nvram_write(FuBcm57xxRecoveryDevice *self,
+				       guint32 address,
+				       const guint32 *buf,
+				       gsize bufsz_dwrds,
+				       FuProgress *progress,
+				       GError **error)
 {
 	const guint32 page_size_dwrds = 64;
 
@@ -377,7 +383,7 @@ fu_bcm57xx_recovery_device_nvram_write (FuBcm57xxRecoveryDevice *self,
 			return FALSE;
 		}
 		address += sizeof(guint32);
-		fu_device_set_progress_full (FU_DEVICE (self), i, bufsz_dwrds);
+		fu_progress_set_percentage_full(progress, i + 1, bufsz_dwrds);
 	}
 
 	/* success */
@@ -439,6 +445,7 @@ static GBytes *
 fu_bcm57xx_recovery_device_dump_firmware (FuDevice *device, GError **error)
 {
 	FuBcm57xxRecoveryDevice *self = FU_BCM57XX_RECOVERY_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	gsize bufsz_dwrds = fu_device_get_firmware_size_max (FU_DEVICE (self)) / sizeof(guint32);
 	g_autofree guint32 *buf_dwrds = g_new0 (guint32, bufsz_dwrds);
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -458,7 +465,12 @@ fu_bcm57xx_recovery_device_dump_firmware (FuDevice *device, GError **error)
 					     error);
 	if (locker2 == NULL)
 		return NULL;
-	if (!fu_bcm57xx_recovery_device_nvram_read (self, 0x0, buf_dwrds, bufsz_dwrds, error))
+	if (!fu_bcm57xx_recovery_device_nvram_read(self,
+						   0x0,
+						   buf_dwrds,
+						   bufsz_dwrds,
+						   progress,
+						   error))
 		return NULL;
 	if (!fu_device_locker_close (locker2, error))
 		return NULL;
@@ -498,6 +510,7 @@ fu_bcm57xx_recovery_device_write_firmware (FuDevice *device,
 					   GError **error)
 {
 	FuBcm57xxRecoveryDevice *self= FU_BCM57XX_RECOVERY_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	const guint8 *buf;
 	gsize bufsz = 0;
 	gsize bufsz_dwrds;
@@ -535,7 +548,12 @@ fu_bcm57xx_recovery_device_write_firmware (FuDevice *device,
 					     error);
 	if (locker2 == NULL)
 		return FALSE;
-	if (!fu_bcm57xx_recovery_device_nvram_write (self, 0x0, buf_dwrds, bufsz_dwrds, error))
+	if (!fu_bcm57xx_recovery_device_nvram_write(self,
+						    0x0,
+						    buf_dwrds,
+						    bufsz_dwrds,
+						    progress,
+						    error))
 		return FALSE;
 	if (!fu_device_locker_close (locker2, error))
 		return FALSE;
@@ -550,9 +568,17 @@ static gboolean
 fu_bcm57xx_recovery_device_setup (FuDevice *device, GError **error)
 {
 	FuBcm57xxRecoveryDevice *self = FU_BCM57XX_RECOVERY_DEVICE (device);
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	guint32 fwversion = 0;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuDeviceLocker) locker2 = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10); /* enable */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 80); /* nvram */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10); /* veraddr */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10); /* version */
 
 	locker = fu_device_locker_new_full (self,
 					    (FuDeviceLockerFunc) fu_bcm57xx_recovery_device_nvram_acquire_lock,
@@ -566,11 +592,17 @@ fu_bcm57xx_recovery_device_setup (FuDevice *device, GError **error)
 					     error);
 	if (locker2 == NULL)
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* get NVRAM version */
-	if (!fu_bcm57xx_recovery_device_nvram_read (self, BCM_NVRAM_STAGE1_BASE + BCM_NVRAM_STAGE1_VERSION,
-					   &fwversion, 1, error))
+	if (!fu_bcm57xx_recovery_device_nvram_read(self,
+						   BCM_NVRAM_STAGE1_BASE + BCM_NVRAM_STAGE1_VERSION,
+						   &fwversion,
+						   1,
+						   fu_progress_get_child(progress),
+						   error))
 		return FALSE;
+	fu_progress_step_done(progress);
 	if (fwversion != 0x0) {
 		g_autofree gchar *fwversion_str = NULL;
 
@@ -581,23 +613,34 @@ fu_bcm57xx_recovery_device_setup (FuDevice *device, GError **error)
 		fu_device_set_version (device, fwversion_str);
 		fu_device_set_version_raw (device, fwversion);
 		fu_device_set_branch (device, BCM_FW_BRANCH_OSS_FIRMWARE);
+		fu_progress_step_done(progress);
+		fu_progress_step_done(progress);
 	} else {
 		guint32 bufver[4] = { 0x0 };
 		guint32 veraddr = 0;
 		g_autoptr(Bcm57xxVeritem) veritem = NULL;
 
 		/* fall back to the string, e.g. '5719-v1.43' */
-		if (!fu_bcm57xx_recovery_device_nvram_read (self,
-							    BCM_NVRAM_STAGE1_BASE + BCM_NVRAM_STAGE1_VERADDR,
-							    &veraddr, 1, error))
+		if (!fu_bcm57xx_recovery_device_nvram_read(self,
+							   BCM_NVRAM_STAGE1_BASE +
+							       BCM_NVRAM_STAGE1_VERADDR,
+							   &veraddr,
+							   1,
+							   fu_progress_get_child(progress),
+							   error))
 			return FALSE;
+		fu_progress_step_done(progress);
 		veraddr = GUINT32_FROM_BE(veraddr);
 		if (veraddr > BCM_PHYS_ADDR_DEFAULT)
 			veraddr -= BCM_PHYS_ADDR_DEFAULT;
-		if (!fu_bcm57xx_recovery_device_nvram_read (self,
-						   BCM_NVRAM_STAGE1_BASE + veraddr,
-						   bufver, 4, error))
+		if (!fu_bcm57xx_recovery_device_nvram_read(self,
+							   BCM_NVRAM_STAGE1_BASE + veraddr,
+							   bufver,
+							   4,
+							   fu_progress_get_child(progress),
+							   error))
 			return FALSE;
+		fu_progress_step_done(progress);
 		veritem = fu_bcm57xx_veritem_new ((guint8 *) bufver, sizeof(bufver));
 		if (veritem != NULL) {
 			fu_device_set_version (device, veritem->version);
