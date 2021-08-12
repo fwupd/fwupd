@@ -54,6 +54,14 @@ setup_precommit()
     pre-commit install
 }
 
+check_markdown()
+{
+    if python3 -c "import markdown; import sys; sys.exit(markdown.__version_info__ >= (3,3,3))"; then
+        echo "Upgrading python3-markdown version"
+        python3 -m pip install markdown --upgrade
+    fi
+}
+
 #if interactive install build deps and prepare environment
 if [ -t 2 ]; then
     OS=$(python3 -c "import distro; print(distro.linux_distribution()[0].split()[0].lower())")
@@ -66,6 +74,7 @@ if [ -t 2 ]; then
             setup_deps $OS
             ;;
     esac
+    check_markdown
     setup_vscode
 fi
 
