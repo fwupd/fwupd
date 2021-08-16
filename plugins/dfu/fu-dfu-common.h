@@ -214,6 +214,12 @@ typedef enum {
  * Uses the slightly weird GD32 variant of DFU.
  */
 #define FU_DFU_DEVICE_FLAG_GD32					(1 << 17)
+/**
+ * FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT:
+ *
+ * Allows the zero bwPollTimeout from GetStatus in dfuDNLOAD-SYNC state.
+ */
+#define FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT (1 << 18)
 
 const gchar	*fu_dfu_state_to_string			(FuDfuState	 state);
 const gchar	*fu_dfu_status_to_string		(FuDfuStatus	 status);
