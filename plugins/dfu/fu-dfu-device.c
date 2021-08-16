@@ -890,7 +890,9 @@ fu_dfu_device_refresh (FuDfuDevice *self, GError **error)
 		priv->dnload_timeout = buf[1] +
 					(((guint32) buf[2]) << 8) +
 					(((guint32) buf[3]) << 16);
-		if (priv->dnload_timeout == 0) {
+		if (priv->dnload_timeout == 0 &&
+		    !fu_device_has_private_flag(FU_DEVICE(self),
+						FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT)) {
 			priv->dnload_timeout = DFU_DEVICE_DNLOAD_TIMEOUT_DEFAULT;
 			g_debug ("no dnload-timeout, using default of %ums",
 				 priv->dnload_timeout);
@@ -1965,4 +1967,7 @@ fu_dfu_device_init (FuDfuDevice *self)
 	fu_device_register_private_flag (FU_DEVICE (self),
 					 FU_DFU_DEVICE_FLAG_GD32,
 					 "gd32");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT,
+					"allow-zero-polltimeout");
 }
