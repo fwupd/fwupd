@@ -529,18 +529,19 @@ void		 fu_device_set_firmware_size_max	(FuDevice	*self,
 							 guint64	 size_max);
 guint64		 fu_device_get_firmware_size_min	(FuDevice	*self);
 guint64		 fu_device_get_firmware_size_max	(FuDevice	*self);
-guint		 fu_device_get_progress			(FuDevice	*self);
-void		 fu_device_set_progress			(FuDevice	*self,
-							 guint		 progress);
+guint
+fu_device_get_progress(FuDevice *self) G_DEPRECATED_FOR(fu_progress_get_percentage);
+void
+fu_device_set_progress(FuDevice *self, guint progress) G_DEPRECATED_FOR(fu_progress_set_percentage);
 guint		 fu_device_get_battery_level		(FuDevice	*self);
 void		 fu_device_set_battery_level		(FuDevice	*self,
 							 guint		 battery_level);
 guint		 fu_device_get_battery_threshold	(FuDevice	*self);
 void		 fu_device_set_battery_threshold	(FuDevice	*self,
 							 guint		 battery_threshold);
-void		 fu_device_set_progress_full		(FuDevice	*self,
-							 gsize		 progress_done,
-							 gsize		 progress_total);
+void
+fu_device_set_progress_full(FuDevice *self, gsize progress_done, gsize progress_total)
+    G_DEPRECATED_FOR(fu_progress_set_percentage_full);
 void		 fu_device_sleep_with_progress		(FuDevice	*self,
 							 guint		 delay_secs);
 void		 fu_device_set_update_state		(FuDevice	*self,

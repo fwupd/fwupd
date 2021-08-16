@@ -206,16 +206,18 @@ fu_engine_set_percentage (FuEngine *self, guint percentage)
 static void
 fu_engine_progress_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
+	FuProgress *progress = fu_device_get_progress_helper(device);
 	if (fu_device_get_status (device) == FWUPD_STATUS_UNKNOWN)
 		return;
-	fu_engine_set_percentage (self, fu_device_get_progress (device));
+	fu_engine_set_percentage(self, fu_progress_get_percentage(progress));
 	fu_engine_emit_device_changed (self, device);
 }
 
 static void
 fu_engine_status_notify_cb (FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
-	fu_engine_set_status (self, fu_device_get_status (device));
+	FuProgress *progress = fu_device_get_progress_helper(device);
+	fu_engine_set_status(self, fu_progress_get_status(progress));
 	fu_engine_emit_device_changed (self, device);
 }
 

@@ -121,7 +121,7 @@ fu_device_get_property (GObject *object, guint prop_id,
 	FuDevicePrivate *priv = GET_PRIVATE (self);
 	switch (prop_id) {
 	case PROP_PROGRESS:
-		g_value_set_uint(value, fu_device_get_progress(self));
+		g_value_set_uint(value, fu_progress_get_percentage(priv->progress));
 		break;
 	case PROP_BATTERY_LEVEL:
 		g_value_set_uint (value, priv->battery_level);
@@ -158,9 +158,10 @@ fu_device_set_property (GObject *object, guint prop_id,
 			const GValue *value, GParamSpec *pspec)
 {
 	FuDevice *self = FU_DEVICE (object);
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	switch (prop_id) {
 	case PROP_PROGRESS:
-		fu_device_set_progress (self, g_value_get_uint (value));
+		fu_progress_set_percentage(priv->progress, g_value_get_uint(value));
 		break;
 	case PROP_BATTERY_LEVEL:
 		fu_device_set_battery_level (self, g_value_get_uint (value));
@@ -3214,15 +3215,16 @@ fu_device_set_progress_full (FuDevice *self, gsize progress_done, gsize progress
 void
 fu_device_sleep_with_progress (FuDevice *self, guint delay_secs)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	gulong delay_us_pc = (delay_secs * G_USEC_PER_SEC) / 100;
 
 	g_return_if_fail (FU_IS_DEVICE (self));
 	g_return_if_fail (delay_secs > 0);
 
-	fu_device_set_progress (self, 0);
+	fu_progress_set_percentage(priv->progress, 0);
 	for (guint i = 0; i < 100; i++) {
 		g_usleep (delay_us_pc);
-		fu_device_set_progress (self, i + 1);
+		fu_progress_set_percentage(priv->progress, i + 1);
 	}
 }
 

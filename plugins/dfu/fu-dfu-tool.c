@@ -461,9 +461,10 @@ fu_dfu_tool_replace_data (FuDfuTool *self, gchar **values, GError **error)
 static void
 fu_tool_action_changed_cb (FuDevice *device, GParamSpec *pspec, FuDfuTool *self)
 {
-	g_print ("%s:\t%u%%\n",
-		 fwupd_status_to_string (fu_device_get_status (device)),
-		 fu_device_get_progress (device));
+	FuProgress *progress = fu_device_get_progress_helper(device);
+	g_print("%s:\t%u%%\n",
+		fwupd_status_to_string(fu_device_get_status(device)),
+		fu_progress_get_percentage(progress));
 }
 
 static gboolean
