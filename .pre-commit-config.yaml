@@ -46,7 +46,7 @@ repos:
     - id: shellcheck
       name: check shellscript style
       language: system
-      entry: shellcheck --severity=error -e SC2068
+      entry: shellcheck --severity=warning -e SC2068
       types: [shell]
     - id: clang-format
       name: clang-format
