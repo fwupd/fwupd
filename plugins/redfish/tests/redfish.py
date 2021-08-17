@@ -97,7 +97,6 @@ def firmware_inventory_bmc():
         "Manufacturer": "Lenovo",
         "Name": "Lenovo BMC Firmware",
         "RelatedItem": [{"@odata.id": "/redfish/v1/Managers/BMC"}],
-        "ReleaseDate": "2017-08-22T12:00:00",
         "SoftwareId": "UEFI-AFE1-6",
         "UefiDevicePaths": ["BMC(0x1,0x0ABCDEF)"],
         "Updateable": True,
