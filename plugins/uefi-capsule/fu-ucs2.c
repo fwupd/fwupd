@@ -23,10 +23,10 @@ fu_ucs2_to_uft8 (const guint16 *str, gssize max)
 	for (i = 0, j = 0; i < max && str[i]; i++, j++) {
 		if (str[i] <= 0x7f) {
 			ret[j] = str[i];
-		} else if (str[i] > 0x7f && str[i] <= 0x7ff) {
+		} else if (str[i] <= 0x7ff) {
 			ret[j++] = 0xc0 | ev_bits(str[i], 0x1f, 6);
 			ret[j]   = 0x80 | ev_bits(str[i], 0x3f, 0);
-		} else if (str[i] > 0x7ff /* && str[i] < 0x10000 */ ) {
+		} else {
 			ret[j++] = 0xe0 | ev_bits(str[i], 0xf, 12);
 			ret[j++] = 0x80 | ev_bits(str[i], 0x3f, 6);
 			ret[j]   = 0x80 | ev_bits(str[i], 0x3f, 0);
