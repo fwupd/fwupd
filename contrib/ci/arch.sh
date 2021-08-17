@@ -25,7 +25,7 @@ pacman -Syu --noconfirm python-flask
 # install and run TPM simulator necessary for plugins/uefi-capsule/uefi-self-test
 pacman -Syu --noconfirm swtpm tpm2-tools
 swtpm socket --tpm2 --server port=2321 --ctrl type=tcp,port=2322 --flags not-need-init --tpmstate "dir=$PWD" &
-trap "kill $!" EXIT
+trap 'kill $!' EXIT
 # extend a PCR0 value for test suite
 sleep 2
 tpm2_startup -c

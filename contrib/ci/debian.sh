@@ -76,7 +76,7 @@ if [ ! -f /.dockerenv ]; then
 fi
 
 #test the packages install
-PACKAGES=$(ls ../*.deb | grep -v 'fwupd-tests\|dbgsym')
+PACKAGES=$(find .. -type f -name "*.deb" | grep -v 'fwupd-tests\|dbgsym')
 dpkg -i $PACKAGES
 
 # run the installed tests

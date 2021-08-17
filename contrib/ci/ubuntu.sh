@@ -14,10 +14,12 @@ set -x
 export DEB_BUILD_MAINT_OPTIONS="optimize=-lto"
 eval "$(dpkg-buildflags --export=sh)"
 #filter out -Bsymbolic-functions
-export LDFLAGS=$(dpkg-buildflags --get LDFLAGS | sed "s/-Wl,-Bsymbolic-functions\s//")
+LDFLAGS=$(dpkg-buildflags --get LDFLAGS | sed "s/-Wl,-Bsymbolic-functions\s//")
+export LDFLAGS
 
-rm -rf build
-meson build -Dman=false -Ddocs=docgen -Dgusb:tests=false -Dplugin_platform_integrity=true --prefix=$(pwd)/dist
+root=$(pwd)
+rm -rf ${root}/build
+meson build -Dman=false -Ddocs=docgen -Dgusb:tests=false -Dplugin_platform_integrity=true --prefix=${root}/dist
 #build with clang
 ninja -C build test -v
 
