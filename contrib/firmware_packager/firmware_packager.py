@@ -93,24 +93,24 @@ def create_firmware_cab(exe, folder):
 
 
 def main(args):
-    with tempfile.TemporaryDirectory() as dir:
-        print("Using temp directory {}".format(dir))
+    with tempfile.TemporaryDirectory() as d:
+        print("Using temp directory {}".format(d))
 
         if args.exe:
             print("Extracting firmware exe")
-            extract_exe(args.exe, dir)
+            extract_exe(args.exe, d)
 
         print("Locating firmware bin")
-        get_firmware_bin(dir, args.bin, dir)
+        get_firmware_bin(d, args.bin, d)
 
         print("Creating metainfo")
-        make_firmware_metainfo(args, dir)
+        make_firmware_metainfo(args, d)
 
         print("Creating cabinet file")
-        create_firmware_cab(args, dir)
+        create_firmware_cab(args, d)
 
         print("Done")
-        shutil.copy(os.path.join(dir, "firmware.cab"), args.out)
+        shutil.copy(os.path.join(d, "firmware.cab"), args.out)
 
 
 if __name__ == "__main__":
