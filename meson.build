@@ -578,7 +578,7 @@ endif
 subdir('docs')
 
 if get_option('systemd') and build_daemon
-  meson.add_install_script('meson_post_install.sh', systemdunitdir, localstatedir)
+  meson.add_install_script('meson_post_install.sh', systemdunitdir)
 endif
 
 makensis = find_program('makensis', required : false)
