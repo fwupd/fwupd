@@ -50,7 +50,6 @@ rm -rf ./*
 ls .
 cp -r ~/work/fwupd/fwupd/contrib/freebsd/* .
 ls .
-REPOSITORY_NAME=$(echo "${GITHUB_REPOSITORY}" | awk -F / '{print $2}')
 sed -i .old "s/GH_TAGNAME=.*$/GH_TAGNAME=\t${GITHUB_SHA}/" Makefile
 sed -i .old "s/GH_ACCOUNT=.*$/GH_ACCOUNT=\t${GITHUB_REPOSITORY_OWNER}/" Makefile
 sed -i .old "s/DISTVERSION=.*$/DISTVERSION=\t${GITHUB_TAG}/" Makefile
