@@ -6,11 +6,8 @@ set -x
 xbps-install -Suy python3
 ./contrib/ci/generate_dependencies.py | xargs xbps-install -y
 
-#clone test firmware
-if [ "$CI_NETWORK" = "true" ]; then
-	./contrib/ci/get_test_firmware.sh
-	export G_TEST_SRCDIR=`pwd`/fwupd-test-firmware/installed-tests
-fi
+#clone test firmware if necessary
+. ./contrib/ci/get_test_firmware.sh
 
 #build
 rm -rf build
