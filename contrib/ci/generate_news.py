@@ -21,5 +21,5 @@ if __name__ == "__main__":
         if release.attrib["version"] != args.version:
             continue
         description = release.find("description")
-        str = etree.tostring(description, encoding="unicode", method="text")
-        print(str.strip())
+        result = etree.tostring(description, encoding="unicode", method="text")
+        print(result.strip())

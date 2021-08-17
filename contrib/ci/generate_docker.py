@@ -35,12 +35,12 @@ if len(split) >= 2:
 
 deps = parse_dependencies(OS, SUBOS, "build")
 
-input = os.path.join(directory, "Dockerfile-%s.in" % OS)
-if not os.path.exists(input):
-    print("Missing input file %s for %s" % (input, OS))
+f = os.path.join(directory, "Dockerfile-%s.in" % OS)
+if not os.path.exists(f):
+    print("Missing input file %s for %s" % (f, OS))
     sys.exit(1)
 
-with open(input, "r") as rfd:
+with open(f, "r") as rfd:
     lines = rfd.readlines()
 
 with open("Dockerfile", "w") as wfd:
