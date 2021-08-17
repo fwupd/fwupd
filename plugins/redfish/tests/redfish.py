@@ -7,7 +7,7 @@
 
 import json
 
-from flask import Flask, Response, request, g
+from flask import Flask, Response, request
 
 app = Flask(__name__)
 
@@ -21,7 +21,7 @@ def _failure(msg: str, status=400):
     res = {
         "error": {"message": msg},
     }
-    return Response(response=json.dumps(msg), status=401, mimetype="application/json")
+    return Response(response=json.dumps(res), status=401, mimetype="application/json")
 
 
 @app.route("/redfish/v1/")
