@@ -3,11 +3,8 @@ set -e
 set -x
 shopt -s extglob
 
-#clone test firmware
-if [ "$CI_NETWORK" = "true" ]; then
-	./contrib/ci/get_test_firmware.sh
-	export G_TEST_SRCDIR=`pwd`/fwupd-test-firmware/installed-tests
-fi
+#clone test firmware if necessary
+. ./contrib/ci/get_test_firmware.sh
 
 #install anything missing from the container
 ./contrib/ci/generate_dependencies.py | xargs pacman -S --noconfirm --needed

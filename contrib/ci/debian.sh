@@ -42,11 +42,8 @@ if ! dpkg-checkbuilddeps; then
 	exit 0
 fi
 
-#clone test firmware
-if [ "$CI_NETWORK" = "true" ]; then
-	./contrib/ci/get_test_firmware.sh
-	export G_TEST_SRCDIR=`pwd`/fwupd-test-firmware/installed-tests
-fi
+#clone test firmware if necessary
+. ./contrib/ci/get_test_firmware.sh
 
 #disable unit tests if fwupd is already installed (may cause problems)
 if [ -x /usr/lib/fwupd/fwupd ]; then
