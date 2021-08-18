@@ -39,6 +39,7 @@ set -xe
 mkdir -p /usr/local/etc/pkg/repos/
 # Fix meson flag problem https://www.mail-archive.com/freebsd-ports@freebsd.org/msg86617.html
 cp /etc/pkg/FreeBSD.conf /usr/local/etc/pkg/repos/FreeBSD.conf
+# Use latest pkg repo instead of quaterly https://wiki.freebsd.org/Ports/QuarterlyBranch
 sed -i .old 's|url: "pkg+http://pkg.FreeBSD.org/${ABI}/quarterly"|url: "pkg+http://pkg.FreeBSD.org/${ABI}/latest"|' \
 /usr/local/etc/pkg/repos/FreeBSD.conf
 pkg install -y meson efivar
@@ -56,8 +57,12 @@ sed -i .old "s/DISTVERSION=.*$/DISTVERSION=\t${GITHUB_TAG}/" Makefile
 make makesum
 make clean
 make
-make makeplist > plist
-sed -i "" "1d" plist
+# Generate current list of files in the pkg-plist
+make makeplist > pkg-plist
+sed -i "" "1d" pkg-plist
+sed -i "" "s/%%PORTDOCS%%%%DOCSDIR%%/%%DOCSDIR%%/g" pkg-plist
+# Build artifact
+make clean
 make package
 make install
 cp /usr/ports/sysutils/fwupd/work/pkg/fwupd*.pkg \
