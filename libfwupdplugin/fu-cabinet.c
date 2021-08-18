@@ -453,6 +453,46 @@ fu_cabinet_set_container_checksum_cb (XbBuilderFixup *builder_fixup,
 	return TRUE;
 }
 
+static void
+fu_cabinet_fixup_checksum_children(XbBuilderNode *bn,
+				   const gchar *element,
+				   const gchar *attr_name,
+				   const gchar *attr_value)
+{
+	GPtrArray *bcs = xb_builder_node_get_children(bn);
+	for (guint i = 0; i < bcs->len; i++) {
+		XbBuilderNode *bc = g_ptr_array_index(bcs, i);
+		if (g_strcmp0(xb_builder_node_get_element(bc), element) != 0)
+			continue;
+		if (attr_value == NULL ||
+		    g_strcmp0(xb_builder_node_get_attr(bc, attr_name), attr_value) == 0) {
+			const gchar *tmp = xb_builder_node_get_text(bc);
+			if (tmp != NULL) {
+				g_autofree gchar *lowercase = g_ascii_strdown(tmp, -1);
+				xb_builder_node_set_text(bc, lowercase, -1);
+			}
+		}
+	}
+}
+
+static gboolean
+fu_cabinet_set_lowercase_checksum_cb(XbBuilderFixup *builder_fixup,
+				     XbBuilderNode *bn,
+				     gpointer user_data,
+				     GError **error)
+{
+	g_autoptr(XbBuilderNode) csum = NULL;
+
+	if (g_strcmp0(xb_builder_node_get_element(bn), "artifact") == 0)
+		/* don't care whether it's sha256, sha1 or something else so don't check for
+		 * specific value */
+		fu_cabinet_fixup_checksum_children(bn, "checksum", "type", NULL);
+	else if (g_strcmp0(xb_builder_node_get_element(bn), "release") == 0)
+		fu_cabinet_fixup_checksum_children(bn, "checksum", "target", "content");
+
+	return TRUE;
+}
+
 /* adds each GCabFile to the silo */
 static gboolean
 fu_cabinet_build_silo_file (FuCabinet *self,
@@ -589,6 +629,7 @@ fu_cabinet_build_silo (FuCabinet *self, GBytes *data, GError **error)
 	GPtrArray *folders;
 	g_autoptr(XbBuilderFixup) fixup1 = NULL;
 	g_autoptr(XbBuilderFixup) fixup2 = NULL;
+	g_autoptr(XbBuilderFixup) fixup3 = NULL;
 
 	/* verbose profiling */
 	if (g_getenv ("FWUPD_XMLB_VERBOSE") != NULL) {
@@ -626,6 +667,12 @@ fu_cabinet_build_silo (FuCabinet *self, GBytes *data, GError **error)
 				       fu_cabinet_set_container_checksum_cb,
 				       self, NULL);
 	xb_builder_add_fixup (self->builder, fixup2);
+
+	fixup3 = xb_builder_fixup_new("LowerCaseCheckSum",
+				      fu_cabinet_set_lowercase_checksum_cb,
+				      self,
+				      NULL);
+	xb_builder_add_fixup(self->builder, fixup3);
 
 	/* did we get any valid files */
 	self->silo = xb_builder_compile (self->builder,
