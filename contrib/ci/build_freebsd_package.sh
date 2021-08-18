@@ -60,5 +60,5 @@ make makeplist > plist
 sed -i "" "1d" plist
 make package
 make install
-cp /usr/ports/sysutils/fwupd/work/pkg/fwupd*.txz \
-~/work/fwupd/fwupd/fwupd-freebsd-${GITHUB_TAG}-${GITHUB_SHA}.txz || exit 1
+cp /usr/ports/sysutils/fwupd/work/pkg/fwupd*.pkg \
+~/work/fwupd/fwupd/fwupd-freebsd-${GITHUB_TAG}-${GITHUB_SHA}.pkg || exit 1
