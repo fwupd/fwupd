@@ -109,5 +109,5 @@ jobs:
       with:
         name: Binary package
         path: |
-          fwupd*.txz
+          fwupd*.pkg
 
