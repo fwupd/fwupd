@@ -3,6 +3,7 @@
  * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
  * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
  * Copyright (C) 2018 Ryan Chang <ryan.chang@synaptics.com>
+ * Copyright (C) 2021 Apollo Ling <apollo.ling@synaptics.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -772,19 +773,149 @@ fu_synaptics_mst_device_panamera_prepare_write (FuSynapticsMstDevice *self, GErr
 }
 
 static gboolean
+fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
+						guint32 payload_len,
+						const guint8 *payload_data,
+						GError **error)
+{
+	g_autoptr(FuSynapticsMstConnection) connection = NULL;
+	guint32 data_to_write = 0;
+	guint32 offset = 0;
+	guint32 write_loops = 0;
+
+	payload_len = 0x50000;
+	write_loops = (payload_len / BLOCK_UNIT);
+	data_to_write = payload_len;
+
+	if (payload_len % BLOCK_UNIT)
+		write_loops++;
+
+	connection = fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
+						     self->layer,
+						     self->rad);
+	for (guint32 retries_cnt = 0;; retries_cnt++) {
+		guint32 checksum = 0;
+		guint32 flash_checksum = 0;
+
+		if (!fu_synaptics_mst_device_set_flash_sector_erase(self, 0xffff, 0, error))
+			return FALSE;
+		g_debug("Waiting for flash clear to settle");
+		g_usleep(FLASH_SETTLE_TIME);
+
+		for (guint32 i = 0; i < write_loops; i++) {
+			g_autoptr(GError) error_local = NULL;
+			guint8 length = BLOCK_UNIT;
+
+			if (data_to_write < BLOCK_UNIT)
+				length = data_to_write;
+			if (!fu_synaptics_mst_connection_rc_set_command(connection,
+									UPDC_WRITE_TO_EEPROM,
+									length,
+									offset,
+									payload_data + offset,
+									&error_local)) {
+				g_warning("Failed to write flash offset 0x%04x: %s, retrying",
+					  offset,
+					  error_local->message);
+				/* repeat once */
+				if (!fu_synaptics_mst_connection_rc_set_command(
+					connection,
+					UPDC_WRITE_TO_EEPROM,
+					length,
+					offset,
+					payload_data + offset,
+					error)) {
+					g_prefix_error(error,
+						       "can't write flash offset 0x%04x: ",
+						       offset);
+					return FALSE;
+				}
+			}
+			offset += length;
+			data_to_write -= length;
+			fu_device_set_progress_full(FU_DEVICE(self),
+						    (goffset)i * 100,
+						    (goffset)(write_loops - 1) * 100);
+		}
+
+		/* verify CRC */
+		checksum = fu_synaptics_mst_device_get_crc(0, 16, payload_len, payload_data);
+		if (!fu_synaptics_mst_connection_rc_special_get_command(connection,
+									UPDC_CAL_EEPROM_CHECK_CRC16,
+									payload_len,
+									0,
+									NULL,
+									4,
+									(guint8 *)(&flash_checksum),
+									error)) {
+			g_prefix_error(error, "Failed to get flash checksum: ");
+			return FALSE;
+		}
+		if (checksum == flash_checksum)
+			break;
+		g_debug("attempt %u: checksum %x didn't match %x",
+			retries_cnt,
+			flash_checksum,
+			checksum);
+
+		if (retries_cnt > MAX_RETRY_COUNTS) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "checksum %x mismatched %x",
+				    flash_checksum,
+				    checksum);
+			return FALSE;
+		}
+	}
+
+	if (!fu_synaptics_mst_connection_rc_set_command(connection,
+							UPDC_ACTIVATE_FIRMWARE,
+							0,
+							0,
+							NULL,
+							error)) {
+		g_prefix_error(error, "active firmware failed: ");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean
 fu_synaptics_mst_device_restart (FuSynapticsMstDevice *self, GError **error)
 {
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
 	guint8 buf[4] = {0xF5, 0, 0 ,0};
+	gint offset;
 	g_autoptr(GError) error_local = NULL;
 
+	switch (self->family) {
+	case FU_SYNAPTICS_MST_FAMILY_TESLA:
+	case FU_SYNAPTICS_MST_FAMILY_LEAF:
+	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
+		offset = 0x2000FC;
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
+	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+		offset = 0x2020021C;
+		break;
+	default:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Unsupported chip family");
+		return FALSE;
+	}
 	/* issue the reboot command, ignore return code (triggers before returning) */
 	connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)),
 						      self->layer, self->rad);
-	if (!fu_synaptics_mst_connection_rc_set_command (connection,
-							 UPDC_WRITE_TO_MEMORY,
-							 4, (gint) 0x2000FC, (guint8*) &buf,
-							 &error_local))
+	if (!fu_synaptics_mst_connection_rc_set_command(connection,
+							UPDC_WRITE_TO_MEMORY,
+							4,
+							offset,
+							(guint8 *)&buf,
+							&error_local))
 		g_debug ("failed to restart: %s", error_local->message);
 
 	return TRUE;
@@ -853,7 +984,18 @@ fu_synaptics_mst_device_write_firmware (FuDevice *device,
 		return FALSE;
 
 	/* update firmware */
-	if (self->family == FU_SYNAPTICS_MST_FAMILY_PANAMERA) {
+	switch (self->family) {
+	case FU_SYNAPTICS_MST_FAMILY_TESLA:
+	case FU_SYNAPTICS_MST_FAMILY_LEAF:
+		if (!fu_synaptics_mst_device_update_tesla_leaf_firmware(self,
+									payload_len,
+									payload_data,
+									error)) {
+			g_prefix_error(error, "Firmware update failed: ");
+			return FALSE;
+		}
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
 		if (!fu_synaptics_mst_device_panamera_prepare_write (self, error)) {
 			g_prefix_error (error, "Failed to prepare for write: ");
 			return FALSE;
@@ -871,14 +1013,23 @@ fu_synaptics_mst_device_write_firmware (FuDevice *device,
 			g_prefix_error (error, "Firmware update failed: ");
 			return FALSE;
 		}
-	} else {
-		if (!fu_synaptics_mst_device_update_tesla_leaf_firmware (self,
-									 payload_len,
-									 payload_data,
-									 error)) {
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
+	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+		if (!fu_synaptics_mst_device_update_cayenne_firmware(self,
+								     payload_len,
+								     payload_data,
+								     error)) {
 			g_prefix_error (error, "Firmware update failed: ");
 			return FALSE;
 		}
+		break;
+	default:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Unsupported chip family");
+		return FALSE;
 	}
 
 	/* wait for flash clear to settle */
@@ -901,6 +1052,8 @@ fu_synaptics_mst_device_read_board_id (FuSynapticsMstDevice *self,
 				       guint8 *byte,
 				       GError **error)
 {
+	gint offset;
+
 	/* in test mode we need to open a different file node instead */
 	if (fu_udev_device_get_dev (FU_UDEV_DEVICE (self)) == NULL) {
 		g_autofree gchar *filename = NULL;
@@ -940,12 +1093,31 @@ fu_synaptics_mst_device_read_board_id (FuSynapticsMstDevice *self,
 		return TRUE;
 	}
 
+	switch (self->family) {
+	case FU_SYNAPTICS_MST_FAMILY_TESLA:
+	case FU_SYNAPTICS_MST_FAMILY_LEAF:
+	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
+		offset = (gint)ADDR_MEMORY_CUSTOMER_ID;
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
+	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+		offset = (gint)ADDR_MEMORY_CUSTOMER_ID_CAYENNE;
+		break;
+	default:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Unsupported chip family");
+		return FALSE;
+	}
+
 	/* get board ID via MCU address 0x170E instead of flash access due to HDCP2.2 running */
-	if (!fu_synaptics_mst_connection_rc_get_command (connection,
-							 UPDC_READ_FROM_MEMORY,
-							 2,
-							 (gint)ADDR_MEMORY_CUSTOMER_ID, byte,
-							 error)) {
+	if (!fu_synaptics_mst_connection_rc_get_command(connection,
+							UPDC_READ_FROM_MEMORY,
+							2,
+							offset,
+							byte,
+							error)) {
 		g_prefix_error (error, "Memory query failed: ");
 		return FALSE;
 	}
@@ -1067,11 +1239,6 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 	version = g_strdup_printf ("%1d.%02d.%02d", buf_ver[0], buf_ver[1], buf_ver[2]);
 	fu_device_set_version (FU_DEVICE (self), version);
 
-	/* read board ID */
-	if (!fu_synaptics_mst_device_read_board_id (self, connection, buf_ver, error))
-		return FALSE;
-	self->board_id = fu_common_read_uint16 (buf_ver, G_BIG_ENDIAN);
-
 	/* read board chip_id */
 	if (!fu_synaptics_mst_connection_read (connection, REG_CHIP_ID,
 					       buf_ver, 2, error)) {
@@ -1093,6 +1260,11 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 		if (!fu_synaptics_mst_device_get_active_bank_panamera (self, error))
 			return FALSE;
 	}
+
+	/* read board ID */
+	if (!fu_synaptics_mst_device_read_board_id(self, connection, buf_ver, error))
+		return FALSE;
+	self->board_id = fu_common_read_uint16(buf_ver, G_BIG_ENDIAN);
 
 	/* recursively look for cascade devices */
 	if (!fu_device_locker_close (locker, error)) {
