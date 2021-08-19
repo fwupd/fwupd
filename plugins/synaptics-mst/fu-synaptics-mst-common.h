@@ -2,6 +2,7 @@
  * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
  * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
  * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2021 Apollo Ling <apollo.ling@synaptics.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -33,6 +34,8 @@ typedef enum {
 	FU_SYNAPTICS_MST_FAMILY_TESLA,
 	FU_SYNAPTICS_MST_FAMILY_LEAF,
 	FU_SYNAPTICS_MST_FAMILY_PANAMERA,
+	FU_SYNAPTICS_MST_FAMILY_CAYENNE,
+	FU_SYNAPTICS_MST_FAMILY_SPYDER,
 	/*<private >*/
 	FU_SYNAPTICS_MST_FAMILY_LAST
 } FuSynapticsMstFamily;
