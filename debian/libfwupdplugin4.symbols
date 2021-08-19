@@ -1,12 +1,9 @@
-libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
-* Build-Depends-Package: libfwupdplugin-dev
+libfwupdplugin.so.4 libfwupdplugin4 #MINVER#
  LIBFWUPDPLUGIN_0.1.0@LIBFWUPDPLUGIN_0.1.0 0.1.0
- LIBFWUPDPLUGIN_0.3.5@LIBFWUPDPLUGIN_0.3.5 0.3.5
  LIBFWUPDPLUGIN_0.6.1@LIBFWUPDPLUGIN_0.6.1 0.6.1
  LIBFWUPDPLUGIN_0.7.1@LIBFWUPDPLUGIN_0.7.1 0.7.1
  LIBFWUPDPLUGIN_0.7.2@LIBFWUPDPLUGIN_0.7.2 0.7.2
  LIBFWUPDPLUGIN_0.8.0@LIBFWUPDPLUGIN_0.8.0 0.8.0
- LIBFWUPDPLUGIN_0.9.1@LIBFWUPDPLUGIN_0.9.1 0.9.1
  LIBFWUPDPLUGIN_0.9.3@LIBFWUPDPLUGIN_0.9.3 0.9.3
  LIBFWUPDPLUGIN_0.9.5@LIBFWUPDPLUGIN_0.9.5 0.9.5
  LIBFWUPDPLUGIN_0.9.7@LIBFWUPDPLUGIN_0.9.7 0.9.7
@@ -18,7 +15,6 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  LIBFWUPDPLUGIN_1.0.4@LIBFWUPDPLUGIN_1.0.4 1.0.4
  LIBFWUPDPLUGIN_1.0.5@LIBFWUPDPLUGIN_1.0.5 1.0.5
  LIBFWUPDPLUGIN_1.0.6@LIBFWUPDPLUGIN_1.0.6 1.0.6
- LIBFWUPDPLUGIN_1.0.7@LIBFWUPDPLUGIN_1.0.7 1.0.7
  LIBFWUPDPLUGIN_1.0.8@LIBFWUPDPLUGIN_1.0.8 1.0.8
  LIBFWUPDPLUGIN_1.0.9@LIBFWUPDPLUGIN_1.0.9 1.0.9
  LIBFWUPDPLUGIN_1.1.0@LIBFWUPDPLUGIN_1.1.0 1.1.0
@@ -51,24 +47,80 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  LIBFWUPDPLUGIN_1.5.5@LIBFWUPDPLUGIN_1.5.5 1.5.5
  LIBFWUPDPLUGIN_1.5.6@LIBFWUPDPLUGIN_1.5.6 1.5.6
  LIBFWUPDPLUGIN_1.5.7@LIBFWUPDPLUGIN_1.5.7 1.5.7
+ LIBFWUPDPLUGIN_1.5.8@LIBFWUPDPLUGIN_1.5.8 1.5.8
+ LIBFWUPDPLUGIN_1.6.0@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ LIBFWUPDPLUGIN_1.6.1@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ LIBFWUPDPLUGIN_1.6.2@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ LIBFWUPDPLUGIN_1.7.0@LIBFWUPDPLUGIN_1.7.0 1.7.0
  fu_archive_get_type@LIBFWUPDPLUGIN_1.2.2 1.2.2
  fu_archive_iterate@LIBFWUPDPLUGIN_1.3.4 1.3.4
  fu_archive_lookup_by_fn@LIBFWUPDPLUGIN_1.2.2 1.2.2
  fu_archive_new@LIBFWUPDPLUGIN_1.2.2 1.2.2
+ fu_backend_coldplug@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_backend_device_added@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_backend_device_changed@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_backend_device_removed@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_backend_get_context@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_backend_get_devices@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_backend_get_enabled@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_backend_get_name@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_backend_get_type@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_backend_lookup_by_id@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_backend_set_enabled@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_backend_setup@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_battery_state_to_string@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_bluez_device_get_type@LIBFWUPDPLUGIN_1.5.7 1.5.7
+ fu_bluez_device_notify_start@LIBFWUPDPLUGIN_1.5.8 1.5.8
+ fu_bluez_device_notify_stop@LIBFWUPDPLUGIN_1.5.8 1.5.8
  fu_bluez_device_read@LIBFWUPDPLUGIN_1.5.7 1.5.7
  fu_bluez_device_read_string@LIBFWUPDPLUGIN_1.5.7 1.5.7
  fu_bluez_device_write@LIBFWUPDPLUGIN_1.5.7 1.5.7
+ fu_byte_array_align_up@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_byte_array_append_bytes@LIBFWUPDPLUGIN_1.5.8 1.5.8
  fu_byte_array_append_uint16@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_byte_array_append_uint32@LIBFWUPDPLUGIN_1.3.1 1.3.1
+ fu_byte_array_append_uint64@LIBFWUPDPLUGIN_1.5.8 1.5.8
  fu_byte_array_append_uint8@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_byte_array_set_size@LIBFWUPDPLUGIN_1.5.0 1.5.0
+ fu_byte_array_set_size_full@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_bytes_get_data_safe@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_cabinet_add_file@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_cabinet_export@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_cabinet_get_file@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_cabinet_get_silo@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_cabinet_get_type@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_cabinet_new@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_cabinet_parse@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_cabinet_set_jcat_context@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_cabinet_set_size_max@LIBFWUPDPLUGIN_1.4.0 1.4.0
+ fu_cabinet_sign@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_cfu_device_offer_to_string@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_device_reject_to_string@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_device_status_to_string@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_get_bank@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_get_component_id@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_get_force_ignore_version@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_get_force_immediate_reset@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_get_hw_variant@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_get_milestone@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_get_product_id@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_get_protocol_revision@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_get_segment_number@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_get_token@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_get_type@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_new@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_set_bank@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_set_component_id@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_set_force_ignore_version@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_set_force_immediate_reset@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_set_hw_variant@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_set_milestone@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_set_product_id@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_set_protocol_revision@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_set_segment_number@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_offer_set_token@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_payload_get_type@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_cfu_payload_new@LIBFWUPDPLUGIN_1.7.0 1.7.0
  fu_chunk_array_mutable_new@LIBFWUPDPLUGIN_1.5.6 1.5.6
  fu_chunk_array_new@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_chunk_array_new_from_bytes@LIBFWUPDPLUGIN_1.1.2 1.1.2
@@ -87,7 +139,8 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_chunk_set_bytes@LIBFWUPDPLUGIN_1.5.6 1.5.6
  fu_chunk_set_idx@LIBFWUPDPLUGIN_1.5.6 1.5.6
  fu_chunk_set_page@LIBFWUPDPLUGIN_1.5.6 1.5.6
- fu_chunk_to_string@LIBFWUPDPLUGIN_1.1.2 1.4.6
+ fu_chunk_to_string@LIBFWUPDPLUGIN_1.1.2 1.1.2
+ fu_common_align_up@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_common_bytes_align@LIBFWUPDPLUGIN_1.2.4 1.2.4
  fu_common_bytes_compare@LIBFWUPDPLUGIN_1.2.6 1.2.6
  fu_common_bytes_compare_raw@LIBFWUPDPLUGIN_1.3.2 1.3.2
@@ -95,8 +148,10 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_common_bytes_new_offset@LIBFWUPDPLUGIN_1.5.4 1.5.4
  fu_common_bytes_pad@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_common_cab_build_silo@LIBFWUPDPLUGIN_1.2.0 1.2.0
+ fu_common_check_kernel_version@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_common_cpuid@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_common_crc16@LIBFWUPDPLUGIN_1.5.0 1.5.0
+ fu_common_crc16_full@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_common_crc32@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_common_crc32_full@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_common_crc8@LIBFWUPDPLUGIN_1.5.0 1.5.0
@@ -115,13 +170,13 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_common_get_esp_default@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_common_get_esp_for_path@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_common_get_files_recursive@LIBFWUPDPLUGIN_1.0.6 1.0.6
+ fu_common_get_firmware_search_path@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_common_get_memory_size@LIBFWUPDPLUGIN_1.5.6 1.5.6
  fu_common_get_path@LIBFWUPDPLUGIN_1.0.8 1.0.8
  fu_common_get_volume_by_device@LIBFWUPDPLUGIN_1.5.1 1.5.1
  fu_common_get_volume_by_devnum@LIBFWUPDPLUGIN_1.5.1 1.5.1
  fu_common_get_volumes_by_kind@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_common_guid_is_plausible@LIBFWUPDPLUGIN_1.2.5 1.2.5
- fu_common_is_cpu_intel@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_common_is_live_media@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_common_kernel_locked_down@LIBFWUPDPLUGIN_1.3.8 1.3.8
  fu_common_mkdir_parent@LIBFWUPDPLUGIN_0.9.7 0.9.7
@@ -129,10 +184,14 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_common_read_uint16_safe@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_common_read_uint32@LIBFWUPDPLUGIN_1.0.3 1.0.3
  fu_common_read_uint32_safe@LIBFWUPDPLUGIN_1.3.3 1.3.3
+ fu_common_read_uint64@LIBFWUPDPLUGIN_1.5.8 1.5.8
+ fu_common_read_uint64_safe@LIBFWUPDPLUGIN_1.5.8 1.5.8
  fu_common_read_uint8_safe@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_common_realpath@LIBFWUPDPLUGIN_1.2.6 1.2.6
+ fu_common_reset_firmware_search_path@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_common_rmtree@LIBFWUPDPLUGIN_0.9.7 0.9.7
  fu_common_set_contents_bytes@LIBFWUPDPLUGIN_0.9.5 0.9.5
+ fu_common_set_firmware_search_path@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_common_spawn_sync@LIBFWUPDPLUGIN_0.9.7 0.9.7
  fu_common_string_append_kb@LIBFWUPDPLUGIN_1.2.4 1.2.4
  fu_common_string_append_ku@LIBFWUPDPLUGIN_1.2.4 1.2.4
@@ -141,44 +200,89 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_common_string_replace@LIBFWUPDPLUGIN_1.2.0 1.2.0
  fu_common_strjoin_array@LIBFWUPDPLUGIN_1.5.6 1.5.6
  fu_common_strnsplit@LIBFWUPDPLUGIN_1.3.1 1.3.1
+ fu_common_strnsplit_full@LIBFWUPDPLUGIN_1.7.0 1.7.0
  fu_common_strsafe@LIBFWUPDPLUGIN_1.5.5 1.5.5
  fu_common_strstrip@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_common_strtoull@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_common_strwidth@LIBFWUPDPLUGIN_1.3.2 1.3.2
  fu_common_uri_get_scheme@LIBFWUPDPLUGIN_1.5.6 1.5.6
- fu_common_vercmp@LIBFWUPDPLUGIN_0.3.5 0.3.5
  fu_common_vercmp_full@LIBFWUPDPLUGIN_1.3.9 1.3.9
  fu_common_version_ensure_semver@LIBFWUPDPLUGIN_1.2.9 1.2.9
  fu_common_version_from_uint16@LIBFWUPDPLUGIN_1.2.0 1.2.0
  fu_common_version_from_uint32@LIBFWUPDPLUGIN_1.2.0 1.2.0
  fu_common_version_from_uint64@LIBFWUPDPLUGIN_1.3.6 1.3.6
  fu_common_version_guess_format@LIBFWUPDPLUGIN_1.2.0 1.2.0
- fu_common_version_parse@LIBFWUPDPLUGIN_1.2.0 1.2.0
  fu_common_version_parse_from_format@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_common_version_verify_format@LIBFWUPDPLUGIN_1.2.9 1.2.9
  fu_common_write_uint16@LIBFWUPDPLUGIN_1.0.3 1.0.3
+ fu_common_write_uint16_safe@LIBFWUPDPLUGIN_1.5.8 1.5.8
  fu_common_write_uint32@LIBFWUPDPLUGIN_1.0.3 1.0.3
+ fu_common_write_uint32_safe@LIBFWUPDPLUGIN_1.5.8 1.5.8
+ fu_common_write_uint64@LIBFWUPDPLUGIN_1.5.8 1.5.8
+ fu_common_write_uint64_safe@LIBFWUPDPLUGIN_1.5.8 1.5.8
+ fu_common_write_uint8_safe@LIBFWUPDPLUGIN_1.5.8 1.5.8
+ fu_context_add_compile_version@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_add_firmware_gtype@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_add_quirk_key@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_add_runtime_version@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_add_udev_subsystem@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_get_battery_level@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_get_battery_state@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_get_battery_threshold@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_get_firmware_gtype_by_id@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_get_firmware_gtype_ids@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_get_hwid_guids@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_get_hwid_replace_value@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_get_hwid_value@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_get_smbios_data@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_get_smbios_integer@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_get_smbios_string@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_get_type@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_get_udev_subsystems@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_has_hwid_guid@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_load_hwinfo@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_load_quirks@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_lookup_quirk_by_id@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_lookup_quirk_by_id_iter@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_new@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_security_changed@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_set_battery_level@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_set_battery_state@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_set_battery_threshold@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_set_compile_versions@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_context_set_runtime_versions@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_device_activate@LIBFWUPDPLUGIN_1.2.6 1.2.6
  fu_device_add_child@LIBFWUPDPLUGIN_1.0.8 1.0.8
  fu_device_add_counterpart_guid@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_device_add_flag@LIBFWUPDPLUGIN_0.1.0 0.1.0
  fu_device_add_guid@LIBFWUPDPLUGIN_0.7.2 0.7.2
+ fu_device_add_guid_full@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_device_add_instance_id@LIBFWUPDPLUGIN_1.2.5 1.2.5
  fu_device_add_instance_id_full@LIBFWUPDPLUGIN_1.2.9 1.2.9
  fu_device_add_internal_flag@LIBFWUPDPLUGIN_1.5.5 1.5.5
  fu_device_add_parent_guid@LIBFWUPDPLUGIN_1.0.8 1.0.8
+ fu_device_add_parent_physical_id@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_device_add_possible_plugin@LIBFWUPDPLUGIN_1.5.1 1.5.1
+ fu_device_add_private_flag@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_device_add_security_attrs@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_device_attach@LIBFWUPDPLUGIN_1.0.8 1.0.8
+ fu_device_attach_full@LIBFWUPDPLUGIN_1.7.0 1.7.0
  fu_device_bind_driver@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_device_cleanup@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_device_close@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_device_convert_instance_ids@LIBFWUPDPLUGIN_1.2.5 1.2.5
  fu_device_detach@LIBFWUPDPLUGIN_1.0.8 1.0.8
+ fu_device_detach_full@LIBFWUPDPLUGIN_1.7.0 1.7.0
  fu_device_dump_firmware@LIBFWUPDPLUGIN_1.5.0 1.5.0
+ fu_device_emit_request@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_device_ensure_id@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_device_get_alternate@LIBFWUPDPLUGIN_0.7.2 0.7.2
  fu_device_get_alternate_id@LIBFWUPDPLUGIN_1.1.0 1.1.0
+ fu_device_get_backend_id@LIBFWUPDPLUGIN_1.5.8 1.5.8
+ fu_device_get_battery_level@LIBFWUPDPLUGIN_1.5.8 1.5.8
+ fu_device_get_battery_threshold@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_device_get_children@LIBFWUPDPLUGIN_1.0.8 1.0.8
+ fu_device_get_context@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_device_get_custom_flags@LIBFWUPDPLUGIN_1.1.0 1.1.0
  fu_device_get_equivalent_id@LIBFWUPDPLUGIN_0.6.1 0.6.1
  fu_device_get_firmware_size_max@LIBFWUPDPLUGIN_1.2.6 1.2.6
@@ -191,27 +295,30 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_device_get_order@LIBFWUPDPLUGIN_1.0.8 1.0.8
  fu_device_get_parent@LIBFWUPDPLUGIN_1.0.8 1.0.8
  fu_device_get_parent_guids@LIBFWUPDPLUGIN_1.0.8 1.0.8
+ fu_device_get_parent_physical_ids@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_device_get_physical_id@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_device_get_possible_plugins@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_device_get_priority@LIBFWUPDPLUGIN_1.1.1 1.1.1
- fu_device_get_progress@LIBFWUPDPLUGIN_1.0.3 1.0.3
- fu_device_get_protocol@LIBFWUPDPLUGIN_1.3.5 1.3.5
+ fu_device_get_private_flags@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_device_get_proxy@LIBFWUPDPLUGIN_1.4.1 1.4.1
  fu_device_get_proxy_guid@LIBFWUPDPLUGIN_1.4.1 1.4.1
- fu_device_get_quirks@LIBFWUPDPLUGIN_1.0.3 1.0.3
+ fu_device_get_proxy_with_fallback@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_device_get_release_default@LIBFWUPDPLUGIN_1.0.5 1.0.5
  fu_device_get_remove_delay@LIBFWUPDPLUGIN_1.0.2 1.0.2
+ fu_device_get_request_cnt@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_device_get_results@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_device_get_root@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_device_get_specialized_gtype@LIBFWUPDPLUGIN_1.3.3 1.3.3
- fu_device_get_status@LIBFWUPDPLUGIN_1.0.3 1.0.3
  fu_device_get_type@LIBFWUPDPLUGIN_0.1.0 0.1.0
- fu_device_has_custom_flag@LIBFWUPDPLUGIN_1.1.0 1.1.0
  fu_device_has_guid@LIBFWUPDPLUGIN_1.2.2 1.2.2
  fu_device_has_internal_flag@LIBFWUPDPLUGIN_1.5.5 1.5.5
  fu_device_has_parent_guid@LIBFWUPDPLUGIN_1.0.8 1.0.8
+ fu_device_has_parent_physical_id@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_device_has_private_flag@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_device_incorporate@LIBFWUPDPLUGIN_1.1.0 1.1.0
  fu_device_incorporate_flag@LIBFWUPDPLUGIN_1.3.5 1.3.5
  fu_device_incorporate_from_component@LIBFWUPDPLUGIN_1.2.4 1.2.4
+ fu_device_inhibit@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_device_internal_flag_from_string@LIBFWUPDPLUGIN_1.5.5 1.5.5
  fu_device_internal_flag_to_string@LIBFWUPDPLUGIN_1.5.5 1.5.5
  fu_device_locker_close@LIBFWUPDPLUGIN_1.4.0 1.4.0
@@ -219,6 +326,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_device_locker_new@LIBFWUPDPLUGIN_1.0.0 1.0.0
  fu_device_locker_new_full@LIBFWUPDPLUGIN_1.0.0 1.0.0
  fu_device_new@LIBFWUPDPLUGIN_0.1.0 0.1.0
+ fu_device_new_with_context@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_device_open@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_device_poll@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_device_prepare@LIBFWUPDPLUGIN_1.3.3 1.3.3
@@ -226,9 +334,13 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_device_probe@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_device_probe_invalidate@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_device_read_firmware@LIBFWUPDPLUGIN_1.0.8 1.0.8
+ fu_device_register_private_flag@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_device_reload@LIBFWUPDPLUGIN_1.3.3 1.3.3
+ fu_device_remove_child@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_device_remove_flag@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_device_remove_internal_flag@LIBFWUPDPLUGIN_1.5.5 1.5.5
  fu_device_remove_metadata@LIBFWUPDPLUGIN_1.3.3 1.3.3
+ fu_device_remove_private_flag@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_device_report_metadata_post@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_device_report_metadata_pre@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_device_rescan@LIBFWUPDPLUGIN_1.3.1 1.3.1
@@ -238,6 +350,10 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_device_retry_set_delay@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_device_set_alternate@LIBFWUPDPLUGIN_0.7.2 0.7.2
  fu_device_set_alternate_id@LIBFWUPDPLUGIN_1.1.0 1.1.0
+ fu_device_set_backend_id@LIBFWUPDPLUGIN_1.5.8 1.5.8
+ fu_device_set_battery_level@LIBFWUPDPLUGIN_1.5.8 1.5.8
+ fu_device_set_battery_threshold@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_device_set_context@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_device_set_custom_flags@LIBFWUPDPLUGIN_1.1.0 1.1.0
  fu_device_set_equivalent_id@LIBFWUPDPLUGIN_0.6.1 0.6.1
  fu_device_set_firmware_size@LIBFWUPDPLUGIN_1.2.6 1.2.6
@@ -254,22 +370,21 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_device_set_physical_id@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_device_set_poll_interval@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_device_set_priority@LIBFWUPDPLUGIN_1.1.1 1.1.1
- fu_device_set_progress@LIBFWUPDPLUGIN_1.0.3 1.0.3
- fu_device_set_progress_full@LIBFWUPDPLUGIN_1.0.3 1.0.3
- fu_device_set_protocol@LIBFWUPDPLUGIN_1.3.5 1.3.5
+ fu_device_set_private_flags@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_device_set_progress@LIBFWUPDPLUGIN_1.7.0 1.7.0
  fu_device_set_proxy@LIBFWUPDPLUGIN_1.4.1 1.4.1
  fu_device_set_proxy_guid@LIBFWUPDPLUGIN_1.4.1 1.4.1
- fu_device_set_quirks@LIBFWUPDPLUGIN_1.0.3 1.0.3
  fu_device_set_remove_delay@LIBFWUPDPLUGIN_1.0.2 1.0.2
- fu_device_set_status@LIBFWUPDPLUGIN_1.0.3 1.0.3
+ fu_device_set_update_state@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_device_set_vendor@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_device_set_version@LIBFWUPDPLUGIN_1.2.9 1.2.9
  fu_device_set_version_bootloader@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_device_set_version_format@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_device_set_version_lowest@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_device_setup@LIBFWUPDPLUGIN_1.1.2 1.1.2
- fu_device_sleep_with_progress@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_device_to_string@LIBFWUPDPLUGIN_0.9.8 0.9.8
  fu_device_unbind_driver@LIBFWUPDPLUGIN_1.5.0 1.5.0
+ fu_device_uninhibit@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_device_write_firmware@LIBFWUPDPLUGIN_1.0.8 1.0.8
  fu_dfu_firmware_get_pid@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_dfu_firmware_get_release@LIBFWUPDPLUGIN_1.3.3 1.3.3
@@ -283,6 +398,15 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_dfu_firmware_set_vid@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_dfuse_firmware_get_type@LIBFWUPDPLUGIN_1.5.6 1.5.6
  fu_dfuse_firmware_new@LIBFWUPDPLUGIN_1.5.6 1.5.6
+ fu_efi_firmware_file_get_type@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_efi_firmware_file_new@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_efi_firmware_filesystem_get_type@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_efi_firmware_filesystem_new@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_efi_firmware_section_get_type@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_efi_firmware_section_new@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_efi_firmware_volume_get_type@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_efi_firmware_volume_new@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_efi_guid_to_name@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_efi_signature_get_kind@LIBFWUPDPLUGIN_1.5.5 1.5.5
  fu_efi_signature_get_owner@LIBFWUPDPLUGIN_1.5.5 1.5.5
  fu_efi_signature_get_type@LIBFWUPDPLUGIN_1.5.5 1.5.5
@@ -302,47 +426,35 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_efivar_set_data_bytes@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_efivar_space_used@LIBFWUPDPLUGIN_1.5.1 1.5.1
  fu_efivar_supported@LIBFWUPDPLUGIN_1.4.0 1.4.0
+ fu_firmware_add_chunk@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_firmware_add_flag@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_firmware_add_image@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_build@LIBFWUPDPLUGIN_1.5.0 1.5.0
+ fu_firmware_build_from_xml@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_export@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_export_to_xml@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_firmware_flag_from_string@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_firmware_flag_to_string@LIBFWUPDPLUGIN_1.5.0 1.5.0
+ fu_firmware_get_addr@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_get_alignment@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_get_bytes@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_get_checksum@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_get_chunks@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_get_filename@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_get_id@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_get_idx@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_firmware_get_image_by_checksum@LIBFWUPDPLUGIN_1.5.5 1.5.5
  fu_firmware_get_image_by_id@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_get_image_by_id_bytes@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_get_image_by_idx@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_get_image_by_idx_bytes@LIBFWUPDPLUGIN_1.3.1 1.3.1
- fu_firmware_get_image_default@LIBFWUPDPLUGIN_1.3.1 1.3.1
- fu_firmware_get_image_default_bytes@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_get_images@LIBFWUPDPLUGIN_1.3.1 1.3.1
+ fu_firmware_get_offset@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_get_size@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_firmware_get_type@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_get_version@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_firmware_get_version_raw@LIBFWUPDPLUGIN_1.5.7 1.5.7
  fu_firmware_has_flag@LIBFWUPDPLUGIN_1.5.0 1.5.0
- fu_firmware_image_add_chunk@LIBFWUPDPLUGIN_1.5.6 1.5.6
- fu_firmware_image_build@LIBFWUPDPLUGIN_1.5.0 1.5.0
- fu_firmware_image_get_addr@LIBFWUPDPLUGIN_1.3.1 1.3.1
- fu_firmware_image_get_bytes@LIBFWUPDPLUGIN_1.5.0 1.5.0
- fu_firmware_image_get_checksum@LIBFWUPDPLUGIN_1.5.5 1.5.5
- fu_firmware_image_get_chunks@LIBFWUPDPLUGIN_1.5.6 1.5.6
- fu_firmware_image_get_filename@LIBFWUPDPLUGIN_1.5.0 1.5.0
- fu_firmware_image_get_id@LIBFWUPDPLUGIN_1.3.1 1.3.1
- fu_firmware_image_get_idx@LIBFWUPDPLUGIN_1.3.1 1.3.1
- fu_firmware_image_get_offset@LIBFWUPDPLUGIN_1.5.0 1.5.0
- fu_firmware_image_get_type@LIBFWUPDPLUGIN_1.3.1 1.3.1
- fu_firmware_image_get_version@LIBFWUPDPLUGIN_1.3.4 1.3.4
- fu_firmware_image_new@LIBFWUPDPLUGIN_1.3.1 1.3.1
- fu_firmware_image_parse@LIBFWUPDPLUGIN_1.5.0 1.5.0
- fu_firmware_image_set_addr@LIBFWUPDPLUGIN_1.3.1 1.3.1
- fu_firmware_image_set_bytes@LIBFWUPDPLUGIN_1.3.1 1.3.1
- fu_firmware_image_set_filename@LIBFWUPDPLUGIN_1.5.0 1.5.0
- fu_firmware_image_set_id@LIBFWUPDPLUGIN_1.3.1 1.3.1
- fu_firmware_image_set_idx@LIBFWUPDPLUGIN_1.3.1 1.3.1
- fu_firmware_image_set_offset@LIBFWUPDPLUGIN_1.5.0 1.5.0
- fu_firmware_image_set_version@LIBFWUPDPLUGIN_1.3.4 1.3.4
- fu_firmware_image_to_string@LIBFWUPDPLUGIN_1.3.1 1.3.1
- fu_firmware_image_write@LIBFWUPDPLUGIN_1.3.3 1.3.3
- fu_firmware_image_write_chunk@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_new@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_new_from_bytes@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_new_from_gtypes@LIBFWUPDPLUGIN_1.5.6 1.5.6
@@ -352,21 +464,25 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_firmware_remove_image@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_firmware_remove_image_by_id@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_firmware_remove_image_by_idx@LIBFWUPDPLUGIN_1.5.0 1.5.0
+ fu_firmware_set_addr@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_set_alignment@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_set_bytes@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_set_filename@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_set_id@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_set_idx@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_set_offset@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_firmware_set_size@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_firmware_set_version@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_firmware_set_version_raw@LIBFWUPDPLUGIN_1.5.7 1.5.7
- fu_firmware_strparse_uint16@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_strparse_uint16_safe@LIBFWUPDPLUGIN_1.5.6 1.5.6
- fu_firmware_strparse_uint24@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_strparse_uint24_safe@LIBFWUPDPLUGIN_1.5.6 1.5.6
- fu_firmware_strparse_uint32@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_strparse_uint32_safe@LIBFWUPDPLUGIN_1.5.6 1.5.6
- fu_firmware_strparse_uint4@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_strparse_uint4_safe@LIBFWUPDPLUGIN_1.5.6 1.5.6
- fu_firmware_strparse_uint8@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_strparse_uint8_safe@LIBFWUPDPLUGIN_1.5.6 1.5.6
  fu_firmware_to_string@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_firmware_tokenize@LIBFWUPDPLUGIN_1.3.2 1.3.2
  fu_firmware_write@LIBFWUPDPLUGIN_1.3.1 1.3.1
+ fu_firmware_write_chunk@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_firmware_write_file@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_fmap_firmware_get_type@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_fmap_firmware_new@LIBFWUPDPLUGIN_1.5.0 1.5.0
@@ -388,9 +504,30 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_hwids_has_guid@LIBFWUPDPLUGIN_0.9.3 0.9.3
  fu_hwids_new@LIBFWUPDPLUGIN_0.9.3 0.9.3
  fu_hwids_setup@LIBFWUPDPLUGIN_0.9.3 0.9.3
+ fu_i2c_device_get_bus_number@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_i2c_device_get_type@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_i2c_device_read@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_i2c_device_read_full@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_i2c_device_set_bus_number@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_i2c_device_write@LIBFWUPDPLUGIN_1.6.1 1.6.1
+ fu_i2c_device_write_full@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_ifd_access_to_string@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_ifd_bios_get_type@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_ifd_bios_new@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_ifd_firmware_check_jedec_cmd@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_ifd_firmware_get_type@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_ifd_firmware_new@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_ifd_image_get_access@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_ifd_image_get_type@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_ifd_image_new@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_ifd_image_set_access@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_ifd_region_to_access@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_ifd_region_to_name@LIBFWUPDPLUGIN_1.6.2 1.6.2
+ fu_ifd_region_to_string@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_ihex_firmware_get_records@LIBFWUPDPLUGIN_1.3.4 1.3.4
  fu_ihex_firmware_get_type@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_ihex_firmware_new@LIBFWUPDPLUGIN_1.3.1 1.3.1
+ fu_ihex_firmware_set_padding_value@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_io_channel_get_type@LIBFWUPDPLUGIN_1.2.2 1.2.2
  fu_io_channel_new_file@LIBFWUPDPLUGIN_1.2.2 1.2.2
  fu_io_channel_read_byte_array@LIBFWUPDPLUGIN_1.3.2 1.3.2
@@ -402,95 +539,94 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_io_channel_write_byte_array@LIBFWUPDPLUGIN_1.3.2 1.3.2
  fu_io_channel_write_bytes@LIBFWUPDPLUGIN_1.2.2 1.2.2
  fu_io_channel_write_raw@LIBFWUPDPLUGIN_1.2.2 1.2.2
+ fu_kenv_get_string@LIBFWUPDPLUGIN_1.6.1 1.6.1
  fu_memcpy_safe@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_memdup_safe@LIBFWUPDPLUGIN_1.5.6 1.5.6
- fu_plugin_add_compile_version@LIBFWUPDPLUGIN_1.0.7 1.0.7
+ fu_plugin_add_device_gtype@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_plugin_add_firmware_gtype@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_plugin_add_report_metadata@LIBFWUPDPLUGIN_1.0.4 1.0.4
  fu_plugin_add_rule@LIBFWUPDPLUGIN_1.0.0 1.0.0
- fu_plugin_add_runtime_version@LIBFWUPDPLUGIN_1.0.7 1.0.7
- fu_plugin_add_udev_subsystem@LIBFWUPDPLUGIN_1.1.2 1.1.2
+ fu_plugin_add_udev_subsystem@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_plugin_alloc_data@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_cache_add@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_cache_lookup@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_cache_remove@LIBFWUPDPLUGIN_0.8.0 0.8.0
- fu_plugin_check_hwid@LIBFWUPDPLUGIN_0.9.1 0.9.1
  fu_plugin_device_add@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_device_register@LIBFWUPDPLUGIN_0.9.7 0.9.7
  fu_plugin_device_remove@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_get_build_hash@LIBFWUPDPLUGIN_1.2.4 1.2.4
  fu_plugin_get_config_value@LIBFWUPDPLUGIN_1.0.6 1.0.6
  fu_plugin_get_config_value_boolean@LIBFWUPDPLUGIN_1.4.0 1.4.0
+ fu_plugin_get_context@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_plugin_get_data@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_get_devices@LIBFWUPDPLUGIN_1.5.6 1.5.6
- fu_plugin_get_dmi_value@LIBFWUPDPLUGIN_0.9.7 0.9.7
- fu_plugin_get_enabled@LIBFWUPDPLUGIN_0.8.0 0.8.0
- fu_plugin_get_hwid_replace_value@LIBFWUPDPLUGIN_1.3.3 1.3.3
- fu_plugin_get_hwids@LIBFWUPDPLUGIN_1.1.1 1.1.1
  fu_plugin_get_name@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_get_order@LIBFWUPDPLUGIN_1.0.0 1.0.0
  fu_plugin_get_priority@LIBFWUPDPLUGIN_1.1.1 1.1.1
- fu_plugin_get_quirks@LIBFWUPDPLUGIN_1.0.1 1.0.1
  fu_plugin_get_report_metadata@LIBFWUPDPLUGIN_1.0.4 1.0.4
  fu_plugin_get_rules@LIBFWUPDPLUGIN_1.0.0 1.0.0
- fu_plugin_get_smbios_data@LIBFWUPDPLUGIN_0.9.8 0.9.8
- fu_plugin_get_smbios_string@LIBFWUPDPLUGIN_0.9.8 0.9.8
  fu_plugin_get_type@LIBFWUPDPLUGIN_0.8.0 0.8.0
- fu_plugin_get_usb_context@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_guess_name_from_fn@LIBFWUPDPLUGIN_1.0.8 1.0.8
  fu_plugin_has_custom_flag@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_plugin_has_rule@LIBFWUPDPLUGIN_1.0.0 1.0.0
  fu_plugin_is_open@LIBFWUPDPLUGIN_1.3.5 1.3.5
- fu_plugin_lookup_quirk_by_id@LIBFWUPDPLUGIN_1.0.1 1.0.1
- fu_plugin_lookup_quirk_by_id_as_uint64@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_plugin_name_compare@LIBFWUPDPLUGIN_1.0.8 1.0.8
  fu_plugin_new@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_open@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_order_compare@LIBFWUPDPLUGIN_1.0.8 1.0.8
- fu_plugin_request_recoldplug@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_runner_activate@LIBFWUPDPLUGIN_1.2.6 1.2.6
  fu_plugin_runner_add_security_attrs@LIBFWUPDPLUGIN_1.5.0 1.5.0
+ fu_plugin_runner_attach@LIBFWUPDPLUGIN_1.7.0 1.7.0
  fu_plugin_runner_backend_device_added@LIBFWUPDPLUGIN_1.5.6 1.5.6
  fu_plugin_runner_backend_device_changed@LIBFWUPDPLUGIN_1.5.6 1.5.6
+ fu_plugin_runner_cleanup@LIBFWUPDPLUGIN_1.7.0 1.7.0
  fu_plugin_runner_clear_results@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_runner_coldplug@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_runner_coldplug_cleanup@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_runner_coldplug_prepare@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_runner_composite_cleanup@LIBFWUPDPLUGIN_1.0.9 1.0.9
  fu_plugin_runner_composite_prepare@LIBFWUPDPLUGIN_1.0.9 1.0.9
+ fu_plugin_runner_detach@LIBFWUPDPLUGIN_1.7.0 1.7.0
  fu_plugin_runner_device_added@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_plugin_runner_device_created@LIBFWUPDPLUGIN_1.4.0 1.4.0
  fu_plugin_runner_device_register@LIBFWUPDPLUGIN_0.9.7 0.9.7
  fu_plugin_runner_device_removed@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_plugin_runner_get_results@LIBFWUPDPLUGIN_0.8.0 0.8.0
- fu_plugin_runner_recoldplug@LIBFWUPDPLUGIN_1.0.4 1.0.4
+ fu_plugin_runner_prepare@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_plugin_runner_reload@LIBFWUPDPLUGIN_1.7.0 1.7.0
  fu_plugin_runner_startup@LIBFWUPDPLUGIN_0.8.0 0.8.0
- fu_plugin_runner_udev_device_added@LIBFWUPDPLUGIN_1.0.2 1.0.2
- fu_plugin_runner_udev_device_changed@LIBFWUPDPLUGIN_1.0.2 1.0.2
  fu_plugin_runner_unlock@LIBFWUPDPLUGIN_0.8.0 0.8.0
- fu_plugin_runner_update@LIBFWUPDPLUGIN_0.8.0 0.8.0
- fu_plugin_runner_update_attach@LIBFWUPDPLUGIN_1.1.2 1.1.2
- fu_plugin_runner_update_cleanup@LIBFWUPDPLUGIN_1.1.2 1.1.2
- fu_plugin_runner_update_detach@LIBFWUPDPLUGIN_1.1.2 1.1.2
- fu_plugin_runner_update_prepare@LIBFWUPDPLUGIN_1.1.2 1.1.2
- fu_plugin_runner_update_reload@LIBFWUPDPLUGIN_1.1.2 1.1.2
- fu_plugin_runner_usb_device_added@LIBFWUPDPLUGIN_1.0.2 1.0.2
  fu_plugin_runner_verify@LIBFWUPDPLUGIN_0.8.0 0.8.0
- fu_plugin_security_changed@LIBFWUPDPLUGIN_1.5.0 1.5.0
+ fu_plugin_runner_write_firmware@LIBFWUPDPLUGIN_1.7.0 1.7.0
  fu_plugin_set_build_hash@LIBFWUPDPLUGIN_1.2.4 1.2.4
- fu_plugin_set_coldplug_delay@LIBFWUPDPLUGIN_0.8.0 0.8.0
- fu_plugin_set_compile_versions@LIBFWUPDPLUGIN_1.0.7 1.0.7
- fu_plugin_set_device_gtype@LIBFWUPDPLUGIN_1.3.3 1.3.3
- fu_plugin_set_enabled@LIBFWUPDPLUGIN_0.8.0 0.8.0
- fu_plugin_set_hwids@LIBFWUPDPLUGIN_0.9.7 0.9.7
+ fu_plugin_set_config_value@LIBFWUPDPLUGIN_1.7.0 1.7.0
  fu_plugin_set_name@LIBFWUPDPLUGIN_0.8.0 0.8.0
  fu_plugin_set_order@LIBFWUPDPLUGIN_1.0.0 1.0.0
  fu_plugin_set_priority@LIBFWUPDPLUGIN_1.0.0 1.0.0
- fu_plugin_set_quirks@LIBFWUPDPLUGIN_1.0.1 1.0.1
- fu_plugin_set_runtime_versions@LIBFWUPDPLUGIN_1.0.7 1.0.7
- fu_plugin_set_smbios@LIBFWUPDPLUGIN_1.0.0 1.0.0
- fu_plugin_set_udev_subsystems@LIBFWUPDPLUGIN_1.1.2 1.1.2
- fu_plugin_set_usb_context@LIBFWUPDPLUGIN_0.8.0 0.8.0
+ fu_progress_add_flag@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_add_step@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_finished@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_flag_from_string@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_flag_to_string@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_get_child@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_get_id@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_get_percentage@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_get_status@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_get_steps@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_get_type@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_has_flag@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_new@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_remove_flag@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_reset@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_set_id@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_set_percentage@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_set_percentage_full@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_set_profile@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_set_status@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_set_steps@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_sleep@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_progress_step_done@LIBFWUPDPLUGIN_1.7.0 1.7.0
+ fu_quirks_add_possible_key@LIBFWUPDPLUGIN_1.5.8 1.5.8
  fu_quirks_get_type@LIBFWUPDPLUGIN_1.0.1 1.0.1
  fu_quirks_load@LIBFWUPDPLUGIN_1.0.1 1.0.1
  fu_quirks_lookup_by_id@LIBFWUPDPLUGIN_1.0.1 1.0.1
@@ -511,13 +647,16 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_smbios_new@LIBFWUPDPLUGIN_1.0.0 1.0.0
  fu_smbios_setup@LIBFWUPDPLUGIN_1.0.0 1.0.0
  fu_smbios_setup_from_file@LIBFWUPDPLUGIN_1.0.0 1.0.0
+ fu_smbios_setup_from_kernel@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_smbios_setup_from_path@LIBFWUPDPLUGIN_1.0.0 1.0.0
  fu_smbios_to_string@LIBFWUPDPLUGIN_1.0.0 1.0.0
  fu_srec_firmware_get_records@LIBFWUPDPLUGIN_1.3.2 1.3.2
  fu_srec_firmware_get_type@LIBFWUPDPLUGIN_1.3.2 1.3.2
  fu_srec_firmware_new@LIBFWUPDPLUGIN_1.3.2 1.3.2
+ fu_srec_firmware_record_get_type@LIBFWUPDPLUGIN_1.6.1 1.6.1
  fu_srec_firmware_record_new@LIBFWUPDPLUGIN_1.3.2 1.3.2
  fu_udev_device_emit_changed@LIBFWUPDPLUGIN_1.1.2 1.1.2
+ fu_udev_device_get_children_with_subsystem@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_udev_device_get_dev@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_udev_device_get_device_file@LIBFWUPDPLUGIN_1.3.1 1.3.1
  fu_udev_device_get_devtype@LIBFWUPDPLUGIN_1.4.5 1.4.5
@@ -527,6 +666,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_udev_device_get_number@LIBFWUPDPLUGIN_1.5.0 1.5.0
  fu_udev_device_get_parent_name@LIBFWUPDPLUGIN_1.4.5 1.4.5
  fu_udev_device_get_revision@LIBFWUPDPLUGIN_1.1.2 1.1.2
+ fu_udev_device_get_siblings_with_subsystem@LIBFWUPDPLUGIN_1.6.0 1.6.0
  fu_udev_device_get_slot_depth@LIBFWUPDPLUGIN_1.2.4 1.2.4
  fu_udev_device_get_subsystem@LIBFWUPDPLUGIN_1.1.2 1.1.2
  fu_udev_device_get_subsystem_model@LIBFWUPDPLUGIN_1.5.0 1.5.0
@@ -541,10 +681,11 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_udev_device_pread_full@LIBFWUPDPLUGIN_1.4.5 1.4.5
  fu_udev_device_pwrite@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_udev_device_pwrite_full@LIBFWUPDPLUGIN_1.4.5 1.4.5
+ fu_udev_device_set_dev@LIBFWUPDPLUGIN_1.6.2 1.6.2
  fu_udev_device_set_fd@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_udev_device_set_flags@LIBFWUPDPLUGIN_1.3.6 1.3.6
+ fu_udev_device_set_logical_id@LIBFWUPDPLUGIN_1.5.8 1.5.8
  fu_udev_device_set_physical_id@LIBFWUPDPLUGIN_1.1.2 1.1.2
- fu_udev_device_set_readonly@LIBFWUPDPLUGIN_1.3.3 1.3.3
  fu_udev_device_write_sysfs@LIBFWUPDPLUGIN_1.4.5 1.4.5
  fu_usb_device_find_udev_device@LIBFWUPDPLUGIN_1.3.2 1.3.2
  fu_usb_device_get_dev@LIBFWUPDPLUGIN_1.0.2 1.0.2
@@ -556,6 +697,7 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_usb_device_is_open@LIBFWUPDPLUGIN_1.0.3 1.0.3
  fu_usb_device_new@LIBFWUPDPLUGIN_1.0.2 1.0.2
  fu_usb_device_set_dev@LIBFWUPDPLUGIN_1.0.2 1.0.2
+ fu_version_string@LIBFWUPDPLUGIN_1.6.1 1.6.1
  fu_volume_check_free_space@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_volume_get_id@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_volume_get_id_type@LIBFWUPDPLUGIN_1.5.2 1.5.2
@@ -567,3 +709,6 @@ libfwupdplugin.so.1 libfwupdplugin1 #MINVER#
  fu_volume_locker@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_volume_mount@LIBFWUPDPLUGIN_1.4.6 1.4.6
  fu_volume_unmount@LIBFWUPDPLUGIN_1.4.6 1.4.6
+ fu_xmlb_builder_insert_kb@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_xmlb_builder_insert_kv@LIBFWUPDPLUGIN_1.6.0 1.6.0
+ fu_xmlb_builder_insert_kx@LIBFWUPDPLUGIN_1.6.0 1.6.0
