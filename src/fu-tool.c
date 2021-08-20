@@ -621,7 +621,7 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "No updates available for remaining devices");
+				    _("No updates available for remaining devices"));
 		return FALSE;
 	}
 
