@@ -1228,8 +1228,8 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 				    /* TRANSLATORS: error message for a user who ran fwupdmgr
 				       refresh recently %1 is an already translated timestamp such
 				       as 6 hours or 15 seconds */
-				    "Firmware metadata last refresh: %s ago. "
-				    "Use --force to refresh again.",
+				    _("Firmware metadata last refresh: %s ago. "
+				      "Use --force to refresh again."),
 				    fu_util_time_to_str(age_oldest));
 			return FALSE;
 		}
@@ -1657,7 +1657,7 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "No updates available for remaining devices");
+				    _("No updates available for remaining devices"));
 		return FALSE;
 	}
 
