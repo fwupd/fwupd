@@ -60,6 +60,7 @@ endif
 
 fwupdtpmevlog = executable(
   'fwupdtpmevlog',
+  fu_hash,
   sources : [
     'fu-tpm-eventlog.c',
     'fu-tpm-eventlog-common.c',
