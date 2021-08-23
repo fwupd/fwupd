@@ -555,6 +555,7 @@ elif get_option('docs') == 'docgen'
   endif
   gidocgen_dep = dependency('gi-docgen',
     version: '>= 2021.1',
+    native: true,
     fallback: ['gi-docgen', 'dummy_dep'],
   )
   gidocgen = find_program('gi-docgen')
