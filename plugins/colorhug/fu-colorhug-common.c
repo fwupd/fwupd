@@ -9,7 +9,7 @@
 #include "fu-colorhug-common.h"
 
 const gchar *
-ch_strerror (ChError error_enum)
+ch_strerror(ChError error_enum)
 {
 	if (error_enum == CH_ERROR_NONE)
 		return "Success";

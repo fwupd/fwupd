@@ -8,12 +8,16 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_EFI_FIRMWARE_FILESYSTEM (fu_efi_firmware_filesystem_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuEfiFirmwareFilesystem, fu_efi_firmware_filesystem, FU, EFI_FIRMWARE_FILESYSTEM, FuFirmware)
+#define FU_TYPE_EFI_FIRMWARE_FILESYSTEM (fu_efi_firmware_filesystem_get_type())
+G_DECLARE_DERIVABLE_TYPE(FuEfiFirmwareFilesystem,
+			 fu_efi_firmware_filesystem,
+			 FU,
+			 EFI_FIRMWARE_FILESYSTEM,
+			 FuFirmware)
 
-struct _FuEfiFirmwareFilesystemClass
-{
-	FuFirmwareClass		 parent_class;
+struct _FuEfiFirmwareFilesystemClass {
+	FuFirmwareClass parent_class;
 };
 
-FuFirmware		*fu_efi_firmware_filesystem_new			(void);
+FuFirmware *
+fu_efi_firmware_filesystem_new(void);

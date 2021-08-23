@@ -8,4 +8,5 @@
 
 #include <gio/gio.h>
 
-gboolean	 fu_common_guid_is_plausible	(const guint8	*buf);
+gboolean
+fu_common_guid_is_plausible(const guint8 *buf);

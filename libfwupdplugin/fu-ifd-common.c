@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#include <config.h>
-
 #include "fu-ifd-common.h"
+
+#include <config.h>
 
 /**
  * fu_ifd_region_to_string:
@@ -19,7 +19,7 @@
  * Since: 1.6.2
  **/
 const gchar *
-fu_ifd_region_to_string (FuIfdRegion region)
+fu_ifd_region_to_string(FuIfdRegion region)
 {
 	if (region == FU_IFD_REGION_DESC)
 		return "desc";
@@ -55,7 +55,7 @@ fu_ifd_region_to_string (FuIfdRegion region)
  * Since: 1.6.2
  **/
 const gchar *
-fu_ifd_region_to_name (FuIfdRegion region)
+fu_ifd_region_to_name(FuIfdRegion region)
 {
 	if (region == FU_IFD_REGION_DESC)
 		return "IFD descriptor region";
@@ -91,7 +91,7 @@ fu_ifd_region_to_name (FuIfdRegion region)
  * Since: 1.6.2
  **/
 const gchar *
-fu_ifd_access_to_string (FuIfdAccess access)
+fu_ifd_access_to_string(FuIfdAccess access)
 {
 	if (access == FU_IFD_ACCESS_NONE)
 		return "--";
@@ -117,7 +117,7 @@ fu_ifd_access_to_string (FuIfdAccess access)
  * Since: 1.6.2
  **/
 FuIfdAccess
-fu_ifd_region_to_access (FuIfdRegion region, guint32 flash_master, gboolean new_layout)
+fu_ifd_region_to_access(FuIfdRegion region, guint32 flash_master, gboolean new_layout)
 {
 	guint8 bit_r = 0;
 	guint8 bit_w = 0;
@@ -127,7 +127,7 @@ fu_ifd_region_to_access (FuIfdRegion region, guint32 flash_master, gboolean new_
 		bit_r = (flash_master >> (region + 8)) & 0b1;
 		bit_w = (flash_master >> (region + 20)) & 0b1;
 		return (bit_r ? FU_IFD_ACCESS_READ : FU_IFD_ACCESS_NONE) |
-			(bit_w ? FU_IFD_ACCESS_WRITE : FU_IFD_ACCESS_NONE);
+		       (bit_w ? FU_IFD_ACCESS_WRITE : FU_IFD_ACCESS_NONE);
 	}
 
 	/* old layout */
@@ -145,5 +145,5 @@ fu_ifd_region_to_access (FuIfdRegion region, guint32 flash_master, gboolean new_
 		bit_w = 27;
 	}
 	return ((flash_master >> bit_r) & 0b1 ? FU_IFD_ACCESS_READ : FU_IFD_ACCESS_NONE) |
-		((flash_master >> bit_w) & 0b1 ? FU_IFD_ACCESS_WRITE : FU_IFD_ACCESS_NONE);
+	       ((flash_master >> bit_w) & 0b1 ? FU_IFD_ACCESS_WRITE : FU_IFD_ACCESS_NONE);
 }

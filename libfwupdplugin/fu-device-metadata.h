@@ -14,7 +14,7 @@
  * If the Thunderbolt hardware is stuck in safe mode.
  * Consumed by the thunderbolt plugin.
  */
-#define FU_DEVICE_METADATA_TBT_IS_SAFE_MODE	"Thunderbolt::IsSafeMode"
+#define FU_DEVICE_METADATA_TBT_IS_SAFE_MODE "Thunderbolt::IsSafeMode"
 
 /**
  * FU_DEVICE_METADATA_UEFI_DEVICE_KIND:
@@ -23,7 +23,7 @@
  * Consumed by the uefi plugin when other devices register fake devices that
  * need to be handled as a capsule update.
  */
-#define FU_DEVICE_METADATA_UEFI_DEVICE_KIND	"UefiDeviceKind"
+#define FU_DEVICE_METADATA_UEFI_DEVICE_KIND "UefiDeviceKind"
 
 /**
  * FU_DEVICE_METADATA_UEFI_FW_VERSION:
@@ -33,7 +33,7 @@
  * Consumed by the uefi plugin when other devices register fake devices that
  * need to be handled as a capsule update.
  */
-#define FU_DEVICE_METADATA_UEFI_FW_VERSION	"UefiFwVersion"
+#define FU_DEVICE_METADATA_UEFI_FW_VERSION "UefiFwVersion"
 
 /**
  * FU_DEVICE_METADATA_UEFI_CAPSULE_FLAGS:
@@ -42,4 +42,4 @@
  * Consumed by the uefi plugin when other devices register fake devices that
  * need to be handled as a capsule update.
  */
-#define FU_DEVICE_METADATA_UEFI_CAPSULE_FLAGS	"UefiCapsuleFlags"
+#define FU_DEVICE_METADATA_UEFI_CAPSULE_FLAGS "UefiCapsuleFlags"

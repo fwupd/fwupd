@@ -33,7 +33,7 @@ G_DEFINE_TYPE(FuUefiBackendLinux, fu_uefi_backend_linux, FU_TYPE_UEFI_BACKEND)
 static guint
 fu_uefi_backend_linux_read(const gchar *path, const gchar *filename)
 {
-	return fu_uefi_read_file_as_uint64 (path, filename);
+	return fu_uefi_read_file_as_uint64(path, filename);
 }
 
 static FuUefiDevice *
@@ -43,12 +43,12 @@ fu_uefi_backend_linux_device_new(FuUefiBackendLinux *self, const gchar *path)
 	g_autofree gchar *fw_class = NULL;
 	g_autofree gchar *fw_class_fn = NULL;
 
-	g_return_val_if_fail (path != NULL, NULL);
+	g_return_val_if_fail(path != NULL, NULL);
 
 	/* read values from sysfs */
-	fw_class_fn = g_build_filename (path, "fw_class", NULL);
-	if (g_file_get_contents (fw_class_fn, &fw_class, NULL, NULL))
-		g_strdelimit (fw_class, "\n", '\0');
+	fw_class_fn = g_build_filename(path, "fw_class", NULL);
+	if (g_file_get_contents(fw_class_fn, &fw_class, NULL, NULL))
+		g_strdelimit(fw_class, "\n", '\0');
 
 	/* Create object, assuming a verfmt of NUMBER unless told otherwise by
 	 * a quirk entry or metadata.
@@ -82,8 +82,8 @@ fu_uefi_backend_linux_device_new(FuUefiBackendLinux *self, const gchar *path)
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE);
 
 	/* set ID */
-	fu_device_set_physical_id (FU_DEVICE (dev), path);
-	return g_steal_pointer (&dev);
+	fu_device_set_physical_id(FU_DEVICE(dev), path);
+	return g_steal_pointer(&dev);
 }
 
 static gboolean
@@ -138,18 +138,18 @@ fu_uefi_backend_linux_coldplug(FuBackend *backend, GError **error)
 		return FALSE;
 
 	/* get the directory of ESRT entries */
-	sysfsfwdir = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-	esrt_path = g_build_filename (sysfsfwdir, "efi", "esrt", NULL);
-	esrt_entries = g_build_filename (esrt_path, "entries", NULL);
-	dir = g_dir_open (esrt_entries, 0, error);
+	sysfsfwdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_FW);
+	esrt_path = g_build_filename(sysfsfwdir, "efi", "esrt", NULL);
+	esrt_entries = g_build_filename(esrt_path, "entries", NULL);
+	dir = g_dir_open(esrt_entries, 0, error);
 	if (dir == NULL)
 		return FALSE;
 
 	/* add each device */
-	while ((fn = g_dir_read_name (dir)) != NULL) {
-		g_autofree gchar *path = g_build_filename (esrt_entries, fn, NULL);
+	while ((fn = g_dir_read_name(dir)) != NULL) {
+		g_autofree gchar *path = g_build_filename(esrt_entries, fn, NULL);
 		g_autoptr(FuUefiDevice) dev = fu_uefi_backend_linux_device_new(self, path);
-		fu_backend_device_added (backend, FU_DEVICE (dev));
+		fu_backend_device_added(backend, FU_DEVICE(dev));
 	}
 
 	/* success */
@@ -161,37 +161,38 @@ fu_uefi_backend_linux_check_smbios_enabled(FuContext *ctx, GError **error)
 {
 	const guint8 *data;
 	gsize sz;
-	g_autoptr(GBytes) bios_information = fu_context_get_smbios_data (ctx, 0);
+	g_autoptr(GBytes) bios_information = fu_context_get_smbios_data(ctx, 0);
 	if (bios_information == NULL) {
-		const gchar *tmp = g_getenv ("FWUPD_DELL_FAKE_SMBIOS");
+		const gchar *tmp = g_getenv("FWUPD_DELL_FAKE_SMBIOS");
 		if (tmp != NULL)
 			return TRUE;
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "SMBIOS not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "SMBIOS not supported");
 		return FALSE;
 	}
-	data = g_bytes_get_data (bios_information, &sz);
+	data = g_bytes_get_data(bios_information, &sz);
 	if (sz < 0x14) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "offset bigger than size %" G_GSIZE_FORMAT, sz);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "offset bigger than size %" G_GSIZE_FORMAT,
+			    sz);
 		return FALSE;
 	}
 	if (data[1] < 0x14) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "SMBIOS 2.3 not supported");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "SMBIOS 2.3 not supported");
 		return FALSE;
 	}
 	if (!(data[0x13] & (1 << 3))) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "System does not support UEFI mode");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "System does not support UEFI mode");
 		return FALSE;
 	}
 	return TRUE;
@@ -203,21 +204,22 @@ fu_uefi_backend_linux_setup(FuBackend *backend, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* using a pre-cooked SMBIOS */
-	if (g_getenv ("FWUPD_SYSFSFWDIR") != NULL)
+	if (g_getenv("FWUPD_SYSFSFWDIR") != NULL)
 		return TRUE;
 
 	/* check SMBIOS for 'UEFI Specification is supported' */
 	if (!fu_uefi_backend_linux_check_smbios_enabled(fu_backend_get_context(backend),
 							&error_local)) {
-		g_autofree gchar *fw = fu_common_get_path (FU_PATH_KIND_SYSFSDIR_FW);
-		g_autofree gchar *fn = g_build_filename (fw, "efi", NULL);
-		if (g_file_test (fn, G_FILE_TEST_EXISTS)) {
-			g_warning ("SMBIOS BIOS Characteristics Extension Byte 2 is invalid -- "
-				   "UEFI Specification is unsupported, but %s exists: %s",
-				   fn, error_local->message);
+		g_autofree gchar *fw = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_FW);
+		g_autofree gchar *fn = g_build_filename(fw, "efi", NULL);
+		if (g_file_test(fn, G_FILE_TEST_EXISTS)) {
+			g_warning("SMBIOS BIOS Characteristics Extension Byte 2 is invalid -- "
+				  "UEFI Specification is unsupported, but %s exists: %s",
+				  fn,
+				  error_local->message);
 			return TRUE;
 		}
-		g_propagate_error (error, g_steal_pointer (&error_local));
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
 	return TRUE;
@@ -232,13 +234,13 @@ fu_uefi_backend_linux_init(FuUefiBackendLinux *self)
 static void
 fu_uefi_backend_linux_class_init(FuUefiBackendLinuxClass *klass)
 {
-	FuBackendClass *klass_backend = FU_BACKEND_CLASS (klass);
+	FuBackendClass *klass_backend = FU_BACKEND_CLASS(klass);
 	klass_backend->coldplug = fu_uefi_backend_linux_coldplug;
 	klass_backend->setup = fu_uefi_backend_linux_setup;
 }
 
 FuBackend *
-fu_uefi_backend_new (FuContext *ctx)
+fu_uefi_backend_new(FuContext *ctx)
 {
 	return g_object_new(FU_TYPE_UEFI_BACKEND_LINUX, "name", "uefi", "context", ctx, NULL);
 }

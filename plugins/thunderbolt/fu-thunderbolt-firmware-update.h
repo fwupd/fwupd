@@ -17,4 +17,5 @@ G_DECLARE_FINAL_TYPE(FuThunderboltFirmwareUpdate,
 		     THUNDERBOLT_FIRMWARE_UPDATE,
 		     FuThunderboltFirmware)
 
-FuThunderboltFirmwareUpdate *fu_thunderbolt_firmware_update_new	(void);
+FuThunderboltFirmwareUpdate *
+fu_thunderbolt_firmware_update_new(void);

@@ -9,10 +9,10 @@
 #include "fu-elantp-common.h"
 
 guint16
-fu_elantp_calc_checksum (const guint8 *data, gsize length)
+fu_elantp_calc_checksum(const guint8 *data, gsize length)
 {
 	guint16 checksum = 0;
 	for (gsize i = 0; i < length; i += 2)
-		checksum += ((guint16) (data[i+1]) << 8) | (data[i]);
+		checksum += ((guint16)(data[i + 1]) << 8) | (data[i]);
 	return checksum;
 }

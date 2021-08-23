@@ -8,12 +8,12 @@
 
 #include "fu-ifd-image.h"
 
-#define FU_TYPE_IFD_BIOS (fu_ifd_bios_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuIfdBios, fu_ifd_bios, FU, IFD_BIOS, FuIfdImage)
+#define FU_TYPE_IFD_BIOS (fu_ifd_bios_get_type())
+G_DECLARE_DERIVABLE_TYPE(FuIfdBios, fu_ifd_bios, FU, IFD_BIOS, FuIfdImage)
 
-struct _FuIfdBiosClass
-{
-	FuIfdImageClass		 parent_class;
+struct _FuIfdBiosClass {
+	FuIfdImageClass parent_class;
 };
 
-FuFirmware	*fu_ifd_bios_new		(void);
+FuFirmware *
+fu_ifd_bios_new(void);

@@ -8,7 +8,8 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_EBITDO_FIRMWARE (fu_ebitdo_firmware_get_type ())
-G_DECLARE_FINAL_TYPE (FuEbitdoFirmware, fu_ebitdo_firmware, FU, EBITDO_FIRMWARE, FuFirmware)
+#define FU_TYPE_EBITDO_FIRMWARE (fu_ebitdo_firmware_get_type())
+G_DECLARE_FINAL_TYPE(FuEbitdoFirmware, fu_ebitdo_firmware, FU, EBITDO_FIRMWARE, FuFirmware)
 
-FuFirmware			*fu_ebitdo_firmware_new			(void);
+FuFirmware *
+fu_ebitdo_firmware_new(void);

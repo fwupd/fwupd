@@ -8,17 +8,17 @@
 
 #define __FWUPD_H_INSIDE__
 
-#include <libfwupd/fwupd-client.h>
 #include <libfwupd/fwupd-client-sync.h>
+#include <libfwupd/fwupd-client.h>
 #include <libfwupd/fwupd-common.h>
 #include <libfwupd/fwupd-device.h>
-#include <libfwupd/fwupd-plugin.h>
 #include <libfwupd/fwupd-enums.h>
 #include <libfwupd/fwupd-error.h>
-#include <libfwupd/fwupd-security-attr.h>
+#include <libfwupd/fwupd-plugin.h>
 #include <libfwupd/fwupd-release.h>
 #include <libfwupd/fwupd-remote.h>
 #include <libfwupd/fwupd-request.h>
+#include <libfwupd/fwupd-security-attr.h>
 #include <libfwupd/fwupd-version.h>
 
 #ifndef FWUPD_DISABLE_DEPRECATED

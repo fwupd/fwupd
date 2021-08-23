@@ -11,9 +11,9 @@
 #include "fu-nvme-device.h"
 
 void
-fu_plugin_init (FuPlugin *plugin)
+fu_plugin_init(FuPlugin *plugin)
 {
-	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_udev_subsystem (plugin, "nvme");
-	fu_plugin_add_device_gtype (plugin, FU_TYPE_NVME_DEVICE);
+	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
+	fu_plugin_add_udev_subsystem(plugin, "nvme");
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_NVME_DEVICE);
 }

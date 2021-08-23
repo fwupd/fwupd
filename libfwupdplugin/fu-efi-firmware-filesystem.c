@@ -19,22 +19,22 @@
  * See also: [class@FuFirmware]
  */
 
-G_DEFINE_TYPE (FuEfiFirmwareFilesystem, fu_efi_firmware_filesystem, FU_TYPE_FIRMWARE)
+G_DEFINE_TYPE(FuEfiFirmwareFilesystem, fu_efi_firmware_filesystem, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_efi_firmware_filesystem_parse (FuFirmware *firmware,
-				  GBytes *fw,
-				  guint64 addr_start,
-				  guint64 addr_end,
-				  FwupdInstallFlags flags,
-				  GError **error)
+fu_efi_firmware_filesystem_parse(FuFirmware *firmware,
+				 GBytes *fw,
+				 guint64 addr_start,
+				 guint64 addr_end,
+				 FwupdInstallFlags flags,
+				 GError **error)
 {
 	gsize offset = 0;
 	gsize bufsz = 0x0;
-	const guint8 *buf = g_bytes_get_data (fw, &bufsz);
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 
 	while (offset + 0x18 < bufsz) {
-		g_autoptr(FuFirmware) img = fu_efi_firmware_file_new ();
+		g_autoptr(FuFirmware) img = fu_efi_firmware_file_new();
 		g_autoptr(GBytes) fw_tmp = NULL;
 		gboolean is_freespace = TRUE;
 
@@ -48,20 +48,18 @@ fu_efi_firmware_filesystem_parse (FuFirmware *firmware,
 		if (is_freespace)
 			break;
 
-		fw_tmp = fu_common_bytes_new_offset (fw, offset, bufsz - offset, error);
+		fw_tmp = fu_common_bytes_new_offset(fw, offset, bufsz - offset, error);
 		if (fw_tmp == NULL)
 			return FALSE;
-		if (!fu_firmware_parse (img, fw_tmp, flags, error)) {
-			g_prefix_error (error,
-					"failed to parse EFI file at 0x%x: ",
-					(guint) offset);
+		if (!fu_firmware_parse(img, fw_tmp, flags, error)) {
+			g_prefix_error(error, "failed to parse EFI file at 0x%x: ", (guint)offset);
 			return FALSE;
 		}
-		fu_firmware_set_offset (firmware, offset);
-		fu_firmware_add_image (firmware, img);
+		fu_firmware_set_offset(firmware, offset);
+		fu_firmware_add_image(firmware, img);
 
 		/* next! */
-		offset += fu_firmware_get_size (img);
+		offset += fu_firmware_get_size(img);
 	}
 
 	/* success */
@@ -69,37 +67,37 @@ fu_efi_firmware_filesystem_parse (FuFirmware *firmware,
 }
 
 static GBytes *
-fu_efi_firmware_filesystem_write (FuFirmware *firmware, GError **error)
+fu_efi_firmware_filesystem_write(FuFirmware *firmware, GError **error)
 {
-	g_autoptr(GByteArray) buf = g_byte_array_new ();
-	g_autoptr(GPtrArray) images = fu_firmware_get_images (firmware);
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 
 	/* add each file */
 	for (guint i = 0; i < images->len; i++) {
-		FuFirmware *img = g_ptr_array_index (images, i);
+		FuFirmware *img = g_ptr_array_index(images, i);
 		g_autoptr(GBytes) blob = NULL;
-		fu_firmware_set_offset (img, buf->len);
-		blob = fu_firmware_write (img, error);
+		fu_firmware_set_offset(img, buf->len);
+		blob = fu_firmware_write(img, error);
 		if (blob == NULL)
 			return NULL;
-		fu_byte_array_append_bytes (buf, blob);
-		fu_byte_array_align_up (buf, fu_firmware_get_alignment (firmware), 0xFF);
+		fu_byte_array_append_bytes(buf, blob);
+		fu_byte_array_align_up(buf, fu_firmware_get_alignment(firmware), 0xFF);
 	}
 
 	/* success */
-	return g_byte_array_free_to_bytes (g_steal_pointer (&buf));
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
 }
 
 static void
-fu_efi_firmware_filesystem_init (FuEfiFirmwareFilesystem *self)
+fu_efi_firmware_filesystem_init(FuEfiFirmwareFilesystem *self)
 {
-	fu_firmware_set_alignment (FU_FIRMWARE (self), FU_FIRMWARE_ALIGNMENT_8);
+	fu_firmware_set_alignment(FU_FIRMWARE(self), FU_FIRMWARE_ALIGNMENT_8);
 }
 
 static void
-fu_efi_firmware_filesystem_class_init (FuEfiFirmwareFilesystemClass *klass)
+fu_efi_firmware_filesystem_class_init(FuEfiFirmwareFilesystemClass *klass)
 {
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
+	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
 	klass_firmware->parse = fu_efi_firmware_filesystem_parse;
 	klass_firmware->write = fu_efi_firmware_filesystem_write;
 }
@@ -112,7 +110,7 @@ fu_efi_firmware_filesystem_class_init (FuEfiFirmwareFilesystemClass *klass)
  * Since: 1.6.2
  **/
 FuFirmware *
-fu_efi_firmware_filesystem_new (void)
+fu_efi_firmware_filesystem_new(void)
 {
-	return FU_FIRMWARE (g_object_new (FU_TYPE_EFI_FIRMWARE_FILESYSTEM, NULL));
+	return FU_FIRMWARE(g_object_new(FU_TYPE_EFI_FIRMWARE_FILESYSTEM, NULL));
 }

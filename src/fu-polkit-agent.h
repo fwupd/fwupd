@@ -9,5 +9,7 @@
 
 #pragma once
 
-gboolean	 fu_polkit_agent_open		(GError		**error);
-void		 fu_polkit_agent_close		(void);
+gboolean
+fu_polkit_agent_open(GError **error);
+void
+fu_polkit_agent_close(void);

@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#define G_LOG_DOMAIN				"FuFirmware"
+#define G_LOG_DOMAIN "FuFirmware"
+
+#include "fu-firmware-common.h"
 
 #include <config.h>
-
 #include <string.h>
 
 #include "fu-common.h"
-#include "fu-firmware-common.h"
 
 /**
  * fu_firmware_strparse_uint4_safe:
@@ -29,19 +29,24 @@
  * Since: 1.5.6
  **/
 gboolean
-fu_firmware_strparse_uint4_safe (const gchar *data,
-				 gsize datasz,
-				 gsize offset,
-				 guint8 *value,
-				 GError **error)
+fu_firmware_strparse_uint4_safe(const gchar *data,
+				gsize datasz,
+				gsize offset,
+				guint8 *value,
+				GError **error)
 {
-	gchar buffer[2] = { '\0' };
-	if (!fu_memcpy_safe ((guint8 *) buffer, sizeof(buffer), 0x0,	/* dst */
-			     (const guint8 *) data, datasz, offset,	/* src */
-			     sizeof(buffer) - 1, error))
+	gchar buffer[2] = {'\0'};
+	if (!fu_memcpy_safe((guint8 *)buffer,
+			    sizeof(buffer),
+			    0x0, /* dst */
+			    (const guint8 *)data,
+			    datasz,
+			    offset, /* src */
+			    sizeof(buffer) - 1,
+			    error))
 		return FALSE;
 	if (value != NULL)
-		*value = (guint8) g_ascii_strtoull (buffer, NULL, 16);
+		*value = (guint8)g_ascii_strtoull(buffer, NULL, 16);
 	return TRUE;
 }
 
@@ -61,19 +66,24 @@ fu_firmware_strparse_uint4_safe (const gchar *data,
  * Since: 1.5.6
  **/
 gboolean
-fu_firmware_strparse_uint8_safe (const gchar *data,
-				 gsize datasz,
-				 gsize offset,
-				 guint8 *value,
-				 GError **error)
+fu_firmware_strparse_uint8_safe(const gchar *data,
+				gsize datasz,
+				gsize offset,
+				guint8 *value,
+				GError **error)
 {
-	gchar buffer[3] = { '\0' };
-	if (!fu_memcpy_safe ((guint8 *) buffer, sizeof(buffer), 0x0,	/* dst */
-			     (const guint8 *) data, datasz, offset,	/* src */
-			     sizeof(buffer) - 1, error))
+	gchar buffer[3] = {'\0'};
+	if (!fu_memcpy_safe((guint8 *)buffer,
+			    sizeof(buffer),
+			    0x0, /* dst */
+			    (const guint8 *)data,
+			    datasz,
+			    offset, /* src */
+			    sizeof(buffer) - 1,
+			    error))
 		return FALSE;
 	if (value != NULL)
-		*value = (guint8) g_ascii_strtoull (buffer, NULL, 16);
+		*value = (guint8)g_ascii_strtoull(buffer, NULL, 16);
 	return TRUE;
 }
 
@@ -93,19 +103,24 @@ fu_firmware_strparse_uint8_safe (const gchar *data,
  * Since: 1.5.6
  **/
 gboolean
-fu_firmware_strparse_uint16_safe (const gchar *data,
-				  gsize datasz,
-				  gsize offset,
-				  guint16 *value,
-				  GError **error)
+fu_firmware_strparse_uint16_safe(const gchar *data,
+				 gsize datasz,
+				 gsize offset,
+				 guint16 *value,
+				 GError **error)
 {
-	gchar buffer[5] = { '\0' };
-	if (!fu_memcpy_safe ((guint8 *) buffer, sizeof(buffer), 0x0,	/* dst */
-			     (const guint8 *) data, datasz, offset,	/* src */
-			     sizeof(buffer) - 1, error))
+	gchar buffer[5] = {'\0'};
+	if (!fu_memcpy_safe((guint8 *)buffer,
+			    sizeof(buffer),
+			    0x0, /* dst */
+			    (const guint8 *)data,
+			    datasz,
+			    offset, /* src */
+			    sizeof(buffer) - 1,
+			    error))
 		return FALSE;
 	if (value != NULL)
-		*value = (guint16) g_ascii_strtoull (buffer, NULL, 16);
+		*value = (guint16)g_ascii_strtoull(buffer, NULL, 16);
 	return TRUE;
 }
 
@@ -125,19 +140,24 @@ fu_firmware_strparse_uint16_safe (const gchar *data,
  * Since: 1.5.6
  **/
 gboolean
-fu_firmware_strparse_uint24_safe (const gchar *data,
-				  gsize datasz,
-				  gsize offset,
-				  guint32 *value,
-				  GError **error)
+fu_firmware_strparse_uint24_safe(const gchar *data,
+				 gsize datasz,
+				 gsize offset,
+				 guint32 *value,
+				 GError **error)
 {
-	gchar buffer[7] = { '\0' };
-	if (!fu_memcpy_safe ((guint8 *) buffer, sizeof(buffer), 0x0,	/* dst */
-			     (const guint8 *) data, datasz, offset,	/* src */
-			     sizeof(buffer) - 1, error))
+	gchar buffer[7] = {'\0'};
+	if (!fu_memcpy_safe((guint8 *)buffer,
+			    sizeof(buffer),
+			    0x0, /* dst */
+			    (const guint8 *)data,
+			    datasz,
+			    offset, /* src */
+			    sizeof(buffer) - 1,
+			    error))
 		return FALSE;
 	if (value != NULL)
-		*value = (guint16) g_ascii_strtoull (buffer, NULL, 16);
+		*value = (guint16)g_ascii_strtoull(buffer, NULL, 16);
 	return TRUE;
 }
 
@@ -157,18 +177,23 @@ fu_firmware_strparse_uint24_safe (const gchar *data,
  * Since: 1.5.6
  **/
 gboolean
-fu_firmware_strparse_uint32_safe (const gchar *data,
-				  gsize datasz,
-				  gsize offset,
-				  guint32 *value,
-				  GError **error)
+fu_firmware_strparse_uint32_safe(const gchar *data,
+				 gsize datasz,
+				 gsize offset,
+				 guint32 *value,
+				 GError **error)
 {
-	gchar buffer[9] = { '\0' };
-	if (!fu_memcpy_safe ((guint8 *) buffer, sizeof(buffer), 0x0,	/* dst */
-			     (const guint8 *) data, datasz, offset,	/* src */
-			     sizeof(buffer) - 1, error))
+	gchar buffer[9] = {'\0'};
+	if (!fu_memcpy_safe((guint8 *)buffer,
+			    sizeof(buffer),
+			    0x0, /* dst */
+			    (const guint8 *)data,
+			    datasz,
+			    offset, /* src */
+			    sizeof(buffer) - 1,
+			    error))
 		return FALSE;
 	if (value != NULL)
-		*value = (guint32) g_ascii_strtoull (buffer, NULL, 16);
+		*value = (guint32)g_ascii_strtoull(buffer, NULL, 16);
 	return TRUE;
 }

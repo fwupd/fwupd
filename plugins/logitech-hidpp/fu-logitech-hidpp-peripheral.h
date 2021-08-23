@@ -8,5 +8,9 @@
 
 #include "fu-logitech-hidpp-device.h"
 
-#define FU_TYPE_HIDPP_PERIPHERAL (fu_logitech_hidpp_peripheral_get_type ())
-G_DECLARE_FINAL_TYPE (FuLogitechHidPpPeripheral, fu_logitech_hidpp_peripheral, FU, HIDPP_PERIPHERAL, FuLogitechHidPpDevice)
+#define FU_TYPE_HIDPP_PERIPHERAL (fu_logitech_hidpp_peripheral_get_type())
+G_DECLARE_FINAL_TYPE(FuLogitechHidPpPeripheral,
+		     fu_logitech_hidpp_peripheral,
+		     FU,
+		     HIDPP_PERIPHERAL,
+		     FuLogitechHidPpDevice)

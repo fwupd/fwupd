@@ -19,7 +19,8 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_DELL_DOCK_MST (fu_dell_dock_mst_get_type ())
-G_DECLARE_FINAL_TYPE (FuDellDockMst, fu_dell_dock_mst, FU, DELL_DOCK_MST, FuDevice)
+#define FU_TYPE_DELL_DOCK_MST (fu_dell_dock_mst_get_type())
+G_DECLARE_FINAL_TYPE(FuDellDockMst, fu_dell_dock_mst, FU, DELL_DOCK_MST, FuDevice)
 
-FuDellDockMst 	*fu_dell_dock_mst_new	(void);
+FuDellDockMst *
+fu_dell_dock_mst_new(void);
