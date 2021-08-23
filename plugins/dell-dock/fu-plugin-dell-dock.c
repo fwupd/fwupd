@@ -186,18 +186,32 @@ fu_plugin_device_registered (FuPlugin *plugin, FuDevice *device)
 
 	/* online activation is mutually exclusive between usb4 and ec */
 	if (g_strcmp0(fu_device_get_plugin(device), "dell_dock") == 0 &&
-	    FU_IS_DELL_DOCK_USB4(device) &&
-	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+	    (FU_IS_DELL_DOCK_EC(device) || FU_IS_DELL_DOCK_USB4(device))) {
 		GPtrArray *devices = fu_plugin_get_devices(plugin);
+		FuDevice *device_ec = NULL;
+		FuDevice *device_usb4 = NULL;
 		for (guint i = 0; i < devices->len; i++) {
 			FuDevice *device_tmp = g_ptr_array_index(devices, i);
-			if (FU_IS_DELL_DOCK_EC(device_tmp) &&
-			    fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
-				fu_device_remove_flag(FU_DEVICE(device_tmp),
+			if (FU_IS_DELL_DOCK_EC(device_tmp))
+				device_ec = device_tmp;
+			else if (FU_IS_DELL_DOCK_USB4(device_tmp))
+				device_usb4 = device_tmp;
+		}
+		/* both usb4 and ec device are found */
+		if (device_usb4 && device_ec) {
+			if (fu_device_has_flag(device_usb4, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION) &&
+			    fu_device_has_flag(device_ec, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+				fu_device_remove_flag(FU_DEVICE(device_ec),
 						      FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
 				g_debug("activate for %s is inhibited by %s",
-					fu_device_get_name(device_tmp),
-					fu_device_get_name(device));
+					fu_device_get_name(device_ec),
+					fu_device_get_name(device_usb4));
+			} else if (fu_device_has_flag(device_usb4,
+						      FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)) {
+				fu_device_remove_flag(FU_DEVICE(device_usb4),
+						      FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+				g_debug("activate for %s is invalid",
+					fu_device_get_name(device_usb4));
 			}
 		}
 	}
