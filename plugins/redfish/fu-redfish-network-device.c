@@ -24,7 +24,7 @@ fu_redfish_network_device_get_state (FuRedfishNetworkDevice *self,
 	g_autoptr(GVariant) retval = NULL;
 	g_autoptr(GDBusProxy) proxy = NULL;
 
-	g_return_val_if_fail (FU_IS_REDFISH_NETWORK_DEVICE (self), FU_REDFISH_NETWORK_DEVICE_STATE_UNKNOWN);
+	g_return_val_if_fail(FU_IS_REDFISH_NETWORK_DEVICE(self), FALSE);
 	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
 
 	/* connect to device */
