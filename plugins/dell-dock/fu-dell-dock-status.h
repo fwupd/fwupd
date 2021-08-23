@@ -19,7 +19,8 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_DELL_DOCK_STATUS (fu_dell_dock_status_get_type ())
-G_DECLARE_FINAL_TYPE (FuDellDockStatus, fu_dell_dock_status, FU, DELL_DOCK_STATUS, FuDevice)
+#define FU_TYPE_DELL_DOCK_STATUS (fu_dell_dock_status_get_type())
+G_DECLARE_FINAL_TYPE(FuDellDockStatus, fu_dell_dock_status, FU, DELL_DOCK_STATUS, FuDevice)
 
-FuDellDockStatus	*fu_dell_dock_status_new	(void);
+FuDellDockStatus *
+fu_dell_dock_status_new(void);

@@ -23,7 +23,7 @@
  * Since: 0.7.0
  **/
 const gchar *
-fwupd_error_to_string (FwupdError error)
+fwupd_error_to_string(FwupdError error)
 {
 	if (error == FWUPD_ERROR_INTERNAL)
 		return FWUPD_DBUS_INTERFACE ".Internal";
@@ -73,41 +73,41 @@ fwupd_error_to_string (FwupdError error)
  * Since: 0.7.0
  **/
 FwupdError
-fwupd_error_from_string (const gchar *error)
+fwupd_error_from_string(const gchar *error)
 {
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".Internal") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".Internal") == 0)
 		return FWUPD_ERROR_INTERNAL;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".VersionNewer") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".VersionNewer") == 0)
 		return FWUPD_ERROR_VERSION_NEWER;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".VersionSame") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".VersionSame") == 0)
 		return FWUPD_ERROR_VERSION_SAME;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".AlreadyPending") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".AlreadyPending") == 0)
 		return FWUPD_ERROR_ALREADY_PENDING;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".AuthFailed") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".AuthFailed") == 0)
 		return FWUPD_ERROR_AUTH_FAILED;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".Read") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".Read") == 0)
 		return FWUPD_ERROR_READ;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".Write") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".Write") == 0)
 		return FWUPD_ERROR_WRITE;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".InvalidFile") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".InvalidFile") == 0)
 		return FWUPD_ERROR_INVALID_FILE;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".NotFound") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".NotFound") == 0)
 		return FWUPD_ERROR_NOT_FOUND;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".NothingToDo") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".NothingToDo") == 0)
 		return FWUPD_ERROR_NOTHING_TO_DO;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".NotSupported") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".NotSupported") == 0)
 		return FWUPD_ERROR_NOT_SUPPORTED;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".SignatureInvalid") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".SignatureInvalid") == 0)
 		return FWUPD_ERROR_SIGNATURE_INVALID;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".AcPowerRequired") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".AcPowerRequired") == 0)
 		return FWUPD_ERROR_AC_POWER_REQUIRED;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".PermissionDenied") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".PermissionDenied") == 0)
 		return FWUPD_ERROR_PERMISSION_DENIED;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".BrokenSystem") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".BrokenSystem") == 0)
 		return FWUPD_ERROR_BROKEN_SYSTEM;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".BatteryLevelTooLow") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".BatteryLevelTooLow") == 0)
 		return FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW;
-	if (g_strcmp0 (error, FWUPD_DBUS_INTERFACE ".NeedsUserAction") == 0)
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".NeedsUserAction") == 0)
 		return FWUPD_ERROR_NEEDS_USER_ACTION;
 	return FWUPD_ERROR_LAST;
 }
@@ -122,14 +122,13 @@ fwupd_error_from_string (const gchar *error)
  * Since: 0.1.1
  **/
 GQuark
-fwupd_error_quark (void)
+fwupd_error_quark(void)
 {
 	static GQuark quark = 0;
 	if (!quark) {
-		quark = g_quark_from_static_string ("FwupdError");
+		quark = g_quark_from_static_string("FwupdError");
 		for (gint i = 0; i < FWUPD_ERROR_LAST; i++) {
-			g_dbus_error_register_error (quark, i,
-						     fwupd_error_to_string (i));
+			g_dbus_error_register_error(quark, i, fwupd_error_to_string(i));
 		}
 	}
 	return quark;

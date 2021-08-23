@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#define G_LOG_DOMAIN				"FuKeyring"
+#define G_LOG_DOMAIN "FuKeyring"
+
+#include "fu-keyring-utils.h"
 
 #include <config.h>
 #include <string.h>
 
 #include "fwupd-error.h"
-
-#include "fu-keyring-utils.h"
 
 /**
  * fu_keyring_get_release_flags:
@@ -24,22 +24,20 @@
  * Returns: %TRUE if @flags has been set
  **/
 gboolean
-fu_keyring_get_release_flags (XbNode *release,
-			      FwupdReleaseFlags *flags,
-			      GError **error)
+fu_keyring_get_release_flags(XbNode *release, FwupdReleaseFlags *flags, GError **error)
 {
 	GBytes *blob;
 
-	blob = g_object_get_data (G_OBJECT (release), "fwupd::ReleaseFlags");
+	blob = g_object_get_data(G_OBJECT(release), "fwupd::ReleaseFlags");
 	if (blob == NULL)
 		return TRUE;
-	if (g_bytes_get_size (blob) != sizeof(FwupdReleaseFlags)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "invalid fwupd::ReleaseFlags set by loader");
+	if (g_bytes_get_size(blob) != sizeof(FwupdReleaseFlags)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid fwupd::ReleaseFlags set by loader");
 		return FALSE;
 	}
-	memcpy (flags, g_bytes_get_data (blob, NULL), sizeof(FwupdReleaseFlags));
+	memcpy(flags, g_bytes_get_data(blob, NULL), sizeof(FwupdReleaseFlags));
 	return TRUE;
 }

@@ -9,5 +9,9 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_THUNDERBOLT_DEVICE (fu_thunderbolt_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuThunderboltDevice, fu_thunderbolt_device, FU, THUNDERBOLT_DEVICE, FuUdevDevice)
+#define FU_TYPE_THUNDERBOLT_DEVICE (fu_thunderbolt_device_get_type())
+G_DECLARE_FINAL_TYPE(FuThunderboltDevice,
+		     fu_thunderbolt_device,
+		     FU,
+		     THUNDERBOLT_DEVICE,
+		     FuUdevDevice)

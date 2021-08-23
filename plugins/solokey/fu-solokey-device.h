@@ -8,5 +8,5 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_SOLOKEY_DEVICE (fu_solokey_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuSolokeyDevice, fu_solokey_device, FU, SOLOKEY_DEVICE, FuUsbDevice)
+#define FU_TYPE_SOLOKEY_DEVICE (fu_solokey_device_get_type())
+G_DECLARE_FINAL_TYPE(FuSolokeyDevice, fu_solokey_device, FU, SOLOKEY_DEVICE, FuUsbDevice)

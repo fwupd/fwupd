@@ -9,7 +9,7 @@
 #include "fu-nvme-common.h"
 
 const gchar *
-fu_nvme_status_to_string (guint32 status)
+fu_nvme_status_to_string(guint32 status)
 {
 	switch (status) {
 	case NVME_SC_SUCCESS:

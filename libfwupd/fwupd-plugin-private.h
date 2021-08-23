@@ -12,8 +12,9 @@
 
 G_BEGIN_DECLS
 
-GVariant	*fwupd_plugin_to_variant		(FwupdPlugin	*self);
-void		 fwupd_plugin_to_json			(FwupdPlugin	*self,
-							 JsonBuilder	*builder);
+GVariant *
+fwupd_plugin_to_variant(FwupdPlugin *self);
+void
+fwupd_plugin_to_json(FwupdPlugin *self, JsonBuilder *builder);
 
 G_END_DECLS

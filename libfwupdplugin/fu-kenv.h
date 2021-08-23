@@ -8,5 +8,5 @@
 
 #include <glib.h>
 
-gchar		*fu_kenv_get_string		(const gchar	*key,
-						 GError		**error);
+gchar *
+fu_kenv_get_string(const gchar *key, GError **error);

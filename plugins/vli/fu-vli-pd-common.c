@@ -10,7 +10,7 @@
 #include "fu-vli-pd-common.h"
 
 FuVliDeviceKind
-fu_vli_pd_common_guess_device_kind (guint32 fwver)
+fu_vli_pd_common_guess_device_kind(guint32 fwver)
 {
 	guint32 tmp = (fwver & 0x0f000000) >> 24;
 	if (tmp == 0x01 || tmp == 0x02 || tmp == 0x03)

@@ -13,8 +13,9 @@
 
 G_BEGIN_DECLS
 
-GVariant	*fwupd_release_to_variant		(FwupdRelease	*self);
-void		 fwupd_release_to_json			(FwupdRelease	*self,
-							 JsonBuilder	*builder);
+GVariant *
+fwupd_release_to_variant(FwupdRelease *self);
+void
+fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder);
 
 G_END_DECLS

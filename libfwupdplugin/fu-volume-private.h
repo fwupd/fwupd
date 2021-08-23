@@ -11,4 +11,5 @@
 
 #include "fu-volume.h"
 
-FuVolume	*fu_volume_new_from_mount_path		(const gchar	*mount_path);
+FuVolume *
+fu_volume_new_from_mount_path(const gchar *mount_path);

@@ -8,5 +8,9 @@
 
 #include "fu-redfish-device.h"
 
-#define FU_TYPE_REDFISH_MULTIPART_DEVICE (fu_redfish_multipart_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuRedfishMultipartDevice, fu_redfish_multipart_device, FU, REDFISH_MULTIPART_DEVICE, FuRedfishDevice)
+#define FU_TYPE_REDFISH_MULTIPART_DEVICE (fu_redfish_multipart_device_get_type())
+G_DECLARE_FINAL_TYPE(FuRedfishMultipartDevice,
+		     fu_redfish_multipart_device,
+		     FU,
+		     REDFISH_MULTIPART_DEVICE,
+		     FuRedfishDevice)

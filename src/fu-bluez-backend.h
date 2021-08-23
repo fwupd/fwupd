@@ -8,7 +8,8 @@
 
 #include "fu-backend.h"
 
-#define FU_TYPE_BLUEZ_BACKEND (fu_bluez_backend_get_type ())
-G_DECLARE_FINAL_TYPE (FuBluezBackend, fu_bluez_backend, FU, BLUEZ_BACKEND, FuBackend)
+#define FU_TYPE_BLUEZ_BACKEND (fu_bluez_backend_get_type())
+G_DECLARE_FINAL_TYPE(FuBluezBackend, fu_bluez_backend, FU, BLUEZ_BACKEND, FuBackend)
 
-FuBackend	*fu_bluez_backend_new			(void);
+FuBackend *
+fu_bluez_backend_new(void);

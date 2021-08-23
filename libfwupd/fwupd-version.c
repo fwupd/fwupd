@@ -21,9 +21,8 @@
  * Since: 1.6.1
  **/
 const gchar *
-fwupd_version_string (void)
+fwupd_version_string(void)
 {
-	return G_STRINGIFY(FWUPD_MAJOR_VERSION) "."
-		G_STRINGIFY(FWUPD_MINOR_VERSION) "."
-		G_STRINGIFY(FWUPD_MICRO_VERSION);
+	return G_STRINGIFY(FWUPD_MAJOR_VERSION) "." G_STRINGIFY(
+	    FWUPD_MINOR_VERSION) "." G_STRINGIFY(FWUPD_MICRO_VERSION);
 }

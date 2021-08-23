@@ -10,6 +10,7 @@
 
 G_BEGIN_DECLS
 
-GVariant	*fwupd_request_to_variant		(FwupdRequest	*self);
+GVariant *
+fwupd_request_to_variant(FwupdRequest *self);
 
 G_END_DECLS

@@ -27,27 +27,25 @@
  * Since: 1.6.1
  **/
 gchar *
-fu_kenv_get_string (const gchar *key, GError **error)
+fu_kenv_get_string(const gchar *key, GError **error)
 {
 #ifdef HAVE_KENV_H
-	gchar buf[128] = { '\0' };
+	gchar buf[128] = {'\0'};
 
-	g_return_val_if_fail (key != NULL, NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	if (kenv (KENV_GET, key, buf, sizeof(buf)) == -1) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_READ,
-			     "cannot get kenv request for %s", key);
+	if (kenv(KENV_GET, key, buf, sizeof(buf)) == -1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_READ,
+			    "cannot get kenv request for %s",
+			    key);
 		return NULL;
 	}
-	return g_strndup (buf, sizeof(buf));
+	return g_strndup(buf, sizeof(buf));
 #else
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "kenv not supported");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "kenv not supported");
 	return NULL;
 #endif
 }

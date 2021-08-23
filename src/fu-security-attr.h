@@ -8,5 +8,7 @@
 
 #include <fwupd.h>
 
-gchar		*fu_security_attr_get_name	(FwupdSecurityAttr	*attr);
-const gchar	*fu_security_attr_get_result	(FwupdSecurityAttr	*attr);
+gchar *
+fu_security_attr_get_name(FwupdSecurityAttr *attr);
+const gchar *
+fu_security_attr_get_result(FwupdSecurityAttr *attr);

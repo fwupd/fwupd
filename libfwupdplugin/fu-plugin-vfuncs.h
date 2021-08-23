@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "fu-plugin.h"
 #include "fu-device.h"
 #include "fu-hwids.h"
+#include "fu-plugin.h"
 #include "fu-quirks.h"
 #include "fu-security-attrs.h"
 
@@ -29,7 +29,8 @@
  *
  * Since: 0.8.0
  **/
-void		 fu_plugin_init				(FuPlugin	*plugin);
+void
+fu_plugin_init(FuPlugin *plugin);
 
 /**
  * fu_plugin_destroy:
@@ -40,7 +41,8 @@ void		 fu_plugin_init				(FuPlugin	*plugin);
  *
  * Since: 0.8.0
  **/
-void		 fu_plugin_destroy			(FuPlugin	*plugin);
+void
+fu_plugin_destroy(FuPlugin *plugin);
 
 /**
  * fu_plugin_startup:
@@ -56,8 +58,8 @@ void		 fu_plugin_destroy			(FuPlugin	*plugin);
  *
  * Since: 0.8.0
  **/
-gboolean	 fu_plugin_startup			(FuPlugin	*plugin,
-							 GError		**error);
+gboolean
+fu_plugin_startup(FuPlugin *plugin, GError **error);
 /**
  * fu_plugin_coldplug:
  * @plugin: a plugin
@@ -67,8 +69,8 @@ gboolean	 fu_plugin_startup			(FuPlugin	*plugin,
  *
  * Since: 0.8.0
  **/
-gboolean	 fu_plugin_coldplug			(FuPlugin	*plugin,
-							 GError		**error);
+gboolean
+fu_plugin_coldplug(FuPlugin *plugin, GError **error);
 /**
  * fu_plugin_coldplug_prepare:
  * @plugin: a plugin
@@ -78,8 +80,8 @@ gboolean	 fu_plugin_coldplug			(FuPlugin	*plugin,
  *
  * Since: 0.8.0
  **/
-gboolean	 fu_plugin_coldplug_prepare		(FuPlugin	*plugin,
-							 GError		**error);
+gboolean
+fu_plugin_coldplug_prepare(FuPlugin *plugin, GError **error);
 /**
  * fu_plugin_coldplug_cleanup:
  * @plugin: a plugin
@@ -89,8 +91,8 @@ gboolean	 fu_plugin_coldplug_prepare		(FuPlugin	*plugin,
  *
  * Since: 0.8.0
  **/
-gboolean	 fu_plugin_coldplug_cleanup		(FuPlugin	*plugin,
-							 GError		**error);
+gboolean
+fu_plugin_coldplug_cleanup(FuPlugin *plugin, GError **error);
 /**
  * fu_plugin_write_firmware:
  * @plugin: a plugin
@@ -120,10 +122,8 @@ fu_plugin_write_firmware(FuPlugin *plugin,
  *
  * Since: 0.8.0
  **/
-gboolean	 fu_plugin_verify			(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 FuPluginVerifyFlags flags,
-							 GError		**error);
+gboolean
+fu_plugin_verify(FuPlugin *plugin, FuDevice *dev, FuPluginVerifyFlags flags, GError **error);
 /**
  * fu_plugin_unlock:
  * @plugin: a plugin
@@ -134,9 +134,8 @@ gboolean	 fu_plugin_verify			(FuPlugin	*plugin,
  *
  * Since: 0.8.0
  **/
-gboolean	 fu_plugin_unlock			(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GError		**error);
+gboolean
+fu_plugin_unlock(FuPlugin *plugin, FuDevice *dev, GError **error);
 /**
  * fu_plugin_activate:
  * @plugin: a plugin
@@ -150,9 +149,8 @@ gboolean	 fu_plugin_unlock			(FuPlugin	*plugin,
  *
  * Since: 1.2.6
  **/
-gboolean	 fu_plugin_activate			(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GError		**error);
+gboolean
+fu_plugin_activate(FuPlugin *plugin, FuDevice *dev, GError **error);
 /**
  * fu_plugin_clear_results:
  * @plugin: a plugin
@@ -163,9 +161,8 @@ gboolean	 fu_plugin_activate			(FuPlugin	*plugin,
  *
  * Since: 0.8.0
  **/
-gboolean	 fu_plugin_clear_results		(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GError		**error);
+gboolean
+fu_plugin_clear_results(FuPlugin *plugin, FuDevice *dev, GError **error);
 /**
  * fu_plugin_get_results:
  * @plugin: a plugin
@@ -176,9 +173,8 @@ gboolean	 fu_plugin_clear_results		(FuPlugin	*plugin,
  *
  * Since: 0.8.0
  **/
-gboolean	 fu_plugin_get_results			(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GError		**error);
+gboolean
+fu_plugin_get_results(FuPlugin *plugin, FuDevice *dev, GError **error);
 /**
  * fu_plugin_attach:
  * @plugin: a plugin
@@ -239,9 +235,8 @@ fu_plugin_cleanup(FuPlugin *plugin, FuDevice *dev, FwupdInstallFlags flags, GErr
  *
  * Since: 1.0.9
  **/
-gboolean	 fu_plugin_composite_prepare		(FuPlugin	*plugin,
-							 GPtrArray	*devices,
-							 GError		**error);
+gboolean
+fu_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error);
 /**
  * fu_plugin_composite_cleanup
  * @plugin: a plugin
@@ -252,9 +247,8 @@ gboolean	 fu_plugin_composite_prepare		(FuPlugin	*plugin,
  *
  * Since: 1.0.9
  **/
-gboolean	 fu_plugin_composite_cleanup		(FuPlugin	*plugin,
-							 GPtrArray	*devices,
-							 GError		**error);
+gboolean
+fu_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error);
 /**
  * fu_plugin_backend_device_added
  * @plugin: a plugin
@@ -265,9 +259,8 @@ gboolean	 fu_plugin_composite_cleanup		(FuPlugin	*plugin,
  *
  * Since: 1.5.6
  **/
-gboolean	 fu_plugin_backend_device_added		(FuPlugin	*plugin,
-							 FuDevice	*device,
-							 GError		**error);
+gboolean
+fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error);
 /**
  * fu_plugin_backend_device_changed
  * @plugin: a plugin
@@ -278,9 +271,8 @@ gboolean	 fu_plugin_backend_device_added		(FuPlugin	*plugin,
  *
  * Since: 1.5.6
  **/
-gboolean	 fu_plugin_backend_device_changed	(FuPlugin	*plugin,
-							 FuDevice	*device,
-							 GError		**error);
+gboolean
+fu_plugin_backend_device_changed(FuPlugin *plugin, FuDevice *device, GError **error);
 /**
  * fu_plugin_backend_device_removed
  * @plugin: a plugin
@@ -291,9 +283,8 @@ gboolean	 fu_plugin_backend_device_changed	(FuPlugin	*plugin,
  *
  * Since: 1.5.6
  **/
-gboolean	 fu_plugin_backend_device_removed	(FuPlugin	*plugin,
-							 FuDevice	*device,
-							 GError		**error);
+gboolean
+fu_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, GError **error);
 /**
  * fu_plugin_device_added
  * @plugin: a plugin
@@ -303,8 +294,8 @@ gboolean	 fu_plugin_backend_device_removed	(FuPlugin	*plugin,
  *
  * Since: 1.5.0
  **/
-void		 fu_plugin_device_added			(FuPlugin	*plugin,
-							 FuDevice	*dev);
+void
+fu_plugin_device_added(FuPlugin *plugin, FuDevice *dev);
 /**
  * fu_plugin_device_created
  * @plugin: a plugin
@@ -315,9 +306,8 @@ void		 fu_plugin_device_added			(FuPlugin	*plugin,
  *
  * Since: 1.4.0
  **/
-gboolean	 fu_plugin_device_created		(FuPlugin	*plugin,
-							 FuDevice	*dev,
-							 GError		**error);
+gboolean
+fu_plugin_device_created(FuPlugin *plugin, FuDevice *dev, GError **error);
 /**
  * fu_plugin_device_registered
  * @plugin: a plugin
@@ -327,8 +317,8 @@ gboolean	 fu_plugin_device_created		(FuPlugin	*plugin,
  *
  * Since: 0.9.7
  **/
-void		 fu_plugin_device_registered		(FuPlugin	*plugin,
-							 FuDevice	*dev);
+void
+fu_plugin_device_registered(FuPlugin *plugin, FuDevice *dev);
 /**
  * fu_plugin_add_security_attrs
  * @plugin: a plugin
@@ -338,5 +328,5 @@ void		 fu_plugin_device_registered		(FuPlugin	*plugin,
  *
  * Since: 1.5.0
  **/
-void		 fu_plugin_add_security_attrs		(FuPlugin	*plugin,
-							 FuSecurityAttrs *attrs);
+void
+fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs);

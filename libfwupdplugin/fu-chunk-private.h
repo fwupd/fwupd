@@ -11,9 +11,7 @@
 #include "fu-chunk.h"
 #include "fu-firmware.h"
 
-void		 fu_chunk_export			(FuChunk	*self,
-							 FuFirmwareExportFlags flags,
-							 XbBuilderNode	*bn);
-gboolean	 fu_chunk_build				(FuChunk	*self,
-							 XbNode		*n,
-							 GError		**error);
+void
+fu_chunk_export(FuChunk *self, FuFirmwareExportFlags flags, XbBuilderNode *bn);
+gboolean
+fu_chunk_build(FuChunk *self, XbNode *n, GError **error);
