@@ -1,5 +1,5 @@
 [USB\VID_0A5C&PID_6412]
-Flags= ignore-runtime
+Flags = ignore-runtime
 
 [ACME Inc.=True]
 Name = awesome
