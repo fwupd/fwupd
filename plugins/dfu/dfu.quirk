@@ -249,7 +249,7 @@ DfuAltName = @Flash/0x0/1*128Kg
 DfuAltName = @Flash/0x0/1*128Kg
 
 # ATxmega128D4	[USER]		USER=0x20000
- [DFU_AVR\CID_0x1e9747]
+[DFU_AVR\CID_0x1e9747]
 DfuAltName = @Flash/0x0/1*128Kg
 
 # ATxmega128A1	[USER]		USER=0x20000
