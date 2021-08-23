@@ -44,6 +44,12 @@ setup_vscode()
     fi
 }
 
+setup_git()
+{
+    echo "Configuring git environment"
+    git config include.path ../.gitconfig
+}
+
 setup_precommit()
 {
     echo "Configuring pre-commit hooks"
@@ -80,3 +86,6 @@ fi
 
 #always setup pre-commit
 setup_precommit
+
+#always setup git environment
+setup_git
