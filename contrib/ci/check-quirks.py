@@ -26,12 +26,22 @@ def test_files() -> int:
                         print("{} has invalid section header: {}".format(fn, line))
                         rc = 1
                         continue
+                    for deprecated in ["DeviceInstanceId", "Guid"]:
+                        if line.find(deprecated) != -1:
+                            print("{} has deprecated prefix: {}".format(fn, deprecated))
+                            rc = 1
+                            continue
                 else:
-                    sections = line.split("=")
+                    sections = line.split(" = ")
                     if len(sections) != 2:
                         print("{} has invalid line: {}".format(fn, line))
                         rc = 1
                         continue
+                    for section in sections:
+                        if section.strip() != section:
+                            print("{} has invalid spacing: {}".format(fn, line))
+                            rc = 1
+                            break
     return rc
 
 

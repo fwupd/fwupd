@@ -2,7 +2,7 @@
 [HIDRAW\VEN_046D&DEV_C52B]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpRuntimeUnifying
-VendorId=USB:0x046D
+VendorId = USB:0x046D
 InstallDuration = 30
 
 # Nordic
