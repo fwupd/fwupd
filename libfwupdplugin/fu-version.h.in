@@ -1,0 +1,53 @@
+/*
+ * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+#pragma once
+
+#include <glib.h>
+
+/* clang-format off */
+/**
+ * FWUPDPLUGIN_MAJOR_VERSION:
+ *
+ * The compile-time major version
+ */
+#define FWUPDPLUGIN_MAJOR_VERSION @MAJOR_VERSION@
+
+/**
+ * FWUPDPLUGIN_MINOR_VERSION:
+ *
+ * The compile-time minor version
+ */
+#define FWUPDPLUGIN_MINOR_VERSION @MINOR_VERSION@
+
+/**
+ * FWUPDPLUGIN_MICRO_VERSION:
+ *
+ * The compile-time micro version
+ */
+#define FWUPDPLUGIN_MICRO_VERSION @MICRO_VERSION@
+/* clang-format on */
+
+/**
+ * FWUPDPLUGIN_CHECK_VERSION:
+ * @major: Major version number
+ * @minor: Minor version number
+ * @micro: Micro version number
+ *
+ * Check whether a fwupd version equal to or greater than
+ * major.minor.micro.
+ *
+ * These compile time macros allow the user to enable parts of client code
+ * depending on the version of libfwupd installed.
+ */
+#define FWUPDPLUGIN_CHECK_VERSION(major, minor, micro)                                             \
+	(FWUPDPLUGIN_MAJOR_VERSION > major ||                                                      \
+	 (FWUPDPLUGIN_MAJOR_VERSION == major && FWUPDPLUGIN_MINOR_VERSION > minor) ||              \
+	 (FWUPDPLUGIN_MAJOR_VERSION == major && FWUPDPLUGIN_MINOR_VERSION == minor &&              \
+	  FWUPDPLUGIN_MICRO_VERSION >= micro))
+
+const gchar *
+fu_version_string(void);

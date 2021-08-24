@@ -1,3 +1,9 @@
+fwupdplugin_version_h = configure_file(
+  input : 'fu-version.h.in',
+  output : 'fu-version.h',
+  configuration : conf
+)
+
 fwupdplugin_src = [
   'fu-archive.c',
   'fu-backend.c',
@@ -132,7 +138,7 @@ fwupdplugin_headers_private = [
   'fu-smbios-private.h',
   'fu-udev-device-private.h',
   'fu-usb-device-private.h',
-  'fu-version.h',
+  fwupdplugin_version_h,
 ]
 
 introspection_deps = [
