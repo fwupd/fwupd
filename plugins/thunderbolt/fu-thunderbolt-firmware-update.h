@@ -8,7 +8,13 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_THUNDERBOLT_FIRMWARE_UPDATE (fu_thunderbolt_firmware_update_get_type ())
-G_DECLARE_FINAL_TYPE (FuThunderboltFirmwareUpdate, fu_thunderbolt_firmware_update, FU,THUNDERBOLT_FIRMWARE_UPDATE, FuThunderboltFirmware)
+#include "fu-thunderbolt-firmware.h"
+
+#define FU_TYPE_THUNDERBOLT_FIRMWARE_UPDATE (fu_thunderbolt_firmware_update_get_type())
+G_DECLARE_FINAL_TYPE(FuThunderboltFirmwareUpdate,
+		     fu_thunderbolt_firmware_update,
+		     FU,
+		     THUNDERBOLT_FIRMWARE_UPDATE,
+		     FuThunderboltFirmware)
 
 FuThunderboltFirmwareUpdate *fu_thunderbolt_firmware_update_new	(void);
