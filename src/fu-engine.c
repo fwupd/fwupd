@@ -5908,6 +5908,8 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
 	g_autoptr(GPtrArray) items = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *data = NULL;
 
 	/* already valid */
 	if (self->host_security_id != NULL)
@@ -5952,6 +5954,20 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	/* distil into one simple string */
 	g_free(self->host_security_id);
 	self->host_security_id = fu_engine_attrs_calculate_hsi_for_chassis(self);
+
+	/* Convert Security attribute to json string */
+	data = fu_security_attrs_to_json_string(self->host_security_attrs, &error);
+
+	/* Store string to db */
+	if (data == NULL) {
+		g_warning("Fail to convert security attributes to string: %s", error->message);
+	} else {
+		if (fu_history_add_security_attribute(self->history,
+						      data,
+						      self->host_security_id,
+						      &error) == FALSE)
+			g_warning("Fail to write security attribute to DB: %s", error->message);
+	}
 }
 
 const gchar *

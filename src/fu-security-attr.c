@@ -8,8 +8,11 @@
 
 #include <config.h>
 #include <glib/gi18n.h>
+#include <json-glib/json-glib.h>
 
 #include "fwupd-security-attr-private.h"
+
+#include "fu-security-attrs-private.h"
 
 gchar *
 fu_security_attr_get_name(FwupdSecurityAttr *attr)
@@ -246,4 +249,73 @@ fu_security_attr_get_result(FwupdSecurityAttr *attr)
 
 	/* TRANSLATORS: Suffix: the fallback HSI result */
 	return _("Failed");
+}
+
+/**
+ * fu_security_attrs_to_json_string：
+ * Convert security attribute to JSON string.
+ * @attrs: a pointer for a FuSecurityAttrs data structure.
+ * @error: return location for an error
+ *
+ * fu_security_attrs_to_json_string() converts FuSecurityAttrs and return the
+ * string pointer. The converted JSON format is shown as follows:
+ * {
+ *     "SecurityAttrs": {
+ *         "Attrs": [
+ *             {
+ *                  "name": "aaa",
+ *                  "value": "bbb"
+ *             }
+ *         ]
+ *     }
+ *  }
+ *
+ * Returns: A string and NULL on fail.
+ *
+ * Since: 1.7.0
+ *
+ */
+gchar *
+fu_security_attrs_to_json_string(FuSecurityAttrs *attrs, GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(JsonNode) json_root = NULL;
+	fu_security_attrs_to_json(attrs, builder);
+	json_root = json_builder_get_root(builder);
+	json_generator = json_generator_new();
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to convert security attribute to json.");
+		return NULL;
+	}
+	return g_steal_pointer(&data);
+}
+
+void
+fu_security_attrs_to_json(FuSecurityAttrs *attrs, JsonBuilder *builder)
+{
+	g_autoptr(GPtrArray) items = NULL;
+	g_autoptr(GError) error = NULL;
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "SecurityAttrs");
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Attrs");
+	json_builder_begin_array(builder);
+	items = fu_security_attrs_get_all(attrs);
+	for (guint i = 0; i < items->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
+		json_builder_begin_object(builder);
+		fwupd_security_attr_to_json(attr, builder);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+	json_builder_end_object(builder);
 }

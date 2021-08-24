@@ -20,7 +20,7 @@
 #include "fu-history.h"
 #include "fu-mutex.h"
 
-#define FU_HISTORY_CURRENT_SCHEMA_VERSION 6
+#define FU_HISTORY_CURRENT_SCHEMA_VERSION 7
 
 static void
 fu_history_finalize(GObject *object);
@@ -183,6 +183,10 @@ fu_history_create_database(FuHistory *self, GError **error)
 			  "checksum TEXT);"
 			  "CREATE TABLE IF NOT EXISTS blocked_firmware ("
 			  "checksum TEXT);"
+			  "CREATE TABLE IF NOT EXISTS hsi_history ("
+			  "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+			  "hsi_details TEXT DEFAULT NULL,"
+			  "hsi_score TEXT DEFAULT NULL);"
 			  "COMMIT;",
 			  NULL,
 			  NULL,
@@ -307,6 +311,29 @@ fu_history_migrate_database_v5(FuHistory *self, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_history_migrate_database_v6(FuHistory *self, GError **error)
+{
+	gint rc;
+	rc = sqlite3_exec(self->db,
+			  "CREATE TABLE IF NOT EXISTS hsi_history ("
+			  "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+			  "hsi_details TEXT DEFAULT NULL,"
+			  "hsi_score TEXT DEFAULT NULL);",
+			  NULL,
+			  NULL,
+			  NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to create table: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /* returns 0 if database is not initialized */
 static guint
 fu_history_get_schema_version(FuHistory *self)
@@ -362,6 +389,10 @@ fu_history_create_or_migrate(FuHistory *self, guint schema_ver, GError **error)
 	/* fall through */
 	case 5:
 		if (!fu_history_migrate_database_v5(self, error))
+			return FALSE;
+	/* fall through */
+	case 6:
+		if (!fu_history_migrate_database_v6(self, error))
 			return FALSE;
 		break;
 	default:
@@ -1280,6 +1311,42 @@ fu_history_add_blocked_firmware(FuHistory *self, const gchar *checksum, GError *
 		return FALSE;
 	}
 	sqlite3_bind_text(stmt, 1, checksum, -1, SQLITE_STATIC);
+	return fu_history_stmt_exec(self, stmt, NULL, error);
+}
+
+gboolean
+fu_history_add_security_attribute(FuHistory *self,
+				  const gchar *security_attr_json,
+				  const gchar *hsi_score,
+				  GError **error)
+{
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+	g_autoptr(GRWLockWriterLocker) locker = NULL;
+	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
+
+	/* lazy load */
+	if (!fu_history_load(self, error))
+		return FALSE;
+	/* remove entries */
+	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
+	g_return_val_if_fail(locker != NULL, FALSE);
+	rc = sqlite3_prepare_v2(self->db,
+				"INSERT INTO hsi_history (hsi_details, hsi_score)"
+				"VALUES (?1, ?2)",
+				-1,
+				&stmt,
+				NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to prepare SQL to write security attribute: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+	sqlite3_bind_text(stmt, 1, security_attr_json, -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 2, hsi_score, -1, SQLITE_STATIC);
 	return fu_history_stmt_exec(self, stmt, NULL, error);
 }
 
