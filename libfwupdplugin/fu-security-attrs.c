@@ -6,13 +6,15 @@
 
 #define G_LOG_DOMAIN				"FuSecurityAttrs"
 
-#include "config.h"
+#include "fu-security-attrs.h"
 
+#include <config.h>
 #include <glib/gi18n.h>
 
-#include "fu-security-attrs.h"
-#include "fu-security-attrs-private.h"
 #include "fwupd-security-attr-private.h"
+#include "fwupd-version.h"
+
+#include "fu-security-attrs-private.h"
 
 /**
  * FuSecurityAttrs:
