@@ -27,9 +27,12 @@
 #include "fu-dell-dock-status.h"
 #include "fu-dell-dock-usb-usb4.h"
 
-#define DELL_DOCK_EC_INSTANCE_ID   "USB\\VID_413C&PID_B06E&hub&embedded"
-#define DELL_DOCK_TBT_INSTANCE_ID  "TBT-00d4b070"
-#define DELL_DOCK_USB4_INSTANCE_ID "TBT-00d4b071"
+#define DELL_DOCK_DOCK1_INSTANCE_ID  "USB\\VID_413C&PID_B06E&hub&status"
+#define DELL_DOCK_DOCK2_INSTANCE_ID  "USB\\VID_413C&PID_B06E&hub&salomon_mlk_status"
+#define DELL_DOCK_EC_INSTANCE_ID     "USB\\VID_413C&PID_B06E&hub&embedded"
+#define DELL_DOCK_TBT_INSTANCE_ID    "TBT-00d4b070"
+#define DELL_DOCK_USB4_INSTANCE_ID   "TBT-00d4b071"
+#define DELL_DOCK_VM5331_INSTANCE_ID "MST-panamera-vmm5331-259"
 #define GR_USB_VID		   0x8087
 #define GR_USB_PID		   0x0B40
 
