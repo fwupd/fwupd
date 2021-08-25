@@ -78,25 +78,24 @@ fu_plugin_dell_dock_probe (FuPlugin *plugin,
 		return FALSE;
 
 	/* create mst endpoint */
-	mst_device = fu_dell_dock_mst_new ();
-	fu_device_add_child (FU_DEVICE (ec_device), FU_DEVICE (mst_device));
-	fu_device_add_instance_id (FU_DEVICE (mst_device), "MST-panamera-vmm5331-259");
-	if (!fu_plugin_dell_dock_create_node (plugin,
-					      FU_DEVICE (mst_device),
-					      error))
+	mst_device = fu_dell_dock_mst_new();
+	instance = DELL_DOCK_VM5331_INSTANCE_ID;
+	fu_device_add_guid(FU_DEVICE(mst_device), fwupd_guid_hash_string(instance));
+	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(mst_device));
+	fu_device_add_instance_id(FU_DEVICE(mst_device), instance);
+	if (!fu_plugin_dell_dock_create_node(plugin, FU_DEVICE(mst_device), error))
 		return FALSE;
 
 	/* create package version endpoint */
-	status_device = fu_dell_dock_status_new ();
-	if (fu_dell_dock_module_is_usb4 (FU_DEVICE (ec_device)))
-		instance = "USB\\VID_413C&PID_B06E&hub&salomon_mlk_status";
+	status_device = fu_dell_dock_status_new();
+	if (fu_dell_dock_module_is_usb4(FU_DEVICE(ec_device)))
+		instance = DELL_DOCK_DOCK2_INSTANCE_ID;
 	else
-		instance = "USB\\VID_413C&PID_B06E&hub&status";
-	fu_device_add_child (FU_DEVICE (ec_device), FU_DEVICE (status_device));
-	fu_device_add_instance_id (FU_DEVICE (status_device), instance);
-	if (!fu_plugin_dell_dock_create_node (plugin,
-					      FU_DEVICE (status_device),
-					      error))
+		instance = DELL_DOCK_DOCK1_INSTANCE_ID;
+	fu_device_add_guid(FU_DEVICE(status_device), fwupd_guid_hash_string(instance));
+	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(status_device));
+	fu_device_add_instance_id(FU_DEVICE(status_device), instance);
+	if (!fu_plugin_dell_dock_create_node(plugin, FU_DEVICE(status_device), error))
 		return FALSE;
 
 	/* create TBT endpoint if Thunderbolt SKU and Thunderbolt link inactive */
