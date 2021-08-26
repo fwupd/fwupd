@@ -296,6 +296,7 @@ fu_test_redfish_update_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GBytes) blob_fw = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	devices = fu_plugin_get_devices(self->plugin);
 	g_assert_nonnull(devices);
@@ -311,6 +312,7 @@ fu_test_redfish_update_func(gconstpointer user_data)
 	ret = fu_plugin_runner_write_firmware(self->plugin,
 					      dev,
 					      blob_fw,
+					      progress,
 					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
 	g_assert_no_error(error);
@@ -321,6 +323,7 @@ fu_test_redfish_update_func(gconstpointer user_data)
 	ret = fu_plugin_runner_write_firmware(self->plugin,
 					      dev,
 					      blob_fw,
+					      progress,
 					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE);

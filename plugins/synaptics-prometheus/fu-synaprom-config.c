@@ -76,6 +76,7 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) reply = NULL;
 	g_autoptr(GByteArray) request = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autofree gchar *devid = NULL;
 
 	/* get IOTA */
@@ -84,7 +85,12 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 	request = fu_synaprom_request_new(FU_SYNAPROM_CMD_IOTA_FIND, &cmd, sizeof(cmd));
 	reply = fu_synaprom_reply_new(sizeof(FuSynapromReplyIotaFindHdr) +
 				      FU_SYNAPROM_MAX_IOTA_READ_SIZE);
-	if (!fu_synaprom_device_cmd_send(FU_SYNAPROM_DEVICE(parent), request, reply, 5000, error))
+	if (!fu_synaprom_device_cmd_send(FU_SYNAPROM_DEVICE(parent),
+					 request,
+					 reply,
+					 progress,
+					 5000,
+					 error))
 		return FALSE;
 	if (reply->len < sizeof(hdr) + sizeof(cfg)) {
 		g_set_error(error,
@@ -213,6 +219,7 @@ fu_synaprom_config_prepare_firmware(FuDevice *device,
 static gboolean
 fu_synaprom_config_write_firmware(FuDevice *device,
 				  FuFirmware *firmware,
+				  FuProgress *progress,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
@@ -225,7 +232,7 @@ fu_synaprom_config_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* I assume the CFG/MFW difference is detected in the device...*/
-	return fu_synaprom_device_write_fw(FU_SYNAPROM_DEVICE(parent), fw, error);
+	return fu_synaprom_device_write_fw(FU_SYNAPROM_DEVICE(parent), fw, progress, error);
 }
 
 static void
@@ -259,17 +266,17 @@ fu_synaprom_config_constructed(GObject *obj)
 }
 
 static gboolean
-fu_synaprom_config_attach(FuDevice *device, GError **error)
+fu_synaprom_config_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
-	return fu_device_attach(parent, error);
+	return fu_device_attach(parent, progress, error);
 }
 
 static gboolean
-fu_synaprom_config_detach(FuDevice *device, GError **error)
+fu_synaprom_config_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
-	return fu_device_detach(parent, error);
+	return fu_device_detach(parent, progress, error);
 }
 
 static void

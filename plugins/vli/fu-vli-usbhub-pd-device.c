@@ -171,7 +171,7 @@ fu_vli_usbhub_pd_device_prepare_firmware(FuDevice *device,
 }
 
 static GBytes *
-fu_vli_usbhub_pd_device_dump_firmware(FuDevice *device, GError **error)
+fu_vli_usbhub_pd_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE(device);
@@ -183,16 +183,18 @@ fu_vli_usbhub_pd_device_dump_firmware(FuDevice *device, GError **error)
 		return NULL;
 
 	/* read */
-	fu_device_set_status(FU_DEVICE(device), FWUPD_STATUS_DEVICE_READ);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	return fu_vli_device_spi_read(FU_VLI_DEVICE(parent),
 				      fu_vli_common_device_kind_get_offset(self->device_kind),
 				      fu_device_get_firmware_size_max(device),
+				      progress,
 				      error);
 }
 
 static gboolean
 fu_vli_usbhub_pd_device_write_firmware(FuDevice *device,
 				       FuFirmware *firmware,
+				       FuProgress *progress,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
@@ -202,6 +204,11 @@ fu_vli_usbhub_pd_device_write_firmware(FuDevice *device,
 	const guint8 *buf;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GBytes) fw = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 78);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 22);
 
 	/* simple image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -214,22 +221,24 @@ fu_vli_usbhub_pd_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* erase */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_ERASE);
 	buf = g_bytes_get_data(fw, &bufsz);
 	if (!fu_vli_device_spi_erase(FU_VLI_DEVICE(parent),
 				     fu_vli_common_device_kind_get_offset(self->device_kind),
 				     bufsz,
+				     fu_progress_get_child(progress),
 				     error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* write */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_vli_device_spi_write(FU_VLI_DEVICE(parent),
 				     fu_vli_common_device_kind_get_offset(self->device_kind),
 				     buf,
 				     bufsz,
+				     fu_progress_get_child(progress),
 				     error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;
@@ -237,13 +246,13 @@ fu_vli_usbhub_pd_device_write_firmware(FuDevice *device,
 
 /* reboot the parent FuVliUsbhubDevice if we update the FuVliUsbhubPdDevice */
 static gboolean
-fu_vli_usbhub_pd_device_attach(FuDevice *device, GError **error)
+fu_vli_usbhub_pd_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_attach(parent, error);
+	return fu_device_attach(parent, progress, error);
 }
 
 static gboolean
@@ -252,6 +261,17 @@ fu_vli_usbhub_pd_device_probe(FuDevice *device, GError **error)
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
 	fu_device_set_physical_id(device, fu_device_get_physical_id(FU_DEVICE(parent)));
 	return TRUE;
+}
+
+static void
+fu_vli_usbhub_pd_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
 }
 
 static void
@@ -279,6 +299,7 @@ fu_vli_usbhub_pd_device_class_init(FuVliUsbhubPdDeviceClass *klass)
 	klass_device->dump_firmware = fu_vli_usbhub_pd_device_dump_firmware;
 	klass_device->write_firmware = fu_vli_usbhub_pd_device_write_firmware;
 	klass_device->prepare_firmware = fu_vli_usbhub_pd_device_prepare_firmware;
+	klass_device->set_progress = fu_vli_usbhub_pd_device_set_progress;
 }
 
 FuDevice *

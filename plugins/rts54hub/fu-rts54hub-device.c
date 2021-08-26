@@ -427,12 +427,20 @@ fu_rts54hub_device_close(FuDevice *device, GError **error)
 static gboolean
 fu_rts54hub_device_write_firmware(FuDevice *device,
 				  FuFirmware *firmware,
+				  FuProgress *progress,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
 	FuRts54HubDevice *self = FU_RTS54HUB_DEVICE(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 46);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 52);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1);
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -449,9 +457,9 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 	}
 
 	/* erase spare flash bank only if it is not empty */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_rts54hub_device_erase_flash(self, 1, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* set MCU clock to high clock mode */
 	if (!fu_rts54hub_device_highclockmode(self, 0x0001, error)) {
@@ -465,14 +473,11 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 
-	/* build packets */
+	/* write each block */
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       0x00, /* start addr */
 					       0x00, /* page_sz */
 					       FU_RTS54HUB_DEVICE_BLOCK_SIZE);
-
-	/* write each block */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 
@@ -485,18 +490,21 @@ fu_rts54hub_device_write_firmware(FuDevice *device,
 			return FALSE;
 
 		/* update progress */
-		fu_device_set_progress_full(device, (gsize)i, (gsize)chunks->len - 1);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* get device to authenticate the firmware */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_VERIFY);
 	if (!fu_rts54hub_device_flash_authentication(self, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* send software reset to run available flash code */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_rts54hub_device_reset_flash(self, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* don't reset the vendor command enable, the device will be rebooted */
 	self->vendor_cmd = FU_RTS54HUB_VENDOR_CMD_NONE;
@@ -529,6 +537,16 @@ fu_rts54hub_device_prepare_firmware(FuDevice *device,
 }
 
 static void
+fu_rts54hub_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0);	 /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 62);	 /* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 38); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);	 /* reload */
+}
+
+static void
 fu_rts54hub_device_init(FuRts54HubDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rts54");
@@ -544,4 +562,5 @@ fu_rts54hub_device_class_init(FuRts54HubDeviceClass *klass)
 	klass_device->to_string = fu_rts54hub_device_to_string;
 	klass_device->prepare_firmware = fu_rts54hub_device_prepare_firmware;
 	klass_device->close = fu_rts54hub_device_close;
+	klass_device->set_progress = fu_rts54hub_device_set_progress;
 }

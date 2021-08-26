@@ -1186,6 +1186,7 @@ test_update_working(ThunderboltTest *tt, gconstpointer user_data)
 	const gchar *version_after;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(UpdateContext) up_ctx = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* test sanity check */
 	g_assert_nonnull(tree);
@@ -1194,7 +1195,8 @@ test_update_working(ThunderboltTest *tt, gconstpointer user_data)
 	/* simulate an update, where the device goes away and comes back
 	 * after the time in the last parameter (given in ms) */
 	up_ctx = mock_tree_prepare_for_update(tree, plugin, "42.23", fw_data, 1000);
-	ret = fu_plugin_runner_write_firmware(plugin, tree->fu_device, fw_data, 0, &error);
+	ret =
+	    fu_plugin_runner_write_firmware(plugin, tree->fu_device, fw_data, progress, 0, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -1203,7 +1205,7 @@ test_update_working(ThunderboltTest *tt, gconstpointer user_data)
 	ret = mock_tree_settle(tree, plugin);
 	g_assert_true(ret);
 
-	ret = fu_plugin_runner_attach(plugin, tree->fu_device, &error);
+	ret = fu_plugin_runner_attach(plugin, tree->fu_device, progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -1232,6 +1234,7 @@ test_update_wd19(ThunderboltTest *tt, gconstpointer user_data)
 	const gchar *version_before;
 	const gchar *version_after;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* test sanity check */
 	g_assert_nonnull(tree);
@@ -1242,7 +1245,8 @@ test_update_wd19(ThunderboltTest *tt, gconstpointer user_data)
 	fu_device_add_flag(tree->fu_device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	version_before = fu_device_get_version(tree->fu_device);
 
-	ret = fu_plugin_runner_write_firmware(plugin, tree->fu_device, fw_data, 0, &error);
+	ret =
+	    fu_plugin_runner_write_firmware(plugin, tree->fu_device, fw_data, progress, 0, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -1263,6 +1267,7 @@ test_update_fail(ThunderboltTest *tt, gconstpointer user_data)
 	const gchar *version_after;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(UpdateContext) up_ctx = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* test sanity check */
 	g_assert_nonnull(tree);
@@ -1274,7 +1279,8 @@ test_update_fail(ThunderboltTest *tt, gconstpointer user_data)
 	up_ctx = mock_tree_prepare_for_update(tree, plugin, "42.23", fw_data, 1000);
 	up_ctx->result = UPDATE_FAIL_DEVICE_INTERNAL;
 
-	ret = fu_plugin_runner_write_firmware(plugin, tree->fu_device, fw_data, 0, &error);
+	ret =
+	    fu_plugin_runner_write_firmware(plugin, tree->fu_device, fw_data, progress, 0, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -1284,7 +1290,7 @@ test_update_fail(ThunderboltTest *tt, gconstpointer user_data)
 	ret = mock_tree_settle(tree, plugin);
 	g_assert_true(ret);
 
-	ret = fu_plugin_runner_attach(plugin, tree->fu_device, &error);
+	ret = fu_plugin_runner_attach(plugin, tree->fu_device, progress, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL);
 	g_assert_false(ret);
 
@@ -1310,6 +1316,7 @@ test_update_fail_nowshow(ThunderboltTest *tt, gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(UpdateContext) up_ctx = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* test sanity check */
 	g_assert_nonnull(tree);
@@ -1321,7 +1328,8 @@ test_update_fail_nowshow(ThunderboltTest *tt, gconstpointer user_data)
 	up_ctx = mock_tree_prepare_for_update(tree, plugin, "42.23", fw_data, 1000);
 	up_ctx->result = UPDATE_FAIL_DEVICE_NOSHOW;
 
-	ret = fu_plugin_runner_write_firmware(plugin, tree->fu_device, fw_data, 0, &error);
+	ret =
+	    fu_plugin_runner_write_firmware(plugin, tree->fu_device, fw_data, progress, 0, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 

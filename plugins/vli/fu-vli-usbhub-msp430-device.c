@@ -139,7 +139,7 @@ fu_vli_usbhub_msp430_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_vli_usbhub_msp430_device_detach(FuDevice *device, GError **error)
+fu_vli_usbhub_msp430_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
 	FuVliUsbhubI2cStatus status = 0xff;
@@ -157,8 +157,7 @@ fu_vli_usbhub_msp430_device_detach(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* avoid power instability by waiting T1 */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_sleep_with_progress(device, 1); /* seconds */
+	fu_progress_sleep(progress, 1000);
 
 	/* check the device came back */
 	if (!fu_vli_usbhub_device_i2c_read_status(parent, &status, error)) {
@@ -225,6 +224,7 @@ fu_vli_usbhub_msp430_device_write_firmware_cb(FuDevice *device, gpointer user_da
 static gboolean
 fu_vli_usbhub_msp430_device_write_firmware(FuDevice *device,
 					   FuFirmware *firmware,
+					   FuProgress *progress,
 					   FwupdInstallFlags flags,
 					   GError **error)
 {
@@ -238,7 +238,7 @@ fu_vli_usbhub_msp430_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* transfer by I²C write, and check status by I²C read */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint j = 0; j < records->len; j++) {
 		FuIhexFirmwareRecord *rcd = g_ptr_array_index(records, j);
 		FuVliUsbhubDeviceRequest req = {0x0};
@@ -289,12 +289,10 @@ fu_vli_usbhub_msp430_device_write_firmware(FuDevice *device,
 				     &req,
 				     error))
 			return FALSE;
-		fu_device_set_progress_full(device, (gsize)j, (gsize)records->len);
+		fu_progress_set_percentage_full(progress, (gsize)j + 1, (gsize)records->len);
 	}
 
 	/* the device automatically reboots */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_progress(device, 0);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
@@ -322,6 +320,17 @@ fu_vli_usbhub_msp430_device_probe(FuDevice *device, GError **error)
 }
 
 static void
+fu_vli_usbhub_msp430_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_vli_usbhub_msp430_device_init(FuVliUsbhubMsp430Device *self)
 {
 	fu_device_add_icon(FU_DEVICE(self), "audio-card");
@@ -344,6 +353,7 @@ fu_vli_usbhub_msp430_device_class_init(FuVliUsbhubMsp430DeviceClass *klass)
 	klass_device->detach = fu_vli_usbhub_msp430_device_detach;
 	klass_device->write_firmware = fu_vli_usbhub_msp430_device_write_firmware;
 	klass_device->prepare_firmware = fu_vli_usbhub_msp430_device_prepare_firmware;
+	klass_device->set_progress = fu_vli_usbhub_msp430_device_set_progress;
 }
 
 FuDevice *

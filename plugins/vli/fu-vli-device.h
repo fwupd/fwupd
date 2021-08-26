@@ -60,9 +60,13 @@ fu_vli_device_get_spi_cmd(FuVliDevice *self, FuVliDeviceSpiReq req, guint8 *cmd,
 gboolean
 fu_vli_device_spi_erase_sector(FuVliDevice *self, guint32 addr, GError **error);
 gboolean
-fu_vli_device_spi_erase_all(FuVliDevice *self, GError **error);
+fu_vli_device_spi_erase_all(FuVliDevice *self, FuProgress *progress, GError **error);
 gboolean
-fu_vli_device_spi_erase(FuVliDevice *self, guint32 addr, gsize sz, GError **error);
+fu_vli_device_spi_erase(FuVliDevice *self,
+			guint32 addr,
+			gsize sz,
+			FuProgress *progress,
+			GError **error);
 gboolean
 fu_vli_device_spi_read_block(FuVliDevice *self,
 			     guint32 addr,
@@ -70,16 +74,22 @@ fu_vli_device_spi_read_block(FuVliDevice *self,
 			     gsize bufsz,
 			     GError **error);
 GBytes *
-fu_vli_device_spi_read(FuVliDevice *self, guint32 address, gsize bufsz, GError **error);
+fu_vli_device_spi_read(FuVliDevice *self,
+		       guint32 address,
+		       gsize bufsz,
+		       FuProgress *progress,
+		       GError **error);
 gboolean
 fu_vli_device_spi_write_block(FuVliDevice *self,
 			      guint32 address,
 			      const guint8 *buf,
 			      gsize bufsz,
+			      FuProgress *progress,
 			      GError **error);
 gboolean
 fu_vli_device_spi_write(FuVliDevice *self,
 			guint32 address,
 			const guint8 *buf,
 			gsize bufsz,
+			FuProgress *progress,
 			GError **error);

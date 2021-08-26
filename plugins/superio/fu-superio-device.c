@@ -473,6 +473,17 @@ fu_superio_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
+fu_superio_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_superio_device_init(FuSuperioDevice *self)
 {
 	FuSuperioDevicePrivate *priv = GET_PRIVATE(self);
@@ -517,4 +528,5 @@ fu_superio_device_class_init(FuSuperioDeviceClass *klass)
 	klass_device->probe = fu_superio_device_probe;
 	klass_device->setup = fu_superio_device_setup;
 	klass_device->prepare_firmware = fu_superio_device_prepare_firmware;
+	klass_device->set_progress = fu_superio_device_set_progress;
 }

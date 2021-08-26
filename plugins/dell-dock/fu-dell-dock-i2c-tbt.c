@@ -50,6 +50,7 @@ G_DEFINE_TYPE(FuDellDockTbt, fu_dell_dock_tbt, FU_TYPE_DEVICE)
 static gboolean
 fu_dell_dock_tbt_write_fw(FuDevice *device,
 			  FuFirmware *firmware,
+			  FuProgress *progress,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
@@ -106,7 +107,7 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 		return FALSE;
 	g_usleep(2000000);
 
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < image_size; i += HIDI2C_MAX_WRITE, buffer += HIDI2C_MAX_WRITE) {
 		guint8 write_size = (image_size - i) > HIDI2C_MAX_WRITE ? HIDI2C_MAX_WRITE
 									: (image_size - i);
@@ -119,11 +120,11 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 						error))
 			return FALSE;
 
-		fu_device_set_progress_full(device, i, image_size);
+		fu_progress_set_percentage_full(progress, i, image_size);
 	}
 	g_debug("writing took %f seconds", g_timer_elapsed(timer, NULL));
 
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_BUSY);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 
 	if (fu_dell_dock_ec_tbt_passive(fu_device_get_parent(device))) {
 		g_debug("using passive flow for Thunderbolt");
@@ -135,7 +136,6 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 	}
 
 	/* dock will reboot to re-read; this is to appease the daemon */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_version(device, dynamic_version);
 

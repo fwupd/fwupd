@@ -355,10 +355,67 @@ fu_ccgx_dmc_get_image_write_status_cb(FuDevice *device, gpointer user_data, GErr
 }
 
 static gboolean
+fu_ccgx_dmc_write_firmware_record(FuCcgxDmcDevice *self,
+				  FuCcgxDmcFirmwareSegmentRecord *seg_rcd,
+				  gsize *fw_data_written,
+				  FuProgress *progress,
+				  GError **error)
+{
+	GPtrArray *data_records = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99);
+
+	/* write start row and number of rows to a device */
+	if (!fu_ccgx_dmc_device_send_write_command(self,
+						   seg_rcd->start_row,
+						   seg_rcd->num_rows,
+						   error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* send data records */
+	data_records = seg_rcd->data_records;
+	for (guint32 data_index = 0; data_index < data_records->len; data_index++) {
+		GBytes *data_rcd = g_ptr_array_index(data_records, data_index);
+		const guint8 *row_buffer = NULL;
+		gsize row_size = 0;
+
+		/* write row data */
+		row_buffer = g_bytes_get_data(data_rcd, &row_size);
+		if (!fu_ccgx_dmc_device_send_row_data(self, row_buffer, (guint16)row_size, error))
+			return FALSE;
+
+		/* increase fw written size */
+		*fw_data_written += row_size;
+
+		/* get status */
+		if (!fu_device_retry(FU_DEVICE(self),
+				     fu_ccgx_dmc_get_image_write_status_cb,
+				     DMC_FW_WRITE_STATUS_RETRY_COUNT,
+				     NULL,
+				     error))
+			return FALSE;
+
+		/* done */
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						data_index + 1,
+						data_records->len);
+	}
+	fu_progress_step_done(progress);
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_ccgx_dmc_write_firmware_image(FuDevice *device,
 				 FuCcgxDmcFirmwareRecord *img_rcd,
 				 gsize *fw_data_written,
 				 const gsize fw_data_size,
+				 FuProgress *progress,
 				 GError **error)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
@@ -369,44 +426,17 @@ fu_ccgx_dmc_write_firmware_image(FuDevice *device,
 
 	/* get segment records */
 	seg_records = img_rcd->seg_records;
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, seg_records->len);
 	for (guint32 seg_index = 0; seg_index < seg_records->len; seg_index++) {
-		GPtrArray *data_records = NULL;
 		FuCcgxDmcFirmwareSegmentRecord *seg_rcd = g_ptr_array_index(seg_records, seg_index);
-
-		/* write start row and number of rows to a device */
-		if (!fu_ccgx_dmc_device_send_write_command(self,
-							   seg_rcd->start_row,
-							   seg_rcd->num_rows,
-							   error))
+		if (!fu_ccgx_dmc_write_firmware_record(self,
+						       seg_rcd,
+						       fw_data_written,
+						       fu_progress_get_child(progress),
+						       error))
 			return FALSE;
-
-		/* get data records */
-		data_records = seg_rcd->data_records;
-		for (guint32 data_index = 0; data_index < data_records->len; data_index++) {
-			GBytes *data_rcd = g_ptr_array_index(data_records, data_index);
-			const guint8 *row_buffer = NULL;
-			gsize row_size = 0;
-
-			/* write row data */
-			row_buffer = g_bytes_get_data(data_rcd, &row_size);
-			if (!fu_ccgx_dmc_device_send_row_data(self,
-							      row_buffer,
-							      (guint16)row_size,
-							      error))
-				return FALSE;
-
-			/* increase fw written size */
-			*fw_data_written += row_size;
-			fu_device_set_progress_full(device, *fw_data_written, fw_data_size);
-
-			/* get status */
-			if (!fu_device_retry(FU_DEVICE(self),
-					     fu_ccgx_dmc_get_image_write_status_cb,
-					     DMC_FW_WRITE_STATUS_RETRY_COUNT,
-					     NULL,
-					     error))
-				return FALSE;
-		}
+		fu_progress_step_done(progress);
 	}
 	return TRUE;
 }
@@ -414,6 +444,7 @@ fu_ccgx_dmc_write_firmware_image(FuDevice *device,
 static gboolean
 fu_ccgx_dmc_write_firmware(FuDevice *device,
 			   FuFirmware *firmware,
+			   FuProgress *progress,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
@@ -430,6 +461,12 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 	gsize fw_data_size = 0;
 	gsize fw_data_written = 0;
 	guint8 img_index = 0;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);
 
 	/* get fwct record */
 	fwct_blob = fu_ccgx_dmc_firmware_get_fwct_record(FU_CCGX_DMC_FIRMWARE(firmware));
@@ -449,9 +486,9 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 		custom_meta_data = g_bytes_get_data(custom_meta_blob, &custom_meta_bufsz);
 
 	/* reset */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_BUSY);
 	if (!fu_ccgx_dmc_device_send_reset_state_machine(self, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* start fw upgrade with custom metadata */
 	if (!fu_ccgx_dmc_device_send_start_upgrade(self,
@@ -463,11 +500,11 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 	/* send fwct data */
 	if (!fu_ccgx_dmc_device_send_fwct(self, fwct_buf, fwct_sz, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* get total fw size */
 	image_records = fu_ccgx_dmc_firmware_get_image_records(FU_CCGX_DMC_FIRMWARE(firmware));
 	fw_data_size = fu_ccgx_dmc_firmware_get_fw_data_size(FU_CCGX_DMC_FIRMWARE(firmware));
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	while (1) {
 		/* get interrupt request */
 		if (!fu_ccgx_dmc_device_read_intr_req(self, &dmc_int_rqt, error))
@@ -494,10 +531,10 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 						      img_rcd,
 						      &fw_data_written,
 						      fw_data_size,
+						      fu_progress_get_child(progress),
 						      error))
 			return FALSE;
 	}
-
 	if (dmc_int_rqt.opcode != DMC_INT_OPCODE_FW_UPGRADE_STATUS) {
 		if (dmc_int_rqt.opcode == DMC_INT_OPCODE_FWCT_ANALYSIS_STATUS) {
 			g_set_error(error,
@@ -515,7 +552,6 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 			    dmc_int_rqt.data[0]);
 		return FALSE;
 	}
-
 	if (dmc_int_rqt.data[0] == DMC_DEVICE_STATUS_UPDATE_PHASE_1_COMPLETE) {
 		self->update_model = DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER;
 	} else if (dmc_int_rqt.data[0] == DMC_DEVICE_STATUS_FW_DOWNLOADED_UPDATE_PEND) {
@@ -528,6 +564,9 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 			    dmc_int_rqt.data[0]);
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
+
+	/* success */
 	return TRUE;
 }
 
@@ -565,7 +604,7 @@ fu_ccgx_dmc_device_prepare_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_ccgx_dmc_device_attach(FuDevice *device, GError **error)
+fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
 	gboolean manual_replug;
@@ -603,7 +642,6 @@ fu_ccgx_dmc_device_attach(FuDevice *device, GError **error)
 	if (manual_replug)
 		return TRUE;
 
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -672,6 +710,17 @@ fu_ccgx_dmc_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
+fu_ccgx_hid_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);	/* actually 0, 20, 0, 80! */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 75);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 25);	/* reload */
+}
+
+static void
 fu_ccgx_dmc_device_init(FuCcgxDmcDevice *self)
 {
 	self->ep_intr_in = DMC_INTERRUPT_PIPE_ID;
@@ -697,4 +746,5 @@ fu_ccgx_dmc_device_class_init(FuCcgxDmcDeviceClass *klass)
 	klass_device->attach = fu_ccgx_dmc_device_attach;
 	klass_device->setup = fu_ccgx_dmc_device_setup;
 	klass_device->set_quirk_kv = fu_ccgx_dmc_device_set_quirk_kv;
+	klass_device->set_progress = fu_ccgx_hid_device_set_progress;
 }

@@ -174,13 +174,6 @@ fu_superio_it55_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static void
-fu_superio_it55_device_progress_cb(goffset current, goffset total, gpointer user_data)
-{
-	FuDevice *device = FU_DEVICE(user_data);
-	fu_device_set_progress_full(device, (gsize)current, (gsize)total);
-}
-
 static GBytes *
 fu_plugin_superio_patch_autoload(FuDevice *device, GBytes *fw, GError **error)
 {
@@ -234,9 +227,7 @@ fu_plugin_superio_patch_autoload(FuDevice *device, GBytes *fw, GError **error)
 /* progress callback is optional to not affect device progress during writing
  * firmware */
 static GBytes *
-fu_superio_it55_device_get_firmware(FuDevice *device,
-				    GFileProgressCallback progress_cb,
-				    GError **error)
+fu_superio_it55_device_get_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE(device);
 	guint64 fwsize = fu_device_get_firmware_size_min(device);
@@ -254,8 +245,7 @@ fu_superio_it55_device_get_firmware(FuDevice *device,
 			if (!fu_superio_device_ec_read_data(self, &buf[offset], error))
 				return NULL;
 
-			if (progress_cb != NULL)
-				progress_cb(offset, (goffset)fwsize, self);
+			fu_progress_set_percentage_full(progress, (gsize)i + 1, (gsize)block_count);
 		}
 	}
 
@@ -263,7 +253,7 @@ fu_superio_it55_device_get_firmware(FuDevice *device,
 }
 
 static GBytes *
-fu_superio_it55_device_dump_firmware(FuDevice *device, GError **error)
+fu_superio_it55_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -275,14 +265,12 @@ fu_superio_it55_device_dump_firmware(FuDevice *device, GError **error)
 	if (locker == NULL)
 		return NULL;
 
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_READ);
-	return fu_superio_it55_device_get_firmware(device,
-						   fu_superio_it55_device_progress_cb,
-						   error);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
+	return fu_superio_it55_device_get_firmware(device, progress, error);
 }
 
 static gboolean
-fu_superio_it55_device_attach(FuDevice *device, GError **error)
+fu_superio_it55_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE(device);
 
@@ -299,7 +287,7 @@ fu_superio_it55_device_attach(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_superio_it55_device_detach(FuDevice *device, GError **error)
+fu_superio_it55_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE(device);
 
@@ -338,20 +326,30 @@ fu_superio_it55_device_erase(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_superio_it55_device_write_attempt(FuDevice *device, GBytes *firmware, GError **error)
+fu_superio_it55_device_write_attempt(FuDevice *device,
+				     GBytes *firmware,
+				     FuProgress *progress,
+				     GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE(device);
-	gsize fwsize = g_bytes_get_size(firmware);
-	guint64 total = (fwsize + CHUNK_SIZE - 1) / CHUNK_SIZE;
 	const guint8 *fw_data = NULL;
 	g_autoptr(GBytes) erased_fw = NULL;
 	g_autoptr(GBytes) written_fw = NULL;
 	g_autoptr(GPtrArray) blocks = NULL;
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1); /* block 0 */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 9);
+
 	if (!fu_superio_it55_device_erase(device, error))
 		return FALSE;
 
-	erased_fw = fu_superio_it55_device_get_firmware(device, NULL, error);
+	erased_fw =
+	    fu_superio_it55_device_get_firmware(device, fu_progress_get_child(progress), error);
 	if (erased_fw == NULL) {
 		g_prefix_error(error, "failed to read erased firmware");
 		return FALSE;
@@ -363,6 +361,7 @@ fu_superio_it55_device_write_attempt(FuDevice *device, GBytes *firmware, GError 
 				    "firmware was not erased");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* write everything but the first kilobyte */
 	blocks = fu_chunk_array_new_from_bytes(firmware, 0x00, 0x00, BLOCK_SIZE);
@@ -381,12 +380,9 @@ fu_superio_it55_device_write_attempt(FuDevice *device, GBytes *firmware, GError 
 			return FALSE;
 
 		for (guint j = 0; j < CHUNKS_IN_BLOCK; ++j) {
-			gsize progress = i * CHUNKS_IN_BLOCK + j;
-
 			if (first && j < CHUNKS_IN_KBYTE) {
 				offset += CHUNK_SIZE;
 				bytes_left -= CHUNK_SIZE;
-				fu_device_set_progress_full(device, progress, (gsize)total);
 				continue;
 			}
 
@@ -403,10 +399,12 @@ fu_superio_it55_device_write_attempt(FuDevice *device, GBytes *firmware, GError 
 				++offset;
 				--bytes_left;
 			}
-
-			fu_device_set_progress_full(device, progress, (gsize)total);
 		}
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)blocks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* now write the first kilobyte */
 	if (!fu_superio_device_ec_write_cmd(self, SIO_CMD_EC_WRITE_1ST_KBYTE, error))
@@ -415,27 +413,30 @@ fu_superio_it55_device_write_attempt(FuDevice *device, GBytes *firmware, GError 
 	for (guint i = 0; i < CHUNK_SIZE * CHUNKS_IN_KBYTE; ++i)
 		if (!fu_superio_device_ec_write_data(self, fw_data[i], error))
 			return FALSE;
+	fu_progress_step_done(progress);
 
 	g_usleep(1000);
 
-	written_fw = fu_superio_it55_device_get_firmware(device, NULL, error);
+	written_fw =
+	    fu_superio_it55_device_get_firmware(device, fu_progress_get_child(progress), error);
 	if (written_fw == NULL) {
-		g_prefix_error(error, "failed to read erased firmware");
+		g_prefix_error(error, "failed to read firmware");
 		return FALSE;
 	}
 	if (!fu_common_bytes_compare(written_fw, firmware, error)) {
 		g_prefix_error(error, "firmware verification");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* success */
-	fu_device_set_progress(device, 100);
 	return TRUE;
 }
 
 static gboolean
 fu_superio_it55_device_write_firmware(FuDevice *device,
 				      FuFirmware *firmware,
+				      FuProgress *progress,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
@@ -443,6 +444,11 @@ fu_superio_it55_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_patched = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
 
 	/* require detach -> attach */
 	locker = fu_device_locker_new_full(device,
@@ -466,14 +472,16 @@ fu_superio_it55_device_write_firmware(FuDevice *device,
 	fw_patched = fu_plugin_superio_patch_autoload(device, fw, error);
 	if (fw_patched == NULL)
 		return FALSE;
-
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_step_done(progress);
 
 	/* try this many times; the failure-to-flash case leaves you without a
 	 * keyboard and future boot may completely fail */
 	for (guint i = 1;; ++i) {
 		g_autoptr(GError) error_chk = NULL;
-		if (fu_superio_it55_device_write_attempt(device, fw_patched, &error_chk))
+		if (fu_superio_it55_device_write_attempt(device,
+							 fw_patched,
+							 fu_progress_get_child(progress),
+							 &error_chk))
 			break;
 
 		if (i == MAX_FLASHING_ATTEMPTS) {
@@ -483,6 +491,7 @@ fu_superio_it55_device_write_firmware(FuDevice *device,
 
 		g_warning("failure %u: %s", i, error_chk->message);
 	}
+	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;

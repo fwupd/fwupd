@@ -16,4 +16,5 @@ fu_intel_spi_device_dump(FuIntelSpiDevice *self,
 			 FuDevice *device,
 			 guint32 offset,
 			 guint32 length,
+			 FuProgress *progress,
 			 GError **error);

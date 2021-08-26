@@ -357,6 +357,7 @@ fu_dell_dock_usb4_hub_nvm_write(FuDevice *device,
 				const guint8 *buf,
 				guint32 length,
 				guint32 nvm_addr,
+				FuProgress *progress,
 				GError **error)
 {
 	guint8 metadata[4];
@@ -389,8 +390,8 @@ fu_dell_dock_usb4_hub_nvm_write(FuDevice *device,
 	}
 
 	/* 2 Write data in 64 byte blocks */
-	fu_device_set_progress_full(device, bytes_done, bytes_total);
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_percentage_full(progress, bytes_done, bytes_total);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	while (length > 0) {
 		/* write data to mbox data regs */
 		if (!fu_dell_dock_usb4_mbox_data_write(device, buf, 64, error)) {
@@ -404,14 +405,14 @@ fu_dell_dock_usb4_hub_nvm_write(FuDevice *device,
 		}
 		buf += 64;
 		length -= 64;
-		fu_device_set_progress_full(device, bytes_done += 64, bytes_total);
+		fu_progress_set_percentage_full(progress, bytes_done += 64, bytes_total);
 	}
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_BUSY);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 	return TRUE;
 }
 
 static gboolean
-fu_dell_dock_usb4_activate(FuDevice *device, GError **error)
+fu_dell_dock_usb4_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
@@ -429,6 +430,7 @@ fu_dell_dock_usb4_activate(FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_usb4_write_fw(FuDevice *device,
 			   FuFirmware *firmware,
+			   FuProgress *progress,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
@@ -522,7 +524,7 @@ fu_dell_dock_usb4_write_fw(FuDevice *device,
 	/* firmware install */
 	fw_buf += fw_header_offset;
 	fw_blob_size -= fw_header_offset;
-	if (!fu_dell_dock_usb4_hub_nvm_write(device, fw_buf, fw_blob_size, 0, error))
+	if (!fu_dell_dock_usb4_hub_nvm_write(device, fw_buf, fw_blob_size, 0, progress, error))
 		return FALSE;
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);

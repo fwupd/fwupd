@@ -45,10 +45,6 @@ typedef struct {
 	FwupdStatus old_action;
 } FuDfuTargetPrivate;
 
-enum { SIGNAL_PERCENTAGE_CHANGED, SIGNAL_ACTION_CHANGED, SIGNAL_LAST };
-
-static guint signals[SIGNAL_LAST] = {0};
-
 G_DEFINE_TYPE_WITH_PRIVATE(FuDfuTarget, fu_dfu_target, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fu_dfu_target_get_instance_private(o))
 
@@ -56,45 +52,6 @@ static void
 fu_dfu_target_class_init(FuDfuTargetClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-	/**
-	 * FuDfuTarget::percentage-changed:
-	 * @device: the #FuDfuTarget instance that emitted the signal
-	 * @percentage: the new percentage
-	 *
-	 * The ::percentage-changed signal is emitted when the percentage changes.
-	 **/
-	signals[SIGNAL_PERCENTAGE_CHANGED] =
-	    g_signal_new("percentage-changed",
-			 G_TYPE_FROM_CLASS(object_class),
-			 G_SIGNAL_RUN_LAST,
-			 G_STRUCT_OFFSET(FuDfuTargetClass, percentage_changed),
-			 NULL,
-			 NULL,
-			 g_cclosure_marshal_VOID__UINT,
-			 G_TYPE_NONE,
-			 1,
-			 G_TYPE_UINT);
-
-	/**
-	 * FuDfuTarget::action-changed:
-	 * @device: the #FuDfuTarget instance that emitted the signal
-	 * @action: the new FwupdStatus
-	 *
-	 * The ::action-changed signal is emitted when the high level action changes.
-	 **/
-	signals[SIGNAL_ACTION_CHANGED] =
-	    g_signal_new("action-changed",
-			 G_TYPE_FROM_CLASS(object_class),
-			 G_SIGNAL_RUN_LAST,
-			 G_STRUCT_OFFSET(FuDfuTargetClass, action_changed),
-			 NULL,
-			 NULL,
-			 g_cclosure_marshal_VOID__UINT,
-			 G_TYPE_NONE,
-			 1,
-			 G_TYPE_UINT);
-
 	object_class->finalize = fu_dfu_target_finalize;
 }
 
@@ -750,7 +707,7 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error)
  * Returns: %TRUE for success
  **/
 gboolean
-fu_dfu_target_mass_erase(FuDfuTarget *self, GError **error)
+fu_dfu_target_mass_erase(FuDfuTarget *self, FuProgress *progress, GError **error)
 {
 	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS(self);
 	if (!fu_dfu_target_setup(self, error))
@@ -762,11 +719,15 @@ fu_dfu_target_mass_erase(FuDfuTarget *self, GError **error)
 				    "mass erase not supported");
 		return FALSE;
 	}
-	return klass->mass_erase(self, error);
+	return klass->mass_erase(self, progress, error);
 }
 
 gboolean
-fu_dfu_target_download_chunk(FuDfuTarget *self, guint16 index, GBytes *bytes, GError **error)
+fu_dfu_target_download_chunk(FuDfuTarget *self,
+			     guint16 index,
+			     GBytes *bytes,
+			     FuProgress *progress,
+			     GError **error)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(priv->device));
@@ -807,10 +768,8 @@ fu_dfu_target_download_chunk(FuDfuTarget *self, guint16 index, GBytes *bytes, GE
 	}
 
 	/* wait for the device to write contents to the EEPROM */
-	if (g_bytes_get_size(bytes) == 0 && fu_dfu_device_get_download_timeout(priv->device) > 0) {
-		fu_dfu_target_set_action(self, FWUPD_STATUS_IDLE);
-		fu_dfu_target_set_action(self, FWUPD_STATUS_DEVICE_BUSY);
-	}
+	if (g_bytes_get_size(bytes) == 0 && fu_dfu_device_get_download_timeout(priv->device) > 0)
+		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 	if (fu_dfu_device_get_download_timeout(priv->device) > 0) {
 		g_debug("sleeping for %ums…", fu_dfu_device_get_download_timeout(priv->device));
 		g_usleep(fu_dfu_device_get_download_timeout(priv->device) * 1000);
@@ -825,7 +784,11 @@ fu_dfu_target_download_chunk(FuDfuTarget *self, guint16 index, GBytes *bytes, GE
 }
 
 GBytes *
-fu_dfu_target_upload_chunk(FuDfuTarget *self, guint16 index, gsize buf_sz, GError **error)
+fu_dfu_target_upload_chunk(FuDfuTarget *self,
+			   guint16 index,
+			   gsize buf_sz,
+			   FuProgress *progress,
+			   GError **error)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(priv->device));
@@ -882,25 +845,6 @@ fu_dfu_target_set_alt_setting(FuDfuTarget *self, guint8 alt_setting)
 	priv->alt_setting = alt_setting;
 }
 
-void
-fu_dfu_target_set_action(FuDfuTarget *self, FwupdStatus action)
-{
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-
-	/* unchanged */
-	if (priv->old_action == action)
-		return;
-	if (priv->old_action != FWUPD_STATUS_IDLE && action != FWUPD_STATUS_IDLE) {
-		g_debug("ignoring action %s as %s already set and not idle",
-			fwupd_status_to_string(action),
-			fwupd_status_to_string(priv->old_action));
-		return;
-	}
-	g_debug("setting action %s", fwupd_status_to_string(action));
-	g_signal_emit(self, signals[SIGNAL_ACTION_CHANGED], 0, action);
-	priv->old_action = action;
-}
-
 FuDfuDevice *
 fu_dfu_target_get_device(FuDfuTarget *self)
 {
@@ -908,34 +852,8 @@ fu_dfu_target_get_device(FuDfuTarget *self)
 	return priv->device;
 }
 
-void
-fu_dfu_target_set_percentage_raw(FuDfuTarget *self, guint percentage)
-{
-	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
-	if (percentage == priv->old_percentage)
-		return;
-	g_debug("setting percentage %u%% of %s",
-		percentage,
-		fwupd_status_to_string(priv->old_action));
-	g_signal_emit(self, signals[SIGNAL_PERCENTAGE_CHANGED], 0, percentage);
-	priv->old_percentage = percentage;
-}
-
-void
-fu_dfu_target_set_percentage(FuDfuTarget *self, guint value, guint total)
-{
-	guint percentage;
-
-	g_return_if_fail(total > 0);
-
-	percentage = (value * 100) / total;
-	if (percentage >= 100)
-		return;
-	fu_dfu_target_set_percentage_raw(self, percentage);
-}
-
 gboolean
-fu_dfu_target_attach(FuDfuTarget *self, GError **error)
+fu_dfu_target_attach(FuDfuTarget *self, FuProgress *progress, GError **error)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS(self);
@@ -946,10 +864,10 @@ fu_dfu_target_attach(FuDfuTarget *self, GError **error)
 
 	/* implemented as part of a superclass */
 	if (klass->attach != NULL)
-		return klass->attach(self, error);
+		return klass->attach(self, progress, error);
 
 	/* normal DFU mode just needs a bus reset */
-	return fu_dfu_device_reset(priv->device, error);
+	return fu_dfu_device_reset(priv->device, progress, error);
 }
 
 static FuChunk *
@@ -957,6 +875,7 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 				 guint32 address,
 				 gsize expected_size,
 				 gsize maximum_size,
+				 FuProgress *progress,
 				 GError **error)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
@@ -969,7 +888,7 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* update UI */
-	fu_dfu_target_set_action(self, FWUPD_STATUS_DEVICE_READ);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 
 	/* get all the chunks from the hardware */
 	chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
@@ -980,6 +899,7 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 		chunk_tmp = fu_dfu_target_upload_chunk(self,
 						       idx,
 						       0, /* device transfer size */
+						       progress,
 						       error);
 		if (chunk_tmp == NULL)
 			return NULL;
@@ -995,7 +915,7 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 
 		/* update UI */
 		if (chunk_size > 0)
-			fu_dfu_target_set_percentage(self, total_size, percentage_size);
+			fu_progress_set_percentage_full(progress, total_size, percentage_size);
 
 		/* detect short write as EOF */
 		if (chunk_size < transfer_size)
@@ -1017,8 +937,7 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 	}
 
 	/* done */
-	fu_dfu_target_set_percentage_raw(self, 100);
-	fu_dfu_target_set_action(self, FWUPD_STATUS_IDLE);
+	fu_progress_set_percentage(progress, 100);
 
 	/* create new image */
 	contents = fu_dfu_utils_bytes_join_array(chunks);
@@ -1030,15 +949,22 @@ fu_dfu_target_upload_element(FuDfuTarget *self,
 			     guint32 address,
 			     gsize expected_size,
 			     gsize maximum_size,
+			     FuProgress *progress,
 			     GError **error)
 {
 	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS(self);
 
 	/* implemented as part of a superclass */
 	if (klass->upload_element != NULL) {
-		return klass->upload_element(self, address, expected_size, maximum_size, error);
+		return klass
+		    ->upload_element(self, address, expected_size, maximum_size, progress, error);
 	}
-	return fu_dfu_target_upload_element_dfu(self, address, expected_size, maximum_size, error);
+	return fu_dfu_target_upload_element_dfu(self,
+						address,
+						expected_size,
+						maximum_size,
+						progress,
+						error);
 }
 
 static guint32
@@ -1059,6 +985,7 @@ fu_dfu_target_get_size_of_zone(FuDfuTarget *self, guint16 zone)
 gboolean
 fu_dfu_target_upload(FuDfuTarget *self,
 		     FuFirmware *firmware,
+		     FuProgress *progress,
 		     FuDfuTargetTransferFlags flags,
 		     GError **error)
 {
@@ -1104,6 +1031,8 @@ fu_dfu_target_upload(FuDfuTarget *self,
 	fu_firmware_set_idx(image, priv->alt_setting);
 
 	/* get all the sectors for the device */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, priv->sectors->len);
 	for (guint i = 0; i < priv->sectors->len; i++) {
 		g_autoptr(FuChunk) chk = NULL;
 
@@ -1125,12 +1054,14 @@ fu_dfu_target_upload(FuDfuTarget *self,
 						   fu_dfu_sector_get_address(sector),
 						   0,	      /* expected */
 						   zone_size, /* maximum */
+						   fu_progress_get_child(progress),
 						   error);
 		if (chk == NULL)
 			return FALSE;
 
 		/* this chunk was uploaded okay */
 		fu_firmware_add_chunk(image, chk);
+		fu_progress_step_done(progress);
 	}
 
 	/* success */
@@ -1172,6 +1103,7 @@ _g_bytes_compare_verbose(GBytes *bytes1, GBytes *bytes2)
 static gboolean
 fu_dfu_target_download_element_dfu(FuDfuTarget *self,
 				   FuChunk *chk,
+				   FuProgress *progress,
 				   FuDfuTargetTransferFlags flags,
 				   GError **error)
 {
@@ -1190,7 +1122,7 @@ fu_dfu_target_download_element_dfu(FuDfuTarget *self,
 				    "zero-length firmware");
 		return FALSE;
 	}
-	fu_dfu_target_set_action(self, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint32 i = 0; i < nr_chunks + 1; i++) {
 		gsize length;
 		guint32 offset;
@@ -1213,16 +1145,12 @@ fu_dfu_target_download_element_dfu(FuDfuTarget *self,
 		g_debug("writing #%04x chunk of size %" G_GSIZE_FORMAT,
 			i,
 			g_bytes_get_size(bytes_tmp));
-		if (!fu_dfu_target_download_chunk(self, i, bytes_tmp, error))
+		if (!fu_dfu_target_download_chunk(self, i, bytes_tmp, progress, error))
 			return FALSE;
 
 		/* update UI */
-		fu_dfu_target_set_percentage(self, offset, g_bytes_get_size(bytes));
+		fu_progress_set_percentage_full(progress, i + 1, nr_chunks + 1);
 	}
-
-	/* done */
-	fu_dfu_target_set_percentage_raw(self, 100);
-	fu_dfu_target_set_action(self, FWUPD_STATUS_IDLE);
 
 	/* success */
 	return TRUE;
@@ -1231,20 +1159,41 @@ fu_dfu_target_download_element_dfu(FuDfuTarget *self,
 static gboolean
 fu_dfu_target_download_element(FuDfuTarget *self,
 			       FuChunk *chk,
+			       FuProgress *progress,
 			       FuDfuTargetTransferFlags flags,
 			       GError **error)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	FuDfuTargetClass *klass = FU_DFU_TARGET_GET_CLASS(self);
 
+	/* progress */
+	if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY &&
+	    fu_dfu_device_has_attribute(priv->device, FU_DFU_DEVICE_ATTR_CAN_UPLOAD)) {
+		fu_progress_set_id(progress, G_STRLOC);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 4);
+	} else {
+		fu_progress_set_id(progress, G_STRLOC);
+		fu_progress_set_steps(progress, 1);
+	}
+
 	/* implemented as part of a superclass */
 	if (klass->download_element != NULL) {
-		if (!klass->download_element(self, chk, flags, error))
+		if (!klass->download_element(self,
+					     chk,
+					     fu_progress_get_child(progress),
+					     flags,
+					     error))
 			return FALSE;
 	} else {
-		if (!fu_dfu_target_download_element_dfu(self, chk, flags, error))
+		if (!fu_dfu_target_download_element_dfu(self,
+							chk,
+							fu_progress_get_child(progress),
+							flags,
+							error))
 			return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* verify */
 	if (flags & DFU_TARGET_TRANSFER_FLAG_VERIFY &&
@@ -1252,12 +1201,12 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 		g_autoptr(GBytes) bytes = NULL;
 		g_autoptr(GBytes) bytes_tmp = NULL;
 		g_autoptr(FuChunk) chunk_tmp = NULL;
-		fu_dfu_target_set_action(self, FWUPD_STATUS_DEVICE_VERIFY);
 		bytes = fu_chunk_get_bytes(chk);
 		chunk_tmp = fu_dfu_target_upload_element(self,
 							 fu_chunk_get_address(chk),
 							 g_bytes_get_size(bytes),
 							 g_bytes_get_size(bytes),
+							 fu_progress_get_child(progress),
 							 error);
 		if (chunk_tmp == NULL)
 			return FALSE;
@@ -1272,7 +1221,7 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 				    bytes_cmp_str);
 			return FALSE;
 		}
-		fu_dfu_target_set_action(self, FWUPD_STATUS_IDLE);
+		fu_progress_step_done(progress);
 	}
 
 	return TRUE;
@@ -1293,6 +1242,7 @@ fu_dfu_target_download_element(FuDfuTarget *self,
 gboolean
 fu_dfu_target_download(FuDfuTarget *self,
 		       FuFirmware *image,
+		       FuProgress *progress,
 		       FuDfuTargetTransferFlags flags,
 		       GError **error)
 {
@@ -1348,7 +1298,7 @@ fu_dfu_target_download(FuDfuTarget *self,
 		}
 
 		/* download to device */
-		if (!fu_dfu_target_download_element(self, chk, flags, error))
+		if (!fu_dfu_target_download_element(self, chk, progress, flags, error))
 			return FALSE;
 	}
 

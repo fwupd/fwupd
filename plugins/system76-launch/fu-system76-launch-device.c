@@ -111,7 +111,7 @@ fu_system76_launch_device_reset(FuDevice *device, guint8 *rc, GError **error)
 }
 
 static gboolean
-fu_system76_launch_device_detach(FuDevice *device, GError **error)
+fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	guint8 rc = 0x0;
 	g_autoptr(FwupdRequest) request = fwupd_request_new();
@@ -142,7 +142,6 @@ fu_system76_launch_device_detach(FuDevice *device, GError **error)
 	fu_device_emit_request(device, request);
 
 	/* poll for the user-unlock */
-	fu_device_set_progress(device, 0);
 	do {
 		g_usleep(G_USEC_PER_SEC);
 		if (!fu_system76_launch_device_reset(device, &rc, error))
@@ -199,6 +198,17 @@ fu_system76_launch_device_close(FuDevice *device, GError **error)
 }
 
 static void
+fu_system76_launch_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_system76_launch_device_init(FuSystem76LaunchDevice *self)
 {
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
@@ -218,4 +228,5 @@ fu_system76_launch_device_class_init(FuSystem76LaunchDeviceClass *klass)
 	klass_device->detach = fu_system76_launch_device_detach;
 	klass_device->open = fu_system76_launch_device_open;
 	klass_device->close = fu_system76_launch_device_close;
+	klass_device->set_progress = fu_system76_launch_device_set_progress;
 }

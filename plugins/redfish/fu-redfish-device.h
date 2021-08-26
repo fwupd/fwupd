@@ -45,4 +45,7 @@ struct _FuRedfishDeviceClass {
 FuRedfishBackend *
 fu_redfish_device_get_backend(FuRedfishDevice *self);
 gboolean
-fu_redfish_device_poll_task(FuRedfishDevice *self, const gchar *location, GError **error);
+fu_redfish_device_poll_task(FuRedfishDevice *self,
+			    const gchar *location,
+			    FuProgress *progress,
+			    GError **error);

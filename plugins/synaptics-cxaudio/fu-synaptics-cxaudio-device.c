@@ -612,12 +612,21 @@ fu_synaptics_cxaudio_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 					   FuFirmware *firmware,
+					   FuProgress *progress,
 					   FwupdInstallFlags flags,
 					   GError **error)
 {
 	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE(device);
 	GPtrArray *records = fu_srec_firmware_get_records(FU_SREC_FIRMWARE(firmware));
 	FuSynapticsCxaudioFileKind file_kind;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 3); /* park */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* init */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* invalidate */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* unpark */
 
 	/* check if a patch file fits completely into the EEPROM */
 	for (guint i = 0; i < records->len; i++) {
@@ -645,6 +654,7 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 		error))
 		return FALSE;
 	g_usleep(10 * 1000);
+	fu_progress_step_done(progress);
 
 	/* initialize layout signature and version to 0 if transitioning from
 	 * EEPROM layout version 1 => 0 */
@@ -681,9 +691,9 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 		}
 		g_debug("initialized layout signature");
 	}
+	fu_progress_step_done(progress);
 
 	/* perform the actual write */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < records->len; i++) {
 		FuSrecFirmwareRecord *rcd = g_ptr_array_index(records, i);
 		if (rcd->kind != FU_FIRMWARE_SREC_RECORD_KIND_S3_DATA_32)
@@ -704,8 +714,11 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 				       rcd->buf->len);
 			return FALSE;
 		}
-		fu_device_set_progress_full(device, (gsize)i, (gsize)records->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)records->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* in case of a full FW upgrade invalidate the old FW patch (if any)
 	 * as it may have not been done by the S37 file */
@@ -740,6 +753,7 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 			g_debug("invalidated old FW patch for CX2070x (RAM) device");
 		}
 	}
+	fu_progress_step_done(progress);
 
 	/* unpark the FW */
 	if (!fu_synaptics_cxaudio_device_register_clear_bit(
@@ -748,13 +762,14 @@ fu_synaptics_cxaudio_device_write_firmware(FuDevice *device,
 		7,
 		error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_synaptics_cxaudio_device_attach(FuDevice *device, GError **error)
+fu_synaptics_cxaudio_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuSynapticsCxaudioDevice *self = FU_SYNAPTICS_CXAUDIO_DEVICE(device);
 	guint8 tmp = 1 << 6;
@@ -765,7 +780,6 @@ fu_synaptics_cxaudio_device_attach(FuDevice *device, GError **error)
 		return TRUE;
 
 	/* wait for re-enumeration */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* this fails on success */
@@ -817,6 +831,17 @@ fu_synaptics_cxaudio_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
+fu_synaptics_cxaudio_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_synaptics_cxaudio_device_init(FuSynapticsCxaudioDevice *self)
 {
 	self->sw_reset_supported = TRUE;
@@ -839,4 +864,5 @@ fu_synaptics_cxaudio_device_class_init(FuSynapticsCxaudioDeviceClass *klass)
 	klass_device->write_firmware = fu_synaptics_cxaudio_device_write_firmware;
 	klass_device->attach = fu_synaptics_cxaudio_device_attach;
 	klass_device->prepare_firmware = fu_synaptics_cxaudio_device_prepare_firmware;
+	klass_device->set_progress = fu_synaptics_cxaudio_device_set_progress;
 }

@@ -852,7 +852,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_logitech_hidpp_device_detach(FuDevice *device, GError **error)
+fu_logitech_hidpp_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
@@ -887,7 +887,6 @@ fu_logitech_hidpp_device_detach(FuDevice *device, GError **error)
 		msg->hidpp_version = priv->hidpp_version;
 		msg->flags = FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SUB_ID |
 			     FU_UNIFYING_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
-		fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 		if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, &error_local)) {
 			if (fu_device_has_private_flag(
 				device,
@@ -1139,6 +1138,7 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidPpDevice *self,
 static gboolean
 fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 					FuFirmware *firmware,
+					FuProgress *progress,
 					FwupdInstallFlags flags,
 					GError **error)
 {
@@ -1168,7 +1168,7 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 		g_warning("updating cached entity 0x%x with 0x%x", priv->cached_fw_entity, data[0]);
 		priv->cached_fw_entity = data[0];
 	}
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	for (gsize i = 0; i < sz / 16; i++) {
 		/* send packet and wait for reply */
 		if (g_getenv("FWUPD_LOGITECH_HIDPP") != NULL)
@@ -1186,7 +1186,7 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 		cmd = (cmd + 1) % 4;
 
 		/* update progress-bar */
-		fu_device_set_progress_full(device, i * 16, sz);
+		fu_progress_set_percentage_full(progress, (i + 1) * 16, sz);
 	}
 
 	return TRUE;
@@ -1199,7 +1199,10 @@ fu_logitech_hidpp_device_reprobe_cb(FuDevice *device, gpointer user_data, GError
 }
 
 gboolean
-fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self, guint8 entity, GError **error)
+fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self,
+				guint8 entity,
+				FuProgress *progress,
+				GError **error)
 {
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
 	FuDevice *device = FU_DEVICE(self);
@@ -1248,7 +1251,7 @@ fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self, guint8 entity, GErr
 		 * Possible race condition: after the device is reset, Linux might enumerate it as
 		 * a different hidraw device depending on timing.
 		 */
-		fu_device_sleep_with_progress(device, 1); /* second */
+		fu_progress_sleep(progress, 1000); /* ms */
 	} else {
 		/* device file hasn't been unbound/re-bound, just probe again */
 		if (!fu_device_retry(device, fu_logitech_hidpp_device_reprobe_cb, 10, NULL, error))
@@ -1260,14 +1263,14 @@ fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self, guint8 entity, GErr
 }
 
 static gboolean
-fu_logitech_hidpp_device_attach_cached(FuDevice *device, GError **error)
+fu_logitech_hidpp_device_attach_cached(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
+
 	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH))
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return fu_logitech_hidpp_device_attach(self, priv->cached_fw_entity, error);
+	return fu_logitech_hidpp_device_attach(self, priv->cached_fw_entity, progress, error);
 }
 
 static gboolean
@@ -1284,6 +1287,17 @@ fu_logitech_hidpp_device_set_quirk_kv(FuDevice *device,
 	}
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
 	return FALSE;
+}
+
+static void
+fu_logitech_hidpp_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
 }
 
 static void
@@ -1327,6 +1341,7 @@ fu_logitech_hidpp_device_class_init(FuLogitechHidPpDeviceClass *klass)
 	klass_device->probe = fu_logitech_hidpp_device_probe;
 	klass_device->set_quirk_kv = fu_logitech_hidpp_device_set_quirk_kv;
 	klass_device->cleanup = fu_logitech_hidpp_device_cleanup;
+	klass_device->set_progress = fu_logitech_hidpp_device_set_progress;
 }
 
 static void

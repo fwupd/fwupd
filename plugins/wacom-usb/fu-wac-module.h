@@ -26,4 +26,8 @@ struct _FuWacModuleClass {
 #define FU_WAC_MODULE_COMMAND_END   0x03
 
 gboolean
-fu_wac_module_set_feature(FuWacModule *self, guint8 command, GBytes *blob, GError **error);
+fu_wac_module_set_feature(FuWacModule *self,
+			  guint8 command,
+			  GBytes *blob,
+			  FuProgress *progress,
+			  GError **error);

@@ -59,6 +59,7 @@ struct FuUtilPrivate {
 	GOptionContext *context;
 	FuEngine *engine;
 	FuEngineRequest *request;
+	FuProgress *progress;
 	FuProgressbar *progressbar;
 	gboolean as_json;
 	gboolean no_reboot_check;
@@ -339,6 +340,8 @@ fu_util_private_free(FuUtilPrivate *priv)
 		g_object_unref(priv->cancellable);
 	if (priv->progressbar != NULL)
 		g_object_unref(priv->progressbar);
+	if (priv->progress != NULL)
+		g_object_unref(priv->progress);
 	if (priv->context != NULL)
 		g_option_context_free(priv->context);
 	if (priv->lock_fd != 0)
@@ -830,6 +833,7 @@ static gboolean
 fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob_fw = NULL;
 
 	/* invalid args */
@@ -840,6 +844,9 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 				    "Invalid arguments");
 		return FALSE;
 	}
+
+	/* progress */
+	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
 
 	/* parse blob */
 	blob_fw = fu_common_get_contents_bytes(values[0], error);
@@ -886,6 +893,7 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_engine_install_blob(priv->engine,
 				    device,
 				    blob_fw,
+				    progress,
 				    priv->flags,
 				    fu_engine_request_get_feature_flags(priv->request),
 				    error))
@@ -1010,7 +1018,7 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 			 priv);
 
 	/* dump firmware */
-	blob_fw = fu_engine_firmware_dump(priv->engine, device, priv->flags, error);
+	blob_fw = fu_engine_firmware_dump(priv->engine, device, priv->progress, priv->flags, error);
 	if (blob_fw == NULL)
 		return FALSE;
 	return fu_common_set_contents_bytes(values[0], blob_fw, error);
@@ -1517,7 +1525,7 @@ fu_util_detach(FuUtilPrivate *priv, gchar **values, GError **error)
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_detach(device, error);
+	return fu_device_detach(device, priv->progress, error);
 }
 
 static gboolean
@@ -1614,7 +1622,7 @@ fu_util_attach(FuUtilPrivate *priv, gchar **values, GError **error)
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_attach(device, error);
+	return fu_device_attach(device, priv->progress, error);
 }
 
 static gboolean
@@ -3085,6 +3093,7 @@ main(int argc, char *argv[])
 	/* create helper object */
 	priv->main_ctx = g_main_context_new();
 	priv->loop = g_main_loop_new(priv->main_ctx, FALSE);
+	priv->progress = fu_progress_new(G_STRLOC);
 	priv->progressbar = fu_progressbar_new();
 	fu_progressbar_set_main_context(priv->progressbar, priv->main_ctx);
 	priv->request = fu_engine_request_new();

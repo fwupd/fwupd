@@ -40,19 +40,20 @@ typedef enum {
 
 struct _FuDfuTargetClass {
 	GUsbDeviceClass parent_class;
-	void (*percentage_changed)(FuDfuTarget *self, guint percentage);
 	void (*action_changed)(FuDfuTarget *self, FwupdStatus action);
 	gboolean (*setup)(FuDfuTarget *self, GError **error);
-	gboolean (*attach)(FuDfuTarget *self, GError **error);
-	gboolean (*detach)(FuDfuTarget *self, GError **error);
-	gboolean (*mass_erase)(FuDfuTarget *self, GError **error);
+	gboolean (*attach)(FuDfuTarget *self, FuProgress *progress, GError **error);
+	gboolean (*detach)(FuDfuTarget *self, FuProgress *progress, GError **error);
+	gboolean (*mass_erase)(FuDfuTarget *self, FuProgress *progress, GError **error);
 	FuChunk *(*upload_element)(FuDfuTarget *self,
 				   guint32 address,
 				   gsize expected_size,
 				   gsize maximum_size,
+				   FuProgress *progress,
 				   GError **error);
 	gboolean (*download_element)(FuDfuTarget *self,
 				     FuChunk *chk,
+				     FuProgress *progress,
 				     FuDfuTargetTransferFlags flags,
 				     GError **error);
 };
@@ -70,6 +71,7 @@ fu_dfu_target_get_alt_name_for_display(FuDfuTarget *self, GError **error);
 gboolean
 fu_dfu_target_upload(FuDfuTarget *self,
 		     FuFirmware *firmware,
+		     FuProgress *progress,
 		     FuDfuTargetTransferFlags flags,
 		     GError **error);
 gboolean
@@ -77,9 +79,10 @@ fu_dfu_target_setup(FuDfuTarget *self, GError **error);
 gboolean
 fu_dfu_target_download(FuDfuTarget *self,
 		       FuFirmware *image,
+		       FuProgress *progress,
 		       FuDfuTargetTransferFlags flags,
 		       GError **error);
 gboolean
-fu_dfu_target_mass_erase(FuDfuTarget *self, GError **error);
+fu_dfu_target_mass_erase(FuDfuTarget *self, FuProgress *progress, GError **error);
 void
 fu_dfu_target_to_string(FuDfuTarget *self, guint idt, GString *str);

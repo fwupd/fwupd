@@ -84,6 +84,9 @@ fu_logitech_hidpp_device_set_hidpp_pid(FuLogitechHidPpDevice *self, guint16 hidp
 const gchar *
 fu_logitech_hidpp_device_get_model_id(FuLogitechHidPpDevice *self);
 gboolean
-fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self, guint8 entity, GError **error);
+fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self,
+				guint8 entity,
+				FuProgress *progress,
+				GError **error);
 FuLogitechHidPpDevice *
 fu_logitech_hidpp_device_new(FuUdevDevice *parent);

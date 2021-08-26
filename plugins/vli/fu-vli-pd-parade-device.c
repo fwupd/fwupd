@@ -454,6 +454,7 @@ fu_vli_pd_parade_device_block_read(FuVliPdParadeDevice *self,
 static gboolean
 fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 				       FuFirmware *firmware,
+				       FuProgress *progress,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
@@ -467,6 +468,14 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GBytes) fw_verify = NULL;
 	g_autoptr(GPtrArray) blocks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 19);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 45);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 36);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
 
 	/* simple image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -483,7 +492,6 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/*  64K block erase */
-	fu_device_set_status(FU_DEVICE(self), FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_vli_pd_parade_device_write_enable(self, error))
 		return FALSE;
 	if (!fu_vli_pd_parade_device_write_status(self, 0x00, error))
@@ -495,8 +503,11 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 		FuChunk *chk = g_ptr_array_index(blocks, i);
 		if (!fu_vli_pd_parade_device_block_erase(self, fu_chunk_get_idx(chk), error))
 			return FALSE;
-		fu_device_set_progress_full(FU_DEVICE(self), i, blocks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						i + 1,
+						blocks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/*  load F/W to SPI ROM */
 	if (!fu_vli_pd_parade_device_enable_mapping(self, error))
@@ -508,7 +519,6 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* write blocks */
-	fu_device_set_status(FU_DEVICE(self), FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 1; i < blocks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(blocks, i);
 		if (!fu_vli_pd_parade_device_block_write(self,
@@ -516,10 +526,13 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 							 fu_chunk_get_data(chk),
 							 error))
 			return FALSE;
-		fu_device_set_progress_full(FU_DEVICE(self), i, blocks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						i + 1,
+						blocks->len);
 	}
 	if (!fu_vli_pd_parade_device_write_disable(self, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* add the new boot config into the verify buffer */
 	buf_verify = g_byte_array_sized_new(g_bytes_get_size(fw));
@@ -527,7 +540,6 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 	g_byte_array_append(buf_verify, fu_chunk_get_data(chk0), fu_chunk_get_data_sz(chk0));
 
 	/*  verify SPI ROM, ignoring the boot config */
-	fu_device_set_status(FU_DEVICE(self), FWUPD_STATUS_DEVICE_VERIFY);
 	for (guint i = 1; i < blocks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(blocks, i);
 		gsize bufsz = fu_chunk_get_data_sz(chk);
@@ -539,11 +551,14 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 							error))
 			return FALSE;
 		g_byte_array_append(buf_verify, vbuf, bufsz);
-		fu_device_set_progress_full(FU_DEVICE(self), i, blocks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						i + 1,
+						blocks->len);
 	}
 	fw_verify = g_byte_array_free_to_bytes(g_steal_pointer(&buf_verify));
 	if (!fu_common_bytes_compare(fw, fw_verify, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/*  save boot config into Block_0 */
 	if (!fu_vli_pd_parade_device_write_enable(self, error))
@@ -606,13 +621,14 @@ fu_vli_pd_parade_device_write_firmware(FuDevice *device,
 		return FALSE;
 	if (!fu_vli_pd_parade_device_write_disable(self, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;
 }
 
 static GBytes *
-fu_vli_pd_parade_device_dump_firmware(FuDevice *device, GError **error)
+fu_vli_pd_parade_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuVliPdDevice *parent = FU_VLI_PD_DEVICE(fu_device_get_parent(device));
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
@@ -630,7 +646,7 @@ fu_vli_pd_parade_device_dump_firmware(FuDevice *device, GError **error)
 		return NULL;
 
 	/* read */
-	fu_device_set_status(FU_DEVICE(device), FWUPD_STATUS_DEVICE_VERIFY);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
 	fu_byte_array_set_size(fw, fu_device_get_firmware_size_max(device));
 	blocks = fu_chunk_array_mutable_new(fw->data, fw->len, 0x0, 0x0, 0x10000);
 	for (guint i = 0; i < blocks->len; i++) {
@@ -641,6 +657,7 @@ fu_vli_pd_parade_device_dump_firmware(FuDevice *device, GError **error)
 							fu_chunk_get_data_sz(chk),
 							error))
 			return NULL;
+		fu_progress_set_percentage_full(progress, i + 1, blocks->len);
 	}
 	return g_byte_array_free_to_bytes(g_steal_pointer(&fw));
 }
@@ -668,6 +685,17 @@ fu_vli_pd_parade_device_probe(FuDevice *device, GError **error)
 }
 
 static void
+fu_vli_pd_parade_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_vli_pd_parade_device_init(FuVliPdParadeDevice *self)
 {
 	self->device_kind = FU_VLI_DEVICE_KIND_PS186;
@@ -691,6 +719,7 @@ fu_vli_pd_parade_device_class_init(FuVliPdParadeDeviceClass *klass)
 	klass_device->probe = fu_vli_pd_parade_device_probe;
 	klass_device->dump_firmware = fu_vli_pd_parade_device_dump_firmware;
 	klass_device->write_firmware = fu_vli_pd_parade_device_write_firmware;
+	klass_device->set_progress = fu_vli_pd_parade_device_set_progress;
 }
 
 FuDevice *

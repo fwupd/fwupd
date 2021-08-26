@@ -61,7 +61,7 @@ fu_thelio_io_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_thelio_io_device_detach(FuDevice *device, GError **error)
+fu_thelio_io_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	const gchar *devpath;
 	g_autofree gchar *fn = NULL;
@@ -73,8 +73,6 @@ fu_thelio_io_device_detach(FuDevice *device, GError **error)
 	udev_device = fu_usb_device_find_udev_device(FU_USB_DEVICE(device), error);
 	if (udev_device == NULL)
 		return FALSE;
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
-
 	devpath = g_udev_device_get_sysfs_path(udev_device);
 	if (G_UNLIKELY(devpath == NULL)) {
 		g_set_error_literal(error,
@@ -100,6 +98,17 @@ fu_thelio_io_device_detach(FuDevice *device, GError **error)
 }
 
 static void
+fu_thelio_io_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_thelio_io_device_init(FuThelioIoDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -115,4 +124,5 @@ fu_thelio_io_device_class_init(FuThelioIoDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->probe = fu_thelio_io_device_probe;
 	klass_device->detach = fu_thelio_io_device_detach;
+	klass_device->set_progress = fu_thelio_io_device_set_progress;
 }

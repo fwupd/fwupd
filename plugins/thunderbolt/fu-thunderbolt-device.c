@@ -498,7 +498,7 @@ fu_thunderbolt_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_thunderbolt_device_activate(FuDevice *device, GError **error)
+fu_thunderbolt_device_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
 
@@ -524,7 +524,7 @@ fu_thunderbolt_device_flush_update(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_thunderbolt_device_attach(FuDevice *device, GError **error)
+fu_thunderbolt_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	const gchar *attribute;
 	guint64 status;
@@ -571,7 +571,10 @@ fu_thunderbolt_device_rescan(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_thunderbolt_device_write_data(FuThunderboltDevice *self, GBytes *blob_fw, GError **error)
+fu_thunderbolt_device_write_data(FuThunderboltDevice *self,
+				 GBytes *blob_fw,
+				 FuProgress *progress,
+				 GError **error)
 {
 	gsize fw_size;
 	gsize nwritten;
@@ -590,7 +593,6 @@ fu_thunderbolt_device_write_data(FuThunderboltDevice *self, GBytes *blob_fw, GEr
 
 	nwritten = 0;
 	fw_size = g_bytes_get_size(blob_fw);
-	fu_device_set_progress_full(FU_DEVICE(self), nwritten, fw_size);
 
 	do {
 		g_autoptr(GBytes) fw_data = NULL;
@@ -604,7 +606,7 @@ fu_thunderbolt_device_write_data(FuThunderboltDevice *self, GBytes *blob_fw, GEr
 			return FALSE;
 
 		nwritten += n;
-		fu_device_set_progress_full(FU_DEVICE(self), nwritten, fw_size);
+		fu_progress_set_percentage_full(progress, nwritten, fw_size);
 
 	} while (nwritten < fw_size);
 
@@ -716,6 +718,7 @@ fu_thunderbolt_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_thunderbolt_device_write_firmware(FuDevice *device,
 				     FuFirmware *firmware,
+				     FuProgress *progress,
 				     FwupdInstallFlags flags,
 				     GError **error)
 {
@@ -727,8 +730,8 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 	if (blob_fw == NULL)
 		return FALSE;
 
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
-	if (!fu_thunderbolt_device_write_data(self, blob_fw, error)) {
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
+	if (!fu_thunderbolt_device_write_data(self, blob_fw, progress, error)) {
 		g_prefix_error(error,
 			       "could not write firmware to thunderbolt device at %s: ",
 			       self->devpath);
@@ -757,12 +760,22 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 
 	/* whether to wait for a device replug or not */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
-		fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
+		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
 		fu_device_set_remove_delay(device, FU_PLUGIN_THUNDERBOLT_UPDATE_TIMEOUT);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	}
 
 	return TRUE;
+}
+
+static void
+fu_thunderbolt_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100); /* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);	/* reload */
 }
 
 static void
@@ -796,4 +809,5 @@ fu_thunderbolt_device_class_init(FuThunderboltDeviceClass *klass)
 	klass_device->attach = fu_thunderbolt_device_attach;
 	klass_device->rescan = fu_thunderbolt_device_rescan;
 	klass_device->probe = fu_thunderbolt_device_probe;
+	klass_device->set_progress = fu_thunderbolt_device_set_progress;
 }

@@ -116,17 +116,23 @@ fu_wac_module_bluetooth_parse_blocks(const guint8 *data,
 static gboolean
 fu_wac_module_bluetooth_write_firmware(FuDevice *device,
 				       FuFirmware *firmware,
+				       FuProgress *progress,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
 	FuWacModule *self = FU_WAC_MODULE(device);
 	const guint8 *data;
 	gsize len = 0;
-	gsize blocks_total = 0;
 	const guint8 buf_start[] = {0x00};
 	g_autoptr(GPtrArray) blocks = NULL;
 	g_autoptr(GBytes) blob_start = g_bytes_new_static(buf_start, 1);
 	g_autoptr(GBytes) fw = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 79);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -138,18 +144,17 @@ fu_wac_module_bluetooth_write_firmware(FuDevice *device,
 	blocks = fu_wac_module_bluetooth_parse_blocks(data, len, TRUE, error);
 	if (blocks == NULL)
 		return FALSE;
-	blocks_total = blocks->len + 2;
 
 	/* start, which will erase the module */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_wac_module_set_feature(self, FU_WAC_MODULE_COMMAND_START, blob_start, error))
+	if (!fu_wac_module_set_feature(self,
+				       FU_WAC_MODULE_COMMAND_START,
+				       blob_start,
+				       fu_progress_get_child(progress),
+				       error))
 		return FALSE;
-
-	/* update progress */
-	fu_device_set_progress_full(device, 1, blocks_total);
+	fu_progress_step_done(progress);
 
 	/* data */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < blocks->len; i++) {
 		FuWacModuleBluetoothBlockData *bd = g_ptr_array_index(blocks, i);
 		guint8 buf[256 + 11];
@@ -162,19 +167,30 @@ fu_wac_module_bluetooth_write_firmware(FuDevice *device,
 		buf[10] = bd->crc;
 		memcpy(&buf[11], bd->cdata, sizeof(bd->cdata));
 		blob_chunk = g_bytes_new(buf, sizeof(buf));
-		if (!fu_wac_module_set_feature(self, FU_WAC_MODULE_COMMAND_DATA, blob_chunk, error))
+		if (!fu_wac_module_set_feature(self,
+					       FU_WAC_MODULE_COMMAND_DATA,
+					       blob_chunk,
+					       fu_progress_get_child(progress),
+					       error))
 			return FALSE;
 
 		/* update progress */
-		fu_device_set_progress_full(device, i + 1, blocks_total);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						i + 1,
+						blocks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* end */
-	if (!fu_wac_module_set_feature(self, FU_WAC_MODULE_COMMAND_END, NULL, error))
+	if (!fu_wac_module_set_feature(self,
+				       FU_WAC_MODULE_COMMAND_END,
+				       NULL,
+				       fu_progress_get_child(progress),
+				       error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
-	/* update progress */
-	fu_device_set_progress_full(device, blocks_total, blocks_total);
+	/* success */
 	return TRUE;
 }
 

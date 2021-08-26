@@ -146,6 +146,7 @@ and then calls the vfuncs to update the device.
     fu_plugin_write_firmware (FuPlugin *plugin,
                       FuDevice *dev,
                       GBytes *blob_fw,
+                      FuProgress *progress,
                       FwupdInstallFlags flags,
                       GError **error)
     {
@@ -212,19 +213,19 @@ handle the device ID, although the registered plugin can change during the
 attach and detach phases.
 
     gboolean
-    fu_plugin_detach (FuPlugin *plugin, FuDevice *device, GError **error)
+    fu_plugin_detach (FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
     {
         if (hardware_in_bootloader)
             return TRUE;
-        return _device_detach(device, error);
+        return _device_detach(device, progress, error);
     }
 
     gboolean
-    fu_plugin_attach (FuPlugin *plugin, FuDevice *device, GError **error)
+    fu_plugin_attach (FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
     {
         if (!hardware_in_bootloader)
             return TRUE;
-        return _device_attach(device, error);
+        return _device_attach(device, progress, error);
     }
 
     gboolean

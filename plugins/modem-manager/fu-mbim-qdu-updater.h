@@ -23,6 +23,7 @@ fu_mbim_qdu_updater_write(FuMbimQduUpdater *self,
 			  const gchar *filename,
 			  GBytes *blob,
 			  FuDevice *device,
+			  FuProgress *progress,
 			  GError **error);
 gchar *
 fu_mbim_qdu_updater_check_ready(FuMbimQduUpdater *self, GError **error);

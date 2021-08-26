@@ -387,6 +387,7 @@ main(int argc, char *argv[])
 	if (apply != NULL) {
 		g_autoptr(FuContext) ctx = fu_context_new();
 		g_autoptr(FuBackend) backend = fu_uefi_backend_new(ctx);
+		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 		g_autoptr(FuUefiDevice) dev = NULL;
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GBytes) fw = NULL;
@@ -427,6 +428,7 @@ main(int argc, char *argv[])
 		}
 		if (!fu_device_write_firmware(FU_DEVICE(dev),
 					      fw,
+					      progress,
 					      FWUPD_INSTALL_FLAG_NONE,
 					      &error_local)) {
 			g_printerr("failed: %s\n", error_local->message);

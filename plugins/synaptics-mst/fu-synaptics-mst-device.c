@@ -295,6 +295,7 @@ fu_synaptics_mst_device_set_flash_sector_erase(FuSynapticsMstDevice *self,
 static gboolean
 fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 				   const guint8 *payload_data,
+				   FuProgress *progress,
 				   GError **error)
 {
 	guint32 checksum = 0;
@@ -360,9 +361,9 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 			}
 			write_offset += unit_sz;
 			write_idx += unit_sz;
-			fu_device_set_progress_full(FU_DEVICE(self),
-						    (goffset)i * 100,
-						    (goffset)(write_loops - 1) * 100);
+			fu_progress_set_percentage_full(progress,
+							(goffset)i + 1,
+							(goffset)write_loops);
 		}
 
 		/* check ESM checksum */
@@ -404,6 +405,7 @@ static gboolean
 fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 						   guint32 payload_len,
 						   const guint8 *payload_data,
+						   FuProgress *progress,
 						   GError **error)
 {
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
@@ -460,9 +462,9 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 			}
 			offset += length;
 			data_to_write -= length;
-			fu_device_set_progress_full(FU_DEVICE(self),
-						    (goffset)i * 100,
-						    (goffset)(write_loops - 1) * 100);
+			fu_progress_set_percentage_full(progress,
+							(goffset)i + 1,
+							(goffset)write_loops);
 		}
 
 		/* check data just written */
@@ -526,6 +528,7 @@ static gboolean
 fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 						 guint32 payload_len,
 						 const guint8 *payload_data,
+						 FuProgress *progress,
 						 GError **error)
 {
 	guint16 crc_tmp = 0;
@@ -613,9 +616,9 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 
 			write_offset += unit_sz;
 			write_idx += unit_sz;
-			fu_device_set_progress_full(FU_DEVICE(self),
-						    (goffset)i * 100,
-						    (goffset)(write_loops - 1) * 100);
+			fu_progress_set_percentage_full(progress,
+							(goffset)i + 1,
+							(goffset)write_loops);
 		}
 
 		/* verify CRC */
@@ -853,6 +856,7 @@ static gboolean
 fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 						guint32 payload_len,
 						const guint8 *payload_data,
+						FuProgress *progress,
 						GError **error)
 {
 	g_autoptr(FuSynapticsMstConnection) connection = NULL;
@@ -910,9 +914,9 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 			}
 			offset += length;
 			data_to_write -= length;
-			fu_device_set_progress_full(FU_DEVICE(self),
-						    (goffset)i * 100,
-						    (goffset)(write_loops - 1) * 100);
+			fu_progress_set_percentage_full(progress,
+							(goffset)i * 100,
+							(goffset)(write_loops - 1) * 100);
 		}
 
 		/* verify CRC */
@@ -1031,6 +1035,7 @@ fu_synaptics_mst_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_synaptics_mst_device_write_firmware(FuDevice *device,
 				       FuFirmware *firmware,
+				       FuProgress *progress,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
@@ -1040,13 +1045,18 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 	gsize payload_len;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 10);
+
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
 	payload_data = g_bytes_get_data(fw, &payload_len);
 
 	/* enable remote control and disable on exit */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART)) {
 		locker =
 		    fu_device_locker_new_full(self,
@@ -1072,6 +1082,7 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 		if (!fu_synaptics_mst_device_update_tesla_leaf_firmware(self,
 									payload_len,
 									payload_data,
+									progress,
 									error)) {
 			g_prefix_error(error, "Firmware update failed: ");
 			return FALSE;
@@ -1082,13 +1093,14 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 			g_prefix_error(error, "Failed to prepare for write: ");
 			return FALSE;
 		}
-		if (!fu_synaptics_mst_device_update_esm(self, payload_data, error)) {
+		if (!fu_synaptics_mst_device_update_esm(self, payload_data, progress, error)) {
 			g_prefix_error(error, "ESM update failed: ");
 			return FALSE;
 		}
 		if (!fu_synaptics_mst_device_update_panamera_firmware(self,
 								      payload_len,
 								      payload_data,
+								      progress,
 								      error)) {
 			g_prefix_error(error, "Firmware update failed: ");
 			return FALSE;
@@ -1099,6 +1111,7 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 		if (!fu_synaptics_mst_device_update_cayenne_firmware(self,
 								     payload_len,
 								     payload_data,
+								     progress,
 								     error)) {
 			g_prefix_error(error, "Firmware update failed: ");
 			return FALSE;
@@ -1111,10 +1124,11 @@ fu_synaptics_mst_device_write_firmware(FuDevice *device,
 			    "Unsupported chip family");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* wait for flash clear to settle */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_sleep_with_progress(device, 2);
+	fu_progress_sleep(fu_progress_get_child(progress), 2000);
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 
@@ -1466,6 +1480,17 @@ fu_synaptics_mst_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
+fu_synaptics_mst_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_synaptics_mst_device_class_init(FuSynapticsMstDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -1477,4 +1502,5 @@ fu_synaptics_mst_device_class_init(FuSynapticsMstDeviceClass *klass)
 	klass_device->write_firmware = fu_synaptics_mst_device_write_firmware;
 	klass_device->prepare_firmware = fu_synaptics_mst_device_prepare_firmware;
 	klass_device->probe = fu_synaptics_mst_device_probe;
+	klass_device->set_progress = fu_synaptics_mst_device_set_progress;
 }

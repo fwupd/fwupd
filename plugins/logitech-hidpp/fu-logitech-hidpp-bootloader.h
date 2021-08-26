@@ -19,6 +19,15 @@ struct _FuLogitechHidPpBootloaderClass {
 	FuHidDeviceClass parent_class;
 };
 
+/**
+ * FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED:
+ *
+ * Device requires signed firmware.
+ *
+ * Since: 1.7.0
+ */
+#define FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED (1 << 0)
+
 typedef enum {
 	FU_UNIFYING_BOOTLOADER_CMD_GENERAL_ERROR = 0x01,
 	FU_UNIFYING_BOOTLOADER_CMD_READ = 0x10,

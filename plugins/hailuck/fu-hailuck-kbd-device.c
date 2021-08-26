@@ -17,10 +17,9 @@ struct _FuHailuckKbdDevice {
 G_DEFINE_TYPE(FuHailuckKbdDevice, fu_hailuck_kbd_device, FU_TYPE_HID_DEVICE)
 
 static gboolean
-fu_hailuck_kbd_device_detach(FuDevice *device, GError **error)
+fu_hailuck_kbd_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	guint8 buf[6] = {FU_HAILUCK_REPORT_ID_SHORT, FU_HAILUCK_CMD_DETACH};
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(device),
 				      buf[0],
 				      buf,
@@ -63,6 +62,17 @@ fu_hailuck_kbd_device_probe(FuDevice *device, GError **error)
 }
 
 static void
+fu_hailuck_kbd_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_hailuck_kbd_device_init(FuHailuckKbdDevice *self)
 {
 	fu_device_set_firmware_size(FU_DEVICE(self), 0x4000);
@@ -81,4 +91,5 @@ fu_hailuck_kbd_device_class_init(FuHailuckKbdDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->detach = fu_hailuck_kbd_device_detach;
 	klass_device->probe = fu_hailuck_kbd_device_probe;
+	klass_device->set_progress = fu_hailuck_kbd_device_set_progress;
 }

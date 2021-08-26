@@ -106,7 +106,7 @@ fu_wacom_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_wacom_device_detach(FuDevice *device, GError **error)
+fu_wacom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE(device);
 	guint8 buf[FU_WACOM_RAW_FW_REPORT_SZ] = {
@@ -127,7 +127,7 @@ fu_wacom_device_detach(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_wacom_device_attach(FuDevice *device, GError **error)
+fu_wacom_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE(device);
 	FuWacomRawRequest req = {.report_id = FU_WACOM_RAW_BL_REPORT_ID_SET,
@@ -212,6 +212,7 @@ fu_wacom_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_wacom_device_write_firmware(FuDevice *device,
 			       FuFirmware *firmware,
+			       FuProgress *progress,
 			       FwupdInstallFlags flags,
 			       GError **error)
 {
@@ -256,7 +257,7 @@ fu_wacom_device_write_firmware(FuDevice *device,
 					       priv->flash_base_addr,
 					       0x00, /* page_sz */
 					       priv->flash_block_size);
-	return klass->write_firmware(device, chunks, error);
+	return klass->write_firmware(device, chunks, progress, error);
 }
 
 gboolean
@@ -343,6 +344,17 @@ fu_wacom_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 }
 
 static void
+fu_wacom_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_wacom_device_init(FuWacomDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.wacom.raw");
@@ -363,4 +375,5 @@ fu_wacom_device_class_init(FuWacomDeviceClass *klass)
 	klass_device->detach = fu_wacom_device_detach;
 	klass_device->set_quirk_kv = fu_wacom_device_set_quirk_kv;
 	klass_device->probe = fu_wacom_device_probe;
+	klass_device->set_progress = fu_wacom_device_set_progress;
 }

@@ -18,6 +18,12 @@ Remember: Plugins should be upstream!
 * Migrate from fu_device_get_protocol() to fu_device_get_protocols() and fu_device_set_protocol() to fu_device_add_protocol()
 * Migrate from fu_device_has_custom_flag() to fu_device_has_private_flag()
 * Migrate from fu_udev_device_set_readonly() to fu_udev_device_set_flags()
+* Migrate from fu_device_sleep_with_progress() to fu_progress_sleep() -- but be aware the unit of time has changed from *seconds* to *milliseconds*
+* Migrate from fu_device_get_status() to fu_progress_get_status()
+* Migrate from fu_device_set_status() to fu_progress_set_status()
+* Migrate from fu_device_get_progress() to fu_progress_get_percentage()
+* Migrate from fu_device_set_progress_full() to fu_progress_set_percentage_full()
+* Migrate from fu_device_set_progress() to fu_progress_set_steps(), fu_progress_add_step() and fu_progress_done -- see the FuProgress docs for more details!
 
 ## Planned API/ABI changes for next release
 

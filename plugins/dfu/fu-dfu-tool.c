@@ -259,7 +259,6 @@ fu_dfu_device_wait_for_replug(FuDfuTool *self, FuDfuDevice *device, guint timeou
 		return FALSE;
 
 	/* re-open with new device set */
-	fu_device_set_status(FU_DEVICE(device), FWUPD_STATUS_IDLE);
 	fu_usb_device_set_dev(FU_USB_DEVICE(device), usb_device2);
 	if (!fu_device_open(FU_DEVICE(device), error))
 		return FALSE;
@@ -444,11 +443,11 @@ fu_dfu_tool_replace_data(FuDfuTool *self, gchar **values, GError **error)
 }
 
 static void
-fu_tool_action_changed_cb(FuDevice *device, GParamSpec *pspec, FuDfuTool *self)
+fu_tool_action_changed_cb(FuProgress *progress, gpointer dummy, FuDfuTool *self)
 {
 	g_print("%s:\t%u%%\n",
-		fwupd_status_to_string(fu_device_get_status(device)),
-		fu_device_get_progress(device));
+		fwupd_status_to_string(fu_progress_get_status(progress)),
+		fu_progress_get_percentage(progress));
 }
 
 static gboolean
@@ -461,6 +460,7 @@ fu_dfu_tool_read_alt(FuDfuTool *self, gchar **values, GError **error)
 	g_autoptr(FuDfuTarget) target = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* check args */
 	if (g_strv_length(values) < 2) {
@@ -485,13 +485,16 @@ fu_dfu_tool_read_alt(FuDfuTool *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* set up progress */
-	g_signal_connect(device, "notify::status", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(device, "notify::progress", G_CALLBACK(fu_tool_action_changed_cb), self);
+	g_signal_connect(progress, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_tool_action_changed_cb),
+			 self);
 
 	/* APP -> DFU */
 	if (!fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug("detaching");
-		if (!fu_device_detach(FU_DEVICE(device), error))
+		if (!fu_device_detach(FU_DEVICE(device), progress, error))
 			return FALSE;
 		if (!fu_dfu_device_wait_for_replug(self,
 						   device,
@@ -522,11 +525,11 @@ fu_dfu_tool_read_alt(FuDfuTool *self, gchar **values, GError **error)
 	firmware = fu_dfuse_firmware_new();
 	fu_dfu_firmware_set_vid(FU_DFU_FIRMWARE(firmware), fu_dfu_device_get_runtime_vid(device));
 	fu_dfu_firmware_set_pid(FU_DFU_FIRMWARE(firmware), fu_dfu_device_get_runtime_pid(device));
-	if (!fu_dfu_target_upload(target, firmware, flags, error))
+	if (!fu_dfu_target_upload(target, firmware, progress, flags, error))
 		return FALSE;
 
 	/* do host reset */
-	if (!fu_device_attach(FU_DEVICE(device), error))
+	if (!fu_device_attach(FU_DEVICE(device), progress, error))
 		return FALSE;
 	if (!fu_dfu_device_wait_for_replug(self,
 					   device,
@@ -557,6 +560,7 @@ fu_dfu_tool_read(FuDfuTool *self, gchar **values, GError **error)
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* check args */
 	if (g_strv_length(values) != 1) {
@@ -579,7 +583,7 @@ fu_dfu_tool_read(FuDfuTool *self, gchar **values, GError **error)
 
 	/* APP -> DFU */
 	if (!fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		if (!fu_device_detach(FU_DEVICE(device), error))
+		if (!fu_device_detach(FU_DEVICE(device), progress, error))
 			return FALSE;
 		if (!fu_dfu_device_wait_for_replug(self,
 						   device,
@@ -590,14 +594,14 @@ fu_dfu_tool_read(FuDfuTool *self, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	g_signal_connect(device, "notify::status", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(device, "notify::progress", G_CALLBACK(fu_tool_action_changed_cb), self);
-	firmware = fu_dfu_device_upload(device, flags, error);
+	g_signal_connect(device, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
+	g_signal_connect(device, "percentage-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
+	firmware = fu_dfu_device_upload(device, progress, flags, error);
 	if (firmware == NULL)
 		return FALSE;
 
 	/* do host reset */
-	if (!fu_device_attach(FU_DEVICE(device), error))
+	if (!fu_device_attach(FU_DEVICE(device), progress, error))
 		return FALSE;
 	if (!fu_dfu_device_wait_for_replug(self,
 					   device,
@@ -630,6 +634,7 @@ fu_dfu_tool_write_alt(FuDfuTool *self, gchar **values, GError **error)
 	g_autoptr(FuDfuTarget) target = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GFile) file = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* check args */
 	if (g_strv_length(values) < 2) {
@@ -661,13 +666,13 @@ fu_dfu_tool_write_alt(FuDfuTool *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* set up progress */
-	g_signal_connect(device, "notify::status", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(device, "notify::progress", G_CALLBACK(fu_tool_action_changed_cb), self);
+	g_signal_connect(device, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
+	g_signal_connect(device, "percentage-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
 
 	/* APP -> DFU */
 	if (!fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug("detaching");
-		if (!fu_device_detach(FU_DEVICE(device), error))
+		if (!fu_device_detach(FU_DEVICE(device), progress, error))
 			return FALSE;
 		if (!fu_dfu_device_wait_for_replug(self, device, 5000, error))
 			return FALSE;
@@ -721,11 +726,11 @@ fu_dfu_tool_write_alt(FuDfuTool *self, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	if (!fu_dfu_target_download(target, image, flags, error))
+	if (!fu_dfu_target_download(target, image, progress, flags, error))
 		return FALSE;
 
 	/* do host reset */
-	if (!fu_device_attach(FU_DEVICE(device), error))
+	if (!fu_device_attach(FU_DEVICE(device), progress, error))
 		return FALSE;
 	if (!fu_dfu_device_wait_for_replug(self,
 					   device,
@@ -745,6 +750,7 @@ fu_dfu_tool_write(FuDfuTool *self, gchar **values, GError **error)
 	g_autoptr(FuDfuDevice) device = NULL;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* check args */
 	if (g_strv_length(values) < 1) {
@@ -772,7 +778,7 @@ fu_dfu_tool_write(FuDfuTool *self, gchar **values, GError **error)
 
 	/* APP -> DFU */
 	if (!fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		if (!fu_device_detach(FU_DEVICE(device), error))
+		if (!fu_device_detach(FU_DEVICE(device), progress, error))
 			return FALSE;
 		if (!fu_dfu_device_wait_for_replug(self,
 						   device,
@@ -788,13 +794,13 @@ fu_dfu_tool_write(FuDfuTool *self, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	g_signal_connect(device, "notify::status", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(device, "notify::progress", G_CALLBACK(fu_tool_action_changed_cb), self);
-	if (!fu_device_write_firmware(FU_DEVICE(device), fw, flags, error))
+	g_signal_connect(device, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
+	g_signal_connect(device, "percentage-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
+	if (!fu_device_write_firmware(FU_DEVICE(device), fw, progress, flags, error))
 		return FALSE;
 
 	/* do host reset */
-	if (!fu_device_attach(FU_DEVICE(device), error))
+	if (!fu_device_attach(FU_DEVICE(device), progress, error))
 		return FALSE;
 
 	if (fu_dfu_device_has_attribute(device, FU_DFU_DEVICE_ATTR_MANIFEST_TOL)) {

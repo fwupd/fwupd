@@ -197,14 +197,22 @@ fu_wacom_emr_device_write_block(FuWacomEmrDevice *self,
 }
 
 static gboolean
-fu_wacom_emr_device_write_firmware(FuDevice *device, GPtrArray *chunks, GError **error)
+fu_wacom_emr_device_write_firmware(FuDevice *device,
+				   GPtrArray *chunks,
+				   FuProgress *progress,
+				   GError **error)
 {
 	FuWacomEmrDevice *self = FU_WACOM_EMR_DEVICE(device);
 	guint8 idx = 0;
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+
 	/* erase W9013 */
 	if (fu_device_has_instance_id(device, "WacomEMR_W9013")) {
-		fu_device_set_status(device, FWUPD_STATUS_DEVICE_ERASE);
 		if (!fu_wacom_emr_device_w9013_erase_data(self, error))
 			return FALSE;
 		for (guint i = 127; i >= 8; i--) {
@@ -218,9 +226,9 @@ fu_wacom_emr_device_write_firmware(FuDevice *device, GPtrArray *chunks, GError *
 		if (!fu_wacom_device_w9021_erase_all(self, error))
 			return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* write */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (fu_wacom_common_block_is_empty(fu_chunk_get_data(chk),
@@ -233,10 +241,12 @@ fu_wacom_emr_device_write_firmware(FuDevice *device, GPtrArray *chunks, GError *
 						     fu_chunk_get_data_sz(chk),
 						     error))
 			return FALSE;
-		fu_device_set_progress_full(device, (gsize)i, (gsize)chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
-	fu_device_set_progress(device, 100);
 	return TRUE;
 }
 
