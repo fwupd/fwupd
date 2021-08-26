@@ -17,7 +17,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_APPSTREAM_ID		"AppstreamId"
+#define FWUPD_RESULT_KEY_APPSTREAM_ID "AppstreamId"
 /**
  * FWUPD_RESULT_KEY_CHECKSUM:
  *
@@ -25,7 +25,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'as' i.e. an array of strings.
  **/
-#define FWUPD_RESULT_KEY_CHECKSUM		"Checksum"
+#define FWUPD_RESULT_KEY_CHECKSUM "Checksum"
 /**
  * FWUPD_RESULT_KEY_CREATED:
  *
@@ -33,7 +33,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
  **/
-#define FWUPD_RESULT_KEY_CREATED		"Created"
+#define FWUPD_RESULT_KEY_CREATED "Created"
 /**
  * FWUPD_RESULT_KEY_DESCRIPTION:
  *
@@ -41,7 +41,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_DESCRIPTION		"Description"
+#define FWUPD_RESULT_KEY_DESCRIPTION "Description"
 /**
  * FWUPD_RESULT_KEY_DETACH_CAPTION:
  *
@@ -49,7 +49,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_DETACH_CAPTION		"DetachCaption"
+#define FWUPD_RESULT_KEY_DETACH_CAPTION "DetachCaption"
 /**
  * FWUPD_RESULT_KEY_DETACH_IMAGE:
  *
@@ -57,7 +57,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_DETACH_IMAGE		"DetachImage"
+#define FWUPD_RESULT_KEY_DETACH_IMAGE "DetachImage"
 /**
  * FWUPD_RESULT_KEY_DEVICE_ID:
  *
@@ -65,7 +65,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_DEVICE_ID		"DeviceId"
+#define FWUPD_RESULT_KEY_DEVICE_ID "DeviceId"
 /**
  * FWUPD_RESULT_KEY_PARENT_DEVICE_ID:
  *
@@ -73,7 +73,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_PARENT_DEVICE_ID	"ParentDeviceId"
+#define FWUPD_RESULT_KEY_PARENT_DEVICE_ID "ParentDeviceId"
 /**
  * FWUPD_RESULT_KEY_COMPOSITE_ID:
  *
@@ -81,7 +81,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_COMPOSITE_ID		"CompositeId"
+#define FWUPD_RESULT_KEY_COMPOSITE_ID "CompositeId"
 /**
  * FWUPD_RESULT_KEY_FILENAME:
  *
@@ -89,7 +89,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_FILENAME		"Filename"
+#define FWUPD_RESULT_KEY_FILENAME "Filename"
 /**
  * FWUPD_RESULT_KEY_PROTOCOL:
  *
@@ -97,7 +97,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_PROTOCOL		"Protocol"
+#define FWUPD_RESULT_KEY_PROTOCOL "Protocol"
 /**
  * FWUPD_RESULT_KEY_CATEGORIES:
  *
@@ -105,7 +105,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'as' i.e. an array of strings.
  **/
-#define FWUPD_RESULT_KEY_CATEGORIES		"Categories"
+#define FWUPD_RESULT_KEY_CATEGORIES "Categories"
 /**
  * FWUPD_RESULT_KEY_ISSUES:
  *
@@ -113,7 +113,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'as' i.e. an array of strings.
  **/
-#define FWUPD_RESULT_KEY_ISSUES			"Issues"
+#define FWUPD_RESULT_KEY_ISSUES "Issues"
 /**
  * FWUPD_RESULT_KEY_FLAGS:
  *
@@ -121,7 +121,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
  **/
-#define FWUPD_RESULT_KEY_FLAGS			"Flags"
+#define FWUPD_RESULT_KEY_FLAGS "Flags"
 /**
  * FWUPD_RESULT_KEY_FLASHES_LEFT:
  *
@@ -129,7 +129,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
  **/
-#define FWUPD_RESULT_KEY_FLASHES_LEFT		"FlashesLeft"
+#define FWUPD_RESULT_KEY_FLASHES_LEFT "FlashesLeft"
 /**
  * FWUPD_RESULT_KEY_URGENCY:
  *
@@ -137,7 +137,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
  **/
-#define FWUPD_RESULT_KEY_URGENCY		"Urgency"
+#define FWUPD_RESULT_KEY_URGENCY "Urgency"
 /**
  * FWUPD_RESULT_KEY_REQUEST_KIND:
  *
@@ -145,7 +145,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
  **/
-#define FWUPD_RESULT_KEY_REQUEST_KIND		"RequestKind"
+#define FWUPD_RESULT_KEY_REQUEST_KIND "RequestKind"
 /**
  * FWUPD_RESULT_KEY_HSI_LEVEL:
  *
@@ -153,7 +153,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
  **/
-#define FWUPD_RESULT_KEY_HSI_LEVEL		"HsiLevel"
+#define FWUPD_RESULT_KEY_HSI_LEVEL "HsiLevel"
 /**
  * FWUPD_RESULT_KEY_HSI_RESULT:
  *
@@ -161,7 +161,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
  **/
-#define FWUPD_RESULT_KEY_HSI_RESULT		"HsiResult"
+#define FWUPD_RESULT_KEY_HSI_RESULT "HsiResult"
 /**
  * FWUPD_RESULT_KEY_INSTALL_DURATION:
  *
@@ -169,7 +169,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
  **/
-#define FWUPD_RESULT_KEY_INSTALL_DURATION	"InstallDuration"
+#define FWUPD_RESULT_KEY_INSTALL_DURATION "InstallDuration"
 /**
  * FWUPD_RESULT_KEY_GUID:
  *
@@ -177,7 +177,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'as' i.e. an array of strings.
  **/
-#define FWUPD_RESULT_KEY_GUID			"Guid"
+#define FWUPD_RESULT_KEY_GUID "Guid"
 /**
  * FWUPD_RESULT_KEY_INSTANCE_IDS:
  *
@@ -185,7 +185,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'as' i.e. an array of strings.
  **/
-#define FWUPD_RESULT_KEY_INSTANCE_IDS		"InstanceIds"
+#define FWUPD_RESULT_KEY_INSTANCE_IDS "InstanceIds"
 /**
  * FWUPD_RESULT_KEY_HOMEPAGE:
  *
@@ -193,7 +193,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_HOMEPAGE		"Homepage"
+#define FWUPD_RESULT_KEY_HOMEPAGE "Homepage"
 /**
  * FWUPD_RESULT_KEY_DETAILS_URL:
  *
@@ -201,7 +201,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_DETAILS_URL		"DetailsUrl"
+#define FWUPD_RESULT_KEY_DETAILS_URL "DetailsUrl"
 /**
  * FWUPD_RESULT_KEY_SOURCE_URL:
  *
@@ -209,7 +209,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_SOURCE_URL		"SourceUrl"
+#define FWUPD_RESULT_KEY_SOURCE_URL "SourceUrl"
 /**
  * FWUPD_RESULT_KEY_ICON:
  *
@@ -217,7 +217,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'as' i.e. an array of strings.
  **/
-#define FWUPD_RESULT_KEY_ICON			"Icon"
+#define FWUPD_RESULT_KEY_ICON "Icon"
 /**
  * FWUPD_RESULT_KEY_LICENSE:
  *
@@ -225,7 +225,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_LICENSE		"License"
+#define FWUPD_RESULT_KEY_LICENSE "License"
 /**
  * FWUPD_RESULT_KEY_MODIFIED:
  *
@@ -233,7 +233,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
  **/
-#define FWUPD_RESULT_KEY_MODIFIED		"Modified"
+#define FWUPD_RESULT_KEY_MODIFIED "Modified"
 /**
  * FWUPD_RESULT_KEY_VERSION_BUILD_DATE:
  *
@@ -241,7 +241,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
  **/
-#define FWUPD_RESULT_KEY_VERSION_BUILD_DATE	"VersionBuildDate"
+#define FWUPD_RESULT_KEY_VERSION_BUILD_DATE "VersionBuildDate"
 /**
  * FWUPD_RESULT_KEY_METADATA:
  *
@@ -249,7 +249,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'a{ss}' i.e. a string dictionary.
  **/
-#define FWUPD_RESULT_KEY_METADATA		"Metadata"
+#define FWUPD_RESULT_KEY_METADATA "Metadata"
 /**
  * FWUPD_RESULT_KEY_NAME:
  *
@@ -257,7 +257,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_NAME			"Name"
+#define FWUPD_RESULT_KEY_NAME "Name"
 /**
  * FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX:
  *
@@ -265,7 +265,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX	"NameVariantSuffix"
+#define FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX "NameVariantSuffix"
 /**
  * FWUPD_RESULT_KEY_PLUGIN:
  *
@@ -273,7 +273,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_PLUGIN			"Plugin"
+#define FWUPD_RESULT_KEY_PLUGIN "Plugin"
 /**
  * FWUPD_RESULT_KEY_RELEASE:
  *
@@ -281,7 +281,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'a{sv}' i.e. a variant dictionary.
  **/
-#define FWUPD_RESULT_KEY_RELEASE		"Release"
+#define FWUPD_RESULT_KEY_RELEASE "Release"
 /**
  * FWUPD_RESULT_KEY_REMOTE_ID:
  *
@@ -289,7 +289,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_REMOTE_ID		"RemoteId"
+#define FWUPD_RESULT_KEY_REMOTE_ID "RemoteId"
 /**
  * FWUPD_RESULT_KEY_SERIAL:
  *
@@ -297,7 +297,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_SERIAL			"Serial"
+#define FWUPD_RESULT_KEY_SERIAL "Serial"
 /**
  * FWUPD_RESULT_KEY_SIZE:
  *
@@ -305,7 +305,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
  **/
-#define FWUPD_RESULT_KEY_SIZE			"Size"
+#define FWUPD_RESULT_KEY_SIZE "Size"
 /**
  * FWUPD_RESULT_KEY_STATUS:
  *
@@ -313,7 +313,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
  **/
-#define FWUPD_RESULT_KEY_STATUS			"Status"
+#define FWUPD_RESULT_KEY_STATUS "Status"
 /**
  * FWUPD_RESULT_KEY_SUMMARY:
  *
@@ -321,7 +321,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_SUMMARY		"Summary"
+#define FWUPD_RESULT_KEY_SUMMARY "Summary"
 /**
  * FWUPD_RESULT_KEY_BRANCH:
  *
@@ -329,7 +329,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_BRANCH			"Branch"
+#define FWUPD_RESULT_KEY_BRANCH "Branch"
 /**
  * FWUPD_RESULT_KEY_TRUST_FLAGS:
  *
@@ -337,7 +337,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
  **/
-#define FWUPD_RESULT_KEY_TRUST_FLAGS		"TrustFlags"
+#define FWUPD_RESULT_KEY_TRUST_FLAGS "TrustFlags"
 /**
  * FWUPD_RESULT_KEY_UPDATE_MESSAGE:
  *
@@ -345,7 +345,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_UPDATE_MESSAGE		"UpdateMessage"
+#define FWUPD_RESULT_KEY_UPDATE_MESSAGE "UpdateMessage"
 /**
  * FWUPD_RESULT_KEY_UPDATE_IMAGE:
  *
@@ -353,7 +353,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_UPDATE_IMAGE		"UpdateImage"
+#define FWUPD_RESULT_KEY_UPDATE_IMAGE "UpdateImage"
 /**
  * FWUPD_RESULT_KEY_UPDATE_ERROR:
  *
@@ -361,7 +361,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_UPDATE_ERROR		"UpdateError"
+#define FWUPD_RESULT_KEY_UPDATE_ERROR "UpdateError"
 /**
  * FWUPD_RESULT_KEY_UPDATE_STATE:
  *
@@ -369,7 +369,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
  **/
-#define FWUPD_RESULT_KEY_UPDATE_STATE		"UpdateState"
+#define FWUPD_RESULT_KEY_UPDATE_STATE "UpdateState"
 /**
  * FWUPD_RESULT_KEY_URI:
  *
@@ -377,7 +377,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_URI			"Uri"
+#define FWUPD_RESULT_KEY_URI "Uri"
 /**
  * FWUPD_RESULT_KEY_LOCATIONS:
  *
@@ -385,7 +385,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'as' i.e. an array of strings.
  **/
-#define FWUPD_RESULT_KEY_LOCATIONS		"Locations"
+#define FWUPD_RESULT_KEY_LOCATIONS "Locations"
 /**
  * FWUPD_RESULT_KEY_VENDOR_ID:
  *
@@ -393,7 +393,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_VENDOR_ID		"VendorId"
+#define FWUPD_RESULT_KEY_VENDOR_ID "VendorId"
 /**
  * FWUPD_RESULT_KEY_VENDOR:
  *
@@ -401,7 +401,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_VENDOR			"Vendor"
+#define FWUPD_RESULT_KEY_VENDOR "Vendor"
 /**
  * FWUPD_RESULT_KEY_VERSION_BOOTLOADER:
  *
@@ -409,7 +409,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_VERSION_BOOTLOADER	"VersionBootloader"
+#define FWUPD_RESULT_KEY_VERSION_BOOTLOADER "VersionBootloader"
 /**
  * FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW:
  *
@@ -417,7 +417,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
  **/
-#define FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW	"VersionBootloaderRaw"
+#define FWUPD_RESULT_KEY_VERSION_BOOTLOADER_RAW "VersionBootloaderRaw"
 /**
  * FWUPD_RESULT_KEY_VERSION_FORMAT:
  *
@@ -425,7 +425,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 'u' i.e. a unsigned 32 bit integer.
  **/
-#define FWUPD_RESULT_KEY_VERSION_FORMAT		"VersionFormat"
+#define FWUPD_RESULT_KEY_VERSION_FORMAT "VersionFormat"
 /**
  * FWUPD_RESULT_KEY_VERSION_RAW:
  *
@@ -433,7 +433,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
  **/
-#define FWUPD_RESULT_KEY_VERSION_RAW		"VersionRaw"
+#define FWUPD_RESULT_KEY_VERSION_RAW "VersionRaw"
 /**
  * FWUPD_RESULT_KEY_VERSION_LOWEST:
  *
@@ -441,7 +441,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_VERSION_LOWEST		"VersionLowest"
+#define FWUPD_RESULT_KEY_VERSION_LOWEST "VersionLowest"
 /**
  * FWUPD_RESULT_KEY_VERSION_LOWEST_RAW:
  *
@@ -449,7 +449,7 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 't' i.e. a unsigned 64 bit integer.
  **/
-#define FWUPD_RESULT_KEY_VERSION_LOWEST_RAW	"VersionLowestRaw"
+#define FWUPD_RESULT_KEY_VERSION_LOWEST_RAW "VersionLowestRaw"
 /**
  * FWUPD_RESULT_KEY_VERSION:
  *
@@ -457,6 +457,6 @@ G_BEGIN_DECLS
  *
  * The D-Bus type signature string is 's' i.e. a string.
  **/
-#define FWUPD_RESULT_KEY_VERSION		"Version"
+#define FWUPD_RESULT_KEY_VERSION "Version"
 
 G_END_DECLS

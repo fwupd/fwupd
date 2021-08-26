@@ -10,12 +10,11 @@
 
 #include "fu-redfish-backend.h"
 
-#define FU_TYPE_REDFISH_DEVICE (fu_redfish_device_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuRedfishDevice, fu_redfish_device, FU, REDFISH_DEVICE, FuDevice)
+#define FU_TYPE_REDFISH_DEVICE (fu_redfish_device_get_type())
+G_DECLARE_DERIVABLE_TYPE(FuRedfishDevice, fu_redfish_device, FU, REDFISH_DEVICE, FuDevice)
 
-struct _FuRedfishDeviceClass
-{
-	FuDeviceClass		 parent_class;
+struct _FuRedfishDeviceClass {
+	FuDeviceClass parent_class;
 };
 
 /**
@@ -23,14 +22,14 @@ struct _FuRedfishDeviceClass
  *
  * The device is the other half of a dual image firmware.
  */
-#define FU_REDFISH_DEVICE_FLAG_IS_BACKUP	(1 << 0)
+#define FU_REDFISH_DEVICE_FLAG_IS_BACKUP (1 << 0)
 
 /**
  * FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD:
  *
  * Use unsigned development builds.
  */
-#define FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD	(1 << 1)
+#define FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD (1 << 1)
 
 /**
  * FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS:
@@ -41,9 +40,10 @@ struct _FuRedfishDeviceClass
  * To use this option the payload must contain metadata that restricts it to a
  * specific SoftwareId.
  */
-#define FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS	(1 << 2)
+#define FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS (1 << 2)
 
-FuRedfishBackend *fu_redfish_device_get_backend		(FuRedfishDevice	*self);
+FuRedfishBackend *
+fu_redfish_device_get_backend(FuRedfishDevice *self);
 gboolean
 fu_redfish_device_poll_task(FuRedfishDevice *self,
 			    const gchar *location,

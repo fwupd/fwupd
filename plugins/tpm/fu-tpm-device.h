@@ -8,7 +8,8 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_TPM_DEVICE (fu_tpm_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuTpmDevice, fu_tpm_device, FU, TPM_DEVICE, FuUdevDevice)
+#define FU_TYPE_TPM_DEVICE (fu_tpm_device_get_type())
+G_DECLARE_FINAL_TYPE(FuTpmDevice, fu_tpm_device, FU, TPM_DEVICE, FuUdevDevice)
 
-const gchar	*fu_tpm_device_get_family	(FuTpmDevice	*self);
+const gchar *
+fu_tpm_device_get_family(FuTpmDevice *self);

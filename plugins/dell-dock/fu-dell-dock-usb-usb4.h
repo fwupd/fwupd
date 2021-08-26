@@ -20,7 +20,8 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_DELL_DOCK_USB4 (fu_dell_dock_usb4_get_type ())
-G_DECLARE_FINAL_TYPE (FuDellDockUsb4, fu_dell_dock_usb4, FU, DELL_DOCK_USB4, FuUsbDevice)
+#define FU_TYPE_DELL_DOCK_USB4 (fu_dell_dock_usb4_get_type())
+G_DECLARE_FINAL_TYPE(FuDellDockUsb4, fu_dell_dock_usb4, FU, DELL_DOCK_USB4, FuUsbDevice)
 
-FuDellDockUsb4	*fu_dell_dock_usb4_new		(FuUsbDevice	*device);
+FuDellDockUsb4 *
+fu_dell_dock_usb4_new(FuUsbDevice *device);

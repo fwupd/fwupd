@@ -11,5 +11,9 @@
 
 #include "fu-rts54hub-rtd21xx-device.h"
 
-#define FU_TYPE_RTS54HUB_RTD21XX_BACKGROUND (fu_rts54hub_rtd21xx_background_get_type ())
-G_DECLARE_FINAL_TYPE (FuRts54hubRtd21xxBackground, fu_rts54hub_rtd21xx_background, FU, RTS54HUB_RTD21XX_BACKGROUND, FuRts54hubRtd21xxDevice)
+#define FU_TYPE_RTS54HUB_RTD21XX_BACKGROUND (fu_rts54hub_rtd21xx_background_get_type())
+G_DECLARE_FINAL_TYPE(FuRts54hubRtd21xxBackground,
+		     fu_rts54hub_rtd21xx_background,
+		     FU,
+		     RTS54HUB_RTD21XX_BACKGROUND,
+		     FuRts54hubRtd21xxDevice)

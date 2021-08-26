@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#define G_LOG_DOMAIN				"FuCommonCab"
+#define G_LOG_DOMAIN "FuCommonCab"
 
 #include "config.h"
 
@@ -24,15 +24,15 @@
  * Since: 1.2.0
  **/
 XbSilo *
-fu_common_cab_build_silo (GBytes *blob, guint64 size_max, GError **error)
+fu_common_cab_build_silo(GBytes *blob, guint64 size_max, GError **error)
 {
-	g_autoptr(FuCabinet) cabinet = fu_cabinet_new ();
+	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
 
-	g_return_val_if_fail (blob != NULL, NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	g_return_val_if_fail(blob != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	fu_cabinet_set_size_max (cabinet, size_max);
-	if (!fu_cabinet_parse (cabinet, blob, FU_CABINET_PARSE_FLAG_NONE, error))
+	fu_cabinet_set_size_max(cabinet, size_max);
+	if (!fu_cabinet_parse(cabinet, blob, FU_CABINET_PARSE_FLAG_NONE, error))
 		return NULL;
-	return fu_cabinet_get_silo (cabinet);
+	return fu_cabinet_get_silo(cabinet);
 }

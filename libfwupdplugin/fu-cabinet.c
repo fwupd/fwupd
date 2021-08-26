@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#define G_LOG_DOMAIN				"FuCabinet"
+#define G_LOG_DOMAIN "FuCabinet"
 
 #include "config.h"
 
 #include <gio/gio.h>
 #include <libgcab.h>
 
-#include "fu-cabinet.h"
-#include "fu-common.h"
-
 #include "fwupd-common.h"
 #include "fwupd-enums.h"
 #include "fwupd-error.h"
+
+#include "fu-cabinet.h"
+#include "fu-common.h"
 
 /**
  * FuCabinet:
@@ -27,48 +27,48 @@
  */
 
 struct _FuCabinet {
-	GObject			 parent_instance;
-	guint64			 size_max;
-	GCabCabinet		*gcab_cabinet;
-	gchar			*container_checksum;
-	XbBuilder		*builder;
-	XbSilo			*silo;
-	JcatContext		*jcat_context;
-	JcatFile		*jcat_file;
+	GObject parent_instance;
+	guint64 size_max;
+	GCabCabinet *gcab_cabinet;
+	gchar *container_checksum;
+	XbBuilder *builder;
+	XbSilo *silo;
+	JcatContext *jcat_context;
+	JcatFile *jcat_file;
 };
 
-G_DEFINE_TYPE (FuCabinet, fu_cabinet, G_TYPE_OBJECT)
+G_DEFINE_TYPE(FuCabinet, fu_cabinet, G_TYPE_OBJECT)
 
 static void
-fu_cabinet_finalize (GObject *obj)
+fu_cabinet_finalize(GObject *obj)
 {
-	FuCabinet *self = FU_CABINET (obj);
+	FuCabinet *self = FU_CABINET(obj);
 	if (self->silo != NULL)
-		g_object_unref (self->silo);
+		g_object_unref(self->silo);
 	if (self->builder != NULL)
-		g_object_unref (self->builder);
-	g_free (self->container_checksum);
-	g_object_unref (self->gcab_cabinet);
-	g_object_unref (self->jcat_context);
-	g_object_unref (self->jcat_file);
-	G_OBJECT_CLASS (fu_cabinet_parent_class)->finalize (obj);
+		g_object_unref(self->builder);
+	g_free(self->container_checksum);
+	g_object_unref(self->gcab_cabinet);
+	g_object_unref(self->jcat_context);
+	g_object_unref(self->jcat_file);
+	G_OBJECT_CLASS(fu_cabinet_parent_class)->finalize(obj);
 }
 
 static void
-fu_cabinet_class_init (FuCabinetClass *klass)
+fu_cabinet_class_init(FuCabinetClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_cabinet_finalize;
 }
 
 static void
-fu_cabinet_init (FuCabinet *self)
+fu_cabinet_init(FuCabinet *self)
 {
 	self->size_max = 1024 * 1024 * 100;
-	self->gcab_cabinet = gcab_cabinet_new ();
-	self->builder = xb_builder_new ();
-	self->jcat_file = jcat_file_new ();
-	self->jcat_context = jcat_context_new ();
+	self->gcab_cabinet = gcab_cabinet_new();
+	self->builder = xb_builder_new();
+	self->jcat_file = jcat_file_new();
+	self->jcat_context = jcat_context_new();
 }
 
 /**
@@ -81,9 +81,9 @@ fu_cabinet_init (FuCabinet *self)
  * Since: 1.4.0
  **/
 void
-fu_cabinet_set_size_max (FuCabinet *self, guint64 size_max)
+fu_cabinet_set_size_max(FuCabinet *self, guint64 size_max)
 {
-	g_return_if_fail (FU_IS_CABINET (self));
+	g_return_if_fail(FU_IS_CABINET(self));
 	self->size_max = size_max;
 }
 
@@ -98,11 +98,11 @@ fu_cabinet_set_size_max (FuCabinet *self, guint64 size_max)
  * Since: 1.4.0
  **/
 void
-fu_cabinet_set_jcat_context (FuCabinet *self, JcatContext *jcat_context)
+fu_cabinet_set_jcat_context(FuCabinet *self, JcatContext *jcat_context)
 {
-	g_return_if_fail (FU_IS_CABINET (self));
-	g_return_if_fail (JCAT_IS_CONTEXT (jcat_context));
-	g_set_object (&self->jcat_context, jcat_context);
+	g_return_if_fail(FU_IS_CABINET(self));
+	g_return_if_fail(JCAT_IS_CONTEXT(jcat_context));
+	g_set_object(&self->jcat_context, jcat_context);
 }
 
 /**
@@ -117,21 +117,21 @@ fu_cabinet_set_jcat_context (FuCabinet *self, JcatContext *jcat_context)
  * Since: 1.4.0
  **/
 XbSilo *
-fu_cabinet_get_silo (FuCabinet *self)
+fu_cabinet_get_silo(FuCabinet *self)
 {
-	g_return_val_if_fail (FU_IS_CABINET (self), NULL);
+	g_return_val_if_fail(FU_IS_CABINET(self), NULL);
 	if (self->silo == NULL)
 		return NULL;
-	return g_object_ref (self->silo);
+	return g_object_ref(self->silo);
 }
 
 static GCabFile *
-fu_cabinet_get_file_by_name (FuCabinet *self, const gchar *basename)
+fu_cabinet_get_file_by_name(FuCabinet *self, const gchar *basename)
 {
-	GPtrArray *folders = gcab_cabinet_get_folders (self->gcab_cabinet);
+	GPtrArray *folders = gcab_cabinet_get_folders(self->gcab_cabinet);
 	for (guint i = 0; i < folders->len; i++) {
-		GCabFolder *cabfolder = GCAB_FOLDER (g_ptr_array_index (folders, i));
-		GCabFile *cabfile = gcab_folder_get_file_by_name (cabfolder, basename);
+		GCabFolder *cabfolder = GCAB_FOLDER(g_ptr_array_index(folders, i));
+		GCabFile *cabfile = gcab_folder_get_file_by_name(cabfolder, basename);
 		if (cabfile != NULL)
 			return cabfile;
 	}
@@ -149,34 +149,34 @@ fu_cabinet_get_file_by_name (FuCabinet *self, const gchar *basename)
  * Since: 1.6.0
  **/
 void
-fu_cabinet_add_file (FuCabinet *self, const gchar *basename, GBytes *data)
+fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data)
 {
 	GPtrArray *folders;
 	GCabFile *gcab_file_old;
 	g_autoptr(GCabFolder) gcab_folder = NULL;
 	g_autoptr(GCabFile) gcab_file = NULL;
 
-	g_return_if_fail (FU_IS_CABINET (self));
-	g_return_if_fail (basename != NULL);
-	g_return_if_fail (data != NULL);
+	g_return_if_fail(FU_IS_CABINET(self));
+	g_return_if_fail(basename != NULL);
+	g_return_if_fail(data != NULL);
 
 	/* existing file? */
-	gcab_file_old = fu_cabinet_get_file_by_name (self, basename);
+	gcab_file_old = fu_cabinet_get_file_by_name(self, basename);
 	if (gcab_file_old != NULL) {
-		g_object_set (gcab_file_old, "bytes", data, NULL);
+		g_object_set(gcab_file_old, "bytes", data, NULL);
 		return;
 	}
 
 	/* new file, in a possibly new folder */
-	folders = gcab_cabinet_get_folders (self->gcab_cabinet);
+	folders = gcab_cabinet_get_folders(self->gcab_cabinet);
 	if (folders->len == 0) {
-		gcab_folder = gcab_folder_new (GCAB_COMPRESSION_NONE);
-		gcab_cabinet_add_folder (self->gcab_cabinet, gcab_folder, NULL);
+		gcab_folder = gcab_folder_new(GCAB_COMPRESSION_NONE);
+		gcab_cabinet_add_folder(self->gcab_cabinet, gcab_folder, NULL);
 	} else {
-		gcab_folder = g_object_ref (GCAB_FOLDER (g_ptr_array_index (folders, 0)));
+		gcab_folder = g_object_ref(GCAB_FOLDER(g_ptr_array_index(folders, 0)));
 	}
-	gcab_file = gcab_file_new_with_bytes (basename, data);
-	gcab_folder_add_file (gcab_folder, gcab_file, FALSE, NULL, NULL);
+	gcab_file = gcab_file_new_with_bytes(basename, data);
+	gcab_folder_add_file(gcab_folder, gcab_file, FALSE, NULL, NULL);
 }
 
 /**
@@ -192,37 +192,37 @@ fu_cabinet_add_file (FuCabinet *self, const gchar *basename, GBytes *data)
  * Since: 1.6.0
  **/
 GBytes *
-fu_cabinet_get_file (FuCabinet *self, const gchar *basename, GError **error)
+fu_cabinet_get_file(FuCabinet *self, const gchar *basename, GError **error)
 {
 	GCabFile *cabfile;
 	GBytes *blob;
 
-	g_return_val_if_fail (FU_IS_CABINET (self), NULL);
-	g_return_val_if_fail (basename != NULL, NULL);
+	g_return_val_if_fail(FU_IS_CABINET(self), NULL);
+	g_return_val_if_fail(basename != NULL, NULL);
 
-	cabfile = fu_cabinet_get_file_by_name (self, basename);
+	cabfile = fu_cabinet_get_file_by_name(self, basename);
 	if (cabfile == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "cannot find %s in archive",
-			     basename);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "cannot find %s in archive",
+			    basename);
 		return NULL;
 	}
-	blob = gcab_file_get_bytes (cabfile);
+	blob = gcab_file_get_bytes(cabfile);
 	if (blob == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no GBytes from GCabFile firmware");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no GBytes from GCabFile firmware");
 		return NULL;
 	}
-	return g_bytes_ref (blob);
+	return g_bytes_ref(blob);
 }
 
 /* sets the firmware and signature blobs on XbNode */
 static gboolean
-fu_cabinet_parse_release (FuCabinet *self, XbNode *release, GError **error)
+fu_cabinet_parse_release(FuCabinet *self, XbNode *release, GError **error)
 {
 	GCabFile *cabfile;
 	GBytes *blob;
@@ -237,21 +237,21 @@ fu_cabinet_parse_release (FuCabinet *self, XbNode *release, GError **error)
 	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
 
 	/* we set this with XbBuilderSource before the silo was created */
-	metadata_trust = xb_node_query_first (release, "../../info/metadata_trust", NULL);
+	metadata_trust = xb_node_query_first(release, "../../info/metadata_trust", NULL);
 	if (metadata_trust != NULL)
 		release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_METADATA;
 
 	/* look for source artifact first */
-	artifact = xb_node_query_first (release, "artifacts/artifact[@type='binary']", NULL);
+	artifact = xb_node_query_first(release, "artifacts/artifact[@type='binary']", NULL);
 	if (artifact != NULL) {
-		csum_filename = xb_node_query_text (artifact, "filename", NULL);
-		csum_tmp = xb_node_query_first (artifact, "checksum[@type='sha256']", NULL);
+		csum_filename = xb_node_query_text(artifact, "filename", NULL);
+		csum_tmp = xb_node_query_first(artifact, "checksum[@type='sha256']", NULL);
 		if (csum_tmp == NULL)
-			csum_tmp = xb_node_query_first (artifact, "checksum", NULL);
+			csum_tmp = xb_node_query_first(artifact, "checksum", NULL);
 	} else {
-		csum_tmp = xb_node_query_first (release, "checksum[@target='content']", NULL);
+		csum_tmp = xb_node_query_first(release, "checksum[@target='content']", NULL);
 		if (csum_tmp != NULL)
-			csum_filename = xb_node_get_attr (csum_tmp, "filename");
+			csum_filename = xb_node_get_attr(csum_tmp, "filename");
 	}
 
 	/* if this isn't true, a firmware needs to set in the metainfo.xml file
@@ -260,131 +260,133 @@ fu_cabinet_parse_release (FuCabinet *self, XbNode *release, GError **error)
 		csum_filename = "firmware.bin";
 
 	/* get the main firmware file */
-	basename = g_path_get_basename (csum_filename);
-	cabfile = fu_cabinet_get_file_by_name (self, basename);
+	basename = g_path_get_basename(csum_filename);
+	cabfile = fu_cabinet_get_file_by_name(self, basename);
 	if (cabfile == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "cannot find %s in archive",
-			     basename);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "cannot find %s in archive",
+			    basename);
 		return FALSE;
 	}
-	blob = gcab_file_get_bytes (cabfile);
+	blob = gcab_file_get_bytes(cabfile);
 	if (blob == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no GBytes from GCabFile firmware");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no GBytes from GCabFile firmware");
 		return FALSE;
 	}
 
 	/* set the blob */
-	xb_node_set_data (release, "fwupd::FirmwareBlob", blob);
+	xb_node_set_data(release, "fwupd::FirmwareBlob", blob);
 
 	/* set as metadata if unset, but error if specified and incorrect */
-	nsize = xb_node_query_first (release, "size[@type='installed']", NULL);
+	nsize = xb_node_query_first(release, "size[@type='installed']", NULL);
 	if (nsize != NULL) {
-		guint64 size = fu_common_strtoull (xb_node_get_text (nsize));
-		if (size != g_bytes_get_size (blob)) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "contents size invalid, expected "
-				     "%" G_GSIZE_FORMAT ", got %" G_GUINT64_FORMAT,
-				     g_bytes_get_size (blob), size);
+		guint64 size = fu_common_strtoull(xb_node_get_text(nsize));
+		if (size != g_bytes_get_size(blob)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "contents size invalid, expected "
+				    "%" G_GSIZE_FORMAT ", got %" G_GUINT64_FORMAT,
+				    g_bytes_get_size(blob),
+				    size);
 			return FALSE;
 		}
 	} else {
-		guint64 size = g_bytes_get_size (blob);
-		g_autoptr(GBytes) blob_sz = g_bytes_new (&size, sizeof(guint64));
-		xb_node_set_data (release, "fwupd::ReleaseSize", blob_sz);
+		guint64 size = g_bytes_get_size(blob);
+		g_autoptr(GBytes) blob_sz = g_bytes_new(&size, sizeof(guint64));
+		xb_node_set_data(release, "fwupd::ReleaseSize", blob_sz);
 	}
 
 	/* set if unspecified, but error out if specified and incorrect */
-	if (csum_tmp != NULL && xb_node_get_text (csum_tmp) != NULL) {
-		const gchar *checksum_old = xb_node_get_text (csum_tmp);
-		GChecksumType checksum_type = fwupd_checksum_guess_kind (checksum_old);
+	if (csum_tmp != NULL && xb_node_get_text(csum_tmp) != NULL) {
+		const gchar *checksum_old = xb_node_get_text(csum_tmp);
+		GChecksumType checksum_type = fwupd_checksum_guess_kind(checksum_old);
 		g_autofree gchar *checksum = NULL;
-		checksum = g_compute_checksum_for_bytes (checksum_type, blob);
-		if (g_strcmp0 (checksum, checksum_old) != 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "contents checksum invalid, expected %s, got %s",
-				     checksum,
-				     xb_node_get_text (csum_tmp));
+		checksum = g_compute_checksum_for_bytes(checksum_type, blob);
+		if (g_strcmp0(checksum, checksum_old) != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "contents checksum invalid, expected %s, got %s",
+				    checksum,
+				    xb_node_get_text(csum_tmp));
 			return FALSE;
 		}
 	}
 
 	/* find out if the payload is signed, falling back to detached */
-	item = jcat_file_get_item_by_id (self->jcat_file, basename, NULL);
+	item = jcat_file_get_item_by_id(self->jcat_file, basename, NULL);
 	if (item != NULL) {
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) results = NULL;
-		results = jcat_context_verify_item (self->jcat_context,
-						    blob, item,
-						    JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
-						    JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-						    &error_local);
+		results = jcat_context_verify_item(self->jcat_context,
+						   blob,
+						   item,
+						   JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+						   &error_local);
 		if (results == NULL) {
-			g_debug ("failed to verify payload %s: %s",
-				 basename, error_local->message);
+			g_debug("failed to verify payload %s: %s", basename, error_local->message);
 		} else {
-			g_debug ("verified payload %s: %u",
-				 basename, results->len);
+			g_debug("verified payload %s: %u", basename, results->len);
 			release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
 		}
 
-	/* legacy GPG detached signature */
+		/* legacy GPG detached signature */
 	} else {
 		g_autofree gchar *basename_sig = NULL;
-		basename_sig = g_strdup_printf ("%s.asc", basename);
-		cabfile = fu_cabinet_get_file_by_name (self, basename_sig);
+		basename_sig = g_strdup_printf("%s.asc", basename);
+		cabfile = fu_cabinet_get_file_by_name(self, basename_sig);
 		if (cabfile != NULL) {
 			GBytes *data_sig;
 			g_autoptr(JcatResult) jcat_result = NULL;
 			g_autoptr(JcatBlob) jcat_blob = NULL;
 			g_autoptr(GError) error_local = NULL;
 
-			data_sig = gcab_file_get_bytes (cabfile);
+			data_sig = gcab_file_get_bytes(cabfile);
 			if (data_sig == NULL) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "no GBytes from GCabFile %s",
-					     basename_sig);
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "no GBytes from GCabFile %s",
+					    basename_sig);
 				return FALSE;
 			}
-			jcat_blob = jcat_blob_new (JCAT_BLOB_KIND_GPG, data_sig);
-			jcat_result = jcat_context_verify_blob (self->jcat_context,
-								blob, jcat_blob,
-								JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-								&error_local);
+			jcat_blob = jcat_blob_new(JCAT_BLOB_KIND_GPG, data_sig);
+			jcat_result = jcat_context_verify_blob(self->jcat_context,
+							       blob,
+							       jcat_blob,
+							       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+							       &error_local);
 			if (jcat_result == NULL) {
-				g_debug ("failed to verify payload %s using detached: %s",
-					 basename, error_local->message);
+				g_debug("failed to verify payload %s using detached: %s",
+					basename,
+					error_local->message);
 			} else {
-				g_debug ("verified payload %s using detached", basename);
+				g_debug("verified payload %s using detached", basename);
 				release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD;
 			}
 		}
 	}
 
 	/* this means we can get the data from fu_keyring_get_release_flags */
-	release_flags_blob = g_bytes_new (&release_flags, sizeof(release_flags));
-	xb_node_set_data (release, "fwupd::ReleaseFlags", release_flags_blob);
+	release_flags_blob = g_bytes_new(&release_flags, sizeof(release_flags));
+	xb_node_set_data(release, "fwupd::ReleaseFlags", release_flags_blob);
 
 	/* success */
 	return TRUE;
 }
 
 static gint
-fu_cabinet_sort_cb (XbBuilderNode *bn1, XbBuilderNode *bn2, gpointer user_data)
+fu_cabinet_sort_cb(XbBuilderNode *bn1, XbBuilderNode *bn2, gpointer user_data)
 {
-	guint64 prio1 = xb_builder_node_get_attr_as_uint (bn1, "priority");
-	guint64 prio2 = xb_builder_node_get_attr_as_uint (bn2, "priority");
+	guint64 prio1 = xb_builder_node_get_attr_as_uint(bn1, "priority");
+	guint64 prio2 = xb_builder_node_get_attr_as_uint(bn2, "priority");
 	if (prio1 > prio2)
 		return -1;
 	if (prio1 < prio2)
@@ -393,150 +395,144 @@ fu_cabinet_sort_cb (XbBuilderNode *bn1, XbBuilderNode *bn2, gpointer user_data)
 }
 
 static gboolean
-fu_cabinet_sort_priority_cb (XbBuilderFixup *self,
-			     XbBuilderNode *bn,
-			     gpointer user_data,
-			     GError **error)
+fu_cabinet_sort_priority_cb(XbBuilderFixup *self,
+			    XbBuilderNode *bn,
+			    gpointer user_data,
+			    GError **error)
 {
-	xb_builder_node_sort_children (bn, fu_cabinet_sort_cb, user_data);
+	xb_builder_node_sort_children(bn, fu_cabinet_sort_cb, user_data);
 	return TRUE;
 }
 
 static XbBuilderNode *
-_xb_builder_node_get_child_by_element_attr (XbBuilderNode *bn,
-					    const gchar *element,
-					    const gchar *attr_name,
-					    const gchar *attr_value)
+_xb_builder_node_get_child_by_element_attr(XbBuilderNode *bn,
+					   const gchar *element,
+					   const gchar *attr_name,
+					   const gchar *attr_value)
 {
-	GPtrArray *bcs = xb_builder_node_get_children (bn);
+	GPtrArray *bcs = xb_builder_node_get_children(bn);
 	for (guint i = 0; i < bcs->len; i++) {
-		XbBuilderNode *bc = g_ptr_array_index (bcs, i);
-		if (g_strcmp0 (xb_builder_node_get_element (bc), element) != 0)
+		XbBuilderNode *bc = g_ptr_array_index(bcs, i);
+		if (g_strcmp0(xb_builder_node_get_element(bc), element) != 0)
 			continue;
-		if (g_strcmp0 (xb_builder_node_get_attr (bc, attr_name), attr_value) == 0)
-			return g_object_ref (bc);
+		if (g_strcmp0(xb_builder_node_get_attr(bc, attr_name), attr_value) == 0)
+			return g_object_ref(bc);
 	}
 	return NULL;
 }
 
 static gboolean
-fu_cabinet_set_container_checksum_cb (XbBuilderFixup *builder_fixup,
-				      XbBuilderNode *bn,
-				      gpointer user_data,
-				      GError **error)
+fu_cabinet_set_container_checksum_cb(XbBuilderFixup *builder_fixup,
+				     XbBuilderNode *bn,
+				     gpointer user_data,
+				     GError **error)
 {
-	FuCabinet *self = FU_CABINET (user_data);
+	FuCabinet *self = FU_CABINET(user_data);
 	g_autoptr(XbBuilderNode) csum = NULL;
 
 	/* not us */
-	if (g_strcmp0 (xb_builder_node_get_element (bn), "release") != 0)
+	if (g_strcmp0(xb_builder_node_get_element(bn), "release") != 0)
 		return TRUE;
 
 	/* verify it exists */
-	csum = _xb_builder_node_get_child_by_element_attr (bn, "checksum",
-							   "type", "container");
+	csum = _xb_builder_node_get_child_by_element_attr(bn, "checksum", "type", "container");
 	if (csum == NULL) {
-		csum = xb_builder_node_insert (bn, "checksum",
-					       "target", "container",
-					       NULL);
+		csum = xb_builder_node_insert(bn, "checksum", "target", "container", NULL);
 	}
 
 	/* verify it is correct */
-	if (g_strcmp0 (xb_builder_node_get_text (csum), self->container_checksum) != 0) {
-		if (xb_builder_node_get_text (csum) != NULL) {
-			g_warning ("invalid container checksum %s, fixing up to %s",
-				   xb_builder_node_get_text (csum),
-				   self->container_checksum);
+	if (g_strcmp0(xb_builder_node_get_text(csum), self->container_checksum) != 0) {
+		if (xb_builder_node_get_text(csum) != NULL) {
+			g_warning("invalid container checksum %s, fixing up to %s",
+				  xb_builder_node_get_text(csum),
+				  self->container_checksum);
 		}
-		xb_builder_node_set_text (csum, self->container_checksum, -1);
+		xb_builder_node_set_text(csum, self->container_checksum, -1);
 	}
 	return TRUE;
 }
 
 /* adds each GCabFile to the silo */
 static gboolean
-fu_cabinet_build_silo_file (FuCabinet *self,
-			    GCabFile *cabfile,
-			    FwupdReleaseFlags release_flags,
-			    GError **error)
+fu_cabinet_build_silo_file(FuCabinet *self,
+			   GCabFile *cabfile,
+			   FwupdReleaseFlags release_flags,
+			   GError **error)
 {
 	GBytes *blob;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(XbBuilderSource) source = xb_builder_source_new ();
-	g_autoptr(XbBuilderNode) bn_info = xb_builder_node_new ("info");
+	g_autoptr(XbBuilderSource) source = xb_builder_source_new();
+	g_autoptr(XbBuilderNode) bn_info = xb_builder_node_new("info");
 
 	/* indicate the metainfo file was signed */
 	if (release_flags & FWUPD_RELEASE_FLAG_TRUSTED_METADATA)
-		xb_builder_node_insert (bn_info, "metadata_trust", NULL);
-	xb_builder_node_insert_text (bn_info, "filename",
-				     gcab_file_get_name (cabfile),
-				     NULL);
-	xb_builder_source_set_info (source, bn_info);
+		xb_builder_node_insert(bn_info, "metadata_trust", NULL);
+	xb_builder_node_insert_text(bn_info, "filename", gcab_file_get_name(cabfile), NULL);
+	xb_builder_source_set_info(source, bn_info);
 
 	/* rewrite to be under a components root */
-	xb_builder_source_set_prefix (source, "components");
+	xb_builder_source_set_prefix(source, "components");
 
 	/* parse file */
-	blob = gcab_file_get_bytes (cabfile);
+	blob = gcab_file_get_bytes(cabfile);
 	if (blob == NULL) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no GBytes from GCabFile");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no GBytes from GCabFile");
 		return FALSE;
 	}
-	if (!xb_builder_source_load_bytes (source,
-					   blob,
-					   XB_BUILDER_SOURCE_FLAG_NONE,
-					   &error_local)) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "could not parse MetaInfo XML: %s",
-			     error_local->message);
+	if (!xb_builder_source_load_bytes(source,
+					  blob,
+					  XB_BUILDER_SOURCE_FLAG_NONE,
+					  &error_local)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "could not parse MetaInfo XML: %s",
+			    error_local->message);
 		return FALSE;
 	}
-	xb_builder_import_source (self->builder, source);
+	xb_builder_import_source(self->builder, source);
 
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_cabinet_build_silo_metainfo (FuCabinet *self, GCabFile *cabfile, GError **error)
+fu_cabinet_build_silo_metainfo(FuCabinet *self, GCabFile *cabfile, GError **error)
 {
 	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
-	const gchar *fn = gcab_file_get_extract_name (cabfile);
+	const gchar *fn = gcab_file_get_extract_name(cabfile);
 	g_autoptr(JcatItem) item = NULL;
 
 	/* validate against the Jcat file */
-	item = jcat_file_get_item_by_id (self->jcat_file, fn, NULL);
+	item = jcat_file_get_item_by_id(self->jcat_file, fn, NULL);
 	if (item == NULL) {
-		g_debug ("failed to verify %s: no JcatItem", fn);
+		g_debug("failed to verify %s: no JcatItem", fn);
 	} else {
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) results = NULL;
-		results = jcat_context_verify_item (self->jcat_context,
-						    gcab_file_get_bytes (cabfile),
-						    item,
-						    JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
-						    JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
-						    &error_local);
+		results = jcat_context_verify_item(self->jcat_context,
+						   gcab_file_get_bytes(cabfile),
+						   item,
+						   JCAT_VERIFY_FLAG_REQUIRE_CHECKSUM |
+						       JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE,
+						   &error_local);
 		if (results == NULL) {
-			g_debug ("failed to verify %s: %s",
-				 fn, error_local->message);
+			g_debug("failed to verify %s: %s", fn, error_local->message);
 		} else {
-			g_debug ("verified metadata %s: %u",
-				 fn, results->len);
+			g_debug("verified metadata %s: %u", fn, results->len);
 			release_flags |= FWUPD_RELEASE_FLAG_TRUSTED_METADATA;
 		}
 	}
 
 	/* actually parse the XML now */
-	g_debug ("processing file: %s", fn);
-	if (!fu_cabinet_build_silo_file (self, cabfile, release_flags, error)) {
-		g_prefix_error (error, "%s could not be loaded: ",
-				gcab_file_get_extract_name (cabfile));
+	g_debug("processing file: %s", fn);
+	if (!fu_cabinet_build_silo_file(self, cabfile, release_flags, error)) {
+		g_prefix_error(error,
+			       "%s could not be loaded: ",
+			       gcab_file_get_extract_name(cabfile));
 		return FALSE;
 	}
 
@@ -546,21 +542,21 @@ fu_cabinet_build_silo_metainfo (FuCabinet *self, GCabFile *cabfile, GError **err
 
 /* load the firmware.jcat files if included */
 static gboolean
-fu_cabinet_build_jcat_folder (FuCabinet *self, GCabFolder *cabfolder, GError **error)
+fu_cabinet_build_jcat_folder(FuCabinet *self, GCabFolder *cabfolder, GError **error)
 {
-	g_autoptr(GSList) cabfiles = gcab_folder_get_files (cabfolder);
+	g_autoptr(GSList) cabfiles = gcab_folder_get_files(cabfolder);
 	for (GSList *l = cabfiles; l != NULL; l = l->next) {
-		GCabFile *cabfile = GCAB_FILE (l->data);
-		const gchar *fn = gcab_file_get_extract_name (cabfile);
-		if (g_str_has_suffix (fn, ".jcat")) {
-			GBytes *data_jcat = gcab_file_get_bytes (cabfile);
+		GCabFile *cabfile = GCAB_FILE(l->data);
+		const gchar *fn = gcab_file_get_extract_name(cabfile);
+		if (g_str_has_suffix(fn, ".jcat")) {
+			GBytes *data_jcat = gcab_file_get_bytes(cabfile);
 			g_autoptr(GInputStream) istream = NULL;
-			istream = g_memory_input_stream_new_from_bytes (data_jcat);
-			if (!jcat_file_import_stream (self->jcat_file,
-						      istream,
-						      JCAT_IMPORT_FLAG_NONE,
-						      NULL,
-						      error))
+			istream = g_memory_input_stream_new_from_bytes(data_jcat);
+			if (!jcat_file_import_stream(self->jcat_file,
+						     istream,
+						     JCAT_IMPORT_FLAG_NONE,
+						     NULL,
+						     error))
 				return FALSE;
 		}
 	}
@@ -569,68 +565,65 @@ fu_cabinet_build_jcat_folder (FuCabinet *self, GCabFolder *cabfolder, GError **e
 
 /* adds each GCabFolder to the silo */
 static gboolean
-fu_cabinet_build_silo_folder (FuCabinet *self, GCabFolder *cabfolder, GError **error)
+fu_cabinet_build_silo_folder(FuCabinet *self, GCabFolder *cabfolder, GError **error)
 {
-	g_autoptr(GSList) cabfiles = gcab_folder_get_files (cabfolder);
+	g_autoptr(GSList) cabfiles = gcab_folder_get_files(cabfolder);
 	for (GSList *l = cabfiles; l != NULL; l = l->next) {
-		GCabFile *cabfile = GCAB_FILE (l->data);
-		const gchar *fn = gcab_file_get_extract_name (cabfile);
-		if (!g_str_has_suffix (fn, ".metainfo.xml"))
+		GCabFile *cabfile = GCAB_FILE(l->data);
+		const gchar *fn = gcab_file_get_extract_name(cabfile);
+		if (!g_str_has_suffix(fn, ".metainfo.xml"))
 			continue;
-		if (!fu_cabinet_build_silo_metainfo (self, cabfile, error))
+		if (!fu_cabinet_build_silo_metainfo(self, cabfile, error))
 			return FALSE;
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_cabinet_build_silo (FuCabinet *self, GBytes *data, GError **error)
+fu_cabinet_build_silo(FuCabinet *self, GBytes *data, GError **error)
 {
 	GPtrArray *folders;
 	g_autoptr(XbBuilderFixup) fixup1 = NULL;
 	g_autoptr(XbBuilderFixup) fixup2 = NULL;
 
 	/* verbose profiling */
-	if (g_getenv ("FWUPD_XMLB_VERBOSE") != NULL) {
-		xb_builder_set_profile_flags (self->builder,
-					      XB_SILO_PROFILE_FLAG_XPATH |
-					      XB_SILO_PROFILE_FLAG_DEBUG);
+	if (g_getenv("FWUPD_XMLB_VERBOSE") != NULL) {
+		xb_builder_set_profile_flags(self->builder,
+					     XB_SILO_PROFILE_FLAG_XPATH |
+						 XB_SILO_PROFILE_FLAG_DEBUG);
 	}
 
 	/* load Jcat */
-	folders = gcab_cabinet_get_folders (self->gcab_cabinet);
+	folders = gcab_cabinet_get_folders(self->gcab_cabinet);
 	if (self->jcat_context != NULL) {
 		for (guint i = 0; i < folders->len; i++) {
-			GCabFolder *cabfolder = GCAB_FOLDER (g_ptr_array_index (folders, i));
-			if (!fu_cabinet_build_jcat_folder (self, cabfolder, error))
+			GCabFolder *cabfolder = GCAB_FOLDER(g_ptr_array_index(folders, i));
+			if (!fu_cabinet_build_jcat_folder(self, cabfolder, error))
 				return FALSE;
 		}
 	}
 
 	/* adds each metainfo file to the silo */
 	for (guint i = 0; i < folders->len; i++) {
-		GCabFolder *cabfolder = GCAB_FOLDER (g_ptr_array_index (folders, i));
-		if (!fu_cabinet_build_silo_folder (self, cabfolder, error))
+		GCabFolder *cabfolder = GCAB_FOLDER(g_ptr_array_index(folders, i));
+		if (!fu_cabinet_build_silo_folder(self, cabfolder, error))
 			return FALSE;
 	}
 
 	/* sort the components by priority */
-	fixup1 = xb_builder_fixup_new ("OrderByPriority",
-				       fu_cabinet_sort_priority_cb,
-				       NULL, NULL);
-	xb_builder_fixup_set_max_depth (fixup1, 0);
-	xb_builder_add_fixup (self->builder, fixup1);
+	fixup1 = xb_builder_fixup_new("OrderByPriority", fu_cabinet_sort_priority_cb, NULL, NULL);
+	xb_builder_fixup_set_max_depth(fixup1, 0);
+	xb_builder_add_fixup(self->builder, fixup1);
 
 	/* ensure the container checksum is always set */
-	fixup2 = xb_builder_fixup_new ("SetContainerChecksum",
-				       fu_cabinet_set_container_checksum_cb,
-				       self, NULL);
-	xb_builder_add_fixup (self->builder, fixup2);
+	fixup2 = xb_builder_fixup_new("SetContainerChecksum",
+				      fu_cabinet_set_container_checksum_cb,
+				      self,
+				      NULL);
+	xb_builder_add_fixup(self->builder, fixup2);
 
 	/* did we get any valid files */
-	self->silo = xb_builder_compile (self->builder,
-					 XB_BUILDER_COMPILE_FLAG_NONE,
-					 NULL, error);
+	self->silo = xb_builder_compile(self->builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
 	if (self->silo == NULL)
 		return FALSE;
 
@@ -639,16 +632,16 @@ fu_cabinet_build_silo (FuCabinet *self, GBytes *data, GError **error)
 }
 
 typedef struct {
-	FuCabinet	*self;
-	guint64		 size_total;
-	GError		*error;
+	FuCabinet *self;
+	guint64 size_total;
+	GError *error;
 } FuCabinetDecompressHelper;
 
 static gboolean
-fu_cabinet_decompress_file_cb (GCabFile *file, gpointer user_data)
+fu_cabinet_decompress_file_cb(GCabFile *file, gpointer user_data)
 {
-	FuCabinetDecompressHelper *helper = (FuCabinetDecompressHelper *) user_data;
-	FuCabinet *self = FU_CABINET (helper->self);
+	FuCabinetDecompressHelper *helper = (FuCabinetDecompressHelper *)user_data;
+	FuCabinet *self = FU_CABINET(helper->self);
 	g_autofree gchar *basename = NULL;
 	g_autofree gchar *name = NULL;
 
@@ -657,83 +650,89 @@ fu_cabinet_decompress_file_cb (GCabFile *file, gpointer user_data)
 		return FALSE;
 
 	/* check the size of the compressed file */
-	if (gcab_file_get_size (file) > self->size_max) {
-		g_autofree gchar *sz_val = g_format_size (gcab_file_get_size (file));
-		g_autofree gchar *sz_max = g_format_size (self->size_max);
-		g_set_error (&helper->error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "file %s was too large (%s, limit %s)",
-			     gcab_file_get_name (file),
-			     sz_val, sz_max);
+	if (gcab_file_get_size(file) > self->size_max) {
+		g_autofree gchar *sz_val = g_format_size(gcab_file_get_size(file));
+		g_autofree gchar *sz_max = g_format_size(self->size_max);
+		g_set_error(&helper->error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "file %s was too large (%s, limit %s)",
+			    gcab_file_get_name(file),
+			    sz_val,
+			    sz_max);
 		return FALSE;
 	}
 
 	/* check the total size of all the compressed files */
-	helper->size_total += gcab_file_get_size (file);
+	helper->size_total += gcab_file_get_size(file);
 	if (helper->size_total > self->size_max) {
-		g_autofree gchar *sz_val = g_format_size (helper->size_total);
-		g_autofree gchar *sz_max = g_format_size (self->size_max);
-		g_set_error (&helper->error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "uncompressed data too large (%s, limit %s)",
-			     sz_val, sz_max);
+		g_autofree gchar *sz_val = g_format_size(helper->size_total);
+		g_autofree gchar *sz_max = g_format_size(self->size_max);
+		g_set_error(&helper->error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "uncompressed data too large (%s, limit %s)",
+			    sz_val,
+			    sz_max);
 		return FALSE;
 	}
 
 	/* convert to UNIX paths */
-	name = g_strdup (gcab_file_get_name (file));
-	g_strdelimit (name, "\\", '/');
+	name = g_strdup(gcab_file_get_name(file));
+	g_strdelimit(name, "\\", '/');
 
 	/* ignore the dirname completely */
-	basename = g_path_get_basename (name);
-	gcab_file_set_extract_name (file, basename);
+	basename = g_path_get_basename(name);
+	gcab_file_set_extract_name(file, basename);
 	return TRUE;
 }
 
 static gboolean
-fu_cabinet_decompress (FuCabinet *self, GBytes *data, GError **error)
+fu_cabinet_decompress(FuCabinet *self, GBytes *data, GError **error)
 {
 	FuCabinetDecompressHelper helper = {
-		.self		= self,
-		.size_total	= 0,
-		.error		= NULL,
+	    .self = self,
+	    .size_total = 0,
+	    .error = NULL,
 	};
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GInputStream) istream = NULL;
 
 	/* load from a seekable stream */
-	istream = g_memory_input_stream_new_from_bytes (data);
-	if (!gcab_cabinet_load (self->gcab_cabinet, istream, NULL, error))
+	istream = g_memory_input_stream_new_from_bytes(data);
+	if (!gcab_cabinet_load(self->gcab_cabinet, istream, NULL, error))
 		return FALSE;
 
 	/* check the size is sane */
-	if (gcab_cabinet_get_size (self->gcab_cabinet) > self->size_max) {
-		g_autofree gchar *sz_val = g_format_size (gcab_cabinet_get_size (self->gcab_cabinet));
-		g_autofree gchar *sz_max = g_format_size (self->size_max);
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "archive too large (%s, limit %s)",
-			     sz_val, sz_max);
+	if (gcab_cabinet_get_size(self->gcab_cabinet) > self->size_max) {
+		g_autofree gchar *sz_val = g_format_size(gcab_cabinet_get_size(self->gcab_cabinet));
+		g_autofree gchar *sz_max = g_format_size(self->size_max);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "archive too large (%s, limit %s)",
+			    sz_val,
+			    sz_max);
 		return FALSE;
 	}
 
 	/* decompress the file to memory */
-	if (!gcab_cabinet_extract_simple (self->gcab_cabinet, NULL,
-					  fu_cabinet_decompress_file_cb, &helper,
-					  NULL, &error_local)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     error_local->message);
+	if (!gcab_cabinet_extract_simple(self->gcab_cabinet,
+					 NULL,
+					 fu_cabinet_decompress_file_cb,
+					 &helper,
+					 NULL,
+					 &error_local)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    error_local->message);
 		return FALSE;
 	}
 
 	/* the file callback set an error */
 	if (helper.error != NULL) {
-		g_propagate_error (error, helper.error);
+		g_propagate_error(error, helper.error);
 		return FALSE;
 	}
 
@@ -754,82 +753,82 @@ fu_cabinet_decompress (FuCabinet *self, GBytes *data, GError **error)
  * Since: 1.6.0
  **/
 GBytes *
-fu_cabinet_export (FuCabinet *self,
-		   FuCabinetExportFlags flags,
-		   GError **error)
+fu_cabinet_export(FuCabinet *self, FuCabinetExportFlags flags, GError **error)
 {
 	g_autoptr(GOutputStream) op = NULL;
-	op = g_memory_output_stream_new_resizable ();
-	if (!gcab_cabinet_write_simple  (self->gcab_cabinet, op,
-					 NULL, NULL, /* progress */
-					 NULL, error))
+	op = g_memory_output_stream_new_resizable();
+	if (!gcab_cabinet_write_simple(self->gcab_cabinet,
+				       op,
+				       NULL,
+				       NULL, /* progress */
+				       NULL,
+				       error))
 		return NULL;
-	if (!g_output_stream_close (op, NULL, error))
+	if (!g_output_stream_close(op, NULL, error))
 		return NULL;
-	return g_memory_output_stream_steal_as_bytes (G_MEMORY_OUTPUT_STREAM (op));
+	return g_memory_output_stream_steal_as_bytes(G_MEMORY_OUTPUT_STREAM(op));
 }
 
 static gboolean
-fu_cabinet_sign_filename (FuCabinet *self,
-			  const gchar *filename,
-			  JcatEngine *jcat_engine,
-			  JcatFile *jcat_file,
-			  GBytes *cert,
-			  GBytes *privkey,
-			  GError **error)
+fu_cabinet_sign_filename(FuCabinet *self,
+			 const gchar *filename,
+			 JcatEngine *jcat_engine,
+			 JcatFile *jcat_file,
+			 GBytes *cert,
+			 GBytes *privkey,
+			 GError **error)
 {
 	g_autoptr(GBytes) source_blob = NULL;
 	g_autoptr(JcatBlob) jcat_blob = NULL;
 	g_autoptr(JcatItem) jcat_item = NULL;
 
 	/* sign the file using the engine */
-	source_blob = fu_cabinet_get_file (self, filename, error);
+	source_blob = fu_cabinet_get_file(self, filename, error);
 	if (source_blob == NULL)
 		return FALSE;
-	jcat_item = jcat_file_get_item_by_id (jcat_file, filename, NULL);
+	jcat_item = jcat_file_get_item_by_id(jcat_file, filename, NULL);
 	if (jcat_item == NULL) {
-		jcat_item = jcat_item_new (filename);
-		jcat_file_add_item (jcat_file, jcat_item);
+		jcat_item = jcat_item_new(filename);
+		jcat_file_add_item(jcat_file, jcat_item);
 	}
-	jcat_blob = jcat_engine_pubkey_sign (jcat_engine, source_blob, cert, privkey,
-					     JCAT_SIGN_FLAG_ADD_TIMESTAMP |
-					     JCAT_SIGN_FLAG_ADD_CERT,
-					     error);
+	jcat_blob = jcat_engine_pubkey_sign(jcat_engine,
+					    source_blob,
+					    cert,
+					    privkey,
+					    JCAT_SIGN_FLAG_ADD_TIMESTAMP | JCAT_SIGN_FLAG_ADD_CERT,
+					    error);
 	if (jcat_blob == NULL)
 		return FALSE;
-	jcat_item_add_blob (jcat_item, jcat_blob);
+	jcat_item_add_blob(jcat_item, jcat_blob);
 	return TRUE;
 }
 
 static gboolean
-fu_cabinet_sign_enumerate_metainfo (FuCabinet *self, GPtrArray *files, GError **error)
+fu_cabinet_sign_enumerate_metainfo(FuCabinet *self, GPtrArray *files, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) nodes = NULL;
-	g_autoptr(XbSilo) silo = fu_cabinet_get_silo (self);
+	g_autoptr(XbSilo) silo = fu_cabinet_get_silo(self);
 
 	/* get all the firmware referenced by the metainfo files */
-	nodes = xb_silo_query (silo,
-			       "components/component[@type='firmware']/info/filename",
-			       0, &error_local);
+	nodes = xb_silo_query(silo,
+			      "components/component[@type='firmware']/info/filename",
+			      0,
+			      &error_local);
 	if (nodes == NULL) {
-		if (g_error_matches (error_local,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_ARGUMENT) ||
-		    g_error_matches (error_local,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_FOUND)) {
-			g_debug ("ignoring: %s", error_local->message);
-			g_ptr_array_add (files, g_strdup ("firmware.metainfo.xml"));
+		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT) ||
+		    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+			g_debug("ignoring: %s", error_local->message);
+			g_ptr_array_add(files, g_strdup("firmware.metainfo.xml"));
 		} else {
-			g_propagate_error (error, g_steal_pointer (&error_local));
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
 	} else {
 		for (guint i = 0; i < nodes->len; i++) {
-			XbNode *n = g_ptr_array_index (nodes, i);
-			g_debug ("adding: %s", xb_node_get_text (n));
-			g_ptr_array_add (files, g_strdup (xb_node_get_text (n)));
+			XbNode *n = g_ptr_array_index(nodes, i);
+			g_debug("adding: %s", xb_node_get_text(n));
+			g_ptr_array_add(files, g_strdup(xb_node_get_text(n)));
 		}
 	}
 
@@ -838,37 +837,38 @@ fu_cabinet_sign_enumerate_metainfo (FuCabinet *self, GPtrArray *files, GError **
 }
 
 static gboolean
-fu_cabinet_sign_enumerate_firmware (FuCabinet *self, GPtrArray *files, GError **error)
+fu_cabinet_sign_enumerate_firmware(FuCabinet *self, GPtrArray *files, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) nodes = NULL;
-	g_autoptr(XbSilo) silo = fu_cabinet_get_silo (self);
+	g_autoptr(XbSilo) silo = fu_cabinet_get_silo(self);
 
-	nodes = xb_silo_query (silo,
-			       "components/component[@type='firmware']/releases/"
-			       "release/checksum[@target='content']",
-			       0, &error_local);
+	nodes = xb_silo_query(silo,
+			      "components/component[@type='firmware']/releases/"
+			      "release/checksum[@target='content']",
+			      0,
+			      &error_local);
 	if (nodes == NULL) {
-		if (g_error_matches (error_local,
-				     G_IO_ERROR,
-				     G_IO_ERROR_INVALID_ARGUMENT) ||
-		    g_error_matches (error_local,
-				     G_IO_ERROR,
-				     G_IO_ERROR_NOT_FOUND)) {
-			g_debug ("ignoring: %s", error_local->message);
-			g_ptr_array_add (files, g_strdup ("firmware.bin"));
+		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT) ||
+		    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+			g_debug("ignoring: %s", error_local->message);
+			g_ptr_array_add(files, g_strdup("firmware.bin"));
 		} else {
-			g_propagate_error (error, g_steal_pointer (&error_local));
+			g_propagate_error(error, g_steal_pointer(&error_local));
 			return FALSE;
 		}
 	} else {
 		for (guint i = 0; i < nodes->len; i++) {
-			XbNode *n = g_ptr_array_index (nodes, i);
-			g_debug ("adding: %s", xb_node_get_attr (n, "filename"));
-			g_ptr_array_add (files, g_strdup (xb_node_get_attr (n, "filename")));
+			XbNode *n = g_ptr_array_index(nodes, i);
+			g_debug("adding: %s", xb_node_get_attr(n, "filename"));
+			g_ptr_array_add(files, g_strdup(xb_node_get_attr(n, "filename")));
 		}
 	}
-	g_error ("%s", xb_silo_export(silo, XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE | XB_NODE_EXPORT_FLAG_FORMAT_INDENT, NULL));
+	g_error(
+	    "%s",
+	    xb_silo_export(silo,
+			   XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE | XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
+			   NULL));
 
 	/* success */
 	return TRUE;
@@ -889,62 +889,57 @@ fu_cabinet_sign_enumerate_firmware (FuCabinet *self, GPtrArray *files, GError **
  * Since: 1.6.0
  **/
 gboolean
-fu_cabinet_sign (FuCabinet *self,
-		 GBytes *cert,
-		 GBytes *privkey,
-		 FuCabinetSignFlags flags,
-		 GError **error)
+fu_cabinet_sign(FuCabinet *self,
+		GBytes *cert,
+		GBytes *privkey,
+		FuCabinetSignFlags flags,
+		GError **error)
 {
 	g_autoptr(GBytes) new_bytes = NULL;
 	g_autoptr(GBytes) old_bytes = NULL;
 	g_autoptr(GOutputStream) ostr = NULL;
-	g_autoptr(GPtrArray) filenames = g_ptr_array_new_with_free_func (g_free);
-	g_autoptr(JcatContext) jcat_context = jcat_context_new ();
+	g_autoptr(GPtrArray) filenames = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(JcatContext) jcat_context = jcat_context_new();
 	g_autoptr(JcatEngine) jcat_engine = NULL;
-	g_autoptr(JcatFile) jcat_file = jcat_file_new ();
+	g_autoptr(JcatFile) jcat_file = jcat_file_new();
 
 	/* load existing .jcat file if it exists */
-	old_bytes = fu_cabinet_get_file (self, "firmware.jcat", NULL);
+	old_bytes = fu_cabinet_get_file(self, "firmware.jcat", NULL);
 	if (old_bytes != NULL) {
 		g_autoptr(GInputStream) istr = NULL;
-		istr = g_memory_input_stream_new_from_bytes (old_bytes);
-		if (!jcat_file_import_stream (jcat_file, istr,
-					      JCAT_IMPORT_FLAG_NONE,
-					      NULL, error))
+		istr = g_memory_input_stream_new_from_bytes(old_bytes);
+		if (!jcat_file_import_stream(jcat_file, istr, JCAT_IMPORT_FLAG_NONE, NULL, error))
 			return FALSE;
 	}
 
 	/* get all the metainfo.xml and firmware.bin files */
-	if (!fu_cabinet_sign_enumerate_metainfo (self, filenames, error))
+	if (!fu_cabinet_sign_enumerate_metainfo(self, filenames, error))
 		return FALSE;
-	if (!fu_cabinet_sign_enumerate_firmware (self, filenames, error))
+	if (!fu_cabinet_sign_enumerate_firmware(self, filenames, error))
 		return FALSE;
 
 	/* sign all the files */
-	jcat_engine = jcat_context_get_engine (jcat_context,
-					       JCAT_BLOB_KIND_PKCS7,
-					       error);
+	jcat_engine = jcat_context_get_engine(jcat_context, JCAT_BLOB_KIND_PKCS7, error);
 	if (jcat_engine == NULL)
 		return FALSE;
 	for (guint i = 0; i < filenames->len; i++) {
-		const gchar *filename = g_ptr_array_index (filenames, i);
-		if (!fu_cabinet_sign_filename (self,
-					       filename,
-					       jcat_engine,
-					       jcat_file,
-					       cert, privkey,
-					       error))
+		const gchar *filename = g_ptr_array_index(filenames, i);
+		if (!fu_cabinet_sign_filename(self,
+					      filename,
+					      jcat_engine,
+					      jcat_file,
+					      cert,
+					      privkey,
+					      error))
 			return FALSE;
 	}
 
 	/* export new JCat file and add it to the archive */
-	ostr = g_memory_output_stream_new_resizable ();
-	if (!jcat_file_export_stream (jcat_file, ostr,
-				      JCAT_EXPORT_FLAG_NONE,
-				      NULL, error))
+	ostr = g_memory_output_stream_new_resizable();
+	if (!jcat_file_export_stream(jcat_file, ostr, JCAT_EXPORT_FLAG_NONE, NULL, error))
 		return FALSE;
-	new_bytes = g_memory_output_stream_steal_as_bytes (G_MEMORY_OUTPUT_STREAM (ostr));
-	fu_cabinet_add_file (self, "firmware.jcat", new_bytes);
+	new_bytes = g_memory_output_stream_steal_as_bytes(G_MEMORY_OUTPUT_STREAM(ostr));
+	fu_cabinet_add_file(self, "firmware.jcat", new_bytes);
 	return TRUE;
 }
 
@@ -962,71 +957,67 @@ fu_cabinet_sign (FuCabinet *self,
  * Since: 1.4.0
  **/
 gboolean
-fu_cabinet_parse (FuCabinet *self,
-		  GBytes *data,
-		  FuCabinetParseFlags flags,
-		  GError **error)
+fu_cabinet_parse(FuCabinet *self, GBytes *data, FuCabinetParseFlags flags, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(XbQuery) query = NULL;
 
-	g_return_val_if_fail (FU_IS_CABINET (self), FALSE);
-	g_return_val_if_fail (data != NULL, FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-	g_return_val_if_fail (self->silo == NULL, FALSE);
+	g_return_val_if_fail(FU_IS_CABINET(self), FALSE);
+	g_return_val_if_fail(data != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail(self->silo == NULL, FALSE);
 
 	/* decompress */
-	if (!fu_cabinet_decompress (self, data, error))
+	if (!fu_cabinet_decompress(self, data, error))
 		return FALSE;
 
 	/* build xmlb silo */
-	self->container_checksum = g_compute_checksum_for_bytes (G_CHECKSUM_SHA1, data);
-	if (!fu_cabinet_build_silo (self, data, error))
+	self->container_checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data);
+	if (!fu_cabinet_build_silo(self, data, error))
 		return FALSE;
 
 	/* sanity check */
-	components = xb_silo_query (self->silo,
-				    "components/component[@type='firmware']",
-				    0, &error_local);
+	components =
+	    xb_silo_query(self->silo, "components/component[@type='firmware']", 0, &error_local);
 	if (components == NULL) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "archive contained no valid metadata: %s",
-			     error_local->message);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "archive contained no valid metadata: %s",
+			    error_local->message);
 		return FALSE;
 	}
 
 	/* prepare query */
-	query = xb_query_new_full (self->silo,
-				   "releases/release",
-#if LIBXMLB_CHECK_VERSION(0,2,0)
-				   XB_QUERY_FLAG_FORCE_NODE_CACHE,
+	query = xb_query_new_full(self->silo,
+				  "releases/release",
+#if LIBXMLB_CHECK_VERSION(0, 2, 0)
+				  XB_QUERY_FLAG_FORCE_NODE_CACHE,
 #else
-				   XB_QUERY_FLAG_NONE,
+				  XB_QUERY_FLAG_NONE,
 #endif
-				   error);
+				  error);
 	if (query == NULL)
 		return FALSE;
 
 	/* process each listed release */
 	for (guint i = 0; i < components->len; i++) {
-		XbNode *component = g_ptr_array_index (components, i);
+		XbNode *component = g_ptr_array_index(components, i);
 		g_autoptr(GPtrArray) releases = NULL;
-		releases = xb_node_query_full (component, query, &error_local);
+		releases = xb_node_query_full(component, query, &error_local);
 		if (releases == NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no releases in metainfo file: %s",
-				     error_local->message);
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no releases in metainfo file: %s",
+				    error_local->message);
 			return FALSE;
 		}
 		for (guint j = 0; j < releases->len; j++) {
-			XbNode *rel = g_ptr_array_index (releases, j);
-			g_debug ("processing release: %s", xb_node_get_attr (rel, "version"));
-			if (!fu_cabinet_parse_release (self, rel, error))
+			XbNode *rel = g_ptr_array_index(releases, j);
+			g_debug("processing release: %s", xb_node_get_attr(rel, "version"));
+			if (!fu_cabinet_parse_release(self, rel, error))
 				return FALSE;
 		}
 	}
@@ -1043,7 +1034,7 @@ fu_cabinet_parse (FuCabinet *self,
  * Since: 1.4.0
  **/
 FuCabinet *
-fu_cabinet_new (void)
+fu_cabinet_new(void)
 {
-	return g_object_new (FU_TYPE_CABINET, NULL);
+	return g_object_new(FU_TYPE_CABINET, NULL);
 }

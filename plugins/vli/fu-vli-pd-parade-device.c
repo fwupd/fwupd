@@ -12,218 +12,223 @@
 #include "fu-vli-pd-device.h"
 #include "fu-vli-pd-parade-device.h"
 
-struct _FuVliPdParadeDevice
-{
-	FuDevice		 parent_instance;
-	FuVliDeviceKind		 device_kind;
-	guint8			 page2;		/* base address */
-	guint8			 page7;		/* base address */
+struct _FuVliPdParadeDevice {
+	FuDevice parent_instance;
+	FuVliDeviceKind device_kind;
+	guint8 page2; /* base address */
+	guint8 page7; /* base address */
 };
 
-G_DEFINE_TYPE (FuVliPdParadeDevice, fu_vli_pd_parade_device, FU_TYPE_DEVICE)
+G_DEFINE_TYPE(FuVliPdParadeDevice, fu_vli_pd_parade_device, FU_TYPE_DEVICE)
 
-#define FU_VLI_PD_PARADE_I2C_CMD_WRITE		0xa6
-#define FU_VLI_PD_PARADE_I2C_CMD_READ		0xa5
+#define FU_VLI_PD_PARADE_I2C_CMD_WRITE 0xa6
+#define FU_VLI_PD_PARADE_I2C_CMD_READ  0xa5
 
 static void
-fu_vli_pd_parade_device_to_string (FuDevice *device, guint idt, GString *str)
+fu_vli_pd_parade_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE (device);
-	fu_common_string_append_kv (str, idt, "DeviceKind",
-				    fu_vli_common_device_kind_to_string (self->device_kind));
-	fu_common_string_append_kx (str, idt, "Page2", self->page2);
-	fu_common_string_append_kx (str, idt, "Page7", self->page7);
+	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
+	fu_common_string_append_kv(str,
+				   idt,
+				   "DeviceKind",
+				   fu_vli_common_device_kind_to_string(self->device_kind));
+	fu_common_string_append_kx(str, idt, "Page2", self->page2);
+	fu_common_string_append_kx(str, idt, "Page7", self->page7);
 }
 
 static gboolean
-fu_vli_pd_parade_device_i2c_read (FuVliPdParadeDevice *self,
-				  guint8 page2,
-				  guint8 reg_offset,		/* customers addr offset */
-				  guint8 *buf,
-				  gsize bufsz,
-				  GError **error)
+fu_vli_pd_parade_device_i2c_read(FuVliPdParadeDevice *self,
+				 guint8 page2,
+				 guint8 reg_offset, /* customers addr offset */
+				 guint8 *buf,
+				 gsize bufsz,
+				 GError **error)
 {
 	guint16 value;
 
 	/* sanity check */
 	if (bufsz > 0x40) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "request too large");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "request too large");
 		return FALSE;
 	}
 
 	/* VL103 FW only Use bits[7:1], so divide by 2 */
-	value = ((guint16) reg_offset << 8)| (page2 >> 1);
-	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
-					    G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    FU_VLI_PD_PARADE_I2C_CMD_READ, value, 0x0,
-					    buf, bufsz, NULL,
-					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL, error)) {
-		g_prefix_error (error, "failed to read 0x%x:0x%x: ", page2, reg_offset);
+	value = ((guint16)reg_offset << 8) | (page2 >> 1);
+	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
+					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					   G_USB_DEVICE_RECIPIENT_DEVICE,
+					   FU_VLI_PD_PARADE_I2C_CMD_READ,
+					   value,
+					   0x0,
+					   buf,
+					   bufsz,
+					   NULL,
+					   FU_VLI_DEVICE_TIMEOUT,
+					   NULL,
+					   error)) {
+		g_prefix_error(error, "failed to read 0x%x:0x%x: ", page2, reg_offset);
 		return FALSE;
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_vli_pd_parade_device_i2c_write (FuVliPdParadeDevice *self,
-				   guint8 page2,
-				   guint8 reg_offset,	/* customers addr offset */
-				   guint8 val,		/* only one byte supported */
-				   GError **error)
+fu_vli_pd_parade_device_i2c_write(FuVliPdParadeDevice *self,
+				  guint8 page2,
+				  guint8 reg_offset, /* customers addr offset */
+				  guint8 val,	     /* only one byte supported */
+				  GError **error)
 {
 	guint16 value;
 	guint16 index;
-	guint8 buf[2] = { 0x0 };	/* apparently unused... */
+	guint8 buf[2] = {0x0}; /* apparently unused... */
 
 	/* VL103 FW only Use bits[7:1], so divide by 2 */
-	value = ((guint16) reg_offset << 8) | (page2 >> 1);
-	index = (guint16) val << 8;
-	if (!g_usb_device_control_transfer (fu_usb_device_get_dev (FU_USB_DEVICE (self)),
-					    G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-					    G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-					    G_USB_DEVICE_RECIPIENT_DEVICE,
-					    FU_VLI_PD_PARADE_I2C_CMD_WRITE,
-					    value, index,
-					    buf, 0x0, NULL,
-					    FU_VLI_DEVICE_TIMEOUT,
-					    NULL, error)) {
-		g_prefix_error (error, "failed to write 0x%x:0x%x: ", page2, reg_offset);
+	value = ((guint16)reg_offset << 8) | (page2 >> 1);
+	index = (guint16)val << 8;
+	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
+					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					   G_USB_DEVICE_RECIPIENT_DEVICE,
+					   FU_VLI_PD_PARADE_I2C_CMD_WRITE,
+					   value,
+					   index,
+					   buf,
+					   0x0,
+					   NULL,
+					   FU_VLI_DEVICE_TIMEOUT,
+					   NULL,
+					   error)) {
+		g_prefix_error(error, "failed to write 0x%x:0x%x: ", page2, reg_offset);
 		return FALSE;
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_vli_pd_parade_device_start_mcu (FuVliPdParadeDevice *self, GError **error)
+fu_vli_pd_parade_device_start_mcu(FuVliPdParadeDevice *self, GError **error)
 {
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0xBC, 0x00, error)) {
-		g_prefix_error (error, "failed to start MCU: ");
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xBC, 0x00, error)) {
+		g_prefix_error(error, "failed to start MCU: ");
 		return FALSE;
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_vli_pd_parade_device_stop_mcu (FuVliPdParadeDevice *self, GError **error)
+fu_vli_pd_parade_device_stop_mcu(FuVliPdParadeDevice *self, GError **error)
 {
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0xBC, 0xC0, error)) {
-		g_prefix_error (error, "failed to stop MCU: ");
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xBC, 0xC0, error)) {
+		g_prefix_error(error, "failed to stop MCU: ");
 		return FALSE;
 	}
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0xBC, 0x40, error)) {
-		g_prefix_error (error, "failed to stop MCU 2nd: ");
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xBC, 0x40, error)) {
+		g_prefix_error(error, "failed to stop MCU 2nd: ");
 		return FALSE;
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_vli_pd_parade_device_set_offset (FuVliPdParadeDevice *self, guint16 addr, GError **error)
+fu_vli_pd_parade_device_set_offset(FuVliPdParadeDevice *self, guint16 addr, GError **error)
 {
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x8E, addr >> 8, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x8E, addr >> 8, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x8F, addr & 0xff, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x8F, addr & 0xff, error))
 		return FALSE;
 	return TRUE;
 }
 
 static gboolean
-fu_vli_pd_parade_device_read_fw_ver (FuVliPdParadeDevice *self, GError **error)
+fu_vli_pd_parade_device_read_fw_ver(FuVliPdParadeDevice *self, GError **error)
 {
-	guint8 buf[0x20] = { 0x0 };
+	guint8 buf[0x20] = {0x0};
 	g_autofree gchar *version_str = NULL;
 
 	/* stop MCU */
-	if (!fu_vli_pd_parade_device_stop_mcu (self, error))
+	if (!fu_vli_pd_parade_device_stop_mcu(self, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_set_offset (self, 0x0, error))
+	if (!fu_vli_pd_parade_device_set_offset(self, 0x0, error))
 		return FALSE;
-	g_usleep (1000 * 10);
-	if (!fu_vli_pd_parade_device_i2c_read (self, self->page7, 0x02, buf, 0x1, error))
+	g_usleep(1000 * 10);
+	if (!fu_vli_pd_parade_device_i2c_read(self, self->page7, 0x02, buf, 0x1, error))
 		return FALSE;
 	if (buf[0] != 0x01 && buf[0] != 0x02) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_SUPPORTED,
-			     "not supported");
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
 		return FALSE;
 	}
 
-	g_debug ("getting FW%X version", buf[0]);
-	if (!fu_vli_pd_parade_device_set_offset (self, 0x5000 | buf[0], error))
+	g_debug("getting FW%X version", buf[0]);
+	if (!fu_vli_pd_parade_device_set_offset(self, 0x5000 | buf[0], error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_read (self, self->page7, 0x00, buf, sizeof(buf), error))
+	if (!fu_vli_pd_parade_device_i2c_read(self, self->page7, 0x00, buf, sizeof(buf), error))
 		return FALSE;
 
 	/* start MCU */
-	if (!fu_vli_pd_parade_device_start_mcu (self, error))
+	if (!fu_vli_pd_parade_device_start_mcu(self, error))
 		return FALSE;
 
 	/* format version triplet */
-	version_str = g_strdup_printf ("%u.%u.%u", buf[0], buf[1], buf[2]);
-	fu_device_set_version (FU_DEVICE (self), version_str);
+	version_str = g_strdup_printf("%u.%u.%u", buf[0], buf[1], buf[2]);
+	fu_device_set_version(FU_DEVICE(self), version_str);
 	return TRUE;
 }
 
 static gboolean
-fu_vli_pd_parade_device_set_wp (FuVliPdParadeDevice *self, gboolean val, GError **error)
+fu_vli_pd_parade_device_set_wp(FuVliPdParadeDevice *self, gboolean val, GError **error)
 {
-	return fu_vli_pd_parade_device_i2c_write (self, self->page2, 0xB3,
-						  val ? 0x10 : 0x00, error);
+	return fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xB3, val ? 0x10 : 0x00, error);
 }
 
 static gboolean
-fu_vli_pd_parade_device_write_enable (FuVliPdParadeDevice *self, GError **error)
+fu_vli_pd_parade_device_write_enable(FuVliPdParadeDevice *self, GError **error)
 {
 	/* Set_WP_High, SPI_WEN_06, Len_00, Trigger_Write, Set_WP_Low */
-	if (!fu_vli_pd_parade_device_set_wp (self, TRUE, error))
+	if (!fu_vli_pd_parade_device_set_wp(self, TRUE, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x90, 0x06, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x90, 0x06, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x92, 0x00, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x92, 0x00, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x93, 0x05, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x93, 0x05, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_set_wp (self, FALSE, error))
+	if (!fu_vli_pd_parade_device_set_wp(self, FALSE, error))
 		return FALSE;
 	return TRUE;
 }
 
 static gboolean
-fu_vli_pd_parade_device_write_disable (FuVliPdParadeDevice *self, GError **error)
+fu_vli_pd_parade_device_write_disable(FuVliPdParadeDevice *self, GError **error)
 {
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0xDA, 0x00, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xDA, 0x00, error))
 		return FALSE;
 	return TRUE;
 }
 
 static gboolean
-fu_vli_pd_parade_device_write_status (FuVliPdParadeDevice *self, guint8 target_status, GError **error)
+fu_vli_pd_parade_device_write_status(FuVliPdParadeDevice *self,
+				     guint8 target_status,
+				     GError **error)
 {
 	/* Set_WP_High, SPI_WSTS_01, Target_Status, Len_01, Trigger_Write, Set_WP_Low */
-	if (!fu_vli_pd_parade_device_set_wp (self, TRUE, error))
+	if (!fu_vli_pd_parade_device_set_wp(self, TRUE, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x90, 0x01, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x90, 0x01, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x90, target_status, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x90, target_status, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x92, 0x01, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x92, 0x01, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x93, 0x05, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x93, 0x05, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_set_wp (self, FALSE, error))
+	if (!fu_vli_pd_parade_device_set_wp(self, FALSE, error))
 		return FALSE;
 	return TRUE;
 }
 
 static gboolean
-fu_vli_pd_parade_device_wait_ready (FuVliPdParadeDevice *self, GError **error)
+fu_vli_pd_parade_device_wait_ready(FuVliPdParadeDevice *self, GError **error)
 {
 	gboolean ret = FALSE;
 	guint limit = 100;
@@ -232,9 +237,12 @@ fu_vli_pd_parade_device_wait_ready (FuVliPdParadeDevice *self, GError **error)
 	/* wait for SPI ROM */
 	for (guint wait_cnt1 = 0; wait_cnt1 < limit; wait_cnt1++) {
 		buf = 0xFF;
-		if (!fu_vli_pd_parade_device_i2c_read (self, self->page2,
-						       0x9E, &buf, sizeof(buf),
-						       error))
+		if (!fu_vli_pd_parade_device_i2c_read(self,
+						      self->page2,
+						      0x9E,
+						      &buf,
+						      sizeof(buf),
+						      error))
 			return FALSE;
 		/* busy status:
 		 * bit[1,0]:Byte_Program
@@ -246,10 +254,10 @@ fu_vli_pd_parade_device_wait_ready (FuVliPdParadeDevice *self, GError **error)
 		}
 	}
 	if (!ret) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "failed to wait for SPI not BUSY");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to wait for SPI not BUSY");
 		return FALSE;
 	}
 
@@ -259,19 +267,22 @@ fu_vli_pd_parade_device_wait_ready (FuVliPdParadeDevice *self, GError **error)
 		gboolean ret2 = FALSE;
 
 		/* SPI_RSTS_05, Len_01, Trigger_Read */
-		if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x90, 0x05, error))
+		if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x90, 0x05, error))
 			return FALSE;
-		if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x92, 0x00, error))
+		if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x92, 0x00, error))
 			return FALSE;
-		if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x93, 0x01, error))
+		if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x93, 0x01, error))
 			return FALSE;
 
 		/* wait for cmd done */
 		for (guint wait_cnt2 = 0; wait_cnt2 < limit; wait_cnt2++) {
 			buf = 0xFF;
-			if (!fu_vli_pd_parade_device_i2c_read (self, self->page2,
-							       0x93, &buf, sizeof(buf),
-							       error))
+			if (!fu_vli_pd_parade_device_i2c_read(self,
+							      self->page2,
+							      0x93,
+							      &buf,
+							      sizeof(buf),
+							      error))
 				return FALSE;
 			if ((buf & 0x01) == 0) {
 				ret2 = TRUE;
@@ -279,18 +290,21 @@ fu_vli_pd_parade_device_wait_ready (FuVliPdParadeDevice *self, GError **error)
 			}
 		}
 		if (!ret2) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "failed to wait for SPI CMD done");
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to wait for SPI CMD done");
 			return FALSE;
 		}
 
 		/* Wait_SPI_STS_00 */
 		buf = 0xFF;
-		if (!fu_vli_pd_parade_device_i2c_read (self, self->page2,
-						       0x91, &buf, sizeof(buf),
-						       error))
+		if (!fu_vli_pd_parade_device_i2c_read(self,
+						      self->page2,
+						      0x91,
+						      &buf,
+						      sizeof(buf),
+						      error))
 			return FALSE;
 		if ((buf & 0x01) == 0) {
 			ret = TRUE;
@@ -298,10 +312,10 @@ fu_vli_pd_parade_device_wait_ready (FuVliPdParadeDevice *self, GError **error)
 		}
 	}
 	if (!ret) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INTERNAL,
-			     "failed to wait for SPI status clear");
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to wait for SPI status clear");
 		return FALSE;
 	}
 
@@ -310,73 +324,76 @@ fu_vli_pd_parade_device_wait_ready (FuVliPdParadeDevice *self, GError **error)
 }
 
 static gboolean
-fu_vli_pd_parade_device_sector_erase (FuVliPdParadeDevice *self, guint16 addr, GError **error)
+fu_vli_pd_parade_device_sector_erase(FuVliPdParadeDevice *self, guint16 addr, GError **error)
 {
 	/* SPI_SE_20, SPI_Adr_H, SPI_Adr_M, SPI_Adr_L, Len_03, Trigger_Write */
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x90, 0x20, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x90, 0x20, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x90, addr >> 8, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x90, addr >> 8, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x90, addr & 0xff, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x90, addr & 0xff, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x90, 0x00, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x90, 0x00, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x92, 0x03, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x92, 0x03, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x93, 0x05, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x93, 0x05, error))
 		return FALSE;
 	return TRUE;
 }
 
 static gboolean
-fu_vli_pd_parade_device_enable_mapping (FuVliPdParadeDevice *self, GError **error)
+fu_vli_pd_parade_device_enable_mapping(FuVliPdParadeDevice *self, GError **error)
 {
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0xDA, 0xAA, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xDA, 0xAA, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0xDA, 0x55, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xDA, 0x55, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0xDA, 0x50, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xDA, 0x50, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0xDA, 0x41, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xDA, 0x41, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0xDA, 0x52, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xDA, 0x52, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0xDA, 0x44, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0xDA, 0x44, error))
 		return FALSE;
 	return TRUE;
 }
 
 static gboolean
-fu_vli_pd_parade_device_block_erase (FuVliPdParadeDevice *self, guint8 block_idx, GError **error)
+fu_vli_pd_parade_device_block_erase(FuVliPdParadeDevice *self, guint8 block_idx, GError **error)
 {
 	/* erase */
-	for (guint idx = 0x00; idx < 0x100; idx += 0x10){
-		if (!fu_vli_pd_parade_device_write_enable (self, error))
+	for (guint idx = 0x00; idx < 0x100; idx += 0x10) {
+		if (!fu_vli_pd_parade_device_write_enable(self, error))
 			return FALSE;
-		if (!fu_vli_pd_parade_device_set_wp (self, TRUE, error))
+		if (!fu_vli_pd_parade_device_set_wp(self, TRUE, error))
 			return FALSE;
-		if (!fu_vli_pd_parade_device_sector_erase (self, ((guint16) block_idx << 8) | idx, error))
+		if (!fu_vli_pd_parade_device_sector_erase(self,
+							  ((guint16)block_idx << 8) | idx,
+							  error))
 			return FALSE;
-		if (!fu_vli_pd_parade_device_wait_ready (self, error))
+		if (!fu_vli_pd_parade_device_wait_ready(self, error))
 			return FALSE;
-		if (!fu_vli_pd_parade_device_set_wp (self, FALSE, error))
+		if (!fu_vli_pd_parade_device_set_wp(self, FALSE, error))
 			return FALSE;
 	}
 
 	/* verify */
-	for (guint idx = 0; idx < 0x100; idx += 0x10){
-		guint8 buf[0x20] = { 0xff };
-		if (!fu_vli_pd_parade_device_set_offset (self, (block_idx << 8) | idx, error))
+	for (guint idx = 0; idx < 0x100; idx += 0x10) {
+		guint8 buf[0x20] = {0xff};
+		if (!fu_vli_pd_parade_device_set_offset(self, (block_idx << 8) | idx, error))
 			return FALSE;
-		if (!fu_vli_pd_parade_device_i2c_read (self, self->page7, 0, buf, 0x20, error))
+		if (!fu_vli_pd_parade_device_i2c_read(self, self->page7, 0, buf, 0x20, error))
 			return FALSE;
-		for (guint idx2 = 0; idx2 < 0x20; idx2++){
+		for (guint idx2 = 0; idx2 < 0x20; idx2++) {
 			if (buf[idx2] != 0xFF) {
 				guint32 addr = (block_idx << 16) + (idx << 8);
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
-					     "Erase failed @0x%x", addr);
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "Erase failed @0x%x",
+					    addr);
 				return FALSE;
 			}
 		}
@@ -387,21 +404,21 @@ fu_vli_pd_parade_device_block_erase (FuVliPdParadeDevice *self, guint8 block_idx
 }
 
 static gboolean
-fu_vli_pd_parade_device_block_write (FuVliPdParadeDevice *self,
-				     guint8 block_idx,
-				     const guint8 *txbuf,
-				     GError **error)
+fu_vli_pd_parade_device_block_write(FuVliPdParadeDevice *self,
+				    guint8 block_idx,
+				    const guint8 *txbuf,
+				    GError **error)
 {
 	for (guint idx = 0; idx < 0x100; idx++) {
-		if (!fu_vli_pd_parade_device_set_offset (self, (block_idx << 8) | idx, error))
+		if (!fu_vli_pd_parade_device_set_offset(self, (block_idx << 8) | idx, error))
 			return FALSE;
-		for (guint idx2 = 0; idx2 < 0x100; idx2++){
+		for (guint idx2 = 0; idx2 < 0x100; idx2++) {
 			guint32 buf_offset = (idx << 8) + idx2;
-			if (!fu_vli_pd_parade_device_i2c_write (self,
-								self->page7,
-								(guint8)idx2,
-								txbuf[buf_offset],
-								error))
+			if (!fu_vli_pd_parade_device_i2c_write(self,
+							       self->page7,
+							       (guint8)idx2,
+							       txbuf[buf_offset],
+							       error))
 				return FALSE;
 		}
 	}
@@ -411,18 +428,23 @@ fu_vli_pd_parade_device_block_write (FuVliPdParadeDevice *self,
 }
 
 static gboolean
-fu_vli_pd_parade_device_block_read (FuVliPdParadeDevice *self,
-				    guint8 block_idx,
-				    guint8 *buf,
-				    gsize bufsz,
-				    GError **error)
+fu_vli_pd_parade_device_block_read(FuVliPdParadeDevice *self,
+				   guint8 block_idx,
+				   guint8 *buf,
+				   gsize bufsz,
+				   GError **error)
 {
-	for (guint idx = 0; idx < 0x100; idx++){
-		if (!fu_vli_pd_parade_device_set_offset (self, (block_idx << 8) | idx, error))
+	for (guint idx = 0; idx < 0x100; idx++) {
+		if (!fu_vli_pd_parade_device_set_offset(self, (block_idx << 8) | idx, error))
 			return FALSE;
-		for (guint idx2 = 0; idx2 < 0x100; idx2 += 0x20){
+		for (guint idx2 = 0; idx2 < 0x100; idx2 += 0x20) {
 			guint buf_offset = (idx << 8) + idx2;
-			if (!fu_vli_pd_parade_device_i2c_read (self, self->page7, idx2, buf + buf_offset, 0x20, error))
+			if (!fu_vli_pd_parade_device_i2c_read(self,
+							      self->page7,
+							      idx2,
+							      buf + buf_offset,
+							      0x20,
+							      error))
 				return FALSE;
 		}
 	}
@@ -430,13 +452,13 @@ fu_vli_pd_parade_device_block_read (FuVliPdParadeDevice *self,
 }
 
 static gboolean
-fu_vli_pd_parade_device_write_firmware (FuDevice *device,
-					FuFirmware *firmware,
-					FwupdInstallFlags flags,
-					GError **error)
+fu_vli_pd_parade_device_write_firmware(FuDevice *device,
+				       FuFirmware *firmware,
+				       FwupdInstallFlags flags,
+				       GError **error)
 {
-	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE (device);
-	FuVliPdDevice *parent = FU_VLI_PD_DEVICE (fu_device_get_parent (device));
+	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
+	FuVliPdDevice *parent = FU_VLI_PD_DEVICE(fu_device_get_parent(device));
 	FuProgress *progress = fu_device_get_progress_helper(device);
 	FuChunk *chk0;
 	guint8 buf[0x20];
@@ -454,31 +476,31 @@ fu_vli_pd_parade_device_write_firmware (FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 36);
 
 	/* simple image */
-	fw = fu_firmware_get_bytes (firmware, error);
+	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
 
 	/* open device */
-	locker = fu_device_locker_new (parent, error);
+	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
 
 	/*  stop MPU and reset SPI */
-	if (!fu_vli_pd_parade_device_stop_mcu (self, error))
+	if (!fu_vli_pd_parade_device_stop_mcu(self, error))
 		return FALSE;
 
 	/*  64K block erase */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_vli_pd_parade_device_write_enable (self, error))
+	fu_device_set_status(FU_DEVICE(self), FWUPD_STATUS_DEVICE_ERASE);
+	if (!fu_vli_pd_parade_device_write_enable(self, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_write_status (self, 0x00, error))
+	if (!fu_vli_pd_parade_device_write_status(self, 0x00, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_wait_ready (self, error))
+	if (!fu_vli_pd_parade_device_wait_ready(self, error))
 		return FALSE;
-	blocks = fu_chunk_array_new_from_bytes (fw, 0x0, 0x0, 0x10000);
+	blocks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, 0x10000);
 	for (guint i = 1; i < blocks->len; i++) {
-		FuChunk *chk = g_ptr_array_index (blocks, i);
-		if (!fu_vli_pd_parade_device_block_erase (self, fu_chunk_get_idx (chk), error))
+		FuChunk *chk = g_ptr_array_index(blocks, i);
+		if (!fu_vli_pd_parade_device_block_erase(self, fu_chunk_get_idx(chk), error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						i + 1,
@@ -487,109 +509,116 @@ fu_vli_pd_parade_device_write_firmware (FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/*  load F/W to SPI ROM */
-	if (!fu_vli_pd_parade_device_enable_mapping (self, error))
+	if (!fu_vli_pd_parade_device_enable_mapping(self, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x82, 0x20, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x82, 0x20, error))
 		return FALSE; /* Reset_CLT2SPI_Interface */
-	g_usleep (1000 * 100);
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page2, 0x82, 0x00, error))
+	g_usleep(1000 * 100);
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page2, 0x82, 0x00, error))
 		return FALSE;
 
 	/* write blocks */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_status(FU_DEVICE(self), FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 1; i < blocks->len; i++) {
-		FuChunk *chk = g_ptr_array_index (blocks, i);
-		if (!fu_vli_pd_parade_device_block_write (self, fu_chunk_get_idx (chk), fu_chunk_get_data (chk), error))
+		FuChunk *chk = g_ptr_array_index(blocks, i);
+		if (!fu_vli_pd_parade_device_block_write(self,
+							 fu_chunk_get_idx(chk),
+							 fu_chunk_get_data(chk),
+							 error))
 			return FALSE;
 		fu_progress_set_percentage_full(fu_progress_get_child(progress),
 						i + 1,
 						blocks->len);
 	}
-	if (!fu_vli_pd_parade_device_write_disable (self, error))
+	if (!fu_vli_pd_parade_device_write_disable(self, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* add the new boot config into the verify buffer */
-	buf_verify = g_byte_array_sized_new (g_bytes_get_size (fw));
-	chk0 = g_ptr_array_index (blocks, 0);
-	g_byte_array_append (buf_verify,
-			     fu_chunk_get_data (chk0),
-			     fu_chunk_get_data_sz (chk0));
+	buf_verify = g_byte_array_sized_new(g_bytes_get_size(fw));
+	chk0 = g_ptr_array_index(blocks, 0);
+	g_byte_array_append(buf_verify, fu_chunk_get_data(chk0), fu_chunk_get_data_sz(chk0));
 
 	/*  verify SPI ROM, ignoring the boot config */
-	fu_device_set_status (FU_DEVICE (self), FWUPD_STATUS_DEVICE_VERIFY);
+	fu_device_set_status(FU_DEVICE(self), FWUPD_STATUS_DEVICE_VERIFY);
 	for (guint i = 1; i < blocks->len; i++) {
-		FuChunk *chk = g_ptr_array_index (blocks, i);
-		gsize bufsz = fu_chunk_get_data_sz (chk);
-		g_autofree guint8 *vbuf = g_malloc0 (bufsz);
-		if (!fu_vli_pd_parade_device_block_read (self,
-							 fu_chunk_get_idx (chk),
-							 vbuf,
-							 bufsz,
-							 error))
+		FuChunk *chk = g_ptr_array_index(blocks, i);
+		gsize bufsz = fu_chunk_get_data_sz(chk);
+		g_autofree guint8 *vbuf = g_malloc0(bufsz);
+		if (!fu_vli_pd_parade_device_block_read(self,
+							fu_chunk_get_idx(chk),
+							vbuf,
+							bufsz,
+							error))
 			return FALSE;
-		g_byte_array_append (buf_verify, vbuf, bufsz);
+		g_byte_array_append(buf_verify, vbuf, bufsz);
 		fu_progress_set_percentage_full(progress, i + 1, blocks->len);
 	}
-	fw_verify = g_byte_array_free_to_bytes (g_steal_pointer (&buf_verify));
-	if (!fu_common_bytes_compare (fw, fw_verify, error))
+	fw_verify = g_byte_array_free_to_bytes(g_steal_pointer(&buf_verify));
+	if (!fu_common_bytes_compare(fw, fw_verify, error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/*  save boot config into Block_0 */
-	if (!fu_vli_pd_parade_device_write_enable (self, error))
+	if (!fu_vli_pd_parade_device_write_enable(self, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_set_wp (self, TRUE, error))
+	if (!fu_vli_pd_parade_device_set_wp(self, TRUE, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_sector_erase (self, 0x0, error))
+	if (!fu_vli_pd_parade_device_sector_erase(self, 0x0, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_wait_ready (self, error))
+	if (!fu_vli_pd_parade_device_wait_ready(self, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_set_wp (self, FALSE, error))
+	if (!fu_vli_pd_parade_device_set_wp(self, FALSE, error))
 		return FALSE;
 
 	/* Page_HW_Write_Disable */
-	if (!fu_vli_pd_parade_device_enable_mapping (self, error))
+	if (!fu_vli_pd_parade_device_enable_mapping(self, error))
 		return FALSE;
 
 	block_idx_tmp = 1;
-	if (!fu_vli_pd_parade_device_set_offset (self, 0x0, error))
+	if (!fu_vli_pd_parade_device_set_offset(self, 0x0, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page7, 0x00, 0x55, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page7, 0x00, 0x55, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page7, 0x01, 0xAA, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self, self->page7, 0x01, 0xAA, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page7, 0x02, (guint8) block_idx_tmp, error))
+	if (!fu_vli_pd_parade_device_i2c_write(self,
+					       self->page7,
+					       0x02,
+					       (guint8)block_idx_tmp,
+					       error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_write (self, self->page7, 0x03, (guint8) (0x01 - block_idx_tmp), error))
+	if (!fu_vli_pd_parade_device_i2c_write(self,
+					       self->page7,
+					       0x03,
+					       (guint8)(0x01 - block_idx_tmp),
+					       error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_write_disable (self, error))
+	if (!fu_vli_pd_parade_device_write_disable(self, error))
 		return FALSE;
 
 	/*  check boot config data */
-	if (!fu_vli_pd_parade_device_set_offset (self, 0x0, error))
+	if (!fu_vli_pd_parade_device_set_offset(self, 0x0, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_i2c_read (self, self->page7, 0, buf, sizeof(buf), error))
+	if (!fu_vli_pd_parade_device_i2c_read(self, self->page7, 0, buf, sizeof(buf), error))
 		return FALSE;
-	if (buf[0] != 0x55 ||
-	    buf[1] != 0xAA ||
-	    buf[2] != block_idx_tmp ||
+	if (buf[0] != 0x55 || buf[1] != 0xAA || buf[2] != block_idx_tmp ||
 	    buf[3] != 0x01 - block_idx_tmp) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "boot config data error");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "boot config data error");
 		return FALSE;
 	}
 
 	/*  enable write protection */
-	if (!fu_vli_pd_parade_device_write_enable (self, error))
+	if (!fu_vli_pd_parade_device_write_enable(self, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_write_status (self, 0x8C, error))
+	if (!fu_vli_pd_parade_device_write_status(self, 0x8C, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_wait_ready (self, error))
+	if (!fu_vli_pd_parade_device_wait_ready(self, error))
 		return FALSE;
-	if (!fu_vli_pd_parade_device_write_disable (self, error))
+	if (!fu_vli_pd_parade_device_write_disable(self, error))
 		return FALSE;
 
 	/* success */
@@ -597,83 +626,83 @@ fu_vli_pd_parade_device_write_firmware (FuDevice *device,
 }
 
 static GBytes *
-fu_vli_pd_parade_device_dump_firmware (FuDevice *device, GError **error)
+fu_vli_pd_parade_device_dump_firmware(FuDevice *device, GError **error)
 {
-	FuVliPdDevice *parent = FU_VLI_PD_DEVICE (fu_device_get_parent (device));
-	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE (device);
+	FuVliPdDevice *parent = FU_VLI_PD_DEVICE(fu_device_get_parent(device));
+	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
 	FuProgress *progress = fu_device_get_progress_helper(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(GByteArray) fw = NULL;
 	g_autoptr(GPtrArray) blocks = NULL;
 
 	/* open device */
-	locker = fu_device_locker_new (parent, error);
+	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return NULL;
 
 	/*  stop MPU and reset SPI */
-	if (!fu_vli_pd_parade_device_stop_mcu (self, error))
+	if (!fu_vli_pd_parade_device_stop_mcu(self, error))
 		return NULL;
 
 	/* read */
-	fu_device_set_status (FU_DEVICE (device), FWUPD_STATUS_DEVICE_VERIFY);
-	fu_byte_array_set_size (fw, fu_device_get_firmware_size_max (device));
-	blocks = fu_chunk_array_mutable_new (fw->data, fw->len, 0x0, 0x0, 0x10000);
+	fu_device_set_status(FU_DEVICE(device), FWUPD_STATUS_DEVICE_VERIFY);
+	fu_byte_array_set_size(fw, fu_device_get_firmware_size_max(device));
+	blocks = fu_chunk_array_mutable_new(fw->data, fw->len, 0x0, 0x0, 0x10000);
 	for (guint i = 0; i < blocks->len; i++) {
-		FuChunk *chk = g_ptr_array_index (blocks, i);
-		if (!fu_vli_pd_parade_device_block_read (self,
-							 fu_chunk_get_idx (chk),
-							 fu_chunk_get_data_out (chk),
-							 fu_chunk_get_data_sz (chk),
-							 error))
+		FuChunk *chk = g_ptr_array_index(blocks, i);
+		if (!fu_vli_pd_parade_device_block_read(self,
+							fu_chunk_get_idx(chk),
+							fu_chunk_get_data_out(chk),
+							fu_chunk_get_data_sz(chk),
+							error))
 			return NULL;
 		fu_progress_set_percentage_full(progress, i + 1, blocks->len);
 	}
-	return g_byte_array_free_to_bytes (g_steal_pointer (&fw));
+	return g_byte_array_free_to_bytes(g_steal_pointer(&fw));
 }
 
 static gboolean
-fu_vli_pd_parade_device_probe (FuDevice *device, GError **error)
+fu_vli_pd_parade_device_probe(FuDevice *device, GError **error)
 {
-	FuVliPdDevice *parent = FU_VLI_PD_DEVICE (fu_device_get_parent (device));
-	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE (device);
+	FuVliPdDevice *parent = FU_VLI_PD_DEVICE(fu_device_get_parent(device));
+	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
 	g_autofree gchar *instance_id1 = NULL;
 
 	/* get version */
-	if (!fu_vli_pd_parade_device_read_fw_ver (self, error))
+	if (!fu_vli_pd_parade_device_read_fw_ver(self, error))
 		return FALSE;
 
 	/* use header to populate device info */
-	instance_id1 = g_strdup_printf ("USB\\VID_%04X&PID_%04X&I2C_%s",
-					fu_usb_device_get_vid (FU_USB_DEVICE (parent)),
-					fu_usb_device_get_pid (FU_USB_DEVICE (parent)),
-					fu_vli_common_device_kind_to_string (self->device_kind));
-	fu_device_add_instance_id (device, instance_id1);
+	instance_id1 = g_strdup_printf("USB\\VID_%04X&PID_%04X&I2C_%s",
+				       fu_usb_device_get_vid(FU_USB_DEVICE(parent)),
+				       fu_usb_device_get_pid(FU_USB_DEVICE(parent)),
+				       fu_vli_common_device_kind_to_string(self->device_kind));
+	fu_device_add_instance_id(device, instance_id1);
 
 	/* success */
 	return TRUE;
 }
 
 static void
-fu_vli_pd_parade_device_init (FuVliPdParadeDevice *self)
+fu_vli_pd_parade_device_init(FuVliPdParadeDevice *self)
 {
 	self->device_kind = FU_VLI_DEVICE_KIND_PS186;
 	self->page2 = 0x14;
 	self->page7 = 0x1E;
-	fu_device_add_icon (FU_DEVICE (self), "video-display");
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_version_format (FU_DEVICE (self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_device_add_protocol (FU_DEVICE (self), "com.vli.i2c");
-	fu_device_set_install_duration (FU_DEVICE (self), 15); /* seconds */
-	fu_device_set_logical_id (FU_DEVICE (self), "PS186");
-	fu_device_set_summary (FU_DEVICE (self), "DisplayPort 1.4a to HDMI 2.0b protocol converter");
-	fu_device_set_firmware_size (FU_DEVICE (self), 0x40000);
+	fu_device_add_icon(FU_DEVICE(self), "video-display");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_add_protocol(FU_DEVICE(self), "com.vli.i2c");
+	fu_device_set_install_duration(FU_DEVICE(self), 15); /* seconds */
+	fu_device_set_logical_id(FU_DEVICE(self), "PS186");
+	fu_device_set_summary(FU_DEVICE(self), "DisplayPort 1.4a to HDMI 2.0b protocol converter");
+	fu_device_set_firmware_size(FU_DEVICE(self), 0x40000);
 }
 
 static void
-fu_vli_pd_parade_device_class_init (FuVliPdParadeDeviceClass *klass)
+fu_vli_pd_parade_device_class_init(FuVliPdParadeDeviceClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->to_string = fu_vli_pd_parade_device_to_string;
 	klass_device->probe = fu_vli_pd_parade_device_probe;
 	klass_device->dump_firmware = fu_vli_pd_parade_device_dump_firmware;
@@ -681,10 +710,9 @@ fu_vli_pd_parade_device_class_init (FuVliPdParadeDeviceClass *klass)
 }
 
 FuDevice *
-fu_vli_pd_parade_device_new (FuVliDevice *parent)
+fu_vli_pd_parade_device_new(FuVliDevice *parent)
 {
-	FuVliPdParadeDevice *self = g_object_new (FU_TYPE_VLI_PD_PARADE_DEVICE,
-						  "parent", parent,
-						  NULL);
-	return FU_DEVICE (self);
+	FuVliPdParadeDevice *self =
+	    g_object_new(FU_TYPE_VLI_PD_PARADE_DEVICE, "parent", parent, NULL);
+	return FU_DEVICE(self);
 }

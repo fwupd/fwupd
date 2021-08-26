@@ -11,13 +11,13 @@
 #include "fu-acpi-dmar.h"
 
 void
-fu_plugin_init (FuPlugin *plugin)
+fu_plugin_init(FuPlugin *plugin)
 {
-	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
+	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 }
 
 void
-fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
+fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *path = NULL;
@@ -27,36 +27,36 @@ fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(GError) error_local = NULL;
 
 	/* only Intel */
-	if (fu_common_get_cpu_vendor () != FU_CPU_VENDOR_INTEL)
+	if (fu_common_get_cpu_vendor() != FU_CPU_VENDOR_INTEL)
 		return;
 
 	/* create attr */
-	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_ACPI_DMAR);
-	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
-	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
-	fu_security_attrs_append (attrs, attr);
+	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_ACPI_DMAR);
+	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
+	fu_security_attrs_append(attrs, attr);
 
 	/* load DMAR table */
-	path = fu_common_get_path (FU_PATH_KIND_ACPI_TABLES);
-	fn = g_build_filename (path, "DMAR", NULL);
-	blob = fu_common_get_contents_bytes (fn, &error_local);
+	path = fu_common_get_path(FU_PATH_KIND_ACPI_TABLES);
+	fn = g_build_filename(path, "DMAR", NULL);
+	blob = fu_common_get_contents_bytes(fn, &error_local);
 	if (blob == NULL) {
-		g_debug ("failed to load %s: %s", fn, error_local->message);
-		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		g_debug("failed to load %s: %s", fn, error_local->message);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	dmar = fu_acpi_dmar_new (blob, &error_local);
+	dmar = fu_acpi_dmar_new(blob, &error_local);
 	if (dmar == NULL) {
-		g_warning ("failed to parse %s: %s", fn, error_local->message);
-		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+		g_warning("failed to parse %s: %s", fn, error_local->message);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
-	if (!fu_acpi_dmar_get_opt_in (dmar)) {
-		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	if (!fu_acpi_dmar_get_opt_in(dmar)) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
-	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }

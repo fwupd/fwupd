@@ -7,77 +7,77 @@
 #include "config.h"
 
 #include <fwupdplugin.h>
+
 #include <string.h>
 
 #include "fu-wac-device.h"
 #include "fu-wac-module-touch.h"
 
-
-struct _FuWacModuleTouch
-{
-	FuWacModule		 parent_instance;
+struct _FuWacModuleTouch {
+	FuWacModule parent_instance;
 };
 
-G_DEFINE_TYPE (FuWacModuleTouch, fu_wac_module_touch, FU_TYPE_WAC_MODULE)
+G_DEFINE_TYPE(FuWacModuleTouch, fu_wac_module_touch, FU_TYPE_WAC_MODULE)
 
 static FuFirmware *
-fu_wac_module_touch_prepare_firmware (FuDevice *device,
-				      GBytes *fw,
-				      FwupdInstallFlags flags,
-				      GError **error)
+fu_wac_module_touch_prepare_firmware(FuDevice *device,
+				     GBytes *fw,
+				     FwupdInstallFlags flags,
+				     GError **error)
 {
-	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new ();
-	if (!fu_firmware_parse (firmware, fw, flags, error))
+	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new();
+	if (!fu_firmware_parse(firmware, fw, flags, error))
 		return NULL;
-	return g_steal_pointer (&firmware);
+	return g_steal_pointer(&firmware);
 }
 
 static gboolean
-fu_wac_module_touch_write_firmware (FuDevice *device,
-				    FuFirmware *firmware,
-				    FwupdInstallFlags flags,
-				    GError **error)
+fu_wac_module_touch_write_firmware(FuDevice *device,
+				   FuFirmware *firmware,
+				   FwupdInstallFlags flags,
+				   GError **error)
 {
-	FuWacModule *self = FU_WAC_MODULE (device);
+	FuWacModule *self = FU_WAC_MODULE(device);
 	FuProgress *progress = fu_device_get_progress_helper(device);
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	g_debug ("using element at addr 0x%0x",
-		 (guint) fu_firmware_get_addr (firmware));
+	g_debug("using element at addr 0x%0x", (guint)fu_firmware_get_addr(firmware));
 
 	/* build each data packet */
-	fw = fu_firmware_get_bytes (firmware, error);
+	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
-	chunks = fu_chunk_array_new_from_bytes (fw,
-						fu_firmware_get_addr (firmware),
-						0x0, /* page_sz */
-						128); /* packet_sz */
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       fu_firmware_get_addr(firmware),
+					       0x0,  /* page_sz */
+					       128); /* packet_sz */
 
 	/* start, which will erase the module */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_wac_module_set_feature (self, FU_WAC_MODULE_COMMAND_START, NULL, error))
+	fu_device_set_status(device, FWUPD_STATUS_DEVICE_ERASE);
+	if (!fu_wac_module_set_feature(self, FU_WAC_MODULE_COMMAND_START, NULL, error))
 		return FALSE;
 
 	/* data */
-	fu_device_set_status (device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < chunks->len; i++) {
-		FuChunk *chk = g_ptr_array_index (chunks, i);
-		guint8 buf[128+7] = { 0xff };
+		FuChunk *chk = g_ptr_array_index(chunks, i);
+		guint8 buf[128 + 7] = {0xff};
 		g_autoptr(GBytes) blob_chunk = NULL;
 
 		/* build G11T data packet */
-		memset (buf, 0xff, sizeof(buf));
+		memset(buf, 0xff, sizeof(buf));
 		buf[0] = 0x01; /* writing */
-		buf[1] = fu_chunk_get_idx (chk) + 1;
-		fu_common_write_uint32 (&buf[2], fu_chunk_get_address (chk), G_LITTLE_ENDIAN);
+		buf[1] = fu_chunk_get_idx(chk) + 1;
+		fu_common_write_uint32(&buf[2], fu_chunk_get_address(chk), G_LITTLE_ENDIAN);
 		buf[6] = 0x10; /* no idea! */
-		memcpy (&buf[7], fu_chunk_get_data (chk), fu_chunk_get_data_sz (chk));
-		blob_chunk = g_bytes_new (buf, sizeof(buf));
-		if (!fu_wac_module_set_feature (self, FU_WAC_MODULE_COMMAND_DATA,
-						blob_chunk, error)) {
-			g_prefix_error (error, "failed to write block %u: ", fu_chunk_get_idx (chk));
+		memcpy(&buf[7], fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		blob_chunk = g_bytes_new(buf, sizeof(buf));
+		if (!fu_wac_module_set_feature(self,
+					       FU_WAC_MODULE_COMMAND_DATA,
+					       blob_chunk,
+					       error)) {
+			g_prefix_error(error, "failed to write block %u: ", fu_chunk_get_idx(chk));
 			return FALSE;
 		}
 
@@ -86,7 +86,7 @@ fu_wac_module_touch_write_firmware (FuDevice *device,
 	}
 
 	/* end */
-	if (!fu_wac_module_set_feature (self, FU_WAC_MODULE_COMMAND_END, NULL, error))
+	if (!fu_wac_module_set_feature(self, FU_WAC_MODULE_COMMAND_END, NULL, error))
 		return FALSE;
 
 	/* success */
@@ -94,27 +94,29 @@ fu_wac_module_touch_write_firmware (FuDevice *device,
 }
 
 static void
-fu_wac_module_touch_init (FuWacModuleTouch *self)
+fu_wac_module_touch_init(FuWacModuleTouch *self)
 {
-	fu_device_add_flag (FU_DEVICE (self), FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_set_install_duration (FU_DEVICE (self), 30);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_install_duration(FU_DEVICE(self), 30);
 }
 
 static void
-fu_wac_module_touch_class_init (FuWacModuleTouchClass *klass)
+fu_wac_module_touch_class_init(FuWacModuleTouchClass *klass)
 {
-	FuDeviceClass *klass_device = FU_DEVICE_CLASS (klass);
+	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->prepare_firmware = fu_wac_module_touch_prepare_firmware;
 	klass_device->write_firmware = fu_wac_module_touch_write_firmware;
 }
 
 FuWacModule *
-fu_wac_module_touch_new (GUsbDevice *usb_device)
+fu_wac_module_touch_new(GUsbDevice *usb_device)
 {
 	FuWacModule *module = NULL;
-	module = g_object_new (FU_TYPE_WAC_MODULE_TOUCH,
-			       "usb-device", usb_device,
-			       "fw-type", FU_WAC_MODULE_FW_TYPE_TOUCH,
-			       NULL);
+	module = g_object_new(FU_TYPE_WAC_MODULE_TOUCH,
+			      "usb-device",
+			      usb_device,
+			      "fw-type",
+			      FU_WAC_MODULE_FW_TYPE_TOUCH,
+			      NULL);
 	return module;
 }

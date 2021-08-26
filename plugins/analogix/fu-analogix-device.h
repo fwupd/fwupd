@@ -7,10 +7,9 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_ANALOGIX_DEVICE (fu_analogix_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuAnalogixDevice, fu_analogix_device, FU, ANALOGIX_DEVICE, FuUsbDevice)
+#define FU_TYPE_ANALOGIX_DEVICE (fu_analogix_device_get_type())
+G_DECLARE_FINAL_TYPE(FuAnalogixDevice, fu_analogix_device, FU, ANALOGIX_DEVICE, FuUsbDevice)
 
-struct _FuAnalogixDeviceClass
-{
+struct _FuAnalogixDeviceClass {
 	FuUsbDeviceClass parent_class;
 };

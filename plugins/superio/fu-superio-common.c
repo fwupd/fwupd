@@ -9,7 +9,7 @@
 #include "fu-superio-common.h"
 
 const gchar *
-fu_superio_ldn_to_text (guint8 ldn)
+fu_superio_ldn_to_text(guint8 ldn)
 {
 	if (ldn == SIO_LDN_FDC)
 		return "Floppy Disk Controller";

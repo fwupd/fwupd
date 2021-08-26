@@ -8,4 +8,5 @@
 
 #include <glib.h>
 
-const gchar	*fu_version_string			(void);
+const gchar *
+fu_version_string(void);

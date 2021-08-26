@@ -7,9 +7,9 @@
 
 #include "config.h"
 
-#include "fu-efivar-impl.h"
-
 #include "fwupd-error.h"
+
+#include "fu-efivar-impl.h"
 
 /**
  * fu_efivar_supported:
@@ -22,9 +22,9 @@
  * Since: 1.4.0
  **/
 gboolean
-fu_efivar_supported (GError **error)
+fu_efivar_supported(GError **error)
 {
-	return fu_efivar_supported_impl (error);
+	return fu_efivar_supported_impl(error);
 }
 
 /**
@@ -40,12 +40,12 @@ fu_efivar_supported (GError **error)
  * Since: 1.4.0
  **/
 gboolean
-fu_efivar_delete (const gchar *guid, const gchar *name, GError **error)
+fu_efivar_delete(const gchar *guid, const gchar *name, GError **error)
 {
-	g_return_val_if_fail (guid != NULL, FALSE);
-	g_return_val_if_fail (name != NULL, FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-	return fu_efivar_delete_impl (guid, name, error);
+	g_return_val_if_fail(guid != NULL, FALSE);
+	g_return_val_if_fail(name != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_efivar_delete_impl(guid, name, error);
 }
 
 /**
@@ -61,12 +61,12 @@ fu_efivar_delete (const gchar *guid, const gchar *name, GError **error)
  * Since: 1.4.0
  **/
 gboolean
-fu_efivar_delete_with_glob (const gchar *guid, const gchar *name_glob, GError **error)
+fu_efivar_delete_with_glob(const gchar *guid, const gchar *name_glob, GError **error)
 {
-	g_return_val_if_fail (guid != NULL, FALSE);
-	g_return_val_if_fail (name_glob != NULL, FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-	return fu_efivar_delete_with_glob_impl (guid, name_glob, error);
+	g_return_val_if_fail(guid != NULL, FALSE);
+	g_return_val_if_fail(name_glob != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_efivar_delete_with_glob_impl(guid, name_glob, error);
 }
 
 /**
@@ -81,10 +81,10 @@ fu_efivar_delete_with_glob (const gchar *guid, const gchar *name_glob, GError **
  * Since: 1.4.0
  **/
 gboolean
-fu_efivar_exists (const gchar *guid, const gchar *name)
+fu_efivar_exists(const gchar *guid, const gchar *name)
 {
-	g_return_val_if_fail (guid != NULL, FALSE);
-	return fu_efivar_exists_impl (guid, name);
+	g_return_val_if_fail(guid != NULL, FALSE);
+	return fu_efivar_exists_impl(guid, name);
 }
 
 /**
@@ -103,13 +103,17 @@ fu_efivar_exists (const gchar *guid, const gchar *name)
  * Since: 1.4.0
  **/
 gboolean
-fu_efivar_get_data (const gchar *guid, const gchar *name, guint8 **data,
-		    gsize *data_sz, guint32 *attr, GError **error)
+fu_efivar_get_data(const gchar *guid,
+		   const gchar *name,
+		   guint8 **data,
+		   gsize *data_sz,
+		   guint32 *attr,
+		   GError **error)
 {
-	g_return_val_if_fail (guid != NULL, FALSE);
-	g_return_val_if_fail (name != NULL, FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-	return fu_efivar_get_data_impl (guid, name, data, data_sz, attr, error);
+	g_return_val_if_fail(guid != NULL, FALSE);
+	g_return_val_if_fail(name != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_efivar_get_data_impl(guid, name, data, data_sz, attr, error);
 }
 
 /**
@@ -126,21 +130,18 @@ fu_efivar_get_data (const gchar *guid, const gchar *name, guint8 **data,
  * Since: 1.5.0
  **/
 GBytes *
-fu_efivar_get_data_bytes (const gchar *guid,
-			  const gchar *name,
-			  guint32 *attr,
-			  GError **error)
+fu_efivar_get_data_bytes(const gchar *guid, const gchar *name, guint32 *attr, GError **error)
 {
 	guint8 *data = NULL;
 	gsize datasz = 0;
 
-	g_return_val_if_fail (guid != NULL, NULL);
-	g_return_val_if_fail (name != NULL, NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+	g_return_val_if_fail(guid != NULL, NULL);
+	g_return_val_if_fail(name != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-	if (!fu_efivar_get_data (guid, name, &data, &datasz, attr, error))
+	if (!fu_efivar_get_data(guid, name, &data, &datasz, attr, error))
 		return NULL;
-	return g_bytes_new_take (data, datasz);
+	return g_bytes_new_take(data, datasz);
 }
 
 /**
@@ -156,11 +157,11 @@ fu_efivar_get_data_bytes (const gchar *guid,
  * Since: 1.4.7
  **/
 GPtrArray *
-fu_efivar_get_names (const gchar *guid, GError **error)
+fu_efivar_get_names(const gchar *guid, GError **error)
 {
-	g_return_val_if_fail (guid != NULL, NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-	return fu_efivar_get_names_impl (guid, error);
+	g_return_val_if_fail(guid != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fu_efivar_get_names_impl(guid, error);
 }
 
 /**
@@ -176,11 +177,11 @@ fu_efivar_get_names (const gchar *guid, GError **error)
  * Since: 1.5.5
  **/
 GFileMonitor *
-fu_efivar_get_monitor (const gchar *guid, const gchar *name, GError **error)
+fu_efivar_get_monitor(const gchar *guid, const gchar *name, GError **error)
 {
-	g_return_val_if_fail (guid != NULL, NULL);
-	g_return_val_if_fail (name != NULL, NULL);
-	return fu_efivar_get_monitor_impl (guid, name, error);
+	g_return_val_if_fail(guid != NULL, NULL);
+	g_return_val_if_fail(name != NULL, NULL);
+	return fu_efivar_get_monitor_impl(guid, name, error);
 }
 
 /**
@@ -195,10 +196,10 @@ fu_efivar_get_monitor (const gchar *guid, const gchar *name, GError **error)
  * Since: 1.5.1
  **/
 guint64
-fu_efivar_space_used (GError **error)
+fu_efivar_space_used(GError **error)
 {
-	g_return_val_if_fail (error == NULL || *error == NULL, G_MAXUINT64);
-	return fu_efivar_space_used_impl (error);
+	g_return_val_if_fail(error == NULL || *error == NULL, G_MAXUINT64);
+	return fu_efivar_space_used_impl(error);
 }
 /**
  * fu_efivar_set_data:
@@ -216,14 +217,18 @@ fu_efivar_space_used (GError **error)
  * Since: 1.4.0
  **/
 gboolean
-fu_efivar_set_data (const gchar *guid, const gchar *name, const guint8 *data,
-		     gsize sz, guint32 attr, GError **error)
+fu_efivar_set_data(const gchar *guid,
+		   const gchar *name,
+		   const guint8 *data,
+		   gsize sz,
+		   guint32 attr,
+		   GError **error)
 {
-	g_return_val_if_fail (guid != NULL, FALSE);
-	g_return_val_if_fail (name != NULL, FALSE);
-	g_return_val_if_fail (data != NULL, FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
-	return fu_efivar_set_data_impl (guid, name, data, sz, attr, error);
+	g_return_val_if_fail(guid != NULL, FALSE);
+	g_return_val_if_fail(name != NULL, FALSE);
+	g_return_val_if_fail(data != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	return fu_efivar_set_data_impl(guid, name, data, sz, attr, error);
 }
 
 /**
@@ -241,19 +246,22 @@ fu_efivar_set_data (const gchar *guid, const gchar *name, const guint8 *data,
  * Since: 1.5.0
  **/
 gboolean
-fu_efivar_set_data_bytes (const gchar *guid, const gchar *name, GBytes *bytes,
-			  guint32 attr, GError **error)
+fu_efivar_set_data_bytes(const gchar *guid,
+			 const gchar *name,
+			 GBytes *bytes,
+			 guint32 attr,
+			 GError **error)
 {
 	gsize bufsz = 0;
 	const guint8 *buf;
 
-	g_return_val_if_fail (guid != NULL, FALSE);
-	g_return_val_if_fail (name != NULL, FALSE);
-	g_return_val_if_fail (bytes != NULL, FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail(guid != NULL, FALSE);
+	g_return_val_if_fail(name != NULL, FALSE);
+	g_return_val_if_fail(bytes != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	buf = g_bytes_get_data (bytes, &bufsz);
-	return fu_efivar_set_data (guid, name, buf, bufsz, attr, error);
+	buf = g_bytes_get_data(bytes, &bufsz);
+	return fu_efivar_set_data(guid, name, buf, bufsz, attr, error);
 }
 
 /**
@@ -267,29 +275,30 @@ fu_efivar_set_data_bytes (const gchar *guid, const gchar *name, GBytes *bytes,
  * Since: 1.5.0
  **/
 gboolean
-fu_efivar_secure_boot_enabled_full (GError **error)
+fu_efivar_secure_boot_enabled_full(GError **error)
 {
 	gsize data_size = 0;
 	g_autofree guint8 *data = NULL;
 
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (!fu_efivar_get_data (FU_EFIVAR_GUID_EFI_GLOBAL, "SecureBoot",
-				 &data, &data_size, NULL, NULL)) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "SecureBoot is not available");
+	if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL,
+				"SecureBoot",
+				&data,
+				&data_size,
+				NULL,
+				NULL)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "SecureBoot is not available");
 		return FALSE;
 	}
 	if (data_size >= 1 && data[0] & 1)
 		return TRUE;
 
 	/* available, but not enabled */
-	g_set_error_literal (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_NOT_FOUND,
-			     "SecureBoot is not enabled");
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "SecureBoot is not enabled");
 	return FALSE;
 }
 
@@ -303,7 +312,7 @@ fu_efivar_secure_boot_enabled_full (GError **error)
  * Since: 1.4.0
  **/
 gboolean
-fu_efivar_secure_boot_enabled (void)
+fu_efivar_secure_boot_enabled(void)
 {
-	return fu_efivar_secure_boot_enabled_full (NULL);
+	return fu_efivar_secure_boot_enabled_full(NULL);
 }

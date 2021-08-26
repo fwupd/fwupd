@@ -8,4 +8,5 @@
 
 #include <glib.h>
 
-GOptionGroup	*fu_debug_get_option_group	(void);
+GOptionGroup *
+fu_debug_get_option_group(void);

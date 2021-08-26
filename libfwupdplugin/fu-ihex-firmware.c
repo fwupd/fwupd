@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#define G_LOG_DOMAIN				"FuFirmware"
+#define G_LOG_DOMAIN "FuFirmware"
 
 #include "config.h"
 
@@ -23,12 +23,12 @@
  */
 
 typedef struct {
-	GPtrArray		*records;
-	guint8			 padding_value;
+	GPtrArray *records;
+	guint8 padding_value;
 } FuIhexFirmwarePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (FuIhexFirmware, fu_ihex_firmware, FU_TYPE_FIRMWARE)
-#define GET_PRIVATE(o) (fu_ihex_firmware_get_instance_private (o))
+G_DEFINE_TYPE_WITH_PRIVATE(FuIhexFirmware, fu_ihex_firmware, FU_TYPE_FIRMWARE)
+#define GET_PRIVATE(o) (fu_ihex_firmware_get_instance_private(o))
 
 /**
  * fu_ihex_firmware_get_records:
@@ -44,10 +44,10 @@ G_DEFINE_TYPE_WITH_PRIVATE (FuIhexFirmware, fu_ihex_firmware, FU_TYPE_FIRMWARE)
  * Since: 1.3.4
  **/
 GPtrArray *
-fu_ihex_firmware_get_records (FuIhexFirmware *self)
+fu_ihex_firmware_get_records(FuIhexFirmware *self)
 {
-	FuIhexFirmwarePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FU_IS_IHEX_FIRMWARE (self), NULL);
+	FuIhexFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_IHEX_FIRMWARE(self), NULL);
 	return priv->records;
 }
 
@@ -64,71 +64,70 @@ fu_ihex_firmware_get_records (FuIhexFirmware *self)
  * Since: 1.6.0
  **/
 void
-fu_ihex_firmware_set_padding_value (FuIhexFirmware *self, guint8 padding_value)
+fu_ihex_firmware_set_padding_value(FuIhexFirmware *self, guint8 padding_value)
 {
-	FuIhexFirmwarePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FU_IS_IHEX_FIRMWARE (self));
+	FuIhexFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_IHEX_FIRMWARE(self));
 	priv->padding_value = padding_value;
 }
 
 static void
-fu_ihex_firmware_record_free (FuIhexFirmwareRecord *rcd)
+fu_ihex_firmware_record_free(FuIhexFirmwareRecord *rcd)
 {
-	g_string_free (rcd->buf, TRUE);
-	g_byte_array_unref (rcd->data);
-	g_free (rcd);
+	g_string_free(rcd->buf, TRUE);
+	g_byte_array_unref(rcd->data);
+	g_free(rcd);
 }
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuIhexFirmwareRecord, fu_ihex_firmware_record_free)
 
 static FuIhexFirmwareRecord *
-fu_ihex_firmware_record_new (guint ln, const gchar *line,
-			     FwupdInstallFlags flags, GError **error)
+fu_ihex_firmware_record_new(guint ln, const gchar *line, FwupdInstallFlags flags, GError **error)
 {
 	g_autoptr(FuIhexFirmwareRecord) rcd = NULL;
-	gsize linesz = strlen (line);
+	gsize linesz = strlen(line);
 	guint line_end;
 	guint16 addr16 = 0;
 
 	/* check starting token */
 	if (line[0] != ':') {
-		g_autofree gchar *strsafe = fu_common_strsafe (line, 5);
+		g_autofree gchar *strsafe = fu_common_strsafe(line, 5);
 		if (strsafe != NULL) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "invalid starting token: %s",
-				     strsafe);
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid starting token: %s",
+				    strsafe);
 			return NULL;
 		}
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "invalid starting token");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid starting token");
 		return NULL;
 	}
 
 	/* length, 16-bit address, type */
-	rcd = g_new0 (FuIhexFirmwareRecord, 1);
+	rcd = g_new0(FuIhexFirmwareRecord, 1);
 	rcd->ln = ln;
-	rcd->data = g_byte_array_new ();
-	rcd->buf = g_string_new (line);
-	if (!fu_firmware_strparse_uint8_safe (line, linesz, 1, &rcd->byte_cnt, error))
+	rcd->data = g_byte_array_new();
+	rcd->buf = g_string_new(line);
+	if (!fu_firmware_strparse_uint8_safe(line, linesz, 1, &rcd->byte_cnt, error))
 		return NULL;
-	if (!fu_firmware_strparse_uint16_safe (line, linesz, 3, &addr16, error))
+	if (!fu_firmware_strparse_uint16_safe(line, linesz, 3, &addr16, error))
 		return NULL;
 	rcd->addr = addr16;
-	if (!fu_firmware_strparse_uint8_safe (line, linesz, 7, &rcd->record_type, error))
+	if (!fu_firmware_strparse_uint8_safe(line, linesz, 7, &rcd->record_type, error))
 		return NULL;
 
 	/* position of checksum */
 	line_end = 9 + rcd->byte_cnt * 2;
-	if (line_end > (guint) rcd->buf->len) {
-		g_set_error (error,
-			     FWUPD_ERROR,
-			     FWUPD_ERROR_INVALID_FILE,
-			     "line malformed, length: %u",
-			     line_end);
+	if (line_end > (guint)rcd->buf->len) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "line malformed, length: %u",
+			    line_end);
 		return NULL;
 	}
 
@@ -137,16 +136,16 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 		guint8 checksum = 0;
 		for (guint i = 1; i < line_end + 2; i += 2) {
 			guint8 data_tmp = 0;
-			if (!fu_firmware_strparse_uint8_safe (line, linesz, i, &data_tmp, error))
+			if (!fu_firmware_strparse_uint8_safe(line, linesz, i, &data_tmp, error))
 				return NULL;
 			checksum += data_tmp;
 		}
-		if (checksum != 0)  {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "invalid checksum (0x%02x)",
-				     checksum);
+		if (checksum != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid checksum (0x%02x)",
+				    checksum);
 			return NULL;
 		}
 	}
@@ -154,15 +153,15 @@ fu_ihex_firmware_record_new (guint ln, const gchar *line,
 	/* add data */
 	for (guint i = 9; i < line_end; i += 2) {
 		guint8 tmp_c = 0;
-		if (!fu_firmware_strparse_uint8_safe (line, linesz, i, &tmp_c, error))
+		if (!fu_firmware_strparse_uint8_safe(line, linesz, i, &tmp_c, error))
 			return NULL;
-		fu_byte_array_append_uint8 (rcd->data, tmp_c);
+		fu_byte_array_append_uint8(rcd->data, tmp_c);
 	}
-	return g_steal_pointer (&rcd);
+	return g_steal_pointer(&rcd);
 }
 
 static const gchar *
-fu_ihex_firmware_record_type_to_string (guint8 record_type)
+fu_ihex_firmware_record_type_to_string(guint8 record_type)
 {
 	if (record_type == FU_IHEX_FIRMWARE_RECORD_TYPE_DATA)
 		return "DATA";
@@ -182,42 +181,41 @@ fu_ihex_firmware_record_type_to_string (guint8 record_type)
 }
 
 static gboolean
-fu_ihex_firmware_tokenize (FuFirmware *firmware, GBytes *fw,
-			   FwupdInstallFlags flags, GError **error)
+fu_ihex_firmware_tokenize(FuFirmware *firmware, GBytes *fw, FwupdInstallFlags flags, GError **error)
 {
-	FuIhexFirmware *self = FU_IHEX_FIRMWARE (firmware);
-	FuIhexFirmwarePrivate *priv = GET_PRIVATE (self);
+	FuIhexFirmware *self = FU_IHEX_FIRMWARE(firmware);
+	FuIhexFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize sz = 0;
-	const gchar *data = g_bytes_get_data (fw, &sz);
-	g_auto(GStrv) lines = fu_common_strnsplit (data, sz, "\n", -1);
+	const gchar *data = g_bytes_get_data(fw, &sz);
+	g_auto(GStrv) lines = fu_common_strnsplit(data, sz, "\n", -1);
 
 	for (guint ln = 0; lines[ln] != NULL; ln++) {
 		g_autoptr(FuIhexFirmwareRecord) rcd = NULL;
-		g_strdelimit (lines[ln], "\r\x1a", '\0');
-		if (g_str_has_prefix (lines[ln], ";"))
+		g_strdelimit(lines[ln], "\r\x1a", '\0');
+		if (g_str_has_prefix(lines[ln], ";"))
 			continue;
 		if (lines[ln][0] == '\0')
 			continue;
-		rcd = fu_ihex_firmware_record_new (ln + 1, lines[ln], flags, error);
+		rcd = fu_ihex_firmware_record_new(ln + 1, lines[ln], flags, error);
 		if (rcd == NULL) {
-			g_prefix_error (error, "invalid line %u: ", ln + 1);
+			g_prefix_error(error, "invalid line %u: ", ln + 1);
 			return FALSE;
 		}
-		g_ptr_array_add (priv->records, g_steal_pointer (&rcd));
+		g_ptr_array_add(priv->records, g_steal_pointer(&rcd));
 	}
 	return TRUE;
 }
 
 static gboolean
-fu_ihex_firmware_parse (FuFirmware *firmware,
-			GBytes *fw,
-			guint64 addr_start,
-			guint64 addr_end,
-			FwupdInstallFlags flags,
-			GError **error)
+fu_ihex_firmware_parse(FuFirmware *firmware,
+		       GBytes *fw,
+		       guint64 addr_start,
+		       guint64 addr_end,
+		       FwupdInstallFlags flags,
+		       GError **error)
 {
-	FuIhexFirmware *self = FU_IHEX_FIRMWARE (firmware);
-	FuIhexFirmwarePrivate *priv = GET_PRIVATE (self);
+	FuIhexFirmware *self = FU_IHEX_FIRMWARE(firmware);
+	FuIhexFirmwarePrivate *priv = GET_PRIVATE(self);
 	gboolean got_eof = FALSE;
 	gboolean got_sig = FALSE;
 	guint32 abs_addr = 0x0;
@@ -225,26 +223,26 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 	guint32 img_addr = G_MAXUINT32;
 	guint32 seg_addr = 0x0;
 	g_autoptr(GBytes) img_bytes = NULL;
-	g_autoptr(GByteArray) buf = g_byte_array_new ();
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
 	/* parse records */
 	for (guint k = 0; k < priv->records->len; k++) {
-		FuIhexFirmwareRecord *rcd = g_ptr_array_index (priv->records, k);
+		FuIhexFirmwareRecord *rcd = g_ptr_array_index(priv->records, k);
 		guint16 addr16 = 0;
 		guint32 addr = rcd->addr + seg_addr + abs_addr;
 		guint32 len_hole;
 
-		g_debug ("%s:", fu_ihex_firmware_record_type_to_string (rcd->record_type));
-		g_debug ("  length:\t0x%02x", rcd->data->len);
-		g_debug ("  addr:\t0x%08x", addr);
+		g_debug("%s:", fu_ihex_firmware_record_type_to_string(rcd->record_type));
+		g_debug("  length:\t0x%02x", rcd->data->len);
+		g_debug("  addr:\t0x%08x", addr);
 
 		/* sanity check */
-		if (rcd->record_type != FU_IHEX_FIRMWARE_RECORD_TYPE_EOF &&
-		    rcd->data->len == 0) {
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_NOT_SUPPORTED,
-				     "record 0x%x had zero size", k);
+		if (rcd->record_type != FU_IHEX_FIRMWARE_RECORD_TYPE_EOF && rcd->data->len == 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "record 0x%x had zero size",
+				    k);
 			return FALSE;
 		}
 
@@ -254,17 +252,17 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 
 			/* does not make sense */
 			if (got_eof) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "cannot process data after EOF");
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_FILE,
+						    "cannot process data after EOF");
 				return FALSE;
 			}
 			if (rcd->data->len == 0) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "cannot parse invalid data");
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_FILE,
+						    "cannot parse invalid data");
 				return FALSE;
 			}
 
@@ -274,99 +272,120 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 
 			/* does not make sense */
 			if (addr < addr_last) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "invalid address 0x%x, last was 0x%x on line %u",
-					     (guint) addr,
-					     (guint) addr_last,
-					     rcd->ln);
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "invalid address 0x%x, last was 0x%x on line %u",
+					    (guint)addr,
+					    (guint)addr_last,
+					    rcd->ln);
 				return FALSE;
 			}
 
 			/* any holes in the hex record */
 			len_hole = addr - addr_last;
 			if (addr_last > 0 && len_hole > 0x100000) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "hole of 0x%x bytes too large to fill on line %u",
-					     (guint) len_hole,
-					     rcd->ln);
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "hole of 0x%x bytes too large to fill on line %u",
+					    (guint)len_hole,
+					    rcd->ln);
 				return FALSE;
 			}
 			if (addr_last > 0x0 && len_hole > 1) {
-				g_debug ("filling address 0x%08x to 0x%08x on line %u",
-					 addr_last + 1, addr_last + len_hole - 1, rcd->ln);
+				g_debug("filling address 0x%08x to 0x%08x on line %u",
+					addr_last + 1,
+					addr_last + len_hole - 1,
+					rcd->ln);
 				for (guint j = 1; j < len_hole; j++)
-					fu_byte_array_append_uint8 (buf, priv->padding_value);
+					fu_byte_array_append_uint8(buf, priv->padding_value);
 			}
 			addr_last = addr + rcd->data->len - 1;
 			if (addr_last < addr) {
-				g_set_error (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INVALID_FILE,
-					     "overflow of address 0x%x on line %u",
-					     (guint) addr, rcd->ln);
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INVALID_FILE,
+					    "overflow of address 0x%x on line %u",
+					    (guint)addr,
+					    rcd->ln);
 				return FALSE;
 			}
 
 			/* write into buf */
-			g_byte_array_append (buf, rcd->data->data, rcd->data->len);
+			g_byte_array_append(buf, rcd->data->data, rcd->data->len);
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_EOF:
 			if (got_eof) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "duplicate EOF, perhaps "
-						     "corrupt file");
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_FILE,
+						    "duplicate EOF, perhaps "
+						    "corrupt file");
 				return FALSE;
 			}
 			got_eof = TRUE;
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_LINEAR:
-			if (!fu_common_read_uint16_safe (rcd->data->data, rcd->data->len,
-							 0x0, &addr16, G_BIG_ENDIAN, error))
+			if (!fu_common_read_uint16_safe(rcd->data->data,
+							rcd->data->len,
+							0x0,
+							&addr16,
+							G_BIG_ENDIAN,
+							error))
 				return FALSE;
-			abs_addr = (guint32) addr16 << 16;
-			g_debug ("  abs_addr:\t0x%02x on line %u", abs_addr, rcd->ln);
+			abs_addr = (guint32)addr16 << 16;
+			g_debug("  abs_addr:\t0x%02x on line %u", abs_addr, rcd->ln);
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_START_LINEAR:
-			if (!fu_common_read_uint32_safe (rcd->data->data, rcd->data->len,
-							 0x0, &abs_addr, G_BIG_ENDIAN, error))
+			if (!fu_common_read_uint32_safe(rcd->data->data,
+							rcd->data->len,
+							0x0,
+							&abs_addr,
+							G_BIG_ENDIAN,
+							error))
 				return FALSE;
-			g_debug ("  abs_addr:\t0x%08x on line %u", abs_addr, rcd->ln);
+			g_debug("  abs_addr:\t0x%08x on line %u", abs_addr, rcd->ln);
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_SEGMENT:
-			if (!fu_common_read_uint16_safe (rcd->data->data, rcd->data->len,
-							 0x0, &addr16, G_BIG_ENDIAN, error))
+			if (!fu_common_read_uint16_safe(rcd->data->data,
+							rcd->data->len,
+							0x0,
+							&addr16,
+							G_BIG_ENDIAN,
+							error))
 				return FALSE;
 			/* segment base address, so ~1Mb addressable */
-			seg_addr = (guint32) addr16 * 16;
-			g_debug ("  seg_addr:\t0x%08x on line %u", seg_addr, rcd->ln);
+			seg_addr = (guint32)addr16 * 16;
+			g_debug("  seg_addr:\t0x%08x on line %u", seg_addr, rcd->ln);
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_START_SEGMENT:
 			/* initial content of the CS:IP registers */
-			if (!fu_common_read_uint32_safe (rcd->data->data, rcd->data->len,
-							 0x0, &seg_addr, G_BIG_ENDIAN, error))
+			if (!fu_common_read_uint32_safe(rcd->data->data,
+							rcd->data->len,
+							0x0,
+							&seg_addr,
+							G_BIG_ENDIAN,
+							error))
 				return FALSE;
-			g_debug ("  seg_addr:\t0x%02x on line %u", seg_addr, rcd->ln);
+			g_debug("  seg_addr:\t0x%02x on line %u", seg_addr, rcd->ln);
 			break;
 		case FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE:
 			if (got_sig) {
-				g_set_error_literal (error,
-						     FWUPD_ERROR,
-						     FWUPD_ERROR_INVALID_FILE,
-						     "duplicate signature, perhaps "
-						     "corrupt file");
+				g_set_error_literal(error,
+						    FWUPD_ERROR,
+						    FWUPD_ERROR_INVALID_FILE,
+						    "duplicate signature, perhaps "
+						    "corrupt file");
 				return FALSE;
 			}
 			if (rcd->data->len > 0) {
-				g_autoptr(GBytes) data_sig = g_bytes_new (rcd->data->data, rcd->data->len);
-				g_autoptr(FuFirmware) img_sig = fu_firmware_new_from_bytes (data_sig);
-				fu_firmware_set_id (img_sig, FU_FIRMWARE_ID_SIGNATURE);
-				fu_firmware_add_image (firmware, img_sig);
+				g_autoptr(GBytes) data_sig =
+				    g_bytes_new(rcd->data->data, rcd->data->len);
+				g_autoptr(FuFirmware) img_sig =
+				    fu_firmware_new_from_bytes(data_sig);
+				fu_firmware_set_id(img_sig, FU_FIRMWARE_ID_SIGNATURE);
+				fu_firmware_add_image(firmware, img_sig);
 			}
 			got_sig = TRUE;
 			break;
@@ -374,58 +393,59 @@ fu_ihex_firmware_parse (FuFirmware *firmware,
 			/* vendors sneak in nonstandard sections past the EOF */
 			if (got_eof)
 				break;
-			g_set_error (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "invalid ihex record type %i on line %u",
-				     rcd->record_type, rcd->ln);
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid ihex record type %i on line %u",
+				    rcd->record_type,
+				    rcd->ln);
 			return FALSE;
 		}
 	}
 
 	/* no EOF */
 	if (!got_eof) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INVALID_FILE,
-				     "no EOF, perhaps truncated file");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no EOF, perhaps truncated file");
 		return FALSE;
 	}
 
 	/* add single image */
-	img_bytes = g_bytes_new (buf->data, buf->len);
+	img_bytes = g_bytes_new(buf->data, buf->len);
 	if (img_addr != G_MAXUINT32)
-		fu_firmware_set_addr (firmware, img_addr);
-	fu_firmware_set_bytes (firmware, img_bytes);
+		fu_firmware_set_addr(firmware, img_addr);
+	fu_firmware_set_bytes(firmware, img_bytes);
 	return TRUE;
 }
 
 static void
-fu_ihex_firmware_emit_chunk (GString *str,
-			     guint16 address,
-			     guint8 record_type,
-			     const guint8 *data,
-			     gsize sz)
+fu_ihex_firmware_emit_chunk(GString *str,
+			    guint16 address,
+			    guint8 record_type,
+			    const guint8 *data,
+			    gsize sz)
 {
 	guint8 checksum = 0x00;
-	g_string_append_printf (str, ":%02X%04X%02X",
-				(guint) sz,
-				(guint) address,
-				(guint) record_type);
+	g_string_append_printf(str, ":%02X%04X%02X", (guint)sz, (guint)address, (guint)record_type);
 	for (gsize j = 0; j < sz; j++)
-		g_string_append_printf (str, "%02X", data[j]);
-	checksum = (guint8) sz;
-	checksum += (guint8) ((address & 0xff00) >> 8);
-	checksum += (guint8) (address & 0xff);
+		g_string_append_printf(str, "%02X", data[j]);
+	checksum = (guint8)sz;
+	checksum += (guint8)((address & 0xff00) >> 8);
+	checksum += (guint8)(address & 0xff);
 	checksum += record_type;
 	for (gsize j = 0; j < sz; j++)
 		checksum += data[j];
-	g_string_append_printf (str, "%02X\n", (guint) (((~checksum) + 0x01) & 0xff));
+	g_string_append_printf(str, "%02X\n", (guint)(((~checksum) + 0x01) & 0xff));
 }
 
 static gboolean
-fu_ihex_firmware_image_to_string (GBytes *bytes, guint32 addr, guint8 record_type,
-				  GString *str, GError **error)
+fu_ihex_firmware_image_to_string(GBytes *bytes,
+				 guint32 addr,
+				 guint8 record_type,
+				 GString *str,
+				 GError **error)
 {
 	const guint8 *data;
 	const guint chunk_size = 16;
@@ -433,85 +453,89 @@ fu_ihex_firmware_image_to_string (GBytes *bytes, guint32 addr, guint8 record_typ
 	guint32 address_offset_last = 0x0;
 
 	/* get number of chunks */
-	data = g_bytes_get_data (bytes, &len);
+	data = g_bytes_get_data(bytes, &len);
 	for (gsize i = 0; i < len; i += chunk_size) {
 		guint32 address_tmp = addr + i;
 		guint32 address_offset = (address_tmp >> 16) & 0xffff;
-		gsize chunk_len = MIN (len - i, 16);
+		gsize chunk_len = MIN(len - i, 16);
 
 		/* need to offset */
 		if (address_offset != address_offset_last) {
 			guint8 buf[2];
-			fu_common_write_uint16 (buf, address_offset, G_BIG_ENDIAN);
-			fu_ihex_firmware_emit_chunk (str, 0x0,
-						     FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_LINEAR,
-						     buf, 2);
+			fu_common_write_uint16(buf, address_offset, G_BIG_ENDIAN);
+			fu_ihex_firmware_emit_chunk(str,
+						    0x0,
+						    FU_IHEX_FIRMWARE_RECORD_TYPE_EXTENDED_LINEAR,
+						    buf,
+						    2);
 			address_offset_last = address_offset;
 		}
 		address_tmp &= 0xffff;
-		fu_ihex_firmware_emit_chunk (str, address_tmp,
-					     record_type, data + i, chunk_len);
+		fu_ihex_firmware_emit_chunk(str, address_tmp, record_type, data + i, chunk_len);
 	}
 	return TRUE;
 }
 
 static GBytes *
-fu_ihex_firmware_write (FuFirmware *firmware, GError **error)
+fu_ihex_firmware_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(FuFirmware) img_sig = NULL;
-	g_autoptr(GString) str = g_string_new ("");
+	g_autoptr(GString) str = g_string_new("");
 
 	/* payload */
-	fw = fu_firmware_get_bytes (firmware, error);
+	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return NULL;
-	if (!fu_ihex_firmware_image_to_string (fw,
-					       fu_firmware_get_addr (firmware),
-					       FU_IHEX_FIRMWARE_RECORD_TYPE_DATA,
-					       str, error))
+	if (!fu_ihex_firmware_image_to_string(fw,
+					      fu_firmware_get_addr(firmware),
+					      FU_IHEX_FIRMWARE_RECORD_TYPE_DATA,
+					      str,
+					      error))
 		return NULL;
 
 	/* signature */
-	img_sig = fu_firmware_get_image_by_id (firmware, FU_FIRMWARE_ID_SIGNATURE, NULL);
+	img_sig = fu_firmware_get_image_by_id(firmware, FU_FIRMWARE_ID_SIGNATURE, NULL);
 	if (img_sig != NULL) {
-		g_autoptr(GBytes) img_fw = fu_firmware_get_bytes (img_sig, error);
+		g_autoptr(GBytes) img_fw = fu_firmware_get_bytes(img_sig, error);
 		if (img_fw == NULL)
 			return NULL;
-		if (!fu_ihex_firmware_image_to_string (img_fw, 0,
-						       FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE,
-						       str, error))
+		if (!fu_ihex_firmware_image_to_string(img_fw,
+						      0,
+						      FU_IHEX_FIRMWARE_RECORD_TYPE_SIGNATURE,
+						      str,
+						      error))
 			return NULL;
 	}
 
 	/* add EOF */
-	fu_ihex_firmware_emit_chunk (str, 0x0, FU_IHEX_FIRMWARE_RECORD_TYPE_EOF, NULL, 0);
-	return g_bytes_new (str->str, str->len);
+	fu_ihex_firmware_emit_chunk(str, 0x0, FU_IHEX_FIRMWARE_RECORD_TYPE_EOF, NULL, 0);
+	return g_bytes_new(str->str, str->len);
 }
 
 static void
-fu_ihex_firmware_finalize (GObject *object)
+fu_ihex_firmware_finalize(GObject *object)
 {
-	FuIhexFirmware *self = FU_IHEX_FIRMWARE (object);
-	FuIhexFirmwarePrivate *priv = GET_PRIVATE (self);
-	g_ptr_array_unref (priv->records);
-	G_OBJECT_CLASS (fu_ihex_firmware_parent_class)->finalize (object);
+	FuIhexFirmware *self = FU_IHEX_FIRMWARE(object);
+	FuIhexFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_ptr_array_unref(priv->records);
+	G_OBJECT_CLASS(fu_ihex_firmware_parent_class)->finalize(object);
 }
 
 static void
-fu_ihex_firmware_init (FuIhexFirmware *self)
+fu_ihex_firmware_init(FuIhexFirmware *self)
 {
-	FuIhexFirmwarePrivate *priv = GET_PRIVATE (self);
-	priv->padding_value = 0x00;	/* chosen as we can't write 0xffff to PIC14 */
-	priv->records = g_ptr_array_new_with_free_func ((GFreeFunc) fu_ihex_firmware_record_free);
-	fu_firmware_add_flag (FU_FIRMWARE (self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
+	FuIhexFirmwarePrivate *priv = GET_PRIVATE(self);
+	priv->padding_value = 0x00; /* chosen as we can't write 0xffff to PIC14 */
+	priv->records = g_ptr_array_new_with_free_func((GFreeFunc)fu_ihex_firmware_record_free);
+	fu_firmware_add_flag(FU_FIRMWARE(self), FU_FIRMWARE_FLAG_HAS_CHECKSUM);
 }
 
 static void
-fu_ihex_firmware_class_init (FuIhexFirmwareClass *klass)
+fu_ihex_firmware_class_init(FuIhexFirmwareClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
-	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS (klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
 	object_class->finalize = fu_ihex_firmware_finalize;
 	klass_firmware->parse = fu_ihex_firmware_parse;
 	klass_firmware->tokenize = fu_ihex_firmware_tokenize;
@@ -526,7 +550,7 @@ fu_ihex_firmware_class_init (FuIhexFirmwareClass *klass)
  * Since: 1.3.1
  **/
 FuFirmware *
-fu_ihex_firmware_new (void)
+fu_ihex_firmware_new(void)
 {
-	return FU_FIRMWARE (g_object_new (FU_TYPE_IHEX_FIRMWARE, NULL));
+	return FU_FIRMWARE(g_object_new(FU_TYPE_IHEX_FIRMWARE, NULL));
 }

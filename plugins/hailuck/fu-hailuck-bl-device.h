@@ -8,5 +8,5 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_HAILUCK_BL_DEVICE (fu_hailuck_bl_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuHailuckBlDevice, fu_hailuck_bl_device, FU, HAILUCK_BL_DEVICE, FuHidDevice)
+#define FU_TYPE_HAILUCK_BL_DEVICE (fu_hailuck_bl_device_get_type())
+G_DECLARE_FINAL_TYPE(FuHailuckBlDevice, fu_hailuck_bl_device, FU, HAILUCK_BL_DEVICE, FuHidDevice)

@@ -9,7 +9,7 @@
 #include "fu-hailuck-common.h"
 
 const gchar *
-fu_hailuck_cmd_to_string (guint8 cmd)
+fu_hailuck_cmd_to_string(guint8 cmd)
 {
 	if (cmd == FU_HAILUCK_CMD_ERASE)
 		return "erase";

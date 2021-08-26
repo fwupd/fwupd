@@ -11,13 +11,14 @@
 
 #include "fu-vli-common.h"
 
-typedef struct __attribute__ ((packed)) {
-	guint32		fwver;	/* BE */
-	guint16		vid;	/* LE */
-	guint16		pid;	/* LE */
+typedef struct __attribute__((packed)) {
+	guint32 fwver; /* BE */
+	guint16 vid;   /* LE */
+	guint16 pid;   /* LE */
 } FuVliPdHdr;
 
-#define VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY		0x4000
-#define VLI_USBHUB_PD_FLASHMAP_ADDR			0x1003
+#define VLI_USBHUB_PD_FLASHMAP_ADDR_LEGACY 0x4000
+#define VLI_USBHUB_PD_FLASHMAP_ADDR	   0x1003
 
-FuVliDeviceKind	 fu_vli_pd_common_guess_device_kind		(guint32		 fwver);
+FuVliDeviceKind
+fu_vli_pd_common_guess_device_kind(guint32 fwver);

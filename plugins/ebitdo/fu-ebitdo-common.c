@@ -11,7 +11,7 @@
 #include "fu-ebitdo-common.h"
 
 const gchar *
-fu_ebitdo_pkt_type_to_string (FuEbitdoPktType cmd)
+fu_ebitdo_pkt_type_to_string(FuEbitdoPktType cmd)
 {
 	if (cmd == FU_EBITDO_PKT_TYPE_USER_CMD)
 		return "user-cmd";
@@ -23,7 +23,7 @@ fu_ebitdo_pkt_type_to_string (FuEbitdoPktType cmd)
 }
 
 const gchar *
-fu_ebitdo_pkt_cmd_to_string (FuEbitdoPktCmd cmd)
+fu_ebitdo_pkt_cmd_to_string(FuEbitdoPktCmd cmd)
 {
 	if (cmd == FU_EBITDO_PKT_CMD_FW_UPDATE_DATA)
 		return "fw-update-data";
@@ -65,16 +65,14 @@ fu_ebitdo_pkt_cmd_to_string (FuEbitdoPktCmd cmd)
 }
 
 void
-fu_ebitdo_dump_pkt (FuEbitdoPkt *hdr)
+fu_ebitdo_dump_pkt(FuEbitdoPkt *hdr)
 {
-	g_print ("PktLength:   0x%02x\n", hdr->pkt_len);
-	g_print ("PktType:     0x%02x [%s]\n",
-		 hdr->type, fu_ebitdo_pkt_type_to_string (hdr->type));
-	g_print ("CmdSubtype:  0x%02x [%s]\n",
-		 hdr->subtype, fu_ebitdo_pkt_cmd_to_string (hdr->subtype));
-	g_print ("CmdLen:      0x%04x\n", GUINT16_FROM_LE (hdr->cmd_len));
-	g_print ("Cmd:         0x%02x [%s]\n",
-		 hdr->cmd, fu_ebitdo_pkt_cmd_to_string (hdr->cmd));
-	g_print ("Payload Len: 0x%04x\n",
-		 GUINT16_FROM_LE (hdr->payload_len));
+	g_print("PktLength:   0x%02x\n", hdr->pkt_len);
+	g_print("PktType:     0x%02x [%s]\n", hdr->type, fu_ebitdo_pkt_type_to_string(hdr->type));
+	g_print("CmdSubtype:  0x%02x [%s]\n",
+		hdr->subtype,
+		fu_ebitdo_pkt_cmd_to_string(hdr->subtype));
+	g_print("CmdLen:      0x%04x\n", GUINT16_FROM_LE(hdr->cmd_len));
+	g_print("Cmd:         0x%02x [%s]\n", hdr->cmd, fu_ebitdo_pkt_cmd_to_string(hdr->cmd));
+	g_print("Payload Len: 0x%04x\n", GUINT16_FROM_LE(hdr->payload_len));
 }

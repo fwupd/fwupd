@@ -9,6 +9,6 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_PXI_BLE_DEVICE (fu_pxi_ble_device_get_type ())
+#define FU_TYPE_PXI_BLE_DEVICE (fu_pxi_ble_device_get_type())
 
-G_DECLARE_FINAL_TYPE (FuPxiBleDevice, fu_pxi_ble_device, FU, PXI_BLE_DEVICE, FuUdevDevice)
+G_DECLARE_FINAL_TYPE(FuPxiBleDevice, fu_pxi_ble_device, FU, PXI_BLE_DEVICE, FuUdevDevice)

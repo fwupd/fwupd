@@ -8,7 +8,9 @@
 
 #include <fwupdplugin.h>
 
-#define FU_TYPE_PARADE_LSPCON_DEVICE (fu_parade_lspcon_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuParadeLspconDevice,
-		      fu_parade_lspcon_device, FU,
-		      PARADE_LSPCON_DEVICE, FuI2cDevice)
+#define FU_TYPE_PARADE_LSPCON_DEVICE (fu_parade_lspcon_device_get_type())
+G_DECLARE_FINAL_TYPE(FuParadeLspconDevice,
+		     fu_parade_lspcon_device,
+		     FU,
+		     PARADE_LSPCON_DEVICE,
+		     FuI2cDevice)

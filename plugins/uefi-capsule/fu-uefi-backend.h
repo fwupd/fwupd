@@ -10,14 +10,15 @@
 
 #include "fu-uefi-device.h"
 
-#define FU_TYPE_UEFI_BACKEND (fu_uefi_backend_get_type ())
+#define FU_TYPE_UEFI_BACKEND (fu_uefi_backend_get_type())
 G_DECLARE_DERIVABLE_TYPE(FuUefiBackend, fu_uefi_backend, FU, UEFI_BACKEND, FuBackend)
 
 struct _FuUefiBackendClass {
 	FuBackendClass parent_class;
 };
 
-FuBackend	*fu_uefi_backend_new			(FuContext	*ctx);
+FuBackend *
+fu_uefi_backend_new(FuContext *ctx);
 void
 fu_uefi_backend_set_device_gtype(FuUefiBackend *self, GType device_gtype);
 GType

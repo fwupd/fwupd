@@ -6,8 +6,8 @@
 
 #include "config.h"
 
-#include <glib-object.h>
 #include <gio/gio.h>
+#include <glib-object.h>
 #include <string.h>
 
 #include "fwupd-common-private.h"
@@ -26,46 +26,47 @@
  * See also: [class@FwupdDevice]
  */
 
-static void fwupd_release_finalize	 (GObject *object);
+static void
+fwupd_release_finalize(GObject *object);
 
 typedef struct {
-	GPtrArray			*checksums;
-	GPtrArray			*categories;
-	GPtrArray			*issues;
-	GHashTable			*metadata;
-	gchar				*description;
-	gchar				*filename;
-	gchar				*protocol;
-	gchar				*homepage;
-	gchar				*details_url;
-	gchar				*source_url;
-	gchar				*appstream_id;
-	gchar				*detach_caption;
-	gchar				*detach_image;
-	gchar				*license;
-	gchar				*name;
-	gchar				*name_variant_suffix;
-	gchar				*summary;
-	gchar				*branch;
-	GPtrArray			*locations;
-	gchar				*vendor;
-	gchar				*version;
-	gchar				*remote_id;
-	guint64				 size;
-	guint64				 created;
-	guint32				 install_duration;
-	FwupdReleaseFlags		 flags;
-	FwupdReleaseUrgency		 urgency;
-	gchar				*update_message;
-	gchar				*update_image;
+	GPtrArray *checksums;
+	GPtrArray *categories;
+	GPtrArray *issues;
+	GHashTable *metadata;
+	gchar *description;
+	gchar *filename;
+	gchar *protocol;
+	gchar *homepage;
+	gchar *details_url;
+	gchar *source_url;
+	gchar *appstream_id;
+	gchar *detach_caption;
+	gchar *detach_image;
+	gchar *license;
+	gchar *name;
+	gchar *name_variant_suffix;
+	gchar *summary;
+	gchar *branch;
+	GPtrArray *locations;
+	gchar *vendor;
+	gchar *version;
+	gchar *remote_id;
+	guint64 size;
+	guint64 created;
+	guint32 install_duration;
+	FwupdReleaseFlags flags;
+	FwupdReleaseUrgency urgency;
+	gchar *update_message;
+	gchar *update_image;
 } FwupdReleasePrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE (FwupdRelease, fwupd_release, G_TYPE_OBJECT)
-#define GET_PRIVATE(o) (fwupd_release_get_instance_private (o))
+G_DEFINE_TYPE_WITH_PRIVATE(FwupdRelease, fwupd_release, G_TYPE_OBJECT)
+#define GET_PRIVATE(o) (fwupd_release_get_instance_private(o))
 
 /* the deprecated fwupd_release_get_trust_flags() function should only
  * return the last two bits of the #FwupdReleaseFlags */
-#define FWUPD_RELEASE_TRUST_FLAGS_MASK		0x3
+#define FWUPD_RELEASE_TRUST_FLAGS_MASK 0x3
 
 /**
  * fwupd_release_get_remote_id:
@@ -78,10 +79,10 @@ G_DEFINE_TYPE_WITH_PRIVATE (FwupdRelease, fwupd_release, G_TYPE_OBJECT)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_release_get_remote_id (FwupdRelease *self)
+fwupd_release_get_remote_id(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->remote_id;
 }
 
@@ -95,17 +96,17 @@ fwupd_release_get_remote_id (FwupdRelease *self)
  * Since: 0.9.3
  **/
 void
-fwupd_release_set_remote_id (FwupdRelease *self, const gchar *remote_id)
+fwupd_release_set_remote_id(FwupdRelease *self, const gchar *remote_id)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->remote_id, remote_id) == 0)
+	if (g_strcmp0(priv->remote_id, remote_id) == 0)
 		return;
 
-	g_free (priv->remote_id);
-	priv->remote_id = g_strdup (remote_id);
+	g_free(priv->remote_id);
+	priv->remote_id = g_strdup(remote_id);
 }
 
 /**
@@ -119,10 +120,10 @@ fwupd_release_set_remote_id (FwupdRelease *self, const gchar *remote_id)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_release_get_version (FwupdRelease *self)
+fwupd_release_get_version(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->version;
 }
 
@@ -136,17 +137,17 @@ fwupd_release_get_version (FwupdRelease *self)
  * Since: 0.9.3
  **/
 void
-fwupd_release_set_version (FwupdRelease *self, const gchar *version)
+fwupd_release_set_version(FwupdRelease *self, const gchar *version)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->version, version) == 0)
+	if (g_strcmp0(priv->version, version) == 0)
 		return;
 
-	g_free (priv->version);
-	priv->version = g_strdup (version);
+	g_free(priv->version);
+	priv->version = g_strdup(version);
 }
 
 /**
@@ -160,10 +161,10 @@ fwupd_release_set_version (FwupdRelease *self, const gchar *version)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_release_get_filename (FwupdRelease *self)
+fwupd_release_get_filename(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->filename;
 }
 
@@ -177,17 +178,17 @@ fwupd_release_get_filename (FwupdRelease *self)
  * Since: 0.9.3
  **/
 void
-fwupd_release_set_filename (FwupdRelease *self, const gchar *filename)
+fwupd_release_set_filename(FwupdRelease *self, const gchar *filename)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->filename, filename) == 0)
+	if (g_strcmp0(priv->filename, filename) == 0)
 		return;
 
-	g_free (priv->filename);
-	priv->filename = g_strdup (filename);
+	g_free(priv->filename);
+	priv->filename = g_strdup(filename);
 }
 
 /**
@@ -201,10 +202,10 @@ fwupd_release_set_filename (FwupdRelease *self, const gchar *filename)
  * Since: 1.2.4
  **/
 const gchar *
-fwupd_release_get_update_message (FwupdRelease *self)
+fwupd_release_get_update_message(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->update_message;
 }
 
@@ -218,17 +219,17 @@ fwupd_release_get_update_message (FwupdRelease *self)
  * Since: 1.2.4
  **/
 void
-fwupd_release_set_update_message (FwupdRelease *self, const gchar *update_message)
+fwupd_release_set_update_message(FwupdRelease *self, const gchar *update_message)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->update_message, update_message) == 0)
+	if (g_strcmp0(priv->update_message, update_message) == 0)
 		return;
 
-	g_free (priv->update_message);
-	priv->update_message = g_strdup (update_message);
+	g_free(priv->update_message);
+	priv->update_message = g_strdup(update_message);
 }
 
 /**
@@ -242,10 +243,10 @@ fwupd_release_set_update_message (FwupdRelease *self, const gchar *update_messag
  * Since: 1.4.5
  **/
 const gchar *
-fwupd_release_get_update_image (FwupdRelease *self)
+fwupd_release_get_update_image(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->update_image;
 }
 
@@ -259,17 +260,17 @@ fwupd_release_get_update_image (FwupdRelease *self)
  * Since: 1.4.5
  **/
 void
-fwupd_release_set_update_image (FwupdRelease *self, const gchar *update_image)
+fwupd_release_set_update_image(FwupdRelease *self, const gchar *update_image)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->update_image, update_image) == 0)
+	if (g_strcmp0(priv->update_image, update_image) == 0)
 		return;
 
-	g_free (priv->update_image);
-	priv->update_image = g_strdup (update_image);
+	g_free(priv->update_image);
+	priv->update_image = g_strdup(update_image);
 }
 
 /**
@@ -283,10 +284,10 @@ fwupd_release_set_update_image (FwupdRelease *self, const gchar *update_image)
  * Since: 1.2.2
  **/
 const gchar *
-fwupd_release_get_protocol (FwupdRelease *self)
+fwupd_release_get_protocol(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->protocol;
 }
 
@@ -300,17 +301,17 @@ fwupd_release_get_protocol (FwupdRelease *self)
  * Since: 1.2.2
  **/
 void
-fwupd_release_set_protocol (FwupdRelease *self, const gchar *protocol)
+fwupd_release_set_protocol(FwupdRelease *self, const gchar *protocol)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->protocol, protocol) == 0)
+	if (g_strcmp0(priv->protocol, protocol) == 0)
 		return;
 
-	g_free (priv->protocol);
-	priv->protocol = g_strdup (protocol);
+	g_free(priv->protocol);
+	priv->protocol = g_strdup(protocol);
 }
 
 /**
@@ -324,10 +325,10 @@ fwupd_release_set_protocol (FwupdRelease *self, const gchar *protocol)
  * Since: 1.3.2
  **/
 GPtrArray *
-fwupd_release_get_issues (FwupdRelease *self)
+fwupd_release_get_issues(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->issues;
 }
 
@@ -341,17 +342,17 @@ fwupd_release_get_issues (FwupdRelease *self)
  * Since: 1.3.2
  **/
 void
-fwupd_release_add_issue (FwupdRelease *self, const gchar *issue)
+fwupd_release_add_issue(FwupdRelease *self, const gchar *issue)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
-	g_return_if_fail (issue != NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+	g_return_if_fail(issue != NULL);
 	for (guint i = 0; i < priv->issues->len; i++) {
-		const gchar *issue_tmp = g_ptr_array_index (priv->issues, i);
-		if (g_strcmp0 (issue_tmp, issue) == 0)
+		const gchar *issue_tmp = g_ptr_array_index(priv->issues, i);
+		if (g_strcmp0(issue_tmp, issue) == 0)
 			return;
 	}
-	g_ptr_array_add (priv->issues, g_strdup (issue));
+	g_ptr_array_add(priv->issues, g_strdup(issue));
 }
 
 /**
@@ -365,10 +366,10 @@ fwupd_release_add_issue (FwupdRelease *self, const gchar *issue)
  * Since: 1.2.7
  **/
 GPtrArray *
-fwupd_release_get_categories (FwupdRelease *self)
+fwupd_release_get_categories(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->categories;
 }
 
@@ -382,17 +383,17 @@ fwupd_release_get_categories (FwupdRelease *self)
  * Since: 1.2.7
  **/
 void
-fwupd_release_add_category (FwupdRelease *self, const gchar *category)
+fwupd_release_add_category(FwupdRelease *self, const gchar *category)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
-	g_return_if_fail (category != NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+	g_return_if_fail(category != NULL);
 	for (guint i = 0; i < priv->categories->len; i++) {
-		const gchar *category_tmp = g_ptr_array_index (priv->categories, i);
-		if (g_strcmp0 (category_tmp, category) == 0)
+		const gchar *category_tmp = g_ptr_array_index(priv->categories, i);
+		if (g_strcmp0(category_tmp, category) == 0)
 			return;
 	}
-	g_ptr_array_add (priv->categories, g_strdup (category));
+	g_ptr_array_add(priv->categories, g_strdup(category));
 }
 
 /**
@@ -407,14 +408,14 @@ fwupd_release_add_category (FwupdRelease *self, const gchar *category)
  * Since: 1.2.7
  **/
 gboolean
-fwupd_release_has_category (FwupdRelease *self, const gchar *category)
+fwupd_release_has_category(FwupdRelease *self, const gchar *category)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), FALSE);
-	g_return_val_if_fail (category != NULL, FALSE);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), FALSE);
+	g_return_val_if_fail(category != NULL, FALSE);
 	for (guint i = 0; i < priv->categories->len; i++) {
-		const gchar *category_tmp = g_ptr_array_index (priv->categories, i);
-		if (g_strcmp0 (category_tmp, category) == 0)
+		const gchar *category_tmp = g_ptr_array_index(priv->categories, i);
+		if (g_strcmp0(category_tmp, category) == 0)
 			return TRUE;
 	}
 	return FALSE;
@@ -431,10 +432,10 @@ fwupd_release_has_category (FwupdRelease *self, const gchar *category)
  * Since: 0.9.3
  **/
 GPtrArray *
-fwupd_release_get_checksums (FwupdRelease *self)
+fwupd_release_get_checksums(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->checksums;
 }
 
@@ -448,17 +449,17 @@ fwupd_release_get_checksums (FwupdRelease *self)
  * Since: 0.9.3
  **/
 void
-fwupd_release_add_checksum (FwupdRelease *self, const gchar *checksum)
+fwupd_release_add_checksum(FwupdRelease *self, const gchar *checksum)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
-	g_return_if_fail (checksum != NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+	g_return_if_fail(checksum != NULL);
 	for (guint i = 0; i < priv->checksums->len; i++) {
-		const gchar *checksum_tmp = g_ptr_array_index (priv->checksums, i);
-		if (g_strcmp0 (checksum_tmp, checksum) == 0)
+		const gchar *checksum_tmp = g_ptr_array_index(priv->checksums, i);
+		if (g_strcmp0(checksum_tmp, checksum) == 0)
 			return;
 	}
-	g_ptr_array_add (priv->checksums, g_strdup (checksum));
+	g_ptr_array_add(priv->checksums, g_strdup(checksum));
 }
 
 /**
@@ -473,14 +474,14 @@ fwupd_release_add_checksum (FwupdRelease *self, const gchar *checksum)
  * Since: 1.2.6
  **/
 gboolean
-fwupd_release_has_checksum (FwupdRelease *self, const gchar *checksum)
+fwupd_release_has_checksum(FwupdRelease *self, const gchar *checksum)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), FALSE);
-	g_return_val_if_fail (checksum != NULL, FALSE);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), FALSE);
+	g_return_val_if_fail(checksum != NULL, FALSE);
 	for (guint i = 0; i < priv->checksums->len; i++) {
-		const gchar *checksum_tmp = g_ptr_array_index (priv->checksums, i);
-		if (g_strcmp0 (checksum_tmp, checksum) == 0)
+		const gchar *checksum_tmp = g_ptr_array_index(priv->checksums, i);
+		if (g_strcmp0(checksum_tmp, checksum) == 0)
 			return TRUE;
 	}
 	return FALSE;
@@ -497,10 +498,10 @@ fwupd_release_has_checksum (FwupdRelease *self, const gchar *checksum)
  * Since: 1.0.4
  **/
 GHashTable *
-fwupd_release_get_metadata (FwupdRelease *self)
+fwupd_release_get_metadata(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->metadata;
 }
 
@@ -515,13 +516,13 @@ fwupd_release_get_metadata (FwupdRelease *self)
  * Since: 1.0.4
  **/
 void
-fwupd_release_add_metadata_item (FwupdRelease *self, const gchar *key, const gchar *value)
+fwupd_release_add_metadata_item(FwupdRelease *self, const gchar *key, const gchar *value)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
-	g_return_if_fail (key != NULL);
-	g_return_if_fail (value != NULL);
-	g_hash_table_insert (priv->metadata, g_strdup (key), g_strdup (value));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+	g_return_if_fail(key != NULL);
+	g_return_if_fail(value != NULL);
+	g_hash_table_insert(priv->metadata, g_strdup(key), g_strdup(value));
 }
 
 /**
@@ -534,20 +535,20 @@ fwupd_release_add_metadata_item (FwupdRelease *self, const gchar *key, const gch
  * Since: 1.0.4
  **/
 void
-fwupd_release_add_metadata (FwupdRelease *self, GHashTable *hash)
+fwupd_release_add_metadata(FwupdRelease *self, GHashTable *hash)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GList) keys = NULL;
 
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
-	g_return_if_fail (hash != NULL);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+	g_return_if_fail(hash != NULL);
 
 	/* deep copy the whole map */
-	keys = g_hash_table_get_keys (hash);
+	keys = g_hash_table_get_keys(hash);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
-		const gchar *value = g_hash_table_lookup (hash, key);
-		g_hash_table_insert (priv->metadata, g_strdup (key), g_strdup (value));
+		const gchar *value = g_hash_table_lookup(hash, key);
+		g_hash_table_insert(priv->metadata, g_strdup(key), g_strdup(value));
 	}
 }
 
@@ -563,12 +564,12 @@ fwupd_release_add_metadata (FwupdRelease *self, GHashTable *hash)
  * Since: 1.0.4
  **/
 const gchar *
-fwupd_release_get_metadata_item (FwupdRelease *self, const gchar *key)
+fwupd_release_get_metadata_item(FwupdRelease *self, const gchar *key)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
-	g_return_val_if_fail (key != NULL, NULL);
-	return g_hash_table_lookup (priv->metadata, key);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
+	g_return_val_if_fail(key != NULL, NULL);
+	return g_hash_table_lookup(priv->metadata, key);
 }
 
 /**
@@ -583,13 +584,13 @@ fwupd_release_get_metadata_item (FwupdRelease *self, const gchar *key)
  * Deprecated: 1.5.6: Use fwupd_release_get_locations() instead.
  **/
 const gchar *
-fwupd_release_get_uri (FwupdRelease *self)
+fwupd_release_get_uri(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	if (priv->locations->len == 0)
 		return NULL;
-	return (const gchar *) g_ptr_array_index (priv->locations, 0);
+	return (const gchar *)g_ptr_array_index(priv->locations, 0);
 }
 
 /**
@@ -603,12 +604,12 @@ fwupd_release_get_uri (FwupdRelease *self)
  * Deprecated: 1.5.6: Use fwupd_release_add_location() instead.
  **/
 void
-fwupd_release_set_uri (FwupdRelease *self, const gchar *uri)
+fwupd_release_set_uri(FwupdRelease *self, const gchar *uri)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
-	g_ptr_array_set_size (priv->locations, 0);
-	g_ptr_array_add (priv->locations, g_strdup (uri));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+	g_ptr_array_set_size(priv->locations, 0);
+	g_ptr_array_add(priv->locations, g_strdup(uri));
 }
 
 /**
@@ -625,10 +626,10 @@ fwupd_release_set_uri (FwupdRelease *self, const gchar *uri)
  * Since: 1.5.6
  **/
 GPtrArray *
-fwupd_release_get_locations (FwupdRelease *self)
+fwupd_release_get_locations(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->locations;
 }
 
@@ -642,17 +643,17 @@ fwupd_release_get_locations (FwupdRelease *self)
  * Since: 1.5.6
  **/
 void
-fwupd_release_add_location (FwupdRelease *self, const gchar *location)
+fwupd_release_add_location(FwupdRelease *self, const gchar *location)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
-	g_return_if_fail (location != NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+	g_return_if_fail(location != NULL);
 	for (guint i = 0; i < priv->locations->len; i++) {
-		const gchar *location_tmp = g_ptr_array_index (priv->locations, i);
-		if (g_strcmp0 (location_tmp, location) == 0)
+		const gchar *location_tmp = g_ptr_array_index(priv->locations, i);
+		if (g_strcmp0(location_tmp, location) == 0)
 			return;
 	}
-	g_ptr_array_add (priv->locations, g_strdup (location));
+	g_ptr_array_add(priv->locations, g_strdup(location));
 }
 
 /**
@@ -666,10 +667,10 @@ fwupd_release_add_location (FwupdRelease *self, const gchar *location)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_release_get_homepage (FwupdRelease *self)
+fwupd_release_get_homepage(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->homepage;
 }
 
@@ -683,17 +684,17 @@ fwupd_release_get_homepage (FwupdRelease *self)
  * Since: 0.9.3
  **/
 void
-fwupd_release_set_homepage (FwupdRelease *self, const gchar *homepage)
+fwupd_release_set_homepage(FwupdRelease *self, const gchar *homepage)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->homepage, homepage) == 0)
+	if (g_strcmp0(priv->homepage, homepage) == 0)
 		return;
 
-	g_free (priv->homepage);
-	priv->homepage = g_strdup (homepage);
+	g_free(priv->homepage);
+	priv->homepage = g_strdup(homepage);
 }
 
 /**
@@ -707,10 +708,10 @@ fwupd_release_set_homepage (FwupdRelease *self, const gchar *homepage)
  * Since: 1.2.4
  **/
 const gchar *
-fwupd_release_get_details_url (FwupdRelease *self)
+fwupd_release_get_details_url(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->details_url;
 }
 
@@ -724,17 +725,17 @@ fwupd_release_get_details_url (FwupdRelease *self)
  * Since: 1.2.4
  **/
 void
-fwupd_release_set_details_url (FwupdRelease *self, const gchar *details_url)
+fwupd_release_set_details_url(FwupdRelease *self, const gchar *details_url)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->details_url, details_url) == 0)
+	if (g_strcmp0(priv->details_url, details_url) == 0)
 		return;
 
-	g_free (priv->details_url);
-	priv->details_url = g_strdup (details_url);
+	g_free(priv->details_url);
+	priv->details_url = g_strdup(details_url);
 }
 
 /**
@@ -748,10 +749,10 @@ fwupd_release_set_details_url (FwupdRelease *self, const gchar *details_url)
  * Since: 1.2.4
  **/
 const gchar *
-fwupd_release_get_source_url (FwupdRelease *self)
+fwupd_release_get_source_url(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->source_url;
 }
 
@@ -765,17 +766,17 @@ fwupd_release_get_source_url (FwupdRelease *self)
  * Since: 1.2.4
  **/
 void
-fwupd_release_set_source_url (FwupdRelease *self, const gchar *source_url)
+fwupd_release_set_source_url(FwupdRelease *self, const gchar *source_url)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->source_url, source_url) == 0)
+	if (g_strcmp0(priv->source_url, source_url) == 0)
 		return;
 
-	g_free (priv->source_url);
-	priv->source_url = g_strdup (source_url);
+	g_free(priv->source_url);
+	priv->source_url = g_strdup(source_url);
 }
 
 /**
@@ -789,10 +790,10 @@ fwupd_release_set_source_url (FwupdRelease *self, const gchar *source_url)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_release_get_description (FwupdRelease *self)
+fwupd_release_get_description(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->description;
 }
 
@@ -806,17 +807,17 @@ fwupd_release_get_description (FwupdRelease *self)
  * Since: 0.9.3
  **/
 void
-fwupd_release_set_description (FwupdRelease *self, const gchar *description)
+fwupd_release_set_description(FwupdRelease *self, const gchar *description)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->description, description) == 0)
+	if (g_strcmp0(priv->description, description) == 0)
 		return;
 
-	g_free (priv->description);
-	priv->description = g_strdup (description);
+	g_free(priv->description);
+	priv->description = g_strdup(description);
 }
 
 /**
@@ -830,10 +831,10 @@ fwupd_release_set_description (FwupdRelease *self, const gchar *description)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_release_get_appstream_id (FwupdRelease *self)
+fwupd_release_get_appstream_id(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->appstream_id;
 }
 
@@ -847,17 +848,17 @@ fwupd_release_get_appstream_id (FwupdRelease *self)
  * Since: 0.9.3
  **/
 void
-fwupd_release_set_appstream_id (FwupdRelease *self, const gchar *appstream_id)
+fwupd_release_set_appstream_id(FwupdRelease *self, const gchar *appstream_id)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->appstream_id, appstream_id) == 0)
+	if (g_strcmp0(priv->appstream_id, appstream_id) == 0)
 		return;
 
-	g_free (priv->appstream_id);
-	priv->appstream_id = g_strdup (appstream_id);
+	g_free(priv->appstream_id);
+	priv->appstream_id = g_strdup(appstream_id);
 }
 
 /**
@@ -871,10 +872,10 @@ fwupd_release_set_appstream_id (FwupdRelease *self, const gchar *appstream_id)
  * Since: 1.3.3
  **/
 const gchar *
-fwupd_release_get_detach_caption (FwupdRelease *self)
+fwupd_release_get_detach_caption(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->detach_caption;
 }
 
@@ -888,17 +889,17 @@ fwupd_release_get_detach_caption (FwupdRelease *self)
  * Since: 1.3.3
  **/
 void
-fwupd_release_set_detach_caption (FwupdRelease *self, const gchar *detach_caption)
+fwupd_release_set_detach_caption(FwupdRelease *self, const gchar *detach_caption)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->detach_caption, detach_caption) == 0)
+	if (g_strcmp0(priv->detach_caption, detach_caption) == 0)
 		return;
 
-	g_free (priv->detach_caption);
-	priv->detach_caption = g_strdup (detach_caption);
+	g_free(priv->detach_caption);
+	priv->detach_caption = g_strdup(detach_caption);
 }
 
 /**
@@ -912,10 +913,10 @@ fwupd_release_set_detach_caption (FwupdRelease *self, const gchar *detach_captio
  * Since: 1.3.3
  **/
 const gchar *
-fwupd_release_get_detach_image (FwupdRelease *self)
+fwupd_release_get_detach_image(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->detach_image;
 }
 
@@ -929,17 +930,17 @@ fwupd_release_get_detach_image (FwupdRelease *self)
  * Since: 1.3.3
  **/
 void
-fwupd_release_set_detach_image (FwupdRelease *self, const gchar *detach_image)
+fwupd_release_set_detach_image(FwupdRelease *self, const gchar *detach_image)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->detach_image, detach_image) == 0)
+	if (g_strcmp0(priv->detach_image, detach_image) == 0)
 		return;
 
-	g_free (priv->detach_image);
-	priv->detach_image = g_strdup (detach_image);
+	g_free(priv->detach_image);
+	priv->detach_image = g_strdup(detach_image);
 }
 
 /**
@@ -953,10 +954,10 @@ fwupd_release_set_detach_image (FwupdRelease *self, const gchar *detach_image)
  * Since: 0.9.3
  **/
 guint64
-fwupd_release_get_size (FwupdRelease *self)
+fwupd_release_get_size(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), 0);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), 0);
 	return priv->size;
 }
 
@@ -970,10 +971,10 @@ fwupd_release_get_size (FwupdRelease *self)
  * Since: 0.9.3
  **/
 void
-fwupd_release_set_size (FwupdRelease *self, guint64 size)
+fwupd_release_set_size(FwupdRelease *self, guint64 size)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	priv->size = size;
 }
 
@@ -988,10 +989,10 @@ fwupd_release_set_size (FwupdRelease *self, guint64 size)
  * Since: 1.4.0
  **/
 guint64
-fwupd_release_get_created (FwupdRelease *self)
+fwupd_release_get_created(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), 0);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), 0);
 	return priv->created;
 }
 
@@ -1005,10 +1006,10 @@ fwupd_release_get_created (FwupdRelease *self)
  * Since: 1.4.0
  **/
 void
-fwupd_release_set_created (FwupdRelease *self, guint64 created)
+fwupd_release_set_created(FwupdRelease *self, guint64 created)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	priv->created = created;
 }
 
@@ -1023,10 +1024,10 @@ fwupd_release_set_created (FwupdRelease *self, guint64 created)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_release_get_summary (FwupdRelease *self)
+fwupd_release_get_summary(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->summary;
 }
 
@@ -1040,17 +1041,17 @@ fwupd_release_get_summary (FwupdRelease *self)
  * Since: 0.9.3
  **/
 void
-fwupd_release_set_summary (FwupdRelease *self, const gchar *summary)
+fwupd_release_set_summary(FwupdRelease *self, const gchar *summary)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->summary, summary) == 0)
+	if (g_strcmp0(priv->summary, summary) == 0)
 		return;
 
-	g_free (priv->summary);
-	priv->summary = g_strdup (summary);
+	g_free(priv->summary);
+	priv->summary = g_strdup(summary);
 }
 
 /**
@@ -1064,10 +1065,10 @@ fwupd_release_set_summary (FwupdRelease *self, const gchar *summary)
  * Since: 1.5.0
  **/
 const gchar *
-fwupd_release_get_branch (FwupdRelease *self)
+fwupd_release_get_branch(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->branch;
 }
 
@@ -1081,17 +1082,17 @@ fwupd_release_get_branch (FwupdRelease *self)
  * Since: 1.5.0
  **/
 void
-fwupd_release_set_branch (FwupdRelease *self, const gchar *branch)
+fwupd_release_set_branch(FwupdRelease *self, const gchar *branch)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->branch, branch) == 0)
+	if (g_strcmp0(priv->branch, branch) == 0)
 		return;
 
-	g_free (priv->branch);
-	priv->branch = g_strdup (branch);
+	g_free(priv->branch);
+	priv->branch = g_strdup(branch);
 }
 
 /**
@@ -1105,10 +1106,10 @@ fwupd_release_set_branch (FwupdRelease *self, const gchar *branch)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_release_get_vendor (FwupdRelease *self)
+fwupd_release_get_vendor(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->vendor;
 }
 
@@ -1122,17 +1123,17 @@ fwupd_release_get_vendor (FwupdRelease *self)
  * Since: 0.9.3
  **/
 void
-fwupd_release_set_vendor (FwupdRelease *self, const gchar *vendor)
+fwupd_release_set_vendor(FwupdRelease *self, const gchar *vendor)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->vendor, vendor) == 0)
+	if (g_strcmp0(priv->vendor, vendor) == 0)
 		return;
 
-	g_free (priv->vendor);
-	priv->vendor = g_strdup (vendor);
+	g_free(priv->vendor);
+	priv->vendor = g_strdup(vendor);
 }
 
 /**
@@ -1146,10 +1147,10 @@ fwupd_release_set_vendor (FwupdRelease *self, const gchar *vendor)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_release_get_license (FwupdRelease *self)
+fwupd_release_get_license(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->license;
 }
 
@@ -1163,17 +1164,17 @@ fwupd_release_get_license (FwupdRelease *self)
  * Since: 0.9.3
  **/
 void
-fwupd_release_set_license (FwupdRelease *self, const gchar *license)
+fwupd_release_set_license(FwupdRelease *self, const gchar *license)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->license, license) == 0)
+	if (g_strcmp0(priv->license, license) == 0)
 		return;
 
-	g_free (priv->license);
-	priv->license = g_strdup (license);
+	g_free(priv->license);
+	priv->license = g_strdup(license);
 }
 
 /**
@@ -1187,10 +1188,10 @@ fwupd_release_set_license (FwupdRelease *self, const gchar *license)
  * Since: 0.9.3
  **/
 const gchar *
-fwupd_release_get_name (FwupdRelease *self)
+fwupd_release_get_name(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->name;
 }
 
@@ -1204,17 +1205,17 @@ fwupd_release_get_name (FwupdRelease *self)
  * Since: 0.9.3
  **/
 void
-fwupd_release_set_name (FwupdRelease *self, const gchar *name)
+fwupd_release_set_name(FwupdRelease *self, const gchar *name)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->name, name) == 0)
+	if (g_strcmp0(priv->name, name) == 0)
 		return;
 
-	g_free (priv->name);
-	priv->name = g_strdup (name);
+	g_free(priv->name);
+	priv->name = g_strdup(name);
 }
 
 /**
@@ -1228,10 +1229,10 @@ fwupd_release_set_name (FwupdRelease *self, const gchar *name)
  * Since: 1.3.2
  **/
 const gchar *
-fwupd_release_get_name_variant_suffix (FwupdRelease *self)
+fwupd_release_get_name_variant_suffix(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 	return priv->name_variant_suffix;
 }
 
@@ -1245,17 +1246,17 @@ fwupd_release_get_name_variant_suffix (FwupdRelease *self)
  * Since: 1.3.2
  **/
 void
-fwupd_release_set_name_variant_suffix (FwupdRelease *self, const gchar *name_variant_suffix)
+fwupd_release_set_name_variant_suffix(FwupdRelease *self, const gchar *name_variant_suffix)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* not changed */
-	if (g_strcmp0 (priv->name_variant_suffix, name_variant_suffix) == 0)
+	if (g_strcmp0(priv->name_variant_suffix, name_variant_suffix) == 0)
 		return;
 
-	g_free (priv->name_variant_suffix);
-	priv->name_variant_suffix = g_strdup (name_variant_suffix);
+	g_free(priv->name_variant_suffix);
+	priv->name_variant_suffix = g_strdup(name_variant_suffix);
 }
 
 /**
@@ -1269,10 +1270,10 @@ fwupd_release_set_name_variant_suffix (FwupdRelease *self, const gchar *name_var
  * Since: 0.9.8
  **/
 FwupdTrustFlags
-fwupd_release_get_trust_flags (FwupdRelease *self)
+fwupd_release_get_trust_flags(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), 0);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), 0);
 	return priv->flags & FWUPD_RELEASE_TRUST_FLAGS_MASK;
 }
 
@@ -1286,10 +1287,10 @@ fwupd_release_get_trust_flags (FwupdRelease *self)
  * Since: 0.9.8
  **/
 void
-fwupd_release_set_trust_flags (FwupdRelease *self, FwupdTrustFlags trust_flags)
+fwupd_release_set_trust_flags(FwupdRelease *self, FwupdTrustFlags trust_flags)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 
 	/* only overwrite the last two bits of the flags */
 	priv->flags &= ~FWUPD_RELEASE_TRUST_FLAGS_MASK;
@@ -1307,10 +1308,10 @@ fwupd_release_set_trust_flags (FwupdRelease *self, FwupdTrustFlags trust_flags)
  * Since: 1.2.6
  **/
 FwupdReleaseFlags
-fwupd_release_get_flags (FwupdRelease *self)
+fwupd_release_get_flags(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), 0);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), 0);
 	return priv->flags;
 }
 
@@ -1324,10 +1325,10 @@ fwupd_release_get_flags (FwupdRelease *self)
  * Since: 1.2.6
  **/
 void
-fwupd_release_set_flags (FwupdRelease *self, FwupdReleaseFlags flags)
+fwupd_release_set_flags(FwupdRelease *self, FwupdReleaseFlags flags)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	priv->flags = flags;
 }
 
@@ -1341,10 +1342,10 @@ fwupd_release_set_flags (FwupdRelease *self, FwupdReleaseFlags flags)
  * Since: 1.2.6
  **/
 void
-fwupd_release_add_flag (FwupdRelease *self, FwupdReleaseFlags flag)
+fwupd_release_add_flag(FwupdRelease *self, FwupdReleaseFlags flag)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	priv->flags |= flag;
 }
 
@@ -1358,10 +1359,10 @@ fwupd_release_add_flag (FwupdRelease *self, FwupdReleaseFlags flag)
  * Since: 1.2.6
  **/
 void
-fwupd_release_remove_flag (FwupdRelease *self, FwupdReleaseFlags flag)
+fwupd_release_remove_flag(FwupdRelease *self, FwupdReleaseFlags flag)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	priv->flags &= ~flag;
 }
 
@@ -1377,10 +1378,10 @@ fwupd_release_remove_flag (FwupdRelease *self, FwupdReleaseFlags flag)
  * Since: 1.2.6
  **/
 gboolean
-fwupd_release_has_flag (FwupdRelease *self, FwupdReleaseFlags flag)
+fwupd_release_has_flag(FwupdRelease *self, FwupdReleaseFlags flag)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), FALSE);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), FALSE);
 	return (priv->flags & flag) > 0;
 }
 
@@ -1395,10 +1396,10 @@ fwupd_release_has_flag (FwupdRelease *self, FwupdReleaseFlags flag)
  * Since: 1.4.0
  **/
 FwupdReleaseUrgency
-fwupd_release_get_urgency (FwupdRelease *self)
+fwupd_release_get_urgency(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), 0);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), 0);
 	return priv->urgency;
 }
 
@@ -1412,10 +1413,10 @@ fwupd_release_get_urgency (FwupdRelease *self)
  * Since: 1.4.0
  **/
 void
-fwupd_release_set_urgency (FwupdRelease *self, FwupdReleaseUrgency urgency)
+fwupd_release_set_urgency(FwupdRelease *self, FwupdReleaseUrgency urgency)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	priv->urgency = urgency;
 }
 
@@ -1430,10 +1431,10 @@ fwupd_release_set_urgency (FwupdRelease *self, FwupdReleaseUrgency urgency)
  * Since: 1.2.1
  **/
 guint32
-fwupd_release_get_install_duration (FwupdRelease *self)
+fwupd_release_get_install_duration(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), 0);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), 0);
 	return priv->install_duration;
 }
 
@@ -1447,10 +1448,10 @@ fwupd_release_get_install_duration (FwupdRelease *self)
  * Since: 1.2.1
  **/
 void
-fwupd_release_set_install_duration (FwupdRelease *self, guint32 duration)
+fwupd_release_set_install_duration(FwupdRelease *self, guint32 duration)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
 	priv->install_duration = duration;
 }
 
@@ -1465,321 +1466,350 @@ fwupd_release_set_install_duration (FwupdRelease *self, guint32 duration)
  * Since: 1.0.0
  **/
 GVariant *
-fwupd_release_to_variant (FwupdRelease *self)
+fwupd_release_to_variant(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	GVariantBuilder builder;
 
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 
 	/* create an array with all the metadata in */
-	g_variant_builder_init (&builder, G_VARIANT_TYPE_VARDICT);
+	g_variant_builder_init(&builder, G_VARIANT_TYPE_VARDICT);
 	if (priv->remote_id != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_REMOTE_ID,
-				       g_variant_new_string (priv->remote_id));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_REMOTE_ID,
+				      g_variant_new_string(priv->remote_id));
 	}
 	if (priv->appstream_id != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_APPSTREAM_ID,
-				       g_variant_new_string (priv->appstream_id));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_APPSTREAM_ID,
+				      g_variant_new_string(priv->appstream_id));
 	}
 	if (priv->detach_caption != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DETACH_CAPTION,
-				       g_variant_new_string (priv->detach_caption));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_DETACH_CAPTION,
+				      g_variant_new_string(priv->detach_caption));
 	}
 	if (priv->detach_image != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DETACH_IMAGE,
-				       g_variant_new_string (priv->detach_image));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_DETACH_IMAGE,
+				      g_variant_new_string(priv->detach_image));
 	}
 	if (priv->filename != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_FILENAME,
-				       g_variant_new_string (priv->filename));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_FILENAME,
+				      g_variant_new_string(priv->filename));
 	}
 	if (priv->protocol != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_PROTOCOL,
-				       g_variant_new_string (priv->protocol));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_PROTOCOL,
+				      g_variant_new_string(priv->protocol));
 	}
 	if (priv->license != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_LICENSE,
-				       g_variant_new_string (priv->license));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_LICENSE,
+				      g_variant_new_string(priv->license));
 	}
 	if (priv->name != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_NAME,
-				       g_variant_new_string (priv->name));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_NAME,
+				      g_variant_new_string(priv->name));
 	}
 	if (priv->name_variant_suffix != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX,
-				       g_variant_new_string (priv->name_variant_suffix));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX,
+				      g_variant_new_string(priv->name_variant_suffix));
 	}
 	if (priv->size != 0) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_SIZE,
-				       g_variant_new_uint64 (priv->size));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_SIZE,
+				      g_variant_new_uint64(priv->size));
 	}
 	if (priv->created != 0) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_CREATED,
-				       g_variant_new_uint64 (priv->created));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_CREATED,
+				      g_variant_new_uint64(priv->created));
 	}
 	if (priv->summary != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_SUMMARY,
-				       g_variant_new_string (priv->summary));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_SUMMARY,
+				      g_variant_new_string(priv->summary));
 	}
 	if (priv->branch != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_BRANCH,
-				       g_variant_new_string (priv->branch));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_BRANCH,
+				      g_variant_new_string(priv->branch));
 	}
 	if (priv->description != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DESCRIPTION,
-				       g_variant_new_string (priv->description));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_DESCRIPTION,
+				      g_variant_new_string(priv->description));
 	}
 	if (priv->categories->len > 0) {
-		g_autofree const gchar **strv = g_new0 (const gchar *, priv->categories->len + 1);
+		g_autofree const gchar **strv = g_new0(const gchar *, priv->categories->len + 1);
 		for (guint i = 0; i < priv->categories->len; i++)
-			strv[i] = (const gchar *) g_ptr_array_index (priv->categories, i);
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_CATEGORIES,
-				       g_variant_new_strv (strv, -1));
+			strv[i] = (const gchar *)g_ptr_array_index(priv->categories, i);
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_CATEGORIES,
+				      g_variant_new_strv(strv, -1));
 	}
 	if (priv->issues->len > 0) {
-		g_autofree const gchar **strv = g_new0 (const gchar *, priv->issues->len + 1);
+		g_autofree const gchar **strv = g_new0(const gchar *, priv->issues->len + 1);
 		for (guint i = 0; i < priv->issues->len; i++)
-			strv[i] = (const gchar *) g_ptr_array_index (priv->issues, i);
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_ISSUES,
-				       g_variant_new_strv (strv, -1));
+			strv[i] = (const gchar *)g_ptr_array_index(priv->issues, i);
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_ISSUES,
+				      g_variant_new_strv(strv, -1));
 	}
 	if (priv->checksums->len > 0) {
-		g_autoptr(GString) str = g_string_new ("");
+		g_autoptr(GString) str = g_string_new("");
 		for (guint i = 0; i < priv->checksums->len; i++) {
-			const gchar *checksum = g_ptr_array_index (priv->checksums, i);
-			g_string_append_printf (str, "%s,", checksum);
+			const gchar *checksum = g_ptr_array_index(priv->checksums, i);
+			g_string_append_printf(str, "%s,", checksum);
 		}
 		if (str->len > 0)
-			g_string_truncate (str, str->len - 1);
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_CHECKSUM,
-				       g_variant_new_string (str->str));
+			g_string_truncate(str, str->len - 1);
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_CHECKSUM,
+				      g_variant_new_string(str->str));
 	}
 	if (priv->locations->len > 0) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_LOCATIONS,
-				       g_variant_new_strv ((const gchar * const*) priv->locations->pdata,
-							   priv->locations->len));
+		g_variant_builder_add(
+		    &builder,
+		    "{sv}",
+		    FWUPD_RESULT_KEY_LOCATIONS,
+		    g_variant_new_strv((const gchar *const *)priv->locations->pdata,
+				       priv->locations->len));
 		/* for compatibility */
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_URI,
-				       g_variant_new_string (g_ptr_array_index (priv->locations, 0)));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_URI,
+				      g_variant_new_string(g_ptr_array_index(priv->locations, 0)));
 	}
 	if (priv->homepage != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_HOMEPAGE,
-				       g_variant_new_string (priv->homepage));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_HOMEPAGE,
+				      g_variant_new_string(priv->homepage));
 	}
 	if (priv->details_url != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_DETAILS_URL,
-				       g_variant_new_string (priv->details_url));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_DETAILS_URL,
+				      g_variant_new_string(priv->details_url));
 	}
 	if (priv->source_url != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_SOURCE_URL,
-				       g_variant_new_string (priv->source_url));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_SOURCE_URL,
+				      g_variant_new_string(priv->source_url));
 	}
 	if (priv->version != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_VERSION,
-				       g_variant_new_string (priv->version));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_VERSION,
+				      g_variant_new_string(priv->version));
 	}
 	if (priv->vendor != NULL) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_VENDOR,
-				       g_variant_new_string (priv->vendor));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_VENDOR,
+				      g_variant_new_string(priv->vendor));
 	}
 	if (priv->flags != 0) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_TRUST_FLAGS,
-				       g_variant_new_uint64 (priv->flags));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_TRUST_FLAGS,
+				      g_variant_new_uint64(priv->flags));
 	}
 	if (priv->urgency != 0) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_URGENCY,
-				       g_variant_new_uint32 (priv->urgency));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_URGENCY,
+				      g_variant_new_uint32(priv->urgency));
 	}
-	if (g_hash_table_size (priv->metadata) > 0) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_METADATA,
-				       fwupd_hash_kv_to_variant (priv->metadata));
+	if (g_hash_table_size(priv->metadata) > 0) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_METADATA,
+				      fwupd_hash_kv_to_variant(priv->metadata));
 	}
 	if (priv->install_duration > 0) {
-		g_variant_builder_add (&builder, "{sv}",
-				       FWUPD_RESULT_KEY_INSTALL_DURATION,
-				       g_variant_new_uint32 (priv->install_duration));
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_INSTALL_DURATION,
+				      g_variant_new_uint32(priv->install_duration));
 	}
-	return g_variant_new ("a{sv}", &builder);
+	return g_variant_new("a{sv}", &builder);
 }
 
 static void
-fwupd_release_from_key_value (FwupdRelease *self, const gchar *key, GVariant *value)
+fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *value)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_REMOTE_ID) == 0) {
-		fwupd_release_set_remote_id (self, g_variant_get_string (value, NULL));
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_REMOTE_ID) == 0) {
+		fwupd_release_set_remote_id(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_APPSTREAM_ID) == 0) {
-		fwupd_release_set_appstream_id (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_APPSTREAM_ID) == 0) {
+		fwupd_release_set_appstream_id(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DETACH_CAPTION) == 0) {
-		fwupd_release_set_detach_caption (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_DETACH_CAPTION) == 0) {
+		fwupd_release_set_detach_caption(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DETACH_IMAGE) == 0) {
-		fwupd_release_set_detach_image (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_DETACH_IMAGE) == 0) {
+		fwupd_release_set_detach_image(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_FILENAME) == 0) {
-		fwupd_release_set_filename (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_FILENAME) == 0) {
+		fwupd_release_set_filename(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_PROTOCOL) == 0) {
-		fwupd_release_set_protocol (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_PROTOCOL) == 0) {
+		fwupd_release_set_protocol(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_LICENSE) == 0) {
-		fwupd_release_set_license (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_LICENSE) == 0) {
+		fwupd_release_set_license(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_NAME) == 0) {
-		fwupd_release_set_name (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
+		fwupd_release_set_name(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX) == 0) {
-		fwupd_release_set_name_variant_suffix (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX) == 0) {
+		fwupd_release_set_name_variant_suffix(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SIZE) == 0) {
-		fwupd_release_set_size (self, g_variant_get_uint64 (value));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_SIZE) == 0) {
+		fwupd_release_set_size(self, g_variant_get_uint64(value));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_CREATED) == 0) {
-		fwupd_release_set_created (self, g_variant_get_uint64 (value));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
+		fwupd_release_set_created(self, g_variant_get_uint64(value));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
-		fwupd_release_set_summary (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_SUMMARY) == 0) {
+		fwupd_release_set_summary(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_BRANCH) == 0) {
-		fwupd_release_set_branch (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_BRANCH) == 0) {
+		fwupd_release_set_branch(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
-		fwupd_release_set_description (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_DESCRIPTION) == 0) {
+		fwupd_release_set_description(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_CATEGORIES) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv (value, NULL);
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_CATEGORIES) == 0) {
+		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
 		for (guint i = 0; strv[i] != NULL; i++)
-			fwupd_release_add_category (self, strv[i]);
+			fwupd_release_add_category(self, strv[i]);
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_ISSUES) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv (value, NULL);
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_ISSUES) == 0) {
+		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
 		for (guint i = 0; strv[i] != NULL; i++)
-			fwupd_release_add_issue (self, strv[i]);
+			fwupd_release_add_issue(self, strv[i]);
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
-		const gchar *checksums = g_variant_get_string (value, NULL);
-		g_auto(GStrv) split = g_strsplit (checksums, ",", -1);
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_CHECKSUM) == 0) {
+		const gchar *checksums = g_variant_get_string(value, NULL);
+		g_auto(GStrv) split = g_strsplit(checksums, ",", -1);
 		for (guint i = 0; split[i] != NULL; i++)
-			fwupd_release_add_checksum (self, split[i]);
+			fwupd_release_add_checksum(self, split[i]);
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_LOCATIONS) == 0) {
-		g_autofree const gchar **strv = g_variant_get_strv (value, NULL);
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_LOCATIONS) == 0) {
+		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
 		for (guint i = 0; strv[i] != NULL; i++)
-			fwupd_release_add_location (self, strv[i]);
+			fwupd_release_add_location(self, strv[i]);
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_URI) == 0) {
-		fwupd_release_add_location (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0) {
+		fwupd_release_add_location(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_HOMEPAGE) == 0) {
-		fwupd_release_set_homepage (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_HOMEPAGE) == 0) {
+		fwupd_release_set_homepage(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_DETAILS_URL) == 0) {
-		fwupd_release_set_details_url (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_DETAILS_URL) == 0) {
+		fwupd_release_set_details_url(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_SOURCE_URL) == 0) {
-		fwupd_release_set_source_url (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_SOURCE_URL) == 0) {
+		fwupd_release_set_source_url(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VERSION) == 0) {
-		fwupd_release_set_version (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION) == 0) {
+		fwupd_release_set_version(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_VENDOR) == 0) {
-		fwupd_release_set_vendor (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_VENDOR) == 0) {
+		fwupd_release_set_vendor(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_TRUST_FLAGS) == 0) {
-		fwupd_release_set_flags (self, g_variant_get_uint64 (value));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_TRUST_FLAGS) == 0) {
+		fwupd_release_set_flags(self, g_variant_get_uint64(value));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_URGENCY) == 0) {
-		fwupd_release_set_urgency (self, g_variant_get_uint32 (value));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_URGENCY) == 0) {
+		fwupd_release_set_urgency(self, g_variant_get_uint32(value));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_INSTALL_DURATION) == 0) {
-		fwupd_release_set_install_duration (self, g_variant_get_uint32 (value));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_INSTALL_DURATION) == 0) {
+		fwupd_release_set_install_duration(self, g_variant_get_uint32(value));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_MESSAGE) == 0) {
-		fwupd_release_set_update_message (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_UPDATE_MESSAGE) == 0) {
+		fwupd_release_set_update_message(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_UPDATE_IMAGE) == 0) {
-		fwupd_release_set_update_image (self, g_variant_get_string (value, NULL));
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_UPDATE_IMAGE) == 0) {
+		fwupd_release_set_update_image(self, g_variant_get_string(value, NULL));
 		return;
 	}
-	if (g_strcmp0 (key, FWUPD_RESULT_KEY_METADATA) == 0) {
-		g_hash_table_unref (priv->metadata);
-		priv->metadata = fwupd_variant_to_hash_kv (value);
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_METADATA) == 0) {
+		g_hash_table_unref(priv->metadata);
+		priv->metadata = fwupd_variant_to_hash_kv(value);
 		return;
 	}
 }
 
 static void
-fwupd_pad_kv_str (GString *str, const gchar *key, const gchar *value)
+fwupd_pad_kv_str(GString *str, const gchar *key, const gchar *value)
 {
 	/* ignore */
 	if (key == NULL || value == NULL)
 		return;
-	g_string_append_printf (str, "  %s: ", key);
-	for (gsize i = strlen (key); i < 20; i++)
-		g_string_append (str, " ");
-	g_string_append_printf (str, "%s\n", value);
+	g_string_append_printf(str, "  %s: ", key);
+	for (gsize i = strlen(key); i < 20; i++)
+		g_string_append(str, " ");
+	g_string_append_printf(str, "%s\n", value);
 }
 
 static void
-fwupd_pad_kv_unx (GString *str, const gchar *key, guint64 value)
+fwupd_pad_kv_unx(GString *str, const gchar *key, guint64 value)
 {
 	g_autoptr(GDateTime) date = NULL;
 	g_autofree gchar *tmp = NULL;
@@ -1788,43 +1818,42 @@ fwupd_pad_kv_unx (GString *str, const gchar *key, guint64 value)
 	if (value == 0)
 		return;
 
-	date = g_date_time_new_from_unix_utc ((gint64) value);
-	tmp = g_date_time_format (date, "%F");
-	fwupd_pad_kv_str (str, key, tmp);
+	date = g_date_time_new_from_unix_utc((gint64)value);
+	tmp = g_date_time_format(date, "%F");
+	fwupd_pad_kv_str(str, key, tmp);
 }
 
 static void
-fwupd_pad_kv_siz (GString *str, const gchar *key, guint64 value)
+fwupd_pad_kv_siz(GString *str, const gchar *key, guint64 value)
 {
 	g_autofree gchar *tmp = NULL;
 
 	/* ignore */
 	if (value == 0)
 		return;
-	tmp = g_format_size (value);
-	fwupd_pad_kv_str (str, key, tmp);
+	tmp = g_format_size(value);
+	fwupd_pad_kv_str(str, key, tmp);
 }
 
 static void
-fwupd_pad_kv_tfl (GString *str, const gchar *key, FwupdReleaseFlags release_flags)
+fwupd_pad_kv_tfl(GString *str, const gchar *key, FwupdReleaseFlags release_flags)
 {
-	g_autoptr(GString) tmp = g_string_new ("");
+	g_autoptr(GString) tmp = g_string_new("");
 	for (guint i = 0; i < 64; i++) {
-		if ((release_flags & ((guint64) 1 << i)) == 0)
+		if ((release_flags & ((guint64)1 << i)) == 0)
 			continue;
-		g_string_append_printf (tmp, "%s|",
-					fwupd_release_flag_to_string ((guint64) 1 << i));
+		g_string_append_printf(tmp, "%s|", fwupd_release_flag_to_string((guint64)1 << i));
 	}
 	if (tmp->len == 0) {
-		g_string_append (tmp, fwupd_release_flag_to_string (0));
+		g_string_append(tmp, fwupd_release_flag_to_string(0));
 	} else {
-		g_string_truncate (tmp, tmp->len - 1);
+		g_string_truncate(tmp, tmp->len - 1);
 	}
-	fwupd_pad_kv_str (str, key, tmp->str);
+	fwupd_pad_kv_str(str, key, tmp->str);
 }
 
 static void
-fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
+fwupd_pad_kv_int(GString *str, const gchar *key, guint32 value)
 {
 	g_autofree gchar *tmp = NULL;
 
@@ -1832,7 +1861,7 @@ fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
 	if (value == 0)
 		return;
 	tmp = g_strdup_printf("%" G_GUINT32_FORMAT, value);
-	fwupd_pad_kv_str (str, key, tmp);
+	fwupd_pad_kv_str(str, key, tmp);
 }
 
 /**
@@ -1845,92 +1874,99 @@ fwupd_pad_kv_int (GString *str, const gchar *key, guint32 value)
  * Since: 1.2.6
  **/
 void
-fwupd_release_to_json (FwupdRelease *self, JsonBuilder *builder)
+fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(GList) keys = NULL;
 
-	g_return_if_fail (FWUPD_IS_RELEASE (self));
-	g_return_if_fail (builder != NULL);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+	g_return_if_fail(builder != NULL);
 
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_VERSION, priv->version);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_FILENAME, priv->filename);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_VERSION, priv->version);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_FILENAME, priv->filename);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	if (priv->categories->len > 0) {
-		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_CATEGORIES);
-		json_builder_begin_array (builder);
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_CATEGORIES);
+		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->categories->len; i++) {
-			const gchar *tmp = g_ptr_array_index (priv->categories, i);
-			json_builder_add_string_value (builder, tmp);
+			const gchar *tmp = g_ptr_array_index(priv->categories, i);
+			json_builder_add_string_value(builder, tmp);
 		}
-		json_builder_end_array (builder);
+		json_builder_end_array(builder);
 	}
 	if (priv->issues->len > 0) {
-		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_ISSUES);
-		json_builder_begin_array (builder);
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_ISSUES);
+		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->issues->len; i++) {
-			const gchar *tmp = g_ptr_array_index (priv->issues, i);
-			json_builder_add_string_value (builder, tmp);
+			const gchar *tmp = g_ptr_array_index(priv->issues, i);
+			json_builder_add_string_value(builder, tmp);
 		}
-		json_builder_end_array (builder);
+		json_builder_end_array(builder);
 	}
 	if (priv->checksums->len > 0) {
-		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_CHECKSUM);
-		json_builder_begin_array (builder);
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_CHECKSUM);
+		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->checksums->len; i++) {
-			const gchar *checksum = g_ptr_array_index (priv->checksums, i);
-			json_builder_add_string_value (builder, checksum);
+			const gchar *checksum = g_ptr_array_index(priv->checksums, i);
+			json_builder_add_string_value(builder, checksum);
 		}
-		json_builder_end_array (builder);
+		json_builder_end_array(builder);
 	}
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_LICENSE, priv->license);
-	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_SIZE, priv->size);
-	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_CREATED, priv->created);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_LICENSE, priv->license);
+	fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_SIZE, priv->size);
+	fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_CREATED, priv->created);
 	if (priv->locations->len > 0) {
-		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_LOCATIONS);
-		json_builder_begin_array (builder);
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_LOCATIONS);
+		json_builder_begin_array(builder);
 		for (guint i = 0; i < priv->locations->len; i++) {
-			const gchar *location = g_ptr_array_index (priv->locations, i);
-			json_builder_add_string_value (builder, location);
+			const gchar *location = g_ptr_array_index(priv->locations, i);
+			json_builder_add_string_value(builder, location);
 		}
-		json_builder_end_array (builder);
+		json_builder_end_array(builder);
 		/* for compatibility */
-		fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_URI,
-					       (const gchar *) g_ptr_array_index (priv->locations, 0));
+		fwupd_common_json_add_string(builder,
+					     FWUPD_RESULT_KEY_URI,
+					     (const gchar *)g_ptr_array_index(priv->locations, 0));
 	}
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
 	if (priv->flags != FWUPD_RELEASE_FLAG_NONE) {
-		json_builder_set_member_name (builder, FWUPD_RESULT_KEY_FLAGS);
-		json_builder_begin_array (builder);
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
+		json_builder_begin_array(builder);
 		for (guint i = 0; i < 64; i++) {
 			const gchar *tmp;
-			if ((priv->flags & ((guint64) 1 << i)) == 0)
+			if ((priv->flags & ((guint64)1 << i)) == 0)
 				continue;
-			tmp = fwupd_release_flag_to_string ((guint64) 1 << i);
-			json_builder_add_string_value (builder, tmp);
+			tmp = fwupd_release_flag_to_string((guint64)1 << i);
+			json_builder_add_string_value(builder, tmp);
 		}
-		json_builder_end_array (builder);
+		json_builder_end_array(builder);
 	}
-	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_DETACH_CAPTION, priv->detach_caption);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
-	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
+	fwupd_common_json_add_int(builder,
+				  FWUPD_RESULT_KEY_INSTALL_DURATION,
+				  priv->install_duration);
+	fwupd_common_json_add_string(builder,
+				     FWUPD_RESULT_KEY_DETACH_CAPTION,
+				     priv->detach_caption);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
+	fwupd_common_json_add_string(builder,
+				     FWUPD_RESULT_KEY_UPDATE_MESSAGE,
+				     priv->update_message);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 
 	/* metadata */
-	keys = g_hash_table_get_keys (priv->metadata);
+	keys = g_hash_table_get_keys(priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
-		const gchar *value = g_hash_table_lookup (priv->metadata, key);
-		fwupd_common_json_add_string (builder, key, value);
+		const gchar *value = g_hash_table_lookup(priv->metadata, key);
+		fwupd_common_json_add_string(builder, key, value);
 	}
 }
 
@@ -1945,130 +1981,131 @@ fwupd_release_to_json (FwupdRelease *self, JsonBuilder *builder)
  * Since: 0.9.3
  **/
 gchar *
-fwupd_release_to_string (FwupdRelease *self)
+fwupd_release_to_string(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 	GString *str;
 	g_autoptr(GList) keys = NULL;
 
-	g_return_val_if_fail (FWUPD_IS_RELEASE (self), NULL);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
 
-	str = g_string_new ("");
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_BRANCH, priv->branch);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VERSION, priv->version);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_FILENAME, priv->filename);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
+	str = g_string_new("");
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_BRANCH, priv->branch);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VERSION, priv->version);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_FILENAME, priv->filename);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_PROTOCOL, priv->protocol);
 	for (guint i = 0; i < priv->categories->len; i++) {
-		const gchar *tmp = g_ptr_array_index (priv->categories, i);
-		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_CATEGORIES, tmp);
+		const gchar *tmp = g_ptr_array_index(priv->categories, i);
+		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_CATEGORIES, tmp);
 	}
 	for (guint i = 0; i < priv->issues->len; i++) {
-		const gchar *tmp = g_ptr_array_index (priv->issues, i);
-		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_ISSUES, tmp);
+		const gchar *tmp = g_ptr_array_index(priv->issues, i);
+		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_ISSUES, tmp);
 	}
 	for (guint i = 0; i < priv->checksums->len; i++) {
-		const gchar *checksum = g_ptr_array_index (priv->checksums, i);
-		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display (checksum);
-		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_CHECKSUM, checksum_display);
+		const gchar *checksum = g_ptr_array_index(priv->checksums, i);
+		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display(checksum);
+		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_CHECKSUM, checksum_display);
 	}
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_LICENSE, priv->license);
-	fwupd_pad_kv_siz (str, FWUPD_RESULT_KEY_SIZE, priv->size);
-	fwupd_pad_kv_unx (str, FWUPD_RESULT_KEY_CREATED, priv->created);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_LICENSE, priv->license);
+	fwupd_pad_kv_siz(str, FWUPD_RESULT_KEY_SIZE, priv->size);
+	fwupd_pad_kv_unx(str, FWUPD_RESULT_KEY_CREATED, priv->created);
 	for (guint i = 0; i < priv->locations->len; i++) {
-		const gchar *location = g_ptr_array_index (priv->locations, i);
-		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_URI, location);
+		const gchar *location = g_ptr_array_index(priv->locations, i);
+		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_URI, location);
 	}
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_HOMEPAGE, priv->homepage);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DETAILS_URL, priv->details_url);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_SOURCE_URL, priv->source_url);
 	if (priv->urgency != FWUPD_RELEASE_URGENCY_UNKNOWN) {
-		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_URGENCY,
-				  fwupd_release_urgency_to_string (priv->urgency));
+		fwupd_pad_kv_str(str,
+				 FWUPD_RESULT_KEY_URGENCY,
+				 fwupd_release_urgency_to_string(priv->urgency));
 	}
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
-	fwupd_pad_kv_tfl (str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
-	fwupd_pad_kv_int (str, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DETACH_CAPTION, priv->detach_caption);
-	fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_VENDOR, priv->vendor);
+	fwupd_pad_kv_tfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
+	fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DETACH_CAPTION, priv->detach_caption);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DETACH_IMAGE, priv->detach_image);
 	if (priv->update_message != NULL)
-		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
+		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
 	if (priv->update_image != NULL)
-		fwupd_pad_kv_str (str, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
+		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);
 	/* metadata */
-	keys = g_hash_table_get_keys (priv->metadata);
+	keys = g_hash_table_get_keys(priv->metadata);
 	for (GList *l = keys; l != NULL; l = l->next) {
 		const gchar *key = l->data;
-		const gchar *value = g_hash_table_lookup (priv->metadata, key);
-		fwupd_pad_kv_str (str, key, value);
+		const gchar *value = g_hash_table_lookup(priv->metadata, key);
+		fwupd_pad_kv_str(str, key, value);
 	}
 
-	return g_string_free (str, FALSE);
+	return g_string_free(str, FALSE);
 }
 
 static void
-fwupd_release_class_init (FwupdReleaseClass *klass)
+fwupd_release_class_init(FwupdReleaseClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fwupd_release_finalize;
 }
 
 static void
-fwupd_release_init (FwupdRelease *self)
+fwupd_release_init(FwupdRelease *self)
 {
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
-	priv->categories = g_ptr_array_new_with_free_func (g_free);
-	priv->issues = g_ptr_array_new_with_free_func (g_free);
-	priv->checksums = g_ptr_array_new_with_free_func (g_free);
-	priv->locations = g_ptr_array_new_with_free_func (g_free);
-	priv->metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	priv->categories = g_ptr_array_new_with_free_func(g_free);
+	priv->issues = g_ptr_array_new_with_free_func(g_free);
+	priv->checksums = g_ptr_array_new_with_free_func(g_free);
+	priv->locations = g_ptr_array_new_with_free_func(g_free);
+	priv->metadata = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
 static void
-fwupd_release_finalize (GObject *object)
+fwupd_release_finalize(GObject *object)
 {
-	FwupdRelease *self = FWUPD_RELEASE (object);
-	FwupdReleasePrivate *priv = GET_PRIVATE (self);
+	FwupdRelease *self = FWUPD_RELEASE(object);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
 
-	g_free (priv->description);
-	g_free (priv->filename);
-	g_free (priv->protocol);
-	g_free (priv->appstream_id);
-	g_free (priv->detach_caption);
-	g_free (priv->detach_image);
-	g_free (priv->license);
-	g_free (priv->name);
-	g_free (priv->name_variant_suffix);
-	g_free (priv->summary);
-	g_free (priv->branch);
-	g_ptr_array_unref (priv->locations);
-	g_free (priv->homepage);
-	g_free (priv->details_url);
-	g_free (priv->source_url);
-	g_free (priv->vendor);
-	g_free (priv->version);
-	g_free (priv->remote_id);
-	g_free (priv->update_message);
-	g_free (priv->update_image);
-	g_ptr_array_unref (priv->categories);
-	g_ptr_array_unref (priv->issues);
-	g_ptr_array_unref (priv->checksums);
-	g_hash_table_unref (priv->metadata);
+	g_free(priv->description);
+	g_free(priv->filename);
+	g_free(priv->protocol);
+	g_free(priv->appstream_id);
+	g_free(priv->detach_caption);
+	g_free(priv->detach_image);
+	g_free(priv->license);
+	g_free(priv->name);
+	g_free(priv->name_variant_suffix);
+	g_free(priv->summary);
+	g_free(priv->branch);
+	g_ptr_array_unref(priv->locations);
+	g_free(priv->homepage);
+	g_free(priv->details_url);
+	g_free(priv->source_url);
+	g_free(priv->vendor);
+	g_free(priv->version);
+	g_free(priv->remote_id);
+	g_free(priv->update_message);
+	g_free(priv->update_image);
+	g_ptr_array_unref(priv->categories);
+	g_ptr_array_unref(priv->issues);
+	g_ptr_array_unref(priv->checksums);
+	g_hash_table_unref(priv->metadata);
 
-	G_OBJECT_CLASS (fwupd_release_parent_class)->finalize (object);
+	G_OBJECT_CLASS(fwupd_release_parent_class)->finalize(object);
 }
 
 static void
-fwupd_release_set_from_variant_iter (FwupdRelease *self, GVariantIter *iter)
+fwupd_release_set_from_variant_iter(FwupdRelease *self, GVariantIter *iter)
 {
 	GVariant *value;
 	const gchar *key;
-	while (g_variant_iter_next (iter, "{&sv}", &key, &value)) {
-		fwupd_release_from_key_value (self, key, value);
-		g_variant_unref (value);
+	while (g_variant_iter_next(iter, "{&sv}", &key, &value)) {
+		fwupd_release_from_key_value(self, key, value);
+		g_variant_unref(value);
 	}
 }
 
@@ -2083,24 +2120,24 @@ fwupd_release_set_from_variant_iter (FwupdRelease *self, GVariantIter *iter)
  * Since: 1.0.0
  **/
 FwupdRelease *
-fwupd_release_from_variant (GVariant *value)
+fwupd_release_from_variant(GVariant *value)
 {
 	FwupdRelease *self = NULL;
 	const gchar *type_string;
 	g_autoptr(GVariantIter) iter = NULL;
 
 	/* format from GetDetails */
-	type_string = g_variant_get_type_string (value);
-	if (g_strcmp0 (type_string, "(a{sv})") == 0) {
-		self = fwupd_release_new ();
-		g_variant_get (value, "(a{sv})", &iter);
-		fwupd_release_set_from_variant_iter (self, iter);
-	} else if (g_strcmp0 (type_string, "a{sv}") == 0) {
-		self = fwupd_release_new ();
-		g_variant_get (value, "a{sv}", &iter);
-		fwupd_release_set_from_variant_iter (self, iter);
+	type_string = g_variant_get_type_string(value);
+	if (g_strcmp0(type_string, "(a{sv})") == 0) {
+		self = fwupd_release_new();
+		g_variant_get(value, "(a{sv})", &iter);
+		fwupd_release_set_from_variant_iter(self, iter);
+	} else if (g_strcmp0(type_string, "a{sv}") == 0) {
+		self = fwupd_release_new();
+		g_variant_get(value, "a{sv}", &iter);
+		fwupd_release_set_from_variant_iter(self, iter);
 	} else {
-		g_warning ("type %s not known", type_string);
+		g_warning("type %s not known", type_string);
 	}
 	return self;
 }
@@ -2111,28 +2148,29 @@ fwupd_release_from_variant (GVariant *value)
  *
  * Creates an array of new releases using serialized data.
  *
- * Returns: (transfer container) (element-type FwupdRelease): releases, or %NULL if @value was invalid
+ * Returns: (transfer container) (element-type FwupdRelease): releases, or %NULL if @value was
+ *invalid
  *
  * Since: 1.2.10
  **/
 GPtrArray *
-fwupd_release_array_from_variant (GVariant *value)
+fwupd_release_array_from_variant(GVariant *value)
 {
 	GPtrArray *array = NULL;
 	gsize sz;
 	g_autoptr(GVariant) untuple = NULL;
 
-	array = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	untuple = g_variant_get_child_value (value, 0);
-	sz = g_variant_n_children (untuple);
+	array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	untuple = g_variant_get_child_value(value, 0);
+	sz = g_variant_n_children(untuple);
 	for (guint i = 0; i < sz; i++) {
 		FwupdRelease *self;
 		g_autoptr(GVariant) data = NULL;
-		data = g_variant_get_child_value (untuple, i);
-		self = fwupd_release_from_variant (data);
+		data = g_variant_get_child_value(untuple, i);
+		self = fwupd_release_from_variant(data);
 		if (self == NULL)
 			continue;
-		g_ptr_array_add (array, self);
+		g_ptr_array_add(array, self);
 	}
 	return array;
 }
@@ -2147,9 +2185,9 @@ fwupd_release_array_from_variant (GVariant *value)
  * Since: 0.9.3
  **/
 FwupdRelease *
-fwupd_release_new (void)
+fwupd_release_new(void)
 {
 	FwupdRelease *self;
-	self = g_object_new (FWUPD_TYPE_RELEASE, NULL);
-	return FWUPD_RELEASE (self);
+	self = g_object_new(FWUPD_TYPE_RELEASE, NULL);
+	return FWUPD_RELEASE(self);
 }

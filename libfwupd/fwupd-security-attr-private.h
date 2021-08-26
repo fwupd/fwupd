@@ -20,7 +20,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_ACPI_DMAR		"org.fwupd.hsi.AcpiDmar"
+#define FWUPD_SECURITY_ATTR_ID_ACPI_DMAR "org.fwupd.hsi.AcpiDmar"
 /**
  * FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM:
  *
@@ -28,7 +28,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM		"org.fwupd.hsi.EncryptedRam"
+#define FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM "org.fwupd.hsi.EncryptedRam"
 /**
  * FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION:
  *
@@ -36,7 +36,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION	"org.fwupd.hsi.Fwupd.Attestation"
+#define FWUPD_SECURITY_ATTR_ID_FWUPD_ATTESTATION "org.fwupd.hsi.Fwupd.Attestation"
 /**
  * FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS:
  *
@@ -44,7 +44,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS		"org.fwupd.hsi.Fwupd.Plugins"
+#define FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS "org.fwupd.hsi.Fwupd.Plugins"
 /**
  * FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES:
  *
@@ -52,7 +52,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES		"org.fwupd.hsi.Fwupd.Updates"
+#define FWUPD_SECURITY_ATTR_ID_FWUPD_UPDATES "org.fwupd.hsi.Fwupd.Updates"
 /**
  * FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED:
  *
@@ -60,7 +60,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED	"org.fwupd.hsi.IntelBootguard.Enabled"
+#define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED "org.fwupd.hsi.IntelBootguard.Enabled"
 /**
  * FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED:
  *
@@ -68,7 +68,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED	"org.fwupd.hsi.IntelBootguard.Verified"
+#define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED "org.fwupd.hsi.IntelBootguard.Verified"
 /**
  * FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM:
  *
@@ -76,7 +76,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM	"org.fwupd.hsi.IntelBootguard.Acm"
+#define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ACM "org.fwupd.hsi.IntelBootguard.Acm"
 /**
  * FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY:
  *
@@ -84,7 +84,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY	"org.fwupd.hsi.IntelBootguard.Policy"
+#define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY "org.fwupd.hsi.IntelBootguard.Policy"
 /**
  * FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP:
  *
@@ -92,7 +92,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP	"org.fwupd.hsi.IntelBootguard.Otp"
+#define FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP "org.fwupd.hsi.IntelBootguard.Otp"
 /**
  * FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED:
  *
@@ -100,7 +100,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED	"org.fwupd.hsi.IntelCet.Enabled"
+#define FWUPD_SECURITY_ATTR_ID_INTEL_CET_ENABLED "org.fwupd.hsi.IntelCet.Enabled"
 /**
  * FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE:
  *
@@ -108,7 +108,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE		"org.fwupd.hsi.IntelCet.Active"
+#define FWUPD_SECURITY_ATTR_ID_INTEL_CET_ACTIVE "org.fwupd.hsi.IntelCet.Active"
 /**
  * FWUPD_SECURITY_ATTR_ID_INTEL_SMAP:
  *
@@ -116,7 +116,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_INTEL_SMAP		"org.fwupd.hsi.IntelSmap"
+#define FWUPD_SECURITY_ATTR_ID_INTEL_SMAP "org.fwupd.hsi.IntelSmap"
 /**
  * FWUPD_SECURITY_ATTR_ID_IOMMU:
  *
@@ -124,7 +124,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_IOMMU			"org.fwupd.hsi.Iommu"
+#define FWUPD_SECURITY_ATTR_ID_IOMMU "org.fwupd.hsi.Iommu"
 /**
  * FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN:
  *
@@ -132,7 +132,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN		"org.fwupd.hsi.Kernel.Lockdown"
+#define FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN "org.fwupd.hsi.Kernel.Lockdown"
 /**
  * FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP:
  *
@@ -140,7 +140,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP		"org.fwupd.hsi.Kernel.Swap"
+#define FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP "org.fwupd.hsi.Kernel.Swap"
 /**
  * FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED:
  *
@@ -148,7 +148,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED		"org.fwupd.hsi.Kernel.Tainted"
+#define FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED "org.fwupd.hsi.Kernel.Tainted"
 /**
  * FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE:
  *
@@ -156,7 +156,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE	"org.fwupd.hsi.Mei.ManufacturingMode"
+#define FWUPD_SECURITY_ATTR_ID_MEI_MANUFACTURING_MODE "org.fwupd.hsi.Mei.ManufacturingMode"
 /**
  * FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP:
  *
@@ -164,7 +164,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP	"org.fwupd.hsi.Mei.OverrideStrap"
+#define FWUPD_SECURITY_ATTR_ID_MEI_OVERRIDE_STRAP "org.fwupd.hsi.Mei.OverrideStrap"
 /**
  * FWUPD_SECURITY_ATTR_ID_MEI_VERSION:
  *
@@ -172,7 +172,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_MEI_VERSION		"org.fwupd.hsi.Mei.Version"
+#define FWUPD_SECURITY_ATTR_ID_MEI_VERSION "org.fwupd.hsi.Mei.Version"
 /**
  * FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE:
  *
@@ -180,7 +180,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE		"org.fwupd.hsi.Spi.Bioswe"
+#define FWUPD_SECURITY_ATTR_ID_SPI_BIOSWE "org.fwupd.hsi.Spi.Bioswe"
 /**
  * FWUPD_SECURITY_ATTR_ID_SPI_BLE:
  *
@@ -188,7 +188,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_SPI_BLE			"org.fwupd.hsi.Spi.Ble"
+#define FWUPD_SECURITY_ATTR_ID_SPI_BLE "org.fwupd.hsi.Spi.Ble"
 /**
  * FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP:
  *
@@ -196,7 +196,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP		"org.fwupd.hsi.Spi.SmmBwp"
+#define FWUPD_SECURITY_ATTR_ID_SPI_SMM_BWP "org.fwupd.hsi.Spi.SmmBwp"
 /**
  * FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR:
  *
@@ -204,7 +204,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.6.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR		"org.fwupd.hsi.Spi.Descriptor"
+#define FWUPD_SECURITY_ATTR_ID_SPI_DESCRIPTOR "org.fwupd.hsi.Spi.Descriptor"
 /**
  * FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE:
  *
@@ -212,7 +212,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE		"org.fwupd.hsi.SuspendToIdle"
+#define FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_IDLE "org.fwupd.hsi.SuspendToIdle"
 /**
  * FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM:
  *
@@ -220,7 +220,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM		"org.fwupd.hsi.SuspendToRam"
+#define FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM "org.fwupd.hsi.SuspendToRam"
 /**
  * FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0:
  *
@@ -228,7 +228,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0	"org.fwupd.hsi.Tpm.ReconstructionPcr0"
+#define FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0 "org.fwupd.hsi.Tpm.ReconstructionPcr0"
 /**
  * FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20:
  *
@@ -236,7 +236,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20		"org.fwupd.hsi.Tpm.Version20"
+#define FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20 "org.fwupd.hsi.Tpm.Version20"
 /**
  * FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT:
  *
@@ -244,7 +244,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT		"org.fwupd.hsi.Uefi.SecureBoot"
+#define FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT "org.fwupd.hsi.Uefi.SecureBoot"
 /**
  * FWUPD_SECURITY_ATTR_ID_INTEL_DCI_ENABLED:
  *
@@ -252,7 +252,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_ENABLED	"org.fwupd.hsi.IntelDci.Enabled"
+#define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_ENABLED "org.fwupd.hsi.IntelDci.Enabled"
 /**
  * FWUPD_SECURITY_ATTR_ID_INTEL_DCI_LOCKED:
  *
@@ -260,7 +260,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_LOCKED		"org.fwupd.hsi.IntelDci.Locked"
+#define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_LOCKED "org.fwupd.hsi.IntelDci.Locked"
 /**
  * FWUPD_SECURITY_ATTR_ID_UEFI_PK:
  *
@@ -268,10 +268,11 @@ G_BEGIN_DECLS
  *
  * Since: 1.5.5
  **/
-#define FWUPD_SECURITY_ATTR_ID_UEFI_PK			"org.fwupd.hsi.Uefi.Pk"
+#define FWUPD_SECURITY_ATTR_ID_UEFI_PK "org.fwupd.hsi.Uefi.Pk"
 
-GVariant	*fwupd_security_attr_to_variant		(FwupdSecurityAttr	*self);
-void		 fwupd_security_attr_to_json		(FwupdSecurityAttr	*self,
-							 JsonBuilder		*builder);
+GVariant *
+fwupd_security_attr_to_variant(FwupdSecurityAttr *self);
+void
+fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder);
 
 G_END_DECLS

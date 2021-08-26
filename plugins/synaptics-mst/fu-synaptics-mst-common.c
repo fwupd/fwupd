@@ -10,7 +10,7 @@
 #include "fu-synaptics-mst-common.h"
 
 const gchar *
-fu_synaptics_mst_mode_to_string (FuSynapticsMstMode mode)
+fu_synaptics_mst_mode_to_string(FuSynapticsMstMode mode)
 {
 	if (mode == FU_SYNAPTICS_MST_MODE_DIRECT)
 		return "DIRECT";
@@ -20,7 +20,7 @@ fu_synaptics_mst_mode_to_string (FuSynapticsMstMode mode)
 }
 
 const gchar *
-fu_synaptics_mst_family_to_string (FuSynapticsMstFamily family)
+fu_synaptics_mst_family_to_string(FuSynapticsMstFamily family)
 {
 	if (family == FU_SYNAPTICS_MST_FAMILY_TESLA)
 		return "tesla";
@@ -32,7 +32,7 @@ fu_synaptics_mst_family_to_string (FuSynapticsMstFamily family)
 }
 
 FuSynapticsMstFamily
-fu_synaptics_mst_family_from_chip_id (guint16 chip_id)
+fu_synaptics_mst_family_from_chip_id(guint16 chip_id)
 {
 	if (chip_id >= 0x5000 && chip_id < 0x6000)
 		return FU_SYNAPTICS_MST_FAMILY_PANAMERA;
