@@ -23,6 +23,7 @@ gboolean
 fu_firehose_updater_write(FuFirehoseUpdater *self,
 			  XbSilo *silo,
 			  GPtrArray *action_nodes,
+			  FuProgress *progress,
 			  GError **error);
 gboolean
 fu_firehose_updater_close(FuFirehoseUpdater *self, GError **error);

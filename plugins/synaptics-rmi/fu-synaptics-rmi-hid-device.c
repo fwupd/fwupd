@@ -428,7 +428,7 @@ fu_synaptics_rmi_hid_device_rebind_driver(FuSynapticsRmiDevice *self, GError **e
 }
 
 static gboolean
-fu_synaptics_rmi_hid_device_detach(FuDevice *device, GError **error)
+fu_synaptics_rmi_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	FuSynapticsRmiFunction *f34;
@@ -437,10 +437,10 @@ fu_synaptics_rmi_hid_device_detach(FuDevice *device, GError **error)
 	if (f34 == NULL)
 		return FALSE;
 	if (f34->function_version == 0x0 || f34->function_version == 0x1) {
-		if (!fu_synaptics_rmi_v5_device_detach(device, error))
+		if (!fu_synaptics_rmi_v5_device_detach(device, progress, error))
 			return FALSE;
 	} else if (f34->function_version == 0x2) {
-		if (!fu_synaptics_rmi_v7_device_detach(device, error))
+		if (!fu_synaptics_rmi_v7_device_detach(device, progress, error))
 			return FALSE;
 	} else {
 		g_set_error(error,
@@ -454,7 +454,7 @@ fu_synaptics_rmi_hid_device_detach(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_synaptics_rmi_hid_device_attach(FuDevice *device, GError **error)
+fu_synaptics_rmi_hid_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 
@@ -469,7 +469,6 @@ fu_synaptics_rmi_hid_device_attach(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* rebind to rescan PDT with new firmware running */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	return fu_synaptics_rmi_hid_device_rebind_driver(self, error);
 }
 
@@ -550,6 +549,17 @@ fu_synaptics_rmi_hid_device_query_status(FuSynapticsRmiDevice *rmi_device, GErro
 }
 
 static void
+fu_synaptics_rmi_hid_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_synaptics_rmi_hid_device_init(FuSynapticsRmiHidDevice *self)
 {
 	fu_device_set_name(FU_DEVICE(self), "Touchpad");
@@ -567,6 +577,7 @@ fu_synaptics_rmi_hid_device_class_init(FuSynapticsRmiHidDeviceClass *klass)
 	klass_device->probe = fu_synaptics_rmi_hid_device_probe;
 	klass_device->open = fu_synaptics_rmi_hid_device_open;
 	klass_device->close = fu_synaptics_rmi_hid_device_close;
+	klass_device->set_progress = fu_synaptics_rmi_hid_device_set_progress;
 	klass_rmi->write = fu_synaptics_rmi_hid_device_write;
 	klass_rmi->read = fu_synaptics_rmi_hid_device_read;
 	klass_rmi->wait_for_attr = fu_synaptics_rmi_hid_device_wait_for_attr;

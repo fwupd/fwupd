@@ -20,7 +20,7 @@ G_DEFINE_TYPE(FuLogitechHidPpRuntimeUnifying,
 #define GET_PRIVATE(o) (fu_logitech_hidpp_runtime_unifying_get_instance_private(o))
 
 static gboolean
-fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, GError **error)
+fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuLogitechHidPpRuntime *self = FU_HIDPP_RUNTIME(device);
 	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
@@ -152,12 +152,23 @@ fu_logitech_hidpp_runtime_unifying_setup(FuDevice *device, GError **error)
 }
 
 static void
+fu_logitech_hidpp_runtime_unifying_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 70);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 4); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 27);	/* reload */
+}
+
+static void
 fu_logitech_hidpp_runtime_unifying_class_init(FuLogitechHidPpRuntimeUnifyingClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 
 	klass_device->detach = fu_logitech_hidpp_runtime_unifying_detach;
 	klass_device->setup = fu_logitech_hidpp_runtime_unifying_setup;
+	klass_device->set_progress = fu_logitech_hidpp_runtime_unifying_set_progress;
 }
 
 static void

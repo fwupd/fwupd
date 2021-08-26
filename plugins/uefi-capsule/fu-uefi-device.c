@@ -766,6 +766,17 @@ fu_uefi_device_set_property(GObject *object, guint prop_id, const GValue *value,
 }
 
 static void
+fu_uefi_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_uefi_device_init(FuUefiDevice *self)
 {
 	fu_device_set_summary(FU_DEVICE(self), "UEFI ESRT device");
@@ -824,6 +835,7 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 	klass_device->report_metadata_pre = fu_uefi_device_report_metadata_pre;
 	klass_device->report_metadata_post = fu_uefi_device_report_metadata_post;
 	klass_device->get_results = fu_uefi_device_get_results;
+	klass_device->set_progress = fu_uefi_device_set_progress;
 
 	pspec =
 	    g_param_spec_string("fw-class",

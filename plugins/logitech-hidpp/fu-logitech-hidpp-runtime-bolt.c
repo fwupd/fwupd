@@ -20,7 +20,7 @@ struct _FuLogitechHidPpRuntimeBolt {
 G_DEFINE_TYPE(FuLogitechHidPpRuntimeBolt, fu_logitech_hidpp_runtime_bolt, FU_TYPE_HIDPP_RUNTIME)
 
 static gboolean
-fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, GError **error)
+fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuLogitechHidPpRuntime *self = FU_HIDPP_RUNTIME(device);
 	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();

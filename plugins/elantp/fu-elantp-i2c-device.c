@@ -29,7 +29,7 @@ struct _FuElantpI2cDevice {
 G_DEFINE_TYPE(FuElantpI2cDevice, fu_elantp_i2c_device, FU_TYPE_UDEV_DEVICE)
 
 static gboolean
-fu_elantp_i2c_device_detach(FuDevice *device, GError **error);
+fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **error);
 
 static void
 fu_elantp_i2c_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -372,6 +372,7 @@ fu_elantp_i2c_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_elantp_i2c_device_write_firmware(FuDevice *device,
 				    FuFirmware *firmware,
+				    FuProgress *progress,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
@@ -386,17 +387,25 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1);
+
 	/* simple image */
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
 
 	/* detach */
-	if (!fu_elantp_i2c_device_detach(device, error))
+	if (!fu_elantp_i2c_device_detach(device, fu_progress_get_child(progress), error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* write each block */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	buf = g_bytes_get_data(fw, &bufsz);
 	iap_addr = fu_elantp_firmware_get_iap_addr(firmware_elantp);
 	chunks = fu_chunk_array_new(buf + iap_addr, bufsz - iap_addr, 0x0, 0x0, self->fw_page_size);
@@ -442,11 +451,13 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 
 		/* update progress */
 		checksum += csum_tmp;
-		fu_device_set_progress_full(device, (gsize)i, (gsize)chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* verify the written checksum */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_VERIFY);
 	if (!fu_elantp_i2c_device_read_cmd(self,
 					   ETP_CMD_I2C_IAP_CHECKSUM,
 					   csum_buf,
@@ -469,16 +480,16 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 			    checksum_device);
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* wait for a reset */
-	fu_device_set_progress(device, 0);
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
-	g_usleep(ELANTP_DELAY_COMPLETE * 1000);
+	fu_progress_sleep(fu_progress_get_child(progress), ELANTP_DELAY_COMPLETE);
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 
 static gboolean
-fu_elantp_i2c_device_detach(FuDevice *device, GError **error)
+fu_elantp_i2c_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	guint16 iap_ver;
 	guint16 ic_type;
@@ -489,7 +500,6 @@ fu_elantp_i2c_device_detach(FuDevice *device, GError **error)
 	/* sanity check */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug("in bootloader mode, reset IC");
-		fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 		if (!fu_elantp_i2c_device_write_cmd(self,
 						    ETP_CMD_I2C_IAP_RESET,
 						    ETP_I2C_IAP_RESET,
@@ -607,7 +617,7 @@ fu_elantp_i2c_device_detach(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_elantp_i2c_device_attach(FuDevice *device, GError **error)
+fu_elantp_i2c_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE(device);
 
@@ -618,7 +628,6 @@ fu_elantp_i2c_device_attach(FuDevice *device, GError **error)
 	}
 
 	/* reset back to runtime */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_elantp_i2c_device_write_cmd(self, ETP_CMD_I2C_IAP_RESET, ETP_I2C_IAP_RESET, error))
 		return FALSE;
 	g_usleep(ELANTP_DELAY_RESET * 1000);
@@ -691,6 +700,17 @@ fu_elantp_i2c_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
+fu_elantp_i2c_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_elantp_i2c_device_init(FuElantpI2cDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
@@ -725,4 +745,5 @@ fu_elantp_i2c_device_class_init(FuElantpI2cDeviceClass *klass)
 	klass_device->prepare_firmware = fu_elantp_i2c_device_prepare_firmware;
 	klass_device->probe = fu_elantp_i2c_device_probe;
 	klass_device->open = fu_elantp_i2c_device_open;
+	klass_device->set_progress = fu_elantp_i2c_device_set_progress;
 }

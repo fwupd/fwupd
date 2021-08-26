@@ -311,7 +311,8 @@ fu_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error
 		return FALSE;
 
 	if (needs_activation && dev != NULL) {
-		if (!fu_device_activate(dev, error))
+		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+		if (!fu_device_activate(dev, progress, error))
 			return FALSE;
 	}
 

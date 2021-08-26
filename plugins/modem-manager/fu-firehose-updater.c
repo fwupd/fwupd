@@ -49,10 +49,6 @@
 #define CONFIGURE_ZLP_AWARE_HOST		      1
 #define CONFIGURE_SKIP_STORAGE_INIT		      0
 
-enum { SIGNAL_WRITE_PERCENTAGE, SIGNAL_LAST };
-
-static guint signals[SIGNAL_LAST] = {0};
-
 struct _FuFirehoseUpdater {
 	GObject parent_instance;
 	gchar *port;
@@ -755,6 +751,7 @@ fu_firehose_updater_run_actions(FuFirehoseUpdater *self,
 				XbSilo *silo,
 				GPtrArray *action_nodes,
 				guint max_payload_size,
+				FuProgress *progress,
 				GError **error)
 {
 	gsize sent_bytes = 0;
@@ -777,10 +774,7 @@ fu_firehose_updater_run_actions(FuFirehoseUpdater *self,
 						    error))
 			return FALSE;
 
-		g_signal_emit(self,
-			      signals[SIGNAL_WRITE_PERCENTAGE],
-			      0,
-			      (guint)((100.0 * (gdouble)sent_bytes) / (gdouble)total_bytes));
+		fu_progress_set_percentage_full(progress, sent_bytes, total_bytes);
 	}
 
 	return TRUE;
@@ -790,13 +784,12 @@ gboolean
 fu_firehose_updater_write(FuFirehoseUpdater *self,
 			  XbSilo *silo,
 			  GPtrArray *action_nodes,
+			  FuProgress *progress,
 			  GError **error)
 {
 	guint max_payload_size;
 	gboolean result;
 	g_autoptr(GError) error_local = NULL;
-
-	g_signal_emit(self, signals[SIGNAL_WRITE_PERCENTAGE], 0, 0);
 
 	if (!fu_firehose_updater_initialize(self, error))
 		return FALSE;
@@ -805,15 +798,18 @@ fu_firehose_updater_write(FuFirehoseUpdater *self,
 	if (max_payload_size == 0)
 		return FALSE;
 
-	result = fu_firehose_updater_run_actions(self, silo, action_nodes, max_payload_size, error);
+	result = fu_firehose_updater_run_actions(self,
+						 silo,
+						 action_nodes,
+						 max_payload_size,
+						 progress,
+						 error);
 
 	if (!fu_firehose_updater_reset(self, &error_local)) {
 		if (result)
 			g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
-
-	g_signal_emit(self, signals[SIGNAL_WRITE_PERCENTAGE], 0, 100);
 
 	return result;
 }
@@ -837,17 +833,6 @@ fu_firehose_updater_class_init(FuFirehoseUpdaterClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_firehose_updater_finalize;
-
-	signals[SIGNAL_WRITE_PERCENTAGE] = g_signal_new("write-percentage",
-							G_TYPE_FROM_CLASS(object_class),
-							G_SIGNAL_RUN_LAST,
-							0,
-							NULL,
-							NULL,
-							g_cclosure_marshal_VOID__UINT,
-							G_TYPE_NONE,
-							1,
-							G_TYPE_UINT);
 }
 
 FuFirehoseUpdater *

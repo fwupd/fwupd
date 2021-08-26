@@ -24,7 +24,6 @@ fu_ccgx_hid_device_enable_hpi_mode_cb(FuDevice *device, gpointer user_data, GErr
 {
 	guint8 buf[5] = {0xEE, 0xBC, 0xA6, 0xB9, 0xA8};
 
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(device),
 				      buf[0],
 				      buf,
@@ -39,7 +38,7 @@ fu_ccgx_hid_device_enable_hpi_mode_cb(FuDevice *device, gpointer user_data, GErr
 }
 
 static gboolean
-fu_ccgx_hid_device_detach(FuDevice *device, GError **error)
+fu_ccgx_hid_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	if (!fu_device_retry(device,
 			     fu_ccgx_hid_device_enable_hpi_mode_cb,
@@ -78,6 +77,17 @@ fu_ccgx_hid_device_setup(FuDevice *device, GError **error)
 }
 
 static void
+fu_ccgx_hid_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_ccgx_hid_device_init(FuCcgxHidDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.cypress.ccgx");
@@ -93,4 +103,5 @@ fu_ccgx_hid_device_class_init(FuCcgxHidDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->detach = fu_ccgx_hid_device_detach;
 	klass_device->setup = fu_ccgx_hid_device_setup;
+	klass_device->set_progress = fu_ccgx_hid_device_set_progress;
 }

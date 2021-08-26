@@ -286,14 +286,13 @@ fu_goodixmoc_device_update_init(FuGoodixMocDevice *self, GError **error)
 }
 
 static gboolean
-fu_goodixmoc_device_attach(FuDevice *device, GError **error)
+fu_goodixmoc_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE(device);
 	GxfpCmdResp rsp = {0};
 	g_autoptr(GByteArray) req = g_byte_array_new();
 
 	/* reset device */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_goodixmoc_device_cmd_xfer(self,
 					  GX_CMD_RESET,
 					  0x03,
@@ -356,6 +355,7 @@ fu_goodixmoc_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_goodixmoc_device_write_firmware(FuDevice *device,
 				   FuFirmware *firmware,
+				   FuProgress *progress,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
@@ -366,6 +366,12 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* init */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99);
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -379,7 +385,6 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 					       GX_FLASH_TRANSFER_BLOCK_SIZE);
 
 	/* don't auto-boot firmware */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_goodixmoc_device_update_init(self, &error_local)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -388,6 +393,7 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 			    error_local->message);
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* write each block */
 	for (guint i = 0; i < chunks->len; i++) {
@@ -429,11 +435,25 @@ fu_goodixmoc_device_write_firmware(FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full(device, (gsize)i, (gsize)chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* success! */
 	return TRUE;
+}
+
+static void
+fu_goodixmoc_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
 }
 
 static void
@@ -461,4 +481,5 @@ fu_goodixmoc_device_class_init(FuGoodixMocDeviceClass *klass)
 	klass_device->setup = fu_goodixmoc_device_setup;
 	klass_device->attach = fu_goodixmoc_device_attach;
 	klass_device->open = fu_goodixmoc_device_open;
+	klass_device->set_progress = fu_goodixmoc_device_set_progress;
 }

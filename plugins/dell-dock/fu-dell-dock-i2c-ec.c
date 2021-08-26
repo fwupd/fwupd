@@ -660,7 +660,7 @@ fu_dell_dock_ec_reset(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dell_dock_ec_activate(FuDevice *device, GError **error)
+fu_dell_dock_ec_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDellDockECFWUpdateStatus status;
 
@@ -787,6 +787,7 @@ fu_dell_dock_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error
 static gboolean
 fu_dell_dock_ec_write_fw(FuDevice *device,
 			 FuFirmware *firmware,
+			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -801,6 +802,11 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 
 	g_return_val_if_fail(device != NULL, FALSE);
 	g_return_val_if_fail(FU_IS_FIRMWARE(firmware), FALSE);
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 15);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 85);
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -832,11 +838,12 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 	if (!fu_dell_dock_hid_raise_mcu_clock(fu_device_get_proxy(device), TRUE, error))
 		return FALSE;
 
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_ERASE);
+	/* erase */
 	if (!fu_dell_dock_hid_erase_bank(fu_device_get_proxy(device), 0xff, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
+	/* write */
 	do {
 		/* last packet */
 		if (fw_size - nwritten < write_size)
@@ -850,11 +857,12 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 			g_prefix_error(error, "write over HID failed: ");
 			return FALSE;
 		}
-		fu_device_set_progress_full(device, nwritten, fw_size);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress), nwritten, fw_size);
 		nwritten += write_size;
 		data += write_size;
 		address += write_size;
 	} while (nwritten < fw_size);
+	fu_progress_step_done(progress);
 
 	if (!fu_dell_dock_hid_raise_mcu_clock(fu_device_get_proxy(device), FALSE, error))
 		return FALSE;
@@ -990,6 +998,17 @@ fu_dell_dock_ec_finalize(GObject *object)
 }
 
 static void
+fu_dell_dock_ec_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100); /* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);	/* reload */
+}
+
+static void
 fu_dell_dock_ec_init(FuDellDockEc *self)
 {
 	self->data = g_new0(FuDellDockDockDataStructure, 1);
@@ -1010,6 +1029,7 @@ fu_dell_dock_ec_class_init(FuDellDockEcClass *klass)
 	klass_device->close = fu_dell_dock_ec_close;
 	klass_device->write_firmware = fu_dell_dock_ec_write_fw;
 	klass_device->set_quirk_kv = fu_dell_dock_ec_set_quirk_kv;
+	klass_device->set_progress = fu_dell_dock_ec_set_progress;
 }
 
 FuDellDockEc *

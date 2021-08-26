@@ -267,6 +267,7 @@ typedef struct {
 	GPtrArray *chunks;
 	guint chunk_sent;
 	FuDevice *device;
+	FuProgress *progress;
 } WriteContext;
 
 static gboolean
@@ -302,10 +303,10 @@ fu_mbim_qdu_updater_file_write_ready(MbimDevice *device, GAsyncResult *res, gpoi
 		return;
 	}
 
-	fu_device_set_progress_full(FU_DEVICE(ctx->device),
-				    (gsize)ctx->chunk_sent,
-				    (gsize)ctx->chunks->len);
 	ctx->chunk_sent++;
+	fu_progress_set_percentage_full(ctx->progress,
+					(gsize)ctx->chunk_sent,
+					(gsize)ctx->chunks->len);
 	if (ctx->chunk_sent < ctx->chunks->len) {
 		FuChunk *chk = g_ptr_array_index(ctx->chunks, ctx->chunk_sent);
 		g_autoptr(MbimMessage) request =
@@ -321,8 +322,7 @@ fu_mbim_qdu_updater_file_write_ready(MbimDevice *device, GAsyncResult *res, gpoi
 		return;
 	}
 
-	fu_device_set_progress(FU_DEVICE(ctx->device), 100);
-	fu_device_set_status(FU_DEVICE(ctx->device), FWUPD_STATUS_DEVICE_RESTART);
+	fu_progress_set_status(ctx->progress, FWUPD_STATUS_DEVICE_RESTART);
 	/* device will auto reboot right after update finish */
 	g_timeout_add_seconds(10, fu_mbim_qdu_updater_reboot_timeout, ctx);
 }
@@ -462,6 +462,7 @@ fu_mbim_qdu_updater_write(FuMbimQduUpdater *self,
 			  const gchar *filename,
 			  GBytes *blob,
 			  FuDevice *device,
+			  FuProgress *progress,
 			  GError **error)
 {
 	g_autoptr(GMainLoop) mainloop = g_main_loop_new(NULL, FALSE);
@@ -476,6 +477,7 @@ fu_mbim_qdu_updater_write(FuMbimQduUpdater *self,
 	    .chunks = chunks,
 	    .chunk_sent = 0,
 	    .device = device,
+	    .progress = progress,
 	};
 
 	fu_mbim_qdu_updater_set_update_session(self->mbim_device, &ctx);

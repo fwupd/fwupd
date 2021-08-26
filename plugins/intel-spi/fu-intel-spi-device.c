@@ -391,13 +391,14 @@ fu_intel_spi_device_dump(FuIntelSpiDevice *self,
 			 FuDevice *device,
 			 guint32 offset,
 			 guint32 length,
+			 FuProgress *progress,
 			 GError **error)
 {
 	guint8 block_len = 0x40;
 	g_autoptr(GByteArray) buf = g_byte_array_sized_new(length);
 
 	/* set FDONE, FCERR, AEL */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_READ);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	fu_mmio_write16(self->spibar, ICH9_REG_HSFS, fu_mmio_read16(self->spibar, ICH9_REG_HSFS));
 	for (guint32 addr = offset; addr < offset + length; addr += block_len) {
 		guint16 hsfc;
@@ -426,7 +427,7 @@ fu_intel_spi_device_dump(FuIntelSpiDevice *self,
 		}
 
 		/* progress */
-		fu_device_set_progress_full(device, addr - offset + block_len, length);
+		fu_progress_set_percentage_full(progress, addr - offset + block_len, length);
 	}
 
 	/* success */
@@ -434,20 +435,26 @@ fu_intel_spi_device_dump(FuIntelSpiDevice *self,
 }
 
 static GBytes *
-fu_intel_spi_device_dump_firmware(FuDevice *device, GError **error)
+fu_intel_spi_device_dump_firmware2(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuIntelSpiDevice *self = FU_INTEL_SPI_DEVICE(device);
 	guint64 total_size = fu_device_get_firmware_size_max(device);
-	return fu_intel_spi_device_dump(self, device, 0x0, total_size, error);
+	return fu_intel_spi_device_dump(self, device, 0x0, total_size, progress, error);
+}
+
+static GBytes *
+fu_intel_spi_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
+{
+	return fu_intel_spi_device_dump_firmware2(device, progress, error);
 }
 
 static FuFirmware *
-fu_intel_spi_device_read_firmware(FuDevice *device, GError **error)
+fu_intel_spi_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_ifd_firmware_new();
 	g_autoptr(GBytes) blob = NULL;
 
-	blob = fu_intel_spi_device_dump_firmware(device, error);
+	blob = fu_intel_spi_device_dump_firmware2(device, progress, error);
 	if (blob == NULL)
 		return NULL;
 	if (!fu_firmware_parse(firmware, blob, FWUPD_INSTALL_FLAG_NONE, error))

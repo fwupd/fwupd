@@ -58,7 +58,7 @@ fu_dfu_csr_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_dfu_csr_device_attach(FuDevice *device, GError **error)
+fu_dfu_csr_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	guint8 buf[] = {FU_DFU_CSR_REPORT_ID_CONTROL, FU_DFU_CSR_CONTROL_RESET};
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(device),
@@ -180,7 +180,7 @@ fu_dfu_csr_device_upload_chunk(FuDfuCsrDevice *self, GError **error)
 }
 
 static GBytes *
-fu_dfu_csr_device_upload(FuDevice *device, GError **error)
+fu_dfu_csr_device_upload(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE(device);
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -188,7 +188,7 @@ fu_dfu_csr_device_upload(FuDevice *device, GError **error)
 	gsize done_sz = 0;
 
 	/* notify UI */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_READ);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 
 	chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
 	for (guint32 i = 0; i < 0x3ffffff; i++) {
@@ -253,7 +253,7 @@ fu_dfu_csr_device_upload(FuDevice *device, GError **error)
 		/* add to chunk array */
 		done_sz += chunk_sz;
 		g_ptr_array_add(chunks, g_steal_pointer(&chunk));
-		fu_device_set_progress_full(device, done_sz, (gsize)total_sz);
+		fu_progress_set_percentage_full(progress, done_sz, (gsize)total_sz);
 
 		/* we're done */
 		if (chunk_sz < 64 - FU_DFU_CSR_COMMAND_HEADER_SIZE)
@@ -366,6 +366,7 @@ fu_dfu_csr_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_dfu_csr_device_download(FuDevice *device,
 			   FuFirmware *firmware,
+			   FuProgress *progress,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
@@ -381,7 +382,7 @@ fu_dfu_csr_device_download(FuDevice *device,
 		return FALSE;
 
 	/* notify UI */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 
 	/* create chunks */
 	chunks = fu_chunk_array_new_from_bytes(blob,
@@ -400,7 +401,7 @@ fu_dfu_csr_device_download(FuDevice *device,
 			return FALSE;
 
 		/* update progress */
-		fu_device_set_progress_full(device, (gsize)idx, (gsize)chunks->len);
+		fu_progress_set_percentage_full(progress, (gsize)idx + 1, (gsize)chunks->len);
 	}
 
 	/* all done */
@@ -439,6 +440,17 @@ fu_dfu_csr_device_setup(FuDevice *device, GError **error)
 }
 
 static void
+fu_dfu_csr_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_dfu_csr_device_init(FuDfuCsrDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.dfu");
@@ -459,4 +471,5 @@ fu_dfu_csr_device_class_init(FuDfuCsrDeviceClass *klass)
 	klass_device->attach = fu_dfu_csr_device_attach;
 	klass_device->setup = fu_dfu_csr_device_setup;
 	klass_device->probe = fu_dfu_csr_device_probe;
+	klass_device->set_progress = fu_dfu_csr_device_set_progress;
 }

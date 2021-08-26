@@ -169,6 +169,7 @@ gboolean
 fu_wac_module_set_feature(FuWacModule *self,
 			  guint8 command,
 			  GBytes *blob, /* optional */
+			  FuProgress *progress,
 			  GError **error)
 {
 	FuWacDevice *parent_device = FU_WAC_DEVICE(fu_device_get_parent(FU_DEVICE(self)));
@@ -204,13 +205,13 @@ fu_wac_module_set_feature(FuWacModule *self,
 	/* tell the daemon the current status */
 	switch (command) {
 	case FU_WAC_MODULE_COMMAND_START:
-		fu_device_set_status(FU_DEVICE(self), FWUPD_STATUS_DEVICE_ERASE);
+		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_ERASE);
 		break;
 	case FU_WAC_MODULE_COMMAND_DATA:
-		fu_device_set_status(FU_DEVICE(self), FWUPD_STATUS_DEVICE_WRITE);
+		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 		break;
 	case FU_WAC_MODULE_COMMAND_END:
-		fu_device_set_status(FU_DEVICE(self), FWUPD_STATUS_DEVICE_VERIFY);
+		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
 		break;
 	default:
 		break;
@@ -345,6 +346,16 @@ fu_wac_module_constructed(GObject *object)
 }
 
 static void
+fu_wac_module_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100); /* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);	/* reload */
+}
+
+static void
 fu_wac_module_finalize(GObject *object)
 {
 	FuWacModule *self = FU_WAC_MODULE(object);
@@ -383,4 +394,5 @@ fu_wac_module_class_init(FuWacModuleClass *klass)
 	object_class->finalize = fu_wac_module_finalize;
 	klass_device->to_string = fu_wac_module_to_string;
 	klass_device->cleanup = fu_wac_module_cleanup;
+	klass_device->set_progress = fu_wac_module_set_progress;
 }

@@ -53,6 +53,7 @@ fu_jabra_device_prepare(FuDevice *device, FwupdInstallFlags flags, GError **erro
 	guint8 rep = 0x00;
 	guint8 iface_hid;
 	guint8 buf[33] = {0x00};
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error_local = NULL;
 
 	/* parse string and create magic packet */
@@ -110,7 +111,7 @@ fu_jabra_device_prepare(FuDevice *device, FwupdInstallFlags flags, GError **erro
 	}
 
 	/* wait for device to re-appear and be added to the dfu plugin */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }

@@ -80,6 +80,7 @@ fu_plugin_dell_tpm_func(gconstpointer user_data)
 	g_autoptr(GBytes) blob_fw = g_bytes_new_static(fw, sizeof(fw));
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 #ifdef HAVE_GETUID
 	if (tpm_server_running == NULL && (getuid() != 0 || geteuid() != 0)) {
@@ -234,6 +235,7 @@ fu_plugin_dell_tpm_func(gconstpointer user_data)
 	ret = fu_plugin_runner_write_firmware(self->plugin_uefi_capsule,
 					      device_v20,
 					      blob_fw,
+					      progress,
 					      FWUPD_INSTALL_FLAG_NONE,
 					      &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
@@ -244,6 +246,7 @@ fu_plugin_dell_tpm_func(gconstpointer user_data)
 	ret = fu_plugin_runner_write_firmware(self->plugin_uefi_capsule,
 					      device_v20,
 					      blob_fw,
+					      progress,
 					      FWUPD_INSTALL_FLAG_FORCE,
 					      &error);
 	g_assert_no_error(error);

@@ -108,7 +108,7 @@ fu_ep963x_device_write_icp(FuEp963xDevice *self,
 }
 
 static gboolean
-fu_ep963x_device_detach(FuDevice *device, GError **error)
+fu_ep963x_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuEp963xDevice *self = FU_EP963X_DEVICE(device);
 	const guint8 buf[] = {'E', 'P', '9', '6', '3'};
@@ -135,13 +135,12 @@ fu_ep963x_device_detach(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
 static gboolean
-fu_ep963x_device_attach(FuDevice *device, GError **error)
+fu_ep963x_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuEp963xDevice *self = FU_EP963X_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
@@ -151,8 +150,6 @@ fu_ep963x_device_attach(FuDevice *device, GError **error)
 		g_debug("already in runtime mode, skipping");
 		return TRUE;
 	}
-
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_ep963x_device_write(self,
 				    FU_EP963_USB_CONTROL_ID,
 				    FU_EP963_OPCODE_SUBMCU_PROGRAM_FINISHED,
@@ -244,6 +241,7 @@ fu_ep963x_device_wait_cb(FuDevice *device, gpointer user_data, GError **error)
 static gboolean
 fu_ep963x_device_write_firmware(FuDevice *device,
 				FuFirmware *firmware,
+				FuProgress *progress,
 				FwupdInstallFlags flags,
 				GError **error)
 {
@@ -252,13 +250,18 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) blocks = NULL;
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5); /* ICP */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 95);
+
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
 
 	/* reset the block index */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_ep963x_device_write(self,
 				    FU_EP963_USB_CONTROL_ID,
 				    FU_EP963_OPCODE_SUBMCU_ENTER_ICP,
@@ -272,6 +275,7 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 			    error_local->message);
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* write each block */
 	blocks = fu_chunk_array_new_from_bytes(fw, 0x00, 0x00, FU_EP963_TRANSFER_BLOCK_SIZE);
@@ -343,11 +347,25 @@ fu_ep963x_device_write_firmware(FuDevice *device,
 			return FALSE;
 
 		/* update progress */
-		fu_device_set_progress_full(device, (gsize)i, (gsize)chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* success! */
 	return TRUE;
+}
+
+static void
+fu_ep963x_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
 }
 
 static void
@@ -370,4 +388,5 @@ fu_ep963x_device_class_init(FuEp963xDeviceClass *klass)
 	klass_device->attach = fu_ep963x_device_attach;
 	klass_device->detach = fu_ep963x_device_detach;
 	klass_device->setup = fu_ep963x_device_setup;
+	klass_device->set_progress = fu_ep963x_device_set_progress;
 }

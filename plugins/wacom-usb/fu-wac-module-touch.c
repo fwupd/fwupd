@@ -34,13 +34,20 @@ fu_wac_module_touch_prepare_firmware(FuDevice *device,
 static gboolean
 fu_wac_module_touch_write_firmware(FuDevice *device,
 				   FuFirmware *firmware,
+				   FuProgress *progress,
 				   FwupdInstallFlags flags,
 				   GError **error)
 {
 	FuWacModule *self = FU_WAC_MODULE(device);
-	gsize blocks_total = 0;
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10);
 
 	g_debug("using element at addr 0x%0x", (guint)fu_firmware_get_addr(firmware));
 
@@ -52,18 +59,17 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 					       fu_firmware_get_addr(firmware),
 					       0x0,  /* page_sz */
 					       128); /* packet_sz */
-	blocks_total = chunks->len + 2;
 
 	/* start, which will erase the module */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_wac_module_set_feature(self, FU_WAC_MODULE_COMMAND_START, NULL, error))
+	if (!fu_wac_module_set_feature(self,
+				       FU_WAC_MODULE_COMMAND_START,
+				       NULL,
+				       fu_progress_get_child(progress),
+				       error))
 		return FALSE;
-
-	/* update progress */
-	fu_device_set_progress_full(device, 1, blocks_total);
+	fu_progress_step_done(progress);
 
 	/* data */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		guint8 buf[128 + 7] = {0xff};
@@ -80,21 +86,29 @@ fu_wac_module_touch_write_firmware(FuDevice *device,
 		if (!fu_wac_module_set_feature(self,
 					       FU_WAC_MODULE_COMMAND_DATA,
 					       blob_chunk,
+					       fu_progress_get_child(progress),
 					       error)) {
 			g_prefix_error(error, "failed to write block %u: ", fu_chunk_get_idx(chk));
 			return FALSE;
 		}
 
 		/* update progress */
-		fu_device_set_progress_full(device, i + 1, blocks_total);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						i + 1,
+						chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* end */
-	if (!fu_wac_module_set_feature(self, FU_WAC_MODULE_COMMAND_END, NULL, error))
+	if (!fu_wac_module_set_feature(self,
+				       FU_WAC_MODULE_COMMAND_END,
+				       NULL,
+				       fu_progress_get_child(progress),
+				       error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
-	/* update progress */
-	fu_device_set_progress_full(device, blocks_total, blocks_total);
+	/* success */
 	return TRUE;
 }
 

@@ -114,7 +114,7 @@ fu_rts54hub_rtd21xx_background_detach_cb(FuDevice *device, gpointer user_data, G
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_background_detach(FuDevice *device, GError **error)
+fu_rts54hub_rtd21xx_background_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(device));
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -127,7 +127,7 @@ fu_rts54hub_rtd21xx_background_detach(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_rts54hub_rtd21xx_background_attach(FuDevice *device, GError **error)
+fu_rts54hub_rtd21xx_background_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuRts54HubDevice *parent = FU_RTS54HUB_DEVICE(fu_device_get_parent(device));
 	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE(device);
@@ -147,7 +147,7 @@ fu_rts54hub_rtd21xx_background_attach(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to attach: ");
 		return FALSE;
 	}
-	fu_device_sleep_with_progress(device, 1);
+	fu_progress_sleep(progress, 1000);
 
 	/* success */
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -190,6 +190,7 @@ fu_rts54hub_rtd21xx_background_reload(FuDevice *device, GError **error)
 static gboolean
 fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 					      FuFirmware *firmware,
+					      FuProgress *progress,
 					      FwupdInstallFlags flags,
 					      GError **error)
 {
@@ -204,6 +205,13 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5); /* setup */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5); /* exit */
+
 	/* open device */
 	locker = fu_device_locker_new(self, error);
 	if (locker == NULL)
@@ -217,7 +225,6 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 
 	/* get project ID address */
 	write_buf[0] = ISP_CMD_GET_PROJECT_ID_ADDR;
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_READ);
 	if (!fu_rts54hub_rtd21xx_device_i2c_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						  UC_ISP_SLAVE_ADDR,
 						  UC_BACKGROUND_OPCODE,
@@ -263,7 +270,6 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to write project ID from 0x%04x: ", project_addr);
 		return FALSE;
 	}
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_BUSY);
 	if (!fu_rts54hub_rtd21xx_device_i2c_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
 						  UC_ISP_SLAVE_ADDR,
 						  UC_BACKGROUND_OPCODE,
@@ -288,9 +294,9 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to send fw update start cmd: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* send data */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	chunks = fu_chunk_array_new_from_bytes(fw,
 					       0x00, /* start addr */
 					       0x00, /* page_sz */
@@ -314,11 +320,13 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full(device, (gsize)i, (gsize)chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* update finish command */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_BUSY);
 	if (!fu_rts54hub_rtd21xx_device_read_status(FU_RTS54HUB_RTD21XX_DEVICE(self), NULL, error))
 		return FALSE;
 	write_buf[0] = ISP_CMD_FW_UPDATE_ISP_DONE;
@@ -333,10 +341,9 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 	}
 
 	/* exit fw mode */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_set_progress(device, 0);
 	if (!fu_rts54hub_rtd21xx_device_read_status(FU_RTS54HUB_RTD21XX_DEVICE(self), NULL, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;

@@ -300,7 +300,7 @@ fu_bcm57xx_device_nvram_check(FuBcm57xxDevice *self, GError **error)
 }
 
 static gboolean
-fu_bcm57xx_device_activate(FuDevice *device, GError **error)
+fu_bcm57xx_device_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(device);
 	g_autoptr(FuDeviceLocker) locker1 = NULL;
@@ -320,7 +320,7 @@ fu_bcm57xx_device_activate(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* activate, causing APE reset, then close, then attach */
-	if (!fu_device_activate(FU_DEVICE(self->recovery), error))
+	if (!fu_device_activate(FU_DEVICE(self->recovery), progress, error))
 		return FALSE;
 
 	/* ensure we attach before we close */
@@ -328,20 +328,20 @@ fu_bcm57xx_device_activate(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* wait for the device to restart before calling reload() */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_BUSY);
-	fu_device_sleep_with_progress(device, 5); /* seconds */
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
+	fu_progress_sleep(progress, 5000);
 	return TRUE;
 }
 
 static GBytes *
-fu_bcm57xx_device_dump_firmware(FuDevice *device, GError **error)
+fu_bcm57xx_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuBcm57xxDevice *self = FU_BCM57XX_DEVICE(device);
 	const gsize bufsz = fu_device_get_firmware_size_max(FU_DEVICE(self));
 	g_autofree guint8 *buf = g_malloc0(bufsz);
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_READ);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	chunks = fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, FU_BCM57XX_BLOCK_SZ);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
@@ -351,7 +351,7 @@ fu_bcm57xx_device_dump_firmware(FuDevice *device, GError **error)
 						  fu_chunk_get_data_sz(chk),
 						  error))
 			return NULL;
-		fu_device_set_progress_full(device, i, chunks->len - 1);
+		fu_progress_set_percentage_full(progress, i + 1, chunks->len - 1);
 	}
 
 	/* read from hardware */
@@ -359,13 +359,13 @@ fu_bcm57xx_device_dump_firmware(FuDevice *device, GError **error)
 }
 
 static FuFirmware *
-fu_bcm57xx_device_read_firmware(FuDevice *device, GError **error)
+fu_bcm57xx_device_read_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(FuFirmware) firmware = fu_bcm57xx_firmware_new();
 	g_autoptr(GBytes) fw = NULL;
 
 	/* read from hardware */
-	fw = fu_bcm57xx_device_dump_firmware(device, error);
+	fw = fu_bcm57xx_device_dump_firmware(device, progress, error);
 	if (fw == NULL)
 		return NULL;
 	if (!fu_firmware_parse(firmware, fw, FWUPD_INSTALL_FLAG_NONE, error))
@@ -394,6 +394,7 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) img_ape = NULL;
 	g_autoptr(FuFirmware) img_stage1 = NULL;
 	g_autoptr(FuFirmware) img_stage2 = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GPtrArray) images = NULL;
 
 	/* try to parse NVRAM, stage1 or APE */
@@ -423,7 +424,7 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 	}
 
 	/* get the existing firmware from the device */
-	fw_old = fu_bcm57xx_device_dump_firmware(device, error);
+	fw_old = fu_bcm57xx_device_dump_firmware(device, progress, error);
 	if (fw_old == NULL)
 		return NULL;
 	if (!fu_firmware_parse(firmware, fw_old, flags, error)) {
@@ -467,6 +468,7 @@ fu_bcm57xx_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_bcm57xx_device_write_firmware(FuDevice *device,
 				 FuFirmware *firmware,
+				 FuProgress *progress,
 				 FwupdInstallFlags flags,
 				 GError **error)
 {
@@ -475,14 +477,21 @@ fu_bcm57xx_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) blob_verify = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DECOMPRESSING, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 19);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2);
+
 	/* build the images into one linear blob of the correct size */
-	fu_device_set_status(device, FWUPD_STATUS_DECOMPRESSING);
 	blob = fu_firmware_write(firmware, error);
 	if (blob == NULL)
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* hit hardware */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	chunks = fu_chunk_array_new_from_bytes(blob, 0x0, 0x0, FU_BCM57XX_BLOCK_SZ);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
@@ -492,19 +501,28 @@ fu_bcm57xx_device_write_firmware(FuDevice *device,
 						   fu_chunk_get_data_sz(chk),
 						   error))
 			return FALSE;
-		fu_device_set_progress_full(device, i, chunks->len - 1);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						i + 1,
+						chunks->len - 1);
 	}
+	fu_progress_step_done(progress);
 
 	/* verify */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_VERIFY);
-	blob_verify = fu_bcm57xx_device_dump_firmware(device, error);
+	blob_verify =
+	    fu_bcm57xx_device_dump_firmware(device, fu_progress_get_child(progress), error);
 	if (blob_verify == NULL)
 		return FALSE;
 	if (!fu_common_bytes_compare(blob, blob_verify, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* reset APE */
-	return fu_device_activate(device, error);
+	if (!fu_device_activate(device, fu_progress_get_child(progress), error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -617,6 +635,17 @@ fu_bcm57xx_device_close(FuDevice *device, GError **error)
 }
 
 static void
+fu_bcm57xx_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_bcm57xx_device_init(FuBcm57xxDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.broadcom.bcm57xx");
@@ -654,4 +683,5 @@ fu_bcm57xx_device_class_init(FuBcm57xxDeviceClass *klass)
 	klass_device->dump_firmware = fu_bcm57xx_device_dump_firmware;
 	klass_device->probe = fu_bcm57xx_device_probe;
 	klass_device->to_string = fu_bcm57xx_device_to_string;
+	klass_device->set_progress = fu_bcm57xx_device_set_progress;
 }

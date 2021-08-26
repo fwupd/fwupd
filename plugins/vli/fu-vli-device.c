@@ -242,7 +242,11 @@ fu_vli_device_spi_erase_sector(FuVliDevice *self, guint32 addr, GError **error)
 }
 
 GBytes *
-fu_vli_device_spi_read(FuVliDevice *self, guint32 address, gsize bufsz, GError **error)
+fu_vli_device_spi_read(FuVliDevice *self,
+		       guint32 address,
+		       gsize bufsz,
+		       FuProgress *progress,
+		       GError **error)
 {
 	g_autofree guint8 *buf = g_malloc0(bufsz);
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -261,7 +265,7 @@ fu_vli_device_spi_read(FuVliDevice *self, guint32 address, gsize bufsz, GError *
 				       fu_chunk_get_address(chk));
 			return NULL;
 		}
-		fu_device_set_progress_full(FU_DEVICE(self), (gsize)i, (gsize)chunks->len);
+		fu_progress_set_percentage_full(progress, (gsize)i + 1, (gsize)chunks->len);
 	}
 	return g_bytes_new_take(g_steal_pointer(&buf), bufsz);
 }
@@ -271,6 +275,7 @@ fu_vli_device_spi_write_block(FuVliDevice *self,
 			      guint32 address,
 			      const guint8 *buf,
 			      gsize bufsz,
+			      FuProgress *progress,
 			      GError **error)
 {
 	g_autofree guint8 *buf_tmp = g_malloc0(bufsz);
@@ -311,49 +316,66 @@ fu_vli_device_spi_write(FuVliDevice *self,
 			guint32 address,
 			const guint8 *buf,
 			gsize bufsz,
+			FuProgress *progress,
 			GError **error)
 {
 	FuChunk *chk;
 	g_autoptr(GPtrArray) chunks = NULL;
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1); /* chk0 */
+
 	/* write SPI data, then CRC bytes last */
 	g_debug("writing 0x%x bytes @0x%x", (guint)bufsz, address);
 	chunks = fu_chunk_array_new(buf, bufsz, 0x0, 0x0, FU_VLI_DEVICE_TXSIZE);
 	if (chunks->len > 1) {
+		FuProgress *progress_local = fu_progress_get_child(progress);
+		fu_progress_set_id(progress_local, G_STRLOC);
+		fu_progress_set_steps(progress_local, chunks->len - 1);
 		for (guint i = 1; i < chunks->len; i++) {
 			chk = g_ptr_array_index(chunks, i);
 			if (!fu_vli_device_spi_write_block(self,
 							   fu_chunk_get_address(chk) + address,
 							   fu_chunk_get_data(chk),
 							   fu_chunk_get_data_sz(chk),
+							   fu_progress_get_child(progress_local),
 							   error)) {
 				g_prefix_error(error,
 					       "failed to write block 0x%x: ",
 					       fu_chunk_get_idx(chk));
 				return FALSE;
 			}
-			fu_device_set_progress_full(FU_DEVICE(self),
-						    (gsize)i - 1,
-						    (gsize)chunks->len);
+			fu_progress_step_done(progress_local);
 		}
 	}
+	fu_progress_step_done(progress);
+
+	/* chk0 */
 	chk = g_ptr_array_index(chunks, 0);
 	if (!fu_vli_device_spi_write_block(self,
 					   fu_chunk_get_address(chk) + address,
 					   fu_chunk_get_data(chk),
 					   fu_chunk_get_data_sz(chk),
+					   fu_progress_get_child(progress),
 					   error)) {
 		g_prefix_error(error, "failed to write CRC block: ");
 		return FALSE;
 	}
-	fu_device_set_progress_full(FU_DEVICE(self), (gsize)chunks->len, (gsize)chunks->len);
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 
 gboolean
-fu_vli_device_spi_erase_all(FuVliDevice *self, GError **error)
+fu_vli_device_spi_erase_all(FuVliDevice *self, FuProgress *progress, GError **error)
 {
-	fu_device_set_progress(FU_DEVICE(self), 0);
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 99);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 1);
+
 	if (!fu_vli_device_spi_write_enable(self, error))
 		return FALSE;
 	if (!fu_vli_device_spi_write_status(self, 0x00, error))
@@ -362,7 +384,8 @@ fu_vli_device_spi_erase_all(FuVliDevice *self, GError **error)
 		return FALSE;
 	if (!fu_vli_device_spi_chip_erase(self, error))
 		return FALSE;
-	fu_device_sleep_with_progress(FU_DEVICE(self), 4); /* seconds */
+	fu_progress_sleep(fu_progress_get_child(progress), 4000);
+	fu_progress_step_done(progress);
 
 	/* verify chip was erased */
 	for (guint addr = 0; addr < 0x10000; addr += 0x1000) {
@@ -381,13 +404,20 @@ fu_vli_device_spi_erase_all(FuVliDevice *self, GError **error)
 				return FALSE;
 			}
 		}
-		fu_device_set_progress_full(FU_DEVICE(self), (gsize)addr, (gsize)0x10000);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)addr + 0x1000,
+						(gsize)0x10000);
 	}
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 
 gboolean
-fu_vli_device_spi_erase(FuVliDevice *self, guint32 addr, gsize sz, GError **error)
+fu_vli_device_spi_erase(FuVliDevice *self,
+			guint32 addr,
+			gsize sz,
+			FuProgress *progress,
+			GError **error)
 {
 	g_autoptr(GPtrArray) chunks = fu_chunk_array_new(NULL, sz, addr, 0x0, 0x1000);
 	g_debug("erasing 0x%x bytes @0x%x", (guint)sz, addr);
@@ -403,7 +433,7 @@ fu_vli_device_spi_erase(FuVliDevice *self, guint32 addr, gsize sz, GError **erro
 				       fu_chunk_get_address(chk));
 			return FALSE;
 		}
-		fu_device_set_progress_full(FU_DEVICE(self), (gsize)i, (gsize)chunks->len);
+		fu_progress_set_percentage_full(progress, (gsize)i + 1, (gsize)chunks->len);
 	}
 	return TRUE;
 }

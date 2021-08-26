@@ -1693,6 +1693,7 @@ fu_engine_history_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(FwupdDevice) device3 = NULL;
 	g_autoptr(FwupdDevice) device4 = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
@@ -1761,6 +1762,7 @@ fu_engine_history_func(gconstpointer user_data)
 	ret = fu_engine_install(engine,
 				task,
 				blob_cab,
+				progress,
 				FWUPD_INSTALL_FLAG_NONE,
 				FWUPD_FEATURE_FLAG_NONE,
 				&error);
@@ -1829,6 +1831,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -1890,6 +1893,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	ret = fu_engine_install(engine,
 				task,
 				blob_cab,
+				progress,
 				FWUPD_INSTALL_FLAG_NONE,
 				FWUPD_FEATURE_FLAG_NONE,
 				&error);
@@ -1912,6 +1916,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1976,6 +1981,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	ret = fu_engine_install(engine,
 				task,
 				blob_cab,
+				progress,
 				FWUPD_INSTALL_FLAG_NONE,
 				FWUPD_FEATURE_FLAG_NONE,
 				&error);
@@ -1996,11 +2002,13 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.3");
 
 	/* emulate getting the flag for a fresh boot on old firmware */
+	fu_progress_reset(progress);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device, "1.2.2");
 	ret = fu_engine_install(engine,
 				task,
 				blob_cab,
+				progress,
 				FWUPD_INSTALL_FLAG_NONE,
 				FWUPD_FEATURE_FLAG_NONE,
 				&error);
@@ -2050,6 +2058,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -2109,6 +2118,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	ret = fu_engine_install(engine,
 				task,
 				blob_cab,
+				progress,
 				FWUPD_INSTALL_FLAG_NONE,
 				FWUPD_FEATURE_FLAG_NONE,
 				&error);
@@ -2135,6 +2145,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error2 = NULL;
 	g_autoptr(GError) error = NULL;
@@ -2192,6 +2203,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	ret = fu_engine_install(engine,
 				task,
 				blob_cab,
+				progress,
 				FWUPD_INSTALL_FLAG_NONE,
 				FWUPD_FEATURE_FLAG_NONE,
 				&error);
@@ -2780,12 +2792,10 @@ fu_history_migrate_func(gconstpointer user_data)
 }
 
 static void
-_plugin_status_changed_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+_plugin_status_changed_cb(FuDevice *device, FwupdStatus status, gpointer user_data)
 {
 	guint *cnt = (guint *)user_data;
-	g_debug("device %s now %s",
-		fu_device_get_id(device),
-		fwupd_status_to_string(fu_device_get_status(device)));
+	g_debug("status now %s", fwupd_status_to_string(status));
 	(*cnt)++;
 	fu_test_loop_quit();
 }
@@ -2823,6 +2833,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device3 = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
 	g_autoptr(FuHistory) history = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GMappedFile) mapped_file = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
@@ -2864,7 +2875,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	return;
 #endif
 	/* schedule an offline update */
-	g_signal_connect(device, "notify::status", G_CALLBACK(_plugin_status_changed_cb), &cnt);
+	g_signal_connect(progress, "status-changed", G_CALLBACK(_plugin_status_changed_cb), &cnt);
 	mapped_file_fn = g_build_filename(TESTDATADIR_SRC, "colorhug", "firmware.bin", NULL);
 	mapped_file = g_mapped_file_new(mapped_file_fn, FALSE, &error);
 	g_assert_no_error(error);
@@ -2880,7 +2891,6 @@ fu_plugin_module_func(gconstpointer user_data)
 					&error);
 	g_assert_no_error(error);
 	g_assert(ret);
-	g_assert_cmpint(cnt, ==, 1);
 
 	/* set on the current device */
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
@@ -2907,12 +2917,13 @@ fu_plugin_module_func(gconstpointer user_data)
 	ret = fu_engine_install_blob(engine,
 				     device,
 				     blob_cab,
+				     progress,
 				     FWUPD_INSTALL_FLAG_NONE,
 				     FWUPD_FEATURE_FLAG_NONE,
 				     &error);
 	g_assert_no_error(error);
 	g_assert(ret);
-	g_assert_cmpint(cnt, ==, 4);
+	g_assert_cmpint(cnt, ==, 8);
 
 	/* check the new version */
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.3");

@@ -54,7 +54,6 @@ typedef struct {
 	GRWLock parent_guids_mutex;
 	GPtrArray *parent_physical_ids; /* (nullable) */
 	guint remove_delay;		/* ms */
-	guint progress;
 	guint battery_level;
 	guint battery_threshold;
 	guint request_cnts[FWUPD_REQUEST_KIND_LAST];
@@ -90,7 +89,6 @@ typedef struct {
 
 enum {
 	PROP_0,
-	PROP_PROGRESS,
 	PROP_BATTERY_LEVEL,
 	PROP_BATTERY_THRESHOLD,
 	PROP_PHYSICAL_ID,
@@ -115,9 +113,6 @@ fu_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec
 	FuDevice *self = FU_DEVICE(object);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	switch (prop_id) {
-	case PROP_PROGRESS:
-		g_value_set_uint(value, priv->progress);
-		break;
 	case PROP_BATTERY_LEVEL:
 		g_value_set_uint(value, priv->battery_level);
 		break;
@@ -153,9 +148,6 @@ fu_device_set_property(GObject *object, guint prop_id, const GValue *value, GPar
 {
 	FuDevice *self = FU_DEVICE(object);
 	switch (prop_id) {
-	case PROP_PROGRESS:
-		fu_device_set_progress(self, g_value_get_uint(value));
-		break;
 	case PROP_BATTERY_LEVEL:
 		fu_device_set_battery_level(self, g_value_get_uint(value));
 		break;
@@ -3066,123 +3058,6 @@ fu_device_set_remove_delay(FuDevice *self, guint remove_delay)
 }
 
 /**
- * fu_device_get_status:
- * @self: a #FuDevice
- *
- * Returns what the device is currently doing.
- *
- * Returns: the status value, e.g. %FWUPD_STATUS_DEVICE_WRITE
- *
- * Since: 1.0.3
- **/
-FwupdStatus
-fu_device_get_status(FuDevice *self)
-{
-	g_return_val_if_fail(FU_IS_DEVICE(self), 0);
-	return fwupd_device_get_status(FWUPD_DEVICE(self));
-}
-
-/**
- * fu_device_set_status:
- * @self: a #FuDevice
- * @status: the status value, e.g. %FWUPD_STATUS_DEVICE_WRITE
- *
- * Sets what the device is currently doing.
- *
- * Since: 1.0.3
- **/
-void
-fu_device_set_status(FuDevice *self, FwupdStatus status)
-{
-	g_return_if_fail(FU_IS_DEVICE(self));
-	fwupd_device_set_status(FWUPD_DEVICE(self), status);
-}
-
-/**
- * fu_device_get_progress:
- * @self: a #FuDevice
- *
- * Returns the progress completion.
- *
- * Returns: value in percent
- *
- * Since: 1.0.3
- **/
-guint
-fu_device_get_progress(FuDevice *self)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_DEVICE(self), 0);
-	return priv->progress;
-}
-
-/**
- * fu_device_set_progress:
- * @self: a #FuDevice
- * @progress: the progress percentage value
- *
- * Sets the progress completion.
- *
- * Since: 1.0.3
- **/
-void
-fu_device_set_progress(FuDevice *self, guint progress)
-{
-	FuDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_if_fail(FU_IS_DEVICE(self));
-	if (priv->progress == progress)
-		return;
-	priv->progress = progress;
-	g_object_notify(G_OBJECT(self), "progress");
-}
-
-/**
- * fu_device_set_progress_full:
- * @self: a #FuDevice
- * @progress_done: the bytes already done
- * @progress_total: the total number of bytes
- *
- * Sets the progress completion using the raw progress values.
- *
- * Since: 1.0.3
- **/
-void
-fu_device_set_progress_full(FuDevice *self, gsize progress_done, gsize progress_total)
-{
-	gdouble percentage = 0.f;
-	g_return_if_fail(FU_IS_DEVICE(self));
-	if (progress_total > 0)
-		percentage = (100.f * (gdouble)progress_done) / (gdouble)progress_total;
-	fu_device_set_progress(self, (guint)percentage);
-}
-
-/**
- * fu_device_sleep_with_progress:
- * @self: a #FuDevice
- * @delay_secs: the delay in seconds
- *
- * Sleeps, setting the device progress from 0..100% as time continues.
- * The value is gven in whole seconds as it does not make sense to show the
- * progressbar advancing so quickly for durations of less than one second.
- *
- * Since: 1.5.0
- **/
-void
-fu_device_sleep_with_progress(FuDevice *self, guint delay_secs)
-{
-	gulong delay_us_pc = (delay_secs * G_USEC_PER_SEC) / 100;
-
-	g_return_if_fail(FU_IS_DEVICE(self));
-	g_return_if_fail(delay_secs > 0);
-
-	fu_device_set_progress(self, 0);
-	for (guint i = 0; i < 100; i++) {
-		g_usleep(delay_us_pc);
-		fu_device_set_progress(self, i + 1);
-	}
-}
-
-/**
  * fu_device_set_update_state:
  * @self: a #FuDevice
  * @update_state: the state, e.g. %FWUPD_UPDATE_STATE_PENDING
@@ -3547,6 +3422,7 @@ fu_device_get_results(FuDevice *self, GError **error)
  * fu_device_write_firmware:
  * @self: a #FuDevice
  * @fw: firmware blob
+ * @progress: a #FuProgress
  * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_FORCE
  * @error: (nullable): optional return location for an error
  *
@@ -3557,7 +3433,11 @@ fu_device_get_results(FuDevice *self, GError **error)
  * Since: 1.0.8
  **/
 gboolean
-fu_device_write_firmware(FuDevice *self, GBytes *fw, FwupdInstallFlags flags, GError **error)
+fu_device_write_firmware(FuDevice *self,
+			 GBytes *fw,
+			 FuProgress *progress,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 	FuDevicePrivate *priv = GET_PRIVATE(self);
@@ -3565,6 +3445,7 @@ fu_device_write_firmware(FuDevice *self, GBytes *fw, FwupdInstallFlags flags, GE
 	g_autofree gchar *str = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
@@ -3574,6 +3455,7 @@ fu_device_write_firmware(FuDevice *self, GBytes *fw, FwupdInstallFlags flags, GE
 	}
 
 	/* prepare (e.g. decompress) firmware */
+	fu_progress_set_status(progress, FWUPD_STATUS_DECOMPRESSING);
 	firmware = fu_device_prepare_firmware(self, fw, flags, error);
 	if (firmware == NULL)
 		return FALSE;
@@ -3581,7 +3463,7 @@ fu_device_write_firmware(FuDevice *self, GBytes *fw, FwupdInstallFlags flags, GE
 	g_debug("installing onto %s:\n%s", fu_device_get_id(self), str);
 
 	/* call vfunc */
-	if (!klass->write_firmware(self, firmware, flags, error))
+	if (!klass->write_firmware(self, firmware, progress, flags, error))
 		return FALSE;
 
 	/* the device set an UpdateMessage (possibly from a quirk, or XML file)
@@ -3633,7 +3515,6 @@ fu_device_prepare_firmware(FuDevice *self, GBytes *fw, FwupdInstallFlags flags, 
 
 	/* optionally subclassed */
 	if (klass->prepare_firmware != NULL) {
-		fu_device_set_status(self, FWUPD_STATUS_DECOMPRESSING);
 		firmware = klass->prepare_firmware(self, fw, flags, error);
 		if (firmware == NULL)
 			return NULL;
@@ -3674,6 +3555,7 @@ fu_device_prepare_firmware(FuDevice *self, GBytes *fw, FwupdInstallFlags flags, 
 /**
  * fu_device_read_firmware:
  * @self: a #FuDevice
+ * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Reads firmware from the device by calling a plugin-specific vfunc.
@@ -3688,12 +3570,13 @@ fu_device_prepare_firmware(FuDevice *self, GBytes *fw, FwupdInstallFlags flags, 
  * Since: 1.0.8
  **/
 FuFirmware *
-fu_device_read_firmware(FuDevice *self, GError **error)
+fu_device_read_firmware(FuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 	g_autoptr(GBytes) fw = NULL;
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* device does not support reading for verification CRCs */
@@ -3704,10 +3587,10 @@ fu_device_read_firmware(FuDevice *self, GError **error)
 
 	/* call vfunc */
 	if (klass->read_firmware != NULL)
-		return klass->read_firmware(self, error);
+		return klass->read_firmware(self, progress, error);
 
 	/* use the default FuFirmware when only ->dump_firmware is provided */
-	fw = fu_device_dump_firmware(self, error);
+	fw = fu_device_dump_firmware(self, progress, error);
 	if (fw == NULL)
 		return NULL;
 	return fu_firmware_new_from_bytes(fw);
@@ -3716,6 +3599,7 @@ fu_device_read_firmware(FuDevice *self, GError **error)
 /**
  * fu_device_dump_firmware:
  * @self: a #FuDevice
+ * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Reads the raw firmware image from the device by calling a plugin-specific
@@ -3728,11 +3612,12 @@ fu_device_read_firmware(FuDevice *self, GError **error)
  * Since: 1.5.0
  **/
 GBytes *
-fu_device_dump_firmware(FuDevice *self, GError **error)
+fu_device_dump_firmware(FuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* use the default FuFirmware when only ->dump_firmware is provided */
@@ -3742,12 +3627,13 @@ fu_device_dump_firmware(FuDevice *self, GError **error)
 	}
 
 	/* proxy */
-	return klass->dump_firmware(self, error);
+	return klass->dump_firmware(self, progress, error);
 }
 
 /**
  * fu_device_detach:
  * @self: a #FuDevice
+ * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Detaches a device from the application into bootloader mode.
@@ -3757,11 +3643,12 @@ fu_device_dump_firmware(FuDevice *self, GError **error)
  * Since: 1.0.8
  **/
 gboolean
-fu_device_detach(FuDevice *self, GError **error)
+fu_device_detach(FuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
@@ -3769,12 +3656,13 @@ fu_device_detach(FuDevice *self, GError **error)
 		return TRUE;
 
 	/* call vfunc */
-	return klass->detach(self, error);
+	return klass->detach(self, progress, error);
 }
 
 /**
  * fu_device_attach:
  * @self: a #FuDevice
+ * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Attaches a device from the bootloader into application mode.
@@ -3784,11 +3672,12 @@ fu_device_detach(FuDevice *self, GError **error)
  * Since: 1.0.8
  **/
 gboolean
-fu_device_attach(FuDevice *self, GError **error)
+fu_device_attach(FuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* no plugin-specific method */
@@ -3796,7 +3685,7 @@ fu_device_attach(FuDevice *self, GError **error)
 		return TRUE;
 
 	/* call vfunc */
-	return klass->attach(self, error);
+	return klass->attach(self, progress, error);
 }
 
 /**
@@ -4127,6 +4016,30 @@ fu_device_rescan(FuDevice *self, GError **error)
 }
 
 /**
+ * fu_device_set_progress:
+ * @self: a #FuDevice
+ * @progress: a #FuProgress
+ *
+ * Sets steps on the progress object used to write firmware.
+ *
+ * Since: 1.7.0
+ **/
+void
+fu_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+
+	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(FU_IS_PROGRESS(progress));
+	g_return_if_fail(FU_IS_PROGRESS(progress));
+
+	/* subclassed */
+	if (klass->set_progress == NULL)
+		return;
+	klass->set_progress(self, progress);
+}
+
+/**
  * fu_device_convert_instance_ids:
  * @self: a #FuDevice
  *
@@ -4217,6 +4130,7 @@ fu_device_setup(FuDevice *self, GError **error)
 /**
  * fu_device_activate:
  * @self: a #FuDevice
+ * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Activates up a device, which normally means the device switches to a new
@@ -4227,16 +4141,17 @@ fu_device_setup(FuDevice *self, GError **error)
  * Since: 1.2.6
  **/
 gboolean
-fu_device_activate(FuDevice *self, GError **error)
+fu_device_activate(FuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* subclassed */
 	if (klass->activate != NULL) {
-		if (!klass->activate(self, error))
+		if (!klass->activate(self, progress, error))
 			return FALSE;
 	}
 
@@ -4646,15 +4561,6 @@ fu_device_class_init(FuDeviceClass *klass)
 				    NULL,
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BACKEND_ID, pspec);
-
-	pspec = g_param_spec_uint("progress",
-				  NULL,
-				  NULL,
-				  0,
-				  100,
-				  0,
-				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
-	g_object_class_install_property(object_class, PROP_PROGRESS, pspec);
 
 	pspec = g_param_spec_uint("battery-level",
 				  NULL,

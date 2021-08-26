@@ -16,23 +16,25 @@ FuDfuTarget *
 fu_dfu_target_new(void);
 
 GBytes *
-fu_dfu_target_upload_chunk(FuDfuTarget *self, guint16 index, gsize buf_sz, GError **error);
+fu_dfu_target_upload_chunk(FuDfuTarget *self,
+			   guint16 index,
+			   gsize buf_sz,
+			   FuProgress *progress,
+			   GError **error);
 gboolean
-fu_dfu_target_download_chunk(FuDfuTarget *self, guint16 index, GBytes *bytes, GError **error);
+fu_dfu_target_download_chunk(FuDfuTarget *self,
+			     guint16 index,
+			     GBytes *bytes,
+			     FuProgress *progress,
+			     GError **error);
 gboolean
-fu_dfu_target_attach(FuDfuTarget *self, GError **error);
+fu_dfu_target_attach(FuDfuTarget *self, FuProgress *progress, GError **error);
 void
 fu_dfu_target_set_alt_idx(FuDfuTarget *self, guint8 alt_idx);
 void
 fu_dfu_target_set_alt_setting(FuDfuTarget *self, guint8 alt_setting);
 
 /* for the other implementations */
-void
-fu_dfu_target_set_action(FuDfuTarget *self, FwupdStatus action);
-void
-fu_dfu_target_set_percentage_raw(FuDfuTarget *self, guint percentage);
-void
-fu_dfu_target_set_percentage(FuDfuTarget *self, guint value, guint total);
 void
 fu_dfu_target_set_alt_name(FuDfuTarget *self, const gchar *alt_name);
 void
