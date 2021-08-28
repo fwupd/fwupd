@@ -289,7 +289,6 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 	FuIfdFirmwarePrivate *priv = GET_PRIVATE(self);
 	gsize bufsz_max = 0x0;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 	g_autoptr(GHashTable) blobs = NULL;
 	g_autoptr(FuFirmware) img_desc = NULL;
 
