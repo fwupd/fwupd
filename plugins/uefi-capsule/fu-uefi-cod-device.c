@@ -90,7 +90,6 @@ fu_uefi_cod_device_get_variable_idx(const gchar *name, guint *value, GError **er
 	gsize bufsz = 0;
 	g_autofree guint8 *buf = NULL;
 	g_autofree gchar *str = NULL;
-	g_autoptr(GError) error_local = NULL;
 	gunichar2 buf16[VARIABLE_IDX_SIZE] = {0x0};
 
 	if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_CAPSULE_REPORT, name, &buf, &bufsz, NULL, error))

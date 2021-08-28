@@ -480,8 +480,6 @@ fu_cabinet_set_lowercase_checksum_cb(XbBuilderFixup *builder_fixup,
 				     gpointer user_data,
 				     GError **error)
 {
-	g_autoptr(XbBuilderNode) csum = NULL;
-
 	if (g_strcmp0(xb_builder_node_get_element(bn), "artifact") == 0)
 		/* don't care whether it's sha256, sha1 or something else so don't check for
 		 * specific value */

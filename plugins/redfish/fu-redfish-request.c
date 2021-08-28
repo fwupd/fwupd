@@ -101,7 +101,6 @@ fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **e
 	/* dump for humans */
 	if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL) {
 		g_autoptr(GString) str = g_string_new(NULL);
-		g_autoptr(JsonBuilder) builder = json_builder_new();
 		g_autoptr(JsonGenerator) json_generator = json_generator_new();
 		json_generator_set_pretty(json_generator, TRUE);
 		json_generator_set_root(json_generator, json_root);

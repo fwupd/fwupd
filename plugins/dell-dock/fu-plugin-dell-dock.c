@@ -167,7 +167,6 @@ fu_plugin_dell_dock_separate_activation(FuPlugin *plugin)
 	GPtrArray *devices = fu_plugin_get_devices(plugin);
 	FuDevice *device_ec = NULL;
 	FuDevice *device_usb4 = NULL;
-	g_autoptr(GError) error_local = NULL;
 
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
