@@ -10,29 +10,29 @@
 
 /* clang-format off */
 /**
- * FWUPDPLUGIN_MAJOR_VERSION:
+ * FU_MAJOR_VERSION:
  *
  * The compile-time major version
  */
-#define FWUPDPLUGIN_MAJOR_VERSION @MAJOR_VERSION@
+#define FU_MAJOR_VERSION @MAJOR_VERSION@
 
 /**
- * FWUPDPLUGIN_MINOR_VERSION:
+ * FU_MINOR_VERSION:
  *
  * The compile-time minor version
  */
-#define FWUPDPLUGIN_MINOR_VERSION @MINOR_VERSION@
+#define FU_MINOR_VERSION @MINOR_VERSION@
 
 /**
- * FWUPDPLUGIN_MICRO_VERSION:
+ * FU_MICRO_VERSION:
  *
  * The compile-time micro version
  */
-#define FWUPDPLUGIN_MICRO_VERSION @MICRO_VERSION@
+#define FU_MICRO_VERSION @MICRO_VERSION@
 /* clang-format on */
 
 /**
- * FWUPDPLUGIN_CHECK_VERSION:
+ * FU_CHECK_VERSION:
  * @major: Major version number
  * @minor: Minor version number
  * @micro: Micro version number
@@ -43,11 +43,11 @@
  * These compile time macros allow the user to enable parts of client code
  * depending on the version of libfwupd installed.
  */
-#define FWUPDPLUGIN_CHECK_VERSION(major, minor, micro)                                             \
-	(FWUPDPLUGIN_MAJOR_VERSION > major ||                                                      \
-	 (FWUPDPLUGIN_MAJOR_VERSION == major && FWUPDPLUGIN_MINOR_VERSION > minor) ||              \
-	 (FWUPDPLUGIN_MAJOR_VERSION == major && FWUPDPLUGIN_MINOR_VERSION == minor &&              \
-	  FWUPDPLUGIN_MICRO_VERSION >= micro))
+#define FU_CHECK_VERSION(major, minor, micro)                                             \
+	(FU_MAJOR_VERSION > major ||                                                      \
+	 (FU_MAJOR_VERSION == major && FU_MINOR_VERSION > minor) ||              \
+	 (FU_MAJOR_VERSION == major && FU_MINOR_VERSION == minor &&              \
+	  FU_MICRO_VERSION >= micro))
 
 const gchar *
 fu_version_string(void);
