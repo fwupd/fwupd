@@ -235,6 +235,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "use-parent-for-open";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY)
 		return "use-parent-for-battery";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_REQUIRED_FOR_COMPOSITE)
+		return "required-for-composite";
 	return NULL;
 }
 
@@ -287,6 +289,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN;
 	if (g_strcmp0(flag, "use-parent-for-battery") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY;
+	if (g_strcmp0(flag, "required-for-composite") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_REQUIRED_FOR_COMPOSITE;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 

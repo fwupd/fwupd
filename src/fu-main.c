@@ -856,6 +856,19 @@ fu_main_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 						xb_node_query_text(component, "id", NULL),
 						error_local->message);
 				}
+
+				/* is *required* to be included as part of a composite update */
+				if (fu_device_has_internal_flag(
+					device,
+					FU_DEVICE_INTERNAL_FLAG_REQUIRED_FOR_COMPOSITE)) {
+					g_propagate_prefixed_error(error,
+								   g_steal_pointer(&error_local),
+								   "device is required to be part "
+								   "of the composite update: ");
+					return FALSE;
+				}
+
+				/* just ignore, and only return errors if nothing can be deployed */
 				g_ptr_array_add(errors, g_steal_pointer(&error_local));
 				continue;
 			}
@@ -871,6 +884,19 @@ fu_main_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 					fu_device_get_id(device),
 					xb_node_query_text(component, "id", NULL),
 					error_local->message);
+
+				/* is *required* to be included as part of a composite update */
+				if (fu_device_has_internal_flag(
+					device,
+					FU_DEVICE_INTERNAL_FLAG_REQUIRED_FOR_COMPOSITE)) {
+					g_propagate_prefixed_error(error,
+								   g_steal_pointer(&error_local),
+								   "device is required to be part "
+								   "of the composite update: ");
+					return FALSE;
+				}
+
+				/* just ignore, and only return errors if nothing can be deployed */
 				g_ptr_array_add(errors, g_steal_pointer(&error_local));
 				continue;
 			}

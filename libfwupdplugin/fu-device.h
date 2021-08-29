@@ -378,6 +378,18 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY (1ull << 17)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_REQUIRED_FOR_COMPOSITE:
+ *
+ * The device is required to be included in the composite update.
+ *
+ * For example, it might not be possible to deploy updates of a subcomponent device unless the
+ * abstract management device (which updates the firmware checksum) is also updated.
+ *
+ * Since: 1.6.3
+ */
+#define FU_DEVICE_INTERNAL_FLAG_REQUIRED_FOR_COMPOSITE (1ull << 18)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
