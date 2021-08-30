@@ -1184,7 +1184,7 @@ fu_util_device_flag_to_string(guint64 device_flag)
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE) {
 		/* TRANSLATORS: some devices can only be updated to a new semver and cannot
-		 * be downgraded or reinstalled with the sexisting version */
+		 * be downgraded or reinstalled with the existing version */
 		return _("Only version upgrades are allowed");
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
