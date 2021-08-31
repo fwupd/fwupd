@@ -1074,6 +1074,7 @@ fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self, guint8 entity, GErr
 	FuDevice *device = FU_DEVICE(self);
 	guint8 idx;
 	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
+	g_autoptr(GError) error_local = NULL;
 
 	/* sanity check */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -1098,9 +1099,15 @@ fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self, guint8 entity, GErr
 	msg->flags = FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SUB_ID |
 		     FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SWID | // inferred?
 		     FU_UNIFYING_HIDPP_MSG_FLAG_LONGER_TIMEOUT;
-	if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, error)) {
-		g_prefix_error(error, "failed to restart device: ");
-		return FALSE;
+	if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_READ) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			g_debug("ignoring '%s' on reset", error_local->message);
+		} else {
+			g_prefix_error(&error_local, "failed to restart device: ");
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
 	}
 
 	/* reprobe */
