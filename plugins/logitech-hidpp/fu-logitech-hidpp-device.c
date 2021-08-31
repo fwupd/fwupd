@@ -15,6 +15,7 @@
 typedef struct {
 	guint8 cached_fw_entity;
 	guint8 hidpp_id;
+	guint16 hidpp_pid;
 	guint8 hidpp_version;
 	gboolean is_updatable;
 	gboolean is_active;
@@ -50,6 +51,22 @@ fu_logitech_hidpp_device_set_hidpp_id(FuLogitechHidPpDevice *self, guint8 hidpp_
 	g_return_if_fail(FU_IS_HIDPP_DEVICE(self));
 	priv = GET_PRIVATE(self);
 	priv->hidpp_id = hidpp_id;
+}
+
+guint16
+fu_logitech_hidpp_device_get_hidpp_pid(FuLogitechHidPpDevice *self)
+{
+	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_HIDPP_DEVICE(self), G_MAXUINT16);
+	return priv->hidpp_pid;
+}
+
+void
+fu_logitech_hidpp_device_set_hidpp_pid(FuLogitechHidPpDevice *self, guint16 hidpp_pid)
+{
+	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_HIDPP_DEVICE(self));
+	priv->hidpp_pid = hidpp_pid;
 }
 
 static const gchar *
@@ -279,6 +296,7 @@ fu_logitech_hidpp_device_to_string(FuDevice *device, guint idt, GString *str)
 	FU_DEVICE_CLASS(fu_logitech_hidpp_device_parent_class)->to_string(device, idt, str);
 
 	fu_common_string_append_ku(str, idt, "HidppVersion", priv->hidpp_version);
+	fu_common_string_append_ku(str, idt, "HidppPid", priv->hidpp_pid);
 	fu_common_string_append_kx(str, idt, "HidppId", priv->hidpp_id);
 	fu_common_string_append_kb(str, idt, "IsUpdatable", priv->is_updatable);
 	fu_common_string_append_kb(str, idt, "IsActive", priv->is_active);
