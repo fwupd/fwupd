@@ -200,6 +200,7 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 	guint16 release = 0xffff;
 	g_autoptr(GUdevDevice) udev_parent = NULL;
+	g_autoptr(GUdevDevice) udev_parent_usb_interface = NULL;
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_logitech_hidpp_runtime_parent_class)->probe(device, error))
@@ -219,6 +220,7 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 	}
 	if (release != 0xffff) {
 		g_autofree gchar *devid2 = NULL;
+		const gchar *interface_str;
 		switch (release &= 0xff00) {
 		case 0x1200:
 			/* Nordic */
@@ -233,6 +235,34 @@ fu_logitech_hidpp_runtime_probe(FuDevice *device, GError **error)
 			devid2 = g_strdup_printf("USB\\VID_%04X&PID_%04X",
 						 (guint)FU_UNIFYING_DEVICE_VID,
 						 (guint)FU_UNIFYING_DEVICE_PID_BOOTLOADER_TEXAS);
+			fu_device_add_counterpart_guid(device, devid2);
+			priv->version_bl_major = 0x03;
+			break;
+		case 0x0500:
+			/* Bolt */
+			udev_parent_usb_interface =
+			    g_udev_device_get_parent_with_subsystem(udev_device,
+								    "usb",
+								    "usb_interface");
+			interface_str =
+			    g_udev_device_get_property(udev_parent_usb_interface, "INTERFACE");
+			if (interface_str == NULL) {
+				g_set_error(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_NOT_FOUND,
+					    "INTERFACE property not found in parent device");
+				return FALSE;
+			}
+			if (g_strcmp0(interface_str, "3/0/0") != 0) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "skipping hidraw device");
+				return FALSE;
+			}
+			devid2 = g_strdup_printf("USB\\VID_%04X&PID_%04X",
+						 (guint)FU_UNIFYING_DEVICE_VID,
+						 (guint)FU_UNIFYING_DEVICE_PID_BOOTLOADER_BOLT);
 			fu_device_add_counterpart_guid(device, devid2);
 			priv->version_bl_major = 0x03;
 			break;

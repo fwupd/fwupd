@@ -104,6 +104,8 @@ fu_logitech_hidpp_msg_fcn_id_to_string(FuLogitechHidPpHidppMsg *msg)
 			return "device-firmware-update-mode";
 		if (msg->function_id == HIDPP_REGISTER_DEVICE_FIRMWARE_INFORMATION)
 			return "device-firmware-information";
+		if (msg->function_id == BOLT_REGISTER_RECEIVER_FW_INFORMATION)
+			return "receiver-fw-information";
 		break;
 	default:
 		break;

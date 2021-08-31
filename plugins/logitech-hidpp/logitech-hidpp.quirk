@@ -5,6 +5,22 @@ GType = FuLogitechHidPpRuntimeUnifying
 VendorId = USB:0x046D
 InstallDuration = 30
 
+# Bolt Receiver (runtime)
+[HIDRAW\VEN_046D&DEV_C548]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpRuntimeBolt
+VendorId = USB:0x046D
+InstallDuration = 30
+
+# Bolt Receiver (bootloader)
+[HIDRAW\VEN_046D&DEV_AB07]
+Plugin = logitech_hidpp
+Name = Bolt Receiver
+GType = FuLogitechHidPpDevice
+CounterpartGuid = HIDRAW\VEN_046D&DEV_C548
+InstallDuration = 30
+Flags = rebind-attach,force-receiver-id,replug-match-guid
+
 # Nordic
 [USB\VID_046D&PID_AAAA]
 Plugin = logitech_hidpp

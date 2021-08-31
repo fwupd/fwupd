@@ -1,0 +1,18 @@
+{
+  "name": "Logitech Bolt receiver",
+  "guids": [
+    "af1404c4-f038-5b3e-92b0-09bf4aa84f1c"
+  ],
+  "interactive": true,
+  "protocol": "com.logitech.unifyingsigned",
+  "releases": [
+    {
+      "version": "MPR05.00_B0008",
+      "file": "b061b6b7338ace5cd8d341d229a81004f78a7551b3e507de578dbab1bc686294-MPR05.00_B0008_full.cab"
+    },
+    {
+      "version": "MPR05.00_B0009",
+      "file": "2a2b7197f0096a2c119e58cfdaa14531b2ca11bdad10553cd5069fb4d7dba106-MPR05.00_B0009_full.cab"
+    }
+  ]
+}

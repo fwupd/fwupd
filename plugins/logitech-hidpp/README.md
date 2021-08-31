@@ -2,8 +2,12 @@
 
 ## Introduction
 
-This plugin can flash the firmware on Logitech Unifying dongles, both the
-Nordic (U0007) device and the Texas Instruments (U0008) version.
+This plugin can flash the firmware on:
+
+* Logitech Unifying dongles, both the Nordic (U0007) device and the
+   Texas Instruments (U0008) versions
+* Logitech Bolt dongles
+* Unifying peripherals through the Unifying receiver
 
 This plugin will not work with the different "Nano" dongle (U0010) as it does
 not use the Unifying protocol.
@@ -26,7 +30,8 @@ This plugin supports the following protocol IDs:
 
 ## GUID Generation
 
-These devices use the standard USB DeviceInstanceId values when in DFU mode:
+The Unifying receivers and peripherals use the standard USB
+DeviceInstanceId values when in DFU mode:
 
 * `USB\VID_046D&PID_AAAA&REV_0001`
 * `USB\VID_046D&PID_AAAA`
@@ -38,6 +43,11 @@ When in runtime mode, the HID raw DeviceInstanceId values are used:
 * `HIDRAW\VEN_046D&DEV_C52B`
 * `HIDRAW\VEN_046D`
 
+The Bolt dongle and peripherals use HID raw DeviceInstanceId values
+regardless of their mode. This might change once these devices are
+handled by the Logitech Linux driver instead of by the generic hid
+driver.
+
 ## Vendor ID Security
 
 The vendor ID is set from the vendor ID, in this instance set to `USB:0x046D`
@@ -45,16 +55,24 @@ in bootloader and `HIDRAW:0x046D` in runtime mode.
 
 ## Update Behavior
 
-The peripheral firmware is deployed when the device is in normal runtime mode,
-and the device will reset when the new firmware has been written.
+Due to the variety of devices supported and the differences in how
+they're enumerated, the update behavior is slightly different between
+them.
 
-The receiver device presents in runtime mode, but on detach re-enumerates with a
+In all cases, the devices have to be put in bootloader mode to run the
+DFU process. While in bootloader mode, the user won't be able to use the
+device. For receivers, that also means that while they're in bootloader
+mode, the peripherals paired to them won't work during the update.
+
+A Unifying receiver presents in runtime mode, but on detach re-enumerates with a
 different USB PID in a bootloader mode. On attach the device again re-enumerates
-back to the runtime mode. All unifying devices attached to the receiver will not
-work for the duration of the update.
+back to the runtime mode.
 
 For this reason the `REPLUG_MATCH_GUID` internal device flag is used so that
 the bootloader and runtime modes are treated as the same device.
+
+The Bolt receiver enumerates as a hidraw device both in runtime and
+bootloader mode, but with different HIDRAW devIDs.
 
 ## Design Notes
 
@@ -63,6 +81,40 @@ the kernel and use raw control transfers. This ensures that we don't accidentall
 corrupt the uploading firmware. For application firmware we use hidraw which
 means the hardware keeps working while probing, and also allows us to detect
 paired devices.
+
+### How the code is organized
+
+Here's how the different devices are handled in the plugin:
+
+* Unifying receiver in runtime mode: FuLogitechHidPpRuntimeUnifying
+    (fu-logitech-hidpp-runtime-unifying.c)
+* Unifying receiver in bootloader mode:
+  * Nordic chipset: FuLogitechHidPpBootloaderNordic
+    (fu-logitech-hidpp-bootloader-nordic.c)
+  * TI chipset: FuLogitechHidPpBootloaderTexas
+    (fu-logitech-hidpp-bootloader-texas.c)
+* Bolt receiver in runtime mode: FuLogitechHidPpRuntimeBolt
+    (fu-logitech-hidpp-runtime-bolt.c)
+* Bolt receiver in bootloader mode and all peripherals:
+    FuLogitechHidPpDevice (fu-logitech-hidpp-device.c)
+
+FuLogitechHidPpDevice effectively handles all devices that use the
+HID++2.0 protocol.
+
+### Plugin-specific flags
+
+Even though the same code handles multiple different devices, there are
+some inherent differences in them that makes it necessary to handle some
+exceptional behaviors sometimes.
+
+In order to do that there are a few specific flags that can be used to
+tweak the plugin code for certain device types:
+
+* rebind-attach: some devices will have their device file unbound and
+    re-bound after reset, so the device object can't be simply re-probed
+    using the same file descriptor.
+* force-receiver-id: this flag is used to differentiate the receiver device in
+    FuLogitechHidPpDevice, since the receiver has a specific HID++ ID.
 
 ## External Interface Access
 
