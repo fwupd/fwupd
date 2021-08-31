@@ -101,6 +101,12 @@ Here's how the different devices are handled in the plugin:
 FuLogitechHidPpDevice effectively handles all devices that use the
 HID++2.0 protocol.
 
+Every device contains two updatable entities, the main application FW
+and the radio stack FW (SoftDevice). The latter will show up as a child
+device of the actual device and is handled by FuLogitechHidPpRadio
+(fu-logitech-hidpp-radio.c), which simply defers to the parent device
+for most operations.
+
 ### Plugin-specific flags
 
 Even though the same code handles multiple different devices, there are
