@@ -20,6 +20,7 @@ typedef struct {
 	gboolean is_updatable;
 	gboolean is_active;
 	FuIOChannel *io_channel;
+	gchar *model_id;
 	GPtrArray *feature_index; /* of FuLogitechHidPpHidppMap */
 } FuLogitechHidPpDevicePrivate;
 
@@ -67,6 +68,14 @@ fu_logitech_hidpp_device_set_hidpp_pid(FuLogitechHidPpDevice *self, guint16 hidp
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_HIDPP_DEVICE(self));
 	priv->hidpp_pid = hidpp_pid;
+}
+
+const gchar *
+fu_logitech_hidpp_device_get_model_id(FuLogitechHidPpDevice *self)
+{
+	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_HIDPP_DEVICE(self), NULL);
+	return priv->model_id;
 }
 
 static const gchar *
@@ -300,6 +309,7 @@ fu_logitech_hidpp_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kx(str, idt, "HidppId", priv->hidpp_id);
 	fu_common_string_append_kb(str, idt, "IsUpdatable", priv->is_updatable);
 	fu_common_string_append_kb(str, idt, "IsActive", priv->is_active);
+	fu_common_string_append_kv(str, idt, "ModelId", priv->model_id);
 	for (guint i = 0; i < priv->feature_index->len; i++) {
 		FuLogitechHidPpHidppMap *map = g_ptr_array_index(priv->feature_index, i);
 		fu_logitech_hidpp_map_to_string(map, idt, str);
@@ -381,6 +391,45 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidPpDevice *self, GError
 	}
 
 	/* not an error, the device just doesn't support this */
+	return TRUE;
+}
+
+static gboolean
+fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidPpDevice *self, GError **error)
+{
+	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
+	guint8 idx;
+	g_autofree gchar *devid = NULL;
+	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	/* get the (optional) feature index */
+	idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_I_FIRMWARE_INFO);
+	if (idx == 0x00)
+		return TRUE;
+
+	msg->report_id = HIDPP_REPORT_ID_SHORT;
+	msg->device_id = priv->hidpp_id;
+	msg->sub_id = idx;
+	msg->function_id = 0x00 << 4; /* getDeviceInfo */
+	msg->hidpp_version = priv->hidpp_version;
+	if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, error)) {
+		g_prefix_error(error, "failed to get the model ID: ");
+		return FALSE;
+	}
+	for (guint i = 7; i < 13; i++) {
+		g_string_append_printf(str, "%02X", msg->data[i]);
+	}
+	g_string_append_printf(str, "%02X", msg->data[13]);
+
+	priv->model_id = g_string_free(g_steal_pointer(&str), FALSE);
+
+	/* add one more instance ID */
+	devid = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&MOD_%s",
+				fu_udev_device_get_vendor(FU_UDEV_DEVICE(self)),
+				fu_udev_device_get_model(FU_UDEV_DEVICE(self)),
+				priv->model_id);
+	fu_device_add_instance_id(FU_DEVICE(self), devid);
 	return TRUE;
 }
 
@@ -629,6 +678,10 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 
 	/* get the battery level */
 	if (!fu_logitech_hidpp_device_fetch_battery_level(self, error))
+		return FALSE;
+
+	/* get the model ID, typically something like B3630000000000 */
+	if (!fu_logitech_hidpp_device_fetch_model_id(self, error))
 		return FALSE;
 
 	/* try using HID++2.0 */
@@ -1064,6 +1117,7 @@ fu_logitech_hidpp_device_finalize(GObject *object)
 	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE(object);
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
 	g_ptr_array_unref(priv->feature_index);
+	g_free(priv->model_id);
 	G_OBJECT_CLASS(fu_logitech_hidpp_device_parent_class)->finalize(object);
 }
 
