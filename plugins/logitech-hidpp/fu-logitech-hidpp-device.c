@@ -107,6 +107,8 @@ fu_logitech_hidpp_feature_to_string(guint16 feature)
 		return "GetDevicenameType";
 	if (feature == HIDPP_FEATURE_BATTERY_LEVEL_STATUS)
 		return "BatteryLevelStatus";
+	if (feature == HIDPP_FEATURE_UNIFIED_BATTERY)
+		return "UnifiedBattery";
 	if (feature == HIDPP_FEATURE_DFU_CONTROL)
 		return "DfuControl";
 	if (feature == HIDPP_FEATURE_DFU_CONTROL_SIGNED)
@@ -372,22 +374,71 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidPpDevice *self, GError
 	/* try using HID++2.0 */
 	if (priv->hidpp_version >= 2.f) {
 		guint8 idx;
-		idx = fu_logitech_hidpp_device_feature_get_idx(self,
-							       HIDPP_FEATURE_BATTERY_LEVEL_STATUS);
+
+		/* try the Unified Battery feature first */
+		idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_UNIFIED_BATTERY);
 		if (idx != 0x00) {
+			gboolean socc = FALSE; /* state of charge capability */
 			g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
 			msg->report_id = HIDPP_REPORT_ID_SHORT;
 			msg->device_id = priv->hidpp_id;
 			msg->sub_id = idx;
-			msg->function_id = 0x00; /* GetBatteryLevelStatus */
+			msg->function_id = 0x00 << 4; /* get_capabilities */
 			msg->hidpp_version = priv->hidpp_version;
 			if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, error)) {
 				g_prefix_error(error, "failed to get battery info: ");
 				return FALSE;
 			}
-			if (msg->data[0] != 0x00)
+			if (msg->data[1] & 0x02)
+				socc = TRUE;
+			msg->function_id = 0x01 << 4; /* get_status */
+			if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, error)) {
+				g_prefix_error(error, "failed to get battery info: ");
+				return FALSE;
+			}
+			if (socc) {
 				fu_device_set_battery_level(FU_DEVICE(self), msg->data[0]);
+			} else {
+				switch (msg->data[1]) {
+				case 1: /* critical */
+					fu_device_set_battery_level(FU_DEVICE(self), 5);
+					break;
+				case 2: /* low */
+					fu_device_set_battery_level(FU_DEVICE(self), 20);
+					break;
+				case 4: /* good */
+					fu_device_set_battery_level(FU_DEVICE(self), 55);
+					break;
+				case 8: /* full */
+					fu_device_set_battery_level(FU_DEVICE(self), 90);
+					break;
+				default:
+					g_warning("unknown battery level: 0x%02x", msg->data[1]);
+					break;
+				}
+			}
 			return TRUE;
+		} else {
+			/* fall back to the legacy Battery Level feature */
+			idx = fu_logitech_hidpp_device_feature_get_idx(
+			    self,
+			    HIDPP_FEATURE_BATTERY_LEVEL_STATUS);
+			if (idx != 0x00) {
+				g_autoptr(FuLogitechHidPpHidppMsg) msg =
+				    fu_logitech_hidpp_msg_new();
+				msg->report_id = HIDPP_REPORT_ID_SHORT;
+				msg->device_id = priv->hidpp_id;
+				msg->sub_id = idx;
+				msg->function_id = 0x00 << 4; /* GetBatteryLevelStatus */
+				msg->hidpp_version = priv->hidpp_version;
+				if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, error)) {
+					g_prefix_error(error, "failed to get battery info: ");
+					return FALSE;
+				}
+				if (msg->data[0] != 0x00)
+					fu_device_set_battery_level(FU_DEVICE(self), msg->data[0]);
+				return TRUE;
+			}
 		}
 	}
 
@@ -516,6 +567,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 	const guint16 map_features[] = {HIDPP_FEATURE_GET_DEVICE_NAME_TYPE,
 					HIDPP_FEATURE_I_FIRMWARE_INFO,
 					HIDPP_FEATURE_BATTERY_LEVEL_STATUS,
+					HIDPP_FEATURE_UNIFIED_BATTERY,
 					HIDPP_FEATURE_DFU_CONTROL,
 					HIDPP_FEATURE_DFU_CONTROL_SIGNED,
 					HIDPP_FEATURE_DFU,
