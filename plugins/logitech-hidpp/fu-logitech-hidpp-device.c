@@ -11,6 +11,7 @@
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-device.h"
 #include "fu-logitech-hidpp-hidpp.h"
+#include "fu-logitech-hidpp-radio.h"
 #include "fu-logitech-hidpp-runtime-bolt.h"
 
 /**
@@ -31,6 +32,15 @@
  * Since: 1.7.0
  */
 #define FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH (1 << 2)
+
+/**
+ * FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO:
+ *
+ * The device should add a softdevice (index 0x5), typically a radio.
+ *
+ * Since: 1.7.0
+ */
+#define FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO (1 << 5)
 
 typedef struct {
 	guint8 cached_fw_entity;
@@ -352,12 +362,50 @@ fu_logitech_hidpp_device_feature_get_idx(FuLogitechHidPpDevice *self, guint16 fe
 }
 
 static gboolean
+fu_logitech_hidpp_device_create_radio_child(FuLogitechHidPpDevice *self,
+					    guint8 entity,
+					    guint16 build,
+					    GError **error)
+{
+	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
+	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
+	g_autofree gchar *instance_id = NULL;
+	g_autofree gchar *radio_version = NULL;
+	g_autoptr(FuLogitechHidPpRadio) radio = NULL;
+
+	/* sanity check */
+	if (priv->model_id == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "model ID not set");
+		return FALSE;
+	}
+
+	radio_version = g_strdup_printf("0x%.4x", build);
+	radio = fu_logitech_hidpp_radio_new(ctx, entity);
+	fu_device_set_physical_id(FU_DEVICE(radio), fu_device_get_physical_id(FU_DEVICE(self)));
+
+	fu_device_set_logical_id(FU_DEVICE(radio), priv->model_id);
+	instance_id = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&MOD_%s_SOFTDEVICE",
+				      fu_udev_device_get_vendor(FU_UDEV_DEVICE(self)),
+				      fu_udev_device_get_model(FU_UDEV_DEVICE(self)),
+				      priv->model_id);
+	fu_device_add_instance_id(FU_DEVICE(radio), instance_id);
+	fu_device_set_name(FU_DEVICE(radio), "Radio");
+	fu_device_set_version(FU_DEVICE(radio), radio_version);
+	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(radio));
+	return TRUE;
+}
+
+static gboolean
 fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidPpDevice *self, GError **error)
 {
 	guint8 idx;
 	guint8 entity_count;
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
 	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
+	gboolean radio_ok = FALSE;
 
 	/* get the feature index */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_I_FIRMWARE_INFO);
@@ -409,6 +457,24 @@ fu_logitech_hidpp_device_fetch_firmware_info(FuLogitechHidPpDevice *self, GError
 			fu_device_set_version_bootloader(FU_DEVICE(self), version);
 		} else if (msg->data[0] == 2) {
 			fu_device_set_metadata(FU_DEVICE(self), "version-hw", version);
+		} else if (msg->data[0] == 5 &&
+			   fu_device_has_private_flag(FU_DEVICE(self),
+						      FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO)) {
+			if (!fu_logitech_hidpp_device_create_radio_child(self, i, build, error)) {
+				g_prefix_error(error, "failed to create radio: ");
+				return FALSE;
+			}
+			radio_ok = TRUE;
+		}
+	}
+
+	/* the device is probably in bootloader mode and the last SoftDevice FW upgrade failed */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO) &&
+	    !radio_ok) {
+		g_debug("no radio found, creating a fake one for recovery");
+		if (!fu_logitech_hidpp_device_create_radio_child(self, 1, 0, error)) {
+			g_prefix_error(error, "failed to create radio: ");
+			return FALSE;
 		}
 	}
 
@@ -1181,6 +1247,22 @@ fu_logitech_hidpp_device_attach_cached(FuDevice *device, GError **error)
 	return fu_logitech_hidpp_device_attach(self, priv->cached_fw_entity, error);
 }
 
+static gboolean
+fu_logitech_hidpp_device_set_quirk_kv(FuDevice *device,
+				      const gchar *key,
+				      const gchar *value,
+				      GError **error)
+{
+	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE(device);
+	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
+	if (g_strcmp0(key, "LogitechHidppModelId") == 0) {
+		priv->model_id = g_strdup(value);
+		return TRUE;
+	}
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	return FALSE;
+}
+
 static void
 fu_logitech_hidpp_device_finalize(GObject *object)
 {
@@ -1207,6 +1289,7 @@ fu_logitech_hidpp_device_class_init(FuLogitechHidPpDeviceClass *klass)
 	klass_device->poll = fu_logitech_hidpp_device_poll;
 	klass_device->to_string = fu_logitech_hidpp_device_to_string;
 	klass_device->probe = fu_logitech_hidpp_device_probe;
+	klass_device->set_quirk_kv = fu_logitech_hidpp_device_set_quirk_kv;
 }
 
 static void
@@ -1224,6 +1307,9 @@ fu_logitech_hidpp_device_init(FuLogitechHidPpDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH,
 					"rebind-attach");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO,
+					"add-radio");
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
 }

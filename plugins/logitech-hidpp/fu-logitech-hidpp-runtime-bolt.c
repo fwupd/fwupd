@@ -9,6 +9,7 @@
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-device.h"
 #include "fu-logitech-hidpp-hidpp.h"
+#include "fu-logitech-hidpp-radio.h"
 #include "fu-logitech-hidpp-runtime-bolt.h"
 
 struct _FuLogitechHidPpRuntimeBolt {
@@ -141,6 +142,7 @@ fu_logitech_hidpp_runtime_bolt_poll(FuDevice *device, GError **error)
 static gboolean
 fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 {
+	FuContext *ctx = fu_device_get_context(device);
 	FuLogitechHidPpRuntime *self = FU_HIDPP_RUNTIME(device);
 	FuLogitechHidPpRuntimeBolt *bolt = FU_HIDPP_RUNTIME_BOLT(device);
 	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
@@ -165,6 +167,9 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 	 */
 	for (guint i = 0; i < 3; i++) {
 		g_autofree gchar *version = NULL;
+		g_autoptr(FuLogitechHidPpRadio) radio = NULL;
+		g_autofree gchar *instance_id = NULL;
+		g_autoptr(GString) radio_version = NULL;
 
 		msg->report_id = HIDPP_REPORT_ID_SHORT;
 		msg->device_id = HIDPP_DEVICE_ID_RECEIVER;
@@ -199,6 +204,23 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 			break;
 		case 5:
 			/* SoftDevice */
+			radio_version = g_string_new(NULL);
+			radio = fu_logitech_hidpp_radio_new(ctx, i);
+			fu_device_set_physical_id(FU_DEVICE(radio),
+						  fu_device_get_physical_id(device));
+			fu_device_set_logical_id(FU_DEVICE(radio), "Receiver_SoftDevice");
+
+			instance_id =
+			    g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X_RECEIVER_SOFTDEVICE",
+					    fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)),
+					    fu_udev_device_get_model(FU_UDEV_DEVICE(device)));
+			fu_device_add_guid(FU_DEVICE(radio), instance_id);
+			fu_device_set_name(FU_DEVICE(radio), "SoftDevice");
+			g_string_append_printf(radio_version,
+					       "0x%.4x",
+					       (guint16)(msg->data[3] << 8 | msg->data[4]));
+			fu_device_set_version(FU_DEVICE(radio), radio_version->str);
+			fu_device_add_child(device, FU_DEVICE(radio));
 			break;
 		default:
 			break;

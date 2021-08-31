@@ -22,6 +22,7 @@ shared_module('fu_plugin_logitech_hidpp',
     'fu-logitech-hidpp-runtime.c',
     'fu-logitech-hidpp-runtime-unifying.c',
     'fu-logitech-hidpp-runtime-bolt.c',
+    'fu-logitech-hidpp-radio.c',
   ],
   include_directories : [
     root_incdir,

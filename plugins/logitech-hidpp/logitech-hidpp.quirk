@@ -19,7 +19,8 @@ Name = Bolt Receiver
 GType = FuLogitechHidPpDevice
 CounterpartGuid = HIDRAW\VEN_046D&DEV_C548
 InstallDuration = 30
-Flags = rebind-attach,force-receiver-id,replug-match-guid
+Flags = rebind-attach,force-receiver-id,replug-match-guid,add-radio
+LogitechHidppModelId = B601C548000000
 
 # Nordic
 [USB\VID_046D&PID_AAAA]
@@ -61,3 +62,14 @@ Plugin = logitech_hidpp
 GType = FuLogitechHidPpDevice
 Flags = only-supported
 ParentGuid = HIDRAW\VEN_046D&DEV_C52B
+
+# SoftDevice (Bolt receiver runtime)
+[HIDRAW\VEN_046D&DEV_C548_RECEIVER_SOFTDEVICE]
+Plugin = logitech_hidpp
+Flags = rebind-attach
+
+# SoftDevice (Bolt receiver bootloader)
+[HIDRAW\VEN_046D&DEV_AB07&MOD_B601C548000000_SOFTDEVICE]
+Plugin = logitech_hidpp
+CounterpartGuid = HIDRAW\VEN_046D&DEV_C548_RECEIVER_SOFTDEVICE
+Flags = rebind-attach,is-bootloader
