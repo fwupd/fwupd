@@ -470,6 +470,15 @@ typedef enum {
  */
 #define FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE (1llu << 43)
 /**
+ * FWUPD_DEVICE_FLAG_UNREACHABLE:
+ *
+ * The device is currently unreachable, perhaps because it is in a lower power state or is out of
+ * wireless range.
+ *
+ * Since 1.7.0
+ */
+#define FWUPD_DEVICE_FLAG_UNREACHABLE (1llu << 44)
+/**
  * FWUPD_DEVICE_FLAG_UNKNOWN:
  *
  * This flag is not defined, this typically will happen from mismatched

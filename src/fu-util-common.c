@@ -1187,6 +1187,11 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		 * be downgraded or reinstalled with the existing version */
 		return _("Only version upgrades are allowed");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_UNREACHABLE) {
+		/* TRANSLATORS: currently unreachable, perhaps because it is in a lower power state
+		 * or is out of wireless range */
+		return _("Device is unreachable");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
 		/* skip */
 		return NULL;
