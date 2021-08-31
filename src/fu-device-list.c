@@ -819,21 +819,6 @@ fu_device_list_get_by_guid(FuDeviceList *self, const gchar *guid, GError **error
 	return NULL;
 }
 
-/* count devices that are disconnected and are waiting to be replugged */
-static guint
-fu_device_list_devices_wait_removed(FuDeviceList *self)
-{
-	guint cnt = 0;
-	g_rw_lock_reader_lock(&self->devices_mutex);
-	for (guint i = 0; i < self->devices->len; i++) {
-		FuDeviceItem *item = g_ptr_array_index(self->devices, i);
-		if (item->remove_id != 0)
-			cnt++;
-	}
-	g_rw_lock_reader_unlock(&self->devices_mutex);
-	return cnt;
-}
-
 static GPtrArray *
 fu_device_list_get_wait_for_replug(FuDeviceList *self)
 {
@@ -863,8 +848,6 @@ gboolean
 fu_device_list_wait_for_replug(FuDeviceList *self, GError **error)
 {
 	guint remove_delay = 0;
-	guint wait_removed;
-	guint wait_removed_old = 0;
 	g_autoptr(GTimer) timer = g_timer_new();
 	g_autoptr(GPtrArray) devices_wfr1 = NULL;
 	g_autoptr(GPtrArray) devices_wfr2 = NULL;
@@ -899,19 +882,10 @@ fu_device_list_wait_for_replug(FuDeviceList *self, GError **error)
 	/* time to unplug and then re-plug */
 	do {
 		g_autoptr(GPtrArray) devices_wfr_tmp = NULL;
-
-		/* count how many devices are in the remove waiting state */
-		wait_removed = fu_device_list_devices_wait_removed(self);
-		if (wait_removed != wait_removed_old) {
-			g_debug("devices in wait_removed: %u -> %u",
-				wait_removed_old,
-				wait_removed);
-			wait_removed_old = wait_removed;
-		}
 		g_usleep(1000);
 		g_main_context_iteration(NULL, FALSE);
 		devices_wfr_tmp = fu_device_list_get_wait_for_replug(self);
-		if (devices_wfr_tmp->len == 0 && wait_removed == 0)
+		if (devices_wfr_tmp->len == 0)
 			break;
 	} while (g_timer_elapsed(timer, NULL) * 1000.f < remove_delay);
 
