@@ -1067,6 +1067,12 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_logitech_hidpp_device_reprobe_cb(FuDevice *device, gpointer user_data, GError **error)
+{
+	return fu_logitech_hidpp_device_setup(device, error);
+}
+
 gboolean
 fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self, guint8 entity, GError **error)
 {
@@ -1111,7 +1117,7 @@ fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self, guint8 entity, GErr
 	}
 
 	/* reprobe */
-	if (!fu_logitech_hidpp_device_setup(device, error))
+	if (!fu_device_retry(device, fu_logitech_hidpp_device_reprobe_cb, 5, NULL, error))
 		return FALSE;
 
 	/* success */
@@ -1166,5 +1172,6 @@ fu_logitech_hidpp_device_init(FuLogitechHidPpDevice *self)
 	priv->feature_index = g_ptr_array_new_with_free_func(g_free);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
 }
