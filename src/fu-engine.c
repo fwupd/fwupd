@@ -2790,8 +2790,10 @@ fu_engine_prepare(FuEngine *self, FwupdInstallFlags flags, const gchar *device_i
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device(self, device_id, error);
-	if (device == NULL)
+	if (device == NULL) {
+		g_prefix_error(error, "failed to get device before update prepare: ");
 		return FALSE;
+	}
 
 	/* don't rely on a plugin clearing this */
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
@@ -2826,8 +2828,10 @@ fu_engine_cleanup(FuEngine *self, FwupdInstallFlags flags, const gchar *device_i
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device(self, device_id, error);
-	if (device == NULL)
+	if (device == NULL) {
+		g_prefix_error(error, "failed to get device before update cleanup: ");
 		return FALSE;
+	}
 	str = fu_device_to_string(device);
 	g_debug("cleanup -> %s", str);
 	if (!fu_engine_device_cleanup(self, device, flags, error))
@@ -2858,8 +2862,10 @@ fu_engine_detach(FuEngine *self,
 
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device(self, device_id, error);
-	if (device == NULL)
+	if (device == NULL) {
+		g_prefix_error(error, "failed to get device before update detach: ");
 		return FALSE;
+	}
 	str = fu_device_to_string(device);
 	g_debug("detach -> %s", str);
 	plugin =
@@ -2903,7 +2909,7 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, GError **error)
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device(self, device_id, error);
 	if (device == NULL) {
-		g_prefix_error(error, "failed to get device after update: ");
+		g_prefix_error(error, "failed to get device before update attach: ");
 		return FALSE;
 	}
 	str = fu_device_to_string(device);
@@ -2960,7 +2966,7 @@ fu_engine_reload(FuEngine *self, const gchar *device_id, GError **error)
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device(self, device_id, error);
 	if (device == NULL) {
-		g_prefix_error(error, "failed to get device after update: ");
+		g_prefix_error(error, "failed to get device before update reload: ");
 		return FALSE;
 	}
 	str = fu_device_to_string(device);
@@ -3001,7 +3007,7 @@ fu_engine_write_firmware(FuEngine *self,
 	/* the device and plugin both may have changed */
 	device = fu_engine_get_device(self, device_id, error);
 	if (device == NULL) {
-		g_prefix_error(error, "failed to get device after detach: ");
+		g_prefix_error(error, "failed to get device before update: ");
 		return FALSE;
 	}
 	device_pending = fu_history_get_device_by_id(self->history, device_id, NULL);
@@ -3129,8 +3135,10 @@ fu_engine_install_blob(FuEngine *self,
 
 		/* the device and plugin both may have changed */
 		device_tmp = fu_engine_get_device(self, device_id, error);
-		if (device_tmp == NULL)
+		if (device_tmp == NULL) {
+			g_prefix_error(error, "failed to get device after install blob: ");
 			return FALSE;
+		}
 		if (!fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED))
 			break;
 
