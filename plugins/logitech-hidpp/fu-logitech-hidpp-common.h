@@ -19,6 +19,10 @@
 /* Signed firmware are very long to verify on the device */
 #define FU_UNIFYING_DEVICE_TIMEOUT_MS 30000
 
+/* Polling intervals (ms) */
+#define FU_HIDPP_DEVICE_POLLING_INTERVAL	   30000
+#define FU_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL 5000
+
 guint8
 fu_logitech_hidpp_buffer_read_uint8(const gchar *str);
 guint16

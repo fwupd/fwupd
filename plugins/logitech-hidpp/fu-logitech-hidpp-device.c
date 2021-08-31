@@ -681,7 +681,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 	fu_logitech_hidpp_device_refresh_updatable(self);
 
 	/* poll for pings to track active state */
-	fu_device_set_poll_interval(device, 30000);
+	fu_device_set_poll_interval(device, FU_HIDPP_DEVICE_POLLING_INTERVAL);
 	return TRUE;
 }
 
