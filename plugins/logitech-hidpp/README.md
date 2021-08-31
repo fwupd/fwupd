@@ -34,6 +34,7 @@ These devices use the standard USB DeviceInstanceId values when in DFU mode:
 
 When in runtime mode, the HID raw DeviceInstanceId values are used:
 
+* `HIDRAW\VEN_046D&DEV_C52B&MOD_B33B405B000000`
 * `HIDRAW\VEN_046D&DEV_C52B`
 * `HIDRAW\VEN_046D`
 
