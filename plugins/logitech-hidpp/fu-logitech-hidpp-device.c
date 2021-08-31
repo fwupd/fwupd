@@ -1067,11 +1067,11 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
-static gboolean
-fu_logitech_hidpp_device_attach(FuDevice *device, GError **error)
+gboolean
+fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self, guint8 entity, GError **error)
 {
-	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
+	FuDevice *device = FU_DEVICE(self);
 	guint8 idx;
 	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
 
@@ -1092,8 +1092,8 @@ fu_logitech_hidpp_device_attach(FuDevice *device, GError **error)
 	msg->report_id = HIDPP_REPORT_ID_SHORT;
 	msg->device_id = priv->hidpp_id;
 	msg->sub_id = idx;
-	msg->function_id = 0x05 << 4;	       /* restart */
-	msg->data[0] = priv->cached_fw_entity; /* fwEntity */
+	msg->function_id = 0x05 << 4; /* restart */
+	msg->data[0] = entity;	      /* fwEntity */
 	msg->hidpp_version = priv->hidpp_version;
 	msg->flags = FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SUB_ID |
 		     FU_UNIFYING_HIDPP_MSG_FLAG_IGNORE_SWID | // inferred?
@@ -1108,6 +1108,18 @@ fu_logitech_hidpp_device_attach(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_logitech_hidpp_device_attach_cached(FuDevice *device, GError **error)
+{
+	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE(device);
+	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
+	if (!fu_logitech_hidpp_device_attach(self, priv->cached_fw_entity, error))
+		return FALSE;
+	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -1132,7 +1144,7 @@ fu_logitech_hidpp_device_class_init(FuLogitechHidPpDeviceClass *klass)
 	klass_device->open = fu_logitech_hidpp_device_open;
 	klass_device->close = fu_logitech_hidpp_device_close;
 	klass_device->write_firmware = fu_logitech_hidpp_device_write_firmware;
-	klass_device->attach = fu_logitech_hidpp_device_attach;
+	klass_device->attach = fu_logitech_hidpp_device_attach_cached;
 	klass_device->detach = fu_logitech_hidpp_device_detach;
 	klass_device->poll = fu_logitech_hidpp_device_poll;
 	klass_device->to_string = fu_logitech_hidpp_device_to_string;
