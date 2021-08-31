@@ -11,6 +11,26 @@
 #include "fu-logitech-hidpp-common.h"
 #include "fu-logitech-hidpp-device.h"
 #include "fu-logitech-hidpp-hidpp.h"
+#include "fu-logitech-hidpp-runtime-bolt.h"
+
+/**
+ * FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID:
+ *
+ * Device is a unifying or Bolt receiver.
+ *
+ * Since: 1.7.0
+ */
+#define FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID (1 << 0)
+
+/**
+ * FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH:
+ *
+ * The device file is automatically unbound and re-bound after the
+ * device is attached.
+ *
+ * Since: 1.7.0
+ */
+#define FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH (1 << 2)
 
 typedef struct {
 	guint8 cached_fw_entity;
@@ -139,6 +159,8 @@ fu_logitech_hidpp_feature_to_string(guint16 feature)
 		return "DfuControl";
 	if (feature == HIDPP_FEATURE_DFU_CONTROL_SIGNED)
 		return "DfuControlSigned";
+	if (feature == HIDPP_FEATURE_DFU_CONTROL_BOLT)
+		return "DfuControlBolt";
 	if (feature == HIDPP_FEATURE_DFU)
 		return "Dfu";
 	return NULL;
@@ -637,8 +659,12 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 					HIDPP_FEATURE_UNIFIED_BATTERY,
 					HIDPP_FEATURE_DFU_CONTROL,
 					HIDPP_FEATURE_DFU_CONTROL_SIGNED,
+					HIDPP_FEATURE_DFU_CONTROL_BOLT,
 					HIDPP_FEATURE_DFU,
 					HIDPP_FEATURE_ROOT};
+
+	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID))
+		priv->hidpp_id = HIDPP_DEVICE_ID_RECEIVER;
 
 	/* ping device to get HID++ version */
 	if (!fu_logitech_hidpp_device_ping(self, error))
@@ -713,7 +739,10 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 		fu_device_remove_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifying");
 	}
-	idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_DFU_CONTROL_SIGNED);
+	idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_DFU_CONTROL_BOLT);
+	if (idx == 0x00)
+		idx = fu_logitech_hidpp_device_feature_get_idx(self,
+							       HIDPP_FEATURE_DFU_CONTROL_SIGNED);
 	if (idx != 0x00) {
 		/* check the feature is available */
 		g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
@@ -770,8 +799,10 @@ fu_logitech_hidpp_device_detach(FuDevice *device, GError **error)
 		return TRUE;
 	}
 
-	/* this requires user action */
-	idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_DFU_CONTROL);
+	/* these require user action */
+	idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_DFU_CONTROL_BOLT);
+	if (idx == 0x00)
+		idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_DFU_CONTROL);
 	if (idx != 0x00) {
 		g_autoptr(FwupdRequest) request = fwupd_request_new();
 		msg->report_id = HIDPP_REPORT_ID_LONG;
@@ -1023,6 +1054,7 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 					GError **error)
 {
 	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE(device);
+	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
 	gsize sz = 0;
 	const guint8 *data;
 	guint8 cmd = 0x04;
@@ -1041,8 +1073,12 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	/* flash hardware */
+	/* flash hardware -- the first data byte is the fw entity */
 	data = g_bytes_get_data(fw, &sz);
+	if (priv->cached_fw_entity != data[0]) {
+		g_warning("updating cached entity 0x%x with 0x%x", priv->cached_fw_entity, data[0]);
+		priv->cached_fw_entity = data[0];
+	}
 	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	for (gsize i = 0; i < sz / 16; i++) {
 		/* send packet and wait for reply */
@@ -1116,9 +1152,19 @@ fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self, guint8 entity, GErr
 		}
 	}
 
-	/* reprobe */
-	if (!fu_device_retry(device, fu_logitech_hidpp_device_reprobe_cb, 5, NULL, error))
-		return FALSE;
+	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH)) {
+		fu_device_set_poll_interval(device, 0);
+		/*
+		 * Wait for device to become ready after flashing.
+		 * Possible race condition: after the device is reset, Linux might enumerate it as
+		 * a different hidraw device depending on timing.
+		 */
+		fu_device_sleep_with_progress(device, 1); /* second */
+	} else {
+		/* device file hasn't been unbound/re-bound, just probe again */
+		if (!fu_device_retry(device, fu_logitech_hidpp_device_reprobe_cb, 5, NULL, error))
+			return FALSE;
+	}
 
 	/* success */
 	return TRUE;
@@ -1130,6 +1176,8 @@ fu_logitech_hidpp_device_attach_cached(FuDevice *device, GError **error)
 	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
 	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
+	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH))
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return fu_logitech_hidpp_device_attach(self, priv->cached_fw_entity, error);
 }
 
@@ -1170,5 +1218,12 @@ fu_logitech_hidpp_device_init(FuLogitechHidPpDevice *self)
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID,
+					"force-receiver-id");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH,
+					"rebind-attach");
+	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
 	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
 }
