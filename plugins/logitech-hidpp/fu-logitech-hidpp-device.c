@@ -397,16 +397,18 @@ fu_logitech_hidpp_device_fetch_battery_level(FuLogitechHidPpDevice *self, GError
 		msg->report_id = HIDPP_REPORT_ID_SHORT;
 		msg->device_id = priv->hidpp_id;
 		msg->sub_id = HIDPP_SUBID_GET_REGISTER;
-		msg->function_id = HIDPP_REGISTER_BATTERY_MILEAGE;
+		msg->function_id = HIDPP_REGISTER_BATTERY_MILEAGE << 4;
 		msg->hidpp_version = priv->hidpp_version;
 		if (fu_logitech_hidpp_transfer(priv->io_channel, msg, NULL)) {
-			if (msg->data[0] != 0x00)
+			if (msg->data[0] != 0x7F)
 				fu_device_set_battery_level(FU_DEVICE(self), msg->data[0]);
+			else
+				g_warning("unknown battery level: 0x%02x", msg->data[0]);
 			return TRUE;
 		}
 
 		/* try HID++1.0 battery status instead */
-		msg->function_id = HIDPP_REGISTER_BATTERY_STATUS;
+		msg->function_id = HIDPP_REGISTER_BATTERY_STATUS << 4;
 		if (fu_logitech_hidpp_transfer(priv->io_channel, msg, NULL)) {
 			switch (msg->data[0]) {
 			case 1: /* 0 - 10 */
@@ -1011,4 +1013,5 @@ fu_logitech_hidpp_device_init(FuLogitechHidPpDevice *self)
 	priv->feature_index = g_ptr_array_new_with_free_func(g_free);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
+	fu_device_set_battery_threshold(FU_DEVICE(self), 20);
 }
