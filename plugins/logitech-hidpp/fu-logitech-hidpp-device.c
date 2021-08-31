@@ -1129,11 +1129,8 @@ fu_logitech_hidpp_device_attach_cached(FuDevice *device, GError **error)
 {
 	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
-	if (!fu_logitech_hidpp_device_attach(self, priv->cached_fw_entity, error))
-		return FALSE;
 	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return TRUE;
+	return fu_logitech_hidpp_device_attach(self, priv->cached_fw_entity, error);
 }
 
 static void
