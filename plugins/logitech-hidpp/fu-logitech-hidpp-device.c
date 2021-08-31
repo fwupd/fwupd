@@ -702,6 +702,7 @@ fu_logitech_hidpp_device_detach(FuDevice *device, GError **error)
 	/* this requires user action */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_DFU_CONTROL);
 	if (idx != 0x00) {
+		g_autoptr(FwupdRequest) request = fwupd_request_new();
 		msg->report_id = HIDPP_REPORT_ID_LONG;
 		msg->device_id = priv->hidpp_id;
 		msg->sub_id = idx;
@@ -720,14 +721,23 @@ fu_logitech_hidpp_device_detach(FuDevice *device, GError **error)
 			g_prefix_error(error, "failed to put device into DFU mode: ");
 			return FALSE;
 		}
+		fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NEEDS_USER_ACTION,
-			    "%s needs to be manually restarted to complete the update."
-			    "Please unplug and reconnect the device and re-run the update",
+
+		/* generate a message if not already set */
+		if (fu_device_get_update_message(device) == NULL) {
+			g_autofree gchar *str = NULL;
+			str = g_strdup_printf(
+			    "%s needs to be manually restarted to complete the update. "
+			    "Please turn it off and on.",
 			    fu_device_get_name(device));
-		return FALSE;
+			fu_device_set_update_message(device, str);
+		}
+		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+		fwupd_request_set_message(request, fu_device_get_update_message(device));
+		fu_device_emit_request(device, request);
+		return TRUE;
 	}
 
 	/* this can reboot all by itself */
