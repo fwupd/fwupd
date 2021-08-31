@@ -830,7 +830,7 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidPpDevice *self,
 	msg->function_id = cmd << 4; /* dfuStart or dfuCmdDataX */
 	msg->hidpp_version = priv->hidpp_version;
 	memcpy(msg->data, data, 16);
-	if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, &error_local)) {
+	if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, error)) {
 		g_prefix_error(error, "failed to supply program data: ");
 		return FALSE;
 	}
