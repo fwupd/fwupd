@@ -11,7 +11,7 @@
 #include "fu-logitech-hidpp-bootloader-nordic.h"
 #include "fu-logitech-hidpp-bootloader-texas.h"
 #include "fu-logitech-hidpp-common.h"
-#include "fu-logitech-hidpp-peripheral.h"
+#include "fu-logitech-hidpp-device.h"
 #include "fu-logitech-hidpp-runtime-unifying.h"
 
 gboolean
@@ -37,5 +37,5 @@ fu_plugin_init(FuPlugin *plugin)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_UNIFYING_BOOTLOADER_NORDIC);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_UNIFYING_BOOTLOADER_TEXAS);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_HIDPP_RUNTIME_UNIFYING);
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_HIDPP_PERIPHERAL);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_HIDPP_DEVICE);
 }

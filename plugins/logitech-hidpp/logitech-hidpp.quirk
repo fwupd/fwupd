@@ -38,6 +38,10 @@ CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
 InstallDuration = 18
 
 # Possible HID++ v2.0 peripheral device
+# there are a lot of unifying peripherals, but not all respond
+# well to opening -- so limit to ones with issued updates
 [HIDRAW\VEN_046D]
 Plugin = logitech_hidpp
-GType = FuLogitechHidPpPeripheral
+GType = FuLogitechHidPpDevice
+Flags = only-supported
+ParentGuid = HIDRAW\VEN_046D&DEV_C52B
