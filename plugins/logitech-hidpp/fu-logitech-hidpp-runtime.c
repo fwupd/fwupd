@@ -186,7 +186,7 @@ fu_logitech_hidpp_runtime_open(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* poll for notifications */
-	fu_device_set_poll_interval(device, 5000);
+	fu_device_set_poll_interval(device, FU_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL);
 
 	/* success */
 	return TRUE;
