@@ -69,6 +69,12 @@ fu_logitech_hidpp_send(FuIOChannel *io_channel,
 	if (msg->hidpp_version >= 2.f)
 		msg->function_id |= FU_UNIFYING_HIDPP_MSG_SW_ID;
 
+	/* force long reports for BLE-direct devices */
+	if (msg->hidpp_version == FU_HIDPP_VERSION_BLE) {
+		msg->report_id = HIDPP_REPORT_ID_LONG;
+		len = 20;
+	}
+
 	/* detailed debugging */
 	if (g_getenv("FWUPD_LOGITECH_HIDPP") != NULL) {
 		g_autofree gchar *str = fu_logitech_hidpp_msg_to_string(msg);
@@ -151,9 +157,27 @@ fu_logitech_hidpp_transfer(FuIOChannel *io_channel, FuLogitechHidPpHidppMsg *msg
 	/* keep trying to receive until we get a valid reply */
 	while (1) {
 		msg_tmp->hidpp_version = msg->hidpp_version;
-		if (!fu_logitech_hidpp_receive(io_channel, msg_tmp, timeout, error)) {
-			g_prefix_error(error, "failed to receive: ");
-			return FALSE;
+
+		if (msg->flags & FU_UNIFYING_HIDPP_MSG_FLAG_RETRY_STUCK) {
+			g_autoptr(GError) error_local = NULL;
+			/* retry the send once case the device is "stuck" */
+			if (!fu_logitech_hidpp_receive(io_channel, msg_tmp, 1000, &error_local)) {
+				if (!fu_logitech_hidpp_send(io_channel, msg, timeout, error)) {
+					return FALSE;
+				}
+				if (!fu_logitech_hidpp_receive(io_channel,
+							       msg_tmp,
+							       timeout,
+							       error)) {
+					g_prefix_error(error, "failed to receive: ");
+					return FALSE;
+				}
+			}
+		} else {
+			if (!fu_logitech_hidpp_receive(io_channel, msg_tmp, timeout, error)) {
+				g_prefix_error(error, "failed to receive: ");
+				return FALSE;
+			}
 		}
 
 		/* we don't know how to handle this report packet */

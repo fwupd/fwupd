@@ -1,0 +1,13 @@
+{
+  "name": "Logitech M750",
+  "guids": [
+    "b0904956-9081-5ce4-9490-bee057a2d577"
+  ],
+  "protocol": "com.logitech.unifyingsigned",
+  "releases": [
+    {
+      "version": "RBM18.00_B0010",
+      "file": "8e67c3eb84a6a52c39980eea7e048b723554af2c3604c72a33994d4ecf5e6c14-Logitech-RBM18-RBM18.00_B0010.cab"
+    }
+  ]
+}

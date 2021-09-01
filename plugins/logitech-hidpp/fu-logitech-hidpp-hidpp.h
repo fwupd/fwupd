@@ -14,9 +14,10 @@
  * Based on the HID++ documentation provided by Nestor Lopez Casado at:
  *   https://drive.google.com/folderview?id=0BxbRzx7vEV7eWmgwazJ3NUFfQ28&usp=sharing
  */
-#define HIDPP_DEVICE_ID_WIRED	 0x00
-#define HIDPP_DEVICE_ID_RECEIVER 0xFF
-#define HIDPP_DEVICE_ID_UNSET	 0xFE
+#define HIDPP_DEVICE_IDX_WIRED	  0x00
+#define HIDPP_DEVICE_IDX_RECEIVER 0xFF
+#define HIDPP_DEVICE_IDX_BLE	  0xFF
+#define HIDPP_DEVICE_IDX_UNSET	  0x00
 
 #define HIDPP_REPORT_NOTIFICATION 0x01
 #define HIDPP_REPORT_ID_SHORT	  0x10
