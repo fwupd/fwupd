@@ -47,8 +47,6 @@ typedef struct {
 	guint8 hidpp_id;
 	guint16 hidpp_pid;
 	guint8 hidpp_version;
-	gboolean is_updatable;
-	gboolean is_active;
 	FuIOChannel *io_channel;
 	gchar *model_id;
 	GPtrArray *feature_index; /* of FuLogitechHidPpHidppMap */
@@ -176,19 +174,6 @@ fu_logitech_hidpp_feature_to_string(guint16 feature)
 	return NULL;
 }
 
-static void
-fu_logitech_hidpp_device_refresh_updatable(FuLogitechHidPpDevice *self)
-{
-	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
-
-	/* device can only be upgraded if it is capable, and active */
-	if (priv->is_updatable && priv->is_active) {
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-		return;
-	}
-	fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
-}
-
 static gboolean
 fu_logitech_hidpp_device_ping(FuLogitechHidPpDevice *self, GError **error)
 {
@@ -212,22 +197,15 @@ fu_logitech_hidpp_device_ping(FuLogitechHidPpDevice *self, GError **error)
 			return TRUE;
 		}
 		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_HOST_UNREACHABLE)) {
-			priv->is_active = FALSE;
-			fu_logitech_hidpp_device_refresh_updatable(self);
+			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNREACHABLE);
 			return TRUE;
 		}
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "failed to ping %s: %s",
-			    fu_device_get_name(FU_DEVICE(self)),
-			    error_local->message);
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
 	}
 
 	/* device no longer asleep */
-	priv->is_active = TRUE;
-	fu_logitech_hidpp_device_refresh_updatable(self);
+	fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNREACHABLE);
 
 	/* if the HID++ ID is unset, grab it from the reply */
 	if (priv->hidpp_id == HIDPP_DEVICE_ID_UNSET && msg->device_id != HIDPP_DEVICE_ID_UNSET) {
@@ -286,7 +264,9 @@ fu_logitech_hidpp_device_poll(FuDevice *device, GError **error)
 
 	/* just ping */
 	if (!fu_logitech_hidpp_device_ping(self, &error_local)) {
-		g_warning("failed to ping device: %s", error_local->message);
+		g_warning("failed to ping %s: %s",
+			  fu_device_get_name(FU_DEVICE(self)),
+			  error_local->message);
 		return TRUE;
 	}
 
@@ -339,8 +319,6 @@ fu_logitech_hidpp_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_ku(str, idt, "HidppVersion", priv->hidpp_version);
 	fu_common_string_append_ku(str, idt, "HidppPid", priv->hidpp_pid);
 	fu_common_string_append_kx(str, idt, "HidppId", priv->hidpp_id);
-	fu_common_string_append_kb(str, idt, "IsUpdatable", priv->is_updatable);
-	fu_common_string_append_kb(str, idt, "IsActive", priv->is_active);
 	fu_common_string_append_kv(str, idt, "ModelId", priv->model_id);
 	for (guint i = 0; i < priv->feature_index->len; i++) {
 		FuLogitechHidPpHidppMap *map = g_ptr_array_index(priv->feature_index, i);
@@ -801,7 +779,6 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 	}
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_DFU_CONTROL);
 	if (idx != 0x00) {
-		priv->is_updatable = TRUE;
 		fu_device_remove_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifying");
 	}
@@ -824,14 +801,12 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 		if ((msg->data[2] & 0x01) > 0) {
 			g_warning("DFU mode not available");
 		} else {
-			priv->is_updatable = TRUE;
 			fu_device_remove_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		}
 		fu_device_add_protocol(FU_DEVICE(device), "com.logitech.unifyingsigned");
 	}
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_DFU);
 	if (idx != 0x00) {
-		priv->is_updatable = TRUE;
 		fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		if (fu_device_get_version(device) == NULL) {
 			g_debug("repairing device in bootloader mode");
@@ -842,9 +817,6 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 		fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifying");
 		fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifyingsigned");
 	}
-
-	/* this device may have changed state */
-	fu_logitech_hidpp_device_refresh_updatable(self);
 
 	/* poll for pings to track active state */
 	fu_device_set_poll_interval(device, FU_HIDPP_DEVICE_POLLING_INTERVAL);
@@ -1298,6 +1270,7 @@ fu_logitech_hidpp_device_init(FuLogitechHidPpDevice *self)
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
 	priv->hidpp_id = HIDPP_DEVICE_ID_UNSET;
 	priv->feature_index = g_ptr_array_new_with_free_func(g_free);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
