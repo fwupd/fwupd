@@ -27,7 +27,7 @@ fu_logitech_hidpp_runtime_unifying_detach(FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	msg->report_id = HIDPP_REPORT_ID_SHORT;
-	msg->device_id = HIDPP_DEVICE_ID_RECEIVER;
+	msg->device_id = HIDPP_DEVICE_IDX_RECEIVER;
 	msg->sub_id = HIDPP_SUBID_SET_REGISTER;
 	msg->function_id = HIDPP_REGISTER_DEVICE_FIRMWARE_UPDATE_MODE;
 	msg->data[0] = 'I';
@@ -69,7 +69,7 @@ fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **err
 			continue;
 
 		msg->report_id = HIDPP_REPORT_ID_SHORT;
-		msg->device_id = HIDPP_DEVICE_ID_RECEIVER;
+		msg->device_id = HIDPP_DEVICE_IDX_RECEIVER;
 		msg->sub_id = HIDPP_SUBID_GET_REGISTER;
 		msg->function_id = HIDPP_REGISTER_DEVICE_FIRMWARE_INFORMATION;
 		msg->data[0] = i;

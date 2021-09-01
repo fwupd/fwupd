@@ -95,7 +95,7 @@ fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidPpRuntime *self, GEr
 	FuLogitechHidPpRuntimePrivate *priv = GET_PRIVATE(self);
 
 	msg->report_id = HIDPP_REPORT_ID_SHORT;
-	msg->device_id = HIDPP_DEVICE_ID_RECEIVER;
+	msg->device_id = HIDPP_DEVICE_IDX_RECEIVER;
 	msg->sub_id = HIDPP_SUBID_SET_REGISTER;
 	msg->function_id = HIDPP_REGISTER_HIDPP_NOTIFICATIONS;
 	msg->data[0] = 0x00;

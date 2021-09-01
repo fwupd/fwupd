@@ -8,6 +8,7 @@ This plugin can flash the firmware on:
    Texas Instruments (U0008) versions
 * Logitech Bolt dongles
 * Unifying peripherals through the Unifying receiver
+* Peripherals through the Bolt receiver and directly through BLE
 
 This plugin will not work with the different "Nano" dongle (U0010) as it does
 not use the Unifying protocol.
@@ -39,8 +40,10 @@ DeviceInstanceId values when in DFU mode:
 
 When in runtime mode, the HID raw DeviceInstanceId values are used:
 
-* `HIDRAW\VEN_046D&DEV_C52B&MOD_B33B405B000000`
+* `HIDRAW\VEN_046D&MOD_B33B405B0000`
+* `HIDRAW\VEN_046D&MOD_B33B405B0000&ENT_05`
 * `HIDRAW\VEN_046D&DEV_C52B`
+* `HIDRAW\VEN_046D&DEV_C52B&ENT_05`
 * `HIDRAW\VEN_046D`
 
 The Bolt dongle and peripherals use HID raw DeviceInstanceId values
@@ -73,6 +76,17 @@ the bootloader and runtime modes are treated as the same device.
 
 The Bolt receiver enumerates as a hidraw device both in runtime and
 bootloader mode, but with different HIDRAW devIDs.
+
+Peripherals paired to a receiver are enumerated as separate hidraw
+devices but those device files can't be used for DFU. Instead, all the
+DFU-related messages need to be piped through the hidraw device file of
+the receiver. They are polled and queried by the receiver and listed as
+its children. Note that this will likely change once the Logitech Linux
+driver supports Bolt devices.
+
+Bolt peripherals directly connected to the host through BLE are
+enumerated as individual hidraw devices and can be upgraded through
+their hidraw device files.
 
 ## Design Notes
 
@@ -121,6 +135,12 @@ tweak the plugin code for certain device types:
     using the same file descriptor.
 * force-receiver-id: this flag is used to differentiate the receiver device in
     FuLogitechHidPpDevice, since the receiver has a specific HID++ ID.
+* ble: used to differentiate devices in BLE mode. They require all the
+    reports to be _long_.
+* bolt-peripheral: used to specify that the device works as a
+    peripheral paired to a Bolt receiver. In FuLogitechHidPpDevice this
+    is used to trigger a refresh of the paired device status in the
+    receiver after attaching.
 
 ## External Interface Access
 

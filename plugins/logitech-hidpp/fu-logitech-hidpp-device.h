@@ -20,8 +20,63 @@ struct _FuLogitechHidPpDeviceClass {
 	/* TODO: overridable methods */
 };
 
+/**
+ * FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID:
+ *
+ * Device is a unifying or Bolt receiver.
+ *
+ * Since: 1.7.0
+ */
+#define FU_LOGITECH_HIDPP_DEVICE_FLAG_FORCE_RECEIVER_ID (1 << 0)
+
+/**
+ * FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE:
+ *
+ * Device is connected using Bluetooth Low Energy.
+ *
+ * Since: 1.7.0
+ */
+#define FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE (1 << 1)
+
+/**
+ * FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH:
+ *
+ * The device file is automatically unbound and re-bound after the
+ * device is attached.
+ *
+ * Since: 1.7.0
+ */
+#define FU_LOGITECH_HIDPP_DEVICE_FLAG_REBIND_ATTACH (1 << 2)
+
+/**
+ * FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED:
+ *
+ * No user-action is required for detach and attach.
+ *
+ * Since: 1.7.0
+ */
+#define FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED (1 << 3)
+
+/**
+ * FU_LOGITECH_HIDPP_DEVICE_FLAG_BOLT_PERIPHERAL:
+ *
+ * The device is handled through a Bolt receiver.
+ *
+ * Since: 1.7.0
+ */
+#define FU_LOGITECH_HIDPP_DEVICE_FLAG_BOLT_PERIPHERAL (1 << 4)
+
+/**
+ * FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO:
+ *
+ * The device should add a softdevice (index 0x5), typically a radio.
+ *
+ * Since: 1.7.0
+ */
+#define FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO (1 << 5)
+
 void
-fu_logitech_hidpp_device_set_hidpp_id(FuLogitechHidPpDevice *self, guint8 hidpp_id);
+fu_logitech_hidpp_device_set_device_idx(FuLogitechHidPpDevice *self, guint8 device_idx);
 guint16
 fu_logitech_hidpp_device_get_hidpp_pid(FuLogitechHidPpDevice *self);
 void
@@ -30,3 +85,5 @@ const gchar *
 fu_logitech_hidpp_device_get_model_id(FuLogitechHidPpDevice *self);
 gboolean
 fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self, guint8 entity, GError **error);
+FuLogitechHidPpDevice *
+fu_logitech_hidpp_device_new(FuUdevDevice *parent);
