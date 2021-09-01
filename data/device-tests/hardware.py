@@ -93,7 +93,7 @@ class DeviceTest:
         for d in self.client.get_devices(cancellable):
             for guid in self.guids:
                 if d.has_guid(guid):
-                    if self.protocol and self.protocol != d.get_protocol():
+                    if self.protocol and not d.has_protocol(self.protocol):
                         continue
                     return d
         return None
