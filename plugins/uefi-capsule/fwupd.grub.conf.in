@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: LGPL-2.1+
 set -e
 
-${pkgdatadir:?}
+[ -d ${pkgdatadir:?} ]
 # shellcheck source=/dev/null
 . "$pkgdatadir/grub-mkconfig_lib"
 
