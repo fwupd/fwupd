@@ -742,16 +742,16 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 		}
 	}
 
+	/* get the model ID, typically something like B3630000000000 */
+	if (!fu_logitech_hidpp_device_fetch_model_id(self, error))
+		return FALSE;
+
 	/* get the firmware information */
 	if (!fu_logitech_hidpp_device_fetch_firmware_info(self, error))
 		return FALSE;
 
 	/* get the battery level */
 	if (!fu_logitech_hidpp_device_fetch_battery_level(self, error))
-		return FALSE;
-
-	/* get the model ID, typically something like B3630000000000 */
-	if (!fu_logitech_hidpp_device_fetch_model_id(self, error))
 		return FALSE;
 
 	/* try using HID++2.0 */
