@@ -49,10 +49,31 @@ fu_flashrom_internal_device_prepare(FuDevice *device, FwupdInstallFlags flags, G
 		FuFlashromDevice *parent = FU_FLASHROM_DEVICE(device);
 		struct flashrom_flashctx *flashctx = fu_flashrom_device_get_flashctx(parent);
 		gsize flash_size = fu_flashrom_device_get_flash_size(parent);
+		struct flashrom_layout *layout;
 		g_autofree guint8 *newcontents = g_malloc0(flash_size);
 		g_autoptr(GBytes) buf = NULL;
-
 		fu_device_set_status(device, FWUPD_STATUS_DEVICE_READ);
+
+		if (flashrom_layout_read_from_ifd(&layout, flashctx, NULL, 0)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_READ,
+					    "failed to read layout from Intel ICH descriptor");
+			return FALSE;
+		}
+
+		/* include bios region for safety reasons */
+		if (flashrom_layout_include_region(layout, "bios")) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "invalid region name");
+			return FALSE;
+		}
+
+		/* read region */
+		flashrom_layout_set(flashctx, layout);
+
 		if (flashrom_image_read(flashctx, newcontents, flash_size)) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
