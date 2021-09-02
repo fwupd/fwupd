@@ -1918,8 +1918,10 @@ fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder)
 		json_builder_end_array(builder);
 	}
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_LICENSE, priv->license);
-	fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_SIZE, priv->size);
-	fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_CREATED, priv->created);
+	if (priv->size > 0)
+		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_SIZE, priv->size);
+	if (priv->created > 0)
+		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_CREATED, priv->created);
 	if (priv->locations->len > 0) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_LOCATIONS);
 		json_builder_begin_array(builder);
@@ -1949,9 +1951,11 @@ fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder)
 		}
 		json_builder_end_array(builder);
 	}
-	fwupd_common_json_add_int(builder,
-				  FWUPD_RESULT_KEY_INSTALL_DURATION,
-				  priv->install_duration);
+	if (priv->install_duration > 0) {
+		fwupd_common_json_add_int(builder,
+					  FWUPD_RESULT_KEY_INSTALL_DURATION,
+					  priv->install_duration);
+	}
 	fwupd_common_json_add_string(builder,
 				     FWUPD_RESULT_KEY_DETACH_CAPTION,
 				     priv->detach_caption);
