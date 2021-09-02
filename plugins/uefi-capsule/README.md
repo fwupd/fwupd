@@ -41,6 +41,33 @@ This plugin supports the following protocol ID:
 
 ## Update Behavior
 
+### Capsule update on-disk
+
+Described in  [UEFI specification](https://www.uefi.org/sites/default/files/resources/UEFI%20Spec%202_6.pdf)
+§ 8.5.5 - Delivery of Capsules via file on Mass Storage device.
+
+If the firmware supports this, it will be the preferred method of updating. You
+can explicitly disable it by by modifying *DisableCapsuleUpdateOnDisk* in
+`/etc/fwupd/uefi_capsule.conf`.
+
+The spec expects runtime *SetVariable* to be available in order to enable this
+feature, we need to set `EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED`
+in *OsIndications* variable to trigger processing of submitted capsule on next
+reboot. However some firmware implementations (e.g U-Boot), can't set the
+variable at runtime, but ignore the variable in next reboot and apply the
+capsule anyway.
+
+The directory \EFI\UpdateCapsule is checked for capsules only within the EFI
+system partition on the device specified in the active boot option determine by
+reference to *BootNext* variable or *BootOrder* variable processing.  Since
+setting *BootNext*, for capsule update on-disk, is not yet implemented, the only
+available option is place the \EFI\UpdateCapsule within the ESP partition
+indicated by the current *BootOrder*.
+Note that this will be always needed if your firmware doesn't support
+*SetVariable* at runtime (even if *BootNext* functionality is added).
+
+### Runtime capsule updates
+
 The firmware is deployed when the OS is running, but it is only written when the
 system has been restarted and the `fwupd*.efi` binary has been run. To achieve
 this fwupd sets up the EFI `BootNext` variable, creating the new boot entry if
