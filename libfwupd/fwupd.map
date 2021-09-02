@@ -707,5 +707,6 @@ LIBFWUPD_1.7.0 {
     fwupd_security_attr_add_guids;
     fwupd_security_attr_get_guids;
     fwupd_security_attr_has_guid;
+    fwupd_security_attr_flag_to_string_array;
   local: *;
 } LIBFWUPD_1.6.2;

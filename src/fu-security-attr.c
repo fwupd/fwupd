@@ -10,6 +10,7 @@
 #include <glib/gi18n.h>
 #include <json-glib/json-glib.h>
 
+#include "fwupd-enums-private.h"
 #include "fwupd-security-attr-private.h"
 
 #include "fu-security-attrs-private.h"
@@ -260,12 +261,16 @@ fu_security_attr_get_result(FwupdSecurityAttr *attr)
  * fu_security_attrs_to_json_string() converts FuSecurityAttrs and return the
  * string pointer. The converted JSON format is shown as follows:
  * {
- *     "SecurityAttributes": [
- *         {
+ *     "SecurityAttributes": {
+ *         "$AppStreamID1": {
  *              "name": "aaa",
  *              "value": "bbb"
- *         }
- *     ]
+ *         },
+ * 	   "$AppStreamID2": {
+ *              "name": "aaa",
+ *              "value": "bbb"
+ *         },
+ *     }
  *  }
  *
  * Returns: A string and NULL on fail.
@@ -283,7 +288,7 @@ fu_security_attrs_to_json_string(FuSecurityAttrs *attrs, GError **error)
 	fu_security_attrs_to_json(attrs, builder);
 	json_root = json_builder_get_root(builder);
 	json_generator = json_generator_new();
-	json_generator_set_pretty(json_generator, TRUE);
+	// json_generator_set_pretty(json_generator, TRUE);
 	json_generator_set_root(json_generator, json_root);
 	data = json_generator_to_data(json_generator, NULL);
 	if (data == NULL) {
@@ -301,17 +306,240 @@ fu_security_attrs_to_json(FuSecurityAttrs *attrs, JsonBuilder *builder)
 {
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GError) error = NULL;
-
 	json_builder_begin_object(builder);
 	json_builder_set_member_name(builder, "SecurityAttributes");
-	json_builder_begin_array(builder);
+	json_builder_begin_object(builder);
 	items = fu_security_attrs_get_all(attrs);
 	for (guint i = 0; i < items->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
+		json_builder_set_member_name(builder, fwupd_security_attr_get_appstream_id(attr));
 		json_builder_begin_object(builder);
 		fwupd_security_attr_to_json(attr, builder);
 		json_builder_end_object(builder);
 	}
-	json_builder_end_array(builder);
 	json_builder_end_object(builder);
+	json_builder_end_object(builder);
+}
+
+guint
+fu_security_attrs_compare_hsi_score(const guint previous_hsi, const guint current_hsi)
+{
+	if (current_hsi > previous_hsi)
+		return 1;
+	else if (current_hsi < previous_hsi)
+		return -1;
+	else
+		return 0;
+}
+
+static void
+fu_security_attr_dup_json_array_to_builder(JsonBuilder *builder,
+					   JsonArray *src,
+					   const gchar *item_name)
+{
+	JsonNode *json_node;
+	if (src != NULL) {
+		json_builder_set_member_name(builder, item_name);
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < json_array_get_length(src); i++) {
+			json_node = json_array_dup_element(src, i);
+			json_builder_add_value(builder, json_node);
+		}
+		json_builder_end_array(builder);
+	}
+}
+
+static void
+fu_security_attr_dup_json(JsonObject *src, JsonBuilder *builder)
+{
+	JsonArray *array_items = NULL;
+	json_builder_set_member_name(builder, FWUPD_RESULT_KEY_HSI_LEVEL);
+	json_builder_add_int_value(builder,
+				   json_object_get_int_member(src, FWUPD_RESULT_KEY_HSI_LEVEL));
+	json_builder_set_member_name(builder, FWUPD_RESULT_KEY_HSI_RESULT);
+	json_builder_add_string_value(
+	    builder,
+	    json_object_get_string_member(src, FWUPD_RESULT_KEY_HSI_RESULT));
+	json_builder_set_member_name(builder, FWUPD_RESULT_KEY_NAME);
+	json_builder_add_string_value(builder,
+				      json_object_get_string_member(src, FWUPD_RESULT_KEY_NAME));
+	if (json_object_has_member(src, FWUPD_RESULT_KEY_FLAGS) == TRUE) {
+		array_items = json_object_get_array_member(src, FWUPD_RESULT_KEY_FLAGS);
+		fu_security_attr_dup_json_array_to_builder(builder,
+							   array_items,
+							   FWUPD_RESULT_KEY_FLAGS);
+	}
+}
+
+/**
+ * fu_security_attr_deep_object_compare:
+ *
+ * Detect HSI changes and put the results into a JSON builder.
+ *
+ * @current_attr: a pointer for a current FuSecurityAttrs data structure.
+ * @previous_json_obj: a JSON object of previous security detail.
+ * @result_builder: A JSON builder.
+ *
+ * The format of the results are shown as follows.
+ * {
+ *	"$appstreamID_difference": {
+ *		"previous": {
+ *			"AppstreamID": ...
+ *			...
+ *		},
+ *		"current": {
+ *			"AppstreamID": ...
+ *			...
+ *		}
+ *	},
+ *	"$appstreamID2_new" {
+ *		"new": {
+ *		...
+ *		},
+ *	}
+ *	"$appstreamID3_removed" {
+ *		"removed": {
+ *		...
+ *		}
+ *	}
+ * }
+ *
+ * Returns: TRUE on success and FALSE on error.
+ *
+ * Since: 1.7.0
+ *
+ */
+static gboolean
+fu_security_attr_deep_object_compare(FwupdSecurityAttr *current_attr,
+				     JsonObject *previous_json_obj,
+				     JsonBuilder *result_builder)
+{
+	g_autoptr(GPtrArray) flag_array = NULL;
+	if (previous_json_obj != NULL) {
+		/* 1. HSI comparison */
+		if (fwupd_security_attr_get_level(current_attr) ==
+		    json_object_get_int_member(previous_json_obj, FWUPD_RESULT_KEY_HSI_LEVEL)) {
+			return TRUE;
+		}
+		/* Level changed, find the difference*/
+
+		json_builder_set_member_name(
+		    result_builder,
+		    json_object_get_string_member(previous_json_obj,
+						  FWUPD_RESULT_KEY_APPSTREAM_ID));
+		json_builder_begin_object(result_builder);
+		json_builder_set_member_name(result_builder, "previous");
+		json_builder_begin_object(result_builder);
+		fu_security_attr_dup_json(previous_json_obj, result_builder);
+		json_builder_end_object(result_builder);
+		json_builder_set_member_name(result_builder, "current");
+	} else {
+		json_builder_set_member_name(result_builder,
+					     fwupd_security_attr_get_appstream_id(current_attr));
+		json_builder_begin_object(result_builder);
+		json_builder_set_member_name(result_builder, "new");
+	}
+	json_builder_begin_object(result_builder);
+	// fwupd_security_attr_to_json(current_attr, result_builder);
+	json_builder_set_member_name(result_builder, FWUPD_RESULT_KEY_HSI_LEVEL);
+	json_builder_add_int_value(result_builder, fwupd_security_attr_get_level(current_attr));
+	json_builder_set_member_name(result_builder, FWUPD_RESULT_KEY_HSI_RESULT);
+	json_builder_add_string_value(
+	    result_builder,
+	    fwupd_security_attr_result_to_string(fwupd_security_attr_get_result(current_attr)));
+	json_builder_set_member_name(result_builder, FWUPD_RESULT_KEY_NAME);
+	json_builder_add_string_value(result_builder, fwupd_security_attr_get_name(current_attr));
+	flag_array = fwupd_security_attr_flag_to_string_array(current_attr);
+	if (flag_array != NULL) {
+		json_builder_set_member_name(result_builder, FWUPD_RESULT_KEY_FLAGS);
+		json_builder_begin_array(result_builder);
+		for (guint i = 0; i < flag_array->len; i++) {
+			json_builder_add_string_value(result_builder,
+						      g_strdup(g_ptr_array_index(flag_array, i)));
+		}
+		json_builder_end_array(result_builder);
+	}
+	json_builder_end_object(result_builder);
+	json_builder_end_object(result_builder);
+
+	return FALSE;
+}
+
+static void
+fu_security_attr_append_remove_to_result(JsonObject *previous_json_obj, JsonBuilder *result_builder)
+{
+	json_builder_set_member_name(
+	    result_builder,
+	    json_object_get_string_member(previous_json_obj, FWUPD_RESULT_KEY_APPSTREAM_ID));
+	json_builder_begin_object(result_builder);
+	json_builder_set_member_name(result_builder, "removed");
+	json_builder_begin_object(result_builder);
+	fu_security_attr_dup_json(previous_json_obj, result_builder);
+	json_builder_end_object(result_builder);
+	json_builder_end_object(result_builder);
+}
+
+gchar *
+fu_security_attrs_hsi_change(FuSecurityAttrs *attrs, const gchar *last_hsi_detail)
+{
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonParser) parser = json_parser_new();
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonBuilder) result_builder = json_builder_new();
+	g_autoptr(JsonNode) result_json_root = NULL;
+	g_autoptr(GPtrArray) items = NULL;
+	g_autoptr(GHashTable) found_list = g_hash_table_new(g_str_hash, g_str_equal);
+	g_autoptr(GList) member_list = NULL;
+	g_autoptr(GList) removed_keys = NULL;
+	JsonNode *json_root = NULL;
+	JsonObject *json_obj = NULL;
+	JsonObject *previous_security_attrs = NULL;
+
+	json_parser_load_from_data(parser, last_hsi_detail, -1, NULL);
+	json_root = json_parser_get_root(parser);
+	json_obj = json_node_get_object(json_root);
+	previous_security_attrs = json_object_get_object_member(json_obj, "SecurityAttributes");
+
+	member_list = json_object_get_members(previous_security_attrs);
+	for (GList *tmp = member_list; tmp != NULL; tmp = tmp->next) {
+		g_hash_table_insert(found_list, g_strdup(tmp->data), NULL);
+	}
+
+	items = fu_security_attrs_get_all(attrs);
+	json_builder_begin_object(result_builder);
+	for (guint i = 0; i < items->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
+		if (json_object_has_member(previous_security_attrs,
+					   fwupd_security_attr_get_appstream_id(attr)) == TRUE) {
+			/* Hit */
+			g_hash_table_remove(found_list, fwupd_security_attr_get_appstream_id(attr));
+			fu_security_attr_deep_object_compare(
+			    attr,
+			    json_object_get_object_member(
+				previous_security_attrs,
+				fwupd_security_attr_get_appstream_id(attr)),
+			    result_builder);
+		} else {
+			/* Miss- A new AppStreamID */
+			fu_security_attr_deep_object_compare(attr, NULL, result_builder);
+		}
+	}
+	removed_keys = g_hash_table_get_keys(found_list);
+	if (removed_keys != NULL) {
+		/* Removed from current */
+		for (GList *tmp_remove = removed_keys; tmp_remove != NULL;
+		     tmp_remove = tmp_remove->next) {
+			fu_security_attr_append_remove_to_result(
+			    json_object_get_object_member(previous_security_attrs,
+							  (gchar *)tmp_remove->data),
+			    result_builder);
+		}
+	}
+
+	json_builder_end_object(result_builder);
+	json_generator = json_generator_new();
+	result_json_root = json_builder_get_root(result_builder);
+	json_generator_set_root(json_generator, result_json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	return g_steal_pointer(&data);
 }

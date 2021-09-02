@@ -25,7 +25,9 @@ typedef enum {
 FuSecurityAttrs *
 fu_security_attrs_new(void);
 gchar *
-fu_security_attrs_calculate_hsi(FuSecurityAttrs *self, FuSecurityAttrsFlags flags);
+fu_security_attrs_calculate_hsi(FuSecurityAttrs *self,
+				FuSecurityAttrsFlags flags,
+				guint *hsi_guint_ret);
 void
 fu_security_attrs_depsolve(FuSecurityAttrs *self);
 GVariant *

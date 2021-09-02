@@ -866,6 +866,37 @@ fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
 }
 
 /**
+ * fwupd_security_attr_flag_to_string_array:
+ *
+ * @self: a single FwupdSecurityAttr
+ *
+ * Convert flags to string and store them in GPtrArray.
+ *
+ * Since: 1.7.0
+ *
+ */
+
+GPtrArray *
+fwupd_security_attr_flag_to_string_array(FwupdSecurityAttr *self)
+{
+	GPtrArray *flag_array = NULL;
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE) {
+		flag_array = g_ptr_array_new();
+		for (guint i = 0; i < 64; i++) {
+			if ((priv->flags & ((guint64)1 << i)) == 0)
+				continue;
+			g_ptr_array_add(
+			    flag_array,
+			    g_strdup(fwupd_security_attr_flag_to_string((guint64)1 << i)));
+		}
+	} else {
+		return NULL;
+	}
+	return flag_array;
+}
+
+/**
  * fwupd_security_attr_to_string:
  * @self: a #FwupdSecurityAttr
  *

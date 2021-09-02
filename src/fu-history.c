@@ -20,7 +20,7 @@
 #include "fu-history.h"
 #include "fu-mutex.h"
 
-#define FU_HISTORY_CURRENT_SCHEMA_VERSION 7
+#define FU_HISTORY_CURRENT_SCHEMA_VERSION 8
 
 static void
 fu_history_finalize(GObject *object);
@@ -186,7 +186,9 @@ fu_history_create_database(FuHistory *self, GError **error)
 			  "CREATE TABLE IF NOT EXISTS hsi_history ("
 			  "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
 			  "hsi_details TEXT DEFAULT NULL,"
-			  "hsi_score TEXT DEFAULT NULL);"
+			  "hsi_score INTEGER DEFAULT 0,"
+			  "fwupd_version TEXT DEFAULT NULL,"
+			  "changes TEXT DEFAULT NULL);"
 			  "COMMIT;",
 			  NULL,
 			  NULL,
@@ -334,6 +336,48 @@ fu_history_migrate_database_v6(FuHistory *self, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_history_migrate_database_v7(FuHistory *self, GError **error)
+{
+	gint rc;
+	/* rename table */
+	rc = sqlite3_exec(self->db,
+			  "ALTER TABLE hsi_history RENAME TO hsi_history_tmp",
+			  NULL,
+			  NULL,
+			  NULL);
+	/* Migrate data */
+
+	rc = sqlite3_exec(self->db,
+			  "CREATE TABLE IF NOT EXISTS hsi_history ("
+			  "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
+			  "hsi_details TEXT DEFAULT NULL,"
+			  "hsi_score INTEGER DEFAULT 0,"
+			  "fwupd_version TEXT DEFAULT NULL,"
+			  "changes TEXT DEFAULT NULL);",
+			  NULL,
+			  NULL,
+			  NULL);
+	rc = sqlite3_exec(self->db,
+			  "INSERT INTO hsi_history (timestamp, hsi_details)"
+			  "SELECT timestamp,hsi_details FROM hsi_history_tmp;",
+			  NULL,
+			  NULL,
+			  NULL);
+
+	rc = sqlite3_exec(self->db, "DROP TABLE hsi_history_tmp;", NULL, NULL, NULL);
+
+	if (rc != SQLITE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to create table: %s",
+			    sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /* returns 0 if database is not initialized */
 static guint
 fu_history_get_schema_version(FuHistory *self)
@@ -393,6 +437,11 @@ fu_history_create_or_migrate(FuHistory *self, guint schema_ver, GError **error)
 	/* fall through */
 	case 6:
 		if (!fu_history_migrate_database_v6(self, error))
+			return FALSE;
+		break;
+	/* fall through */
+	case 7:
+		if (!fu_history_migrate_database_v7(self, error))
 			return FALSE;
 		break;
 	default:
@@ -1172,6 +1221,7 @@ fu_history_add_approved_firmware(FuHistory *self, const gchar *checksum, GError 
 	sqlite3_bind_text(stmt, 1, checksum, -1, SQLITE_STATIC);
 	return fu_history_stmt_exec(self, stmt, NULL, error);
 }
+
 /**
  * fu_history_get_blocked_firmware:
  * @self: a #FuHistory
@@ -1317,7 +1367,9 @@ fu_history_add_blocked_firmware(FuHistory *self, const gchar *checksum, GError *
 gboolean
 fu_history_add_security_attribute(FuHistory *self,
 				  const gchar *security_attr_json,
-				  const gchar *hsi_score,
+				  const guint hsi_score,
+				  const gchar *version,
+				  const gchar *diff_result,
 				  GError **error)
 {
 	gint rc;
@@ -1331,12 +1383,13 @@ fu_history_add_security_attribute(FuHistory *self,
 	/* remove entries */
 	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
 	g_return_val_if_fail(locker != NULL, FALSE);
-	rc = sqlite3_prepare_v2(self->db,
-				"INSERT INTO hsi_history (hsi_details, hsi_score)"
-				"VALUES (?1, ?2)",
-				-1,
-				&stmt,
-				NULL);
+	rc = sqlite3_prepare_v2(
+	    self->db,
+	    "INSERT INTO hsi_history (hsi_details, hsi_score, fwupd_version, changes)"
+	    "VALUES (?1, ?2, ?3, ?4)",
+	    -1,
+	    &stmt,
+	    NULL);
 	if (rc != SQLITE_OK) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -1346,8 +1399,56 @@ fu_history_add_security_attribute(FuHistory *self,
 		return FALSE;
 	}
 	sqlite3_bind_text(stmt, 1, security_attr_json, -1, SQLITE_STATIC);
-	sqlite3_bind_text(stmt, 2, hsi_score, -1, SQLITE_STATIC);
+	sqlite3_bind_int(stmt, 2, hsi_score);
+	sqlite3_bind_text(stmt, 3, version, -1, SQLITE_STATIC);
+	sqlite3_bind_text(stmt, 4, diff_result, -1, SQLITE_STATIC);
+
 	return fu_history_stmt_exec(self, stmt, NULL, error);
+}
+
+gboolean
+fu_history_get_last_hsi_details(FuHistory *self, guint *ret_hsi, gchar **ret_json_attr)
+{
+	gint rc;
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+
+	rc = sqlite3_prepare_v2(
+	    self->db,
+	    "SELECT hsi_score,hsi_details FROM hsi_history ORDER BY timestamp DESC LIMIT 1;",
+	    -1,
+	    &stmt,
+	    NULL);
+	if (rc != SQLITE_OK) {
+		g_debug("Error on fetching HSI history: %s", sqlite3_errmsg(self->db));
+		return FALSE;
+	}
+	while (sqlite3_step(stmt) != SQLITE_DONE) {
+		int i;
+		int num_cols = sqlite3_column_count(stmt);
+		for (i = 0; i < num_cols; i++) {
+			switch (sqlite3_column_type(stmt, i)) {
+			case (SQLITE3_TEXT):
+				if (i == 1) {
+					GString *tmp_str = g_string_new(NULL);
+					g_string_append_printf(tmp_str,
+							       "%s",
+							       sqlite3_column_text(stmt, i));
+					*ret_json_attr = g_string_free(tmp_str, FALSE);
+				}
+				break;
+			case (SQLITE_INTEGER):
+				if (i == 0)
+					*ret_hsi = sqlite3_column_int(stmt, i);
+				break;
+			default:
+				g_warning("Mismatch HSI history column format");
+				return FALSE;
+			}
+		}
+		return TRUE;
+	}
+
+	return FALSE;
 }
 
 static void

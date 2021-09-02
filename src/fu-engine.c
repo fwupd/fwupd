@@ -5863,7 +5863,7 @@ fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 }
 
 static gchar *
-fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
+fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self, guint *hsi_value)
 {
 	guint val;
 
@@ -5893,12 +5893,15 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 	case FU_SMBIOS_CHASSIS_KIND_MINI_PC:
 	case FU_SMBIOS_CHASSIS_KIND_STICK_PC:
 		return fu_security_attrs_calculate_hsi(self->host_security_attrs,
-						       FU_SECURITY_ATTRS_FLAG_ADD_VERSION);
+						       FU_SECURITY_ATTRS_FLAG_ADD_VERSION,
+						       hsi_value);
 	default:
 		break;
 	}
 
 	/* failed */
+	if (hsi_value != NULL)
+		*hsi_value = -1;
 	return g_strdup_printf("HSI-INVALID:chassis[0x%02x]", val);
 }
 
@@ -5910,6 +5913,10 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *data = NULL;
+	g_autofree gchar *last_json_attr = NULL;
+	g_autofree gchar *diff_result = NULL;
+	guint hsi_value = G_MAXUINT;
+	guint previous_hsi = G_MAXUINT;
 
 	/* already valid */
 	if (self->host_security_id != NULL)
@@ -5953,8 +5960,14 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 
 	/* distil into one simple string */
 	g_free(self->host_security_id);
-	self->host_security_id = fu_engine_attrs_calculate_hsi_for_chassis(self);
+	self->host_security_id = fu_engine_attrs_calculate_hsi_for_chassis(self, &hsi_value);
 
+	if (fu_history_get_last_hsi_details(self->history, &previous_hsi, &last_json_attr) ==
+	    TRUE) {
+		if (fu_security_attrs_compare_hsi_score(previous_hsi, hsi_value) == 0)
+			diff_result =
+			    fu_security_attrs_hsi_change(self->host_security_attrs, last_json_attr);
+	}
 	/* Convert Security attribute to json string */
 	data = fu_security_attrs_to_json_string(self->host_security_attrs, &error);
 
@@ -5964,7 +5977,9 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	} else {
 		if (fu_history_add_security_attribute(self->history,
 						      data,
-						      self->host_security_id,
+						      hsi_value,
+						      fwupd_version_string(),
+						      diff_result,
 						      &error) == FALSE)
 			g_warning("Fail to write security attribute to DB: %s", error->message);
 	}
