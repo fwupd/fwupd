@@ -2598,7 +2598,8 @@ fwupd_device_to_json (FwupdDevice *self, JsonBuilder *builder)
 	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_BOOTLOADER, priv->version_bootloader);
 	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_VERSION_FORMAT,
 				      fwupd_version_format_to_string (priv->version_format));
-	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_FLASHES_LEFT, priv->flashes_left);
+	if (priv->flashes_left > 0)
+		fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_FLASHES_LEFT, priv->flashes_left);
 	if (priv->version_raw > 0)
 		fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_VERSION_RAW, priv->version_raw);
 	if (priv->version_lowest_raw > 0)
@@ -2616,11 +2617,16 @@ fwupd_device_to_json (FwupdDevice *self, JsonBuilder *builder)
 		}
 		json_builder_end_array (builder);
 	}
-	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
-	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_CREATED, priv->created);
-	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
-	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
-	fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_STATUS, priv->status);
+	if (priv->install_duration > 0)
+		fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_INSTALL_DURATION, priv->install_duration);
+	if (priv->created > 0)
+		fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_CREATED, priv->created);
+	if (priv->modified > 0)
+		fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_MODIFIED, priv->modified);
+	if (priv->update_state > 0)
+		fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_UPDATE_STATE, priv->update_state);
+	if (priv->status > 0)
+		fwupd_common_json_add_int (builder, FWUPD_RESULT_KEY_STATUS, priv->status);
 	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_ERROR, priv->update_error);
 	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->update_message);
 	fwupd_common_json_add_string (builder, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->update_image);

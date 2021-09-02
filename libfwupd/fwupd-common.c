@@ -1147,8 +1147,6 @@ fwupd_common_json_add_string (JsonBuilder *builder, const gchar *key, const gcha
 void
 fwupd_common_json_add_int (JsonBuilder *builder, const gchar *key, guint64 value)
 {
-	if (value == 0)
-		return;
 	json_builder_set_member_name (builder, key);
 	json_builder_add_int_value (builder, value);
 }
