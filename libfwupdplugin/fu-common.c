@@ -1219,6 +1219,13 @@ fu_common_get_path(FuPathKind path_kind)
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_DATADIR, PACKAGE_NAME, NULL);
 		return g_build_filename(FWUPD_DATADIR, PACKAGE_NAME, NULL);
+	/* /usr/share/fwupd/quirks.d */
+	case FU_PATH_KIND_DATADIR_QUIRKS:
+		tmp = g_getenv("FWUPD_DATADIR_QUIRKS");
+		if (tmp != NULL)
+			return g_strdup(tmp);
+		basedir = fu_common_get_path(FU_PATH_KIND_DATADIR_PKG);
+		return g_build_filename(basedir, "quirks.d", NULL);
 	/* /usr/libexec/fwupd/efi */
 	case FU_PATH_KIND_EFIAPPDIR:
 		tmp = g_getenv("FWUPD_EFIAPPDIR");
@@ -1246,6 +1253,13 @@ fu_common_get_path(FuPathKind path_kind)
 			return g_build_filename(tmp, NULL);
 		basedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR);
 		return g_build_filename(basedir, "lib", PACKAGE_NAME, NULL);
+	/* /var/lib/fwupd/quirks.d */
+	case FU_PATH_KIND_LOCALSTATEDIR_QUIRKS:
+		tmp = g_getenv("FWUPD_LOCALSTATEDIR_QUIRKS");
+		if (tmp != NULL)
+			return g_build_filename(tmp, NULL);
+		basedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+		return g_build_filename(basedir, "quirks.d", NULL);
 	/* /var/cache/fwupd */
 	case FU_PATH_KIND_CACHEDIR_PKG:
 		tmp = g_getenv("CACHE_DIRECTORY");
