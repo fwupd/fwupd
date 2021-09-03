@@ -11,7 +11,7 @@
 #include "fu-tpm-device.h"
 
 struct FuPluginData {
-	gboolean has_tpm;
+	FuDevice *tpm_device;
 	gboolean has_tpm_v20;
 };
 
@@ -25,12 +25,20 @@ fu_plugin_init(FuPlugin *plugin)
 }
 
 void
+fu_plugin_destroy(FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_get_data(plugin);
+	if (data->tpm_device != NULL)
+		g_object_unref(data->tpm_device);
+}
+
+void
 fu_plugin_device_added(FuPlugin *plugin, FuDevice *dev)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	const gchar *family = fu_tpm_device_get_family(FU_TPM_DEVICE(dev));
 
-	data->has_tpm = TRUE;
+	g_set_object(&data->tpm_device, dev);
 	if (g_strcmp0(family, "2.0") == 0)
 		data->has_tpm_v20 = TRUE;
 	fu_plugin_add_report_metadata(plugin, "TpmFamily", family);
@@ -49,7 +57,7 @@ fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_security_attrs_append(attrs, attr);
 
 	/* check exists, and in v2.0 mode */
-	if (!data->has_tpm) {
+	if (data->tpm_device == NULL) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
@@ -59,6 +67,7 @@ fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	}
 
 	/* success */
+	fwupd_security_attr_add_guids(attr, fu_device_get_guids(data->tpm_device));
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_FOUND);
 }

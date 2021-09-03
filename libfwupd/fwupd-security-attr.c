@@ -25,6 +25,7 @@ fwupd_security_attr_finalize(GObject *object);
 typedef struct {
 	gchar *appstream_id;
 	GPtrArray *obsoletes;
+	GPtrArray *guids;
 	GHashTable *metadata; /* (nullable) */
 	gchar *name;
 	gchar *plugin;
@@ -191,6 +192,91 @@ fwupd_security_attr_has_obsolete(FwupdSecurityAttr *self, const gchar *appstream
 	for (guint i = 0; i < priv->obsoletes->len; i++) {
 		const gchar *obsolete_tmp = g_ptr_array_index(priv->obsoletes, i);
 		if (g_strcmp0(obsolete_tmp, appstream_id) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * fwupd_security_attr_get_guids:
+ * @self: a #FwupdSecurityAttr
+ *
+ * Gets the list of attribute GUIDs. The GUID values will not modify the calculated HSI value.
+ *
+ * Returns: (element-type utf8) (transfer none): the GUIDs, which may be empty
+ *
+ * Since: 1.7.0
+ **/
+GPtrArray *
+fwupd_security_attr_get_guids(FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
+	return priv->guids;
+}
+
+/**
+ * fwupd_security_attr_add_guid:
+ * @self: a #FwupdSecurityAttr
+ * @guid: the GUID
+ *
+ * Adds a device GUID to the attribute. This indicates the GUID in some way contributed to the
+ * result decided.
+ *
+ * Since: 1.7.0
+ **/
+void
+fwupd_security_attr_add_guid(FwupdSecurityAttr *self, const gchar *guid)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
+	g_return_if_fail(fwupd_guid_is_valid(guid));
+	if (fwupd_security_attr_has_guid(self, guid))
+		return;
+	g_ptr_array_add(priv->guids, g_strdup(guid));
+}
+
+/**
+ * fwupd_security_attr_add_guids:
+ * @self: a #FwupdSecurityAttr
+ * @guids: (element-type utf8): the GUIDs
+ *
+ * Adds device GUIDs to the attribute. This indicates the GUIDs in some way contributed to the
+ * result decided.
+ *
+ * Since: 1.7.0
+ **/
+void
+fwupd_security_attr_add_guids(FwupdSecurityAttr *self, GPtrArray *guids)
+{
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
+	g_return_if_fail(guids != NULL);
+	for (guint i = 0; i < guids->len; i++) {
+		const gchar *guid = g_ptr_array_index(guids, i);
+		fwupd_security_attr_add_guid(self, guid);
+	}
+}
+
+/**
+ * fwupd_security_attr_has_guid:
+ * @self: a #FwupdSecurityAttr
+ * @guid: the attribute guid
+ *
+ * Finds out if a specific GUID was added to the attribute.
+ *
+ * Returns: %TRUE if the self matches
+ *
+ * Since: 1.7.0
+ **/
+gboolean
+fwupd_security_attr_has_guid(FwupdSecurityAttr *self, const gchar *guid)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), FALSE);
+	g_return_val_if_fail(guid != NULL, FALSE);
+	for (guint i = 0; i < priv->guids->len; i++) {
+		const gchar *guid_tmp = g_ptr_array_index(priv->guids, i);
+		if (g_strcmp0(guid_tmp, guid) == 0)
 			return TRUE;
 	}
 	return FALSE;
@@ -553,6 +639,15 @@ fwupd_security_attr_to_variant(FwupdSecurityAttr *self)
 				      FWUPD_RESULT_KEY_CATEGORIES,
 				      g_variant_new_strv(strv, -1));
 	}
+	if (priv->guids->len > 0) {
+		g_autofree const gchar **strv = g_new0(const gchar *, priv->guids->len + 1);
+		for (guint i = 0; i < priv->guids->len; i++)
+			strv[i] = (const gchar *)g_ptr_array_index(priv->guids, i);
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_GUID,
+				      g_variant_new_strv(strv, -1));
+	}
 	if (priv->flags != 0) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
@@ -657,6 +752,12 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		fwupd_security_attr_set_result(self, g_variant_get_uint32(value));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_GUID) == 0) {
+		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
+		for (guint i = 0; strv[i] != NULL; i++)
+			fwupd_security_attr_add_guid(self, strv[i]);
+		return;
+	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_METADATA) == 0) {
 		if (priv->metadata != NULL)
 			g_hash_table_unref(priv->metadata);
@@ -745,6 +846,15 @@ fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
 		}
 		json_builder_end_array(builder);
 	}
+	if (priv->guids->len > 0) {
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_GUID);
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < priv->guids->len; i++) {
+			const gchar *guid = g_ptr_array_index(priv->guids, i);
+			json_builder_add_string_value(builder, guid);
+		}
+		json_builder_end_array(builder);
+	}
 	if (priv->metadata != NULL) {
 		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
 		for (GList *l = keys; l != NULL; l = l->next) {
@@ -788,6 +898,10 @@ fwupd_security_attr_to_string(FwupdSecurityAttr *self)
 		const gchar *appstream_id = g_ptr_array_index(priv->obsoletes, i);
 		fwupd_pad_kv_str(str, "Obsolete", appstream_id);
 	}
+	for (guint i = 0; i < priv->guids->len; i++) {
+		const gchar *guid = g_ptr_array_index(priv->guids, i);
+		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_GUID, guid);
+	}
 	if (priv->metadata != NULL) {
 		g_autoptr(GList) keys = g_hash_table_get_keys(priv->metadata);
 		for (GList *l = keys; l != NULL; l = l->next) {
@@ -812,6 +926,7 @@ fwupd_security_attr_init(FwupdSecurityAttr *self)
 {
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	priv->obsoletes = g_ptr_array_new_with_free_func(g_free);
+	priv->guids = g_ptr_array_new_with_free_func(g_free);
 }
 
 static void
@@ -827,6 +942,7 @@ fwupd_security_attr_finalize(GObject *object)
 	g_free(priv->plugin);
 	g_free(priv->url);
 	g_ptr_array_unref(priv->obsoletes);
+	g_ptr_array_unref(priv->guids);
 
 	G_OBJECT_CLASS(fwupd_security_attr_parent_class)->finalize(object);
 }

@@ -700,3 +700,12 @@ LIBFWUPD_1.6.2 {
     fwupd_request_to_variant;
   local: *;
 } LIBFWUPD_1.6.1;
+
+LIBFWUPD_1.7.0 {
+  global:
+    fwupd_security_attr_add_guid;
+    fwupd_security_attr_add_guids;
+    fwupd_security_attr_get_guids;
+    fwupd_security_attr_has_guid;
+  local: *;
+} LIBFWUPD_1.6.2;

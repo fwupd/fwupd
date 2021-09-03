@@ -11,7 +11,7 @@
 #include "fu-mei-common.h"
 
 struct FuPluginData {
-	gboolean has_device;
+	FuDevice *pci_device;
 	FuMeiHfsts1 hfsts1;
 	FuMeiHfsts2 hfsts2;
 	FuMeiHfsts3 hfsts3;
@@ -54,6 +54,14 @@ fu_plugin_init(FuPlugin *plugin)
 	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem(plugin, "pci");
+}
+
+void
+fu_plugin_destroy(FuPlugin *plugin)
+{
+	FuPluginData *data = fu_plugin_get_data(plugin);
+	if (data->pci_device != NULL)
+		g_object_unref(data->pci_device);
 }
 
 static FuMeiFamily
@@ -218,7 +226,7 @@ fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **erro
 		return FALSE;
 	}
 	priv->hfsts6.data = fu_common_read_uint32(buf, G_LITTLE_ENDIAN);
-	priv->has_device = TRUE;
+	g_set_object(&priv->pci_device, device);
 
 	/* dump to console */
 	if (g_getenv("FWUPD_PCI_MEI_VERBOSE") != NULL) {
@@ -503,7 +511,7 @@ fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* only Intel */
 	if (fu_common_get_cpu_vendor() != FU_CPU_VENDOR_INTEL)
 		return;
-	if (!priv->has_device)
+	if (priv->pci_device == NULL)
 		return;
 
 	fu_plugin_add_security_attrs_manufacturing_mode(plugin, attrs);
