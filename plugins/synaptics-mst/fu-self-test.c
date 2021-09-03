@@ -173,7 +173,8 @@ fu_synaptics_mst_firmware_xml_func (void)
 int
 main (int argc, char **argv)
 {
-	g_test_init (&argc, &argv, NULL);
+	g_setenv("FWUPD_DATADIR_QUIRKS", PLUGINSOURCEDIR, TRUE);
+	g_test_init(&argc, &argv, NULL);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask (NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
