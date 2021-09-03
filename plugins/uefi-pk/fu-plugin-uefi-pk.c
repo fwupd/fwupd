@@ -159,15 +159,25 @@ fu_plugin_init(FuPlugin *plugin)
 }
 
 void
+fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
+{
+	if (fu_device_has_instance_id(device, "main-system-firmware"))
+		fu_plugin_cache_add(plugin, "main-system-firmware", device);
+}
+
+void
 fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuDevice *msf_device = fu_plugin_cache_lookup(plugin, "main-system-firmware");
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_UEFI_PK);
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	if (msf_device != NULL)
+		fwupd_security_attr_add_guids(attr, fu_device_get_guids(msf_device));
 	fu_security_attrs_append(attrs, attr);
 
 	/* test key is not secure */

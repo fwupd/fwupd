@@ -12,7 +12,7 @@
 
 struct FuPluginData {
 	GPtrArray *pcr0s;
-	gboolean has_tpm_device;
+	FuDevice *tpm_device;
 	gboolean has_uefi_device;
 	gboolean reconstructed;
 };
@@ -32,6 +32,8 @@ fu_plugin_destroy(FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (data->pcr0s != NULL)
 		g_ptr_array_unref(data->pcr0s);
+	if (data->tpm_device != NULL)
+		g_object_unref(data->tpm_device);
 }
 
 gboolean
@@ -93,7 +95,7 @@ static void
 fu_plugin_device_registered_tpm(FuPlugin *plugin, FuDevice *device)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
-	data->has_tpm_device = TRUE;
+	g_set_object(&data->tpm_device, device);
 }
 
 static void
@@ -150,13 +152,14 @@ fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* no TPM device */
-	if (!data->has_tpm_device)
+	if (data->tpm_device == NULL)
 		return;
 
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
+	fwupd_security_attr_add_guids(attr, fu_device_get_guids(data->tpm_device));
 	fu_security_attrs_append(attrs, attr);
 
 	/* check reconstructed to PCR0 */
