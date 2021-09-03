@@ -260,14 +260,12 @@ fu_security_attr_get_result(FwupdSecurityAttr *attr)
  * fu_security_attrs_to_json_string() converts FuSecurityAttrs and return the
  * string pointer. The converted JSON format is shown as follows:
  * {
- *     "SecurityAttrs": {
- *         "Attrs": [
- *             {
- *                  "name": "aaa",
- *                  "value": "bbb"
- *             }
- *         ]
- *     }
+ *     "SecurityAttributes": [
+ *         {
+ *              "name": "aaa",
+ *              "value": "bbb"
+ *         }
+ *     ]
  *  }
  *
  * Returns: A string and NULL on fail.
@@ -303,10 +301,9 @@ fu_security_attrs_to_json(FuSecurityAttrs *attrs, JsonBuilder *builder)
 {
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GError) error = NULL;
+
 	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "SecurityAttrs");
-	json_builder_begin_object(builder);
-	json_builder_set_member_name(builder, "Attrs");
+	json_builder_set_member_name(builder, "SecurityAttributes");
 	json_builder_begin_array(builder);
 	items = fu_security_attrs_get_all(attrs);
 	for (guint i = 0; i < items->len; i++) {
@@ -316,6 +313,5 @@ fu_security_attrs_to_json(FuSecurityAttrs *attrs, JsonBuilder *builder)
 		json_builder_end_object(builder);
 	}
 	json_builder_end_array(builder);
-	json_builder_end_object(builder);
 	json_builder_end_object(builder);
 }
