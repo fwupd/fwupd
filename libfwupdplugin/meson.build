@@ -335,7 +335,6 @@ if get_option('tests')
     c_args : [
       '-DTESTDATADIR_SRC="' + testdatadir_src + '"',
       '-DTESTDATADIR_DST="' + testdatadir_dst + '"',
-      '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
     ],
   )
   test('fwupdplugin-self-test', e, is_parallel:false, timeout:180)
