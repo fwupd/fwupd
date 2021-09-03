@@ -31,6 +31,11 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 	g_autoptr(GDir) dir = g_dir_open(path, 0, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(dir);
+
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+
 	while ((basename = g_dir_read_name(dir)) != NULL) {
 		g_autofree gchar *fn = g_build_filename(path, basename, NULL);
 		g_autoptr(FuUdevDevice) dev = NULL;
@@ -69,6 +74,10 @@ fu_plugin_synaptics_mst_none_func(void)
 	g_autofree gchar *pluginfn = NULL;
 	g_autofree gchar *filename = NULL;
 
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+
 	g_signal_connect(plugin, "device-added", G_CALLBACK(_plugin_device_added_cb), &devices);
 	pluginfn = g_test_build_filename(G_TEST_BUILT,
 					 "libfu_plugin_synaptics_mst." G_MODULE_SUFFIX,
@@ -106,6 +115,10 @@ fu_plugin_synaptics_mst_tb16_func(void)
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	g_autofree gchar *pluginfn = NULL;
 	g_autofree gchar *filename = NULL;
+
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
 
 	g_signal_connect(plugin, "device-added", G_CALLBACK(_plugin_device_added_cb), &devices);
 	pluginfn = g_test_build_filename(G_TEST_BUILT,
