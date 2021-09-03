@@ -316,6 +316,9 @@ fu_smbios_func(void)
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
 
+	/* these tests will not write */
+	g_setenv("FWUPD_SYSFSFWDIR", TESTDATADIR_SRC, TRUE);
+
 	smbios = fu_smbios_new();
 	ret = fu_smbios_setup(smbios, &error);
 	g_assert_no_error(error);
@@ -484,6 +487,9 @@ fu_hwids_func(void)
 		     {"HardwareID-1", "b7cceb67-774c-537e-bf8b-22c6107e9a74"},
 		     {"HardwareID-0", "147efce9-f201-5fc8-ab0c-c859751c3440"},
 		     {NULL, NULL}};
+
+	/* these tests will not write */
+	g_setenv("FWUPD_SYSFSFWDIR", TESTDATADIR_SRC, TRUE);
 
 	smbios = fu_smbios_new();
 	ret = fu_smbios_setup(smbios, &error);
@@ -2804,6 +2810,9 @@ fu_efivar_func(void)
 	return;
 #endif
 
+	/* these tests will write */
+	g_setenv("FWUPD_SYSFSFWDIR", TESTDATADIR_DST, TRUE);
+
 	/* check supported */
 	ret = fu_efivar_supported(&error);
 	g_assert_no_error(error);
@@ -3382,7 +3391,6 @@ main(int argc, char **argv)
 	g_setenv("FWUPD_DATADIR", TESTDATADIR_SRC, TRUE);
 	g_setenv("FWUPD_PLUGINDIR", TESTDATADIR_SRC, TRUE);
 	g_setenv("FWUPD_SYSCONFDIR", TESTDATADIR_SRC, TRUE);
-	g_setenv("FWUPD_SYSFSFWDIR", TESTDATADIR_SRC, TRUE);
 	g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
