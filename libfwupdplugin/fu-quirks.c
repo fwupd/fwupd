@@ -167,15 +167,13 @@ static gboolean
 fu_quirks_add_quirks_for_path(FuQuirks *self, XbBuilder *builder, const gchar *path, GError **error)
 {
 	const gchar *tmp;
-	g_autofree gchar *path_hw = NULL;
 	g_autoptr(GDir) dir = NULL;
 	g_autoptr(GPtrArray) filenames = g_ptr_array_new_with_free_func(g_free);
 
 	/* add valid files to the array */
-	path_hw = g_build_filename(path, "quirks.d", NULL);
-	if (!g_file_test(path_hw, G_FILE_TEST_EXISTS))
+	if (!g_file_test(path, G_FILE_TEST_EXISTS))
 		return TRUE;
-	dir = g_dir_open(path_hw, 0, error);
+	dir = g_dir_open(path, 0, error);
 	if (dir == NULL)
 		return FALSE;
 	while ((tmp = g_dir_read_name(dir)) != NULL) {
@@ -183,7 +181,7 @@ fu_quirks_add_quirks_for_path(FuQuirks *self, XbBuilder *builder, const gchar *p
 			g_debug("skipping invalid file %s", tmp);
 			continue;
 		}
-		g_ptr_array_add(filenames, g_build_filename(path_hw, tmp, NULL));
+		g_ptr_array_add(filenames, g_build_filename(path, tmp, NULL));
 	}
 
 	/* sort */
@@ -250,12 +248,12 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 
 	/* system datadir */
 	builder = xb_builder_new();
-	datadir = fu_common_get_path(FU_PATH_KIND_DATADIR_PKG);
+	datadir = fu_common_get_path(FU_PATH_KIND_DATADIR_QUIRKS);
 	if (!fu_quirks_add_quirks_for_path(self, builder, datadir, error))
 		return FALSE;
 
 	/* something we can write when using Ostree */
-	localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_QUIRKS);
 	if (!fu_quirks_add_quirks_for_path(self, builder, localstatedir, error))
 		return FALSE;
 

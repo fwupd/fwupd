@@ -75,6 +75,9 @@ typedef guint FuEndianType;
  * /sys/class/firmware-attributes)
  * @FU_PATH_KIND_FIRMWARE_SEARCH:	The path to configure the kernel policy for runtime loading
  *other than /lib/firmware (IE /sys/module/firmware_class/parameters/path)
+ * @FU_PATH_KIND_DATADIR_QUIRKS:	The quirks data store (IE /usr/share/fwupd/quirks.d)
+ * @FU_PATH_KIND_LOCALSTATEDIR_QUIRKS:	The local state directory for quirks (IE
+ * /var/lib/fwupd/quirks.d)
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -98,6 +101,8 @@ typedef enum {
 	FU_PATH_KIND_LOCKDIR,
 	FU_PATH_KIND_SYSFSDIR_FW_ATTRIB,
 	FU_PATH_KIND_FIRMWARE_SEARCH,
+	FU_PATH_KIND_DATADIR_QUIRKS,
+	FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;
