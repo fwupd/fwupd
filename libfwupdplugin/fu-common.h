@@ -52,23 +52,32 @@ typedef guint FuEndianType;
  * FuPathKind:
  * @FU_PATH_KIND_CACHEDIR_PKG:		The cache directory (IE /var/cache/fwupd)
  * @FU_PATH_KIND_DATADIR_PKG:		The non-volatile data store (IE /usr/share/fwupd)
- * @FU_PATH_KIND_EFIAPPDIR:		The location to store EFI apps before install (IE /usr/libexec/fwupd/efi)
+ * @FU_PATH_KIND_EFIAPPDIR:		The location to store EFI apps before install (IE
+ * /usr/libexec/fwupd/efi)
  * @FU_PATH_KIND_LOCALSTATEDIR:		The local state directory (IE /var)
- * @FU_PATH_KIND_LOCALSTATEDIR_PKG:	The local state directory for the package (IE /var/lib/fwupd)
- * @FU_PATH_KIND_PLUGINDIR_PKG:		The location to look for plugins for package (IE /usr/lib/[triplet]/fwupd-plugins-3)
+ * @FU_PATH_KIND_LOCALSTATEDIR_PKG:	The local state directory for the package (IE
+ * /var/lib/fwupd)
+ * @FU_PATH_KIND_PLUGINDIR_PKG:		The location to look for plugins for package (IE
+ * /usr/lib/[triplet]/fwupd-plugins-3)
  * @FU_PATH_KIND_SYSCONFDIR:		The configuration location (IE /etc)
  * @FU_PATH_KIND_SYSCONFDIR_PKG:	The package configuration location (IE /etc/fwupd)
  * @FU_PATH_KIND_SYSFSDIR_FW:		The sysfs firmware location (IE /sys/firmware)
  * @FU_PATH_KIND_SYSFSDIR_DRIVERS:	The platform sysfs directory (IE /sys/bus/platform/drivers)
  * @FU_PATH_KIND_SYSFSDIR_TPM:		The TPM sysfs directory (IE /sys/class/tpm)
  * @FU_PATH_KIND_PROCFS:		The procfs location (IE /proc)
- * @FU_PATH_KIND_POLKIT_ACTIONS:	The directory for policy kit actions (IE /usr/share/polkit-1/actions/)
+ * @FU_PATH_KIND_POLKIT_ACTIONS:	The directory for policy kit actions (IE
+ * /usr/share/polkit-1/actions/)
  * @FU_PATH_KIND_OFFLINE_TRIGGER:	The file for the offline trigger (IE /system-update)
  * @FU_PATH_KIND_SYSFSDIR_SECURITY:	The sysfs security location (IE /sys/kernel/security)
  * @FU_PATH_KIND_ACPI_TABLES:		The location of the ACPI tables
  * @FU_PATH_KIND_LOCKDIR:		The lock directory (IE /run/lock)
- * @FU_PATH_KIND_SYSFSDIR_FW_ATTRIB	The firmware attributes directory (IE /sys/class/firmware-attributes)
- * @FU_PATH_KIND_FIRMWARE_SEARCH:	The path to configure the kernel policy for runtime loading other than /lib/firmware (IE /sys/module/firmware_class/parameters/path)
+ * @FU_PATH_KIND_SYSFSDIR_FW_ATTRIB	The firmware attributes directory (IE
+ * /sys/class/firmware-attributes)
+ * @FU_PATH_KIND_FIRMWARE_SEARCH:	The path to configure the kernel policy for runtime loading
+ *other than /lib/firmware (IE /sys/module/firmware_class/parameters/path)
+ * @FU_PATH_KIND_DATADIR_QUIRKS:	The quirks data store (IE /usr/share/fwupd/quirks.d)
+ * @FU_PATH_KIND_LOCALSTATEDIR_QUIRKS:	The local state directory for quirks (IE
+ * /var/lib/fwupd/quirks.d)
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -92,6 +101,8 @@ typedef enum {
 	FU_PATH_KIND_LOCKDIR,
 	FU_PATH_KIND_SYSFSDIR_FW_ATTRIB,
 	FU_PATH_KIND_FIRMWARE_SEARCH,
+	FU_PATH_KIND_DATADIR_QUIRKS,
+	FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;
