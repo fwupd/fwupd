@@ -32,6 +32,7 @@
 #include "fu-hwids.h"
 #include "fu-plugin-private.h"
 #include "fu-progressbar.h"
+#include "fu-security-attr.h"
 #include "fu-security-attrs-private.h"
 #include "fu-smbios-private.h"
 #include "fu-util-common.h"
@@ -59,6 +60,7 @@ struct FuUtilPrivate {
 	FuEngine *engine;
 	FuEngineRequest *request;
 	FuProgressbar *progressbar;
+	gboolean as_json;
 	gboolean no_reboot_check;
 	gboolean no_safety_check;
 	gboolean prepare_blob;
@@ -2622,6 +2624,13 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* print the "why" */
 	attrs = fu_engine_get_host_security_attrs(priv->engine);
+	if (priv->as_json) {
+		str = fu_security_attrs_to_json_string(attrs, error);
+		if (str == NULL)
+			return FALSE;
+		g_print("%s\n", str);
+		return TRUE;
+	}
 	items = fu_security_attrs_get_all(attrs);
 	str = fu_util_security_attrs_to_string(items, flags);
 	g_print("%s\n", str);
@@ -3040,6 +3049,14 @@ main(int argc, char *argv[])
 	     /* TRANSLATORS: command line option */
 	     _("Filter with a set of device flags using a ~ prefix to "
 	       "exclude, e.g. 'internal,~needs-reboot'"),
+	     NULL},
+	    {"json",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->as_json,
+	     /* TRANSLATORS: command line option */
+	     _("Output in JSON format"),
 	     NULL},
 	    {NULL}};
 
