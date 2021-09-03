@@ -24,6 +24,10 @@ fu_nvme_cns_func(void)
 	g_autoptr(FuNvmeDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+
 	path = g_test_build_filename(G_TEST_DIST, "tests", "TOSHIBA_THNSN5512GPU7.bin", NULL);
 
 	if (!g_file_test(path, G_FILE_TEST_EXISTS) && ci == NULL) {

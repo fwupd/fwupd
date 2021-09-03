@@ -24,6 +24,10 @@ fu_ata_id_func(void)
 	g_autoptr(FuAtaDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
 
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+
 	path = g_test_build_filename(G_TEST_DIST, "tests", "StarDrive-SBFM61.2.bin", NULL);
 	if (!g_file_test(path, G_FILE_TEST_EXISTS) && ci == NULL) {
 		g_test_skip("Missing StarDrive-SBFM61.2.bin");
@@ -54,6 +58,10 @@ fu_ata_oui_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuAtaDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
+
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
 
 	path = g_test_build_filename(G_TEST_DIST, "tests", "Samsung SSD 860 EVO 500GB.bin", NULL);
 	if (!g_file_test(path, G_FILE_TEST_EXISTS) && ci == NULL) {
