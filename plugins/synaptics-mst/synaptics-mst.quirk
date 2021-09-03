@@ -40,15 +40,15 @@ Name = Dell Rugged Platform
 SynapticsMstDeviceKind = system
 
 # ThinkPad Workstation Dock
-[MST-tesla-vmm2322-513]
+[MST-513]
 ParentGuid = USB\VID_17EF&PID_305A
+SynapticsMstDeviceKind = dock
 
 # ThinkPad Thunderbolt 3 Workstation Dock
-[MST-panamera-vmm5322-595]
+[MST-595]
 ParentGuid = TBT-01081720
+SynapticsMstDeviceKind = dock
 
 [MST-596]
 Name = ThinkPad USB-C Dock Gen2
-
-[MST-596]
-Name = ThinkPad USB-C Dock Gen2
+SynapticsMstDeviceKind = dock
