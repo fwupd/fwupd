@@ -1590,4 +1590,9 @@
       <package>protobuf</package>
     </distro>
   </dependency>
+  <dependency type="build" id="sudo">
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
 </dependencies>
