@@ -119,6 +119,14 @@ fu_uefi_nvram_device_write_firmware(FuDevice *device,
 }
 
 static void
+fu_uefi_nvram_device_report_metadata_pre(FuDevice *device, GHashTable *metadata)
+{
+	/* FuUefiDevice */
+	FU_DEVICE_CLASS(fu_uefi_nvram_device_parent_class)->report_metadata_pre(device, metadata);
+	g_hash_table_insert(metadata, g_strdup("CapsuleApplyMethod"), g_strdup("nvram"));
+}
+
+static void
 fu_uefi_nvram_device_init(FuUefiNvramDevice *self)
 {
 }
@@ -129,4 +137,5 @@ fu_uefi_nvram_device_class_init(FuUefiNvramDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->get_results = fu_uefi_nvram_device_get_results;
 	klass_device->write_firmware = fu_uefi_nvram_device_write_firmware;
+	klass_device->report_metadata_pre = fu_uefi_nvram_device_report_metadata_pre;
 }
