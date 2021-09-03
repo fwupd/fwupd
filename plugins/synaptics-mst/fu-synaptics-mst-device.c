@@ -79,15 +79,17 @@ fu_synaptics_mst_device_finalize(GObject *object)
 static void
 fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 {
+	FuUdevDeviceFlags flags =
+	    FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT;
+	if (fu_udev_device_get_dev(FU_UDEV_DEVICE(self)) != NULL)
+		flags |= FU_UDEV_DEVICE_FLAG_OPEN_WRITE;
+	fu_udev_device_set_flags(FU_UDEV_DEVICE(self), flags);
 	fu_device_add_protocol(FU_DEVICE(self), "com.synaptics.mst");
 	fu_device_set_vendor(FU_DEVICE(self), "Synaptics");
 	fu_device_add_vendor_id(FU_DEVICE(self), "DRM_DP_AUX_DEV:0x06CB");
 	fu_device_set_summary(FU_DEVICE(self), "Multi-stream transport device");
 	fu_device_add_icon(FU_DEVICE(self), "video-display");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
-	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
-				 FU_UDEV_DEVICE_FLAG_OPEN_READ | FU_UDEV_DEVICE_FLAG_OPEN_WRITE |
-				     FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID,
 					"ignore-board-id");
