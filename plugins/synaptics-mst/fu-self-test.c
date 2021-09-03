@@ -29,11 +29,16 @@ _test_add_fake_devices_from_dir (FuPlugin *plugin, const gchar *path)
 	gboolean ret;
 	g_autoptr(FuContext) ctx = fu_context_new ();
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GDir) dir = g_dir_open (path, 0, &error);
-	g_assert_no_error (error);
-	g_assert_nonnull (dir);
-	while ((basename = g_dir_read_name (dir)) != NULL) {
-		g_autofree gchar *fn = g_build_filename (path, basename, NULL);
+	g_autoptr(GDir) dir = g_dir_open(path, 0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(dir);
+
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+
+	while ((basename = g_dir_read_name(dir)) != NULL) {
+		g_autofree gchar *fn = g_build_filename(path, basename, NULL);
 		g_autoptr(FuUdevDevice) dev = NULL;
 		if (!g_str_has_prefix (basename, "drm_dp_aux"))
 			continue;
@@ -64,18 +69,20 @@ fu_plugin_synaptics_mst_none_func (void)
 	g_autofree gchar *pluginfn = NULL;
 	g_autofree gchar *filename = NULL;
 
-	g_signal_connect (plugin, "device-added",
-			  G_CALLBACK (_plugin_device_added_cb),
-			  &devices);
-	pluginfn = g_test_build_filename (G_TEST_BUILT,
-				     "libfu_plugin_synaptics_mst." G_MODULE_SUFFIX,
-				     NULL);
-	ret = fu_plugin_open (plugin, pluginfn, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	ret = fu_plugin_runner_startup (plugin, &error);
-	if (!ret && g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-		g_test_skip ("Skipping tests due to unsupported configuration");
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+
+	g_signal_connect(plugin, "device-added", G_CALLBACK(_plugin_device_added_cb), &devices);
+	pluginfn = g_test_build_filename(G_TEST_BUILT,
+					 "libfu_plugin_synaptics_mst." G_MODULE_SUFFIX,
+					 NULL);
+	ret = fu_plugin_open(plugin, pluginfn, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+	ret = fu_plugin_runner_startup(plugin, &error);
+	if (!ret && g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_test_skip("Skipping tests due to unsupported configuration");
 		return;
 	}
 	g_assert_no_error (error);
@@ -103,18 +110,20 @@ fu_plugin_synaptics_mst_tb16_func (void)
 	g_autofree gchar *pluginfn = NULL;
 	g_autofree gchar *filename = NULL;
 
-	g_signal_connect (plugin, "device-added",
-			  G_CALLBACK (_plugin_device_added_cb),
-			  &devices);
-	pluginfn = g_test_build_filename (G_TEST_BUILT,
-				     "libfu_plugin_synaptics_mst." G_MODULE_SUFFIX,
-				     NULL);
-	ret = fu_plugin_open (plugin, pluginfn, &error);
-	g_assert_no_error (error);
-	g_assert (ret);
-	ret = fu_plugin_runner_startup (plugin, &error);
-	if (!ret && g_error_matches (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-		g_test_skip ("Skipping tests due to unsupported configuration");
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+
+	g_signal_connect(plugin, "device-added", G_CALLBACK(_plugin_device_added_cb), &devices);
+	pluginfn = g_test_build_filename(G_TEST_BUILT,
+					 "libfu_plugin_synaptics_mst." G_MODULE_SUFFIX,
+					 NULL);
+	ret = fu_plugin_open(plugin, pluginfn, &error);
+	g_assert_no_error(error);
+	g_assert(ret);
+	ret = fu_plugin_runner_startup(plugin, &error);
+	if (!ret && g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_test_skip("Skipping tests due to unsupported configuration");
 		return;
 	}
 	g_assert_no_error (error);

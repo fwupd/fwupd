@@ -1313,6 +1313,14 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 						    self->board_id);
 			fu_device_add_instance_id (FU_DEVICE (self), dock_id2);
 		}
+	} else {
+		/* devices are explicit opt-in */
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "ignoring %s device with no SynapticsMstDeviceKind quirk",
+			    guid0);
+		return FALSE;
 	}
 
 	/* detect chip family */
