@@ -1884,6 +1884,10 @@ fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder)
 
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
+	fwupd_common_json_add_string(builder,
+				     FWUPD_RESULT_KEY_NAME_VARIANT_SUFFIX,
+				     priv->name_variant_suffix);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_BRANCH, priv->branch);
