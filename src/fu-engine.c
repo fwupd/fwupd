@@ -6892,8 +6892,6 @@ fu_engine_init(FuEngine *self)
 
 	/* add some runtime versions of things the daemon depends on */
 	fu_engine_add_runtime_version(self, "org.freedesktop.fwupd", VERSION);
-	fu_engine_add_runtime_version(self, "com.redhat.fwupdate", "12");
-	fu_engine_add_runtime_version(self, "org.freedesktop.appstream-glib", "0.7.14");
 #if G_USB_CHECK_VERSION(0, 3, 1)
 	fu_engine_add_runtime_version(self, "org.freedesktop.gusb", g_usb_version_string());
 #endif
