@@ -2751,6 +2751,28 @@ fu_firmware_func(void)
 }
 
 static void
+fu_firmware_common_func(void)
+{
+	gboolean ret;
+	guint8 value = 0;
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_firmware_strparse_uint8_safe("ff00XX", 6, 0, &value, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(value, ==, 0xFF);
+
+	ret = fu_firmware_strparse_uint8_safe("ff00XX", 6, 2, &value, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(value, ==, 0x00);
+
+	ret = fu_firmware_strparse_uint8_safe("ff00XX", 6, 4, &value, &error);
+	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA);
+	g_assert_false(ret);
+}
+
+static void
 fu_firmware_dedupe_func(void)
 {
 	g_autoptr(FuFirmware) firmware = fu_firmware_new();
@@ -3444,6 +3466,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/smbios{dt}", fu_smbios_dt_func);
 	g_test_add_func("/fwupd/smbios{class}", fu_smbios_class_func);
 	g_test_add_func("/fwupd/firmware", fu_firmware_func);
+	g_test_add_func("/fwupd/firmware{common}", fu_firmware_common_func);
 	g_test_add_func("/fwupd/firmware{dedupe}", fu_firmware_dedupe_func);
 	g_test_add_func("/fwupd/firmware{build}", fu_firmware_build_func);
 	g_test_add_func("/fwupd/firmware{ihex}", fu_firmware_ihex_func);

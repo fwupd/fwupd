@@ -36,6 +36,8 @@ fu_firmware_strparse_uint4_safe(const gchar *data,
 				GError **error)
 {
 	gchar buffer[2] = {'\0'};
+	gchar *endptr = NULL;
+	guint64 valuetmp;
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -45,8 +47,18 @@ fu_firmware_strparse_uint4_safe(const gchar *data,
 			    sizeof(buffer) - 1,
 			    error))
 		return FALSE;
+	valuetmp = g_ascii_strtoull(buffer, &endptr, 16);
+	if (endptr - buffer != sizeof(buffer) - 1) {
+		g_autofree gchar *str = fu_common_strsafe(buffer, sizeof(buffer));
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "cannot parse %s as hex",
+			    str);
+		return FALSE;
+	}
 	if (value != NULL)
-		*value = (guint8)g_ascii_strtoull(buffer, NULL, 16);
+		*value = (guint8)valuetmp;
 	return TRUE;
 }
 
@@ -73,6 +85,8 @@ fu_firmware_strparse_uint8_safe(const gchar *data,
 				GError **error)
 {
 	gchar buffer[3] = {'\0'};
+	gchar *endptr = NULL;
+	guint64 valuetmp;
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -82,8 +96,18 @@ fu_firmware_strparse_uint8_safe(const gchar *data,
 			    sizeof(buffer) - 1,
 			    error))
 		return FALSE;
+	valuetmp = g_ascii_strtoull(buffer, &endptr, 16);
+	if (endptr - buffer != sizeof(buffer) - 1) {
+		g_autofree gchar *str = fu_common_strsafe(buffer, sizeof(buffer));
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "cannot parse %s as hex",
+			    str);
+		return FALSE;
+	}
 	if (value != NULL)
-		*value = (guint8)g_ascii_strtoull(buffer, NULL, 16);
+		*value = (guint8)valuetmp;
 	return TRUE;
 }
 
@@ -110,6 +134,8 @@ fu_firmware_strparse_uint16_safe(const gchar *data,
 				 GError **error)
 {
 	gchar buffer[5] = {'\0'};
+	gchar *endptr = NULL;
+	guint64 valuetmp;
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -119,8 +145,18 @@ fu_firmware_strparse_uint16_safe(const gchar *data,
 			    sizeof(buffer) - 1,
 			    error))
 		return FALSE;
+	valuetmp = g_ascii_strtoull(buffer, &endptr, 16);
+	if (endptr - buffer != sizeof(buffer) - 1) {
+		g_autofree gchar *str = fu_common_strsafe(buffer, sizeof(buffer));
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "cannot parse %s as hex",
+			    str);
+		return FALSE;
+	}
 	if (value != NULL)
-		*value = (guint16)g_ascii_strtoull(buffer, NULL, 16);
+		*value = (guint16)valuetmp;
 	return TRUE;
 }
 
@@ -147,6 +183,8 @@ fu_firmware_strparse_uint24_safe(const gchar *data,
 				 GError **error)
 {
 	gchar buffer[7] = {'\0'};
+	gchar *endptr = NULL;
+	guint64 valuetmp;
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -156,8 +194,18 @@ fu_firmware_strparse_uint24_safe(const gchar *data,
 			    sizeof(buffer) - 1,
 			    error))
 		return FALSE;
+	valuetmp = g_ascii_strtoull(buffer, &endptr, 16);
+	if (endptr - buffer != sizeof(buffer) - 1) {
+		g_autofree gchar *str = fu_common_strsafe(buffer, sizeof(buffer));
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "cannot parse %s as hex",
+			    str);
+		return FALSE;
+	}
 	if (value != NULL)
-		*value = (guint16)g_ascii_strtoull(buffer, NULL, 16);
+		*value = (guint16)valuetmp;
 	return TRUE;
 }
 
@@ -184,6 +232,8 @@ fu_firmware_strparse_uint32_safe(const gchar *data,
 				 GError **error)
 {
 	gchar buffer[9] = {'\0'};
+	gchar *endptr = NULL;
+	guint64 valuetmp;
 	if (!fu_memcpy_safe((guint8 *)buffer,
 			    sizeof(buffer),
 			    0x0, /* dst */
@@ -193,7 +243,17 @@ fu_firmware_strparse_uint32_safe(const gchar *data,
 			    sizeof(buffer) - 1,
 			    error))
 		return FALSE;
+	valuetmp = g_ascii_strtoull(buffer, &endptr, 16);
+	if (endptr - buffer != sizeof(buffer) - 1) {
+		g_autofree gchar *str = fu_common_strsafe(buffer, sizeof(buffer));
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "cannot parse %s as hex",
+			    str);
+		return FALSE;
+	}
 	if (value != NULL)
-		*value = (guint32)g_ascii_strtoull(buffer, NULL, 16);
+		*value = (guint32)valuetmp;
 	return TRUE;
 }
