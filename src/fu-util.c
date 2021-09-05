@@ -2806,12 +2806,21 @@ fu_util_set_approved_firmware(FuUtilPrivate *priv, gchar **values, GError **erro
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_ARGS,
-				    "Invalid arguments: list of checksums expected");
+				    "Invalid arguments: filename or list of checksums expected");
 		return FALSE;
 	}
 
+	/* filename */
+	if (g_file_test(values[0], G_FILE_TEST_EXISTS)) {
+		g_autofree gchar *data = NULL;
+		if (!g_file_get_contents(values[0], &data, NULL, error))
+			return FALSE;
+		checksums = g_strsplit(data, "\n", -1);
+	} else {
+		checksums = g_strsplit(values[0], ",", -1);
+	}
+
 	/* call into daemon */
-	checksums = g_strsplit(values[0], ",", -1);
 	return fwupd_client_set_approved_firmware(priv->client,
 						  checksums,
 						  priv->cancellable,
@@ -3829,7 +3838,7 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "set-approved-firmware",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"),
+			      _("FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"),
 			      /* TRANSLATORS: firmware approved by the admin */
 			      _("Sets the list of approved firmware"),
 			      fu_util_set_approved_firmware);
