@@ -187,6 +187,9 @@ fu_wac_firmware_parse(FuFirmware *firmware,
 				return FALSE;
 			}
 			g_string_append_printf(image_buffer, "%s\n", lines[i]);
+		} else {
+			g_warning("ignoring invalid srec command %s", cmd);
+			continue;
 		}
 
 		/* end */
