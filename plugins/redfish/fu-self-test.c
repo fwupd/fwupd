@@ -10,6 +10,9 @@
 
 #include "fu-context-private.h"
 #include "fu-device-private.h"
+#ifdef HAVE_LINUX_IPMI_H
+#include "fu-ipmi-device.h"
+#endif
 #include "fu-plugin-private.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-network.h"
@@ -47,6 +50,56 @@ fu_test_self_init(FuTest *self)
 	ret = fu_plugin_runner_coldplug(self->plugin, &error);
 	g_assert_no_error(error);
 	g_assert(ret);
+}
+
+static void
+fu_test_redfish_ipmi_func(void)
+{
+#ifdef HAVE_LINUX_IPMI_H
+	gboolean ret;
+	g_autoptr(FuIpmiDevice) device = fu_ipmi_device_new(NULL);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autofree gchar *username = NULL;
+	g_autofree gchar *str = NULL;
+
+	/* sanity check */
+	if (!g_file_test("/dev/ipmi0", G_FILE_TEST_EXISTS)) {
+		g_test_skip("no IPMI hardware");
+		return;
+	}
+
+	/* create device */
+	locker = fu_device_locker_new(device, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(locker);
+	str = fu_device_to_string(FU_DEVICE(device));
+	g_debug("%s", str);
+
+	/* add user that can do redfish commands */
+	if (g_getenv("FWUPD_REDFISH_SELF_TEST") == NULL) {
+		g_test_skip("not doing destructive tests");
+		return;
+	}
+	ret = fu_ipmi_device_set_user_name(device, 0x04, "fwupd", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	username = fu_ipmi_device_get_user_password(device, 0x04, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(username);
+	g_debug("username=%s", username);
+	ret = fu_ipmi_device_set_user_enable(device, 0x04, TRUE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_ipmi_device_set_user_priv(device, 0x04, 0x4, 1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_ipmi_device_set_user_password(device, 0x04, "Passw0rd123", &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+#else
+	g_test_skip("no linux/ipmi.h, so skipping");
+#endif
 }
 
 static void
@@ -303,6 +356,7 @@ main(int argc, char **argv)
 
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	fu_test_self_init(self);
+	g_test_add_func("/redfish/ipmi", fu_test_redfish_ipmi_func);
 	g_test_add_func("/redfish/common", fu_test_redfish_common_func);
 	g_test_add_func("/redfish/common{version}", fu_test_redfish_common_version_func);
 	g_test_add_func("/redfish/common{lenovo}", fu_test_redfish_common_lenovo_func);

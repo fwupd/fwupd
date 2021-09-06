@@ -372,6 +372,12 @@ fu_redfish_backend_set_username(FuRedfishBackend *self, const gchar *username)
 	self->username = g_strdup(username);
 }
 
+const gchar *
+fu_redfish_backend_get_username(FuRedfishBackend *self)
+{
+	return self->username;
+}
+
 void
 fu_redfish_backend_set_password(FuRedfishBackend *self, const gchar *password)
 {

@@ -8,6 +8,17 @@ install_data(['redfish.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
+ipmi_src = []
+if have_linux_ipmi
+  ipmi_src += 'fu-ipmi-device.c'
+endif
+
+if get_option('systemd') and have_linux_ipmi
+install_data(['fwupd-redfish.conf'],
+  install_dir: systemd_modules_load_dir,
+)
+endif
+
 shared_module('fu_plugin_redfish',
   fu_hash,
   sources : [
@@ -21,6 +32,7 @@ shared_module('fu_plugin_redfish',
     'fu-redfish-network-device.c',
     'fu-redfish-request.c',
     'fu-redfish-smbios.c',     # fuzzing
+    ipmi_src,
   ],
   include_directories : [
     root_incdir,
@@ -66,6 +78,7 @@ if get_option('tests')
       'fu-redfish-network-device.c',
       'fu-redfish-request.c',
       'fu-redfish-smbios.c',
+      ipmi_src,
     ],
     include_directories : [
       root_incdir,
