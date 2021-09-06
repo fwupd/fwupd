@@ -57,6 +57,11 @@ fu_srec_firmware_record_free(FuSrecFirmwareRecord *rcd)
 	g_free(rcd);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuSrecFirmwareRecord, fu_srec_firmware_record_free);
+#pragma clang diagnostic pop
+
 /**
  * fu_srec_firmware_record_new: (skip):
  * @ln: unsigned integer
@@ -126,7 +131,7 @@ fu_srec_firmware_tokenize(FuFirmware *firmware, GBytes *fw, FwupdInstallFlags fl
 	data = g_bytes_get_data(fw, &sz);
 	lines = fu_common_strnsplit(data, sz, "\n", -1);
 	for (guint ln = 0; lines[ln] != NULL; ln++) {
-		FuSrecFirmwareRecord *rcd;
+		g_autoptr(FuSrecFirmwareRecord) rcd = NULL;
 		const gchar *line = lines[ln];
 		gsize linesz;
 		guint32 rec_addr32;
@@ -290,7 +295,7 @@ fu_srec_firmware_tokenize(FuFirmware *firmware, GBytes *fw, FwupdInstallFlags fl
 				fu_byte_array_append_uint8(rcd->buf, tmp);
 			}
 		}
-		g_ptr_array_add(priv->records, rcd);
+		g_ptr_array_add(priv->records, g_steal_pointer(&rcd));
 	}
 
 	/* no EOF */
