@@ -2,8 +2,6 @@ repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
     hooks:
-    -   id: no-commit-to-branch
-        args: [--branch, master, --pattern, 1_.*_X]
     -   id: check-added-large-files
     -   id: check-byte-order-marker
     -   id: check-executables-have-shebangs
