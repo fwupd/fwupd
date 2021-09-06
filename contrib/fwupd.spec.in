@@ -425,6 +425,7 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_dfu_csr.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_ebitdo.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_elantp.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_elanfp.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_emmc.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_ep963x.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_fastboot.so
