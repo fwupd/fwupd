@@ -873,5 +873,6 @@ LIBFWUPDPLUGIN_1.7.0 {
     fu_plugin_runner_prepare;
     fu_plugin_runner_reload;
     fu_plugin_runner_write_firmware;
+    fu_plugin_set_config_value;
   local: *;
 } LIBFWUPDPLUGIN_1.6.2;

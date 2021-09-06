@@ -2340,6 +2340,36 @@ fu_plugin_get_config_value(FuPlugin *self, const gchar *key)
 }
 
 /**
+ * fu_plugin_set_config_value:
+ * @self: a #FuPlugin
+ * @key: a settings key
+ * @value: (nullable): a settings value
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets a plugin config value.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.7.0
+ **/
+gboolean
+fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value, GError **error)
+{
+	g_autofree gchar *conf_path = fu_plugin_get_config_filename(self);
+	g_autoptr(GKeyFile) keyfile = NULL;
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(key != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	keyfile = g_key_file_new();
+	if (!g_key_file_load_from_file(keyfile, conf_path, G_KEY_FILE_KEEP_COMMENTS, error))
+		return FALSE;
+	g_key_file_set_string(keyfile, fu_plugin_get_name(self), key, value);
+	return g_key_file_save_to_file(keyfile, conf_path, error);
+}
+
+/**
  * fu_plugin_get_config_value_boolean:
  * @self: a #FuPlugin
  * @key: a settings key
