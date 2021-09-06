@@ -131,4 +131,6 @@ fu_plugin_get_config_value(FuPlugin *self, const gchar *key);
 gboolean
 fu_plugin_get_config_value_boolean(FuPlugin *self, const gchar *key);
 gboolean
+fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value, GError **error);
+gboolean
 fu_plugin_has_custom_flag(FuPlugin *self, const gchar *flag);
