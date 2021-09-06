@@ -8,6 +8,10 @@
 
 #include <fwupdplugin.h>
 
+#ifdef HAVE_LINUX_IPMI_H
+#include "fu-ipmi-device.h"
+#endif
+
 #include "fu-redfish-backend.h"
 #include "fu-redfish-common.h"
 #include "fu-redfish-network.h"
@@ -181,6 +185,89 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
+#ifdef HAVE_LINUX_IPMI_H
+static gchar *
+fu_common_generate_password(guint length)
+{
+	GString *str = g_string_sized_new(length);
+
+	/* get a random password string */
+	while (str->len < length) {
+		gchar tmp = (gchar)g_random_int_range(0x0, 0xff);
+		if (g_ascii_isalnum(tmp))
+			g_string_append_c(str, tmp);
+	}
+	return g_string_free(str, FALSE);
+}
+
+static gboolean
+fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data(plugin);
+	const gchar *username_fwupd = "fwupd";
+	guint8 user_id = 0x04;
+	g_autofree gchar *password_new = fu_common_generate_password(15);
+	g_autofree gchar *password_tmp = fu_common_generate_password(15);
+	g_autofree gchar *uri = NULL;
+	g_autofree gchar *username = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuIpmiDevice) device = fu_ipmi_device_new(fu_plugin_get_context(plugin));
+	g_autoptr(FuRedfishRequest) request = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+
+	/* create device */
+	locker = fu_device_locker_new(device, error);
+	if (locker == NULL)
+		return FALSE;
+
+	/* check the slot is clear */
+	username = fu_ipmi_device_get_user_password(device, 0x04, NULL);
+	if (username != NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "cannot create fwupd user with account %s already existing",
+			    username);
+		return FALSE;
+	}
+
+	/* create a user with appropriate permissions */
+	if (!fu_ipmi_device_set_user_name(device, user_id, username_fwupd, error))
+		return FALSE;
+	if (!fu_ipmi_device_set_user_enable(device, user_id, TRUE, error))
+		return FALSE;
+	if (!fu_ipmi_device_set_user_priv(device, user_id, 0x4, 1, error))
+		return FALSE;
+	if (!fu_ipmi_device_set_user_password(device, user_id, password_tmp, error))
+		return FALSE;
+	fu_redfish_backend_set_username(data->backend, username_fwupd);
+	fu_redfish_backend_set_password(data->backend, password_tmp);
+
+	/* now use Redfish to change the temporary password to the actual password */
+	request = fu_redfish_backend_request_new(data->backend);
+	uri = g_strdup_printf("/redfish/v1/AccountService/Accounts/%u", (guint)user_id - 1);
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Password");
+	json_builder_add_string_value(builder, password_new);
+	json_builder_end_object(builder);
+	if (!fu_redfish_request_patch(request,
+				      uri,
+				      builder,
+				      FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+				      error))
+		return FALSE;
+	fu_redfish_backend_set_password(data->backend, password_new);
+
+	/* success */
+	if (!fu_plugin_set_config_value(plugin, "Username", username_fwupd, error))
+		return FALSE;
+	if (!fu_plugin_set_config_value(plugin, "Password", password_new, error))
+		return FALSE;
+	return TRUE;
+}
+#endif
+
 gboolean
 fu_plugin_startup(FuPlugin *plugin, GError **error)
 {
@@ -245,6 +332,18 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	}
 	if (fu_plugin_has_custom_flag(plugin, "wildcard-targets"))
 		fu_redfish_backend_set_wildcard_targets(data->backend, TRUE);
+
+#ifdef HAVE_LINUX_IPMI_H
+	/* we got neither a type 42 entry or config value, lets try IPMI */
+	if (fu_redfish_backend_get_username(data->backend) == NULL) {
+		if (!fu_plugin_get_config_value_boolean(plugin, "IpmiDisableCreateUser")) {
+			g_debug("attempting to create user using IPMI");
+			if (!fu_redfish_plugin_ipmi_create_user(plugin, error))
+				return FALSE;
+		}
+	}
+#endif
+
 	return fu_backend_setup(FU_BACKEND(data->backend), error);
 }
 

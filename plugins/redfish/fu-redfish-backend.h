@@ -20,6 +20,8 @@ void
 fu_redfish_backend_set_hostname(FuRedfishBackend *self, const gchar *hostname);
 void
 fu_redfish_backend_set_username(FuRedfishBackend *self, const gchar *username);
+const gchar *
+fu_redfish_backend_get_username(FuRedfishBackend *self);
 void
 fu_redfish_backend_set_password(FuRedfishBackend *self, const gchar *password);
 void
