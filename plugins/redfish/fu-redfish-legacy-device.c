@@ -22,13 +22,8 @@ fu_redfish_legacy_device_detach(FuDevice *dev, GError **error)
 {
 	FuRedfishLegacyDevice *self = FU_REDFISH_LEGACY_DEVICE(dev);
 	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
-	CURL *curl;
-	struct curl_slist *hs = NULL;
-	g_autoptr(FuRedfishRequest) request = NULL;
-	g_autoptr(GString) str = g_string_new(NULL);
+	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(backend);
 	g_autoptr(JsonBuilder) builder = json_builder_new();
-	g_autoptr(JsonGenerator) json_generator = json_generator_new();
-	g_autoptr(JsonNode) json_root = NULL;
 
 	/* create header */
 	json_builder_begin_object(builder);
@@ -40,26 +35,12 @@ fu_redfish_legacy_device_detach(FuDevice *dev, GError **error)
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
 
-	/* export as a string */
-	json_root = json_builder_get_root(builder);
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	json_generator_to_gstring(json_generator, str);
-	if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL)
-		g_debug("request: %s", str->str);
-
 	/* patch the two fields */
-	request = fu_redfish_backend_request_new(backend);
-	curl = fu_redfish_request_get_curl(request);
-	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, str->str);
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)str->len);
-	hs = curl_slist_append(hs, "Content-Type: application/json");
-	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
-	return fu_redfish_request_perform(request,
-					  "/redfish/v1/UpdateService",
-					  FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					  error);
+	return fu_redfish_request_patch(request,
+					"/redfish/v1/UpdateService",
+					builder,
+					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					error);
 }
 
 static gboolean
@@ -67,13 +48,8 @@ fu_redfish_legacy_device_attach(FuDevice *dev, GError **error)
 {
 	FuRedfishLegacyDevice *self = FU_REDFISH_LEGACY_DEVICE(dev);
 	FuRedfishBackend *backend = fu_redfish_device_get_backend(FU_REDFISH_DEVICE(self));
-	CURL *curl;
-	struct curl_slist *hs = NULL;
-	g_autoptr(FuRedfishRequest) request = NULL;
-	g_autoptr(GString) str = g_string_new(NULL);
+	g_autoptr(FuRedfishRequest) request = fu_redfish_backend_request_new(backend);
 	g_autoptr(JsonBuilder) builder = json_builder_new();
-	g_autoptr(JsonGenerator) json_generator = json_generator_new();
-	g_autoptr(JsonNode) json_root = NULL;
 
 	/* create header */
 	json_builder_begin_object(builder);
@@ -84,26 +60,12 @@ fu_redfish_legacy_device_attach(FuDevice *dev, GError **error)
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
 
-	/* export as a string */
-	json_root = json_builder_get_root(builder);
-	json_generator_set_pretty(json_generator, TRUE);
-	json_generator_set_root(json_generator, json_root);
-	json_generator_to_gstring(json_generator, str);
-	if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL)
-		g_debug("request: %s", str->str);
-
 	/* patch the two fields */
-	request = fu_redfish_backend_request_new(backend);
-	curl = fu_redfish_request_get_curl(request);
-	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PATCH");
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, str->str);
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)str->len);
-	hs = curl_slist_append(hs, "Content-Type: application/json");
-	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hs);
-	return fu_redfish_request_perform(request,
-					  "/redfish/v1/UpdateService",
-					  FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
-					  error);
+	return fu_redfish_request_patch(request,
+					"/redfish/v1/UpdateService",
+					builder,
+					FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+					error);
 }
 
 static gboolean

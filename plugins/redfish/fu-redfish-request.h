@@ -24,6 +24,12 @@ fu_redfish_request_perform(FuRedfishRequest *self,
 			   const gchar *path,
 			   FuRedfishRequestPerformFlags flags,
 			   GError **error);
+gboolean
+fu_redfish_request_patch(FuRedfishRequest *self,
+			 const gchar *path,
+			 JsonBuilder *builder,
+			 FuRedfishRequestPerformFlags flags,
+			 GError **error);
 JsonObject *
 fu_redfish_request_get_json_object(FuRedfishRequest *self);
 CURL *
