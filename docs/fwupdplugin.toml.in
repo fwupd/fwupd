@@ -49,7 +49,7 @@ content_images = [
   "architecture-plan.svg",
   "../data/org.freedesktop.fwupd.svg",
 ]
-urlmap_file = "../urlmap.js"
+urlmap_file = "urlmap_fwupdplugin.js"
 
 [[object]]
 name = "Device"
