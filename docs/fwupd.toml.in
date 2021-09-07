@@ -42,7 +42,7 @@ base_url = "https://github.com/fwupd/fwupd/blob/@version@/"
 content_images = [
   "../data/org.freedesktop.fwupd.svg",
 ]
-urlmap_file = "../urlmap.js"
+urlmap_file = "urlmap_fwupd.js"
 
 [[object]]
 name = "build_user_agent_system"
