@@ -134,7 +134,7 @@ FuDeviceLocker *
 fu_device_locker_new (gpointer device, GError **error)
 {
 	g_return_val_if_fail (device != NULL, NULL);
-	g_return_val_if_fail (error != NULL, NULL);
+	g_return_val_if_fail (error != NULL || *error == NULL, NULL);
 
 #ifdef HAVE_GUSB
 	/* GUsbDevice */
@@ -191,7 +191,7 @@ fu_device_locker_new_full (gpointer device,
 	g_return_val_if_fail (device != NULL, NULL);
 	g_return_val_if_fail (open_func != NULL, NULL);
 	g_return_val_if_fail (close_func != NULL, NULL);
-	g_return_val_if_fail (error != NULL, NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
 	/* create object */
 	self = g_object_new (FU_TYPE_DEVICE_LOCKER, NULL);
