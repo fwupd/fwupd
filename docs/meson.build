@@ -72,8 +72,11 @@ if get_option('docs') == 'docgen'
  install_data(['index.html'],
     install_dir : join_paths(datadir, 'doc', 'fwupd')
   )
- install_data(['urlmap.js'],
-    install_dir : join_paths(datadir, 'doc', 'fwupd')
+ install_data(['urlmap_fwupd.js'],
+    install_dir : join_paths(datadir, 'doc', 'fwupd', 'libfwupd')
+  )
+ install_data(['urlmap_fwupdplugin.js'],
+    install_dir : join_paths(datadir, 'doc', 'fwupd', 'libfwupdplugin')
   )
 
 elif get_option('docs') == 'gtkdoc'
