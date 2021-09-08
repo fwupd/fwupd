@@ -1,12 +1,10 @@
 /*
- * Copyright (C) 2021
+ * Copyright (C) 2021 Michael Cheng <michael.cheng@emc.com.tw>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #include "config.h"
-
-#include <glib/gstdio.h>
 
 #include "fu-elanfp-file-control.h"
 #include "fu-elanfp-usb-device.h"

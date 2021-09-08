@@ -1,12 +1,13 @@
 /*
- * Copyright (C) 2021
+ * Copyright (C) 2021 Michael Cheng <michael.cheng@emc.com.tw>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
 #pragma once
 
-#include <glib.h>
+//#include <glib.h>
+#include <fwupdplugin.h>
 
 typedef struct _S2FIDENTITY {
 	guint32 Tag;
