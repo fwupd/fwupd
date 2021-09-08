@@ -253,6 +253,7 @@ fu_engine_watch_device(FuEngine *self, FuDevice *device)
 						     fu_engine_progress_notify_cb,
 						     self);
 		g_signal_handlers_disconnect_by_func(device_old, fu_engine_status_notify_cb, self);
+		g_signal_handlers_disconnect_by_func(device_old, fu_engine_generic_notify_cb, self);
 		g_signal_handlers_disconnect_by_func(device_old, fu_engine_history_notify_cb, self);
 		g_signal_handlers_disconnect_by_func(device_old, fu_engine_device_request_cb, self);
 	}
