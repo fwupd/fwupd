@@ -776,7 +776,8 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 
 		switch (fw_type) {
 		case FU_WAC_MODULE_FW_TYPE_TOUCH:
-			module = fu_wac_module_touch_new(usb_device);
+			module = fu_wac_module_touch_new(fu_device_get_context(FU_DEVICE(self)),
+							 usb_device);
 			name = g_strdup_printf("%s [Touch Module]",
 					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));

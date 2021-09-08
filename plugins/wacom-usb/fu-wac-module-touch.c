@@ -114,10 +114,12 @@ fu_wac_module_touch_class_init(FuWacModuleTouchClass *klass)
 }
 
 FuWacModule *
-fu_wac_module_touch_new(GUsbDevice *usb_device)
+fu_wac_module_touch_new(FuContext *context, GUsbDevice *usb_device)
 {
 	FuWacModule *module = NULL;
 	module = g_object_new(FU_TYPE_WAC_MODULE_TOUCH,
+			      "context",
+			      context,
 			      "usb-device",
 			      usb_device,
 			      "fw-type",
