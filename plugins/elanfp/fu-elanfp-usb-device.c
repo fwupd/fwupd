@@ -62,17 +62,24 @@ G_DEFINE_TYPE(FuElanfpUsbDevice, fu_elanfp_usb_device, FU_TYPE_USB_DEVICE)
 
 // Communication
 gboolean
-iapSendCommand(GUsbDevice *usb_device,
-	       guint8 reqType,
-	       guint8 request,
-	       guint8 *pbuff,
-	       gsize len,
-	       GError **error)
+iap_send_command(GUsbDevice *usb_device,
+		 guint8 reqType,
+		 guint8 request,
+		 guint8 *pbuff,
+		 gsize len,
+		 GError **error)
 {
 	gsize actual = 0;
 
-	if (pbuff == NULL || len == 0)
+	if (pbuff == NULL) {
+		g_prefix_error(error, "send command - buffer is null: ");
 		return FALSE;
+	}
+
+	if (len == 0) {
+		g_prefix_error(error, "send command - buffer length is zero: ");
+		return FALSE;
+	}
 
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -87,7 +94,7 @@ iapSendCommand(GUsbDevice *usb_device,
 					   CTRL_SEND_TIMEOUT_MS,
 					   NULL,
 					   error)) {
-		g_prefix_error(error, "failed to send command: ");
+		g_prefix_error(error, "send command - failed to send command: ");
 		return FALSE;
 	}
 
@@ -106,12 +113,19 @@ iapSendCommand(GUsbDevice *usb_device,
 }
 
 gboolean
-iapRecvStatus(GUsbDevice *usb_device, guint8 *pbuff, gsize len, GError **error)
+iap_recv_status(GUsbDevice *usb_device, guint8 *pbuff, gsize len, GError **error)
 {
 	gsize actual = 0;
 
-	if (pbuff == NULL || len == 0)
+	if (pbuff == NULL) {
+		g_prefix_error(error, "received status - buffer is null: ");
 		return FALSE;
+	}
+
+	if (len == 0) {
+		g_prefix_error(error, "received status - buffer length is zero: ");
+		return FALSE;
+	}
 
 	if (!g_usb_device_bulk_transfer(usb_device,
 					ELAN_EP_CMD_IN,
@@ -121,7 +135,7 @@ iapRecvStatus(GUsbDevice *usb_device, guint8 *pbuff, gsize len, GError **error)
 					BULK_RECV_TIMEOUT_MS,
 					NULL,
 					error)) {
-		g_prefix_error(error, "failed to received status: ");
+		g_prefix_error(error, "received status - failed to received status: ");
 		return FALSE;
 	}
 
@@ -140,7 +154,7 @@ iapRecvStatus(GUsbDevice *usb_device, guint8 *pbuff, gsize len, GError **error)
 }
 
 gboolean
-runIapProcess(FuElanfpUsbDevice *self, GBytes *fw, GError **error)
+run_iap_process(FuElanfpUsbDevice *self, GBytes *fw, GError **error)
 {
 	const guint8 *pbinary = NULL;
 	guint8 databuf[61] = {0};
@@ -151,23 +165,22 @@ runIapProcess(FuElanfpUsbDevice *self, GBytes *fw, GError **error)
 	guint32 pkg_index = 0;
 	guint32 payload_offset = 0;
 	gsize binary_size;
-	gboolean result = TRUE;
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 
-	if (fw == NULL)
+	if (fw == NULL) {
+		g_prefix_error(error, "run iap process - fw is null: ");
 		return FALSE;
+	}
 
 	pbinary = g_bytes_get_data(fw, &binary_size);
 
 	if (pbinary == NULL) {
-		// g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "device write fw - binary
-		// buffer is null !!\n");
+		g_prefix_error(error, "run iap process - binary is null: ");
 		return FALSE;
 	}
 
-	if (!binaryVerify(pbinary, binary_size, &s2ffile, error)) {
-		// g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE, "device write fw -
-		// binary verify fail !!\n");
+	if (!binary_verify(pbinary, binary_size, &s2ffile, error)) {
+		g_prefix_error(error, "run iap process - binary verify fail: ");
 		return FALSE;
 	}
 
@@ -178,27 +191,26 @@ runIapProcess(FuElanfpUsbDevice *self, GBytes *fw, GError **error)
 		databuf[0] = REPORT_ID_OFFER_COMMAND;
 		memcpy(databuf + 1, s2ffile.pOffer[i], s2ffile.OfferLength[i]);
 
-		if (!iapSendCommand(usb_device,
-				    REQTYPE_COMMAND,
-				    REPORT_ID_OFFER_COMMAND,
-				    databuf,
-				    s2ffile.OfferLength[i] + 1,
-				    error)) {
-			result = FALSE;
-			goto Exit;
+		g_debug("send offer start");
+
+		if (!iap_send_command(usb_device,
+				      REQTYPE_COMMAND,
+				      REPORT_ID_OFFER_COMMAND,
+				      databuf,
+				      s2ffile.OfferLength[i] + 1,
+				      error)) {
+			g_prefix_error(error, "run iap process - send offer command fail: ");
+			return FALSE;
 		}
 
-		if (!iapRecvStatus(usb_device, recvbuf, s2ffile.OfferLength[i] + 1, error)) {
-			result = FALSE;
-			goto Exit;
+		if (!iap_recv_status(usb_device, recvbuf, s2ffile.OfferLength[i] + 1, error)) {
+			g_prefix_error(error, "run iap process - received offer status fail: ");
+			return FALSE;
 		}
 
 		if (recvbuf[13] == FIRMWARE_UPDATE_OFFER_ACCEPT) {
 			// Payload
-
-			g_debug("*******************************************************\n");
-			g_debug("run iap - Offer %s Accepted\n", s2ffile.Tag[i]);
-			g_debug("*******************************************************\n");
+			g_debug("run iap - Offer %s Accepted", s2ffile.Tag[i]);
 
 			pkg_index = 1;
 			payload_offset = 0;
@@ -225,19 +237,23 @@ runIapProcess(FuElanfpUsbDevice *self, GBytes *fw, GError **error)
 				       s2ffile.pPayload[i] + payload_offset + payloadheader_length,
 				       databuf[2]);
 
-				if (!iapSendCommand(usb_device,
-						    REQTYPE_COMMAND,
-						    REPORT_ID_PAYLOAD_COMMAND,
-						    databuf,
-						    sizeof(databuf),
-						    error)) {
-					result = FALSE;
-					goto Exit;
+				if (!iap_send_command(usb_device,
+						      REQTYPE_COMMAND,
+						      REPORT_ID_PAYLOAD_COMMAND,
+						      databuf,
+						      sizeof(databuf),
+						      error)) {
+					g_prefix_error(
+					    error,
+					    "run iap process - send payload command fail: ");
+					return FALSE;
 				}
 
-				if (!iapRecvStatus(usb_device, recvbuf, sizeof(recvbuf), error)) {
-					result = FALSE;
-					goto Exit;
+				if (!iap_recv_status(usb_device, recvbuf, sizeof(recvbuf), error)) {
+					g_prefix_error(
+					    error,
+					    "run iap process - received payload status fail: ");
+					return FALSE;
 				}
 
 				if (recvbuf[5] == FIRMWARE_UPDATE_SUCCESS) {
@@ -248,16 +264,11 @@ runIapProcess(FuElanfpUsbDevice *self, GBytes *fw, GError **error)
 							(payloadheader_length + databuf[2]),
 						    (gsize)s2ffile.PayloadLength[i]);
 
-						g_debug("******************************************"
-							"********"
-							"*****\n");
 						g_debug("run iap - iap bank-%s update completely, "
 							"wait device "
-							"reset !\n",
+							"reset !",
 							s2ffile.Tag[i]);
-						g_debug("******************************************"
-							"********"
-							"*****\n");
+
 					} else {
 						fu_device_set_progress_full(
 						    FU_DEVICE(self),
@@ -268,49 +279,48 @@ runIapProcess(FuElanfpUsbDevice *self, GBytes *fw, GError **error)
 					if (recvbuf[5] == FIRMWARE_UPDATE_ERROR_WRITE)
 						g_debug("run iap - payload %s : write fail, "
 							"sequence no : "
-							"0x%08X\n",
+							"0x%08X",
 							s2ffile.Tag[i],
 							*(guint32 *)(recvbuf + 1));
 					else if (recvbuf[5] == FIRMWARE_UPDATE_ERROR_VERIFY)
 						g_debug("run iap - payload %s : verify fail, "
 							"sequence no : "
-							"0x%08X\n",
+							"0x%08X",
 							s2ffile.Tag[i],
 							*(guint32 *)(recvbuf + 1));
 					else if (recvbuf[5] == FIRMWARE_UPDATE_ERROR_SIGNATURE)
 						g_debug("run iap - payload %s : signature error, "
 							"sequence no : "
-							"0x%08X\n",
+							"0x%08X",
 							s2ffile.Tag[i],
 							*(guint32 *)(recvbuf + 1));
 					else if (recvbuf[5] == FIRMWARE_UPDATE_ERROR_INVALID_ADDR)
 						g_debug("run iap - payload %s : invalid address, "
 							"sequence no : "
-							"0x%08X\n",
+							"0x%08X",
 							s2ffile.Tag[i],
 							*(guint32 *)(recvbuf + 1));
 					else if (recvbuf[5] == FIRMWARE_UPDATE_ERROR_NO_OFFER)
 						g_debug("run iap - payload %s : no offer error, "
 							"sequence "
-							"no : 0x%08X\n",
+							"no : 0x%08X",
 							s2ffile.Tag[i],
 							*(guint32 *)(recvbuf + 1));
 					else if (recvbuf[5] == FIRMWARE_UPDATE_ERROR_INVALID)
 						g_debug("run iap - payload %s : invalid error, "
 							"sequence no "
-							": 0x%08X\n",
+							": 0x%08X",
 							s2ffile.Tag[i],
 							*(guint32 *)(recvbuf + 1));
 					else
 						g_debug("run iap - payload %s status : 0x%02X, "
 							"sequence no "
-							": 0x%08X\n",
+							": 0x%08X",
 							s2ffile.Tag[i],
 							recvbuf[5],
 							*(guint32 *)(recvbuf + 1));
 
-					result = FALSE;
-					goto Exit;
+					return FALSE;
 				}
 
 				payload_offset += (payloadheader_length + databuf[2]);
@@ -319,38 +329,30 @@ runIapProcess(FuElanfpUsbDevice *self, GBytes *fw, GError **error)
 			}
 		} else if (recvbuf[13] == FIRMWARE_UPDATE_OFFER_REJECT) {
 			if (recvbuf[9] == STA_REJECT_OLD_FIRMWARE)
-				g_debug("run iap - offer-%s reject : OLD_FIRMWARE\n",
-					s2ffile.Tag[i]);
+				g_debug("run iap - offer-%s reject : OLD_FIRMWARE", s2ffile.Tag[i]);
 			else if (recvbuf[9] == STA_REJECT_SWAP_PENDING)
-				g_debug("run iap - offer-%s reject : SWAP_PENDING\n",
-					s2ffile.Tag[i]);
+				g_debug("run iap - offer-%s reject : SWAP_PENDING", s2ffile.Tag[i]);
 			else if (recvbuf[9] == STA_REJECT_WRONG_BANK)
-				g_debug("run iap - offer-%s reject : WRONG_BANK\n", s2ffile.Tag[i]);
+				g_debug("run iap - offer-%s reject : WRONG_BANK", s2ffile.Tag[i]);
 			else if (recvbuf[9] == STA_REJECT_SIGN_RULE)
-				g_debug("run iap - offer-%s reject : SIGN_RULE\n", s2ffile.Tag[i]);
+				g_debug("run iap - offer-%s reject : SIGN_RULE", s2ffile.Tag[i]);
 			else if (recvbuf[9] == STA_REJECT_VER_RELEASE_DEBUG)
-				g_debug("run iap - offer-%s reject : VER_RELEASE_DEBUG\n",
+				g_debug("run iap - offer-%s reject : VER_RELEASE_DEBUG",
 					s2ffile.Tag[i]);
 			else if (recvbuf[9] == STA_REJECT_DEBUG_SAME_VERSION)
-				g_debug("run iap - offer-%s reject : DEBUG_SAME_VERSION\n",
+				g_debug("run iap - offer-%s reject : DEBUG_SAME_VERSION",
 					s2ffile.Tag[i]);
 			else
-				g_debug("run iap - Offer-%s reject : 0x%02X\n",
+				g_debug("run iap - Offer-%s reject : 0x%02X",
 					s2ffile.Tag[i],
 					recvbuf[9]);
 		} else if (recvbuf[13] == FIRMWARE_UPDATE_OFFER_SKIP)
-			g_debug("run iap - offer-%s skip\n", s2ffile.Tag[i]);
+			g_debug("run iap - offer-%s skip", s2ffile.Tag[i]);
 		else
-			g_debug("run iap - offer-%s status : 0x%02X\n",
-				s2ffile.Tag[i],
-				recvbuf[13]);
+			g_debug("run iap - offer-%s status : 0x%02X", s2ffile.Tag[i], recvbuf[13]);
 	}
 
-Exit:
-
-	g_debug("run iap - update result: %d\n", result);
-
-	return result;
+	return TRUE;
 }
 
 static gboolean
@@ -461,46 +463,32 @@ static gboolean
 fu_elanfp_usb_device_setup(FuDevice *device, GError **error)
 {
 	FuElanfpUsbDevice *self = FU_ELANFP_USB_DEVICE(device);
-	gchar version[8] = {0};
+	const gchar *fw_ver_str = NULL;
+	guint16 fw_ver;
 	guint8 usb_buf[2] = {0x40, 0x19};
 	gsize actual_len = 0;
 
-	fu_elanfp_usb_device_do_xfer(self,
-				     (guint8 *)&usb_buf,
-				     sizeof(usb_buf),
-				     usb_buf,
-				     sizeof(usb_buf),
-				     TRUE,
-				     &actual_len,
-				     error);
-
-	sprintf(version, "%02x%02x", usb_buf[0], usb_buf[1]);
-
-	g_debug("version %x %x", usb_buf[0], usb_buf[1]);
-
-	fu_device_set_version(device, version);
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_elanfp_device_write_fw(FuElanfpUsbDevice *self, GBytes *fw, GError **error)
-{
-	g_autoptr(GPtrArray) chunks = NULL;
-
-	g_debug("device write fw - start\n");
-
-	if (!runIapProcess(self, fw, error)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_WRITE,
-			    "device write fw - iap fail !!\n");
+	if (!fu_elanfp_usb_device_do_xfer(self,
+					  (guint8 *)&usb_buf,
+					  sizeof(usb_buf),
+					  usb_buf,
+					  sizeof(usb_buf),
+					  TRUE,
+					  &actual_len,
+					  error)) {
+		g_prefix_error(error, "failed to device setup: ");
 		return FALSE;
 	}
 
-	g_debug("device write fw - iap success !!\n");
+	fw_ver = fu_common_read_uint16(usb_buf, G_BIG_ENDIAN);
 
+	fw_ver_str = g_strdup_printf("%04x", fw_ver);
+
+	g_debug("fw version %04x", fw_ver);
+
+	fu_device_set_version(device, fw_ver_str);
+
+	/* success */
 	return TRUE;
 }
 
@@ -518,7 +506,14 @@ fu_elanfp_usb_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	return fu_elanfp_device_write_fw(self, fw, error);
+	if (!run_iap_process(self, fw, error)) {
+		g_prefix_error(error, "device write firmware - iap fail: ");
+		return FALSE;
+	}
+
+	g_debug("device write firmware - iap success !!");
+
+	return TRUE;
 }
 
 static gboolean

@@ -16,19 +16,52 @@
 #define S2F_TAG_END_OF_INDEX	0xFF
 
 gboolean
-binaryVerify(const guint8 *pbinary, gsize binary_size, S2FFILE *ps2ffile, GError **error)
+binary_verify(const guint8 *pbinary, gsize binary_size, S2FFILE *ps2ffile, GError **error)
 {
 	S2FINDEX *ps2findex = NULL;
 	guint8 *pindex = NULL;
-	gboolean result = TRUE;
 
-	if (pbinary == NULL)
+	g_return_val_if_fail(pbinary != NULL, FALSE);
+
+	if (!fu_common_read_uint32_safe(pbinary,
+					binary_size,
+					0,
+					&(ps2ffile->S2FHeader.Tag),
+					G_LITTLE_ENDIAN,
+					error)) {
+		g_prefix_error(error, "binary verify - fail to get tag: ");
 		return FALSE;
+	}
 
-	ps2ffile->S2FHeader.Tag = *(guint32 *)pbinary;
-	ps2ffile->S2FHeader.FormatVersion = *(guint32 *)(pbinary + 4);
-	ps2ffile->S2FHeader.ICID = *(guint32 *)(pbinary + 8);
-	ps2ffile->S2FHeader.Reserve = *(guint32 *)(pbinary + 12);
+	if (!fu_common_read_uint32_safe(pbinary,
+					binary_size,
+					4,
+					&(ps2ffile->S2FHeader.FormatVersion),
+					G_LITTLE_ENDIAN,
+					error)) {
+		g_prefix_error(error, "binary verify - fail to get format version: ");
+		return FALSE;
+	}
+
+	if (!fu_common_read_uint32_safe(pbinary,
+					binary_size,
+					8,
+					&ps2ffile->S2FHeader.ICID,
+					G_LITTLE_ENDIAN,
+					error)) {
+		g_prefix_error(error, "binary verify - fail to get icid: ");
+		return FALSE;
+	}
+
+	if (!fu_common_read_uint32_safe(pbinary,
+					binary_size,
+					12,
+					&ps2ffile->S2FHeader.Reserve,
+					G_LITTLE_ENDIAN,
+					error)) {
+		g_prefix_error(error, "binary verify - fail to get reserve field: ");
+		return FALSE;
+	}
 
 	if (ps2ffile->S2FHeader.Tag != 0x46325354)
 		return FALSE;
@@ -47,27 +80,34 @@ binaryVerify(const guint8 *pbinary, gsize binary_size, S2FFILE *ps2ffile, GError
 		case S2F_TAG_CFU_OFFER_A:
 
 			ps2ffile->pOffer[0] = (guint8 *)pbinary + ps2findex->StartAddress;
+
 			ps2ffile->OfferLength[0] = ps2findex->Length;
 			break;
 		case S2F_TAG_CFU_OFFER_B:
 
 			ps2ffile->pOffer[1] = (guint8 *)pbinary + ps2findex->StartAddress;
+
 			ps2ffile->OfferLength[1] = ps2findex->Length;
 			break;
 		case S2F_TAG_CFU_PAYLOAD_A:
 
 			ps2ffile->pPayload[0] = (guint8 *)pbinary + ps2findex->StartAddress;
+
 			ps2ffile->PayloadLength[0] = ps2findex->Length;
 			break;
 		case S2F_TAG_CFU_PAYLOAD_B:
 
 			ps2ffile->pPayload[1] = (guint8 *)pbinary + ps2findex->StartAddress;
+
 			ps2ffile->PayloadLength[1] = ps2findex->Length;
-			break;
-		case S2F_TAG_END_OF_INDEX:
-			goto Exit;
 
 			break;
+		case S2F_TAG_END_OF_INDEX:
+
+			g_debug("end of index");
+
+			return TRUE;
+
 		default:;
 		}
 
@@ -76,7 +116,5 @@ binaryVerify(const guint8 *pbinary, gsize binary_size, S2FFILE *ps2ffile, GError
 		pindex += sizeof(S2FINDEX);
 	}
 
-Exit:
-
-	return result;
+	return FALSE;
 }

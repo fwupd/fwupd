@@ -38,4 +38,4 @@ typedef struct _PAYLOAD_HEADER {
 } PAYLOAD_HEADER;
 
 gboolean
-binaryVerify(const guint8 *pbinary, gsize binary_size, S2FFILE *ps2ffile, GError **error);
+binary_verify(const guint8 *pbinary, gsize binary_size, S2FFILE *ps2ffile, GError **error);

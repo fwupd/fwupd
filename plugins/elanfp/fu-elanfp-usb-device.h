@@ -15,18 +15,16 @@ struct _FuElanfpUsbDeviceClass {
 	FuUsbDeviceClass parent_class;
 };
 
-// communication
 gboolean
-iapSendCommand(GUsbDevice *usb_device,
-	       guint8 reqType,
-	       guint8 request,
-	       guint8 *pbuff,
-	       gsize len,
-	       GError **error);
+iap_send_command(GUsbDevice *usb_device,
+		 guint8 reqType,
+		 guint8 request,
+		 guint8 *pbuff,
+		 gsize len,
+		 GError **error);
 
 gboolean
-iapRecvStatus(GUsbDevice *usb_device, guint8 *pbuff, gsize len, GError **error);
+iap_recv_status(GUsbDevice *usb_device, guint8 *pbuff, gsize len, GError **error);
 
-// run iap
 gboolean
-runIapProcess(FuElanfpUsbDevice *self, GBytes *fw, GError **error);
+run_iap_process(FuElanfpUsbDevice *self, GBytes *fw, GError **error);
