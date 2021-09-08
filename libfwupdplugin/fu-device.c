@@ -4721,6 +4721,7 @@ fu_device_class_init (FuDeviceClass *klass)
 	pspec = g_param_spec_object ("context", NULL, NULL,
 				     FU_TYPE_CONTEXT,
 				     G_PARAM_READWRITE |
+				     G_PARAM_CONSTRUCT |
 				     G_PARAM_STATIC_NAME);
 	g_object_class_install_property (object_class, PROP_CONTEXT, pspec);
 
