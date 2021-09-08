@@ -695,7 +695,7 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 
 	/* success */
 	name = g_strdup_printf("%s [Legacy Bluetooth Module]", fu_device_get_name(FU_DEVICE(self)));
-	module = fu_wac_module_bluetooth_new(usb_device);
+	module = fu_wac_module_bluetooth_new(fu_device_get_context(FU_DEVICE(self)), usb_device);
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 	fu_device_set_name(FU_DEVICE(module), name);
 	fu_device_set_version(FU_DEVICE(module), version);
@@ -785,7 +785,8 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 			fu_device_set_version_raw(FU_DEVICE(module), ver);
 			break;
 		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH:
-			module = fu_wac_module_bluetooth_new(usb_device);
+			module = fu_wac_module_bluetooth_new(fu_device_get_context(FU_DEVICE(self)),
+							     usb_device);
 			name = g_strdup_printf("%s [Bluetooth Module]",
 					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
