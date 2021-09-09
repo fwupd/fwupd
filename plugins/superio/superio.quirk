@@ -72,3 +72,7 @@ SuperioControlPort = 0x66
 SuperioDataPort = 0x62
 SuperioAutoloadAction = disable
 SuperioTimeout = 650
+
+[SuperIO-IT5570-4e]
+SuperioId = 0x5570
+SuperioPort = 0x4e
