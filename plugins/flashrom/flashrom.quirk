@@ -15,6 +15,10 @@ Plugin = flashrom
 [baf1d04e-fd16-5e6a-93cc-1c23d171f879]
 Plugin = flashrom
 
+# StarBook Mk V (HwId)
+[85aba599-addd-5985-a2e8-eddb41c61ba3]
+Plugin = flashrom
+
 # Star Lite Mk II (HwId)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
 Plugin = flashrom

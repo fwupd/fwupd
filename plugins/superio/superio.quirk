@@ -16,6 +16,11 @@ InstallDuration = 20
 SuperioChipsets = IT8987
 InstallDuration = 20
 
+# StarBook Mk V (HwId)
+[85aba599-addd-5985-a2e8-eddb41c61ba3]
+SuperioChipsets = IT5570
+InstallDuration = 20
+
 # Star Lite Mk II (HwId)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
 SuperioChipsets = IT8987
@@ -72,3 +77,4 @@ SuperioControlPort = 0x66
 SuperioDataPort = 0x62
 SuperioAutoloadAction = disable
 SuperioTimeout = 650
+
