@@ -378,6 +378,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY (1ull << 17)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK:
+ *
+ * Use parent for the battery level and threshold.
+ *
+ * Since: 1.6.4
+ */
+#define FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK (1ull << 18)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);

@@ -235,6 +235,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "use-parent-for-open";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY)
 		return "use-parent-for-battery";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK)
+		return "use-proxy-fallback";
 	return NULL;
 }
 
@@ -287,6 +289,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN;
 	if (g_strcmp0(flag, "use-parent-for-battery") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY;
+	if (g_strcmp0(flag, "use-proxy-fallback") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -1092,7 +1096,8 @@ fu_device_get_proxy(FuDevice *self)
  * fu_device_get_proxy_with_fallback:
  * @self: a #FuDevice
  *
- * Gets the proxy device, falling back to the device itself.
+ * Gets the proxy device if %FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK is set, falling back to the
+ * device itself.
  *
  * Returns: (transfer none): a device
  *
@@ -1103,7 +1108,8 @@ fu_device_get_proxy_with_fallback(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	if (priv->proxy != NULL)
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK) &&
+	    priv->proxy != NULL)
 		return priv->proxy;
 	return self;
 }
