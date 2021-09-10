@@ -8,8 +8,16 @@
 
 #include <libflashrom.h>
 
+#include "fu-flashrom-cmos.h"
 #include "fu-flashrom-device.h"
 #include "fu-flashrom-internal-device.h"
+
+/*
+ * Flag to determine if the CMOS checksum should be reset after the flash
+ * is reprogrammed.  This will force the CMOS defaults to be reloaded on
+ * the next boot.
+ */
+#define FU_FLASHROM_DEVICE_FLAG_RESET_CMOS (1 << 0)
 
 struct _FuFlashromInternalDevice {
 	FuFlashromDevice parent_instance;
@@ -30,6 +38,9 @@ fu_flashrom_internal_device_init(FuFlashromInternalDevice *self)
 	fu_device_set_logical_id(FU_DEVICE(self), "bios");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_FLASHROM_DEVICE_FLAG_RESET_CMOS,
+					"reset-cmos");
 }
 
 static gboolean
@@ -105,6 +116,15 @@ fu_flashrom_internal_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) blob_fw = fu_firmware_get_bytes(firmware, error);
 	if (blob_fw == NULL)
 		return FALSE;
+
+	/* Check if CMOS needs a reset */
+	if (fu_device_has_private_flag(device, FU_FLASHROM_DEVICE_FLAG_RESET_CMOS)) {
+		g_debug("Attempting CMOS Reset");
+		if (!fu_flashrom_cmos_reset(error)) {
+			g_prefix_error(error, "failed CMOS reset: ");
+			return FALSE;
+		}
+	}
 
 	buf = g_bytes_get_data(blob_fw, &sz);
 
