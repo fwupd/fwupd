@@ -795,7 +795,8 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	g_autoptr(FuDevice) parent = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
 	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
-	g_autoptr(FuInstallTask) task = NULL;
+	g_autoptr(FuInstallTask) task1 = NULL;
+	g_autoptr(FuInstallTask) task2 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
@@ -859,8 +860,8 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	g_assert_nonnull(component);
 
 	/* check this fails */
-	task = fu_install_task_new(device1, component);
-	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
+	task1 = fu_install_task_new(device1, component);
+	ret = fu_engine_check_requirements(engine, request, task1, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_false(ret);
 	g_clear_error(&error);
@@ -879,8 +880,8 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	fu_engine_add_device(engine, device2);
 
 	/* check this passes */
-	task = fu_install_task_new(device1, component);
-	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
+	task2 = fu_install_task_new(device1, component);
+	ret = fu_engine_check_requirements(engine, request, task2, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert(ret);
 }
