@@ -31,13 +31,16 @@ Plugin = flashrom
 [d33219e2-b84c-53a8-a624-27af9752dba6]
 Branch = coreboot
 VersionFormat = number
+Flags = reset-cmos
 
 # Star LabTop Mk IV (coreboot GUID)
 [0ee5867c-93f0-5fb4-adf1-9d686ea1183a]
 Branch = coreboot
 VersionFormat = number
+Flags = reset-cmos
 
 # StarBook Mk V (coreboot GUID)
 [7c13a5b2-22f8-5564-8b48-4bbf20da8ed6]
 Branch = coreboot
 VersionFormat = number
+Flags = reset-cmos
