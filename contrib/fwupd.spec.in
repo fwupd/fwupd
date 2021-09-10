@@ -352,7 +352,6 @@ done
 %if 0%{?have_msr}
 /usr/lib/modules-load.d/fwupd-msr.conf
 %endif
-/usr/lib/modules-load.d/fwupd-redfish.conf
 %{_datadir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
 %{_datadir}/bash-completion/completions/fwupdtool
@@ -461,6 +460,7 @@ done
 %if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_mst.so
 %endif
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_cape.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_cxaudio.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_prometheus.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_rmi.so

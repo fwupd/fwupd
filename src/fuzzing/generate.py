@@ -38,6 +38,7 @@ if __name__ == "__main__":
         ("srec-addr32.builder.xml", "srec-addr32.srec"),
         ("srec.builder.xml", "srec.srec"),
         ("synaprom.builder.xml", "synaprom.bin"),
+        ("synaptics-cape.builder.xml", "synaptics-cape.fw"),
         ("synaptics-mst.builder.xml", "synaptics-mst.dat"),
         ("wacom.builder.xml", "wacom.wac"),
     ]:
