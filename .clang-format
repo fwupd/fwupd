@@ -29,6 +29,9 @@ SpaceBeforeAssignmentOperators : 'true'
 SpaceBeforeParens: 'ControlStatements'
 SpaceInEmptyParentheses: 'false'
 SpacesInSquareBrackets: 'false'
+SpacesInLineCommentPrefix:
+ Minimum: 1
+ Maximum: 1
 TabWidth: '8'
 UseTab: 'Always'
 PenaltyBreakAssignment: '3'
