@@ -313,7 +313,11 @@ fu_cpu_device_add_security_attrs_intel_cet_active (FuCpuDevice *self, FuSecurity
 		g_warning ("failed to test CET: %s", error_local->message);
 		return;
 	}
+#if GLIB_CHECK_VERSION(2, 69, 2)
+	if (!g_spawn_check_wait_status(exit_status, &error_local)) {
+#else
 	if (!g_spawn_check_exit_status (exit_status, &error_local)) {
+#endif
 		g_debug ("CET does not function, not supported: %s", error_local->message);
 		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 	}
