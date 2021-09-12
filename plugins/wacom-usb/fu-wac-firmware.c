@@ -186,6 +186,13 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 				return FALSE;
 			}
 			g_string_append_printf (image_buffer, "%s\n", lines[i]);
+		} else {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "invalid SREC command: %s",
+				    cmd);
+			return FALSE;
 		}
 
 		/* end */
