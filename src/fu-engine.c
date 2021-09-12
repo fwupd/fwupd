@@ -1731,7 +1731,8 @@ fu_engine_check_requirements (FuEngine *self,
 {
 	FuDevice *device = fu_install_task_get_device (task);
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GPtrArray) reqs = NULL;
+	g_autoptr(GPtrArray) reqs_hard = NULL;
+	g_autoptr(GPtrArray) reqs_soft = NULL;
 
 	/* all install task checks require a device */
 	if (device != NULL) {
@@ -1740,38 +1741,40 @@ fu_engine_check_requirements (FuEngine *self,
 	}
 
 	/* do engine checks */
-	reqs = xb_node_query (fu_install_task_get_component (task),
-			      "requires/*", 0, &error_local);
-	if (reqs != NULL) {
-		for (guint i = 0; i < reqs->len; i++) {
-			XbNode *req = g_ptr_array_index (reqs, i);
+	reqs_hard =
+	    xb_node_query(fu_install_task_get_component(task), "requires/*", 0, &error_local);
+	if (reqs_hard != NULL) {
+		for (guint i = 0; i < reqs_hard->len; i++) {
+			XbNode *req = g_ptr_array_index(reqs_hard, i);
 			if (!fu_engine_check_requirement (self, request,
 							  req, device,
 							  flags, error))
 				return FALSE;
 		}
-	} else if (!g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
-		   !g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
-			g_propagate_error (error, g_steal_pointer (&error_local));
-			return FALSE;
+	} else if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
+		   !g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
 	}
 
 	/* soft requirements */
 	g_clear_error (&error_local);
-	reqs = xb_node_query (fu_install_task_get_component (task),
-			      "suggests/*|recommends/*", 0, &error_local);
-	if (reqs != NULL) {
-		for (guint i = 0; i < reqs->len; i++) {
-			XbNode *req = g_ptr_array_index (reqs, i);
+	reqs_soft = xb_node_query(fu_install_task_get_component(task),
+				  "suggests/*|recommends/*",
+				  0,
+				  &error_local);
+	if (reqs_soft != NULL) {
+		for (guint i = 0; i < reqs_soft->len; i++) {
+			XbNode *req = g_ptr_array_index(reqs_soft, i);
 			if (!fu_engine_check_soft_requirement (self, request,
 							       req, device,
 							       flags, error))
 				return FALSE;
 		}
-	} else if (!g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
-		   !g_error_matches (error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
-			g_propagate_error (error, g_steal_pointer (&error_local));
-			return FALSE;
+	} else if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
+		   !g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
 	}
 
 	return TRUE;
