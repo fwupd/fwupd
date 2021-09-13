@@ -21,10 +21,8 @@ These devices use the standard USB DeviceInstanceId values, e.g.
 [USB\VID_1395&PID_0293]
 Guid = SYNAPTICS_CAPE\CX31993
 
-
 [SYNAPTICS_CAPE\CX31993]
 Plugin = synaptics_cape
-
 
 These devices also use custom GUID values, e.g.
 
@@ -43,7 +41,6 @@ The vendor ID is set from the USB vendor, in this instance set to `USB:0x1395`
 ## Quirk Use
 
 This plugin uses the following plugin-specific quirks:
-
 
 ## External Interface Access
 
