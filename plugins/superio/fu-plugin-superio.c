@@ -13,52 +13,46 @@
 #include "fu-superio-it85-device.h"
 #include "fu-superio-it89-device.h"
 
-#define FU_QUIRKS_SUPERIO_CHIPSETS "SuperioChipsets"
+#define FU_QUIRKS_SUPERIO_GTYPE "SuperioGType"
 
 static gboolean
-fu_plugin_superio_coldplug_chipset(FuPlugin *plugin, const gchar *chipset, GError **error)
+fu_plugin_superio_coldplug_chipset(FuPlugin *plugin, const gchar *guid, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *dmi_vendor;
+	const gchar *chipset;
+	GType custom_gtype;
+	g_autofree gchar *devid = NULL;
 	g_autoptr(FuSuperioDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
+	/* get chipset */
+	chipset = fu_context_lookup_quirk_by_id(ctx, guid, FU_QUIRKS_SUPERIO_GTYPE);
+	if (chipset == NULL)
+		return TRUE;
+
 	/* create IT89xx, IT89xx or IT5570 */
-	if (g_strcmp0(chipset, "IT8587") == 0) {
-		dev = g_object_new(FU_TYPE_SUPERIO_IT85_DEVICE,
-				   "device-file",
-				   "/dev/port",
-				   "chipset",
-				   chipset,
-				   "context",
-				   ctx,
-				   NULL);
-	} else if (g_strcmp0(chipset, "IT8987") == 0) {
-		dev = g_object_new(FU_TYPE_SUPERIO_IT89_DEVICE,
-				   "device-file",
-				   "/dev/port",
-				   "chipset",
-				   chipset,
-				   "context",
-				   ctx,
-				   NULL);
-	} else if (g_strcmp0(chipset, "IT5570") == 0) {
-		dev = g_object_new(FU_TYPE_EC_IT55_DEVICE,
-				   "device-file",
-				   "/dev/port",
-				   "chipset",
-				   chipset,
-				   "context",
-				   ctx,
-				   NULL);
-	} else {
+	custom_gtype = g_type_from_name(chipset);
+	if (custom_gtype == G_TYPE_INVALID) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_NOT_SUPPORTED,
-			    "SuperIO chip %s has unsupported SuperioId",
+			    "SuperIO GType %s unsupported",
 			    chipset);
 		return FALSE;
 	}
+	dev = g_object_new(custom_gtype,
+			   "device-file",
+			   "/dev/port",
+			   "chipset",
+			   chipset,
+			   "context",
+			   ctx,
+			   NULL);
+
+	/* add this so we can attach all the other quirks */
+	devid = g_strdup_printf("SUPERIO\\GUID_%s", guid);
+	fu_device_add_instance_id(FU_DEVICE(dev), devid);
 
 	/* set ID and ports via quirks */
 	if (!fu_device_probe(FU_DEVICE(dev), error))
@@ -85,8 +79,11 @@ fu_plugin_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_EC_IT55_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_SUPERIO_IT85_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_SUPERIO_IT89_DEVICE);
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
-	fu_context_add_quirk_key(ctx, "SuperioChipsets");
+	fu_context_add_quirk_key(ctx, "SuperioGType");
 	fu_context_add_quirk_key(ctx, "SuperioId");
 	fu_context_add_quirk_key(ctx, "SuperioPort");
 	fu_context_add_quirk_key(ctx, "SuperioControlPort");
@@ -111,12 +108,8 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 
 	hwids = fu_context_get_hwid_guids(ctx);
 	for (guint i = 0; i < hwids->len; i++) {
-		const gchar *tmp;
 		const gchar *guid = g_ptr_array_index(hwids, i);
-		tmp = fu_context_lookup_quirk_by_id(ctx, guid, FU_QUIRKS_SUPERIO_CHIPSETS);
-		if (tmp == NULL)
-			continue;
-		if (!fu_plugin_superio_coldplug_chipset(plugin, tmp, error))
+		if (!fu_plugin_superio_coldplug_chipset(plugin, guid, error))
 			return FALSE;
 	}
 	return TRUE;
