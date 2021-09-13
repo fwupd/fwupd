@@ -136,7 +136,7 @@ fu_synaptics_cape_device_rc_set_error(const FuCapCmd *rsp, GError **error)
 		break;
 
 	case FU_SYNAPTICS_CAPE_MODULE_RC_ALREADY_EXISTS:
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "CMD ERROR: alraedy exists");
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "CMD ERROR: already exists");
 		break;
 	case FU_SYNAPTICS_CAPE_MODULE_RC_NULL_APP_POINTER:
 		g_set_error(error, G_IO_ERROR, G_IO_ERROR_BUSY, "CMD ERROR: null app pointer");
@@ -332,7 +332,7 @@ fu_synaptics_cape_device_reset(FuSynapticsCapeDevice *self, GError **error)
  *
  * Updates active partition information to FuSynapticsCapeDevice::active_partition
  *
- * Returns: retruns TRUE if operation is successful, otherwise, return FALSE if
+ * Returns: returns TRUE if operation is successful, otherwise, return FALSE if
  *          unsuccessful.
  *
  **/

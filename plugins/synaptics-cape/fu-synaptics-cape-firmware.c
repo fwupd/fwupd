@@ -35,7 +35,7 @@ typedef struct __attribute__((packed)) {
 typedef struct __attribute__((packed)) {
 	FuCapeHidFwCmdUpdateStartPar par;
 	guint16 version_w; /* firmware version is four parts number "z.y.x.w", this is last part */
-	guint16 version_x; /* firmware version, thrid part */
+	guint16 version_x; /* firmware version, third part */
 	guint16 version_y; /* firmware version, second part */
 	guint16 version_z; /* firmware version, first part */
 	guint32 reserved3;
@@ -86,7 +86,7 @@ fu_synaptics_cape_firmware_parse_header(FuSynapticsCapeFirmware *self,
 	g_autoptr(FuFirmware) img_hdr = fu_firmware_new();
 
 
-	/* the input fw image size shoud be the same as header size */
+	/* the input fw image size should be the same as header size */
 	if (bufsz < sizeof(FuCapeHidFileHeader)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
