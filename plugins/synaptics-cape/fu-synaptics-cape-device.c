@@ -28,7 +28,7 @@
 #define FU_SYNAPTICS_CAPE_CMD_WRITE_DATAL_LEN 8	 /* number of guint32 */
 #define FU_SYNAPTICS_CAPE_WORD_IN_BYTES	      4	 /* bytes */
 
-#define FU_SYNAPTICS_CAPE_CMD_APP_ID(a, b, c, d)                                                   \
+#define FU_SYNAPTICS_CAPE_CMD_APP_ID(a, b, c, d) \
 	((((a)-0x20) << 8) | (((b)-0x20) << 14) | (((c)-0x20) << 20) | (((d)-0x20) << 26))
 
 /* CAPE command return codes */
@@ -113,9 +113,9 @@ fu_synaptics_cape_device_get_report(FuSynapticsCapeDevice *self,
 				      datasz,
 				      FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_READ_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
-				      error)) {
+				      error)) 
 		return FALSE;
-	}
+	
 	if (g_getenv("FWUPD_SYNAPTICS_CAPE_HID_REPORT_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "GetReport", data, datasz);
 
@@ -348,9 +348,8 @@ fu_synaptics_cape_device_setup_active_partition(FuSynapticsCapeDevice *self, GEr
 	cmd.cmd_id = FU_SYNAPTICS_CMD_FW_GET_ACTIVE_PARTITION;
 	cmd.module_id = FU_SYNAPTICS_CAPE_CMD_APP_ID('C', 'T', 'R', 'L');
 
-	if (!fu_synaptics_cape_device_sendcmd_ex(self, &cmd, 0, error)) {
+	if (!fu_synaptics_cape_device_sendcmd_ex(self, &cmd, 0, error))
 		return FALSE;
-	}
 
 	self->ActivePartition = GUINT32_FROM_LE(cmd.data[0]);
 
@@ -587,6 +586,7 @@ fu_synaptics_cape_device_write_firmware(FuDevice *device,
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
+
 	if (!fu_synaptics_cape_device_write_firmware_image(self, fw, error)) {
 		g_prefix_error(error, "update image failed: ");
 		return FALSE;
