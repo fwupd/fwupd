@@ -34,7 +34,7 @@ gboolean
 fu_flashrom_cmos_reset(GError **error)
 {
 	/* Call ioperm() to grant us access to ports 0x70 and 0x71 */
-	if (!ioperm(RTC_BASE_PORT, 2, TRUE)) {
+	if (ioperm(RTC_BASE_PORT, 2, TRUE) < 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_READ,
