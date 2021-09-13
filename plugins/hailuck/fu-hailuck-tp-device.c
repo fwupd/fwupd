@@ -89,6 +89,7 @@ fu_hailuck_tp_device_cmd_cb(FuDevice *device, gpointer user_data, GError **error
 static gboolean
 fu_hailuck_tp_device_write_firmware(FuDevice *device,
 				    FuFirmware *firmware,
+				    FuProgress *progress,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
@@ -101,22 +102,30 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 	    .success = 0xff,
 	};
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 85);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* end-program */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 3);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1); /* pass */
+
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
 
 	/* erase */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_ERASE);
 	req.type = FU_HAILUCK_CMD_I2C_ERASE;
 	if (!fu_device_retry(device, fu_hailuck_tp_device_cmd_cb, 100, &req, error)) {
 		g_prefix_error(error, "failed to erase: ");
 		return FALSE;
 	}
 	g_usleep(10000);
+	fu_progress_step_done(progress);
 
 	/* write */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, block_size);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
@@ -163,9 +172,12 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full(device, i, chunks->len - 1);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						i + 1,
+						chunks->len);
 	}
 	g_usleep(50 * 1000);
+	fu_progress_step_done(progress);
 
 	/* end-program */
 	req.type = FU_HAILUCK_CMD_I2C_END_PROGRAM;
@@ -174,6 +186,7 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 	g_usleep(50 * 1000);
+	fu_progress_step_done(progress);
 
 	/* verify checksum */
 	req.type = FU_HAILUCK_CMD_I2C_VERIFY_CHECKSUM;
@@ -182,6 +195,7 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 	g_usleep(50 * 1000);
+	fu_progress_step_done(progress);
 
 	/* signal that programming has completed */
 	req.type = FU_HAILUCK_CMD_I2C_PROGRAMPASS;
@@ -190,9 +204,21 @@ fu_hailuck_tp_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to program: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* success! */
 	return TRUE;
+}
+
+static void
+fu_hailuck_tp_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
 }
 
 static void
@@ -216,6 +242,7 @@ fu_hailuck_tp_device_class_init(FuHailuckTpDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->write_firmware = fu_hailuck_tp_device_write_firmware;
 	klass_device->probe = fu_hailuck_tp_device_probe;
+	klass_device->set_progress = fu_hailuck_tp_device_set_progress;
 }
 
 FuHailuckTpDevice *

@@ -73,7 +73,7 @@ rmi_firmware_partition_id_to_string(RmiPartitionId partition_id)
 }
 
 gboolean
-fu_synaptics_rmi_v7_device_detach(FuDevice *device, GError **error)
+fu_synaptics_rmi_v7_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	g_autoptr(GByteArray) enable_req = g_byte_array_new();
@@ -112,7 +112,6 @@ fu_synaptics_rmi_v7_device_detach(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_synaptics_rmi_device_poll_wait(self, error))
 		return FALSE;
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	g_usleep(1000 * RMI_F34_ENABLE_WAIT_MS);
 	return TRUE;
 }
@@ -254,6 +253,7 @@ static gboolean
 fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 					   RmiPartitionId partition_id,
 					   GBytes *bytes,
+					   FuProgress *progress,
 					   GError **error)
 {
 	FuSynapticsRmiFunction *f34;
@@ -324,7 +324,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 							     fu_chunk_get_data_sz(chk),
 							     error))
 			return FALSE;
-		fu_device_set_progress_full(FU_DEVICE(self), (gsize)i, (gsize)chunks->len);
+		fu_progress_set_percentage_full(progress, (gsize)i + 1, (gsize)chunks->len);
 	}
 	return TRUE;
 }
@@ -332,6 +332,7 @@ fu_synaptics_rmi_v7_device_write_partition(FuSynapticsRmiDevice *self,
 gboolean
 fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 					  FuFirmware *firmware,
+					  FuProgress *progress,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
@@ -341,6 +342,15 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) bytes_bin = NULL;
 	g_autoptr(GBytes) bytes_cfg = NULL;
 	g_autoptr(GBytes) bytes_flashcfg = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 20);
 
 	/* we should be in bootloader mode now, but check anyway */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -372,36 +382,43 @@ fu_synaptics_rmi_v7_device_write_firmware(FuDevice *device,
 	/* disable powersaving */
 	if (!fu_synaptics_rmi_device_disable_sleep(self, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* erase all */
-	g_debug("erasing…");
 	if (!fu_synaptics_rmi_v7_device_erase_all(self, error)) {
 		g_prefix_error(error, "failed to erase all: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* write flash config for v8 */
 	if (bytes_flashcfg != NULL) {
 		if (!fu_synaptics_rmi_v7_device_write_partition(self,
 								RMI_PARTITION_ID_FLASH_CONFIG,
 								bytes_flashcfg,
+								fu_progress_get_child(progress),
 								error))
 			return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* write core code */
 	if (!fu_synaptics_rmi_v7_device_write_partition(self,
 							RMI_PARTITION_ID_CORE_CODE,
 							bytes_bin,
+							fu_progress_get_child(progress),
 							error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* write core config */
 	if (!fu_synaptics_rmi_v7_device_write_partition(self,
 							RMI_PARTITION_ID_CORE_CONFIG,
 							bytes_cfg,
+							fu_progress_get_child(progress),
 							error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;

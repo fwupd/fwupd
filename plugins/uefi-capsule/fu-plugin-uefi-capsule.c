@@ -320,6 +320,7 @@ gboolean
 fu_plugin_write_firmware(FuPlugin *plugin,
 			 FuDevice *device,
 			 GBytes *blob_fw,
+			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -352,12 +353,12 @@ fu_plugin_write_firmware(FuPlugin *plugin,
 	g_assert(str != NULL);
 
 	/* perform the update */
-	fu_device_set_status(device, FWUPD_STATUS_SCHEDULING);
+	fu_progress_set_status(progress, FWUPD_STATUS_SCHEDULING);
 	if (!fu_plugin_uefi_capsule_update_splash(plugin, device, &error_splash)) {
 		g_debug("failed to upload UEFI UX capsule text: %s", error_splash->message);
 	}
 
-	return fu_device_write_firmware(device, blob_fw, flags, error);
+	return fu_device_write_firmware(device, blob_fw, progress, flags, error);
 }
 
 static void

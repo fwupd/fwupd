@@ -82,7 +82,7 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuDfuTargetAvr, fu_dfu_target_avr, FU_TYPE_DFU_TARGET
 #define ATMEL_MANUFACTURER_CODE2 0x1e
 
 static gboolean
-fu_dfu_target_avr_mass_erase(FuDfuTarget *target, GError **error)
+fu_dfu_target_avr_mass_erase(FuDfuTarget *target, FuProgress *progress, GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
 	guint8 buf[3];
@@ -95,18 +95,15 @@ fu_dfu_target_avr_mass_erase(FuDfuTarget *target, GError **error)
 	buf[1] = DFU_AVR32_CMD_ERASE;
 	buf[2] = 0xff;
 	data_in = g_bytes_new_static(buf, sizeof(buf));
-	g_debug("mass erasing");
-	fu_dfu_target_set_action(target, FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
 		g_prefix_error(error, "cannot mass-erase: ");
 		return FALSE;
 	}
-	fu_dfu_target_set_action(target, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
 static gboolean
-fu_dfu_target_avr_attach(FuDfuTarget *target, GError **error)
+fu_dfu_target_avr_attach(FuDfuTarget *target, FuProgress *progress, GError **error)
 {
 	guint8 buf[3];
 	g_autoptr(GBytes) data_empty = NULL;
@@ -118,7 +115,7 @@ fu_dfu_target_avr_attach(FuDfuTarget *target, GError **error)
 	buf[1] = DFU_AVR32_CMD_START_APPLI;
 	buf[2] = DFU_AVR32_START_APPLI_RESET;
 	data_in = g_bytes_new_static(buf, sizeof(buf));
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, &error_local)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_debug("ignoring as device rebooting: %s", error_local->message);
 			return TRUE;
@@ -129,7 +126,7 @@ fu_dfu_target_avr_attach(FuDfuTarget *target, GError **error)
 
 	/* do zero-sized download to initiate the reset */
 	data_empty = g_bytes_new(NULL, 0);
-	if (!fu_dfu_target_download_chunk(target, 0, data_empty, &error_local)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_empty, progress, &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_debug("ignoring as device rebooting: %s", error_local->message);
 			return TRUE;
@@ -153,7 +150,10 @@ fu_dfu_target_avr_attach(FuDfuTarget *target, GError **error)
  * Returns: %TRUE for success
  **/
 static gboolean
-fu_dfu_target_avr_select_memory_unit(FuDfuTarget *target, guint8 memory_unit, GError **error)
+fu_dfu_target_avr_select_memory_unit(FuDfuTarget *target,
+				     guint8 memory_unit,
+				     FuProgress *progress,
+				     GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
 	guint8 buf[4];
@@ -172,7 +172,7 @@ fu_dfu_target_avr_select_memory_unit(FuDfuTarget *target, guint8 memory_unit, GE
 	buf[3] = memory_unit;
 	data_in = g_bytes_new_static(buf, sizeof(buf));
 	g_debug("selecting memory unit 0x%02x", (guint)memory_unit);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
 		g_prefix_error(error, "cannot select memory unit: ");
 		return FALSE;
 	}
@@ -190,7 +190,10 @@ fu_dfu_target_avr_select_memory_unit(FuDfuTarget *target, guint8 memory_unit, GE
  * Returns: %TRUE for success
  **/
 static gboolean
-fu_dfu_target_avr_select_memory_page(FuDfuTarget *target, guint16 memory_page, GError **error)
+fu_dfu_target_avr_select_memory_page(FuDfuTarget *target,
+				     guint16 memory_page,
+				     FuProgress *progress,
+				     GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
 	guint8 buf[4];
@@ -213,7 +216,7 @@ fu_dfu_target_avr_select_memory_page(FuDfuTarget *target, guint16 memory_page, G
 	buf[3] = memory_page & 0xff;
 	data_in = g_bytes_new_static(buf, sizeof(buf));
 	g_debug("selecting memory page 0x%01x", (guint)memory_page);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
 		g_prefix_error(error, "cannot select memory page: ");
 		return FALSE;
 	}
@@ -231,7 +234,10 @@ fu_dfu_target_avr_select_memory_page(FuDfuTarget *target, guint16 memory_page, G
  * Returns: %TRUE for success
  **/
 static gboolean
-fu_dfu_target_avr32_select_memory_page(FuDfuTarget *target, guint16 memory_page, GError **error)
+fu_dfu_target_avr32_select_memory_page(FuDfuTarget *target,
+				       guint16 memory_page,
+				       FuProgress *progress,
+				       GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
 	guint8 buf[5];
@@ -243,7 +249,7 @@ fu_dfu_target_avr32_select_memory_page(FuDfuTarget *target, guint16 memory_page,
 	fu_common_write_uint16(&buf[3], memory_page, G_BIG_ENDIAN);
 	data_in = g_bytes_new_static(buf, sizeof(buf));
 	g_debug("selecting memory page 0x%02x", (guint)memory_page);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
 		g_prefix_error(error, "cannot select memory page: ");
 		return FALSE;
 	}
@@ -265,6 +271,7 @@ static gboolean
 fu_dfu_target_avr_read_memory(FuDfuTarget *target,
 			      guint16 addr_start,
 			      guint16 addr_end,
+			      FuProgress *progress,
 			      GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
@@ -277,7 +284,7 @@ fu_dfu_target_avr_read_memory(FuDfuTarget *target,
 	fu_common_write_uint16(&buf[4], addr_end, G_BIG_ENDIAN);
 	data_in = g_bytes_new_static(buf, sizeof(buf));
 	g_debug("reading memory from 0x%04x to 0x%04x", (guint)addr_start, (guint)addr_end);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
 		g_prefix_error(error,
 			       "cannot read memory 0x%04x to 0x%04x: ",
 			       (guint)addr_start,
@@ -298,7 +305,11 @@ fu_dfu_target_avr_read_memory(FuDfuTarget *target,
  * Returns: %TRUE for success
  **/
 static gboolean
-fu_dfu_target_avr_read_command(FuDfuTarget *target, guint8 page, guint8 addr, GError **error)
+fu_dfu_target_avr_read_command(FuDfuTarget *target,
+			       guint8 page,
+			       guint8 addr,
+			       FuProgress *progress,
+			       GError **error)
 {
 	g_autoptr(GBytes) data_in = NULL;
 	guint8 buf[3];
@@ -309,7 +320,7 @@ fu_dfu_target_avr_read_command(FuDfuTarget *target, guint8 page, guint8 addr, GE
 	buf[2] = addr;
 	data_in = g_bytes_new_static(buf, sizeof(buf));
 	g_debug("read command page:0x%02x addr:0x%02x", (guint)page, (guint)addr);
-	if (!fu_dfu_target_download_chunk(target, 0, data_in, error)) {
+	if (!fu_dfu_target_download_chunk(target, 0, data_in, progress, error)) {
 		g_prefix_error(error, "cannot read command page: ");
 		return FALSE;
 	}
@@ -326,18 +337,21 @@ fu_dfu_target_avr_read_command(FuDfuTarget *target, guint8 page, guint8 addr, GE
  * Returns: a 4-byte %GBytes object for success, else %NULL
  **/
 static GBytes *
-fu_dfu_target_avr32_get_chip_signature(FuDfuTarget *target, GError **error)
+fu_dfu_target_avr32_get_chip_signature(FuDfuTarget *target, FuProgress *progress, GError **error)
 {
 	/* select unit, and request 4 bytes */
-	if (!fu_dfu_target_avr_select_memory_unit(target, DFU_AVR32_MEMORY_UNIT_SIGNATURE, error))
+	if (!fu_dfu_target_avr_select_memory_unit(target,
+						  DFU_AVR32_MEMORY_UNIT_SIGNATURE,
+						  progress,
+						  error))
 		return NULL;
-	if (!fu_dfu_target_avr32_select_memory_page(target, 0x00, error))
+	if (!fu_dfu_target_avr32_select_memory_page(target, 0x00, progress, error))
 		return NULL;
-	if (!fu_dfu_target_avr_read_memory(target, 0x00, 0x03, error))
+	if (!fu_dfu_target_avr_read_memory(target, 0x00, 0x03, progress, error))
 		return NULL;
 
 	/* get data back */
-	return fu_dfu_target_upload_chunk(target, 0x00, 0, error);
+	return fu_dfu_target_upload_chunk(target, 0x00, 0, progress, error);
 }
 
 /**
@@ -350,7 +364,7 @@ fu_dfu_target_avr32_get_chip_signature(FuDfuTarget *target, GError **error)
  * Returns: a 4-byte %GBytes object for success, else %NULL
  **/
 static GBytes *
-fu_dfu_target_avr_get_chip_signature(FuDfuTarget *target, GError **error)
+fu_dfu_target_avr_get_chip_signature(FuDfuTarget *target, FuProgress *progress, GError **error)
 {
 	struct {
 		guint8 page;
@@ -371,11 +385,12 @@ fu_dfu_target_avr_get_chip_signature(FuDfuTarget *target, GError **error)
 		if (!fu_dfu_target_avr_read_command(target,
 						    signature_locations[i].page,
 						    signature_locations[i].addr,
+						    progress,
 						    error))
 			return NULL;
 
 		/* get data back */
-		chunk_byte = fu_dfu_target_upload_chunk(target, 0x00, 0x01, error);
+		chunk_byte = fu_dfu_target_upload_chunk(target, 0x00, 0x01, progress, error);
 		if (chunk_byte == NULL)
 			return NULL;
 		if (g_bytes_get_size(chunk_byte) != 1) {
@@ -405,6 +420,7 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 	gsize sz;
 	guint32 device_id_be;
 	g_autofree gchar *chip_id_guid = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) chunk_sig = NULL;
 
 	/* already done */
@@ -414,11 +430,11 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 	/* different methods for AVR vs. AVR32 */
 	if (fu_device_has_private_flag(FU_DEVICE(fu_dfu_target_get_device(target)),
 				       FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
-		chunk_sig = fu_dfu_target_avr_get_chip_signature(target, error);
+		chunk_sig = fu_dfu_target_avr_get_chip_signature(target, progress, error);
 		if (chunk_sig == NULL)
 			return FALSE;
 	} else {
-		chunk_sig = fu_dfu_target_avr32_get_chip_signature(target, error);
+		chunk_sig = fu_dfu_target_avr32_get_chip_signature(target, progress, error);
 		if (chunk_sig == NULL) {
 			g_prefix_error(error, "failed to get chip signature: ");
 			return FALSE;
@@ -477,6 +493,7 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 static gboolean
 fu_dfu_target_avr_download_element(FuDfuTarget *target,
 				   FuChunk *chk,
+				   FuProgress *progress,
 				   FuDfuTargetTransferFlags flags,
 				   GError **error)
 {
@@ -505,13 +522,21 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 				 0xff,
 				 0xff}; /* release */
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+
 	/* select a memory and erase everything */
 	if (!fu_dfu_target_avr_select_memory_unit(target,
 						  fu_dfu_target_get_alt_setting(target),
+						  progress,
 						  error))
 		return FALSE;
-	if (!fu_dfu_target_avr_mass_erase(target, error))
+	if (!fu_dfu_target_avr_mass_erase(target, progress, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* verify the element isn't larger than the target size */
 	blob = fu_chunk_get_bytes(chk);
@@ -554,11 +579,8 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 				    fu_dfu_sector_get_address(sector),
 				    ATMEL_64KB_PAGE,
 				    ATMEL_MAX_TRANSFER_SIZE);
-
-	/* update UI */
-	fu_dfu_target_set_action(target, FWUPD_STATUS_DEVICE_WRITE);
-
-	/* process each chunk */
+	fu_progress_set_id(fu_progress_get_child(progress), G_STRLOC);
+	fu_progress_set_steps(fu_progress_get_child(progress), chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk2 = g_ptr_array_index(chunks, i);
 		g_autofree guint8 *buf = NULL;
@@ -570,11 +592,13 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 						       FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 				if (!fu_dfu_target_avr_select_memory_page(target,
 									  fu_chunk_get_page(chk2),
+									  progress,
 									  error))
 					return FALSE;
 			} else {
 				if (!fu_dfu_target_avr32_select_memory_page(target,
 									    fu_chunk_get_page(chk2),
+									    progress,
 									    error))
 					return FALSE;
 			}
@@ -598,16 +622,15 @@ fu_dfu_target_avr_download_element(FuDfuTarget *target,
 				       fu_chunk_get_data_sz(chk2) + header_sz + sizeof(footer));
 		g_debug("sending %" G_GSIZE_FORMAT " bytes to the hardware",
 			g_bytes_get_size(chunk_tmp));
-		if (!fu_dfu_target_download_chunk(target, i, chunk_tmp, error))
+		if (!fu_dfu_target_download_chunk(target, i, chunk_tmp, progress, error))
 			return FALSE;
 
 		/* update UI */
-		fu_dfu_target_set_percentage(target, i + 1, chunks->len);
+		fu_progress_step_done(fu_progress_get_child(progress));
 	}
+	fu_progress_step_done(progress);
 
 	/* done */
-	fu_dfu_target_set_percentage_raw(target, 100);
-	fu_dfu_target_set_action(target, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
@@ -616,6 +639,7 @@ fu_dfu_target_avr_upload_element(FuDfuTarget *target,
 				 guint32 address,
 				 gsize expected_size,
 				 gsize maximum_size,
+				 FuProgress *progress,
 				 GError **error)
 {
 	guint16 page_last = G_MAXUINT16;
@@ -630,6 +654,7 @@ fu_dfu_target_avr_upload_element(FuDfuTarget *target,
 	/* select unit */
 	if (!fu_dfu_target_avr_select_memory_unit(target,
 						  fu_dfu_target_get_alt_setting(target),
+						  progress,
 						  error))
 		return NULL;
 
@@ -661,7 +686,7 @@ fu_dfu_target_avr_upload_element(FuDfuTarget *target,
 				    ATMEL_MAX_TRANSFER_SIZE);
 
 	/* update UI */
-	fu_dfu_target_set_action(target, FWUPD_STATUS_DEVICE_READ);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 
 	/* process each chunk */
 	blobs = g_ptr_array_new_with_free_func((GDestroyNotify)g_bytes_unref);
@@ -675,11 +700,13 @@ fu_dfu_target_avr_upload_element(FuDfuTarget *target,
 						       FU_DFU_DEVICE_FLAG_LEGACY_PROTOCOL)) {
 				if (!fu_dfu_target_avr_select_memory_page(target,
 									  fu_chunk_get_page(chk),
+									  progress,
 									  error))
 					return NULL;
 			} else {
 				if (!fu_dfu_target_avr32_select_memory_page(target,
 									    fu_chunk_get_page(chk),
+									    progress,
 									    error))
 					return NULL;
 			}
@@ -691,6 +718,7 @@ fu_dfu_target_avr_upload_element(FuDfuTarget *target,
 						   fu_chunk_get_address(chk),
 						   fu_chunk_get_address(chk) +
 						       fu_chunk_get_data_sz(chk) - 1,
+						   progress,
 						   error))
 			return NULL;
 
@@ -698,7 +726,8 @@ fu_dfu_target_avr_upload_element(FuDfuTarget *target,
 		g_debug("requesting %i bytes from the hardware for chunk 0x%x",
 			ATMEL_MAX_TRANSFER_SIZE,
 			i);
-		blob_tmp = fu_dfu_target_upload_chunk(target, i, ATMEL_MAX_TRANSFER_SIZE, error);
+		blob_tmp =
+		    fu_dfu_target_upload_chunk(target, i, ATMEL_MAX_TRANSFER_SIZE, progress, error);
 		if (blob_tmp == NULL)
 			return NULL;
 		g_ptr_array_add(blobs, blob_tmp);
@@ -714,12 +743,8 @@ fu_dfu_target_avr_upload_element(FuDfuTarget *target,
 		}
 
 		/* update UI */
-		fu_dfu_target_set_percentage(target, i + 1, chunks->len);
+		fu_progress_set_percentage_full(progress, i + 1, chunks->len);
 	}
-
-	/* done */
-	fu_dfu_target_set_percentage_raw(target, 100);
-	fu_dfu_target_set_action(target, FWUPD_STATUS_IDLE);
 
 	/* truncate the image if any sectors are empty, i.e. all 0xff */
 	if (chunk_valid == G_MAXUINT) {

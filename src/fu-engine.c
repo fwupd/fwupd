@@ -54,6 +54,7 @@
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 #include "fu-plugin.h"
+#include "fu-progress.h"
 #include "fu-quirks.h"
 #include "fu-remote-list.h"
 #include "fu-security-attr.h"
@@ -202,19 +203,21 @@ fu_engine_set_percentage(FuEngine *self, guint percentage)
 }
 
 static void
-fu_engine_progress_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
+fu_engine_progress_percentage_changed_cb(FuProgress *progress, guint percentage, FuEngine *self)
 {
-	if (fu_device_get_status(device) == FWUPD_STATUS_UNKNOWN)
-		return;
-	fu_engine_set_percentage(self, fu_device_get_progress(device));
-	fu_engine_emit_device_changed(self, device);
+	/* this is global for all the tasks and divisions */
+	fu_engine_set_percentage(self, percentage);
 }
 
 static void
-fu_engine_status_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
+fu_engine_progress_status_changed_cb(FuProgress *progress, FwupdStatus status, FuEngine *self)
 {
-	fu_engine_set_status(self, fu_device_get_status(device));
-	fu_engine_emit_device_changed(self, device);
+	/* ignore */
+	if (status == FWUPD_STATUS_UNKNOWN)
+		return;
+
+	/* this is global for all the tasks and divisions */
+	fu_engine_set_status(self, status);
 }
 
 static void
@@ -249,19 +252,10 @@ fu_engine_watch_device(FuEngine *self, FuDevice *device)
 {
 	g_autoptr(FuDevice) device_old = fu_device_list_get_old(self->device_list, device);
 	if (device_old != NULL) {
-		g_signal_handlers_disconnect_by_func(device_old,
-						     fu_engine_progress_notify_cb,
-						     self);
-		g_signal_handlers_disconnect_by_func(device_old, fu_engine_status_notify_cb, self);
 		g_signal_handlers_disconnect_by_func(device_old, fu_engine_generic_notify_cb, self);
 		g_signal_handlers_disconnect_by_func(device_old, fu_engine_history_notify_cb, self);
 		g_signal_handlers_disconnect_by_func(device_old, fu_engine_device_request_cb, self);
 	}
-	g_signal_connect(device,
-			 "notify::progress",
-			 G_CALLBACK(fu_engine_progress_notify_cb),
-			 self);
-	g_signal_connect(device, "notify::status", G_CALLBACK(fu_engine_status_notify_cb), self);
 	g_signal_connect(device, "notify::flags", G_CALLBACK(fu_engine_generic_notify_cb), self);
 	g_signal_connect(device,
 			 "notify::update-message",
@@ -847,6 +841,7 @@ fu_engine_verify_update(FuEngine *self, const gchar *device_id, GError **error)
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *localstatedir = NULL;
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderNode) component = NULL;
@@ -858,6 +853,17 @@ fu_engine_verify_update(FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* progress */
+	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
+			 self);
+	g_signal_connect(progress,
+			 "status-changed",
+			 G_CALLBACK(fu_engine_progress_status_changed_cb),
+			 self);
 
 	/* check the devices still exists */
 	device = fu_device_list_get_by_id(self->device_list, device_id, error);
@@ -873,7 +879,11 @@ fu_engine_verify_update(FuEngine *self, const gchar *device_id, GError **error)
 	/* get the checksum */
 	checksums = fu_device_get_checksums(device);
 	if (checksums->len == 0) {
-		if (!fu_plugin_runner_verify(plugin, device, FU_PLUGIN_VERIFY_FLAG_NONE, error))
+		if (!fu_plugin_runner_verify(plugin,
+					     device,
+					     progress,
+					     FU_PLUGIN_VERIFY_FLAG_NONE,
+					     error))
 			return FALSE;
 		fu_engine_emit_device_changed(self, device);
 	}
@@ -1071,6 +1081,7 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, GError **error)
 	FuPlugin *plugin;
 	GPtrArray *checksums;
 	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) xpath_csum = g_string_new(NULL);
 	g_autoptr(XbNode) csum = NULL;
@@ -1079,6 +1090,17 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* progress */
+	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
+			 self);
+	g_signal_connect(progress,
+			 "status-changed",
+			 G_CALLBACK(fu_engine_progress_status_changed_cb),
+			 self);
 
 	/* check the id exists */
 	device = fu_device_list_get_by_id(self->device_list, device_id, error);
@@ -1093,7 +1115,11 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, GError **error)
 
 	/* update the device firmware hashes if possible */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)) {
-		if (!fu_plugin_runner_verify(plugin, device, FU_PLUGIN_VERIFY_FLAG_NONE, error))
+		if (!fu_plugin_runner_verify(plugin,
+					     device,
+					     progress,
+					     FU_PLUGIN_VERIFY_FLAG_NONE,
+					     error))
 			return FALSE;
 	}
 
@@ -1709,7 +1735,8 @@ fu_engine_check_requirements(FuEngine *self,
 {
 	FuDevice *device = fu_install_task_get_device(task);
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GPtrArray) reqs = NULL;
+	g_autoptr(GPtrArray) reqs_hard = NULL;
+	g_autoptr(GPtrArray) reqs_soft = NULL;
 
 	/* all install task checks require a device */
 	if (device != NULL) {
@@ -1718,10 +1745,11 @@ fu_engine_check_requirements(FuEngine *self,
 	}
 
 	/* do engine checks */
-	reqs = xb_node_query(fu_install_task_get_component(task), "requires/*", 0, &error_local);
-	if (reqs != NULL) {
-		for (guint i = 0; i < reqs->len; i++) {
-			XbNode *req = g_ptr_array_index(reqs, i);
+	reqs_hard =
+	    xb_node_query(fu_install_task_get_component(task), "requires/*", 0, &error_local);
+	if (reqs_hard != NULL) {
+		for (guint i = 0; i < reqs_hard->len; i++) {
+			XbNode *req = g_ptr_array_index(reqs_hard, i);
 			if (!fu_engine_check_requirement(self, request, req, device, flags, error))
 				return FALSE;
 		}
@@ -1733,13 +1761,13 @@ fu_engine_check_requirements(FuEngine *self,
 
 	/* soft requirements */
 	g_clear_error(&error_local);
-	reqs = xb_node_query(fu_install_task_get_component(task),
-			     "suggests/*|recommends/*",
-			     0,
-			     &error_local);
-	if (reqs != NULL) {
-		for (guint i = 0; i < reqs->len; i++) {
-			XbNode *req = g_ptr_array_index(reqs, i);
+	reqs_soft = xb_node_query(fu_install_task_get_component(task),
+				  "suggests/*|recommends/*",
+				  0,
+				  &error_local);
+	if (reqs_soft != NULL) {
+		for (guint i = 0; i < reqs_soft->len; i++) {
+			XbNode *req = g_ptr_array_index(reqs_soft, i);
 			if (!fu_engine_check_soft_requirement(self,
 							      request,
 							      req,
@@ -2055,6 +2083,7 @@ fu_engine_install_tasks(FuEngine *self,
 	g_autoptr(FuIdleLocker) locker = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_new = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* do not allow auto-shutdown during this time */
 	locker = fu_idle_locker_new(self->idle, "update");
@@ -2075,9 +2104,25 @@ fu_engine_install_tasks(FuEngine *self,
 	}
 
 	/* all authenticated, so install all the things */
+	fu_progress_set_steps(progress, install_tasks->len);
+	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
+			 self);
+	g_signal_connect(progress,
+			 "status-changed",
+			 G_CALLBACK(fu_engine_progress_status_changed_cb),
+			 self);
 	for (guint i = 0; i < install_tasks->len; i++) {
 		FuInstallTask *task = g_ptr_array_index(install_tasks, i);
-		if (!fu_engine_install(self, task, blob_cab, flags, feature_flags, error)) {
+		if (!fu_engine_install(self,
+				       task,
+				       blob_cab,
+				       fu_progress_get_child(progress),
+				       flags,
+				       feature_flags,
+				       error)) {
 			g_autoptr(GError) error_local = NULL;
 			if (!fu_engine_composite_cleanup(self, devices, &error_local)) {
 				g_warning("failed to cleanup failed composite action: %s",
@@ -2085,13 +2130,14 @@ fu_engine_install_tasks(FuEngine *self,
 			}
 			return FALSE;
 		}
+		fu_progress_step_done(progress);
 	}
 
 	/* set all the device statuses back to unknown */
 	for (guint i = 0; i < install_tasks->len; i++) {
 		FuInstallTask *task = g_ptr_array_index(install_tasks, i);
 		FuDevice *device = fu_install_task_get_device(task);
-		fu_device_set_status(device, FWUPD_STATUS_UNKNOWN);
+		fwupd_device_set_status(FWUPD_DEVICE(device), FWUPD_STATUS_UNKNOWN);
 	}
 
 	/* get a new list of devices in case they replugged */
@@ -2118,6 +2164,7 @@ fu_engine_install_tasks(FuEngine *self,
 	}
 
 	/* success */
+	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
@@ -2310,7 +2357,6 @@ fu_engine_schedule_update(FuEngine *self,
 	filename = g_build_filename(dirname, tmpname, NULL);
 
 	/* just copy to the temp file */
-	fu_device_set_status(device, FWUPD_STATUS_SCHEDULING);
 	if (!g_file_set_contents(filename,
 				 g_bytes_get_data(blob_cab, NULL),
 				 (gssize)g_bytes_get_size(blob_cab),
@@ -2330,7 +2376,6 @@ fu_engine_schedule_update(FuEngine *self,
 		return FALSE;
 
 	/* next boot we run offline */
-	fu_device_set_progress(device, 100);
 	return fu_engine_offline_setup(error);
 }
 
@@ -2339,6 +2384,7 @@ fu_engine_install_release(FuEngine *self,
 			  FuDevice *device_orig,
 			  XbNode *component,
 			  XbNode *rel,
+			  FuProgress *progress,
 			  FwupdInstallFlags flags,
 			  FwupdFeatureFlags feature_flags,
 			  GError **error)
@@ -2412,8 +2458,13 @@ fu_engine_install_release(FuEngine *self,
 
 	/* install firmware blob */
 	version_orig = g_strdup(fu_device_get_version(device));
-	if (!fu_engine_install_blob(self, device, blob_fw2, flags, feature_flags, &error_local)) {
-		fu_device_set_status(device, FWUPD_STATUS_IDLE);
+	if (!fu_engine_install_blob(self,
+				    device,
+				    blob_fw2,
+				    progress,
+				    flags,
+				    feature_flags,
+				    &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AC_POWER_REQUIRED) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW) ||
 		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NEEDS_USER_ACTION) ||
@@ -2511,6 +2562,7 @@ fu_engine_sort_releases(FuEngine *self, FuDevice *device, GPtrArray *rels, GErro
  * @self: a #FuEngine
  * @task: a #FuInstallTask
  * @blob_cab: the #GBytes of the .cab file
+ * @progress: a #FuProgress
  * @flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_OLDER
  * @feature_flags: feature flags, e.g. %FWUPD_FEATURE_FLAG_NONE
  * @error: (nullable): optional return location for an error
@@ -2527,6 +2579,7 @@ gboolean
 fu_engine_install(FuEngine *self,
 		  FuInstallTask *task,
 		  GBytes *blob_cab,
+		  FuProgress *progress,
 		  FwupdInstallFlags flags,
 		  FwupdFeatureFlags feature_flags,
 		  GError **error)
@@ -2540,6 +2593,7 @@ fu_engine_install(FuEngine *self,
 #endif
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
 	g_return_val_if_fail(XB_IS_NODE(component), FALSE);
 	g_return_val_if_fail(blob_cab != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
@@ -2595,6 +2649,7 @@ fu_engine_install(FuEngine *self,
 			if (!fu_plugin_runner_prepare(plugin, device, flags, error))
 				return FALSE;
 		}
+		fu_progress_set_status(progress, FWUPD_STATUS_SCHEDULING);
 		release_tmp = fu_engine_create_release_metadata(self, device, plugin, error);
 		if (release_tmp == NULL)
 			return FALSE;
@@ -2620,22 +2675,26 @@ fu_engine_install(FuEngine *self,
 		}
 		if (!fu_engine_sort_releases(self, device, rels, error))
 			return FALSE;
+		fu_progress_set_steps(progress, rels->len);
 		for (guint i = 0; i < rels->len; i++) {
 			XbNode *rel = g_ptr_array_index(rels, i);
 			if (!fu_engine_install_release(self,
 						       device,
 						       component,
 						       rel,
+						       fu_progress_get_child(progress),
 						       flags,
 						       feature_flags,
 						       error))
 				return FALSE;
+			fu_progress_step_done(progress);
 		}
 	} else {
 		if (!fu_engine_install_release(self,
 					       device,
 					       component,
 					       rel_newest,
+					       progress,
 					       flags,
 					       feature_flags,
 					       error))
@@ -2854,6 +2913,7 @@ fu_engine_cleanup(FuEngine *self, FwupdInstallFlags flags, const gchar *device_i
 static gboolean
 fu_engine_detach(FuEngine *self,
 		 const gchar *device_id,
+		 FuProgress *progress,
 		 FwupdFeatureFlags feature_flags,
 		 GError **error)
 {
@@ -2873,7 +2933,7 @@ fu_engine_detach(FuEngine *self,
 	    fu_plugin_list_find_by_name(self->plugin_list, fu_device_get_plugin(device), error);
 	if (plugin == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_detach(plugin, device, error))
+	if (!fu_plugin_runner_detach(plugin, device, progress, error))
 		return FALSE;
 
 	/* support older clients without the ability to do immediate requests */
@@ -2901,7 +2961,7 @@ fu_engine_detach(FuEngine *self,
 }
 
 static gboolean
-fu_engine_attach(FuEngine *self, const gchar *device_id, GError **error)
+fu_engine_attach(FuEngine *self, const gchar *device_id, FuProgress *progress, GError **error)
 {
 	FuPlugin *plugin;
 	g_autofree gchar *str = NULL;
@@ -2920,8 +2980,23 @@ fu_engine_attach(FuEngine *self, const gchar *device_id, GError **error)
 	if (plugin == NULL)
 		return FALSE;
 
-	if (!fu_plugin_runner_attach(plugin, device, error))
+	if (!fu_plugin_runner_attach(plugin, device, progress, error))
 		return FALSE;
+	return TRUE;
+}
+
+static gboolean
+fu_engine_set_progress(FuEngine *self, const gchar *device_id, FuProgress *progress, GError **error)
+{
+	g_autoptr(FuDevice) device = NULL;
+
+	/* the device and plugin both may have changed */
+	device = fu_engine_get_device(self, device_id, error);
+	if (device == NULL) {
+		g_prefix_error(error, "failed to get device before setting progress: ");
+		return FALSE;
+	}
+	fu_device_set_progress(device, progress);
 	return TRUE;
 }
 
@@ -2929,12 +3004,24 @@ gboolean
 fu_engine_activate(FuEngine *self, const gchar *device_id, GError **error)
 {
 	FuPlugin *plugin;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* progress */
+	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
+			 self);
+	g_signal_connect(progress,
+			 "status-changed",
+			 G_CALLBACK(fu_engine_progress_status_changed_cb),
+			 self);
 
 	/* check the device exists */
 	device = fu_device_list_get_by_id(self->device_list, device_id, error);
@@ -2948,7 +3035,7 @@ fu_engine_activate(FuEngine *self, const gchar *device_id, GError **error)
 		return FALSE;
 	g_debug("Activating %s", fu_device_get_name(device));
 
-	if (!fu_plugin_runner_activate(plugin, device, error))
+	if (!fu_plugin_runner_activate(plugin, device, progress, error))
 		return FALSE;
 
 	fu_engine_emit_device_changed(self, device);
@@ -2993,6 +3080,7 @@ static gboolean
 fu_engine_write_firmware(FuEngine *self,
 			 const gchar *device_id,
 			 GBytes *blob_fw,
+			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
@@ -3018,12 +3106,12 @@ fu_engine_write_firmware(FuEngine *self,
 	    fu_plugin_list_find_by_name(self->plugin_list, fu_device_get_plugin(device), error);
 	if (plugin == NULL)
 		return FALSE;
-	if (!fu_plugin_runner_write_firmware(plugin, device, blob_fw, flags, error)) {
+	if (!fu_plugin_runner_write_firmware(plugin, device, blob_fw, progress, flags, error)) {
 		g_autoptr(GError) error_attach = NULL;
 		g_autoptr(GError) error_cleanup = NULL;
 
 		/* attack back into runtime then cleanup */
-		if (!fu_plugin_runner_attach(plugin, device, &error_attach)) {
+		if (!fu_plugin_runner_attach(plugin, device, progress, &error_attach)) {
 			g_warning("failed to attach device after failed update: %s",
 				  error_attach->message);
 		}
@@ -3066,7 +3154,11 @@ fu_engine_write_firmware(FuEngine *self,
 }
 
 GBytes *
-fu_engine_firmware_dump(FuEngine *self, FuDevice *device, FwupdInstallFlags flags, GError **error)
+fu_engine_firmware_dump(FuEngine *self,
+			FuDevice *device,
+			FuProgress *progress,
+			FwupdInstallFlags flags,
+			GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -3076,13 +3168,14 @@ fu_engine_firmware_dump(FuEngine *self, FuDevice *device, FwupdInstallFlags flag
 		g_prefix_error(error, "failed to open device for firmware read: ");
 		return NULL;
 	}
-	return fu_device_dump_firmware(device, error);
+	return fu_device_dump_firmware(device, progress, error);
 }
 
 gboolean
 fu_engine_install_blob(FuEngine *self,
 		       FuDevice *device,
 		       GBytes *blob_fw,
+		       FuProgress *progress,
 		       FwupdInstallFlags flags,
 		       FwupdFeatureFlags feature_flags,
 		       GError **error)
@@ -3122,17 +3215,46 @@ fu_engine_install_blob(FuEngine *self,
 		if (!fu_engine_prepare(self, flags, device_id, error))
 			return FALSE;
 
-		/* detach to bootloader mode */
-		if (!fu_engine_detach(self, device_id, feature_flags, error))
+		/* progress */
+		if (!fu_engine_set_progress(self, device_id, progress, error))
 			return FALSE;
+		if (fu_progress_get_steps(progress) == 0) {
+			fu_progress_set_id(progress, G_STRLOC);
+			fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+			fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+			fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+			fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+			fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+		}
+
+		/* detach to bootloader mode */
+		if (!fu_engine_detach(self,
+				      device_id,
+				      fu_progress_get_child(progress),
+				      feature_flags,
+				      error))
+			return FALSE;
+		fu_progress_step_done(progress);
 
 		/* install */
-		if (!fu_engine_write_firmware(self, device_id, blob_fw, flags, error))
+		if (!fu_engine_write_firmware(self,
+					      device_id,
+					      blob_fw,
+					      fu_progress_get_child(progress),
+					      flags,
+					      error))
 			return FALSE;
+		fu_progress_step_done(progress);
 
 		/* attach into runtime mode */
-		if (!fu_engine_attach(self, device_id, error))
+		if (!fu_engine_attach(self, device_id, fu_progress_get_child(progress), error))
 			return FALSE;
+		fu_progress_step_done(progress);
+
+		/* get the new version number */
+		if (!fu_engine_reload(self, device_id, error))
+			return FALSE;
+		fu_progress_step_done(progress);
 
 		/* the device and plugin both may have changed */
 		device_tmp = fu_engine_get_device(self, device_id, error);
@@ -3143,18 +3265,16 @@ fu_engine_install_blob(FuEngine *self,
 		if (!fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED))
 			break;
 
-	} while (TRUE);
+		/* not sure we can do any better than this */
+		fu_progress_reset(progress);
 
-	/* get the new version number */
-	if (!fu_engine_reload(self, device_id, error))
-		return FALSE;
+	} while (TRUE);
 
 	/* signal to all the plugins the update has happened */
 	if (!fu_engine_cleanup(self, flags, device_id, error))
 		return FALSE;
 
 	/* make the UI update */
-	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
 	g_debug("Updating %s took %f seconds",
 		fu_device_get_name(device),
 		g_timer_elapsed(timer, NULL));

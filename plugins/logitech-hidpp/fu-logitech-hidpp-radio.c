@@ -24,7 +24,7 @@ fu_logitech_hidpp_radio_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
-fu_logitech_hidpp_radio_attach(FuDevice *device, GError **error)
+fu_logitech_hidpp_radio_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuLogitechHidPpRadio *self = FU_HIDPP_RADIO(device);
 	FuDevice *parent = fu_device_get_parent(device);
@@ -35,13 +35,15 @@ fu_logitech_hidpp_radio_attach(FuDevice *device, GError **error)
 	if (locker == NULL)
 		return FALSE;
 
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return fu_logitech_hidpp_device_attach(FU_HIDPP_DEVICE(parent), self->entity, error);
+	return fu_logitech_hidpp_device_attach(FU_HIDPP_DEVICE(parent),
+					       self->entity,
+					       progress,
+					       error);
 }
 
 static gboolean
-fu_logitech_hidpp_radio_detach(FuDevice *device, GError **error)
+fu_logitech_hidpp_radio_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -51,16 +53,15 @@ fu_logitech_hidpp_radio_detach(FuDevice *device, GError **error)
 	if (locker == NULL)
 		return FALSE;
 
-	if (!fu_device_has_flag(parent, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
+	if (!fu_device_has_flag(parent, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	}
-	return fu_device_detach(parent, error);
+	return fu_device_detach(parent, progress, error);
 }
 
 static gboolean
 fu_logitech_hidpp_radio_write_firmware(FuDevice *device,
 				       FuFirmware *firmware,
+				       FuProgress *progress,
 				       FwupdInstallFlags flags,
 				       GError **error)
 {
@@ -76,15 +77,15 @@ fu_logitech_hidpp_radio_write_firmware(FuDevice *device,
 	locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
-
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
-	return fu_device_write_firmware(parent, fw, flags, error);
+	return fu_device_write_firmware(parent, fw, progress, flags, error);
 }
 
 static void
 fu_logitech_hidpp_radio_init(FuLogitechHidPpRadio *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_set_name(FU_DEVICE(self), "Radio");
+	fu_device_set_install_duration(FU_DEVICE(self), 270);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_add_internal_flag(FU_DEVICE(self),
 				    FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY);

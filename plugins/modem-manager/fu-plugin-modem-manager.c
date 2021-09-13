@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2018 Richard Hughes <richard@hughsie.com>
  *
@@ -370,7 +371,7 @@ fu_plugin_destroy(FuPlugin *plugin)
 }
 
 gboolean
-fu_plugin_detach(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_detach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -397,7 +398,7 @@ fu_plugin_detach(FuPlugin *plugin, FuDevice *device, GError **error)
 	}
 
 	/* reset */
-	if (!fu_device_detach(device, error)) {
+	if (!fu_device_detach(device, progress, error)) {
 		fu_plugin_mm_uninhibit_device(plugin);
 		return FALSE;
 	}
@@ -414,7 +415,7 @@ fu_plugin_mm_device_attach_finished(gpointer user_data)
 }
 
 gboolean
-fu_plugin_attach(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_attach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -434,7 +435,7 @@ fu_plugin_attach(FuPlugin *plugin, FuDevice *device, GError **error)
 	 * so that engine can setup the device "waiting" logic before the actual
 	 * attach procedure happens (which will reset the module if it worked
 	 * properly) */
-	if (!fu_device_attach(device, error))
+	if (!fu_device_attach(device, progress, error))
 		return FALSE;
 
 	/* this signal will always be emitted asynchronously */

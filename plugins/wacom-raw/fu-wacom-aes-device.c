@@ -153,7 +153,7 @@ fu_wacom_aes_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_wacom_aes_device_erase_all(FuWacomAesDevice *self, GError **error)
+fu_wacom_aes_device_erase_all(FuWacomAesDevice *self, FuProgress *progress, GError **error)
 {
 	FuWacomRawRequest req = {.cmd = FU_WACOM_RAW_BL_CMD_ALL_ERASE,
 				 .echo = FU_WACOM_RAW_ECHO_DEFAULT,
@@ -168,7 +168,7 @@ fu_wacom_aes_device_erase_all(FuWacomAesDevice *self, GError **error)
 		g_prefix_error(error, "failed to send eraseall command: ");
 		return FALSE;
 	}
-	fu_device_sleep_with_progress(FU_DEVICE(self), 2); /* seconds */
+	fu_progress_sleep(progress, 2000);
 	return TRUE;
 }
 
@@ -224,17 +224,25 @@ fu_wacom_aes_device_write_block(FuWacomAesDevice *self,
 }
 
 static gboolean
-fu_wacom_aes_device_write_firmware(FuDevice *device, GPtrArray *chunks, GError **error)
+fu_wacom_aes_device_write_firmware(FuDevice *device,
+				   GPtrArray *chunks,
+				   FuProgress *progress,
+				   GError **error)
 {
 	FuWacomAesDevice *self = FU_WACOM_AES_DEVICE(device);
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 20);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80);
+
 	/* erase */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_wacom_aes_device_erase_all(self, error))
+	if (!fu_wacom_aes_device_erase_all(self, progress, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* write */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (!fu_wacom_aes_device_write_block(self,
@@ -244,8 +252,11 @@ fu_wacom_aes_device_write_firmware(FuDevice *device, GPtrArray *chunks, GError *
 						     fu_chunk_get_data_sz(chk),
 						     error))
 			return FALSE;
-		fu_device_set_progress_full(device, (gsize)i, (gsize)chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 	return TRUE;
 }
 

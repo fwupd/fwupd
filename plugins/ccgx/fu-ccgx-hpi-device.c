@@ -34,6 +34,15 @@ struct _FuCcgxHpiDevice {
 	guint32 flash_size;
 };
 
+/**
+ * FU_CCGX_HPI_DEVICE_IS_IN_RESTART:
+ *
+ * Device is in restart and should not be closed manually.
+ *
+ * Since: 1.7.0
+ */
+#define FU_CCGX_HPI_DEVICE_IS_IN_RESTART (1 << 0)
+
 G_DEFINE_TYPE(FuCcgxHpiDevice, fu_ccgx_hpi_device, FU_TYPE_USB_DEVICE)
 
 #define HPI_CMD_REG_READ_WRITE_DELAY_US		 10000
@@ -1027,7 +1036,7 @@ fu_ccgx_hpi_read_flash(FuCcgxHpiDevice *self,
 }
 
 static gboolean
-fu_ccgx_hpi_device_detach(FuDevice *device, GError **error)
+fu_ccgx_hpi_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
 	guint8 buf[] = {
@@ -1042,7 +1051,6 @@ fu_ccgx_hpi_device_detach(FuDevice *device, GError **error)
 	/* jump to Alt FW */
 	if (!fu_ccgx_hpi_device_clear_all_events(self, HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS, error))
 		return FALSE;
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_ccgx_hpi_device_reg_write(self,
 					  CY_PD_JUMP_TO_BOOT_REG_ADDR,
 					  buf,
@@ -1054,13 +1062,14 @@ fu_ccgx_hpi_device_detach(FuDevice *device, GError **error)
 
 	/* sym not required */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_private_flag(device, FU_CCGX_HPI_DEVICE_IS_IN_RESTART);
 
 	/* success */
 	return TRUE;
 }
 
 static gboolean
-fu_ccgx_hpi_device_attach(FuDevice *device, GError **error)
+fu_ccgx_hpi_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
 	guint8 buf[] = {
@@ -1069,7 +1078,6 @@ fu_ccgx_hpi_device_attach(FuDevice *device, GError **error)
 	};
 	if (!fu_ccgx_hpi_device_clear_all_events(self, HPI_CMD_COMMAND_CLEAR_EVENT_TIME_MS, error))
 		return FALSE;
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_ccgx_hpi_device_reg_write_no_resp(self,
 						  CY_PD_REG_RESET_ADDR,
 						  buf,
@@ -1079,6 +1087,7 @@ fu_ccgx_hpi_device_attach(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	fu_device_add_private_flag(device, FU_CCGX_HPI_DEVICE_IS_IN_RESTART);
 	return TRUE;
 }
 
@@ -1252,6 +1261,7 @@ fu_ccgx_hpi_save_metadata(FuCcgxHpiDevice *self,
 static gboolean
 fu_ccgx_hpi_write_firmware(FuDevice *device,
 			   FuFirmware *firmware,
+			   FuProgress *progress,
 			   FwupdInstallFlags flags,
 			   GError **error)
 {
@@ -1260,6 +1270,14 @@ fu_ccgx_hpi_write_firmware(FuDevice *device,
 	GPtrArray *records = fu_ccgx_firmware_get_records(FU_CCGX_FIRMWARE(firmware));
 	FWMode fw_mode_alt = fu_ccgx_fw_mode_get_alternate(self->fw_mode);
 	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5); /* invalidate metadata */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5); /* leave-flash */
 
 	/* enter flash mode */
 	locker = fu_device_locker_new_full(self,
@@ -1270,16 +1288,14 @@ fu_ccgx_hpi_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* invalidate metadata for alternate image */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_READ);
 	if (!fu_ccgx_hpi_load_metadata(self, fw_mode_alt, &metadata, error))
 		return FALSE;
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_ERASE);
 	metadata.metadata_valid = 0x00;
 	if (!fu_ccgx_hpi_save_metadata(self, fw_mode_alt, &metadata, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* write new image */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < records->len; i++) {
 		FuCcgxFirmwareRecord *rcd = g_ptr_array_index(records, i);
 
@@ -1294,19 +1310,23 @@ fu_ccgx_hpi_write_firmware(FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full(device, (gsize)i, (gsize)records->len - 1);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)records->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* validate fw */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_VERIFY);
 	if (!fu_ccgx_hpi_validate_fw(self, fw_mode_alt, error)) {
 		g_prefix_error(error, "fw validate error: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* this is a good time to leave the flash mode *before* rebooting */
 	if (!fu_device_locker_close(locker, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;
@@ -1586,7 +1606,7 @@ fu_ccgx_hpi_device_close(FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 
 	/* do not close handle when device restarts */
-	if (fu_device_get_status(device) == FWUPD_STATUS_DEVICE_RESTART)
+	if (fu_device_has_private_flag(device, FU_CCGX_HPI_DEVICE_IS_IN_RESTART))
 		return TRUE;
 	if (!g_usb_device_release_interface(fu_usb_device_get_dev(FU_USB_DEVICE(device)),
 					    self->inf_num,
@@ -1601,6 +1621,17 @@ fu_ccgx_hpi_device_close(FuDevice *device, GError **error)
 	}
 	/* FuUsbDevice->close */
 	return FU_DEVICE_CLASS(fu_ccgx_hpi_device_parent_class)->close(device, error);
+}
+
+static void
+fu_ccgx_hpi_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
 }
 
 static void
@@ -1649,4 +1680,5 @@ fu_ccgx_hpi_device_class_init(FuCcgxHpiDeviceClass *klass)
 	klass_device->set_quirk_kv = fu_ccgx_hpi_device_set_quirk_kv;
 	klass_device->open = fu_ccgx_hpi_device_open;
 	klass_device->close = fu_ccgx_hpi_device_close;
+	klass_device->set_progress = fu_ccgx_hpi_device_set_progress;
 }

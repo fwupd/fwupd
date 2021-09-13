@@ -98,6 +98,7 @@ fu_plugin_coldplug_cleanup(FuPlugin *plugin, GError **error);
  * @plugin: a plugin
  * @dev: a device
  * @blob_fw: a data blob
+ * @progress: a #FuProgress
  * @flags: install flags
  * @error: (nullable): optional return location for an error
  *
@@ -109,6 +110,7 @@ gboolean
 fu_plugin_write_firmware(FuPlugin *plugin,
 			 FuDevice *dev,
 			 GBytes *blob_fw,
+			 FuProgress *progress,
 			 FwupdInstallFlags flags,
 			 GError **error);
 /**
@@ -150,7 +152,7 @@ fu_plugin_unlock(FuPlugin *plugin, FuDevice *dev, GError **error);
  * Since: 1.2.6
  **/
 gboolean
-fu_plugin_activate(FuPlugin *plugin, FuDevice *dev, GError **error);
+fu_plugin_activate(FuPlugin *plugin, FuDevice *dev, FuProgress *progress, GError **error);
 /**
  * fu_plugin_clear_results:
  * @plugin: a plugin
@@ -186,7 +188,7 @@ fu_plugin_get_results(FuPlugin *plugin, FuDevice *dev, GError **error);
  * Since: 1.0.2
  **/
 gboolean
-fu_plugin_attach(FuPlugin *plugin, FuDevice *dev, GError **error);
+fu_plugin_attach(FuPlugin *plugin, FuDevice *dev, FuProgress *progress, GError **error);
 /**
  * fu_plugin_detach:
  * @plugin: a plugin
@@ -198,7 +200,7 @@ fu_plugin_attach(FuPlugin *plugin, FuDevice *dev, GError **error);
  * Since: 1.7.0
  **/
 gboolean
-fu_plugin_detach(FuPlugin *plugin, FuDevice *dev, GError **error);
+fu_plugin_detach(FuPlugin *plugin, FuDevice *dev, FuProgress *progress, GError **error);
 /**
  * fu_plugin_prepare:
  * @plugin: a plugin

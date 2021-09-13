@@ -115,6 +115,7 @@ fu_logitech_hidpp_bootloader_texas_clear_ram_buffer(FuLogitechHidPpBootloader *s
 static gboolean
 fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 						  FuFirmware *firmware,
+						  FuProgress *progress,
 						  FwupdInstallFlags flags,
 						  GError **error)
 {
@@ -124,6 +125,20 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 	g_autoptr(GPtrArray) reqs = NULL;
 	g_autoptr(FuLogitechHidPpBootloaderRequest) req =
 	    fu_logitech_hidpp_bootloader_request_new();
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED)) {
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 3);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1); /* clear */
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 18);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 79);
+	} else {
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 11);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 1); /* clear */
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 75);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 12);
+	}
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -136,16 +151,16 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* erase all flash pages */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_logitech_hidpp_bootloader_texas_erase_all(self, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* set existing RAM buffer to 0xff's */
 	if (!fu_logitech_hidpp_bootloader_texas_clear_ram_buffer(self, error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* write to RAM buffer */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < reqs->len; i++) {
 		payload = g_ptr_array_index(reqs, i);
 
@@ -213,15 +228,14 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 		}
 
 		/* update progress */
-		fu_device_set_progress_full(device, i * 32, reqs->len * 32);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress), i + 1, reqs->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* check CRC */
 	if (!fu_logitech_hidpp_bootloader_texas_compute_and_test_crc(self, error))
 		return FALSE;
-
-	/* mark as complete */
-	fu_device_set_progress_full(device, reqs->len * 32, reqs->len * 32);
+	fu_progress_step_done(progress);
 
 	/* success! */
 	return TRUE;

@@ -20,7 +20,12 @@ GType = FuLogitechHidPpDevice
 CounterpartGuid = HIDRAW\VEN_046D&DEV_C548
 InstallDuration = 30
 Flags = rebind-attach,force-receiver-id,replug-match-guid,add-radio
-LogitechHidppModelId = B601C548000000
+LogitechHidppModelId = B601C5480000
+
+# Bolt receiver radio (bootloader)
+[HIDRAW\VEN_046D&MOD_B601C5480000&ENT_05]
+CounterpartGuid = HIDRAW\VEN_046D&DEV_C548&ENT_05
+Flags = is-bootloader
 
 # Nordic
 [USB\VID_046D&PID_AAAA]
@@ -61,13 +66,70 @@ GType = FuLogitechHidPpDevice
 ParentGuid = HIDRAW\VEN_046D&DEV_C52B
 InstallDuration = 150
 
-# SoftDevice (Bolt receiver runtime)
-[HIDRAW\VEN_046D&DEV_C548_RECEIVER_SOFTDEVICE]
+# MR0077
+[HIDRAW\VEN_046D&MOD_B02800000000]
 Plugin = logitech_hidpp
-Flags = rebind-attach
+GType = FuLogitechHidPpDevice
+Flags = add-radio,bolt-peripheral
+InstallDuration = 270
 
-# SoftDevice (Bolt receiver bootloader)
-[HIDRAW\VEN_046D&DEV_AB07&MOD_B601C548000000_SOFTDEVICE]
+# MR0077 (BLE direct)
+[HIDRAW\VEN_046D&DEV_B028]
 Plugin = logitech_hidpp
-CounterpartGuid = HIDRAW\VEN_046D&DEV_C548_RECEIVER_SOFTDEVICE
-Flags = rebind-attach,is-bootloader
+GType = FuLogitechHidPpDevice
+Flags = add-radio,ble,rebind-attach
+InstallDuration = 270
+
+# YR0073
+[HIDRAW\VEN_046D&MOD_B36300000000]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,bolt-peripheral
+InstallDuration = 270
+
+# YR0073 (BLE direct)
+[HIDRAW\VEN_046D&DEV_B363]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,ble,rebind-attach
+InstallDuration = 270
+
+# M650
+[HIDRAW\VEN_046D&MOD_B02A00000000]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,no-request-required,bolt-peripheral
+InstallDuration = 270
+
+# M650 (BLE direct)
+[HIDRAW\VEN_046D&DEV_B02A]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,ble,rebind-attach,no-request-required
+InstallDuration = 270
+
+# M750
+[HIDRAW\VEN_046D&MOD_B02C00000000]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,no-request-required,bolt-peripheral
+InstallDuration = 270
+
+# M750 (BLE direct)
+[HIDRAW\VEN_046D&DEV_B02C]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,ble,rebind-attach,no-request-required
+InstallDuration = 270
+
+[HIDRAW\VEN_046D&MOD_B36F00000000]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,no-request-required,bolt-peripheral
+InstallDuration = 270
+
+[HIDRAW\VEN_046D&DEV_B36F]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,ble,rebind-attach,no-request-required
+InstallDuration = 270

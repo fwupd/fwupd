@@ -882,7 +882,7 @@ fu_synaptics_rmi_ps2_device_close(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_synaptics_rmi_ps2_device_detach(FuDevice *device, GError **error)
+fu_synaptics_rmi_ps2_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	FuSynapticsRmiFunction *f34;
@@ -911,10 +911,10 @@ fu_synaptics_rmi_ps2_device_detach(FuDevice *device, GError **error)
 	if (f34 == NULL)
 		return FALSE;
 	if (f34->function_version == 0x0 || f34->function_version == 0x1) {
-		if (!fu_synaptics_rmi_v5_device_detach(device, error))
+		if (!fu_synaptics_rmi_v5_device_detach(device, progress, error))
 			return FALSE;
 	} else if (f34->function_version == 0x2) {
-		if (!fu_synaptics_rmi_v7_device_detach(device, error))
+		if (!fu_synaptics_rmi_v7_device_detach(device, progress, error))
 			return FALSE;
 	} else {
 		g_set_error(error,
@@ -950,7 +950,7 @@ fu_synaptics_rmi_ps2_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_synaptics_rmi_ps2_device_attach(FuDevice *device, GError **error)
+fu_synaptics_rmi_ps2_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuSynapticsRmiDevice *rmi_device = FU_SYNAPTICS_RMI_DEVICE(device);
 
@@ -964,8 +964,7 @@ fu_synaptics_rmi_ps2_device_attach(FuDevice *device, GError **error)
 	fu_synaptics_rmi_device_set_iepmode(rmi_device, FALSE);
 
 	/* delay after writing */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
-	fu_device_sleep_with_progress(device, 2);
+	fu_progress_sleep(progress, 2000);
 
 	/* reset device */
 	if (!fu_synaptics_rmi_device_enter_iep_mode(rmi_device,
@@ -978,7 +977,7 @@ fu_synaptics_rmi_ps2_device_attach(FuDevice *device, GError **error)
 	}
 
 	/* delay after reset */
-	fu_device_sleep_with_progress(device, 5);
+	fu_progress_sleep(progress, 5000);
 
 	/* back to psmouse */
 	if (!fu_udev_device_write_sysfs(FU_UDEV_DEVICE(device), "drvctl", "psmouse", error)) {

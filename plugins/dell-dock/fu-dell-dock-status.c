@@ -60,6 +60,7 @@ fu_dell_dock_status_setup(FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_status_write(FuDevice *device,
 			  FuFirmware *firmware,
+			  FuProgress *progress,
 			  FwupdInstallFlags flags,
 			  GError **error)
 {
@@ -96,7 +97,6 @@ fu_dell_dock_status_write(FuDevice *device,
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_version(device, dynamic_version);
 	return TRUE;
@@ -144,6 +144,16 @@ fu_dell_dock_status_finalize(GObject *object)
 }
 
 static void
+fu_dell_dock_status_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 13); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 72);	 /* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 9);	 /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 7);	 /* reload */
+}
+
+static void
 fu_dell_dock_status_init(FuDellDockStatus *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.dock");
@@ -160,6 +170,7 @@ fu_dell_dock_status_class_init(FuDellDockStatusClass *klass)
 	klass_device->open = fu_dell_dock_status_open;
 	klass_device->close = fu_dell_dock_status_close;
 	klass_device->set_quirk_kv = fu_dell_dock_status_set_quirk_kv;
+	klass_device->set_progress = fu_dell_dock_status_set_progress;
 }
 
 FuDellDockStatus *

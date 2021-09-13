@@ -150,11 +150,6 @@ LIBFWUPDPLUGIN_1.0.3 {
     fu_common_read_uint32;
     fu_common_write_uint16;
     fu_common_write_uint32;
-    fu_device_get_progress;
-    fu_device_get_status;
-    fu_device_set_progress;
-    fu_device_set_progress_full;
-    fu_device_set_status;
     fu_usb_device_is_open;
   local: *;
 } LIBFWUPDPLUGIN_1.0.2;
@@ -550,7 +545,6 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_device_dump_firmware;
     fu_device_report_metadata_post;
     fu_device_report_metadata_pre;
-    fu_device_sleep_with_progress;
     fu_device_unbind_driver;
     fu_efivar_get_data_bytes;
     fu_efivar_secure_boot_enabled_full;
@@ -867,6 +861,7 @@ LIBFWUPDPLUGIN_1.6.2 {
 
 LIBFWUPDPLUGIN_1.7.0 {
   global:
+    fu_device_set_progress;
     fu_plugin_runner_attach;
     fu_plugin_runner_cleanup;
     fu_plugin_runner_detach;
@@ -874,5 +869,28 @@ LIBFWUPDPLUGIN_1.7.0 {
     fu_plugin_runner_reload;
     fu_plugin_runner_write_firmware;
     fu_plugin_set_config_value;
+    fu_progress_add_flag;
+    fu_progress_add_step;
+    fu_progress_finished;
+    fu_progress_flag_from_string;
+    fu_progress_flag_to_string;
+    fu_progress_get_child;
+    fu_progress_get_id;
+    fu_progress_get_percentage;
+    fu_progress_get_status;
+    fu_progress_get_steps;
+    fu_progress_get_type;
+    fu_progress_has_flag;
+    fu_progress_new;
+    fu_progress_remove_flag;
+    fu_progress_reset;
+    fu_progress_set_id;
+    fu_progress_set_percentage;
+    fu_progress_set_percentage_full;
+    fu_progress_set_profile;
+    fu_progress_set_status;
+    fu_progress_set_steps;
+    fu_progress_sleep;
+    fu_progress_step_done;
   local: *;
 } LIBFWUPDPLUGIN_1.6.2;

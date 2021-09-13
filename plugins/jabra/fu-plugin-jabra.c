@@ -26,6 +26,7 @@ fu_plugin_cleanup(FuPlugin *plugin, FuDevice *device, FwupdInstallFlags flags, G
 {
 	GUsbDevice *usb_device;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error_local = NULL;
 
 	/* check for a property on the *dfu* FuDevice, which is also why we
@@ -35,7 +36,7 @@ fu_plugin_cleanup(FuPlugin *plugin, FuDevice *device, FwupdInstallFlags flags, G
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
 	usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	if (!g_usb_device_reset(usb_device, &error_local)) {
 		g_set_error(error,

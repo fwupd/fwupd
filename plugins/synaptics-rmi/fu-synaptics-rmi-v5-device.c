@@ -27,7 +27,7 @@
 #define RMI_F34_ERASE_WAIT_MS (5 * 1000) /* ms */
 
 gboolean
-fu_synaptics_rmi_v5_device_detach(FuDevice *device, GError **error)
+fu_synaptics_rmi_v5_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuSynapticsRmiDevice *self = FU_SYNAPTICS_RMI_DEVICE(device);
 	FuSynapticsRmiFlash *flash = fu_synaptics_rmi_device_get_flash(self);
@@ -60,7 +60,6 @@ fu_synaptics_rmi_v5_device_detach(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	g_usleep(1000 * RMI_F34_ENABLE_WAIT_MS);
 	return TRUE;
 }
@@ -238,6 +237,7 @@ fu_synaptics_rmi_v5_device_secure_check(FuDevice *device,
 gboolean
 fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 					  FuFirmware *firmware,
+					  FuProgress *progress,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
@@ -255,6 +255,14 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 	g_autoptr(GPtrArray) chunks_bin = NULL;
 	g_autoptr(GPtrArray) chunks_cfg = NULL;
 	g_autoptr(GByteArray) req_addr = g_byte_array_new();
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10);
 
 	/* we should be in bootloader mode now, but check anyway */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -331,17 +339,19 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to unlock again: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* erase all */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_ERASE);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_ERASE);
 	if (!fu_synaptics_rmi_v5_device_erase_all(self, error)) {
 		g_prefix_error(error, "failed to erase all: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* write initial address */
 	fu_byte_array_append_uint16(req_addr, 0x0, G_LITTLE_ENDIAN);
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_synaptics_rmi_device_write(self,
 					   f34->data_base,
 					   req_addr,
@@ -377,10 +387,11 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 				       fu_chunk_get_idx(chk));
 			return FALSE;
 		}
-		fu_device_set_progress_full(device,
-					    (gsize)i,
-					    (gsize)chunks_bin->len + chunks_cfg->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks_bin->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* payload signature */
 	if (signature_bin != NULL && fu_synaptics_rmi_device_get_sig_size(self) != 0) {
@@ -410,9 +421,9 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 					       fu_chunk_get_idx(chk));
 				return FALSE;
 			}
-			fu_device_set_progress_full(device,
-						    (gsize)i,
-						    (gsize)chunks_bin->len + chunks_cfg->len);
+			fu_progress_set_percentage_full(progress,
+							(gsize)i + 1,
+							(gsize)chunks_sig->len);
 		}
 		g_usleep(1000 * 1000);
 	}
@@ -444,10 +455,11 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 				       fu_chunk_get_idx(chk));
 			return FALSE;
 		}
-		fu_device_set_progress_full(device,
-					    (gsize)chunks_bin->len + i,
-					    (gsize)chunks_bin->len + chunks_cfg->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks_cfg->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* success */
 	return TRUE;

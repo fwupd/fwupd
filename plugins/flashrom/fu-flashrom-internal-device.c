@@ -8,8 +8,16 @@
 
 #include <libflashrom.h>
 
+#include "fu-flashrom-cmos.h"
 #include "fu-flashrom-device.h"
 #include "fu-flashrom-internal-device.h"
+
+/*
+ * Flag to determine if the CMOS checksum should be reset after the flash
+ * is reprogrammed.  This will force the CMOS defaults to be reloaded on
+ * the next boot.
+ */
+#define FU_FLASHROM_DEVICE_FLAG_RESET_CMOS (1 << 0)
 
 struct _FuFlashromInternalDevice {
 	FuFlashromDevice parent_instance;
@@ -30,6 +38,9 @@ fu_flashrom_internal_device_init(FuFlashromInternalDevice *self)
 	fu_device_set_logical_id(FU_DEVICE(self), "bios");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_FLASHROM_DEVICE_FLAG_RESET_CMOS,
+					"reset-cmos");
 }
 
 static gboolean
@@ -38,6 +49,7 @@ fu_flashrom_internal_device_prepare(FuDevice *device, FwupdInstallFlags flags, G
 	g_autofree gchar *firmware_orig = NULL;
 	g_autofree gchar *localstatedir = NULL;
 	g_autofree gchar *basename = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* if the original firmware doesn't exist, grab it now */
 	basename = g_strdup_printf("flashrom-%s.bin", fu_device_get_id(device));
@@ -52,7 +64,6 @@ fu_flashrom_internal_device_prepare(FuDevice *device, FwupdInstallFlags flags, G
 		struct flashrom_layout *layout;
 		g_autofree guint8 *newcontents = g_malloc0(flash_size);
 		g_autoptr(GBytes) buf = NULL;
-		fu_device_set_status(device, FWUPD_STATUS_DEVICE_READ);
 
 		if (flashrom_layout_read_from_ifd(&layout, flashctx, NULL, 0)) {
 			g_set_error_literal(error,
@@ -74,6 +85,7 @@ fu_flashrom_internal_device_prepare(FuDevice *device, FwupdInstallFlags flags, G
 		/* read region */
 		flashrom_layout_set(flashctx, layout);
 
+		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 		if (flashrom_image_read(flashctx, newcontents, flash_size)) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -92,6 +104,7 @@ fu_flashrom_internal_device_prepare(FuDevice *device, FwupdInstallFlags flags, G
 static gboolean
 fu_flashrom_internal_device_write_firmware(FuDevice *device,
 					   FuFirmware *firmware,
+					   FuProgress *progress,
 					   FwupdInstallFlags flags,
 					   GError **error)
 {
@@ -105,6 +118,21 @@ fu_flashrom_internal_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) blob_fw = fu_firmware_get_bytes(firmware, error);
 	if (blob_fw == NULL)
 		return FALSE;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10);
+
+	/* Check if CMOS needs a reset */
+	if (fu_device_has_private_flag(device, FU_FLASHROM_DEVICE_FLAG_RESET_CMOS)) {
+		g_debug("Attempting CMOS Reset");
+		if (!fu_flashrom_cmos_reset(error)) {
+			g_prefix_error(error, "failed CMOS reset: ");
+			return FALSE;
+		}
+	}
 
 	buf = g_bytes_get_data(blob_fw, &sz);
 
@@ -136,9 +164,6 @@ fu_flashrom_internal_device_write_firmware(FuDevice *device,
 			    (guint)flash_size);
 		return FALSE;
 	}
-
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
-	fu_device_set_progress(device, 0); /* urgh */
 	rc = flashrom_image_write(flashctx, (void *)buf, sz, NULL /* refbuffer */);
 	if (rc != 0) {
 		g_set_error(error,
@@ -148,12 +173,13 @@ fu_flashrom_internal_device_write_firmware(FuDevice *device,
 			    rc);
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_VERIFY);
 	if (flashrom_image_verify(flashctx, (void *)buf, sz)) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_WRITE, "image verify failed");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 	flashrom_layout_release(layout);
 
 	/* success */

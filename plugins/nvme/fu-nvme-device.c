@@ -318,6 +318,7 @@ fu_nvme_device_setup(FuDevice *device, GError **error)
 static gboolean
 fu_nvme_device_write_firmware(FuDevice *device,
 			      FuFirmware *firmware,
+			      FuProgress *progress,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
@@ -326,6 +327,12 @@ fu_nvme_device_write_firmware(FuDevice *device,
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
 	guint64 block_size = self->write_block_size > 0 ? self->write_block_size : 0x1000;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10); /* commit */
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -340,14 +347,11 @@ fu_nvme_device_write_firmware(FuDevice *device,
 		fw2 = g_bytes_ref(fw);
 	}
 
-	/* build packets */
+	/* write each block */
 	chunks = fu_chunk_array_new_from_bytes(fw2,
 					       0x00,	    /* start_addr */
 					       0x00,	    /* page_sz */
 					       block_size); /* block size */
-
-	/* write each block */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (!fu_nvme_device_fw_download(self,
@@ -358,8 +362,11 @@ fu_nvme_device_write_firmware(FuDevice *device,
 			g_prefix_error(error, "failed to write chunk %u: ", i);
 			return FALSE;
 		}
-		fu_device_set_progress_full(device, (gsize)i, (gsize)chunks->len + 1);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						(gsize)i + 1,
+						(gsize)chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* commit */
 	if (!fu_nvme_device_fw_commit(self,
@@ -370,9 +377,9 @@ fu_nvme_device_write_firmware(FuDevice *device,
 		g_prefix_error(error, "failed to commit to auto slot: ");
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	/* success! */
-	fu_device_set_progress(device, 100);
 	return TRUE;
 }
 
@@ -387,6 +394,16 @@ fu_nvme_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *val
 
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
 	return FALSE;
+}
+
+static void
+fu_nvme_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100); /* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);	/* reload */
 }
 
 static void
@@ -423,6 +440,7 @@ fu_nvme_device_class_init(FuNvmeDeviceClass *klass)
 	klass_device->setup = fu_nvme_device_setup;
 	klass_device->write_firmware = fu_nvme_device_write_firmware;
 	klass_device->probe = fu_nvme_device_probe;
+	klass_device->set_progress = fu_nvme_device_set_progress;
 }
 
 FuNvmeDevice *

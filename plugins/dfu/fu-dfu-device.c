@@ -906,7 +906,7 @@ fu_dfu_device_refresh(FuDfuDevice *self, GError **error)
 }
 
 static gboolean
-fu_dfu_device_request_detach(FuDfuDevice *self, GError **error)
+fu_dfu_device_request_detach(FuDfuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
@@ -954,7 +954,7 @@ fu_dfu_device_reload(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_dfu_device_detach(FuDevice *device, GError **error)
+fu_dfu_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
@@ -989,20 +989,18 @@ fu_dfu_device_detach(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* inform UI there's going to be a detach:attach */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
-	if (!fu_dfu_device_request_detach(self, error))
+	if (!fu_dfu_device_request_detach(self, progress, error))
 		return FALSE;
 
 	/* do a host reset */
 	if ((priv->attributes & FU_DFU_DEVICE_ATTR_WILL_DETACH) == 0) {
 		g_debug("doing device reset as host will not self-reset");
-		if (!fu_dfu_device_reset(self, error))
+		if (!fu_dfu_device_reset(self, progress, error))
 			return FALSE;
 	}
 
 	/* success */
 	priv->force_version = 0x0;
-	fu_device_set_status(device, FWUPD_STATUS_IDLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
@@ -1308,24 +1306,17 @@ fu_dfu_device_probe(FuDevice *device, GError **error)
 
 	/* hardware from Jabra literally reboots if you try to retry a failed
 	 * write -- there's no way to avoid blocking the daemon like this... */
-	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET))
-		fu_device_sleep_with_progress(device, 10); /* seconds */
+	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_ATTACH_EXTRA_RESET)) {
+		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+		fu_progress_sleep(progress, 10000);
+	}
 
 	/* success */
 	return TRUE;
 }
 
-/**
- * fu_dfu_device_reset:
- * @self: a #FuDfuDevice
- * @error: (nullable): optional return location for an error
- *
- * Resets the USB device.
- *
- * Returns: %TRUE for success
- **/
 gboolean
-fu_dfu_device_reset(FuDfuDevice *self, GError **error)
+fu_dfu_device_reset(FuDfuDevice *self, FuProgress *progress, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autoptr(GError) error_local = NULL;
@@ -1358,7 +1349,7 @@ fu_dfu_device_reset(FuDfuDevice *self, GError **error)
 }
 
 static gboolean
-fu_dfu_device_attach(FuDevice *device, GError **error)
+fu_dfu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
@@ -1373,14 +1364,10 @@ fu_dfu_device_attach(FuDevice *device, GError **error)
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		return TRUE;
 
-	/* inform UI there's going to be a re-attach */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
-
 	/* handle weirdness */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_DETACH_FOR_ATTACH)) {
-		if (!fu_dfu_device_request_detach(self, error))
+		if (!fu_dfu_device_request_detach(self, progress, error))
 			return FALSE;
-		fu_device_set_status(device, FWUPD_STATUS_IDLE);
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		return TRUE;
 	}
@@ -1395,7 +1382,7 @@ fu_dfu_device_attach(FuDevice *device, GError **error)
 		target_zero = fu_dfu_device_get_target_by_alt_setting(self, 0, error);
 		if (target_zero == NULL)
 			return FALSE;
-		chunk = fu_dfu_target_upload_chunk(target_zero, 0, 0, error);
+		chunk = fu_dfu_target_upload_chunk(target_zero, 0, 0, progress, error);
 		if (chunk == NULL)
 			return FALSE;
 	}
@@ -1409,26 +1396,13 @@ fu_dfu_device_attach(FuDevice *device, GError **error)
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH) &&
 	    fu_dfu_device_has_attribute(self, FU_DFU_DEVICE_ATTR_WILL_DETACH))
 		g_debug("Bus reset is not required. Device will reboot to normal");
-	else if (!fu_dfu_target_attach(target, error))
+	else if (!fu_dfu_target_attach(target, progress, error))
 		return FALSE;
 
 	/* success */
 	priv->force_version = 0x0;
-	fu_device_set_status(device, FWUPD_STATUS_IDLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
-}
-
-static void
-fu_dfu_device_percentage_cb(FuDfuTarget *target, guint percentage, FuDfuDevice *self)
-{
-	fu_device_set_progress(FU_DEVICE(self), percentage);
-}
-
-static void
-fu_dfu_device_action_cb(FuDfuTarget *target, FwupdStatus action, FuDfuDevice *self)
-{
-	fu_device_set_status(FU_DEVICE(self), action);
 }
 
 /**
@@ -1442,7 +1416,10 @@ fu_dfu_device_action_cb(FuDfuTarget *target, FwupdStatus action, FuDfuDevice *se
  * Returns: (transfer full): the uploaded firmware, or %NULL for error
  **/
 FuFirmware *
-fu_dfu_device_upload(FuDfuDevice *self, FuDfuTargetTransferFlags flags, GError **error)
+fu_dfu_device_upload(FuDfuDevice *self,
+		     FuProgress *progress,
+		     FuDfuTargetTransferFlags flags,
+		     GError **error)
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
@@ -1474,11 +1451,11 @@ fu_dfu_device_upload(FuDfuDevice *self, FuDfuTargetTransferFlags flags, GError *
 	fu_dfu_firmware_set_release(FU_DFU_FIRMWARE(firmware), 0xffff);
 
 	/* upload from each target */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, priv->targets->len);
 	for (guint i = 0; i < priv->targets->len; i++) {
 		FuDfuTarget *target;
 		const gchar *alt_name;
-		gulong id1;
-		gulong id2;
 
 		/* upload to target and proxy signals */
 		target = g_ptr_array_index(priv->targets, i);
@@ -1489,26 +1466,19 @@ fu_dfu_device_upload(FuDfuDevice *self, FuDfuTargetTransferFlags flags, GError *
 			g_debug("ignoring target %s", alt_name);
 			continue;
 		}
-
-		id1 = g_signal_connect(target,
-				       "percentage-changed",
-				       G_CALLBACK(fu_dfu_device_percentage_cb),
-				       self);
-		id2 = g_signal_connect(target,
-				       "action-changed",
-				       G_CALLBACK(fu_dfu_device_action_cb),
-				       self);
-		if (!fu_dfu_target_upload(target, firmware, DFU_TARGET_TRANSFER_FLAG_NONE, error))
+		if (!fu_dfu_target_upload(target,
+					  firmware,
+					  fu_progress_get_child(progress),
+					  DFU_TARGET_TRANSFER_FLAG_NONE,
+					  error))
 			return NULL;
-		g_signal_handler_disconnect(target, id1);
-		g_signal_handler_disconnect(target, id2);
+		fu_progress_step_done(progress);
 	}
 
 	/* do not do the dummy upload for quirked devices */
 	priv->done_upload_or_download = TRUE;
 
 	/* success */
-	fu_device_set_status(FU_DEVICE(self), FWUPD_STATUS_IDLE);
 	return g_object_ref(firmware);
 }
 
@@ -1534,6 +1504,7 @@ fu_dfu_device_id_compatible(guint16 id_file, guint16 id_runtime, guint16 id_dev)
 static gboolean
 fu_dfu_device_download(FuDfuDevice *self,
 		       FuFirmware *firmware,
+		       FuProgress *progress,
 		       FuDfuTargetTransferFlags flags,
 		       GError **error)
 {
@@ -1625,13 +1596,13 @@ fu_dfu_device_download(FuDfuDevice *self,
 	images = fu_firmware_get_images(firmware);
 	if (images->len == 0)
 		g_ptr_array_add(images, g_object_ref(firmware));
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, images->len);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *image = g_ptr_array_index(images, i);
 		FuDfuTargetTransferFlags flags_local = DFU_TARGET_TRANSFER_FLAG_NONE;
 		const gchar *alt_name;
 		guint8 alt;
-		gulong id1;
-		gulong id2;
 		g_autoptr(FuDfuTarget) target_tmp = NULL;
 		g_autoptr(GError) error_local = NULL;
 
@@ -1658,26 +1629,20 @@ fu_dfu_device_download(FuDfuDevice *self,
 		if (!FU_IS_DFU_FIRMWARE(firmware) ||
 		    fu_dfu_firmware_get_version(FU_DFU_FIRMWARE(firmware)) == 0x0)
 			flags_local |= DFU_TARGET_TRANSFER_FLAG_ADDR_HEURISTIC;
-		id1 = g_signal_connect(target_tmp,
-				       "percentage-changed",
-				       G_CALLBACK(fu_dfu_device_percentage_cb),
-				       self);
-		id2 = g_signal_connect(target_tmp,
-				       "action-changed",
-				       G_CALLBACK(fu_dfu_device_action_cb),
-				       self);
-		ret = fu_dfu_target_download(target_tmp, image, flags_local, error);
-		g_signal_handler_disconnect(target_tmp, id1);
-		g_signal_handler_disconnect(target_tmp, id2);
+		ret = fu_dfu_target_download(target_tmp,
+					     image,
+					     fu_progress_get_child(progress),
+					     flags_local,
+					     error);
 		if (!ret)
 			return FALSE;
+		fu_progress_step_done(progress);
 	}
 
 	/* do not do the dummy upload for quirked devices */
 	priv->done_upload_or_download = TRUE;
 
 	/* success */
-	fu_device_set_status(FU_DEVICE(self), FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
@@ -1720,7 +1685,7 @@ fu_dfu_device_error_fixup(FuDfuDevice *self, GError **error)
 }
 
 static GBytes *
-fu_dfu_device_dump_firmware(FuDevice *device, GError **error)
+fu_dfu_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = NULL;
@@ -1738,7 +1703,7 @@ fu_dfu_device_dump_firmware(FuDevice *device, GError **error)
 	g_debug("uploading from device->host");
 	if (!fu_dfu_device_refresh_and_clear(self, error))
 		return NULL;
-	firmware = fu_dfu_device_upload(self, DFU_TARGET_TRANSFER_FLAG_NONE, error);
+	firmware = fu_dfu_device_upload(self, progress, DFU_TARGET_TRANSFER_FLAG_NONE, error);
 	if (firmware == NULL)
 		return NULL;
 
@@ -1764,6 +1729,7 @@ fu_dfu_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_dfu_device_write_firmware(FuDevice *device,
 			     FuFirmware *firmware,
+			     FuProgress *progress,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
@@ -1779,7 +1745,7 @@ fu_dfu_device_write_firmware(FuDevice *device,
 	}
 
 	/* hit hardware */
-	return fu_dfu_device_download(self, firmware, transfer_flags, error);
+	return fu_dfu_device_download(self, firmware, progress, transfer_flags, error);
 }
 
 static gboolean
@@ -1870,6 +1836,16 @@ fu_dfu_device_get_attributes_as_string(FuDfuDevice *self)
 }
 
 static void
+fu_dfu_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 88);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 10);	/* reload */
+}
+
+static void
 fu_dfu_device_finalize(GObject *object)
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(object);
@@ -1897,6 +1873,7 @@ fu_dfu_device_class_init(FuDfuDeviceClass *klass)
 	klass_device->open = fu_dfu_device_open;
 	klass_device->close = fu_dfu_device_close;
 	klass_device->probe = fu_dfu_device_probe;
+	klass_device->set_progress = fu_dfu_device_set_progress;
 	object_class->finalize = fu_dfu_device_finalize;
 }
 
@@ -1971,7 +1948,4 @@ fu_dfu_device_init(FuDfuDevice *self)
 					FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH,
 					"no-bus-reset-attach");
 	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_GD32, "gd32");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT,
-					"allow-zero-polltimeout");
 }

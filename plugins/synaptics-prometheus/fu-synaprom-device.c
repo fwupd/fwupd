@@ -85,12 +85,19 @@ gboolean
 fu_synaprom_device_cmd_send(FuSynapromDevice *device,
 			    GByteArray *request,
 			    GByteArray *reply,
+			    FuProgress *progress,
 			    guint timeout_ms,
 			    GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	gboolean ret;
 	gsize actual_len = 0;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 25);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 75);
 
 	if (g_getenv("FWUPD_SYNAPROM_VERBOSE") != NULL) {
 		fu_common_dump_full(G_LOG_DOMAIN,
@@ -121,6 +128,7 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *device,
 			    request->len);
 		return FALSE;
 	}
+	fu_progress_step_done(progress);
 
 	ret = g_usb_device_bulk_transfer(usb_device,
 					 FU_SYNAPROM_USB_REPLY_EP,
@@ -142,6 +150,7 @@ fu_synaprom_device_cmd_send(FuSynapromDevice *device,
 				    16,
 				    FU_DUMP_FLAGS_SHOW_ADDRESSES);
 	}
+	fu_progress_step_done(progress);
 
 	/* parse as FuSynapromReplyGeneric */
 	if (reply->len >= sizeof(FuSynapromReplyGeneric)) {
@@ -195,6 +204,7 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 	guint64 serial_number = 0;
 	g_autoptr(GByteArray) request = NULL;
 	g_autoptr(GByteArray) reply = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_synaprom_device_parent_class)->setup(device, error))
@@ -203,7 +213,7 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 	/* get version */
 	request = fu_synaprom_request_new(FU_SYNAPROM_CMD_GET_VERSION, NULL, 0);
 	reply = fu_synaprom_reply_new(sizeof(FuSynapromReplyGetVersion));
-	if (!fu_synaprom_device_cmd_send(self, request, reply, 250, error)) {
+	if (!fu_synaprom_device_cmd_send(self, request, reply, progress, 250, error)) {
 		g_prefix_error(error, "failed to get version: ");
 		return FALSE;
 	}
@@ -246,18 +256,6 @@ fu_synaprom_device_setup(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-static gboolean
-fu_synaprom_device_cmd_download_chunk(FuSynapromDevice *device,
-				      const GByteArray *chunk,
-				      GError **error)
-{
-	g_autoptr(GByteArray) request = NULL;
-	g_autoptr(GByteArray) reply = NULL;
-	request = fu_synaprom_request_new(FU_SYNAPROM_CMD_BOOTLDR_PATCH, chunk->data, chunk->len);
-	reply = fu_synaprom_reply_new(sizeof(FuSynapromReplyGeneric));
-	return fu_synaprom_device_cmd_send(device, request, reply, 20000, error);
 }
 
 FuFirmware *
@@ -307,57 +305,104 @@ fu_synaprom_device_prepare_fw(FuDevice *device, GBytes *fw, FwupdInstallFlags fl
 	return g_steal_pointer(&firmware);
 }
 
+static gboolean
+fu_synaprom_device_write_chunks(FuSynapromDevice *self,
+				GPtrArray *chunks,
+				FuProgress *progress,
+				GError **error)
+{
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, chunks->len);
+	for (guint i = 0; i < chunks->len; i++) {
+		GByteArray *chunk = g_ptr_array_index(chunks, i);
+		g_autoptr(GByteArray) request = NULL;
+		g_autoptr(GByteArray) reply = NULL;
+
+		/* patch */
+		request =
+		    fu_synaprom_request_new(FU_SYNAPROM_CMD_BOOTLDR_PATCH, chunk->data, chunk->len);
+		reply = fu_synaprom_reply_new(sizeof(FuSynapromReplyGeneric));
+		if (!fu_synaprom_device_cmd_send(self,
+						 request,
+						 reply,
+						 fu_progress_get_child(progress),
+						 20000,
+						 error))
+			return FALSE;
+		fu_progress_step_done(progress);
+	}
+
+	/* success */
+	return TRUE;
+}
+
 gboolean
-fu_synaprom_device_write_fw(FuSynapromDevice *self, GBytes *fw, GError **error)
+fu_synaprom_device_write_fw(FuSynapromDevice *self,
+			    GBytes *fw,
+			    FuProgress *progress,
+			    GError **error)
 {
 	const guint8 *buf;
-	gsize sz = 0;
+	gsize bufsz = 0;
+	gsize offset = 0;
+	g_autoptr(GPtrArray) chunks = NULL;
 
-	/* write chunks */
-	fu_device_set_progress(FU_DEVICE(self), 10);
-	fu_device_set_status(FU_DEVICE(self), FWUPD_STATUS_DEVICE_WRITE);
-	buf = g_bytes_get_data(fw, &sz);
-	while (sz != 0) {
-		guint32 chunksz;
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99);
+
+	/* collect chunks */
+	buf = g_bytes_get_data(fw, &bufsz);
+	chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_byte_array_unref);
+	while (offset != bufsz) {
+		guint32 chunksz = 0;
+		g_autofree guint8 *chunkbuf = NULL;
 		g_autoptr(GByteArray) chunk = g_byte_array_new();
 
 		/* get chunk size */
-		if (sz < sizeof(guint32)) {
-			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
-					    "No enough data for patch len");
+		if (!fu_common_read_uint32_safe(buf,
+						bufsz,
+						offset,
+						&chunksz,
+						G_LITTLE_ENDIAN,
+						error))
 			return FALSE;
-		}
-		memcpy(&chunksz, buf, sizeof(guint32));
-		buf += sizeof(guint32);
-		sz -= sizeof(guint32);
-		if (sz < chunksz) {
-			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
-					    "No enough data for patch chunk");
-			return FALSE;
-		}
+		offset += sizeof(guint32);
 
-		/* download chunk */
-		g_byte_array_append(chunk, buf, chunksz);
-		if (!fu_synaprom_device_cmd_download_chunk(self, chunk, error))
+		/* read out chunk */
+		chunkbuf = g_malloc0(chunksz);
+		if (!fu_memcpy_safe(chunkbuf,
+				    chunksz,
+				    0x0, /* dst */
+				    buf,
+				    bufsz,
+				    offset, /* src */
+				    chunksz,
+				    error))
 			return FALSE;
+		offset += chunksz;
 
-		/* next chunk */
-		buf += chunksz;
-		sz -= chunksz;
+		/* add chunk */
+		g_byte_array_append(chunk, chunkbuf, chunksz);
+		g_ptr_array_add(chunks, g_steal_pointer(&chunk));
 	}
+	fu_progress_step_done(progress);
+
+	/* write chunks */
+	if (!fu_synaprom_device_write_chunks(self, chunks, fu_progress_get_child(progress), error))
+		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* success! */
-	fu_device_set_progress(FU_DEVICE(self), 100);
 	return TRUE;
 }
 
 static gboolean
 fu_synaprom_device_write_firmware(FuDevice *device,
 				  FuFirmware *firmware,
+				  FuProgress *progress,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
@@ -369,11 +414,11 @@ fu_synaprom_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	return fu_synaprom_device_write_fw(self, fw, error);
+	return fu_synaprom_device_write_fw(self, fw, progress, error);
 }
 
 static gboolean
-fu_synaprom_device_attach(FuDevice *device, GError **error)
+fu_synaprom_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	gboolean ret;
@@ -410,7 +455,6 @@ fu_synaprom_device_attach(FuDevice *device, GError **error)
 			    (guint)sizeof(data));
 		return FALSE;
 	}
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!g_usb_device_reset(usb_device, error)) {
 		g_prefix_error(error, "failed to force-reset device: ");
 		return FALSE;
@@ -420,7 +464,7 @@ fu_synaprom_device_attach(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_synaprom_device_detach(FuDevice *device, GError **error)
+fu_synaprom_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	gboolean ret;
@@ -457,13 +501,24 @@ fu_synaprom_device_detach(FuDevice *device, GError **error)
 			    (guint)sizeof(data));
 		return FALSE;
 	}
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
 	if (!g_usb_device_reset(usb_device, error)) {
 		g_prefix_error(error, "failed to force-reset device: ");
 		return FALSE;
 	}
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 	return TRUE;
+}
+
+static void
+fu_synaprom_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
 }
 
 static void
@@ -492,6 +547,7 @@ fu_synaprom_device_class_init(FuSynapromDeviceClass *klass)
 	klass_device->attach = fu_synaprom_device_attach;
 	klass_device->detach = fu_synaprom_device_detach;
 	klass_device->open = fu_synaprom_device_open;
+	klass_device->set_progress = fu_synaprom_device_set_progress;
 }
 
 FuSynapromDevice *

@@ -654,7 +654,7 @@ fu_ata_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_ata_device_activate(FuDevice *device, GError **error)
+fu_ata_device_activate(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
 	struct ata_tf tf = {0x0};
@@ -760,6 +760,7 @@ fu_ata_device_fw_download(FuAtaDevice *self,
 static gboolean
 fu_ata_device_write_firmware(FuDevice *device,
 			     FuFirmware *firmware,
+			     FuProgress *progress,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
@@ -797,7 +798,7 @@ fu_ata_device_write_firmware(FuDevice *device,
 	}
 
 	/* write each block */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x00, 0x00, chunksz);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
@@ -810,12 +811,11 @@ fu_ata_device_write_firmware(FuDevice *device,
 			g_prefix_error(error, "failed to write chunk %u: ", i);
 			return FALSE;
 		}
-		fu_device_set_progress_full(device, (gsize)i, (gsize)chunks->len + 1);
+		fu_progress_set_percentage_full(progress, (gsize)i + 1, (gsize)chunks->len);
 	}
 
 	/* success! */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-	fu_device_set_progress(device, 100);
 	return TRUE;
 }
 
@@ -856,6 +856,17 @@ fu_ata_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 }
 
 static void
+fu_ata_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_ata_device_init(FuAtaDevice *self)
 {
 	/* we chose this default as _DOWNLOAD_CHUNKS_ACTIVATE applies the
@@ -890,6 +901,7 @@ fu_ata_device_class_init(FuAtaDeviceClass *klass)
 	klass_device->activate = fu_ata_device_activate;
 	klass_device->write_firmware = fu_ata_device_write_firmware;
 	klass_device->probe = fu_ata_device_probe;
+	klass_device->set_progress = fu_ata_device_set_progress;
 }
 
 FuAtaDevice *

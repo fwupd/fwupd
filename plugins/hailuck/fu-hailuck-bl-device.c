@@ -19,13 +19,12 @@ struct _FuHailuckBlDevice {
 G_DEFINE_TYPE(FuHailuckBlDevice, fu_hailuck_bl_device, FU_TYPE_HID_DEVICE)
 
 static gboolean
-fu_hailuck_bl_device_attach(FuDevice *device, GError **error)
+fu_hailuck_bl_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	guint8 buf[6] = {
 	    FU_HAILUCK_REPORT_ID_SHORT,
 	    FU_HAILUCK_CMD_ATTACH,
 	};
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_RESTART);
 	if (!fu_hid_device_set_report(FU_HID_DEVICE(device),
 				      buf[0],
 				      buf,
@@ -111,7 +110,7 @@ fu_hailuck_bl_device_read_block(FuHailuckBlDevice *self,
 }
 
 static GBytes *
-fu_hailuck_bl_device_dump_firmware(FuDevice *device, GError **error)
+fu_hailuck_bl_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuHailuckBlDevice *self = FU_HAILUCK_BL_DEVICE(device);
 	gsize fwsz = fu_device_get_firmware_size_max(device);
@@ -119,7 +118,7 @@ fu_hailuck_bl_device_dump_firmware(FuDevice *device, GError **error)
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* tell device amount of data to send */
-	fu_device_set_status(FU_DEVICE(self), FWUPD_STATUS_DEVICE_READ);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
 	if (!fu_hailuck_bl_device_read_block_start(self, fwsz, error))
 		return NULL;
 
@@ -133,7 +132,7 @@ fu_hailuck_bl_device_dump_firmware(FuDevice *device, GError **error)
 						     fu_chunk_get_data_sz(chk),
 						     error))
 			return NULL;
-		fu_device_set_progress_full(device, i, chunks->len - 1);
+		fu_progress_set_percentage_full(progress, i + 1, chunks->len);
 	}
 
 	/* success */
@@ -141,7 +140,7 @@ fu_hailuck_bl_device_dump_firmware(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_hailuck_bl_device_erase(FuHailuckBlDevice *self, GError **error)
+fu_hailuck_bl_device_erase(FuHailuckBlDevice *self, FuProgress *progress, GError **error)
 {
 	guint8 buf[6] = {
 	    FU_HAILUCK_REPORT_ID_SHORT,
@@ -155,7 +154,7 @@ fu_hailuck_bl_device_erase(FuHailuckBlDevice *self, GError **error)
 				      FU_HID_DEVICE_FLAG_IS_FEATURE,
 				      error))
 		return FALSE;
-	fu_device_sleep_with_progress(FU_DEVICE(self), 2);
+	fu_progress_sleep(progress, 2000);
 	return TRUE;
 }
 
@@ -225,6 +224,7 @@ fu_hailuck_bl_device_prepare_firmware(FuDevice *device,
 static gboolean
 fu_hailuck_bl_device_write_firmware(FuDevice *device,
 				    FuFirmware *firmware,
+				    FuProgress *progress,
 				    FwupdInstallFlags flags,
 				    GError **error)
 {
@@ -235,18 +235,25 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 	g_autoptr(GPtrArray) chunks = NULL;
 	g_autofree guint8 *chk0_data = NULL;
 
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 10);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 80);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1); /* block 0 */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 9);
+
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
 
 	/* erase all contents */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_ERASE);
-	if (!fu_hailuck_bl_device_erase(self, error))
+	if (!fu_hailuck_bl_device_erase(self, fu_progress_get_child(progress), error))
 		return FALSE;
+	fu_progress_step_done(progress);
 
 	/* tell device amount of data to expect */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
 	if (!fu_hailuck_bl_device_write_block_start(self, g_bytes_get_size(fw), error))
 		return FALSE;
 
@@ -270,8 +277,11 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 						      fu_chunk_get_data_sz(chk),
 						      error))
 			return FALSE;
-		fu_device_set_progress_full(device, i, chunks->len);
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						i + 1,
+						chunks->len);
 	}
+	fu_progress_step_done(progress);
 
 	/* retry write of first block */
 	if (!fu_hailuck_bl_device_write_block_start(self, g_bytes_get_size(fw), error))
@@ -281,10 +291,11 @@ fu_hailuck_bl_device_write_firmware(FuDevice *device,
 					      fu_chunk_get_data_sz(chk0),
 					      error))
 		return FALSE;
-	fu_device_set_progress_full(device, chunks->len, chunks->len);
+	fu_progress_step_done(progress);
 
 	/* verify */
-	fw_new = fu_hailuck_bl_device_dump_firmware(device, error);
+	fw_new = fu_hailuck_bl_device_dump_firmware(device, fu_progress_get_child(progress), error);
+	fu_progress_step_done(progress);
 	return fu_common_bytes_compare(fw, fw_new, error);
 }
 

@@ -24,6 +24,8 @@
 #define FU_HIDPP_DEVICE_POLLING_INTERVAL	   30000
 #define FU_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL 5000
 
+#define FU_HIDPP_VERSION_BLE 0xFE
+
 guint8
 fu_logitech_hidpp_buffer_read_uint8(const gchar *str);
 guint16

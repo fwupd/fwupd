@@ -194,6 +194,17 @@ fu_flashrom_device_close(FuDevice *device, GError **error)
 }
 
 static void
+fu_flashrom_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 100); /* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 0);	/* reload */
+}
+
+static void
 fu_flashrom_device_class_init(FuFlashromDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
@@ -203,4 +214,5 @@ fu_flashrom_device_class_init(FuFlashromDeviceClass *klass)
 	klass_device->probe = fu_flashrom_device_probe;
 	klass_device->open = fu_flashrom_device_open;
 	klass_device->close = fu_flashrom_device_close;
+	klass_device->set_progress = fu_flashrom_device_set_progress;
 }

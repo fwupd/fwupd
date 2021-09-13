@@ -20,6 +20,7 @@ G_DEFINE_TYPE(FuUefiDbxDevice, fu_uefi_dbx_device, FU_TYPE_DEVICE)
 static gboolean
 fu_uefi_dbx_device_write_firmware(FuDevice *device,
 				  FuFirmware *firmware,
+				  FuProgress *progress,
 				  FwupdInstallFlags install_flags,
 				  GError **error)
 {
@@ -33,7 +34,7 @@ fu_uefi_dbx_device_write_firmware(FuDevice *device,
 		return FALSE;
 
 	/* write entire chunk to efivarfs */
-	fu_device_set_status(device, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	buf = g_bytes_get_data(fw, &bufsz);
 	if (!fu_efivar_set_data(FU_EFIVAR_GUID_SECURITY_DATABASE,
 				"dbx",
@@ -80,7 +81,7 @@ fu_uefi_dbx_prepare_firmware(FuDevice *device, GBytes *fw, FwupdInstallFlags fla
 
 	/* validate this is safe to apply */
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-		fu_device_set_status(device, FWUPD_STATUS_DEVICE_VERIFY);
+		//		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_VERIFY);
 		if (!fu_uefi_dbx_signature_list_validate(FU_EFI_SIGNATURE_LIST(siglist), error)) {
 			g_prefix_error(error,
 				       "Blocked executable in the ESP, "
@@ -129,6 +130,17 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 }
 
 static void
+fu_uefi_dbx_device_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+}
+
+static void
 fu_uefi_dbx_device_init(FuUefiDbxDevice *self)
 {
 	fu_device_set_physical_id(FU_DEVICE(self), "dbx");
@@ -154,6 +166,7 @@ fu_uefi_dbx_device_class_init(FuUefiDbxDeviceClass *klass)
 	klass_device->probe = fu_uefi_dbx_device_probe;
 	klass_device->write_firmware = fu_uefi_dbx_device_write_firmware;
 	klass_device->prepare_firmware = fu_uefi_dbx_prepare_firmware;
+	klass_device->set_progress = fu_uefi_dbx_device_set_progress;
 }
 
 FuUefiDbxDevice *
