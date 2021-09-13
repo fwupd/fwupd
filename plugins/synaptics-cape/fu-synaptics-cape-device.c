@@ -21,7 +21,7 @@
 #define FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_RETRY_TIMEOUT       300   /* ms */
 #define FU_SYNAPTICS_CAPE_DEVICE_USB_RESET_DELAY_MS	         3000   /* ms */
 
-/* define CAPE command constant values and macro */                      
+/* define CAPE command constant values and macro */
 #define FU_SYNAPTICS_CAPE_DEVICE_GOLEM_REPORT_ID 1 /* HID report id */
 
 #define FU_SYNAPTICS_CAPE_CMD_MAX_DATA_LEN    13 /* number of guint32 */
@@ -113,9 +113,9 @@ fu_synaptics_cape_device_get_report(FuSynapticsCapeDevice *self,
 				      datasz,
 				      FU_SYNAPTICS_CAPE_DEVICE_USB_CMD_READ_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
-				      error)) 
+				      error))
 		return FALSE;
-	
+
 	if (g_getenv("FWUPD_SYNAPTICS_CAPE_HID_REPORT_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "GetReport", data, datasz);
 
@@ -211,7 +211,7 @@ fu_synaptics_cape_device_sendcmd_ex(FuSynapticsCapeDevice *self,
 	} else {
 		report.cmd.data_len = GINT16_TO_LE(report.cmd.data_len);
 	}
-	
+
 	report.cmd.cmd_id = GUINT32_TO_LE(report.cmd.cmd_id);
 	report.cmd.module_id = GUINT32_TO_LE(report.cmd.module_id);
 
@@ -344,7 +344,7 @@ fu_synaptics_cape_device_setup_active_partition(FuSynapticsCapeDevice *self, GEr
 	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	
+
 	cmd.cmd_id = FU_SYNAPTICS_CMD_FW_GET_ACTIVE_PARTITION;
 	cmd.module_id = FU_SYNAPTICS_CAPE_CMD_APP_ID('C', 'T', 'R', 'L');
 
