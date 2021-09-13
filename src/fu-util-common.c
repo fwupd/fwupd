@@ -744,6 +744,15 @@ fu_util_release_get_name(FwupdRelease *release)
 			/* TRANSLATORS: Keyboard refers to an input device for typing */
 			return g_strdup_printf(_("%s Keyboard Update"), name);
 		}
+		if (g_strcmp0(cat, "X-StorageController") == 0) {
+			/* TRANSLATORS: Storage Controller is typically a RAID or SAS adapter */
+			return g_strdup_printf(_("%s Storage Controller Update"), name);
+		}
+		if (g_strcmp0(cat, "X-NetworkInterface") == 0) {
+			/* TRANSLATORS: Network Interface refers to the physical
+			 * PCI card, not the logical wired connection */
+			return g_strdup_printf(_("%s Network Interface Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release
