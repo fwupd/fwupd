@@ -673,8 +673,12 @@ fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE(device);
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
 
-	/* FuUdevDevice->probe */
-	if (!fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_BOLT_PERIPHERAL)) {
+	/*
+	 * FuUdevDevice->probe except for paired devices. We don't want
+	 * paired devices to inherit the logical ids of the receiver.
+	 */
+	if (priv->device_idx == HIDPP_DEVICE_IDX_UNSET ||
+	    priv->device_idx == HIDPP_DEVICE_IDX_BLE) {
 		if (!FU_DEVICE_CLASS(fu_logitech_hidpp_device_parent_class)->probe(device, error))
 			return FALSE;
 	}
@@ -698,15 +702,6 @@ fu_logitech_hidpp_device_probe(FuDevice *device, GError **error)
 		fu_device_set_logical_id(device, id_str->str);
 	}
 
-	/* this is a non-standard extension */
-	if (!fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_BOLT_PERIPHERAL) &&
-	    !fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE)) {
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("UFY\\VID_%04X&PID_%04X",
-					fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)),
-					fu_udev_device_get_model(FU_UDEV_DEVICE(device)));
-		fu_device_add_instance_id(device, devid);
-	}
 	return TRUE;
 }
 
@@ -729,6 +724,17 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_BLE)) {
 		priv->hidpp_version = FU_HIDPP_VERSION_BLE;
 		priv->device_idx = HIDPP_DEVICE_IDX_BLE;
+		/*
+		 * Set the logical ID for BLE devices. Note that for BLE
+		 * devices, physical_id = HID_PHYS = MAC of the BT adapter,
+		 * logical_id = HID_UNIQ = MAC of the device. The physical id is
+		 * not enough to differentiate two BLE devices connected to the
+		 * same adapter. This is done here because private flags
+		 * are not loaded when the probe method runs, so we
+		 * can't tell the device is in BLE mode.
+		 */
+		if (!fu_udev_device_set_logical_id(FU_UDEV_DEVICE(device), "hid", error))
+			return FALSE;
 		/*
 		 * BLE devices might not be ready for ping right after
 		 * they come up -> wait a bit before pinging.
