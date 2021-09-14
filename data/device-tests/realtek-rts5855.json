@@ -1,0 +1,28 @@
+{
+  "name": "Realtek RTS5855 Webcam",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/ff989c4b71c92a4a217dfb2f82c1c87691b8eb31-rts5855_v0.4.cab",
+      "components": [
+        {
+          "version": "0.4",
+          "guids": [
+            "9829f051-47f5-55e7-87dc-a49cf55602e2"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/ed5c411d6b74c363209f408f87618fa5c31b50ab-v0.3.cab",
+      "components": [
+        {
+          "version": "0.3",
+          "guids": [
+            "9829f051-47f5-55e7-87dc-a49cf55602e2"
+          ]
+        }
+      ]
+    }
+  ]
+}

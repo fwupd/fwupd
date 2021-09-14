@@ -1,0 +1,30 @@
+{
+  "name": "Hughski ColorHug Plus",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/5cbff92158331aeb10008ca36fa918a9637dde7bfe31de3e0523d14090be8977-fakedevice01_dfu.cab",
+      "components": [
+        {
+          "version": "0.1",
+          "guids": [
+            "dfbaaded-754b-5214-a5f2-46aa3331e8ce",
+            "f5b42624-ff57-5073-ba09-b7c9c04241be"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/8bc3afd07a0af3baaab8b19893791dd3972e8305-fakedevice02_dfu.cab",
+      "components": [
+        {
+          "version": "0.2",
+          "guids": [
+            "dfbaaded-754b-5214-a5f2-46aa3331e8ce",
+            "f5b42624-ff57-5073-ba09-b7c9c04241be"
+          ]
+        }
+      ]
+    }
+  ]
+}

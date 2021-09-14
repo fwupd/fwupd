@@ -1,0 +1,28 @@
+{
+  "name": "Hughski ColorHug2",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/170f2c19f17b7819644d3fcc7617621cc3350a04-hughski-colorhug2-2.0.6.cab",
+      "components": [
+        {
+          "version": "2.0.6",
+          "guids": [
+            "2082b5e0-7a64-478a-b1b2-e3404fab6dad"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/0a29848de74d26348bc5a6e24fc9f03778eddf0e-hughski-colorhug2-2.0.7.cab",
+      "components": [
+        {
+          "version": "2.0.7",
+          "guids": [
+            "2082b5e0-7a64-478a-b1b2-e3404fab6dad"
+          ]
+        }
+      ]
+    }
+  ]
+}
