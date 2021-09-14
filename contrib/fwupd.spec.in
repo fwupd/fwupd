@@ -461,6 +461,7 @@ done
 %if 0%{?have_dell}
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_mst.so
 %endif
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_cape.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_cxaudio.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_prometheus.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_rmi.so
