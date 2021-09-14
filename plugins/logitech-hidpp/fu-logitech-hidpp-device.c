@@ -338,6 +338,7 @@ fu_logitech_hidpp_device_create_radio_child(FuLogitechHidPpDevice *self,
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
 	FuContext *ctx = fu_device_get_context(FU_DEVICE(self));
 	g_autofree gchar *instance_id = NULL;
+	g_autofree gchar *logical_id = NULL;
 	g_autofree gchar *radio_version = NULL;
 	g_autoptr(FuLogitechHidPpRadio) radio = NULL;
 	GPtrArray *children = fu_device_get_children(FU_DEVICE(self));
@@ -354,7 +355,15 @@ fu_logitech_hidpp_device_create_radio_child(FuLogitechHidPpDevice *self,
 	radio_version = g_strdup_printf("0x%.4x", build);
 	radio = fu_logitech_hidpp_radio_new(ctx, entity);
 	fu_device_set_physical_id(FU_DEVICE(radio), fu_device_get_physical_id(FU_DEVICE(self)));
-	fu_device_set_logical_id(FU_DEVICE(radio), priv->model_id);
+	/*
+	 * Use the parent logical id as well as the model id for the
+	 * logical id of the radio child device. This allows the radio
+	 * devices of two devices of the same type (same device type,
+	 * BLE mode) to coexist correctly.
+	 */
+	logical_id =
+	    g_strdup_printf("%s-%s", fu_device_get_logical_id(FU_DEVICE(self)), priv->model_id);
+	fu_device_set_logical_id(FU_DEVICE(radio), logical_id);
 	instance_id = g_strdup_printf("HIDRAW\\VEN_%04X&MOD_%s&ENT_05",
 				      (guint)FU_UNIFYING_DEVICE_VID,
 				      priv->model_id);
