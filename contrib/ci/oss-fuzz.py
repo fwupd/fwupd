@@ -214,7 +214,9 @@ class Fuzzer:
 def _build(bld: Builder) -> None:
 
     # GLib
-    src = bld.checkout_source("glib", url="https://gitlab.gnome.org/GNOME/glib.git")
+    src = bld.checkout_source(
+        "glib", url="https://gitlab.gnome.org/GNOME/glib.git", commit="glib-2-68"
+    )
     bld.build_meson_project(
         src,
         [
@@ -321,6 +323,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
         Fuzzer("solokey"),
         Fuzzer("synaprom", srcdir="synaptics-prometheus"),
+        Fuzzer("synaptics-cape"),
         Fuzzer("synaptics-mst"),
         Fuzzer("synaptics-rmi"),
         Fuzzer("wacom-usb", pattern="wac-firmware", globstr="wacom*"),
