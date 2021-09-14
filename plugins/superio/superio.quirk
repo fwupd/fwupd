@@ -30,7 +30,7 @@ InstallDuration = 20
 
 # StarBook Mk V (HwId)
 [85aba599-addd-5985-a2e8-eddb41c61ba3]
-SuperioGType = FuEcIt89Device
+SuperioGType = FuSuperioIt89Device
 [SUPERIO\GUID_85aba599-addd-5985-a2e8-eddb41c61ba3]
 SuperioId = 0x5570
 SuperioPort = 0x4e
