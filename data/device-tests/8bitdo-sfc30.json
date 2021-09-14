@@ -1,0 +1,17 @@
+{
+  "name": "8BitDo SFC30",
+  "interactive": true,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/fe066b57c69265f4cce8a999a5f8ab90d1c13b24-8Bitdo-SFC30_NES30_SFC30_SNES30-4.01.cab",
+      "components": [
+        {
+          "version": "4.01",
+          "guids": [
+            "a7fcfbaf-e9e8-59f4-920d-7691dc6c8699"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "Logitech M750",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/8e67c3eb84a6a52c39980eea7e048b723554af2c3604c72a33994d4ecf5e6c14-Logitech-RBM18-RBM18.00_B0010.cab",
+      "components": [
+        {
+          "version": "RBM18.00_B0010",
+          "guids": [
+            "b0904956-9081-5ce4-9490-bee057a2d577"
+          ]
+        }
+      ]
+    }
+  ]
+}

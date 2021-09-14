@@ -644,6 +644,8 @@ fu_util_download_if_required(FuUtilPrivate *priv, const gchar *perhapsfn, GError
 
 	/* download the firmware to a cachedir */
 	filename = fu_util_get_user_cache_path(perhapsfn);
+	if (g_file_test(filename, G_FILE_TEST_EXISTS))
+		return g_steal_pointer(&filename);
 	if (!fu_common_mkdir_parent(filename, error))
 		return NULL;
 	blob = fwupd_client_download_bytes(priv->client,
@@ -671,6 +673,241 @@ fu_util_display_current_message(FuUtilPrivate *priv)
 		FwupdRequest *request = g_ptr_array_index(priv->post_requests, i);
 		g_print("%s\n", fwupd_request_get_message(request));
 	}
+}
+
+static gboolean
+fu_util_device_test_component(FuUtilPrivate *priv, JsonObject *json_obj, GBytes *fw, GError **error)
+{
+	JsonArray *json_array;
+	const gchar *name = "component";
+	const gchar *protocol = NULL;
+	g_autoptr(FwupdDevice) device = NULL;
+
+	/* some elements are optional */
+	if (json_object_has_member(json_obj, "name"))
+		name = json_object_get_string_member(json_obj, "name");
+	if (json_object_has_member(json_obj, "protocol"))
+		protocol = json_object_get_string_member(json_obj, "protocol");
+
+	/* find the device with any of the matching GUIDs */
+	if (!json_object_has_member(json_obj, "guids")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "JSON invalid as has no 'guids'");
+		return FALSE;
+	}
+	json_array = json_object_get_array_member(json_obj, "guids");
+	for (guint i = 0; i < json_array_get_length(json_array); i++) {
+		JsonNode *json_node = json_array_get_element(json_array, i);
+		FwupdDevice *device_tmp;
+		const gchar *guid = json_node_get_string(json_node);
+		g_autoptr(GPtrArray) devices = NULL;
+
+		g_debug("looking for guid %s", guid);
+		devices = fwupd_client_get_devices_by_guid(priv->client, guid, NULL, NULL);
+		if (devices == NULL)
+			continue;
+		if (devices->len > 1) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "multiple devices with GUID %s",
+				    guid);
+			return FALSE;
+		}
+		device_tmp = g_ptr_array_index(devices, 0);
+		if (protocol != NULL && !fu_device_has_protocol(device_tmp, protocol))
+			continue;
+		device = g_object_ref(device_tmp);
+		break;
+	}
+	if (device == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "did not find any %s devices with matching GUIDs",
+			    name);
+		return FALSE;
+	}
+
+	/* verify the version matches what we expected */
+	if (json_object_has_member(json_obj, "version")) {
+		const gchar *version = json_object_get_string_member(json_obj, "version");
+		if (g_strcmp0(version, fu_device_get_version(device)) != 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "version of %s did not match, got %s, expected %s",
+				    name,
+				    fu_device_get_version(device),
+				    version);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_util_device_test_step(FuUtilPrivate *priv, JsonObject *json_obj, GError **error)
+{
+	JsonArray *json_array;
+	const gchar *url;
+	const gchar *baseuri = g_getenv("FWUPD_DEVICE_TESTS_BASE_URI");
+	g_autofree gchar *filename = NULL;
+	g_autofree gchar *url_safe = NULL;
+	g_autoptr(GBytes) fw = NULL;
+
+	/* download file if required */
+	if (!json_object_has_member(json_obj, "url")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "JSON invalid as has no 'url'");
+		return FALSE;
+	}
+
+	/* build URL */
+	url = json_object_get_string_member(json_obj, "url");
+	if (baseuri != NULL) {
+		g_autofree gchar *basename = g_path_get_basename(url);
+		url_safe = g_build_filename(baseuri, basename, NULL);
+	} else {
+		url_safe = g_strdup(url);
+	}
+	filename = fu_util_download_if_required(priv, url_safe, error);
+	if (filename == NULL)
+		return FALSE;
+
+	/* install file */
+	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
+	if (!fwupd_client_install(priv->client,
+				  FWUPD_DEVICE_ID_ANY,
+				  filename,
+				  priv->flags,
+				  NULL,
+				  error))
+		return FALSE;
+
+	/* process each step */
+	if (!json_object_has_member(json_obj, "components")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "JSON invalid as has no 'components'");
+		return FALSE;
+	}
+	json_array = json_object_get_array_member(json_obj, "components");
+	for (guint i = 0; i < json_array_get_length(json_array); i++) {
+		JsonNode *json_node = json_array_get_element(json_array, i);
+		JsonObject *json_obj_tmp = json_node_get_object(json_node);
+		if (!fu_util_device_test_component(priv, json_obj_tmp, fw, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_util_device_test_filename(FuUtilPrivate *priv, const gchar *filename, GError **error)
+{
+	JsonNode *json_root;
+	JsonObject *json_obj;
+	guint repeat = 1;
+	g_autoptr(JsonParser) parser = json_parser_new();
+
+	/* parse JSON */
+	if (!json_parser_load_from_file(parser, filename, error)) {
+		g_prefix_error(error, "test not in JSON format: ");
+		return FALSE;
+	}
+	json_root = json_parser_get_root(parser);
+	if (json_root == NULL || !JSON_NODE_HOLDS_OBJECT(json_root)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "JSON invalid as has no root");
+		return FALSE;
+	}
+	json_obj = json_node_get_object(json_root);
+	if (!json_object_has_member(json_obj, "steps")) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "JSON invalid as has no 'steps'");
+		return FALSE;
+	}
+
+	/* process each step */
+	if (json_object_has_member(json_obj, "repeat"))
+		repeat = json_object_get_int_member(json_obj, "repeat");
+	for (guint j = 0; j < repeat; j++) {
+		JsonArray *json_array = json_object_get_array_member(json_obj, "steps");
+		for (guint i = 0; i < json_array_get_length(json_array); i++) {
+			JsonNode *json_node = json_array_get_element(json_array, i);
+			json_obj = json_node_get_object(json_node);
+			if (!fu_util_device_test_step(priv, json_obj, error))
+				return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	gboolean some_failed = FALSE;
+
+	/* required for interactive devices */
+	g_signal_connect(priv->client,
+			 "device-request",
+			 G_CALLBACK(fu_util_update_device_request_cb),
+			 priv);
+
+	/* at least one argument required */
+	if (g_strv_length(values) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
+	/* process all the files */
+	for (guint i = 0; values[i] != NULL; i++) {
+		g_autoptr(GError) error_local = NULL;
+		g_autofree gchar *str = NULL;
+		if (!fu_util_device_test_filename(priv, values[i], &error_local)) {
+			str = fu_util_term_format(error_local->message, FU_UTIL_TERM_COLOR_RED);
+			g_print("%s: %s\n", values[i], str);
+			some_failed = TRUE;
+			continue;
+		}
+		str = fu_util_term_format("OK!", FU_UTIL_TERM_COLOR_GREEN);
+		g_print("%s: %s\n", values[i], str);
+	}
+
+	/* we need all to pass for a zero return code */
+	if (some_failed) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Some of the tests failed");
+		return FALSE;
+	}
+
+	/* nag? */
+	if (!fu_util_perhaps_show_unreported(priv, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
 }
 
 static gboolean
@@ -3539,6 +3776,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Download a file"),
 			      fu_util_download);
+	fu_util_cmd_array_add(cmd_array,
+			      "device-test",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("[FILENAME1] [FILENAME2]"),
+			      /* TRANSLATORS: command description */
+			      _("Test a device using a JSON manifest"),
+			      fu_util_device_test);
 
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();

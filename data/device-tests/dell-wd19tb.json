@@ -1,0 +1,53 @@
+{
+  "name": "Dell WD19TB Dock",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/c05bacfd8f73f30812559f14245b92a069c680caf300e961c78e00c985efe3e0-WD19FirmwareUpdateLinux_01.00.14.cab",
+      "components": [
+        {
+          "name": "ec",
+          "version": "01.00.00.04",
+          "guids": [
+            "cd357cf1-40b2-5d87-b8df-bb2dd82774aa"
+          ]
+        },
+        {
+          "name": "mst",
+          "version": "05.04.03",
+          "guids": [
+            "89fec0b6-6b76-5008-b82c-5e5c6c164007"
+          ]
+        },
+        {
+          "name": "pkg",
+          "version": "01.00.14.01",
+          "guids": [
+            "8ceeeffd-51b6-580c-9b75-69143227aff8"
+          ]
+        },
+        {
+          "name": "tbt",
+          "version": "43.00",
+          "guids": [
+            "c94770ca-1773-592c-b20a-e87243bc7cd0"
+          ]
+        },
+        {
+          "name": "usb1",
+          "version": "01.21",
+          "guids": [
+            "ac5b774c-b49d-566b-9255-85f0f7f8a4ed"
+          ]
+        },
+        {
+          "name": "usb2",
+          "version": "01.47",
+          "guids": [
+            "568ffa1e-a0db-5287-9ea3-872b60f7730b"
+          ]
+        }
+      ]
+    }
+  ]
+}

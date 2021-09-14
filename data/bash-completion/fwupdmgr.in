@@ -5,6 +5,7 @@ _fwupdmgr_cmd_list=(
 	'clear-offline'
 	'clear-results'
 	'disable-remote'
+	'device-test'
 	'downgrade'
 	'download'
 	'enable-remote'
@@ -115,6 +116,15 @@ _fwupdmgr()
 		;;
 	get-details)
 		#browse for file
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	device-test)
+		#browse for files
 		if [[ "$prev" = "$command" ]]; then
 			_filedir
 		#modifiers
