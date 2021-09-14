@@ -12,12 +12,9 @@ xbps-install -Suy python3
 #build
 rm -rf build
 meson build \
- -Dman=false \
- -Ddocs=none \
  -Dgusb:tests=false \
  -Dgcab:docs=false \
  -Dconsolekit=false \
  -Dsystemd=false \
- -Db_lto=false \
  -Delogind=true
 ninja -C build test -v
