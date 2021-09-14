@@ -51,10 +51,15 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 	/* parse each line */
 	lines = fu_common_strnsplit ((const gchar *) data, len, "\n", -1);
 	for (guint i = 0; lines[i] != NULL; i++) {
-		g_autofree gchar *cmd = g_strndup (lines[i], 2);
+		g_autofree gchar *cmd = NULL;
 
 		/* remove windows line endings */
 		g_strdelimit (lines[i], "\r", '\0');
+		cmd = g_strndup(lines[i], 2);
+
+		/* ignore blank lines */
+		if (g_strcmp0(cmd, "") == 0)
+			continue;
 
 		/* Wacom-specific metadata */
 		if (g_strcmp0 (cmd, "WA") == 0) {
@@ -190,7 +195,8 @@ fu_wac_firmware_parse (FuFirmware *firmware,
 			g_set_error(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
-				    "invalid SREC command: %s",
+				    "invalid SREC command on line %u: %s",
+				    i + 1,
 				    cmd);
 			return FALSE;
 		}
