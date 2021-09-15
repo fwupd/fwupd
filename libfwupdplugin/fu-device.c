@@ -2229,6 +2229,7 @@ fu_device_set_id(FuDevice *self, const gchar *id)
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	GPtrArray *children;
 	g_autofree gchar *id_hash = NULL;
+	g_autofree gchar *id_hash_old = g_strdup(fwupd_device_get_id(FWUPD_DEVICE(self)));
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(id != NULL);
@@ -2248,6 +2249,12 @@ fu_device_set_id(FuDevice *self, const gchar *id)
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *devtmp = g_ptr_array_index(children, i);
 		fwupd_device_set_parent_id(FWUPD_DEVICE(devtmp), id_hash);
+
+		/* update the composite ID of the child with the new ID if required; this will
+		 * propagate to grandchildren and great-grandchildren as required */
+		if (id_hash_old != NULL &&
+		    g_strcmp0(fu_device_get_composite_id(devtmp), id_hash_old) == 0)
+			fu_device_set_composite_id(devtmp, id_hash);
 	}
 }
 
