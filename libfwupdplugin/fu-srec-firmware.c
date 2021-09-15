@@ -29,6 +29,8 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuSrecFirmware, fu_srec_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_srec_firmware_get_instance_private(o))
 
+#define FU_SREC_FIRMWARE_TOKENS_MAX 100000 /* lines */
+
 /**
  * fu_srec_firmware_get_records:
  * @self: A #FuSrecFirmware
@@ -117,189 +119,227 @@ fu_srec_firmware_record_get_type(void)
 	return type_id;
 }
 
+typedef struct {
+	FuSrecFirmware *self;
+	FwupdInstallFlags flags;
+	gboolean got_eof;
+} FuSrecFirmwareTokenHelper;
+
+static gboolean
+fu_srec_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+{
+	FuSrecFirmwareTokenHelper *helper = (FuSrecFirmwareTokenHelper *)user_data;
+	FuSrecFirmwarePrivate *priv = GET_PRIVATE(helper->self);
+	g_autoptr(FuSrecFirmwareRecord) rcd = NULL;
+	guint32 rec_addr32;
+	guint16 rec_addr16;
+	guint8 addrsz = 0; /* bytes */
+	guint8 rec_count;  /* words */
+	guint8 rec_kind;
+
+	/* sanity check */
+	if (token_idx > FU_SREC_FIRMWARE_TOKENS_MAX) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "file has too many lines");
+		return FALSE;
+	}
+
+	/* remove WIN32 line endings */
+	g_strdelimit(token->str, "\r\x1a", '\0');
+	token->len = strlen(token->str);
+
+	/* ignore blank lines */
+	if (token->len == 0)
+		return TRUE;
+
+	/* check starting token */
+	if (token->str[0] != 'S' || token->len < 3) {
+		g_autofree gchar *strsafe = fu_common_strsafe(token->str, 3);
+		if (strsafe != NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "invalid starting token, got '%s' at line %u",
+				    strsafe,
+				    token_idx + 1);
+			return FALSE;
+		}
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "invalid starting token at line %u",
+			    token_idx + 1);
+		return FALSE;
+	}
+
+	/* kind, count, address, (data), checksum, linefeed */
+	rec_kind = token->str[1] - '0';
+	if (!fu_firmware_strparse_uint8_safe(token->str, token->len, 2, &rec_count, error))
+		return FALSE;
+	if (rec_count * 2 != token->len - 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "count incomplete at line %u, "
+			    "length %u, expected %u",
+			    token_idx + 1,
+			    (guint)token->len - 4,
+			    (guint)rec_count * 2);
+		return FALSE;
+	}
+
+	/* checksum check */
+	if ((helper->flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
+		guint8 rec_csum = 0;
+		guint8 rec_csum_expected;
+		for (guint8 i = 0; i < rec_count; i++) {
+			guint8 csum_tmp = 0;
+			if (!fu_firmware_strparse_uint8_safe(token->str,
+							     token->len,
+							     (i * 2) + 2,
+							     &csum_tmp,
+							     error))
+				return FALSE;
+			rec_csum += csum_tmp;
+		}
+		rec_csum ^= 0xff;
+		if (!fu_firmware_strparse_uint8_safe(token->str,
+						     token->len,
+						     (rec_count * 2) + 2,
+						     &rec_csum_expected,
+						     error))
+			return FALSE;
+		if (rec_csum != rec_csum_expected) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "checksum incorrect line %u, "
+				    "expected %02x, got %02x",
+				    token_idx + 1,
+				    rec_csum_expected,
+				    rec_csum);
+			return FALSE;
+		}
+	}
+
+	/* set each command settings */
+	switch (rec_kind) {
+	case FU_FIRMWARE_SREC_RECORD_KIND_S0_HEADER:
+		addrsz = 2;
+		break;
+	case FU_FIRMWARE_SREC_RECORD_KIND_S1_DATA_16:
+		addrsz = 2;
+		break;
+	case FU_FIRMWARE_SREC_RECORD_KIND_S2_DATA_24:
+		addrsz = 3;
+		break;
+	case FU_FIRMWARE_SREC_RECORD_KIND_S3_DATA_32:
+		addrsz = 4;
+		break;
+	case FU_FIRMWARE_SREC_RECORD_KIND_S5_COUNT_16:
+		addrsz = 2;
+		helper->got_eof = TRUE;
+		break;
+	case FU_FIRMWARE_SREC_RECORD_KIND_S6_COUNT_24:
+		addrsz = 3;
+		break;
+	case FU_FIRMWARE_SREC_RECORD_KIND_S7_COUNT_32:
+		addrsz = 4;
+		helper->got_eof = TRUE;
+		break;
+	case FU_FIRMWARE_SREC_RECORD_KIND_S8_TERMINATION_24:
+		addrsz = 3;
+		helper->got_eof = TRUE;
+		break;
+	case FU_FIRMWARE_SREC_RECORD_KIND_S9_TERMINATION_16:
+		addrsz = 2;
+		helper->got_eof = TRUE;
+		break;
+	default:
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "invalid srec record type S%c at line %u",
+			    token->str[1],
+			    token_idx + 1);
+		return FALSE;
+	}
+
+	/* parse address */
+	switch (addrsz) {
+	case 2:
+		if (!fu_firmware_strparse_uint16_safe(token->str,
+						      token->len,
+						      4,
+						      &rec_addr16,
+						      error))
+			return FALSE;
+		rec_addr32 = rec_addr16;
+		break;
+	case 3:
+		if (!fu_firmware_strparse_uint24_safe(token->str,
+						      token->len,
+						      4,
+						      &rec_addr32,
+						      error))
+			return FALSE;
+		break;
+	case 4:
+		if (!fu_firmware_strparse_uint32_safe(token->str,
+						      token->len,
+						      4,
+						      &rec_addr32,
+						      error))
+			return FALSE;
+		break;
+	default:
+		g_assert_not_reached();
+	}
+	if (g_getenv("FU_SREC_FIRMWARE_VERBOSE") != NULL) {
+		g_debug("line %03u S%u addr:0x%04x datalen:0x%02x",
+			token_idx + 1,
+			rec_kind,
+			rec_addr32,
+			(guint)rec_count - addrsz - 1);
+	}
+
+	/* data */
+	rcd = fu_srec_firmware_record_new(token_idx + 1, rec_kind, rec_addr32);
+	if (rec_kind == 1 || rec_kind == 2 || rec_kind == 3) {
+		for (gsize i = 4 + (addrsz * 2); i <= rec_count * 2; i += 2) {
+			guint8 tmp = 0;
+			if (!fu_firmware_strparse_uint8_safe(token->str,
+							     token->len,
+							     i,
+							     &tmp,
+							     error))
+				return FALSE;
+			fu_byte_array_append_uint8(rcd->buf, tmp);
+		}
+	}
+	g_ptr_array_add(priv->records, g_steal_pointer(&rcd));
+	return TRUE;
+}
+
 static gboolean
 fu_srec_firmware_tokenize(FuFirmware *firmware, GBytes *fw, FwupdInstallFlags flags, GError **error)
 {
 	FuSrecFirmware *self = FU_SREC_FIRMWARE(firmware);
-	FuSrecFirmwarePrivate *priv = GET_PRIVATE(self);
-	const gchar *data;
-	gboolean got_eof = FALSE;
-	gsize sz = 0;
-	g_auto(GStrv) lines = NULL;
+	FuSrecFirmwareTokenHelper helper = {.self = self, .flags = flags, .got_eof = FALSE};
 
 	/* parse records */
-	data = g_bytes_get_data(fw, &sz);
-	lines = fu_common_strnsplit(data, sz, "\n", -1);
-	for (guint ln = 0; lines[ln] != NULL; ln++) {
-		g_autoptr(FuSrecFirmwareRecord) rcd = NULL;
-		const gchar *line = lines[ln];
-		gsize linesz;
-		guint32 rec_addr32;
-		guint16 rec_addr16;
-		guint8 addrsz = 0; /* bytes */
-		guint8 rec_count;  /* words */
-		guint8 rec_kind;
-
-		/* ignore blank lines */
-		g_strdelimit(lines[ln], "\r", '\0');
-		linesz = strlen(line);
-		if (linesz == 0)
-			continue;
-
-		/* check starting token */
-		if (line[0] != 'S') {
-			g_autofree gchar *strsafe = fu_common_strsafe(line, 3);
-			if (strsafe != NULL) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "invalid starting token, got '%s' at line %u",
-					    strsafe,
-					    ln + 1);
-				return FALSE;
-			}
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid starting token at line %u",
-				    ln + 1);
-			return FALSE;
-		}
-
-		/* kind, count, address, (data), checksum, linefeed */
-		rec_kind = line[1] - '0';
-		if (!fu_firmware_strparse_uint8_safe(line, linesz, 2, &rec_count, error))
-			return FALSE;
-		if (rec_count * 2 != linesz - 4) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "count incomplete at line %u, "
-				    "length %u, expected %u",
-				    ln + 1,
-				    (guint)linesz - 4,
-				    (guint)rec_count * 2);
-			return FALSE;
-		}
-
-		/* checksum check */
-		if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-			guint8 rec_csum = 0;
-			guint8 rec_csum_expected;
-			for (guint8 i = 0; i < rec_count; i++) {
-				guint8 csum_tmp = 0;
-				if (!fu_firmware_strparse_uint8_safe(line,
-								     linesz,
-								     (i * 2) + 2,
-								     &csum_tmp,
-								     error))
-					return FALSE;
-				rec_csum += csum_tmp;
-			}
-			rec_csum ^= 0xff;
-			if (!fu_firmware_strparse_uint8_safe(line,
-							     linesz,
-							     (rec_count * 2) + 2,
-							     &rec_csum_expected,
-							     error))
-				return FALSE;
-			if (rec_csum != rec_csum_expected) {
-				g_set_error(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "checksum incorrect line %u, "
-					    "expected %02x, got %02x",
-					    ln + 1,
-					    rec_csum_expected,
-					    rec_csum);
-				return FALSE;
-			}
-		}
-
-		/* set each command settings */
-		switch (rec_kind) {
-		case FU_FIRMWARE_SREC_RECORD_KIND_S0_HEADER:
-			addrsz = 2;
-			break;
-		case FU_FIRMWARE_SREC_RECORD_KIND_S1_DATA_16:
-			addrsz = 2;
-			break;
-		case FU_FIRMWARE_SREC_RECORD_KIND_S2_DATA_24:
-			addrsz = 3;
-			break;
-		case FU_FIRMWARE_SREC_RECORD_KIND_S3_DATA_32:
-			addrsz = 4;
-			break;
-		case FU_FIRMWARE_SREC_RECORD_KIND_S5_COUNT_16:
-			addrsz = 2;
-			got_eof = TRUE;
-			break;
-		case FU_FIRMWARE_SREC_RECORD_KIND_S6_COUNT_24:
-			addrsz = 3;
-			break;
-		case FU_FIRMWARE_SREC_RECORD_KIND_S7_COUNT_32:
-			addrsz = 4;
-			got_eof = TRUE;
-			break;
-		case FU_FIRMWARE_SREC_RECORD_KIND_S8_TERMINATION_24:
-			addrsz = 3;
-			got_eof = TRUE;
-			break;
-		case FU_FIRMWARE_SREC_RECORD_KIND_S9_TERMINATION_16:
-			addrsz = 2;
-			got_eof = TRUE;
-			break;
-		default:
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "invalid srec record type S%c at line %u",
-				    line[1],
-				    ln + 1);
-			return FALSE;
-		}
-
-		/* parse address */
-		switch (addrsz) {
-		case 2:
-			if (!fu_firmware_strparse_uint16_safe(line, linesz, 4, &rec_addr16, error))
-				return FALSE;
-			rec_addr32 = rec_addr16;
-			break;
-		case 3:
-			if (!fu_firmware_strparse_uint24_safe(line, linesz, 4, &rec_addr32, error))
-				return FALSE;
-			break;
-		case 4:
-			if (!fu_firmware_strparse_uint32_safe(line, linesz, 4, &rec_addr32, error))
-				return FALSE;
-			break;
-		default:
-			g_assert_not_reached();
-		}
-		if (g_getenv("FU_SREC_FIRMWARE_VERBOSE") != NULL) {
-			g_debug("line %03u S%u addr:0x%04x datalen:0x%02x",
-				ln + 1,
-				rec_kind,
-				rec_addr32,
-				(guint)rec_count - addrsz - 1);
-		}
-
-		/* data */
-		rcd = fu_srec_firmware_record_new(ln + 1, rec_kind, rec_addr32);
-		if (rec_kind == 1 || rec_kind == 2 || rec_kind == 3) {
-			for (gsize i = 4 + (addrsz * 2); i <= rec_count * 2; i += 2) {
-				guint8 tmp = 0;
-				if (!fu_firmware_strparse_uint8_safe(line, linesz, i, &tmp, error))
-					return FALSE;
-				fu_byte_array_append_uint8(rcd->buf, tmp);
-			}
-		}
-		g_ptr_array_add(priv->records, g_steal_pointer(&rcd));
-	}
+	if (!fu_common_strnsplit_full(g_bytes_get_data(fw, NULL),
+				      g_bytes_get_size(fw),
+				      "\n",
+				      fu_srec_firmware_tokenize_cb,
+				      &helper,
+				      error))
+		return FALSE;
 
 	/* no EOF */
-	if (!got_eof) {
+	if (!helper.got_eof) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
