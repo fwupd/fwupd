@@ -81,6 +81,16 @@ fu_logitech_hidpp_radio_write_firmware(FuDevice *device,
 }
 
 static void
+fu_logitech_hidpp_radio_set_progress(FuDevice *self, FuProgress *progress)
+{
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 96);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 1); /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 3);	/* reload */
+}
+
+static void
 fu_logitech_hidpp_radio_init(FuLogitechHidPpRadio *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
@@ -102,6 +112,7 @@ fu_logitech_hidpp_radio_class_init(FuLogitechHidPpRadioClass *klass)
 	klass_device->attach = fu_logitech_hidpp_radio_attach;
 	klass_device->write_firmware = fu_logitech_hidpp_radio_write_firmware;
 	klass_device->to_string = fu_logitech_hidpp_radio_to_string;
+	klass_device->set_progress = fu_logitech_hidpp_radio_set_progress;
 }
 
 FuLogitechHidPpRadio *
