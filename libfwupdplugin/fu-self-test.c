@@ -1598,6 +1598,15 @@ fu_device_composite_id_func(void)
 	g_assert_cmpstr(fu_device_get_composite_id(dev4),
 			==,
 			"3b42553c4e3241e8f3f8fbc19a69fa2f95708a9d");
+
+	/* change the parent ID */
+	fu_device_set_id(dev1, "dev1-NEW");
+	g_assert_cmpstr(fu_device_get_composite_id(dev1),
+			==,
+			"a4c8efc6a0a58c2dc14c05fd33186703f7352997");
+	g_assert_cmpstr(fu_device_get_composite_id(dev2),
+			==,
+			"a4c8efc6a0a58c2dc14c05fd33186703f7352997");
 }
 
 static void
