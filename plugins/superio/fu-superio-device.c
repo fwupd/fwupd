@@ -268,10 +268,13 @@ fu_superio_device_probe(FuDevice *device, GError **error)
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE(device);
 	FuSuperioDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *devid = NULL;
 	g_autofree gchar *name = NULL;
 
 	/* use the chipset name as the logical ID and for the GUID */
 	fu_device_set_logical_id(device, priv->chipset);
+	devid = g_strdup_printf("SuperIO-%s", priv->chipset);
+	fu_device_add_instance_id(device, devid);
 	name = g_strdup_printf("SuperIO %s", priv->chipset);
 	fu_device_set_name(FU_DEVICE(self), name);
 	return TRUE;
