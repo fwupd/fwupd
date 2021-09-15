@@ -344,6 +344,28 @@ void
 fu_common_string_append_kb(GString *str, guint idt, const gchar *key, gboolean value);
 gchar **
 fu_common_strnsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max_tokens);
+
+/**
+ * FuCommonStrsplitFunc:
+ * @token: a #GString
+ * @token_idx: the token number
+ * @user_data: user data
+ * @error: a #GError or NULL
+ *
+ * The fu_common_strnsplit_full() iteration callback.
+ */
+typedef gboolean (*FuCommonStrsplitFunc)(GString *token,
+					 guint token_idx,
+					 gpointer user_data,
+					 GError **error);
+gboolean
+fu_common_strnsplit_full(const gchar *str,
+			 gssize sz,
+			 const gchar *delimiter,
+			 FuCommonStrsplitFunc callback,
+			 gpointer user_data,
+			 GError **error);
+
 gchar *
 fu_common_strsafe(const gchar *str, gsize maxsz);
 gchar *

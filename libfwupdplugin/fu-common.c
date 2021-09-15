@@ -1942,6 +1942,79 @@ fu_common_strnsplit(const gchar *str, gsize sz, const gchar *delimiter, gint max
 }
 
 /**
+ * fu_common_strnsplit_full:
+ * @str: a string to split
+ * @sz: size of @str, or -1 for unknown
+ * @delimiter: a string which specifies the places at which to split the string
+ * @callback: (scope call): a #FuCommonStrsplitFunc.
+ * @user_data: user data
+ * @error: (nullable): optional return location for an error
+ *
+ * Splits the string, calling the given function for each
+ * of the tokens found. If any @callback returns %FALSE scanning is aborted.
+ *
+ * Use this function in preference to fu_common_strnsplit() when the input file is untrusted,
+ * and you don't want to allocate a GStrv with billions of one byte items.
+ *
+ * Returns: %TRUE if no @callback returned FALSE
+ *
+ * Since: 1.7.0
+ */
+gboolean
+fu_common_strnsplit_full(const gchar *str,
+			 gssize sz,
+			 const gchar *delimiter,
+			 FuCommonStrsplitFunc callback,
+			 gpointer user_data,
+			 GError **error)
+{
+	gsize delimiter_sz;
+	gsize str_sz;
+	guint found_idx = 0;
+	guint token_idx = 0;
+
+	g_return_val_if_fail(str != NULL, FALSE);
+	g_return_val_if_fail(delimiter != NULL && delimiter[0] != '\0', FALSE);
+	g_return_val_if_fail(callback != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* make known */
+	str_sz = sz != -1 ? (gsize)sz : strlen(str);
+	delimiter_sz = strlen(delimiter);
+
+	/* cannot split */
+	if (delimiter_sz > str_sz) {
+		g_autoptr(GString) token = g_string_new(str);
+		return callback(token, token_idx, user_data, error);
+	}
+
+	/* start splittin' */
+	for (gsize i = 0; i < (str_sz - delimiter_sz) + 1;) {
+		if (strncmp(str + i, delimiter, delimiter_sz) == 0) {
+			g_autoptr(GString) token = g_string_new(NULL);
+			g_string_append_len(token, str + found_idx, i - found_idx);
+			if (!callback(token, token_idx++, user_data, error))
+				return FALSE;
+			i += delimiter_sz;
+			found_idx = i;
+		} else {
+			i++;
+		}
+	}
+
+	/* any bits left over? */
+	if (found_idx != str_sz) {
+		g_autoptr(GString) token = g_string_new(NULL);
+		g_string_append_len(token, str + found_idx, str_sz - found_idx);
+		if (!callback(token, token_idx, user_data, error))
+			return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+/**
  * fu_common_strsafe:
  * @str: (nullable): a string to make safe for printing
  * @maxsz: maximum size of returned string

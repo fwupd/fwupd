@@ -30,6 +30,8 @@ typedef struct {
 G_DEFINE_TYPE_WITH_PRIVATE(FuIhexFirmware, fu_ihex_firmware, FU_TYPE_FIRMWARE)
 #define GET_PRIVATE(o) (fu_ihex_firmware_get_instance_private(o))
 
+#define FU_IHEX_FIRMWARE_TOKENS_MAX 100000 /* lines */
+
 /**
  * fu_ihex_firmware_get_records:
  * @self: A #FuIhexFirmware
@@ -180,30 +182,60 @@ fu_ihex_firmware_record_type_to_string(guint8 record_type)
 	return NULL;
 }
 
+typedef struct {
+	FuIhexFirmware *self;
+	FwupdInstallFlags flags;
+} FuIhexFirmwareTokenHelper;
+
+static gboolean
+fu_ihex_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+{
+	FuIhexFirmwareTokenHelper *helper = (FuIhexFirmwareTokenHelper *)user_data;
+	FuIhexFirmwarePrivate *priv = GET_PRIVATE(helper->self);
+	g_autoptr(FuIhexFirmwareRecord) rcd = NULL;
+
+	/* sanity check */
+	if (token_idx > FU_IHEX_FIRMWARE_TOKENS_MAX) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "file has too many lines");
+		return FALSE;
+	}
+
+	/* remove WIN32 line endings */
+	g_strdelimit(token->str, "\r\x1a", '\0');
+	token->len = strlen(token->str);
+
+	/* ignore blank lines */
+	if (token->len == 0)
+		return TRUE;
+
+	/* ignore comments */
+	if (g_str_has_prefix(token->str, ";"))
+		return TRUE;
+
+	/* parse record */
+	rcd = fu_ihex_firmware_record_new(token_idx + 1, token->str, helper->flags, error);
+	if (rcd == NULL) {
+		g_prefix_error(error, "invalid line %u: ", token_idx + 1);
+		return FALSE;
+	}
+	g_ptr_array_add(priv->records, g_steal_pointer(&rcd));
+	return TRUE;
+}
+
 static gboolean
 fu_ihex_firmware_tokenize(FuFirmware *firmware, GBytes *fw, FwupdInstallFlags flags, GError **error)
 {
 	FuIhexFirmware *self = FU_IHEX_FIRMWARE(firmware);
-	FuIhexFirmwarePrivate *priv = GET_PRIVATE(self);
-	gsize sz = 0;
-	const gchar *data = g_bytes_get_data(fw, &sz);
-	g_auto(GStrv) lines = fu_common_strnsplit(data, sz, "\n", -1);
-
-	for (guint ln = 0; lines[ln] != NULL; ln++) {
-		g_autoptr(FuIhexFirmwareRecord) rcd = NULL;
-		g_strdelimit(lines[ln], "\r\x1a", '\0');
-		if (g_str_has_prefix(lines[ln], ";"))
-			continue;
-		if (lines[ln][0] == '\0')
-			continue;
-		rcd = fu_ihex_firmware_record_new(ln + 1, lines[ln], flags, error);
-		if (rcd == NULL) {
-			g_prefix_error(error, "invalid line %u: ", ln + 1);
-			return FALSE;
-		}
-		g_ptr_array_add(priv->records, g_steal_pointer(&rcd));
-	}
-	return TRUE;
+	FuIhexFirmwareTokenHelper helper = {.self = self, .flags = flags};
+	return fu_common_strnsplit_full(g_bytes_get_data(fw, NULL),
+					g_bytes_get_size(fw),
+					"\n",
+					fu_ihex_firmware_tokenize_cb,
+					&helper,
+					error);
 }
 
 static gboolean

@@ -27,6 +27,8 @@ G_DEFINE_TYPE(FuCcgxFirmware, fu_ccgx_firmware, FU_TYPE_FIRMWARE)
 /* offset stored application version for CCGx */
 #define CCGX_APP_VERSION_OFFSET 228 /* 128+64+32+4 */
 
+#define FU_CCGX_FIRMWARE_TOKENS_MAX 100000 /* lines */
+
 GPtrArray *
 fu_ccgx_firmware_get_records(FuCcgxFirmware *self)
 {
@@ -79,11 +81,10 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCcgxFirmwareRecord, fu_ccgx_firmware_record_free
 
 static gboolean
 fu_ccgx_firmware_add_record(FuCcgxFirmware *self,
-			    const gchar *line,
+			    GString *token,
 			    FwupdInstallFlags flags,
 			    GError **error)
 {
-	guint16 linesz = strlen(line);
 	guint16 buflen;
 	guint8 checksum_calc = 0;
 	g_autoptr(FuCcgxFirmwareRecord) rcd = NULL;
@@ -91,26 +92,30 @@ fu_ccgx_firmware_add_record(FuCcgxFirmware *self,
 
 	/* parse according to https://community.cypress.com/docs/DOC-10562 */
 	rcd = g_new0(FuCcgxFirmwareRecord, 1);
-	if (!fu_firmware_strparse_uint8_safe(line, linesz, 0, &rcd->array_id, error))
+	if (!fu_firmware_strparse_uint8_safe(token->str, token->len, 0, &rcd->array_id, error))
 		return FALSE;
-	if (!fu_firmware_strparse_uint16_safe(line, linesz, 2, &rcd->row_number, error))
+	if (!fu_firmware_strparse_uint16_safe(token->str, token->len, 2, &rcd->row_number, error))
 		return FALSE;
-	if (!fu_firmware_strparse_uint16_safe(line, linesz, 6, &buflen, error))
+	if (!fu_firmware_strparse_uint16_safe(token->str, token->len, 6, &buflen, error))
 		return FALSE;
-	if (linesz != (buflen * 2) + 12) {
+	if (token->len != ((gsize)buflen * 2) + 12) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "invalid record, expected %u chars, got %u",
 			    (guint)(buflen * 2) + 12,
-			    linesz);
+			    (guint)token->len);
 		return FALSE;
 	}
 
 	/* parse payload, adding checksum */
 	for (guint i = 0; i < buflen; i++) {
 		guint8 tmp = 0;
-		if (!fu_firmware_strparse_uint8_safe(line, linesz, 10 + (i * 2), &tmp, error))
+		if (!fu_firmware_strparse_uint8_safe(token->str,
+						     token->len,
+						     10 + (i * 2),
+						     &tmp,
+						     error))
 			return FALSE;
 		fu_byte_array_append_uint8(data, tmp);
 		checksum_calc += tmp;
@@ -120,15 +125,19 @@ fu_ccgx_firmware_add_record(FuCcgxFirmware *self,
 	/* verify 2s complement checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
 		guint8 checksum_file;
-		if (!fu_firmware_strparse_uint8_safe(line,
-						     linesz,
+		if (!fu_firmware_strparse_uint8_safe(token->str,
+						     token->len,
 						     (buflen * 2) + 10,
 						     &checksum_file,
 						     error))
 			return FALSE;
 		for (guint i = 0; i < 5; i++) {
 			guint8 tmp = 0;
-			if (!fu_firmware_strparse_uint8_safe(line, linesz, i * 2, &tmp, error))
+			if (!fu_firmware_strparse_uint8_safe(token->str,
+							     token->len,
+							     i * 2,
+							     &tmp,
+							     error))
 				return FALSE;
 			checksum_calc += tmp;
 		}
@@ -287,6 +296,69 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 	return TRUE;
 }
 
+typedef struct {
+	FuCcgxFirmware *self;
+	FwupdInstallFlags flags;
+} FuCcgxFirmwareTokenHelper;
+
+static gboolean
+fu_ccgx_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+{
+	FuCcgxFirmwareTokenHelper *helper = (FuCcgxFirmwareTokenHelper *)user_data;
+	FuCcgxFirmware *self = FU_CCGX_FIRMWARE(helper->self);
+
+	/* sanity check */
+	if (token_idx > FU_CCGX_FIRMWARE_TOKENS_MAX) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "file has too many lines");
+		return FALSE;
+	}
+
+	/* remove WIN32 line endings */
+	g_strdelimit(token->str, "\r\x1a", '\0');
+	token->len = strlen(token->str);
+
+	/* header */
+	if (token_idx == 0) {
+		guint32 device_id = 0;
+		if (token->len != 12) {
+			g_autofree gchar *strsafe = fu_common_strsafe(token->str, 12);
+			if (strsafe != NULL) {
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "invalid header, expected == 12 chars -- got %s",
+					    strsafe);
+				return FALSE;
+			}
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "invalid header, expected == 12 chars");
+			return FALSE;
+		}
+		if (!fu_firmware_strparse_uint32_safe(token->str, token->len, 0, &device_id, error))
+			return FALSE;
+		self->silicon_id = device_id >> 16;
+		return TRUE;
+	}
+
+	/* ignore blank lines */
+	if (token->len == 0)
+		return TRUE;
+
+	/* parse record */
+	if (!fu_ccgx_firmware_add_record(self, token, helper->flags, error)) {
+		g_prefix_error(error, "error on line %u: ", token_idx + 1);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_ccgx_firmware_parse(FuFirmware *firmware,
 		       GBytes *fw,
@@ -296,52 +368,16 @@ fu_ccgx_firmware_parse(FuFirmware *firmware,
 		       GError **error)
 {
 	FuCcgxFirmware *self = FU_CCGX_FIRMWARE(firmware);
-	gsize linesz;
-	gsize sz = 0;
-	guint32 device_id = 0;
-	const gchar *data = g_bytes_get_data(fw, &sz);
-	g_auto(GStrv) lines = fu_common_strnsplit(data, sz, "\n", -1);
+	FuCcgxFirmwareTokenHelper helper = {.self = self, .flags = flags};
 
-	/* parse header */
-	if (lines[0] == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "invalid header, expected == 12 chars");
+	/* tokenize */
+	if (!fu_common_strnsplit_full(g_bytes_get_data(fw, NULL),
+				      g_bytes_get_size(fw),
+				      "\n",
+				      fu_ccgx_firmware_tokenize_cb,
+				      &helper,
+				      error))
 		return FALSE;
-	}
-	g_strdelimit(lines[0], "\r\x1a", '\0');
-	linesz = strlen(lines[0]);
-	if (linesz != 12) {
-		g_autofree gchar *strsafe = fu_common_strsafe(lines[0], 12);
-		if (strsafe != NULL) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "invalid header, expected == 12 chars -- got %s",
-				    strsafe);
-			return FALSE;
-		}
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "invalid header, expected == 12 chars");
-		return FALSE;
-	}
-	if (!fu_firmware_strparse_uint32_safe(lines[0], linesz, 0, &device_id, error))
-		return FALSE;
-	self->silicon_id = device_id >> 16;
-
-	/* parse data */
-	for (guint ln = 1; lines[ln] != NULL; ln++) {
-		g_strdelimit(lines[ln], "\r\x1a", '\0');
-		if (lines[ln][0] == '\0')
-			continue;
-		if (!fu_ccgx_firmware_add_record(self, lines[ln] + 1, flags, error)) {
-			g_prefix_error(error, "error on line %u: ", ln + 1);
-			return FALSE;
-		}
-	}
 
 	/* address is first data entry */
 	if (self->records->len > 0) {

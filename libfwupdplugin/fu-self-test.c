@@ -422,6 +422,52 @@ fu_smbios_class_func(void)
 	g_assert_cmpuint(byte, ==, 16);
 }
 
+static gboolean
+_strnsplit_add_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+{
+	GPtrArray *array = (GPtrArray *)user_data;
+	g_debug("TOKEN: [%s] (%u)", token->str, token_idx);
+	g_ptr_array_add(array, g_strdup(token->str));
+	return TRUE;
+}
+
+static gboolean
+_strnsplit_nop_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+{
+	guint *cnt = (guint *)user_data;
+	(*cnt)++;
+	return TRUE;
+}
+
+static void
+fu_common_strnsplit_func(void)
+{
+	const gchar *str = "123foo123bar123";
+	const guint bigsz = 1024 * 1024;
+	gboolean ret;
+	guint cnt = 0;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GString) bigstr = g_string_sized_new(bigsz * 2);
+
+	/* works for me */
+	ret = fu_common_strnsplit_full(str, -1, "123", _strnsplit_add_cb, array, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(array->len, ==, 3);
+	g_assert_cmpstr(g_ptr_array_index(array, 0), ==, "");
+	g_assert_cmpstr(g_ptr_array_index(array, 1), ==, "foo");
+	g_assert_cmpstr(g_ptr_array_index(array, 2), ==, "bar");
+
+	/* lets try something insane */
+	for (guint i = 0; i < bigsz; i++)
+		g_string_append(bigstr, "X\n");
+	ret = fu_common_strnsplit_full(bigstr->str, -1, "\n", _strnsplit_nop_cb, &cnt, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(cnt, ==, bigsz);
+}
+
 static void
 fu_common_strsafe_func(void)
 {
@@ -3633,6 +3679,7 @@ main(int argc, char **argv)
 	g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
+	g_test_add_func("/fwupd/common{strnsplit}", fu_common_strnsplit_func);
 	g_test_add_func("/fwupd/progress", fu_progress_func);
 	g_test_add_func("/fwupd/progress{child}", fu_progress_child_func);
 	g_test_add_func("/fwupd/progress{parent-1-step}", fu_progress_parent_one_step_proxy_func);

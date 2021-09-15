@@ -861,6 +861,7 @@ LIBFWUPDPLUGIN_1.6.2 {
 
 LIBFWUPDPLUGIN_1.7.0 {
   global:
+    fu_common_strnsplit_full;
     fu_device_set_progress;
     fu_plugin_runner_attach;
     fu_plugin_runner_cleanup;
