@@ -758,11 +758,11 @@ fu_pxi_receiver_device_add_peripherals(FuPxiReceiverDevice *device, guint idx, G
 				      model_name);
 	if (model.type == OTA_WIRELESS_MODULE_TYPE_RECEIVER) {
 		fu_device_set_version(FU_DEVICE(device), model_version);
-		fu_device_add_guid(FU_DEVICE(device), instance_id);
+		fu_device_add_instance_id(FU_DEVICE(device), instance_id);
 	} else {
 		g_autoptr(FuPxiWirelessDevice) wireless_device = fu_pxi_wireless_device_new(&model);
 		g_autofree gchar *logical_id = g_strdup_printf("IDX:0x%02x", idx);
-		fu_device_add_guid(FU_DEVICE(wireless_device), instance_id);
+		fu_device_add_instance_id(FU_DEVICE(wireless_device), instance_id);
 		fu_device_set_name(FU_DEVICE(wireless_device), model_name);
 		fu_device_set_version(FU_DEVICE(wireless_device), model_version);
 		fu_device_set_logical_id(FU_DEVICE(wireless_device), logical_id);
