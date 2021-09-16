@@ -97,7 +97,7 @@ jobs:
           pkg install -y git python3 glib meson pkgconf gobject-introspection \
             vala gtk-doc json-glib gpgme gnutls sqlite3 curl gcab libarchive \
             libelf libgpg-error gettext-tools gtk-update-icon-cache atk pango \
-            binutils gcc
+            binutils gcc protobuf-c
         sync: rsync
         run: ./contrib/ci/build_freebsd_package.sh
           --GITHUB_SHA=${GITHUB_SHA}
