@@ -18,6 +18,15 @@ fu_plugin_init(FuPlugin *plugin)
 }
 
 gboolean
+fu_plugin_startup(FuPlugin *plugin, GError **error)
+{
+	/* are the EFI dirs set up so we can update each device */
+	if (!fu_efivar_supported(error))
+		return FALSE;
+	return TRUE;
+}
+
+gboolean
 fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
