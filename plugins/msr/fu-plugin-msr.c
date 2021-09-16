@@ -55,6 +55,14 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	guint eax = 0;
 	guint ecx = 0;
 
+	if (!g_file_test("/dev/cpu", G_FILE_TEST_IS_DIR)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "missing kernel support");
+		return FALSE;
+	}
+
 	/* sdbg is supported: https://en.wikipedia.org/wiki/CPUID */
 	if (fu_common_get_cpu_vendor() == FU_CPU_VENDOR_INTEL) {
 		if (!fu_common_cpuid(0x01, NULL, NULL, &ecx, NULL, error))
