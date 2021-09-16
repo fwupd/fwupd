@@ -42,11 +42,14 @@ def parse_dependencies(OS, SUBOS, requested_type):
 
 
 if __name__ == "__main__":
+    possible_targets = ["fedora", "centos", "debian", "ubuntu", "arch"]
 
     try:
         import distro
 
         target = distro.id()
+        if not target in possible_targets:
+            target = distro.like()
     except ModuleNotFoundError:
         target = None
 
@@ -55,7 +58,7 @@ if __name__ == "__main__":
         "-o",
         "--os",
         default=target,
-        choices=["fedora", "centos", "debian", "ubuntu", "arch"],
+        choices=possible_targets,
         help="dependencies for OS",
     )
     args = parser.parse_args()
