@@ -63,6 +63,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    # these require variants to be set
+    if args.os == "ubuntu" or args.os == "debian":
+        args.os = "%s-%s" % (args.os, os.uname().machine)
+
     target = os.getenv("OS", args.os)
     if target is None:
         print("Missing OS environment variable")
