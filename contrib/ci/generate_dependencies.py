@@ -46,7 +46,7 @@ if __name__ == "__main__":
     try:
         import distro
 
-        target = distro.linux_distribution()[0]
+        target = distro.id()
     except ModuleNotFoundError:
         target = None
 
