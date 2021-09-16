@@ -58,15 +58,6 @@ struct _FuLogitechHidPpDeviceClass {
 #define FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED (1 << 3)
 
 /**
- * FU_LOGITECH_HIDPP_DEVICE_FLAG_BOLT_PERIPHERAL:
- *
- * The device is handled through a Bolt receiver.
- *
- * Since: 1.7.0
- */
-#define FU_LOGITECH_HIDPP_DEVICE_FLAG_BOLT_PERIPHERAL (1 << 4)
-
-/**
  * FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO:
  *
  * The device should add a softdevice (index 0x5), typically a radio.

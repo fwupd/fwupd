@@ -225,8 +225,6 @@ fu_logitech_hidpp_runtime_bolt_poll_peripherals(FuDevice *device)
 			fu_device_set_install_duration(FU_DEVICE(child), 270);
 			fu_device_add_private_flag(FU_DEVICE(child),
 						   FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO);
-			fu_device_add_private_flag(FU_DEVICE(child),
-						   FU_LOGITECH_HIDPP_DEVICE_FLAG_BOLT_PERIPHERAL);
 			fu_device_set_name(FU_DEVICE(child), name);
 			fu_logitech_hidpp_device_set_device_idx(child, i);
 			fu_logitech_hidpp_device_set_hidpp_pid(child, hidpp_pid);

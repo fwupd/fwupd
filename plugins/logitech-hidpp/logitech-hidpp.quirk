@@ -70,7 +70,7 @@ InstallDuration = 150
 [HIDRAW\VEN_046D&MOD_B02800000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpDevice
-Flags = add-radio,bolt-peripheral
+Flags = add-radio
 InstallDuration = 270
 
 # MR0077 (BLE direct)
@@ -84,7 +84,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&MOD_B36300000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpDevice
-Flags = add-radio,bolt-peripheral
+Flags = add-radio
 InstallDuration = 270
 
 # YR0073 (BLE direct)
@@ -98,7 +98,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&MOD_B02A00000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpDevice
-Flags = add-radio,no-request-required,bolt-peripheral
+Flags = add-radio,no-request-required
 InstallDuration = 270
 
 # M650 (BLE direct)
@@ -112,7 +112,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&MOD_B02C00000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpDevice
-Flags = add-radio,no-request-required,bolt-peripheral
+Flags = add-radio,no-request-required
 InstallDuration = 270
 
 # M750 (BLE direct)
@@ -125,7 +125,7 @@ InstallDuration = 270
 [HIDRAW\VEN_046D&MOD_B36F00000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpDevice
-Flags = add-radio,no-request-required,bolt-peripheral
+Flags = add-radio,no-request-required
 InstallDuration = 270
 
 [HIDRAW\VEN_046D&DEV_B36F]
