@@ -403,7 +403,7 @@ fu_util_get_plugins (FuUtilPrivate *priv, gchar **values, GError **error)
 	GPtrArray *plugins;
 
 	/* load engine */
-	if (!fu_util_start_engine (priv, FU_ENGINE_LOAD_FLAG_NONE, error))
+	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_HWINFO, error))
 		return FALSE;
 
 	/* print */
