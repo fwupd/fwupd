@@ -1095,8 +1095,8 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidPpDevice *self,
 	msg->sub_id = idx;
 	msg->function_id = cmd << 4; /* dfuStart or dfuCmdDataX */
 	msg->hidpp_version = priv->hidpp_version;
-	if (fu_device_has_private_flag(FU_DEVICE(self),
-				       FU_LOGITECH_HIDPP_DEVICE_FLAG_BOLT_PERIPHERAL))
+	/* enable transfer workaround for devices paired to Bolt receiver */
+	if (priv->device_idx != HIDPP_DEVICE_IDX_UNSET && priv->device_idx != HIDPP_DEVICE_IDX_BLE)
 		msg->flags = FU_UNIFYING_HIDPP_MSG_FLAG_RETRY_STUCK;
 	memcpy(msg->data, data, 16);
 	if (!fu_logitech_hidpp_transfer(priv->io_channel, msg, error)) {
@@ -1328,12 +1328,9 @@ fu_logitech_hidpp_device_finalize(GObject *object)
 static gboolean
 fu_logitech_hidpp_device_cleanup(FuDevice *device, FwupdInstallFlags flags, GError **error)
 {
-	if (fu_device_has_private_flag(device, FU_LOGITECH_HIDPP_DEVICE_FLAG_BOLT_PERIPHERAL)) {
-		FuDevice *parent = fu_device_get_parent(device);
-		if (parent != NULL)
-			fu_device_set_poll_interval(parent,
-						    FU_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL);
-	}
+	FuDevice *parent = fu_device_get_parent(device);
+	if (parent != NULL)
+		fu_device_set_poll_interval(parent, FU_HIDPP_RECEIVER_RUNTIME_POLLING_INTERVAL);
 
 	return TRUE;
 }
@@ -1379,9 +1376,6 @@ fu_logitech_hidpp_device_init(FuLogitechHidPpDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_LOGITECH_HIDPP_DEVICE_FLAG_NO_REQUEST_REQUIRED,
 					"no-request-required");
-	fu_device_register_private_flag(FU_DEVICE(self),
-					FU_LOGITECH_HIDPP_DEVICE_FLAG_BOLT_PERIPHERAL,
-					"bolt-peripheral");
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_LOGITECH_HIDPP_DEVICE_FLAG_ADD_RADIO,
 					"add-radio");

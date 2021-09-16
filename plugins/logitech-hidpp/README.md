@@ -137,10 +137,6 @@ tweak the plugin code for certain device types:
     FuLogitechHidPpDevice, since the receiver has a specific HID++ ID.
 * ble: used to differentiate devices in BLE mode. They require all the
     reports to be _long_.
-* bolt-peripheral: used to specify that the device works as a
-    peripheral paired to a Bolt receiver. In FuLogitechHidPpDevice this
-    is used to trigger a refresh of the paired device status in the
-    receiver after attaching.
 
 ## External Interface Access
 
