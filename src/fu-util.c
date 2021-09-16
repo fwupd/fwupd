@@ -1788,8 +1788,6 @@ fu_util_update_device_with_release(FuUtilPrivate *priv,
 				   GError **error)
 {
 	if (!priv->no_safety_check && !priv->assume_yes) {
-		if (!fu_util_prompt_warning_composite(priv, dev, rel, error))
-			return FALSE;
 		if (!fu_util_prompt_warning(dev, rel, fu_util_get_tree_title(priv), error))
 			return FALSE;
 		if (!fu_util_prompt_warning_composite(priv, dev, rel, error))
