@@ -1508,16 +1508,6 @@
       <package />
     </distro>
   </dependency>
-  <dependency type="build" id="flatpak-builder">
-    <distro id="flatpak">
-      <package />
-    </distro>
-  </dependency>
-  <dependency type="build" id="tree">
-    <distro id="flatpak">
-      <package />
-    </distro>
-  </dependency>
   <dependency type="build" id="libtss2-dev">
     <distro id="arch">
       <package>tpm2-tss</package>

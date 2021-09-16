@@ -52,7 +52,7 @@ with open("Dockerfile", "w") as wfd:
                 replace = ""
             wfd.write(line.replace("%%%ARCH_PREFIX%%%", replace))
         elif line == "%%%INSTALL_DEPENDENCIES_COMMAND%%%\n":
-            if OS == "fedora" or OS == "flatpak":
+            if OS == "fedora":
                 wfd.write("RUN dnf --enablerepo=updates-testing -y install \\\n")
             elif OS == "centos":
                 wfd.write("RUN yum -y install \\\n")
