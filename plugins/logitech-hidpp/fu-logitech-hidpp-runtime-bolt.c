@@ -25,7 +25,6 @@ fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GE
 	FuLogitechHidPpRuntime *self = FU_HIDPP_RUNTIME(device);
 	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(FwupdRequest) request = fwupd_request_new();
 
 	msg->report_id = HIDPP_REPORT_ID_LONG;
 	msg->device_id = HIDPP_DEVICE_IDX_RECEIVER;
@@ -49,20 +48,7 @@ fu_logitech_hidpp_runtime_bolt_detach(FuDevice *device, FuProgress *progress, GE
 			return FALSE;
 		}
 	}
-
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	/* generate a message if not already set */
-	if (fu_device_get_update_message(device) == NULL) {
-		g_autofree gchar *str = NULL;
-		str = g_strdup_printf("%s needs to be manually restarted to complete the update. "
-				      "Please unplug it and plug it back again.",
-				      fu_device_get_name(device));
-		fu_device_set_update_message(device, str);
-	}
-	fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
-	fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
-	fwupd_request_set_message(request, fu_device_get_update_message(device));
-	fu_device_emit_request(device, request);
 	return TRUE;
 }
 
