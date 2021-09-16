@@ -55,7 +55,7 @@ if __name__ == "__main__":
         "-o",
         "--os",
         default=target,
-        choices=["fedora", "centos", "flatpak", "debian", "ubuntu", "arch"],
+        choices=["fedora", "centos", "debian", "ubuntu", "arch"],
         help="dependencies for OS",
     )
     args = parser.parse_args()
