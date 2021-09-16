@@ -205,11 +205,10 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	const gchar *username_fwupd = "fwupd";
-	guint8 user_id = 0x04;
+	guint8 user_id = G_MAXUINT8;
 	g_autofree gchar *password_new = fu_common_generate_password(15);
 	g_autofree gchar *password_tmp = fu_common_generate_password(15);
 	g_autofree gchar *uri = NULL;
-	g_autofree gchar *username = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuIpmiDevice) device = fu_ipmi_device_new(fu_plugin_get_context(plugin));
 	g_autoptr(FuRedfishRequest) request = NULL;
@@ -221,14 +220,28 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	if (locker == NULL)
 		return FALSE;
 
-	/* check the slot is clear */
-	username = fu_ipmi_device_get_user_password(device, 0x04, NULL);
-	if (username != NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "cannot create fwupd user with account %s already existing",
-			    username);
+	/* check for existing user, and if not then remember the first spare slot */
+	for (guint8 i = 2; i < 0xFF; i++) {
+		g_autofree gchar *username = fu_ipmi_device_get_user_password(device, i, NULL);
+		if (username == NULL && user_id == G_MAXUINT8) {
+			g_debug("KCS slot %u free", i);
+			user_id = i;
+			continue;
+		}
+		if (g_strcmp0(username, "fwupd") == 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "fwupd user already exists in KCS slot %u",
+				    (guint)i);
+			return FALSE;
+		}
+	}
+	if (user_id == G_MAXUINT8) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "all KCS slots full, cannot create user");
 		return FALSE;
 	}
 
