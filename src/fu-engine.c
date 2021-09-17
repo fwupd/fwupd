@@ -29,6 +29,8 @@
 
 #include "fu-backend.h"
 #include "fu-cabinet.h"
+#include "fu-cfu-offer.h"
+#include "fu-cfu-payload.h"
 #include "fu-common-cab.h"
 #include "fu-common.h"
 #include "fu-config.h"
@@ -6716,6 +6718,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 				      FU_TYPE_EFI_FIRMWARE_VOLUME);
 	fu_context_add_firmware_gtype(self->ctx, "ifd-bios", FU_TYPE_IFD_BIOS);
 	fu_context_add_firmware_gtype(self->ctx, "ifd-firmware", FU_TYPE_IFD_FIRMWARE);
+	fu_context_add_firmware_gtype(self->ctx, "cfu-offer", FU_TYPE_CFU_OFFER);
+	fu_context_add_firmware_gtype(self->ctx, "cfu-payload", FU_TYPE_CFU_PAYLOAD);
 
 	/* set up backends */
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
