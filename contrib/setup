@@ -10,9 +10,6 @@ setup_deps()
     if [ "$question" = "y" ]; then
         DEPS=$(./contrib/ci/generate_dependencies.py)
         if [ "$OS" = "debian" ] || [ "$OS" = "ubuntu" ]; then
-            if ! python3 -c "import venv"; then
-                DEPS="python3-venv"
-            fi
             sudo apt install $DEPS
         elif [ "$OS" = "fedora" ]; then
             sudo dnf install $DEPS
@@ -70,7 +67,7 @@ check_markdown()
 
 #if interactive install build deps and prepare environment
 if [ -t 2 ]; then
-    OS=$(python3 -c "import distro; print(distro.id().split()[0])")
+    OS=$(python3 ./contrib/ci/detect_os_profile.py)
     case $OS in
         debian|ubuntu|arch|fedora)
             setup_deps $OS
