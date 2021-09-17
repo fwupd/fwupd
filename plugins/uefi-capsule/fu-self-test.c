@@ -204,7 +204,7 @@ fu_uefi_cod_device_func(void)
 	g_autofree gchar *str = NULL;
 
 	/* these are checked into git and so are not required */
-	if (g_getenv("FU_UEFI_CAPSULE_RECREATE_COD_SELF_TEST_DATA") != NULL) {
+	if (g_getenv("FWUPD_UEFI_CAPSULE_RECREATE_COD_DATA") != NULL) {
 		g_autoptr(GByteArray) cap0 = NULL;
 		g_autoptr(GByteArray) cap1 = NULL;
 		g_autoptr(GByteArray) last = NULL;

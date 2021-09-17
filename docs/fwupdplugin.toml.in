@@ -42,6 +42,7 @@ base_url = "https://github.com/fwupd/fwupd/blob/@version@/"
 
 [extra]
 content_files = [
+  "env.md",
   "tutorial.md",
   "hsi.md",
 ]
