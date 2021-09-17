@@ -22,6 +22,7 @@ if __name__ == "__main__":
         ("cros-ec.builder.xml", "cros-ec.bin"),
         ("dfuse.builder.xml", "dfuse.dfu"),
         ("ebitdo.builder.xml", "ebitdo.dat"),
+        ("elanfp.builder.xml", "elanfp.bin"),
         ("efi-firmware-file.builder.xml", "efi-file.bin"),
         ("efi-firmware-filesystem.builder.xml", "efi-filesystem.bin"),
         ("efi-firmware-volume.builder.xml", "efi-volume.bin"),

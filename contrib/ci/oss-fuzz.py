@@ -317,6 +317,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("ccgx", globstr="ccgx*.cyacd"),
         Fuzzer("cros-ec"),
         Fuzzer("ebitdo"),
+        Fuzzer("elanfp"),
         Fuzzer("elantp"),
         Fuzzer("hailuck-kbd", srcdir="hailuck", globstr="ihex*"),
         Fuzzer("pixart", srcdir="pixart-rf", pattern="pxi-firmware"),
