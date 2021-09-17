@@ -1,5 +1,17 @@
 version: 2
 jobs:
+  build-debian-s390x:
+    machine:
+      image: circleci/classic:latest
+    steps:
+      - checkout
+      - run:
+          name: "Build container"
+          command: OS=debian-s390x ./contrib/ci/generate_docker.py build
+      - run:
+          name: "Run build script"
+          command: docker run --privileged -e CI=true -t -v `pwd`:/github/workspace fwupd-debian-s390x
+
   build-ubuntu-x86_64:
     machine:
       image: circleci/classic:latest
@@ -151,6 +163,7 @@ workflows:
   main:
     jobs:
       - build-windows
+      - build-debian-s390x
       - build-ubuntu-x86_64
       - build-snap
       - publish-edge:
