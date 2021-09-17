@@ -16,105 +16,115 @@
 #define S2F_TAG_END_OF_INDEX	0xFF
 
 gboolean
-binary_verify(const guint8 *pbinary, gsize binary_size, S2FFILE *ps2ffile, GError **error)
+fU_elanfp_file_ctrl_binary_verify(FuFirmware *firmware, GError **error)
 {
-	S2FINDEX *ps2findex = NULL;
-	guint8 *pindex = NULL;
+	S2F_HEADER *ps2f_header = NULL;
+	S2F_INDEX *ps2f_index = NULL;
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GBytes) fw_index = NULL;
+	g_autoptr(GBytes) fw_offer_a = NULL;
+	g_autoptr(GBytes) fw_offer_b = NULL;
+	g_autoptr(GBytes) fw_payload_a = NULL;
+	g_autoptr(GBytes) fw_payload_b = NULL;
+	g_autoptr(FuFirmware) img_offer_a = fu_firmware_new();
+	g_autoptr(FuFirmware) img_offer_b = fu_firmware_new();
+	g_autoptr(FuFirmware) img_payload_a = fu_firmware_new();
+	g_autoptr(FuFirmware) img_payload_b = fu_firmware_new();
+	gsize binary_size;
+	gsize index_size;
 
-	g_return_val_if_fail(pbinary != NULL, FALSE);
+	g_return_val_if_fail(firmware != NULL, FALSE);
 
-	if (!fu_common_read_uint32_safe(pbinary,
-					binary_size,
-					0,
-					&(ps2ffile->S2FHeader.Tag),
-					G_LITTLE_ENDIAN,
-					error)) {
-		g_prefix_error(error, "binary verify - fail to get tag: ");
+	/* get default image */
+	fw = fu_firmware_get_bytes(firmware, error);
+	if (fw == NULL) {
+		g_prefix_error(error, "binary verify - fail to get fw buffer: ");
 		return FALSE;
 	}
 
-	if (!fu_common_read_uint32_safe(pbinary,
-					binary_size,
-					4,
-					&(ps2ffile->S2FHeader.FormatVersion),
-					G_LITTLE_ENDIAN,
-					error)) {
-		g_prefix_error(error, "binary verify - fail to get format version: ");
+	/* check the file size */
+	ps2f_header = (S2F_HEADER *)g_bytes_get_data(fw, &binary_size);
+
+	if (binary_size == 0) {
+		g_prefix_error(error, "binary verify - file size is zero: ");
 		return FALSE;
 	}
 
-	if (!fu_common_read_uint32_safe(pbinary,
-					binary_size,
-					8,
-					&ps2ffile->S2FHeader.ICID,
-					G_LITTLE_ENDIAN,
-					error)) {
-		g_prefix_error(error, "binary verify - fail to get icid: ");
+	if (GUINT32_FROM_LE(ps2f_header->Tag) != 0x46325354) {
+		g_prefix_error(error, "binary verify - file tag is not correct: ");
 		return FALSE;
 	}
 
-	if (!fu_common_read_uint32_safe(pbinary,
-					binary_size,
-					12,
-					&ps2ffile->S2FHeader.Reserve,
-					G_LITTLE_ENDIAN,
-					error)) {
-		g_prefix_error(error, "binary verify - fail to get reserve field: ");
-		return FALSE;
-	}
+	g_debug("s2f format version: 0x%08X", GUINT32_FROM_LE(ps2f_header->FormatVersion));
 
-	if (ps2ffile->S2FHeader.Tag != 0x46325354)
-		return FALSE;
+	/* find index */
+	fw_index = fu_common_bytes_new_offset(fw, sizeof(S2F_HEADER), sizeof(S2F_INDEX), error);
 
-	ps2ffile->Tag[0][0] = 0x41;
-	ps2ffile->Tag[0][1] = 0x00;
-	ps2ffile->Tag[1][0] = 0x42;
-	ps2ffile->Tag[1][1] = 0x00;
+	ps2f_index = (S2F_INDEX *)g_bytes_get_data(fw_index, &index_size);
 
-	pindex = (guint8 *)pbinary + SIZE_IDENTIFY_PACKET;
-
-	ps2findex = (S2FINDEX *)pindex;
-
-	while (pindex < (pbinary + binary_size)) {
-		switch (ps2findex->Type) {
+	while (1) {
+		switch (ps2f_index->Type) {
 		case S2F_TAG_CFU_OFFER_A:
 
-			ps2ffile->pOffer[0] = (guint8 *)pbinary + ps2findex->StartAddress;
+			fw_offer_a = fu_common_bytes_new_offset(fw,
+								ps2f_index->StartAddress,
+								ps2f_index->Length,
+								error);
 
-			ps2ffile->OfferLength[0] = ps2findex->Length;
+			fu_firmware_set_id(img_offer_a, FW_SET_ID_OFFER_A);
+			fu_firmware_set_bytes(img_offer_a, fw_offer_a);
+			fu_firmware_add_image(firmware, img_offer_a);
+
 			break;
 		case S2F_TAG_CFU_OFFER_B:
 
-			ps2ffile->pOffer[1] = (guint8 *)pbinary + ps2findex->StartAddress;
+			fw_offer_b = fu_common_bytes_new_offset(fw,
+								ps2f_index->StartAddress,
+								ps2f_index->Length,
+								error);
 
-			ps2ffile->OfferLength[1] = ps2findex->Length;
+			fu_firmware_set_id(img_offer_b, FW_SET_ID_OFFER_B);
+			fu_firmware_set_bytes(img_offer_b, fw_offer_b);
+			fu_firmware_add_image(firmware, img_offer_b);
+
 			break;
 		case S2F_TAG_CFU_PAYLOAD_A:
 
-			ps2ffile->pPayload[0] = (guint8 *)pbinary + ps2findex->StartAddress;
+			fw_payload_a = fu_common_bytes_new_offset(fw,
+								  ps2f_index->StartAddress,
+								  ps2f_index->Length,
+								  error);
 
-			ps2ffile->PayloadLength[0] = ps2findex->Length;
+			fu_firmware_set_id(img_payload_a, FW_SET_ID_PAYLOAD_A);
+			fu_firmware_set_bytes(img_payload_a, fw_payload_a);
+			fu_firmware_add_image(firmware, img_payload_a);
+
 			break;
 		case S2F_TAG_CFU_PAYLOAD_B:
 
-			ps2ffile->pPayload[1] = (guint8 *)pbinary + ps2findex->StartAddress;
+			fw_payload_b = fu_common_bytes_new_offset(fw,
+								  ps2f_index->StartAddress,
+								  ps2f_index->Length,
+								  error);
 
-			ps2ffile->PayloadLength[1] = ps2findex->Length;
+			fu_firmware_set_id(img_payload_b, FW_SET_ID_PAYLOAD_B);
+			fu_firmware_set_bytes(img_payload_b, fw_payload_b);
+			fu_firmware_add_image(firmware, img_payload_b);
 
 			break;
 		case S2F_TAG_END_OF_INDEX:
 
-			g_debug("end of index");
+			g_debug("binary verify - end of index");
 
 			return TRUE;
 
 		default:;
 		}
 
-		ps2findex++;
-
-		pindex += sizeof(S2FINDEX);
+		ps2f_index++;
 	}
 
-	return FALSE;
+	g_debug("binary verify - success");
+
+	return TRUE;
 }

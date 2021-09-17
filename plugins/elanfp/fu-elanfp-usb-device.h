@@ -27,4 +27,4 @@ gboolean
 iap_recv_status(GUsbDevice *usb_device, guint8 *pbuff, gsize len, GError **error);
 
 gboolean
-run_iap_process(FuElanfpUsbDevice *self, GBytes *fw, GError **error);
+run_iap_process(FuElanfpUsbDevice *self, FuFirmware *firmware, GError **error);

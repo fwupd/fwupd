@@ -6,31 +6,35 @@
 
 #pragma once
 
-//#include <glib.h>
 #include <fwupdplugin.h>
 
-typedef struct _S2FIDENTITY {
+#define FW_SET_ID_OFFER_A   "offer_A"
+#define FW_SET_ID_OFFER_B   "offer_B"
+#define FW_SET_ID_PAYLOAD_A "payload_A"
+#define FW_SET_ID_PAYLOAD_B "payload_B"
+
+typedef struct _S2F_HEADER {
 	guint32 Tag;
 	guint32 FormatVersion;
 	guint32 ICID;
 	guint32 Reserve;
-} S2FIDENTITY;
+} S2F_HEADER;
 
-typedef struct _S2FINDEX {
+typedef struct _S2F_INDEX {
 	guint32 Type;
 	guint32 Reserve;
 	guint32 StartAddress;
 	guint32 Length;
-} S2FINDEX;
+} S2F_INDEX;
 
-typedef struct _S2FFILE {
-	S2FIDENTITY S2FHeader;
+typedef struct _S2F_FILE {
+	S2F_HEADER S2FHeader;
 	guint8 Tag[2][2];
-	guint8 *pOffer[2];
-	guint8 *pPayload[2];
-	guint32 OfferLength[2];
-	guint32 PayloadLength[2];
-} S2FFILE;
+	const guint8 *pOffer[2];
+	const guint8 *pPayload[2];
+	gsize OfferLength[2];
+	gsize PayloadLength[2];
+} S2F_FILE;
 
 typedef struct _PAYLOAD_HEADER {
 	guint32 Address;
@@ -38,4 +42,4 @@ typedef struct _PAYLOAD_HEADER {
 } PAYLOAD_HEADER;
 
 gboolean
-binary_verify(const guint8 *pbinary, gsize binary_size, S2FFILE *ps2ffile, GError **error);
+fU_elanfp_file_ctrl_binary_verify(FuFirmware *firmware, GError **error);
