@@ -1239,7 +1239,7 @@ fu_logitech_hidpp_device_attach(FuLogitechHidPpDevice *self,
 	}
 
 	/* reboot back into firmware mode */
-	msg->report_id = HIDPP_REPORT_ID_SHORT;
+	msg->report_id = HIDPP_REPORT_ID_LONG;
 	msg->device_id = priv->device_idx;
 	msg->sub_id = idx;
 	msg->function_id = 0x05 << 4; /* restart */
