@@ -565,9 +565,17 @@ fu_device_dump_firmware(FuDevice *self,
 			FuProgress *progress,
 			GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_device_attach(FuDevice *self, FuProgress *progress, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_attach(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_device_detach(FuDevice *self, FuProgress *progress, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+fu_device_detach(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_device_attach_full(FuDevice *self,
+		      FuProgress *progress,
+		      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_device_detach_full(FuDevice *self,
+		      FuProgress *progress,
+		      GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_device_reload(FuDevice *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean

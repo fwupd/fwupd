@@ -269,14 +269,14 @@ static gboolean
 fu_synaprom_config_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
-	return fu_device_attach(parent, progress, error);
+	return fu_device_attach_full(parent, progress, error);
 }
 
 static gboolean
 fu_synaprom_config_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuDevice *parent = fu_device_get_parent(device);
-	return fu_device_detach(parent, progress, error);
+	return fu_device_detach_full(parent, progress, error);
 }
 
 static void
