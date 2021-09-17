@@ -19,6 +19,7 @@ struct _FuWacModuleClass {
 #define FU_WAC_MODULE_FW_TYPE_BLUETOOTH	     0x01
 #define FU_WAC_MODULE_FW_TYPE_EMR_CORRECTION 0x02
 #define FU_WAC_MODULE_FW_TYPE_BLUETOOTH_HID  0x03
+#define FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID6  0x06
 #define FU_WAC_MODULE_FW_TYPE_MAIN	     0x3f
 
 #define FU_WAC_MODULE_COMMAND_START 0x01
@@ -28,6 +29,7 @@ struct _FuWacModuleClass {
 #define FU_WAC_MODULE_WRITE_TIMEOUT  1
 #define FU_WAC_MODULE_ERASE_TIMEOUT  15
 #define FU_WAC_MODULE_FINISH_TIMEOUT 1
+#define FU_WAC_MODULE_COMMIT_TIMEOUT 80
 
 gboolean
 fu_wac_module_set_feature(FuWacModule *self,

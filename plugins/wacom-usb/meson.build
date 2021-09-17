@@ -14,6 +14,7 @@ shared_module('fu_plugin_wacom_usb',
     'fu-wac-firmware.c',          # fuzzing
     'fu-wac-module.c',
     'fu-wac-module-bluetooth.c',
+    'fu-wac-module-bluetooth-id6.c',
     'fu-wac-module-touch.c',
     'fu-plugin-wacom-usb.c',
   ],
