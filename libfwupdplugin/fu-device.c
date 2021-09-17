@@ -3640,7 +3640,6 @@ fu_device_dump_firmware(FuDevice *self, FuProgress *progress, GError **error)
 /**
  * fu_device_detach:
  * @self: a #FuDevice
- * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Detaches a device from the application into bootloader mode.
@@ -3650,7 +3649,26 @@ fu_device_dump_firmware(FuDevice *self, FuProgress *progress, GError **error)
  * Since: 1.0.8
  **/
 gboolean
-fu_device_detach(FuDevice *self, FuProgress *progress, GError **error)
+fu_device_detach(FuDevice *self, GError **error)
+{
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	return fu_device_detach_full(self, progress, error);
+}
+
+/**
+ * fu_device_detach_full:
+ * @self: a #FuDevice
+ * @progress: a #FuProgress
+ * @error: (nullable): optional return location for an error
+ *
+ * Detaches a device from the application into bootloader mode.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.7.0
+ **/
+gboolean
+fu_device_detach_full(FuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 
@@ -3669,7 +3687,6 @@ fu_device_detach(FuDevice *self, FuProgress *progress, GError **error)
 /**
  * fu_device_attach:
  * @self: a #FuDevice
- * @progress: a #FuProgress
  * @error: (nullable): optional return location for an error
  *
  * Attaches a device from the bootloader into application mode.
@@ -3679,7 +3696,26 @@ fu_device_detach(FuDevice *self, FuProgress *progress, GError **error)
  * Since: 1.0.8
  **/
 gboolean
-fu_device_attach(FuDevice *self, FuProgress *progress, GError **error)
+fu_device_attach(FuDevice *self, GError **error)
+{
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+	return fu_device_attach_full(self, progress, error);
+}
+
+/**
+ * fu_device_attach_full:
+ * @self: a #FuDevice
+ * @progress: a #FuProgress
+ * @error: (nullable): optional return location for an error
+ *
+ * Attaches a device from the bootloader into application mode.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.7.0
+ **/
+gboolean
+fu_device_attach_full(FuDevice *self, FuProgress *progress, GError **error)
 {
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
 

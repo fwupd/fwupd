@@ -682,7 +682,7 @@ fu_plugin_device_attach(FuPlugin *self, FuDevice *device, FuProgress *progress, 
 	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_attach(device, progress, error);
+	return fu_device_attach_full(device, progress, error);
 }
 
 static gboolean
@@ -693,7 +693,7 @@ fu_plugin_device_detach(FuPlugin *self, FuDevice *device, FuProgress *progress, 
 	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_detach(device, progress, error);
+	return fu_device_detach_full(device, progress, error);
 }
 
 static gboolean
@@ -780,12 +780,12 @@ fu_plugin_device_read_firmware(FuPlugin *self,
 	locker = fu_device_locker_new(proxy, error);
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_device_detach(device, progress, error))
+	if (!fu_device_detach_full(device, progress, error))
 		return FALSE;
 	firmware = fu_device_read_firmware(device, progress, error);
 	if (firmware == NULL) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_device_attach(device, progress, &error_local))
+		if (!fu_device_attach_full(device, progress, &error_local))
 			g_debug("ignoring attach failure: %s", error_local->message);
 		g_prefix_error(error, "failed to read firmware: ");
 		return FALSE;
@@ -793,7 +793,7 @@ fu_plugin_device_read_firmware(FuPlugin *self,
 	fw = fu_firmware_write(firmware, error);
 	if (fw == NULL) {
 		g_autoptr(GError) error_local = NULL;
-		if (!fu_device_attach(device, progress, &error_local))
+		if (!fu_device_attach_full(device, progress, &error_local))
 			g_debug("ignoring attach failure: %s", error_local->message);
 		g_prefix_error(error, "failed to write firmware: ");
 		return FALSE;
@@ -803,7 +803,7 @@ fu_plugin_device_read_firmware(FuPlugin *self,
 		hash = g_compute_checksum_for_bytes(checksum_types[i], fw);
 		fu_device_add_checksum(device, hash);
 	}
-	return fu_device_attach(device, progress, error);
+	return fu_device_attach_full(device, progress, error);
 }
 
 /**

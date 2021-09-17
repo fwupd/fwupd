@@ -1525,7 +1525,7 @@ fu_util_detach(FuUtilPrivate *priv, gchar **values, GError **error)
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_detach(device, priv->progress, error);
+	return fu_device_detach_full(device, priv->progress, error);
 }
 
 static gboolean
@@ -1622,7 +1622,7 @@ fu_util_attach(FuUtilPrivate *priv, gchar **values, GError **error)
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_attach(device, priv->progress, error);
+	return fu_device_attach_full(device, priv->progress, error);
 }
 
 static gboolean

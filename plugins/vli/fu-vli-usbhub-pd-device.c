@@ -252,7 +252,7 @@ fu_vli_usbhub_pd_device_attach(FuDevice *device, FuProgress *progress, GError **
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(parent, error);
 	if (locker == NULL)
 		return FALSE;
-	return fu_device_attach(parent, progress, error);
+	return fu_device_attach_full(parent, progress, error);
 }
 
 static gboolean

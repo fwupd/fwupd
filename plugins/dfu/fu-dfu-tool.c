@@ -494,7 +494,7 @@ fu_dfu_tool_read_alt(FuDfuTool *self, gchar **values, GError **error)
 	/* APP -> DFU */
 	if (!fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug("detaching");
-		if (!fu_device_detach(FU_DEVICE(device), progress, error))
+		if (!fu_device_detach_full(FU_DEVICE(device), progress, error))
 			return FALSE;
 		if (!fu_dfu_device_wait_for_replug(self,
 						   device,
@@ -529,7 +529,7 @@ fu_dfu_tool_read_alt(FuDfuTool *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* do host reset */
-	if (!fu_device_attach(FU_DEVICE(device), progress, error))
+	if (!fu_device_attach_full(FU_DEVICE(device), progress, error))
 		return FALSE;
 	if (!fu_dfu_device_wait_for_replug(self,
 					   device,
@@ -583,7 +583,7 @@ fu_dfu_tool_read(FuDfuTool *self, gchar **values, GError **error)
 
 	/* APP -> DFU */
 	if (!fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		if (!fu_device_detach(FU_DEVICE(device), progress, error))
+		if (!fu_device_detach_full(FU_DEVICE(device), progress, error))
 			return FALSE;
 		if (!fu_dfu_device_wait_for_replug(self,
 						   device,
@@ -601,7 +601,7 @@ fu_dfu_tool_read(FuDfuTool *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* do host reset */
-	if (!fu_device_attach(FU_DEVICE(device), progress, error))
+	if (!fu_device_attach_full(FU_DEVICE(device), progress, error))
 		return FALSE;
 	if (!fu_dfu_device_wait_for_replug(self,
 					   device,
@@ -672,7 +672,7 @@ fu_dfu_tool_write_alt(FuDfuTool *self, gchar **values, GError **error)
 	/* APP -> DFU */
 	if (!fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
 		g_debug("detaching");
-		if (!fu_device_detach(FU_DEVICE(device), progress, error))
+		if (!fu_device_detach_full(FU_DEVICE(device), progress, error))
 			return FALSE;
 		if (!fu_dfu_device_wait_for_replug(self, device, 5000, error))
 			return FALSE;
@@ -730,7 +730,7 @@ fu_dfu_tool_write_alt(FuDfuTool *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* do host reset */
-	if (!fu_device_attach(FU_DEVICE(device), progress, error))
+	if (!fu_device_attach_full(FU_DEVICE(device), progress, error))
 		return FALSE;
 	if (!fu_dfu_device_wait_for_replug(self,
 					   device,
@@ -778,7 +778,7 @@ fu_dfu_tool_write(FuDfuTool *self, gchar **values, GError **error)
 
 	/* APP -> DFU */
 	if (!fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
-		if (!fu_device_detach(FU_DEVICE(device), progress, error))
+		if (!fu_device_detach_full(FU_DEVICE(device), progress, error))
 			return FALSE;
 		if (!fu_dfu_device_wait_for_replug(self,
 						   device,
@@ -800,7 +800,7 @@ fu_dfu_tool_write(FuDfuTool *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* do host reset */
-	if (!fu_device_attach(FU_DEVICE(device), progress, error))
+	if (!fu_device_attach_full(FU_DEVICE(device), progress, error))
 		return FALSE;
 
 	if (fu_dfu_device_has_attribute(device, FU_DFU_DEVICE_ATTR_MANIFEST_TOL)) {

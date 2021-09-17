@@ -55,7 +55,7 @@ fu_logitech_hidpp_radio_detach(FuDevice *device, FuProgress *progress, GError **
 
 	if (!fu_device_has_flag(parent, FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
-	return fu_device_detach(parent, progress, error);
+	return fu_device_detach_full(parent, progress, error);
 }
 
 static gboolean
