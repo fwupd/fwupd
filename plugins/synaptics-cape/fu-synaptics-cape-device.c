@@ -88,7 +88,7 @@ fu_synaptics_cape_device_set_report(FuSynapticsCapeDevice *self,
 	g_return_val_if_fail(data != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	if (g_getenv("FWUPD_SYNAPTICS_CAPE_HID_REPORT_VERBOSE") != NULL)
+	if (g_getenv("FWUPD_SYNAPTICS_CAPE_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "SetReport", (guint8 *)data, sizeof(*data));
 
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
@@ -119,7 +119,7 @@ fu_synaptics_cape_device_get_report(FuSynapticsCapeDevice *self,
 				      error))
 		return FALSE;
 
-	if (g_getenv("FWUPD_SYNAPTICS_CAPE_HID_REPORT_VERBOSE") != NULL)
+	if (g_getenv("FWUPD_SYNAPTICS_CAPE_VERBOSE") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "GetReport", (guint8 *)data, sizeof(*data));
 
 	/* success */

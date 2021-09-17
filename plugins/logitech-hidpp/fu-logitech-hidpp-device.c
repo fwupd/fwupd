@@ -1112,7 +1112,7 @@ fu_logitech_hidpp_device_write_firmware_pkt(FuLogitechHidPpDevice *self,
 					G_BIG_ENDIAN,
 					error))
 		return FALSE;
-	if (g_getenv("FWUPD_LOGITECH_HIDPP") != NULL)
+	if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL)
 		g_debug("packet_cnt=0x%04x", packet_cnt);
 	if (fu_logitech_hidpp_device_check_status(msg->data[4], &error_local))
 		return TRUE;
@@ -1186,7 +1186,7 @@ fu_logitech_hidpp_device_write_firmware(FuDevice *device,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	for (gsize i = 0; i < sz / 16; i++) {
 		/* send packet and wait for reply */
-		if (g_getenv("FWUPD_LOGITECH_HIDPP") != NULL)
+		if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL)
 			g_debug("send data at addr=0x%04x", (guint)i * 16);
 		if (!fu_logitech_hidpp_device_write_firmware_pkt(self,
 								 idx,

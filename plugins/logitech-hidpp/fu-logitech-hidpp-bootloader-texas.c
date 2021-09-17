@@ -212,7 +212,7 @@ fu_logitech_hidpp_bootloader_texas_write_firmware(FuDevice *device,
 		if ((payload->addr + 0x10) % 0x80 == 0 &&
 		    req->cmd != FU_UNIFYING_BOOTLOADER_CMD_WRITE_SIGNATURE) {
 			guint16 addr_start = payload->addr - (7 * 0x10);
-			if (g_getenv("FWUPD_LOGITECH_HIDPP") != NULL) {
+			if (g_getenv("FWUPD_LOGITECH_HIDPP_VERBOSE") != NULL) {
 				g_debug("addr flush @ 0x%04x for 0x%04x",
 					payload->addr,
 					addr_start);

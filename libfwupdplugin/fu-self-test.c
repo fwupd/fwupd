@@ -324,7 +324,7 @@ fu_smbios_func(void)
 	g_assert_no_error(error);
 	g_assert(ret);
 	dump = fu_smbios_to_string(smbios);
-	if (g_getenv("VERBOSE") != NULL)
+	if (g_getenv("FWUPD_VERBOSE") != NULL)
 		g_debug("%s", dump);
 
 	/* test for missing table */
@@ -359,7 +359,7 @@ fu_smbios3_func(void)
 	ret = fu_smbios_setup_from_path(smbios, path, &error);
 	g_assert_no_error(error);
 	g_assert(ret);
-	if (g_getenv("VERBOSE") != NULL) {
+	if (g_getenv("FWUPD_VERBOSE") != NULL) {
 		g_autofree gchar *dump = fu_smbios_to_string(smbios);
 		g_debug("%s", dump);
 	}
@@ -384,7 +384,7 @@ fu_smbios_dt_func(void)
 	ret = fu_smbios_setup_from_path(smbios, path, &error);
 	g_assert_no_error(error);
 	g_assert(ret);
-	if (g_getenv("VERBOSE") != NULL) {
+	if (g_getenv("FWUPD_VERBOSE") != NULL) {
 		g_autofree gchar *dump = fu_smbios_to_string(smbios);
 		g_debug("%s", dump);
 	}
@@ -408,7 +408,7 @@ fu_smbios_class_func(void)
 	ret = fu_smbios_setup_from_kernel(smbios, path, &error);
 	g_assert_no_error(error);
 	g_assert(ret);
-	if (g_getenv("VERBOSE") != NULL) {
+	if (g_getenv("FWUPD_VERBOSE") != NULL) {
 		g_autofree gchar *dump = fu_smbios_to_string(smbios);
 		g_debug("%s", dump);
 	}
