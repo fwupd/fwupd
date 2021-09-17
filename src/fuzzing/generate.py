@@ -17,6 +17,8 @@ if __name__ == "__main__":
         ("bcm57xx.builder.xml", "bcm57xx.bin"),
         ("ccgx.builder.xml", "ccgx.cyacd"),
         ("ccgx-dmc.builder.xml", "ccgx-dmc.bin"),
+        ("cfu-offer.builder.xml", "cfu.offer"),
+        ("cfu-payload.builder.xml", "cfu.payload"),
         ("cros-ec.builder.xml", "cros-ec.bin"),
         ("dfuse.builder.xml", "dfuse.dfu"),
         ("ebitdo.builder.xml", "ebitdo.dat"),

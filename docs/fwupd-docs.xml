@@ -49,6 +49,8 @@
     <xi:include href="xml/fu-common-guid.xml"/>
     <xi:include href="xml/fu-common-version.xml"/>
     <xi:include href="xml/fu-common.xml"/>
+    <xi:include href="xml/fu-cfu-offer.xml"/>
+    <xi:include href="xml/fu-cfu-payload.xml"/>
     <xi:include href="xml/fu-device-locker.xml"/>
     <xi:include href="xml/fu-device-metadata.xml"/>
     <xi:include href="xml/fu-device.xml"/>

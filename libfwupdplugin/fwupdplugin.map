@@ -861,6 +861,30 @@ LIBFWUPDPLUGIN_1.6.2 {
 
 LIBFWUPDPLUGIN_1.7.0 {
   global:
+    fu_cfu_offer_get_bank;
+    fu_cfu_offer_get_component_id;
+    fu_cfu_offer_get_force_ignore_version;
+    fu_cfu_offer_get_force_immediate_reset;
+    fu_cfu_offer_get_hw_variant;
+    fu_cfu_offer_get_milestone;
+    fu_cfu_offer_get_product_id;
+    fu_cfu_offer_get_protocol_revision;
+    fu_cfu_offer_get_segment_number;
+    fu_cfu_offer_get_token;
+    fu_cfu_offer_get_type;
+    fu_cfu_offer_new;
+    fu_cfu_offer_set_bank;
+    fu_cfu_offer_set_component_id;
+    fu_cfu_offer_set_force_ignore_version;
+    fu_cfu_offer_set_force_immediate_reset;
+    fu_cfu_offer_set_hw_variant;
+    fu_cfu_offer_set_milestone;
+    fu_cfu_offer_set_product_id;
+    fu_cfu_offer_set_protocol_revision;
+    fu_cfu_offer_set_segment_number;
+    fu_cfu_offer_set_token;
+    fu_cfu_payload_get_type;
+    fu_cfu_payload_new;
     fu_common_strnsplit_full;
     fu_device_attach_full;
     fu_device_detach_full;
