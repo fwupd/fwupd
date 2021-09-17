@@ -7,7 +7,7 @@ shopt -s extglob
 . ./contrib/ci/get_test_firmware.sh
 
 #install anything missing from the container
-./contrib/ci/generate_dependencies.py | xargs pacman -S --noconfirm --needed
+./contrib/ci/fwupd_setup_helpers.py install-dependencies -o arch
 
 # prepare the build tree
 rm -rf build

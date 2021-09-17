@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 import shutil
-from generate_dependencies import parse_dependencies
+from fwupd_setup_helpers import parse_dependencies
 
 
 def get_container_cmd():

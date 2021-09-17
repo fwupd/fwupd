@@ -31,7 +31,7 @@ jobs:
       - name: Refresh dependencies
         run: sudo apt update
       - name: Install dependencies
-        run: ./contrib/ci/generate_dependencies.py | sudo xargs apt install -y
+        run: sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
       - name: Check ABI
         run: ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
 

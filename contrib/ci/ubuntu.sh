@@ -6,7 +6,7 @@ set -x
 . ./contrib/ci/get_test_firmware.sh
 
 #check for and install missing dependencies
-./contrib/ci/generate_dependencies.py | xargs apt install -y
+./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o ubuntu
 
 #evaluate using Ubuntu's buildflags
 #evaluate using Debian/Ubuntu's buildflags

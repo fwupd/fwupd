@@ -3,7 +3,7 @@ set -e
 set -x
 
 #get any missing deps from the container
-./contrib/ci/generate_dependencies.py | xargs dnf install -y
+./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o fedora
 
 #generate a tarball
 git config tar.tar.xz.command "xz -c"
