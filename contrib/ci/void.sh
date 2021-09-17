@@ -4,7 +4,7 @@ set -x
 
 #install dependencies
 xbps-install -Suy python3
-./contrib/ci/generate_dependencies.py | xargs xbps-install -y
+./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o void
 
 #clone test firmware if necessary
 . ./contrib/ci/get_test_firmware.sh

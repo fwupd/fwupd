@@ -3,21 +3,14 @@
 
 cd "$(dirname "$0")/.."
 
+HELPER=./contrib/ci/fwupd_setup_helpers.py
+HELPER_ARGS="-y"
+
 setup_deps()
 {
-    OS=$1
-    read -p  "Install build dependencies? (y/n) " question
+    read -p "Install build dependencies? (y/n) " question
     if [ "$question" = "y" ]; then
-        DEPS=$(./contrib/ci/generate_dependencies.py)
-        if [ "$OS" = "debian" ] || [ "$OS" = "ubuntu" ]; then
-            sudo apt install $DEPS
-        elif [ "$OS" = "fedora" ]; then
-            sudo dnf install $DEPS
-        elif [ "$OS" = "arch" ]; then
-            pacman -Syu --noconfirm --needed $DEPS
-        elif [ "$OS" = "void" ]; then
-            xbps-install -Syu $DEPS
-        fi
+        $(which sudo) python3 $HELPER install-dependencies $HELPER_ARGS -y
     fi
 }
 
@@ -47,34 +40,79 @@ setup_git()
     git config include.path ../.gitconfig
 }
 
+install_pip()
+{
+    package=$1
+    args=$2
+    if ! python3 -m pip install $package $args; then
+        $(which sudo) python3 $HELPER install-pip $HELPER_ARGS -y
+    fi
+    #try once more
+    python3 -m pip install $package
+}
+
 setup_precommit()
 {
     echo "Configuring pre-commit hooks"
     python3 -m venv venv
     source venv/bin/activate
 
-    python3 -m pip install pre-commit
+    install_pip pre-commit
     pre-commit install
 }
 
 check_markdown()
 {
-    if python3 -c "import markdown; import sys; sys.exit(markdown.__version_info__ >= (3,3,3))"; then
-        echo "Upgrading python3-markdown version"
-        python3 -m pip install markdown --upgrade
+    if ! python3 $HELPER test-markdown; then
+        install_pip markdown --upgrade
     fi
 }
 
+detect_os()
+{
+    for i in "$@"; do
+        case $i in
+            --os=*)
+                OS="${i#*=}"
+                shift
+                ;;
+            --debug)
+                DEBUG=1
+                shift
+                ;;
+            *)
+                ;;
+        esac
+    done
+    if [ -z $OS ]; then
+        OS=$(python3 $HELPER detect-profile)
+        if [ -z "$OS" ]; then
+            install_pip distro
+            OS=$(python3 $HELPER detect-profile)
+        fi
+        echo "Using OS profile $OS to setup"
+    fi
+    if [ -n "$OS" ];then
+        HELPER_ARGS="$HELPER_ARGS --os $OS"
+    fi
+    if [ -n "$DEBUG" ]; then
+        set -x
+        HELPER_ARGS="$HELPER_ARGS --debug"
+    fi
+}
+
+#needed for arguments for some commands
+detect_os "$@"
+
 #if interactive install build deps and prepare environment
 if [ -t 2 ]; then
-    OS=$(python3 ./contrib/ci/detect_os_profile.py)
     case $OS in
         debian|ubuntu|arch|fedora)
-            setup_deps $OS
+            setup_deps
             setup_run_dev
             ;;
         void)
-            setup_deps $OS
+            setup_deps
             ;;
     esac
     check_markdown
