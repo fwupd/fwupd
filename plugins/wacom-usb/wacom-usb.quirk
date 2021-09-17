@@ -59,3 +59,25 @@ GType = FuWacAndroidDevice
 [USB\VID_056A&PID_0392]
 GType = FuWacDevice
 Plugin = wacom_usb
+
+# Intuos BT S 3rd-gen, Rev 2 (USB) [CTL-4100WL]
+[USB\VID_056A&PID_03C5]
+Plugin = wacom_usb
+GType = FuWacDevice
+Flags = use-runtime-version,no-serial-number
+
+# Intuos BT S 3rd-gen, Rev 2 (USB) [CTL-4100WL - Android Mode]
+[USB\VID_2D1F&PID_03C5]
+Plugin = wacom_usb
+GType = FuWacAndroidDevice
+
+# Intuos BT M 3rd-gen, Rev 2 (USB) [CTL-6100WL]
+[USB\VID_056A&PID_03C7]
+Plugin = wacom_usb
+GType = FuWacDevice
+Flags = use-runtime-version,no-serial-number
+
+# Intuos BT M 3rd-gen, Rev 2 (USB) [CTL-6100WL - Android Mode]
+[USB\VID_2D1F&PID_03C7]
+Plugin = wacom_usb
+GType = FuWacAndroidDevice
