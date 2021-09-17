@@ -934,11 +934,11 @@ fu_logitech_hidpp_device_detach(FuDevice *device, FuProgress *progress, GError *
 				    fu_device_get_name(device));
 				fu_device_set_update_message(device, str);
 			}
+			fwupd_request_set_message(request, fu_device_get_update_message(device));
+			fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
+			fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
+			fu_device_emit_request(device, request);
 		}
-		fwupd_request_set_kind(request, FWUPD_REQUEST_KIND_IMMEDIATE);
-		fwupd_request_set_id(request, FWUPD_REQUEST_ID_REMOVE_REPLUG);
-		fwupd_request_set_message(request, fu_device_get_update_message(device));
-		fu_device_emit_request(device, request);
 		return TRUE;
 	}
 
