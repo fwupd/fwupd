@@ -1,0 +1,19 @@
+<firmware gtype="FuElanfpFirmware">
+  <format_version>0x123</format_version>
+  <firmware>
+    <idx>0x72</idx>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware>
+    <idx>0x73</idx>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware>
+    <idx>0x74</idx>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware>
+    <idx>0x75</idx>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+</firmware>
