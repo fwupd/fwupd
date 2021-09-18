@@ -174,8 +174,6 @@ const gchar *
 fwupd_security_attr_flag_to_suffix(FwupdSecurityAttrFlags flag);
 const gchar *
 fwupd_security_attr_result_to_string(FwupdSecurityAttrResult result);
-GPtrArray *
-fwupd_security_attr_flag_to_string_array(FwupdSecurityAttr *self);
 FwupdSecurityAttr *
 fwupd_security_attr_from_variant(GVariant *value);
 GPtrArray *

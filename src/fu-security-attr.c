@@ -288,7 +288,6 @@ fu_security_attrs_to_json_string(FuSecurityAttrs *attrs, GError **error)
 	fu_security_attrs_to_json(attrs, builder);
 	json_root = json_builder_get_root(builder);
 	json_generator = json_generator_new();
-	// json_generator_set_pretty(json_generator, TRUE);
 	json_generator_set_root(json_generator, json_root);
 	data = json_generator_to_data(json_generator, NULL);
 	if (data == NULL) {
@@ -372,6 +371,36 @@ fu_security_attr_dup_json(JsonObject *src, JsonBuilder *builder)
 }
 
 /**
+ * fu_security_attr_flag_to_string_array:
+ *
+ * @self: a single FwupdSecurityAttr
+ *
+ * Convert flags to string and store them in GPtrArray.
+ *
+ * Since: 1.7.0
+ *
+ */
+static GPtrArray *
+fu_security_attr_flag_to_string_array(FwupdSecurityAttr *attr)
+{
+	GPtrArray *flag_array = NULL;
+	FwupdSecurityAttrFlags flags = fwupd_security_attr_get_flags(attr);
+	if (flags != FWUPD_SECURITY_ATTR_FLAG_NONE) {
+		flag_array = g_ptr_array_new();
+		for (guint i = 0; i < 64; i++) {
+			if ((flags & ((guint64)1 << i)) == 0)
+				continue;
+			g_ptr_array_add(
+			    flag_array,
+			    g_strdup(fwupd_security_attr_flag_to_string((guint64)1 << i)));
+		}
+	} else {
+		return NULL;
+	}
+	return flag_array;
+}
+
+/**
  * fu_security_attr_deep_object_compare:
  *
  * Detect HSI changes and put the results into a JSON builder.
@@ -440,7 +469,6 @@ fu_security_attr_deep_object_compare(FwupdSecurityAttr *current_attr,
 		json_builder_set_member_name(result_builder, "new");
 	}
 	json_builder_begin_object(result_builder);
-	// fwupd_security_attr_to_json(current_attr, result_builder);
 	json_builder_set_member_name(result_builder, FWUPD_RESULT_KEY_HSI_LEVEL);
 	json_builder_add_int_value(result_builder, fwupd_security_attr_get_level(current_attr));
 	json_builder_set_member_name(result_builder, FWUPD_RESULT_KEY_HSI_RESULT);
@@ -449,7 +477,7 @@ fu_security_attr_deep_object_compare(FwupdSecurityAttr *current_attr,
 	    fwupd_security_attr_result_to_string(fwupd_security_attr_get_result(current_attr)));
 	json_builder_set_member_name(result_builder, FWUPD_RESULT_KEY_NAME);
 	json_builder_add_string_value(result_builder, fwupd_security_attr_get_name(current_attr));
-	flag_array = fwupd_security_attr_flag_to_string_array(current_attr);
+	flag_array = fu_security_attr_flag_to_string_array(current_attr);
 	if (flag_array != NULL) {
 		json_builder_set_member_name(result_builder, FWUPD_RESULT_KEY_FLAGS);
 		json_builder_begin_array(result_builder);
