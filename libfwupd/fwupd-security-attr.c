@@ -865,7 +865,6 @@ fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
 	}
 }
 
-
 /**
  * fwupd_security_attr_to_string:
  * @self: a #FwupdSecurityAttr
