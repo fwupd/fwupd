@@ -201,6 +201,8 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "unreachable";
 	if (device_flag == FWUPD_DEVICE_FLAG_AFFECTS_FDE)
 		return "affects-fde";
+	if (device_flag == FWUPD_DEVICE_FLAG_REQUIRES_WAKEUP)
+		return "requires-wakeup";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -312,6 +314,8 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_UNREACHABLE;
 	if (g_strcmp0(device_flag, "affects-fde") == 0)
 		return FWUPD_DEVICE_FLAG_AFFECTS_FDE;
+	if (g_strcmp0(device_flag, "requires-wakeup") == 0)
+		return FWUPD_DEVICE_FLAG_REQUIRES_WAKEUP;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 
