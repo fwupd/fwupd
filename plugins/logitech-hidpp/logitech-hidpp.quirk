@@ -122,13 +122,13 @@ GType = FuLogitechHidPpDevice
 Flags = add-radio,ble,rebind-attach,no-request-required
 InstallDuration = 270
 
-[HIDRAW\VEN_046D&MOD_B36F00000000]
+[HIDRAW\VEN_046D&MOD_B37000000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpDevice
 Flags = add-radio,no-request-required
 InstallDuration = 270
 
-[HIDRAW\VEN_046D&DEV_B36F]
+[HIDRAW\VEN_046D&DEV_B370]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpDevice
 Flags = add-radio,ble,rebind-attach,no-request-required
