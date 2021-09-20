@@ -93,6 +93,7 @@ fu_synaptics_mst_device_init(FuSynapticsMstDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SYNAPTICS_MST_DEVICE_FLAG_IGNORE_BOARD_ID,
 					"ignore-board-id");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 }
 
 static void
@@ -1456,10 +1457,9 @@ fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
 
 	/* this is not a valid customer ID */
 	if ((self->board_id >> 8) == 0x0) {
-		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_set_update_error(device, "cannot update as CustomerID is unset");
-	} else {
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_inhibit(device,
+				  "invalid-customer-id",
+				  "cannot update as CustomerID is unset");
 	}
 	return TRUE;
 }
