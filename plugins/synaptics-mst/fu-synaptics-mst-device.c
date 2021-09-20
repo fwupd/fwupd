@@ -1010,9 +1010,10 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 	g_autofree gchar *guid2 = NULL;
 	g_autofree gchar *guid3 = NULL;
 	g_autofree gchar *name = NULL;
-	const gchar *name_parent;
+	const gchar *name_parent = NULL;
 	const gchar *name_family;
 	guint8 buf_ver[16];
+	FuDevice *parent;
 
 	/* read vendor ID */
 	connection = fu_synaptics_mst_connection_new (fu_udev_device_get_fd (FU_UDEV_DEVICE (self)), 0, 0);
@@ -1093,9 +1094,11 @@ fu_synaptics_mst_device_rescan (FuDevice *device, GError **error)
 		return FALSE;
 
 	/* set up the device name and kind via quirks */
-	guid0 = g_strdup_printf ("MST-%u", self->board_id);
-	fu_device_add_instance_id (FU_DEVICE (self), guid0);
-	name_parent = fu_device_get_name (FU_DEVICE (self));
+	guid0 = g_strdup_printf("MST-%u", self->board_id);
+	fu_device_add_instance_id(FU_DEVICE(self), guid0);
+	parent = fu_device_get_parent(FU_DEVICE(self));
+	if (parent != NULL)
+		name_parent = fu_device_get_name(parent);
 	if (name_parent != NULL) {
 		name = g_strdup_printf ("VMM%04x inside %s",
 					self->chip_id, name_parent);
