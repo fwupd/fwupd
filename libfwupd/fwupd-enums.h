@@ -493,6 +493,9 @@ typedef enum {
  * Since: 1.7.1
  */
 #define FWUPD_DEVICE_FLAG_AFFECTS_FDE (1llu << 45)
+*FWUPD_DEVICE_FLAG_REQUIRES_WAKEUP : **The device requires to be woken up to be re -
+    enumerated.**Since 1.6.5 * /
+#define FWUPD_DEVICE_FLAG_REQUIRES_WAKEUP (1llu << 44)
 /**
  * FWUPD_DEVICE_FLAG_UNKNOWN:
  *
@@ -502,12 +505,12 @@ typedef enum {
  * Since 0.7.3
  */
 #define FWUPD_DEVICE_FLAG_UNKNOWN G_MAXUINT64
-/**
- * FwupdDeviceFlags:
- *
- * Flags used to represent device attributes
- */
-typedef guint64 FwupdDeviceFlags;
+	/**
+	 * FwupdDeviceFlags:
+	 *
+	 * Flags used to represent device attributes
+	 */
+	typedef guint64 FwupdDeviceFlags;
 
 /**
  * FWUPD_RELEASE_FLAG_NONE:
