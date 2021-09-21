@@ -728,7 +728,13 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 		g_autofree gchar *fn = NULL;
 		g_autofree gchar *localstatedir = NULL;
 
-		fw_old = fu_device_dump_firmware(device, progress, error);
+		/* progress */
+		fu_progress_set_id(progress, G_STRLOC);
+		fu_progress_add_flag(progress, FU_PROGRESS_FLAG_NO_PROFILE);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_READ, 25);
+		fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 75);
+
+		fw_old = fu_device_dump_firmware(device, fu_progress_get_child(progress), error);
 		if (fw_old == NULL) {
 			g_prefix_error(error, "failed to backup old firmware: ");
 			return FALSE;
@@ -742,8 +748,17 @@ fu_plugin_device_write_firmware(FuPlugin *self,
 		    fu_device_get_serial(device) != NULL ? fu_device_get_serial(device) : "default",
 		    fn,
 		    NULL);
+		fu_progress_step_done(progress);
 		if (!fu_common_set_contents_bytes(path, fw_old, error))
 			return FALSE;
+		if (!fu_device_write_firmware(device,
+					      fw,
+					      fu_progress_get_child(progress),
+					      flags,
+					      error))
+			return FALSE;
+		fu_progress_step_done(progress);
+		return TRUE;
 	}
 
 	return fu_device_write_firmware(device, fw, progress, flags, error);
