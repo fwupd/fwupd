@@ -3338,7 +3338,6 @@ main(int argc, char *argv[])
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
 	gboolean enable_ipfs = FALSE;
-	gboolean ignore_power = FALSE;
 	gboolean is_interactive = TRUE;
 	gboolean no_history = FALSE;
 	gboolean offline = FALSE;
@@ -3511,14 +3510,6 @@ main(int argc, char *argv[])
 					 /* TRANSLATORS: command line option */
 					 _("Filter with a set of device flags using a ~ prefix to "
 					   "exclude, e.g. 'internal,~needs-reboot'"),
-					 NULL},
-					{"ignore-power",
-					 '\0',
-					 0,
-					 G_OPTION_ARG_NONE,
-					 &ignore_power,
-					 /* TRANSLATORS: command line option */
-					 _("Ignore requirement of external power source"),
 					 NULL},
 					{"json",
 					 '\0',
@@ -3879,14 +3870,10 @@ main(int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	if (allow_branch_switch)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
-	if (force) {
+	if (force)
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
-		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_POWER;
-	}
 	if (no_history)
 		priv->flags |= FWUPD_INSTALL_FLAG_NO_HISTORY;
-	if (ignore_power)
-		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_POWER;
 
 	/* use IPFS for metadata and firmware *only* if specified */
 	if (enable_ipfs)

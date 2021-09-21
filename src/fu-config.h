@@ -38,3 +38,5 @@ gboolean
 fu_config_get_update_motd(FuConfig *self);
 gboolean
 fu_config_get_enumerate_all_devices(FuConfig *self);
+gboolean
+fu_config_get_ignore_power(FuConfig *self);

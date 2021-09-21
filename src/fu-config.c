@@ -34,6 +34,7 @@ struct _FuConfig {
 	gchar *config_file;
 	gboolean update_motd;
 	gboolean enumerate_all_devices;
+	gboolean ignore_power;
 };
 
 G_DEFINE_TYPE(FuConfig, fu_config, G_TYPE_OBJECT)
@@ -58,6 +59,7 @@ fu_config_reload(FuConfig *self, GError **error)
 	g_autofree gchar *domains = NULL;
 	g_autoptr(GKeyFile) keyfile = g_key_file_new();
 	g_autoptr(GError) error_update_motd = NULL;
+	g_autoptr(GError) error_ignore_power = NULL;
 	g_autoptr(GError) error_enumerate_all = NULL;
 
 	if (g_file_test(self->config_file, G_FILE_TEST_EXISTS)) {
@@ -184,6 +186,14 @@ fu_config_reload(FuConfig *self, GError **error)
 		self->enumerate_all_devices = TRUE;
 	}
 
+	/* whether to ignore power levels for updates */
+	self->ignore_power =
+	    g_key_file_get_boolean(keyfile, "fwupd", "IgnorePower", &error_ignore_power);
+	if (!self->ignore_power && error_ignore_power != NULL) {
+		g_debug("failed to read IgnorePower key: %s", error_ignore_power->message);
+		self->ignore_power = FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -304,6 +314,13 @@ fu_config_get_update_motd(FuConfig *self)
 {
 	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
 	return self->update_motd;
+}
+
+gboolean
+fu_config_get_ignore_power(FuConfig *self)
+{
+	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
+	return self->ignore_power;
 }
 
 gboolean

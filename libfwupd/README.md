@@ -9,6 +9,7 @@
 * Remove `fwupd_release_get_uri()` and `fwupd_release_set_uri()`
 * Rename `fwupd_client_install_release2_async()` to `fwupd_client_install_release_async()`
 * Remove fwupd_device_set_protocol() and fwupd_device_get_protocol()
+* Remove deprecated install flag `FWUPD_INSTALL_FLAG_IGNORE_POWER`
 
 ## Migration from Version 0.9.x
 
