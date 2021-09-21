@@ -1,4 +1,6 @@
-# Title: fwupd Plugin Tutorial
+---
+title: Plugin Tutorial
+---
 
 ## Introduction
 

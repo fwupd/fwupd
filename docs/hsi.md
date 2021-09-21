@@ -1,5 +1,5 @@
-# Host Security ID Specification
-
+---
+title: Host Security ID Specification
 ---
 
 **WARNING:
