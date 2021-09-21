@@ -381,6 +381,18 @@ fu_main_engine_percentage_changed_cb(FuEngine *engine, guint percentage, FuUtilP
 	fu_progressbar_update(priv->progressbar, FWUPD_STATUS_UNKNOWN, percentage);
 }
 
+static void
+fu_util_progress_percentage_changed_cb(FuProgress *progress, guint percentage, FuUtilPrivate *priv)
+{
+	fu_progressbar_update(priv->progressbar, FWUPD_STATUS_UNKNOWN, percentage);
+}
+
+static void
+fu_util_progress_status_changed_cb(FuProgress *progress, FwupdStatus status, FuUtilPrivate *priv)
+{
+	fu_progressbar_update(priv->progressbar, status, 0);
+}
+
 static gboolean
 fu_util_watch(FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -833,7 +845,6 @@ static gboolean
 fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GBytes) blob_fw = NULL;
 
 	/* invalid args */
@@ -844,9 +855,6 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 				    "Invalid arguments");
 		return FALSE;
 	}
-
-	/* progress */
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
 
 	/* parse blob */
 	blob_fw = fu_common_get_contents_bytes(values[0], error);
@@ -893,7 +901,7 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_engine_install_blob(priv->engine,
 				    device,
 				    blob_fw,
-				    progress,
+				    priv->progress,
 				    priv->flags,
 				    fu_engine_request_get_feature_flags(priv->request),
 				    error))
@@ -3093,10 +3101,21 @@ main(int argc, char *argv[])
 	/* create helper object */
 	priv->main_ctx = g_main_context_new();
 	priv->loop = g_main_loop_new(priv->main_ctx, FALSE);
-	priv->progress = fu_progress_new(G_STRLOC);
 	priv->progressbar = fu_progressbar_new();
 	fu_progressbar_set_main_context(priv->progressbar, priv->main_ctx);
 	priv->request = fu_engine_request_new();
+
+	/* when not using the engine */
+	priv->progress = fu_progress_new(G_STRLOC);
+	fu_progress_set_profile(priv->progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	g_signal_connect(priv->progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_util_progress_percentage_changed_cb),
+			 priv);
+	g_signal_connect(priv->progress,
+			 "status-changed",
+			 G_CALLBACK(fu_util_progress_status_changed_cb),
+			 priv);
 
 	/* add commands */
 	fu_util_cmd_array_add(cmd_array,
