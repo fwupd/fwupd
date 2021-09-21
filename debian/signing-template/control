@@ -4,7 +4,10 @@ Maintainer: Debian EFI <debian-efi@lists.debian.org>
 Uploaders: Steve McIntyre <93sam@debian.org>,
            Matthias Klumpp <mak@debian.org>,
            Mario Limonciello <mario.limonciello@dell.com>
-Build-Depends: debhelper (>= 9.0.0), sbsigntool [amd64 arm64 armhf i386], fwupd (= SIGNVERSION) [SIGNARCH]
+Build-Depends: debhelper (>= 9.0.0),
+	       sbsigntool [amd64 arm64 armhf i386],
+	       fwupd (>= SIGNVERSION) [SIGNARCH],
+	       fwupd (<< NEXTVERSION) [SIGNARCH]
 Standards-Version: 4.1.3
 Section: libs
 Homepage: https://github.com/fwupd/fwupd
@@ -15,7 +18,10 @@ Package: fwupd-SIGNARCH-signed
 Section: admin
 Architecture: SIGNARCH
 Provides: fwupd-signed
-Depends: ${shlibs:Depends}, ${misc:Depends}, fwupd (= SIGNVERSION)
+Depends: ${shlibs:Depends},	
+	 ${misc:Depends},
+	 fwupd (>= SIGNVERSION),
+	 fwupd (<< NEXTVERSION)
 Built-Using: fwupd (= SIGNVERSION)
 Description: Tools to manage UEFI firmware updates (signed)
  fwupd provides functionality to update system firmware. It has been

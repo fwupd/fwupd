@@ -17,7 +17,8 @@ ifneq ($(CI),)
 endif
 
 SB_STYLE := debian
-deb_version := $(shell dpkg-parsechangelog --show-field Version)
+deb_version := $(shell debian/grab_version)
+deb_next_version := $(shell debian/grab_version --next)
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
 	SB_STYLE := ubuntu
 	tar_name := fwupd_$(deb_version)_$(DEB_HOST_ARCH).tar.gz
@@ -98,6 +99,7 @@ ifeq (debian,$(SB_STYLE))
 	cp debian/README.Debian $(TMPLDIR)/source-template/debian
 	find $(TMPLDIR)/source-template/debian -type f | xargs sed -i "s,SIGNARCH,$(DEB_HOST_ARCH),"
 	find $(TMPLDIR)/source-template/debian -type f | xargs sed -i "s,SIGNVERSION,$(deb_version),"
+	find $(TMPLDIR)/source-template/debian -type f | xargs sed -i "s,NEXTVERSION,$(deb_next_version),"
 	set -e; for file in $$(find $(TMPLDIR)/source-template/debian -type f -name '*SIGNARCH*'); do \
 		file1=$$(echo $$file | sed "s,SIGNARCH,$(DEB_HOST_ARCH),"); \
 		mv -v $$file $$file1; \

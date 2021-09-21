@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+#
+# Helper script to work out the current *and next* version of the
+# package.
+
+use warnings;
+use strict;
+
+# Grab current version from the changelog
+my $this_version = `dpkg-parsechangelog --show-field Version`;
+chomp $this_version;
+
+# Remove any trailing +b - ignore binNMUs
+$this_version =~ s/\+b\d+$//;
+
+# Code borrowed from dch for incrementing a version number, let's
+# assume it works!
+$this_version =~ /^(.*?)([a-yA-Y][a-zA-Z]*|\d*)$/;
+my $end = $2;
+if ($end eq '') {
+    die "Cannot determine new Debian revision; abort\n";
+}
+$end++;
+my $next_version = "$1$end";
+
+if (scalar(@ARGV) == 1) {
+    my $arg = shift;
+    if ($arg eq "--next") {
+	print "$next_version\n";
+	exit 0;
+    }
+}
+
+# else
+
+print "$this_version\n";
+exit 0;
+

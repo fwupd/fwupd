@@ -1,3 +1,11 @@
+fwupd (1.5.7-5) unstable; urgency=medium
+
+  * Change dependency versioning strategy for the signed fwupd
+    packages to make them binNMU friendly. Closes: #973715
+  * Similarly change versioning used for Built-Using. Closes: #992910
+
+ -- Steve McIntyre <93sam@debian.org>  Tue, 21 Sep 2021 01:06:34 +0100
+
 fwupd (1.5.7-4) unstable; urgency=medium
 
   * Multiple fixes for working with UEFI SBAT
