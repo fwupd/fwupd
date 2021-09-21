@@ -743,6 +743,7 @@ typedef guint64 FwupdPluginFlags;
  * @FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM:		Ignore firmware CRCs and checksums
  * @FWUPD_INSTALL_FLAG_IGNORE_VID_PID:		Ignore firmware vendor and project checks
  * @FWUPD_INSTALL_FLAG_IGNORE_POWER:		Ignore requirement of external power source
+ *(Deprecated since 1.7.0)
  * @FWUPD_INSTALL_FLAG_NO_SEARCH:		Do not use heuristics when parsing the image
  *
  * Flags to set when performing the firmware update or install.

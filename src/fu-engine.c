@@ -281,6 +281,9 @@ fu_engine_watch_device(FuEngine *self, FuDevice *device)
 static void
 fu_engine_ensure_device_battery_inhibit(FuEngine *self, FuDevice *device)
 {
+	if (fu_config_get_ignore_power(self->config))
+		return;
+
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC) &&
 	    (fu_context_get_battery_state(self->ctx) == FU_BATTERY_STATE_DISCHARGING ||
 	     fu_context_get_battery_state(self->ctx) == FU_BATTERY_STATE_EMPTY)) {
@@ -2811,7 +2814,15 @@ fu_engine_device_check_power(FuEngine *self,
 			     FwupdInstallFlags flags,
 			     GError **error)
 {
-	if (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER)
+	if (flags & FWUPD_INSTALL_FLAG_IGNORE_POWER) {
+		g_autofree gchar *configdir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
+		g_autofree gchar *configfile = g_build_filename(configdir, "daemon.conf", NULL);
+		g_warning("Ignoring deprecated flag provided by client "
+			  "'FWUPD_INSTALL_FLAG_IGNORE_POWER'. To ignore power levels, modify %s",
+			  configfile);
+	}
+
+	if (fu_config_get_ignore_power(self->config))
 		return TRUE;
 
 	/* not charging */

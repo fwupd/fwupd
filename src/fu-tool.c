@@ -2899,7 +2899,6 @@ main(int argc, char *argv[])
 	gboolean ret;
 	gboolean version = FALSE;
 	gboolean ignore_checksum = FALSE;
-	gboolean ignore_power = FALSE;
 	gboolean ignore_vid_pid = FALSE;
 	gboolean interactive = isatty(fileno(stdout)) != 0;
 	g_auto(GStrv) plugin_glob = NULL;
@@ -2964,14 +2963,6 @@ main(int argc, char *argv[])
 	     &ignore_vid_pid,
 	     /* TRANSLATORS: command line option */
 	     _("Ignore firmware hardware mismatch failures"),
-	     NULL},
-	    {"ignore-power",
-	     '\0',
-	     0,
-	     G_OPTION_ARG_NONE,
-	     &ignore_power,
-	     /* TRANSLATORS: command line option */
-	     _("Ignore requirement of external power source"),
 	     NULL},
 	    {"no-reboot-check",
 	     '\0',
@@ -3430,16 +3421,12 @@ main(int argc, char *argv[])
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	if (allow_branch_switch)
 		priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_BRANCH_SWITCH;
-	if (force) {
+	if (force)
 		priv->flags |= FWUPD_INSTALL_FLAG_FORCE;
-		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_POWER;
-	}
 	if (ignore_checksum)
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM;
 	if (ignore_vid_pid)
 		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_VID_PID;
-	if (ignore_power)
-		priv->flags |= FWUPD_INSTALL_FLAG_IGNORE_POWER;
 
 	/* load engine */
 	priv->engine = fu_engine_new(FU_APP_FLAGS_NO_IDLE_SOURCES);
