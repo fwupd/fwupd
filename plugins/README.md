@@ -23,6 +23,6 @@ This includes things like one plugin turning on a device, or providing missing
 metadata to another plugin.
 
 The ABI for these interactions is defined in:
-<https://github.com/fwupd/fwupd/blob/master/src/fu-device-metadata.h>
+<https://github.com/fwupd/fwupd/blob/master/libfwupdplugin/fu-device-metadata.h>
 
 All interactions between plugins should have the interface defined in that file.
