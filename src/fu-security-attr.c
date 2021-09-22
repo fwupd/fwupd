@@ -373,7 +373,7 @@ fu_security_attr_dup_json(JsonObject *src, JsonBuilder *builder)
 /**
  * fu_security_attr_flag_to_string_array:
  *
- * @self: a single FwupdSecurityAttr
+ * @attr: a single FwupdSecurityAttr
  *
  * Convert flags to string and store them in GPtrArray.
  *
@@ -386,7 +386,7 @@ fu_security_attr_flag_to_string_array(FwupdSecurityAttr *attr)
 	GPtrArray *flag_array = NULL;
 	FwupdSecurityAttrFlags flags = fwupd_security_attr_get_flags(attr);
 	if (flags != FWUPD_SECURITY_ATTR_FLAG_NONE) {
-		flag_array = g_ptr_array_new();
+		flag_array = g_ptr_array_new_with_free_func(g_free);
 		for (guint i = 0; i < 64; i++) {
 			if ((flags & ((guint64)1 << i)) == 0)
 				continue;
@@ -445,12 +445,9 @@ fu_security_attr_deep_object_compare(FwupdSecurityAttr *current_attr,
 {
 	g_autoptr(GPtrArray) flag_array = NULL;
 	if (previous_json_obj != NULL) {
-		/* 1. HSI comparison */
 		if (fwupd_security_attr_get_level(current_attr) ==
-		    json_object_get_int_member(previous_json_obj, FWUPD_RESULT_KEY_HSI_LEVEL)) {
+		    json_object_get_int_member(previous_json_obj, FWUPD_RESULT_KEY_HSI_LEVEL))
 			return TRUE;
-		}
-		/* Level changed, find the difference*/
 
 		json_builder_set_member_name(
 		    result_builder,
@@ -539,7 +536,7 @@ fu_security_attrs_hsi_change(FuSecurityAttrs *attrs, const gchar *last_hsi_detai
 		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
 		if (json_object_has_member(previous_security_attrs,
 					   fwupd_security_attr_get_appstream_id(attr)) == TRUE) {
-			/* Hit */
+			/* hit */
 			g_hash_table_remove(found_list, fwupd_security_attr_get_appstream_id(attr));
 			fu_security_attr_deep_object_compare(
 			    attr,
@@ -548,13 +545,13 @@ fu_security_attrs_hsi_change(FuSecurityAttrs *attrs, const gchar *last_hsi_detai
 				fwupd_security_attr_get_appstream_id(attr)),
 			    result_builder);
 		} else {
-			/* Miss- A new AppStreamID */
+			/* miss- a new AppStreamId */
 			fu_security_attr_deep_object_compare(attr, NULL, result_builder);
 		}
 	}
 	removed_keys = g_hash_table_get_keys(found_list);
 	if (removed_keys != NULL) {
-		/* Removed from current */
+		/* removed from current */
 		for (GList *tmp_remove = removed_keys; tmp_remove != NULL;
 		     tmp_remove = tmp_remove->next) {
 			fu_security_attr_append_remove_to_result(

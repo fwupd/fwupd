@@ -438,7 +438,6 @@ fu_history_create_or_migrate(FuHistory *self, guint schema_ver, GError **error)
 	case 6:
 		if (!fu_history_migrate_database_v6(self, error))
 			return FALSE;
-		break;
 	/* fall through */
 	case 7:
 		if (!fu_history_migrate_database_v7(self, error))
@@ -1407,7 +1406,10 @@ fu_history_add_security_attribute(FuHistory *self,
 }
 
 gboolean
-fu_history_get_last_hsi_details(FuHistory *self, guint *ret_hsi, gchar **ret_json_attr)
+fu_history_get_last_hsi_details(FuHistory *self,
+				guint *ret_hsi,
+				gchar **ret_json_attr,
+				GError **error)
 {
 	gint rc;
 	g_autoptr(sqlite3_stmt) stmt = NULL;
@@ -1419,7 +1421,11 @@ fu_history_get_last_hsi_details(FuHistory *self, guint *ret_hsi, gchar **ret_jso
 	    &stmt,
 	    NULL);
 	if (rc != SQLITE_OK) {
-		g_debug("Error on fetching HSI history: %s", sqlite3_errmsg(self->db));
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Error on DB access: %s",
+			    sqlite3_errmsg(self->db));
 		return FALSE;
 	}
 	while (sqlite3_step(stmt) != SQLITE_DONE) {
@@ -1441,7 +1447,11 @@ fu_history_get_last_hsi_details(FuHistory *self, guint *ret_hsi, gchar **ret_jso
 					*ret_hsi = sqlite3_column_int(stmt, i);
 				break;
 			default:
-				g_warning("Mismatch HSI history column format");
+				g_set_error(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "Error on reading: %s",
+					    sqlite3_errmsg(self->db));
 				return FALSE;
 			}
 		}

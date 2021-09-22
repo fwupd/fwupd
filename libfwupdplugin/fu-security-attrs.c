@@ -154,10 +154,9 @@ fu_security_attrs_remove_all(FuSecurityAttrs *self)
  * fu_security_attrs_calculate_hsi:
  * @self: a #FuSecurityAttrs
  * @flags: HSI attribute flags
+ * @hsi_number: (out) (nullable): the HSI number
  *
  * Calculates the HSI string from the appended attributes.
- *
- * If hsi_uint_ret is NULL, the guint type hsi will not be returned.
  *
  * Returns: (transfer full): a string or %NULL
  *
@@ -167,9 +166,9 @@ fu_security_attrs_remove_all(FuSecurityAttrs *self)
 gchar *
 fu_security_attrs_calculate_hsi(FuSecurityAttrs *self,
 				FuSecurityAttrsFlags flags,
-				guint *hsi_guint_ret)
+				guint *hsi_number)
 {
-	guint hsi_number = 0;
+	guint hsi_number_tmp = 0;
 	FwupdSecurityAttrFlags attr_flags = FWUPD_SECURITY_ATTR_FLAG_NONE;
 	GString *str = g_string_new("HSI:");
 	const FwupdSecurityAttrFlags hpi_suffixes[] = {
@@ -197,13 +196,13 @@ fu_security_attrs_calculate_hsi(FuSecurityAttrs *self,
 
 		/* abort */
 		if (failure_cnt > 0) {
-			hsi_number = j - 1;
+			hsi_number_tmp = j - 1;
 			break;
 		}
 
 		/* we matched at least one thing on this level */
 		if (success_cnt > 0)
-			hsi_number = j;
+			hsi_number_tmp = j;
 	}
 
 	/* get a logical OR of the runtime flags */
@@ -217,11 +216,10 @@ fu_security_attrs_calculate_hsi(FuSecurityAttrs *self,
 		attr_flags |= fwupd_security_attr_get_flags(attr);
 	}
 
-	if (hsi_guint_ret != NULL) {
-		*hsi_guint_ret = hsi_number;
-	}
+	if (hsi_number != NULL)
+		*hsi_number = hsi_number_tmp;
 
-	g_string_append_printf(str, "%u", hsi_number);
+	g_string_append_printf(str, "%u", hsi_number_tmp);
 	if (attr_flags & FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE) {
 		for (guint j = 0; hpi_suffixes[j] != FWUPD_SECURITY_ATTR_FLAG_NONE; j++) {
 			if (attr_flags & hpi_suffixes[j])

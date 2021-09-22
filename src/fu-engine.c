@@ -5863,7 +5863,7 @@ fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 }
 
 static gchar *
-fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self, guint *hsi_value)
+fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self, guint *hsi_number)
 {
 	guint val;
 
@@ -5894,14 +5894,14 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self, guint *hsi_value)
 	case FU_SMBIOS_CHASSIS_KIND_STICK_PC:
 		return fu_security_attrs_calculate_hsi(self->host_security_attrs,
 						       FU_SECURITY_ATTRS_FLAG_ADD_VERSION,
-						       hsi_value);
+						       hsi_number);
 	default:
 		break;
 	}
 
-	/* failed */
-	if (hsi_value != NULL)
-		*hsi_value = -1;
+	if (hsi_number != NULL)
+		*hsi_number = -1;
+
 	return g_strdup_printf("HSI-INVALID:chassis[0x%02x]", val);
 }
 
@@ -5915,7 +5915,7 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	g_autofree gchar *data = NULL;
 	g_autofree gchar *last_json_attr = NULL;
 	g_autofree gchar *diff_result = NULL;
-	guint hsi_value = G_MAXUINT;
+	guint hsi_number = G_MAXUINT;
 	guint previous_hsi = G_MAXUINT;
 
 	/* already valid */
@@ -5960,24 +5960,26 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 
 	/* distil into one simple string */
 	g_free(self->host_security_id);
-	self->host_security_id = fu_engine_attrs_calculate_hsi_for_chassis(self, &hsi_value);
+	self->host_security_id = fu_engine_attrs_calculate_hsi_for_chassis(self, &hsi_number);
 
-	if (fu_history_get_last_hsi_details(self->history, &previous_hsi, &last_json_attr) ==
-	    TRUE) {
-		if (fu_security_attrs_compare_hsi_score(previous_hsi, hsi_value) == 0)
+	if (fu_history_get_last_hsi_details(self->history,
+					    &previous_hsi,
+					    &last_json_attr,
+					    &error)) {
+		if (fu_security_attrs_compare_hsi_score(previous_hsi, hsi_number) == 0)
 			diff_result =
 			    fu_security_attrs_hsi_change(self->host_security_attrs, last_json_attr);
-	}
-	/* Convert Security attribute to json string */
+	} else
+		g_warning("Error on reading HSI history: %s", error->message);
+
 	data = fu_security_attrs_to_json_string(self->host_security_attrs, &error);
 
-	/* Store string to db */
 	if (data == NULL) {
 		g_warning("Fail to convert security attributes to string: %s", error->message);
 	} else {
 		if (fu_history_add_security_attribute(self->history,
 						      data,
-						      hsi_value,
+						      hsi_number,
 						      fwupd_version_string(),
 						      diff_result,
 						      &error) == FALSE)
