@@ -1,19 +1,33 @@
 <firmware gtype="FuElanfpFirmware">
   <format_version>0x123</format_version>
-  <firmware>
+  <firmware gtype="FuCfuOffer">
     <idx>0x72</idx>
-    <data>aGVsbG8gd29ybGQ=</data>
+    <version_raw>0x1234</version_raw>
+    <product_id>0x5678</product_id>
+    <bank>0x1</bank>
   </firmware>
-  <firmware>
+  <firmware gtype="FuCfuOffer">
     <idx>0x73</idx>
-    <data>aGVsbG8gd29ybGQ=</data>
+    <version_raw>0x1234</version_raw>
+    <product_id>0x5678</product_id>
+    <bank>0x2</bank>
   </firmware>
-  <firmware>
+  <firmware gtype="FuCfuPayload">
     <idx>0x74</idx>
-    <data>aGVsbG8gd29ybGQ=</data>
+    <chunks>
+      <chunk>
+        <data>aGVsbG8gd29ybGQ=</data>
+        <addr>0x8001234</addr>
+      </chunk>
+    </chunks>
   </firmware>
-  <firmware>
+  <firmware gtype="FuCfuPayload">
     <idx>0x75</idx>
-    <data>aGVsbG8gd29ybGQ=</data>
+    <chunks>
+      <chunk>
+        <data>aGVsbG8gd29ybGQ=</data>
+        <addr>0x8001234</addr>
+      </chunk>
+    </chunks>
   </firmware>
 </firmware>

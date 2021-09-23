@@ -11,6 +11,8 @@
 #include <libfwupdplugin/fu-archive.h>
 #include <libfwupdplugin/fu-backend.h>
 #include <libfwupdplugin/fu-bluez-device.h>
+#include <libfwupdplugin/fu-cfu-offer.h>
+#include <libfwupdplugin/fu-cfu-payload.h>
 #include <libfwupdplugin/fu-chunk.h>
 #include <libfwupdplugin/fu-common-cab.h>
 #include <libfwupdplugin/fu-common-guid.h>

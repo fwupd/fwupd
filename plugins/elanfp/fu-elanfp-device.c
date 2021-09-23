@@ -108,7 +108,6 @@ fu_elanfp_iap_send_command(FuElanfpDevice *self,
 				    error))
 			return FALSE;
 	}
-
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
@@ -265,48 +264,16 @@ fu_elanfp_device_setup(FuDevice *device, GError **error)
 
 static gboolean
 fu_elanfp_device_write_payload(FuElanfpDevice *self,
-			       GBytes *fw,
+			       FuFirmware *payload,
 			       FuProgress *progress,
 			       GError **error)
 {
-	guint32 offset = 0;
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autoptr(GPtrArray) chunks = NULL;
 
-	/* process into chunks */
-	chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	while (offset < bufsz) {
-		guint32 chunk_addr = 0;
-		guint8 chunk_size = 0;
-		g_autoptr(FuChunk) chk = NULL;
-		g_autoptr(GBytes) blob = NULL;
-
-		/* read chunk header */
-		if (!fu_common_read_uint32_safe(buf,
-						bufsz,
-						offset,
-						&chunk_addr,
-						G_LITTLE_ENDIAN,
-						error))
-			return FALSE;
-		if (!fu_common_read_uint8_safe(buf, bufsz, offset + 0x4, &chunk_size, error))
-			return FALSE;
-		offset += 0x5;
-		blob = fu_common_bytes_new_offset(fw, offset, chunk_size, error);
-		if (blob == NULL) {
-			g_prefix_error(error, "memory copy for offer fail: ");
-			return FALSE;
-		}
-		chk = fu_chunk_bytes_new(blob);
-		fu_chunk_set_address(chk, chunk_addr);
-		g_ptr_array_add(chunks, g_steal_pointer(&chk));
-
-		/* next! */
-		offset += chunk_size;
-	}
-
 	/* write each chunk */
+	chunks = fu_firmware_get_chunks(payload, error);
+	if (chunks == NULL)
+		return FALSE;
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
@@ -395,8 +362,11 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 		const gchar *tag;
 		guint8 offer_idx;
 		guint8 payload_idx;
-	} items[] = {{"A", 0x72, 0x74}, {"B", 0x73, 0x75}, {NULL, 0x0, 0x0}};
-	g_autoptr(GBytes) payload = NULL;
+	} items[] = {
+	    {"A", FU_ELANTP_FIRMWARE_IDX_CFU_OFFER_A, FU_ELANTP_FIRMWARE_IDX_CFU_PAYLOAD_A},
+	    {"B", FU_ELANTP_FIRMWARE_IDX_CFU_OFFER_B, FU_ELANTP_FIRMWARE_IDX_CFU_PAYLOAD_B},
+	    {NULL, FU_ELANTP_FIRMWARE_IDX_END, FU_ELANTP_FIRMWARE_IDX_END}};
+	g_autoptr(FuFirmware) payload = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -442,7 +412,7 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* send payload */
-	payload = fu_firmware_get_image_by_idx_bytes(firmware, items[i].payload_idx, error);
+	payload = fu_firmware_get_image_by_idx(firmware, items[i].payload_idx, error);
 	if (payload == NULL)
 		return FALSE;
 	if (!fu_elanfp_device_write_payload(self, payload, fu_progress_get_child(progress), error))
