@@ -17,8 +17,6 @@ struct _FuElanfpFirmware {
 
 G_DEFINE_TYPE(FuElanfpFirmware, fu_elanfp_firmware, FU_TYPE_FIRMWARE)
 
-#define FU_ELANTP_FIRMWARE_IDX_END 0xFF
-
 static void
 fu_elanfp_firmware_export(FuFirmware *firmware, FuFirmwareExportFlags flags, XbBuilderNode *bn)
 {
@@ -90,6 +88,23 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 						G_LITTLE_ENDIAN,
 						error))
 			return FALSE;
+
+		/* done */
+		if (fwtype == FU_ELANTP_FIRMWARE_IDX_END)
+			break;
+		switch (fwtype) {
+		case FU_ELANTP_FIRMWARE_IDX_CFU_OFFER_A:
+		case FU_ELANTP_FIRMWARE_IDX_CFU_OFFER_B:
+			img = fu_cfu_offer_new();
+			break;
+		case FU_ELANTP_FIRMWARE_IDX_CFU_PAYLOAD_A:
+		case FU_ELANTP_FIRMWARE_IDX_CFU_PAYLOAD_B:
+			img = fu_cfu_payload_new();
+			break;
+		default:
+			img = fu_firmware_new();
+			break;
+		}
 		fu_firmware_set_idx(img, fwtype);
 		if (!fu_common_read_uint32_safe(buf,
 						bufsz,
@@ -109,12 +124,9 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 		blob = fu_common_bytes_new_offset(fw, start_addr, length, error);
 		if (blob == NULL)
 			return FALSE;
-		fu_firmware_set_bytes(img, blob);
+		if (!fu_firmware_parse(img, blob, flags, error))
+			return FALSE;
 		fu_firmware_add_image(firmware, img);
-
-		/* done */
-		if (fwtype == FU_ELANTP_FIRMWARE_IDX_END)
-			break;
 
 		offset += 0x10;
 	}
@@ -141,11 +153,14 @@ fu_elanfp_firmware_write(FuFirmware *firmware, GError **error)
 	offset += 0x10 + ((imgs->len + 1) * 0x10);
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
+		g_autoptr(GBytes) blob = fu_firmware_write(img, error);
+		if (blob == NULL)
+			return NULL;
 		fu_byte_array_append_uint32(buf, fu_firmware_get_idx(img), G_LITTLE_ENDIAN);
 		fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN); /* reserved */
 		fu_byte_array_append_uint32(buf, offset, G_LITTLE_ENDIAN);
-		fu_byte_array_append_uint32(buf, fu_firmware_get_size(img), G_LITTLE_ENDIAN);
-		offset += fu_firmware_get_size(img);
+		fu_byte_array_append_uint32(buf, g_bytes_get_size(blob), G_LITTLE_ENDIAN);
+		offset += g_bytes_get_size(blob);
 	}
 
 	/* end of index */
@@ -157,7 +172,9 @@ fu_elanfp_firmware_write(FuFirmware *firmware, GError **error)
 	/* data */
 	for (guint i = 0; i < imgs->len; i++) {
 		FuFirmware *img = g_ptr_array_index(imgs, i);
-		g_autoptr(GBytes) blob = fu_firmware_get_bytes(img, error);
+		g_autoptr(GBytes) blob = fu_firmware_write(img, error);
+		if (blob == NULL)
+			return NULL;
 		fu_byte_array_append_bytes(buf, blob);
 	}
 
