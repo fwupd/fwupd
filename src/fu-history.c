@@ -1458,7 +1458,7 @@ fu_history_get_last_hsi_details(FuHistory *self,
 		return TRUE;
 	}
 
-	return FALSE;
+	return TRUE;
 }
 
 static void

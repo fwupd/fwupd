@@ -5966,9 +5966,12 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 					    &previous_hsi,
 					    &last_json_attr,
 					    &error)) {
-		if (fu_security_attrs_compare_hsi_score(previous_hsi, hsi_number) == 0)
-			diff_result =
-			    fu_security_attrs_hsi_change(self->host_security_attrs, last_json_attr);
+		if (previous_hsi != G_MAXUINT) {
+			if (fu_security_attrs_compare_hsi_score(previous_hsi, hsi_number))
+				diff_result =
+				    fu_security_attrs_hsi_change(self->host_security_attrs,
+								 last_json_attr);
+		}
 	} else
 		g_warning("Error on reading HSI history: %s", error->message);
 
