@@ -9,6 +9,9 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="bash">
     <distro id="void">
@@ -27,6 +30,10 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="bubblewrap">
     <distro id="debian">
@@ -38,6 +45,9 @@
       <package />
     </distro>
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -70,14 +80,23 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="clang">
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="clang-tools">
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -89,6 +108,9 @@
       <package variant="x86_64" />
     </distro>
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -122,6 +144,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="libcairo-gobject2">
     <distro id="centos">
@@ -139,6 +165,15 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="libdistro-info-perl">
+    <distro id="launchpad">
+      <control />
     </distro>
   </dependency>
   <dependency type="build" id="libjson-glib-dev">
@@ -168,6 +203,12 @@
       </control>
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control>
+        <version>(>= 1.1.1)</version>
+      </control>
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="libftdi1-dev">
     <distro id="arch">
@@ -184,6 +225,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
+       <control />
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -203,6 +248,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -229,6 +278,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="devscripts">
     <distro id="debian">
@@ -236,6 +289,9 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -248,6 +304,12 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control>
+        <version>(>= 12)</version>
+      </control>
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control>
         <version>(>= 12)</version>
       </control>
@@ -268,6 +330,9 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="dconf">
     <distro id="centos">
@@ -284,6 +349,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -310,6 +379,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="fakeroot">
     <distro id="debian">
@@ -317,6 +390,9 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -337,6 +413,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="fontconfig">
     <distro id="centos">
@@ -354,6 +434,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="libflashrom-dev">
     <distro id="fedora">
@@ -367,6 +451,12 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control>
+        <exclusive>ia64</exclusive>
+      </control>
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control>
         <exclusive>ia64</exclusive>
       </control>
@@ -393,6 +483,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="gettext">
     <distro id="centos">
@@ -413,6 +507,12 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control>
+        <version>(>= 0.19.8.1)</version>
+      </control>
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control>
         <version>(>= 0.19.8.1)</version>
       </control>
@@ -460,6 +560,16 @@
       <package variant="x86_64">gnu-efi</package>
       <package variant="i386">gnu-efi</package>
     </distro>
+    <distro id="launchpad">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
+      <package variant="x86_64">gnu-efi</package>
+      <package variant="i386">gnu-efi</package>
+    </distro>
   </dependency>
   <dependency type="build" id="git">
     <distro id="arch">
@@ -482,6 +592,9 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="libglib2.0-doc">
     <distro id="debian">
@@ -489,6 +602,9 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -511,6 +627,12 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control>
+        <version>(>= 2.45.8)</version>
+      </control>
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control>
         <version>(>= 2.45.8)</version>
       </control>
@@ -544,6 +666,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="gnome-desktop-testing">
     <distro id="fedora">
@@ -554,6 +680,9 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -574,6 +703,10 @@
       <package variant="i386">libgnutls28-dev</package>
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -598,6 +731,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <!-- TODO: Drop build dependency after switching to gidoc-gen -->
   <dependency type="build" id="gtk-doc-tools">
@@ -616,6 +753,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -657,6 +798,12 @@
       </control>
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control>
+        <version>(>= 0.1.13)</version>
+      </control>
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="libjcat-dev">
     <distro id="fedora">
@@ -669,6 +816,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -690,6 +841,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -729,6 +884,15 @@
       </control>
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="libefiboot-dev">
     <distro id="debian">
@@ -742,6 +906,15 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control>
         <inclusive>amd64</inclusive>
         <inclusive>arm64</inclusive>
@@ -771,6 +944,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
     <distro id="void">
       <package>gcab-devel</package>
     </distro>
@@ -783,6 +960,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -801,6 +982,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -827,6 +1012,12 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control>
+        <version>(>= 0.3.5)</version>
+      </control>
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control>
         <version>(>= 0.3.3)</version>
       </control>
@@ -873,9 +1064,20 @@
       </control>
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control>
+        <inclusive>i386</inclusive>
+        <inclusive>amd64</inclusive>
+      </control>
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="libsoup2.4-dev">
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -906,6 +1108,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="libtool-bin">
     <distro id="debian">
@@ -914,6 +1120,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -929,6 +1139,9 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -957,6 +1170,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="meson">
     <distro id="arch">
@@ -975,6 +1192,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -1005,6 +1226,15 @@
       </control>
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="gir1.2-pango-1.0">
     <distro id="centos">
@@ -1025,6 +1255,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="pkg-config">
     <distro id="debian">
@@ -1033,6 +1267,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -1067,6 +1305,12 @@
       </control>
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control>
+        <version>(>> 0.105-14)</version>
+      </control>
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="libmm-glib-dev">
     <distro id="centos">
@@ -1085,6 +1329,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -1109,6 +1357,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="libmbim-glib-dev">
     <distro id="centos">
@@ -1130,6 +1382,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="libpolkit-gobject-1-dev">
     <distro id="centos">
@@ -1148,6 +1404,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -1185,6 +1445,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="gi-docgen">
     <distro id="void">
@@ -1197,6 +1461,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="python3-typogrify">
     <distro id="debian">
@@ -1205,6 +1473,9 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
     <distro id="fedora">
@@ -1223,12 +1494,18 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="python3-markdown">
     <distro id="fedora">
       <package />
     </distro>
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -1242,6 +1519,9 @@
       <package />
     </distro>
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -1266,6 +1546,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -1308,6 +1592,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
     <distro id="void">
       <package>sqlite-devel</package>
     </distro>
@@ -1338,6 +1626,12 @@
       </control>
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control>
+        <version>(>= 231)</version>
+      </control>
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="libsystemd-dev">
     <distro id="centos">
@@ -1353,6 +1647,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -1377,6 +1675,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="texlive-fonts-recommended">
     <distro id="debian">
@@ -1384,6 +1686,9 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -1395,6 +1700,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -1415,6 +1724,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -1439,6 +1752,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -1475,6 +1792,26 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control>
+        <exclusive>ia64</exclusive>
+        <exclusive>riscv64</exclusive>
+        <exclusive>x32</exclusive>
+        <exclusive>mips</exclusive>
+        <exclusive>sparc64</exclusive>
+        <exclusive>sh4</exclusive>
+        <exclusive>ppc64</exclusive>
+        <exclusive>powerpcspe</exclusive>
+        <exclusive>hppa</exclusive>
+        <exclusive>alpha</exclusive>
+        <exclusive>mips64el</exclusive>
+        <exclusive>armhf</exclusive>
+        <exclusive>armel</exclusive>
+        <exclusive>mipsel</exclusive>
+        <exclusive>m68k</exclusive>
+      </control>
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control>
         <exclusive>ia64</exclusive>
         <exclusive>riscv64</exclusive>
@@ -1533,6 +1870,15 @@
       </control>
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control>
+        <inclusive>amd64</inclusive>
+        <inclusive>arm64</inclusive>
+        <inclusive>armhf</inclusive>
+        <inclusive>i386</inclusive>
+      </control>
+      <package variant="x86_64" />
+    </distro>
     <distro id="void">
       <package>tpm2-tss-devel</package>
     </distro>
@@ -1544,6 +1890,9 @@
   </dependency>
   <dependency type="build" id="shellcheck">
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
     <distro id="fedora">
@@ -1560,6 +1909,10 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <control />
       <package variant="x86_64" />
     </distro>
@@ -1580,6 +1933,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
     <distro id="fedora">
       <package />
     </distro>
@@ -1591,6 +1948,9 @@
     <distro id="ubuntu">
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <package variant="x86_64" />
+    </distro>
   </dependency>
   <dependency type="build" id="python3-venv">
     <distro id="debian">
@@ -1598,6 +1958,9 @@
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="launchpad">
       <package variant="x86_64" />
     </distro>
   </dependency>
