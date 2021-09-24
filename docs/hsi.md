@@ -95,7 +95,7 @@ A runtime security issue detected.
 
 - Unencrypted [swap partition](https://wiki.archlinux.org/index.php/Dm-crypt/Swap_encryption). *[v1.5.0]*
 
-- The installed fwupd is running with [custom or modified plugins](https://github.com/fwupd/fwupd/tree/master/plugins). *[v1.5.0]*
+- The installed fwupd is running with [custom or modified plugins](https://github.com/fwupd/fwupd/tree/main/plugins). *[v1.5.0]*
 
 ## Tests included in fwupd {#tests}
 

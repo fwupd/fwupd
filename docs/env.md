@@ -55,7 +55,7 @@ Other variables, include:
 
 ## File system overrides
 
-These are not fully documented here, see <https://github.com/fwupd/fwupd/blob/master/libfwupdplugin/fu-common.c>
+These are not fully documented here, see <https://github.com/fwupd/fwupd/blob/main/libfwupdplugin/fu-common.c>
 for details.
 
 * `CACHE_DIRECTORY`
