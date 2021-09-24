@@ -72,7 +72,7 @@ fu_ipmi_device_send(FuIpmiDevice *self,
 	    .msg.netfn = netfn,
 	    .msg.cmd = cmd,
 	};
-	if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL)
+	if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL && buf2 != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "ipmi-send", buf2, bufsz);
 	return fu_udev_device_ioctl(FU_UDEV_DEVICE(self),
 				    IPMICTL_SEND_COMMAND,
@@ -104,8 +104,8 @@ fu_ipmi_device_recv(FuIpmiDevice *self,
 				  NULL,
 				  error))
 		return FALSE;
-	if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL)
-		fu_common_dump_raw(G_LOG_DOMAIN, "ipmi-recv", buf, *len);
+	if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL && buf != NULL)
+		fu_common_dump_raw(G_LOG_DOMAIN, "ipmi-recv", buf, bufsz);
 	if (netfn != NULL)
 		*netfn = recv.msg.netfn;
 	if (cmd != NULL)
