@@ -3,7 +3,10 @@ subdir('pki')
 subdir('remotes.d')
 subdir('bash-completion')
 subdir('fish-completion')
+
+if get_option('tests')
 subdir('device-tests')
+endif
 
 if build_daemon
 subdir('motd')
