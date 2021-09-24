@@ -60,7 +60,7 @@ To enable this:
 The LVFS currently outputs XML with absolute URI locations, e.g.
 `<location>http://foo/bar.cab</location>` rather than `<location>bar.cab</location>`
 
-This makes mirroring the master LVFS (or other private instance) somewhat tricky.
+This makes mirroring the upstream LVFS (or other private instance) somewhat tricky.
 To work around this issue client remotes can specify `FirmwareBaseURI` to
 replace the URI of the firmware before it is downloaded.
 
