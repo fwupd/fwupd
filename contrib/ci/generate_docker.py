@@ -56,7 +56,7 @@ with open("Dockerfile", "w") as wfd:
                 wfd.write("RUN dnf --enablerepo=updates-testing -y install \\\n")
             elif OS == "centos":
                 wfd.write("RUN yum -y install \\\n")
-            elif OS == "debian" or OS == "ubuntu":
+            elif OS == "debian" or OS == "ubuntu" or OS == "launchpad":
                 wfd.write("RUN apt update -qq && \\\n")
                 wfd.write(
                     "\tDEBIAN_FRONTEND=noninteractive apt install -yq --no-install-recommends\\\n"
