@@ -271,15 +271,22 @@ fu_thunderbolt_device_probe(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_thunderbolt_device_parent_class)->probe(device, error))
 		return FALSE;
 
+	self->devpath = g_strdup(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
+
 	/* device */
 	if (g_strcmp0(tmp, "thunderbolt_device") == 0) {
+		g_autofree gchar *parent_name =
+		    fu_udev_device_get_parent_name(FU_UDEV_DEVICE(self));
+		/* determine if host controller or not */
+		if (parent_name != NULL && g_str_has_prefix(parent_name, "domain"))
+			self->device_type = FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER;
 		tmp = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "unique_id", NULL);
 		if (tmp != NULL)
 			fu_device_set_physical_id(device, tmp);
 		/* retimer */
 	} else if (g_strcmp0(tmp, "thunderbolt_retimer") == 0) {
 		self->device_type = FU_THUNDERBOLT_DEVICE_TYPE_RETIMER;
-		tmp = g_path_get_basename(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
+		tmp = g_path_get_basename(self->devpath);
 		if (tmp != NULL)
 			fu_device_set_physical_id(device, tmp);
 		/* domain or unsupported */
@@ -321,7 +328,6 @@ fu_thunderbolt_device_setup_controller(FuDevice *device, GError **error)
 	guint16 did;
 	guint16 vid;
 	g_autoptr(GError) error_gen = NULL;
-	g_autofree gchar *parent_name = fu_udev_device_get_parent_name(FU_UDEV_DEVICE(self));
 
 	/* these may be missing on ICL or later */
 	vid = fu_udev_device_get_vendor(FU_UDEV_DEVICE(self));
@@ -337,13 +343,7 @@ fu_thunderbolt_device_setup_controller(FuDevice *device, GError **error)
 	if (self->gen == 0)
 		g_debug("Unable to read generation: %s", error_gen->message);
 
-	/* read the first block of firmware to get the is-native attribute */
-	if (!fu_thunderbolt_device_read_status_block(self, error))
-		return FALSE;
-
-	/* determine if host controller or not */
-	if (parent_name != NULL && g_str_has_prefix(parent_name, "domain")) {
-		self->device_type = FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER;
+	if (self->device_type == FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
 		fu_device_set_summary(device, "Unmatched performance for high-speed I/O");
 	} else {
@@ -356,10 +356,9 @@ fu_thunderbolt_device_setup_controller(FuDevice *device, GError **error)
 	fu_device_set_name(device, tmp);
 
 	/* set vendor string */
-	tmp = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(self), "vendor_name", error);
-	if (tmp == NULL)
-		return FALSE;
-	fu_device_set_vendor(device, tmp);
+	tmp = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(self), "vendor_name", NULL);
+	if (tmp != NULL)
+		fu_device_set_vendor(device, tmp);
 
 	if (fu_device_get_version(device) == NULL)
 		fu_thunderbolt_device_check_safe_mode(self);
@@ -376,12 +375,17 @@ fu_thunderbolt_device_setup_controller(FuDevice *device, GError **error)
 			 * so don't try to read a native attribute from their NVM */
 			if (self->device_type == FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER &&
 			    self->gen < 4) {
-				domain_id = g_strdup_printf("TBT-%04x%04x%s-controller%s",
-							    (guint)vid,
-							    (guint)did,
-							    self->is_native ? "-native" : "",
-							    domain);
+				/* read first block of firmware to get the is-native attribute */
+				if (!fu_thunderbolt_device_read_status_block(self, error))
+					return FALSE;
+			} else {
+				self->is_native = FALSE;
 			}
+			domain_id = g_strdup_printf("TBT-%04x%04x%s-controller%s",
+						    (guint)vid,
+						    (guint)did,
+						    self->is_native ? "-native" : "",
+						    domain);
 			vendor_id = g_strdup_printf("TBT:0x%04X", (guint)vid);
 			fu_device_add_vendor_id(device, vendor_id);
 			device_id = g_strdup_printf("TBT-%04x%04x%s",
@@ -481,7 +485,8 @@ fu_thunderbolt_device_setup(FuDevice *device, GError **error)
 
 	/* try to read the version */
 	if (!fu_thunderbolt_device_get_version(self, &error_version)) {
-		if (g_error_matches(error_version, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		if (self->device_type != FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER &&
+		    g_error_matches(error_version, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_propagate_error(error, g_steal_pointer(&error_version));
 			return FALSE;
 		}
