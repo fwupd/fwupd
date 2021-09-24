@@ -22,7 +22,7 @@ struct _FuSynapticsCapeFirmware {
 	guint16 pid;
 };
 
-/* Firmware update command structure, little endian */
+/* firmware update command structure, little endian */
 typedef struct __attribute__((packed)) {
 	guint32 vid;		/* USB vendor id */
 	guint32 pid;		/* USB product id */
