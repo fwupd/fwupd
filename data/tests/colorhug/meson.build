@@ -6,6 +6,6 @@ colorhug_test_firmware = custom_target('colorhug-test-firmware',
   ],
   output : 'colorhug-als-3.0.2.cab',
   command : [
-    gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
+    gcabcmd, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
   ],
 )

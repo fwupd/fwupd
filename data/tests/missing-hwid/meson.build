@@ -5,7 +5,7 @@ hwid_test_firmware = custom_target('hwid-test-firmware',
   ],
   output : 'hwid-1.2.3.cab',
   command : [
-    gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
+    gcabcmd, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
   ],
 )
 noreqs_test_firmware = custom_target('noreqs-test-firmware',
@@ -15,6 +15,6 @@ noreqs_test_firmware = custom_target('noreqs-test-firmware',
   ],
   output : 'noreqs-1.2.3.cab',
   command : [
-    gcab, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
+    gcabcmd, '--create', '--nopath', '@OUTPUT@', '@INPUT@',
   ],
 )

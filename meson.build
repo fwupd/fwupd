@@ -250,7 +250,7 @@ if build_daemon
 endif
 libm = cc.find_library('m', required: false)
 libgcab = dependency('libgcab-1.0', version : '>= 1.0', fallback : ['gcab', 'gcab_dep'])
-gcab = find_program('gcab', required : get_option('tests'))
+gcabcmd = find_program('gcab', required : get_option('tests'))
 bashcomp = dependency('bash-completion', required: false)
 if host_machine.system() != 'freebsd'
   python3 = find_program('python3')
