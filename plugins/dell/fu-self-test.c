@@ -104,7 +104,7 @@ fu_plugin_dell_tpm_func(gconstpointer user_data)
 				       self->plugin_uefi_capsule);
 	ret = fu_plugin_runner_coldplug(self->plugin_dell, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* inject fake data (no TPM) */
 	tpm_out.ret = -2;
@@ -159,7 +159,7 @@ fu_plugin_dell_tpm_func(gconstpointer user_data)
 	fu_plugin_dell_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm(self->plugin_dell, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* make sure not allowed to flash 1.2 */
 	device_v12 = _find_device_by_name(devices, "TPM 1.2");
@@ -188,7 +188,7 @@ fu_plugin_dell_tpm_func(gconstpointer user_data)
 	fu_plugin_dell_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm(self->plugin_dell, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* make sure allowed to flash 1.2 but not 2.0 */
 	device_v12 = _find_device_by_name(devices, "TPM 1.2");
@@ -201,7 +201,7 @@ fu_plugin_dell_tpm_func(gconstpointer user_data)
 	/* try to unlock 2.0 */
 	ret = fu_plugin_runner_unlock(self->plugin_uefi_capsule, device_v20, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* make sure no longer allowed to flash 1.2 but can flash 2.0 */
 	g_assert_false(fu_device_has_flag(device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
@@ -221,7 +221,7 @@ fu_plugin_dell_tpm_func(gconstpointer user_data)
 	fu_plugin_dell_inject_fake_data(self->plugin_dell, (guint32 *)&tpm_out, 0, 0, NULL, TRUE);
 	ret = fu_plugin_dell_detect_tpm(self->plugin_dell, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* make sure allowed to flash 2.0 but not 1.2 */
 	device_v20 = _find_device_by_name(devices, "TPM 2.0");
@@ -250,7 +250,7 @@ fu_plugin_dell_tpm_func(gconstpointer user_data)
 					      FWUPD_INSTALL_FLAG_FORCE,
 					      &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* all */
 	g_signal_handler_disconnect(self->plugin_uefi_capsule, added_id);
@@ -339,7 +339,7 @@ fu_plugin_dell_dock_func(gconstpointer user_data)
 					buf.buf,
 					FALSE);
 	ret = fu_plugin_backend_device_added(self->plugin_dell, FU_DEVICE(fake_usb_device), NULL);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(devices->len, ==, 4);
 	g_ptr_array_set_size(devices, 0);
 	g_free(buf.record);
@@ -375,7 +375,7 @@ fu_plugin_dell_dock_func(gconstpointer user_data)
 					buf.buf,
 					FALSE);
 	ret = fu_plugin_backend_device_added(self->plugin_dell, FU_DEVICE(fake_usb_device), NULL);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(devices->len, ==, 3);
 	g_ptr_array_set_size(devices, 0);
 	g_free(buf.record);
@@ -409,7 +409,7 @@ fu_plugin_dell_dock_func(gconstpointer user_data)
 					buf.buf,
 					FALSE);
 	ret = fu_plugin_backend_device_added(self->plugin_dell, FU_DEVICE(fake_usb_device), &error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_no_error(error);
 	g_assert_cmpint(devices->len, ==, 3);
 	g_ptr_array_set_size(devices, 0);
@@ -444,7 +444,7 @@ fu_plugin_dell_dock_func(gconstpointer user_data)
 					buf.buf,
 					FALSE);
 	ret = fu_plugin_backend_device_added(self->plugin_dell, FU_DEVICE(fake_usb_device), &error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_no_error(error);
 	g_assert_cmpint(devices->len, ==, 2);
 	g_ptr_array_set_size(devices, 0);
@@ -504,20 +504,20 @@ fu_test_self_init(FuTest *self)
 					 NULL);
 	ret = fu_plugin_open(self->plugin_uefi_capsule, pluginfn_uefi, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	ret = fu_plugin_runner_startup(self->plugin_uefi_capsule, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	self->plugin_dell = fu_plugin_new(ctx);
 	pluginfn_dell =
 	    g_build_filename(PLUGINBUILDDIR, "libfu_plugin_dell." G_MODULE_SUFFIX, NULL);
 	ret = fu_plugin_open(self->plugin_dell, pluginfn_dell, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	ret = fu_plugin_runner_startup(self->plugin_dell, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void

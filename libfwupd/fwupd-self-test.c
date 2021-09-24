@@ -187,7 +187,7 @@ fwupd_remote_download_func(void)
 	fn = g_build_filename(FU_SELF_TEST_REMOTES_DIR, "remotes.d", "lvfs-testing.conf", NULL);
 	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	ret = fwupd_remote_setup(remote, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -224,11 +224,11 @@ fwupd_remote_baseuri_func(void)
 	fn = g_build_filename(TESTDATADIR, "tests", "firmware-base-uri.conf", NULL);
 	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
 	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_JCAT);
 	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
-	g_assert(fwupd_remote_get_enabled(remote));
+	g_assert_true(fwupd_remote_get_enabled(remote));
 	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
 	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
 			==,
@@ -291,11 +291,11 @@ fwupd_remote_nopath_func(void)
 	fn = g_build_filename(TESTDATADIR, "tests", "firmware-nopath.conf", NULL);
 	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
 	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_JCAT);
 	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
-	g_assert(fwupd_remote_get_enabled(remote));
+	g_assert_true(fwupd_remote_get_enabled(remote));
 	g_assert_cmpstr(fwupd_remote_get_checksum(remote), ==, NULL);
 	g_assert_cmpstr(fwupd_remote_get_metadata_uri(remote),
 			==,
@@ -322,13 +322,13 @@ fwupd_remote_local_func(void)
 	fn = g_build_filename(FU_LOCAL_REMOTE_DIR, "dell-esrt.conf", NULL);
 	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_LOCAL);
 	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_NONE);
-	g_assert(fwupd_remote_get_enabled(remote));
-	g_assert(fwupd_remote_get_metadata_uri(remote) == NULL);
-	g_assert(fwupd_remote_get_metadata_uri_sig(remote) == NULL);
-	g_assert(fwupd_remote_get_report_uri(remote) == NULL);
+	g_assert_true(fwupd_remote_get_enabled(remote));
+	g_assert_null(fwupd_remote_get_metadata_uri(remote));
+	g_assert_null(fwupd_remote_get_metadata_uri_sig(remote));
+	g_assert_null(fwupd_remote_get_report_uri(remote));
 	g_assert_cmpstr(fwupd_remote_get_title(remote),
 			==,
 			"Enable UEFI capsule updates on Dell systems");
@@ -429,9 +429,9 @@ fwupd_device_func(void)
 	g_print("\n%s", str);
 
 	/* check GUIDs */
-	g_assert(fwupd_device_has_guid(dev, "2082b5e0-7a64-478a-b1b2-e3404fab6dad"));
-	g_assert(fwupd_device_has_guid(dev, "00000000-0000-0000-0000-000000000000"));
-	g_assert(!fwupd_device_has_guid(dev, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"));
+	g_assert_true(fwupd_device_has_guid(dev, "2082b5e0-7a64-478a-b1b2-e3404fab6dad"));
+	g_assert_true(fwupd_device_has_guid(dev, "00000000-0000-0000-0000-000000000000"));
+	g_assert_false(fwupd_device_has_guid(dev, "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"));
 
 	/* convert the new non-breaking space back into a normal space:
 	 * https://gitlab.gnome.org/GNOME/glib/commit/76af5dabb4a25956a6c41a75c0c7feeee74496da */
@@ -460,7 +460,7 @@ fwupd_device_func(void)
 				    "  Flags:                trusted-payload\n",
 				    &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* export to json */
 	builder = json_builder_new();
@@ -517,7 +517,7 @@ fwupd_device_func(void)
 				    "}",
 				    &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -559,12 +559,12 @@ fwupd_client_devices_func(void)
 		return;
 	}
 	g_assert_no_error(error);
-	g_assert(array != NULL);
+	g_assert_nonnull(array);
 	g_assert_cmpint(array->len, >, 0);
 
 	/* check device */
 	dev = g_ptr_array_index(array, 0);
-	g_assert(FWUPD_IS_DEVICE(dev));
+	g_assert_true(FWUPD_IS_DEVICE(dev));
 	g_assert_cmpstr(fwupd_device_get_guid_default(dev), !=, NULL);
 	g_assert_cmpstr(fwupd_device_get_id(dev), !=, NULL);
 }
@@ -611,20 +611,20 @@ fwupd_client_remotes_func(void)
 		return;
 	}
 	g_assert_no_error(error);
-	g_assert(array != NULL);
+	g_assert_nonnull(array);
 	g_assert_cmpint(array->len, >, 0);
 
 	/* check we can find the right thing */
 	remote2 = fwupd_client_get_remote_by_id(client, "lvfs", NULL, &error);
 	g_assert_no_error(error);
-	g_assert(remote2 != NULL);
+	g_assert_nonnull(remote2);
 	g_assert_cmpstr(fwupd_remote_get_id(remote2), ==, "lvfs");
-	g_assert(fwupd_remote_get_metadata_uri(remote2) != NULL);
+	g_assert_nonnull(fwupd_remote_get_metadata_uri(remote2));
 
 	/* check we set an error when unfound */
 	remote3 = fwupd_client_get_remote_by_id(client, "XXXX", NULL, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert(remote3 == NULL);
+	g_assert_null(remote3);
 }
 
 static gboolean
@@ -695,15 +695,15 @@ fwupd_common_guid_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* invalid */
-	g_assert(!fwupd_guid_is_valid(NULL));
-	g_assert(!fwupd_guid_is_valid(""));
-	g_assert(!fwupd_guid_is_valid("1ff60ab2-3905-06a1-b476"));
-	g_assert(!fwupd_guid_is_valid("1ff60ab2-XXXX-XXXX-XXXX-0371f00c9e9b"));
-	g_assert(!fwupd_guid_is_valid(" 1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
-	g_assert(!fwupd_guid_is_valid("00000000-0000-0000-0000-000000000000"));
+	g_assert_false(fwupd_guid_is_valid(NULL));
+	g_assert_false(fwupd_guid_is_valid(""));
+	g_assert_false(fwupd_guid_is_valid("1ff60ab2-3905-06a1-b476"));
+	g_assert_false(fwupd_guid_is_valid("1ff60ab2-XXXX-XXXX-XXXX-0371f00c9e9b"));
+	g_assert_false(fwupd_guid_is_valid(" 1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
+	g_assert_false(fwupd_guid_is_valid("00000000-0000-0000-0000-000000000000"));
 
 	/* valid */
-	g_assert(fwupd_guid_is_valid("1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
+	g_assert_true(fwupd_guid_is_valid("1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
 
 	/* make valid */
 	guid1 = fwupd_guid_hash_string("python.org");
@@ -719,9 +719,11 @@ fwupd_common_guid_func(void)
 				     &error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
-	g_assert(memcmp(buf,
-			"\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff",
-			sizeof(buf)) == 0);
+	g_assert_cmpint(memcmp(buf,
+			       "\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff",
+			       sizeof(buf)),
+			==,
+			0);
 	guid_be = fwupd_guid_to_string((const fwupd_guid_t *)&buf, FWUPD_GUID_FLAG_NONE);
 	g_assert_cmpstr(guid_be, ==, "00112233-4455-6677-8899-aabbccddeeff");
 
@@ -732,9 +734,11 @@ fwupd_common_guid_func(void)
 				     &error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
-	g_assert(memcmp(buf,
-			"\x33\x22\x11\x00\x55\x44\x77\x66\x88\x99\xaa\xbb\xcc\xdd\xee\xff",
-			sizeof(buf)) == 0);
+	g_assert_cmpint(memcmp(buf,
+			       "\x33\x22\x11\x00\x55\x44\x77\x66\x88\x99\xaa\xbb\xcc\xdd\xee\xff",
+			       sizeof(buf)),
+			==,
+			0);
 	guid_me = fwupd_guid_to_string((const fwupd_guid_t *)&buf, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	g_assert_cmpstr(guid_me, ==, "00112233-4455-6677-8899-aabbccddeeff");
 

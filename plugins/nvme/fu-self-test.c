@@ -26,7 +26,7 @@ fu_nvme_cns_func(void)
 
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	path = g_test_build_filename(G_TEST_DIST, "tests", "TOSHIBA_THNSN5512GPU7.bin", NULL);
 
@@ -36,7 +36,7 @@ fu_nvme_cns_func(void)
 	}
 	ret = g_file_get_contents(path, &data, &sz, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	dev = fu_nvme_device_new_from_blob(ctx, (guint8 *)data, sz, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(dev);

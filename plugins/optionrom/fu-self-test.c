@@ -59,7 +59,7 @@ fu_rom_func(void)
 		g_autoptr(FuRom) rom = NULL;
 		g_autoptr(GFile) file = NULL;
 		rom = fu_rom_new();
-		g_assert(rom != NULL);
+		g_assert_nonnull(rom);
 
 		/* load file */
 		filename = g_test_build_filename(G_TEST_DIST, "tests", data[i].fn, NULL);
@@ -69,7 +69,7 @@ fu_rom_func(void)
 		file = g_file_new_for_path(filename);
 		ret = fu_rom_load_file(rom, file, FU_ROM_LOAD_FLAG_BLANK_PPID, NULL, &error);
 		g_assert_no_error(error);
-		g_assert(ret);
+		g_assert_true(ret);
 		g_assert_cmpstr(fu_rom_get_version(rom), ==, data[i].ver);
 		g_assert_cmpint(fu_rom_get_kind(rom), ==, data[i].kind);
 		g_assert_cmpint(fu_rom_get_vendor(rom), ==, data[i].vendor);

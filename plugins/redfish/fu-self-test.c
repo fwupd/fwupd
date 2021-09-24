@@ -33,23 +33,23 @@ fu_test_self_init(FuTest *self)
 				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
 				     &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	self->plugin = fu_plugin_new(ctx);
 	pluginfn = g_build_filename(PLUGINBUILDDIR, "libfu_plugin_redfish." G_MODULE_SUFFIX, NULL);
 	ret = fu_plugin_open(self->plugin, pluginfn, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	ret = fu_plugin_runner_startup(self->plugin, &error);
 	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
 		g_test_skip("no redfish.py running");
 		return;
 	}
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	ret = fu_plugin_runner_coldplug(self->plugin, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void

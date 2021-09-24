@@ -30,7 +30,7 @@ fwupd_thread_test_thread_cb(gpointer user_data)
 	g_autoptr(GMainContext) context = g_main_context_new();
 	g_autoptr(GMainContextPusher) pusher = g_main_context_pusher_new(context);
 
-	g_assert(pusher != NULL);
+	g_assert_nonnull(pusher);
 	g_message("Calling fwupd_client_get_devices() in thread %p with main context %p",
 		  g_thread_self(),
 		  g_main_context_get_thread_default());

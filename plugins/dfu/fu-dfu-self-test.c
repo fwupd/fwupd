@@ -73,7 +73,7 @@ fu_dfu_target_dfuse_func(void)
 	fu_dfu_target_set_device(target, device);
 	ret = fu_dfu_target_parse_sectors(target, NULL, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	tmp = fu_dfu_target_sectors_to_string(target);
 	g_assert_cmpstr(tmp, ==, "");
 	g_free(tmp);
@@ -81,7 +81,7 @@ fu_dfu_target_dfuse_func(void)
 	/* no addresses */
 	ret = fu_dfu_target_parse_sectors(target, "@Flash3", &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	tmp = fu_dfu_target_sectors_to_string(target);
 	g_assert_cmpstr(tmp, ==, "");
 	g_free(tmp);
@@ -89,20 +89,20 @@ fu_dfu_target_dfuse_func(void)
 	/* one sector, no space */
 	ret = fu_dfu_target_parse_sectors(target, "@Internal Flash /0x08000000/2*001Ka", &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	tmp = fu_dfu_target_sectors_to_string(target);
 	ret = fu_test_compare_lines(tmp,
 				    "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1 [R]\n"
 				    "Zone:0, Sec#:0, Addr:0x08000400, Size:0x0400, Caps:0x1 [R]",
 				    &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_free(tmp);
 
 	/* multiple sectors */
 	ret = fu_dfu_target_parse_sectors(target, "@Flash1   /0x08000000/2*001Ka,4*001Kg", &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	tmp = fu_dfu_target_sectors_to_string(target);
 	ret = fu_test_compare_lines(tmp,
 				    "Zone:0, Sec#:0, Addr:0x08000000, Size:0x0400, Caps:0x1 [R]\n"
@@ -113,7 +113,7 @@ fu_dfu_target_dfuse_func(void)
 				    "Zone:0, Sec#:1, Addr:0x08001400, Size:0x0400, Caps:0x7 [REW]",
 				    &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_free(tmp);
 
 	/* non-contiguous */
@@ -121,7 +121,7 @@ fu_dfu_target_dfuse_func(void)
 					  "@Flash2 /0xF000/4*100Ba/0xE000/3*8Kg/0x80000/2*24Kg",
 					  &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	tmp = fu_dfu_target_sectors_to_string(target);
 	ret = fu_test_compare_lines(tmp,
 				    "Zone:0, Sec#:0, Addr:0x0000f000, Size:0x0064, Caps:0x1 [R]\n"
@@ -135,16 +135,16 @@ fu_dfu_target_dfuse_func(void)
 				    "Zone:2, Sec#:0, Addr:0x00086000, Size:0x6000, Caps:0x7 [REW]",
 				    &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_free(tmp);
 
 	/* invalid */
 	ret = fu_dfu_target_parse_sectors(target, "Flash", NULL);
-	g_assert(ret);
+	g_assert_true(ret);
 	ret = fu_dfu_target_parse_sectors(target, "@Internal Flash /0x08000000", NULL);
-	g_assert(!ret);
+	g_assert_false(ret);
 	ret = fu_dfu_target_parse_sectors(target, "@Internal Flash /0x08000000/12*001a", NULL);
-	g_assert(!ret);
+	g_assert_false(ret);
 }
 
 int

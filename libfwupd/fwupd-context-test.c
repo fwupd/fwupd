@@ -30,7 +30,7 @@ fwupd_thread_test_thread_cb(gpointer user_data)
 	g_autoptr(GMainContext) context = g_main_context_new();
 	g_autoptr(GMainContextPusher) pusher = g_main_context_pusher_new(context);
 
-	g_assert(pusher != NULL);
+	g_assert_nonnull(pusher);
 	g_message("Calling fwupd_client_get_devices() in thread %p with main context %p",
 		  g_thread_self(),
 		  g_main_context_get_thread_default());
@@ -66,8 +66,8 @@ fwupd_thread_test_notify_cb(GObject *object, GParamSpec *pspec, gpointer user_da
 	g_message("fwupd_thread_test_notify_cb() in thread %p with main context %p",
 		  g_thread_self(),
 		  g_main_context_get_thread_default());
-	g_assert(g_thread_self() == self->main_thread);
-	g_assert(g_main_context_get_thread_default() == NULL);
+	g_assert_true(g_thread_self() == self->main_thread);
+	g_assert_null(g_main_context_get_thread_default());
 }
 
 static gboolean

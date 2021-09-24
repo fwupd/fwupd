@@ -48,8 +48,8 @@ fu_test_hang_check_cb(gpointer user_data)
 static void
 fu_test_loop_run_with_timeout(guint timeout_ms)
 {
-	g_assert(_test_loop_timeout_id == 0);
-	g_assert(_test_loop == NULL);
+	g_assert_cmpint(_test_loop_timeout_id, ==, 0);
+	g_assert_null(_test_loop);
 	_test_loop = g_main_loop_new(NULL, FALSE);
 	_test_loop_timeout_id = g_timeout_add(timeout_ms, fu_test_hang_check_cb, NULL);
 	g_main_loop_run(_test_loop);
@@ -135,14 +135,14 @@ fu_engine_generate_md_func(gconstpointer user_data)
 					   data,
 					   &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* load engine and check the device was found */
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_NO_CACHE,
 			     &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device, "1.2.3");
@@ -171,7 +171,7 @@ fu_plugin_hash_func(gconstpointer user_data)
 
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* make sure not tainted */
 	ret = fu_engine_get_tainted(engine);
@@ -221,7 +221,7 @@ fu_engine_requirements_missing_func(gconstpointer user_data)
 	task = fu_install_task_new(NULL, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert(!ret);
+	g_assert_false(ret);
 }
 
 static void
@@ -255,7 +255,7 @@ fu_engine_requirements_soft_func(gconstpointer user_data)
 	task = fu_install_task_new(NULL, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_FORCE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -286,7 +286,7 @@ fu_engine_requirements_client_fail_func(gconstpointer user_data)
 	task = fu_install_task_new(NULL, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-	g_assert(!ret);
+	g_assert_false(ret);
 }
 
 static void
@@ -317,7 +317,7 @@ fu_engine_requirements_client_invalid_func(gconstpointer user_data)
 	task = fu_install_task_new(NULL, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert(!ret);
+	g_assert_false(ret);
 }
 
 static void
@@ -351,7 +351,7 @@ fu_engine_requirements_client_pass_func(gconstpointer user_data)
 	task = fu_install_task_new(NULL, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -398,8 +398,9 @@ fu_engine_requirements_version_require_func(gconstpointer user_data)
 	task = fu_install_task_new(device, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-	g_assert(g_str_has_prefix(error->message, "device requires firmware with a version check"));
-	g_assert(!ret);
+	g_assert_true(
+	    g_str_has_prefix(error->message, "device requires firmware with a version check"));
+	g_assert_false(ret);
 }
 
 static void
@@ -433,7 +434,7 @@ fu_engine_requirements_unsupported_func(gconstpointer user_data)
 	task = fu_install_task_new(NULL, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-	g_assert(!ret);
+	g_assert_false(ret);
 }
 
 static void
@@ -488,7 +489,7 @@ fu_engine_requirements_child_func(gconstpointer user_data)
 	task = fu_install_task_new(device, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -545,7 +546,7 @@ fu_engine_requirements_child_fail_func(gconstpointer user_data)
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_nonnull(
 	    g_strstr_len(error->message, -1, "Not compatible with child device version"));
-	g_assert(!ret);
+	g_assert_false(ret);
 }
 
 static void
@@ -580,7 +581,7 @@ fu_engine_requirements_func(gconstpointer user_data)
 	task = fu_install_task_new(NULL, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -637,7 +638,7 @@ fu_engine_requirements_device_func(gconstpointer user_data)
 	task = fu_install_task_new(device, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -683,7 +684,7 @@ fu_engine_requirements_device_plain_func(gconstpointer user_data)
 	task = fu_install_task_new(device, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -733,7 +734,7 @@ fu_engine_requirements_version_format_func(gconstpointer user_data)
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_nonnull(
 	    g_strstr_len(error->message, -1, "Firmware version formats were different"));
-	g_assert(!ret);
+	g_assert_false(ret);
 }
 
 static void
@@ -781,7 +782,7 @@ fu_engine_requirements_only_upgrade_func(gconstpointer user_data)
 					   &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
 	g_assert_nonnull(g_strstr_len(error->message, -1, "Device only supports version upgrades"));
-	g_assert(!ret);
+	g_assert_false(ret);
 }
 
 static void
@@ -883,7 +884,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	task2 = fu_install_task_new(device1, component);
 	ret = fu_engine_check_requirements(engine, request, task2, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -948,7 +949,7 @@ fu_engine_requirements_other_device_func(gconstpointer user_data)
 	task = fu_install_task_new(device1, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -1033,7 +1034,7 @@ fu_engine_requirements_protocol_check_func(gconstpointer user_data)
 	ret = fu_engine_check_requirements(engine, request, task2, FWUPD_INSTALL_FLAG_NONE, &error);
 
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -1100,7 +1101,7 @@ fu_engine_requirements_parent_device_func(gconstpointer user_data)
 	task = fu_install_task_new(device2, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -1147,8 +1148,8 @@ fu_engine_device_parent_guid_func(gconstpointer user_data)
 	fu_engine_add_device(engine, device3);
 
 	/* verify both children were adopted */
-	g_assert(fu_device_get_parent(device3) == device2);
-	g_assert(fu_device_get_parent(device1) == device2);
+	g_assert_true(fu_device_get_parent(device3) == device2);
+	g_assert_true(fu_device_get_parent(device1) == device2);
 	g_assert_cmpstr(fu_device_get_vendor(device3), ==, "oem");
 
 	/* verify order */
@@ -1221,9 +1222,9 @@ fu_engine_device_parent_id_func(gconstpointer user_data)
 	fu_engine_add_device(engine, device4);
 
 	/* verify both children were adopted */
-	g_assert(fu_device_get_parent(device3) == device2);
-	g_assert(fu_device_get_parent(device4) == device2);
-	g_assert(fu_device_get_parent(device1) == device2);
+	g_assert_true(fu_device_get_parent(device3) == device2);
+	g_assert_true(fu_device_get_parent(device4) == device2);
+	g_assert_true(fu_device_get_parent(device1) == device2);
 	g_assert_cmpstr(fu_device_get_vendor(device3), ==, "oem");
 }
 
@@ -1267,33 +1268,33 @@ fu_engine_partial_hash_func(gconstpointer user_data)
 	/* match nothing */
 	ret = fu_engine_unlock(engine, "deadbeef", &error_none);
 	g_assert_error(error_none, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert(!ret);
+	g_assert_false(ret);
 
 	/* match both */
 	ret = fu_engine_unlock(engine, "9", &error_both);
 	g_assert_error(error_both, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-	g_assert(!ret);
+	g_assert_false(ret);
 
 	/* match one exactly */
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_LOCKED);
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_LOCKED);
 	ret = fu_engine_unlock(engine, "934b4162a6daa0b033d649c8d464529cec41d3de", &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* match one partially */
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_LOCKED);
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_LOCKED);
 	ret = fu_engine_unlock(engine, "934b", &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* match equivalent ID */
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_LOCKED);
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_LOCKED);
 	ret = fu_engine_unlock(engine, "b92f", &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -1313,7 +1314,7 @@ fu_engine_device_unlock_func(gconstpointer user_data)
 	/* load engine to get FuConfig set up */
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* add the hardcoded 'fwupd' metadata */
 	filename = g_build_filename(TESTDATADIR_SRC, "metadata.xml", NULL);
@@ -1368,13 +1369,13 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	/* load engine to get FuConfig set up */
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* get generated file as a blob */
 	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "hwid-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
-	g_assert(blob_cab != NULL);
+	g_assert_nonnull(blob_cab);
 	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
@@ -1401,11 +1402,11 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	task = fu_install_task_new(device, component);
 	ret = fu_engine_check_requirements(engine, request, task, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert(error != NULL);
+	g_assert_nonnull(error);
 	g_assert_cmpstr(error->message,
 			==,
 			"no HWIDs matched 9342d47a-1bab-5709-9869-c840b2eac501");
-	g_assert(!ret);
+	g_assert_false(ret);
 }
 
 static void
@@ -1438,7 +1439,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 				  -1,
 				  &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* write the main file */
 	ret = g_file_set_contents(
@@ -1475,7 +1476,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	    -1,
 	    &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* write the extra file */
 	ret = g_file_set_contents(
@@ -1512,27 +1513,27 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	    -1,
 	    &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_NO_CACHE,
 			     &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(fu_engine_get_status(engine), ==, FWUPD_STATUS_IDLE);
 	g_test_assert_expected_messages();
 
 	/* return all the remotes, even the broken one */
 	remotes = fu_engine_get_remotes(engine, &error);
 	g_assert_no_error(error);
-	g_assert(remotes != NULL);
+	g_assert_nonnull(remotes);
 	g_assert_cmpint(remotes->len, ==, 4);
 
 	/* ensure there are no devices already */
 	devices_pre = fu_engine_get_devices(engine, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
-	g_assert(devices_pre == NULL);
+	g_assert_null(devices_pre);
 	g_clear_error(&error);
 
 	/* add a device so we can get upgrades and downgrades */
@@ -1552,17 +1553,17 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
 	g_assert_no_error(error);
-	g_assert(devices != NULL);
+	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
 #ifdef HAVE_POLKIT
-	g_assert(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED));
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED));
 #endif
-	g_assert(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
 
 	/* get the releases for one device */
 	releases = fu_engine_get_releases(engine, request, fu_device_get_id(device), &error);
 	g_assert_no_error(error);
-	g_assert(releases != NULL);
+	g_assert_nonnull(releases);
 	g_assert_cmpint(releases->len, ==, 4);
 
 	/* no upgrades, as no firmware is approved */
@@ -1578,7 +1579,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	/* upgrades */
 	releases_up = fu_engine_get_upgrades(engine, request, fu_device_get_id(device), &error);
 	g_assert_no_error(error);
-	g_assert(releases_up != NULL);
+	g_assert_nonnull(releases_up);
 	g_assert_cmpint(releases_up->len, ==, 2);
 
 	/* ensure the list is sorted */
@@ -1590,7 +1591,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	/* downgrades */
 	releases_dg = fu_engine_get_downgrades(engine, request, fu_device_get_id(device), &error);
 	g_assert_no_error(error);
-	g_assert(releases_dg != NULL);
+	g_assert_nonnull(releases_dg);
 	g_assert_cmpint(releases_dg->len, ==, 1);
 	rel = FWUPD_RELEASE(g_ptr_array_index(releases_dg, 0));
 	g_assert_cmpstr(fwupd_release_get_version(rel), ==, "1.2.2");
@@ -1639,14 +1640,14 @@ fu_engine_install_duration_func(gconstpointer user_data)
 	    -1,
 	    &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_NO_CACHE,
 			     &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* add a device so we can get the install duration */
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
@@ -1665,15 +1666,15 @@ fu_engine_install_duration_func(gconstpointer user_data)
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
 	g_assert_no_error(error);
-	g_assert(devices != NULL);
+	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
 #ifdef HAVE_POLKIT
-	g_assert(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED));
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED));
 #endif
 	/* check the release install duration */
 	releases = fu_engine_get_releases(engine, request, fu_device_get_id(device), &error);
 	g_assert_no_error(error);
-	g_assert(releases != NULL);
+	g_assert_nonnull(releases);
 	g_assert_cmpint(releases->len, ==, 1);
 	rel = FWUPD_RELEASE(g_ptr_array_index(releases, 0));
 	g_assert_cmpint(fwupd_release_get_install_duration(rel), ==, 120);
@@ -1715,7 +1716,7 @@ fu_engine_history_func(gconstpointer user_data)
 	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(fu_engine_get_status(engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
@@ -1733,14 +1734,14 @@ fu_engine_history_func(gconstpointer user_data)
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
 	g_assert_no_error(error);
-	g_assert(devices != NULL);
+	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
-	g_assert(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
 
 	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
-	g_assert(blob_cab != NULL);
+	g_assert_nonnull(blob_cab);
 	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
@@ -1767,7 +1768,7 @@ fu_engine_history_func(gconstpointer user_data)
 				FWUPD_FEATURE_FLAG_NONE,
 				&error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* check the write was done more than once */
 	g_assert_cmpint(fu_device_get_metadata_integer(device, "nr-update"), ==, 2);
@@ -1776,7 +1777,7 @@ fu_engine_history_func(gconstpointer user_data)
 	history = fu_history_new();
 	device2 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error);
 	g_assert_no_error(error);
-	g_assert(device2 != NULL);
+	g_assert_nonnull(device2);
 	g_assert_cmpint(fu_device_get_update_state(device2), ==, FWUPD_UPDATE_STATE_SUCCESS);
 	g_assert_cmpstr(fu_device_get_update_error(device2), ==, NULL);
 	fu_device_set_modified(device2, 1514338000);
@@ -1802,11 +1803,11 @@ fu_engine_history_func(gconstpointer user_data)
 			    checksum);
 	ret = fu_test_compare_lines(device_str, device_str_expected, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* GetResults() */
 	device3 = fu_engine_get_results(engine, FWUPD_DEVICE_ID_ANY, &error);
-	g_assert(device3 != NULL);
+	g_assert_nonnull(device3);
 	g_assert_cmpstr(fu_device_get_id(device3), ==, "894e8c17a29428b09d10cd90d1db74ea76fbcfe8");
 	g_assert_cmpint(fu_device_get_update_state(device3), ==, FWUPD_UPDATE_STATE_SUCCESS);
 	g_assert_cmpstr(fu_device_get_update_error(device3), ==, NULL);
@@ -1814,11 +1815,11 @@ fu_engine_history_func(gconstpointer user_data)
 	/* ClearResults() */
 	ret = fu_engine_clear_results(engine, FWUPD_DEVICE_ID_ANY, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* GetResults() */
 	device4 = fu_engine_get_results(engine, FWUPD_DEVICE_ID_ANY, &error);
-	g_assert(device4 == NULL);
+	g_assert_null(device4);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO);
 }
 
@@ -1850,7 +1851,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(fu_engine_get_status(engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
@@ -1872,7 +1873,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	    g_build_filename(TESTDATADIR_DST, "multiple-rels", "multiple-rels-1.2.4.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
-	g_assert(blob_cab != NULL);
+	g_assert_nonnull(blob_cab);
 	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
@@ -1898,7 +1899,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 				FWUPD_FEATURE_FLAG_NONE,
 				&error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* check we did 1.2.2 -> 1.2.3 -> 1.2.4 */
 	g_assert_cmpint(fu_device_get_metadata_integer(device, "nr-update"), ==, 2);
@@ -1938,7 +1939,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(fu_engine_get_status(engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
@@ -1955,14 +1956,14 @@ fu_engine_history_inherit(gconstpointer user_data)
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
 	g_assert_no_error(error);
-	g_assert(devices != NULL);
+	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
-	g_assert(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
 
 	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
-	g_assert(blob_cab != NULL);
+	g_assert_nonnull(blob_cab);
 	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
@@ -1986,7 +1987,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 				FWUPD_FEATURE_FLAG_NONE,
 				&error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* check the device requires an activation */
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
@@ -1995,7 +1996,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	/* activate the device */
 	ret = fu_engine_activate(engine, fu_device_get_id(device), &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* check the device no longer requires an activation */
 	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION));
@@ -2013,7 +2014,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 				FWUPD_FEATURE_FLAG_NONE,
 				&error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_object_unref(engine);
 	g_object_unref(device);
 	engine = fu_engine_new(FU_APP_FLAGS_NONE);
@@ -2075,7 +2076,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(fu_engine_get_status(engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
@@ -2092,14 +2093,14 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
 	g_assert_no_error(error);
-	g_assert(devices != NULL);
+	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
-	g_assert(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
 
 	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
-	g_assert(blob_cab != NULL);
+	g_assert_nonnull(blob_cab);
 	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
@@ -2123,7 +2124,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 				FWUPD_FEATURE_FLAG_NONE,
 				&error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* check the device requires reboot */
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
@@ -2164,7 +2165,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(fu_engine_get_status(engine), ==, FWUPD_STATUS_IDLE);
 
 	/* add a device so we can get upgrade it */
@@ -2181,15 +2182,15 @@ fu_engine_history_error_func(gconstpointer user_data)
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
 	g_assert_no_error(error);
-	g_assert(devices != NULL);
+	g_assert_nonnull(devices);
 	g_assert_cmpint(devices->len, ==, 1);
-	g_assert(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
+	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
 
 	/* install the wrong thing */
 	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
-	g_assert(blob_cab != NULL);
+	g_assert_nonnull(blob_cab);
 	silo = fu_engine_get_silo_from_blob(engine, blob_cab, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
@@ -2208,15 +2209,14 @@ fu_engine_history_error_func(gconstpointer user_data)
 				FWUPD_FEATURE_FLAG_NONE,
 				&error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED);
-	g_assert(error != NULL);
 	g_assert_cmpstr(error->message, ==, "device was not in supported mode");
-	g_assert(!ret);
+	g_assert_false(ret);
 
 	/* check the history database */
 	history = fu_history_new();
 	device2 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error2);
 	g_assert_no_error(error2);
-	g_assert(device2 != NULL);
+	g_assert_nonnull(device2);
 	g_assert_cmpint(fu_device_get_update_state(device2), ==, FWUPD_UPDATE_STATE_FAILED);
 	g_assert_cmpstr(fu_device_get_update_error(device2), ==, error->message);
 	g_clear_error(&error);
@@ -2244,7 +2244,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 			    checksum);
 	ret = fu_test_compare_lines(device_str, device_str_expected, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static void
@@ -2390,7 +2390,7 @@ fu_device_list_replug_auto_func(gconstpointer user_data)
 	/* not yet added */
 	ret = fu_device_list_wait_for_replug(device_list, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* add device */
 	fu_device_list_add(device_list, device1);
@@ -2398,7 +2398,7 @@ fu_device_list_replug_auto_func(gconstpointer user_data)
 	/* not waiting */
 	ret = fu_device_list_wait_for_replug(device_list, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* waiting */
 	helper.device_old = device1;
@@ -2409,17 +2409,17 @@ fu_device_list_replug_auto_func(gconstpointer user_data)
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	ret = fu_device_list_wait_for_replug(device_list, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_false(fu_device_has_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
 
 	/* check device2 now has parent too */
-	g_assert(fu_device_get_parent(device2) == parent);
+	g_assert_true(fu_device_get_parent(device2) == parent);
 
 	/* waiting, failed */
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	ret = fu_device_list_wait_for_replug(device_list, &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert(!ret);
+	g_assert_false(ret);
 	g_assert_false(fu_device_has_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
 }
 
@@ -2455,7 +2455,7 @@ fu_device_list_replug_user_func(gconstpointer user_data)
 	/* not yet added */
 	ret = fu_device_list_wait_for_replug(device_list, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* add device */
 	fu_device_list_add(device_list, device1);
@@ -2468,7 +2468,7 @@ fu_device_list_replug_user_func(gconstpointer user_data)
 	/* not waiting */
 	ret = fu_device_list_wait_for_replug(device_list, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* waiting */
 	helper.device_old = device1;
@@ -2479,7 +2479,7 @@ fu_device_list_replug_user_func(gconstpointer user_data)
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	ret = fu_device_list_wait_for_replug(device_list, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_false(fu_device_has_flag(device1, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG));
 
 	/* should not be possible, but here we are */
@@ -2568,7 +2568,7 @@ fu_device_list_compatible_func(gconstpointer user_data)
 
 	/* verify we can get the old device from the new device */
 	device_old = fu_device_list_get_old(device_list, device2);
-	g_assert(device_old == device1);
+	g_assert_true(device_old == device1);
 }
 
 static void
@@ -2656,7 +2656,7 @@ fu_device_list_func(gconstpointer user_data)
 					  "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a",
 					  &error);
 	g_assert_no_error(error);
-	g_assert(device != NULL);
+	g_assert_nonnull(device);
 	g_assert_cmpstr(fu_device_get_id(device), ==, "99249eb1bd9ef0b6e192b271a8cb6a3090cfec7a");
 	g_clear_object(&device);
 
@@ -2664,14 +2664,14 @@ fu_device_list_func(gconstpointer user_data)
 	device =
 	    fu_device_list_get_by_guid(device_list, "579a3b1c-d1db-5bdc-b6b9-e2c1b28d5b8a", &error);
 	g_assert_no_error(error);
-	g_assert(device != NULL);
+	g_assert_nonnull(device);
 	g_assert_cmpstr(fu_device_get_id(device), ==, "1a8d0d9a96ad3e67ba76cf3033623625dc6d6882");
 	g_clear_object(&device);
 
 	/* find by missing GUID */
 	device = fu_device_list_get_by_guid(device_list, "notfound", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert(device == NULL);
+	g_assert_null(device);
 
 	/* remove device */
 	added_cnt = removed_cnt = changed_cnt = 0;
@@ -2707,13 +2707,13 @@ fu_plugin_list_func(gconstpointer user_data)
 	/* get a single plugin */
 	plugin = fu_plugin_list_find_by_name(plugin_list, "plugin1", &error);
 	g_assert_no_error(error);
-	g_assert(plugin != NULL);
+	g_assert_nonnull(plugin);
 	g_assert_cmpstr(fu_plugin_get_name(plugin), ==, "plugin1");
 
 	/* does not exist */
 	plugin = fu_plugin_list_find_by_name(plugin_list, "nope", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert(plugin == NULL);
+	g_assert_null(plugin);
 }
 
 static void
@@ -2736,7 +2736,7 @@ fu_plugin_list_depsolve_func(gconstpointer user_data)
 	fu_plugin_add_rule(plugin1, FU_PLUGIN_RULE_RUN_AFTER, "plugin2");
 	ret = fu_plugin_list_depsolve(plugin_list, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	plugins = fu_plugin_list_get_all(plugin_list);
 	g_assert_cmpint(plugins->len, ==, 2);
 	plugin = g_ptr_array_index(plugins, 0);
@@ -2748,14 +2748,14 @@ fu_plugin_list_depsolve_func(gconstpointer user_data)
 	fu_plugin_add_rule(plugin1, FU_PLUGIN_RULE_CONFLICTS, "plugin2");
 	ret = fu_plugin_list_depsolve(plugin_list, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	plugin = fu_plugin_list_find_by_name(plugin_list, "plugin1", &error);
 	g_assert_no_error(error);
-	g_assert(plugin != NULL);
+	g_assert_nonnull(plugin);
 	g_assert_false(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED));
 	plugin = fu_plugin_list_find_by_name(plugin_list, "plugin2", &error);
 	g_assert_no_error(error);
-	g_assert(plugin != NULL);
+	g_assert_nonnull(plugin);
 	g_assert_true(fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED));
 }
 
@@ -2776,18 +2776,18 @@ fu_history_migrate_func(gconstpointer user_data)
 	file_dst = g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/pending.db");
 	ret = g_file_copy(file_src, file_dst, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* create, migrating as required */
 	history = fu_history_new();
-	g_assert(history != NULL);
+	g_assert_nonnull(history);
 
 	/* get device */
 	device = fu_history_get_device_by_id(history,
 					     "2ba16d10df45823dd4494ff10a0bfccfef512c9d",
 					     &error);
 	g_assert_no_error(error);
-	g_assert(device != NULL);
+	g_assert_nonnull(device);
 	g_assert_cmpstr(fu_device_get_id(device), ==, "2ba16d10df45823dd4494ff10a0bfccfef512c9d");
 }
 
@@ -2845,7 +2845,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_setenv("FWUPD_PLUGIN_TEST", "registration", TRUE);
 	ret = fu_plugin_runner_startup(self->plugin, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_signal_connect(self->plugin,
 			 "device-added",
 			 G_CALLBACK(_plugin_device_added_cb),
@@ -2856,10 +2856,10 @@ fu_plugin_module_func(gconstpointer user_data)
 			 &device);
 	ret = fu_plugin_runner_coldplug(self->plugin, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* check we did the right thing */
-	g_assert(device != NULL);
+	g_assert_nonnull(device);
 	g_assert_cmpstr(fu_device_get_id(device), ==, "08d460be0f1f9f128413f816022a6439e0078018");
 	g_assert_cmpstr(fu_device_get_version_lowest(device), ==, "1.2.0");
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.2");
@@ -2879,7 +2879,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	mapped_file_fn = g_build_filename(TESTDATADIR_SRC, "colorhug", "firmware.bin", NULL);
 	mapped_file = g_mapped_file_new(mapped_file_fn, FALSE, &error);
 	g_assert_no_error(error);
-	g_assert(mapped_file != NULL);
+	g_assert_nonnull(mapped_file);
 	blob_cab = g_mapped_file_get_bytes(mapped_file);
 	release = fu_device_get_release_default(device);
 	fwupd_release_set_version(release, "1.2.3");
@@ -2890,7 +2890,7 @@ fu_plugin_module_func(gconstpointer user_data)
 					FWUPD_INSTALL_FLAG_NONE,
 					&error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* set on the current device */
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
@@ -2899,12 +2899,12 @@ fu_plugin_module_func(gconstpointer user_data)
 	history = fu_history_new();
 	device2 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error);
 	g_assert_no_error(error);
-	g_assert(device2 != NULL);
+	g_assert_nonnull(device2);
 	g_assert_cmpint(fu_device_get_update_state(device2), ==, FWUPD_UPDATE_STATE_PENDING);
 	g_assert_cmpstr(fu_device_get_update_error(device2), ==, NULL);
 	g_assert_true(fu_device_has_flag(device2, FWUPD_DEVICE_FLAG_NEEDS_REBOOT));
 	release = fu_device_get_release_default(device2);
-	g_assert(release != NULL);
+	g_assert_nonnull(release);
 	g_assert_cmpstr(fwupd_release_get_filename(release), !=, NULL);
 	g_assert_cmpstr(fwupd_release_get_version(release), ==, "1.2.3");
 
@@ -2922,7 +2922,7 @@ fu_plugin_module_func(gconstpointer user_data)
 				     FWUPD_FEATURE_FLAG_NONE,
 				     &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(cnt, ==, 8);
 
 	/* check the new version */
@@ -2932,7 +2932,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	/* lets check the history */
 	device3 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error);
 	g_assert_no_error(error);
-	g_assert(device3 != NULL);
+	g_assert_nonnull(device3);
 	g_assert_cmpint(fu_device_get_update_state(device3), ==, FWUPD_UPDATE_STATE_SUCCESS);
 	g_assert_cmpstr(fu_device_get_update_error(device3), ==, NULL);
 
@@ -2941,14 +2941,14 @@ fu_plugin_module_func(gconstpointer user_data)
 	fu_device_set_id(device_tmp, "FakeDevice");
 	ret = fu_plugin_runner_get_results(self->plugin, device_tmp, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_cmpint(fu_device_get_update_state(device_tmp), ==, FWUPD_UPDATE_STATE_SUCCESS);
 	g_assert_cmpstr(fu_device_get_update_error(device_tmp), ==, NULL);
 
 	/* clear */
 	ret = fu_plugin_runner_clear_results(self->plugin, device_tmp, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	g_object_unref(device_tmp);
 	g_clear_error(&error);
@@ -2977,7 +2977,7 @@ fu_history_func(gconstpointer user_data)
 
 	/* create */
 	history = fu_history_new();
-	g_assert(history != NULL);
+	g_assert_nonnull(history);
 
 	/* delete the database */
 	dirname = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
@@ -3005,11 +3005,11 @@ fu_history_func(gconstpointer user_data)
 	fwupd_release_add_metadata_item(release, "FwupdVersion", VERSION);
 	ret = fu_history_add_device(history, device, release, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_object_unref(release);
 
 	/* ensure database was created */
-	g_assert(g_file_test(filename, G_FILE_TEST_EXISTS));
+	g_assert_true(g_file_test(filename, G_FILE_TEST_EXISTS));
 
 	g_object_unref(device);
 
@@ -3018,7 +3018,7 @@ fu_history_func(gconstpointer user_data)
 					     "2ba16d10df45823dd4494ff10a0bfccfef512c9d",
 					     &error);
 	g_assert_no_error(error);
-	g_assert(device != NULL);
+	g_assert_nonnull(device);
 	g_assert_cmpstr(fu_device_get_id(device), ==, "2ba16d10df45823dd4494ff10a0bfccfef512c9d");
 	g_assert_cmpstr(fu_device_get_name(device), ==, "ColorHug");
 	g_assert_cmpstr(fu_device_get_version(device), ==, "3.0.1");
@@ -3033,22 +3033,22 @@ fu_history_func(gconstpointer user_data)
 	g_assert_cmpint(fu_device_get_created(device), ==, 123);
 	g_assert_cmpint(fu_device_get_modified(device), ==, 456);
 	release = fu_device_get_release_default(device);
-	g_assert(release != NULL);
+	g_assert_nonnull(release);
 	g_assert_cmpstr(fwupd_release_get_version(release), ==, "3.0.2");
 	g_assert_cmpstr(fwupd_release_get_filename(release), ==, "/var/lib/dave.cap");
 	g_assert_cmpstr(fwupd_release_get_metadata_item(release, "FwupdVersion"), ==, VERSION);
 	checksums = fwupd_release_get_checksums(release);
-	g_assert(checksums != NULL);
+	g_assert_nonnull(checksums);
 	g_assert_cmpint(checksums->len, ==, 1);
 	g_assert_cmpstr(fwupd_checksum_get_by_kind(checksums, G_CHECKSUM_SHA1), ==, "abcdef");
 	ret = fu_history_add_device(history, device, release, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* get device that does not exist */
 	device_found = fu_history_get_device_by_id(history, "XXXXXXXXXXXXX", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert(device_found == NULL);
+	g_assert_null(device_found);
 	g_clear_error(&error);
 
 	/* get device that does exist */
@@ -3056,13 +3056,13 @@ fu_history_func(gconstpointer user_data)
 						   "2ba16d10df45823dd4494ff10a0bfccfef512c9d",
 						   &error);
 	g_assert_no_error(error);
-	g_assert(device_found != NULL);
+	g_assert_nonnull(device_found);
 	g_object_unref(device_found);
 
 	/* remove device */
 	ret = fu_history_remove_device(history, device, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_object_unref(device);
 
 	/* get device that does not exist */
@@ -3070,19 +3070,19 @@ fu_history_func(gconstpointer user_data)
 						   "2ba16d10df45823dd4494ff10a0bfccfef512c9d",
 						   &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
-	g_assert(device_found == NULL);
+	g_assert_null(device_found);
 	g_clear_error(&error);
 
 	/* approved firmware */
 	ret = fu_history_clear_approved_firmware(history, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	ret = fu_history_add_approved_firmware(history, "foo", &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	ret = fu_history_add_approved_firmware(history, "bar", &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	approved_firmware = fu_history_get_approved_firmware(history, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(approved_firmware);
@@ -3106,7 +3106,7 @@ _build_cab(GCabCompression compression, ...)
 	cabfolder = gcab_folder_new(compression);
 	ret = gcab_cabinet_add_folder(cabinet, cabfolder, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	/* add each file */
 	va_start(args, compression);
@@ -3132,7 +3132,7 @@ _build_cab(GCabCompression compression, ...)
 		cabfile = gcab_file_new_with_bytes(fn, blob);
 		ret = gcab_folder_add_file(cabfolder, cabfile, FALSE, NULL, &error);
 		g_assert_no_error(error);
-		g_assert(ret);
+		g_assert_true(ret);
 	} while (TRUE);
 	va_end(args);
 
@@ -3140,10 +3140,10 @@ _build_cab(GCabCompression compression, ...)
 	op = g_memory_output_stream_new_resizable();
 	ret = gcab_cabinet_write_simple(cabinet, op, NULL, NULL, NULL, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	ret = g_output_stream_close(op, NULL, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	return g_memory_output_stream_steal_as_bytes(G_MEMORY_OUTPUT_STREAM(op));
 }
 
@@ -3339,7 +3339,7 @@ fu_memcpy_func(gconstpointer user_data)
 	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 4, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_assert(memcmp(src, dst, 4) == 0);
+	g_assert_cmpint(memcmp(src, dst, 4), ==, 0);
 
 	/* copy first char */
 	ret = fu_memcpy_safe(dst, sizeof(dst), 0x0, src, sizeof(src), 0x0, 1, &error);

@@ -26,7 +26,7 @@ fu_ata_id_func(void)
 
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	path = g_test_build_filename(G_TEST_DIST, "tests", "StarDrive-SBFM61.2.bin", NULL);
 	if (!g_file_test(path, G_FILE_TEST_EXISTS) && ci == NULL) {
@@ -35,7 +35,7 @@ fu_ata_id_func(void)
 	}
 	ret = g_file_get_contents(path, &data, &sz, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	dev = fu_ata_device_new_from_blob(ctx, (guint8 *)data, sz, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(dev);
@@ -61,7 +61,7 @@ fu_ata_oui_func(void)
 
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	path = g_test_build_filename(G_TEST_DIST, "tests", "Samsung SSD 860 EVO 500GB.bin", NULL);
 	if (!g_file_test(path, G_FILE_TEST_EXISTS) && ci == NULL) {
@@ -70,7 +70,7 @@ fu_ata_oui_func(void)
 	}
 	ret = g_file_get_contents(path, &data, &sz, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	dev = fu_ata_device_new_from_blob(ctx, (guint8 *)data, sz, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(dev);
