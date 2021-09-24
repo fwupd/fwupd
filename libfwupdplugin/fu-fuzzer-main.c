@@ -14,7 +14,7 @@ LLVMFuzzerInitialize(int *argc, char ***argv);
 int
 main(int argc, char **argv)
 {
-	g_assert(LLVMFuzzerTestOneInput != NULL);
+	g_assert_nonnull(LLVMFuzzerTestOneInput);
 	if (LLVMFuzzerInitialize != NULL)
 		LLVMFuzzerInitialize(&argc, &argv);
 	for (int i = 1; i < argc; i++) {

@@ -40,7 +40,7 @@ fu_test_self_init(FuTest *self)
 				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
 				     &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	self->plugin_uefi_capsule = fu_plugin_new(ctx);
 	pluginfn_uefi = g_build_filename(PLUGINBUILDDIR,
@@ -50,20 +50,20 @@ fu_test_self_init(FuTest *self)
 					 NULL);
 	ret = fu_plugin_open(self->plugin_uefi_capsule, pluginfn_uefi, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	ret = fu_plugin_runner_startup(self->plugin_uefi_capsule, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	self->plugin_lenovo_thinklmi = fu_plugin_new(ctx);
 	pluginfn_lenovo =
 	    g_build_filename(PLUGINBUILDDIR, "libfu_plugin_lenovo_thinklmi." G_MODULE_SUFFIX, NULL);
 	ret = fu_plugin_open(self->plugin_lenovo_thinklmi, pluginfn_lenovo, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	ret = fu_plugin_runner_startup(self->plugin_lenovo_thinklmi, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 }
 
 static FuDevice *
@@ -81,7 +81,7 @@ fu_test_probe_fake_esrt(FuTest *self)
 
 	ret = fu_plugin_runner_coldplug(self->plugin_uefi_capsule, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	g_assert_nonnull(dev);
 	g_assert_true(fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE));
 	g_signal_handler_disconnect(self->plugin_uefi_capsule, added_id);

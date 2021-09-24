@@ -779,7 +779,7 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 	if (!fu_dfu_target_check_status(self, error))
 		return FALSE;
 
-	g_assert(actual_length == g_bytes_get_size(bytes));
+	g_assert_cmpint(actual_length, ==, g_bytes_get_size(bytes));
 	return TRUE;
 }
 

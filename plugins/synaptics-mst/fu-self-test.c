@@ -34,7 +34,7 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	while ((basename = g_dir_read_name(dir)) != NULL) {
 		g_autofree gchar *fn = g_build_filename(path, basename, NULL);
@@ -56,7 +56,7 @@ _test_add_fake_devices_from_dir(FuPlugin *plugin, const gchar *path)
 		g_debug("creating drm_dp_aux_dev object backed by %s", fn);
 		ret = fu_plugin_runner_backend_device_added(plugin, FU_DEVICE(dev), &error);
 		g_assert_no_error(error);
-		g_assert(ret);
+		g_assert_true(ret);
 	}
 }
 
@@ -76,7 +76,7 @@ fu_plugin_synaptics_mst_none_func(void)
 
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	g_signal_connect(plugin, "device-added", G_CALLBACK(_plugin_device_added_cb), &devices);
 	pluginfn = g_test_build_filename(G_TEST_BUILT,
@@ -84,14 +84,14 @@ fu_plugin_synaptics_mst_none_func(void)
 					 NULL);
 	ret = fu_plugin_open(plugin, pluginfn, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	ret = fu_plugin_runner_startup(plugin, &error);
 	if (!ret && g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 		g_test_skip("Skipping tests due to unsupported configuration");
 		return;
 	}
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "no_devices", NULL);
 	if (!g_file_test(filename, G_FILE_TEST_EXISTS) && ci == NULL) {
@@ -118,7 +118,7 @@ fu_plugin_synaptics_mst_tb16_func(void)
 
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	g_signal_connect(plugin, "device-added", G_CALLBACK(_plugin_device_added_cb), &devices);
 	pluginfn = g_test_build_filename(G_TEST_BUILT,
@@ -126,14 +126,14 @@ fu_plugin_synaptics_mst_tb16_func(void)
 					 NULL);
 	ret = fu_plugin_open(plugin, pluginfn, &error);
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 	ret = fu_plugin_runner_startup(plugin, &error);
 	if (!ret && g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 		g_test_skip("Skipping tests due to unsupported configuration");
 		return;
 	}
 	g_assert_no_error(error);
-	g_assert(ret);
+	g_assert_true(ret);
 
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "tb16_dock", NULL);
 	if (!g_file_test(filename, G_FILE_TEST_EXISTS) && ci == NULL) {

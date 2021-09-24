@@ -344,7 +344,14 @@ fu_dfu_target_stm_download_element(FuDfuTarget *target,
 
 		/* for DfuSe devices we need to set the address manually */
 		sector = fu_dfu_target_get_sector_for_addr(target, offset_dev);
-		g_assert(sector != NULL);
+		if (sector == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "no valid sector for %x",
+				    offset_dev);
+			return FALSE;
+		}
 
 		/* manually set the sector address */
 		if (fu_dfu_sector_get_zone(sector) != zone_last) {
