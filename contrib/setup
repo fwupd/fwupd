@@ -6,6 +6,22 @@ cd "$(dirname "$0")/.."
 HELPER=./contrib/ci/fwupd_setup_helpers.py
 HELPER_ARGS="-y"
 
+rename_branch()
+{
+    OLD=master
+    NEW=main
+    if git log $OLD >/dev/null 2>&1 &&
+       git remote get-url origin 2>&1 | grep fwupd/fwupd.git >/dev/null 2>&1; then
+        read -p "Rename existing $OLD branch to $NEW? (y/n) " question
+        if [ "$question" = "y" ]; then
+            git branch -m $OLD $NEW
+            git fetch origin
+            git branch -u origin/$NEW $NEW
+            git remote set-head origin -a
+        fi
+    fi
+}
+
 setup_deps()
 {
     read -p "Install build dependencies? (y/n) " question
@@ -117,6 +133,7 @@ if [ -t 2 ]; then
     esac
     check_markdown
     setup_vscode
+    rename_branch
 fi
 
 #always setup pre-commit
