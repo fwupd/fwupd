@@ -35,6 +35,24 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.6.4" date="2021-09-24">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow overriding the quirks directory at runtime</li>
+          <li>Fix a regression in flashing the Dell dock</li>
+          <li>Fix probing the Dell TPM</li>
+          <li>Show HSiLevel=0 attributes in JSON security output</li>
+          <li>Abort on invalid SREC files early to avoid a fuzzing timeout</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>AVer ATLAS CAM/CAM520 Pro2</li>
+          <li>Cayenne/Spyder Synaptics MST</li>
+          <li>VL819 USB devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.6.3" date="2021-08-10">
       <description>
         <p>
