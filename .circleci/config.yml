@@ -158,7 +158,7 @@ workflows:
             - build-snap
           filters:
             branches:
-              only: master
+              only: main
   deploy:
     jobs:
       - build-ubuntu-x86_64:

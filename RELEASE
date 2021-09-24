@@ -2,7 +2,7 @@ fwupd Release Notes
 
 Forking stable branch:
 
-When forking master into a stable 1_7_X, be sure to disable the following CI jobs:
+When forking main into a stable 1_7_X, be sure to disable the following CI jobs:
  * publish-docs
  * publish-stable
 
