@@ -1320,20 +1320,15 @@ fu_util_get_device_by_id(FuUtilPrivate *priv, const gchar *id, GError **error)
 static FwupdDevice *
 fu_util_get_device_or_prompt(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	FwupdDevice *dev = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get device to use */
 	if (g_strv_length(values) >= 1) {
-		g_autoptr(GError) error_local = NULL;
 		if (g_strv_length(values) > 1) {
 			for (guint i = 1; i < g_strv_length(values); i++)
 				g_debug("Ignoring extra input %s", values[i]);
 		}
-		dev = fu_util_get_device_by_id(priv, values[0], &error_local);
-		if (dev != NULL)
-			return dev;
-		g_print("%s\n", error_local->message);
+		return fu_util_get_device_by_id(priv, values[0], error);
 	}
 
 	/* get all devices from daemon */
