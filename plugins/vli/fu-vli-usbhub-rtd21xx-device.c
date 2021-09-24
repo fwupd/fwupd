@@ -50,7 +50,7 @@ typedef enum {
 
 static gboolean
 fu_vli_usbhub_device_i2c_write(FuVliUsbhubDevice *self,
-			       guint8 slave_addr,
+			       guint8 target_addr,
 			       guint8 sub_addr,
 			       guint8 *data,
 			       gsize datasz,
@@ -60,7 +60,7 @@ fu_vli_usbhub_device_i2c_write(FuVliUsbhubDevice *self,
 	gsize bufsz = datasz + 2;
 	g_autofree guint8 *buf = g_malloc0(bufsz);
 
-	buf[0] = slave_addr;
+	buf[0] = target_addr;
 	buf[1] = sub_addr;
 	if (!fu_memcpy_safe(buf,
 			    bufsz,
@@ -86,7 +86,7 @@ fu_vli_usbhub_device_i2c_write(FuVliUsbhubDevice *self,
 					   FU_VLI_DEVICE_TIMEOUT,
 					   NULL,
 					   error)) {
-		g_prefix_error(error, "failed to write I2C @0x%02x:%02x: ", slave_addr, sub_addr);
+		g_prefix_error(error, "failed to write I2C @0x%02x:%02x: ", target_addr, sub_addr);
 		return FALSE;
 	}
 	g_usleep(I2C_DELAY_AFTER_SEND);
@@ -95,7 +95,7 @@ fu_vli_usbhub_device_i2c_write(FuVliUsbhubDevice *self,
 
 static gboolean
 fu_vli_usbhub_device_i2c_read(FuVliUsbhubDevice *self,
-			      guint8 slave_addr,
+			      guint8 target_addr,
 			      guint8 sub_addr,
 			      guint8 *data,
 			      gsize datasz,
@@ -108,7 +108,7 @@ fu_vli_usbhub_device_i2c_read(FuVliUsbhubDevice *self,
 					   G_USB_DEVICE_RECIPIENT_DEVICE,
 					   I2C_READ_REQUEST,
 					   0x0000,
-					   ((guint16)sub_addr << 8) + slave_addr,
+					   ((guint16)sub_addr << 8) + target_addr,
 					   data,
 					   datasz,
 					   NULL,

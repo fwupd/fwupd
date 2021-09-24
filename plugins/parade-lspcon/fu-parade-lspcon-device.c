@@ -164,7 +164,7 @@ fu_parade_lspcon_ensure_i2c_address(FuParadeLspconDevice *self, guint8 address, 
 				  (guint8 *)(guintptr)address,
 				  NULL,
 				  error)) {
-		g_prefix_error(error, "failed to set I2C slave address: ");
+		g_prefix_error(error, "failed to set I2C address: ");
 		return FALSE;
 	}
 	return TRUE;
