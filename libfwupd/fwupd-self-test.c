@@ -179,12 +179,12 @@ fwupd_remote_download_func(void)
 					     "lib",
 					     "fwupd",
 					     "remotes.d",
-					     "lvfs",
+					     "lvfs-testing",
 					     "metadata.xml.gz",
 					     NULL);
 	expected_signature = g_strdup_printf("%s.jcat", expected_metadata);
 	fwupd_remote_set_remotes_dir(remote, directory);
-	fn = g_build_filename(FU_SELF_TEST_REMOTES_DIR, "remotes.d", "lvfs.conf", NULL);
+	fn = g_build_filename(FU_SELF_TEST_REMOTES_DIR, "remotes.d", "lvfs-testing.conf", NULL);
 	ret = fwupd_remote_load_from_filename(remote, fn, NULL, &error);
 	g_assert_no_error(error);
 	g_assert(ret);
@@ -194,10 +194,12 @@ fwupd_remote_download_func(void)
 	g_assert_cmpint(fwupd_remote_get_kind(remote), ==, FWUPD_REMOTE_KIND_DOWNLOAD);
 	g_assert_cmpint(fwupd_remote_get_keyring_kind(remote), ==, FWUPD_KEYRING_KIND_JCAT);
 	g_assert_cmpint(fwupd_remote_get_priority(remote), ==, 0);
-	g_assert(fwupd_remote_get_enabled(remote));
-	g_assert(fwupd_remote_get_metadata_uri(remote) != NULL);
-	g_assert(fwupd_remote_get_metadata_uri_sig(remote) != NULL);
-	g_assert_cmpstr(fwupd_remote_get_title(remote), ==, "Linux Vendor Firmware Service");
+	g_assert_false(fwupd_remote_get_enabled(remote));
+	g_assert_nonnull(fwupd_remote_get_metadata_uri(remote));
+	g_assert_nonnull(fwupd_remote_get_metadata_uri_sig(remote));
+	g_assert_cmpstr(fwupd_remote_get_title(remote),
+			==,
+			"Linux Vendor Firmware Service (testing)");
 	g_assert_cmpstr(fwupd_remote_get_report_uri(remote),
 			==,
 			"https://fwupd.org/lvfs/firmware/report");
