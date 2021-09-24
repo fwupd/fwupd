@@ -1221,12 +1221,11 @@ fu_dfu_device_open(FuDevice *device, GError **error)
 		serial_str = g_strndup((const gchar *)buf + 2, bufsz - 2);
 		fu_device_set_serial(FU_DEVICE(device), serial_str);
 #else
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "GUsb version %s too old to support GD32, "
-			    "fwupd needs to be rebuilt against 0.3.6 or later",
-			    g_usb_version_string());
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "GUsb version too old to support GD32, "
+				    "fwupd needs to be rebuilt against 0.3.6 or later");
 		return FALSE;
 #endif
 	}

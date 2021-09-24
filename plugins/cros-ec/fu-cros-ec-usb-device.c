@@ -111,6 +111,7 @@ fu_cros_ec_usb_device_get_configuration(FuCrosEcUsbDevice *self, GError **error)
 static gboolean
 fu_cros_ec_usb_device_find_interface(FuUsbDevice *device, GError **error)
 {
+#if G_USB_CHECK_VERSION(0, 3, 3)
 	GUsbDevice *usb_device = fu_usb_device_get_dev(device);
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
 	g_autoptr(GPtrArray) intfs = NULL;
@@ -141,6 +142,13 @@ fu_cros_ec_usb_device_find_interface(FuUsbDevice *device, GError **error)
 	}
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no update interface found");
 	return FALSE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "this version of GUsb is not supported");
+	return FALSE;
+#endif
 }
 
 static gboolean
