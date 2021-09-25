@@ -6,7 +6,6 @@
 
 #include "config.h"
 
-#include "fu-elanfp-common.h"
 #include "fu-elanfp-device.h"
 #include "fu-elanfp-firmware.h"
 
@@ -339,7 +338,7 @@ fu_elanfp_device_write_payload(FuElanfpDevice *self,
 				    G_IO_ERROR_INVALID_DATA,
 				    "failed to send chunk %u: %s",
 				    i + 1,
-				    fu_elanfp_cfu_device_status_to_string(recvbuf[5]));
+				    fu_cfu_device_status_to_string(recvbuf[5]));
 			return FALSE;
 		}
 		fu_progress_step_done(progress);
@@ -397,8 +396,8 @@ fu_elanfp_device_write_firmware(FuDevice *device,
 		}
 		g_debug("offer-%s status:%s reject:%s",
 			items[i].tag,
-			fu_elanfp_cfu_device_offer_to_string(recvbuf[13]),
-			fu_elanfp_cfu_device_reject_to_string(recvbuf[9]));
+			fu_cfu_device_offer_to_string(recvbuf[13]),
+			fu_cfu_device_reject_to_string(recvbuf[9]));
 		if (recvbuf[13] == FU_CFU_DEVICE_OFFER_ACCEPT)
 			break;
 	}

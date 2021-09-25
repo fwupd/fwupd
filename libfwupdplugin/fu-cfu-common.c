@@ -6,10 +6,20 @@
 
 #include "config.h"
 
-#include "fu-elanfp-common.h"
+#include "fu-cfu-common.h"
 
+/**
+ * fu_cfu_device_reject_to_string:
+ * @val: a enumerated value, e.g. %FU_CFU_DEVICE_REJECT_OLD_FIRMWARE
+ *
+ * Converts an enumerated reject type to a string.
+ *
+ * Returns: a string, or `unknown` for invalid
+ *
+ * Since: 1.7.0
+ **/
 const gchar *
-fu_elanfp_cfu_device_reject_to_string(guint8 val)
+fu_cfu_device_reject_to_string(guint8 val)
 {
 	if (val == FU_CFU_DEVICE_REJECT_OLD_FIRMWARE)
 		return "old-firmware";
@@ -28,8 +38,18 @@ fu_elanfp_cfu_device_reject_to_string(guint8 val)
 	return "unknown";
 }
 
+/**
+ * fu_cfu_device_offer_to_string:
+ * @val: a enumerated value, e.g. %FU_CFU_DEVICE_OFFER_ACCEPT
+ *
+ * Converts an enumerated offer type to a string.
+ *
+ * Returns: a string, or `unknown` for invalid
+ *
+ * Since: 1.7.0
+ **/
 const gchar *
-fu_elanfp_cfu_device_offer_to_string(guint8 val)
+fu_cfu_device_offer_to_string(guint8 val)
 {
 	if (val == FU_CFU_DEVICE_OFFER_SKIP)
 		return "skip";
@@ -46,8 +66,18 @@ fu_elanfp_cfu_device_offer_to_string(guint8 val)
 	return "unknown";
 }
 
+/**
+ * fu_cfu_device_status_to_string:
+ * @val: a enumerated value, e.g. %FU_CFU_DEVICE_OFFER_ACCEPT
+ *
+ * Converts an enumerated status type to a string.
+ *
+ * Returns: a string, or `unknown` for invalid
+ *
+ * Since: 1.7.0
+ **/
 const gchar *
-fu_elanfp_cfu_device_status_to_string(guint8 val)
+fu_cfu_device_status_to_string(guint8 val)
 {
 	if (val == FU_CFU_DEVICE_STATUS_SUCCESS)
 		return "success";

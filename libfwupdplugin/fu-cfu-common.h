@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <fwupdplugin.h>
+#include <gio/gio.h>
 
 #define FU_CFU_DEVICE_OFFER_SKIP	  0x00
 #define FU_CFU_DEVICE_OFFER_ACCEPT	  0x01
@@ -40,8 +40,8 @@
 #define FU_CFU_DEVICE_REJECT_DEBUG_SAME_VERSION 0xE2
 
 const gchar *
-fu_elanfp_cfu_device_reject_to_string(guint8 val);
+fu_cfu_device_reject_to_string(guint8 val);
 const gchar *
-fu_elanfp_cfu_device_status_to_string(guint8 val);
+fu_cfu_device_status_to_string(guint8 val);
 const gchar *
-fu_elanfp_cfu_device_offer_to_string(guint8 val);
+fu_cfu_device_offer_to_string(guint8 val);
