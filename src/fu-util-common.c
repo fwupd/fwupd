@@ -1175,7 +1175,7 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		return _("Device firmware is required to have a version check");
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES) {
-		/* TRANSLATORS: a version check is required for all firmware */
+		/* TRANSLATORS: the device cannot update from A->C and has to go A->B->C */
 		return _("Device is required to install all provided releases");
 	}
 	if (device_flag == FWUPD_DEVICE_FLAG_HAS_MULTIPLE_BRANCHES) {
