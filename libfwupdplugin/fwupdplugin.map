@@ -861,6 +861,9 @@ LIBFWUPDPLUGIN_1.6.2 {
 
 LIBFWUPDPLUGIN_1.7.0 {
   global:
+    fu_cfu_device_offer_to_string;
+    fu_cfu_device_reject_to_string;
+    fu_cfu_device_status_to_string;
     fu_cfu_offer_get_bank;
     fu_cfu_offer_get_component_id;
     fu_cfu_offer_get_force_ignore_version;
