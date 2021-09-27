@@ -16,4 +16,4 @@ G_DECLARE_FINAL_TYPE(FuFlashromInternalDevice,
 		     FuFlashromDevice)
 
 FuDevice *
-fu_flashrom_internal_device_new(void);
+fu_flashrom_internal_device_new(FuContext *ctx);

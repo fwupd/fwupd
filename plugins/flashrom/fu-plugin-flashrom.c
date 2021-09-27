@@ -148,7 +148,7 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *dmi_vendor;
-	g_autoptr(FuDevice) device = fu_flashrom_internal_device_new();
+	g_autoptr(FuDevice) device = fu_flashrom_internal_device_new(ctx);
 
 	fu_device_set_context(device, ctx);
 	fu_device_set_name(device, fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME));
