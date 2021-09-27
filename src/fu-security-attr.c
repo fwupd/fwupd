@@ -320,7 +320,7 @@ fu_security_attrs_to_json(FuSecurityAttrs *attrs, JsonBuilder *builder)
 	json_builder_end_object(builder);
 }
 
-guint
+gint
 fu_security_attrs_compare_hsi_score(const guint previous_hsi, const guint current_hsi)
 {
 	if (current_hsi > previous_hsi)

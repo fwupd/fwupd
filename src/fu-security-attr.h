@@ -21,5 +21,5 @@ gchar *
 fu_security_attrs_to_json_string(FuSecurityAttrs *attrs, GError **error);
 gchar *
 fu_security_attrs_hsi_change(FuSecurityAttrs *attrs, const gchar *last_hsi_detail);
-guint
+gint
 fu_security_attrs_compare_hsi_score(const guint previous_hsi, const guint current_hsi);

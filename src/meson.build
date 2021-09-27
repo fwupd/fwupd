@@ -265,6 +265,34 @@ if get_option('tests')
     ],
   )
   test('fu-self-test', e, is_parallel:false, timeout:180)
+  e = executable(
+    'fu-security-attr-self-test',
+    resources_src,
+    test_deps,
+    fu_hash,
+    sources : [
+      'fu-security-attr-self-test.c',
+      daemon_src,
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    dependencies : [
+      daemon_dep,
+    ],
+    link_with : [
+      fwupd,
+      fwupdplugin
+    ],
+    c_args : [
+      '-DTESTDATADIR_SRC="' + testdatadir_src + '"',
+      '-DTESTDATADIR_DST="' + testdatadir_dst + '"',
+      '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
+    ],
+  )
+  test('fu-security-attr-self-test', e, is_parallel:false, timeout:180)
 
   # for fuzzing
   fwupd_firmware_dump = executable(
