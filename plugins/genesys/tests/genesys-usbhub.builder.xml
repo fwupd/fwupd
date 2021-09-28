@@ -1,0 +1,5 @@
+<firmware gtype="FuGenesysUsbhubFirmware">
+  <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
+  <tool_string_version>1</tool_string_version>
+  <mask_project_ic_type>352310</mask_project_ic_type>
+</firmware>
