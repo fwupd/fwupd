@@ -435,6 +435,7 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_ep963x.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_fastboot.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_fresco_pd.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_genesys.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_gpio.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_hailuck.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_iommu.so
