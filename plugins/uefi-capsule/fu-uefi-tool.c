@@ -277,7 +277,7 @@ main(int argc, char *argv[])
 		g_autoptr(GError) error_local = NULL;
 
 		/* add each device */
-		if (fu_backend_coldplug(backend, &error_local)) {
+		if (!fu_backend_coldplug(backend, &error_local)) {
 			g_printerr("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
