@@ -20,7 +20,6 @@
 /* Payload size limited to 8k for both interfaces */
 #define UPD_PACKET_HEADER_SIZE	      (2 * sizeof(guint32))
 #define SYNC_PACKET_HEADER_SIZE	      (3 * sizeof(guint32))
-#define WRITE_TIME_OUT		      100
 #define HASH_TIMEOUT		      30000
 #define MAX_DATA_SIZE		      8192 /* 8k */
 #define PAYLOAD_SIZE		      MAX_DATA_SIZE - UPD_PACKET_HEADER_SIZE
@@ -31,6 +30,10 @@
 #define LENGTH_OFFSET		      0x4
 #define COMMAND_OFFSET		      0x0
 #define SYNC_ACK_PAYLOAD_LENGTH	      5
+#define THREE_SECONDS		      3 * G_TIME_SPAN_SECOND
+#define MAX_RETRIES		      5
+#define MAX_WAIT_COUNT		      150
+#define MAX_REBOOT_TIME		      180
 
 enum { SHA_256, SHA_512, MD5 };
 
@@ -61,9 +64,29 @@ struct _FuLogitechBulkcontrollerDevice {
 	guint update_iface;
 	FuLogitechBulkcontrollerDeviceStatus status;
 	FuLogitechBulkcontrollerDeviceUpdateState update_status;
+	GThread *sync_thread;
+	gboolean is_sync_transfer_in_progress;
+	GByteArray *device_response;
+	GMutex sync_transfer_mutex;
+	GCond sync_transfer_cond;
 };
 
 G_DEFINE_TYPE(FuLogitechBulkcontrollerDevice, fu_logitech_bulkcontroller_device, FU_TYPE_USB_DEVICE)
+
+/*
+ * Sync Thread : A thread to read data from sync endopint continuously
+ */
+void *
+fu_logitech_bulkcontroller_device_sync_thread(void *data);
+
+static void
+fu_logitech_bulkcontroller_device_startlistening_sync(FuDevice *device);
+
+static void
+fu_logitech_bulkcontroller_device_stoplistening_sync(FuDevice *device);
+
+static gboolean
+fu_logitech_bulkcontroller_device_get_data(FuDevice *device, GError **error);
 
 static void
 fu_logitech_bulkcontroller_device_to_string(FuDevice *device, guint idt, GString *str)
@@ -165,7 +188,7 @@ fu_logitech_bulkcontroller_device_send(FuLogitechBulkcontrollerDevice *self,
 					(guint8 *)buf->data,
 					buf->len,
 					&transferred,
-					WRITE_TIME_OUT,
+					BULK_TRANSFER_TIMEOUT,
 					cancellable,
 					error)) {
 		g_prefix_error(error, "bulk transfer failed: ");
@@ -282,10 +305,6 @@ fu_logitech_bulkcontroller_device_send_sync_cmd(FuLogitechBulkcontrollerDevice *
 						GByteArray *buf,
 						GError **error)
 {
-	guint32 cmd_tmp = 0x0;
-	guint64 cmd_tmp_64 = 0x0;
-	guint32 verify_cmd = 0x0;
-	gchar ack_payload[SYNC_ACK_PAYLOAD_LENGTH] = {0x0};
 	g_autoptr(GByteArray) buf_pkt = g_byte_array_new();
 	g_autoptr(GByteArray) buf_ack = g_byte_array_new();
 
@@ -303,111 +322,6 @@ fu_logitech_bulkcontroller_device_send_sync_cmd(FuLogitechBulkcontrollerDevice *
 	}
 	if (!fu_logitech_bulkcontroller_device_send(self, buf_pkt, BULK_INTERFACE_SYNC, error))
 		return FALSE;
-
-	/* receiving ACK */
-	fu_byte_array_set_size(buf_ack, MAX_DATA_SIZE);
-	if (!fu_logitech_bulkcontroller_device_recv(self,
-						    buf_ack,
-						    BULK_INTERFACE_SYNC,
-						    BULK_TRANSFER_TIMEOUT,
-						    error))
-		return FALSE;
-	if (!fu_common_read_uint32_safe(buf_ack->data,
-					buf_ack->len,
-					COMMAND_OFFSET,
-					&cmd_tmp,
-					G_LITTLE_ENDIAN,
-					error))
-		return FALSE;
-	if (cmd_tmp != CMD_ACK) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "not sync CMD_ACK, got %x",
-			    cmd_tmp);
-		return FALSE;
-	}
-	if (!fu_common_read_uint64_safe(buf_ack->data,
-					buf_ack->len,
-					SYNC_PACKET_HEADER_SIZE,
-					&cmd_tmp_64,
-					G_LITTLE_ENDIAN,
-					error))
-		return FALSE;
-	if (!fu_memcpy_safe((guint8 *)ack_payload,
-			    sizeof(ack_payload),
-			    0x0,
-			    (guint8 *)&cmd_tmp_64,
-			    sizeof(cmd_tmp_64),
-			    0x0,
-			    SYNC_ACK_PAYLOAD_LENGTH,
-			    error)) {
-		g_prefix_error(error, "failed to retrieve payload data: ");
-		return FALSE;
-	}
-	verify_cmd = fu_common_strtoull(ack_payload);
-	if (verify_cmd != cmd) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "invalid sync message payload received, expected %x, got %x",
-			    cmd,
-			    verify_cmd);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_logitech_bulkcontroller_device_recv_sync_cmd(FuLogitechBulkcontrollerDevice *self,
-						guint32 cmd,
-						GByteArray *buf,
-						GError **error)
-{
-	guint32 cmd_tmp = 0x0;
-	guint32 response_length = 0;
-	g_autoptr(GByteArray) buf_pkt = g_byte_array_new();
-	g_autoptr(GByteArray) buf_ack = g_byte_array_new();
-
-	fu_byte_array_set_size(buf_pkt, MAX_DATA_SIZE);
-	if (!fu_logitech_bulkcontroller_device_recv(self,
-						    buf_pkt,
-						    BULK_INTERFACE_SYNC,
-						    BULK_TRANSFER_TIMEOUT,
-						    error))
-		return FALSE;
-	if (!fu_common_read_uint32_safe(buf_pkt->data,
-					buf_pkt->len,
-					COMMAND_OFFSET,
-					&cmd_tmp,
-					G_LITTLE_ENDIAN,
-					error))
-		return FALSE;
-	if (cmd_tmp != cmd) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "invalid sync message received, expected %x, got %x",
-			    cmd,
-			    cmd_tmp);
-		return FALSE;
-	}
-	if (!fu_common_read_uint32_safe(buf_pkt->data,
-					buf_pkt->len,
-					LENGTH_OFFSET,
-					&response_length,
-					G_LITTLE_ENDIAN,
-					error))
-		return FALSE;
-
-	fu_byte_array_append_uint32(buf_ack, CMD_ACK, G_LITTLE_ENDIAN);		/* ACK message */
-	fu_byte_array_append_uint32(buf_ack, sizeof(guint32), G_LITTLE_ENDIAN); /* Length */
-	fu_byte_array_append_uint32(buf_ack, 0, G_LITTLE_ENDIAN);		/* Sequence ID */
-	fu_byte_array_append_uint32(buf_ack, cmd, G_LITTLE_ENDIAN);		/* Payload */
-	if (!fu_logitech_bulkcontroller_device_send(self, buf_ack, BULK_INTERFACE_SYNC, error))
-		return FALSE;
-	if (buf != NULL)
-		g_byte_array_append(buf, buf_pkt->data + SYNC_PACKET_HEADER_SIZE, response_length);
 
 	return TRUE;
 }
@@ -431,6 +345,13 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 						 GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+	guint init_retry = MAX_RETRIES;
+	/* Give up if firmware upgrade is taking forever to finish */
+	guint max_wait = MAX_WAIT_COUNT;
+	/* Flag error if device doesn't respond after these many attempts */
+	guint max_no_response_count = MAX_RETRIES * 2;
+	guint no_response_count = 0;
+	g_autofree gchar *old_firmware_version = NULL;
 	g_autofree gchar *base64hash = NULL;
 	g_autoptr(GByteArray) end_pkt = g_byte_array_new();
 	g_autoptr(GByteArray) start_pkt = g_byte_array_new();
@@ -444,17 +365,30 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5);
 
+	/* Stopping the sync thread because upd endpoint is getting blocked because of sync
+	   transfers running in parallel */
+	fu_logitech_bulkcontroller_device_stoplistening_sync(device);
+
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
 
-	/* Sending INIT */
-	if (!fu_logitech_bulkcontroller_device_send_upd_cmd(self, CMD_INIT, NULL, error)) {
-		g_prefix_error(error, "error in writing init transfer packet: ");
+	/* Sending INIT. Retry if device is not in IDLE state to receive the file */
+	do {
+		if (!fu_logitech_bulkcontroller_device_send_upd_cmd(self, CMD_INIT, NULL, error)) {
+			g_prefix_error(error,
+				       "error in writing init transfer packet: retrying... ");
+			continue;
+		}
+		break;
+	} while (--init_retry);
+	/* Return if maximum retires are done. Restart the device.*/
+	if (!init_retry) {
+		g_prefix_error(error,
+			       "error in writing init transfer packet: Please reboot the device ");
 		return FALSE;
 	}
-
 	/* transfer sent */
 	fu_byte_array_append_uint64(start_pkt, g_bytes_get_size(fw), G_LITTLE_ENDIAN);
 	if (!fu_logitech_bulkcontroller_device_send_upd_cmd(self,
@@ -506,6 +440,58 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	}
 	fu_progress_step_done(progress);
 
+	/*
+	 * Image file pushed, Restart sync thread, to get the update progress
+	 * If no error, status changes as follows:
+	 *  kUpdateStateCurrent->kUpdateStateDownloading
+	 *  kUpdateStateDownloading->kUpdateStateReady
+	 *  kUpdateStateReady->kUpdateStateStarting
+	 *  kUpdateStateStarting->kUpdateStateUpdating
+	 *  kUpdateStateUpdating->kUpdateStateCurrent
+	 * Device reboots itself. Note: reboot not triggered for minor upgrade
+	 */
+	g_usleep(MAX_RETRIES * G_TIME_SPAN_SECOND);
+	fu_logitech_bulkcontroller_device_startlistening_sync(device);
+	/* Save the current firmware version for comparison, troubleshooting purpose */
+	old_firmware_version = g_strdup(fu_device_get_version(device));
+	do {
+		g_usleep(MAX_RETRIES * 2 * G_TIME_SPAN_SECOND);
+		/* Catch all: Lost Success/Failure message, device rebooting */
+		if (no_response_count == max_no_response_count) {
+			g_debug("Device not responding, rebooting...");
+			g_usleep(MAX_REBOOT_TIME * G_TIME_SPAN_SECOND);
+			break;
+		}
+		/* Update device obj with latest info from the device */
+		if (!fu_logitech_bulkcontroller_device_get_data(device, error)) {
+			no_response_count++;
+			g_debug("No response for device info request. Count: %u",
+				no_response_count);
+			continue;
+		}
+		/* Device responsive, no error and not rebooting yet */
+		no_response_count = 0;
+		g_debug(
+		    "Firmware update status: %s",
+		    fu_logitech_bulkcontroller_device_update_state_to_string(self->update_status));
+		if (self->update_status == kUpdateStateError) {
+			g_prefix_error(error, "firmware upgrade failed: ");
+			return FALSE;
+		}
+		if (self->update_status == kUpdateStateCurrent) {
+			g_debug("New firmware version: %s, Old firmware version: %s, rebooting...",
+				fu_device_get_version(device),
+				old_firmware_version);
+			g_usleep(MAX_REBOOT_TIME * G_TIME_SPAN_SECOND);
+			break;
+		}
+	} while (max_wait--);
+
+	if (max_wait == 0) {
+		g_prefix_error(error, "firmware upgrade timeout: ");
+		return FALSE;
+	}
+
 	/* success! */
 	return TRUE;
 }
@@ -535,7 +521,7 @@ fu_logitech_bulkcontroller_device_open(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to claim sync interface: ");
 		return FALSE;
 	}
-
+	fu_logitech_bulkcontroller_device_startlistening_sync(device);
 	/* success */
 	return TRUE;
 }
@@ -545,7 +531,6 @@ fu_logitech_bulkcontroller_device_close(FuDevice *device, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
 	if (!g_usb_device_release_interface(usb_device,
 					    self->update_iface,
 					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
@@ -560,7 +545,7 @@ fu_logitech_bulkcontroller_device_close(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to release sync interface: ");
 		return FALSE;
 	}
-
+	fu_logitech_bulkcontroller_device_stoplistening_sync(device);
 	/* FuUsbDevice->close */
 	return FU_DEVICE_CLASS(fu_logitech_bulkcontroller_device_parent_class)
 	    ->close(device, error);
@@ -639,64 +624,90 @@ static gboolean
 fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
-	g_autoptr(GByteArray) device_info_request = g_byte_array_new();
+	g_autoptr(GByteArray) device_request = g_byte_array_new();
 	g_autoptr(GByteArray) decoded_pkt = g_byte_array_new();
-	g_autoptr(GByteArray) device_info_response = g_byte_array_new();
 	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
+	guint32 success = 0;
+	guint32 error_code = 0;
+	GError *error_local = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_logitech_bulkcontroller_device_parent_class)->setup(device, error))
 		return FALSE;
 
-	/* sending GetDeviceInfoRequest */
-	device_info_request = proto_manager_generate_get_device_info_request();
+	/*
+	 * Device supports USB_Device mode, Appliance mode and BYOD mode.
+	 * Only USB_Device mode is supported here.
+	 * Ensure it is running in USB_Device mode
+	 * Response has two data: Request succeeded or failed, and error code in case of failure
+	 */
+	device_request = proto_manager_generate_transition_to_device_mode_request();
 	if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
 							     CMD_BUFFER_WRITE,
-							     device_info_request,
+							     device_request,
 							     error)) {
-		g_prefix_error(error, "error in sending buffer write packet: ");
+		g_prefix_error(
+		    error,
+		    "error in sending buffer write packet for transition mode request: ");
 		return FALSE;
 	}
 
-	/* wait for the GetDeviceInfoResponse */
-	if (!fu_logitech_bulkcontroller_device_recv_sync_cmd(self,
-							     CMD_BUFFER_READ,
-							     device_info_response,
-							     error)) {
-		g_prefix_error(error, "error in buffer read packet: ");
+	if (!g_mutex_trylock(&self->sync_transfer_mutex)) {
+		g_prefix_error(error, "error in acquiring lock for transition mode request: ");
 		return FALSE;
 	}
-
-	if (!fu_logitech_bulkcontroller_device_recv_sync_cmd(self,
-							     CMD_UNINIT_BUFFER,
-							     NULL,
-							     error)) {
-		g_prefix_error(error, "error in buffer read packet: ");
+	if (!g_cond_wait_until(&self->sync_transfer_cond,
+			       &self->sync_transfer_mutex,
+			       g_get_monotonic_time() + THREE_SECONDS)) {
+		g_mutex_unlock(&self->sync_transfer_mutex);
+		g_prefix_error(error,
+			       "timing out, failed to receive response from device for transition "
+			       "mode request: ");
 		return FALSE;
 	}
-	if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
-							     CMD_UNINIT_BUFFER,
-							     NULL,
-							     error)) {
-		g_prefix_error(error, "error in sending buffer uninitialize packet: ");
-		return FALSE;
-	}
-	decoded_pkt = proto_manager_decode_message(device_info_response->data,
-						   device_info_response->len,
+	g_mutex_unlock(&self->sync_transfer_mutex);
+	decoded_pkt = proto_manager_decode_message(self->device_response->data,
+						   self->device_response->len,
 						   &proto_id,
 						   error);
+	g_byte_array_free(self->device_response, TRUE);
 	if (decoded_pkt == NULL) {
-		g_prefix_error(error, "error in unpacking packet: ");
+		g_prefix_error(error, "error in unpacking response for transition mode request: ");
 		return FALSE;
 	}
-	if (proto_id != kProtoId_GetDeviceInfoResponse) {
+	if (proto_id != kProtoId_TransitionToDeviceModeResponse) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
-				    "did not get kProtoId_GetDeviceInfoResponse");
+				    "incorrect response for transition mode request");
 		return FALSE;
 	}
-	if (!fu_logitech_bulkcontroller_device_json_parser(device, decoded_pkt, error))
+	if (!fu_common_read_uint32_safe(decoded_pkt->data,
+					decoded_pkt->len,
+					COMMAND_OFFSET,
+					&success,
+					G_LITTLE_ENDIAN,
+					&error_local)) {
+		g_prefix_error(error, "failed to retrieve result for transition mode request: ");
+		return FALSE;
+	}
+	if (!fu_common_read_uint32_safe(decoded_pkt->data,
+					decoded_pkt->len,
+					LENGTH_OFFSET,
+					&error_code,
+					G_LITTLE_ENDIAN,
+					&error_local)) {
+		g_prefix_error(error,
+			       "failed to retrieve error code for transition mode request: ");
+		return FALSE;
+	}
+	g_debug("Received transition mode response. Success: %u, Error: %u", success, error_code);
+	if (!success) {
+		g_prefix_error(error, "transition mode request failed. error: %u", error_code);
+		return FALSE;
+	}
+	/* Load current device data */
+	if (!fu_logitech_bulkcontroller_device_get_data(device, error))
 		return FALSE;
 
 	/* success */
@@ -733,4 +744,199 @@ fu_logitech_bulkcontroller_device_class_init(FuLogitechBulkcontrollerDeviceClass
 	klass_device->open = fu_logitech_bulkcontroller_device_open;
 	klass_device->close = fu_logitech_bulkcontroller_device_close;
 	klass_device->set_progress = fu_logitech_bulkcontroller_device_set_progress;
+}
+
+void *
+fu_logitech_bulkcontroller_device_sync_thread(void *data)
+{
+	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(data);
+
+	while (self->is_sync_transfer_in_progress) {
+		guint32 cmd_tmp = 0x0;
+		guint64 cmd_tmp_64 = 0x0;
+		guint32 response_length = 0;
+		guint8 ack_payload[SYNC_ACK_PAYLOAD_LENGTH];
+		GError *error = NULL;
+		g_autoptr(GByteArray) buf_pkt = g_byte_array_new();
+		g_autoptr(GByteArray) buf_ack = g_byte_array_new();
+
+		fu_byte_array_set_size(buf_pkt, MAX_DATA_SIZE);
+		if (!fu_logitech_bulkcontroller_device_recv(self,
+							    buf_pkt,
+							    BULK_INTERFACE_SYNC,
+							    BULK_TRANSFER_TIMEOUT,
+							    &error)) {
+			g_prefix_error(&error, "failed to receive data on sync interface: ");
+			continue;
+		}
+		if (!fu_common_read_uint32_safe(buf_pkt->data,
+						buf_pkt->len,
+						COMMAND_OFFSET,
+						&cmd_tmp,
+						G_LITTLE_ENDIAN,
+						&error)) {
+			g_prefix_error(&error, "failed to retrieve payload command: ");
+			return error;
+		}
+		if (!fu_common_read_uint32_safe(buf_pkt->data,
+						buf_pkt->len,
+						LENGTH_OFFSET,
+						&response_length,
+						G_LITTLE_ENDIAN,
+						&error)) {
+			g_prefix_error(&error, "failed to retrieve payload length: ");
+			return error;
+		}
+		if (!fu_common_read_uint64_safe(buf_pkt->data,
+						buf_pkt->len,
+						SYNC_PACKET_HEADER_SIZE,
+						&cmd_tmp_64,
+						G_LITTLE_ENDIAN,
+						&error)) {
+			g_prefix_error(&error, "failed to retrieve payload data: ");
+			return error;
+		}
+		if (!fu_memcpy_safe((guint8 *)ack_payload,
+				    sizeof(ack_payload),
+				    0x0,
+				    (guint8 *)&cmd_tmp_64,
+				    sizeof(cmd_tmp_64),
+				    0x0,
+				    SYNC_ACK_PAYLOAD_LENGTH,
+				    &error)) {
+			g_prefix_error(&error, "failed to copy payload data: ");
+			return error;
+		}
+		switch (cmd_tmp) {
+		case CMD_ACK:
+			if (CMD_BUFFER_WRITE == fu_common_strtoull((const char *)ack_payload)) {
+				if (!fu_logitech_bulkcontroller_device_send_sync_cmd(
+					self,
+					CMD_UNINIT_BUFFER,
+					NULL,
+					&error))
+					return error;
+
+			} else if (fu_common_strtoull((const char *)ack_payload) !=
+				   CMD_UNINIT_BUFFER) {
+				g_prefix_error(
+				    &error,
+				    "invalid message received: expected %s, but received %d: ",
+				    (const gchar *)ack_payload,
+				    CMD_UNINIT_BUFFER);
+				return error;
+			}
+			break;
+		case CMD_BUFFER_READ:
+			self->device_response = g_byte_array_new();
+			g_byte_array_append(self->device_response,
+					    buf_pkt->data + SYNC_PACKET_HEADER_SIZE,
+					    response_length);
+			if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
+				g_debug("Received data on sync interface. Buffer: %s, length: %u",
+					(const gchar *)self->device_response->data,
+					self->device_response->len);
+			}
+			fu_byte_array_append_uint32(buf_ack, cmd_tmp, G_LITTLE_ENDIAN);
+			if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
+									     CMD_ACK,
+									     buf_ack,
+									     &error))
+				return error;
+			break;
+		case CMD_UNINIT_BUFFER:
+			fu_byte_array_append_uint32(buf_ack, cmd_tmp, G_LITTLE_ENDIAN);
+			if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
+									     CMD_ACK,
+									     buf_ack,
+									     &error))
+				return error;
+			g_cond_signal(&self->sync_transfer_cond);
+			break;
+		default:
+			break;
+		}
+	}
+	return NULL;
+}
+
+static gboolean
+fu_logitech_bulkcontroller_device_get_data(FuDevice *device, GError **error)
+{
+	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+	g_autoptr(GByteArray) device_request = g_byte_array_new();
+	g_autoptr(GByteArray) decoded_pkt = g_byte_array_new();
+	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
+
+	/* sending GetDeviceInfoRequest */
+	device_request = proto_manager_generate_get_device_info_request();
+	if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
+							     CMD_BUFFER_WRITE,
+							     device_request,
+							     error)) {
+		g_prefix_error(error,
+			       "error in sending buffer write packet for device info request: ");
+		return FALSE;
+	}
+	if (!g_mutex_trylock(&self->sync_transfer_mutex)) {
+		g_prefix_error(error, "error in acquiring lock for device info request: ");
+		return FALSE;
+	}
+	if (!g_cond_wait_until(&self->sync_transfer_cond,
+			       &self->sync_transfer_mutex,
+			       g_get_monotonic_time() + THREE_SECONDS)) {
+		g_mutex_unlock(&self->sync_transfer_mutex);
+		g_prefix_error(
+		    error,
+		    "timing out, failed to receive response from device for device info request: ");
+		return FALSE;
+	}
+	g_mutex_unlock(&self->sync_transfer_mutex);
+	decoded_pkt = proto_manager_decode_message(self->device_response->data,
+						   self->device_response->len,
+						   &proto_id,
+						   error);
+	g_byte_array_free(self->device_response, TRUE);
+	if (decoded_pkt == NULL) {
+		g_prefix_error(error, "error in unpacking response for device info request: ");
+		return FALSE;
+	}
+	g_debug("Received device response. data: %s, length: %u",
+		(const gchar *)decoded_pkt->data,
+		decoded_pkt->len);
+
+	if (proto_id != kProtoId_GetDeviceInfoResponse) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "incorrect response for device info request: ");
+		return FALSE;
+	}
+	if (!fu_logitech_bulkcontroller_device_json_parser(device, decoded_pkt, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static void
+fu_logitech_bulkcontroller_device_startlistening_sync(FuDevice *device)
+{
+	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+
+	self->is_sync_transfer_in_progress = TRUE;
+	self->sync_thread = g_thread_new("Sync Transfer thread",
+					 &fu_logitech_bulkcontroller_device_sync_thread,
+					 device);
+}
+
+static void
+fu_logitech_bulkcontroller_device_stoplistening_sync(FuDevice *device)
+{
+	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+
+	if (self->sync_thread) {
+		self->is_sync_transfer_in_progress = FALSE;
+		g_thread_join(self->sync_thread);
+	}
 }
