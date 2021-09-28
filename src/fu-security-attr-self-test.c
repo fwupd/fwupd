@@ -21,11 +21,27 @@
 #include "fu-history.h"
 #include "fu-security-attr.h"
 
+gchar *standard_str =
+    "{\"SecurityAttributes\":{\"org.fwupd.hsi.test.string0001\":{\"AppstreamId\":\"org."
+    "fwupd.hsi.test.string0001\",\"HsiLevel\":0,\"HsiResult\":\"not-supported\",\"Name\":"
+    "\"test1\",\"Plugin\":\"test1_plugin\",\"Uri\":\"https://"
+    "test1\"},\"org.fwupd.hsi.test.string0002\":{\"AppstreamId\":\"org.fwupd.hsi.test."
+    "string0002\",\"HsiLevel\":0,\"HsiResult\":\"not-supported\",\"Name\":\"test2\","
+    "\"Plugin\":\"test2_plugin\",\"Uri\":\"https://"
+    "test2\",\"Flags\":[\"obsoleted\"]},\"org.fwupd.hsi.test.string0003\":{\"AppstreamId\":"
+    "\"org.fwupd.hsi.test.string0003\",\"HsiLevel\":0,\"HsiResult\":\"not-supported\","
+    "\"Name\":\"test3\",\"Plugin\":\"test1_plugin\",\"Uri\":\"https://"
+    "test3\",\"Guid\":[\"ea9b78bf-8830-47a4-8c72-6093c08b4f88\"]},\"org.fwupd.hsi.test."
+    "string0004\":{\"AppstreamId\":\"org.fwupd.hsi.test.string0004\",\"HsiLevel\":0,"
+    "\"HsiResult\":\"not-supported\",\"Name\":\"test4\",\"Plugin\":\"test4_plugin\","
+    "\"Uri\":\"https://test4\",\"Flags\":[\"success\",\"runtime-updates\"]}}}";
+
 static gchar test_dir[34];
 
 typedef struct {
 	sqlite3 *db;
 	FuSecurityAttrs *attrs;
+	FuHistory *history;
 } FuTest;
 
 static void
@@ -39,10 +55,10 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuTest, fu_test_free)
 static void
 fu_security_attr_test_mkroot(void)
 {
-	gchar *ret = NULL;
 	memset(test_dir, 0, sizeof(test_dir));
 	g_sprintf(test_dir, "/tmp/fu-security-attr-test-XXXXXX");
 	g_assert_nonnull(g_mkdtemp_full(test_dir, 00755));
+	g_printf("Path %s", test_dir);
 }
 
 static void
@@ -53,79 +69,12 @@ fu_security_attr_test_tear_down()
 		g_warning("failed to mkroot: %s", error->message);
 }
 
-static gboolean
-init_fake_data(FuTest *self)
-{
-	gint rc;
-	g_autofree gchar *filename = NULL;
-	g_autoptr(GError) error = NULL;
-	filename = g_build_filename(test_dir, "lib", "fwupd", "pending.db");
-	g_printf("db filename %s\n", filename);
-	rc = sqlite3_open(filename, &self->db);
-	if (rc != SQLITE_OK) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_READ,
-			    "Can't open %s: %s",
-			    test_dir,
-			    sqlite3_errmsg(self->db));
-		return FALSE;
-	}
-	rc = sqlite3_exec(self->db,
-			  "BEGIN TRANSACTION;"
-			  "CREATE TABLE IF NOT EXISTS schema ("
-			  "created timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
-			  "version INTEGER DEFAULT 0);"
-			  "INSERT INTO schema (version) VALUES (0);"
-			  "CREATE TABLE IF NOT EXISTS hsi_history ("
-			  "timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,"
-			  "hsi_details TEXT DEFAULT NULL,"
-			  "hsi_score INTEGER DEFAULT 0,"
-			  "fwupd_version TEXT DEFAULT NULL,"
-			  "changes TEXT DEFAULT NULL);"
-			  "COMMIT;",
-			  NULL,
-			  NULL,
-			  NULL);
-	if (rc != SQLITE_OK) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Failed to prepare SQL for creating tables: %s",
-			    sqlite3_errmsg(self->db));
-		sqlite3_close(self->db);
-		return FALSE;
-	}
-	sqlite3_close(self->db);
-	return TRUE;
-}
-
-static void
-fu_security_attr_test_init_history(FuTest self)
-{
-}
-
 static void
 fu_security_attr_insert_db_data(FuTest *self)
 {
-	g_autoptr(FuHistory) history = fu_history_new();
+	self->history = fu_history_new();
 	g_autoptr(GError) error = NULL;
-	gchar *test_json =
-	    "{\"SecurityAttributes\":{\"org.fwupd.hsi.test.string0001\":{\"AppstreamId\":\"org."
-	    "fwupd.hsi.test.string0001\",\"HsiLevel\":0,\"Name\":\"test1\",\"Plugin\":\"test1_"
-	    "plugin\",\"Uri\":\"https://"
-	    "test1\"},\"org.fwupd.hsi.test.string0002\":{\"AppstreamId\":\"org.fwupd.hsi.test."
-	    "string0002\",\"HsiLevel\":0,\"Name\":\"test2\",\"Plugin\":\"test2_plugin\",\"Uri\":"
-	    "\"https://"
-	    "test2\",\"Flags\":[\"obsoleted\"]},\"org.fwupd.hsi.test.string0003\":{\"AppstreamId\":"
-	    "\"org.fwupd.hsi.test.string0003\",\"HsiLevel\":0,\"Name\":\"test3\",\"Plugin\":"
-	    "\"test1_plugin\",\"Uri\":\"https://"
-	    "test3\",\"Guid\":[\"ea9b78bf-8830-47a4-8c72-6093c08b4f88\"]},\"org.fwupd.hsi.test."
-	    "string0004\":{\"AppstreamId\":\"org.fwupd.hsi.test.string0004\",\"HsiLevel\":0,"
-	    "\"Name\":\"test4\",\"Plugin\":\"test4_plugin\",\"Uri\":\"https://"
-	    "test4\",\"Flags\":[\"success\",\"runtime-updates\"]}}}";
-
-	fu_history_add_security_attribute(history, test_json, 9, "1.7.0", "{}", &error);
+	fu_history_add_security_attribute(self->history, standard_str, 9, "1.7.0", "{}", &error);
 }
 
 static void
@@ -137,20 +86,19 @@ fu_security_attr_to_json_func(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	g_autoptr(GPtrArray) items = NULL;
 	items = fu_security_attrs_get_all(self->attrs);
-	for (guint i = 0; i < items->len; i++) {
+	/*for (guint i = 0; i < items->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
 		g_printf("%s\n", fwupd_security_attr_get_appstream_id(attr));
-	}
+	}*/
 	ret1 = fu_security_attrs_to_json_string(self->attrs, &error);
 	g_assert_nonnull(ret1);
 	g_assert_null(error);
-	g_printf("%s\n", ret1);
+	g_assert_cmpint(g_strcmp0(ret1, standard_str), ==, 0);
 	/* Empty attr */
 	g_autoptr(FuSecurityAttrs) empty_attrs = fu_security_attrs_new();
 	ret2 = fu_security_attrs_to_json_string(empty_attrs, &error);
 	g_assert_nonnull(ret2);
 	g_assert_null(error);
-	g_printf("%s\n", ret2);
 }
 
 static void
@@ -173,20 +121,307 @@ fu_security_attr_hsi_compare(gconstpointer user_data)
 	g_assert_cmpint(ret, ==, 1);
 }
 
+static void
+fu_security_attr_test_hsi_change_func(gconstpointer user_data)
+{
+	g_autoptr(FuSecurityAttrs) current_attrs = NULL;
+	g_autoptr(FuSecurityAttrs) current_attrs_all_miss = NULL;
+	g_autoptr(FuSecurityAttrs) current_attrs_level_change = NULL;
+	g_autoptr(FuSecurityAttrs) current_attrs_mixed = NULL;
+	gchar *ret = NULL;
+	FwupdSecurityAttr *item = NULL;
+	/* equal */
+	current_attrs = fu_security_attrs_new();
+	for (gint i = 0; i < 4; i++) {
+		switch (i) {
+		/* no flags and GUID */
+		case 0:
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.string0001");
+			fwupd_security_attr_set_level(item, 0);
+			fwupd_security_attr_set_name(item, "test1");
+			fwupd_security_attr_set_plugin(item, "test1_plugin");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_url(item, "https://test1");
+			break;
+		/* flags only */
+		case 1:
+
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.string0002");
+			fwupd_security_attr_set_level(item, 0);
+			fwupd_security_attr_set_name(item, "test2");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_plugin(item, "test2_plugin");
+			fwupd_security_attr_set_url(item, "https://test2");
+			/* success */
+			fwupd_security_attr_set_flags(item, 0x2);
+			break;
+		/* GUID only */
+		case 2:
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.string0003");
+			fwupd_security_attr_set_level(item, 0);
+			fwupd_security_attr_set_name(item, "test3");
+			fwupd_security_attr_set_plugin(item, "test1_plugin");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_url(item, "https://test3");
+			fwupd_security_attr_add_guid(item, "ea9b78bf-8830-47a4-8c72-6093c08b4f88");
+			break;
+		/* both flags and GUID */
+		case 3:
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.string0004");
+			fwupd_security_attr_set_level(item, 0);
+			fwupd_security_attr_set_name(item, "test4");
+			fwupd_security_attr_set_plugin(item, "test4_plugin");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_url(item, "https://test4");
+			fwupd_security_attr_add_flag(item, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+			fwupd_security_attr_add_flag(item,
+						     FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
+			break;
+		default:
+			g_printf("out of index\n");
+		}
+		fu_security_attrs_append(current_attrs, item);
+	}
+
+	ret = fu_security_attrs_hsi_change(current_attrs, standard_str);
+	g_assert_cmpstr(ret, ==, "{}");
+	g_free(ret);
+
+	/* remove all and new all*/
+	current_attrs_all_miss = fu_security_attrs_new();
+	for (gint i = 0; i < 4; i++) {
+		switch (i) {
+		/* no flags and GUID */
+		case 0:
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.Newstring0001");
+			fwupd_security_attr_set_level(item, 0);
+			fwupd_security_attr_set_name(item, "test1");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_plugin(item, "test1_plugin");
+			fwupd_security_attr_set_url(item, "https://test1");
+			break;
+		/* flags only */
+		case 1:
+
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.Newstring0002");
+			fwupd_security_attr_set_level(item, 0);
+			fwupd_security_attr_set_name(item, "test2");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_plugin(item, "test2_plugin");
+			fwupd_security_attr_set_url(item, "https://test2");
+			/* success */
+			fwupd_security_attr_set_flags(item, 0x2);
+			break;
+		/* GUID only */
+		case 2:
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.Newstring0003");
+			fwupd_security_attr_set_level(item, 0);
+			fwupd_security_attr_set_name(item, "test3");
+			fwupd_security_attr_set_plugin(item, "test1_plugin");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_url(item, "https://test3");
+			fwupd_security_attr_add_guid(item, "ea9b78bf-8830-47a4-8c72-6093c08b4f88");
+			break;
+		/* both flags and GUID */
+		case 3:
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.Newstring0004");
+			fwupd_security_attr_set_level(item, 0);
+			fwupd_security_attr_set_name(item, "test4");
+			fwupd_security_attr_set_plugin(item, "test4_plugin");
+			fwupd_security_attr_set_url(item, "https://test4");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_add_flag(item, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+			fwupd_security_attr_add_flag(item,
+						     FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
+			break;
+		default:
+			g_printf("out of index\n");
+		}
+		fu_security_attrs_append(current_attrs_all_miss, item);
+	}
+	ret = fu_security_attrs_hsi_change(current_attrs_all_miss, standard_str);
+	gchar *result =
+	    "{\"org.fwupd.hsi.test.Newstring0001\":{\"new\":{\"HsiLevel\":0,\"HsiResult\":\"not-"
+	    "supported\",\"Name\":\"test1\"}},\"org.fwupd.hsi.test.Newstring0002\":{\"new\":{"
+	    "\"HsiLevel\":0,\"HsiResult\":\"not-supported\",\"Name\":\"test2\",\"Flags\":["
+	    "\"obsoleted\"]}},\"org.fwupd.hsi.test.Newstring0003\":{\"new\":{\"HsiLevel\":0,"
+	    "\"HsiResult\":\"not-supported\",\"Name\":\"test3\"}},\"org.fwupd.hsi.test."
+	    "Newstring0004\":{\"new\":{\"HsiLevel\":0,\"HsiResult\":\"not-supported\",\"Name\":"
+	    "\"test4\",\"Flags\":[\"success\",\"runtime-updates\"]}},\"org.fwupd.hsi.test."
+	    "string0004\":{\"removed\":{\"HsiLevel\":0,\"HsiResult\":\"not-supported\",\"Name\":"
+	    "\"test4\",\"Flags\":[\"success\",\"runtime-updates\"]}},\"org.fwupd.hsi.test."
+	    "string0002\":{\"removed\":{\"HsiLevel\":0,\"HsiResult\":\"not-supported\",\"Name\":"
+	    "\"test2\",\"Flags\":[\"obsoleted\"]}},\"org.fwupd.hsi.test.string0003\":{\"removed\":{"
+	    "\"HsiLevel\":0,\"HsiResult\":\"not-supported\",\"Name\":\"test3\"}},\"org.fwupd.hsi."
+	    "test.string0001\":{\"removed\":{\"HsiLevel\":0,\"HsiResult\":\"not-supported\","
+	    "\"Name\":\"test1\"}}}";
+	g_assert_cmpstr(ret, ==, result);
+	g_free(ret);
+
+	/* all level change */
+	current_attrs_level_change = fu_security_attrs_new();
+	for (gint i = 0; i < 4; i++) {
+		switch (i) {
+		/* no flags and GUID */
+		case 0:
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.string0001");
+			fwupd_security_attr_set_level(item, 5);
+			fwupd_security_attr_set_name(item, "test1");
+			fwupd_security_attr_set_plugin(item, "test1_plugin");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_url(item, "https://test1");
+			break;
+		/* flags only */
+		case 1:
+
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.string0002");
+			fwupd_security_attr_set_level(item, 2);
+			fwupd_security_attr_set_name(item, "test2");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_plugin(item, "test2_plugin");
+			fwupd_security_attr_set_url(item, "https://test2");
+			/* success */
+			fwupd_security_attr_set_flags(item, 0x2);
+			break;
+		/* GUID only */
+		case 2:
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.string0003");
+			fwupd_security_attr_set_level(item, 3);
+			fwupd_security_attr_set_name(item, "test3");
+			fwupd_security_attr_set_plugin(item, "test1_plugin");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_url(item, "https://test3");
+			fwupd_security_attr_add_guid(item, "ea9b78bf-8830-47a4-8c72-6093c08b4f88");
+			break;
+		/* both flags and GUID */
+		case 3:
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.string0004");
+			fwupd_security_attr_set_level(item, 1);
+			fwupd_security_attr_set_name(item, "test4");
+			fwupd_security_attr_set_plugin(item, "test4_plugin");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_url(item, "https://test4");
+			fwupd_security_attr_add_flag(item, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+			fwupd_security_attr_add_flag(item,
+						     FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
+			break;
+		default:
+			g_printf("out of index\n");
+		}
+		fu_security_attrs_append(current_attrs_level_change, item);
+	}
+	ret = fu_security_attrs_hsi_change(current_attrs_level_change, standard_str);
+	gchar *result_change =
+	    "{\"org.fwupd.hsi.test.string0001\":{\"previous\":{\"HsiLevel\":0,\"HsiResult\":\"not-"
+	    "supported\",\"Name\":\"test1\"},\"current\":{\"HsiLevel\":5,\"HsiResult\":\"not-"
+	    "supported\",\"Name\":\"test1\"}},\"org.fwupd.hsi.test.string0002\":{\"previous\":{"
+	    "\"HsiLevel\":0,\"HsiResult\":\"not-supported\",\"Name\":\"test2\",\"Flags\":["
+	    "\"obsoleted\"]},\"current\":{\"HsiLevel\":2,\"HsiResult\":\"not-supported\",\"Name\":"
+	    "\"test2\",\"Flags\":[\"obsoleted\"]}},\"org.fwupd.hsi.test.string0003\":{\"previous\":"
+	    "{\"HsiLevel\":0,\"HsiResult\":\"not-supported\",\"Name\":\"test3\"},\"current\":{"
+	    "\"HsiLevel\":3,\"HsiResult\":\"not-supported\",\"Name\":\"test3\"}},\"org.fwupd.hsi."
+	    "test.string0004\":{\"previous\":{\"HsiLevel\":0,\"HsiResult\":\"not-supported\","
+	    "\"Name\":\"test4\",\"Flags\":[\"success\",\"runtime-updates\"]},\"current\":{"
+	    "\"HsiLevel\":1,\"HsiResult\":\"not-supported\",\"Name\":\"test4\",\"Flags\":["
+	    "\"success\",\"runtime-updates\"]}}}";
+	g_assert_cmpstr(ret, ==, result_change);
+	g_free(ret);
+
+	/* mixed */
+	current_attrs_mixed = fu_security_attrs_new();
+	for (gint i = 0; i < 3; i++) {
+		switch (i) {
+		/* no flags and GUID */
+		case 0:
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.Newstring0001");
+			fwupd_security_attr_set_level(item, 5);
+			fwupd_security_attr_set_name(item, "test1");
+			fwupd_security_attr_set_plugin(item, "test1_plugin");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_url(item, "https://test1");
+			break;
+		/* flags only */
+		case 1:
+
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.string0002");
+			fwupd_security_attr_set_level(item, 2);
+			fwupd_security_attr_set_name(item, "test2");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_plugin(item, "test2_plugin");
+			fwupd_security_attr_set_url(item, "https://test2");
+			/* success */
+			fwupd_security_attr_set_flags(item, 0x2);
+			break;
+		/* GUID only */
+		case 2:
+			item = fwupd_security_attr_new("org.fwupd.hsi.test.string0003");
+			fwupd_security_attr_set_level(item, 3);
+			fwupd_security_attr_set_name(item, "test3");
+			fwupd_security_attr_set_plugin(item, "test1_plugin");
+			fwupd_security_attr_set_result(item,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+			fwupd_security_attr_set_url(item, "https://test3");
+			fwupd_security_attr_add_guid(item, "ea9b78bf-8830-47a4-8c72-6093c08b4f88");
+			break;
+		default:
+			g_printf("out of index\n");
+		}
+		fu_security_attrs_append(current_attrs_mixed, item);
+	}
+	ret = fu_security_attrs_hsi_change(current_attrs_mixed, standard_str);
+	gchar *standard_mix =
+	    "{\"org.fwupd.hsi.test.Newstring0001\":{\"new\":{\"HsiLevel\":5,\"HsiResult\":\"not-"
+	    "supported\",\"Name\":\"test1\"}},\"org.fwupd.hsi.test.string0002\":{\"previous\":{"
+	    "\"HsiLevel\":0,\"HsiResult\":\"not-supported\",\"Name\":\"test2\",\"Flags\":["
+	    "\"obsoleted\"]},\"current\":{\"HsiLevel\":2,\"HsiResult\":\"not-supported\",\"Name\":"
+	    "\"test2\",\"Flags\":[\"obsoleted\"]}},\"org.fwupd.hsi.test.string0003\":{\"previous\":"
+	    "{\"HsiLevel\":0,\"HsiResult\":\"not-supported\",\"Name\":\"test3\"},\"current\":{"
+	    "\"HsiLevel\":3,\"HsiResult\":\"not-supported\",\"Name\":\"test3\"}},\"org.fwupd.hsi."
+	    "test.string0004\":{\"removed\":{\"HsiLevel\":0,\"HsiResult\":\"not-supported\","
+	    "\"Name\":\"test4\",\"Flags\":[\"success\",\"runtime-updates\"]}},\"org.fwupd.hsi.test."
+	    "string0001\":{\"removed\":{\"HsiLevel\":0,\"HsiResult\":\"not-supported\",\"Name\":"
+	    "\"test1\"}}}";
+	g_assert_cmpstr(ret, ==, standard_mix);
+	g_free(ret);
+
+	/* NULL previous */
+	ret = fu_security_attrs_hsi_change(current_attrs_mixed, NULL);
+	gchar *standard_null =
+	    "{\"org.fwupd.hsi.test.Newstring0001\":{\"new\":{\"HsiLevel\":5,\"HsiResult\":\"not-"
+	    "supported\",\"Name\":\"test1\"}},\"org.fwupd.hsi.test.string0002\":{\"new\":{"
+	    "\"HsiLevel\":2,\"HsiResult\":\"not-supported\",\"Name\":\"test2\",\"Flags\":["
+	    "\"obsoleted\"]}},\"org.fwupd.hsi.test.string0003\":{\"new\":{\"HsiLevel\":3,"
+	    "\"HsiResult\":\"not-supported\",\"Name\":\"test3\"}}}";
+	g_assert_cmpstr(ret, ==, standard_null);
+	g_free(ret);
+}
+
 int
 main(int argc, char **argv)
 {
 	gboolean ret;
 	g_autoptr(FuTest) self = g_new0(FuTest, 1);
 	g_autoptr(GError) error = NULL;
-
 	FwupdSecurityAttr *attr = NULL;
 	g_autoptr(FuSecurityAttrs) attrs = NULL;
 	g_autofree gchar *var_path = NULL;
 	g_autofree gchar *system_path = NULL;
 
 	g_test_init(&argc, &argv, NULL);
-
 	fu_security_attr_test_mkroot();
 
 	/* only critical and error are fatal */
@@ -213,6 +448,8 @@ main(int argc, char **argv)
 			attr = fwupd_security_attr_new("org.fwupd.hsi.test.string0001");
 			fwupd_security_attr_set_level(attr, 0);
 			fwupd_security_attr_set_name(attr, "test1");
+			fwupd_security_attr_set_result(attr,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 			fwupd_security_attr_set_plugin(attr, "test1_plugin");
 			fwupd_security_attr_set_url(attr, "https://test1");
 			break;
@@ -222,6 +459,8 @@ main(int argc, char **argv)
 			attr = fwupd_security_attr_new("org.fwupd.hsi.test.string0002");
 			fwupd_security_attr_set_level(attr, 0);
 			fwupd_security_attr_set_name(attr, "test2");
+			fwupd_security_attr_set_result(attr,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 			fwupd_security_attr_set_plugin(attr, "test2_plugin");
 			fwupd_security_attr_set_url(attr, "https://test2");
 			/* success */
@@ -233,6 +472,8 @@ main(int argc, char **argv)
 			fwupd_security_attr_set_level(attr, 0);
 			fwupd_security_attr_set_name(attr, "test3");
 			fwupd_security_attr_set_plugin(attr, "test1_plugin");
+			fwupd_security_attr_set_result(attr,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 			fwupd_security_attr_set_url(attr, "https://test3");
 			fwupd_security_attr_add_guid(attr, "ea9b78bf-8830-47a4-8c72-6093c08b4f88");
 			break;
@@ -243,6 +484,8 @@ main(int argc, char **argv)
 			fwupd_security_attr_set_name(attr, "test4");
 			fwupd_security_attr_set_plugin(attr, "test4_plugin");
 			fwupd_security_attr_set_url(attr, "https://test4");
+			fwupd_security_attr_set_result(attr,
+						       FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
 			fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 			fwupd_security_attr_add_flag(attr,
 						     FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES);
@@ -252,14 +495,16 @@ main(int argc, char **argv)
 		}
 		fu_security_attrs_append(attrs, attr);
 	}
+	/* insert test data */
+	fu_security_attr_insert_db_data(self);
+
 	g_test_add_data_func("/fwupd/security-attr{to-json}", self, fu_security_attr_to_json_func);
 	g_test_add_data_func("/fwupd/security-attr{hsi-compare}",
 			     self,
 			     fu_security_attr_hsi_compare);
+	g_test_add_data_func("/fwupd/securioty-attr{hsi-change}",
+			     self,
+			     fu_security_attr_test_hsi_change_func);
 
-	fu_security_attr_insert_db_data(self);
-
-	/* convert  attr from string to security attr */
-
-	g_test_run();
+	return g_test_run();
 }

@@ -5972,8 +5972,10 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 				    fu_security_attrs_hsi_change(self->host_security_attrs,
 								 last_json_attr);
 		}
-	} else
-		g_warning("Error on reading HSI history: %s", error->message); // g_clear_error()
+	} else {
+		g_warning("Error on reading HSI history: %s", error->message);
+		g_clear_error(&error);
+	}
 
 	data = fu_security_attrs_to_json_string(self->host_security_attrs, &error);
 
@@ -5985,9 +5987,10 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 						      hsi_number,
 						      fwupd_version_string(),
 						      diff_result,
-						      &error) == FALSE)
-			g_warning("Fail to write security attribute to DB: %s",
-				  error->message); // g_clear_error()
+						      &error) == FALSE) {
+			g_warning("Fail to write security attribute to DB: %s", error->message);
+			g_clear_error(&error);
+		}
 	}
 }
 

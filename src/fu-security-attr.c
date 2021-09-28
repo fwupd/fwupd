@@ -352,16 +352,24 @@ static void
 fu_security_attr_dup_json(JsonObject *src, JsonBuilder *builder)
 {
 	JsonArray *array_items = NULL;
-	json_builder_set_member_name(builder, FWUPD_RESULT_KEY_HSI_LEVEL);
-	json_builder_add_int_value(builder,
-				   json_object_get_int_member(src, FWUPD_RESULT_KEY_HSI_LEVEL));
-	json_builder_set_member_name(builder, FWUPD_RESULT_KEY_HSI_RESULT);
-	json_builder_add_string_value(
-	    builder,
-	    json_object_get_string_member(src, FWUPD_RESULT_KEY_HSI_RESULT));
-	json_builder_set_member_name(builder, FWUPD_RESULT_KEY_NAME);
-	json_builder_add_string_value(builder,
-				      json_object_get_string_member(src, FWUPD_RESULT_KEY_NAME));
+	if (json_object_has_member(src, FWUPD_RESULT_KEY_HSI_LEVEL)) {
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_HSI_LEVEL);
+		json_builder_add_int_value(
+		    builder,
+		    json_object_get_int_member(src, FWUPD_RESULT_KEY_HSI_LEVEL));
+	}
+	if (json_object_has_member(src, FWUPD_RESULT_KEY_HSI_RESULT)) {
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_HSI_RESULT);
+		json_builder_add_string_value(
+		    builder,
+		    json_object_get_string_member(src, FWUPD_RESULT_KEY_HSI_RESULT));
+	}
+	if (json_object_has_member(src, FWUPD_RESULT_KEY_HSI_RESULT)) {
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_NAME);
+		json_builder_add_string_value(
+		    builder,
+		    json_object_get_string_member(src, FWUPD_RESULT_KEY_NAME));
+	}
 	if (json_object_has_member(src, FWUPD_RESULT_KEY_FLAGS) == TRUE) {
 		array_items = json_object_get_array_member(src, FWUPD_RESULT_KEY_FLAGS);
 		fu_security_attr_dup_json_array_to_builder(builder,
@@ -479,8 +487,10 @@ fu_security_attr_deep_object_compare(FwupdSecurityAttr *current_attr,
 		json_builder_set_member_name(result_builder, FWUPD_RESULT_KEY_FLAGS);
 		json_builder_begin_array(result_builder);
 		for (guint i = 0; i < flag_array->len; i++) {
-			json_builder_add_string_value(result_builder,
-						      g_strdup(g_ptr_array_index(flag_array, i)));
+			json_builder_add_string_value(
+			    result_builder,
+			    // g_strdup(g_ptr_array_index(flag_array, i)));
+			    g_ptr_array_index(flag_array, i));
 		}
 		json_builder_end_array(result_builder);
 	}
@@ -508,6 +518,7 @@ gchar *
 fu_security_attrs_hsi_change(FuSecurityAttrs *attrs, const gchar *last_hsi_detail)
 {
 	g_autofree gchar *data = NULL;
+	g_autofree gchar *json_null = NULL;
 	g_autoptr(JsonParser) parser = json_parser_new();
 	g_autoptr(JsonGenerator) json_generator = NULL;
 	g_autoptr(JsonBuilder) result_builder = json_builder_new();
@@ -520,14 +531,18 @@ fu_security_attrs_hsi_change(FuSecurityAttrs *attrs, const gchar *last_hsi_detai
 	JsonObject *json_obj = NULL;
 	JsonObject *previous_security_attrs = NULL;
 
-	json_parser_load_from_data(parser, last_hsi_detail, -1, NULL);
+	if (last_hsi_detail == NULL) {
+		json_null = g_strdup("{\"SecurityAttributes\":{}}");
+		json_parser_load_from_data(parser, json_null, -1, NULL);
+	} else
+		json_parser_load_from_data(parser, last_hsi_detail, -1, NULL);
 	json_root = json_parser_get_root(parser);
 	json_obj = json_node_get_object(json_root);
 	previous_security_attrs = json_object_get_object_member(json_obj, "SecurityAttributes");
 
 	member_list = json_object_get_members(previous_security_attrs);
 	for (GList *tmp = member_list; tmp != NULL; tmp = tmp->next) {
-		g_hash_table_insert(found_list, g_strdup(tmp->data), NULL);
+		g_hash_table_insert(found_list, tmp->data, NULL);
 	}
 
 	items = fu_security_attrs_get_all(attrs);
