@@ -31,6 +31,7 @@
 #define LENGTH_OFFSET		      0x4
 #define COMMAND_OFFSET		      0x0
 #define SYNC_ACK_PAYLOAD_LENGTH	      5
+#define MAX_RETRIES		      5
 
 enum { SHA_256, SHA_512, MD5 };
 
