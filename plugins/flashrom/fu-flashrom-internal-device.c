@@ -195,7 +195,7 @@ fu_flashrom_internal_device_class_init(FuFlashromInternalDeviceClass *klass)
 }
 
 FuDevice *
-fu_flashrom_internal_device_new(void)
+fu_flashrom_internal_device_new(FuContext *ctx)
 {
-	return FU_DEVICE(g_object_new(FU_TYPE_FLASHROM_INTERNAL_DEVICE, NULL));
+	return FU_DEVICE(g_object_new(FU_TYPE_FLASHROM_INTERNAL_DEVICE, "context", ctx, NULL));
 }

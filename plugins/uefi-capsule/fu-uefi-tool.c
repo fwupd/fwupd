@@ -276,8 +276,14 @@ main(int argc, char *argv[])
 		g_autoptr(FuBackend) backend = fu_uefi_backend_new(ctx);
 		g_autoptr(GError) error_local = NULL;
 
+		/* load SMBIOS */
+		if (!fu_context_load_hwinfo(ctx, &error_local)) {
+			g_printerr("failed: %s\n", error_local->message);
+			return EXIT_FAILURE;
+		}
+
 		/* add each device */
-		if (fu_backend_coldplug(backend, &error_local)) {
+		if (!fu_backend_coldplug(backend, &error_local)) {
 			g_printerr("failed: %s\n", error_local->message);
 			return EXIT_FAILURE;
 		}
@@ -391,6 +397,12 @@ main(int argc, char *argv[])
 		g_autoptr(FuUefiDevice) dev = NULL;
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GBytes) fw = NULL;
+
+		/* load SMBIOS */
+		if (!fu_context_load_hwinfo(ctx, &error_local)) {
+			g_printerr("failed: %s\n", error_local->message);
+			return EXIT_FAILURE;
+		}
 
 		/* type is specified, otherwise use default */
 		if (type != NULL) {
