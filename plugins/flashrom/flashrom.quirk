@@ -7,33 +7,33 @@ Plugin = flashrom
 Plugin = flashrom
 VersionFormat = quad
 
-# Star LabTop Mk III (HwId)
+# StarLite Mk II (HwId)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
 Plugin = flashrom
 
-# Star LabTop Mk IV (HwId)
-[baf1d04e-fd16-5e6a-93cc-1c23d171f879]
-Plugin = flashrom
-
-# StarBook Mk V (HwId)
-[85aba599-addd-5985-a2e8-eddb41c61ba3]
-Plugin = flashrom
-
-# Star Lite Mk II (HwId)
-[013b60e5-1023-5bee-8ae5-14cae21377b7]
-Plugin = flashrom
-
-# Star Lite Mk III (HwId)
+# StarLite Mk III (HwId)
 [d5521faa-c50b-5d64-971d-8fd400030c51]
 Plugin = flashrom
 
-# Star LabTop Mk III (coreboot GUID)
+# StarLabTop Mk III (HwId)
+[013b60e5-1023-5bee-8ae5-14cae21377b7]
+Plugin = flashrom
+
+# StarLabTop Mk IV (HwId)
+[baf1d04e-fd16-5e6a-93cc-1c23d171f879]
+Plugin = flashrom
+
+# StarBookMk V (HwId)
+[85aba599-addd-5985-a2e8-eddb41c61ba3]
+Plugin = flashrom
+
+# StarLabTop Mk III (coreboot GUID)
 [d33219e2-b84c-53a8-a624-27af9752dba6]
 Branch = coreboot
 VersionFormat = number
 Flags = reset-cmos
 
-# Star LabTop Mk IV (coreboot GUID)
+# StarLabTop Mk IV (coreboot GUID)
 [0ee5867c-93f0-5fb4-adf1-9d686ea1183a]
 Branch = coreboot
 VersionFormat = number
