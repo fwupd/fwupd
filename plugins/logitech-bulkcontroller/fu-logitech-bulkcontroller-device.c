@@ -234,7 +234,7 @@ fu_logitech_bulkcontroller_device_send_upd_cmd(FuLogitechBulkcontrollerDevice *s
 	/* receiving INIT ACK */
 	fu_byte_array_set_size(buf_ack, MAX_DATA_SIZE);
 
-	/* Extending the bulk transfer timeout value, as android device takes some time to
+	/* extending the bulk transfer timeout value, as android device takes some time to
 	   calculate Hash and respond */
 	if (CMD_END_TRANSFER == cmd)
 		timeout = HASH_TIMEOUT;
@@ -513,7 +513,7 @@ fu_logitech_bulkcontroller_device_get_data(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	/* wait for the TransitionToDeviceModeResponse */
+	/* wait for the GetDeviceInfoResponse */
 	if (!fu_logitech_bulkcontroller_device_recv_sync_cmd(self,
 							     CMD_BUFFER_READ,
 							     device_response,
@@ -588,7 +588,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	/* Sending INIT */
+	/* sending INIT */
 	if (!fu_logitech_bulkcontroller_device_send_upd_cmd(self, CMD_INIT, NULL, error)) {
 		g_prefix_error(error, "error in writing init transfer packet: ");
 		return FALSE;
@@ -715,14 +715,13 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
 	guint32 success = 0;
 	guint32 error_code = 0;
-	GError *error_local = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_logitech_bulkcontroller_device_parent_class)->setup(device, error))
 		return FALSE;
 
 	/*
-	 * Device supports USB_Device mode, Appliance mode and BYOD mode.
+	 * device supports USB_Device mode, Appliance mode and BYOD mode.
 	 * Only USB_Device mode is supported here.
 	 * Ensure it is running in USB_Device mode
 	 * Response has two data: Request succeeded or failed, and error code in case of failure
@@ -783,27 +782,26 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 					COMMAND_OFFSET,
 					&success,
 					G_LITTLE_ENDIAN,
-					&error_local)) {
-		g_prefix_error(error, "failed to retrieve result for transition mode request: ");
+					error))
 		return FALSE;
-	}
 	if (!fu_common_read_uint32_safe(decoded_pkt->data,
 					decoded_pkt->len,
 					LENGTH_OFFSET,
 					&error_code,
 					G_LITTLE_ENDIAN,
-					&error_local)) {
-		g_prefix_error(error,
-			       "failed to retrieve error code for transition mode request: ");
+					error))
 		return FALSE;
-	}
 	g_debug("Received transition mode response. Success: %u, Error: %u", success, error_code);
 	if (!success) {
-		g_prefix_error(error, "transition mode request failed. error: %u", error_code);
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_FAILED,
+			    "transition mode request failed. error: %u",
+			    error_code);
 		return FALSE;
 	}
 
-	/* Load current device data */
+	/* load current device data */
 	if (!fu_logitech_bulkcontroller_device_get_data(device, error))
 		return FALSE;
 
