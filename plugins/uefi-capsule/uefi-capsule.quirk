@@ -1,14 +1,22 @@
-# Star Labs Lite (Mk III)
+# StarLite Mk II
+[797f8bae-0ea2-4c0f-8a30-7d10ccfacbc0]
+Flags = no-ux-capsule,use-shim-unique
+
+# StarLite Mk III
 [d9d7b13b-e4db-4f91-8bf6-8952a9caa82a]
 Flags = no-ux-capsule
 
-# Star Labs LabTop (Mk III)
+# StarLabTop Mk III
 [8265d473-a6c2-42b4-897b-bc220faa2d32]
-Flags = use-shim-unique
+Flags = no-ux-capsule,use-shim-unique
 
-# Star Labs Lite (Mk II)
-[797f8bae-0ea2-4c0f-8a30-7d10ccfacbc0]
-Flags = use-shim-unique,no-ux-capsule
+# StarLabTop Mk IV
+[502bff68-b8db-4b01-86ef-ab65f6502a77]
+Flags = no-ux-capsule
+
+# StarBook Mk V
+[e27d9e98-cbb2-4975-a8f8-261de2adde05]
+Flags = no-ux-capsule
 
 # Silicom Minnowboard Turbot D0/D1 PLATFORM
 [386c2f52-44ec-55d3-b802-47631bfb8451]
