@@ -31,6 +31,7 @@
 #define LENGTH_OFFSET		      0x4
 #define COMMAND_OFFSET		      0x0
 #define SYNC_ACK_PAYLOAD_LENGTH	      5
+#define MAX_RETRIES		      5
 
 enum { SHA_256, SHA_512, MD5 };
 
@@ -566,6 +567,15 @@ fu_logitech_bulkcontroller_device_get_data(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_logitech_bulkcontroller_device_send_upd_init_cmd_cb(FuDevice *device,
+						       gpointer user_data,
+						       GError **error)
+{
+	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+	return fu_logitech_bulkcontroller_device_send_upd_cmd(self, CMD_INIT, NULL, error);
+}
+
+static gboolean
 fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 						 FuFirmware *firmware,
 						 FuProgress *progress,
@@ -591,9 +601,14 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	/* sending INIT */
-	if (!fu_logitech_bulkcontroller_device_send_upd_cmd(self, CMD_INIT, NULL, error)) {
-		g_prefix_error(error, "failed to write init transfer packet: ");
+	/* sending INIT. Retry if device is not in IDLE state to receive the file */
+	if (!fu_device_retry(device,
+			     fu_logitech_bulkcontroller_device_send_upd_init_cmd_cb,
+			     MAX_RETRIES,
+			     NULL,
+			     error)) {
+		g_prefix_error(error,
+			       "failed to write init transfer packet: please reboot the device: ");
 		return FALSE;
 	}
 
@@ -832,6 +847,7 @@ fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.vc.proto");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 }
 
 static void
