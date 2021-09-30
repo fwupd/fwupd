@@ -546,10 +546,11 @@ fu_logitech_bulkcontroller_device_get_data(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to unpack packet for device info request: ");
 		return FALSE;
 	}
-	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL)
-		g_debug("Received device response. data: %s, length: %u",
-			(const gchar *)decoded_pkt->data,
-			decoded_pkt->len);
+	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
+		g_autofree gchar *strsafe =
+		    fu_common_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+		g_debug("Received device response: %s", strsafe);
+	}
 	if (proto_id != kProtoId_GetDeviceInfoResponse) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
