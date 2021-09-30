@@ -15,7 +15,14 @@
 
 #include "fu-flashrom-internal-device.h"
 
+#define BCR_WPD	       (1 << 0)
+#define BCR_BLE	       (1 << 1)
 #define SELFCHECK_TRUE 1
+
+struct FuPluginData {
+	guint8 bcr_addr;
+	guint8 bcr;
+};
 
 void
 fu_plugin_init(FuPlugin *plugin)
@@ -147,6 +154,8 @@ gboolean
 fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 	const gchar *dmi_vendor;
 	g_autoptr(FuDevice) device = fu_flashrom_internal_device_new(ctx);
 
@@ -165,6 +174,10 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	fu_plugin_flashrom_device_set_bios_info(plugin, device);
 	fu_flashrom_device_set_programmer_name(FU_FLASHROM_DEVICE(device), "internal");
 	if (!fu_device_setup(device, error))
+		return FALSE;
+	/* Disable flashrom if BLE is enabled so that uefi-capsule is used */
+	if ((g_strcmp0(dmi_vendor, "American Megatrends Inc.") == 0) &&
+	    ((priv->bcr & BCR_WPD) == 0 && (priv->bcr & BCR_BLE) > 0))
 		return FALSE;
 
 	/* success */

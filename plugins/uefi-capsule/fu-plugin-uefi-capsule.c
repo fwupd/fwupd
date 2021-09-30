@@ -19,10 +19,15 @@
 #include "fu-uefi-common.h"
 #include "fu-uefi-grub-device.h"
 
+#define BCR_WPD (1 << 0)
+#define BCR_BLE (1 << 1)
+
 struct FuPluginData {
 	FuUefiBgrt *bgrt;
 	FuVolume *esp;
 	FuBackend *backend;
+	guint8 bcr_addr;
+	guint8 bcr;
 };
 
 void
@@ -712,6 +717,8 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_get_data(plugin);
+	FuPluginData *priv = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
+	const gchar *dmi_vendor;
 	const gchar *str;
 	g_autoptr(GError) error_udisks2 = NULL;
 	g_autoptr(GError) error_local = NULL;
@@ -760,6 +767,11 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 				 "notify::update-state",
 				 G_CALLBACK(fu_plugin_uefi_update_state_notify_cb),
 				 plugin);
+		/* Disable uefi-capsule if BLE is disabled so that flashrom is used */
+		dmi_vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_BIOS_VENDOR);
+		if ((g_strcmp0(dmi_vendor, "American Megatrends Inc.") == 0) &&
+		    ((priv->bcr & BCR_WPD) > 0 && (priv->bcr & BCR_BLE) == 0))
+			return FALSE;
 
 		fu_plugin_device_add(plugin, FU_DEVICE(dev));
 	}
