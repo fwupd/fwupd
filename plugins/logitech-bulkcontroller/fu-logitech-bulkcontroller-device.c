@@ -234,7 +234,7 @@ fu_logitech_bulkcontroller_device_send_upd_cmd(FuLogitechBulkcontrollerDevice *s
 	/* receiving INIT ACK */
 	fu_byte_array_set_size(buf_ack, MAX_DATA_SIZE);
 
-	/* Extending the bulk transfer timeout value, as android device takes some time to
+	/* extending the bulk transfer timeout value, as android device takes some time to
 	   calculate Hash and respond */
 	if (CMD_END_TRANSFER == cmd)
 		timeout = HASH_TIMEOUT;
@@ -424,6 +424,148 @@ fu_logitech_bulkcontroller_device_compute_hash(GBytes *data)
 }
 
 static gboolean
+fu_logitech_bulkcontroller_device_json_parser(FuDevice *device,
+					      GByteArray *decoded_pkt,
+					      GError **error)
+{
+	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+	JsonArray *json_devices;
+	JsonNode *json_root;
+	JsonObject *json_device;
+	JsonObject *json_object;
+	JsonObject *json_payload;
+	g_autoptr(JsonParser) json_parser = json_parser_new();
+
+	/* parse JSON reply */
+	if (!json_parser_load_from_data(json_parser,
+					(const gchar *)decoded_pkt->data,
+					decoded_pkt->len,
+					error)) {
+		g_prefix_error(error, "failed to parse json data: ");
+		return FALSE;
+	}
+	json_root = json_parser_get_root(json_parser);
+	if (json_root == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "did not get JSON root");
+		return FALSE;
+	}
+	json_object = json_node_get_object(json_root);
+	json_payload = json_object_get_object_member(json_object, "payload");
+	if (json_payload == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "did not get JSON payload");
+		return FALSE;
+	}
+	json_devices = json_object_get_array_member(json_payload, "devices");
+	if (json_devices == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "did not get JSON devices");
+		return FALSE;
+	}
+	json_device = json_array_get_object_element(json_devices, 0);
+	if (json_device == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "did not get JSON device");
+		return FALSE;
+	}
+	if (json_object_has_member(json_device, "name"))
+		fu_device_set_name(device, json_object_get_string_member(json_device, "name"));
+	if (json_object_has_member(json_device, "sw"))
+		fu_device_set_version(device, json_object_get_string_member(json_device, "sw"));
+	if (json_object_has_member(json_device, "type"))
+		fu_device_add_instance_id(device,
+					  json_object_get_string_member(json_device, "type"));
+	if (json_object_has_member(json_device, "status"))
+		self->status = json_object_get_int_member(json_device, "status");
+	if (json_object_has_member(json_device, "updateStatus"))
+		self->update_status = json_object_get_int_member(json_device, "updateStatus");
+
+	return TRUE;
+}
+
+static gboolean
+fu_logitech_bulkcontroller_device_get_data(FuDevice *device, GError **error)
+{
+	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+	g_autoptr(GByteArray) device_request = g_byte_array_new();
+	g_autoptr(GByteArray) decoded_pkt = g_byte_array_new();
+	g_autoptr(GByteArray) device_response = g_byte_array_new();
+	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
+
+	/* sending GetDeviceInfoRequest. Device reports quite a few matrix, including status,
+	 * progress etc */
+	device_request = proto_manager_generate_get_device_info_request();
+	if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
+							     CMD_BUFFER_WRITE,
+							     device_request,
+							     error)) {
+		g_prefix_error(error,
+			       "failed to send write buffer packet for device info request: ");
+		return FALSE;
+	}
+
+	/* wait for the GetDeviceInfoResponse */
+	if (!fu_logitech_bulkcontroller_device_recv_sync_cmd(self,
+							     CMD_BUFFER_READ,
+							     device_response,
+							     error)) {
+		g_prefix_error(error, "failed to read buffer packet for device info request: ");
+		return FALSE;
+	}
+	if (!fu_logitech_bulkcontroller_device_recv_sync_cmd(self,
+							     CMD_UNINIT_BUFFER,
+							     NULL,
+							     error)) {
+		g_prefix_error(error,
+			       "failed to read uninit buffer packet for device info request: ");
+		return FALSE;
+	}
+	if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
+							     CMD_UNINIT_BUFFER,
+							     NULL,
+							     error)) {
+		g_prefix_error(
+		    error,
+		    "failed to send buffer uninitialize packet for device info request: ");
+		return FALSE;
+	}
+	decoded_pkt = proto_manager_decode_message(device_response->data,
+						   device_response->len,
+						   &proto_id,
+						   error);
+	if (decoded_pkt == NULL) {
+		g_prefix_error(error, "failed to unpack packet for device info request: ");
+		return FALSE;
+	}
+	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
+		g_autofree gchar *strsafe =
+		    fu_common_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+		g_debug("Received device response: %s", strsafe);
+	}
+	if (proto_id != kProtoId_GetDeviceInfoResponse) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "incorrect response for device info request");
+		return FALSE;
+	}
+	if (!fu_logitech_bulkcontroller_device_json_parser(device, decoded_pkt, error))
+		return FALSE;
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 						 FuFirmware *firmware,
 						 FuProgress *progress,
@@ -449,9 +591,9 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	/* Sending INIT */
+	/* sending INIT */
 	if (!fu_logitech_bulkcontroller_device_send_upd_cmd(self, CMD_INIT, NULL, error)) {
-		g_prefix_error(error, "error in writing init transfer packet: ");
+		g_prefix_error(error, "failed to write init transfer packet: ");
 		return FALSE;
 	}
 
@@ -461,7 +603,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 							    CMD_START_TRANSFER,
 							    start_pkt,
 							    error)) {
-		g_prefix_error(error, "error in writing start transfer packet: ");
+		g_prefix_error(error, "failed to write start transfer packet: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -495,13 +637,13 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 							    CMD_END_TRANSFER,
 							    end_pkt,
 							    error)) {
-		g_prefix_error(error, "error in writing end transfer transfer packet: ");
+		g_prefix_error(error, "failed to write end transfer transfer packet: ");
 		return FALSE;
 	}
 
 	/* send uninit */
 	if (!fu_logitech_bulkcontroller_device_send_upd_cmd(self, CMD_UNINIT, NULL, error)) {
-		g_prefix_error(error, "error in writing finish transfer packet: ");
+		g_prefix_error(error, "failed to write finish transfer packet: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -567,103 +709,42 @@ fu_logitech_bulkcontroller_device_close(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_logitech_bulkcontroller_device_json_parser(FuDevice *device,
-					      GByteArray *decoded_pkt,
-					      GError **error)
-{
-	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
-	JsonArray *json_devices;
-	JsonNode *json_root;
-	JsonObject *json_device;
-	JsonObject *json_object;
-	JsonObject *json_payload;
-	g_autoptr(JsonParser) json_parser = json_parser_new();
-
-	/* parse JSON reply */
-	if (!json_parser_load_from_data(json_parser,
-					(const gchar *)decoded_pkt->data,
-					decoded_pkt->len,
-					error)) {
-		g_prefix_error(error, "error in parsing json data: ");
-		return FALSE;
-	}
-	json_root = json_parser_get_root(json_parser);
-	if (json_root == NULL) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "did not get JSON root");
-		return FALSE;
-	}
-	json_object = json_node_get_object(json_root);
-	json_payload = json_object_get_object_member(json_object, "payload");
-	if (json_payload == NULL) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "did not get JSON payload");
-		return FALSE;
-	}
-	json_devices = json_object_get_array_member(json_payload, "devices");
-	if (json_devices == NULL) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "did not get JSON devices");
-		return FALSE;
-	}
-	json_device = json_array_get_object_element(json_devices, 0);
-	if (json_device == NULL) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "did not get JSON device");
-		return FALSE;
-	}
-	if (json_object_has_member(json_device, "name"))
-		fu_device_set_name(device, json_object_get_string_member(json_device, "name"));
-	if (json_object_has_member(json_device, "sw"))
-		fu_device_set_version(device, json_object_get_string_member(json_device, "sw"));
-	if (json_object_has_member(json_device, "type"))
-		fu_device_add_instance_id(device,
-					  json_object_get_string_member(json_device, "type"));
-	if (json_object_has_member(json_device, "status"))
-		self->status = json_object_get_int_member(json_device, "status");
-	if (json_object_has_member(json_device, "updateStatus"))
-		self->update_status = json_object_get_int_member(json_device, "updateStatus");
-
-	return TRUE;
-}
-
-static gboolean
 fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
-	g_autoptr(GByteArray) device_info_request = g_byte_array_new();
+	g_autoptr(GByteArray) device_request = g_byte_array_new();
 	g_autoptr(GByteArray) decoded_pkt = g_byte_array_new();
-	g_autoptr(GByteArray) device_info_response = g_byte_array_new();
+	g_autoptr(GByteArray) device_response = g_byte_array_new();
 	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
+	guint32 success = 0;
+	guint32 error_code = 0;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_logitech_bulkcontroller_device_parent_class)->setup(device, error))
 		return FALSE;
 
-	/* sending GetDeviceInfoRequest */
-	device_info_request = proto_manager_generate_get_device_info_request();
+	/*
+	 * device supports USB_Device mode, Appliance mode and BYOD mode.
+	 * Only USB_Device mode is supported here.
+	 * Ensure it is running in USB_Device mode
+	 * Response has two data: Request succeeded or failed, and error code in case of failure
+	 */
+	device_request = proto_manager_generate_transition_to_device_mode_request();
 	if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
 							     CMD_BUFFER_WRITE,
-							     device_info_request,
+							     device_request,
 							     error)) {
-		g_prefix_error(error, "error in sending buffer write packet: ");
+		g_prefix_error(error,
+			       "failed to send buffer write packet for transition mode request: ");
 		return FALSE;
 	}
 
-	/* wait for the GetDeviceInfoResponse */
+	/* wait for the TransitionToDeviceModeResponse */
 	if (!fu_logitech_bulkcontroller_device_recv_sync_cmd(self,
 							     CMD_BUFFER_READ,
-							     device_info_response,
+							     device_response,
 							     error)) {
-		g_prefix_error(error, "error in buffer read packet: ");
+		g_prefix_error(error, "failed to read buffer packet for transition mode request: ");
 		return FALSE;
 	}
 
@@ -671,32 +752,63 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 							     CMD_UNINIT_BUFFER,
 							     NULL,
 							     error)) {
-		g_prefix_error(error, "error in buffer read packet: ");
+		g_prefix_error(error,
+			       "failed to read uninit buffer packet for transition mode request: ");
 		return FALSE;
 	}
 	if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
 							     CMD_UNINIT_BUFFER,
 							     NULL,
 							     error)) {
-		g_prefix_error(error, "error in sending buffer uninitialize packet: ");
+		g_prefix_error(
+		    error,
+		    "failed to send buffer uninitialize packet for transition mode request: ");
 		return FALSE;
 	}
-	decoded_pkt = proto_manager_decode_message(device_info_response->data,
-						   device_info_response->len,
+	decoded_pkt = proto_manager_decode_message(device_response->data,
+						   device_response->len,
 						   &proto_id,
 						   error);
 	if (decoded_pkt == NULL) {
-		g_prefix_error(error, "error in unpacking packet: ");
+		g_prefix_error(error, "failed to unpack packet for transition mode request: ");
 		return FALSE;
 	}
-	if (proto_id != kProtoId_GetDeviceInfoResponse) {
+	if (proto_id != kProtoId_TransitionToDeviceModeResponse) {
 		g_set_error_literal(error,
 				    G_IO_ERROR,
 				    G_IO_ERROR_INVALID_DATA,
-				    "did not get kProtoId_GetDeviceInfoResponse");
+				    "incorrect response for transition mode request");
 		return FALSE;
 	}
-	if (!fu_logitech_bulkcontroller_device_json_parser(device, decoded_pkt, error))
+	if (!fu_common_read_uint32_safe(decoded_pkt->data,
+					decoded_pkt->len,
+					COMMAND_OFFSET,
+					&success,
+					G_LITTLE_ENDIAN,
+					error))
+		return FALSE;
+	if (!fu_common_read_uint32_safe(decoded_pkt->data,
+					decoded_pkt->len,
+					LENGTH_OFFSET,
+					&error_code,
+					G_LITTLE_ENDIAN,
+					error))
+		return FALSE;
+	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL)
+		g_debug("Received transition mode response. Success: %u, Error: %u",
+			success,
+			error_code);
+	if (!success) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_FAILED,
+			    "transition mode request failed. error: %u",
+			    error_code);
+		return FALSE;
+	}
+
+	/* load current device data */
+	if (!fu_logitech_bulkcontroller_device_get_data(device, error))
 		return FALSE;
 
 	/* success */

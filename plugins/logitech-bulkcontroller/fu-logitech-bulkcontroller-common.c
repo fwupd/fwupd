@@ -31,11 +31,10 @@ proto_manager_generate_get_device_info_request(void)
 	Logi__Device__Proto__Header header_msg = LOGI__DEVICE__PROTO__HEADER__INIT;
 	Logi__Device__Proto__GetDeviceInfoRequest get_deviceinfo_msg =
 	    LOGI__DEVICE__PROTO__GET_DEVICE_INFO_REQUEST__INIT;
-	Logi__Device__Proto__Request request_msg = {
-	    PROTOBUF_C_MESSAGE_INIT(&logi__device__proto__request__descriptor),
-	    LOGI__DEVICE__PROTO__REQUEST__PAYLOAD_GET_DEVICE_INFO_REQUEST,
-	    {&get_deviceinfo_msg}};
 	Logi__Device__Proto__UsbMsg usb_msg = LOGI__DEVICE__PROTO__USB_MSG__INIT;
+	Logi__Device__Proto__Request request_msg = LOGI__DEVICE__PROTO__REQUEST__INIT;
+	request_msg.payload_case = LOGI__DEVICE__PROTO__REQUEST__PAYLOAD_GET_DEVICE_INFO_REQUEST;
+	request_msg.get_device_info_request = &get_deviceinfo_msg;
 
 	proto_manager_set_header(&header_msg);
 	usb_msg.header = &header_msg;
@@ -54,11 +53,11 @@ proto_manager_generate_transition_to_device_mode_request(void)
 	Logi__Device__Proto__Header header_msg = LOGI__DEVICE__PROTO__HEADER__INIT;
 	Logi__Device__Proto__TransitionToDeviceModeRequest transition_to_device_mode_msg =
 	    LOGI__DEVICE__PROTO__TRANSITION_TO_DEVICE_MODE_REQUEST__INIT;
-	Logi__Device__Proto__Request request_msg = {
-	    PROTOBUF_C_MESSAGE_INIT(&logi__device__proto__request__descriptor),
-	    LOGI__DEVICE__PROTO__REQUEST__PAYLOAD_TRANSITION_TO_DEVICEMODE_REQUEST,
-	    {(Logi__Device__Proto__GetDeviceInfoRequest *)&transition_to_device_mode_msg}};
 	Logi__Device__Proto__UsbMsg usb_msg = LOGI__DEVICE__PROTO__USB_MSG__INIT;
+	Logi__Device__Proto__Request request_msg = LOGI__DEVICE__PROTO__REQUEST__INIT;
+	request_msg.payload_case =
+	    LOGI__DEVICE__PROTO__REQUEST__PAYLOAD_TRANSITION_TO_DEVICEMODE_REQUEST;
+	request_msg.transition_to_devicemode_request = &transition_to_device_mode_msg;
 
 	proto_manager_set_header(&header_msg);
 	usb_msg.header = &header_msg;
@@ -77,7 +76,8 @@ proto_manager_decode_message(const guint8 *data,
 			     GError **error)
 {
 	g_autoptr(GByteArray) buf_decoded = g_byte_array_new();
-
+	guint32 success = 0;
+	guint32 error_code = 0;
 	Logi__Device__Proto__UsbMsg *usb_msg =
 	    logi__device__proto__usb_msg__unpack(NULL, len, (const unsigned char *)data);
 	if (usb_msg == NULL) {
@@ -115,9 +115,16 @@ proto_manager_decode_message(const guint8 *data,
 		case LOGI__DEVICE__PROTO__RESPONSE__PAYLOAD_TRANSITION_TO_DEVICEMODE_RESPONSE:
 			if (usb_msg->response->transition_to_devicemode_response) {
 				*proto_id = kProtoId_TransitionToDeviceModeResponse;
-				fu_byte_array_append_uint8(
-				    buf_decoded,
-				    usb_msg->response->transition_to_devicemode_response->success);
+				success =
+				    usb_msg->response->transition_to_devicemode_response->success
+					? 1
+					: 0;
+				error_code =
+				    usb_msg->response->transition_to_devicemode_response->error;
+				fu_byte_array_append_uint32(buf_decoded, success, G_LITTLE_ENDIAN);
+				fu_byte_array_append_uint32(buf_decoded,
+							    error_code,
+							    G_LITTLE_ENDIAN);
 			}
 			break;
 		default:
