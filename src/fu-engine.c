@@ -5962,19 +5962,24 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	g_free(self->host_security_id);
 	self->host_security_id = fu_engine_attrs_calculate_hsi_for_chassis(self, &hsi_number);
 
-	if (fu_history_get_last_hsi_details(self->history,
-					    &previous_hsi,
-					    &last_json_attr,
-					    &error)) {
+	if (!fu_history_get_last_hsi_details(self->history,
+					     &previous_hsi,
+					     &last_json_attr,
+					     &error)) {
+		g_warning("Error on reading HSI history: %s", error->message);
+		g_clear_error(&error);
+	} else {
 		if (previous_hsi != G_MAXUINT) {
-			if (fu_security_attrs_compare_hsi_score(previous_hsi, hsi_number))
+			if (fu_security_attrs_compare_hsi_score(previous_hsi, hsi_number)) {
+				g_warning("The current HSI number (%u) is different from the "
+					  "previous one (%u)",
+					  hsi_number,
+					  previous_hsi);
 				diff_result =
 				    fu_security_attrs_hsi_change(self->host_security_attrs,
 								 last_json_attr);
+			}
 		}
-	} else {
-		g_warning("Error on reading HSI history: %s", error->message);
-		g_clear_error(&error);
 	}
 
 	data = fu_security_attrs_to_json_string(self->host_security_attrs, &error);

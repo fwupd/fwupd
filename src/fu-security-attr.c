@@ -514,11 +514,62 @@ fu_security_attr_append_remove_to_result(JsonObject *previous_json_obj, JsonBuil
 	json_builder_end_object(result_builder);
 }
 
+/**
+ * fu_security_attrs_hsi_change:
+ *
+ * Compare the current and previous HSI number and security attributes.
+ * It returns the difference between current and previous security attributes in JSON format.
+ * The format is shown as follows. (new, removed, and difference)
+ *    {
+ *        "org.fwupd.hsi.test.Newstring0001":{
+ *            "new":{
+ *                "HsiLevel":5,
+ *                "HsiResult":"not-supported",
+ *                "Name":"test1"
+ *            }
+ *        },
+ *        "org.fwupd.hsi. test.string0004":{
+ *            "removed":{
+ *                "HsiLevel":0,
+ *                "HsiResult":"not-supported",
+ *                "Name":"test4",
+ *                "Flags":[
+ *                    "success",
+ *                    "runtime-updates"
+ *                ]
+ *            }
+ *        }
+ *        "org.fwupd.hsi.test.string0002":{
+ *            "previous":{
+ *                "HsiLevel":0,
+ *                "HsiResult":"not-supported",
+ *                "Name":"test2",
+ *                "Flags":[
+ *                    "obsoleted"
+ *                ]
+ *            },
+ *            "current":{
+ *                "HsiLevel":2,
+ *                "HsiResult":"not-supported",
+ *                "Name":"test2",
+ *                "Flags":[
+ *                    "obsoleted"
+ *                ]
+ *            }
+ *        },
+ *    }
+ * @attrs: current discovered security attributes.
+ * @previous_hsi_detail: previous security attributes read from history.
+ *
+ * Returns: JSON string.
+ *
+ * Since: 1.7.0
+ *
+ */
 gchar *
-fu_security_attrs_hsi_change(FuSecurityAttrs *attrs, const gchar *last_hsi_detail)
+fu_security_attrs_hsi_change(FuSecurityAttrs *attrs, const gchar *previous_hsi_detail)
 {
 	g_autofree gchar *data = NULL;
-	g_autofree gchar *json_null = NULL;
 	g_autoptr(JsonParser) parser = json_parser_new();
 	g_autoptr(JsonGenerator) json_generator = NULL;
 	g_autoptr(JsonBuilder) result_builder = json_builder_new();
@@ -531,42 +582,42 @@ fu_security_attrs_hsi_change(FuSecurityAttrs *attrs, const gchar *last_hsi_detai
 	JsonObject *json_obj = NULL;
 	JsonObject *previous_security_attrs = NULL;
 
-	if (last_hsi_detail == NULL) {
-		json_null = g_strdup("{\"SecurityAttributes\":{}}");
-		json_parser_load_from_data(parser, json_null, -1, NULL);
-	} else
-		json_parser_load_from_data(parser, last_hsi_detail, -1, NULL);
-	json_root = json_parser_get_root(parser);
-	json_obj = json_node_get_object(json_root);
-	previous_security_attrs = json_object_get_object_member(json_obj, "SecurityAttributes");
-
-	member_list = json_object_get_members(previous_security_attrs);
-	for (GList *tmp = member_list; tmp != NULL; tmp = tmp->next) {
-		g_hash_table_insert(found_list, tmp->data, NULL);
-	}
-
-	items = fu_security_attrs_get_all(attrs);
 	json_builder_begin_object(result_builder);
-	for (guint i = 0; i < items->len; i++) {
-		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
-		if (json_object_has_member(previous_security_attrs,
-					   fwupd_security_attr_get_appstream_id(attr)) == TRUE) {
-			/* hit */
-			g_hash_table_remove(found_list, fwupd_security_attr_get_appstream_id(attr));
-			fu_security_attr_deep_object_compare(
-			    attr,
-			    json_object_get_object_member(
-				previous_security_attrs,
-				fwupd_security_attr_get_appstream_id(attr)),
-			    result_builder);
-		} else {
-			/* miss- a new AppStreamId */
-			fu_security_attr_deep_object_compare(attr, NULL, result_builder);
+	items = fu_security_attrs_get_all(attrs);
+	if (previous_hsi_detail == NULL) {
+		for (guint x = 0; x < items->len; x++) {
+			FwupdSecurityAttr *new_attr = g_ptr_array_index(items, x);
+			fu_security_attr_deep_object_compare(new_attr, NULL, result_builder);
 		}
-	}
-	removed_keys = g_hash_table_get_keys(found_list);
-	if (removed_keys != NULL) {
-		/* removed from current */
+	} else {
+		json_parser_load_from_data(parser, previous_hsi_detail, -1, NULL);
+		json_root = json_parser_get_root(parser);
+		json_obj = json_node_get_object(json_root);
+		previous_security_attrs =
+		    json_object_get_object_member(json_obj, "SecurityAttributes");
+		member_list = json_object_get_members(previous_security_attrs);
+		for (GList *tmp = member_list; tmp != NULL; tmp = tmp->next) {
+			g_hash_table_insert(found_list, tmp->data, NULL);
+		}
+		for (guint i = 0; i < items->len; i++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
+			if (json_object_has_member(previous_security_attrs,
+						   fwupd_security_attr_get_appstream_id(attr))) {
+				/* hit */
+				g_hash_table_remove(found_list,
+						    fwupd_security_attr_get_appstream_id(attr));
+				fu_security_attr_deep_object_compare(
+				    attr,
+				    json_object_get_object_member(
+					previous_security_attrs,
+					fwupd_security_attr_get_appstream_id(attr)),
+				    result_builder);
+			} else {
+				/* miss- a new AppStreamId */
+				fu_security_attr_deep_object_compare(attr, NULL, result_builder);
+			}
+		}
+		removed_keys = g_hash_table_get_keys(found_list);
 		for (GList *tmp_remove = removed_keys; tmp_remove != NULL;
 		     tmp_remove = tmp_remove->next) {
 			fu_security_attr_append_remove_to_result(
