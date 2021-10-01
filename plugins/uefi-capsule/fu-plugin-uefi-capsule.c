@@ -203,8 +203,12 @@ fu_plugin_uefi_capsule_write_splash_data(FuPlugin *plugin,
 	header.image_type = 0;
 	header.reserved = 0;
 	header.x_offset = (screen_x / 2) - (width / 2);
-	header.y_offset =
-	    fu_uefi_bgrt_get_yoffset(data->bgrt) + fu_uefi_bgrt_get_height(data->bgrt);
+	if (screen_y == fu_uefi_bgrt_get_height(data->bgrt)) {
+		header.y_offset = (gdouble)screen_y * 0.8f;
+	} else {
+		header.y_offset =
+		    fu_uefi_bgrt_get_yoffset(data->bgrt) + fu_uefi_bgrt_get_height(data->bgrt);
+	};
 
 	/* header, payload and image has to add to zero */
 	csum +=
