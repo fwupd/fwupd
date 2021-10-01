@@ -125,15 +125,6 @@ fu_flashrom_internal_device_write_firmware(FuDevice *device,
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 10);
 
-	/* Check if CMOS needs a reset */
-	if (fu_device_has_private_flag(device, FU_FLASHROM_DEVICE_FLAG_RESET_CMOS)) {
-		g_debug("Attempting CMOS Reset");
-		if (!fu_flashrom_cmos_reset(error)) {
-			g_prefix_error(error, "failed CMOS reset: ");
-			return FALSE;
-		}
-	}
-
 	buf = g_bytes_get_data(blob_fw, &sz);
 
 	if (flashrom_layout_read_from_ifd(&layout, flashctx, NULL, 0)) {
@@ -181,6 +172,15 @@ fu_flashrom_internal_device_write_firmware(FuDevice *device,
 	}
 	fu_progress_step_done(progress);
 	flashrom_layout_release(layout);
+
+	/* Check if CMOS needs a reset */
+	if (fu_device_has_private_flag(device, FU_FLASHROM_DEVICE_FLAG_RESET_CMOS)) {
+		g_debug("Attempting CMOS Reset");
+		if (!fu_flashrom_cmos_reset(error)) {
+			g_prefix_error(error, "failed CMOS reset: ");
+			return FALSE;
+		}
+	}
 
 	/* success */
 	return TRUE;
