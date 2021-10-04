@@ -1,0 +1,50 @@
+/*
+ * Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+#include "config.h"
+
+#include "fu-lenovo-dock-dmc-device.h"
+
+struct _FuLenovoDockDmcDevice {
+	FuUsbDevice parent_instance;
+};
+
+G_DEFINE_TYPE(FuLenovoDockDmcDevice, fu_lenovo_dock_dmc_device, FU_TYPE_USB_DEVICE)
+
+static void
+fu_lenovo_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+{
+	FuDevice *parent = fu_device_get_parent(device);
+	if (parent != NULL) {
+		g_autofree gchar *instance_id = NULL;
+
+		/* slightly odd: the MCU device uses the DMC version number */
+		g_debug("absorbing DMC version into MCU");
+		fu_device_set_version_format(parent, fu_device_get_version_format(device));
+		fu_device_set_version(parent, fu_device_get_version(device));
+
+		/* allow matching firmware */
+		instance_id = g_strdup_printf("USB\\VID_%04X&PID_%04X&CID_%s",
+					      fu_usb_device_get_vid(FU_USB_DEVICE(parent)),
+					      fu_usb_device_get_pid(FU_USB_DEVICE(parent)),
+					      fu_device_get_name(device));
+		fu_device_add_instance_id(parent, instance_id);
+	}
+}
+
+static void
+fu_lenovo_dock_dmc_device_init(FuLenovoDockDmcDevice *self)
+{
+	g_signal_connect(self,
+			 "notify::parent",
+			 G_CALLBACK(fu_lenovo_dock_dmc_device_parent_notify_cb),
+			 NULL);
+}
+
+static void
+fu_lenovo_dock_dmc_device_class_init(FuLenovoDockDmcDeviceClass *klass)
+{
+}

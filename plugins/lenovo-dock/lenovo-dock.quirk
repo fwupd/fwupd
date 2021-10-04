@@ -1,0 +1,8 @@
+[USB\VID_17EF&PID_30B4]
+Plugin = lenovo_dock
+GType = FuLenovoDockMcuDevice
+
+[USB\VID_17EF&PID_30B5]
+Plugin = lenovo_dock
+GType = FuLenovoDockDmcDevice
+ParentGuid = USB\VID_17EF&PID_30B4
