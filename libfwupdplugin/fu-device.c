@@ -1034,6 +1034,7 @@ fu_device_set_parent(FuDevice *self, FuDevice *parent)
 	}
 
 	fwupd_device_set_parent(FWUPD_DEVICE(self), FWUPD_DEVICE(parent));
+	g_object_notify(G_OBJECT(self), "parent");
 }
 
 /**
