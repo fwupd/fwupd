@@ -31,7 +31,6 @@ complete -c fwupdmgr -l show-all -d 'Show all results'
 complete -c fwupdmgr -l disable-ssl-strict -d 'Ignore SSL strict checks when downloading'
 complete -c fwupdmgr -l ipfs -d 'Use IPFS when downloading files'
 complete -c fwupdmgr -l filter -d 'Filter with a set of device flags'
-complete -c fwupdmgr -l ignore-power -d 'Ignore requirement of external power source'
 
 # complete subcommands
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a activate -d 'Activate devices'
