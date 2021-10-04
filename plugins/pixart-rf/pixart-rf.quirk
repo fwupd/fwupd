@@ -83,7 +83,7 @@ GType = FuPxiBleDevice
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 
-# j5 Wireless Keybaord
+# j5 Wireless Keyboard
 [HIDRAW\VEN_2DE5&DEV_2051]
 Plugin = pixart_rf
 GType = FuPxiBleDevice
