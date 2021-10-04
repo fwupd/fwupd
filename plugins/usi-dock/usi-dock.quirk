@@ -1,0 +1,15 @@
+[USB\VID_17EF&PID_30B4]
+Plugin = usi_dock
+GType = FuUsiDockMcuDevice
+Name = ThinkPad Thunderbolt 4 Dock
+
+[USB\VID_17EF&PID_30B5]
+Plugin = usi_dock
+GType = FuUsiDockDmcDevice
+ParentGuid = USB\VID_17EF&PID_30B4
+
+[USB\VID_03F0&PID_0505]
+Plugin = usi_dock
+GType = FuUsiDockMcuDevice
+Name = USB-C G2 Multiport Hub MCU Controller
+Flags = verfmt-hp
