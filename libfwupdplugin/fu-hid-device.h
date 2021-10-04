@@ -26,6 +26,7 @@ struct _FuHidDeviceClass {
  * @FU_HID_DEVICE_FLAG_RETRY_FAILURE:		Retry up to 10 times on failure
  * @FU_HID_DEVICE_FLAG_NO_KERNEL_UNBIND:	Do not unbind the kernel driver on open
  * @FU_HID_DEVICE_FLAG_NO_KERNEL_REBIND:	Do not rebind the kernel driver on close
+ * @FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER:	Use interrupt transfers, not control transfers
  *
  * Flags used when calling fu_hid_device_get_report() and fu_hid_device_set_report().
  **/
@@ -36,6 +37,7 @@ typedef enum {
 	FU_HID_DEVICE_FLAG_RETRY_FAILURE = 1 << 2,
 	FU_HID_DEVICE_FLAG_NO_KERNEL_UNBIND = 1 << 3,
 	FU_HID_DEVICE_FLAG_NO_KERNEL_REBIND = 1 << 4,
+	FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER = 1 << 5,
 	/*< private >*/
 	FU_HID_DEVICE_FLAG_LAST
 } FuHidDeviceFlags;
