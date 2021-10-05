@@ -250,6 +250,10 @@ if build_daemon
 endif
 libm = cc.find_library('m', required: false)
 libgcab = dependency('libgcab-1.0', version : '>= 1.0', fallback : ['gcab', 'gcab_dep'])
+if libgcab.type_name() == 'pkgconfig' and cc.has_function('gcab_file_set_bytes', dependencies: libgcab)
+  conf.set('HAVE_GCAB_FILE_SET_BYTES', '1')
+endif
+
 bashcomp = dependency('bash-completion', required: false)
 if host_machine.system() != 'freebsd'
   python3 = find_program('python3')
