@@ -9,7 +9,7 @@
 #include "fu-lenovo-dock-common.h"
 
 const gchar *
-fu_lenovo_dock_smbus_strerror(guint8 val)
+fu_lenovo_dock_idx_to_string(guint8 val)
 {
 	return NULL;
 }

@@ -37,15 +37,15 @@
 
 #define External_Valid_Value 0x37
 
-#define LENOVO_DOCK_FIRMWARE_IDX_NONE	0x00
-#define LENOVO_DOCK_FIRMWARE_IDX_DMC_PD 0x01
-#define LENOVO_DOCK_FIRMWARE_IDX_DP	0x02
-#define LENOVO_DOCK_FIRMWARE_IDX_TBT4	0x04
-#define LENOVO_DOCK_FIRMWARE_IDX_USB3	0x08
-#define LENOVO_DOCK_FIRMWARE_IDX_USB2	0x10
-#define LENOVO_DOCK_FIRMWARE_IDX_AUDIO	0x20
-#define LENOVO_DOCK_FIRMWARE_IDX_I225	0x40
-#define LENOVO_DOCK_FIRMWARE_IDX_MCU	0x80
+#define FIRMWARE_IDX_NONE   0x00
+#define FIRMWARE_IDX_DMC_PD 0x01
+#define FIRMWARE_IDX_DP	    0x02
+#define FIRMWARE_IDX_TBT4   0x04
+#define FIRMWARE_IDX_USB3   0x08
+#define FIRMWARE_IDX_USB2   0x10
+#define FIRMWARE_IDX_AUDIO  0x20
+#define FIRMWARE_IDX_I225   0x40
+#define FIRMWARE_IDX_MCU    0x80
 
 typedef struct {
 	guint8 DMC[5];
@@ -62,4 +62,4 @@ typedef struct {
 } IspVersionInMcu_t;
 
 const gchar *
-fu_lenovo_dock_smbus_strerror(guint8 val);
+fu_lenovo_dock_idx_to_string(guint8 val);

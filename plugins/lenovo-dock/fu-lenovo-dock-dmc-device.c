@@ -25,6 +25,7 @@ fu_lenovo_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, 
 		g_debug("absorbing DMC version into MCU");
 		fu_device_set_version_format(parent, fu_device_get_version_format(device));
 		fu_device_set_version(parent, fu_device_get_version(device));
+		fu_device_set_serial(parent, fu_device_get_serial(device));
 
 		/* allow matching firmware */
 		instance_id = g_strdup_printf("USB\\VID_%04X&PID_%04X&CID_%s",
@@ -32,6 +33,10 @@ fu_lenovo_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, 
 					      fu_usb_device_get_pid(FU_USB_DEVICE(parent)),
 					      fu_device_get_name(device));
 		fu_device_add_instance_id(parent, instance_id);
+
+		/* don't allow firmware updates on this */
+		fu_device_set_name(device, "Dock Management Controller Information");
+		fu_device_inhibit(device, "dummy", "Use the MCU to update the DMC device");
 	}
 }
 

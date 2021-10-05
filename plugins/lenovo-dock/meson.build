@@ -10,6 +10,7 @@ shared_module('fu_plugin_lenovo_dock',
   fu_hash,
   sources : [
     'fu-lenovo-dock-common.c',
+    'fu-lenovo-dock-child-device.c',
     'fu-lenovo-dock-dmc-device.c',
     'fu-lenovo-dock-mcu-device.c',
     'fu-lenovo-dock-firmware.c',

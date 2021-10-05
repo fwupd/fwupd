@@ -14,3 +14,10 @@ G_DECLARE_FINAL_TYPE(FuLenovoDockMcuDevice,
 		     FU,
 		     LENOVO_DOCK_MCU_DEVICE,
 		     FuHidDevice)
+gboolean
+fu_lenovo_dock_mcu_device_write_firmware_with_idx(FuLenovoDockMcuDevice *self,
+						  FuFirmware *firmware,
+						  guint8 chip_idx,
+						  FuProgress *progress,
+						  FwupdInstallFlags flags,
+						  GError **error);

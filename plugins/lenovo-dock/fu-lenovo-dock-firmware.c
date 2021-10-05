@@ -22,7 +22,7 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
-	// FIXME
+	// TODO -- add each image to the firmware with the appropriate IDX set
 	fu_firmware_set_bytes(firmware, fw);
 	return TRUE;
 }
