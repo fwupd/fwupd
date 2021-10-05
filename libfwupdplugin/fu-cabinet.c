@@ -163,7 +163,11 @@ fu_cabinet_add_file(FuCabinet *self, const gchar *basename, GBytes *data)
 	/* existing file? */
 	gcab_file_old = fu_cabinet_get_file_by_name(self, basename);
 	if (gcab_file_old != NULL) {
+#ifdef HAVE_GCAB_FILE_SET_BYTES
+		gcab_file_set_bytes(gcab_file_old, data);
+#else
 		g_object_set(gcab_file_old, "bytes", data, NULL);
+#endif
 		return;
 	}
 
