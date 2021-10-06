@@ -35,6 +35,54 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.7.0" date="2021-10-06">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add FuCfuPayload and FuCfuOffer for future usage</li>
+          <li>Add support for an 'unreachable' device flag</li>
+          <li>Add support for Logitech devices supporting the Unified Battery feature</li>
+          <li>Allow adding GUIDs to each HSI security attribute</li>
+          <li>Allow installing the LVFS remote, but with it disabled by default</li>
+          <li>Convert security attributes to JSON and write then to the database</li>
+          <li>Convert the device test script to a fwupdmgr subcommand</li>
+          <li>Create Redfish user accounts automatically using IPMI</li>
+          <li>Use an interactive request to restart some Logitech DFU devices</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Abort on invalid SREC files early to avoid a fuzzing timeout</li>
+          <li>Allow using interrupt transfers for HID devices</li>
+          <li>Allow waiting for multiple devices to replug</li>
+          <li>Fix a critical warning on a Unifying flash failure</li>
+          <li>Fix a regression in flashing the Dell dock</li>
+          <li>Fix Thunderbolt host controller probing</li>
+          <li>Forcefully set checksums found in cabinet files to lowercase</li>
+          <li>Force UX-capsule over full size BGRT</li>
+          <li>Make the SuperIO ports and timeouts specific to the DMI model</li>
+          <li>Only probe SynapticsMST devices that have opted-in</li>
+          <li>Remove support for --ignore-power as it did not work for UEFI firmware</li>
+          <li>Reset the CMOS as required when changing system firmware branch</li>
+          <li>Restart the daemon if any of the the plugin config files are modified</li>
+          <li>Show HSiLevel=0 attributes in JSON security output</li>
+          <li>Update the child composite ID if the parent changes</li>
+          <li>Use a per-device global percentage completion</li>
+          <li>Write the BMP image upside down to avoid using a negative bitmap height</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>A huge number of Synaptics CAPE devices</li>
+          <li>Elan fingerprint readers</li>
+          <li>Logitech Bolt peripherals, receivers and radio hardware</li>
+          <li>Logitech devices supporting the bulk controller protocol</li>
+          <li>More supported PixArt devices</li>
+          <li>More supported StarBook coreboot devices</li>
+          <li>Union Point SPI hardware</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.6.2" date="2021-08-02">
       <description>
         <p>

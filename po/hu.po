@@ -18,7 +18,7 @@ msgstr ""
 "Language: hu\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -88,12 +88,14 @@ msgstr "%s frissítés"
 msgid "%s and all connected devices may not be usable while updating."
 msgstr "Lehet, hogy a(z) %s és az összes kapcsolódó eszköz használhatatlan lesz a frissítés alatt."
 
-#. TRANSLATORS: warn the user before updating, %1 is a device name
+#. TRANSLATORS: warn the user before
+#. * updating, %1 is a device name
 #, c-format
 msgid "%s must remain connected for the duration of the update to avoid damage."
 msgstr "A károsodás elkerülése miatt szükséges, hogy a(z) %s kapcsolódva maradjon a frissítés során."
 
-#. TRANSLATORS: warn the user before updating, %1 is a machine name
+#. TRANSLATORS: warn the user before updating, %1 is a machine
+#. * name
 #, c-format
 msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
 msgstr "A károsodás elkerülése miatt szükséges, hogy a(z) %s csatlakoztatva maradjon egy áramforráshoz a frissítés során."
@@ -706,6 +708,7 @@ msgid_plural "Issues"
 msgstr[0] "Probléma"
 msgstr[1] "Problémák"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Kulcstartó"
 
@@ -1035,6 +1038,7 @@ msgstr "Leállítja most?"
 msgid "Sign data using the client certificate"
 msgstr "Adatok aláírása az ügyféltanúsítvánnyal"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "Adatok aláírása az ügyféltanúsítvánnyal"

@@ -296,6 +296,7 @@ msgstr "Инсталирајте непотписани системски фи�
 msgid "Installing firmware update…"
 msgstr "Инсталирам ажурирање фирмвера…"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Привезак"
 

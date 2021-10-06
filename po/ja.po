@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
+# Green, 2021
 # Nobuhiro Iwamatsu <iwamatsu@nigauri.org>, 2021
 # Takuro Onoue <kusanaginoturugi@gmail.com>, 2021
 # YOSHIDUMI, Rentaro, 2021
@@ -28,6 +29,10 @@ msgstr "%sの別名"
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
 msgstr "外付け機器でファームウェアをダウングレードするには認証が必要です"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr "この機器のファームウェアをダウングレードするには認証が必要です。"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to modify a configured remote used for firmware updates"
@@ -72,6 +77,13 @@ msgstr "バイト数"
 msgid "Command not found"
 msgstr "コマンドが見付かりません"
 
+#. TRANSLATORS: DFU stands for device firmware update
+msgid "DFU Utility"
+msgstr "DFU ユーティリティ"
+
+msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "この機能を有効にすることは、お客様自身の責任で行ってください。つまり、これらの更新によって発生した問題については、製造元のメーカーに連絡する必要があります。更新プロセス自体に関する問題だけを $OS_RELEASE:BUG_REPORT_URL$ へ提出してください。"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
 msgstr "ファイル名"
@@ -83,6 +95,10 @@ msgstr "ファイル名 機器の代替名|機器の代替ID"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID [IMAGE-ALT-NAME|IMAGE-ALT-ID]"
 msgstr "ファイル名 機器の代替名|機器の代替ID [イメージの代替名|イメージの代替ID]"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse arguments"
+msgstr "引数の解析に失敗しました"
 
 msgid "Force the action ignoring all warnings"
 msgstr "警告を全て無視して処理を強行"
@@ -128,13 +144,22 @@ msgstr "ファームウェアを機器からファイルに読み込む"
 msgid "Read firmware from one partition into a file"
 msgstr "ファームウェアをひとつの領域からファイルに読み込む"
 
+#. TRANSLATORS: command description
+msgid "Replace data in an existing firmware file"
+msgstr "既存のファームウェアファイル内のデータを置き換えます"
+
 #. TRANSLATORS: firmware approved by the admin
 msgid "Sets the list of approved firmware"
 msgstr "認証済みファームウェアの一覧を設定する"
 
+#. TRANSLATORS: command line option
+msgid "Show extra debugging information"
+msgstr "追加のデバッグ情報を表示します"
+
 msgid "Sign data using the client certificate"
 msgstr "クライアント証明書を用いてデータに署名する"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "クライアント証明書を用いてデータに署名する"
@@ -149,6 +174,9 @@ msgstr "USB伝送器ごとのバイト数を指定する"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS は独立した法人として機能する無料のサービスであり、$OS_RELEASE:NAME$ とは関係ありません。ディストリビューターは、システムまたは接続されているデバイスとの互換性について、ファームウェアの更新を確認していない可能性があります。すべてのファームウェアは、元の機器の製造元からのみ提供されています。"
 
+msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
+msgstr "この遠隔側ソースには、輸出禁止ではないファームウェアが含まれていますが、ハードウェアベンダーによって未だテスト中です。ファームウェアの更新に失敗した場合は、ファームウェアを手動でダウングレードする方法を確保しておく必要があります。"
+
 msgid "Unlock the device to allow access"
 msgstr "アクセスを許可するために機器を開錠してください"
 
@@ -161,3 +189,7 @@ msgstr "ベンダーID:製品ID"
 #. TRANSLATORS: command description
 msgid "Write firmware from file into device"
 msgstr "ファームウェアをファイルから機器に書き込む"
+
+#. TRANSLATORS: command description
+msgid "Write firmware from file into one partition"
+msgstr "ファームウェアをファイルから 1 つの領域に書き込む"

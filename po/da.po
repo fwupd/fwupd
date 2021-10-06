@@ -16,7 +16,7 @@ msgstr ""
 "Language: da\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -57,7 +57,7 @@ msgstr "%s ME-opdatering for forbruger"
 #. * the first %s is the device name, e.g. 'Intel ThunderBolt`
 #, c-format
 msgid "%s Controller Update"
-msgstr "Opdatering for controller %s"
+msgstr "Opdatering af controller %s"
 
 #. TRANSLATORS: ME stands for Management Engine (with Intel AMT),
 #. * where the first %s is the device name, e.g. 'ThinkPad P50`
@@ -93,6 +93,17 @@ msgstr "ME-opdatering for %s"
 msgid "%s Mouse Update"
 msgstr "%s Opdatering for mus"
 
+#. TRANSLATORS: Network Interface refers to the physical
+#. * PCI card, not the logical wired connection
+#, c-format
+msgid "%s Network Interface Update"
+msgstr "Opdatering af netværksgrænseflade %s"
+
+#. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
+#, c-format
+msgid "%s Storage Controller Update"
+msgstr "Opdatering af lagercontroller %s"
+
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
@@ -109,7 +120,7 @@ msgstr "%s Opdatering for TPM"
 #. * the first %s is the system name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Thunderbolt Controller Update"
-msgstr "%s opdatering af Thunderbolt-controller"
+msgstr "Opdatering af Thunderbolt-controller %s"
 
 #. TRANSLATORS: TouchPad refers to a flat input device
 #, c-format
@@ -134,12 +145,14 @@ msgstr "%s og alle tilsluttede enheder vil måske ikke være anvendelige under o
 msgid "%s manufacturing mode"
 msgstr "%s-fabrikstilstand"
 
-#. TRANSLATORS: warn the user before updating, %1 is a device name
+#. TRANSLATORS: warn the user before
+#. * updating, %1 is a device name
 #, c-format
 msgid "%s must remain connected for the duration of the update to avoid damage."
 msgstr "%s skal være tilsluttet under hele opdateringen, for at undgå skade."
 
-#. TRANSLATORS: warn the user before updating, %1 is a machine name
+#. TRANSLATORS: warn the user before updating, %1 is a machine
+#. * name
 #, c-format
 msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
 msgstr "%s skal være tilsluttet en strømkilde under hele opdateringen, for at undgå skade."
@@ -204,6 +217,10 @@ msgstr[1] "%u sekunder"
 msgid "(obsoleted)"
 msgstr "(forældet)"
 
+#. TRANSLATORS: the user needs to do something, e.g. remove the device
+msgid "Action Required:"
+msgstr "Handling kræves:"
+
 #. TRANSLATORS: command description
 msgid "Activate devices"
 msgstr "Aktivér enheder"
@@ -235,6 +252,12 @@ msgstr "Accepter og aktivér fjernen?"
 #, c-format
 msgid "Alias to %s"
 msgstr "Alias til %s"
+
+#. TRANSLATORS: on some systems certain devices have to have matching
+#. versions,
+#. * e.g. the EFI driver for a given network card cannot be different
+msgid "All devices of the same type will be updated at the same time"
+msgstr "Alle enheder af den samme type opdateres samtidigt"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
@@ -294,6 +317,10 @@ msgstr "Tilkobl til firmwaretilstand"
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
 msgstr "Autentificerer …"
+
+#. TRANSLATORS: user needs to run a command
+msgid "Authentication details are required"
+msgstr "Der kræves autentifikationsdetaljer"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
@@ -527,9 +554,15 @@ msgstr "Enhedsfirmware kræves for at have et versiontjek"
 msgid "Device is locked"
 msgstr "Enheden er låst"
 
-#. TRANSLATORS: a version check is required for all firmware
+#. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
 msgstr "Enhed kræves for at installere alle leverede udgivelser"
+
+#. TRANSLATORS: currently unreachable, perhaps because it is in a lower power
+#. state
+#. * or is out of wireless range
+msgid "Device is unreachable"
+msgstr "Enheden er utilgængelig"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
@@ -546,6 +579,10 @@ msgstr "Enhedstrin-opdateringer"
 #. TRANSLATORS: there is more than one supplier of the firmware
 msgid "Device supports switching to a different branch of firmware"
 msgstr "Enheden understøtter at der kan skiftes til en anden gren med firmware"
+
+#. TRANSLATORS: command line option
+msgid "Device update method"
+msgstr "Opdateringsmetode for enhed"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -567,12 +604,13 @@ msgstr "Enheder som det lykkedes at opdatere:"
 msgid "Devices that were not updated correctly:"
 msgstr "Enheder som ikke blev opdateret korrekt:"
 
-#. TRANSLATORS: message letting the user know no device upgrade available due
-#. to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Enheder uden nogen tilgængelige firmwareopdateringer: "
 
-#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
 msgid "Devices with the latest available firmware version:"
 msgstr "Enheder med den seneste tilgængelige firmwareversion:"
 
@@ -666,6 +704,10 @@ msgstr "Nedgraderer %s fra %s til %s... "
 #, c-format
 msgid "Downgrading %s…"
 msgstr "Nedgraderer %s …"
+
+#. TRANSLATORS: command description
+msgid "Download a file"
+msgstr "Download en fil"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
@@ -913,6 +955,13 @@ msgid_plural "Firmware metadata has not been updated for %u days and may not be 
 msgstr[0] "Firmwaremetadata er ikke blevet opdateret i %u dag og kan være forældet."
 msgstr[1] "Firmwaremetadata er ikke blevet opdateret i %u dage og kan være forældet."
 
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. refresh recently %1 is an already translated timestamp such
+#. as 6 hours or 15 seconds
+#, c-format
+msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
+msgstr "Sidste opdatering af firmwaremetadata: %s siden. Brug --force til at opdatere igen."
+
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Firmwareopdateringer"
@@ -1015,7 +1064,7 @@ msgid "Host Security ID:"
 msgstr "Værtens sikkerheds-ID:"
 
 #. TRANSLATORS: Title:
-#. https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
 
@@ -1034,10 +1083,6 @@ msgstr "Ignorer mislykkede checksum for firmware"
 #. TRANSLATORS: command line option
 msgid "Ignore firmware hardware mismatch failures"
 msgstr "Ignorer mislykkedes firmwarehardware som ikke passer sammen"
-
-#. TRANSLATORS: command line option
-msgid "Ignore requirement of external power source"
-msgstr "Ignorer krav om ekstern strømkilde"
 
 #. TRANSLATORS: Ignore validation safety checks when flashing this device
 msgid "Ignore validation safety checks"
@@ -1156,8 +1201,13 @@ msgstr[1] "Problemstillinger"
 msgid "KEY,VALUE"
 msgstr "NØGLE,VÆRDI"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Nøglering"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "LOCATION"
+msgstr "PLACERING"
 
 #. TRANSLATORS: the original time/date the device was modified
 msgid "Last modified"
@@ -1332,6 +1382,9 @@ msgstr "Der er ikke nogen metadata da der ikke er aktiveret nogen fjerne."
 msgid "No remotes available"
 msgstr "Ingen tilgængelige fjerne"
 
+msgid "No updates available for remaining devices"
+msgstr "Ingen opdateringer tilgængelige for tilbageværende enheder"
+
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "Der blev ikke anvendt nogen opdateringer"
@@ -1355,6 +1408,15 @@ msgstr "Vis kun én PCR-værdi"
 #. TRANSLATORS: command line option
 msgid "Only use IPFS when downloading files"
 msgstr "Brug kun IPFS når filer downloades"
+
+#. TRANSLATORS: some devices can only be updated to a new semver and cannot
+#. * be downgraded or reinstalled with the existing version
+msgid "Only version upgrades are allowed"
+msgstr "Kun versionsopgraderinger er tilladte"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format"
+msgstr "Output i JSON-format"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -1468,7 +1530,7 @@ msgstr "Genstarter …"
 
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
-msgstr "Genopfrisk metadata fra fjernserver"
+msgstr "Opdater metadata fra fjernserver"
 
 #. TRANSLATORS: message letting the user know an upgrade is available
 #. * %1 is the device name and %2 is a version string
@@ -1554,6 +1616,10 @@ msgstr "Kør oprydningsrutinen for pluginkomposition når install-blob bruges"
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Kør forberedelsesrutinen for pluginkomposition når install-blob bruges"
+
+#. TRANSLATORS: The kernel does not support this plugin
+msgid "Running kernel is too old"
+msgstr "Kørende kerne er for gammel"
 
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
@@ -1683,6 +1749,7 @@ msgstr "Underskriv en firmware med en ny nøgle"
 msgid "Sign data using the client certificate"
 msgstr "Underskriv data med klientcertifikat"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "Underskriv data med klientcertifikat"
@@ -1822,6 +1889,10 @@ msgstr "Tainted"
 
 msgid "Target"
 msgstr "Mål"
+
+#. TRANSLATORS: command description
+msgid "Test a device using a JSON manifest"
+msgstr "Test en enhed med et JSON-manifest"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
@@ -2075,11 +2146,11 @@ msgstr "Upload af firmwarerapporter hjælper hardwareproducenter til hurtigt at 
 msgid "Urgency"
 msgstr "Vigtighed"
 
-#. TRANSLATORS: error message explaining command to run to how to get help
+#. TRANSLATORS: error message explaining command on how to get help
 msgid "Use fwupdmgr --help for help"
 msgstr "Brug fwupdmgr --help for hjælp"
 
-#. TRANSLATORS: error message explaining command to run to how to get help
+#. TRANSLATORS: error message explaining command on how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Brug fwupdtool --help for hjælp"
 
@@ -2174,6 +2245,10 @@ msgstr "[ENHEDS-ID|GUID] [GREN]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"
 msgstr "[FIL FILUNDERSKRIFT FJERN-ID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILENAME1] [FILENAME2]"
+msgstr "[FILNAVN1] [FILNAVN2]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

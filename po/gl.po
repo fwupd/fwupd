@@ -15,7 +15,7 @@ msgstr ""
 "Language: gl\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -425,7 +425,7 @@ msgid "Host Security ID:"
 msgstr "ID de seguranza do equipo:"
 
 #. TRANSLATORS: Title:
-#. https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
 
@@ -789,6 +789,7 @@ msgstr "Mostrar a información de estado da actualización do firmware"
 msgid "Sign data using the client certificate"
 msgstr "Asinar os datos usando o certificafo do cliente"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "Asinar os datos usando o certificafo do cliente"
@@ -928,7 +929,7 @@ msgstr "Actualizando %s…"
 msgid "Upload report now?"
 msgstr "Desexa subir o informe agora?"
 
-#. TRANSLATORS: error message explaining command to run to how to get help
+#. TRANSLATORS: error message explaining command on how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Usar fwupdtool --help para obter axuda"
 

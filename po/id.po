@@ -15,7 +15,7 @@ msgstr ""
 "Language: id\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -84,12 +84,14 @@ msgstr "Pembaruan %s"
 msgid "%s and all connected devices may not be usable while updating."
 msgstr "%s dan semua perangkat yang terhubung mungkin tidak dapat digunakan saat memperbarui."
 
-#. TRANSLATORS: warn the user before updating, %1 is a device name
+#. TRANSLATORS: warn the user before
+#. * updating, %1 is a device name
 #, c-format
 msgid "%s must remain connected for the duration of the update to avoid damage."
 msgstr "%s harus tetap terhubung selama pembaruan untuk menghindari kerusakan."
 
-#. TRANSLATORS: warn the user before updating, %1 is a machine name
+#. TRANSLATORS: warn the user before updating, %1 is a machine
+#. * name
 #, c-format
 msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
 msgstr "%s harus tetap terhubung ke sumber tenaga selama pembaruan untuk menghindari kerusakan."
@@ -359,7 +361,7 @@ msgstr "Firmware perangkat harus memiliki pemeriksaan versi"
 msgid "Device is locked"
 msgstr "Perangkat terkunci"
 
-#. TRANSLATORS: a version check is required for all firmware
+#. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
 msgstr "Perangkat perlu menginstal semua rilis yang disediakan"
 
@@ -710,6 +712,7 @@ msgid "Issue"
 msgid_plural "Issues"
 msgstr[0] "Masalah"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Keyring"
 
@@ -1052,6 +1055,7 @@ msgstr "Matikan sekarang?"
 msgid "Sign data using the client certificate"
 msgstr "Tanda tangani data menggunakan sertifikat klien"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "Tanda tangani data menggunakan sertifikat klien"

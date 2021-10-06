@@ -18,12 +18,20 @@ msgstr ""
 "Language: fr\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
 msgstr[0] "%.0f minute restante"
 msgstr[1] "%.0f minutes restantes"
+
+#. TRANSLATORS: this is the fallback where we don't know if the release
+#. * is updating the system, the device, or a device class, or something else
+#. --
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Update"
+msgstr "Mise à jour de %s"
 
 #. TRANSLATORS: Title: %1 is ME kind, e.g. CSME/TXT, %2 is a version number
 #, c-format
@@ -152,6 +160,9 @@ msgstr "Rapports automatiques"
 #. TRANSLATORS: can we JFDI?
 msgid "Automatically upload every time?"
 msgstr "Envoyer automatiquement à chaque fois ?"
+
+msgid "BYTES"
+msgstr "OCTETS"
 
 #. TRANSLATORS: firmware version of bootloader
 msgid "Bootloader Version"
@@ -432,6 +443,12 @@ msgstr "Drapeaux"
 msgid "Found"
 msgstr "Trouvé"
 
+#. TRANSLATORS: global ID common to all similar hardware
+msgid "GUID"
+msgid_plural "GUIDs"
+msgstr[0] "GUID"
+msgstr[1] "GUIDs"
+
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
 msgid "GUID"
@@ -454,7 +471,7 @@ msgid "Host Security ID:"
 msgstr "Identifiant de sécurité de l'hôte :"
 
 #. TRANSLATORS: Title:
-#. https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
 
@@ -517,6 +534,7 @@ msgstr "Invalide"
 msgid "KEY,VALUE"
 msgstr "CLÉ,VALEUR"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Trousseau de clés"
 
@@ -769,6 +787,7 @@ msgstr "Éteindre maintenant ?"
 msgid "Sign data using the client certificate"
 msgstr "Signer les données en utilisant le certificat du client"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "Signer les données en utilisant le certificat du client"
@@ -955,7 +974,11 @@ msgstr "Mise à jour de %s de %s en %s"
 msgid "Updating %s…"
 msgstr "Mise à jour de %s…"
 
-#. TRANSLATORS: error message explaining command to run to how to get help
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "Urgence"
+
+#. TRANSLATORS: error message explaining command on how to get help
 msgid "Use fwupdmgr --help for help"
 msgstr "Utilisez fwupdmgr --help pour obtenir de l'aide"
 

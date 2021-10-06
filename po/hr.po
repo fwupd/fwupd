@@ -18,7 +18,7 @@ msgstr ""
 "Language: hr\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -106,12 +106,14 @@ msgstr "%s i svi spojeni uređaji možda neće biti upotrebljivi tijekom nadopun
 msgid "%s manufacturing mode"
 msgstr "%s način rada za proizvođače"
 
-#. TRANSLATORS: warn the user before updating, %1 is a device name
+#. TRANSLATORS: warn the user before
+#. * updating, %1 is a device name
 #, c-format
 msgid "%s must remain connected for the duration of the update to avoid damage."
 msgstr "%s mora ostati spojen tijekom trajanja nadopune kako bi se izbjeglo oštećenje."
 
-#. TRANSLATORS: warn the user before updating, %1 is a machine name
+#. TRANSLATORS: warn the user before updating, %1 is a machine
+#. * name
 #, c-format
 msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
 msgstr "%s mora ostati spojen s izvorom energije tijekom trajanja nadopune kako bi se izbjeglo oštećenje."
@@ -491,7 +493,7 @@ msgstr "Potreban je firmver uređaja za provjeru inačice"
 msgid "Device is locked"
 msgstr "Uređaj je zaključan"
 
-#. TRANSLATORS: a version check is required for all firmware
+#. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
 msgstr "Uređaj je potreban za instalaciju svih pružanih izdanja"
 
@@ -531,12 +533,13 @@ msgstr "Uređaji koji su uspješno nadopunjeni:"
 msgid "Devices that were not updated correctly:"
 msgstr "Uređaji koji nisu ispravno nadopunjeni:"
 
-#. TRANSLATORS: message letting the user know no device upgrade available due
-#. to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Uređaji bez dostupnih nadopuna firmvera: "
 
-#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
 msgid "Devices with the latest available firmware version:"
 msgstr "Uređaji s najnovijom dostupnom inačicom firmvera:"
 
@@ -891,7 +894,7 @@ msgid "Host Security ID:"
 msgstr "Sigurnosni ID poslužitelja:"
 
 #. TRANSLATORS: Title:
-#. https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
 
@@ -910,10 +913,6 @@ msgstr "Zanemari neuspjele kontrolne zbrojeve firmvera"
 #. TRANSLATORS: command line option
 msgid "Ignore firmware hardware mismatch failures"
 msgstr "Zanemari neuspjela poklapanja hardvera firmvera"
-
-#. TRANSLATORS: command line option
-msgid "Ignore requirement of external power source"
-msgstr "Zanemari zahtjev vanjskog izvora energije"
 
 #. TRANSLATORS: Ignore validation safety checks when flashing this device
 msgid "Ignore validation safety checks"
@@ -1029,6 +1028,7 @@ msgstr[0] "Problem"
 msgstr[1] "Problemi"
 msgstr[2] "Problemi"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Skup ključeva"
 
@@ -1502,6 +1502,7 @@ msgstr "Odmah isključi?"
 msgid "Sign data using the client certificate"
 msgstr "Potpiši podatke koristeći vjerodajnicu klijenta"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "Potpiši podatke koristeći vjerodajnicu klijenta"
@@ -1831,11 +1832,11 @@ msgstr "Slanje izvještaja firmvera pomaže proizvođačima hardvera brzo otkriv
 msgid "Urgency"
 msgstr "Hitnost"
 
-#. TRANSLATORS: error message explaining command to run to how to get help
+#. TRANSLATORS: error message explaining command on how to get help
 msgid "Use fwupdmgr --help for help"
 msgstr "Koristite fwupdmgr --help za prikaz pomoći"
 
-#. TRANSLATORS: error message explaining command to run to how to get help
+#. TRANSLATORS: error message explaining command on how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Koristite fwupdtool --help za prikaz pomoći"
 

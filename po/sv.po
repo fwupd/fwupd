@@ -21,7 +21,7 @@ msgstr ""
 "Language: sv\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -98,6 +98,17 @@ msgstr "%s ME-uppdatering"
 msgid "%s Mouse Update"
 msgstr "%s-musuppdatering"
 
+#. TRANSLATORS: Network Interface refers to the physical
+#. * PCI card, not the logical wired connection
+#, c-format
+msgid "%s Network Interface Update"
+msgstr "%s-nätverksgränssnittsuppdatering"
+
+#. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
+#, c-format
+msgid "%s Storage Controller Update"
+msgstr "%s-lagringsstyrenhetsuppdatering"
+
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
@@ -139,12 +150,14 @@ msgstr "%s och alla anslutna enheter kanske inte går att använda under uppdate
 msgid "%s manufacturing mode"
 msgstr "%s-tillverkningsläge"
 
-#. TRANSLATORS: warn the user before updating, %1 is a device name
+#. TRANSLATORS: warn the user before
+#. * updating, %1 is a device name
 #, c-format
 msgid "%s must remain connected for the duration of the update to avoid damage."
 msgstr "%s måste förbli anslutna under tiden som uppdateringen pågår för att undvika skador."
 
-#. TRANSLATORS: warn the user before updating, %1 is a machine name
+#. TRANSLATORS: warn the user before updating, %1 is a machine
+#. * name
 #, c-format
 msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
 msgstr "%s måste förbli ansluten till en strömkälla under tiden som uppdateringen pågår för att undvika skada."
@@ -209,6 +222,10 @@ msgstr[1] "%u sekunder"
 msgid "(obsoleted)"
 msgstr "(föråldrad)"
 
+#. TRANSLATORS: the user needs to do something, e.g. remove the device
+msgid "Action Required:"
+msgstr "Åtgärd krävs:"
+
 #. TRANSLATORS: command description
 msgid "Activate devices"
 msgstr "Aktivera enheter"
@@ -240,6 +257,12 @@ msgstr "Samtyck och aktivera fjärrkällan?"
 #, c-format
 msgid "Alias to %s"
 msgstr "Alias för %s"
+
+#. TRANSLATORS: on some systems certain devices have to have matching
+#. versions,
+#. * e.g. the EFI driver for a given network card cannot be different
+msgid "All devices of the same type will be updated at the same time"
+msgstr "Alla enheter av samma typ kommer uppdateras samtidigt"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
@@ -299,6 +322,10 @@ msgstr "Fäst till fast programvaruläge"
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
 msgstr "Autentiserar…"
+
+#. TRANSLATORS: user needs to run a command
+msgid "Authentication details are required"
+msgstr "Autentiseringsdetaljer krävs"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
@@ -532,9 +559,15 @@ msgstr "Fast programvara för enhet krävs för att ha en versionskontroll"
 msgid "Device is locked"
 msgstr "Enhet är låst"
 
-#. TRANSLATORS: a version check is required for all firmware
+#. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
 msgstr "Enhet krävs för att installera alla tillgängliga utgåvor"
+
+#. TRANSLATORS: currently unreachable, perhaps because it is in a lower power
+#. state
+#. * or is out of wireless range
+msgid "Device is unreachable"
+msgstr "Enheten kan inte nås"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
@@ -551,6 +584,10 @@ msgstr "Enhet genomför uppdatering i steg"
 #. TRANSLATORS: there is more than one supplier of the firmware
 msgid "Device supports switching to a different branch of firmware"
 msgstr "Enheten stöder byte till en annan gren av fast programvara"
+
+#. TRANSLATORS: command line option
+msgid "Device update method"
+msgstr "Uppdateringsmetod för enhet"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -572,12 +609,13 @@ msgstr "Enheter som har uppdaterats:"
 msgid "Devices that were not updated correctly:"
 msgstr "Enheter som inte uppdaterades korrekt:"
 
-#. TRANSLATORS: message letting the user know no device upgrade available due
-#. to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Enheter utan tillgängliga uppdateringar för fast programvara: "
 
-#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
 msgid "Devices with the latest available firmware version:"
 msgstr "Enheter med den senaste tillgängliga uppdateringen för fast programvara:"
 
@@ -672,6 +710,10 @@ msgstr "Nedgraderar %s från %s till %s… "
 msgid "Downgrading %s…"
 msgstr "Nedgraderar %s…"
 
+#. TRANSLATORS: command description
+msgid "Download a file"
+msgstr "Hämta en fil"
+
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
 msgstr "Hämtar…"
@@ -762,7 +804,7 @@ msgstr "FIL [ENHETS-ID|GUID]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILE-IN FILE-OUT [SCRIPT] [OUTPUT]"
-msgstr "INFIL UTFIL [SCRIPT] [UTMATNING]"
+msgstr "INFIL UTFIL [SKRIPT] [UTMATNING]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
@@ -918,6 +960,13 @@ msgid_plural "Firmware metadata has not been updated for %u days and may not be 
 msgstr[0] "Metadata för fast programvara har inte uppdaterats på %u dag och kan vara inaktuell."
 msgstr[1] "Metadata för fast programvara har inte uppdaterats på %u dagar och kan vara inaktuell."
 
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. refresh recently %1 is an already translated timestamp such
+#. as 6 hours or 15 seconds
+#, c-format
+msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
+msgstr "Senaste uppdatering för metadata för fast programvara: %s sedan. Använd --force för att uppdatera igen."
+
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Uppdateringar för fast programvara"
@@ -1020,7 +1069,7 @@ msgid "Host Security ID:"
 msgstr "Säkerhets-ID för värd:"
 
 #. TRANSLATORS: Title:
-#. https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
 
@@ -1039,10 +1088,6 @@ msgstr "Ignorera fel i kontrollsumman för fast programvara"
 #. TRANSLATORS: command line option
 msgid "Ignore firmware hardware mismatch failures"
 msgstr "Ignorera fel i matchning av hårdvara för fast programvara"
-
-#. TRANSLATORS: command line option
-msgid "Ignore requirement of external power source"
-msgstr "Ignorera krav på extern strömkälla"
 
 #. TRANSLATORS: Ignore validation safety checks when flashing this device
 msgid "Ignore validation safety checks"
@@ -1161,8 +1206,13 @@ msgstr[1] "Problem"
 msgid "KEY,VALUE"
 msgstr "NYCKEL,VÄRDE"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Nyckelring"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "LOCATION"
+msgstr "PLATS"
 
 #. TRANSLATORS: the original time/date the device was modified
 msgid "Last modified"
@@ -1337,6 +1387,9 @@ msgstr "Inga fjärrkällor är aktiverade för närvarande, så ingen metadata �
 msgid "No remotes available"
 msgstr "Inga fjärrkällor tillgängliga"
 
+msgid "No updates available for remaining devices"
+msgstr "Inga uppdateringar tillgängliga för kvarvarande enheter"
+
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "Inga uppdateringar applicerades"
@@ -1360,6 +1413,15 @@ msgstr "Visa endast enkelt PCR-värde"
 #. TRANSLATORS: command line option
 msgid "Only use IPFS when downloading files"
 msgstr "Använd endast IPFS när du hämtar filer"
+
+#. TRANSLATORS: some devices can only be updated to a new semver and cannot
+#. * be downgraded or reinstalled with the existing version
+msgid "Only version upgrades are allowed"
+msgstr "Endast versionsuppgraderingar är tillåtna"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format"
+msgstr "Utmatning i JSON-format"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -1560,6 +1622,10 @@ msgstr "Kör uppstädningssammansättningsrutin för insticksmodulen när instal
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Kör förberedelsesammansättningsrutin för insticksmodulen när install-blob används"
 
+#. TRANSLATORS: The kernel does not support this plugin
+msgid "Running kernel is too old"
+msgstr "Kärnan som körs är för gammal"
+
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Exekveringssuffix"
@@ -1688,6 +1754,7 @@ msgstr "Signera en fast programvara med en ny nyckel"
 msgid "Sign data using the client certificate"
 msgstr "Signera data med klientcertifikatet"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "Signera data med klientcertifikatet"
@@ -1827,6 +1894,10 @@ msgstr "Befläckad"
 
 msgid "Target"
 msgstr "Mål"
+
+#. TRANSLATORS: command description
+msgid "Test a device using a JSON manifest"
+msgstr "Testa en enhet med ett JSON-manifest"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
@@ -2080,11 +2151,11 @@ msgstr "Att skicka upp rapporter för fast programvara hjälper hårdvarutillver
 msgid "Urgency"
 msgstr "Viktighet"
 
-#. TRANSLATORS: error message explaining command to run to how to get help
+#. TRANSLATORS: error message explaining command on how to get help
 msgid "Use fwupdmgr --help for help"
 msgstr "Använd fwupdmgr --help för hjälp"
 
-#. TRANSLATORS: error message explaining command to run to how to get help
+#. TRANSLATORS: error message explaining command on how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Använd fwupdtool --help för hjälp"
 
@@ -2179,6 +2250,10 @@ msgstr "[ENHETS-ID|GUID] [GREN]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"
 msgstr "[FIL FILSIG FJÄRR-ID]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILENAME1] [FILENAME2]"
+msgstr "[FILNAMN1] [FILNAMN2]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

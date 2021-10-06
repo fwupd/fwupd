@@ -15,7 +15,7 @@ msgstr ""
 "Language: uk\n"
 "Plural-Forms: nplurals=4; plural=(n % 1 == 0 && n % 10 == 1 && n % 100 != 11 ? 0 : n % 1 == 0 && n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : n % 1 == 0 && (n % 10 ==0 || (n % 10 >=5 && n % 10 <=9) || (n % 100 >=11 && n % 100 <=14 )) ? 2: 3);\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -94,6 +94,17 @@ msgstr "Оновлення ME %s"
 msgid "%s Mouse Update"
 msgstr "Оновлення для миші %s"
 
+#. TRANSLATORS: Network Interface refers to the physical
+#. * PCI card, not the logical wired connection
+#, c-format
+msgid "%s Network Interface Update"
+msgstr "Оновлення інтерфейсу мережі %s"
+
+#. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
+#, c-format
+msgid "%s Storage Controller Update"
+msgstr "Оновлення контролера сховища даних %s"
+
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
@@ -135,12 +146,14 @@ msgstr "%s і усі з'єднані пристрою можуть бути не
 msgid "%s manufacturing mode"
 msgstr "Режим виробництва %s"
 
-#. TRANSLATORS: warn the user before updating, %1 is a device name
+#. TRANSLATORS: warn the user before
+#. * updating, %1 is a device name
 #, c-format
 msgid "%s must remain connected for the duration of the update to avoid damage."
 msgstr "Для уникнення пошкоджень %s має лишатися з'єднаним із комп'ютером протягом оновлення."
 
-#. TRANSLATORS: warn the user before updating, %1 is a machine name
+#. TRANSLATORS: warn the user before updating, %1 is a machine
+#. * name
 #, c-format
 msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
 msgstr "Для уникнення пошкоджень %s має лишатися з'єднаним із джерелом живлення протягом оновлення."
@@ -217,6 +230,10 @@ msgstr[3] "%u секунда"
 msgid "(obsoleted)"
 msgstr "(є застарілим)"
 
+#. TRANSLATORS: the user needs to do something, e.g. remove the device
+msgid "Action Required:"
+msgstr "Потрібна дія:"
+
 #. TRANSLATORS: command description
 msgid "Activate devices"
 msgstr "Задіяти пристрої"
@@ -248,6 +265,12 @@ msgstr "Згодні, увімкнути віддалене сховище?"
 #, c-format
 msgid "Alias to %s"
 msgstr "Інша назва %s"
+
+#. TRANSLATORS: on some systems certain devices have to have matching
+#. versions,
+#. * e.g. the EFI driver for a given network card cannot be different
+msgid "All devices of the same type will be updated at the same time"
+msgstr "Усі пристрої одного типу буде оновлено одночасно"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
@@ -309,6 +332,10 @@ msgstr "Долучитися до режиму мікропрограми"
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
 msgstr "Проходимо розпізнавання…"
+
+#. TRANSLATORS: user needs to run a command
+msgid "Authentication details are required"
+msgstr "Потрібні дані для розпізнавання"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
@@ -542,9 +569,15 @@ msgstr "Для перевірки версії потрібна мікропро
 msgid "Device is locked"
 msgstr "Пристрій заблоковано"
 
-#. TRANSLATORS: a version check is required for all firmware
+#. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
 msgstr "Для встановлення усіх наданих випусків потрібен пристрій"
+
+#. TRANSLATORS: currently unreachable, perhaps because it is in a lower power
+#. state
+#. * or is out of wireless range
+msgid "Device is unreachable"
+msgstr "Пристрій є недоступним"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
@@ -561,6 +594,10 @@ msgstr "Пристрій із покроковим оновленням"
 #. TRANSLATORS: there is more than one supplier of the firmware
 msgid "Device supports switching to a different branch of firmware"
 msgstr "У пристрої передбачено підтримку перемикання на іншу гілку мікропрограми"
+
+#. TRANSLATORS: command line option
+msgid "Device update method"
+msgstr "Спосіб оновлення для пристрою"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -582,12 +619,13 @@ msgstr "Пристрої, для яких вдалося успішно онов
 msgid "Devices that were not updated correctly:"
 msgstr "Пристрої, для яких не вдалося оновити дані належним чином:"
 
-#. TRANSLATORS: message letting the user know no device upgrade available due
-#. to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Пристрої, для яких немає оновлень мікропрограми:"
 
-#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
 msgid "Devices with the latest available firmware version:"
 msgstr "Пристрої із найсвіжішою доступною версією мікропрограми:"
 
@@ -681,6 +719,10 @@ msgstr "Знижуємо версію %s з %s до %s... "
 #, c-format
 msgid "Downgrading %s…"
 msgstr "Знижуємо версію %s…"
+
+#. TRANSLATORS: command description
+msgid "Download a file"
+msgstr "Отримати файл"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
@@ -930,6 +972,13 @@ msgstr[1] "Метадані мікропрограми не оновлювали
 msgstr[2] "Метадані мікропрограми не оновлювалися %u днів, можливо, вони вже не є актуальними."
 msgstr[3] "Метадані мікропрограми не оновлювалися %u днів, можливо, вони вже не є актуальними."
 
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. refresh recently %1 is an already translated timestamp such
+#. as 6 hours or 15 seconds
+#, c-format
+msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
+msgstr "Останнє оновлення метаданих мікропрограми було виконано %s тому. Скористайтеся --force, щоб виконати примусове оновлення."
+
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
 msgstr "Оновлення мікропрограми"
@@ -1034,7 +1083,7 @@ msgid "Host Security ID:"
 msgstr "Ід. захисту основної системи:"
 
 #. TRANSLATORS: Title:
-#. https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
 
@@ -1053,10 +1102,6 @@ msgstr "Ігнорувати помилки при перевірці контр
 #. TRANSLATORS: command line option
 msgid "Ignore firmware hardware mismatch failures"
 msgstr "Ігнорувати помилки, пов'язані із невідповідністю обладнання мікропрограмі"
-
-#. TRANSLATORS: command line option
-msgid "Ignore requirement of external power source"
-msgstr "Ігнорувати вимогу щодо наявності зовнішнього джерела живлення"
 
 #. TRANSLATORS: Ignore validation safety checks when flashing this device
 msgid "Ignore validation safety checks"
@@ -1177,8 +1222,13 @@ msgstr[3] "Вада"
 msgid "KEY,VALUE"
 msgstr "КЛЮЧ,ЗНАЧЕННЯ"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Сховище ключів"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "LOCATION"
+msgstr "МІСЦЕ"
 
 #. TRANSLATORS: the original time/date the device was modified
 msgid "Last modified"
@@ -1353,6 +1403,9 @@ msgstr "Зараз не увімкнено жодного віддаленого
 msgid "No remotes available"
 msgstr "Немає доступних віддалених сховищ"
 
+msgid "No updates available for remaining devices"
+msgstr "Для решти пристроїв немає доступних оновлень"
+
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "Не застосовано жодного оновлення"
@@ -1376,6 +1429,15 @@ msgstr "Показувати лише одне значення PCR"
 #. TRANSLATORS: command line option
 msgid "Only use IPFS when downloading files"
 msgstr "Використовувати IPFS лише при отриманні файлів"
+
+#. TRANSLATORS: some devices can only be updated to a new semver and cannot
+#. * be downgraded or reinstalled with the existing version
+msgid "Only version upgrades are allowed"
+msgstr "Дозволено лише оновлення версії"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format"
+msgstr "Виведені дані у форматі JSON"
 
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
@@ -1576,6 +1638,10 @@ msgstr "Запустити процедуру чищення композиці�
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Запустити процедуру приготування композиції додатків при використанні install-blob"
 
+#. TRANSLATORS: The kernel does not support this plugin
+msgid "Running kernel is too old"
+msgstr "Поточне ядро є надто застарілим"
+
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Динамічний суфікс"
@@ -1704,6 +1770,7 @@ msgstr "Підписати мікропрограму новим ключем"
 msgid "Sign data using the client certificate"
 msgstr "Підписування даних клієнтським сертифікатом"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "Підписування даних клієнтським сертифікатом"
@@ -1845,6 +1912,10 @@ msgstr "Нечисте"
 
 msgid "Target"
 msgstr "Ціль"
+
+#. TRANSLATORS: command description
+msgid "Test a device using a JSON manifest"
+msgstr "Перевірити пристрій за допомогою маніфесту JSON"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
@@ -2098,11 +2169,11 @@ msgstr "Вивантаження звітів щодо мікропрограм 
 msgid "Urgency"
 msgstr "Рівень важливості"
 
-#. TRANSLATORS: error message explaining command to run to how to get help
+#. TRANSLATORS: error message explaining command on how to get help
 msgid "Use fwupdmgr --help for help"
 msgstr "Скористайтеся fwupdmgr --help, щоб дізнатися більше"
 
-#. TRANSLATORS: error message explaining command to run to how to get help
+#. TRANSLATORS: error message explaining command on how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Скористайтеся fwupdtool --help, щоб дізнатися більше"
 
@@ -2197,6 +2268,10 @@ msgstr "[ІД_ПРИСТРОЮ|GUID] [ГІЛКА]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"
 msgstr "[ФАЙЛ ПІДПИС_ФАЙЛА ВІДДАЛ-ІД]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILENAME1] [FILENAME2]"
+msgstr "[НАЗВАФАЙЛА1] [НАЗВАФАЙЛА2]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

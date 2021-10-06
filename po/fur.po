@@ -15,7 +15,7 @@ msgstr ""
 "Language: fur\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -439,6 +439,7 @@ msgstr "Daûr a instalâ l'inzornament dal firmware…"
 msgid "Installing on %s…"
 msgstr "Daûr a instalâ su %s…"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Puarteclâfs"
 
@@ -693,6 +694,7 @@ msgstr "Distudâ cumò?"
 msgid "Sign data using the client certificate"
 msgstr "Firme i dâts doprant il certificât dal client"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "Firme i dâts doprant il certificât dal client"
