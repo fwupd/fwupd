@@ -5,10 +5,13 @@
  */
 #include "config.h"
 
+#ifdef HAVE_IO_H
 #include <sys/io.h>
+#endif
 
 #include "fu-flashrom-cmos.h"
 
+#ifdef HAVE_IO_H
 static gboolean
 fu_flashrom_cmos_write(guint8 addr, guint8 val)
 {
@@ -29,10 +32,12 @@ fu_flashrom_cmos_write(guint8 addr, guint8 val)
 	/* Check the read value against the written */
 	return (tmp == val);
 }
+#endif
 
 gboolean
 fu_flashrom_cmos_reset(GError **error)
 {
+#ifdef HAVE_IO_H
 	/* Call ioperm() to grant us access to ports 0x70 and 0x71 */
 	if (ioperm(RTC_BASE_PORT, 2, TRUE) < 0) {
 		g_set_error_literal(error,
@@ -50,6 +55,9 @@ fu_flashrom_cmos_reset(GError **error)
 	}
 
 	/* success */
-
 	return TRUE;
+#else
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no <sys/io.h> support");
+	return FALSE;
+#endif
 }
