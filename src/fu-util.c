@@ -1209,9 +1209,9 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 	}
 
-	/* TRANSLATORS: success message -- where the user has uploaded
-	 * success and/or failure reports to the remote server */
 	g_string_append_printf(str,
+			       /* TRANSLATORS: success message -- where the user has uploaded
+				* success and/or failure reports to the remote server */
 			       ngettext("Successfully uploaded %u report",
 					"Successfully uploaded %u reports",
 					g_hash_table_size(report_map)),
@@ -1514,8 +1514,8 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 	 * about available firmware on the remote server */
 	g_string_append(str, _("Successfully downloaded new metadata: "));
 
-	/* TRANSLATORS: how many local devices can expect updates now */
 	g_string_append_printf(str,
+			       /* TRANSLATORS: how many local devices can expect updates now */
 			       ngettext("%u local device supported",
 					"%u local devices supported",
 					devices_supported_cnt),
@@ -2089,9 +2089,9 @@ fu_util_update_all(FuUtilPrivate *priv, GError **error)
 			continue;
 		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
 			if (!no_updates_header) {
-				/* TRANSLATORS: message letting the user know no device upgrade
-				 * available due to missing on LVFS */
 				g_printerr("%s\n",
+					   /* TRANSLATORS: message letting the user know no device
+					    * upgrade available due to missing on LVFS */
 					   _("Devices with no available firmware updates: "));
 				no_updates_header = TRUE;
 			}
@@ -2109,10 +2109,10 @@ fu_util_update_all(FuUtilPrivate *priv, GError **error)
 						 &error_local);
 		if (rels == NULL) {
 			if (!latest_header) {
-				/* TRANSLATORS: message letting the user know no device upgrade
-				 * available */
 				g_printerr(
 				    "%s\n",
+				    /* TRANSLATORS: message letting the user know no device upgrade
+				     * available */
 				    _("Devices with the latest available firmware version:"));
 				latest_header = TRUE;
 			}
@@ -2359,9 +2359,9 @@ fu_util_downgrade(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* get the releases for this device and filter for validity */
 	rels = fwupd_client_get_downgrades(priv->client, fwupd_device_get_id(dev), NULL, error);
 	if (rels == NULL) {
-		/* TRANSLATORS: message letting the user know no device downgrade available
-		 * %1 is the device name */
 		g_autofree gchar *downgrade_str =
+		    /* TRANSLATORS: message letting the user know no device downgrade available
+		     * %1 is the device name */
 		    g_strdup_printf(_("No downgrades for %s"), fwupd_device_get_name(dev));
 		g_prefix_error(error, "%s: ", downgrade_str);
 		return FALSE;
@@ -2649,8 +2649,8 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 			continue;
 		if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION))
 			continue;
-		/* TRANSLATORS: shown when shutting down to switch to the new version */
 		g_print("%s %s…\n",
+			/* TRANSLATORS: shown when shutting down to switch to the new version */
 			_("Activating firmware update for"),
 			fwupd_device_get_name(device));
 		if (!fwupd_client_activate(priv->client, NULL, fwupd_device_get_id(device), error))
@@ -2724,10 +2724,10 @@ fu_util_get_approved_firmware(FuUtilPrivate *priv, gchar **values, GError **erro
 		 * the domain administrator */
 		g_print("%s\n", _("There is no approved firmware."));
 	} else {
-		/* TRANSLATORS: approved firmware has been checked by
-		 * the domain administrator */
 		g_print(
 		    "%s\n",
+		    /* TRANSLATORS: approved firmware has been checked by
+		     * the domain administrator */
 		    ngettext("Approved firmware:", "Approved firmware:", g_strv_length(checksums)));
 		for (guint i = 0; checksums[i] != NULL; i++)
 			g_print(" * %s\n", checksums[i]);
@@ -2998,8 +2998,8 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (priv->as_json)
 		return fu_util_security_as_json(priv, attrs, error);
 
-	/* TRANSLATORS: this is a string like 'HSI:2-U' */
 	g_print("%s \033[1m%s\033[0m\n",
+		/* TRANSLATORS: this is a string like 'HSI:2-U' */
 		_("Host Security ID:"),
 		fwupd_client_get_host_security_id(priv->client));
 
@@ -3801,9 +3801,9 @@ main(int argc, char *argv[])
 		g_autofree gchar *fmt = NULL;
 		/* TRANSLATORS: this is a prefix on the console */
 		fmt = fu_util_term_format(_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
-		/* TRANSLATORS: try to help */
 		g_printerr("%s %s\n",
 			   fmt,
+			   /* TRANSLATORS: try to help */
 			   _("Ignoring SSL strict checks, "
 			     "to do this automatically in the future "
 			     "export DISABLE_SSL_STRICT in your environment"));
@@ -3816,9 +3816,9 @@ main(int argc, char *argv[])
 		g_autofree gchar *fmt = NULL;
 		/* TRANSLATORS: this is a prefix on the console */
 		fmt = fu_util_term_format(_("WARNING:"), FU_UTIL_TERM_COLOR_RED);
-		/* TRANSLATORS: try to help */
 		g_printerr("%s %s\n",
 			   fmt,
+			   /* TRANSLATORS: try to help */
 			   _("The system clock has not been set "
 			     "correctly and downloading files may fail."));
 	}
@@ -3840,8 +3840,8 @@ main(int argc, char *argv[])
 						&priv->filter_include,
 						&priv->filter_exclude,
 						&error)) {
-			/* TRANSLATORS: the user didn't read the man page */
 			g_print("%s: %s\n",
+				/* TRANSLATORS: the user didn't read the man page */
 				_("Failed to parse flags for --filter"),
 				error->message);
 			return EXIT_FAILURE;
@@ -3975,8 +3975,7 @@ main(int argc, char *argv[])
 	if (!ret) {
 		g_printerr("%s\n", error->message);
 		if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS)) {
-			/* TRANSLATORS: error message explaining command to run to how to get help
-			 */
+			/* TRANSLATORS: error message explaining command on how to get help */
 			g_printerr("\n%s\n", _("Use fwupdmgr --help for help"));
 		} else if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
 			g_debug("%s\n", error->message);

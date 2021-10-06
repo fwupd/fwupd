@@ -405,28 +405,31 @@ fu_util_prompt_warning(FwupdDevice *device,
 				       fu_device_get_version(device),
 				       fwupd_device_get_version_format(device));
 	if (vercmp < 0) {
-		/* TRANSLATORS: message letting the user know an downgrade is available
-		 * %1 is the device name and %2 and %3 are version strings */
-		g_string_append_printf(title,
-				       _("Downgrade %s from %s to %s?"),
-				       fwupd_device_get_name(device),
-				       fwupd_device_get_version(device),
-				       fwupd_release_get_version(release));
+		g_string_append_printf(
+		    title,
+		    /* TRANSLATORS: message letting the user know an downgrade is available
+		     * %1 is the device name and %2 and %3 are version strings */
+		    _("Downgrade %s from %s to %s?"),
+		    fwupd_device_get_name(device),
+		    fwupd_device_get_version(device),
+		    fwupd_release_get_version(release));
 	} else if (vercmp > 0) {
-		/* TRANSLATORS: message letting the user know an upgrade is available
-		 * %1 is the device name and %2 and %3 are version strings */
-		g_string_append_printf(title,
-				       _("Upgrade %s from %s to %s?"),
-				       fwupd_device_get_name(device),
-				       fwupd_device_get_version(device),
-				       fwupd_release_get_version(release));
+		g_string_append_printf(
+		    title,
+		    /* TRANSLATORS: message letting the user know an upgrade is available
+		     * %1 is the device name and %2 and %3 are version strings */
+		    _("Upgrade %s from %s to %s?"),
+		    fwupd_device_get_name(device),
+		    fwupd_device_get_version(device),
+		    fwupd_release_get_version(release));
 	} else {
-		/* TRANSLATORS: message letting the user know an upgrade is available
-		 * %1 is the device name and %2 is a version string */
-		g_string_append_printf(title,
-				       _("Reinstall %s to %s?"),
-				       fwupd_device_get_name(device),
-				       fwupd_release_get_version(release));
+		g_string_append_printf(
+		    title,
+		    /* TRANSLATORS: message letting the user know an upgrade is available
+		     * %1 is the device name and %2 is a version string */
+		    _("Reinstall %s to %s?"),
+		    fwupd_device_get_name(device),
+		    fwupd_release_get_version(release));
 	}
 
 	/* description is optional */
@@ -443,9 +446,9 @@ fu_util_prompt_warning(FwupdDevice *device,
 		/* device may reboot */
 		if ((flags & FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE) == 0) {
 			g_string_append(str, "\n\n");
-			/* TRANSLATORS: warn the user before updating, %1 is a device name */
 			g_string_append_printf(
 			    str,
+			    /* TRANSLATORS: warn the user before updating, %1 is a device name */
 			    _("%s and all connected devices may not be usable while updating."),
 			    fwupd_device_get_name(device));
 
@@ -454,17 +457,19 @@ fu_util_prompt_warning(FwupdDevice *device,
 			g_string_append(str, "\n\n");
 			/* external device */
 			if ((flags & FWUPD_DEVICE_FLAG_INTERNAL) == 0) {
-				/* TRANSLATORS: warn the user before updating, %1 is a device name
-				 */
 				g_string_append_printf(str,
+						       /* TRANSLATORS: warn the user before
+							* updating, %1 is a device name
+							*/
 						       _("%s must remain connected for the "
 							 "duration of the update to avoid damage."),
 						       fwupd_device_get_name(device));
 			} else if (flags & FWUPD_DEVICE_FLAG_REQUIRE_AC) {
-				/* TRANSLATORS: warn the user before updating, %1 is a machine name
-				 */
 				g_string_append_printf(
 				    str,
+				    /* TRANSLATORS: warn the user before updating, %1 is a machine
+				     * name
+				     */
 				    _("%s must remain plugged into a power source for the duration "
 				      "of the update to avoid damage."),
 				    machine);
@@ -1301,11 +1306,12 @@ fu_util_device_to_string(FwupdDevice *dev, guint idt)
 			g_string_append_printf(verstr, " [%s]", datestr);
 		}
 		if (flags & FWUPD_DEVICE_FLAG_HISTORICAL) {
-			/* TRANSLATORS: version number of previous firmware */
-			fu_common_string_append_kv(str,
-						   idt + 1,
-						   _("Previous version"),
-						   verstr->str);
+			fu_common_string_append_kv(
+			    str,
+			    idt + 1,
+			    /* TRANSLATORS: version number of previous firmware */
+			    _("Previous version"),
+			    verstr->str);
 		} else {
 			/* TRANSLATORS: version number of current firmware */
 			fu_common_string_append_kv(str, idt + 1, _("Current version"), verstr->str);
@@ -1340,11 +1346,12 @@ fu_util_device_to_string(FwupdDevice *dev, guint idt)
 
 	/* branch */
 	if (fwupd_device_get_branch(dev) != NULL) {
-		/* TRANSLATORS: the stream of firmware, e.g. nonfree or open-source */
-		fu_common_string_append_kv(str,
-					   idt + 1,
-					   _("Release Branch"),
-					   fwupd_device_get_branch(dev));
+		fu_common_string_append_kv(
+		    str,
+		    idt + 1,
+		    /* TRANSLATORS: the stream of firmware, e.g. nonfree or open-source */
+		    _("Release Branch"),
+		    fwupd_device_get_branch(dev));
 	}
 
 	/* install duration */
@@ -1365,9 +1372,9 @@ fu_util_device_to_string(FwupdDevice *dev, guint idt)
 	/* update state */
 	state = fwupd_device_get_update_state(dev);
 	if (state != FWUPD_UPDATE_STATE_UNKNOWN) {
-		/* TRANSLATORS: hardware state, e.g. "pending" */
 		fu_common_string_append_kv(str,
 					   idt + 1,
+					   /* TRANSLATORS: hardware state, e.g. "pending" */
 					   _("Update State"),
 					   fu_util_update_state_to_string(state));
 
@@ -1376,11 +1383,12 @@ fu_util_device_to_string(FwupdDevice *dev, guint idt)
 			if (tmp != NULL) {
 				g_autofree gchar *color =
 				    fu_util_term_format(tmp, FU_UTIL_TERM_COLOR_BLUE);
-				/* TRANSLATORS: helpful messages from last update */
-				fu_common_string_append_kv(str,
-							   idt + 1,
-							   _("Update Message"),
-							   color);
+				fu_common_string_append_kv(
+				    str,
+				    idt + 1,
+				    /* TRANSLATORS: helpful messages from last update */
+				    _("Update Message"),
+				    color);
 			}
 		}
 	}
@@ -1421,11 +1429,12 @@ fu_util_device_to_string(FwupdDevice *dev, guint idt)
 			guid_src = g_strdup_printf("%s ← %s", guid, instance_id);
 		}
 		if (i == 0) {
-			/* TRANSLATORS: global ID common to all similar hardware */
-			fu_common_string_append_kv(str,
-						   idt + 1,
-						   ngettext("GUID", "GUIDs", guids->len),
-						   guid_src);
+			fu_common_string_append_kv(
+			    str,
+			    idt + 1,
+			    /* TRANSLATORS: global ID common to all similar hardware */
+			    ngettext("GUID", "GUIDs", guids->len),
+			    guid_src);
 		} else {
 			fu_common_string_append_kv(str, idt + 1, "", guid_src);
 		}
@@ -1637,36 +1646,38 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 	fu_common_string_append_kv(str, idt + 1, _("New version"), fwupd_release_get_version(rel));
 
 	if (fwupd_release_get_remote_id(rel) != NULL) {
-		/* TRANSLATORS: the server the file is coming from */
 		fu_common_string_append_kv(str,
 					   idt + 1,
+					   /* TRANSLATORS: the server the file is coming from */
 					   _("Remote ID"),
 					   fwupd_release_get_remote_id(rel));
 	}
 	if (fwupd_release_get_branch(rel) != NULL) {
-		/* TRANSLATORS: the stream of firmware, e.g. nonfree or open-source */
-		fu_common_string_append_kv(str,
-					   idt + 1,
-					   _("Branch"),
-					   fwupd_release_get_branch(rel));
+		fu_common_string_append_kv(
+		    str,
+		    idt + 1,
+		    /* TRANSLATORS: the stream of firmware, e.g. nonfree or open-source */
+		    _("Branch"),
+		    fwupd_release_get_branch(rel));
 	}
 	if (fwupd_release_get_summary(rel) != NULL) {
-		/* TRANSLATORS: one line summary of device */
 		fu_common_string_append_kv(str,
 					   idt + 1,
+					   /* TRANSLATORS: one line summary of device */
 					   _("Summary"),
 					   fwupd_release_get_summary(rel));
 	}
 	if (fwupd_release_get_name_variant_suffix(rel) != NULL) {
-		/* TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China') */
-		fu_common_string_append_kv(str,
-					   idt + 1,
-					   _("Variant"),
-					   fwupd_release_get_name_variant_suffix(rel));
+		fu_common_string_append_kv(
+		    str,
+		    idt + 1,
+		    /* TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China') */
+		    _("Variant"),
+		    fwupd_release_get_name_variant_suffix(rel));
 	}
-	/* TRANSLATORS: e.g. GPLv2+, Proprietary etc */
 	fu_common_string_append_kv(str,
 				   idt + 1,
+				   /* TRANSLATORS: e.g. GPLv2+, Proprietary etc */
 				   _("License"),
 				   fu_util_license_to_string(fwupd_release_get_license(rel)));
 	if (fwupd_release_get_size(rel) != 0) {
@@ -1684,30 +1695,30 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 	}
 	if (fwupd_release_get_urgency(rel) != FWUPD_RELEASE_URGENCY_UNKNOWN) {
 		FwupdReleaseUrgency tmp = fwupd_release_get_urgency(rel);
-		/* TRANSLATORS: how important the release is */
 		fu_common_string_append_kv(str,
 					   idt + 1,
+					   /* TRANSLATORS: how important the release is */
 					   _("Urgency"),
 					   fu_util_release_urgency_to_string(tmp));
 	}
 	if (fwupd_release_get_details_url(rel) != NULL) {
-		/* TRANSLATORS: more details about the update link */
 		fu_common_string_append_kv(str,
 					   idt + 1,
+					   /* TRANSLATORS: more details about the update link */
 					   _("Details"),
 					   fwupd_release_get_details_url(rel));
 	}
 	if (fwupd_release_get_source_url(rel) != NULL) {
-		/* TRANSLATORS: source (as in code) link */
 		fu_common_string_append_kv(str,
 					   idt + 1,
+					   /* TRANSLATORS: source (as in code) link */
 					   _("Source"),
 					   fwupd_release_get_source_url(rel));
 	}
 	if (fwupd_release_get_vendor(rel) != NULL) {
-		/* TRANSLATORS: manufacturer of hardware */
 		fu_common_string_append_kv(str,
 					   idt + 1,
+					   /* TRANSLATORS: manufacturer of hardware */
 					   _("Vendor"),
 					   fwupd_release_get_vendor(rel));
 	}
@@ -1718,9 +1729,9 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 		fu_common_string_append_kv(str, idt + 1, _("Duration"), tmp);
 	}
 	if (fwupd_release_get_update_message(rel) != NULL) {
-		/* TRANSLATORS: helpful messages for the update */
 		fu_common_string_append_kv(str,
 					   idt + 1,
+					   /* TRANSLATORS: helpful messages for the update */
 					   _("Update Message"),
 					   fwupd_release_get_update_message(rel));
 	}
@@ -1748,11 +1759,12 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 	for (guint i = 0; i < issues->len; i++) {
 		const gchar *issue = g_ptr_array_index(issues, i);
 		if (i == 0) {
-			/* TRANSLATORS: issue fixed with the release, e.g. CVE */
-			fu_common_string_append_kv(str,
-						   idt + 1,
-						   ngettext("Issue", "Issues", issues->len),
-						   issue);
+			fu_common_string_append_kv(
+			    str,
+			    idt + 1,
+			    /* TRANSLATORS: issue fixed with the release, e.g. CVE */
+			    ngettext("Issue", "Issues", issues->len),
+			    issue);
 		} else {
 			fu_common_string_append_kv(str, idt + 1, "", issue);
 		}
@@ -1780,17 +1792,17 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 	/* TRANSLATORS: remote type, e.g. remote or local */
 	fu_common_string_append_kv(str, idt + 1, _("Type"), fwupd_remote_kind_to_string(kind));
 
-	/* TRANSLATORS: keyring type, e.g. GPG or PKCS7 */
 	if (keyring_kind != FWUPD_KEYRING_KIND_UNKNOWN) {
 		fu_common_string_append_kv(str,
 					   idt + 1,
+					   /* TRANSLATORS: keyring type, e.g. GPG or PKCS7 */
 					   _("Keyring"),
 					   fwupd_keyring_kind_to_string(keyring_kind));
 	}
 
-	/* TRANSLATORS: if the remote is enabled */
 	fu_common_string_append_kv(str,
 				   idt + 1,
+				   /* TRANSLATORS: if the remote is enabled */
 				   _("Enabled"),
 				   fwupd_remote_get_enabled(remote) ? "true" : "false");
 
@@ -1878,12 +1890,12 @@ fu_util_remote_to_string(FwupdRemote *remote, guint idt)
 	if (tmp != NULL) {
 		/* TRANSLATORS: URI to send success/failure reports */
 		fu_common_string_append_kv(str, idt + 1, _("Report URI"), tmp);
-		/* TRANSLATORS: Boolean value to automatically send reports */
-		fu_common_string_append_kv(str,
-					   idt + 1,
-					   _("Automatic Reporting"),
-					   fwupd_remote_get_automatic_reports(remote) ? "true"
-										      : "false");
+		fu_common_string_append_kv(
+		    str,
+		    idt + 1,
+		    /* TRANSLATORS: Boolean value to automatically send reports */
+		    _("Automatic Reporting"),
+		    fwupd_remote_get_automatic_reports(remote) ? "true" : "false");
 	}
 
 	return g_string_free(str, FALSE);
@@ -2171,15 +2183,16 @@ fu_util_switch_branch_warning(FwupdDevice *dev,
 
 	/* warn the user if the vendor is different */
 	if (g_strcmp0(fwupd_device_get_vendor(dev), fwupd_release_get_vendor(rel)) != 0) {
-		/* TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name */
-		g_string_append_printf(desc_full,
-				       _("The firmware from %s is not "
-					 "supplied by %s, the hardware vendor."),
-				       fwupd_release_get_vendor(rel),
-				       fwupd_device_get_vendor(dev));
+		g_string_append_printf(
+		    desc_full,
+		    /* TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name */
+		    _("The firmware from %s is not "
+		      "supplied by %s, the hardware vendor."),
+		    fwupd_release_get_vendor(rel),
+		    fwupd_device_get_vendor(dev));
 		g_string_append(desc_full, "\n\n");
-		/* TRANSLATORS: %1 is the device vendor name */
 		g_string_append_printf(desc_full,
+				       /* TRANSLATORS: %1 is the device vendor name */
 				       _("Your hardware may be damaged using this firmware, "
 					 "and installing this release may void any warranty "
 					 "with %s."),
@@ -2228,9 +2241,9 @@ fu_util_show_unsupported_warn(void)
 		return;
 	/* TRANSLATORS: this is a prefix on the console */
 	fmt = fu_util_term_format(_("WARNING:"), FU_UTIL_TERM_COLOR_YELLOW);
-	/* TRANSLATORS: unsupported build of the package */
 	g_printerr("%s %s\n",
 		   fmt,
+		   /* TRANSLATORS: unsupported build of the package */
 		   _("This package has not been validated, it may not work properly."));
 #endif
 }

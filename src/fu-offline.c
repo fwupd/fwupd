@@ -253,8 +253,8 @@ main(int argc, char *argv[])
 					      FWUPD_INSTALL_FLAG_OFFLINE,
 					  NULL,
 					  &error)) {
-			/* TRANSLATORS: we could not install for some reason */
 			g_printerr("%s: %s\n",
+				   /* TRANSLATORS: we could not install for some reason */
 				   _("Failed to install firmware update"),
 				   error->message);
 			return EXIT_FAILURE;

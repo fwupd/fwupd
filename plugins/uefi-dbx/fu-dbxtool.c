@@ -186,8 +186,8 @@ main(int argc, char *argv[])
 		if (dbxfile != NULL) {
 			dbx = fu_dbxtool_get_siglist_local(dbxfile, &error);
 			if (dbx == NULL) {
-				/* TRANSLATORS: could not read existing system data */
 				g_printerr("%s: %s\n",
+					   /* TRANSLATORS: could not read existing system data */
 					   _("Failed to load local dbx"),
 					   error->message);
 				return EXIT_FAILURE;
@@ -195,8 +195,8 @@ main(int argc, char *argv[])
 		} else {
 			dbx = fu_dbxtool_get_siglist_system(&error);
 			if (dbx == NULL) {
-				/* TRANSLATORS: could not read existing system data */
 				g_printerr("%s: %s\n",
+					   /* TRANSLATORS: could not read existing system data */
 					   _("Failed to load system dbx"),
 					   error->message);
 				return EXIT_FAILURE;
@@ -267,8 +267,8 @@ main(int argc, char *argv[])
 
 		/* check this is a newer dbx update */
 		if (!force && fu_dbxtool_siglist_inclusive(dbx_system, dbx_update)) {
-			/* TRANSLATORS: same or newer update already applied */
 			g_printerr("%s\n",
+				   /* TRANSLATORS: same or newer update already applied */
 				   _("Cannot apply as dbx update has already been applied."));
 			return EXIT_FAILURE;
 		}
@@ -286,9 +286,9 @@ main(int argc, char *argv[])
 			g_print("%s\n", _("Validating ESP contents…"));
 			if (!fu_uefi_dbx_signature_list_validate(FU_EFI_SIGNATURE_LIST(dbx_update),
 								 &error)) {
-				/* TRANSLATORS: something with a blocked hash exists
-				 * in the users ESP -- which would be bad! */
 				g_printerr("%s: %s\n",
+					   /* TRANSLATORS: something with a blocked hash exists
+					    * in the users ESP -- which would be bad! */
 					   _("Failed to validate ESP contents"),
 					   error->message);
 				return EXIT_FAILURE;
