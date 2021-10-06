@@ -140,8 +140,8 @@ fu_progressbar_time_remaining_str(FuProgressbar *self)
 		return g_strdup(_("Less than one minute remaining"));
 	}
 
-	/* more than a minute */
 	return g_strdup_printf(
+	    /* TRANSLATORS: more than a minute */
 	    ngettext("%.0f minute remaining", "%.0f minutes remaining", self->last_estimate / 60),
 	    self->last_estimate / 60);
 }
