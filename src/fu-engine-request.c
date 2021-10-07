@@ -32,6 +32,13 @@ fu_engine_request_set_feature_flags(FuEngineRequest *self, FwupdFeatureFlags fea
 	self->feature_flags = feature_flags;
 }
 
+gboolean
+fu_engine_request_has_feature_flag(FuEngineRequest *self, FwupdFeatureFlags feature_flag)
+{
+	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), FALSE);
+	return (self->feature_flags & feature_flag) > 0;
+}
+
 FwupdDeviceFlags
 fu_engine_request_get_device_flags(FuEngineRequest *self)
 {

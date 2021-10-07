@@ -927,6 +927,7 @@ LIBFWUPDPLUGIN_1.7.0 {
 
 LIBFWUPDPLUGIN_1.7.1 {
   global:
+    fu_common_check_full_disk_encryption;
     fu_common_mkdir;
   local: *;
 } LIBFWUPDPLUGIN_1.7.0;

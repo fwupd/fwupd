@@ -454,6 +454,7 @@ fu_engine_set_release_from_artifact(FuEngine *self,
 
 static gboolean
 fu_engine_set_release_from_appstream(FuEngine *self,
+				     FuEngineRequest *request,
 				     FuDevice *dev,
 				     FwupdRelease *rel,
 				     XbNode *component,
@@ -518,9 +519,19 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 	description = xb_node_query_first(release, "description", NULL);
 	if (description != NULL) {
 		g_autofree gchar *xml = NULL;
+		g_autoptr(GString) str = NULL;
 		xml = xb_node_export(description, XB_NODE_EXPORT_FLAG_ONLY_CHILDREN, NULL);
-		if (xml != NULL)
-			fwupd_release_set_description(rel, xml);
+		str = g_string_new(xml);
+		if (request != NULL &&
+		    !fu_engine_request_has_feature_flag(request, FWUPD_FEATURE_FLAG_FDE_WARNING)) {
+			g_string_prepend(
+			    str,
+			    "<p>Some of the platform secrets may be invalidated when "
+			    "updating this firmware. Please ensure you have the volume "
+			    "recovery key before continuing.</p>");
+		}
+		if (str->len > 0)
+			fwupd_release_set_description(rel, str->str);
 	}
 	if (artifact == NULL) {
 		tmp = xb_node_query_text(release, "location", NULL);
@@ -4278,7 +4289,13 @@ fu_engine_get_result_from_component(FuEngine *self,
 	}
 	rel = fwupd_release_new();
 	fwupd_release_set_flags(rel, release_flags);
-	if (!fu_engine_set_release_from_appstream(self, dev, rel, component, release, error))
+	if (!fu_engine_set_release_from_appstream(self,
+						  request,
+						  dev,
+						  rel,
+						  component,
+						  release,
+						  error))
 		return NULL;
 	fu_device_add_release(dev, rel);
 	return g_steal_pointer(&dev);
@@ -4782,6 +4799,7 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 
 		/* create new FwupdRelease for the XbNode */
 		if (!fu_engine_set_release_from_appstream(self,
+							  request,
 							  device,
 							  rel,
 							  component,
@@ -5725,6 +5743,7 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 				g_autoptr(FwupdRelease) rel = fwupd_release_new();
 				g_autoptr(GError) error_local = NULL;
 				if (!fu_engine_set_release_from_appstream(self,
+									  NULL,
 									  device,
 									  rel,
 									  component,

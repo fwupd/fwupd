@@ -79,6 +79,8 @@ struct FuUtilPrivate {
 
 static gboolean
 fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error);
+static FwupdDevice *
+fu_util_get_device_by_id(FuUtilPrivate *priv, const gchar *id, GError **error);
 
 static void
 fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuUtilPrivate *priv)
@@ -1063,12 +1065,16 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *id;
 	g_autofree gchar *filename = NULL;
+	g_autoptr(FwupdDevice) dev = NULL;
 
 	/* handle both forms */
 	if (g_strv_length(values) == 1) {
 		id = FWUPD_DEVICE_ID_ANY;
 	} else if (g_strv_length(values) == 2) {
 		id = values[1];
+		dev = fu_util_get_device_by_id(priv, id, error);
+		if (dev == NULL)
+			return FALSE;
 	} else {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1091,6 +1097,12 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	filename = fu_util_download_if_required(priv, values[0], error);
 	if (filename == NULL)
 		return FALSE;
+
+	/* detect bitlocker */
+	if (dev != NULL && !priv->no_safety_check && !priv->assume_yes) {
+		if (!fu_util_prompt_warning_fde(dev, error))
+			return FALSE;
+	}
 
 	if (!fwupd_client_install(priv->client, id, filename, priv->flags, NULL, error))
 		return FALSE;
@@ -2140,6 +2152,8 @@ fu_util_update_device_with_release(FuUtilPrivate *priv,
 {
 	if (!priv->no_safety_check && !priv->assume_yes) {
 		if (!fu_util_prompt_warning(dev, rel, fu_util_get_tree_title(priv), error))
+			return FALSE;
+		if (!fu_util_prompt_warning_fde(dev, error))
 			return FALSE;
 		if (!fu_util_prompt_warning_composite(priv, dev, rel, error))
 			return FALSE;
@@ -4081,7 +4095,7 @@ main(int argc, char *argv[])
 			priv->client,
 			FWUPD_FEATURE_FLAG_CAN_REPORT | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
 			    FWUPD_FEATURE_FLAG_REQUESTS | FWUPD_FEATURE_FLAG_UPDATE_ACTION |
-			    FWUPD_FEATURE_FLAG_DETACH_ACTION,
+			    FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_DETACH_ACTION,
 			priv->cancellable,
 			&error)) {
 			g_printerr("Failed to set front-end features: %s\n", error->message);

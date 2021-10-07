@@ -528,6 +528,7 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *nvram_total_str = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GError) error_fde = NULL;
 
 	/* don't let user's environment influence test suite failures */
 	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
@@ -717,7 +718,9 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	const gchar *str;
+	gboolean has_fde = FALSE;
 	g_autoptr(GError) error_udisks2 = NULL;
+	g_autoptr(GError) error_fde = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
@@ -742,6 +745,12 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 		}
 	}
 
+	/*  warn the user that BitLocker might ask for recovery key after fw update */
+	if (!fu_common_check_full_disk_encryption(&error_fde)) {
+		g_debug("FDE in use, set flag: %s", error_fde->message);
+		has_fde = TRUE;
+	}
+
 	/* add each device */
 	if (!fu_backend_coldplug(data->backend, error))
 		return FALSE;
@@ -755,6 +764,10 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 			return FALSE;
 		fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+
+		/* only system firmware "BIOS" can change the PCRx registers */
+		if (fu_uefi_device_get_kind(dev) == FU_UEFI_DEVICE_KIND_SYSTEM_FIRMWARE && has_fde)
+			fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_AFFECTS_FDE);
 
 		/* load all configuration variables */
 		fu_plugin_uefi_capsule_load_config(plugin, FU_DEVICE(dev));

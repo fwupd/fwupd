@@ -199,6 +199,8 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "only-version-upgrade";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNREACHABLE)
 		return "unreachable";
+	if (device_flag == FWUPD_DEVICE_FLAG_AFFECTS_FDE)
+		return "affects-fde";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -308,6 +310,8 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE;
 	if (g_strcmp0(device_flag, "unreachable") == 0)
 		return FWUPD_DEVICE_FLAG_UNREACHABLE;
+	if (g_strcmp0(device_flag, "affects-fde") == 0)
+		return FWUPD_DEVICE_FLAG_AFFECTS_FDE;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 
@@ -526,6 +530,8 @@ fwupd_feature_flag_to_string(FwupdFeatureFlags feature_flag)
 		return "switch-branch";
 	if (feature_flag == FWUPD_FEATURE_FLAG_REQUESTS)
 		return "requests";
+	if (feature_flag == FWUPD_FEATURE_FLAG_FDE_WARNING)
+		return "fde-warning";
 	return NULL;
 }
 
@@ -554,6 +560,8 @@ fwupd_feature_flag_from_string(const gchar *feature_flag)
 		return FWUPD_FEATURE_FLAG_SWITCH_BRANCH;
 	if (g_strcmp0(feature_flag, "requests") == 0)
 		return FWUPD_FEATURE_FLAG_REQUESTS;
+	if (g_strcmp0(feature_flag, "fde-warning") == 0)
+		return FWUPD_FEATURE_FLAG_FDE_WARNING;
 	return FWUPD_FEATURE_FLAG_LAST;
 }
 
