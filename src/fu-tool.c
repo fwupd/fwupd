@@ -1111,6 +1111,10 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 		FuDevice *device = fu_util_get_device(priv, values[1], error);
 		if (device == NULL)
 			return FALSE;
+		if (!priv->no_safety_check) {
+			if (!fu_util_prompt_warning_fde(FWUPD_DEVICE(device), error))
+				return FALSE;
+		}
 		devices_possible = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 		g_ptr_array_add(devices_possible, device);
 	} else {
@@ -1337,6 +1341,8 @@ fu_util_update_all(FuUtilPrivate *priv, GError **error)
 		if (!priv->no_safety_check) {
 			if (!fu_util_prompt_warning(dev, rel, fu_util_get_tree_title(priv), error))
 				return FALSE;
+			if (!fu_util_prompt_warning_fde(dev, error))
+				return FALSE;
 		}
 
 		if (!fu_util_install_release(priv, rel, &error_local)) {
@@ -1364,6 +1370,12 @@ fu_util_update_by_id(FuUtilPrivate *priv, const gchar *id, GError **error)
 	rels = fu_engine_get_upgrades(priv->engine, priv->request, fu_device_get_id(dev), error);
 	if (rels == NULL)
 		return FALSE;
+
+	/* detect bitlocker */
+	if (!priv->no_safety_check) {
+		if (!fu_util_prompt_warning_fde(FWUPD_DEVICE(dev), error))
+			return FALSE;
+	}
 	rel = g_ptr_array_index(rels, 0);
 	if (!fu_util_install_release(priv, rel, error))
 		return FALSE;
@@ -3378,10 +3390,10 @@ main(int argc, char *argv[])
 		fu_progressbar_set_interactive(priv->progressbar, FALSE);
 	} else {
 		/* set our implemented feature set */
-		fu_engine_request_set_feature_flags(priv->request,
-						    FWUPD_FEATURE_FLAG_DETACH_ACTION |
-							FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
-							FWUPD_FEATURE_FLAG_UPDATE_ACTION);
+		fu_engine_request_set_feature_flags(
+		    priv->request,
+		    FWUPD_FEATURE_FLAG_DETACH_ACTION | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
+			FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_UPDATE_ACTION);
 	}
 
 	/* get a list of the commands */

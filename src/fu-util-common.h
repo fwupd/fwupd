@@ -68,6 +68,8 @@ fu_util_prompt_warning(FwupdDevice *device,
 		       const gchar *machine,
 		       GError **error);
 gboolean
+fu_util_prompt_warning_fde(FwupdDevice *dev, GError **error);
+gboolean
 fu_util_prompt_complete(FwupdDeviceFlags flags, gboolean prompt, GError **error);
 gboolean
 fu_util_update_reboot(GError **error);

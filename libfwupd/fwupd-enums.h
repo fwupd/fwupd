@@ -72,6 +72,7 @@ typedef enum {
  * @FWUPD_FEATURE_FLAG_UPDATE_ACTION:		Can perform update action, typically showing text
  * @FWUPD_FEATURE_FLAG_SWITCH_BRANCH:		Can switch the firmware branch
  * @FWUPD_FEATURE_FLAG_REQUESTS:		Can show interactive requests
+ * @FWUPD_FEATURE_FLAG_FDE_WARNING:		Can warn about full disk encryption
  *
  * The flags to the feature capabilities of the front-end client.
  **/
@@ -82,6 +83,7 @@ typedef enum {
 	FWUPD_FEATURE_FLAG_UPDATE_ACTION = 1 << 2, /* Since: 1.4.5 */
 	FWUPD_FEATURE_FLAG_SWITCH_BRANCH = 1 << 3, /* Since: 1.5.0 */
 	FWUPD_FEATURE_FLAG_REQUESTS = 1 << 4,	   /* Since: 1.6.2 */
+	FWUPD_FEATURE_FLAG_FDE_WARNING = 1 << 5,   /* Since: 1.7.1 */
 	/*< private >*/
 	FWUPD_FEATURE_FLAG_LAST
 } FwupdFeatureFlags;
@@ -478,6 +480,19 @@ typedef enum {
  * Since 1.7.0
  */
 #define FWUPD_DEVICE_FLAG_UNREACHABLE (1llu << 44)
+/**
+ * FWUPD_DEVICE_FLAG_AFFECTS_FDE:
+ *
+ * The device is warning that a volume with full-disk-encryption was found on this machine,
+ * typically a Windows NTFS partition with BitLocker.
+ * Updating the firmware on this device may invalidate secrets used to decrypt the volume, and
+ * the recovery key may be required.
+ *
+ * Supported clients will display this information as a warning to the user.
+ *
+ * Since: 1.7.1
+ */
+#define FWUPD_DEVICE_FLAG_AFFECTS_FDE (1llu << 45)
 /**
  * FWUPD_DEVICE_FLAG_UNKNOWN:
  *

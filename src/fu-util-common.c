@@ -1206,6 +1206,10 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		 * or is out of wireless range */
 		return _("Device is unreachable");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_AFFECTS_FDE) {
+		/* TRANSLATORS: we might ask the user the recovery key when next booting Windows */
+		return _("Full disk encryption secrets may be invalidated when updating");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
 		/* skip */
 		return NULL;
@@ -1547,8 +1551,6 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:
 	case FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:
 	case FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD:
-		return fu_util_term_format(fu_util_plugin_flag_to_string(plugin_flag),
-					   FU_UTIL_TERM_COLOR_RED);
 	default:
 		break;
 	}
@@ -2227,6 +2229,40 @@ fu_util_switch_branch_warning(FwupdDevice *dev,
 					    "Declined branch switch");
 			return FALSE;
 		}
+	}
+	return TRUE;
+}
+
+gboolean
+fu_util_prompt_warning_fde(FwupdDevice *dev, GError **error)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_AFFECTS_FDE))
+		return TRUE;
+
+	g_string_append(
+	    str,
+	    /* TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM */
+	    _("Some of the platform secrets may be invalidated when updating this firmware."));
+	g_string_append(str, " ");
+	g_string_append(str,
+			/* TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+			   metal thing */
+			_("Please ensure you have the volume recovery key before continuing."));
+	/* TRANSLATORS: title text, shown as a warning */
+	fu_util_warning_box(_("Full Disk Encryption Detected"), str->str, 80);
+
+	/* ask for confirmation */
+	g_print("\n%s [Y|n]: ",
+		/* TRANSLATORS: prompt to apply the update */
+		_("Perform operation?"));
+	if (!fu_util_prompt_for_boolean(TRUE)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "Request canceled");
+		return FALSE;
 	}
 	return TRUE;
 }

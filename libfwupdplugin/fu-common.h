@@ -405,6 +405,8 @@ FuVolume *
 fu_common_get_esp_for_path(const gchar *esp_path, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 FuVolume *
 fu_common_get_esp_default(GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_common_check_full_disk_encryption(GError **error);
 
 guint8
 fu_common_crc8(const guint8 *buf, gsize bufsz);
