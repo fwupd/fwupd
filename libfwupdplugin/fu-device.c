@@ -1150,7 +1150,8 @@ fu_device_add_child(FuDevice *self, FuDevice *child)
 	fwupd_device_add_child(FWUPD_DEVICE(self), FWUPD_DEVICE(child));
 
 	/* propagate inhibits to children */
-	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN)) {
+	if (priv->inhibits != NULL &&
+	    fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN)) {
 		g_autoptr(GList) values = g_hash_table_get_values(priv->inhibits);
 		for (GList *l = values; l != NULL; l = l->next) {
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
