@@ -169,7 +169,6 @@ fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **erro
 	while ((tmp = g_dir_read_name(dir)) != NULL) {
 		g_autofree gchar *filename = g_build_filename(path_remotes, tmp, NULL);
 		g_autoptr(FwupdRemote) remote = fwupd_remote_new();
-		g_autofree gchar *localstatedir = NULL;
 		g_autofree gchar *remotesdir = NULL;
 
 		/* skip invalid files */
@@ -179,8 +178,7 @@ fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **erro
 		}
 
 		/* set directory to store data */
-		localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-		remotesdir = g_build_filename(localstatedir, "remotes.d", NULL);
+		remotesdir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_METADATA);
 		fwupd_remote_set_remotes_dir(remote, remotesdir);
 
 		/* load from keyfile */
