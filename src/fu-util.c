@@ -83,6 +83,8 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error);
 static void
 fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuUtilPrivate *priv)
 {
+	if (priv->as_json)
+		return;
 	fu_progressbar_update(priv->progressbar,
 			      fwupd_client_get_status(priv->client),
 			      fwupd_client_get_percentage(priv->client));
