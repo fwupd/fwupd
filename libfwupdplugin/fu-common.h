@@ -78,6 +78,8 @@ typedef guint FuEndianType;
  * @FU_PATH_KIND_DATADIR_QUIRKS:	The quirks data store (IE /usr/share/fwupd/quirks.d)
  * @FU_PATH_KIND_LOCALSTATEDIR_QUIRKS:	The local state directory for quirks (IE
  * /var/lib/fwupd/quirks.d)
+ * @FU_PATH_KIND_LOCALSTATEDIR_METADATA: The local state directory for metadata (IE
+ * /var/lib/fwupd/metadata)
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -103,6 +105,7 @@ typedef enum {
 	FU_PATH_KIND_FIRMWARE_SEARCH,
 	FU_PATH_KIND_DATADIR_QUIRKS,
 	FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
+	FU_PATH_KIND_LOCALSTATEDIR_METADATA,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;

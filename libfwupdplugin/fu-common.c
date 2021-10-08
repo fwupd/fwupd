@@ -1281,6 +1281,13 @@ fu_common_get_path(FuPathKind path_kind)
 			return g_build_filename(tmp, NULL);
 		basedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 		return g_build_filename(basedir, "quirks.d", NULL);
+	/* /var/lib/fwupd/metadata */
+	case FU_PATH_KIND_LOCALSTATEDIR_METADATA:
+		tmp = g_getenv("FWUPD_LOCALSTATEDIR_METADATA");
+		if (tmp != NULL)
+			return g_build_filename(tmp, NULL);
+		basedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+		return g_build_filename(basedir, "metadata", NULL);
 	/* /var/cache/fwupd */
 	case FU_PATH_KIND_CACHEDIR_PKG:
 		tmp = g_getenv("CACHE_DIRECTORY");
