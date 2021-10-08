@@ -32,10 +32,23 @@ static gboolean
 fu_dell_dock_hub_probe(FuDevice *device, GError **error)
 {
 	g_autofree gchar *devid = NULL;
+        GUsbDevice *parent = NULL;
+        GUsbDevice *usb_device = fu_usb_device_get_dev (FU_USB_DEVICE (device));
 
-	devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&hub",
-				(guint)fu_usb_device_get_vid(FU_USB_DEVICE(device)),
-				(guint)fu_usb_device_get_pid(FU_USB_DEVICE(device)));
+        parent = g_usb_device_get_parent(usb_device);
+
+        if (g_usb_device_get_pid(parent) == SALOMON_HUB1_PID ||
+            g_usb_device_get_pid(parent) == SALOMON_HUB2_PID) {
+                devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X&hub",
+                             (guint) fu_usb_device_get_vid (FU_USB_DEVICE (device)),
+                             (guint) fu_usb_device_get_pid (FU_USB_DEVICE (device)));
+        }
+        if (g_usb_device_get_pid(parent) == ATOMIC_HUB1_PID ||
+            g_usb_device_get_pid(parent) == ATOMIC_HUB2_PID) {
+                devid = g_strdup_printf ("USB\\VID_%04X&PID_%04X&atomic_hub",
+                             (guint) fu_usb_device_get_vid (FU_USB_DEVICE (device)),
+                             (guint) fu_usb_device_get_pid (FU_USB_DEVICE (device)));
+        }
 
 	fu_device_set_logical_id(device, "hub");
 	fu_device_add_instance_id(device, devid);

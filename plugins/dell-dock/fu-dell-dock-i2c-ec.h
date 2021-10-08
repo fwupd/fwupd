@@ -47,3 +47,6 @@ gboolean
 fu_dell_dock_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error);
 gboolean
 fu_dell_dock_module_is_usb4(FuDevice *device);
+gboolean
+fu_dell_dock_ec_is_atomic(FuDevice *device);
+

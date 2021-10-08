@@ -75,7 +75,10 @@ fu_plugin_dell_dock_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 
 	/* create mst endpoint */
 	mst_device = fu_dell_dock_mst_new();
-	instance = DELL_DOCK_VM5331_INSTANCE_ID;
+	if (fu_dell_dock_ec_is_atomic (FU_DEVICE (ec_device)))
+		instance = DELL_DOCK_VMM6210_INSTANCE_ID;
+	else
+		instance = DELL_DOCK_VM5331_INSTANCE_ID;
 	fu_device_set_context(FU_DEVICE(mst_device), ctx);
 	fu_device_add_guid(FU_DEVICE(mst_device), fwupd_guid_hash_string(instance));
 	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(mst_device));
@@ -85,7 +88,9 @@ fu_plugin_dell_dock_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 
 	/* create package version endpoint */
 	status_device = fu_dell_dock_status_new();
-	if (fu_dell_dock_module_is_usb4(FU_DEVICE(ec_device)))
+        if (fu_dell_dock_ec_is_atomic (FU_DEVICE (ec_device)))
+                instance = DELL_DOCK_ATOMIC_STATUS_INSTANCE_ID;
+	else if (fu_dell_dock_module_is_usb4(FU_DEVICE(ec_device)))
 		instance = DELL_DOCK_DOCK2_INSTANCE_ID;
 	else
 		instance = DELL_DOCK_DOCK1_INSTANCE_ID;

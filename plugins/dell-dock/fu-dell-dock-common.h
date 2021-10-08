@@ -36,6 +36,15 @@
 #define GR_USB_VID		   0x8087
 #define GR_USB_PID		   0x0B40
 
+/* Add atomic support */
+#define DELL_DOCK_ATOMIC_STATUS_INSTANCE_ID     "USB\\VID_413C&PID_B06E&hub&atomic_status"
+#define DELL_DOCK_ATOMIC_EC_INSTANCE_ID         "USB\\VID_413C&PID_B06E&hub&atomic_embedded"
+#define DELL_DOCK_VMM6210_INSTANCE_ID           "MST-cayenne-vmm6210-257"
+#define SALOMON_HUB2_PID                        0x5487
+#define SALOMON_HUB1_PID                        0x5413
+#define ATOMIC_HUB2_PID                         0x548A
+#define ATOMIC_HUB1_PID                         0x541A
+
 gboolean
 fu_dell_dock_set_power(FuDevice *device, guint8 target, gboolean enabled, GError **error);
 void

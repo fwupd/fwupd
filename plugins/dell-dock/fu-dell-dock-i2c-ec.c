@@ -34,6 +34,7 @@
 
 #define EXPECTED_DOCK_INFO_SIZE 0xb7
 #define WD19_BASE		0x04
+#define ATOMIC_BASE		0x05
 
 #define TBT_MODE_MASK 0x01
 
@@ -181,6 +182,13 @@ fu_dell_dock_module_is_usb4(FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	return self->data->module_type == MODULE_TYPE_130_USB4;
+}
+
+gboolean
+fu_dell_dock_ec_is_atomic (FuDevice *device)
+{
+        FuDellDockEc *self = FU_DELL_DOCK_EC (device);
+        return self->base_type == ATOMIC_BASE;
 }
 
 const gchar *
@@ -344,14 +352,17 @@ fu_dell_dock_is_valid_dock(FuDevice *device, GError **error)
 	if (self->base_type == WD19_BASE) {
 		fu_device_add_instance_id(device, DELL_DOCK_EC_INSTANCE_ID);
 		return TRUE;
+	}else if (self->base_type == ATOMIC_BASE) {
+                fu_device_add_instance_id (device, DELL_DOCK_ATOMIC_EC_INSTANCE_ID);
+                return TRUE;
+        }else{
+		g_set_error(error,
+		    	FWUPD_ERROR,
+		    	FWUPD_ERROR_NOT_SUPPORTED,
+		    	"Invalid dock type: %x",
+		    	self->base_type);
+		return FALSE;
 	}
-
-	g_set_error(error,
-		    FWUPD_ERROR,
-		    FWUPD_ERROR_NOT_SUPPORTED,
-		    "Invalid dock type: %x",
-		    self->base_type);
-	return FALSE;
 }
 
 static gboolean
