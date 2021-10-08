@@ -6590,6 +6590,20 @@ fu_engine_context_set_battery_threshold(FuContext *ctx)
 	fu_context_set_battery_threshold(ctx, minimum_battery);
 }
 
+static gboolean
+fu_engine_ensure_paths_exist(GError **error)
+{
+	FuPathKind path_kinds[] = {FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
+				   FU_PATH_KIND_CACHEDIR_PKG,
+				   FU_PATH_KIND_LAST};
+	for (guint i = 0; path_kinds[i] != FU_PATH_KIND_LAST; i++) {
+		g_autofree gchar *fn = fu_common_get_path(path_kinds[i]);
+		if (!fu_common_mkdir(fn, error))
+			return FALSE;
+	}
+	return TRUE;
+}
+
 /**
  * fu_engine_load:
  * @self: a #FuEngine
@@ -6610,7 +6624,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 #ifndef _WIN32
 	g_autoptr(GError) error_local = NULL;
 #endif
-
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -6645,6 +6658,11 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if (self->host_machine_id == NULL)
 		g_debug("failed to build machine-id: %s", error_local->message);
 #endif
+
+	/* ensure these exist before starting */
+	if (!fu_engine_ensure_paths_exist(error))
+		return FALSE;
+
 	/* read config file */
 	if (!fu_config_load(self->config, error)) {
 		g_prefix_error(error, "Failed to load config: ");

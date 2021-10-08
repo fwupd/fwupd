@@ -183,6 +183,8 @@ fu_common_rmtree(const gchar *directory, GError **error) G_GNUC_WARN_UNUSED_RESU
 GPtrArray *
 fu_common_get_files_recursive(const gchar *path, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
+fu_common_mkdir(const gchar *dirname, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
 fu_common_mkdir_parent(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_common_set_contents_bytes(const gchar *filename,
