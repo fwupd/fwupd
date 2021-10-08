@@ -853,15 +853,22 @@ fu_util_warning_box(const gchar *title, const gchar *body, guint width)
 
 	/* optional body */
 	if (body != NULL) {
+		gboolean has_nonempty = FALSE;
 		g_auto(GStrv) split = g_strsplit(body, "\n", -1);
 		for (guint i = 0; split[i] != NULL; i++) {
 			g_autoptr(GPtrArray) lines = fu_util_strsplit_words(split[i], width - 4);
-			if (lines == NULL)
+			if (lines == NULL) {
+				if (has_nonempty) {
+					fu_util_warning_box_line("║ ", NULL, " ║", " ", width);
+					has_nonempty = FALSE;
+				}
 				continue;
+			}
 			for (guint j = 0; j < lines->len; j++) {
 				const gchar *line = g_ptr_array_index(lines, j);
 				fu_util_warning_box_line("║ ", line, " ║", " ", width);
 			}
+			has_nonempty = TRUE;
 		}
 	}
 
