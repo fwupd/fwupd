@@ -358,7 +358,7 @@ fu_superio_device_prepare_firmware(FuDevice *device,
 {
 	gsize sz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &sz);
-	const guint8 sig1[] = {0xa5, 0xa5, 0xa5, 0xa5, 0xa5, 0xa5, 0xa5};
+	const guint8 sig1[] = {0xa5, 0xa5, 0xa5, 0xa5, 0xa5, 0xa5};
 	const guint8 sig2[] = {0x85, 0x12, 0x5a, 0x5a, 0xaa};
 
 	/* find signature -- maybe ignore byte 0x14 too? */
