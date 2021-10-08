@@ -29,12 +29,19 @@ struct _FuDellDockHub {
 G_DEFINE_TYPE(FuDellDockHub, fu_dell_dock_hub, FU_TYPE_HID_DEVICE)
 
 void
-fu_dell_dock_hub_add_instance(FuDevice *device)
+fu_dell_dock_hub_add_instance(FuDevice *device, guint8 ec_type)
 {
-	g_autofree gchar *devid =
-	    g_strdup_printf("USB\\VID_%04X&PID_%04X&hub",
-			    (guint)fu_usb_device_get_vid(FU_USB_DEVICE(device)),
-			    (guint)fu_usb_device_get_pid(FU_USB_DEVICE(device)));
+	g_autofree gchar *devid = NULL;
+
+	if (ec_type == ATOMIC_BASE) {
+		devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&atomic_hub",
+					(guint)fu_usb_device_get_vid(FU_USB_DEVICE(device)),
+					(guint)fu_usb_device_get_pid(FU_USB_DEVICE(device)));
+	} else {
+		devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&hub",
+					(guint)fu_usb_device_get_vid(FU_USB_DEVICE(device)),
+					(guint)fu_usb_device_get_pid(FU_USB_DEVICE(device)));
+	}
 	fu_device_add_instance_id(device, devid);
 }
 
@@ -43,9 +50,6 @@ fu_dell_dock_hub_probe(FuDevice *device, GError **error)
 {
 	fu_device_set_logical_id(device, "hub");
 	fu_device_add_protocol(device, "com.dell.dock");
-	/* delay if we have the bridge until we've probed behind it */
-	if (!fu_device_has_private_flag(device, FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE))
-		fu_dell_dock_hub_add_instance(device);
 
 	return TRUE;
 }

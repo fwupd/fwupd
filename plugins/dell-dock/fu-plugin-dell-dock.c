@@ -75,7 +75,10 @@ fu_plugin_dell_dock_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 
 	/* create mst endpoint */
 	mst_device = fu_dell_dock_mst_new();
-	instance = DELL_DOCK_VM5331_INSTANCE_ID;
+	if (fu_dell_dock_get_ec_type(FU_DEVICE(ec_device)) == ATOMIC_BASE)
+		instance = DELL_DOCK_VMM6210_INSTANCE_ID;
+	else
+		instance = DELL_DOCK_VM5331_INSTANCE_ID;
 	fu_device_set_context(FU_DEVICE(mst_device), ctx);
 	fu_device_add_guid(FU_DEVICE(mst_device), fwupd_guid_hash_string(instance));
 	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(mst_device));
@@ -85,7 +88,9 @@ fu_plugin_dell_dock_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 
 	/* create package version endpoint */
 	status_device = fu_dell_dock_status_new();
-	if (fu_dell_dock_module_is_usb4(FU_DEVICE(ec_device)))
+	if (fu_dell_dock_get_ec_type(FU_DEVICE(ec_device)) == ATOMIC_BASE)
+		instance = DELL_DOCK_ATOMIC_STATUS_INSTANCE_ID;
+	else if (fu_dell_dock_module_is_usb4(FU_DEVICE(ec_device)))
 		instance = DELL_DOCK_DOCK2_INSTANCE_ID;
 	else
 		instance = DELL_DOCK_DOCK1_INSTANCE_ID;
@@ -104,10 +109,25 @@ fu_plugin_dell_dock_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 			return FALSE;
 	}
 
-	/* lastly add instance IDs for hub */
-	fu_dell_dock_hub_add_instance(proxy);
-
 	return TRUE;
+}
+
+/* prefer to use EC if in the transaction and parent if it is not */
+static FuDevice *
+fu_plugin_dell_dock_get_ec(GPtrArray *devices)
+{
+	FuDevice *ec_parent = NULL;
+	for (gint i = devices->len - 1; i >= 0; i--) {
+		FuDevice *dev = g_ptr_array_index(devices, i);
+		FuDevice *parent;
+		if (FU_IS_DELL_DOCK_EC(dev))
+			return dev;
+		parent = fu_device_get_parent(dev);
+		if (parent != NULL && FU_IS_DELL_DOCK_EC(parent))
+			ec_parent = parent;
+	}
+
+	return ec_parent;
 }
 
 gboolean
@@ -116,6 +136,9 @@ fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **erro
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuDellDockHub) hub = NULL;
 	const gchar *key = NULL;
+	GPtrArray *devices;
+	FuDevice *ec_device;
+	guint8 ec_type;
 
 	/* not interesting */
 	if (!FU_IS_USB_DEVICE(device))
@@ -150,6 +173,13 @@ fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **erro
 			return FALSE;
 		fu_plugin_cache_add(plugin, key, FU_DEVICE(hub));
 	}
+
+	/* add hub instance id after ec probed */
+	devices = fu_plugin_get_devices(plugin);
+	ec_device = fu_plugin_dell_dock_get_ec(devices);
+	ec_type = fu_dell_dock_get_ec_type(ec_device);
+	fu_dell_dock_hub_add_instance(FU_DEVICE(hub), ec_type);
+
 	fu_plugin_device_add(plugin, FU_DEVICE(hub));
 
 	/* clear updatable flag if parent doesn't have it */
@@ -231,24 +261,6 @@ fu_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, GError **er
 	}
 
 	return TRUE;
-}
-
-/* prefer to use EC if in the transaction and parent if it is not */
-static FuDevice *
-fu_plugin_dell_dock_get_ec(GPtrArray *devices)
-{
-	FuDevice *ec_parent = NULL;
-	for (guint i = 0; i < devices->len; i++) {
-		FuDevice *dev = g_ptr_array_index(devices, i);
-		FuDevice *parent;
-		if (FU_IS_DELL_DOCK_EC(dev))
-			return dev;
-		parent = fu_device_get_parent(dev);
-		if (parent != NULL && FU_IS_DELL_DOCK_EC(parent))
-			ec_parent = parent;
-	}
-
-	return ec_parent;
 }
 
 gboolean

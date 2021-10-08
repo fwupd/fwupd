@@ -55,6 +55,36 @@ DellDockBlobMajorOffset = 0x7F52
 DellDockBlobMinorOffset = 0x7F53
 InstallDuration = 3
 
+# Atomic USB hub1
+[USB\VID_413C&PID_B06F&atomic_hub]
+Name = RTS5413 in Dell dock
+Summary = USB 3.1 Generation 1 Hub
+ParentGuid = USB\VID_413C&PID_B06E&hub&atomic_embedded
+Plugin = dell_dock
+Vendor = Dell Inc.
+Icon = dock-usb
+FirmwareSize = 0x10000
+Flags = require-ac,updatable,dual-image,usable-during-update
+DellDockUnlockTarget = 8
+DellDockBlobMajorOffset = 0x7F6E
+DellDockBlobMinorOffset = 0x7F6F
+InstallDuration = 14
+
+# Atomic USB hub2
+[USB\VID_413C&PID_B06E&atomic_hub]
+Name = RTS5487 in Dell dock
+Summary = USB 3.1 Generation 2 Hub
+ParentGuid = USB\VID_413C&PID_B06E&hub&atomic_embedded
+Vendor = Dell Inc.
+Plugin = dell_dock
+Icon = dock-usb
+FirmwareSize = 0x10000
+Flags = require-ac,updatable,has-bridge,dual-image,usable-during-update
+DellDockUnlockTarget = 7
+DellDockBlobMajorOffset = 0x7F52
+DellDockBlobMinorOffset = 0x7F53
+InstallDuration = 3
+
 # Embedded Controller
 # Name is intentionally not set (it's queried by dock)
 [USB\VID_413C&PID_B06E&hub&embedded]
@@ -70,6 +100,22 @@ Flags = require-ac,dual-image,self-recovery,usable-during-update
 DellDockUnlockTarget = 1
 DellDockBoardMin = 6
 DellDockVersionLowest = 01.00.00.00
+DellDockBlobVersionOffset = 0x1AFC0
+InstallDuration = 60
+
+#Atomic Embedded Controller
+# Name is intentionally not set (it's queried by dock)
+[USB\VID_413C&PID_B06E&hub&atomic_embedded]
+Name = Dell dock
+Summary = High performance dock
+Plugin = dell_dock
+Vendor = Dell Inc.
+VendorId = USB:0x413C
+Icon = dock-usb
+FirmwareSizeMin = 0x1FFC0
+FirmwareSizeMax = 0x20000
+Flags = require-ac,dual-image,self-recovery,usable-during-update
+DellDockUnlockTarget = 1
 DellDockBlobVersionOffset = 0x1AFC0
 InstallDuration = 60
 
@@ -95,6 +141,17 @@ FirmwareSize = 24
 InstallDuration = 5
 DellDockBlobVersionOffset = 0x14
 
+# Representation of overall dock update
+[USB\VID_413C&PID_B06E&hub&atomic_status]
+Name = Package level of Dell dock
+Summary = A representation of dock update status
+Plugin = dell_dock
+Vendor = Dell Inc.
+Flags = self-recovery,usable-during-update
+FirmwareSize = 24
+InstallDuration = 5
+DellDockBlobVersionOffset = 0x14
+
 # MST Hub
 [MST-panamera-vmm5331-259]
 Name = VMM5331 in Dell dock
@@ -110,6 +167,23 @@ DellDockInstallDurationI2C = 360
 DellDockBlobMajorOffset = 0x18400
 DellDockBlobMinorOffset = 0x18401
 DellDockBlobBuildOffset = 0x18402
+Icon = video-display
+
+#Atomic MST Hub
+[MST-cayenne-vmm6210-257]
+Name = VMM6210 in Dell dock
+Summary = Multi Stream Transport controller
+Vendor = Dell Inc.
+Plugin = dell_dock
+ParentGuid = USB\VID_413C&PID_B06E&hub&atomic_embedded
+Flags = skips-restart,require-ac,dual-image,usable-during-update
+FirmwareSize = 1048576
+DellDockUnlockTarget = 9
+InstallDuration = 95
+DellDockInstallDurationI2C = 360
+DellDockBlobMajorOffset = 0x4000
+DellDockBlobMinorOffset = 0x4001
+DellDockBlobBuildOffset = 0x4002
 Icon = video-display
 
 # Thunderbolt controller

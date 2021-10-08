@@ -33,7 +33,6 @@
 #define EC_GET_FW_UPDATE_STATUS 0x0f
 
 #define EXPECTED_DOCK_INFO_SIZE 0xb7
-#define WD19_BASE		0x04
 
 #define TBT_MODE_MASK 0x01
 
@@ -181,6 +180,13 @@ fu_dell_dock_module_is_usb4(FuDevice *device)
 {
 	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
 	return self->data->module_type == MODULE_TYPE_130_USB4;
+}
+
+guint8
+fu_dell_dock_get_ec_type(FuDevice *device)
+{
+	FuDellDockEc *self = FU_DELL_DOCK_EC(device);
+	return self->base_type;
 }
 
 const gchar *
@@ -344,8 +350,10 @@ fu_dell_dock_is_valid_dock(FuDevice *device, GError **error)
 	if (self->base_type == WD19_BASE) {
 		fu_device_add_instance_id(device, DELL_DOCK_EC_INSTANCE_ID);
 		return TRUE;
+	} else if (self->base_type == ATOMIC_BASE) {
+		fu_device_add_instance_id(device, DELL_DOCK_ATOMIC_EC_INSTANCE_ID);
+		return TRUE;
 	}
-
 	g_set_error(error,
 		    FWUPD_ERROR,
 		    FWUPD_ERROR_NOT_SUPPORTED,
@@ -815,6 +823,7 @@ fu_dell_dock_ec_write_fw(FuDevice *device,
 	data = g_bytes_get_data(fw, &fw_size);
 	write_size = (fw_size / HIDI2C_MAX_WRITE) >= 1 ? HIDI2C_MAX_WRITE : fw_size;
 	dynamic_version = g_strndup((gchar *)data + self->blob_version_offset, 11);
+	g_debug("writing EC firmware version %s", dynamic_version);
 
 	/* meet the minimum EC version */
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0 &&
