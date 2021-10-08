@@ -6595,6 +6595,7 @@ fu_engine_ensure_paths_exist(GError **error)
 {
 	FuPathKind path_kinds[] = {FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
 				   FU_PATH_KIND_LOCALSTATEDIR_METADATA,
+				   FU_PATH_KIND_LOCALSTATEDIR_REMOTES,
 				   FU_PATH_KIND_CACHEDIR_PKG,
 				   FU_PATH_KIND_LAST};
 	for (guint i = 0; path_kinds[i] != FU_PATH_KIND_LAST; i++) {

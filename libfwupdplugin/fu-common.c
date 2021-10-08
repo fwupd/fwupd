@@ -1288,6 +1288,13 @@ fu_common_get_path(FuPathKind path_kind)
 			return g_build_filename(tmp, NULL);
 		basedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 		return g_build_filename(basedir, "metadata", NULL);
+	/* /var/lib/fwupd/remotes.d */
+	case FU_PATH_KIND_LOCALSTATEDIR_REMOTES:
+		tmp = g_getenv("FWUPD_LOCALSTATEDIR_REMOTES");
+		if (tmp != NULL)
+			return g_build_filename(tmp, NULL);
+		basedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+		return g_build_filename(basedir, "remotes.d", NULL);
 	/* /var/cache/fwupd */
 	case FU_PATH_KIND_CACHEDIR_PKG:
 		tmp = g_getenv("CACHE_DIRECTORY");

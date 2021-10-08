@@ -342,6 +342,7 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 {
 	guint depsolve_check;
 	g_autofree gchar *remotesdir = NULL;
+	g_autofree gchar *remotesdir_mut = NULL;
 
 	/* clear */
 	g_ptr_array_set_size(self->array, 0);
@@ -349,13 +350,10 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 
 	/* use sysremotes, and then fall back to /etc */
 	remotesdir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
-	if (!g_file_test(remotesdir, G_FILE_TEST_EXISTS)) {
-		g_debug("no remotes found");
-		return TRUE;
-	}
-
-	/* look for all remote_list */
 	if (!fu_remote_list_add_for_path(self, remotesdir, error))
+		return FALSE;
+	remotesdir_mut = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	if (!fu_remote_list_add_for_path(self, remotesdir_mut, error))
 		return FALSE;
 
 	/* depsolve */
