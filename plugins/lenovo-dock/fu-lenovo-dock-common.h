@@ -90,3 +90,5 @@ typedef struct {
 
 const gchar *
 fu_lenovo_dock_idx_to_string(guint8 val);
+const gchar *
+fu_lenovo_dock_spi_state_to_string(guint8 val);

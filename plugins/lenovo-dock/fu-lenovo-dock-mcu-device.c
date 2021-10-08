@@ -425,7 +425,29 @@ fu_lenovo_dock_mcu_device_wait_for_spi_ready_cb(FuDevice *device,
 						GError **error)
 {
 	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(device);
-	return self != NULL; // TODO
+	guint8 buf[] = {USBUID_ISP_DEVICE_CMD_FWBUFER_READ_STATUS};
+	guint8 val = 0;
+
+	if (!fu_lenovo_dock_mcu_device_txrx(self,
+					    TAG_TAG2_CMD_SPI,
+					    buf,
+					    sizeof(buf),
+					    &val,
+					    sizeof(val),
+					    error))
+		return FALSE;
+	if (val != SPI_STATE_READY) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_BUSY,
+			    "SPI state is %s [0x%02x]",
+			    fu_lenovo_dock_spi_state_to_string(val),
+			    val);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
 }
 
 gboolean
@@ -478,18 +500,10 @@ fu_lenovo_dock_mcu_device_write_firmware_with_idx(FuLenovoDockMcuDevice *self,
 					    TAG_TAG2_CMD_SPI,
 					    &cmd,
 					    sizeof(cmd),
-					    &val,
-					    sizeof(val),
+					    NULL,
+					    0x0,
 					    error))
 		return FALSE;
-	if (val != SPI_STATE_READY) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "invalid state for CMD_FWBUFER_INITIAL, got 0x%02x",
-			    val);
-		return FALSE;
-	}
 	if (!fu_device_retry(FU_DEVICE(self),
 			     fu_lenovo_dock_mcu_device_wait_for_spi_ready_cb,
 			     30,
