@@ -146,6 +146,38 @@ fu_common_get_files_recursive(const gchar *path, GError **error)
 		return NULL;
 	return g_steal_pointer(&files);
 }
+
+/**
+ * fu_common_mkdir:
+ * @dirname: a directory name
+ * @error: (nullable): optional return location for an error
+ *
+ * Creates any required directories, including any parent directories.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.7.1
+ **/
+gboolean
+fu_common_mkdir(const gchar *dirname, GError **error)
+{
+	g_return_val_if_fail(dirname != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!g_file_test(dirname, G_FILE_TEST_IS_DIR))
+		g_debug("creating path %s", dirname);
+	if (g_mkdir_with_parents(dirname, 0755) == -1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to create '%s': %s",
+			    dirname,
+			    g_strerror(errno));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /**
  * fu_common_mkdir_parent:
  * @filename: a full pathname
@@ -166,18 +198,7 @@ fu_common_mkdir_parent(const gchar *filename, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	parent = g_path_get_dirname(filename);
-	if (!g_file_test(parent, G_FILE_TEST_IS_DIR))
-		g_debug("creating path %s", parent);
-	if (g_mkdir_with_parents(parent, 0755) == -1) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Failed to create '%s': %s",
-			    parent,
-			    g_strerror(errno));
-		return FALSE;
-	}
-	return TRUE;
+	return fu_common_mkdir(parent, error);
 }
 
 /**

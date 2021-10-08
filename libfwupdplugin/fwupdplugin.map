@@ -924,3 +924,9 @@ LIBFWUPDPLUGIN_1.7.0 {
     fu_progress_step_done;
   local: *;
 } LIBFWUPDPLUGIN_1.6.2;
+
+LIBFWUPDPLUGIN_1.7.1 {
+  global:
+    fu_common_mkdir;
+  local: *;
+} LIBFWUPDPLUGIN_1.7.0;
