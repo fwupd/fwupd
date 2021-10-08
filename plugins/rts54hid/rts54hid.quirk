@@ -1,4 +1,4 @@
-# Realtek USBHub (HID Device) 
+# Realtek USBHub (HID Device)
 [USB\VID_0BDA&PID_5A00]
 Plugin = rts54hid
 GType = FuRts54HidDevice
