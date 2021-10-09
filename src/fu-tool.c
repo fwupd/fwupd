@@ -3106,7 +3106,7 @@ main(int argc, char *argv[])
 	priv->loop = g_main_loop_new(priv->main_ctx, FALSE);
 	priv->progressbar = fu_progressbar_new();
 	fu_progressbar_set_main_context(priv->progressbar, priv->main_ctx);
-	priv->request = fu_engine_request_new();
+	priv->request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 
 	/* when not using the engine */
 	priv->progress = fu_progress_new(G_STRLOC);

@@ -11,8 +11,16 @@
 #define FU_TYPE_ENGINE_REQUEST (fu_engine_request_get_type())
 G_DECLARE_FINAL_TYPE(FuEngineRequest, fu_engine_request, FU, ENGINE_REQUEST, GObject)
 
+typedef enum {
+	FU_ENGINE_REQUEST_KIND_UNKNOWN,
+	FU_ENGINE_REQUEST_KIND_ACTIVE,
+	FU_ENGINE_REQUEST_KIND_ONLY_SUPPORTED,
+} FuEngineRequestKind;
+
 FuEngineRequest *
-fu_engine_request_new(void);
+fu_engine_request_new(FuEngineRequestKind kind);
+FuEngineRequestKind
+fu_engine_request_get_kind(FuEngineRequest *self);
 FwupdFeatureFlags
 fu_engine_request_get_feature_flags(FuEngineRequest *self);
 void

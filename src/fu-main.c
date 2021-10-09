@@ -238,7 +238,7 @@ fu_main_create_request(FuMainPrivate *priv, const gchar *sender, GError **error)
 	FwupdFeatureFlags *feature_flags;
 	FwupdDeviceFlags device_flags = FWUPD_DEVICE_FLAG_NONE;
 	uid_t calling_uid = 0;
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(GVariant) value = NULL;
 
 	g_return_val_if_fail(sender != NULL, NULL);
