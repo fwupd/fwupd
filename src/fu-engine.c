@@ -1755,7 +1755,8 @@ fu_engine_check_requirements(FuEngine *self,
 	g_autoptr(GPtrArray) reqs_soft = NULL;
 
 	/* all install task checks require a device */
-	if (device != NULL) {
+	if (device != NULL &&
+	    fu_engine_request_get_kind(request) == FU_ENGINE_REQUEST_KIND_ACTIVE) {
 		if (!fu_install_task_check_requirements(task, flags, error))
 			return FALSE;
 	}
@@ -3465,9 +3466,10 @@ fu_engine_ensure_device_supported(FuEngine *self, FuDevice *device)
 	gboolean is_supported = FALSE;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = NULL;
 
 	/* all flags set */
+	request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ONLY_SUPPORTED);
 	fu_engine_request_set_feature_flags(request, ~0);
 
 	/* get all releases that pass the requirements */

@@ -12,6 +12,7 @@
 
 struct _FuEngineRequest {
 	GObject parent_instance;
+	FuEngineRequestKind kind;
 	FwupdFeatureFlags feature_flags;
 	FwupdDeviceFlags device_flags;
 };
@@ -23,6 +24,13 @@ fu_engine_request_get_feature_flags(FuEngineRequest *self)
 {
 	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), FALSE);
 	return self->feature_flags;
+}
+
+FuEngineRequestKind
+fu_engine_request_get_kind(FuEngineRequest *self)
+{
+	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), FU_ENGINE_REQUEST_KIND_UNKNOWN);
+	return self->kind;
 }
 
 void
@@ -66,9 +74,10 @@ fu_engine_request_class_init(FuEngineRequestClass *klass)
 }
 
 FuEngineRequest *
-fu_engine_request_new(void)
+fu_engine_request_new(FuEngineRequestKind kind)
 {
 	FuEngineRequest *self;
 	self = g_object_new(FU_TYPE_ENGINE_REQUEST, NULL);
+	self->kind = kind;
 	return FU_ENGINE_REQUEST(self);
 }
