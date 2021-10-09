@@ -2956,7 +2956,7 @@ fu_common_convert_to_gpt_type(const gchar *type)
 
 /**
  * fu_common_check_full_disk_encryption:
- * @kind: a volume kind, typically a GUID
+ * @error: (nullable): optional return location for an error
  *
  * Checks that all FDE volumes are not going to be affected by a firmware update. If unsure,
  * return with failure and let the user decide.
