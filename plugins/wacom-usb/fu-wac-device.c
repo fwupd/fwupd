@@ -16,7 +16,7 @@
 #include "fu-wac-module-bluetooth.h"
 #include "fu-wac-module-touch.h"
 
-typedef struct __attribute__((packed)) {
+typedef struct {
 	guint32 start_addr;
 	guint32 block_sz;
 	guint16 write_sz; /* bit 15 is write protection flag */
@@ -204,7 +204,7 @@ fu_wac_device_ensure_flash_descriptors(FuWacDevice *self, GError **error)
 	/* parse */
 	for (guint i = 0; i < self->nr_flash_blocks; i++) {
 		FuWacFlashDescriptor *fd = g_new0(FuWacFlashDescriptor, 1);
-		const guint blksz = sizeof(FuWacFlashDescriptor);
+		const guint blksz = 0x0A;
 		if (!fu_common_read_uint32_safe(buf,
 						sz,
 						(i * blksz) + 1,
