@@ -633,7 +633,7 @@ fu_vli_pd_parade_device_dump_firmware(FuDevice *device, FuProgress *progress, GE
 	FuVliPdDevice *parent = FU_VLI_PD_DEVICE(fu_device_get_parent(device));
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
-	g_autoptr(GByteArray) fw = NULL;
+	g_autoptr(GByteArray) fw = g_byte_array_new();
 	g_autoptr(GPtrArray) blocks = NULL;
 
 	/* open device */
