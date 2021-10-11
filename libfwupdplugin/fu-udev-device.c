@@ -1253,7 +1253,11 @@ fu_udev_device_open(FuDevice *device, GError **error)
 		if (priv->fd < 0) {
 			g_set_error(error,
 				    G_IO_ERROR,
+#ifdef HAVE_ERRNO_H
+				    g_io_error_from_errno(errno),
+#else
 				    G_IO_ERROR_FAILED,
+#endif
 				    "failed to open %s: %s",
 				    priv->device_file,
 				    strerror(errno));
