@@ -24,8 +24,4 @@ fu_plugin_init(FuPlugin *plugin)
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_VLI_PD_DEVICE);
 	fu_context_add_quirk_key(ctx, "VliDeviceKind");
 	fu_context_add_quirk_key(ctx, "VliSpiAutoDetect");
-	fu_context_add_quirk_key(ctx, "VliSpiCmdChipErase");
-	fu_context_add_quirk_key(ctx, "VliSpiCmdReadId");
-	fu_context_add_quirk_key(ctx, "VliSpiCmdReadIdSz");
-	fu_context_add_quirk_key(ctx, "VliSpiCmdSectorErase");
 }

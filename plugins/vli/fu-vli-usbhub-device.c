@@ -162,7 +162,10 @@ static gboolean
 fu_vli_usbhub_device_spi_read_status(FuVliDevice *self, guint8 *status, GError **error)
 {
 	guint8 spi_cmd = 0x0;
-	if (!fu_vli_device_get_spi_cmd(self, FU_VLI_DEVICE_SPI_REQ_READ_STATUS, &spi_cmd, error))
+	if (!fu_cfi_device_get_cmd(fu_vli_device_get_cfi_device(self),
+				   FU_CFI_DEVICE_CMD_READ_STATUS,
+				   &spi_cmd,
+				   error))
 		return FALSE;
 	return g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 					     G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
@@ -189,7 +192,10 @@ fu_vli_usbhub_device_spi_read_data(FuVliDevice *self,
 	guint8 spi_cmd = 0x0;
 	guint16 value;
 	guint16 index;
-	if (!fu_vli_device_get_spi_cmd(self, FU_VLI_DEVICE_SPI_REQ_READ_DATA, &spi_cmd, error))
+	if (!fu_cfi_device_get_cmd(fu_vli_device_get_cfi_device(self),
+				   FU_CFI_DEVICE_CMD_READ_DATA,
+				   &spi_cmd,
+				   error))
 		return FALSE;
 	value = ((addr >> 8) & 0xff00) | spi_cmd;
 	index = ((addr << 8) & 0xff00) | ((addr >> 8) & 0x00ff);
@@ -212,7 +218,10 @@ static gboolean
 fu_vli_usbhub_device_spi_write_status(FuVliDevice *self, guint8 status, GError **error)
 {
 	guint8 spi_cmd = 0x0;
-	if (!fu_vli_device_get_spi_cmd(self, FU_VLI_DEVICE_SPI_REQ_WRITE_STATUS, &spi_cmd, error))
+	if (!fu_cfi_device_get_cmd(fu_vli_device_get_cfi_device(self),
+				   FU_CFI_DEVICE_CMD_WRITE_STATUS,
+				   &spi_cmd,
+				   error))
 		return FALSE;
 	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -239,7 +248,10 @@ static gboolean
 fu_vli_usbhub_device_spi_write_enable(FuVliDevice *self, GError **error)
 {
 	guint8 spi_cmd = 0x0;
-	if (!fu_vli_device_get_spi_cmd(self, FU_VLI_DEVICE_SPI_REQ_WRITE_EN, &spi_cmd, error))
+	if (!fu_cfi_device_get_cmd(fu_vli_device_get_cfi_device(self),
+				   FU_CFI_DEVICE_CMD_WRITE_EN,
+				   &spi_cmd,
+				   error))
 		return FALSE;
 	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -264,7 +276,10 @@ static gboolean
 fu_vli_usbhub_device_spi_chip_erase(FuVliDevice *self, GError **error)
 {
 	guint8 spi_cmd = 0x0;
-	if (!fu_vli_device_get_spi_cmd(self, FU_VLI_DEVICE_SPI_REQ_CHIP_ERASE, &spi_cmd, error))
+	if (!fu_cfi_device_get_cmd(fu_vli_device_get_cfi_device(self),
+				   FU_CFI_DEVICE_CMD_CHIP_ERASE,
+				   &spi_cmd,
+				   error))
 		return FALSE;
 	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -290,7 +305,10 @@ fu_vli_usbhub_device_spi_sector_erase(FuVliDevice *self, guint32 addr, GError **
 	guint8 spi_cmd = 0x0;
 	guint16 value;
 	guint16 index;
-	if (!fu_vli_device_get_spi_cmd(self, FU_VLI_DEVICE_SPI_REQ_SECTOR_ERASE, &spi_cmd, error))
+	if (!fu_cfi_device_get_cmd(fu_vli_device_get_cfi_device(self),
+				   FU_CFI_DEVICE_CMD_SECTOR_ERASE,
+				   &spi_cmd,
+				   error))
 		return FALSE;
 	value = ((addr >> 8) & 0xff00) | spi_cmd;
 	index = ((addr << 8) & 0xff00) | ((addr >> 8) & 0x00ff);
@@ -319,7 +337,10 @@ fu_vli_usbhub_device_spi_write_data(FuVliDevice *self,
 	guint8 spi_cmd = 0x0;
 	guint16 value;
 	guint16 index;
-	if (!fu_vli_device_get_spi_cmd(self, FU_VLI_DEVICE_SPI_REQ_PAGE_PROG, &spi_cmd, error))
+	if (!fu_cfi_device_get_cmd(fu_vli_device_get_cfi_device(self),
+				   FU_CFI_DEVICE_CMD_PAGE_PROG,
+				   &spi_cmd,
+				   error))
 		return FALSE;
 	value = ((addr >> 8) & 0xff00) | spi_cmd;
 	index = ((addr << 8) & 0xff00) | ((addr >> 8) & 0x00ff);

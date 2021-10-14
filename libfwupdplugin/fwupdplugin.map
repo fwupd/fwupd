@@ -927,6 +927,13 @@ LIBFWUPDPLUGIN_1.7.0 {
 
 LIBFWUPDPLUGIN_1.7.1 {
   global:
+    fu_cfi_device_get_cmd;
+    fu_cfi_device_get_flash_id;
+    fu_cfi_device_get_size;
+    fu_cfi_device_get_type;
+    fu_cfi_device_new;
+    fu_cfi_device_set_flash_id;
+    fu_cfi_device_set_size;
     fu_common_check_full_disk_encryption;
     fu_common_mkdir;
     fu_device_add_string;

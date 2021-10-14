@@ -522,6 +522,10 @@ fu_quirks_init(FuQuirks *self)
 	fu_quirks_add_possible_key(self, FU_QUIRKS_VENDOR_ID);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_VERSION);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_VERSION_FORMAT);
+	fu_quirks_add_possible_key(self, "CfiDeviceCmdReadId");
+	fu_quirks_add_possible_key(self, "CfiDeviceCmdReadIdSz");
+	fu_quirks_add_possible_key(self, "CfiDeviceCmdChipErase");
+	fu_quirks_add_possible_key(self, "CfiDeviceCmdSectorErase");
 }
 
 static void
