@@ -1746,8 +1746,10 @@ fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *cons
 		/* if the sysfs path of self's parent is the same as that of the
 		 * located device's parent, they are siblings */
 		if (g_strcmp0(udev_parent_path, enumerated_parent_path) == 0) {
-			g_ptr_array_add(out,
-					fu_udev_device_new(g_steal_pointer(&enumerated_device)));
+			FuUdevDevice *dev =
+			    fu_udev_device_new_with_context(fu_device_get_context(FU_DEVICE(self)),
+							    g_steal_pointer(&enumerated_device));
+			g_ptr_array_add(out, dev);
 		}
 	}
 #endif
@@ -1787,8 +1789,10 @@ fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *cons
 		/* enumerated device is a child of self if its parent is the
 		 * same as self */
 		if (g_strcmp0(self_path, enumerated_parent_path) == 0) {
-			g_ptr_array_add(out,
-					fu_udev_device_new(g_steal_pointer(&enumerated_device)));
+			FuUdevDevice *dev =
+			    fu_udev_device_new_with_context(fu_device_get_context(FU_DEVICE(self)),
+							    g_steal_pointer(&enumerated_device));
+			g_ptr_array_add(out, dev);
 		}
 	}
 #endif
@@ -1926,6 +1930,34 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 }
 
 /**
+ * fu_udev_device_new_with_context:
+ * @ctx: (nullable): a #FuContext
+ * @udev_device: a #GUdevDevice
+ *
+ * Creates a new #FuUdevDevice.
+ *
+ * Returns: (transfer full): a #FuUdevDevice
+ *
+ * Since: 1.7.1
+ **/
+FuUdevDevice *
+fu_udev_device_new_with_context(FuContext *ctx, GUdevDevice *udev_device)
+{
+#ifdef HAVE_GUDEV
+	/* create the correct object depending on the subsystem */
+	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "i2c-dev") == 0) {
+		return g_object_new(FU_TYPE_I2C_DEVICE,
+				    "context",
+				    ctx,
+				    "udev-device",
+				    udev_device,
+				    NULL);
+	}
+#endif
+	return g_object_new(FU_TYPE_UDEV_DEVICE, "context", ctx, "udev-device", udev_device, NULL);
+}
+
+/**
  * fu_udev_device_new:
  * @udev_device: a #GUdevDevice
  *
@@ -1938,12 +1970,5 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 FuUdevDevice *
 fu_udev_device_new(GUdevDevice *udev_device)
 {
-#ifdef HAVE_GUDEV
-	/* create the correct object depending on the subsystem */
-	if (g_strcmp0(g_udev_device_get_subsystem(udev_device), "i2c-dev") == 0) {
-		return FU_UDEV_DEVICE(
-		    g_object_new(FU_TYPE_I2C_DEVICE, "udev-device", udev_device, NULL));
-	}
-#endif
-	return FU_UDEV_DEVICE(g_object_new(FU_TYPE_UDEV_DEVICE, "udev-device", udev_device, NULL));
+	return fu_udev_device_new_with_context(NULL, udev_device);
 }

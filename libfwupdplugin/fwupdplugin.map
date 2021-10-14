@@ -930,5 +930,7 @@ LIBFWUPDPLUGIN_1.7.1 {
     fu_common_check_full_disk_encryption;
     fu_common_mkdir;
     fu_device_add_string;
+    fu_udev_device_new_with_context;
+    fu_usb_device_new_with_context;
   local: *;
 } LIBFWUPDPLUGIN_1.7.0;

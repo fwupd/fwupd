@@ -23,9 +23,10 @@ G_DEFINE_TYPE(FuUsbBackend, fu_usb_backend, FU_TYPE_BACKEND)
 static void
 fu_usb_backend_device_added_cb(GUsbContext *ctx, GUsbDevice *usb_device, FuBackend *backend)
 {
-	g_autoptr(FuUsbDevice) device = fu_usb_device_new(usb_device);
+	g_autoptr(FuUsbDevice) device = NULL;
 
 	/* success */
+	device = fu_usb_device_new_with_context(fu_backend_get_context(backend), usb_device);
 	fu_backend_device_added(backend, FU_DEVICE(device));
 }
 
