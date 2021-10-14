@@ -16,7 +16,7 @@
 /**
  * fu_firmware_strparse_uint4_safe:
  * @data: destination buffer
- * @datasz: size of @data, typcally the same as `strlen(data)`
+ * @datasz: size of @data, typically the same as `strlen(data)`
  * @offset: offset in chars into @data to read
  * @value: (out) (nullable): parsed value
  * @error: (nullable): optional return location for an error
@@ -65,7 +65,7 @@ fu_firmware_strparse_uint4_safe(const gchar *data,
 /**
  * fu_firmware_strparse_uint8_safe:
  * @data: destination buffer
- * @datasz: size of @data, typcally the same as `strlen(data)`
+ * @datasz: size of @data, typically the same as `strlen(data)`
  * @offset: offset in chars into @data to read
  * @value: (out) (nullable): parsed value
  * @error: (nullable): optional return location for an error
@@ -114,7 +114,7 @@ fu_firmware_strparse_uint8_safe(const gchar *data,
 /**
  * fu_firmware_strparse_uint16_safe:
  * @data: destination buffer
- * @datasz: size of @data, typcally the same as `strlen(data)`
+ * @datasz: size of @data, typically the same as `strlen(data)`
  * @offset: offset in chars into @data to read
  * @value: (out) (nullable): parsed value
  * @error: (nullable): optional return location for an error
@@ -163,7 +163,7 @@ fu_firmware_strparse_uint16_safe(const gchar *data,
 /**
  * fu_firmware_strparse_uint24_safe:
  * @data: destination buffer
- * @datasz: size of @data, typcally the same as `strlen(data)`
+ * @datasz: size of @data, typically the same as `strlen(data)`
  * @offset: offset in chars into @data to read
  * @value: (out) (nullable): parsed value
  * @error: (nullable): optional return location for an error
@@ -212,7 +212,7 @@ fu_firmware_strparse_uint24_safe(const gchar *data,
 /**
  * fu_firmware_strparse_uint32_safe:
  * @data: destination buffer
- * @datasz: size of @data, typcally the same as `strlen(data)`
+ * @datasz: size of @data, typically the same as `strlen(data)`
  * @offset: offset in chars into @data to read
  * @value: (out) (nullable): parsed value
  * @error: (nullable): optional return location for an error
