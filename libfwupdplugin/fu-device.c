@@ -1764,11 +1764,10 @@ fu_device_has_guid(FuDevice *self, const gchar *guid)
 /**
  * fu_device_add_instance_id_full:
  * @self: a #FuDevice
- * @instance_id: a Instance ID, e.g. `WacomAES`
+ * @instance_id: a instance ID, e.g. `WacomAES`
  * @flags: instance ID flags
  *
  * Adds an instance ID with all parameters set
- *
  *
  * Since: 1.2.9
  **/
@@ -1807,7 +1806,7 @@ fu_device_add_instance_id_full(FuDevice *self,
 /**
  * fu_device_add_instance_id:
  * @self: a #FuDevice
- * @instance_id: the InstanceID, e.g. `PCI\VEN_10EC&DEV_525A`
+ * @instance_id: the instance ID, e.g. `PCI\VEN_10EC&DEV_525A`
  *
  * Adds an instance ID to the device. If the @instance_id argument is already a
  * valid GUID then fu_device_add_guid() should be used instead.
@@ -4088,7 +4087,7 @@ fu_device_set_progress(FuDevice *self, FuProgress *progress)
  * fu_device_convert_instance_ids:
  * @self: a #FuDevice
  *
- * Converts all the Device Instance IDs added using fu_device_add_instance_id()
+ * Converts all the Device instance IDs added using fu_device_add_instance_id()
  * into actual GUIDs, **unless** %FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS has
  * been set.
  *
