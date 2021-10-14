@@ -277,6 +277,38 @@ fu_device_name_func(void)
 }
 
 static void
+fu_device_cfi_device_func(void)
+{
+	gboolean ret;
+	guint8 cmd = 0;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuCfiDevice) cfi_device = NULL;
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	cfi_device = fu_cfi_device_new(ctx, "3730");
+	ret = fu_device_probe(FU_DEVICE(cfi_device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* fallback */
+	ret = fu_cfi_device_get_cmd(cfi_device, FU_CFI_DEVICE_CMD_READ_DATA, &cmd, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(cmd, ==, 0x03);
+
+	/* from quirk */
+	ret = fu_cfi_device_get_cmd(cfi_device, FU_CFI_DEVICE_CMD_CHIP_ERASE, &cmd, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(cmd, ==, 0xC7);
+	g_assert_cmpint(fu_cfi_device_get_size(cfi_device), ==, 0x10000);
+}
+
+static void
 fu_device_metadata_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new();
@@ -3782,6 +3814,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{retry-success}", fu_device_retry_success_func);
 	g_test_add_func("/fwupd/device{retry-failed}", fu_device_retry_failed_func);
 	g_test_add_func("/fwupd/device{retry-hardware}", fu_device_retry_hardware_func);
+	g_test_add_func("/fwupd/device{cfi-device}", fu_device_cfi_device_func);
 	g_test_add_func("/efi/firmware-section{xml}", fu_efi_firmware_section_xml_func);
 	g_test_add_func("/efi/firmware-file{xml}", fu_efi_firmware_file_xml_func);
 	g_test_add_func("/efi/firmware-filesystem{xml}", fu_efi_firmware_filesystem_xml_func);

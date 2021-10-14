@@ -29,9 +29,9 @@ All VLI devices also use custom GUID values for the device type, e.g.
 
 These devices also use custom GUID values for the SPI flash configuration, e.g.
 
-* `VLI_USBHUB\SPI_37303840`
-* `VLI_USBHUB\SPI_3730`
-* `VLI_USBHUB\SPI_37`
+* `CFI\FLASHID_37303840`
+* `CFI\FLASHID_3730`
+* `CFI\FLASHID_37`
 
 Optional PD child devices sharing the SPI flash use two extra GUIDs, e.g.
 
@@ -63,42 +63,30 @@ SPI autodetect (default 0x1).
 
 Since: 1.3.7
 
-### VliSpiCmdChipErase
-
-Flash command to erase chip.
-
-Since: 1.3.3
-
-### VliSpiCmdSectorErase
-
-Flash command to erase sector.
-
-Since: 1.3.3
-
-### VliSpiCmdReadId
+### CfiDeviceCmdReadId
 
 Flash command to read the ID.
 
 Since: 1.3.3
 
-### VliSpiCmdReadIdSz
+### CfiDeviceCmdReadIdSz
 
 Size of the ReadId response.
 
-The `VliSpiCmdReadId` and `VliSpiCmdReadIdSz` quirks have to be assigned to the device
+The `CfiDeviceCmdReadId` and `CfiDeviceCmdReadIdSz` quirks have to be assigned to the device
 instance attribute, rather then the flash part as the ID is required to query
 the other flash chip parameters. For example:
 
     [USB\VID_2109&PID_0210]
     Plugin = vli
     GType = FuVliUsbhubDevice
-    VliSpiCmdReadId = 0xf8
-    VliSpiCmdReadIdSz = 4
+    CfiDeviceCmdReadId = 0xf8
+    CfiDeviceCmdReadIdSz = 4
 
     # W3IRDFLASHxxx
-    [VLI_USBHUB\\SPI_37303840]
-    VliSpiCmdChipErase = 0xc7
-    VliSpiCmdSectorErase = 0x20
+    [CFI\\FLASHID_37303840]
+    CfiDeviceCmdChipErase = 0xc7
+    CfiDeviceCmdSectorErase = 0x20
 
 ## External Interface Access
 

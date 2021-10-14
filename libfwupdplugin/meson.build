@@ -52,6 +52,7 @@ fwupdplugin_src = [
   'fu-udev-device.c',
   'fu-i2c-device.c',
   'fu-usb-device.c',
+  'fu-cfi-device.c',
   'fu-hid-device.c',
   'fu-version.c',
 ]
@@ -110,6 +111,7 @@ fwupdplugin_headers = [
   'fu-security-attrs.h',
   'fu-progress.h',
   'fu-smbios.h',
+  'fu-cfi-device.h',
   'fu-srec-firmware.h',
   'fu-efi-signature.h',
   'fu-efi-signature-list.h',

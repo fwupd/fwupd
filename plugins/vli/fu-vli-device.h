@@ -32,18 +32,6 @@ struct _FuVliDeviceClass {
 	gboolean (*spi_write_status)(FuVliDevice *self, guint8 status, GError **error);
 };
 
-typedef enum {
-	FU_VLI_DEVICE_SPI_REQ_READ_ID,
-	FU_VLI_DEVICE_SPI_REQ_PAGE_PROG,
-	FU_VLI_DEVICE_SPI_REQ_CHIP_ERASE,
-	FU_VLI_DEVICE_SPI_REQ_READ_DATA,
-	FU_VLI_DEVICE_SPI_REQ_READ_STATUS,
-	FU_VLI_DEVICE_SPI_REQ_SECTOR_ERASE,
-	FU_VLI_DEVICE_SPI_REQ_WRITE_EN,
-	FU_VLI_DEVICE_SPI_REQ_WRITE_STATUS,
-	FU_VLI_DEVICE_SPI_REQ_LAST
-} FuVliDeviceSpiReq;
-
 #define FU_VLI_DEVICE_TIMEOUT 3000 /* ms */
 #define FU_VLI_DEVICE_TXSIZE  0x20 /* bytes */
 
@@ -55,8 +43,8 @@ FuVliDeviceKind
 fu_vli_device_get_kind(FuVliDevice *self);
 guint32
 fu_vli_device_get_offset(FuVliDevice *self);
-gboolean
-fu_vli_device_get_spi_cmd(FuVliDevice *self, FuVliDeviceSpiReq req, guint8 *cmd, GError **error);
+FuCfiDevice *
+fu_vli_device_get_cfi_device(FuVliDevice *self);
 gboolean
 fu_vli_device_spi_erase_sector(FuVliDevice *self, guint32 addr, GError **error);
 gboolean

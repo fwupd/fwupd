@@ -23,7 +23,7 @@ if build_standalone
   install_data(['daemon.conf'],
     install_dir : join_paths(sysconfdir, 'fwupd')
   )
-  install_data(['power.quirk'],
+  install_data(['power.quirk', 'cfi.quirk'],
     install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
 endif
 
