@@ -403,6 +403,8 @@ typedef guint64 FuDeviceInternalFlags;
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
+void
+fu_device_add_string(FuDevice *self, guint idt, GString *str);
 const gchar *
 fu_device_get_alternate_id(FuDevice *self);
 void

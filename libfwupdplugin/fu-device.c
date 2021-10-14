@@ -3209,7 +3209,17 @@ fu_device_set_battery_threshold(FuDevice *self, guint battery_threshold)
 	fu_device_ensure_battery_inhibit(self);
 }
 
-static void
+/**
+ * fu_device_add_string:
+ * @self: a #FuDevice
+ * @idt: indent level
+ * @str: a string to append to
+ *
+ * Add daemon-specific device metadata to an existing string.
+ *
+ * Since: 1.7.1
+ **/
+void
 fu_device_add_string(FuDevice *self, guint idt, GString *str)
 {
 	GPtrArray *children;
