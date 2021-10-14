@@ -585,7 +585,7 @@ fu_udev_device_bind_driver(FuDevice *device,
 	dev = fu_usb_device_find_udev_device(self, error);
 	if (dev == NULL)
 		return FALSE;
-	udev_device = fu_udev_device_new(dev);
+	udev_device = fu_udev_device_new_with_context(fu_device_get_context(device), dev);
 	return fu_device_bind_driver(FU_DEVICE(udev_device), subsystem, driver, error);
 }
 
@@ -600,8 +600,25 @@ fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 	dev = fu_usb_device_find_udev_device(self, error);
 	if (dev == NULL)
 		return FALSE;
-	udev_device = fu_udev_device_new(dev);
+	udev_device = fu_udev_device_new_with_context(fu_device_get_context(device), dev);
 	return fu_device_unbind_driver(FU_DEVICE(udev_device), error);
+}
+
+/**
+ * fu_usb_device_new_with_context:
+ * @ctx: (nullable): a #FuContext
+ * @usb_device: a USB device
+ *
+ * Creates a new #FuUsbDevice.
+ *
+ * Returns: (transfer full): a #FuUsbDevice
+ *
+ * Since: 1.7.1
+ **/
+FuUsbDevice *
+fu_usb_device_new_with_context(FuContext *ctx, GUsbDevice *usb_device)
+{
+	return g_object_new(FU_TYPE_USB_DEVICE, "context", ctx, "usb-device", usb_device, NULL);
 }
 
 /**
@@ -617,9 +634,7 @@ fu_udev_device_unbind_driver(FuDevice *device, GError **error)
 FuUsbDevice *
 fu_usb_device_new(GUsbDevice *usb_device)
 {
-	FuUsbDevice *device = g_object_new(FU_TYPE_USB_DEVICE, NULL);
-	fu_usb_device_set_dev(device, usb_device);
-	return FU_USB_DEVICE(device);
+	return fu_usb_device_new_with_context(NULL, usb_device);
 }
 
 #ifdef HAVE_GUSB
