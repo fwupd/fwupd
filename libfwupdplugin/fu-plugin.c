@@ -1579,7 +1579,7 @@ fu_plugin_backend_device_added(FuPlugin *self, FuDevice *device, GError **error)
 	}
 
 	/* create new device and incorporate existing properties */
-	dev = g_object_new(device_gtype, NULL);
+	dev = g_object_new(device_gtype, "context", priv->ctx, NULL);
 	fu_device_incorporate(dev, FU_DEVICE(device));
 	if (!fu_plugin_runner_device_created(self, dev, error))
 		return FALSE;
