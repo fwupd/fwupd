@@ -37,6 +37,12 @@ back to the runtime locked mode.
 
 The vendor ID is set from the USB vendor, in this instance set to `USB:0x17EF`
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+* `LenovoDockFirmwareImageId` - the image ID to use for the device
+
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.

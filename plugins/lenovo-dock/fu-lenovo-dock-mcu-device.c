@@ -14,6 +14,7 @@
 
 struct _FuLenovoDockMcuDevice {
 	FuHidDevice parent_instance;
+	gchar *firmware_image_id;
 };
 
 G_DEFINE_TYPE(FuLenovoDockMcuDevice, fu_lenovo_dock_mcu_device, FU_TYPE_HID_DEVICE)
@@ -337,11 +338,12 @@ fu_lenovo_dock_mcu_device_prepare_firmware(FuDevice *device,
 					   FwupdInstallFlags flags,
 					   GError **error)
 {
+	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_lenovo_dock_firmware_new();
 	g_autoptr(FuFirmware) img = NULL;
 	if (!fu_firmware_parse(firmware, fw, flags, error))
 		return NULL;
-	img = fu_firmware_get_image_by_id(firmware, "UG", error);
+	img = fu_firmware_get_image_by_id(firmware, self->firmware_image_id, error);
 	if (img == NULL)
 		return NULL;
 	return g_steal_pointer(&firmware);
@@ -659,6 +661,35 @@ fu_lenovo_dock_mcu_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
 }
 
+static gboolean
+fu_lenovo_dock_mcu_device_set_quirk_kv(FuDevice *device,
+				       const gchar *key,
+				       const gchar *value,
+				       GError **error)
+{
+	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(device);
+	if (g_strcmp0(key, "LenovoDockFirmwareImageId") == 0) {
+		self->firmware_image_id = g_strdup(value);
+		return TRUE;
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
+}
+
+static void
+fu_lenovo_dock_mcu_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(device);
+
+	/* parent */
+	FU_DEVICE_CLASS(fu_lenovo_dock_mcu_device_parent_class)->to_string(device, idt, str);
+
+	fu_common_string_append_kv(str, idt, "FirmwareImageId", self->firmware_image_id);
+}
+
 static void
 fu_lenovo_dock_mcu_device_init(FuLenovoDockMcuDevice *self)
 {
@@ -674,15 +705,26 @@ fu_lenovo_dock_mcu_device_init(FuLenovoDockMcuDevice *self)
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_device_add_icon(FU_DEVICE(self), "dock");
 }
+static void
+fu_lenovo_dock_mcu_device_finalize(GObject *obj)
+{
+	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(obj);
+	g_free(self->firmware_image_id);
+	G_OBJECT_CLASS(fu_lenovo_dock_mcu_device_parent_class)->finalize(obj);
+}
 
 static void
 fu_lenovo_dock_mcu_device_class_init(FuLenovoDockMcuDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_lenovo_dock_mcu_device_finalize;
 	klass_device->prepare_firmware = fu_lenovo_dock_mcu_device_prepare_firmware;
 	klass_device->write_firmware = fu_lenovo_dock_mcu_device_write_firmware;
 	klass_device->attach = fu_lenovo_dock_mcu_device_attach;
 	klass_device->detach = fu_lenovo_dock_mcu_device_detach;
 	klass_device->setup = fu_lenovo_dock_mcu_device_setup;
 	klass_device->set_progress = fu_lenovo_dock_mcu_device_set_progress;
+	klass_device->to_string = fu_lenovo_dock_mcu_device_to_string;
+	klass_device->set_quirk_kv = fu_lenovo_dock_mcu_device_set_quirk_kv;
 }
