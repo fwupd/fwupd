@@ -40,3 +40,5 @@ gboolean
 fu_config_get_enumerate_all_devices(FuConfig *self);
 gboolean
 fu_config_get_ignore_power(FuConfig *self);
+gboolean
+fu_config_get_only_trusted(FuConfig *self);

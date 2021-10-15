@@ -35,6 +35,7 @@ struct _FuConfig {
 	gboolean update_motd;
 	gboolean enumerate_all_devices;
 	gboolean ignore_power;
+	gboolean only_trusted;
 };
 
 G_DEFINE_TYPE(FuConfig, fu_config, G_TYPE_OBJECT)
@@ -60,6 +61,7 @@ fu_config_reload(FuConfig *self, GError **error)
 	g_autoptr(GKeyFile) keyfile = g_key_file_new();
 	g_autoptr(GError) error_update_motd = NULL;
 	g_autoptr(GError) error_ignore_power = NULL;
+	g_autoptr(GError) error_only_trusted = NULL;
 	g_autoptr(GError) error_enumerate_all = NULL;
 
 	if (g_file_test(self->config_file, G_FILE_TEST_EXISTS)) {
@@ -194,6 +196,14 @@ fu_config_reload(FuConfig *self, GError **error)
 		self->ignore_power = FALSE;
 	}
 
+	/* whether to allow untrusted firmware *at all* even with PolicyKit auth */
+	self->only_trusted =
+	    g_key_file_get_boolean(keyfile, "fwupd", "OnlyTrusted", &error_only_trusted);
+	if (!self->only_trusted && error_only_trusted != NULL) {
+		g_debug("failed to read OnlyTrusted key: %s", error_only_trusted->message);
+		self->only_trusted = TRUE;
+	}
+
 	return TRUE;
 }
 
@@ -321,6 +331,13 @@ fu_config_get_ignore_power(FuConfig *self)
 {
 	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
 	return self->ignore_power;
+}
+
+gboolean
+fu_config_get_only_trusted(FuConfig *self)
+{
+	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
+	return self->only_trusted;
 }
 
 gboolean

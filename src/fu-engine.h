@@ -211,7 +211,7 @@ fu_engine_add_plugin(FuEngine *self, FuPlugin *plugin);
 void
 fu_engine_add_runtime_version(FuEngine *self, const gchar *component_id, const gchar *version);
 gboolean
-fu_engine_check_trust(FuInstallTask *task, GError **error);
+fu_engine_check_trust(FuEngine *self, FuInstallTask *task, GError **error);
 gboolean
 fu_engine_check_requirements(FuEngine *self,
 			     FuEngineRequest *request,

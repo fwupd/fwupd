@@ -874,7 +874,7 @@ fu_main_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 				g_ptr_array_add(errors, g_steal_pointer(&error_local));
 				continue;
 			}
-			if (!fu_engine_check_trust(task, &error_local)) {
+			if (!fu_engine_check_trust(priv->engine, task, &error_local)) {
 				g_ptr_array_add(errors, g_steal_pointer(&error_local));
 				continue;
 			}
