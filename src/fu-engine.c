@@ -1960,6 +1960,12 @@ fu_engine_get_report_metadata_kernel_cmdline(GHashTable *hash, GError **error)
 	return TRUE;
 }
 
+static void
+fu_engine_add_report_metadata_bool(GHashTable *hash, const gchar *key, gboolean value)
+{
+	g_hash_table_insert(hash, g_strdup(key), g_strdup(value ? "True" : "False"));
+}
+
 GHashTable *
 fu_engine_get_report_metadata(FuEngine *self, GError **error)
 {
@@ -1992,6 +1998,14 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		return NULL;
 	if (!fu_engine_get_report_metadata_kernel_cmdline(hash, error))
 		return NULL;
+
+	/* these affect the report credibility */
+	fu_engine_add_report_metadata_bool(hash, "FwupdTainted", self->tainted);
+#ifdef SUPPORTED_BUILD
+	fu_engine_add_report_metadata_bool(hash, "FwupdSupported", TRUE);
+#else
+	fu_engine_add_report_metadata_bool(hash, "FwupdSupported", FALSE);
+#endif
 
 	/* DMI data */
 	tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_PRODUCT_NAME);
