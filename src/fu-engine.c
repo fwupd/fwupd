@@ -1707,14 +1707,27 @@ fu_engine_check_requirement(FuEngine *self,
 }
 
 gboolean
-fu_engine_check_trust(FuInstallTask *task, GError **error)
+fu_engine_check_trust(FuEngine *self, FuInstallTask *task, GError **error)
 {
-#ifndef HAVE_POLKIT
+#ifdef HAVE_POLKIT
+	if (fu_config_get_only_trusted(self->config) &&
+	    (fu_install_task_get_trust_flags(task) & FWUPD_TRUST_FLAG_PAYLOAD) == 0) {
+		g_autofree gchar *sysconfdir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
+		g_autofree gchar *fn = g_build_filename(sysconfdir, "daemon.conf", NULL);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware signature missing or not trusted; "
+			    "set OnlyTrusted=false in %s ONLY if you are a firmware developer",
+			    fn);
+		return FALSE;
+	}
+#else
 	if ((fu_install_task_get_trust_flags(task) & FWUPD_TRUST_FLAG_PAYLOAD) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
-				    "archive signature missing or not trusted");
+				    "firmware signature missing or not trusted");
 		return FALSE;
 	}
 #endif
