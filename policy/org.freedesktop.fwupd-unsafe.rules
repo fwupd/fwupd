@@ -1,0 +1,6 @@
+polkit.addRule(function(action, subject) {
+    if (action.id.startsWith("org.freedesktop.fwupd.") &&
+        subject.isInGroup("wheel")) {
+            return polkit.Result.YES;
+    }
+});
