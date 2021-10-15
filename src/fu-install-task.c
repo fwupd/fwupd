@@ -461,16 +461,22 @@ fu_install_task_get_action_id(FuInstallTask *self)
 {
 	/* relax authentication checks for removable devices */
 	if (!fu_device_has_flag(self->device, FWUPD_DEVICE_FLAG_INTERNAL)) {
-		if (self->is_downgrade)
+		if (self->is_downgrade) {
+			if (self->trust_flags & FWUPD_TRUST_FLAG_PAYLOAD)
+				return "org.freedesktop.fwupd.downgrade-hotplug-trusted";
 			return "org.freedesktop.fwupd.downgrade-hotplug";
+		}
 		if (self->trust_flags & FWUPD_TRUST_FLAG_PAYLOAD)
 			return "org.freedesktop.fwupd.update-hotplug-trusted";
 		return "org.freedesktop.fwupd.update-hotplug";
 	}
 
 	/* internal device */
-	if (self->is_downgrade)
+	if (self->is_downgrade) {
+		if (self->trust_flags & FWUPD_TRUST_FLAG_PAYLOAD)
+			return "org.freedesktop.fwupd.downgrade-internal-trusted";
 		return "org.freedesktop.fwupd.downgrade-internal";
+	}
 	if (self->trust_flags & FWUPD_TRUST_FLAG_PAYLOAD)
 		return "org.freedesktop.fwupd.update-internal-trusted";
 	return "org.freedesktop.fwupd.update-internal";
