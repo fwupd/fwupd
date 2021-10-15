@@ -32,6 +32,40 @@ typedef struct __attribute__((packed)) {
 	guint8 rev7;
 } IspLabel;
 
+const gchar * 
+fw_selection[] = {
+	"FW_NONE",
+	"FW_40B1",
+	"FW_40B0",
+	"FW_LAST"
+};
+
+typedef struct {
+        FuFirmware *firmware;
+} FuLenovoDockFirmwareTokenHelper;
+
+static gboolean
+fu_lenovo_dock_firmware_tokenize_cb(GString *token, guint token_idx, gpointer user_data, GError **error)
+{
+	FuLenovoDockFirmwareTokenHelper *helper = (FuLenovoDockFirmwareTokenHelper *)user_data;
+	g_autoptr(GBytes) blob = NULL;
+
+	if (token->len == 0) return TRUE;
+
+	g_autoptr(FuFirmware) img = fu_firmware_new();
+
+	blob = g_bytes_new(token->str, token->len);
+
+	fu_firmware_set_bytes(img, blob);
+	fu_firmware_set_idx(img, token_idx);
+	fu_firmware_set_id(img, fw_selection[token_idx]);
+
+        /* done */
+	fu_firmware_add_image(helper->firmware, img);
+
+	return TRUE;
+}
+
 static gboolean
 fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 			      GBytes *fw,
@@ -40,78 +74,70 @@ fu_lenovo_dock_firmware_parse(FuFirmware *firmware,
 			      FwupdInstallFlags flags,
 			      GError **error)
 {
-	gsize offset = 0;
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+	gchar tagbuf[3] = {0};
+	FuLenovoDockFirmwareTokenHelper helper = {.firmware = firmware};
+	gchar label[sizeof(IspLabel)+1] = { 0x0 };
 
-	/* add each image to the firmware with the appropriate IDX set */
-	while (offset < g_bytes_get_size(fw)) {
-		guint8 tag = 0;
-		guint16 fwsz = 0;
-		gchar verbuf[5] = {0};
-		gchar tag1buf[3] = {0};
-		g_autoptr(FuFirmware) img = fu_firmware_new();
-		g_autoptr(GBytes) blob_img = NULL;
+	/* tag */
+	if (!fu_memcpy_safe((guint8 *)tagbuf,
+                            sizeof(tagbuf),
+                            0x0,
+                            buf,
+                            bufsz,
+                            G_STRUCT_OFFSET(IspLabel, tag),
+                            2,
+                            error))
+                 return FALSE;
 
-		/* magic header byte */
-		if (!fu_firmware_strparse_uint8_safe((const gchar *)buf,
-						     bufsz,
-						     offset + G_STRUCT_OFFSET(IspLabel, tag),
-						     &tag,
-						     error))
-			return FALSE;
-		if (tag != 0x5A) {
-			g_set_error(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_NOT_SUPPORTED,
-				    "got tag 0x%02x, expected 0x5A",
-				    tag);
-			return FALSE;
-		}
+        if (g_strcmp0(tagbuf, "5A") != 0) {
+                        g_set_error(error,
+                                    G_IO_ERROR,
+                                    G_IO_ERROR_NOT_SUPPORTED,
+                                    "got tag %s, expected 5A",
+                                    tagbuf);
+                 return FALSE;
+        }
 
-		/* version */
-		if (!fu_memcpy_safe((guint8 *)verbuf,
-				    sizeof(verbuf),
-				    0x0,
-				    buf,
-				    bufsz,
-				    G_STRUCT_OFFSET(IspLabel, ver),
-				    4,
-				    error))
-			return FALSE;
-		fu_firmware_set_version(img, verbuf);
+	/* tag1 */
+        if (!fu_memcpy_safe((guint8 *)tagbuf,
+                            sizeof(tagbuf),
+                            0x0,
+                            buf,
+                            bufsz,
+                            G_STRUCT_OFFSET(IspLabel, tag1),
+                            2,
+                            error))
+                 return FALSE;
 
-		/* tag1 */
-		if (!fu_memcpy_safe((guint8 *)tag1buf,
-				    sizeof(tag1buf),
-				    0x0,
-				    buf,
-				    bufsz,
-				    G_STRUCT_OFFSET(IspLabel, tag1),
-				    2,
-				    error))
-			return FALSE;
-		fu_firmware_set_id(img, tag1buf);
-
-		/* file size */
-		if (!fu_firmware_strparse_uint16_safe((const gchar *)buf,
-						      bufsz,
-						      offset + G_STRUCT_OFFSET(IspLabel, file_cnt),
-						      &fwsz,
-						      error))
-			return FALSE;
-
-		/* get file data */
-		offset += sizeof(IspLabel);
-		blob_img = fu_common_bytes_new_offset(fw, offset, fwsz, error);
-		if (blob_img == NULL)
-			return FALSE;
-		fu_firmware_set_bytes(img, blob_img);
-
-		/* done */
-		fu_firmware_add_image(firmware, img);
-		offset += fwsz;
+	if (g_strcmp0(tagbuf, "UG") != 0) {
+	                g_set_error(error,
+                                    G_IO_ERROR,
+                                    G_IO_ERROR_NOT_SUPPORTED,
+                                    "got tag1 %s, expected UG",
+                                    tagbuf);
+                 return FALSE;
 	}
+
+	/* tokenize */
+	if (!fu_memcpy_safe((guint8 *) label,
+                            sizeof(label),
+                            0x0, /* dst */
+                            buf,
+                            bufsz,
+                            0x0, /* src */
+                            sizeof(label),
+                            error))
+                return FALSE;
+
+        if (!fu_common_strnsplit_full(g_bytes_get_data(fw, NULL),
+                                      g_bytes_get_size(fw),
+                                      (gchar*) &label,
+                                      fu_lenovo_dock_firmware_tokenize_cb,
+                                      &helper,
+                                      error))
+                return FALSE;
 
 	/* success */
 	return TRUE;

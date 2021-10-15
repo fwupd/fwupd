@@ -341,7 +341,11 @@ fu_lenovo_dock_mcu_device_prepare_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) img = NULL;
 	if (!fu_firmware_parse(firmware, fw, flags, error))
 		return NULL;
-	img = fu_firmware_get_image_by_id(firmware, "UG", error);
+
+	if (fu_device_has_guid(device, "72918203-63fd-5064-b704-85200e0f3b72")) {
+                img = fu_firmware_get_image_by_id(firmware, "FW_40B1", error);
+        } else img = fu_firmware_get_image_by_id(firmware, "FW_40B0", error);
+
 	if (img == NULL)
 		return NULL;
 	return g_steal_pointer(&firmware);
@@ -598,9 +602,10 @@ fu_lenovo_dock_mcu_device_write_firmware(FuDevice *device,
 	g_autoptr(FuFirmware) img = NULL;
 
 	/* get correct image */
-	img = fu_firmware_get_image_by_id(firmware, "UG", error);
-	if (img == NULL)
-		return FALSE;
+	if (fu_device_has_guid(device, "72918203-63fd-5064-b704-85200e0f3b72")) {
+                img = fu_firmware_get_image_by_id(firmware, "FW_40B1", error);
+        } else img = fu_firmware_get_image_by_id(firmware, "FW_40B0", error);
+
 	return fu_lenovo_dock_mcu_device_write_firmware_with_idx(FU_LENOVO_DOCK_MCU_DEVICE(device),
 								 img,
 								 0xFF, /* all */
