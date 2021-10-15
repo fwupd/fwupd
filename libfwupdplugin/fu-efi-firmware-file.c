@@ -291,6 +291,16 @@ fu_efi_firmware_file_write_sections(FuFirmware *firmware, GError **error)
 	g_autoptr(GPtrArray) images = fu_firmware_get_images(firmware);
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
+	/* sanity check */
+	if (fu_firmware_get_alignment(firmware) > FU_FIRMWARE_ALIGNMENT_1M) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "alignment invalid, got 0x%02x",
+			    fu_firmware_get_alignment(firmware));
+		return NULL;
+	}
+
 	/* no sections defined */
 	if (images->len == 0)
 		return fu_firmware_get_bytes(firmware, error);
