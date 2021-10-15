@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginElanfp"']
 
 install_data(['elanfp.quirk'],
@@ -27,3 +28,4 @@ shared_module('fu_plugin_elanfp',
     plugin_deps,
   ],
 )
+endif
