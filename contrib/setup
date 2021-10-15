@@ -38,6 +38,14 @@ setup_run_dev()
     fi
 }
 
+setup_unsafe_polkit_rules()
+{
+    read -p "Install developer-friendly **unsafe** PolicyKit rules into /etc/polkit-1/rules.d? (y/n) " question
+    if [ "$question" = "y" ]; then
+        sudo cp ./policy/org.freedesktop.fwupd-unsafe.rules /etc/polkit-1/rules.d/
+    fi
+}
+
 setup_vscode()
 {
     # Add default vscode settings if not existing
@@ -131,6 +139,7 @@ if [ -t 2 ]; then
             setup_deps
             ;;
     esac
+    setup_unsafe_polkit_rules
     check_markdown
     setup_vscode
     rename_branch
