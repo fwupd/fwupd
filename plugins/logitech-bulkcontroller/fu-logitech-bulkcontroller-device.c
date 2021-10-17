@@ -31,6 +31,8 @@
 #define COMMAND_OFFSET		      0x0
 #define SYNC_ACK_PAYLOAD_LENGTH	      5
 #define MAX_RETRIES		      5
+#define MAX_HANDSHAKE_RETRIES	      3
+#define MAX_WAIT_COUNT		      150
 
 enum { SHA_256, SHA_512, MD5 };
 
@@ -61,6 +63,7 @@ struct _FuLogitechBulkcontrollerDevice {
 	guint update_iface;
 	FuLogitechBulkcontrollerDeviceStatus status;
 	FuLogitechBulkcontrollerDeviceUpdateState update_status;
+	guint update_progress; /* percentage value */
 	gboolean is_sync_transfer_in_progress;
 };
 
@@ -209,7 +212,6 @@ fu_logitech_bulkcontroller_device_recv(FuLogitechBulkcontrollerDevice *self,
 {
 	gsize received_length = 0;
 	gint ep;
-
 	g_return_val_if_fail(buf != NULL, FALSE);
 
 	if (interface_id == BULK_INTERFACE_SYNC) {
@@ -404,6 +406,9 @@ fu_logitech_bulkcontroller_device_json_parser(FuDevice *device,
 		self->status = json_object_get_int_member(json_device, "status");
 	if (json_object_has_member(json_device, "updateStatus"))
 		self->update_status = json_object_get_int_member(json_device, "updateStatus");
+	/* updateProgress only available while firmware upgrade is going on */
+	if (json_object_has_member(json_device, "updateProgress"))
+		self->update_progress = json_object_get_int_member(json_device, "updateProgress");
 
 	return TRUE;
 }
@@ -421,9 +426,13 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 	guint32 response_length = 0;
 	guint8 ack_payload[SYNC_ACK_PAYLOAD_LENGTH] = {0};
 	g_autoptr(GByteArray) buf_ack = g_byte_array_new();
+	g_autoptr(GError) error_local = NULL;
 
-	if (!g_usb_device_bulk_transfer_finish(G_USB_DEVICE(source_object), res, &helper->error)) {
-		g_prefix_error(&helper->error, "failed to finish using bulk transfer: ");
+	if (!g_usb_device_bulk_transfer_finish(G_USB_DEVICE(source_object), res, &error_local)) {
+		g_propagate_prefixed_error(&helper->error,
+					   g_steal_pointer(&error_local),
+					   "failed to finish using bulk transfer %s: ",
+					   error_local->message);
 		g_main_loop_quit(helper->loop);
 		return;
 	}
@@ -505,7 +514,7 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 			g_autofree gchar *strsafe =
 			    fu_common_strsafe((const gchar *)helper->device_response->data,
 					      helper->device_response->len);
-			g_debug("received data on sync interface: length: %u, buffer: %s",
+			g_debug("Received data on sync interface. length: %u, buffer: %s",
 				helper->device_response->len,
 				strsafe);
 		}
@@ -576,16 +585,24 @@ fu_logitech_bulkcontroller_device_startlistening_sync(FuLogitechBulkcontrollerDe
 		/* handle error scenario, e.g. device no longer responding */
 		if (max_retry == 0) {
 			self->is_sync_transfer_in_progress = FALSE;
-			g_propagate_prefixed_error(error,
-						   g_steal_pointer(&helper->error),
-						   "failed after %i retries: ",
-						   MAX_RETRIES);
+			if (helper->error != NULL) {
+				g_propagate_prefixed_error(error,
+							   g_steal_pointer(&helper->error),
+							   "failed after %i retries: ",
+							   MAX_RETRIES);
+			} else {
+				g_set_error(&helper->error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "failed after %i retries: ",
+					    MAX_RETRIES);
+			}
 			return FALSE;
 		}
 
 		/* just show to console */
 		if (helper->error != NULL)
-			g_warning("%s", helper->error->message);
+			g_warning("async error %s", helper->error->message);
 	}
 
 	/* success */
@@ -593,24 +610,32 @@ fu_logitech_bulkcontroller_device_startlistening_sync(FuLogitechBulkcontrollerDe
 }
 
 static gboolean
-fu_logitech_bulkcontroller_device_get_data(FuDevice *device, GError **error)
+fu_logitech_bulkcontroller_device_get_data(FuDevice *device, gboolean send_req, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
-	g_autoptr(GByteArray) device_request = g_byte_array_new();
 	g_autoptr(GByteArray) decoded_pkt = g_byte_array_new();
 	g_autoptr(GByteArray) device_response = g_byte_array_new();
 	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
 
 	/* sending GetDeviceInfoRequest. Device reports quite a few matrix, including status,
-	 * progress etc */
-	device_request = proto_manager_generate_get_device_info_request();
-	if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
-							     CMD_BUFFER_WRITE,
-							     device_request,
-							     error)) {
-		g_prefix_error(error,
-			       "failed to send write buffer packet for device info request: ");
-		return FALSE;
+	 * progress etc
+	 * Two ways to get data from device:
+	 * 1. Listen for the data broadcasted by device, while firmware upgrade is going on
+	 * 2. Make explicit request to the device. Used when data is needed before/after firmware
+	 * upgrade
+	 */
+	if (send_req) {
+		g_autoptr(GByteArray) device_request = g_byte_array_new();
+		device_request = proto_manager_generate_get_device_info_request();
+		if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
+								     CMD_BUFFER_WRITE,
+								     device_request,
+								     error)) {
+			g_prefix_error(
+			    error,
+			    "failed to send write buffer packet for device info request: ");
+			return FALSE;
+		}
 	}
 	if (!fu_logitech_bulkcontroller_device_startlistening_sync(self, device_response, error)) {
 		g_prefix_error(error, "failed to receive data packet for device info request: ");
@@ -633,7 +658,10 @@ fu_logitech_bulkcontroller_device_get_data(FuDevice *device, GError **error)
 	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
 		g_autofree gchar *strsafe =
 		    fu_common_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
-		g_debug("Received device response: id: %u. data: %s", proto_id, strsafe);
+		g_debug("Received device response: id: %u, length %u, data: %s",
+			proto_id,
+			device_response->len,
+			strsafe);
 	}
 	if (proto_id != kProtoId_GetDeviceInfoResponse && proto_id != kProtoId_KongEvent) {
 		g_set_error_literal(error,
@@ -666,18 +694,23 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 						 GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+	gboolean query_device = FALSE;	/* query or listen for events, periodically broadcasted */
+	gint max_wait = MAX_WAIT_COUNT; /* if firmware upgrade is taking forever to finish */
+	guint max_no_response_count = MAX_RETRIES; /* device doesn't respond */
+	guint no_response_count = 0;
 	g_autofree gchar *base64hash = NULL;
 	g_autoptr(GByteArray) end_pkt = g_byte_array_new();
 	g_autoptr(GByteArray) start_pkt = g_byte_array_new();
 	g_autoptr(GBytes) fw = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
+	g_autofree gchar *old_firmware_version = NULL;
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 90);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 5);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 49);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 49);
 
 	/* get default image */
 	fw = fu_firmware_get_bytes(firmware, error);
@@ -706,7 +739,7 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	}
 	fu_progress_step_done(progress);
 
-	/* each block */
+	/* push each block to device */
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, PAYLOAD_SIZE);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
@@ -742,6 +775,93 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 	/* send uninit */
 	if (!fu_logitech_bulkcontroller_device_send_upd_cmd(self, CMD_UNINIT, NULL, error)) {
 		g_prefix_error(error, "failed to write finish transfer packet: ");
+		return FALSE;
+	}
+	fu_progress_step_done(progress);
+
+	/*
+	 * image file pushed. Device validates and uploads new image on inactive partition.
+	 * Restart sync cb, to get the update progress
+	 * Normally status changes as follows:
+	 *  While image being pushed: kUpdateStateCurrent->kUpdateStateDownloading (~5minutes)
+	 *  After image push is complete: kUpdateStateDownloading->kUpdateStateReady
+	 *  Validating image: kUpdateStateReady->kUpdateStateStarting
+	 *  Uploading image: kUpdateStateStarting->kUpdateStateUpdating
+	 *  Upload finished: kUpdateStateUpdating->kUpdateStateCurrent (~5minutes)
+	 *  After upload is finished, device reboots itself
+	 */
+	g_usleep(G_TIME_SPAN_SECOND);
+	/* save the current firmware version for troubleshooting purpose */
+	old_firmware_version = g_strdup(fu_device_get_version(device));
+	do {
+		g_autoptr(GError) error_local = NULL;
+		/* skip explicit device query as long as device is publishing update events
+		 * (kProtoId_KongEvent) */
+		if (self->update_progress == 100) {
+			query_device = TRUE;
+		} else {
+			query_device = (no_response_count == 0) ? FALSE : TRUE;
+		}
+		g_usleep(500 * G_TIME_SPAN_MILLISECOND);
+
+		/* lost Success/Failure message, device rebooting */
+		if (no_response_count == max_no_response_count) {
+			g_debug("device not responding, rebooting...");
+			break;
+		}
+
+		/* update device obj with latest info from the device */
+		if (!fu_logitech_bulkcontroller_device_get_data(device,
+								query_device,
+								&error_local)) {
+			no_response_count++;
+			g_debug("no response for device info request %u", no_response_count);
+			continue;
+		}
+
+		/* device responsive, no error and not rebooting yet */
+		no_response_count = 0;
+		if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
+			g_debug("firmware update status: %s. progress: %u",
+				fu_logitech_bulkcontroller_device_update_state_to_string(
+				    self->update_status),
+				self->update_progress);
+		}
+
+		/* existing device image version is same as newly pushed image */
+		if (self->update_status == kUpdateStateError) {
+			g_set_error_literal(error,
+					    G_IO_ERROR,
+					    G_IO_ERROR_INVALID_DATA,
+					    "firmware upgrade failed");
+			return FALSE;
+		}
+		if (self->update_status == kUpdateStateCurrent) {
+			if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
+				g_debug("new firmware version: %s, old firmware version: %s, "
+					"rebooting...",
+					fu_device_get_version(device),
+					old_firmware_version);
+			}
+			break;
+		}
+		if (self->update_progress == 100) {
+			/* wait for state change: kUpdateStateUpdating->kUpdateStateCurrent
+			 * device no longer broadcast fu related events, need to query device
+			 * explicitly now
+			 */
+			g_usleep(G_USEC_PER_SEC);
+			continue;
+		}
+		fu_progress_set_percentage_full(fu_progress_get_child(progress),
+						self->update_progress,
+						100);
+	} while (max_wait--);
+	if (max_wait <= 0) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "firmware upgrade timeout: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -807,6 +927,77 @@ fu_logitech_bulkcontroller_device_close(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_logitech_bulkcontroller_device_get_handshake_cb(FuDevice *device,
+						   gpointer user_data,
+						   GError **error)
+{
+	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
+	g_autoptr(GByteArray) decoded_pkt = g_byte_array_new();
+	g_autoptr(GByteArray) device_response = g_byte_array_new();
+	g_autoptr(GError) error_local = NULL;
+
+	if (!fu_logitech_bulkcontroller_device_startlistening_sync(self,
+								   device_response,
+								   &error_local)) {
+		if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL)
+			g_debug("failed to receive data packet for handshake request");
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_FAILED,
+				    "failed to receive data packet for handshake request");
+		return FALSE;
+	}
+
+	/* handle error scenario, e.g. CMD_UNINIT_BUFFER arrived before CMD_BUFFER_READ */
+	if (device_response->len == 0) {
+		if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL)
+			g_debug("failed to receive expected packet for handshake request");
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_FAILED,
+				    "failed to receive expected packet for handshake request");
+		return FALSE;
+	}
+
+	decoded_pkt = proto_manager_decode_message(device_response->data,
+						   device_response->len,
+						   &proto_id,
+						   &error_local);
+	if (decoded_pkt == NULL) {
+		if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL)
+			g_debug("failed to unpack packet for handshake request");
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_FAILED,
+				    "failed to unpack packet for handshake request");
+		return FALSE;
+	}
+
+	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
+		g_autofree gchar *strsafe =
+		    fu_common_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+		g_debug("Received initialization response: id: %u, length %u, data: %s",
+			proto_id,
+			device_response->len,
+			strsafe);
+	}
+
+	/* skip optional initialization events -- not an error if these events are missed */
+	if (proto_id != kProtoId_HandshakeEvent) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_FAILED,
+			    "invalid initialization message received: %u",
+			    proto_id);
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
@@ -816,10 +1007,21 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
 	guint32 success = 0;
 	guint32 error_code = 0;
+	g_autoptr(GError) error_local = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_logitech_bulkcontroller_device_parent_class)->setup(device, error))
 		return FALSE;
+
+	/* check for initialization events generated by the device
+	 * no error check needed here, possibly missed */
+	if (!fu_device_retry(device,
+			     fu_logitech_bulkcontroller_device_get_handshake_cb,
+			     MAX_HANDSHAKE_RETRIES,
+			     NULL,
+			     &error_local)) {
+		g_warning("failed to receive initialization events: %s", error_local->message);
+	}
 
 	/*
 	 * device supports USB_Device mode, Appliance mode and BYOD mode.
@@ -855,6 +1057,14 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	if (decoded_pkt == NULL) {
 		g_prefix_error(error, "failed to unpack packet for transition mode request: ");
 		return FALSE;
+	}
+	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
+		g_autofree gchar *strsafe =
+		    fu_common_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+		g_debug("Received transition mode response: id: %u, length %u, data: %s",
+			proto_id,
+			device_response->len,
+			strsafe);
 	}
 	if (proto_id != kProtoId_TransitionToDeviceModeResponse) {
 		g_set_error_literal(error,
@@ -897,7 +1107,7 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* load current device data */
-	if (!fu_logitech_bulkcontroller_device_get_data(device, error))
+	if (!fu_logitech_bulkcontroller_device_get_data(device, TRUE, error))
 		return FALSE;
 
 	/* success */
@@ -908,11 +1118,10 @@ static void
 fu_logitech_bulkcontroller_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 98);	/* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99);	/* write */
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 0); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);	/* reload */
 }
 
 static void
@@ -922,6 +1131,7 @@ fu_logitech_bulkcontroller_device_init(FuLogitechBulkcontrollerDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
+	fu_device_set_remove_delay(FU_DEVICE(self), 100000); /* >1 min to finish init */
 }
 
 static void
