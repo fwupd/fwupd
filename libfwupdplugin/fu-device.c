@@ -336,6 +336,40 @@ fu_device_has_internal_flag(FuDevice *self, FuDeviceInternalFlags flag)
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	return (priv->internal_flags & flag) > 0;
 }
+/**
+ * fu_device_get_internal_flags:
+ * @self: a #FuDevice
+ *
+ * Gets all the internal flags.
+ *
+ * Returns: flags, e.g. %FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON
+ *
+ * Since: 1.7.1
+ **/
+FuDeviceInternalFlags
+fu_device_get_internal_flags(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_UNKNOWN);
+	return priv->internal_flags;
+}
+
+/**
+ * fu_device_set_internal_flags:
+ * @self: a #FuDevice
+ * @flags: internal device flags, e.g. %FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON
+ *
+ * Sets the internal flags.
+ *
+ * Since: 1.7.1
+ **/
+void
+fu_device_set_internal_flags(FuDevice *self, FuDeviceInternalFlags flags)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	priv->internal_flags = flags;
+}
 
 /**
  * fu_device_add_private_flag:

@@ -52,3 +52,7 @@ void
 fu_device_set_private_flags(FuDevice *self, guint64 flag);
 void
 fu_device_set_progress(FuDevice *self, FuProgress *progress);
+FuDeviceInternalFlags
+fu_device_get_internal_flags(FuDevice *self);
+void
+fu_device_set_internal_flags(FuDevice *self, FuDeviceInternalFlags flag);
