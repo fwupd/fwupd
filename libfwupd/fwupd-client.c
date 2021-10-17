@@ -1178,6 +1178,8 @@ fwupd_client_get_history_finish(FwupdClient *self, GAsyncResult *res, GError **e
 static void
 fwupd_client_get_device_by_id_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
+	FwupdDevice *device_result = NULL;
+	gsize device_id_len;
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1189,15 +1191,29 @@ fwupd_client_get_device_by_id_cb(GObject *source, GAsyncResult *res, gpointer us
 		return;
 	}
 
-	/* find the device by ID (client side) */
+	/* support abbreviated hashes (client side) */
+	device_id_len = strlen(device_id);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
-		if (g_strcmp0(fwupd_device_get_id(dev), device_id) == 0) {
-			g_task_return_pointer(task,
-					      g_object_ref(dev),
-					      (GDestroyNotify)g_object_unref);
-			return;
+		if (strncmp(fwupd_device_get_id(dev), device_id, device_id_len) == 0) {
+			if (device_result != NULL) {
+				g_task_return_new_error(task,
+							FWUPD_ERROR,
+							FWUPD_ERROR_NOT_FOUND,
+							"more than one matching ID prefix '%s'",
+							device_id);
+				return;
+			}
+			device_result = dev;
 		}
+	}
+
+	/* one result */
+	if (device_result != NULL) {
+		g_task_return_pointer(task,
+				      g_object_ref(device_result),
+				      (GDestroyNotify)g_object_unref);
+		return;
 	}
 
 	/* failed */
