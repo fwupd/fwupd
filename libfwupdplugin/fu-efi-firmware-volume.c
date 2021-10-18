@@ -301,6 +301,16 @@ fu_efi_firmware_volume_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) img_blob = NULL;
 	g_autoptr(FuFirmware) img = NULL;
 
+	/* sanity check */
+	if (fu_firmware_get_alignment(firmware) > FU_FIRMWARE_ALIGNMENT_1M) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "alignment invalid, got 0x%02x",
+			    fu_firmware_get_alignment(firmware));
+		return NULL;
+	}
+
 	/* zero vector */
 	for (guint i = 0; i < 0x10; i++)
 		fu_byte_array_append_uint8(buf, 0x0);
