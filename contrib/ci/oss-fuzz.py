@@ -29,7 +29,7 @@ class Builder:
         self.ldflags = ["-lpthread", "-lresolv", "-ldl", "-lffi", "-lz", "-llzma"]
 
         # defined in env
-        self.cflags = ["-Wno-deprecated-declarations"]
+        self.cflags = ["-Wno-deprecated-declarations", "-g"]
         if "CFLAGS" in os.environ:
             self.cflags += os.environ["CFLAGS"].split(" ")
         self.cxxflags = []
