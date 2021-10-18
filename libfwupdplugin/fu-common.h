@@ -410,6 +410,8 @@ fu_common_check_full_disk_encryption(GError **error);
 
 guint8
 fu_common_crc8(const guint8 *buf, gsize bufsz);
+guint8
+fu_common_crc8_full(const guint8 *buf, gsize bufsz, guint8 crc_init, guint8 polynomial);
 guint16
 fu_common_crc16(const guint8 *buf, gsize bufsz);
 guint16
