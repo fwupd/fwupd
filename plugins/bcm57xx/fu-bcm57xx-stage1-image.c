@@ -102,6 +102,16 @@ fu_bcm57xx_stage1_image_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autoptr(GBytes) fw_nocrc = NULL;
 
+	/* sanity check */
+	if (fu_firmware_get_alignment(firmware) > FU_FIRMWARE_ALIGNMENT_1M) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "alignment invalid, got 0x%02x",
+			    fu_firmware_get_alignment(firmware));
+		return NULL;
+	}
+
 	/* the CRC-less payload */
 	fw_nocrc = fu_firmware_get_bytes(firmware, error);
 	if (fw_nocrc == NULL)
