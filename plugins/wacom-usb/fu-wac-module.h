@@ -25,9 +25,14 @@ struct _FuWacModuleClass {
 #define FU_WAC_MODULE_COMMAND_DATA  0x02
 #define FU_WAC_MODULE_COMMAND_END   0x03
 
+#define FU_WAC_MODULE_WRITE_TIMEOUT  1
+#define FU_WAC_MODULE_ERASE_TIMEOUT  15
+#define FU_WAC_MODULE_FINISH_TIMEOUT 1
+
 gboolean
 fu_wac_module_set_feature(FuWacModule *self,
 			  guint8 command,
 			  GBytes *blob,
 			  FuProgress *progress,
+			  guint busy_timeout,
 			  GError **error);

@@ -170,13 +170,14 @@ fu_wac_module_set_feature(FuWacModule *self,
 			  guint8 command,
 			  GBytes *blob, /* optional */
 			  FuProgress *progress,
+			  guint busy_timeout,
 			  GError **error)
 {
 	FuWacDevice *parent_device = FU_WAC_DEVICE(fu_device_get_parent(FU_DEVICE(self)));
 	FuWacModulePrivate *priv = GET_PRIVATE(self);
 	const guint8 *data;
 	gsize len = 0;
-	guint busy_poll_loops = 100; /* 1s */
+	guint busy_poll_loops = busy_timeout * 100;
 	guint8 buf[] = {[0] = FU_WAC_REPORT_ID_MODULE,
 			[1] = priv->fw_type,
 			[2] = command,
@@ -226,11 +227,6 @@ fu_wac_module_set_feature(FuWacModule *self,
 		g_prefix_error(error, "failed to set module feature: ");
 		return FALSE;
 	}
-
-	/* special case StartProgram, as it can take much longer as it is
-	 * erasing the blocks (15s) */
-	if (command == FU_WAC_MODULE_COMMAND_START)
-		busy_poll_loops *= 15;
 
 	/* wait for hardware */
 	for (guint i = 0; i < busy_poll_loops; i++) {
