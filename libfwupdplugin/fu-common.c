@@ -3288,6 +3288,34 @@ fu_common_get_esp_for_path(const gchar *esp_path, GError **error)
 }
 
 /**
+ * fu_common_crc8_full:
+ * @buf: memory buffer
+ * @bufsz: size of @buf
+ * @crc_init: initial CRC value, typically 0x00
+ * @polynomial: CRC polynomial, e.g. 0x07 for CCITT
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * Returns: CRC value
+ *
+ * Since: 1.7.1
+ **/
+guint8
+fu_common_crc8_full(const guint8 *buf, gsize bufsz, guint8 crc_init, guint8 polynomial)
+{
+	guint32 crc = crc_init;
+	for (gsize j = bufsz; j > 0; j--) {
+		crc ^= (*(buf++) << 8);
+		for (guint32 i = 8; i; i--) {
+			if (crc & 0x8000)
+				crc ^= ((polynomial | 0x100) << 7);
+			crc <<= 1;
+		}
+	}
+	return ~((guint8)(crc >> 8));
+}
+
+/**
  * fu_common_crc8:
  * @buf: memory buffer
  * @bufsz: size of @buf
@@ -3301,16 +3329,7 @@ fu_common_get_esp_for_path(const gchar *esp_path, GError **error)
 guint8
 fu_common_crc8(const guint8 *buf, gsize bufsz)
 {
-	guint32 crc = 0;
-	for (gsize j = bufsz; j > 0; j--) {
-		crc ^= (*(buf++) << 8);
-		for (guint32 i = 8; i; i--) {
-			if (crc & 0x8000)
-				crc ^= (0x1070 << 3);
-			crc <<= 1;
-		}
-	}
-	return ~((guint8)(crc >> 8));
+	return fu_common_crc8_full(buf, bufsz, 0x00, 0x07);
 }
 
 /**

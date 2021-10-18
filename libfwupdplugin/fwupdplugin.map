@@ -935,6 +935,7 @@ LIBFWUPDPLUGIN_1.7.1 {
     fu_cfi_device_set_flash_id;
     fu_cfi_device_set_size;
     fu_common_check_full_disk_encryption;
+    fu_common_crc8_full;
     fu_common_mkdir;
     fu_device_add_string;
     fu_device_get_internal_flags;
