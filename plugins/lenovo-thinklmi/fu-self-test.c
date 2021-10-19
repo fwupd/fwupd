@@ -43,11 +43,11 @@ fu_test_self_init(FuTest *self)
 	g_assert_true(ret);
 
 	self->plugin_uefi_capsule = fu_plugin_new(ctx);
-	pluginfn_uefi = g_build_filename(PLUGINBUILDDIR,
-					 "..",
-					 "uefi-capsule",
-					 "libfu_plugin_uefi_capsule." G_MODULE_SUFFIX,
-					 NULL);
+	pluginfn_uefi = g_test_build_filename(G_TEST_BUILT,
+					      "..",
+					      "uefi-capsule",
+					      "libfu_plugin_uefi_capsule." G_MODULE_SUFFIX,
+					      NULL);
 	ret = fu_plugin_open(self->plugin_uefi_capsule, pluginfn_uefi, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -56,8 +56,9 @@ fu_test_self_init(FuTest *self)
 	g_assert_true(ret);
 
 	self->plugin_lenovo_thinklmi = fu_plugin_new(ctx);
-	pluginfn_lenovo =
-	    g_build_filename(PLUGINBUILDDIR, "libfu_plugin_lenovo_thinklmi." G_MODULE_SUFFIX, NULL);
+	pluginfn_lenovo = g_test_build_filename(G_TEST_BUILT,
+						"libfu_plugin_lenovo_thinklmi." G_MODULE_SUFFIX,
+						NULL);
 	ret = fu_plugin_open(self->plugin_lenovo_thinklmi, pluginfn_lenovo, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -94,7 +95,7 @@ fu_plugin_lenovo_thinklmi_bootorder_locked(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autofree gchar *test_dir =
-	    g_build_filename(TESTDATADIR, "firmware-attributes", "locked", NULL);
+	    g_test_build_filename(G_TEST_DIST, "tests", "firmware-attributes", "locked", NULL);
 	g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
 	dev = fu_test_probe_fake_esrt(self);
@@ -108,7 +109,7 @@ fu_plugin_lenovo_thinklmi_bootorder_unlocked(gconstpointer user_data)
 	FuTest *self = (FuTest *)user_data;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autofree gchar *test_dir =
-	    g_build_filename(TESTDATADIR, "firmware-attributes", "unlocked", NULL);
+	    g_test_build_filename(G_TEST_DIST, "tests", "firmware-attributes", "unlocked", NULL);
 	g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
 	dev = fu_test_probe_fake_esrt(self);
@@ -135,17 +136,20 @@ int
 main(int argc, char **argv)
 {
 	g_autofree gchar *sysfsdir = NULL;
+	g_autofree gchar *testdatadir = NULL;
 	g_autofree gchar *test_dir = NULL;
 	g_autoptr(FuTest) self = g_new0(FuTest, 1);
 
 	g_test_init(&argc, &argv, NULL);
 
 	/* starting thinklmi dir to make startup pass */
-	test_dir = g_build_filename(TESTDATADIR, "firmware-attributes", "locked", NULL);
+	test_dir =
+	    g_test_build_filename(G_TEST_DIST, "tests", "firmware-attributes", "locked", NULL);
 	g_setenv("FWUPD_SYSFSFWATTRIBDIR", test_dir, TRUE);
 
 	/* starting ESRT path */
-	g_setenv("FWUPD_SYSFSFWDIR", TESTDATADIR, TRUE);
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 
 	/* change behavior of UEFI plugin for test mode */
 	sysfsdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_FW);

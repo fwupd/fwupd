@@ -1,3 +1,7 @@
+if get_option('tests')
+subdir('tests')
+endif
+
 fwupdplugin_version_h = configure_file(
   input : 'fu-version.h.in',
   output : 'fu-version.h',
@@ -314,16 +318,11 @@ endif
 
 if get_option('tests')
   test_deps = [
-    colorhug_test_firmware,
-    builder_test_firmware,
-    hwid_test_firmware,
-    multiple_rels_test_firmware,
-    noreqs_test_firmware,
     fu_hash,
   ]
-  testdatadir_src = join_paths(meson.source_root(), 'data', 'tests')
-  testdatadir_dst = join_paths(meson.build_root(), 'data', 'tests')
-  pluginbuilddir = join_paths(meson.build_root(), 'plugins', 'test')
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fwupdplugin-self-test',
     test_deps,
@@ -343,11 +342,9 @@ if get_option('tests')
       fwupdplugin
     ],
     c_args : [
-      '-DTESTDATADIR_SRC="' + testdatadir_src + '"',
-      '-DTESTDATADIR_DST="' + testdatadir_dst + '"',
     ],
   )
-  test('fwupdplugin-self-test', e, is_parallel:false, timeout:180)
+  test('fwupdplugin-self-test', e, is_parallel:false, timeout:180, env : env)
 endif
 
 fwupdplugin_incdir = include_directories('.')

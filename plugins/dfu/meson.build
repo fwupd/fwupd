@@ -91,9 +91,9 @@ if get_option('man')
 endif
 
 if get_option('tests')
-  testdatadirs = environment()
-  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
-  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fu-dfu-self-test',
     fu_hash,
@@ -117,7 +117,7 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('fu-dfu-self-test', e, env : testdatadirs)  # added to installed-tests
+  test('fu-dfu-self-test', e, env : env)  # added to installed-tests
 endif
 
 plugindfu_incdir = include_directories('.')

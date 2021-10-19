@@ -127,7 +127,8 @@ fu_engine_generate_md_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 
 	/* put cab file somewhere we can parse it */
-	filename = g_build_filename(TESTDATADIR_DST, "colorhug", "colorhug-als-3.0.2.cab", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "colorhug-als-3.0.2.cab", NULL);
 	data = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
@@ -155,7 +156,7 @@ fu_engine_generate_md_func(gconstpointer user_data)
 
 	/* verify checksums */
 	tmp = xb_node_query_text(component, "releases/release/checksum[@target='container']", NULL);
-	g_assert_cmpstr(tmp, !=, NULL);
+	g_assert_cmpstr(tmp, ==, "3da49ddd961144a79336b3ac3b0e469cb2531d0e");
 	tmp = xb_node_query_text(component, "releases/release/checksum[@target='content']", NULL);
 	g_assert_cmpstr(tmp, ==, NULL);
 }
@@ -178,7 +179,12 @@ fu_plugin_hash_func(gconstpointer user_data)
 	g_assert_false(ret);
 
 	/* create a tainted plugin */
-	pluginfn = g_build_filename(PLUGINBUILDDIR, "libfu_plugin_invalid." G_MODULE_SUFFIX, NULL);
+	pluginfn = g_test_build_filename(G_TEST_BUILT,
+					 "..",
+					 "plugins",
+					 "test",
+					 "libfu_plugin_invalid." G_MODULE_SUFFIX,
+					 NULL);
 	ret = fu_plugin_open(plugin, pluginfn, &error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
@@ -1317,7 +1323,7 @@ fu_engine_device_unlock_func(gconstpointer user_data)
 	g_assert_true(ret);
 
 	/* add the hardcoded 'fwupd' metadata */
-	filename = g_build_filename(TESTDATADIR_SRC, "metadata.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "metadata.xml", NULL);
 	file = g_file_new_for_path(filename);
 	ret = xb_builder_source_load_file(source, file, XB_BUILDER_SOURCE_FLAG_NONE, NULL, &error);
 	g_assert_no_error(error);
@@ -1372,7 +1378,8 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	g_assert_true(ret);
 
 	/* get generated file as a blob */
-	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "hwid-1.2.3.cab", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "hwid-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
@@ -1515,7 +1522,6 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_NO_CACHE,
 			     &error);
@@ -1642,7 +1648,6 @@ fu_engine_install_duration_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_NO_CACHE,
 			     &error);
@@ -1713,7 +1718,6 @@ fu_engine_history_func(gconstpointer user_data)
 	/* set up dummy plugin */
 	fu_engine_add_plugin(engine, self->plugin);
 
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1738,7 +1742,8 @@ fu_engine_history_func(gconstpointer user_data)
 	g_assert_cmpint(devices->len, ==, 1);
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
 
-	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
@@ -1848,7 +1853,6 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	/* set up dummy plugin */
 	fu_engine_add_plugin(engine, self->plugin);
 
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1869,8 +1873,11 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	fu_device_set_created(device, 1515338000);
 	fu_engine_add_device(engine, device);
 
-	filename =
-	    g_build_filename(TESTDATADIR_DST, "multiple-rels", "multiple-rels-1.2.4.cab", NULL);
+	filename = g_test_build_filename(G_TEST_BUILT,
+					 "tests",
+					 "multiple-rels",
+					 "multiple-rels-1.2.4.cab",
+					 NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
@@ -1936,7 +1943,6 @@ fu_engine_history_inherit(gconstpointer user_data)
 	/* set up dummy plugin */
 	g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
 	fu_engine_add_plugin(engine, self->plugin);
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1960,7 +1966,8 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_assert_cmpint(devices->len, ==, 1);
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
 
-	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
@@ -2073,7 +2080,6 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	/* set up dummy plugin */
 	g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
 	fu_engine_add_plugin(engine, self->plugin);
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -2097,7 +2103,8 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_assert_cmpint(devices->len, ==, 1);
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
 
-	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
@@ -2161,8 +2168,6 @@ fu_engine_history_error_func(gconstpointer user_data)
 	/* set up dummy plugin */
 	g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
 	fu_engine_add_plugin(engine, self->plugin);
-
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -2187,7 +2192,8 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
 
 	/* install the wrong thing */
-	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
@@ -2771,7 +2777,7 @@ fu_history_migrate_func(gconstpointer user_data)
 	g_autofree gchar *filename = NULL;
 
 	/* load old version */
-	filename = g_build_filename(TESTDATADIR_SRC, "history_v1.db", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "history_v1.db", NULL);
 	file_src = g_file_new_for_path(filename);
 	file_dst = g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/pending.db");
 	ret = g_file_copy(file_src, file_dst, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, &error);
@@ -2876,7 +2882,8 @@ fu_plugin_module_func(gconstpointer user_data)
 #endif
 	/* schedule an offline update */
 	g_signal_connect(progress, "status-changed", G_CALLBACK(_plugin_status_changed_cb), &cnt);
-	mapped_file_fn = g_build_filename(TESTDATADIR_SRC, "colorhug", "firmware.bin", NULL);
+	mapped_file_fn =
+	    g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
 	mapped_file = g_mapped_file_new(mapped_file_fn, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(mapped_file);
@@ -3453,6 +3460,7 @@ main(int argc, char **argv)
 {
 	gboolean ret;
 	g_autofree gchar *pluginfn = NULL;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuTest) self = g_new0(FuTest, 1);
 
@@ -3462,10 +3470,12 @@ main(int argc, char **argv)
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 	g_setenv("FWUPD_DEVICE_LIST_VERBOSE", "1", TRUE);
-	g_setenv("FWUPD_DATADIR", TESTDATADIR_SRC, TRUE);
-	g_setenv("FWUPD_PLUGINDIR", TESTDATADIR_SRC, TRUE);
-	g_setenv("FWUPD_SYSCONFDIR", TESTDATADIR_SRC, TRUE);
-	g_setenv("FWUPD_SYSFSFWDIR", TESTDATADIR_SRC, TRUE);
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	g_setenv("FWUPD_DATADIR", testdatadir, TRUE);
+	g_setenv("FWUPD_PLUGINDIR", testdatadir, TRUE);
+	g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
+	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 	g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
@@ -3480,7 +3490,12 @@ main(int argc, char **argv)
 
 	/* load the test plugin */
 	self->plugin = fu_plugin_new(self->ctx);
-	pluginfn = g_build_filename(PLUGINBUILDDIR, "libfu_plugin_test." G_MODULE_SUFFIX, NULL);
+	pluginfn = g_test_build_filename(G_TEST_BUILT,
+					 "..",
+					 "plugins",
+					 "test",
+					 "libfu_plugin_test." G_MODULE_SUFFIX,
+					 NULL);
 	ret = fu_plugin_open(self->plugin, pluginfn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);

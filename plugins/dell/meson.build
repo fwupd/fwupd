@@ -33,9 +33,10 @@ shared_module('fu_plugin_dell',
 )
 
 if get_option('tests')
-  testdatadir = join_paths(meson.current_source_dir(), 'tests')
-  cargs += '-DTESTDATADIR="' + testdatadir + '"'
-  cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'dell-self-test',
     fu_hash,
@@ -64,6 +65,6 @@ if get_option('tests')
       cargs,
     ],
   )
-  test('dell-self-test', e)
+  test('dell-self-test', e, env : env)
 endif
 endif
