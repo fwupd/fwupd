@@ -8,7 +8,6 @@ plugins/uefi-capsule/fu-uefi-tool.c
 plugins/uefi-dbx/fu-dbxtool.c
 src/fu-debug.c
 src/fu-engine-helper.c
-src/fu-firmware-dump.c
 src/fu-main.c
 src/fu-offline.c
 src/fu-progressbar.c

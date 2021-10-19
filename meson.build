@@ -111,12 +111,6 @@ warning_flags = [
 cc = meson.get_compiler('c')
 add_project_arguments(cc.get_supported_arguments(warning_flags), language : 'c')
 
-# use honggfuzz for parallel persistent fuzzing
-honggfuzz = find_program('honggfuzz', required: false)
-if cc.has_function('HF_ITER')
-  conf.set('HAVE_HF_ITER', '1')
-endif
-
 if not meson.is_cross_build()
   add_project_arguments('-fstack-protector-strong', language : 'c')
 endif
