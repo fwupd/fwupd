@@ -249,6 +249,7 @@ fu_remote_list_set_key_value(FuRemoteList *self,
 {
 	FwupdRemote *remote;
 	const gchar *filename;
+	g_autofree gchar *value_old = NULL;
 	g_autoptr(GKeyFile) keyfile = g_key_file_new();
 
 	/* check remote is valid */
@@ -268,6 +269,9 @@ fu_remote_list_set_key_value(FuRemoteList *self,
 		g_prefix_error(error, "failed to load %s: ", filename);
 		return FALSE;
 	}
+	value_old = g_key_file_get_string(keyfile, "fwupd Remote", key, NULL);
+	if (g_strcmp0(value_old, value) == 0)
+		return TRUE;
 	g_key_file_set_string(keyfile, "fwupd Remote", key, value);
 	if (!g_key_file_save_to_file(keyfile, filename, error))
 		return FALSE;
