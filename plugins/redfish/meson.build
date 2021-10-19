@@ -51,6 +51,7 @@ shared_module('fu_plugin_redfish',
     libcurl,
   ],
 )
+subdir('fuzzing')
 
 install_data(['redfish.conf'],
   install_dir:  join_paths(sysconfdir, 'fwupd'),
@@ -98,6 +99,6 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('redfish-self-test', e)  # added to installed-tests
+  test('redfish-self-test', e, env : testdatadirs)  # added to installed-tests
 endif
 endif

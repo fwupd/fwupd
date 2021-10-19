@@ -79,6 +79,9 @@ fi
 PACKAGES=$(find .. -type f -name "*.deb" | grep -v 'fwupd-tests\|dbgsym')
 dpkg -i $PACKAGES
 
+# copy in more non-generated data
+cp fwupd-test-firmware/installed-tests/* /usr/share/installed-tests/fwupd/ -Rv
+
 # run the installed tests
 if [ "$CI" = "true" ]; then
 	dpkg -i ../fwupd-tests*.deb

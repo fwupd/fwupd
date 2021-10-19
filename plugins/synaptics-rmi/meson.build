@@ -38,9 +38,13 @@ shared_module('fu_plugin_synaptics_rmi',
     fwupdplugin,
   ],
 )
+subdir('fuzzing')
 endif
 
 if get_option('tests')
+  testdatadirs = environment()
+  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
+  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'synaptics-rmi-self-test',
     fu_hash,
@@ -65,5 +69,5 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('synaptics-rmi-self-test', e)
+  test('synaptics-rmi-self-test', e, env : testdatadirs)
 endif

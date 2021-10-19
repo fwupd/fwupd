@@ -266,3 +266,5 @@ if get_option('tests')
   )
   test('fu-self-test', e, is_parallel:false, timeout:180)
 endif
+
+subdir('fuzzing')

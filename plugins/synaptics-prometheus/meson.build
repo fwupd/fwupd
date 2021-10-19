@@ -30,6 +30,7 @@ shared_module('fu_plugin_synaptics_prometheus',
     plugin_deps,
   ],
 )
+subdir('fuzzing')
 
 if get_option('tests')
   testdatadirs = environment()

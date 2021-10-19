@@ -28,4 +28,5 @@ shared_module('fu_plugin_elanfp',
     plugin_deps,
   ],
 )
+subdir('fuzzing')
 endif

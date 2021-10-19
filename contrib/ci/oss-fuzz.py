@@ -175,6 +175,8 @@ class Builder:
             for line in f.read().split("\n"):
                 if line.find(token) == -1:
                     continue
+                if line.find("subdir") != -1:
+                    continue
 
                 # get rid of token
                 line = line.split("#")[0]
@@ -199,7 +201,7 @@ class Fuzzer:
 
         self.name = name
         self.srcdir = srcdir or name
-        self.globstr = globstr or "{}*".format(name)
+        self.globstr = globstr or "{}*.bin".format(name)
         self.pattern = pattern or "{}-firmware".format(name)
 
     @property
@@ -288,10 +290,10 @@ def _build(bld: Builder) -> None:
 
     # built in formats
     for fzr in [
-        Fuzzer("dfuse"),
+        Fuzzer("dfuse", globstr="dfu*.dfu"),
         Fuzzer("fmap"),
-        Fuzzer("ihex"),
-        Fuzzer("srec"),
+        Fuzzer("ihex", globstr="ihex*.hex"),
+        Fuzzer("srec", globstr="*.srec"),
         Fuzzer("efi-filesystem", pattern="efi-firmware-filesystem"),
         Fuzzer("efi-volume", pattern="efi-firmware-volume"),
         Fuzzer("ifd"),
@@ -306,7 +308,7 @@ def _build(bld: Builder) -> None:
         bld.link([bld.compile(src)] + built_objs, "{}_fuzzer".format(fzr.name))
         bld.makezip(
             "{}_fuzzer_seed_corpus.zip".format(fzr.name),
-            "fwupd/src/fuzzing/firmware/{}".format(fzr.globstr),
+            "fwupd/src/fuzzing/{}".format(fzr.globstr),
         )
 
     # plugins
@@ -316,18 +318,17 @@ def _build(bld: Builder) -> None:
         Fuzzer("ccgx-dmc", srcdir="ccgx", globstr="ccgx-dmc*.bin"),
         Fuzzer("ccgx", globstr="ccgx*.cyacd"),
         Fuzzer("cros-ec"),
-        Fuzzer("ebitdo"),
+        Fuzzer("ebitdo", globstr="ebitdo*.dat"),
         Fuzzer("elanfp"),
         Fuzzer("elantp"),
-        Fuzzer("hailuck-kbd", srcdir="hailuck", globstr="ihex*"),
         Fuzzer("pixart", srcdir="pixart-rf", pattern="pxi-firmware"),
         Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
-        Fuzzer("solokey"),
+        Fuzzer("solokey", globstr="solokey*.json"),
         Fuzzer("synaprom", srcdir="synaptics-prometheus"),
-        Fuzzer("synaptics-cape"),
-        Fuzzer("synaptics-mst"),
+        Fuzzer("synaptics-cape", globstr="synaptics-cape*.fw"),
+        Fuzzer("synaptics-mst", globstr="synaptics-mst*.dat"),
         Fuzzer("synaptics-rmi"),
-        Fuzzer("wacom-usb", pattern="wac-firmware", globstr="wacom*"),
+        Fuzzer("wacom-usb", pattern="wac-firmware", globstr="wacom*.wac"),
     ]:
         fuzz_objs = []
         for obj in bld.grep_meson("fwupd/plugins/{}".format(fzr.srcdir)):
@@ -343,7 +344,7 @@ def _build(bld: Builder) -> None:
         bld.link(fuzz_objs + built_objs, "{}_fuzzer".format(fzr.name))
         bld.makezip(
             "{}_fuzzer_seed_corpus.zip".format(fzr.name),
-            "fwupd/src/fuzzing/firmware/{}".format(fzr.globstr),
+            "fwupd/plugins/{}/fuzzing/{}".format(fzr.srcdir, fzr.globstr),
         )
 
 

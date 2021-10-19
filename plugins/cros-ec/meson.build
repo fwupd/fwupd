@@ -29,4 +29,5 @@ shared_module('fu_plugin_cros_ec',
     plugin_deps,
   ],
 )
+subdir('fuzzing')
 endif

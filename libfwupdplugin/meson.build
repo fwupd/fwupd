@@ -322,6 +322,9 @@ if get_option('tests')
   testdatadir_src = join_paths(meson.source_root(), 'data', 'tests')
   testdatadir_dst = join_paths(meson.build_root(), 'data', 'tests')
   pluginbuilddir = join_paths(meson.build_root(), 'plugins', 'test')
+  testdatadirs = environment()
+  testdatadirs.set('G_TEST_SRCDIR', join_paths(meson.source_root(), 'src'))
+  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fwupdplugin-self-test',
     test_deps,
@@ -345,7 +348,7 @@ if get_option('tests')
       '-DTESTDATADIR_DST="' + testdatadir_dst + '"',
     ],
   )
-  test('fwupdplugin-self-test', e, is_parallel:false, timeout:180)
+  test('fwupdplugin-self-test', e, is_parallel:false, timeout:180, env : testdatadirs)
 endif
 
 fwupdplugin_incdir = include_directories('.')

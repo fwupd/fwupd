@@ -521,10 +521,12 @@ done
 %files tests
 %if 0%{?enable_tests}
 %dir %{_datadir}/installed-tests/fwupd
+%dir %{_datadir}/installed-tests/fwupd/fuzzing
 %{_datadir}/installed-tests/fwupd/fwupd-tests.xml
 %{_datadir}/installed-tests/fwupd/*.test
 %{_datadir}/installed-tests/fwupd/*.cab
 %{_datadir}/installed-tests/fwupd/*.sh
+%{_datadir}/installed-tests/fwupd/fuzzing/*.xml
 %{_datadir}/fwupd/device-tests/*.json
 %{_libexecdir}/installed-tests/fwupd/*
 %dir %{_sysconfdir}/fwupd/remotes.d

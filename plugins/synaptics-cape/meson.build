@@ -28,4 +28,5 @@ shared_module('fu_plugin_synaptics_cape',
     plugin_deps,
   ],
 )
+subdir('fuzzing')
 endif

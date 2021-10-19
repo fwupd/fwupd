@@ -30,4 +30,5 @@ shared_module('fu_plugin_solokey',
     plugin_deps,
   ],
 )
+subdir('fuzzing')
 endif

@@ -33,6 +33,7 @@ shared_module('fu_plugin_wacom_usb',
     fwupdplugin,
   ],
 )
+subdir('fuzzing')
 
 if get_option('tests')
   testdatadirs = environment()

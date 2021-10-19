@@ -26,6 +26,7 @@ shared_module('fu_plugin_acpi_phat',
     plugin_deps,
   ],
 )
+subdir('fuzzing')
 
 if get_option('tests')
   testdatadirs = environment()
