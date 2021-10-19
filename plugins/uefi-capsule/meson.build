@@ -150,8 +150,10 @@ if get_option('plugin_uefi_capsule_splash')
 endif
 
 if get_option('tests')
-  testdatadir = join_paths(meson.current_source_dir(), 'tests')
-  cargs += '-DTESTDATADIR="' + testdatadir + '"'
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'uefi-self-test',
     fu_hash,
@@ -187,6 +189,6 @@ if get_option('tests')
     ],
     c_args : cargs
   )
-  test('uefi-self-test', e)
+  test('uefi-self-test', e, env: env)
 endif
 endif

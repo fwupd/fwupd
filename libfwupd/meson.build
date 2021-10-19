@@ -180,8 +180,9 @@ if get_option('introspection')
 endif
 
 if get_option('tests')
-  testdatadir = join_paths(meson.source_root(), 'data')
-  localremotetestdir = join_paths(meson.source_root(), 'plugins', 'dell-esrt')
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fwupd-self-test',
     sources : [
@@ -197,12 +198,9 @@ if get_option('tests')
     c_args : [
       '-DG_LOG_DOMAIN="Fwupd"',
       '-DLOCALSTATEDIR="' + localstatedir + '"',
-      '-DTESTDATADIR="' + testdatadir + '"',
-      '-DFU_SELF_TEST_REMOTES_DIR="' + testdatadir + '"',
-      '-DFU_LOCAL_REMOTE_DIR="' + localremotetestdir + '"',
     ],
   )
-  test('fwupd-self-test', e, timeout: 60)
+  test('fwupd-self-test', e, timeout: 60, env : env)
   if gio.version().version_compare ('>= 2.64.0')
     e = executable(
       'fwupd-thread-test',

@@ -13,7 +13,6 @@ subdir('motd')
 endif
 
 if get_option('tests')
-  subdir('tests')
   if build_daemon
     subdir('installed-tests')
   endif

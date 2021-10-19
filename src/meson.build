@@ -1,3 +1,7 @@
+if get_option('tests')
+subdir('tests')
+endif
+
 if build_daemon
   install_data(['org.freedesktop.fwupd.xml'],
     install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
@@ -233,9 +237,15 @@ executable(
 endif
 
 if get_option('tests')
-  testdatadir_src = join_paths(meson.source_root(), 'data', 'tests')
-  testdatadir_dst = join_paths(meson.build_root(), 'data', 'tests')
-  pluginbuilddir = join_paths(meson.build_root(), 'plugins', 'test')
+  test_deps += colorhug_test_firmware
+  test_deps += hwid_test_firmware
+  test_deps += multiple_rels_test_firmware
+  test_deps += noreqs_test_firmware
+  test_deps += builder_test_firmware
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'fu-self-test',
     resources_src,
@@ -259,10 +269,7 @@ if get_option('tests')
       fwupdplugin
     ],
     c_args : [
-      '-DTESTDATADIR_SRC="' + testdatadir_src + '"',
-      '-DTESTDATADIR_DST="' + testdatadir_dst + '"',
-      '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
     ],
   )
-  test('fu-self-test', e, is_parallel:false, timeout:180)
+  test('fu-self-test', e, is_parallel:false, timeout:180, env : env)
 endif

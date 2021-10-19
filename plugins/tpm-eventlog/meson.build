@@ -28,9 +28,9 @@ shared_module('fu_plugin_tpm_eventlog',
 )
 
 if get_option('tests')
-  testdatadirs = environment()
-  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
-  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'tpm-eventlog-self-test',
     fu_hash,
@@ -55,7 +55,7 @@ if get_option('tests')
     ],
     c_args : cargs
   )
-  test('tpm-eventlog-self-test', e, env : testdatadirs)  # added to installed-tests
+  test('tpm-eventlog-self-test', e, env : env)  # added to installed-tests
 endif
 
 fwupdtpmevlog = executable(

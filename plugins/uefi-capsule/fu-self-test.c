@@ -24,8 +24,10 @@ fu_uefi_pcrs_1_2_func(void)
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
 	g_autoptr(GPtrArray) pcrXs = NULL;
+	g_autofree gchar *testdatadir = NULL;
 
-	g_setenv("FWUPD_SYSFSTPMDIR", TESTDATADIR, TRUE);
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	g_setenv("FWUPD_SYSFSTPMDIR", testdatadir, TRUE);
 
 	ret = fu_uefi_pcrs_setup(pcrs, &error);
 	g_assert_no_error(error);
@@ -132,7 +134,7 @@ fu_uefi_bitmap_func(void)
 	g_autofree gchar *buf = NULL;
 	g_autoptr(GError) error = NULL;
 
-	fn = g_build_filename(TESTDATADIR, "test.bmp", NULL);
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "test.bmp", NULL);
 	ret = g_file_get_contents(fn, &buf, &sz, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -189,7 +191,8 @@ fu_uefi_cod_device_write_efi_name(const gchar *name, GByteArray *array)
 	gboolean ret;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *fn = g_strdup_printf("%s-%s", name, FU_EFIVAR_GUID_EFI_CAPSULE_REPORT);
-	g_autofree gchar *path = g_build_filename(TESTDATADIR, "efi", "efivars", fn, NULL);
+	g_autofree gchar *path = NULL;
+	path = g_test_build_filename(G_TEST_DIST, "tests", "efi", "efivars", fn, NULL);
 	ret = g_file_set_contents(path, (gchar *)array->data, array->len, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -358,9 +361,13 @@ fu_uefi_update_info_func(void)
 int
 main(int argc, char **argv)
 {
+	g_autofree gchar *testdatadir = NULL;
+
 	g_test_init(&argc, &argv, NULL);
-	g_setenv("FWUPD_SYSFSFWDIR", TESTDATADIR, TRUE);
-	g_setenv("FWUPD_SYSFSDRIVERDIR", TESTDATADIR, TRUE);
+
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	g_setenv("FWUPD_SYSFSDRIVERDIR", testdatadir, TRUE);
 	g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 
 	/* only critical and error are fatal */

@@ -521,6 +521,7 @@ done
 %files tests
 %if 0%{?enable_tests}
 %dir %{_datadir}/installed-tests/fwupd
+%{_datadir}/installed-tests/fwupd/tests/*
 %{_datadir}/installed-tests/fwupd/fwupd-tests.xml
 %{_datadir}/installed-tests/fwupd/*.test
 %{_datadir}/installed-tests/fwupd/*.cab

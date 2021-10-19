@@ -37,10 +37,10 @@ shared_module('fu_plugin_synaptics_mst',
 )
 
 if get_option('tests')
-  testdatadirs = environment()
-  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
-  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
-  testdatadirs.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   cargs += '-DPLUGINSOURCEDIR="' + meson.current_source_dir() + '"'
   e = executable(
     'synaptics-mst-self-test',
@@ -72,6 +72,6 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('synaptics-mst-self-test', e, env: testdatadirs)
+  test('synaptics-mst-self-test', e, env: env)
 endif
 endif
