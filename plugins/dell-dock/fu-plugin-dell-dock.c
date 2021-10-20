@@ -104,6 +104,9 @@ fu_plugin_dell_dock_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 			return FALSE;
 	}
 
+	/* lastly add instance IDs for hub */
+	fu_dell_dock_hub_add_instance(proxy);
+
 	return TRUE;
 }
 
@@ -134,26 +137,20 @@ fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **erro
 	locker = fu_device_locker_new(FU_DEVICE(hub), error);
 	if (locker == NULL)
 		return FALSE;
-	fu_plugin_device_add(plugin, FU_DEVICE(hub));
 
 	if (fu_device_has_private_flag(FU_DEVICE(hub), FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE)) {
-		g_autoptr(GError) error_local = NULL;
-
 		/* only add the device with parent to cache */
 		key = fu_device_get_id(FU_DEVICE(hub));
 		if (fu_plugin_cache_lookup(plugin, key) != NULL) {
 			g_debug("Ignoring already added device %s", key);
 			return TRUE;
 		}
-		fu_plugin_cache_add(plugin, key, FU_DEVICE(hub));
-
 		/* probe for extended devices */
-		if (!fu_plugin_dell_dock_probe(plugin, FU_DEVICE(hub), &error_local)) {
-			g_warning("Failed to probe bridged devices for %s: %s",
-				  key,
-				  error_local->message);
-		}
+		if (!fu_plugin_dell_dock_probe(plugin, FU_DEVICE(hub), error))
+			return FALSE;
+		fu_plugin_cache_add(plugin, key, FU_DEVICE(hub));
 	}
+	fu_plugin_device_add(plugin, FU_DEVICE(hub));
 
 	/* clear updatable flag if parent doesn't have it */
 	fu_dell_dock_clone_updatable(FU_DEVICE(hub));
