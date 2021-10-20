@@ -1,3 +1,11 @@
+# StarLite Mk II
+[797f8bae-0ea2-4c0f-8a30-7d10ccfacbc0]
+Flags = no-ux-capsule
+
+# StarLite Mk III
+[d9d7b13b-e4db-4f91-8bf6-8952a9caa82a]
+Flags = no-ux-capsule
+
 # Silicom Minnowboard Turbot D0/D1 PLATFORM
 [386c2f52-44ec-55d3-b802-47631bfb8451]
 Flags = uefi-force-enable
