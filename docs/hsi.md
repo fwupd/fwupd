@@ -33,7 +33,9 @@ Traditionally, figuring out the true security of your hardware and firmware requ
 Tools such as Chipsec can check the hardware configuration, but they do not work out of the box and use technical jargon that an average user cannot interpret.
 Unfortunately, running a tool like Chipsec requires that you actively turn off some security layers such as UEFI Secure Boot, and allow 3rd party unsigned kernel modules to be loaded.
 
-## Verifying Host Firmware Security {#verifying}
+<a id="verifying"></a>
+
+## [Verifying Host Firmware Security](#verifying)
 
 To start out some core protections must be assigned a relative
 importance.
@@ -53,37 +55,51 @@ For this reason HSI will only measure security protections that can be verified 
 The HSI specification is primarily designed for laptop and desktop hardware, although some tests *may* still make sense on server or embedded hardware.
 It is not expected that non-consumer hardware will publish an HSI number.
 
-## Runtime Behavior {#runtime-behaviour}
+<a id="runtime-behaviour"></a>
+
+## [Runtime Behavior](#runtime-behaviour)
 
 Orthogonal to the security features provided by the firmware there are other security considerations related to the firmware which may require internet access to discover or that runtime OS changes directly affect the security of the firmware.
 It would not make sense to have *have updates on the LVFS* as a requirement for a specific security level as this would mean offline the platform might be a higher level initially but as soon as it is brought online it is downgraded which would be really confusing to users.
 The *core* security level will not change at Operating System runtime, but the suffix may.
 
-### HSI:0 (Insecure) {#hsi-level0}
+<a id="hsi-level0"></a>
+
+### [HSI:0 (Insecure)](#hsi-level0)
 
 The lowest security level with little or no detected firmware protections.
 This is the default security level if no tests can be run or some tests in the next security level have failed.
 
-### HSI:1 (Critical) {#hsi-level1}
+<a id="hsi-level1"></a>
+
+### [HSI:1 (Critical)](#hsi-level1)
 
 This security level corresponds to the most basic of security protections considered essential by security professionals.
 Any failures at this level would have critical security impact and could likely be used to compromise the system firmware without physical access.
 
-### HSI:3 (Theoretical) {#hsi-level2}
+<a id="hsi-level3"></a>
+
+### [HSI:3 (Theoretical)](#hsi-level3)
 
 This security level corresponds to firmware security issues that pose a theoretical concern or where any exploit would be difficult or impractical to use.
 At this level various technologies may be employed to protect the boot process from modification by an attacker with local access to the machine.
 
-### HSI:4 (System Protection) {#hsi-level4}
+<a id="hsi-level4"></a>
+
+### [HSI:4 (System Protection)](#hsi-level4)
 
 This security level corresponds to out-of-band protection of the system firmware perhaps including recovery.
 
-### HSI:5 (System Attestation) {#hsi-level5}
+<a id="hsi-level5"></a>
+
+### [HSI:5 (System Attestation)](#hsi-level5)
 
 This security level corresponds to out-of-band attestation of the system firmware.
 There are currently no tests implemented for HSI:5 and so this security level cannot yet be obtained.
 
-### HSI Runtime Suffix `!` {#runtime-bang}
+<a id="runtime-bang"></a>
+
+### [HSI Runtime Suffix `!`](#runtime-bang)
 
 A runtime security issue detected.
 
@@ -97,12 +113,16 @@ A runtime security issue detected.
 
 - The installed fwupd is running with [custom or modified plugins](https://github.com/fwupd/fwupd/tree/main/plugins). *[v1.5.0]*
 
-## Tests included in fwupd {#tests}
+<a id="tests"></a>
+
+## [Tests included in fwupd](#tests)
 
 The set of tests is currently x86 UEFI-centric, but will be expanded in the future for various ARM or RISC-V firmware protections as required.
 Where the requirement is architecture or processor specific it has been noted.
 
-### UEFI SecureBoot {#org.fwupd.hsi.Uefi.SecureBoot}
+<a id="org.fwupd.hsi.Uefi.SecureBoot"></a>
+
+### [UEFI SecureBoot](#org.fwupd.hsi.Uefi.SecureBoot)
 
 UEFI Secure boot is a verification mechanism for ensuring that code launched by firmware is trusted.
 
@@ -114,7 +134,9 @@ See also:
 
 - [Ubuntu SecureBoot Wiki Page](https://wiki.ubuntu.com/UEFI/SecureBoot)
 
-### UEFI PK {#org.fwupd.hsi.Uefi.Pk}
+<a id="org.fwupd.hsi.Uefi.Pk"></a>
+
+### [UEFI PK](#org.fwupd.hsi.Uefi.Pk)
 
 UEFI defines a platform key for the system.
 This should not be a test key, e.g. `DO NOT TRUST - AMI Test PK`
@@ -125,7 +147,9 @@ See also:
 
 - [Ubuntu SecureBoot Wiki Page](https://wiki.ubuntu.com/UEFI/SecureBoot/Testing)
 
-### BIOS Write Enable (BWE) {#org.fwupd.hsi.Spi.Bioswe}
+<a id="org.fwupd.hsi.Spi.Bioswe"></a>
+
+### [BIOS Write Enable (BWE)](#org.fwupd.hsi.Spi.Bioswe)
 
 Intel hardware provides this mechanism to protect the SPI ROM chip located on the motherboard from being overwritten by the operating
 system.
@@ -136,7 +160,9 @@ See also:
 
 - [Intel C200 Datasheet](http://www.intel.com/content/www/us/en/chipsets/6-chipset-c200-chipset-datasheet.html)
 
-### BIOS Lock Enable (BLE) {#org.fwupd.hsi.Spi.Ble}
+<a id="org.fwupd.hsi.Spi.Ble"></a>
+
+### [BIOS Lock Enable (BLE)](#org.fwupd.hsi.Spi.Ble)
 
 If the lock bit is set then System Management Interrupts (SMIs) are raised when setting BIOS Write Enable.
 The `BLE` bit must be enabled in the PCH otherwise `BIOSWE` can easily be unset.
@@ -147,7 +173,9 @@ See also:
 
 - [Intel C200 Datasheet](http://www.intel.com/content/www/us/en/chipsets/6-chipset-c200-chipset-datasheet.html)
 
-### SMM Bios Write Protect (SMM\_BWP) {#org.fwupd.hsi.Spi.SmmBwp}
+<a id="org.fwupd.hsi.Spi.SmmBwp"></a>
+
+### [SMM Bios Write Protect (SMM\_BWP)](#org.fwupd.hsi.Spi.SmmBwp)
 
 This bit set defines when the BIOS region can be written by the host.
 The `SMM_BWP` bit must be set to make the BIOS region non-writable unless all processors are in system management mode.
@@ -158,14 +186,18 @@ See also:
 
 - [Intel C200 Datasheet](http://www.intel.com/content/www/us/en/chipsets/6-chipset-c200-chipset-datasheet.html)
 
-### Read-only SPI Descriptor {#org.fwupd.hsi.Spi.Descriptor}
+<a id="org.fwupd.hsi.Spi.Descriptor"></a>
+
+### [Read-only SPI Descriptor](#org.fwupd.hsi.Spi.Descriptor)
 
 The SPI descriptor must always be read only from all other regions.
 Additionally on Intel architectures the FLOCKDN register must be set to prevent configuration registers in the SPI BAR from being changed.
 
 - For HSI-1 this should be read only from all regions *[v1.6.0]*
 
-### TPM 2.0 Present {#org.fwupd.hsi.Tpm.Version20}
+<a id="org.fwupd.hsi.Tpm.Version20"></a>
+
+### [TPM 2.0 Present](#org.fwupd.hsi.Tpm.Version20)
 
 A TPM securely stores platform specific secrets that can only be divulged to trusted consumers in a secure environment.
 
@@ -176,7 +208,9 @@ See also:
 
 - [TPM Wikipedia Page](https://en.wikipedia.org/wiki/Trusted_Platform_Module)
 
-### ME not in manufacturing mode {#org.fwupd.hsi.Mei.ManufacturingMode}
+<a id="org.fwupd.hsi.Mei.ManufacturingMode"></a>
+
+### [ME not in manufacturing mode](#org.fwupd.hsi.Mei.ManufacturingMode)
 
 There have been some unfortunate cases of the ME being distributed in manufacturing mode.
 In manufacturing mode many features from the ME can be interacted with that decrease the platform's security.
@@ -188,7 +222,9 @@ See also:
 - [ME Manufacturing Mode: obscured dangers](http://blog.ptsecurity.com/2018/10/intel-me-manufacturing-mode-macbook.html)
 - [Intel security advisory SA-00086](https://www.intel.com/content/www/us/en/security-center/advisory/intel-sa-00086.html)
 
-### ME Flash Descriptor Override {#org.fwupd.hsi.Mei.OverrideStrap}
+<a id="org.fwupd.hsi.Mei.OverrideStrap"></a>
+
+### [ME Flash Descriptor Override](#org.fwupd.hsi.Mei.OverrideStrap)
 
 The Flash Descriptor Security Override Strap is not accessible to end users on consumer boards and Intel stresses that this is for debugging
 only.
@@ -199,7 +235,9 @@ See also:
 
 - [Chromium documentation for Intel ME](https://chromium.googlesource.com/chromiumos/third_party/flashrom/+/master/Documentation/mysteries_intel.txt)
 
-### CSME Version {#org.fwupd.hsi.Mei.Version}
+<a id="org.fwupd.hsi.Mei.Version"></a>
+
+### [CSME Version](#org.fwupd.hsi.Mei.Version)
 
 Converged Security and Manageability Engine is a standalone management module that can manage and control some local devices without the host CPU involvement.
 The CSME lives in the PCH and can only be updated by the OEM vendor.
@@ -211,7 +249,9 @@ See also:
 
 - [Intel CSME Security Review Cumulative Update](https://www.intel.com/content/www/us/en/security-center/advisory/intel-sa-00086.html)
 
-### Intel DCI {#org.fwupd.hsi.IntelDci}
+<a id="org.fwupd.hsi.IntelDci"></a>
+
+### [Intel DCI](#org.fwupd.hsi.IntelDci)
 
 Newer Intel CPUs support debugging over USB3 via a proprietary Direct Connection Interface (DCI) with the use of off-the-shelf hardware.
 DCI should always be disabled and locked on production hardware.
@@ -226,7 +266,9 @@ See also:
 - [Chipsec 4xxlp register definitions](https://github.com/chipsec/chipsec/blob/master/chipsec/cfg/8086/pch_4xxlp.xml#L270)
 - [RISC-V EDK PCH register definitions](https://github.com/riscv/riscv-edk2-platforms/blob/85a50de1b459d1d6644a402081120770aa6dd8c7/Silicon/Intel/CoffeelakeSiliconPkg/Pch/Include/Register/PchRegsDci.h)
 
-### PCR0 TPM Event Log Reconstruction {#org.fwupd.hsi.Tpm.ReconstructionPcr0}
+<a id="org.fwupd.hsi.Tpm.ReconstructionPcr0"></a>
+
+### [PCR0 TPM Event Log Reconstruction](#org.fwupd.hsi.Tpm.ReconstructionPcr0)
 
 The TPM event log records which events are registered for the PCR0 hash.
 When reconstructed the event log values should always match the TPM PCR0.
@@ -238,7 +280,9 @@ See also:
 
 - [Linux Kernel TPM Documentation](https://www.kernel.org/doc/html/latest/security/tpm/tpm_event_log.html)
 
-### Pre-boot DMA protection {#org.fwupd.hsi.AcpiDmar}
+<a id="org.fwupd.hsi.AcpiDmar"></a>
+
+### [Pre-boot DMA protection](#org.fwupd.hsi.AcpiDmar)
 
 The IOMMU on modern systems is used to mitigate against DMA attacks.
 All I/O for devices capable of DMA is mapped into a private virtual memory region.
@@ -250,7 +294,9 @@ See also:
 
 - [IOMMU Wikipedia Page](https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit)
 
-### Intel BootGuard {#org.fwupd.hsi.IntelBootguard}
+<a id="org.fwupd.hsi.IntelBootguard"></a>
+
+### [Intel BootGuard](#org.fwupd.hsi.IntelBootguard)
 
 BootGuard is a processor feature that prevents the machine from running firmware images not released by the system manufacturer.
 It forms a root-of-trust by fusing in cryptographic keys into the processor itself that are used to verify the Authenticated Code Modules found in the SPI flash.
@@ -263,7 +309,9 @@ See also:
 
 - [Coreboot documentation](https://github.com/coreboot/coreboot/blob/master/src/soc/intel/jasperlake/include/soc/me.h)
 
-### Suspend to RAM disabled {#org.fwupd.hsi.SuspendToRam}
+<a id="org.fwupd.hsi.SuspendToRam"></a>
+
+### [Suspend to RAM disabled](#org.fwupd.hsi.SuspendToRam)
 
 Suspend to Ram (S3) keeps the raw contents of the DRAM refreshed when the system is asleep.
 This means that the memory modules can be physically removed and the contents recovered, or a cold boot attack can be performed with a USB device.
@@ -274,7 +322,9 @@ See also:
 
 - [Cold Boot Attack Wikipedia Page](https://en.wikipedia.org/wiki/Cold_boot_attack)
 
-### Intel CET Available {#org.fwupd.hsi.IntelCet}
+<a id="org.fwupd.hsi.IntelCet"></a>
+
+### [Intel CET Available](#org.fwupd.hsi.IntelCet)
 
 Control enforcement technology is available on new Intel platforms and prevents exploits from hijacking the control-flow transfer instructions for both forward-edge (indirect call/jmp) and back-edge transfer (ret).
 
@@ -284,7 +334,9 @@ See also:
 
 - [Intel CET Technology Preview](https://software.intel.com/sites/default/files/managed/4d/2a/control-flow-enforcement-technology-preview.pdf)
 
-### DRAM memory encryption {#org.fwupd.hsi.EncryptedRam}
+<a id="org.fwupd.hsi.EncryptedRam"></a>
+
+### [DRAM memory encryption](#org.fwupd.hsi.EncryptedRam)
 
 TME (Intel) or TSME (AMD) is used by the firmware on supported SOCs to encrypt all data on external memory buses.
 It mitigates against an attacker being able to capture memory data while the system is running or to capture memory by removing a DRAM chip.
@@ -296,7 +348,9 @@ See also:
 - [Intel TME Press Release](https://software.intel.com/content/www/us/en/develop/blogs/intel-releases-new-technology-specification-for-memory-encryption.html)
 - [WikiChip SME Overview](https://en.wikichip.org/wiki/x86/sme)
 
-### Supervisor Mode Access Prevention {#org.fwupd.hsi.IntelSmap}
+<a id="org.fwupd.hsi.IntelSmap"></a>
+
+### [Supervisor Mode Access Prevention](#org.fwupd.hsi.IntelSmap)
 
 Without Supervisor Mode Access Prevention, the supervisor code usually has full read and write access to user-space memory mappings.
 This can make exploits easier to write, as it allows the kernel to access user-space memory when it did not intend to.
@@ -307,7 +361,9 @@ See also:
 
 - [SMAP Wikipedia Page](https://en.wikipedia.org/wiki/Supervisor_Mode_Access_Prevention)
 
-### Kernel DMA protection {#org.fwupd.hsi.Iommu}
+<a id="org.fwupd.hsi.Iommu"></a>
+
+### [Kernel DMA protection](#org.fwupd.hsi.Iommu)
 
 The IOMMU on modern systems is used to mitigate against DMA attacks.
 All I/O for devices capable of DMA is mapped into a private virtual memory region.
@@ -319,13 +375,17 @@ See also:
 
 - [IOMMU Wikipedia Page](https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit)
 
-### Suspend-to-Idle {#org.fwupd.hsi.SuspendToIdle}
+<a id="org.fwupd.hsi.SuspendToIdle"></a>
+
+### [Suspend-to-Idle](#org.fwupd.hsi.SuspendToIdle)
 
 The platform should be set up with Suspend-to-Idle as the default S3 sleep state.
 
 - For HSI-3 this should be set *[v1.5.0]*
 
-## Conclusion {#conclusions}
+<a id="conclusions"></a>
+
+## [Conclusion](#conclusions)
 
 Any system with a Host Security ID of `0` can easily be modified from userspace.
 PCs with confidential documents should have a `HSI:3` or higher level of protection.
@@ -345,7 +405,9 @@ In some cases security level measurements will only be possible on systems with 
 The long term goal is to increase the `HSI:x` level of systems being sold to consumers.
 By making some of the `HSI:x` attributes part of the LVFS uploaded report we can allow users to compare vendors and models before purchasing hardware.
 
-## Intentional Omissions {#ommissions}
+<a id="ommissions"></a>
+
+## [Intentional Omissions](#ommissions)
 
 ### Intel SGX
 
