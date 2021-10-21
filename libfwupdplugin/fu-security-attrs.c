@@ -29,7 +29,7 @@ struct _FuSecurityAttrs {
 };
 
 /* probably sane to *not* make this part of the ABI */
-#define FWUPD_SECURITY_ATTR_ID_DOC_URL "https://fwupd.github.io/hsi.html"
+#define FWUPD_SECURITY_ATTR_ID_DOC_URL "https://fwupd.github.io/libfwupdplugin/hsi.html"
 
 G_DEFINE_TYPE(FuSecurityAttrs, fu_security_attrs, G_TYPE_OBJECT)
 
