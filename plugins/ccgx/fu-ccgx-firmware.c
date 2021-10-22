@@ -90,6 +90,10 @@ fu_ccgx_firmware_add_record(FuCcgxFirmware *self,
 	g_autoptr(FuCcgxFirmwareRecord) rcd = NULL;
 	g_autoptr(GByteArray) data = g_byte_array_new();
 
+	/* this is not in the specification, but exists in reality */
+	if (token->str[0] == ':')
+		g_string_erase(token, 0, 1);
+
 	/* parse according to https://community.cypress.com/docs/DOC-10562 */
 	rcd = g_new0(FuCcgxFirmwareRecord, 1);
 	if (!fu_firmware_strparse_uint8_safe(token->str, token->len, 0, &rcd->array_id, error))
