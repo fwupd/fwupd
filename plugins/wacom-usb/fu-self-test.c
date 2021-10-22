@@ -73,7 +73,7 @@ fu_wac_firmware_xml_func(void)
 	g_assert_true(ret);
 	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
 	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "bd734911430831127a7bba4664e212a56a2821bc");
+	g_assert_cmpstr(csum1, ==, "346f6196449b356777cf241f6edb039d503b88a1");
 
 	/* ensure we can round-trip */
 	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);

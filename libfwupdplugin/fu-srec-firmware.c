@@ -550,11 +550,9 @@ fu_srec_firmware_write(FuFirmware *firmware, GError **error)
 	/* upgrade to longer addresses? */
 	if (fu_firmware_get_addr(firmware) >= (1ull << 24)) {
 		kind_data = FU_FIRMWARE_SREC_RECORD_KIND_S3_DATA_32;
-		kind_coun = FU_FIRMWARE_SREC_RECORD_KIND_S6_COUNT_24;
 		kind_term = FU_FIRMWARE_SREC_RECORD_KIND_S7_COUNT_32; /* intentional... */
 	} else if (fu_firmware_get_addr(firmware) >= (1ull << 16)) {
 		kind_data = FU_FIRMWARE_SREC_RECORD_KIND_S2_DATA_24;
-		kind_coun = FU_FIRMWARE_SREC_RECORD_KIND_S6_COUNT_24;
 		kind_term = FU_FIRMWARE_SREC_RECORD_KIND_S8_TERMINATION_24;
 	}
 
@@ -585,6 +583,9 @@ fu_srec_firmware_write(FuFirmware *firmware, GError **error)
 						    fu_chunk_get_data(chk),
 						    fu_chunk_get_data_sz(chk));
 		}
+		/* upgrade to longer format */
+		if (chunks->len > G_MAXUINT16)
+			kind_coun = FU_FIRMWARE_SREC_RECORD_KIND_S6_COUNT_24;
 		fu_srec_firmware_write_line(str, kind_coun, chunks->len, NULL, 0);
 	}
 
