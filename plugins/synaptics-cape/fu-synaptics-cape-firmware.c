@@ -195,6 +195,54 @@ fu_synaptics_cape_firmware_parse(FuFirmware *firmware,
 	return TRUE;
 }
 
+static GBytes *
+fu_synaptics_cape_firmware_write(FuFirmware *firmware, GError **error)
+{
+	FuSynapticsCapeFirmware *self = FU_SYNAPTICS_CAPE_FIRMWARE(firmware);
+	guint64 ver = fu_firmware_get_version_raw(firmware);
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GBytes) payload = NULL;
+
+	/* header */
+	fu_byte_array_append_uint32(buf, self->vid, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32(buf, self->pid, G_LITTLE_ENDIAN);
+	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN);	      /* update type */
+	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN);	      /* identifier */
+	fu_byte_array_append_uint32(buf, 0xffff, G_LITTLE_ENDIAN);    /* crc_value */
+	fu_byte_array_append_uint16(buf, ver >> 0, G_LITTLE_ENDIAN);  /* version w */
+	fu_byte_array_append_uint16(buf, ver >> 16, G_LITTLE_ENDIAN); /* version x */
+	fu_byte_array_append_uint16(buf, ver >> 32, G_LITTLE_ENDIAN); /* version y */
+	fu_byte_array_append_uint16(buf, ver >> 48, G_LITTLE_ENDIAN); /* version z */
+	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN);	      /* reserved */
+
+	/* payload */
+	payload = fu_firmware_get_bytes(firmware, error);
+	if (payload == NULL)
+		return NULL;
+	fu_byte_array_append_bytes(buf, payload);
+	fu_byte_array_align_up(buf, FU_FIRMWARE_ALIGNMENT_32, 0xFF);
+
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+}
+
+static gboolean
+fu_synaptics_cape_firmware_build(FuFirmware *firmware, XbNode *n, GError **error)
+{
+	FuSynapticsCapeFirmware *self = FU_SYNAPTICS_CAPE_FIRMWARE(firmware);
+	guint64 tmp;
+
+	/* optional properties */
+	tmp = xb_node_query_text_as_uint(n, "vid", NULL);
+	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+		self->vid = tmp;
+	tmp = xb_node_query_text_as_uint(n, "pid", NULL);
+	if (tmp != G_MAXUINT64 && tmp <= G_MAXUINT16)
+		self->pid = tmp;
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_synaptics_cape_firmware_init(FuSynapticsCapeFirmware *self)
 {
@@ -207,6 +255,8 @@ fu_synaptics_cape_firmware_class_init(FuSynapticsCapeFirmwareClass *klass)
 	FuFirmwareClass *klass_firmware = FU_FIRMWARE_CLASS(klass);
 	klass_firmware->parse = fu_synaptics_cape_firmware_parse;
 	klass_firmware->export = fu_synaptics_cape_firmware_export;
+	klass_firmware->write = fu_synaptics_cape_firmware_write;
+	klass_firmware->build = fu_synaptics_cape_firmware_build;
 }
 
 FuFirmware *
