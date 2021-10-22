@@ -270,16 +270,6 @@ typedef struct {
 	FuProgress *progress;
 } WriteContext;
 
-static gboolean
-fu_mbim_qdu_updater_reboot_timeout(gpointer user_data)
-{
-	WriteContext *ctx = user_data;
-	g_ptr_array_unref(ctx->chunks);
-	g_main_loop_quit(ctx->mainloop);
-
-	return G_SOURCE_REMOVE;
-}
-
 static void
 fu_mbim_qdu_updater_file_write_ready(MbimDevice *device, GAsyncResult *res, gpointer user_data)
 {
@@ -322,9 +312,8 @@ fu_mbim_qdu_updater_file_write_ready(MbimDevice *device, GAsyncResult *res, gpoi
 		return;
 	}
 
-	fu_progress_set_status(ctx->progress, FWUPD_STATUS_DEVICE_RESTART);
-	/* device will auto reboot right after update finish */
-	g_timeout_add_seconds(10, fu_mbim_qdu_updater_reboot_timeout, ctx);
+	g_ptr_array_unref(ctx->chunks);
+	g_main_loop_quit(ctx->mainloop);
 }
 
 static void
