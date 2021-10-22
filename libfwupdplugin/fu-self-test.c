@@ -2655,7 +2655,7 @@ fu_firmware_fmap_func(void)
 #endif
 
 	/* load firmware */
-	filename = g_test_build_filename(G_TEST_DIST, "tests", "firmware.fmap", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "fmap-offset.bin", NULL);
 	g_assert_nonnull(filename);
 	roundtrip_orig = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
@@ -3199,6 +3199,7 @@ static void
 fu_firmware_dfuse_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3208,7 +3209,8 @@ fu_firmware_dfuse_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/dfuse.builder.xml", &xml_src, NULL, &error);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "dfuse.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3232,6 +3234,7 @@ static void
 fu_firmware_srec_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3241,7 +3244,8 @@ fu_firmware_srec_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/srec.builder.xml", &xml_src, NULL, &error);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "srec.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3264,6 +3268,7 @@ static void
 fu_firmware_ihex_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3273,7 +3278,8 @@ fu_firmware_ihex_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/ihex.builder.xml", &xml_src, NULL, &error);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "ihex.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3296,6 +3302,7 @@ static void
 fu_firmware_fmap_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3305,7 +3312,8 @@ fu_firmware_fmap_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/fmap.builder.xml", &xml_src, NULL, &error);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "fmap.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3329,6 +3337,7 @@ static void
 fu_efi_firmware_section_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3338,10 +3347,9 @@ fu_efi_firmware_section_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/efi-firmware-section.builder.xml",
-				  &xml_src,
-				  NULL,
-				  &error);
+	filename =
+	    g_test_build_filename(G_TEST_DIST, "tests", "efi-firmware-section.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3365,6 +3373,7 @@ static void
 fu_efi_firmware_file_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3374,10 +3383,9 @@ fu_efi_firmware_file_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/efi-firmware-file.builder.xml",
-				  &xml_src,
-				  NULL,
-				  &error);
+	filename =
+	    g_test_build_filename(G_TEST_DIST, "tests", "efi-firmware-file.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3401,6 +3409,7 @@ static void
 fu_efi_firmware_filesystem_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3410,10 +3419,11 @@ fu_efi_firmware_filesystem_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/efi-firmware-filesystem.builder.xml",
-				  &xml_src,
-				  NULL,
-				  &error);
+	filename = g_test_build_filename(G_TEST_DIST,
+					 "tests",
+					 "efi-firmware-filesystem.builder.xml",
+					 NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3437,6 +3447,7 @@ static void
 fu_efi_firmware_volume_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3446,10 +3457,9 @@ fu_efi_firmware_volume_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/efi-firmware-volume.builder.xml",
-				  &xml_src,
-				  NULL,
-				  &error);
+	filename =
+	    g_test_build_filename(G_TEST_DIST, "tests", "efi-firmware-volume.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3473,6 +3483,7 @@ static void
 fu_ifd_image_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3482,7 +3493,8 @@ fu_ifd_image_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/ifd.builder.xml", &xml_src, NULL, &error);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "ifd.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);

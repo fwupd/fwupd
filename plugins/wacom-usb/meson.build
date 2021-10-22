@@ -35,6 +35,8 @@ shared_module('fu_plugin_wacom_usb',
 )
 
 if get_option('tests')
+  install_data(['tests/wacom-usb.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'))
   env = environment()
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
