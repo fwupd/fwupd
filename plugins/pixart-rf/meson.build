@@ -34,6 +34,11 @@ shared_module('fu_plugin_pixart_rf',
 endif
 
 if get_option('tests')
+  install_data(['tests/pixart.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'))
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'pxi-self-test',
     fu_hash,
@@ -56,5 +61,5 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('pxi-self-test', e)
+  test('pxi-self-test', e, env : env)
 endif

@@ -141,6 +141,30 @@ class Builder:
         print("building {} into {}".format(",".join(objs), dst))
         subprocess.run(argv, cwd=self.srcdir, check=True)
 
+    def mkfuzztargets(self, globstr: str) -> None:
+        """make binary fuzzing targets from builder.xml files"""
+        builder_xmls = glob.glob(globstr)
+        if not builder_xmls:
+            print("failed to find {}".format(globstr))
+            sys.exit(1)
+        for fn_src in builder_xmls:
+            fn_dst = fn_src.replace(".builder.xml", ".bin")
+            if os.path.exists(fn_dst):
+                continue
+            print("building {} into {}".format(fn_src, fn_dst))
+            try:
+                argv = [
+                    "sudo",
+                    "build/src/fwupdtool",
+                    "firmware-build",
+                    fn_src,
+                    fn_dst,
+                ]
+                subprocess.run(argv, check=True)
+            except subprocess.CalledProcessError as e:
+                print("tried to run: `{}` and got {}".format(" ".join(argv), str(e)))
+                sys.exit(1)
+
     def write_header(
         self, dst: str, defines: Dict[str, Optional[Union[str, int]]]
     ) -> None:
@@ -199,7 +223,7 @@ class Fuzzer:
 
         self.name = name
         self.srcdir = srcdir or name
-        self.globstr = globstr or "{}*".format(name)
+        self.globstr = globstr or "{}*.bin".format(name)
         self.pattern = pattern or "{}-firmware".format(name)
 
     @property
@@ -292,8 +316,8 @@ def _build(bld: Builder) -> None:
         Fuzzer("fmap"),
         Fuzzer("ihex"),
         Fuzzer("srec"),
-        Fuzzer("efi-filesystem", pattern="efi-firmware-filesystem"),
-        Fuzzer("efi-volume", pattern="efi-firmware-volume"),
+        Fuzzer("efi-firmware-filesystem", pattern="efi-firmware-filesystem"),
+        Fuzzer("efi-firmware-volume", pattern="efi-firmware-volume"),
         Fuzzer("ifd"),
     ]:
         src = bld.substitute(
@@ -304,9 +328,18 @@ def _build(bld: Builder) -> None:
             },
         )
         bld.link([bld.compile(src)] + built_objs, "{}_fuzzer".format(fzr.name))
+        bld.mkfuzztargets(
+            os.path.join(
+                bld.srcdir,
+                "fwupd",
+                "libfwupdplugin",
+                "tests",
+                "{}*.builder.xml".format(fzr.name),
+            )
+        )
         bld.makezip(
             "{}_fuzzer_seed_corpus.zip".format(fzr.name),
-            "fwupd/src/fuzzing/firmware/{}".format(fzr.globstr),
+            "fwupd/libfwupdplugin/tests/{}".format(fzr.globstr),
         )
 
     # plugins
@@ -314,20 +347,19 @@ def _build(bld: Builder) -> None:
         Fuzzer("acpi-phat", pattern="acpi-phat"),
         Fuzzer("bcm57xx"),
         Fuzzer("ccgx-dmc", srcdir="ccgx", globstr="ccgx-dmc*.bin"),
-        Fuzzer("ccgx", globstr="ccgx*.cyacd"),
+        Fuzzer("ccgx"),
         Fuzzer("cros-ec"),
         Fuzzer("ebitdo"),
         Fuzzer("elanfp"),
         Fuzzer("elantp"),
-        Fuzzer("hailuck-kbd", srcdir="hailuck", globstr="ihex*"),
         Fuzzer("pixart", srcdir="pixart-rf", pattern="pxi-firmware"),
         Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
         Fuzzer("solokey"),
-        Fuzzer("synaprom", srcdir="synaptics-prometheus"),
+        Fuzzer("synaptics-prometheus", pattern="synaprom-firmware"),
         Fuzzer("synaptics-cape"),
         Fuzzer("synaptics-mst"),
         Fuzzer("synaptics-rmi"),
-        Fuzzer("wacom-usb", pattern="wac-firmware", globstr="wacom*"),
+        Fuzzer("wacom-usb", pattern="wac-firmware"),
     ]:
         fuzz_objs = []
         for obj in bld.grep_meson("fwupd/plugins/{}".format(fzr.srcdir)):
@@ -341,9 +373,19 @@ def _build(bld: Builder) -> None:
         )
         fuzz_objs.append(bld.compile(src))
         bld.link(fuzz_objs + built_objs, "{}_fuzzer".format(fzr.name))
+        bld.mkfuzztargets(
+            os.path.join(
+                bld.srcdir,
+                "fwupd",
+                "plugins",
+                fzr.srcdir,
+                "tests",
+                "{}*.builder.xml".format(fzr.name),
+            )
+        )
         bld.makezip(
             "{}_fuzzer_seed_corpus.zip".format(fzr.name),
-            "fwupd/src/fuzzing/firmware/{}".format(fzr.globstr),
+            "fwupd/plugins/{}/tests/{}".format(fzr.srcdir, fzr.globstr),
         )
 
 
