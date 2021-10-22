@@ -247,8 +247,20 @@ fu_plugin_mm_device_removed_cb(MMManager *manager, MMObject *modem, FuPlugin *pl
 	if (dev == NULL)
 		return;
 	g_debug("removed modem: %s", mm_object_get_path(modem));
+
+#if MM_CHECK_VERSION(1, 17, 1)
+	/* No information will be displayed during the upgrade process if the
+	 * device is removed, the main reason is that device is "removed" from
+	 * ModemManager, but it still exists in the system */
+	if (!(fu_mm_device_get_update_methods(FU_MM_DEVICE(dev)) &
+	      MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU)) {
+		fu_plugin_cache_remove(plugin, object_path);
+		fu_plugin_device_remove(plugin, FU_DEVICE(dev));
+	}
+#else
 	fu_plugin_cache_remove(plugin, object_path);
 	fu_plugin_device_remove(plugin, FU_DEVICE(dev));
+#endif /* MM_CHECK_VERSION(1,17,1) */
 }
 
 static void
@@ -376,13 +388,6 @@ fu_plugin_detach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GErro
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-#if MM_CHECK_VERSION(1, 17, 1)
-	/* skip update_detach, as MBIM modem doesn't change port layout. */
-	if (fu_mm_device_get_update_methods(FU_MM_DEVICE(device)) &
-	    MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU)
-		return TRUE;
-
-#endif /* MM_CHECK_VERSION(1,17,1) */
 	/* open device */
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
@@ -419,13 +424,6 @@ fu_plugin_attach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GErro
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-#if MM_CHECK_VERSION(1, 17, 1)
-	/* skip update_attach, as MBIM modem doesn't change port layout. */
-	if (fu_mm_device_get_update_methods(FU_MM_DEVICE(device)) &
-	    MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU)
-		return TRUE;
-
-#endif /* MM_CHECK_VERSION(1,17,1) */
 	/* open device */
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)

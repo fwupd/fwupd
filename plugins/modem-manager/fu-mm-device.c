@@ -54,6 +54,7 @@ struct _FuMmDevice {
 	gchar *detach_fastboot_at;
 	gint port_at_ifnum;
 	gint port_qmi_ifnum;
+	gint port_mbim_ifnum;
 
 	/* fastboot detach handling */
 	gchar *port_at;
@@ -136,6 +137,13 @@ fu_mm_device_get_port_qmi_ifnum(FuMmDevice *device)
 {
 	g_return_val_if_fail(FU_IS_MM_DEVICE(device), -1);
 	return device->port_qmi_ifnum;
+}
+
+gint
+fu_mm_device_get_port_mbim_ifnum(FuMmDevice *device)
+{
+	g_return_val_if_fail(FU_IS_MM_DEVICE(device), -1);
+	return device->port_mbim_ifnum;
 }
 
 static gboolean
@@ -380,7 +388,7 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 		fu_mm_utils_get_port_info(self->port_mbim,
 					  &mbim_device_bus,
 					  &mbim_device_sysfs_path,
-					  NULL,
+					  &self->port_mbim_ifnum,
 					  NULL);
 		if (device_sysfs_path == NULL && mbim_device_sysfs_path != NULL) {
 			device_sysfs_path = g_steal_pointer(&mbim_device_sysfs_path);
@@ -1171,8 +1179,6 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 		return FALSE;
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
-	fu_device_set_remove_delay(device, MAX_WAIT_TIME_SECS * 1000);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	version = fu_mm_device_get_firmware_version_mbim(device, error);
 	if (version == NULL)
 		return FALSE;
@@ -1553,6 +1559,7 @@ fu_mm_device_new(MMManager *manager, MMObject *omodem)
 	self->omodem = g_object_ref(omodem);
 	self->port_at_ifnum = -1;
 	self->port_qmi_ifnum = -1;
+	self->port_mbim_ifnum = -1;
 	return self;
 }
 
@@ -1571,6 +1578,7 @@ fu_plugin_mm_inhibited_device_info_new(FuMmDevice *device)
 	info->detach_fastboot_at = g_strdup(fu_mm_device_get_detach_fastboot_at(device));
 	info->port_at_ifnum = fu_mm_device_get_port_at_ifnum(device);
 	info->port_qmi_ifnum = fu_mm_device_get_port_qmi_ifnum(device);
+	info->port_mbim_ifnum = fu_mm_device_get_port_mbim_ifnum(device);
 	info->inhibited_uid = g_strdup(fu_mm_device_get_inhibition_uid(device));
 
 	return info;
