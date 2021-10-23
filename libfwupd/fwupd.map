@@ -709,3 +709,9 @@ LIBFWUPD_1.7.0 {
     fwupd_security_attr_has_guid;
   local: *;
 } LIBFWUPD_1.6.2;
+
+LIBFWUPD_1.7.1 {
+  global:
+    fwupd_client_add_hint;
+  local: *;
+} LIBFWUPD_1.7.0;

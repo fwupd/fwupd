@@ -25,6 +25,10 @@ FwupdFeatureFlags
 fu_engine_request_get_feature_flags(FuEngineRequest *self);
 void
 fu_engine_request_set_feature_flags(FuEngineRequest *self, FwupdFeatureFlags feature_flags);
+const gchar *
+fu_engine_request_get_locale(FuEngineRequest *self);
+void
+fu_engine_request_set_locale(FuEngineRequest *self, const gchar *locale);
 gboolean
 fu_engine_request_has_feature_flag(FuEngineRequest *self, FwupdFeatureFlags feature_flag);
 FwupdDeviceFlags

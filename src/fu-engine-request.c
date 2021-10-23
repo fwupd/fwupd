@@ -15,6 +15,7 @@ struct _FuEngineRequest {
 	FuEngineRequestKind kind;
 	FwupdFeatureFlags feature_flags;
 	FwupdDeviceFlags device_flags;
+	gchar *locale;
 };
 
 G_DEFINE_TYPE(FuEngineRequest, fu_engine_request, G_TYPE_OBJECT)
@@ -24,6 +25,13 @@ fu_engine_request_get_feature_flags(FuEngineRequest *self)
 {
 	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), FALSE);
 	return self->feature_flags;
+}
+
+const gchar *
+fu_engine_request_get_locale(FuEngineRequest *self)
+{
+	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), NULL);
+	return self->locale;
 }
 
 FuEngineRequestKind
@@ -38,6 +46,17 @@ fu_engine_request_set_feature_flags(FuEngineRequest *self, FwupdFeatureFlags fea
 {
 	g_return_if_fail(FU_IS_ENGINE_REQUEST(self));
 	self->feature_flags = feature_flags;
+}
+
+void
+fu_engine_request_set_locale(FuEngineRequest *self, const gchar *locale)
+{
+	g_return_if_fail(FU_IS_ENGINE_REQUEST(self));
+	self->locale = g_strdup(locale);
+
+	/* remove the UTF8 suffix as it is not present in the XML */
+	if (self->locale != NULL)
+		g_strdelimit(self->locale, ".", '\0');
 }
 
 gboolean
