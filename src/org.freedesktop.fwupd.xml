@@ -308,6 +308,25 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='SetHints'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Sets optional hints from the client that may affect the list of devices.
+            A typical hint might be <doc:tt>locale</doc:tt> and unknown hints should be ignored.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='a{ss}' name='hints' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>An array of string key values.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='Install'>
       <doc:doc>
         <doc:description>

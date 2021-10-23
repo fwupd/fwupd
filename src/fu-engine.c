@@ -452,6 +452,25 @@ fu_engine_set_release_from_artifact(FuEngine *self,
 	return TRUE;
 }
 
+static gchar *
+fu_engine_request_get_localized_xpath(FuEngineRequest *request, const gchar *element)
+{
+	GString *xpath = g_string_new(element);
+	const gchar *locale = NULL;
+
+	/* optional; not set in tests */
+	if (request != NULL)
+		locale = fu_engine_request_get_locale(request);
+
+	/* prefer the users locale if set */
+	if (locale != NULL) {
+		g_autofree gchar *xpath_locale = NULL;
+		xpath_locale = g_strdup_printf("%s[@xml:lang='%s']|", element, locale);
+		g_string_prepend(xpath, xpath_locale);
+	}
+	return g_string_free(xpath, FALSE);
+}
+
 static gboolean
 fu_engine_set_release_from_appstream(FuEngine *self,
 				     FuEngineRequest *request,
@@ -465,6 +484,7 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 	const gchar *tmp;
 	const gchar *remote_id;
 	guint64 tmp64;
+	g_autofree gchar *description_xpath = NULL;
 	g_autofree gchar *version_rel = NULL;
 	g_autoptr(GPtrArray) cats = NULL;
 	g_autoptr(GPtrArray) issues = NULL;
@@ -516,7 +536,8 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 		if (!fu_engine_set_release_from_artifact(self, rel, remote, artifact, error))
 			return FALSE;
 	}
-	description = xb_node_query_first(release, "description", NULL);
+	description_xpath = fu_engine_request_get_localized_xpath(request, "description");
+	description = xb_node_query_first(release, description_xpath, NULL);
 	if (description != NULL) {
 		g_autofree gchar *xml = NULL;
 		g_autoptr(GString) str = NULL;
@@ -4209,6 +4230,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 				    GError **error)
 {
 	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
+	g_autofree gchar *description_xpath = NULL;
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
@@ -4300,7 +4322,8 @@ fu_engine_get_result_from_component(FuEngine *self,
 	}
 
 	/* create a result with all the metadata in */
-	description = xb_node_query_first(component, "description", NULL);
+	description_xpath = fu_engine_request_get_localized_xpath(request, "description");
+	description = xb_node_query_first(component, description_xpath, NULL);
 	if (description != NULL) {
 		g_autofree gchar *xml = NULL;
 		xml = xb_node_export(description, XB_NODE_EXPORT_FLAG_ONLY_CHILDREN, NULL);

@@ -34,6 +34,9 @@
 #include "fwupd-request-private.h"
 #include "fwupd-security-attr-private.h"
 
+static void
+fwupd_client_fixup_dbus_error(GError *error);
+
 typedef GObject *(*FwupdClientObjectNewFunc)(void);
 
 #define FWUPD_CLIENT_DBUS_PROXY_TIMEOUT 180000 /* ms */
@@ -66,6 +69,7 @@ typedef struct {
 	GDBusProxy *proxy;
 	GProxyResolver *proxy_resolver;
 	gchar *user_agent;
+	GHashTable *hints; /* str:str */
 #ifdef SOUP_SESSION_COMPAT
 	GObject *soup_session;
 	GModule *soup_module; /* we leak this */
@@ -595,11 +599,39 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
 #endif
 
 static void
+fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+	if (val == NULL) {
+		/* new libfwupd and old daemon, just swallow the error */
+		if (g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_UNKNOWN_METHOD)) {
+			g_debug("ignoring %s", error->message);
+			g_task_return_boolean(task, TRUE);
+			return;
+		}
+		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean(task, TRUE);
+}
+
+static void
 fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
+	GVariantBuilder builder;
+	GHashTableIter iter;
+	gpointer key, value;
 	FwupdClient *self = g_task_get_source_object(task);
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	GCancellable *cancellable = g_task_get_cancellable(task);
 	g_autoptr(GDBusProxy) proxy = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) val = NULL;
@@ -653,8 +685,21 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	if (val7 != NULL)
 		fwupd_client_set_host_security_id(self, g_variant_get_string(val7, NULL));
 
-	/* success */
-	g_task_return_boolean(task, TRUE);
+	/* build client hints */
+	g_variant_builder_init(&builder, G_VARIANT_TYPE_DICTIONARY);
+	g_hash_table_iter_init(&iter, priv->hints);
+	while (g_hash_table_iter_next(&iter, &key, &value))
+		g_variant_builder_add(&builder, "{ss}", (const gchar *)key, (const gchar *)value);
+
+	/* only supported on fwupd >= 1.7.1 */
+	g_dbus_proxy_call(priv->proxy,
+			  "SetHints",
+			  g_variant_new("(a{ss})", &builder),
+			  G_DBUS_CALL_FLAGS_NONE,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
+			  cancellable,
+			  fwupd_client_set_hints_cb,
+			  g_steal_pointer(&task));
 }
 
 /**
@@ -4794,6 +4839,27 @@ fwupd_client_upload_bytes_finish(FwupdClient *self, GAsyncResult *res, GError **
 	return g_task_propagate_pointer(G_TASK(res), error);
 }
 
+/**
+ * fwupd_client_add_hint:
+ * @self: a #FwupdClient
+ * @key: the key, e.g. `locale`
+ * @value: (nullable): the value @key should be set
+ *
+ * Sets optional hints from the client that may affect the list of devices.
+ *
+ * Since: 1.7.1
+ **/
+void
+fwupd_client_add_hint(FwupdClient *self, const gchar *key, const gchar *value)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(key != NULL);
+
+	g_hash_table_insert(priv->hints, g_strdup(key), g_strdup(value));
+}
+
 #ifdef SOUP_SESSION_COMPAT
 /* this is bad; we dlopen libsoup-2.4.so.1 and get the gtype manually
  * to avoid deps on both libcurl and libsoup whilst preserving ABI */
@@ -5177,6 +5243,10 @@ fwupd_client_init(FwupdClient *self)
 	priv->idle_sources =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_client_context_helper_free);
 	priv->proxy_resolver = g_proxy_resolver_get_default();
+	priv->hints = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+	/* we get this one for free */
+	fwupd_client_add_hint(self, "locale", g_getenv("LANG"));
 }
 
 static void
@@ -5191,6 +5261,7 @@ fwupd_client_finalize(GObject *object)
 	g_free(priv->host_product);
 	g_free(priv->host_machine_id);
 	g_free(priv->host_security_id);
+	g_hash_table_unref(priv->hints);
 	g_mutex_clear(&priv->idle_mutex);
 	if (priv->idle_id != 0)
 		g_source_remove(priv->idle_id);

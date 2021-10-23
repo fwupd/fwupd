@@ -478,5 +478,7 @@ fwupd_client_upload_bytes_finish(FwupdClient *self,
 				 GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fwupd_client_ensure_networking(FwupdClient *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+void
+fwupd_client_add_hint(FwupdClient *self, const gchar *key, const gchar *value);
 
 G_END_DECLS
