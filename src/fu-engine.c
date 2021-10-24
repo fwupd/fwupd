@@ -485,6 +485,9 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 	const gchar *remote_id;
 	guint64 tmp64;
 	g_autofree gchar *description_xpath = NULL;
+	g_autofree gchar *name_xpath = NULL;
+	g_autofree gchar *namevs_xpath = NULL;
+	g_autofree gchar *summary_xpath = NULL;
 	g_autofree gchar *version_rel = NULL;
 	g_autoptr(GPtrArray) cats = NULL;
 	g_autoptr(GPtrArray) issues = NULL;
@@ -501,12 +504,18 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 	tmp = xb_node_query_text(component, "project_license", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_license(rel, tmp);
-	tmp = xb_node_query_text(component, "name", NULL);
+	name_xpath = fu_engine_request_get_localized_xpath(request, "name");
+	tmp = xb_node_query_text(component, name_xpath, NULL);
 	if (tmp != NULL)
 		fwupd_release_set_name(rel, tmp);
-	tmp = xb_node_query_text(component, "summary", NULL);
+	summary_xpath = fu_engine_request_get_localized_xpath(request, "summary");
+	tmp = xb_node_query_text(component, summary_xpath, NULL);
 	if (tmp != NULL)
 		fwupd_release_set_summary(rel, tmp);
+	namevs_xpath = fu_engine_request_get_localized_xpath(request, "name_variant_suffix");
+	tmp = xb_node_query_text(component, namevs_xpath, NULL);
+	if (tmp != NULL)
+		fwupd_release_set_name_variant_suffix(rel, tmp);
 	tmp = xb_node_query_text(component, "branch", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_branch(rel, tmp);
