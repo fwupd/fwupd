@@ -1,34 +1,34 @@
 # Realtek NIC in Dell docks
-[DeviceInstanceId=USB\VID_0BDA&PID_8153]
+[USB\VID_0BDA&PID_8153]
 Plugin = dell
 
 # Dell TB16/TB18 cable
-[Guid=TBT-00d4b051]
+[TBT-00d4b051]
 Plugin = thunderbolt
 ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
 
 # Dell TB16/TB18 dock
-[Guid=TBT-00d4b054]
+[TBT-00d4b054]
 Plugin = thunderbolt
 ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
 
 # Dell WD15 dock
-[Guid=MST-wd15-vmm3332-274]
+[MST-wd15-vmm3332-274]
 Plugin = synaptics_mst
 ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
 
 # Dell TB16 dock
-[Guid=MST-tb16-vmm3320-274]
+[MST-tb16-vmm3320-274]
 Plugin = synaptics_mst
 ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
-[Guid=MST-tb16-vmm3330-274]
+[MST-tb16-vmm3330-274]
 Plugin = synaptics_mst
 ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
 
 #Dell TB18 dock
-[Guid=MST-tb18-vmm3320-274]
+[MST-tb18-vmm3320-274]
 Plugin = synaptics_mst
 ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479
-[Guid=MST-tb18-vmm3330-274]
+[MST-tb18-vmm3330-274]
 Plugin = synaptics_mst
 ParentGuid = e7ca1f36-bf73-4574-afe6-a4ccacabf479

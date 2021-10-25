@@ -9,59 +9,54 @@
 #include <glib.h>
 
 /* maximum number of programmable devices expected to be connected in dock.
-* this is design limitation. This shall not be edited, unless stated by C Y*/
-#define DMC_DOCK_MAX_DEV_COUNT			8
+ * this is design limitation. This shall not be edited, unless stated by C Y*/
+#define DMC_DOCK_MAX_DEV_COUNT 8
 
 /* size of FW version structure in bytes */
-#define DMC_DOCK_FW_VERSION_SIZE		8
+#define DMC_DOCK_FW_VERSION_SIZE 8
 
 /* indicates length of string in dock identity*/
-#define DMC_IDENTITY_STRING_LEN		32
+#define DMC_IDENTITY_STRING_LEN 32
 
 /* interrupt end point for DMC Dock */
-#define DMC_INTERRUPT_PIPE_ID			0x82
+#define DMC_INTERRUPT_PIPE_ID 0x82
 
 /* USB bulk end point for DMC Dock */
-#define DMC_BULK_PIPE_ID			1
+#define DMC_BULK_PIPE_ID 1
 
 /* indicates length of interrupt structure's data array filed */
-#define DMC_INTERRUPT_DATA_LEN			8
+#define DMC_INTERRUPT_DATA_LEN 8
 
 /* status of the dmc will have different length. so first few bytes of status
-* is read, which will contain actual length of status. this value indicates
-* how much byte should read at first stage */
-#define DMC_GET_STATUS_MIN_LEN			32
+ * is read, which will contain actual length of status. this value indicates
+ * how much byte should read at first stage */
+#define DMC_GET_STATUS_MIN_LEN 32
 
-#define DMC_HASH_SIZE				32
+#define DMC_HASH_SIZE 32
 
 /* time out to be set in control in/out pipe policy in ms */
-#define DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT	5000
+#define DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT 5000
 
 /* time out to be set in bulk out pipe policy in ms */
-#define DMC_BULK_OUT_PIPE_TIMEOUT		2000
+#define DMC_BULK_OUT_PIPE_TIMEOUT 2000
 
 /* time out to be set in bulk out pipe policy in ms */
-#define DMC_GET_REQUEST_TIMEOUT			20000
+#define DMC_GET_REQUEST_TIMEOUT 20000
 
-
-#define DMC_FWCT_SIGN				0x54435746 /* 'F' 'W' 'C' 'T' */
+#define DMC_FWCT_SIGN 0x54435746 /* 'F' 'W' 'C' 'T' */
 
 /* first we have to read few bytes to know the actual length of FWCT
  * this constant defines, number bytest to be read for getting length */
-#define DMC_FWCT_MIN_LENGTH			6
-#define DMC_FWCT_LENGTH_OFFSET			4
-#define DMC_FWCT_MAX_SIZE			2048
+#define DMC_FWCT_MIN_LENGTH    6
+#define DMC_FWCT_LENGTH_OFFSET 4
+#define DMC_FWCT_MAX_SIZE      2048
 
-#define DMC_CUSTOM_META_LENGTH_FIELD_SIZE	2
-#define DMC_CUSTOM_META_LENGTH_OFFSET		0
-#define DMC_CUSTOM_META_MAX_SIZE		256
+#define DMC_CUSTOM_META_LENGTH_FIELD_SIZE 2
+#define DMC_CUSTOM_META_LENGTH_OFFSET	  0
+#define DMC_CUSTOM_META_MAX_SIZE	  256
 
 /* this data type enumerates the image types */
-typedef enum {
-	DMC_IMG_TYPE_INVALID = 0,
-	DMC_IMG_TYPE_IMAGE_0,
-	DMC_IMG_TYPE_IMAGE_1
-} DmcImgType;
+typedef enum { DMC_IMG_TYPE_INVALID = 0, DMC_IMG_TYPE_IMAGE_0, DMC_IMG_TYPE_IMAGE_1 } DmcImgType;
 
 /* this data type enumerates the image status */
 typedef enum {
@@ -90,7 +85,7 @@ typedef enum {
 /* this data type enumerates the dock status */
 typedef enum {
 	/* status code indicating DOCK IDLE state. SUCCESS: no malfunctioning
-	* no outstanding request or event */
+	 * no outstanding request or event */
 	DMC_DEVICE_STATUS_IDLE = 0,
 	/* status code indicating dock FW update in progress */
 	DMC_DEVICE_STATUS_UPDATE_IN_PROGRESS,
@@ -145,7 +140,7 @@ typedef enum {
 } DmcRqtCode;
 
 /* this data type enumerates the opcode of triggering the download, in case of
-* 2 stage update */
+ * 2 stage update */
 typedef enum {
 	DMC_TRIGGER_CODE_DONT_UPDATE,
 	DMC_TRIGGER_CODE_UPDATE_NOW,
@@ -172,7 +167,7 @@ typedef enum {
 } DmcFwctAnalysisStatus;
 
 typedef enum {
-	DMC_UPDATE_MODEL_UNKNOWN= 0,
+	DMC_UPDATE_MODEL_UNKNOWN = 0,
 	/* need to trigger after updating FW */
 	DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER,
 	/* need to set soft reset after updating FW */
@@ -186,35 +181,35 @@ typedef struct __attribute__((packed)) {
 	 * 0 : invalid
 	 * 1 : old structure
 	 * 2 : new structure */
-	guint8		structure_version;
-	guint8		cdtt_version;
-	guint16		vid;
-	guint16		pid;
-	guint16		device_id;
-	gchar		vendor_string[DMC_IDENTITY_STRING_LEN];
-	gchar		product_string[DMC_IDENTITY_STRING_LEN];
-	guint8		custom_meta_data_flag;
+	guint8 structure_version;
+	guint8 cdtt_version;
+	guint16 vid;
+	guint16 pid;
+	guint16 device_id;
+	gchar vendor_string[DMC_IDENTITY_STRING_LEN];
+	gchar product_string[DMC_IDENTITY_STRING_LEN];
+	guint8 custom_meta_data_flag;
 	/* model field indicates the type of the firmware upgrade status
-	* 0 - online/offline
-	* 1 - Online model
-	* 2 - ADICORA/Offline model
-	* 3 - No reset
-	* 4 - 0xFF - Reserved
-	*/
-	guint8		model;
+	 * 0 - online/offline
+	 * 1 - Online model
+	 * 2 - ADICORA/Offline model
+	 * 3 - No reset
+	 * 4 - 0xFF - Reserved
+	 */
+	guint8 model;
 } DmcDockIdentity;
 
 /* this structure defines the fields of status of a specific device  */
 typedef struct __attribute__((packed)) {
 	/* device ID of the device */
-	guint8		device_type;
+	guint8 device_type;
 	/* component ID of the device */
-	guint8		component_id;
+	guint8 component_id;
 	/* image mode of the device - single image/ dual symmetric/ dual
 	 * asymmetric image > */
-	guint8		image_mode;
+	guint8 image_mode;
 	/* current running image */
-	guint8		current_image;
+	guint8 current_image;
 	/* image status
 	 * b7:b4 => Image 2 status
 	 * b3:b0 => Image 1 status
@@ -223,75 +218,76 @@ typedef struct __attribute__((packed)) {
 	 *  2 = Invalid
 	 *  3-0xF = Reserved
 	 */
-	guint8		img_status;
+	guint8 img_status;
 	/* padding */
-	guint8		reserved_0[3];
+	guint8 reserved_0[3];
 	/* complete fw version 8 bytes for bootload, image1 and image2. 8 byte
-	* for fw version and application version */
-	guint8		fw_version[24];
+	 * for fw version and application version */
+	guint8 fw_version[24];
 } DmcDevxStatus;
 
 /* this structure defines the fields of data returned when reading dock_status */
 typedef struct __attribute__((packed)) {
 	/* overall status of dock. see DmcDeviceStatus */
-	guint8		device_status;
+	guint8 device_status;
 	/* eevice count */
-	guint8		device_count;
+	guint8 device_count;
 	/* length of status bytes including dock_status,
 	devx_status for each device */
-	guint16		status_length;
+	guint16 status_length;
 	/* dock composite version m_fwct_info */
-	guint32		composite_version;
+	guint32 composite_version;
 	/* fw status of device of interest */
-	DmcDevxStatus	devx_status[DMC_DOCK_MAX_DEV_COUNT];
+	DmcDevxStatus devx_status[DMC_DOCK_MAX_DEV_COUNT];
 } DmcDockStatus;
 
 /* This structure defines the fields of data returned when reading an interrupt
-* from DMC */
+ * from DMC */
 typedef struct __attribute__((packed)) {
-	guint8		opcode;
-	guint8		length;
-	guint8		data[DMC_INTERRUPT_DATA_LEN];
+	guint8 opcode;
+	guint8 length;
+	guint8 data[DMC_INTERRUPT_DATA_LEN];
 } DmcIntRqt;
 
 /* this structure defines header structure of FWCT */
 typedef struct __attribute__((packed)) {
-	guint32		signature;
-	guint16		size;
-	guint8		checksum;
-	guint8		version;
-	guint8		custom_meta_type;
-	guint8		cdtt_version;
-	guint16		vid;
-	guint16		pid;
-	guint16		device_id;
-	guint8		reserv0[16];
-	guint32		composite_version;
-	guint8		image_count;
-	guint8		reserv1[3];
+	guint32 signature;
+	guint16 size;
+	guint8 checksum;
+	guint8 version;
+	guint8 custom_meta_type;
+	guint8 cdtt_version;
+	guint16 vid;
+	guint16 pid;
+	guint16 device_id;
+	guint8 reserv0[16];
+	guint32 composite_version;
+	guint8 image_count;
+	guint8 reserv1[3];
 } FwctInfo;
 
 typedef struct __attribute__((packed)) {
-	guint8		device_type;
-	guint8		img_type;
-	guint8		comp_id;
-	guint8		row_size;
-	guint8		reserv0[4];
-	guint32		fw_version;
-	guint32		app_version;
-	guint32		img_offset;
-	guint32		img_size;
-	guint8		img_digest[32];
-	guint8		num_img_segments;
-	guint8		reserv1[3];
+	guint8 device_type;
+	guint8 img_type;
+	guint8 comp_id;
+	guint8 row_size;
+	guint8 reserv0[4];
+	guint32 fw_version;
+	guint32 app_version;
+	guint32 img_offset;
+	guint32 img_size;
+	guint8 img_digest[32];
+	guint8 num_img_segments;
+	guint8 reserv1[3];
 } FwctImageInfo;
 
 typedef struct __attribute__((packed)) {
-	guint8		img_id;
-	guint8		type;
-	guint16		start_row;
-	guint16		num_rows; /* size */
-	guint8		reserv0[2];
+	guint8 img_id;
+	guint8 type;
+	guint16 start_row;
+	guint16 num_rows; /* size */
+	guint8 reserv0[2];
 } FwctSegmentationInfo;
 
-const gchar	*fu_ccgx_dmc_update_model_type_to_string	(DmcUpdateModel	val);
+const gchar *
+fu_ccgx_dmc_update_model_type_to_string(DmcUpdateModel val);

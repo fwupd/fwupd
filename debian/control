@@ -19,7 +19,6 @@ Build-Depends:
 	gnutls-dev,
 	gobject-introspection,
 	gtk-doc-tools,
-	help2man,
 	libarchive-dev,
 	libcairo-dev,
 	libcairo-gobject2,
@@ -36,8 +35,11 @@ Build-Depends:
 	libgusb-dev (>= 0.3.5),
 	libjcat-dev,
 	libjson-glib-dev (>= 1.1.1),
+	libmbim-glib-dev,
 	libmm-glib-dev,
+	libpci-dev,
 	libpolkit-gobject-1-dev,
+	libprotobuf-c-dev,
 	libqmi-glib-dev,
 	libsmbios-dev [i386 amd64],
 	libsqlite3-dev,
@@ -50,9 +52,12 @@ Build-Depends:
 	mingw-w64-tools [amd64 arm64 armhf i386],
 	pkg-config,
 	policykit-1 (>> 0.105-14),
+	protobuf-c-compiler,
 	python3-gi-cairo,
-	python3-pil,
+	python3-jinja2,
 	python3-requests,
+	python3-toml,
+	python3-typogrify,
 	shared-mime-info,
 	systemd (>= 231),
 	udev,
@@ -66,7 +71,7 @@ Homepage: https://github.com/fwupd/fwupd
 Vcs-Git: https://salsa.debian.org/efi-team/fwupd.git
 Vcs-Browser: https://salsa.debian.org/efi-team/fwupd
 
-Package: libfwupdplugin1
+Package: libfwupdplugin4
 Section: libs
 Architecture: linux-any
 Depends: ${misc:Depends},
@@ -106,6 +111,7 @@ Recommends: python3,
 	    dbus,
 	    secureboot-db,
 	    udisks2,
+	    fwupd-unsigned,
 	    fwupd-signed
 Suggests: gir1.2-fwupd-2.0
 Provides: fwupdate
@@ -206,7 +212,7 @@ Description: GObject introspection data for libfwupd
 Package: libfwupdplugin-dev
 Architecture: linux-any
 Multi-Arch: same
-Depends: libfwupdplugin1 (= ${binary:Version}),
+Depends: libfwupdplugin4 (= ${binary:Version}),
          gir1.2-fwupdplugin-1.0 (= ${binary:Version}),
          libarchive-dev,
          libcurl4-gnutls-dev,
@@ -241,31 +247,3 @@ Description: GObject introspection data for libfwupdplugin
  .
  It can be used by packages using the GIRepository format to generate
  dynamic bindings.
-
-Package: fwupd-amd64-signed-template
-Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, make | build-essential | dpkg-dev
-Description: Template for signed fwupd package
- This package is used to control code signing by the Debian signing
- service.
-
-Package: fwupd-i386-signed-template
-Architecture: i386
-Depends: ${shlibs:Depends}, ${misc:Depends}, make | build-essential | dpkg-dev
-Description: Template for signed fwupd package
- This package is used to control code signing by the Debian signing
- service.
-
-Package: fwupd-armhf-signed-template
-Architecture: armhf
-Depends: ${shlibs:Depends}, ${misc:Depends}, make | build-essential | dpkg-dev
-Description: Template for signed fwupd package
- This package is used to control code signing by the Debian signing
- service.
-
-Package: fwupd-arm64-signed-template
-Architecture: arm64
-Depends: ${shlibs:Depends}, ${misc:Depends}, make | build-essential | dpkg-dev
-Description: Template for signed fwupd package
- This package is used to control code signing by the Debian signing
- service.

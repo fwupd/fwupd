@@ -1,0 +1,5 @@
+<firmware gtype="FuEbitdoFirmware">
+  <version_raw>0x10002</version_raw>
+  <addr>0x3000</addr>
+  <data>aGVsbG8gd29ybGQ=</data>
+</firmware>

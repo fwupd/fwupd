@@ -1,0 +1,22 @@
+======================================================================
+Dom0 Devices:			
+======================================================================
+	ColorHug2
+======================================================================
+	DeviceId:			b0a78eb71f4eeea7df8fb114522556ba8ce22074
+	Guid:				·2082b5e0-7a64-478a-b1b2-e3404fab6dad
+	 				·aa4b4156-9732-55db-9500-bf6388508ee3
+	 				·101ee86a-7bea-59fb-9f89-6b6297ceed3b
+	 				·2fa8891f-3ece-53a4-adc4-0dd875685f30
+	Summary:			An open source display colorimeter
+	Plugin:				colorhug
+	Protocol:			com.hughski.colorhug
+	Flags:				·updatable
+	 				·supported
+	 				·registered
+	 				·self-recovery
+	 				·add-counterpart-guids
+	Vendor:				Hughski Ltd.
+	VendorId:			USB:0x273F
+	Version:			2.0.6
+	Created:			1614224175

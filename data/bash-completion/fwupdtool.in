@@ -6,8 +6,10 @@ _fwupdtool_cmd_list=(
 	'esp-unmount'
 	'firmware-build'
 	'firmware-convert'
+	'firmware-export'
 	'firmware-extract'
 	'firmware-parse'
+	'firmware-sign'
 	'get-updates'
 	'get-upgrades'
 	'get-details'
@@ -51,11 +53,11 @@ _fwupdtool_opts=(
 	'--prepare'
 	'--cleanup'
 	'--filter'
+	'--method'
 	'--disable-ssl-strict'
 	'--no-safety-check'
 	'--ignore-checksum'
 	'--ignore-vid-pid'
-	'--ignore-power'
 )
 
 _show_filters()

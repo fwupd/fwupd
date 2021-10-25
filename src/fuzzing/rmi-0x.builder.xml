@@ -1,7 +1,8 @@
 <firmware gtype="FuSynapticsRmiFirmware">
   <kind>0x01</kind>
   <product_id>Example</product_id>
-  <image gtype="FuFirmwareImage">
+  <firmware gtype="FuFirmware">
+    <id>ui</id>
     <data>ZGF2ZQ==</data> <!-- base64, 4 bytes -->
-  </image>
+  </firmware>
 </firmware>

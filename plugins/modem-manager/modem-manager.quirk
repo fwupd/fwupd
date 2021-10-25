@@ -1,40 +1,40 @@
 
 # DW5821e
-[DeviceInstanceId=USB\VID_413C&PID_81D7]
+[USB\VID_413C&PID_81D7]
 Summary = Dell DW5821e LTE modem
 CounterpartGuid = USB\VID_413C&PID_81D6
 
 # DW5821e in fastboot mode
-[DeviceInstanceId=USB\VID_413C&PID_81D6]
+[USB\VID_413C&PID_81D6]
 Summary = Dell DW5821e LTE modem (fastboot)
 CounterpartGuid = USB\VID_413C&PID_81D7
 
 # DW5821e/eSIM
-[DeviceInstanceId=USB\VID_413C&PID_81E0]
+[USB\VID_413C&PID_81E0]
 Summary = Dell DW5821e/eSIM LTE modem
 CounterpartGuid = USB\VID_413C&PID_81E1
 
 # DW5821e/eSIM in fastboot mode
-[DeviceInstanceId=USB\VID_413C&PID_81E1]
+[USB\VID_413C&PID_81E1]
 Summary = Dell DW5821e/eSIM LTE modem (fastboot)
 CounterpartGuid = USB\VID_413C&PID_81E0
 
 # T77W968
-[DeviceInstanceId=USB\VID_0489&PID_E0B4]
+[USB\VID_0489&PID_E0B4]
 Summary = Foxconn T77w968 LTE modem
 CounterpartGuid = USB\VID_0489&PID_E0B7
 
 # T77W968 in fastboot mode
-[DeviceInstanceId=USB\VID_0489&PID_E0B7]
+[USB\VID_0489&PID_E0B7]
 Summary = Foxconn T77w968 LTE modem (fastboot)
 CounterpartGuid = USB\VID_0489&PID_E0B4
 
 # T77W968/eSIM
-[DeviceInstanceId=USB\VID_0489&PID_E0B5]
+[USB\VID_0489&PID_E0B5]
 Summary = Foxconn T77w968/eSIM LTE modem
 CounterpartGuid = USB\VID_0489&PID_E0B8
 
 # T77W968/eSIM in fastboot mode
-[DeviceInstanceId=USB\VID_0489&PID_E0B8]
+[USB\VID_0489&PID_E0B8]
 Summary = Foxconn T77w968/eSIM LTE modem (fastboot)
 CounterpartGuid = USB\VID_0489&PID_E0B5

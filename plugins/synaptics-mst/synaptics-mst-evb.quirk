@@ -10,9 +10,9 @@
 # during flashing. This shouldn't be used in practice for production boards.
 #
 
-[SynapticsMSTBoardID=2]
+[MST-2]
 Name = Synaptics EVB development board
-DeviceKind = panamera_evb
+SynapticsMstDeviceKind = panamera_evb
 
-[Guid=MST-panamera_evb-vmm5331-2]
+[MST-panamera_evb-vmm5331-2]
 Flags = ignore-board-id

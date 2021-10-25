@@ -1,0 +1,70 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+    -   id: no-commit-to-branch
+        args: [--branch, main, --pattern, 1_.*_X]
+    -   id: check-added-large-files
+    -   id: check-byte-order-marker
+    -   id: check-executables-have-shebangs
+    -   id: forbid-new-submodules
+    -   id: check-yaml
+        exclude: '.clang-format'
+    -   id: check-json
+    -   id: check-symlinks
+    -   id: check-xml
+    -   id: end-of-file-fixer
+        types_or: [c, shell, python, proto]
+    -   id: trailing-whitespace
+        types_or: [c, shell, python, xml]
+    -   id: check-docstring-first
+    -   id: check-merge-conflict
+    -   id: mixed-line-ending
+        args: [--fix=lf]
+-   repo: https://github.com/codespell-project/codespell
+    rev: v2.1.0
+    hooks:
+    -   id: codespell
+        args: ['--config', './contrib/codespell.cfg', --write-changes]
+-   repo: https://github.com/ambv/black
+    rev: 21.6b0
+    hooks:
+    - id: black
+-   repo: local
+    hooks:
+    - id: check-deprecated
+      name: check for use of any deprecated items
+      language: script
+      entry: ./contrib/ci/check-deprecated.sh
+    - id: check-null-false-returns
+      name: check for null / false return mistmatch
+      language: script
+      entry: ./contrib/ci/check-null-false-returns.py
+    - id: check-headers
+      name: check for superfluous includes
+      language: script
+      entry: ./contrib/ci/check-headers.py
+    - id: check-quirks
+      name: check quirk style
+      language: script
+      entry: ./contrib/ci/check-quirks.py
+    - id: shellcheck
+      name: check shellscript style
+      language: system
+      entry: shellcheck --severity=warning -e SC2068
+      types: [shell]
+    - id: clang-format
+      name: clang-format
+      language: script
+      entry: ./contrib/reformat-code.py
+      types: [c]
+    - id: check-license
+      name: Check license header
+      types_or: [shell, c, python]
+      language: script
+      entry: ./contrib/ci/check-license.py
+-   repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.27.1
+    hooks:
+    - id: markdownlint
+      args: ['--fix', '--ignore', '.github']

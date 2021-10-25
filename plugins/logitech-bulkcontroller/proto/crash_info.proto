@@ -1,0 +1,285 @@
+/*
+ * Copyright (c) 1999-2021 Logitech, Inc.
+ * All Rights Reserved
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+syntax = "proto3";
+
+package logi.device.proto;
+
+option java_package = "com.logitech.vc.proto";
+
+/**
+ * Kong as an Android device can accumulate
+ * crash debug information during its operation.
+ * When Kong is running in device mode, those
+ * crash dump files need to be copied over to
+ * PC and uploaded to S3.
+ * Note, if Kong is running in host mode, uploaded
+ *  files, and then moved to device mode, will it
+ *  copy the same files over?
+ *
+ * This message requests that crash dump files be
+ * copied over to PC
+ *
+ * EXPECTED RESPONSE
+ * SendCrashDumpResponse
+ *
+ */
+message SendCrashDumpRequest
+{
+	/**
+	 * Unused. Reserved for future use.
+	 */
+	bool reserved = 1;
+}
+
+/**
+ * Crash dump information.  Most of these
+ * are supplied by the crash analytics service, so lets
+ * pass this information along.
+ */
+message CrashDumpInfo
+{
+	/**
+	 * the filename
+	 */
+	string file_name = 1;
+
+	/**
+	 * the serial number
+	 */
+	string device_id = 2;
+
+	/**
+	 * the software version
+	 */
+	string software_version = 3;
+
+	/**
+	 * the file size
+	 */
+	uint64 file_size = 4;
+
+	/**
+	 * timestamp
+	 */
+	uint64 timestamp = 5;
+
+	/**
+	 * md5 for file
+	 */
+	string md5 = 6;
+
+	/**
+	 * the device type .  Kong|Diddy
+	 */
+	string device_type = 7;
+
+	/**
+	 * the device mode.  Hosted|Appliance
+	 */
+	string device_mode = 8;
+
+	/**
+	 * the report type. BugReport|EventLog,Diagnostics
+	 */
+	string report_type = 9;
+
+	/**
+	 * the content type. application/zip | text/plain | application/json
+	 */
+	string content_type = 10;
+}
+
+/**
+ * Response which contains the crash dump file name
+ * information and bool value to indicate will send
+ * file
+ */
+message SendCrashDumpResponse
+{
+	/**
+	 * (OPTIONAL)
+	 * If crash dump exists, this variable
+	 * contains the file name of crash dump
+	 * that will be copied over.
+	 */
+	string crash_dump_file = 1;
+
+	/**
+	 * (REQUIRED)
+	 * bool value to indicate will send file
+	 * true if sending file over.
+	 * false if no file to send.
+	 * If true, caller will look at CrashDumpInfo
+	 */
+	bool will_send_file = 2;
+
+	/**
+	 * (OPTIONAL)
+	 * Crash dump info
+	 */
+	CrashDumpInfo crash_dump_info = 3;
+}
+
+message SendCrashDumpRequestv2
+{
+	/**
+	 * The attestation challenge.
+	 * (REQUIRED)
+	 */
+	string challenge = 1;
+
+	/**
+	 * Time to live
+	 * (REQUIRED)
+	 */
+	int32 ttl = 2;
+}
+
+/**
+ * Response which contains the crash dump file name
+ * information, bool value to indicate will send
+ * file, body of the request and signature
+ */
+message SendCrashDumpResponsev2
+{
+	/**
+	 * (OPTIONAL)
+	 * If crash dump exists, this variable
+	 * contains the file name of crash dump
+	 * that will be copied over.
+	 */
+	string crash_dump_file = 1;
+
+	/**
+	 * (REQUIRED)
+	 * bool value to indicate will send file
+	 * true if sending file over.
+	 * false if no file to send.
+	 * If true, caller will look at CrashDumpInfo
+	 */
+	bool will_send_file = 2;
+
+	/**
+	 * (OPTIONAL)
+	 * The get upload url body.  This is a json string
+	 */
+	string body = 3;
+
+	/**
+	 * (OPTIONAL)
+	 * The get upload url body signature.
+	 */
+	string signature = 4;
+}
+
+/**
+ * This is event sent from PC or Kong to indicate
+ *   Success
+ */
+message SendCrashDumpEvent
+{
+	/**
+	 * (REQUIRED)
+	 * Contains the file name of crash dump
+	 * that is being sent or in process of being
+	 * received
+	 */
+	string crash_dump_file = 1;
+
+	/**
+	 * (REQUIRED)
+	 * Transfer state.
+	 *  true indicates file was received without errors and bug report file was
+	 * uploaded false means an error occurred
+	 */
+	bool success = 2;
+}
+
+/**
+ * Place holder for Android requesting that a crash dump copy
+ * get initiated from PC side
+ */
+message CrashDumpAvailableEvent
+{
+	/**
+	 * Unused. Reserved for future use.
+	 */
+	bool reserved = 1;
+}
+
+/**
+ * Ask device to generate a bug report. This could be
+ * for gathering logcat, system logs, etc.
+ * Similar to SendCrashDumpRequestv2, but bug report generation is on
+ * demand.
+ * EXPECTED RESPONSE:
+ * GenerateCrashDumpResponse
+ * It should follow the same flow as described here
+ * https://docs.google.com/document/d/1D5nx1nenDu9ucZbYPXlNNxFEN1tx3W7k044mvi74x28/edit#heading=h.a9wyfbpb2282
+ */
+message GenerateCrashDumpRequest
+{
+	/**
+	 * The attestation challenge.
+	 * (REQUIRED)
+	 */
+	string challenge = 1;
+
+	/**
+	 * Time to live
+	 * (REQUIRED)
+	 */
+	int32 ttl = 2;
+
+	/**
+	 * The note to include in the bug report. This could be empty.
+	 * (OPTIONAL)
+	 */
+	string note = 3;
+}
+
+/**
+ * Response which contains the
+ * crash dump file name information,
+ * bool value to indicate will send file,
+ * body of the request and signature.
+ * Similar to SendCrashDumpResponsev2, but bug report generation is on
+ * demand.
+ * It should follow the same flow as described here
+ * https://docs.google.com/document/d/1D5nx1nenDu9ucZbYPXlNNxFEN1tx3W7k044mvi74x28/edit#heading=h.a9wyfbpb2282
+ */
+message GenerateCrashDumpResponse
+{
+	/**
+	 * (OPTIONAL)
+	 * If crash dump exists, this variable
+	 * contains the file name of crash dump
+	 * that will be copied over.
+	 */
+	string crash_dump_file = 1;
+
+	/**
+	 * (REQUIRED)
+	 * bool value to indicate will send file
+	 * true if sending file over.
+	 * false if no file to send.
+	 */
+	bool will_send_file = 2;
+
+	/**
+	 * (OPTIONAL)
+	 * The get upload url body.  This is a json string
+	 */
+	string body = 3;
+
+	/**
+	 * (OPTIONAL)
+	 * The get upload url body signature.
+	 */
+	string signature = 4;
+}

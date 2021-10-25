@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#define G_LOG_DOMAIN				"FuProgressBar"
+#define G_LOG_DOMAIN "FuProgressBar"
 
 #include "config.h"
 
@@ -14,29 +14,30 @@
 #include "fu-common.h"
 #include "fu-progressbar.h"
 
-static void fu_progressbar_finalize	 (GObject *obj);
+static void
+fu_progressbar_finalize(GObject *obj);
 
-struct _FuProgressbar
-{
-	GObject			 parent_instance;
-	FwupdStatus		 status;
-	gboolean		 spinner_count_up;	/* chars */
-	guint			 spinner_idx;		/* chars */
-	guint			 length_percentage;	/* chars */
-	guint			 length_status;		/* chars */
-	guint			 percentage;
-	guint			 to_erase;		/* chars */
-	guint			 timer_id;
-	gint64			 last_animated;		/* monotonic */
-	GTimer			*time_elapsed;
-	gdouble			 last_estimate;
-	gboolean		 interactive;
+struct _FuProgressbar {
+	GObject parent_instance;
+	GMainContext *main_ctx;
+	FwupdStatus status;
+	gboolean spinner_count_up; /* chars */
+	guint spinner_idx;	   /* chars */
+	guint length_percentage;   /* chars */
+	guint length_status;	   /* chars */
+	guint percentage;
+	guint to_erase; /* chars */
+	GSource *timer_source;
+	gint64 last_animated; /* monotonic */
+	GTimer *time_elapsed;
+	gdouble last_estimate;
+	gboolean interactive;
 };
 
-G_DEFINE_TYPE (FuProgressbar, fu_progressbar, G_TYPE_OBJECT)
+G_DEFINE_TYPE(FuProgressbar, fu_progressbar, G_TYPE_OBJECT)
 
 static const gchar *
-fu_progressbar_status_to_string (FwupdStatus status)
+fu_progressbar_status_to_string(FwupdStatus status)
 {
 	switch (status) {
 	case FWUPD_STATUS_IDLE:
@@ -96,30 +97,30 @@ fu_progressbar_status_to_string (FwupdStatus status)
 }
 
 static void
-fu_progressbar_erase_line (FuProgressbar *self)
+fu_progressbar_erase_line(FuProgressbar *self)
 {
 	if (!self->interactive)
 		return;
 	for (guint i = 0; i < self->to_erase; i++)
-		g_print ("\b");
+		g_print("\b");
 	self->to_erase = 0;
 }
 
 static gboolean
-fu_progressbar_estimate_ready (FuProgressbar *self, guint percentage)
+fu_progressbar_estimate_ready(FuProgressbar *self, guint percentage)
 {
 	gdouble old;
 	gdouble elapsed;
 
 	/* now invalid */
 	if (percentage == 0 || percentage == 100) {
-		g_timer_start (self->time_elapsed);
+		g_timer_start(self->time_elapsed);
 		self->last_estimate = 0;
 		return FALSE;
 	}
 
 	old = self->last_estimate;
-	elapsed = g_timer_elapsed (self->time_elapsed, NULL);
+	elapsed = g_timer_elapsed(self->time_elapsed, NULL);
 	self->last_estimate = elapsed / percentage * (100 - percentage);
 
 	/* estimate is ready if we have decreased */
@@ -127,7 +128,7 @@ fu_progressbar_estimate_ready (FuProgressbar *self, guint percentage)
 }
 
 static gchar *
-fu_progressbar_time_remaining_str (FuProgressbar *self)
+fu_progressbar_time_remaining_str(FuProgressbar *self)
 {
 	/* less than 5 seconds remaining */
 	if (self->last_estimate < 5)
@@ -136,26 +137,25 @@ fu_progressbar_time_remaining_str (FuProgressbar *self)
 	/* less than 60 seconds remaining */
 	if (self->last_estimate < 60) {
 		/* TRANSLATORS: time remaining for completing firmware flash */
-		return g_strdup (_("Less than one minute remaining"));
+		return g_strdup(_("Less than one minute remaining"));
 	}
 
-	/* more than a minute */
-	return g_strdup_printf (ngettext ("%.0f minute remaining",
-					  "%.0f minutes remaining",
-					  self->last_estimate / 60),
-				self->last_estimate / 60);
+	return g_strdup_printf(
+	    /* TRANSLATORS: more than a minute */
+	    ngettext("%.0f minute remaining", "%.0f minutes remaining", self->last_estimate / 60),
+	    self->last_estimate / 60);
 }
 
 static void
-fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentage)
+fu_progressbar_refresh(FuProgressbar *self, FwupdStatus status, guint percentage)
 {
 	const gchar *title;
 	guint i;
 	gboolean is_idle_newline = FALSE;
-	g_autoptr(GString) str = g_string_new (NULL);
+	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* erase previous line */
-	fu_progressbar_erase_line (self);
+	fu_progressbar_erase_line(self);
 
 	/* add status */
 	if (status == FWUPD_STATUS_IDLE) {
@@ -165,42 +165,47 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
 	} else if (status == FWUPD_STATUS_WAITING_FOR_AUTH) {
 		is_idle_newline = TRUE;
 	}
-	title = fu_progressbar_status_to_string (status);
-	g_string_append (str, title);
-	for (i = fu_common_strwidth (str->str); i < self->length_status; i++)
-		g_string_append_c (str, ' ');
+	title = fu_progressbar_status_to_string(status);
+	g_string_append(str, title);
+	for (i = fu_common_strwidth(str->str); i < self->length_status; i++)
+		g_string_append_c(str, ' ');
 
 	/* add progressbar */
-	g_string_append (str, "[");
+	g_string_append(str, "[");
 	if (percentage > 0) {
 		for (i = 0; i < (self->length_percentage - 1) * percentage / 100; i++)
-			g_string_append_c (str, '*');
+			g_string_append_c(str, '*');
 		for (i = i + 1; i < self->length_percentage; i++)
-			g_string_append_c (str, ' ');
+			g_string_append_c(str, ' ');
 	} else {
-		const gchar chars[] = { '-', '\\', '|', '/', };
+		const gchar chars[] = {
+		    '-',
+		    '\\',
+		    '|',
+		    '/',
+		};
 		for (i = 0; i < self->spinner_idx; i++)
-			g_string_append_c (str, ' ');
-		g_string_append_c (str, chars[i / 4 % G_N_ELEMENTS(chars)]);
+			g_string_append_c(str, ' ');
+		g_string_append_c(str, chars[i / 4 % G_N_ELEMENTS(chars)]);
 		for (i = i + 1; i < self->length_percentage - 1; i++)
-			g_string_append_c (str, ' ');
+			g_string_append_c(str, ' ');
 	}
-	g_string_append_c (str, ']');
+	g_string_append_c(str, ']');
 
 	/* once we have good data show an estimate of time remaining */
-	if (fu_progressbar_estimate_ready (self, percentage)) {
-		g_autofree gchar *remaining = fu_progressbar_time_remaining_str (self);
+	if (fu_progressbar_estimate_ready(self, percentage)) {
+		g_autofree gchar *remaining = fu_progressbar_time_remaining_str(self);
 		if (remaining != NULL)
-			g_string_append_printf (str, " %s…", remaining);
+			g_string_append_printf(str, " %s…", remaining);
 	}
 
 	/* dump to screen */
-	g_print ("%s", str->str);
-	self->to_erase = g_utf8_strlen (str->str, -1);
+	g_print("%s", str->str);
+	self->to_erase = g_utf8_strlen(str->str, -1);
 
 	/* done */
 	if (is_idle_newline) {
-		g_print ("\n");
+		g_print("\n");
 		self->to_erase = 0;
 		return;
 	}
@@ -216,18 +221,33 @@ fu_progressbar_refresh (FuProgressbar *self, FwupdStatus status, guint percentag
  * Since: 0.9.7
  **/
 void
-fu_progressbar_set_title (FuProgressbar *self, const gchar *title)
+fu_progressbar_set_title(FuProgressbar *self, const gchar *title)
 {
-	fu_progressbar_erase_line (self);
-	g_print ("%s\n", title);
-	fu_progressbar_refresh (self, self->status, self->percentage);
+	fu_progressbar_erase_line(self);
+	g_print("%s\n", title);
+	fu_progressbar_refresh(self, self->status, self->percentage);
+}
+
+/**
+ * fu_progressbar_set_main_context:
+ * @self: A #FuProgressbar
+ * @main_ctx: (nullable): main context
+ *
+ * Sets progressbar main context to use for animations.
+ *
+ * Since: 1.6.2
+ **/
+void
+fu_progressbar_set_main_context(FuProgressbar *self, GMainContext *main_ctx)
+{
+	self->main_ctx = g_main_context_ref(main_ctx);
 }
 
 static void
-fu_progressbar_spin_inc (FuProgressbar *self)
+fu_progressbar_spin_inc(FuProgressbar *self)
 {
 	/* reset */
-	self->last_animated = g_get_monotonic_time ();
+	self->last_animated = g_get_monotonic_time();
 
 	/* up to down */
 	if (self->spinner_count_up) {
@@ -240,33 +260,32 @@ fu_progressbar_spin_inc (FuProgressbar *self)
 }
 
 static gboolean
-fu_progressbar_spin_cb (gpointer user_data)
+fu_progressbar_spin_cb(gpointer user_data)
 {
-	FuProgressbar *self = FU_PROGRESSBAR (user_data);
+	FuProgressbar *self = FU_PROGRESSBAR(user_data);
 
 	/* ignore */
-	if (self->status == FWUPD_STATUS_IDLE ||
-	    self->status == FWUPD_STATUS_WAITING_FOR_AUTH)
+	if (self->status == FWUPD_STATUS_IDLE || self->status == FWUPD_STATUS_WAITING_FOR_AUTH)
 		return G_SOURCE_CONTINUE;
 
 	/* move the spinner index up to down */
-	fu_progressbar_spin_inc (self);
+	fu_progressbar_spin_inc(self);
 
 	/* update the terminal */
-	fu_progressbar_refresh (self, self->status, self->percentage);
+	fu_progressbar_refresh(self, self->status, self->percentage);
 
 	return G_SOURCE_CONTINUE;
 }
 
 static void
-fu_progressbar_spin_end (FuProgressbar *self)
+fu_progressbar_spin_end(FuProgressbar *self)
 {
-	if (self->timer_id != 0) {
-		g_source_remove (self->timer_id);
-		self->timer_id = 0;
+	if (self->timer_source != NULL) {
+		g_source_destroy(self->timer_source);
+		self->timer_source = NULL;
 
 		/* reset when the spinner has been stopped */
-		g_timer_start (self->time_elapsed);
+		g_timer_start(self->time_elapsed);
 	}
 
 	/* go back to the start when we next go into unknown percentage mode */
@@ -275,11 +294,13 @@ fu_progressbar_spin_end (FuProgressbar *self)
 }
 
 static void
-fu_progressbar_spin_start (FuProgressbar *self)
+fu_progressbar_spin_start(FuProgressbar *self)
 {
-	if (self->timer_id != 0)
-		g_source_remove (self->timer_id);
-	self->timer_id = g_timeout_add (40, fu_progressbar_spin_cb, self);
+	if (self->timer_source != NULL)
+		g_source_destroy(self->timer_source);
+	self->timer_source = g_timeout_source_new(40);
+	g_source_set_callback(self->timer_source, fu_progressbar_spin_cb, self, NULL);
+	g_source_attach(self->timer_source, self->main_ctx);
 }
 
 /**
@@ -293,9 +314,9 @@ fu_progressbar_spin_start (FuProgressbar *self)
  * Since: 0.9.7
  **/
 void
-fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage)
+fu_progressbar_update(FuProgressbar *self, FwupdStatus status, guint percentage)
 {
-	g_return_if_fail (FU_IS_PROGRESSBAR (self));
+	g_return_if_fail(FU_IS_PROGRESSBAR(self));
 
 	/* ignore initial client connection */
 	if (self->status == FWUPD_STATUS_UNKNOWN && status == FWUPD_STATUS_IDLE) {
@@ -309,7 +330,7 @@ fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage
 
 	if (!self->interactive) {
 		if (self->status != status) {
-			g_debug ("%s\n", fu_progressbar_status_to_string (status));
+			g_debug("%s\n", fu_progressbar_status_to_string(status));
 			self->status = status;
 		}
 		return;
@@ -317,30 +338,27 @@ fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage
 
 	/* if the main loop isn't spinning and we've not had a chance to
 	 * execute the callback just do the refresh now manually */
-	if (percentage == 0 &&
-	    status != FWUPD_STATUS_IDLE &&
-	    status != FWUPD_STATUS_WAITING_FOR_AUTH &&
-	    self->status != FWUPD_STATUS_UNKNOWN) {
-		if ((g_get_monotonic_time () - self->last_animated) / 1000 > 40) {
-			fu_progressbar_spin_inc (self);
-			fu_progressbar_refresh (self, status, percentage);
+	if (percentage == 0 && status != FWUPD_STATUS_IDLE &&
+	    status != FWUPD_STATUS_WAITING_FOR_AUTH && self->status != FWUPD_STATUS_UNKNOWN) {
+		if ((g_get_monotonic_time() - self->last_animated) / 1000 > 40) {
+			fu_progressbar_spin_inc(self);
+			fu_progressbar_refresh(self, status, percentage);
 		}
 	}
 
 	/* ignore duplicates */
-	if (self->status == status &&
-	    self->percentage == percentage)
+	if (self->status == status && self->percentage == percentage)
 		return;
 
 	/* enable or disable the spinner timeout */
 	if (percentage > 0) {
-		fu_progressbar_spin_end (self);
+		fu_progressbar_spin_end(self);
 	} else {
-		fu_progressbar_spin_start (self);
+		fu_progressbar_spin_start(self);
 	}
 
 	/* update the terminal */
-	fu_progressbar_refresh (self, status, percentage);
+	fu_progressbar_refresh(self, status, percentage);
 
 	/* cache */
 	self->status = status;
@@ -357,9 +375,9 @@ fu_progressbar_update (FuProgressbar *self, FwupdStatus status, guint percentage
  * Since: 0.9.7
  **/
 void
-fu_progressbar_set_interactive (FuProgressbar *self, gboolean interactive)
+fu_progressbar_set_interactive(FuProgressbar *self, gboolean interactive)
 {
-	g_return_if_fail (FU_IS_PROGRESSBAR (self));
+	g_return_if_fail(FU_IS_PROGRESSBAR(self));
 	self->interactive = interactive;
 }
 
@@ -373,10 +391,10 @@ fu_progressbar_set_interactive (FuProgressbar *self, gboolean interactive)
  * Since: 0.9.7
  **/
 void
-fu_progressbar_set_length_status (FuProgressbar *self, guint len)
+fu_progressbar_set_length_status(FuProgressbar *self, guint len)
 {
-	g_return_if_fail (FU_IS_PROGRESSBAR (self));
-	g_return_if_fail (len > 3);
+	g_return_if_fail(FU_IS_PROGRESSBAR(self));
+	g_return_if_fail(len > 3);
 	self->length_status = len;
 }
 
@@ -390,40 +408,42 @@ fu_progressbar_set_length_status (FuProgressbar *self, guint len)
  * Since: 0.9.7
  **/
 void
-fu_progressbar_set_length_percentage (FuProgressbar *self, guint len)
+fu_progressbar_set_length_percentage(FuProgressbar *self, guint len)
 {
-	g_return_if_fail (FU_IS_PROGRESSBAR (self));
-	g_return_if_fail (len > 3);
+	g_return_if_fail(FU_IS_PROGRESSBAR(self));
+	g_return_if_fail(len > 3);
 	self->length_percentage = len;
 }
 
 static void
-fu_progressbar_class_init (FuProgressbarClass *klass)
+fu_progressbar_class_init(FuProgressbarClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_progressbar_finalize;
 }
 
 static void
-fu_progressbar_init (FuProgressbar *self)
+fu_progressbar_init(FuProgressbar *self)
 {
 	self->length_percentage = 40;
 	self->length_status = 25;
 	self->spinner_count_up = TRUE;
-	self->time_elapsed = g_timer_new ();
+	self->time_elapsed = g_timer_new();
 	self->interactive = TRUE;
 }
 
 static void
-fu_progressbar_finalize (GObject *obj)
+fu_progressbar_finalize(GObject *obj)
 {
-	FuProgressbar *self = FU_PROGRESSBAR (obj);
+	FuProgressbar *self = FU_PROGRESSBAR(obj);
 
-	if (self->timer_id != 0)
-		g_source_remove (self->timer_id);
-	g_timer_destroy (self->time_elapsed);
+	if (self->timer_source != 0)
+		g_source_destroy(self->timer_source);
+	if (self->main_ctx != NULL)
+		g_main_context_unref(self->main_ctx);
+	g_timer_destroy(self->time_elapsed);
 
-	G_OBJECT_CLASS (fu_progressbar_parent_class)->finalize (obj);
+	G_OBJECT_CLASS(fu_progressbar_parent_class)->finalize(obj);
 }
 
 /**
@@ -434,9 +454,9 @@ fu_progressbar_finalize (GObject *obj)
  * Since: 0.9.7
  **/
 FuProgressbar *
-fu_progressbar_new (void)
+fu_progressbar_new(void)
 {
 	FuProgressbar *self;
-	self = g_object_new (FU_TYPE_PROGRESSBAR, NULL);
-	return FU_PROGRESSBAR (self);
+	self = g_object_new(FU_TYPE_PROGRESSBAR, NULL);
+	return FU_PROGRESSBAR(self);
 }

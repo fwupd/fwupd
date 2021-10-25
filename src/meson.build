@@ -50,7 +50,6 @@ daemon_src = [
   'fu-install-task.c',
   'fu-keyring-utils.c',
   'fu-plugin-list.c',
-  'fu-backend.c',
   'fu-remote-list.c',
   'fu-security-attr.c',
 ] + systemd_src
@@ -95,34 +94,13 @@ fwupdmgr = executable(
   install : true,
   install_dir : bindir
 )
-endif
 
-if get_option('agent')
-fwupdagent = executable(
-  'fwupdagent',
-  sources : [
-    'fu-agent.c',
-    'fu-security-attr.c',
-    'fu-util-common.c',
-    systemd_src,
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  dependencies : [
-    libfwupd_deps,
-    libxmlb,
-    client_dep,
-  ],
-  link_with : [
-    fwupd,
-    fwupdplugin,
-  ],
-  install : true,
-  install_dir : bindir
-)
+# for compatibility
+meson.add_install_script(
+  'sh', '-c',
+  'ln -fs fwupdmgr @0@@1@'.format(
+      '${DESTDIR}',
+      join_paths(get_option('prefix'), get_option('bindir'), 'fwupdagent')))
 endif
 
 if get_option('systemd')
@@ -195,55 +173,29 @@ fwupdtool = executable(
 )
 
 if get_option('man')
-  help2man = find_program('help2man')
   if build_daemon
-    custom_target('fwupdmgr-man',
-      input : fwupdmgr,
+    configure_file(
+      input : 'fwupdmgr.1',
       output : 'fwupdmgr.1',
-      command : [
-        help2man, '@INPUT@',
-        '--no-info',
-        '--output', '@OUTPUT@',
-        '--name', 'Firmware update manager client utility',
-        '--manual', 'User Commands',
-        '--include', join_paths(meson.current_source_dir(), 'scripting.txt'),
-        '--version-string', fwupd_version,
-      ],
-      install : true,
-      install_dir : join_paths(mandir, 'man1'),
+      configuration : conf,
+      install: true,
+      install_dir: join_paths(mandir, 'man1'),
     )
-  endif
-  if get_option('agent')
-    custom_target('fwupdagent-man',
-      input : fwupdagent,
+    configure_file(
+      input : 'fwupdagent.1',
       output : 'fwupdagent.1',
-      command : [
-        help2man, '@INPUT@',
-        '--no-info',
-        '--output', '@OUTPUT@',
-        '--name', 'Firmware updating agent',
-        '--manual', 'User Commands',
-        '--include', join_paths(meson.current_source_dir(), 'scripting.txt'),
-        '--version-string', fwupd_version,
-      ],
-      install : true,
-      install_dir : join_paths(mandir, 'man1'),
+      configuration : conf,
+      install: true,
+      install_dir: join_paths(mandir, 'man1'),
     )
   endif
   if build_standalone
-    custom_target('fwupdtool-man',
-      input : fwupdtool,
+    configure_file(
+      input : 'fwupdtool.1',
       output : 'fwupdtool.1',
-      command : [
-        help2man, '@INPUT@',
-        '--no-info',
-        '--output', '@OUTPUT@',
-        '--name', 'Standalone firmware update utility',
-        '--manual', 'User Commands',
-        '--version-string', fwupd_version,
-      ],
-      install : true,
-      install_dir : join_paths(mandir, 'man1'),
+      configuration : conf,
+      install: true,
+      install_dir: join_paths(mandir, 'man1'),
     )
   endif
 endif

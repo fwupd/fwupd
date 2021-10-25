@@ -1,0 +1,2 @@
+usr/libexec/qubes-fwupd/fwupd_download_updates.py
+usr/libexec/qubes-fwupd/fwupd_common_vm.py

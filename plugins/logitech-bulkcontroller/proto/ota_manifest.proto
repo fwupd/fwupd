@@ -1,0 +1,72 @@
+/*
+ * Copyright (c) 1999-2021 Logitech, Inc.
+ * All Rights Reserved
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+syntax = "proto3";
+
+package logi.device.proto;
+
+option java_package = "com.logitech.vc.proto";
+
+/**
+ * Request device to create a GetManifestv2 body.  See
+ * https://docs.google.com/document/d/1l31A1TWhtJC0xR8GwuNtiGN4vPLURRsj5ZcC1uEIwVQ/edit#heading=h.ctbthi1iyxw1
+ *
+ *
+ * This is to be included in UsbMsg
+ *
+ * EXPECTED RESPONSE
+ * GetManifestBodyResponse
+ */
+message GetManifestBodyRequest
+{
+	/**
+	 * The attestation challenge.
+	 * (REQUIRED)
+	 */
+	string challenge = 1;
+
+	/**
+	 * The manifest version.
+	 * (REQUIRED)
+	 */
+	string version = 2;
+
+	/**
+	 * The channel.  Dont use if empty or null
+	 * (OPTIONAL)
+	 */
+	string channel = 3;
+
+	/**
+	 * The meta info in json format.  This
+	 * field usually comes from PC.
+	 * (OPTIONAL)
+	 */
+	string meta_info = 4;
+
+	/**
+	 * Time to live
+	 * (REQUIRED)
+	 */
+	int32 ttl = 5;
+}
+
+/**
+ * GetManifestv2 body response
+ */
+message GetManifestBodyResponse
+{
+	/**
+	 * The get manifest body.  This is a json string
+	 */
+	string body = 1;
+
+	/**
+	 * The get manifest body signature.
+	 */
+	string signature = 2;
+}

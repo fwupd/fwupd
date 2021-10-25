@@ -6,13 +6,15 @@
 
 #pragma once
 
-#include "fu-hid-device.h"
-#include "fu-plugin.h"
+#include <fwupdplugin.h>
 
-#define FU_TYPE_SYNAPTICS_CXAUDIO_DEVICE (fu_synaptics_cxaudio_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuSynapticsCxaudioDevice, fu_synaptics_cxaudio_device, FU, SYNAPTICS_CXAUDIO_DEVICE, FuHidDevice)
+#define FU_TYPE_SYNAPTICS_CXAUDIO_DEVICE (fu_synaptics_cxaudio_device_get_type())
+G_DECLARE_FINAL_TYPE(FuSynapticsCxaudioDevice,
+		     fu_synaptics_cxaudio_device,
+		     FU,
+		     SYNAPTICS_CXAUDIO_DEVICE,
+		     FuHidDevice)
 
-struct _FuSynapticsCxaudioDeviceClass
-{
-	FuHidDeviceClass	parent_class;
+struct _FuSynapticsCxaudioDeviceClass {
+	FuHidDeviceClass parent_class;
 };

@@ -1,10 +1,10 @@
 # Hyper USB-C Hub
-[DeviceInstanceId=USB\VID_2D01&PID_0385]
+[USB\VID_2D01&PID_0385]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3,has-shared-spi-pd
 CounterpartGuid = USB\VID_2D01&PID_0382
-[DeviceInstanceId=USB\VID_2D01&PID_0382]
+[USB\VID_2D01&PID_0382]
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2

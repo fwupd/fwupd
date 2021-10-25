@@ -1,7 +1,5 @@
 <firmware gtype="FuSynapromFirmware">
   <version>1.2</version>
-  <image>
-    <product_id>0x42</product_id>
-    <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
-  </image>
+  <product_id>0x42</product_id>
+  <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
 </firmware>

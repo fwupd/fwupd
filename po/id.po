@@ -15,7 +15,7 @@ msgstr ""
 "Language: id\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -84,12 +84,14 @@ msgstr "Pembaruan %s"
 msgid "%s and all connected devices may not be usable while updating."
 msgstr "%s dan semua perangkat yang terhubung mungkin tidak dapat digunakan saat memperbarui."
 
-#. TRANSLATORS: warn the user before updating, %1 is a device name
+#. TRANSLATORS: warn the user before
+#. * updating, %1 is a device name
 #, c-format
 msgid "%s must remain connected for the duration of the update to avoid damage."
 msgstr "%s harus tetap terhubung selama pembaruan untuk menghindari kerusakan."
 
-#. TRANSLATORS: warn the user before updating, %1 is a machine name
+#. TRANSLATORS: warn the user before updating, %1 is a machine
+#. * name
 #, c-format
 msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
 msgstr "%s harus tetap terhubung ke sumber tenaga selama pembaruan untuk menghindari kerusakan."
@@ -299,10 +301,6 @@ msgstr "Membersihkan hasil dari pemutakhiran terakhir"
 msgid "Command not found"
 msgstr "Perintah tidak ditemukan"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Lanjutkan dengan pembaruan?"
-
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
 msgstr "Verifikasi hash kriptografis tersedia"
@@ -363,7 +361,7 @@ msgstr "Firmware perangkat harus memiliki pemeriksaan versi"
 msgid "Device is locked"
 msgstr "Perangkat terkunci"
 
-#. TRANSLATORS: a version check is required for all firmware
+#. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
 msgstr "Perangkat perlu menginstal semua rilis yang disediakan"
 
@@ -411,10 +409,6 @@ msgid "Do not check for old metadata"
 msgstr "Jangan periksa untuk metadata lama"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Jangan periksa untuk boot ulang setelah pembaruan"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Jangan periksa untuk riwayat yang tak dilaporkan"
 
@@ -429,14 +423,6 @@ msgstr "Jangan sertakan awalan stempel waktu"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Jangan melakukan pemeriksaan keamanan perangkat"
-
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Jangan mengunggah laporan saat ini, tetapi minta lagi untuk pembaruan di masa mendatang"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "Jangan unggah laporan, dan jangan pernah meminta untuk mengunggah laporan untuk pembaruan di masa mendatang"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -571,10 +557,6 @@ msgstr "Tanda Tangan Nama Berkas"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Memfilter dengan suatu set flag perangkat menggunakan awalan ~ untuk mengecualikan, mis. 'internal, ~needs-reboot'"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Agen Firmware"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "URI Basis Firmware"
@@ -630,10 +612,6 @@ msgid "Get all device flags supported by fwupd"
 msgstr "Dapatkan semua flag perangkat yang didukung oleh fwupd"
 
 #. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Dapatkan semua perangkat dan kemungkinan rilis"
-
-#. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Dapatkan semua perangkat yang mendukung pemutakhiran firmware"
 
@@ -661,7 +639,7 @@ msgstr "Mendapatkan rilis-rilis bagi sebuah peranti"
 msgid "Gets the results from the last update"
 msgstr "Mendapatkan hasil dari pemutakhiran terakhir"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "Perangkat keras sedang menunggu untuk ditancapkan kembali"
 
@@ -734,6 +712,7 @@ msgid "Issue"
 msgid_plural "Issues"
 msgstr[0] "Masalah"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Keyring"
 
@@ -863,10 +842,6 @@ msgstr "Hanya tampilkan nilai PCR tunggal"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Timpa path ESP default"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Menimpa peringatan dan paksa aksi"
 
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
@@ -1080,6 +1055,7 @@ msgstr "Matikan sekarang?"
 msgid "Sign data using the client certificate"
 msgstr "Tanda tangani data menggunakan sertifikat klien"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "Tanda tangani data menggunakan sertifikat klien"
@@ -1279,23 +1255,9 @@ msgstr "Memutakhirkan %s dari %s ke %s... "
 msgid "Updating %s…"
 msgstr "Memutakhirkan %s…"
 
-#. TRANSLATORS: message letting the user know an upgrade is available
-#. * %1 is the device name and %2 and %3 are version strings
-#, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "Pembaruan tersedia untuk %s dari %s ke %s"
-
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Unggah laporan hanya sekali ini saja, tetapi minta lagi untuk pembaruan di masa mendatang"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Unggah laporan sekarang?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Unggah laporan saat ini dan unggah laporan secara otomatis setelah menyelesaikan pembaruan di masa mendatang"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

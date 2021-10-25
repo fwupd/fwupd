@@ -5,10 +5,11 @@
  */
 
 #include "config.h"
+
 #include "fu-ccgx-dmc-common.h"
 
 const gchar *
-fu_ccgx_dmc_update_model_type_to_string (DmcUpdateModel val)
+fu_ccgx_dmc_update_model_type_to_string(DmcUpdateModel val)
 {
 	if (val == DMC_UPDATE_MODEL_UNKNOWN)
 		return "Unknown";

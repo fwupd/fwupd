@@ -1,18 +1,18 @@
 <firmware gtype="FuBcm57xxFirmware">
   <version>1.2.3</version>
-  <image gtype="FuBcm57xxStage1Image">
-    <version>7.8.9</version>
+  <firmware gtype="FuBcm57xxStage1Image">
+    <version_raw>0x123456</version_raw>
     <id>stage1</id>
     <idx>0x01</idx>
-    <filename>bcm57xx-stage1.bin</filename>
-  </image>
-  <image gtype="FuBcm57xxStage2Image">
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware gtype="FuBcm57xxStage2Image">
     <id>stage2</id>
     <data/> <!-- empty! -->
-  </image>
-  <image gtype="FuBcm57xxDictImage">
+  </firmware>
+  <firmware gtype="FuBcm57xxDictImage">
     <id>ape</id>
     <addr>0x7</addr>
     <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
-  </image>
+  </firmware>
 </firmware>

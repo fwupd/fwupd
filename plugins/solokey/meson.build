@@ -28,7 +28,6 @@ shared_module('fu_plugin_solokey',
   c_args : cargs,
   dependencies : [
     plugin_deps,
-    libjsonglib,
   ],
 )
 endif

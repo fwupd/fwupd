@@ -1,0 +1,12 @@
+<firmware gtype="FuCfuPayload">
+  <chunks>
+    <chunk>
+      <data>aGVsbG8gd29ybGQ=</data>
+      <addr>0x8001234</addr>
+    </chunk>
+    <chunk>
+      <data>aGVsbG8gd29ybGQ=</data>
+      <addr>0x8005678</addr>
+    </chunk>
+  </chunks>
+</firmware>

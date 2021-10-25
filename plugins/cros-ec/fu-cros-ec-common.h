@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <glib.h>
+#include <fwupdplugin.h>
 
-#include "fu-plugin.h"
+#include <glib.h>
 
 #define UPDATE_PROTOCOL_VERSION 6
 #define FU_CROS_EC_STRLEN	32
@@ -21,8 +21,8 @@
  * block_base:   offset of this PDU into the flash SPI.
  */
 typedef struct __attribute__((packed)) {
-	guint32  block_digest;
-	guint32  block_base;
+	guint32 block_digest;
+	guint32 block_base;
 	/* The actual payload goes here. */
 } update_command;
 
@@ -90,8 +90,8 @@ struct first_response_pdu {
 		/* cr50 (header_type = UPDATE_HEADER_TYPE_CR50) */
 		struct {
 			/* The below fields are present in versions 3 and up. */
-			guint32  backup_ro_offset;
-			guint32  backup_rw_offset;
+			guint32 backup_ro_offset;
+			guint32 backup_rw_offset;
 
 			/* The below fields are present in versions 4 and up. */
 			/*
@@ -132,12 +132,11 @@ enum first_response_pdu_header_type {
 };
 
 struct cros_ec_version {
-	gchar	 boardname[FU_CROS_EC_STRLEN];
-	gchar	 triplet[FU_CROS_EC_STRLEN];
-	gchar	 sha1[FU_CROS_EC_STRLEN];
+	gchar boardname[FU_CROS_EC_STRLEN];
+	gchar triplet[FU_CROS_EC_STRLEN];
+	gchar sha1[FU_CROS_EC_STRLEN];
 	gboolean dirty;
 };
 
-gboolean	fu_cros_ec_parse_version	(const gchar 		*version_raw,
-						 struct cros_ec_version *version,
-						 GError **error);
+gboolean
+fu_cros_ec_parse_version(const gchar *version_raw, struct cros_ec_version *version, GError **error);

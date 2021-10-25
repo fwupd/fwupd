@@ -1,0 +1,58 @@
+{
+  "name": "Lenovo USB-C Mini Dock",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/3b183e21869e4fce8bc81b3357de2fd1ee47b35e272e26169ebaee88faa39e03-Lenovo-Mini_Dock_New.cab",
+      "components": [
+        {
+          "name": "tier1",
+          "version": "4.154",
+          "guids": [
+            "f281c1df-c3d5-5f8a-984d-e9548ffc95fe"
+          ]
+        },
+        {
+          "name": "tier2",
+          "version": "4.43",
+          "guids": [
+            "d636c717-44c4-5fcf-9d7f-b96f9c5f6608"
+          ]
+        },
+        {
+          "name": "tier3",
+          "version": "138.4.24.38",
+          "guids": [
+            "3ae6610b-5c33-5714-96e3-05735eb9b2a5"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/f55a307af1dc66d46bc12460ced828b31b2ee2a78c1d58d4f474958c2c6d134e-Lenovo-Mini_Dock_Old.cab",
+      "components": [
+        {
+          "name": "tier1",
+          "version": "4.94",
+          "guids": [
+            "f281c1df-c3d5-5f8a-984d-e9548ffc95fe"
+          ]
+        },
+        {
+          "name": "tier2",
+          "version": "4.33",
+          "guids": [
+            "d636c717-44c4-5fcf-9d7f-b96f9c5f6608"
+          ]
+        },
+        {
+          "name": "tier3",
+          "version": "138.4.23.38",
+          "guids": [
+            "3ae6610b-5c33-5714-96e3-05735eb9b2a5"
+          ]
+        }
+      ]
+    }
+  ]
+}

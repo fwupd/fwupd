@@ -1,7 +1,0 @@
-[DESCRIPTION]
-.PP
-This manual page documents briefly the \fBdbxtool\fR command.
-.PP
-\fBdbxtool\fR allows a user to operate on the UEFI dbx revokation list.
-This tool can be used to list the current dbx contents or update it to a newer
-version.

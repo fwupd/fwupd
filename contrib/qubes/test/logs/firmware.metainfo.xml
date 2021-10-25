@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="firmware">
+  <id>com.dell.uefi6180aaaa.firmware</id>
+  <name>Latitude 7390 2-in-1</name>
+  <summary>Firmware for the Dell Latitude 7390 2-in-1</summary>
+  <description>
+    <p>Updating the system firmware improves performance.</p>
+  </description>
+  <provides>
+    <firmware type="flashed">6180aaaa-5529-4bbf-b4fd-65b4f788de5b</firmware>
+  </provides>
+  <url type="homepage">http://support.dell.com/</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>proprietary</project_license>
+  <developer_name>Dell Inc.</developer_name>
+  <categories>
+    <category>X-System</category>
+  </categories>
+  <custom>
+    <value key="LVFS::VersionFormat">quad</value>
+    <value key="LVFS::VersionFormat">dell-bios</value>
+    <value key="LVFS::UpdateProtocol">org.uefi.capsule</value>
+  </custom>
+  <releases>
+    <release version="P1.1" date="2020-01-22" urgency="critical">
+      <checksum type="sha1" filename="firmware.bin" target="content">b03252481573f600c7f530d7a4c24bd62c810412</checksum>
+      <checksum type="sha256" filename="firmware.bin" target="content">bd866bcd2b5964da4b20d3f57128746efb7afefe648cf7284f2fae399225f1ac</checksum>
+      <description>
+        <p>This stable release fixes the following issues:</p>
+        <ul>
+          <li>Firmware updates to address the Intel Security Advisories.</li>
+          <li>Enhanced the system firmware auto recovery function when system firmware does not work.</li>
+          <li>Updated the BIOS warning message that is displayed when an AC adapter with low wattage is connected to the system.</li>
+          <li>Updated the Intel CPU Microcode.</li>
+        </ul>
+      </description>
+      <size type="installed">14699068</size>
+      <issues>
+        <issue type="cve">CVE-2019-14607</issue>
+        <issue type="cve">CVE-2019-11157</issue>
+      </issues>
+    </release>
+  </releases>
+</component>

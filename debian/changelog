@@ -1,3 +1,11 @@
+fwupd (1.7.0-1) UNRELEASED; urgency=medium
+
+  * New upstream version (1.7.0)
+  * Update debian/control and debian/copyright for changes upstream
+  * Drop all patches, upstream
+
+ -- Mario Limonciello <superm1@gmail.com>  Mon, 25 Oct 2021 10:58:15 -0500
+
 fwupd (1.5.7-5) unstable; urgency=medium
 
   * Change dependency versioning strategy for the signed fwupd
@@ -778,7 +786,7 @@ fwupd (0.9.6-1) unstable; urgency=medium
   * trivial: debian: add missing dh-strip-nondeterminism dependency
   * trivial: debian: update standards version
   * trivial: debian: remove transient items on purge (Closes: #868464, #868465)
-  * trivial: debian: recusively cleanup on purge
+  * trivial: debian: recursively cleanup on purge
   * trivial: fix various spelling errors
   * debian: run lintian as part of CI
   * Add capability to enable test suite via /etc/fwupd.conf

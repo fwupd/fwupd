@@ -2,6 +2,8 @@
 set -e
 set -x
 
+export QUBES_OPTION=
+
 # remove when tpm2-tss is fixed
 mkdir -p /usr/include/tss
 
@@ -9,6 +11,11 @@ mkdir -p /usr/include/tss
 if [ "$OS" = "debian-s390x" ]; then
 	./contrib/ci/debian_s390x.sh
 	exit 0
+fi
+
+# Set Qubes Os vars if -Dqubes=true is parameter
+if [ "$QUBES" = "true" ]; then
+	export QUBES_OPTION='-Dqubes=true'
 fi
 
 #prepare
@@ -19,7 +26,7 @@ VERSION=`git describe | sed 's/-/+r/;s/-/+/'`
 rm -rf build/
 mkdir -p build
 shopt -s extglob
-cp -lR !(build|dist) build/
+cp -lR !(build|dist|venv) build/
 pushd build
 mv contrib/debian .
 sed s/quilt/native/ debian/source/format -i
@@ -29,17 +36,14 @@ sed s/quilt/native/ debian/source/format -i
 #check if we have all deps available
 #if some are missing, we're going to use subproject instead and
 #packaging CI will fail
-./contrib/ci/generate_dependencies.py  | xargs apt install -y || true
+./contrib/ci/fwupd_setup_helpers.py install-dependencies -o debian --yes || true
 if ! dpkg-checkbuilddeps; then
 	./contrib/ci/ubuntu.sh
 	exit 0
 fi
 
-#clone test firmware
-if [ "$CI_NETWORK" = "true" ]; then
-	./contrib/ci/get_test_firmware.sh
-	export G_TEST_SRCDIR=`pwd`/fwupd-test-firmware/installed-tests
-fi
+#clone test firmware if necessary
+. ./contrib/ci/get_test_firmware.sh
 
 #disable unit tests if fwupd is already installed (may cause problems)
 if [ -x /usr/lib/fwupd/fwupd ]; then
@@ -47,7 +51,8 @@ if [ -x /usr/lib/fwupd/fwupd ]; then
 fi
 #build the package
 EDITOR=/bin/true dch --create --package fwupd -v $VERSION "CI Build"
-debuild --no-lintian --preserve-envvar CI --preserve-envvar CC
+debuild --no-lintian --preserve-envvar CI --preserve-envvar CC \
+	--preserve-envvar QUBES_OPTION
 
 #check lintian output
 #suppress tags that are side effects of building in docker this way
@@ -71,7 +76,7 @@ if [ ! -f /.dockerenv ]; then
 fi
 
 #test the packages install
-PACKAGES=$(ls ../*.deb | grep -v 'fwupd-tests\|dbgsym')
+PACKAGES=$(find .. -type f -name "*.deb" | grep -v 'fwupd-tests\|dbgsym')
 dpkg -i $PACKAGES
 
 # run the installed tests

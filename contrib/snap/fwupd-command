@@ -23,6 +23,7 @@ fi
 # re-generate gio modules in local cache
 needs_update=true
 if [ -f $SNAP_USER_DATA/.last_revision ]; then
+  # shellcheck source=/dev/null
   . $SNAP_USER_DATA/.last_revision 2>/dev/null
 fi
 if [ "$SNAP_DESKTOP_LAST_REVISION" = "$SNAP_REVISION" ]; then

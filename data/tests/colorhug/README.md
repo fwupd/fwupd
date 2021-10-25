@@ -1,4 +1,4 @@
-# Generating the p7b file manually:
+# Generating the p7b file manually
 
     certtool --p7-detached-sign --p7-time \
         --load-privkey LVFS/pkcs7/secure-lvfs.rhcloud.com.key \

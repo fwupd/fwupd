@@ -1,5 +1,0 @@
-fwupd-SIGNARCH-signed (1) unstable; urgency=medium
-
-  * Add template source package for signing
-
- -- Steve McIntyre <93sam@debian.org>  Sat, 07 Apr 2018 12:44:55 +0100

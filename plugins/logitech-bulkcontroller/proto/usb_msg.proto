@@ -1,0 +1,204 @@
+/*
+ * Copyright (c) 1999-2021 Logitech, Inc.
+ * All Rights Reserved
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+syntax = "proto3";
+
+package logi.device.proto;
+
+option java_package = "com.logitech.vc.proto";
+
+import "device_info.proto";
+import "firmware_update.proto";
+import "crash_info.proto";
+import "device_mode.proto";
+import "device_attestation.proto";
+import "rightsight.proto";
+import "ota_manifest.proto";
+import "device_time.proto";
+import "ble_cfg.proto";
+import "antiflicker.proto";
+import "device_request.proto";
+
+/**
+ *
+ * Header message to be included in UsbMsg. This contains
+ *  message metadata that aids in processing of messages
+ */
+message Header
+{
+	/**
+	 * A unique id of the message. If responding after receiving
+	 * data, the value stored in this field should be used in the ack message
+	 * msgId field
+	 */
+	string id = 1;
+	/**
+	 * A timestamp indicating when the message was
+	 * sent. This is the number of milliseconds that have
+	 * elapsed since the epoch, in string format
+	 */
+	string timestamp = 2;
+}
+
+/**
+ * The Ack message.
+ * This is to be included in UsbMsg
+ */
+message Acknowledge
+{
+	/**
+	 * The message Id.  This should be the same value
+	 *  in UsbMsg.Header.id field
+	 */
+	string msgId = 1;
+
+	/**
+	 * The message processing result.  true indicates message was
+	 * successfully processed, false otherwise.
+	 */
+	bool success = 2;
+}
+
+/**
+ * The Kong Event message.
+ *  Anything that is not part of
+ *   Request/Response messaging, but is being sent to mqtt distributor
+ *   should be considered as a KongEvent, and forwarded to device host.
+ * This is to be included in UsbMsg
+ */
+message KongEvent
+{
+	/**
+	 * mqtt_event contains actual mqtt message
+	 */
+	string mqtt_event = 1;
+}
+
+/**
+ * Sent by Kong sync-agent.
+ * If Kong sync-agent starts-up and it is in Device mode, then
+ * it can send this event.  When PC sync-agent receives this event,
+ * it should send a TransitionToDeviceModeRequest.
+ * This is to be included in UsbMsg
+ */
+message HandshakeEvent
+{
+	/**
+	 * Unused. Reserved for future use.
+	 */
+	bool reserved = 1;
+}
+
+/**
+ * The enclosing message.
+ * This is the root message of all messagesszx
+ */
+message UsbMsg
+{
+	/**
+	 * Header for the message containing additional
+	 * message metadata.
+	 */
+	Header header = 1;
+
+	/**
+	 * The actual message being sent.  One of these must be
+	 *   included
+	 */
+	oneof message
+	{
+		/**
+		 * Ack message
+		 */
+		Acknowledge ack = 2;
+		/**
+		 * Request message
+		 */
+		Request request = 3;
+		/**
+		 * Response message
+		 */
+		Response response = 4;
+		/**
+		 * Event
+		 */
+		Event event = 5;
+	}
+}
+
+/**
+ * The Request message.
+ * This is to be included in UsbMsg
+ */
+message Request
+{
+	oneof payload
+	{
+		GetDeviceInfoRequest get_device_info_request = 2;
+		UpdateNowRequest update_now_request = 3;
+		SendCrashDumpRequest crash_dump_request = 4;
+		TransitionToDeviceModeRequest transition_to_devicemode_request = 5;
+		GetCertificateChainRequest get_certificate_chain_request = 6;
+		SetRightSightConfigurationRequest set_right_sight_configuration_request = 7;
+		GetManifestBodyRequest get_manifest_body_request = 8;
+		SendCrashDumpRequestv2 crash_dump_request_v2 = 9;
+		SetDeviceTimeRequest set_device_time_request = 10;
+		SetAntiFlickerConfigurationRequest set_anti_flicker_configuration_request = 11;
+		SetBLECfgRequest set_ble_cfg_request = 12;
+		SetDeprovisionRequest set_deprovision_request = 13;
+		RebootDeviceRequest reboot_device_request = 14;
+		SetSpeakerBoostRequest speaker_boost_request = 15;
+		SetNoiseReductionRequest noise_reduction_request = 16;
+		SetReverbModeRequest reverb_mode_request = 17;
+		GenerateCrashDumpRequest generate_bug_report_request = 18;
+		SendCertificateDataRequest send_certificate_data_request = 19;
+	}
+}
+
+/**
+ * The Response message.
+ * This is to be included in UsbMsg
+ */
+message Response
+{
+	oneof payload
+	{
+		GetDeviceInfoResponse get_device_info_response = 2;
+		UpdateNowResponse update_now_response = 3;
+		SendCrashDumpResponse crash_dump_response = 4;
+		TransitionToDeviceModeResponse transition_to_devicemode_response = 5;
+		GetCertificateChainResponse get_certificate_chain_response = 6;
+		SetRightSightConfigurationResponse set_right_sight_configuration_response = 7;
+		GetManifestBodyResponse get_manifest_body_response = 8;
+		SendCrashDumpResponsev2 crash_dump_response_v2 = 9;
+		SetAntiFlickerConfigurationResponse set_anti_flicker_configuration_response = 11;
+		SetBLECfgResponse set_ble_cfg_response = 12;
+		SetDeprovisionResponse set_deprovision_response = 13;
+		RebootDeviceResponse reboot_device_response = 14;
+
+		SetSpeakerBoostResponse speaker_boost_response = 15;
+		SetNoiseReductionResponse noise_reduction_response = 16;
+		SetReverbModeResponse reverb_mode_response = 17;
+		GenerateCrashDumpResponse generate_bug_report_response = 18;
+		SendCertificateDataResponse send_certificate_data_response = 19;
+	}
+}
+
+/**
+ * The Event message.
+ * This is to be included in UsbMsg
+ */
+message Event
+{
+	oneof payload
+	{
+		KongEvent kong_event = 1;
+		SendCrashDumpEvent send_crash_dump_event = 2;
+		CrashDumpAvailableEvent crash_dump_available_event = 3;
+		HandshakeEvent handshake_event = 4;
+	}
+}

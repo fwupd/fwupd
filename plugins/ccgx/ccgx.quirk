@@ -1,74 +1,74 @@
 # Lenovo ThinkPad USB-C Dock Gen2
-[DeviceInstanceId=USB\VID_17EF&PID_A38F]
+[USB\VID_17EF&PID_A38F]
 Plugin = ccgx
 GType = FuCcgxHidDevice
 ParentGuid = USB\VID_17EF&PID_A391
 
-[DeviceInstanceId=USB\VID_04B4&PID_521A]
+[USB\VID_04B4&PID_521A]
 Plugin = ccgx
 GType = FuCcgxHpiDevice
 
-[DeviceInstanceId=USB\VID_04B4&PID_521A&SID_1F00&APP_6D64]
-ImageKind = dual-asymmetric
+[USB\VID_04B4&PID_521A&SID_1F00&APP_6D64]
+CcgxImageKind = dual-asymmetric
 Name = ThinkPad USB-C Dock Gen2 PD Controller
 ParentGuid = USB\VID_17EF&PID_A391
 InstallDuration = 120
 RemoveDelay = 60000
 
-[DeviceInstanceId=USB\VID_04B4&PID_521A&SID_1F00&APP_6D64&MODE_FW1]
+[USB\VID_04B4&PID_521A&SID_1F00&APP_6D64&MODE_FW1]
 Summary = CCGx Power Delivery Device (Bootloader)
 Flags = is-bootloader
 
-[DeviceInstanceId=USB\VID_04B4&PID_521A&SID_1F00&APP_6D64&MODE_FW2]
+[USB\VID_04B4&PID_521A&SID_1F00&APP_6D64&MODE_FW2]
 Summary = CCGx Power Delivery Device
 CounterpartGuid = USB\VID_04B4&PID_521A&SID_1F00&APP_6D64&MODE_FW1
 
 # Lenovo ThinkPad USB-C Dock Hybrid
-[DeviceInstanceId=USB\VID_17EF&PID_A354]
+[USB\VID_17EF&PID_A354]
 Plugin = ccgx
 GType = FuCcgxHidDevice
 ParentGuid = USB\VID_17EF&PID_1028
 
-[DeviceInstanceId=USB\VID_17EF&PID_A35F]
+[USB\VID_17EF&PID_A35F]
 Plugin = ccgx
 GType = FuCcgxHidDevice
 ParentGuid = USB\VID_17EF&PID_1028
 
-[DeviceInstanceId=USB\VID_04B4&PID_5218]
+[USB\VID_04B4&PID_5218]
 Plugin = ccgx
 GType = FuCcgxHpiDevice
 
-[DeviceInstanceId=USB\VID_04B4&PID_5218&SID_1F00&APP_6432]
-ImageKind = dual-symmetric
+[USB\VID_04B4&PID_5218&SID_1F00&APP_6432]
+CcgxImageKind = dual-symmetric
 Name = ThinkPad USB-C Dock Hybrid PD Controller
 ParentGuid = USB\VID_17EF&PID_1028
 InstallDuration = 120
 RemoveDelay = 60000
 
-[DeviceInstanceId=USB\VID_04B4&PID_5218&SID_1F00&APP_6432&MODE_FW1]
+[USB\VID_04B4&PID_5218&SID_1F00&APP_6432&MODE_FW1]
 Summary = CCGx Power Delivery Device (Symmetric FW1)
 
-[DeviceInstanceId=USB\VID_04B4&PID_5218&SID_1F00&APP_6432&MODE_FW2]
+[USB\VID_04B4&PID_5218&SID_1F00&APP_6432&MODE_FW2]
 Summary = CCGx Power Delivery Device (Symmetric FW2)
 
 # HP USB-C Dock G5
-[DeviceInstanceId=USB\VID_03F0&PID_046B]
+[USB\VID_03F0&PID_046B]
 Plugin = ccgx
 GType = FuCcgxDmcDevice
 Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_0363
 Name = HP USB-C Dock G5
-ImageKind = dmc-composite
+CcgxImageKind = dmc-composite
 InstallDuration = 233
 RemoveDelay = 203000
 
 # HP USB-C/A Universal Dock G2
-[DeviceInstanceId=USB\VID_03F0&PID_0A6B]
+[USB\VID_03F0&PID_0A6B]
 Plugin = ccgx
 GType = FuCcgxDmcDevice
 Summary = Dock Management Controller Device
 ParentGuid = USB\VID_03F0&PID_096B
 Name = HP USB-C/A Universal Dock G2
-ImageKind = dmc-composite
+CcgxImageKind = dmc-composite
 InstallDuration = 180
 RemoveDelay = 162000

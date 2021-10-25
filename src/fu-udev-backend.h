@@ -8,7 +8,8 @@
 
 #include "fu-backend.h"
 
-#define FU_TYPE_UDEV_BACKEND (fu_udev_backend_get_type ())
-G_DECLARE_FINAL_TYPE (FuUdevBackend, fu_udev_backend, FU, UDEV_BACKEND, FuBackend)
+#define FU_TYPE_UDEV_BACKEND (fu_udev_backend_get_type())
+G_DECLARE_FINAL_TYPE(FuUdevBackend, fu_udev_backend, FU, UDEV_BACKEND, FuBackend)
 
-FuBackend	*fu_udev_backend_new		(GPtrArray	*subsystems);
+FuBackend *
+fu_udev_backend_new(GPtrArray *subsystems);

@@ -12,6 +12,7 @@ A clear and concise description of what you are wondering about.
 
 **fwupd version information**
 Please provide the version of the daemon and client if applicable to your current installation of `fwupd`.
+
 ```shell
-$ fwupdmgr --version
+fwupdmgr --version
 ```

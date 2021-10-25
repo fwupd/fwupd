@@ -2,6 +2,7 @@
  * Copyright (C) 2016 Mario Limonciello <mario.limonciello@dell.com>
  * Copyright (C) 2017 Peichen Huang <peichenhuang@tw.synaptics.com>
  * Copyright (C) 2019 Richard Hughes <richard@hughsie.com>
+ * Copyright (C) 2021 Apollo Ling <apollo.ling@synaptics.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -10,7 +11,7 @@
 
 #include <glib.h>
 
-#define SYNAPTICS_FLASH_MODE_DELAY	3	/* seconds */
+#define SYNAPTICS_FLASH_MODE_DELAY 3 /* seconds */
 
 /**
  * FuSynapticsMstMode:
@@ -33,10 +34,15 @@ typedef enum {
 	FU_SYNAPTICS_MST_FAMILY_TESLA,
 	FU_SYNAPTICS_MST_FAMILY_LEAF,
 	FU_SYNAPTICS_MST_FAMILY_PANAMERA,
+	FU_SYNAPTICS_MST_FAMILY_CAYENNE,
+	FU_SYNAPTICS_MST_FAMILY_SPYDER,
 	/*<private >*/
 	FU_SYNAPTICS_MST_FAMILY_LAST
 } FuSynapticsMstFamily;
 
-const gchar		*fu_synaptics_mst_mode_to_string		(FuSynapticsMstMode	 mode);
-const gchar		*fu_synaptics_mst_family_to_string	(FuSynapticsMstFamily	 family);
-FuSynapticsMstFamily	 fu_synaptics_mst_family_from_chip_id	(guint16		 chip_id);
+const gchar *
+fu_synaptics_mst_mode_to_string(FuSynapticsMstMode mode);
+const gchar *
+fu_synaptics_mst_family_to_string(FuSynapticsMstFamily family);
+FuSynapticsMstFamily
+fu_synaptics_mst_family_from_chip_id(guint16 chip_id);

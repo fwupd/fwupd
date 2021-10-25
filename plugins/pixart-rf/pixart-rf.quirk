@@ -1,47 +1,99 @@
 # Pixart 2801
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2801]
+[HIDRAW\VEN_093A&DEV_2801]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Pixart 2860
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2860]
+[HIDRAW\VEN_093A&DEV_2860]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Pixart 2802
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2802]
+[HIDRAW\VEN_093A&DEV_2802]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Pixart 2822
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2822]
+[HIDRAW\VEN_093A&DEV_2822]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Pixart 2861
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2861]
+[HIDRAW\VEN_093A&DEV_2861]
 Plugin = pixart_rf
+GType = FuPxiReceiverDevice
 
 # Pixart 2862
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2862]
+[HIDRAW\VEN_093A&DEV_2862]
 Plugin = pixart_rf
+GType = FuPxiReceiverDevice
 
 # Pixart 2452
-[DeviceInstanceId=HIDRAW\VEN_093A&DEV_2452]
+[HIDRAW\VEN_093A&DEV_2452]
 Plugin = pixart_rf
+GType = FuPxiReceiverDevice
 
 # Primax Mouse
-[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EEF]
+[HIDRAW\VEN_0461&DEV_4EEF]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Primax US KB
-[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EEE]
+[HIDRAW\VEN_0461&DEV_4EEE]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Primax UK KB
-[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EF4]
+[HIDRAW\VEN_0461&DEV_4EF4]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
 # Primax JP KB
-[DeviceInstanceId=HIDRAW\VEN_0461&DEV_4EF5]
+[HIDRAW\VEN_0461&DEV_4EF5]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
 
-# Chicony Cheetos
-[DeviceInstanceId=HIDRAW\VEN_04F2&DEV_2051]
+# Chicony Cheetos keyboard
+[HIDRAW\VEN_04F2&DEV_2051]
 Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# Chicony Cheetos mouse
+[HIDRAW\VEN_04F2&DEV_2103]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# Elecom Bluetooth Keyboard
+[HIDRAW\VEN_056E&DEV_1095]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# Targus BT Mouse AMB844
+[HIDRAW\VEN_1048&DEV_1013]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# AKR123 Bluetooth Keyboard
+[HIDRAW\VEN_04F2&DEV_2199]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# AMR120 Bluetooth Mouse
+[HIDRAW\VEN_04F2&DEV_2198]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# j5 Wireless Keyboard
+[HIDRAW\VEN_2DE5&DEV_2051]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# j5 Wireless Mouse
+[HIDRAW\VEN_2DE5&DEV_2103]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# Primax Black Mocha KB
+[HIDRAW\VEN_0461&DEV_4EFA]
+Plugin = pixart_rf
+GType = FuPxiBleDevice

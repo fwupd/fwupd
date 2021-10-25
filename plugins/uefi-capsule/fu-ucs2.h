@@ -9,9 +9,9 @@
 
 #include <glib.h>
 
-gsize		 fu_ucs2_strlen			(const guint16	*str,
-						 gssize		 limit);
-guint16		*fu_uft8_to_ucs2		(const gchar	*str,
-						 gssize		 max);
-gchar		*fu_ucs2_to_uft8		(const guint16	*str,
-						 gssize		 max);
+gsize
+fu_ucs2_strlen(const guint16 *str, gssize limit);
+guint16 *
+fu_uft8_to_ucs2(const gchar *str, gssize max);
+gchar *
+fu_ucs2_to_uft8(const guint16 *str, gssize max);

@@ -4,33 +4,52 @@ Source: https://github.com/fwupd/fwupd
 
 Files: *
 Copyright: 
+	    Norbert Kaminski  <norbert.kaminski@3mdeb.com>
+	    Norbert Kamiński  <norbert.kaminski@3mdeb.com>
+	    Rafal Wojtczuk  <rafal@invisiblethingslab.com>
+	   3mdeb Embedded Systems Consulting
 	   9elements Agency GmbH <patrick.rudolph@9elements.com>
 	   Aleix Pol <aleixpol@kde.org>
 	   Aleksander Morgado <aleksander@aleksander.es>
 	   Andrew Duggan
+	   Apollo Ling <apollo.ling@synaptics.com>
 	   Benson Leung <bleung@chromium.org>
 	   Christian J. Kellner <christian@kellner.me>
 	   Cypress Semiconductor Corporation.
+	   Daniel Campello <campello@chromium.org>
 	   Dell Inc.
 	   Dell, Inc.
 	   Evan Lojewski
+	   Free Software Foundation, Inc. <https://fsf.org/>
 	   Fresco Logic
+	   George Popoola <gpopoola@google.com>
 	   Google, Inc.
 	   H.J. Lu <hjl.tools@gmail.com>
 	   Intel Corporation.
 	   Intel, Inc.
+	   Jarvis Jiang <jarvis.w.jiang@gmail.com>
 	   Javier Martinez Canillas <javierm@redhat.com>
 	   Jeremy Soller <jeremy@system76.com>
 	   Jimmy Yu <Jimmy_yu@pixart.com>
 	   Kalev Lember <klember@redhat.com>
+	   Lars Gustaebel <lars@gustaebel.de>
 	   Lennart Poettering <lennart@poettering.net>
+	   Mario Limonciello
+	   Mario Limonciello <mario.limonciello@amd.com>
 	   Mario Limonciello <mario.limonciello@dell.com>
+	   Mario Limonciello <superm1@gmail.com>
 	   Matthias Klumpp <matthias@tenstral.net>
 	   Max Ehrlich maxehr@gmail.com
+	   Michael Cheng <michael.cheng@emc.com.tw>
+	   Michał Kopeć <michal.kopec@3mdeb.com>
+	   Norbert Kamiński <norbert.kaminski@3mdeb.com>
 	   Peichen Huang <peichenhuang@tw.synaptics.com>
 	   Peter Jones <pjones@redhat.com>
+	   Peter Marheine <pmarheine@chromium.org>
 	   Philip Withnall <philip@tecnocode.co.uk>
 	   Philip Withnall <pwithnall@endlessos.org>
+	   Python Software Foundation.
+	   Quectel Wireless Solutions Co., Ltd.
 	   Realtek Corporation
 	   Realtek Semiconductor Corporation
 	   Red Hat, Inc.
@@ -38,11 +57,20 @@ Copyright:
 	   Richard Hughes <richard@hughsie.com>
 	   Ricky Wu <ricky_wu@realtek.com> <spring1527@gmail.com>
 	   Ryan Chang <ryan.chang@synaptics.com>
+	   Sean Rhodes <sean@starlabs.systems>
+	   Sergii Dmytruk <sergii.dmytruk@3mdeb.com>
 	   Synaptics
 	   Synaptics Inc
 	   Synaptics Inc.
 	   Synaptics Incorporated
+	   Synaptics Incorporated <simon.ho@synaptics.com>
+	   TUXEDO Computers GmbH
+	   The Android Open Source Project
+	   The Python Software Foundation.
+	   Twain Byrnes <binarynewts@google.com>
 	   VIA Corporation
+	   Vinay Sajip.
+	   Xiaotian Cui <xtcui@analogixsemi.com>
 	   boger wang <boger@goodix.com>
 License: LGPL-2.1+
 

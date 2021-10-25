@@ -9,7 +9,7 @@
 #include "fu-ep963x-common.h"
 
 const gchar *
-fu_ep963x_smbus_strerror (guint8 val)
+fu_ep963x_smbus_strerror(guint8 val)
 {
 	if (val == FU_EP963_SMBUS_ERROR_NONE)
 		return "none";

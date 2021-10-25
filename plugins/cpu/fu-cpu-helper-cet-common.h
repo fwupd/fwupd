@@ -7,4 +7,5 @@
 
 #pragma once
 
-void		 fu_cpu_helper_cet_testfn1		(void);
+void
+fu_cpu_helper_cet_testfn1(void);

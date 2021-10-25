@@ -5,6 +5,8 @@
 # Translators:
 # dhead666 <myfoolishgames@gmail.com>, 2015
 # GenghisKhan <genghiskhan@gmx.ca>, 2015
+# Omeritzics Games <omeritzicschwartz@gmail.com>, 2021
+# Yaron Shahrabani <sh.yaron@gmail.com>, 2021
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -16,35 +18,534 @@ msgstr ""
 "Language: he\n"
 "Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n == 2 && n % 1 == 0) ? 1: (n % 10 == 0 && n % 1 == 0 && n > 10) ? 2 : 3;\n"
 
+#. TRANSLATORS: more than a minute
+#, c-format
+msgid "%.0f minute remaining"
+msgid_plural "%.0f minutes remaining"
+msgstr[0] "נותרה דקה %.0f"
+msgstr[1] "נותרו %.0f דקות"
+msgstr[2] "נותרו %.0f דקות"
+msgstr[3] "נותרו %.0f דקות"
+
+#. TRANSLATORS: battery refers to the system power source
+#, c-format
+msgid "%s Battery Update"
+msgstr "עדכון סוללה %s"
+
+#. TRANSLATORS: camera can refer to the laptop internal
+#. * camera in the bezel or external USB webcam
+#, c-format
+msgid "%s Camera Update"
+msgstr "עדכון מצלמה %s"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Secure Boot`
+#, c-format
+msgid "%s Configuration Update"
+msgstr "עדכון הגדרות %s"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Unifying Receiver`
+#, c-format
+msgid "%s Device Update"
+msgstr "עדכון התקן %s"
+
+#. TRANSLATORS: the EC is typically the keyboard controller chip,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Embedded Controller Update"
+msgstr "עדכון בקר משובץ של %s"
+
+#. TRANSLATORS: Keyboard refers to an input device for typing
+#, c-format
+msgid "%s Keyboard Update"
+msgstr "עדכון מקלדת %s"
+
+#. TRANSLATORS: Mouse refers to a handheld input device
+#, c-format
+msgid "%s Mouse Update"
+msgstr "עדכון עכבר %s"
+
+#. TRANSLATORS: Network Interface refers to the physical
+#. * PCI card, not the logical wired connection
+#, c-format
+msgid "%s Network Interface Update"
+msgstr "עדכון מנשק רשת %s"
+
+#. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
+#, c-format
+msgid "%s Storage Controller Update"
+msgstr "עדכון בקר אחסון %s"
+
+#. TRANSLATORS: the entire system, e.g. all internal devices,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s System Update"
+msgstr "עדכון מערכת %s"
+
+#. TRANSLATORS: TPM refers to a Trusted Platform Module
+#, c-format
+msgid "%s TPM Update"
+msgstr "עדכון TPM %s"
+
+#. TRANSLATORS: TouchPad refers to a flat input device
+#, c-format
+msgid "%s Touchpad Update"
+msgstr "עדכון משטח מגע %s"
+
+#. TRANSLATORS: this is the fallback where we don't know if the release
+#. * is updating the system, the device, or a device class, or something else
+#. --
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Update"
+msgstr "עדכון %s"
+
+#. TRANSLATORS: warn the user before updating, %1 is a device name
+#, c-format
+msgid "%s and all connected devices may not be usable while updating."
+msgstr "%s וכל ההתקנים המחוברים עשויים לא להיות שמישים בעת העדכון."
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s manufacturing mode"
+msgstr "מצב ייצור של %s"
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s version"
+msgstr "גרסת %s"
+
+#. TRANSLATORS: duration in days!
+#, c-format
+msgid "%u day"
+msgid_plural "%u days"
+msgstr[0] "יום %u"
+msgstr[1] "יומיים (%u)"
+msgstr[2] "%u ימים"
+msgstr[3] "%u ימים"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u hour"
+msgid_plural "%u hours"
+msgstr[0] "שעה %u"
+msgstr[1] "שעתיים (%u)"
+msgstr[2] "%u שעות"
+msgstr[3] "%u שעות"
+
+#. TRANSLATORS: how many local devices can expect updates now
+#, c-format
+msgid "%u local device supported"
+msgid_plural "%u local devices supported"
+msgstr[0] "יש תמיכה בהתקן מקומי %u"
+msgstr[1] "יש תמיכה ב־%u התקנים מקומיים"
+msgstr[2] "יש תמיכה ב־%u התקנים מקומיים"
+msgstr[3] "יש תמיכה ב־%u התקנים מקומיים"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "דקה %u"
+msgstr[1] "%u דקות"
+msgstr[2] "%u דקות"
+msgstr[3] "%u דקות"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "שנייה %u"
+msgstr[1] "%u שניות"
+msgstr[2] "%u שניות"
+msgstr[3] "%u שניות"
+
+#. TRANSLATORS: this is shown as a suffix for obsoleted tests
+msgid "(obsoleted)"
+msgstr "(לא תקף עוד)"
+
+#. TRANSLATORS: the user needs to do something, e.g. remove the device
+msgid "Action Required:"
+msgstr "פעולה נדרשת:"
+
+#. TRANSLATORS: command description
+msgid "Activate devices"
+msgstr "הפעלת התקנים"
+
+#. TRANSLATORS: command description
+msgid "Activate pending devices"
+msgstr "ההתקנים הממתינים מופעלים"
+
+msgid "Activate the new firmware on the device"
+msgstr "הפעלת קושחה חדשה בהתקן"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update"
+msgstr "עדכון הקושחה מופעל"
+
+#. TRANSLATORS: shown when shutting down to switch to the new version
+msgid "Activating firmware update for"
+msgstr "עדכון הקושחה מופעל עבור"
+
+#. TRANSLATORS: the age of the metadata
+msgid "Age"
+msgstr "גיל"
+
+#. TRANSLATORS: should the remote still be enabled
+msgid "Agree and enable the remote?"
+msgstr "להסכים ולהפעיל את המרוחק?"
+
 #. TRANSLATORS: this is a command alias, e.g. 'get-devices'
 #, c-format
 msgid "Alias to %s"
 msgstr "כינוי עבור %s"
 
+#. TRANSLATORS: command line option
+msgid "Allow downgrading firmware versions"
+msgstr "לאפשר שנמוך גרסאות קושחה"
+
+#. TRANSLATORS: command line option
+msgid "Allow reinstalling existing firmware versions"
+msgstr "לאפשר להתקין מחדש גרסאות קושחה קיימות"
+
+#. TRANSLATORS: command line option
+msgid "Allow switching firmware branch"
+msgstr "לאפשר מעבר ענפי קושחה"
+
+#. TRANSLATORS: explain why we want to reboot
+msgid "An update requires a reboot to complete."
+msgstr "נדרשת הפעלה מחדש להשלמת עדכון."
+
+#. TRANSLATORS: explain why we want to shutdown
+msgid "An update requires the system to shutdown to complete."
+msgstr "נדרש כיבוי המערכת כדי להשלים עדכון."
+
+#. TRANSLATORS: command line option
+msgid "Answer yes to all questions"
+msgstr "לענות כן על כל השאלות"
+
+#. TRANSLATORS: command line option
+msgid "Apply firmware updates"
+msgstr "החלת עדכוני קושחה"
+
+#. TRANSLATORS: command line option
+msgid "Apply update even when not advised"
+msgstr "החלת עדכון אפילו אם לא מומלץ"
+
+#. TRANSLATORS: command line option
+msgid "Apply update files"
+msgstr "החלת קובצי עדכון"
+
+#. TRANSLATORS: actually sending the update to the hardware
+msgid "Applying update…"
+msgstr "העדכון חל…"
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "Approved firmware:"
+msgid_plural "Approved firmware:"
+msgstr[0] "קושחה מאומתת:"
+msgstr[1] "קושחה מאומתת:"
+msgstr[2] "קושחה מאומתת:"
+msgstr[3] "קושחה מאומתת:"
+
+#. TRANSLATORS: stop nagging the user
+msgid "Ask again next time?"
+msgstr "לשאול שוב בפעם הבאה?"
+
+#. TRANSLATORS: command description
+msgid "Attach to firmware mode"
+msgstr "הצמדה למצב קושחה"
+
+#. TRANSLATORS: waiting for user to authenticate
+msgid "Authenticating…"
+msgstr "מתבצע אימות…"
+
+#. TRANSLATORS: user needs to run a command
+msgid "Authentication details are required"
+msgstr "פרטי אימות נחוצים"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on a removable device"
+msgstr "נדרש אימות כדי לשנמך חומרה על התקן נשלף"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr "נדרש אימות כדי לשנמך את הקושחה במכונה הזאת"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify a configured remote used for firmware updates"
+msgstr "נדרש אימות כדי לשנות מרוחק מוגדר לעדכוני קושחה"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to modify daemon configuration"
+msgstr "נדרש אימות לשינוי הגדרות הסוכן"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to set the list of approved firmware"
+msgstr "נדרש אימות כדי להגדיר את רשימת הקושחות המותרות"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to sign data using the client certificate"
+msgstr "נדרש אימות כדי לחתום נתונים באמצעות אישור לקוח"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to switch to the new firmware version"
+msgstr "נדרש אימות כדי לעבור לגרסת הקושחה החדשה"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to unlock a device"
+msgstr "נדרש אימות כדי לשחרר התקן"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on a removable device"
+msgstr "נדרש אימות כדי לעדכן חומרה על התקן נשלף"
+
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
 msgstr "אימות משתמש נדרש לעדכון קושחה מערכת זו"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the stored checksums for the device"
+msgstr "נדרש אימות כדי לעדכן את סכומי הביקורת עבור ההתקן"
+
+#. TRANSLATORS: Boolean value to automatically send reports
+msgid "Automatic Reporting"
+msgstr "דיווח אוטומטי"
+
+#. TRANSLATORS: can we JFDI?
+msgid "Automatically upload every time?"
+msgstr "להעלות אוטומטית בכל פעם?"
+
+#. TRANSLATORS: command description
+msgid "Bind new kernel driver"
+msgstr "איגוד למנהל התקן ליבה חדש"
+
+#. TRANSLATORS: there follows a list of hashes
+msgid "Blocked firmware files:"
+msgstr "קובצי קושחה חסומים:"
+
+#. TRANSLATORS: we will not offer this firmware to the user
+msgid "Blocking firmware:"
+msgstr "קושחה חוסמת:"
+
+#. TRANSLATORS: firmware version of bootloader
+msgid "Bootloader Version"
+msgstr "גרסת מנהל טעינה"
+
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Branch"
+msgstr "ענף"
+
+#. TRANSLATORS: command description
+msgid "Build a firmware file"
+msgstr "בניית קובץ קושחה"
+
+#. TRANSLATORS: command description
+msgid "Build firmware using a sandbox"
+msgstr "בניית קושחה בסביבה מבודדת"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "ביטול"
+
+#. TRANSLATORS: this is when a device ctrl+c's a watch
+msgid "Cancelled"
+msgstr "בוטל"
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "השתנה"
+
+#. TRANSLATORS: command description
+msgid "Checks cryptographic hash matches firmware"
+msgstr "בודק שהגיבוב הקריפטוגרפי תואם לקושחה"
 
 #. TRANSLATORS: remote checksum
 msgid "Checksum"
 msgstr "סכום ביקורת"
 
+#. TRANSLATORS: get interactive prompt, where branch is the
+#. * supplier of the firmware, e.g. "non-free" or "free"
+msgid "Choose a branch:"
+msgstr "נא לבחור ענף:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a device:"
+msgstr "נא לבחור התקן:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a firmware type:"
+msgstr "נא לבחור סוג קושחה"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a release:"
+msgstr "נא לבחור מהדורה:"
+
+#. TRANSLATORS: get interactive prompt
+msgid "Choose a volume:"
+msgstr "נא לבחור כרך:"
+
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "פקודה לא נמצאה"
+
+#. TRANSLATORS: command description
+msgid "Convert a firmware file"
+msgstr "המרת קובץ קושחה"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "מועד יצירה"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "קריטי"
+
+#. TRANSLATORS: version number of current firmware
+msgid "Current version"
+msgstr "גרסה נוכחית"
+
+#. TRANSLATORS: DFU stands for device firmware update
+msgid "DFU Utility"
+msgstr "כלי עדכון קושחת התקן"
 
 #. TRANSLATORS: for the --verbose arg
 msgid "Debugging Options"
 msgstr "אפשרויות ניפוי שגיאות"
 
+#. TRANSLATORS: decompressing the firmware file
+msgid "Decompressing…"
+msgstr "מתבצעת פריסה…"
+
 #. TRANSLATORS: multiline description of device
 msgid "Description"
 msgstr "תיאור"
+
+#. TRANSLATORS: command description
+msgid "Detach to bootloader mode"
+msgstr "ניתוק למצב מנהל טעינה"
+
+#. TRANSLATORS: more details about the update link
+msgid "Details"
+msgstr "פרטים"
+
+#. TRANSLATORS: description of device ability
+msgid "Device Flags"
+msgstr "דגלוני התקן"
+
+#. TRANSLATORS: ID for hardware, typically a SHA1 sum
+msgid "Device ID"
+msgstr "מזהה התקן"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device added:"
+msgstr "נוסף התקן:"
+
+#. TRANSLATORS: this is when a device has been updated
+msgid "Device changed:"
+msgstr "השתנה התקן:"
+
+#. TRANSLATORS: Is locked and can be unlocked
+msgid "Device is locked"
+msgstr "ההתקן נעול"
+
+#. TRANSLATORS: currently unreachable, perhaps because it is in a lower power
+#. state
+#. * or is out of wireless range
+msgid "Device is unreachable"
+msgstr "ההתקן אינו נגיש"
+
+#. TRANSLATORS: this is when a device is hotplugged
+msgid "Device removed:"
+msgstr "הוסר התקנים:"
+
+#. TRANSLATORS: command line option
+msgid "Device update method"
+msgstr "שיטת עדכון התקן"
+
+#. TRANSLATORS: Device update needs to be separately activated
+msgid "Device update needs activation"
+msgstr "עדכון ההתקן דורש הפעלה"
+
+#. TRANSLATORS: a list of successful updates
+msgid "Devices that have been updated successfully:"
+msgstr "התקנים שעודכנו כראוי:"
+
+#. TRANSLATORS: a list of failed updates
+msgid "Devices that were not updated correctly:"
+msgstr "התקנים שלא עודכנו כראוי:"
+
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
+msgid "Devices with no available firmware updates: "
+msgstr "התקנים ללא עדכוני קושחה זמינים:"
+
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
+msgid "Devices with the latest available firmware version:"
+msgstr "התקנים עם גרסת הקושחה העדכנית ביותר שזמינה:"
+
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is inactive and not used
+msgid "Disabled"
+msgstr "מושבת"
+
+#. TRANSLATORS: command description
+msgid "Disables a given remote"
+msgstr "משבית מרוחק מסוים"
+
+#. TRANSLATORS: command line option
+msgid "Display version"
+msgstr "הצגת גרסה"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for old metadata"
+msgstr "לא לבדוק נתוני על ישנים"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for unreported history"
+msgstr "לא לבדוק היסטוריה לא מדווחת"
+
+#. TRANSLATORS: command line option
+msgid "Do not check if download remotes should be enabled"
+msgstr "לא לבדוק אם המרוחקים שהתקבלו אמורים להיות מופעלים"
+
+#. TRANSLATORS: command line option
+msgid "Do not write to the history database"
+msgstr "לא לכתוב למסד הנתונים של ההיסטוריה"
+
+#. TRANSLATORS: should the branch be changed
+msgid "Do you understand the consequences of changing the firmware branch?"
+msgstr "האם השלכות מעבר ענף הקושחה ברורות לך?"
+
+#. TRANSLATORS: offer to disable this nag
+msgid "Do you want to disable this feature for future updates?"
+msgstr "להשבתי את היכולת הזאת לעדכונים עתידיים?"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Do you want to refresh this remote now?"
+msgstr "לרענן את המרוחק הזה כעת?"
+
+#. TRANSLATORS: offer to stop asking the question
+msgid "Do you want to upload reports automatically for future updates?"
+msgstr "להעלות את הדוחות אוטומטית לעדכונים עתידיים?"
 
 #. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "הסתיים!"
+
+#. TRANSLATORS: message letting the user know an downgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Downgrade %s from %s to %s?"
+msgstr "לשנמך את %s מגרסה %s אל %s?"
+
+#. TRANSLATORS: command description
+msgid "Downgrades the firmware on a device"
+msgstr "משנמך קושחה על התקן"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
@@ -52,6 +553,68 @@ msgstr "הסתיים!"
 #, c-format
 msgid "Downgrading %s from %s to %s... "
 msgstr "משנמך גרסת %s מ־%s ל־%s..."
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Downgrading %s…"
+msgstr "%s משונמך…"
+
+#. TRANSLATORS: command description
+msgid "Download a file"
+msgstr "הורדת קובץ"
+
+#. TRANSLATORS: downloading from a remote server
+msgid "Downloading…"
+msgstr "מתבצעת הורדה…"
+
+#. TRANSLATORS: command description
+msgid "Dump SMBIOS data from a file"
+msgstr "משיכת נתוני SMBIOS מקובץ"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Duration"
+msgstr "משך"
+
+#. TRANSLATORS: ESP is EFI System Partition
+msgid "ESP specified was not valid"
+msgstr "ה־ESP שצוין לא היה תקף"
+
+#. TRANSLATORS: a remote here is like a 'repo' or software source
+msgid "Enable new remote?"
+msgstr "להפעיל מרוחק חדש?"
+
+#. TRANSLATORS: Turn on the remote
+msgid "Enable this remote?"
+msgstr "להפעיל את המרוחק הזה?"
+
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
+#. TRANSLATORS: if the remote is enabled
+msgid "Enabled"
+msgstr "מופעל"
+
+#. TRANSLATORS: command description
+msgid "Enables a given remote"
+msgstr "מפעיל מרוחק מסוים"
+
+msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "הפעלת יכולת זאת היא על אחריותך בלבד, כלומר שעליך ליצור קשר עם ספק הציוד המקורי שלך בנוגע לתקלות שנגרמות על ידי העדכונים האלה. רק תקלות בתהליך העדכון עצמו אמורות להיות מתועדות אצל $OS_RELEASE:BUG_REPORT_URL$."
+
+#. TRANSLATORS: show the user a warning
+msgid "Enabling this remote is done at your own risk."
+msgstr "הפעלת מרוחק זה היא על אחריותך בלבד."
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Encrypted"
+msgstr "מוצפן"
+
+#. TRANSLATORS: command description
+msgid "Erase all firmware update history"
+msgstr "למחוק את כל היסטוריית עדכוני הקושחה"
+
+#. TRANSLATORS: erasing contents of the flash chips
+msgid "Erasing…"
+msgstr "מתבצעת מחיקה…"
 
 #. TRANSLATORS: exit after we've started up, used for user profiling
 msgid "Exit after a small delay"
@@ -61,9 +624,95 @@ msgstr "יציאה לאחר השהייה קצרה"
 msgid "Exit after the engine has loaded"
 msgstr "יציאה לאחר טעינת מנוע התכנה"
 
+#. TRANSLATORS: command description
+msgid "Export a firmware file structure to XML"
+msgstr "ייצוא מבנה קובצי הקושחה ל־XML"
+
+#. TRANSLATORS: command description
+msgid "Extract a firmware blob to images"
+msgstr "חילוץ מקטע בינרי מהקושחה לקובצי דמות"
+
+#. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: the update state of the specific device
+msgid "Failed"
+msgstr "נכשל"
+
+#. TRANSLATORS: dbx file failed to be applied as an update
+msgid "Failed to apply update"
+msgstr "החלת העדכון נכשלה"
+
+#. TRANSLATORS: we could not talk to the fwupd daemon
+msgid "Failed to connect to daemon"
+msgstr "החיבור לסוכן נכשל"
+
+#. TRANSLATORS: we could not get the devices to update offline
+msgid "Failed to get pending devices"
+msgstr "קבלת ההתקנים הממתינים נכשלה"
+
+#. TRANSLATORS: we could not install for some reason
+msgid "Failed to install firmware update"
+msgstr "התקנת עדכון הקושחה נכשלה"
+
+#. TRANSLATORS: could not read existing system data
+#. TRANSLATORS: could not read file
+msgid "Failed to load local dbx"
+msgstr "טעינת ה־dbx המקומי נכשלה"
+
+#. TRANSLATORS: quirks are device-specific workarounds
+msgid "Failed to load quirks"
+msgstr "טעינת התיקונים תואמי ההתקן נכשלה"
+
+#. TRANSLATORS: could not read existing system data
+msgid "Failed to load system dbx"
+msgstr "טעינת ה־dbx של המערכת נכשלה"
+
+#. TRANSLATORS: another fwupdtool instance is already running
+msgid "Failed to lock"
+msgstr "הנעילה נכשלה"
+
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
-msgstr "נכשל בפענוח הארגומנטים"
+msgstr " פענוח הארגומנטים נכשל"
+
+#. TRANSLATORS: failed to read measurements file
+msgid "Failed to parse file"
+msgstr "ניתוח הקובץ נכשל"
+
+#. TRANSLATORS: the user didn't read the man page
+msgid "Failed to parse flags for --filter"
+msgstr "פענוח הדגלונים עבור ‎--filter נכשל"
+
+#. TRANSLATORS: could not parse file
+msgid "Failed to parse local dbx"
+msgstr "פענוח ה־dbx המקומי נכשל"
+
+#. TRANSLATORS: we could not reboot for some reason
+msgid "Failed to reboot"
+msgstr "הפעלה מחדש נכשלה"
+
+#. TRANSLATORS: we could not talk to plymouth
+msgid "Failed to set splash mode"
+msgstr "הגדרת מצב מסך הכניסה נכשלה"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename"
+msgstr "שם קובץ"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename Signature"
+msgstr "חתימת שם קובץ"
+
+#. TRANSLATORS: full path of the remote.conf file
+msgid "Filename Source"
+msgstr "מקור שם קובץ"
+
+#. TRANSLATORS: user did not include a filename parameter
+msgid "Filename required"
+msgstr "נדרש שם קובץ"
+
+#. TRANSLATORS: remote URI
+msgid "Firmware Base URI"
+msgstr "כתובת בסיס קושחה"
 
 #. TRANSLATORS: program summary
 msgid "Firmware Update D-Bus Service"
@@ -73,25 +722,437 @@ msgstr "שירות D-Bus עדכון קושחה"
 msgid "Firmware Update Daemon"
 msgstr "שדון עדכון קושחה"
 
+#. TRANSLATORS: program name
+msgid "Firmware Utility"
+msgstr "כלי קושחה"
+
+#. TRANSLATORS: user selected something not possible
+msgid "Firmware is already blocked"
+msgstr "הקושחה כבר חסומה"
+
+#. TRANSLATORS: user selected something not possible
+msgid "Firmware is not already blocked"
+msgstr "הקושחה אינה חסומה כבר"
+
+#. TRANSLATORS: Title: if firmware updates are available
+msgid "Firmware updates"
+msgstr "עדכוני קושחה"
+
+msgid "Firmware updates are not supported on this machine."
+msgstr "במערכת הזאת אין תמיכה בעדכוני קושחה."
+
+msgid "Firmware updates are supported on this machine."
+msgstr "במערכת הזאת יש תמיכה בעדכוני קושחה."
+
+#. TRANSLATORS: user needs to run a command
+msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
+msgstr "עדכוני קושחה מושבתים, נא להריץ את ‚fwupdmgr unlock’ כדי להפעיל."
+
+#. TRANSLATORS: description of plugin state, e.g. disabled
+#. TRANSLATORS: release properties
+msgid "Flags"
+msgstr "דגלים"
+
+msgid "Force the action ignoring all warnings"
+msgstr "אילוץ הפעולה תוך התעלמות מכל האזהרות"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Found"
+msgstr "נמצא"
+
+#. TRANSLATORS: command description
+msgid "Get all device flags supported by fwupd"
+msgstr "מקבל את כל דגלוני ההתקנים שנתמכים על ידי fwupd"
+
 #. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "מציג כל המכשירים התומכים בעדכוני קושחה"
+
+#. TRANSLATORS: command description
+msgid "Get all enabled plugins registered with the system"
+msgstr "קבלת כל התוספים הפעילים שנרשמו במערכת"
 
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
 msgstr "מציג פרטים אודות קובץ קושחה"
 
 #. TRANSLATORS: command description
+msgid "Gets the configured remotes"
+msgstr "מושכת את המרוחקים המוגדרים"
+
+#. TRANSLATORS: command description
+msgid "Gets the host security attributes"
+msgstr "מושך את מאפייני האבטחה של המארח"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Gets the list of approved firmware"
+msgstr "מקבל את רשימת הקושחות שעברו אישור"
+
+#. TRANSLATORS: command description
+msgid "Gets the list of blocked firmware"
+msgstr "מקבל את רשימת הקושחות החסומות"
+
+#. TRANSLATORS: command description
+msgid "Gets the list of updates for connected hardware"
+msgstr "מקבל את רשימת העדכונים לחומרה שמחוברת"
+
+#. TRANSLATORS: command description
+msgid "Gets the results from the last update"
+msgstr "מקבל את התוצאות מהעדכון האחרון"
+
+#. TRANSLATORS: the hardware is waiting to be replugged
+msgid "Hardware is waiting to be replugged"
+msgstr "החומרה ממתינה לחיבור מחדש"
+
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "גבוה"
+
+#. TRANSLATORS: this is a string like 'HSI:2-U'
+msgid "Host Security ID:"
+msgstr "מזהה אבטחת מארח:"
+
+#. TRANSLATORS: daemon is inactive
+msgid "Idle…"
+msgstr "בהמתנה…"
+
+#. TRANSLATORS: command line option
+msgid "Ignore SSL strict checks when downloading files"
+msgstr "התעלמות מבדיקות מחמירות של SSL בעת הורדת קבצים"
+
+#. TRANSLATORS: Ignore validation safety checks when flashing this device
+msgid "Ignore validation safety checks"
+msgstr "התעלמות מאימות בדיקות בטיחות"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Install Duration"
+msgstr "משך התקנה"
+
+#. TRANSLATORS: command description
+msgid "Install a firmware blob on a device"
+msgstr "התקנת מקטע בינרי של קושחה על התקן"
+
+#. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "מתקין קובץ קושחה בחומרה זו"
+
+msgid "Install old version of system firmware"
+msgstr "התקנת גרסה ישנה של קושחת המערכת"
+
+msgid "Install signed device firmware"
+msgstr "התקנת קושחת התקן חתומה"
+
+msgid "Install signed system firmware"
+msgstr "התקנת קושחת מערכת חתומה"
+
+#. TRANSLATORS: Install composite firmware on the parent before the child
+msgid "Install to parent device first"
+msgstr "יש להתקין להתקן הורה תחילה"
+
+msgid "Install unsigned device firmware"
+msgstr "התקנת קושחת התקן שלא נחתמה"
+
+msgid "Install unsigned system firmware"
+msgstr "התקנת קושחת מערכת שלא נחתמה"
+
+#. TRANSLATORS: console message when no Plymouth is installed
+msgid "Installing Firmware…"
+msgstr "קושחה מותקנת…"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+msgid "Installing firmware update…"
+msgstr "עדכון הקושחה מותקן…"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Installing on %s…"
+msgstr "מותקן על %s…"
+
+#. TRANSLATORS: Device cannot be removed easily
+msgid "Internal device"
+msgstr "התקן פנימי"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Invalid"
+msgstr "שגוי"
+
+#. TRANSLATORS: Is currently in bootloader mode
+msgid "Is in bootloader mode"
+msgstr "במצב מנהל טעינה"
+
+#. TRANSLATORS: issue fixed with the release, e.g. CVE
+msgid "Issue"
+msgid_plural "Issues"
+msgstr[0] "תקלה"
+msgstr[1] "תקלות"
+msgstr[2] "תקלות"
+msgstr[3] "תקלות"
+
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
+msgid "Keyring"
+msgstr "מחזיק מפתחות"
+
+#. TRANSLATORS: the original time/date the device was modified
+msgid "Last modified"
+msgstr "שינוי אחרון"
+
+#. TRANSLATORS: time remaining for completing firmware flash
+msgid "Less than one minute remaining"
+msgstr "נותרה פחות מדקה"
+
+#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
+msgid "License"
+msgstr "רישיון"
+
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "שירות קושחת יצרנים ללינוקס (קושחה יציבה)"
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "שירות קושחת יצרנים ללינוקס (קושחה ניסיונית)"
+
+#. TRANSLATORS: Title: if it's tainted or not
+msgid "Linux kernel"
+msgstr "הליבה של לינוקס"
+
+#. TRANSLATORS: Title: swap space or swap partition
+msgid "Linux swap"
+msgstr "אזור החלפה של לינוקס"
+
+#. TRANSLATORS: command line option
+msgid "List entries in dbx"
+msgstr "הצגת רשומות ב־dbx"
+
+#. TRANSLATORS: command line option
+msgid "List supported firmware updates"
+msgstr "הצגת עדכוני הקושחה הנתמכים"
+
+#. TRANSLATORS: command description
+msgid "List the available firmware types"
+msgstr "הצגת סוגי הקושחות הזמינים"
+
+#. TRANSLATORS: command description
+msgid "Lists files on the ESP"
+msgstr "מציג קבצים ב־ESP"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading…"
+msgstr "בטעינה…"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Locked"
+msgstr "נעול"
+
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "נמוך"
+
+#. TRANSLATORS: command line option
+msgid "Manually enable specific plugins"
+msgstr "להפעיל ידנית תוספים מסוימים"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "בינוני"
+
+#. TRANSLATORS: remote URI
+msgid "Metadata Signature"
+msgstr "חתימת נתוני על"
+
+#. TRANSLATORS: remote URI
+msgid "Metadata URI"
+msgstr "כתובת נתוני על"
+
+#. TRANSLATORS: smallest version number installable on device
+msgid "Minimum Version"
+msgstr "גרסה מזערית"
+
+#. TRANSLATORS: command description
+msgid "Modifies a given remote"
+msgstr "משנה מרוחק נתון"
+
+msgid "Modify a configured remote"
+msgstr "שינוי מרוחק מוגדר"
+
+msgid "Modify daemon configuration"
+msgstr "שינוי הגדרות סוכן"
+
+#. TRANSLATORS: command description
+msgid "Monitor the daemon for events"
+msgstr "מעקב אחר הסוכן לאיתור אירועים"
+
+#. TRANSLATORS: command description
+msgid "Mounts the ESP"
+msgstr "מעגן את ה־ESP"
+
+#. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
+msgid "Needs a reboot after installation"
+msgstr "דורש הפעלה מחדש לאחר ההתקנה"
+
+#. TRANSLATORS: Requires system shutdown to apply firmware
+msgid "Needs shutdown after installation"
+msgstr "דורש כיבוי לאחר ההתקנה"
+
+#. TRANSLATORS: version number of new firmware
+msgid "New version"
+msgstr "גרסה חדשה"
+
+#. TRANSLATORS: user did not tell the tool what to do
+msgid "No action specified!"
+msgstr "לא צוינה פעולה!"
+
+#. TRANSLATORS: message letting the user know no device downgrade available
+#. * %1 is the device name
+#, c-format
+msgid "No downgrades for %s"
+msgstr "אין שנמוכים עבור %s"
+
+#. TRANSLATORS: nothing found
+msgid "No firmware IDs found"
+msgstr "לא נמצאו מזהי קושחה"
 
 #. TRANSLATORS: nothing attached that can be upgraded
 msgid "No hardware detected with firmware update capability"
 msgstr "לא אותרה חומרה בעלת יכולת עדכון קושחה"
 
+#. TRANSLATORS: nothing found
+msgid "No plugins found"
+msgstr "לא נמצאו תוספים"
+
+#. TRANSLATORS: no repositories to download from
+msgid "No releases available"
+msgstr "אין מהדורות זמינות"
+
+#. TRANSLATORS: no repositories to download from
+msgid "No remotes available"
+msgstr "אין מרוחקים זמינים"
+
+msgid "No updates available for remaining devices"
+msgstr "אין עדכונים זמינים להתקנים שנותרו"
+
+#. TRANSLATORS: nothing was updated offline
+msgid "No updates were applied"
+msgstr "לא הוחלו עדכונים"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not found"
+msgstr "לא נמצא"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not supported"
+msgstr "לא נתמך"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "OK"
 msgstr "אישור"
+
+#. TRANSLATORS: command line option
+msgid "Only use IPFS when downloading files"
+msgstr "להשתמש ב־IPFS רק בעת הורדת קבצים"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format"
+msgstr "פלט במבנה JSON"
+
+#. TRANSLATORS: command description
+msgid "Parse and show details about a firmware file"
+msgstr "פענוח והצגת פרטים על קובץ קושחה"
+
+#. TRANSLATORS: reading new dbx from the update
+msgid "Parsing dbx update…"
+msgstr "עדכון ה־dbx מפוענח…"
+
+#. TRANSLATORS: reading existing dbx from the system
+msgid "Parsing system dbx…"
+msgstr "ה־dbx של המערכת מפוענח…"
+
+#. TRANSLATORS: remote filename base
+msgid "Password"
+msgstr "סיסמה"
+
+msgid "Payload"
+msgstr "מטען"
+
+#. TRANSLATORS: console message when not using plymouth
+msgid "Percentage complete"
+msgstr "אחוזים שהושלמו"
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "לבצע פעולה?"
+
+#. TRANSLATORS: the user isn't reading the question
+#, c-format
+msgid "Please enter a number from 0 to %u: "
+msgstr "נא למלא מספר מ־0 עד %u:"
+
+#. TRANSLATORS: Failed to open plugin, hey Arch users
+msgid "Plugin dependencies missing"
+msgstr "תלויות התוסף חסרות"
+
+#. TRANSLATORS: version number of previous firmware
+msgid "Previous version"
+msgstr "גרסה קודמת"
+
+msgid "Print the version number"
+msgstr "הצגת מספר הגרסה"
+
+#. TRANSLATORS: the numeric priority
+msgid "Priority"
+msgstr "עדיפות"
+
+msgid "Proceed with upload?"
+msgstr "להמשיך בהעלאה?"
+
+#. TRANSLATORS: a non-free software license
+msgid "Proprietary"
+msgstr "קנייני"
+
+#. TRANSLATORS: command line option
+msgid "Query for firmware update support"
+msgstr "תשאול תמיכה בעדכון קושחה"
+
+#. TRANSLATORS: command description
+msgid "Read a firmware blob from a device"
+msgstr "קריאת מקטע בינרי של קושחה מהתקן"
+
+#. TRANSLATORS: command description
+msgid "Read firmware from device into a file"
+msgstr "קריאת קושחה מהתקן לקובץ"
+
+#. TRANSLATORS: command description
+msgid "Read firmware from one partition into a file"
+msgstr "קריאת קושחה ממחיצה אחת לקובץ"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Reading from %s…"
+msgstr "נקרא מתוך %s…"
+
+#. TRANSLATORS: reading from the flash chips
+msgid "Reading…"
+msgstr "מתבצעת קריאה…"
+
+#. TRANSLATORS: console message when not using plymouth
+msgid "Rebooting…"
+msgstr "מתבצעת הפעלה מחדש…"
+
+#. TRANSLATORS: command description
+msgid "Refresh metadata from remote server"
+msgstr "רענון נתוני העל משרת מרוחק"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 is a version string
+#, c-format
+msgid "Reinstall %s to %s?"
+msgstr "להתקין את %s אל %s מחדש?"
+
+#. TRANSLATORS: command description
+msgid "Reinstall current firmware on the device"
+msgstr "התקנת הקושחה הנוכחית על ההתקן מחדש"
+
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "התקנת קושחה על התקן מחדש"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
@@ -100,13 +1161,404 @@ msgstr "אישור"
 msgid "Reinstalling %s with %s... "
 msgstr "מתקין מחדש %s עם %s..."
 
+#. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
+msgid "Release Branch"
+msgstr "ענף הפצה"
+
+#. TRANSLATORS: the server the file is coming from
+#. TRANSLATORS: remote identifier, e.g. lvfs-testing
+msgid "Remote ID"
+msgstr "מזהה מרוחק"
+
+#. TRANSLATORS: command description
+msgid "Replace data in an existing firmware file"
+msgstr "החלפת נתונים בקובץ קושחה קיים"
+
+#. TRANSLATORS: URI to send success/failure reports
+msgid "Report URI"
+msgstr "כתובת לדיווח"
+
+#. TRANSLATORS: Has been reported to a metadata server
+msgid "Reported to remote server"
+msgstr "דווח לשרת המרוחק"
+
+#. TRANSLATORS: the user is using Gentoo/Arch and has screwed something up
+msgid "Required efivarfs filesystem was not found"
+msgstr "מערכת קבצים efivarfs נחוצה לא נמצאה"
+
+#. TRANSLATORS: not required for this system
+msgid "Required hardware was not found"
+msgstr "החומרה הנדרשת לא נמצאה"
+
+#. TRANSLATORS: Requires a bootloader mode to be manually enabled by the user
+msgid "Requires a bootloader"
+msgstr "דורש מנהל טעינה"
+
+#. TRANSLATORS: metadata is downloaded from the Internet
+msgid "Requires internet connection"
+msgstr "דורש חיבור לאינטרנט"
+
+#. TRANSLATORS: reboot to apply the update
+msgid "Restart now?"
+msgstr "להפעיל כעת מחדש?"
+
+#. TRANSLATORS: configuration changes only take effect on restart
+msgid "Restart the daemon to make the change effective?"
+msgstr "להפעיל את הסוכן מחדש כדי שהשינויים ייכנסו לתוקף?"
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+msgid "Restarting device…"
+msgstr "ההתקן מופעל מחדש…"
+
+#. TRANSLATORS: command description
+msgid "Return all the hardware IDs for the machine"
+msgstr "החזרת כל מזהי החומרה למכונה"
+
+#. TRANSLATORS: The kernel does not support this plugin
+msgid "Running kernel is too old"
+msgstr "הליבה הפעילה ישנה מדי"
+
+#. TRANSLATORS:  this is the HSI suffix
+msgid "Runtime Suffix"
+msgstr "סיומת סביבת הרצה"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI lock"
+msgstr "נעילת SPI"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI write"
+msgstr "כתיבת SPI"
+
+#. TRANSLATORS: command line option
+msgid "Save device state into a JSON file between executions"
+msgstr "לשמור את מצב ההתקנים לקובץ JSON בין ההפעלות"
+
+#. TRANSLATORS: scheduling an update to be done on the next boot
+msgid "Scheduling…"
+msgstr "מתבצע תזמון…"
+
+#. TRANSLATORS: Device has been chosen by the daemon for the user
+msgid "Selected device"
+msgstr "התקן נבחר"
+
+#. TRANSLATORS: Volume has been chosen by the user
+msgid "Selected volume"
+msgstr "כרך נבחר"
+
+#. TRANSLATORS: serial number of hardware
+msgid "Serial Number"
+msgstr "מספר סידורי"
+
+#. TRANSLATORS: firmware approved by the admin
+msgid "Sets the list of approved firmware"
+msgstr "הגדרת רשימת הקושחות המותרות"
+
+#. TRANSLATORS: command description
+msgid "Share firmware history with the developers"
+msgstr "שיתוף היסטוריית הקושחה עם המפתחים"
+
+#. TRANSLATORS: command line option
+msgid "Show all results"
+msgstr "הצגת כל התוצאות"
+
+#. TRANSLATORS: command line option
+msgid "Show client and daemon versions"
+msgstr "הצגת גרסאות לקוח וסוכן"
+
 #. TRANSLATORS: for the --verbose arg
 msgid "Show debugging options"
 msgstr "הצג אפשרויות ניפוי שגיאות"
 
 #. TRANSLATORS: command line option
+msgid "Show devices that are not updatable"
+msgstr "להציג התקנים שלא ניתן לעדכן"
+
+#. TRANSLATORS: command line option
 msgid "Show extra debugging information"
-msgstr "הצג מידע ניפוי שגיאות מורחב"
+msgstr "הצגת מידע ניפוי שגיאות מורחב"
+
+#. TRANSLATORS: command description
+msgid "Show history of firmware updates"
+msgstr "הצגת היסטוריית עדכוני קושחה"
+
+#. TRANSLATORS: command line option
+msgid "Show the calculated version of the dbx"
+msgstr "הצגת הגרסה המחושבת של ה־dbx"
+
+#. TRANSLATORS: command line option
+msgid "Show the information of firmware update status"
+msgstr "להציג את המידע על מצב עדכון הקושחה"
+
+#. TRANSLATORS: shutdown to apply the update
+msgid "Shutdown now?"
+msgstr "לכבות כעת?"
+
+#. TRANSLATORS: command description
+msgid "Sign a firmware with a new key"
+msgstr "לחתום על חומרה עם מפתח חדש"
+
+msgid "Sign data using the client certificate"
+msgstr "לחתום על הנתונים בעזרת אישור הלקוח"
+
+#. TRANSLATORS: command description
+msgctxt "command-description"
+msgid "Sign data using the client certificate"
+msgstr "לחתום על הנתונים בעזרת אישור הלקוח"
+
+#. TRANSLATORS: command line option
+msgid "Sign the uploaded data with the client certificate"
+msgstr "לחתום על הנתונים שנשלחים עם אישור הלקוח"
+
+msgid "Signature"
+msgstr "חתימה"
+
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "גודל"
+
+#. TRANSLATORS: source (as in code) link
+msgid "Source"
+msgstr "מקור"
+
+#. TRANSLATORS: command line option
+msgid "Specify the dbx database file"
+msgstr "ציון קובץ מסד הנתוני מסוג dbx"
+
+msgid "Specify the number of bytes per USB transfer"
+msgstr "ציון מספר הבתים להעברה בודדת דרך USB"
+
+#. TRANSLATORS: success message -- where activation is making the new
+#. * firmware take effect, usually after updating offline
+msgid "Successfully activated all devices"
+msgstr "כל ההתקנים הופעלו בהצלחה"
+
+#. TRANSLATORS: success message -- where 'metadata' is information
+#. * about available firmware on the remote server
+msgid "Successfully downloaded new metadata: "
+msgstr "נתוני על חדשים התקבלו בהצלחה:"
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled remote"
+msgstr "המרוחק הופעל בהצלחה"
+
+#. TRANSLATORS: success message
+msgid "Successfully installed firmware"
+msgstr "הקושחה הותקנה בהצלחה"
+
+#. TRANSLATORS: success message -- a per-system setting value
+msgid "Successfully modified configuration value"
+msgstr "ערך התצורה נערך בהצלחה"
+
+#. TRANSLATORS: success message for a per-remote setting change
+msgid "Successfully modified remote"
+msgstr "המרוחק נערך בהצלחה"
+
+#. TRANSLATORS: success message -- the user can do this by-hand too
+msgid "Successfully refreshed metadata manually"
+msgstr "נתוני העל התרעננו ידנית בהצלחה"
+
+#. TRANSLATORS: one line summary of device
+msgid "Summary"
+msgstr "תקציר"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Supported"
+msgstr "נתמך"
+
+#. TRANSLATORS: Is found in current metadata
+msgid "Supported on remote server"
+msgstr "נתמך בשרת המרוחק"
+
+#. TRANSLATORS: Title: a better sleep state
+msgid "Suspend-to-idle"
+msgstr "השהיה למצב המתנה"
+
+#. TRANSLATORS: Title: sleep state
+msgid "Suspend-to-ram"
+msgstr "השהיה לזיכרון"
+
+#. TRANSLATORS: show and ask user to confirm --
+#. * %1 is the old branch name, %2 is the new branch name
+#, c-format
+msgid "Switch branch from %s to %s?"
+msgstr "לעבור ענף מ־%s אל %s?"
+
+#. TRANSLATORS: command description
+msgid "Switch the firmware branch on the device"
+msgstr "החלפת ענף הקושחה בהתקן"
+
+#. TRANSLATORS: Must be plugged in to an outlet
+msgid "System requires external power source"
+msgstr "המערכת דורשת מקור חשמל חיצוני"
+
+msgid "Target"
+msgstr "יעד"
+
+#. TRANSLATORS: command description
+msgid "Test a device using a JSON manifest"
+msgstr "בדיקת התקן עם מניפסט JSON"
+
+#. TRANSLATORS: do not translate the variables marked using $
+msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
+msgstr "LVFS הוא שירות חינמי שמתפקד כיישות חוקית בלתי תלוי ואין לה שום קשר עם $OS_RELEASE:NAME$. יתכן כי המפיץ שלך לא אימת ברמת תאימות אף אחד מעדכוני הקושחה מול המערכת שלך או ההתקנים המחוברים אליה. כל הקושחה מסופקת אך ורק על ידי יצרני הציוד המקוריים."
+
+#. TRANSLATORS: nothing to show
+msgid "There are no blocked firmware files"
+msgstr "אין קובצי קושחה חסומים"
+
+#. TRANSLATORS: approved firmware has been checked by
+#. * the domain administrator
+msgid "There is no approved firmware."
+msgstr "אין קושחה שעברה אימות."
+
+msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
+msgstr "צד מרוחק זה כולל קושחה שלא נפסלה אך עדיין נבדקת על ידי ספק החומרה. עליך לוודא שיש לך דרך ידנית לשנמך את הקושחה במקרה שעדכון הקושחה נכשל."
+
+#. TRANSLATORS: description of dbxtool
+msgid "This tool allows an administrator to apply UEFI dbx updates."
+msgstr "כלי זה מאפשר להנהלה להחיל עדכוני dbx ב־UEFI."
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
+msgstr "כלי זה מאפשר להנהלה להשתמש בתוספי fwupd מבלי שיותקנו על המערכת המארחת."
+
+#. TRANSLATORS: the user needs to stop playing with stuff
+msgid "This tool can only be used by the root user"
+msgstr "בכלי הזה יכול להשתמש רק משתמש העל"
+
+#. TRANSLATORS: CLI description
+msgid "This tool will read and parse the TPM event log from the system firmware."
+msgstr "כלי זה יקרא ויפענח את יומן האירועים של ה־TPM מקושחת המערכת."
+
+#. TRANSLATORS: command line option
+msgid "Timeout in milliseconds for each parse"
+msgstr "זמן המתנה מרבי במילישניות לכל פענוח"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+msgid "Type"
+msgstr "סוג"
+
+#. TRANSLATORS: partition refers to something on disk, again, hey Arch users
+msgid "UEFI ESP partition not detected or configured"
+msgstr "מחיצת ESP של UEFI לא זוהתה או הוגדרה"
+
+#. TRANSLATORS: program name
+msgid "UEFI Firmware Utility"
+msgstr "כלי קושחת UEFI"
+
+#. TRANSLATORS: capsule updates are an optional BIOS feature
+msgid "UEFI capsule updates not available or enabled in firmware setup"
+msgstr "עדכוני כמוסה של UEFI אינם זמינים או מופעלים בתצורת הקושחה"
+
+#. TRANSLATORS: program name
+msgid "UEFI dbx Utility"
+msgstr "כלי dbx ל־UEFI"
+
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "UEFI firmware can not be updated in legacy BIOS mode"
+msgstr "אי אפשר לעדכן קושחת UEFI במצב BIOS מיושן"
+
+#. TRANSLATORS: Title: PK is the 'platform key' for the machine
+msgid "UEFI platform key"
+msgstr "מפתח פלטפורמה ב־UEFI"
+
+#. TRANSLATORS: Title: SB is a way of locking down UEFI
+msgid "UEFI secure boot"
+msgstr "טעינה מאובטחת של UEFI"
+
+#. TRANSLATORS: error message
+msgid "Unable to connect to service"
+msgstr "לא ניתן להתחבר לשירות"
+
+#. TRANSLATORS: command description
+msgid "Unbind current driver"
+msgstr "ביטול איגוד מנהל ההתקן הנוכחי"
+
+#. TRANSLATORS: we will now offer this firmware to the user
+msgid "Unblocking firmware:"
+msgstr "קושחה לא חוסמת:"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unencrypted"
+msgstr "לא מוצפן"
+
+#. TRANSLATORS: current daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
+msgid "Unknown"
+msgstr "לא ידוע"
+
+#. TRANSLATORS: Name of hardware
+msgid "Unknown Device"
+msgstr "התקן לא ידוע"
+
+msgid "Unlock the device to allow access"
+msgstr "יש לשחרר את ההתקן כדי לאפשר גישה"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unlocked"
+msgstr "משוחרר"
+
+#. TRANSLATORS: command description
+msgid "Unlocks the device for firmware access"
+msgstr "משחרר את חסימת ההתקן לגישת קושחה"
+
+#. TRANSLATORS: command description
+msgid "Unmounts the ESP"
+msgstr "מנתק את ה־ESP"
+
+#. TRANSLATORS: error message
+#, c-format
+msgid "Unsupported daemon version %s, client version is %s"
+msgstr "גרסת הסוכן %s אינה נתמכת, גרסת הלקוח היא %s"
+
+#. TRANSLATORS: Device is updatable in this or any other mode
+msgid "Updatable"
+msgstr "ניתן לעדכון"
+
+#. TRANSLATORS: error message from last update attempt
+msgid "Update Error"
+msgstr "שגיאת עדכון"
+
+#. TRANSLATORS: helpful messages from last update
+#. TRANSLATORS: helpful messages for the update
+msgid "Update Message"
+msgstr "הודעת עדכון"
+
+#. TRANSLATORS: hardware state, e.g. "pending"
+msgid "Update State"
+msgstr "מצב עדכון"
+
+#. TRANSLATORS: command description
+msgid "Update all devices that match local metadata"
+msgstr "עדכון כל ההתקנים שתואמים את נתוני העל המקומיים"
+
+#. TRANSLATORS: the server sent the user a small message
+msgid "Update failure is a known issue, visit this URL for more information:"
+msgstr "כשל בעדכון זאת תקלה מוכרת, יש לבקר בכתובת למידע נוסף:"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Update now?"
+msgstr "לעדכן עכשיו?"
+
+#. TRANSLATORS: Update can only be done from offline mode
+msgid "Update requires a reboot"
+msgstr "העדכון דורש הפעלה מחדש"
+
+msgid "Update the stored device verification information"
+msgstr "עדכון פרטי אימות ההתקן המאוחסנים"
+
+#. TRANSLATORS: command description
+msgid "Update the stored metadata with current contents"
+msgstr "עדכון נתוני העל המאוחסנים בתכנים נוכחיים"
+
+#. TRANSLATORS: command description
+msgid "Updates all firmware to latest versions available"
+msgstr "מעדכן את כל הקושחה לגרסאות הזמינות העדכניות ביותר"
+
+msgid "Updating"
+msgstr "מתבצע עדכון"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
@@ -115,6 +1567,97 @@ msgstr "הצג מידע ניפוי שגיאות מורחב"
 msgid "Updating %s from %s to %s... "
 msgstr "מעדכן %s מ־%s ל־%s..."
 
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Updating %s…"
+msgstr "%s מתעדכן…"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Upgrade %s from %s to %s?"
+msgstr "לשדרג את %s מגרסה %s אל %s?"
+
+#. TRANSLATORS: ask the user to upload
+msgid "Upload report now?"
+msgstr "להעלות דוח עכשיו?"
+
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "דחיפות"
+
+#. TRANSLATORS: error message explaining command on how to get help
+msgid "Use fwupdmgr --help for help"
+msgstr "יש להשתמש ב־fwupdmgr --help לקבלת עזרה"
+
+#. TRANSLATORS: error message explaining command on how to get help
+msgid "Use fwupdtool --help for help"
+msgstr "יש להשתמש ב־fwupdtool --help לקבלת עזרה"
+
+#. TRANSLATORS: User has been notified
+msgid "User has been notified"
+msgstr "נשלחה הודעה למשתמש"
+
+#. TRANSLATORS: remote filename base
+msgid "Username"
+msgstr "שם משתמש"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Valid"
+msgstr "תקף"
+
+#. TRANSLATORS: ESP refers to the EFI System Partition
+msgid "Validating ESP contents…"
+msgstr "תכני ה־ESP עוברים אימות…"
+
+#. TRANSLATORS: one line variant of release (e.g. 'Prerelease' or 'China')
+msgid "Variant"
+msgstr "הגוון"
+
+#. TRANSLATORS: manufacturer of hardware
+msgid "Vendor"
+msgstr "ספק"
+
+#. TRANSLATORS: verifying we wrote the firmware correctly
+msgid "Verifying…"
+msgstr "מתבצע אימות…"
+
 #. TRANSLATORS: the detected version number of the dbx
 msgid "Version"
-msgstr "גרסא"
+msgstr "גרסה"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING:"
+msgstr "אזהרה:"
+
+#. TRANSLATORS: waiting for device to do something
+msgid "Waiting…"
+msgstr "בהמתנה…"
+
+#. TRANSLATORS: command description
+msgid "Watch for hardware changes"
+msgstr "מעקב אחר שינויים בחומרה"
+
+#. TRANSLATORS: command description
+msgid "Write firmware from file into device"
+msgstr "כתיבת קושחה מקובץ להתקן"
+
+#. TRANSLATORS: command description
+msgid "Write firmware from file into one partition"
+msgstr "כתיבת קושחה מקובץ למחיצה אחת"
+
+#. TRANSLATORS: decompressing images from a container firmware
+msgid "Writing file:"
+msgstr "קובץ נכתב:"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing…"
+msgstr "מתבצעת כתיבה…"
+
+#. TRANSLATORS: this is the default branch name when unset
+msgid "default"
+msgstr "בררת מחדל"
+
+#. TRANSLATORS: Title: if the fwupd plugins are all present and correct
+msgid "fwupd plugins"
+msgstr "תוספים של fwupd"

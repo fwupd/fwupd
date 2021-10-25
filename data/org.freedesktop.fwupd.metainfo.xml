@@ -14,7 +14,7 @@
       apply updates, the command-line tool or the D-Bus interface directly.
     </p>
     <p>
-      The fwupd process is a simple daemon to allow session software to update
+      The fwupd process is a system daemon to allow session software to update
       device firmware on your local machine.
       It is designed for desktops, but this project is also usable on phones,
       tablets and on headless servers.
@@ -35,6 +35,215 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.7.0" date="2021-10-06">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add FuCfuPayload and FuCfuOffer for future usage</li>
+          <li>Add support for an 'unreachable' device flag</li>
+          <li>Add support for Logitech devices supporting the Unified Battery feature</li>
+          <li>Allow adding GUIDs to each HSI security attribute</li>
+          <li>Allow installing the LVFS remote, but with it disabled by default</li>
+          <li>Convert security attributes to JSON and write then to the database</li>
+          <li>Convert the device test script to a fwupdmgr subcommand</li>
+          <li>Create Redfish user accounts automatically using IPMI</li>
+          <li>Use an interactive request to restart some Logitech DFU devices</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Abort on invalid SREC files early to avoid a fuzzing timeout</li>
+          <li>Allow using interrupt transfers for HID devices</li>
+          <li>Allow waiting for multiple devices to replug</li>
+          <li>Fix a critical warning on a Unifying flash failure</li>
+          <li>Fix a regression in flashing the Dell dock</li>
+          <li>Fix Thunderbolt host controller probing</li>
+          <li>Forcefully set checksums found in cabinet files to lowercase</li>
+          <li>Force UX-capsule over full size BGRT</li>
+          <li>Make the SuperIO ports and timeouts specific to the DMI model</li>
+          <li>Only probe SynapticsMST devices that have opted-in</li>
+          <li>Remove support for --ignore-power as it did not work for UEFI firmware</li>
+          <li>Reset the CMOS as required when changing system firmware branch</li>
+          <li>Restart the daemon if any of the the plugin config files are modified</li>
+          <li>Show HSiLevel=0 attributes in JSON security output</li>
+          <li>Update the child composite ID if the parent changes</li>
+          <li>Use a per-device global percentage completion</li>
+          <li>Write the BMP image upside down to avoid using a negative bitmap height</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>A huge number of Synaptics CAPE devices</li>
+          <li>Elan fingerprint readers</li>
+          <li>Logitech Bolt peripherals, receivers and radio hardware</li>
+          <li>Logitech devices supporting the bulk controller protocol</li>
+          <li>More supported PixArt devices</li>
+          <li>More supported StarBook coreboot devices</li>
+          <li>Union Point SPI hardware</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.6.2" date="2021-08-02">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a plugin to check Lenovo firmware settings</li>
+          <li>Add initial support for the powerd daemon</li>
+          <li>Add support for CapsuleOnDisk</li>
+          <li>Add support for installing UEFI updates from GRUB</li>
+          <li>Add support for soft-requirements that can be ignored with --force</li>
+          <li>Allow devices to only accept version upgrades</li>
+          <li>Allow discovery of Redfish BMCs specified by VID-PID or MAC</li>
+          <li>Allow the daemon to request interactive action from the end user</li>
+          <li>Automatically connect the BMC network interface at startup</li>
+          <li>Show the build timestamp if set on the device</li>
+          <li>Show the user how to switch out of Wacom tablet Android-mode</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add the alternate vendor name into the 8BitDo allowlist</li>
+          <li>Allow multiple devices to set WAIT_FOR_REPLUG</li>
+          <li>Allow the client to watch for more property changes</li>
+          <li>Always ensure the SuperIO version string is NUL terminated</li>
+          <li>Automatically clear the update error as required</li>
+          <li>Disable all UX capsules for Lenovo hardware</li>
+          <li>Do not assume the metainfo file is NUL-terminated</li>
+          <li>Do not save invalid files on LVFS server error</li>
+          <li>Fix a VLI regression in enumerating the PD device</li>
+          <li>Fix a VLI regression when installing VL820Q7 firmware</li>
+          <li>Fix enumeration of the Synaptics Prometheus config child</li>
+          <li>Fix parsing Redfish USB/PCI network VID/PIDs</li>
+          <li>Fix the fwupdmgr progressbar spinner to actually work</li>
+          <li>Fix version number for legacy Wacom Bluetooth modules</li>
+          <li>Ignore virtual M.2 ATA devices</li>
+          <li>Preserve NEEDS_REBOOT on successful update</li>
+          <li>Prevent a corrupt PHAT table from allocating lots of memory</li>
+          <li>Read the Redfish SMBIOS table when required</li>
+          <li>Remove the vendor string from the device name where required</li>
+          <li>Save the update state to the database correctly all of the time</li>
+          <li>Switch from sysctl to ioctl for ESRT on FreeBSD</li>
+          <li>Try reading from /sys/class/dmi if SMBIOS direct access fails</li>
+          <li>Watch for children added or removed after setup has been completed</li>
+          <li>Work around a XCC-ism on Lenovo hardware</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>ModemManager devices supporting Firehose or MBIM QDU</li>
+          <li>More models of RTS54HUB</li>
+          <li>More Poly DFU devices</li>
+          <li>Parade LSPCON</li>
+          <li>PixArt receiver and wireless hardware</li>
+          <li>Realtek MST with RTD2142</li>
+          <li>SuperIO IT5570</li>
+          <li>USB4 Dell dock</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.6.1" date="2021-06-14">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add FreeBSD UEFI Capsule support</li>
+          <li>Add generic ModemManager support for PCI based modems</li>
+          <li>Add initial support for USB4 module in the Dell dock</li>
+          <li>Add support for sibling requirements</li>
+          <li>Add support for the ACPI PHAT table</li>
+          <li>Allow building the documentation with gi-docgen and gtk-doc</li>
+          <li>Support binary artifact resources in cabinet archives</li>
+          <li>Use GProxyResolver to get the system proxy setting for a given URL</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Ask the user to confirm all CLI actions</li>
+          <li>Check the versions of libfwupd and libfwupdplugin at startup</li>
+          <li>Do not prevent firmware updates on desktop hardware</li>
+          <li>Do not show an invalid DFU warning on attach</li>
+          <li>Fail parsing if wacom firmware sections are not in sorted order</li>
+          <li>Fall back to binary files when flashing STM32 hardware</li>
+          <li>Fix a critical warning when downloading files</li>
+          <li>Fix a possible critical warning due to a bug in type casting</li>
+          <li>Fix a regression in updating the WD19TB dock</li>
+          <li>Fix GUID generation on pixart hardware</li>
+          <li>Fix the VLI i2c device enumeration, e.g. MSP430</li>
+          <li>Follow HTTP 3XX redirects when downloading files</li>
+          <li>Force the device locker to close() an aborted open()</li>
+          <li>Handle bsdisks' UDisks2 implementation on FreeBSD</li>
+          <li>Only lock fwupdtool when loading the engine</li>
+          <li>Read current Wacom firmware index before finding image to write</li>
+          <li>Support all hash types when loading cabinet archives</li>
+          <li>Support mirroring the detach and update images</li>
+          <li>Switch lock directory from /var/run to /run/lock</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Minibons devices</li>
+          <li>More 8BitDo hardware</li>
+          <li>More Synaptics Prometheus hardware</li>
+          <li>RTD21xx devices in background mode</li>
+          <li>Some Kingston SSD and NVMe hardware</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.6.0" date="2021-04-26">
+      <description>
+        <p>
+          This is the first release of the 1.6.x series, and since 1.5.x
+          some internal plugin API has been changed and removed.
+          Although we've tested this release on all the hardware we have
+          regression tests for, bugs may have crept in; please report failures
+          to the issue tracker as required.
+        </p>
+        <p>
+          There are several new plugins adding support for new hardware
+          and a lot of code has been migrated to the new plugin API.
+          The public libfwupd API also has some trivial additions, although no
+          action is required.
+        </p>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a composite ID that is used to identify dock device components</li>
+          <li>Add an Intel Flash Descriptor parser</li>
+          <li>Add API to allow the device to report its own battery level</li>
+          <li>Add API to recount why the the device is non-updatable</li>
+          <li>Add lspcon-i2c-spi programmer support</li>
+          <li>Add more hardware support to the pixart-rf plugin</li>
+          <li>Add some more new category types for firmware to use</li>
+          <li>Add support for downloading the SPI image from the Intel eSPI device</li>
+          <li>Add support for some Analogix hardware</li>
+          <li>Add support for writing SREC firmware</li>
+          <li>Add the firmware-sign command to fwupdtool to allow resigning archives</li>
+          <li>Split UEFI EFI binary into a subproject</li>
+          <li>Use an OFD or Unix lock to prevent more than one fwupdtool process</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Actually write the bcm57xx stage1 version into the file</li>
+          <li>Add option to disable the UEFI capsule splash screen generation</li>
+          <li>Avoid use-after-free when specifying the VID/PID in dfu-tool</li>
+          <li>Cancel the GDBusObjectManager operation to fix a potential crash</li>
+          <li>Check PixArt firmware compatibility with hardware before flashing</li>
+          <li>Do not check for native dependencies as target dependencies</li>
+          <li>Do not use help2man to build manual pages</li>
+          <li>Fix a crash when shutting down the daemon</li>
+          <li>Fix build on musl</li>
+          <li>Fix build when using BSD</li>
+          <li>Fix /etc/os-release ID_LIKE field parsing</li>
+          <li>Force the synaptics-rmi hardware into IEP mode as required</li>
+          <li>Never allow D-Bus replacement when a firmware update is in operation</li>
+          <li>Offer the user to refresh the remote after enabling</li>
+          <li>Remove unused, unsafe and deprecated functions from libfwupdplugin</li>
+          <li>Simplify asking the user about reviews</li>
+          <li>Write BMP data directly without using PIL</li>
+          <li>Write synaptics-rmi files with valid checksum data</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.7" date="2021-02-23">
       <description>
         <p>This release adds the following features:</p>
@@ -137,7 +346,7 @@
         <p>This release fixes the following bugs:</p>
         <ul>
           <li>Add a UEFI quirk for Star Labs Lite Mk III</li>
-          <li>Add the device firmare ID for serio class hardware</li>
+          <li>Add the device firmware ID for serio class hardware</li>
           <li>Allow the client to send legacy PKCS7 and GPG signatures</li>
           <li>Do not use accidentally depend on new meson versions</li>
           <li>Fix a possible critical warning due to missing retval</li>
@@ -632,7 +841,7 @@
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Blacklist the synapticsmst plugin when using amdgpu</li>
+          <li>Blocklist the synapticsmst plugin when using amdgpu</li>
           <li>Correct ATA activation functionality to work for all vendors</li>
           <li>Implement QMI PDC active config selection for modems</li>
           <li>Make an error message clearer when there are no updates available</li>
@@ -1120,7 +1329,7 @@
           <li>Catch invalid Dell dock component requests</li>
           <li>Correctly output Intel HEX files with &gt; 16bit offset addresses</li>
           <li>Do not try to verify the element write if upload is unsupported</li>
-          <li>Fix a double-unref when updating any 8Bitdo device</li>
+          <li>Fix a double-unref when updating any 8BitDo device</li>
           <li>Fix crash when enumerating with Dell dock connected but with no UEFI</li>
           <li>Fix uploading large firmware files over DFU</li>
           <li>Format the BCD USB revision numbers correctly</li>
@@ -1133,7 +1342,7 @@
             fwupdmgr
           </li>
           <li>Use the correct wDetachTimeOut when writing DFU firmware</li>
-          <li>Verify devices with legacy VIDs are actually 8Bitdo controllers</li>
+          <li>Verify devices with legacy VIDs are actually 8BitDo controllers</li>
         </ul>
       </description>
     </release>
@@ -1149,7 +1358,7 @@
             device
           </li>
           <li>Add FuDeviceLocker to simplify device open/close lifecycles</li>
-          <li>Add functionality to blacklist Dell HW with problems</li>
+          <li>Add functionality to blocklist Dell HW with problems</li>
           <li>Add fu_plugin_check_supported()</li>
           <li>Add fwupd_remote_get_checksum() to use in client programs</li>
           <li>Add ModifyRemote as an easy way to enable and disable remotes</li>
@@ -1222,7 +1431,7 @@
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Check all the device GUIDs against the blacklist when added</li>
+          <li>Check all the device GUIDs against the blocklist when added</li>
           <li>Correct a memory leak in Dell plugin</li>
           <li>Default to 'en' for UEFI capsule graphics</li>
           <li>Don't log a warning when an unknown unifying report is parsed</li>
@@ -1464,7 +1673,7 @@
         </ul>
         <p>This release fixes the following bugs:</p>
         <ul>
-          <li>Add XPS 9250 to Dell TPM modeswitch blacklist</li>
+          <li>Add XPS 9250 to Dell TPM modeswitch blocklist</li>
           <li>Allow blacklisting devices by their GUID</li>
           <li>Conditionally enable all providers based upon installed</li>
           <li>Display flashes left in results output when it gets low</li>

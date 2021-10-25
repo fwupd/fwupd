@@ -10,9 +10,9 @@
 #include "fu-fresco-pd-common.h"
 
 gchar *
-fu_fresco_pd_version_from_buf (const guint8 ver[4])
+fu_fresco_pd_version_from_buf(const guint8 ver[4])
 {
 	if (ver[3] == 1 || ver[3] == 2)
-		return g_strdup_printf ("%u.%u.%u.%u", ver[0], ver[1], ver[2], ver[3]);
-	return g_strdup_printf ("%u.%u.%u.%u", ver[3], ver[1], ver[2], ver[0]);
+		return g_strdup_printf("%u.%u.%u.%u", ver[0], ver[1], ver[2], ver[3]);
+	return g_strdup_printf("%u.%u.%u.%u", ver[3], ver[1], ver[2], ver[0]);
 }

@@ -1,0 +1,38 @@
+/*
+ * Copyright (c) 1999-2021 Logitech, Inc.
+ * All Rights Reserved
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+syntax = "proto3";
+
+package logi.device.proto;
+
+option java_package = "com.logitech.vc.proto";
+
+/**
+ * Request Device information
+ * This is to be included in UsbMsg
+
+ * EXPECTED RESPONSE
+ * GetDeviceInfoResponse
+ */
+message GetDeviceInfoRequest
+{
+	/**
+	 * Unused. Reserved for future use.
+	 */
+	bool reserved = 1;
+}
+
+/**
+ * Get device information response
+ */
+message GetDeviceInfoResponse
+{
+	/**
+	 * payload contains actual mqtt message
+	 */
+	string payload = 1;
+}
