@@ -9,10 +9,11 @@
 #include <glib-object.h>
 #include <libfwupd/fwupd-security-attr.h>
 
-#define FU_TYPE_SECURITY_ATTRS (fu_security_attrs_get_type ())
+#define FU_TYPE_SECURITY_ATTRS (fu_security_attrs_get_type())
 
-G_DECLARE_FINAL_TYPE (FuSecurityAttrs, fu_security_attrs, FU, SECURITY_ATTRS, GObject)
+G_DECLARE_FINAL_TYPE(FuSecurityAttrs, fu_security_attrs, FU, SECURITY_ATTRS, GObject)
 
-void		 fu_security_attrs_append		(FuSecurityAttrs	*self,
-							 FwupdSecurityAttr	*attr);
-void		 fu_security_attrs_remove_all		(FuSecurityAttrs	*self);
+void
+fu_security_attrs_append(FuSecurityAttrs *self, FwupdSecurityAttr *attr);
+void
+fu_security_attrs_remove_all(FuSecurityAttrs *self);

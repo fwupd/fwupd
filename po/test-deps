@@ -1,12 +1,11 @@
 #!/usr/bin/python3
-""" Check dependencies needed for rasterization """
+# SPDX-License-Identifier: LGPL-2.1+
 
-"""
- SPDX-License-Identifier: LGPL-2.1+
-"""
+""" Check dependencies needed for rasterization """
 
 import sys
 import os
+
 err = 0
 
 try:
@@ -15,29 +14,23 @@ except ImportError:
     print("Error: missing dependency python gobject introspection (python3-gi)")
     err = 1
 try:
-    gi.require_version('Pango', '1.0')
+    gi.require_version("Pango", "1.0")
     from gi.repository import Pango
 except ValueError:
     print("Error: missing pango gobject introspection library")
     err = 1
 try:
-    gi.require_version('PangoCairo', '1.0')
+    gi.require_version("PangoCairo", "1.0")
     from gi.repository import PangoCairo
 except ValueError:
     print("Error: missing pangocairo gobject introspection library")
     err = 1
 
 try:
-    gi.require_version("cairo", '1.0')
+    gi.require_version("cairo", "1.0")
     from gi.repository import cairo
 except ValueError:
     print("Error: missing cairo gobject introspection library")
-    err = 1
-
-try:
-    from PIL import Image
-except ImportError:
-    print("Error: missing dependency python pillow (python3-pil)")
     err = 1
 
 try:
@@ -47,13 +40,13 @@ except ImportError:
     err = 1
 
 # check that LINUGAS lists every language with a .po file
-with open('po/LINGUAS') as f:
+with open("po/LINGUAS") as f:
     langs = f.read().splitlines()
-for root, dirs, files in os.walk('po'):
+for root, dirs, files in os.walk("po"):
     for file in files:
-        if not file.endswith('.po'):
+        if not file.endswith(".po"):
             continue
-        l = file.split('.po')
+        l = file.split(".po")
         if len(l) > 1 and not l[0] in langs:
             err = 1
             print("Error: missing translations for %s" % l[0])

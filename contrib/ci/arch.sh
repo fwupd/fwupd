@@ -3,14 +3,11 @@ set -e
 set -x
 shopt -s extglob
 
-#clone test firmware
-if [ "$CI_NETWORK" = "true" ]; then
-	./contrib/ci/get_test_firmware.sh
-	export G_TEST_SRCDIR=`pwd`/fwupd-test-firmware/installed-tests
-fi
+#clone test firmware if necessary
+. ./contrib/ci/get_test_firmware.sh
 
 #install anything missing from the container
-./contrib/ci/generate_dependencies.py | xargs pacman -S --noconfirm --needed
+./contrib/ci/fwupd_setup_helpers.py install-dependencies -o arch
 
 # prepare the build tree
 rm -rf build
@@ -21,10 +18,14 @@ cp -R ../../../!(build|dist) .
 popd
 chown nobody . -R
 
+# install and run the custom redfish simulator
+pacman -Syu --noconfirm python-flask
+../plugins/redfish/tests/redfish.py &
+
 # install and run TPM simulator necessary for plugins/uefi-capsule/uefi-self-test
 pacman -Syu --noconfirm swtpm tpm2-tools
 swtpm socket --tpm2 --server port=2321 --ctrl type=tcp,port=2322 --flags not-need-init --tpmstate "dir=$PWD" &
-trap "kill $!" EXIT
+trap 'kill $!' EXIT
 # extend a PCR0 value for test suite
 sleep 2
 tpm2_startup -c

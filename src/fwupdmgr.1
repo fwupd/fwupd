@@ -1,0 +1,21 @@
+.\" Report problems in https://github.com/fwupd/fwupd
+.TH man 8 "11 April 2021" @PACKAGE_VERSION@ "fwupdmgr man page"
+.SH NAME
+fwupdmgr \- firmware update manager client utility
+.SH SYNOPSIS
+fwupdmgr [CMD]
+.SH DESCRIPTION
+fwupdmgr is a command line fwupd client intended to be used interactively.
+The output between versions of fwupd is not guaranteed to be stable.
+.SH OPTIONS
+The fwupdmgr command takes various options depending on the action.
+Run \fBfwupdmgr --help\fR for the full list.
+.SH EXIT STATUS
+Commands that successfully execute will return "0", but commands that have no
+actions but successfully execute will return "2".
+.SH SEE ALSO
+fwupdagent(1), fwupdtool(1)
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Richard Hughes (richard@hughsie.com)

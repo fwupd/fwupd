@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#define G_LOG_DOMAIN				"FuCommon"
-
-#include <config.h>
+#define G_LOG_DOMAIN "FuCommon"
 
 #include "fu-common-guid.h"
+
+#include <config.h>
 
 /**
  * fu_common_guid_is_plausible:
@@ -21,7 +21,7 @@
  * Since: 1.2.5
  **/
 gboolean
-fu_common_guid_is_plausible (const guint8 *buf)
+fu_common_guid_is_plausible(const guint8 *buf)
 {
 	guint guint_sum = 0;
 

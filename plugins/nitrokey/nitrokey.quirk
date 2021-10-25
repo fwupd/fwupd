@@ -1,5 +1,5 @@
 # Nitrokey Storage
-[DeviceInstanceId=USB\VID_20A0&PID_4109]
+[USB\VID_20A0&PID_4109]
 Plugin = nitrokey
 Flags = needs-bootloader,use-runtime-version
 CounterpartGuid = USB\VID_03EB&PID_2FF1

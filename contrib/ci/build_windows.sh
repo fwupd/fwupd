@@ -2,26 +2,37 @@
 set -e
 #prep
 export LC_ALL=C.UTF-8
-export DESTDIR=`pwd`/dist
-root=`pwd`
+root=$(pwd)
+export DESTDIR=${root}/dist
 build=$root/build-win32
 rm -rf $DESTDIR $build
+
+# For logitech bulk controller being disabled (-Dplugin_logitech_bulkcontroller=false):
+# See https://bugzilla.redhat.com/show_bug.cgi?id=1991749
+# When fixed need to do the following to enable:
+# 1. need to add mingw64-protobuf mingw64-protobuf-tools to CI build deps
+# 2. add protoc = /path/to/protoc-c.exe in mingw64.cross
+# 3. Only enable when not a tagged release (Unsupported by Logitech)
 
 #build
 mkdir -p $build $DESTDIR && cd $build
 meson .. \
     --cross-file=../contrib/mingw64.cross \
     --prefix=/ \
-    --libexecdir=$target \
-    --bindir=$target \
+    --libexecdir="" \
+    --bindir="" \
     -Dbuild=standalone \
+    -Ddocs=none \
     -Dpolkit=false \
     -Dplugin_flashrom=false \
     -Dplugin_uefi_capsule=false \
     -Dplugin_redfish=false \
     -Dplugin_altos=false \
     -Dplugin_dell=false \
+    -Dplugin_logitech_bulkcontroller=false \
     -Dplugin_nvme=false \
+    -Dplugin_parade_lspcon=false \
+    -Dplugin_realtek_mst=false \
     -Dplugin_platform_integrity=false \
     -Dplugin_tpm=false \
     -Dsystemd=false \
@@ -67,7 +78,7 @@ makensis -NOCD $build/contrib/setup-win32.nsi
 cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll .
 
 #remove static archives
-find -type f -name "*.dll.a" | xargs rm -f
+find -type f -print0 -name "*.dll.a" | xargs rm -f
 
 #remove stuff that we really don't need
 rm -fr gcab.exe \

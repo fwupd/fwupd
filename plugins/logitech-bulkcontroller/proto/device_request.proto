@@ -1,0 +1,143 @@
+/*
+ * Copyright (c) 1999-2021 Logitech, Inc.
+ * All Rights Reserved
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+syntax = "proto3";
+
+package logi.device.proto;
+
+option java_package = "com.logitech.vc.proto";
+
+/**
+ * Request to reboot device
+ * This is to be included in UsbMsg
+
+ * EXPECTED RESPONSE
+ * RebootDeviceResponse
+ */
+message RebootDeviceRequest
+{
+	/**
+	 * Unused. Reserved for future use.
+	 */
+	bool reserved = 1;
+
+	/**
+	 *  A timestamp indicating when the reboot request
+	 *	was initiated.
+	 *  The device should include this entry as part of the event information
+	 *   it sends back to PC during a reboot request.
+	 */
+	uint64 iat = 2;
+}
+
+/**
+ * Reboot device response
+ */
+message RebootDeviceResponse
+{
+	/**
+	 * bool value to indicate reboot was requested.  If there are errors
+	 * while requesting a device to reboot, should set the value to false
+	 */
+	bool success = 1;
+}
+
+/**
+ * This message requests that the speaker boost audio setting be changed.
+ * The device should send a device info event after this setting request are
+ * handled.
+ *
+ * EXPECTED RESPONSE
+ * SetSpeakerBoostResponse
+ *
+ */
+message SetSpeakerBoostRequest
+{
+	/**
+	 * (REQUIRED) The speaker boost setting to be set
+	 *
+	 * If value is 0, the request is to disable.  If 1,
+	 * the request is to enable.
+	 */
+	int32 speaker_boost = 1;
+}
+
+message SetSpeakerBoostResponse
+{
+	/**
+	 * (REQUIRED) set to true if the audio setting request was successfully sent,
+	 * false otherwise
+	 */
+	bool success = 1;
+}
+
+/**
+ * This message requests that the noise reduction audio setting be changed.
+ * The device should send a device info event after this setting request are
+ * handled.
+ *
+ * EXPECTED RESPONSE
+ * SetNoiseReductionResponse
+ *
+ */
+message SetNoiseReductionRequest
+{
+	/**
+	 * (REQUIRED) The noise reduction setting to be set
+	 *
+	 * If value is 0, the request is to disable.  If 1,
+	 * the request is to enable.
+	 */
+	int32 noise_reduction = 1;
+}
+
+message SetNoiseReductionResponse
+{
+	/**
+	 * (REQUIRED) set to true if the audio setting request was successfully sent,
+	 * false otherwise
+	 */
+	bool success = 1;
+}
+
+/**
+ * This message requests that the reverb mode audio setting be changed.
+ * The device should send a device info event after this setting request are
+ * handled.
+ *
+ * EXPECTED RESPONSE
+ * SetReverbModeResponse
+ *
+ */
+message SetReverbModeRequest
+{
+	/**
+	 * Reverb mode enumeration
+	 */
+	enum ReverbMode {
+		DISABLED = 0;
+		MILD = 1;
+		NORMAL = 2;
+		AGGRESSIVE = 3;
+	}
+
+	/**
+	 * (REQUIRED) The reverb mode setting to be set
+	 *
+	 *  see Reverb mode enumeration
+	 */
+	ReverbMode reverb_mode = 1;
+}
+
+message SetReverbModeResponse
+{
+	/**
+	 * (REQUIRED) set to true if the setting request was successfully sent, false
+	 * otherwise
+	 */
+	bool success = 1;
+}

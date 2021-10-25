@@ -5,6 +5,7 @@
 %global libjcat_version 0.1.0
 %global systemd_version 231
 %global json_glib_version 1.1.1
+%global fwupdplugin_version @FWUPD_PLUGINVER@
 
 # although we ship a few tiny python files these are utilities that 99.99%
 # of users do not need -- use this to avoid dragging python onto CoreOS
@@ -15,7 +16,7 @@
 %global enable_ci 0
 %global enable_tests 1
 %global enable_dummy 1
-%global __meson_wrap_mode default
+%global __meson_wrap_mode nodownload
 
 # fwupd.efi is only available on these arches
 %ifarch x86_64 aarch64
@@ -73,7 +74,6 @@ BuildRequires: gtk-doc
 BuildRequires: gnutls-devel
 BuildRequires: gnutls-utils
 BuildRequires: meson
-BuildRequires: help2man
 BuildRequires: json-glib-devel >= %{json_glib_version}
 BuildRequires: vala
 BuildRequires: bash-completion
@@ -85,19 +85,18 @@ BuildRequires: flashrom-devel >= 1.2-2
 %if 0%{?have_modem_manager}
 BuildRequires: ModemManager-glib-devel >= 1.10.0
 BuildRequires: libqmi-devel >= 1.22.0
+BuildRequires: libmbim-devel
 %endif
 
 %if 0%{?have_uefi}
 BuildRequires: efivar-devel >= 33
-BuildRequires: python3 python3-cairo python3-gobject python3-pillow
+BuildRequires: python3 python3-cairo python3-gobject
 BuildRequires: pango-devel
 BuildRequires: cairo-devel cairo-gobject-devel
 BuildRequires: freetype
 BuildRequires: fontconfig
 BuildRequires: google-noto-sans-cjk-ttc-fonts
-BuildRequires: gnu-efi-devel
 BuildRequires: tpm2-tss-devel >= 2.2.3
-BuildRequires: pesign
 %endif
 
 %if 0%{?have_dell}
@@ -146,6 +145,7 @@ Recommends: %{name}-plugin-modem-manager
 Recommends: %{name}-plugin-flashrom
 %endif
 %if 0%{?have_uefi}
+Recommends: %{name}-efi
 Recommends: %{name}-plugin-uefi-capsule-data
 %endif
 
@@ -196,6 +196,26 @@ update operation. This subpackage is probably not required on embedded hardware
 or server machines.
 %endif
 
+%if 0%{?qubes_packages}
+%package qubes-dom0
+Summary: fwupd wrapper for Qubes OS - dom0 scripts
+Requires:   gcab
+Requires:   fwupd >= 1.5.7
+Requires:   libjcat >= 0.1.6
+
+%description qubes-dom0
+fwupd wrapper for Qubes OS
+
+%package qubes-vm
+Summary: fwupd wrapper for Qubes OS - VM scripts
+Requires:   gcab
+Requires:   fwupd >= 1.5.7
+Requires:   libjcat >= 0.1.6
+
+%description qubes-vm
+fwupd wrapper for Qubes OS
+%endif
+
 %prep
 %autosetup -p1
 
@@ -205,7 +225,7 @@ or server machines.
 %if 0%{?enable_ci}
     --werror \
 %endif
-    -Dgtkdoc=true \
+    -Ddocs=gtkdoc \
 %if 0%{?enable_tests}
     -Dtests=true \
 %else
@@ -230,12 +250,8 @@ or server machines.
 %if 0%{?have_uefi}
     -Dplugin_uefi_capsule=true \
     -Dplugin_uefi_pk=true \
-    -Defi_sbat_distro_id="fedora" \
-    -Defi_sbat_distro_summary="The Fedora Project" \
-    -Defi_sbat_distro_pkgname="%{name}" \
-    -Defi_sbat_distro_version="%{version}" \
-    -Defi_sbat_distro_url="https://src.fedoraproject.org/rpms/%{name}" \
     -Dplugin_tpm=true \
+    -Defi_binary=false \
 %else
     -Dplugin_uefi_capsule=false \
     -Dplugin_uefi_pk=false \
@@ -253,6 +269,9 @@ or server machines.
 %else
     -Dplugin_modem_manager=false \
 %endif
+%if 0%{?qubes_packages}
+    -Dqubes=true \
+%endif
     -Dman=true \
     -Dbluez=true \
     -Dsupported_build=true
@@ -269,21 +288,6 @@ or server machines.
 
 %install
 %meson_install
-
-# sign fwupd.efi loader
-%if 0%{?have_uefi}
-%ifarch x86_64
-%global efiarch x64
-%endif
-%ifarch aarch64
-%global efiarch aa64
-%endif
-%global fwup_efi_fn $RPM_BUILD_ROOT%{_libexecdir}/fwupd/efi/fwupd%{efiarch}.efi
-%pesign -s -i %{fwup_efi_fn} -o %{fwup_efi_fn}.tmp
-%define __pesign_client_cert fwupd-signer
-%pesign -s -i %{fwup_efi_fn}.tmp -o %{fwup_efi_fn}.signed
-rm -vf %{fwup_efi_fn}.tmp
-%endif
 
 mkdir -p --mode=0700 $RPM_BUILD_ROOT%{_localstatedir}/lib/fwupd/gnupg
 
@@ -307,13 +311,11 @@ done
 
 %postun
 %systemd_postun_with_restart fwupd.service
-%systemd_postun_with_restart pesign.service
 
 %files -f %{name}.lang
 %doc README.md AUTHORS
 %license COPYING
 %config(noreplace)%{_sysconfdir}/fwupd/daemon.conf
-%config(noreplace)%{_sysconfdir}/fwupd/upower.conf
 %if 0%{?have_uefi}
 %config(noreplace)%{_sysconfdir}/fwupd/uefi_capsule.conf
 %endif
@@ -326,8 +328,6 @@ done
 %endif
 %{_libexecdir}/fwupd/fwupdoffline
 %if 0%{?have_uefi}
-%{_libexecdir}/fwupd/efi/*.efi
-%{_libexecdir}/fwupd/efi/*.efi.signed
 %{_bindir}/fwupdate
 %{_bindir}/fwupdtpmevlog
 %endif
@@ -352,6 +352,7 @@ done
 %if 0%{?have_msr}
 /usr/lib/modules-load.d/fwupd-msr.conf
 %endif
+/usr/lib/modules-load.d/fwupd-redfish.conf
 %{_datadir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
 %{_datadir}/bash-completion/completions/fwupdtool
@@ -393,97 +394,112 @@ done
 %dir %{_localstatedir}/cache/fwupd
 %dir %{_datadir}/fwupd/quirks.d
 %{_datadir}/fwupd/quirks.d/*.quirk
-%{_localstatedir}/lib/fwupd/builder/README.md
-%{_libdir}/libfwupd*.so.*
+%{_datadir}/doc/fwupd/builder/README.md
+%if 0%{?have_uefi}
+%{_sysconfdir}/grub.d/35_fwupd
+%endif
+%{_libdir}/libfwupd.so.2*
+%{_libdir}/libfwupdplugin.so.%{fwupdplugin_version}*
 %{_libdir}/girepository-1.0/Fwupd-2.0.typelib
 %{_libdir}/girepository-1.0/FwupdPlugin-1.0.typelib
 /usr/lib/udev/rules.d/*.rules
 /usr/lib/systemd/system-shutdown/fwupd.shutdown
-%dir %{_libdir}/fwupd-plugins-3
-%{_libdir}/fwupd-plugins-3/libfu_plugin_acpi_dmar.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_acpi_facp.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_altos.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_amt.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_ata.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_bcm57xx.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_ccgx.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_colorhug.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_cros_ec.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_cpu.so
+%dir %{_libdir}/fwupd-plugins-%{fwupdplugin_version}
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_acpi_dmar.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_acpi_facp.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_acpi_phat.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_altos.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_amt.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_analogix.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_ata.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_bcm57xx.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_ccgx.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_colorhug.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_cros_ec.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_cpu.so
 %if 0%{?have_dell}
-%{_libdir}/fwupd-plugins-3/libfu_plugin_dell.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_dell_esrt.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_dell.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_dell_esrt.so
 %endif
-%{_libdir}/fwupd-plugins-3/libfu_plugin_dell_dock.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_dfu.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_dfu_csr.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_ebitdo.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_elantp.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_emmc.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_ep963x.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_fastboot.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_fresco_pd.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_hailuck.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_iommu.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_jabra.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_linux_lockdown.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_linux_sleep.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_linux_swap.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_linux_tainted.so
-%if 0%{?have_msr}
-%{_libdir}/fwupd-plugins-3/libfu_plugin_msr.so
-%endif
-%{_libdir}/fwupd-plugins-3/libfu_plugin_nitrokey.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_nvme.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_optionrom.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_pci_bcr.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_pci_mei.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_pixart_rf.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_redfish.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_rts54hid.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_rts54hub.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_solokey.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_steelseries.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_superio.so
-%if 0%{?have_dell}
-%{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_mst.so
-%endif
-%{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_cxaudio.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_prometheus.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_synaptics_rmi.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_system76_launch.so
-%if 0%{?enable_dummy}
-%{_libdir}/fwupd-plugins-3/libfu_plugin_test.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_test_ble.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_invalid.so
-%endif
-%{_libdir}/fwupd-plugins-3/libfu_plugin_thelio_io.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_thunderbolt.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_dell_dock.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_dfu.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_dfu_csr.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_ebitdo.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_elantp.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_elanfp.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_emmc.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_ep963x.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_fastboot.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_fresco_pd.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_hailuck.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_iommu.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_jabra.so
 %if 0%{?have_uefi}
-%{_libdir}/fwupd-plugins-3/libfu_plugin_tpm.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_tpm_eventlog.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_bios.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_capsule.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_dbx.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_pk.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_uefi_recovery.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_lenovo_thinklmi.so
 %endif
-%{_libdir}/fwupd-plugins-3/libfu_plugin_logind.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_logitech_hidpp.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_upower.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_vli.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_wacom_raw.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_wacom_usb.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_goodixmoc.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_linux_lockdown.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_linux_sleep.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_linux_swap.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_linux_tainted.so
+%if 0%{?have_msr}
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_msr.so
+%endif
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_nitrokey.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_nvme.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_optionrom.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_parade_lspcon.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_pci_bcr.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_pci_mei.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_pixart_rf.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_powerd.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_realtek_mst.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_redfish.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_rts54hid.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_rts54hub.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_solokey.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_steelseries.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_superio.so
+%if 0%{?have_dell}
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_mst.so
+%endif
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_cape.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_cxaudio.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_prometheus.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_synaptics_rmi.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_system76_launch.so
+%if 0%{?enable_dummy}
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_test.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_test_ble.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_invalid.so
+%endif
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_thelio_io.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_thunderbolt.so
+%if 0%{?have_uefi}
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_tpm.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_tpm_eventlog.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_bios.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_uefi_capsule.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_uefi_dbx.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_uefi_pk.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_uefi_recovery.so
+%endif
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_logind.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_logitech_bulkcontroller.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_logitech_hidpp.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_upower.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_vli.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_wacom_raw.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_wacom_usb.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_goodixmoc.so
 %ghost %{_localstatedir}/lib/fwupd/gnupg
 
 %if 0%{?have_modem_manager}
 %files plugin-modem-manager
-%{_libdir}/fwupd-plugins-3/libfu_plugin_modem_manager.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_modem_manager.so
 %endif
 %if 0%{?have_flashrom}
 %files plugin-flashrom
-%{_libdir}/fwupd-plugins-3/libfu_plugin_flashrom.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_flashrom.so
 %endif
 %if 0%{?have_uefi}
 %files plugin-uefi-capsule-data
@@ -507,9 +523,34 @@ done
 %{_datadir}/installed-tests/fwupd/*.test
 %{_datadir}/installed-tests/fwupd/*.cab
 %{_datadir}/installed-tests/fwupd/*.sh
+%{_datadir}/fwupd/device-tests/*.json
 %{_libexecdir}/installed-tests/fwupd/*
 %dir %{_sysconfdir}/fwupd/remotes.d
 %config(noreplace)%{_sysconfdir}/fwupd/remotes.d/fwupd-tests.conf
+%endif
+
+%if 0%{?qubes_packages}
+%files qubes-vm
+%{_libexecdir}/qubes-fwupd/fwupd_common_vm.py
+%{_libexecdir}/qubes-fwupd/fwupd_download_updates.py
+%{_libexecdir}/qubes-fwupd/fwupd_usbvm_validate.py
+
+%files qubes-dom0
+%{_datadir}/qubes-fwupd/src/fwupd_receive_updates.py
+/usr/sbin/qubes-fwupdmgr
+%{_datadir}/qubes-fwupd/src/qubes_fwupd_heads.py
+%{_datadir}/qubes-fwupd/src/qubes_fwupd_update.py
+%{_datadir}/qubes-fwupd/src/__init__.py
+%{_datadir}/qubes-fwupd/test/fwupd_logs.py
+%{_datadir}/qubes-fwupd/test/test_qubes_fwupdmgr.py
+%{_datadir}/qubes-fwupd/test/test_qubes_fwupd_heads.py
+%{_datadir}/qubes-fwupd/test/__init__.py
+%{_datadir}/qubes-fwupd/test/logs/get_devices.log
+%{_datadir}/qubes-fwupd/test/logs/get_updates.log
+%{_datadir}/qubes-fwupd/test/logs/help.log
+%{_datadir}/qubes-fwupd/test/logs/firmware.metainfo.xml
+%{_datadir}/qubes-fwupd/test/logs/metainfo_name/firmware.metainfo.xml
+%{_datadir}/qubes-fwupd/test/logs/metainfo_version/firmware.metainfo.xml
 %endif
 
 %changelog

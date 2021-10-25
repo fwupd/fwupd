@@ -1,0 +1,44 @@
+{
+  "name": "Wacom Intuos BT-S",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/1a8dd91d0536ca58eb662b92f54d11f83fd74b653bcfe93dcd98ed2a51a0a6a7-Wacom-CTL-4100WL-1.0.cab",
+      "components": [
+        {
+          "name": "bluetooth",
+          "version": "1.11",
+          "guids": [
+            "e317b626-4c1d-5892-8b4c-aafec894a4c9"
+          ]
+        },
+        {
+          "name": "main",
+          "version": "1.0",
+          "guids": [
+            "dc80ba55-c5f7-5195-b6f4-23c2940bcaec"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/cfec6515263c0d358d40d7b8fb6472214015225210dfa2db8dd307e896f03dcf-Wacom-CTL-4100WL-1.11.cab",
+      "components": [
+        {
+          "name": "bluetooth",
+          "version": "1.12",
+          "guids": [
+            "e317b626-4c1d-5892-8b4c-aafec894a4c9"
+          ]
+        },
+        {
+          "name": "main",
+          "version": "1.11",
+          "guids": [
+            "dc80ba55-c5f7-5195-b6f4-23c2940bcaec"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,12 +1,34 @@
 # Unifying Receiver
-[DeviceInstanceId=HIDRAW\VEN_046D&DEV_C52B]
+[HIDRAW\VEN_046D&DEV_C52B]
 Plugin = logitech_hidpp
-GType = FuLogitechHidPpRuntime
-VendorId=USB:0x046D
+GType = FuLogitechHidPpRuntimeUnifying
+VendorId = USB:0x046D
 InstallDuration = 30
 
+# Bolt Receiver (runtime)
+[HIDRAW\VEN_046D&DEV_C548]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpRuntimeBolt
+VendorId = USB:0x046D
+InstallDuration = 30
+
+# Bolt Receiver (bootloader)
+[HIDRAW\VEN_046D&DEV_AB07]
+Plugin = logitech_hidpp
+Name = Bolt Receiver
+GType = FuLogitechHidPpDevice
+CounterpartGuid = HIDRAW\VEN_046D&DEV_C548
+InstallDuration = 30
+Flags = rebind-attach,force-receiver-id,replug-match-guid,add-radio
+LogitechHidppModelId = B601C5480000
+
+# Bolt receiver radio (bootloader)
+[HIDRAW\VEN_046D&MOD_B601C5480000&ENT_05]
+CounterpartGuid = HIDRAW\VEN_046D&DEV_C548&ENT_05
+Flags = is-bootloader
+
 # Nordic
-[DeviceInstanceId=USB\VID_046D&PID_AAAA]
+[USB\VID_046D&PID_AAAA]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpBootloaderNordic
 FirmwareSizeMin = 0x4000
@@ -14,7 +36,7 @@ CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
 InstallDuration = 30
 
 # Nordic Pico
-[DeviceInstanceId=USB\VID_046D&PID_AAAE]
+[USB\VID_046D&PID_AAAE]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpBootloaderNordic
 FirmwareSizeMin = 0x4000
@@ -22,7 +44,7 @@ CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
 InstallDuration = 30
 
 # Texas
-[DeviceInstanceId=USB\VID_046D&PID_AAAC]
+[USB\VID_046D&PID_AAAC]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpBootloaderTexas
 FirmwareSizeMin = 0x4000
@@ -30,14 +52,84 @@ CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
 InstallDuration = 18
 
 # Texas Pico
-[DeviceInstanceId=USB\VID_046D&PID_AAAD]
+[USB\VID_046D&PID_AAAD]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpBootloaderTexas
 FirmwareSizeMin = 0x4000
 CounterpartGuid = HIDRAW\VEN_046D&DEV_C52B
 InstallDuration = 18
 
-# Possible HID++ v2.0 peripheral device
-[DeviceInstanceId=HIDRAW\VEN_046D]
+# K780 (through Unifying receiver)
+[HIDRAW\VEN_046D&DEV_405B]
 Plugin = logitech_hidpp
-GType = FuLogitechHidPpPeripheral
+GType = FuLogitechHidPpDevice
+ParentGuid = HIDRAW\VEN_046D&DEV_C52B
+InstallDuration = 150
+
+# MR0077
+[HIDRAW\VEN_046D&MOD_B02800000000]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio
+InstallDuration = 270
+
+# MR0077 (BLE direct)
+[HIDRAW\VEN_046D&DEV_B028]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,ble,rebind-attach
+InstallDuration = 270
+
+# YR0073
+[HIDRAW\VEN_046D&MOD_B36300000000]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio
+InstallDuration = 270
+
+# YR0073 (BLE direct)
+[HIDRAW\VEN_046D&DEV_B363]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,ble,rebind-attach
+InstallDuration = 270
+
+# M650
+[HIDRAW\VEN_046D&MOD_B02A00000000]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,no-request-required
+InstallDuration = 270
+
+# M650 (BLE direct)
+[HIDRAW\VEN_046D&DEV_B02A]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,ble,rebind-attach,no-request-required
+InstallDuration = 270
+
+# M750
+[HIDRAW\VEN_046D&MOD_B02C00000000]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,no-request-required
+InstallDuration = 270
+
+# M750 (BLE direct)
+[HIDRAW\VEN_046D&DEV_B02C]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,ble,rebind-attach,no-request-required
+InstallDuration = 270
+
+[HIDRAW\VEN_046D&MOD_B37000000000]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,no-request-required
+InstallDuration = 270
+
+[HIDRAW\VEN_046D&DEV_B370]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,ble,rebind-attach,no-request-required
+InstallDuration = 270

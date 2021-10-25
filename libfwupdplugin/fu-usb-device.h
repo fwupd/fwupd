@@ -10,37 +10,37 @@
 #ifdef HAVE_GUSB
 #include <gusb.h>
 #else
+#ifndef __GI_SCANNER__
 typedef GObject GUsbContext;
 typedef GObject GUsbDevice;
-#define G_USB_CHECK_VERSION(a,c,b)	0
+#define G_USB_CHECK_VERSION(a, c, b) 0
+#endif
 #endif
 
 #include "fu-plugin.h"
 #include "fu-udev-device.h"
 
-#define FU_TYPE_USB_DEVICE (fu_usb_device_get_type ())
-G_DECLARE_DERIVABLE_TYPE (FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuDevice)
+#define FU_TYPE_USB_DEVICE (fu_usb_device_get_type())
+G_DECLARE_DERIVABLE_TYPE(FuUsbDevice, fu_usb_device, FU, USB_DEVICE, FuDevice)
 
-struct _FuUsbDeviceClass
-{
-	FuDeviceClass	parent_class;
-	gboolean	 (*open)		(FuUsbDevice		*device,
-						 GError			**error);
-	gboolean	 (*close)		(FuUsbDevice		*device,
-						 GError			**error);
-	gboolean	 (*probe)		(FuUsbDevice		*device,
-						 GError			**error);
-	gpointer	__reserved[28];
+struct _FuUsbDeviceClass {
+	FuDeviceClass parent_class;
+	gpointer __reserved[31];
 };
 
-FuUsbDevice	*fu_usb_device_new			(GUsbDevice	*usb_device);
-guint16		 fu_usb_device_get_vid			(FuUsbDevice	*self);
-guint16		 fu_usb_device_get_pid			(FuUsbDevice	*self);
-guint16		 fu_usb_device_get_spec			(FuUsbDevice	*self);
-GUsbDevice	*fu_usb_device_get_dev			(FuUsbDevice	*device);
-void		 fu_usb_device_set_dev			(FuUsbDevice	*device,
-							 GUsbDevice	*usb_device);
-gboolean	 fu_usb_device_is_open			(FuUsbDevice	*device);
-GUdevDevice	*fu_usb_device_find_udev_device		(FuUsbDevice	*device,
-							 GError		**error)
-							 G_GNUC_WARN_UNUSED_RESULT;
+FuUsbDevice *
+fu_usb_device_new(GUsbDevice *usb_device);
+guint16
+fu_usb_device_get_vid(FuUsbDevice *self);
+guint16
+fu_usb_device_get_pid(FuUsbDevice *self);
+guint16
+fu_usb_device_get_spec(FuUsbDevice *self);
+GUsbDevice *
+fu_usb_device_get_dev(FuUsbDevice *device);
+void
+fu_usb_device_set_dev(FuUsbDevice *device, GUsbDevice *usb_device);
+gboolean
+fu_usb_device_is_open(FuUsbDevice *device);
+GUdevDevice *
+fu_usb_device_find_udev_device(FuUsbDevice *device, GError **error) G_GNUC_WARN_UNUSED_RESULT;

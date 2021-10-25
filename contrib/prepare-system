@@ -1,0 +1,48 @@
+#!/bin/bash -e
+# Setup local system for running development version
+
+PREFIX=$1
+ACTION=$2
+
+cleanup ()
+{
+    sudo rm -f /etc/dbus-1/system-local.conf \
+               /usr/share/polkit-1/actions/org.freedesktop.fwupd.policy \
+               /usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules \
+               /etc/grub.d/35_fwupd
+}
+
+install ()
+{
+    cat > system-local.conf << EOF
+<busconfig>
+    <includedir>PREFIX/share/dbus-1/system.d</includedir>
+</busconfig>
+EOF
+    sed -i s,PREFIX,$1, system-local.conf
+    sudo mv system-local.conf /etc/dbus-1/system-local.conf
+    sudo ln -s $1/share/polkit-1/actions/org.freedesktop.fwupd.policy \
+                /usr/share/polkit-1/actions/org.freedesktop.fwupd.policy
+    sudo ln -s $1/polkit-1/rules.d/org.freedesktop.fwupd.rules \
+                /usr/share/polkit-1/rules.d/org.freedesktop.fwupd.rules
+    sudo ln -s /usr/local/etc/grub.d/35_fwupd /etc/grub.d/35_fwupd
+}
+
+if [ "$PREFIX" = "/" ]; then
+    echo "Invalid prefix: $PREFIX"
+    exit 1
+fi
+case $ACTION in
+    remove)
+        cleanup
+        ;;
+    install)
+        cleanup
+        install $PREFIX
+        ;;
+    *)
+        echo "Unknown action $ACTION"
+        exit 1
+        ;;
+esac
+sudo systemctl reload dbus.service

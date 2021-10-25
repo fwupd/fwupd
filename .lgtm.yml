@@ -5,15 +5,10 @@ extraction:
   cpp:
     prepare:
       packages:
-      - python3-gi
       - libarchive-tools
-      - libcogl-pango-dev
-      - python3-pil
       - python3-pip
       - python3-setuptools
       - python3-wheel
-      - python3-cairo
-      - python3-gi-cairo
       - libssl-dev
     after_prepare:
     - python3 -m pip install --user "meson >= 0.52.0"
@@ -27,7 +22,9 @@ extraction:
     - "make install"
     - "export PKG_CONFIG_PATH=$LGTM_WORKSPACE/installdir/usr/lib/pkgconfig:$PKG_CONFIG_PATH"
     - "export LD_LIBRARY_PATH=$LGTM_WORKSPACE/installdir/usr/lib:$LD_LIBRARY_PATH"
+    configure:
+      command:
+      - "meson setup _lgtm_build_dir -Defi_binary=false -Dplugin_uefi_capsule_splash=false -Ddocs=none"
     index:
       build_command:
-      - "meson setup build"
-      - "ninja -C build"
+      - "ninja -C _lgtm_build_dir"

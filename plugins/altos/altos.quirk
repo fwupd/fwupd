@@ -1,11 +1,11 @@
 # ChaosKey
-[DeviceInstanceId=USB\VID_1D50&PID_60C6]
+[USB\VID_1D50&PID_60C6]
 Plugin = altos
 Flags = ~is-bootloader
 Name = Altus-Metrum ChaosKey
 CounterpartGuid = USB\VID_FFFE&PID_000A
 
-[DeviceInstanceId=USB\VID_FFFE&PID_000A]
+[USB\VID_FFFE&PID_000A]
 Plugin = altos
 Flags = is-bootloader
 Name = Altos [bootloader]

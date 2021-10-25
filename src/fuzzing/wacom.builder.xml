@@ -1,0 +1,12 @@
+<firmware gtype="FuWacFirmware">
+  <firmware gtype="FuSrecFirmware">
+    <idx>0x0</idx>
+    <addr>0x8008000</addr>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware gtype="FuSrecFirmware">
+    <idx>0x1</idx>
+    <addr>0x8040000</addr>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+</firmware>

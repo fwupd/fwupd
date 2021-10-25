@@ -1,17 +1,17 @@
 [USB\VID_0A5C&PID_6412]
-Flags= ignore-runtime
+Flags = ignore-runtime
 
 [ACME Inc.=True]
-Test = awesome
+Name = awesome
 
 [CORP*]
-Test = town
+Name = town
 
-[DeviceInstanceId=USB\VID_0BDA&PID_1100]
+[USB\VID_0BDA&PID_1100]
 Flags = clever
 Name = Hub
 Children = FuDevice|USB\VID_0763&PID_2806&I2C_01
 
-[DeviceInstanceId=USB\VID_0763&PID_2806&I2C_01]
+[USB\VID_0763&PID_2806&I2C_01]
 Name = HDMI
 Flags = updatable,internal

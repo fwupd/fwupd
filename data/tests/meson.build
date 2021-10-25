@@ -1,4 +1,5 @@
 subdir('builder')
 subdir('colorhug')
+subdir('efi')
 subdir('missing-hwid')
 subdir('multiple-rels')

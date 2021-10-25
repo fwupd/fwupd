@@ -1,0 +1,15 @@
+<firmware gtype="FuIfdBios">
+  <id>bios</id>
+  <idx>0x1</idx>
+  <addr>0x1000</addr>
+  <firmware gtype="FuEfiFirmwareVolume">
+    <id>fff12b8d-7696-4c8b-a985-2747075b4f50</id>
+    <alignment>0xB</alignment>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+  <firmware gtype="FuEfiFirmwareVolume">
+    <id>fff12b8d-7696-4c8b-a985-2747075b4f50</id>
+    <alignment>0xB</alignment>
+    <data>aGVsbG8gd29ybGQ=</data>
+  </firmware>
+</firmware>

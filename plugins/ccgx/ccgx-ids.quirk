@@ -1,319 +1,319 @@
 # CCG2 - CYPD2103-20FNXI
-[DeviceInstanceId=CCGX\SID_1400]
-FlashRowSize = 0x80
-FlashSize = 0x8000
+[CCGX\SID_1400]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x8000
 
 # CCG2 - CYPD2104-20FNXI
-[DeviceInstanceId=CCGX\SID_1401]
-FlashRowSize = 0x80
-FlashSize = 0x8000
+[CCGX\SID_1401]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x8000
 
 # CCG2 - CYPD2105-20FNXI
-[DeviceInstanceId=CCGX\SID_1402]
-FlashRowSize = 0x80
-FlashSize = 0x8000
+[CCGX\SID_1402]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x8000
 
 # CCG2 - CYPD2103-14LHXI
-[DeviceInstanceId=CCGX\SID_1403]
-FlashRowSize = 0x80
-FlashSize = 0x8000
+[CCGX\SID_1403]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x8000
 
 # CCG2 - CYPD2122-24LQXI
-[DeviceInstanceId=CCGX\SID_1404]
-FlashRowSize = 0x80
-FlashSize = 0x8000
+[CCGX\SID_1404]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x8000
 
 # CCG2 - CYPD2134-24LQXI
-[DeviceInstanceId=CCGX\SID_1405]
-FlashRowSize = 0x80
-FlashSize = 0x8000
+[CCGX\SID_1405]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x8000
 
 # CCG2 - CYPD2122-20FNXI
-[DeviceInstanceId=CCGX\SID_1406]
-FlashRowSize = 0x80
-FlashSize = 0x8000
+[CCGX\SID_1406]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x8000
 
 # CCG2 - CYPD2123-24LQXI
-[DeviceInstanceId=CCGX\SID_1407]
-FlashRowSize = 0x80
-FlashSize = 0x8000
+[CCGX\SID_1407]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x8000
 
 # CCG2 - CYPD2124-24LQXI
-[DeviceInstanceId=CCGX\SID_1408]
-FlashRowSize = 0x80
-FlashSize = 0x8000
+[CCGX\SID_1408]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x8000
 
 # CCG2 - CYPD2119-24LQXI
-[DeviceInstanceId=CCGX\SID_1409]
-FlashRowSize = 0x80
-FlashSize = 0x8000
+[CCGX\SID_1409]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x8000
 
 # CCG2 - CYPD2121-24LQXI
-[DeviceInstanceId=CCGX\SID_1410]
-FlashRowSize = 0x80
-FlashSize = 0x8000
+[CCGX\SID_1410]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x8000
 
 # CCG2 - CYPD2125-24LQXI
-[DeviceInstanceId=CCGX\SID_1411]
-FlashRowSize = 0x80
-FlashSize = 0x8000
+[CCGX\SID_1411]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x8000
 
 # CCG2 - CYPD2120-24LQXI
-[DeviceInstanceId=CCGX\SID_1412]
-FlashRowSize = 0x80
-FlashSize = 0x8000
+[CCGX\SID_1412]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x8000
 
 # CCG3 - CYPD3120-40LQXI
-[DeviceInstanceId=CCGX\SID_1D00]
-FlashRowSize = 0x80
-FlashSize = 0x20000
+[CCGX\SID_1D00]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x20000
 
 # CCG3 - CYPD3105-42FNXI
-[DeviceInstanceId=CCGX\SID_1D01]
-FlashRowSize = 0x80
-FlashSize = 0x20000
+[CCGX\SID_1D01]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x20000
 
 # CCG3 - CYPD3121-40LQXI
-[DeviceInstanceId=CCGX\SID_1D02]
-FlashRowSize = 0x80
-FlashSize = 0x20000
+[CCGX\SID_1D02]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x20000
 
 # CCG3 - CYPD3122-40LQXI
-[DeviceInstanceId=CCGX\SID_1D03]
-FlashRowSize = 0x80
-FlashSize = 0x20000
+[CCGX\SID_1D03]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x20000
 
 # CCG3 - CYPD3125-40LQXI
-[DeviceInstanceId=CCGX\SID_1D04]
-FlashRowSize = 0x80
-FlashSize = 0x20000
+[CCGX\SID_1D04]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x20000
 
 # CCG3 - CYPD3135-40LQXI
-[DeviceInstanceId=CCGX\SID_1D05]
-FlashRowSize = 0x80
-FlashSize = 0x20000
+[CCGX\SID_1D05]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x20000
 
 # CCG3 - CYPD3135-16SXQ'
-[DeviceInstanceId=CCGX\SID_1D06]
-FlashRowSize = 0x80
-FlashSize = 0x20000
+[CCGX\SID_1D06]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x20000
 
 # CCG3 - CYPD3126-42FNXI
-[DeviceInstanceId=CCGX\SID_1D07]
-FlashRowSize = 0x80
-FlashSize = 0x20000
+[CCGX\SID_1D07]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x20000
 
 # CCG3 - CYPD3123-40LQXI
-[DeviceInstanceId=CCGX\SID_1D09]
-FlashRowSize = 0x80
-FlashSize = 0x20000
+[CCGX\SID_1D09]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x20000
 
 # CCG4 - CYPD4225-40LQXI
-[DeviceInstanceId=CCGX\SID_1800]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_1800]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG4 - CYPD4125-40LQXI
-[DeviceInstanceId=CCGX\SID_1801]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_1801]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG4 - CYPD4235-40LQXI
-[DeviceInstanceId=CCGX\SID_1802]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_1802]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG4 - CYPD4135-40LQXI
-[DeviceInstanceId=CCGX\SID_1803]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_1803]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG4 - CYPD4225A0-33FNXIT
-[DeviceInstanceId=CCGX\SID_1810]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_1810]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG4 - CYPD4226-40LQXI
-[DeviceInstanceId=CCGX\SID_1F00]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_1F00]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG4 - CYPD4126-40LQXI
-[DeviceInstanceId=CCGX\SID_1F01]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_1F01]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG4 - CYPD4126-24LQXI
-[DeviceInstanceId=CCGX\SID_1F04]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_1F04]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG4 - CYPD4236-40LQXI
-[DeviceInstanceId=CCGX\SID_1F02]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_1F02]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG4 - CYPD4136-40LQXI
-[DeviceInstanceId=CCGX\SID_1F03]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_1F03]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG4 - CYPD4136-24LQXI
-[DeviceInstanceId=CCGX\SID_1F05]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_1F05]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG3PA - CYPD3174-24LQXQ
-[DeviceInstanceId=CCGX\SID_2000]
-FlashRowSize = 0x80
-FlashSize = 0x10000
+[CCGX\SID_2000]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x10000
 
 # CCG3PA - CYPD3174-16SXQ
-[DeviceInstanceId=CCGX\SID_2001]
-FlashRowSize = 0x80
-FlashSize = 0x10000
+[CCGX\SID_2001]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x10000
 
 # CCG3PA - CYPD3175-24LQXQ
-[DeviceInstanceId=CCGX\SID_2002]
-FlashRowSize = 0x80
-FlashSize = 0x10000
+[CCGX\SID_2002]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x10000
 
 # CCG3PA - CYPD3171-24LQXQ
-[DeviceInstanceId=CCGX\SID_2003]
-FlashRowSize = 0x80
-FlashSize = 0x10000
+[CCGX\SID_2003]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x10000
 
 # CCG3PA - CYPD3195-24LDXS
-[DeviceInstanceId=CCGX\SID_2005]
-FlashRowSize = 0x80
-FlashSize = 0x10000
+[CCGX\SID_2005]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x10000
 
 # CCG3PA - CYPD3196-24LDXS
-[DeviceInstanceId=CCGX\SID_2006]
-FlashRowSize = 0x80
-FlashSize = 0x10000
+[CCGX\SID_2006]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x10000
 
 # CCG3PA - CYPD3197-24LDXS
-[DeviceInstanceId=CCGX\SID_2007]
-FlashRowSize = 0x80
-FlashSize = 0x10000
+[CCGX\SID_2007]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x10000
 
 # CCG3PA2 - CYPDC1185-32LQXQ
-[DeviceInstanceId=CCGX\SID_2400]
-FlashRowSize = 0x80
-FlashSize = 0x20000
+[CCGX\SID_2400]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x20000
 
 # CCG3PA2 - CYPDC1186-30FNXI
-[DeviceInstanceId=CCGX\SID_2401]
-FlashRowSize = 0x80
-FlashSize = 0x20000
+[CCGX\SID_2401]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x20000
 
 # CCG3PA2 - CYPDC1186B2-30FNXI
-[DeviceInstanceId=CCGX\SID_2402]
-FlashRowSize = 0x80
-FlashSize = 0x20000
+[CCGX\SID_2402]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x20000
 
 # CCG5 - CYPD5225-96BZXI
-[DeviceInstanceId=CCGX\SID_2100]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_2100]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG5 - CYPD5125-40LQXI
-[DeviceInstanceId=CCGX\SID_2101]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_2101]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG5 - CYPD5235-96BZXI
-[DeviceInstanceId=CCGX\SID_2102]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_2102]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG5 - CYPD5236-96BZXI
-[DeviceInstanceId=CCGX\SID_2103]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_2103]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG5 - CYPD5237-96BZXI
-[DeviceInstanceId=CCGX\SID_2104]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_2104]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG5 - CYPD5227-96BZXI
-[DeviceInstanceId=CCGX\SID_2105]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_2105]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG5 - CYPD5135-40LQXI
-[DeviceInstanceId=CCGX\SID_2106]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_2106]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG6 - CYPD6125-40LQXI
-[DeviceInstanceId=CCGX\SID_2A00]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_2A00]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG6 - CYPD6126-96BZXI
-[DeviceInstanceId=CCGX\SID_2A10]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_2A10]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG6 - CYPD5126-40LQXI
-[DeviceInstanceId=CCGX\SID_2A01]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_2A01]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG6 - CYPD5137-40LQXI
-[DeviceInstanceId=CCGX\SID_2A02]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_2A02]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # CCG6 - CYPD6137-40LQXI
-[DeviceInstanceId=CCGX\SID_2A03]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_2A03]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # PAG1S - CYPAS111-24LQXQ
-[DeviceInstanceId=CCGX\SID_2B01]
-FlashRowSize = 0x80
-FlashSize = 0x10000
+[CCGX\SID_2B01]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x10000
 
 # PAG1S - CYPD3184-24LQXQ
-[DeviceInstanceId=CCGX\SID_2B00]
-FlashRowSize = 0x80
-FlashSize = 0x10000
+[CCGX\SID_2B00]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x10000
 
 # HX3PD - CYUSB4347-BZXC_PD
-[DeviceInstanceId=CCGX\SID_1F82]
-FlashRowSize = 0x100
-FlashSize = 0x20000
+[CCGX\SID_1F82]
+CcgxFlashRowSize = 0x100
+CcgxFlashSize = 0x20000
 
 # ACG1F - CYAC1126-24LQXI
-[DeviceInstanceId=CCGX\SID_2F00]
-FlashRowSize = 0x40
-FlashSize = 0x4000
+[CCGX\SID_2F00]
+CcgxFlashRowSize = 0x40
+CcgxFlashSize = 0x4000
 
 # ACG1F - CYAC1126-40LQXI
-[DeviceInstanceId=CCGX\SID_2F01]
-FlashRowSize = 0x40
-FlashSize = 0x4000
+[CCGX\SID_2F01]
+CcgxFlashRowSize = 0x40
+CcgxFlashSize = 0x4000
 
 # CCG6DF - CYPD6227-96BZXI
-[DeviceInstanceId=CCGX\SID_3000]
-FlashRowSize = 0x80
-FlashSize = 0x10000
+[CCGX\SID_3000]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x10000
 
 # CCG6DF - CYPD6127-96BZXI
-[DeviceInstanceId=CCGX\SID_3001]
-FlashRowSize = 0x80
-FlashSize = 0x10000
+[CCGX\SID_3001]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x10000
 
 # CCG6SF - CYPD6128-96BZXI
-[DeviceInstanceId=CCGX\SID_3300]
-FlashRowSize = 0x80
-FlashSize = 0x10000
+[CCGX\SID_3300]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x10000
 
 # CCG6SF - CYPD6127-48LQXI
-[DeviceInstanceId=CCGX\SID_3301]
-FlashRowSize = 0x80
-FlashSize = 0x10000
+[CCGX\SID_3301]
+CcgxFlashRowSize = 0x80
+CcgxFlashSize = 0x10000

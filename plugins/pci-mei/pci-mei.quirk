@@ -1,2 +1,2 @@
-[DeviceInstanceId=PCI\DRIVER_mei_me]
+[PCI\DRIVER_mei_me]
 Plugin = pci_mei

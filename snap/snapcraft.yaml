@@ -163,7 +163,6 @@ parts:
     stage-packages:
       - python3-gi
       - python3-gi-cairo
-      - python3-pil
     prime:
       - -etc
       - -usr
@@ -174,7 +173,7 @@ parts:
     meson-parameters: [--prefix=/,
                        -Dtests=false,
                        -Dbuild=all,
-                       -Dgtkdoc=false,
+                       -Ddocs=none,
                        -Dintrospection=false,
                        -Dman=false,
                        -Dplugin_modem_manager=true,
@@ -212,11 +211,13 @@ parts:
       - libpango1.0-dev
       - libpci-dev
       - libpolkit-gobject-1-dev
+      - libprotobuf-c-dev
       - libsmbios-dev
       - libsqlite3-dev
       - libsystemd-dev
       - locales
       - pkg-config
+      - protobuf-c-compiler
       - systemd
       - uuid-dev
     stage-packages:

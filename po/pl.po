@@ -15,7 +15,7 @@ msgstr ""
 "Language: pl\n"
 "Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -24,11 +24,22 @@ msgstr[1] "Pozostały %.0f minuty"
 msgstr[2] "Pozostało %.0f minut"
 msgstr[3] "Pozostało %.0f minut"
 
+#. TRANSLATORS: battery refers to the system power source
+#, c-format
+msgid "%s Battery Update"
+msgstr "Aktualizacja akumulatora %s"
+
 #. TRANSLATORS: the CPU microcode is firmware loaded onto the CPU
 #. * at system bootup
 #, c-format
 msgid "%s CPU Microcode Update"
 msgstr "Aktualizacja mikrokodu procesora %s"
+
+#. TRANSLATORS: camera can refer to the laptop internal
+#. * camera in the bezel or external USB webcam
+#, c-format
+msgid "%s Camera Update"
+msgstr "Aktualizacja aparatu %s"
 
 #. TRANSLATORS: a specific part of hardware,
 #. * the first %s is the device name, e.g. 'Secure Boot`
@@ -67,11 +78,32 @@ msgstr "Aktualizacja urządzenia %s"
 msgid "%s Embedded Controller Update"
 msgstr "Aktualizacja wbudowanego kontrolera %s"
 
+#. TRANSLATORS: Keyboard refers to an input device for typing
+#, c-format
+msgid "%s Keyboard Update"
+msgstr "Aktualizacja klawiatury %s"
+
 #. TRANSLATORS: ME stands for Management Engine, the Intel AMT thing,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s ME Update"
 msgstr "Aktualizacja podsystemu ME urządzenia %s"
+
+#. TRANSLATORS: Mouse refers to a handheld input device
+#, c-format
+msgid "%s Mouse Update"
+msgstr "Aktualizacja myszy %s"
+
+#. TRANSLATORS: Network Interface refers to the physical
+#. * PCI card, not the logical wired connection
+#, c-format
+msgid "%s Network Interface Update"
+msgstr "Aktualizacja interfejsu sieciowego %s"
+
+#. TRANSLATORS: Storage Controller is typically a RAID or SAS adapter
+#, c-format
+msgid "%s Storage Controller Update"
+msgstr "Aktualizacja kontrolera pamięci masowej %s"
 
 #. TRANSLATORS: the entire system, e.g. all internal devices,
 #. * the first %s is the device name, e.g. 'ThinkPad P50`
@@ -79,12 +111,22 @@ msgstr "Aktualizacja podsystemu ME urządzenia %s"
 msgid "%s System Update"
 msgstr "Aktualizacja komputera %s"
 
+#. TRANSLATORS: TPM refers to a Trusted Platform Module
+#, c-format
+msgid "%s TPM Update"
+msgstr "Aktualizacja TPM %s"
+
 #. TRANSLATORS: the Thunderbolt controller is a device that
 #. * has other high speed Thunderbolt devices plugged into it;
 #. * the first %s is the system name, e.g. 'ThinkPad P50`
 #, c-format
 msgid "%s Thunderbolt Controller Update"
 msgstr "Aktualizacja kontrolera Thunderbolt %s"
+
+#. TRANSLATORS: TouchPad refers to a flat input device
+#, c-format
+msgid "%s Touchpad Update"
+msgstr "Aktualizacja panelu dotykowego %s"
 
 #. TRANSLATORS: this is the fallback where we don't know if the release
 #. * is updating the system, the device, or a device class, or something else
@@ -104,12 +146,14 @@ msgstr "%s i wszystkie podłączone urządzenia nie będą mogły być używane
 msgid "%s manufacturing mode"
 msgstr "Tryb serwisowy %s"
 
-#. TRANSLATORS: warn the user before updating, %1 is a device name
+#. TRANSLATORS: warn the user before
+#. * updating, %1 is a device name
 #, c-format
 msgid "%s must remain connected for the duration of the update to avoid damage."
 msgstr "Urządzenie %s musi być podłączone podczas trwania aktualizacji, aby uniknąć uszkodzenia."
 
-#. TRANSLATORS: warn the user before updating, %1 is a machine name
+#. TRANSLATORS: warn the user before updating, %1 is a machine
+#. * name
 #, c-format
 msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
 msgstr "Urządzenie %s musi być podłączone do prądu podczas trwania aktualizacji, aby uniknąć uszkodzenia."
@@ -186,6 +230,10 @@ msgstr[3] "%u sekund"
 msgid "(obsoleted)"
 msgstr "(przestarzałe)"
 
+#. TRANSLATORS: the user needs to do something, e.g. remove the device
+msgid "Action Required:"
+msgstr "Wymagane działanie:"
+
 #. TRANSLATORS: command description
 msgid "Activate devices"
 msgstr "Aktywuje urządzenia"
@@ -217,6 +265,12 @@ msgstr "Wyrazić zgodę i włączyć repozytorium?"
 #, c-format
 msgid "Alias to %s"
 msgstr "Alias do „%s”"
+
+#. TRANSLATORS: on some systems certain devices have to have matching
+#. versions,
+#. * e.g. the EFI driver for a given network card cannot be different
+msgid "All devices of the same type will be updated at the same time"
+msgstr "Wszystkie urządzenia tego samego typu zostaną zaktualizowane w tym samym czasie"
 
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
@@ -278,6 +332,10 @@ msgstr "Podłącza do trybu oprogramowania sprzętowego"
 #. TRANSLATORS: waiting for user to authenticate
 msgid "Authenticating…"
 msgstr "Uwierzytelnianie…"
+
+#. TRANSLATORS: user needs to run a command
+msgid "Authentication details are required"
+msgstr "Wymagane są informacje o uwierzytelnieniu"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to downgrade the firmware on a removable device"
@@ -435,10 +493,6 @@ msgstr "Usuwa wyniki z ostatniej aktualizacji"
 msgid "Command not found"
 msgstr "Nie odnaleziono polecenia"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Kontynuować aktualizację?"
-
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
 msgstr "Konwertuje plik oprogramowania sprzętowego"
@@ -515,9 +569,15 @@ msgstr "Oprogramowanie sprzętowe urządzenia musi mieć test wersji"
 msgid "Device is locked"
 msgstr "Urządzenie jest zablokowane"
 
-#. TRANSLATORS: a version check is required for all firmware
+#. TRANSLATORS: the device cannot update from A->C and has to go A->B->C
 msgid "Device is required to install all provided releases"
 msgstr "Urządzenie musi zainstalować wszystkie podane wydania"
+
+#. TRANSLATORS: currently unreachable, perhaps because it is in a lower power
+#. state
+#. * or is out of wireless range
+msgid "Device is unreachable"
+msgstr "Nie można komunikować się z urządzeniem"
 
 #. TRANSLATORS: Device remains usable during update
 msgid "Device is usable for the duration of the update"
@@ -534,6 +594,10 @@ msgstr "Urządzenie przygotowuje aktualizacje"
 #. TRANSLATORS: there is more than one supplier of the firmware
 msgid "Device supports switching to a different branch of firmware"
 msgstr "Urządzenie obsługuje przełączanie na inną gałąź oprogramowania sprzętowego"
+
+#. TRANSLATORS: command line option
+msgid "Device update method"
+msgstr "Metoda aktualizacji urządzenia"
 
 #. TRANSLATORS: Device update needs to be separately activated
 msgid "Device update needs activation"
@@ -555,12 +619,13 @@ msgstr "Pomyślnie zaktualizowane urządzenia:"
 msgid "Devices that were not updated correctly:"
 msgstr "Urządzenia, które nie zostały poprawnie zaktualizowane:"
 
-#. TRANSLATORS: message letting the user know no device upgrade available due
-#. to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Urządzenia bez dostępnych aktualizacji oprogramowania sprzętowego: "
 
-#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
 msgid "Devices with the latest available firmware version:"
 msgstr "Urządzenia z najnowszą dostępną wersją oprogramowania sprzętowego:"
 
@@ -585,16 +650,16 @@ msgid "Do not check for old metadata"
 msgstr "Bez sprawdzania przestarzałych metadanych"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Bez sprawdzania potrzeby ponownego uruchomienia po aktualizacji"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Bez sprawdzania niezgłoszonej historii"
 
 #. TRANSLATORS: command line option
 msgid "Do not check if download remotes should be enabled"
 msgstr "Bez sprawdzania, czy repozytoria pobierania mają być włączone"
+
+#. TRANSLATORS: command line option
+msgid "Do not check or prompt for reboot after update"
+msgstr "Bez sprawdzania ani pytania o ponowne uruchomienie po aktualizacji"
 
 #. TRANSLATORS: turn on all debugging
 msgid "Do not include log domain prefix"
@@ -608,20 +673,6 @@ msgstr "Bez dołączania przedrostka czasu"
 msgid "Do not perform device safety checks"
 msgstr "Bez wykonywania testów bezpieczeństwa urządzenia"
 
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Bez wysyłania zgłoszenia tym razem, ale pytanie ponownie przy przyszłych aktualizacjach"
-msgstr[1] "Bez wysyłania zgłoszeń tym razem, ale pytanie ponownie przy przyszłych aktualizacjach"
-msgstr[2] "Bez wysyłania zgłoszeń tym razem, ale pytanie ponownie przy przyszłych aktualizacjach"
-msgstr[3] "Bez wysyłania zgłoszeń tym razem, ale pytanie ponownie przy przyszłych aktualizacjach"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "Bez wysyłania zgłoszenia i wyłączenie pytania o wysyłanie zgłoszeń przy przyszłych aktualizacjach"
-msgstr[1] "Bez wysyłania zgłoszeń i wyłączenie pytania o wysyłanie zgłoszeń przy przyszłych aktualizacjach"
-msgstr[2] "Bez wysyłania zgłoszeń i wyłączenie pytania o wysyłanie zgłoszeń przy przyszłych aktualizacjach"
-msgstr[3] "Bez wysyłania zgłoszeń i wyłączenie pytania o wysyłanie zgłoszeń przy przyszłych aktualizacjach"
-
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "Bez zapisywania do bazy danych historii"
@@ -630,10 +681,28 @@ msgstr "Bez zapisywania do bazy danych historii"
 msgid "Do you understand the consequences of changing the firmware branch?"
 msgstr "Czy rozumiesz konsekwencje zmiany gałęzi oprogramowania sprzętowego?"
 
+#. TRANSLATORS: offer to disable this nag
+msgid "Do you want to disable this feature for future updates?"
+msgstr "Wyłączyć tę funkcję dla przyszłych aktualizacji?"
+
+#. TRANSLATORS: ask the user if we can update the metadata
+msgid "Do you want to refresh this remote now?"
+msgstr "Odświeżyć to repozytorium teraz?"
+
+#. TRANSLATORS: offer to stop asking the question
+msgid "Do you want to upload reports automatically for future updates?"
+msgstr "Automatycznie wysyłać zgłoszenia dla przyszłych aktualizacji?"
+
 #. TRANSLATORS: success
 #. success
 msgid "Done!"
 msgstr "Gotowe."
+
+#. TRANSLATORS: message letting the user know an downgrade is available
+#. * %1 is the device name and %2 and %3 are version strings
+#, c-format
+msgid "Downgrade %s from %s to %s?"
+msgstr "Zainstalować poprzednią wersję urządzenia %s z %s do %s?"
 
 #. TRANSLATORS: command description
 msgid "Downgrades the firmware on a device"
@@ -650,6 +719,10 @@ msgstr "Instalowanie poprzedniej wersji %s z %s do %s… "
 #, c-format
 msgid "Downgrading %s…"
 msgstr "Instalowanie poprzedniej wersji urządzenia %s…"
+
+#. TRANSLATORS: command description
+msgid "Download a file"
+msgstr "Pobiera plik"
 
 #. TRANSLATORS: downloading from a remote server
 msgid "Downloading…"
@@ -670,6 +743,10 @@ msgstr "Podana partycja ESP nie jest prawidłowa"
 #. TRANSLATORS: command line option
 msgid "Enable firmware update support on supported systems"
 msgstr "Włącza obsługę aktualizacji oprogramowania sprzętowego na obsługiwanych systemach"
+
+#. TRANSLATORS: a remote here is like a 'repo' or software source
+msgid "Enable new remote?"
+msgstr "Włączyć nowe repozytorium?"
 
 #. TRANSLATORS: Turn on the remote
 msgid "Enable this remote?"
@@ -720,6 +797,10 @@ msgid "Exit after the engine has loaded"
 msgstr "Kończy działanie po wczytaniu mechanizmu"
 
 #. TRANSLATORS: command description
+msgid "Export a firmware file structure to XML"
+msgstr "Eksportuje strukturę pliku oprogramowania sprzętowego do pliku XML"
+
+#. TRANSLATORS: command description
 msgid "Extract a firmware blob to images"
 msgstr "Rozpakowuje zamknięte oprogramowanie sprzętowe do obrazów"
 
@@ -738,6 +819,10 @@ msgstr "PLIK-WEJŚCIOWY PLIK-WYJŚCIOWY [SKRYPT] [WYJŚCIE]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME"
 msgstr "NAZWA-PLIKU"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME CERTIFICATE PRIVATE-KEY"
+msgstr "NAZWA-PLIKU CERTYFIKAT KLUCZ-PRYWATNY"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ALT-NAME|DEVICE-ALT-ID"
@@ -764,7 +849,7 @@ msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "NAZWA-PLIKU-ŹRÓDŁOWEGO NAZWA-PLIKU-DOCELOWEGO [TYP-ŹRÓDŁOWEGO-OPROGRAMOWANIA-SPRZĘTOWEGO] [TYP-DOCELOWEGO-OPROGRAMOWANIA-SPRZĘTOWEGO]"
 
 #. TRANSLATORS: Suffix: the fallback HSI result
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Failed"
 msgstr "Nie powiodło się"
 
@@ -796,6 +881,10 @@ msgstr "Wczytanie poprawek się nie powiodło"
 #. TRANSLATORS: could not read existing system data
 msgid "Failed to load system dbx"
 msgstr "Wczytanie systemowej bazy dbx się nie powiodło"
+
+#. TRANSLATORS: another fwupdtool instance is already running
+msgid "Failed to lock"
+msgstr "Zablokowanie się nie powiodło"
 
 #. TRANSLATORS: the user didn't read the man page
 msgid "Failed to parse arguments"
@@ -834,6 +923,10 @@ msgstr "Nazwa pliku"
 msgid "Filename Signature"
 msgstr "Podpis nazwy pliku"
 
+#. TRANSLATORS: full path of the remote.conf file
+msgid "Filename Source"
+msgstr "Źródło nazwy pliku"
+
 #. TRANSLATORS: user did not include a filename parameter
 msgid "Filename required"
 msgstr "Wymagana jest nazwa pliku"
@@ -841,10 +934,6 @@ msgstr "Wymagana jest nazwa pliku"
 #. TRANSLATORS: command line option
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Filtruje za pomocą zestawu flag urządzeń, przedrostek ~ wyklucza, np. „internal,~needs-reboot”"
-
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Agent oprogramowania sprzętowego"
 
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
@@ -866,10 +955,6 @@ msgstr "Narzędzie oprogramowania sprzętowego"
 msgid "Firmware attestation"
 msgstr "Zaświadczenie oprogramowania sprzętowego"
 
-#. TRANSLATORS: system is not booted in UEFI mode
-msgid "Firmware can not be updated in legacy BIOS mode"
-msgstr "Nie można aktualizować oprogramowania sprzętowego w trybie przestarzałego BIOS-u"
-
 #. TRANSLATORS: user selected something not possible
 msgid "Firmware is already blocked"
 msgstr "Oprogramowanie sprzętowe jest już zablokowane"
@@ -886,6 +971,13 @@ msgstr[0] "Metadane oprogramowania sprzętowego nie zostały zaktualizowane prze
 msgstr[1] "Metadane oprogramowania sprzętowego nie zostały zaktualizowane przez %u dni i mogą nie być aktualne."
 msgstr[2] "Metadane oprogramowania sprzętowego nie zostały zaktualizowane przez %u dni i mogą nie być aktualne."
 msgstr[3] "Metadane oprogramowania sprzętowego nie zostały zaktualizowane przez %u dni i mogą nie być aktualne."
+
+#. TRANSLATORS: error message for a user who ran fwupdmgr
+#. refresh recently %1 is an already translated timestamp such
+#. as 6 hours or 15 seconds
+#, c-format
+msgid "Firmware metadata last refresh: %s ago. Use --force to refresh again."
+msgstr "Ostatnie odświeżenie metadanych oprogramowania sprzętowego: %s temu. Parametr --force odświeży ponownie."
 
 #. TRANSLATORS: Title: if firmware updates are available
 msgid "Firmware updates"
@@ -935,10 +1027,6 @@ msgid "Get all device flags supported by fwupd"
 msgstr "Uzyskuje wszystkie flagi urządzeń obsługiwane przez usługę fwupd"
 
 #. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Uzyskuje wszystkie urządzenia i możliwe wydania"
-
-#. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Uzyskuje wszystkie urządzenia obsługujące aktualizacje oprogramowania sprzętowego"
 
@@ -982,7 +1070,7 @@ msgstr "Uzyskuje wyniki z ostatniej aktualizacji"
 msgid "HWIDS-FILE"
 msgstr "PLIK-HWIDS"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "Sprzęt czeka na ponowne podłączenie"
 
@@ -995,7 +1083,7 @@ msgid "Host Security ID:"
 msgstr "Identyfikator zabezpieczeń komputera:"
 
 #. TRANSLATORS: Title:
-#. https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
+#. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
 
@@ -1014,10 +1102,6 @@ msgstr "Ignoruje niepowodzenia sum kontrolnych oprogramowania sprzętowego"
 #. TRANSLATORS: command line option
 msgid "Ignore firmware hardware mismatch failures"
 msgstr "Ignoruje niepowodzenia zgodności sprzętu z oprogramowaniem sprzętowym"
-
-#. TRANSLATORS: command line option
-msgid "Ignore requirement of external power source"
-msgstr "Ignoruje wymaganie zewnętrznego źródła zasilania"
 
 #. TRANSLATORS: Ignore validation safety checks when flashing this device
 msgid "Ignore validation safety checks"
@@ -1138,8 +1222,13 @@ msgstr[3] "Błędy"
 msgid "KEY,VALUE"
 msgstr "KLUCZ,WARTOŚĆ"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Baza kluczy"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "LOCATION"
+msgstr "POŁOŻENIE"
 
 #. TRANSLATORS: the original time/date the device was modified
 msgid "Last modified"
@@ -1268,7 +1357,7 @@ msgstr "Montuje MSP"
 msgid "Needs a reboot after installation"
 msgstr "Wymaga ponownego uruchomienia po instalacji"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Needs reboot"
 msgstr "Wymaga ponownego uruchomienia"
 
@@ -1314,6 +1403,9 @@ msgstr "Żadne repozytoria nie są obecnie włączone, więc żadne metadane nie
 msgid "No remotes available"
 msgstr "Brak dostępnych repozytoriów"
 
+msgid "No updates available for remaining devices"
+msgstr "Brak dostępnych aktualizacji dla pozostałych urządzeń"
+
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "Nie zastosowano żadnych aktualizacji"
@@ -1338,13 +1430,18 @@ msgstr "Wyświetla tylko jedną wartość PCR"
 msgid "Only use IPFS when downloading files"
 msgstr "Używa IPFS tylko podczas pobierania plików"
 
+#. TRANSLATORS: some devices can only be updated to a new semver and cannot
+#. * be downgraded or reinstalled with the existing version
+msgid "Only version upgrades are allowed"
+msgstr "Dozwolone są tylko aktualizacje wersji"
+
+#. TRANSLATORS: command line option
+msgid "Output in JSON format"
+msgstr "Wyjście w formacie JSON"
+
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Zastępuje domyślną ścieżkę ESP"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Zastępuje ostrzeżenia i wymusza działanie"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "PATH"
@@ -1369,13 +1466,17 @@ msgstr "Hasło"
 msgid "Payload"
 msgstr "Dane"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Pending"
 msgstr "Oczekujące"
 
 #. TRANSLATORS: console message when not using plymouth
 msgid "Percentage complete"
 msgstr "Procent ukończenia"
+
+#. TRANSLATORS: prompt to apply the update
+msgid "Perform operation?"
+msgstr "Wykonać działanie?"
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1451,6 +1552,12 @@ msgstr "Ponowne uruchamianie…"
 #. TRANSLATORS: command description
 msgid "Refresh metadata from remote server"
 msgstr "Odświeża metadane ze zdalnego serwera"
+
+#. TRANSLATORS: message letting the user know an upgrade is available
+#. * %1 is the device name and %2 is a version string
+#, c-format
+msgid "Reinstall %s to %s?"
+msgstr "Ponownie zainstalować urządzenie %s do wersji %s?"
 
 #. TRANSLATORS: command description
 msgid "Reinstall current firmware on the device"
@@ -1531,9 +1638,17 @@ msgstr "Wykonuje procedurę czyszczenia składania wtyczki podczas używania „
 msgid "Run the plugin composite prepare routine when using install-blob"
 msgstr "Wykonuje procedurę przygotowania składania wtyczki podczas używania „install-blob”"
 
+#. TRANSLATORS: The kernel does not support this plugin
+msgid "Running kernel is too old"
+msgstr "Działające jądro jest za stare"
+
 #. TRANSLATORS:  this is the HSI suffix
 msgid "Runtime Suffix"
 msgstr "Przyrostek uruchamiania"
+
+#. TRANSLATORS: Title: SPI refers to the flash chip in the computer
+msgid "SPI BIOS Descriptor"
+msgstr "Deskryptor BIOS-u SPI"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS region"
@@ -1648,9 +1763,14 @@ msgstr "Wyświetla informacje o stanie aktualizacji oprogramowania sprzętowego
 msgid "Shutdown now?"
 msgstr "Wyłączyć teraz?"
 
+#. TRANSLATORS: command description
+msgid "Sign a firmware with a new key"
+msgstr "Podpisuje oprogramowanie sprzętowe nowym kluczem"
+
 msgid "Sign data using the client certificate"
 msgstr "Podpisanie danych za pomocą certyfikatu klienta"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "Podpisanie danych za pomocą certyfikatu klienta"
@@ -1680,7 +1800,7 @@ msgstr "Podaje plik bazy dbx"
 msgid "Specify the number of bytes per USB transfer"
 msgstr "Podaje liczbę bajtów na przesyłanie USB"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Success"
 msgstr "Powodzenie"
 
@@ -1697,6 +1817,10 @@ msgstr "Pomyślnie wyłączono repozytorium"
 #. * about available firmware on the remote server
 msgid "Successfully downloaded new metadata: "
 msgstr "Pomyślnie pobrano nowe metadane: "
+
+#. TRANSLATORS: success message
+msgid "Successfully enabled and refreshed remote"
+msgstr "Pomyślnie włączono i odświeżono repozytorium"
 
 #. TRANSLATORS: success message
 msgid "Successfully enabled remote"
@@ -1756,6 +1880,12 @@ msgstr "Uśpienie do trybu bezczynności"
 msgid "Suspend-to-ram"
 msgstr "Uśpienie do pamięci RAM"
 
+#. TRANSLATORS: show and ask user to confirm --
+#. * %1 is the old branch name, %2 is the new branch name
+#, c-format
+msgid "Switch branch from %s to %s?"
+msgstr "Przełączyć gałąź z %s na %s?"
+
 #. TRANSLATORS: command description
 msgid "Switch the firmware branch on the device"
 msgstr "Przełącza gałąź oprogramowania sprzętowego na urządzeniu"
@@ -1782,6 +1912,10 @@ msgstr "Skażone"
 
 msgid "Target"
 msgstr "Cel"
+
+#. TRANSLATORS: command description
+msgid "Test a device using a JSON manifest"
+msgstr "Testuje urządzenie za pomocą manifestu JSON"
 
 #. TRANSLATORS: do not translate the variables marked using $
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
@@ -1848,10 +1982,6 @@ msgstr "To narzędzie umożliwia administratorowi odpytywanie i sterowanie usł
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
 msgstr "To narzędzie umożliwia administratorowi używanie wtyczek fwupd bez ich instalacji na komputerze."
 
-#. TRANSLATORS: CLI description
-msgid "This tool can be used from other tools and from shell scripts."
-msgstr "To narzędzie może być używane z innych narzędzi i ze skryptów powłoki."
-
 #. TRANSLATORS: the user needs to stop playing with stuff
 msgid "This tool can only be used by the root user"
 msgstr "To narzędzie może być używane tylko przez użytkownika root"
@@ -1864,7 +1994,7 @@ msgstr "To narzędzie odczyta i przetworzy dziennik zdarzeń TPM z oprogramowa
 msgid "Timeout in milliseconds for each parse"
 msgstr "Czas oczekiwania w milisekundach dla każdego przetworzenia"
 
-#. TRANSLATORS: The update state of the specific device
+#. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Przejściowe niepowodzenie"
 
@@ -1887,6 +2017,10 @@ msgstr "Aktualizacje kapsułowe UEFI są niedostępne lub wyłączone w konfigu
 #. TRANSLATORS: program name
 msgid "UEFI dbx Utility"
 msgstr "Narzędzie bazy dbx dla UEFI"
+
+#. TRANSLATORS: system is not booted in UEFI mode
+msgid "UEFI firmware can not be updated in legacy BIOS mode"
+msgstr "Nie można aktualizować oprogramowania sprzętowego UEFI w trybie przestarzałego BIOS-u"
 
 #. TRANSLATORS: Title: PK is the 'platform key' for the machine
 msgid "UEFI platform key"
@@ -2020,26 +2154,12 @@ msgstr "Aktualizowanie urządzenia %s…"
 #. TRANSLATORS: message letting the user know an upgrade is available
 #. * %1 is the device name and %2 and %3 are version strings
 #, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "Dostępna jest aktualizacja urządzenia %s z wersji %s do %s"
-
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Wysłanie zgłoszenia tylko tym razem, ale pytanie ponownie przy przyszłych aktualizacjach"
-msgstr[1] "Wysłanie zgłoszeń tylko tym razem, ale pytanie ponownie przy przyszłych aktualizacjach"
-msgstr[2] "Wysłanie zgłoszeń tylko tym razem, ale pytanie ponownie przy przyszłych aktualizacjach"
-msgstr[3] "Wysłanie zgłoszeń tylko tym razem, ale pytanie ponownie przy przyszłych aktualizacjach"
+msgid "Upgrade %s from %s to %s?"
+msgstr "Zaktualizować urządzenie %s z wersji %s na %s?"
 
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Wysłać zgłoszenie?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Wysłanie zgłoszenia tym razem i automatyczne wysyłanie zgłoszeń po ukończeniu przyszłych aktualizacji"
-msgstr[1] "Wysłanie zgłoszeń tym razem i automatyczne wysyłanie zgłoszeń po ukończeniu przyszłych aktualizacji"
-msgstr[2] "Wysłanie zgłoszeń tym razem i automatyczne wysyłanie zgłoszeń po ukończeniu przyszłych aktualizacji"
-msgstr[3] "Wysłanie zgłoszeń tym razem i automatyczne wysyłanie zgłoszeń po ukończeniu przyszłych aktualizacji"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."
@@ -2049,11 +2169,11 @@ msgstr "Wysyłanie zgłoszeń o oprogramowaniu sprzętowym pomaga dostawcom spr
 msgid "Urgency"
 msgstr "Pilność"
 
-#. TRANSLATORS: error message explaining command to run to how to get help
+#. TRANSLATORS: error message explaining command on how to get help
 msgid "Use fwupdmgr --help for help"
 msgstr "Polecenie fwupdmgr --help wyświetli pomoc"
 
-#. TRANSLATORS: error message explaining command to run to how to get help
+#. TRANSLATORS: error message explaining command on how to get help
 msgid "Use fwupdtool --help for help"
 msgstr "Polecenie fwupdtool --help wyświetli pomoc"
 
@@ -2148,6 +2268,10 @@ msgstr "[IDENTYFIKATOR-URZĄDZENIA|GUID] [GAŁĄŹ]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[FILE FILE_SIG REMOTE-ID]"
 msgstr "[PLIK PODPIS_PLIKU IDENTYFIKATOR-REPOZYTORIUM]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "[FILENAME1] [FILENAME2]"
+msgstr "[NAZWA-PLIKU1] [NAZWA-PLIKU2]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[SMBIOS-FILE|HWIDS-FILE]"

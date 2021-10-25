@@ -1,6 +1,0 @@
-[scripting]
-A variety of client tools are provided by fwupd.  Not all tools are suggested to be scripted.
-
-fwupdmgr is a command line fwupd client intended to be used interactively. The output between versions of fwupd is not guaranteed to be stable. Commands that succesfully execute will return "0". Commands that have no actions but succesfully execute will return "2".
-
-fwupdagent is a command line fwupd client intended to be used by scripts. The output is JSON and guaranteed to be stable. Commands that succesfully execute will return "0".

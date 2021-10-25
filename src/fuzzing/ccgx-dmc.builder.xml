@@ -1,6 +1,4 @@
 <firmware gtype="FuCcgxDmcFirmware">
   <version_raw>0x1000800</version_raw>
-  <image>
-    <data>aGVsbG8gd29ybGQ=</data>
-  </image>
+  <data>aGVsbG8gd29ybGQ=</data>
 </firmware>

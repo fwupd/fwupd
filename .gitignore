@@ -2,6 +2,7 @@
 /build-win32
 /dist
 /.vscode
+.vscode-ctags
 /build-dir
 /.flatpak-builder
 /repo
@@ -21,6 +22,7 @@
 /*.dsc
 /*.xz
 /*.gz
+/venv
 __pycache__
 plugins/acpi-dmar/tests/
 plugins/acpi-facp/tests/

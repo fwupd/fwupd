@@ -10,6 +10,7 @@ shared_module('fu_plugin_superio',
   sources : [
     'fu-plugin-superio.c',
     'fu-superio-device.c',
+    'fu-superio-it55-device.c',
     'fu-superio-it85-device.c',
     'fu-superio-it89-device.c',
     'fu-superio-common.c',

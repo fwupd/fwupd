@@ -1,5 +1,4 @@
 if get_option('plugin_uefi_capsule')
-subdir('efi')
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']
 
@@ -11,6 +10,25 @@ endif
 install_data(['uefi-capsule.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
 
+backend_srcs = ['fu-uefi-backend.c']
+if host_machine.system() == 'linux'
+  backend_srcs += 'fu-uefi-backend-linux.c'
+  # replace @localstatedir@
+  con2 = configuration_data()
+  con2.set('localstatedir', localstatedir)
+  configure_file(
+    input : 'fwupd.grub.conf.in',
+    output : '35_fwupd',
+    configuration : con2,
+    install: true,
+    install_dir: join_paths(sysconfdir, 'grub.d')
+  )
+elif host_machine.system() == 'freebsd'
+  backend_srcs += 'fu-uefi-backend-freebsd.c'
+else
+  error('no ESRT support for @0@'.format(host_machine.system()))
+endif
+
 shared_module('fu_plugin_uefi_capsule',
   fu_hash,
   sources : [
@@ -19,10 +37,14 @@ shared_module('fu_plugin_uefi_capsule',
     'fu-ucs2.c',
     'fu-uefi-bootmgr.c',
     'fu-uefi-common.c',
+    'fu-uefi-cod-device.c',
+    'fu-uefi-nvram-device.c',
+    'fu-uefi-grub-device.c',
     'fu-uefi-device.c',
     'fu-uefi-devpath.c',
     'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
+    backend_srcs,
   ],
   include_directories : [
     root_incdir,
@@ -38,6 +60,7 @@ shared_module('fu_plugin_uefi_capsule',
   c_args : cargs,
   dependencies : [
     plugin_deps,
+    platform_deps,
     efiboot,
     tpm2tss,
   ],
@@ -54,9 +77,13 @@ fwupdate = executable(
     'fu-uefi-bootmgr.c',
     'fu-uefi-common.c',
     'fu-uefi-device.c',
+    'fu-uefi-cod-device.c',
+    'fu-uefi-nvram-device.c',
+    'fu-uefi-grub-device.c',
     'fu-uefi-devpath.c',
     'fu-uefi-pcrs.c',
     'fu-uefi-update-info.c',
+    backend_srcs,
   ],
   include_directories : [
     root_incdir,
@@ -65,6 +92,7 @@ fwupdate = executable(
   ],
   dependencies : [
     plugin_deps,
+    platform_deps,
     efiboot,
     tpm2tss,
   ],
@@ -78,19 +106,12 @@ fwupdate = executable(
 )
 
 if get_option('man')
-  custom_target('fwupdate-man',
-    input : fwupdate,
+  configure_file(
+    input : 'fwupdate.1',
     output : 'fwupdate.1',
-    command : [
-      help2man, '@INPUT@',
-      '--no-info',
-      '--output', '@OUTPUT@',
-      '--name', 'Debugging utility for UEFI firmware updates',
-      '--manual', 'User Commands',
-      '--version-string', fwupd_version,
-    ],
-    install : true,
-    install_dir : join_paths(mandir, 'man1'),
+    configuration : conf,
+    install: true,
+    install_dir: join_paths(mandir, 'man1'),
   )
 endif
 
@@ -107,24 +128,26 @@ foreach ux_lingua : ux_linguas
   ux_capsule_pofiles += join_paths(meson.source_root(), 'po', '@0@.po'.format(ux_lingua))
 endforeach
 
-# add the archive of pregenerated images
-custom_target('ux-capsule-tar',
-  input : [
-    join_paths(meson.source_root(), 'po', 'LINGUAS'),
-    join_paths(meson.current_source_dir(), 'make-images.py'),
-    ux_capsule_pofiles,
-  ],
-  output : 'uefi-capsule-ux.tar.xz',
-  command : [
-    python3.path(),
-    join_paths(meson.current_source_dir(), 'make-images.py'),
-    '--podir', join_paths(meson.source_root(), 'po'),
-    '--label', 'Installing firmware update…',
-    '--out', '@OUTPUT@',
-  ],
-  install: true,
-  install_dir: join_paths(datadir, 'fwupd'),
-)
+if get_option('plugin_uefi_capsule_splash')
+  # add the archive of pregenerated images
+  custom_target('ux-capsule-tar',
+    input : [
+      join_paths(meson.source_root(), 'po', 'LINGUAS'),
+      join_paths(meson.current_source_dir(), 'make-images.py'),
+      ux_capsule_pofiles,
+    ],
+    output : 'uefi-capsule-ux.tar.xz',
+    command : [
+      python3.path(),
+      join_paths(meson.current_source_dir(), 'make-images.py'),
+      '--podir', join_paths(meson.source_root(), 'po'),
+      '--label', 'Installing firmware update…',
+      '--out', '@OUTPUT@',
+    ],
+    install: true,
+    install_dir: join_paths(datadir, 'fwupd'),
+  )
+endif
 
 if get_option('tests')
   testdatadir = join_paths(meson.current_source_dir(), 'tests')
@@ -138,10 +161,14 @@ if get_option('tests')
       'fu-uefi-bootmgr.c',
       'fu-uefi-common.c',
       'fu-uefi-device.c',
+      'fu-uefi-cod-device.c',
+      'fu-uefi-nvram-device.c',
+      'fu-uefi-grub-device.c',
       'fu-uefi-devpath.c',
       'fu-uefi-pcrs.c',
       'fu-uefi-update-info.c',
       'fu-ucs2.c',
+      backend_srcs,
     ],
     include_directories : [
       root_incdir,
@@ -150,6 +177,7 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
+      platform_deps,
       efiboot,
       tpm2tss,
     ],

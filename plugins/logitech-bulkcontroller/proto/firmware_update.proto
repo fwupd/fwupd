@@ -1,0 +1,38 @@
+/*
+ * Copyright (c) 1999-2021 Logitech, Inc.
+ * All Rights Reserved
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+syntax = "proto3";
+
+package logi.device.proto;
+
+option java_package = "com.logitech.vc.proto";
+
+/**
+ * Request to start update
+ * This is to be included in UsbMsg
+
+ * EXPECTED RESPONSE
+ * UpdateNowResponse
+ */
+message UpdateNowRequest
+{
+	/**
+	 * Unused. Reserved for future use.
+	 */
+	bool reserved = 1;
+}
+
+/**
+ * Update now response
+ */
+message UpdateNowResponse
+{
+	/**
+	 * bool value to indicate update was started
+	 */
+	bool started = 1;
+}

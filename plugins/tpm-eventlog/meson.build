@@ -60,6 +60,7 @@ endif
 
 fwupdtpmevlog = executable(
   'fwupdtpmevlog',
+  fu_hash,
   sources : [
     'fu-tpm-eventlog.c',
     'fu-tpm-eventlog-common.c',
@@ -83,19 +84,12 @@ fwupdtpmevlog = executable(
 )
 
 if get_option('man')
-  custom_target('fwupdtpmevlog-man',
-    input : fwupdtpmevlog,
+  configure_file(
+    input : 'fwupdtpmevlog.1',
     output : 'fwupdtpmevlog.1',
-    command : [
-      help2man, '@INPUT@',
-      '--no-info',
-      '--output', '@OUTPUT@',
-      '--name', 'Debugging utility for the TPM event log',
-      '--manual', 'User Commands',
-      '--version-string', fwupd_version,
-    ],
-    install : true,
-    install_dir : join_paths(mandir, 'man1'),
+    configuration : conf,
+    install: true,
+    install_dir: join_paths(mandir, 'man1'),
   )
 endif
 

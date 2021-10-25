@@ -41,6 +41,7 @@ if get_option('tests')
   testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
   testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
   testdatadirs.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
+  cargs += '-DPLUGINSOURCEDIR="' + meson.current_source_dir() + '"'
   e = executable(
     'synaptics-mst-self-test',
     fu_hash,

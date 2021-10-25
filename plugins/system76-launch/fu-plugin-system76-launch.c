@@ -7,13 +7,13 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 #include "fu-system76-launch-device.h"
 
 void
-fu_plugin_init (FuPlugin *plugin)
+fu_plugin_init(FuPlugin *plugin)
 {
-	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_SYSTEM76_LAUNCH_DEVICE);
+	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_SYSTEM76_LAUNCH_DEVICE);
 }

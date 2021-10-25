@@ -648,3 +648,64 @@ LIBFWUPD_1.5.6 {
     fwupd_release_get_locations;
   local: *;
 } LIBFWUPD_1.5.5;
+
+LIBFWUPD_1.5.8 {
+  global:
+    fwupd_device_add_protocol;
+    fwupd_device_get_protocols;
+    fwupd_device_has_protocol;
+  local: *;
+} LIBFWUPD_1.5.6;
+
+LIBFWUPD_1.6.0 {
+  global:
+    fwupd_device_get_composite_id;
+    fwupd_device_set_composite_id;
+  local: *;
+} LIBFWUPD_1.5.8;
+
+LIBFWUPD_1.6.1 {
+  global:
+    fwupd_remote_set_filename_source;
+    fwupd_remote_setup;
+    fwupd_version_string;
+  local: *;
+} LIBFWUPD_1.6.0;
+
+LIBFWUPD_1.6.2 {
+  global:
+    fwupd_device_get_version_build_date;
+    fwupd_device_has_icon;
+    fwupd_device_remove_child;
+    fwupd_device_set_version_build_date;
+    fwupd_remote_to_json;
+    fwupd_request_from_variant;
+    fwupd_request_get_created;
+    fwupd_request_get_device_id;
+    fwupd_request_get_id;
+    fwupd_request_get_image;
+    fwupd_request_get_kind;
+    fwupd_request_get_message;
+    fwupd_request_get_type;
+    fwupd_request_kind_from_string;
+    fwupd_request_kind_to_string;
+    fwupd_request_new;
+    fwupd_request_set_created;
+    fwupd_request_set_device_id;
+    fwupd_request_set_id;
+    fwupd_request_set_image;
+    fwupd_request_set_kind;
+    fwupd_request_set_message;
+    fwupd_request_to_string;
+    fwupd_request_to_variant;
+  local: *;
+} LIBFWUPD_1.6.1;
+
+LIBFWUPD_1.7.0 {
+  global:
+    fwupd_security_attr_add_guid;
+    fwupd_security_attr_add_guids;
+    fwupd_security_attr_get_guids;
+    fwupd_security_attr_has_guid;
+  local: *;
+} LIBFWUPD_1.6.2;

@@ -48,4 +48,5 @@ typedef enum {
 	CH_ERROR_LAST
 } ChError;
 
-const gchar	*ch_strerror			(ChError	 error_enum);
+const gchar *
+ch_strerror(ChError error_enum);

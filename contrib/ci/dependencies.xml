@@ -10,6 +10,11 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="bash">
+    <distro id="void">
+      <package />
+    </distro>
+  </dependency>
   <dependency type="build" id="bash-completion">
     <distro id="debian">
       <control />
@@ -76,6 +81,22 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="clang-format">
+    <distro id="fedora">
+      <package>clang-tools-extra</package>
+    </distro>
+    <distro id="debian">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="gcc">
+    <distro id="void">
+      <package />
+    </distro>
+  </dependency>
   <dependency type="build" id="gcc-multilib-s390x-linux-gnu">
     <distro id="debian">
       <package variant="s390x" />
@@ -86,6 +107,9 @@
       <package>cairo-devel</package>
     </distro>
     <distro id="fedora">
+      <package>cairo-devel</package>
+    </distro>
+    <distro id="void">
       <package>cairo-devel</package>
     </distro>
     <distro id="debian">
@@ -125,6 +149,9 @@
       <package>json-glib-devel</package>
     </distro>
     <distro id="fedora">
+      <package>json-glib-devel</package>
+    </distro>
+    <distro id="void">
       <package>json-glib-devel</package>
     </distro>
     <distro id="debian">
@@ -171,10 +198,12 @@
       <package>pciutils-devel</package>
     </distro>
     <distro id="debian">
+      <control />
       <package variant="x86_64" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
+      <control />
       <package variant="x86_64" />
     </distro>
   </dependency>
@@ -187,6 +216,9 @@
     </distro>
     <distro id="fedora">
       <package>google-noto-sans-cjk-ttc-fonts</package>
+    </distro>
+    <distro id="void">
+      <package>noto-fonts-cjk</package>
     </distro>
     <distro id="debian">
       <control />
@@ -348,6 +380,9 @@
     <distro id="fedora">
       <package />
     </distro>
+    <distro id="void">
+      <package />
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
@@ -364,6 +399,9 @@
       <package />
     </distro>
     <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="void">
       <package />
     </distro>
     <distro id="debian">
@@ -399,6 +437,9 @@
     <distro id="fedora">
       <package />
     </distro>
+    <distro id="void">
+      <package>gnu-efi-libs</package>
+    </distro>
     <distro id="debian">
       <control>
         <inclusive>amd64</inclusive>
@@ -430,6 +471,9 @@
     <distro id="fedora">
       <package />
     </distro>
+    <distro id="void">
+      <package />
+    </distro>
     <distro id="debian">
       <package variant="x86_64" />
       <package variant="s390x" />
@@ -454,6 +498,9 @@
     </distro>
     <distro id="fedora">
       <package>glib2-devel</package>
+    </distro>
+    <distro id="void">
+      <package>glib-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -485,6 +532,9 @@
     <distro id="fedora">
       <package>gobject-introspection-devel</package>
     </distro>
+    <distro id="void">
+      <package />
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
@@ -514,6 +564,9 @@
     <distro id="fedora">
       <package>gnutls-devel</package>
     </distro>
+    <distro id="void">
+      <package>gnutls-devel</package>
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
@@ -532,6 +585,9 @@
     <distro id="fedora">
       <package>gnutls-utils</package>
     </distro>
+    <distro id="void">
+      <package>gnutls-tools</package>
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
@@ -543,6 +599,7 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <!-- TODO: Drop build dependency after switching to gidoc-gen -->
   <dependency type="build" id="gtk-doc-tools">
     <distro id="arch">
       <package>gtk-doc</package>
@@ -556,27 +613,6 @@
     <distro id="debian">
       <control />
       <package variant="x86_64" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
-  <dependency type="build" id="help2man">
-    <distro id="arch">
-      <package />
-    </distro>
-    <distro id="centos">
-      <package />
-    </distro>
-    <distro id="fedora">
-      <package />
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
       <package variant="i386" />
     </distro>
     <distro id="ubuntu">
@@ -602,6 +638,9 @@
     </distro>
 -->
     <distro id="fedora">
+      <package>libxmlb-devel</package>
+    </distro>
+    <distro id="void">
       <package>libxmlb-devel</package>
     </distro>
     <distro id="debian">
@@ -633,6 +672,9 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="void">
+      <package>libjcat-devel</package>
+    </distro>
   </dependency>
   <dependency type="build" id="libarchive-dev">
     <distro id="centos">
@@ -651,6 +693,9 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="void">
+      <package>libarchive-devel</package>
+    </distro>
   </dependency>
   <dependency type="build" id="libefivar-dev">
     <distro id="arch">
@@ -661,6 +706,9 @@
     </distro>
     <distro id="fedora">
       <package>efivar-devel</package>
+    </distro>
+    <distro id="void">
+      <package>libefivar-devel</package>
     </distro>
     <distro id="debian">
       <control>
@@ -723,6 +771,9 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="void">
+      <package>gcab-devel</package>
+    </distro>
   </dependency>
   <dependency type="build" id="libgirepository1.0-dev">
     <distro id="debian">
@@ -764,6 +815,9 @@
     <distro id="fedora">
       <package>libgusb-devel</package>
     </distro>
+    <distro id="void">
+      <package>libgusb-devel</package>
+    </distro>
     <distro id="debian">
       <control>
         <version>(>= 0.3.5)</version>
@@ -801,6 +855,9 @@
     <distro id="fedora">
       <package>libsmbios-devel</package>
     </distro>
+    <distro id="void">
+      <package>libsmbios-devel</package>
+    </distro>
     <distro id="debian">
       <control>
         <inclusive>i386</inclusive>
@@ -822,6 +879,9 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="void">
+      <package>libsoup-devel</package>
+    </distro>
   </dependency>
   <dependency type="build" id="libcurl4-gnutls-dev">
     <distro id="arch">
@@ -831,6 +891,9 @@
       <package>libcurl-devel</package>
     </distro>
     <distro id="fedora">
+      <package>libcurl-devel</package>
+    </distro>
+    <distro id="void">
       <package>libcurl-devel</package>
     </distro>
     <distro id="debian">
@@ -915,6 +978,9 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="void">
+      <package />
+    </distro>
   </dependency>
   <dependency type="build" id="mingw-w64-tools">
     <distro id="fedora">
@@ -947,6 +1013,9 @@
     <distro id="fedora">
       <package>pango-devel</package>
     </distro>
+    <distro id="void">
+      <package>pango-devel</package>
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
@@ -967,6 +1036,9 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="void">
+      <package />
+    </distro>
   </dependency>
   <dependency type="build" id="policykit-1">
     <distro id="arch">
@@ -976,6 +1048,9 @@
       <package>polkit</package>
     </distro>
     <distro id="fedora">
+      <package>polkit</package>
+    </distro>
+    <distro id="void">
       <package>polkit</package>
     </distro>
     <distro id="debian">
@@ -1035,11 +1110,35 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="libmbim-glib-dev">
+    <distro id="centos">
+      <package>libmbim-devel</package>
+    </distro>
+    <distro id="fedora">
+      <package>libmbim-devel</package>
+    </distro>
+    <distro id="arch">
+      <package>libmbim</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libmbim-glib-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="libpolkit-gobject-1-dev">
     <distro id="centos">
       <package>polkit-devel</package>
     </distro>
     <distro id="fedora">
+      <package>polkit-devel</package>
+    </distro>
+    <distro id="void">
       <package>polkit-devel</package>
     </distro>
     <distro id="debian">
@@ -1065,6 +1164,9 @@
     <distro id="fedora">
       <package />
     </distro>
+    <distro id="void">
+      <package />
+    </distro>
   </dependency>
   <dependency type="build" id="python3-gi-cairo">
     <distro id="arch">
@@ -1084,6 +1186,65 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="gi-docgen">
+    <distro id="void">
+      <package />
+    </distro>
+  </dependency>
+  <!-- These are needed for gi-docgen -->
+  <dependency type="build" id="python3-pygments">
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-typogrify">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-toml">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-markdown">
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-jinja2">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="python3-gobject">
     <distro id="arch">
       <package>python-gobject</package>
@@ -1091,23 +1252,8 @@
     <distro id="fedora">
       <package />
     </distro>
-  </dependency>
-  <dependency type="build" id="python3-pil">
-    <distro id="arch">
-      <package>python-pillow</package>
-    </distro>
-    <distro id="fedora">
-      <package>python3-pillow</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x" />
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
+    <distro id="void">
+      <package />
     </distro>
   </dependency>
   <dependency type="build" id="python3-requests">
@@ -1161,6 +1307,14 @@
     <distro id="ubuntu">
       <control />
       <package variant="x86_64" />
+    </distro>
+    <distro id="void">
+      <package>sqlite-devel</package>
+    </distro>
+  </dependency>
+  <dependency type="build" id="logind">
+    <distro id="void">
+      <package>elogind-devel</package>
     </distro>
   </dependency>
   <dependency type="build" id="systemd">
@@ -1275,6 +1429,9 @@
     <distro id="fedora">
       <package>vala</package>
     </distro>
+    <distro id="void">
+      <package>vala</package>
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
@@ -1351,16 +1508,6 @@
       <package />
     </distro>
   </dependency>
-  <dependency type="build" id="flatpak-builder">
-    <distro id="flatpak">
-      <package />
-    </distro>
-  </dependency>
-  <dependency type="build" id="tree">
-    <distro id="flatpak">
-      <package />
-    </distro>
-  </dependency>
   <dependency type="build" id="libtss2-dev">
     <distro id="arch">
       <package>tpm2-tss</package>
@@ -1386,10 +1533,72 @@
       </control>
       <package variant="x86_64" />
     </distro>
+    <distro id="void">
+      <package>tpm2-tss-devel</package>
+    </distro>
   </dependency>
   <dependency type="build" id="libgcrypt-devel">
     <distro id="fedora">
       <package />
+    </distro>
+  </dependency>
+  <dependency type="build" id="shellcheck">
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package>ShellCheck</package>
+    </distro>
+  </dependency>
+  <dependency type="build" id="libprotobuf-c-dev">
+    <distro id="arch">
+      <package>protobuf-c</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package>protobuf-c-devel</package>
+    </distro>
+    <distro id="void">
+      <package>protobuf-c-devel</package>
+    </distro>
+  </dependency>
+  <dependency type="build" id="protobuf-c-compiler">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="void">
+      <package>protobuf</package>
+    </distro>
+  </dependency>
+  <dependency type="build" id="sudo">
+    <distro id="ubuntu">
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
+  <dependency type="build" id="python3-venv">
+    <distro id="debian">
+      <package variant="x86_64" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <package variant="x86_64" />
     </distro>
   </dependency>
 </dependencies>

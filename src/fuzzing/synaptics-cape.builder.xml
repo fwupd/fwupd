@@ -1,0 +1,11 @@
+<firmware gtype="FuSynapticsCapeFirmware">
+  <flags>has-vid-pid</flags>
+  <id>payload</id>
+  <version>8.41.24.0</version>
+  <data size="0x1c000">EFSCh...</data>
+  <firmware>
+    <id>header</id>
+    <data size="0x14">
+    </data>
+  </firmware>
+</firmware>

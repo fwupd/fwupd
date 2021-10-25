@@ -8,4 +8,5 @@
 
 #include "fu-usb-device.h"
 
-const gchar	*fu_usb_device_get_platform_id		(FuUsbDevice	*self);
+const gchar *
+fu_usb_device_get_platform_id(FuUsbDevice *self);

@@ -4,6 +4,10 @@ subdir('remotes.d')
 subdir('bash-completion')
 subdir('fish-completion')
 
+if get_option('tests')
+subdir('device-tests')
+endif
+
 if build_daemon
 subdir('motd')
 endif
@@ -19,6 +23,8 @@ if build_standalone
   install_data(['daemon.conf'],
     install_dir : join_paths(sysconfdir, 'fwupd')
   )
+  install_data(['power.quirk'],
+    install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
 endif
 
 install_data(['org.freedesktop.fwupd.metainfo.xml'],
@@ -47,10 +53,9 @@ if get_option('systemd') and build_daemon
   con2.set('bindir', bindir)
   con2.set('datadir', datadir)
   con2.set('localstatedir', localstatedir)
-  con2.set('package_name', meson.project_name())
   rw_directories = []
   if get_option('plugin_uefi_capsule')
-    rw_directories += ['-/boot/efi', '-/efi/EFI', '-/boot/EFI']
+    rw_directories += ['-/boot/efi', '-/efi/EFI', '-/boot/EFI', '-/boot/grub']
   endif
 
   dynamic_options = []
@@ -64,6 +69,17 @@ if get_option('systemd') and build_daemon
     dynamic_options += ['ReadWritePaths=' + ' '.join(rw_directories)]
   else
     dynamic_options += ['ReadWriteDirectories=' + ' '.join(rw_directories)]
+  endif
+  #pull configuration/cache/state from /etc and /var only if prefix is /usr
+  if get_option('prefix') == '/usr'
+    dynamic_options += 'ConfigurationDirectory=fwupd'
+    dynamic_options += 'StateDirectory=fwupd'
+    dynamic_options += 'CacheDirectory=fwupd'
+  endif
+  if get_option('plugin_redfish')
+    dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX AF_INET AF_INET6'
+  else
+    dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX'
   endif
   con2.set('dynamic_options', '\n'.join(dynamic_options))
   con2.set('motd_dir', motd_dir)

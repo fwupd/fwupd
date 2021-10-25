@@ -1,2 +1,2 @@
-[DeviceInstanceId=USB\VID_17EF&PID_7226]
+[USB\VID_17EF&PID_7226]
 Plugin = ep963x

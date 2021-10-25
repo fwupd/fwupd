@@ -2,7 +2,7 @@
   <vendor>0x1234</vendor>
   <product>0x5678</product>
   <release>0x8642</release>
-  <image>
+  <firmware>
     <idx>0x1</idx>
     <id>one</id>
     <chunks>
@@ -15,8 +15,8 @@
         <addr>0x8005678</addr>
       </chunk>
     </chunks>
-  </image>
-  <image>
+  </firmware>
+  <firmware>
     <id>two</id>
     <addr>0x7</addr>
     <chunks>
@@ -25,5 +25,5 @@
         <addr>0x8000000</addr>
       </chunk>
     </chunks>
-  </image>
+  </firmware>
 </firmware>

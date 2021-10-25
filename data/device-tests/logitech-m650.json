@@ -1,0 +1,30 @@
+{
+  "name": "Logitech M650",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/d2708955692a7d774839e1952734f70347ae6e4ead0b31f2cf8093c9214f12b6-Logitech-RBM16-RBM16.00_B0009.cab",
+      "components": [
+        {
+          "version": "RBM16.00_B0009",
+          "protocol": "com.logitech.unifyingsigned",
+          "guids": [
+            "bb3fe644-ed3c-55a4-a506-191e65974b04"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/422d8c719d859b4ef321d95aa9e21f8d0d899ac924b9ca3ed76b1d745224e8e4-Logitech-RBM16-RBM16.00_B0010.cab",
+      "components": [
+        {
+          "version": "RBM16.00_B0010",
+          "protocol": "com.logitech.unifyingsigned",
+          "guids": [
+            "bb3fe644-ed3c-55a4-a506-191e65974b04"
+          ]
+        }
+      ]
+    }
+  ]
+}

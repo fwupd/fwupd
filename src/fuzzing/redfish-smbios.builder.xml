@@ -1,0 +1,7 @@
+<firmware gtype="FuRedfishSmbios">
+  <port>0x1234</port>
+  <hostname>localhost</hostname>
+  <ip_addr>0.0.0.0</ip_addr>
+  <vid>0x9876</vid>
+  <pid>0x5678</pid>
+</firmware>

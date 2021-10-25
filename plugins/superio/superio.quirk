@@ -1,59 +1,73 @@
 # N13xWU
-[HwId=992f1bc7-f8ee-567a-88dd-30e5158d72ed]
-SuperioChipsets=IT8587
+[992f1bc7-f8ee-567a-88dd-30e5158d72ed]
+SuperioGType = FuSuperioIt85Device
+[SUPERIO\GUID_992f1bc7-f8ee-567a-88dd-30e5158d72ed]
+SuperioId = 0x8587
+SuperioPort = 0x2e
 
 # W740SU
-[HwId=f00d8c4e-dce2-51c3-89d6-6cbc5fc5cdbb]
-SuperioChipsets=IT8587
+[f00d8c4e-dce2-51c3-89d6-6cbc5fc5cdbb]
+SuperioGType = FuSuperioIt85Device
+[SUPERIO\GUID_f00d8c4e-dce2-51c3-89d6-6cbc5fc5cdbb]
+SuperioId = 0x8587
+SuperioPort = 0x2e
 
-# Star Lite Mk III
-[HwId=23fe120a-f9e1-590d-9e6b-4a2a9274b293]
-SuperioChipsets=IT8987
-InstallDuration=20
+# Star LabTop Mk III (HwId)
+[013b60e5-1023-5bee-8ae5-14cae21377b7]
+SuperioGType = FuSuperioIt89Device
+[SUPERIO\GUID_013b60e5-1023-5bee-8ae5-14cae21377b7]
+SuperioId = 0x8987
+SuperioPort = 0x4e
+InstallDuration = 20
 
-# Star LabTop Mk IV
-[HwId=baf1d04e-fd16-5e6a-93cc-1c23d171f879]
-SuperioChipsets=IT8987
-InstallDuration=20
+# Star LabTop Mk IV (HwId)
+[baf1d04e-fd16-5e6a-93cc-1c23d171f879]
+SuperioGType = FuSuperioIt89Device
+[SUPERIO\GUID_baf1d04e-fd16-5e6a-93cc-1c23d171f879]
+SuperioId = 0x8987
+SuperioPort = 0x4e
+InstallDuration = 20
 
-# Star LabTop Mk3
-[HwId=3dc52d2c-9e9b-5ba5-b10d-9ba1eb11dacc]
-SuperioChipsets=IT8987
-InstallDuration=20
+# StarBook Mk V (HwId)
+[85aba599-addd-5985-a2e8-eddb41c61ba3]
+SuperioGType = FuSuperioIt89Device
+[SUPERIO\GUID_85aba599-addd-5985-a2e8-eddb41c61ba3]
+SuperioId = 0x5570
+SuperioPort = 0x4e
+InstallDuration = 20
 
-# Star Lite Mk2
-[HwId=d1a64840-4307-58fb-a62c-de28a07c0151]
-SuperioChipsets=IT8987
-InstallDuration=20
+# Star Lite Mk II (HwId)
+[013b60e5-1023-5bee-8ae5-14cae21377b7]
+SuperioGType = FuSuperioIt89Device
+[SUPERIO\GUID_013b60e5-1023-5bee-8ae5-14cae21377b7]
+SuperioId = 0x8987
+SuperioPort = 0x4e
+InstallDuration = 20
 
-[SuperIO=IT8510]
-Id=0x8510
-Port=0x2e
+# Star Lite Mk III (HwId)
+[d5521faa-c50b-5d64-971d-8fd400030c51]
+SuperioGType = FuSuperioIt89Device
+[SUPERIO\GUID_d5521faa-c50b-5d64-971d-8fd400030c51]
+SuperioId = 0x8987
+SuperioPort = 0x4e
+InstallDuration = 20
 
-[SuperIO=IT8511]
-Id=0x8511
-Port=0x2e
+# Tuxedo InifinityBook S14 Gen6
+[6c80d85b-d0b6-5ee2-99d4-ec28dd32febd]
+SuperioGType = FuEcIt55Device
+[SUPERIO\GUID_6c80d85b-d0b6-5ee2-99d4-ec28dd32febd]
+SuperioId = 0x5570
+SuperioControlPort = 0x66
+SuperioDataPort = 0x62
+SuperioAutoloadAction = disable
+SuperioTimeout = 650
 
-[SuperIO=IT8512]
-Id=0x8512
-Port=0x2e
-
-[SuperIO=IT8513]
-Id=0x8513
-Port=0x2e
-
-[SuperIO=IT8516]
-Id=0x8516
-Port=0x2e
-
-[SuperIO=IT8518]
-Id=0x8518
-Port=0x2e
-
-[SuperIO=IT8587]
-Id=0x8587
-Port=0x2e
-
-[SuperIO=IT8987]
-Id=0x8987
-Port=0x4e
+# Tuxedo InifinityBook S15 Gen6
+[60f53465-e8fc-5122-b79b-f7b03f063037]
+SuperioGType = FuEcIt55Device
+[SUPERIO\GUID_60f53465-e8fc-5122-b79b-f7b03f063037]
+SuperioId = 0x5570
+SuperioControlPort = 0x66
+SuperioDataPort = 0x62
+SuperioAutoloadAction = disable
+SuperioTimeout = 650

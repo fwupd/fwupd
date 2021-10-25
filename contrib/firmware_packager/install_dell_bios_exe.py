@@ -11,7 +11,7 @@ import tempfile
 import gi
 
 try:
-    gi.require_version('Fwupd', '2.0')
+    gi.require_version("Fwupd", "2.0")
 except ValueError:
     print("Missing gobject-introspection packages.  Try to install gir1.2-fwupd-2.0.")
     sys.exit(1)
@@ -39,8 +39,8 @@ def parse_args():
     import argparse
 
     parser = argparse.ArgumentParser(description="Interact with fwupd daemon")
-    parser.add_argument('exe', nargs='?', help='exe file')
-    parser.add_argument('deviceid', nargs='?', help='DeviceID to operate on(optional)')
+    parser.add_argument("exe", nargs="?", help="exe file")
+    parser.add_argument("deviceid", nargs="?", help="DeviceID to operate on(optional)")
     args = parser.parse_args()
     return args
 
@@ -72,7 +72,7 @@ def find_uefi_device(client, deviceid):
         if not item.has_flag(1 << 8):
             continue
         # return the first hit for UEFI plugin
-        if item.get_plugin() == 'uefi' or item.get_plugin() == 'uefi_capsule':
+        if item.get_plugin() == "uefi" or item.get_plugin() == "uefi_capsule":
             print("Installing to %s" % item.get_name())
             return item.get_guid_default(), item.get_id(), item.get_version()
     print("Couldn't find any UEFI devices")
@@ -83,19 +83,19 @@ def prompt_reboot():
     print("An update requires a reboot to complete")
     while True:
         res = input("Restart now? (Y/N) ")
-        if res.lower() == 'n':
+        if res.lower() == "n":
             print("Reboot your machine manually to finish the update.")
             break
-        if res.lower() != 'y':
+        if res.lower() != "y":
             continue
         # reboot using logind
         obj = dbus.SystemBus().get_object(
-            'org.freedesktop.login1', '/org/freedesktop/login1'
+            "org.freedesktop.login1", "/org/freedesktop/login1"
         )
-        obj.Reboot(True, dbus_interface='org.freedesktop.login1.Manager')
+        obj.Reboot(True, dbus_interface="org.freedesktop.login1.Manager")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ARGS = parse_args()
     CLIENT = Fwupd.Client()
     CLIENT.connect()
