@@ -45,6 +45,10 @@ firmware_metainfo_template = """<?xml version="1.0" encoding="UTF-8"?>
       </description>
     </release>
   </releases>
+  <custom>
+    <value key="LVFS::VersionFormat">{update_protocol}</value>
+    <value key="LVFS::UpdateProtocol">{version_format}</value>
+  </custom>
 </component>
 """
 
@@ -143,6 +147,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "--release-version",
         help="Version number of the firmware package",
+        required=True,
+    )
+    parser.add_argument(
+        "--version-format",
+        help="Version format, e.g. quad or triplet",
+        required=True,
+    )
+    parser.add_argument(
+        "--update-protocol",
+        help="Update protocol, e.g. org.uefi.capsule",
         required=True,
     )
     parser.add_argument(
