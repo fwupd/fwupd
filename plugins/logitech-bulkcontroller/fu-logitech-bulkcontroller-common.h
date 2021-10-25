@@ -11,6 +11,8 @@
 
 #include "usb_msg.pb-c.h"
 
+#define SET_TIME_DELAY_MS 500 /* send future time to keep PC & device time as close as possible */
+
 typedef enum {
 	kDeviceStateUnknown = -1,
 	kDeviceStateOffline,
