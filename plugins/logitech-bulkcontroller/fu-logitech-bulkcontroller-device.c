@@ -998,6 +998,65 @@ fu_logitech_bulkcontroller_device_get_handshake_cb(FuDevice *device,
 }
 
 static gboolean
+fu_logitech_bulkcontroller_device_set_time(FuDevice *device, GError **error)
+{
+	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
+	g_autoptr(GByteArray) device_request = g_byte_array_new();
+	g_autoptr(GByteArray) decoded_pkt = g_byte_array_new();
+	g_autoptr(GByteArray) device_response = g_byte_array_new();
+	FuLogitechBulkcontrollerProtoId proto_id = kProtoId_UnknownId;
+
+	/* send SetDeviceTimeRequest to sync device clock with host */
+	device_request = proto_manager_generate_set_device_time_request();
+	if (!fu_logitech_bulkcontroller_device_send_sync_cmd(self,
+							     CMD_BUFFER_WRITE,
+							     device_request,
+							     error)) {
+		g_prefix_error(error,
+			       "failed to send write buffer packet for set device time request: ");
+		return FALSE;
+	}
+	if (!fu_logitech_bulkcontroller_device_startlistening_sync(self, device_response, error)) {
+		g_prefix_error(error,
+			       "failed to receive data packet for set device time request: ");
+		return FALSE;
+	}
+	/* handle error scenario, e.g. CMD_UNINIT_BUFFER arrived before CMD_BUFFER_READ */
+	if (device_response->len == 0) {
+		g_prefix_error(error,
+			       "failed to receive expected packet for set device time request: ");
+		return FALSE;
+	}
+	decoded_pkt = proto_manager_decode_message(device_response->data,
+						   device_response->len,
+						   &proto_id,
+						   error);
+	if (decoded_pkt == NULL) {
+		g_prefix_error(error, "failed to unpack packet for set device time request: ");
+		return FALSE;
+	}
+	if (g_getenv("FWUPD_LOGITECH_BULKCONTROLLER_VERBOSE") != NULL) {
+		g_autofree gchar *strsafe =
+		    fu_common_strsafe((const gchar *)decoded_pkt->data, decoded_pkt->len);
+		g_debug("Received device response while processing set device time request: id: "
+			"%u, length %u, data: %s",
+			proto_id,
+			device_response->len,
+			strsafe);
+	}
+	if (proto_id != kProtoId_Ack) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "incorrect response for set device time request");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 {
 	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
@@ -1105,6 +1164,10 @@ fu_logitech_bulkcontroller_device_setup(FuDevice *device, GError **error)
 			    error_code);
 		return FALSE;
 	}
+
+	/* set device time */
+	if (!fu_logitech_bulkcontroller_device_set_time(device, error))
+		return FALSE;
 
 	/* load current device data */
 	if (!fu_logitech_bulkcontroller_device_get_data(device, TRUE, error))

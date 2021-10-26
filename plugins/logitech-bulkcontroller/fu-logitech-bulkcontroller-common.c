@@ -70,6 +70,38 @@ proto_manager_generate_transition_to_device_mode_request(void)
 }
 
 GByteArray *
+proto_manager_generate_set_device_time_request(void)
+{
+	GByteArray *buf = g_byte_array_new();
+	g_autoptr(GTimeZone) tz = g_time_zone_new_local();
+	g_autoptr(GDateTime) dt = g_date_time_new_now_utc();
+
+	Logi__Device__Proto__Header header_msg = LOGI__DEVICE__PROTO__HEADER__INIT;
+	Logi__Device__Proto__SetDeviceTimeRequest set_devicetime_msg =
+	    LOGI__DEVICE__PROTO__SET_DEVICE_TIME_REQUEST__INIT;
+	Logi__Device__Proto__UsbMsg usb_msg = LOGI__DEVICE__PROTO__USB_MSG__INIT;
+	Logi__Device__Proto__Request request_msg = LOGI__DEVICE__PROTO__REQUEST__INIT;
+	request_msg.payload_case = LOGI__DEVICE__PROTO__REQUEST__PAYLOAD_SET_DEVICE_TIME_REQUEST;
+	request_msg.set_device_time_request = &set_devicetime_msg;
+
+#if GLIB_CHECK_VERSION(2, 57, 1)
+	set_devicetime_msg.ts = (g_get_real_time() / 1000) + SET_TIME_DELAY_MS;
+	set_devicetime_msg.time_zone = g_strdup_printf("%s", g_time_zone_get_identifier(tz));
+#else
+	set_devicetime_msg.ts = (g_date_time_to_unix(dt) * 1000) + SET_TIME_DELAY_MS;
+	set_devicetime_msg.time_zone = g_strdup_printf("%s", "UTC");
+#endif
+	proto_manager_set_header(&header_msg);
+	usb_msg.header = &header_msg;
+	usb_msg.message_case = LOGI__DEVICE__PROTO__USB_MSG__MESSAGE_REQUEST;
+	usb_msg.request = &request_msg;
+
+	fu_byte_array_set_size(buf, logi__device__proto__usb_msg__get_packed_size(&usb_msg));
+	logi__device__proto__usb_msg__pack(&usb_msg, (unsigned char *)buf->data);
+	return buf;
+}
+
+GByteArray *
 proto_manager_decode_message(const guint8 *data,
 			     guint32 len,
 			     FuLogitechBulkcontrollerProtoId *proto_id,
