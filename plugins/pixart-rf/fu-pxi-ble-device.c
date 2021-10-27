@@ -249,7 +249,8 @@ fu_pxi_ble_device_check_support_report_id(FuPxiBleDevice *self, GError **error)
 				  NULL,
 				  error))
 		return FALSE;
-	fu_common_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
+	if (g_getenv("FWUPD_PIXART_RF_VERBOSE") != NULL)
+		fu_common_dump_raw(G_LOG_DOMAIN, "HID descriptor", rpt_desc.value, rpt_desc.size);
 
 	/* check ota retransmit feature report usage page exist or not */
 	fu_byte_array_append_uint16(req, PXI_HID_DEV_OTA_RETRANSMIT_USAGE_PAGE, G_LITTLE_ENDIAN);
