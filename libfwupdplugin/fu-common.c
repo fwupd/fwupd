@@ -3069,11 +3069,14 @@ fu_common_get_volumes_by_kind(const gchar *kind, GError **error)
 
 		/* convert reported type to GPT type */
 		type_str = fu_common_convert_to_gpt_type(type_str);
-		g_debug("device %s, type: %s, internal: %d, fs: %s",
-			g_dbus_proxy_get_object_path(proxy_blk),
-			type_str,
-			fu_volume_is_internal(vol),
-			fu_volume_get_id_type(vol));
+		if (g_getenv("FWUPD_VERBOSE") != NULL) {
+			g_autofree gchar *id_type = fu_volume_get_id_type(vol);
+			g_debug("device %s, type: %s, internal: %d, fs: %s",
+				g_dbus_proxy_get_object_path(proxy_blk),
+				type_str,
+				fu_volume_is_internal(vol),
+				id_type);
+		}
 		if (g_strcmp0(type_str, kind) != 0)
 			continue;
 		g_ptr_array_add(volumes, g_steal_pointer(&vol));
