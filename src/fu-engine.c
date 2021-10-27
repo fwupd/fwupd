@@ -6639,9 +6639,9 @@ fu_engine_ensure_client_certificate(FuEngine *self)
 static void
 fu_engine_context_set_battery_threshold(FuContext *ctx)
 {
-	const gchar *vendor;
 	guint64 minimum_battery;
 	g_autofree gchar *battery_str = NULL;
+	g_autofree gchar *vendor = NULL;
 
 	vendor = fu_context_get_hwid_replace_value(ctx, FU_HWIDS_KEY_MANUFACTURER, NULL);
 	if (vendor != NULL) {
