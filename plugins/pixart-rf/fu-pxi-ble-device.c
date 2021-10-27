@@ -908,6 +908,7 @@ fu_pxi_ble_device_finalize(GObject *object)
 {
 	FuPxiBleDevice *self = FU_PXI_BLE_DEVICE(object);
 	g_free(self->model_name);
+	G_OBJECT_CLASS(fu_pxi_ble_device_parent_class)->finalize(object);
 }
 
 static void
