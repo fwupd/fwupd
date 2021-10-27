@@ -431,8 +431,7 @@ fu_logitech_bulkcontroller_device_sync_cb(GObject *source_object,
 	if (!g_usb_device_bulk_transfer_finish(G_USB_DEVICE(source_object), res, &error_local)) {
 		g_propagate_prefixed_error(&helper->error,
 					   g_steal_pointer(&error_local),
-					   "failed to finish using bulk transfer %s: ",
-					   error_local->message);
+					   "failed to finish using bulk transfer: ");
 		g_main_loop_quit(helper->loop);
 		return;
 	}
