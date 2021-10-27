@@ -1057,7 +1057,8 @@ static void
 fu_common_cabinet_func(void)
 {
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob1 = NULL;
+	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GBytes) jcat_blob1 = g_bytes_new_static("hello", 6);
 	g_autoptr(GBytes) jcat_blob2 = g_bytes_new_static("hellX", 6);
 	g_autoptr(GError) error = NULL;
@@ -1069,15 +1070,15 @@ fu_common_cabinet_func(void)
 	fu_cabinet_add_file(cabinet, "firmware.jcat", jcat_blob2);
 
 	/* get data */
-	blob = fu_cabinet_get_file(cabinet, "firmware.jcat", &error);
+	blob1 = fu_cabinet_get_file(cabinet, "firmware.jcat", &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob);
-	g_assert_cmpstr(g_bytes_get_data(blob, NULL), ==, "hellX");
+	g_assert_nonnull(blob1);
+	g_assert_cmpstr(g_bytes_get_data(blob1, NULL), ==, "hellX");
 
 	/* get data that does not exist */
-	blob = fu_cabinet_get_file(cabinet, "foo.jcat", &error);
+	blob2 = fu_cabinet_get_file(cabinet, "foo.jcat", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert_null(blob);
+	g_assert_null(blob2);
 }
 
 static void
@@ -1160,12 +1161,15 @@ fu_common_store_cab_func(void)
 static void
 fu_common_store_cab_artifact_func(void)
 {
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob1 = NULL;
+	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GBytes) blob3 = NULL;
+	g_autoptr(GBytes) blob4 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 
 	/* create silo (sha256, using artifacts object) */
-	blob = _build_cab(
+	blob1 = _build_cab(
 	    GCAB_COMPRESSION_NONE,
 	    "acme.metainfo.xml",
 	    "<component type=\"firmware\">\n"
@@ -1188,90 +1192,91 @@ fu_common_store_cab_artifact_func(void)
 	    "firmware.dfu.asc",
 	    "signature",
 	    NULL);
-	silo = fu_common_cab_build_silo(blob, 10240, &error);
+	silo = fu_common_cab_build_silo(blob1, 10240, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
 	g_clear_object(&silo);
 
 	/* create silo (sha1, using artifacts object; mixed case) */
-	blob = _build_cab(GCAB_COMPRESSION_NONE,
-			  "acme.metainfo.xml",
-			  "<component type=\"firmware\">\n"
-			  "  <id>com.acme.example.firmware</id>\n"
-			  "  <releases>\n"
-			  "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
-			  "      <artifacts>\n"
-			  "        <artifact type=\"binary\">\n"
-			  "          <filename>firmware.dfu</filename>\n"
-			  "          <checksum "
-			  "type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbF43</"
-			  "checksum>\n"
-			  "        </artifact>\n"
-			  "      </artifacts>\n"
-			  "    </release>\n"
-			  "  </releases>\n"
-			  "</component>",
-			  "firmware.dfu",
-			  "world",
-			  "firmware.dfu.asc",
-			  "signature",
-			  NULL);
-	silo = fu_common_cab_build_silo(blob, 10240, &error);
+	blob2 = _build_cab(GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+			   "<component type=\"firmware\">\n"
+			   "  <id>com.acme.example.firmware</id>\n"
+			   "  <releases>\n"
+			   "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+			   "      <artifacts>\n"
+			   "        <artifact type=\"binary\">\n"
+			   "          <filename>firmware.dfu</filename>\n"
+			   "          <checksum "
+			   "type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbF43</"
+			   "checksum>\n"
+			   "        </artifact>\n"
+			   "      </artifacts>\n"
+			   "    </release>\n"
+			   "  </releases>\n"
+			   "</component>",
+			   "firmware.dfu",
+			   "world",
+			   "firmware.dfu.asc",
+			   "signature",
+			   NULL);
+	silo = fu_common_cab_build_silo(blob2, 10240, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
 	g_clear_object(&silo);
 
 	/* create silo (sha512, using artifacts object; lower case) */
-	blob = _build_cab(GCAB_COMPRESSION_NONE,
-			  "acme.metainfo.xml",
-			  "<component type=\"firmware\">\n"
-			  "  <id>com.acme.example.firmware</id>\n"
-			  "  <releases>\n"
-			  "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
-			  "      <artifacts>\n"
-			  "        <artifact type=\"binary\">\n"
-			  "          <filename>firmware.dfu</filename>\n"
-			  "          <checksum "
-			  "type=\"sha512\">"
-			  "11853df40f4b2b919d3815f64792e58d08663767a494bcbb38c0b2389d9140bbb170281b"
-			  "4a847be7757bde12c9cd0054ce3652d0ad3a1a0c92babb69798246ee</"
-			  "checksum>\n"
-			  "        </artifact>\n"
-			  "      </artifacts>\n"
-			  "    </release>\n"
-			  "  </releases>\n"
-			  "</component>",
-			  "firmware.dfu",
-			  "world",
-			  "firmware.dfu.asc",
-			  "signature",
-			  NULL);
-	silo = fu_common_cab_build_silo(blob, 10240, &error);
+	blob3 =
+	    _build_cab(GCAB_COMPRESSION_NONE,
+		       "acme.metainfo.xml",
+		       "<component type=\"firmware\">\n"
+		       "  <id>com.acme.example.firmware</id>\n"
+		       "  <releases>\n"
+		       "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+		       "      <artifacts>\n"
+		       "        <artifact type=\"binary\">\n"
+		       "          <filename>firmware.dfu</filename>\n"
+		       "          <checksum "
+		       "type=\"sha512\">"
+		       "11853df40f4b2b919d3815f64792e58d08663767a494bcbb38c0b2389d9140bbb170281b"
+		       "4a847be7757bde12c9cd0054ce3652d0ad3a1a0c92babb69798246ee</"
+		       "checksum>\n"
+		       "        </artifact>\n"
+		       "      </artifacts>\n"
+		       "    </release>\n"
+		       "  </releases>\n"
+		       "</component>",
+		       "firmware.dfu",
+		       "world",
+		       "firmware.dfu.asc",
+		       "signature",
+		       NULL);
+	silo = fu_common_cab_build_silo(blob3, 10240, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
 	g_clear_object(&silo);
 
 	/* create silo (legacy release object) */
-	blob = _build_cab(GCAB_COMPRESSION_NONE,
-			  "acme.metainfo.xml",
-			  "<component type=\"firmware\">\n"
-			  "  <id>com.acme.example.firmware</id>\n"
-			  "  <releases>\n"
-			  "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
-			  "        <checksum "
-			  "target=\"content\" "
-			  "filename=\"firmware.dfu\">"
-			  "486EA46224D1BB4FB680F34F7C9AD96A8F24EC88BE73EA8E5A6C65260E9CB8A7</"
-			  "checksum>\n"
-			  "    </release>\n"
-			  "  </releases>\n"
-			  "</component>",
-			  "firmware.dfu",
-			  "world",
-			  "firmware.dfu.asc",
-			  "signature",
-			  NULL);
-	silo = fu_common_cab_build_silo(blob, 10240, &error);
+	blob4 = _build_cab(GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+			   "<component type=\"firmware\">\n"
+			   "  <id>com.acme.example.firmware</id>\n"
+			   "  <releases>\n"
+			   "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+			   "        <checksum "
+			   "target=\"content\" "
+			   "filename=\"firmware.dfu\">"
+			   "486EA46224D1BB4FB680F34F7C9AD96A8F24EC88BE73EA8E5A6C65260E9CB8A7</"
+			   "checksum>\n"
+			   "    </release>\n"
+			   "  </releases>\n"
+			   "</component>",
+			   "firmware.dfu",
+			   "world",
+			   "firmware.dfu.asc",
+			   "signature",
+			   NULL);
+	silo = fu_common_cab_build_silo(blob4, 10240, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
 }
