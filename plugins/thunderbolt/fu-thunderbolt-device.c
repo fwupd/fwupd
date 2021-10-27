@@ -32,7 +32,6 @@ struct _FuThunderboltDevice {
 	gboolean safe_mode;
 	gboolean is_native;
 	guint16 gen;
-	gchar *devpath;
 	const gchar *auth_method;
 };
 
@@ -46,9 +45,10 @@ fu_thunderbolt_device_find_nvmem(FuThunderboltDevice *self, gboolean active, GEr
 {
 	const gchar *nvmem_dir = active ? "nvm_active" : "nvm_non_active";
 	const gchar *name;
+	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
 	g_autoptr(GDir) d = NULL;
 
-	if (G_UNLIKELY(self->devpath == NULL)) {
+	if (G_UNLIKELY(devpath == NULL)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,
@@ -56,13 +56,13 @@ fu_thunderbolt_device_find_nvmem(FuThunderboltDevice *self, gboolean active, GEr
 		return NULL;
 	}
 
-	d = g_dir_open(self->devpath, 0, error);
+	d = g_dir_open(devpath, 0, error);
 	if (d == NULL)
 		return NULL;
 
 	while ((name = g_dir_read_name(d)) != NULL) {
 		if (g_str_has_prefix(name, nvmem_dir)) {
-			g_autoptr(GFile) parent = g_file_new_for_path(self->devpath);
+			g_autoptr(GFile) parent = g_file_new_for_path(devpath);
 			g_autoptr(GFile) nvm_dir = g_file_get_child(parent, name);
 			return g_file_get_child(nvm_dir, "nvmem");
 		}
@@ -111,8 +111,9 @@ fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error
 	guint64 status;
 	g_autofree gchar *attribute = NULL;
 	const gchar *update_error = NULL;
+	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
 	/* read directly from file to prevent udev caching */
-	g_autofree gchar *safe_path = g_build_path("/", self->devpath, "authorized", NULL);
+	g_autofree gchar *safe_path = g_build_path("/", devpath, "authorized", NULL);
 
 	if (!g_file_test(safe_path, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
@@ -160,11 +161,12 @@ fu_thunderbolt_device_can_update(FuThunderboltDevice *self)
 static gboolean
 fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error)
 {
+	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
 	g_auto(GStrv) split = NULL;
 	g_autofree gchar *version_raw = NULL;
 	g_autofree gchar *version = NULL;
 	/* read directly from file to prevent udev caching */
-	g_autofree gchar *safe_path = g_build_path("/", self->devpath, "nvm_version", NULL);
+	g_autofree gchar *safe_path = g_build_path("/", devpath, "nvm_version", NULL);
 
 	if (!g_file_test(safe_path, G_FILE_TEST_EXISTS)) {
 		g_set_error_literal(error,
@@ -211,12 +213,13 @@ fu_thunderbolt_device_get_version(FuThunderboltDevice *self, GError **error)
 static void
 fu_thunderbolt_device_check_safe_mode(FuThunderboltDevice *self)
 {
+	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
 	/* failed to read, for host check for safe mode */
 	if (self->device_type != FU_THUNDERBOLT_DEVICE_TYPE_DEVICE_CONTROLLER)
 		return;
 	g_warning("%s is in safe mode --  VID/DID will "
 		  "need to be set by another plugin",
-		  self->devpath);
+		  devpath);
 	self->safe_mode = TRUE;
 	fu_device_set_version(FU_DEVICE(self), "00.00");
 	fu_device_add_instance_id(FU_DEVICE(self), "TBT-safemode");
@@ -266,12 +269,11 @@ fu_thunderbolt_device_probe(FuDevice *device, GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
 	const gchar *tmp = fu_udev_device_get_devtype(FU_UDEV_DEVICE(device));
+	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device));
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_thunderbolt_device_parent_class)->probe(device, error))
 		return FALSE;
-
-	self->devpath = g_strdup(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
 
 	/* device */
 	if (g_strcmp0(tmp, "thunderbolt_device") == 0) {
@@ -286,7 +288,7 @@ fu_thunderbolt_device_probe(FuDevice *device, GError **error)
 		/* retimer */
 	} else if (g_strcmp0(tmp, "thunderbolt_retimer") == 0) {
 		self->device_type = FU_THUNDERBOLT_DEVICE_TYPE_RETIMER;
-		tmp = g_path_get_basename(self->devpath);
+		tmp = g_path_get_basename(devpath);
 		if (tmp != NULL)
 			fu_device_set_physical_id(device, tmp);
 		/* domain or unsupported */
@@ -369,8 +371,9 @@ fu_thunderbolt_device_setup_controller(FuDevice *device, GError **error)
 		g_autofree gchar *device_id = NULL;
 		g_autofree gchar *domain_id = NULL;
 		if (fu_thunderbolt_device_can_update(self)) {
+			const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
 			g_autofree gchar *vendor_id = NULL;
-			g_autofree gchar *domain = g_path_get_basename(self->devpath);
+			g_autofree gchar *domain = g_path_get_basename(devpath);
 			/* USB4 controllers don't have a concept of legacy vs native
 			 * so don't try to read a native attribute from their NVM */
 			if (self->device_type == FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER &&
@@ -480,8 +483,6 @@ fu_thunderbolt_device_setup(FuDevice *device, GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
 	g_autoptr(GError) error_version = NULL;
-
-	self->devpath = g_strdup(fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(device)));
 
 	/* try to read the version */
 	if (!fu_thunderbolt_device_get_version(self, &error_version)) {
@@ -739,7 +740,7 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 	if (!fu_thunderbolt_device_write_data(self, blob_fw, progress, error)) {
 		g_prefix_error(error,
 			       "could not write firmware to thunderbolt device at %s: ",
-			       self->devpath);
+			       fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self)));
 		return FALSE;
 	}
 
@@ -793,19 +794,9 @@ fu_thunderbolt_device_init(FuThunderboltDevice *self)
 }
 
 static void
-fu_thunderbolt_device_finalize(GObject *object)
-{
-	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(object);
-	G_OBJECT_CLASS(fu_thunderbolt_device_parent_class)->finalize(object);
-	g_free(self->devpath);
-}
-
-static void
 fu_thunderbolt_device_class_init(FuThunderboltDeviceClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	object_class->finalize = fu_thunderbolt_device_finalize;
 	klass_device->activate = fu_thunderbolt_device_activate;
 	klass_device->to_string = fu_thunderbolt_device_to_string;
 	klass_device->setup = fu_thunderbolt_device_setup;
