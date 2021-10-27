@@ -94,6 +94,7 @@ fu_parade_lspcon_device_finalize(GObject *object)
 {
 	FuParadeLspconDevice *self = FU_PARADE_LSPCON_DEVICE(object);
 	g_free(self->aux_device_name);
+	G_OBJECT_CLASS(fu_parade_lspcon_device_parent_class)->finalize(object);
 }
 
 static gboolean
