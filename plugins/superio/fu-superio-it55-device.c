@@ -628,6 +628,7 @@ fu_superio_it55_device_finalize(GObject *obj)
 {
 	FuEcIt55Device *self = FU_SUPERIO_IT55_DEVICE(obj);
 	g_free(self->prj_name);
+	G_OBJECT_CLASS(fu_superio_it55_device_parent_class)->finalize(obj);
 }
 
 static void
