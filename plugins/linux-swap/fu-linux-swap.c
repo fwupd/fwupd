@@ -97,7 +97,7 @@ fu_linux_swap_verify_file(FuLinuxSwap *self, const gchar *fn, GError **error)
 FuLinuxSwap *
 fu_linux_swap_new(const gchar *buf, gsize bufsz, GError **error)
 {
-	FuLinuxSwap *self = g_object_new(FU_TYPE_LINUX_SWAP, NULL);
+	g_autoptr(FuLinuxSwap) self = g_object_new(FU_TYPE_LINUX_SWAP, NULL);
 	g_auto(GStrv) lines = NULL;
 
 	/* look at each line in /proc/swaps */
@@ -129,7 +129,7 @@ fu_linux_swap_new(const gchar *buf, gsize bufsz, GError **error)
 			}
 		}
 	}
-	return self;
+	return g_steal_pointer(&self);
 }
 
 /* success if *all* the swap devices are encrypted */
