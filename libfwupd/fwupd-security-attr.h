@@ -170,10 +170,14 @@ gboolean
 fwupd_security_attr_has_flag(FwupdSecurityAttr *self, FwupdSecurityAttrFlags flag);
 const gchar *
 fwupd_security_attr_flag_to_string(FwupdSecurityAttrFlags flag);
+FwupdSecurityAttrFlags
+fwupd_security_attr_flag_from_string(const gchar *flag);
 const gchar *
 fwupd_security_attr_flag_to_suffix(FwupdSecurityAttrFlags flag);
 const gchar *
 fwupd_security_attr_result_to_string(FwupdSecurityAttrResult result);
+FwupdSecurityAttrResult
+fwupd_security_attr_result_from_string(const gchar *result);
 
 FwupdSecurityAttr *
 fwupd_security_attr_from_variant(GVariant *value);
