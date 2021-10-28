@@ -736,6 +736,10 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 		fwupd_security_attr_set_name(self, g_variant_get_string(value, NULL));
 		return;
 	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_PLUGIN) == 0) {
+		fwupd_security_attr_set_plugin(self, g_variant_get_string(value, NULL));
+		return;
+	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0) {
 		fwupd_security_attr_set_url(self, g_variant_get_string(value, NULL));
 		return;
