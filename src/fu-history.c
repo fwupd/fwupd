@@ -12,13 +12,17 @@
 #include <gio/gio.h>
 #include <glib-object.h>
 #include <glib/gstdio.h>
+#include <json-glib/json-glib.h>
 #include <sqlite3.h>
 #include <stdlib.h>
+
+#include "fwupd-security-attr-private.h"
 
 #include "fu-common.h"
 #include "fu-device-private.h"
 #include "fu-history.h"
 #include "fu-mutex.h"
+#include "fu-security-attr.h"
 
 #define FU_HISTORY_CURRENT_SCHEMA_VERSION 7
 
@@ -1348,6 +1352,118 @@ fu_history_add_security_attribute(FuHistory *self,
 	sqlite3_bind_text(stmt, 1, security_attr_json, -1, SQLITE_STATIC);
 	sqlite3_bind_text(stmt, 2, hsi_score, -1, SQLITE_STATIC);
 	return fu_history_stmt_exec(self, stmt, NULL, error);
+}
+
+/**
+ * fu_history_get_security_attrs:
+ * @self: a #FuHistory
+ * @limit: maximum number of attributes to return
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the security attributes in the history database.
+ * Attributes with the same stores JSON data will be deduplicated as required.
+ *
+ * Returns: (element-type #FuSecurityAttrs) (transfer container): attrs
+ *
+ * Since: 1.7.1
+ **/
+GPtrArray *
+fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error)
+{
+	g_autoptr(sqlite3_stmt) stmt = NULL;
+	gint rc;
+	guint old_hash = 0;
+	g_autoptr(GPtrArray) array = NULL;
+	g_autoptr(GRWLockReaderLocker) locker = NULL;
+
+	g_return_val_if_fail(FU_IS_HISTORY(self), NULL);
+
+	/* lazy load */
+	if (self->db == NULL) {
+		if (!fu_history_load(self, error))
+			return NULL;
+	}
+
+	/* get all the devices */
+	locker = g_rw_lock_reader_locker_new(&self->db_mutex);
+	g_return_val_if_fail(locker != NULL, NULL);
+	rc = sqlite3_prepare_v2(self->db,
+				"SELECT timestamp, hsi_details FROM hsi_history "
+				"ORDER BY timestamp DESC;",
+				-1,
+				&stmt,
+				NULL);
+	if (rc != SQLITE_OK) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to prepare SQL to get security attrs: %s",
+			    sqlite3_errmsg(self->db));
+		return NULL;
+	}
+	array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+		const gchar *json;
+		guint hash;
+		const gchar *timestamp;
+		g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+		g_autoptr(JsonParser) parser = NULL;
+		g_autoptr(GDateTime) created_dt = NULL;
+		g_autoptr(GTimeZone) tz_utc = g_time_zone_new_utc();
+
+		/* old */
+		timestamp = (const gchar *)sqlite3_column_text(stmt, 0);
+		if (timestamp == NULL)
+			continue;
+
+		/* device_id */
+		json = (const gchar *)sqlite3_column_text(stmt, 1);
+		if (json == NULL)
+			continue;
+
+		/* do not create dups */
+		hash = g_str_hash(json);
+		if (hash == old_hash) {
+			g_debug("skipping %s as unchanged", timestamp);
+			continue;
+		}
+		old_hash = hash;
+
+		/* parse JSON */
+		parser = json_parser_new();
+		g_debug("parsing %s", timestamp);
+		if (!json_parser_load_from_data(parser, json, -1, error))
+			return NULL;
+		if (!fu_security_attrs_from_json(attrs, json_parser_get_root(parser), error))
+			return NULL;
+
+		/* parse timestamp */
+		created_dt = g_date_time_new_from_iso8601(timestamp, tz_utc);
+		if (created_dt != NULL) {
+			guint64 created_unix = g_date_time_to_unix(created_dt);
+			g_autoptr(GPtrArray) attr_array = fu_security_attrs_get_all(attrs);
+			for (guint i = 0; i < attr_array->len; i++) {
+				FwupdSecurityAttr *attr = g_ptr_array_index(attr_array, i);
+				fwupd_security_attr_set_created(attr, created_unix);
+			}
+		}
+
+		/* success */
+		g_ptr_array_add(array, g_steal_pointer(&attrs));
+		if (array->len >= limit) {
+			rc = SQLITE_DONE;
+			break;
+		}
+	}
+	if (rc != SQLITE_DONE) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_WRITE,
+			    "failed to execute prepared statement: %s",
+			    sqlite3_errmsg(self->db));
+		return NULL;
+	}
+	return g_steal_pointer(&array);
 }
 
 static void
