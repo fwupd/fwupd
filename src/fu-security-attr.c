@@ -308,8 +308,11 @@ fu_security_attrs_to_json(FuSecurityAttrs *attrs, JsonBuilder *builder)
 	items = fu_security_attrs_get_all(attrs);
 	for (guint i = 0; i < items->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(items, i);
+		guint64 created = fwupd_security_attr_get_created(attr);
 		json_builder_begin_object(builder);
+		fwupd_security_attr_set_created(attr, 0);
 		fwupd_security_attr_to_json(attr, builder);
+		fwupd_security_attr_set_created(attr, created);
 		json_builder_end_object(builder);
 	}
 	json_builder_end_array(builder);
