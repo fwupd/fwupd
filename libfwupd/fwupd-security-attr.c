@@ -33,6 +33,7 @@ typedef struct {
 	guint64 created;
 	FwupdSecurityAttrLevel level;
 	FwupdSecurityAttrResult result;
+	FwupdSecurityAttrResult result_fallback;
 	FwupdSecurityAttrFlags flags;
 } FwupdSecurityAttrPrivate;
 
@@ -699,6 +700,42 @@ fwupd_security_attr_get_result(FwupdSecurityAttr *self)
 }
 
 /**
+ * fwupd_security_attr_set_result_fallback:
+ * @self: a #FwupdSecurityAttr
+ * @result: a security attribute, e.g. %FWUPD_SECURITY_ATTR_LEVEL_LOCKED
+ *
+ * Sets the optional fallback HSI result. The fallback may represent the old state, or a state
+ * that may be considered equivalent.
+ *
+ * Since: 1.7.1
+ **/
+void
+fwupd_security_attr_set_result_fallback(FwupdSecurityAttr *self, FwupdSecurityAttrResult result)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
+	priv->result_fallback = result;
+}
+
+/**
+ * fwupd_security_attr_get_result_fallback:
+ * @self: a #FwupdSecurityAttr
+ *
+ * Gets the optional fallback HSI result.
+ *
+ * Returns: the #FwupdSecurityAttrResult, e.g %FWUPD_SECURITY_ATTR_LEVEL_LOCKED
+ *
+ * Since: 1.7.1
+ **/
+FwupdSecurityAttrResult
+fwupd_security_attr_get_result_fallback(FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), 0);
+	return priv->result_fallback;
+}
+
+/**
  * fwupd_security_attr_to_variant:
  * @self: a #FwupdSecurityAttr
  *
@@ -776,6 +813,12 @@ fwupd_security_attr_to_variant(FwupdSecurityAttr *self)
 				      "{sv}",
 				      FWUPD_RESULT_KEY_HSI_RESULT,
 				      g_variant_new_uint32(priv->result));
+	}
+	if (priv->result_fallback != FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
+				      g_variant_new_uint32(priv->result_fallback));
 	}
 	if (priv->metadata != NULL) {
 		g_variant_builder_add(&builder,
@@ -869,6 +912,10 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT) == 0) {
 		fwupd_security_attr_set_result(self, g_variant_get_uint32(value));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK) == 0) {
+		fwupd_security_attr_set_result_fallback(self, g_variant_get_uint32(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_GUID) == 0) {
@@ -991,6 +1038,15 @@ fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GErr
 							       NULL);
 		fwupd_security_attr_set_result(self, fwupd_security_attr_result_from_string(tmp));
 	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
+							       NULL);
+		fwupd_security_attr_set_result_fallback(
+		    self,
+		    fwupd_security_attr_result_from_string(tmp));
+	}
 	if (json_object_has_member(obj, FWUPD_RESULT_KEY_FLAGS)) {
 		JsonArray *array = json_object_get_array_member(obj, FWUPD_RESULT_KEY_FLAGS);
 		for (guint i = 0; i < json_array_get_length(array); i++) {
@@ -1043,6 +1099,9 @@ fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
 	fwupd_common_json_add_string(builder,
 				     FWUPD_RESULT_KEY_HSI_RESULT,
 				     fwupd_security_attr_result_to_string(priv->result));
+	fwupd_common_json_add_string(builder,
+				     FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
+				     fwupd_security_attr_result_to_string(priv->result_fallback));
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PLUGIN, priv->plugin);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_URI, priv->url);
@@ -1118,6 +1177,9 @@ fwupd_security_attr_to_string(FwupdSecurityAttr *self)
 	fwupd_pad_kv_str(str,
 			 FWUPD_RESULT_KEY_HSI_RESULT,
 			 fwupd_security_attr_result_to_string(priv->result));
+	fwupd_pad_kv_str(str,
+			 FWUPD_RESULT_KEY_HSI_RESULT_FALLBACK,
+			 fwupd_security_attr_result_to_string(priv->result_fallback));
 	if (priv->flags != FWUPD_SECURITY_ATTR_FLAG_NONE)
 		fwupd_pad_kv_tfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_NAME, priv->name);
