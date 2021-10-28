@@ -829,6 +829,9 @@ fwupd_security_attr_func(void)
 	fwupd_security_attr_add_metadata(attr1, "KEY", "VALUE");
 	g_assert_cmpstr(fwupd_security_attr_get_metadata(attr1, "KEY"), ==, "VALUE");
 
+	/* remove this from the output */
+	fwupd_security_attr_set_created(attr1, 0);
+
 	str1 = fwupd_security_attr_to_string(attr1);
 	ret = fu_test_compare_lines(str1,
 				    "  AppstreamId:          org.fwupd.hsi.baz\n"

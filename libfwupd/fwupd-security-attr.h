@@ -142,6 +142,10 @@ const gchar *
 fwupd_security_attr_get_url(FwupdSecurityAttr *self);
 void
 fwupd_security_attr_set_url(FwupdSecurityAttr *self, const gchar *url);
+guint64
+fwupd_security_attr_get_created(FwupdSecurityAttr *self);
+void
+fwupd_security_attr_set_created(FwupdSecurityAttr *self, guint64 created);
 GPtrArray *
 fwupd_security_attr_get_obsoletes(FwupdSecurityAttr *self);
 void
