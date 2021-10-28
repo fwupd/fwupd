@@ -315,3 +315,37 @@ fu_security_attrs_to_json(FuSecurityAttrs *attrs, JsonBuilder *builder)
 	json_builder_end_array(builder);
 	json_builder_end_object(builder);
 }
+
+gboolean
+fu_security_attrs_from_json(FuSecurityAttrs *attrs, JsonNode *json_node, GError **error)
+{
+	JsonArray *array;
+	JsonObject *obj;
+
+	/* sanity check */
+	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		return FALSE;
+	}
+	obj = json_node_get_object(json_node);
+
+	/* this has to exist */
+	if (!json_object_has_member(obj, "SecurityAttributes")) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "no SecurityAttributes property in object");
+		return FALSE;
+	}
+	array = json_object_get_array_member(obj, "SecurityAttributes");
+	for (guint i = 0; i < json_array_get_length(array); i++) {
+		JsonNode *node_tmp = json_array_get_element(array, i);
+		g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new(NULL);
+		if (!fwupd_security_attr_from_json(attr, node_tmp, error))
+			return FALSE;
+		fu_security_attrs_append(attrs, attr);
+	}
+
+	/* success */
+	return TRUE;
+}

@@ -884,6 +884,94 @@ fwupd_pad_kv_int(GString *str, const gchar *key, guint32 value)
 }
 
 /**
+ * fwupd_security_attr_from_json:
+ * @self: a #FwupdSecurityAttr
+ * @json_node: a JSON node
+ * @error: (nullable): optional return location for an error
+ *
+ * Loads a fwupd security attribute from a JSON node.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.7.1
+ **/
+gboolean
+fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GError **error)
+{
+#if JSON_CHECK_VERSION(1, 6, 0)
+	JsonObject *obj;
+
+	/* sanity check */
+	if (!JSON_NODE_HOLDS_OBJECT(json_node)) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "not JSON object");
+		return FALSE;
+	}
+	obj = json_node_get_object(json_node);
+
+	/* this has to exist */
+	if (!json_object_has_member(obj, FWUPD_RESULT_KEY_APPSTREAM_ID)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "no %s property in object",
+			    FWUPD_RESULT_KEY_APPSTREAM_ID);
+		return FALSE;
+	}
+
+	/* all optional */
+	fwupd_security_attr_set_appstream_id(
+	    self,
+	    json_object_get_string_member(obj, FWUPD_RESULT_KEY_APPSTREAM_ID));
+	fwupd_security_attr_set_name(
+	    self,
+	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_NAME, NULL));
+	fwupd_security_attr_set_plugin(
+	    self,
+	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_PLUGIN, NULL));
+	fwupd_security_attr_set_url(
+	    self,
+	    json_object_get_string_member_with_default(obj, FWUPD_RESULT_KEY_URI, NULL));
+	fwupd_security_attr_set_level(
+	    self,
+	    json_object_get_int_member_with_default(obj, FWUPD_RESULT_KEY_HSI_LEVEL, 0));
+
+	/* also optional */
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_HSI_RESULT)) {
+		const gchar *tmp =
+		    json_object_get_string_member_with_default(obj,
+							       FWUPD_RESULT_KEY_HSI_RESULT,
+							       NULL);
+		fwupd_security_attr_set_result(self, fwupd_security_attr_result_from_string(tmp));
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_FLAGS)) {
+		JsonArray *array = json_object_get_array_member(obj, FWUPD_RESULT_KEY_FLAGS);
+		for (guint i = 0; i < json_array_get_length(array); i++) {
+			const gchar *tmp = json_array_get_string_element(array, i);
+			FwupdSecurityAttrFlags flag = fwupd_security_attr_flag_from_string(tmp);
+			if (flag != FWUPD_SECURITY_ATTR_FLAG_NONE)
+				fwupd_security_attr_add_flag(self, flag);
+		}
+	}
+	if (json_object_has_member(obj, FWUPD_RESULT_KEY_GUID)) {
+		JsonArray *array = json_object_get_array_member(obj, FWUPD_RESULT_KEY_GUID);
+		for (guint i = 0; i < json_array_get_length(array); i++) {
+			const gchar *tmp = json_array_get_string_element(array, i);
+			fwupd_security_attr_add_guid(self, tmp);
+		}
+	}
+
+	/* success */
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "json-glib version too old");
+	return FALSE;
+#endif
+}
+
+/**
  * fwupd_security_attr_to_json:
  * @self: a #FwupdSecurityAttr
  * @builder: a JSON builder

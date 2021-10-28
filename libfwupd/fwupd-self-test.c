@@ -21,6 +21,7 @@
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 #include "fwupd-request-private.h"
+#include "fwupd-security-attr-private.h"
 
 static gboolean
 fu_test_compare_lines(const gchar *txt1, const gchar *txt2, GError **error)
@@ -751,6 +752,143 @@ fwupd_common_guid_func(void)
 	    fwupd_guid_from_string("0112233-4455-6677-8899-aabbccddeeff", NULL, 0, NULL));
 }
 
+static gchar *
+fwupd_security_attr_to_json_string(FwupdSecurityAttr *attr, GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	g_autoptr(JsonNode) json_root = NULL;
+	json_builder_begin_object(builder);
+	fwupd_security_attr_to_json(attr, builder);
+	json_builder_end_object(builder);
+	json_root = json_builder_get_root(builder);
+	json_generator = json_generator_new();
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to convert security attribute to json.");
+		return NULL;
+	}
+	return g_steal_pointer(&data);
+}
+
+static void
+fwupd_security_attr_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *str1 = NULL;
+	g_autofree gchar *str2 = NULL;
+	g_autofree gchar *json = NULL;
+	g_autoptr(FwupdSecurityAttr) attr1 = fwupd_security_attr_new("org.fwupd.hsi.bar");
+	g_autoptr(FwupdSecurityAttr) attr2 = fwupd_security_attr_new(NULL);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(JsonParser) parser = json_parser_new();
+
+	for (guint i = 1; i < FWUPD_SECURITY_ATTR_RESULT_LAST; i++) {
+		const gchar *tmp = fwupd_security_attr_result_to_string(i);
+		g_assert_cmpstr(tmp, !=, NULL);
+		g_assert_cmpint(fwupd_security_attr_result_from_string(tmp), ==, i);
+	}
+
+	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr1), ==, "org.fwupd.hsi.bar");
+	fwupd_security_attr_set_appstream_id(attr1, "org.fwupd.hsi.baz");
+	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr1), ==, "org.fwupd.hsi.baz");
+
+	fwupd_security_attr_set_level(attr1, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
+	g_assert_cmpint(fwupd_security_attr_get_level(attr1),
+			==,
+			FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
+
+	fwupd_security_attr_set_result(attr1, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr1),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+
+	fwupd_security_attr_add_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	g_assert_true(fwupd_security_attr_has_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_SUCCESS));
+	g_assert_false(fwupd_security_attr_has_flag(attr1, FWUPD_SECURITY_ATTR_FLAG_OBSOLETED));
+
+	fwupd_security_attr_set_name(attr1, "DCI");
+	g_assert_cmpstr(fwupd_security_attr_get_name(attr1), ==, "DCI");
+
+	fwupd_security_attr_set_plugin(attr1, "uefi-capsule");
+	g_assert_cmpstr(fwupd_security_attr_get_plugin(attr1), ==, "uefi-capsule");
+
+	fwupd_security_attr_set_url(attr1, "https://foo.bar");
+	g_assert_cmpstr(fwupd_security_attr_get_url(attr1), ==, "https://foo.bar");
+
+	fwupd_security_attr_add_guid(attr1, "af3fc12c-d090-5783-8a67-845b90d3cfec");
+	g_assert_true(fwupd_security_attr_has_guid(attr1, "af3fc12c-d090-5783-8a67-845b90d3cfec"));
+	g_assert_false(fwupd_security_attr_has_guid(attr1, "NOT_GOING_TO_EXIST"));
+
+	fwupd_security_attr_add_metadata(attr1, "KEY", "VALUE");
+	g_assert_cmpstr(fwupd_security_attr_get_metadata(attr1, "KEY"), ==, "VALUE");
+
+	str1 = fwupd_security_attr_to_string(attr1);
+	ret = fu_test_compare_lines(str1,
+				    "  AppstreamId:          org.fwupd.hsi.baz\n"
+				    "  HsiLevel:             2\n"
+				    "  HsiResult:            enabled\n"
+				    "  Flags:                success\n"
+				    "  Name:                 DCI\n"
+				    "  Plugin:               uefi-capsule\n"
+				    "  Uri:                  https://foo.bar\n"
+				    "  Guid:                 af3fc12c-d090-5783-8a67-845b90d3cfec\n"
+				    "  KEY:                  VALUE\n",
+				    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* to JSON */
+	json = fwupd_security_attr_to_json_string(attr1, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json);
+	ret = fu_test_compare_lines(json,
+				    "{\n"
+				    "  \"AppstreamId\" : \"org.fwupd.hsi.baz\",\n"
+				    "  \"HsiLevel\" : 2,\n"
+				    "  \"HsiResult\" : \"enabled\",\n"
+				    "  \"Name\" : \"DCI\",\n"
+				    "  \"Plugin\" : \"uefi-capsule\",\n"
+				    "  \"Uri\" : \"https://foo.bar\",\n"
+				    "  \"Flags\" : [\n"
+				    "    \"success\"\n"
+				    "  ],\n"
+				    "  \"Guid\" : [\n"
+				    "    \"af3fc12c-d090-5783-8a67-845b90d3cfec\"\n"
+				    "  ],\n"
+				    "  \"KEY\" : \"VALUE\"\n"
+				    "}",
+				    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* from JSON */
+	ret = json_parser_load_from_data(parser, json, -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fwupd_security_attr_from_json(attr2, json_parser_get_root(parser), &error);
+	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+		g_test_skip(error->message);
+		return;
+	}
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* we don't load unconditionally load metadata from the JSON */
+	fwupd_security_attr_add_metadata(attr2, "KEY", "VALUE");
+
+	str2 = fwupd_security_attr_to_string(attr2);
+	ret = fu_test_compare_lines(str2, str1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -768,6 +906,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/release", fwupd_release_func);
 	g_test_add_func("/fwupd/request", fwupd_request_func);
 	g_test_add_func("/fwupd/device", fwupd_device_func);
+	g_test_add_func("/fwupd/security-attr", fwupd_security_attr_func);
 	g_test_add_func("/fwupd/remote{download}", fwupd_remote_download_func);
 	g_test_add_func("/fwupd/remote{base-uri}", fwupd_remote_baseuri_func);
 	g_test_add_func("/fwupd/remote{no-path}", fwupd_remote_nopath_func);
