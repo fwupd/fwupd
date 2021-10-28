@@ -67,6 +67,32 @@ fwupd_security_attr_flag_to_string(FwupdSecurityAttrFlags flag)
 }
 
 /**
+ * fwupd_security_attr_flag_from_string:
+ * @flag: a string, e.g. `success`
+ *
+ * Converts a string to an enumerated flag.
+ *
+ * Returns: enumerated value
+ *
+ * Since: 1.7.1
+ **/
+FwupdSecurityAttrFlags
+fwupd_security_attr_flag_from_string(const gchar *flag)
+{
+	if (g_strcmp0(flag, "success") == 0)
+		return FWUPD_SECURITY_ATTR_FLAG_SUCCESS;
+	if (g_strcmp0(flag, "obsoleted") == 0)
+		return FWUPD_SECURITY_ATTR_FLAG_OBSOLETED;
+	if (g_strcmp0(flag, "runtime-updates") == 0)
+		return FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES;
+	if (g_strcmp0(flag, "runtime-attestation") == 0)
+		return FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION;
+	if (g_strcmp0(flag, "runtime-issue") == 0)
+		return FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE;
+	return FWUPD_SECURITY_ATTR_FLAG_NONE;
+}
+
+/**
  * fwupd_security_attr_result_to_string:
  * @result: security attribute result, e.g. %FWUPD_SECURITY_ATTR_RESULT_ENABLED
  *
@@ -108,6 +134,50 @@ fwupd_security_attr_result_to_string(FwupdSecurityAttrResult result)
 	if (result == FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED)
 		return "not-supported";
 	return NULL;
+}
+
+/**
+ * fwupd_security_attr_result_from_string:
+ * @result: a string, e.g. `not-encrypted`
+ *
+ * Converts a string to an enumerated result.
+ *
+ * Returns: enumerated value
+ *
+ * Since: 1.7.1
+ **/
+FwupdSecurityAttrResult
+fwupd_security_attr_result_from_string(const gchar *result)
+{
+	if (g_strcmp0(result, "valid") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_VALID;
+	if (g_strcmp0(result, "not-valid") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_NOT_VALID;
+	if (g_strcmp0(result, "enabled") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_ENABLED;
+	if (g_strcmp0(result, "not-enabled") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED;
+	if (g_strcmp0(result, "locked") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_LOCKED;
+	if (g_strcmp0(result, "not-locked") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_NOT_LOCKED;
+	if (g_strcmp0(result, "encrypted") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED;
+	if (g_strcmp0(result, "not-encrypted") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED;
+	if (g_strcmp0(result, "tainted") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_TAINTED;
+	if (g_strcmp0(result, "not-tainted") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED;
+	if (g_strcmp0(result, "found") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_FOUND;
+	if (g_strcmp0(result, "not-found") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND;
+	if (g_strcmp0(result, "supported") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_SUPPORTED;
+	if (g_strcmp0(result, "not-supported") == 0)
+		return FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED;
+	return FWUPD_SECURITY_ATTR_RESULT_UNKNOWN;
 }
 
 /**
