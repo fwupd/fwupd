@@ -714,6 +714,7 @@ LIBFWUPD_1.7.1 {
   global:
     fwupd_client_add_hint;
     fwupd_security_attr_flag_from_string;
+    fwupd_security_attr_from_json;
     fwupd_security_attr_result_from_string;
   local: *;
 } LIBFWUPD_1.7.0;

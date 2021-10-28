@@ -3327,11 +3327,65 @@ fu_plugin_composite_func(gconstpointer user_data)
 static void
 fu_security_attr_func(gconstpointer user_data)
 {
-	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new(NULL);
-	for (guint i = 0; i < FWUPD_SECURITY_ATTR_RESULT_LAST; i++) {
-		fwupd_security_attr_set_result(attr, i);
-		g_assert_cmpstr(fu_security_attr_get_result(attr), !=, NULL);
+	gboolean ret;
+	g_autofree gchar *json1 = NULL;
+	g_autofree gchar *json2 = NULL;
+	g_autoptr(FuSecurityAttrs) attrs1 = fu_security_attrs_new();
+	g_autoptr(FuSecurityAttrs) attrs2 = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr1 = fwupd_security_attr_new("org.fwupd.hsi.foo");
+	g_autoptr(FwupdSecurityAttr) attr2 = fwupd_security_attr_new("org.fwupd.hsi.bar");
+	g_autoptr(GError) error = NULL;
+	g_autoptr(JsonParser) parser = json_parser_new();
+
+	fwupd_security_attr_set_plugin(attr1, "foo");
+	fwupd_security_attr_set_plugin(attr2, "bar");
+	fu_security_attrs_append(attrs1, attr1);
+	fu_security_attrs_append(attrs1, attr2);
+
+	json1 = fu_security_attrs_to_json_string(attrs1, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json1);
+	ret = fu_test_compare_lines(
+	    json1,
+	    "{\n"
+	    "  \"SecurityAttributes\" : [\n"
+	    "    {\n"
+	    "      \"AppstreamId\" : \"org.fwupd.hsi.foo\",\n"
+	    "      \"HsiLevel\" : 0,\n"
+	    "      \"Plugin\" : \"foo\",\n"
+	    "      \"Uri\" : "
+	    "\"https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.foo\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\" : \"org.fwupd.hsi.bar\",\n"
+	    "      \"HsiLevel\" : 0,\n"
+	    "      \"Plugin\" : \"bar\",\n"
+	    "      \"Uri\" : "
+	    "\"https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.bar\"\n"
+	    "    }\n"
+	    "  ]\n"
+	    "}",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = json_parser_load_from_data(parser, json1, -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_security_attrs_from_json(attrs2, json_parser_get_root(parser), &error);
+	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+		g_test_skip(error->message);
+		return;
 	}
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	json2 = fu_security_attrs_to_json_string(attrs2, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json2);
+	ret = fu_test_compare_lines(json2, json1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
