@@ -30,6 +30,7 @@ typedef struct {
 	gchar *name;
 	gchar *plugin;
 	gchar *url;
+	guint64 created;
 	FwupdSecurityAttrLevel level;
 	FwupdSecurityAttrResult result;
 	FwupdSecurityAttrFlags flags;
@@ -483,6 +484,40 @@ fwupd_security_attr_set_url(FwupdSecurityAttr *self, const gchar *url)
 	g_free(priv->url);
 	priv->url = g_strdup(url);
 }
+/**
+ * fwupd_security_attr_get_created:
+ * @self: a #FwupdSecurityAttr
+ *
+ * Gets when the attribute was created.
+ *
+ * Returns: the UNIX time, or 0 if unset
+ *
+ * Since: 1.7.1
+ **/
+guint64
+fwupd_security_attr_get_created(FwupdSecurityAttr *self)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), 0);
+	return priv->created;
+}
+
+/**
+ * fwupd_security_attr_set_created:
+ * @self: a #FwupdSecurityAttr
+ * @created: the UNIX time
+ *
+ * Sets when the attribute was created.
+ *
+ * Since: 1.7.1
+ **/
+void
+fwupd_security_attr_set_created(FwupdSecurityAttr *self, guint64 created)
+{
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(self));
+	priv->created = created;
+}
 
 /**
  * fwupd_security_attr_get_name:
@@ -688,6 +723,12 @@ fwupd_security_attr_to_variant(FwupdSecurityAttr *self)
 				      FWUPD_RESULT_KEY_APPSTREAM_ID,
 				      g_variant_new_string(priv->appstream_id));
 	}
+	if (priv->created > 0) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_CREATED,
+				      g_variant_new_uint64(priv->created));
+	}
 	if (priv->name != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
@@ -800,6 +841,10 @@ fwupd_security_attr_from_key_value(FwupdSecurityAttr *self, const gchar *key, GV
 
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_APPSTREAM_ID) == 0) {
 		fwupd_security_attr_set_appstream_id(self, g_variant_get_string(value, NULL));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_CREATED) == 0) {
+		fwupd_security_attr_set_created(self, g_variant_get_uint64(value));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_NAME) == 0) {
@@ -934,6 +979,9 @@ fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GErr
 	fwupd_security_attr_set_level(
 	    self,
 	    json_object_get_int_member_with_default(obj, FWUPD_RESULT_KEY_HSI_LEVEL, 0));
+	fwupd_security_attr_set_created(
+	    self,
+	    json_object_get_int_member_with_default(obj, FWUPD_RESULT_KEY_CREATED, 0));
 
 	/* also optional */
 	if (json_object_has_member(obj, FWUPD_RESULT_KEY_HSI_RESULT)) {
@@ -989,6 +1037,8 @@ fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
 	g_return_if_fail(builder != NULL);
 
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	if (priv->created > 0)
+		fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_CREATED, priv->created);
 	fwupd_common_json_add_int(builder, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
 	fwupd_common_json_add_string(builder,
 				     FWUPD_RESULT_KEY_HSI_RESULT,
@@ -1027,6 +1077,21 @@ fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder)
 	}
 }
 
+static void
+fwupd_pad_kv_unx(GString *str, const gchar *key, guint64 value)
+{
+	g_autoptr(GDateTime) date = NULL;
+	g_autofree gchar *tmp = NULL;
+
+	/* ignore */
+	if (value == 0)
+		return;
+
+	date = g_date_time_new_from_unix_utc((gint64)value);
+	tmp = g_date_time_format(date, "%F");
+	fwupd_pad_kv_str(str, key, tmp);
+}
+
 /**
  * fwupd_security_attr_to_string:
  * @self: a #FwupdSecurityAttr
@@ -1047,6 +1112,8 @@ fwupd_security_attr_to_string(FwupdSecurityAttr *self)
 
 	str = g_string_new("");
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	if (priv->created > 0)
+		fwupd_pad_kv_unx(str, FWUPD_RESULT_KEY_CREATED, priv->created);
 	fwupd_pad_kv_int(str, FWUPD_RESULT_KEY_HSI_LEVEL, priv->level);
 	fwupd_pad_kv_str(str,
 			 FWUPD_RESULT_KEY_HSI_RESULT,
@@ -1089,6 +1156,7 @@ fwupd_security_attr_init(FwupdSecurityAttr *self)
 	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
 	priv->obsoletes = g_ptr_array_new_with_free_func(g_free);
 	priv->guids = g_ptr_array_new_with_free_func(g_free);
+	priv->created = (guint64)g_get_real_time() / G_USEC_PER_SEC;
 }
 
 static void

@@ -3338,7 +3338,9 @@ fu_security_attr_func(gconstpointer user_data)
 	g_autoptr(JsonParser) parser = json_parser_new();
 
 	fwupd_security_attr_set_plugin(attr1, "foo");
+	fwupd_security_attr_set_created(attr1, 0);
 	fwupd_security_attr_set_plugin(attr2, "bar");
+	fwupd_security_attr_set_created(attr2, 0);
 	fu_security_attrs_append(attrs1, attr1);
 	fu_security_attrs_append(attrs1, attr2);
 
