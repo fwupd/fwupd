@@ -717,7 +717,9 @@ LIBFWUPD_1.7.1 {
     fwupd_security_attr_flag_from_string;
     fwupd_security_attr_from_json;
     fwupd_security_attr_get_created;
+    fwupd_security_attr_get_result_fallback;
     fwupd_security_attr_result_from_string;
     fwupd_security_attr_set_created;
+    fwupd_security_attr_set_result_fallback;
   local: *;
 } LIBFWUPD_1.7.0;
