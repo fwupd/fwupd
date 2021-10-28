@@ -6107,6 +6107,46 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 	return g_strdup_printf("HSI-INVALID:chassis[0x%02x]", val);
 }
 
+static gboolean
+fu_engine_record_security_attrs(FuEngine *self, GError **error)
+{
+	g_autoptr(GPtrArray) attrs_array = NULL;
+	g_autofree gchar *json = NULL;
+
+	/* convert attrs to json string */
+	json = fu_security_attrs_to_json_string(self->host_security_attrs, error);
+	if (json == NULL) {
+		g_prefix_error(error, "cannot convert current attrs to string: ");
+		return FALSE;
+	}
+
+	/* check that we did not store this already last boot */
+	attrs_array = fu_history_get_security_attrs(self->history, 1, error);
+	if (attrs_array == NULL) {
+		g_prefix_error(error, "failed to get historical attr: ");
+		return FALSE;
+	}
+	if (attrs_array->len > 0) {
+		FuSecurityAttrs *attrs_tmp = g_ptr_array_index(attrs_array, 0);
+		if (fu_security_attrs_equal(attrs_tmp, self->host_security_attrs)) {
+			g_debug("skipping writing HSI attrs to database as unchanged");
+			return TRUE;
+		}
+	}
+
+	/* write new values */
+	if (!fu_history_add_security_attribute(self->history,
+					       json,
+					       self->host_security_id,
+					       error)) {
+		g_prefix_error(error, "failed to write to DB: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_engine_ensure_security_attrs(FuEngine *self)
 {
@@ -6114,7 +6154,6 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autofree gchar *data = NULL;
 
 	/* already valid */
 	if (self->host_security_id != NULL)
@@ -6160,19 +6199,9 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	g_free(self->host_security_id);
 	self->host_security_id = fu_engine_attrs_calculate_hsi_for_chassis(self);
 
-	/* Convert Security attribute to json string */
-	data = fu_security_attrs_to_json_string(self->host_security_attrs, &error);
-
-	/* Store string to db */
-	if (data == NULL) {
-		g_warning("Fail to convert security attributes to string: %s", error->message);
-	} else {
-		if (fu_history_add_security_attribute(self->history,
-						      data,
-						      self->host_security_id,
-						      &error) == FALSE)
-			g_warning("Fail to write security attribute to DB: %s", error->message);
-	}
+	/* record into the database (best effort) */
+	if (!fu_engine_record_security_attrs(self, &error))
+		g_warning("failed to record HSI attributes: %s", error->message);
 }
 
 const gchar *
