@@ -21,17 +21,14 @@ def __get_license(fn: str) -> str:
 def test_files() -> int:
 
     rc: int = 0
-    build_dir = ""
+    build_dirs = [os.path.dirname(cf) for cf in glob.glob("**/config.h")]
 
     for fn in glob.glob("**/*.[c|h|py|sh]", recursive=True):
         if "meson-private" in fn:
             continue
         if os.path.isdir(fn):
             continue
-        if "config.h" in fn:
-            build_dir = os.path.dirname(fn)
-            continue
-        if build_dir and fn.startswith(build_dir):
+        if fn.startswith(tuple(build_dirs)):
             continue
         if fn.startswith("subprojects"):
             continue
