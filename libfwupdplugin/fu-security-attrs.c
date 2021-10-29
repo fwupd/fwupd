@@ -55,6 +55,23 @@ fu_security_attrs_init(FuSecurityAttrs *self)
 }
 
 /**
+ * fu_security_attrs_append_internal:
+ * @self: a #FuSecurityAttrs
+ * @attr: a #FwupdSecurityAttr
+ *
+ * Adds a #FwupdSecurityAttr to the array with no sanity checks.
+ *
+ * Since: 1.7.1
+ **/
+void
+fu_security_attrs_append_internal(FuSecurityAttrs *self, FwupdSecurityAttr *attr)
+{
+	g_return_if_fail(FU_IS_SECURITY_ATTRS(self));
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(attr));
+	g_ptr_array_add(self->attrs, g_object_ref(attr));
+}
+
+/**
  * fu_security_attrs_append:
  * @self: a #FuSecurityAttrs
  * @attr: a #FwupdSecurityAttr
@@ -88,7 +105,7 @@ fu_security_attrs_append(FuSecurityAttrs *self, FwupdSecurityAttr *attr)
 				      fwupd_security_attr_get_url(attr));
 		fwupd_security_attr_set_url(attr, url);
 	}
-	g_ptr_array_add(self->attrs, g_object_ref(attr));
+	fu_security_attrs_append_internal(self, attr);
 }
 
 /**

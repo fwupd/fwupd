@@ -32,3 +32,5 @@ GVariant *
 fu_security_attrs_to_variant(FuSecurityAttrs *self);
 GPtrArray *
 fu_security_attrs_get_all(FuSecurityAttrs *self);
+void
+fu_security_attrs_append_internal(FuSecurityAttrs *self, FwupdSecurityAttr *attr);
