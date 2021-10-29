@@ -55,4 +55,4 @@ fu_device_set_progress(FuDevice *self, FuProgress *progress);
 FuDeviceInternalFlags
 fu_device_get_internal_flags(FuDevice *self);
 void
-fu_device_set_internal_flags(FuDevice *self, FuDeviceInternalFlags flag);
+fu_device_set_internal_flags(FuDevice *self, FuDeviceInternalFlags flags);
