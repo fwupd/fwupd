@@ -265,22 +265,31 @@ See also:
 
 - [Intel CSME Security Review Cumulative Update](https://www.intel.com/content/www/us/en/security-center/advisory/intel-sa-00086.html)
 
-<a id="org.fwupd.hsi.IntelDci"></a>
+<a id="org.fwupd.hsi.IntelDci.Enabled"></a>
 
-### [Intel DCI](#org.fwupd.hsi.IntelDci)
+### [Intel DCI](#org.fwupd.hsi.IntelDci.Enabled)
 
 Newer Intel CPUs support debugging over USB3 via a proprietary Direct Connection Interface (DCI) with the use of off-the-shelf hardware.
-DCI should always be disabled and locked on production hardware.
 
-- For HSI-1 this should be disabled. *[v1.5.0]*
-
-- For HSI-2 this should be locked. *[v1.5.0]*
+- For HSI-1 this feature should be disabled. *[v1.5.0]*
 
 See also:
 
 - [Intel Direct Connect Interface](https://www.intel.co.uk/content/www/uk/en/support/articles/000029393/processors.html)
 - [Chipsec 4xxlp register definitions](https://github.com/chipsec/chipsec/blob/master/chipsec/cfg/8086/pch_4xxlp.xml#L270)
 - [RISC-V EDK PCH register definitions](https://github.com/riscv/riscv-edk2-platforms/blob/85a50de1b459d1d6644a402081120770aa6dd8c7/Silicon/Intel/CoffeelakeSiliconPkg/Pch/Include/Register/PchRegsDci.h)
+
+<a id="org.fwupd.hsi.IntelDci.Locked"></a>
+
+### [Intel DCI](#org.fwupd.hsi.IntelDci.Locked)
+
+Newer Intel CPUs support debugging over USB3 via a proprietary Direct Connection Interface (DCI) with the use of off-the-shelf hardware.
+
+- For HSI-2 this feature should be locked. *[v1.5.0]*
+
+See also:
+
+- [Intel Direct Connect Interface](https://www.intel.co.uk/content/www/uk/en/support/articles/000029393/processors.html)
 
 <a id="org.fwupd.hsi.Tpm.ReconstructionPcr0"></a>
 
