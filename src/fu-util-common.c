@@ -1959,6 +1959,114 @@ fu_security_attr_append_str(FwupdSecurityAttr *attr,
 	g_string_append_printf(str, "\n");
 }
 
+static gchar *
+fu_util_security_event_to_string(FwupdSecurityAttr *attr)
+{
+	struct {
+		const gchar *appstream_id;
+		FwupdSecurityAttrResult result_old;
+		FwupdSecurityAttrResult result_new;
+		const gchar *text;
+	} items[] = {{"org.fwupd.hsi.Iommu",
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("IOMMU device protection enabled")},
+		     {"org.fwupd.hsi.Iommu",
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
+		      /* TRANSLATORS: HSI event title */
+		      _("IOMMU device protection disabled")},
+		     /* ------------------------------------------*/
+		     {"org.fwupd.hsi.Fwupd.Plugins",
+		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
+		      NULL},
+		     {"org.fwupd.hsi.Fwupd.Plugins",
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
+		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
+		      NULL},
+		     /* ------------------------------------------*/
+		     {"org.fwupd.hsi.Kernel.Lockdown",
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("Kernel lockdown disabled")},
+		     {"org.fwupd.hsi.Kernel.Lockdown",
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("Kernel lockdown enabled")},
+		     /* ------------------------------------------*/
+		     {"org.fwupd.hsi.Uefi.SecureBoot",
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("SecureBoot disabled")},
+		     {"org.fwupd.hsi.Uefi.SecureBoot",
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("Secure Boot enabled")},
+		     {NULL, 0, 0, NULL}};
+
+	/* look for prepared text */
+	for (guint i = 0; items[i].appstream_id != NULL; i++) {
+		if (g_strcmp0(fwupd_security_attr_get_appstream_id(attr), items[i].appstream_id) ==
+			0 &&
+		    fwupd_security_attr_get_result(attr) == items[i].result_new &&
+		    fwupd_security_attr_get_result_fallback(attr) == items[i].result_old)
+			return g_strdup(items[i].text);
+	}
+
+	/* fall back to something sensible */
+	return g_strdup_printf(
+	    _("Attribute '%s' changed result from %s to %s."),
+	    fwupd_security_attr_get_name(attr),
+	    fwupd_security_attr_result_to_string(fwupd_security_attr_get_result_fallback(attr)),
+	    fwupd_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
+}
+
+gchar *
+fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags strflags)
+{
+	GString *str = g_string_new(NULL);
+
+	/* debugging */
+	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+		for (guint i = 0; i < events->len; i++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index(events, i);
+			g_autofree gchar *tmp = fwupd_security_attr_to_string(attr);
+			g_debug("%s", tmp);
+		}
+	}
+
+	/* TRANSLATORS: title for host security events */
+	g_string_append_printf(str, "%s\n", _("Host Security Events"));
+	for (guint i = 0; i < events->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(events, i);
+		g_autoptr(GDateTime) date = NULL;
+		g_autofree gchar *dtstr = NULL;
+		g_autofree gchar *check = NULL;
+		g_autofree gchar *eventstr = NULL;
+
+		date = g_date_time_new_from_unix_utc((gint64)fwupd_security_attr_get_created(attr));
+		dtstr = g_date_time_format(date, "%F %T");
+		eventstr = fu_util_security_event_to_string(attr);
+		if (eventstr == NULL)
+			continue;
+		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+			check = fu_util_term_format("✔", FU_UTIL_TERM_COLOR_GREEN);
+		} else {
+			check = fu_util_term_format("✘", FU_UTIL_TERM_COLOR_RED);
+		}
+		g_string_append_printf(str, "  %s:  %s %s\n", dtstr, check, eventstr);
+	}
+
+	/* success */
+	return g_string_free(str, FALSE);
+}
+
 gchar *
 fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags strflags)
 {

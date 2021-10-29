@@ -713,6 +713,9 @@ LIBFWUPD_1.7.0 {
 LIBFWUPD_1.7.1 {
   global:
     fwupd_client_add_hint;
+    fwupd_client_get_host_security_events;
+    fwupd_client_get_host_security_events_async;
+    fwupd_client_get_host_security_events_finish;
     fwupd_security_attr_copy;
     fwupd_security_attr_flag_from_string;
     fwupd_security_attr_from_json;

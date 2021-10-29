@@ -3097,10 +3097,12 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 }
 
 static gboolean
-fu_util_security_as_json(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
+fu_util_security_as_json(FuUtilPrivate *priv, GPtrArray *attrs, GPtrArray *events, GError **error)
 {
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 	json_builder_begin_object(builder);
+
+	/* attrs */
 	json_builder_set_member_name(builder, "HostSecurityAttributes");
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < attrs->len; i++) {
@@ -3110,6 +3112,20 @@ fu_util_security_as_json(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 		json_builder_end_object(builder);
 	}
 	json_builder_end_array(builder);
+
+	/* events */
+	if (events->len > 0) {
+		json_builder_set_member_name(builder, "HostSecurityEvents");
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < attrs->len; i++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
+			json_builder_begin_object(builder);
+			fwupd_security_attr_to_json(attr, builder);
+			json_builder_end_object(builder);
+		}
+		json_builder_end_array(builder);
+	}
+
 	json_builder_end_object(builder);
 	return fu_util_print_builder(builder, error);
 }
@@ -3119,6 +3135,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
 	g_autoptr(GPtrArray) attrs = NULL;
+	g_autoptr(GPtrArray) events = NULL;
 	g_autofree gchar *str = NULL;
 
 	/* not ready yet */
@@ -3136,9 +3153,14 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (attrs == NULL)
 		return FALSE;
 
+	/* the "when" */
+	events = fwupd_client_get_host_security_events(priv->client, 10, priv->cancellable, error);
+	if (events == NULL)
+		return FALSE;
+
 	/* not for human consumption */
 	if (priv->as_json)
-		return fu_util_security_as_json(priv, attrs, error);
+		return fu_util_security_as_json(priv, attrs, events, error);
 
 	g_print("%s \033[1m%s\033[0m\n",
 		/* TRANSLATORS: this is a string like 'HSI:2-U' */
@@ -3152,6 +3174,12 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 	str = fu_util_security_attrs_to_string(attrs, flags);
 	g_print("%s\n", str);
+
+	/* events */
+	if (events->len > 0) {
+		g_autofree gchar *estr = fu_util_security_events_to_string(events, flags);
+		g_print("%s\n", estr);
+	}
 
 	/* opted-out */
 	if (priv->no_unreported_check)

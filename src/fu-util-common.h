@@ -124,6 +124,8 @@ gchar *
 fu_util_remote_to_string(FwupdRemote *remote, guint idt);
 gchar *
 fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags flags);
+gchar *
+fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags flags);
 gboolean
 fu_util_send_report(FwupdClient *client,
 		    const gchar *report_uri,

@@ -2624,7 +2624,9 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
 	g_autoptr(FuSecurityAttrs) attrs = NULL;
+	g_autoptr(FuSecurityAttrs) events = NULL;
 	g_autoptr(GPtrArray) items = NULL;
+	g_autoptr(GPtrArray) events_array = NULL;
 	g_autofree gchar *str = NULL;
 
 	/* not ready yet */
@@ -2666,6 +2668,18 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	items = fu_security_attrs_get_all(attrs);
 	str = fu_util_security_attrs_to_string(items, flags);
 	g_print("%s\n", str);
+
+	/* print the "when" */
+	events = fu_engine_get_host_security_events(priv->engine, 10, error);
+	if (events == NULL)
+		return FALSE;
+	events_array = fu_security_attrs_get_all(attrs);
+	if (events_array->len > 0) {
+		g_autofree gchar *estr = fu_util_security_events_to_string(events_array, flags);
+		g_print("%s\n", estr);
+	}
+
+	/* success */
 	return TRUE;
 }
 

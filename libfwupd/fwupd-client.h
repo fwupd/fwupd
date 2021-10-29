@@ -228,6 +228,16 @@ fwupd_client_get_host_security_attrs_finish(FwupdClient *self,
 					    GAsyncResult *res,
 					    GError **error) G_GNUC_WARN_UNUSED_RESULT;
 void
+fwupd_client_get_host_security_events_async(FwupdClient *self,
+					    guint limit,
+					    GCancellable *cancellable,
+					    GAsyncReadyCallback callback,
+					    gpointer callback_data);
+GPtrArray *
+fwupd_client_get_host_security_events_finish(FwupdClient *self,
+					     GAsyncResult *res,
+					     GError **error) G_GNUC_WARN_UNUSED_RESULT;
+void
 fwupd_client_get_device_by_id_async(FwupdClient *self,
 				    const gchar *device_id,
 				    GCancellable *cancellable,

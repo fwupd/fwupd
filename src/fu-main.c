@@ -1250,6 +1250,20 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 		g_dbus_method_invocation_return_value(invocation, val);
 		return;
 	}
+	if (g_strcmp0(method_name, "GetHostSecurityEvents") == 0) {
+		guint limit = 0;
+		g_autoptr(FuSecurityAttrs) attrs = NULL;
+		g_variant_get(parameters, "(u)", &limit);
+		g_debug("Called %s(%u)", method_name, limit);
+		attrs = fu_engine_get_host_security_events(priv->engine, limit, &error);
+		if (attrs == NULL) {
+			g_dbus_method_invocation_return_gerror(invocation, error);
+			return;
+		}
+		val = fu_security_attrs_to_variant(attrs);
+		g_dbus_method_invocation_return_value(invocation, val);
+		return;
+	}
 	if (g_strcmp0(method_name, "ClearResults") == 0) {
 		const gchar *device_id;
 		g_variant_get(parameters, "(&s)", &device_id);
