@@ -1254,6 +1254,53 @@ fwupd_security_attr_array_from_variant(GVariant *value)
 }
 
 /**
+ * fwupd_security_attr_copy:
+ * @self: (nullable): a #FwupdSecurityAttr
+ *
+ * Makes a full (deep) copy of a security attribute.
+ *
+ * Returns: (transfer full): a new #FwupdSecurityAttr
+ *
+ * Since: 1.7.1
+ **/
+FwupdSecurityAttr *
+fwupd_security_attr_copy(FwupdSecurityAttr *self)
+{
+	g_autoptr(FwupdSecurityAttr) new = g_object_new(FWUPD_TYPE_SECURITY_ATTR, NULL);
+	FwupdSecurityAttrPrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FWUPD_IS_SECURITY_ATTR(self), NULL);
+
+	fwupd_security_attr_set_appstream_id(new, priv->appstream_id);
+	fwupd_security_attr_set_name(new, priv->name);
+	fwupd_security_attr_set_plugin(new, priv->plugin);
+	fwupd_security_attr_set_url(new, priv->url);
+	fwupd_security_attr_set_level(new, priv->level);
+	fwupd_security_attr_set_flags(new, priv->flags);
+	fwupd_security_attr_set_result(new, priv->result);
+	fwupd_security_attr_set_created(new, priv->created);
+	for (guint i = 0; i < priv->guids->len; i++) {
+		const gchar *guid = g_ptr_array_index(priv->guids, i);
+		fwupd_security_attr_add_guid(new, guid);
+	}
+	for (guint i = 0; i < priv->obsoletes->len; i++) {
+		const gchar *obsolete = g_ptr_array_index(priv->obsoletes, i);
+		fwupd_security_attr_add_obsolete(new, obsolete);
+	}
+	if (priv->metadata != NULL) {
+		GHashTableIter iter;
+		gpointer key, value;
+		g_hash_table_iter_init(&iter, priv->metadata);
+		while (g_hash_table_iter_next(&iter, &key, &value)) {
+			fwupd_security_attr_add_metadata(new,
+							 (const gchar *)key,
+							 (const gchar *)value);
+		}
+	}
+	return g_steal_pointer(&new);
+}
+
+/**
  * fwupd_security_attr_new:
  * @appstream_id: (nullable): the AppStream component ID, e.g. `com.intel.BiosGuard`
  *

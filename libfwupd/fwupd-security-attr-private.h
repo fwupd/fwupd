@@ -276,5 +276,7 @@ void
 fwupd_security_attr_to_json(FwupdSecurityAttr *self, JsonBuilder *builder);
 gboolean
 fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GError **error);
+FwupdSecurityAttr *
+fwupd_security_attr_copy(FwupdSecurityAttr *self);
 
 G_END_DECLS
