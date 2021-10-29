@@ -936,6 +936,59 @@ fwupd_client_get_host_security_attrs(FwupdClient *self, GCancellable *cancellabl
 }
 
 static void
+fwupd_client_get_host_security_events_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;
+	helper->array =
+	    fwupd_client_get_host_security_events_finish(FWUPD_CLIENT(source), res, &helper->error);
+	g_main_loop_quit(helper->loop);
+}
+
+/**
+ * fwupd_client_get_host_security_events:
+ * @self: a #FwupdClient
+ * @limit: maximum number of events, or 0 for no limit
+ * @cancellable: (nullable): optional #GCancellable
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets all the host security events from the daemon.
+ *
+ * Returns: (element-type FwupdSecurityAttr) (transfer container): attributes
+ *
+ * Since: 1.7.1
+ **/
+GPtrArray *
+fwupd_client_get_host_security_events(FwupdClient *self,
+				      guint limit,
+				      GCancellable *cancellable,
+				      GError **error)
+{
+	g_autoptr(FwupdClientHelper) helper = NULL;
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* connect */
+	if (!fwupd_client_connect(self, cancellable, error))
+		return NULL;
+
+	/* call async version and run loop until complete */
+	helper = fwupd_client_helper_new(self);
+	fwupd_client_get_host_security_events_async(self,
+						    limit,
+						    cancellable,
+						    fwupd_client_get_host_security_events_cb,
+						    helper);
+	g_main_loop_run(helper->loop);
+	if (helper->array == NULL) {
+		g_propagate_error(error, g_steal_pointer(&helper->error));
+		return NULL;
+	}
+	return g_steal_pointer(&helper->array);
+}
+
+static void
 fwupd_client_get_device_by_id_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	FwupdClientHelper *helper = (FwupdClientHelper *)user_data;

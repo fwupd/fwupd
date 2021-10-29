@@ -6220,6 +6220,31 @@ fu_engine_get_host_security_attrs(FuEngine *self)
 	return g_object_ref(self->host_security_attrs);
 }
 
+FuSecurityAttrs *
+fu_engine_get_host_security_events(FuEngine *self, guint limit, GError **error)
+{
+	g_autoptr(FuSecurityAttrs) events = fu_security_attrs_new();
+	g_autoptr(GPtrArray) attrs_array = NULL;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+
+	attrs_array = fu_history_get_security_attrs(self->history, limit, error);
+	if (attrs_array == NULL)
+		return NULL;
+	for (guint i = 1; i < attrs_array->len; i++) {
+		FuSecurityAttrs *attrs_new = g_ptr_array_index(attrs_array, i - 1);
+		FuSecurityAttrs *attrs_old = g_ptr_array_index(attrs_array, i - 0);
+		g_autoptr(GPtrArray) diffs = fu_security_attrs_compare(attrs_old, attrs_new);
+		for (guint j = 0; j < diffs->len; j++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index(diffs, j);
+			fu_security_attrs_append_internal(events, attr);
+		}
+	}
+
+	/* success */
+	return g_steal_pointer(&events);
+}
+
 gboolean
 fu_engine_load_plugins(FuEngine *self, GError **error)
 {

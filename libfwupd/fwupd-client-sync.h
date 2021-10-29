@@ -91,6 +91,11 @@ GPtrArray *
 fwupd_client_get_host_security_attrs(FwupdClient *self,
 				     GCancellable *cancellable,
 				     GError **error) G_GNUC_WARN_UNUSED_RESULT;
+GPtrArray *
+fwupd_client_get_host_security_events(FwupdClient *self,
+				      guint limit,
+				      GCancellable *cancellable,
+				      GError **error) G_GNUC_WARN_UNUSED_RESULT;
 FwupdDevice *
 fwupd_client_get_device_by_id(FwupdClient *self,
 			      const gchar *device_id,
