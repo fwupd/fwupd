@@ -39,8 +39,6 @@ shared_module('fu_plugin_synaptics_rmi',
   ],
 )
 
-endif
-
 if get_option('tests')
   install_data(['tests/synaptics-rmi-0x.builder.xml','tests/synaptics-rmi-10.builder.xml'],
     install_dir: join_paths(installed_test_datadir, 'tests'))
@@ -72,4 +70,5 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('synaptics-rmi-self-test', e, env : env)
+endif
 endif
