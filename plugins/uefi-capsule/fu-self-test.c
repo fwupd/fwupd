@@ -14,73 +14,6 @@
 #include "fu-uefi-bgrt.h"
 #include "fu-uefi-cod-device.h"
 #include "fu-uefi-common.h"
-#include "fu-uefi-pcrs.h"
-
-static void
-fu_uefi_pcrs_1_2_func(void)
-{
-	gboolean ret;
-	g_autoptr(FuUefiPcrs) pcrs = fu_uefi_pcrs_new();
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GPtrArray) pcr0s = NULL;
-	g_autoptr(GPtrArray) pcrXs = NULL;
-	g_autofree gchar *testdatadir = NULL;
-
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
-	g_setenv("FWUPD_SYSFSTPMDIR", testdatadir, TRUE);
-
-	ret = fu_uefi_pcrs_setup(pcrs, &error);
-	g_assert_no_error(error);
-	g_assert_true(ret);
-	pcr0s = fu_uefi_pcrs_get_checksums(pcrs, 0);
-	g_assert_nonnull(pcr0s);
-	g_assert_cmpint(pcr0s->len, ==, 1);
-	pcrXs = fu_uefi_pcrs_get_checksums(pcrs, 999);
-	g_assert_nonnull(pcrXs);
-	g_assert_cmpint(pcrXs->len, ==, 0);
-
-	g_unsetenv("FWUPD_SYSFSTPMDIR");
-}
-
-static void
-fu_uefi_pcrs_2_0_func(void)
-{
-	g_autoptr(FuUefiPcrs) pcrs = fu_uefi_pcrs_new();
-	g_autoptr(GError) error = NULL;
-	g_autoptr(GPtrArray) pcr0s = NULL;
-	g_autoptr(GPtrArray) pcrXs = NULL;
-	const gchar *tpm_server_running = g_getenv("TPM_SERVER_RUNNING");
-	g_setenv("FWUPD_FORCE_TPM2", "1", TRUE);
-
-#ifndef HAVE_TSS2
-	g_test_skip("Compiled without TPM2.0 support");
-	return;
-#endif
-
-#ifdef HAVE_GETUID
-	if (tpm_server_running == NULL && (getuid() != 0 || geteuid() != 0)) {
-		g_test_skip("TPM2.0 tests require simulated TPM2.0 running or need root access "
-			    "with physical TPM");
-		return;
-	}
-#endif
-
-	if (!fu_uefi_pcrs_setup(pcrs, &error)) {
-		if (tpm_server_running == NULL &&
-		    g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
-			g_test_skip("no physical or simulated TPM 2.0 device available");
-			return;
-		}
-	}
-	g_assert_no_error(error);
-	pcr0s = fu_uefi_pcrs_get_checksums(pcrs, 0);
-	g_assert_nonnull(pcr0s);
-	g_assert_cmpint(pcr0s->len, >=, 1);
-	pcrXs = fu_uefi_pcrs_get_checksums(pcrs, 999);
-	g_assert_nonnull(pcrXs);
-	g_assert_cmpint(pcrXs->len, ==, 0);
-	g_unsetenv("FWUPD_FORCE_TPM2");
-}
 
 static void
 fu_uefi_ucs2_func(void)
@@ -375,8 +308,6 @@ main(int argc, char **argv)
 	g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 
 	/* tests go here */
-	g_test_add_func("/uefi/pcrs1.2", fu_uefi_pcrs_1_2_func);
-	g_test_add_func("/uefi/pcrs2.0", fu_uefi_pcrs_2_0_func);
 	g_test_add_func("/uefi/ucs2", fu_uefi_ucs2_func);
 	g_test_add_func("/uefi/bgrt", fu_uefi_bgrt_func);
 	g_test_add_func("/uefi/framebuffer", fu_uefi_framebuffer_func);
