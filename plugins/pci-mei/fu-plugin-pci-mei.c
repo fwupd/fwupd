@@ -312,7 +312,6 @@ fu_plugin_add_security_attrs_bootguard_enabled(FuPlugin *plugin, FuSecurityAttrs
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_ENABLED);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
-	fwupd_security_attr_set_url(attr, "#org.fwupd.hsi.Kernel.IntelBootguard");
 	fu_security_attrs_append(attrs, attr);
 
 	/* disabled at runtime? */
@@ -344,7 +343,6 @@ fu_plugin_add_security_attrs_bootguard_verified(FuPlugin *plugin, FuSecurityAttr
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_VERIFIED);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
-	fwupd_security_attr_set_url(attr, "#org.fwupd.hsi.Kernel.IntelBootguard");
 	fu_security_attrs_append(attrs, attr);
 
 	/* measured boot is not sufficient, verified is required */
@@ -407,7 +405,6 @@ fu_plugin_add_security_attrs_bootguard_policy(FuPlugin *plugin, FuSecurityAttrs 
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_POLICY);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_THEORETICAL);
-	fwupd_security_attr_set_url(attr, "#org.fwupd.hsi.Kernel.IntelBootguard");
 	fu_security_attrs_append(attrs, attr);
 
 	/* policy must be to immediately shutdown */
@@ -439,7 +436,6 @@ fu_plugin_add_security_attrs_bootguard_otp(FuPlugin *plugin, FuSecurityAttrs *at
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_INTEL_BOOTGUARD_OTP);
 	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
 	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
-	fwupd_security_attr_set_url(attr, "#org.fwupd.hsi.Kernel.IntelBootguard");
 	fu_security_attrs_append(attrs, attr);
 
 	/* ensure vendor set the FPF OTP fuse */
