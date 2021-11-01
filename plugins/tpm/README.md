@@ -5,6 +5,13 @@
 This allows enumerating Trusted Platform Modules, also known as "TPM" devices,
 although it does not allow the user to update the firmware on them.
 
+The TPM Event Log records which events are registered for the PCR0 hash, which
+may help in explaining why PCR0 values are differing for some firmware.
+
+The device exposed is not upgradable in any way and is just for debugging.
+The created device will be a child device of the system TPM device, which may
+or may not be upgradable.
+
 ## GUID Generation
 
 These devices use custom GUIDs:
@@ -29,4 +36,5 @@ The device is not upgradable and thus requires no vendor ID set.
 
 ## External Interface Access
 
-This plugin uses the tpm2-tss library to access the TPM.  It requires access to `/sys/class/tpm`.
+This plugin uses the tpm2-tss library to access the TPM.  It requires access to `/sys/class/tpm`
+and optionally requires read only access to `/sys/kernel/security/tpm0/binary_bios_measurements`.
