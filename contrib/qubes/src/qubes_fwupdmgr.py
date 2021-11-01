@@ -231,7 +231,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         p = subprocess.Popen(CMD_update)
         p.wait()
         if p.returncode != 0:
-            raise Exception("fwudp-qubes: Firmware update failed")
+            raise Exception("fwupd-qubes: Firmware update failed")
 
     def _install_usbvm_firmware_downgrade(self, arch_name):
         """Installs firmware downgrades for specified device in dom0.
@@ -250,7 +250,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         p = subprocess.Popen(CMD_downgrade)
         p.wait()
         if p.returncode != 0:
-            raise Exception("fwudp-qubes: Firmware downgrade failed")
+            raise Exception("fwupd-qubes: Firmware downgrade failed")
 
     def _clean_usbvm(self):
         """Cleans usbvm directories."""
@@ -351,7 +351,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         self.output = p.communicate()[0].decode()
         print(self.output)
         if p.returncode != 0:
-            raise Exception("fwudp-qubes: Refresh failed")
+            raise Exception("fwupd-qubes: Refresh failed")
         if not METADATA_REFRESH_REGEX.match(self.output):
             raise Exception("Manual metadata refresh failed!!!")
 
@@ -361,7 +361,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         p = subprocess.Popen(cmd_get_dom0_updates, stdout=subprocess.PIPE)
         self.dom0_updates_info = p.communicate()[0].decode()
         if p.returncode != 0 and p.returncode != 2:
-            raise Exception("fwudp-qubes: Getting available updates failed")
+            raise Exception("fwupd-qubes: Getting available updates failed")
 
     def _parse_dom0_updates_info(self, updates_info):
         """Creates dictionary and list with information about updates.
@@ -507,7 +507,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         p = subprocess.Popen(cmd_install)
         p.wait()
         if p.returncode != 0:
-            raise Exception("fwudp-qubes: Firmware update failed")
+            raise Exception("fwupd-qubes: Firmware update failed")
 
     def _read_dmi(self):
         """Reads BIOS information from DMI."""
@@ -548,7 +548,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         p = subprocess.Popen(cmd_get_dom0_devices, stdout=subprocess.PIPE)
         self.dom0_devices_info = p.communicate()[0].decode()
         if p.returncode != 0:
-            raise Exception("fwudp-qubes: Getting devices info failed")
+            raise Exception("fwupd-qubes: Getting devices info failed")
 
     def _get_usbvm_devices(self):
         """Gathers information about devices connected in usbvm."""
@@ -562,7 +562,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         p = subprocess.Popen(cmd_get_usbvm_devices, shell=True)
         p.wait()
         if p.returncode != 0 and p.returncode != 2 and not os.path.exists(FWUPD_VM_LOG):
-            raise Exception("fwudp-qubes: Getting usbvm devices info failed")
+            raise Exception("fwupd-qubes: Getting usbvm devices info failed")
         if not os.path.exists(FWUPD_VM_LOG):
             raise Exception("usbvm device info log does not exist")
 
@@ -682,7 +682,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         p = subprocess.Popen(cmd_install)
         p.wait()
         if p.returncode != 0:
-            raise Exception("fwudp-qubes: Firmware downgrade failed")
+            raise Exception("fwupd-qubes: Firmware downgrade failed")
 
     def downgrade_firmware(self, usbvm=False, whonix=False):
         """Downgrades firmware of the specified device.
@@ -867,7 +867,7 @@ class QubesFwupdmgr(FwupdHeads, FwupdUpdate, FwupdReceiveUpdates):
         p = subprocess.Popen(cmd_xl_list, stdout=subprocess.PIPE)
         self.output = p.communicate()[0].decode()
         if p.returncode != 0:
-            raise Exception("fwudp-qubes: Firmware downgrade failed")
+            raise Exception("fwupd-qubes: Firmware downgrade failed")
         return USBVM_N in self.output
 
     def trusted_cleanup(self, usbvm=False):
