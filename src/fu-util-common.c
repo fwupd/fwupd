@@ -2010,6 +2010,10 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      _("Secure Boot enabled")},
 		     {NULL, 0, 0, NULL}};
 
+	/* sanity check */
+	if (fwupd_security_attr_get_appstream_id(attr) == NULL)
+		return NULL;
+
 	/* look for prepared text */
 	for (guint i = 0; items[i].appstream_id != NULL; i++) {
 		if (g_strcmp0(fwupd_security_attr_get_appstream_id(attr), items[i].appstream_id) ==
