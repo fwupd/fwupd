@@ -25,3 +25,5 @@ gboolean
 fu_security_attrs_equal(FuSecurityAttrs *attrs1, FuSecurityAttrs *attrs2);
 GPtrArray *
 fu_security_attrs_compare(FuSecurityAttrs *attrs1, FuSecurityAttrs *attrs2);
+const gchar *
+fu_security_attr_result_to_string(FwupdSecurityAttrResult result);

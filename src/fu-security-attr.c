@@ -181,9 +181,8 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 }
 
 const gchar *
-fu_security_attr_get_result(FwupdSecurityAttr *attr)
+fu_security_attr_result_to_string(FwupdSecurityAttrResult result)
 {
-	FwupdSecurityAttrResult result = fwupd_security_attr_get_result(attr);
 	if (result == FWUPD_SECURITY_ATTR_RESULT_VALID) {
 		/* TRANSLATORS: Suffix: the HSI result */
 		return _("Valid");
@@ -240,6 +239,18 @@ fu_security_attr_get_result(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Suffix: the HSI result */
 		return _("Not supported");
 	}
+	return NULL;
+}
+
+const gchar *
+fu_security_attr_get_result(FwupdSecurityAttr *attr)
+{
+	const gchar *tmp;
+
+	/* common case */
+	tmp = fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr));
+	if (tmp != NULL)
+		return tmp;
 
 	/* fallback */
 	if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
