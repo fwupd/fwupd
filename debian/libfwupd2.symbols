@@ -51,6 +51,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  LIBFWUPD_1.6.1@LIBFWUPD_1.6.1 1.6.1
  LIBFWUPD_1.6.2@LIBFWUPD_1.6.2 1.6.2
  LIBFWUPD_1.7.0@LIBFWUPD_1.7.0 1.7.0
+ LIBFWUPD_1.7.1@LIBFWUPD_1.7.1 1.7.1
  fwupd_build_history_report_json@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_machine_id@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_user_agent@LIBFWUPD_1.0.3 1.0.3
@@ -61,6 +62,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_client_activate@LIBFWUPD_1.2.6 1.2.6
  fwupd_client_activate_async@LIBFWUPD_1.5.0 1.5.0
  fwupd_client_activate_finish@LIBFWUPD_1.5.0 1.5.0
+ fwupd_client_add_hint@LIBFWUPD_1.7.1 1.7.1
  fwupd_client_clear_results@LIBFWUPD_0.7.0 1.0.0
  fwupd_client_clear_results_async@LIBFWUPD_1.5.0 1.5.0
  fwupd_client_clear_results_finish@LIBFWUPD_1.5.0 1.5.0
@@ -104,6 +106,9 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_client_get_host_security_attrs@LIBFWUPD_1.5.0 1.5.0
  fwupd_client_get_host_security_attrs_async@LIBFWUPD_1.5.0 1.5.0
  fwupd_client_get_host_security_attrs_finish@LIBFWUPD_1.5.0 1.5.0
+ fwupd_client_get_host_security_events@LIBFWUPD_1.7.1 1.7.1
+ fwupd_client_get_host_security_events_async@LIBFWUPD_1.7.1 1.7.1
+ fwupd_client_get_host_security_events_finish@LIBFWUPD_1.7.1 1.7.1
  fwupd_client_get_host_security_id@LIBFWUPD_1.5.0 1.5.0
  fwupd_client_get_main_context@LIBFWUPD_1.5.3 1.5.3
  fwupd_client_get_percentage@LIBFWUPD_0.7.3 1.0.0
@@ -468,10 +473,14 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_security_attr_add_metadata@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_add_obsolete@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_array_from_variant@LIBFWUPD_1.5.0 1.5.0
+ fwupd_security_attr_copy@LIBFWUPD_1.7.1 1.7.1
+ fwupd_security_attr_flag_from_string@LIBFWUPD_1.7.1 1.7.1
  fwupd_security_attr_flag_to_string@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_flag_to_suffix@LIBFWUPD_1.5.0 1.5.0
+ fwupd_security_attr_from_json@LIBFWUPD_1.7.1 1.7.1
  fwupd_security_attr_from_variant@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_get_appstream_id@LIBFWUPD_1.5.0 1.5.0
+ fwupd_security_attr_get_created@LIBFWUPD_1.7.1 1.7.1
  fwupd_security_attr_get_flags@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_get_guids@LIBFWUPD_1.7.0 1.7.0
  fwupd_security_attr_get_level@LIBFWUPD_1.5.0 1.5.0
@@ -480,19 +489,23 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_security_attr_get_obsoletes@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_get_plugin@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_get_result@LIBFWUPD_1.5.0 1.5.0
+ fwupd_security_attr_get_result_fallback@LIBFWUPD_1.7.1 1.7.1
  fwupd_security_attr_get_type@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_get_url@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_has_flag@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_has_guid@LIBFWUPD_1.7.0 1.7.0
  fwupd_security_attr_has_obsolete@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_new@LIBFWUPD_1.5.0 1.5.0
+ fwupd_security_attr_result_from_string@LIBFWUPD_1.7.1 1.7.1
  fwupd_security_attr_result_to_string@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_set_appstream_id@LIBFWUPD_1.5.0 1.5.0
+ fwupd_security_attr_set_created@LIBFWUPD_1.7.1 1.7.1
  fwupd_security_attr_set_flags@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_set_level@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_set_name@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_set_plugin@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_set_result@LIBFWUPD_1.5.0 1.5.0
+ fwupd_security_attr_set_result_fallback@LIBFWUPD_1.7.1 1.7.1
  fwupd_security_attr_set_url@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_to_json@LIBFWUPD_1.5.0 1.5.0
  fwupd_security_attr_to_string@LIBFWUPD_1.5.0 1.5.0
