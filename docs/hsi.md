@@ -394,6 +394,7 @@ See also:
 
 - [IOMMU Wikipedia Page](https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit)
 
+<a id="org.fwupd.hsi.Kernel.IntelBootguard"></a>
 <a id="org.fwupd.hsi.IntelBootguard.Enabled"></a>
 
 ### [Intel BootGuard: Enabled](#org.fwupd.hsi.IntelBootguard.Enabled)
