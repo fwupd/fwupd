@@ -2030,7 +2030,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 gchar *
 fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags strflags)
 {
-	GString *str = g_string_new(NULL);
+	g_autoptr(GString) str = g_string_new(NULL);
 
 	/* debugging */
 	if (g_getenv("FWUPD_VERBOSE") != NULL) {
@@ -2041,8 +2041,6 @@ fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags
 		}
 	}
 
-	/* TRANSLATORS: title for host security events */
-	g_string_append_printf(str, "%s\n", _("Host Security Events"));
 	for (guint i = 0; i < events->len; i++) {
 		FwupdSecurityAttr *attr = g_ptr_array_index(events, i);
 		g_autoptr(GDateTime) date = NULL;
@@ -2060,11 +2058,19 @@ fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags
 		} else {
 			check = fu_util_term_format("✘", FU_UTIL_TERM_COLOR_RED);
 		}
+		if (str->len == 0) {
+			/* TRANSLATORS: title for host security events */
+			g_string_append_printf(str, "%s\n", _("Host Security Events"));
+		}
 		g_string_append_printf(str, "  %s:  %s %s\n", dtstr, check, eventstr);
 	}
 
+	/* no output required */
+	if (str->len == 0)
+		return NULL;
+
 	/* success */
-	return g_string_free(str, FALSE);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 gchar *

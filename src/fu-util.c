@@ -3178,7 +3178,8 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* events */
 	if (events->len > 0) {
 		g_autofree gchar *estr = fu_util_security_events_to_string(events, flags);
-		g_print("%s\n", estr);
+		if (estr != NULL)
+			g_print("%s\n", estr);
 	}
 
 	/* opted-out */

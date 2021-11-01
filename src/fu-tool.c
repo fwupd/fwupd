@@ -2676,7 +2676,8 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	events_array = fu_security_attrs_get_all(attrs);
 	if (events_array->len > 0) {
 		g_autofree gchar *estr = fu_util_security_events_to_string(events_array, flags);
-		g_print("%s\n", estr);
+		if (estr != NULL)
+			g_print("%s\n", estr);
 	}
 
 	/* success */
