@@ -124,9 +124,8 @@ fu_security_attrs_to_variant(FuSecurityAttrs *self)
 	GVariantBuilder builder;
 
 	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), NULL);
-	g_return_val_if_fail(self->attrs->len > 0, NULL);
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
 
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
 	for (guint i = 0; i < self->attrs->len; i++) {
 		FwupdSecurityAttr *security_attr = g_ptr_array_index(self->attrs, i);
 		GVariant *tmp = fwupd_security_attr_to_variant(security_attr);
