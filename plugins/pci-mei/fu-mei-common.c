@@ -49,33 +49,27 @@ fu_mei_common_cmp_version(FuMeiVersion *vers1, FuMeiVersion *vers2)
 FuMeiIssue
 fu_mei_common_is_csme_vulnerable(FuMeiVersion *vers)
 {
-	if (vers->major == 11 && vers->minor == 8 && vers->hotfix >= 70)
-		return FU_MEI_ISSUE_PATCHED;
-	if (vers->major == 11 && vers->minor == 11 && vers->hotfix >= 70)
-		return FU_MEI_ISSUE_PATCHED;
-	if (vers->major == 11 && vers->minor == 22 && vers->hotfix >= 70)
-		return FU_MEI_ISSUE_PATCHED;
-	if (vers->major == 12 && vers->minor == 0 && (vers->hotfix == 49 || vers->hotfix >= 56))
-		return FU_MEI_ISSUE_PATCHED;
-	if (vers->major == 13 && vers->minor == 0 && vers->hotfix >= 21)
-		return FU_MEI_ISSUE_PATCHED;
-	if (vers->major == 14 && vers->minor == 0 && vers->hotfix >= 11)
-		return FU_MEI_ISSUE_PATCHED;
-	if (vers->major == 15)
-		return FU_MEI_ISSUE_NOT_VULNERABLE;
-	return FU_MEI_ISSUE_VULNERABLE;
+	if (vers->major == 11 && (vers->minor == 8 || vers->minor == 11 || vers->minor == 22)) {
+		return vers->hotfix >= 70 ? FU_MEI_ISSUE_PATCHED : FU_MEI_ISSUE_VULNERABLE;
+	} else if (vers->major == 12 && vers->minor == 0) {
+		return (vers->hotfix == 49 || vers->hotfix >= 56) ? FU_MEI_ISSUE_PATCHED
+								  : FU_MEI_ISSUE_VULNERABLE;
+	} else if (vers->major == 13 && vers->minor == 0) {
+		return vers->hotfix >= 21 ? FU_MEI_ISSUE_PATCHED : FU_MEI_ISSUE_VULNERABLE;
+	} else if (vers->major == 14 && vers->minor == 0) {
+		return vers->hotfix >= 11 ? FU_MEI_ISSUE_PATCHED : FU_MEI_ISSUE_VULNERABLE;
+	}
+	return FU_MEI_ISSUE_NOT_VULNERABLE;
 }
 
 FuMeiIssue
 fu_mei_common_is_txe_vulnerable(FuMeiVersion *vers)
 {
-	if (vers->major == 3 && vers->minor == 1 && vers->hotfix >= 70)
-		return FU_MEI_ISSUE_PATCHED;
-	if (vers->major == 4 && vers->minor == 0 && vers->hotfix >= 20)
-		return FU_MEI_ISSUE_PATCHED;
-	if (vers->major == 5)
-		return FU_MEI_ISSUE_NOT_VULNERABLE;
-	return FU_MEI_ISSUE_VULNERABLE;
+	if (vers->major == 3 && vers->minor == 1)
+		return vers->hotfix >= 70 ? FU_MEI_ISSUE_PATCHED : FU_MEI_ISSUE_VULNERABLE;
+	if (vers->major == 4 && vers->minor == 0)
+		return vers->hotfix >= 20 ? FU_MEI_ISSUE_PATCHED : FU_MEI_ISSUE_VULNERABLE;
+	return FU_MEI_ISSUE_NOT_VULNERABLE;
 }
 
 FuMeiIssue

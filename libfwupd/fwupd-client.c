@@ -34,7 +34,12 @@
 #include "fwupd-request-private.h"
 #include "fwupd-security-attr-private.h"
 
+static void
+fwupd_client_fixup_dbus_error(GError *error);
+
 typedef GObject *(*FwupdClientObjectNewFunc)(void);
+
+#define FWUPD_CLIENT_DBUS_PROXY_TIMEOUT 180000 /* ms */
 
 /**
  * FwupdClient:
@@ -64,6 +69,7 @@ typedef struct {
 	GDBusProxy *proxy;
 	GProxyResolver *proxy_resolver;
 	gchar *user_agent;
+	GHashTable *hints; /* str:str */
 #ifdef SOUP_SESSION_COMPAT
 	GObject *soup_session;
 	GModule *soup_module; /* we leak this */
@@ -593,11 +599,39 @@ fwupd_client_curl_new(FwupdClient *self, GError **error)
 #endif
 
 static void
+fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+	if (val == NULL) {
+		/* new libfwupd and old daemon, just swallow the error */
+		if (g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_UNKNOWN_METHOD)) {
+			g_debug("ignoring %s", error->message);
+			g_task_return_boolean(task, TRUE);
+			return;
+		}
+		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_boolean(task, TRUE);
+}
+
+static void
 fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(GTask) task = G_TASK(user_data);
+	GVariantBuilder builder;
+	GHashTableIter iter;
+	gpointer key, value;
 	FwupdClient *self = g_task_get_source_object(task);
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	GCancellable *cancellable = g_task_get_cancellable(task);
 	g_autoptr(GDBusProxy) proxy = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GVariant) val = NULL;
@@ -651,8 +685,21 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	if (val7 != NULL)
 		fwupd_client_set_host_security_id(self, g_variant_get_string(val7, NULL));
 
-	/* success */
-	g_task_return_boolean(task, TRUE);
+	/* build client hints */
+	g_variant_builder_init(&builder, G_VARIANT_TYPE_DICTIONARY);
+	g_hash_table_iter_init(&iter, priv->hints);
+	while (g_hash_table_iter_next(&iter, &key, &value))
+		g_variant_builder_add(&builder, "{ss}", (const gchar *)key, (const gchar *)value);
+
+	/* only supported on fwupd >= 1.7.1 */
+	g_dbus_proxy_call(priv->proxy,
+			  "SetHints",
+			  g_variant_new("(a{ss})", &builder),
+			  G_DBUS_CALL_FLAGS_NONE,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
+			  cancellable,
+			  fwupd_client_set_hints_cb,
+			  g_steal_pointer(&task));
 }
 
 /**
@@ -805,7 +852,7 @@ fwupd_client_get_host_security_attrs_async(FwupdClient *self,
 			  "GetHostSecurityAttrs",
 			  NULL,
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_get_host_security_attrs_cb,
 			  g_steal_pointer(&task));
@@ -825,6 +872,88 @@ fwupd_client_get_host_security_attrs_async(FwupdClient *self,
  **/
 GPtrArray *
 fwupd_client_get_host_security_attrs_finish(FwupdClient *self, GAsyncResult *res, GError **error)
+{
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return g_task_propagate_pointer(G_TASK(res), error);
+}
+
+static void
+fwupd_client_get_host_security_events_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK(user_data);
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GVariant) val = NULL;
+
+	val = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+	if (val == NULL) {
+		fwupd_client_fixup_dbus_error(error);
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+
+	/* success */
+	g_task_return_pointer(task,
+			      fwupd_security_attr_array_from_variant(val),
+			      (GDestroyNotify)g_ptr_array_unref);
+}
+
+/**
+ * fwupd_client_get_host_security_events_async:
+ * @self: a #FwupdClient
+ * @limit: maximum number of events, or 0 for no limit
+ * @cancellable: (nullable): optional #GCancellable
+ * @callback: the function to run on completion
+ * @callback_data: the data to pass to @callback
+ *
+ * Gets all the host security events from the daemon.
+ *
+ * You must have called [method@Client.connect_async] on @self before using
+ * this method.
+ *
+ * Since: 1.7.1
+ **/
+void
+fwupd_client_get_host_security_events_async(FwupdClient *self,
+					    guint limit,
+					    GCancellable *cancellable,
+					    GAsyncReadyCallback callback,
+					    gpointer callback_data)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GTask) task = NULL;
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
+	g_return_if_fail(priv->proxy != NULL);
+
+	/* call into daemon */
+	task = g_task_new(self, cancellable, callback, callback_data);
+	g_dbus_proxy_call(priv->proxy,
+			  "GetHostSecurityEvents",
+			  g_variant_new("(u)", limit),
+			  G_DBUS_CALL_FLAGS_NONE,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
+			  cancellable,
+			  fwupd_client_get_host_security_events_cb,
+			  g_steal_pointer(&task));
+}
+
+/**
+ * fwupd_client_get_host_security_events_finish:
+ * @self: a #FwupdClient
+ * @res: the asynchronous result
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the result of fwupd_client_get_host_security_events_async().
+ *
+ * Returns: (element-type FwupdSecurityAttr) (transfer container): attributes
+ *
+ * Since: 1.7.1
+ **/
+GPtrArray *
+fwupd_client_get_host_security_events_finish(FwupdClient *self, GAsyncResult *res, GError **error)
 {
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	g_return_val_if_fail(g_task_is_valid(res, self), NULL);
@@ -906,7 +1035,7 @@ fwupd_client_get_report_metadata_async(FwupdClient *self,
 			  "GetReportMetadata",
 			  NULL,
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_get_report_metadata_cb,
 			  g_steal_pointer(&task));
@@ -986,7 +1115,7 @@ fwupd_client_get_devices_async(FwupdClient *self,
 			  "GetDevices",
 			  NULL,
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_get_devices_cb,
 			  g_steal_pointer(&task));
@@ -1066,7 +1195,7 @@ fwupd_client_get_plugins_async(FwupdClient *self,
 			  "GetPlugins",
 			  NULL,
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_get_plugins_cb,
 			  g_steal_pointer(&task));
@@ -1146,7 +1275,7 @@ fwupd_client_get_history_async(FwupdClient *self,
 			  "GetHistory",
 			  NULL,
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_get_history_cb,
 			  g_steal_pointer(&task));
@@ -1176,6 +1305,8 @@ fwupd_client_get_history_finish(FwupdClient *self, GAsyncResult *res, GError **e
 static void
 fwupd_client_get_device_by_id_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
+	FwupdDevice *device_result = NULL;
+	gsize device_id_len;
 	g_autoptr(GTask) task = G_TASK(user_data);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -1187,15 +1318,29 @@ fwupd_client_get_device_by_id_cb(GObject *source, GAsyncResult *res, gpointer us
 		return;
 	}
 
-	/* find the device by ID (client side) */
+	/* support abbreviated hashes (client side) */
+	device_id_len = strlen(device_id);
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
-		if (g_strcmp0(fwupd_device_get_id(dev), device_id) == 0) {
-			g_task_return_pointer(task,
-					      g_object_ref(dev),
-					      (GDestroyNotify)g_object_unref);
-			return;
+		if (strncmp(fwupd_device_get_id(dev), device_id, device_id_len) == 0) {
+			if (device_result != NULL) {
+				g_task_return_new_error(task,
+							FWUPD_ERROR,
+							FWUPD_ERROR_NOT_FOUND,
+							"more than one matching ID prefix '%s'",
+							device_id);
+				return;
+			}
+			device_result = dev;
 		}
+	}
+
+	/* one result */
+	if (device_result != NULL) {
+		g_task_return_pointer(task,
+				      g_object_ref(device_result),
+				      (GDestroyNotify)g_object_unref);
+		return;
 	}
 
 	/* failed */
@@ -1421,7 +1566,7 @@ fwupd_client_get_releases_async(FwupdClient *self,
 			  "GetReleases",
 			  g_variant_new("(s)", device_id),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_get_releases_cb,
 			  g_steal_pointer(&task));
@@ -1504,7 +1649,7 @@ fwupd_client_get_downgrades_async(FwupdClient *self,
 			  "GetDowngrades",
 			  g_variant_new("(s)", device_id),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_get_downgrades_cb,
 			  g_steal_pointer(&task));
@@ -1587,7 +1732,7 @@ fwupd_client_get_upgrades_async(FwupdClient *self,
 			  "GetUpgrades",
 			  g_variant_new("(s)", device_id),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_get_upgrades_cb,
 			  g_steal_pointer(&task));
@@ -1669,7 +1814,7 @@ fwupd_client_modify_config_async(FwupdClient *self,
 			  "ModifyConfig",
 			  g_variant_new("(ss)", key, value),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_modify_config_cb,
 			  g_steal_pointer(&task));
@@ -1748,7 +1893,7 @@ fwupd_client_activate_async(FwupdClient *self,
 			  "Activate",
 			  g_variant_new("(s)", device_id),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_activate_cb,
 			  g_steal_pointer(&task));
@@ -1826,7 +1971,7 @@ fwupd_client_verify_async(FwupdClient *self,
 			  "Verify",
 			  g_variant_new("(s)", device_id),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_verify_cb,
 			  g_steal_pointer(&task));
@@ -1904,7 +2049,7 @@ fwupd_client_verify_update_async(FwupdClient *self,
 			  "VerifyUpdate",
 			  g_variant_new("(s)", device_id),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_verify_update_cb,
 			  g_steal_pointer(&task));
@@ -1982,7 +2127,7 @@ fwupd_client_unlock_async(FwupdClient *self,
 			  "Unlock",
 			  g_variant_new("(s)", device_id),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_unlock_cb,
 			  g_steal_pointer(&task));
@@ -2060,7 +2205,7 @@ fwupd_client_clear_results_async(FwupdClient *self,
 			  "ClearResults",
 			  g_variant_new("(s)", device_id),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_clear_results_cb,
 			  g_steal_pointer(&task));
@@ -2143,7 +2288,7 @@ fwupd_client_get_results_async(FwupdClient *self,
 			  "GetResults",
 			  g_variant_new("(s)", device_id),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_get_results_cb,
 			  g_steal_pointer(&task));
@@ -3458,7 +3603,7 @@ fwupd_client_get_remotes_async(FwupdClient *self,
 			  "GetRemotes",
 			  NULL,
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_get_remotes_cb,
 			  g_steal_pointer(&task));
@@ -3542,7 +3687,7 @@ fwupd_client_get_approved_firmware_async(FwupdClient *self,
 			  "GetApprovedFirmware",
 			  NULL,
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_get_approved_firmware_cb,
 			  g_steal_pointer(&task));
@@ -3625,7 +3770,7 @@ fwupd_client_set_approved_firmware_async(FwupdClient *self,
 			  "SetApprovedFirmware",
 			  g_variant_new("(^as)", strv),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_set_approved_firmware_cb,
 			  g_steal_pointer(&task));
@@ -3709,7 +3854,7 @@ fwupd_client_get_blocked_firmware_async(FwupdClient *self,
 			  "GetBlockedFirmware",
 			  NULL,
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_get_blocked_firmware_cb,
 			  g_steal_pointer(&task));
@@ -3792,7 +3937,7 @@ fwupd_client_set_blocked_firmware_async(FwupdClient *self,
 			  "SetBlockedFirmware",
 			  g_variant_new("(^as)", strv),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_set_blocked_firmware_cb,
 			  g_steal_pointer(&task));
@@ -3871,7 +4016,7 @@ fwupd_client_set_feature_flags_async(FwupdClient *self,
 			  "SetFeatureFlags",
 			  g_variant_new("(t)", (guint64)feature_flags),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_set_feature_flags_cb,
 			  g_steal_pointer(&task));
@@ -3969,7 +4114,7 @@ fwupd_client_self_sign_async(FwupdClient *self,
 			  "SelfSign",
 			  g_variant_new("(sa{sv})", value, &builder),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_self_sign_cb,
 			  g_steal_pointer(&task));
@@ -4053,7 +4198,7 @@ fwupd_client_modify_remote_async(FwupdClient *self,
 			  "ModifyRemote",
 			  g_variant_new("(sss)", remote_id, key, value),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_modify_remote_cb,
 			  g_steal_pointer(&task));
@@ -4138,7 +4283,7 @@ fwupd_client_modify_device_async(FwupdClient *self,
 			  "ModifyDevice",
 			  g_variant_new("(sss)", device_id, key, value),
 			  G_DBUS_CALL_FLAGS_NONE,
-			  -1,
+			  FWUPD_CLIENT_DBUS_PROXY_TIMEOUT,
 			  cancellable,
 			  fwupd_client_modify_device_cb,
 			  g_steal_pointer(&task));
@@ -4776,6 +4921,27 @@ fwupd_client_upload_bytes_finish(FwupdClient *self, GAsyncResult *res, GError **
 	return g_task_propagate_pointer(G_TASK(res), error);
 }
 
+/**
+ * fwupd_client_add_hint:
+ * @self: a #FwupdClient
+ * @key: the key, e.g. `locale`
+ * @value: (nullable): the value @key should be set
+ *
+ * Sets optional hints from the client that may affect the list of devices.
+ *
+ * Since: 1.7.1
+ **/
+void
+fwupd_client_add_hint(FwupdClient *self, const gchar *key, const gchar *value)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
+	g_return_if_fail(key != NULL);
+
+	g_hash_table_insert(priv->hints, g_strdup(key), g_strdup(value));
+}
+
 #ifdef SOUP_SESSION_COMPAT
 /* this is bad; we dlopen libsoup-2.4.so.1 and get the gtype manually
  * to avoid deps on both libcurl and libsoup whilst preserving ABI */
@@ -5159,6 +5325,10 @@ fwupd_client_init(FwupdClient *self)
 	priv->idle_sources =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_client_context_helper_free);
 	priv->proxy_resolver = g_proxy_resolver_get_default();
+	priv->hints = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+	/* we get this one for free */
+	fwupd_client_add_hint(self, "locale", g_getenv("LANG"));
 }
 
 static void
@@ -5173,6 +5343,7 @@ fwupd_client_finalize(GObject *object)
 	g_free(priv->host_product);
 	g_free(priv->host_machine_id);
 	g_free(priv->host_security_id);
+	g_hash_table_unref(priv->hints);
 	g_mutex_clear(&priv->idle_mutex);
 	if (priv->idle_id != 0)
 		g_source_remove(priv->idle_id);

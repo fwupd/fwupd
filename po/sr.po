@@ -277,9 +277,6 @@ msgstr "Мирујем…"
 msgid "Install a firmware file on this hardware"
 msgstr "Инсталирај датотеку са фирмвером на овај уређај"
 
-msgid "Install old version of system firmware"
-msgstr "Инсталирајте старо издање системског фирмвера"
-
 msgid "Install signed device firmware"
 msgstr "Инсталирајте потписани фирмвер за уређаје"
 

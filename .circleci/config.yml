@@ -102,7 +102,7 @@ jobs:
             git config user.email "info@fwupd.org"
             git config user.name "Documentation deployment Bot"
             rm -rf *
-            cp  ../libfwupd* ../*html ../*.js . -R
+            cp  ../libfwupd* ../*html . -R
             git add .
             git commit -a --allow-empty -m "Trigger deployment"
             git push git@github.com:fwupd/fwupd.github.io.git

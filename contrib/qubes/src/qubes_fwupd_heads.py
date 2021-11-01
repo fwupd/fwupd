@@ -27,7 +27,7 @@ class FwupdHeads:
         p = subprocess.Popen(cmd_hwids, stdout=subprocess.PIPE)
         self.dom0_hwids_info = p.communicate()[0].decode()
         if p.returncode != 0:
-            raise Exception("fwudp-qubes: Getting hwids info failed")
+            raise Exception("fwupd-qubes: Getting hwids info failed")
 
     def _gather_firmware_version(self):
         """
@@ -54,7 +54,7 @@ class FwupdHeads:
         p = subprocess.Popen(cmd_metadata, stdout=subprocess.PIPE)
         self.metadata_info = p.communicate()[0].decode()
         if p.returncode != 0:
-            raise Exception("fwudp-qubes: Parsing metadata failed")
+            raise Exception("fwupd-qubes: Parsing metadata failed")
 
     def _parse_heads_updates(self, device):
         """

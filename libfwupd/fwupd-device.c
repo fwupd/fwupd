@@ -110,7 +110,7 @@ fwupd_device_get_checksums(FwupdDevice *self)
  * @self: a #FwupdDevice
  * @checksum: the device checksum
  *
- * Sets the device checksum.
+ * Adds a device checksum.
  *
  * Since: 0.9.3
  **/
@@ -314,7 +314,7 @@ fwupd_device_set_id(FwupdDevice *self, const gchar *id)
  * fwupd_device_get_parent_id:
  * @self: a #FwupdDevice
  *
- * Gets the ID.
+ * Gets the parent ID.
  *
  * Returns: the parent ID, or %NULL if unset
  *
@@ -596,9 +596,9 @@ fwupd_device_get_guid_default(FwupdDevice *self)
  * fwupd_device_get_instance_ids:
  * @self: a #FwupdDevice
  *
- * Gets the InstanceIDs.
+ * Gets the instance IDs.
  *
- * Returns: (element-type utf8) (transfer none): the InstanceID
+ * Returns: (element-type utf8) (transfer none): the instance IDs
  *
  * Since: 1.2.5
  **/
@@ -613,11 +613,11 @@ fwupd_device_get_instance_ids(FwupdDevice *self)
 /**
  * fwupd_device_has_instance_id:
  * @self: a #FwupdDevice
- * @instance_id: the InstanceID, e.g. `PCI\VEN_10EC&DEV_525A`
+ * @instance_id: the instance ID, e.g. `PCI\VEN_10EC&DEV_525A`
  *
- * Finds out if the device has this specific InstanceID.
+ * Finds out if the device has this specific instance ID.
  *
- * Returns: %TRUE if the InstanceID is found
+ * Returns: %TRUE if the instance ID is found
  *
  * Since: 1.2.5
  **/
@@ -640,9 +640,9 @@ fwupd_device_has_instance_id(FwupdDevice *self, const gchar *instance_id)
 /**
  * fwupd_device_add_instance_id:
  * @self: a #FwupdDevice
- * @instance_id: the GUID, e.g. `PCI\VEN_10EC&DEV_525A`
+ * @instance_id: the instance ID, e.g. `PCI\VEN_10EC&DEV_525A`
  *
- * Adds the InstanceID if it does not already exist.
+ * Adds the instance ID if it does not already exist.
  *
  * Since: 1.2.5
  **/
@@ -681,11 +681,11 @@ fwupd_device_get_icons(FwupdDevice *self)
 /**
  * fwupd_device_has_icon:
  * @self: a #FwupdDevice
- * @icon: the name, e.g. `input-mouse` or `/usr/share/icons/foo.png`
+ * @icon: the icon name, e.g. `input-mouse` or `/usr/share/icons/foo.png`
  *
  * Finds out if the device has this specific icon.
  *
- * Returns: %TRUE if the icon is found
+ * Returns: %TRUE if the icon name is found
  *
  * Since: 1.6.2
  **/
@@ -704,7 +704,7 @@ fwupd_device_has_icon(FwupdDevice *self, const gchar *icon)
 /**
  * fwupd_device_add_icon:
  * @self: a #FwupdDevice
- * @icon: the name, e.g. `input-mouse` or `/usr/share/icons/foo.png`
+ * @icon: the icon name, e.g. `input-mouse` or `/usr/share/icons/foo.png`
  *
  * Adds the icon name if it does not already exist.
  *
@@ -783,7 +783,7 @@ fwupd_device_get_vendor(FwupdDevice *self)
 /**
  * fwupd_device_set_vendor:
  * @self: a #FwupdDevice
- * @vendor: (nullable): the description
+ * @vendor: (nullable): the vendor
  *
  * Sets the device vendor.
  *
@@ -826,7 +826,7 @@ fwupd_device_get_vendor_id(FwupdDevice *self)
 /**
  * fwupd_device_set_vendor_id:
  * @self: a #FwupdDevice
- * @vendor_id: the ID, e.g. 'USB:0x1234' or 'USB:0x1234|PCI:0x5678'
+ * @vendor_id: the vendor ID, e.g. 'USB:0x1234' or 'USB:0x1234|PCI:0x5678'
  *
  * Sets the device vendor ID.
  *
@@ -869,11 +869,11 @@ fwupd_device_get_vendor_ids(FwupdDevice *self)
 /**
  * fwupd_device_has_vendor_id:
  * @self: a #FwupdDevice
- * @vendor_id: the ID, e.g. 'USB:0x1234'
+ * @vendor_id: the vendor ID, e.g. 'USB:0x1234'
  *
  * Finds out if the device has this specific vendor ID.
  *
- * Returns: %TRUE if the ID is found
+ * Returns: %TRUE if the vendor ID is found
  *
  * Since: 1.5.5
  **/
@@ -1274,7 +1274,7 @@ fwupd_device_set_plugin(FwupdDevice *self, const gchar *plugin)
  * fwupd_device_get_protocol:
  * @self: a #FwupdDevice
  *
- * Gets the protocol that the device uses for updating.
+ * Gets the protocol name that the device uses for updating.
  *
  * Returns: the protocol name, or %NULL if unset
  *
@@ -1295,7 +1295,7 @@ fwupd_device_get_protocol(FwupdDevice *self)
  * @self: a #FwupdDevice
  * @protocol: the protocol name, e.g. `com.hughski.colorhug`
  *
- * Sets the protocol that is used to update the device.
+ * Sets the protocol name that is used to update the device.
  *
  * Since: 1.3.6
  *
@@ -1319,9 +1319,9 @@ fwupd_device_set_protocol(FwupdDevice *self, const gchar *protocol)
  * fwupd_device_get_protocols:
  * @self: a #FwupdDevice
  *
- * Gets the device protocol.
+ * Gets the device protocol names.
  *
- * Returns: (element-type utf8) (transfer none): the device protocol
+ * Returns: (element-type utf8) (transfer none): the device protocol names
  *
  * Since: 1.5.8
  **/
@@ -1336,11 +1336,11 @@ fwupd_device_get_protocols(FwupdDevice *self)
 /**
  * fwupd_device_has_protocol:
  * @self: a #FwupdDevice
- * @protocol: the ID, e.g. 'USB:0x1234'
+ * @protocol: the protocol name, e.g. `com.hughski.colorhug`
  *
- * Finds out if the device has this specific protocol.
+ * Finds out if the device has this specific protocol name.
  *
- * Returns: %TRUE if the ID is found
+ * Returns: %TRUE if the protocol name is found
  *
  * Since: 1.5.8
  **/
@@ -1363,9 +1363,9 @@ fwupd_device_has_protocol(FwupdDevice *self, const gchar *protocol)
 /**
  * fwupd_device_add_protocol:
  * @self: a #FwupdDevice
- * @protocol: the ID, e.g. 'USB:0x1234'
+ * @protocol: the protocol name, e.g. `com.hughski.colorhug`
  *
- * Adds a device protocol.
+ * Adds a device protocol name.
  *
  * Since: 1.5.8
  **/
@@ -2321,9 +2321,9 @@ fwupd_device_set_version_build_date(FwupdDevice *self, guint64 version_build_dat
  * fwupd_device_get_update_message:
  * @self: a #FwupdDevice
  *
- * Gets the update message.
+ * Gets the update message string.
  *
- * Returns: the update message, or %NULL if unset
+ * Returns: the update message string, or %NULL if unset
  *
  * Since: 1.2.4
  **/
@@ -2340,7 +2340,7 @@ fwupd_device_get_update_message(FwupdDevice *self)
  * @self: a #FwupdDevice
  * @update_message: (nullable): the update message string
  *
- * Sets the update message.
+ * Sets the update message string.
  *
  * Since: 1.2.4
  **/
@@ -2363,7 +2363,7 @@ fwupd_device_set_update_message(FwupdDevice *self, const gchar *update_message)
  * fwupd_device_get_update_image:
  * @self: a #FwupdDevice
  *
- * Gets the update image.
+ * Gets the update image URL.
  *
  * Returns: the update image URL, or %NULL if unset
  *
@@ -2382,7 +2382,7 @@ fwupd_device_get_update_image(FwupdDevice *self)
  * @self: a #FwupdDevice
  * @update_image: (nullable): the update image URL
  *
- * Sets the update image.
+ * Sets the update image URL.
  *
  * Since: 1.4.5
  **/
@@ -2405,9 +2405,9 @@ fwupd_device_set_update_image(FwupdDevice *self, const gchar *update_image)
  * fwupd_device_get_update_error:
  * @self: a #FwupdDevice
  *
- * Gets the update error.
+ * Gets the update error string.
  *
- * Returns: the update error, or %NULL if unset
+ * Returns: the update error string, or %NULL if unset
  *
  * Since: 0.9.8
  **/
@@ -2424,7 +2424,7 @@ fwupd_device_get_update_error(FwupdDevice *self)
  * @self: a #FwupdDevice
  * @update_error: (nullable): the update error string
  *
- * Sets the update error.
+ * Sets the update error string.
  *
  * Since: 0.9.8
  **/
@@ -2497,6 +2497,7 @@ fwupd_device_add_release(FwupdDevice *self, FwupdRelease *release)
 	g_return_if_fail(FWUPD_IS_DEVICE(self));
 	g_ptr_array_add(priv->releases, g_object_ref(release));
 }
+
 /**
  * fwupd_device_get_status:
  * @self: a #FwupdDevice
@@ -2759,7 +2760,7 @@ fwupd_device_to_string(FwupdDevice *self)
 				 fwupd_status_to_string(priv->status));
 	}
 
-	/* show InstanceIDs optionally mapped to GUIDs, and also "standalone" GUIDs */
+	/* show instance IDs optionally mapped to GUIDs, and also "standalone" GUIDs */
 	guid_helpers = g_ptr_array_new_with_free_func((GDestroyNotify)fwupd_device_guid_helper_new);
 	for (guint i = 0; i < priv->instance_ids->len; i++) {
 		FwupdDeviceGuidHelper *helper = g_new0(FwupdDeviceGuidHelper, 1);
@@ -3121,7 +3122,7 @@ fwupd_device_from_variant(GVariant *value)
  * fwupd_device_array_ensure_parents:
  * @devices: (element-type FwupdDevice): devices
  *
- * Sets the parent object on all devices in the array using the parent-id.
+ * Sets the parent object on all devices in the array using the parent ID.
  *
  * Since: 1.3.7
  **/

@@ -15,6 +15,8 @@
 #include <string.h>
 #include <xmlb.h>
 
+#include "fwupd-security-attr-private.h"
+
 #include "fu-config.h"
 #include "fu-context-private.h"
 #include "fu-device-list.h"
@@ -127,7 +129,8 @@ fu_engine_generate_md_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 
 	/* put cab file somewhere we can parse it */
-	filename = g_build_filename(TESTDATADIR_DST, "colorhug", "colorhug-als-3.0.2.cab", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "colorhug-als-3.0.2.cab", NULL);
 	data = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
@@ -155,7 +158,7 @@ fu_engine_generate_md_func(gconstpointer user_data)
 
 	/* verify checksums */
 	tmp = xb_node_query_text(component, "releases/release/checksum[@target='container']", NULL);
-	g_assert_cmpstr(tmp, !=, NULL);
+	g_assert_cmpstr(tmp, ==, "3da49ddd961144a79336b3ac3b0e469cb2531d0e");
 	tmp = xb_node_query_text(component, "releases/release/checksum[@target='content']", NULL);
 	g_assert_cmpstr(tmp, ==, NULL);
 }
@@ -178,7 +181,12 @@ fu_plugin_hash_func(gconstpointer user_data)
 	g_assert_false(ret);
 
 	/* create a tainted plugin */
-	pluginfn = g_build_filename(PLUGINBUILDDIR, "libfu_plugin_invalid." G_MODULE_SUFFIX, NULL);
+	pluginfn = g_test_build_filename(G_TEST_BUILT,
+					 "..",
+					 "plugins",
+					 "test",
+					 "libfu_plugin_invalid." G_MODULE_SUFFIX,
+					 NULL);
 	ret = fu_plugin_open(plugin, pluginfn, &error);
 	g_assert_true(ret);
 	g_assert_no_error(error);
@@ -197,7 +205,7 @@ fu_engine_requirements_missing_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *xml = "<component>"
@@ -231,7 +239,7 @@ fu_engine_requirements_soft_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *xml = "<component>"
@@ -265,7 +273,7 @@ fu_engine_requirements_client_fail_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *xml = "<component>"
@@ -296,7 +304,7 @@ fu_engine_requirements_client_invalid_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *xml = "<component>"
@@ -327,7 +335,7 @@ fu_engine_requirements_client_pass_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *xml = "<component>"
@@ -361,7 +369,7 @@ fu_engine_requirements_version_require_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -410,7 +418,7 @@ fu_engine_requirements_unsupported_func(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	const gchar *xml = "<component>"
@@ -445,7 +453,7 @@ fu_engine_requirements_child_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuDevice) child = fu_device_new();
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -500,7 +508,7 @@ fu_engine_requirements_child_fail_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuDevice) child = fu_device_new();
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -555,7 +563,7 @@ fu_engine_requirements_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
 	g_autoptr(FuInstallTask) task = NULL;
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo = NULL;
@@ -591,7 +599,7 @@ fu_engine_requirements_device_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -648,7 +656,7 @@ fu_engine_requirements_device_plain_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -694,7 +702,7 @@ fu_engine_requirements_version_format_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -744,7 +752,7 @@ fu_engine_requirements_only_upgrade_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -795,7 +803,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	g_autoptr(FuDevice) unrelated_device3 = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuDevice) parent = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task1 = NULL;
 	g_autoptr(FuInstallTask) task2 = NULL;
 	g_autoptr(GError) error = NULL;
@@ -895,7 +903,7 @@ fu_engine_requirements_other_device_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device1 = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -959,7 +967,7 @@ fu_engine_requirements_protocol_check_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device1 = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(FuInstallTask) task1 = NULL;
 	g_autoptr(FuInstallTask) task2 = NULL;
@@ -1045,7 +1053,7 @@ fu_engine_requirements_parent_device_func(gconstpointer user_data)
 	g_autoptr(FuDevice) device1 = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuDevice) device2 = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) component = NULL;
@@ -1317,7 +1325,7 @@ fu_engine_device_unlock_func(gconstpointer user_data)
 	g_assert_true(ret);
 
 	/* add the hardcoded 'fwupd' metadata */
-	filename = g_build_filename(TESTDATADIR_SRC, "metadata.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "metadata.xml", NULL);
 	file = g_file_new_for_path(filename);
 	ret = xb_builder_source_load_file(source, file, XB_BUILDER_SOURCE_FLAG_NONE, NULL, &error);
 	g_assert_no_error(error);
@@ -1349,7 +1357,7 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(GBytes) blob_cab = NULL;
 	g_autoptr(GError) error = NULL;
@@ -1372,7 +1380,8 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	g_assert_true(ret);
 
 	/* get generated file as a blob */
-	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "hwid-1.2.3.cab", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "hwid-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
@@ -1417,7 +1426,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_pre = NULL;
@@ -1515,7 +1524,6 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_NO_CACHE,
 			     &error);
@@ -1605,7 +1613,7 @@ fu_engine_install_duration_func(gconstpointer user_data)
 	gboolean ret;
 	g_autoptr(FuDevice) device = fu_device_new_with_context(self->ctx);
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
@@ -1642,7 +1650,6 @@ fu_engine_install_duration_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine,
 			     FU_ENGINE_LOAD_FLAG_REMOTES | FU_ENGINE_LOAD_FLAG_NO_CACHE,
 			     &error);
@@ -1713,7 +1720,6 @@ fu_engine_history_func(gconstpointer user_data)
 	/* set up dummy plugin */
 	fu_engine_add_plugin(engine, self->plugin);
 
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1738,7 +1744,8 @@ fu_engine_history_func(gconstpointer user_data)
 	g_assert_cmpint(devices->len, ==, 1);
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
 
-	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
@@ -1848,7 +1855,6 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	/* set up dummy plugin */
 	fu_engine_add_plugin(engine, self->plugin);
 
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1869,8 +1875,11 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	fu_device_set_created(device, 1515338000);
 	fu_engine_add_device(engine, device);
 
-	filename =
-	    g_build_filename(TESTDATADIR_DST, "multiple-rels", "multiple-rels-1.2.4.cab", NULL);
+	filename = g_test_build_filename(G_TEST_BUILT,
+					 "tests",
+					 "multiple-rels",
+					 "multiple-rels-1.2.4.cab",
+					 NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
@@ -1936,7 +1945,6 @@ fu_engine_history_inherit(gconstpointer user_data)
 	/* set up dummy plugin */
 	g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
 	fu_engine_add_plugin(engine, self->plugin);
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1960,7 +1968,8 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_assert_cmpint(devices->len, ==, 1);
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
 
-	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
@@ -2073,7 +2082,6 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	/* set up dummy plugin */
 	g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
 	fu_engine_add_plugin(engine, self->plugin);
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -2097,7 +2105,8 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	g_assert_cmpint(devices->len, ==, 1);
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
 
-	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
@@ -2161,8 +2170,6 @@ fu_engine_history_error_func(gconstpointer user_data)
 	/* set up dummy plugin */
 	g_setenv("FWUPD_PLUGIN_TEST", "fail", TRUE);
 	fu_engine_add_plugin(engine, self->plugin);
-
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR_SRC, TRUE);
 	ret = fu_engine_load(engine, FU_ENGINE_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -2187,7 +2194,8 @@ fu_engine_history_error_func(gconstpointer user_data)
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED));
 
 	/* install the wrong thing */
-	filename = g_build_filename(TESTDATADIR_DST, "missing-hwid", "noreqs-1.2.3.cab", NULL);
+	filename =
+	    g_test_build_filename(G_TEST_BUILT, "tests", "missing-hwid", "noreqs-1.2.3.cab", NULL);
 	blob_cab = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob_cab);
@@ -2771,7 +2779,7 @@ fu_history_migrate_func(gconstpointer user_data)
 	g_autofree gchar *filename = NULL;
 
 	/* load old version */
-	filename = g_build_filename(TESTDATADIR_SRC, "history_v1.db", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "history_v1.db", NULL);
 	file_src = g_file_new_for_path(filename);
 	file_dst = g_file_new_for_path("/tmp/fwupd-self-test/var/lib/fwupd/pending.db");
 	ret = g_file_copy(file_src, file_dst, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, &error);
@@ -2876,7 +2884,8 @@ fu_plugin_module_func(gconstpointer user_data)
 #endif
 	/* schedule an offline update */
 	g_signal_connect(progress, "status-changed", G_CALLBACK(_plugin_status_changed_cb), &cnt);
-	mapped_file_fn = g_build_filename(TESTDATADIR_SRC, "colorhug", "firmware.bin", NULL);
+	mapped_file_fn =
+	    g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
 	mapped_file = g_mapped_file_new(mapped_file_fn, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(mapped_file);
@@ -3161,7 +3170,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	GError *error = NULL;
 	gboolean ret;
 	g_autoptr(FuEngine) engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
@@ -3318,13 +3327,133 @@ fu_plugin_composite_func(gconstpointer user_data)
 }
 
 static void
+fu_security_attrs_func(gconstpointer user_data)
+{
+	FwupdSecurityAttr *attr_tmp;
+	g_autoptr(FuSecurityAttrs) attrs1 = fu_security_attrs_new();
+	g_autoptr(FuSecurityAttrs) attrs2 = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr1 = fwupd_security_attr_new("org.fwupd.hsi.foo");
+	g_autoptr(FwupdSecurityAttr) attr2 = fwupd_security_attr_new("org.fwupd.hsi.bar");
+	g_autoptr(FwupdSecurityAttr) attr3 = fwupd_security_attr_new("org.fwupd.hsi.baz");
+	g_autoptr(FwupdSecurityAttr) attr4 = fwupd_security_attr_new("org.fwupd.hsi.baz");
+	g_autoptr(GPtrArray) results = NULL;
+
+	/* attrs1 has foo and baz(enabled) */
+	fwupd_security_attr_set_plugin(attr1, "foo");
+	fwupd_security_attr_set_created(attr1, 0);
+	fwupd_security_attr_set_result(attr1, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
+	fu_security_attrs_append(attrs1, attr1);
+	fwupd_security_attr_set_plugin(attr3, "baz");
+	fwupd_security_attr_set_created(attr3, 0);
+	fwupd_security_attr_set_result(attr3, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fu_security_attrs_append(attrs1, attr3);
+
+	/* attrs2 has bar and baz(~enabled) */
+	fwupd_security_attr_set_plugin(attr2, "bar");
+	fwupd_security_attr_set_created(attr2, 0);
+	fwupd_security_attr_set_result(attr2, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	fu_security_attrs_append(attrs2, attr2);
+	fwupd_security_attr_set_plugin(attr4, "baz");
+	fwupd_security_attr_set_created(attr4, 0);
+	fwupd_security_attr_set_result(attr4, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+	fu_security_attrs_append(attrs2, attr4);
+
+	results = fu_security_attrs_compare(attrs1, attrs2);
+	g_assert_cmpint(results->len, ==, 3);
+	attr_tmp = g_ptr_array_index(results, 0);
+	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr_tmp), ==, "org.fwupd.hsi.bar");
+	g_assert_cmpint(fwupd_security_attr_get_result_fallback(attr_tmp),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr_tmp),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_LOCKED);
+	attr_tmp = g_ptr_array_index(results, 1);
+	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr_tmp), ==, "org.fwupd.hsi.foo");
+	g_assert_cmpint(fwupd_security_attr_get_result_fallback(attr_tmp),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr_tmp),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
+	attr_tmp = g_ptr_array_index(results, 2);
+	g_assert_cmpstr(fwupd_security_attr_get_appstream_id(attr_tmp), ==, "org.fwupd.hsi.baz");
+	g_assert_cmpint(fwupd_security_attr_get_result_fallback(attr_tmp),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr_tmp),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+
+	g_assert_true(fu_security_attrs_equal(attrs1, attrs1));
+	g_assert_false(fu_security_attrs_equal(attrs1, attrs2));
+	g_assert_false(fu_security_attrs_equal(attrs2, attrs1));
+}
+
+static void
 fu_security_attr_func(gconstpointer user_data)
 {
-	g_autoptr(FwupdSecurityAttr) attr = fwupd_security_attr_new(NULL);
-	for (guint i = 0; i < FWUPD_SECURITY_ATTR_RESULT_LAST; i++) {
-		fwupd_security_attr_set_result(attr, i);
-		g_assert_cmpstr(fu_security_attr_get_result(attr), !=, NULL);
+	gboolean ret;
+	g_autofree gchar *json1 = NULL;
+	g_autofree gchar *json2 = NULL;
+	g_autoptr(FuSecurityAttrs) attrs1 = fu_security_attrs_new();
+	g_autoptr(FuSecurityAttrs) attrs2 = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr1 = fwupd_security_attr_new("org.fwupd.hsi.foo");
+	g_autoptr(FwupdSecurityAttr) attr2 = fwupd_security_attr_new("org.fwupd.hsi.bar");
+	g_autoptr(GError) error = NULL;
+	g_autoptr(JsonParser) parser = json_parser_new();
+
+	fwupd_security_attr_set_plugin(attr1, "foo");
+	fwupd_security_attr_set_created(attr1, 0);
+	fwupd_security_attr_set_plugin(attr2, "bar");
+	fwupd_security_attr_set_created(attr2, 0);
+	fu_security_attrs_append(attrs1, attr1);
+	fu_security_attrs_append(attrs1, attr2);
+
+	json1 = fu_security_attrs_to_json_string(attrs1, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json1);
+	ret = fu_test_compare_lines(
+	    json1,
+	    "{\n"
+	    "  \"SecurityAttributes\" : [\n"
+	    "    {\n"
+	    "      \"AppstreamId\" : \"org.fwupd.hsi.foo\",\n"
+	    "      \"HsiLevel\" : 0,\n"
+	    "      \"Plugin\" : \"foo\",\n"
+	    "      \"Uri\" : "
+	    "\"https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.foo\"\n"
+	    "    },\n"
+	    "    {\n"
+	    "      \"AppstreamId\" : \"org.fwupd.hsi.bar\",\n"
+	    "      \"HsiLevel\" : 0,\n"
+	    "      \"Plugin\" : \"bar\",\n"
+	    "      \"Uri\" : "
+	    "\"https://fwupd.github.io/libfwupdplugin/hsi.html#org.fwupd.hsi.bar\"\n"
+	    "    }\n"
+	    "  ]\n"
+	    "}",
+	    &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	ret = json_parser_load_from_data(parser, json1, -1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_security_attrs_from_json(attrs2, json_parser_get_root(parser), &error);
+	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+		g_test_skip(error->message);
+		return;
 	}
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	json2 = fu_security_attrs_to_json_string(attrs2, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(json2);
+	ret = fu_test_compare_lines(json2, json1, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
 }
 
 static void
@@ -3453,6 +3582,7 @@ main(int argc, char **argv)
 {
 	gboolean ret;
 	g_autofree gchar *pluginfn = NULL;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(FuTest) self = g_new0(FuTest, 1);
 
@@ -3462,10 +3592,12 @@ main(int argc, char **argv)
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
 	g_setenv("FWUPD_DEVICE_LIST_VERBOSE", "1", TRUE);
-	g_setenv("FWUPD_DATADIR", TESTDATADIR_SRC, TRUE);
-	g_setenv("FWUPD_PLUGINDIR", TESTDATADIR_SRC, TRUE);
-	g_setenv("FWUPD_SYSCONFDIR", TESTDATADIR_SRC, TRUE);
-	g_setenv("FWUPD_SYSFSFWDIR", TESTDATADIR_SRC, TRUE);
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	g_setenv("FWUPD_DATADIR", testdatadir, TRUE);
+	g_setenv("FWUPD_PLUGINDIR", testdatadir, TRUE);
+	g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
+	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 	g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
@@ -3480,7 +3612,12 @@ main(int argc, char **argv)
 
 	/* load the test plugin */
 	self->plugin = fu_plugin_new(self->ctx);
-	pluginfn = g_build_filename(PLUGINBUILDDIR, "libfu_plugin_test." G_MODULE_SUFFIX, NULL);
+	pluginfn = g_test_build_filename(G_TEST_BUILT,
+					 "..",
+					 "plugins",
+					 "test",
+					 "libfu_plugin_test." G_MODULE_SUFFIX,
+					 NULL);
 	ret = fu_plugin_open(self->plugin, pluginfn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -3493,6 +3630,7 @@ main(int argc, char **argv)
 	g_test_add_data_func("/fwupd/plugin{module}", self, fu_plugin_module_func);
 	g_test_add_data_func("/fwupd/memcpy", self, fu_memcpy_func);
 	g_test_add_data_func("/fwupd/security-attr", self, fu_security_attr_func);
+	g_test_add_data_func("/fwupd/security-attrs", self, fu_security_attrs_func);
 	g_test_add_data_func("/fwupd/device-list", self, fu_device_list_func);
 	g_test_add_data_func("/fwupd/device-list{delay}", self, fu_device_list_delay_func);
 	g_test_add_data_func("/fwupd/device-list{no-auto-remove-children}",

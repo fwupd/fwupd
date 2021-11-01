@@ -29,7 +29,7 @@ struct _FuSecurityAttrs {
 };
 
 /* probably sane to *not* make this part of the ABI */
-#define FWUPD_SECURITY_ATTR_ID_DOC_URL "https://fwupd.github.io/hsi.html"
+#define FWUPD_SECURITY_ATTR_ID_DOC_URL "https://fwupd.github.io/libfwupdplugin/hsi.html"
 
 G_DEFINE_TYPE(FuSecurityAttrs, fu_security_attrs, G_TYPE_OBJECT)
 
@@ -52,6 +52,23 @@ static void
 fu_security_attrs_init(FuSecurityAttrs *self)
 {
 	self->attrs = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+}
+
+/**
+ * fu_security_attrs_append_internal:
+ * @self: a #FuSecurityAttrs
+ * @attr: a #FwupdSecurityAttr
+ *
+ * Adds a #FwupdSecurityAttr to the array with no sanity checks.
+ *
+ * Since: 1.7.1
+ **/
+void
+fu_security_attrs_append_internal(FuSecurityAttrs *self, FwupdSecurityAttr *attr)
+{
+	g_return_if_fail(FU_IS_SECURITY_ATTRS(self));
+	g_return_if_fail(FWUPD_IS_SECURITY_ATTR(attr));
+	g_ptr_array_add(self->attrs, g_object_ref(attr));
 }
 
 /**
@@ -88,7 +105,7 @@ fu_security_attrs_append(FuSecurityAttrs *self, FwupdSecurityAttr *attr)
 				      fwupd_security_attr_get_url(attr));
 		fwupd_security_attr_set_url(attr, url);
 	}
-	g_ptr_array_add(self->attrs, g_object_ref(attr));
+	fu_security_attrs_append_internal(self, attr);
 }
 
 /**
@@ -107,9 +124,8 @@ fu_security_attrs_to_variant(FuSecurityAttrs *self)
 	GVariantBuilder builder;
 
 	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), NULL);
-	g_return_val_if_fail(self->attrs->len > 0, NULL);
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
 
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("aa{sv}"));
 	for (guint i = 0; i < self->attrs->len; i++) {
 		FwupdSecurityAttr *security_attr = g_ptr_array_index(self->attrs, i);
 		GVariant *tmp = fwupd_security_attr_to_variant(security_attr);

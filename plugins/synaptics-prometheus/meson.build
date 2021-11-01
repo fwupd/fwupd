@@ -32,9 +32,11 @@ shared_module('fu_plugin_synaptics_prometheus',
 )
 
 if get_option('tests')
-  testdatadirs = environment()
-  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
-  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  install_data(['tests/synaptics-prometheus.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'))
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'synaptics-prometheus-self-test',
     fu_hash,
@@ -61,6 +63,6 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('synaptics-prometheus-self-test', e, env : testdatadirs)  # added to installed-tests
+  test('synaptics-prometheus-self-test', e, env : env)  # added to installed-tests
 endif
 endif

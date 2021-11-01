@@ -415,10 +415,6 @@ msgstr "Luo laiteohjelmistotiedosto"
 msgid "Build firmware using a sandbox"
 msgstr "Rakenna laiteohjelmisto hiekkalaatikon avulla"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-msgstr "TARKISTESUMMA1[,TARKISTESUMMA2][,TARKISTESUMMA3]"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Peru"
@@ -1105,9 +1101,6 @@ msgstr "Asenna laiteohjelmisto (\"blob\") laitteeseen"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Asenna laiteohjelmistotiedosto tähän laitteistoon"
-
-msgid "Install old version of system firmware"
-msgstr "Asenna järjestelmän laiteohjelmiston vanha versio"
 
 msgid "Install signed device firmware"
 msgstr "Asenna allekirjoitettu laiteohjelmisto"
@@ -1968,10 +1961,6 @@ msgstr "Tätä työkalua voi käyttää vain root-käyttäjä"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Tämä työkalu lukee ja jäsentää TPM-tapahtumalokin järjestelmän laiteohjelmistosta."
-
-#. TRANSLATORS: command line option
-msgid "Timeout in milliseconds for each parse"
-msgstr "Aikakatkaisu millisekunteina kutakin jäsentämistä varten"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

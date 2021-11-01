@@ -69,7 +69,7 @@ if get_option('docs') == 'docgen'
     install_dir: join_paths(datadir, 'doc', 'fwupd'),
   )
 
- install_data(['index.html'],
+ install_data(['index.html', 'hsi.html'],
     install_dir : join_paths(datadir, 'doc', 'fwupd')
   )
  install_data(['urlmap_fwupd.js'],

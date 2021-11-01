@@ -336,7 +336,7 @@ write_controller_fw(const gchar *nvm)
 	g_autoptr(GError) error = NULL;
 	gssize n;
 
-	fw_path = g_build_filename(TESTDATADIR, "thunderbolt/minimal-fw-controller.bin", NULL);
+	fw_path = g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw-controller.bin", NULL);
 	fw_file = g_file_new_for_path(fw_path);
 	g_assert_nonnull(fw_file);
 
@@ -841,6 +841,7 @@ typedef enum TestFlags {
 typedef struct ThunderboltTest {
 	UMockdevTestbed *bed;
 	FuPlugin *plugin;
+	FuContext *ctx;
 	GUdevClient *udev_client;
 
 	/* if TestParam::initialize_tree */
@@ -859,8 +860,10 @@ fu_thunderbolt_gudev_uevent_cb(GUdevClient *gudev_client,
 			       ThunderboltTest *tt)
 {
 	if (g_strcmp0(action, "add") == 0) {
-		g_autoptr(FuUdevDevice) device = fu_udev_device_new(udev_device);
+		g_autoptr(FuUdevDevice) device = NULL;
 		g_autoptr(GError) error_local = NULL;
+
+		device = fu_udev_device_new_with_context(tt->ctx, udev_device);
 		if (!fu_plugin_runner_backend_device_added(tt->plugin,
 							   FU_DEVICE(device),
 							   &error_local))
@@ -888,10 +891,10 @@ test_set_up(ThunderboltTest *tt, gconstpointer params)
 	g_autofree gchar *pluginfn = NULL;
 	g_autofree gchar *sysfs = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 	const gchar *udev_subsystems[] = {"thunderbolt", NULL};
 
-	ret = fu_context_load_quirks(ctx,
+	tt->ctx = fu_context_new();
+	ret = fu_context_load_quirks(tt->ctx,
 				     FU_QUIRKS_LOAD_FLAG_NO_CACHE | FU_QUIRKS_LOAD_FLAG_NO_VERIFY,
 				     &error);
 	g_assert_no_error(error);
@@ -903,11 +906,11 @@ test_set_up(ThunderboltTest *tt, gconstpointer params)
 	sysfs = umockdev_testbed_get_sys_dir(tt->bed);
 	g_debug("mock sysfs at %s", sysfs);
 
-	tt->plugin = fu_plugin_new(ctx);
+	tt->plugin = fu_plugin_new(tt->ctx);
 	g_assert_nonnull(tt->plugin);
 
 	pluginfn =
-	    g_build_filename(PLUGINBUILDDIR, "libfu_plugin_thunderbolt." G_MODULE_SUFFIX, NULL);
+	    g_test_build_filename(G_TEST_BUILT, "libfu_plugin_thunderbolt." G_MODULE_SUFFIX, NULL);
 	ret = fu_plugin_open(tt->plugin, pluginfn, &error);
 
 	g_assert_no_error(error);
@@ -941,7 +944,7 @@ test_set_up(ThunderboltTest *tt, gconstpointer params)
 	if (flags & TEST_PREPARE_FIRMWARE) {
 		g_autofree gchar *fw_path = NULL;
 
-		fw_path = g_build_filename(TESTDATADIR, "thunderbolt/minimal-fw.bin", NULL);
+		fw_path = g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw.bin", NULL);
 		tt->fw_file = g_mapped_file_new(fw_path, FALSE, &error);
 		g_assert_no_error(error);
 		g_assert_nonnull(tt->fw_file);
@@ -955,6 +958,7 @@ static void
 test_tear_down(ThunderboltTest *tt, gconstpointer user_data)
 {
 	g_object_unref(tt->plugin);
+	g_object_unref(tt->ctx);
 	g_object_unref(tt->bed);
 	g_object_unref(tt->udev_client);
 
@@ -1096,7 +1100,7 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_autoptr(FuThunderboltFirmware) firmware_bad = fu_thunderbolt_firmware_new();
 
 	/* image as if read from the controller (i.e. no headers) */
-	ctl_path = g_build_filename(TESTDATADIR, "thunderbolt/minimal-fw-controller.bin", NULL);
+	ctl_path = g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw-controller.bin", NULL);
 	ctl_file = g_mapped_file_new(ctl_path, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(ctl_file);
@@ -1111,7 +1115,7 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_no_error(error);
 
 	/* valid firmware update image */
-	fwi_path = g_build_filename(TESTDATADIR, "thunderbolt/minimal-fw.bin", NULL);
+	fwi_path = g_test_build_filename(G_TEST_DIST, "tests", "minimal-fw.bin", NULL);
 	fwi_file = g_mapped_file_new(fwi_path, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(fwi_file);
@@ -1126,7 +1130,7 @@ test_image_validation(ThunderboltTest *tt, gconstpointer user_data)
 	g_assert_no_error(error);
 
 	/* a wrong/bad firmware update image */
-	bad_path = g_build_filename(TESTDATADIR, "colorhug/firmware.bin", NULL);
+	bad_path = g_test_build_filename(G_TEST_DIST, "tests", "colorhug.bin", NULL);
 	bad_file = g_mapped_file_new(bad_path, FALSE, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(bad_file);

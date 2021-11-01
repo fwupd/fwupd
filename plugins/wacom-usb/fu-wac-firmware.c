@@ -278,7 +278,7 @@ fu_wac_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 
 	/* verify data is complete */
-	if (helper.image_buffer != NULL) {
+	if (helper.image_buffer->len > 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INTERNAL,

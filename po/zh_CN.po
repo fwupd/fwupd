@@ -409,10 +409,6 @@ msgstr "生成固件文件"
 msgid "Build firmware using a sandbox"
 msgstr "使用沙箱生成固件"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-msgstr "校验和1[,校验和2][,校验和3]"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "取消"
@@ -1097,9 +1093,6 @@ msgstr "在设备上安装固件比特块"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "在此硬件上安装固件文件"
-
-msgid "Install old version of system firmware"
-msgstr "安装旧版本的系统固件"
 
 msgid "Install signed device firmware"
 msgstr "安装已签名的设备固件"
@@ -1958,10 +1951,6 @@ msgstr "此工具只能由 root 用户使用"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "此工具将读取和解析系统固件中的 TPM 事件日志。"
-
-#. TRANSLATORS: command line option
-msgid "Timeout in milliseconds for each parse"
-msgstr "每个阶段的超时时间，以毫秒记"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

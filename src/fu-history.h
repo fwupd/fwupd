@@ -53,3 +53,5 @@ fu_history_add_security_attribute(FuHistory *self,
 				  const gchar *security_attr_json,
 				  const gchar *hsi_score,
 				  GError **error);
+GPtrArray *
+fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error);

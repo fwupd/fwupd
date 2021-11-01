@@ -21,6 +21,15 @@ typedef struct {
 	FuPlugin *plugin;
 } FuTest;
 
+static gboolean
+fu_test_is_installed_test(void)
+{
+	const gchar *builddir = g_getenv("G_TEST_BUILDDIR");
+	if (builddir == NULL)
+		return FALSE;
+	return g_str_has_prefix(builddir, "/usr");
+}
+
 static void
 fu_test_self_init(FuTest *self)
 {
@@ -36,7 +45,17 @@ fu_test_self_init(FuTest *self)
 	g_assert_true(ret);
 
 	self->plugin = fu_plugin_new(ctx);
-	pluginfn = g_build_filename(PLUGINBUILDDIR, "libfu_plugin_redfish." G_MODULE_SUFFIX, NULL);
+
+	/* running as an installed test */
+	if (fu_test_is_installed_test()) {
+		g_autofree gchar *plugindir = fu_common_get_path(FU_PATH_KIND_PLUGINDIR_PKG);
+		pluginfn =
+		    g_build_filename(plugindir, "libfu_plugin_redfish." G_MODULE_SUFFIX, NULL);
+	} else {
+		pluginfn = g_test_build_filename(G_TEST_BUILT,
+						 "libfu_plugin_redfish." G_MODULE_SUFFIX,
+						 NULL);
+	}
 	ret = fu_plugin_open(self->plugin, pluginfn, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -71,6 +90,10 @@ fu_test_redfish_ipmi_func(void)
 
 	/* create device */
 	locker = fu_device_locker_new(device, &error);
+	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED)) {
+		g_test_skip("permission denied for access to IPMI hardware");
+		return;
+	}
 	g_assert_no_error(error);
 	g_assert_nonnull(locker);
 	str = fu_device_to_string(FU_DEVICE(device));
@@ -348,14 +371,17 @@ main(int argc, char **argv)
 {
 	g_autoptr(FuTest) self = g_new0(FuTest, 1);
 	g_autofree gchar *smbios_data_fn = NULL;
+	g_autofree gchar *testdatadir = NULL;
+
+	g_test_init(&argc, &argv, NULL);
 
 	g_setenv("FWUPD_REDFISH_VERBOSE", "1", TRUE);
 
-	smbios_data_fn = g_build_filename(TESTDATADIR, "redfish-smbios.bin", NULL);
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	smbios_data_fn = g_build_filename(testdatadir, "redfish-smbios.bin", NULL);
 	g_setenv("FWUPD_REDFISH_SMBIOS_DATA", smbios_data_fn, TRUE);
-	g_setenv("FWUPD_SYSFSFWDIR", TESTDATADIR, TRUE);
-	g_setenv("CONFIGURATION_DIRECTORY", TESTDATADIR, TRUE);
-	g_test_init(&argc, &argv, NULL);
+	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
+	g_setenv("CONFIGURATION_DIRECTORY", testdatadir, TRUE);
 
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	fu_test_self_init(self);

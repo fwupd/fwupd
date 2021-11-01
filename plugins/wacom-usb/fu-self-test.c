@@ -56,6 +56,7 @@ static void
 fu_wac_firmware_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -65,7 +66,8 @@ fu_wac_firmware_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/wacom.builder.xml", &xml_src, NULL, &error);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "wacom-usb.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -73,7 +75,7 @@ fu_wac_firmware_xml_func(void)
 	g_assert_true(ret);
 	csum1 = fu_firmware_get_checksum(firmware1, G_CHECKSUM_SHA1, &error);
 	g_assert_no_error(error);
-	g_assert_cmpstr(csum1, ==, "bd734911430831127a7bba4664e212a56a2821bc");
+	g_assert_cmpstr(csum1, ==, "346f6196449b356777cf241f6edb039d503b88a1");
 
 	/* ensure we can round-trip */
 	xml_out = fu_firmware_export_to_xml(firmware1, FU_FIRMWARE_EXPORT_FLAG_NONE, &error);

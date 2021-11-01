@@ -78,6 +78,10 @@ typedef guint FuEndianType;
  * @FU_PATH_KIND_DATADIR_QUIRKS:	The quirks data store (IE /usr/share/fwupd/quirks.d)
  * @FU_PATH_KIND_LOCALSTATEDIR_QUIRKS:	The local state directory for quirks (IE
  * /var/lib/fwupd/quirks.d)
+ * @FU_PATH_KIND_LOCALSTATEDIR_METADATA: The local state directory for metadata (IE
+ * /var/lib/fwupd/metadata)
+ * @FU_PATH_KIND_LOCALSTATEDIR_REMOTES: The local state directory for remotes (IE
+ * /var/lib/fwupd/remotes.d)
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -103,6 +107,8 @@ typedef enum {
 	FU_PATH_KIND_FIRMWARE_SEARCH,
 	FU_PATH_KIND_DATADIR_QUIRKS,
 	FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
+	FU_PATH_KIND_LOCALSTATEDIR_METADATA,
+	FU_PATH_KIND_LOCALSTATEDIR_REMOTES,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;
@@ -182,6 +188,8 @@ gboolean
 fu_common_rmtree(const gchar *directory, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GPtrArray *
 fu_common_get_files_recursive(const gchar *path, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_common_mkdir(const gchar *dirname, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_common_mkdir_parent(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
@@ -397,9 +405,13 @@ FuVolume *
 fu_common_get_esp_for_path(const gchar *esp_path, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 FuVolume *
 fu_common_get_esp_default(GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_common_check_full_disk_encryption(GError **error);
 
 guint8
 fu_common_crc8(const guint8 *buf, gsize bufsz);
+guint8
+fu_common_crc8_full(const guint8 *buf, gsize bufsz, guint8 crc_init, guint8 polynomial);
 guint16
 fu_common_crc16(const guint8 *buf, gsize bufsz);
 guint16

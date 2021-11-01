@@ -76,7 +76,7 @@ fu_archive_invalid_func(void)
 	return;
 #endif
 
-	filename = g_build_filename(TESTDATADIR_SRC, "metadata.xml", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "metadata.xml", NULL);
 	data = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
@@ -102,7 +102,11 @@ fu_archive_cab_func(void)
 	return;
 #endif
 
-	filename = g_build_filename(TESTDATADIR_DST, "colorhug", "colorhug-als-3.0.2.cab", NULL);
+	filename = g_test_build_filename(G_TEST_BUILT,
+					 "tests",
+					 "colorhug",
+					 "colorhug-als-3.0.2.cab",
+					 NULL);
 	data = fu_common_get_contents_bytes(filename, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data);
@@ -277,6 +281,38 @@ fu_device_name_func(void)
 }
 
 static void
+fu_device_cfi_device_func(void)
+{
+	gboolean ret;
+	guint8 cmd = 0;
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuCfiDevice) cfi_device = NULL;
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	cfi_device = fu_cfi_device_new(ctx, "3730");
+	ret = fu_device_probe(FU_DEVICE(cfi_device), &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* fallback */
+	ret = fu_cfi_device_get_cmd(cfi_device, FU_CFI_DEVICE_CMD_READ_DATA, &cmd, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(cmd, ==, 0x03);
+
+	/* from quirk */
+	ret = fu_cfi_device_get_cmd(cfi_device, FU_CFI_DEVICE_CMD_CHIP_ERASE, &cmd, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(cmd, ==, 0xC7);
+	g_assert_cmpint(fu_cfi_device_get_size(cfi_device), ==, 0x10000);
+}
+
+static void
 fu_device_metadata_func(void)
 {
 	g_autoptr(FuDevice) device = fu_device_new();
@@ -313,11 +349,13 @@ fu_smbios_func(void)
 	const gchar *str;
 	gboolean ret;
 	g_autofree gchar *dump = NULL;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
 
 	/* these tests will not write */
-	g_setenv("FWUPD_SYSFSFWDIR", TESTDATADIR_SRC, TRUE);
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 
 	smbios = fu_smbios_new();
 	ret = fu_smbios_setup(smbios, &error);
@@ -354,7 +392,7 @@ fu_smbios3_func(void)
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
 
-	path = g_build_filename(TESTDATADIR_SRC, "dmi", "tables64", NULL);
+	path = g_test_build_filename(G_TEST_DIST, "tests", "dmi", "tables64", NULL);
 	smbios = fu_smbios_new();
 	ret = fu_smbios_setup_from_path(smbios, path, &error);
 	g_assert_no_error(error);
@@ -379,7 +417,7 @@ fu_smbios_dt_func(void)
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
 
-	path = g_build_filename(TESTDATADIR_SRC, "devicetree", "base", NULL);
+	path = g_test_build_filename(G_TEST_DIST, "tests", "devicetree", "base", NULL);
 	smbios = fu_smbios_new();
 	ret = fu_smbios_setup_from_path(smbios, path, &error);
 	g_assert_no_error(error);
@@ -398,7 +436,7 @@ fu_smbios_dt_func(void)
 static void
 fu_smbios_class_func(void)
 {
-	g_autofree gchar *path = g_build_filename(TESTDATADIR_SRC, "dmi", "class", NULL);
+	g_autofree gchar *path = g_test_build_filename(G_TEST_DIST, "tests", "dmi", "class", NULL);
 	g_autoptr(FuSmbios) smbios = fu_smbios_new();
 	g_autoptr(GError) error = NULL;
 	gboolean ret;
@@ -508,6 +546,7 @@ fu_common_uri_scheme_func(void)
 static void
 fu_hwids_func(void)
 {
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuHwids) hwids = NULL;
 	g_autoptr(FuSmbios) smbios = NULL;
 	g_autoptr(GError) error = NULL;
@@ -535,7 +574,8 @@ fu_hwids_func(void)
 		     {NULL, NULL}};
 
 	/* these tests will not write */
-	g_setenv("FWUPD_SYSFSFWDIR", TESTDATADIR_SRC, TRUE);
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 
 	smbios = fu_smbios_new();
 	ret = fu_smbios_setup(smbios, &error);
@@ -774,17 +814,17 @@ fu_common_kernel_lockdown_func(void)
 	return;
 #endif
 
-	old_kernel_dir = g_build_filename(TESTDATADIR_SRC, "lockdown", NULL);
+	old_kernel_dir = g_test_build_filename(G_TEST_DIST, "tests", "lockdown", NULL);
 	g_setenv("FWUPD_SYSFSSECURITYDIR", old_kernel_dir, TRUE);
 	ret = fu_common_kernel_locked_down();
 	g_assert_false(ret);
 
-	locked_dir = g_build_filename(TESTDATADIR_SRC, "lockdown", "locked", NULL);
+	locked_dir = g_test_build_filename(G_TEST_DIST, "tests", "lockdown", "locked", NULL);
 	g_setenv("FWUPD_SYSFSSECURITYDIR", locked_dir, TRUE);
 	ret = fu_common_kernel_locked_down();
 	g_assert_true(ret);
 
-	none_dir = g_build_filename(TESTDATADIR_SRC, "lockdown", "none", NULL);
+	none_dir = g_test_build_filename(G_TEST_DIST, "tests", "lockdown", "none", NULL);
 	g_setenv("FWUPD_SYSFSSECURITYDIR", none_dir, TRUE);
 	ret = fu_common_kernel_locked_down();
 	g_assert_false(ret);
@@ -800,7 +840,7 @@ fu_common_firmware_builder_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* get test file */
-	archive_fn = g_build_filename(TESTDATADIR_DST, "builder", "firmware.tar", NULL);
+	archive_fn = g_test_build_filename(G_TEST_BUILT, "tests", "builder", "firmware.tar", NULL);
 	archive_blob = fu_common_get_contents_bytes(archive_fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(archive_blob);
@@ -911,7 +951,7 @@ fu_common_spawn_func(void)
 	return;
 #endif
 
-	fn = g_build_filename(TESTDATADIR_SRC, "spawn.sh", NULL);
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "spawn.sh", NULL);
 	argv[0] = fn;
 	ret = fu_common_spawn_sync(argv, fu_test_stdout_cb, &lines, 0, NULL, &error);
 	g_assert_no_error(error);
@@ -933,7 +973,7 @@ fu_common_spawn_timeout_func(void)
 	return;
 #endif
 
-	fn = g_build_filename(TESTDATADIR_SRC, "spawn.sh", NULL);
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "spawn.sh", NULL);
 	argv[0] = fn;
 	ret = fu_common_spawn_sync(argv, fu_test_stdout_cb, &lines, 50, NULL, &error);
 	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_CANCELLED);
@@ -1017,7 +1057,8 @@ static void
 fu_common_cabinet_func(void)
 {
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob1 = NULL;
+	g_autoptr(GBytes) blob2 = NULL;
 	g_autoptr(GBytes) jcat_blob1 = g_bytes_new_static("hello", 6);
 	g_autoptr(GBytes) jcat_blob2 = g_bytes_new_static("hellX", 6);
 	g_autoptr(GError) error = NULL;
@@ -1029,15 +1070,15 @@ fu_common_cabinet_func(void)
 	fu_cabinet_add_file(cabinet, "firmware.jcat", jcat_blob2);
 
 	/* get data */
-	blob = fu_cabinet_get_file(cabinet, "firmware.jcat", &error);
+	blob1 = fu_cabinet_get_file(cabinet, "firmware.jcat", &error);
 	g_assert_no_error(error);
-	g_assert_nonnull(blob);
-	g_assert_cmpstr(g_bytes_get_data(blob, NULL), ==, "hellX");
+	g_assert_nonnull(blob1);
+	g_assert_cmpstr(g_bytes_get_data(blob1, NULL), ==, "hellX");
 
 	/* get data that does not exist */
-	blob = fu_cabinet_get_file(cabinet, "foo.jcat", &error);
+	blob2 = fu_cabinet_get_file(cabinet, "foo.jcat", &error);
 	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE);
-	g_assert_null(blob);
+	g_assert_null(blob2);
 }
 
 static void
@@ -1120,12 +1161,15 @@ fu_common_store_cab_func(void)
 static void
 fu_common_store_cab_artifact_func(void)
 {
-	g_autoptr(GBytes) blob = NULL;
+	g_autoptr(GBytes) blob1 = NULL;
+	g_autoptr(GBytes) blob2 = NULL;
+	g_autoptr(GBytes) blob3 = NULL;
+	g_autoptr(GBytes) blob4 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 
 	/* create silo (sha256, using artifacts object) */
-	blob = _build_cab(
+	blob1 = _build_cab(
 	    GCAB_COMPRESSION_NONE,
 	    "acme.metainfo.xml",
 	    "<component type=\"firmware\">\n"
@@ -1148,90 +1192,91 @@ fu_common_store_cab_artifact_func(void)
 	    "firmware.dfu.asc",
 	    "signature",
 	    NULL);
-	silo = fu_common_cab_build_silo(blob, 10240, &error);
+	silo = fu_common_cab_build_silo(blob1, 10240, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
 	g_clear_object(&silo);
 
 	/* create silo (sha1, using artifacts object; mixed case) */
-	blob = _build_cab(GCAB_COMPRESSION_NONE,
-			  "acme.metainfo.xml",
-			  "<component type=\"firmware\">\n"
-			  "  <id>com.acme.example.firmware</id>\n"
-			  "  <releases>\n"
-			  "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
-			  "      <artifacts>\n"
-			  "        <artifact type=\"binary\">\n"
-			  "          <filename>firmware.dfu</filename>\n"
-			  "          <checksum "
-			  "type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbF43</"
-			  "checksum>\n"
-			  "        </artifact>\n"
-			  "      </artifacts>\n"
-			  "    </release>\n"
-			  "  </releases>\n"
-			  "</component>",
-			  "firmware.dfu",
-			  "world",
-			  "firmware.dfu.asc",
-			  "signature",
-			  NULL);
-	silo = fu_common_cab_build_silo(blob, 10240, &error);
+	blob2 = _build_cab(GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+			   "<component type=\"firmware\">\n"
+			   "  <id>com.acme.example.firmware</id>\n"
+			   "  <releases>\n"
+			   "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+			   "      <artifacts>\n"
+			   "        <artifact type=\"binary\">\n"
+			   "          <filename>firmware.dfu</filename>\n"
+			   "          <checksum "
+			   "type=\"sha1\">7c211433f02071597741e6ff5a8ea34789abbF43</"
+			   "checksum>\n"
+			   "        </artifact>\n"
+			   "      </artifacts>\n"
+			   "    </release>\n"
+			   "  </releases>\n"
+			   "</component>",
+			   "firmware.dfu",
+			   "world",
+			   "firmware.dfu.asc",
+			   "signature",
+			   NULL);
+	silo = fu_common_cab_build_silo(blob2, 10240, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
 	g_clear_object(&silo);
 
 	/* create silo (sha512, using artifacts object; lower case) */
-	blob = _build_cab(GCAB_COMPRESSION_NONE,
-			  "acme.metainfo.xml",
-			  "<component type=\"firmware\">\n"
-			  "  <id>com.acme.example.firmware</id>\n"
-			  "  <releases>\n"
-			  "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
-			  "      <artifacts>\n"
-			  "        <artifact type=\"binary\">\n"
-			  "          <filename>firmware.dfu</filename>\n"
-			  "          <checksum "
-			  "type=\"sha512\">"
-			  "11853df40f4b2b919d3815f64792e58d08663767a494bcbb38c0b2389d9140bbb170281b"
-			  "4a847be7757bde12c9cd0054ce3652d0ad3a1a0c92babb69798246ee</"
-			  "checksum>\n"
-			  "        </artifact>\n"
-			  "      </artifacts>\n"
-			  "    </release>\n"
-			  "  </releases>\n"
-			  "</component>",
-			  "firmware.dfu",
-			  "world",
-			  "firmware.dfu.asc",
-			  "signature",
-			  NULL);
-	silo = fu_common_cab_build_silo(blob, 10240, &error);
+	blob3 =
+	    _build_cab(GCAB_COMPRESSION_NONE,
+		       "acme.metainfo.xml",
+		       "<component type=\"firmware\">\n"
+		       "  <id>com.acme.example.firmware</id>\n"
+		       "  <releases>\n"
+		       "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+		       "      <artifacts>\n"
+		       "        <artifact type=\"binary\">\n"
+		       "          <filename>firmware.dfu</filename>\n"
+		       "          <checksum "
+		       "type=\"sha512\">"
+		       "11853df40f4b2b919d3815f64792e58d08663767a494bcbb38c0b2389d9140bbb170281b"
+		       "4a847be7757bde12c9cd0054ce3652d0ad3a1a0c92babb69798246ee</"
+		       "checksum>\n"
+		       "        </artifact>\n"
+		       "      </artifacts>\n"
+		       "    </release>\n"
+		       "  </releases>\n"
+		       "</component>",
+		       "firmware.dfu",
+		       "world",
+		       "firmware.dfu.asc",
+		       "signature",
+		       NULL);
+	silo = fu_common_cab_build_silo(blob3, 10240, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
 	g_clear_object(&silo);
 
 	/* create silo (legacy release object) */
-	blob = _build_cab(GCAB_COMPRESSION_NONE,
-			  "acme.metainfo.xml",
-			  "<component type=\"firmware\">\n"
-			  "  <id>com.acme.example.firmware</id>\n"
-			  "  <releases>\n"
-			  "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
-			  "        <checksum "
-			  "target=\"content\" "
-			  "filename=\"firmware.dfu\">"
-			  "486EA46224D1BB4FB680F34F7C9AD96A8F24EC88BE73EA8E5A6C65260E9CB8A7</"
-			  "checksum>\n"
-			  "    </release>\n"
-			  "  </releases>\n"
-			  "</component>",
-			  "firmware.dfu",
-			  "world",
-			  "firmware.dfu.asc",
-			  "signature",
-			  NULL);
-	silo = fu_common_cab_build_silo(blob, 10240, &error);
+	blob4 = _build_cab(GCAB_COMPRESSION_NONE,
+			   "acme.metainfo.xml",
+			   "<component type=\"firmware\">\n"
+			   "  <id>com.acme.example.firmware</id>\n"
+			   "  <releases>\n"
+			   "    <release version=\"1.2.3\" date=\"2017-09-06\">\n"
+			   "        <checksum "
+			   "target=\"content\" "
+			   "filename=\"firmware.dfu\">"
+			   "486EA46224D1BB4FB680F34F7C9AD96A8F24EC88BE73EA8E5A6C65260E9CB8A7</"
+			   "checksum>\n"
+			   "    </release>\n"
+			   "  </releases>\n"
+			   "</component>",
+			   "firmware.dfu",
+			   "world",
+			   "firmware.dfu.asc",
+			   "signature",
+			   NULL);
+	silo = fu_common_cab_build_silo(blob4, 10240, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(silo);
 }
@@ -2286,7 +2331,7 @@ fu_firmware_ihex_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* load a Intel hex32 file */
-	filename_hex = g_build_filename(TESTDATADIR_SRC, "firmware.hex", NULL);
+	filename_hex = g_test_build_filename(G_TEST_DIST, "tests", "firmware.hex", NULL);
 	data_file = fu_common_get_contents_bytes(filename_hex, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_file);
@@ -2299,7 +2344,7 @@ fu_firmware_ihex_func(void)
 	g_assert_cmpint(g_bytes_get_size(data_fw), ==, 136);
 
 	/* did we match the reference file? */
-	filename_ref = g_build_filename(TESTDATADIR_SRC, "firmware.bin", NULL);
+	filename_ref = g_test_build_filename(G_TEST_DIST, "tests", "firmware.bin", NULL);
 	data_ref = fu_common_get_contents_bytes(filename_ref, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_ref);
@@ -2342,7 +2387,7 @@ fu_firmware_ihex_signed_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* load a signed Intel hex32 file */
-	filename_shex = g_build_filename(TESTDATADIR_SRC, "firmware.shex", NULL);
+	filename_shex = g_test_build_filename(G_TEST_DIST, "tests", "firmware.shex", NULL);
 	data_file = fu_common_get_contents_bytes(filename_shex, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_file);
@@ -2416,7 +2461,7 @@ fu_firmware_srec_func(void)
 	g_autoptr(GBytes) data_bin = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename_srec = g_build_filename(TESTDATADIR_SRC, "firmware.srec", NULL);
+	filename_srec = g_test_build_filename(G_TEST_DIST, "tests", "firmware.srec", NULL);
 	data_srec = fu_common_get_contents_bytes(filename_srec, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_srec);
@@ -2429,7 +2474,7 @@ fu_firmware_srec_func(void)
 	g_assert_cmpint(g_bytes_get_size(data_bin), ==, 136);
 
 	/* did we match the reference file? */
-	filename_ref = g_build_filename(TESTDATADIR_SRC, "firmware.bin", NULL);
+	filename_ref = g_test_build_filename(G_TEST_DIST, "tests", "firmware.bin", NULL);
 	data_ref = fu_common_get_contents_bytes(filename_ref, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_ref);
@@ -2573,9 +2618,11 @@ fu_firmware_dfuse_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* load a DfuSe firmware */
-	filename = g_build_filename(TESTDATADIR_SRC, "firmware.dfuse", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "firmware.dfuse", NULL);
 	g_assert_nonnull(filename);
 	roundtrip_orig = fu_common_get_contents_bytes(filename, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(roundtrip_orig);
 	ret = fu_firmware_parse(firmware, roundtrip_orig, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -2613,9 +2660,11 @@ fu_firmware_fmap_func(void)
 #endif
 
 	/* load firmware */
-	filename = g_build_filename(TESTDATADIR_SRC, "firmware.fmap", NULL);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "fmap-offset.bin", NULL);
 	g_assert_nonnull(filename);
 	roundtrip_orig = fu_common_get_contents_bytes(filename, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(roundtrip_orig);
 	ret = fu_firmware_parse(firmware, roundtrip_orig, FWUPD_INSTALL_FLAG_NONE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -2654,7 +2703,7 @@ fu_firmware_new_from_gtypes_func(void)
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GError) error = NULL;
 
-	fn = g_build_filename(TESTDATADIR_SRC, "firmware.dfu", NULL);
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "firmware.dfu", NULL);
 	blob = fu_common_get_contents_bytes(fn, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(blob);
@@ -2704,7 +2753,7 @@ fu_firmware_dfu_func(void)
 	g_autoptr(GBytes) data_bin = NULL;
 	g_autoptr(GError) error = NULL;
 
-	filename_dfu = g_build_filename(TESTDATADIR_SRC, "firmware.dfu", NULL);
+	filename_dfu = g_test_build_filename(G_TEST_DIST, "tests", "firmware.dfu", NULL);
 	data_dfu = fu_common_get_contents_bytes(filename_dfu, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_dfu);
@@ -2720,7 +2769,7 @@ fu_firmware_dfu_func(void)
 	g_assert_cmpint(g_bytes_get_size(data_bin), ==, 136);
 
 	/* did we match the reference file? */
-	filename_ref = g_build_filename(TESTDATADIR_SRC, "firmware.bin", NULL);
+	filename_ref = g_test_build_filename(G_TEST_DIST, "tests", "firmware.bin", NULL);
 	data_ref = fu_common_get_contents_bytes(filename_ref, &error);
 	g_assert_no_error(error);
 	g_assert_nonnull(data_ref);
@@ -2878,6 +2927,7 @@ fu_efivar_func(void)
 	gsize sz = 0;
 	guint32 attr = 0;
 	guint64 total;
+	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree guint8 *data = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) names = NULL;
@@ -2888,7 +2938,8 @@ fu_efivar_func(void)
 #endif
 
 	/* these tests will write */
-	g_setenv("FWUPD_SYSFSFWDIR", TESTDATADIR_DST, TRUE);
+	sysfsfwdir = g_test_build_filename(G_TEST_BUILT, "tests", NULL);
+	g_setenv("FWUPD_SYSFSFWDIR", sysfsfwdir, TRUE);
 
 	/* check supported */
 	ret = fu_efivar_supported(&error);
@@ -3153,6 +3204,7 @@ static void
 fu_firmware_dfuse_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3162,7 +3214,8 @@ fu_firmware_dfuse_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/dfuse.builder.xml", &xml_src, NULL, &error);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "dfuse.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3186,6 +3239,7 @@ static void
 fu_firmware_srec_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3195,7 +3249,8 @@ fu_firmware_srec_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/srec.builder.xml", &xml_src, NULL, &error);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "srec.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3218,6 +3273,7 @@ static void
 fu_firmware_ihex_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3227,7 +3283,8 @@ fu_firmware_ihex_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/ihex.builder.xml", &xml_src, NULL, &error);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "ihex.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3250,6 +3307,7 @@ static void
 fu_firmware_fmap_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3259,7 +3317,8 @@ fu_firmware_fmap_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/fmap.builder.xml", &xml_src, NULL, &error);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "fmap.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3283,6 +3342,7 @@ static void
 fu_efi_firmware_section_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3292,10 +3352,9 @@ fu_efi_firmware_section_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/efi-firmware-section.builder.xml",
-				  &xml_src,
-				  NULL,
-				  &error);
+	filename =
+	    g_test_build_filename(G_TEST_DIST, "tests", "efi-firmware-section.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3319,6 +3378,7 @@ static void
 fu_efi_firmware_file_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3328,10 +3388,9 @@ fu_efi_firmware_file_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/efi-firmware-file.builder.xml",
-				  &xml_src,
-				  NULL,
-				  &error);
+	filename =
+	    g_test_build_filename(G_TEST_DIST, "tests", "efi-firmware-file.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3355,6 +3414,7 @@ static void
 fu_efi_firmware_filesystem_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3364,10 +3424,11 @@ fu_efi_firmware_filesystem_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/efi-firmware-filesystem.builder.xml",
-				  &xml_src,
-				  NULL,
-				  &error);
+	filename = g_test_build_filename(G_TEST_DIST,
+					 "tests",
+					 "efi-firmware-filesystem.builder.xml",
+					 NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3391,6 +3452,7 @@ static void
 fu_efi_firmware_volume_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3400,10 +3462,9 @@ fu_efi_firmware_volume_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/efi-firmware-volume.builder.xml",
-				  &xml_src,
-				  NULL,
-				  &error);
+	filename =
+	    g_test_build_filename(G_TEST_DIST, "tests", "efi-firmware-volume.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3427,6 +3488,7 @@ static void
 fu_ifd_image_xml_func(void)
 {
 	gboolean ret;
+	g_autofree gchar *filename = NULL;
 	g_autofree gchar *csum1 = NULL;
 	g_autofree gchar *csum2 = NULL;
 	g_autofree gchar *xml_out = NULL;
@@ -3436,7 +3498,8 @@ fu_ifd_image_xml_func(void)
 	g_autoptr(GError) error = NULL;
 
 	/* build and write */
-	ret = g_file_get_contents(FWUPD_FUZZINGSRCDIR "/ifd.builder.xml", &xml_src, NULL, &error);
+	filename = g_test_build_filename(G_TEST_DIST, "tests", "ifd.builder.xml", NULL);
+	ret = g_file_get_contents(filename, &xml_src, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_firmware_build_from_xml(firmware1, xml_src, &error);
@@ -3676,15 +3739,19 @@ fu_progress_finish_func(void)
 int
 main(int argc, char **argv)
 {
+	g_autofree gchar *testdatadir = NULL;
+
 	g_test_init(&argc, &argv, NULL);
 	g_type_ensure(FU_TYPE_IFD_BIOS);
 
 	/* only critical and error are fatal */
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
 	g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
-	g_setenv("FWUPD_DATADIR", TESTDATADIR_SRC, TRUE);
-	g_setenv("FWUPD_PLUGINDIR", TESTDATADIR_SRC, TRUE);
-	g_setenv("FWUPD_SYSCONFDIR", TESTDATADIR_SRC, TRUE);
+
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	g_setenv("FWUPD_DATADIR", testdatadir, TRUE);
+	g_setenv("FWUPD_PLUGINDIR", testdatadir, TRUE);
+	g_setenv("FWUPD_SYSCONFDIR", testdatadir, TRUE);
 	g_setenv("FWUPD_OFFLINE_TRIGGER", "/tmp/fwupd-self-test/system-update", TRUE);
 	g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
@@ -3782,6 +3849,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{retry-success}", fu_device_retry_success_func);
 	g_test_add_func("/fwupd/device{retry-failed}", fu_device_retry_failed_func);
 	g_test_add_func("/fwupd/device{retry-hardware}", fu_device_retry_hardware_func);
+	g_test_add_func("/fwupd/device{cfi-device}", fu_device_cfi_device_func);
 	g_test_add_func("/efi/firmware-section{xml}", fu_efi_firmware_section_xml_func);
 	g_test_add_func("/efi/firmware-file{xml}", fu_efi_firmware_file_xml_func);
 	g_test_add_func("/efi/firmware-filesystem{xml}", fu_efi_firmware_filesystem_xml_func);

@@ -667,9 +667,6 @@ msgstr "Instal blob firmware pada perangkat"
 msgid "Install a firmware file on this hardware"
 msgstr "Pasang suatu berkas firmware pada perangkat keras ini"
 
-msgid "Install old version of system firmware"
-msgstr "Pasang versi lama dari firmware sistem"
-
 msgid "Install signed device firmware"
 msgstr "Pasang firmware perangkat yang ditandatangani"
 

@@ -106,6 +106,8 @@ FwupdDevice *
 fu_engine_get_results(FuEngine *self, const gchar *device_id, GError **error);
 FuSecurityAttrs *
 fu_engine_get_host_security_attrs(FuEngine *self);
+FuSecurityAttrs *
+fu_engine_get_host_security_events(FuEngine *self, guint limit, GError **error);
 GHashTable *
 fu_engine_get_report_metadata(FuEngine *self, GError **error);
 gboolean
@@ -211,7 +213,7 @@ fu_engine_add_plugin(FuEngine *self, FuPlugin *plugin);
 void
 fu_engine_add_runtime_version(FuEngine *self, const gchar *component_id, const gchar *version);
 gboolean
-fu_engine_check_trust(FuInstallTask *task, GError **error);
+fu_engine_check_trust(FuEngine *self, FuInstallTask *task, GError **error);
 gboolean
 fu_engine_check_requirements(FuEngine *self,
 			     FuEngineRequest *request,

@@ -17,12 +17,13 @@ gboolean
 fu_engine_update_motd(FuEngine *self, GError **error)
 {
 	guint upgrade_count = 0;
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GString) str = NULL;
 	g_autofree gchar *target = NULL;
 
 	/* a subset of what fwupdmgr can do */
+	request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	fu_engine_request_set_feature_flags(request,
 					    FWUPD_FEATURE_FLAG_DETACH_ACTION |
 						FWUPD_FEATURE_FLAG_UPDATE_ACTION);

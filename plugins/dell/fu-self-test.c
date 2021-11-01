@@ -267,11 +267,12 @@ fu_plugin_dell_dock_func(gconstpointer user_data)
 	DOCK_INFO *dock_info;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(FuUsbDevice) fake_usb_device = fu_usb_device_new(NULL);
+	g_autoptr(FuUsbDevice) fake_usb_device = NULL;
 	gulong added_id;
 	gulong register_id;
 
-	fu_device_set_context(FU_DEVICE(fake_usb_device), fu_plugin_get_context(self->plugin_dell));
+	fake_usb_device =
+	    fu_usb_device_new_with_context(fu_plugin_get_context(self->plugin_dell), NULL);
 	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	added_id = g_signal_connect(self->plugin_uefi_capsule,
 				    "device-added",
@@ -497,11 +498,11 @@ fu_test_self_init(FuTest *self)
 	g_assert_true(ret);
 
 	self->plugin_uefi_capsule = fu_plugin_new(ctx);
-	pluginfn_uefi = g_build_filename(PLUGINBUILDDIR,
-					 "..",
-					 "uefi-capsule",
-					 "libfu_plugin_uefi_capsule." G_MODULE_SUFFIX,
-					 NULL);
+	pluginfn_uefi = g_test_build_filename(G_TEST_BUILT,
+					      "..",
+					      "uefi-capsule",
+					      "libfu_plugin_uefi_capsule." G_MODULE_SUFFIX,
+					      NULL);
 	ret = fu_plugin_open(self->plugin_uefi_capsule, pluginfn_uefi, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -511,7 +512,7 @@ fu_test_self_init(FuTest *self)
 
 	self->plugin_dell = fu_plugin_new(ctx);
 	pluginfn_dell =
-	    g_build_filename(PLUGINBUILDDIR, "libfu_plugin_dell." G_MODULE_SUFFIX, NULL);
+	    g_test_build_filename(G_TEST_BUILT, "libfu_plugin_dell." G_MODULE_SUFFIX, NULL);
 	ret = fu_plugin_open(self->plugin_dell, pluginfn_dell, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -539,12 +540,14 @@ int
 main(int argc, char **argv)
 {
 	g_autofree gchar *sysfsdir = NULL;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuTest) self = g_new0(FuTest, 1);
 
 	g_test_init(&argc, &argv, NULL);
 
 	/* change path */
-	g_setenv("FWUPD_SYSFSFWDIR", TESTDATADIR, TRUE);
+	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
+	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 
 	/* change behavior */
 	sysfsdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_FW);

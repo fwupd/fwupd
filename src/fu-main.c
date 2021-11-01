@@ -59,12 +59,17 @@ typedef enum {
 } FuMainMachineKind;
 
 typedef struct {
+	FwupdFeatureFlags feature_flags;
+	GHashTable *hints; /* str:str */
+} FuSenderItem;
+
+typedef struct {
 	GDBusConnection *connection;
 	GDBusNodeInfo *introspection_daemon;
 	GDBusProxy *proxy_uid;
 	GMainLoop *loop;
 	GFileMonitor *argv0_monitor;
-	GHashTable *sender_features; /* sender:FwupdFeatureFlags */
+	GHashTable *sender_items; /* sender:FuSenderItem */
 #if GLIB_CHECK_VERSION(2, 63, 3)
 	GMemoryMonitor *memory_monitor;
 #endif
@@ -235,18 +240,22 @@ fu_main_engine_percentage_changed_cb(FuEngine *engine, guint percentage, FuMainP
 static FuEngineRequest *
 fu_main_create_request(FuMainPrivate *priv, const gchar *sender, GError **error)
 {
-	FwupdFeatureFlags *feature_flags;
+	FuSenderItem *sender_item;
 	FwupdDeviceFlags device_flags = FWUPD_DEVICE_FLAG_NONE;
 	uid_t calling_uid = 0;
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 	g_autoptr(GVariant) value = NULL;
 
 	g_return_val_if_fail(sender != NULL, NULL);
 
-	/* did the client set the list of supported feature */
-	feature_flags = g_hash_table_lookup(priv->sender_features, sender);
-	if (feature_flags != NULL)
-		fu_engine_request_set_feature_flags(request, *feature_flags);
+	/* did the client set the list of supported features or any hints */
+	sender_item = g_hash_table_lookup(priv->sender_items, sender);
+	if (sender_item != NULL) {
+		const gchar *locale = g_hash_table_lookup(sender_item->hints, "locale");
+		if (locale != NULL)
+			fu_engine_request_set_locale(request, locale);
+		fu_engine_request_set_feature_flags(request, sender_item->feature_flags);
+	}
 
 	/* are we root and therefore trusted? */
 	value = g_dbus_proxy_call_sync(priv->proxy_uid,
@@ -874,7 +883,7 @@ fu_main_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 				g_ptr_array_add(errors, g_steal_pointer(&error_local));
 				continue;
 			}
-			if (!fu_engine_check_trust(task, &error_local)) {
+			if (!fu_engine_check_trust(priv->engine, task, &error_local)) {
 				g_ptr_array_add(errors, g_steal_pointer(&error_local));
 				continue;
 			}
@@ -904,6 +913,19 @@ fu_main_install_with_helper(FuMainAuthHelper *helper_ref, GError **error)
 	fu_main_set_status(priv, FWUPD_STATUS_WAITING_FOR_AUTH);
 	fu_main_authorize_install_queue(g_steal_pointer(&helper));
 	return TRUE;
+}
+
+static FuSenderItem *
+fu_main_ensure_sender_item(FuMainPrivate *priv, const gchar *sender)
+{
+	FuSenderItem *sender_item;
+	sender_item = g_hash_table_lookup(priv->sender_items, sender);
+	if (sender_item == NULL) {
+		sender_item = g_new0(FuSenderItem, 1);
+		sender_item->hints = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+		g_hash_table_insert(priv->sender_items, g_strdup(sender), sender_item);
+	}
+	return sender_item;
 }
 
 static gboolean
@@ -1228,6 +1250,20 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 		g_dbus_method_invocation_return_value(invocation, val);
 		return;
 	}
+	if (g_strcmp0(method_name, "GetHostSecurityEvents") == 0) {
+		guint limit = 0;
+		g_autoptr(FuSecurityAttrs) attrs = NULL;
+		g_variant_get(parameters, "(u)", &limit);
+		g_debug("Called %s(%u)", method_name, limit);
+		attrs = fu_engine_get_host_security_events(priv->engine, limit, &error);
+		if (attrs == NULL) {
+			g_dbus_method_invocation_return_gerror(invocation, error);
+			return;
+		}
+		val = fu_security_attrs_to_variant(attrs);
+		g_dbus_method_invocation_return_value(invocation, val);
+		return;
+	}
 	if (g_strcmp0(method_name, "ClearResults") == 0) {
 		const gchar *device_id;
 		g_variant_get(parameters, "(&s)", &device_id);
@@ -1510,23 +1546,37 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 		return;
 	}
 	if (g_strcmp0(method_name, "SetFeatureFlags") == 0) {
-		FwupdFeatureFlags feature_flags;
+		FuSenderItem *sender_item;
 		guint64 feature_flags_u64 = 0;
+
 		g_variant_get(parameters, "(t)", &feature_flags_u64);
 		g_debug("Called %s(%" G_GUINT64_FORMAT ")", method_name, feature_flags_u64);
 
 		/* old flags for the same sender will be automatically destroyed */
-		feature_flags = feature_flags_u64;
-		g_hash_table_insert(priv->sender_features,
-				    g_strdup(sender),
-#if GLIB_CHECK_VERSION(2, 67, 4)
-				    g_memdup2(&feature_flags, sizeof(feature_flags)));
-#else
-				    g_memdup(&feature_flags, sizeof(feature_flags)));
-#endif
+		sender_item = fu_main_ensure_sender_item(priv, sender);
+		sender_item->feature_flags = feature_flags_u64;
 		g_dbus_method_invocation_return_value(invocation, NULL);
 		return;
 	}
+	if (g_strcmp0(method_name, "SetHints") == 0) {
+		FuSenderItem *sender_item;
+		const gchar *prop_key;
+		const gchar *prop_value;
+		g_autoptr(GVariantIter) iter = NULL;
+
+		g_variant_get(parameters, "(a{ss})", &iter);
+		g_debug("Called %s()", method_name);
+		sender_item = fu_main_ensure_sender_item(priv, sender);
+		while (g_variant_iter_next(iter, "{&s&s}", &prop_key, &prop_value)) {
+			g_debug("got hint %s=%s", prop_key, prop_value);
+			g_hash_table_insert(sender_item->hints,
+					    g_strdup(prop_key),
+					    g_strdup(prop_value));
+		}
+		g_dbus_method_invocation_return_value(invocation, NULL);
+		return;
+	}
+
 	if (g_strcmp0(method_name, "Install") == 0) {
 		GVariant *prop_value;
 		const gchar *device_id = NULL;
@@ -1845,7 +1895,7 @@ fu_main_is_container(void)
 static void
 fu_main_private_free(FuMainPrivate *priv)
 {
-	g_hash_table_unref(priv->sender_features);
+	g_hash_table_unref(priv->sender_items);
 	if (priv->loop != NULL)
 		g_main_loop_unref(priv->loop);
 	if (priv->owner_id > 0)
@@ -1877,6 +1927,13 @@ fu_main_private_free(FuMainPrivate *priv)
 #pragma clang diagnostic ignored "-Wunused-function"
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuMainPrivate, fu_main_private_free)
 #pragma clang diagnostic pop
+
+static void
+fu_main_sender_item_free(FuSenderItem *sender_item)
+{
+	g_hash_table_unref(sender_item->hints);
+	g_free(sender_item);
+}
 
 int
 main(int argc, char *argv[])
@@ -1926,7 +1983,10 @@ main(int argc, char *argv[])
 
 	/* create new objects */
 	priv = g_new0(FuMainPrivate, 1);
-	priv->sender_features = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+	priv->sender_items = g_hash_table_new_full(g_str_hash,
+						   g_str_equal,
+						   g_free,
+						   (GDestroyNotify)fu_main_sender_item_free);
 	priv->loop = g_main_loop_new(NULL, FALSE);
 
 	/* load engine */

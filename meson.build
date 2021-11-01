@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.7.0',
+  version : '1.7.1',
   license : 'LGPL-2.1+',
   meson_version : '>=0.50.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -110,12 +110,6 @@ warning_flags = [
 ]
 cc = meson.get_compiler('c')
 add_project_arguments(cc.get_supported_arguments(warning_flags), language : 'c')
-
-# use honggfuzz for parallel persistent fuzzing
-honggfuzz = find_program('honggfuzz', required: false)
-if cc.has_function('HF_ITER')
-  conf.set('HAVE_HF_ITER', '1')
-endif
 
 if not meson.is_cross_build()
   add_project_arguments('-fstack-protector-strong', language : 'c')
@@ -314,6 +308,9 @@ endif
 if cc.has_header('sys/socket.h')
   conf.set('HAVE_SOCKET_H', '1')
 endif
+if cc.has_header('sys/io.h')
+  conf.set('HAVE_IO_H', '1')
+endif
 if cc.has_header('linux/ethtool.h')
   conf.set('HAVE_ETHTOOL_H', '1')
 endif
@@ -511,7 +508,6 @@ conf.set_quoted('FWUPD_DATADIR', datadir)
 conf.set_quoted('FWUPD_LOCALSTATEDIR', localstatedir)
 conf.set_quoted('FWUPD_SYSCONFDIR', sysconfdir)
 conf.set_quoted('FWUPD_LOCALEDIR', localedir)
-conf.set_quoted('FWUPD_FUZZINGSRCDIR', join_paths(meson.source_root(), 'src', 'fuzzing'))
 
 if build_standalone
 if host_machine.system() == 'windows'

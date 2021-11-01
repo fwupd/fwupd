@@ -28,17 +28,27 @@ struct _FuDellDockHub {
 
 G_DEFINE_TYPE(FuDellDockHub, fu_dell_dock_hub, FU_TYPE_HID_DEVICE)
 
-static gboolean
-fu_dell_dock_hub_probe(FuDevice *device, GError **error)
+void
+fu_dell_dock_hub_add_instance(FuDevice *device, guint8 ec_type)
 {
 	g_autofree gchar *devid = NULL;
 
-	devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&hub",
-				(guint)fu_usb_device_get_vid(FU_USB_DEVICE(device)),
-				(guint)fu_usb_device_get_pid(FU_USB_DEVICE(device)));
-
-	fu_device_set_logical_id(device, "hub");
+	if (ec_type == ATOMIC_BASE) {
+		devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&atomic_hub",
+					(guint)fu_usb_device_get_vid(FU_USB_DEVICE(device)),
+					(guint)fu_usb_device_get_pid(FU_USB_DEVICE(device)));
+	} else {
+		devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&hub",
+					(guint)fu_usb_device_get_vid(FU_USB_DEVICE(device)),
+					(guint)fu_usb_device_get_pid(FU_USB_DEVICE(device)));
+	}
 	fu_device_add_instance_id(device, devid);
+}
+
+static gboolean
+fu_dell_dock_hub_probe(FuDevice *device, GError **error)
+{
+	fu_device_set_logical_id(device, "hub");
 	fu_device_add_protocol(device, "com.dell.dock");
 
 	return TRUE;

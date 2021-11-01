@@ -645,11 +645,11 @@ fu_synaptics_rmi_firmware_write_v10(FuFirmware *firmware, GError **error)
 	    .content_length = GUINT32_TO_LE(0x1 * 4), /* size of offset table in bytes */
 	    .content_address = GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x20), /* offset to table */
 	};
-	guint32 offset_table[] = {RMI_IMG_FW_OFFSET +
-				  0x24}; /* offset to first RmiFirmwareContainerDescriptor */
+	guint32 offset_table[] = {
+	    GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x24)}; /* offset to first descriptor */
 	RmiFirmwareContainerDescriptor desc = {
 	    .container_id = GUINT16_TO_LE(RMI_FIRMWARE_CONTAINER_ID_FLASH_CONFIG),
-	    .content_length = 0x0,
+	    .content_length = GUINT32_TO_LE(0x0),
 	    .content_address = GUINT32_TO_LE(RMI_IMG_FW_OFFSET + 0x44),
 	};
 

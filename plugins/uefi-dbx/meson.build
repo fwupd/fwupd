@@ -27,9 +27,9 @@ shared_module('fu_plugin_uefi_dbx',
 )
 
 if get_option('tests')
-  testdatadirs = environment()
-  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
-  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'uefi-dbx-self-test',
     fu_hash,
@@ -54,7 +54,7 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('uefi-dbx-self-test', e, env : testdatadirs)  # added to installed-tests
+  test('uefi-dbx-self-test', e, env : env)  # added to installed-tests
 endif
 
 dbxtool = executable(

@@ -32,6 +32,8 @@ class Variables:
         self.contact_info = "Unknown"
         self.release_version = version
         self.release_description = "Unknown"
+        self.update_protocol = "org.uefi.capsule"
+        self.version_format = "dell-bios"
 
 
 def parse_args():

@@ -13,8 +13,8 @@
 
 typedef struct {
 	FuVliDeviceKind kind;
+	FuCfiDevice *cfi_device;
 	gboolean spi_auto_detect;
-	FuVliDeviceSpiReq spi_cmds[FU_VLI_DEVICE_SPI_REQ_LAST];
 	guint8 spi_cmd_read_id_sz;
 	guint32 flash_id;
 } FuVliDevicePrivate;
@@ -25,47 +25,11 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuVliDevice, fu_vli_device, FU_TYPE_USB_DEVICE)
 
 enum { PROP_0, PROP_KIND, PROP_LAST };
 
-static const gchar *
-fu_vli_device_spi_req_to_string(FuVliDeviceSpiReq req)
-{
-	if (req == FU_VLI_DEVICE_SPI_REQ_READ_ID)
-		return "SpiCmdReadId";
-	if (req == FU_VLI_DEVICE_SPI_REQ_PAGE_PROG)
-		return "SpiCmdPageProg";
-	if (req == FU_VLI_DEVICE_SPI_REQ_CHIP_ERASE)
-		return "SpiCmdChipErase";
-	if (req == FU_VLI_DEVICE_SPI_REQ_READ_DATA)
-		return "SpiCmdReadData";
-	if (req == FU_VLI_DEVICE_SPI_REQ_READ_STATUS)
-		return "SpiCmdReadStatus";
-	if (req == FU_VLI_DEVICE_SPI_REQ_SECTOR_ERASE)
-		return "SpiCmdSectorErase";
-	if (req == FU_VLI_DEVICE_SPI_REQ_WRITE_EN)
-		return "SpiCmdWriteEn";
-	if (req == FU_VLI_DEVICE_SPI_REQ_WRITE_STATUS)
-		return "SpiCmdWriteStatus";
-	return NULL;
-}
-
-gboolean
-fu_vli_device_get_spi_cmd(FuVliDevice *self, FuVliDeviceSpiReq req, guint8 *cmd, GError **error)
+FuCfiDevice *
+fu_vli_device_get_cfi_device(FuVliDevice *self)
 {
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
-	if (req >= FU_VLI_DEVICE_SPI_REQ_LAST) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "SPI req invalid");
-		return FALSE;
-	}
-	if (priv->spi_cmds[req] == 0x0) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
-			    "No defined SPI cmd for %s",
-			    fu_vli_device_spi_req_to_string(req));
-		return FALSE;
-	}
-	if (cmd != NULL)
-		*cmd = priv->spi_cmds[req];
-	return TRUE;
+	return priv->cfi_device;
 }
 
 static gboolean
@@ -521,12 +485,7 @@ fu_vli_device_to_string(FuDevice *device, guint idt, GString *str)
 		g_autofree gchar *tmp = fu_vli_device_get_flash_id_str(self);
 		fu_common_string_append_kv(str, idt, "FlashId", tmp);
 	}
-	for (guint i = 0; i < FU_VLI_DEVICE_SPI_REQ_LAST; i++) {
-		fu_common_string_append_kx(str,
-					   idt,
-					   fu_vli_device_spi_req_to_string(i),
-					   priv->spi_cmds[i]);
-	}
+	fu_device_add_string(FU_DEVICE(priv->cfi_device), idt + 1, str);
 }
 
 static gboolean
@@ -535,12 +494,16 @@ fu_vli_device_spi_read_flash_id(FuVliDevice *self, GError **error)
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	guint8 buf[4] = {0x0};
+	guint8 spi_cmd = 0x0;
+
+	if (!fu_cfi_device_get_cmd(priv->cfi_device, FU_CFI_DEVICE_CMD_READ_ID, &spi_cmd, error))
+		return FALSE;
 	if (!g_usb_device_control_transfer(usb_device,
 					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
 					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
 					   G_USB_DEVICE_RECIPIENT_DEVICE,
 					   0xc0 | (priv->spi_cmd_read_id_sz * 2),
-					   priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_READ_ID],
+					   spi_cmd,
 					   0x0000,
 					   buf,
 					   sizeof(buf),
@@ -593,16 +556,14 @@ fu_vli_device_setup(FuDevice *device, GError **error)
 			return FALSE;
 		}
 		if (priv->flash_id != 0x0) {
-			g_autofree gchar *spi_id = NULL;
 			g_autofree gchar *devid1 = NULL;
 			g_autofree gchar *devid2 = NULL;
 			g_autofree gchar *flash_id = fu_vli_device_get_flash_id_str(self);
 
-			/* load the SPI parameters from quirks */
-			spi_id = g_strdup_printf("VLI_USBHUB\\SPI_%s", flash_id);
-			fu_device_add_instance_id_full(FU_DEVICE(self),
-						       spi_id,
-						       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+			/* use the correct flash device */
+			fu_cfi_device_set_flash_id(priv->cfi_device, flash_id);
+			if (!fu_device_probe(FU_DEVICE(priv->cfi_device), error))
+				return FALSE;
 
 			/* add extra instance IDs to include the SPI variant */
 			devid2 = g_strdup_printf("USB\\VID_%04X&PID_%04X&SPI_%s&REV_%04X",
@@ -628,20 +589,8 @@ fu_vli_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 {
 	FuVliDevice *self = FU_VLI_DEVICE(device);
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
-	if (g_strcmp0(key, "VliSpiCmdReadId") == 0) {
-		priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_READ_ID] = fu_common_strtoull(value);
-		return TRUE;
-	}
-	if (g_strcmp0(key, "VliSpiCmdReadIdSz") == 0) {
+	if (g_strcmp0(key, "CfiDeviceCmdReadIdSz") == 0) {
 		priv->spi_cmd_read_id_sz = fu_common_strtoull(value);
-		return TRUE;
-	}
-	if (g_strcmp0(key, "VliSpiCmdChipErase") == 0) {
-		priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_CHIP_ERASE] = fu_common_strtoull(value);
-		return TRUE;
-	}
-	if (g_strcmp0(key, "VliSpiCmdSectorErase") == 0) {
-		priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_SECTOR_ERASE] = fu_common_strtoull(value);
 		return TRUE;
 	}
 	if (g_strcmp0(key, "VliSpiAutoDetect") == 0) {
@@ -706,20 +655,28 @@ fu_vli_device_set_property(GObject *object, guint prop_id, const GValue *value, 
 }
 
 static void
+fu_vli_device_constructed(GObject *obj)
+{
+	FuVliDevice *self = FU_VLI_DEVICE(obj);
+	FuVliDevicePrivate *priv = GET_PRIVATE(self);
+	priv->cfi_device = fu_cfi_device_new(fu_device_get_context(FU_DEVICE(self)), NULL);
+}
+
+static void
 fu_vli_device_init(FuVliDevice *self)
 {
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
-	priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_WRITE_STATUS] = 0x01;
-	priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_PAGE_PROG] = 0x02;
-	priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_READ_DATA] = 0x03;
-	priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_READ_STATUS] = 0x05;
-	priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_WRITE_EN] = 0x06;
-	priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_SECTOR_ERASE] = 0x20;
-	priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_CHIP_ERASE] = 0x60;
-	priv->spi_cmds[FU_VLI_DEVICE_SPI_REQ_READ_ID] = 0x9f;
 	priv->spi_cmd_read_id_sz = 2;
 	priv->spi_auto_detect = TRUE;
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
+}
+
+static void
+fu_vli_device_finalize(GObject *obj)
+{
+	FuVliDevice *self = FU_VLI_DEVICE(obj);
+	FuVliDevicePrivate *priv = GET_PRIVATE(self);
+	g_object_unref(priv->cfi_device);
 }
 
 static void
@@ -732,6 +689,8 @@ fu_vli_device_class_init(FuVliDeviceClass *klass)
 	/* properties */
 	object_class->get_property = fu_vli_device_get_property;
 	object_class->set_property = fu_vli_device_set_property;
+	object_class->constructed = fu_vli_device_constructed;
+	object_class->finalize = fu_vli_device_finalize;
 	pspec = g_param_spec_uint("kind",
 				  NULL,
 				  NULL,

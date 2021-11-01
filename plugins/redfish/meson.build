@@ -58,13 +58,16 @@ install_data(['redfish.conf'],
 )
 
 if get_option('tests')
-  testdatadir = join_paths(meson.current_source_dir(), 'tests')
-  testdatadirs = environment()
-  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
-  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
-  testdatadirs.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
-  cargs += '-DTESTDATADIR="' + testdatadir + '"'
-  cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
+  install_data(['tests/redfish-smbios.bin'],
+    install_dir: join_paths(installed_test_datadir, 'tests'))
+  install_data(['tests/efi/efivars/RedfishIndications-16faa37e-4b6a-4891-9028-242de65a3b70'],
+    install_dir: join_paths(installed_test_datadir, 'tests', 'efi', 'efivars'))
+  install_data(['tests/efi/efivars/RedfishOSCredentials-16faa37e-4b6a-4891-9028-242de65a3b70'],
+    install_dir: join_paths(installed_test_datadir, 'tests', 'efi', 'efivars'))
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'redfish-self-test',
     fu_hash,
@@ -86,6 +89,7 @@ if get_option('tests')
       fwupd_incdir,
       fwupdplugin_incdir,
     ],
+    c_args : cargs,
     dependencies : [
       plugin_deps,
       libcurl,
@@ -94,10 +98,9 @@ if get_option('tests')
       fwupd,
       fwupdplugin,
     ],
-    c_args : cargs,
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('redfish-self-test', e)  # added to installed-tests
+  test('redfish-self-test', e, env : env)  # added to installed-tests
 endif
 endif

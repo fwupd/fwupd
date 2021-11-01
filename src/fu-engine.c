@@ -452,8 +452,28 @@ fu_engine_set_release_from_artifact(FuEngine *self,
 	return TRUE;
 }
 
+static gchar *
+fu_engine_request_get_localized_xpath(FuEngineRequest *request, const gchar *element)
+{
+	GString *xpath = g_string_new(element);
+	const gchar *locale = NULL;
+
+	/* optional; not set in tests */
+	if (request != NULL)
+		locale = fu_engine_request_get_locale(request);
+
+	/* prefer the users locale if set */
+	if (locale != NULL) {
+		g_autofree gchar *xpath_locale = NULL;
+		xpath_locale = g_strdup_printf("%s[@xml:lang='%s']|", element, locale);
+		g_string_prepend(xpath, xpath_locale);
+	}
+	return g_string_free(xpath, FALSE);
+}
+
 static gboolean
 fu_engine_set_release_from_appstream(FuEngine *self,
+				     FuEngineRequest *request,
 				     FuDevice *dev,
 				     FwupdRelease *rel,
 				     XbNode *component,
@@ -464,6 +484,10 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 	const gchar *tmp;
 	const gchar *remote_id;
 	guint64 tmp64;
+	g_autofree gchar *description_xpath = NULL;
+	g_autofree gchar *name_xpath = NULL;
+	g_autofree gchar *namevs_xpath = NULL;
+	g_autofree gchar *summary_xpath = NULL;
 	g_autofree gchar *version_rel = NULL;
 	g_autoptr(GPtrArray) cats = NULL;
 	g_autoptr(GPtrArray) issues = NULL;
@@ -480,12 +504,18 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 	tmp = xb_node_query_text(component, "project_license", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_license(rel, tmp);
-	tmp = xb_node_query_text(component, "name", NULL);
+	name_xpath = fu_engine_request_get_localized_xpath(request, "name");
+	tmp = xb_node_query_text(component, name_xpath, NULL);
 	if (tmp != NULL)
 		fwupd_release_set_name(rel, tmp);
-	tmp = xb_node_query_text(component, "summary", NULL);
+	summary_xpath = fu_engine_request_get_localized_xpath(request, "summary");
+	tmp = xb_node_query_text(component, summary_xpath, NULL);
 	if (tmp != NULL)
 		fwupd_release_set_summary(rel, tmp);
+	namevs_xpath = fu_engine_request_get_localized_xpath(request, "name_variant_suffix");
+	tmp = xb_node_query_text(component, namevs_xpath, NULL);
+	if (tmp != NULL)
+		fwupd_release_set_name_variant_suffix(rel, tmp);
 	tmp = xb_node_query_text(component, "branch", NULL);
 	if (tmp != NULL)
 		fwupd_release_set_branch(rel, tmp);
@@ -515,12 +545,23 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 		if (!fu_engine_set_release_from_artifact(self, rel, remote, artifact, error))
 			return FALSE;
 	}
-	description = xb_node_query_first(release, "description", NULL);
+	description_xpath = fu_engine_request_get_localized_xpath(request, "description");
+	description = xb_node_query_first(release, description_xpath, NULL);
 	if (description != NULL) {
 		g_autofree gchar *xml = NULL;
+		g_autoptr(GString) str = NULL;
 		xml = xb_node_export(description, XB_NODE_EXPORT_FLAG_ONLY_CHILDREN, NULL);
-		if (xml != NULL)
-			fwupd_release_set_description(rel, xml);
+		str = g_string_new(xml);
+		if (request != NULL &&
+		    !fu_engine_request_has_feature_flag(request, FWUPD_FEATURE_FLAG_FDE_WARNING)) {
+			g_string_prepend(
+			    str,
+			    "<p>Some of the platform secrets may be invalidated when "
+			    "updating this firmware. Please ensure you have the volume "
+			    "recovery key before continuing.</p>");
+		}
+		if (str->len > 0)
+			fwupd_release_set_description(rel, str->str);
 	}
 	if (artifact == NULL) {
 		tmp = xb_node_query_text(release, "location", NULL);
@@ -1696,17 +1737,20 @@ fu_engine_check_requirement(FuEngine *self,
 }
 
 gboolean
-fu_engine_check_trust(FuInstallTask *task, GError **error)
+fu_engine_check_trust(FuEngine *self, FuInstallTask *task, GError **error)
 {
-#ifndef HAVE_POLKIT
-	if ((fu_install_task_get_trust_flags(task) & FWUPD_TRUST_FLAG_PAYLOAD) == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_FILE,
-				    "archive signature missing or not trusted");
+	if (fu_config_get_only_trusted(self->config) &&
+	    (fu_install_task_get_trust_flags(task) & FWUPD_TRUST_FLAG_PAYLOAD) == 0) {
+		g_autofree gchar *sysconfdir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
+		g_autofree gchar *fn = g_build_filename(sysconfdir, "daemon.conf", NULL);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "firmware signature missing or not trusted; "
+			    "set OnlyTrusted=false in %s ONLY if you are a firmware developer",
+			    fn);
 		return FALSE;
 	}
-#endif
 	return TRUE;
 }
 
@@ -1744,7 +1788,8 @@ fu_engine_check_requirements(FuEngine *self,
 	g_autoptr(GPtrArray) reqs_soft = NULL;
 
 	/* all install task checks require a device */
-	if (device != NULL) {
+	if (device != NULL &&
+	    fu_engine_request_get_kind(request) == FU_ENGINE_REQUEST_KIND_ACTIVE) {
 		if (!fu_install_task_check_requirements(task, flags, error))
 			return FALSE;
 	}
@@ -1948,6 +1993,12 @@ fu_engine_get_report_metadata_kernel_cmdline(GHashTable *hash, GError **error)
 	return TRUE;
 }
 
+static void
+fu_engine_add_report_metadata_bool(GHashTable *hash, const gchar *key, gboolean value)
+{
+	g_hash_table_insert(hash, g_strdup(key), g_strdup(value ? "True" : "False"));
+}
+
 GHashTable *
 fu_engine_get_report_metadata(FuEngine *self, GError **error)
 {
@@ -1980,6 +2031,14 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 		return NULL;
 	if (!fu_engine_get_report_metadata_kernel_cmdline(hash, error))
 		return NULL;
+
+	/* these affect the report credibility */
+	fu_engine_add_report_metadata_bool(hash, "FwupdTainted", self->tainted);
+#ifdef SUPPORTED_BUILD
+	fu_engine_add_report_metadata_bool(hash, "FwupdSupported", TRUE);
+#else
+	fu_engine_add_report_metadata_bool(hash, "FwupdSupported", FALSE);
+#endif
 
 	/* DMI data */
 	tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_PRODUCT_NAME);
@@ -3454,9 +3513,10 @@ fu_engine_ensure_device_supported(FuEngine *self, FuDevice *device)
 	gboolean is_supported = FALSE;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) releases = NULL;
-	g_autoptr(FuEngineRequest) request = fu_engine_request_new();
+	g_autoptr(FuEngineRequest) request = NULL;
 
 	/* all flags set */
+	request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ONLY_SUPPORTED);
 	fu_engine_request_set_feature_flags(request, ~0);
 
 	/* get all releases that pass the requirements */
@@ -4179,6 +4239,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 				    GError **error)
 {
 	FwupdReleaseFlags release_flags = FWUPD_RELEASE_FLAG_NONE;
+	g_autofree gchar *description_xpath = NULL;
 	g_autoptr(FuInstallTask) task = NULL;
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
@@ -4213,6 +4274,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 		if (device != NULL) {
 			fu_device_set_name(dev, fu_device_get_name(device));
 			fu_device_set_flags(dev, fu_device_get_flags(device));
+			fu_device_set_internal_flags(dev, fu_device_get_internal_flags(device));
 			fu_device_set_id(dev, fu_device_get_id(device));
 			fu_device_set_version_raw(dev, fu_device_get_version_raw(device));
 			fu_device_set_version_format(dev, fu_device_get_version_format(device));
@@ -4269,7 +4331,8 @@ fu_engine_get_result_from_component(FuEngine *self,
 	}
 
 	/* create a result with all the metadata in */
-	description = xb_node_query_first(component, "description", NULL);
+	description_xpath = fu_engine_request_get_localized_xpath(request, "description");
+	description = xb_node_query_first(component, description_xpath, NULL);
 	if (description != NULL) {
 		g_autofree gchar *xml = NULL;
 		xml = xb_node_export(description, XB_NODE_EXPORT_FLAG_ONLY_CHILDREN, NULL);
@@ -4278,7 +4341,13 @@ fu_engine_get_result_from_component(FuEngine *self,
 	}
 	rel = fwupd_release_new();
 	fwupd_release_set_flags(rel, release_flags);
-	if (!fu_engine_set_release_from_appstream(self, dev, rel, component, release, error))
+	if (!fu_engine_set_release_from_appstream(self,
+						  request,
+						  dev,
+						  rel,
+						  component,
+						  release,
+						  error))
 		return NULL;
 	fu_device_add_release(dev, rel);
 	return g_steal_pointer(&dev);
@@ -4782,6 +4851,7 @@ fu_engine_add_releases_for_device_component(FuEngine *self,
 
 		/* create new FwupdRelease for the XbNode */
 		if (!fu_engine_set_release_from_appstream(self,
+							  request,
 							  device,
 							  rel,
 							  component,
@@ -5725,6 +5795,7 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 				g_autoptr(FwupdRelease) rel = fwupd_release_new();
 				g_autoptr(GError) error_local = NULL;
 				if (!fu_engine_set_release_from_appstream(self,
+									  NULL,
 									  device,
 									  rel,
 									  component,
@@ -6036,6 +6107,46 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 	return g_strdup_printf("HSI-INVALID:chassis[0x%02x]", val);
 }
 
+static gboolean
+fu_engine_record_security_attrs(FuEngine *self, GError **error)
+{
+	g_autoptr(GPtrArray) attrs_array = NULL;
+	g_autofree gchar *json = NULL;
+
+	/* convert attrs to json string */
+	json = fu_security_attrs_to_json_string(self->host_security_attrs, error);
+	if (json == NULL) {
+		g_prefix_error(error, "cannot convert current attrs to string: ");
+		return FALSE;
+	}
+
+	/* check that we did not store this already last boot */
+	attrs_array = fu_history_get_security_attrs(self->history, 1, error);
+	if (attrs_array == NULL) {
+		g_prefix_error(error, "failed to get historical attr: ");
+		return FALSE;
+	}
+	if (attrs_array->len > 0) {
+		FuSecurityAttrs *attrs_tmp = g_ptr_array_index(attrs_array, 0);
+		if (fu_security_attrs_equal(attrs_tmp, self->host_security_attrs)) {
+			g_debug("skipping writing HSI attrs to database as unchanged");
+			return TRUE;
+		}
+	}
+
+	/* write new values */
+	if (!fu_history_add_security_attribute(self->history,
+					       json,
+					       self->host_security_id,
+					       error)) {
+		g_prefix_error(error, "failed to write to DB: ");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_engine_ensure_security_attrs(FuEngine *self)
 {
@@ -6043,7 +6154,6 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autofree gchar *data = NULL;
 
 	/* already valid */
 	if (self->host_security_id != NULL)
@@ -6089,19 +6199,9 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	g_free(self->host_security_id);
 	self->host_security_id = fu_engine_attrs_calculate_hsi_for_chassis(self);
 
-	/* Convert Security attribute to json string */
-	data = fu_security_attrs_to_json_string(self->host_security_attrs, &error);
-
-	/* Store string to db */
-	if (data == NULL) {
-		g_warning("Fail to convert security attributes to string: %s", error->message);
-	} else {
-		if (fu_history_add_security_attribute(self->history,
-						      data,
-						      self->host_security_id,
-						      &error) == FALSE)
-			g_warning("Fail to write security attribute to DB: %s", error->message);
-	}
+	/* record into the database (best effort) */
+	if (!fu_engine_record_security_attrs(self, &error))
+		g_warning("failed to record HSI attributes: %s", error->message);
 }
 
 const gchar *
@@ -6118,6 +6218,31 @@ fu_engine_get_host_security_attrs(FuEngine *self)
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 	fu_engine_ensure_security_attrs(self);
 	return g_object_ref(self->host_security_attrs);
+}
+
+FuSecurityAttrs *
+fu_engine_get_host_security_events(FuEngine *self, guint limit, GError **error)
+{
+	g_autoptr(FuSecurityAttrs) events = fu_security_attrs_new();
+	g_autoptr(GPtrArray) attrs_array = NULL;
+
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+
+	attrs_array = fu_history_get_security_attrs(self->history, limit, error);
+	if (attrs_array == NULL)
+		return NULL;
+	for (guint i = 1; i < attrs_array->len; i++) {
+		FuSecurityAttrs *attrs_new = g_ptr_array_index(attrs_array, i - 1);
+		FuSecurityAttrs *attrs_old = g_ptr_array_index(attrs_array, i - 0);
+		g_autoptr(GPtrArray) diffs = fu_security_attrs_compare(attrs_old, attrs_new);
+		for (guint j = 0; j < diffs->len; j++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index(diffs, j);
+			fu_security_attrs_append_internal(events, attr);
+		}
+	}
+
+	/* success */
+	return g_steal_pointer(&events);
 }
 
 gboolean
@@ -6568,9 +6693,9 @@ fu_engine_ensure_client_certificate(FuEngine *self)
 static void
 fu_engine_context_set_battery_threshold(FuContext *ctx)
 {
-	const gchar *vendor;
 	guint64 minimum_battery;
 	g_autofree gchar *battery_str = NULL;
+	g_autofree gchar *vendor = NULL;
 
 	vendor = fu_context_get_hwid_replace_value(ctx, FU_HWIDS_KEY_MANUFACTURER, NULL);
 	if (vendor != NULL) {
@@ -6588,6 +6713,22 @@ fu_engine_context_set_battery_threshold(FuContext *ctx)
 		minimum_battery = MINIMUM_BATTERY_PERCENTAGE_FALLBACK;
 	}
 	fu_context_set_battery_threshold(ctx, minimum_battery);
+}
+
+static gboolean
+fu_engine_ensure_paths_exist(GError **error)
+{
+	FuPathKind path_kinds[] = {FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
+				   FU_PATH_KIND_LOCALSTATEDIR_METADATA,
+				   FU_PATH_KIND_LOCALSTATEDIR_REMOTES,
+				   FU_PATH_KIND_CACHEDIR_PKG,
+				   FU_PATH_KIND_LAST};
+	for (guint i = 0; path_kinds[i] != FU_PATH_KIND_LAST; i++) {
+		g_autofree gchar *fn = fu_common_get_path(path_kinds[i]);
+		if (!fu_common_mkdir(fn, error))
+			return FALSE;
+	}
+	return TRUE;
 }
 
 /**
@@ -6610,7 +6751,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 #ifndef _WIN32
 	g_autoptr(GError) error_local = NULL;
 #endif
-
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -6645,6 +6785,11 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if (self->host_machine_id == NULL)
 		g_debug("failed to build machine-id: %s", error_local->message);
 #endif
+
+	/* ensure these exist before starting */
+	if (!fu_engine_ensure_paths_exist(error))
+		return FALSE;
+
 	/* read config file */
 	if (!fu_config_load(self->config, error)) {
 		g_prefix_error(error, "Failed to load config: ");

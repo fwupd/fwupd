@@ -300,10 +300,6 @@ msgstr "Susieti naują branduolio tvarkyklę"
 msgid "Build firmware using a sandbox"
 msgstr "Sukurti programinę aparatinę įrangą, naudojant smėliadėžę"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-msgstr "KONTROLINĖ-SUMA1[,KONTROLINĖ-SUMA2][,KONTROLINĖ-SUMA3]"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Atsisakyti"
@@ -742,9 +738,6 @@ msgstr "Įdiegti įrenginyje programinės aparatinės įrangos dvejetainį išpl
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Įdiegti šioje aparatinėje įrangoje programinės aparatinės įrangos failą"
-
-msgid "Install old version of system firmware"
-msgstr "Įdiegti senąją sistemos programinės aparatinės įrangos versiją"
 
 msgid "Install signed device firmware"
 msgstr "Įdiegti pasirašytą įrenginio programinę aparatinę įrangą"

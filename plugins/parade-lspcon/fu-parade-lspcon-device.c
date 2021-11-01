@@ -94,6 +94,7 @@ fu_parade_lspcon_device_finalize(GObject *object)
 {
 	FuParadeLspconDevice *self = FU_PARADE_LSPCON_DEVICE(object);
 	g_free(self->aux_device_name);
+	G_OBJECT_CLASS(fu_parade_lspcon_device_parent_class)->finalize(object);
 }
 
 static gboolean
@@ -591,13 +592,13 @@ fu_parade_lspcon_device_reload(FuDevice *device, GError **error)
 			    self->aux_device_name);
 		return FALSE;
 	}
-	aux_device = fu_udev_device_new(g_steal_pointer(&aux_devices->data));
+	aux_device = fu_udev_device_new_with_context(fu_device_get_context(device),
+						     g_steal_pointer(&aux_devices->data));
 	g_debug("using aux dev %s", fu_udev_device_get_sysfs_path(aux_device));
 
 	/* the following open() requires the device have IDs set */
 	if (!fu_udev_device_set_physical_id(aux_device, "drm_dp_aux_dev", error))
 		return FALSE;
-	fu_device_set_context(FU_DEVICE(aux_device), fu_device_get_context(device));
 
 	/* open device to read version from DPCD */
 	if ((aux_device_locker = fu_device_locker_new(aux_device, error)) == NULL)

@@ -354,9 +354,6 @@ msgstr "在裝置上安裝韌體 blob"
 msgid "Install a firmware file on this hardware"
 msgstr "在此硬體安裝韌體檔案"
 
-msgid "Install old version of system firmware"
-msgstr "安裝舊版本的系統韌體"
-
 msgid "Install signed device firmware"
 msgstr "安裝已簽署的裝置韌體"
 

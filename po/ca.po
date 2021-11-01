@@ -4,7 +4,7 @@
 #
 # Translators:
 # Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2021
-# Robert Antoni Buj i Gelonch <rbuj@fedoraproject.org>, 2017
+# Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2017
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -412,10 +412,6 @@ msgstr "Construeix un fitxer de microprogramari."
 #. TRANSLATORS: command description
 msgid "Build firmware using a sandbox"
 msgstr "Construeix el microprogramari usant un entorn de proves."
-
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-msgstr "SUMA_DE_VERIFICACIÓ_1[,SUMA_DE_VERIFICACIÓ_2][,SUMA_DE_VERIFICACIÓ_3]"
 
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
@@ -1103,9 +1099,6 @@ msgstr "Instal·la un blob de microprogramari en un dispositiu."
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instal·la un fitxer de microprogramari en aquest maquinari."
-
-msgid "Install old version of system firmware"
-msgstr "Instal·la la versió antiga del microprogramari per al sistema"
 
 msgid "Install signed device firmware"
 msgstr "Instal·la microprogramari signat per al dispositiu"
@@ -1966,10 +1959,6 @@ msgstr "Aquesta eina només pot ser usada per l'usuari «root»."
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Aquesta eina llegirà i analitzarà el registre d'esdeveniments TPM des del microprogramari del sistema."
-
-#. TRANSLATORS: command line option
-msgid "Timeout in milliseconds for each parse"
-msgstr "Temps d'espera en mil·lisegons per a cada anàlisi"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

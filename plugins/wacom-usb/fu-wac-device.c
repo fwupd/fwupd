@@ -13,10 +13,11 @@
 #include "fu-wac-common.h"
 #include "fu-wac-device.h"
 #include "fu-wac-firmware.h"
+#include "fu-wac-module-bluetooth-id6.h"
 #include "fu-wac-module-bluetooth.h"
 #include "fu-wac-module-touch.h"
 
-typedef struct __attribute__((packed)) {
+typedef struct {
 	guint32 start_addr;
 	guint32 block_sz;
 	guint16 write_sz; /* bit 15 is write protection flag */
@@ -204,7 +205,7 @@ fu_wac_device_ensure_flash_descriptors(FuWacDevice *self, GError **error)
 	/* parse */
 	for (guint i = 0; i < self->nr_flash_blocks; i++) {
 		FuWacFlashDescriptor *fd = g_new0(FuWacFlashDescriptor, 1);
-		const guint blksz = sizeof(FuWacFlashDescriptor);
+		const guint blksz = 0x0A;
 		if (!fu_common_read_uint32_safe(buf,
 						sz,
 						(i * blksz) + 1,
@@ -702,9 +703,21 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 	}
 	version = fu_common_version_from_uint16(fw_ver, FWUPD_VERSION_FORMAT_BCD);
 
-	/* success */
+	/* Success! But legacy bluetooth can't tell us which module the device needs.
+	 * Initialize both and rely on the firmware update containing the appropriate
+	 * package.
+	 */
 	name = g_strdup_printf("%s [Legacy Bluetooth Module]", fu_device_get_name(FU_DEVICE(self)));
 	module = fu_wac_module_bluetooth_new(fu_device_get_context(FU_DEVICE(self)), usb_device);
+	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
+	fu_device_set_name(FU_DEVICE(module), name);
+	fu_device_set_version(FU_DEVICE(module), version);
+	fu_device_set_version_raw(FU_DEVICE(module), fw_ver);
+
+	name = g_strdup_printf("%s [Legacy Bluetooth Module (ID6)]",
+			       fu_device_get_name(FU_DEVICE(self)));
+	module =
+	    fu_wac_module_bluetooth_id6_new(fu_device_get_context(FU_DEVICE(self)), usb_device);
 	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 	fu_device_set_name(FU_DEVICE(module), name);
 	fu_device_set_version(FU_DEVICE(module), version);
@@ -798,6 +811,17 @@ fu_wac_device_add_modules(FuWacDevice *self, GError **error)
 			module = fu_wac_module_bluetooth_new(fu_device_get_context(FU_DEVICE(self)),
 							     usb_device);
 			name = g_strdup_printf("%s [Bluetooth Module]",
+					       fu_device_get_name(FU_DEVICE(self)));
+			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
+			fu_device_set_name(FU_DEVICE(module), name);
+			fu_device_set_version(FU_DEVICE(module), version);
+			fu_device_set_version_raw(FU_DEVICE(module), ver);
+			break;
+		case FU_WAC_MODULE_FW_TYPE_BLUETOOTH_ID6:
+			module =
+			    fu_wac_module_bluetooth_id6_new(fu_device_get_context(FU_DEVICE(self)),
+							    usb_device);
+			name = g_strdup_printf("%s [Bluetooth Module (ID6)]",
 					       fu_device_get_name(FU_DEVICE(self)));
 			fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
 			fu_device_set_name(FU_DEVICE(module), name);

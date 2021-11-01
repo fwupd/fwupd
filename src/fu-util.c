@@ -79,10 +79,14 @@ struct FuUtilPrivate {
 
 static gboolean
 fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error);
+static FwupdDevice *
+fu_util_get_device_by_id(FuUtilPrivate *priv, const gchar *id, GError **error);
 
 static void
 fu_util_client_notify_cb(GObject *object, GParamSpec *pspec, FuUtilPrivate *priv)
 {
+	if (priv->as_json)
+		return;
 	fu_progressbar_update(priv->progressbar,
 			      fwupd_client_get_status(priv->client),
 			      fwupd_client_get_percentage(priv->client));
@@ -675,8 +679,19 @@ fu_util_display_current_message(FuUtilPrivate *priv)
 	}
 }
 
+typedef struct {
+	guint nr_success;
+	guint nr_failed;
+	JsonBuilder *builder;
+	const gchar *name;
+} FuUtilDeviceTestHelper;
+
 static gboolean
-fu_util_device_test_component(FuUtilPrivate *priv, JsonObject *json_obj, GBytes *fw, GError **error)
+fu_util_device_test_component(FuUtilPrivate *priv,
+			      FuUtilDeviceTestHelper *helper,
+			      JsonObject *json_obj,
+			      GBytes *fw,
+			      GError **error)
 {
 	JsonArray *json_array;
 	const gchar *name = "component";
@@ -684,10 +699,16 @@ fu_util_device_test_component(FuUtilPrivate *priv, JsonObject *json_obj, GBytes 
 	g_autoptr(FwupdDevice) device = NULL;
 
 	/* some elements are optional */
-	if (json_object_has_member(json_obj, "name"))
+	if (json_object_has_member(json_obj, "name")) {
 		name = json_object_get_string_member(json_obj, "name");
-	if (json_object_has_member(json_obj, "protocol"))
+		json_builder_set_member_name(helper->builder, "name");
+		json_builder_add_string_value(helper->builder, name);
+	}
+	if (json_object_has_member(json_obj, "protocol")) {
 		protocol = json_object_get_string_member(json_obj, "protocol");
+		json_builder_set_member_name(helper->builder, "protocol");
+		json_builder_add_string_value(helper->builder, protocol);
+	}
 
 	/* find the device with any of the matching GUIDs */
 	if (!json_object_has_member(json_obj, "guids")) {
@@ -698,6 +719,8 @@ fu_util_device_test_component(FuUtilPrivate *priv, JsonObject *json_obj, GBytes 
 		return FALSE;
 	}
 	json_array = json_object_get_array_member(json_obj, "guids");
+	json_builder_set_member_name(helper->builder, "guids");
+	json_builder_begin_array(helper->builder);
 	for (guint i = 0; i < json_array_get_length(json_array); i++) {
 		JsonNode *json_node = json_array_get_element(json_array, i);
 		FwupdDevice *device_tmp;
@@ -720,38 +743,68 @@ fu_util_device_test_component(FuUtilPrivate *priv, JsonObject *json_obj, GBytes 
 		if (protocol != NULL && !fu_device_has_protocol(device_tmp, protocol))
 			continue;
 		device = g_object_ref(device_tmp);
+		json_builder_add_string_value(helper->builder, guid);
 		break;
 	}
+	json_builder_end_array(helper->builder);
 	if (device == NULL) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "did not find any %s devices with matching GUIDs",
-			    name);
-		return FALSE;
+		if (!priv->as_json) {
+			g_autofree gchar *msg = NULL;
+			/* TRANSLATORS: this is for the device tests */
+			msg = fu_util_term_format(_("Did not find any devices with matching GUIDs"),
+						  FU_UTIL_TERM_COLOR_RED);
+			g_print("%s: %s", name, msg);
+		}
+		json_builder_set_member_name(helper->builder, "error");
+		json_builder_add_string_value(helper->builder, "no devices found");
+		helper->nr_failed++;
+		return TRUE;
 	}
 
 	/* verify the version matches what we expected */
 	if (json_object_has_member(json_obj, "version")) {
 		const gchar *version = json_object_get_string_member(json_obj, "version");
+		json_builder_set_member_name(helper->builder, "version");
+		json_builder_add_string_value(helper->builder, version);
 		if (g_strcmp0(version, fu_device_get_version(device)) != 0) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "version of %s did not match, got %s, expected %s",
-				    name,
+			g_autofree gchar *str = NULL;
+			str = g_strdup_printf("version did not match: got %s, expected %s",
+					      fu_device_get_version(device),
+					      version);
+			if (!priv->as_json) {
+				g_autofree gchar *msg = NULL;
+				g_autofree gchar *str2 = NULL;
+				str2 = g_strdup_printf(
+				    /* TRANSLATORS: this is for the device tests, %1 is the device
+				     * version, %2 is what we expected */
+				    _("The device version did not match: got %s, expected %s"),
 				    fu_device_get_version(device),
 				    version);
-			return FALSE;
+				msg = fu_util_term_format(str2, FU_UTIL_TERM_COLOR_RED);
+				g_print("%s: %s", name, msg);
+			}
+			json_builder_set_member_name(helper->builder, "error");
+			json_builder_add_string_value(helper->builder, str);
+			helper->nr_failed++;
 		}
 	}
 
 	/* success */
+	if (!priv->as_json) {
+		g_autofree gchar *msg = NULL;
+		/* TRANSLATORS: this is for the device tests */
+		msg = fu_util_term_format(_("OK!"), FU_UTIL_TERM_COLOR_GREEN);
+		g_print("%s: %s\n", helper->name, msg);
+	}
+	helper->nr_success++;
 	return TRUE;
 }
 
 static gboolean
-fu_util_device_test_step(FuUtilPrivate *priv, JsonObject *json_obj, GError **error)
+fu_util_device_test_step(FuUtilPrivate *priv,
+			 FuUtilDeviceTestHelper *helper,
+			 JsonObject *json_obj,
+			 GError **error)
 {
 	JsonArray *json_array;
 	const gchar *url;
@@ -759,6 +812,7 @@ fu_util_device_test_step(FuUtilPrivate *priv, JsonObject *json_obj, GError **err
 	g_autofree gchar *filename = NULL;
 	g_autofree gchar *url_safe = NULL;
 	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* download file if required */
 	if (!json_object_has_member(json_obj, "url")) {
@@ -781,6 +835,10 @@ fu_util_device_test_step(FuUtilPrivate *priv, JsonObject *json_obj, GError **err
 	if (filename == NULL)
 		return FALSE;
 
+	/* log */
+	json_builder_set_member_name(helper->builder, "url");
+	json_builder_add_string_value(helper->builder, url_safe);
+
 	/* install file */
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
 	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_REINSTALL;
@@ -789,8 +847,22 @@ fu_util_device_test_step(FuUtilPrivate *priv, JsonObject *json_obj, GError **err
 				  filename,
 				  priv->flags,
 				  NULL,
-				  error))
-		return FALSE;
+				  &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
+			json_builder_set_member_name(helper->builder, "info");
+			json_builder_add_string_value(helper->builder, error_local->message);
+			return TRUE;
+		}
+		if (!priv->as_json) {
+			g_autofree gchar *msg = NULL;
+			msg = fu_util_term_format(error_local->message, FU_UTIL_TERM_COLOR_RED);
+			g_print("%s: %s", helper->name, msg);
+		}
+		json_builder_set_member_name(helper->builder, "error");
+		json_builder_add_string_value(helper->builder, error_local->message);
+		helper->nr_failed++;
+		return TRUE;
+	}
 
 	/* process each step */
 	if (!json_object_has_member(json_obj, "components")) {
@@ -804,21 +876,30 @@ fu_util_device_test_step(FuUtilPrivate *priv, JsonObject *json_obj, GError **err
 	for (guint i = 0; i < json_array_get_length(json_array); i++) {
 		JsonNode *json_node = json_array_get_element(json_array, i);
 		JsonObject *json_obj_tmp = json_node_get_object(json_node);
-		if (!fu_util_device_test_component(priv, json_obj_tmp, fw, error))
+		if (!fu_util_device_test_component(priv, helper, json_obj_tmp, fw, error))
 			return FALSE;
 	}
 
 	/* success */
+	json_builder_set_member_name(helper->builder, "success");
+	json_builder_add_boolean_value(helper->builder, TRUE);
 	return TRUE;
 }
 
 static gboolean
-fu_util_device_test_filename(FuUtilPrivate *priv, const gchar *filename, GError **error)
+fu_util_device_test_filename(FuUtilPrivate *priv,
+			     FuUtilDeviceTestHelper *helper,
+			     const gchar *filename,
+			     GError **error)
 {
 	JsonNode *json_root;
 	JsonObject *json_obj;
 	guint repeat = 1;
 	g_autoptr(JsonParser) parser = json_parser_new();
+
+	/* log */
+	json_builder_set_member_name(helper->builder, "filename");
+	json_builder_add_string_value(helper->builder, filename);
 
 	/* parse JSON */
 	if (!json_parser_load_from_file(parser, filename, error)) {
@@ -842,18 +923,38 @@ fu_util_device_test_filename(FuUtilPrivate *priv, const gchar *filename, GError 
 		return FALSE;
 	}
 
+	/* some elements are optional */
+	if (json_object_has_member(json_obj, "name")) {
+		helper->name = json_object_get_string_member(json_obj, "name");
+		json_builder_set_member_name(helper->builder, "name");
+		json_builder_add_string_value(helper->builder, helper->name);
+	}
+	if (json_object_has_member(json_obj, "interactive")) {
+		gboolean interactive = json_object_get_boolean_member(json_obj, "interactive");
+		json_builder_set_member_name(helper->builder, "interactive");
+		json_builder_add_boolean_value(helper->builder, interactive);
+	}
+
 	/* process each step */
-	if (json_object_has_member(json_obj, "repeat"))
+	if (json_object_has_member(json_obj, "repeat")) {
 		repeat = json_object_get_int_member(json_obj, "repeat");
+		json_builder_set_member_name(helper->builder, "repeat");
+		json_builder_add_int_value(helper->builder, repeat);
+	}
+	json_builder_set_member_name(helper->builder, "steps");
+	json_builder_begin_array(helper->builder);
 	for (guint j = 0; j < repeat; j++) {
 		JsonArray *json_array = json_object_get_array_member(json_obj, "steps");
 		for (guint i = 0; i < json_array_get_length(json_array); i++) {
 			JsonNode *json_node = json_array_get_element(json_array, i);
 			json_obj = json_node_get_object(json_node);
-			if (!fu_util_device_test_step(priv, json_obj, error))
+			json_builder_begin_object(helper->builder);
+			if (!fu_util_device_test_step(priv, helper, json_obj, error))
 				return FALSE;
+			json_builder_end_object(helper->builder);
 		}
 	}
+	json_builder_end_array(helper->builder);
 
 	/* success */
 	return TRUE;
@@ -862,7 +963,11 @@ fu_util_device_test_filename(FuUtilPrivate *priv, const gchar *filename, GError 
 static gboolean
 fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
 {
-	gboolean some_failed = FALSE;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	FuUtilDeviceTestHelper helper = {.nr_failed = 0,
+					 .nr_success = 0,
+					 .builder = builder,
+					 .name = "Unknown"};
 
 	/* required for interactive devices */
 	g_signal_connect(priv->client,
@@ -879,26 +984,42 @@ fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	}
 
+	/* prepare to save the data as JSON */
+	json_builder_begin_object(builder);
+
 	/* process all the files */
+	json_builder_set_member_name(builder, "results");
+	json_builder_begin_array(builder);
 	for (guint i = 0; values[i] != NULL; i++) {
 		g_autoptr(GError) error_local = NULL;
-		g_autofree gchar *str = NULL;
-		if (!fu_util_device_test_filename(priv, values[i], &error_local)) {
-			str = fu_util_term_format(error_local->message, FU_UTIL_TERM_COLOR_RED);
-			g_print("%s: %s\n", values[i], str);
-			some_failed = TRUE;
-			continue;
+		json_builder_begin_object(builder);
+		if (!fu_util_device_test_filename(priv, &helper, values[i], error)) {
+			return FALSE;
 		}
-		str = fu_util_term_format("OK!", FU_UTIL_TERM_COLOR_GREEN);
-		g_print("%s: %s\n", values[i], str);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+
+	/* dump to screen as JSON format */
+	json_builder_end_object(builder);
+	if (priv->as_json) {
+		if (!fu_util_print_builder(builder, error))
+			return FALSE;
 	}
 
 	/* we need all to pass for a zero return code */
-	if (some_failed) {
+	if (helper.nr_failed > 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "Some of the tests failed");
+		return FALSE;
+	}
+	if (helper.nr_success == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "None of the tests were successful");
 		return FALSE;
 	}
 
@@ -944,12 +1065,16 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	const gchar *id;
 	g_autofree gchar *filename = NULL;
+	g_autoptr(FwupdDevice) dev = NULL;
 
 	/* handle both forms */
 	if (g_strv_length(values) == 1) {
 		id = FWUPD_DEVICE_ID_ANY;
 	} else if (g_strv_length(values) == 2) {
 		id = values[1];
+		dev = fu_util_get_device_by_id(priv, id, error);
+		if (dev == NULL)
+			return FALSE;
 	} else {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -972,6 +1097,12 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	filename = fu_util_download_if_required(priv, values[0], error);
 	if (filename == NULL)
 		return FALSE;
+
+	/* detect bitlocker */
+	if (dev != NULL && !priv->no_safety_check && !priv->assume_yes) {
+		if (!fu_util_prompt_warning_fde(dev, error))
+			return FALSE;
+	}
 
 	if (!fwupd_client_install(priv->client, id, filename, priv->flags, NULL, error))
 		return FALSE;
@@ -2022,6 +2153,8 @@ fu_util_update_device_with_release(FuUtilPrivate *priv,
 	if (!priv->no_safety_check && !priv->assume_yes) {
 		if (!fu_util_prompt_warning(dev, rel, fu_util_get_tree_title(priv), error))
 			return FALSE;
+		if (!fu_util_prompt_warning_fde(dev, error))
+			return FALSE;
 		if (!fu_util_prompt_warning_composite(priv, dev, rel, error))
 			return FALSE;
 	}
@@ -2673,12 +2806,21 @@ fu_util_set_approved_firmware(FuUtilPrivate *priv, gchar **values, GError **erro
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_ARGS,
-				    "Invalid arguments: list of checksums expected");
+				    "Invalid arguments: filename or list of checksums expected");
 		return FALSE;
 	}
 
+	/* filename */
+	if (g_file_test(values[0], G_FILE_TEST_EXISTS)) {
+		g_autofree gchar *data = NULL;
+		if (!g_file_get_contents(values[0], &data, NULL, error))
+			return FALSE;
+		checksums = g_strsplit(data, "\n", -1);
+	} else {
+		checksums = g_strsplit(values[0], ",", -1);
+	}
+
 	/* call into daemon */
-	checksums = g_strsplit(values[0], ",", -1);
 	return fwupd_client_set_approved_firmware(priv->client,
 						  checksums,
 						  priv->cancellable,
@@ -2955,10 +3097,12 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 }
 
 static gboolean
-fu_util_security_as_json(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
+fu_util_security_as_json(FuUtilPrivate *priv, GPtrArray *attrs, GPtrArray *events, GError **error)
 {
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 	json_builder_begin_object(builder);
+
+	/* attrs */
 	json_builder_set_member_name(builder, "HostSecurityAttributes");
 	json_builder_begin_array(builder);
 	for (guint i = 0; i < attrs->len; i++) {
@@ -2968,6 +3112,20 @@ fu_util_security_as_json(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 		json_builder_end_object(builder);
 	}
 	json_builder_end_array(builder);
+
+	/* events */
+	if (events->len > 0) {
+		json_builder_set_member_name(builder, "HostSecurityEvents");
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < attrs->len; i++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
+			json_builder_begin_object(builder);
+			fwupd_security_attr_to_json(attr, builder);
+			json_builder_end_object(builder);
+		}
+		json_builder_end_array(builder);
+	}
+
 	json_builder_end_object(builder);
 	return fu_util_print_builder(builder, error);
 }
@@ -2977,6 +3135,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
 	g_autoptr(GPtrArray) attrs = NULL;
+	g_autoptr(GPtrArray) events = NULL;
 	g_autofree gchar *str = NULL;
 
 	/* not ready yet */
@@ -2994,9 +3153,14 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (attrs == NULL)
 		return FALSE;
 
+	/* the "when" */
+	events = fwupd_client_get_host_security_events(priv->client, 10, priv->cancellable, error);
+	if (events == NULL)
+		return FALSE;
+
 	/* not for human consumption */
 	if (priv->as_json)
-		return fu_util_security_as_json(priv, attrs, error);
+		return fu_util_security_as_json(priv, attrs, events, error);
 
 	g_print("%s \033[1m%s\033[0m\n",
 		/* TRANSLATORS: this is a string like 'HSI:2-U' */
@@ -3010,6 +3174,13 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 	str = fu_util_security_attrs_to_string(attrs, flags);
 	g_print("%s\n", str);
+
+	/* events */
+	if (events->len > 0) {
+		g_autofree gchar *estr = fu_util_security_events_to_string(events, flags);
+		if (estr != NULL)
+			g_print("%s\n", estr);
+	}
 
 	/* opted-out */
 	if (priv->no_unreported_check)
@@ -3696,7 +3867,7 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_add(cmd_array,
 			      "set-approved-firmware",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-			      _("CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"),
+			      _("FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"),
 			      /* TRANSLATORS: firmware approved by the admin */
 			      _("Sets the list of approved firmware"),
 			      fu_util_set_approved_firmware);
@@ -3962,7 +4133,7 @@ main(int argc, char *argv[])
 			priv->client,
 			FWUPD_FEATURE_FLAG_CAN_REPORT | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
 			    FWUPD_FEATURE_FLAG_REQUESTS | FWUPD_FEATURE_FLAG_UPDATE_ACTION |
-			    FWUPD_FEATURE_FLAG_DETACH_ACTION,
+			    FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_DETACH_ACTION,
 			priv->cancellable,
 			&error)) {
 			g_printerr("Failed to set front-end features: %s\n", error->message);

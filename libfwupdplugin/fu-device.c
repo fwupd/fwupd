@@ -336,6 +336,40 @@ fu_device_has_internal_flag(FuDevice *self, FuDeviceInternalFlags flag)
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	return (priv->internal_flags & flag) > 0;
 }
+/**
+ * fu_device_get_internal_flags:
+ * @self: a #FuDevice
+ *
+ * Gets all the internal flags.
+ *
+ * Returns: flags, e.g. %FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON
+ *
+ * Since: 1.7.1
+ **/
+FuDeviceInternalFlags
+fu_device_get_internal_flags(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_UNKNOWN);
+	return priv->internal_flags;
+}
+
+/**
+ * fu_device_set_internal_flags:
+ * @self: a #FuDevice
+ * @flags: internal device flags, e.g. %FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON
+ *
+ * Sets the internal flags.
+ *
+ * Since: 1.7.1
+ **/
+void
+fu_device_set_internal_flags(FuDevice *self, FuDeviceInternalFlags flags)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_DEVICE(self));
+	priv->internal_flags = flags;
+}
 
 /**
  * fu_device_add_private_flag:
@@ -1150,7 +1184,8 @@ fu_device_add_child(FuDevice *self, FuDevice *child)
 	fwupd_device_add_child(FWUPD_DEVICE(self), FWUPD_DEVICE(child));
 
 	/* propagate inhibits to children */
-	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN)) {
+	if (priv->inhibits != NULL &&
+	    fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN)) {
 		g_autoptr(GList) values = g_hash_table_get_values(priv->inhibits);
 		for (GList *l = values; l != NULL; l = l->next) {
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
@@ -1763,11 +1798,10 @@ fu_device_has_guid(FuDevice *self, const gchar *guid)
 /**
  * fu_device_add_instance_id_full:
  * @self: a #FuDevice
- * @instance_id: a Instance ID, e.g. `WacomAES`
+ * @instance_id: a instance ID, e.g. `WacomAES`
  * @flags: instance ID flags
  *
  * Adds an instance ID with all parameters set
- *
  *
  * Since: 1.2.9
  **/
@@ -1806,7 +1840,7 @@ fu_device_add_instance_id_full(FuDevice *self,
 /**
  * fu_device_add_instance_id:
  * @self: a #FuDevice
- * @instance_id: the InstanceID, e.g. `PCI\VEN_10EC&DEV_525A`
+ * @instance_id: the instance ID, e.g. `PCI\VEN_10EC&DEV_525A`
  *
  * Adds an instance ID to the device. If the @instance_id argument is already a
  * valid GUID then fu_device_add_guid() should be used instead.
@@ -3208,7 +3242,17 @@ fu_device_set_battery_threshold(FuDevice *self, guint battery_threshold)
 	fu_device_ensure_battery_inhibit(self);
 }
 
-static void
+/**
+ * fu_device_add_string:
+ * @self: a #FuDevice
+ * @idt: indent level
+ * @str: a string to append to
+ *
+ * Add daemon-specific device metadata to an existing string.
+ *
+ * Since: 1.7.1
+ **/
+void
 fu_device_add_string(FuDevice *self, guint idt, GString *str)
 {
 	GPtrArray *children;
@@ -4087,7 +4131,7 @@ fu_device_set_progress(FuDevice *self, FuProgress *progress)
  * fu_device_convert_instance_ids:
  * @self: a #FuDevice
  *
- * Converts all the Device Instance IDs added using fu_device_add_instance_id()
+ * Converts all the Device instance IDs added using fu_device_add_instance_id()
  * into actual GUIDs, **unless** %FU_DEVICE_INTERNAL_FLAG_NO_AUTO_INSTANCE_IDS has
  * been set.
  *

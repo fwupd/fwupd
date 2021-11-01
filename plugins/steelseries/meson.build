@@ -9,7 +9,9 @@ shared_module('fu_plugin_steelseries',
   fu_hash,
   sources : [
     'fu-plugin-steelseries.c',
+    'fu-steelseries-common.c',
     'fu-steelseries-device.c',
+    'fu-steelseries-gamepad.c',
   ],
   include_directories : [
     root_incdir,
@@ -19,6 +21,7 @@ shared_module('fu_plugin_steelseries',
   install : true,
   install_dir: plugin_dir,
   link_with : [
+    fwupd,
     fwupdplugin,
   ],
   c_args : cargs,

@@ -1111,6 +1111,10 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 		FuDevice *device = fu_util_get_device(priv, values[1], error);
 		if (device == NULL)
 			return FALSE;
+		if (!priv->no_safety_check) {
+			if (!fu_util_prompt_warning_fde(FWUPD_DEVICE(device), error))
+				return FALSE;
+		}
 		devices_possible = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 		g_ptr_array_add(devices_possible, device);
 	} else {
@@ -1337,6 +1341,8 @@ fu_util_update_all(FuUtilPrivate *priv, GError **error)
 		if (!priv->no_safety_check) {
 			if (!fu_util_prompt_warning(dev, rel, fu_util_get_tree_title(priv), error))
 				return FALSE;
+			if (!fu_util_prompt_warning_fde(dev, error))
+				return FALSE;
 		}
 
 		if (!fu_util_install_release(priv, rel, &error_local)) {
@@ -1364,6 +1370,12 @@ fu_util_update_by_id(FuUtilPrivate *priv, const gchar *id, GError **error)
 	rels = fu_engine_get_upgrades(priv->engine, priv->request, fu_device_get_id(dev), error);
 	if (rels == NULL)
 		return FALSE;
+
+	/* detect bitlocker */
+	if (!priv->no_safety_check) {
+		if (!fu_util_prompt_warning_fde(FWUPD_DEVICE(dev), error))
+			return FALSE;
+	}
 	rel = g_ptr_array_index(rels, 0);
 	if (!fu_util_install_release(priv, rel, error))
 		return FALSE;
@@ -2612,7 +2624,9 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
 	g_autoptr(FuSecurityAttrs) attrs = NULL;
+	g_autoptr(FuSecurityAttrs) events = NULL;
 	g_autoptr(GPtrArray) items = NULL;
+	g_autoptr(GPtrArray) events_array = NULL;
 	g_autofree gchar *str = NULL;
 
 	/* not ready yet */
@@ -2654,6 +2668,19 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	items = fu_security_attrs_get_all(attrs);
 	str = fu_util_security_attrs_to_string(items, flags);
 	g_print("%s\n", str);
+
+	/* print the "when" */
+	events = fu_engine_get_host_security_events(priv->engine, 10, error);
+	if (events == NULL)
+		return FALSE;
+	events_array = fu_security_attrs_get_all(attrs);
+	if (events_array->len > 0) {
+		g_autofree gchar *estr = fu_util_security_events_to_string(events_array, flags);
+		if (estr != NULL)
+			g_print("%s\n", estr);
+	}
+
+	/* success */
 	return TRUE;
 }
 
@@ -3094,7 +3121,7 @@ main(int argc, char *argv[])
 	priv->loop = g_main_loop_new(priv->main_ctx, FALSE);
 	priv->progressbar = fu_progressbar_new();
 	fu_progressbar_set_main_context(priv->progressbar, priv->main_ctx);
-	priv->request = fu_engine_request_new();
+	priv->request = fu_engine_request_new(FU_ENGINE_REQUEST_KIND_ACTIVE);
 
 	/* when not using the engine */
 	priv->progress = fu_progress_new(G_STRLOC);
@@ -3378,10 +3405,10 @@ main(int argc, char *argv[])
 		fu_progressbar_set_interactive(priv->progressbar, FALSE);
 	} else {
 		/* set our implemented feature set */
-		fu_engine_request_set_feature_flags(priv->request,
-						    FWUPD_FEATURE_FLAG_DETACH_ACTION |
-							FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
-							FWUPD_FEATURE_FLAG_UPDATE_ACTION);
+		fu_engine_request_set_feature_flags(
+		    priv->request,
+		    FWUPD_FEATURE_FLAG_DETACH_ACTION | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
+			FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_UPDATE_ACTION);
 	}
 
 	/* get a list of the commands */

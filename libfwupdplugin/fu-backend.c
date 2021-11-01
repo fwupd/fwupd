@@ -326,6 +326,15 @@ fu_backend_init(FuBackend *self)
 }
 
 static void
+fu_backend_dispose(GObject *object)
+{
+	FuBackend *self = FU_BACKEND(object);
+	FuBackendPrivate *priv = GET_PRIVATE(self);
+	g_hash_table_remove_all(priv->devices);
+	G_OBJECT_CLASS(fu_backend_parent_class)->dispose(object);
+}
+
+static void
 fu_backend_finalize(GObject *object)
 {
 	FuBackend *self = FU_BACKEND(object);
@@ -346,6 +355,7 @@ fu_backend_class_init(FuBackendClass *klass)
 	object_class->get_property = fu_backend_get_property;
 	object_class->set_property = fu_backend_set_property;
 	object_class->finalize = fu_backend_finalize;
+	object_class->dispose = fu_backend_dispose;
 
 	pspec =
 	    g_param_spec_string("name",

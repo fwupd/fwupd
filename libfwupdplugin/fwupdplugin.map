@@ -924,3 +924,24 @@ LIBFWUPDPLUGIN_1.7.0 {
     fu_progress_step_done;
   local: *;
 } LIBFWUPDPLUGIN_1.6.2;
+
+LIBFWUPDPLUGIN_1.7.1 {
+  global:
+    fu_cfi_device_get_cmd;
+    fu_cfi_device_get_flash_id;
+    fu_cfi_device_get_size;
+    fu_cfi_device_get_type;
+    fu_cfi_device_new;
+    fu_cfi_device_set_flash_id;
+    fu_cfi_device_set_size;
+    fu_common_check_full_disk_encryption;
+    fu_common_crc8_full;
+    fu_common_mkdir;
+    fu_device_add_string;
+    fu_device_get_internal_flags;
+    fu_device_set_internal_flags;
+    fu_security_attrs_append_internal;
+    fu_udev_device_new_with_context;
+    fu_usb_device_new_with_context;
+  local: *;
+} LIBFWUPDPLUGIN_1.7.0;

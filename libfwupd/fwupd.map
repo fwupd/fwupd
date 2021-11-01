@@ -709,3 +709,20 @@ LIBFWUPD_1.7.0 {
     fwupd_security_attr_has_guid;
   local: *;
 } LIBFWUPD_1.6.2;
+
+LIBFWUPD_1.7.1 {
+  global:
+    fwupd_client_add_hint;
+    fwupd_client_get_host_security_events;
+    fwupd_client_get_host_security_events_async;
+    fwupd_client_get_host_security_events_finish;
+    fwupd_security_attr_copy;
+    fwupd_security_attr_flag_from_string;
+    fwupd_security_attr_from_json;
+    fwupd_security_attr_get_created;
+    fwupd_security_attr_get_result_fallback;
+    fwupd_security_attr_result_from_string;
+    fwupd_security_attr_set_created;
+    fwupd_security_attr_set_result_fallback;
+  local: *;
+} LIBFWUPD_1.7.0;

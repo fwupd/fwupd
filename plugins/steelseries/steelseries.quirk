@@ -1,5 +1,50 @@
 # Rival 100
 [USB\VID_1038&PID_1702]
 Plugin = steelseries
+GType = FuSteelseriesDevice
 Summary = An optical gaming mouse
 Icon = input-mouse
+
+[USB\VID_1038&PID_1430]
+Plugin = steelseries
+GType = FuSteelseriesGamepad
+Name = Stratus Duo RX
+Icon = input-gaming
+CounterpartGuid = USB\VID_1038&PID_1432
+SteelSeriesDeviceKind = gamepad-dongle
+
+[USB\VID_1038&PID_1431]
+Plugin = steelseries
+GType = FuSteelseriesGamepad
+Name = Stratus Duo Gamepad
+Icon = input-gaming
+CounterpartGuid = USB\VID_1038&PID_1433
+
+[USB\VID_1038&PID_1432]
+Plugin = steelseries
+GType = FuSteelseriesGamepad
+Name = Stratus Duo RX bootloader
+CounterpartGuid = USB\VID_1038&PID_1430
+Flags = is-bootloader
+SteelSeriesDeviceKind = gamepad-dongle
+
+[USB\VID_1038&PID_1433]
+Plugin = steelseries
+GType = FuSteelseriesGamepad
+Name = Stratus Duo bootloader
+CounterpartGuid = USB\VID_1038&PID_1431
+Flags = is-bootloader
+
+[USB\VID_1038&PID_1434]
+Plugin = steelseries
+GType = FuSteelseriesGamepad
+Name = Proton gamepad
+Icon = input-gaming
+CounterpartGuid = USB\VID_1038&PID_1435
+
+[USB\VID_1038&PID_1435]
+Plugin = steelseries
+GType = FuSteelseriesGamepad
+Name = Proton bootloader
+CounterpartGuid = USB\VID_1038&PID_1434
+Flags = is-bootloader

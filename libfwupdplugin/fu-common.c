@@ -146,6 +146,38 @@ fu_common_get_files_recursive(const gchar *path, GError **error)
 		return NULL;
 	return g_steal_pointer(&files);
 }
+
+/**
+ * fu_common_mkdir:
+ * @dirname: a directory name
+ * @error: (nullable): optional return location for an error
+ *
+ * Creates any required directories, including any parent directories.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.7.1
+ **/
+gboolean
+fu_common_mkdir(const gchar *dirname, GError **error)
+{
+	g_return_val_if_fail(dirname != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!g_file_test(dirname, G_FILE_TEST_IS_DIR))
+		g_debug("creating path %s", dirname);
+	if (g_mkdir_with_parents(dirname, 0755) == -1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Failed to create '%s': %s",
+			    dirname,
+			    g_strerror(errno));
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /**
  * fu_common_mkdir_parent:
  * @filename: a full pathname
@@ -166,18 +198,7 @@ fu_common_mkdir_parent(const gchar *filename, GError **error)
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	parent = g_path_get_dirname(filename);
-	if (!g_file_test(parent, G_FILE_TEST_IS_DIR))
-		g_debug("creating path %s", parent);
-	if (g_mkdir_with_parents(parent, 0755) == -1) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Failed to create '%s': %s",
-			    parent,
-			    g_strerror(errno));
-		return FALSE;
-	}
-	return TRUE;
+	return fu_common_mkdir(parent, error);
 }
 
 /**
@@ -1260,6 +1281,20 @@ fu_common_get_path(FuPathKind path_kind)
 			return g_build_filename(tmp, NULL);
 		basedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 		return g_build_filename(basedir, "quirks.d", NULL);
+	/* /var/lib/fwupd/metadata */
+	case FU_PATH_KIND_LOCALSTATEDIR_METADATA:
+		tmp = g_getenv("FWUPD_LOCALSTATEDIR_METADATA");
+		if (tmp != NULL)
+			return g_build_filename(tmp, NULL);
+		basedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+		return g_build_filename(basedir, "metadata", NULL);
+	/* /var/lib/fwupd/remotes.d */
+	case FU_PATH_KIND_LOCALSTATEDIR_REMOTES:
+		tmp = g_getenv("FWUPD_LOCALSTATEDIR_REMOTES");
+		if (tmp != NULL)
+			return g_build_filename(tmp, NULL);
+		basedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+		return g_build_filename(basedir, "remotes.d", NULL);
 	/* /var/cache/fwupd */
 	case FU_PATH_KIND_CACHEDIR_PKG:
 		tmp = g_getenv("CACHE_DIRECTORY");
@@ -2920,6 +2955,46 @@ fu_common_convert_to_gpt_type(const gchar *type)
 }
 
 /**
+ * fu_common_check_full_disk_encryption:
+ * @error: (nullable): optional return location for an error
+ *
+ * Checks that all FDE volumes are not going to be affected by a firmware update. If unsure,
+ * return with failure and let the user decide.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.7.1
+ **/
+gboolean
+fu_common_check_full_disk_encryption(GError **error)
+{
+	g_autoptr(GPtrArray) devices = NULL;
+
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	devices = fu_common_get_block_devices(error);
+	if (devices == NULL)
+		return FALSE;
+	for (guint i = 0; i < devices->len; i++) {
+		GDBusProxy *proxy = g_ptr_array_index(devices, i);
+		g_autoptr(GVariant) id_type = g_dbus_proxy_get_cached_property(proxy, "IdType");
+		g_autoptr(GVariant) device = g_dbus_proxy_get_cached_property(proxy, "Device");
+		if (id_type == NULL || device == NULL)
+			continue;
+		if (g_strcmp0(g_variant_get_string(id_type, NULL), "BitLocker") == 0) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_WOULD_BLOCK,
+				    "%s device %s is encrypted",
+				    g_variant_get_string(id_type, NULL),
+				    g_variant_get_bytestring(device));
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+/**
  * fu_common_get_volumes_by_kind:
  * @kind: a volume kind, typically a GUID
  * @error: (nullable): optional return location for an error
@@ -2994,11 +3069,14 @@ fu_common_get_volumes_by_kind(const gchar *kind, GError **error)
 
 		/* convert reported type to GPT type */
 		type_str = fu_common_convert_to_gpt_type(type_str);
-		g_debug("device %s, type: %s, internal: %d, fs: %s",
-			g_dbus_proxy_get_object_path(proxy_blk),
-			type_str,
-			fu_volume_is_internal(vol),
-			fu_volume_get_id_type(vol));
+		if (g_getenv("FWUPD_VERBOSE") != NULL) {
+			g_autofree gchar *id_type = fu_volume_get_id_type(vol);
+			g_debug("device %s, type: %s, internal: %d, fs: %s",
+				g_dbus_proxy_get_object_path(proxy_blk),
+				type_str,
+				fu_volume_is_internal(vol),
+				id_type);
+		}
 		if (g_strcmp0(type_str, kind) != 0)
 			continue;
 		g_ptr_array_add(volumes, g_steal_pointer(&vol));
@@ -3213,6 +3291,34 @@ fu_common_get_esp_for_path(const gchar *esp_path, GError **error)
 }
 
 /**
+ * fu_common_crc8_full:
+ * @buf: memory buffer
+ * @bufsz: size of @buf
+ * @crc_init: initial CRC value, typically 0x00
+ * @polynomial: CRC polynomial, e.g. 0x07 for CCITT
+ *
+ * Returns the cyclic redundancy check value for the given memory buffer.
+ *
+ * Returns: CRC value
+ *
+ * Since: 1.7.1
+ **/
+guint8
+fu_common_crc8_full(const guint8 *buf, gsize bufsz, guint8 crc_init, guint8 polynomial)
+{
+	guint32 crc = crc_init;
+	for (gsize j = bufsz; j > 0; j--) {
+		crc ^= (*(buf++) << 8);
+		for (guint32 i = 8; i; i--) {
+			if (crc & 0x8000)
+				crc ^= ((polynomial | 0x100) << 7);
+			crc <<= 1;
+		}
+	}
+	return ~((guint8)(crc >> 8));
+}
+
+/**
  * fu_common_crc8:
  * @buf: memory buffer
  * @bufsz: size of @buf
@@ -3226,16 +3332,7 @@ fu_common_get_esp_for_path(const gchar *esp_path, GError **error)
 guint8
 fu_common_crc8(const guint8 *buf, gsize bufsz)
 {
-	guint32 crc = 0;
-	for (gsize j = bufsz; j > 0; j--) {
-		crc ^= (*(buf++) << 8);
-		for (guint32 i = 8; i; i--) {
-			if (crc & 0x8000)
-				crc ^= (0x1070 << 3);
-			crc <<= 1;
-		}
-	}
-	return ~((guint8)(crc >> 8));
+	return fu_common_crc8_full(buf, bufsz, 0x00, 0x07);
 }
 
 /**

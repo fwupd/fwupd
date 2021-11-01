@@ -876,10 +876,6 @@ msgstr "Cet outil permet à un administrateur de déboguer l'opération UpdateCa
 msgid "This tool can only be used by the root user"
 msgstr "Cet outil ne peut être utilisé que par l'utilisateur root"
 
-#. TRANSLATORS: command line option
-msgid "Timeout in milliseconds for each parse"
-msgstr "Délai en millisecondes pour chaque analyse"
-
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
 msgstr "Type"

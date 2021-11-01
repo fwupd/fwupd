@@ -181,9 +181,11 @@ fu_realtek_mst_device_use_aux_dev(FuRealtekMstDevice *self, GError **error)
 	 * I2C bus that runs over DPDDC on the port represented by the
 	 * drm_dp_aux_dev */
 	for (GList *element = matches; element != NULL; element = element->next) {
-		g_autoptr(FuUdevDevice) device = fu_udev_device_new(element->data);
+		g_autoptr(FuUdevDevice) device = NULL;
 		g_autoptr(GPtrArray) i2c_devices = NULL;
 
+		device = fu_udev_device_new_with_context(fu_device_get_context(FU_DEVICE(self)),
+							 element->data);
 		if (bus_device != NULL) {
 			g_debug("Ignoring additional aux device %s",
 				fu_udev_device_get_sysfs_path(device));
@@ -221,9 +223,11 @@ fu_realtek_mst_device_use_drm_card(FuRealtekMstDevice *self, GError **error)
 	g_udev_enumerator_add_match_name(enumerator, self->dp_card_kernel_name);
 	drm_devices = g_udev_enumerator_execute(enumerator);
 	for (GList *element = drm_devices; element != NULL; element = element->next) {
-		g_autoptr(FuUdevDevice) drm_device = fu_udev_device_new(element->data);
+		g_autoptr(FuUdevDevice) drm_device = NULL;
 		g_autoptr(GPtrArray) i2c_devices = NULL;
 
+		drm_device = fu_udev_device_new_with_context(fu_device_get_context(FU_DEVICE(self)),
+							     element->data);
 		if (bus_device != NULL) {
 			g_debug("Ignoring additional drm device %s",
 				fu_udev_device_get_sysfs_path(drm_device));

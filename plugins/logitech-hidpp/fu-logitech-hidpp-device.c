@@ -84,6 +84,17 @@ fu_logitech_hidpp_device_get_model_id(FuLogitechHidPpDevice *self)
 	return priv->model_id;
 }
 
+static void
+fu_logitech_hidpp_device_set_model_id(FuLogitechHidPpDevice *self, const gchar *model_id)
+{
+	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_HIDPP_DEVICE(self));
+	if (g_strcmp0(priv->model_id, model_id) == 0)
+		return;
+	g_free(priv->model_id);
+	priv->model_id = g_strdup(model_id);
+}
+
 static const gchar *
 fu_logitech_hidpp_device_get_icon(FuLogitechHidPpDeviceKind kind)
 {
@@ -498,7 +509,7 @@ fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidPpDevice *self, GError **er
 	/* ignore extendedModelID in data[13] */
 	for (guint i = 7; i < 13; i++)
 		g_string_append_printf(str, "%02X", msg->data[i]);
-	priv->model_id = g_string_free(g_steal_pointer(&str), FALSE);
+	fu_logitech_hidpp_device_set_model_id(self, str->str);
 
 	/* add one more instance ID */
 	devid = g_strdup_printf("HIDRAW\\VEN_%04X&MOD_%s",
@@ -1295,9 +1306,8 @@ fu_logitech_hidpp_device_set_quirk_kv(FuDevice *device,
 				      GError **error)
 {
 	FuLogitechHidPpDevice *self = FU_HIDPP_DEVICE(device);
-	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
 	if (g_strcmp0(key, "LogitechHidppModelId") == 0) {
-		priv->model_id = g_strdup(value);
+		fu_logitech_hidpp_device_set_model_id(self, value);
 		return TRUE;
 	}
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");

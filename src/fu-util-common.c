@@ -853,15 +853,22 @@ fu_util_warning_box(const gchar *title, const gchar *body, guint width)
 
 	/* optional body */
 	if (body != NULL) {
+		gboolean has_nonempty = FALSE;
 		g_auto(GStrv) split = g_strsplit(body, "\n", -1);
 		for (guint i = 0; split[i] != NULL; i++) {
 			g_autoptr(GPtrArray) lines = fu_util_strsplit_words(split[i], width - 4);
-			if (lines == NULL)
+			if (lines == NULL) {
+				if (has_nonempty) {
+					fu_util_warning_box_line("║ ", NULL, " ║", " ", width);
+					has_nonempty = FALSE;
+				}
 				continue;
+			}
 			for (guint j = 0; j < lines->len; j++) {
 				const gchar *line = g_ptr_array_index(lines, j);
 				fu_util_warning_box_line("║ ", line, " ║", " ", width);
 			}
+			has_nonempty = TRUE;
 		}
 	}
 
@@ -1206,6 +1213,10 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		 * or is out of wireless range */
 		return _("Device is unreachable");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_AFFECTS_FDE) {
+		/* TRANSLATORS: we might ask the user the recovery key when next booting Windows */
+		return _("Full disk encryption secrets may be invalidated when updating");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
 		/* skip */
 		return NULL;
@@ -1547,8 +1558,6 @@ fu_util_plugin_flag_to_cli_text(FwupdPluginFlags plugin_flag)
 	case FWUPD_PLUGIN_FLAG_EFIVAR_NOT_MOUNTED:
 	case FWUPD_PLUGIN_FLAG_ESP_NOT_FOUND:
 	case FWUPD_PLUGIN_FLAG_KERNEL_TOO_OLD:
-		return fu_util_term_format(fu_util_plugin_flag_to_string(plugin_flag),
-					   FU_UTIL_TERM_COLOR_RED);
 	default:
 		break;
 	}
@@ -1950,6 +1959,154 @@ fu_security_attr_append_str(FwupdSecurityAttr *attr,
 	g_string_append_printf(str, "\n");
 }
 
+static gchar *
+fu_util_security_event_to_string(FwupdSecurityAttr *attr)
+{
+	struct {
+		const gchar *appstream_id;
+		FwupdSecurityAttrResult result_old;
+		FwupdSecurityAttrResult result_new;
+		const gchar *text;
+	} items[] = {{"org.fwupd.hsi.Iommu",
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("IOMMU device protection enabled")},
+		     {"org.fwupd.hsi.Iommu",
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
+		      /* TRANSLATORS: HSI event title */
+		      _("IOMMU device protection disabled")},
+		     /* ------------------------------------------*/
+		     {"org.fwupd.hsi.Fwupd.Plugins",
+		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
+		      NULL},
+		     {"org.fwupd.hsi.Fwupd.Plugins",
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
+		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
+		      NULL},
+		     {"org.fwupd.hsi.Fwupd.Plugins",
+		      FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      NULL},
+		     /* ------------------------------------------*/
+		     {"org.fwupd.hsi.Kernel.Lockdown",
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("Kernel lockdown disabled")},
+		     {"org.fwupd.hsi.Kernel.Lockdown",
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("Kernel lockdown enabled")},
+		     /* ------------------------------------------*/
+		     {"org.fwupd.hsi.Uefi.SecureBoot",
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("SecureBoot disabled")},
+		     {"org.fwupd.hsi.Uefi.SecureBoot",
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("Secure Boot enabled")},
+		     {NULL, 0, 0, NULL}};
+
+	/* sanity check */
+	if (fwupd_security_attr_get_appstream_id(attr) == NULL)
+		return NULL;
+	if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN &&
+	    fwupd_security_attr_get_result_fallback(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN)
+		return NULL;
+
+	/* look for prepared text */
+	for (guint i = 0; items[i].appstream_id != NULL; i++) {
+		if (g_strcmp0(fwupd_security_attr_get_appstream_id(attr), items[i].appstream_id) ==
+			0 &&
+		    fwupd_security_attr_get_result(attr) == items[i].result_new &&
+		    fwupd_security_attr_get_result_fallback(attr) == items[i].result_old)
+			return g_strdup(items[i].text);
+	}
+
+	/* disappeared */
+	if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		return g_strdup_printf(
+		    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
+		       %2 refers to a result value, e.g. "Invalid" */
+		    _("%s disappeared: %s"),
+		    fu_security_attr_get_name(attr),
+		    fu_security_attr_result_to_string(
+			fwupd_security_attr_get_result_fallback(attr)));
+	}
+
+	/* appeared */
+	if (fwupd_security_attr_get_result_fallback(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		return g_strdup_printf(
+		    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+		       %2 refers to a result value, e.g. "Invalid" */
+		    _("%s appeared: %s"),
+		    fu_security_attr_get_name(attr),
+		    fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
+	}
+
+	/* fall back to something sensible */
+	return g_strdup_printf(
+	    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform key".
+	     * %2 and %3 refer to results value, e.g. "Valid" and "Invalid" */
+	    _("%s changed: %s → %s"),
+	    fu_security_attr_get_name(attr),
+	    fu_security_attr_result_to_string(fwupd_security_attr_get_result_fallback(attr)),
+	    fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
+}
+
+gchar *
+fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags strflags)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	/* debugging */
+	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+		for (guint i = 0; i < events->len; i++) {
+			FwupdSecurityAttr *attr = g_ptr_array_index(events, i);
+			g_autofree gchar *tmp = fwupd_security_attr_to_string(attr);
+			g_debug("%s", tmp);
+		}
+	}
+
+	for (guint i = 0; i < events->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(events, i);
+		g_autoptr(GDateTime) date = NULL;
+		g_autofree gchar *dtstr = NULL;
+		g_autofree gchar *check = NULL;
+		g_autofree gchar *eventstr = NULL;
+
+		date = g_date_time_new_from_unix_utc((gint64)fwupd_security_attr_get_created(attr));
+		dtstr = g_date_time_format(date, "%F %T");
+		eventstr = fu_util_security_event_to_string(attr);
+		if (eventstr == NULL)
+			continue;
+		if (fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS)) {
+			check = fu_util_term_format("✔", FU_UTIL_TERM_COLOR_GREEN);
+		} else {
+			check = fu_util_term_format("✘", FU_UTIL_TERM_COLOR_RED);
+		}
+		if (str->len == 0) {
+			/* TRANSLATORS: title for host security events */
+			g_string_append_printf(str, "%s\n", _("Host Security Events"));
+		}
+		g_string_append_printf(str, "  %s:  %s %s\n", dtstr, check, eventstr);
+	}
+
+	/* no output required */
+	if (str->len == 0)
+		return NULL;
+
+	/* success */
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
 gchar *
 fu_util_security_attrs_to_string(GPtrArray *attrs, FuSecurityAttrToStringFlags strflags)
 {
@@ -2227,6 +2384,40 @@ fu_util_switch_branch_warning(FwupdDevice *dev,
 					    "Declined branch switch");
 			return FALSE;
 		}
+	}
+	return TRUE;
+}
+
+gboolean
+fu_util_prompt_warning_fde(FwupdDevice *dev, GError **error)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_AFFECTS_FDE))
+		return TRUE;
+
+	g_string_append(
+	    str,
+	    /* TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM */
+	    _("Some of the platform secrets may be invalidated when updating this firmware."));
+	g_string_append(str, " ");
+	g_string_append(str,
+			/* TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+			   metal thing */
+			_("Please ensure you have the volume recovery key before continuing."));
+	/* TRANSLATORS: title text, shown as a warning */
+	fu_util_warning_box(_("Full Disk Encryption Detected"), str->str, 80);
+
+	/* ask for confirmation */
+	g_print("\n%s [Y|n]: ",
+		/* TRANSLATORS: prompt to apply the update */
+		_("Perform operation?"));
+	if (!fu_util_prompt_for_boolean(TRUE)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "Request canceled");
+		return FALSE;
 	}
 	return TRUE;
 }

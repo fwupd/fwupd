@@ -169,7 +169,6 @@ fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **erro
 	while ((tmp = g_dir_read_name(dir)) != NULL) {
 		g_autofree gchar *filename = g_build_filename(path_remotes, tmp, NULL);
 		g_autoptr(FwupdRemote) remote = fwupd_remote_new();
-		g_autofree gchar *localstatedir = NULL;
 		g_autofree gchar *remotesdir = NULL;
 
 		/* skip invalid files */
@@ -179,8 +178,7 @@ fu_remote_list_add_for_path(FuRemoteList *self, const gchar *path, GError **erro
 		}
 
 		/* set directory to store data */
-		localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
-		remotesdir = g_build_filename(localstatedir, "remotes.d", NULL);
+		remotesdir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_METADATA);
 		fwupd_remote_set_remotes_dir(remote, remotesdir);
 
 		/* load from keyfile */
@@ -251,6 +249,7 @@ fu_remote_list_set_key_value(FuRemoteList *self,
 {
 	FwupdRemote *remote;
 	const gchar *filename;
+	g_autofree gchar *value_old = NULL;
 	g_autoptr(GKeyFile) keyfile = g_key_file_new();
 
 	/* check remote is valid */
@@ -270,6 +269,9 @@ fu_remote_list_set_key_value(FuRemoteList *self,
 		g_prefix_error(error, "failed to load %s: ", filename);
 		return FALSE;
 	}
+	value_old = g_key_file_get_string(keyfile, "fwupd Remote", key, NULL);
+	if (g_strcmp0(value_old, value) == 0)
+		return TRUE;
 	g_key_file_set_string(keyfile, "fwupd Remote", key, value);
 	if (!g_key_file_save_to_file(keyfile, filename, error))
 		return FALSE;
@@ -344,6 +346,7 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 {
 	guint depsolve_check;
 	g_autofree gchar *remotesdir = NULL;
+	g_autofree gchar *remotesdir_mut = NULL;
 
 	/* clear */
 	g_ptr_array_set_size(self->array, 0);
@@ -351,13 +354,10 @@ fu_remote_list_reload(FuRemoteList *self, GError **error)
 
 	/* use sysremotes, and then fall back to /etc */
 	remotesdir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
-	if (!g_file_test(remotesdir, G_FILE_TEST_EXISTS)) {
-		g_debug("no remotes found");
-		return TRUE;
-	}
-
-	/* look for all remote_list */
 	if (!fu_remote_list_add_for_path(self, remotesdir, error))
+		return FALSE;
+	remotesdir_mut = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	if (!fu_remote_list_add_for_path(self, remotesdir_mut, error))
 		return FALSE;
 
 	/* depsolve */

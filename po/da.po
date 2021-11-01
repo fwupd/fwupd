@@ -413,10 +413,6 @@ msgstr "Byg en firmwarefil"
 msgid "Build firmware using a sandbox"
 msgstr "Byg firmware med en sandkasse"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-msgstr "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Annuller"
@@ -1103,9 +1099,6 @@ msgstr "Installer en firmwareblob på en enhed"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Installer en firmwarefil på hardwaren"
-
-msgid "Install old version of system firmware"
-msgstr "Installer gammel version af systemfirmware"
 
 msgid "Install signed device firmware"
 msgstr "Installer enhedsfirmware der er underskrevet"
@@ -1966,10 +1959,6 @@ msgstr "Værktøjet kan kun bruges af root-brugeren"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Værktøjet læser og fortolker TPM-hændelsesloggen fra systemfirmwaren."
-
-#. TRANSLATORS: command line option
-msgid "Timeout in milliseconds for each parse"
-msgstr "Timeout i millisekunder til hver fortolkning"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
