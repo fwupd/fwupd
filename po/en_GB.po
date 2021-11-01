@@ -402,10 +402,6 @@ msgstr "Build a firmware file"
 msgid "Build firmware using a sandbox"
 msgstr "Build firmware using a sandbox"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-msgstr "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Cancel"
@@ -1086,9 +1082,6 @@ msgstr "Install a firmware blob on a device"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Install a firmware file on this hardware"
-
-msgid "Install old version of system firmware"
-msgstr "Install old version of system firmware"
 
 msgid "Install signed device firmware"
 msgstr "Install signed device firmware"
@@ -1945,10 +1938,6 @@ msgstr "This tool can only be used by the root user"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "This tool will read and parse the TPM event log from the system firmware."
-
-#. TRANSLATORS: command line option
-msgid "Timeout in milliseconds for each parse"
-msgstr "Timeout in milliseconds for each parse"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

@@ -428,10 +428,6 @@ msgstr "Зібрати файл мікропрограми"
 msgid "Build firmware using a sandbox"
 msgstr "Зібрати мікропрограму за допомогою пісочниці"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-msgstr "КОНТР_СУМА1[,КОНТР_СУМА2][,КОНТР_СУМА3]"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Скасувати"
@@ -1122,9 +1118,6 @@ msgstr "Встановити бінарну мікропрограму на пр
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Встановити файл мікропрограми на це обладнання"
-
-msgid "Install old version of system firmware"
-msgstr "Встановити стару версію мікропрограми системи"
 
 msgid "Install signed device firmware"
 msgstr "Встановити підписану мікропрограму пристрою"
@@ -1989,10 +1982,6 @@ msgstr "Цим інструментом може користуватися ли
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Цей інструмент читає і обробляє журнал подій TPM, який заповнюється мікропрограмами системи."
-
-#. TRANSLATORS: command line option
-msgid "Timeout in milliseconds for each parse"
-msgstr "Час очікування у мілісекундах на кожну обробку"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

@@ -428,10 +428,6 @@ msgstr "Buduje plik oprogramowania sprzętowego"
 msgid "Build firmware using a sandbox"
 msgstr "Buduje oprogramowanie sprzętowe za pomocą piaskownicy"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-msgstr "SUMA-KONTROLNA1[,SUMA-KONTROLNA2][,SUMA-KONTROLNA3]"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Anuluj"
@@ -1122,9 +1118,6 @@ msgstr "Instaluje zamknięte oprogramowanie sprzętowe na urządzeniu"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instaluje plik oprogramowania sprzętowego na tym sprzęcie"
-
-msgid "Install old version of system firmware"
-msgstr "Instalacja poprzedniej wersji oprogramowania sprzętowego komputera"
 
 msgid "Install signed device firmware"
 msgstr "Instalacja podpisanego oprogramowania sprzętowego urządzenia"
@@ -1989,10 +1982,6 @@ msgstr "To narzędzie może być używane tylko przez użytkownika root"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "To narzędzie odczyta i przetworzy dziennik zdarzeń TPM z oprogramowania sprzętowego komputera."
-
-#. TRANSLATORS: command line option
-msgid "Timeout in milliseconds for each parse"
-msgstr "Czas oczekiwania w milisekundach dla każdego przetworzenia"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"

@@ -533,9 +533,6 @@ msgstr "Установить двоичную прошивку на устрой
 msgid "Install a firmware file on this hardware"
 msgstr "Установить файл прошивки на это оборудование"
 
-msgid "Install old version of system firmware"
-msgstr "Установить старую версию системной прошивки"
-
 msgid "Install signed device firmware"
 msgstr "Установить подписанную прошивку устройства"
 

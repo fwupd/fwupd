@@ -411,9 +411,6 @@ msgstr "In polse…"
 msgid "Install a firmware file on this hardware"
 msgstr "Instale un file firmware su chest hardware"
 
-msgid "Install old version of system firmware"
-msgstr "Instale une version vecje dal firmware di sisteme"
-
 msgid "Install signed device firmware"
 msgstr "Instasle firmware di dispositîf firmât"
 

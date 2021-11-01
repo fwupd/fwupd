@@ -441,9 +441,6 @@ msgstr "Instalar un blob de firmware nun dispositivo"
 msgid "Install a firmware file on this hardware"
 msgstr "Instalar un ficheiro de firmware neste hardware"
 
-msgid "Install old version of system firmware"
-msgstr "Instalar unha versión antiga do firmware do sistema"
-
 msgid "Install signed device firmware"
 msgstr "Instalar firmware de dispositivo asinado"
 

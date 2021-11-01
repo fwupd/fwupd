@@ -103,9 +103,6 @@ msgstr "引数の解析に失敗しました"
 msgid "Force the action ignoring all warnings"
 msgstr "警告を全て無視して処理を強行"
 
-msgid "Install old version of system firmware"
-msgstr "旧版のファームウェアを導入する"
-
 msgid "Install signed device firmware"
 msgstr "署名済みデバイスファームウェアを導入する"
 

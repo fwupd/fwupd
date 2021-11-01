@@ -662,9 +662,6 @@ msgstr "Firmware blob telepítése egy eszközre"
 msgid "Install a firmware file on this hardware"
 msgstr "Egy firmware fájl telepítése ezen a hardveren"
 
-msgid "Install old version of system firmware"
-msgstr "A rendszer firmware régi verziójának telepítése"
-
 msgid "Install signed device firmware"
 msgstr "Aláírt eszköz firmware telepítése"
 

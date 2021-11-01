@@ -258,10 +258,6 @@ msgstr "Önyükleyici Sürümü"
 msgid "Build firmware using a sandbox"
 msgstr "Ürün yazılımını korumalı alan kullanarak oluştur"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-msgstr "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "İptal"
@@ -645,9 +641,6 @@ msgstr "Dosyaları indirirken katı SSL kontrollerini yoksay"
 #. TRANSLATORS: length of time the update takes to apply
 msgid "Install Duration"
 msgstr "Kurulum Süresi"
-
-msgid "Install old version of system firmware"
-msgstr "Eski sürüm sistem ürün yazılımını yükle"
 
 msgid "Install signed device firmware"
 msgstr "İmzalı aygıt ürün yazılımını yükle"

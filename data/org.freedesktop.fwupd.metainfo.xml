@@ -35,6 +35,47 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.7.1" date="2021-11-01">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Allow specifying 'fwupdmgr device-test foo --json' for unattended testing</li>
+          <li>Allow using a filename when using set-approved-firmware</li>
+          <li>Inhibit ModemManager device in mbim-qdu</li>
+          <li>Share the Common Flash Memory Interface quirks between plugins</li>
+          <li>Show changes in HSI attributes when using 'fwupdmgr security'</li>
+          <li>Show the user a warning if updating may affect full-disk-encryption</li>
+          <li>Show translated firmware release notes when provided</li>
+          <li>Support loading remotes from /var/lib/fwupd/remotes.d</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix a CCGX regression when loading firmware</li>
+          <li>Fix a potential crash when dumping Parade devices</li>
+          <li>Fix build error when sys/io.h is not available</li>
+          <li>Fix building the Synaptics RMI self tests on s390x</li>
+          <li>Fix the CSME CVE detection for new generations</li>
+          <li>Handle EPERM when running the self tests on systems with IPMI</li>
+          <li>Mark as SUPPORTED even if on battery power</li>
+          <li>Only save the HSI attributes to the database if different</li>
+          <li>Raise the client timeout value from 25 seconds to fix Redfish startup</li>
+          <li>Redirect the old HSI links to the correct place</li>
+          <li>Relax the ITE SuperIO signature checks for new hardware support</li>
+          <li>Set device time and timezone for logitech bulkcontroller devices</li>
+          <li>Set the verfmt of the returned device when the daemon device is unset</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Dell Atomic Dock</li>
+          <li>HP Thunderbolt Dock G4</li>
+          <li>More PixArt devices</li>
+          <li>Steelseries Stratus</li>
+          <li>Wacom 3rd-gen Intuos BT</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.7.0" date="2021-10-06">
       <description>
         <p>

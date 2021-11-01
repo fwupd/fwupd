@@ -201,6 +201,12 @@ msgstr "להסכים ולהפעיל את המרוחק?"
 msgid "Alias to %s"
 msgstr "כינוי עבור %s"
 
+#. TRANSLATORS: on some systems certain devices have to have matching
+#. versions,
+#. * e.g. the EFI driver for a given network card cannot be different
+msgid "All devices of the same type will be updated at the same time"
+msgstr "כל ההתקנים מאותו הסוג יעודכנו באותו הזמן"
+
 #. TRANSLATORS: command line option
 msgid "Allow downgrading firmware versions"
 msgstr "לאפשר שנמוך גרסאות קושחה"
@@ -513,6 +519,14 @@ msgid "Do not check if download remotes should be enabled"
 msgstr "לא לבדוק אם המרוחקים שהתקבלו אמורים להיות מופעלים"
 
 #. TRANSLATORS: command line option
+msgid "Do not check or prompt for reboot after update"
+msgstr "לא לבדוק או לבקש הפעלה מחדש לאחר עדכון"
+
+#. TRANSLATORS: command line option
+msgid "Do not perform device safety checks"
+msgstr "לא לבצע בדיקות בטיחות על ההתקן"
+
+#. TRANSLATORS: command line option
 msgid "Do not write to the history database"
 msgstr "לא לכתוב למסד הנתונים של ההיסטוריה"
 
@@ -607,6 +621,10 @@ msgstr "הפעלת מרוחק זה היא על אחריותך בלבד."
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Encrypted"
 msgstr "מוצפן"
+
+#. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
+msgid "Encrypted RAM"
+msgstr "זיכרון מוצפן"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -820,6 +838,14 @@ msgstr "בהמתנה…"
 msgid "Ignore SSL strict checks when downloading files"
 msgstr "התעלמות מבדיקות מחמירות של SSL בעת הורדת קבצים"
 
+#. TRANSLATORS: command line option
+msgid "Ignore firmware checksum failures"
+msgstr "התעלמות מכשלונות סיכום ביקורת של קושחות"
+
+#. TRANSLATORS: command line option
+msgid "Ignore firmware hardware mismatch failures"
+msgstr "התעלמות מכשלי התאמה בין קושחה לחומרה"
+
 #. TRANSLATORS: Ignore validation safety checks when flashing this device
 msgid "Ignore validation safety checks"
 msgstr "התעלמות מאימות בדיקות בטיחות"
@@ -835,9 +861,6 @@ msgstr "התקנת מקטע בינרי של קושחה על התקן"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "מתקין קובץ קושחה בחומרה זו"
-
-msgid "Install old version of system firmware"
-msgstr "התקנת גרסה ישנה של קושחת המערכת"
 
 msgid "Install signed device firmware"
 msgstr "התקנת קושחת התקן חתומה"
@@ -867,6 +890,29 @@ msgstr "עדכון הקושחה מותקן…"
 #, c-format
 msgid "Installing on %s…"
 msgstr "מותקן על %s…"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel
+msgid "Intel BootGuard"
+msgstr "BootGuard של אינטל"
+
+#. TRANSLATORS: Title: BootGuard is a trademark from Intel,
+#. * error policy is what to do on failure
+msgid "Intel BootGuard error policy"
+msgstr "מדיניות שגיאות של BootGuard של אינטל"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * active means being used by the OS
+msgid "Intel CET Active"
+msgstr "CET של אינטל פעיל"
+
+#. TRANSLATORS: Title: CET = Control-flow Enforcement Technology,
+#. * enabled means supported by the processor
+msgid "Intel CET Enabled"
+msgstr "CET של אינטל מאופשר"
+
+#. TRANSLATORS: Title: SMAP = Supervisor Mode Access Prevention
+msgid "Intel SMAP"
+msgstr "SMAP של אינטל"
 
 #. TRANSLATORS: Device cannot be removed easily
 msgid "Internal device"
@@ -945,6 +991,9 @@ msgstr "נעול"
 #. TRANSLATORS: the release urgency
 msgid "Low"
 msgstr "נמוך"
+
+msgid "MEI version"
+msgstr "גרסת MEI"
 
 #. TRANSLATORS: command line option
 msgid "Manually enable specific plugins"
@@ -1048,6 +1097,11 @@ msgstr "אישור"
 #. TRANSLATORS: command line option
 msgid "Only use IPFS when downloading files"
 msgstr "להשתמש ב־IPFS רק בעת הורדת קבצים"
+
+#. TRANSLATORS: some devices can only be updated to a new semver and cannot
+#. * be downgraded or reinstalled with the existing version
+msgid "Only version upgrades are allowed"
+msgstr "מותר עדכוני גרסאות בלבד"
 
 #. TRANSLATORS: command line option
 msgid "Output in JSON format"
@@ -1238,6 +1292,11 @@ msgstr "לשמור את מצב ההתקנים לקובץ JSON בין ההפעל�
 msgid "Scheduling…"
 msgstr "מתבצע תזמון…"
 
+#. TRANSLATORS: %s is a link to a website
+#, c-format
+msgid "See %s for more information."
+msgstr "ניתן לפנות אל %s למידע נוסף."
+
 #. TRANSLATORS: Device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "התקן נבחר"
@@ -1403,6 +1462,15 @@ msgstr "בדיקת התקן עם מניפסט JSON"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "LVFS הוא שירות חינמי שמתפקד כיישות חוקית בלתי תלוי ואין לה שום קשר עם $OS_RELEASE:NAME$. יתכן כי המפיץ שלך לא אימת ברמת תאימות אף אחד מעדכוני הקושחה מול המערכת שלך או ההתקנים המחוברים אליה. כל הקושחה מסופקת אך ורק על ידי יצרני הציוד המקוריים."
 
+#. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
+#, c-format
+msgid "The firmware from %s is not supplied by %s, the hardware vendor."
+msgstr "הקושחה הזאת מבית %s אינה מסופקת על ידי %s, יצרן החומרה"
+
+#. TRANSLATORS: try to help
+msgid "The system clock has not been set correctly and downloading files may fail."
+msgstr "שעון המערכת אינו מכוון והורדת קבצים עלולה להיכשל."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "אין קובצי קושחה חסומים"
@@ -1412,12 +1480,28 @@ msgstr "אין קובצי קושחה חסומים"
 msgid "There is no approved firmware."
 msgstr "אין קושחה שעברה אימות."
 
+#. TRANSLATORS: unsupported build of the package
+msgid "This package has not been validated, it may not work properly."
+msgstr "החבילה לא עברה אימות, יכול להיות שלא תעבוד כראוי."
+
 msgid "This remote contains firmware which is not embargoed, but is still being tested by the hardware vendor. You should ensure you have a way to manually downgrade the firmware if the firmware update fails."
 msgstr "צד מרוחק זה כולל קושחה שלא נפסלה אך עדיין נבדקת על ידי ספק החומרה. עליך לוודא שיש לך דרך ידנית לשנמך את הקושחה במקרה שעדכון הקושחה נכשל."
+
+#. TRANSLATORS: this is instructions on how to improve the HSI suffix
+msgid "This system has HSI runtime issues."
+msgstr "למערכת יש תקלות בסביבת הרצת ה־HSI."
+
+#. TRANSLATORS: this is instructions on how to improve the HSI security level
+msgid "This system has a low HSI security level."
+msgstr "רמת אבטחת ה־HSI של המערכת נמוכה."
 
 #. TRANSLATORS: description of dbxtool
 msgid "This tool allows an administrator to apply UEFI dbx updates."
 msgstr "כלי זה מאפשר להנהלה להחיל עדכוני dbx ב־UEFI."
+
+#. TRANSLATORS: CLI description
+msgid "This tool allows an administrator to query and control the fwupd daemon, allowing them to perform actions such as installing or downgrading firmware."
+msgstr "כלי זה מאפשר למנהלי המערכת לתשאל ולשלוט בסוכן fwupd, הוא מאפשר להם לבצע פעולות כגון התקנת או שנמוך קושחה."
 
 #. TRANSLATORS: CLI description
 msgid "This tool allows an administrator to use the fwupd plugins without being installed on the host system."
@@ -1430,10 +1514,6 @@ msgstr "בכלי הזה יכול להשתמש רק משתמש העל"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "כלי זה יקרא ויפענח את יומן האירועים של ה־TPM מקושחת המערכת."
-
-#. TRANSLATORS: command line option
-msgid "Timeout in milliseconds for each parse"
-msgstr "זמן המתנה מרבי במילישניות לכל פענוח"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -1653,6 +1733,11 @@ msgstr "קובץ נכתב:"
 #. TRANSLATORS: writing to the flash chips
 msgid "Writing…"
 msgstr "מתבצעת כתיבה…"
+
+#. TRANSLATORS: %1 is the device vendor name
+#, c-format
+msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
+msgstr "יכול להיות שהחומרה שלך תיפגע עקב השימוש בקושחה הזאת והתקנת המהדורה הזאת עשויה לפגוע באחריות עם %s."
 
 #. TRANSLATORS: this is the default branch name when unset
 msgid "default"

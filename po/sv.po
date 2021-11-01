@@ -418,10 +418,6 @@ msgstr "Bygg en fast programvarufil"
 msgid "Build firmware using a sandbox"
 msgstr "Bygg fast programvara med en sandlåda"
 
-#. TRANSLATORS: command argument: uppercase, spaces->dashes
-msgid "CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
-msgstr "KONTROLLSUMMA1[,KONTROLLSUMMA2][,KONTROLLSUMMA3]"
-
 #. TRANSLATORS: this is to abort the interactive prompt
 msgid "Cancel"
 msgstr "Avbryt"
@@ -1108,9 +1104,6 @@ msgstr "Installera en fast programvaru-blob på en enhet"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Installera en fast programvarufil på denna hårdvara"
-
-msgid "Install old version of system firmware"
-msgstr "Installera en gammal version av fast programvara för systemet"
 
 msgid "Install signed device firmware"
 msgstr "Installera signerad fast programvara för enhet"
@@ -1971,10 +1964,6 @@ msgstr "Detta verktyg kan endast användas av administratörsanvändaren"
 #. TRANSLATORS: CLI description
 msgid "This tool will read and parse the TPM event log from the system firmware."
 msgstr "Detta verktyg läser och analyserar TPM-händelseloggen från systemets fasta programvara."
-
-#. TRANSLATORS: command line option
-msgid "Timeout in milliseconds for each parse"
-msgstr "Tidsgräns i millisekunder för varje tolkning"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
