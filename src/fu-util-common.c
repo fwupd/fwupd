@@ -1986,6 +1986,10 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
 		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
 		      NULL},
+		     {"org.fwupd.hsi.Fwupd.Plugins",
+		      FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      NULL},
 		     /* ------------------------------------------*/
 		     {"org.fwupd.hsi.Kernel.Lockdown",
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
@@ -2013,6 +2017,9 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 	/* sanity check */
 	if (fwupd_security_attr_get_appstream_id(attr) == NULL)
 		return NULL;
+	if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN &&
+	    fwupd_security_attr_get_result_fallback(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN)
+		return NULL;
 
 	/* look for prepared text */
 	for (guint i = 0; items[i].appstream_id != NULL; i++) {
@@ -2023,12 +2030,35 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 			return g_strdup(items[i].text);
 	}
 
+	/* disappeared */
+	if (fwupd_security_attr_get_result(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		return g_strdup_printf(
+		    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS region".
+		       %2 refers to a result value, e.g. "Invalid" */
+		    _("%s disappeared: %s"),
+		    fu_security_attr_get_name(attr),
+		    fu_security_attr_result_to_string(
+			fwupd_security_attr_get_result_fallback(attr)));
+	}
+
+	/* appeared */
+	if (fwupd_security_attr_get_result_fallback(attr) == FWUPD_SECURITY_ATTR_RESULT_UNKNOWN) {
+		return g_strdup_printf(
+		    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+		       %2 refers to a result value, e.g. "Invalid" */
+		    _("%s appeared: %s"),
+		    fu_security_attr_get_name(attr),
+		    fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
+	}
+
 	/* fall back to something sensible */
 	return g_strdup_printf(
-	    _("Attribute '%s' changed result from %s to %s."),
-	    fwupd_security_attr_get_name(attr),
-	    fwupd_security_attr_result_to_string(fwupd_security_attr_get_result_fallback(attr)),
-	    fwupd_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
+	    /* TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform key".
+	     * %2 and %3 refer to results value, e.g. "Valid" and "Invalid" */
+	    _("%s changed: %s → %s"),
+	    fu_security_attr_get_name(attr),
+	    fu_security_attr_result_to_string(fwupd_security_attr_get_result_fallback(attr)),
+	    fu_security_attr_result_to_string(fwupd_security_attr_get_result(attr)));
 }
 
 gchar *
