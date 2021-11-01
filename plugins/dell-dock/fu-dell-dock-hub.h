@@ -30,3 +30,4 @@ G_DECLARE_FINAL_TYPE (FuDellDockHub, fu_dell_dock_hub, FU, DELL_DOCK_HUB, FuHidD
 #define FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE	(1 << 0)
 
 FuDellDockHub 	*fu_dell_dock_hub_new		(FuUsbDevice *device);
+void             fu_dell_dock_hub_add_instance  (FuDevice *device, guint8 ec_type);

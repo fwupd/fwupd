@@ -35,6 +35,16 @@
 #define DELL_DOCK_VM5331_INSTANCE_ID "MST-panamera-vmm5331-259"
 #define GR_USB_VID		     0x8087
 #define GR_USB_PID		     0x0B40
+#define DELL_DOCK_ATOMIC_STATUS_INSTANCE_ID "USB\\VID_413C&PID_B06E&hub&atomic_status"
+#define DELL_DOCK_ATOMIC_EC_INSTANCE_ID     "USB\\VID_413C&PID_B06E&hub&atomic_embedded"
+#define DELL_DOCK_VMM6210_INSTANCE_ID       "MST-cayenne-vmm6210-257"
+#define ATOMIC_HUB2_PID                     0x548A
+#define ATOMIC_HUB1_PID                     0x541A
+#define DELL_VID                            0x413C
+
+#define WD19_BASE   			    0x04
+#define ATOMIC_BASE 			    0x05
+
 
 gboolean	fu_dell_dock_set_power		(FuDevice *device,
 						 guint8 target,
