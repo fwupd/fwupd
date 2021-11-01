@@ -478,7 +478,6 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_thunderbolt.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_tpm.so
-%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_tpm_eventlog.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_bios.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_uefi_capsule.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_uefi_dbx.so

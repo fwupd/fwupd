@@ -17,6 +17,8 @@ shared_module('fu_plugin_tpm',
     'fu-tpm-device.c',
     'fu-tpm-v1-device.c',
     'fu-tpm-v2-device.c',
+    'fu-tpm-eventlog-common.c',
+    'fu-tpm-eventlog-parser.c',
   ],
   include_directories : [
     root_incdir,
@@ -49,6 +51,8 @@ if get_option('tests')
       'fu-tpm-device.c',
       'fu-tpm-v1-device.c',
       'fu-tpm-v2-device.c',
+      'fu-tpm-eventlog-common.c',
+      'fu-tpm-eventlog-parser.c',
     ],
     include_directories : [
       root_incdir,
@@ -66,5 +70,40 @@ if get_option('tests')
     c_args : cargs
   )
   test('tpm-self-test', e, env: env)
+endif
+
+fwupdtpmevlog = executable(
+  'fwupdtpmevlog',
+  fu_hash,
+  sources : [
+    'fu-tpm-eventlog.c',
+    'fu-tpm-eventlog-common.c',
+    'fu-tpm-eventlog-parser.c',
+  ],
+  include_directories : [
+    root_incdir,
+    fwupd_incdir,
+    fwupdplugin_incdir,
+  ],
+  dependencies : [
+      plugin_deps,
+      tpm2tss,
+  ],
+  link_with : [
+    fwupd,
+    fwupdplugin,
+  ],
+  install : true,
+  install_dir : bindir
+)
+
+if get_option('man')
+  configure_file(
+    input : 'fwupdtpmevlog.1',
+    output : 'fwupdtpmevlog.1',
+    configuration : conf,
+    install: true,
+    install_dir: join_paths(mandir, 'man1'),
+  )
 endif
 endif

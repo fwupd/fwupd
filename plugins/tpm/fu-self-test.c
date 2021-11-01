@@ -9,6 +9,8 @@
 #include <fwupdplugin.h>
 
 #include "fu-context-private.h"
+#include "fu-tpm-eventlog-common.h"
+#include "fu-tpm-eventlog-parser.h"
 #include "fu-tpm-v1-device.h"
 #include "fu-tpm-v2-device.h"
 
@@ -73,6 +75,80 @@ fu_tpm_device_2_0_func(void)
 	g_unsetenv("FWUPD_FORCE_TPM2");
 }
 
+static void
+fu_tpm_eventlog_parse_v1_func(void)
+{
+	const gchar *ci = g_getenv("CI_NETWORK");
+	const gchar *tmp;
+	gboolean ret;
+	gsize bufsz = 0;
+	g_autofree gchar *fn = NULL;
+	g_autofree guint8 *buf = NULL;
+	g_autoptr(GPtrArray) items = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) pcr0s = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "binary_bios_measurements-v1", NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip("Missing binary_bios_measurements-v1");
+		return;
+	}
+	ret = g_file_get_contents(fn, (gchar **)&buf, &bufsz, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	items = fu_tpm_eventlog_parser_new(buf, bufsz, FU_TPM_EVENTLOG_PARSER_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(items);
+
+	pcr0s = fu_tpm_eventlog_calc_checksums(items, 0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(pcr0s);
+	g_assert_cmpint(pcr0s->len, ==, 1);
+	tmp = g_ptr_array_index(pcr0s, 0);
+	g_assert_cmpstr(tmp, ==, "543ae96e57b6fc4003531cd0dab1d9ba7f8166e0");
+}
+
+static void
+fu_tpm_eventlog_parse_v2_func(void)
+{
+	const gchar *ci = g_getenv("CI_NETWORK");
+	const gchar *tmp;
+	gboolean ret;
+	gsize bufsz = 0;
+	g_autofree gchar *fn = NULL;
+	g_autofree guint8 *buf = NULL;
+	g_autoptr(GPtrArray) items = NULL;
+	g_autoptr(GError) error = NULL;
+	g_autoptr(GPtrArray) pcr0s = NULL;
+	g_autoptr(FuContext) ctx = fu_context_new();
+
+	fn = g_test_build_filename(G_TEST_DIST, "tests", "binary_bios_measurements-v2", NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS) && ci == NULL) {
+		g_test_skip("Missing binary_bios_measurements-v2");
+		return;
+	}
+	ret = g_file_get_contents(fn, (gchar **)&buf, &bufsz, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	items = fu_tpm_eventlog_parser_new(buf, bufsz, FU_TPM_EVENTLOG_PARSER_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(items);
+
+	pcr0s = fu_tpm_eventlog_calc_checksums(items, 0, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(pcr0s);
+	g_assert_cmpint(pcr0s->len, ==, 2);
+	tmp = g_ptr_array_index(pcr0s, 0);
+	g_assert_cmpstr(tmp, ==, "ebead4b31c7c49e193c440cd6ee90bc1b61a3ca6");
+	tmp = g_ptr_array_index(pcr0s, 1);
+	g_assert_cmpstr(tmp,
+			==,
+			"6d9fed68092cfb91c9552bcb7879e75e1df36efd407af67690dc3389a5722fab");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -92,5 +168,7 @@ main(int argc, char **argv)
 	/* tests go here */
 	g_test_add_func("/tpm/pcrs1.2", fu_tpm_device_1_2_func);
 	g_test_add_func("/tpm/pcrs2.0", fu_tpm_device_2_0_func);
+	g_test_add_func("/tpm/eventlog-parse{v1}", fu_tpm_eventlog_parse_v1_func);
+	g_test_add_func("/tpm/eventlog-parse{v2}", fu_tpm_eventlog_parse_v2_func);
 	return g_test_run();
 }

@@ -2,7 +2,7 @@ data/remotes.d/lvfs.metainfo.xml
 data/remotes.d/lvfs-testing.metainfo.xml
 policy/org.freedesktop.fwupd.policy.in
 plugins/dfu/fu-dfu-tool.c
-plugins/tpm-eventlog/fu-tpm-eventlog.c
+plugins/tpm/fu-tpm-eventlog.c
 plugins/uefi-capsule/fu-plugin-uefi-capsule.c
 plugins/uefi-capsule/fu-uefi-tool.c
 plugins/uefi-dbx/fu-dbxtool.c
