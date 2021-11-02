@@ -1,9 +1,9 @@
 name: Continuous Integration
 on:
   push:
-    branches: [ master ]
+    branches: [ 1_6_X ]
   pull_request:
-    branches: [ master ]
+    branches: [ 1_6_X ]
 
 jobs:
   pre-commit:
