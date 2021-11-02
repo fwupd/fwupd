@@ -200,7 +200,9 @@ class Builder:
 def _build(bld: Builder) -> None:
 
     # GLib
-    src = bld.checkout_source("glib", url="https://gitlab.gnome.org/GNOME/glib.git")
+    src = bld.checkout_source(
+        "glib", url="https://gitlab.gnome.org/GNOME/glib.git", commit="glib-2-68"
+    )
     bld.build_meson_project(
         src,
         [
