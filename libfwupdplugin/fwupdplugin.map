@@ -945,3 +945,9 @@ LIBFWUPDPLUGIN_1.7.1 {
     fu_usb_device_new_with_context;
   local: *;
 } LIBFWUPDPLUGIN_1.7.0;
+
+LIBFWUPDPLUGIN_1.7.2 {
+  global:
+    fu_context_has_hwid_flag;
+  local: *;
+} LIBFWUPDPLUGIN_1.7.1;

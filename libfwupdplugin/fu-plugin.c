@@ -611,30 +611,12 @@ gboolean
 fu_plugin_has_custom_flag(FuPlugin *self, const gchar *flag)
 {
 	FuPluginPrivate *priv = GET_PRIVATE(self);
-	GPtrArray *guids;
 
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 	g_return_val_if_fail(flag != NULL, FALSE);
 
 	/* never set up, e.g. in tests */
-	if (priv->ctx == NULL)
-		return FALSE;
-
-	/* search each hwid */
-	guids = fu_context_get_hwid_guids(priv->ctx);
-	for (guint i = 0; i < guids->len; i++) {
-		const gchar *guid = g_ptr_array_index(guids, i);
-		const gchar *value;
-
-		/* does prefixed quirk exist */
-		value = fu_context_lookup_quirk_by_id(priv->ctx, guid, FU_QUIRKS_FLAGS);
-		if (value != NULL) {
-			g_auto(GStrv) values = g_strsplit(value, ",", -1);
-			if (g_strv_contains((const gchar *const *)values, flag))
-				return TRUE;
-		}
-	}
-	return FALSE;
+	return fu_context_has_hwid_flag(priv->ctx, flag);
 }
 
 /**

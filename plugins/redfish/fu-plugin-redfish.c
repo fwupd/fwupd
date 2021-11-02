@@ -38,7 +38,7 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	devices = fu_backend_get_devices(FU_BACKEND(data->backend));
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
-		if (fu_plugin_has_custom_flag(plugin, "reset-required"))
+		if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "reset-required"))
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 		fu_plugin_device_add(plugin, device);
 	}
@@ -343,7 +343,7 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 		gboolean ca_check = fu_plugin_get_config_value_boolean(plugin, "CACheck");
 		fu_redfish_backend_set_cacheck(data->backend, ca_check);
 	}
-	if (fu_plugin_has_custom_flag(plugin, "wildcard-targets"))
+	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "wildcard-targets"))
 		fu_redfish_backend_set_wildcard_targets(data->backend, TRUE);
 
 #ifdef HAVE_LINUX_IPMI_H

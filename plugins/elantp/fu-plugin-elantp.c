@@ -16,7 +16,7 @@ gboolean
 fu_plugin_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
 {
 	if (fu_device_get_specialized_gtype(dev) == FU_TYPE_ELANTP_I2C_DEVICE &&
-	    !fu_plugin_has_custom_flag(plugin, "elantp-recovery")) {
+	    !fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "elantp-recovery")) {
 		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not required");
 		return FALSE;
 	}

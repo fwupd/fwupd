@@ -45,6 +45,8 @@ gboolean
 fu_context_has_hwid_guid(FuContext *self, const gchar *guid);
 GPtrArray *
 fu_context_get_hwid_guids(FuContext *self);
+gboolean
+fu_context_has_hwid_flag(FuContext *self, const gchar *flag);
 const gchar *
 fu_context_get_hwid_value(FuContext *self, const gchar *key);
 gchar *
