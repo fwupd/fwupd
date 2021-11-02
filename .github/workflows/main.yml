@@ -4,6 +4,8 @@ on:
     branches: [ 1_5_X ]
   pull_request:
     branches: [ 1_5_X ]
+  schedule:
+    - cron: "0 1 * * 5"
 
 jobs:
   abi:
