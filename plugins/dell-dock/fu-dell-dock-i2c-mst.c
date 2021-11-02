@@ -1108,7 +1108,7 @@ fu_dell_dock_mst_probe (FuDevice *device, GError **error)
 {
 	MSTType type;
 	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
-	
+
 	fu_device_set_logical_id (FU_DEVICE (device), "mst");
 
 		/* confige mst register via instance id*/
