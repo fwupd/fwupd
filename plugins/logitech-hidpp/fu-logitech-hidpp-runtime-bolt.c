@@ -82,7 +82,7 @@ fu_logitech_hidpp_runtime_bolt_query_device_name(FuLogitechHidPpRuntime *self,
 						 GError **error)
 {
 	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
-	GString *dev_name = g_string_new(NULL);
+	g_autoptr(GString) dev_name = g_string_new(NULL);
 	guint namelen;
 
 	msg->report_id = HIDPP_REPORT_ID_SHORT;
@@ -101,7 +101,7 @@ fu_logitech_hidpp_runtime_bolt_query_device_name(FuLogitechHidPpRuntime *self,
 	namelen = msg->data[2];
 	g_string_append_len(dev_name, (const char *)(&(msg->data[3])), namelen);
 
-	return g_string_free(dev_name, FALSE);
+	return g_string_free(g_steal_pointer(&dev_name), FALSE);
 }
 
 static gboolean
