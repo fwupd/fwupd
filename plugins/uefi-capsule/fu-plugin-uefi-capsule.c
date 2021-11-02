@@ -465,15 +465,15 @@ fu_plugin_uefi_capsule_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 		return FALSE;
 
 	/* if not already set by quirks */
-	if (fu_plugin_has_custom_flag(plugin, "use-legacy-bootmgr-desc")) {
+	if (fu_context_has_hwid_flag(ctx, "use-legacy-bootmgr-desc")) {
 		fu_device_add_private_flag(FU_DEVICE(dev),
 					   FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
 	}
-	if (fu_plugin_has_custom_flag(plugin, "supports-boot-order-lock")) {
+	if (fu_context_has_hwid_flag(ctx, "supports-boot-order-lock")) {
 		fu_device_add_private_flag(FU_DEVICE(dev),
 					   FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
 	}
-	if (fu_plugin_has_custom_flag(plugin, "no-ux-capsule"))
+	if (fu_context_has_hwid_flag(ctx, "no-ux-capsule"))
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE);
 
 	/* set fallback name if nothing else is set */
@@ -522,6 +522,7 @@ fu_plugin_uefi_capsule_test_secure_boot(FuPlugin *plugin)
 gboolean
 fu_plugin_startup(FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	guint64 nvram_total;
 	g_autofree gchar *esp_path = NULL;
@@ -534,11 +535,11 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 		return TRUE;
 
 	/* for the uploaded report */
-	if (fu_plugin_has_custom_flag(plugin, "use-legacy-bootmgr-desc"))
+	if (fu_context_has_hwid_flag(ctx, "use-legacy-bootmgr-desc"))
 		fu_plugin_add_report_metadata(plugin, "BootMgrDesc", "legacy");
 
 	/* some platforms have broken SMBIOS data */
-	if (fu_plugin_has_custom_flag(plugin, "uefi-force-enable"))
+	if (fu_context_has_hwid_flag(ctx, "uefi-force-enable"))
 		return TRUE;
 
 	/* use GRUB to load updates */
@@ -665,7 +666,7 @@ fu_plugin_uefi_update_state_notify_cb(GObject *object, GParamSpec *pspec, FuPlug
 		return;
 
 	/* only do this on hardware that cannot coalesce multiple capsules */
-	if (!fu_plugin_has_custom_flag(plugin, "no-coalesce"))
+	if (!fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "no-coalesce"))
 		return;
 
 	/* mark every other device for this plugin as non-updatable */
