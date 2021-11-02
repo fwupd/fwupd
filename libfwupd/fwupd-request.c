@@ -443,7 +443,7 @@ gchar *
 fwupd_request_to_string(FwupdRequest *self)
 {
 	FwupdRequestPrivate *priv = GET_PRIVATE(self);
-	GString *str = g_string_new(NULL);
+	g_autoptr(GString) str = g_string_new(NULL);
 
 	g_return_val_if_fail(FWUPD_IS_REQUEST(self), NULL);
 
@@ -457,7 +457,7 @@ fwupd_request_to_string(FwupdRequest *self)
 	fwupd_pad_kv_unx(str, FWUPD_RESULT_KEY_CREATED, priv->created);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_UPDATE_MESSAGE, priv->message);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_UPDATE_IMAGE, priv->image);
-	return g_string_free(str, FALSE);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 static void
