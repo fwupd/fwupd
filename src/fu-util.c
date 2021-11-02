@@ -2130,10 +2130,8 @@ fu_util_prompt_warning_composite(FuUtilPrivate *priv,
 		for (guint j = 0; j < rels->len; j++) {
 			FwupdRelease *rel_tmp = g_ptr_array_index(rels, j);
 			if (fwupd_release_has_checksum(rel_tmp, rel_csum)) {
-				if (!fu_util_prompt_warning(dev_tmp,
-							    rel_tmp,
-							    fu_util_get_tree_title(priv),
-							    error))
+				g_autofree gchar *title = fu_util_get_tree_title(priv);
+				if (!fu_util_prompt_warning(dev_tmp, rel_tmp, title, error))
 					return FALSE;
 				break;
 			}
@@ -2151,7 +2149,8 @@ fu_util_update_device_with_release(FuUtilPrivate *priv,
 				   GError **error)
 {
 	if (!priv->no_safety_check && !priv->assume_yes) {
-		if (!fu_util_prompt_warning(dev, rel, fu_util_get_tree_title(priv), error))
+		g_autofree gchar *title = fu_util_get_tree_title(priv);
+		if (!fu_util_prompt_warning(dev, rel, title, error))
 			return FALSE;
 		if (!fu_util_prompt_warning_fde(dev, error))
 			return FALSE;
