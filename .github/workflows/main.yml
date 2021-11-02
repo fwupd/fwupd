@@ -4,6 +4,8 @@ on:
     branches: [ 1_6_X ]
   pull_request:
     branches: [ 1_6_X ]
+  schedule:
+    - cron: "0 0 * * 5"
 
 jobs:
   pre-commit:
