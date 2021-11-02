@@ -164,6 +164,7 @@ Files for development with %{name}.
 
 %package tests
 Summary: Data files for installed tests
+Requires: %{name}%{?_isa} = %{version}-%{release}
 
 %description tests
 Data files for installed tests.
@@ -171,6 +172,7 @@ Data files for installed tests.
 %if 0%{?have_modem_manager}
 %package plugin-modem-manager
 Summary: fwupd plugin using ModemManger
+Requires: %{name}%{?_isa} = %{version}-%{release}
 
 %description plugin-modem-manager
 This provides the optional package which is only required on hardware that
@@ -180,6 +182,7 @@ might have mobile broadband hardware. It is probably not required on servers.
 %if 0%{?have_flashrom}
 %package plugin-flashrom
 Summary: fwupd plugin using flashrom
+Requires: %{name}%{?_isa} = %{version}-%{release}
 
 %description plugin-flashrom
 This provides the optional package which is only required on hardware that
@@ -189,6 +192,7 @@ can be flashed using flashrom. It is probably not required on servers.
 %if 0%{?have_uefi}
 %package plugin-uefi-capsule-data
 Summary: Localized data for the UEFI UX capsule
+Requires: %{name}%{?_isa} = %{version}-%{release}
 
 %description plugin-uefi-capsule-data
 This provides the pregenerated BMP artwork for the UX capsule, which allows the
