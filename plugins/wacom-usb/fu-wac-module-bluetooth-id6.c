@@ -58,7 +58,7 @@ fu_wac_module_bluetooth_id6_parse_blocks(const guint8 *data, gsize sz, GError **
 	const guint8 preamble[] = {0x00, 0x01};
 	GPtrArray *blocks = g_ptr_array_new_with_free_func(g_free);
 	for (guint addr = 0x0; addr < sz; addr += FU_WAC_MODULE_BLUETOOTH_ID6_PAYLOAD_SZ) {
-		FuWacModuleBluetoothId6BlockData *bd;
+		g_autofree FuWacModuleBluetoothId6BlockData *bd = NULL;
 		gsize cdata_sz = FU_WAC_MODULE_BLUETOOTH_ID6_PAYLOAD_SZ;
 
 		bd = g_new0(FuWacModuleBluetoothId6BlockData, 1);
@@ -84,7 +84,7 @@ fu_wac_module_bluetooth_id6_parse_blocks(const guint8 *data, gsize sz, GError **
 		bd->crc = fu_wac_module_bluetooth_id6_calculate_crc(
 		    bd->cdata,
 		    FU_WAC_MODULE_BLUETOOTH_ID6_PAYLOAD_SZ);
-		g_ptr_array_add(blocks, bd);
+		g_ptr_array_add(blocks, g_steal_pointer(&bd));
 	}
 	return blocks;
 }

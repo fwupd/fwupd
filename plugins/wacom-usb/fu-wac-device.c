@@ -674,8 +674,10 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autofree gchar *name = NULL;
+	g_autofree gchar *name_id6 = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuWacModule) module = NULL;
+	g_autoptr(FuWacModule) module_id6 = NULL;
 	guint16 fw_ver;
 
 	/* it can take up to 5s to get the new version after a fw update */
@@ -714,14 +716,14 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 	fu_device_set_version(FU_DEVICE(module), version);
 	fu_device_set_version_raw(FU_DEVICE(module), fw_ver);
 
-	name = g_strdup_printf("%s [Legacy Bluetooth Module (ID6)]",
-			       fu_device_get_name(FU_DEVICE(self)));
-	module =
+	name_id6 = g_strdup_printf("%s [Legacy Bluetooth Module (ID6)]",
+				   fu_device_get_name(FU_DEVICE(self)));
+	module_id6 =
 	    fu_wac_module_bluetooth_id6_new(fu_device_get_context(FU_DEVICE(self)), usb_device);
-	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
-	fu_device_set_name(FU_DEVICE(module), name);
-	fu_device_set_version(FU_DEVICE(module), version);
-	fu_device_set_version_raw(FU_DEVICE(module), fw_ver);
+	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module_id6));
+	fu_device_set_name(FU_DEVICE(module_id6), name_id6);
+	fu_device_set_version(FU_DEVICE(module_id6), version);
+	fu_device_set_version_raw(FU_DEVICE(module_id6), fw_ver);
 	return TRUE;
 }
 
