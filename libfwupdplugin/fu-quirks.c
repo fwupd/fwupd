@@ -54,6 +54,8 @@ struct _FuQuirks {
 	GHashTable *possible_keys;
 	GPtrArray *invalid_keys;
 	XbSilo *silo;
+	XbQuery *query_kv;
+	XbQuery *query_vs;
 };
 
 G_DEFINE_TYPE(FuQuirks, fu_quirks, G_TYPE_OBJECT)
@@ -241,6 +243,7 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 	g_autofree gchar *localstatedir = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(XbBuilder) builder = NULL;
+	g_autoptr(XbNode) n_any = NULL;
 
 	/* everything is okay */
 	if (self->silo != NULL && xb_silo_is_valid(self->silo))
@@ -287,6 +290,32 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 		g_debug("invalid key names: %s", str);
 	}
 
+	/* check if there is any quirk data to load, as older libxmlb versions will not be able to
+	 * create the prepared query with an unknown text ID */
+	n_any = xb_silo_query_first(self->silo, "quirk", NULL);
+	if (n_any == NULL) {
+		g_debug("no quirk data, not creating prepared queries");
+		return TRUE;
+	}
+
+	/* create prepared queries to save time later */
+	self->query_kv = xb_query_new_full(self->silo,
+					   "quirk/device[@id=?]/value[@key=?]",
+					   XB_QUERY_FLAG_OPTIMIZE,
+					   error);
+	if (self->query_kv == NULL) {
+		g_prefix_error(error, "failed to prepare query: ");
+		return FALSE;
+	}
+	self->query_vs = xb_query_new_full(self->silo,
+					   "quirk/device[@id=?]/value",
+					   XB_QUERY_FLAG_OPTIMIZE,
+					   error);
+	if (self->query_vs == NULL) {
+		g_prefix_error(error, "failed to prepare query: ");
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -309,7 +338,6 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *group, const gchar *key)
 	g_autofree gchar *group_key = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) n = NULL;
-	g_autoptr(XbQuery) query = NULL;
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 #endif
@@ -324,35 +352,26 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *group, const gchar *key)
 		return NULL;
 	}
 
+	/* no quirk data */
+	if (self->query_kv == NULL)
+		return NULL;
+
 	/* query */
 	group_key = fu_quirks_build_group_key(group);
-	query = xb_query_new_full(self->silo,
-				  "quirk/device[@id=?]/value[@key=?]",
-				  XB_QUERY_FLAG_NONE,
-				  &error);
-	if (query == NULL) {
-		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
-			return NULL;
-		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
-			return NULL;
-		g_warning("failed to build query: %s", error->message);
-		return NULL;
-	}
-
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, group_key, NULL);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 1, key, NULL);
-	n = xb_silo_query_first_with_context(self->silo, query, &context, &error);
+	n = xb_silo_query_first_with_context(self->silo, self->query_kv, &context, &error);
 #else
-	if (!xb_query_bind_str(query, 0, group_key, &error)) {
+	if (!xb_query_bind_str(self->query_kv, 0, group_key, &error)) {
 		g_warning("failed to bind 0: %s", error->message);
 		return NULL;
 	}
-	if (!xb_query_bind_str(query, 1, key, &error)) {
+	if (!xb_query_bind_str(self->query_kv, 1, key, &error)) {
 		g_warning("failed to bind 1: %s", error->message);
 		return NULL;
 	}
-	n = xb_silo_query_first_full(self->silo, query, &error);
+	n = xb_silo_query_first_full(self->silo, self->query_kv, &error);
 #endif
 
 	if (n == NULL) {
@@ -388,7 +407,6 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 	g_autofree gchar *group_key = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) results = NULL;
-	g_autoptr(XbQuery) query = NULL;
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 #endif
@@ -403,28 +421,21 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 		return FALSE;
 	}
 
+	/* no quirk data */
+	if (self->query_vs == NULL)
+		return FALSE;
+
 	/* query */
 	group_key = fu_quirks_build_group_key(group);
-	query =
-	    xb_query_new_full(self->silo, "quirk/device[@id=?]/value", XB_QUERY_FLAG_NONE, &error);
-	if (query == NULL) {
-		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
-			return FALSE;
-		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
-			return FALSE;
-		g_warning("failed to build query: %s", error->message);
-		return FALSE;
-	}
-
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, group_key, NULL);
-	results = xb_silo_query_with_context(self->silo, query, &context, &error);
+	results = xb_silo_query_with_context(self->silo, self->query_vs, &context, &error);
 #else
-	if (!xb_query_bind_str(query, 0, group_key, &error)) {
+	if (!xb_query_bind_str(self->query_vs, 0, group_key, &error)) {
 		g_warning("failed to bind 0: %s", error->message);
 		return FALSE;
 	}
-	results = xb_silo_query_full(self->silo, query, &error);
+	results = xb_silo_query_full(self->silo, self->query_vs, &error);
 #endif
 
 	if (results == NULL) {
@@ -532,6 +543,10 @@ static void
 fu_quirks_finalize(GObject *obj)
 {
 	FuQuirks *self = FU_QUIRKS(obj);
+	if (self->query_kv != NULL)
+		g_object_unref(self->query_kv);
+	if (self->query_vs != NULL)
+		g_object_unref(self->query_vs);
 	if (self->silo != NULL)
 		g_object_unref(self->silo);
 	g_hash_table_unref(self->possible_keys);
