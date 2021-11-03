@@ -359,6 +359,7 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *group, const gchar *key)
 	/* query */
 	group_key = fu_quirks_build_group_key(group);
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
+	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, group_key, NULL);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 1, key, NULL);
 	n = xb_silo_query_first_with_context(self->silo, self->query_kv, &context, &error);
@@ -428,6 +429,7 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 	/* query */
 	group_key = fu_quirks_build_group_key(group);
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
+	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, group_key, NULL);
 	results = xb_silo_query_with_context(self->silo, self->query_vs, &context, &error);
 #else
