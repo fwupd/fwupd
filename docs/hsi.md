@@ -191,7 +191,7 @@ To meet HSI-1 on systems that run this test, the result must be `not-enabled`. *
 
 See also:
 
-- [Intel C200 Datasheet](http://www.intel.com/content/www/us/en/chipsets/6-chipset-c200-chipset-datasheet.html)
+- [Intel C200 Datasheet](https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/6-chipset-c200-chipset-datasheet.pdf)
 
 <a id="org.fwupd.hsi.Spi.Ble"></a>
 
@@ -209,7 +209,7 @@ To meet HSI-1 on systems that run this test, the result must be `enabled`. *[v1.
 
 See also:
 
-- [Intel C200 Datasheet](http://www.intel.com/content/www/us/en/chipsets/6-chipset-c200-chipset-datasheet.html)
+- [Intel C200 Datasheet](https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/6-chipset-c200-chipset-datasheet.pdf)
 
 <a id="org.fwupd.hsi.Spi.SmmBwp"></a>
 
@@ -227,7 +227,7 @@ To meet HSI-1 on systems that run this test, the result must be `locked`. *[v1.5
 
 See also:
 
-- [Intel C200 Datasheet](http://www.intel.com/content/www/us/en/chipsets/6-chipset-c200-chipset-datasheet.html)
+- [Intel C200 Datasheet](https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/6-chipset-c200-chipset-datasheet.pdf)
 
 <a id="org.fwupd.hsi.Spi.Descriptor"></a>
 
@@ -278,7 +278,7 @@ To meet HSI-1 on systems that run this test, the result must be `locked`. *[v1.5
 
 See also:
 
-- [ME Manufacturing Mode: obscured dangers](http://blog.ptsecurity.com/2018/10/intel-me-manufacturing-mode-macbook.html)
+- [ME Manufacturing Mode: obscured dangers](https://malware.news/t/intel-me-manufacturing-mode-obscured-dangers-and-their-relationship-to-apple-macbook-vulnerability-cve-2018-4251/23214)
 - [Intel security advisory SA-00086](https://www.intel.com/content/www/us/en/security-center/advisory/intel-sa-00086.html)
 
 <a id="org.fwupd.hsi.Mei.OverrideStrap"></a>
