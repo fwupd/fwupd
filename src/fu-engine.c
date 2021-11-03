@@ -6671,7 +6671,7 @@ fu_engine_update_history_database(FuEngine *self, GError **error)
 static void
 fu_engine_ensure_client_certificate(FuEngine *self)
 {
-	g_autoptr(GBytes) blob = g_bytes_new_static("test\0", 5);
+	g_autoptr(GBytes) blob = g_bytes_new_static(NULL, 0);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(JcatBlob) jcat_sig = NULL;
 	g_autoptr(JcatEngine) jcat_engine = NULL;
@@ -6684,6 +6684,10 @@ fu_engine_ensure_client_certificate(FuEngine *self)
 	}
 	jcat_sig = jcat_engine_self_sign(jcat_engine, blob, JCAT_SIGN_FLAG_NONE, &error);
 	if (jcat_sig == NULL) {
+		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+			g_debug("client certificate now exists: %s", error->message);
+			return;
+		}
 		g_message("failed to sign using keyring: %s", error->message);
 		return;
 	}
