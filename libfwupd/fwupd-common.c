@@ -884,13 +884,31 @@ fwupd_device_id_is_valid(const gchar *device_id)
 gboolean
 fwupd_guid_is_valid(const gchar *guid)
 {
+	const gchar zeroguid[] = {"00000000-0000-0000-0000-000000000000"};
+
+	/* sanity check */
 	if (guid == NULL)
 		return FALSE;
-	if (!fwupd_guid_from_string(guid, NULL, FWUPD_GUID_FLAG_NONE, NULL))
+
+	/* check for dashes and hexdigits in the right place */
+	for (guint i = 0; i < sizeof(zeroguid) - 1; i++) {
+		if (guid[i] == '\0')
+			return FALSE;
+		if (zeroguid[i] == '-') {
+			if (guid[i] != '-')
+				return FALSE;
+			continue;
+		}
+		if (!g_ascii_isxdigit(guid[i]))
+			return FALSE;
+	}
+
+	/* longer than required */
+	if (guid[sizeof(zeroguid) - 1] != '\0')
 		return FALSE;
-	if (g_strcmp0(guid, "00000000-0000-0000-0000-000000000000") == 0)
-		return FALSE;
-	return TRUE;
+
+	/* not valid */
+	return g_strcmp0(guid, zeroguid) != 0;
 }
 
 /**
