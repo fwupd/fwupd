@@ -702,6 +702,7 @@ fwupd_common_guid_func(void)
 	g_assert_false(fwupd_guid_is_valid(""));
 	g_assert_false(fwupd_guid_is_valid("1ff60ab2-3905-06a1-b476"));
 	g_assert_false(fwupd_guid_is_valid("1ff60ab2-XXXX-XXXX-XXXX-0371f00c9e9b"));
+	g_assert_false(fwupd_guid_is_valid("1ff60ab2-XXXX-XXXX-XXXX-0371f00c9e9bf"));
 	g_assert_false(fwupd_guid_is_valid(" 1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
 	g_assert_false(fwupd_guid_is_valid("00000000-0000-0000-0000-000000000000"));
 
