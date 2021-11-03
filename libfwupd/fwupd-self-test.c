@@ -689,8 +689,10 @@ fwupd_common_device_id_func(void)
 static void
 fwupd_common_guid_func(void)
 {
+	const guint8 msbuf[] = "hello world!";
 	g_autofree gchar *guid1 = NULL;
 	g_autofree gchar *guid2 = NULL;
+	g_autofree gchar *guid3 = NULL;
 	g_autofree gchar *guid_be = NULL;
 	g_autofree gchar *guid_me = NULL;
 	fwupd_guid_t buf = {0x0};
@@ -715,6 +717,9 @@ fwupd_common_guid_func(void)
 
 	guid2 = fwupd_guid_hash_string("8086:0406");
 	g_assert_cmpstr(guid2, ==, "1fbd1f2c-80f4-5d7c-a6ad-35c7b9bd5486");
+
+	guid3 = fwupd_guid_hash_data(msbuf, sizeof(msbuf), FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT);
+	g_assert_cmpstr(guid3, ==, "6836cfac-f77a-527f-b375-4f92f01449c5");
 
 	/* round-trip BE */
 	ret = fwupd_guid_from_string("00112233-4455-6677-8899-aabbccddeeff",
