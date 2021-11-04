@@ -113,6 +113,8 @@ fu_udev_device_pread_full(FuUdevDevice *self,
 			  guint8 *buf,
 			  gsize bufsz,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 const gchar *
 fu_udev_device_get_sysfs_attr(FuUdevDevice *self, const gchar *attr, GError **error);
 gboolean

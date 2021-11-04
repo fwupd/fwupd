@@ -1448,6 +1448,57 @@ fu_udev_device_pread_full(FuUdevDevice *self,
 }
 
 /**
+ * fu_udev_device_seek:
+ * @self: a #FuUdevDevice
+ * @offset: offset address
+ * @error: (nullable): optional return location for an error
+ *
+ * Seeks a file descriptor to a given offset.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.7.2
+ **/
+gboolean
+fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error)
+{
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_UDEV_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* not open! */
+	if (priv->fd == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "%s [%s] has not been opened",
+			    fu_device_get_id(FU_DEVICE(self)),
+			    fu_device_get_name(FU_DEVICE(self)));
+		return FALSE;
+	}
+
+#ifdef HAVE_PWRITE
+	if (lseek(priv->fd, offset, SEEK_SET) < 0) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_FAILED,
+			    "failed to seek to 0x%04x: %s",
+			    (guint)offset,
+			    strerror(errno));
+		return FALSE;
+	}
+	return TRUE;
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Not supported as lseek() is unavailable");
+	return FALSE;
+#endif
+}
+
+/**
  * fu_udev_device_pwrite_full:
  * @self: a #FuUdevDevice
  * @port: offset address

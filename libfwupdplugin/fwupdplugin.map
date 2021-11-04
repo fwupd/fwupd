@@ -950,5 +950,6 @@ LIBFWUPDPLUGIN_1.7.2 {
   global:
     fu_context_has_hwid_flag;
     fu_udev_device_get_sysfs_attr_uint64;
+    fu_udev_device_seek;
   local: *;
 } LIBFWUPDPLUGIN_1.7.1;
