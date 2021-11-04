@@ -115,6 +115,11 @@ fu_udev_device_pread_full(FuUdevDevice *self,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
 const gchar *
 fu_udev_device_get_sysfs_attr(FuUdevDevice *self, const gchar *attr, GError **error);
+gboolean
+fu_udev_device_get_sysfs_attr_uint64(FuUdevDevice *self,
+				     const gchar *attr,
+				     guint64 *value,
+				     GError **error);
 gchar *
 fu_udev_device_get_parent_name(FuUdevDevice *self);
 
