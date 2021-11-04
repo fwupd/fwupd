@@ -108,6 +108,7 @@ struct _FuEngine {
 	FuHistory *history;
 	FuIdle *idle;
 	XbSilo *silo;
+	XbQuery *query_component_by_guid;
 	guint coldplug_id;
 	FuPluginList *plugin_list;
 	GPtrArray *plugin_filter;
@@ -990,24 +991,55 @@ fu_engine_verify_update(FuEngine *self, const gchar *device_id, GError **error)
 	return TRUE;
 }
 
+static XbNode *
+fu_engine_get_component_by_guid(FuEngine *self, const gchar *guid)
+{
+	XbNode *component;
+	g_autoptr(GError) error_local = NULL;
+#if LIBXMLB_CHECK_VERSION(0, 3, 0)
+	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
+#endif
+
+	/* no components in silo */
+	if (self->query_component_by_guid == NULL)
+		return NULL;
+
+#if LIBXMLB_CHECK_VERSION(0, 3, 0)
+	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
+	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
+	component = xb_silo_query_first_with_context(self->silo,
+						     self->query_component_by_guid,
+						     &context,
+						     &error_local);
+#else
+	if (!xb_query_bind_str(self->query_component_by_guid, 0, guid, &error_local)) {
+		g_warning("failed to bind 0: %s", error_local->message);
+		return NULL;
+	}
+	component =
+	    xb_silo_query_first_full(self->silo, self->query_component_by_guid, &error_local);
+#endif
+	if (component == NULL) {
+		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
+		    !g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
+			g_warning("ignoring: %s", error_local->message);
+		return NULL;
+	}
+	return g_object_ref(component);
+}
+
 XbNode *
 fu_engine_get_component_by_guids(FuEngine *self, FuDevice *device)
 {
 	GPtrArray *guids = fu_device_get_guids(device);
-	g_autoptr(GString) xpath = g_string_new(NULL);
-	g_autoptr(XbNode) component = NULL;
+	XbNode *component = NULL;
 	for (guint i = 0; i < guids->len; i++) {
 		const gchar *guid = g_ptr_array_index(guids, i);
-		xb_string_append_union(xpath,
-				       "components/component[@type='firmware']/"
-				       "provides/firmware[@type='flashed'][text()='%s']/"
-				       "../..",
-				       guid);
+		component = fu_engine_get_component_by_guid(self, guid);
+		if (component != NULL)
+			break;
 	}
-	component = xb_silo_query_first(self->silo, xpath->str, NULL);
-	if (component != NULL)
-		return g_steal_pointer(&component);
-	return NULL;
+	return component;
 }
 
 static XbNode *
@@ -3409,13 +3441,56 @@ fu_engine_get_item_by_id_fallback_history(FuEngine *self, const gchar *id, GErro
 	return NULL;
 }
 
+static gboolean
+fu_engine_create_silo_index(FuEngine *self, GError **error)
+{
+	g_autoptr(GPtrArray) components = NULL;
+
+	/* print what we've got */
+	components = xb_silo_query(self->silo, "components/component[@type='firmware']", 0, NULL);
+	if (components == NULL)
+		return TRUE;
+	g_debug("%u components now in silo", components->len);
+
+	/* build the index */
+	if (!xb_silo_query_build_index(self->silo, "components/component", "type", error))
+		return FALSE;
+	if (!xb_silo_query_build_index(self->silo,
+				       "components/component[@type='firmware']/provides/firmware",
+				       "type",
+				       error))
+		return FALSE;
+	if (!xb_silo_query_build_index(self->silo,
+				       "components/component[@type='firmware']/provides/firmware",
+				       NULL,
+				       error))
+		return FALSE;
+
+	/* create prepared queries to save time later */
+	self->query_component_by_guid =
+	    xb_query_new_full(self->silo,
+			      "components/component[@type='firmware']/"
+			      "provides/firmware[@type=$'flashed'][text()=?]/"
+			      "../..",
+			      XB_QUERY_FLAG_OPTIMIZE,
+			      error);
+	if (self->query_component_by_guid == NULL) {
+		g_prefix_error(error, "failed to prepare query: ");
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /* for the self tests */
 void
 fu_engine_set_silo(FuEngine *self, XbSilo *silo)
 {
+	g_autoptr(GError) error_local = NULL;
 	g_return_if_fail(FU_IS_ENGINE(self));
 	g_return_if_fail(XB_IS_SILO(silo));
 	g_set_object(&self->silo, silo);
+	if (!fu_engine_create_silo_index(self, &error_local))
+		g_warning("failed to create indexes: %s", error_local->message);
 }
 
 static gboolean
@@ -3743,7 +3818,6 @@ fu_engine_load_metadata_store(FuEngine *self, FuEngineLoadFlags flags, GError **
 	GPtrArray *remotes;
 	XbBuilderCompileFlags compile_flags = XB_BUILDER_COMPILE_FLAG_IGNORE_INVALID;
 	g_autoptr(GFile) xmlb = NULL;
-	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 
 	/* clear existing silo */
@@ -3846,27 +3920,8 @@ fu_engine_load_metadata_store(FuEngine *self, FuEngineLoadFlags flags, GError **
 		return FALSE;
 	}
 
-	/* print what we've got */
-	components = xb_silo_query(self->silo, "components/component[@type='firmware']", 0, NULL);
-	if (components != NULL)
-		g_debug("%u components now in silo", components->len);
-
-	/* build the index */
-	if (!xb_silo_query_build_index(self->silo, "components/component", "type", error))
-		return FALSE;
-	if (!xb_silo_query_build_index(self->silo,
-				       "components/component[@type='firmware']/provides/firmware",
-				       "type",
-				       error))
-		return FALSE;
-	if (!xb_silo_query_build_index(self->silo,
-				       "components/component[@type='firmware']/provides/firmware",
-				       NULL,
-				       error))
-		return FALSE;
-
 	/* success */
-	return TRUE;
+	return fu_engine_create_silo_index(self, error);
 }
 
 static void
@@ -7214,6 +7269,8 @@ fu_engine_finalize(GObject *obj)
 
 	if (self->silo != NULL)
 		g_object_unref(self->silo);
+	if (self->query_component_by_guid != NULL)
+		g_object_unref(self->query_component_by_guid);
 	if (self->coldplug_id != 0)
 		g_source_remove(self->coldplug_id);
 	if (self->approved_firmware != NULL)
