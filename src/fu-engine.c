@@ -5810,6 +5810,12 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 		}
 	}
 
+	/* set or clear the SUPPORTED flag */
+	fu_engine_ensure_device_supported(self, device);
+
+	/* fixup the name and format as needed */
+	fu_engine_md_refresh_device_from_component(self, device, component);
+
 	/* adopt any required children, which may or may not already exist */
 	fu_engine_adopt_children(self, device);
 
@@ -6969,9 +6975,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 			}
 		}
 	}
-
-	/* set device properties from the metadata */
-	fu_engine_md_refresh_devices(self);
 
 	/* update the db for devices that were updated during the reboot */
 	if (!fu_engine_update_history_database(self, error))
