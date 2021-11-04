@@ -33,6 +33,7 @@ struct _FuUdevDeviceClass {
  * @FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT:	Get the vendor ID fallback from the parent
  * @FU_UDEV_DEVICE_FLAG_USE_CONFIG:		Read and write from the device config
  * @FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK:		Open nonblocking, e.g. O_NONBLOCK
+ * @FU_UDEV_DEVICE_FLAG_OPEN_SYNC:		Open sync, e.g. O_SYNC
  *
  * Flags used when opening the device using fu_device_open().
  **/
@@ -43,6 +44,7 @@ typedef enum {
 	FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT = 1 << 2,
 	FU_UDEV_DEVICE_FLAG_USE_CONFIG = 1 << 3,
 	FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK = 1 << 4,
+	FU_UDEV_DEVICE_FLAG_OPEN_SYNC = 1 << 5,
 	/*< private >*/
 	FU_UDEV_DEVICE_FLAG_LAST
 } FuUdevDeviceFlags;
