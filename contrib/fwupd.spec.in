@@ -450,6 +450,7 @@ done
 %if 0%{?have_msr}
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_msr.so
 %endif
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_mtd.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_nitrokey.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_nvme.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_optionrom.so

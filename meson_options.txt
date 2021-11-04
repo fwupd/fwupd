@@ -32,6 +32,7 @@ option('plugin_uefi_pk', type : 'boolean', value : true, description : 'enable U
 option('plugin_nvme', type : 'boolean', value : true, description : 'enable NVMe support')
 option('plugin_modem_manager', type : 'boolean', value : false, description : 'enable ModemManager support')
 option('plugin_msr', type : 'boolean', value : true, description : 'enable MSR support')
+option('plugin_mtd', type : 'boolean', value : true, description : 'enable MTD support')
 option('plugin_flashrom', type : 'boolean', value : false, description : 'enable libflashrom support')
 option('plugin_platform_integrity', type : 'boolean', value : false, description : 'enable platform integrity support')
 option('plugin_intel_spi', type : 'boolean', value : false, description : 'enable Intel SPI support')

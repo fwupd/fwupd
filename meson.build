@@ -314,6 +314,9 @@ endif
 if cc.has_header('linux/ethtool.h')
   conf.set('HAVE_ETHTOOL_H', '1')
 endif
+if cc.has_header('mtd/mtd-user.h')
+  conf.set('HAVE_MTD_USER_H', '1')
+endif
 if cc.has_header('linux/hidraw.h')
   conf.set('HAVE_HIDRAW_H', '1')
 endif

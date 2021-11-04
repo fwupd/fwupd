@@ -38,6 +38,7 @@ meson .. \
     -Dsystemd=false \
     -Dplugin_emmc=false \
     -Dplugin_amt=false \
+    -Dplugin_mtd=false \
     -Dintrospection=false \
     -Dplugin_thunderbolt=false \
     -Dplugin_synaptics_mst=false \
