@@ -43,3 +43,29 @@ fu_lenovo_dock_spi_state_to_string(guint8 val)
 		return "flash-not-found";
 	return NULL;
 }
+
+/* returned TRUE - got a expected report*/
+gboolean
+fu_lenovo_dock_rx_filter(guint8 cmd, const guint8 *buf)
+{
+	if (cmd != buf[1])
+		return TRUE;
+
+	switch (cmd) {
+	case USBUID_ISP_DEVICE_CMD_MCU_JUMP2BOOT:
+		g_debug("got correct jump");
+		break;
+	case USBUID_ISP_INTERNAL_FW_CMD_TARGET_CHECKSUM:
+		if (buf[6] == FIRMWARE_IDX_AUDIO) {
+			g_debug("got a quick jump at audio updates");
+		} else {
+			g_debug("got a ignored report");
+			return FALSE;
+		}
+		break;
+	default:
+		break;
+	}
+
+	return TRUE;
+}

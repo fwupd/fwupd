@@ -2,7 +2,6 @@
 Plugin = lenovo_dock
 GType = FuLenovoDockMcuDevice
 Name = ThinkPad Thunderbolt 4 Dock
-LenovoDockFirmwareImageId = FW_40B1
 
 [USB\VID_17EF&PID_30B5]
 Plugin = lenovo_dock
