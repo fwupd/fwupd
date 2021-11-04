@@ -29,10 +29,11 @@
 #define USBUID_ISP_DEVICE_CMD_FWBUFER_TRANSFER_FINISH 0x08
 #define USBUID_ISP_DEVICE_CMD_FWBUFER_ERROR_END	      0x09
 
-#define USBUID_ISP_INTERNAL_FW_CMD_INITAL	   0xA0
-#define USBUID_ISP_INTERNAL_FW_CMD_UPDATE_FW	   0xA1
-#define USBUID_ISP_INTERNAL_FW_CMD_TARGET_CHECKSUM 0xA2
-#define USBUID_ISP_INTERNAL_FW_CMD_ISP_END	   0xA3
+#define USBUID_ISP_INTERNAL_FW_CMD_INITAL	   0x0A
+#define USBUID_ISP_INTERNAL_FW_CMD_UPDATE_FW	   0x0B
+#define USBUID_ISP_INTERNAL_FW_CMD_TARGET_CHECKSUM 0x0C
+#define USBUID_ISP_INTERNAL_FW_CMD_ISP_END	   0x0D
+#define USBUID_ISP_CMD_ALL			   0xFF
 
 #define TAG_TAG2_ISP_BOOT      0    /* before Common CMD for bootload, with TAG0, TAG1, CMD */
 #define TAG_TAG2_ISP	       0x5a /* before Common, with TAG0, TAG1, CMD */
@@ -48,6 +49,8 @@
 
 #define External_Valid_Value 0x37
 #define TX_ISP_LENGTH	     61
+
+#define W25Q16DV_PAGE_SIZE 256
 
 #define FIRMWARE_IDX_NONE   0x00
 #define FIRMWARE_IDX_DMC_PD 0x01
@@ -92,3 +95,5 @@ const gchar *
 fu_lenovo_dock_idx_to_string(guint8 val);
 const gchar *
 fu_lenovo_dock_spi_state_to_string(guint8 val);
+gboolean
+fu_lenovo_dock_rx_filter(guint8, const guint8 *);
