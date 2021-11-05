@@ -677,6 +677,7 @@ fu_vli_device_finalize(GObject *obj)
 	FuVliDevice *self = FU_VLI_DEVICE(obj);
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
 	g_object_unref(priv->cfi_device);
+	G_OBJECT_CLASS(fu_vli_device_parent_class)->finalize(obj);
 }
 
 static void
