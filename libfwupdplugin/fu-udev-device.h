@@ -64,6 +64,10 @@ fu_udev_device_get_sysfs_path(FuUdevDevice *self);
 const gchar *
 fu_udev_device_get_subsystem(FuUdevDevice *self);
 const gchar *
+fu_udev_device_get_bind_id(FuUdevDevice *self);
+void
+fu_udev_device_set_bind_id(FuUdevDevice *self, const gchar *bind_id);
+const gchar *
 fu_udev_device_get_driver(FuUdevDevice *self);
 guint32
 fu_udev_device_get_vendor(FuUdevDevice *self);
