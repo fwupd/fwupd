@@ -431,18 +431,6 @@ fu_solokey_device_verify(FuSolokeyDevice *self, GBytes *fw_sig, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_solokey_device_prepare_firmware(FuDevice *device,
-				   GBytes *fw,
-				   FwupdInstallFlags flags,
-				   GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_solokey_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_solokey_device_write_firmware(FuDevice *device,
 				 FuFirmware *firmware,
@@ -534,6 +522,7 @@ fu_solokey_device_init(FuSolokeyDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.solokeys");
 	fu_device_set_name(FU_DEVICE(self), "Solo Secure");
 	fu_device_set_summary(FU_DEVICE(self), "Open source FIDO2 security key");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_SOLOKEY_FIRMWARE);
 	fu_device_add_icon(FU_DEVICE(self), "applications-internet");
 }
 
@@ -542,7 +531,6 @@ fu_solokey_device_class_init(FuSolokeyDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->write_firmware = fu_solokey_device_write_firmware;
-	klass_device->prepare_firmware = fu_solokey_device_prepare_firmware;
 	klass_device->setup = fu_solokey_device_setup;
 	klass_device->open = fu_solokey_device_open;
 	klass_device->close = fu_solokey_device_close;

@@ -541,6 +541,10 @@ FwupdRelease *
 fu_device_get_release_default(FuDevice *self);
 GType
 fu_device_get_specialized_gtype(FuDevice *self);
+GType
+fu_device_get_firmware_gtype(FuDevice *self);
+void
+fu_device_set_firmware_gtype(FuDevice *self, GType firmware_gtype);
 void
 fu_device_add_internal_flag(FuDevice *self, FuDeviceInternalFlags flag);
 void

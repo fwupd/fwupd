@@ -570,18 +570,6 @@ fu_pxi_wireless_device_reset(FuDevice *device, GError **error)
 						  error);
 }
 
-static FuFirmware *
-fu_pxi_wireless_device_prepare_firmware(FuDevice *device,
-					GBytes *fw,
-					FwupdInstallFlags flags,
-					GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_pxi_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_pxi_wireless_device_write_firmware(FuDevice *device,
 				      FuFirmware *firmware,
@@ -665,6 +653,7 @@ fu_pxi_wireless_device_init(FuPxiWirelessDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_vendor_id(FU_DEVICE(self), "USB:0x093A");
 	fu_device_add_protocol(FU_DEVICE(self), "com.pixart.rf");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_PXI_FIRMWARE);
 }
 
 static void
@@ -672,7 +661,6 @@ fu_pxi_wireless_device_class_init(FuPxiWirelessDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->write_firmware = fu_pxi_wireless_device_write_firmware;
-	klass_device->prepare_firmware = fu_pxi_wireless_device_prepare_firmware;
 	klass_device->to_string = fu_pxi_wireless_device_to_string;
 	klass_device->set_progress = fu_pxi_wireless_device_set_progress;
 }

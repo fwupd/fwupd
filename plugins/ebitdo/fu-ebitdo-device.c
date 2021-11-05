@@ -656,18 +656,6 @@ fu_ebitdo_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_ebitdo_device_prepare_firmware(FuDevice *device,
-				  GBytes *fw,
-				  FwupdInstallFlags flags,
-				  GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_ebitdo_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 static void
 fu_ebitdo_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -685,6 +673,7 @@ fu_ebitdo_device_init(FuEbitdoDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "com.8bitdo");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_EBITDO_FIRMWARE);
 }
 
 static void
@@ -697,6 +686,5 @@ fu_ebitdo_device_class_init(FuEbitdoDeviceClass *klass)
 	klass_device->attach = fu_ebitdo_device_attach;
 	klass_device->open = fu_ebitdo_device_open;
 	klass_device->probe = fu_ebitdo_device_probe;
-	klass_device->prepare_firmware = fu_ebitdo_device_prepare_firmware;
 	klass_device->set_progress = fu_ebitdo_set_progress;
 }
