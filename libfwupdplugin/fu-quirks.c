@@ -516,6 +516,7 @@ fu_quirks_init(FuQuirks *self)
 	fu_quirks_add_possible_key(self, FU_QUIRKS_FIRMWARE_SIZE_MIN);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_FLAGS);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_GTYPE);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_FIRMWARE_GTYPE);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_GUID);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_ICON);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_INHIBIT);

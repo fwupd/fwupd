@@ -223,18 +223,6 @@ fu_altos_device_write_page(FuAltosDevice *self,
 	return TRUE;
 }
 
-static FuFirmware *
-fu_altos_device_prepare_firmware(FuDevice *device,
-				 GBytes *fw,
-				 FwupdInstallFlags flags,
-				 GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_altos_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_altos_device_write_firmware(FuDevice *device,
 			       FuFirmware *firmware,
@@ -572,6 +560,7 @@ fu_altos_device_init(FuAltosDevice *self)
 	fu_device_set_vendor(FU_DEVICE(self), "altusmetrum.org");
 	fu_device_set_summary(FU_DEVICE(self), "USB hardware random number generator");
 	fu_device_add_protocol(FU_DEVICE(self), "org.altusmetrum.altos");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ALTOS_FIRMWARE);
 
 	/* requires manual step */
 	if (!fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER))
@@ -585,7 +574,6 @@ fu_altos_device_class_init(FuAltosDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->to_string = fu_altos_device_to_string;
 	klass_device->probe = fu_altos_device_probe;
-	klass_device->prepare_firmware = fu_altos_device_prepare_firmware;
 	klass_device->write_firmware = fu_altos_device_write_firmware;
 	klass_device->dump_firmware = fu_altos_device_dump_firmware;
 	klass_device->set_progress = fu_altos_device_set_progress;

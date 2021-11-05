@@ -457,18 +457,6 @@ fu_wac_device_switch_to_flash_loader(FuWacDevice *self, GError **error)
 						error);
 }
 
-static FuFirmware *
-fu_wac_device_prepare_firmware(FuDevice *device,
-			       GBytes *fw,
-			       FwupdInstallFlags flags,
-			       GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_wac_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_wac_device_write_firmware(FuDevice *device,
 			     FuFirmware *firmware,
@@ -923,6 +911,7 @@ fu_wac_device_init(FuWacDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_install_duration(FU_DEVICE(self), 10);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_WAC_FIRMWARE);
 }
 
 static void
@@ -942,7 +931,6 @@ fu_wac_device_class_init(FuWacDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_wac_device_finalize;
-	klass_device->prepare_firmware = fu_wac_device_prepare_firmware;
 	klass_device->write_firmware = fu_wac_device_write_firmware;
 	klass_device->to_string = fu_wac_device_to_string;
 	klass_device->setup = fu_wac_device_setup;

@@ -221,6 +221,14 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key);
  **/
 #define FU_QUIRKS_GTYPE "GType"
 /**
+ * FU_QUIRKS_FIRMWARE_GTYPE:
+ *
+ * The quirk key for the custom firmware GType.
+ *
+ * Since: 1.7.2
+ **/
+#define FU_QUIRKS_FIRMWARE_GTYPE "FirmwareGType"
+/**
  * FU_QUIRKS_PROTOCOL:
  *
  * The quirk key for the protocol, e.g. `org.usb.dfu`.

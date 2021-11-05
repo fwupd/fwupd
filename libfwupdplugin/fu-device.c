@@ -67,6 +67,7 @@ typedef struct {
 	guint64 size_max;
 	gint open_refcount; /* atomic */
 	GType specialized_gtype;
+	GType firmware_gtype;
 	GPtrArray *possible_plugins;
 	GPtrArray *retry_recs; /* of FuDeviceRetryRecovery */
 	guint retry_delay;
@@ -1611,6 +1612,16 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		priv->specialized_gtype = g_type_from_name(value);
 		return TRUE;
 	}
+	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_GTYPE) == 0) {
+		if (priv->firmware_gtype != G_TYPE_INVALID) {
+			g_debug("already set firmware GType to %s, ignoring %s",
+				g_type_name(priv->firmware_gtype),
+				value);
+			return TRUE;
+		}
+		priv->firmware_gtype = g_type_from_name(value);
+		return TRUE;
+	}
 	if (g_strcmp0(key, FU_QUIRKS_CHILDREN) == 0) {
 		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
 		for (guint i = 0; sections[i] != NULL; i++) {
@@ -1644,6 +1655,39 @@ fu_device_get_specialized_gtype(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	return priv->specialized_gtype;
+}
+
+/**
+ * fu_device_get_firmware_gtype:
+ * @self: a #FuDevice
+ *
+ * Gets the default firmware type for the device.
+ *
+ * Returns: #GType
+ *
+ * Since: 1.7.2
+ **/
+GType
+fu_device_get_firmware_gtype(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	return priv->firmware_gtype;
+}
+
+/**
+ * fu_device_set_firmware_gtype:
+ * @self: a #FuDevice
+ * @firmware_gtype: a #GType
+ *
+ * Sets the default firmware type for the device.
+ *
+ * Since: 1.7.2
+ **/
+void
+fu_device_set_firmware_gtype(FuDevice *self, GType firmware_gtype)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	priv->firmware_gtype = firmware_gtype;
 }
 
 static void
@@ -3570,6 +3614,10 @@ fu_device_prepare_firmware(FuDevice *self, GBytes *fw, FwupdInstallFlags flags, 
 	if (klass->prepare_firmware != NULL) {
 		firmware = klass->prepare_firmware(self, fw, flags, error);
 		if (firmware == NULL)
+			return NULL;
+	} else if (priv->firmware_gtype != G_TYPE_INVALID) {
+		firmware = g_object_new(priv->firmware_gtype, NULL);
+		if (!fu_firmware_parse(firmware, fw, flags, error))
 			return NULL;
 	} else {
 		firmware = fu_firmware_new_from_bytes(fw);

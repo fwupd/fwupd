@@ -197,18 +197,6 @@ fu_wacom_device_set_version_bootloader(FuWacomDevice *self, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_wacom_device_prepare_firmware(FuDevice *device,
-				 GBytes *fw,
-				 FwupdInstallFlags flags,
-				 GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_wacom_device_write_firmware(FuDevice *device,
 			       FuFirmware *firmware,
@@ -362,6 +350,7 @@ fu_wacom_device_init(FuWacomDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_IHEX_FIRMWARE);
 }
 
 static void
@@ -369,7 +358,6 @@ fu_wacom_device_class_init(FuWacomDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->to_string = fu_wacom_device_to_string;
-	klass_device->prepare_firmware = fu_wacom_device_prepare_firmware;
 	klass_device->write_firmware = fu_wacom_device_write_firmware;
 	klass_device->attach = fu_wacom_device_attach;
 	klass_device->detach = fu_wacom_device_detach;

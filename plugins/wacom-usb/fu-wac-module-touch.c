@@ -19,18 +19,6 @@ struct _FuWacModuleTouch {
 
 G_DEFINE_TYPE(FuWacModuleTouch, fu_wac_module_touch, FU_TYPE_WAC_MODULE)
 
-static FuFirmware *
-fu_wac_module_touch_prepare_firmware(FuDevice *device,
-				     GBytes *fw,
-				     FwupdInstallFlags flags,
-				     GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_wac_module_touch_write_firmware(FuDevice *device,
 				   FuFirmware *firmware,
@@ -128,13 +116,13 @@ fu_wac_module_touch_init(FuWacModuleTouch *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_set_install_duration(FU_DEVICE(self), 30);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_IHEX_FIRMWARE);
 }
 
 static void
 fu_wac_module_touch_class_init(FuWacModuleTouchClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->prepare_firmware = fu_wac_module_touch_prepare_firmware;
 	klass_device->write_firmware = fu_wac_module_touch_write_firmware;
 }
 
