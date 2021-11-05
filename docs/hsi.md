@@ -123,7 +123,7 @@ A runtime security issue detected.
 
 - The kernel is [tainted](https://www.kernel.org/doc/html/latest/admin-guide/tainted-kernels.html) due to a non-free module or critical firmware issue. *[v1.5.0]*
 
-- The kernel is not [locked down](https://mjg59.dreamwidth.org/50577.html). [*[v1.5.0]*]
+- The kernel is not [locked down](https://mjg59.dreamwidth.org/50577.html). *[v1.5.0]*
 
 - Unencrypted [swap partition](https://wiki.archlinux.org/index.php/Dm-crypt/Swap_encryption). *[v1.5.0]*
 
