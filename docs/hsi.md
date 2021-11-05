@@ -144,7 +144,7 @@ UEFI Secure boot is a verification mechanism for ensuring that code launched by 
 
 Secure Boot requires that each binary loaded at boot is validated against trusted certificates.
 
-Permitted results:
+Possible results:
 
 - `not-found`: support has not been detected
 - `not-enabled`: detected, but has been turned off
@@ -152,7 +152,7 @@ Permitted results:
 
 To meet HSI-1 on UEFI systems that run this test, the result must be `enabled`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Ubuntu SecureBoot Wiki Page](https://wiki.ubuntu.com/UEFI/SecureBoot)
 
@@ -163,14 +163,14 @@ See also:
 UEFI defines a platform key for the system.
 This should not be a test key, e.g. `DO NOT TRUST - AMI Test PK`
 
-Permitted results:
+Possible results:
 
 - `valid`: valid key
 - `not-valid`: an invalid key has been enrolled
 
 To meet HSI-1 on UEFI systems that run this test, the result must be `valid`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Ubuntu SecureBoot Wiki Page](https://wiki.ubuntu.com/UEFI/SecureBoot/Testing)
 
@@ -181,7 +181,7 @@ See also:
 Intel hardware provides this mechanism to protect the SPI ROM chip located on the motherboard from being overwritten by the operating
 system. The `BIOSWE` bit must be unset otherwise userspace can write to the SPI chip.
 
-Permitted results:
+Possible results:
 
 - `not-found`: the SPI device was not found
 - `not-enabled`: write enable is disabled
@@ -189,7 +189,7 @@ Permitted results:
 
 To meet HSI-1 on systems that run this test, the result must be `not-enabled`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Intel C200 Datasheet](https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/6-chipset-c200-chipset-datasheet.pdf)
 
@@ -200,14 +200,14 @@ See also:
 If the lock bit is set then System Management Interrupts (SMIs) are raised when setting BIOS Write Enable.
 The `BLE` bit must be enabled in the PCH otherwise `BIOSWE` can easily be unset.
 
-Permitted results:
+Possible results:
 
 - `enabled`: the register is locked
 - `not-enabled`: the register is not locked
 
 To meet HSI-1 on systems that run this test, the result must be `enabled`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Intel C200 Datasheet](https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/6-chipset-c200-chipset-datasheet.pdf)
 
@@ -218,14 +218,14 @@ See also:
 This bit set defines when the BIOS region can be written by the host.
 The `SMM_BWP` bit must be set to make the BIOS region non-writable unless all processors are in system management mode.
 
-Permitted results:
+Possible results:
 
 - `locked`: the region is locked
 - `not-locked`: the region is not locked
 
 To meet HSI-1 on systems that run this test, the result must be `locked`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Intel C200 Datasheet](https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/6-chipset-c200-chipset-datasheet.pdf)
 
@@ -236,7 +236,7 @@ See also:
 The SPI descriptor must always be read only from all other regions.
 Additionally on Intel architectures the FLOCKDN register must be set to prevent configuration registers in the SPI BAR from being changed.
 
-Permitted results:
+Possible results:
 
 - `not-valid`: any region can write to the flash descriptor
 - `locked`: the SPI BAR is locked and read only from all regions
@@ -250,7 +250,7 @@ To meet HSI-1 on systems that run this test, the result must be `locked`. *[v1.6
 
 A TPM securely stores platform specific secrets that can only be divulged to trusted consumers in a secure environment.
 
-Permitted results:
+Possible results:
 
 - `found`: device found in v2 mode
 - `not-found`: no device found
@@ -258,7 +258,7 @@ Permitted results:
 
 To meet HSI-1 on systems that run this test, the result must be `found`. *[v1.5.0]*
 
-See also:
+References:
 
 - [TPM Wikipedia Page](https://en.wikipedia.org/wiki/Trusted_Platform_Module)
 
@@ -269,14 +269,14 @@ See also:
 There have been some unfortunate cases of the ME being distributed in manufacturing mode.
 In manufacturing mode many features from the ME can be interacted with that decrease the platform's security.
 
-Permitted results:
+Possible results:
 
 - `locked`: device has had manufacturing mode disabled
 - `not-locked`: device is in manufacturing mode
 
 To meet HSI-1 on systems that run this test, the result must be `locked`. *[v1.5.0]*
 
-See also:
+References:
 
 - [ME Manufacturing Mode: obscured dangers](https://malware.news/t/intel-me-manufacturing-mode-obscured-dangers-and-their-relationship-to-apple-macbook-vulnerability-cve-2018-4251/23214)
 - [Intel security advisory SA-00086](https://www.intel.com/content/www/us/en/security-center/advisory/intel-sa-00086.html)
@@ -288,14 +288,14 @@ See also:
 The Flash Descriptor Security Override Strap is not accessible to end users on consumer boards and Intel stresses that this is for debugging
 only.
 
-Permitted results:
+Possible results:
 
 - `locked`: device in in normal runtime mode
 - `not-locked`: device is in debugging mode
 
 To meet HSI-1 on systems that run this test, the result must be `locked`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Chromium documentation for Intel ME](https://chromium.googlesource.com/chromiumos/third_party/flashrom/+/master/Documentation/mysteries_intel.txt)
 
@@ -307,14 +307,14 @@ Converged Security and Manageability Engine is a standalone management module th
 The CSME lives in the PCH and can only be updated by the OEM vendor.
 The version of the CSME module can be checked to detect the most common and serious vulnerabilities: CVE-2017-5705, CVE-2017-5708, CVE-2017-5711, CVE-2017-5712, CVE-2017-5711, CVE-2017-5712, CVE-2017-5706, CVE-2017-5709, CVE-2017-5707 or CVE-2017-5710.
 
-Permitted results:
+Possible results:
 
 - `valid`: affected by one of the below CVEs
 - `not-valid`: is not affected by the most critical CVEs
 
 To meet HSI-1 on systems that run this test, the result must be `valid`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Intel CSME Security Review Cumulative Update](https://www.intel.com/content/www/us/en/security-center/advisory/intel-sa-00086.html)
 
@@ -324,14 +324,14 @@ See also:
 
 Newer Intel CPUs support debugging over USB3 via a proprietary Direct Connection Interface (DCI) with the use of off-the-shelf hardware.
 
-Permitted results:
+Possible results:
 
 - `enabled`: debugging is currently enabled
 - `not-enabled`: debugging is not currently enabled
 
 To meet HSI-1 on systems that run this test, the result must be `not-enabled`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Intel Direct Connect Interface](https://www.intel.co.uk/content/www/uk/en/support/articles/000029393/processors.html)
 - [Chipsec 4xxlp register definitions](https://github.com/chipsec/chipsec/blob/master/chipsec/cfg/8086/pch_4xxlp.xml#L270)
@@ -343,14 +343,14 @@ See also:
 
 Newer Intel CPUs support debugging over USB3 via a proprietary Direct Connection Interface (DCI) with the use of off-the-shelf hardware.
 
-Permitted results:
+Possible results:
 
 - `locked`: CPU debugging has been disabled
 - `not-locked`: is is still possible to enable CPU debugging
 
 To meet HSI-2 on systems that run this test, the result must be `locked`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Intel Direct Connect Interface](https://www.intel.co.uk/content/www/uk/en/support/articles/000029393/processors.html)
 
@@ -362,7 +362,7 @@ The TPM event log records which events are registered for the PCR0 hash.
 When reconstructed the event log values should always match the TPM PCR0.
 If extra events are included in the event log, or some are missing, the reconstitution will fail.
 
-Permitted results:
+Possible results:
 
 - `valid`: all correct
 - `not-valid`: could not reconstitute the hash value
@@ -370,7 +370,7 @@ Permitted results:
 
 To meet HSI-2 on systems that run this test, the result must be `valid`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Linux Kernel TPM Documentation](https://www.kernel.org/doc/html/latest/security/tpm/tpm_event_log.html)
 
@@ -382,7 +382,7 @@ The IOMMU on modern systems is used to mitigate against DMA attacks.
 All I/O for devices capable of DMA is mapped into a private virtual memory region.
 The ACPI DMAR table is used to set up pre-boot DMA protection which eliminates some firmware attacks.
 
-Permitted results:
+Possible results:
 
 - `enabled`: detected correctly
 - `not-valid`: could not determine state
@@ -390,7 +390,7 @@ Permitted results:
 
 To meet HSI-2 on systems that run this test, the result must be `enabled`. *[v1.5.0]*
 
-See also:
+References:
 
 - [IOMMU Wikipedia Page](https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit)
 
@@ -402,14 +402,14 @@ See also:
 BootGuard is a processor feature that prevents the machine from running firmware images not released by the system manufacturer.
 It forms a root-of-trust by fusing in cryptographic keys into the processor itself that are used to verify the Authenticated Code Modules found in the SPI flash.
 
-Permitted results:
+Possible results:
 
 - `enabled`: detected and enabled
 - `not-enabled`: not detected, or detected but not enabled
 
 To meet HSI-2 on systems that run this test, the result must be `enabled`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Coreboot documentation](https://github.com/coreboot/coreboot/blob/master/src/soc/intel/jasperlake/include/soc/me.h)
 
@@ -420,7 +420,7 @@ See also:
 BootGuard is a processor feature that prevents the machine from running firmware images not released by the system manufacturer.
 It forms a root-of-trust by fusing in cryptographic keys into the processor itself that are used to verify the Authenticated Code Modules found in the SPI flash.
 
-Permitted results:
+Possible results:
 
 - `success`: verified boot chain
 - `not-valid`: boot is not verified
@@ -434,7 +434,7 @@ To meet HSI-2 on systems that run this test, the result must be `success`. *[v1.
 BootGuard is a processor feature that prevents the machine from running firmware images not released by the system manufacturer.
 It forms a root-of-trust by fusing in cryptographic keys into the processor itself that are used to verify the Authenticated Code Modules found in the SPI flash.
 
-Permitted results:
+Possible results:
 
 - `valid`: ACM protected
 - `not-valid`: boot is not verified
@@ -448,7 +448,7 @@ To meet HSI-2 on systems that run this test, the result must be `valid`. *[v1.5.
 BootGuard is a processor feature that prevents the machine from running firmware images not released by the system manufacturer.
 It forms a root-of-trust by fusing in cryptographic keys into the processor itself that are used to verify the Authenticated Code Modules found in the SPI flash.
 
-Permitted results:
+Possible results:
 
 - `valid`: error enforce policy is set to shutdown
 - `not-valid`: policy is invalid
@@ -462,7 +462,7 @@ To meet HSI-2 on systems that run this test, the result must be `valid`. *[v1.5.
 BootGuard is a processor feature that prevents the machine from running firmware images not released by the system manufacturer.
 It forms a root-of-trust by fusing in cryptographic keys into the processor itself that are used to verify the Authenticated Code Modules found in the SPI flash.
 
-Permitted results:
+Possible results:
 
 - `valid`: SOC is locked
 - `not-valid`: SOC is not locked
@@ -477,7 +477,7 @@ Suspend to Ram (S3) keeps the raw contents of the DRAM refreshed when the system
 This means that the memory modules can be physically removed and the contents recovered, or a cold boot attack can be performed with a USB device.
 The firmware should be configured to prefer using suspend to idle instead of suspend to ram or to not offer suspend to RAM.
 
-Permitted results:
+Possible results:
 
 - `enabled`: sleep enabled
 - `not-enabled`: suspend-to-ram being used
@@ -485,7 +485,7 @@ Permitted results:
 
 To meet HSI-3 on systems that run this test, the result must be `not-enabled`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Cold Boot Attack Wikipedia Page](https://en.wikipedia.org/wiki/Cold_boot_attack)
 
@@ -495,14 +495,14 @@ See also:
 
 Control enforcement technology is available on new Intel platforms and prevents exploits from hijacking the control-flow transfer instructions for both forward-edge (indirect call/jmp) and back-edge transfer (ret).
 
-Permitted results:
+Possible results:
 
 - `enabled`: feature enabled by the platform
 - `not-supported`: not supported
 
 To meet HSI-3 on systems that run this test, the result must be `enabled`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Intel CET Technology Preview](https://software.intel.com/sites/default/files/managed/4d/2a/control-flow-enforcement-technology-preview.pdf)
 
@@ -512,14 +512,14 @@ See also:
 
 Control enforcement technology is available on new Intel platforms and prevents exploits from hijacking the control-flow transfer instructions for both forward-edge (indirect call/jmp) and back-edge transfer (ret).
 
-Permitted results:
+Possible results:
 
 - `supported`: being used
 - `not-supported`: not being used by the host
 
 To meet HSI-3 on systems that run this test, the result must be `supported`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Intel CET Technology Preview](https://software.intel.com/sites/default/files/managed/4d/2a/control-flow-enforcement-technology-preview.pdf)
 
@@ -530,14 +530,14 @@ See also:
 TME (Intel) or TSME (AMD) is used by the firmware on supported SOCs to encrypt all data on external memory buses.
 It mitigates against an attacker being able to capture memory data while the system is running or to capture memory by removing a DRAM chip.
 
-Permitted results:
+Possible results:
 
 - `enabled`: detected and enabled
 - `not-supported`: not available
 
 To meet HSI-4 on systems that run this test, the result must be `enabled`. *[v1.5.0]*
 
-See also:
+References:
 
 - [Intel TME Press Release](https://software.intel.com/content/www/us/en/develop/blogs/intel-releases-new-technology-specification-for-memory-encryption.html)
 - [WikiChip SME Overview](https://en.wikichip.org/wiki/x86/sme)
@@ -549,14 +549,14 @@ See also:
 Without Supervisor Mode Access Prevention, the supervisor code usually has full read and write access to user-space memory mappings.
 This can make exploits easier to write, as it allows the kernel to access user-space memory when it did not intend to.
 
-Permitted results:
+Possible results:
 
 - `enabled`: features are detected and enabled
 - `not-supported`: not enabled
 
 To meet HSI-4 on systems that run this test, the result must be `enabled`. *[v1.5.0]*
 
-See also:
+References:
 
 - [SMAP Wikipedia Page](https://en.wikipedia.org/wiki/Supervisor_Mode_Access_Prevention)
 
@@ -568,14 +568,14 @@ The IOMMU on modern systems is used to mitigate against DMA attacks.
 All I/O for devices capable of DMA is mapped into a private virtual memory region.
 Common implementations are Intel VT-d and AMD-Vi.
 
-Permitted results:
+Possible results:
 
 - `enabled`: hardware detected and enabled
 - `not-found`: hardware was not detected
 
 To meet HSI-2 on systems that run this test, the result must be `enabled`. *[v1.5.0]*
 
-See also:
+References:
 
 - [IOMMU Wikipedia Page](https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit)
 
@@ -585,7 +585,7 @@ See also:
 
 The platform should be set up with Suspend-to-Idle as the default S3 sleep state.
 
-Permitted results:
+Possible results:
 
 - `enabled`: deep sleep enabled
 - `not-enabled`: suspend-to-idle being used
