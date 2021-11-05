@@ -1094,6 +1094,7 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 	if (proxy != NULL)
 		g_object_add_weak_pointer(G_OBJECT(proxy), (gpointer *)&priv->proxy);
 	priv->proxy = proxy;
+	g_object_notify(G_OBJECT(self), "proxy");
 }
 
 /**
