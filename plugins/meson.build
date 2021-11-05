@@ -75,6 +75,7 @@ plugins = [
   'modem-manager',
   'msr',
   'mtd',
+  'mtd-recovery',
   'nitrokey',
   'nordic-hid',
   'nvme',
