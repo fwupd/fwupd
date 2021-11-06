@@ -757,11 +757,20 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	devices = fu_backend_get_devices(data->backend);
 	for (guint i = 0; i < devices->len; i++) {
 		FuUefiDevice *dev = g_ptr_array_index(devices, i);
+		g_autoptr(GError) error_device = NULL;
+
 		fu_device_set_context(FU_DEVICE(dev), ctx);
 		if (data->esp != NULL)
 			fu_uefi_device_set_esp(dev, data->esp);
-		if (!fu_plugin_uefi_capsule_coldplug_device(plugin, dev, error))
+		if (!fu_plugin_uefi_capsule_coldplug_device(plugin, dev, &error_device)) {
+			if (g_error_matches(error_device, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_warning("skipping device that failed coldplug: %s",
+					  error_device->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_device));
 			return FALSE;
+		}
 		fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 
