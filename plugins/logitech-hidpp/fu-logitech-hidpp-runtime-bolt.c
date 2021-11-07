@@ -463,6 +463,7 @@ static void
 fu_logitech_hidpp_runtime_bolt_init(FuLogitechHidPpRuntimeBolt *self)
 {
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_USER_REPLUG);
+	fu_device_set_vendor(FU_DEVICE(self), "Logitech");
 	fu_device_set_name(FU_DEVICE(self), "Bolt Receiver");
 	fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifyingsigned");
 }
