@@ -2145,7 +2145,9 @@ fu_device_fixup_vendor_name(FuDevice *self)
 	const gchar *name = fu_device_get_name(self);
 	const gchar *vendor = fu_device_get_vendor(self);
 	if (name != NULL && vendor != NULL) {
-		if (g_str_has_prefix(name, vendor)) {
+		g_autofree gchar *name_up = g_utf8_strup(name, -1);
+		g_autofree gchar *vendor_up = g_utf8_strup(vendor, -1);
+		if (g_str_has_prefix(name_up, vendor_up)) {
 			gsize vendor_len = strlen(vendor);
 			g_autofree gchar *name1 = g_strdup(name + vendor_len);
 			g_autofree gchar *name2 = fu_common_strstrip(name1);
@@ -2153,6 +2155,54 @@ fu_device_fixup_vendor_name(FuDevice *self)
 			fwupd_device_set_name(FWUPD_DEVICE(self), name2);
 		}
 	}
+}
+
+static gchar *
+fu_device_fixup_vendor(const gchar *vendor)
+{
+	g_autoptr(GString) str = NULL;
+	const gchar *suffixes[] = {"Ltd.",
+				   "Ltd",
+				   "Limited",
+				   "Inc.",
+				   "Inc",
+				   "Co.",
+				   "Co",
+				   "Corporation",
+				   "Corp",
+				   "corp.",
+				   "Incorporated",
+				   "GmbH",
+				   NULL};
+	struct {
+		const gchar *old;
+		const gchar *new;
+	} vendor_names[] = {{"ADATA Technology Co., Ltd.", "ADATA"},
+			    {"Chicony Electronics Co.,Ltd.", "Chicony"},
+			    {"LENOVO", "Lenovo"},
+			    {"Micron Technology Inc", "Micron"},
+			    {"Samsung Electronics Co Ltd", "Samsung"},
+			    {"VIA Labs, Inc.", "VIA"},
+			    {NULL, NULL}};
+
+	/* sanity check */
+	if (vendor == NULL)
+		return NULL;
+
+	/* correct some company names */
+	for (guint i = 0; vendor_names[i].old != NULL; i++) {
+		if (g_str_has_prefix(vendor, vendor_names[i].old))
+			return g_strdup(vendor_names[i].new);
+	}
+
+	/* get rid of suffixes */
+	str = g_string_new(vendor);
+	for (guint i = 0; suffixes[i] != NULL; i++) {
+		if (g_str_has_suffix(str->str, suffixes[i]))
+			g_string_truncate(str, str->len - strlen(suffixes[i]));
+	}
+	g_strchomp(str->str);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 /**
@@ -2167,7 +2217,8 @@ fu_device_fixup_vendor_name(FuDevice *self)
 void
 fu_device_set_vendor(FuDevice *self, const gchar *vendor)
 {
-	fwupd_device_set_vendor(FWUPD_DEVICE(self), vendor);
+	g_autofree gchar *vendor_fixed = fu_device_fixup_vendor(vendor);
+	fwupd_device_set_vendor(FWUPD_DEVICE(self), vendor_fixed);
 	fu_device_fixup_vendor_name(self);
 }
 
