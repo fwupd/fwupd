@@ -4512,32 +4512,15 @@ fwupd_client_download_write_callback_cb(char *ptr, size_t size, size_t nmemb, vo
 }
 
 static GBytes *
-fwupd_client_stream_read_bytes(GInputStream *stream, GError **error)
-{
-	guint8 tmp[0x8000] = {0x0};
-	g_autoptr(GByteArray) buf = g_byte_array_new();
-
-	/* read from stream in 32kB chunks */
-	while (TRUE) {
-		gssize sz;
-		sz = g_input_stream_read(stream, tmp, sizeof(tmp), NULL, error);
-		if (sz == 0)
-			break;
-		if (sz < 0)
-			return NULL;
-		g_byte_array_append(buf, tmp, sz);
-	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
-}
-
-static GBytes *
 fwupd_client_download_ipfs(FwupdClient *self,
 			   const gchar *url,
 			   GCancellable *cancellable,
 			   GError **error)
 {
-	GInputStream *stream = NULL;
+	GSubprocessFlags flags = G_SUBPROCESS_FLAGS_STDOUT_PIPE | G_SUBPROCESS_FLAGS_STDERR_PIPE;
 	g_autofree gchar *path = NULL;
+	g_autoptr(GBytes) bstdout = NULL;
+	g_autoptr(GBytes) bstderr = NULL;
 	g_autoptr(GSubprocess) subprocess = NULL;
 
 	/* we get no detailed progress details */
@@ -4554,16 +4537,22 @@ fwupd_client_download_ipfs(FwupdClient *self,
 	}
 
 	/* run sync */
-	subprocess =
-	    g_subprocess_new(G_SUBPROCESS_FLAGS_STDOUT_PIPE, error, "ipfs", "cat", path, NULL);
+	subprocess = g_subprocess_new(flags, error, "ipfs", "cat", path, NULL);
 	if (subprocess == NULL)
 		return NULL;
-	if (!g_subprocess_wait_check(subprocess, cancellable, error))
+	if (!g_subprocess_communicate(subprocess, NULL, cancellable, &bstdout, &bstderr, error))
 		return NULL;
-
-	/* get raw stdout */
-	stream = g_subprocess_get_stdout_pipe(subprocess);
-	return fwupd_client_stream_read_bytes(stream, error);
+	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
+	if (g_subprocess_get_exit_status(subprocess) != 0) {
+		const gchar *msg = g_bytes_get_data(bstderr, NULL);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to download file: %s",
+			    msg);
+		return NULL;
+	}
+	return g_steal_pointer(&bstdout);
 }
 
 static GBytes *
