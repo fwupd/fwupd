@@ -75,4 +75,22 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->startup = fu_plugin_thunderbolt_startup;
 	vfuncs->device_registered = fu_plugin_thunderbolt_device_registered;
 	vfuncs->device_created = fu_plugin_thunderbolt_device_created;
+gboolean
+fu_plugin_update_prepare (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
+			  FuDevice *device,
+			  GError **error)
+{
+	  g_warning("debug from fu_plugin_update_prepare");
+	  return TRUE;
+}
+
+gboolean
+fu_plugin_update_cleanup (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
+			  FuDevice *device,
+			  GError **error)
+{
+	g_warning("debug from fu_plugin_update_cleanup");
+	return TRUE;
 }
