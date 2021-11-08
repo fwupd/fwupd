@@ -25,8 +25,8 @@ struct FuPluginData {
 	FuBackend *backend;
 };
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_uefi_capsule_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
@@ -38,11 +38,10 @@ fu_plugin_init(FuPlugin *plugin)
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "acpi_phat");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_uefi_capsule_destroy(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (data->esp != NULL)
@@ -51,15 +50,15 @@ fu_plugin_destroy(FuPlugin *plugin)
 	g_object_unref(data->bgrt);
 }
 
-gboolean
-fu_plugin_clear_results(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_uefi_capsule_clear_results(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuUefiDevice *device_uefi = FU_UEFI_DEVICE(device);
 	return fu_uefi_device_clear_status(device_uefi, error);
 }
 
-void
-fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_uefi_capsule_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
@@ -319,13 +318,13 @@ fu_plugin_uefi_capsule_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 	return fu_plugin_uefi_capsule_write_splash_data(plugin, device, image_bmp, error);
 }
 
-gboolean
-fu_plugin_write_firmware(FuPlugin *plugin,
-			 FuDevice *device,
-			 GBytes *blob_fw,
-			 FuProgress *progress,
-			 FwupdInstallFlags flags,
-			 GError **error)
+static gboolean
+fu_plugin_uefi_capsule_write_firmware(FuPlugin *plugin,
+				      FuDevice *device,
+				      GBytes *blob_fw,
+				      FuProgress *progress,
+				      FwupdInstallFlags flags,
+				      GError **error)
 {
 	const gchar *str;
 	guint32 flashes_left;
@@ -411,8 +410,8 @@ fu_plugin_uefi_capsule_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 	fu_plugin_device_add(plugin, FU_DEVICE(dev));
 }
 
-void
-fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
+static void
+fu_plugin_uefi_capsule_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	if (fu_device_get_metadata(device, FU_DEVICE_METADATA_UEFI_DEVICE_KIND) != NULL) {
 		if (fu_device_get_guid_default(device) == NULL) {
@@ -519,8 +518,8 @@ fu_plugin_uefi_capsule_test_secure_boot(FuPlugin *plugin)
 	fu_plugin_add_report_metadata(plugin, "SecureBoot", result_str);
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_uefi_capsule_startup(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_get_data(plugin);
@@ -586,8 +585,8 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_unlock(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_uefi_capsule_unlock(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuUefiDevice *device_uefi = FU_UEFI_DEVICE(device);
 	FuDevice *device_alt = NULL;
@@ -683,7 +682,7 @@ fu_plugin_uefi_update_state_notify_cb(GObject *object, GParamSpec *pspec, FuPlug
 }
 
 static gboolean
-fu_backend_uefi_check_cod_support(GError **error)
+fu_plugin_uefi_capsule_check_cod_support(GError **error)
 {
 	gsize bufsz = 0;
 	guint64 value = 0;
@@ -712,8 +711,8 @@ fu_backend_uefi_check_cod_support(GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_get_data(plugin);
@@ -737,7 +736,7 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	/* firmware may lie */
 	if (!fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk")) {
 		g_autoptr(GError) error_cod = NULL;
-		if (!fu_backend_uefi_check_cod_support(&error_cod)) {
+		if (!fu_plugin_uefi_capsule_check_cod_support(&error_cod)) {
 			g_debug("not using CapsuleOnDisk support: %s", error_cod->message);
 		} else {
 			fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(data->backend),
@@ -799,4 +798,19 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	fu_plugin_add_report_metadata(plugin, "UEFIUXCapsule", str);
 
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_uefi_capsule_init;
+	vfuncs->destroy = fu_plugin_uefi_capsule_destroy;
+	vfuncs->clear_results = fu_plugin_uefi_capsule_clear_results;
+	vfuncs->add_security_attrs = fu_plugin_uefi_capsule_add_security_attrs;
+	vfuncs->device_registered = fu_plugin_uefi_capsule_device_registered;
+	vfuncs->startup = fu_plugin_uefi_capsule_startup;
+	vfuncs->unlock = fu_plugin_uefi_capsule_unlock;
+	vfuncs->coldplug = fu_plugin_uefi_capsule_coldplug;
+	vfuncs->write_firmware = fu_plugin_uefi_capsule_write_firmware;
 }

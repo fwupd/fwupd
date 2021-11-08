@@ -87,15 +87,14 @@ fu_plugin_dell_esrt_admin_password_present(gboolean *password_present, GError **
 	return TRUE;
 }
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_dell_esrt_init(FuPlugin *plugin)
 {
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_BETTER_THAN, "bios");
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_dell_esrt_startup(FuPlugin *plugin, GError **error)
 {
 	gboolean capsule_disable = FALSE;
 	g_autofree gchar *sysfsfwdir = NULL;
@@ -131,8 +130,8 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_unlock(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_dell_esrt_unlock(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	gboolean password_present = FALSE;
 	/* check the admin password isn't set */
@@ -155,8 +154,8 @@ fu_plugin_unlock(FuPlugin *plugin, FuDevice *device, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_dell_esrt_coldplug(FuPlugin *plugin, GError **error)
 {
 	g_autoptr(FuDevice) dev = fu_device_new();
 
@@ -178,4 +177,14 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 		return FALSE;
 	fu_plugin_device_add(plugin, dev);
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_dell_esrt_init;
+	vfuncs->startup = fu_plugin_dell_esrt_startup;
+	vfuncs->coldplug = fu_plugin_dell_esrt_coldplug;
+	vfuncs->unlock = fu_plugin_dell_esrt_unlock;
 }

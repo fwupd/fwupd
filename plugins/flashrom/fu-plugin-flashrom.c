@@ -17,12 +17,11 @@
 
 #define SELFCHECK_TRUE 1
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_flashrom_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "coreboot"); /* obsoleted */
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
@@ -143,8 +142,8 @@ fu_plugin_flashrom_device_set_hwids(FuPlugin *plugin, FuDevice *device)
 	}
 }
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_flashrom_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *dmi_vendor;
@@ -172,8 +171,8 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_flashrom_startup(FuPlugin *plugin, GError **error)
 {
 	if (flashrom_init(SELFCHECK_TRUE)) {
 		g_set_error_literal(error,
@@ -184,4 +183,13 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	}
 	flashrom_set_log_callback(fu_plugin_flashrom_debug_cb);
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_flashrom_init;
+	vfuncs->startup = fu_plugin_flashrom_startup;
+	vfuncs->coldplug = fu_plugin_flashrom_coldplug;
 }

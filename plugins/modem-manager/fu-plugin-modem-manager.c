@@ -329,8 +329,8 @@ fu_plugin_mm_name_owner_updated(FuPlugin *plugin)
 		fu_plugin_mm_teardown_manager(plugin);
 }
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_mm_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_signal_connect_swapped(priv->manager,
@@ -341,8 +341,8 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_mm_startup(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(GDBusConnection) connection = NULL;
@@ -360,15 +360,14 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_mm_init(FuPlugin *plugin)
 {
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_mm_destroy(FuPlugin *plugin)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 
@@ -382,8 +381,8 @@ fu_plugin_destroy(FuPlugin *plugin)
 		g_object_unref(priv->manager);
 }
 
-gboolean
-fu_plugin_detach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
+static gboolean
+fu_plugin_mm_detach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -419,8 +418,8 @@ fu_plugin_mm_device_attach_finished(gpointer user_data)
 	fu_plugin_mm_uninhibit_device(plugin);
 }
 
-gboolean
-fu_plugin_attach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
+static gboolean
+fu_plugin_mm_attach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -443,4 +442,16 @@ fu_plugin_attach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GErro
 				 plugin);
 
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_mm_init;
+	vfuncs->destroy = fu_plugin_mm_destroy;
+	vfuncs->startup = fu_plugin_mm_startup;
+	vfuncs->coldplug = fu_plugin_mm_coldplug;
+	vfuncs->attach = fu_plugin_mm_attach;
+	vfuncs->detach = fu_plugin_mm_detach;
 }

@@ -8,14 +8,8 @@
 
 #include <fwupdplugin.h>
 
-void
-fu_plugin_init(FuPlugin *plugin)
-{
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
-}
-
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_bios_startup(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *vendor;
@@ -29,8 +23,8 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_bios_coldplug(FuPlugin *plugin, GError **error)
 {
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *esrt_path = NULL;
@@ -57,4 +51,12 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	/* we appear to have UEFI capsule updates */
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED);
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->startup = fu_plugin_bios_startup;
+	vfuncs->coldplug = fu_plugin_bios_coldplug;
 }

@@ -514,14 +514,8 @@ fu_plugin_amt_create_device(FuPlugin *plugin, GError **error)
 	return g_steal_pointer(&dev);
 }
 
-void
-fu_plugin_init(FuPlugin *plugin)
-{
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
-}
-
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_amt_coldplug(FuPlugin *plugin, GError **error)
 {
 	g_autoptr(FuDevice) dev = NULL;
 	dev = fu_plugin_amt_create_device(plugin, error);
@@ -529,4 +523,11 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 		return FALSE;
 	fu_plugin_device_add(plugin, dev);
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->coldplug = fu_plugin_amt_coldplug;
 }

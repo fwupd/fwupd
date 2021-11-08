@@ -14,16 +14,15 @@ struct FuPluginData {
 	guint delay_verify_ms;
 };
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_test_init(FuPlugin *plugin)
 {
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 	g_debug("init");
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_test_destroy(FuPlugin *plugin)
 {
 	// FuPluginData *data = fu_plugin_get_data (plugin);
 	g_debug("destroy");
@@ -63,8 +62,8 @@ fu_plugin_test_load_xml(FuPlugin *plugin, const gchar *xml, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_test_startup(FuPlugin *plugin, GError **error)
 {
 	const gchar *xml = g_getenv("FWUPD_TEST_PLUGIN_XML");
 	if (xml != NULL) {
@@ -74,8 +73,8 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_test_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuDevice) device = NULL;
@@ -141,14 +140,14 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-void
-fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
+static void
+fu_plugin_test_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	fu_device_set_metadata(device, "BestDevice", "/dev/urandom");
 }
 
-gboolean
-fu_plugin_verify(FuPlugin *plugin, FuDevice *device, FuPluginVerifyFlags flags, GError **error)
+static gboolean
+fu_plugin_test_verify(FuPlugin *plugin, FuDevice *device, FuPluginVerifyFlags flags, GError **error)
 {
 	if (g_strcmp0(fu_device_get_version(device), "1.2.2") == 0) {
 		fu_device_add_checksum(device, "90d0ad436d21e0687998cd2127b2411135e1f730");
@@ -192,13 +191,13 @@ fu_plugin_test_get_version(GBytes *blob_fw)
 	return fu_common_version_from_uint32(val, FWUPD_VERSION_FORMAT_TRIPLET);
 }
 
-gboolean
-fu_plugin_write_firmware(FuPlugin *plugin,
-			 FuDevice *device,
-			 GBytes *blob_fw,
-			 FuProgress *progress,
-			 FwupdInstallFlags flags,
-			 GError **error)
+static gboolean
+fu_plugin_test_write_firmware(FuPlugin *plugin,
+			      FuDevice *device,
+			      GBytes *blob_fw,
+			      FuProgress *progress,
+			      FwupdInstallFlags flags,
+			      GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	const gchar *test = g_getenv("FWUPD_PLUGIN_TEST");
@@ -272,24 +271,24 @@ fu_plugin_write_firmware(FuPlugin *plugin,
 	return TRUE;
 }
 
-gboolean
-fu_plugin_activate(FuPlugin *plugin, FuDevice *device, FuProgress *process, GError **error)
+static gboolean
+fu_plugin_test_activate(FuPlugin *plugin, FuDevice *device, FuProgress *process, GError **error)
 {
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device, "1.2.3");
 	return TRUE;
 }
 
-gboolean
-fu_plugin_get_results(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_test_get_results(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	fu_device_set_update_state(device, FWUPD_UPDATE_STATE_SUCCESS);
 	fu_device_set_update_error(device, NULL);
 	return TRUE;
 }
 
-gboolean
-fu_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
+static gboolean
+fu_plugin_test_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
 	if (g_strcmp0(g_getenv("FWUPD_PLUGIN_TEST"), "composite") == 0) {
 		for (guint i = 0; i < devices->len; i++) {
@@ -300,8 +299,8 @@ fu_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error
 	return TRUE;
 }
 
-gboolean
-fu_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+static gboolean
+fu_plugin_test_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
 	if (g_strcmp0(g_getenv("FWUPD_PLUGIN_TEST"), "composite") == 0) {
 		for (guint i = 0; i < devices->len; i++) {
@@ -310,4 +309,21 @@ fu_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error
 		}
 	}
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_test_init;
+	vfuncs->destroy = fu_plugin_test_destroy;
+	vfuncs->composite_cleanup = fu_plugin_test_composite_cleanup;
+	vfuncs->composite_prepare = fu_plugin_test_composite_prepare;
+	vfuncs->get_results = fu_plugin_test_get_results;
+	vfuncs->activate = fu_plugin_test_activate;
+	vfuncs->write_firmware = fu_plugin_test_write_firmware;
+	vfuncs->verify = fu_plugin_test_verify;
+	vfuncs->startup = fu_plugin_test_startup;
+	vfuncs->coldplug = fu_plugin_test_coldplug;
+	vfuncs->device_registered = fu_plugin_test_device_registered;
 }

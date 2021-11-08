@@ -25,8 +25,8 @@ fu_plugin_thunderbolt_safe_kernel(FuPlugin *plugin, GError **error)
 	return fu_common_check_kernel_version(minimum_kernel, error);
 }
 
-gboolean
-fu_plugin_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
+static gboolean
+fu_plugin_thunderbolt_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_plugin_add_rule(plugin,
@@ -36,8 +36,8 @@ fu_plugin_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
 	return TRUE;
 }
 
-void
-fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
+static void
+fu_plugin_thunderbolt_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	if (g_strcmp0(fu_device_get_plugin(device), "thunderbolt") != 0)
 		return;
@@ -52,18 +52,27 @@ fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	}
 }
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_thunderbolt_init(FuPlugin *plugin)
 {
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem(plugin, "thunderbolt");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_THUNDERBOLT_DEVICE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_THUNDERBOLT_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_THUNDERBOLT_FIRMWARE_UPDATE);
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_thunderbolt_startup(FuPlugin *plugin, GError **error)
 {
 	return fu_plugin_thunderbolt_safe_kernel(plugin, error);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_thunderbolt_init;
+	vfuncs->startup = fu_plugin_thunderbolt_startup;
+	vfuncs->device_registered = fu_plugin_thunderbolt_device_registered;
+	vfuncs->device_created = fu_plugin_thunderbolt_device_created;
 }

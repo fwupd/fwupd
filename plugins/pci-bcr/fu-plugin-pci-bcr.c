@@ -18,12 +18,11 @@ struct FuPluginData {
 #define BCR_BLE	    (1 << 1)
 #define BCR_SMM_BWP (1 << 5)
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_pci_bcr_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *priv = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem(plugin, "pci");
 	fu_context_add_quirk_key(ctx, "PciBcrAddr");
 
@@ -42,8 +41,8 @@ fu_plugin_pci_bcr_set_updatable(FuPlugin *plugin, FuDevice *dev)
 	}
 }
 
-void
-fu_plugin_device_registered(FuPlugin *plugin, FuDevice *dev)
+static void
+fu_plugin_pci_bcr_device_registered(FuPlugin *plugin, FuDevice *dev)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	if (g_strcmp0(fu_device_get_plugin(dev), "cpu") == 0 ||
@@ -157,8 +156,8 @@ fu_plugin_add_security_attr_smm_bwp(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 }
 
-gboolean
-fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_pci_bcr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	FuDevice *device_msf;
@@ -203,8 +202,8 @@ fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **erro
 	return TRUE;
 }
 
-void
-fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_pci_bcr_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	/* only Intel */
 	if (fu_common_get_cpu_vendor() != FU_CPU_VENDOR_INTEL)
@@ -214,4 +213,14 @@ fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_plugin_add_security_attr_bioswe(plugin, attrs);
 	fu_plugin_add_security_attr_ble(plugin, attrs);
 	fu_plugin_add_security_attr_smm_bwp(plugin, attrs);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_pci_bcr_init;
+	vfuncs->add_security_attrs = fu_plugin_pci_bcr_add_security_attrs;
+	vfuncs->device_registered = fu_plugin_pci_bcr_device_registered;
+	vfuncs->backend_device_added = fu_plugin_pci_bcr_backend_device_added;
 }

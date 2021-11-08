@@ -39,10 +39,6 @@ fu_plugin_runner_startup(FuPlugin *self, GError **error) G_GNUC_WARN_UNUSED_RESU
 gboolean
 fu_plugin_runner_coldplug(FuPlugin *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
-fu_plugin_runner_coldplug_prepare(FuPlugin *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-gboolean
-fu_plugin_runner_coldplug_cleanup(FuPlugin *self, GError **error) G_GNUC_WARN_UNUSED_RESULT;
-gboolean
 fu_plugin_runner_prepare(FuPlugin *self, FuDevice *device, FwupdInstallFlags flags, GError **error)
     G_GNUC_WARN_UNUSED_RESULT;
 gboolean

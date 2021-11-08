@@ -10,16 +10,15 @@
 
 #include "fu-mtd-device.h"
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_mtd_init(FuPlugin *plugin)
 {
 	fu_plugin_add_udev_subsystem(plugin, "mtd");
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_MTD_DEVICE);
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_mtd_startup(FuPlugin *plugin, GError **error)
 {
 #ifndef HAVE_MTD_USER_H
 	g_set_error_literal(error,
@@ -31,8 +30,8 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
+static gboolean
+fu_plugin_mtd_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *vendor;
@@ -51,4 +50,13 @@ fu_plugin_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
 	}
 
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_mtd_init;
+	vfuncs->startup = fu_plugin_mtd_startup;
+	vfuncs->device_created = fu_plugin_mtd_device_created;
 }
