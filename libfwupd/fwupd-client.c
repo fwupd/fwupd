@@ -4531,7 +4531,10 @@ fwupd_client_stream_read_bytes(GInputStream *stream, GError **error)
 }
 
 static GBytes *
-fwupd_client_download_ipfs(FwupdClient *self, const gchar *url, GError **error)
+fwupd_client_download_ipfs(FwupdClient *self,
+			   const gchar *url,
+			   GCancellable *cancellable,
+			   GError **error)
 {
 	GInputStream *stream = NULL;
 	g_autofree gchar *path = NULL;
@@ -4555,7 +4558,7 @@ fwupd_client_download_ipfs(FwupdClient *self, const gchar *url, GError **error)
 	    g_subprocess_new(G_SUBPROCESS_FLAGS_STDOUT_PIPE, error, "ipfs", "cat", path, NULL);
 	if (subprocess == NULL)
 		return NULL;
-	if (!g_subprocess_wait_check(subprocess, NULL, error))
+	if (!g_subprocess_wait_check(subprocess, cancellable, error))
 		return NULL;
 
 	/* get raw stdout */
@@ -4637,7 +4640,7 @@ fwupd_client_download_bytes_thread_cb(GTask *task,
 			if (blob != NULL)
 				break;
 		} else if (fwupd_client_is_url_ipfs(url)) {
-			blob = fwupd_client_download_ipfs(self, url, &error);
+			blob = fwupd_client_download_ipfs(self, url, cancellable, &error);
 			if (blob != NULL)
 				break;
 		} else {
