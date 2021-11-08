@@ -12,15 +12,14 @@ struct FuPluginData {
 	GDBusProxy *proxy; /* nullable */
 };
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_upower_init(FuPlugin *plugin)
 {
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_upower_destroy(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (data->proxy != NULL)
@@ -72,8 +71,8 @@ fu_plugin_upower_proxy_changed_cb(GDBusProxy *proxy,
 	fu_plugin_upower_rescan(plugin);
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_upower_startup(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *name_owner = NULL;
@@ -108,4 +107,13 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_upower_init;
+	vfuncs->startup = fu_plugin_upower_startup;
+	vfuncs->destroy = fu_plugin_upower_destroy;
 }

@@ -5580,16 +5580,8 @@ fu_engine_plugins_coldplug(FuEngine *self)
 	GPtrArray *plugins;
 	g_autoptr(GString) str = g_string_new(NULL);
 
-	/* prepare */
-	plugins = fu_plugin_list_get_all(self->plugin_list);
-	for (guint i = 0; i < plugins->len; i++) {
-		g_autoptr(GError) error = NULL;
-		FuPlugin *plugin = g_ptr_array_index(plugins, i);
-		if (!fu_plugin_runner_coldplug_prepare(plugin, &error))
-			g_warning("failed to prepare coldplug: %s", error->message);
-	}
-
 	/* exec */
+	plugins = fu_plugin_list_get_all(self->plugin_list);
 	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
@@ -5597,14 +5589,6 @@ fu_engine_plugins_coldplug(FuEngine *self)
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED);
 			g_message("disabling plugin because: %s", error->message);
 		}
-	}
-
-	/* cleanup */
-	for (guint i = 0; i < plugins->len; i++) {
-		g_autoptr(GError) error = NULL;
-		FuPlugin *plugin = g_ptr_array_index(plugins, i);
-		if (!fu_plugin_runner_coldplug_cleanup(plugin, &error))
-			g_warning("failed to cleanup coldplug: %s", error->message);
 	}
 
 	/* print what we do have */

@@ -1255,7 +1255,6 @@ fu_engine_partial_hash_func(gconstpointer user_data)
 
 	/* set up dummy plugin */
 	fu_plugin_set_name(plugin, "test");
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_engine_add_plugin(engine, plugin);
 
 	/* add two dummy devices */

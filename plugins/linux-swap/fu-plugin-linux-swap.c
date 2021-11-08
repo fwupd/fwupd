@@ -15,15 +15,14 @@ struct FuPluginData {
 	GFileMonitor *monitor;
 };
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_linux_swap_init(FuPlugin *plugin)
 {
 	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_linux_swap_destroy(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (data->file != NULL)
@@ -46,8 +45,8 @@ fu_plugin_linux_swap_changed_cb(GFileMonitor *monitor,
 	fu_context_security_changed(ctx);
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_linux_swap_startup(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *fn = NULL;
@@ -66,8 +65,8 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-void
-fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_linux_swap_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	gsize bufsz = 0;
@@ -113,4 +112,14 @@ fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_linux_swap_init;
+	vfuncs->destroy = fu_plugin_linux_swap_destroy;
+	vfuncs->startup = fu_plugin_linux_swap_startup;
+	vfuncs->add_security_attrs = fu_plugin_linux_swap_add_security_attrs;
 }

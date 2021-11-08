@@ -16,15 +16,14 @@ struct FuPluginData {
 	gint logind_fd;
 };
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_logind_init(FuPlugin *plugin)
 {
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_logind_destroy(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (data->logind_fd != 0)
@@ -33,8 +32,8 @@ fu_plugin_destroy(FuPlugin *plugin)
 		g_object_unref(data->logind_proxy);
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_logind_startup(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *name_owner = NULL;
@@ -64,8 +63,11 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_prepare(FuPlugin *plugin, FuDevice *device, FwupdInstallFlags flags, GError **error)
+static gboolean
+fu_plugin_logind_prepare(FuPlugin *plugin,
+			 FuDevice *device,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autoptr(GError) error_local = NULL;
@@ -110,8 +112,11 @@ fu_plugin_prepare(FuPlugin *plugin, FuDevice *device, FwupdInstallFlags flags, G
 	return TRUE;
 }
 
-gboolean
-fu_plugin_cleanup(FuPlugin *plugin, FuDevice *device, FwupdInstallFlags flags, GError **error)
+static gboolean
+fu_plugin_logind_cleanup(FuPlugin *plugin,
+			 FuDevice *device,
+			 FwupdInstallFlags flags,
+			 GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (data->logind_fd == 0)
@@ -121,4 +126,15 @@ fu_plugin_cleanup(FuPlugin *plugin, FuDevice *device, FwupdInstallFlags flags, G
 		return FALSE;
 	data->logind_fd = 0;
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_logind_init;
+	vfuncs->destroy = fu_plugin_logind_destroy;
+	vfuncs->startup = fu_plugin_logind_startup;
+	vfuncs->cleanup = fu_plugin_logind_cleanup;
+	vfuncs->prepare = fu_plugin_logind_prepare;
 }

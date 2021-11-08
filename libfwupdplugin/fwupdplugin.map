@@ -47,8 +47,6 @@ LIBFWUPDPLUGIN_0.8.0 {
     fu_plugin_open;
     fu_plugin_runner_clear_results;
     fu_plugin_runner_coldplug;
-    fu_plugin_runner_coldplug_cleanup;
-    fu_plugin_runner_coldplug_prepare;
     fu_plugin_runner_get_results;
     fu_plugin_runner_startup;
     fu_plugin_runner_unlock;
@@ -305,7 +303,6 @@ LIBFWUPDPLUGIN_1.2.4 {
     fu_common_string_append_kx;
     fu_device_incorporate_from_component;
     fu_plugin_get_build_hash;
-    fu_plugin_set_build_hash;
     fu_udev_device_get_slot_depth;
   local: *;
 } LIBFWUPDPLUGIN_1.2.2;

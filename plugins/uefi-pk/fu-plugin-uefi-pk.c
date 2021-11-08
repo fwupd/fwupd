@@ -115,8 +115,8 @@ fu_plugin_uefi_pk_parse_signature(FuPlugin *plugin, FuEfiSignature *sig, GError 
 	return TRUE;
 }
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_uefi_pk_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(FuFirmware) img = NULL;
@@ -151,22 +151,21 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_uefi_pk_init(FuPlugin *plugin)
 {
 	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 }
 
-void
-fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
+static void
+fu_plugin_uefi_pk_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	if (fu_device_has_instance_id(device, "main-system-firmware"))
 		fu_plugin_cache_add(plugin, "main-system-firmware", device);
 }
 
-void
-fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_uefi_pk_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	FuDevice *msf_device = fu_plugin_cache_lookup(plugin, "main-system-firmware");
@@ -189,4 +188,14 @@ fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_uefi_pk_init;
+	vfuncs->add_security_attrs = fu_plugin_uefi_pk_add_security_attrs;
+	vfuncs->device_registered = fu_plugin_uefi_pk_device_registered;
+	vfuncs->coldplug = fu_plugin_uefi_pk_coldplug;
 }

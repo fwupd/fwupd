@@ -12,23 +12,24 @@ struct FuPluginData {
 	gchar *sysfs_path;
 };
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_platform_integrity_init(FuPlugin *plugin)
 {
 	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem(plugin, "platform-integrity");
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_platform_integrity_destroy(FuPlugin *plugin)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_free(priv->sysfs_path);
 }
 
-gboolean
-fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_platform_integrity_backend_device_added(FuPlugin *plugin,
+						  FuDevice *device,
+						  GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 
@@ -156,8 +157,8 @@ fu_plugin_add_security_attr_smm_bwp(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 }
 
-void
-fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_platform_integrity_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 
@@ -169,4 +170,14 @@ fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_plugin_add_security_attr_bioswe(plugin, attrs);
 	fu_plugin_add_security_attr_ble(plugin, attrs);
 	fu_plugin_add_security_attr_smm_bwp(plugin, attrs);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_platform_integrity_init;
+	vfuncs->destroy = fu_plugin_platform_integrity_destroy;
+	vfuncs->backend_device_added = fu_plugin_platform_integrity_backend_device_added;
+	vfuncs->add_security_attrs = fu_plugin_platform_integrity_add_security_attrs;
 }

@@ -10,19 +10,18 @@
 
 #include "fu-jabra-device.h"
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_jabra_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_JABRA_DEVICE);
 	fu_context_add_quirk_key(ctx, "JabraMagic");
 }
 
 /* slightly weirdly, this takes us from appIDLE back into the actual
  * runtime mode where the device actually works */
-gboolean
-fu_plugin_cleanup(FuPlugin *plugin, FuDevice *device, FwupdInstallFlags flags, GError **error)
+static gboolean
+fu_plugin_jabra_cleanup(FuPlugin *plugin, FuDevice *device, FwupdInstallFlags flags, GError **error)
 {
 	GUsbDevice *usb_device;
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -51,4 +50,12 @@ fu_plugin_cleanup(FuPlugin *plugin, FuDevice *device, FwupdInstallFlags flags, G
 	/* wait for device to re-appear */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_jabra_init;
+	vfuncs->cleanup = fu_plugin_jabra_cleanup;
 }

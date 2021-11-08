@@ -10,16 +10,15 @@
 
 #include "fu-uefi-dbx-device.h"
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_uefi_dbx_init(FuPlugin *plugin)
 {
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "uefi_capsule");
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_EFI_SIGNATURE_LIST);
 }
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_uefi_dbx_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuUefiDbxDevice) device = fu_uefi_dbx_device_new(ctx);
@@ -29,4 +28,12 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 		return FALSE;
 	fu_plugin_device_add(plugin, FU_DEVICE(device));
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_uefi_dbx_init;
+	vfuncs->coldplug = fu_plugin_uefi_dbx_coldplug;
 }

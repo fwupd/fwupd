@@ -18,18 +18,17 @@ struct FuPluginData {
 	GPtrArray *ev_items; /* of FuTpmEventlogItem */
 };
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_tpm_init(FuPlugin *plugin)
 {
 	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "tpm_eventlog"); /* old name */
 	fu_plugin_add_udev_subsystem(plugin, "tpm");
 	fu_plugin_add_device_gtype(plugin, FU_TYPE_TPM_V2_DEVICE);
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_tpm_destroy(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (data->tpm_device != NULL)
@@ -64,8 +63,8 @@ fu_plugin_tpm_set_bios_pcr0s(FuPlugin *plugin)
 }
 
 /* set the PCR0 as the device checksum */
-void
-fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
+static void
+fu_plugin_tpm_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (fu_device_has_instance_id(device, "main-system-firmware")) {
@@ -74,8 +73,8 @@ fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	}
 }
 
-void
-fu_plugin_device_added(FuPlugin *plugin, FuDevice *dev)
+static void
+fu_plugin_tpm_device_added(FuPlugin *plugin, FuDevice *dev)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autoptr(GPtrArray) pcr0s = NULL;
@@ -198,8 +197,8 @@ fu_plugin_tpm_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 }
 
-void
-fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_tpm_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	fu_plugin_tpm_add_security_attr_version(plugin, attrs);
 	fu_plugin_tpm_add_security_attr_eventlog(plugin, attrs);
@@ -269,8 +268,8 @@ fu_plugin_tpm_coldplug_eventlog(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_tpm_coldplug(FuPlugin *plugin, GError **error)
 {
 	g_autoptr(GError) error_local = NULL;
 
@@ -282,8 +281,8 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_tpm_startup(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *sysfstpmdir = NULL;
@@ -301,4 +300,17 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 
 	/* success */
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_tpm_init;
+	vfuncs->destroy = fu_plugin_tpm_destroy;
+	vfuncs->startup = fu_plugin_tpm_startup;
+	vfuncs->coldplug = fu_plugin_tpm_coldplug;
+	vfuncs->device_added = fu_plugin_tpm_device_added;
+	vfuncs->device_registered = fu_plugin_tpm_device_registered;
+	vfuncs->add_security_attrs = fu_plugin_tpm_add_security_attrs;
 }

@@ -19,12 +19,11 @@
 
 #include "fu-dell-dock-common.h"
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_dell_dock_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_context_add_quirk_key(ctx, "DellDockBlobBuildOffset");
 	fu_context_add_quirk_key(ctx, "DellDockBlobMajorOffset");
 	fu_context_add_quirk_key(ctx, "DellDockBlobMinorOffset");
@@ -130,8 +129,8 @@ fu_plugin_dell_dock_get_ec(GPtrArray *devices)
 	return ec_parent;
 }
 
-gboolean
-fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_dell_dock_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuDellDockHub) hub = NULL;
@@ -215,8 +214,8 @@ fu_plugin_dell_dock_separate_activation(FuPlugin *plugin)
 	}
 }
 
-void
-fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
+static void
+fu_plugin_dell_dock_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	/* usb4 device from thunderbolt plugin */
 	if (g_strcmp0(fu_device_get_plugin(device), "thunderbolt") == 0 &&
@@ -240,8 +239,8 @@ fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	fu_dell_dock_clone_updatable(device);
 }
 
-gboolean
-fu_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_dell_dock_backend_device_removed(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	const gchar *device_key = fu_device_get_id(device);
 	FuDevice *dev;
@@ -263,8 +262,8 @@ fu_plugin_backend_device_removed(FuPlugin *plugin, FuDevice *device, GError **er
 	return TRUE;
 }
 
-gboolean
-fu_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
+static gboolean
+fu_plugin_dell_dock_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
 	FuDevice *parent = fu_plugin_dell_dock_get_ec(devices);
 	const gchar *sku;
@@ -277,8 +276,8 @@ fu_plugin_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error
 	return TRUE;
 }
 
-gboolean
-fu_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+static gboolean
+fu_plugin_dell_dock_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
 {
 	FuDevice *parent = fu_plugin_dell_dock_get_ec(devices);
 	FuDevice *dev = NULL;
@@ -326,4 +325,16 @@ fu_plugin_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error
 	}
 
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_dell_dock_init;
+	vfuncs->device_registered = fu_plugin_dell_dock_device_registered;
+	vfuncs->backend_device_added = fu_plugin_dell_dock_backend_device_added;
+	vfuncs->backend_device_removed = fu_plugin_dell_dock_backend_device_removed;
+	vfuncs->composite_cleanup = fu_plugin_dell_dock_composite_cleanup;
+	vfuncs->composite_prepare = fu_plugin_dell_dock_composite_prepare;
 }

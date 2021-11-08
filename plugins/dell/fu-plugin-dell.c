@@ -291,7 +291,7 @@ fu_plugin_dock_node(FuPlugin *plugin,
 }
 
 gboolean
-fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_dell_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	FwupdVersionFormat version_format = FWUPD_VERSION_FORMAT_DELL_BIOS;
@@ -449,8 +449,8 @@ fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **erro
 	return TRUE;
 }
 
-gboolean
-fu_plugin_get_results(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_dell_get_results(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(GBytes) de_table = NULL;
@@ -833,8 +833,8 @@ fu_plugin_dell_detect_tpm(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-void
-fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
+static void
+fu_plugin_dell_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	/* thunderbolt plugin */
 	if (g_strcmp0(fu_device_get_plugin(device), "thunderbolt") == 0 &&
@@ -858,14 +858,13 @@ fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 	}
 }
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_dell_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 	g_autofree gchar *tmp = NULL;
 
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	tmp = g_strdup_printf("%d.%d",
 			      smbios_get_library_version_major(),
 			      smbios_get_library_version_minor());
@@ -890,8 +889,8 @@ fu_plugin_init(FuPlugin *plugin)
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_BETTER_THAN, "tpm");
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_dell_destroy(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (data->smi_obj->smi)
@@ -899,8 +898,8 @@ fu_plugin_destroy(FuPlugin *plugin)
 	g_free(data->smi_obj);
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_dell_startup(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *sysfsfwdir = NULL;
@@ -958,8 +957,15 @@ fu_plugin_dell_coldplug(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
-	return fu_plugin_dell_coldplug(plugin, error);
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_dell_init;
+	vfuncs->destroy = fu_plugin_dell_destroy;
+	vfuncs->startup = fu_plugin_dell_startup;
+	vfuncs->coldplug = fu_plugin_dell_coldplug;
+	vfuncs->backend_device_added = fu_plugin_dell_backend_device_added;
+	vfuncs->device_registered = fu_plugin_dell_device_registered;
+	vfuncs->get_results = fu_plugin_dell_get_results;
 }

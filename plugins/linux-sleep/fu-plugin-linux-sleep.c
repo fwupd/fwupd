@@ -8,14 +8,8 @@
 
 #include <fwupdplugin.h>
 
-void
-fu_plugin_init(FuPlugin *plugin)
-{
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
-}
-
-void
-fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_linux_sleep_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	gsize bufsz = 0;
 	g_autofree gchar *buf = NULL;
@@ -44,4 +38,11 @@ fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->add_security_attrs = fu_plugin_linux_sleep_add_security_attrs;
 }

@@ -67,8 +67,8 @@ fu_plugin_synaptics_mst_rescan_cb(gpointer user_data)
 	return FALSE;
 }
 
-gboolean
-fu_plugin_backend_device_changed(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_synaptics_mst_backend_device_changed(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 
@@ -87,8 +87,8 @@ fu_plugin_backend_device_changed(FuPlugin *plugin, FuDevice *device, GError **er
 	return TRUE;
 }
 
-gboolean
-fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_synaptics_mst_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *priv = fu_plugin_get_data(plugin);
@@ -115,13 +115,13 @@ fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **erro
 	return TRUE;
 }
 
-gboolean
-fu_plugin_write_firmware(FuPlugin *plugin,
-			 FuDevice *device,
-			 GBytes *blob_fw,
-			 FuProgress *progress,
-			 FwupdInstallFlags flags,
-			 GError **error)
+static gboolean
+fu_plugin_synaptics_mst_write_firmware(FuPlugin *plugin,
+				       FuDevice *device,
+				       GBytes *blob_fw,
+				       FuProgress *progress,
+				       FwupdInstallFlags flags,
+				       GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
@@ -133,8 +133,8 @@ fu_plugin_write_firmware(FuPlugin *plugin,
 	return TRUE;
 }
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_synaptics_mst_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *priv = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
@@ -142,18 +142,28 @@ fu_plugin_init(FuPlugin *plugin)
 	/* devices added by this plugin */
 	priv->devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem(plugin, "drm"); /* used for uevent only */
 	fu_plugin_add_udev_subsystem(plugin, "drm_dp_aux_dev");
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_SYNAPTICS_MST_FIRMWARE);
 	fu_context_add_quirk_key(ctx, "SynapticsMstDeviceKind");
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_synaptics_mst_destroy(FuPlugin *plugin)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	if (priv->drm_changed_id != 0)
 		g_source_remove(priv->drm_changed_id);
 	g_ptr_array_unref(priv->devices);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_synaptics_mst_init;
+	vfuncs->destroy = fu_plugin_synaptics_mst_destroy;
+	vfuncs->write_firmware = fu_plugin_synaptics_mst_write_firmware;
+	vfuncs->backend_device_added = fu_plugin_synaptics_mst_backend_device_added;
+	vfuncs->backend_device_changed = fu_plugin_synaptics_mst_backend_device_changed;
 }

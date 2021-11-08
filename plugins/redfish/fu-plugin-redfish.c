@@ -21,8 +21,8 @@ struct FuPluginData {
 	FuRedfishBackend *backend;
 };
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_redfish_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autoptr(GPtrArray) devices = NULL;
@@ -281,8 +281,8 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 }
 #endif
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_redfish_startup(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *ca_check_str = NULL;
@@ -360,19 +360,28 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return fu_backend_setup(FU_BACKEND(data->backend), error);
 }
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_redfish_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 	data->backend = fu_redfish_backend_new(ctx);
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_REDFISH_SMBIOS);
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_redfish_destroy(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_object_unref(data->backend);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_redfish_init;
+	vfuncs->destroy = fu_plugin_redfish_destroy;
+	vfuncs->startup = fu_plugin_redfish_startup;
+	vfuncs->coldplug = fu_plugin_redfish_coldplug;
 }
