@@ -67,3 +67,23 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 {
 	return fu_plugin_thunderbolt_safe_kernel(plugin, error);
 }
+
+gboolean
+fu_plugin_update_prepare (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
+			  FuDevice *device,
+			  GError **error)
+{
+	  g_warning("debug from fu_plugin_update_prepare");
+	  return TRUE;
+}
+
+gboolean
+fu_plugin_update_cleanup (FuPlugin *plugin,
+			  FwupdInstallFlags flags,
+			  FuDevice *device,
+			  GError **error)
+{
+	g_warning("debug from fu_plugin_update_cleanup");
+	return TRUE;
+}
