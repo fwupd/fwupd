@@ -1097,6 +1097,15 @@ fu_plugin_runner_coldplug(FuPlugin *self, GError **error)
 					    FWUPD_ERROR_INTERNAL,
 					    "unspecified error");
 		}
+		/* coldplug failed, but we might have already added devices to the daemon... */
+		if (priv->devices != NULL) {
+			for (guint i = 0; i < priv->devices->len; i++) {
+				FuDevice *device = g_ptr_array_index(priv->devices, i);
+				g_warning("removing device %s due to failed coldplug",
+					  fu_device_get_id(device));
+				fu_plugin_device_remove(self, device);
+			}
+		}
 		g_propagate_prefixed_error(error,
 					   g_steal_pointer(&error_local),
 					   "failed to coldplug using %s: ",
