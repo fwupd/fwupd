@@ -222,6 +222,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_SUSPEND_TO_RAM "org.fwupd.hsi.SuspendToRam"
 /**
+ * FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR:
+ *
+ * Host Security ID attribute for empty PCR
+ *
+ * Since: 1.7.2
+ **/
+#define FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR "org.fwupd.hsi.Tpm.EmptyPcr"
+/**
  * FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0:
  *
  * Host Security ID attribute for TPM PCR0 reconstruction

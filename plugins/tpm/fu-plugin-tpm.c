@@ -153,8 +153,7 @@ fu_plugin_tpm_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 	fu_security_attrs_append(attrs, attr);
 
 	/* check reconstructed to PCR0 */
-	if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED) || data->bios_device == NULL ||
-	    data->ev_items == NULL) {
+	if (data->ev_items == NULL || data->bios_device == NULL) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
@@ -198,10 +197,58 @@ fu_plugin_tpm_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attr
 }
 
 static void
+fu_plugin_tpm_add_security_attr_empty(FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *data = fu_plugin_get_data(plugin);
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	/* no TPM device */
+	if (data->tpm_device == NULL)
+		return;
+
+	/* add attributes */
+	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR);
+	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	fwupd_security_attr_add_guids(attr, fu_device_get_guids(data->tpm_device));
+	fu_security_attrs_append(attrs, attr);
+
+	/* check PCRs 0 through 7 for empty checksums */
+	for (guint pcr = 0; pcr <= 7; pcr++) {
+		g_autoptr(GPtrArray) checksums = fu_tpm_device_get_checksums(data->tpm_device, pcr);
+		for (guint i = 0; i < checksums->len; i++) {
+			const gchar *checksum = g_ptr_array_index(checksums, i);
+			gboolean empty = TRUE;
+
+			/* empty checksum is zero, so made entirely of zeroes */
+			for (guint j = 0; checksum[j] != '\0'; j++) {
+				if (checksum[j] != '0') {
+					empty = FALSE;
+					break;
+				}
+			}
+			if (empty) {
+				fwupd_security_attr_set_result(
+				    attr,
+				    FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
+				return;
+			}
+		}
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+}
+
+static void
 fu_plugin_tpm_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+	if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED))
+		return;
 	fu_plugin_tpm_add_security_attr_version(plugin, attrs);
 	fu_plugin_tpm_add_security_attr_eventlog(plugin, attrs);
+	fu_plugin_tpm_add_security_attr_empty(plugin, attrs);
 }
 
 static gchar *
