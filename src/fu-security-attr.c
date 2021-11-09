@@ -113,6 +113,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: SB is a way of locking down UEFI */
 		return g_strdup(_("UEFI secure boot"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR) == 0) {
+		/* TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be empty */
+		return g_strdup(_("TPM empty PCRs"));
+	}
 	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0) == 0) {
 		/* TRANSLATORS: Title: the PCR is rebuilt from the TPM event log */
 		return g_strdup(_("TPM PCR0 reconstruction"));

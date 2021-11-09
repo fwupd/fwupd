@@ -2012,6 +2012,22 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
 		      _("Secure Boot enabled")},
+		     /* ------------------------------------------*/
+		     {"org.fwupd.hsi.Tpm.EmptyPcr",
+		      FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
+		      FWUPD_SECURITY_ATTR_RESULT_VALID,
+		      /* TRANSLATORS: HSI event title */
+		      _("All TPM PCRs are valid")},
+		     {"org.fwupd.hsi.Tpm.EmptyPcr",
+		      FWUPD_SECURITY_ATTR_RESULT_VALID,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+		      /* TRANSLATORS: HSI event title */
+		      _("All TPM PCRs are now valid")},
+		     {"org.fwupd.hsi.Uefi.SecureBoot",
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+		      FWUPD_SECURITY_ATTR_RESULT_VALID,
+		      /* TRANSLATORS: HSI event title */
+		      _("A TPM PCR is now an invalid value")},
 		     {NULL, 0, 0, NULL}};
 
 	/* sanity check */

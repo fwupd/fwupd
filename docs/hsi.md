@@ -392,6 +392,28 @@ To meet HSI-2 on systems that run this test, the result must be `locked`. *[v1.5
 
 - [Intel Direct Connect Interface](https://www.intel.co.uk/content/www/uk/en/support/articles/000029393/processors.html)
 
+<a id="org.fwupd.hsi.Tpm.EmptyPcr"></a>
+
+### [Empty PCR in TPM](#org.fwupd.hsi.Tpm.EmptyPcr)
+
+The system firmware is responsible for measuring values about its boot stage in PCRs 0 through 7.
+Some firmwares have bugs that prevent them from measuring some of those values, breaking the fundamental assumption of the Measured Boot chain-of-trust.
+
+**Impact:** A local attacker could measure fake values into the empty PCR, corresponding to a firmware and OS that do not match the ones actually loaded.
+This allows hiding a compromised boot chain or fooling a remote-attestation server into believing that a different kernel is running.
+
+**Possible results:**
+
+- `valid`: all correct
+- `not-valid`: at least one empty checksum has been found
+- `not-found`: no TPM hardware could be found
+
+To meet HSI-1 on systems that run this test, all PCRs from 0 to 7 in all banks must have non-empty measurements *[v1.7.2]*
+
+**References:**
+
+- [CVE-2021-42299: TPM Carte Blanche](https://github.com/google/security-research/blob/master/pocs/bios/tpm-carte-blanche/writeup.md)
+
 <a id="org.fwupd.hsi.Tpm.ReconstructionPcr0"></a>
 
 ### [PCR0 TPM Event Log Reconstruction](#org.fwupd.hsi.Tpm.ReconstructionPcr0)
