@@ -2189,7 +2189,9 @@ fu_device_fixup_vendor_name(FuDevice *self)
 	const gchar *name = fu_device_get_name(self);
 	const gchar *vendor = fu_device_get_vendor(self);
 	if (name != NULL && vendor != NULL) {
-		if (g_str_has_prefix(name, vendor)) {
+		g_autofree gchar *name_up = g_utf8_strup(name, -1);
+		g_autofree gchar *vendor_up = g_utf8_strup(vendor, -1);
+		if (g_str_has_prefix(name_up, vendor_up)) {
 			gsize vendor_len = strlen(vendor);
 			g_autofree gchar *name1 = g_strdup(name + vendor_len);
 			g_autofree gchar *name2 = fu_common_strstrip(name1);
