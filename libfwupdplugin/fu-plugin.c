@@ -597,7 +597,6 @@ fu_plugin_has_custom_flag(FuPlugin *self, const gchar *flag)
 	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
 	g_return_val_if_fail(flag != NULL, FALSE);
 
-	/* never set up, e.g. in tests */
 	return fu_context_has_hwid_flag(priv->ctx, flag);
 }
 
