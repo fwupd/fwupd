@@ -351,6 +351,41 @@ fu_hwids_convert_integer_cb(FuSmbios *smbios, guint8 type, guint8 offset, GError
 	return g_strdup_printf("%x", tmp);
 }
 
+static gboolean
+fu_hwids_setup_overrides(FuHwids *self, GError **error)
+{
+	g_autofree gchar *localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
+	g_autofree gchar *sysconfigdir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
+	g_autoptr(GKeyFile) kf = g_key_file_new();
+	g_autoptr(GPtrArray) fns = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GPtrArray) keys = fu_hwids_get_keys(self);
+
+	/* per-system configuration and optional overrides */
+	g_ptr_array_add(fns, g_build_filename(sysconfigdir, "daemon.conf", NULL));
+	g_ptr_array_add(fns, g_build_filename(localstatedir, "daemon.conf", NULL));
+	for (guint i = 0; i < fns->len; i++) {
+		const gchar *fn = g_ptr_array_index(fns, i);
+		if (g_file_test(fn, G_FILE_TEST_EXISTS)) {
+			g_debug("loading HwId overrides from %s", fn);
+			if (!g_key_file_load_from_file(kf, fn, G_KEY_FILE_NONE, error))
+				return FALSE;
+		} else {
+			g_debug("not loading HwId overrides from %s", fn);
+		}
+	}
+
+	/* all keys are optional */
+	for (guint i = 0; i < keys->len; i++) {
+		const gchar *key = g_ptr_array_index(keys, i);
+		g_autofree gchar *value = g_key_file_get_string(kf, "fwupd", key, NULL);
+		if (value != NULL)
+			fu_hwids_add_smbios_override(self, key, value);
+	}
+
+	/* success */
+	return TRUE;
+}
+
 /**
  * fu_hwids_setup:
  * @self: a #FuHwids
@@ -428,6 +463,10 @@ fu_hwids_setup(FuHwids *self, FuSmbios *smbios, GError **error)
 	g_return_val_if_fail(FU_IS_HWIDS(self), FALSE);
 	g_return_val_if_fail(FU_IS_SMBIOS(smbios) || smbios == NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* override using a config file */
+	if (!fu_hwids_setup_overrides(self, error))
+		return FALSE;
 
 	/* get all DMI data */
 	for (guint i = 0; map[i].key != NULL; i++) {
