@@ -275,6 +275,10 @@ fu_nvme_device_probe(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_nvme_device_parent_class)->probe(device, error))
 		return FALSE;
 
+	/* fix up vendor name so we can remove it from the product name */
+	if (g_strcmp0(fu_device_get_vendor(FU_DEVICE(device)), "Samsung Electronics Co Ltd") == 0)
+		fu_device_set_vendor(FU_DEVICE(device), "Samsung");
+
 	/* set the physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
 		return FALSE;
