@@ -308,7 +308,7 @@ endif
 if cc.has_header('sys/socket.h')
   conf.set('HAVE_SOCKET_H', '1')
 endif
-if cc.has_header('sys/io.h')
+if cc.has_header('sys/io.h') and cc.has_function('outb', prefix: '#include <sys/io.h>')
   conf.set('HAVE_IO_H', '1')
 endif
 if cc.has_header('linux/ethtool.h')
