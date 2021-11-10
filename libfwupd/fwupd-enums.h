@@ -472,6 +472,7 @@ typedef enum {
  */
 #define FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE (1llu << 43)
 /**
+<<<<<<< HEAD
  * FWUPD_DEVICE_FLAG_UNREACHABLE:
  *
  * The device is currently unreachable, perhaps because it is in a lower power state or is out of
@@ -495,12 +496,16 @@ typedef enum {
 #define FWUPD_DEVICE_FLAG_AFFECTS_FDE (1llu << 45)
 /**
  *
- * FWUPD_DEVICE_FLAG_REQUIRES_WAKEUP :
  *
  * The device requires to be woken up to be re-enumerated.
- * Since 1.7.1
+ *
+ * FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE :
+ *
+ * The device requires to be woken up to be re-enumerated.
+ * Since 1.7.2
  */
-#define FWUPD_DEVICE_FLAG_REQUIRES_WAKEUP (1llu << 46)
+
+#define FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE (1llu << 46)
 /**
  * FWUPD_DEVICE_FLAG_UNKNOWN:
  *

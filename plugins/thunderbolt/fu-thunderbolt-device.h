@@ -15,3 +15,10 @@ G_DECLARE_FINAL_TYPE(FuThunderboltDevice,
 		     FU,
 		     THUNDERBOLT_DEVICE,
 		     FuUdevDevice)
+
+gboolean
+fu_thunderbolt_device_open(FuDevice *device, GError **error);
+
+gboolean
+fu_thunderbolt_device_close(FuDevice *device, GError **error);
+

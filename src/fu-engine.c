@@ -291,7 +291,6 @@ fu_engine_ensure_device_battery_inhibit(FuEngine *self, FuDevice *device)
 				  "battery-system",
 				  "Cannot install update when not on AC power");
 		return;
-	}
 	if (fu_context_get_battery_level(self->ctx) != FU_BATTERY_VALUE_INVALID &&
 	    fu_context_get_battery_threshold(self->ctx) != FU_BATTERY_VALUE_INVALID &&
 	    fu_context_get_battery_level(self->ctx) < fu_context_get_battery_threshold(self->ctx)) {
