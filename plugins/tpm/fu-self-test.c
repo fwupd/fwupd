@@ -9,6 +9,8 @@
 #include <fwupdplugin.h>
 
 #include "fu-context-private.h"
+#include "fu-plugin-private.h"
+#include "fu-security-attrs-private.h"
 #include "fu-tpm-eventlog-common.h"
 #include "fu-tpm-eventlog-parser.h"
 #include "fu-tpm-v1-device.h"
@@ -17,26 +19,54 @@
 static void
 fu_tpm_device_1_2_func(void)
 {
+	FuTpmDevice *device;
+	GPtrArray *devices;
 	gboolean ret;
+	g_autofree gchar *pluginfn = NULL;
+	g_autofree gchar *testdatadir = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
-	g_autoptr(FuTpmDevice) device = fu_tpm_v1_device_new(ctx);
+	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
+	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
 	g_autoptr(GPtrArray) pcrXs = NULL;
-	g_autofree gchar *testdatadir = NULL;
 
-	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "tpm0", "pcrs", NULL);
-	g_object_set(device, "device-file", testdatadir, NULL);
-
-	ret = fu_device_setup(FU_DEVICE(device), &error);
+	/* do not save silo */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
+
+	/* load the plugin */
+	pluginfn = g_test_build_filename(G_TEST_BUILT, "libfu_plugin_tpm." G_MODULE_SUFFIX, NULL);
+	ret = fu_plugin_open(plugin, pluginfn, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	ret = fu_plugin_runner_startup(plugin, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* get the v1.2 device */
+	devices = fu_plugin_get_devices(plugin);
+	g_assert_cmpint(devices->len, ==, 1);
+	device = g_ptr_array_index(devices, 0);
+	g_assert_true(FU_IS_TPM_DEVICE(device));
+
+	/* verify checksums set correctly */
 	pcr0s = fu_tpm_device_get_checksums(device, 0);
 	g_assert_nonnull(pcr0s);
 	g_assert_cmpint(pcr0s->len, ==, 1);
 	pcrXs = fu_tpm_device_get_checksums(device, 999);
 	g_assert_nonnull(pcrXs);
 	g_assert_cmpint(pcrXs->len, ==, 0);
+
+	/* verify HSI attr */
+	fu_plugin_runner_add_security_attrs(plugin, attrs);
+	attr = fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20);
+	g_assert_nonnull(attr);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 }
 
 static void
@@ -159,6 +189,7 @@ main(int argc, char **argv)
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", NULL);
 	g_setenv("FWUPD_SYSFSFWDIR", testdatadir, TRUE);
 	g_setenv("FWUPD_SYSFSDRIVERDIR", testdatadir, TRUE);
+	g_setenv("FWUPD_SYSFSTPMDIR", testdatadir, TRUE);
 	g_setenv("FWUPD_UEFI_TEST", "1", TRUE);
 
 	/* only critical and error are fatal */

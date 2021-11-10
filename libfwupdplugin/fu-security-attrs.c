@@ -109,6 +109,29 @@ fu_security_attrs_append(FuSecurityAttrs *self, FwupdSecurityAttr *attr)
 }
 
 /**
+ * fu_security_attrs_get_by_appstream_id:
+ * @self: a #FuSecurityAttrs
+ * @appstream_id: an ID, e.g. %FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM
+ *
+ * Gets a specific #FwupdSecurityAttr from the array.
+ *
+ * Returns: (transfer full): a #FwupdSecurityAttr or %NULL
+ *
+ * Since: 1.7.2
+ **/
+FwupdSecurityAttr *
+fu_security_attrs_get_by_appstream_id(FuSecurityAttrs *self, const gchar *appstream_id)
+{
+	g_return_val_if_fail(FU_IS_SECURITY_ATTRS(self), NULL);
+	for (guint i = 0; i < self->attrs->len; i++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(self->attrs, i);
+		if (g_strcmp0(fwupd_security_attr_get_appstream_id(attr), appstream_id) == 0)
+			return g_object_ref(attr);
+	}
+	return NULL;
+}
+
+/**
  * fu_security_attrs_to_variant:
  * @self: a #FuSecurityAttrs
  *
