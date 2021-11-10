@@ -515,7 +515,9 @@ fu_thunderbolt_device_setup_retimer(FuDevice *device, GError **error)
 	g_autofree gchar *instance = NULL;
 
 	/* as defined in PCIe 4.0 spec */
-	fu_device_set_summary (device, "A physical layer protocol-aware, software-transparent extension device "
+	fu_device_set_summary (
+			device,
+			"A physical layer protocol-aware, software-transparent extension device "
 				        "that forms two separate electrical link segments");
 	fu_device_set_name (device, fu_thunderbolt_device_type_to_string (self));
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);

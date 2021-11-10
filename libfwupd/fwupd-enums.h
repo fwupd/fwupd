@@ -472,7 +472,6 @@ typedef enum {
  */
 #define FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE (1llu << 43)
 /**
-<<<<<<< HEAD
  * FWUPD_DEVICE_FLAG_UNREACHABLE:
  *
  * The device is currently unreachable, perhaps because it is in a lower power state or is out of
