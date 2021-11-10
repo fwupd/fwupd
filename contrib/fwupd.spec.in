@@ -448,6 +448,7 @@ done
 %endif
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_mtd.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_nitrokey.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_nordic_hid.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_nvme.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_optionrom.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_parade_lspcon.so
