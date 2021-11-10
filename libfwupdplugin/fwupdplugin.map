@@ -948,6 +948,7 @@ LIBFWUPDPLUGIN_1.7.2 {
     fu_context_has_hwid_flag;
     fu_device_get_firmware_gtype;
     fu_device_set_firmware_gtype;
+    fu_security_attrs_get_by_appstream_id;
     fu_udev_device_get_bind_id;
     fu_udev_device_get_sysfs_attr_uint64;
     fu_udev_device_seek;

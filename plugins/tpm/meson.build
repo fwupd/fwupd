@@ -10,7 +10,7 @@ install_data([
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
-shared_module('fu_plugin_tpm',
+plugin_tpm = shared_module('fu_plugin_tpm',
   fu_hash,
   sources : [
     'fu-plugin-tpm.c',
@@ -46,6 +46,7 @@ if get_option('tests')
   e = executable(
     'tpm-self-test',
     fu_hash,
+    plugin_tpm,
     sources : [
       'fu-self-test.c',
       'fu-tpm-device.c',

@@ -290,12 +290,14 @@ fu_plugin_tpm_startup(FuPlugin *plugin, GError **error)
 
 	/* look for TPM v1.2 */
 	sysfstpmdir = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_TPM);
-	fn_pcrs = g_build_filename(sysfstpmdir, "tmp0", "pcrs", NULL);
+	fn_pcrs = g_build_filename(sysfstpmdir, "tpm0", "pcrs", NULL);
 	if (g_file_test(fn_pcrs, G_FILE_TEST_EXISTS) && g_getenv("FWUPD_FORCE_TPM2") == NULL) {
 		data->tpm_device = fu_tpm_v1_device_new(fu_plugin_get_context(plugin));
 		g_object_set(data->tpm_device, "device-file", fn_pcrs, NULL);
+		fu_device_set_physical_id(FU_DEVICE(data->tpm_device), "tpm");
 		if (!fu_device_probe(FU_DEVICE(data->tpm_device), error))
 			return FALSE;
+		fu_plugin_device_add(plugin, FU_DEVICE(data->tpm_device));
 	}
 
 	/* success */
