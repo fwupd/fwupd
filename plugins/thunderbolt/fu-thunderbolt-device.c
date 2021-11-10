@@ -110,7 +110,6 @@ fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error
 {
 	guint64 status;
 	g_autofree gchar *attribute = NULL;
-	const gchar *update_error = NULL;
 	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
 	/* read directly from file to prevent udev caching */
 	g_autofree gchar *safe_path = g_build_path("/", devpath, "authorized", NULL);
@@ -135,10 +134,9 @@ fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error
 		return FALSE;
 	}
 	if (status == 1 || status == 2)
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_uninhibit(FU_DEVICE(self), "not-authorized");
 	else
-		update_error = "Not authorized";
-	fu_device_set_update_error(FU_DEVICE(self), update_error);
+		fu_device_inhibit(FU_DEVICE(self), "not-authorized", "Not authorized");
 
 	return TRUE;
 }
@@ -788,6 +786,7 @@ static void
 fu_thunderbolt_device_init(FuThunderboltDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_icon(FU_DEVICE(self), "thunderbolt");
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
