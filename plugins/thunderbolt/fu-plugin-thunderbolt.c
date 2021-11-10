@@ -82,7 +82,9 @@ fu_plugin_update_prepare (FuPlugin *plugin,
 			  GError **error)
 {
 	  g_warning("debug from fu_plugin_update_prepare");
-	  return TRUE;
+	  if (device != NULL && fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE)) {
+		  return fu_thunderbolt_device_open(device,error);
+	  }
 }
 
 gboolean
@@ -92,5 +94,8 @@ fu_plugin_update_cleanup (FuPlugin *plugin,
 			  GError **error)
 {
 	g_warning("debug from fu_plugin_update_cleanup");
+	  if (device != NULL && fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE)) {
+		  return fu_thunderbolt_device_close(device, error);
+	  }
 	return TRUE;
 }

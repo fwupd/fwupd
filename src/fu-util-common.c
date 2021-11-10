@@ -1220,6 +1220,10 @@ fu_util_device_flag_to_string(guint64 device_flag)
 			/* TRANSLATORS: device needs to be re-enumerated to operate upon */
 			return _("Device needs to be re-enumerated");
 		}
+	if (device_flag == FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE) {
+		/* TRANSLATORS: device needs to be re-enumerated to operate upon */
+		return _("Device needs to be re-enumerated");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
 		/* skip */
 		return NULL;

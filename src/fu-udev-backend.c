@@ -42,9 +42,10 @@ fu_udev_backend_device_remove(FuUdevBackend *self, GUdevDevice *udev_device)
 	device_tmp =
 	    fu_backend_lookup_by_id(FU_BACKEND(self), g_udev_device_get_sysfs_path(udev_device));
 	if (device_tmp != NULL &&
-	    fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_REQUIRES_WAKEUP)) {
-		if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL) {
-			g_debug("UDEV %s removed", g_udev_device_get_sysfs_path(udev_device));
+	    fu_device_has_flag(device_tmp, FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE)) {
+		if (g_getenv ("FWUPD_PROBE_VERBOSE") != NULL) {
+			g_debug ("UDEV %s removed",
+				 g_udev_device_get_sysfs_path (udev_device));
 		}
 		fu_backend_device_removed(FU_BACKEND(self), device_tmp);
 	}

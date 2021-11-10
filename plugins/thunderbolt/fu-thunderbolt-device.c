@@ -355,14 +355,14 @@ fu_thunderbolt_device_set_port_online_cb(FuUdevDevice *device)
 	return G_SOURCE_REMOVE;
 }
 
-static gboolean
+gboolean
 fu_thunderbolt_device_open(FuDevice *device, GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
 	GUdevDevice *udev_device = NULL;
 	g_autoptr(GUdevDevice) udev_parent = NULL;
 	g_autoptr(FuUdevDevice) parent = NULL;
-
+	g_warning("debug from fu_thunderbolt_device_open");
 	if (self->device_type != FU_THUNDERBOLT_DEVICE_TYPE_RETIMER ||
 	    fu_thunderbolt_device_get_version(self, NULL))
 		return TRUE;
@@ -371,10 +371,11 @@ fu_thunderbolt_device_open(FuDevice *device, GError **error)
 	udev_parent = g_udev_device_get_parent(udev_device);
 	udev_parent = g_udev_device_get_parent(udev_parent);
 	parent = fu_udev_device_new(g_steal_pointer(&udev_parent));
+	g_warning("set offline from fu_thunderbolt_device_open");
 	return fu_thunderbolt_device_set_port_offline(parent);
 }
 
-static gboolean
+gboolean
 fu_thunderbolt_device_close(FuDevice *device, GError **error)
 {
 	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
@@ -387,7 +388,8 @@ fu_thunderbolt_device_close(FuDevice *device, GError **error)
 	udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 	udev_parent = g_udev_device_get_parent(udev_device);
 	udev_parent = g_udev_device_get_parent(udev_parent);
-	g_autoptr(FuUdevDevice) parent = fu_udev_device_new(g_steal_pointer(&udev_parent));
+	parent = fu_udev_device_new(g_steal_pointer(&udev_parent));
+	g_warning("set online from fu_thunderbolt_device_close");
 	fu_thunderbolt_device_set_port_online(parent);
 	return TRUE;
 }
@@ -496,9 +498,10 @@ fu_thunderbolt_device_setup_controller(FuDevice *device, GError **error)
 
 	if (self->device_type == FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER) {
 		if(fu_thunderbolt_device_set_port_offline(FU_UDEV_DEVICE(device)))
-			g_timeout_add_seconds(5,
+			/*g_timeout_add_seconds(5,
 				      G_SOURCE_FUNC(fu_thunderbolt_device_set_port_online_cb),
-				      FU_UDEV_DEVICE(device));
+				      FU_UDEV_DEVICE(device));*/
+			return TRUE;
 	}
 
 	return TRUE;
@@ -513,16 +516,14 @@ fu_thunderbolt_device_setup_retimer(FuDevice *device, GError **error)
 	g_autofree gchar *instance = NULL;
 
 	/* as defined in PCIe 4.0 spec */
-	fu_device_set_summary(
-	    device,
-	    "A physical layer protocol-aware, software-transparent extension device "
-	    "that forms two separate electrical link segments");
-	fu_device_set_name(device, fu_thunderbolt_device_type_to_string(self));
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_REQUIRES_WAKEUP);
-	vid = fu_udev_device_get_vendor(FU_UDEV_DEVICE(self));
+	fu_device_set_summary (device, "A physical layer protocol-aware, software-transparent extension device "
+				        "that forms two separate electrical link segments");
+	fu_device_set_name (device, fu_thunderbolt_device_type_to_string (self));
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE);
+	vid = fu_udev_device_get_vendor (FU_UDEV_DEVICE (self));
 	if (vid == 0x0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -879,8 +880,8 @@ fu_thunderbolt_device_class_init(FuThunderboltDeviceClass *klass)
 	klass_device->activate = fu_thunderbolt_device_activate;
 	klass_device->to_string = fu_thunderbolt_device_to_string;
 	klass_device->setup = fu_thunderbolt_device_setup;
-	klass_device->open = fu_thunderbolt_device_open;
-	klass_device->close = fu_thunderbolt_device_close;
+	//klass_device->open = fu_thunderbolt_device_open;
+	//klass_device->close = fu_thunderbolt_device_close;
 	klass_device->prepare_firmware = fu_thunderbolt_device_prepare_firmware;
 	klass_device->write_firmware = fu_thunderbolt_device_write_firmware;
 	klass_device->attach = fu_thunderbolt_device_attach;
