@@ -304,30 +304,33 @@ fu_plugin_redfish_startup(FuPlugin *plugin, GError **error)
 	if (redfish_uri != NULL) {
 		const gchar *ip_str = NULL;
 		g_auto(GStrv) split = NULL;
-		guint64 port;
+		guint64 port = 0;
 
 		if (g_str_has_prefix(redfish_uri, "https://")) {
 			fu_redfish_backend_set_https(data->backend, TRUE);
 			ip_str = redfish_uri + strlen("https://");
+			port = 443;
 		} else if (g_str_has_prefix(redfish_uri, "http://")) {
 			fu_redfish_backend_set_https(data->backend, FALSE);
 			ip_str = redfish_uri + strlen("http://");
+			port = 80;
 		} else {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "in valid scheme");
+					    "invalid scheme");
 			return FALSE;
 		}
 
 		split = g_strsplit(ip_str, ":", 2);
 		fu_redfish_backend_set_hostname(data->backend, split[0]);
-		port = g_ascii_strtoull(split[1], NULL, 10);
-		if (port == 0) {
+		if (g_strv_length(split) > 1)
+			port = g_ascii_strtoull(split[1], NULL, 10);
+		if (port == 0 || port == G_MAXUINT64) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no port specified");
+					    "no valid port specified");
 			return FALSE;
 		}
 		fu_redfish_backend_set_port(data->backend, port);
