@@ -202,7 +202,7 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 	if (device_flag == FWUPD_DEVICE_FLAG_AFFECTS_FDE)
 		return "affects-fde";
 	if (device_flag == FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE)
-		return "requires-wakeup";
+		return "no-auto-remove";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -314,7 +314,7 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_UNREACHABLE;
 	if (g_strcmp0(device_flag, "affects-fde") == 0)
 		return FWUPD_DEVICE_FLAG_AFFECTS_FDE;
-	if (g_strcmp0(device_flag, "requires-wakeup") == 0)
+	if (g_strcmp0(device_flag, "no-auto-remove") == 0)
 		return FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }

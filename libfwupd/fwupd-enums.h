@@ -494,17 +494,14 @@ typedef enum {
  */
 #define FWUPD_DEVICE_FLAG_AFFECTS_FDE (1llu << 45)
 /**
- *
- *
- * The device requires to be woken up to be re-enumerated.
- *
- * FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE :
- *
- * The device requires to be woken up to be re-enumerated.
- * Since 1.7.2
- */
-
+*
+* FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE :
+*
+* The device is not auto removed.
+* Since 1.7.2
+*/
 #define FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE (1llu << 46)
+
 /**
  * FWUPD_DEVICE_FLAG_UNKNOWN:
  *
