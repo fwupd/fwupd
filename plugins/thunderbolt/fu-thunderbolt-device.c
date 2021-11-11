@@ -334,6 +334,7 @@ fu_thunderbolt_device_set_port_offline(FuUdevDevice *device)
 		g_warning("Rescan on port failed: %s", error_local_rescan->message);
 		return FALSE;
 	}
+
 	return TRUE;
 }
 
@@ -346,13 +347,6 @@ fu_thunderbolt_device_set_port_online(FuDevice *device)
 	if (!fu_udev_device_write_sysfs(udev, "usb4_port3/offline", "0", &error_local)) {
 		g_warning("Setting port online failed: %s", error_local->message);
 	}
-}
-
-static gboolean
-fu_thunderbolt_device_set_port_online_cb(FuUdevDevice *device)
-{
-	fu_thunderbolt_device_set_port_online(device);
-	return G_SOURCE_REMOVE;
 }
 
 gboolean
@@ -498,9 +492,6 @@ fu_thunderbolt_device_setup_controller(FuDevice *device, GError **error)
 
 	if (self->device_type == FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER) {
 		if(fu_thunderbolt_device_set_port_offline(FU_UDEV_DEVICE(device)))
-			/*g_timeout_add_seconds(5,
-				      G_SOURCE_FUNC(fu_thunderbolt_device_set_port_online_cb),
-				      FU_UDEV_DEVICE(device));*/
 			return TRUE;
 	}
 
@@ -525,6 +516,7 @@ fu_thunderbolt_device_setup_retimer(FuDevice *device, GError **error)
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag (device, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE);
+
 	vid = fu_udev_device_get_vendor (FU_UDEV_DEVICE (self));
 	if (vid == 0x0) {
 		g_set_error_literal(error,
@@ -846,10 +838,13 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 	}
 
 	/* whether to wait for a device replug or not */
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
-		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
-		fu_device_set_remove_delay(device, FU_PLUGIN_THUNDERBOLT_UPDATE_TIMEOUT);
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	if (!fu_device_has_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
+		fu_device_set_remove_delay (device, FU_PLUGIN_THUNDERBOLT_UPDATE_TIMEOUT);
+		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+		if (self->device_type != FU_THUNDERBOLT_DEVICE_TYPE_RETIMER)
+		{
+			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		}
 	}
 
 	return TRUE;
@@ -882,8 +877,6 @@ fu_thunderbolt_device_class_init(FuThunderboltDeviceClass *klass)
 	klass_device->activate = fu_thunderbolt_device_activate;
 	klass_device->to_string = fu_thunderbolt_device_to_string;
 	klass_device->setup = fu_thunderbolt_device_setup;
-	//klass_device->open = fu_thunderbolt_device_open;
-	//klass_device->close = fu_thunderbolt_device_close;
 	klass_device->prepare_firmware = fu_thunderbolt_device_prepare_firmware;
 	klass_device->write_firmware = fu_thunderbolt_device_write_firmware;
 	klass_device->attach = fu_thunderbolt_device_attach;
