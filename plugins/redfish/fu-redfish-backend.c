@@ -78,8 +78,10 @@ fu_redfish_backend_request_new(FuRedfishBackend *self)
 	user_agent = g_strdup_printf("%s/%s", PACKAGE_NAME, PACKAGE_VERSION);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, user_agent);
 	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 60L);
-	if (!self->cacheck)
+	if (!self->cacheck) {
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+	}
 
 	/* success */
 	return request;
