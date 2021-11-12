@@ -41,8 +41,6 @@ typedef struct {
 	gchar *alt_name;
 	gchar *alt_name_for_display;
 	GPtrArray *sectors; /* of FuDfuSector */
-	guint old_percentage;
-	FwupdStatus old_action;
 } FuDfuTargetPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuDfuTarget, fu_dfu_target, G_TYPE_OBJECT)
@@ -60,8 +58,6 @@ fu_dfu_target_init(FuDfuTarget *self)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	priv->sectors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	priv->old_percentage = G_MAXUINT;
-	priv->old_action = FWUPD_STATUS_IDLE;
 }
 
 static void
@@ -1281,6 +1277,8 @@ fu_dfu_target_download(FuDfuTarget *self,
 				    "no image chunks");
 		return FALSE;
 	}
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		g_debug("downloading chunk at 0x%04x", fu_chunk_get_address(chk));
@@ -1298,8 +1296,13 @@ fu_dfu_target_download(FuDfuTarget *self,
 		}
 
 		/* download to device */
-		if (!fu_dfu_target_download_element(self, chk, progress, flags, error))
+		if (!fu_dfu_target_download_element(self,
+						    chk,
+						    fu_progress_get_child(progress),
+						    flags,
+						    error))
 			return FALSE;
+		fu_progress_step_done(progress);
 	}
 
 	if (fu_device_has_private_flag(FU_DEVICE(priv->device), FU_DFU_DEVICE_FLAG_MANIFEST_POLL) &&
