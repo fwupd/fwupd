@@ -594,8 +594,11 @@ fu_dfu_tool_read(FuDfuTool *self, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	g_signal_connect(device, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(device, "percentage-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
+	g_signal_connect(progress, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_tool_action_changed_cb),
+			 self);
 	firmware = fu_dfu_device_upload(device, progress, flags, error);
 	if (firmware == NULL)
 		return FALSE;
@@ -666,8 +669,11 @@ fu_dfu_tool_write_alt(FuDfuTool *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* set up progress */
-	g_signal_connect(device, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(device, "percentage-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
+	g_signal_connect(progress, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_tool_action_changed_cb),
+			 self);
 
 	/* APP -> DFU */
 	if (!fu_device_has_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -794,8 +800,11 @@ fu_dfu_tool_write(FuDfuTool *self, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	g_signal_connect(device, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(device, "percentage-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
+	g_signal_connect(progress, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_tool_action_changed_cb),
+			 self);
 	if (!fu_device_write_firmware(FU_DEVICE(device), fw, progress, flags, error))
 		return FALSE;
 
