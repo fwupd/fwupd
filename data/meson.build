@@ -26,13 +26,14 @@ if build_standalone
     install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
 endif
 
-install_data(['org.freedesktop.fwupd.metainfo.xml'],
-  install_dir: join_paths(datadir, 'metainfo')
-)
-
-install_data(['org.freedesktop.fwupd.svg'],
-  install_dir : join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
-)
+if get_option('metainfo')
+  install_data(['org.freedesktop.fwupd.metainfo.xml'],
+    install_dir: join_paths(datadir, 'metainfo')
+  )
+  install_data(['org.freedesktop.fwupd.svg'],
+    install_dir : join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
+  )
+endif
 
 if build_daemon
   install_data(['org.freedesktop.fwupd.conf'],
