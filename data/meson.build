@@ -1,8 +1,14 @@
 subdir('builder')
 subdir('pki')
 subdir('remotes.d')
-subdir('bash-completion')
-subdir('fish-completion')
+
+if get_option('bash_completion')
+  subdir('bash-completion')
+endif
+
+if get_option('fish_completion')
+  subdir('fish-completion')
+endif
 
 if get_option('tests')
 subdir('device-tests')
