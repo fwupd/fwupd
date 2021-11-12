@@ -1736,8 +1736,18 @@ fu_main_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "HostProduct") == 0)
 		return g_variant_new_string(fu_engine_get_host_product(priv->engine));
 
-	if (g_strcmp0(property_name, "HostMachineId") == 0)
-		return g_variant_new_string(fu_engine_get_host_machine_id(priv->engine));
+	if (g_strcmp0(property_name, "HostMachineId") == 0) {
+		const gchar *tmp = fu_engine_get_host_machine_id(priv->engine);
+		if (tmp == NULL) {
+			g_set_error(error,
+				    G_DBUS_ERROR,
+				    G_DBUS_ERROR_NOT_SUPPORTED,
+				    "failed to get daemon property %s",
+				    property_name);
+			return NULL;
+		}
+		return g_variant_new_string(tmp);
+	}
 
 	if (g_strcmp0(property_name, "HostSecurityId") == 0)
 		return g_variant_new_string(fu_engine_get_host_security_id(priv->engine));
