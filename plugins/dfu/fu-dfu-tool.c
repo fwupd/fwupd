@@ -27,6 +27,7 @@ typedef struct {
 	gchar *device_vid_pid;
 	guint16 transfer_size;
 	FuContext *ctx;
+	GUsbContext *usb_context;
 } FuDfuTool;
 
 static void
@@ -37,6 +38,8 @@ fu_dfu_tool_free(FuDfuTool *self)
 	g_free(self->device_vid_pid);
 	if (self->cancellable != NULL)
 		g_object_unref(self->cancellable);
+	if (self->usb_context != NULL)
+		g_object_unref(self->usb_context);
 	g_object_unref(self->ctx);
 	if (self->cmd_array != NULL)
 		g_ptr_array_unref(self->cmd_array);
@@ -164,14 +167,13 @@ fu_dfu_tool_run(FuDfuTool *self, const gchar *command, gchar **values, GError **
 static FuDfuDevice *
 fu_dfu_tool_get_default_device(FuDfuTool *self, GError **error)
 {
-	g_autoptr(GUsbContext) usb_context = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
 	/* get all the DFU devices */
-	usb_context = g_usb_context_new(error);
-	if (usb_context == NULL)
+	self->usb_context = g_usb_context_new(error);
+	if (self->usb_context == NULL)
 		return NULL;
-	g_usb_context_enumerate(usb_context);
+	g_usb_context_enumerate(self->usb_context);
 
 	/* we specified it manually */
 	if (self->device_vid_pid != NULL) {
@@ -207,8 +209,10 @@ fu_dfu_tool_get_default_device(FuDfuTool *self, GError **error)
 		}
 
 		/* find device */
-		usb_device =
-		    g_usb_context_find_by_vid_pid(usb_context, (guint16)vid, (guint16)pid, error);
+		usb_device = g_usb_context_find_by_vid_pid(self->usb_context,
+							   (guint16)vid,
+							   (guint16)pid,
+							   error);
 		if (usb_device == NULL) {
 			g_prefix_error(error,
 				       "no device matches for %04x:%04x: ",
@@ -222,7 +226,7 @@ fu_dfu_tool_get_default_device(FuDfuTool *self, GError **error)
 	}
 
 	/* auto-detect first device */
-	devices = g_usb_context_get_devices(usb_context);
+	devices = g_usb_context_get_devices(self->usb_context);
 	for (guint i = 0; i < devices->len; i++) {
 		GUsbDevice *usb_device = g_ptr_array_index(devices, i);
 		g_autoptr(FuDfuDevice) device = fu_dfu_device_new(usb_device);
@@ -241,20 +245,14 @@ fu_dfu_device_wait_for_replug(FuDfuTool *self, FuDfuDevice *device, guint timeou
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	g_autoptr(GUsbDevice) usb_device2 = NULL;
-	g_autoptr(GUsbContext) usb_context = NULL;
 	g_autoptr(GError) error_local = NULL;
-
-	/* get all the DFU devices */
-	usb_context = g_usb_context_new(error);
-	if (usb_context == NULL)
-		return FALSE;
 
 	/* close */
 	if (!fu_device_close(FU_DEVICE(device), &error_local))
 		g_debug("failed to close: %s", error_local->message);
 
 	/* watch the device disappear and re-appear */
-	usb_device2 = g_usb_context_wait_for_replug(usb_context, usb_device, timeout, error);
+	usb_device2 = g_usb_context_wait_for_replug(self->usb_context, usb_device, timeout, error);
 	if (usb_device2 == NULL)
 		return FALSE;
 
