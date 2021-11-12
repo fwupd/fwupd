@@ -2423,6 +2423,15 @@ fu_engine_schedule_update(FuEngine *self,
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(GFile) file = NULL;
 
+#ifndef HAVE_FWUPDOFFLINE
+	/* sanity check */
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "Not supported as compiled without offline support");
+	return FALSE;
+#endif
+
 	/* id already exists */
 	history = fu_history_new();
 	if ((flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {

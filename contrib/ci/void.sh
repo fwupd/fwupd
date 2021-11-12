@@ -16,5 +16,6 @@ meson build \
  -Dgcab:docs=false \
  -Dconsolekit=false \
  -Dsystemd=false \
+ -Doffline=false \
  -Delogind=true
 ninja -C build test -v

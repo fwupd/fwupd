@@ -289,6 +289,13 @@ endif
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
+if get_option('offline')
+  if not get_option('systemd')
+    error('-Doffline=true requires -Dsystemd=true')
+  endif
+  conf.set('HAVE_FWUPDOFFLINE', '1')
+endif
+
 
 if build_standalone and get_option('plugin_altos')
   libelf = dependency('libelf')

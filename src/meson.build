@@ -107,7 +107,7 @@ meson.add_install_script(
       join_paths(get_option('prefix'), get_option('bindir'), 'fwupdagent')))
 endif
 
-if get_option('systemd')
+if get_option('systemd') and get_option('offline')
 fwupdoffline = executable(
   'fwupdoffline',
   sources : [
