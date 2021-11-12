@@ -40,7 +40,6 @@ typedef enum {
 
 struct _FuDfuTargetClass {
 	GUsbDeviceClass parent_class;
-	void (*action_changed)(FuDfuTarget *self, FwupdStatus action);
 	gboolean (*setup)(FuDfuTarget *self, GError **error);
 	gboolean (*attach)(FuDfuTarget *self, FuProgress *progress, GError **error);
 	gboolean (*detach)(FuDfuTarget *self, FuProgress *progress, GError **error);

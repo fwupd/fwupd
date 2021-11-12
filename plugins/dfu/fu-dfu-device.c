@@ -1500,6 +1500,17 @@ fu_dfu_device_id_compatible(guint16 id_file, guint16 id_runtime, guint16 id_dev)
 	return FALSE;
 }
 
+static gsize
+fu_dfu_device_calculate_chunks_size(GPtrArray *chunks)
+{
+	gsize total = 0;
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks, i);
+		total += fu_chunk_get_data_sz(chk);
+	}
+	return total;
+}
+
 static gboolean
 fu_dfu_device_download(FuDfuDevice *self,
 		       FuFirmware *firmware,
@@ -1596,7 +1607,15 @@ fu_dfu_device_download(FuDfuDevice *self,
 	if (images->len == 0)
 		g_ptr_array_add(images, g_object_ref(firmware));
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, images->len);
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmware *image = g_ptr_array_index(images, i);
+		g_autoptr(GPtrArray) chunks = fu_firmware_get_chunks(image, error);
+		if (chunks == NULL)
+			return FALSE;
+		fu_progress_add_step(progress,
+				     FWUPD_STATUS_DEVICE_WRITE,
+				     fu_dfu_device_calculate_chunks_size(chunks));
+	}
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *image = g_ptr_array_index(images, i);
 		FuDfuTargetTransferFlags flags_local = DFU_TARGET_TRANSFER_FLAG_NONE;
