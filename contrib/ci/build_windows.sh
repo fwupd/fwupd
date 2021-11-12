@@ -44,6 +44,7 @@ meson .. \
     -Dplugin_synaptics_mst=false \
     -Dplugin_synaptics_rmi=false \
     -Dman=false \
+    -Dmetainfo=false \
     -Dsoup_session_compat=false \
     -Dgcab:introspection=false \
     -Dgcab:docs=false \
