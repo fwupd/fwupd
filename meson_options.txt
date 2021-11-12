@@ -48,3 +48,5 @@ option('udevdir', type: 'string', value: '', description: 'Directory for udev ru
 option('efi_os_dir', type: 'string', description : 'the hardcoded name of OS directory in ESP, e.g. fedora')
 option('efi_binary', type: 'boolean', value : true, description : 'generate uefi binary if missing')
 option('metainfo', type: 'boolean', value : true, description : 'install the project metainfo.xml information')
+option('bash_completion', type: 'boolean', value : true, description : 'enable bash completion')
+option('fish_completion', type: 'boolean', value : true, description : 'enable fish completion')
