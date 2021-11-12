@@ -686,10 +686,13 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 		fwupd_client_set_host_security_id(self, g_variant_get_string(val7, NULL));
 
 	/* build client hints */
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_DICTIONARY);
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("a{ss}"));
 	g_hash_table_iter_init(&iter, priv->hints);
-	while (g_hash_table_iter_next(&iter, &key, &value))
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		if (value == NULL)
+			continue;
 		g_variant_builder_add(&builder, "{ss}", (const gchar *)key, (const gchar *)value);
+	}
 
 	/* only supported on fwupd >= 1.7.1 */
 	g_dbus_proxy_call(priv->proxy,
