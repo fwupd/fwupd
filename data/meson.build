@@ -91,13 +91,15 @@ if get_option('systemd') and build_daemon
   con2.set('motd_dir', motd_dir)
 
   # replace @bindir@
-  configure_file(
-    input : 'fwupd-offline-update.service.in',
-    output : 'fwupd-offline-update.service',
-    configuration : con2,
-    install: true,
-    install_dir: systemdunitdir,
-  )
+  if get_option('offline')
+    configure_file(
+      input : 'fwupd-offline-update.service.in',
+      output : 'fwupd-offline-update.service',
+      configuration : con2,
+      install: true,
+      install_dir: systemdunitdir,
+    )
+  endif
 
   # replace @dynamic_options@
   configure_file(

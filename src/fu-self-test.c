@@ -2877,7 +2877,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_name(device), ==, "Integrated Webcam™");
 	g_signal_handlers_disconnect_by_data(self->plugin, &device);
 
-#ifdef _WIN32
+#ifndef HAVE_FWUPDOFFLINE
 	g_test_skip("No offline update support on Windows");
 	return;
 #endif

@@ -36,6 +36,7 @@ meson .. \
     -Dplugin_platform_integrity=false \
     -Dplugin_tpm=false \
     -Dsystemd=false \
+    -Doffline=false \
     -Dplugin_emmc=false \
     -Dplugin_amt=false \
     -Dplugin_mtd=false \

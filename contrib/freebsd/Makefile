@@ -56,6 +56,7 @@ MESON_ARGS=	-Dgudev=false \
 		-Dplugin_tpm=false \
 		-Dpolkit=false \
 		-Dsystemd=false \
+		-Doffline=false \
 		-Dtests=false \
 		-Ddocs=gtkdoc \
 		-Defi_binary=false
