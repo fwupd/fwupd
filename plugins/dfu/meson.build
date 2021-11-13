@@ -56,6 +56,7 @@ shared_module('fu_plugin_dfu',
   ],
 )
 
+if get_option('compat_cli')
 fu_dfu_tool = executable(
   'dfu-tool',
   fu_hash,
@@ -79,8 +80,9 @@ fu_dfu_tool = executable(
   install : true,
   install_dir : bindir
 )
+endif
 
-if get_option('man')
+if get_option('compat_cli') and get_option('man')
   configure_file(
     input : 'dfu-tool.1',
     output : 'dfu-tool.1',

@@ -64,6 +64,7 @@ shared_module('fu_plugin_uefi_capsule',
   ],
 )
 
+if get_option('compat_cli')
 fwupdate = executable(
   'fwupdate',
   resources_src,
@@ -100,8 +101,9 @@ fwupdate = executable(
   install_dir : bindir,
   c_args : cargs,
 )
+endif
 
-if get_option('man')
+if get_option('compat_cli') and get_option('man')
   configure_file(
     input : 'fwupdate.1',
     output : 'fwupdate.1',
