@@ -100,11 +100,13 @@ fwupdmgr = executable(
 )
 
 # for compatibility
+if get_option('compat_cli')
 meson.add_install_script(
   'sh', '-c',
   'ln -fs fwupdmgr @0@@1@'.format(
       '${DESTDIR}',
       join_paths(get_option('prefix'), get_option('bindir'), 'fwupdagent')))
+endif
 endif
 
 if get_option('systemd') and get_option('offline')

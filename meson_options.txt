@@ -51,3 +51,4 @@ option('metainfo', type: 'boolean', value : true, description : 'install the pro
 option('bash_completion', type: 'boolean', value : true, description : 'enable bash completion')
 option('fish_completion', type: 'boolean', value : true, description : 'enable fish completion')
 option('offline', type: 'boolean', value : true, description : 'enable installing firmware using a pre-boot systemd target')
+option('compat_cli', type: 'boolean', value : true, description : 'enable legacy commands: fwupdagent,dfu-tool,fwupdate')
