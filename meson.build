@@ -291,7 +291,7 @@ if valgrind.found()
 endif
 if get_option('offline')
   if not get_option('systemd')
-    error('-Doffline=true requires -Dsystemd=true')
+    warning('-Doffline=true requires -Dsystemd=true')
   endif
   conf.set('HAVE_FWUPDOFFLINE', '1')
 endif
