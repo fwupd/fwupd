@@ -73,7 +73,7 @@ if get_option('tests')
   test('tpm-self-test', e, env: env)
 endif
 
-fwupdtpmevlog = executable(
+executable(
   'fwupdtpmevlog',
   fu_hash,
   sources : [
@@ -94,17 +94,6 @@ fwupdtpmevlog = executable(
     fwupd,
     fwupdplugin,
   ],
-  install : true,
-  install_dir : bindir
 )
 
-if get_option('man')
-  configure_file(
-    input : 'fwupdtpmevlog.1',
-    output : 'fwupdtpmevlog.1',
-    configuration : conf,
-    install: true,
-    install_dir: join_paths(mandir, 'man1'),
-  )
-endif
 endif

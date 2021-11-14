@@ -334,7 +334,6 @@ done
 %{_libexecdir}/fwupd/fwupdoffline
 %if 0%{?have_uefi}
 %{_bindir}/fwupdate
-%{_bindir}/fwupdtpmevlog
 %endif
 %{_bindir}/dfu-tool
 %if 0%{?have_uefi}
@@ -381,7 +380,6 @@ done
 %{_mandir}/man1/fwupdmgr.1*
 %if 0%{?have_uefi}
 %{_mandir}/man1/fwupdate.1*
-%{_mandir}/man1/fwupdtpmevlog.1*
 %endif
 %{_datadir}/metainfo/org.freedesktop.fwupd.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/org.freedesktop.fwupd.svg
