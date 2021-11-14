@@ -274,8 +274,8 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 		GUsbInterface *iface = g_ptr_array_index(ifaces, i);
 
 		/* some devices don't use the right class and subclass */
-		if (fu_device_has_private_flag(FU_DEVICE(self),
-					       FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE)) {
+		if (!fu_device_has_private_flag(FU_DEVICE(self),
+						FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE)) {
 			if (g_usb_interface_get_class(iface) !=
 			    G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
 				continue;
