@@ -31,7 +31,6 @@
   <provides>
     <binary>fwupdmgr</binary>
     <binary>fwupdtool</binary>
-    <binary>fwupdtpmevlog</binary>
     <binary>fwupdagent</binary>
   </provides>
   <releases>
