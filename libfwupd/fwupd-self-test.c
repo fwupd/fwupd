@@ -439,8 +439,9 @@ fwupd_device_func(void)
 	str_ascii = g_string_new(str);
 	_g_string_replace(str_ascii, " ", " ");
 	ret = fu_test_compare_lines(str_ascii->str,
-				    "ColorHug2\n"
+				    "FwupdDevice:\n"
 				    "  DeviceId:             USB:foo\n"
+				    "  Name:                 ColorHug2\n"
 				    "  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
 				    "  Guid:                 00000000-0000-0000-0000-000000000000\n"
 				    "  Flags:                updatable|require-ac\n"

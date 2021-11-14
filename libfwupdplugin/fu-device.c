@@ -3310,9 +3310,6 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 
 	g_return_if_fail(locker != NULL);
 
-	/* subclassed type */
-	fu_common_string_append_kv(str, idt, G_OBJECT_TYPE_NAME(self), NULL);
-
 	tmp = fwupd_device_to_string(FWUPD_DEVICE(self));
 	if (tmp != NULL && tmp[0] != '\0')
 		g_string_append(str, tmp);

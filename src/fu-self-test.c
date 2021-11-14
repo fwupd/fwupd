@@ -1792,8 +1792,8 @@ fu_engine_history_func(gconstpointer user_data)
 	checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob_cab);
 	device_str_expected =
 	    g_strdup_printf("FuDevice:\n"
-			    "Test Device\n"
 			    "  DeviceId:             894e8c17a29428b09d10cd90d1db74ea76fbcfe8\n"
+			    "  Name:                 Test Device\n"
 			    "  Guid:                 12345678-1234-1234-1234-123456789012\n"
 			    "  Plugin:               test\n"
 			    "  Flags:                updatable|historical\n"
@@ -2234,8 +2234,8 @@ fu_engine_history_error_func(gconstpointer user_data)
 	checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob_cab);
 	device_str_expected =
 	    g_strdup_printf("FuDevice:\n"
-			    "Test Device\n"
 			    "  DeviceId:             894e8c17a29428b09d10cd90d1db74ea76fbcfe8\n"
+			    "  Name:                 Test Device\n"
 			    "  Guid:                 12345678-1234-1234-1234-123456789012\n"
 			    "  Plugin:               test\n"
 			    "  Flags:                updatable|historical\n"
