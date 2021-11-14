@@ -443,6 +443,8 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 
 	/* get data back */
 	buf = g_bytes_get_data(chunk_sig, &sz);
+	if (g_getenv("FWUPD_DFU_VERBOSE") != NULL)
+		fu_common_dump_bytes(G_LOG_DOMAIN, "AVR:CID", chunk_sig);
 	if (sz != 4) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -481,8 +483,9 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "ChipID %s is not supported",
-			    chip_id);
+			    "ChipID %s [%s] is not supported",
+			    chip_id,
+			    chip_id_guid);
 		return FALSE;
 	}
 	fu_dfu_target_set_alt_name(target, chip_id);
