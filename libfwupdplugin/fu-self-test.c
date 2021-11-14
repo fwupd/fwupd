@@ -1762,7 +1762,6 @@ fu_device_private_flags_func(void)
 	g_assert_cmpstr(tmp,
 			==,
 			"FuDevice:\n"
-			"Unknown Device\n"
 			"  Flags:                none\n"
 			"  CustomFlags:          baz\n" /* compat */
 			"  PrivateFlags:         foo\n");
