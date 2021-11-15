@@ -131,7 +131,6 @@ enum {
 	SIGNAL_DEVICE_CHANGED,
 	SIGNAL_DEVICE_REQUEST,
 	SIGNAL_STATUS_CHANGED,
-	SIGNAL_PERCENTAGE_CHANGED,
 	SIGNAL_LAST
 };
 
@@ -192,35 +191,6 @@ fu_engine_set_status(FuEngine *self, FwupdStatus status)
 	/* emit changed */
 	g_debug("Emitting PropertyChanged('Status'='%s')", fwupd_status_to_string(status));
 	g_signal_emit(self, signals[SIGNAL_STATUS_CHANGED], 0, status);
-}
-
-static void
-fu_engine_set_percentage(FuEngine *self, guint percentage)
-{
-	if (self->percentage == percentage)
-		return;
-	self->percentage = percentage;
-
-	/* emit changed */
-	g_signal_emit(self, signals[SIGNAL_PERCENTAGE_CHANGED], 0, percentage);
-}
-
-static void
-fu_engine_progress_percentage_changed_cb(FuProgress *progress, guint percentage, FuEngine *self)
-{
-	/* this is global for all the tasks and divisions */
-	fu_engine_set_percentage(self, percentage);
-}
-
-static void
-fu_engine_progress_status_changed_cb(FuProgress *progress, FwupdStatus status, FuEngine *self)
-{
-	/* ignore */
-	if (status == FWUPD_STATUS_UNKNOWN)
-		return;
-
-	/* this is global for all the tasks and divisions */
-	fu_engine_set_status(self, status);
 }
 
 static void
@@ -880,7 +850,10 @@ fu_engine_checksum_type_to_string(GChecksumType checksum_type)
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_verify_update(FuEngine *self, const gchar *device_id, GError **error)
+fu_engine_verify_update(FuEngine *self,
+			const gchar *device_id,
+			FuProgress *progress,
+			GError **error)
 {
 	FuPlugin *plugin;
 	GPtrArray *checksums;
@@ -888,7 +861,6 @@ fu_engine_verify_update(FuEngine *self, const gchar *device_id, GError **error)
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *localstatedir = NULL;
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderNode) component = NULL;
@@ -900,17 +872,6 @@ fu_engine_verify_update(FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* progress */
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
-	g_signal_connect(progress,
-			 "percentage-changed",
-			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
-			 self);
-	g_signal_connect(progress,
-			 "status-changed",
-			 G_CALLBACK(fu_engine_progress_status_changed_cb),
-			 self);
 
 	/* check the devices still exists */
 	device = fu_device_list_get_by_id(self->device_list, device_id, error);
@@ -1154,12 +1115,11 @@ fu_engine_verify_from_system_metadata(FuEngine *self, FuDevice *device, GError *
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_verify(FuEngine *self, const gchar *device_id, GError **error)
+fu_engine_verify(FuEngine *self, const gchar *device_id, FuProgress *progress, GError **error)
 {
 	FuPlugin *plugin;
 	GPtrArray *checksums;
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) xpath_csum = g_string_new(NULL);
 	g_autoptr(XbNode) csum = NULL;
@@ -1168,17 +1128,6 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* progress */
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
-	g_signal_connect(progress,
-			 "percentage-changed",
-			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
-			 self);
-	g_signal_connect(progress,
-			 "status-changed",
-			 G_CALLBACK(fu_engine_progress_status_changed_cb),
-			 self);
 
 	/* check the id exists */
 	device = fu_device_list_get_by_id(self->device_list, device_id, error);
@@ -2172,6 +2121,7 @@ fu_engine_install_tasks(FuEngine *self,
 			FuEngineRequest *request,
 			GPtrArray *install_tasks,
 			GBytes *blob_cab,
+			FuProgress *progress,
 			FwupdInstallFlags flags,
 			GError **error)
 {
@@ -2179,7 +2129,6 @@ fu_engine_install_tasks(FuEngine *self,
 	g_autoptr(FuIdleLocker) locker = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_new = NULL;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* do not allow auto-shutdown during this time */
 	locker = fu_idle_locker_new(self->idle, "update");
@@ -2201,15 +2150,6 @@ fu_engine_install_tasks(FuEngine *self,
 
 	/* all authenticated, so install all the things */
 	fu_progress_set_steps(progress, install_tasks->len);
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
-	g_signal_connect(progress,
-			 "percentage-changed",
-			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
-			 self);
-	g_signal_connect(progress,
-			 "status-changed",
-			 G_CALLBACK(fu_engine_progress_status_changed_cb),
-			 self);
 	for (guint i = 0; i < install_tasks->len; i++) {
 		FuInstallTask *task = g_ptr_array_index(install_tasks, i);
 		if (!fu_engine_install(self,
@@ -2260,7 +2200,6 @@ fu_engine_install_tasks(FuEngine *self,
 	}
 
 	/* success */
-	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
@@ -3114,27 +3053,15 @@ fu_engine_set_progress(FuEngine *self, const gchar *device_id, FuProgress *progr
 }
 
 gboolean
-fu_engine_activate(FuEngine *self, const gchar *device_id, GError **error)
+fu_engine_activate(FuEngine *self, const gchar *device_id, FuProgress *progress, GError **error)
 {
 	FuPlugin *plugin;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* progress */
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
-	g_signal_connect(progress,
-			 "percentage-changed",
-			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
-			 self);
-	g_signal_connect(progress,
-			 "status-changed",
-			 G_CALLBACK(fu_engine_progress_status_changed_cb),
-			 self);
 
 	/* check the device exists */
 	device = fu_device_list_get_by_id(self->device_list, device_id, error);
@@ -7103,16 +7030,6 @@ fu_engine_class_init(FuEngineClass *klass)
 						      G_TYPE_NONE,
 						      1,
 						      G_TYPE_UINT);
-	signals[SIGNAL_PERCENTAGE_CHANGED] = g_signal_new("percentage-changed",
-							  G_TYPE_FROM_CLASS(object_class),
-							  G_SIGNAL_RUN_LAST,
-							  0,
-							  NULL,
-							  NULL,
-							  g_cclosure_marshal_VOID__UINT,
-							  G_TYPE_NONE,
-							  1,
-							  G_TYPE_UINT);
 }
 
 void
