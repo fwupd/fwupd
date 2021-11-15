@@ -1715,15 +1715,6 @@ fu_dfu_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **err
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* require detach -> attach */
-	locker = fu_device_locker_new_full(device,
-					   (FuDeviceLockerFunc)fu_device_detach,
-					   (FuDeviceLockerFunc)fu_device_attach,
-					   error);
-	if (locker == NULL)
-		return NULL;
 
 	/* get data from hardware */
 	g_debug("uploading from device->host");
