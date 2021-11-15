@@ -3183,7 +3183,8 @@ main(int argc, char *argv[])
 			      fu_util_get_plugins);
 	fu_util_cmd_array_add(cmd_array,
 			      "get-details",
-			      NULL,
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILE"),
 			      /* TRANSLATORS: command description */
 			      _("Gets details about a firmware file"),
 			      fu_util_get_details);
