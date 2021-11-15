@@ -2002,7 +2002,8 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.2");
 
 	/* activate the device */
-	ret = fu_engine_activate(engine, fu_device_get_id(device), &error);
+	fu_progress_reset(progress);
+	ret = fu_engine_activate(engine, fu_device_get_id(device), progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -3175,6 +3176,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) install_tasks =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 	g_autoptr(XbSilo) silo = NULL;
 
@@ -3297,6 +3299,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 				      request,
 				      install_tasks,
 				      blob,
+				      progress,
 				      FWUPD_DEVICE_FLAG_NONE,
 				      &error);
 	g_assert_no_error(error);
