@@ -84,6 +84,39 @@ fu_quirks_build_group_key(const gchar *group)
 	return fwupd_guid_hash_string(group);
 }
 
+static gboolean
+fu_quirks_validate_flags(const gchar *value, GError **error)
+{
+	if (value == NULL)
+		return FALSE;
+	for (gsize i = 0; value[i] != '\0'; i++) {
+		gchar tmp = value[i];
+
+		/* allowed special chars */
+		if (tmp == ',' || tmp == '~' || tmp == '-')
+			continue;
+		if (!g_ascii_isalnum(tmp)) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "%c is not alphanumeric",
+				    tmp);
+			return FALSE;
+		}
+		if (g_ascii_isalpha(tmp) && !g_ascii_islower(tmp)) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "%c is not lowercase",
+				    tmp);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static GInputStream *
 fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
 				  XbBuilderSourceCtx *ctx,
@@ -114,6 +147,7 @@ fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
 	for (guint i = 0; groups[i] != NULL; i++) {
 		g_auto(GStrv) keys = NULL;
 		g_autofree gchar *group_id = NULL;
+		g_autoptr(GError) error_local = NULL;
 		g_autoptr(XbBuilderNode) bn = NULL;
 
 		/* sanity check group */
@@ -146,6 +180,18 @@ fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
 			value = g_key_file_get_value(kf, groups[i], keys[j], error);
 			if (value == NULL)
 				return NULL;
+
+			/* sanity check flags */
+			if (g_strcmp0(keys[j], FU_QUIRKS_FLAGS) == 0) {
+				if (!fu_quirks_validate_flags(value, &error_local)) {
+					g_warning("[%s] %s = %s is invalid: %s",
+						  groups[i],
+						  keys[j],
+						  value,
+						  error_local->message);
+				}
+			}
+
 			xb_builder_node_insert_text(bn, "value", value, "key", keys[j], NULL);
 		}
 	}
