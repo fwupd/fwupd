@@ -454,10 +454,13 @@ fu_ccgx_dmc_firmware_write(FuFirmware *firmware, GError **error)
 		gsize img_offset = sizeof(FwctInfo) + (i * sizeof(FwctImageInfo));
 		guint8 csumbuf[DMC_HASH_SIZE] = {0x0};
 		g_autoptr(GChecksum) csum = g_checksum_new(G_CHECKSUM_SHA256);
-		g_autoptr(GBytes) img_bytes = fu_firmware_get_bytes(img, NULL);
+		g_autoptr(GBytes) img_bytes = NULL;
 		g_autoptr(GBytes) img_padded = NULL;
 		g_autoptr(GPtrArray) chunks = NULL;
 
+		img_bytes = fu_firmware_get_bytes(img, error);
+		if (img_bytes == NULL)
+			return NULL;
 		chunks = fu_chunk_array_new_from_bytes(img_bytes, 0x0, 0x0, 64);
 		img_padded = fu_common_bytes_pad(img_bytes, MAX(chunks->len, 1) * 64);
 		fu_byte_array_append_bytes(buf, img_padded);
