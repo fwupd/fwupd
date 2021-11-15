@@ -3651,6 +3651,8 @@ fu_progress_non_equal_steps_func(void)
 	child = fu_progress_get_child(progress);
 	fu_progress_set_id(child, G_STRLOC);
 	fu_progress_set_steps(child, 2);
+	fu_progress_set_status(child, FWUPD_STATUS_DEVICE_BUSY);
+	g_assert_cmpint(fu_progress_get_status(progress), ==, FWUPD_STATUS_DEVICE_BUSY);
 
 	/* start child */
 	fu_progress_step_done(child);
@@ -3660,6 +3662,9 @@ fu_progress_non_equal_steps_func(void)
 
 	/* finish child */
 	fu_progress_step_done(child);
+
+	/* ensure the parent is switched back to the status before the child took over */
+	g_assert_cmpint(fu_progress_get_status(progress), ==, FWUPD_STATUS_DEVICE_ERASE);
 
 	fu_progress_step_done(progress);
 	g_assert_cmpint(fu_progress_get_status(progress), ==, FWUPD_STATUS_DEVICE_WRITE);
