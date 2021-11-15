@@ -78,7 +78,7 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 		guint32 length = 0;
 		guint32 fwtype = 0;
 		g_autoptr(GBytes) blob = NULL;
-		g_autoptr(FuFirmware) img = fu_firmware_new();
+		g_autoptr(FuFirmware) img = NULL;
 
 		/* type, reserved, start-addr, len */
 		if (!fu_common_read_uint32_safe(buf,
