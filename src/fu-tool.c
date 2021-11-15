@@ -26,7 +26,6 @@
 #include "fu-cabinet.h"
 #include "fu-context-private.h"
 #include "fu-debug.h"
-#include "fu-device-list.h"
 #include "fu-device-private.h"
 #include "fu-engine.h"
 #include "fu-history.h"
@@ -1522,7 +1521,6 @@ static gboolean
 fu_util_detach(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
@@ -1547,18 +1545,7 @@ fu_util_detach(FuUtilPrivate *priv, gchar **values, GError **error)
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	fu_device_list_add(device_list, device);
-	if (!fu_device_detach_full(device, priv->progress, error))
-		return FALSE;
-
-	/* wait for replug */
-	if (!priv->no_safety_check) {
-		if (!fu_device_list_wait_for_replug(device_list, error))
-			return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	return fu_device_detach_full(device, priv->progress, error);
 }
 
 static gboolean
@@ -1631,7 +1618,6 @@ static gboolean
 fu_util_attach(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuDeviceList) device_list = fu_device_list_new();
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* load engine */
@@ -1656,18 +1642,7 @@ fu_util_attach(FuUtilPrivate *priv, gchar **values, GError **error)
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
-	fu_device_list_add(device_list, device);
-	if (!fu_device_attach_full(device, priv->progress, error))
-		return FALSE;
-
-	/* wait for replug */
-	if (!priv->no_safety_check) {
-		if (!fu_device_list_wait_for_replug(device_list, error))
-			return FALSE;
-	}
-
-	/* success */
-	return TRUE;
+	return fu_device_attach_full(device, priv->progress, error);
 }
 
 static gboolean
