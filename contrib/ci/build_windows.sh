@@ -27,7 +27,6 @@ meson .. \
     -Dplugin_flashrom=false \
     -Dplugin_uefi_capsule=false \
     -Dplugin_redfish=false \
-    -Dplugin_altos=false \
     -Dplugin_dell=false \
     -Dplugin_logitech_bulkcontroller=false \
     -Dplugin_nvme=false \

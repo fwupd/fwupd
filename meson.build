@@ -296,11 +296,6 @@ if get_option('offline')
   conf.set('HAVE_FWUPDOFFLINE', '1')
 endif
 
-
-if build_standalone and get_option('plugin_altos')
-  libelf = dependency('libelf')
-endif
-
 host_cpu = host_machine.cpu_family()
 
 if cc.has_header('sys/utsname.h')

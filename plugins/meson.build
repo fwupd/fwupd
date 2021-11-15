@@ -1,7 +1,6 @@
 subdir('acpi-dmar')
 subdir('acpi-facp')
 subdir('acpi-phat')
-subdir('altos')
 subdir('amt')
 subdir('analogix')
 subdir('ata')
