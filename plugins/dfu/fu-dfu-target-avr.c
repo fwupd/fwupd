@@ -129,7 +129,9 @@ fu_dfu_target_avr_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 			g_debug("ignoring as device rebooting: %s", error_local->message);
 			return TRUE;
 		}
-		g_prefix_error(error, "cannot start application reset attach: ");
+		g_propagate_prefixed_error(error,
+					   g_steal_pointer(&error_local),
+					   "cannot start application reset attach: ");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
@@ -142,7 +144,9 @@ fu_dfu_target_avr_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 					  fu_progress_get_child(progress),
 					  &error_local)) {
 		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
-			g_prefix_error(error, "cannot initiate reset for attach: ");
+			g_propagate_prefixed_error(error,
+						   g_steal_pointer(&error_local),
+						   "cannot initiate reset for attach: ");
 			return FALSE;
 		}
 		g_debug("ignoring as device rebooting: %s", error_local->message);
