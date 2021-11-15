@@ -46,8 +46,8 @@ firmware_metainfo_template = """<?xml version="1.0" encoding="UTF-8"?>
     </release>
   </releases>
   <custom>
-    <value key="LVFS::VersionFormat">{update_protocol}</value>
-    <value key="LVFS::UpdateProtocol">{version_format}</value>
+    <value key="LVFS::VersionFormat">{version_format}</value>
+    <value key="LVFS::UpdateProtocol">{update_protocol}</value>
   </custom>
 </component>
 """
