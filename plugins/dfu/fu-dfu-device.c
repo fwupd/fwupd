@@ -1422,6 +1422,7 @@ fu_dfu_device_upload(FuDfuDevice *self,
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
+	gboolean use_dfuse = FALSE;
 	g_autoptr(FuFirmware) firmware = NULL;
 
 	/* no backing USB device */
@@ -1439,7 +1440,14 @@ fu_dfu_device_upload(FuDfuDevice *self,
 		return NULL;
 
 	/* choose the most appropriate type */
-	if (priv->targets->len > 1) {
+	for (guint i = 0; i < priv->targets->len; i++) {
+		FuDfuTarget *target = g_ptr_array_index(priv->targets, i);
+		if (fu_dfu_target_get_alt_name(target, NULL) != NULL || i > 0) {
+			use_dfuse = TRUE;
+			break;
+		}
+	}
+	if (use_dfuse) {
 		firmware = fu_dfuse_firmware_new();
 		g_debug("switching to DefuSe automatically");
 	} else {

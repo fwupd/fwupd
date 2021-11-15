@@ -84,7 +84,8 @@ fu_dfu_target_to_string(FuDfuTarget *self, guint idt, GString *str)
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	fu_common_string_append_kx(str, idt, "AltSetting", priv->alt_setting);
 	fu_common_string_append_kx(str, idt, "AltIdx", priv->alt_idx);
-	fu_common_string_append_kv(str, idt, "AltName", priv->alt_name);
+	if (priv->alt_name != NULL)
+		fu_common_string_append_kv(str, idt, "AltName", priv->alt_name);
 	if (priv->alt_name_for_display != NULL) {
 		fu_common_string_append_kv(str,
 					   idt,
