@@ -199,7 +199,6 @@ parts:
       - gnu-efi
       - libarchive-dev
       - libcairo-dev
-      - libelf-dev
       - libefiboot-dev
       - libefivar-dev
       - libftdi1-dev
@@ -227,7 +226,6 @@ parts:
       - liblcms2-2
       - libefivar1
       - libefiboot1
-      - libelf1
       - libusb-1.0-0
       - libgudev-1.0-0
       - libgpgme11
