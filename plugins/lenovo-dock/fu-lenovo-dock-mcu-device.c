@@ -14,6 +14,7 @@
 
 struct _FuLenovoDockMcuDevice {
 	FuHidDevice parent_instance;
+	gchar *version_format;
 };
 
 G_DEFINE_TYPE(FuLenovoDockMcuDevice, fu_lenovo_dock_mcu_device, FU_TYPE_HID_DEVICE)
@@ -203,15 +204,30 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 
 		child = fu_lenovo_dock_child_new(fu_device_get_context(FU_DEVICE(self)));
 		if (g_strcmp0(components[i].name, "bcdVersion") == 0) {
-			if (val[0] == 0x00 && val[1] == 0x00) {
+			if ((val[0] == 0x00 && val[1] == 0x00) ||
+			    (val[0] == 0xFF && val[1] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
-			version = g_strdup_printf("%x.%x.%02x", val[0] & 0xFu, val[0] >> 4, val[1]);
-			g_debug("ignoring %s --> %s", components[i].name, version);
+			if ((g_strcmp0(self->version_format, "HP") == 0)) {
+				version = g_strdup_printf("%x.%x.%x.%x",
+							  val[0] >> 4,
+							  val[0] & 0xFu,
+							  val[1] >> 4,
+							  val[1] & 0xFu);
+				fu_device_set_version_format(self, FWUPD_VERSION_FORMAT_QUAD);
+				fu_device_set_version(self, version);
+			} else {
+				version = g_strdup_printf("%x.%x.%02x",
+							  val[0] & 0xFu,
+							  val[0] >> 4,
+							  val[1]);
+				g_debug("ignoring %s --> %s", components[i].name, version);
+			}
 			continue;
 		} else if (g_strcmp0(components[i].name, "DMC") == 0) {
-			if (val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) {
+			if ((val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) ||
+			    (val[2] == 0xFF && val[3] == 0xFF && val[4] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
@@ -220,16 +236,26 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 			fu_device_set_version(child, version);
 			fu_device_set_name(child, "Dock Management Controller");
 		} else if (g_strcmp0(components[i].name, "PD") == 0) {
-			if (val[0] == 0x00 && val[1] == 0x00) {
+			if ((val[1] == 0x00 && val[2] == 0x00 && val[3] == 0x00 &&
+			     val[4] == 0x00) ||
+			    (val[1] == 0xFF && val[2] == 0xFF && val[3] == 0xFF &&
+			     val[4] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
-			version = g_strdup_printf("%d.%d.%d", val[0] >> 4, val[0] & 0xF, val[1]);
-			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
+			if ((g_strcmp0(self->version_format, "HP") == 0)) {
+				version =
+				    g_strdup_printf("%d.%d.%d.%d", val[3], val[4], val[1], val[2]);
+				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_QUAD);
+			} else {
+				version = g_strdup_printf("%d.%d.%d", val[2], val[3], val[4]);
+				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
+			}
 			fu_device_set_version(child, version);
 			fu_device_set_name(child, "Power Delivery");
 		} else if (g_strcmp0(components[i].name, "TBT4") == 0) {
-			if (val[1] == 0x00 && val[2] == 0x00 && val[3] == 0x00) {
+			if ((val[1] == 0x00 && val[2] == 0x00 && val[3] == 0x00) ||
+			    (val[1] == 0xFF && val[2] == 0xFF && val[3] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
@@ -239,7 +265,8 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 			fu_device_add_icon(child, "thunderbolt");
 			fu_device_set_name(child, "Thunderbolt 4 Controller");
 		} else if (g_strcmp0(components[i].name, "DP5x") == 0) {
-			if (val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) {
+			if ((val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) ||
+			    (val[2] == 0xFF && val[3] == 0xFF && val[4] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
@@ -249,17 +276,26 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 			fu_device_add_icon(child, "video-display");
 			fu_device_set_name(child, "Display Port 5");
 		} else if (g_strcmp0(components[i].name, "DP6x") == 0) {
-			if (val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) {
+			if ((val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) ||
+			    (val[2] == 0xFF && val[3] == 0xFF && val[4] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
-			version = g_strdup_printf("%d.%02d.%03d", val[2], val[3], val[4]);
-			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
+			if ((g_strcmp0(self->version_format, "HP") == 0)) {
+				version =
+				    g_strdup_printf("%x.%x.%x.%x", val[3], val[4], val[2], val[1]);
+				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_QUAD);
+				fu_device_set_name(child, "USB/PD HUB");
+			} else {
+				version = g_strdup_printf("%d.%02d.%03d", val[2], val[3], val[4]);
+				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
+				fu_device_set_name(child, "Display Port 6");
+			}
 			fu_device_set_version(child, version);
 			fu_device_add_icon(child, "video-display");
-			fu_device_set_name(child, "Display Port 6");
 		} else if (g_strcmp0(components[i].name, "USB3") == 0) {
-			if (val[3] == 0x00 && val[4] == 0x00) {
+			if ((val[3] == 0x00 && val[4] == 0x00) ||
+			    (val[3] == 0xFF && val[4] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
@@ -268,8 +304,10 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 			fu_device_set_version(child, version);
 			fu_device_set_name(child, "USB 3 Hub");
 		} else if (g_strcmp0(components[i].name, "USB2") == 0) {
-			if (val[0] == 0x00 && val[1] == 0x00 && val[2] == 0x00 && val[3] == 0x00 &&
-			    val[4] == 0x00) {
+			if ((val[0] == 0x00 && val[1] == 0x00 && val[2] == 0x00 && val[3] == 0x00 &&
+			     val[4] == 0x00) ||
+			    (val[0] == 0xFF && val[1] == 0xFF && val[2] == 0xFF && val[3] == 0xFF &&
+			     val[4] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
@@ -279,7 +317,8 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 			fu_device_set_version(child, version);
 			fu_device_set_name(child, "USB 2 Hub");
 		} else if (g_strcmp0(components[i].name, "AUDIO") == 0) {
-			if (val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) {
+			if ((val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) ||
+			    (val[2] == 0xFF && val[3] == 0xFF && val[4] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
@@ -288,7 +327,8 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 			fu_device_set_version(child, version);
 			fu_device_set_name(child, "Audio Controller");
 		} else if (g_strcmp0(components[i].name, "I255") == 0) {
-			if (val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) {
+			if ((val[2] == 0x00 && val[3] == 0x00 && val[4] == 0x00) ||
+			    (val[2] == 0xFF && val[3] == 0xFF && val[4] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
@@ -298,12 +338,22 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 			fu_device_add_icon(child, "network-wired");
 			fu_device_set_name(child, "Ethernet Adapter");
 		} else if (g_strcmp0(components[i].name, "MCU") == 0) {
-			if (val[0] == 0x00 && val[1] == 0x00) {
+			if ((val[0] == 0x00 && val[1] == 0x00) ||
+			    (val[0] == 0xFF && val[1] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
-			version = g_strdup_printf("%X.%X", val[0], val[1]);
-			fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_PLAIN);
+			if ((g_strcmp0(self->version_format, "HP") == 0)) {
+				version = g_strdup_printf("%x.%x.%x.%x",
+							  val[0] > 4,
+							  val[0] & 0x0F,
+							  val[1] > 4,
+							  val[1] & 0x0F);
+				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_QUAD);
+			} else {
+				version = g_strdup_printf("%X.%X", val[0], val[1]);
+				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_PLAIN);
+			}
 			fu_device_set_version(child, version);
 			fu_device_set_name(child, "Dock Management Controller");
 		} else {
@@ -638,15 +688,6 @@ fu_lenovo_dock_mcu_device_write_firmware_with_idx(FuLenovoDockMcuDevice *self,
 					    0x0,
 					    error))
 		return FALSE;
-
-	if (!fu_device_retry(FU_DEVICE(self),
-			     fu_lenovo_dock_mcu_device_wait_for_update_cb,
-			     300,
-			     NULL,
-			     error)) {
-		g_prefix_error(error, "failed to wait for update: ");
-		return FALSE;
-	}
 	fu_progress_step_done(progress);
 
 	/* success */
@@ -671,7 +712,7 @@ fu_lenovo_dock_mcu_device_write_firmware(FuDevice *device,
 static gboolean
 fu_lenovo_dock_mcu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	fu_device_set_remove_delay(device, 60000);
+	fu_device_set_remove_delay(device, 300000);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */
@@ -689,6 +730,35 @@ fu_lenovo_dock_mcu_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
 }
 
+static gboolean
+fu_lenovo_dock_mcu_device_set_quirk_kv(FuDevice *device,
+				       const gchar *key,
+				       const gchar *value,
+				       GError **error)
+{
+	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(device);
+	if (g_strcmp0(key, "LenovoDockVersionFormat") == 0) {
+		self->version_format = g_strdup(value);
+		return TRUE;
+	}
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "quirk key not supported");
+	return FALSE;
+}
+
+static void
+fu_lenovo_dock_mcu_device_to_string(FuDevice *device, guint idt, GString *str)
+{
+	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(device);
+
+	/* parent */
+	FU_DEVICE_CLASS(fu_lenovo_dock_mcu_device_parent_class)->to_string(device, idt, str);
+
+	fu_common_string_append_kv(str, idt, "LenovoDockVersionFormat", self->version_format);
+}
+
 static void
 fu_lenovo_dock_mcu_device_init(FuLenovoDockMcuDevice *self)
 {
@@ -698,6 +768,8 @@ fu_lenovo_dock_mcu_device_init(FuLenovoDockMcuDevice *self)
 
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_NO_SERIAL_NUMBER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER);
 	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.dock");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
@@ -707,11 +779,25 @@ fu_lenovo_dock_mcu_device_init(FuLenovoDockMcuDevice *self)
 }
 
 static void
+fu_lenovo_dock_mcu_device_finalize(GObject *obj)
+{
+	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(obj);
+	g_free(self->version_format);
+	G_OBJECT_CLASS(fu_lenovo_dock_mcu_device_parent_class)->finalize(obj);
+}
+
+static void
 fu_lenovo_dock_mcu_device_class_init(FuLenovoDockMcuDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
+	object_class->finalize = fu_lenovo_dock_mcu_device_finalize;
+
 	klass_device->write_firmware = fu_lenovo_dock_mcu_device_write_firmware;
 	klass_device->attach = fu_lenovo_dock_mcu_device_attach;
 	klass_device->setup = fu_lenovo_dock_mcu_device_setup;
 	klass_device->set_progress = fu_lenovo_dock_mcu_device_set_progress;
+
+	klass_device->to_string = fu_lenovo_dock_mcu_device_to_string;
+	klass_device->set_quirk_kv = fu_lenovo_dock_mcu_device_set_quirk_kv;
 }
