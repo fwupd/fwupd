@@ -321,7 +321,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("ifd"),
     ]:
         src = bld.substitute(
-            "fwupd/libfwupdplugin/fu-fuzzer-firmware.c.in",
+            "fwupd/libfwupdplugin/fu-fuzzer-firmware.c",
             {
                 "@FIRMWARENEW@": fzr.new_gtype,
                 "@INCLUDE@": os.path.join("libfwupdplugin", fzr.header),
