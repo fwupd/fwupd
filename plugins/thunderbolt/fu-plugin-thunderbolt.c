@@ -76,25 +76,30 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->device_registered = fu_plugin_thunderbolt_device_registered;
 	vfuncs->device_created = fu_plugin_thunderbolt_device_created;
 gboolean
-fu_plugin_update_prepare (FuPlugin *plugin,
-			  FwupdInstallFlags flags,
-			  FuDevice *device,
-			  GError **error)
+fu_plugin_composite_prepare (FuPlugin *plugin,
+			     GPtrArray *devices,
+			     GError **error)
 {
-	  if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE)) {
-		  return fu_thunderbolt_device_open(device,error);
-	  }
-	  return TRUE;
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index (devices, i);
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE)) {
+			return fu_thunderbolt_device_open(device,error);
+		}
+	}
+	return TRUE;
 }
 
+
 gboolean
-fu_plugin_update_cleanup (FuPlugin *plugin,
-			  FwupdInstallFlags flags,
-			  FuDevice *device,
-			  GError **error)
+fu_plugin_composite_cleanup	(FuPlugin	*plugin,
+							 GPtrArray	*devices,
+							 GError		**error)
 {
-	  if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE)) {
-		  return fu_thunderbolt_device_close(device, error);
-	  }
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index (devices, i);
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_NO_AUTO_REMOVE)) {
+			return fu_thunderbolt_device_close(device, error);
+		}
+	}
 	return TRUE;
 }
