@@ -350,12 +350,16 @@ fu_thunderbolt_device_set_port_offline(FuUdevDevice *device)
 }
 
 static void
-fu_thunderbolt_device_set_port_online(FuDevice *device)
+fu_thunderbolt_device_set_port_online(FuUdevDevice *device)
 {
 	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
 	g_autoptr(GError) error_local = NULL;
 
-	if (!fu_udev_device_write_sysfs(udev, "../offline", "0", &error_local)) {
+	if (!fu_udev_device_write_sysfs(udev, "usb4_port1/offline", "0", &error_local)) {
+		g_warning("Setting port online failed: %s", error_local->message);
+	}
+
+	if (!fu_udev_device_write_sysfs(udev, "usb4_port3/offline", "0", &error_local)) {
 		g_warning("Setting port online failed: %s", error_local->message);
 	}
 }
@@ -389,9 +393,9 @@ fu_thunderbolt_device_close(FuDevice *device, GError **error)
 		return TRUE;
 
 	udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
-	//udev_parent = g_udev_device_get_parent(udev_device);
-	//udev_parent = g_udev_device_get_parent(udev_parent);
-	parent = fu_udev_device_new(g_steal_pointer(&udev_device));
+	udev_parent = g_udev_device_get_parent(udev_device);
+	udev_parent = g_udev_device_get_parent(udev_parent);
+	parent = fu_udev_device_new(g_steal_pointer(&udev_parent));
 	fu_thunderbolt_device_set_port_online(parent);
 	return TRUE;
 }
