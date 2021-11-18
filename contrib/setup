@@ -12,7 +12,7 @@ rename_branch()
     NEW=main
     if git log $OLD >/dev/null 2>&1 &&
        git remote get-url origin 2>&1 | grep fwupd/fwupd.git >/dev/null 2>&1; then
-        read -p "Rename existing $OLD branch to $NEW? (y/n) " question
+        read -p "Rename existing $OLD branch to $NEW? (y/N) " question
         if [ "$question" = "y" ]; then
             git branch -m $OLD $NEW
             git fetch origin
@@ -24,7 +24,7 @@ rename_branch()
 
 setup_deps()
 {
-    read -p "Install build dependencies? (y/n) " question
+    read -p "Install build dependencies? (y/N) " question
     if [ "$question" = "y" ]; then
         $(which sudo) python3 $HELPER install-dependencies $HELPER_ARGS -y
     fi
@@ -32,7 +32,7 @@ setup_deps()
 
 setup_run_dev()
 {
-    read -p "Set up dbus activated daemon and PolicyKit actions from /usr/local? (y/n) " question
+    read -p "Set up dbus activated daemon and PolicyKit actions from /usr/local? (y/N) " question
     if [ "$question" = "y" ]; then
         ./contrib/prepare-system /usr/local install
     fi
@@ -40,7 +40,7 @@ setup_run_dev()
 
 setup_unsafe_polkit_rules()
 {
-    read -p "Install developer-friendly **unsafe** PolicyKit rules into /etc/polkit-1/rules.d? (y/n) " question
+    read -p "Install developer-friendly **unsafe** PolicyKit rules into /etc/polkit-1/rules.d? (y/N) " question
     if [ "$question" = "y" ]; then
         sudo cp ./policy/org.freedesktop.fwupd-unsafe.rules /etc/polkit-1/rules.d/
     fi
@@ -83,6 +83,16 @@ setup_precommit()
 
     install_pip pre-commit
     pre-commit install
+}
+
+setup_prepush()
+{
+    read -p "Run tests locally before pushing to remote branches? THIS WILL SLOW DOWN EVERY PUSH but reduce the risk of failing CI. (y/N) " question
+    if [ "$question" = "y" ]; then
+        pre-commit install -t pre-push
+    else
+        pre-commit uninstall -t pre-push
+    fi
 }
 
 check_markdown()
@@ -128,6 +138,12 @@ detect_os()
 #needed for arguments for some commands
 detect_os "$@"
 
+#always setup pre-commit
+setup_precommit
+
+#always setup git environment
+setup_git
+
 #if interactive install build deps and prepare environment
 if [ -t 2 ]; then
     case $OS in
@@ -143,10 +159,5 @@ if [ -t 2 ]; then
     check_markdown
     setup_vscode
     rename_branch
+    setup_prepush
 fi
-
-#always setup pre-commit
-setup_precommit
-
-#always setup git environment
-setup_git
