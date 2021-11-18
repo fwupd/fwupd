@@ -503,6 +503,9 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 		return FALSE;
 	fwupd_release_set_version(rel, version_rel);
 
+	/* optional release ID -- currently a integer but maybe namespaced in the future */
+	fwupd_release_set_id(rel, xb_node_get_attr(release, "id"));
+
 	/* find the remote */
 	remote_id = xb_node_query_text(component, "../custom/value[@key='fwupd::RemoteId']", NULL);
 	if (remote_id != NULL) {

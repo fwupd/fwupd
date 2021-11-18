@@ -1661,6 +1661,13 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 					   _("Remote ID"),
 					   fwupd_release_get_remote_id(rel));
 	}
+	if (fwupd_release_get_id(rel) != NULL) {
+		fu_common_string_append_kv(str,
+					   idt + 1,
+					   /* TRANSLATORS: the exact component on the server */
+					   _("Release ID"),
+					   fwupd_release_get_id(rel));
+	}
 	if (fwupd_release_get_branch(rel) != NULL) {
 		fu_common_string_append_kv(
 		    str,

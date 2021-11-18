@@ -81,6 +81,10 @@ fwupd_release_get_protocol(FwupdRelease *self);
 void
 fwupd_release_set_protocol(FwupdRelease *self, const gchar *protocol);
 const gchar *
+fwupd_release_get_id(FwupdRelease *self);
+void
+fwupd_release_set_id(FwupdRelease *self, const gchar *id);
+const gchar *
 fwupd_release_get_appstream_id(FwupdRelease *self);
 void
 fwupd_release_set_appstream_id(FwupdRelease *self, const gchar *appstream_id);

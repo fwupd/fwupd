@@ -41,6 +41,7 @@ typedef struct {
 	gchar *details_url;
 	gchar *source_url;
 	gchar *appstream_id;
+	gchar *id;
 	gchar *detach_caption;
 	gchar *detach_image;
 	gchar *license;
@@ -862,6 +863,47 @@ fwupd_release_set_appstream_id(FwupdRelease *self, const gchar *appstream_id)
 }
 
 /**
+ * fwupd_release_get_id:
+ * @self: a #FwupdRelease
+ *
+ * Gets the release ID, which allows identifying the specific uploaded component.
+ *
+ * Returns: the ID, or %NULL if unset
+ *
+ * Since: 1.7.2
+ **/
+const gchar *
+fwupd_release_get_id(FwupdRelease *self)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
+	return priv->id;
+}
+
+/**
+ * fwupd_release_set_id:
+ * @self: a #FwupdRelease
+ * @id: (nullable): the AppStream component ID, e.g. `component:1234`
+ *
+ * Sets the ID, which allows identifying the specific uploaded component.
+ *
+ * Since: 1.7.2
+ **/
+void
+fwupd_release_set_id(FwupdRelease *self, const gchar *id)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->id, id) == 0)
+		return;
+
+	g_free(priv->id);
+	priv->id = g_strdup(id);
+}
+
+/**
  * fwupd_release_get_detach_caption:
  * @self: a #FwupdRelease
  *
@@ -1487,6 +1529,12 @@ fwupd_release_to_variant(FwupdRelease *self)
 				      FWUPD_RESULT_KEY_APPSTREAM_ID,
 				      g_variant_new_string(priv->appstream_id));
 	}
+	if (priv->id != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_RELEASE_ID,
+				      g_variant_new_string(priv->id));
+	}
 	if (priv->detach_caption != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
@@ -1670,6 +1718,10 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_APPSTREAM_ID) == 0) {
 		fwupd_release_set_appstream_id(self, g_variant_get_string(value, NULL));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_RELEASE_ID) == 0) {
+		fwupd_release_set_id(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DETACH_CAPTION) == 0) {
@@ -1883,6 +1935,7 @@ fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder)
 	g_return_if_fail(builder != NULL);
 
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_RELEASE_ID, priv->id);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
 	fwupd_common_json_add_string(builder,
@@ -1999,6 +2052,7 @@ fwupd_release_to_string(FwupdRelease *self)
 
 	str = g_string_new("");
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_RELEASE_ID, priv->id);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
@@ -2082,6 +2136,7 @@ fwupd_release_finalize(GObject *object)
 	g_free(priv->filename);
 	g_free(priv->protocol);
 	g_free(priv->appstream_id);
+	g_free(priv->id);
 	g_free(priv->detach_caption);
 	g_free(priv->detach_image);
 	g_free(priv->license);
