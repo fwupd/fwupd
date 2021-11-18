@@ -19,6 +19,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_APPSTREAM_ID "AppstreamId"
 /**
+ * FWUPD_RESULT_KEY_RELEASE_ID:
+ *
+ * Result key to represent the release ID.
+ *
+ * The D-Bus type signature string is 's' i.e. a string.
+ **/
+#define FWUPD_RESULT_KEY_RELEASE_ID "ReleaseId"
+/**
  * FWUPD_RESULT_KEY_CHECKSUM:
  *
  * Result key to represent Checksum

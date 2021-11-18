@@ -426,6 +426,10 @@ fwupd_build_history_report_json_device(JsonBuilder *builder, FwupdDevice *dev)
 		json_builder_end_array(builder);
 	}
 
+	/* allow matching the specific component */
+	json_builder_set_member_name(builder, "ReleaseId");
+	json_builder_add_string_value(builder, fwupd_release_get_id(rel));
+
 	/* include the protocol used */
 	if (fwupd_release_get_protocol(rel) != NULL) {
 		json_builder_set_member_name(builder, "Protocol");
