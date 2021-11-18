@@ -46,7 +46,6 @@ if get_option('tests')
   e = executable(
     'tpm-self-test',
     fu_hash,
-    plugin_tpm,
     sources : [
       'fu-self-test.c',
       'fu-tpm-device.c',
