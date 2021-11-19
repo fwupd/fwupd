@@ -337,15 +337,6 @@ fu_thunderbolt_device_set_port_offline(FuUdevDevice *device)
 		return FALSE;
 	}
 
-	if (!fu_udev_device_write_sysfs(device, "usb4_port3/offline", "1", &error_local_offline)) {
-		g_warning("Setting port offline failed: %s", error_local_offline->message);
-		return FALSE;
-	}
-	if (!fu_udev_device_write_sysfs(device, "usb4_port3/rescan", "1", &error_local_rescan)) {
-		g_warning("Rescan on port failed: %s", error_local_rescan->message);
-		return FALSE;
-	}
-
 	return TRUE;
 }
 
@@ -356,10 +347,6 @@ fu_thunderbolt_device_set_port_online(FuUdevDevice *device)
 	g_autoptr(GError) error_local = NULL;
 
 	if (!fu_udev_device_write_sysfs(udev, "usb4_port1/offline", "0", &error_local)) {
-		g_warning("Setting port online failed: %s", error_local->message);
-	}
-
-	if (!fu_udev_device_write_sysfs(udev, "usb4_port3/offline", "0", &error_local)) {
 		g_warning("Setting port online failed: %s", error_local->message);
 	}
 }
