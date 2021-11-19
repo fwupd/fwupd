@@ -773,8 +773,10 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 	}
 
 	/* find out if the write was successful, waiting for BUSY to clear */
-	if (!fu_dfu_target_check_status(self, error))
+	if (!fu_dfu_target_check_status(self, error)) {
+		g_prefix_error(error, "cannot wait for busy: ");
 		return FALSE;
+	}
 
 	g_assert_cmpint(actual_length, ==, g_bytes_get_size(bytes));
 	return TRUE;

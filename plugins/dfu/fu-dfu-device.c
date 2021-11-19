@@ -1393,10 +1393,12 @@ fu_dfu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 
 	/* normal DFU mode just needs a bus reset */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH) &&
-	    fu_dfu_device_has_attribute(self, FU_DFU_DEVICE_ATTR_WILL_DETACH))
+	    fu_dfu_device_has_attribute(self, FU_DFU_DEVICE_ATTR_WILL_DETACH)) {
 		g_debug("Bus reset is not required. Device will reboot to normal");
-	else if (!fu_dfu_target_attach(target, progress, error))
+	} else if (!fu_dfu_target_attach(target, progress, error)) {
+		g_prefix_error(error, "failed to attach target: ");
 		return FALSE;
+	}
 
 	/* success */
 	priv->force_version = 0x0;

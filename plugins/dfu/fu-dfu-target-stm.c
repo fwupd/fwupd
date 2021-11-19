@@ -32,7 +32,16 @@ fu_dfu_target_stm_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 	/* downloading empty payload will cause a dfu to leave,
 	 * the returned status will be dfuMANIFEST and expect the device to disconnect */
 	g_autoptr(GBytes) bytes_tmp = g_bytes_new(NULL, 0);
-	return fu_dfu_target_download_chunk(target, 2, bytes_tmp, progress, error);
+	g_autoptr(GError) error_local = NULL;
+	if (!fu_dfu_target_download_chunk(target, 2, bytes_tmp, progress, &error_local)) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("ignoring: %s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+	return TRUE;
 }
 
 static gboolean
