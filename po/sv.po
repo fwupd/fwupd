@@ -145,6 +145,26 @@ msgstr "%s-uppdatering"
 msgid "%s and all connected devices may not be usable while updating."
 msgstr "%s och alla anslutna enheter kanske inte går att använda under uppdatering."
 
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s appeared: %s"
+msgstr "%s dök upp:%s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform
+#. key".
+#. * %2 and %3 refer to results value, e.g. "Valid" and "Invalid"
+#, c-format
+msgid "%s changed: %s → %s"
+msgstr "%s ändrad: %s → %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS
+#. region".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s disappeared: %s"
+msgstr "%s försvann:%s"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -615,6 +635,10 @@ msgstr "Enheter utan tillgängliga uppdateringar för fast programvara: "
 msgid "Devices with the latest available firmware version:"
 msgstr "Enheter med den senaste tillgängliga uppdateringen för fast programvara:"
 
+#. TRANSLATORS: this is for the device tests
+msgid "Did not find any devices with matching GUIDs"
+msgstr "Hittade inga enheter med matchande GUID:n"
+
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
 msgid "Disabled"
@@ -834,6 +858,10 @@ msgstr "FILNAMN [FAST-PROGRAMVARUTYP]"
 msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "FILNAMN-KÄL FILNAMN-MÅL [FAST-PROGRAMVARUTYP-KÄL] [FAST-PROGRAMVARUTYP-MÅL]"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "FILNAMN|KONTROLLSUMMA1[,KONTROLLSUMMA2][,KONTROLLSUMMA3]"
+
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
 msgid "Failed"
@@ -993,6 +1021,10 @@ msgstr "Tvinga åtgärden, ignorera alla varningar"
 msgid "Found"
 msgstr "Hittad"
 
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "Full diskkryptering upptäckt"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1069,6 +1101,14 @@ msgstr "Säkerhets-ID för värd:"
 msgid "IOMMU"
 msgstr "IOMMU"
 
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr "IOMMU-enhetsskydd inaktiverat"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr "IOMMU-enhetsskydd aktiverat"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "Väntar…"
@@ -1104,6 +1144,12 @@ msgstr "Installera en fast programvaru-blob på en enhet"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Installera en fast programvarufil på denna hårdvara"
+
+msgid "Install old version of signed system firmware"
+msgstr "Installera en gammal version av signerad fast programvara för systemet"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "Installera en gammal version av osignerad fast programvara för systemet"
 
 msgid "Install signed device firmware"
 msgstr "Installera signerad fast programvara för enhet"
@@ -1198,6 +1244,14 @@ msgstr[1] "Problem"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "NYCKEL,VÄRDE"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown disabled"
+msgstr "Lockdown för Linux-kärnan inaktiverad"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown enabled"
+msgstr "Lockdown för Linux-kärnan aktiverad"
 
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
@@ -1399,6 +1453,10 @@ msgstr "Stöds inte"
 msgid "OK"
 msgstr "OK"
 
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "OK!"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Visa endast enkelt PCR-värde"
@@ -1454,6 +1512,11 @@ msgstr "Andel färdigställt"
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Utför operationen?"
+
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr "Se till att du har volymåterställningsnyckeln innan du fortsätter."
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1658,6 +1721,14 @@ msgstr "Schemalägg om möjligt installationen till nästa uppstart"
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Schemalägger…"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "Säkerhetsstart aktiverad"
+
+#. TRANSLATORS: HSI event title
+msgid "SecureBoot disabled"
+msgstr "Säkerhetsstart inaktiverad"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1903,6 +1974,12 @@ msgstr "TPM PCR0 skiljer sig från rekonstruktion."
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "Demonen har läst in tredjepartskod och stöds inte längre av uppströmsutvecklarna!"
+
+#. TRANSLATORS: this is for the device tests, %1 is the device
+#. * version, %2 is what we expected
+#, c-format
+msgid "The device version did not match: got %s, expected %s"
+msgstr "Enhetsversionen matchade inte: fick %s, %s förväntades"
 
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format

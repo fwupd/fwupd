@@ -140,6 +140,26 @@ msgstr "Actualització de %s"
 msgid "%s and all connected devices may not be usable while updating."
 msgstr "%s i tots els dispositius connectats poden no ser usables en actualitzar."
 
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s appeared: %s"
+msgstr "%s ha aparegut: %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform
+#. key".
+#. * %2 and %3 refer to results value, e.g. "Valid" and "Invalid"
+#, c-format
+msgid "%s changed: %s → %s"
+msgstr "%s ha canviat: %s → %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS
+#. region".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s disappeared: %s"
+msgstr "%s ha desaparegut: %s"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -610,6 +630,10 @@ msgstr "Dispositius sense actualitzacions de microprogramari disponibles:"
 msgid "Devices with the latest available firmware version:"
 msgstr "Dispositius amb la versió més recent del microprogramari disponible:"
 
+#. TRANSLATORS: this is for the device tests
+msgid "Did not find any devices with matching GUIDs"
+msgstr "No s'ha trobat cap dispositiu amb GUID coincident"
+
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
 msgid "Disabled"
@@ -829,6 +853,10 @@ msgstr "NOM_FITXER [TIPUS_MICROPROGRAMARI]"
 msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "NOM_FITXER_ORIG NOM_FITXER_DEST [TIPUS_MICROPROGRAMARI_ORIG] [TIPUS_MICROPROGRAMARI_DEST]"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "NOM_DE_FITXER|SUMA_DE_VERIFICACIÓ_1[,SUMA_DE_VERIFICACIÓ_2][,SUMA_DE_VERIFICACIÓ_3]"
+
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
 msgid "Failed"
@@ -988,6 +1016,15 @@ msgstr "Força l'acció ignorant tots els avisos"
 msgid "Found"
 msgstr "S'ha trobat"
 
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "S'ha detectat una encriptació de tot el disc"
+
+#. TRANSLATORS: we might ask the user the recovery key when next booting
+#. Windows
+msgid "Full disk encryption secrets may be invalidated when updating"
+msgstr "Els secrets d'encriptatge de tot el disc es poden invalidar en actualitzar"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1055,6 +1092,10 @@ msgstr "El maquinari està esperant a ser endollat"
 msgid "High"
 msgstr "Alta"
 
+#. TRANSLATORS: title for host security events
+msgid "Host Security Events"
+msgstr "Esdeveniments de seguretat a l'amfitrió"
+
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "ID de seguretat de l'amfitrió:"
@@ -1063,6 +1104,14 @@ msgstr "ID de seguretat de l'amfitrió:"
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr "Està inhabilitada la protecció IOMMU de dispositius"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr "Està habilitada la protecció IOMMU de dispositius"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -1099,6 +1148,12 @@ msgstr "Instal·la un blob de microprogramari en un dispositiu."
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instal·la un fitxer de microprogramari en aquest maquinari."
+
+msgid "Install old version of signed system firmware"
+msgstr "Instal·la la versió antiga del microprogramari signat per al sistema"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "Instal·la la versió antiga del microprogramari sense signar per al sistema"
 
 msgid "Install signed device firmware"
 msgstr "Instal·la microprogramari signat per al dispositiu"
@@ -1193,6 +1248,14 @@ msgstr[1] "Problemes"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "CLAU,VALOR"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown disabled"
+msgstr "Està inhabilitat el bloqueig de parts del nucli"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown enabled"
+msgstr "Està habilitat el bloqueig de parts del nucli"
 
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
@@ -1394,6 +1457,10 @@ msgstr "No admesa"
 msgid "OK"
 msgstr "D'acord"
 
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "Bé!"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Mostra només un únic valor de PCR"
@@ -1449,6 +1516,11 @@ msgstr "Percentatge completat"
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Realitzo l'operació?"
+
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr "Abans de continuar, assegureu-vos que teniu la clau de recuperació del volum."
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1654,6 +1726,14 @@ msgstr "Planifica la instal·lació per al següent reinici quan sigui possible"
 msgid "Scheduling…"
 msgstr "Planificació..."
 
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "Està habilitada l'arrencada segura"
+
+#. TRANSLATORS: HSI event title
+msgid "SecureBoot disabled"
+msgstr "Està inhabilitada l'arrencada segura"
+
 #. TRANSLATORS: %s is a link to a website
 #, c-format
 msgid "See %s for more information."
@@ -1757,6 +1837,10 @@ msgstr "Signatura"
 #. TRANSLATORS: file size of the download
 msgid "Size"
 msgstr "Mida"
+
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr "Alguns dels secrets de la plataforma es poden invalidar en actualitzar aquest microprogramari."
 
 #. TRANSLATORS: source (as in code) link
 msgid "Source"
@@ -1898,6 +1982,12 @@ msgstr "El PCR0 del TPM difereix de la reconstrucció."
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "El dimoni ha carregat codi de tercers i ja no és admès pels desenvolupadors originals!"
+
+#. TRANSLATORS: this is for the device tests, %1 is the device
+#. * version, %2 is what we expected
+#, c-format
+msgid "The device version did not match: got %s, expected %s"
+msgstr "La versió del dispositiu no coincideix: obtinguda %s, esperada %s"
 
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format

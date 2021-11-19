@@ -34,6 +34,39 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.7.2" date="2021-11-19">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a new HSI check that PCR registers 0-7 are not empty</li>
+          <li>Add several compile flags to reduce the install size by over 300Kb</li>
+          <li>Allow overriding HwId data from the daemon.conf config file</li>
+          <li>Allow overriding the firmware GType from a quirk file</li>
+          <li>Export the component release ID over DBus</li>
+          <li>Remove support for the SoloKey and ChaosKey devices</li>
+          <li>Show a daemon warning if quirk flags are malformed</li>
+          <li>Speed up the daemon startup by ~40% by doing less at startup</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Be case insensitive when fixing the device model</li>
+          <li>Fix a critial warning in ccgx found by the fuzzer</li>
+          <li>Fix a DFU crash if the attach failed due to a hardware fault</li>
+          <li>Fix a Redfish crash when specifying a URL without a port</li>
+          <li>Fix CLI downloads when using fwupdmgr --ipfs</li>
+          <li>Fix critical warning when /etc/machine-id does not exist</li>
+          <li>Inhibit thunderbolt devices to correctly use UPDATABLE_HIDDEN</li>
+          <li>Set SSL_VERIFYHOST=0 when using Redfish to fix OpenBMC auth</li>
+          <li>Skip UEFI devices that fail coldplug</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>All exported MTD block devices</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.7.1" date="2021-11-01">
       <description>
         <p>

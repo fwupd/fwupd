@@ -143,6 +143,26 @@ msgstr "%s nadopuna"
 msgid "%s and all connected devices may not be usable while updating."
 msgstr "%s i svi spojeni uređaji možda neće biti upotrebljivi tijekom nadopune."
 
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s appeared: %s"
+msgstr "%s pojavljen: %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform
+#. key".
+#. * %2 and %3 refer to results value, e.g. "Valid" and "Invalid"
+#, c-format
+msgid "%s changed: %s → %s"
+msgstr "%s promijenjen: %s → %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS
+#. region".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s disappeared: %s"
+msgstr "%s nestao: %s"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -620,6 +640,10 @@ msgstr "Uređaji bez dostupnih nadopuna firmvera: "
 msgid "Devices with the latest available firmware version:"
 msgstr "Uređaji s najnovijom dostupnom inačicom firmvera:"
 
+#. TRANSLATORS: this is for the device tests
+msgid "Did not find any devices with matching GUIDs"
+msgstr "Nije pronađen niti jedan uređaj s podudarajućim GUID-ovima"
+
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
 msgid "Disabled"
@@ -839,6 +863,10 @@ msgstr "NAZIV DATOTEKE [FIRMVER-VRSTA]"
 msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "NAZIV DATOTEKE-SRC NAZIV DATOTEKE-DST [FIRMVER-VRSTA-SRC] [FIRMVER-VRSTA-DST]"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "NAZIV DATOTEKE|KONTROLNI ZBROJ1[,KONTROLNI ZBROJ2][,KONTROLNI ZBROJ3]"
+
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
 msgid "Failed"
@@ -999,6 +1027,15 @@ msgstr "Prisili radnju zanemarujući sva upozorenja"
 msgid "Found"
 msgstr "Pronađeno"
 
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "Potpuno šifriranje diska je otkriveno"
+
+#. TRANSLATORS: we might ask the user the recovery key when next booting
+#. Windows
+msgid "Full disk encryption secrets may be invalidated when updating"
+msgstr "Tajne potpunog šifriranja diska mogu biti poništene pri nadopuni"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1067,6 +1104,10 @@ msgstr "Hardver čeka da ponovno bude spojen"
 msgid "High"
 msgstr "Visoka"
 
+#. TRANSLATORS: title for host security events
+msgid "Host Security Events"
+msgstr "Događaji sigurnosti računala"
+
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "Sigurnosni ID poslužitelja:"
@@ -1075,6 +1116,14 @@ msgstr "Sigurnosni ID poslužitelja:"
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr "Onemogućena zaštita IOMMU uređaja"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr "Omogućena zaštita IOMMU uređaja"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -1111,6 +1160,12 @@ msgstr "Instaliraj blob firmvera na uređaj"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instaliraj datoteku firmvera na ovaj uređaj"
+
+msgid "Install old version of signed system firmware"
+msgstr "Instaliraj staru inačicu potpisanog frimvera sustava"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "Instaliraj staru inačicu nepotpisanog frimvera sustava"
 
 msgid "Install signed device firmware"
 msgstr "Instaliraj firmver potpisan uređajem"
@@ -1206,6 +1261,14 @@ msgstr[2] "Problemi"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "KLJUČ,VRIJEDNOST"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown disabled"
+msgstr "Zaključavanje kernela onemogućeno"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown enabled"
+msgstr "Zaključavanje kernela omogućeno"
 
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
@@ -1407,6 +1470,10 @@ msgstr "Nije podržano"
 msgid "OK"
 msgstr "U redu"
 
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "U redu!"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Prikaži samo jednu PRC vrijednost"
@@ -1462,6 +1529,11 @@ msgstr "Postotak završetka"
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Obavi radnju?"
+
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr "Pobrinite se da imate ključ oporavka uređaja prije nastavka."
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1667,6 +1739,14 @@ msgstr "Zakaži instalaciju pri sljedećem pokretanju kada je moguće"
 msgid "Scheduling…"
 msgstr "Zakazivanje…"
 
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "Sigurno pokretanje (SecureBoot) omogućeno"
+
+#. TRANSLATORS: HSI event title
+msgid "SecureBoot disabled"
+msgstr "Sigurno pokretanje (SecureBoot) onemogućeno"
+
 #. TRANSLATORS: %s is a link to a website
 #, c-format
 msgid "See %s for more information."
@@ -1770,6 +1850,10 @@ msgstr "Potpis"
 #. TRANSLATORS: file size of the download
 msgid "Size"
 msgstr "Veličina"
+
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr "Određene tajne platforme mogu biti poništene tijekom nadopune ovog firmvera."
 
 #. TRANSLATORS: source (as in code) link
 msgid "Source"
@@ -1913,6 +1997,12 @@ msgstr "TPM PCR0 razlikuje se od rekonstrukcije."
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "Pozadinski program je učitao kȏd treće strane i više nije podržan od upstream razvijatelja!"
 
+#. TRANSLATORS: this is for the device tests, %1 is the device
+#. * version, %2 is what we expected
+#, c-format
+msgid "The device version did not match: got %s, expected %s"
+msgstr "Inačica uređaja se ne podudara: dobivena %s, očekivana %s"
+
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
@@ -2008,7 +2098,7 @@ msgstr "UEFI ključ platforme"
 
 #. TRANSLATORS: Title: SB is a way of locking down UEFI
 msgid "UEFI secure boot"
-msgstr "UEFI sigurno pokretanje (secure boot)"
+msgstr "UEFI sigurno pokretanje (SecureBoot)"
 
 #. TRANSLATORS: error message
 msgid "Unable to connect to service"

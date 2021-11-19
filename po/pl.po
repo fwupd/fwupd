@@ -141,6 +141,26 @@ msgstr "Aktualizacja urządzenia %s"
 msgid "%s and all connected devices may not be usable while updating."
 msgstr "%s i wszystkie podłączone urządzenia nie będą mogły być używane podczas aktualizacji."
 
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s appeared: %s"
+msgstr "„%s” pojawiło się: %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform
+#. key".
+#. * %2 and %3 refer to results value, e.g. "Valid" and "Invalid"
+#, c-format
+msgid "%s changed: %s → %s"
+msgstr "„%s” zmieniło się: %s → %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS
+#. region".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s disappeared: %s"
+msgstr "„%s” zniknęło: %s"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -625,6 +645,10 @@ msgstr "Urządzenia bez dostępnych aktualizacji oprogramowania sprzętowego: "
 msgid "Devices with the latest available firmware version:"
 msgstr "Urządzenia z najnowszą dostępną wersją oprogramowania sprzętowego:"
 
+#. TRANSLATORS: this is for the device tests
+msgid "Did not find any devices with matching GUIDs"
+msgstr "Nie odnaleziono żadnych urządzeń o pasujących GUID"
+
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
 msgid "Disabled"
@@ -844,6 +868,10 @@ msgstr "NAZWA-PLIKU [TYP-OPROGRAMOWANIA-SPRZĘTOWEGO]"
 msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "NAZWA-PLIKU-ŹRÓDŁOWEGO NAZWA-PLIKU-DOCELOWEGO [TYP-ŹRÓDŁOWEGO-OPROGRAMOWANIA-SPRZĘTOWEGO] [TYP-DOCELOWEGO-OPROGRAMOWANIA-SPRZĘTOWEGO]"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "NAZWA-PLIKU|SUMA-KONTROLNA1[,SUMA-KONTROLNA2][,SUMA-KONTROLNA3]"
+
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
 msgid "Failed"
@@ -1005,6 +1033,15 @@ msgstr "Wymusza działanie ignorując wszystkie ostrzeżenia"
 msgid "Found"
 msgstr "Odnaleziono"
 
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "Wykryto pełne szyfrowanie dysku"
+
+#. TRANSLATORS: we might ask the user the recovery key when next booting
+#. Windows
+msgid "Full disk encryption secrets may be invalidated when updating"
+msgstr "Hasła pełnego szyfrowania dysku mogą zostać unieważnione podczas aktualizacji"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1074,6 +1111,10 @@ msgstr "Sprzęt czeka na ponowne podłączenie"
 msgid "High"
 msgstr "Wysoka"
 
+#. TRANSLATORS: title for host security events
+msgid "Host Security Events"
+msgstr "Zdarzenia zabezpieczeń komputera"
+
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "Identyfikator zabezpieczeń komputera:"
@@ -1082,6 +1123,14 @@ msgstr "Identyfikator zabezpieczeń komputera:"
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr "Wyłączono ochronę urządzenia IOMMU"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr "Włączono ochronę urządzenia IOMMU"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -1118,6 +1167,12 @@ msgstr "Instaluje zamknięte oprogramowanie sprzętowe na urządzeniu"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instaluje plik oprogramowania sprzętowego na tym sprzęcie"
+
+msgid "Install old version of signed system firmware"
+msgstr "Instalacja poprzedniej wersji podpisanego oprogramowania sprzętowego komputera"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "Instalacja poprzedniej wersji niepodpisanego oprogramowania sprzętowego komputera"
 
 msgid "Install signed device firmware"
 msgstr "Instalacja podpisanego oprogramowania sprzętowego urządzenia"
@@ -1214,6 +1269,14 @@ msgstr[3] "Błędy"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "KLUCZ,WARTOŚĆ"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown disabled"
+msgstr "Wyłączono blokadę jądra"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown enabled"
+msgstr "Włączono blokadę jądra"
 
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
@@ -1415,6 +1478,10 @@ msgstr "Nieobsługiwane"
 msgid "OK"
 msgstr "OK"
 
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "OK!"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Wyświetla tylko jedną wartość PCR"
@@ -1470,6 +1537,11 @@ msgstr "Procent ukończenia"
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Wykonać działanie?"
+
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr "Przed kontynuacją proszę się upewnić, że posiadany jest klucz odzyskiwania woluminu."
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1675,6 +1747,14 @@ msgstr "Planuje instalację podczas następnego ponownego uruchomienia"
 msgid "Scheduling…"
 msgstr "Planowanie…"
 
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "Włączono SecureBoot"
+
+#. TRANSLATORS: HSI event title
+msgid "SecureBoot disabled"
+msgstr "Wyłączono SecureBoot"
+
 #. TRANSLATORS: %s is a link to a website
 #, c-format
 msgid "See %s for more information."
@@ -1778,6 +1858,10 @@ msgstr "Podpis"
 #. TRANSLATORS: file size of the download
 msgid "Size"
 msgstr "Rozmiar"
+
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr "Część haseł platformy może zostać unieważnionych podczas aktualizowania tego oprogramowania sprzętowego."
 
 #. TRANSLATORS: source (as in code) link
 msgid "Source"
@@ -1921,6 +2005,12 @@ msgstr "PCR0 TPM różni się od rekonstrukcji."
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "Usługa wczytała kod firmy trzeciej i nie jest już wspierana przez jej programistów!"
+
+#. TRANSLATORS: this is for the device tests, %1 is the device
+#. * version, %2 is what we expected
+#, c-format
+msgid "The device version did not match: got %s, expected %s"
+msgstr "Wersja urządzenia się nie zgadza: otrzymano %s, oczekiwano %s"
 
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format

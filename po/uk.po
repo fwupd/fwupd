@@ -141,6 +141,26 @@ msgstr "Оновлення для %s"
 msgid "%s and all connected devices may not be usable while updating."
 msgstr "%s і усі з'єднані пристрою можуть бути недоступними протягом оновлення."
 
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s appeared: %s"
+msgstr "З'явився %s: %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform
+#. key".
+#. * %2 and %3 refer to results value, e.g. "Valid" and "Invalid"
+#, c-format
+msgid "%s changed: %s → %s"
+msgstr "Змінено %s: %s → %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS
+#. region".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s disappeared: %s"
+msgstr "Зник %s: %s"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -625,6 +645,10 @@ msgstr "Пристрої, для яких немає оновлень мікро
 msgid "Devices with the latest available firmware version:"
 msgstr "Пристрої із найсвіжішою доступною версією мікропрограми:"
 
+#. TRANSLATORS: this is for the device tests
+msgid "Did not find any devices with matching GUIDs"
+msgstr "Не вдалося знайти жодного пристрою із відповідними GUID"
+
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
 msgid "Disabled"
@@ -844,6 +868,10 @@ msgstr "НАЗВА-ФАЙЛА [ТИП-МІКРОПРОГРАМИ]"
 msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "НАЗВА_ФАЙЛА_ДЖ НАЗВА_ФАЙЛА_ПРИЗН [ТИП-МІКРОПРОГРАМИ-ДЖ] [ТИП-МІКРОПРОГРАМИ-ПРИЗН]"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "НАЗВА_ФАЙЛА|КОНТР_СУМА1[,КОНТР_СУМА2][,КОНТР_СУМА3]"
+
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
 msgid "Failed"
@@ -1005,6 +1033,15 @@ msgstr "Виконати дію примусово, ігноруючи усі п
 msgid "Found"
 msgstr "Знайдено"
 
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "Виявлено повне шифрування диска"
+
+#. TRANSLATORS: we might ask the user the recovery key when next booting
+#. Windows
+msgid "Full disk encryption secrets may be invalidated when updating"
+msgstr "Ключі шифрування усього диска можуть втрати чинність при оновленні"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1074,6 +1111,10 @@ msgstr "Обладнання очікує на повторне з'єднанн�
 msgid "High"
 msgstr "Високий"
 
+#. TRANSLATORS: title for host security events
+msgid "Host Security Events"
+msgstr "Події захисту вузла"
+
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "Ід. захисту основної системи:"
@@ -1082,6 +1123,14 @@ msgstr "Ід. захисту основної системи:"
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr "Вимкнено захист пристрою IOMMU"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr "Увімкнено захист пристрою IOMMU"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -1118,6 +1167,12 @@ msgstr "Встановити бінарну мікропрограму на пр
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Встановити файл мікропрограми на це обладнання"
+
+msgid "Install old version of signed system firmware"
+msgstr "Встановити стару версію підписаної мікропрограми системи"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "Встановити стару версію непідписаної мікропрограми системи"
 
 msgid "Install signed device firmware"
 msgstr "Встановити підписану мікропрограму пристрою"
@@ -1214,6 +1269,14 @@ msgstr[3] "Вада"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "КЛЮЧ,ЗНАЧЕННЯ"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown disabled"
+msgstr "Вимкнено блокування ядра"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown enabled"
+msgstr "Увімкнено блокування ядра"
 
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
@@ -1415,6 +1478,10 @@ msgstr "Немає підтримки"
 msgid "OK"
 msgstr "Гаразд"
 
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "Гаразд!"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Показувати лише одне значення PCR"
@@ -1470,6 +1537,11 @@ msgstr "Відсоток виконання"
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Виконати дію?"
+
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr "Будь ласка, переконайтеся, що у вас є ключ відновлення тому, перш ніж продовжувати обробку."
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1675,6 +1747,14 @@ msgstr "Якщо можливо, запланувати встановлення
 msgid "Scheduling…"
 msgstr "Плануємо…"
 
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "Увімкнено Secure Boot"
+
+#. TRANSLATORS: HSI event title
+msgid "SecureBoot disabled"
+msgstr "Вимкнено SecureBoot"
+
 #. TRANSLATORS: %s is a link to a website
 #, c-format
 msgid "See %s for more information."
@@ -1778,6 +1858,10 @@ msgstr "Підпис"
 #. TRANSLATORS: file size of the download
 msgid "Size"
 msgstr "Розмір"
+
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr "Якщо оновити цю мікропрограму, деякі ключі платформи можуть втратити чинність."
 
 #. TRANSLATORS: source (as in code) link
 msgid "Source"
@@ -1921,6 +2005,12 @@ msgstr "PCR0 TPM відрізняється від реконструкції."
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "Ця фонова служба завантажила сторонній код — її підтримка більше не здійснюється розробниками основної гілки програми!"
+
+#. TRANSLATORS: this is for the device tests, %1 is the device
+#. * version, %2 is what we expected
+#, c-format
+msgid "The device version did not match: got %s, expected %s"
+msgstr "Невідповідна версія пристрою: маємо %s, мало бути %s"
 
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
