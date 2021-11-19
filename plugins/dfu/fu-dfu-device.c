@@ -1400,6 +1400,10 @@ fu_dfu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 		return FALSE;
 	}
 
+	/* there is no USB runtime whatsoever */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR))
+		return TRUE;
+
 	/* success */
 	priv->force_version = 0x0;
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);

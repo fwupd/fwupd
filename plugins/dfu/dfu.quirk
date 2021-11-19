@@ -4,7 +4,8 @@ Plugin = dfu
 
 # GD32VF103 Rev1
 [USB\VID_28E9&PID_0189]
-Flags = gd32,force-dfu-mode
+Flags = gd32,force-dfu-mode,will-disappear
+Name = GD32VF103
 Vendor = GDMicroelectronics
 
 # Realtek USB camera
@@ -330,7 +331,7 @@ DfuAltName = @Flash/0x0/1*32Kg
 
 # STM32F745 dfuse bootloader
 [USB\VID_0483&PID_DF11]
-Flags = absent-sector-size
+Flags = absent-sector-size,will-disappear
 Plugin = dfu
 DfuForceVersion = 011a
 DfuForceTimeout = 5000
