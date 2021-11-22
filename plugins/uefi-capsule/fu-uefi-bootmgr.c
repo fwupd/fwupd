@@ -135,8 +135,8 @@ fu_uefi_bootmgr_verify_fwupd(GError **error)
 static gboolean
 fu_uefi_setup_bootnext_with_dp(const guint8 *dp_buf, guint8 *opt, gssize opt_size, GError **error)
 {
-	const gchar *desc;
-	const gchar *name;
+	const gchar *desc = NULL;
+	const gchar *name = NULL;
 	efi_load_option *loadopt = NULL;
 	gsize var_data_size = 0;
 	guint32 attr;
