@@ -613,7 +613,6 @@ fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data
 			g_task_return_boolean(task, TRUE);
 			return;
 		}
-		fwupd_client_fixup_dbus_error(error);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
