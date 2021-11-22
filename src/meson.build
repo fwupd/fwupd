@@ -17,7 +17,6 @@ daemon_dep = [
   giounix,
   gmodule,
   gudev,
-  sqlite,
   libjsonglib,
 ]
 
@@ -32,6 +31,10 @@ endif
 
 if get_option('libarchive')
   daemon_dep += libarchive
+endif
+if get_option('sqlite')
+  daemon_dep += sqlite
+  client_dep += sqlite
 endif
 
 if get_option('systemd')
@@ -89,7 +92,6 @@ fwupdmgr = executable(
     libfwupd_deps,
     libxmlb,
     client_dep,
-    sqlite,
   ],
   link_with : [
     fwupd,
@@ -128,7 +130,6 @@ fwupdoffline = executable(
     libfwupd_deps,
     client_dep,
     libxmlb,
-    sqlite,
   ],
   link_with : [
     fwupd,
@@ -167,7 +168,6 @@ fwupdtool = executable(
     libxmlb,
     libgcab,
     client_dep,
-    sqlite,
     valgrind,
   ],
   link_with : [
