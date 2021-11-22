@@ -1782,6 +1782,10 @@ fu_engine_history_func(gconstpointer user_data)
 	/* check the history database */
 	history = fu_history_new();
 	device2 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_test_skip("no sqlite support");
+		return;
+	}
 	g_assert_no_error(error);
 	g_assert_nonnull(device2);
 	g_assert_cmpint(fu_device_get_update_state(device2), ==, FWUPD_UPDATE_STATE_SUCCESS);
@@ -1932,6 +1936,11 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_autoptr(XbNode) component = NULL;
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 	g_autoptr(XbSilo) silo = NULL;
+
+#ifndef HAVE_SQLITE
+	g_test_skip("no sqlite support");
+	return;
+#endif
 
 	/* delete history */
 	localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
@@ -2223,6 +2232,10 @@ fu_engine_history_error_func(gconstpointer user_data)
 	/* check the history database */
 	history = fu_history_new();
 	device2 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error2);
+	if (g_error_matches(error2, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_test_skip("no sqlite support");
+		return;
+	}
 	g_assert_no_error(error2);
 	g_assert_nonnull(device2);
 	g_assert_cmpint(fu_device_get_update_state(device2), ==, FWUPD_UPDATE_STATE_FAILED);
@@ -2778,6 +2791,11 @@ fu_history_migrate_func(gconstpointer user_data)
 	g_autoptr(FuHistory) history = NULL;
 	g_autofree gchar *filename = NULL;
 
+#ifndef HAVE_SQLITE
+	g_test_skip("no sqlite support");
+	return;
+#endif
+
 	/* load old version */
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "history_v1.db", NULL);
 	file_src = g_file_new_for_path(filename);
@@ -2983,6 +3001,11 @@ fu_history_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) approved_firmware = NULL;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
+
+#ifndef HAVE_SQLITE
+	g_test_skip("no sqlite support");
+	return;
+#endif
 
 	/* create */
 	history = fu_history_new();

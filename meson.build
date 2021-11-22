@@ -209,7 +209,10 @@ if get_option('gusb')
   gusb = dependency('gusb', version : '>= 0.3.0', fallback : ['gusb', 'gusb_dep'])
   conf.set('HAVE_GUSB', '1')
 endif
-sqlite = dependency('sqlite3')
+if get_option('sqlite')
+  sqlite = dependency('sqlite3')
+  conf.set('HAVE_SQLITE', '1')
+endif
 if get_option('libarchive')
   libarchive = dependency('libarchive')
   conf.set('HAVE_LIBARCHIVE', '1')

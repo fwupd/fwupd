@@ -61,7 +61,6 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
-      sqlite,
       valgrind,
     ],
     link_with : [
