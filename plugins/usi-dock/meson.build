@@ -1,20 +1,20 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginLenovoDock"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginUSIDock"']
 
 install_data([
-  'lenovo-dock.quirk',
+  'usi-dock.quirk',
   ],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
-shared_module('fu_plugin_lenovo_dock',
+shared_module('fu_plugin_usi_dock',
   fu_hash,
   sources : [
-    'fu-lenovo-dock-common.c',
-    'fu-lenovo-dock-child-device.c',
-    'fu-lenovo-dock-dmc-device.c',
-    'fu-lenovo-dock-mcu-device.c',
-    'fu-lenovo-dock-firmware.c',
-    'fu-plugin-lenovo-dock.c',
+    'fu-usi-dock-common.c',
+    'fu-usi-dock-child-device.c',
+    'fu-usi-dock-dmc-device.c',
+    'fu-usi-dock-mcu-device.c',
+    'fu-usi-dock-firmware.c',
+    'fu-plugin-usi-dock.c',
   ],
   include_directories : [
     root_incdir,

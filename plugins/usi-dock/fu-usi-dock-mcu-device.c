@@ -6,27 +6,26 @@
 
 #include "config.h"
 
-#include "fu-lenovo-dock-child-device.h"
-#include "fu-lenovo-dock-common.h"
-#include "fu-lenovo-dock-dmc-device.h"
-#include "fu-lenovo-dock-firmware.h"
-#include "fu-lenovo-dock-mcu-device.h"
+#include "fu-usi-dock-child-device.h"
+#include "fu-usi-dock-common.h"
+#include "fu-usi-dock-dmc-device.h"
+#include "fu-usi-dock-firmware.h"
+#include "fu-usi-dock-mcu-device.h"
 
-struct _FuLenovoDockMcuDevice {
+struct _FuUSIDockMcuDevice {
 	FuHidDevice parent_instance;
-	gchar *version_format;
 };
 
-G_DEFINE_TYPE(FuLenovoDockMcuDevice, fu_lenovo_dock_mcu_device, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE(FuUSIDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 
-#define FU_LENOVO_DOCK_MCU_DEVICE_TIMEOUT 5000 /* ms */
+#define FU_USI_DOCK_MCU_DEVICE_TIMEOUT 5000 /* ms */
 
 static gboolean
-fu_lenovo_dock_mcu_device_tx(FuLenovoDockMcuDevice *self,
-			     guint8 tag2,
-			     const guint8 *inbuf,
-			     gsize inbufsz,
-			     GError **error)
+fu_usi_dock_mcu_device_tx(FuUSIDockMcuDevice *self,
+			  guint8 tag2,
+			  const guint8 *inbuf,
+			  gsize inbufsz,
+			  GError **error)
 {
 	guint8 buf[64] = {USB_HID_REPORT_ID2,
 			  0x3 + inbufsz /* length */,
@@ -54,17 +53,17 @@ fu_lenovo_dock_mcu_device_tx(FuLenovoDockMcuDevice *self,
 					USB_HID_REPORT_ID2,
 					buf,
 					sizeof(buf),
-					FU_LENOVO_DOCK_MCU_DEVICE_TIMEOUT,
+					FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
 					FU_HID_DEVICE_FLAG_NONE,
 					error);
 }
 
 static gboolean
-fu_lenovo_dock_mcu_device_rx(FuLenovoDockMcuDevice *self,
-			     guint8 cmd,
-			     guint8 *outbuf,
-			     gsize outbufsz,
-			     GError **error)
+fu_usi_dock_mcu_device_rx(FuUSIDockMcuDevice *self,
+			  guint8 cmd,
+			  guint8 *outbuf,
+			  gsize outbufsz,
+			  GError **error)
 {
 	guint8 buf[64] = {0};
 
@@ -72,7 +71,7 @@ fu_lenovo_dock_mcu_device_rx(FuLenovoDockMcuDevice *self,
 				      USB_HID_REPORT_ID2,
 				      buf,
 				      sizeof(buf),
-				      FU_LENOVO_DOCK_MCU_DEVICE_TIMEOUT,
+				      FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
 				      FU_HID_DEVICE_FLAG_NONE,
 				      error)) {
 		return FALSE;
@@ -99,7 +98,7 @@ fu_lenovo_dock_mcu_device_rx(FuLenovoDockMcuDevice *self,
 	}
 
 	/* special case */
-	if (!fu_lenovo_dock_rx_filter(cmd, buf)) {
+	if (!fu_usi_dock_rx_filter(cmd, buf)) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_INVALID_DATA,
@@ -122,32 +121,32 @@ fu_lenovo_dock_mcu_device_rx(FuLenovoDockMcuDevice *self,
 }
 
 static gboolean
-fu_lenovo_dock_mcu_device_txrx(FuLenovoDockMcuDevice *self,
-			       guint8 tag2,
-			       const guint8 *inbuf,
-			       gsize inbufsz,
-			       guint8 *outbuf,
-			       gsize outbufsz,
-			       GError **error)
+fu_usi_dock_mcu_device_txrx(FuUSIDockMcuDevice *self,
+			    guint8 tag2,
+			    const guint8 *inbuf,
+			    gsize inbufsz,
+			    guint8 *outbuf,
+			    gsize outbufsz,
+			    GError **error)
 {
-	if (!fu_lenovo_dock_mcu_device_tx(self, tag2, inbuf, inbufsz, error))
+	if (!fu_usi_dock_mcu_device_tx(self, tag2, inbuf, inbufsz, error))
 		return FALSE;
-	return fu_lenovo_dock_mcu_device_rx(self, USBUID_ISP_CMD_ALL, outbuf, outbufsz, error);
+	return fu_usi_dock_mcu_device_rx(self, USBUID_ISP_CMD_ALL, outbuf, outbufsz, error);
 }
 
 static gboolean
-fu_lenovo_dock_mcu_device_get_status(FuLenovoDockMcuDevice *self, GError **error)
+fu_usi_dock_mcu_device_get_status(FuUSIDockMcuDevice *self, GError **error)
 {
 	guint8 buf[] = {USBUID_ISP_DEVICE_CMD_MCU_STATUS};
 	guint8 response = 0;
 
-	if (!fu_lenovo_dock_mcu_device_txrx(self,
-					    TAG_TAG2_CMD_MCU,
-					    buf,
-					    sizeof(buf),
-					    &response,
-					    sizeof(response),
-					    error))
+	if (!fu_usi_dock_mcu_device_txrx(self,
+					 TAG_TAG2_CMD_MCU,
+					 buf,
+					 sizeof(buf),
+					 &response,
+					 sizeof(response),
+					 error))
 		return FALSE;
 	if (response == 0x1) {
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_BUSY, "device is busy");
@@ -163,7 +162,7 @@ fu_lenovo_dock_mcu_device_get_status(FuLenovoDockMcuDevice *self, GError **error
 }
 
 static gboolean
-fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError **error)
+fu_usi_dock_mcu_device_enumerate_children(FuUSIDockMcuDevice *self, GError **error)
 {
 	guint8 inbuf[] = {USBUID_ISP_DEVICE_CMD_READ_MCU_VERSIONPAGE,
 			  DP_VERSION_FROM_MCU | NIC_VERSION_FROM_MCU};
@@ -187,13 +186,13 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 	    {NULL, 0, 0}};
 
 	/* assume DP and NIC in-use */
-	if (!fu_lenovo_dock_mcu_device_txrx(self,
-					    TAG_TAG2_CMD_MCU,
-					    inbuf,
-					    sizeof(inbuf),
-					    outbuf,
-					    sizeof(outbuf),
-					    error))
+	if (!fu_usi_dock_mcu_device_txrx(self,
+					 TAG_TAG2_CMD_MCU,
+					 inbuf,
+					 sizeof(inbuf),
+					 outbuf,
+					 sizeof(outbuf),
+					 error))
 		return FALSE;
 
 	for (guint i = 0; components[i].name != NULL; i++) {
@@ -202,21 +201,22 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 		g_autofree gchar *instance_id = NULL;
 		g_autoptr(FuDevice) child = NULL;
 
-		child = fu_lenovo_dock_child_new(fu_device_get_context(FU_DEVICE(self)));
+		child = fu_usi_dock_child_new(fu_device_get_context(FU_DEVICE(self)));
 		if (g_strcmp0(components[i].name, "bcdVersion") == 0) {
 			if ((val[0] == 0x00 && val[1] == 0x00) ||
 			    (val[0] == 0xFF && val[1] == 0xFF)) {
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
-			if ((g_strcmp0(self->version_format, "HP") == 0)) {
+			if ((g_strcmp0(fu_device_get_vendor(FU_DEVICE(self)), "HP") == 0)) {
 				version = g_strdup_printf("%x.%x.%x.%x",
 							  val[0] >> 4,
 							  val[0] & 0xFu,
 							  val[1] >> 4,
 							  val[1] & 0xFu);
-				fu_device_set_version_format(self, FWUPD_VERSION_FORMAT_QUAD);
-				fu_device_set_version(self, version);
+				fu_device_set_version_format(FU_DEVICE(self),
+							     FWUPD_VERSION_FORMAT_QUAD);
+				fu_device_set_version(FU_DEVICE(self), version);
 			} else {
 				version = g_strdup_printf("%x.%x.%02x",
 							  val[0] & 0xFu,
@@ -243,7 +243,7 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
-			if ((g_strcmp0(self->version_format, "HP") == 0)) {
+			if ((g_strcmp0(fu_device_get_vendor(FU_DEVICE(self)), "HP") == 0)) {
 				version =
 				    g_strdup_printf("%d.%d.%d.%d", val[3], val[4], val[1], val[2]);
 				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_QUAD);
@@ -281,7 +281,7 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
-			if ((g_strcmp0(self->version_format, "HP") == 0)) {
+			if ((g_strcmp0(fu_device_get_vendor(FU_DEVICE(self)), "HP") == 0)) {
 				version =
 				    g_strdup_printf("%x.%x.%x.%x", val[3], val[4], val[2], val[1]);
 				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_QUAD);
@@ -343,12 +343,12 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 				g_debug("ignoring %s", components[i].name);
 				continue;
 			}
-			if ((g_strcmp0(self->version_format, "HP") == 0)) {
+			if ((g_strcmp0(fu_device_get_vendor(FU_DEVICE(self)), "HP") == 0)) {
 				version = g_strdup_printf("%x.%x.%x.%x",
-							  val[0] > 4,
-							  val[0] & 0x0F,
-							  val[1] > 4,
-							  val[1] & 0x0F);
+							  val[0] >> 4,
+							  val[0] & 0xFu,
+							  val[1] >> 4,
+							  val[1] & 0xFu);
 				fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_QUAD);
 			} else {
 				version = g_strdup_printf("%X.%X", val[0], val[1]);
@@ -369,8 +369,8 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 		if (fu_device_get_name(child) == NULL)
 			fu_device_set_name(child, components[i].name);
 		fu_device_set_logical_id(child, components[i].name);
-		fu_lenovo_dock_child_device_set_chip_idx(FU_LENOVO_DOCK_CHILD_DEVICE(child),
-							 components[i].chip_idx);
+		fu_usi_dock_child_device_set_chip_idx(FU_USI_DOCK_CHILD_DEVICE(child),
+						      components[i].chip_idx);
 		fu_device_add_child(FU_DEVICE(self), child);
 	}
 
@@ -379,18 +379,18 @@ fu_lenovo_dock_mcu_device_enumerate_children(FuLenovoDockMcuDevice *self, GError
 }
 
 static gboolean
-fu_lenovo_dock_mcu_device_setup(FuDevice *device, GError **error)
+fu_usi_dock_mcu_device_setup(FuDevice *device, GError **error)
 {
-	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(device);
+	FuUSIDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
 
 	/* FuUsbDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_lenovo_dock_mcu_device_parent_class)->setup(device, error))
+	if (!FU_DEVICE_CLASS(fu_usi_dock_mcu_device_parent_class)->setup(device, error))
 		return FALSE;
 
 	/* get status and component versions */
-	if (!fu_lenovo_dock_mcu_device_get_status(self, error))
+	if (!fu_usi_dock_mcu_device_get_status(self, error))
 		return FALSE;
-	if (!fu_lenovo_dock_mcu_device_enumerate_children(self, error))
+	if (!fu_usi_dock_mcu_device_enumerate_children(self, error))
 		return FALSE;
 
 	/* success */
@@ -398,7 +398,7 @@ fu_lenovo_dock_mcu_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_lenovo_dock_mcu_device_write_chunk(FuLenovoDockMcuDevice *self, FuChunk *chk, GError **error)
+fu_usi_dock_mcu_device_write_chunk(FuUSIDockMcuDevice *self, FuChunk *chk, GError **error)
 {
 	guint8 buf[64] = {0x0};
 	guint32 length = 0;
@@ -434,7 +434,7 @@ fu_lenovo_dock_mcu_device_write_chunk(FuLenovoDockMcuDevice *self, FuChunk *chk,
 					      USB_HID_REPORT_ID2,
 					      buf,
 					      sizeof(buf),
-					      FU_LENOVO_DOCK_MCU_DEVICE_TIMEOUT,
+					      FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
 					      FU_HID_DEVICE_FLAG_NONE,
 					      error))
 			return FALSE;
@@ -445,7 +445,7 @@ fu_lenovo_dock_mcu_device_write_chunk(FuLenovoDockMcuDevice *self, FuChunk *chk,
 					      USB_HID_REPORT_ID2,
 					      buf,
 					      sizeof(buf),
-					      FU_LENOVO_DOCK_MCU_DEVICE_TIMEOUT,
+					      FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
 					      FU_HID_DEVICE_FLAG_NONE,
 					      error)) {
 			return FALSE;
@@ -473,16 +473,16 @@ fu_lenovo_dock_mcu_device_write_chunk(FuLenovoDockMcuDevice *self, FuChunk *chk,
 }
 
 static gboolean
-fu_lenovo_dock_mcu_device_write_chunks(FuLenovoDockMcuDevice *self,
-				       GPtrArray *chunks,
-				       FuProgress *progress,
-				       GError **error)
+fu_usi_dock_mcu_device_write_chunks(FuUSIDockMcuDevice *self,
+				    GPtrArray *chunks,
+				    FuProgress *progress,
+				    GError **error)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		if (!fu_lenovo_dock_mcu_device_write_chunk(self, chk, error)) {
+		if (!fu_usi_dock_mcu_device_write_chunk(self, chk, error)) {
 			g_prefix_error(error, "failed to write chunk 0x%x", i);
 			return FALSE;
 		}
@@ -492,28 +492,26 @@ fu_lenovo_dock_mcu_device_write_chunks(FuLenovoDockMcuDevice *self,
 }
 
 static gboolean
-fu_lenovo_dock_mcu_device_wait_for_spi_ready_cb(FuDevice *device,
-						gpointer user_data,
-						GError **error)
+fu_usi_dock_mcu_device_wait_for_spi_ready_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(device);
+	FuUSIDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
 	guint8 buf[] = {USBUID_ISP_DEVICE_CMD_FWBUFER_READ_STATUS};
 	guint8 val = 0;
 
-	if (!fu_lenovo_dock_mcu_device_txrx(self,
-					    TAG_TAG2_CMD_SPI,
-					    buf,
-					    sizeof(buf),
-					    &val,
-					    sizeof(val),
-					    error))
+	if (!fu_usi_dock_mcu_device_txrx(self,
+					 TAG_TAG2_CMD_SPI,
+					 buf,
+					 sizeof(buf),
+					 &val,
+					 sizeof(val),
+					 error))
 		return FALSE;
 	if (val != SPI_STATE_READY) {
 		g_set_error(error,
 			    G_IO_ERROR,
 			    G_IO_ERROR_BUSY,
 			    "SPI state is %s [0x%02x]",
-			    fu_lenovo_dock_spi_state_to_string(val),
+			    fu_usi_dock_spi_state_to_string(val),
 			    val);
 		return FALSE;
 	}
@@ -523,52 +521,28 @@ fu_lenovo_dock_mcu_device_wait_for_spi_ready_cb(FuDevice *device,
 }
 
 static gboolean
-fu_lenovo_dock_mcu_device_wait_for_checksum_cb(FuDevice *device, gpointer user_data, GError **error)
+fu_usi_dock_mcu_device_wait_for_checksum_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(device);
+	FuUSIDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
 
-	if (!fu_lenovo_dock_mcu_device_rx(self,
-					  USBUID_ISP_CMD_ALL,
-					  (guint8 *)user_data,
-					  sizeof(guint8),
-					  error))
+	if (!fu_usi_dock_mcu_device_rx(self,
+				       USBUID_ISP_CMD_ALL,
+				       (guint8 *)user_data,
+				       sizeof(guint8),
+				       error))
 		return FALSE;
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_lenovo_dock_mcu_device_wait_for_update_cb(FuDevice *device, gpointer user_data, GError **error)
-{
-	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(device);
-
-	guint8 val[3] = {0x0};
-
-	if (!fu_lenovo_dock_mcu_device_rx(self,
-					  USBUID_ISP_INTERNAL_FW_CMD_TARGET_CHECKSUM,
-					  val,
-					  sizeof(val),
-					  error)) {
-		return FALSE;
-	}
-
-	if (val[2] == 0x0) {
-		g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED, "undefined jump");
-		return FALSE;
-	}
 
 	/* success */
 	return TRUE;
 }
 
 gboolean
-fu_lenovo_dock_mcu_device_write_firmware_with_idx(FuLenovoDockMcuDevice *self,
-						  FuFirmware *firmware,
-						  guint8 chip_idx,
-						  FuProgress *progress,
-						  FwupdInstallFlags flags,
-						  GError **error)
+fu_usi_dock_mcu_device_write_firmware_with_idx(FuUSIDockMcuDevice *self,
+					       FuFirmware *firmware,
+					       guint8 chip_idx,
+					       FuProgress *progress,
+					       FwupdInstallFlags flags,
+					       GError **error)
 {
 	guint8 cmd;
 	guint8 val = 0x0;
@@ -587,13 +561,13 @@ fu_lenovo_dock_mcu_device_write_firmware_with_idx(FuLenovoDockMcuDevice *self,
 
 	/* initial external flash */
 	cmd = USBUID_ISP_DEVICE_CMD_FWBUFER_INITIAL;
-	if (!fu_lenovo_dock_mcu_device_txrx(self,
-					    TAG_TAG2_CMD_SPI,
-					    &cmd,
-					    sizeof(cmd),
-					    &val,
-					    sizeof(val),
-					    error))
+	if (!fu_usi_dock_mcu_device_txrx(self,
+					 TAG_TAG2_CMD_SPI,
+					 &cmd,
+					 sizeof(cmd),
+					 &val,
+					 sizeof(val),
+					 error))
 		return FALSE;
 	if (val != SPI_STATE_READY) {
 		g_set_error(error,
@@ -607,16 +581,16 @@ fu_lenovo_dock_mcu_device_write_firmware_with_idx(FuLenovoDockMcuDevice *self,
 
 	/* erase external flash */
 	cmd = USBUID_ISP_DEVICE_CMD_FWBUFER_ERASE_FLASH;
-	if (!fu_lenovo_dock_mcu_device_txrx(self,
-					    TAG_TAG2_CMD_SPI,
-					    &cmd,
-					    sizeof(cmd),
-					    NULL,
-					    0x0,
-					    error))
+	if (!fu_usi_dock_mcu_device_txrx(self,
+					 TAG_TAG2_CMD_SPI,
+					 &cmd,
+					 sizeof(cmd),
+					 NULL,
+					 0x0,
+					 error))
 		return FALSE;
 	if (!fu_device_retry(FU_DEVICE(self),
-			     fu_lenovo_dock_mcu_device_wait_for_spi_ready_cb,
+			     fu_usi_dock_mcu_device_wait_for_spi_ready_cb,
 			     30,
 			     NULL,
 			     error)) {
@@ -627,40 +601,40 @@ fu_lenovo_dock_mcu_device_write_firmware_with_idx(FuLenovoDockMcuDevice *self,
 
 	/* write external flash */
 	cmd = USBUID_ISP_DEVICE_CMD_FWBUFER_PROGRAM;
-	if (!fu_lenovo_dock_mcu_device_txrx(self,
-					    TAG_TAG2_CMD_SPI,
-					    &cmd,
-					    sizeof(cmd),
-					    NULL,
-					    0x0,
-					    error))
+	if (!fu_usi_dock_mcu_device_txrx(self,
+					 TAG_TAG2_CMD_SPI,
+					 &cmd,
+					 sizeof(cmd),
+					 NULL,
+					 0x0,
+					 error))
 		return FALSE;
 
 	fw = fu_firmware_get_bytes(firmware, error);
 	if (fw == NULL)
 		return FALSE;
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, W25Q16DV_PAGE_SIZE);
-	if (!fu_lenovo_dock_mcu_device_write_chunks(self,
-						    chunks,
-						    fu_progress_get_child(progress),
-						    error))
+	if (!fu_usi_dock_mcu_device_write_chunks(self,
+						 chunks,
+						 fu_progress_get_child(progress),
+						 error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* file transfer – finished */
 	cmd = USBUID_ISP_DEVICE_CMD_FWBUFER_TRANSFER_FINISH;
-	if (!fu_lenovo_dock_mcu_device_txrx(self,
-					    TAG_TAG2_CMD_SPI,
-					    &cmd,
-					    sizeof(cmd),
-					    NULL,
-					    0x0,
-					    error))
+	if (!fu_usi_dock_mcu_device_txrx(self,
+					 TAG_TAG2_CMD_SPI,
+					 &cmd,
+					 sizeof(cmd),
+					 NULL,
+					 0x0,
+					 error))
 		return FALSE;
 
 	/* MCU checksum */
 	if (!fu_device_retry(FU_DEVICE(self),
-			     fu_lenovo_dock_mcu_device_wait_for_checksum_cb,
+			     fu_usi_dock_mcu_device_wait_for_checksum_cb,
 			     300,
 			     (gpointer *)&checksum,
 			     error)) {
@@ -680,13 +654,13 @@ fu_lenovo_dock_mcu_device_write_firmware_with_idx(FuLenovoDockMcuDevice *self,
 
 	/* internal flash */
 	cmd = USBUID_ISP_INTERNAL_FW_CMD_UPDATE_FW;
-	if (!fu_lenovo_dock_mcu_device_txrx(self,
-					    TAG_TAG2_CMD_MCU,
-					    &cmd,
-					    sizeof(cmd),
-					    NULL,
-					    0x0,
-					    error))
+	if (!fu_usi_dock_mcu_device_txrx(self,
+					 TAG_TAG2_CMD_MCU,
+					 &cmd,
+					 sizeof(cmd),
+					 NULL,
+					 0x0,
+					 error))
 		return FALSE;
 	fu_progress_step_done(progress);
 
@@ -695,22 +669,22 @@ fu_lenovo_dock_mcu_device_write_firmware_with_idx(FuLenovoDockMcuDevice *self,
 }
 
 static gboolean
-fu_lenovo_dock_mcu_device_write_firmware(FuDevice *device,
-					 FuFirmware *firmware,
-					 FuProgress *progress,
-					 FwupdInstallFlags flags,
-					 GError **error)
+fu_usi_dock_mcu_device_write_firmware(FuDevice *device,
+				      FuFirmware *firmware,
+				      FuProgress *progress,
+				      FwupdInstallFlags flags,
+				      GError **error)
 {
-	return fu_lenovo_dock_mcu_device_write_firmware_with_idx(FU_LENOVO_DOCK_MCU_DEVICE(device),
-								 firmware,
-								 0xFF, /* all */
-								 progress,
-								 flags,
-								 error);
+	return fu_usi_dock_mcu_device_write_firmware_with_idx(FU_USI_DOCK_MCU_DEVICE(device),
+							      firmware,
+							      0xFF, /* all */
+							      progress,
+							      flags,
+							      error);
 }
 
 static gboolean
-fu_lenovo_dock_mcu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
+fu_usi_dock_mcu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	fu_device_set_remove_delay(device, 300000);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
@@ -720,7 +694,7 @@ fu_lenovo_dock_mcu_device_attach(FuDevice *device, FuProgress *progress, GError 
 }
 
 static void
-fu_lenovo_dock_mcu_device_set_progress(FuDevice *self, FuProgress *progress)
+fu_usi_dock_mcu_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
@@ -730,37 +704,8 @@ fu_lenovo_dock_mcu_device_set_progress(FuDevice *self, FuProgress *progress)
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
 }
 
-static gboolean
-fu_lenovo_dock_mcu_device_set_quirk_kv(FuDevice *device,
-				       const gchar *key,
-				       const gchar *value,
-				       GError **error)
-{
-	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(device);
-	if (g_strcmp0(key, "LenovoDockVersionFormat") == 0) {
-		self->version_format = g_strdup(value);
-		return TRUE;
-	}
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "quirk key not supported");
-	return FALSE;
-}
-
 static void
-fu_lenovo_dock_mcu_device_to_string(FuDevice *device, guint idt, GString *str)
-{
-	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(device);
-
-	/* parent */
-	FU_DEVICE_CLASS(fu_lenovo_dock_mcu_device_parent_class)->to_string(device, idt, str);
-
-	fu_common_string_append_kv(str, idt, "LenovoDockVersionFormat", self->version_format);
-}
-
-static void
-fu_lenovo_dock_mcu_device_init(FuLenovoDockMcuDevice *self)
+fu_usi_dock_mcu_device_init(FuUSIDockMcuDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
@@ -771,7 +716,7 @@ fu_lenovo_dock_mcu_device_init(FuLenovoDockMcuDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 
 	fu_hid_device_add_flag(FU_HID_DEVICE(self), FU_HID_DEVICE_FLAG_USE_INTERRUPT_TRANSFER);
-	fu_device_add_protocol(FU_DEVICE(self), "com.lenovo.dock");
+	fu_device_add_protocol(FU_DEVICE(self), "com.usi.dock");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
@@ -779,25 +724,12 @@ fu_lenovo_dock_mcu_device_init(FuLenovoDockMcuDevice *self)
 }
 
 static void
-fu_lenovo_dock_mcu_device_finalize(GObject *obj)
-{
-	FuLenovoDockMcuDevice *self = FU_LENOVO_DOCK_MCU_DEVICE(obj);
-	g_free(self->version_format);
-	G_OBJECT_CLASS(fu_lenovo_dock_mcu_device_parent_class)->finalize(obj);
-}
-
-static void
-fu_lenovo_dock_mcu_device_class_init(FuLenovoDockMcuDeviceClass *klass)
+fu_usi_dock_mcu_device_class_init(FuUSIDockMcuDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	GObjectClass *object_class = G_OBJECT_CLASS(klass);
-	object_class->finalize = fu_lenovo_dock_mcu_device_finalize;
 
-	klass_device->write_firmware = fu_lenovo_dock_mcu_device_write_firmware;
-	klass_device->attach = fu_lenovo_dock_mcu_device_attach;
-	klass_device->setup = fu_lenovo_dock_mcu_device_setup;
-	klass_device->set_progress = fu_lenovo_dock_mcu_device_set_progress;
-
-	klass_device->to_string = fu_lenovo_dock_mcu_device_to_string;
-	klass_device->set_quirk_kv = fu_lenovo_dock_mcu_device_set_quirk_kv;
+	klass_device->write_firmware = fu_usi_dock_mcu_device_write_firmware;
+	klass_device->attach = fu_usi_dock_mcu_device_attach;
+	klass_device->setup = fu_usi_dock_mcu_device_setup;
+	klass_device->set_progress = fu_usi_dock_mcu_device_set_progress;
 }

@@ -6,16 +6,16 @@
 
 #include "config.h"
 
-#include "fu-lenovo-dock-dmc-device.h"
+#include "fu-usi-dock-dmc-device.h"
 
-struct _FuLenovoDockDmcDevice {
+struct _FuUSIDockDmcDevice {
 	FuUsbDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuLenovoDockDmcDevice, fu_lenovo_dock_dmc_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE(FuUSIDockDmcDevice, fu_usi_dock_dmc_device, FU_TYPE_USB_DEVICE)
 
 static void
-fu_lenovo_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
+fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	if (parent != NULL) {
@@ -41,15 +41,15 @@ fu_lenovo_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, 
 }
 
 static void
-fu_lenovo_dock_dmc_device_init(FuLenovoDockDmcDevice *self)
+fu_usi_dock_dmc_device_init(FuUSIDockDmcDevice *self)
 {
 	g_signal_connect(self,
 			 "notify::parent",
-			 G_CALLBACK(fu_lenovo_dock_dmc_device_parent_notify_cb),
+			 G_CALLBACK(fu_usi_dock_dmc_device_parent_notify_cb),
 			 NULL);
 }
 
 static void
-fu_lenovo_dock_dmc_device_class_init(FuLenovoDockDmcDeviceClass *klass)
+fu_usi_dock_dmc_device_class_init(FuUSIDockDmcDeviceClass *klass)
 {
 }

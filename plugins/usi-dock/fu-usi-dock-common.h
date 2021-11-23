@@ -92,8 +92,8 @@ typedef struct {
 } IspVersionInMcu_t;
 
 const gchar *
-fu_lenovo_dock_idx_to_string(guint8 val);
+fu_usi_dock_idx_to_string(guint8 val);
 const gchar *
-fu_lenovo_dock_spi_state_to_string(guint8 val);
+fu_usi_dock_spi_state_to_string(guint8 val);
 gboolean
-fu_lenovo_dock_rx_filter(guint8, const guint8 *);
+fu_usi_dock_rx_filter(guint8, const guint8 *);

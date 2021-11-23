@@ -6,16 +6,16 @@
 
 #include "config.h"
 
-#include "fu-lenovo-dock-common.h"
+#include "fu-usi-dock-common.h"
 
 const gchar *
-fu_lenovo_dock_idx_to_string(guint8 val)
+fu_usi_dock_idx_to_string(guint8 val)
 {
 	return NULL;
 }
 
 const gchar *
-fu_lenovo_dock_spi_state_to_string(guint8 val)
+fu_usi_dock_spi_state_to_string(guint8 val)
 {
 	if (val == SPI_STATE_NONE)
 		return "none";
@@ -46,7 +46,7 @@ fu_lenovo_dock_spi_state_to_string(guint8 val)
 
 /* returned TRUE - got a expected report*/
 gboolean
-fu_lenovo_dock_rx_filter(guint8 cmd, const guint8 *buf)
+fu_usi_dock_rx_filter(guint8 cmd, const guint8 *buf)
 {
 	if (cmd != buf[1])
 		return TRUE;

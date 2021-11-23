@@ -1,18 +1,13 @@
-# Lenovo Dock
+# USI Dock
 
 ## Introduction
 
 This plugin uses the MCU to write all the dock firmware components. Interestingly, the MCU version
 is provided by the DMC bcdDevice.
 
-## Firmware Format
-
-The daemon will decompress the cabinet archive and extract a firmware blob in
-a packed binary file format.
-
 This plugin supports the following protocol ID:
 
-* com.lenovo.dock
+* com.usi.dock
 
 ## GUID Generation
 
@@ -35,13 +30,7 @@ back to the runtime locked mode.
 
 ## Vendor ID Security
 
-The vendor ID is set from the USB vendor, in this instance set to `USB:0x17EF`
-
-## Quirk Use
-
-This plugin uses the following plugin-specific quirks:
-
-* `LenovoDockFirmwareImageId` - the image ID to use for the device
+The vendor ID is set from the USB vendor.
 
 ## External Interface Access
 
