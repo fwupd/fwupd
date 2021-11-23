@@ -1798,6 +1798,9 @@ fu_main_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "DaemonVersion") == 0)
 		return g_variant_new_string(SOURCE_VERSION);
 
+	if (g_strcmp0(property_name, "HostBkc") == 0)
+		return g_variant_new_string(fu_engine_get_host_bkc(priv->engine));
+
 	if (g_strcmp0(property_name, "Tainted") == 0)
 		return g_variant_new_boolean(fu_engine_get_tainted(priv->engine));
 

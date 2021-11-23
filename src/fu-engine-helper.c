@@ -13,13 +13,42 @@
 #include "fu-engine-helper.h"
 #include "fu-engine.h"
 
+static FwupdRelease *
+fu_engine_get_release_with_tag(FuEngine *self,
+			       FuEngineRequest *request,
+			       FwupdDevice *dev,
+			       const gchar *tag,
+			       GError **error)
+{
+	g_autoptr(GPtrArray) rels = NULL;
+
+	/* find the newest release that matches */
+	rels = fu_engine_get_releases(self, request, fwupd_device_get_id(dev), error);
+	if (rels == NULL)
+		return NULL;
+	for (guint i = 0; i < rels->len; i++) {
+		FwupdRelease *rel = g_ptr_array_index(rels, i);
+		if (fwupd_release_has_tag(rel, tag))
+			return g_object_ref(rel);
+	}
+
+	/* no match */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no matching releases for device");
+	return NULL;
+}
+
 gboolean
 fu_engine_update_motd(FuEngine *self, GError **error)
 {
+	const gchar *host_bkc = fu_engine_get_host_bkc(self);
 	guint upgrade_count = 0;
+	guint sync_count = 0;
 	g_autoptr(FuEngineRequest) request = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
-	g_autoptr(GString) str = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
 	g_autofree gchar *target = NULL;
 
 	/* a subset of what fwupdmgr can do */
@@ -42,6 +71,22 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 				continue;
 			upgrade_count++;
 		}
+		if (host_bkc != NULL) {
+			for (guint i = 0; i < devices->len; i++) {
+				FwupdDevice *dev = g_ptr_array_index(devices, i);
+				g_autoptr(FwupdRelease) rel = NULL;
+				rel = fu_engine_get_release_with_tag(self,
+								     request,
+								     dev,
+								     host_bkc,
+								     NULL);
+				if (rel == NULL)
+					continue;
+				if (g_strcmp0(fwupd_device_get_version(dev),
+					      fwupd_release_get_version(rel)) != 0)
+					sync_count++;
+			}
+		}
 	}
 
 	/* If running under systemd unit, use the directory as a base */
@@ -58,21 +103,33 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 	if (!fu_common_mkdir_parent(target, error))
 		return FALSE;
 
-	if (upgrade_count == 0) {
-		g_autoptr(GFile) file = g_file_new_for_path(target);
-		g_autoptr(GFileOutputStream) output = NULL;
-		output = g_file_replace(file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, error);
-		return output != NULL;
+	/* nag about syncing or updating, but never both */
+	if (sync_count > 0) {
+		g_string_append(str, "\n");
+		g_string_append_printf(str,
+				       /* TRANSLATORS: this is shown in the MOTD */
+				       ngettext("%u device is not the best known configuration.",
+						"%u devices are not the best known configuration.",
+						sync_count),
+				       sync_count);
+		g_string_append_printf(str,
+				       "\n%s\n\n",
+				       /* TRANSLATORS: this is shown in the MOTD */
+				       _("Run `fwupdmgr sync-bkc` to complete this action."));
+	} else if (upgrade_count > 0) {
+		g_string_append(str, "\n");
+		g_string_append_printf(str,
+				       /* TRANSLATORS: this is shown in the MOTD */
+				       ngettext("%u device has a firmware upgrade available.",
+						"%u devices have a firmware upgrade available.",
+						upgrade_count),
+				       upgrade_count);
+		g_string_append_printf(str,
+				       "\n%s\n\n",
+				       /* TRANSLATORS: this is shown in the MOTD */
+				       _("Run `fwupdmgr get-upgrades` for more information."));
 	}
 
-	str = g_string_new("\n");
-	g_string_append_printf(str,
-			       ngettext("%u device has a firmware upgrade available.",
-					"%u devices have a firmware upgrade available.",
-					upgrade_count),
-			       upgrade_count);
-	g_string_append_printf(str,
-			       "\n%s\n\n",
-			       _("Run `fwupdmgr get-upgrades` for more information."));
+	/* success, with an empty file if nothing to say */
 	return g_file_set_contents(target, str->str, str->len, error);
 }

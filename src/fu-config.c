@@ -32,6 +32,7 @@ struct _FuConfig {
 	guint64 archive_size_max;
 	guint idle_timeout;
 	gchar *config_file;
+	gchar *host_bkc;
 	gboolean update_motd;
 	gboolean enumerate_all_devices;
 	gboolean ignore_power;
@@ -58,6 +59,7 @@ fu_config_reload(FuConfig *self, GError **error)
 	g_auto(GStrv) devices = NULL;
 	g_auto(GStrv) plugins = NULL;
 	g_autofree gchar *domains = NULL;
+	g_autofree gchar *host_bkc = NULL;
 	g_autoptr(GKeyFile) keyfile = g_key_file_new();
 	g_autoptr(GError) error_update_motd = NULL;
 	g_autoptr(GError) error_ignore_power = NULL;
@@ -204,6 +206,11 @@ fu_config_reload(FuConfig *self, GError **error)
 		self->only_trusted = TRUE;
 	}
 
+	/* fetch host best known configuration */
+	host_bkc = g_key_file_get_string(keyfile, "fwupd", "HostBkc", NULL);
+	if (host_bkc != NULL && host_bkc[0] != '\0')
+		self->host_bkc = g_steal_pointer(&host_bkc);
+
 	return TRUE;
 }
 
@@ -347,6 +354,13 @@ fu_config_get_enumerate_all_devices(FuConfig *self)
 	return self->enumerate_all_devices;
 }
 
+const gchar *
+fu_config_get_host_bkc(FuConfig *self)
+{
+	g_return_val_if_fail(FU_IS_CONFIG(self), NULL);
+	return self->host_bkc;
+}
+
 static void
 fu_config_class_init(FuConfigClass *klass)
 {
@@ -389,6 +403,7 @@ fu_config_finalize(GObject *obj)
 	g_ptr_array_unref(self->blocked_firmware);
 	g_ptr_array_unref(self->uri_schemes);
 	g_free(self->config_file);
+	g_free(self->host_bkc);
 
 	G_OBJECT_CLASS(fu_config_parent_class)->finalize(obj);
 }

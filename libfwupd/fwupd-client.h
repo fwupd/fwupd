@@ -370,6 +370,8 @@ fwupd_client_get_percentage(FwupdClient *self);
 const gchar *
 fwupd_client_get_daemon_version(FwupdClient *self);
 const gchar *
+fwupd_client_get_host_bkc(FwupdClient *self);
+const gchar *
 fwupd_client_get_host_product(FwupdClient *self);
 const gchar *
 fwupd_client_get_host_machine_id(FwupdClient *self);
