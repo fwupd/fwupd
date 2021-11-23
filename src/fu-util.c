@@ -2107,6 +2107,95 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static FwupdRelease *
+fu_util_get_release_with_tag(FuUtilPrivate *priv,
+			     FwupdDevice *dev,
+			     const gchar *tag,
+			     GError **error)
+{
+	g_autoptr(GPtrArray) rels = NULL;
+
+	/* find the newest release that matches */
+	rels = fwupd_client_get_releases(priv->client,
+					 fwupd_device_get_id(dev),
+					 priv->cancellable,
+					 error);
+	if (rels == NULL)
+		return NULL;
+	for (guint i = 0; i < rels->len; i++) {
+		FwupdRelease *rel = g_ptr_array_index(rels, i);
+		if (fwupd_release_has_tag(rel, tag))
+			return g_object_ref(rel);
+	}
+
+	/* no match */
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "no matching releases for device");
+	return NULL;
+}
+
+static gboolean
+fu_util_prompt_warning_bkc(FuUtilPrivate *priv, FwupdDevice *dev, FwupdRelease *rel, GError **error)
+{
+	const gchar *host_bkc = fwupd_client_get_host_bkc(priv->client);
+	g_autoptr(FwupdRelease) rel_bkc = NULL;
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	/* nothing to do */
+	if (host_bkc == NULL)
+		return TRUE;
+
+	/* get the release that corresponds with the host BKC */
+	rel_bkc = fu_util_get_release_with_tag(priv, dev, host_bkc, &error_local);
+	if (rel_bkc == NULL) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+		    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+			g_debug("ignoring %s: %s", fwupd_device_get_id(dev), error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+
+	/* device is already on a different release */
+	if (g_strcmp0(fwupd_device_get_version(dev), fwupd_release_get_version(rel)) != 0)
+		return TRUE;
+
+	/* TRANSLATORS: BKC is the industry name for the best known configuration and is a set
+	 * of firmware that works together */
+	g_string_append_printf(str, _("Your system is set up to the BKC of %s."), host_bkc);
+	g_string_append(str, "\n\n");
+	g_string_append_printf(
+	    str,
+	    /* TRANSLATORS: %1 is the current device version number, and %2 is the
+	       command name, e.g. `fwupdmgr sync-bkc` */
+	    _("This device will be reverted back to %s when the %s command is performed."),
+	    fwupd_release_get_version(rel),
+	    "fwupdmgr sync-bkc");
+
+	/* TRANSLATORS: the best known configuration is a set of software that we know works well
+	 * together. In the OEM and ODM industries it is often called a BKC */
+	fu_util_warning_box(_("Deviate from the best known configuration?"), str->str, 80);
+
+	/* ask for confirmation */
+	g_print("\n%s [Y|n]: ",
+		/* TRANSLATORS: prompt to apply the update */
+		_("Perform operation?"));
+	if (!fu_util_prompt_for_boolean(TRUE)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOTHING_TO_DO,
+				    "Request canceled");
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_util_prompt_warning_composite(FuUtilPrivate *priv,
 				 FwupdDevice *dev,
@@ -2182,6 +2271,8 @@ fu_util_update_device_with_release(FuUtilPrivate *priv,
 		if (!fu_util_prompt_warning_fde(dev, error))
 			return FALSE;
 		if (!fu_util_prompt_warning_composite(priv, dev, rel, error))
+			return FALSE;
+		if (!fu_util_prompt_warning_bkc(priv, dev, rel, error))
 			return FALSE;
 	}
 	return fwupd_client_install_release2(priv->client,
@@ -3157,6 +3248,89 @@ fu_util_security_as_json(FuUtilPrivate *priv, GPtrArray *attrs, GPtrArray *event
 }
 
 static gboolean
+fu_util_sync_bkc(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	const gchar *host_bkc = fwupd_client_get_host_bkc(priv->client);
+	guint cnt = 0;
+	g_autoptr(GPtrArray) devices = NULL;
+
+	/* update the console if composite devices are also updated */
+	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
+	g_signal_connect(priv->client,
+			 "device-changed",
+			 G_CALLBACK(fu_util_update_device_changed_cb),
+			 priv);
+	g_signal_connect(priv->client,
+			 "device-request",
+			 G_CALLBACK(fu_util_update_device_request_cb),
+			 priv);
+	priv->flags |= FWUPD_INSTALL_FLAG_ALLOW_OLDER;
+
+	/* for each device, find the release that matches the tag */
+	if (host_bkc == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "No HostBkc set in daemon.conf");
+		return FALSE;
+	}
+	devices = fwupd_client_get_devices(priv->client, NULL, error);
+	if (devices == NULL)
+		return FALSE;
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *dev = g_ptr_array_index(devices, i);
+		g_autoptr(FwupdRelease) rel = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		rel = fu_util_get_release_with_tag(priv, dev, host_bkc, &error_local);
+		if (rel == NULL) {
+			if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED) ||
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
+				g_debug("ignoring %s: %s",
+					fwupd_device_get_id(dev),
+					error_local->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+
+		/* ignore if already on that release */
+		if (g_strcmp0(fwupd_device_get_version(dev), fwupd_release_get_version(rel)) == 0)
+			continue;
+
+		/* install this new release */
+		g_debug("need to move %s from %s to %s",
+			fwupd_device_get_id(dev),
+			fwupd_device_get_version(dev),
+			fwupd_release_get_version(rel));
+		if (!fu_util_update_device_with_release(priv, dev, rel, error))
+			return FALSE;
+		fu_util_display_current_message(priv);
+		cnt++;
+	}
+
+	/* nothing was done */
+	if (cnt == 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOTHING_TO_DO,
+			    "No devices require modifications for target %s",
+			    host_bkc);
+		return FALSE;
+	}
+
+	/* we don't want to ask anything */
+	if (priv->no_reboot_check) {
+		g_debug("skipping reboot check");
+		return TRUE;
+	}
+
+	/* show reboot if needed */
+	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
+}
+
+static gboolean
 fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
@@ -3925,6 +4099,12 @@ main(int argc, char *argv[])
 			      _("Gets the host security attributes"),
 			      fu_util_security);
 	fu_util_cmd_array_add(cmd_array,
+			      "sync-bkc",
+			      NULL,
+			      /* TRANSLATORS: command description */
+			      _("Sync firmware versions to the host best known configuration"),
+			      fu_util_sync_bkc);
+	fu_util_cmd_array_add(cmd_array,
 			      "block-firmware",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("[CHECKSUM]"),
@@ -4102,6 +4282,10 @@ main(int argc, char *argv[])
 			return EXIT_FAILURE;
 		}
 		g_print("daemon version:\t%s\n", fwupd_client_get_daemon_version(priv->client));
+		if (fwupd_client_get_host_bkc(priv->client) != NULL) {
+			g_print("host best-known-configuration:\t%s\n",
+				fwupd_client_get_host_bkc(priv->client));
+		}
 		return EXIT_SUCCESS;
 	}
 

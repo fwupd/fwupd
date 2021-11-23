@@ -6043,6 +6043,15 @@ fu_engine_get_host_machine_id(FuEngine *self)
 	return self->host_machine_id;
 }
 
+const gchar *
+fu_engine_get_host_bkc(FuEngine *self)
+{
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	if (fu_config_get_host_bkc(self->config) == NULL)
+		return "";
+	return fu_config_get_host_bkc(self->config);
+}
+
 #ifdef HAVE_HSI
 static void
 fu_engine_ensure_security_attrs_tainted(FuEngine *self)

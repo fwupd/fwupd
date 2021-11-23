@@ -64,6 +64,8 @@ fu_engine_get_host_product(FuEngine *self);
 const gchar *
 fu_engine_get_host_machine_id(FuEngine *self);
 const gchar *
+fu_engine_get_host_bkc(FuEngine *self);
+const gchar *
 fu_engine_get_host_security_id(FuEngine *self);
 FwupdStatus
 fu_engine_get_status(FuEngine *self);
