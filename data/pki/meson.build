@@ -3,11 +3,11 @@ if libjcat.version().version_compare ('>= 0.1.9')
   supported_gpg = libjcat.get_pkgconfig_variable('supported_gpg')
   supported_pkcs7 = libjcat.get_pkgconfig_variable('supported_pkcs7')
 else
-  supported_gpg = 1
-  supported_pkcs7 = 1
+  supported_gpg = '1'
+  supported_pkcs7 = '1'
 endif
 
-if supported_gpg == 1
+if supported_gpg == '1'
 install_data([
     'GPG-KEY-Linux-Foundation-Firmware',
     'GPG-KEY-Linux-Vendor-Firmware-Service',
@@ -22,7 +22,7 @@ install_data([
 )
 endif
 
-if supported_pkcs7 == 1
+if supported_pkcs7 == '1'
 install_data([
     'LVFS-CA.pem',
   ],
