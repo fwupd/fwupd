@@ -108,6 +108,14 @@ struct _FuFirmwareClass {
  * Since: 1.5.6
  **/
 #define FU_FIRMWARE_FLAG_HAS_VID_PID (1u << 3)
+/**
+ * FU_FIRMWARE_FLAG_DONE_PARSE:
+ *
+ * The firmware object has been used by fu_firmware_parse_full().
+ *
+ * Since: 1.7.3
+ **/
+#define FU_FIRMWARE_FLAG_DONE_PARSE (1u << 4)
 
 /**
  * FuFirmwareFlags:
