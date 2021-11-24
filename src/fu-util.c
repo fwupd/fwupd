@@ -26,6 +26,7 @@
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 #include "fwupd-plugin-private.h"
+#include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 
 #include "fu-history.h"
@@ -517,6 +518,24 @@ static gchar *
 fu_util_get_tree_title(FuUtilPrivate *priv)
 {
 	return g_strdup(fwupd_client_get_host_product(priv->client));
+}
+
+static gboolean
+fu_util_get_releases_as_json(FuUtilPrivate *priv, GPtrArray *rels, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Releases");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < rels->len; i++) {
+		FwupdRelease *rel = g_ptr_array_index(rels, i);
+		json_builder_begin_object(builder);
+		fwupd_release_to_json(rel, builder);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+	return fu_util_print_builder(builder, error);
 }
 
 static gboolean
@@ -1732,6 +1751,10 @@ fu_util_get_releases(FuUtilPrivate *priv, gchar **values, GError **error)
 	rels = fwupd_client_get_releases(priv->client, fwupd_device_get_id(dev), NULL, error);
 	if (rels == NULL)
 		return FALSE;
+
+	/* not for human consumption */
+	if (priv->as_json)
+		return fu_util_get_releases_as_json(priv, rels, error);
 
 	if (rels->len == 0) {
 		/* TRANSLATORS: no repositories to download from */
