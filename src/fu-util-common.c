@@ -2013,7 +2013,7 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
-		      _("SecureBoot disabled")},
+		      _("Secure Boot disabled")},
 		     {"org.fwupd.hsi.Uefi.SecureBoot",
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
