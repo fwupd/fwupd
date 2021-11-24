@@ -1363,6 +1363,10 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (devices == NULL)
 		return FALSE;
 
+	/* not for human consumption */
+	if (priv->as_json)
+		return fu_util_get_devices_as_json(priv, devices, error);
+
 	/* show each device */
 	for (guint i = 0; i < devices->len; i++) {
 		g_autoptr(GPtrArray) rels = NULL;
