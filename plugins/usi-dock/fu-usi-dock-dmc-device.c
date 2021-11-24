@@ -8,11 +8,11 @@
 
 #include "fu-usi-dock-dmc-device.h"
 
-struct _FuUSIDockDmcDevice {
+struct _FuUsiDockDmcDevice {
 	FuUsbDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuUSIDockDmcDevice, fu_usi_dock_dmc_device, FU_TYPE_USB_DEVICE)
+G_DEFINE_TYPE(FuUsiDockDmcDevice, fu_usi_dock_dmc_device, FU_TYPE_USB_DEVICE)
 
 static void
 fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpointer user_data)
@@ -41,7 +41,7 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 }
 
 static void
-fu_usi_dock_dmc_device_init(FuUSIDockDmcDevice *self)
+fu_usi_dock_dmc_device_init(FuUsiDockDmcDevice *self)
 {
 	g_signal_connect(self,
 			 "notify::parent",
@@ -50,6 +50,6 @@ fu_usi_dock_dmc_device_init(FuUSIDockDmcDevice *self)
 }
 
 static void
-fu_usi_dock_dmc_device_class_init(FuUSIDockDmcDeviceClass *klass)
+fu_usi_dock_dmc_device_class_init(FuUsiDockDmcDeviceClass *klass)
 {
 }

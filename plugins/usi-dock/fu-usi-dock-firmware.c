@@ -8,19 +8,19 @@
 
 #include "fu-usi-dock-firmware.h"
 
-struct _FuUSIDockFirmware {
+struct _FuUsiDockFirmware {
 	FuFirmware parent_instance;
 };
 
-G_DEFINE_TYPE(FuUSIDockFirmware, fu_usi_dock_firmware, FU_TYPE_FIRMWARE)
+G_DEFINE_TYPE(FuUsiDockFirmware, fu_usi_dock_firmware, FU_TYPE_FIRMWARE)
 
 static void
-fu_usi_dock_firmware_init(FuUSIDockFirmware *self)
+fu_usi_dock_firmware_init(FuUsiDockFirmware *self)
 {
 }
 
 static void
-fu_usi_dock_firmware_class_init(FuUSIDockFirmwareClass *klass)
+fu_usi_dock_firmware_class_init(FuUsiDockFirmwareClass *klass)
 {
 }
 

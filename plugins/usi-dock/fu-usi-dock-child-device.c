@@ -9,15 +9,15 @@
 #include "fu-usi-dock-child-device.h"
 #include "fu-usi-dock-mcu-device.h"
 
-struct _FuUSIDockChildDevice {
+struct _FuUsiDockChildDevice {
 	FuDevice parent_instance;
 	guint8 chip_idx;
 };
 
-G_DEFINE_TYPE(FuUSIDockChildDevice, fu_usi_dock_child_device, FU_TYPE_DEVICE)
+G_DEFINE_TYPE(FuUsiDockChildDevice, fu_usi_dock_child_device, FU_TYPE_DEVICE)
 
 void
-fu_usi_dock_child_device_set_chip_idx(FuUSIDockChildDevice *self, guint8 chip_idx)
+fu_usi_dock_child_device_set_chip_idx(FuUsiDockChildDevice *self, guint8 chip_idx)
 {
 	self->chip_idx = chip_idx;
 }
@@ -25,7 +25,7 @@ fu_usi_dock_child_device_set_chip_idx(FuUSIDockChildDevice *self, guint8 chip_id
 static void
 fu_usi_dock_child_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuUSIDockChildDevice *self = FU_USI_DOCK_CHILD_DEVICE(device);
+	FuUsiDockChildDevice *self = FU_USI_DOCK_CHILD_DEVICE(device);
 	fu_common_string_append_kx(str, idt, "ChipIdx", self->chip_idx);
 }
 
@@ -54,7 +54,7 @@ fu_usi_dock_mcu_device_write_firmware(FuDevice *device,
 				      FwupdInstallFlags flags,
 				      GError **error)
 {
-	FuUSIDockChildDevice *self = FU_USI_DOCK_CHILD_DEVICE(device);
+	FuUsiDockChildDevice *self = FU_USI_DOCK_CHILD_DEVICE(device);
 	FuDevice *parent = fu_device_get_parent(device);
 	if (parent == NULL) {
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no parent");
@@ -69,13 +69,13 @@ fu_usi_dock_mcu_device_write_firmware(FuDevice *device,
 }
 
 static void
-fu_usi_dock_child_device_init(FuUSIDockChildDevice *self)
+fu_usi_dock_child_device_init(FuUsiDockChildDevice *self)
 {
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_OPEN);
 }
 
 static void
-fu_usi_dock_child_device_class_init(FuUSIDockChildDeviceClass *klass)
+fu_usi_dock_child_device_class_init(FuUsiDockChildDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->to_string = fu_usi_dock_child_device_to_string;

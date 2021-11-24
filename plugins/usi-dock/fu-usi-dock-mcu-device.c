@@ -12,16 +12,16 @@
 #include "fu-usi-dock-firmware.h"
 #include "fu-usi-dock-mcu-device.h"
 
-struct _FuUSIDockMcuDevice {
+struct _FuUsiDockMcuDevice {
 	FuHidDevice parent_instance;
 };
 
-G_DEFINE_TYPE(FuUSIDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
+G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 
 #define FU_USI_DOCK_MCU_DEVICE_TIMEOUT 5000 /* ms */
 
 static gboolean
-fu_usi_dock_mcu_device_tx(FuUSIDockMcuDevice *self,
+fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 			  guint8 tag2,
 			  const guint8 *inbuf,
 			  gsize inbufsz,
@@ -59,7 +59,7 @@ fu_usi_dock_mcu_device_tx(FuUSIDockMcuDevice *self,
 }
 
 static gboolean
-fu_usi_dock_mcu_device_rx(FuUSIDockMcuDevice *self,
+fu_usi_dock_mcu_device_rx(FuUsiDockMcuDevice *self,
 			  guint8 cmd,
 			  guint8 *outbuf,
 			  gsize outbufsz,
@@ -121,7 +121,7 @@ fu_usi_dock_mcu_device_rx(FuUSIDockMcuDevice *self,
 }
 
 static gboolean
-fu_usi_dock_mcu_device_txrx(FuUSIDockMcuDevice *self,
+fu_usi_dock_mcu_device_txrx(FuUsiDockMcuDevice *self,
 			    guint8 tag2,
 			    const guint8 *inbuf,
 			    gsize inbufsz,
@@ -135,7 +135,7 @@ fu_usi_dock_mcu_device_txrx(FuUSIDockMcuDevice *self,
 }
 
 static gboolean
-fu_usi_dock_mcu_device_get_status(FuUSIDockMcuDevice *self, GError **error)
+fu_usi_dock_mcu_device_get_status(FuUsiDockMcuDevice *self, GError **error)
 {
 	guint8 buf[] = {USBUID_ISP_DEVICE_CMD_MCU_STATUS};
 	guint8 response = 0;
@@ -162,7 +162,7 @@ fu_usi_dock_mcu_device_get_status(FuUSIDockMcuDevice *self, GError **error)
 }
 
 static gboolean
-fu_usi_dock_mcu_device_enumerate_children(FuUSIDockMcuDevice *self, GError **error)
+fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **error)
 {
 	guint8 inbuf[] = {USBUID_ISP_DEVICE_CMD_READ_MCU_VERSIONPAGE,
 			  DP_VERSION_FROM_MCU | NIC_VERSION_FROM_MCU};
@@ -381,7 +381,7 @@ fu_usi_dock_mcu_device_enumerate_children(FuUSIDockMcuDevice *self, GError **err
 static gboolean
 fu_usi_dock_mcu_device_setup(FuDevice *device, GError **error)
 {
-	FuUSIDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
+	FuUsiDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_usi_dock_mcu_device_parent_class)->setup(device, error))
@@ -398,7 +398,7 @@ fu_usi_dock_mcu_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_usi_dock_mcu_device_write_chunk(FuUSIDockMcuDevice *self, FuChunk *chk, GError **error)
+fu_usi_dock_mcu_device_write_chunk(FuUsiDockMcuDevice *self, FuChunk *chk, GError **error)
 {
 	guint8 buf[64] = {0x0};
 	guint32 length = 0;
@@ -473,7 +473,7 @@ fu_usi_dock_mcu_device_write_chunk(FuUSIDockMcuDevice *self, FuChunk *chk, GErro
 }
 
 static gboolean
-fu_usi_dock_mcu_device_write_chunks(FuUSIDockMcuDevice *self,
+fu_usi_dock_mcu_device_write_chunks(FuUsiDockMcuDevice *self,
 				    GPtrArray *chunks,
 				    FuProgress *progress,
 				    GError **error)
@@ -494,7 +494,7 @@ fu_usi_dock_mcu_device_write_chunks(FuUSIDockMcuDevice *self,
 static gboolean
 fu_usi_dock_mcu_device_wait_for_spi_ready_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuUSIDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
+	FuUsiDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
 	guint8 buf[] = {USBUID_ISP_DEVICE_CMD_FWBUFER_READ_STATUS};
 	guint8 val = 0;
 
@@ -523,7 +523,7 @@ fu_usi_dock_mcu_device_wait_for_spi_ready_cb(FuDevice *device, gpointer user_dat
 static gboolean
 fu_usi_dock_mcu_device_wait_for_checksum_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	FuUSIDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
+	FuUsiDockMcuDevice *self = FU_USI_DOCK_MCU_DEVICE(device);
 
 	if (!fu_usi_dock_mcu_device_rx(self,
 				       USBUID_ISP_CMD_ALL,
@@ -537,7 +537,7 @@ fu_usi_dock_mcu_device_wait_for_checksum_cb(FuDevice *device, gpointer user_data
 }
 
 gboolean
-fu_usi_dock_mcu_device_write_firmware_with_idx(FuUSIDockMcuDevice *self,
+fu_usi_dock_mcu_device_write_firmware_with_idx(FuUsiDockMcuDevice *self,
 					       FuFirmware *firmware,
 					       guint8 chip_idx,
 					       FuProgress *progress,
@@ -705,7 +705,7 @@ fu_usi_dock_mcu_device_set_progress(FuDevice *self, FuProgress *progress)
 }
 
 static void
-fu_usi_dock_mcu_device_init(FuUSIDockMcuDevice *self)
+fu_usi_dock_mcu_device_init(FuUsiDockMcuDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
@@ -724,7 +724,7 @@ fu_usi_dock_mcu_device_init(FuUSIDockMcuDevice *self)
 }
 
 static void
-fu_usi_dock_mcu_device_class_init(FuUSIDockMcuDeviceClass *klass)
+fu_usi_dock_mcu_device_class_init(FuUsiDockMcuDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 

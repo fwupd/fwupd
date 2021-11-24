@@ -1,4 +1,4 @@
-cargs = ['-DG_LOG_DOMAIN="FuPluginUSIDock"']
+cargs = ['-DG_LOG_DOMAIN="FuPluginUsiDock"']
 
 install_data([
   'usi-dock.quirk',
