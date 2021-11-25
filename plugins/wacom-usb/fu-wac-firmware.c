@@ -304,10 +304,7 @@ fu_wac_firmware_parse(FuFirmware *firmware,
 static guint8
 fu_wac_firmware_calc_checksum(GByteArray *buf)
 {
-	guint8 csum = 0;
-	for (guint i = 0; i < buf->len; i++)
-		csum += buf->data[i];
-	return csum ^ 0xFF;
+	return fu_common_sum8(buf->data, buf->len) ^ 0xFF;
 }
 
 static GBytes *

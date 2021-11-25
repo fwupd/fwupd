@@ -44,6 +44,3 @@
 #define ELANTP_DELAY_UNLOCK	     100  /* ms */
 #define ELANTP_DELAY_WRITE_BLOCK     35	  /* ms */
 #define ELANTP_DELAY_WRITE_BLOCK_512 50	  /* ms */
-
-guint16
-fu_elantp_calc_checksum(const guint8 *data, gsize length);

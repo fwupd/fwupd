@@ -310,8 +310,6 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 						     self->layer,
 						     self->rad);
 
-	for (guint32 i = 0; i < esm_sz; i++)
-		checksum += *(payload_data + EEPROM_ESM_OFFSET + i);
 	if (!fu_synaptics_mst_device_get_flash_checksum(self,
 							esm_sz,
 							EEPROM_ESM_OFFSET,
@@ -321,6 +319,7 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 	}
 
 	/* ESM checksum same */
+	checksum = fu_common_sum32(payload_data + EEPROM_ESM_OFFSET, esm_sz);
 	if (checksum == flash_checksum) {
 		g_debug("ESM checksum already matches");
 		return TRUE;
@@ -368,10 +367,7 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 		}
 
 		/* check ESM checksum */
-		checksum = 0;
 		flash_checksum = 0;
-		for (guint32 i = 0; i < esm_sz; i++)
-			checksum += *(payload_data + EEPROM_ESM_OFFSET + i);
 		if (!fu_synaptics_mst_device_get_flash_checksum(self,
 								esm_sz,
 								EEPROM_ESM_OFFSET,
@@ -424,7 +420,7 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 						     self->layer,
 						     self->rad);
 	for (guint32 retries_cnt = 0;; retries_cnt++) {
-		guint32 checksum = 0;
+		guint32 checksum;
 		guint32 flash_checksum = 0;
 
 		if (!fu_synaptics_mst_device_set_flash_sector_erase(self, 0xffff, 0, error))
@@ -469,15 +465,13 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 		}
 
 		/* check data just written */
-		for (guint32 i = 0; i < payload_len; i++)
-			checksum += *(payload_data + i);
-
 		if (!fu_synaptics_mst_device_get_flash_checksum(self,
 								payload_len,
 								0,
 								&flash_checksum,
 								error))
 			return FALSE;
+		checksum = fu_common_sum32(payload_data, payload_len);
 		if (checksum == flash_checksum)
 			break;
 		g_debug("attempt %u: checksum %x didn't match %x",

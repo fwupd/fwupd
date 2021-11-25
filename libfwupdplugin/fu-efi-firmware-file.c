@@ -114,17 +114,6 @@ fu_efi_firmware_file_export(FuFirmware *firmware, FuFirmwareExportFlags flags, X
 }
 
 static guint8
-fu_efi_firmware_file_data_checksum8(GBytes *blob)
-{
-	gsize bufsz = 0;
-	guint8 checksum = 0;
-	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
-	for (gsize i = 0; i < bufsz; i++)
-		checksum += buf[i];
-	return 0x100 - checksum;
-}
-
-static guint8
 fu_efi_firmware_file_hdr_checksum8(GBytes *blob)
 {
 	gsize bufsz = 0;
@@ -265,7 +254,7 @@ fu_efi_firmware_file_parse(FuFirmware *firmware,
 	/* verify data checksum */
 	if ((priv->attrib & FU_EFI_FIRMWARE_FILE_ATTRIB_CHECKSUM) > 0 &&
 	    (flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint8 data_checksum_verify = fu_efi_firmware_file_data_checksum8(blob);
+		guint8 data_checksum_verify = 0x100 - fu_common_sum8_bytes(blob);
 		if (data_checksum_verify != data_checksum) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -344,7 +333,7 @@ fu_efi_firmware_file_write(FuFirmware *firmware, GError **error)
 		return NULL;
 	g_byte_array_append(buf, (guint8 *)&guid, sizeof(guid));
 	fu_byte_array_append_uint8(buf, 0x0); /* hdr_checksum */
-	fu_byte_array_append_uint8(buf, fu_efi_firmware_file_data_checksum8(blob));
+	fu_byte_array_append_uint8(buf, 0x100 - fu_common_sum8_bytes(blob));
 	fu_byte_array_append_uint8(buf, priv->type);   /* data_checksum */
 	fu_byte_array_append_uint8(buf, priv->attrib); /* data_checksum */
 	fu_byte_array_append_uint32(buf,

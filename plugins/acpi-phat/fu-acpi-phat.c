@@ -163,9 +163,7 @@ fu_acpi_phat_parse(FuFirmware *firmware,
 
 	/* verify checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0) {
-		guint8 checksum = 0;
-		for (gsize i = 0; i < length; i++)
-			checksum += buf[i];
+		guint8 checksum = fu_common_sum8(buf, length);
 		if (checksum != 0x00) {
 			g_set_error(error,
 				    G_IO_ERROR,
@@ -220,7 +218,6 @@ fu_acpi_phat_write(FuFirmware *firmware, GError **error)
 {
 	FuAcpiPhat *self = FU_ACPI_PHAT(firmware);
 	const gchar *oem_table_id_str = fu_firmware_get_id(firmware);
-	guint8 checksum = 0;
 	guint8 creator_id[] = {'F', 'W', 'U', 'P'};
 	guint8 creator_rev[] = {'0', '0', '0', '0'};
 	guint8 oem_id[6] = {'\0'};
@@ -276,9 +273,7 @@ fu_acpi_phat_write(FuFirmware *firmware, GError **error)
 	g_byte_array_append(buf, buf2->data, buf2->len);
 
 	/* fixup checksum */
-	for (gsize i = 0; i < buf->len; i++)
-		checksum += buf->data[i];
-	buf->data[9] = 0xFF - checksum;
+	buf->data[9] = 0xFF - fu_common_sum8(buf->data, buf->len);
 
 	/* success */
 	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));

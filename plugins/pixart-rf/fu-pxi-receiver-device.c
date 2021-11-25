@@ -385,7 +385,7 @@ fu_pxi_receiver_device_write_chunk(FuDevice *device, FuChunk *chk, GError **erro
 				    self->fwstate.mtu_size);
 
 	/* the checksum of chunk */
-	checksum = fu_pxi_common_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+	checksum = fu_common_sum16(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
 	self->fwstate.checksum += checksum;
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk2 = g_ptr_array_index(chunks, i);
@@ -414,9 +414,6 @@ fu_pxi_receiver_device_fw_upgrade(FuDevice *device,
 {
 	FuPxiReceiverDevice *self = FU_PXI_RECEIVER_DEVICE(device);
 	const gchar *version;
-	const guint8 *buf;
-	gsize bufsz = 0;
-	guint16 checksum = 0x0;
 	guint8 fw_version[5] = {0x0};
 	guint8 res[FU_PXI_RECEIVER_DEVICE_OTA_BUF_SZ] = {0x0};
 	guint8 result = 0x0;
@@ -434,19 +431,16 @@ fu_pxi_receiver_device_fw_upgrade(FuDevice *device,
 	if (fw == NULL)
 		return FALSE;
 
-	buf = g_bytes_get_data(fw, &bufsz);
-	checksum = fu_pxi_common_sum16(buf, bufsz);
-
 	/* ota fw upgrade command */
 	fu_byte_array_append_uint8(ota_cmd, 0x0c); /* ota fw upgrade command length */
 	fu_byte_array_append_uint8(
 	    ota_cmd,
 	    FU_PXI_DEVICE_CMD_FW_UPGRADE); /* ota fw upgrade command opccode */
 	fu_byte_array_append_uint32(ota_cmd,
-				    bufsz,
+				    g_bytes_get_size(fw),
 				    G_LITTLE_ENDIAN); /* ota fw upgrade command fw size */
 	fu_byte_array_append_uint16(ota_cmd,
-				    checksum,
+				    fu_common_sum16_bytes(fw),
 				    G_LITTLE_ENDIAN); /* ota fw upgrade command checksum */
 
 	version = fu_firmware_get_version(firmware);

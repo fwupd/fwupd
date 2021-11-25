@@ -130,15 +130,6 @@ fu_plugin_uefi_capsule_get_splash_data(guint width, guint height, GError **error
 	return NULL;
 }
 
-static guint8
-fu_plugin_uefi_capsule_calc_checksum(const guint8 *buf, gsize sz)
-{
-	guint8 csum = 0;
-	for (gsize i = 0; i < sz; i++)
-		csum += buf[i];
-	return csum;
-}
-
 static gboolean
 fu_plugin_uefi_capsule_write_splash_data(FuPlugin *plugin,
 					 FuDevice *device,
@@ -209,11 +200,9 @@ fu_plugin_uefi_capsule_write_splash_data(FuPlugin *plugin,
 	};
 
 	/* header, payload and image has to add to zero */
-	csum +=
-	    fu_plugin_uefi_capsule_calc_checksum((guint8 *)&capsule_header, sizeof(capsule_header));
-	csum += fu_plugin_uefi_capsule_calc_checksum((guint8 *)&header, sizeof(header));
-	csum += fu_plugin_uefi_capsule_calc_checksum(g_bytes_get_data(blob, NULL),
-						     g_bytes_get_size(blob));
+	csum += fu_common_sum8((guint8 *)&capsule_header, sizeof(capsule_header));
+	csum += fu_common_sum8((guint8 *)&header, sizeof(header));
+	csum += fu_common_sum8_bytes(blob);
 	header.checksum = 0x100 - csum;
 
 	/* write capsule file */

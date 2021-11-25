@@ -583,7 +583,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 		}
 
 		/* calculate expected checksum and save to device RAM */
-		csum_local[i] = fu_wac_calculate_checksum32le_bytes(blob_block);
+		csum_local[i] = GUINT32_TO_LE(fu_common_sum32w_bytes(blob_block, G_LITTLE_ENDIAN));
 		if (g_getenv("FWUPD_WACOM_USB_VERBOSE") != NULL)
 			g_debug("block checksum %02u: 0x%08x", i, csum_local[i]);
 		if (!fu_wac_device_set_checksum_of_block(self, i, csum_local[i], error))
