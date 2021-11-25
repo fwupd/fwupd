@@ -12,27 +12,6 @@
 
 #include "fu-wac-common.h"
 
-guint32
-fu_wac_calculate_checksum32le(const guint8 *data, gsize len)
-{
-	guint32 csum = 0x0;
-	g_return_val_if_fail(len % 4 == 0, G_MAXUINT32);
-	for (guint i = 0; i < len; i += 4) {
-		guint32 tmp;
-		memcpy(&tmp, &data[i], sizeof(guint32));
-		csum += GUINT32_FROM_LE(tmp);
-	}
-	return GUINT32_TO_LE(csum);
-}
-
-guint32
-fu_wac_calculate_checksum32le_bytes(GBytes *blob)
-{
-	gsize len = 0;
-	const guint8 *data = g_bytes_get_data(blob, &len);
-	return fu_wac_calculate_checksum32le(data, len);
-}
-
 const gchar *
 fu_wac_report_id_to_string(guint8 report_id)
 {

@@ -103,10 +103,6 @@ struct ota_fw_state {
 	guint8 spec_check_result;
 };
 
-guint8
-fu_pxi_common_sum8(const guint8 *buf, gsize bufsz);
-guint16
-fu_pxi_common_sum16(const guint8 *buf, gsize bufsz);
 gboolean
 fu_pxi_composite_receiver_cmd(guint8 opcode,
 			      guint8 sn,

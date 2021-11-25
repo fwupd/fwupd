@@ -302,7 +302,7 @@ fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
 
 	for (guint id = 0; id < chunks->len; id++) {
 		FuChunk *chunk = g_ptr_array_index(chunks, id);
-		guint16 chunk_checksum = 0;
+		guint16 chunk_checksum;
 		guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0xA3};
 
 		/* block ID */
@@ -324,11 +324,9 @@ fu_steelseries_gamepad_write_firmware_chunks(FuDevice *device,
 				    error))
 			return FALSE;
 
-		for (guint i = 3; i < STEELSERIES_BUFFER_TRANSFER_SIZE + 3; i++)
-			chunk_checksum += data[i];
-
 		/* block checksum */
 		/* probably not necessary */
+		chunk_checksum = fu_common_sum16(data + 3, STEELSERIES_BUFFER_TRANSFER_SIZE);
 		if (!fu_common_write_uint16_safe(data,
 						 STEELSERIES_BUFFER_CONTROL_SIZE,
 						 0x03 + STEELSERIES_BUFFER_TRANSFER_SIZE,
