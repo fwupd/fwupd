@@ -73,17 +73,12 @@ fu_system76_launch_device_command(FuDevice *device, guint8 *data, gsize len, GEr
 }
 
 static gboolean
-fu_system76_launch_device_setup(FuDevice *device, GError **error)
+fu_system76_launch_device_version_cb(FuDevice *device, gpointer user_data, GError **error)
 {
-	guint8 data[32] = {0};
+	guint8 data[32] = {SYSTEM76_LAUNCH_CMD_VERSION, 0};
 	g_autofree gchar *version = NULL;
 
-	/* FuUsbDevice->setup */
-	if (!FU_DEVICE_CLASS(fu_system76_launch_device_parent_class)->setup(device, error))
-		return FALSE;
-
 	/* execute version command */
-	data[0] = SYSTEM76_LAUNCH_CMD_VERSION;
 	if (!fu_system76_launch_device_command(device, data, sizeof(data), error)) {
 		g_prefix_error(error, "failed to execute version command: ");
 		return FALSE;
@@ -93,6 +88,22 @@ fu_system76_launch_device_setup(FuDevice *device, GError **error)
 	fu_device_set_version(device, version);
 
 	return TRUE;
+}
+
+static gboolean
+fu_system76_launch_device_setup(FuDevice *device, GError **error)
+{
+	/* FuUsbDevice->setup */
+	if (!FU_DEVICE_CLASS(fu_system76_launch_device_parent_class)->setup(device, error))
+		return FALSE;
+
+	/* set version */
+	return fu_device_retry_full(device,
+				    fu_system76_launch_device_version_cb,
+				    5,
+				    500,
+				    NULL,
+				    error);
 }
 
 static gboolean
@@ -155,6 +166,9 @@ fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError 
 				    fu_device_get_update_message(device));
 		return FALSE;
 	}
+
+	/* success */
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
@@ -201,11 +215,10 @@ static void
 fu_system76_launch_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* detach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 94);	/* write */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 2); /* attach */
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 2);	/* reload */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 30); /* detach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 40);	 /* write */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_RESTART, 5);	 /* attach */
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 25);	 /* reload */
 }
 
 static void
