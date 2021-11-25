@@ -733,3 +733,11 @@ LIBFWUPD_1.7.2 {
     fwupd_release_set_id;
   local: *;
 } LIBFWUPD_1.7.1;
+
+LIBFWUPD_1.7.3 {
+  global:
+    fwupd_release_add_tag;
+    fwupd_release_get_tags;
+    fwupd_release_has_tag;
+  local: *;
+} LIBFWUPD_1.7.2;

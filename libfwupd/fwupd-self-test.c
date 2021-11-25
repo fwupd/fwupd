@@ -424,6 +424,8 @@ fwupd_device_func(void)
 	fwupd_release_set_size(rel, 1024);
 	fwupd_release_add_location(rel, "http://foo.com");
 	fwupd_release_add_location(rel, "ftp://foo.com");
+	fwupd_release_add_tag(rel, "vendor-2021q1");
+	fwupd_release_add_tag(rel, "vendor-2021q2");
 	fwupd_release_set_version(rel, "1.2.3");
 	fwupd_device_add_release(dev, rel);
 	str = fwupd_device_to_string(dev);
@@ -456,6 +458,8 @@ fwupd_device_func(void)
 				    "  Version:              1.2.3\n"
 				    "  Filename:             firmware.bin\n"
 				    "  Checksum:             SHA1(deadbeef)\n"
+				    "  Tags:                 vendor-2021q1\n"
+				    "  Tags:                 vendor-2021q2\n"
 				    "  Size:                 1.0 kB\n"
 				    "  Uri:                  http://foo.com\n"
 				    "  Uri:                  ftp://foo.com\n"
@@ -504,6 +508,10 @@ fwupd_device_func(void)
 				    "      \"Filename\" : \"firmware.bin\",\n"
 				    "      \"Checksum\" : [\n"
 				    "        \"deadbeef\"\n"
+				    "      ],\n"
+				    "      \"Tags\" : [\n"
+				    "        \"vendor-2021q1\",\n"
+				    "        \"vendor-2021q2\"\n"
 				    "      ],\n"
 				    "      \"Size\" : 1024,\n"
 				    "      \"Locations\" : [\n"

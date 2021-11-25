@@ -62,6 +62,12 @@ void
 fwupd_release_add_checksum(FwupdRelease *self, const gchar *checksum);
 gboolean
 fwupd_release_has_checksum(FwupdRelease *self, const gchar *checksum);
+GPtrArray *
+fwupd_release_get_tags(FwupdRelease *self);
+void
+fwupd_release_add_tag(FwupdRelease *self, const gchar *tag);
+gboolean
+fwupd_release_has_tag(FwupdRelease *self, const gchar *tag);
 
 GHashTable *
 fwupd_release_get_metadata(FwupdRelease *self);
