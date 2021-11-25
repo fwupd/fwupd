@@ -4239,6 +4239,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) provides = NULL;
+	g_autoptr(GPtrArray) tags = NULL;
 	g_autoptr(XbNode) description = NULL;
 	g_autoptr(XbNode) release = NULL;
 #if LIBXMLB_CHECK_VERSION(0, 2, 0)
@@ -4284,6 +4285,15 @@ fu_engine_get_result_from_component(FuEngine *self,
 				    FWUPD_ERROR_INTERNAL,
 				    "component has no GUIDs");
 		return NULL;
+	}
+
+	/* add tags */
+	tags = xb_node_query(component, "tags/tag[@namespace=$'lvfs']", 0, NULL);
+	if (tags != NULL) {
+		for (guint i = 0; i < tags->len; i++) {
+			XbNode *tag = g_ptr_array_index(tags, i);
+			fwupd_release_add_tag(rel, xb_node_get_text(tag));
+		}
 	}
 
 	/* check we can install it */

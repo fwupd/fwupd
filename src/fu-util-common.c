@@ -1643,6 +1643,7 @@ gchar *
 fu_util_release_to_string(FwupdRelease *rel, guint idt)
 {
 	GPtrArray *issues = fwupd_release_get_issues(rel);
+	GPtrArray *tags = fwupd_release_get_tags(rel);
 	GString *str = g_string_new(NULL);
 	guint64 flags = fwupd_release_get_flags(rel);
 	g_autoptr(GString) flags_str = g_string_new(NULL);
@@ -1783,6 +1784,19 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 			    issue);
 		} else {
 			fu_common_string_append_kv(str, idt + 1, "", issue);
+		}
+	}
+	for (guint i = 0; i < tags->len; i++) {
+		const gchar *tag = g_ptr_array_index(tags, i);
+		if (i == 0) {
+			fu_common_string_append_kv(
+			    str,
+			    idt + 1,
+			    /* TRANSLATORS: release tag set for release, e.g. lenovo-2021q3 */
+			    ngettext("Tag", "Tags", tags->len),
+			    tag);
+		} else {
+			fu_common_string_append_kv(str, idt + 1, "", tag);
 		}
 	}
 

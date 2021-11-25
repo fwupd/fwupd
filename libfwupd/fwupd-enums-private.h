@@ -35,6 +35,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_CHECKSUM "Checksum"
 /**
+ * FWUPD_RESULT_KEY_TAGS:
+ *
+ * Result key to represent release tags
+ *
+ * The D-Bus type signature string is 'as' i.e. an array of strings.
+ **/
+#define FWUPD_RESULT_KEY_TAGS "Tags"
+/**
  * FWUPD_RESULT_KEY_CREATED:
  *
  * Result key to represent Created
