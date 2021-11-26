@@ -62,6 +62,8 @@ fu_firmware_flag_to_string(FuFirmwareFlags flag)
 		return "has-checksum";
 	if (flag == FU_FIRMWARE_FLAG_HAS_VID_PID)
 		return "has-vid-pid";
+	if (flag == FU_FIRMWARE_FLAG_DONE_PARSE)
+		return "done-parse";
 	return NULL;
 }
 
@@ -86,6 +88,8 @@ fu_firmware_flag_from_string(const gchar *flag)
 		return FU_FIRMWARE_FLAG_HAS_CHECKSUM;
 	if (g_strcmp0(flag, "has-vid-pid") == 0)
 		return FU_FIRMWARE_FLAG_HAS_VID_PID;
+	if (g_strcmp0(flag, "done-parse") == 0)
+		return FU_FIRMWARE_FLAG_DONE_PARSE;
 	return FU_FIRMWARE_FLAG_NONE;
 }
 
@@ -1469,15 +1473,17 @@ fu_firmware_export(FuFirmware *self, FuFirmwareExportFlags flags, XbBuilderNode 
 	if (priv->flags != FU_FIRMWARE_FLAG_NONE) {
 		g_autoptr(GString) tmp = g_string_new("");
 		for (guint i = 0; i < 64; i++) {
-			if ((priv->flags & ((guint64)1 << i)) == 0)
+			guint64 flag = (guint64)1 << i;
+			if (flag == FU_FIRMWARE_FLAG_DONE_PARSE)
 				continue;
-			g_string_append_printf(tmp,
-					       "%s|",
-					       fu_firmware_flag_to_string((guint64)1 << i));
+			if ((priv->flags & flag) == 0)
+				continue;
+			g_string_append_printf(tmp, "%s|", fu_firmware_flag_to_string(flag));
 		}
-		if (tmp->len > 0)
+		if (tmp->len > 0) {
 			g_string_truncate(tmp, tmp->len - 1);
-		fu_xmlb_builder_insert_kv(bn, "flags", tmp->str);
+			fu_xmlb_builder_insert_kv(bn, "flags", tmp->str);
+		}
 	}
 	fu_xmlb_builder_insert_kv(bn, "id", priv->id);
 	fu_xmlb_builder_insert_kx(bn, "idx", priv->idx);
