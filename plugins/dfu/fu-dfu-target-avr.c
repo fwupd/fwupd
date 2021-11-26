@@ -127,6 +127,7 @@ fu_dfu_target_avr_attach(FuDfuTarget *target, FuProgress *progress, GError **err
 					  &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 			g_debug("ignoring as device rebooting: %s", error_local->message);
+			fu_progress_finished(progress);
 			return TRUE;
 		}
 		g_propagate_prefixed_error(error,
