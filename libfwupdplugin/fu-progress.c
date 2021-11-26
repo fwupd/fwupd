@@ -535,7 +535,6 @@ fu_progress_finished(FuProgress *self)
 	/* all done */
 	priv->step_now = priv->step_max;
 	fu_progress_set_percentage(self, 100);
-	fu_progress_set_status(self, FWUPD_STATUS_UNKNOWN);
 }
 
 static gdouble
