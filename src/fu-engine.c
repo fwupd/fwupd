@@ -74,6 +74,7 @@
 #include "fu-bluez-backend.h"
 #endif
 
+#include "fu-archive-firmware.h"
 #include "fu-dfu-firmware.h"
 #include "fu-dfuse-firmware.h"
 #include "fu-fmap-firmware.h"
@@ -6859,6 +6860,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	fu_context_add_firmware_gtype(self->ctx, "fmap", FU_TYPE_FMAP_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "ihex", FU_TYPE_IHEX_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "srec", FU_TYPE_SREC_FIRMWARE);
+	fu_context_add_firmware_gtype(self->ctx, "archive", FU_TYPE_ARCHIVE_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "smbios", FU_TYPE_SMBIOS);
 	fu_context_add_firmware_gtype(self->ctx, "efi-firmware-file", FU_TYPE_EFI_FIRMWARE_FILE);
 	fu_context_add_firmware_gtype(self->ctx,

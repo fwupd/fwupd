@@ -375,7 +375,7 @@ fu_fastboot_device_setup(FuDevice *device, GError **error)
 
 static gboolean
 fu_fastboot_device_write_qfil_part(FuDevice *device,
-				   FuArchive *archive,
+				   FuFirmware *firmware,
 				   XbNode *part,
 				   FuProgress *progress,
 				   GError **error)
@@ -390,7 +390,7 @@ fu_fastboot_device_write_qfil_part(FuDevice *device,
 		return TRUE;
 
 	/* find filename */
-	data = fu_archive_lookup_by_fn(archive, fn, error);
+	data = fu_firmware_get_image_by_id_bytes(firmware, fn, error);
 	if (data == NULL)
 		return FALSE;
 
@@ -409,7 +409,7 @@ fu_fastboot_device_write_qfil_part(FuDevice *device,
 
 static gboolean
 fu_fastboot_device_write_motorola_part(FuDevice *device,
-				       FuArchive *archive,
+				       FuFirmware *firmware,
 				       XbNode *part,
 				       FuProgress *progress,
 				       GError **error)
@@ -503,7 +503,7 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 		}
 
 		/* find filename */
-		data = fu_archive_lookup_by_fn(archive, filename, error);
+		data = fu_firmware_get_image_by_id_bytes(firmware, filename, error);
 		if (data == NULL)
 			return FALSE;
 
@@ -555,7 +555,7 @@ fu_fastboot_device_write_motorola_part(FuDevice *device,
 
 static gboolean
 fu_fastboot_device_write_motorola(FuDevice *device,
-				  FuArchive *archive,
+				  FuFirmware *firmware,
 				  FuProgress *progress,
 				  GError **error)
 {
@@ -566,7 +566,7 @@ fu_fastboot_device_write_motorola(FuDevice *device,
 	g_autoptr(XbSilo) silo = NULL;
 
 	/* load the manifest of operations */
-	data = fu_archive_lookup_by_fn(archive, "flashfile.xml", error);
+	data = fu_firmware_get_image_by_id_bytes(firmware, "flashfile.xml", error);
 	if (data == NULL)
 		return FALSE;
 	if (!xb_builder_source_load_bytes(source, data, XB_BUILDER_SOURCE_FLAG_NONE, error))
@@ -585,7 +585,7 @@ fu_fastboot_device_write_motorola(FuDevice *device,
 	for (guint i = 0; i < parts->len; i++) {
 		XbNode *part = g_ptr_array_index(parts, i);
 		if (!fu_fastboot_device_write_motorola_part(device,
-							    archive,
+							    firmware,
 							    part,
 							    fu_progress_get_child(progress),
 							    error))
@@ -599,7 +599,7 @@ fu_fastboot_device_write_motorola(FuDevice *device,
 
 static gboolean
 fu_fastboot_device_write_qfil(FuDevice *device,
-			      FuArchive *archive,
+			      FuFirmware *firmware,
 			      FuProgress *progress,
 			      GError **error)
 {
@@ -610,7 +610,7 @@ fu_fastboot_device_write_qfil(FuDevice *device,
 	g_autoptr(XbSilo) silo = NULL;
 
 	/* load the manifest of operations */
-	data = fu_archive_lookup_by_fn(archive, "partition_nand.xml", error);
+	data = fu_firmware_get_image_by_id_bytes(firmware, "partition_nand.xml", error);
 	if (data == NULL)
 		return FALSE;
 	if (!xb_builder_source_load_bytes(source, data, XB_BUILDER_SOURCE_FLAG_NONE, error))
@@ -629,7 +629,7 @@ fu_fastboot_device_write_qfil(FuDevice *device,
 	for (guint i = 0; i < parts->len; i++) {
 		XbNode *part = g_ptr_array_index(parts, i);
 		if (!fu_fastboot_device_write_qfil_part(device,
-							archive,
+							firmware,
 							part,
 							fu_progress_get_child(progress),
 							error))
@@ -648,25 +648,16 @@ fu_fastboot_device_write_firmware(FuDevice *device,
 				  FwupdInstallFlags flags,
 				  GError **error)
 {
-	g_autoptr(FuArchive) archive = NULL;
+	g_autoptr(FuFirmware) manifest = NULL;
 	g_autoptr(GBytes) fw = NULL;
 
-	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
-	/* decompress entire archive ahead of time */
-	archive = fu_archive_new(fw, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
-	if (archive == NULL)
-		return FALSE;
-
 	/* load the manifest of operations */
-	if (fu_archive_lookup_by_fn(archive, "partition_nand.xml", NULL) != NULL)
-		return fu_fastboot_device_write_qfil(device, archive, progress, error);
-	if (fu_archive_lookup_by_fn(archive, "flashfile.xml", NULL) != NULL) {
-		return fu_fastboot_device_write_motorola(device, archive, progress, error);
-	}
+	manifest = fu_firmware_get_image_by_id(firmware, "partition_nand.xml", NULL);
+	if (manifest != NULL)
+		return fu_fastboot_device_write_qfil(device, firmware, progress, error);
+	manifest = fu_firmware_get_image_by_id(firmware, "flashfile.xml", NULL);
+	if (manifest != NULL)
+		return fu_fastboot_device_write_motorola(device, firmware, progress, error);
 
 	/* not supported */
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "manifest not supported");
@@ -754,6 +745,7 @@ fu_fastboot_device_init(FuFastbootDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_ADD_COUNTERPART_GUIDS);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_remove_delay(FU_DEVICE(self), FASTBOOT_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ARCHIVE_FIRMWARE);
 }
 
 static void
