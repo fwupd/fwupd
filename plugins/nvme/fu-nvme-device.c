@@ -232,7 +232,8 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 	fawr = (buf[260] & 0x10) >> 4;
 	nfws = (buf[260] & 0x0e) >> 1;
 	s1ro = buf[260] & 0x01;
-	g_debug("fawr: %u, nr fw slots: %u, slot1 r/o: %u", fawr, nfws, s1ro);
+	if (g_getenv("FWUPD_NVME_VERBOSE") != NULL)
+		g_debug("fawr: %u, nr fw slots: %u, slot1 r/o: %u", fawr, nfws, s1ro);
 
 	/* FRU globally unique identifier (FGUID) */
 	gu = fu_nvme_device_get_guid_safe(buf, 127);
