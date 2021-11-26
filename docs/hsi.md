@@ -341,8 +341,8 @@ The version of the CSME module can be checked to detect the most common and seri
 
 **Possible results:**
 
-- `valid`: affected by one of the below CVEs
-- `not-valid`: is not affected by the most critical CVEs
+- `valid`: is not affected by the most critical CVEs
+- `not-valid`: affected by one of the below CVEs
 
 To meet HSI-1 on systems that run this test, the result must be `valid`. *[v1.5.0]*
 
