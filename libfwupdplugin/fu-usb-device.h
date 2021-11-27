@@ -10,9 +10,9 @@
 #ifdef HAVE_GUSB
 #include <gusb.h>
 #else
+#define GUsbContext GObject
+#define GUsbDevice  GObject
 #ifndef __GI_SCANNER__
-typedef GObject GUsbContext;
-typedef GObject GUsbDevice;
 #define G_USB_CHECK_VERSION(a, c, b) 0
 #endif
 #endif
