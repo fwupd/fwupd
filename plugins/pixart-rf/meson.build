@@ -1,4 +1,8 @@
-if host_machine.system() == 'linux'
+if get_option('plugin_pixart_rf') and host_machine.system() == 'linux'
+if not get_option('gudev')
+  error('gudev is required for plugin_pixart_rf')
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
 
 install_data(['pixart-rf.quirk'],
@@ -31,7 +35,6 @@ shared_module('fu_plugin_pixart_rf',
     fwupdplugin,
   ],
 )
-endif
 
 if get_option('tests')
   install_data(['tests/pixart.builder.xml'],
@@ -62,4 +65,5 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('pxi-self-test', e, env : env)
+endif
 endif

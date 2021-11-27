@@ -1,3 +1,7 @@
+if get_option('plugin_ep963x')
+if not get_option('gudev')
+  error('gudev is required for plugin_ep963x')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginEp963x"']
 
 install_data([
@@ -30,3 +34,4 @@ shared_module('fu_plugin_ep963x',
     plugin_deps,
   ],
 )
+endif
