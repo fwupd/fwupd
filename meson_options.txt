@@ -54,3 +54,4 @@ option('bash_completion', type: 'boolean', value : true, description : 'enable b
 option('fish_completion', type: 'boolean', value : true, description : 'enable fish completion')
 option('offline', type: 'boolean', value : true, description : 'enable installing firmware using a pre-boot systemd target')
 option('compat_cli', type: 'boolean', value : true, description : 'enable legacy commands: fwupdagent,dfu-tool,fwupdate')
+option('hsi', type: 'boolean', value : true, description : 'enable plugins used just for HSI')

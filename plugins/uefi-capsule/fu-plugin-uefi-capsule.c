@@ -60,6 +60,7 @@ fu_plugin_uefi_capsule_clear_results(FuPlugin *plugin, FuDevice *device, GError 
 static void
 fu_plugin_uefi_capsule_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+#ifdef HAVE_HSI
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -82,6 +83,7 @@ fu_plugin_uefi_capsule_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *att
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+#endif
 }
 
 static GBytes *

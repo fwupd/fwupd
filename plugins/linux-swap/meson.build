@@ -1,4 +1,4 @@
-if host_machine.system() == 'linux'
+if get_option('hsi') and host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSwap"']
 
 shared_module('fu_plugin_linux_swap',

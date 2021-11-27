@@ -23,6 +23,7 @@ meson .. \
     --bindir="" \
     -Dbuild=standalone \
     -Ddocs=none \
+    -Dhsi=false \
     -Dpolkit=false \
     -Dplugin_flashrom=false \
     -Dplugin_uefi_capsule=false \
