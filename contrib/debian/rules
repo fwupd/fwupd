@@ -44,7 +44,7 @@ ifneq ($(QUBES_OPTION),)
 	CONFARGS += -Dqubes=true
 endif
 
-CONFARGS += -Dplugin_dummy=true -Ddocs=gtkdoc -Dsupported_build=true
+CONFARGS += -Dplugin_dummy=true -Dplugin_powerd=false -Ddocs=gtkdoc -Dsupported_build=true
 
 %:
 	dh $@ --with gir

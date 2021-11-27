@@ -43,6 +43,8 @@ meson .. \
     -Dplugin_thunderbolt=false \
     -Dplugin_synaptics_mst=false \
     -Dplugin_synaptics_rmi=false \
+    -Dplugin_upower=false \
+    -Dplugin_powerd=false \
     -Dman=false \
     -Dmetainfo=false \
     -Dsoup_session_compat=false \
