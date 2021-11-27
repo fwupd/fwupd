@@ -6030,6 +6030,7 @@ fu_engine_get_host_machine_id(FuEngine *self)
 	return self->host_machine_id;
 }
 
+#ifdef HAVE_HSI
 static void
 fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 {
@@ -6141,10 +6142,12 @@ fu_engine_record_security_attrs(FuEngine *self, GError **error)
 	/* success */
 	return TRUE;
 }
+#endif
 
 static void
 fu_engine_ensure_security_attrs(FuEngine *self)
 {
+#ifdef HAVE_HSI
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
 	g_autoptr(GPtrArray) items = NULL;
@@ -6197,6 +6200,7 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	/* record into the database (best effort) */
 	if (!fu_engine_record_security_attrs(self, &error))
 		g_warning("failed to record HSI attributes: %s", error->message);
+#endif
 }
 
 const gchar *

@@ -1280,6 +1280,12 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 	if (g_strcmp0(method_name, "GetHostSecurityAttrs") == 0) {
 		g_autoptr(FuSecurityAttrs) attrs = NULL;
 		g_debug("Called %s()", method_name);
+#ifndef HAVE_HSI
+		g_dbus_method_invocation_return_error_literal(invocation,
+							      FWUPD_ERROR,
+							      FWUPD_ERROR_NOT_SUPPORTED,
+							      "HSI support not enabled");
+#else
 		if (priv->machine_kind != FU_MAIN_MACHINE_KIND_PHYSICAL) {
 			g_dbus_method_invocation_return_error_literal(
 			    invocation,
@@ -1291,6 +1297,7 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 		attrs = fu_engine_get_host_security_attrs(priv->engine);
 		val = fu_security_attrs_to_variant(attrs);
 		g_dbus_method_invocation_return_value(invocation, val);
+#endif
 		return;
 	}
 	if (g_strcmp0(method_name, "GetHostSecurityEvents") == 0) {
@@ -1298,6 +1305,12 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 		g_autoptr(FuSecurityAttrs) attrs = NULL;
 		g_variant_get(parameters, "(u)", &limit);
 		g_debug("Called %s(%u)", method_name, limit);
+#ifndef HAVE_HSI
+		g_dbus_method_invocation_return_error_literal(invocation,
+							      FWUPD_ERROR,
+							      FWUPD_ERROR_NOT_SUPPORTED,
+							      "HSI support not enabled");
+#else
 		attrs = fu_engine_get_host_security_events(priv->engine, limit, &error);
 		if (attrs == NULL) {
 			g_dbus_method_invocation_return_gerror(invocation, error);
@@ -1305,6 +1318,7 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 		}
 		val = fu_security_attrs_to_variant(attrs);
 		g_dbus_method_invocation_return_value(invocation, val);
+#endif
 		return;
 	}
 	if (g_strcmp0(method_name, "ClearResults") == 0) {

@@ -1,4 +1,4 @@
-if get_option('plugin_uefi_pk')
+if get_option('hsi') and get_option('plugin_uefi_pk')
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiPk"']
 
 shared_module('fu_plugin_uefi_pk',

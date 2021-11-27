@@ -1,4 +1,4 @@
-if get_option('plugin_tpm')
+if get_option('hsi') and get_option('plugin_tpm')
 if not get_option('gudev')
   error('gudev is required for tpm')
 endif
