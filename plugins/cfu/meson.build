@@ -1,3 +1,7 @@
+if get_option('plugin_cfu')
+if not get_option('gudev')
+  error('gudev is required for plugin_cfu')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginCfu"']
 
 install_data([
@@ -29,3 +33,4 @@ shared_module('fu_plugin_cfu',
     plugin_deps,
   ],
 )
+endif

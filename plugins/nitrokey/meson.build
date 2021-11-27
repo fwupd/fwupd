@@ -1,3 +1,4 @@
+if get_option('plugin_nitrokey')
 cargs = ['-DG_LOG_DOMAIN="FuPluginNitrokey"']
 
 install_data(['nitrokey.quirk'],
@@ -52,4 +53,5 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('nitrokey-self-test', e)  # added to installed-tests
+endif
 endif
