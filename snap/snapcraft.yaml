@@ -206,6 +206,7 @@ parts:
       - libglib2.0-dev
       - libgpgme11-dev
       - libjson-glib-dev
+      - liblzma-dev
       - libpango1.0-dev
       - libpci-dev
       - libpolkit-gobject-1-dev
@@ -223,6 +224,7 @@ parts:
       - libarchive13
       - libassuan0
       - liblcms2-2
+      - liblzma5
       - libefivar1
       - libefiboot1
       - libusb-1.0-0
