@@ -488,7 +488,7 @@ fu_thunderbolt_device_setup_controller(FuDevice *device, GError **error)
 	}
 
 	if (self->device_type == FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER) {
-		if(fu_thunderbolt_device_set_port_offline(FU_UDEV_DEVICE(device)))
+		if (fu_thunderbolt_device_set_port_offline(FU_UDEV_DEVICE(device)))
 			return TRUE;
 	}
 
