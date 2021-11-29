@@ -61,6 +61,28 @@ udev_mock_add_nvmem(UMockdevTestbed *bed, gboolean active, const char *parent, i
 	return path;
 }
 
+static gchar *
+udev_mock_add_usb4_port(UMockdevTestbed *bed, int id)
+{
+	gchar *path;
+	g_autofree gchar *name = NULL;
+
+	name = g_strdup_printf("usb4_port%d", id);
+	path = umockdev_testbed_add_device(bed,
+					   "thunderbolt",
+					   name,
+					   NULL,
+					   "security",
+					   "secure",
+					   NULL,
+					   "DEVTYPE",
+					   "thunderbolt_usb4_port",
+					   NULL);
+
+	g_assert_nonnull(path);
+	return path;
+}
+
 typedef struct MockDevice MockDevice;
 
 struct MockDevice {
@@ -561,6 +583,7 @@ mock_tree_attach(MockTree *root, UMockdevTestbed *bed, FuPlugin *plugin)
 {
 	root->bed = g_object_ref(bed);
 	root->sysfs_parent = udev_mock_add_domain(bed, root->device->domain_id);
+	root->sysfs_parent = udev_mock_add_usb4_port(bed, 1);
 	g_assert_nonnull(root->sysfs_parent);
 
 	g_timeout_add(root->device->delay_ms, mock_tree_attach_device, root);

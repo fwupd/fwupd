@@ -326,8 +326,6 @@ fu_thunderbolt_device_set_port_offline(FuUdevDevice *device)
 	g_autoptr(GError) error_local_offline = NULL;
 	g_autoptr(GError) error_local_rescan = NULL;
 
-	g_warning("debug fu_thunderbolt_device_set_port_offline");
-
 	if (!fu_udev_device_write_sysfs(device, "usb4_port1/offline", "1", &error_local_offline)) {
 		g_warning("Setting port offline failed: %s", error_local_offline->message);
 		return FALSE;
@@ -839,7 +837,7 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 	/* whether to wait for a device replug or not */
 	if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
 		fu_device_set_remove_delay (device, FU_PLUGIN_THUNDERBOLT_UPDATE_TIMEOUT);
-		fu_device_set_status (device, FWUPD_STATUS_DEVICE_RESTART);
+		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
 		if (self->device_type != FU_THUNDERBOLT_DEVICE_TYPE_RETIMER)
 		{
 			fu_device_add_flag (device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
