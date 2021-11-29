@@ -462,6 +462,7 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 	g_autofree gchar *summary_xpath = NULL;
 	g_autofree gchar *version_rel = NULL;
 	g_autoptr(GPtrArray) cats = NULL;
+	g_autoptr(GPtrArray) tags = NULL;
 	g_autoptr(GPtrArray) issues = NULL;
 	g_autoptr(XbNode) artifact = NULL;
 	g_autoptr(XbNode) description = NULL;
@@ -601,6 +602,13 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 		for (guint i = 0; i < cats->len; i++) {
 			XbNode *n = g_ptr_array_index(cats, i);
 			fwupd_release_add_category(rel, xb_node_get_text(n));
+		}
+	}
+	tags = xb_node_query(component, "tags/tag[@namespace=$'lvfs']", 0, NULL);
+	if (tags != NULL) {
+		for (guint i = 0; i < tags->len; i++) {
+			XbNode *tag = g_ptr_array_index(tags, i);
+			fwupd_release_add_tag(rel, xb_node_get_text(tag));
 		}
 	}
 	issues = xb_node_query(component, "issues/issue", 0, NULL);
@@ -3403,6 +3411,11 @@ fu_engine_create_silo_index(FuEngine *self, GError **error)
 	if (!xb_silo_query_build_index(self->silo,
 				       "components/component[@type='firmware']/provides/firmware",
 				       NULL,
+				       error))
+		return FALSE;
+	if (!xb_silo_query_build_index(self->silo,
+				       "components/component[@type='firmware']/tags/tag",
+				       "namespace",
 				       error))
 		return FALSE;
 
