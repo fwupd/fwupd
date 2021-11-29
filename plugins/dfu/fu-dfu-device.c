@@ -1972,4 +1972,7 @@ fu_dfu_device_init(FuDfuDevice *self)
 					FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH,
 					"no-bus-reset-attach");
 	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_GD32, "gd32");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT,
+					"allow-zero-polltimeout");
 }
