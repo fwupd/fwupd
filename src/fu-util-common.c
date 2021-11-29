@@ -1786,18 +1786,14 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 			fu_common_string_append_kv(str, idt + 1, "", issue);
 		}
 	}
-	for (guint i = 0; i < tags->len; i++) {
-		const gchar *tag = g_ptr_array_index(tags, i);
-		if (i == 0) {
-			fu_common_string_append_kv(
-			    str,
-			    idt + 1,
-			    /* TRANSLATORS: release tag set for release, e.g. lenovo-2021q3 */
-			    ngettext("Tag", "Tags", tags->len),
-			    tag);
-		} else {
-			fu_common_string_append_kv(str, idt + 1, "", tag);
-		}
+	if (tags->len > 0) {
+		g_autofree gchar *tag_strs = fu_common_strjoin_array(", ", tags);
+		fu_common_string_append_kv(
+		    str,
+		    idt + 1,
+		    /* TRANSLATORS: release tag set for release, e.g. lenovo-2021q3 */
+		    ngettext("Tag", "Tags", tags->len),
+		    tag_strs);
 	}
 
 	return g_string_free(str, FALSE);
