@@ -1,5 +1,5 @@
 # only install files that are going to be used
-if libjcat.version().version_compare ('>= 0.1.9')
+if libjcat.type_name() != 'internal' and libjcat.version().version_compare('>= 0.1.9')
   supported_gpg = libjcat.get_pkgconfig_variable('supported_gpg')
   supported_pkcs7 = libjcat.get_pkgconfig_variable('supported_pkcs7')
 else
