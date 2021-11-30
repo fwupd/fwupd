@@ -528,7 +528,7 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 		g_autoptr(GString) str = NULL;
 		xml = xb_node_export(description, XB_NODE_EXPORT_FLAG_ONLY_CHILDREN, NULL);
 		str = g_string_new(xml);
-		if (request != NULL &&
+		if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_AFFECTS_FDE) && request != NULL &&
 		    !fu_engine_request_has_feature_flag(request, FWUPD_FEATURE_FLAG_FDE_WARNING)) {
 			g_string_prepend(
 			    str,
