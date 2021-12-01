@@ -58,14 +58,14 @@ jobs:
 
   build-snap:
     docker:
-      - image: ubuntu:20.04
+      - image: snapcore/snapcraft:latest
     steps:
       - run:
           name: "Update apt"
           command: apt update
       - run:
           name: "install snapcraft"
-          command: apt install snapcraft git -y
+          command: apt install git -y
       - checkout
       - run:
           name: "Build Snap"
