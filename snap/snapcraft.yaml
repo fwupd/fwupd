@@ -9,6 +9,7 @@ description: |
 grade: stable
 confinement: classic
 base: core18
+compression: lzo
 
 architectures:
   - amd64
