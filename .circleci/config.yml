@@ -60,6 +60,12 @@ jobs:
     docker:
       - image: cibuilds/snapcraft:core20
     steps:
+      - run:
+          name: "Update apt"
+          command: apt update
+      - run:
+          name: "Install packages"
+          command: apt install ca-certificates -y
       - checkout
       - run:
           name: "Build Snap"
