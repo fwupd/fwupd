@@ -35,7 +35,8 @@ apps:
 
 parts:
   curl:
-        source: https://curl.se/download/curl-7.73.0.tar.bz2
+    plugin: autotools
+    source: https://curl.se/download/curl-7.73.0.tar.bz2
   tpm2-tss:
     plugin: autotools
     source: https://github.com/tpm2-software/tpm2-tss/releases/download/2.3.0/tpm2-tss-2.3.0.tar.gz
