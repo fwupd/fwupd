@@ -58,14 +58,8 @@ jobs:
 
   build-snap:
     docker:
-      - image: snapcore/snapcraft:latest
+      - image: cibuilds/snapcraft:stable
     steps:
-      - run:
-          name: "Update apt"
-          command: apt update
-      - run:
-          name: "install snapcraft"
-          command: apt install git -y
       - checkout
       - run:
           name: "Build Snap"
