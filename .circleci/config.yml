@@ -58,7 +58,7 @@ jobs:
 
   build-snap:
     docker:
-      - image: cibuilds/snapcraft:stable
+      - image: cibuilds/snapcraft:core20
     steps:
       - checkout
       - run:
