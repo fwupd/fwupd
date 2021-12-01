@@ -58,7 +58,7 @@ jobs:
 
   build-snap:
     docker:
-      - image: ubuntu:18.04
+      - image: ubuntu:20.04
     steps:
       - run:
           name: "Update apt"
