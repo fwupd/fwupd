@@ -58,14 +58,17 @@ jobs:
 
   build-snap:
     docker:
-      - image: cibuilds/snapcraft:core20
+      - image: ubuntu:18.04
     steps:
       - run:
           name: "Update apt"
-          command: sudo apt update
+          command: apt update
       - run:
           name: "Install packages"
-          command: sudo apt install ca-certificates -y
+          command: apt install ca-certificates -y
+      - run:
+          name: "Install Snapcraft"
+          command: snap install snapcraft
       - checkout
       - run:
           name: "Build Snap"
