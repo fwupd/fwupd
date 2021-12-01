@@ -1121,6 +1121,8 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (dev != NULL && !priv->no_safety_check && !priv->assume_yes) {
 		if (!fu_util_prompt_warning_fde(dev, error))
 			return FALSE;
+		if (!fu_util_prompt_warning_bkc(priv, dev, rel, error))
+			return FALSE;
 	}
 
 	if (!fwupd_client_install(priv->client, id, filename, priv->flags, NULL, error))
