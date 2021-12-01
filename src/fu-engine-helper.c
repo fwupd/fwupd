@@ -131,5 +131,6 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 	}
 
 	/* success, with an empty file if nothing to say */
+	g_debug("writing motd target %s", target);
 	return g_file_set_contents(target, str->str, str->len, error);
 }
