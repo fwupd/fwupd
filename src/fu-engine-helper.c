@@ -91,8 +91,7 @@ fu_engine_update_motd(FuEngine *self, GError **error)
 
 	/* If running under systemd unit, use the directory as a base */
 	if (g_getenv("RUNTIME_DIRECTORY") != NULL) {
-		target =
-		    g_build_filename(g_getenv("RUNTIME_DIRECTORY"), PACKAGE_NAME, MOTD_FILE, NULL);
+		target = g_build_filename(g_getenv("RUNTIME_DIRECTORY"), MOTD_FILE, NULL);
 		/* otherwise use the cache directory */
 	} else {
 		g_autofree gchar *directory = fu_common_get_path(FU_PATH_KIND_CACHEDIR_PKG);
