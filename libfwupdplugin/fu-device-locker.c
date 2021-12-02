@@ -87,8 +87,7 @@ fu_device_locker_close(FuDeviceLocker *self, GError **error)
 		return TRUE;
 	if (!self->close_func(self->device, &error_local)) {
 #ifdef HAVE_GUSB
-		if (G_USB_IS_DEVICE(self->device) &&
-		    g_error_matches(error_local,
+		if (g_error_matches(error_local,
 				    G_USB_DEVICE_ERROR,
 				    G_USB_DEVICE_ERROR_NO_DEVICE)) {
 			g_debug("ignoring: %s", error_local->message);
