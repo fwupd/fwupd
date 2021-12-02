@@ -67,6 +67,32 @@ fu_plugin_thunderbolt_startup(FuPlugin *plugin, GError **error)
 	return fu_plugin_thunderbolt_safe_kernel(plugin, error);
 }
 
+static gboolean
+fu_plugin_thunderbolt_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GError **error)
+{
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index(devices, i);
+		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0) &&
+		    fu_device_has_flag(dev, FWUPD_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)) {
+			return fu_thunderbolt_probe_retimer(dev, error);
+		}
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_plugin_thunderbolt_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GError **error)
+{
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *dev = g_ptr_array_index(devices, i);
+		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0) &&
+		    fu_device_has_flag(dev, FWUPD_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)) {
+			return fu_thunderbolt_device_close(dev, error);
+		}
+	}
+	return TRUE;
+}
+
 void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
@@ -75,4 +101,6 @@ fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 	vfuncs->startup = fu_plugin_thunderbolt_startup;
 	vfuncs->device_registered = fu_plugin_thunderbolt_device_registered;
 	vfuncs->device_created = fu_plugin_thunderbolt_device_created;
+	vfuncs->composite_prepare = fu_plugin_thunderbolt_composite_prepare;
+	vfuncs->composite_cleanup = fu_plugin_thunderbolt_composite_cleanup;
 }

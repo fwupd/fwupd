@@ -39,7 +39,8 @@ fu_usb_backend_device_removed_cb(GUsbContext *ctx, GUsbDevice *usb_device, FuBac
 	/* find the device we enumerated */
 	device_tmp =
 	    fu_backend_lookup_by_id(FU_BACKEND(self), g_usb_device_get_platform_id(usb_device));
-	if (device_tmp != NULL)
+	if (device_tmp != NULL &&
+	    !fu_device_has_flag(device_tmp, FWUPD_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE))
 		fu_backend_device_removed(backend, device_tmp);
 }
 
