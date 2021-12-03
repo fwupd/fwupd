@@ -1421,7 +1421,7 @@ fu_history_add_security_attribute(FuHistory *self,
 /**
  * fu_history_get_security_attrs:
  * @self: a #FuHistory
- * @limit: maximum number of attributes to return
+ * @limit: maximum number of attributes to return, or 0 for no limit
  * @error: (nullable): optional return location for an error
  *
  * Gets the security attributes in the history database.
@@ -1514,7 +1514,7 @@ fu_history_get_security_attrs(FuHistory *self, guint limit, GError **error)
 
 		/* success */
 		g_ptr_array_add(array, g_steal_pointer(&attrs));
-		if (array->len >= limit) {
+		if (limit > 0 && array->len >= limit) {
 			rc = SQLITE_DONE;
 			break;
 		}
