@@ -230,12 +230,8 @@ fu_vli_usbhub_firmware_parse (FuFirmware *firmware,
 			}
 			/* VL820 */
 		} else {
-			if (!fu_common_read_uint8_safe(buf,
-						       bufsz,
-						       adr_ofs + 0x2000 + 0x05,
-						       &tmp,
-						       error)) {
-				g_prefix_error(error, "failed to get offset version: ");
+			if (!fu_common_read_uint8_safe(buf, bufsz, 0xf000, &tmp, error)) {
+				g_prefix_error(error, "failed to get Q7/Q8 difference: ");
 				return FALSE;
 			}
 			if (tmp & (1 << 0))
