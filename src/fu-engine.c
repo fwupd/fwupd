@@ -89,6 +89,7 @@
 #endif
 
 #define MINIMUM_BATTERY_PERCENTAGE_FALLBACK 10
+#define INOTIFY_MIN_USER_INSTANCES	    64
 
 static void
 fu_engine_finalize(GObject *obj);
@@ -6756,6 +6757,29 @@ fu_engine_ensure_paths_exist(GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_engine_check_inotify(GError **error)
+{
+	const gchar *fn = "/proc/sys/fs/inotify/max_user_instances";
+	guint64 inotify_user_instances;
+	g_autofree gchar *buf = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* only for Linux */
+	if (!g_file_get_contents(fn, &buf, NULL, &error_local)) {
+		g_debug("ignoring: %s", error_local->message);
+		return TRUE;
+	}
+
+	/* just put something helpful in the logs */
+	inotify_user_instances = g_ascii_strtoull(buf, NULL, 10);
+	if (inotify_user_instances < INOTIFY_MIN_USER_INSTANCES)
+		g_warning("%s value is too low, expected >= %i!", fn, INOTIFY_MIN_USER_INSTANCES);
+
+	/* success */
+	return TRUE;
+}
+
 /**
  * fu_engine_load:
  * @self: a #FuEngine
@@ -6802,6 +6826,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 			    VERSION);
 		return FALSE;
 	}
+
+	/* ensure there are going to be enough inotify user instances */
+	if (!fu_engine_check_inotify(error))
+		return FALSE;
 
 /* TODO: Read registry key [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography] "MachineGuid" */
 #ifndef _WIN32
