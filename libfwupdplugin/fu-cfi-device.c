@@ -219,7 +219,7 @@ fu_cfi_device_get_cmd(FuCfiDevice *self, FuCfiDeviceCmd cmd, guint8 *value, GErr
 }
 
 static gboolean
-fu_vli_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
+fu_cfi_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
 {
 	FuCfiDevice *self = FU_CFI_DEVICE(device);
 	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
@@ -284,7 +284,7 @@ fu_cfi_device_class_init(FuCfiDeviceClass *klass)
 	object_class->set_property = fu_cfi_device_set_property;
 	klass_device->probe = fu_cfi_device_probe;
 	klass_device->to_string = fu_cfi_device_to_string;
-	klass_device->set_quirk_kv = fu_vli_device_set_quirk_kv;
+	klass_device->set_quirk_kv = fu_cfi_device_set_quirk_kv;
 
 	pspec = g_param_spec_string("flash-id",
 				    NULL,
