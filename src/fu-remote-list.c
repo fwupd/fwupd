@@ -13,6 +13,11 @@
 #include <glib/gi18n.h>
 #include <xmlb.h>
 
+#ifdef HAVE_INOTIFY_H
+#include <errno.h>
+#include <sys/inotify.h>
+#endif
+
 #include "fwupd-common.h"
 #include "fwupd-error.h"
 #include "fwupd-remote-private.h"
@@ -79,6 +84,33 @@ _fwupd_remote_get_mtime(FwupdRemote *remote)
 	return g_file_info_get_attribute_uint64(info, G_FILE_ATTRIBUTE_TIME_MODIFIED);
 }
 
+/* GLib only returns the very unhelpful "Unable to find default local file monitor type"
+ * when /proc/sys/fs/inotify/max_user_instances is set too low; detect this and set a proper
+ * error prefix to aid debugging when the daemon fails to start */
+static void
+fu_remote_list_fixup_inotify_error(GError **error)
+{
+#ifdef HAVE_INOTIFY_H
+	int fd;
+	int wd;
+	const gchar *fn = "/proc/sys/fs/inotify/max_user_instances";
+
+	fd = inotify_init();
+	if (fd == -1) {
+		g_prefix_error(error, "Could not initialize inotify, check %s: ", fn);
+		return;
+	}
+	wd = inotify_add_watch(fd, "/", 0);
+	if (wd < 0) {
+		if (errno == ENOSPC)
+			g_prefix_error(error, "No space for inotify, check %s: ", fn);
+	} else {
+		inotify_rm_watch(fd, wd);
+	}
+	close(fd);
+#endif
+}
+
 static gboolean
 fu_remote_list_add_inotify(FuRemoteList *self, const gchar *filename, GError **error)
 {
@@ -87,8 +119,10 @@ fu_remote_list_add_inotify(FuRemoteList *self, const gchar *filename, GError **e
 
 	/* set up a notify watch */
 	monitor = g_file_monitor(file, G_FILE_MONITOR_NONE, NULL, error);
-	if (monitor == NULL)
+	if (monitor == NULL) {
+		fu_remote_list_fixup_inotify_error(error);
 		return FALSE;
+	}
 	g_signal_connect(monitor, "changed", G_CALLBACK(fu_remote_list_monitor_changed_cb), self);
 	g_ptr_array_add(self->monitors, monitor);
 	return TRUE;

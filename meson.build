@@ -307,6 +307,9 @@ host_cpu = host_machine.cpu_family()
 if cc.has_header('sys/utsname.h')
   conf.set('HAVE_UTSNAME_H', '1')
 endif
+if cc.has_header('sys/inotify.h')
+  conf.set('HAVE_INOTIFY_H', '1')
+endif
 if cc.has_header('sys/ioctl.h')
   conf.set('HAVE_IOCTL_H', '1')
 endif
