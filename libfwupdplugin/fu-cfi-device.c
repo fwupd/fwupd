@@ -162,6 +162,18 @@ fu_cfi_device_finalize(GObject *object)
 	G_OBJECT_CLASS(fu_cfi_device_parent_class)->finalize(object);
 }
 
+/* returns at most 4 chars from the ID, or %NULL if no different from existing ID */
+static gchar *
+fu_cfi_device_get_flash_id_jedec(FuCfiDevice *self)
+{
+	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
+	if (priv->flash_id == NULL)
+		return NULL;
+	if (strlen(priv->flash_id) <= 4)
+		return NULL;
+	return g_strndup(priv->flash_id, 4);
+}
+
 static gboolean
 fu_cfi_device_probe(FuDevice *device, GError **error)
 {
@@ -170,9 +182,23 @@ fu_cfi_device_probe(FuDevice *device, GError **error)
 
 	/* load the parameters from quirks */
 	if (priv->flash_id != NULL) {
-		g_autofree gchar *instance_id = g_strdup_printf("CFI\\FLASHID_%s", priv->flash_id);
+		g_autofree gchar *flash_id_jedec = NULL;
+		g_autofree gchar *instance_id0 = NULL;
+		g_autofree gchar *instance_id1 = NULL;
+
+		/* least specific so adding first */
+		flash_id_jedec = fu_cfi_device_get_flash_id_jedec(self);
+		if (flash_id_jedec != NULL) {
+			instance_id1 = g_strdup_printf("CFI\\FLASHID_%s", flash_id_jedec);
+			fu_device_add_instance_id_full(FU_DEVICE(self),
+						       instance_id1,
+						       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+		}
+
+		/* this is most specific and can override keys of instance_id1 */
+		instance_id0 = g_strdup_printf("CFI\\FLASHID_%s", priv->flash_id);
 		fu_device_add_instance_id_full(FU_DEVICE(self),
-					       instance_id,
+					       instance_id0,
 					       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
 
