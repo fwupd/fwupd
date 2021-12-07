@@ -57,7 +57,7 @@ fu_cfi_device_cmd_to_string(FuCfiDeviceCmd cmd)
  *
  * Gets the chip maximum size.
  *
- * This is typically set with the `FirmwareSizeMax` quirk key.
+ * This is typically get with the `FirmwareSizeMax` quirk key.
  *
  * Returns: size in bytes, or 0 if unknown
  *
