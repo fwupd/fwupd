@@ -265,6 +265,26 @@ fu_cfi_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		priv->cmds[FU_CFI_DEVICE_CMD_SECTOR_ERASE] = fu_common_strtoull(value);
 		return TRUE;
 	}
+	if (g_strcmp0(key, "CfiDeviceCmdWriteStatus") == 0) {
+		priv->cmds[FU_CFI_DEVICE_CMD_WRITE_STATUS] = fu_common_strtoull(value);
+		return TRUE;
+	}
+	if (g_strcmp0(key, "CfiDeviceCmdPageProg") == 0) {
+		priv->cmds[FU_CFI_DEVICE_CMD_PAGE_PROG] = fu_common_strtoull(value);
+		return TRUE;
+	}
+	if (g_strcmp0(key, "CfiDeviceCmdReadData") == 0) {
+		priv->cmds[FU_CFI_DEVICE_CMD_READ_DATA] = fu_common_strtoull(value);
+		return TRUE;
+	}
+	if (g_strcmp0(key, "CfiDeviceCmdReadStatus") == 0) {
+		priv->cmds[FU_CFI_DEVICE_CMD_READ_STATUS] = fu_common_strtoull(value);
+		return TRUE;
+	}
+	if (g_strcmp0(key, "CfiDeviceCmdWriteEn") == 0) {
+		priv->cmds[FU_CFI_DEVICE_CMD_WRITE_EN] = fu_common_strtoull(value);
+		return TRUE;
+	}
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
