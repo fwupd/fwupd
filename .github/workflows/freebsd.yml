@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-freebsd:
-    runs-on: macos-latest
+    runs-on: macos-10.15
     timeout-minutes: 30
     name: build-freebsd-package
     steps:
