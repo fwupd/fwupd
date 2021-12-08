@@ -315,16 +315,24 @@ fu_wacom_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE(device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE(self);
+	guint64 tmp = 0;
+
 	if (g_strcmp0(key, "WacomI2cFlashBlockSize") == 0) {
-		priv->flash_block_size = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXSIZE, error))
+			return FALSE;
+		priv->flash_block_size = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "WacomI2cFlashBaseAddr") == 0) {
-		priv->flash_base_addr = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		priv->flash_base_addr = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "WacomI2cFlashSize") == 0) {
-		priv->flash_size = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		priv->flash_size = tmp;
 		return TRUE;
 	}
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");

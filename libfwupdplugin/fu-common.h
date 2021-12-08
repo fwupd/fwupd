@@ -211,6 +211,8 @@ GError *
 fu_common_error_array_get_best(GPtrArray *errors);
 guint64
 fu_common_strtoull(const gchar *str);
+gboolean
+fu_common_strtoull_full(const gchar *str, guint64 *value, guint64 min, guint64 max, GError **error);
 gchar *
 fu_common_find_program_in_path(const gchar *basename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gchar *

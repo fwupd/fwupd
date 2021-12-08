@@ -1500,6 +1500,7 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	guint64 tmp;
 
 	if (g_strcmp0(key, FU_QUIRKS_PLUGIN) == 0) {
 		fu_device_add_possible_plugin(self, value);
@@ -1568,31 +1569,45 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE_MIN) == 0) {
-		fu_device_set_firmware_size_min(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+			return FALSE;
+		fu_device_set_firmware_size_min(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE_MAX) == 0) {
-		fu_device_set_firmware_size_max(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+			return FALSE;
+		fu_device_set_firmware_size_max(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE) == 0) {
-		fu_device_set_firmware_size(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+			return FALSE;
+		fu_device_set_firmware_size(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_INSTALL_DURATION) == 0) {
-		fu_device_set_install_duration(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, 60 * 60 * 24, error))
+			return FALSE;
+		fu_device_set_install_duration(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_PRIORITY) == 0) {
-		fu_device_set_priority(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		fu_device_set_priority(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_BATTERY_THRESHOLD) == 0) {
-		fu_device_set_battery_threshold(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, 100, error))
+			return FALSE;
+		fu_device_set_battery_threshold(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_REMOVE_DELAY) == 0) {
-		fu_device_set_remove_delay(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+			return FALSE;
+		fu_device_set_remove_delay(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_VERSION_FORMAT) == 0) {

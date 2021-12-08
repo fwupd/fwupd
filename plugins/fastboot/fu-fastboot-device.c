@@ -693,16 +693,11 @@ fu_fastboot_device_set_quirk_kv(FuDevice *device,
 
 	/* load from quirks */
 	if (g_strcmp0(key, "FastbootBlockSize") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp >= 0x40 && tmp < 0x100000) {
-			self->blocksz = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid block size");
-		return FALSE;
+		guint64 tmp = 0;
+		if (!fu_common_strtoull_full(value, &tmp, 0x40, 0x100000, error))
+			return FALSE;
+		self->blocksz = tmp;
+		return TRUE;
 	}
 
 	/* failed */

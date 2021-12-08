@@ -158,47 +158,30 @@ fu_rts54hid_module_set_quirk_kv(FuDevice *device,
 				GError **error)
 {
 	FuRts54HidModule *self = FU_RTS54HID_MODULE(device);
+	guint64 tmp = 0;
 
 	/* load target address from quirks */
 	if (g_strcmp0(key, "Rts54TargetAddr") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp <= 0xff) {
-			self->target_addr = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid target address");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		self->target_addr = tmp;
+		return TRUE;
 	}
 
 	/* load i2c speed from quirks */
 	if (g_strcmp0(key, "Rts54I2cSpeed") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < FU_RTS54HID_I2C_SPEED_LAST) {
-			self->i2c_speed = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid I²C speed");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, FU_RTS54HID_I2C_SPEED_LAST - 1, error))
+			return FALSE;
+		self->i2c_speed = tmp;
+		return TRUE;
 	}
 
 	/* load register address length from quirks */
 	if (g_strcmp0(key, "Rts54RegisterAddrLen") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp <= 0xff) {
-			self->register_addr_len = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid register address length");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		self->register_addr_len = tmp;
+		return TRUE;
 	}
 
 	/* failed */
