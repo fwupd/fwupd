@@ -9,12 +9,6 @@
 #include "fu-usi-dock-common.h"
 
 const gchar *
-fu_usi_dock_idx_to_string(guint8 val)
-{
-	return NULL;
-}
-
-const gchar *
 fu_usi_dock_spi_state_to_string(guint8 val)
 {
 	if (val == SPI_STATE_NONE)
