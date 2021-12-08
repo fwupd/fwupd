@@ -5,7 +5,7 @@ CfiDeviceCmdSectorErase = 0x20
 
 [CFI\FLASHID_1F65]
 Name = AT25F512A/B
-# CfiDeviceCmdReadId = 0x15
+CfiDeviceCmdReadId = 0x15
 CfiDeviceCmdChipErase = 0x62
 CfiDeviceCmdSectorErase = 0x00
 FirmwareSizeMax = 0x10000
@@ -37,19 +37,19 @@ CfiDeviceCmdSectorErase = 0x20
 
 [CFI\FLASHID_00BF]
 Name = PCT/SST25VFxxx/xxxA
-# CfiDeviceCmdReadId = 0x90
+CfiDeviceCmdReadId = 0x90
 CfiDeviceCmdChipErase = 0x60
 CfiDeviceCmdSectorErase = 0x20
 
 [CFI\FLASHID_009D]
 Name = PM25LDxxx
-# CfiDeviceCmdReadId = 0x90
+CfiDeviceCmdReadId = 0x90
 CfiDeviceCmdChipErase = 0xC7
 CfiDeviceCmdSectorErase = 0xD7
 
 [CFI\FLASHID_009D]
 Name = PM25LVxxx
-# CfiDeviceCmdReadId = 0xAB
+CfiDeviceCmdReadId = 0xAB
 CfiDeviceCmdChipErase = 0xC7
 CfiDeviceCmdSectorErase = 0xD7
 
