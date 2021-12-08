@@ -418,53 +418,39 @@ fu_superio_device_set_quirk_kv(FuDevice *device,
 {
 	FuSuperioDevice *self = FU_SUPERIO_DEVICE(device);
 	FuSuperioDevicePrivate *priv = GET_PRIVATE(self);
+	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "SuperioAutoloadAction") == 0)
 		return TRUE;
 	if (g_strcmp0(key, "SuperioId") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < G_MAXUINT16) {
-			priv->id = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid value");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+			return FALSE;
+		priv->id = tmp;
+		return TRUE;
 	}
 	if (g_strcmp0(key, "SuperioPort") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < G_MAXUINT16) {
-			priv->port = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid value");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+			return FALSE;
+		priv->port = tmp;
+		return TRUE;
 	}
 	if (g_strcmp0(key, "SuperioControlPort") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < G_MAXUINT16) {
-			priv->control_port = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid value");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+			return FALSE;
+		priv->control_port = tmp;
+		return TRUE;
 	}
 	if (g_strcmp0(key, "SuperioDataPort") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < G_MAXUINT16) {
-			priv->data_port = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid value");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+			return FALSE;
+		priv->data_port = tmp;
+		return TRUE;
 	}
 	if (g_strcmp0(key, "SuperioTimeout") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < G_MAXUINT) {
-			priv->timeout_ms = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid value");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
+			return FALSE;
+		priv->timeout_ms = tmp;
+		return TRUE;
 	}
 
 	/* failed */

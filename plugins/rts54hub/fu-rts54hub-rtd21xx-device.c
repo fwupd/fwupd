@@ -57,47 +57,30 @@ fu_rts54hub_rtd21xx_device_set_quirk_kv(FuDevice *device,
 {
 	FuRts54hubRtd21xxDevice *self = FU_RTS54HUB_RTD21XX_DEVICE(device);
 	FuRts54hubRtd21xxDevicePrivate *priv = GET_PRIVATE(self);
+	guint64 tmp = 0;
 
 	/* load target address from quirks */
 	if (g_strcmp0(key, "Rts54TargetAddr") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp <= 0xff) {
-			priv->target_addr = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid target address");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->target_addr = tmp;
+		return TRUE;
 	}
 
 	/* load i2c speed from quirks */
 	if (g_strcmp0(key, "Rts54I2cSpeed") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < FU_RTS54HUB_I2C_SPEED_LAST) {
-			priv->i2c_speed = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid I²C speed");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, FU_RTS54HUB_I2C_SPEED_LAST - 1, error))
+			return FALSE;
+		priv->i2c_speed = tmp;
+		return TRUE;
 	}
 
 	/* load register address length from quirks */
 	if (g_strcmp0(key, "Rts54RegisterAddrLen") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp <= 0xff) {
-			priv->register_addr_len = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid register address length");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->register_addr_len = tmp;
+		return TRUE;
 	}
 
 	/* failed */

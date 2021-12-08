@@ -960,6 +960,7 @@ LIBFWUPDPLUGIN_1.7.3 {
   global:
     fu_archive_firmware_get_type;
     fu_archive_firmware_new;
+    fu_common_strtoull_full;
     fu_common_sum16;
     fu_common_sum16_bytes;
     fu_common_sum16w;

@@ -249,40 +249,60 @@ fu_vli_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 {
 	FuCfiDevice *self = FU_CFI_DEVICE(device);
 	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
+	guint64 tmp;
+
 	if (g_strcmp0(key, "CfiDeviceCmdReadId") == 0) {
-		priv->cmds[FU_CFI_DEVICE_CMD_READ_ID] = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->cmds[FU_CFI_DEVICE_CMD_READ_ID] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CfiDeviceCmdReadIdSz") == 0) {
-		priv->cmd_read_id_sz = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->cmd_read_id_sz = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CfiDeviceCmdChipErase") == 0) {
-		priv->cmds[FU_CFI_DEVICE_CMD_CHIP_ERASE] = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->cmds[FU_CFI_DEVICE_CMD_CHIP_ERASE] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CfiDeviceCmdSectorErase") == 0) {
-		priv->cmds[FU_CFI_DEVICE_CMD_SECTOR_ERASE] = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->cmds[FU_CFI_DEVICE_CMD_SECTOR_ERASE] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CfiDeviceCmdWriteStatus") == 0) {
-		priv->cmds[FU_CFI_DEVICE_CMD_WRITE_STATUS] = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->cmds[FU_CFI_DEVICE_CMD_WRITE_STATUS] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CfiDeviceCmdPageProg") == 0) {
-		priv->cmds[FU_CFI_DEVICE_CMD_PAGE_PROG] = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->cmds[FU_CFI_DEVICE_CMD_PAGE_PROG] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CfiDeviceCmdReadData") == 0) {
-		priv->cmds[FU_CFI_DEVICE_CMD_READ_DATA] = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->cmds[FU_CFI_DEVICE_CMD_READ_DATA] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CfiDeviceCmdReadStatus") == 0) {
-		priv->cmds[FU_CFI_DEVICE_CMD_READ_STATUS] = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->cmds[FU_CFI_DEVICE_CMD_READ_STATUS] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CfiDeviceCmdWriteEn") == 0) {
-		priv->cmds[FU_CFI_DEVICE_CMD_WRITE_EN] = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->cmds[FU_CFI_DEVICE_CMD_WRITE_EN] = tmp;
 		return TRUE;
 	}
 	g_set_error_literal(error,

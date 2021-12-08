@@ -1010,6 +1010,86 @@ fu_common_strtoull(const gchar *str)
 }
 
 /**
+ * fu_common_strtoull_full:
+ * @str: a string, e.g. `0x1234`
+ * @value: (out) (nullable): parsed value
+ * @min: minimum acceptable value, typically 0
+ * @max: maximum acceptable value, typically G_MAXUINT64
+ * @error: (nullable): optional return location for an error
+ *
+ * Converts a string value to an integer. Values are assumed base 10, unless
+ * prefixed with "0x" where they are parsed as base 16.
+ *
+ * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
+ *
+ * Since: 1.7.3
+ **/
+gboolean
+fu_common_strtoull_full(const gchar *str, guint64 *value, guint64 min, guint64 max, GError **error)
+{
+	gchar *endptr = NULL;
+	guint64 value_tmp;
+	guint base = 10;
+
+	/* sanity check */
+	if (str == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "cannot parse NULL");
+		return FALSE;
+	}
+
+	/* detect hex */
+	if (g_str_has_prefix(str, "0x")) {
+		str += 2;
+		base = 16;
+	}
+
+	/* convert */
+	value_tmp = g_ascii_strtoull(str, &endptr, base);
+	if ((gsize)(endptr - str) != strlen(str)) {
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "cannot parse %s", str);
+		return FALSE;
+	}
+
+	/* overflow check */
+	if (value_tmp == G_MAXUINT64) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "cannot parse %s as caused overflow",
+			    str);
+		return FALSE;
+	}
+
+	/* range check */
+	if (value_tmp < min) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "value %" G_GUINT64_FORMAT " was below minimum %" G_GUINT64_FORMAT,
+			    value_tmp,
+			    min);
+		return FALSE;
+	}
+	if (value_tmp > max) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "value %" G_GUINT64_FORMAT " was above maximum %" G_GUINT64_FORMAT,
+			    value_tmp,
+			    max);
+		return FALSE;
+	}
+
+	/* success */
+	if (value != NULL)
+		*value = value_tmp;
+	return TRUE;
+}
+
+/**
  * fu_common_strstrip:
  * @str: a string, e.g. ` test `
  *

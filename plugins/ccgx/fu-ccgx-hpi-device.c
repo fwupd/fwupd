@@ -1525,41 +1525,25 @@ fu_ccgx_hpi_device_set_quirk_kv(FuDevice *device,
 				GError **error)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
+	guint64 tmp = 0;
+
 	if (g_strcmp0(key, "SiliconId") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < G_MAXUINT16) {
-			self->silicon_id = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid SiliconId");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+			return FALSE;
+		self->silicon_id = tmp;
+		return TRUE;
 	}
 	if (g_strcmp0(key, "CcgxFlashRowSize") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < G_MAXUINT32) {
-			self->flash_row_size = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid CcgxFlashRowSize");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		self->flash_row_size = tmp;
+		return TRUE;
 	}
 	if (g_strcmp0(key, "CcgxFlashSize") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < G_MAXUINT32) {
-			self->flash_size = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid CcgxFlashSize");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		self->flash_size = tmp;
+		return TRUE;
 	}
 	if (g_strcmp0(key, "CcgxImageKind") == 0) {
 		self->fw_image_type = fu_ccgx_fw_image_type_from_string(value);

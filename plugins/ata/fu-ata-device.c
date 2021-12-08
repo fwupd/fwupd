@@ -823,8 +823,11 @@ static gboolean
 fu_ata_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
+	guint64 tmp = 0;
+
 	if (g_strcmp0(key, "AtaTransferMode") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
 		if (tmp != ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS_ACTIVATE &&
 		    tmp != ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNKS &&
 		    tmp != ATA_SUBCMD_MICROCODE_DOWNLOAD_CHUNK) {
@@ -839,15 +842,8 @@ fu_ata_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		return TRUE;
 	}
 	if (g_strcmp0(key, "AtaTransferBlocks") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp > 0xffff) {
-			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
-					    "AtaTransferBlocks only supports "
-					    "values <= 0xffff");
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
-		}
 		self->transfer_blocks = (guint16)tmp;
 		return TRUE;
 	}

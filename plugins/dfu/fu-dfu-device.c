@@ -1777,6 +1777,7 @@ fu_dfu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
+	guint64 tmp = 0;
 
 	if (g_strcmp0(key, FU_QUIRKS_DFU_FORCE_VERSION) == 0) {
 		if (value != NULL) {
@@ -1794,28 +1795,16 @@ fu_dfu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		return FALSE;
 	}
 	if (g_strcmp0(key, "DfuForceTimeout") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < G_MAXUINT) {
-			priv->timeout_ms = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid DFU timeout");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
+			return FALSE;
+		priv->timeout_ms = tmp;
+		return TRUE;
 	}
 	if (g_strcmp0(key, "DfuForceTransferSize") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < G_MAXUINT16) {
-			priv->force_transfer_size = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid DFU transfer size");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+			return FALSE;
+		priv->force_transfer_size = tmp;
+		return TRUE;
 	}
 	if (g_strcmp0(key, "DfuAltName") == 0) {
 		fu_dfu_device_set_chip_id(self, value);

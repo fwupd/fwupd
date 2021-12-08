@@ -563,29 +563,17 @@ fu_elantp_hid_device_set_quirk_kv(FuDevice *device,
 				  GError **error)
 {
 	FuElantpHidDevice *self = FU_ELANTP_HID_DEVICE(device);
+	guint64 tmp = 0;
+
 	if (g_strcmp0(key, "ElantpIcPageCount") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp > 0xffff) {
-			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
-					    "ElantpIcPageCount only supports "
-					    "values <= 0xffff");
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
-		}
 		self->ic_page_count = (guint16)tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "ElantpIapPassword") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp > 0xffff) {
-			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
-					    "ElantpIapPassword only supports "
-					    "values <= 0xffff");
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
-		}
 		self->iap_password = (guint16)tmp;
 		return TRUE;
 	}
