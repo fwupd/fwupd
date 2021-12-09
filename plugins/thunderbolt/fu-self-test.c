@@ -1219,6 +1219,7 @@ test_update_working(ThunderboltTest *tt, gconstpointer user_data)
 	/* simulate an update, where the device goes away and comes back
 	 * after the time in the last parameter (given in ms) */
 	up_ctx = mock_tree_prepare_for_update(tree, plugin, "42.23", fw_data, 1000);
+	g_assert_nonnull(up_ctx);
 	ret =
 	    fu_plugin_runner_write_firmware(plugin, tree->fu_device, fw_data, progress, 0, &error);
 	g_assert_no_error(error);
