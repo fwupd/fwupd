@@ -189,9 +189,9 @@ static void
 fu_tpm_empty_pcr_func(void)
 {
 	gboolean ret;
-	g_autofree gchar **environ = NULL;
 	g_autofree gchar *pluginfn = NULL;
 	g_autofree gchar *testdatadir = NULL;
+	g_auto(GStrv) environ_old = NULL;
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
@@ -206,7 +206,7 @@ fu_tpm_empty_pcr_func(void)
 	g_assert_true(ret);
 
 	/* save environment and set broken PCR data */
-	environ = g_get_environ();
+	environ_old = g_get_environ();
 	testdatadir = g_test_build_filename(G_TEST_DIST, "tests", "empty_pcr", NULL);
 	g_setenv("FWUPD_SYSFSTPMDIR", testdatadir, TRUE);
 
@@ -229,7 +229,7 @@ fu_tpm_empty_pcr_func(void)
 			FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 
 	/* restore default environment */
-	g_setenv("FWUPD_SYSFSTPMDIR", g_environ_getenv(environ, "FWUPD_SYSFSTPMDIR"), TRUE);
+	g_setenv("FWUPD_SYSFSTPMDIR", g_environ_getenv(environ_old, "FWUPD_SYSFSTPMDIR"), TRUE);
 }
 
 int
