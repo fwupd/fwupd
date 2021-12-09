@@ -676,7 +676,7 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 
 	/* another thread did this for us */
 	locker = g_mutex_locker_new(&priv->proxy_mutex);
-	if (priv->proxy != NULL) {
+	if (locker == NULL || priv->proxy != NULL) {
 		g_task_return_boolean(task, TRUE);
 		return;
 	}
