@@ -43,7 +43,6 @@ static void
 fu_plugin_tpm_set_bios_pcr0s(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
 
 	if (data->tpm_device == NULL)

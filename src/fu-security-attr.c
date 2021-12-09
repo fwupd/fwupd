@@ -315,7 +315,6 @@ void
 fu_security_attrs_to_json(FuSecurityAttrs *attrs, JsonBuilder *builder)
 {
 	g_autoptr(GPtrArray) items = NULL;
-	g_autoptr(GError) error = NULL;
 
 	json_builder_begin_object(builder);
 	json_builder_set_member_name(builder, "SecurityAttributes");

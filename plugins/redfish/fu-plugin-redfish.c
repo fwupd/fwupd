@@ -212,7 +212,6 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuIpmiDevice) device = fu_ipmi_device_new(fu_plugin_get_context(plugin));
 	g_autoptr(FuRedfishRequest) request = NULL;
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 
 	/* create device */

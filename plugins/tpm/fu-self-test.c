@@ -126,7 +126,6 @@ fu_tpm_eventlog_parse_v1_func(void)
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "binary_bios_measurements-v1", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS) && ci == NULL) {
@@ -161,7 +160,6 @@ fu_tpm_eventlog_parse_v2_func(void)
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
-	g_autoptr(FuContext) ctx = fu_context_new();
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "binary_bios_measurements-v2", NULL);
 	if (!g_file_test(fn, G_FILE_TEST_EXISTS) && ci == NULL) {
@@ -200,8 +198,6 @@ fu_tpm_empty_pcr_func(void)
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
-	g_autoptr(GPtrArray) pcr0s = NULL;
-	g_autoptr(GPtrArray) pcrXs = NULL;
 
 	/* do not save silo */
 	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
