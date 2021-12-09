@@ -119,6 +119,13 @@ fu_efivar_set_immutable(const gchar *fn, gboolean value, gboolean *value_old, GE
 		return FALSE;
 	}
 	istr = g_unix_input_stream_new(fd, TRUE);
+	if (istr == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_FAILED,
+				    "failed to create stream");
+		return FALSE;
+	}
 	return fu_efivar_set_immutable_fd(fd, value, value_old, error);
 }
 
