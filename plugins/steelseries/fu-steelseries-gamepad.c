@@ -184,7 +184,6 @@ fu_steelseries_gamepad_setup(FuDevice *device, GError **error)
 {
 	g_autofree gchar *bootloader_version = NULL;
 	g_autofree gchar *version = NULL;
-	g_autofree gchar *tmp = NULL;
 	guint16 fw_ver;
 	guint8 data[STEELSERIES_BUFFER_CONTROL_SIZE] = {0};
 

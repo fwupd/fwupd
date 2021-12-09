@@ -659,7 +659,6 @@ flash_iface_write(FuRealtekMstDevice *self,
 		  FuProgress *progress,
 		  GError **error)
 {
-	gsize bytes_written = 0;
 	gsize total_size = g_bytes_get_size(data);
 	g_autoptr(GPtrArray) chunks = fu_chunk_array_new_from_bytes(data, address, 0, 256);
 
@@ -711,8 +710,6 @@ flash_iface_write(FuRealtekMstDevice *self,
 				       address);
 			return FALSE;
 		}
-
-		bytes_written += chunk_size;
 		fu_progress_set_percentage_full(progress, i + 1, chunks->len);
 	}
 

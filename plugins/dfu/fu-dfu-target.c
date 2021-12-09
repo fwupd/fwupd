@@ -879,7 +879,6 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	GBytes *chunk_tmp;
-	guint32 offset = 0;
 	guint percentage_size = expected_size > 0 ? expected_size : maximum_size;
 	gsize total_size = 0;
 	guint16 transfer_size = fu_dfu_device_get_transfer_size(priv->device);
@@ -906,7 +905,6 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 		/* keep a sum of all the chunks */
 		chunk_size = (guint32)g_bytes_get_size(chunk_tmp);
 		total_size += chunk_size;
-		offset += chunk_size;
 
 		/* add to array */
 		g_debug("got #%04x chunk of size %" G_GUINT32_FORMAT, idx, chunk_size);

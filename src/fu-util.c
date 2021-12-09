@@ -1010,11 +1010,9 @@ fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
 	json_builder_set_member_name(builder, "results");
 	json_builder_begin_array(builder);
 	for (guint i = 0; values[i] != NULL; i++) {
-		g_autoptr(GError) error_local = NULL;
 		json_builder_begin_object(builder);
-		if (!fu_util_device_test_filename(priv, &helper, values[i], error)) {
+		if (!fu_util_device_test_filename(priv, &helper, values[i], error))
 			return FALSE;
-		}
 		json_builder_end_object(builder);
 	}
 	json_builder_end_array(builder);

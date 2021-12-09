@@ -518,7 +518,6 @@ fu_plugin_uefi_capsule_startup(FuPlugin *plugin, GError **error)
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *nvram_total_str = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GError) error_fde = NULL;
 
 	/* don't let user's environment influence test suite failures */
 	if (g_getenv("FWUPD_UEFI_TEST") != NULL)

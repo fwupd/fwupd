@@ -649,7 +649,6 @@ fu_fastboot_device_write_firmware(FuDevice *device,
 				  GError **error)
 {
 	g_autoptr(FuFirmware) manifest = NULL;
-	g_autoptr(GBytes) fw = NULL;
 
 	/* load the manifest of operations */
 	manifest = fu_firmware_get_image_by_id(firmware, "partition_nand.xml", NULL);

@@ -119,7 +119,6 @@ fu_plugin_mm_udev_device_port_added(FuPlugin *plugin,
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	FuMmDevice *existing;
 	g_autoptr(FuMmDevice) dev = NULL;
-	g_autoptr(GError) error = NULL;
 
 	g_return_if_fail(priv->inhibited != NULL);
 	existing = fu_plugin_cache_lookup(plugin, priv->inhibited->physical_id);
