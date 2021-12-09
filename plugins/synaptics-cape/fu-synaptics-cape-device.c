@@ -25,7 +25,6 @@
 
 #define FU_SYNAPTICS_CAPE_CMD_MAX_DATA_LEN    13 /* number of guint32 */
 #define FU_SYNAPTICS_CAPE_CMD_WRITE_DATAL_LEN 8	 /* number of guint32 */
-#define FU_SYNAPTICS_CAPE_WORD_IN_BYTES	      4	 /* bytes */
 
 #define FU_SYNAPTICS_CAPE_CMD_APP_ID_CTRL 0xb32d2300u
 
@@ -349,7 +348,7 @@ fu_synaptics_cape_device_sendcmd(FuSynapticsCapeDevice *self,
 				 GError **error)
 {
 	FuCapCmd cmd = {0};
-	const guint32 dataszbyte = data_len * FU_SYNAPTICS_CAPE_WORD_IN_BYTES;
+	const guint32 dataszbyte = data_len * sizeof(guint32);
 
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -594,6 +593,7 @@ fu_synaptics_cape_device_write_firmware_header(FuSynapticsCapeDevice *self,
 {
 	const guint8 *buf = NULL;
 	gsize bufsz = 0;
+	g_autofree guint32 *buf32 = NULL;
 
 	g_return_val_if_fail(FU_IS_SYNAPTICS_CAPE_DEVICE(self), FALSE);
 	g_return_val_if_fail(fw != NULL, FALSE);
@@ -610,11 +610,22 @@ fu_synaptics_cape_device_write_firmware_header(FuSynapticsCapeDevice *self,
 		return FALSE;
 	}
 
+	/* 32 bit align */
+	buf32 = g_new0(guint32, bufsz / sizeof(guint32));
+	if (!fu_memcpy_safe((guint8 *)buf32,
+			    bufsz,
+			    0x0, /* dst */
+			    buf,
+			    bufsz,
+			    0x0, /* src */
+			    bufsz,
+			    error))
+		return FALSE;
 	return fu_synaptics_cape_device_sendcmd(self,
 						FU_SYNAPTICS_CAPE_CMD_APP_ID_CTRL,
 						FU_SYNAPTICS_CMD_FW_UPDATE_START,
-						(const guint32 *)buf,
-						bufsz / FU_SYNAPTICS_CAPE_WORD_IN_BYTES,
+						buf32,
+						bufsz / sizeof(guint32),
 						0,
 						error);
 }
@@ -632,22 +643,36 @@ fu_synaptics_cape_device_write_firmware_image(FuSynapticsCapeDevice *self,
 	g_return_val_if_fail(fw != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       0x00,
-					       0x00,
-					       FU_SYNAPTICS_CAPE_WORD_IN_BYTES *
-						   FU_SYNAPTICS_CAPE_CMD_WRITE_DATAL_LEN);
+	chunks =
+	    fu_chunk_array_new_from_bytes(fw,
+					  0x00,
+					  0x00,
+					  sizeof(guint32) * FU_SYNAPTICS_CAPE_CMD_WRITE_DATAL_LEN);
 
 	fu_progress_set_id(progress, G_STRLOC);
 	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
+		gsize bufsz = fu_chunk_get_data_sz(chk);
+		g_autofree guint32 *buf32 = NULL;
+
+		/* 32 bit align */
+		buf32 = g_new0(guint32, bufsz / sizeof(guint32));
+		if (!fu_memcpy_safe((guint8 *)buf32,
+				    bufsz,
+				    0x0, /* dst */
+				    fu_chunk_get_data(chk),
+				    bufsz,
+				    0x0, /* src */
+				    bufsz,
+				    error))
+			return FALSE;
+
 		if (!fu_synaptics_cape_device_sendcmd(self,
 						      FU_SYNAPTICS_CAPE_CMD_APP_ID_CTRL,
 						      FU_SYNAPTICS_CMD_FW_UPDATE_WRITE,
-						      (const guint32 *)fu_chunk_get_data(chk),
-						      fu_chunk_get_data_sz(chk) /
-							  FU_SYNAPTICS_CAPE_WORD_IN_BYTES,
+						      buf32,
+						      bufsz / sizeof(guint32),
 						      0,
 						      error)) {
 			g_prefix_error(error, "failed send on chk %u: ", i);
