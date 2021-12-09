@@ -310,6 +310,8 @@ fu_device_cfi_device_func(void)
 	g_assert_true(ret);
 	g_assert_cmpint(cmd, ==, 0xC7);
 	g_assert_cmpint(fu_cfi_device_get_size(cfi_device), ==, 0x10000);
+	g_assert_cmpint(fu_cfi_device_get_page_size(cfi_device), ==, 0x200);
+	g_assert_cmpint(fu_cfi_device_get_sector_size(cfi_device), ==, 0x2000);
 }
 
 static void
