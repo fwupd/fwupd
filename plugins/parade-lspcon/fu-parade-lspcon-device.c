@@ -462,6 +462,9 @@ fu_parade_lspcon_flash_write(FuParadeLspconDevice *self,
 
 		/* write data to page 7 memory window */
 		guard = fu_parade_lspcon_i2c_address_guard_new(self, I2C_ADDR_PAGE7, error);
+		if (guard == NULL)
+			return FALSE;
+
 		/* page write is prefixed with an offset:
 		 * we always start from offset 0 */
 		write_data[0] = 0;
