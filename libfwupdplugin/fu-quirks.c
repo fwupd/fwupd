@@ -586,6 +586,8 @@ fu_quirks_init(FuQuirks *self)
 	fu_quirks_add_possible_key(self, "CfiDeviceCmdReadIdSz");
 	fu_quirks_add_possible_key(self, "CfiDeviceCmdChipErase");
 	fu_quirks_add_possible_key(self, "CfiDeviceCmdSectorErase");
+	fu_quirks_add_possible_key(self, "CfiDevicePageSize");
+	fu_quirks_add_possible_key(self, "CfiDeviceSectorSize");
 }
 
 static void

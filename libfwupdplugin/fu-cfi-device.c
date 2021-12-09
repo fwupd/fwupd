@@ -21,6 +21,8 @@
 typedef struct {
 	gchar *flash_id;
 	guint8 cmd_read_id_sz;
+	guint32 page_size;
+	guint32 sector_size;
 	FuCfiDeviceCmd cmds[FU_CFI_DEVICE_CMD_LAST];
 } FuCfiDevicePrivate;
 
@@ -244,6 +246,80 @@ fu_cfi_device_get_cmd(FuCfiDevice *self, FuCfiDeviceCmd cmd, guint8 *value, GErr
 	return TRUE;
 }
 
+/**
+ * fu_cfi_device_get_page_size:
+ * @self: a #FuCfiDevice
+ *
+ * Gets the chip page size. This is typically the largest writable block size.
+ *
+ * This is typically set with the `CfiDevicePageSize` quirk key.
+ *
+ * Returns: page size in bytes, or 0 if unknown
+ *
+ * Since: 1.7.3
+ **/
+guint32
+fu_cfi_device_get_page_size(FuCfiDevice *self)
+{
+	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CFI_DEVICE(self), G_MAXUINT32);
+	return priv->page_size;
+}
+
+/**
+ * fu_cfi_device_set_page_size:
+ * @self: a #FuCfiDevice
+ * @page_size: page size in bytes, or 0 if unknown
+ *
+ * Sets the chip page size. This is typically the largest writable block size.
+ *
+ * Since: 1.7.3
+ **/
+void
+fu_cfi_device_set_page_size(FuCfiDevice *self, guint32 page_size)
+{
+	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CFI_DEVICE(self));
+	priv->page_size = page_size;
+}
+
+/**
+ * fu_cfi_device_get_sector_size:
+ * @self: a #FuCfiDevice
+ *
+ * Gets the chip sector size. This is typically the smallest erasable page size.
+ *
+ * This is typically set with the `CfiDeviceSectorSize` quirk key.
+ *
+ * Returns: sector size in bytes, or 0 if unknown
+ *
+ * Since: 1.7.3
+ **/
+guint32
+fu_cfi_device_get_sector_size(FuCfiDevice *self)
+{
+	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CFI_DEVICE(self), G_MAXUINT32);
+	return priv->sector_size;
+}
+
+/**
+ * fu_cfi_device_set_sector_size:
+ * @self: a #FuCfiDevice
+ * @sector_size: sector size in bytes, or 0 if unknown
+ *
+ * Sets the chip sector size. This is typically the smallest erasable page size.
+ *
+ * Since: 1.7.3
+ **/
+void
+fu_cfi_device_set_sector_size(FuCfiDevice *self, guint32 sector_size)
+{
+	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CFI_DEVICE(self));
+	priv->sector_size = sector_size;
+}
+
 static gboolean
 fu_cfi_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
 {
@@ -305,6 +381,18 @@ fu_cfi_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		priv->cmds[FU_CFI_DEVICE_CMD_WRITE_EN] = tmp;
 		return TRUE;
 	}
+	if (g_strcmp0(key, "CfiDevicePageSize") == 0) {
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		priv->page_size = tmp;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "CfiDeviceSectorSize") == 0) {
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		priv->sector_size = tmp;
+		return TRUE;
+	}
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -321,6 +409,10 @@ fu_cfi_device_to_string(FuDevice *device, guint idt, GString *str)
 	for (guint i = 0; i < FU_CFI_DEVICE_CMD_LAST; i++) {
 		fu_common_string_append_kx(str, idt, fu_cfi_device_cmd_to_string(i), priv->cmds[i]);
 	}
+	if (priv->page_size > 0)
+		fu_common_string_append_kx(str, idt, "PageSize", priv->page_size);
+	if (priv->sector_size > 0)
+		fu_common_string_append_kx(str, idt, "SectorSize", priv->sector_size);
 }
 
 static void
