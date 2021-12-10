@@ -1,4 +1,4 @@
-if get_option('hsi') and get_option('plugin_uefi_pk')
+if get_option('hsi') and get_option('plugin_cpu')
 cargs = ['-DG_LOG_DOMAIN="FuPluginCpu"']
 
 install_data(['cpu.quirk'],

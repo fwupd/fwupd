@@ -37,6 +37,7 @@ meson .. \
     -Dplugin_bcm57xx=false \
     -Dplugin_pixart_rf=false \
     -Dplugin_cfu=false \
+    -Dplugin_cpu=false \
     -Dplugin_ep963x=false \
     -Dplugin_tpm=false \
     -Dsystemd=false \
