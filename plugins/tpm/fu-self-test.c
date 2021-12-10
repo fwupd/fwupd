@@ -26,7 +26,8 @@ fu_tpm_device_1_2_func(void)
 	g_autoptr(FuContext) ctx = fu_context_new();
 	g_autoptr(FuPlugin) plugin = fu_plugin_new(ctx);
 	g_autoptr(FuSecurityAttrs) attrs = fu_security_attrs_new();
-	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(FwupdSecurityAttr) attr0 = NULL;
+	g_autoptr(FwupdSecurityAttr) attr1 = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s = NULL;
 	g_autoptr(GPtrArray) pcrXs = NULL;
@@ -61,16 +62,18 @@ fu_tpm_device_1_2_func(void)
 
 	/* verify HSI attributes */
 	fu_plugin_runner_add_security_attrs(plugin, attrs);
-	attr = fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20);
-	g_assert_nonnull(attr);
-	g_assert_cmpint(fwupd_security_attr_get_result(attr),
+	attr0 = fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_TPM_VERSION_20);
+	g_assert_nonnull(attr0);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr0),
 			==,
 			FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
 
-	attr = fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR);
-	g_assert_nonnull(attr);
+	attr1 = fu_security_attrs_get_by_appstream_id(attrs, FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR);
+	g_assert_nonnull(attr1);
 	/* Some PCRs are empty, but PCRs 0-7 are set (tests/tpm0/pcrs) */
-	g_assert_cmpint(fwupd_security_attr_get_result(attr), ==, FWUPD_SECURITY_ATTR_RESULT_VALID);
+	g_assert_cmpint(fwupd_security_attr_get_result(attr1),
+			==,
+			FWUPD_SECURITY_ATTR_RESULT_VALID);
 }
 
 static void
