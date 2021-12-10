@@ -401,12 +401,13 @@ typedef guint64 FuDeviceInternalFlags;
 #define FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK (1ull << 18)
 
 /**
- * FWUPD_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE :
+ * FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE:
  *
  * The device is not auto removed.
+ *
  * Since 1.7.3
  */
-#define FWUPD_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE (1llu << 19)
+#define FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE (1llu << 19)
 
 /* accessors */
 gchar *

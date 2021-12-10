@@ -579,7 +579,7 @@ fu_thunderbolt_device_setup_retimer(FuDevice *device, GError **error)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_flag(device, FWUPD_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE);
 
 	vid = fu_udev_device_get_vendor(FU_UDEV_DEVICE(self));
 	if (vid == 0x0) {
