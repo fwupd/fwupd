@@ -57,7 +57,7 @@ fu_cfi_device_set_size(FuCfiDevice *self, guint64 size);
 guint32
 fu_cfi_device_get_page_size(FuCfiDevice *self);
 void
-fu_cfi_device_set_page_size(FuCfiDevice *self, guint32 block_size);
+fu_cfi_device_set_page_size(FuCfiDevice *self, guint32 page_size);
 guint32
 fu_cfi_device_get_sector_size(FuCfiDevice *self);
 void
