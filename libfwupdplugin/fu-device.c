@@ -230,7 +230,7 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "use-parent-for-battery";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK)
 		return "use-proxy-fallback";
-	if (flag == FWUPD_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)
+	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)
 		return "no-auto-remove";
 	return NULL;
 }
@@ -287,7 +287,7 @@ fu_device_internal_flag_from_string(const gchar *flag)
 	if (g_strcmp0(flag, "use-proxy-fallback") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK;
 	if (g_strcmp0(flag, "no-auto-remove") == 0)
-		return FWUPD_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE;
+		return FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
