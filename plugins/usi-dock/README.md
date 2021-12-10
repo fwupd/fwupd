@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This plugin uses the MCU to write all the dock firmware components. Interestingly, the MCU version
+This plugin uses the MCU to write all the dock firmware components. The MCU version
 is provided by the DMC bcdDevice.
 
 This plugin supports the following protocol ID:
