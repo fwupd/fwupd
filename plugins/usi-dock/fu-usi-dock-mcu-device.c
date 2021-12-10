@@ -20,40 +20,7 @@ G_DEFINE_TYPE(FuUsiDockMcuDevice, fu_usi_dock_mcu_device, FU_TYPE_HID_DEVICE)
 
 #define FU_USI_DOCK_MCU_DEVICE_TIMEOUT 5000 /* ms */
 
-/**
- * FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP:
- *
- * All version numbers should be stored in HP format.
- *
- * Since: 1.7.3
- */
 #define FU_USI_DOCK_DEVICE_FLAG_VERFMT_HP (1 << 0)
-
-/* returned TRUE - got a expected report*/
-static gboolean
-fu_usi_dock_rx_filter(guint8 cmd, const guint8 *buf)
-{
-	if (cmd != buf[1])
-		return TRUE;
-
-	switch (cmd) {
-	case USBUID_ISP_DEVICE_CMD_MCU_JUMP2BOOT:
-		g_debug("got correct jump");
-		break;
-	case USBUID_ISP_INTERNAL_FW_CMD_TARGET_CHECKSUM:
-		if (buf[6] == FIRMWARE_IDX_AUDIO) {
-			g_debug("got a quick jump at audio updates");
-		} else {
-			g_debug("got a ignored report");
-			return FALSE;
-		}
-		break;
-	default:
-		break;
-	}
-
-	return TRUE;
-}
 
 static gboolean
 fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
@@ -132,15 +99,6 @@ fu_usi_dock_mcu_device_rx(FuUsiDockMcuDevice *self,
 		return FALSE;
 	}
 
-	/* special case */
-	if (!fu_usi_dock_rx_filter(cmd, buf)) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_INVALID_DATA,
-			    "no expected report received");
-		return FALSE;
-	}
-
 	if (outbuf != NULL) {
 		if (!fu_memcpy_safe(outbuf,
 				    outbufsz,
@@ -172,13 +130,13 @@ fu_usi_dock_mcu_device_txrx(FuUsiDockMcuDevice *self,
 static gboolean
 fu_usi_dock_mcu_device_get_status(FuUsiDockMcuDevice *self, GError **error)
 {
-	guint8 buf[] = {USBUID_ISP_DEVICE_CMD_MCU_STATUS};
+	guint8 cmd = USBUID_ISP_DEVICE_CMD_MCU_STATUS;
 	guint8 response = 0;
 
 	if (!fu_usi_dock_mcu_device_txrx(self,
 					 TAG_TAG2_CMD_MCU,
-					 buf,
-					 sizeof(buf),
+					 &cmd,
+					 sizeof(cmd),
 					 &response,
 					 sizeof(response),
 					 error))
