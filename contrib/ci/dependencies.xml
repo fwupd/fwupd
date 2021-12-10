@@ -819,6 +819,10 @@
       <control />
       <package variant="x86_64" />
     </distro>
+    <distro id="launchpad">
+      <control />
+      <package variant="x86_64" />
+    </distro>
     <distro id="void">
       <package>libjcat-devel</package>
     </distro>
