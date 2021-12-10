@@ -2302,7 +2302,7 @@ fu_plugin_name_compare(FuPlugin *plugin1, FuPlugin *plugin2)
  * @plugin1: first #FuPlugin to compare.
  * @plugin2: second #FuPlugin to compare.
  *
- * Compares two plugins by their depsolved order.
+ * Compares two plugins by their depsolved order, and then by name.
  *
  * Returns: 1, 0 or -1 if @plugin1 is greater, equal, or less than @plugin2.
  *
@@ -2317,7 +2317,7 @@ fu_plugin_order_compare(FuPlugin *plugin1, FuPlugin *plugin2)
 		return -1;
 	if (priv1->order > priv2->order)
 		return 1;
-	return 0;
+	return fu_plugin_name_compare(plugin1, plugin2);
 }
 
 static void
