@@ -204,6 +204,9 @@ endif
 if get_option('bluez')
   conf.set('HAVE_BLUEZ', '1')
 endif
+if get_option('udisks')
+  conf.set('HAVE_UDISKS', '1')
+endif
 if get_option('hsi')
   conf.set('HAVE_HSI', '1')
 endif

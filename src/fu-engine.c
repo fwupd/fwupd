@@ -73,6 +73,9 @@
 #ifdef HAVE_BLUEZ
 #include "fu-bluez-backend.h"
 #endif
+#ifdef HAVE_UDISKS
+#include "fu-udisks-backend.h"
+#endif
 
 #include "fu-archive-firmware.h"
 #include "fu-dfu-firmware.h"
@@ -7172,6 +7175,9 @@ fu_engine_init(FuEngine *self)
 #endif
 #ifdef HAVE_BLUEZ
 	g_ptr_array_add(self->backends, fu_bluez_backend_new());
+#endif
+#ifdef HAVE_UDISKS
+	g_ptr_array_add(self->backends, fu_udisks_backend_new());
 #endif
 
 	/* setup Jcat context */

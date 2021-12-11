@@ -70,6 +70,9 @@ endif
 if get_option('bluez')
   daemon_src += 'fu-bluez-backend.c'
 endif
+if get_option('udisks')
+  daemon_src += 'fu-udisks-backend.c'
+endif
 
 if build_daemon
 fwupdmgr = executable(

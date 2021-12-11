@@ -1,0 +1,138 @@
+# Raspberry Pi RP2 [UUID is random; no CURRENT.UF2]
+[BLOCK\LABEL_RPI-RP2]
+Plugin = uf2
+Guid = UF2\FID_E48BFF56
+Flags = will-disappear
+
+[UF2\FID_16573617]
+Name = ATMEGA32
+Vendor = Microchip
+
+[UF2\FID_1851780A]
+Name = SAML21
+Vendor = Microchip
+
+[UF2\FID_1B57745F]
+Name = NRF52
+Vendor = Nordic
+
+[UF2\FID_1C5F21B0]
+Name = ESP32
+Vendor = ESP32
+
+[UF2\FID_1E1F432D]
+Name = STM32L1
+Vendor = ST
+
+[UF2\FID_202E3A91]
+Name = STM32L0
+Vendor = ST
+
+[UF2\FID_21460FF0]
+Name = STM32WL
+Vendor = ST
+
+[UF2\FID_2ABC77EC]
+Name = LPC55
+Vendor = NXP
+
+[UF2\FID_300F5633]
+Name = STM32G0
+Vendor = ST
+
+[UF2\FID_31D228C6]
+Name = GD32F350
+Vendor = GD
+
+[UF2\FID_04240BDF]
+Name = STM32L5
+Vendor = ST
+
+[UF2\FID_4C71240A]
+Name = STM32G4
+Vendor = ST
+
+[UF2\FID_4FB2D5BD]
+Name = MIMXRT10XX
+Vendor = NXP
+
+[UF2\FID_53B80F00]
+Name = STM32F7
+Vendor = ST
+
+[UF2\FID_55114460]
+Name = SAMD51
+Vendor = Microchip
+
+[UF2\FID_57755A57]
+Name = STM32F4
+Vendor = ST
+
+[UF2\FID_5A18069B]
+Name = FX2
+Vendor = Cypress
+
+[UF2\FID_5D1A0A2E]
+Name = STM32F2
+Vendor = ST
+
+[UF2\FID_5EE21072]
+Name = STM32F1
+Vendor = ST
+
+[UF2\FID_647824B6]
+Name = STM32F0
+Vendor = ST
+
+[UF2\FID_68ED2B88]
+Name = SAMD21
+Vendor = Microchip
+
+[UF2\FID_6B846188]
+Name = STM32F3
+Vendor = ST
+
+[UF2\FID_6D0922FA]
+Name = STM32F407
+Vendor = ST
+
+[UF2\FID_6DB66082]
+Name = STM32H7
+Vendor = ST
+
+[UF2\FID_70D16653]
+Name = STM32WB
+Vendor = ST
+
+[UF2\FID_7EAB61ED]
+Name = ESP8266
+
+[UF2\FID_7F83E793]
+Name = KL32L2
+Vendor = NXP
+
+[UF2\FID_8FB060FE]
+Name = STM32F407VG
+Vendor = ST
+
+[UF2\FID_ADA52840]
+Name = NRF52840
+Vendor = Nordic
+
+[UF2\FID_BFDD4EEE]
+Name = ESP32S2
+
+[UF2\FID_C47E5767]
+Name = ESP32S3
+
+[UF2\FID_D42BA06C]
+Name = ESP32C3
+
+[UF2\FID_E48BFF56]
+Name = RP2040
+Vendor = Raspberry Pi
+VendorId = UF2:E48BFF56
+
+[UF2\FID_00FF6919]
+Name = STM32L4
+Vendor = ST
