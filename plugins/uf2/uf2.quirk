@@ -1,0 +1,159 @@
+# match all devices with this udev subsystem
+[BLOCK]
+Plugin = uf2
+
+# Raspberry Pi RP2 [no CURRENT.UF2]
+[USB\VID_2E8A&PID_0003]
+Guid = UF2\FAMILY_E48BFF56
+Flags = updatable,will-disappear
+
+# Adafruit Trinket
+[USB\VID_1781&PID_0C9F]
+Flags = updatable
+
+# Adafruit Trinket M0
+[USB\VID_239A&PID_001E]
+Flags = updatable
+
+# Adafruit Feather M0 Express
+[USB\VID_239A&PID_001B]
+Flags = updatable
+
+# nRF52840 MDK
+[USB\VID_239A&PID_0029]
+Flags = updatable
+
+# the following values are from https://github.com/microsoft/uf2/blob/master/utils/uf2families.json
+# although are lightly edited to split up Name and Vendor in the correct way.
+
+[UF2\FAMILY_16573617]
+Name = ATMEGA32
+Vendor = Microchip
+
+[UF2\FAMILY_1851780A]
+Name = SAML21
+Vendor = Microchip
+
+[UF2\FAMILY_1B57745F]
+Name = NRF52
+Vendor = Nordic
+
+[UF2\FAMILY_1C5F21B0]
+Name = ESP32
+Vendor = ESP32
+
+[UF2\FAMILY_1E1F432D]
+Name = STM32L1
+Vendor = ST
+
+[UF2\FAMILY_202E3A91]
+Name = STM32L0
+Vendor = ST
+
+[UF2\FAMILY_21460FF0]
+Name = STM32WL
+Vendor = ST
+
+[UF2\FAMILY_2ABC77EC]
+Name = LPC55
+Vendor = NXP
+
+[UF2\FAMILY_300F5633]
+Name = STM32G0
+Vendor = ST
+
+[UF2\FAMILY_31D228C6]
+Name = GD32F350
+Vendor = GD
+
+[UF2\FAMILY_04240BDF]
+Name = STM32L5
+Vendor = ST
+
+[UF2\FAMILY_4C71240A]
+Name = STM32G4
+Vendor = ST
+
+[UF2\FAMILY_4FB2D5BD]
+Name = MIMXRT10XX
+Vendor = NXP
+
+[UF2\FAMILY_53B80F00]
+Name = STM32F7
+Vendor = ST
+
+[UF2\FAMILY_55114460]
+Name = SAMD51
+Vendor = Microchip
+
+[UF2\FAMILY_57755A57]
+Name = STM32F4
+Vendor = ST
+
+[UF2\FAMILY_5A18069B]
+Name = FX2
+Vendor = Cypress
+
+[UF2\FAMILY_5D1A0A2E]
+Name = STM32F2
+Vendor = ST
+
+[UF2\FAMILY_5EE21072]
+Name = STM32F1
+Vendor = ST
+
+[UF2\FAMILY_647824B6]
+Name = STM32F0
+Vendor = ST
+
+[UF2\FAMILY_68ED2B88]
+Name = SAMD21
+Vendor = Microchip
+
+[UF2\FAMILY_6B846188]
+Name = STM32F3
+Vendor = ST
+
+[UF2\FAMILY_6D0922FA]
+Name = STM32F407
+Vendor = ST
+
+[UF2\FAMILY_6DB66082]
+Name = STM32H7
+Vendor = ST
+
+[UF2\FAMILY_70D16653]
+Name = STM32WB
+Vendor = ST
+
+[UF2\FAMILY_7EAB61ED]
+Name = ESP8266
+
+[UF2\FAMILY_7F83E793]
+Name = KL32L2
+Vendor = NXP
+
+[UF2\FAMILY_8FB060FE]
+Name = STM32F407VG
+Vendor = ST
+
+[UF2\FAMILY_ADA52840]
+Name = NRF52840
+Vendor = Nordic
+
+[UF2\FAMILY_BFDD4EEE]
+Name = ESP32S2
+
+[UF2\FAMILY_C47E5767]
+Name = ESP32S3
+
+[UF2\FAMILY_D42BA06C]
+Name = ESP32C3
+
+[UF2\FAMILY_E48BFF56]
+Name = RP2040
+Vendor = Raspberry Pi
+
+[UF2\FAMILY_00FF6919]
+Name = STM32L4
+Vendor = ST
