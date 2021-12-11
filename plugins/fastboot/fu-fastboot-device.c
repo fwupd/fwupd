@@ -708,12 +708,6 @@ fu_fastboot_device_set_quirk_kv(FuDevice *device,
 		self->blocksz = tmp;
 		return TRUE;
 	}
-	if (g_strcmp0(key, "FastbootBlockSize") == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0x40, 0x100000, error))
-			return FALSE;
-		self->blocksz = tmp;
-		return TRUE;
-	}
 	if (g_strcmp0(key, "FastbootOperationDelay") == 0) {
 		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXSIZE, error))
 			return FALSE;
