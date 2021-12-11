@@ -35,6 +35,13 @@
 /* Amount of time for the modem to get firmware version */
 #define MAX_WAIT_TIME_SECS 150 /* s */
 
+/**
+ * FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE
+ *
+ * If no AT response is expected when entering fastboot mode.
+ */
+#define FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE (1 << 0)
+
 struct _FuMmDevice {
 	FuDevice parent_instance;
 	MMManager *manager;
@@ -598,7 +605,7 @@ fu_mm_device_qcdm_cmd(FuMmDevice *self, const guint8 *cmd, gsize cmd_len, GError
 #endif /* MM_CHECK_VERSION(1,17,2) */
 
 static gboolean
-fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, GError **error)
+fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, gboolean has_response, GError **error)
 {
 	const gchar *buf;
 	gsize bufsz = 0;
@@ -617,6 +624,12 @@ fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, GError **error)
 				       error)) {
 		g_prefix_error(error, "failed to write %s: ", cmd);
 		return FALSE;
+	}
+
+	/* AT command has no response, return TRUE */
+	if (!has_response) {
+		g_debug("No response expected for AT command: '%s', assuming succeed", cmd);
+		return TRUE;
 	}
 
 	/* response */
@@ -681,17 +694,25 @@ fu_mm_device_detach_fastboot(FuDevice *device, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	gboolean has_response = TRUE;
 
 	/* boot to fastboot mode */
 	locker = fu_device_locker_new_full(device,
 					   (FuDeviceLockerFunc)fu_mm_device_io_open,
 					   (FuDeviceLockerFunc)fu_mm_device_io_close,
 					   error);
+
+	/* expect response for fastboot AT command */
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE)) {
+		has_response = FALSE;
+	}
+
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_mm_device_at_cmd(self, "AT", error))
+	if (!fu_mm_device_at_cmd(self, "AT", TRUE, error))
 		return FALSE;
-	if (!fu_mm_device_at_cmd(self, self->detach_fastboot_at, error)) {
+	if (!fu_mm_device_at_cmd(self, self->detach_fastboot_at, has_response, error)) {
 		g_prefix_error(error, "rebooting into fastboot not supported: ");
 		return FALSE;
 	}
@@ -1503,6 +1524,9 @@ fu_mm_device_init(FuMmDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "Mobile broadband device");
 	fu_device_add_icon(FU_DEVICE(self), "network-modem");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE,
+					"detach-at-fastboot-has-no-response");
 }
 
 static void
