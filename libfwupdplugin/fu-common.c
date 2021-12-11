@@ -3339,7 +3339,24 @@ fu_common_get_volume_by_device(const gchar *device, GError **error)
 		if (val == NULL)
 			continue;
 		if (g_strcmp0(g_variant_get_bytestring(val), device) == 0) {
-			return g_object_new(FU_TYPE_VOLUME, "proxy-block", proxy_blk, NULL);
+			g_autoptr(GDBusProxy) proxy_fs = NULL;
+			g_autoptr(GError) error_local = NULL;
+			proxy_fs = g_dbus_proxy_new_sync(g_dbus_proxy_get_connection(proxy_blk),
+							 G_DBUS_PROXY_FLAGS_NONE,
+							 NULL,
+							 UDISKS_DBUS_SERVICE,
+							 g_dbus_proxy_get_object_path(proxy_blk),
+							 UDISKS_DBUS_INTERFACE_FILESYSTEM,
+							 NULL,
+							 &error_local);
+			if (proxy_fs == NULL)
+				g_debug("ignoring: %s", error_local->message);
+			return g_object_new(FU_TYPE_VOLUME,
+					    "proxy-block",
+					    proxy_blk,
+					    "proxy-filesystem",
+					    proxy_fs,
+					    NULL);
 		}
 	}
 

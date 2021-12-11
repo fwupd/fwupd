@@ -1,0 +1,4 @@
+<firmware gtype="FuUf2Firmware">
+  <addr>0x0100</addr>
+  <data>aGVsbG8gd29ybGQ=</data> <!-- base64 -->
+</firmware>
