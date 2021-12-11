@@ -47,6 +47,12 @@ Block size to use for transfers.
 
 Since: 1.2.2
 
+### FastbootOperationDelay
+
+Time in ms to delay after a read or write operation.
+
+Since: 1.7.4
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB vendor, for example `USB:0x18D1`
