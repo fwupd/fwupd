@@ -43,8 +43,10 @@ CounterpartGuid = USB\VID_0489&PID_E0B5
 [USB\VID_2C7C&PID_0125]
 Summary = Quectel EG25-G modem
 CounterpartGuid = USB\VID_18D1&PID_D00D
+Flags = detach-at-fastboot-has-no-response
 
 # Quectel EG25-G in fastboot mode
 [USB\VID_18D1&PID_D00D]
 Summary = Quectel EG25-G modem (fastboot)
 CounterpartGuid = USB\VID_2C7C&PID_0125
+Flags = detach-at-fastboot-has-no-response
