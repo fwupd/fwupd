@@ -4518,6 +4518,13 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_device_set_proxy_guid(self, priv_donor->proxy_guid);
 	if (priv->ctx == NULL)
 		fu_device_set_context(self, fu_device_get_context(donor));
+	if (priv_donor->private_flag_items != NULL) {
+		for (guint i = 0; i < priv_donor->private_flag_items->len; i++) {
+			FuDevicePrivateFlagItem *item =
+			    g_ptr_array_index(priv_donor->private_flag_items, i);
+			fu_device_register_private_flag(self, item->value, item->value_str);
+		}
+	}
 	g_rw_lock_reader_lock(&priv_donor->parent_guids_mutex);
 	for (guint i = 0; i < parent_guids->len; i++)
 		fu_device_add_parent_guid(self, g_ptr_array_index(parent_guids, i));
