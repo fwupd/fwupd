@@ -16,7 +16,7 @@
 G_DECLARE_FINAL_TYPE(FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuDevice)
 
 FuMmDevice *
-fu_mm_device_new(MMManager *manager, MMObject *omodem);
+fu_mm_device_new(FuContext *ctx, MMManager *manager, MMObject *omodem);
 const gchar *
 fu_mm_device_get_inhibition_uid(FuMmDevice *device);
 const gchar *

@@ -1552,9 +1552,9 @@ fu_mm_device_class_init(FuMmDeviceClass *klass)
 }
 
 FuMmDevice *
-fu_mm_device_new(MMManager *manager, MMObject *omodem)
+fu_mm_device_new(FuContext *ctx, MMManager *manager, MMObject *omodem)
 {
-	FuMmDevice *self = g_object_new(FU_TYPE_MM_DEVICE, NULL);
+	FuMmDevice *self = g_object_new(FU_TYPE_MM_DEVICE, "context", ctx, NULL);
 	self->manager = g_object_ref(manager);
 	self->omodem = g_object_ref(omodem);
 	self->port_at_ifnum = -1;
