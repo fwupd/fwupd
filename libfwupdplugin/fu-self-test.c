@@ -1765,7 +1765,7 @@ fu_device_private_flags_func(void)
 			==,
 			"FuDevice:\n"
 			"  Flags:                none\n"
-			"  CustomFlags:          baz\n" /* compat */
+			"  CustomFlags:          baz\n"
 			"  PrivateFlags:         foo\n");
 }
 
