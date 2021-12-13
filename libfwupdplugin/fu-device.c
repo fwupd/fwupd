@@ -74,6 +74,7 @@ typedef struct {
 	FuDeviceInternalFlags internal_flags;
 	guint64 private_flags;
 	GPtrArray *private_flag_items; /* (nullable) */
+	gchar *custom_flags;
 	gulong notify_flags_handler_id;
 } FuDevicePrivate;
 
@@ -3093,11 +3094,14 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 void
 fu_device_set_custom_flags(FuDevice *self, const gchar *custom_flags)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(custom_flags != NULL);
 
-	/* display what was set when converting to a string */
-	fu_device_set_metadata(self, "CustomFlags", custom_flags);
+	/* save what was set so we can use it for incorporating a superclass */
+	g_free(priv->custom_flags);
+	priv->custom_flags = g_strdup(custom_flags);
 
 	/* look for any standard FwupdDeviceFlags */
 	if (custom_flags != NULL) {
@@ -3120,8 +3124,9 @@ fu_device_set_custom_flags(FuDevice *self, const gchar *custom_flags)
 const gchar *
 fu_device_get_custom_flags(FuDevice *self)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	return fu_device_get_metadata(self, "CustomFlags");
+	return priv->custom_flags;
 }
 
 /**
@@ -3346,6 +3351,8 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv(str, idt + 1, "ProxyId", fu_device_get_id(priv->proxy));
 	if (priv->proxy_guid != NULL)
 		fu_common_string_append_kv(str, idt + 1, "ProxyGuid", priv->proxy_guid);
+	if (priv->custom_flags != NULL)
+		fu_common_string_append_kv(str, idt + 1, "CustomFlags", priv->custom_flags);
 	if (priv->battery_level != FU_BATTERY_VALUE_INVALID)
 		fu_common_string_append_ku(str, idt + 1, "BatteryLevel", priv->battery_level);
 	if (priv->battery_threshold != FU_BATTERY_VALUE_INVALID)
@@ -4516,6 +4523,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_device_set_proxy(self, priv_donor->proxy);
 	if (priv->proxy_guid == NULL && priv_donor->proxy_guid != NULL)
 		fu_device_set_proxy_guid(self, priv_donor->proxy_guid);
+	if (priv->custom_flags == NULL && priv_donor->custom_flags != NULL)
+		fu_device_set_custom_flags(self, priv_donor->custom_flags);
 	if (priv->ctx == NULL)
 		fu_device_set_context(self, fu_device_get_context(donor));
 	g_rw_lock_reader_lock(&priv_donor->parent_guids_mutex);
@@ -4807,6 +4816,7 @@ fu_device_finalize(GObject *object)
 	g_free(priv->logical_id);
 	g_free(priv->backend_id);
 	g_free(priv->proxy_guid);
+	g_free(priv->custom_flags);
 
 	G_OBJECT_CLASS(fu_device_parent_class)->finalize(object);
 }
