@@ -35,6 +35,20 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.5.13" date="2021-12-13">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add Dell Atomic dock support</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix detection of 8Bitdo wireless usb adapter</li>
+          <li>Fix probing the Dell TPM</li>
+          <li>Fix Synaptics MST naming error when device has a parent</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.12" date="2021-07-30">
       <description>
         <p>This release adds the following features:</p>
