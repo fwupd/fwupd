@@ -5,7 +5,8 @@
 # Translators:
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2016
 # gogo <trebelnik2@gmail.com>, 2016
-# milotype <mail@milotype.de>, 2020-2021
+# Ping <mail@milotype.de>, 2020-2021
+# Ping <mail@milotype.de>, 2021
 # gogo <trebelnik2@gmail.com>, 2016-2021
 msgid ""
 msgstr ""
@@ -203,6 +204,7 @@ msgstr[0] "%u dan"
 msgstr[1] "%u dana"
 msgstr[2] "%u dana"
 
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
@@ -246,6 +248,10 @@ msgstr[2] "%u sekundi"
 msgid "(obsoleted)"
 msgstr "(zastarjelo)"
 
+#. TRANSLATORS: HSI event title
+msgid "A TPM PCR is now an invalid value"
+msgstr "TPM PCR je sada nevaljana vrijednost"
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Radnja je potrebna:"
@@ -281,6 +287,14 @@ msgstr "Slažete li se s omogućavanjem udaljene lokacije?"
 #, c-format
 msgid "Alias to %s"
 msgstr "Zamjena za %s"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are now valid"
+msgstr "Svi TPM PCR-ovi su sada valjani"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are valid"
+msgstr "Svi TPM PCR-ovi su valjani"
 
 #. TRANSLATORS: on some systems certain devices have to have matching
 #. versions,
@@ -1635,6 +1649,10 @@ msgstr "Ponovna instalacija %s inačice %s... "
 msgid "Release Branch"
 msgstr "Ogranak izdanja"
 
+#. TRANSLATORS: the exact component on the server
+msgid "Release ID"
+msgstr "ID izdanja"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
@@ -1684,8 +1702,13 @@ msgstr "Ponovno pokretanje uređaja…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Vrati sve ID-ove hardvera za uređaj"
 
+#. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Pokrenite `fwupdmgr get-upgrades` za više informacija."
+
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync-bkc` to complete this action."
+msgstr "Za završavanje ove radnje pokreni `fwupdmgr sync-bkc`."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -1740,12 +1763,12 @@ msgid "Scheduling…"
 msgstr "Zakazivanje…"
 
 #. TRANSLATORS: HSI event title
-msgid "Secure Boot enabled"
-msgstr "Sigurno pokretanje (SecureBoot) omogućeno"
+msgid "Secure Boot disabled"
+msgstr "Sigurno pokretanje (SecureBoot) onemogućeno"
 
 #. TRANSLATORS: HSI event title
-msgid "SecureBoot disabled"
-msgstr "Sigurno pokretanje (SecureBoot) onemogućeno"
+msgid "Secure Boot enabled"
+msgstr "Sigurno pokretanje (SecureBoot) omogućeno"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1970,9 +1993,21 @@ msgstr "TEKST"
 msgid "TPM PCR0 reconstruction"
 msgstr "TPM PCR0 rekonstrukcija"
 
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM empty PCRs"
+msgstr "TPM prazani PCR-ovi"
+
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
 msgstr "TPM v2.0"
+
+#. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
+msgid "Tag"
+msgid_plural "Tags"
+msgstr[0] "Oznaka"
+msgstr[1] "Oznake"
+msgstr[2] "Oznake"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
@@ -2322,6 +2357,13 @@ msgstr "Vaš distributer možda nije provjerio nadopune firmvera za kompatibilno
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
 msgstr "Vaš hardver se može oštetiti upotrebom ovog firmvera, instalacija ovog izdanja može poništiti jamstvo sa %s."
+
+#. TRANSLATORS: BKC is the industry name for the best known configuration and
+#. is a set
+#. * of firmware that works together
+#, c-format
+msgid "Your system is set up to the BKC of %s."
+msgstr "Tvoj je sustav postavljen na BKC od %s."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"

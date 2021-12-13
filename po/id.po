@@ -197,6 +197,7 @@ msgid "%u day"
 msgid_plural "%u days"
 msgstr[0] "%u hari"
 
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
@@ -1660,6 +1661,7 @@ msgstr "Memulai ulang perangkat…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Memberikan kembalian semua ID perangkat keras bagi mesin"
 
+#. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Jalankan `fwupdmgr get-upgrade` untuk informasi lebih lanjut."
 
@@ -1718,10 +1720,6 @@ msgstr "Menjadwalkan…"
 #. TRANSLATORS: HSI event title
 msgid "Secure Boot enabled"
 msgstr "Secure Boot diaktifkan"
-
-#. TRANSLATORS: HSI event title
-msgid "SecureBoot disabled"
-msgstr "SecureBoot dinonaktifkan"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format

@@ -179,6 +179,7 @@ msgid_plural "%u days"
 msgstr[0] "%u dag"
 msgstr[1] "%u dage"
 
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
@@ -1599,6 +1600,7 @@ msgstr "Genstarter enhed …"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Returner alle maskinens hardware-id'er"
 
+#. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Kør `fwupdmgr get-upgrades` for mere information."
 

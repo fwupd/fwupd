@@ -205,6 +205,7 @@ msgstr[1] "%u dny"
 msgstr[2] "%u dnů"
 msgstr[3] "%u dny"
 
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
@@ -212,6 +213,15 @@ msgstr[0] "Je k dispozici novější firmware pro %u zařízení."
 msgstr[1] "Jsou k dispozici novější firmware pro %u zařízení."
 msgstr[2] "Jsou k dispozici novější firmware pro %u zařízení."
 msgstr[3] "Jsou k dispozici novější firmware pro %u zařízení."
+
+#. TRANSLATORS: this is shown in the MOTD
+#, c-format
+msgid "%u device is not the best known configuration."
+msgid_plural "%u devices are not the best known configuration."
+msgstr[0] "Firmware na %u zařízení není na verzi, která by byla osvědčená v kombinaci s verzemi firmwarů ostatních zařízení."
+msgstr[1] "Firmware na %u zařízeních není na verzi, která by byla osvědčená v kombinaci s verzemi firmwarů ostatních zařízení."
+msgstr[2] "Firmware na %u zařízeních není na verzi, která by byla osvědčená v kombinaci s verzemi firmwarů ostatních zařízení."
+msgstr[3] "Firmware na %u zařízeních není na verzi, která by byla osvědčená v kombinaci s verzemi firmwarů ostatních zařízení."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -253,6 +263,10 @@ msgstr[3] "%u sekundy"
 msgid "(obsoleted)"
 msgstr "(zastaralé)"
 
+#. TRANSLATORS: HSI event title
+msgid "A TPM PCR is now an invalid value"
+msgstr "PCR registr v TPM má nyní neplatnou hodnotu"
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Vyžadovaná akce:"
@@ -288,6 +302,14 @@ msgstr "Odsouhlasit a povolit vzdálený zdroj?"
 #, c-format
 msgid "Alias to %s"
 msgstr "Alternativa (alias) pro %s"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are now valid"
+msgstr "Všechny PCR registry jsou nyní platné"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are valid"
+msgstr "Všechny PCR registry jsou platné"
 
 #. TRANSLATORS: on some systems certain devices have to have matching
 #. versions,
@@ -559,6 +581,12 @@ msgstr "Odpojit do režimu zavaděče"
 #. TRANSLATORS: more details about the update link
 msgid "Details"
 msgstr "Podrobnosti"
+
+#. TRANSLATORS: the best known configuration is a set of software that we know
+#. works well
+#. * together. In the OEM and ODM industries it is often called a BKC
+msgid "Deviate from the best known configuration?"
+msgstr "Odchýlit se od osvědčené kombinace verzí firmwarů všech zařízení?"
 
 #. TRANSLATORS: description of device ability
 msgid "Device Flags"
@@ -1646,6 +1674,10 @@ msgstr "Přeinstalovává se %s na %s…"
 msgid "Release Branch"
 msgstr "Větev vydání"
 
+#. TRANSLATORS: the exact component on the server
+msgid "Release ID"
+msgstr "Identif. vydání"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
@@ -1695,8 +1727,13 @@ msgstr "Restartování zařízení…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Vypsat všechny identifikátory hardwaru počítače"
 
+#. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Podrobnosti získáte spuštěním `fwupdmgr get-upgrades`."
+
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync-bkc` to complete this action."
+msgstr "Pokud chcete vyřešit tuto část, spusťte `fwupdmgr sync-bkc`"
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -1751,12 +1788,12 @@ msgid "Scheduling…"
 msgstr "Plánování aktualizace…"
 
 #. TRANSLATORS: HSI event title
-msgid "Secure Boot enabled"
-msgstr "Secure Boot zapnut"
+msgid "Secure Boot disabled"
+msgstr "Secure Boot vypnut"
 
 #. TRANSLATORS: HSI event title
-msgid "SecureBoot disabled"
-msgstr "SecureBoot vypnut"
+msgid "Secure Boot enabled"
+msgstr "Secure Boot zapnut"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1970,6 +2007,10 @@ msgstr "Přepnout větev z %s na %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Přepnout větev firmware na zařízení"
 
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the host best known configuration"
+msgstr "Synchronizovat verze firmwarů do stavu osvědčené kombinace"
+
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
 msgstr "Počítač vyžaduje externí napájení"
@@ -1981,6 +2022,11 @@ msgstr "TEXT"
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "Rekonstrukce TPM PCR0"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM empty PCRs"
+msgstr "Prázdné PCR registry v TPM"
 
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
@@ -2032,6 +2078,12 @@ msgstr "Nejsou zde žádné blokované soubory s firmware"
 #. * the domain administrator
 msgid "There is no approved firmware."
 msgstr "Není k dispozici žádný schválený firmware."
+
+#. TRANSLATORS: %1 is the current device version number, and %2 is the
+#. command name, e.g. `fwupdmgr sync-bkc`
+#, c-format
+msgid "This device will be reverted back to %s when the %s command is performed."
+msgstr "Vykonáním příkazu %s bude toto zařízení vráceno zpět na verzi %s."
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
@@ -2334,6 +2386,13 @@ msgstr "Kompatibilita aktualizací firmware s připojenými zařízeními, či v
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
 msgstr "Použitím tohoto firmware může být hardware poškozen a instalací tohoto vydání může být ztracena záruka od %s."
+
+#. TRANSLATORS: BKC is the industry name for the best known configuration and
+#. is a set
+#. * of firmware that works together
+#, c-format
+msgid "Your system is set up to the BKC of %s."
+msgstr "Váš systém má osvědčené uspořádání %s."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"

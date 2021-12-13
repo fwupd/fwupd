@@ -199,6 +199,7 @@ msgid_plural "%u days"
 msgstr[0] "%u giorno"
 msgstr[1] "%u giorni"
 
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
@@ -237,6 +238,10 @@ msgstr[1] "%u secondi"
 msgid "(obsoleted)"
 msgstr "(obsoleto)"
 
+#. TRANSLATORS: HSI event title
+msgid "A TPM PCR is now an invalid value"
+msgstr "Un PCR TPM è ora un valore non valido"
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Azione richiesta:"
@@ -272,6 +277,14 @@ msgstr "Accettare e abilitare il remoto?"
 #, c-format
 msgid "Alias to %s"
 msgstr "Alias di %s"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are now valid"
+msgstr "Tutti i PCR TPM non sono validi"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are valid"
+msgstr "Tutti i PCR TPM sono validi"
 
 #. TRANSLATORS: on some systems certain devices have to have matching
 #. versions,
@@ -1622,6 +1635,10 @@ msgstr "Reinstallazione di %s con %s..."
 msgid "Release Branch"
 msgstr "Ramo di rilascio"
 
+#. TRANSLATORS: the exact component on the server
+msgid "Release ID"
+msgstr "ID release"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
@@ -1671,6 +1688,7 @@ msgstr "Riavvio del dispositivo…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Fornisce tutti gli ID hardware per un dispositivo"
 
+#. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Per maggiori informazioni eseguire «fwupdmgr get-upgrades»."
 
@@ -1727,12 +1745,12 @@ msgid "Scheduling…"
 msgstr "Pianificazione…"
 
 #. TRANSLATORS: HSI event title
-msgid "Secure Boot enabled"
-msgstr "Secure boot abilitato"
+msgid "Secure Boot disabled"
+msgstr "Secure boot disabilitato"
 
 #. TRANSLATORS: HSI event title
-msgid "SecureBoot disabled"
-msgstr "Secure boot disabilitato"
+msgid "Secure Boot enabled"
+msgstr "Secure boot abilitato"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1955,6 +1973,11 @@ msgstr "TESTO"
 #. TRANSLATORS: Title: the PCR is rebuilt from the TPM event log
 msgid "TPM PCR0 reconstruction"
 msgstr "Ricostruzione PCR0 TPM"
+
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM empty PCRs"
+msgstr "PCR TPM vuoti"
 
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"

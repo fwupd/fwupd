@@ -22,6 +22,7 @@ msgid_plural "%.0f minutes remaining"
 msgstr[0] "Al mancjie %.0f minût"
 msgstr[1] "A mancjin %.0f minûts"
 
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
@@ -617,6 +618,7 @@ msgstr "Daûr a tornâ a inviâ il dispositîf…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Torne ducj i ID dal hardware pe machine"
 
+#. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Eseguìs `fwupdmgr get-upgrades` par vê plui informazions."
 

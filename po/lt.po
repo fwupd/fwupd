@@ -115,6 +115,7 @@ msgstr[1] "%u dienos"
 msgstr[2] "%u dienų"
 msgstr[3] "%u diena"
 
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
@@ -1058,6 +1059,7 @@ msgstr "Įrenginys paleidžiamas iš naujo…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Grąžinti visus kompiuterio aparatinės įrangos ID"
 
+#. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Išsamesnei informacijai, paleiskite „fwupdmgr get-upgrades“."
 

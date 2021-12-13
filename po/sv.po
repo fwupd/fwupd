@@ -149,7 +149,7 @@ msgstr "%s och alla anslutna enheter kanske inte går att använda under uppdate
 #. %2 refers to a result value, e.g. "Invalid"
 #, c-format
 msgid "%s appeared: %s"
-msgstr "%s dök upp:%s"
+msgstr "%s dök upp: %s"
 
 #. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform
 #. key".
@@ -163,7 +163,7 @@ msgstr "%s ändrad: %s → %s"
 #. %2 refers to a result value, e.g. "Invalid"
 #, c-format
 msgid "%s disappeared: %s"
-msgstr "%s försvann:%s"
+msgstr "%s försvann: %s"
 
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
@@ -204,11 +204,19 @@ msgid_plural "%u days"
 msgstr[0] "%u dag"
 msgstr[1] "%u dagar"
 
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
 msgstr[0] "%u enhet har en uppgradering för fast programvara tillgänglig."
 msgstr[1] "%u enheter har en uppgradering för fast programvara tillgänglig."
+
+#. TRANSLATORS: this is shown in the MOTD
+#, c-format
+msgid "%u device is not the best known configuration."
+msgid_plural "%u devices are not the best known configuration."
+msgstr[0] "%u enhet har inte den mest kända konfigurationen."
+msgstr[1] "%u enheter har inte den mest kända konfigurationen."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -241,6 +249,10 @@ msgstr[1] "%u sekunder"
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
 msgstr "(föråldrad)"
+
+#. TRANSLATORS: HSI event title
+msgid "A TPM PCR is now an invalid value"
+msgstr "Ett TPM PCR har nu ett ogiltigt värde"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
@@ -277,6 +289,14 @@ msgstr "Samtyck och aktivera fjärrkällan?"
 #, c-format
 msgid "Alias to %s"
 msgstr "Alias för %s"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are now valid"
+msgstr "Alla TPM PCR är nu giltiga"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are valid"
+msgstr "Alla TPM PCR är giltiga"
 
 #. TRANSLATORS: on some systems certain devices have to have matching
 #. versions,
@@ -546,6 +566,12 @@ msgstr "Koppla från till starthanterarläge"
 #. TRANSLATORS: more details about the update link
 msgid "Details"
 msgstr "Detaljer"
+
+#. TRANSLATORS: the best known configuration is a set of software that we know
+#. works well
+#. * together. In the OEM and ODM industries it is often called a BKC
+msgid "Deviate from the best known configuration?"
+msgstr "Avvik från den mest kända konfigurationen?"
 
 #. TRANSLATORS: description of device ability
 msgid "Device Flags"
@@ -1025,11 +1051,16 @@ msgstr "Hittad"
 msgid "Full Disk Encryption Detected"
 msgstr "Full diskkryptering upptäckt"
 
+#. TRANSLATORS: we might ask the user the recovery key when next booting
+#. Windows
+msgid "Full disk encryption secrets may be invalidated when updating"
+msgstr "Krypteringshemligheter för hel disk kan göras ogiltiga vid uppdatering"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
 msgstr[0] "GUID"
-msgstr[1] "GUID:er"
+msgstr[1] "GUID:n"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgctxt "A single GUID"
@@ -1091,6 +1122,10 @@ msgstr "Hårdvara väntar på att bli utdragen/återinsatt"
 #. TRANSLATORS: the release urgency
 msgid "High"
 msgstr "Hög"
+
+#. TRANSLATORS: title for host security events
+msgid "Host Security Events"
+msgstr "Säkerhetshändelser för värd"
 
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
@@ -1618,6 +1653,10 @@ msgstr "Återinstallerar %s med %s… "
 msgid "Release Branch"
 msgstr "Utgåvegren"
 
+#. TRANSLATORS: the exact component on the server
+msgid "Release ID"
+msgstr "Utgåva-ID"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
@@ -1667,8 +1706,13 @@ msgstr "Startar om enhet…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Returnera alla hårdvaru-ID:n för maskinen"
 
+#. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Kör ”fwupdmgr get-upgrades” för vidare information."
+
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync-bkc` to complete this action."
+msgstr "Kör `fwupdmgr sync-bkc` för att slutföra denna åtgärd."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -1723,12 +1767,12 @@ msgid "Scheduling…"
 msgstr "Schemalägger…"
 
 #. TRANSLATORS: HSI event title
-msgid "Secure Boot enabled"
-msgstr "Säkerhetsstart aktiverad"
+msgid "Secure Boot disabled"
+msgstr "Secure Boot inaktiverad"
 
 #. TRANSLATORS: HSI event title
-msgid "SecureBoot disabled"
-msgstr "Säkerhetsstart inaktiverad"
+msgid "Secure Boot enabled"
+msgstr "Secure Boot aktiverad"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1834,6 +1878,10 @@ msgstr "Signatur"
 msgid "Size"
 msgstr "Storlek"
 
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr "Några av plattformshemligheterna kan göras ogiltiga när denna fasta programvara uppdateras."
+
 #. TRANSLATORS: source (as in code) link
 msgid "Source"
 msgstr "Källa"
@@ -1936,6 +1984,10 @@ msgstr "Ändra gren från %s till %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Ändra gren för fast programvara på enheten"
 
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the host best known configuration"
+msgstr "Synkronisera versioner för fast programvara till den mest kända konfigurationen hos värden"
+
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
 msgstr "Systemet kräver extern strömkälla"
@@ -1948,9 +2000,20 @@ msgstr "TEXT"
 msgid "TPM PCR0 reconstruction"
 msgstr "TPM PCR0-rekonstruktion"
 
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM empty PCRs"
+msgstr "TPM har tomma PCR"
+
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
 msgstr "TPM v2.0"
+
+#. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
+msgid "Tag"
+msgid_plural "Tags"
+msgstr[0] "Tag"
+msgstr[1] "Taggar"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
@@ -1998,6 +2061,12 @@ msgstr "Det finns inga blockerade fast programvarufiler"
 #. * the domain administrator
 msgid "There is no approved firmware."
 msgstr "Det finns ingen godkänd fast programvara."
+
+#. TRANSLATORS: %1 is the current device version number, and %2 is the
+#. command name, e.g. `fwupdmgr sync-bkc`
+#, c-format
+msgid "This device will be reverted back to %s when the %s command is performed."
+msgstr "Denna enhet kommer att återställas till %s när kommandot %s körs."
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
@@ -2300,6 +2369,13 @@ msgstr "Din distributör kanske inte har verifierat någon av uppdateringarna av
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
 msgstr "Din hårdvara kan skadas med den här fasta programvaran och att installera denna utgåva kan ogiltigförklara all garanti hos %s."
+
+#. TRANSLATORS: BKC is the industry name for the best known configuration and
+#. is a set
+#. * of firmware that works together
+#, c-format
+msgid "Your system is set up to the BKC of %s."
+msgstr "Ditt system är inställt till BKC för %s."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"
