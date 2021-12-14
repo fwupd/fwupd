@@ -114,6 +114,7 @@ fu_nordic_hid_cfg_channel_module_free(FuNordicCfgChannelModule *mod)
 	if (mod->options != NULL)
 		g_ptr_array_unref(mod->options);
 	g_free(mod->name);
+	g_free(mod);
 }
 
 static gboolean
@@ -821,7 +822,8 @@ static gboolean
 fu_nordic_hid_cfg_channel_setup(FuDevice *device, GError **error)
 {
 	FuNordicDeviceCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
-	g_autofree gchar *target_id = NULL;
+	g_autofree gchar *devid0 = NULL;
+	g_autofree gchar *devid1 = NULL;
 
 	if (!fu_nordic_hid_cfg_channel_index_peers(self, error))
 		return FALSE;
@@ -839,19 +841,19 @@ fu_nordic_hid_cfg_channel_setup(FuDevice *device, GError **error)
 
 	/* additional GUID based on VID/PID and target area to flash
 	 * needed to distinguish images aimed to different banks*/
-	target_id = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&BOARD_%s&BL_%s",
-				    fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)),
-				    fu_udev_device_get_model(FU_UDEV_DEVICE(device)),
-				    self->board_name,
-				    self->bl_name);
-	fu_device_add_guid(device, target_id);
-	target_id = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&BOARD_%s&BL_%s&BANK_%01X",
-				    fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)),
-				    fu_udev_device_get_model(FU_UDEV_DEVICE(device)),
-				    self->board_name,
-				    self->bl_name,
-				    self->flash_area_id);
-	fu_device_add_guid(device, target_id);
+	devid0 = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&BOARD_%s&BL_%s",
+				 fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)),
+				 fu_udev_device_get_model(FU_UDEV_DEVICE(device)),
+				 self->board_name,
+				 self->bl_name);
+	fu_device_add_guid(device, devid0);
+	devid1 = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&BOARD_%s&BL_%s&BANK_%01X",
+				 fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)),
+				 fu_udev_device_get_model(FU_UDEV_DEVICE(device)),
+				 self->board_name,
+				 self->bl_name,
+				 self->flash_area_id);
+	fu_device_add_guid(device, devid1);
 	return TRUE;
 }
 
@@ -983,7 +985,7 @@ fu_nordic_hid_cfg_channel_write_firmware(FuDevice *device,
 {
 	FuNordicDeviceCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
 	guint32 checksum;
-	const gchar *csum_str = NULL;
+	g_autofree gchar *csum_str = NULL;
 	g_autofree gchar *image_id = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(FuNordicCfgChannelDfuInfo) dfu_info = g_new0(FuNordicCfgChannelDfuInfo, 1);

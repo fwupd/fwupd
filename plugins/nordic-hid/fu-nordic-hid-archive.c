@@ -103,7 +103,7 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 		guint image_addr = 0;
 		JsonObject *obj = json_array_get_object_element(json_files, i);
 		GBytes *blob = NULL;
-		FuFirmware *image = NULL;
+		g_autoptr(FuFirmware) image = NULL;
 		g_autofree gchar *image_id = NULL;
 		g_auto(GStrv) board_split = NULL;
 
