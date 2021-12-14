@@ -57,6 +57,10 @@ Section "fwupd"
   File "/usr/x86_64-w64-mingw32/sys-root/mingw/bin/libwinpthread-1.dll"
   File "/usr/x86_64-w64-mingw32/sys-root/mingw/bin/libxml2-2.dll"
   File "/usr/x86_64-w64-mingw32/sys-root/mingw/bin/zlib1.dll"
+  File "/usr/x86_64-w64-mingw32/sys-root/mingw/bin/curl.exe"
+  File "/usr/x86_64-w64-mingw32/sys-root/mingw/bin/gspawn-win64-helper-console.exe"
+  File "/usr/x86_64-w64-mingw32/sys-root/mingw/bin/gspawn-win64-helper.exe"
+  File "/etc/pki/tls/certs/ca-bundle.crt"
 
   # fwupd
   File "dfu-tool.exe"

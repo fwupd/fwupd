@@ -1044,9 +1044,16 @@ fu_util_stdout_cb(const gchar *line, gpointer user_data)
 static gboolean
 fu_util_download_out_of_process(const gchar *uri, const gchar *fn, GError **error)
 {
+#ifdef _WIN32
+	g_autofree gchar *basedir = fu_common_get_path(FU_PATH_KIND_WIN32_BASEDIR);
+	g_autofree gchar *cert = g_build_filename(basedir, "bin", "ca-bundle.crt", NULL);
+	const gchar *argv[][7] = {{"curl.exe", uri, "--output", fn, "--cacert", cert, NULL},
+				  {NULL}};
+#else
 	const gchar *argv[][5] = {{"wget", uri, "-O", fn, NULL},
 				  {"curl", uri, "--output", fn, NULL},
 				  {NULL}};
+#endif
 	for (guint i = 0; argv[i][0] != NULL; i++) {
 		g_autoptr(GError) error_local = NULL;
 		g_autofree gchar *fn_tmp = NULL;
