@@ -1034,6 +1034,13 @@ fu_util_install_task_sort_cb(gconstpointer a, gconstpointer b)
 	return fu_install_task_compare(task1, task2);
 }
 
+static void
+fu_util_stdout_cb(const gchar *line, gpointer user_data)
+{
+	if (g_getenv("FWUPD_DOWNLOAD_VERBOSE") != NULL)
+		g_debug("'%s'", line);
+}
+
 static gboolean
 fu_util_download_out_of_process(const gchar *uri, const gchar *fn, GError **error)
 {
@@ -1048,7 +1055,7 @@ fu_util_download_out_of_process(const gchar *uri, const gchar *fn, GError **erro
 			g_debug("%s", error_local->message);
 			continue;
 		}
-		return fu_common_spawn_sync(argv[i], NULL, NULL, 0, NULL, error);
+		return fu_common_spawn_sync(argv[i], fu_util_stdout_cb, NULL, 0, NULL, error);
 	}
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
