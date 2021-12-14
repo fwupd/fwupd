@@ -789,6 +789,7 @@ fu_common_spawn_sync(const gchar *const *argv,
 	if (subprocess == NULL)
 		return FALSE;
 
+#ifndef _WIN32
 	/* watch for process to exit */
 	helper = g_new0(FuCommonSpawnHelper, 1);
 	helper->handler_cb = handler_cb;
@@ -814,6 +815,7 @@ fu_common_spawn_sync(const gchar *const *argv,
 	g_cancellable_disconnect(cancellable, cancellable_id);
 	if (g_cancellable_set_error_if_cancelled(helper->cancellable, error))
 		return FALSE;
+#endif
 	return g_subprocess_wait_check(subprocess, cancellable, error);
 }
 
