@@ -1225,6 +1225,28 @@ fu_common_error_array_get_best(GPtrArray *errors)
 }
 
 /**
+ * fu_common_get_win32_basedir:
+ *
+ * Gets the base directory that fwupd has been launched from on Windows.
+ * This is the directory containing all subdirectories (IE 'C:\Program Files (x86)\fwupd\')
+ *
+ * Returns: The system path, or %NULL if invalid
+ *
+ * Since: 1.7.4
+ **/
+static gchar *
+fu_common_get_win32_basedir(void)
+{
+#ifdef _WIN32
+	char drive_buf[_MAX_DRIVE];
+	char dir_buf[_MAX_DIR];
+	_splitpath(_pgmptr, drive_buf, dir_buf, NULL, NULL);
+	return g_build_filename(drive_buf, dir_buf, "..", NULL);
+#endif
+	return NULL;
+}
+
+/**
  * fu_common_get_path:
  * @path_kind: a #FuPathKind e.g. %FU_PATH_KIND_DATADIR_PKG
  *
@@ -1256,8 +1278,8 @@ fu_common_get_path(FuPathKind path_kind)
 		tmp = g_getenv("SNAP_USER_DATA");
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_LOCALSTATEDIR, NULL);
-#endif
 		return g_build_filename(FWUPD_LOCALSTATEDIR, NULL);
+#endif
 	/* /proc */
 	case FU_PATH_KIND_PROCFS:
 		tmp = g_getenv("FWUPD_PROCFS");
@@ -1308,7 +1330,11 @@ fu_common_get_path(FuPathKind path_kind)
 		tmp = g_getenv("SNAP_USER_DATA");
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_SYSCONFDIR, NULL);
+		basedir = fu_common_get_win32_basedir();
+		if (basedir != NULL)
+			return g_build_filename(basedir, FWUPD_SYSCONFDIR, NULL);
 		return g_strdup(FWUPD_SYSCONFDIR);
+
 	/* /usr/lib/<triplet>/fwupd-plugins-3 */
 	case FU_PATH_KIND_PLUGINDIR_PKG:
 		tmp = g_getenv("FWUPD_PLUGINDIR");
@@ -1317,6 +1343,9 @@ fu_common_get_path(FuPathKind path_kind)
 		tmp = g_getenv("SNAP");
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_PLUGINDIR, NULL);
+		basedir = fu_common_get_win32_basedir();
+		if (basedir != NULL)
+			return g_build_filename(basedir, FWUPD_PLUGINDIR, NULL);
 		return g_build_filename(FWUPD_PLUGINDIR, NULL);
 	/* /usr/share/fwupd */
 	case FU_PATH_KIND_DATADIR_PKG:
@@ -1326,6 +1355,9 @@ fu_common_get_path(FuPathKind path_kind)
 		tmp = g_getenv("SNAP");
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_DATADIR, PACKAGE_NAME, NULL);
+		basedir = fu_common_get_win32_basedir();
+		if (basedir != NULL)
+			return g_build_filename(basedir, FWUPD_DATADIR, PACKAGE_NAME, NULL);
 		return g_build_filename(FWUPD_DATADIR, PACKAGE_NAME, NULL);
 	/* /usr/share/fwupd/quirks.d */
 	case FU_PATH_KIND_DATADIR_QUIRKS:
@@ -1409,6 +1441,9 @@ fu_common_get_path(FuPathKind path_kind)
 #else
 		return NULL;
 #endif
+	/* C:\Program Files (x86)\fwupd\ */
+	case FU_PATH_KIND_WIN32_BASEDIR:
+		return fu_common_get_win32_basedir();
 	/* this shouldn't happen */
 	default:
 		g_warning("cannot build path for unknown kind %u", path_kind);
