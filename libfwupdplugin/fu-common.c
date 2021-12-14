@@ -1247,9 +1247,16 @@ fu_common_get_path(FuPathKind path_kind)
 		tmp = g_getenv("FWUPD_LOCALSTATEDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
+#ifdef _WIN32
+		return g_build_filename(g_getenv("USERPROFILE"),
+					PACKAGE_NAME,
+					FWUPD_LOCALSTATEDIR,
+					NULL);
+#else
 		tmp = g_getenv("SNAP_USER_DATA");
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_LOCALSTATEDIR, NULL);
+#endif
 		return g_build_filename(FWUPD_LOCALSTATEDIR, NULL);
 	/* /proc */
 	case FU_PATH_KIND_PROCFS:
