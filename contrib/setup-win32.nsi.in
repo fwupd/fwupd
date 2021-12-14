@@ -76,6 +76,9 @@ Section "fwupd"
   File "etc/pki/fwupd/LVFS-CA.pem"
   SetOutPath "$INSTDIR\share\fwupd\quirks.d"
   File /r "share/fwupd/quirks.d/*.quirk"
+  SetOutPath "$INSTDIR\etc\fwupd\remotes.d"
+  File "etc/fwupd/remotes.d/lvfs.conf"
+  File "etc/fwupd/remotes.d/lvfs-testing.conf"
 
   ReadEnvStr $0 COMSPEC
   SetOutPath "$INSTDIR"
