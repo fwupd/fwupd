@@ -480,6 +480,30 @@ _strnsplit_nop_cb(GString *token, guint token_idx, gpointer user_data, GError **
 }
 
 static void
+fu_common_memmem_func(void)
+{
+	const guint8 haystack[] = {'H', 'A', 'Y', 'S'};
+	const guint8 needle[] = {'A', 'Y'};
+	gboolean ret;
+	gsize offset = 0;
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_memmem_safe(haystack, sizeof(haystack), needle, sizeof(needle), &offset, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(offset, ==, 0x1);
+
+	ret = fu_memmem_safe(haystack + 2,
+			     sizeof(haystack) - 2,
+			     needle,
+			     sizeof(needle),
+			     &offset,
+			     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
+}
+
+static void
 fu_common_strnsplit_func(void)
 {
 	const gchar *str = "123foo123bar123";
@@ -3789,6 +3813,7 @@ main(int argc, char **argv)
 	g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
 	g_test_add_func("/fwupd/common{strnsplit}", fu_common_strnsplit_func);
+	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
 	g_test_add_func("/fwupd/progress", fu_progress_func);
 	g_test_add_func("/fwupd/progress{child}", fu_progress_child_func);
 	g_test_add_func("/fwupd/progress{parent-1-step}", fu_progress_parent_one_step_proxy_func);

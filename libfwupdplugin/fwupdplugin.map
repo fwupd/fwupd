@@ -977,3 +977,9 @@ LIBFWUPDPLUGIN_1.7.3 {
     fu_common_sum8_bytes;
   local: *;
 } LIBFWUPDPLUGIN_1.7.2;
+
+LIBFWUPDPLUGIN_1.7.4 {
+  global:
+    fu_memmem_safe;
+  local: *;
+} LIBFWUPDPLUGIN_1.7.3;

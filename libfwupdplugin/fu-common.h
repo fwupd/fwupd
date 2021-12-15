@@ -261,6 +261,13 @@ fu_memcpy_safe(guint8 *dst,
 	       gsize n,
 	       GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
+fu_memmem_safe(const guint8 *haystack,
+	       gsize haystack_sz,
+	       const guint8 *needle,
+	       gsize needle_sz,
+	       gsize *offset,
+	       GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
 fu_common_read_uint8_safe(const guint8 *buf,
 			  gsize bufsz,
 			  gsize offset,
