@@ -2329,6 +2329,82 @@ fu_memcpy_safe(guint8 *dst,
 }
 
 /**
+ * fu_memmem_safe:
+ * @haystack: destination buffer
+ * @haystack_sz: maximum size of @haystack, typically `sizeof(haystack)`
+ * @needle: source buffer
+ * @needle_sz: maximum size of @haystack, typically `sizeof(needle)`
+ * @offset: (out) (nullable): offset in bytes @needle has been found in @haystack
+ * @error: (nullable): optional return location for an error
+ *
+ * Finds a block of memory in another block of memory in a safe way.
+ *
+ * Returns: %TRUE if the needle was found in the haystack, %FALSE otherwise
+ *
+ * Since: 1.7.4
+ **/
+gboolean
+fu_memmem_safe(const guint8 *haystack,
+	       gsize haystack_sz,
+	       const guint8 *needle,
+	       gsize needle_sz,
+	       gsize *offset,
+	       GError **error)
+{
+#ifdef HAVE_MEMMEM
+	const guint8 *tmp;
+#endif
+	g_return_val_if_fail(haystack != NULL, FALSE);
+	g_return_val_if_fail(needle != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* nothing to find */
+	if (needle_sz == 0) {
+		if (offset != NULL)
+			*offset = 0;
+		return TRUE;
+	}
+
+	/* impossible */
+	if (needle_sz > haystack_sz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "needle of 0x%02x bytes is larger than haystack of 0x%02x bytes",
+			    (guint)needle_sz,
+			    (guint)haystack_sz);
+		return FALSE;
+	}
+
+#ifdef HAVE_MEMMEM
+	/* trust glibc to do a binary or linear search as appropriate */
+	tmp = memmem(haystack, haystack_sz, needle, needle_sz);
+	if (tmp != NULL) {
+		if (offset != NULL)
+			*offset = tmp - haystack;
+		return TRUE;
+	}
+#else
+	for (gsize i = 0; i < haystack_sz - needle_sz; i++) {
+		if (memcmp(haystack + i, needle, needle_sz) == 0) {
+			if (offset != NULL)
+				*offset = i;
+			return TRUE;
+		}
+	}
+#endif
+
+	/* not found */
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "needle of 0x%02x bytes was not found in haystack of 0x%02x bytes",
+		    (guint)needle_sz,
+		    (guint)haystack_sz);
+	return FALSE;
+}
+
+/**
  * fu_memdup_safe:
  * @src: source buffer
  * @n: number of bytes to copy from @src
