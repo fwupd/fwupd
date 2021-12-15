@@ -51,6 +51,8 @@ fu_cfi_device_cmd_to_string(FuCfiDeviceCmd cmd)
 		return "CfiDeviceCmdWriteEn";
 	if (cmd == FU_CFI_DEVICE_CMD_WRITE_STATUS)
 		return "CfiDeviceCmdWriteStatus";
+	if (cmd == FU_CFI_DEVICE_CMD_BLOCK_ERASE)
+		return "CfiDeviceCmdBlockErase";
 	return NULL;
 }
 
@@ -381,6 +383,12 @@ fu_cfi_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
 			return FALSE;
 		priv->cmds[FU_CFI_DEVICE_CMD_CHIP_ERASE] = tmp;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "CfiDeviceCmdBlockErase") == 0) {
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->cmds[FU_CFI_DEVICE_CMD_BLOCK_ERASE] = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CfiDeviceCmdSectorErase") == 0) {
