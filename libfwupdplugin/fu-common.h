@@ -201,6 +201,10 @@ fu_common_set_contents_bytes(const gchar *filename,
 GBytes *
 fu_common_get_contents_bytes(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GBytes *
+fu_common_get_contents_stream(GInputStream *stream,
+			      gsize count,
+			      GError **error) G_GNUC_WARN_UNUSED_RESULT;
+GBytes *
 fu_common_get_contents_fd(gint fd, gsize count, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_common_extract_archive(GBytes *blob, const gchar *dir, GError **error) G_GNUC_WARN_UNUSED_RESULT;
