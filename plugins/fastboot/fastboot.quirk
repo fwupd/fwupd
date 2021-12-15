@@ -5,4 +5,4 @@ Plugin = fastboot
 # Quectel EG25-G modem
 [USB\VID_18D1&PID_D00D]
 FastbootBlockSize = 16384
-FastbootOperationDelay = 100
+FastbootOperationDelay = 250
