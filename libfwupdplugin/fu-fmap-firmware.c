@@ -73,11 +73,13 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 
-	/* only search for the fmap signature if not fuzzing */
+#ifdef HAVE_MEMMEM
+	/* only search for the fmap signature if not fuzzing and we're on a platform that has it */
 	if ((flags & FWUPD_INSTALL_FLAG_NO_SEARCH) == 0) {
 		if (!fu_fmap_firmware_find_offset(self, buf, bufsz, error))
 			return FALSE;
 	}
+#endif
 
 	/* load header */
 	if (!fu_memcpy_safe((guint8 *)&fmap,
