@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <fwupdplugin.h>
+#include "fu-nordic-hid-firmware.h"
 
 #define FU_TYPE_NORDIC_HID_FIRMWARE_B0 (fu_nordic_hid_firmware_b0_get_type())
 G_DECLARE_FINAL_TYPE(FuNordicHidFirmwareB0,
 		     fu_nordic_hid_firmware_b0,
 		     FU,
 		     NORDIC_HID_FIRMWARE_B0,
-		     FuFirmware)
+		     FuNordicHidFirmware)
 
 FuFirmware *
 fu_nordic_hid_firmware_b0_new(void);

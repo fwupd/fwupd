@@ -12,7 +12,9 @@ shared_module('fu_plugin_nordic_hid',
   sources : [
     'fu-plugin-nordic-hid.c',
     'fu-nordic-hid-cfg-channel.c',
+    'fu-nordic-hid-firmware.c',
     'fu-nordic-hid-firmware-b0.c',
+    'fu-nordic-hid-firmware-mcuboot.c',
     'fu-nordic-hid-archive.c',
   ],
   include_directories : [

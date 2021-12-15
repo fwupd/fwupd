@@ -9,6 +9,7 @@
 
 #include "fu-nordic-hid-archive.h"
 #include "fu-nordic-hid-firmware-b0.h"
+#include "fu-nordic-hid-firmware-mcuboot.h"
 
 /* current version format is 0 */
 #define MAX_VERSION_FORMAT 0
@@ -123,13 +124,8 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 			bootloader_name = "B0";
 			image = g_object_new(FU_TYPE_NORDIC_HID_FIRMWARE_B0, NULL);
 		} else if (json_object_has_member(obj, "version_MCUBOOT")) {
-			/* TODO: add MCUboot format */
 			bootloader_name = "MCUBOOT";
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INVALID_FILE,
-					    "MCUboot bootloader is not supported");
-			return FALSE;
+			image = g_object_new(FU_TYPE_NORDIC_HID_FIRMWARE_MCUBOOT, NULL);
 		} else {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
@@ -154,8 +150,10 @@ fu_nordic_hid_archive_parse(FuFirmware *firmware,
 					    "manifest invalid as has no target board information");
 			return FALSE;
 		}
-		/* images are listed in strict order: this is guaranteed by producer
-		 * set the id format as <board>_<bl>_<bank>N, i.e "nrf52840dk_B0_bank0" */
+		/* images for B0 bootloader are listed in strict order:
+		 * this is guaranteed by producer set the id format as
+		 * <board>_<bl>_<bank>N, i.e "nrf52840dk_B0_bank0".
+		 * For MCUBoot bootloader only the single image is available */
 		image_id = g_strdup_printf("%s_%s_bank%01u", board_split[0], bootloader_name, i);
 		if (!fu_firmware_parse(image, blob, flags, error))
 			return FALSE;
