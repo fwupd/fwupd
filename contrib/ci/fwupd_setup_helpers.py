@@ -31,11 +31,14 @@ def detect_profile():
 
 
 def test_markdown():
-    import markdown
+    try:
+        import markdown
 
-    new_enough = markdown.__version_info__ >= MINIMUM_MARKDOWN
+        new_enough = markdown.__version_info__ >= MINIMUM_MARKDOWN
+    except ModuleNotFoundError:
+        new_enough = False
     if not new_enough:
-        print("python3-markdown must be upgraded")
+        print("python3-markdown must be installed/upgraded")
     sys.exit(not new_enough)
 
 
