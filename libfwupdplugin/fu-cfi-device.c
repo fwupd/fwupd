@@ -23,6 +23,7 @@ typedef struct {
 	guint8 cmd_read_id_sz;
 	guint32 page_size;
 	guint32 sector_size;
+	guint32 block_size;
 	FuCfiDeviceCmd cmds[FU_CFI_DEVICE_CMD_LAST];
 } FuCfiDevicePrivate;
 
@@ -304,6 +305,43 @@ fu_cfi_device_get_sector_size(FuCfiDevice *self)
 }
 
 /**
+ * fu_cfi_device_set_block_size:
+ * @self: a #FuCfiDevice
+ * @block_size: block size in bytes, or 0 if unknown
+ *
+ * Sets the chip block size. This is typically the largest erasable chunk size.
+ *
+ * Since: 1.7.4
+ **/
+void
+fu_cfi_device_set_block_size(FuCfiDevice *self, guint32 block_size)
+{
+	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CFI_DEVICE(self));
+	priv->block_size = block_size;
+}
+
+/**
+ * fu_cfi_device_get_block_size:
+ * @self: a #FuCfiDevice
+ *
+ * Gets the chip block size. This is typically the largest erasable block size.
+ *
+ * This is typically set with the `CfiDeviceBlockSize` quirk key.
+ *
+ * Returns: block size in bytes, or 0 if unknown
+ *
+ * Since: 1.7.4
+ **/
+guint32
+fu_cfi_device_get_block_size(FuCfiDevice *self)
+{
+	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CFI_DEVICE(self), G_MAXUINT32);
+	return priv->block_size;
+}
+
+/**
  * fu_cfi_device_set_sector_size:
  * @self: a #FuCfiDevice
  * @sector_size: sector size in bytes, or 0 if unknown
@@ -393,6 +431,12 @@ fu_cfi_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		priv->sector_size = tmp;
 		return TRUE;
 	}
+	if (g_strcmp0(key, "CfiDeviceBlockSize") == 0) {
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		priv->block_size = tmp;
+		return TRUE;
+	}
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -413,6 +457,8 @@ fu_cfi_device_to_string(FuDevice *device, guint idt, GString *str)
 		fu_common_string_append_kx(str, idt, "PageSize", priv->page_size);
 	if (priv->sector_size > 0)
 		fu_common_string_append_kx(str, idt, "SectorSize", priv->sector_size);
+	if (priv->block_size > 0)
+		fu_common_string_append_kx(str, idt, "BlockSize", priv->block_size);
 }
 
 static void
