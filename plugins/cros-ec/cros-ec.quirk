@@ -17,3 +17,8 @@ Summary = D501 Device (Google Quiche derivative)
 [USB\VID_18D1&PID_5049]
 Plugin = cros_ec
 Summary = Gingerbread Reference Board
+
+# Belkin
+[USB\VID_050D&PID_003F]
+Plugin = cros_ec
+Summary = Belkin Reference Board
