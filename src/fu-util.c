@@ -3229,7 +3229,7 @@ fu_util_security_as_json(FuUtilPrivate *priv, GPtrArray *attrs, GPtrArray *event
 	json_builder_end_array(builder);
 
 	/* events */
-	if (events->len > 0) {
+	if (events != NULL && events->len > 0) {
 		json_builder_set_member_name(builder, "HostSecurityEvents");
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < attrs->len; i++) {
@@ -3334,6 +3334,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
 	g_autoptr(GPtrArray) attrs = NULL;
 	g_autoptr(GPtrArray) events = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *str = NULL;
 
 	/* not ready yet */
@@ -3352,9 +3353,18 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* the "when" */
-	events = fwupd_client_get_host_security_events(priv->client, 10, priv->cancellable, error);
-	if (events == NULL)
-		return FALSE;
+	events = fwupd_client_get_host_security_events(priv->client,
+						       10,
+						       priv->cancellable,
+						       &error_local);
+	if (events == NULL) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("ignoring failed events: %s", error_local->message);
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+	}
 
 	/* not for human consumption */
 	if (priv->as_json)
@@ -3374,7 +3384,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_print("%s\n", str);
 
 	/* events */
-	if (events->len > 0) {
+	if (events != NULL && events->len > 0) {
 		g_autofree gchar *estr = fu_util_security_events_to_string(events, flags);
 		if (estr != NULL)
 			g_print("%s\n", estr);

@@ -11,6 +11,7 @@
 
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
+#include "fwupd-error.h"
 #include "fwupd-security-attr-private.h"
 
 /**
@@ -1068,8 +1069,8 @@ fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GErr
 	return TRUE;
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "json-glib version too old");
 	return FALSE;
 #endif
