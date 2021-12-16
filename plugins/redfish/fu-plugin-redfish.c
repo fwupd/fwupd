@@ -272,10 +272,11 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	fu_redfish_backend_set_password(data->backend, password_new);
 
 	/* success */
-	if (!fu_plugin_set_config_value(plugin, "Username", username_fwupd, error))
+	if (!fu_plugin_set_secure_config_value(plugin, "Username", username_fwupd, error))
 		return FALSE;
-	if (!fu_plugin_set_config_value(plugin, "Password", password_new, error))
+	if (!fu_plugin_set_secure_config_value(plugin, "Password", password_new, error))
 		return FALSE;
+
 	return TRUE;
 }
 #endif
