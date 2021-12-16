@@ -678,6 +678,16 @@ fu_plugin_uefi_capsule_check_cod_support(GError **error)
 	guint64 value = 0;
 	g_autofree guint8 *buf = NULL;
 
+	/* we don't care what the data is, but we need it to exist */
+	if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL,
+				"OsIndications",
+				NULL,
+				NULL,
+				NULL,
+				error)) {
+		g_prefix_error(error, "failed to read EFI variable: ");
+		return FALSE;
+	}
 	if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL,
 				"OsIndicationsSupported",
 				&buf,
