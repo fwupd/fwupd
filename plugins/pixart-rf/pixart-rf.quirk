@@ -102,3 +102,8 @@ GType = FuPxiBleDevice
 [HIDRAW\VEN_03F0&DEV_614A]
 Plugin = pixart_rf
 GType = FuPxiBleDevice
+
+# HP 320 BTKB
+[HIDRAW\VEN_0461&DEV_4F01]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
