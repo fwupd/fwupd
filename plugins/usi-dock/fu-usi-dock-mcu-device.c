@@ -29,15 +29,18 @@ fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 			  gsize inbufsz,
 			  GError **error)
 {
-	guint8 buf[64] = {USB_HID_REPORT_ID2,
-			  0x3 + inbufsz /* length */,
-			  0xFE /* tag1: MCU defined */,
-			  0xFF /* tag2: MCU defined */};
-	buf[63] = tag2;
+	SetReportBuf_t tx_buffer = {
+	    .id = USB_HID_REPORT_ID2,
+	    .length = 0x3 + inbufsz,
+	    .mcutag1 = 0xFE,
+	    .mcutag2 = 0xFF,
+	    .mcutag3 = tag2,
+	};
+
 	if (inbuf != NULL) {
-		if (!fu_memcpy_safe(buf,
-				    sizeof(buf),
-				    0x4, /* dst */
+		if (!fu_memcpy_safe(tx_buffer.inbuf,
+				    sizeof(tx_buffer.inbuf),
+				    0x0, /* dst */
 				    inbuf,
 				    inbufsz,
 				    0x0, /* src */
@@ -47,14 +50,14 @@ fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 	}
 
 	/* special cases */
-	if (buf[5] == USBUID_ISP_INTERNAL_FW_CMD_UPDATE_FW) {
-		buf[6] = 0xFF;
+	if (tx_buffer.inbuf[0] == USBUID_ISP_INTERNAL_FW_CMD_UPDATE_FW) {
+		tx_buffer.inbuf[1] = 0xFF;
 	}
 
 	return fu_hid_device_set_report(FU_HID_DEVICE(self),
 					USB_HID_REPORT_ID2,
-					buf,
-					sizeof(buf),
+					(guint8 *)&tx_buffer,
+					sizeof(tx_buffer),
 					FU_USI_DOCK_MCU_DEVICE_TIMEOUT,
 					FU_HID_DEVICE_FLAG_NONE,
 					error);
@@ -683,7 +686,7 @@ fu_usi_dock_mcu_device_write_firmware(FuDevice *device,
 static gboolean
 fu_usi_dock_mcu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 {
-	fu_device_set_remove_delay(device, 300000);
+	fu_device_set_remove_delay(device, 500000);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
 	/* success */

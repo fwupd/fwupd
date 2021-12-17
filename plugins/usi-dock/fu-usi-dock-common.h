@@ -91,6 +91,15 @@ typedef struct {
 	guint8 bcdVersion[2];
 } IspVersionInMcu_t;
 
+typedef struct {
+	guint8 id;
+	guint8 length;
+	guint8 mcutag1;
+	guint8 mcutag2;
+	guint8 inbuf[59];
+	guint8 mcutag3;
+} SetReportBuf_t;
+
 const gchar *
 fu_usi_dock_idx_to_string(guint8 val);
 const gchar *
