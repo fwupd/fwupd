@@ -742,3 +742,9 @@ LIBFWUPD_1.7.3 {
     fwupd_release_has_tag;
   local: *;
 } LIBFWUPD_1.7.2;
+
+LIBFWUPD_1.7.4 {
+  global:
+    fwupd_device_get_root;
+  local: *;
+} LIBFWUPD_1.7.3;

@@ -417,6 +417,29 @@ fwupd_device_get_parent(FwupdDevice *self)
 }
 
 /**
+ * fwupd_device_get_root:
+ * @self: a #FwupdDevice
+ *
+ * Gets the device root.
+ *
+ * Returns: (transfer none): the root device, or %NULL if unset
+ *
+ * Since: 1.7.4
+ **/
+FwupdDevice *
+fwupd_device_get_root(FwupdDevice *self)
+{
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
+	while (1) {
+		FwupdDevicePrivate *priv = GET_PRIVATE(self);
+		if (priv->parent == NULL)
+			break;
+		self = priv->parent;
+	}
+	return self;
+}
+
+/**
  * fwupd_device_set_parent:
  * @self: a #FwupdDevice
  * @parent: (nullable): another #FwupdDevice
