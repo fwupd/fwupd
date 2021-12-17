@@ -96,11 +96,12 @@ from within the OS by fwupd. This requires compiling with libsmbios support.
 When fwupd has been compiled with this support you will be able to enable UEFI
 support on the device by using the `unlock` command.
 
-## Custom EFI System Partition
+## Custom EFI System Partition (ESP)
 
-Since version 1.1.0 fwupd will autodetect the ESP when it is mounted on
-`/boot/efi`, `/boot`, or `/efi`. A custom EFI system partition location can be
-used by modifying *OverrideESPMountPoint* in `/etc/fwupd/uefi_capsule.conf`.
+Since version 1.1.0 fwupd will autodetect the ESP if it is mounted on
+`/boot/efi`, `/boot`, or `/efi`, and UDisks is available on the system. In
+other cases the mount point of the ESP needs to be manually specified using the
+option *OverrideESPMountPoint* in `/etc/fwupd/uefi_capsule.conf`.
 
 Setting an invalid directory will disable the fwupd plugin.
 
