@@ -98,7 +98,7 @@ typedef struct {
 	guint8 mcutag2;
 	guint8 inbuf[59];
 	guint8 mcutag3;
-} SetReportBuf_t;
+} UsiDockSetReportBuf;
 
 const gchar *
 fu_usi_dock_idx_to_string(guint8 val);

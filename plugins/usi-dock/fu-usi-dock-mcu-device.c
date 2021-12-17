@@ -29,7 +29,7 @@ fu_usi_dock_mcu_device_tx(FuUsiDockMcuDevice *self,
 			  gsize inbufsz,
 			  GError **error)
 {
-	SetReportBuf_t tx_buffer = {
+	UsiDockSetReportBuf tx_buffer = {
 	    .id = USB_HID_REPORT_ID2,
 	    .length = 0x3 + inbufsz,
 	    .mcutag1 = 0xFE,
