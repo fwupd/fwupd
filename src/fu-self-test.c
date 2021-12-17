@@ -3466,7 +3466,7 @@ fu_security_attr_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_security_attrs_from_json(attrs2, json_parser_get_root(parser), &error);
-	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 		g_test_skip(error->message);
 		return;
 	}
