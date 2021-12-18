@@ -129,7 +129,7 @@ fu_plugin_mm_udev_device_port_added(FuPlugin *plugin,
 		return;
 	}
 	/* create device and add to cache */
-	dev = fu_mm_device_udev_new(priv->manager, priv->inhibited);
+	dev = fu_mm_device_udev_new(fu_plugin_get_context(plugin), priv->manager, priv->inhibited);
 	fu_mm_device_udev_add_port(dev, subsystem, path, ifnum);
 	fu_plugin_cache_add(plugin, priv->inhibited->physical_id, dev);
 

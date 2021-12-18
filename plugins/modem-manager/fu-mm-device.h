@@ -54,7 +54,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuPluginMmInhibitedDeviceInfo,
 			      fu_plugin_mm_inhibited_device_info_free);
 
 FuMmDevice *
-fu_mm_device_udev_new(MMManager *manager, FuPluginMmInhibitedDeviceInfo *info);
+fu_mm_device_udev_new(FuContext *ctx, MMManager *manager, FuPluginMmInhibitedDeviceInfo *info);
 void
 fu_mm_device_udev_add_port(FuMmDevice *device,
 			   const gchar *subsystem,

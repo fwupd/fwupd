@@ -1624,9 +1624,9 @@ fu_plugin_mm_inhibited_device_info_free(FuPluginMmInhibitedDeviceInfo *info)
 }
 
 FuMmDevice *
-fu_mm_device_udev_new(MMManager *manager, FuPluginMmInhibitedDeviceInfo *info)
+fu_mm_device_udev_new(FuContext *ctx, MMManager *manager, FuPluginMmInhibitedDeviceInfo *info)
 {
-	FuMmDevice *self = g_object_new(FU_TYPE_MM_DEVICE, NULL);
+	FuMmDevice *self = g_object_new(FU_TYPE_MM_DEVICE, "context", ctx, NULL);
 	g_debug("creating udev-based mm device at %s", info->physical_id);
 	self->manager = g_object_ref(manager);
 	fu_device_set_physical_id(FU_DEVICE(self), info->physical_id);
