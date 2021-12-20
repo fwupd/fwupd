@@ -31,6 +31,7 @@ G_BEGIN_DECLS
  * @FWUPD_ERROR_BROKEN_SYSTEM:			User has configured their system in a broken way
  * @FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW:		The system battery level is too low
  * @FWUPD_ERROR_NEEDS_USER_ACTION:		User needs to do an action to complete the update
+ * @FWUPD_ERROR_AUTH_EXPIRED:			Failed to get auth as credentials have expired
  *
  * The error code.
  **/
@@ -52,6 +53,7 @@ typedef enum {
 	FWUPD_ERROR_BROKEN_SYSTEM,	   /* Since: 1.2.8 */
 	FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW, /* Since: 1.2.10 */
 	FWUPD_ERROR_NEEDS_USER_ACTION,	   /* Since: 1.3.3 */
+	FWUPD_ERROR_AUTH_EXPIRED,	   /* Since: 1.7.5 */
 	/*< private >*/
 	FWUPD_ERROR_LAST
 } FwupdError;

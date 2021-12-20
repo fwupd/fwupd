@@ -21,6 +21,55 @@ struct FuPluginData {
 	FuRedfishBackend *backend;
 };
 
+static gchar *
+fu_common_generate_password(guint length)
+{
+	GString *str = g_string_sized_new(length);
+
+	/* get a random password string */
+	while (str->len < length) {
+		gchar tmp = (gchar)g_random_int_range(0x0, 0xff);
+		if (g_ascii_isalnum(tmp))
+			g_string_append_c(str, tmp);
+	}
+	return g_string_free(str, FALSE);
+}
+
+static gboolean
+fu_plugin_redfish_change_expired(FuPlugin *plugin, GError **error)
+{
+	FuPluginData *data = fu_plugin_get_data(plugin);
+	g_autofree gchar *password_new = fu_common_generate_password(15);
+	g_autofree gchar *uri = NULL;
+	g_autoptr(FuRedfishRequest) request = NULL;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+
+	/* select correct, falling back to default for old fwupd versions */
+	uri = fu_plugin_get_config_value(plugin, "UserUri");
+	if (uri == NULL) {
+		uri = g_strdup("/redfish/v1/AccountService/Accounts/2");
+		if (!fu_plugin_set_secure_config_value(plugin, "UserUri", uri, error))
+			return FALSE;
+	}
+
+	/* now use Redfish to change the temporary password to the actual password */
+	request = fu_redfish_backend_request_new(data->backend);
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Password");
+	json_builder_add_string_value(builder, password_new);
+	json_builder_end_object(builder);
+	if (!fu_redfish_request_patch(request,
+				      uri,
+				      builder,
+				      FU_REDFISH_REQUEST_PERFORM_FLAG_LOAD_JSON,
+				      error))
+		return FALSE;
+	fu_redfish_backend_set_password(data->backend, password_new);
+
+	/* success */
+	return fu_plugin_set_secure_config_value(plugin, "Password", password_new, error);
+}
+
 static gboolean
 fu_plugin_redfish_coldplug(FuPlugin *plugin, GError **error)
 {
@@ -30,10 +79,18 @@ fu_plugin_redfish_coldplug(FuPlugin *plugin, GError **error)
 
 	/* get the list of devices */
 	if (!fu_backend_coldplug(FU_BACKEND(data->backend), &error_local)) {
-		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AUTH_FAILED))
-			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_AUTH_REQUIRED);
-		g_propagate_error(error, g_steal_pointer(&error_local));
-		return FALSE;
+		/* did the user password expire? */
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_AUTH_EXPIRED)) {
+			if (!fu_plugin_redfish_change_expired(plugin, error))
+				return FALSE;
+			if (!fu_backend_coldplug(FU_BACKEND(data->backend), error)) {
+				fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_AUTH_REQUIRED);
+				return FALSE;
+			}
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
 	}
 	devices = fu_backend_get_devices(FU_BACKEND(data->backend));
 	for (guint i = 0; i < devices->len; i++) {
@@ -186,19 +243,6 @@ fu_redfish_plugin_discover_smbios_table(FuPlugin *plugin, GError **error)
 }
 
 #ifdef HAVE_LINUX_IPMI_H
-static gchar *
-fu_common_generate_password(guint length)
-{
-	GString *str = g_string_sized_new(length);
-
-	/* get a random password string */
-	while (str->len < length) {
-		gchar tmp = (gchar)g_random_int_range(0x0, 0xff);
-		if (g_ascii_isalnum(tmp))
-			g_string_append_c(str, tmp);
-	}
-	return g_string_free(str, FALSE);
-}
 
 static gboolean
 fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
@@ -272,6 +316,8 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	fu_redfish_backend_set_password(data->backend, password_new);
 
 	/* success */
+	if (!fu_plugin_set_secure_config_value(plugin, "UserUri", uri, error))
+		return FALSE;
 	if (!fu_plugin_set_secure_config_value(plugin, "Username", username_fwupd, error))
 		return FALSE;
 	if (!fu_plugin_set_secure_config_value(plugin, "Password", password_new, error))
