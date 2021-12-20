@@ -667,7 +667,7 @@ Common implementations are Intel VT-d and AMD-Vi.
 
 To meet HSI-2 on systems that run this test, the result must be `enabled`. *[v1.5.0]*
 
-**Resolution:** If available, turn on IOMMU in the system BIOS.
+**Resolution:** If available, turn on IOMMU in the system BIOS. You may also have to use additional kernel boot parameters, for example `intel_iommu=on iommu=pt`.
 
 **References:**
 
