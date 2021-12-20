@@ -59,6 +59,8 @@ fwupd_error_to_string(FwupdError error)
 		return FWUPD_DBUS_INTERFACE ".BatteryLevelTooLow";
 	if (error == FWUPD_ERROR_NEEDS_USER_ACTION)
 		return FWUPD_DBUS_INTERFACE ".NeedsUserAction";
+	if (error == FWUPD_ERROR_AUTH_EXPIRED)
+		return FWUPD_DBUS_INTERFACE ".AuthExpired";
 	return NULL;
 }
 
@@ -109,6 +111,8 @@ fwupd_error_from_string(const gchar *error)
 		return FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW;
 	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".NeedsUserAction") == 0)
 		return FWUPD_ERROR_NEEDS_USER_ACTION;
+	if (g_strcmp0(error, FWUPD_DBUS_INTERFACE ".AuthExpired") == 0)
+		return FWUPD_ERROR_AUTH_EXPIRED;
 	return FWUPD_ERROR_LAST;
 }
 
