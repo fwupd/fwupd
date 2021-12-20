@@ -454,7 +454,7 @@ This would allow subverting the Secure Boot protection, and also invalidate any 
 - `not-valid`: could not determine state
 - `not-enabled`: was not enabled
 
-To meet HSI-2 on systems that run this test, the result must be `enabled`. *[v1.5.0]*
+To meet HSI-3 on systems that run this test, the result must be `enabled`. *[v1.5.0]*
 
 **References:**
 
@@ -530,7 +530,7 @@ It forms a root-of-trust by fusing in cryptographic keys into the processor itse
 - `valid`: error enforce policy is set to shutdown
 - `not-valid`: policy is invalid
 
-To meet HSI-2 on systems that run this test, the result must be `valid`. *[v1.5.0]*
+To meet HSI-3 on systems that run this test, the result must be `valid`. *[v1.5.0]*
 
 <a id="org.fwupd.hsi.IntelBootguard.Otp"></a>
 
