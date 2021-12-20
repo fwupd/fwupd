@@ -138,6 +138,8 @@ fu_redfish_request_load_json(FuRedfishRequest *self, GByteArray *buf, GError **e
 		}
 		if (g_strcmp0(id, "Base.1.8.AccessDenied") == 0)
 			error_code = FWUPD_ERROR_AUTH_FAILED;
+		else if (g_strcmp0(id, "Base.1.8.PasswordChangeRequired") == 0)
+			error_code = FWUPD_ERROR_AUTH_EXPIRED;
 		g_set_error_literal(error, FWUPD_ERROR, error_code, msg);
 		return FALSE;
 	}
@@ -244,7 +246,7 @@ fu_redfish_request_patch(FuRedfishRequest *self,
 	json_generator_set_root(json_generator, json_root);
 	json_generator_to_gstring(json_generator, str);
 	if (g_getenv("FWUPD_REDFISH_VERBOSE") != NULL)
-		g_debug("request: %s", str->str);
+		g_debug("request to %s: %s", path, str->str);
 
 	/* patch */
 	curl_easy_setopt(self->curl, CURLOPT_CUSTOMREQUEST, "PATCH");
