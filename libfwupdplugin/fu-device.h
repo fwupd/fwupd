@@ -409,6 +409,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE (1llu << 19)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR:
+ *
+ * Set the device vendor from the metadata `developer_name` if available.
+ *
+ * Since: 1.7.4
+ */
+#define FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR (1ull << 20)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);

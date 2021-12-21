@@ -3595,6 +3595,23 @@ fu_engine_md_refresh_device_name(FuEngine *self, FuDevice *device, XbNode *compo
 }
 
 static void
+fu_engine_md_refresh_device_vendor(FuEngine *self, FuDevice *device, XbNode *component)
+{
+	const gchar *vendor = NULL;
+
+	/* require data */
+	if (component == NULL)
+		return;
+
+	/* copy 1:1 */
+	vendor = xb_node_query_text(component, "developer_name", NULL);
+	if (vendor != NULL) {
+		fu_device_set_vendor(device, vendor);
+		fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
+	}
+}
+
+static void
 fu_engine_md_refresh_device_icon(FuEngine *self, FuDevice *device, XbNode *component)
 {
 	const gchar *icon = NULL;
@@ -3743,6 +3760,8 @@ fu_engine_md_refresh_device_from_component(FuEngine *self, FuDevice *device, XbN
 		fu_engine_md_refresh_device_name_category(self, device, component);
 	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON))
 		fu_engine_md_refresh_device_icon(self, device, component);
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR))
+		fu_engine_md_refresh_device_vendor(self, device, component);
 
 	/* fix the version */
 	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT))

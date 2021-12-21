@@ -643,6 +643,7 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
 	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
 
 	/* add icons */
 	if (priv->kind == FU_UEFI_DEVICE_KIND_DEVICE_FIRMWARE) {
