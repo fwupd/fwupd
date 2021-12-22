@@ -158,6 +158,13 @@ fu_uf2_firmware_parse_chunk(FuUf2Firmware *self, FuChunk *chk, GByteArray *tmp, 
 			/* [SZ][TAG][TAG][TAG][TAG][DATA....] */
 			if (!fu_common_read_uint8_safe(buf, bufsz, offset, &sz, error))
 				return FALSE;
+			if (sz < 4) {
+				g_set_error_literal(error,
+						    G_IO_ERROR,
+						    G_IO_ERROR_INVALID_DATA,
+						    "invalid extension tag size");
+				return FALSE;
+			}
 			if (!fu_common_read_uint32_safe(buf,
 							bufsz,
 							offset,
