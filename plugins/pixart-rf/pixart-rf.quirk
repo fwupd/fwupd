@@ -107,3 +107,28 @@ GType = FuPxiBleDevice
 [HIDRAW\VEN_0461&DEV_4F01]
 Plugin = pixart_rf
 GType = FuPxiBleDevice
+
+# Pixart 2403
+[HIDRAW\VEN_093A&DEV_2403]
+Plugin = pixart_rf
+GType = FuPxiReceiverDevice
+
+# Pixart 2463
+[HIDRAW\VEN_093A&DEV_2463]
+Plugin = pixart_rf
+GType = FuPxiReceiverDevice
+
+# Pixart 2832
+[HIDRAW\VEN_093A&DEV_2832]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# Pixart 2851
+[HIDRAW\VEN_093A&DEV_2851]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# Pixart 2852
+[HIDRAW\VEN_093A&DEV_2852]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
