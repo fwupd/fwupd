@@ -4299,6 +4299,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 		if (guid == NULL)
 			continue;
 		device = fu_device_list_get_by_guid(self->device_list, guid, NULL);
+		fu_device_set_internal_flags(dev, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
 		if (device != NULL) {
 			fu_device_set_name(dev, fu_device_get_name(device));
 			fu_device_set_flags(dev, fu_device_get_flags(device));
