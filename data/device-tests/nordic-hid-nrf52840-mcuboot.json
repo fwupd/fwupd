@@ -1,0 +1,28 @@
+{
+  "name": "nRF52840 DK (nRF52 Desktop) MCUBoot variant",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/839c1a8177b19ef3db5e67f31be92c35a25ae5c7bf431740e6568d5b005313b7-nordic-nrf52840dk-mcuboot-0.0.0_0.cab",
+      "components": [
+        {
+          "version": "0.0.0.0",
+          "guids": [
+            "43b38427-fdf5-5400-a23c-f3eb7ea00e7c"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/6fb9dcfc1e26a5b0367d0a8a484f93ba156f846c1fb49013f3a934adc964788c-nordic-nrf52840dk-mcuboot-0.0.0_1.cab",
+      "components": [
+        {
+          "version": "0.0.0.1",
+          "guids": [
+            "43b38427-fdf5-5400-a23c-f3eb7ea00e7c"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -34,6 +34,7 @@ install_data([
     'logitech-rqr12-signed.json',
     'logitech-rqr24.json',
     'logitech-rqr24-signed.json',
+    'nordic-hid-nrf52840-mcuboot.json',
     'realtek-rts5423.json',
     'realtek-rts5855.json',
     'starlabs-phison-ata.json',
