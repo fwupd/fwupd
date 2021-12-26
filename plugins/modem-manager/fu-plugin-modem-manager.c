@@ -219,6 +219,9 @@ fu_plugin_mm_device_add(FuPlugin *plugin, MMObject *modem)
 	const gchar *object_path = mm_object_get_path(modem);
 	g_autoptr(FuMmDevice) dev = NULL;
 	g_autoptr(GError) error = NULL;
+
+	g_debug("added modem: %s", object_path);
+
 	if (fu_plugin_cache_lookup(plugin, object_path) != NULL) {
 		g_warning("MM device already added, ignoring");
 		return;
