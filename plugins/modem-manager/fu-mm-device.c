@@ -59,6 +59,7 @@ struct _FuMmDevice {
 	 */
 	MMModemFirmwareUpdateMethod update_methods;
 	gchar *detach_fastboot_at;
+	gchar *branch_at;
 	gint port_at_ifnum;
 	gint port_qmi_ifnum;
 	gint port_mbim_ifnum;
@@ -653,7 +654,9 @@ fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, gboolean has_response, G
 			    cmd);
 		return FALSE;
 	}
-	if (memcmp(buf, "\r\nOK\r\n", 6) != 0) {
+
+	/* return error if AT command failed */
+	if (g_strrstr(buf, "\r\nOK\r\n") == NULL) {
 		g_autofree gchar *tmp = g_strndup(buf + 2, bufsz - 4);
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -663,6 +666,29 @@ fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, gboolean has_response, G
 			    tmp);
 		return FALSE;
 	}
+
+	/* set firmware branch if returned */
+	if (self->branch_at != NULL && g_strcmp0(cmd, self->branch_at) == 0) {
+		/*
+		 * example AT+GETFWBRANCH response:
+		 *
+		 * \r\nFOSS-002 \r\n\r\nOK\r\n
+		 *
+		 * remove \r\n, and OK to get branch name
+		 */
+		g_auto(GStrv) parts = g_strsplit(buf, "\r\n", -1);
+
+		for (int j = 0; parts[j] != NULL; j++) {
+			/* Ignore empty strings, and OK responses */
+			if (g_strcmp0(parts[j], "") != 0 && g_strcmp0(parts[j], "OK") != 0) {
+				/* Set branch */
+				fu_device_set_branch(FU_DEVICE(self), parts[j]);
+				g_debug("Firmware branch reported as '%s'", parts[j]);
+				break;
+			}
+		}
+	}
+
 	return TRUE;
 }
 
@@ -1433,6 +1459,22 @@ fu_mm_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
+fu_mm_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+
+	/* load from quirks */
+	if (g_strcmp0(key, "ModemManagerBranchAtCommand") == 0) {
+		self->branch_at = g_strdup(value);
+		return TRUE;
+	}
+
+	/* failed */
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	return FALSE;
+}
+
+static gboolean
 fu_mm_device_attach_qmi_pdc(FuMmDevice *self, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -1504,6 +1546,37 @@ fu_mm_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_mm_device_setup(FuDevice *device, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* Create IO channel to send AT commands to the modem */
+	locker = fu_device_locker_new_full(device,
+					   (FuDeviceLockerFunc)fu_mm_device_io_open,
+					   (FuDeviceLockerFunc)fu_mm_device_io_close,
+					   error);
+	if (locker == NULL)
+		return FALSE;
+	/*
+	 * firmware branch AT command may fail if not implemented,
+	 * clear error if not supported
+	 */
+	if (self->branch_at != NULL) {
+		g_autoptr(GError) error_branch = NULL;
+		if (!fu_mm_device_at_cmd(self, self->branch_at, TRUE, &error_branch))
+			g_debug("unable to get firmware branch: %s", error_branch->message);
+	}
+
+	if (fu_device_get_branch(device) != NULL)
+		g_debug("using firmware branch: %s", fu_device_get_branch(device));
+	else
+		g_debug("using firmware branch: default");
+
+	return TRUE;
+}
+
 static void
 fu_mm_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -1542,6 +1615,7 @@ fu_mm_device_finalize(GObject *object)
 	if (self->omodem != NULL)
 		g_object_unref(self->omodem);
 	g_free(self->detach_fastboot_at);
+	g_free(self->branch_at);
 	g_free(self->port_at);
 	g_free(self->port_qmi);
 	g_free(self->port_mbim);
@@ -1558,7 +1632,10 @@ fu_mm_device_class_init(FuMmDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_mm_device_finalize;
+	klass_device->setup = fu_mm_device_setup;
+	klass_device->reload = fu_mm_device_setup;
 	klass_device->to_string = fu_mm_device_to_string;
+	klass_device->set_quirk_kv = fu_mm_device_set_quirk_kv;
 	klass_device->probe = fu_mm_device_probe;
 	klass_device->detach = fu_mm_device_detach;
 	klass_device->write_firmware = fu_mm_device_write_firmware;
