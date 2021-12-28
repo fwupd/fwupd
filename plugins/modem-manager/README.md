@@ -20,6 +20,16 @@ These device use the ModemManager "Firmware Device IDs" as the GUID, e.g.
 * `PCI\VID_1EAC&PID_1002`
 * `PCI\VID_1EAC`
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirk:
+
+### ModemManagerBranchAtCommand
+
+AT command to execute to determine the firmware branch currently installed on the modem.
+
+Since: 1.7.4
+
 ## Vendor ID Security
 
 The vendor ID is set from the USB or PCI vendor, for example `USB:0x413C` `PCI:0x105B`
