@@ -3427,6 +3427,15 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 		tmps = fu_common_strjoin_array(",", tmpv);
 		fu_common_string_append_kv(str, idt + 1, "PrivateFlags", tmps);
 	}
+	if (priv->inhibits != NULL) {
+		g_autoptr(GList) values = g_hash_table_get_values(priv->inhibits);
+		for (GList *l = values; l != NULL; l = l->next) {
+			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
+			g_autofree gchar *val =
+			    g_strdup_printf("[%s] %s", inhibit->inhibit_id, inhibit->reason);
+			fu_common_string_append_kv(str, idt + 1, "Inhibit", val);
+		}
+	}
 
 	/* subclassed */
 	if (klass->to_string != NULL)
