@@ -164,7 +164,7 @@ fu_pxi_receiver_device_fw_ota_ini_new_check(FuPxiReceiverDevice *device, GError 
 	/* delay for wireless module device read command */
 	g_usleep(5 * 1000);
 	buf[0] = PXI_HID_WIRELESS_DEV_OTA_REPORT_ID;
-	if (!fu_pxi_receiver_device_get_feature(self, buf, 32, error))
+	if (!fu_pxi_receiver_device_get_feature(self, buf, sizeof(buf), error))
 		return FALSE;
 
 	/* shared state */
