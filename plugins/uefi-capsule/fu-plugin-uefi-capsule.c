@@ -465,6 +465,8 @@ fu_plugin_uefi_capsule_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 	}
 	if (fu_context_has_hwid_flag(ctx, "no-ux-capsule"))
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE);
+	if (fu_context_has_hwid_flag(ctx, "no-lid-closed"))
+		fu_device_add_internal_flag(FU_DEVICE(dev), FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED);
 
 	/* set fallback name if nothing else is set */
 	device_kind = fu_uefi_device_get_kind(dev);

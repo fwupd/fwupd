@@ -12,7 +12,7 @@ Flags = uefi-force-enable
 
 # Lenovo
 [6de5d951-d755-576b-bd09-c5cf66b27234]
-Flags = supports-boot-order-lock,use-legacy-bootmgr-desc,no-ux-capsule
+Flags = supports-boot-order-lock,use-legacy-bootmgr-desc,no-ux-capsule,no-lid-closed
 
 # Lenovo ThinkPad X1 Yoga 4th
 [1138930e-8df1-5ae0-b946-7b0d9c9b4a79]

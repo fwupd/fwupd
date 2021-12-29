@@ -160,6 +160,22 @@ typedef enum {
 } FuBatteryState;
 
 /**
+ * FuLidState:
+ * @FU_LID_STATE_UNKNOWN:		Unknown
+ * @FU_LID_STATE_OPEN:			Charging
+ * @FU_LID_STATE_CLOSED:		Discharging
+ *
+ * The device lid state.
+ **/
+typedef enum {
+	FU_LID_STATE_UNKNOWN,
+	FU_LID_STATE_OPEN,
+	FU_LID_STATE_CLOSED,
+	/*< private >*/
+	FU_LID_STATE_LAST
+} FuLidState;
+
+/**
  * FuOutputHandler:
  * @line: text data
  * @user_data: user data
@@ -469,6 +485,8 @@ gboolean
 fu_common_reset_firmware_search_path(GError **error);
 const gchar *
 fu_battery_state_to_string(FuBatteryState battery_state);
+const gchar *
+fu_lid_state_to_string(FuLidState lid_state);
 
 void
 fu_xmlb_builder_insert_kv(XbBuilderNode *bn, const gchar *key, const gchar *value);

@@ -29,13 +29,21 @@ typedef struct {
 	GHashTable *firmware_gtypes;
 	GHashTable *hwid_flags; /* str: */
 	FuBatteryState battery_state;
+	FuLidState lid_state;
 	guint battery_level;
 	guint battery_threshold;
 } FuContextPrivate;
 
 enum { SIGNAL_SECURITY_CHANGED, SIGNAL_LAST };
 
-enum { PROP_0, PROP_BATTERY_STATE, PROP_BATTERY_LEVEL, PROP_BATTERY_THRESHOLD, PROP_LAST };
+enum {
+	PROP_0,
+	PROP_BATTERY_STATE,
+	PROP_LID_STATE,
+	PROP_BATTERY_LEVEL,
+	PROP_BATTERY_THRESHOLD,
+	PROP_LAST
+};
 
 static guint signals[SIGNAL_LAST] = {0};
 
@@ -622,6 +630,45 @@ fu_context_set_battery_state(FuContext *self, FuBatteryState battery_state)
 }
 
 /**
+ * fu_context_get_lid_state:
+ * @self: a #FuContext
+ *
+ * Gets the laptop lid state, if applicable.
+ *
+ * Returns: a battery state, e.g. %FU_LID_STATE_CLOSED
+ *
+ * Since: 1.7.4
+ **/
+FuLidState
+fu_context_get_lid_state(FuContext *self)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	return priv->lid_state;
+}
+
+/**
+ * fu_context_set_lid_state:
+ * @self: a #FuContext
+ * @lid_state: a battery state, e.g. %FU_LID_STATE_CLOSED
+ *
+ * Sets the laptop lid state, if applicable.
+ *
+ * Since: 1.7.4
+ **/
+void
+fu_context_set_lid_state(FuContext *self, FuLidState lid_state)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CONTEXT(self));
+	if (priv->lid_state == lid_state)
+		return;
+	priv->lid_state = lid_state;
+	g_debug("lid state now %s", fu_lid_state_to_string(lid_state));
+	g_object_notify(G_OBJECT(self), "lid-state");
+}
+
+/**
  * fu_context_get_battery_level:
  * @self: a #FuContext
  *
@@ -710,6 +757,9 @@ fu_context_get_property(GObject *object, guint prop_id, GValue *value, GParamSpe
 	case PROP_BATTERY_STATE:
 		g_value_set_uint(value, priv->battery_state);
 		break;
+	case PROP_LID_STATE:
+		g_value_set_uint(value, priv->lid_state);
+		break;
 	case PROP_BATTERY_LEVEL:
 		g_value_set_uint(value, priv->battery_level);
 		break;
@@ -729,6 +779,9 @@ fu_context_set_property(GObject *object, guint prop_id, const GValue *value, GPa
 	switch (prop_id) {
 	case PROP_BATTERY_STATE:
 		fu_context_set_battery_state(self, g_value_get_uint(value));
+		break;
+	case PROP_LID_STATE:
+		fu_context_set_lid_state(self, g_value_get_uint(value));
 		break;
 	case PROP_BATTERY_LEVEL:
 		fu_context_set_battery_level(self, g_value_get_uint(value));
@@ -779,6 +832,15 @@ fu_context_class_init(FuContextClass *klass)
 				  FU_BATTERY_STATE_UNKNOWN,
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BATTERY_STATE, pspec);
+
+	pspec = g_param_spec_uint("lid-state",
+				  NULL,
+				  NULL,
+				  FU_LID_STATE_UNKNOWN,
+				  FU_LID_STATE_LAST,
+				  FU_LID_STATE_UNKNOWN,
+				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_LID_STATE, pspec);
 
 	pspec = g_param_spec_uint("battery-level",
 				  NULL,

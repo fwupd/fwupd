@@ -983,6 +983,9 @@ LIBFWUPDPLUGIN_1.7.4 {
     fu_cfi_device_get_block_size;
     fu_cfi_device_set_block_size;
     fu_common_get_contents_stream;
+    fu_context_get_lid_state;
+    fu_context_set_lid_state;
+    fu_lid_state_to_string;
     fu_memmem_safe;
     fu_plugin_set_secure_config_value;
   local: *;

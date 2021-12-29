@@ -278,10 +278,24 @@ fu_engine_ensure_device_battery_inhibit(FuEngine *self, FuDevice *device)
 }
 
 static void
+fu_engine_ensure_device_lid_inhibit(FuEngine *self, FuDevice *device)
+{
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED) &&
+	    fu_context_get_lid_state(self->ctx) == FU_LID_STATE_CLOSED) {
+		fu_device_inhibit(device,
+				  "lid-closed-system",
+				  "Cannot install update when the lid is closed");
+		return;
+	}
+	fu_device_uninhibit(device, "lid-closed-system");
+}
+
+static void
 fu_engine_device_added_cb(FuDeviceList *device_list, FuDevice *device, FuEngine *self)
 {
 	fu_engine_watch_device(self, device);
 	fu_engine_ensure_device_battery_inhibit(self, device);
+	fu_engine_ensure_device_lid_inhibit(self, device);
 	g_signal_emit(self, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
 
@@ -7114,6 +7128,7 @@ fu_engine_context_battery_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
 		fu_engine_ensure_device_battery_inhibit(self, device);
+		fu_engine_ensure_device_lid_inhibit(self, device);
 	}
 }
 
@@ -7159,6 +7174,10 @@ fu_engine_init(FuEngine *self)
 			 self);
 	g_signal_connect(self->ctx,
 			 "notify::battery-state",
+			 G_CALLBACK(fu_engine_context_battery_changed_cb),
+			 self);
+	g_signal_connect(self->ctx,
+			 "notify::lid-state",
 			 G_CALLBACK(fu_engine_context_battery_changed_cb),
 			 self);
 	g_signal_connect(self->ctx,

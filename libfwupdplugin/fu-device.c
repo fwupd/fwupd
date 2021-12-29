@@ -235,6 +235,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "no-auto-remove";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR)
 		return "md-set-vendor";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED)
+		return "no-lid-closed";
 	return NULL;
 }
 
@@ -293,6 +295,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE;
 	if (g_strcmp0(flag, "md-set-vendor") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR;
+	if (g_strcmp0(flag, "no-lid-closed") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
