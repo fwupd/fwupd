@@ -93,7 +93,7 @@ GType = FuPxiBleDevice
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 
-# Targus BT Keyboard AKB869 
+# Targus BT Keyboard AKB869
 [HIDRAW\VEN_1048&DEV_3004]
 Plugin = pixart_rf
 GType = FuPxiBleDevice
