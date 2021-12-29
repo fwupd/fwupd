@@ -418,6 +418,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR (1ull << 20)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED:
+ *
+ * Do not allow updating when the laptop lid is closed.
+ *
+ * Since: 1.7.4
+ */
+#define FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED (1ull << 21)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);

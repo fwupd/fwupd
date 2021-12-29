@@ -3950,6 +3950,28 @@ fu_battery_state_to_string(FuBatteryState battery_state)
 }
 
 /**
+ * fu_lid_state_to_string:
+ * @lid_state: a battery state, e.g. %FU_LID_STATE_CLOSED
+ *
+ * Converts an enumerated type to a string.
+ *
+ * Returns: a string, or %NULL for invalid
+ *
+ * Since: 1.7.4
+ **/
+const gchar *
+fu_lid_state_to_string(FuLidState lid_state)
+{
+	if (lid_state == FU_LID_STATE_UNKNOWN)
+		return "unknown";
+	if (lid_state == FU_LID_STATE_OPEN)
+		return "open";
+	if (lid_state == FU_LID_STATE_CLOSED)
+		return "closed";
+	return NULL;
+}
+
+/**
  * fu_bytes_get_data_safe:
  * @bytes: data blob
  * @bufsz: (out) (optional): location to return size of byte data

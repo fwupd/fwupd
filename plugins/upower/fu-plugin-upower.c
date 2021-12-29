@@ -10,6 +10,7 @@
 
 struct FuPluginData {
 	GDBusProxy *proxy; /* nullable */
+	GDBusProxy *proxy_manager; /* nullable */
 };
 
 static void
@@ -24,10 +25,12 @@ fu_plugin_upower_destroy(FuPlugin *plugin)
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (data->proxy != NULL)
 		g_object_unref(data->proxy);
+	if (data->proxy_manager != NULL)
+		g_object_unref(data->proxy_manager);
 }
 
 static void
-fu_plugin_upower_rescan(FuPlugin *plugin)
+fu_plugin_upower_rescan_devices(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_get_data(plugin);
@@ -63,12 +66,40 @@ fu_plugin_upower_rescan(FuPlugin *plugin)
 }
 
 static void
+fu_plugin_upower_rescan_manager(FuPlugin *plugin)
+{
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	FuPluginData *data = fu_plugin_get_data(plugin);
+	g_autoptr(GVariant) lid_is_closed = NULL;
+	g_autoptr(GVariant) lid_is_present = NULL;
+
+	/* check that we "have" a lid */
+	lid_is_present = g_dbus_proxy_get_cached_property(data->proxy_manager, "LidIsPresent");
+	lid_is_closed = g_dbus_proxy_get_cached_property(data->proxy_manager, "LidIsClosed");
+	if (lid_is_present == NULL || lid_is_closed == NULL) {
+		g_warning("failed to query lid state");
+		fu_context_set_lid_state(ctx, FU_LID_STATE_UNKNOWN);
+		return;
+	}
+	if (!g_variant_get_boolean(lid_is_present)) {
+		fu_context_set_lid_state(ctx, FU_LID_STATE_UNKNOWN);
+		return;
+	}
+	if (g_variant_get_boolean(lid_is_closed)) {
+		fu_context_set_lid_state(ctx, FU_LID_STATE_CLOSED);
+		return;
+	}
+	fu_context_set_lid_state(ctx, FU_LID_STATE_OPEN);
+}
+
+static void
 fu_plugin_upower_proxy_changed_cb(GDBusProxy *proxy,
 				  GVariant *changed_properties,
 				  GStrv invalidated_properties,
 				  FuPlugin *plugin)
 {
-	fu_plugin_upower_rescan(plugin);
+	fu_plugin_upower_rescan_manager(plugin);
+	fu_plugin_upower_rescan_devices(plugin);
 }
 
 static gboolean
@@ -77,6 +108,18 @@ fu_plugin_upower_startup(FuPlugin *plugin, GError **error)
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *name_owner = NULL;
 
+	data->proxy_manager = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
+							    G_DBUS_PROXY_FLAGS_NONE,
+							    NULL,
+							    "org.freedesktop.UPower",
+							    "/org/freedesktop/UPower",
+							    "org.freedesktop.UPower",
+							    NULL,
+							    error);
+	if (data->proxy_manager == NULL) {
+		g_prefix_error(error, "failed to connect to upower: ");
+		return FALSE;
+	}
 	data->proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
 						    G_DBUS_PROXY_FLAGS_NONE,
 						    NULL,
@@ -102,8 +145,13 @@ fu_plugin_upower_startup(FuPlugin *plugin, GError **error)
 			 "g-properties-changed",
 			 G_CALLBACK(fu_plugin_upower_proxy_changed_cb),
 			 plugin);
+	g_signal_connect(data->proxy_manager,
+			 "g-properties-changed",
+			 G_CALLBACK(fu_plugin_upower_proxy_changed_cb),
+			 plugin);
 
-	fu_plugin_upower_rescan(plugin);
+	fu_plugin_upower_rescan_devices(plugin);
+	fu_plugin_upower_rescan_manager(plugin);
 
 	/* success */
 	return TRUE;
