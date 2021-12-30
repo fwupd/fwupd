@@ -87,7 +87,7 @@ parts:
   # this is for the library only, we don't care about the daemon "in-snap"
   modemmanager:
     plugin: autotools
-    source: https://gitlab.freedesktop.org/mobile-broadband/ModemManager.git
+    source: https://github.com/freedesktop/ModemManager.git
     source-tag: 1.14.0
     # build without these; system daemon needs them
     build-packages:
@@ -110,7 +110,7 @@ parts:
       - -lib/girepository-1.0
   libmbim:
     plugin: autotools
-    source: https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
+    source: https://github.com/freedesktop/libmbim.git
     source-tag: 1.24.0
     after: [modemmanager]
     # build without these; system daemon needs them
@@ -145,7 +145,7 @@ parts:
       - -share
   libqmi:
     plugin: autotools
-    source: https://gitlab.freedesktop.org/mobile-broadband/libqmi.git
+    source: https://github.com/freedesktop/libqmi.git
     source-tag: 1.26.0
     after: [modemmanager, libmbim]
     # build without these; system daemon needs them
