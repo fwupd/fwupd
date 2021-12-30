@@ -434,7 +434,6 @@ fu_nordic_hid_cfg_channel_add_peers(FuNordicHidCfgChannel *self, GError **error)
 
 	while (cnt++ <= 0xFF) {
 		g_autoptr(FuNordicHidCfgChannel) peer = NULL;
-		g_autoptr(GError) peer_error = NULL;
 
 		if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 							NULL,
