@@ -440,6 +440,8 @@ fu_thunderbolt_probe_retimer(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	parent = fu_thunderbolt_get_udev_parent_device(device, error);
+	if (parent == NULL)
+		return FALSE;
 	return fu_thunderbolt_device_set_port_offline(parent, error);
 }
 
