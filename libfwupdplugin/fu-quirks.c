@@ -218,6 +218,9 @@ fu_quirks_add_quirks_for_path(FuQuirks *self, XbBuilder *builder, const gchar *p
 	g_autoptr(GDir) dir = NULL;
 	g_autoptr(GPtrArray) filenames = g_ptr_array_new_with_free_func(g_free);
 
+	if (g_getenv("FWUPD_VERBOSE") != NULL)
+		g_debug("loading quirks from %s", path);
+
 	/* add valid files to the array */
 	if (!g_file_test(path, G_FILE_TEST_EXISTS))
 		return TRUE;
