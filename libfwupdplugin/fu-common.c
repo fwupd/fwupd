@@ -750,6 +750,7 @@ fu_common_spawn_helper_free(FuCommonSpawnHelper *helper)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCommonSpawnHelper, fu_common_spawn_helper_free)
 #pragma clang diagnostic pop
 
+#ifndef _WIN32
 static gboolean
 fu_common_spawn_timeout_cb(gpointer user_data)
 {
@@ -766,6 +767,7 @@ fu_common_spawn_cancelled_cb(GCancellable *cancellable, FuCommonSpawnHelper *hel
 	/* just propagate */
 	g_cancellable_cancel(helper->cancellable);
 }
+#endif
 
 /**
  * fu_common_spawn_sync:
@@ -794,7 +796,9 @@ fu_common_spawn_sync(const gchar *const *argv,
 	g_autoptr(FuCommonSpawnHelper) helper = NULL;
 	g_autoptr(GSubprocess) subprocess = NULL;
 	g_autofree gchar *argv_str = NULL;
+#ifndef _WIN32
 	gulong cancellable_id = 0;
+#endif
 
 	g_return_val_if_fail(argv != NULL, FALSE);
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
