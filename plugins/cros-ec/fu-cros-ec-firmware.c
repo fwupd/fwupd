@@ -51,9 +51,26 @@ fu_cros_ec_firmware_pick_sections(FuCrosEcFirmware *self, guint32 writeable_offs
 }
 
 GPtrArray *
-fu_cros_ec_firmware_get_sections(FuCrosEcFirmware *self)
+fu_cros_ec_firmware_get_needed_sections(FuCrosEcFirmware *self, GError **error)
 {
-	return self->sections;
+	g_autoptr(GPtrArray) needed_sections = g_ptr_array_new();
+
+	for (guint i = 0; i < self->sections->len; i++) {
+		FuCrosEcFirmwareSection *section = g_ptr_array_index(self->sections, i);
+		if (section->ustatus != FU_CROS_EC_FW_NEEDED)
+			continue;
+		g_ptr_array_add(needed_sections, section);
+	}
+	if (needed_sections->len == 0) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "no needed sections");
+		return NULL;
+	}
+
+	/* success */
+	return g_steal_pointer(&needed_sections);
 }
 
 static gboolean
