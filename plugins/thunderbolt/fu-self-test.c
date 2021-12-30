@@ -890,6 +890,10 @@ fu_thunderbolt_gudev_uevent_cb(GUdevClient *gudev_client,
 		g_autoptr(GError) error_local = NULL;
 
 		device = fu_udev_device_new_with_context(tt->ctx, udev_device);
+		if (!fu_device_probe(FU_DEVICE(device), &error_local)) {
+			g_warning("failed to probe: %s", error_local->message);
+			return;
+		}
 		if (!fu_plugin_runner_backend_device_added(tt->plugin,
 							   FU_DEVICE(device),
 							   &error_local))
@@ -1376,8 +1380,13 @@ test_update_fail_nowshow(ThunderboltTest *tt, gconstpointer user_data)
 int
 main(int argc, char **argv)
 {
+	g_autofree gchar *quirkdatadir = NULL;
+
 	g_test_init(&argc, &argv, NULL);
 	g_log_set_fatal_mask(NULL, G_LOG_LEVEL_ERROR | G_LOG_LEVEL_CRITICAL);
+
+	quirkdatadir = g_test_build_filename(G_TEST_DIST, "tests", "quirks.d", NULL);
+	g_setenv("FWUPD_DATADIR_QUIRKS", quirkdatadir, FALSE);
 
 	g_test_add("/thunderbolt/basic",
 		   ThunderboltTest,

@@ -1,5 +1,7 @@
 [THUNDERBOLT\TYPE_THUNDERBOLT_DEVICE]
 Plugin = thunderbolt
+GType = FuThunderboltController
 
 [THUNDERBOLT\TYPE_THUNDERBOLT_RETIMER]
 Plugin = thunderbolt
+GType = FuThunderboltRetimer

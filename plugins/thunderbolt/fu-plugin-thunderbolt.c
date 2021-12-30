@@ -8,9 +8,10 @@
 
 #include <fwupdplugin.h>
 
-#include "fu-thunderbolt-device.h"
+#include "fu-thunderbolt-controller.h"
 #include "fu-thunderbolt-firmware-update.h"
 #include "fu-thunderbolt-firmware.h"
+#include "fu-thunderbolt-retimer.h"
 
 static gboolean
 fu_plugin_thunderbolt_safe_kernel(FuPlugin *plugin, GError **error)
@@ -56,7 +57,8 @@ static void
 fu_plugin_thunderbolt_init(FuPlugin *plugin)
 {
 	fu_plugin_add_udev_subsystem(plugin, "thunderbolt");
-	fu_plugin_add_device_gtype(plugin, FU_TYPE_THUNDERBOLT_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_THUNDERBOLT_CONTROLLER);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_THUNDERBOLT_RETIMER);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_THUNDERBOLT_FIRMWARE);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_THUNDERBOLT_FIRMWARE_UPDATE);
 }
@@ -74,7 +76,7 @@ fu_plugin_thunderbolt_composite_prepare(FuPlugin *plugin, GPtrArray *devices, GE
 		FuDevice *dev = g_ptr_array_index(devices, i);
 		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0) &&
 		    fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)) {
-			return fu_thunderbolt_probe_retimer(dev, error);
+			return fu_thunderbolt_retimer_set_parent_port_offline(dev, error);
 		}
 	}
 	return TRUE;
@@ -87,7 +89,7 @@ fu_plugin_thunderbolt_composite_cleanup(FuPlugin *plugin, GPtrArray *devices, GE
 		FuDevice *dev = g_ptr_array_index(devices, i);
 		if ((g_strcmp0(fu_device_get_plugin(dev), "thunderbolt") == 0) &&
 		    fu_device_has_internal_flag(dev, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)) {
-			return fu_thunderbolt_device_close(dev, error);
+			return fu_thunderbolt_retimer_set_parent_port_online(dev, error);
 		}
 	}
 	return TRUE;
