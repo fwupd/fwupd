@@ -509,6 +509,15 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_id_full(device, devid, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
 
+	/* add devtype */
+	tmp = g_udev_device_get_devtype(priv->udev_device);
+	if (tmp != NULL) {
+		g_autofree gchar *devtype = g_utf8_strup(tmp, -1);
+		g_autofree gchar *devid = NULL;
+		devid = g_strdup_printf("%s\\TYPE_%s", subsystem, devtype);
+		fu_device_add_instance_id_full(device, devid, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	}
+
 	/* add the driver */
 	if (priv->driver != NULL) {
 		g_autofree gchar *devid = NULL;

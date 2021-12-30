@@ -1,3 +1,5 @@
-# match all devices with this udev subsystem
-[THUNDERBOLT]
+[THUNDERBOLT\TYPE_THUNDERBOLT_DEVICE]
+Plugin = thunderbolt
+
+[THUNDERBOLT\TYPE_THUNDERBOLT_RETIMER]
 Plugin = thunderbolt
