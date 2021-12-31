@@ -43,7 +43,7 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 static void
 fu_usi_dock_dmc_device_init(FuUsiDockDmcDevice *self)
 {
-	g_signal_connect(self,
+	g_signal_connect(FU_DEVICE(self),
 			 "notify::parent",
 			 G_CALLBACK(fu_usi_dock_dmc_device_parent_notify_cb),
 			 NULL);

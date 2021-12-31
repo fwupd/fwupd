@@ -86,7 +86,7 @@ fu_bluez_backend_object_added(FuBluezBackend *self, GDBusObject *object)
 	iface = g_dbus_object_get_interface(object, "org.bluez.Device1");
 	if (iface == NULL)
 		return;
-	g_signal_connect(iface,
+	g_signal_connect(G_DBUS_INTERFACE(iface),
 			 "g-properties-changed",
 			 G_CALLBACK(fu_bluez_backend_object_properties_changed_cb),
 			 self);
@@ -184,11 +184,11 @@ fu_bluez_backend_setup(FuBackend *backend, GError **error)
 		return FALSE;
 	self->object_manager = g_steal_pointer(&helper->object_manager);
 
-	g_signal_connect(self->object_manager,
+	g_signal_connect(G_DBUS_OBJECT_MANAGER(self->object_manager),
 			 "object-added",
 			 G_CALLBACK(fu_bluez_backend_object_added_cb),
 			 self);
-	g_signal_connect(self->object_manager,
+	g_signal_connect(G_DBUS_OBJECT_MANAGER(self->object_manager),
 			 "object-removed",
 			 G_CALLBACK(fu_bluez_backend_object_removed_cb),
 			 self);

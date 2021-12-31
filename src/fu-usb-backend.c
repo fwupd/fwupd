@@ -61,11 +61,11 @@ fu_usb_backend_setup(FuBackend *backend, GError **error)
 		return FALSE;
 	}
 	g_object_weak_ref(G_OBJECT(self->usb_ctx), fu_usb_backend_context_finalized_cb, self);
-	g_signal_connect(self->usb_ctx,
+	g_signal_connect(G_USB_CONTEXT(self->usb_ctx),
 			 "device-added",
 			 G_CALLBACK(fu_usb_backend_device_added_cb),
 			 self);
-	g_signal_connect(self->usb_ctx,
+	g_signal_connect(G_USB_CONTEXT(self->usb_ctx),
 			 "device-removed",
 			 G_CALLBACK(fu_usb_backend_device_removed_cb),
 			 self);

@@ -773,7 +773,7 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, GError **error)
 		fu_plugin_uefi_capsule_load_config(plugin, FU_DEVICE(dev));
 
 		/* watch in case we set needs-reboot in the engine */
-		g_signal_connect(dev,
+		g_signal_connect(FU_DEVICE(dev),
 				 "notify::update-state",
 				 G_CALLBACK(fu_plugin_uefi_update_state_notify_cb),
 				 plugin);

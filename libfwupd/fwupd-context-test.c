@@ -101,8 +101,14 @@ main(void)
 	g_message("Created FwupdClient in thread %p with main context %p",
 		  g_thread_self(),
 		  g_main_context_get_thread_default());
-	g_signal_connect(client, "notify::status", G_CALLBACK(fwupd_thread_test_notify_cb), &self);
-	g_signal_connect(app, "activate", G_CALLBACK(fwupd_thread_test_activate_cb), &self);
+	g_signal_connect(FWUPD_CLIENT(client),
+			 "notify::status",
+			 G_CALLBACK(fwupd_thread_test_notify_cb),
+			 &self);
+	g_signal_connect(G_APPLICATION(app),
+			 "activate",
+			 G_CALLBACK(fwupd_thread_test_activate_cb),
+			 &self);
 	retval = g_application_run(app, 0, NULL);
 	if (self.worker_thread != NULL)
 		g_thread_join(g_steal_pointer(&self.worker_thread));

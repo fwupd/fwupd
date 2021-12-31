@@ -509,9 +509,15 @@ mock_tree_sync(MockTree *root, FuPlugin *plugin, int timeout_ms)
 	    .loop = mainloop,
 	};
 
-	id_add = g_signal_connect(plugin, "device-added", G_CALLBACK(sync_device_added), &ctx);
+	id_add = g_signal_connect(FU_PLUGIN(plugin),
+				  "device-added",
+				  G_CALLBACK(sync_device_added),
+				  &ctx);
 
-	id_del = g_signal_connect(plugin, "device-removed", G_CALLBACK(sync_device_removed), &ctx);
+	id_del = g_signal_connect(FU_PLUGIN(plugin),
+				  "device-removed",
+				  G_CALLBACK(sync_device_removed),
+				  &ctx);
 
 	if (timeout_ms > 0)
 		g_timeout_add(timeout_ms, on_sync_timeout, &ctx);
@@ -564,7 +570,7 @@ mock_tree_settle(MockTree *root, FuPlugin *plugin)
 	    .loop = mainloop,
 	};
 
-	id = g_signal_connect(plugin,
+	id = g_signal_connect(FU_PLUGIN(plugin),
 			      "device-added",
 			      G_CALLBACK(mock_tree_plugin_device_added),
 			      &ctx);
@@ -784,7 +790,7 @@ mock_tree_prepare_for_update(MockTree *node,
 	ctx->version = g_strdup(version);
 	ctx->data = g_bytes_ref(fw_data);
 
-	g_signal_connect(monitor, "changed", G_CALLBACK(udev_file_changed_cb), ctx);
+	g_signal_connect(G_FILE_MONITOR(monitor), "changed", G_CALLBACK(udev_file_changed_cb), ctx);
 
 	return ctx;
 }
@@ -952,7 +958,10 @@ test_set_up(ThunderboltTest *tt, gconstpointer params)
 
 	tt->udev_client = g_udev_client_new(udev_subsystems);
 	g_assert_nonnull(tt->udev_client);
-	g_signal_connect(tt->udev_client, "uevent", G_CALLBACK(fu_thunderbolt_gudev_uevent_cb), tt);
+	g_signal_connect(G_UDEV_CLIENT(tt->udev_client),
+			 "uevent",
+			 G_CALLBACK(fu_thunderbolt_gudev_uevent_cb),
+			 tt);
 
 	if (flags & TEST_ATTACH) {
 		g_assert_true(flags & TEST_INITIALIZE_TREE);

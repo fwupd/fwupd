@@ -230,24 +230,30 @@ fu_engine_watch_device(FuEngine *self, FuDevice *device)
 		g_signal_handlers_disconnect_by_func(device_old, fu_engine_history_notify_cb, self);
 		g_signal_handlers_disconnect_by_func(device_old, fu_engine_device_request_cb, self);
 	}
-	g_signal_connect(device, "notify::flags", G_CALLBACK(fu_engine_generic_notify_cb), self);
-	g_signal_connect(device,
+	g_signal_connect(FU_DEVICE(device),
+			 "notify::flags",
+			 G_CALLBACK(fu_engine_generic_notify_cb),
+			 self);
+	g_signal_connect(FU_DEVICE(device),
 			 "notify::update-message",
 			 G_CALLBACK(fu_engine_generic_notify_cb),
 			 self);
-	g_signal_connect(device,
+	g_signal_connect(FU_DEVICE(device),
 			 "notify::update-image",
 			 G_CALLBACK(fu_engine_generic_notify_cb),
 			 self);
-	g_signal_connect(device,
+	g_signal_connect(FU_DEVICE(device),
 			 "notify::update-state",
 			 G_CALLBACK(fu_engine_history_notify_cb),
 			 self);
-	g_signal_connect(device,
+	g_signal_connect(FU_DEVICE(device),
 			 "notify::update-error",
 			 G_CALLBACK(fu_engine_history_notify_cb),
 			 self);
-	g_signal_connect(device, "request", G_CALLBACK(fu_engine_device_request_cb), self);
+	g_signal_connect(FU_DEVICE(device),
+			 "request",
+			 G_CALLBACK(fu_engine_device_request_cb),
+			 self);
 }
 
 static void
@@ -6357,27 +6363,27 @@ fu_engine_load_plugins(FuEngine *self, GError **error)
 		}
 
 		/* watch for changes */
-		g_signal_connect(plugin,
+		g_signal_connect(FU_PLUGIN(plugin),
 				 "device-added",
 				 G_CALLBACK(fu_engine_plugin_device_added_cb),
 				 self);
-		g_signal_connect(plugin,
+		g_signal_connect(FU_PLUGIN(plugin),
 				 "device-removed",
 				 G_CALLBACK(fu_engine_plugin_device_removed_cb),
 				 self);
-		g_signal_connect(plugin,
+		g_signal_connect(FU_PLUGIN(plugin),
 				 "device-register",
 				 G_CALLBACK(fu_engine_plugin_device_register_cb),
 				 self);
-		g_signal_connect(plugin,
+		g_signal_connect(FU_PLUGIN(plugin),
 				 "check-supported",
 				 G_CALLBACK(fu_engine_plugin_check_supported_cb),
 				 self);
-		g_signal_connect(plugin,
+		g_signal_connect(FU_PLUGIN(plugin),
 				 "rules-changed",
 				 G_CALLBACK(fu_engine_plugin_rules_changed_cb),
 				 self);
-		g_signal_connect(plugin,
+		g_signal_connect(FU_PLUGIN(plugin),
 				 "config-changed",
 				 G_CALLBACK(fu_engine_plugin_config_changed_cb),
 				 self);
@@ -6981,12 +6987,15 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	fu_engine_context_set_battery_threshold(self->ctx);
 
 	/* watch the device list for updates and proxy */
-	g_signal_connect(self->device_list, "added", G_CALLBACK(fu_engine_device_added_cb), self);
-	g_signal_connect(self->device_list,
+	g_signal_connect(FU_DEVICE_LIST(self->device_list),
+			 "added",
+			 G_CALLBACK(fu_engine_device_added_cb),
+			 self);
+	g_signal_connect(FU_DEVICE_LIST(self->device_list),
 			 "removed",
 			 G_CALLBACK(fu_engine_device_removed_cb),
 			 self);
-	g_signal_connect(self->device_list,
+	g_signal_connect(FU_DEVICE_LIST(self->device_list),
 			 "changed",
 			 G_CALLBACK(fu_engine_device_changed_cb),
 			 self);
@@ -7004,15 +7013,15 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 			g_autoptr(GError) error_backend = NULL;
 			if (!fu_backend_get_enabled(backend))
 				continue;
-			g_signal_connect(backend,
+			g_signal_connect(FU_BACKEND(backend),
 					 "device-added",
 					 G_CALLBACK(fu_engine_backend_device_added_cb),
 					 self);
-			g_signal_connect(backend,
+			g_signal_connect(FU_BACKEND(backend),
 					 "device-removed",
 					 G_CALLBACK(fu_engine_backend_device_removed_cb),
 					 self);
-			g_signal_connect(backend,
+			g_signal_connect(FU_BACKEND(backend),
 					 "device-changed",
 					 G_CALLBACK(fu_engine_backend_device_changed_cb),
 					 self);
@@ -7211,34 +7220,37 @@ fu_engine_init(FuEngine *self)
 	fu_context_set_runtime_versions(self->ctx, self->runtime_versions);
 	fu_context_set_compile_versions(self->ctx, self->compile_versions);
 
-	g_signal_connect(self->ctx,
+	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "security-changed",
 			 G_CALLBACK(fu_engine_context_security_changed_cb),
 			 self);
-	g_signal_connect(self->ctx,
+	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::battery-state",
 			 G_CALLBACK(fu_engine_context_battery_changed_cb),
 			 self);
-	g_signal_connect(self->ctx,
+	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::lid-state",
 			 G_CALLBACK(fu_engine_context_battery_changed_cb),
 			 self);
-	g_signal_connect(self->ctx,
+	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::battery-level",
 			 G_CALLBACK(fu_engine_context_battery_changed_cb),
 			 self);
-	g_signal_connect(self->ctx,
+	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::battery-threshold",
 			 G_CALLBACK(fu_engine_context_battery_changed_cb),
 			 self);
 
-	g_signal_connect(self->config, "changed", G_CALLBACK(fu_engine_config_changed_cb), self);
-	g_signal_connect(self->remote_list,
+	g_signal_connect(FU_CONFIG(self->config),
+			 "changed",
+			 G_CALLBACK(fu_engine_config_changed_cb),
+			 self);
+	g_signal_connect(FU_REMOTE_LIST(self->remote_list),
 			 "changed",
 			 G_CALLBACK(fu_engine_remote_list_changed_cb),
 			 self);
 
-	g_signal_connect(self->idle,
+	g_signal_connect(FU_IDLE(self->idle),
 			 "notify::status",
 			 G_CALLBACK(fu_engine_idle_status_notify_cb),
 			 self);

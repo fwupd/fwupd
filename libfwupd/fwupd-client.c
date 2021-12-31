@@ -683,11 +683,14 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	priv->proxy = g_steal_pointer(&proxy);
 
 	/* connect signals, etc. */
-	g_signal_connect(priv->proxy,
+	g_signal_connect(G_DBUS_PROXY(priv->proxy),
 			 "g-properties-changed",
 			 G_CALLBACK(fwupd_client_properties_changed_cb),
 			 self);
-	g_signal_connect(priv->proxy, "g-signal", G_CALLBACK(fwupd_client_signal_cb), self);
+	g_signal_connect(G_DBUS_PROXY(priv->proxy),
+			 "g-signal",
+			 G_CALLBACK(fwupd_client_signal_cb),
+			 self);
 	val = g_dbus_proxy_get_cached_property(priv->proxy, "DaemonVersion");
 	if (val != NULL)
 		fwupd_client_set_daemon_version(self, g_variant_get_string(val, NULL));

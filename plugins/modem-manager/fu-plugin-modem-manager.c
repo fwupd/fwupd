@@ -203,7 +203,7 @@ fu_plugin_mm_inhibit_device(FuPlugin *plugin, FuDevice *device, GError **error)
 	if (fu_mm_device_get_update_methods(FU_MM_DEVICE(device)) &
 	    MM_MODEM_FIRMWARE_UPDATE_METHOD_FASTBOOT) {
 		priv->udev_client = g_udev_client_new(subsystems);
-		g_signal_connect(priv->udev_client,
+		g_signal_connect(G_UDEV_CLIENT(priv->udev_client),
 				 "uevent",
 				 G_CALLBACK(fu_plugin_mm_udev_uevent_cb),
 				 plugin);
@@ -298,11 +298,11 @@ fu_plugin_mm_setup_manager(FuPlugin *plugin)
 
 	g_debug("ModemManager %s is available", version);
 
-	g_signal_connect(priv->manager,
+	g_signal_connect(G_DBUS_OBJECT_MANAGER(priv->manager),
 			 "object-added",
 			 G_CALLBACK(fu_plugin_mm_device_added_cb),
 			 plugin);
-	g_signal_connect(priv->manager,
+	g_signal_connect(G_DBUS_OBJECT_MANAGER(priv->manager),
 			 "object-removed",
 			 G_CALLBACK(fu_plugin_mm_device_removed_cb),
 			 plugin);
@@ -335,7 +335,7 @@ static gboolean
 fu_plugin_mm_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
-	g_signal_connect_swapped(priv->manager,
+	g_signal_connect_swapped(MM_MANAGER(priv->manager),
 				 "notify::name-owner",
 				 G_CALLBACK(fu_plugin_mm_name_owner_updated),
 				 plugin);
@@ -438,7 +438,7 @@ fu_plugin_mm_attach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GE
 		return FALSE;
 
 	/* this signal will always be emitted asynchronously */
-	g_signal_connect_swapped(device,
+	g_signal_connect_swapped(FU_DEVICE(device),
 				 "attach-finished",
 				 G_CALLBACK(fu_plugin_mm_device_attach_finished),
 				 plugin);

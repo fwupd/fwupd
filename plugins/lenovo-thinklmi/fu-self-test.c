@@ -75,7 +75,7 @@ fu_test_probe_fake_esrt(FuTest *self)
 	FuDevice *dev = NULL;
 	g_autoptr(GError) error = NULL;
 
-	added_id = g_signal_connect(self->plugin_uefi_capsule,
+	added_id = g_signal_connect(FU_PLUGIN(self->plugin_uefi_capsule),
 				    "device-added",
 				    G_CALLBACK(_plugin_device_added_cb),
 				    &dev);

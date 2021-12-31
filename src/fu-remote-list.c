@@ -123,7 +123,10 @@ fu_remote_list_add_inotify(FuRemoteList *self, const gchar *filename, GError **e
 		fu_remote_list_fixup_inotify_error(error);
 		return FALSE;
 	}
-	g_signal_connect(monitor, "changed", G_CALLBACK(fu_remote_list_monitor_changed_cb), self);
+	g_signal_connect(G_FILE_MONITOR(monitor),
+			 "changed",
+			 G_CALLBACK(fu_remote_list_monitor_changed_cb),
+			 self);
 	g_ptr_array_add(self->monitors, monitor);
 	return TRUE;
 }
