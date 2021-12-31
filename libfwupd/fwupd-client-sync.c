@@ -252,7 +252,7 @@ fwupd_client_get_releases_cb(GObject *source, GAsyncResult *res, gpointer user_d
 /**
  * fwupd_client_get_releases:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -306,7 +306,7 @@ fwupd_client_get_downgrades_cb(GObject *source, GAsyncResult *res, gpointer user
 /**
  * fwupd_client_get_downgrades:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -359,7 +359,7 @@ fwupd_client_get_upgrades_cb(GObject *source, GAsyncResult *res, gpointer user_d
 /**
  * fwupd_client_get_upgrades:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -534,7 +534,7 @@ fwupd_client_verify_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 /**
  * fwupd_client_verify:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -583,7 +583,7 @@ fwupd_client_verify_update_cb(GObject *source, GAsyncResult *res, gpointer user_
 /**
  * fwupd_client_verify_update:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -636,7 +636,7 @@ fwupd_client_unlock_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 /**
  * fwupd_client_unlock:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -792,7 +792,7 @@ fwupd_client_clear_results_cb(GObject *source, GAsyncResult *res, gpointer user_
 /**
  * fwupd_client_clear_results:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -845,7 +845,7 @@ fwupd_client_get_results_cb(GObject *source, GAsyncResult *res, gpointer user_da
 /**
  * fwupd_client_get_results:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -1110,7 +1110,7 @@ fwupd_client_install_fd_cb(GObject *source, GAsyncResult *res, gpointer user_dat
 /**
  * fwupd_client_install:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @filename: the filename to install
  * @install_flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @cancellable: (nullable): optional #GCancellable
@@ -1185,7 +1185,7 @@ fwupd_client_install_bytes_cb(GObject *source, GAsyncResult *res, gpointer user_
 /**
  * fwupd_client_install_bytes:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @bytes: cabinet archive
  * @install_flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @cancellable: (nullable): optional #GCancellable
@@ -1654,9 +1654,9 @@ fwupd_client_modify_device_cb(GObject *source, GAsyncResult *res, gpointer user_
 /**
  * fwupd_client_modify_device:
  * @self: a #FwupdClient
- * @device_id: the device ID
- * @key: the key, e.g. `Flags`
- * @value: the key, e.g. `reported`
+ * @device_id: (not nullable): the device ID
+ * @key: (not nullable): the key, e.g. `Flags`
+ * @value: (not nullable): the key, e.g. `reported`
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -1873,7 +1873,7 @@ fwupd_client_set_approved_firmware_cb(GObject *source, GAsyncResult *res, gpoint
 /**
  * fwupd_client_set_approved_firmware:
  * @self: a #FwupdClient
- * @checksums: Array of checksums
+ * @checksums: (not nullable): Array of checksums
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -2095,7 +2095,7 @@ fwupd_client_self_sign_cb(GObject *source, GAsyncResult *res, gpointer user_data
 /**
  * fwupd_client_self_sign:
  * @self: a #FwupdClient
- * @value: a string to sign, typically a JSON blob
+ * @value: (not nullable): a string to sign, typically a JSON blob
  * @flags: signing flags, e.g. %FWUPD_SELF_SIGN_FLAG_ADD_TIMESTAMP
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
@@ -2152,7 +2152,7 @@ fwupd_client_download_bytes_cb(GObject *source, GAsyncResult *res, gpointer user
 /**
  * fwupd_client_download_bytes:
  * @self: a #FwupdClient
- * @url: the remote URL
+ * @url: (not nullable): the remote URL
  * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
@@ -2202,8 +2202,8 @@ fwupd_client_download_bytes(FwupdClient *self,
 /**
  * fwupd_client_download_file:
  * @self: a #FwupdClient
- * @url: the remote URL
- * @file: a file
+ * @url: (not nullable): the remote URL
+ * @file: (not nullable): a file
  * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
@@ -2261,8 +2261,8 @@ fwupd_client_upload_bytes_cb(GObject *source, GAsyncResult *res, gpointer user_d
 /**
  * fwupd_client_upload_bytes:
  * @self: a #FwupdClient
- * @url: the remote URL
- * @payload: payload string
+ * @url: (not nullable): the remote URL
+ * @payload: (not nullable): payload string
  * @signature: (nullable): signature string
  * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
  * @cancellable: (nullable): optional #GCancellable

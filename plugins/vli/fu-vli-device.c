@@ -697,6 +697,12 @@ fu_vli_device_class_init(FuVliDeviceClass *klass)
 	object_class->set_property = fu_vli_device_set_property;
 	object_class->constructed = fu_vli_device_constructed;
 	object_class->finalize = fu_vli_device_finalize;
+
+	/**
+	 * FuVliDevice:kind:
+	 *
+	 * The kind of VLI device.
+	 */
 	pspec = g_param_spec_uint("kind",
 				  NULL,
 				  NULL,

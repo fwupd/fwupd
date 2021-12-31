@@ -669,6 +669,15 @@ fu_bluez_device_class_init(FuBluezDeviceClass *klass)
 	device_class->to_string = fu_bluez_device_to_string;
 	device_class->incorporate = fu_bluez_device_incorporate;
 
+	/**
+	 * FuBluezDevice::changed:
+	 * @self: the #FuBluezDevice instance that emitted the signal
+	 * @uuid: the UUID that changed
+	 *
+	 * The ::changed signal is emitted when a service with a specific UUID changed.
+	 *
+	 * Since: 1.5.8
+	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("changed",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,
@@ -680,6 +689,13 @@ fu_bluez_device_class_init(FuBluezDeviceClass *klass)
 					       1,
 					       G_TYPE_STRING);
 
+	/**
+	 * FuBluezDevice:object-manager:
+	 *
+	 * The object manager instance for all devices.
+	 *
+	 * Since: 1.5.8
+	 */
 	pspec = g_param_spec_object("object-manager",
 				    NULL,
 				    NULL,
@@ -687,6 +703,13 @@ fu_bluez_device_class_init(FuBluezDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_OBJECT_MANAGER, pspec);
 
+	/**
+	 * FuBluezDevice:proxy:
+	 *
+	 * The D-Bus proxy for the object.
+	 *
+	 * Since: 1.5.8
+	 */
 	pspec = g_param_spec_object("proxy",
 				    NULL,
 				    NULL,

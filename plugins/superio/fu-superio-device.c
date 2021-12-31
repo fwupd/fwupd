@@ -500,6 +500,12 @@ fu_superio_device_class_init(FuSuperioDeviceClass *klass)
 	/* properties */
 	object_class->get_property = fu_superio_device_get_property;
 	object_class->set_property = fu_superio_device_set_property;
+
+	/**
+	 * FuSuperioDevice:chipset:
+	 *
+	 * The SuperIO chipset name being used.
+	 */
 	pspec =
 	    g_param_spec_string("chipset",
 				NULL,

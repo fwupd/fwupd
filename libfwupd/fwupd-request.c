@@ -55,7 +55,7 @@ fwupd_request_kind_to_string(FwupdRequestKind kind)
 
 /**
  * fwupd_request_kind_from_string:
- * @kind: a string, e.g. `immediate`
+ * @kind: (nullable): a string, e.g. `immediate`
  *
  * Converts a string to an enumerated update message kind.
  *
@@ -538,10 +538,24 @@ fwupd_request_class_init(FwupdRequestClass *klass)
 	object_class->get_property = fwupd_request_get_property;
 	object_class->set_property = fwupd_request_set_property;
 
+	/**
+	 * FwupdRequest:id:
+	 *
+	 * The request identifier.
+	 *
+	 * Since: 1.6.2
+	 */
 	pspec =
 	    g_param_spec_string("id", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_ID, pspec);
 
+	/**
+	 * FwupdRequest:kind:
+	 *
+	 * The kind of the request.
+	 *
+	 * Since: 1.6.2
+	 */
 	pspec = g_param_spec_uint("kind",
 				  NULL,
 				  NULL,
@@ -551,6 +565,13 @@ fwupd_request_class_init(FwupdRequestClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_KIND, pspec);
 
+	/**
+	 * FwupdRequest:message:
+	 *
+	 * The message text in the request.
+	 *
+	 * Since: 1.6.2
+	 */
 	pspec = g_param_spec_string("message",
 				    NULL,
 				    NULL,
@@ -558,6 +579,13 @@ fwupd_request_class_init(FwupdRequestClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_MESSAGE, pspec);
 
+	/**
+	 * FwupdRequest:image:
+	 *
+	 * The image link for the request.
+	 *
+	 * Since: 1.6.2
+	 */
 	pspec =
 	    g_param_spec_string("image", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_IMAGE, pspec);
@@ -576,7 +604,7 @@ fwupd_request_set_from_variant_iter(FwupdRequest *self, GVariantIter *iter)
 
 /**
  * fwupd_request_from_variant:
- * @value: the serialized data
+ * @value: (not nullable): the serialized data
  *
  * Creates a new request using serialized data.
  *

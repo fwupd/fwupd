@@ -7045,6 +7045,13 @@ fu_engine_class_init(FuEngineClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_engine_finalize;
 
+	/**
+	 * FuEngine::changed:
+	 * @self: the #FuEngine instance that emitted the signal
+	 *
+	 * The ::changed signal is emitted when the engine has changed, for instance when a device
+	 * state has been modified.
+	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("changed",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,
@@ -7054,6 +7061,13 @@ fu_engine_class_init(FuEngineClass *klass)
 					       g_cclosure_marshal_VOID__VOID,
 					       G_TYPE_NONE,
 					       0);
+	/**
+	 * FuEngine::device-added:
+	 * @self: the #FuEngine instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-added signal is emitted when a device has been added.
+	 **/
 	signals[SIGNAL_DEVICE_ADDED] = g_signal_new("device-added",
 						    G_TYPE_FROM_CLASS(object_class),
 						    G_SIGNAL_RUN_LAST,
@@ -7064,6 +7078,13 @@ fu_engine_class_init(FuEngineClass *klass)
 						    G_TYPE_NONE,
 						    1,
 						    FU_TYPE_DEVICE);
+	/**
+	 * FuEngine::device-removed:
+	 * @self: the #FuEngine instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-removed signal is emitted when a device has been removed.
+	 **/
 	signals[SIGNAL_DEVICE_REMOVED] = g_signal_new("device-removed",
 						      G_TYPE_FROM_CLASS(object_class),
 						      G_SIGNAL_RUN_LAST,
@@ -7074,6 +7095,13 @@ fu_engine_class_init(FuEngineClass *klass)
 						      G_TYPE_NONE,
 						      1,
 						      FU_TYPE_DEVICE);
+	/**
+	 * FuEngine::device-changed:
+	 * @self: the #FuEngine instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-changed signal is emitted when a device has been changed.
+	 **/
 	signals[SIGNAL_DEVICE_CHANGED] = g_signal_new("device-changed",
 						      G_TYPE_FROM_CLASS(object_class),
 						      G_SIGNAL_RUN_LAST,
@@ -7084,6 +7112,14 @@ fu_engine_class_init(FuEngineClass *klass)
 						      G_TYPE_NONE,
 						      1,
 						      FU_TYPE_DEVICE);
+	/**
+	 * FuEngine::device-request:
+	 * @self: the #FuEngine instance that emitted the signal
+	 * @request: the #FwupdRequest
+	 *
+	 * The ::device-request signal is emitted when the engine has asked the front end for an
+	 * interactive request.
+	 **/
 	signals[SIGNAL_DEVICE_REQUEST] = g_signal_new("device-request",
 						      G_TYPE_FROM_CLASS(object_class),
 						      G_SIGNAL_RUN_LAST,
@@ -7094,6 +7130,13 @@ fu_engine_class_init(FuEngineClass *klass)
 						      G_TYPE_NONE,
 						      1,
 						      FWUPD_TYPE_REQUEST);
+	/**
+	 * FuEngine::status-changed:
+	 * @self: the #FuEngine instance that emitted the signal
+	 * @status: the #FwupdStatus
+	 *
+	 * The ::status-changed signal is emitted when the daemon global status has changed.
+	 **/
 	signals[SIGNAL_STATUS_CHANGED] = g_signal_new("status-changed",
 						      G_TYPE_FROM_CLASS(object_class),
 						      G_SIGNAL_RUN_LAST,

@@ -71,7 +71,7 @@ fwupd_security_attr_flag_to_string(FwupdSecurityAttrFlags flag)
 
 /**
  * fwupd_security_attr_flag_from_string:
- * @flag: a string, e.g. `success`
+ * @flag: (nullable): a string, e.g. `success`
  *
  * Converts a string to an enumerated flag.
  *
@@ -141,7 +141,7 @@ fwupd_security_attr_result_to_string(FwupdSecurityAttrResult result)
 
 /**
  * fwupd_security_attr_result_from_string:
- * @result: a string, e.g. `not-encrypted`
+ * @result: (nullable): a string, e.g. `not-encrypted`
  *
  * Converts a string to an enumerated result.
  *
@@ -1253,7 +1253,7 @@ fwupd_security_attr_set_from_variant_iter(FwupdSecurityAttr *self, GVariantIter 
 
 /**
  * fwupd_security_attr_from_variant:
- * @value: the serialized data
+ * @value: (not nullable): the serialized data
  *
  * Creates a new security attribute using serialized data.
  *
@@ -1285,7 +1285,7 @@ fwupd_security_attr_from_variant(GVariant *value)
 
 /**
  * fwupd_security_attr_array_from_variant:
- * @value: the serialized data
+ * @value: (not nullable): the serialized data
  *
  * Creates an array of new security attributes using serialized data.
  *

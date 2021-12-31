@@ -2074,6 +2074,14 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	device_class->bind_driver = fu_udev_device_bind_driver;
 	device_class->unbind_driver = fu_udev_device_unbind_driver;
 
+	/**
+	 * FuUdevDevice::changed:
+	 * @self: the #FuUdevDevice instance that emitted the signal
+	 *
+	 * The ::changed signal is emitted when the low-level GUdevDevice has changed.
+	 *
+	 * Since: 1.1.2
+	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("changed",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,
@@ -2084,6 +2092,13 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 					       G_TYPE_NONE,
 					       0);
 
+	/**
+	 * FuUdevDevice:udev-device:
+	 *
+	 * The low-level GUdevDevice.
+	 *
+	 * Since: 1.1.2
+	 */
 	pspec = g_param_spec_object("udev-device",
 				    NULL,
 				    NULL,
@@ -2091,6 +2106,13 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_UDEV_DEVICE, pspec);
 
+	/**
+	 * FuUdevDevice:subsystem:
+	 *
+	 * The device subsystem.
+	 *
+	 * Since: 1.1.2
+	 */
 	pspec = g_param_spec_string("subsystem",
 				    NULL,
 				    NULL,
@@ -2098,6 +2120,13 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_SUBSYSTEM, pspec);
 
+	/**
+	 * FuUdevDevice:bind-id:
+	 *
+	 * The bind ID to use when binding a new driver.
+	 *
+	 * Since: 1.7.2
+	 */
 	pspec = g_param_spec_string("bind-id",
 				    NULL,
 				    NULL,
@@ -2105,6 +2134,13 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BIND_ID, pspec);
 
+	/**
+	 * FuUdevDevice:driver:
+	 *
+	 * The driver being used for the device.
+	 *
+	 * Since: 1.5.3
+	 */
 	pspec = g_param_spec_string("driver",
 				    NULL,
 				    NULL,
@@ -2112,6 +2148,13 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_DRIVER, pspec);
 
+	/**
+	 * FuUdevDevice:device-file:
+	 *
+	 * The low level file to use for device access.
+	 *
+	 * Since: 1.3.1
+	 */
 	pspec = g_param_spec_string("device-file",
 				    NULL,
 				    NULL,

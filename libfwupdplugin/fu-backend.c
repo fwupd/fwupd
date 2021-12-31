@@ -363,6 +363,13 @@ fu_backend_class_init(FuBackendClass *klass)
 	object_class->finalize = fu_backend_finalize;
 	object_class->dispose = fu_backend_dispose;
 
+	/**
+	 * FuBackend:name:
+	 *
+	 * The backend name.
+	 *
+	 * Since: 1.6.1
+	 */
 	pspec =
 	    g_param_spec_string("name",
 				NULL,
@@ -371,6 +378,13 @@ fu_backend_class_init(FuBackendClass *klass)
 				G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_NAME, pspec);
 
+	/**
+	 * FuBackend:context:
+	 *
+	 * The #FuContent to use.
+	 *
+	 * Since: 1.6.1
+	 */
 	pspec =
 	    g_param_spec_object("context",
 				NULL,
@@ -379,6 +393,15 @@ fu_backend_class_init(FuBackendClass *klass)
 				G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_CONTEXT, pspec);
 
+	/**
+	 * FuBackend::device-added:
+	 * @self: the #FuBackend instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-added signal is emitted when a device has been added.
+	 *
+	 * Since: 1.6.1
+	 **/
 	signals[SIGNAL_ADDED] = g_signal_new("device-added",
 					     G_TYPE_FROM_CLASS(object_class),
 					     G_SIGNAL_RUN_LAST,
@@ -389,6 +412,15 @@ fu_backend_class_init(FuBackendClass *klass)
 					     G_TYPE_NONE,
 					     1,
 					     FU_TYPE_DEVICE);
+	/**
+	 * FuBackend::device-removed:
+	 * @self: the #FuBackend instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-removed signal is emitted when a device has been removed.
+	 *
+	 * Since: 1.6.1
+	 **/
 	signals[SIGNAL_REMOVED] = g_signal_new("device-removed",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,
@@ -399,6 +431,15 @@ fu_backend_class_init(FuBackendClass *klass)
 					       G_TYPE_NONE,
 					       1,
 					       FU_TYPE_DEVICE);
+	/**
+	 * FuBackend::device-changed:
+	 * @self: the #FuBackend instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-changed signal is emitted when a device has been changed.
+	 *
+	 * Since: 1.6.1
+	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("device-changed",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,

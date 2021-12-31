@@ -373,12 +373,24 @@ fu_wac_module_class_init(FuWacModuleClass *klass)
 	/* properties */
 	object_class->get_property = fu_wac_module_get_property;
 	object_class->set_property = fu_wac_module_set_property;
+
+	/**
+	 * FuWacModule:usb-device:
+	 *
+	 * The parent USB device to use.
+	 */
 	pspec = g_param_spec_object("usb-device",
 				    NULL,
 				    NULL,
 				    G_USB_TYPE_DEVICE,
 				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_USB_DEVICE, pspec);
+
+	/**
+	 * FuWacModule:fw-type:
+	 *
+	 * The firmware kind.
+	 */
 	pspec = g_param_spec_uint("fw-type",
 				  NULL,
 				  NULL,

@@ -986,6 +986,13 @@ fu_device_list_class_init(FuDeviceListClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_device_list_finalize;
 
+	/**
+	 * FuDeviceList::added:
+	 * @self: the #FuDeviceList instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::added signal is emitted when a device has been added to the list.
+	 **/
 	signals[SIGNAL_ADDED] = g_signal_new("added",
 					     G_TYPE_FROM_CLASS(object_class),
 					     G_SIGNAL_RUN_LAST,
@@ -996,6 +1003,13 @@ fu_device_list_class_init(FuDeviceListClass *klass)
 					     G_TYPE_NONE,
 					     1,
 					     FU_TYPE_DEVICE);
+	/**
+	 * FuDeviceList::removed:
+	 * @self: the #FuDeviceList instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::removed signal is emitted when a device has been removed from the list.
+	 **/
 	signals[SIGNAL_REMOVED] = g_signal_new("removed",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,
@@ -1006,6 +1020,13 @@ fu_device_list_class_init(FuDeviceListClass *klass)
 					       G_TYPE_NONE,
 					       1,
 					       FU_TYPE_DEVICE);
+	/**
+	 * FuDeviceList::changed:
+	 * @self: the #FuDeviceList instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::changed signal is emitted when a device has changed.
+	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("changed",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,

@@ -367,6 +367,13 @@ fu_config_class_init(FuConfigClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_config_finalize;
 
+	/**
+	 * FuConfig::changed:
+	 * @self: the #FuConfig instance that emitted the signal
+	 *
+	 * The ::changed signal is emitted when the config file has
+	 * changed, for instance when a parameter has been modified.
+	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("changed",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,

@@ -277,6 +277,13 @@ fu_i2c_device_class_init(FuI2cDeviceClass *klass)
 	klass_device->probe = fu_i2c_device_probe;
 	klass_device->to_string = fu_i2c_device_to_string;
 
+	/**
+	 * FuI2cDevice:bus-number:
+	 *
+	 * The I²C bus number.
+	 *
+	 * Since: 1.6.2
+	 */
 	pspec = g_param_spec_uint("bus-number",
 				  NULL,
 				  NULL,

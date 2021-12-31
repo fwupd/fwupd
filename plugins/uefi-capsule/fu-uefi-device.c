@@ -795,6 +795,11 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 	klass_device->get_results = fu_uefi_device_get_results;
 	klass_device->set_progress = fu_uefi_device_set_progress;
 
+	/**
+	 * FuUefiDevice:fw-class:
+	 *
+	 * The firmware class, i.e. the ESRT GUID.
+	 */
 	pspec =
 	    g_param_spec_string("fw-class",
 				NULL,
@@ -802,6 +807,12 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 				NULL,
 				G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FW_CLASS, pspec);
+
+	/**
+	 * FuUefiDevice:kind:
+	 *
+	 * The device kind.
+	 */
 	pspec = g_param_spec_uint("kind",
 				  NULL,
 				  NULL,
@@ -810,6 +821,12 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 				  FU_UEFI_DEVICE_KIND_UNKNOWN,
 				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_KIND, pspec);
+
+	/**
+	 * FuUefiDevice:capsule-flags:
+	 *
+	 * The capsule flags to use for the update.
+	 */
 	pspec = g_param_spec_uint("capsule-flags",
 				  NULL,
 				  NULL,
@@ -818,6 +835,12 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 				  0,
 				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_CAPSULE_FLAGS, pspec);
+
+	/**
+	 * FuUefiDevice:fw-version:
+	 *
+	 * The current firmware version.
+	 */
 	pspec = g_param_spec_uint("fw-version",
 				  NULL,
 				  NULL,
@@ -826,6 +849,12 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 				  0,
 				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FW_VERSION, pspec);
+
+	/**
+	 * FuUefiDevice:fw-version-lowest:
+	 *
+	 * The lowest possible installable version.
+	 */
 	pspec = g_param_spec_uint("fw-version-lowest",
 				  NULL,
 				  NULL,
@@ -834,6 +863,12 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 				  0,
 				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FW_VERSION_LOWEST, pspec);
+
+	/**
+	 * FuUefiDevice:last-attempt-status:
+	 *
+	 * The last attempt status value.
+	 */
 	pspec = g_param_spec_uint("last-attempt-status",
 				  NULL,
 				  NULL,
@@ -842,6 +877,12 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 				  FU_UEFI_DEVICE_STATUS_SUCCESS,
 				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_LAST_ATTEMPT_STATUS, pspec);
+
+	/**
+	 * FuUefiDevice:last-attempt-version:
+	 *
+	 * The last attempt firmware version.
+	 */
 	pspec = g_param_spec_uint("last-attempt-version",
 				  NULL,
 				  NULL,
@@ -850,6 +891,12 @@ fu_uefi_device_class_init(FuUefiDeviceClass *klass)
 				  0,
 				  G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_LAST_ATTEMPT_VERSION, pspec);
+
+	/**
+	 * FuUefiDevice:fmp-hardware-instance:
+	 *
+	 * The FMP hardware instance.
+	 */
 	pspec =
 	    g_param_spec_uint64("fmp-hardware-instance",
 				NULL,

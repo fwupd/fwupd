@@ -722,6 +722,13 @@ fu_usb_device_class_init(FuUsbDeviceClass *klass)
 	device_class->bind_driver = fu_udev_device_bind_driver;
 	device_class->unbind_driver = fu_udev_device_unbind_driver;
 
+	/**
+	 * FuUsbDevice:usb-device:
+	 *
+	 * The low-level #GUsbDevice.
+	 *
+	 * Since: 1.0.2
+	 */
 	pspec = g_param_spec_object("usb-device",
 				    NULL,
 				    NULL,
