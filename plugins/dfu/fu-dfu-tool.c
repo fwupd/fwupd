@@ -483,8 +483,11 @@ fu_dfu_tool_read_alt(FuDfuTool *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* set up progress */
-	g_signal_connect(progress, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
+			 "status-changed",
+			 G_CALLBACK(fu_tool_action_changed_cb),
+			 self);
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_tool_action_changed_cb),
 			 self);
@@ -592,8 +595,11 @@ fu_dfu_tool_read(FuDfuTool *self, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	g_signal_connect(progress, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
+			 "status-changed",
+			 G_CALLBACK(fu_tool_action_changed_cb),
+			 self);
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_tool_action_changed_cb),
 			 self);
@@ -667,8 +673,11 @@ fu_dfu_tool_write_alt(FuDfuTool *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* set up progress */
-	g_signal_connect(progress, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
+			 "status-changed",
+			 G_CALLBACK(fu_tool_action_changed_cb),
+			 self);
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_tool_action_changed_cb),
 			 self);
@@ -798,8 +807,11 @@ fu_dfu_tool_write(FuDfuTool *self, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	g_signal_connect(progress, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
+			 "status-changed",
+			 G_CALLBACK(fu_tool_action_changed_cb),
+			 self);
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_tool_action_changed_cb),
 			 self);

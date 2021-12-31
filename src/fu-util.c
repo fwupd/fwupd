@@ -989,7 +989,7 @@ fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
 					 .name = "Unknown"};
 
 	/* required for interactive devices */
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -1101,11 +1101,11 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -2316,11 +2316,11 @@ fu_util_update_all(FuUtilPrivate *priv, GError **error)
 	if (devices == NULL)
 		return FALSE;
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -2414,11 +2414,11 @@ fu_util_update_by_id(FuUtilPrivate *priv, const gchar *device_id, GError **error
 
 	/* get devices from daemon */
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -2622,11 +2622,11 @@ fu_util_downgrade(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_DOWNGRADE;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -2688,11 +2688,11 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -2816,11 +2816,11 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -3254,11 +3254,11 @@ fu_util_sync_bkc(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -4272,11 +4272,11 @@ main(int argc, char *argv[])
 	/* connect to the daemon */
 	priv->client = fwupd_client_new();
 	fwupd_client_set_main_context(priv->client, priv->main_ctx);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "notify::percentage",
 			 G_CALLBACK(fu_util_client_notify_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "notify::status",
 			 G_CALLBACK(fu_util_client_notify_cb),
 			 priv);

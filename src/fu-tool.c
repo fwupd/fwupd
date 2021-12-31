@@ -876,7 +876,7 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
@@ -1014,7 +1014,7 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 	}
 	priv->current_operation = FU_UTIL_OPERATION_READ;
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
@@ -1212,7 +1212,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
@@ -1427,7 +1427,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
@@ -1504,7 +1504,7 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
@@ -1965,11 +1965,23 @@ fu_util_monitor(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* watch for any hotplugged device */
-	g_signal_connect(client, "changed", G_CALLBACK(fu_util_changed_cb), priv);
-	g_signal_connect(client, "device-added", G_CALLBACK(fu_util_device_added_cb), priv);
-	g_signal_connect(client, "device-removed", G_CALLBACK(fu_util_device_removed_cb), priv);
-	g_signal_connect(client, "device-changed", G_CALLBACK(fu_util_device_changed_cb), priv);
-	g_signal_connect(priv->cancellable, "cancelled", G_CALLBACK(fu_util_cancelled_cb), priv);
+	g_signal_connect(FWUPD_CLIENT(client), "changed", G_CALLBACK(fu_util_changed_cb), priv);
+	g_signal_connect(FWUPD_CLIENT(client),
+			 "device-added",
+			 G_CALLBACK(fu_util_device_added_cb),
+			 priv);
+	g_signal_connect(FWUPD_CLIENT(client),
+			 "device-removed",
+			 G_CALLBACK(fu_util_device_removed_cb),
+			 priv);
+	g_signal_connect(FWUPD_CLIENT(client),
+			 "device-changed",
+			 G_CALLBACK(fu_util_device_changed_cb),
+			 priv);
+	g_signal_connect(G_CANCELLABLE(priv->cancellable),
+			 "cancelled",
+			 G_CALLBACK(fu_util_cancelled_cb),
+			 priv);
 	g_main_loop_run(priv->loop);
 	return TRUE;
 }
@@ -2917,7 +2929,7 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
@@ -3406,7 +3418,10 @@ main(int argc, char *argv[])
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();
 	fu_util_setup_signal_handlers(priv);
-	g_signal_connect(priv->cancellable, "cancelled", G_CALLBACK(fu_util_cancelled_cb), priv);
+	g_signal_connect(G_CANCELLABLE(priv->cancellable),
+			 "cancelled",
+			 G_CALLBACK(fu_util_cancelled_cb),
+			 priv);
 
 	/* sort by command name */
 	fu_util_cmd_array_sort(cmd_array);
@@ -3489,15 +3504,15 @@ main(int argc, char *argv[])
 
 	/* load engine */
 	priv->engine = fu_engine_new(FU_APP_FLAGS_NO_IDLE_SOURCES);
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-added",
 			 G_CALLBACK(fu_main_engine_device_added_cb),
 			 priv);
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-removed",
 			 G_CALLBACK(fu_main_engine_device_removed_cb),
 			 priv);
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "status-changed",
 			 G_CALLBACK(fu_main_engine_status_changed_cb),
 			 priv);

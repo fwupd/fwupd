@@ -719,8 +719,11 @@ fu_plugin_delay_func(void)
 	g_autoptr(FuDevice) device = NULL;
 
 	plugin = fu_plugin_new(NULL);
-	g_signal_connect(plugin, "device-added", G_CALLBACK(_plugin_device_added_cb), &device_tmp);
-	g_signal_connect(plugin,
+	g_signal_connect(FU_PLUGIN(plugin),
+			 "device-added",
+			 G_CALLBACK(_plugin_device_added_cb),
+			 &device_tmp);
+	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-removed",
 			 G_CALLBACK(_plugin_device_added_cb),
 			 &device_tmp);
@@ -3591,7 +3594,7 @@ fu_progress_func(void)
 	FuProgressHelper helper = {0};
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_progress_percentage_changed_cb),
 			 &helper);
@@ -3617,7 +3620,7 @@ fu_progress_child_func(void)
 
 	/* reset */
 	fu_progress_set_steps(progress, 2);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_progress_percentage_changed_cb),
 			 &helper);
@@ -3667,7 +3670,7 @@ fu_progress_parent_one_step_proxy_func(void)
 
 	/* one step */
 	fu_progress_set_steps(progress, 1);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_progress_percentage_changed_cb),
 			 &helper);

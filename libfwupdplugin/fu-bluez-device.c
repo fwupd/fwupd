@@ -117,7 +117,7 @@ fu_bluez_device_ensure_uuid_helper_proxy(FuBluezDeviceUuidHelper *uuid_helper, G
 		return FALSE;
 	}
 	g_dbus_proxy_set_default_timeout(uuid_helper->proxy, DEFAULT_PROXY_TIMEOUT);
-	uuid_helper->signal_id = g_signal_connect(uuid_helper->proxy,
+	uuid_helper->signal_id = g_signal_connect(G_DBUS_PROXY(uuid_helper->proxy),
 						  "g-properties-changed",
 						  G_CALLBACK(fu_bluez_device_signal_cb),
 						  uuid_helper);

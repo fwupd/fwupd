@@ -671,11 +671,11 @@ fu_progress_get_child(FuProgress *self)
 	/* connect up signals */
 	priv->child = fu_progress_new(NULL);
 	priv->percentage_child_id =
-	    g_signal_connect(priv->child,
+	    g_signal_connect(FU_PROGRESS(priv->child),
 			     "percentage-changed",
 			     G_CALLBACK(fu_progress_child_percentage_changed_cb),
 			     self);
-	priv->status_child_id = g_signal_connect(priv->child,
+	priv->status_child_id = g_signal_connect(FU_PROGRESS(priv->child),
 						 "status-changed",
 						 G_CALLBACK(fu_progress_child_status_changed_cb),
 						 self);

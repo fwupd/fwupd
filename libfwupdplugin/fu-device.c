@@ -4878,8 +4878,10 @@ fu_device_init(FuDevice *self)
 	priv->retry_recs = g_ptr_array_new_with_free_func(g_free);
 	g_rw_lock_init(&priv->parent_guids_mutex);
 	g_rw_lock_init(&priv->metadata_mutex);
-	priv->notify_flags_handler_id =
-	    g_signal_connect(self, "notify::flags", G_CALLBACK(fu_device_flags_notify_cb), NULL);
+	priv->notify_flags_handler_id = g_signal_connect(FWUPD_DEVICE(self),
+							 "notify::flags",
+							 G_CALLBACK(fu_device_flags_notify_cb),
+							 NULL);
 }
 
 static void

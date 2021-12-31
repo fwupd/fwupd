@@ -261,7 +261,10 @@ fu_config_load(FuConfig *self, GError **error)
 	self->monitor = g_file_monitor(file, G_FILE_MONITOR_NONE, NULL, error);
 	if (self->monitor == NULL)
 		return FALSE;
-	g_signal_connect(self->monitor, "changed", G_CALLBACK(fu_config_monitor_changed_cb), self);
+	g_signal_connect(G_FILE_MONITOR(self->monitor),
+			 "changed",
+			 G_CALLBACK(fu_config_monitor_changed_cb),
+			 self);
 
 	/* success */
 	return TRUE;

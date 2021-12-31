@@ -136,7 +136,7 @@ fu_plugin_powerd_startup(FuPlugin *plugin, GError **error)
 						       NULL,
 						       G_SOURCE_REMOVE));
 
-	g_signal_connect(data->proxy,
+	g_signal_connect(G_DBUS_PROXY(data->proxy),
 			 "g-signal",
 			 G_CALLBACK(fu_plugin_powerd_proxy_changed_cb),
 			 plugin);

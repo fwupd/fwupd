@@ -78,7 +78,10 @@ fu_plugin_synaptics_mst_none_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	g_signal_connect(plugin, "device-added", G_CALLBACK(_plugin_device_added_cb), &devices);
+	g_signal_connect(FU_PLUGIN(plugin),
+			 "device-added",
+			 G_CALLBACK(_plugin_device_added_cb),
+			 &devices);
 	pluginfn = g_test_build_filename(G_TEST_BUILT,
 					 "libfu_plugin_synaptics_mst." G_MODULE_SUFFIX,
 					 NULL);
@@ -120,7 +123,10 @@ fu_plugin_synaptics_mst_tb16_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	g_signal_connect(plugin, "device-added", G_CALLBACK(_plugin_device_added_cb), &devices);
+	g_signal_connect(FU_PLUGIN(plugin),
+			 "device-added",
+			 G_CALLBACK(_plugin_device_added_cb),
+			 &devices);
 	pluginfn = g_test_build_filename(G_TEST_BUILT,
 					 "libfu_plugin_synaptics_mst." G_MODULE_SUFFIX,
 					 NULL);

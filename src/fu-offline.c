@@ -191,7 +191,7 @@ main(int argc, char *argv[])
 
 	/* connect to the daemon */
 	client = fwupd_client_new();
-	g_signal_connect(client,
+	g_signal_connect(FWUPD_CLIENT(client),
 			 "notify::percentage",
 			 G_CALLBACK(fu_offline_client_notify_cb),
 			 priv);

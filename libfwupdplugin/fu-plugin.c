@@ -493,8 +493,11 @@ fu_plugin_device_add(FuPlugin *self, FuDevice *device)
 	}
 
 	/* watch to see if children are added or removed at runtime */
-	g_signal_connect(device, "child-added", G_CALLBACK(fu_plugin_device_child_added_cb), self);
-	g_signal_connect(device,
+	g_signal_connect(FU_DEVICE(device),
+			 "child-added",
+			 G_CALLBACK(fu_plugin_device_child_added_cb),
+			 self);
+	g_signal_connect(FU_DEVICE(device),
 			 "child-removed",
 			 G_CALLBACK(fu_plugin_device_child_removed_cb),
 			 self);
@@ -832,7 +835,7 @@ fu_plugin_runner_startup(FuPlugin *self, GError **error)
 	priv->config_monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, error);
 	if (priv->config_monitor == NULL)
 		return FALSE;
-	g_signal_connect(priv->config_monitor,
+	g_signal_connect(G_FILE_MONITOR(priv->config_monitor),
 			 "changed",
 			 G_CALLBACK(fu_plugin_config_monitor_changed_cb),
 			 self);
