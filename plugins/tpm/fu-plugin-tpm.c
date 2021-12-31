@@ -134,7 +134,7 @@ static void
 fu_plugin_tpm_add_security_attr_eventlog(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
-	gboolean reconstructed;
+	gboolean reconstructed = TRUE;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) pcr0s_calc = NULL;
