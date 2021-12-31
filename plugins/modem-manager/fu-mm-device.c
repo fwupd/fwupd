@@ -1642,6 +1642,12 @@ fu_mm_device_class_init(FuMmDeviceClass *klass)
 	klass_device->attach = fu_mm_device_attach;
 	klass_device->set_progress = fu_mm_device_set_progress;
 
+	/**
+	 * FuMmDevice::attach-finished:
+	 * @self: the #FuMmDevice instance that emitted the signal
+	 *
+	 * The ::attach-finished signal is emitted when the device has attached.
+	 **/
 	signals[SIGNAL_ATTACH_FINISHED] = g_signal_new("attach-finished",
 						       G_TYPE_FROM_CLASS(object_class),
 						       G_SIGNAL_RUN_LAST,

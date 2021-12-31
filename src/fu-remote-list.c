@@ -520,6 +520,13 @@ fu_remote_list_class_init(FuRemoteListClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_remote_list_finalize;
 
+	/**
+	 * FuRemoteList::changed:
+	 * @self: the #FuRemoteList instance that emitted the signal
+	 *
+	 * The ::changed signal is emitted when the list of remotes has
+	 * changed, for instance when a remote has been added or removed.
+	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("changed",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,

@@ -337,7 +337,7 @@ fwupd_release_get_issues(FwupdRelease *self)
 /**
  * fwupd_release_add_issue:
  * @self: a #FwupdRelease
- * @issue: the update issue, e.g. `CVE-2019-12345`
+ * @issue: (not nullable): the update issue, e.g. `CVE-2019-12345`
  *
  * Adds an resolved issue to this release.
  *
@@ -378,7 +378,7 @@ fwupd_release_get_categories(FwupdRelease *self)
 /**
  * fwupd_release_add_category:
  * @self: a #FwupdRelease
- * @category: the update category, e.g. `X-EmbeddedController`
+ * @category: (not nullable): the update category, e.g. `X-EmbeddedController`
  *
  * Adds the update category.
  *
@@ -401,7 +401,7 @@ fwupd_release_add_category(FwupdRelease *self, const gchar *category)
 /**
  * fwupd_release_has_category:
  * @self: a #FwupdRelease
- * @category: the update category, e.g. `X-EmbeddedController`
+ * @category: (not nullable): the update category, e.g. `X-EmbeddedController`
  *
  * Finds out if the release has the update category.
  *
@@ -444,7 +444,7 @@ fwupd_release_get_checksums(FwupdRelease *self)
 /**
  * fwupd_release_add_checksum:
  * @self: a #FwupdRelease
- * @checksum: the update checksum
+ * @checksum: (not nullable): the update checksum
  *
  * Sets the update checksum.
  *
@@ -467,7 +467,7 @@ fwupd_release_add_checksum(FwupdRelease *self, const gchar *checksum)
 /**
  * fwupd_release_has_checksum:
  * @self: a #FwupdRelease
- * @checksum: the update checksum
+ * @checksum: (not nullable): the update checksum
  *
  * Finds out if the release has the update checksum.
  *
@@ -510,7 +510,7 @@ fwupd_release_get_tags(FwupdRelease *self)
 /**
  * fwupd_release_add_tag:
  * @self: a #FwupdRelease
- * @tag: the update tag, e.g. `vendor-factory-2021q1`
+ * @tag: (not nullable): the update tag, e.g. `vendor-factory-2021q1`
  *
  * Adds a specific release tag.
  *
@@ -533,7 +533,7 @@ fwupd_release_add_tag(FwupdRelease *self, const gchar *tag)
 /**
  * fwupd_release_has_tag:
  * @self: a #FwupdRelease
- * @tag: the update tag, e.g. `vendor-factory-2021q1`
+ * @tag: (not nullable): the update tag, e.g. `vendor-factory-2021q1`
  *
  * Finds out if the release has a specific tag.
  *
@@ -576,8 +576,8 @@ fwupd_release_get_metadata(FwupdRelease *self)
 /**
  * fwupd_release_add_metadata_item:
  * @self: a #FwupdRelease
- * @key: the key
- * @value: the value
+ * @key: (not nullable): the key
+ * @value: (not nullable): the value
  *
  * Sets a release metadata item.
  *
@@ -596,7 +596,7 @@ fwupd_release_add_metadata_item(FwupdRelease *self, const gchar *key, const gcha
 /**
  * fwupd_release_add_metadata:
  * @self: a #FwupdRelease
- * @hash: the key-values
+ * @hash: (not nullable): the key-values
  *
  * Sets multiple release metadata items.
  *
@@ -623,7 +623,7 @@ fwupd_release_add_metadata(FwupdRelease *self, GHashTable *hash)
 /**
  * fwupd_release_get_metadata_item:
  * @self: a #FwupdRelease
- * @key: the key
+ * @key: (not nullable): the key
  *
  * Gets a release metadata item.
  *
@@ -704,7 +704,7 @@ fwupd_release_get_locations(FwupdRelease *self)
 /**
  * fwupd_release_add_location:
  * @self: a #FwupdRelease
- * @location: the update URI
+ * @location: (not nullable): the update URI
  *
  * Adds an update URI, i.e. where you can download the firmware from.
  *
@@ -2269,7 +2269,7 @@ fwupd_release_set_from_variant_iter(FwupdRelease *self, GVariantIter *iter)
 
 /**
  * fwupd_release_from_variant:
- * @value: the serialized data
+ * @value: (not nullable): the serialized data
  *
  * Creates a new release using serialized data.
  *
@@ -2302,7 +2302,7 @@ fwupd_release_from_variant(GVariant *value)
 
 /**
  * fwupd_release_array_from_variant:
- * @value: the serialized data
+ * @value: (not nullable): the serialized data
  *
  * Creates an array of new releases using serialized data.
  *

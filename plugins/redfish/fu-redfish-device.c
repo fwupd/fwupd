@@ -843,6 +843,11 @@ fu_redfish_device_class_init(FuRedfishDeviceClass *klass)
 	klass_device->to_string = fu_redfish_device_to_string;
 	klass_device->probe = fu_redfish_device_probe;
 
+	/**
+	 * FuRedfishDevice:backend:
+	 *
+	 * The backend that added the device.
+	 */
 	pspec =
 	    g_param_spec_object("backend",
 				NULL,
@@ -851,6 +856,11 @@ fu_redfish_device_class_init(FuRedfishDeviceClass *klass)
 				G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BACKEND, pspec);
 
+	/**
+	 * FuRedfishDevice:member:
+	 *
+	 * The JSON root member for the device.
+	 */
 	pspec =
 	    g_param_spec_pointer("member",
 				 NULL,

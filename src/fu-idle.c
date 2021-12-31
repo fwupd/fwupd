@@ -195,6 +195,11 @@ fu_idle_class_init(FuIdleClass *klass)
 	object_class->get_property = fu_idle_get_property;
 	object_class->set_property = fu_idle_set_property;
 
+	/**
+	 * FuIdle:status:
+	 *
+	 * The status of the idle monitor.
+	 */
 	pspec = g_param_spec_uint("status",
 				  NULL,
 				  NULL,

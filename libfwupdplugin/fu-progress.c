@@ -885,6 +885,15 @@ fu_progress_class_init(FuProgressClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_progress_finalize;
 
+	/**
+	 * FuProgress::percentage-changed:
+	 * @self: the #FuProgress instance that emitted the signal
+	 * @percentage: the new value
+	 *
+	 * The ::percentage-changed signal is emitted when the tasks completion has changed.
+	 *
+	 * Since: 1.7.0
+	 **/
 	signals[SIGNAL_PERCENTAGE_CHANGED] =
 	    g_signal_new("percentage-changed",
 			 G_TYPE_FROM_CLASS(object_class),
@@ -896,6 +905,15 @@ fu_progress_class_init(FuProgressClass *klass)
 			 G_TYPE_NONE,
 			 1,
 			 G_TYPE_UINT);
+	/**
+	 * FuProgress::status-changed:
+	 * @self: the #FuProgress instance that emitted the signal
+	 * @status: the new #FwupdStatus
+	 *
+	 * The ::status-changed signal is emitted when the task status has changed.
+	 *
+	 * Since: 1.7.0
+	 **/
 	signals[SIGNAL_STATUS_CHANGED] =
 	    g_signal_new("status-changed",
 			 G_TYPE_FROM_CLASS(object_class),

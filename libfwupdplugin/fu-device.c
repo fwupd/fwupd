@@ -4691,6 +4691,15 @@ fu_device_class_init(FuDeviceClass *klass)
 	object_class->get_property = fu_device_get_property;
 	object_class->set_property = fu_device_set_property;
 
+	/**
+	 * FuDevice::child-added:
+	 * @self: the #FuDevice instance that emitted the signal
+	 * @device: the #FuDevice child
+	 *
+	 * The ::child-added signal is emitted when a device has been added as a child.
+	 *
+	 * Since: 1.0.8
+	 **/
 	signals[SIGNAL_CHILD_ADDED] = g_signal_new("child-added",
 						   G_TYPE_FROM_CLASS(object_class),
 						   G_SIGNAL_RUN_LAST,
@@ -4701,6 +4710,15 @@ fu_device_class_init(FuDeviceClass *klass)
 						   G_TYPE_NONE,
 						   1,
 						   FU_TYPE_DEVICE);
+	/**
+	 * FuDevice::child-removed:
+	 * @self: the #FuDevice instance that emitted the signal
+	 * @device: the #FuDevice child
+	 *
+	 * The ::child-removed signal is emitted when a device has been removed as a child.
+	 *
+	 * Since: 1.0.8
+	 **/
 	signals[SIGNAL_CHILD_REMOVED] = g_signal_new("child-removed",
 						     G_TYPE_FROM_CLASS(object_class),
 						     G_SIGNAL_RUN_LAST,
@@ -4711,6 +4729,15 @@ fu_device_class_init(FuDeviceClass *klass)
 						     G_TYPE_NONE,
 						     1,
 						     FU_TYPE_DEVICE);
+	/**
+	 * FuDevice::request:
+	 * @self: the #FuDevice instance that emitted the signal
+	 * @request: the #FwupdRequest
+	 *
+	 * The ::request signal is emitted when the device needs interactive action from the user.
+	 *
+	 * Since: 1.6.2
+	 **/
 	signals[SIGNAL_REQUEST] = g_signal_new("request",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,
@@ -4722,6 +4749,13 @@ fu_device_class_init(FuDeviceClass *klass)
 					       1,
 					       FWUPD_TYPE_REQUEST);
 
+	/**
+	 * FuDevice:physical-id:
+	 *
+	 * The device physical ID.
+	 *
+	 * Since: 1.1.2
+	 */
 	pspec = g_param_spec_string("physical-id",
 				    NULL,
 				    NULL,
@@ -4729,6 +4763,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_PHYSICAL_ID, pspec);
 
+	/**
+	 * FuDevice:logical-id:
+	 *
+	 * The device logical ID.
+	 *
+	 * Since: 1.1.2
+	 */
 	pspec = g_param_spec_string("logical-id",
 				    NULL,
 				    NULL,
@@ -4736,6 +4777,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_LOGICAL_ID, pspec);
 
+	/**
+	 * FuDevice:backend-id:
+	 *
+	 * The device backend ID.
+	 *
+	 * Since: 1.5.8
+	 */
 	pspec = g_param_spec_string("backend-id",
 				    NULL,
 				    NULL,
@@ -4743,6 +4791,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BACKEND_ID, pspec);
 
+	/**
+	 * FuDevice:battery-level:
+	 *
+	 * The device battery level in percent.
+	 *
+	 * Since: 1.5.8
+	 */
 	pspec = g_param_spec_uint("battery-level",
 				  NULL,
 				  NULL,
@@ -4752,6 +4807,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BATTERY_LEVEL, pspec);
 
+	/**
+	 * FuDevice:battery-threshold:
+	 *
+	 * The device battery threshold in percent.
+	 *
+	 * Since: 1.5.8
+	 */
 	pspec = g_param_spec_uint("battery-threshold",
 				  NULL,
 				  NULL,
@@ -4761,6 +4823,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BATTERY_THRESHOLD, pspec);
 
+	/**
+	 * FuDevice:context:
+	 *
+	 * The #FuContext to use.
+	 *
+	 * Since: 1.6.0
+	 */
 	pspec = g_param_spec_object("context",
 				    NULL,
 				    NULL,
@@ -4768,6 +4837,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_CONTEXT, pspec);
 
+	/**
+	 * FuDevice:proxy:
+	 *
+	 * The device proxy to use.
+	 *
+	 * Since: 1.4.1
+	 */
 	pspec = g_param_spec_object("proxy",
 				    NULL,
 				    NULL,
@@ -4775,6 +4851,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_PROXY, pspec);
 
+	/**
+	 * FuDevice:parent:
+	 *
+	 * The device parent.
+	 *
+	 * Since: 1.0.8
+	 */
 	pspec = g_param_spec_object("parent",
 				    NULL,
 				    NULL,

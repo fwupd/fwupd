@@ -64,7 +64,7 @@ fwupd_error_to_string(FwupdError error)
 
 /**
  * fwupd_error_from_string:
- * @error: a string, e.g. `org.freedesktop.fwupd.VersionNewer`
+ * @error: (nullable): a string, e.g. `org.freedesktop.fwupd.VersionNewer`
  *
  * Converts a string to an enumerated error.
  *

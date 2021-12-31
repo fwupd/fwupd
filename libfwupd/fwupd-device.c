@@ -108,7 +108,7 @@ fwupd_device_get_checksums(FwupdDevice *self)
 /**
  * fwupd_device_add_checksum:
  * @self: a #FwupdDevice
- * @checksum: the device checksum
+ * @checksum: (not nullable): the device checksum
  *
  * Adds a device checksum.
  *
@@ -551,7 +551,7 @@ fwupd_device_get_guids(FwupdDevice *self)
 /**
  * fwupd_device_has_guid:
  * @self: a #FwupdDevice
- * @guid: the GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
+ * @guid: (not nullable): the GUID, e.g. `2082b5e0-7a64-478a-b1b2-e3404fab6dad`
  *
  * Finds out if the device has this specific GUID.
  *
@@ -636,7 +636,7 @@ fwupd_device_get_instance_ids(FwupdDevice *self)
 /**
  * fwupd_device_has_instance_id:
  * @self: a #FwupdDevice
- * @instance_id: the instance ID, e.g. `PCI\VEN_10EC&DEV_525A`
+ * @instance_id: (not nullable): the instance ID, e.g. `PCI\VEN_10EC&DEV_525A`
  *
  * Finds out if the device has this specific instance ID.
  *
@@ -663,7 +663,7 @@ fwupd_device_has_instance_id(FwupdDevice *self, const gchar *instance_id)
 /**
  * fwupd_device_add_instance_id:
  * @self: a #FwupdDevice
- * @instance_id: the instance ID, e.g. `PCI\VEN_10EC&DEV_525A`
+ * @instance_id: (not nullable): the instance ID, e.g. `PCI\VEN_10EC&DEV_525A`
  *
  * Adds the instance ID if it does not already exist.
  *
@@ -727,7 +727,7 @@ fwupd_device_has_icon(FwupdDevice *self, const gchar *icon)
 /**
  * fwupd_device_add_icon:
  * @self: a #FwupdDevice
- * @icon: the icon name, e.g. `input-mouse` or `/usr/share/icons/foo.png`
+ * @icon: (not nullable): the icon name, e.g. `input-mouse` or `/usr/share/icons/foo.png`
  *
  * Adds the icon name if it does not already exist.
  *
@@ -849,7 +849,7 @@ fwupd_device_get_vendor_id(FwupdDevice *self)
 /**
  * fwupd_device_set_vendor_id:
  * @self: a #FwupdDevice
- * @vendor_id: the vendor ID, e.g. 'USB:0x1234' or 'USB:0x1234|PCI:0x5678'
+ * @vendor_id: (not nullable): the vendor ID, e.g. 'USB:0x1234' or 'USB:0x1234|PCI:0x5678'
  *
  * Sets the device vendor ID.
  *
@@ -892,7 +892,7 @@ fwupd_device_get_vendor_ids(FwupdDevice *self)
 /**
  * fwupd_device_has_vendor_id:
  * @self: a #FwupdDevice
- * @vendor_id: the vendor ID, e.g. 'USB:0x1234'
+ * @vendor_id: (not nullable): the vendor ID, e.g. 'USB:0x1234'
  *
  * Finds out if the device has this specific vendor ID.
  *
@@ -919,7 +919,7 @@ fwupd_device_has_vendor_id(FwupdDevice *self, const gchar *vendor_id)
 /**
  * fwupd_device_add_vendor_id:
  * @self: a #FwupdDevice
- * @vendor_id: the ID, e.g. 'USB:0x1234'
+ * @vendor_id: (not nullable): the ID, e.g. 'USB:0x1234'
  *
  * Adds a device vendor ID.
  *
@@ -1316,7 +1316,7 @@ fwupd_device_get_protocol(FwupdDevice *self)
 /**
  * fwupd_device_set_protocol:
  * @self: a #FwupdDevice
- * @protocol: the protocol name, e.g. `com.hughski.colorhug`
+ * @protocol: (not nullable): the protocol name, e.g. `com.hughski.colorhug`
  *
  * Sets the protocol name that is used to update the device.
  *
@@ -1359,7 +1359,7 @@ fwupd_device_get_protocols(FwupdDevice *self)
 /**
  * fwupd_device_has_protocol:
  * @self: a #FwupdDevice
- * @protocol: the protocol name, e.g. `com.hughski.colorhug`
+ * @protocol: (not nullable): the protocol name, e.g. `com.hughski.colorhug`
  *
  * Finds out if the device has this specific protocol name.
  *
@@ -1386,7 +1386,7 @@ fwupd_device_has_protocol(FwupdDevice *self, const gchar *protocol)
 /**
  * fwupd_device_add_protocol:
  * @self: a #FwupdDevice
- * @protocol: the protocol name, e.g. `com.hughski.colorhug`
+ * @protocol: (not nullable): the protocol name, e.g. `com.hughski.colorhug`
  *
  * Adds a device protocol name.
  *
@@ -2507,7 +2507,7 @@ fwupd_device_get_releases(FwupdDevice *self)
 /**
  * fwupd_device_add_release:
  * @self: a #FwupdDevice
- * @release: a release
+ * @release: (not nullable): a release
  *
  * Adds a release for this device.
  *
@@ -2570,7 +2570,7 @@ fwupd_pad_kv_ups(GString *str, const gchar *key, FwupdUpdateState value)
 /**
  * fwupd_device_to_json:
  * @self: a #FwupdDevice
- * @builder: a JSON builder
+ * @builder: (not nullable): a JSON builder
  *
  * Adds a fwupd device to a JSON builder
  *
@@ -2966,6 +2966,13 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 	object_class->get_property = fwupd_device_get_property;
 	object_class->set_property = fwupd_device_set_property;
 
+	/**
+	 * FwupdDevice:version-format:
+	 *
+	 * The version format of the device.
+	 *
+	 * Since: 1.2.9
+	 */
 	pspec = g_param_spec_uint("version-format",
 				  NULL,
 				  NULL,
@@ -2975,6 +2982,13 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_VERSION_FORMAT, pspec);
 
+	/**
+	 * FwupdDevice:flags:
+	 *
+	 * The device flags.
+	 *
+	 * Since: 0.9.3
+	 */
 	pspec = g_param_spec_uint64("flags",
 				    NULL,
 				    NULL,
@@ -2984,6 +2998,14 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FLAGS, pspec);
 
+	/**
+	 * FwupdDevice:protocol:
+	 *
+	 * The device protocol.
+	 *
+	 * Since: 1.3.6
+	 * Deprecated: 1.5.8
+	 */
 	pspec = g_param_spec_string("protocol",
 				    NULL,
 				    NULL,
@@ -2991,6 +3013,13 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_PROTOCOL, pspec);
 
+	/**
+	 * FwupdDevice:status:
+	 *
+	 * The current device status.
+	 *
+	 * Since: 1.4.0
+	 */
 	pspec = g_param_spec_uint("status",
 				  NULL,
 				  NULL,
@@ -3000,6 +3029,13 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_STATUS, pspec);
 
+	/**
+	 * FwupdDevice:parent:
+	 *
+	 * The device parent.
+	 *
+	 * Since: 1.0.8
+	 */
 	pspec = g_param_spec_object("parent",
 				    NULL,
 				    NULL,
@@ -3007,6 +3043,13 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_PARENT, pspec);
 
+	/**
+	 * FwupdDevice:update-state:
+	 *
+	 * The device update state.
+	 *
+	 * Since: 0.9.8
+	 */
 	pspec = g_param_spec_uint("update-state",
 				  NULL,
 				  NULL,
@@ -3016,6 +3059,13 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_UPDATE_STATE, pspec);
 
+	/**
+	 * FwupdDevice:update-message:
+	 *
+	 * The device update message.
+	 *
+	 * Since: 1.2.4
+	 */
 	pspec = g_param_spec_string("update-message",
 				    NULL,
 				    NULL,
@@ -3023,6 +3073,13 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_UPDATE_MESSAGE, pspec);
 
+	/**
+	 * FwupdDevice:update-error:
+	 *
+	 * The device update error.
+	 *
+	 * Since: 0.9.8
+	 */
 	pspec = g_param_spec_string("update-error",
 				    NULL,
 				    NULL,
@@ -3030,6 +3087,13 @@ fwupd_device_class_init(FwupdDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_UPDATE_ERROR, pspec);
 
+	/**
+	 * FwupdDevice:update-image:
+	 *
+	 * The update image for the device.
+	 *
+	 * Since: 1.4.5
+	 */
 	pspec = g_param_spec_string("update-image",
 				    NULL,
 				    NULL,
@@ -3108,7 +3172,7 @@ fwupd_device_set_from_variant_iter(FwupdDevice *self, GVariantIter *iter)
 
 /**
  * fwupd_device_from_variant:
- * @value: the serialized data
+ * @value: (not nullable): the serialized data
  *
  * Creates a new device using serialized data.
  *
@@ -3178,7 +3242,7 @@ fwupd_device_array_ensure_parents(GPtrArray *devices)
 
 /**
  * fwupd_device_array_from_variant:
- * @value: the serialized data
+ * @value: (not nullable): the serialized data
  *
  * Creates an array of new devices using serialized data.
  *

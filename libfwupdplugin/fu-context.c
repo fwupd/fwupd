@@ -824,6 +824,13 @@ fu_context_class_init(FuContextClass *klass)
 	object_class->get_property = fu_context_get_property;
 	object_class->set_property = fu_context_set_property;
 
+	/**
+	 * FuContext:battery-state:
+	 *
+	 * The system battery state.
+	 *
+	 * Since: 1.6.0
+	 */
 	pspec = g_param_spec_uint("battery-state",
 				  NULL,
 				  NULL,
@@ -833,6 +840,13 @@ fu_context_class_init(FuContextClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BATTERY_STATE, pspec);
 
+	/**
+	 * FuContext:lid-state:
+	 *
+	 * The system lid state.
+	 *
+	 * Since: 1.7.4
+	 */
 	pspec = g_param_spec_uint("lid-state",
 				  NULL,
 				  NULL,
@@ -842,6 +856,13 @@ fu_context_class_init(FuContextClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_LID_STATE, pspec);
 
+	/**
+	 * FuContext:battery-level:
+	 *
+	 * The system battery level in percent.
+	 *
+	 * Since: 1.6.0
+	 */
 	pspec = g_param_spec_uint("battery-level",
 				  NULL,
 				  NULL,
@@ -851,6 +872,13 @@ fu_context_class_init(FuContextClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BATTERY_LEVEL, pspec);
 
+	/**
+	 * FuContext:battery-threshold:
+	 *
+	 * The system battery threshold in percent.
+	 *
+	 * Since: 1.6.0
+	 */
 	pspec = g_param_spec_uint("battery-threshold",
 				  NULL,
 				  NULL,
@@ -860,6 +888,15 @@ fu_context_class_init(FuContextClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BATTERY_THRESHOLD, pspec);
 
+	/**
+	 * FuContext::security-changed:
+	 * @self: the #FuContext instance that emitted the signal
+	 *
+	 * The ::security-changed signal is emitted when some system state has changed that could
+	 * have affected the security level.
+	 *
+	 * Since: 1.6.0
+	 **/
 	signals[SIGNAL_SECURITY_CHANGED] =
 	    g_signal_new("security-changed",
 			 G_TYPE_FROM_CLASS(object_class),

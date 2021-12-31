@@ -2369,6 +2369,16 @@ fu_plugin_class_init(FuPluginClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_plugin_finalize;
+
+	/**
+	 * FuPlugin::device-added:
+	 * @self: the #FuPlugin instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-added signal is emitted when a device has been added by the plugin.
+	 *
+	 * Since: 0.8.0
+	 **/
 	signals[SIGNAL_DEVICE_ADDED] = g_signal_new("device-added",
 						    G_TYPE_FROM_CLASS(object_class),
 						    G_SIGNAL_RUN_LAST,
@@ -2379,6 +2389,15 @@ fu_plugin_class_init(FuPluginClass *klass)
 						    G_TYPE_NONE,
 						    1,
 						    FU_TYPE_DEVICE);
+	/**
+	 * FuPlugin::device-removed:
+	 * @self: the #FuPlugin instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-removed signal is emitted when a device has been removed by the plugin.
+	 *
+	 * Since: 0.8.0
+	 **/
 	signals[SIGNAL_DEVICE_REMOVED] =
 	    g_signal_new("device-removed",
 			 G_TYPE_FROM_CLASS(object_class),
@@ -2390,6 +2409,15 @@ fu_plugin_class_init(FuPluginClass *klass)
 			 G_TYPE_NONE,
 			 1,
 			 FU_TYPE_DEVICE);
+	/**
+	 * FuPlugin::device-register:
+	 * @self: the #FuPlugin instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-register signal is emitted when another plugin has added the device.
+	 *
+	 * Since: 0.9.7
+	 **/
 	signals[SIGNAL_DEVICE_REGISTER] =
 	    g_signal_new("device-register",
 			 G_TYPE_FROM_CLASS(object_class),
@@ -2401,6 +2429,18 @@ fu_plugin_class_init(FuPluginClass *klass)
 			 G_TYPE_NONE,
 			 1,
 			 FU_TYPE_DEVICE);
+	/**
+	 * FuPlugin::check-supported:
+	 * @self: the #FuPlugin instance that emitted the signal
+	 * @guid: a device GUID
+	 *
+	 * The ::check-supported signal is emitted when a plugin wants to ask the daemon if a
+	 * specific device GUID is supported in the existing system metadata.
+	 *
+	 * Returns: %TRUE if the GUID is found
+	 *
+	 * Since: 1.0.0
+	 **/
 	signals[SIGNAL_CHECK_SUPPORTED] =
 	    g_signal_new("check-supported",
 			 G_TYPE_FROM_CLASS(object_class),
@@ -2421,6 +2461,15 @@ fu_plugin_class_init(FuPluginClass *klass)
 						     g_cclosure_marshal_VOID__VOID,
 						     G_TYPE_NONE,
 						     0);
+	/**
+	 * FuPlugin::config-changed:
+	 * @self: the #FuPlugin instance that emitted the signal
+	 *
+	 * The ::config-changed signal is emitted when one or more config files have changed which
+	 * may affect how the daemon should be run.
+	 *
+	 * Since: 1.7.0
+	 **/
 	signals[SIGNAL_CONFIG_CHANGED] =
 	    g_signal_new("config-changed",
 			 G_TYPE_FROM_CLASS(object_class),

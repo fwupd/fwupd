@@ -35,7 +35,7 @@
 
 /**
  * fwupd_checksum_guess_kind:
- * @checksum: a checksum
+ * @checksum: (nullable): a checksum
  *
  * Guesses the checksum kind based on the length of the hash.
  *
@@ -77,7 +77,7 @@ fwupd_checksum_type_to_string_display(GChecksumType checksum_type)
 
 /**
  * fwupd_checksum_format_for_display:
- * @checksum: a checksum
+ * @checksum: (nullable): a checksum
  *
  * Formats a checksum for display.
  *
@@ -282,8 +282,8 @@ fwupd_build_user_agent_system(void)
 
 /**
  * fwupd_build_user_agent:
- * @package_name: client program name, e.g. `gnome-software`
- * @package_version: client program version, e.g. `3.28.1`
+ * @package_name: (not nullable): client program name, e.g. `gnome-software`
+ * @package_version: (not nullable): client program version, e.g. `3.28.1`
  *
  * Builds a user-agent to use for the download.
  *
@@ -716,8 +716,8 @@ g_ascii_string_to_unsigned(const gchar *str,
 
 /**
  * fwupd_guid_from_string:
- * @guidstr: (nullable): a GUID, e.g. `00112233-4455-6677-8899-aabbccddeeff`
- * @guid: a #fwupd_guid_t, or NULL to just check the GUID
+ * @guidstr: (not nullable): a GUID, e.g. `00112233-4455-6677-8899-aabbccddeeff`
+ * @guid: (nullable): a #fwupd_guid_t, or NULL to just check the GUID
  * @flags: GUID flags, e.g. %FWUPD_GUID_FLAG_MIXED_ENDIAN
  * @error: (nullable): optional return location for an error
  *

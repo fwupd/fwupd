@@ -498,6 +498,13 @@ fu_cfi_device_class_init(FuCfiDeviceClass *klass)
 	klass_device->to_string = fu_cfi_device_to_string;
 	klass_device->set_quirk_kv = fu_cfi_device_set_quirk_kv;
 
+	/**
+	 * FuCfiDevice:flash-id:
+	 *
+	 * The CCI JEDEC flash ID.
+	 *
+	 * Since: 1.7.1
+	 */
 	pspec = g_param_spec_string("flash-id",
 				    NULL,
 				    NULL,
