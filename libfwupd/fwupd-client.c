@@ -4896,6 +4896,7 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(url != NULL);
+	g_return_if_fail(payload != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 	g_return_if_fail(priv->proxy != NULL);
 

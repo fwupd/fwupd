@@ -1892,6 +1892,11 @@ fwupd_client_set_approved_firmware(FwupdClient *self,
 	g_autoptr(FwupdClientHelper) helper = NULL;
 	g_autoptr(GPtrArray) array = g_ptr_array_new_with_free_func(g_free);
 
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(checksums != NULL, FALSE);
+	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
 	/* connect */
 	if (!fwupd_client_connect(self, cancellable, error))
 		return FALSE;
@@ -2288,6 +2293,7 @@ fwupd_client_upload_bytes(FwupdClient *self,
 
 	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	g_return_val_if_fail(url != NULL, NULL);
+	g_return_val_if_fail(payload != NULL, NULL);
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 

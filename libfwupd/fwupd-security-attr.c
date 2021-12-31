@@ -1268,6 +1268,8 @@ fwupd_security_attr_from_variant(GVariant *value)
 	const gchar *type_string;
 	g_autoptr(GVariantIter) iter = NULL;
 
+	g_return_val_if_fail(value != NULL, NULL);
+
 	type_string = g_variant_get_type_string(value);
 	if (g_strcmp0(type_string, "(a{sv})") == 0) {
 		rel = fwupd_security_attr_new(NULL);
