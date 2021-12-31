@@ -1766,6 +1766,8 @@ fwupd_remote_array_from_variant(GVariant *value)
 	gsize sz;
 	g_autoptr(GVariant) untuple = NULL;
 
+	g_return_val_if_fail(value != NULL, NULL);
+
 	remotes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	untuple = g_variant_get_child_value(value, 0);
 	sz = g_variant_n_children(untuple);

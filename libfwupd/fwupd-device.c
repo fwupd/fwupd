@@ -1601,6 +1601,9 @@ fwupd_device_incorporate(FwupdDevice *self, FwupdDevice *donor)
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 	FwupdDevicePrivate *priv_donor = GET_PRIVATE(donor);
 
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	g_return_if_fail(FWUPD_IS_DEVICE(donor));
+
 	fwupd_device_add_flag(self, priv_donor->flags);
 	if (priv->created == 0)
 		fwupd_device_set_created(self, priv_donor->created);
@@ -2518,6 +2521,7 @@ fwupd_device_add_release(FwupdDevice *self, FwupdRelease *release)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	g_return_if_fail(FWUPD_IS_RELEASE(release));
 	g_ptr_array_add(priv->releases, g_object_ref(release));
 }
 
@@ -3256,6 +3260,8 @@ fwupd_device_array_from_variant(GVariant *value)
 	GPtrArray *array = NULL;
 	gsize sz;
 	g_autoptr(GVariant) untuple = NULL;
+
+	g_return_val_if_fail(value != NULL, NULL);
 
 	array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	untuple = g_variant_get_child_value(value, 0);

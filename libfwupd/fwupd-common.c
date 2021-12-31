@@ -106,6 +106,7 @@ fwupd_checksum_format_for_display(const gchar *checksum)
 const gchar *
 fwupd_checksum_get_by_kind(GPtrArray *checksums, GChecksumType kind)
 {
+	g_return_val_if_fail(checksums != NULL, NULL);
 	for (guint i = 0; i < checksums->len; i++) {
 		const gchar *checksum = g_ptr_array_index(checksums, i);
 		if (fwupd_checksum_guess_kind(checksum) == kind)
@@ -128,6 +129,7 @@ const gchar *
 fwupd_checksum_get_best(GPtrArray *checksums)
 {
 	GChecksumType checksum_types[] = {G_CHECKSUM_SHA512, G_CHECKSUM_SHA256, G_CHECKSUM_SHA1, 0};
+	g_return_val_if_fail(checksums != NULL, NULL);
 	for (guint i = 0; checksum_types[i] != 0; i++) {
 		for (guint j = 0; j < checksums->len; j++) {
 			const gchar *checksum = g_ptr_array_index(checksums, j);
@@ -308,6 +310,9 @@ fwupd_build_user_agent(const gchar *package_name, const gchar *package_version)
 {
 	GString *str = g_string_new(NULL);
 	g_autofree gchar *system = NULL;
+
+	g_return_val_if_fail(package_name != NULL, NULL);
+	g_return_val_if_fail(package_version != NULL, NULL);
 
 	/* application name and version */
 	g_string_append_printf(str, "%s/%s", package_name, package_version);
