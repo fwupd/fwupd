@@ -95,7 +95,7 @@ fu_plugin_upower_rescan_manager(FuPlugin *plugin)
 static void
 fu_plugin_upower_proxy_changed_cb(GDBusProxy *proxy,
 				  GVariant *changed_properties,
-				  GStrv invalidated_properties,
+				  const GStrv invalidated_properties,
 				  FuPlugin *plugin)
 {
 	fu_plugin_upower_rescan_manager(plugin);

@@ -986,7 +986,7 @@ fwupd_variant_to_hash_kv(GVariant *dict)
 	const gchar *key;
 	const gchar *value;
 	g_variant_iter_init(&iter, dict);
-	while (g_variant_iter_loop(&iter, "{ss}", &key, &value))
+	while (g_variant_iter_loop(&iter, "{&s&s}", &key, &value))
 		g_hash_table_insert(hash, g_strdup(key), g_strdup(value));
 	return hash;
 }

@@ -84,8 +84,8 @@ fu_plugin_powerd_rescan(FuPlugin *plugin, GVariant *parameters)
 
 static void
 fu_plugin_powerd_proxy_changed_cb(GDBusProxy *proxy,
-				  gchar *sender_name,
-				  gchar *signal_name,
+				  const gchar *sender_name,
+				  const gchar *signal_name,
 				  GVariant *parameters,
 				  FuPlugin *plugin)
 {
