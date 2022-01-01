@@ -315,6 +315,10 @@ fu_common_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt
 	guint64 tmp;
 	guint base;
 
+	/* sanity check */
+	if (version == NULL)
+		return NULL;
+
 	/* already dotted decimal */
 	if (g_strstr_len(version, -1, ".") != NULL)
 		return g_strdup(version);
