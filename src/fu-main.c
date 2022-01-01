@@ -1167,7 +1167,7 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 	}
 	if (g_strcmp0(method_name, "SelfSign") == 0) {
 		GVariant *prop_value;
-		gchar *prop_key;
+		const gchar *prop_key;
 		g_autofree gchar *value = NULL;
 		g_autoptr(FuMainAuthHelper) helper = NULL;
 #ifdef HAVE_POLKIT
@@ -1651,7 +1651,7 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 	if (g_strcmp0(method_name, "Install") == 0) {
 		GVariant *prop_value;
 		const gchar *device_id = NULL;
-		gchar *prop_key;
+		const gchar *prop_key;
 		gint32 fd_handle = 0;
 		gint fd;
 		guint64 archive_size_max;

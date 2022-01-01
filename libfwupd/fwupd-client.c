@@ -356,7 +356,7 @@ fwupd_client_set_percentage(FwupdClient *self, guint percentage)
 static void
 fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 				   GVariant *changed_properties,
-				   GStrv invalidated_properties,
+				   const GStrv invalidated_properties,
 				   FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);

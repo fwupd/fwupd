@@ -1366,7 +1366,7 @@ fwupd_remote_set_from_variant_iter(FwupdRemote *self, GVariantIter *iter)
 	g_autoptr(GVariantIter) iter3 = g_variant_iter_copy(iter);
 
 	/* three passes, as we have to construct Id -> Url -> * */
-	while (g_variant_iter_loop(iter, "{sv}", &key, &value)) {
+	while (g_variant_iter_loop(iter, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_REMOTE_ID) == 0)
 			fwupd_remote_set_id(self, g_variant_get_string(value, NULL));
 		if (g_strcmp0(key, "Type") == 0)
@@ -1374,7 +1374,7 @@ fwupd_remote_set_from_variant_iter(FwupdRemote *self, GVariantIter *iter)
 		if (g_strcmp0(key, "Keyring") == 0)
 			fwupd_remote_set_keyring_kind(self, g_variant_get_uint32(value));
 	}
-	while (g_variant_iter_loop(iter2, "{sv}", &key, &value)) {
+	while (g_variant_iter_loop(iter2, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0)
 			fwupd_remote_set_metadata_uri(self, g_variant_get_string(value, NULL));
 		if (g_strcmp0(key, "FilenameCache") == 0)
@@ -1387,7 +1387,7 @@ fwupd_remote_set_from_variant_iter(FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_security_report_uri(self,
 							     g_variant_get_string(value, NULL));
 	}
-	while (g_variant_iter_loop(iter3, "{sv}", &key, &value)) {
+	while (g_variant_iter_loop(iter3, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, "Username") == 0) {
 			fwupd_remote_set_username(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "Password") == 0) {
