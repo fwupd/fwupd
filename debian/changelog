@@ -1,11 +1,15 @@
 fwupd (1.7.1-1) unstable; urgency=medium
 
+  [ Mario Limonciello ]
   * New upstream version (1.7.1)
   * Update debian/control and debian/copyright for changes upstream
   * Drop all patches, upstream
   * Packaging changes for the split into fwupd/fwupd-efi.
 
- -- Mario Limonciello <superm1@gmail.com>  Tue, 28 Dec 2021 21:03:39 -0600
+  [ Steve McIntyre ]
+  * Update Mario's email address in debian/control
+
+ -- Mario Limonciello <superm1@gmail.com>  Mon, 03 Jan 2022 18:27:46 +0000
 
 fwupd (1.5.7-5) unstable; urgency=medium
 
