@@ -44,3 +44,11 @@ Flags = reset-cmos
 Branch = coreboot
 VersionFormat = plain
 Flags = reset-cmos
+
+# NovaCustom NV4x (HwId)
+[25b6ea34-8f52-598e-a27a-31e03014dbe3]
+Plugin = flashrom
+
+# NovaCustom NV4x (Dasharo GUID)
+[9a8c30e2-1b7e-5b28-9632-fc2fbf8cd0ba]
+Branch = dasharo
