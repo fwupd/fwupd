@@ -70,6 +70,11 @@ override_dh_install:
 	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-*/libfu_plugin_test_ble.so
 	rm -f debian/fwupd/usr/lib/*/fwupd-plugins-*/libfu_plugin_invalid.so
 	rm -f debian/fwupd/etc/fwupd/remotes.d/fwupd-tests.conf
+	mv debian/fwupd/usr/share/man/man1 debian/fwupd/usr/share/man/man8
+	for file in debian/fwupd/usr/share/man/man8/*.1; do \
+		file8=$${file%%.1}.8; \
+		mv -v $$file $$file8; \
+	done
 
 override_dh_strip_nondeterminism:
 	dh_strip_nondeterminism -Xfirmware-example.xml.gz
