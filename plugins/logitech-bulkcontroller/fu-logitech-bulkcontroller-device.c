@@ -145,7 +145,7 @@ fu_logitech_bulkcontroller_device_probe(FuDevice *device, GError **error)
 				   UPD_INTERFACE_SUBPROTOCOL_ID) {
 				g_autoptr(GPtrArray) endpoints =
 				    g_usb_interface_get_endpoints(intf);
-				self->sync_iface = g_usb_interface_get_number(intf);
+				self->update_iface = g_usb_interface_get_number(intf);
 				if (endpoints == NULL)
 					continue;
 				for (guint j = 0; j < endpoints->len; j++) {
