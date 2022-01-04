@@ -63,7 +63,6 @@ static void
 fu_ccgx_hpi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
-	fu_common_string_append_kx(str, idt, "InfNum", self->inf_num);
 	fu_common_string_append_kx(str, idt, "ScbIndex", self->scb_index);
 	fu_common_string_append_kx(str, idt, "SiliconId", self->silicon_id);
 	fu_common_string_append_kx(str, idt, "FwAppType", self->fw_app_type);
@@ -1560,49 +1559,12 @@ fu_ccgx_hpi_device_set_quirk_kv(FuDevice *device,
 }
 
 static gboolean
-fu_ccgx_hpi_device_open(FuDevice *device, GError **error)
-{
-	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
-	g_autoptr(GError) error_local = NULL;
-
-	/* FuUsbDevice->open */
-	if (!FU_DEVICE_CLASS(fu_ccgx_hpi_device_parent_class)->open(device, error))
-		return FALSE;
-
-	if (!g_usb_device_claim_interface(fu_usb_device_get_dev(FU_USB_DEVICE(device)),
-					  self->inf_num,
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  &error_local)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "cannot claim interface: %s",
-			    error_local->message);
-		return FALSE;
-	}
-	return TRUE;
-}
-
-static gboolean
 fu_ccgx_hpi_device_close(FuDevice *device, GError **error)
 {
-	FuCcgxHpiDevice *self = FU_CCGX_HPI_DEVICE(device);
-	g_autoptr(GError) error_local = NULL;
-
 	/* do not close handle when device restarts */
 	if (fu_device_has_private_flag(device, FU_CCGX_HPI_DEVICE_IS_IN_RESTART))
 		return TRUE;
-	if (!g_usb_device_release_interface(fu_usb_device_get_dev(FU_USB_DEVICE(device)),
-					    self->inf_num,
-					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					    &error_local)) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "cannot release interface: %s",
-			    error_local->message);
-		return FALSE;
-	}
+
 	/* FuUsbDevice->close */
 	return FU_DEVICE_CLASS(fu_ccgx_hpi_device_parent_class)->close(device, error);
 }
@@ -1649,6 +1611,7 @@ fu_ccgx_hpi_device_init(FuCcgxHpiDevice *self)
 	/* this might not be true for future hardware */
 	if (self->inf_num > 0)
 		self->scb_index = 1;
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->inf_num);
 }
 
 static void
@@ -1662,7 +1625,6 @@ fu_ccgx_hpi_device_class_init(FuCcgxHpiDeviceClass *klass)
 	klass_device->attach = fu_ccgx_hpi_device_attach;
 	klass_device->setup = fu_ccgx_hpi_device_setup;
 	klass_device->set_quirk_kv = fu_ccgx_hpi_device_set_quirk_kv;
-	klass_device->open = fu_ccgx_hpi_device_open;
 	klass_device->close = fu_ccgx_hpi_device_close;
 	klass_device->set_progress = fu_ccgx_hpi_device_set_progress;
 }

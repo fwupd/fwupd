@@ -349,29 +349,6 @@ fu_colorhug_device_probe(FuDevice *device, GError **error)
 }
 
 static gboolean
-fu_colorhug_device_open(FuDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	/* FuUsbDevice->open */
-	if (!FU_DEVICE_CLASS(fu_colorhug_device_parent_class)->open(device, error))
-		return FALSE;
-
-	/* got the version using the HID API */
-	if (!g_usb_device_set_configuration(usb_device, CH_USB_CONFIG, error))
-		return FALSE;
-	if (!g_usb_device_claim_interface(usb_device,
-					  CH_USB_INTERFACE,
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  error)) {
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_colorhug_device_setup(FuDevice *device, GError **error)
 {
 	FuColorhugDevice *self = FU_COLORHUG_DEVICE(device);
@@ -587,6 +564,8 @@ fu_colorhug_device_init(FuColorhugDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_COLORHUG_DEVICE_FLAG_HALFSIZE,
 					"halfsize");
+	fu_usb_device_set_configuration(FU_USB_DEVICE(self), CH_USB_CONFIG);
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), CH_USB_INTERFACE);
 }
 
 static void
@@ -598,7 +577,6 @@ fu_colorhug_device_class_init(FuColorhugDeviceClass *klass)
 	klass_device->detach = fu_colorhug_device_detach;
 	klass_device->reload = fu_colorhug_device_reload;
 	klass_device->setup = fu_colorhug_device_setup;
-	klass_device->open = fu_colorhug_device_open;
 	klass_device->probe = fu_colorhug_device_probe;
 	klass_device->set_progress = fu_colorhug_device_set_progress;
 }

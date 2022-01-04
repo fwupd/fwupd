@@ -21,8 +21,15 @@
 
 typedef struct {
 	GUsbDevice *usb_device;
+	gint configuration;
+	GPtrArray *interfaces; /* nullable, element-type FuUsbDeviceInterface */
 	FuDeviceLocker *usb_device_locker;
 } FuUsbDevicePrivate;
+
+typedef struct {
+	guint8 number;
+	gboolean claimed;
+} FuUsbDeviceInterface;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuUsbDevice, fu_usb_device, FU_TYPE_DEVICE)
 enum { PROP_0, PROP_USB_DEVICE, PROP_LAST };
@@ -68,6 +75,8 @@ fu_usb_device_finalize(GObject *object)
 		g_object_unref(priv->usb_device_locker);
 	if (priv->usb_device != NULL)
 		g_object_unref(priv->usb_device);
+	if (priv->interfaces != NULL)
+		g_ptr_array_unref(priv->interfaces);
 
 	G_OBJECT_CLASS(fu_usb_device_parent_class)->finalize(object);
 }
@@ -75,6 +84,8 @@ fu_usb_device_finalize(GObject *object)
 static void
 fu_usb_device_init(FuUsbDevice *device)
 {
+	FuUsbDevicePrivate *priv = GET_PRIVATE(device);
+	priv->configuration = -1;
 #ifdef HAVE_GUSB
 	fu_device_retry_add_recovery(FU_DEVICE(device),
 				     G_USB_DEVICE_ERROR,
@@ -103,6 +114,56 @@ fu_usb_device_is_open(FuUsbDevice *device)
 	FuUsbDevicePrivate *priv = GET_PRIVATE(device);
 	g_return_val_if_fail(FU_IS_USB_DEVICE(device), FALSE);
 	return priv->usb_device_locker != NULL;
+}
+
+/**
+ * fu_usb_device_set_configuration:
+ * @configuration: a #FuUsbDevice
+ * @sss: the configuration value to set
+ *
+ * Set the active bConfigurationValue for the device.
+ *
+ * Since: 1.7.4
+ **/
+void
+fu_usb_device_set_configuration(FuUsbDevice *device, gint configuration)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(device);
+	g_return_if_fail(FU_IS_USB_DEVICE(device));
+	priv->configuration = configuration;
+}
+
+/**
+ * fu_usb_device_add_interface:
+ * @configuration: a #FuUsbDevice
+ * @number: bInterfaceNumber of the interface
+ *
+ * Adds an interface that will be claimed on `->open()` and released on `->close()`.
+ *
+ * Since: 1.7.4
+ **/
+void
+fu_usb_device_add_interface(FuUsbDevice *device, guint8 number)
+{
+	FuUsbDevicePrivate *priv = GET_PRIVATE(device);
+	FuUsbDeviceInterface *iface;
+
+	g_return_if_fail(FU_IS_USB_DEVICE(device));
+
+	if (priv->interfaces == NULL)
+		priv->interfaces = g_ptr_array_new_with_free_func(g_free);
+
+	/* check for existing */
+	for (guint i = 0; i < priv->interfaces->len; i++) {
+		iface = g_ptr_array_index(priv->interfaces, i);
+		if (iface->number == number)
+			return;
+	}
+
+	/* add new */
+	iface = g_new0(FuUsbDeviceInterface, 1);
+	iface->number = number;
+	g_ptr_array_add(priv->interfaces, iface);
 }
 
 #ifdef HAVE_GUSB
@@ -178,6 +239,25 @@ fu_usb_device_open(FuDevice *device, GError **error)
 
 	/* success */
 	priv->usb_device_locker = g_steal_pointer(&locker);
+
+	/* if set */
+	if (priv->configuration >= 0) {
+		if (!g_usb_device_set_configuration(priv->usb_device, priv->configuration, error))
+			return FALSE;
+	}
+
+	/* claim interfaces */
+	for (guint i = 0; priv->interfaces != NULL && i < priv->interfaces->len; i++) {
+		FuUsbDeviceInterface *iface = g_ptr_array_index(priv->interfaces, i);
+		if (!g_usb_device_claim_interface(priv->usb_device,
+						  iface->number,
+						  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+						  error)) {
+			g_prefix_error(error, "failed to claim interface 0x%02x: ", iface->number);
+			return FALSE;
+		}
+		iface->claimed = TRUE;
+	}
 #endif
 	return TRUE;
 }
@@ -270,9 +350,37 @@ fu_usb_device_close(FuDevice *device, GError **error)
 	g_return_val_if_fail(FU_IS_USB_DEVICE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-	/* already open */
+	/* already closed */
 	if (priv->usb_device_locker == NULL)
 		return TRUE;
+
+	/* release interfaces, ignoring errors */
+	for (guint i = 0; priv->interfaces != NULL && i < priv->interfaces->len; i++) {
+		FuUsbDeviceInterface *iface = g_ptr_array_index(priv->interfaces, i);
+		g_autoptr(GError) error_local = NULL;
+		if (!iface->claimed)
+			continue;
+		if (!g_usb_device_release_interface(priv->usb_device,
+						    iface->number,
+						    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
+						    &error_local)) {
+			if (g_error_matches(error_local,
+					    G_USB_DEVICE_ERROR,
+					    G_USB_DEVICE_ERROR_NO_DEVICE) ||
+			    g_error_matches(error_local,
+					    G_USB_DEVICE_ERROR,
+					    G_USB_DEVICE_ERROR_INTERNAL)) {
+				g_debug("failed to release interface 0x%02x: %s",
+					iface->number,
+					error_local->message);
+			} else {
+				g_warning("failed to release interface 0x%02x: %s",
+					  iface->number,
+					  error_local->message);
+			}
+		}
+		iface->claimed = FALSE;
+	}
 
 	g_clear_object(&priv->usb_device_locker);
 	return TRUE;
@@ -690,9 +798,18 @@ fu_usb_device_class_code_to_string(GUsbDeviceClassCode code)
 static void
 fu_usb_device_to_string(FuDevice *device, guint idt, GString *str)
 {
-#ifdef HAVE_GUSB
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
+
+	if (priv->configuration > 0)
+		fu_common_string_append_kx(str, idt, "Configuration", priv->configuration);
+	for (guint i = 0; priv->interfaces != NULL && i < priv->interfaces->len; i++) {
+		FuUsbDeviceInterface *iface = g_ptr_array_index(priv->interfaces, i);
+		g_autofree gchar *tmp = g_strdup_printf("InterfaceNumber#%02x", iface->number);
+		fu_common_string_append_kv(str, idt, tmp, iface->claimed ? "claimed" : "released");
+	}
+
+#ifdef HAVE_GUSB
 	if (priv->usb_device != NULL) {
 		GUsbDeviceClassCode code = g_usb_device_get_device_class(priv->usb_device);
 		fu_common_string_append_kv(str,
