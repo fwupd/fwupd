@@ -3,7 +3,7 @@ Priority: optional
 Maintainer: Debian EFI <debian-efi@lists.debian.org>
 Uploaders: Steve McIntyre <93sam@debian.org>,
            Matthias Klumpp <mak@debian.org>,
-           Mario Limonciello <mario.limonciello@dell.com>
+           Mario Limonciello <superm1@gmail.com>
 Build-Depends: %%%DYNAMIC%%%
 Build-Depends-Indep: libglib2.0-doc <!nodoc>
 Standards-Version: 4.5.0
