@@ -557,7 +557,7 @@ fu_srec_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* main blob */
-	buf_blob = fu_firmware_get_bytes(firmware, error);
+	buf_blob = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (buf_blob == NULL)
 		return NULL;
 

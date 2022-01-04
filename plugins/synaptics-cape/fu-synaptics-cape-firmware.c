@@ -216,7 +216,7 @@ fu_synaptics_cape_firmware_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_uint32(buf, 0x0, G_LITTLE_ENDIAN);	      /* reserved */
 
 	/* payload */
-	payload = fu_firmware_get_bytes(firmware, error);
+	payload = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (payload == NULL)
 		return NULL;
 	fu_byte_array_append_bytes(buf, payload);

@@ -34,6 +34,7 @@ typedef struct {
 	guint64 offset;
 	gsize size;
 	GPtrArray *chunks; /* nullable, element-type FuChunk */
+	GPtrArray *patches; /* nullable, element-type FuFirmwarePatch */
 } FuFirmwarePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuFirmware, fu_firmware, G_TYPE_OBJECT)
@@ -91,6 +92,18 @@ fu_firmware_flag_from_string(const gchar *flag)
 	if (g_strcmp0(flag, "done-parse") == 0)
 		return FU_FIRMWARE_FLAG_DONE_PARSE;
 	return FU_FIRMWARE_FLAG_NONE;
+}
+
+typedef struct {
+	gsize offset;
+	GBytes *blob;
+} FuFirmwarePatch;
+
+static void
+fu_firmware_patch_free(FuFirmwarePatch *ptch)
+{
+	g_bytes_unref(ptch->blob);
+	g_free(ptch);
 }
 
 /**
@@ -483,6 +496,55 @@ fu_firmware_get_bytes(FuFirmware *self, GError **error)
 		return NULL;
 	}
 	return g_bytes_ref(priv->bytes);
+}
+
+/**
+ * fu_firmware_get_bytes_with_patches:
+ * @self: a #FuPlugin
+ * @error: (nullable): optional return location for an error
+ *
+ * Gets the firmware payload, with any defined patches applied.
+ *
+ * Returns: (transfer full): a #GBytes, or %NULL if the payload has never been set
+ *
+ * Since: 1.7.4
+ **/
+GBytes *
+fu_firmware_get_bytes_with_patches(FuFirmware *self, GError **error)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
+
+	if (priv->bytes == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
+		return NULL;
+	}
+
+	/* usual case */
+	if (priv->patches == NULL)
+		return g_bytes_ref(priv->bytes);
+
+	/* convert to a mutable buffer, apply each patch, aborting if the offset isn't valid */
+	fu_byte_array_append_bytes(buf, priv->bytes);
+	for (guint i = 0; i < priv->patches->len; i++) {
+		FuFirmwarePatch *ptch = g_ptr_array_index(priv->patches, i);
+		if (!fu_memcpy_safe(buf->data,
+				    buf->len,
+				    ptch->offset, /* dst */
+				    g_bytes_get_data(ptch->blob, NULL),
+				    g_bytes_get_size(ptch->blob),
+				    0x0, /* src */
+				    g_bytes_get_size(ptch->blob),
+				    error)) {
+			g_prefix_error(error, "failed to apply patch @0x%x: ", (guint)ptch->offset);
+			return NULL;
+		}
+	}
+
+	/* success */
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
 }
 
 /**
@@ -1029,7 +1091,6 @@ GBytes *
 fu_firmware_write(FuFirmware *self, GError **error)
 {
 	FuFirmwareClass *klass = FU_FIRMWARE_GET_CLASS(self);
-	FuFirmwarePrivate *priv = GET_PRIVATE(self);
 
 	g_return_val_if_fail(FU_IS_FIRMWARE(self), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
@@ -1038,13 +1099,54 @@ fu_firmware_write(FuFirmware *self, GError **error)
 	if (klass->write != NULL)
 		return klass->write(self, error);
 
-	/* set */
-	if (priv->bytes != NULL)
-		return g_bytes_ref(priv->bytes);
-
 	/* just add default blob */
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no payload set");
-	return NULL;
+	return fu_firmware_get_bytes_with_patches(self, error);
+}
+
+/**
+ * fu_firmware_add_patch:
+ * @self: a #FuFirmware
+ * @offset: an address smaller than fu_firmware_get_size()
+ * @blob: (not nullable): bytes to replace
+ *
+ * Adds a byte patch at a specific offset. If a patch already exists at the specified address then
+ * it is replaced.
+ *
+ * If the @address is larger than the size of the image then an error is returned.
+ *
+ * Since: 1.7.4
+ **/
+void
+fu_firmware_add_patch(FuFirmware *self, gsize offset, GBytes *blob)
+{
+	FuFirmwarePrivate *priv = GET_PRIVATE(self);
+	FuFirmwarePatch *ptch;
+
+	g_return_if_fail(FU_IS_FIRMWARE(self));
+	g_return_if_fail(blob != NULL);
+
+	/* ensure exists */
+	if (priv->patches == NULL) {
+		priv->patches =
+		    g_ptr_array_new_with_free_func((GDestroyNotify)fu_firmware_patch_free);
+	}
+
+	/* find existing of exact same size */
+	for (guint i = 0; i < priv->patches->len; i++) {
+		ptch = g_ptr_array_index(priv->patches, i);
+		if (ptch->offset == offset &&
+		    g_bytes_get_size(ptch->blob) == g_bytes_get_size(blob)) {
+			g_bytes_unref(ptch->blob);
+			ptch->blob = g_bytes_ref(blob);
+			return;
+		}
+	}
+
+	/* add new */
+	ptch = g_new0(FuFirmwarePatch, 1);
+	ptch->offset = offset;
+	ptch->blob = g_bytes_ref(blob);
+	g_ptr_array_add(priv->patches, ptch);
 }
 
 /**
@@ -1612,6 +1714,8 @@ fu_firmware_finalize(GObject *object)
 		g_bytes_unref(priv->bytes);
 	if (priv->chunks != NULL)
 		g_ptr_array_unref(priv->chunks);
+	if (priv->patches != NULL)
+		g_ptr_array_unref(priv->patches);
 	g_ptr_array_unref(priv->images);
 	G_OBJECT_CLASS(fu_firmware_parent_class)->finalize(object);
 }

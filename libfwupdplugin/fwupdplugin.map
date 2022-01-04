@@ -985,6 +985,8 @@ LIBFWUPDPLUGIN_1.7.4 {
     fu_common_get_contents_stream;
     fu_context_get_lid_state;
     fu_context_set_lid_state;
+    fu_firmware_add_patch;
+    fu_firmware_get_bytes_with_patches;
     fu_lid_state_to_string;
     fu_memmem_safe;
     fu_plugin_set_secure_config_value;

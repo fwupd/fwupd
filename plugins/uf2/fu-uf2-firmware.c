@@ -309,7 +309,7 @@ fu_uf2_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GPtrArray) chunks = NULL;
 
 	/* data first */
-	fw = fu_firmware_get_bytes(firmware, error);
+	fw = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (fw == NULL)
 		return NULL;
 

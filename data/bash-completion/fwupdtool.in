@@ -10,6 +10,7 @@ _fwupdtool_cmd_list=(
 	'firmware-extract'
 	'firmware-parse'
 	'firmware-sign'
+	'firmware-patch'
 	'get-updates'
 	'get-upgrades'
 	'get-details'
@@ -141,7 +142,7 @@ _fwupdtool()
 			_show_modifiers
 		fi
 		;;
-	firmware-parse)
+	firmware-parse|firmware-patch)
 		#find files
 		if [[ "$prev" = "$command" ]]; then
 			_filedir

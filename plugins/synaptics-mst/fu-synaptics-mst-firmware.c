@@ -74,7 +74,7 @@ fu_synaptics_mst_firmware_write(FuFirmware *firmware, GError **error)
 		return NULL;
 
 	/* payload */
-	blob = fu_firmware_get_bytes(firmware, error);
+	blob = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (blob == NULL)
 		return NULL;
 	fu_byte_array_append_bytes(buf, blob);

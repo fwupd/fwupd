@@ -153,7 +153,7 @@ fu_elantp_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) blob = NULL;
 
 	/* only one image supported */
-	blob = fu_firmware_get_bytes(firmware, error);
+	blob = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (blob == NULL)
 		return NULL;
 

@@ -31,7 +31,7 @@ fu_nordic_hid_firmware_b0_write(FuFirmware *firmware, GError **error)
 	fu_byte_array_append_uint32(buf, 0x00, G_LITTLE_ENDIAN);
 	/* version */
 	fu_byte_array_append_uint32(buf, 0x63, G_LITTLE_ENDIAN);
-	blob = fu_firmware_get_bytes(firmware, error);
+	blob = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (blob == NULL)
 		return NULL;
 	fu_byte_array_append_bytes(buf, blob);

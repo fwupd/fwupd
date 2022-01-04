@@ -441,7 +441,7 @@ fu_ccgx_firmware_write(FuFirmware *firmware, GError **error)
 			       (guint)0x0);   /* Checksum, or 0x0 */
 
 	/* add image in chunks */
-	fw = fu_firmware_get_bytes(firmware, error);
+	fw = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (fw == NULL)
 		return NULL;
 	chunks = fu_chunk_array_new_from_bytes(fw, 0x0, 0x0, 0x100);
