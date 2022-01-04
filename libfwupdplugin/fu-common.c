@@ -1712,11 +1712,17 @@ fu_common_dump_full(const gchar *log_domain,
 	/* offset line */
 	if (flags & FU_DUMP_FLAGS_SHOW_ADDRESSES) {
 		g_string_append(str, "       │ ");
-		for (gsize i = 0; i < columns; i++)
+		for (gsize i = 0; i < columns; i++) {
 			g_string_append_printf(str, "%02x ", (guint)i);
+			if (flags & FU_DUMP_FLAGS_SHOW_ASCII)
+				g_string_append(str, "    ");
+		}
 		g_string_append(str, "\n───────┼");
-		for (gsize i = 0; i < columns; i++)
+		for (gsize i = 0; i < columns; i++) {
 			g_string_append(str, "───");
+			if (flags & FU_DUMP_FLAGS_SHOW_ASCII)
+				g_string_append(str, "────");
+		}
 		g_string_append_printf(str, "\n0x%04x │ ", (guint)0);
 	}
 
