@@ -1,3 +1,9 @@
+fwupd (1.7.3-1) UNRELEASED; urgency=medium
+
+  * New upstream version (1.7.3)
+
+ -- Mario Limonciello <superm1@gmail.com>  Tue, 04 Jan 2022 12:51:48 -0600
+
 fwupd (1.7.1-1) unstable; urgency=medium
 
   [ Mario Limonciello ]
