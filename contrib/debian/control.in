@@ -12,7 +12,7 @@ Homepage: https://github.com/fwupd/fwupd
 Vcs-Git: https://salsa.debian.org/efi-team/fwupd.git
 Vcs-Browser: https://salsa.debian.org/efi-team/fwupd
 
-Package: libfwupdplugin4
+Package: libfwupdplugin5
 Section: libs
 Architecture: linux-any
 Depends: ${misc:Depends},
@@ -153,7 +153,7 @@ Description: GObject introspection data for libfwupd
 Package: libfwupdplugin-dev
 Architecture: linux-any
 Multi-Arch: same
-Depends: libfwupdplugin4 (= ${binary:Version}),
+Depends: libfwupdplugin5 (= ${binary:Version}),
          gir1.2-fwupdplugin-1.0 (= ${binary:Version}),
          libarchive-dev,
          libcurl4-gnutls-dev,
