@@ -319,21 +319,6 @@ fu_goodixmoc_device_attach(FuDevice *device, FuProgress *progress, GError **erro
 }
 
 static gboolean
-fu_goodixmoc_device_open(FuDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	/* FuUsbDevice->open */
-	if (!FU_DEVICE_CLASS(fu_goodixmoc_device_parent_class)->open(device, error))
-		return FALSE;
-
-	return g_usb_device_claim_interface(usb_device,
-					    GX_USB_INTERFACE,
-					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					    error);
-}
-
-static gboolean
 fu_goodixmoc_device_setup(FuDevice *device, GError **error)
 {
 	FuGoodixMocDevice *self = FU_GOODIXMOC_DEVICE(device);
@@ -471,6 +456,7 @@ fu_goodixmoc_device_init(FuGoodixMocDevice *self)
 	fu_device_set_install_duration(FU_DEVICE(self), 10);
 	fu_device_set_firmware_size_min(FU_DEVICE(self), 0x20000);
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x30000);
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), GX_USB_INTERFACE);
 }
 
 static void
@@ -480,6 +466,5 @@ fu_goodixmoc_device_class_init(FuGoodixMocDeviceClass *klass)
 	klass_device->write_firmware = fu_goodixmoc_device_write_firmware;
 	klass_device->setup = fu_goodixmoc_device_setup;
 	klass_device->attach = fu_goodixmoc_device_attach;
-	klass_device->open = fu_goodixmoc_device_open;
 	klass_device->set_progress = fu_goodixmoc_device_set_progress;
 }

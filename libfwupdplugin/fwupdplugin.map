@@ -988,5 +988,7 @@ LIBFWUPDPLUGIN_1.7.4 {
     fu_lid_state_to_string;
     fu_memmem_safe;
     fu_plugin_set_secure_config_value;
+    fu_usb_device_add_interface;
+    fu_usb_device_set_configuration;
   local: *;
 } LIBFWUPDPLUGIN_1.7.3;

@@ -169,6 +169,7 @@ fu_steelseries_gamepad_probe(FuDevice *device, GError **error)
 	self->ep = ep_id;
 	self->in_size = packet_size;
 
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), iface_id);
 	return TRUE;
 #else
 	g_set_error_literal(error,
@@ -209,47 +210,6 @@ fu_steelseries_gamepad_setup(FuDevice *device, GError **error)
 
 	/* success */
 	return TRUE;
-}
-
-static gboolean
-fu_steelseries_gamepad_open(FuDevice *device, GError **error)
-{
-	FuSteelseriesGamepad *self = FU_STEELSERIES_GAMEPAD(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	/* FuUsbDevice->open */
-	if (!FU_DEVICE_CLASS(fu_steelseries_gamepad_parent_class)->open(device, error))
-		return FALSE;
-
-	if (!g_usb_device_claim_interface(usb_device,
-					  self->iface_idx,
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  error)) {
-		g_prefix_error(error, "failed to claim interface: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_steelseries_gamepad_close(FuDevice *device, GError **error)
-{
-	FuSteelseriesGamepad *self = FU_STEELSERIES_GAMEPAD(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	if (G_USB_IS_DEVICE(device) &&
-	    !g_usb_device_release_interface(usb_device,
-					    self->iface_idx,
-					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					    error)) {
-		g_prefix_error(error, "failed to release interface: ");
-		return FALSE;
-	}
-
-	/* FuUsbDevice->close */
-	return FU_DEVICE_CLASS(fu_steelseries_gamepad_parent_class)->close(device, error);
 }
 
 static gboolean
@@ -486,8 +446,6 @@ fu_steelseries_gamepad_class_init(FuSteelseriesGamepadClass *klass)
 
 	klass_device->probe = fu_steelseries_gamepad_probe;
 	klass_device->setup = fu_steelseries_gamepad_setup;
-	klass_device->open = fu_steelseries_gamepad_open;
-	klass_device->close = fu_steelseries_gamepad_close;
 	klass_device->attach = fu_steelseries_gamepad_attach;
 	klass_device->detach = fu_steelseries_gamepad_detach;
 	klass_device->write_firmware = fu_steelseries_gamepad_write_firmware;

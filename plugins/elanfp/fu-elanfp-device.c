@@ -35,44 +35,6 @@ struct _FuElanfpDevice {
 G_DEFINE_TYPE(FuElanfpDevice, fu_elanfp_device, FU_TYPE_USB_DEVICE)
 
 static gboolean
-fu_elanfp_device_open(FuDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	/* FuUsbDevice->open */
-	if (!FU_DEVICE_CLASS(fu_elanfp_device_parent_class)->open(device, error))
-		return FALSE;
-
-	if (!g_usb_device_claim_interface(usb_device,
-					  ELANFP_USB_INTERFACE,
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  error)) {
-		g_prefix_error(error, "failed to claim interface: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_elanfp_device_close(FuDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	if (!g_usb_device_release_interface(usb_device,
-					    ELANFP_USB_INTERFACE,
-					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					    error)) {
-		g_prefix_error(error, "failed to release interface: ");
-		return FALSE;
-	}
-
-	/* FuUsbDevice->close */
-	return FU_DEVICE_CLASS(fu_elanfp_device_parent_class)->close(device, error);
-}
-
-static gboolean
 fu_elanfp_iap_send_command(FuElanfpDevice *self,
 			   guint8 request_type,
 			   guint8 request,
@@ -428,6 +390,7 @@ fu_elanfp_device_init(FuElanfpDevice *device)
 	fu_device_set_firmware_size_min(FU_DEVICE(self), 0x20000);
 	fu_device_set_firmware_size_max(FU_DEVICE(self), 0x90000);
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ELANFP_FIRMWARE);
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), ELANFP_USB_INTERFACE);
 }
 
 static void
@@ -446,7 +409,5 @@ fu_elanfp_device_class_init(FuElanfpDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->setup = fu_elanfp_device_setup;
 	klass_device->write_firmware = fu_elanfp_device_write_firmware;
-	klass_device->open = fu_elanfp_device_open;
-	klass_device->close = fu_elanfp_device_close;
 	klass_device->set_progress = fu_elanfp_device_set_progress;
 }
