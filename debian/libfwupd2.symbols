@@ -52,6 +52,8 @@ libfwupd.so.2 libfwupd2 #MINVER#
  LIBFWUPD_1.6.2@LIBFWUPD_1.6.2 1.6.2
  LIBFWUPD_1.7.0@LIBFWUPD_1.7.0 1.7.0
  LIBFWUPD_1.7.1@LIBFWUPD_1.7.1 1.7.1
+ LIBFWUPD_1.7.2@LIBFWUPD_1.7.2 1.7.2
+ LIBFWUPD_1.7.3@LIBFWUPD_1.7.3 1.7.3
  fwupd_build_history_report_json@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_machine_id@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_user_agent@LIBFWUPD_1.0.3 1.0.3
@@ -101,6 +103,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_client_get_history@LIBFWUPD_1.0.4 1.0.4
  fwupd_client_get_history_async@LIBFWUPD_1.5.0 1.5.0
  fwupd_client_get_history_finish@LIBFWUPD_1.5.0 1.5.0
+ fwupd_client_get_host_bkc@LIBFWUPD_1.7.3 1.7.3
  fwupd_client_get_host_machine_id@LIBFWUPD_1.3.2 1.3.2
  fwupd_client_get_host_product@LIBFWUPD_1.3.1 1.3.1
  fwupd_client_get_host_security_attrs@LIBFWUPD_1.5.0 1.5.0
@@ -331,6 +334,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_release_add_location@LIBFWUPD_1.5.6 1.5.6
  fwupd_release_add_metadata@LIBFWUPD_1.0.4 1.0.4
  fwupd_release_add_metadata_item@LIBFWUPD_1.0.4 1.0.4
+ fwupd_release_add_tag@LIBFWUPD_1.7.3 1.7.3
  fwupd_release_array_from_variant@LIBFWUPD_1.2.10 1.2.10
  fwupd_release_flag_from_string@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_flag_to_string@LIBFWUPD_1.2.6 1.2.6
@@ -347,6 +351,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_release_get_filename@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_flags@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_get_homepage@LIBFWUPD_0.9.3 1.0.0
+ fwupd_release_get_id@LIBFWUPD_1.7.2 1.7.2
  fwupd_release_get_install_duration@LIBFWUPD_1.2.1 1.2.4
  fwupd_release_get_issues@LIBFWUPD_1.3.2 1.3.2
  fwupd_release_get_license@LIBFWUPD_0.9.3 1.0.0
@@ -360,6 +365,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_release_get_size@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_source_url@LIBFWUPD_1.2.4 1.2.4
  fwupd_release_get_summary@LIBFWUPD_0.9.3 1.0.0
+ fwupd_release_get_tags@LIBFWUPD_1.7.3 1.7.3
  fwupd_release_get_trust_flags@LIBFWUPD_0.9.8 1.0.0
  fwupd_release_get_type@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_get_update_image@LIBFWUPD_1.4.5 1.4.5
@@ -371,6 +377,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_release_has_category@LIBFWUPD_1.2.7 1.2.7
  fwupd_release_has_checksum@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_has_flag@LIBFWUPD_1.2.6 1.2.6
+ fwupd_release_has_tag@LIBFWUPD_1.7.3 1.7.3
  fwupd_release_new@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_remove_flag@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_set_appstream_id@LIBFWUPD_0.9.3 1.0.0
@@ -383,6 +390,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_release_set_filename@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_set_flags@LIBFWUPD_1.2.6 1.2.6
  fwupd_release_set_homepage@LIBFWUPD_0.9.3 1.0.0
+ fwupd_release_set_id@LIBFWUPD_1.7.2 1.7.2
  fwupd_release_set_install_duration@LIBFWUPD_1.2.1 1.2.4
  fwupd_release_set_license@LIBFWUPD_0.9.3 1.0.0
  fwupd_release_set_name@LIBFWUPD_0.9.3 1.0.0

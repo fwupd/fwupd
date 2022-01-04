@@ -20,9 +20,9 @@ libfwupd2.substvars
 libfwupd2/
 libfwupdplugin-dev.debhelper.log
 libfwupdplugin-dev/
-libfwupdplugin1.debhelper.log
-libfwupdplugin1.substvars
-libfwupdplugin1/
+libfwupdplugin5.debhelper.log
+libfwupdplugin5.substvars
+libfwupdplugin5/
 tmp/
 files
 fwupd-amd64-signed-template.substvars
