@@ -1643,6 +1643,7 @@ gchar *
 fu_util_release_to_string(FwupdRelease *rel, guint idt)
 {
 	GPtrArray *issues = fwupd_release_get_issues(rel);
+	GPtrArray *tags = fwupd_release_get_tags(rel);
 	GString *str = g_string_new(NULL);
 	guint64 flags = fwupd_release_get_flags(rel);
 	g_autoptr(GString) flags_str = g_string_new(NULL);
@@ -1660,6 +1661,13 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 					   /* TRANSLATORS: the server the file is coming from */
 					   _("Remote ID"),
 					   fwupd_release_get_remote_id(rel));
+	}
+	if (fwupd_release_get_id(rel) != NULL) {
+		fu_common_string_append_kv(str,
+					   idt + 1,
+					   /* TRANSLATORS: the exact component on the server */
+					   _("Release ID"),
+					   fwupd_release_get_id(rel));
 	}
 	if (fwupd_release_get_branch(rel) != NULL) {
 		fu_common_string_append_kv(
@@ -1777,6 +1785,15 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 		} else {
 			fu_common_string_append_kv(str, idt + 1, "", issue);
 		}
+	}
+	if (tags->len > 0) {
+		g_autofree gchar *tag_strs = fu_common_strjoin_array(", ", tags);
+		fu_common_string_append_kv(
+		    str,
+		    idt + 1,
+		    /* TRANSLATORS: release tag set for release, e.g. lenovo-2021q3 */
+		    ngettext("Tag", "Tags", tags->len),
+		    tag_strs);
 	}
 
 	return g_string_free(str, FALSE);
@@ -2006,12 +2023,28 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
-		      _("SecureBoot disabled")},
+		      _("Secure Boot disabled")},
 		     {"org.fwupd.hsi.Uefi.SecureBoot",
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
 		      _("Secure Boot enabled")},
+		     /* ------------------------------------------*/
+		     {"org.fwupd.hsi.Tpm.EmptyPcr",
+		      FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
+		      FWUPD_SECURITY_ATTR_RESULT_VALID,
+		      /* TRANSLATORS: HSI event title */
+		      _("All TPM PCRs are valid")},
+		     {"org.fwupd.hsi.Tpm.EmptyPcr",
+		      FWUPD_SECURITY_ATTR_RESULT_VALID,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+		      /* TRANSLATORS: HSI event title */
+		      _("All TPM PCRs are now valid")},
+		     {"org.fwupd.hsi.Uefi.SecureBoot",
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+		      FWUPD_SECURITY_ATTR_RESULT_VALID,
+		      /* TRANSLATORS: HSI event title */
+		      _("A TPM PCR is now an invalid value")},
 		     {NULL, 0, 0, NULL}};
 
 	/* sanity check */

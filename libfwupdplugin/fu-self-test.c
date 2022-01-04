@@ -264,7 +264,7 @@ fu_device_name_func(void)
 
 	/* vendor then name */
 	fu_device_set_vendor(device1, "Hughski");
-	fu_device_set_name(device1, "Hughski  ColorHug(TM)__Pro  ");
+	fu_device_set_name(device1, "HUGHSKI  ColorHug(TM)__Pro  ");
 	g_assert_cmpstr(fu_device_get_vendor(device1), ==, "Hughski");
 	g_assert_cmpstr(fu_device_get_name(device1), ==, "ColorHug™ Pro");
 
@@ -310,6 +310,8 @@ fu_device_cfi_device_func(void)
 	g_assert_true(ret);
 	g_assert_cmpint(cmd, ==, 0xC7);
 	g_assert_cmpint(fu_cfi_device_get_size(cfi_device), ==, 0x10000);
+	g_assert_cmpint(fu_cfi_device_get_page_size(cfi_device), ==, 0x200);
+	g_assert_cmpint(fu_cfi_device_get_sector_size(cfi_device), ==, 0x2000);
 }
 
 static void
@@ -1762,7 +1764,6 @@ fu_device_private_flags_func(void)
 	g_assert_cmpstr(tmp,
 			==,
 			"FuDevice:\n"
-			"Unknown Device\n"
 			"  Flags:                none\n"
 			"  CustomFlags:          baz\n" /* compat */
 			"  PrivateFlags:         foo\n");
@@ -2109,6 +2110,33 @@ fu_common_version_semver_func(void)
 		g_autofree gchar *tmp = fu_common_version_ensure_semver(map[i].old);
 		g_assert_cmpstr(tmp, ==, map[i].new);
 	}
+}
+
+static void
+fu_common_strtoull_func(void)
+{
+	gboolean ret;
+	guint64 val = 0;
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_common_strtoull_full("123", &val, 123, 200, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(val, ==, 123);
+
+	ret = fu_common_strtoull_full("0x123", &val, 0, 0x123, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(val, ==, 0x123);
+
+	ret = fu_common_strtoull_full(NULL, &val, 0, G_MAXUINT32, NULL);
+	g_assert_false(ret);
+	ret = fu_common_strtoull_full("", &val, 120, 123, NULL);
+	g_assert_false(ret);
+	ret = fu_common_strtoull_full("124", &val, 120, 123, NULL);
+	g_assert_false(ret);
+	ret = fu_common_strtoull_full("119", &val, 120, 123, NULL);
+	g_assert_false(ret);
 }
 
 static void
@@ -3651,6 +3679,8 @@ fu_progress_non_equal_steps_func(void)
 	child = fu_progress_get_child(progress);
 	fu_progress_set_id(child, G_STRLOC);
 	fu_progress_set_steps(child, 2);
+	fu_progress_set_status(child, FWUPD_STATUS_DEVICE_BUSY);
+	g_assert_cmpint(fu_progress_get_status(progress), ==, FWUPD_STATUS_DEVICE_BUSY);
 
 	/* start child */
 	fu_progress_step_done(child);
@@ -3660,6 +3690,9 @@ fu_progress_non_equal_steps_func(void)
 
 	/* finish child */
 	fu_progress_step_done(child);
+
+	/* ensure the parent is switched back to the status before the child took over */
+	g_assert_cmpint(fu_progress_get_status(progress), ==, FWUPD_STATUS_DEVICE_ERASE);
 
 	fu_progress_step_done(progress);
 	g_assert_cmpint(fu_progress_get_status(progress), ==, FWUPD_STATUS_DEVICE_WRITE);
@@ -3777,6 +3810,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/common{crc}", fu_common_crc_func);
 	g_test_add_func("/fwupd/common{string-append-kv}", fu_common_string_append_kv_func);
 	g_test_add_func("/fwupd/common{version-guess-format}", fu_common_version_guess_format_func);
+	g_test_add_func("/fwupd/common{strtoull}", fu_common_strtoull_func);
 	g_test_add_func("/fwupd/common{version}", fu_common_version_func);
 	g_test_add_func("/fwupd/common{version-semver}", fu_common_version_semver_func);
 	g_test_add_func("/fwupd/common{vercmp}", fu_common_vercmp_func);

@@ -129,6 +129,26 @@ msgstr "%s Aktualisierung"
 msgid "%s and all connected devices may not be usable while updating."
 msgstr "%s und alle angeschlossenen Geräte sind während der Aktualisierung möglicherweise nicht nutzbar."
 
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s appeared: %s"
+msgstr "%s erschienen: %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform
+#. key".
+#. * %2 and %3 refer to results value, e.g. "Valid" and "Invalid"
+#, c-format
+msgid "%s changed: %s → %s"
+msgstr "%s geändert: %s → %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS
+#. region".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s disappeared: %s"
+msgstr "%s verschwunden: %s"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -168,6 +188,7 @@ msgid_plural "%u days"
 msgstr[0] "%u Tag"
 msgstr[1] "%u Tage"
 
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
@@ -394,6 +415,10 @@ msgstr "Abbrechen"
 msgid "Cancelled"
 msgstr "Abgebrochen"
 
+#. TRANSLATORS: same or newer update already applied
+msgid "Cannot apply as dbx update has already been applied."
+msgstr "Eine bereits angewandte dbx-Aktualisierung kann nicht angewendet werden."
+
 #. TRANSLATORS: the user is using a LiveCD or LiveUSB install disk
 msgid "Cannot apply updates on live media"
 msgstr "Aktualisierungen können nicht auf Live-Medien angewendet werden"
@@ -426,6 +451,10 @@ msgstr "Wählen Sie eine Version aus:"
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a volume:"
 msgstr "Wählen Sie einen Datenträger:"
+
+#. TRANSLATORS: command description
+msgid "Clears any updates scheduled to be updated offline"
+msgstr "Löscht alle für die Offline-Aktualisierung geplanten Aktualisierungen"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -558,6 +587,10 @@ msgstr "Geräte mit keinen verfügbaren Firmware-Aktualisierungen: "
 #. * available
 msgid "Devices with the latest available firmware version:"
 msgstr "Geräte mit der neuesten verfügbaren Firmware-Version:"
+
+#. TRANSLATORS: this is for the device tests
+msgid "Did not find any devices with matching GUIDs"
+msgstr "Es wurden keine Geräte mit passenden GUIDs gefunden"
 
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
@@ -877,6 +910,15 @@ msgstr "Aktion erzwingen, bei der alle Warnungen ignoriert werden"
 msgid "Found"
 msgstr "Gefunden"
 
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "Vollständige Festplattenverschlüsselung erkannt"
+
+#. TRANSLATORS: we might ask the user the recovery key when next booting
+#. Windows
+msgid "Full disk encryption secrets may be invalidated when updating"
+msgstr "Die Geheimnisse der vollständigen Festplattenverschlüsselung können bei der Aktualisierung ungültig werden"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -899,6 +941,10 @@ msgstr "Alle aktivierten und im System registrierten Plugins ermitteln"
 #. TRANSLATORS: command description
 msgid "Gets details about a firmware file"
 msgstr "Ermittelt Details über eine Firmware-Datei"
+
+#. TRANSLATORS: command description
+msgid "Gets the host security attributes"
+msgstr "Ruft die Sicherheitsattribute des Hosts ab"
 
 #. TRANSLATORS: firmware approved by the admin
 msgid "Gets the list of approved firmware"
@@ -932,10 +978,22 @@ msgstr "Hardware wartet darauf, wieder angeschlossen zu werden"
 msgid "High"
 msgstr "Hoch"
 
+#. TRANSLATORS: title for host security events
+msgid "Host Security Events"
+msgstr "Host-Sicherheitsereignisse"
+
 #. TRANSLATORS: Title:
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr "IOMMU-Geräteschutz deaktiviert"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr "IOMMU-Geräteschutz aktiviert"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -964,6 +1022,12 @@ msgstr "Firmware-Blob auf einem Gerät installieren"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Eine Firmware-Datei auf dieser Hardware installieren"
+
+msgid "Install old version of signed system firmware"
+msgstr "Alte Version der signierten System-Firmware installieren"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "Alte Version der nicht-signierten System-Firmware installieren"
 
 msgid "Install signed device firmware"
 msgstr "Signierte Geräte-Firmware installieren"
@@ -1049,6 +1113,14 @@ msgstr[1] "Anliegen"
 msgid "KEY,VALUE"
 msgstr "SCHLÜSSEL,WERT"
 
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown disabled"
+msgstr "Kernel-Sperrung deaktiviert"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown enabled"
+msgstr "Kernel-Sperrung aktiviert"
+
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Schlüsselbund"
@@ -1078,6 +1150,10 @@ msgstr "Linux Vendor Firmware Service (Test-Firmware)"
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux kernel"
 msgstr "Linux-Kernel"
+
+#. TRANSLATORS: Title: lockdown is a security mode of the kernel
+msgid "Linux kernel lockdown"
+msgstr "Linux-Kernel-Sperrung"
 
 #. TRANSLATORS: Title: swap space or swap partition
 msgid "Linux swap"
@@ -1221,6 +1297,10 @@ msgstr "Nicht unterstützt"
 msgid "OK"
 msgstr "Ok"
 
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "OK!"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Nur einzelnen PCR-Wert anzeigen"
@@ -1276,6 +1356,11 @@ msgstr "Prozent abgeschlossen"
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Operation durchführen?"
+
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr "Bitte stellen Sie sicher, dass Sie den Wiederherstellungsschlüssel für den Datenträger haben, bevor Sie fortfahren."
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1409,12 +1494,17 @@ msgstr "Gerät wird neu gestartet …"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Alle Hardware-Kennungen für das System zurückgeben"
 
+#. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Führen Sie `fwupdmgr get-upgrades` für weitere Informationen aus."
 
 #. TRANSLATORS: The kernel does not support this plugin
 msgid "Running kernel is too old"
 msgstr "Laufender Kernel ist zu alt"
+
+#. TRANSLATORS:  this is the HSI suffix
+msgid "Runtime Suffix"
+msgstr "Laufzeit-Suffix"
 
 #. TRANSLATORS: Title: SPI refers to the flash chip in the computer
 msgid "SPI BIOS Descriptor"
@@ -1451,6 +1541,14 @@ msgstr "Installation für den nächsten Neustart planen, falls möglich"
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Einplanen …"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot disabled"
+msgstr "Secure Boot deaktiviert"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "Secure Boot aktiviert"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1551,6 +1649,10 @@ msgstr "Signatur"
 #. TRANSLATORS: file size of the download
 msgid "Size"
 msgstr "Größe"
+
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr "Einige der Plattformgeheimnisse können durch die Aktualisierung dieser Firmware ungültig werden."
 
 #. TRANSLATORS: source (as in code) link
 msgid "Source"
@@ -1662,6 +1764,12 @@ msgstr "Ein Gerät mit einem JSON-Manifest testen"
 msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
 msgstr "Der LVFS ist ein kostenloser Dienst, der als unabhängige juristische Person arbeitet und keine Verbindung zu $OS_RELEASE:NAME$ hat. Möglicherweise hat Ihr Lieferant eine der Firmware-Aktualisierungen nicht auf Kompatibilität mit Ihrem System oder angeschlossenen Geräten überprüft. Die gesamte Firmware wird nur vom Originalhersteller zur Verfügung gestellt."
 
+#. TRANSLATORS: this is for the device tests, %1 is the device
+#. * version, %2 is what we expected
+#, c-format
+msgid "The device version did not match: got %s, expected %s"
+msgstr "Die Geräteversion stimmte nicht überein: %s erhalten, %s erwartet"
+
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
@@ -1687,6 +1795,14 @@ msgstr "Dieses Paket wurde nicht validiert und könnte nicht richtig funktionier
 #. TRANSLATORS: we're poking around as a power user
 msgid "This program may only work correctly as root"
 msgstr "Dieses Programm funktioniert möglicherweise nur als root korrekt"
+
+#. TRANSLATORS: this is instructions on how to improve the HSI suffix
+msgid "This system has HSI runtime issues."
+msgstr "Dieses System hat HSI-Laufzeitprobleme."
+
+#. TRANSLATORS: this is instructions on how to improve the HSI security level
+msgid "This system has a low HSI security level."
+msgstr "Dieses System hat eine niedrige HSI-Sicherheitsstufe."
 
 #. TRANSLATORS: description of dbxtool
 msgid "This tool allows an administrator to apply UEFI dbx updates."

@@ -426,6 +426,10 @@ fwupd_build_history_report_json_device(JsonBuilder *builder, FwupdDevice *dev)
 		json_builder_end_array(builder);
 	}
 
+	/* allow matching the specific component */
+	json_builder_set_member_name(builder, "ReleaseId");
+	json_builder_add_string_value(builder, fwupd_release_get_id(rel));
+
 	/* include the protocol used */
 	if (fwupd_release_get_protocol(rel) != NULL) {
 		json_builder_set_member_name(builder, "Protocol");
@@ -809,28 +813,39 @@ fwupd_guid_from_string(const gchar *guidstr,
 gchar *
 fwupd_guid_hash_data(const guint8 *data, gsize datasz, FwupdGuidFlags flags)
 {
-	const gchar *namespace_id = FWUPD_GUID_NAMESPACE_DEFAULT;
 	gsize digestlen = 20;
 	guint8 hash[20];
-	fwupd_guid_t uu_namespace;
 	fwupd_guid_t uu_new;
 	g_autoptr(GChecksum) csum = NULL;
+	const fwupd_guid_t uu_default = {0x6b,
+					 0xa7,
+					 0xb8,
+					 0x10,
+					 0x9d,
+					 0xad,
+					 0x11,
+					 0xd1,
+					 0x80,
+					 0xb4,
+					 0x00,
+					 0xc0,
+					 0x4f,
+					 0xd4,
+					 0x30,
+					 0xc8};
+	const fwupd_guid_t uu_microso = {0x70, 0xff, 0xd8, 0x12, 0x4c, 0x7f, 0x4c, 0x7d};
+	const fwupd_guid_t *uu_namespace = &uu_default;
 
-	g_return_val_if_fail(namespace_id != NULL, NULL);
 	g_return_val_if_fail(data != NULL, NULL);
 	g_return_val_if_fail(datasz != 0, NULL);
 
 	/* old MS GUID */
 	if (flags & FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT)
-		namespace_id = FWUPD_GUID_NAMESPACE_MICROSOFT;
-
-	/* convert the namespace to binary: hardcoded BE, not @flags */
-	if (!fwupd_guid_from_string(namespace_id, &uu_namespace, FWUPD_GUID_FLAG_NONE, NULL))
-		return NULL;
+		uu_namespace = &uu_microso;
 
 	/* hash the namespace and then the string */
 	csum = g_checksum_new(G_CHECKSUM_SHA1);
-	g_checksum_update(csum, (guchar *)&uu_namespace, sizeof(uu_namespace));
+	g_checksum_update(csum, (guchar *)uu_namespace, sizeof(*uu_namespace));
 	g_checksum_update(csum, (guchar *)data, (gssize)datasz);
 	g_checksum_get_digest(csum, hash, &digestlen);
 
@@ -884,13 +899,31 @@ fwupd_device_id_is_valid(const gchar *device_id)
 gboolean
 fwupd_guid_is_valid(const gchar *guid)
 {
+	const gchar zeroguid[] = {"00000000-0000-0000-0000-000000000000"};
+
+	/* sanity check */
 	if (guid == NULL)
 		return FALSE;
-	if (!fwupd_guid_from_string(guid, NULL, FWUPD_GUID_FLAG_NONE, NULL))
+
+	/* check for dashes and hexdigits in the right place */
+	for (guint i = 0; i < sizeof(zeroguid) - 1; i++) {
+		if (guid[i] == '\0')
+			return FALSE;
+		if (zeroguid[i] == '-') {
+			if (guid[i] != '-')
+				return FALSE;
+			continue;
+		}
+		if (!g_ascii_isxdigit(guid[i]))
+			return FALSE;
+	}
+
+	/* longer than required */
+	if (guid[sizeof(zeroguid) - 1] != '\0')
 		return FALSE;
-	if (g_strcmp0(guid, "00000000-0000-0000-0000-000000000000") == 0)
-		return FALSE;
-	return TRUE;
+
+	/* not valid */
+	return g_strcmp0(guid, zeroguid) != 0;
 }
 
 /**

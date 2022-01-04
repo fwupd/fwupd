@@ -67,6 +67,7 @@ typedef struct {
 	guint64 size_max;
 	gint open_refcount; /* atomic */
 	GType specialized_gtype;
+	GType firmware_gtype;
 	GPtrArray *possible_plugins;
 	GPtrArray *retry_recs; /* of FuDeviceRetryRecovery */
 	guint retry_delay;
@@ -229,6 +230,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "use-parent-for-battery";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK)
 		return "use-proxy-fallback";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)
+		return "no-auto-remove";
 	return NULL;
 }
 
@@ -283,6 +286,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY;
 	if (g_strcmp0(flag, "use-proxy-fallback") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK;
+	if (g_strcmp0(flag, "no-auto-remove") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -1094,6 +1099,7 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 	if (proxy != NULL)
 		g_object_add_weak_pointer(G_OBJECT(proxy), (gpointer *)&priv->proxy);
 	priv->proxy = proxy;
+	g_object_notify(G_OBJECT(self), "proxy");
 }
 
 /**
@@ -1494,6 +1500,7 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	FuDeviceClass *klass = FU_DEVICE_GET_CLASS(self);
+	guint64 tmp;
 
 	if (g_strcmp0(key, FU_QUIRKS_PLUGIN) == 0) {
 		fu_device_add_possible_plugin(self, value);
@@ -1562,31 +1569,45 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE_MIN) == 0) {
-		fu_device_set_firmware_size_min(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+			return FALSE;
+		fu_device_set_firmware_size_min(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE_MAX) == 0) {
-		fu_device_set_firmware_size_max(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+			return FALSE;
+		fu_device_set_firmware_size_max(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_SIZE) == 0) {
-		fu_device_set_firmware_size(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+			return FALSE;
+		fu_device_set_firmware_size(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_INSTALL_DURATION) == 0) {
-		fu_device_set_install_duration(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, 60 * 60 * 24, error))
+			return FALSE;
+		fu_device_set_install_duration(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_PRIORITY) == 0) {
-		fu_device_set_priority(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		fu_device_set_priority(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_BATTERY_THRESHOLD) == 0) {
-		fu_device_set_battery_threshold(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, 100, error))
+			return FALSE;
+		fu_device_set_battery_threshold(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_REMOVE_DELAY) == 0) {
-		fu_device_set_remove_delay(self, fu_common_strtoull(value));
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+			return FALSE;
+		fu_device_set_remove_delay(self, tmp);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_VERSION_FORMAT) == 0) {
@@ -1608,6 +1629,16 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 			return TRUE;
 		}
 		priv->specialized_gtype = g_type_from_name(value);
+		return TRUE;
+	}
+	if (g_strcmp0(key, FU_QUIRKS_FIRMWARE_GTYPE) == 0) {
+		if (priv->firmware_gtype != G_TYPE_INVALID) {
+			g_debug("already set firmware GType to %s, ignoring %s",
+				g_type_name(priv->firmware_gtype),
+				value);
+			return TRUE;
+		}
+		priv->firmware_gtype = g_type_from_name(value);
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_CHILDREN) == 0) {
@@ -1643,6 +1674,39 @@ fu_device_get_specialized_gtype(FuDevice *self)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	return priv->specialized_gtype;
+}
+
+/**
+ * fu_device_get_firmware_gtype:
+ * @self: a #FuDevice
+ *
+ * Gets the default firmware type for the device.
+ *
+ * Returns: #GType
+ *
+ * Since: 1.7.2
+ **/
+GType
+fu_device_get_firmware_gtype(FuDevice *self)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	return priv->firmware_gtype;
+}
+
+/**
+ * fu_device_set_firmware_gtype:
+ * @self: a #FuDevice
+ * @firmware_gtype: a #GType
+ *
+ * Sets the default firmware type for the device.
+ *
+ * Since: 1.7.2
+ **/
+void
+fu_device_set_firmware_gtype(FuDevice *self, GType firmware_gtype)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+	priv->firmware_gtype = firmware_gtype;
 }
 
 static void
@@ -2144,7 +2208,9 @@ fu_device_fixup_vendor_name(FuDevice *self)
 	const gchar *name = fu_device_get_name(self);
 	const gchar *vendor = fu_device_get_vendor(self);
 	if (name != NULL && vendor != NULL) {
-		if (g_str_has_prefix(name, vendor)) {
+		g_autofree gchar *name_up = g_utf8_strup(name, -1);
+		g_autofree gchar *vendor_up = g_utf8_strup(vendor, -1);
+		if (g_str_has_prefix(name_up, vendor_up)) {
 			gsize vendor_len = strlen(vendor);
 			g_autofree gchar *name1 = g_strdup(name + vendor_len);
 			g_autofree gchar *name2 = fu_common_strstrip(name1);
@@ -2991,7 +3057,7 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 			priv->private_flags &= ~item->value;
 			return;
 		}
-		g_debug("failed to find registered custom flag %s", hint + 1);
+		g_debug("no registered custom flag %s on %s", hint + 1, G_OBJECT_TYPE_NAME(self));
 		return;
 	}
 
@@ -3011,7 +3077,7 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 		priv->private_flags |= item->value;
 		return;
 	}
-	g_debug("failed to find registered custom flag %s", hint);
+	g_debug("no registered custom flag %s on %s", hint, G_OBJECT_TYPE_NAME(self));
 }
 
 /**
@@ -3262,9 +3328,6 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 	g_autoptr(GRWLockReaderLocker) locker = g_rw_lock_reader_locker_new(&priv->metadata_mutex);
 
 	g_return_if_fail(locker != NULL);
-
-	/* subclassed type */
-	fu_common_string_append_kv(str, idt, G_OBJECT_TYPE_NAME(self), NULL);
 
 	tmp = fwupd_device_to_string(FWUPD_DEVICE(self));
 	if (tmp != NULL && tmp[0] != '\0')
@@ -3569,6 +3632,10 @@ fu_device_prepare_firmware(FuDevice *self, GBytes *fw, FwupdInstallFlags flags, 
 	if (klass->prepare_firmware != NULL) {
 		firmware = klass->prepare_firmware(self, fw, flags, error);
 		if (firmware == NULL)
+			return NULL;
+	} else if (priv->firmware_gtype != G_TYPE_INVALID) {
+		firmware = g_object_new(priv->firmware_gtype, NULL);
+		if (!fu_firmware_parse(firmware, fw, flags, error))
 			return NULL;
 	} else {
 		firmware = fu_firmware_new_from_bytes(fw);

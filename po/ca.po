@@ -140,6 +140,26 @@ msgstr "Actualització de %s"
 msgid "%s and all connected devices may not be usable while updating."
 msgstr "%s i tots els dispositius connectats poden no ser usables en actualitzar."
 
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s appeared: %s"
+msgstr "%s ha aparegut: %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform
+#. key".
+#. * %2 and %3 refer to results value, e.g. "Valid" and "Invalid"
+#, c-format
+msgid "%s changed: %s → %s"
+msgstr "%s ha canviat: %s → %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS
+#. region".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s disappeared: %s"
+msgstr "%s ha desaparegut: %s"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -179,11 +199,19 @@ msgid_plural "%u days"
 msgstr[0] "%u dia"
 msgstr[1] "%u dies"
 
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
 msgstr[0] " %u dispositiu té una actualització de microprogramari disponible."
 msgstr[1] "%u dispositius tenen una actualització de microprogramari disponible."
+
+#. TRANSLATORS: this is shown in the MOTD
+#, c-format
+msgid "%u device is not the best known configuration."
+msgid_plural "%u devices are not the best known configuration."
+msgstr[0] "%u dispositiu no és la millor configuració coneguda."
+msgstr[1] "%u dispositius no són la millor configuració coneguda."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -216,6 +244,10 @@ msgstr[1] "%u segons"
 #. TRANSLATORS: this is shown as a suffix for obsoleted tests
 msgid "(obsoleted)"
 msgstr "(obsolet)"
+
+#. TRANSLATORS: HSI event title
+msgid "A TPM PCR is now an invalid value"
+msgstr "Un PCR en el TPM ara té un valor no vàlid"
 
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
@@ -252,6 +284,14 @@ msgstr "Accepteu i habiliteu el remot?"
 #, c-format
 msgid "Alias to %s"
 msgstr "Àlies per a «%s»"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are now valid"
+msgstr "Tots els PCR en el TPM ara són vàlids"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are valid"
+msgstr "Tots els PCR en el TPM són vàlids"
 
 #. TRANSLATORS: on some systems certain devices have to have matching
 #. versions,
@@ -522,6 +562,12 @@ msgstr "Separa del mode carregador d'arrencada."
 msgid "Details"
 msgstr "Detalls"
 
+#. TRANSLATORS: the best known configuration is a set of software that we know
+#. works well
+#. * together. In the OEM and ODM industries it is often called a BKC
+msgid "Deviate from the best known configuration?"
+msgstr "Cal desviar-se de la millor configuració coneguda?"
+
 #. TRANSLATORS: description of device ability
 msgid "Device Flags"
 msgstr "Etiquetes del dispositiu"
@@ -609,6 +655,10 @@ msgstr "Dispositius sense actualitzacions de microprogramari disponibles:"
 #. * available
 msgid "Devices with the latest available firmware version:"
 msgstr "Dispositius amb la versió més recent del microprogramari disponible:"
+
+#. TRANSLATORS: this is for the device tests
+msgid "Did not find any devices with matching GUIDs"
+msgstr "No s'ha trobat cap dispositiu amb GUID coincident"
 
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
@@ -829,6 +879,10 @@ msgstr "NOM_FITXER [TIPUS_MICROPROGRAMARI]"
 msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "NOM_FITXER_ORIG NOM_FITXER_DEST [TIPUS_MICROPROGRAMARI_ORIG] [TIPUS_MICROPROGRAMARI_DEST]"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "NOM_DE_FITXER|SUMA_DE_VERIFICACIÓ_1[,SUMA_DE_VERIFICACIÓ_2][,SUMA_DE_VERIFICACIÓ_3]"
+
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
 msgid "Failed"
@@ -988,6 +1042,15 @@ msgstr "Força l'acció ignorant tots els avisos"
 msgid "Found"
 msgstr "S'ha trobat"
 
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "S'ha detectat una encriptació de tot el disc"
+
+#. TRANSLATORS: we might ask the user the recovery key when next booting
+#. Windows
+msgid "Full disk encryption secrets may be invalidated when updating"
+msgstr "Els secrets d'encriptatge de tot el disc es poden invalidar en actualitzar"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1055,6 +1118,10 @@ msgstr "El maquinari està esperant a ser endollat"
 msgid "High"
 msgstr "Alta"
 
+#. TRANSLATORS: title for host security events
+msgid "Host Security Events"
+msgstr "Esdeveniments de seguretat a l'amfitrió"
+
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "ID de seguretat de l'amfitrió:"
@@ -1063,6 +1130,14 @@ msgstr "ID de seguretat de l'amfitrió:"
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr "Està inhabilitada la protecció IOMMU de dispositius"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr "Està habilitada la protecció IOMMU de dispositius"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -1099,6 +1174,12 @@ msgstr "Instal·la un blob de microprogramari en un dispositiu."
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Instal·la un fitxer de microprogramari en aquest maquinari."
+
+msgid "Install old version of signed system firmware"
+msgstr "Instal·la la versió antiga del microprogramari signat per al sistema"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "Instal·la la versió antiga del microprogramari sense signar per al sistema"
 
 msgid "Install signed device firmware"
 msgstr "Instal·la microprogramari signat per al dispositiu"
@@ -1193,6 +1274,14 @@ msgstr[1] "Problemes"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "CLAU,VALOR"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown disabled"
+msgstr "Està inhabilitat el bloqueig de parts del nucli"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown enabled"
+msgstr "Està habilitat el bloqueig de parts del nucli"
 
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
@@ -1394,6 +1483,10 @@ msgstr "No admesa"
 msgid "OK"
 msgstr "D'acord"
 
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "Bé!"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Mostra només un únic valor de PCR"
@@ -1449,6 +1542,11 @@ msgstr "Percentatge completat"
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Realitzo l'operació?"
+
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr "Abans de continuar, assegureu-vos que teniu la clau de recuperació del volum."
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1550,6 +1648,10 @@ msgstr "S'està reinstal·lant %s amb %s... "
 msgid "Release Branch"
 msgstr "Branca de llançament"
 
+#. TRANSLATORS: the exact component on the server
+msgid "Release ID"
+msgstr "ID de llançament"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
@@ -1599,8 +1701,13 @@ msgstr "S'està reiniciant el dispositiu..."
 msgid "Return all the hardware IDs for the machine"
 msgstr "Retorna tots els ID del maquinari de la màquina."
 
+#. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Per a més informació executeu «fwupdmgr get-upgrades»."
+
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync-bkc` to complete this action."
+msgstr "Executeu `fwupdmgr sync-bkc` per a completar aquesta acció."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -1653,6 +1760,14 @@ msgstr "Planifica la instal·lació per al següent reinici quan sigui possible"
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Planificació..."
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot disabled"
+msgstr "Està inhabilitada l'arrencada segura"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "Està habilitada l'arrencada segura"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1758,6 +1873,10 @@ msgstr "Signatura"
 msgid "Size"
 msgstr "Mida"
 
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr "Alguns dels secrets de la plataforma es poden invalidar en actualitzar aquest microprogramari."
+
 #. TRANSLATORS: source (as in code) link
 msgid "Source"
 msgstr "Origen"
@@ -1860,6 +1979,10 @@ msgstr "Canvio la branca des de %s a %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Canvia la branca de microprogramari en el dispositiu."
 
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the host best known configuration"
+msgstr "Sincronitza les versions de microprogramari a la millor configuració coneguda de l'amfitrió"
+
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
 msgstr "El sistema requereix una font d'alimentació externa"
@@ -1872,9 +1995,20 @@ msgstr "TEXT"
 msgid "TPM PCR0 reconstruction"
 msgstr "Reconstrucció PCR0 del TPM"
 
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM empty PCRs"
+msgstr "Els PCR buits en el TPM"
+
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
 msgstr "TPM versió 2.0"
+
+#. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
+msgid "Tag"
+msgid_plural "Tags"
+msgstr[0] "Etiqueta"
+msgstr[1] "Etiquetes"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
@@ -1899,6 +2033,12 @@ msgstr "El PCR0 del TPM difereix de la reconstrucció."
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "El dimoni ha carregat codi de tercers i ja no és admès pels desenvolupadors originals!"
 
+#. TRANSLATORS: this is for the device tests, %1 is the device
+#. * version, %2 is what we expected
+#, c-format
+msgid "The device version did not match: got %s, expected %s"
+msgstr "La versió del dispositiu no coincideix: obtinguda %s, esperada %s"
+
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
 msgid "The firmware from %s is not supplied by %s, the hardware vendor."
@@ -1916,6 +2056,12 @@ msgstr "No hi ha cap fitxer de microprogramari bloquejat."
 #. * the domain administrator
 msgid "There is no approved firmware."
 msgstr "No hi ha cap microprogramari aprovat."
+
+#. TRANSLATORS: %1 is the current device version number, and %2 is the
+#. command name, e.g. `fwupdmgr sync-bkc`
+#, c-format
+msgid "This device will be reverted back to %s when the %s command is performed."
+msgstr "Aquest dispositiu es revertirà a %s quan es realitzi l'ordre %s."
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
@@ -2218,6 +2364,13 @@ msgstr "És possible que el vostre distribuïdor no hagi verificat cap de les ac
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
 msgstr "El vostre maquinari pot danyar-se amb aquest microprogramari, i la instal·lació d'aquesta versió pot anul·lar qualsevol garantia amb %s."
+
+#. TRANSLATORS: BKC is the industry name for the best known configuration and
+#. is a set
+#. * of firmware that works together
+#, c-format
+msgid "Your system is set up to the BKC of %s."
+msgstr "El vostre sistema està establert a la BKC de %s."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"

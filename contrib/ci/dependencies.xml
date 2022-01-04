@@ -293,24 +293,6 @@
       <package variant="s390x" />
     </distro>
   </dependency>
-  <dependency type="build" id="libelf-dev">
-    <distro id="centos">
-      <package>elfutils-libelf-devel</package>
-    </distro>
-    <distro id="fedora">
-      <package>elfutils-libelf-devel</package>
-    </distro>
-    <distro id="debian">
-      <control />
-      <package variant="x86_64" />
-      <package variant="s390x">libelf-dev:s390x</package>
-      <package variant="i386" />
-    </distro>
-    <distro id="ubuntu">
-      <control />
-      <package variant="x86_64" />
-    </distro>
-  </dependency>
   <dependency type="build" id="fakeroot">
     <distro id="debian">
       <package variant="x86_64" />
@@ -674,6 +656,21 @@
     </distro>
     <distro id="void">
       <package>libjcat-devel</package>
+    </distro>
+  </dependency>
+  <dependency type="build" id="liblzma-dev">
+    <distro id="fedora">
+      <package>xz-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
     </distro>
   </dependency>
   <dependency type="build" id="libarchive-dev">

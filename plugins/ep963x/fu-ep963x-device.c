@@ -202,18 +202,6 @@ fu_ep963x_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_ep963x_device_prepare_firmware(FuDevice *device,
-				  GBytes *fw,
-				  FwupdInstallFlags flags,
-				  GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_ep963x_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_ep963x_device_wait_cb(FuDevice *device, gpointer user_data, GError **error)
 {
@@ -376,6 +364,7 @@ fu_ep963x_device_init(FuEp963xDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_NUMBER);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 	fu_device_set_firmware_size(FU_DEVICE(self), FU_EP963_FIRMWARE_SIZE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_EP963X_FIRMWARE);
 	fu_device_retry_set_delay(FU_DEVICE(self), 100);
 }
 
@@ -383,7 +372,6 @@ static void
 fu_ep963x_device_class_init(FuEp963xDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
-	klass_device->prepare_firmware = fu_ep963x_device_prepare_firmware;
 	klass_device->write_firmware = fu_ep963x_device_write_firmware;
 	klass_device->attach = fu_ep963x_device_attach;
 	klass_device->detach = fu_ep963x_device_detach;

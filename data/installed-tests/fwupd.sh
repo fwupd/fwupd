@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 exec 2>&1
 dirname=`dirname $0`
@@ -7,7 +7,7 @@ run_test()
 {
         if [ -f $dirname/$1 ]; then
                 $dirname/$1
-                rc=$?; if [[ $rc != 0 ]]; then exit $rc; fi
+                rc=$?; if [ $rc != 0 ]; then exit $rc; fi
         fi
 }
 

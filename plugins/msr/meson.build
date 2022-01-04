@@ -1,4 +1,4 @@
-if get_option('plugin_msr')
+if get_option('hsi') and get_option('plugin_msr')
 cargs = ['-DG_LOG_DOMAIN="FuPluginMsr"']
 
 install_data(['msr.quirk'],

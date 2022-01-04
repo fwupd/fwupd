@@ -230,13 +230,6 @@ fu_main_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuMainPri
 		g_main_loop_quit(priv->loop);
 }
 
-static void
-fu_main_engine_percentage_changed_cb(FuEngine *engine, guint percentage, FuMainPrivate *priv)
-{
-	g_debug("Emitting PropertyChanged('Percentage'='%u%%')", percentage);
-	fu_main_emit_property_changed(priv, "Percentage", g_variant_new_uint32(percentage));
-}
-
 static FuEngineRequest *
 fu_main_create_request(FuMainPrivate *priv, const gchar *sender, GError **error)
 {
@@ -610,10 +603,24 @@ fu_main_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 }
 
 static void
+fu_main_progress_percentage_changed_cb(FuProgress *progress, guint percentage, FuMainPrivate *priv)
+{
+	g_debug("Emitting PropertyChanged('Percentage'='%u%%')", percentage);
+	fu_main_emit_property_changed(priv, "Percentage", g_variant_new_uint32(percentage));
+}
+
+static void
+fu_main_progress_status_changed_cb(FuProgress *progress, FwupdStatus status, FuMainPrivate *priv)
+{
+	fu_main_set_status(priv, status);
+}
+
+static void
 fu_main_authorize_activate_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 #ifdef HAVE_POLKIT
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
@@ -626,8 +633,19 @@ fu_main_authorize_activate_cb(GObject *source, GAsyncResult *res, gpointer user_
 	}
 #endif /* HAVE_POLKIT */
 
+	/* progress */
+	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_main_progress_percentage_changed_cb),
+			 helper->priv);
+	g_signal_connect(progress,
+			 "status-changed",
+			 G_CALLBACK(fu_main_progress_status_changed_cb),
+			 helper->priv);
+
 	/* authenticated */
-	if (!fu_engine_activate(helper->priv->engine, helper->device_id, &error)) {
+	if (!fu_engine_activate(helper->priv->engine, helper->device_id, progress, &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
@@ -641,6 +659,7 @@ fu_main_authorize_verify_update_cb(GObject *source, GAsyncResult *res, gpointer 
 {
 	g_autoptr(FuMainAuthHelper) helper = (FuMainAuthHelper *)user_data;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 #ifdef HAVE_POLKIT
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
@@ -658,8 +677,19 @@ fu_main_authorize_verify_update_cb(GObject *source, GAsyncResult *res, gpointer 
 	}
 #endif /* HAVE_POLKIT */
 
+	/* progress */
+	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_main_progress_percentage_changed_cb),
+			 helper->priv);
+	g_signal_connect(progress,
+			 "status-changed",
+			 G_CALLBACK(fu_main_progress_status_changed_cb),
+			 helper->priv);
+
 	/* authenticated */
-	if (!fu_engine_verify_update(helper->priv->engine, helper->device_id, &error)) {
+	if (!fu_engine_verify_update(helper->priv->engine, helper->device_id, progress, &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
@@ -734,6 +764,7 @@ fu_main_authorize_install_queue(FuMainAuthHelper *helper_ref)
 	FuMainPrivate *priv = helper_ref->priv;
 	g_autoptr(FuMainAuthHelper) helper = helper_ref;
 	g_autoptr(GError) error = NULL;
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	gboolean ret;
 
 #ifdef HAVE_POLKIT
@@ -756,11 +787,23 @@ fu_main_authorize_install_queue(FuMainAuthHelper *helper_ref)
 #endif /* HAVE_POLKIT */
 
 	/* all authenticated, so install all the things */
+	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+	g_signal_connect(progress,
+			 "percentage-changed",
+			 G_CALLBACK(fu_main_progress_percentage_changed_cb),
+			 helper->priv);
+	g_signal_connect(progress,
+			 "status-changed",
+			 G_CALLBACK(fu_main_progress_status_changed_cb),
+			 helper->priv);
+
+	/* all authenticated, so install all the things */
 	priv->update_in_progress = TRUE;
 	ret = fu_engine_install_tasks(helper->priv->engine,
 				      helper->request,
 				      helper->install_tasks,
 				      helper->blob_cab,
+				      progress,
 				      helper->flags,
 				      &error);
 	priv->update_in_progress = FALSE;
@@ -1237,6 +1280,12 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 	if (g_strcmp0(method_name, "GetHostSecurityAttrs") == 0) {
 		g_autoptr(FuSecurityAttrs) attrs = NULL;
 		g_debug("Called %s()", method_name);
+#ifndef HAVE_HSI
+		g_dbus_method_invocation_return_error_literal(invocation,
+							      FWUPD_ERROR,
+							      FWUPD_ERROR_NOT_SUPPORTED,
+							      "HSI support not enabled");
+#else
 		if (priv->machine_kind != FU_MAIN_MACHINE_KIND_PHYSICAL) {
 			g_dbus_method_invocation_return_error_literal(
 			    invocation,
@@ -1248,6 +1297,7 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 		attrs = fu_engine_get_host_security_attrs(priv->engine);
 		val = fu_security_attrs_to_variant(attrs);
 		g_dbus_method_invocation_return_value(invocation, val);
+#endif
 		return;
 	}
 	if (g_strcmp0(method_name, "GetHostSecurityEvents") == 0) {
@@ -1255,6 +1305,12 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 		g_autoptr(FuSecurityAttrs) attrs = NULL;
 		g_variant_get(parameters, "(u)", &limit);
 		g_debug("Called %s(%u)", method_name, limit);
+#ifndef HAVE_HSI
+		g_dbus_method_invocation_return_error_literal(invocation,
+							      FWUPD_ERROR,
+							      FWUPD_ERROR_NOT_SUPPORTED,
+							      "HSI support not enabled");
+#else
 		attrs = fu_engine_get_host_security_events(priv->engine, limit, &error);
 		if (attrs == NULL) {
 			g_dbus_method_invocation_return_gerror(invocation, error);
@@ -1262,6 +1318,7 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 		}
 		val = fu_security_attrs_to_variant(attrs);
 		g_dbus_method_invocation_return_value(invocation, val);
+#endif
 		return;
 	}
 	if (g_strcmp0(method_name, "ClearResults") == 0) {
@@ -1532,13 +1589,27 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 	}
 	if (g_strcmp0(method_name, "Verify") == 0) {
 		const gchar *device_id = NULL;
+		g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
+
 		g_variant_get(parameters, "(&s)", &device_id);
 		g_debug("Called %s(%s)", method_name, device_id);
 		if (!fu_main_device_id_valid(device_id, &error)) {
 			g_dbus_method_invocation_return_gerror(invocation, error);
 			return;
 		}
-		if (!fu_engine_verify(priv->engine, device_id, &error)) {
+
+		/* progress */
+		fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
+		g_signal_connect(progress,
+				 "percentage-changed",
+				 G_CALLBACK(fu_main_progress_percentage_changed_cb),
+				 priv);
+		g_signal_connect(progress,
+				 "status-changed",
+				 G_CALLBACK(fu_main_progress_status_changed_cb),
+				 priv);
+
+		if (!fu_engine_verify(priv->engine, device_id, progress, &error)) {
 			g_dbus_method_invocation_return_gerror(invocation, error);
 			return;
 		}
@@ -1727,6 +1798,9 @@ fu_main_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "DaemonVersion") == 0)
 		return g_variant_new_string(SOURCE_VERSION);
 
+	if (g_strcmp0(property_name, "HostBkc") == 0)
+		return g_variant_new_string(fu_engine_get_host_bkc(priv->engine));
+
 	if (g_strcmp0(property_name, "Tainted") == 0)
 		return g_variant_new_boolean(fu_engine_get_tainted(priv->engine));
 
@@ -1736,11 +1810,31 @@ fu_main_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "HostProduct") == 0)
 		return g_variant_new_string(fu_engine_get_host_product(priv->engine));
 
-	if (g_strcmp0(property_name, "HostMachineId") == 0)
-		return g_variant_new_string(fu_engine_get_host_machine_id(priv->engine));
+	if (g_strcmp0(property_name, "HostMachineId") == 0) {
+		const gchar *tmp = fu_engine_get_host_machine_id(priv->engine);
+		if (tmp == NULL) {
+			g_set_error(error,
+				    G_DBUS_ERROR,
+				    G_DBUS_ERROR_NOT_SUPPORTED,
+				    "failed to get daemon property %s",
+				    property_name);
+			return NULL;
+		}
+		return g_variant_new_string(tmp);
+	}
 
-	if (g_strcmp0(property_name, "HostSecurityId") == 0)
-		return g_variant_new_string(fu_engine_get_host_security_id(priv->engine));
+	if (g_strcmp0(property_name, "HostSecurityId") == 0) {
+		const gchar *tmp = fu_engine_get_host_security_id(priv->engine);
+		if (tmp == NULL) {
+			g_set_error(error,
+				    G_DBUS_ERROR,
+				    G_DBUS_ERROR_NOT_SUPPORTED,
+				    "failed to get daemon property %s",
+				    property_name);
+			return NULL;
+		}
+		return g_variant_new_string(tmp);
+	}
 
 	if (g_strcmp0(property_name, "Interactive") == 0)
 		return g_variant_new_boolean(isatty(fileno(stdout)) != 0);
@@ -2011,10 +2105,6 @@ main(int argc, char *argv[])
 	g_signal_connect(priv->engine,
 			 "status-changed",
 			 G_CALLBACK(fu_main_engine_status_changed_cb),
-			 priv);
-	g_signal_connect(priv->engine,
-			 "percentage-changed",
-			 G_CALLBACK(fu_main_engine_percentage_changed_cb),
 			 priv);
 	if (!fu_engine_load(priv->engine,
 			    FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |

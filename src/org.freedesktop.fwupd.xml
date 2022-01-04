@@ -23,6 +23,18 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='HostBkc' type='s' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            The optional best known configuration to use when syncing back to a
+            known state, e.g. <doc:tt>vendor-factory-2021q1</doc:tt>.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <property name='HostProduct' type='s' access='read'>
       <doc:doc>
         <doc:description>

@@ -267,18 +267,6 @@ fu_analogix_device_probe(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_analogix_device_prepare_firmware(FuDevice *device,
-				    GBytes *fw,
-				    FwupdInstallFlags flags,
-				    GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_analogix_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_analogix_device_write_image(FuAnalogixDevice *self,
 			       FuFirmware *image,
@@ -465,6 +453,7 @@ fu_analogix_device_init(FuAnalogixDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_vendor(FU_DEVICE(self), "Analogix Semiconductor Inc.");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ANALOGIX_FIRMWARE);
 }
 
 static void
@@ -476,7 +465,6 @@ fu_analogix_device_class_init(FuAnalogixDeviceClass *klass)
 	klass_device->setup = fu_analogix_device_setup;
 	klass_device->open = fu_analogix_device_open;
 	klass_device->probe = fu_analogix_device_probe;
-	klass_device->prepare_firmware = fu_analogix_device_prepare_firmware;
 	klass_device->close = fu_analogix_device_close;
 	klass_device->set_progress = fu_analogix_device_set_progress;
 }

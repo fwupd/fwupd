@@ -52,6 +52,7 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 	gsize bufsz;
 	guint32 tag = 0;
 	gsize offset = 0x00;
+	guint img_cnt = 0;
 
 	/* check the tag */
 	buf = g_bytes_get_data(fw, &bufsz);
@@ -78,7 +79,16 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 		guint32 length = 0;
 		guint32 fwtype = 0;
 		g_autoptr(GBytes) blob = NULL;
-		g_autoptr(FuFirmware) img = fu_firmware_new();
+		g_autoptr(FuFirmware) img = NULL;
+
+		/* check sanity */
+		if (img_cnt++ > 256) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "too many images detected");
+			return FALSE;
+		}
 
 		/* type, reserved, start-addr, len */
 		if (!fu_common_read_uint32_safe(buf,
@@ -88,6 +98,17 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 						G_LITTLE_ENDIAN,
 						error))
 			return FALSE;
+
+		/* check not already added */
+		img = fu_firmware_get_image_by_idx(firmware, fwtype, NULL);
+		if (img != NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "already parsed image with fwtype 0x%x",
+				    fwtype);
+			return FALSE;
+		}
 
 		/* done */
 		if (fwtype == FU_ELANTP_FIRMWARE_IDX_END)
@@ -121,6 +142,14 @@ fu_elanfp_firmware_parse(FuFirmware *firmware,
 						G_LITTLE_ENDIAN,
 						error))
 			return FALSE;
+		if (length == 0) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "zero size fwtype 0x%x not supported",
+				    fwtype);
+			return FALSE;
+		}
 		blob = fu_common_bytes_new_offset(fw, start_addr, length, error);
 		if (blob == NULL)
 			return FALSE;

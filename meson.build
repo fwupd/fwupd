@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.7.1',
+  version : '1.7.3',
   license : 'LGPL-2.1+',
   meson_version : '>=0.50.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -50,7 +50,7 @@ libfwupd_lt_current = '2'
 libfwupd_lt_revision = '0'
 libfwupd_lt_age = '0'
 libfwupd_lt_version = '@0@.@1@.@2@'.format(libfwupd_lt_current, libfwupd_lt_age, libfwupd_lt_revision)
-libfwupdplugin_lt_current = '4'
+libfwupdplugin_lt_current = '5'
 libfwupdplugin_lt_revision = '0'
 libfwupdplugin_lt_age = '0'
 libfwupdplugin_lt_version = '@0@.@1@.@2@'.format(libfwupdplugin_lt_current, libfwupdplugin_lt_age, libfwupdplugin_lt_revision)
@@ -204,12 +204,18 @@ endif
 if get_option('bluez')
   conf.set('HAVE_BLUEZ', '1')
 endif
+if get_option('hsi')
+  conf.set('HAVE_HSI', '1')
+endif
 libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
 if get_option('gusb')
   gusb = dependency('gusb', version : '>= 0.3.0', fallback : ['gusb', 'gusb_dep'])
   conf.set('HAVE_GUSB', '1')
 endif
-sqlite = dependency('sqlite3')
+if get_option('sqlite')
+  sqlite = dependency('sqlite3')
+  conf.set('HAVE_SQLITE', '1')
+endif
 if get_option('libarchive')
   libarchive = dependency('libarchive')
   conf.set('HAVE_LIBARCHIVE', '1')
@@ -289,15 +295,20 @@ endif
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
-
-if build_standalone and get_option('plugin_altos')
-  libelf = dependency('libelf')
+if get_option('offline')
+  if not get_option('systemd')
+    warning('-Doffline=true requires -Dsystemd=true')
+  endif
+  conf.set('HAVE_FWUPDOFFLINE', '1')
 endif
 
 host_cpu = host_machine.cpu_family()
 
 if cc.has_header('sys/utsname.h')
   conf.set('HAVE_UTSNAME_H', '1')
+endif
+if cc.has_header('sys/inotify.h')
+  conf.set('HAVE_INOTIFY_H', '1')
 endif
 if cc.has_header('sys/ioctl.h')
   conf.set('HAVE_IOCTL_H', '1')
@@ -308,11 +319,14 @@ endif
 if cc.has_header('sys/socket.h')
   conf.set('HAVE_SOCKET_H', '1')
 endif
-if cc.has_header('sys/io.h')
+if cc.has_header('sys/io.h') and cc.has_function('outb', prefix: '#include <sys/io.h>')
   conf.set('HAVE_IO_H', '1')
 endif
 if cc.has_header('linux/ethtool.h')
   conf.set('HAVE_ETHTOOL_H', '1')
+endif
+if cc.has_header('mtd/mtd-user.h')
+  conf.set('HAVE_MTD_USER_H', '1')
 endif
 if cc.has_header('linux/hidraw.h')
   conf.set('HAVE_HIDRAW_H', '1')

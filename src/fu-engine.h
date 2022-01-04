@@ -64,6 +64,8 @@ fu_engine_get_host_product(FuEngine *self);
 const gchar *
 fu_engine_get_host_machine_id(FuEngine *self);
 const gchar *
+fu_engine_get_host_bkc(FuEngine *self);
+const gchar *
 fu_engine_get_host_security_id(FuEngine *self);
 FwupdStatus
 fu_engine_get_status(FuEngine *self);
@@ -127,9 +129,12 @@ fu_engine_update_metadata_bytes(FuEngine *self,
 gboolean
 fu_engine_unlock(FuEngine *self, const gchar *device_id, GError **error);
 gboolean
-fu_engine_verify(FuEngine *self, const gchar *device_id, GError **error);
+fu_engine_verify(FuEngine *self, const gchar *device_id, FuProgress *progress, GError **error);
 gboolean
-fu_engine_verify_update(FuEngine *self, const gchar *device_id, GError **error);
+fu_engine_verify_update(FuEngine *self,
+			const gchar *device_id,
+			FuProgress *progress,
+			GError **error);
 GBytes *
 fu_engine_firmware_dump(FuEngine *self,
 			FuDevice *device,
@@ -173,12 +178,13 @@ fu_engine_install_tasks(FuEngine *self,
 			FuEngineRequest *request,
 			GPtrArray *install_tasks,
 			GBytes *blob_cab,
+			FuProgress *progress,
 			FwupdInstallFlags flags,
 			GError **error);
 GPtrArray *
 fu_engine_get_details(FuEngine *self, FuEngineRequest *request, gint fd, GError **error);
 gboolean
-fu_engine_activate(FuEngine *self, const gchar *device_id, GError **error);
+fu_engine_activate(FuEngine *self, const gchar *device_id, FuProgress *progress, GError **error);
 GPtrArray *
 fu_engine_get_approved_firmware(FuEngine *self);
 void

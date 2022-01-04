@@ -13,10 +13,9 @@ struct FuPluginData {
 	GDBusProxy *proxy; /* nullable */
 };
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_powerd_init(FuPlugin *plugin)
 {
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 }
 
@@ -57,8 +56,8 @@ fu_plugin_powerd_delete_suspend_file(GError **error)
 	return TRUE;
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_powerd_destroy(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (data->proxy != NULL)
@@ -95,8 +94,8 @@ fu_plugin_powerd_proxy_changed_cb(GDBusProxy *proxy,
 	fu_plugin_powerd_rescan(plugin, parameters);
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_powerd_startup(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *name_owner = NULL;
@@ -145,14 +144,25 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_prepare(FuPlugin *plugin, FuDevice *dev, FwupdInstallFlags flags, GError **error)
+static gboolean
+fu_plugin_powerd_prepare(FuPlugin *plugin, FuDevice *dev, FwupdInstallFlags flags, GError **error)
 {
 	return fu_plugin_powerd_create_suspend_file(error);
 }
 
-gboolean
-fu_plugin_cleanup(FuPlugin *plugin, FuDevice *dev, FwupdInstallFlags flags, GError **error)
+static gboolean
+fu_plugin_powerd_cleanup(FuPlugin *plugin, FuDevice *dev, FwupdInstallFlags flags, GError **error)
 {
 	return fu_plugin_powerd_delete_suspend_file(error);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_powerd_init;
+	vfuncs->destroy = fu_plugin_powerd_destroy;
+	vfuncs->startup = fu_plugin_powerd_startup;
+	vfuncs->cleanup = fu_plugin_powerd_cleanup;
+	vfuncs->prepare = fu_plugin_powerd_prepare;
 }

@@ -142,6 +142,26 @@ msgstr "Laitteen %s päivitys"
 msgid "%s and all connected devices may not be usable while updating."
 msgstr "%s ja kaikki kytketyt laitteet eivät välttämättä ole käyttökelpoisia päivityksen aikana."
 
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "Encrypted RAM".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s appeared: %s"
+msgstr "%s näkyy: %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "UEFI platform
+#. key".
+#. * %2 and %3 refer to results value, e.g. "Valid" and "Invalid"
+#, c-format
+msgid "%s changed: %s → %s"
+msgstr "%s muutettu: %s → %s"
+
+#. TRANSLATORS: %1 refers to some kind of security test, e.g. "SPI BIOS
+#. region".
+#. %2 refers to a result value, e.g. "Invalid"
+#, c-format
+msgid "%s disappeared: %s"
+msgstr "%s kadonnut: %s"
+
 #. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
 #, c-format
 msgid "%s manufacturing mode"
@@ -181,6 +201,7 @@ msgid_plural "%u days"
 msgstr[0] "%u päivä"
 msgstr[1] "%u päivää"
 
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
@@ -219,6 +240,10 @@ msgstr[1] "%u sekuntia"
 msgid "(obsoleted)"
 msgstr "(vanhentunut)"
 
+#. TRANSLATORS: HSI event title
+msgid "A TPM PCR is now an invalid value"
+msgstr "TPM PCR on nyt virheellisellä arvolla"
+
 #. TRANSLATORS: the user needs to do something, e.g. remove the device
 msgid "Action Required:"
 msgstr "Toimia vaaditaan:"
@@ -254,6 +279,14 @@ msgstr "Hyväksytäänkö ja otetaanko lähde käyttöön?"
 #, c-format
 msgid "Alias to %s"
 msgstr "Toinen nimi komennolle %s"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are now valid"
+msgstr "Kaikki TPM PCR:t ovat nyt kelvollisia"
+
+#. TRANSLATORS: HSI event title
+msgid "All TPM PCRs are valid"
+msgstr "Kaikki TPM PCR:t ovat kelvollisia"
 
 #. TRANSLATORS: on some systems certain devices have to have matching
 #. versions,
@@ -612,6 +645,10 @@ msgstr "Laitteet, joille ei ole saatavilla laiteohjelmiston päivityksiä:"
 msgid "Devices with the latest available firmware version:"
 msgstr "Laitteet, joille on asennettu uusin versio laiteohjelmistosta:"
 
+#. TRANSLATORS: this is for the device tests
+msgid "Did not find any devices with matching GUIDs"
+msgstr "Laitteita ei löytynyt vastaavilla GUID-tunnuksilla"
+
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
 msgid "Disabled"
@@ -831,6 +868,10 @@ msgstr "TIEDOSTONIMI [LAITEOHJELMISTON-TYYPPI]"
 msgid "FILENAME-SRC FILENAME-DST [FIRMWARE-TYPE-SRC] [FIRMWARE-TYPE-DST]"
 msgstr "TIEDOSTONIMI-LÄHDE TIEDOSTONIMI-KOHDE [LAITEOHJELMISTON-TYYPPI-LÄHDE] [LAITEOHJELMISTON-TYYPPI-KOHDE]"
 
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+msgstr "FILENAME|CHECKSUM1[,CHECKSUM2][,CHECKSUM3]"
+
 #. TRANSLATORS: Suffix: the fallback HSI result
 #. TRANSLATORS: the update state of the specific device
 msgid "Failed"
@@ -990,6 +1031,15 @@ msgstr "Pakota toimenpide, älä huomioi varoituksia"
 msgid "Found"
 msgstr "Löydetty"
 
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "Levyn salaus havaittu"
+
+#. TRANSLATORS: we might ask the user the recovery key when next booting
+#. Windows
+msgid "Full disk encryption secrets may be invalidated when updating"
+msgstr "Levyn salaus voi mitätöityä päivityksen aikana"
+
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
 msgid_plural "GUIDs"
@@ -1057,6 +1107,10 @@ msgstr "Laitteisto odottaa uudelleenkytkemistä"
 msgid "High"
 msgstr "Korkea"
 
+#. TRANSLATORS: title for host security events
+msgid "Host Security Events"
+msgstr "Koneen suojaustapahtumia"
+
 #. TRANSLATORS: this is a string like 'HSI:2-U'
 msgid "Host Security ID:"
 msgstr "Koneen tietoturvatunniste:"
@@ -1065,6 +1119,14 @@ msgstr "Koneen tietoturvatunniste:"
 #. * https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit
 msgid "IOMMU"
 msgstr "IOMMU"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr "IOMMU-laitteen suojaus poistettu"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr "IOMMU-laitteen suojaus käytössä"
 
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
@@ -1101,6 +1163,12 @@ msgstr "Asenna laiteohjelmisto (\"blob\") laitteeseen"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Asenna laiteohjelmistotiedosto tähän laitteistoon"
+
+msgid "Install old version of signed system firmware"
+msgstr "Asenna allekirjoitetun järjestelmän firmware:n vanha versio"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "Asenna allekirjoittamattoman järjestelmän firmware:n vanha versio"
 
 msgid "Install signed device firmware"
 msgstr "Asenna allekirjoitettu laiteohjelmisto"
@@ -1195,6 +1263,14 @@ msgstr[1] "Ongelmat"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "AVAIN,ARVO"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown disabled"
+msgstr "Kernel lukitus poistettu käytöstä"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel lockdown enabled"
+msgstr "Kernel lukitus käytössä"
 
 #. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
@@ -1396,6 +1472,10 @@ msgstr "Ei tueta"
 msgid "OK"
 msgstr "OK"
 
+#. TRANSLATORS: this is for the device tests
+msgid "OK!"
+msgstr "OK!"
+
 #. TRANSLATORS: command line option
 msgid "Only show single PCR value"
 msgstr "Näytä vain yksi PCR-arvo"
@@ -1451,6 +1531,11 @@ msgstr "Valmis prosenteissa"
 #. TRANSLATORS: prompt to apply the update
 msgid "Perform operation?"
 msgstr "Suoritetaanko toiminto?"
+
+#. TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
+#. metal thing
+msgid "Please ensure you have the volume recovery key before continuing."
+msgstr "Varmista, että sinulla on aseman palautusavain ennen kuin jatkat."
 
 #. TRANSLATORS: the user isn't reading the question
 #, c-format
@@ -1552,6 +1637,10 @@ msgstr "Asennetaan laitteelle %s uudelleen versio %s..."
 msgid "Release Branch"
 msgstr "Julkaisuhaara"
 
+#. TRANSLATORS: the exact component on the server
+msgid "Release ID"
+msgstr "Julkaisu ID-tunnus"
+
 #. TRANSLATORS: the server the file is coming from
 #. TRANSLATORS: remote identifier, e.g. lvfs-testing
 msgid "Remote ID"
@@ -1601,6 +1690,7 @@ msgstr "Käynnistetään laite uudelleen…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "Palauta kaikki koneen laitetunnukset"
 
+#. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Suorita `fwupdmgr get-upgrades` saadaksesi lisätietoja."
 
@@ -1655,6 +1745,14 @@ msgstr "Ajasta asennus uudelleenkäynnistykselle mahdollisuuksien mukaan"
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "Ajoitetaan…"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot disabled"
+msgstr "Secure Boot pois käytöstä"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "Secure Boot käytössä"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1759,6 +1857,10 @@ msgstr "Allekirjoitus"
 #. TRANSLATORS: file size of the download
 msgid "Size"
 msgstr "Koko"
+
+#. TRANSLATORS: the platform secret is stored in the PCRx registers on the TPM
+msgid "Some of the platform secrets may be invalidated when updating this firmware."
+msgstr "Jotkut salaukset voidaan mitätöidä tätä firmware-ohjelmistoa päivitettäessä."
 
 #. TRANSLATORS: source (as in code) link
 msgid "Source"
@@ -1874,6 +1976,11 @@ msgstr "TEKSTI"
 msgid "TPM PCR0 reconstruction"
 msgstr "TPM PCR0 -jälleenrakennus"
 
+#. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
+#. empty
+msgid "TPM empty PCRs"
+msgstr "TPM tyhjät PCR:t"
+
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
 msgstr "TPM v2.0"
@@ -1900,6 +2007,12 @@ msgstr "TPM PCR0 eroaa uudelleenrakennetusta."
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "Palvelu on ladannut 3. osapuolen koodia, eivätkä kehittäjät enää jatkossa tue sitä!"
+
+#. TRANSLATORS: this is for the device tests, %1 is the device
+#. * version, %2 is what we expected
+#, c-format
+msgid "The device version did not match: got %s, expected %s"
+msgstr "Laitteen versio ei täsmää: sain %s, odotettu %s"
 
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format

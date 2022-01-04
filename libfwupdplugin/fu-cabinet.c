@@ -693,7 +693,14 @@ fu_cabinet_build_silo(FuCabinet *self, GBytes *data, GError **error)
 	xb_builder_add_fixup(self->builder, fixup4);
 
 	/* did we get any valid files */
-	self->silo = xb_builder_compile(self->builder, XB_BUILDER_COMPILE_FLAG_NONE, NULL, error);
+	self->silo = xb_builder_compile(self->builder,
+#if LIBXMLB_CHECK_VERSION(0, 3, 4)
+					XB_BUILDER_COMPILE_FLAG_SINGLE_ROOT,
+#else
+					XB_BUILDER_COMPILE_FLAG_NONE,
+#endif
+					NULL,
+					error);
 	if (self->silo == NULL)
 		return FALSE;
 

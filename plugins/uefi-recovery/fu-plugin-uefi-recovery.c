@@ -8,17 +8,16 @@
 
 #include <fwupdplugin.h>
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_uefi_recovery_init(FuPlugin *plugin)
 {
 	/* make sure that UEFI plugin is ready to receive devices */
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "uefi_capsule");
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_uefi_recovery_startup(FuPlugin *plugin, GError **error)
 {
 	/* are the EFI dirs set up so we can update each device */
 	if (!fu_efivar_supported(error))
@@ -26,13 +25,13 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_uefi_recovery_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	GPtrArray *hwids = fu_context_get_hwid_guids(ctx);
 	const gchar *dmi_vendor;
-	g_autoptr(FuDevice) device = fu_device_new();
+	g_autoptr(FuDevice) device = fu_device_new_with_context(fu_plugin_get_context(plugin));
 	fu_device_set_id(device, "uefi-recovery");
 	fu_device_set_name(device, "System Firmware ESRT Recovery");
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
@@ -57,4 +56,13 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 
 	fu_plugin_device_register(plugin, device);
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_uefi_recovery_init;
+	vfuncs->coldplug = fu_plugin_uefi_recovery_coldplug;
+	vfuncs->startup = fu_plugin_uefi_recovery_startup;
 }

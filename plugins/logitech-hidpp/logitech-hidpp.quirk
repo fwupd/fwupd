@@ -16,6 +16,7 @@ InstallDuration = 30
 [HIDRAW\VEN_046D&DEV_AB07]
 Plugin = logitech_hidpp
 Name = Bolt Receiver
+Vendor = Logitech
 GType = FuLogitechHidPpDevice
 CounterpartGuid = HIDRAW\VEN_046D&DEV_C548
 InstallDuration = 30

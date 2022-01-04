@@ -47,8 +47,6 @@ LIBFWUPDPLUGIN_0.8.0 {
     fu_plugin_open;
     fu_plugin_runner_clear_results;
     fu_plugin_runner_coldplug;
-    fu_plugin_runner_coldplug_cleanup;
-    fu_plugin_runner_coldplug_prepare;
     fu_plugin_runner_get_results;
     fu_plugin_runner_startup;
     fu_plugin_runner_unlock;
@@ -305,7 +303,6 @@ LIBFWUPDPLUGIN_1.2.4 {
     fu_common_string_append_kx;
     fu_device_incorporate_from_component;
     fu_plugin_get_build_hash;
-    fu_plugin_set_build_hash;
     fu_udev_device_get_slot_depth;
   local: *;
 } LIBFWUPDPLUGIN_1.2.2;
@@ -945,3 +942,38 @@ LIBFWUPDPLUGIN_1.7.1 {
     fu_usb_device_new_with_context;
   local: *;
 } LIBFWUPDPLUGIN_1.7.0;
+
+LIBFWUPDPLUGIN_1.7.2 {
+  global:
+    fu_context_has_hwid_flag;
+    fu_device_get_firmware_gtype;
+    fu_device_set_firmware_gtype;
+    fu_security_attrs_get_by_appstream_id;
+    fu_udev_device_get_bind_id;
+    fu_udev_device_get_sysfs_attr_uint64;
+    fu_udev_device_seek;
+    fu_udev_device_set_bind_id;
+  local: *;
+} LIBFWUPDPLUGIN_1.7.1;
+
+LIBFWUPDPLUGIN_1.7.3 {
+  global:
+    fu_archive_firmware_get_type;
+    fu_archive_firmware_new;
+    fu_cfi_device_get_page_size;
+    fu_cfi_device_get_sector_size;
+    fu_cfi_device_set_page_size;
+    fu_cfi_device_set_sector_size;
+    fu_common_strtoull_full;
+    fu_common_sum16;
+    fu_common_sum16_bytes;
+    fu_common_sum16w;
+    fu_common_sum16w_bytes;
+    fu_common_sum32;
+    fu_common_sum32_bytes;
+    fu_common_sum32w;
+    fu_common_sum32w_bytes;
+    fu_common_sum8;
+    fu_common_sum8_bytes;
+  local: *;
+} LIBFWUPDPLUGIN_1.7.2;

@@ -50,6 +50,7 @@ msgid_plural "%u days"
 msgstr[0] "%u jour"
 msgstr[1] "%u jours"
 
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
@@ -736,6 +737,7 @@ msgstr "Redémarrer le service pour rendre la modification effective ?"
 msgid "Restarting device…"
 msgstr "Redémarrage du périphérique…"
 
+#. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Exécutez «fwupdmgr get-upgrades» pour plus d'informations."
 

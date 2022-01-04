@@ -342,27 +342,6 @@ fu_dfu_csr_device_download_chunk(FuDfuCsrDevice *self, guint16 idx, GBytes *chun
 	return TRUE;
 }
 
-static FuFirmware *
-fu_dfu_csr_device_prepare_firmware(FuDevice *device,
-				   GBytes *fw,
-				   FwupdInstallFlags flags,
-				   GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_dfu_firmware_new();
-
-	/* parse the file */
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
-	if (g_getenv("FWUPD_DFU_CSR_VERBOSE") != NULL) {
-		g_autofree gchar *fw_str = NULL;
-		fw_str = fu_firmware_to_string(firmware);
-		g_debug("%s", fw_str);
-	}
-
-	/* success */
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_dfu_csr_device_download(FuDevice *device,
 			   FuFirmware *firmware,
@@ -455,6 +434,7 @@ fu_dfu_csr_device_init(FuDfuCsrDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.qualcomm.dfu");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_DFU_FIRMWARE);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_DFU_CSR_DEVICE_FLAG_REQUIRE_DELAY,
 					"require-delay");
@@ -467,7 +447,6 @@ fu_dfu_csr_device_class_init(FuDfuCsrDeviceClass *klass)
 	klass_device->to_string = fu_dfu_csr_device_to_string;
 	klass_device->write_firmware = fu_dfu_csr_device_download;
 	klass_device->dump_firmware = fu_dfu_csr_device_upload;
-	klass_device->prepare_firmware = fu_dfu_csr_device_prepare_firmware;
 	klass_device->attach = fu_dfu_csr_device_attach;
 	klass_device->setup = fu_dfu_csr_device_setup;
 	klass_device->probe = fu_dfu_csr_device_probe;

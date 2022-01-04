@@ -73,8 +73,11 @@ GByteArray *
 proto_manager_generate_set_device_time_request(void)
 {
 	GByteArray *buf = g_byte_array_new();
+#if GLIB_CHECK_VERSION(2, 57, 1)
 	g_autoptr(GTimeZone) tz = g_time_zone_new_local();
+#else
 	g_autoptr(GDateTime) dt = g_date_time_new_now_utc();
+#endif
 
 	Logi__Device__Proto__Header header_msg = LOGI__DEVICE__PROTO__HEADER__INIT;
 	Logi__Device__Proto__SetDeviceTimeRequest set_devicetime_msg =

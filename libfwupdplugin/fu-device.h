@@ -400,6 +400,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK (1ull << 18)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE:
+ *
+ * The device is not auto removed.
+ *
+ * Since 1.7.3
+ */
+#define FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE (1llu << 19)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
@@ -541,6 +550,10 @@ FwupdRelease *
 fu_device_get_release_default(FuDevice *self);
 GType
 fu_device_get_specialized_gtype(FuDevice *self);
+GType
+fu_device_get_firmware_gtype(FuDevice *self);
+void
+fu_device_set_firmware_gtype(FuDevice *self, GType firmware_gtype);
 void
 fu_device_add_internal_flag(FuDevice *self, FuDeviceInternalFlags flag);
 void

@@ -30,41 +30,51 @@ A plugin only needs to define the vfuncs that are required, and the plugin name
 is taken automatically from the suffix of the `.so` file.
 
     /*
-     * Copyright (C) 2017 Richard Hughes
+     * Copyright (C) 2017 Richard Hughes <richard@hughsie.com>
+     *
+     * SPDX-License-Identifier: LGPL-2.1+
      */
 
-    #include <fu-plugin.h>
-    #include <fu-plugin-vfuncs.h>
+    #include <fwupdplugin.h>
 
     struct FuPluginData {
         gpointer proxy;
     };
 
-    void
-    fu_plugin_initialize (FuPlugin *plugin)
+    static void
+    fu_plugin_foo_init(FuPlugin *plugin)
     {
-        fu_plugin_add_rule (plugin, FU_PLUGIN_RULE_RUN_BEFORE, "dfu");
-        fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
+        fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_BEFORE, "dfu");
+        fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
     }
 
-    void
-    fu_plugin_destroy (FuPlugin *plugin)
+    static void
+    fu_plugin_foo_destroy(FuPlugin *plugin)
     {
-        FuPluginData *data = fu_plugin_get_data (plugin);
-        destroy_proxy (data->proxy);
+        FuPluginData *data = fu_plugin_get_data(plugin);
+        destroy_proxy(data->proxy);
     }
 
-    gboolean
-    fu_plugin_startup (FuPlugin *plugin, GError **error)
+    static gboolean
+    fu_plugin_foo_startup(FuPlugin *plugin, GError **error)
     {
-        FuPluginData *data = fu_plugin_get_data (plugin);
-        data->proxy = create_proxy ();
-        if (data->proxy == NULL) {
-            g_set_error (error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
-                         "failed to create proxy");
+        FuPluginData *data = fu_plugin_get_data(plugin);
+        data->proxy = create_proxy();
+        if(data->proxy == NULL) {
+            g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED,
+                        "failed to create proxy");
             return FALSE;
         }
         return TRUE;
+    }
+
+    void
+    fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+    {
+        vfuncs->build_hash = FU_BUILD_HASH;
+        vfuncs->init = fu_plugin_foo_init;
+        vfuncs->destroy = fu_plugin_foo_destroy;
+        vfuncs->startup = fu_plugin_foo_startup;
     }
 
 We have to define when our plugin is run in reference to other plugins, in this
@@ -81,28 +91,34 @@ The example here is all hardcoded, and a true plugin would have to
 derive the details about the `FuDevice` from the hardware, for example reading
 data from `sysfs` or `/dev`.
 
-    #include <fu-plugin.h>
-
-    gboolean
-    fu_plugin_coldplug (FuPlugin *plugin, GError **error)
+    static gboolean
+    fu_plugin_foo_coldplug(FuPlugin *plugin, GError **error)
     {
         g_autoptr(FuDevice) dev = NULL;
-        fu_device_set_id (dev, "dummy-1:2:3");
-        fu_device_add_guid (dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
-        fu_device_set_version (dev, "1.2.3");
-        fu_device_get_version_lowest (dev, "1.2.2");
-        fu_device_get_version_bootloader (dev, "0.1.2");
-        fu_device_add_icon (dev, "computer");
-        fu_device_add_flag (dev, FWUPD_DEVICE_FLAG_UPDATABLE);
-        fu_plugin_device_add (plugin, dev);
+        fu_device_set_id(dev, "dummy-1:2:3");
+        fu_device_add_guid(dev, "2d47f29b-83a2-4f31-a2e8-63474f4d4c2e");
+        fu_device_set_version(dev, "1.2.3");
+        fu_device_get_version_lowest(dev, "1.2.2");
+        fu_device_get_version_bootloader(dev, "0.1.2");
+        fu_device_add_icon(dev, "computer");
+        fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+        fu_plugin_device_add(plugin, dev);
         return TRUE;
+    }
+
+    void
+    fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+    {
+        …
+        vfuncs->coldplug = fu_plugin_foo_coldplug;
+        …
     }
 
 This shows a lot of the plugin architecture in action.
 Some notable points:
 
 - The device ID (`dummy-1:2:3`) has to be unique on the system between all
-- plugins, so including the plugin name as a prefix is probably a good idea.
+plugins, so including the plugin name as a prefix is probably a good idea.
 
 - The GUID value can be generated automatically using
 `fu_device_add_guid(dev,"some-identifier")` but is quoted here explicitly. The
@@ -144,18 +160,26 @@ ask the daemon to update the device with a suitable `.cab` file.
 When this is done the daemon checks the update for compatibility with the device,
 and then calls the vfuncs to update the device.
 
-    gboolean
-    fu_plugin_write_firmware (FuPlugin *plugin,
-                      FuDevice *dev,
-                      GBytes *blob_fw,
-                      FuProgress *progress,
-                      FwupdInstallFlags flags,
-                      GError **error)
+    static gboolean
+    fu_plugin_foo_write_firmware(FuPlugin *plugin,
+                                 FuDevice *dev,
+                                 GBytes *blob_fw,
+                                 FuProgress *progress,
+                                 FwupdInstallFlags flags,
+                                 GError **error)
     {
         gsize sz = 0;
-        guint8 *buf = g_bytes_get_data (blob_fw, &sz);
+        guint8 *buf = g_bytes_get_data(blob_fw, &sz);
         /* write 'buf' of size 'sz' to the hardware */
         return TRUE;
+    }
+
+    void
+    fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+    {
+        …
+        vfuncs->write_firmware = fu_plugin_foo_write_firmware;
+        …
     }
 
 It's important to note that the `blob_fw` is the binary firmware file
@@ -173,26 +197,34 @@ This could be something as simple as checking the system battery level is over a
 certain threshold, or it could be as complicated as ensuring a vendor-specific
 GPIO is asserted when specific types of hardware are updated.
 
-    gboolean
-    fu_plugin_prepare (FuPlugin *plugin, FuDevice *device, GError **error)
+    static gboolean
+    fu_plugin_foo_prepare(FuPlugin *plugin, FuDevice *device, GError **error)
     {
-        if (fu_device_has_flag (device, FWUPD_DEVICE_FLAG_REQUIRE_AC &&
-            !on_ac_power ()) {
-                g_set_error_literal (error,
-                                     FWUPD_ERROR,
-                                     FWUPD_ERROR_AC_POWER_REQUIRED,
-                                     "Cannot install update "
-                                     "when not on AC power");
+        if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REQUIRE_AC && !on_ac_power()) {
+                g_set_error_literal(error,
+                                    FWUPD_ERROR,
+                                    FWUPD_ERROR_AC_POWER_REQUIRED,
+                                    "Cannot install update "
+                                    "when not on AC power");
                 return FALSE;
         }
         return TRUE;
     }
 
-    gboolean
-    fu_plugin_cleanup (FuPlugin *plugin, FuDevice *device, GError **error)
+    static gboolean
+    fu_plugin_foo_cleanup(FuPlugin *plugin, FuDevice *device, GError **error)
     {
-        return g_file_set_contents ("/var/lib/fwupd/something",
-                                    fu_device_get_id (device), -1, error);
+        return g_file_set_contents("/var/lib/fwupd/something",
+                                   fu_device_get_id(device), -1, error);
+    }
+
+    void
+    fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+    {
+        …
+        vfuncs->prepare = fu_plugin_foo_prepare;
+        vfuncs->cleanup = fu_plugin_foo_cleanup;
+        …
     }
 
 ## Detaching to bootloader mode
@@ -214,30 +246,40 @@ The optional vfuncs are **only** run on the plugin currently registered to
 handle the device ID, although the registered plugin can change during the
 attach and detach phases.
 
-    gboolean
-    fu_plugin_detach (FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
+    static gboolean
+    fu_plugin_foo_detach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
     {
         if (hardware_in_bootloader)
             return TRUE;
         return _device_detach(device, progress, error);
     }
 
-    gboolean
-    fu_plugin_attach (FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
+    static gboolean
+    fu_plugin_foo_attach(FuPlugin *plugin, FuDevice *device, FuProgress *progress, GError **error)
     {
         if (!hardware_in_bootloader)
             return TRUE;
         return _device_attach(device, progress, error);
     }
 
-    gboolean
-    fu_plugin_reload (FuPlugin *plugin, FuDevice *device, GError **error)
+    static gboolean
+    fu_plugin_foo_reload(FuPlugin *plugin, FuDevice *device, GError **error)
     {
         g_autofree gchar *version = _get_version(plugin, device, error);
         if (version == NULL)
             return FALSE;
         fu_device_set_version(device, version);
         return TRUE;
+    }
+
+    void
+    fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+    {
+        …
+        vfuncs->detach = fu_plugin_foo_detach;
+        vfuncs->attach = fu_plugin_foo_attach;
+        vfuncs->reload = fu_plugin_foo_reload;
+        …
     }
 
 ## The Plugin Object Cache

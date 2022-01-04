@@ -165,6 +165,8 @@ fu_progressbar_refresh(FuProgressbar *self, FwupdStatus status, guint percentage
 	} else if (status == FWUPD_STATUS_WAITING_FOR_AUTH) {
 		is_idle_newline = TRUE;
 	}
+	if (percentage == 100)
+		is_idle_newline = TRUE;
 	title = fu_progressbar_status_to_string(status);
 	g_string_append(str, title);
 	for (i = fu_common_strwidth(str->str); i < self->length_status; i++)
@@ -329,10 +331,9 @@ fu_progressbar_update(FuProgressbar *self, FwupdStatus status, guint percentage)
 		status = self->status;
 
 	if (!self->interactive) {
-		if (self->status != status) {
-			g_debug("%s\n", fu_progressbar_status_to_string(status));
-			self->status = status;
-		}
+		g_print("%s: %u%%\n", fu_progressbar_status_to_string(status), percentage);
+		self->status = status;
+		self->percentage = percentage;
 		return;
 	}
 

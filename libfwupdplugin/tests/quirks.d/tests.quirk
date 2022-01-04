@@ -20,4 +20,6 @@ Flags = updatable,internal
 Name = A25Lxxx
 CfiDeviceCmdChipErase = 0xc7
 CfiDeviceCmdSectorErase = 0x20
+CfiDevicePageSize = 0x200
+CfiDeviceSectorSize = 0x2000
 FirmwareSizeMax = 0x10000

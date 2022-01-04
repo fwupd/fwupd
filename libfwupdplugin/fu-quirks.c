@@ -54,6 +54,8 @@ struct _FuQuirks {
 	GHashTable *possible_keys;
 	GPtrArray *invalid_keys;
 	XbSilo *silo;
+	XbQuery *query_kv;
+	XbQuery *query_vs;
 };
 
 G_DEFINE_TYPE(FuQuirks, fu_quirks, G_TYPE_OBJECT)
@@ -80,6 +82,39 @@ fu_quirks_build_group_key(const gchar *group)
 	if (fwupd_guid_is_valid(group))
 		return g_strdup(group);
 	return fwupd_guid_hash_string(group);
+}
+
+static gboolean
+fu_quirks_validate_flags(const gchar *value, GError **error)
+{
+	if (value == NULL)
+		return FALSE;
+	for (gsize i = 0; value[i] != '\0'; i++) {
+		gchar tmp = value[i];
+
+		/* allowed special chars */
+		if (tmp == ',' || tmp == '~' || tmp == '-')
+			continue;
+		if (!g_ascii_isalnum(tmp)) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "%c is not alphanumeric",
+				    tmp);
+			return FALSE;
+		}
+		if (g_ascii_isalpha(tmp) && !g_ascii_islower(tmp)) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "%c is not lowercase",
+				    tmp);
+			return FALSE;
+		}
+	}
+
+	/* success */
+	return TRUE;
 }
 
 static GInputStream *
@@ -112,6 +147,7 @@ fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
 	for (guint i = 0; groups[i] != NULL; i++) {
 		g_auto(GStrv) keys = NULL;
 		g_autofree gchar *group_id = NULL;
+		g_autoptr(GError) error_local = NULL;
 		g_autoptr(XbBuilderNode) bn = NULL;
 
 		/* sanity check group */
@@ -144,6 +180,18 @@ fu_quirks_convert_quirk_to_xml_cb(XbBuilderSource *source,
 			value = g_key_file_get_value(kf, groups[i], keys[j], error);
 			if (value == NULL)
 				return NULL;
+
+			/* sanity check flags */
+			if (g_strcmp0(keys[j], FU_QUIRKS_FLAGS) == 0) {
+				if (!fu_quirks_validate_flags(value, &error_local)) {
+					g_warning("[%s] %s = %s is invalid: %s",
+						  groups[i],
+						  keys[j],
+						  value,
+						  error_local->message);
+				}
+			}
+
 			xb_builder_node_insert_text(bn, "value", value, "key", keys[j], NULL);
 		}
 	}
@@ -241,6 +289,7 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 	g_autofree gchar *localstatedir = NULL;
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(XbBuilder) builder = NULL;
+	g_autoptr(XbNode) n_any = NULL;
 
 	/* everything is okay */
 	if (self->silo != NULL && xb_silo_is_valid(self->silo))
@@ -287,6 +336,32 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 		g_debug("invalid key names: %s", str);
 	}
 
+	/* check if there is any quirk data to load, as older libxmlb versions will not be able to
+	 * create the prepared query with an unknown text ID */
+	n_any = xb_silo_query_first(self->silo, "quirk", NULL);
+	if (n_any == NULL) {
+		g_debug("no quirk data, not creating prepared queries");
+		return TRUE;
+	}
+
+	/* create prepared queries to save time later */
+	self->query_kv = xb_query_new_full(self->silo,
+					   "quirk/device[@id=?]/value[@key=?]",
+					   XB_QUERY_FLAG_OPTIMIZE,
+					   error);
+	if (self->query_kv == NULL) {
+		g_prefix_error(error, "failed to prepare query: ");
+		return FALSE;
+	}
+	self->query_vs = xb_query_new_full(self->silo,
+					   "quirk/device[@id=?]/value",
+					   XB_QUERY_FLAG_OPTIMIZE,
+					   error);
+	if (self->query_vs == NULL) {
+		g_prefix_error(error, "failed to prepare query: ");
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -309,7 +384,6 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *group, const gchar *key)
 	g_autofree gchar *group_key = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) n = NULL;
-	g_autoptr(XbQuery) query = NULL;
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 #endif
@@ -324,35 +398,27 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *group, const gchar *key)
 		return NULL;
 	}
 
+	/* no quirk data */
+	if (self->query_kv == NULL)
+		return NULL;
+
 	/* query */
 	group_key = fu_quirks_build_group_key(group);
-	query = xb_query_new_full(self->silo,
-				  "quirk/device[@id=?]/value[@key=?]",
-				  XB_QUERY_FLAG_NONE,
-				  &error);
-	if (query == NULL) {
-		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
-			return NULL;
-		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
-			return NULL;
-		g_warning("failed to build query: %s", error->message);
-		return NULL;
-	}
-
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
+	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, group_key, NULL);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 1, key, NULL);
-	n = xb_silo_query_first_with_context(self->silo, query, &context, &error);
+	n = xb_silo_query_first_with_context(self->silo, self->query_kv, &context, &error);
 #else
-	if (!xb_query_bind_str(query, 0, group_key, &error)) {
+	if (!xb_query_bind_str(self->query_kv, 0, group_key, &error)) {
 		g_warning("failed to bind 0: %s", error->message);
 		return NULL;
 	}
-	if (!xb_query_bind_str(query, 1, key, &error)) {
+	if (!xb_query_bind_str(self->query_kv, 1, key, &error)) {
 		g_warning("failed to bind 1: %s", error->message);
 		return NULL;
 	}
-	n = xb_silo_query_first_full(self->silo, query, &error);
+	n = xb_silo_query_first_full(self->silo, self->query_kv, &error);
 #endif
 
 	if (n == NULL) {
@@ -388,7 +454,6 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 	g_autofree gchar *group_key = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) results = NULL;
-	g_autoptr(XbQuery) query = NULL;
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 #endif
@@ -403,28 +468,22 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 		return FALSE;
 	}
 
+	/* no quirk data */
+	if (self->query_vs == NULL)
+		return FALSE;
+
 	/* query */
 	group_key = fu_quirks_build_group_key(group);
-	query =
-	    xb_query_new_full(self->silo, "quirk/device[@id=?]/value", XB_QUERY_FLAG_NONE, &error);
-	if (query == NULL) {
-		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_FOUND))
-			return FALSE;
-		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
-			return FALSE;
-		g_warning("failed to build query: %s", error->message);
-		return FALSE;
-	}
-
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
+	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, group_key, NULL);
-	results = xb_silo_query_with_context(self->silo, query, &context, &error);
+	results = xb_silo_query_with_context(self->silo, self->query_vs, &context, &error);
 #else
-	if (!xb_query_bind_str(query, 0, group_key, &error)) {
+	if (!xb_query_bind_str(self->query_vs, 0, group_key, &error)) {
 		g_warning("failed to bind 0: %s", error->message);
 		return FALSE;
 	}
-	results = xb_silo_query_full(self->silo, query, &error);
+	results = xb_silo_query_full(self->silo, self->query_vs, &error);
 #endif
 
 	if (results == NULL) {
@@ -503,6 +562,7 @@ fu_quirks_init(FuQuirks *self)
 	fu_quirks_add_possible_key(self, FU_QUIRKS_FIRMWARE_SIZE_MIN);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_FLAGS);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_GTYPE);
+	fu_quirks_add_possible_key(self, FU_QUIRKS_FIRMWARE_GTYPE);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_GUID);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_ICON);
 	fu_quirks_add_possible_key(self, FU_QUIRKS_INHIBIT);
@@ -526,12 +586,18 @@ fu_quirks_init(FuQuirks *self)
 	fu_quirks_add_possible_key(self, "CfiDeviceCmdReadIdSz");
 	fu_quirks_add_possible_key(self, "CfiDeviceCmdChipErase");
 	fu_quirks_add_possible_key(self, "CfiDeviceCmdSectorErase");
+	fu_quirks_add_possible_key(self, "CfiDevicePageSize");
+	fu_quirks_add_possible_key(self, "CfiDeviceSectorSize");
 }
 
 static void
 fu_quirks_finalize(GObject *obj)
 {
 	FuQuirks *self = FU_QUIRKS(obj);
+	if (self->query_kv != NULL)
+		g_object_unref(self->query_kv);
+	if (self->query_vs != NULL)
+		g_object_unref(self->query_vs);
 	if (self->silo != NULL)
 		g_object_unref(self->silo);
 	g_hash_table_unref(self->possible_keys);

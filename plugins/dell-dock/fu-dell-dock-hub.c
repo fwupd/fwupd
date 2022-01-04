@@ -152,25 +152,24 @@ fu_dell_dock_hub_set_quirk_kv(FuDevice *device,
 			      GError **error)
 {
 	FuDellDockHub *self = FU_DELL_DOCK_HUB(device);
+	guint64 tmp = 0;
 
 	if (g_strcmp0(key, "DellDockUnlockTarget") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < G_MAXUINT8) {
-			self->unlock_target = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid DellDockUnlockTarget");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		self->unlock_target = tmp;
+		return TRUE;
 	}
 	if (g_strcmp0(key, "DellDockBlobMajorOffset") == 0) {
-		self->blob_major_offset = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		self->blob_major_offset = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "DellDockBlobMinorOffset") == 0) {
-		self->blob_minor_offset = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		self->blob_minor_offset = tmp;
 		return TRUE;
 	}
 

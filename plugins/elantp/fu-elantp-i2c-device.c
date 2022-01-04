@@ -411,8 +411,9 @@ fu_elantp_i2c_device_write_firmware(FuDevice *device,
 	chunks = fu_chunk_array_new(buf + iap_addr, bufsz - iap_addr, 0x0, 0x0, self->fw_page_size);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
-		guint16 csum_tmp =
-		    fu_elantp_calc_checksum(fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
+		guint16 csum_tmp = fu_common_sum16w(fu_chunk_get_data(chk),
+						    fu_chunk_get_data_sz(chk),
+						    G_LITTLE_ENDIAN);
 		gsize blksz = self->fw_page_size + 4;
 		g_autofree guint8 *blk = g_malloc0(blksz);
 
@@ -656,42 +657,23 @@ fu_elantp_i2c_device_set_quirk_kv(FuDevice *device,
 				  GError **error)
 {
 	FuElantpI2cDevice *self = FU_ELANTP_I2C_DEVICE(device);
+	guint64 tmp = 0;
+
 	if (g_strcmp0(key, "ElantpIcPageCount") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp > 0xffff) {
-			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
-					    "ElantpIcPageCount only supports "
-					    "values <= 0xffff");
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
-		}
 		self->ic_page_count = (guint16)tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "ElantpIapPassword") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp > 0xffff) {
-			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
-					    "ElantpIapPassword only supports "
-					    "values <= 0xffff");
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
-		}
 		self->iap_password = (guint16)tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "ElantpI2cTargetAddress") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp > 0xffff) {
-			g_set_error_literal(error,
-					    G_IO_ERROR,
-					    G_IO_ERROR_NOT_SUPPORTED,
-					    "ElantpI2cTargetAddress only supports "
-					    "values <= 0xffff");
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
-		}
 		self->i2c_addr = (guint16)tmp;
 		return TRUE;
 	}

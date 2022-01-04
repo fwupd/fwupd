@@ -2,7 +2,7 @@ if get_option('tests')
 subdir('tests')
 endif
 
-if build_daemon
+if build_daemon and get_option('introspection')
   install_data(['org.freedesktop.fwupd.xml'],
     install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
   )
@@ -17,7 +17,6 @@ daemon_dep = [
   giounix,
   gmodule,
   gudev,
-  sqlite,
   libjsonglib,
 ]
 
@@ -32,6 +31,10 @@ endif
 
 if get_option('libarchive')
   daemon_dep += libarchive
+endif
+if get_option('sqlite')
+  daemon_dep += sqlite
+  client_dep += sqlite
 endif
 
 if get_option('systemd')
@@ -89,7 +92,6 @@ fwupdmgr = executable(
     libfwupd_deps,
     libxmlb,
     client_dep,
-    sqlite,
   ],
   link_with : [
     fwupd,
@@ -100,14 +102,16 @@ fwupdmgr = executable(
 )
 
 # for compatibility
+if get_option('compat_cli')
 meson.add_install_script(
   'sh', '-c',
   'ln -fs fwupdmgr @0@@1@'.format(
       '${DESTDIR}',
       join_paths(get_option('prefix'), get_option('bindir'), 'fwupdagent')))
 endif
+endif
 
-if get_option('systemd')
+if get_option('systemd') and get_option('offline')
 fwupdoffline = executable(
   'fwupdoffline',
   sources : [
@@ -126,7 +130,6 @@ fwupdoffline = executable(
     libfwupd_deps,
     client_dep,
     libxmlb,
-    sqlite,
   ],
   link_with : [
     fwupd,
@@ -165,7 +168,6 @@ fwupdtool = executable(
     libxmlb,
     libgcab,
     client_dep,
-    sqlite,
     valgrind,
   ],
   link_with : [

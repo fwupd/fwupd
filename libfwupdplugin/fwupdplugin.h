@@ -8,6 +8,7 @@
 
 #define __FWUPDPLUGIN_H_INSIDE__
 
+#include <libfwupdplugin/fu-archive-firmware.h>
 #include <libfwupdplugin/fu-archive.h>
 #include <libfwupdplugin/fu-backend.h>
 #include <libfwupdplugin/fu-bluez-device.h>

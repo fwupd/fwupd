@@ -37,10 +37,6 @@
 #define FU_WAC_REPORT_ID_GET_CURRENT_FIRMWARE_IDX     0xe2 /* GET_FEATURE */
 #define FU_WAC_REPORT_ID_MODULE			      0xe4
 
-guint32
-fu_wac_calculate_checksum32le(const guint8 *data, gsize len);
-guint32
-fu_wac_calculate_checksum32le_bytes(GBytes *blob);
 const gchar *
 fu_wac_report_id_to_string(guint8 report_id);
 void

@@ -288,7 +288,6 @@ fu_vli_device_spi_write(FuVliDevice *self,
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_flag(progress, FU_PROGRESS_FLAG_GUESSED);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 99);
 	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 1); /* chk0 */
 
@@ -589,12 +588,18 @@ fu_vli_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 {
 	FuVliDevice *self = FU_VLI_DEVICE(device);
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
+	guint64 tmp = 0;
+
 	if (g_strcmp0(key, "CfiDeviceCmdReadIdSz") == 0) {
-		priv->spi_cmd_read_id_sz = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->spi_cmd_read_id_sz = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "VliSpiAutoDetect") == 0) {
-		priv->spi_auto_detect = fu_common_strtoull(value) > 0;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT8, error))
+			return FALSE;
+		priv->spi_auto_detect = tmp > 0;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "VliDeviceKind") == 0) {
@@ -677,6 +682,7 @@ fu_vli_device_finalize(GObject *obj)
 	FuVliDevice *self = FU_VLI_DEVICE(obj);
 	FuVliDevicePrivate *priv = GET_PRIVATE(self);
 	g_object_unref(priv->cfi_device);
+	G_OBJECT_CLASS(fu_vli_device_parent_class)->finalize(obj);
 }
 
 static void

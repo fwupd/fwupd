@@ -167,18 +167,6 @@ fu_vli_usbhub_msp430_device_detach(FuDevice *device, FuProgress *progress, GErro
 	return fu_vli_usbhub_i2c_check_status(status, error);
 }
 
-static FuFirmware *
-fu_vli_usbhub_msp430_device_prepare_firmware(FuDevice *device,
-					     GBytes *fw,
-					     FwupdInstallFlags flags,
-					     GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new();
-	if (!fu_firmware_tokenize(firmware, fw, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 typedef struct {
 	guint8 command;
 	guint8 buf[0x40];
@@ -339,6 +327,7 @@ fu_vli_usbhub_msp430_device_init(FuVliUsbhubMsp430Device *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_set_logical_id(FU_DEVICE(self), "I2C");
 	fu_device_set_summary(FU_DEVICE(self), "I²C dock management device");
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_IHEX_FIRMWARE);
 
 	/* the MSP device reboot takes down the entire hub for ~60 seconds */
 	fu_device_set_remove_delay(FU_DEVICE(self), 120 * 1000);
@@ -352,7 +341,6 @@ fu_vli_usbhub_msp430_device_class_init(FuVliUsbhubMsp430DeviceClass *klass)
 	klass_device->setup = fu_vli_usbhub_msp430_device_setup;
 	klass_device->detach = fu_vli_usbhub_msp430_device_detach;
 	klass_device->write_firmware = fu_vli_usbhub_msp430_device_write_firmware;
-	klass_device->prepare_firmware = fu_vli_usbhub_msp430_device_prepare_firmware;
 	klass_device->set_progress = fu_vli_usbhub_msp430_device_set_progress;
 }
 

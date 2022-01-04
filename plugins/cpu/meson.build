@@ -1,3 +1,4 @@
+if get_option('hsi') and get_option('plugin_cpu')
 cargs = ['-DG_LOG_DOMAIN="FuPluginCpu"']
 
 install_data(['cpu.quirk'],
@@ -70,4 +71,5 @@ if build_fwupdcethelper
     install : true,
     install_dir : join_paths(libexecdir, 'fwupd')
   )
+endif
 endif

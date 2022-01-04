@@ -181,6 +181,7 @@ msgid "%u day"
 msgid_plural "%u days"
 msgstr[0] "%u 天"
 
+#. TRANSLATORS: this is shown in the MOTD
 #, c-format
 msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
@@ -1592,6 +1593,7 @@ msgstr "正在重启设备…"
 msgid "Return all the hardware IDs for the machine"
 msgstr "返回机器的所有硬件 ID"
 
+#. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "运行 \"fwupdmgr get-upgrades\" 获取更多信息。"
 

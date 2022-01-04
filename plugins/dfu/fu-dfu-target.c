@@ -41,8 +41,6 @@ typedef struct {
 	gchar *alt_name;
 	gchar *alt_name_for_display;
 	GPtrArray *sectors; /* of FuDfuSector */
-	guint old_percentage;
-	FwupdStatus old_action;
 } FuDfuTargetPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuDfuTarget, fu_dfu_target, G_TYPE_OBJECT)
@@ -60,8 +58,6 @@ fu_dfu_target_init(FuDfuTarget *self)
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	priv->sectors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	priv->old_percentage = G_MAXUINT;
-	priv->old_action = FWUPD_STATUS_IDLE;
 }
 
 static void
@@ -88,7 +84,8 @@ fu_dfu_target_to_string(FuDfuTarget *self, guint idt, GString *str)
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	fu_common_string_append_kx(str, idt, "AltSetting", priv->alt_setting);
 	fu_common_string_append_kx(str, idt, "AltIdx", priv->alt_idx);
-	fu_common_string_append_kv(str, idt, "AltName", priv->alt_name);
+	if (priv->alt_name != NULL)
+		fu_common_string_append_kv(str, idt, "AltName", priv->alt_name);
 	if (priv->alt_name_for_display != NULL) {
 		fu_common_string_append_kv(str,
 					   idt,
@@ -776,8 +773,10 @@ fu_dfu_target_download_chunk(FuDfuTarget *self,
 	}
 
 	/* find out if the write was successful, waiting for BUSY to clear */
-	if (!fu_dfu_target_check_status(self, error))
+	if (!fu_dfu_target_check_status(self, error)) {
+		g_prefix_error(error, "cannot wait for busy: ");
 		return FALSE;
+	}
 
 	g_assert_cmpint(actual_length, ==, g_bytes_get_size(bytes));
 	return TRUE;
@@ -880,7 +879,6 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 {
 	FuDfuTargetPrivate *priv = GET_PRIVATE(self);
 	GBytes *chunk_tmp;
-	guint32 offset = 0;
 	guint percentage_size = expected_size > 0 ? expected_size : maximum_size;
 	gsize total_size = 0;
 	guint16 transfer_size = fu_dfu_device_get_transfer_size(priv->device);
@@ -907,7 +905,6 @@ fu_dfu_target_upload_element_dfu(FuDfuTarget *self,
 		/* keep a sum of all the chunks */
 		chunk_size = (guint32)g_bytes_get_size(chunk_tmp);
 		total_size += chunk_size;
-		offset += chunk_size;
 
 		/* add to array */
 		g_debug("got #%04x chunk of size %" G_GUINT32_FORMAT, idx, chunk_size);
@@ -1281,6 +1278,8 @@ fu_dfu_target_download(FuDfuTarget *self,
 				    "no image chunks");
 		return FALSE;
 	}
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		g_debug("downloading chunk at 0x%04x", fu_chunk_get_address(chk));
@@ -1298,8 +1297,13 @@ fu_dfu_target_download(FuDfuTarget *self,
 		}
 
 		/* download to device */
-		if (!fu_dfu_target_download_element(self, chk, progress, flags, error))
+		if (!fu_dfu_target_download_element(self,
+						    chk,
+						    fu_progress_get_child(progress),
+						    flags,
+						    error))
 			return FALSE;
+		fu_progress_step_done(progress);
 	}
 
 	if (fu_device_has_private_flag(FU_DEVICE(priv->device), FU_DFU_DEVICE_FLAG_MANIFEST_POLL) &&

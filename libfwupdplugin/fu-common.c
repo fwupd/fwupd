@@ -1010,6 +1010,86 @@ fu_common_strtoull(const gchar *str)
 }
 
 /**
+ * fu_common_strtoull_full:
+ * @str: a string, e.g. `0x1234`
+ * @value: (out) (nullable): parsed value
+ * @min: minimum acceptable value, typically 0
+ * @max: maximum acceptable value, typically G_MAXUINT64
+ * @error: (nullable): optional return location for an error
+ *
+ * Converts a string value to an integer. Values are assumed base 10, unless
+ * prefixed with "0x" where they are parsed as base 16.
+ *
+ * Returns: %TRUE if the value was parsed correctly, or %FALSE for error
+ *
+ * Since: 1.7.3
+ **/
+gboolean
+fu_common_strtoull_full(const gchar *str, guint64 *value, guint64 min, guint64 max, GError **error)
+{
+	gchar *endptr = NULL;
+	guint64 value_tmp;
+	guint base = 10;
+
+	/* sanity check */
+	if (str == NULL) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_INVALID_DATA,
+				    "cannot parse NULL");
+		return FALSE;
+	}
+
+	/* detect hex */
+	if (g_str_has_prefix(str, "0x")) {
+		str += 2;
+		base = 16;
+	}
+
+	/* convert */
+	value_tmp = g_ascii_strtoull(str, &endptr, base);
+	if ((gsize)(endptr - str) != strlen(str)) {
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "cannot parse %s", str);
+		return FALSE;
+	}
+
+	/* overflow check */
+	if (value_tmp == G_MAXUINT64) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "cannot parse %s as caused overflow",
+			    str);
+		return FALSE;
+	}
+
+	/* range check */
+	if (value_tmp < min) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "value %" G_GUINT64_FORMAT " was below minimum %" G_GUINT64_FORMAT,
+			    value_tmp,
+			    min);
+		return FALSE;
+	}
+	if (value_tmp > max) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVALID_DATA,
+			    "value %" G_GUINT64_FORMAT " was above maximum %" G_GUINT64_FORMAT,
+			    value_tmp,
+			    max);
+		return FALSE;
+	}
+
+	/* success */
+	if (value != NULL)
+		*value = value_tmp;
+	return TRUE;
+}
+
+/**
  * fu_common_strstrip:
  * @str: a string, e.g. ` test `
  *
@@ -3423,6 +3503,206 @@ guint32
 fu_common_crc32(const guint8 *buf, gsize bufsz)
 {
 	return fu_common_crc32_full(buf, bufsz, 0xFFFFFFFF, 0xEDB88320);
+}
+
+/**
+ * fu_common_sum8:
+ * @buf: memory buffer
+ * @bufsz: size of @buf
+ *
+ * Returns the arithmetic sum of all bytes in @buf.
+ *
+ * Returns: sum value
+ *
+ * Since: 1.7.3
+ **/
+guint8
+fu_common_sum8(const guint8 *buf, gsize bufsz)
+{
+	guint8 checksum = 0;
+	g_return_val_if_fail(buf != NULL, G_MAXUINT8);
+	for (gsize i = 0; i < bufsz; i++)
+		checksum += buf[i];
+	return checksum;
+}
+
+/**
+ * fu_common_sum8_bytes:
+ * @blob: a #GBytes
+ *
+ * Returns the arithmetic sum of all bytes in @blob.
+ *
+ * Returns: sum value
+ *
+ * Since: 1.7.3
+ **/
+guint8
+fu_common_sum8_bytes(GBytes *blob)
+{
+	g_return_val_if_fail(blob != NULL, G_MAXUINT8);
+	return fu_common_sum8(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
+}
+
+/**
+ * fu_common_sum16:
+ * @buf: memory buffer
+ * @bufsz: size of @buf
+ *
+ * Returns the arithmetic sum of all bytes in @buf, adding them one byte at a time.
+ *
+ * Returns: sum value
+ *
+ * Since: 1.7.3
+ **/
+guint16
+fu_common_sum16(const guint8 *buf, gsize bufsz)
+{
+	guint16 checksum = 0;
+	g_return_val_if_fail(buf != NULL, G_MAXUINT16);
+	for (gsize i = 0; i < bufsz; i++)
+		checksum += buf[i];
+	return checksum;
+}
+
+/**
+ * fu_common_sum16_bytes:
+ * @blob: a #GBytes
+ *
+ * Returns the arithmetic sum of all bytes in @blob, adding them one byte at a time.
+ *
+ * Returns: sum value
+ *
+ * Since: 1.7.3
+ **/
+guint16
+fu_common_sum16_bytes(GBytes *blob)
+{
+	g_return_val_if_fail(blob != NULL, G_MAXUINT16);
+	return fu_common_sum16(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
+}
+
+/**
+ * fu_common_sum16w:
+ * @buf: memory buffer
+ * @bufsz: size of @buf
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ *
+ * Returns the arithmetic sum of all bytes in @buf, adding them one word at a time.
+ * The caller must ensure that @bufsz is a multiple of 2.
+ *
+ * Returns: sum value
+ *
+ * Since: 1.7.3
+ **/
+guint16
+fu_common_sum16w(const guint8 *buf, gsize bufsz, FuEndianType endian)
+{
+	guint16 checksum = 0;
+	g_return_val_if_fail(buf != NULL, G_MAXUINT16);
+	g_return_val_if_fail(bufsz % 2 == 0, G_MAXUINT16);
+	for (gsize i = 0; i < bufsz; i += 2)
+		checksum += fu_common_read_uint16(&buf[i], endian);
+	return checksum;
+}
+
+/**
+ * fu_common_sum16w_bytes:
+ * @blob: a #GBytes
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ *
+ * Returns the arithmetic sum of all bytes in @blob, adding them one word at a time.
+ * The caller must ensure that the size of @blob is a multiple of 2.
+ *
+ * Returns: sum value
+ *
+ * Since: 1.7.3
+ **/
+guint16
+fu_common_sum16w_bytes(GBytes *blob, FuEndianType endian)
+{
+	g_return_val_if_fail(blob != NULL, G_MAXUINT16);
+	return fu_common_sum16w(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob), endian);
+}
+
+/**
+ * fu_common_sum32:
+ * @buf: memory buffer
+ * @bufsz: size of @buf
+ *
+ * Returns the arithmetic sum of all bytes in @buf, adding them one byte at a time.
+ *
+ * Returns: sum value
+ *
+ * Since: 1.7.3
+ **/
+guint32
+fu_common_sum32(const guint8 *buf, gsize bufsz)
+{
+	guint32 checksum = 0;
+	g_return_val_if_fail(buf != NULL, G_MAXUINT32);
+	for (gsize i = 0; i < bufsz; i++)
+		checksum += buf[i];
+	return checksum;
+}
+
+/**
+ * fu_common_sum32_bytes:
+ * @blob: a #GBytes
+ *
+ * Returns the arithmetic sum of all bytes in @blob, adding them one byte at a time.
+ *
+ * Returns: sum value
+ *
+ * Since: 1.7.3
+ **/
+guint32
+fu_common_sum32_bytes(GBytes *blob)
+{
+	g_return_val_if_fail(blob != NULL, G_MAXUINT32);
+	return fu_common_sum32(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob));
+}
+
+/**
+ * fu_common_sum32w:
+ * @buf: memory buffer
+ * @bufsz: size of @buf
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ *
+ * Returns the arithmetic sum of all bytes in @buf, adding them one dword at a time.
+ * The caller must ensure that @bufsz is a multiple of 4.
+ *
+ * Returns: sum value
+ *
+ * Since: 1.7.3
+ **/
+guint32
+fu_common_sum32w(const guint8 *buf, gsize bufsz, FuEndianType endian)
+{
+	guint32 checksum = 0;
+	g_return_val_if_fail(buf != NULL, G_MAXUINT32);
+	g_return_val_if_fail(bufsz % 4 == 0, G_MAXUINT32);
+	for (gsize i = 0; i < bufsz; i += 4)
+		checksum += fu_common_read_uint32(&buf[i], endian);
+	return checksum;
+}
+
+/**
+ * fu_common_sum32w_bytes:
+ * @blob: a #GBytes
+ * @endian: an endian type, e.g. %G_LITTLE_ENDIAN
+ *
+ * Returns the arithmetic sum of all bytes in @blob, adding them one dword at a time.
+ * The caller must ensure that the size of @blob is a multiple of 4.
+ *
+ * Returns: sum value
+ *
+ * Since: 1.7.3
+ **/
+guint32
+fu_common_sum32w_bytes(GBytes *blob, FuEndianType endian)
+{
+	g_return_val_if_fail(blob != NULL, G_MAXUINT32);
+	return fu_common_sum32w(g_bytes_get_data(blob, NULL), g_bytes_get_size(blob), endian);
 }
 
 /**

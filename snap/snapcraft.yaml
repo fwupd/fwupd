@@ -29,8 +29,6 @@ apps:
     command: fwupdmgr.wrapper
     completer:
       share/bash-completion/completions/fwupdmgr
-  fwupdtpmevlog:
-    command: fwupdtpmevlog.wrapper
   fwupdagent:
     command: fwupdagent.wrapper
 
@@ -177,6 +175,7 @@ parts:
                        -Dintrospection=false,
                        -Dman=false,
                        -Dplugin_modem_manager=true,
+                       -Dplugin_powerd=false,
                        -Dudevdir=$SNAPCRAFT_STAGE/lib/udev,
                        "-Dgusb:tests=false",
                        "-Dgusb:docs=false",
@@ -199,7 +198,6 @@ parts:
       - gnu-efi
       - libarchive-dev
       - libcairo-dev
-      - libelf-dev
       - libefiboot-dev
       - libefivar-dev
       - libftdi1-dev
@@ -208,6 +206,7 @@ parts:
       - libglib2.0-dev
       - libgpgme11-dev
       - libjson-glib-dev
+      - liblzma-dev
       - libpango1.0-dev
       - libpci-dev
       - libpolkit-gobject-1-dev
@@ -225,9 +224,9 @@ parts:
       - libarchive13
       - libassuan0
       - liblcms2-2
+      - liblzma5
       - libefivar1
       - libefiboot1
-      - libelf1
       - libusb-1.0-0
       - libgudev-1.0-0
       - libgpgme11
@@ -308,5 +307,4 @@ parts:
     - fwupdtool.wrapper
     - fwupd.wrapper
     - fwupdmgr.wrapper
-    - fwupdtpmevlog.wrapper
     - fwupdagent.wrapper

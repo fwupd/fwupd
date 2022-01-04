@@ -110,7 +110,6 @@ fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error
 {
 	guint64 status;
 	g_autofree gchar *attribute = NULL;
-	const gchar *update_error = NULL;
 	const gchar *devpath = fu_udev_device_get_sysfs_path(FU_UDEV_DEVICE(self));
 	/* read directly from file to prevent udev caching */
 	g_autofree gchar *safe_path = g_build_path("/", devpath, "authorized", NULL);
@@ -135,10 +134,9 @@ fu_thunderbolt_device_check_authorized(FuThunderboltDevice *self, GError **error
 		return FALSE;
 	}
 	if (status == 1 || status == 2)
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_uninhibit(FU_DEVICE(self), "not-authorized");
 	else
-		update_error = "Not authorized";
-	fu_device_set_update_error(FU_DEVICE(self), update_error);
+		fu_device_inhibit(FU_DEVICE(self), "not-authorized", "Not authorized");
 
 	return TRUE;
 }
@@ -321,6 +319,138 @@ fu_thunderbolt_device_get_attr_uint16(FuThunderboltDevice *self, const gchar *na
 	}
 	return (guint16)val;
 }
+static gboolean
+fu_thunderbolt_check_usb4_port_path(FuUdevDevice *device, const gchar *attribute, GError **err)
+{
+	g_autofree const gchar *path =
+	    g_build_filename(fu_udev_device_get_sysfs_path(device), attribute, NULL);
+	g_autofree gchar *fn = g_strdup_printf("%s", path);
+	g_autoptr(GFile) file = g_file_new_for_path(fn);
+	if (!g_file_query_exists(file, NULL)) {
+		g_set_error(err, G_IO_ERROR, G_IO_ERROR_NOT_FOUND, "failed to find %s", fn);
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_thunderbolt_device_set_port_offline(FuUdevDevice *device, GError **error)
+{
+	const gchar *offline = "usb4_port1/offline";
+	const gchar *rescan = "usb4_port1/rescan";
+	g_autoptr(GError) error_offline = NULL;
+	g_autoptr(GError) error_rescan = NULL;
+	if (fu_thunderbolt_check_usb4_port_path(device, offline, &error_offline)) {
+		if (!fu_udev_device_write_sysfs(device, offline, "1", error)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "Setting usb4 port offline failed");
+			return FALSE;
+		}
+	} else {
+		g_debug("%s", error_offline->message);
+		return TRUE;
+	}
+	if (fu_thunderbolt_check_usb4_port_path(device, rescan, &error_rescan)) {
+		if (!fu_udev_device_write_sysfs(device, rescan, "1", error)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "Rescan on port failed");
+			return FALSE;
+		}
+	} else {
+		g_debug("%s", error_rescan->message);
+		return TRUE;
+	}
+	return TRUE;
+}
+
+static gboolean
+fu_thunderbolt_device_set_port_online(FuUdevDevice *device, GError **err)
+{
+	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
+	const gchar *offline = "usb4_port1/offline";
+	g_autoptr(GError) error_offline = NULL;
+
+	if (fu_thunderbolt_check_usb4_port_path(device, offline, &error_offline)) {
+		if (!fu_udev_device_write_sysfs(udev, offline, "0", err)) {
+			g_set_error_literal(err,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "Setting port online failed");
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+static FuUdevDevice *
+fu_thunderbolt_get_udev_parent_device(FuDevice *device, GError **error)
+{
+	g_autoptr(GUdevDevice) udev_parent1 = NULL;
+	g_autoptr(GUdevDevice) udev_parent2 = NULL;
+	GUdevDevice *udev_device = NULL;
+	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
+	if (self->device_type != FU_THUNDERBOLT_DEVICE_TYPE_RETIMER) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "not a retimer device");
+		return NULL;
+	}
+	udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
+	if (udev_device == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to get udev device for retimer");
+		return NULL;
+	}
+	udev_parent1 = g_udev_device_get_parent(udev_device);
+	if (udev_parent1 == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to get parent device for retimer");
+		return NULL;
+	}
+	udev_parent2 = g_udev_device_get_parent(udev_parent1);
+	if (udev_parent2 == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to get host router device for retimer");
+		return NULL;
+	}
+	return fu_udev_device_new_with_context(fu_device_get_context(FU_DEVICE(self)),
+					       g_steal_pointer(&udev_parent2));
+}
+gboolean
+fu_thunderbolt_probe_retimer(FuDevice *device, GError **error)
+{
+	FuThunderboltDevice *self = FU_THUNDERBOLT_DEVICE(device);
+	g_autoptr(FuUdevDevice) parent = NULL;
+	if (device == NULL || self->device_type != FU_THUNDERBOLT_DEVICE_TYPE_RETIMER) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "fail to probe retimer device");
+		return FALSE;
+	}
+	parent = fu_thunderbolt_get_udev_parent_device(device, error);
+	return fu_thunderbolt_device_set_port_offline(parent, error);
+}
+
+gboolean
+fu_thunderbolt_device_close(FuDevice *device, GError **error)
+{
+	g_autoptr(FuUdevDevice) parent = fu_thunderbolt_get_udev_parent_device(device, error);
+	if (parent == NULL)
+		return FALSE;
+	return fu_thunderbolt_device_set_port_online(parent, error);
+}
 
 static gboolean
 fu_thunderbolt_device_setup_controller(FuDevice *device, GError **error)
@@ -424,6 +554,11 @@ fu_thunderbolt_device_setup_controller(FuDevice *device, GError **error)
 		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	}
 
+	if (self->device_type == FU_THUNDERBOLT_DEVICE_TYPE_HOST_CONTROLLER) {
+		if (!fu_thunderbolt_device_set_port_offline(FU_UDEV_DEVICE(device), error))
+			return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -444,6 +579,8 @@ fu_thunderbolt_device_setup_retimer(FuDevice *device, GError **error)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INTERNAL);
+	fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE);
+
 	vid = fu_udev_device_get_vendor(FU_UDEV_DEVICE(self));
 	if (vid == 0x0) {
 		g_set_error_literal(error,
@@ -765,10 +902,11 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 	}
 
 	/* whether to wait for a device replug or not */
-	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
-		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE)) {
 		fu_device_set_remove_delay(device, FU_PLUGIN_THUNDERBOLT_UPDATE_TIMEOUT);
-		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_RESTART);
+		if (self->device_type != FU_THUNDERBOLT_DEVICE_TYPE_RETIMER)
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	}
 
 	return TRUE;
@@ -788,6 +926,7 @@ static void
 fu_thunderbolt_device_init(FuThunderboltDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_icon(FU_DEVICE(self), "thunderbolt");
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);

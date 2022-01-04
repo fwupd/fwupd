@@ -62,6 +62,7 @@ typedef struct {
 	guint idle_id;
 	GPtrArray *idle_sources; /* element-type FwupdClientContextHelper */
 	gchar *daemon_version;
+	gchar *host_bkc;
 	gchar *host_product;
 	gchar *host_machine_id;
 	gchar *host_security_id;
@@ -105,6 +106,7 @@ enum {
 	PROP_HOST_PRODUCT,
 	PROP_HOST_MACHINE_ID,
 	PROP_HOST_SECURITY_ID,
+	PROP_HOST_BKC,
 	PROP_INTERACTIVE,
 	PROP_LAST
 };
@@ -313,6 +315,24 @@ fwupd_client_set_daemon_version(FwupdClient *self, const gchar *daemon_version)
 }
 
 static void
+fwupd_client_set_host_bkc(FwupdClient *self, const gchar *host_bkc)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+
+	/* emulate a D-Bus maybe type */
+	if (g_strcmp0(host_bkc, "") == 0)
+		host_bkc = NULL;
+
+	/* not changed */
+	if (g_strcmp0(priv->host_bkc, host_bkc) == 0)
+		return;
+
+	g_free(priv->host_bkc);
+	priv->host_bkc = g_strdup(host_bkc);
+	fwupd_client_object_notify(self, "host-bkc");
+}
+
+static void
 fwupd_client_set_status(FwupdClient *self, FwupdStatus status)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
@@ -377,6 +397,11 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		val = g_dbus_proxy_get_cached_property(proxy, "DaemonVersion");
 		if (val != NULL)
 			fwupd_client_set_daemon_version(self, g_variant_get_string(val, NULL));
+	}
+	if (g_variant_dict_contains(dict, "HostBkc")) {
+		g_autoptr(GVariant) val = g_dbus_proxy_get_cached_property(proxy, "HostBkc");
+		if (val != NULL)
+			fwupd_client_set_host_bkc(self, g_variant_get_string(val, NULL));
 	}
 	if (g_variant_dict_contains(dict, "HostProduct")) {
 		g_autoptr(GVariant) val = NULL;
@@ -613,7 +638,6 @@ fwupd_client_set_hints_cb(GObject *source, GAsyncResult *res, gpointer user_data
 			g_task_return_boolean(task, TRUE);
 			return;
 		}
-		fwupd_client_fixup_dbus_error(error);
 		g_task_return_error(task, g_steal_pointer(&error));
 		return;
 	}
@@ -641,6 +665,7 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	g_autoptr(GVariant) val5 = NULL;
 	g_autoptr(GVariant) val6 = NULL;
 	g_autoptr(GVariant) val7 = NULL;
+	g_autoptr(GVariant) val8 = NULL;
 	g_autoptr(GMutexLocker) locker = NULL;
 
 	proxy = g_dbus_proxy_new_finish(res, &error);
@@ -651,7 +676,7 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 
 	/* another thread did this for us */
 	locker = g_mutex_locker_new(&priv->proxy_mutex);
-	if (priv->proxy != NULL) {
+	if (locker == NULL || priv->proxy != NULL) {
 		g_task_return_boolean(task, TRUE);
 		return;
 	}
@@ -684,12 +709,18 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	val7 = g_dbus_proxy_get_cached_property(priv->proxy, "HostSecurityId");
 	if (val7 != NULL)
 		fwupd_client_set_host_security_id(self, g_variant_get_string(val7, NULL));
+	val8 = g_dbus_proxy_get_cached_property(priv->proxy, "HostBkc");
+	if (val8 != NULL)
+		fwupd_client_set_host_bkc(self, g_variant_get_string(val8, NULL));
 
 	/* build client hints */
-	g_variant_builder_init(&builder, G_VARIANT_TYPE_DICTIONARY);
+	g_variant_builder_init(&builder, G_VARIANT_TYPE("a{ss}"));
 	g_hash_table_iter_init(&iter, priv->hints);
-	while (g_hash_table_iter_next(&iter, &key, &value))
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		if (value == NULL)
+			continue;
 		g_variant_builder_add(&builder, "{ss}", (const gchar *)key, (const gchar *)value);
+	}
 
 	/* only supported on fwupd >= 1.7.1 */
 	g_dbus_proxy_call(priv->proxy,
@@ -3101,6 +3132,24 @@ fwupd_client_get_daemon_version(FwupdClient *self)
 }
 
 /**
+ * fwupd_client_get_host_bkc:
+ * @self: a #FwupdClient
+ *
+ * Gets the daemon version number.
+ *
+ * Returns: a string, or %NULL for unknown.
+ *
+ * Since: 1.7.3
+ **/
+const gchar *
+fwupd_client_get_host_bkc(FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
+	return priv->host_bkc;
+}
+
+/**
  * fwupd_client_get_host_product:
  * @self: a #FwupdClient
  *
@@ -4512,29 +4561,15 @@ fwupd_client_download_write_callback_cb(char *ptr, size_t size, size_t nmemb, vo
 }
 
 static GBytes *
-fwupd_client_stream_read_bytes(GInputStream *stream, GError **error)
+fwupd_client_download_ipfs(FwupdClient *self,
+			   const gchar *url,
+			   GCancellable *cancellable,
+			   GError **error)
 {
-	guint8 tmp[0x8000] = {0x0};
-	g_autoptr(GByteArray) buf = g_byte_array_new();
-
-	/* read from stream in 32kB chunks */
-	while (TRUE) {
-		gssize sz;
-		sz = g_input_stream_read(stream, tmp, sizeof(tmp), NULL, error);
-		if (sz == 0)
-			break;
-		if (sz < 0)
-			return NULL;
-		g_byte_array_append(buf, tmp, sz);
-	}
-	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
-}
-
-static GBytes *
-fwupd_client_download_ipfs(FwupdClient *self, const gchar *url, GError **error)
-{
-	GInputStream *stream = NULL;
+	GSubprocessFlags flags = G_SUBPROCESS_FLAGS_STDOUT_PIPE | G_SUBPROCESS_FLAGS_STDERR_PIPE;
 	g_autofree gchar *path = NULL;
+	g_autoptr(GBytes) bstdout = NULL;
+	g_autoptr(GBytes) bstderr = NULL;
 	g_autoptr(GSubprocess) subprocess = NULL;
 
 	/* we get no detailed progress details */
@@ -4551,16 +4586,22 @@ fwupd_client_download_ipfs(FwupdClient *self, const gchar *url, GError **error)
 	}
 
 	/* run sync */
-	subprocess =
-	    g_subprocess_new(G_SUBPROCESS_FLAGS_STDOUT_PIPE, error, "ipfs", "cat", path, NULL);
+	subprocess = g_subprocess_new(flags, error, "ipfs", "cat", path, NULL);
 	if (subprocess == NULL)
 		return NULL;
-	if (!g_subprocess_wait_check(subprocess, NULL, error))
+	if (!g_subprocess_communicate(subprocess, NULL, cancellable, &bstdout, &bstderr, error))
 		return NULL;
-
-	/* get raw stdout */
-	stream = g_subprocess_get_stdout_pipe(subprocess);
-	return fwupd_client_stream_read_bytes(stream, error);
+	fwupd_client_set_status(self, FWUPD_STATUS_IDLE);
+	if (g_subprocess_get_exit_status(subprocess) != 0) {
+		const gchar *msg = g_bytes_get_data(bstderr, NULL);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to download file: %s",
+			    msg);
+		return NULL;
+	}
+	return g_steal_pointer(&bstdout);
 }
 
 static GBytes *
@@ -4637,7 +4678,7 @@ fwupd_client_download_bytes_thread_cb(GTask *task,
 			if (blob != NULL)
 				break;
 		} else if (fwupd_client_is_url_ipfs(url)) {
-			blob = fwupd_client_download_ipfs(self, url, &error);
+			blob = fwupd_client_download_ipfs(self, url, cancellable, &error);
 			if (blob != NULL)
 				break;
 		} else {
@@ -5011,6 +5052,9 @@ fwupd_client_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_DAEMON_VERSION:
 		g_value_set_string(value, priv->daemon_version);
 		break;
+	case PROP_HOST_BKC:
+		g_value_set_string(value, priv->host_bkc);
+		break;
 	case PROP_HOST_PRODUCT:
 		g_value_set_string(value, priv->host_product);
 		break;
@@ -5260,6 +5304,20 @@ fwupd_client_class_init(FwupdClientClass *klass)
 	g_object_class_install_property(object_class, PROP_DAEMON_VERSION, pspec);
 
 	/**
+	 * FwupdClient:host-bkc:
+	 *
+	 * The host best known configuration.
+	 *
+	 * Since: 1.7.3
+	 */
+	pspec = g_param_spec_string("host-bkc",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_HOST_BKC, pspec);
+
+	/**
 	 * FwupdClient:soup-session:
 	 *
 	 * The libsoup session, now unused.
@@ -5340,6 +5398,7 @@ fwupd_client_finalize(GObject *object)
 	g_clear_pointer(&priv->main_ctx, g_main_context_unref);
 	g_free(priv->user_agent);
 	g_free(priv->daemon_version);
+	g_free(priv->host_bkc);
 	g_free(priv->host_product);
 	g_free(priv->host_machine_id);
 	g_free(priv->host_security_id);

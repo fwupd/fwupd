@@ -62,6 +62,12 @@ void
 fwupd_release_add_checksum(FwupdRelease *self, const gchar *checksum);
 gboolean
 fwupd_release_has_checksum(FwupdRelease *self, const gchar *checksum);
+GPtrArray *
+fwupd_release_get_tags(FwupdRelease *self);
+void
+fwupd_release_add_tag(FwupdRelease *self, const gchar *tag);
+gboolean
+fwupd_release_has_tag(FwupdRelease *self, const gchar *tag);
 
 GHashTable *
 fwupd_release_get_metadata(FwupdRelease *self);
@@ -80,6 +86,10 @@ const gchar *
 fwupd_release_get_protocol(FwupdRelease *self);
 void
 fwupd_release_set_protocol(FwupdRelease *self, const gchar *protocol);
+const gchar *
+fwupd_release_get_id(FwupdRelease *self);
+void
+fwupd_release_set_id(FwupdRelease *self, const gchar *id);
 const gchar *
 fwupd_release_get_appstream_id(FwupdRelease *self);
 void

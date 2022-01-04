@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 # SPDX-License-Identifier: LGPL-2.1+
 set -e
 
@@ -8,7 +8,7 @@ set -e
 
 if [ -f @localstatedir@/lib/fwupd/uefi_capsule.conf ] &&
    ls /sys/firmware/efi/efivars/fwupd-*-0abba7dc-e516-4167-bbf5-4d9d1c739416 1>/dev/null 2>&1; then
-      source @localstatedir@/lib/fwupd/uefi_capsule.conf
+      . @localstatedir@/lib/fwupd/uefi_capsule.conf
       if [ "${EFI_PATH}" != "" ] && [ "${ESP}" != "" ]; then
       echo "Adding Linux Firmware Updater entry" >&2
 cat << EOF

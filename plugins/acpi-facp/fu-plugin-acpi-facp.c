@@ -10,14 +10,8 @@
 
 #include "fu-acpi-facp.h"
 
-void
-fu_plugin_init(FuPlugin *plugin)
-{
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
-}
-
-void
-fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_acpi_facp_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *path = NULL;
@@ -55,4 +49,11 @@ fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* success */
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->add_security_attrs = fu_plugin_acpi_facp_add_security_attrs;
 }

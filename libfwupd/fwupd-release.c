@@ -31,6 +31,7 @@ fwupd_release_finalize(GObject *object);
 
 typedef struct {
 	GPtrArray *checksums;
+	GPtrArray *tags;
 	GPtrArray *categories;
 	GPtrArray *issues;
 	GHashTable *metadata;
@@ -41,6 +42,7 @@ typedef struct {
 	gchar *details_url;
 	gchar *source_url;
 	gchar *appstream_id;
+	gchar *id;
 	gchar *detach_caption;
 	gchar *detach_image;
 	gchar *license;
@@ -488,6 +490,72 @@ fwupd_release_has_checksum(FwupdRelease *self, const gchar *checksum)
 }
 
 /**
+ * fwupd_release_get_tags:
+ * @self: a #FwupdRelease
+ *
+ * Gets the release tags.
+ *
+ * Returns: (element-type utf8) (transfer none): the tags, which may be empty
+ *
+ * Since: 1.7.3
+ **/
+GPtrArray *
+fwupd_release_get_tags(FwupdRelease *self)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
+	return priv->tags;
+}
+
+/**
+ * fwupd_release_add_tag:
+ * @self: a #FwupdRelease
+ * @tag: the update tag, e.g. `vendor-factory-2021q1`
+ *
+ * Adds a specific release tag.
+ *
+ * Since: 1.7.3
+ **/
+void
+fwupd_release_add_tag(FwupdRelease *self, const gchar *tag)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+	g_return_if_fail(tag != NULL);
+	for (guint i = 0; i < priv->tags->len; i++) {
+		const gchar *tag_tmp = g_ptr_array_index(priv->tags, i);
+		if (g_strcmp0(tag_tmp, tag) == 0)
+			return;
+	}
+	g_ptr_array_add(priv->tags, g_strdup(tag));
+}
+
+/**
+ * fwupd_release_has_tag:
+ * @self: a #FwupdRelease
+ * @tag: the update tag, e.g. `vendor-factory-2021q1`
+ *
+ * Finds out if the release has a specific tag.
+ *
+ * Returns: %TRUE if the release matches
+ *
+ * Since: 1.7.3
+ **/
+gboolean
+fwupd_release_has_tag(FwupdRelease *self, const gchar *tag)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), FALSE);
+	g_return_val_if_fail(tag != NULL, FALSE);
+	for (guint i = 0; i < priv->tags->len; i++) {
+		const gchar *tag_tmp = g_ptr_array_index(priv->tags, i);
+		if (g_strcmp0(tag_tmp, tag) == 0)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+/**
  * fwupd_release_get_metadata:
  * @self: a #FwupdRelease
  *
@@ -859,6 +927,47 @@ fwupd_release_set_appstream_id(FwupdRelease *self, const gchar *appstream_id)
 
 	g_free(priv->appstream_id);
 	priv->appstream_id = g_strdup(appstream_id);
+}
+
+/**
+ * fwupd_release_get_id:
+ * @self: a #FwupdRelease
+ *
+ * Gets the release ID, which allows identifying the specific uploaded component.
+ *
+ * Returns: the ID, or %NULL if unset
+ *
+ * Since: 1.7.2
+ **/
+const gchar *
+fwupd_release_get_id(FwupdRelease *self)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_RELEASE(self), NULL);
+	return priv->id;
+}
+
+/**
+ * fwupd_release_set_id:
+ * @self: a #FwupdRelease
+ * @id: (nullable): the AppStream component ID, e.g. `component:1234`
+ *
+ * Sets the ID, which allows identifying the specific uploaded component.
+ *
+ * Since: 1.7.2
+ **/
+void
+fwupd_release_set_id(FwupdRelease *self, const gchar *id)
+{
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_RELEASE(self));
+
+	/* not changed */
+	if (g_strcmp0(priv->id, id) == 0)
+		return;
+
+	g_free(priv->id);
+	priv->id = g_strdup(id);
 }
 
 /**
@@ -1487,6 +1596,12 @@ fwupd_release_to_variant(FwupdRelease *self)
 				      FWUPD_RESULT_KEY_APPSTREAM_ID,
 				      g_variant_new_string(priv->appstream_id));
 	}
+	if (priv->id != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_RELEASE_ID,
+				      g_variant_new_string(priv->id));
+	}
 	if (priv->detach_caption != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
@@ -1603,6 +1718,13 @@ fwupd_release_to_variant(FwupdRelease *self)
 				      FWUPD_RESULT_KEY_URI,
 				      g_variant_new_string(g_ptr_array_index(priv->locations, 0)));
 	}
+	if (priv->tags->len > 0) {
+		g_variant_builder_add(
+		    &builder,
+		    "{sv}",
+		    FWUPD_RESULT_KEY_TAGS,
+		    g_variant_new_strv((const gchar *const *)priv->tags->pdata, priv->tags->len));
+	}
 	if (priv->homepage != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
@@ -1670,6 +1792,10 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_APPSTREAM_ID) == 0) {
 		fwupd_release_set_appstream_id(self, g_variant_get_string(value, NULL));
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_RELEASE_ID) == 0) {
+		fwupd_release_set_id(self, g_variant_get_string(value, NULL));
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_DETACH_CAPTION) == 0) {
@@ -1743,6 +1869,12 @@ fwupd_release_from_key_value(FwupdRelease *self, const gchar *key, GVariant *val
 		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
 		for (guint i = 0; strv[i] != NULL; i++)
 			fwupd_release_add_location(self, strv[i]);
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_TAGS) == 0) {
+		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
+		for (guint i = 0; strv[i] != NULL; i++)
+			fwupd_release_add_tag(self, strv[i]);
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0) {
@@ -1883,6 +2015,7 @@ fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder)
 	g_return_if_fail(builder != NULL);
 
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_RELEASE_ID, priv->id);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_NAME, priv->name);
 	fwupd_common_json_add_string(builder,
@@ -1918,6 +2051,15 @@ fwupd_release_to_json(FwupdRelease *self, JsonBuilder *builder)
 		for (guint i = 0; i < priv->checksums->len; i++) {
 			const gchar *checksum = g_ptr_array_index(priv->checksums, i);
 			json_builder_add_string_value(builder, checksum);
+		}
+		json_builder_end_array(builder);
+	}
+	if (priv->tags->len > 0) {
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_TAGS);
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < priv->tags->len; i++) {
+			const gchar *tag = g_ptr_array_index(priv->tags, i);
+			json_builder_add_string_value(builder, tag);
 		}
 		json_builder_end_array(builder);
 	}
@@ -1999,6 +2141,7 @@ fwupd_release_to_string(FwupdRelease *self)
 
 	str = g_string_new("");
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_APPSTREAM_ID, priv->appstream_id);
+	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_RELEASE_ID, priv->id);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_REMOTE_ID, priv->remote_id);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_SUMMARY, priv->summary);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DESCRIPTION, priv->description);
@@ -2018,6 +2161,10 @@ fwupd_release_to_string(FwupdRelease *self)
 		const gchar *checksum = g_ptr_array_index(priv->checksums, i);
 		g_autofree gchar *checksum_display = fwupd_checksum_format_for_display(checksum);
 		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_CHECKSUM, checksum_display);
+	}
+	for (guint i = 0; i < priv->tags->len; i++) {
+		const gchar *tag = g_ptr_array_index(priv->tags, i);
+		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_TAGS, tag);
 	}
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_LICENSE, priv->license);
 	fwupd_pad_kv_siz(str, FWUPD_RESULT_KEY_SIZE, priv->size);
@@ -2068,6 +2215,7 @@ fwupd_release_init(FwupdRelease *self)
 	priv->categories = g_ptr_array_new_with_free_func(g_free);
 	priv->issues = g_ptr_array_new_with_free_func(g_free);
 	priv->checksums = g_ptr_array_new_with_free_func(g_free);
+	priv->tags = g_ptr_array_new_with_free_func(g_free);
 	priv->locations = g_ptr_array_new_with_free_func(g_free);
 	priv->metadata = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
@@ -2082,6 +2230,7 @@ fwupd_release_finalize(GObject *object)
 	g_free(priv->filename);
 	g_free(priv->protocol);
 	g_free(priv->appstream_id);
+	g_free(priv->id);
 	g_free(priv->detach_caption);
 	g_free(priv->detach_image);
 	g_free(priv->license);
@@ -2101,6 +2250,7 @@ fwupd_release_finalize(GObject *object)
 	g_ptr_array_unref(priv->categories);
 	g_ptr_array_unref(priv->issues);
 	g_ptr_array_unref(priv->checksums);
+	g_ptr_array_unref(priv->tags);
 	g_hash_table_unref(priv->metadata);
 
 	G_OBJECT_CLASS(fwupd_release_parent_class)->finalize(object);

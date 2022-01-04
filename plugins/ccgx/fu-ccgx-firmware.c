@@ -162,17 +162,6 @@ fu_ccgx_firmware_add_record(FuCcgxFirmware *self,
 	return TRUE;
 }
 
-static guint8
-fu_ccgx_firmware_record_calc_checksum(FuCcgxFirmwareRecord *rcd)
-{
-	guint8 csum = 0x0;
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(rcd->data, &bufsz);
-	for (gsize j = 0; j < bufsz; j++)
-		csum += buf[j];
-	return csum;
-}
-
 static gboolean
 fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, GError **error)
 {
@@ -238,7 +227,7 @@ fu_ccgx_firmware_parse_md_block(FuCcgxFirmware *self, FwupdInstallFlags flags, G
 	}
 	for (guint i = 0; i < self->records->len - 1; i++) {
 		rcd = g_ptr_array_index(self->records, i);
-		checksum_calc += fu_ccgx_firmware_record_calc_checksum(rcd);
+		checksum_calc += fu_common_sum8_bytes(rcd->data);
 		fw_size += g_bytes_get_size(rcd->data);
 	}
 	if (fw_size != metadata.fw_size) {

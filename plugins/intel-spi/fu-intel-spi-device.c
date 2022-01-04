@@ -470,7 +470,9 @@ fu_intel_spi_device_set_quirk_kv(FuDevice *device,
 {
 	FuIntelSpiDevice *self = FU_INTEL_SPI_DEVICE(device);
 	if (g_strcmp0(key, "IntelSpiBar") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
+		guint64 tmp = 0;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
 		self->phys_spibar = tmp;
 		return TRUE;
 	}
@@ -510,8 +512,8 @@ fu_intel_spi_device_init(FuIntelSpiDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_icon(FU_DEVICE(self), "computer");
 	fu_device_set_physical_id(FU_DEVICE(self), "intel_spi");
-	fu_device_register_private_flag(FU_DEVICE(self), FU_INTEL_SPI_DEVICE_FLAG_ICH, "ICH");
-	fu_device_register_private_flag(FU_DEVICE(self), FU_INTEL_SPI_DEVICE_FLAG_PCH, "PCH");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_INTEL_SPI_DEVICE_FLAG_ICH, "ich");
+	fu_device_register_private_flag(FU_DEVICE(self), FU_INTEL_SPI_DEVICE_FLAG_PCH, "pch");
 }
 
 static void

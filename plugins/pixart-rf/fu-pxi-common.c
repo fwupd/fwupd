@@ -9,24 +9,6 @@
 
 #include "fu-pxi-common.h"
 
-guint8
-fu_pxi_common_sum8(const guint8 *buf, gsize bufsz)
-{
-	guint8 checksum = 0;
-	for (gsize idx = 0; idx < bufsz; idx++)
-		checksum += (guint8)buf[idx];
-	return checksum;
-}
-
-guint16
-fu_pxi_common_sum16(const guint8 *buf, gsize bufsz)
-{
-	guint16 checksum = 0;
-	for (gsize idx = 0; idx < bufsz; idx++)
-		checksum += (guint8)buf[idx];
-	return checksum;
-}
-
 const gchar *
 fu_pxi_spec_check_result_to_string(guint8 spec_check_result)
 {
@@ -172,7 +154,7 @@ fu_pxi_composite_receiver_cmd(guint8 opcode,
 	g_byte_array_prepend(wireless_mod_cmd, &rf_cmd_code, 0x01); /* command code */
 
 	/* prepend checksum */
-	checksum = fu_pxi_common_sum8(wireless_mod_cmd->data, wireless_mod_cmd->len);
+	checksum = fu_common_sum8(wireless_mod_cmd->data, wireless_mod_cmd->len);
 	g_byte_array_prepend(wireless_mod_cmd, &checksum, 0x01);
 
 	/* prepend feature report id */

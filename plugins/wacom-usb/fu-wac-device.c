@@ -457,18 +457,6 @@ fu_wac_device_switch_to_flash_loader(FuWacDevice *self, GError **error)
 						error);
 }
 
-static FuFirmware *
-fu_wac_device_prepare_firmware(FuDevice *device,
-			       GBytes *fw,
-			       FwupdInstallFlags flags,
-			       GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_wac_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_wac_device_write_firmware(FuDevice *device,
 			     FuFirmware *firmware,
@@ -595,7 +583,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 		}
 
 		/* calculate expected checksum and save to device RAM */
-		csum_local[i] = fu_wac_calculate_checksum32le_bytes(blob_block);
+		csum_local[i] = GUINT32_TO_LE(fu_common_sum32w_bytes(blob_block, G_LITTLE_ENDIAN));
 		if (g_getenv("FWUPD_WACOM_USB_VERBOSE") != NULL)
 			g_debug("block checksum %02u: 0x%08x", i, csum_local[i]);
 		if (!fu_wac_device_set_checksum_of_block(self, i, csum_local[i], error))
@@ -674,8 +662,10 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 	g_autofree gchar *name = NULL;
+	g_autofree gchar *name_id6 = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(FuWacModule) module = NULL;
+	g_autoptr(FuWacModule) module_id6 = NULL;
 	guint16 fw_ver;
 
 	/* it can take up to 5s to get the new version after a fw update */
@@ -714,14 +704,14 @@ fu_wac_device_add_modules_bluetooth(FuWacDevice *self, GError **error)
 	fu_device_set_version(FU_DEVICE(module), version);
 	fu_device_set_version_raw(FU_DEVICE(module), fw_ver);
 
-	name = g_strdup_printf("%s [Legacy Bluetooth Module (ID6)]",
-			       fu_device_get_name(FU_DEVICE(self)));
-	module =
+	name_id6 = g_strdup_printf("%s [Legacy Bluetooth Module (ID6)]",
+				   fu_device_get_name(FU_DEVICE(self)));
+	module_id6 =
 	    fu_wac_module_bluetooth_id6_new(fu_device_get_context(FU_DEVICE(self)), usb_device);
-	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module));
-	fu_device_set_name(FU_DEVICE(module), name);
-	fu_device_set_version(FU_DEVICE(module), version);
-	fu_device_set_version_raw(FU_DEVICE(module), fw_ver);
+	fu_device_add_child(FU_DEVICE(self), FU_DEVICE(module_id6));
+	fu_device_set_name(FU_DEVICE(module_id6), name_id6);
+	fu_device_set_version(FU_DEVICE(module_id6), version);
+	fu_device_set_version_raw(FU_DEVICE(module_id6), fw_ver);
 	return TRUE;
 }
 
@@ -921,6 +911,7 @@ fu_wac_device_init(FuWacDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_BCD);
 	fu_device_set_install_duration(FU_DEVICE(self), 10);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_WAC_FIRMWARE);
 }
 
 static void
@@ -940,7 +931,6 @@ fu_wac_device_class_init(FuWacDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_wac_device_finalize;
-	klass_device->prepare_firmware = fu_wac_device_prepare_firmware;
 	klass_device->write_firmware = fu_wac_device_write_firmware;
 	klass_device->to_string = fu_wac_device_to_string;
 	klass_device->setup = fu_wac_device_setup;

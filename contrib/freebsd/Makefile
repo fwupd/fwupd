@@ -18,7 +18,6 @@ BUILD_DEPENDS=	gtkdoc-scan:textproc/gtk-doc \
 		${PYTHON_PKGNAMEPREFIX}gobject3>0:devel/py-gobject3@${PY_FLAVOR}
 LIB_DEPENDS=	libcurl.so:ftp/curl \
 		libefiboot.so:devel/libefiboot \
-		libelf.so:devel/libelf \
 		libgcab-1.0.so:archivers/gcab \
 		libgnutls.so:security/gnutls \
 		libgpg-error.so:security/libgpg-error \
@@ -42,7 +41,6 @@ USE_LDCONFIG=	yes
 SHEBANG_GLOB=	*.py
 
 MESON_ARGS=	-Dgudev=false \
-		-Dplugin_altos=false \
 		-Dplugin_amt=false \
 		-Dplugin_dell=false \
 		-Dplugin_emmc=false \
@@ -56,6 +54,7 @@ MESON_ARGS=	-Dgudev=false \
 		-Dplugin_tpm=false \
 		-Dpolkit=false \
 		-Dsystemd=false \
+		-Doffline=false \
 		-Dtests=false \
 		-Ddocs=gtkdoc \
 		-Defi_binary=false

@@ -48,16 +48,15 @@ fu_mei_hfsts_to_string(FuPlugin *plugin, guint idt, GString *str)
 	fu_mei_hfsts6_to_string(priv->hfsts6, idt + 1, str);
 }
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_pci_mei_init(FuPlugin *plugin)
 {
 	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem(plugin, "pci");
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_pci_mei_destroy(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (data->pci_device != NULL)
@@ -149,8 +148,8 @@ fu_mei_parse_fwvers(FuPlugin *plugin, const gchar *fwvers, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_pci_mei_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	const gchar *fwvers;
@@ -499,8 +498,8 @@ fu_plugin_add_security_attrs_mei_version(FuPlugin *plugin, FuSecurityAttrs *attr
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
-void
-fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_pci_mei_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 
@@ -514,4 +513,14 @@ fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fu_plugin_add_security_attrs_override_strap(plugin, attrs);
 	fu_plugin_add_security_attrs_bootguard(plugin, attrs);
 	fu_plugin_add_security_attrs_mei_version(plugin, attrs);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_pci_mei_init;
+	vfuncs->destroy = fu_plugin_pci_mei_destroy;
+	vfuncs->add_security_attrs = fu_plugin_pci_mei_add_security_attrs;
+	vfuncs->backend_device_added = fu_plugin_pci_mei_backend_device_added;
 }

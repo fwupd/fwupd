@@ -52,7 +52,6 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
-      sqlite,
       libsmbios_c,
       valgrind,
       tpm2tss,

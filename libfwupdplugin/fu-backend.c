@@ -24,6 +24,7 @@ typedef struct {
 	gboolean enabled;
 	gboolean done_setup;
 	GHashTable *devices; /* device_id : * FuDevice */
+	GThread *thread_init;
 } FuBackendPrivate;
 
 enum { SIGNAL_ADDED, SIGNAL_REMOVED, SIGNAL_CHANGED, SIGNAL_LAST };
@@ -50,6 +51,7 @@ fu_backend_device_added(FuBackend *self, FuDevice *device)
 	FuBackendPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_BACKEND(self));
 	g_return_if_fail(FU_IS_DEVICE(device));
+	g_return_if_fail(priv->thread_init == g_thread_self());
 
 	/* assign context if unset */
 	if (fu_device_get_context(device) == NULL)
@@ -77,6 +79,7 @@ fu_backend_device_removed(FuBackend *self, FuDevice *device)
 	FuBackendPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_BACKEND(self));
 	g_return_if_fail(FU_IS_DEVICE(device));
+	g_return_if_fail(priv->thread_init == g_thread_self());
 	g_signal_emit(self, signals[SIGNAL_REMOVED], 0, device);
 	g_hash_table_remove(priv->devices, fu_device_get_backend_id(device));
 }
@@ -93,8 +96,10 @@ fu_backend_device_removed(FuBackend *self, FuDevice *device)
 void
 fu_backend_device_changed(FuBackend *self, FuDevice *device)
 {
+	FuBackendPrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_BACKEND(self));
 	g_return_if_fail(FU_IS_DEVICE(device));
+	g_return_if_fail(priv->thread_init == g_thread_self());
 	g_signal_emit(self, signals[SIGNAL_CHANGED], 0, device);
 }
 
@@ -321,6 +326,7 @@ fu_backend_init(FuBackend *self)
 {
 	FuBackendPrivate *priv = GET_PRIVATE(self);
 	priv->enabled = TRUE;
+	priv->thread_init = g_thread_self();
 	priv->devices =
 	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
 }

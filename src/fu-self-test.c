@@ -1255,7 +1255,6 @@ fu_engine_partial_hash_func(gconstpointer user_data)
 
 	/* set up dummy plugin */
 	fu_plugin_set_name(plugin, "test");
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_engine_add_plugin(engine, plugin);
 
 	/* add two dummy devices */
@@ -1783,6 +1782,10 @@ fu_engine_history_func(gconstpointer user_data)
 	/* check the history database */
 	history = fu_history_new();
 	device2 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error);
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_test_skip("no sqlite support");
+		return;
+	}
 	g_assert_no_error(error);
 	g_assert_nonnull(device2);
 	g_assert_cmpint(fu_device_get_update_state(device2), ==, FWUPD_UPDATE_STATE_SUCCESS);
@@ -1793,8 +1796,8 @@ fu_engine_history_func(gconstpointer user_data)
 	checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob_cab);
 	device_str_expected =
 	    g_strdup_printf("FuDevice:\n"
-			    "Test Device\n"
 			    "  DeviceId:             894e8c17a29428b09d10cd90d1db74ea76fbcfe8\n"
+			    "  Name:                 Test Device\n"
 			    "  Guid:                 12345678-1234-1234-1234-123456789012\n"
 			    "  Plugin:               test\n"
 			    "  Flags:                updatable|historical\n"
@@ -1934,6 +1937,11 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 	g_autoptr(XbSilo) silo = NULL;
 
+#ifndef HAVE_SQLITE
+	g_test_skip("no sqlite support");
+	return;
+#endif
+
 	/* delete history */
 	localstatedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR_PKG);
 	history_db = g_build_filename(localstatedir, "pending.db", NULL);
@@ -2003,7 +2011,8 @@ fu_engine_history_inherit(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_version(device), ==, "1.2.2");
 
 	/* activate the device */
-	ret = fu_engine_activate(engine, fu_device_get_id(device), &error);
+	fu_progress_reset(progress);
+	ret = fu_engine_activate(engine, fu_device_get_id(device), progress, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
@@ -2223,6 +2232,10 @@ fu_engine_history_error_func(gconstpointer user_data)
 	/* check the history database */
 	history = fu_history_new();
 	device2 = fu_history_get_device_by_id(history, fu_device_get_id(device), &error2);
+	if (g_error_matches(error2, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+		g_test_skip("no sqlite support");
+		return;
+	}
 	g_assert_no_error(error2);
 	g_assert_nonnull(device2);
 	g_assert_cmpint(fu_device_get_update_state(device2), ==, FWUPD_UPDATE_STATE_FAILED);
@@ -2234,8 +2247,8 @@ fu_engine_history_error_func(gconstpointer user_data)
 	checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, blob_cab);
 	device_str_expected =
 	    g_strdup_printf("FuDevice:\n"
-			    "Test Device\n"
 			    "  DeviceId:             894e8c17a29428b09d10cd90d1db74ea76fbcfe8\n"
+			    "  Name:                 Test Device\n"
 			    "  Guid:                 12345678-1234-1234-1234-123456789012\n"
 			    "  Plugin:               test\n"
 			    "  Flags:                updatable|historical\n"
@@ -2778,6 +2791,11 @@ fu_history_migrate_func(gconstpointer user_data)
 	g_autoptr(FuHistory) history = NULL;
 	g_autofree gchar *filename = NULL;
 
+#ifndef HAVE_SQLITE
+	g_test_skip("no sqlite support");
+	return;
+#endif
+
 	/* load old version */
 	filename = g_test_build_filename(G_TEST_DIST, "tests", "history_v1.db", NULL);
 	file_src = g_file_new_for_path(filename);
@@ -2878,7 +2896,7 @@ fu_plugin_module_func(gconstpointer user_data)
 	g_assert_cmpstr(fu_device_get_name(device), ==, "Integrated Webcam™");
 	g_signal_handlers_disconnect_by_data(self->plugin, &device);
 
-#ifdef _WIN32
+#ifndef HAVE_FWUPDOFFLINE
 	g_test_skip("No offline update support on Windows");
 	return;
 #endif
@@ -2983,6 +3001,11 @@ fu_history_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) approved_firmware = NULL;
 	g_autofree gchar *dirname = NULL;
 	g_autofree gchar *filename = NULL;
+
+#ifndef HAVE_SQLITE
+	g_test_skip("no sqlite support");
+	return;
+#endif
 
 	/* create */
 	history = fu_history_new();
@@ -3176,6 +3199,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) install_tasks =
 	    g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(XbSilo) silo_empty = xb_silo_new();
 	g_autoptr(XbSilo) silo = NULL;
 
@@ -3298,6 +3322,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 				      request,
 				      install_tasks,
 				      blob,
+				      progress,
 				      FWUPD_DEVICE_FLAG_NONE,
 				      &error);
 	g_assert_no_error(error);

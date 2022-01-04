@@ -311,7 +311,6 @@ fu_logitech_bulkcontroller_device_send_sync_cmd(FuLogitechBulkcontrollerDevice *
 						GError **error)
 {
 	g_autoptr(GByteArray) buf_pkt = g_byte_array_new();
-	g_autoptr(GByteArray) buf_ack = g_byte_array_new();
 
 	fu_byte_array_append_uint32(buf_pkt, cmd, G_LITTLE_ENDIAN); /* Type(T) : Command type */
 	fu_byte_array_append_uint32(buf_pkt,

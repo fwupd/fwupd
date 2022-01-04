@@ -420,9 +420,9 @@ fu_chunk_array_new(const guint8 *data,
 	guint32 idx;
 	guint32 last_flush = 0;
 
-	g_return_val_if_fail(data_sz > 0, NULL);
-
 	chunks = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	if (data_sz == 0)
+		return chunks;
 	for (idx = 1; idx < data_sz; idx++) {
 		guint32 page = 0;
 		if (page_sz > 0)

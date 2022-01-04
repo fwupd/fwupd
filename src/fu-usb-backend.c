@@ -39,8 +39,15 @@ fu_usb_backend_device_removed_cb(GUsbContext *ctx, GUsbDevice *usb_device, FuBac
 	/* find the device we enumerated */
 	device_tmp =
 	    fu_backend_lookup_by_id(FU_BACKEND(self), g_usb_device_get_platform_id(usb_device));
-	if (device_tmp != NULL)
+	if (device_tmp != NULL &&
+	    !fu_device_has_internal_flag(device_tmp, FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE))
 		fu_backend_device_removed(backend, device_tmp);
+}
+
+static void
+fu_usb_backend_context_finalized_cb(gpointer data, GObject *where_the_object_was)
+{
+	g_critical("GUsbContext %p was finalized from under our feet!", where_the_object_was);
 }
 
 static gboolean
@@ -53,6 +60,7 @@ fu_usb_backend_setup(FuBackend *backend, GError **error)
 		g_prefix_error(error, "failed to get USB context: ");
 		return FALSE;
 	}
+	g_object_weak_ref(G_OBJECT(self->usb_ctx), fu_usb_backend_context_finalized_cb, self);
 	g_signal_connect(self->usb_ctx,
 			 "device-added",
 			 G_CALLBACK(fu_usb_backend_device_added_cb),
@@ -77,8 +85,13 @@ static void
 fu_usb_backend_finalize(GObject *object)
 {
 	FuUsbBackend *self = FU_USB_BACKEND(object);
-	if (self->usb_ctx != NULL)
+
+	if (self->usb_ctx != NULL) {
+		g_object_weak_unref(G_OBJECT(self->usb_ctx),
+				    fu_usb_backend_context_finalized_cb,
+				    self);
 		g_object_unref(self->usb_ctx);
+	}
 	G_OBJECT_CLASS(fu_usb_backend_parent_class)->finalize(object);
 }
 

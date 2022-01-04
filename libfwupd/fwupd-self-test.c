@@ -424,6 +424,8 @@ fwupd_device_func(void)
 	fwupd_release_set_size(rel, 1024);
 	fwupd_release_add_location(rel, "http://foo.com");
 	fwupd_release_add_location(rel, "ftp://foo.com");
+	fwupd_release_add_tag(rel, "vendor-2021q1");
+	fwupd_release_add_tag(rel, "vendor-2021q2");
 	fwupd_release_set_version(rel, "1.2.3");
 	fwupd_device_add_release(dev, rel);
 	str = fwupd_device_to_string(dev);
@@ -439,8 +441,9 @@ fwupd_device_func(void)
 	str_ascii = g_string_new(str);
 	_g_string_replace(str_ascii, " ", " ");
 	ret = fu_test_compare_lines(str_ascii->str,
-				    "ColorHug2\n"
+				    "FwupdDevice:\n"
 				    "  DeviceId:             USB:foo\n"
+				    "  Name:                 ColorHug2\n"
 				    "  Guid:                 2082b5e0-7a64-478a-b1b2-e3404fab6dad\n"
 				    "  Guid:                 00000000-0000-0000-0000-000000000000\n"
 				    "  Flags:                updatable|require-ac\n"
@@ -455,6 +458,8 @@ fwupd_device_func(void)
 				    "  Version:              1.2.3\n"
 				    "  Filename:             firmware.bin\n"
 				    "  Checksum:             SHA1(deadbeef)\n"
+				    "  Tags:                 vendor-2021q1\n"
+				    "  Tags:                 vendor-2021q2\n"
 				    "  Size:                 1.0 kB\n"
 				    "  Uri:                  http://foo.com\n"
 				    "  Uri:                  ftp://foo.com\n"
@@ -504,6 +509,10 @@ fwupd_device_func(void)
 				    "      \"Checksum\" : [\n"
 				    "        \"deadbeef\"\n"
 				    "      ],\n"
+				    "      \"Tags\" : [\n"
+				    "        \"vendor-2021q1\",\n"
+				    "        \"vendor-2021q2\"\n"
+				    "      ],\n"
 				    "      \"Size\" : 1024,\n"
 				    "      \"Locations\" : [\n"
 				    "        \"http://foo.com\",\n"
@@ -534,7 +543,8 @@ fwupd_client_devices_func(void)
 
 	/* only run if running fwupd is new enough */
 	ret = fwupd_client_connect(client, NULL, &error);
-	if (ret == FALSE && g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_TIMED_OUT)) {
+	if (ret == FALSE && (g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_TIMED_OUT) ||
+			     g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN))) {
 		g_debug("%s", error->message);
 		g_test_skip("timeout connecting to daemon");
 		return;
@@ -588,7 +598,8 @@ fwupd_client_remotes_func(void)
 
 	/* only run if running fwupd is new enough */
 	ret = fwupd_client_connect(client, NULL, &error);
-	if (ret == FALSE && g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_TIMED_OUT)) {
+	if (ret == FALSE && (g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_TIMED_OUT) ||
+			     g_error_matches(error, G_DBUS_ERROR, G_DBUS_ERROR_SERVICE_UNKNOWN))) {
 		g_debug("%s", error->message);
 		g_test_skip("timeout connecting to daemon");
 		return;
@@ -689,8 +700,10 @@ fwupd_common_device_id_func(void)
 static void
 fwupd_common_guid_func(void)
 {
+	const guint8 msbuf[] = "hello world!";
 	g_autofree gchar *guid1 = NULL;
 	g_autofree gchar *guid2 = NULL;
+	g_autofree gchar *guid3 = NULL;
 	g_autofree gchar *guid_be = NULL;
 	g_autofree gchar *guid_me = NULL;
 	fwupd_guid_t buf = {0x0};
@@ -702,6 +715,7 @@ fwupd_common_guid_func(void)
 	g_assert_false(fwupd_guid_is_valid(""));
 	g_assert_false(fwupd_guid_is_valid("1ff60ab2-3905-06a1-b476"));
 	g_assert_false(fwupd_guid_is_valid("1ff60ab2-XXXX-XXXX-XXXX-0371f00c9e9b"));
+	g_assert_false(fwupd_guid_is_valid("1ff60ab2-XXXX-XXXX-XXXX-0371f00c9e9bf"));
 	g_assert_false(fwupd_guid_is_valid(" 1ff60ab2-3905-06a1-b476-0371f00c9e9b"));
 	g_assert_false(fwupd_guid_is_valid("00000000-0000-0000-0000-000000000000"));
 
@@ -714,6 +728,9 @@ fwupd_common_guid_func(void)
 
 	guid2 = fwupd_guid_hash_string("8086:0406");
 	g_assert_cmpstr(guid2, ==, "1fbd1f2c-80f4-5d7c-a6ad-35c7b9bd5486");
+
+	guid3 = fwupd_guid_hash_data(msbuf, sizeof(msbuf), FWUPD_GUID_FLAG_NAMESPACE_MICROSOFT);
+	g_assert_cmpstr(guid3, ==, "6836cfac-f77a-527f-b375-4f92f01449c5");
 
 	/* round-trip BE */
 	ret = fwupd_guid_from_string("00112233-4455-6677-8899-aabbccddeeff",

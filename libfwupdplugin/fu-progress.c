@@ -535,7 +535,6 @@ fu_progress_finished(FuProgress *self)
 	/* all done */
 	priv->step_now = priv->step_max;
 	fu_progress_set_percentage(self, 100);
-	fu_progress_set_status(self, FWUPD_STATUS_UNKNOWN);
 }
 
 static gdouble
@@ -598,6 +597,12 @@ fu_progress_child_percentage_changed_cb(FuProgress *child, guint percentage, FuP
 	if (priv->step_now >= priv->step_max) {
 		g_warning("already at %u/%u step_max", priv->step_now, priv->step_max);
 		return;
+	}
+
+	/* if the child finished, set the status back to the last parent status */
+	if (percentage == 100 && priv->steps->len > 0) {
+		FuProgressStep *step = g_ptr_array_index(priv->steps, priv->step_now);
+		fu_progress_set_status(self, step->status);
 	}
 
 	/* we have to deal with non-linear step_max */

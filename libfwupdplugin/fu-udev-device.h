@@ -33,6 +33,7 @@ struct _FuUdevDeviceClass {
  * @FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT:	Get the vendor ID fallback from the parent
  * @FU_UDEV_DEVICE_FLAG_USE_CONFIG:		Read and write from the device config
  * @FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK:		Open nonblocking, e.g. O_NONBLOCK
+ * @FU_UDEV_DEVICE_FLAG_OPEN_SYNC:		Open sync, e.g. O_SYNC
  *
  * Flags used when opening the device using fu_device_open().
  **/
@@ -43,6 +44,7 @@ typedef enum {
 	FU_UDEV_DEVICE_FLAG_VENDOR_FROM_PARENT = 1 << 2,
 	FU_UDEV_DEVICE_FLAG_USE_CONFIG = 1 << 3,
 	FU_UDEV_DEVICE_FLAG_OPEN_NONBLOCK = 1 << 4,
+	FU_UDEV_DEVICE_FLAG_OPEN_SYNC = 1 << 5,
 	/*< private >*/
 	FU_UDEV_DEVICE_FLAG_LAST
 } FuUdevDeviceFlags;
@@ -61,6 +63,10 @@ const gchar *
 fu_udev_device_get_sysfs_path(FuUdevDevice *self);
 const gchar *
 fu_udev_device_get_subsystem(FuUdevDevice *self);
+const gchar *
+fu_udev_device_get_bind_id(FuUdevDevice *self);
+void
+fu_udev_device_set_bind_id(FuUdevDevice *self, const gchar *bind_id);
 const gchar *
 fu_udev_device_get_driver(FuUdevDevice *self);
 guint32
@@ -113,8 +119,15 @@ fu_udev_device_pread_full(FuUdevDevice *self,
 			  guint8 *buf,
 			  gsize bufsz,
 			  GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_udev_device_seek(FuUdevDevice *self, goffset offset, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 const gchar *
 fu_udev_device_get_sysfs_attr(FuUdevDevice *self, const gchar *attr, GError **error);
+gboolean
+fu_udev_device_get_sysfs_attr_uint64(FuUdevDevice *self,
+				     const gchar *attr,
+				     guint64 *value,
+				     GError **error);
 gchar *
 fu_udev_device_get_parent_name(FuUdevDevice *self);
 

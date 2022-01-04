@@ -2740,20 +2740,18 @@ gchar *
 fwupd_device_to_string(FwupdDevice *self)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	GString *str;
+	GString *str = g_string_new(NULL);
 	g_autoptr(GPtrArray) guid_helpers = NULL;
 
 	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
 
-	str = g_string_new("");
-	if (priv->name != NULL)
-		g_string_append_printf(str, "%s\n", priv->name);
-	else
-		str = g_string_append(str, "Unknown Device\n");
+	g_string_append_printf(str, "%s:\n", G_OBJECT_TYPE_NAME(self));
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
 	if (g_strcmp0(priv->composite_id, priv->parent_id) != 0)
 		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, priv->parent_id);
 	fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_COMPOSITE_ID, priv->composite_id);
+	if (priv->name != NULL)
+		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_NAME, priv->name);
 	if (priv->status != FWUPD_STATUS_UNKNOWN) {
 		fwupd_pad_kv_str(str,
 				 FWUPD_RESULT_KEY_STATUS,

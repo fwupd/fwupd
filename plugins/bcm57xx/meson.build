@@ -1,3 +1,7 @@
+if get_option('plugin_bcm57xx')
+if not get_option('gudev')
+  error('gudev is required for plugin_bcm57xx')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginBcm57xx"']
 
 install_data(['bcm57xx.quirk'],
@@ -66,4 +70,5 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('bcm57xx-self-test', e, env : env)
+endif
 endif

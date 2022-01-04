@@ -25,8 +25,8 @@ struct FuPluginData {
 	FuBackend *backend;
 };
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_uefi_capsule_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
@@ -34,16 +34,14 @@ fu_plugin_init(FuPlugin *plugin)
 	data->bgrt = fu_uefi_bgrt_new();
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_RUN_AFTER, "upower");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "tpm");
-	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "tpm_eventlog");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "dell");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "acpi_phat");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "uefi"); /* old name */
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_uefi_capsule_destroy(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	if (data->esp != NULL)
@@ -52,16 +50,17 @@ fu_plugin_destroy(FuPlugin *plugin)
 	g_object_unref(data->bgrt);
 }
 
-gboolean
-fu_plugin_clear_results(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_uefi_capsule_clear_results(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuUefiDevice *device_uefi = FU_UEFI_DEVICE(device);
 	return fu_uefi_device_clear_status(device_uefi, error);
 }
 
-void
-fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_uefi_capsule_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
+#ifdef HAVE_HSI
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error = NULL;
 
@@ -84,6 +83,7 @@ fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	/* success */
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+#endif
 }
 
 static GBytes *
@@ -130,15 +130,6 @@ fu_plugin_uefi_capsule_get_splash_data(guint width, guint height, GError **error
 		    langs_str,
 		    datadir_pkg);
 	return NULL;
-}
-
-static guint8
-fu_plugin_uefi_capsule_calc_checksum(const guint8 *buf, gsize sz)
-{
-	guint8 csum = 0;
-	for (gsize i = 0; i < sz; i++)
-		csum += buf[i];
-	return csum;
 }
 
 static gboolean
@@ -211,11 +202,9 @@ fu_plugin_uefi_capsule_write_splash_data(FuPlugin *plugin,
 	};
 
 	/* header, payload and image has to add to zero */
-	csum +=
-	    fu_plugin_uefi_capsule_calc_checksum((guint8 *)&capsule_header, sizeof(capsule_header));
-	csum += fu_plugin_uefi_capsule_calc_checksum((guint8 *)&header, sizeof(header));
-	csum += fu_plugin_uefi_capsule_calc_checksum(g_bytes_get_data(blob, NULL),
-						     g_bytes_get_size(blob));
+	csum += fu_common_sum8((guint8 *)&capsule_header, sizeof(capsule_header));
+	csum += fu_common_sum8((guint8 *)&header, sizeof(header));
+	csum += fu_common_sum8_bytes(blob);
 	header.checksum = 0x100 - csum;
 
 	/* write capsule file */
@@ -320,13 +309,13 @@ fu_plugin_uefi_capsule_update_splash(FuPlugin *plugin, FuDevice *device, GError 
 	return fu_plugin_uefi_capsule_write_splash_data(plugin, device, image_bmp, error);
 }
 
-gboolean
-fu_plugin_write_firmware(FuPlugin *plugin,
-			 FuDevice *device,
-			 GBytes *blob_fw,
-			 FuProgress *progress,
-			 FwupdInstallFlags flags,
-			 GError **error)
+static gboolean
+fu_plugin_uefi_capsule_write_firmware(FuPlugin *plugin,
+				      FuDevice *device,
+				      GBytes *blob_fw,
+				      FuProgress *progress,
+				      FwupdInstallFlags flags,
+				      GError **error)
 {
 	const gchar *str;
 	guint32 flashes_left;
@@ -412,8 +401,8 @@ fu_plugin_uefi_capsule_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 	fu_plugin_device_add(plugin, FU_DEVICE(dev));
 }
 
-void
-fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
+static void
+fu_plugin_uefi_capsule_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	if (fu_device_get_metadata(device, FU_DEVICE_METADATA_UEFI_DEVICE_KIND) != NULL) {
 		if (fu_device_get_guid_default(device) == NULL) {
@@ -466,15 +455,15 @@ fu_plugin_uefi_capsule_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 		return FALSE;
 
 	/* if not already set by quirks */
-	if (fu_plugin_has_custom_flag(plugin, "use-legacy-bootmgr-desc")) {
+	if (fu_context_has_hwid_flag(ctx, "use-legacy-bootmgr-desc")) {
 		fu_device_add_private_flag(FU_DEVICE(dev),
 					   FU_UEFI_DEVICE_FLAG_USE_LEGACY_BOOTMGR_DESC);
 	}
-	if (fu_plugin_has_custom_flag(plugin, "supports-boot-order-lock")) {
+	if (fu_context_has_hwid_flag(ctx, "supports-boot-order-lock")) {
 		fu_device_add_private_flag(FU_DEVICE(dev),
 					   FU_UEFI_DEVICE_FLAG_SUPPORTS_BOOT_ORDER_LOCK);
 	}
-	if (fu_plugin_has_custom_flag(plugin, "no-ux-capsule"))
+	if (fu_context_has_hwid_flag(ctx, "no-ux-capsule"))
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE);
 
 	/* set fallback name if nothing else is set */
@@ -520,26 +509,26 @@ fu_plugin_uefi_capsule_test_secure_boot(FuPlugin *plugin)
 	fu_plugin_add_report_metadata(plugin, "SecureBoot", result_str);
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_uefi_capsule_startup(FuPlugin *plugin, GError **error)
 {
+	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	guint64 nvram_total;
 	g_autofree gchar *esp_path = NULL;
 	g_autofree gchar *nvram_total_str = NULL;
 	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GError) error_fde = NULL;
 
 	/* don't let user's environment influence test suite failures */
 	if (g_getenv("FWUPD_UEFI_TEST") != NULL)
 		return TRUE;
 
 	/* for the uploaded report */
-	if (fu_plugin_has_custom_flag(plugin, "use-legacy-bootmgr-desc"))
+	if (fu_context_has_hwid_flag(ctx, "use-legacy-bootmgr-desc"))
 		fu_plugin_add_report_metadata(plugin, "BootMgrDesc", "legacy");
 
 	/* some platforms have broken SMBIOS data */
-	if (fu_plugin_has_custom_flag(plugin, "uefi-force-enable"))
+	if (fu_context_has_hwid_flag(ctx, "uefi-force-enable"))
 		return TRUE;
 
 	/* use GRUB to load updates */
@@ -586,8 +575,8 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_unlock(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_uefi_capsule_unlock(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuUefiDevice *device_uefi = FU_UEFI_DEVICE(device);
 	FuDevice *device_alt = NULL;
@@ -666,7 +655,7 @@ fu_plugin_uefi_update_state_notify_cb(GObject *object, GParamSpec *pspec, FuPlug
 		return;
 
 	/* only do this on hardware that cannot coalesce multiple capsules */
-	if (!fu_plugin_has_custom_flag(plugin, "no-coalesce"))
+	if (!fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "no-coalesce"))
 		return;
 
 	/* mark every other device for this plugin as non-updatable */
@@ -683,7 +672,7 @@ fu_plugin_uefi_update_state_notify_cb(GObject *object, GParamSpec *pspec, FuPlug
 }
 
 static gboolean
-fu_backend_uefi_check_cod_support(GError **error)
+fu_plugin_uefi_capsule_check_cod_support(GError **error)
 {
 	gsize bufsz = 0;
 	guint64 value = 0;
@@ -712,8 +701,8 @@ fu_backend_uefi_check_cod_support(GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_get_data(plugin);
@@ -737,7 +726,7 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	/* firmware may lie */
 	if (!fu_plugin_get_config_value_boolean(plugin, "DisableCapsuleUpdateOnDisk")) {
 		g_autoptr(GError) error_cod = NULL;
-		if (!fu_backend_uefi_check_cod_support(&error_cod)) {
+		if (!fu_plugin_uefi_capsule_check_cod_support(&error_cod)) {
 			g_debug("not using CapsuleOnDisk support: %s", error_cod->message);
 		} else {
 			fu_uefi_backend_set_device_gtype(FU_UEFI_BACKEND(data->backend),
@@ -757,11 +746,20 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	devices = fu_backend_get_devices(data->backend);
 	for (guint i = 0; i < devices->len; i++) {
 		FuUefiDevice *dev = g_ptr_array_index(devices, i);
+		g_autoptr(GError) error_device = NULL;
+
 		fu_device_set_context(FU_DEVICE(dev), ctx);
 		if (data->esp != NULL)
 			fu_uefi_device_set_esp(dev, data->esp);
-		if (!fu_plugin_uefi_capsule_coldplug_device(plugin, dev, error))
+		if (!fu_plugin_uefi_capsule_coldplug_device(plugin, dev, &error_device)) {
+			if (g_error_matches(error_device, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+				g_warning("skipping device that failed coldplug: %s",
+					  error_device->message);
+				continue;
+			}
+			g_propagate_error(error, g_steal_pointer(&error_device));
 			return FALSE;
+		}
 		fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_UPDATABLE);
 		fu_device_add_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 
@@ -790,4 +788,19 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	fu_plugin_add_report_metadata(plugin, "UEFIUXCapsule", str);
 
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_uefi_capsule_init;
+	vfuncs->destroy = fu_plugin_uefi_capsule_destroy;
+	vfuncs->clear_results = fu_plugin_uefi_capsule_clear_results;
+	vfuncs->add_security_attrs = fu_plugin_uefi_capsule_add_security_attrs;
+	vfuncs->device_registered = fu_plugin_uefi_capsule_device_registered;
+	vfuncs->startup = fu_plugin_uefi_capsule_startup;
+	vfuncs->unlock = fu_plugin_uefi_capsule_unlock;
+	vfuncs->coldplug = fu_plugin_uefi_capsule_coldplug;
+	vfuncs->write_firmware = fu_plugin_uefi_capsule_write_firmware;
 }

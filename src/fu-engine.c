@@ -74,6 +74,7 @@
 #include "fu-bluez-backend.h"
 #endif
 
+#include "fu-archive-firmware.h"
 #include "fu-dfu-firmware.h"
 #include "fu-dfuse-firmware.h"
 #include "fu-fmap-firmware.h"
@@ -108,6 +109,7 @@ struct _FuEngine {
 	FuHistory *history;
 	FuIdle *idle;
 	XbSilo *silo;
+	XbQuery *query_component_by_guid;
 	guint coldplug_id;
 	FuPluginList *plugin_list;
 	GPtrArray *plugin_filter;
@@ -130,7 +132,6 @@ enum {
 	SIGNAL_DEVICE_CHANGED,
 	SIGNAL_DEVICE_REQUEST,
 	SIGNAL_STATUS_CHANGED,
-	SIGNAL_PERCENTAGE_CHANGED,
 	SIGNAL_LAST
 };
 
@@ -191,35 +192,6 @@ fu_engine_set_status(FuEngine *self, FwupdStatus status)
 	/* emit changed */
 	g_debug("Emitting PropertyChanged('Status'='%s')", fwupd_status_to_string(status));
 	g_signal_emit(self, signals[SIGNAL_STATUS_CHANGED], 0, status);
-}
-
-static void
-fu_engine_set_percentage(FuEngine *self, guint percentage)
-{
-	if (self->percentage == percentage)
-		return;
-	self->percentage = percentage;
-
-	/* emit changed */
-	g_signal_emit(self, signals[SIGNAL_PERCENTAGE_CHANGED], 0, percentage);
-}
-
-static void
-fu_engine_progress_percentage_changed_cb(FuProgress *progress, guint percentage, FuEngine *self)
-{
-	/* this is global for all the tasks and divisions */
-	fu_engine_set_percentage(self, percentage);
-}
-
-static void
-fu_engine_progress_status_changed_cb(FuProgress *progress, FwupdStatus status, FuEngine *self)
-{
-	/* ignore */
-	if (status == FWUPD_STATUS_UNKNOWN)
-		return;
-
-	/* this is global for all the tasks and divisions */
-	fu_engine_set_status(self, status);
 }
 
 static void
@@ -490,6 +462,7 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 	g_autofree gchar *summary_xpath = NULL;
 	g_autofree gchar *version_rel = NULL;
 	g_autoptr(GPtrArray) cats = NULL;
+	g_autoptr(GPtrArray) tags = NULL;
 	g_autoptr(GPtrArray) issues = NULL;
 	g_autoptr(XbNode) artifact = NULL;
 	g_autoptr(XbNode) description = NULL;
@@ -532,6 +505,9 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 		return FALSE;
 	fwupd_release_set_version(rel, version_rel);
 
+	/* optional release ID -- currently a integer but maybe namespaced in the future */
+	fwupd_release_set_id(rel, xb_node_get_attr(release, "id"));
+
 	/* find the remote */
 	remote_id = xb_node_query_text(component, "../custom/value[@key='fwupd::RemoteId']", NULL);
 	if (remote_id != NULL) {
@@ -552,7 +528,7 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 		g_autoptr(GString) str = NULL;
 		xml = xb_node_export(description, XB_NODE_EXPORT_FLAG_ONLY_CHILDREN, NULL);
 		str = g_string_new(xml);
-		if (request != NULL &&
+		if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_AFFECTS_FDE) && request != NULL &&
 		    !fu_engine_request_has_feature_flag(request, FWUPD_FEATURE_FLAG_FDE_WARNING)) {
 			g_string_prepend(
 			    str,
@@ -626,6 +602,13 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 		for (guint i = 0; i < cats->len; i++) {
 			XbNode *n = g_ptr_array_index(cats, i);
 			fwupd_release_add_category(rel, xb_node_get_text(n));
+		}
+	}
+	tags = xb_node_query(component, "tags/tag[@namespace=$'lvfs']", 0, NULL);
+	if (tags != NULL) {
+		for (guint i = 0; i < tags->len; i++) {
+			XbNode *tag = g_ptr_array_index(tags, i);
+			fwupd_release_add_tag(rel, xb_node_get_text(tag));
 		}
 	}
 	issues = xb_node_query(component, "issues/issue", 0, NULL);
@@ -879,7 +862,10 @@ fu_engine_checksum_type_to_string(GChecksumType checksum_type)
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_verify_update(FuEngine *self, const gchar *device_id, GError **error)
+fu_engine_verify_update(FuEngine *self,
+			const gchar *device_id,
+			FuProgress *progress,
+			GError **error)
 {
 	FuPlugin *plugin;
 	GPtrArray *checksums;
@@ -887,7 +873,6 @@ fu_engine_verify_update(FuEngine *self, const gchar *device_id, GError **error)
 	g_autofree gchar *fn = NULL;
 	g_autofree gchar *localstatedir = NULL;
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GFile) file = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 	g_autoptr(XbBuilderNode) component = NULL;
@@ -899,17 +884,6 @@ fu_engine_verify_update(FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* progress */
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
-	g_signal_connect(progress,
-			 "percentage-changed",
-			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
-			 self);
-	g_signal_connect(progress,
-			 "status-changed",
-			 G_CALLBACK(fu_engine_progress_status_changed_cb),
-			 self);
 
 	/* check the devices still exists */
 	device = fu_device_list_get_by_id(self->device_list, device_id, error);
@@ -990,24 +964,55 @@ fu_engine_verify_update(FuEngine *self, const gchar *device_id, GError **error)
 	return TRUE;
 }
 
+static XbNode *
+fu_engine_get_component_by_guid(FuEngine *self, const gchar *guid)
+{
+	XbNode *component;
+	g_autoptr(GError) error_local = NULL;
+#if LIBXMLB_CHECK_VERSION(0, 3, 0)
+	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
+#endif
+
+	/* no components in silo */
+	if (self->query_component_by_guid == NULL)
+		return NULL;
+
+#if LIBXMLB_CHECK_VERSION(0, 3, 0)
+	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
+	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
+	component = xb_silo_query_first_with_context(self->silo,
+						     self->query_component_by_guid,
+						     &context,
+						     &error_local);
+#else
+	if (!xb_query_bind_str(self->query_component_by_guid, 0, guid, &error_local)) {
+		g_warning("failed to bind 0: %s", error_local->message);
+		return NULL;
+	}
+	component =
+	    xb_silo_query_first_full(self->silo, self->query_component_by_guid, &error_local);
+#endif
+	if (component == NULL) {
+		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
+		    !g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
+			g_warning("ignoring: %s", error_local->message);
+		return NULL;
+	}
+	return g_object_ref(component);
+}
+
 XbNode *
 fu_engine_get_component_by_guids(FuEngine *self, FuDevice *device)
 {
 	GPtrArray *guids = fu_device_get_guids(device);
-	g_autoptr(GString) xpath = g_string_new(NULL);
-	g_autoptr(XbNode) component = NULL;
+	XbNode *component = NULL;
 	for (guint i = 0; i < guids->len; i++) {
 		const gchar *guid = g_ptr_array_index(guids, i);
-		xb_string_append_union(xpath,
-				       "components/component[@type='firmware']/"
-				       "provides/firmware[@type='flashed'][text()='%s']/"
-				       "../..",
-				       guid);
+		component = fu_engine_get_component_by_guid(self, guid);
+		if (component != NULL)
+			break;
 	}
-	component = xb_silo_query_first(self->silo, xpath->str, NULL);
-	if (component != NULL)
-		return g_steal_pointer(&component);
-	return NULL;
+	return component;
 }
 
 static XbNode *
@@ -1122,12 +1127,11 @@ fu_engine_verify_from_system_metadata(FuEngine *self, FuDevice *device, GError *
  * Returns: %TRUE for success
  **/
 gboolean
-fu_engine_verify(FuEngine *self, const gchar *device_id, GError **error)
+fu_engine_verify(FuEngine *self, const gchar *device_id, FuProgress *progress, GError **error)
 {
 	FuPlugin *plugin;
 	GPtrArray *checksums;
 	g_autoptr(FuDevice) device = NULL;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GString) xpath_csum = g_string_new(NULL);
 	g_autoptr(XbNode) csum = NULL;
@@ -1136,17 +1140,6 @@ fu_engine_verify(FuEngine *self, const gchar *device_id, GError **error)
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* progress */
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
-	g_signal_connect(progress,
-			 "percentage-changed",
-			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
-			 self);
-	g_signal_connect(progress,
-			 "status-changed",
-			 G_CALLBACK(fu_engine_progress_status_changed_cb),
-			 self);
 
 	/* check the id exists */
 	device = fu_device_list_get_by_id(self->device_list, device_id, error);
@@ -2140,6 +2133,7 @@ fu_engine_install_tasks(FuEngine *self,
 			FuEngineRequest *request,
 			GPtrArray *install_tasks,
 			GBytes *blob_cab,
+			FuProgress *progress,
 			FwupdInstallFlags flags,
 			GError **error)
 {
@@ -2147,7 +2141,6 @@ fu_engine_install_tasks(FuEngine *self,
 	g_autoptr(FuIdleLocker) locker = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) devices_new = NULL;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
 	/* do not allow auto-shutdown during this time */
 	locker = fu_idle_locker_new(self->idle, "update");
@@ -2169,15 +2162,6 @@ fu_engine_install_tasks(FuEngine *self,
 
 	/* all authenticated, so install all the things */
 	fu_progress_set_steps(progress, install_tasks->len);
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
-	g_signal_connect(progress,
-			 "percentage-changed",
-			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
-			 self);
-	g_signal_connect(progress,
-			 "status-changed",
-			 G_CALLBACK(fu_engine_progress_status_changed_cb),
-			 self);
 	for (guint i = 0; i < install_tasks->len; i++) {
 		FuInstallTask *task = g_ptr_array_index(install_tasks, i);
 		if (!fu_engine_install(self,
@@ -2228,7 +2212,6 @@ fu_engine_install_tasks(FuEngine *self,
 	}
 
 	/* success */
-	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
 	return TRUE;
 }
 
@@ -2390,6 +2373,15 @@ fu_engine_schedule_update(FuEngine *self,
 	g_autofree gchar *filename = NULL;
 	g_autoptr(FuHistory) history = NULL;
 	g_autoptr(GFile) file = NULL;
+
+#ifndef HAVE_FWUPDOFFLINE
+	/* sanity check */
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_SUPPORTED,
+		    "Not supported as compiled without offline support");
+	return FALSE;
+#endif
 
 	/* id already exists */
 	history = fu_history_new();
@@ -3073,27 +3065,15 @@ fu_engine_set_progress(FuEngine *self, const gchar *device_id, FuProgress *progr
 }
 
 gboolean
-fu_engine_activate(FuEngine *self, const gchar *device_id, GError **error)
+fu_engine_activate(FuEngine *self, const gchar *device_id, FuProgress *progress, GError **error)
 {
 	FuPlugin *plugin;
-	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 	g_autofree gchar *str = NULL;
 	g_autoptr(FuDevice) device = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(device_id != NULL, FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-	/* progress */
-	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
-	g_signal_connect(progress,
-			 "percentage-changed",
-			 G_CALLBACK(fu_engine_progress_percentage_changed_cb),
-			 self);
-	g_signal_connect(progress,
-			 "status-changed",
-			 G_CALLBACK(fu_engine_progress_status_changed_cb),
-			 self);
 
 	/* check the device exists */
 	device = fu_device_list_get_by_id(self->device_list, device_id, error);
@@ -3409,13 +3389,61 @@ fu_engine_get_item_by_id_fallback_history(FuEngine *self, const gchar *id, GErro
 	return NULL;
 }
 
+static gboolean
+fu_engine_create_silo_index(FuEngine *self, GError **error)
+{
+	g_autoptr(GPtrArray) components = NULL;
+
+	/* print what we've got */
+	components = xb_silo_query(self->silo, "components/component[@type='firmware']", 0, NULL);
+	if (components == NULL)
+		return TRUE;
+	g_debug("%u components now in silo", components->len);
+
+	/* build the index */
+	if (!xb_silo_query_build_index(self->silo, "components/component", "type", error))
+		return FALSE;
+	if (!xb_silo_query_build_index(self->silo,
+				       "components/component[@type='firmware']/provides/firmware",
+				       "type",
+				       error))
+		return FALSE;
+	if (!xb_silo_query_build_index(self->silo,
+				       "components/component[@type='firmware']/provides/firmware",
+				       NULL,
+				       error))
+		return FALSE;
+	if (!xb_silo_query_build_index(self->silo,
+				       "components/component[@type='firmware']/tags/tag",
+				       "namespace",
+				       error))
+		return FALSE;
+
+	/* create prepared queries to save time later */
+	self->query_component_by_guid =
+	    xb_query_new_full(self->silo,
+			      "components/component[@type='firmware']/"
+			      "provides/firmware[@type=$'flashed'][text()=?]/"
+			      "../..",
+			      XB_QUERY_FLAG_OPTIMIZE,
+			      error);
+	if (self->query_component_by_guid == NULL) {
+		g_prefix_error(error, "failed to prepare query: ");
+		return FALSE;
+	}
+	return TRUE;
+}
+
 /* for the self tests */
 void
 fu_engine_set_silo(FuEngine *self, XbSilo *silo)
 {
+	g_autoptr(GError) error_local = NULL;
 	g_return_if_fail(FU_IS_ENGINE(self));
 	g_return_if_fail(XB_IS_SILO(silo));
 	g_set_object(&self->silo, silo);
+	if (!fu_engine_create_silo_index(self, &error_local))
+		g_warning("failed to create indexes: %s", error_local->message);
 }
 
 static gboolean
@@ -3743,7 +3771,6 @@ fu_engine_load_metadata_store(FuEngine *self, FuEngineLoadFlags flags, GError **
 	GPtrArray *remotes;
 	XbBuilderCompileFlags compile_flags = XB_BUILDER_COMPILE_FLAG_IGNORE_INVALID;
 	g_autoptr(GFile) xmlb = NULL;
-	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(XbBuilder) builder = xb_builder_new();
 
 	/* clear existing silo */
@@ -3846,27 +3873,8 @@ fu_engine_load_metadata_store(FuEngine *self, FuEngineLoadFlags flags, GError **
 		return FALSE;
 	}
 
-	/* print what we've got */
-	components = xb_silo_query(self->silo, "components/component[@type='firmware']", 0, NULL);
-	if (components != NULL)
-		g_debug("%u components now in silo", components->len);
-
-	/* build the index */
-	if (!xb_silo_query_build_index(self->silo, "components/component", "type", error))
-		return FALSE;
-	if (!xb_silo_query_build_index(self->silo,
-				       "components/component[@type='firmware']/provides/firmware",
-				       "type",
-				       error))
-		return FALSE;
-	if (!xb_silo_query_build_index(self->silo,
-				       "components/component[@type='firmware']/provides/firmware",
-				       NULL,
-				       error))
-		return FALSE;
-
 	/* success */
-	return TRUE;
+	return fu_engine_create_silo_index(self, error);
 }
 
 static void
@@ -4245,6 +4253,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) provides = NULL;
+	g_autoptr(GPtrArray) tags = NULL;
 	g_autoptr(XbNode) description = NULL;
 	g_autoptr(XbNode) release = NULL;
 #if LIBXMLB_CHECK_VERSION(0, 2, 0)
@@ -4290,6 +4299,15 @@ fu_engine_get_result_from_component(FuEngine *self,
 				    FWUPD_ERROR_INTERNAL,
 				    "component has no GUIDs");
 		return NULL;
+	}
+
+	/* add tags */
+	tags = xb_node_query(component, "tags/tag[@namespace=$'lvfs']", 0, NULL);
+	if (tags != NULL) {
+		for (guint i = 0; i < tags->len; i++) {
+			XbNode *tag = g_ptr_array_index(tags, i);
+			fwupd_release_add_tag(rel, xb_node_get_text(tag));
+		}
 	}
 
 	/* check we can install it */
@@ -5525,16 +5543,8 @@ fu_engine_plugins_coldplug(FuEngine *self)
 	GPtrArray *plugins;
 	g_autoptr(GString) str = g_string_new(NULL);
 
-	/* prepare */
-	plugins = fu_plugin_list_get_all(self->plugin_list);
-	for (guint i = 0; i < plugins->len; i++) {
-		g_autoptr(GError) error = NULL;
-		FuPlugin *plugin = g_ptr_array_index(plugins, i);
-		if (!fu_plugin_runner_coldplug_prepare(plugin, &error))
-			g_warning("failed to prepare coldplug: %s", error->message);
-	}
-
 	/* exec */
+	plugins = fu_plugin_list_get_all(self->plugin_list);
 	for (guint i = 0; i < plugins->len; i++) {
 		g_autoptr(GError) error = NULL;
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
@@ -5542,14 +5552,6 @@ fu_engine_plugins_coldplug(FuEngine *self)
 			fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED);
 			g_message("disabling plugin because: %s", error->message);
 		}
-	}
-
-	/* cleanup */
-	for (guint i = 0; i < plugins->len; i++) {
-		g_autoptr(GError) error = NULL;
-		FuPlugin *plugin = g_ptr_array_index(plugins, i);
-		if (!fu_plugin_runner_coldplug_cleanup(plugin, &error))
-			g_warning("failed to cleanup coldplug: %s", error->message);
 	}
 
 	/* print what we do have */
@@ -5810,6 +5812,12 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 		}
 	}
 
+	/* set or clear the SUPPORTED flag */
+	fu_engine_ensure_device_supported(self, device);
+
+	/* fixup the name and format as needed */
+	fu_engine_md_refresh_device_from_component(self, device, component);
+
 	/* adopt any required children, which may or may not already exist */
 	fu_engine_adopt_children(self, device);
 
@@ -6035,6 +6043,16 @@ fu_engine_get_host_machine_id(FuEngine *self)
 	return self->host_machine_id;
 }
 
+const gchar *
+fu_engine_get_host_bkc(FuEngine *self)
+{
+	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
+	if (fu_config_get_host_bkc(self->config) == NULL)
+		return "";
+	return fu_config_get_host_bkc(self->config);
+}
+
+#ifdef HAVE_HSI
 static void
 fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 {
@@ -6146,10 +6164,12 @@ fu_engine_record_security_attrs(FuEngine *self, GError **error)
 	/* success */
 	return TRUE;
 }
+#endif
 
 static void
 fu_engine_ensure_security_attrs(FuEngine *self)
 {
+#ifdef HAVE_HSI
 	GPtrArray *plugins = fu_plugin_list_get_all(self->plugin_list);
 	g_autoptr(GPtrArray) devices = fu_device_list_get_all(self->device_list);
 	g_autoptr(GPtrArray) items = NULL;
@@ -6202,6 +6222,7 @@ fu_engine_ensure_security_attrs(FuEngine *self)
 	/* record into the database (best effort) */
 	if (!fu_engine_record_security_attrs(self, &error))
 		g_warning("failed to record HSI attributes: %s", error->message);
+#endif
 }
 
 const gchar *
@@ -6671,7 +6692,7 @@ fu_engine_update_history_database(FuEngine *self, GError **error)
 static void
 fu_engine_ensure_client_certificate(FuEngine *self)
 {
-	g_autoptr(GBytes) blob = g_bytes_new_static("test\0", 5);
+	g_autoptr(GBytes) blob = g_bytes_new_static(NULL, 0);
 	g_autoptr(GError) error = NULL;
 	g_autoptr(JcatBlob) jcat_sig = NULL;
 	g_autoptr(JcatEngine) jcat_engine = NULL;
@@ -6684,6 +6705,10 @@ fu_engine_ensure_client_certificate(FuEngine *self)
 	}
 	jcat_sig = jcat_engine_self_sign(jcat_engine, blob, JCAT_SIGN_FLAG_NONE, &error);
 	if (jcat_sig == NULL) {
+		if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
+			g_debug("client certificate now exists: %s", error->message);
+			return;
+		}
 		g_message("failed to sign using keyring: %s", error->message);
 		return;
 	}
@@ -6861,6 +6886,7 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	fu_context_add_firmware_gtype(self->ctx, "fmap", FU_TYPE_FMAP_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "ihex", FU_TYPE_IHEX_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "srec", FU_TYPE_SREC_FIRMWARE);
+	fu_context_add_firmware_gtype(self->ctx, "archive", FU_TYPE_ARCHIVE_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "smbios", FU_TYPE_SMBIOS);
 	fu_context_add_firmware_gtype(self->ctx, "efi-firmware-file", FU_TYPE_EFI_FIRMWARE_FILE);
 	fu_context_add_firmware_gtype(self->ctx,
@@ -6966,9 +6992,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		}
 	}
 
-	/* set device properties from the metadata */
-	fu_engine_md_refresh_devices(self);
-
 	/* update the db for devices that were updated during the reboot */
 	if (!fu_engine_update_history_database(self, error))
 		return FALSE;
@@ -7048,16 +7071,6 @@ fu_engine_class_init(FuEngineClass *klass)
 						      G_TYPE_NONE,
 						      1,
 						      G_TYPE_UINT);
-	signals[SIGNAL_PERCENTAGE_CHANGED] = g_signal_new("percentage-changed",
-							  G_TYPE_FROM_CLASS(object_class),
-							  G_SIGNAL_RUN_LAST,
-							  0,
-							  NULL,
-							  NULL,
-							  g_cclosure_marshal_VOID__UINT,
-							  G_TYPE_NONE,
-							  1,
-							  G_TYPE_UINT);
 }
 
 void
@@ -7207,6 +7220,8 @@ fu_engine_finalize(GObject *obj)
 
 	if (self->silo != NULL)
 		g_object_unref(self->silo);
+	if (self->query_component_by_guid != NULL)
+		g_object_unref(self->query_component_by_guid);
 	if (self->coldplug_id != 0)
 		g_source_remove(self->coldplug_id);
 	if (self->approved_firmware != NULL)

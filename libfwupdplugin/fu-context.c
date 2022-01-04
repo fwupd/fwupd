@@ -27,6 +27,7 @@ typedef struct {
 	GHashTable *compile_versions;
 	GPtrArray *udev_subsystems;
 	GHashTable *firmware_gtypes;
+	GHashTable *hwid_flags; /* str: */
 	FuBatteryState battery_state;
 	guint battery_level;
 	guint battery_threshold;
@@ -501,6 +502,7 @@ gboolean
 fu_context_load_hwinfo(FuContext *self, GError **error)
 {
 	FuContextPrivate *priv = GET_PRIVATE(self);
+	GPtrArray *guids;
 	g_autoptr(GError) error_smbios = NULL;
 	g_autoptr(GError) error_hwids = NULL;
 
@@ -512,8 +514,43 @@ fu_context_load_hwinfo(FuContext *self, GError **error)
 	if (!fu_hwids_setup(priv->hwids, priv->smbios, &error_hwids))
 		g_warning("Failed to load HWIDs: %s", error_hwids->message);
 
+	/* set the hwid flags */
+	guids = fu_context_get_hwid_guids(self);
+	for (guint i = 0; i < guids->len; i++) {
+		const gchar *guid = g_ptr_array_index(guids, i);
+		const gchar *value;
+
+		/* does prefixed quirk exist */
+		value = fu_context_lookup_quirk_by_id(self, guid, FU_QUIRKS_FLAGS);
+		if (value != NULL) {
+			g_auto(GStrv) values = g_strsplit(value, ",", -1);
+			for (guint j = 0; values[j] != NULL; j++)
+				g_hash_table_add(priv->hwid_flags, g_strdup(values[j]));
+		}
+	}
+
 	/* always */
 	return TRUE;
+}
+
+/**
+ * fu_context_has_hwid_flag:
+ * @self: a #FuContext
+ * @flag: flag, e.g. `use-legacy-bootmgr-desc`
+ *
+ * Returns if a HwId custom flag exists, typically added from a DMI quirk.
+ *
+ * Returns: %TRUE if the flag exists
+ *
+ * Since: 1.7.2
+ **/
+gboolean
+fu_context_has_hwid_flag(FuContext *self, const gchar *flag)
+{
+	FuContextPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CONTEXT(self), FALSE);
+	g_return_val_if_fail(flag != NULL, FALSE);
+	return g_hash_table_lookup(priv->hwid_flags, flag) != NULL;
 }
 
 /**
@@ -716,6 +753,7 @@ fu_context_finalize(GObject *object)
 	if (priv->compile_versions != NULL)
 		g_hash_table_unref(priv->compile_versions);
 	g_object_unref(priv->hwids);
+	g_hash_table_unref(priv->hwid_flags);
 	g_object_unref(priv->quirks);
 	g_object_unref(priv->smbios);
 	g_hash_table_unref(priv->firmware_gtypes);
@@ -782,6 +820,7 @@ fu_context_init(FuContext *self)
 	priv->battery_threshold = FU_BATTERY_VALUE_INVALID;
 	priv->smbios = fu_smbios_new();
 	priv->hwids = fu_hwids_new();
+	priv->hwid_flags = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->udev_subsystems = g_ptr_array_new_with_free_func(g_free);
 	priv->firmware_gtypes = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	priv->quirks = fu_quirks_new();

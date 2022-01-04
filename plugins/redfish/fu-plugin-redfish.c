@@ -21,8 +21,8 @@ struct FuPluginData {
 	FuRedfishBackend *backend;
 };
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_redfish_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autoptr(GPtrArray) devices = NULL;
@@ -38,7 +38,7 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	devices = fu_backend_get_devices(FU_BACKEND(data->backend));
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
-		if (fu_plugin_has_custom_flag(plugin, "reset-required"))
+		if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "reset-required"))
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
 		fu_plugin_device_add(plugin, device);
 	}
@@ -212,7 +212,6 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuIpmiDevice) device = fu_ipmi_device_new(fu_plugin_get_context(plugin));
 	g_autoptr(FuRedfishRequest) request = NULL;
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(JsonBuilder) builder = json_builder_new();
 
 	/* create device */
@@ -281,8 +280,8 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 }
 #endif
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_redfish_startup(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autofree gchar *ca_check_str = NULL;
@@ -304,30 +303,33 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	if (redfish_uri != NULL) {
 		const gchar *ip_str = NULL;
 		g_auto(GStrv) split = NULL;
-		guint64 port;
+		guint64 port = 0;
 
 		if (g_str_has_prefix(redfish_uri, "https://")) {
 			fu_redfish_backend_set_https(data->backend, TRUE);
 			ip_str = redfish_uri + strlen("https://");
+			port = 443;
 		} else if (g_str_has_prefix(redfish_uri, "http://")) {
 			fu_redfish_backend_set_https(data->backend, FALSE);
 			ip_str = redfish_uri + strlen("http://");
+			port = 80;
 		} else {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "in valid scheme");
+					    "invalid scheme");
 			return FALSE;
 		}
 
 		split = g_strsplit(ip_str, ":", 2);
 		fu_redfish_backend_set_hostname(data->backend, split[0]);
-		port = g_ascii_strtoull(split[1], NULL, 10);
-		if (port == 0) {
+		if (g_strv_length(split) > 1)
+			port = g_ascii_strtoull(split[1], NULL, 10);
+		if (port == 0 || port == G_MAXUINT64) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_NOT_SUPPORTED,
-					    "no port specified");
+					    "no valid port specified");
 			return FALSE;
 		}
 		fu_redfish_backend_set_port(data->backend, port);
@@ -343,7 +345,7 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 		gboolean ca_check = fu_plugin_get_config_value_boolean(plugin, "CACheck");
 		fu_redfish_backend_set_cacheck(data->backend, ca_check);
 	}
-	if (fu_plugin_has_custom_flag(plugin, "wildcard-targets"))
+	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "wildcard-targets"))
 		fu_redfish_backend_set_wildcard_targets(data->backend, TRUE);
 
 #ifdef HAVE_LINUX_IPMI_H
@@ -360,19 +362,28 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return fu_backend_setup(FU_BACKEND(data->backend), error);
 }
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_redfish_init(FuPlugin *plugin)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
 	data->backend = fu_redfish_backend_new(ctx);
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_REDFISH_SMBIOS);
 }
 
-void
-fu_plugin_destroy(FuPlugin *plugin)
+static void
+fu_plugin_redfish_destroy(FuPlugin *plugin)
 {
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_object_unref(data->backend);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_redfish_init;
+	vfuncs->destroy = fu_plugin_redfish_destroy;
+	vfuncs->startup = fu_plugin_redfish_startup;
+	vfuncs->coldplug = fu_plugin_redfish_coldplug;
 }

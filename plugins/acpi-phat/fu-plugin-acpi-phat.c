@@ -13,18 +13,17 @@
 #include "fu-acpi-phat-version-record.h"
 #include "fu-acpi-phat.h"
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_acpi_phat_init(FuPlugin *plugin)
 {
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_ACPI_PHAT);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_ACPI_PHAT_HEALTH_RECORD);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_ACPI_PHAT_VERSION_ELEMENT);
 	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_ACPI_PHAT_VERSION_RECORD);
 }
 
-gboolean
-fu_plugin_coldplug(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_acpi_phat_coldplug(FuPlugin *plugin, GError **error)
 {
 	g_autofree gchar *path = NULL;
 	g_autofree gchar *fn = NULL;
@@ -42,4 +41,12 @@ fu_plugin_coldplug(FuPlugin *plugin, GError **error)
 	str = fu_acpi_phat_to_report_string(FU_ACPI_PHAT(phat));
 	fu_plugin_add_report_metadata(plugin, "PHAT", str);
 	return TRUE;
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_acpi_phat_init;
+	vfuncs->coldplug = fu_plugin_acpi_phat_coldplug;
 }

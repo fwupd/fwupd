@@ -40,16 +40,15 @@ struct FuPluginData {
 #define PCI_MSR_IA32_BIOS_SIGN_ID    0x8b
 #define PCI_MSR_K8_SYSCFG	     0xC0010010
 
-void
-fu_plugin_init(FuPlugin *plugin)
+static void
+fu_plugin_msr_init(FuPlugin *plugin)
 {
 	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
 	fu_plugin_add_udev_subsystem(plugin, "msr");
 }
 
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_msr_startup(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	guint eax = 0;
@@ -80,8 +79,8 @@ fu_plugin_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-gboolean
-fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
 {
 	FuDevice *device_cpu = fu_plugin_cache_lookup(plugin, "cpu");
 	FuPluginData *priv = fu_plugin_get_data(plugin);
@@ -182,8 +181,8 @@ fu_plugin_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **erro
 	return TRUE;
 }
 
-void
-fu_plugin_device_registered(FuPlugin *plugin, FuDevice *dev)
+static void
+fu_plugin_msr_device_registered(FuPlugin *plugin, FuDevice *dev)
 {
 	if (g_strcmp0(fu_device_get_plugin(dev), "cpu") == 0) {
 		fu_plugin_cache_add(plugin, "cpu", dev);
@@ -289,10 +288,21 @@ fu_plugin_add_security_attr_amd_tsme_enabled(FuPlugin *plugin, FuSecurityAttrs *
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
 }
 
-void
-fu_plugin_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_msr_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	fu_plugin_add_security_attr_dci_enabled(plugin, attrs);
 	fu_plugin_add_security_attr_dci_locked(plugin, attrs);
 	fu_plugin_add_security_attr_amd_tsme_enabled(plugin, attrs);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_msr_init;
+	vfuncs->startup = fu_plugin_msr_startup;
+	vfuncs->backend_device_added = fu_plugin_msr_backend_device_added;
+	vfuncs->add_security_attrs = fu_plugin_msr_add_security_attrs;
+	vfuncs->device_registered = fu_plugin_msr_device_registered;
 }

@@ -19,6 +19,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_RESULT_KEY_APPSTREAM_ID "AppstreamId"
 /**
+ * FWUPD_RESULT_KEY_RELEASE_ID:
+ *
+ * Result key to represent the release ID.
+ *
+ * The D-Bus type signature string is 's' i.e. a string.
+ **/
+#define FWUPD_RESULT_KEY_RELEASE_ID "ReleaseId"
+/**
  * FWUPD_RESULT_KEY_CHECKSUM:
  *
  * Result key to represent Checksum
@@ -26,6 +34,14 @@ G_BEGIN_DECLS
  * The D-Bus type signature string is 'as' i.e. an array of strings.
  **/
 #define FWUPD_RESULT_KEY_CHECKSUM "Checksum"
+/**
+ * FWUPD_RESULT_KEY_TAGS:
+ *
+ * Result key to represent release tags
+ *
+ * The D-Bus type signature string is 'as' i.e. an array of strings.
+ **/
+#define FWUPD_RESULT_KEY_TAGS "Tags"
 /**
  * FWUPD_RESULT_KEY_CREATED:
  *

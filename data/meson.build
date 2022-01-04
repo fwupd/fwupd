@@ -1,8 +1,14 @@
 subdir('builder')
 subdir('pki')
 subdir('remotes.d')
-subdir('bash-completion')
-subdir('fish-completion')
+
+if get_option('bash_completion')
+  subdir('bash-completion')
+endif
+
+if get_option('fish_completion')
+  subdir('fish-completion')
+endif
 
 if get_option('tests')
 subdir('device-tests')
@@ -26,13 +32,14 @@ if build_standalone
     install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
 endif
 
-install_data(['org.freedesktop.fwupd.metainfo.xml'],
-  install_dir: join_paths(datadir, 'metainfo')
-)
-
-install_data(['org.freedesktop.fwupd.svg'],
-  install_dir : join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
-)
+if get_option('metainfo')
+  install_data(['org.freedesktop.fwupd.metainfo.xml'],
+    install_dir: join_paths(datadir, 'metainfo')
+  )
+  install_data(['org.freedesktop.fwupd.svg'],
+    install_dir : join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
+  )
+endif
 
 if build_daemon
   install_data(['org.freedesktop.fwupd.conf'],
@@ -84,13 +91,15 @@ if get_option('systemd') and build_daemon
   con2.set('motd_dir', motd_dir)
 
   # replace @bindir@
-  configure_file(
-    input : 'fwupd-offline-update.service.in',
-    output : 'fwupd-offline-update.service',
-    configuration : con2,
-    install: true,
-    install_dir: systemdunitdir,
-  )
+  if get_option('offline')
+    configure_file(
+      input : 'fwupd-offline-update.service.in',
+      output : 'fwupd-offline-update.service',
+      configuration : con2,
+      install: true,
+      install_dir: systemdunitdir,
+    )
+  endif
 
   # replace @dynamic_options@
   configure_file(

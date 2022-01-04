@@ -92,6 +92,7 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
 	version = fu_common_version_from_uint32(version_raw,
 						fu_device_get_version_format(FU_DEVICE(self)));
+	fu_device_set_version(FU_DEVICE(self), version);
 
 	/* logical ID */
 	logical_id = g_strdup_printf("CID:0x%02x,BANK:0x%02x", self->component_id, self->bank);

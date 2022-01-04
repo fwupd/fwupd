@@ -1,4 +1,4 @@
-if host_machine.system() == 'linux' and gio.version().version_compare('>=2.58')
+if get_option('plugin_powerd') and host_machine.system() == 'linux' and gio.version().version_compare('>=2.58')
   cargs = ['-DG_LOG_DOMAIN="FuPluginPowerd"']
 
 shared_module('fu_plugin_powerd',

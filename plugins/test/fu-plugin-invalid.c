@@ -9,7 +9,7 @@
 #include <fwupdplugin.h>
 
 void
-fu_plugin_init(FuPlugin *plugin)
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
-	fu_plugin_set_build_hash(plugin, "invalid");
+	vfuncs->build_hash = "invalid";
 }

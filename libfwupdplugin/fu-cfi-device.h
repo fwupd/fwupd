@@ -54,5 +54,13 @@ guint64
 fu_cfi_device_get_size(FuCfiDevice *self);
 void
 fu_cfi_device_set_size(FuCfiDevice *self, guint64 size);
+guint32
+fu_cfi_device_get_page_size(FuCfiDevice *self);
+void
+fu_cfi_device_set_page_size(FuCfiDevice *self, guint32 page_size);
+guint32
+fu_cfi_device_get_sector_size(FuCfiDevice *self);
+void
+fu_cfi_device_set_sector_size(FuCfiDevice *self, guint32 sector_size);
 gboolean
 fu_cfi_device_get_cmd(FuCfiDevice *self, FuCfiDeviceCmd cmd, guint8 *value, GError **error);

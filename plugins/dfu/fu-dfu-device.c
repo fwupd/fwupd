@@ -274,8 +274,8 @@ fu_dfu_device_add_targets(FuDfuDevice *self, GError **error)
 		GUsbInterface *iface = g_ptr_array_index(ifaces, i);
 
 		/* some devices don't use the right class and subclass */
-		if (fu_device_has_private_flag(FU_DEVICE(self),
-					       FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE)) {
+		if (!fu_device_has_private_flag(FU_DEVICE(self),
+						FU_DFU_DEVICE_FLAG_USE_ANY_INTERFACE)) {
 			if (g_usb_interface_get_class(iface) !=
 			    G_USB_DEVICE_CLASS_APPLICATION_SPECIFIC)
 				continue;
@@ -1393,10 +1393,16 @@ fu_dfu_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 
 	/* normal DFU mode just needs a bus reset */
 	if (fu_device_has_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH) &&
-	    fu_dfu_device_has_attribute(self, FU_DFU_DEVICE_ATTR_WILL_DETACH))
+	    fu_dfu_device_has_attribute(self, FU_DFU_DEVICE_ATTR_WILL_DETACH)) {
 		g_debug("Bus reset is not required. Device will reboot to normal");
-	else if (!fu_dfu_target_attach(target, progress, error))
+	} else if (!fu_dfu_target_attach(target, progress, error)) {
+		g_prefix_error(error, "failed to attach target: ");
 		return FALSE;
+	}
+
+	/* there is no USB runtime whatsoever */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WILL_DISAPPEAR))
+		return TRUE;
 
 	/* success */
 	priv->force_version = 0x0;
@@ -1422,6 +1428,7 @@ fu_dfu_device_upload(FuDfuDevice *self,
 {
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
+	gboolean use_dfuse = FALSE;
 	g_autoptr(FuFirmware) firmware = NULL;
 
 	/* no backing USB device */
@@ -1439,7 +1446,14 @@ fu_dfu_device_upload(FuDfuDevice *self,
 		return NULL;
 
 	/* choose the most appropriate type */
-	if (priv->targets->len > 1) {
+	for (guint i = 0; i < priv->targets->len; i++) {
+		FuDfuTarget *target = g_ptr_array_index(priv->targets, i);
+		if (fu_dfu_target_get_alt_name(target, NULL) != NULL || i > 0) {
+			use_dfuse = TRUE;
+			break;
+		}
+	}
+	if (use_dfuse) {
 		firmware = fu_dfuse_firmware_new();
 		g_debug("switching to DefuSe automatically");
 	} else {
@@ -1498,6 +1512,17 @@ fu_dfu_device_id_compatible(guint16 id_file, guint16 id_runtime, guint16 id_dev)
 
 	/* nothing */
 	return FALSE;
+}
+
+static gsize
+fu_dfu_device_calculate_chunks_size(GPtrArray *chunks)
+{
+	gsize total = 0;
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks, i);
+		total += fu_chunk_get_data_sz(chk);
+	}
+	return total;
 }
 
 static gboolean
@@ -1596,7 +1621,15 @@ fu_dfu_device_download(FuDfuDevice *self,
 	if (images->len == 0)
 		g_ptr_array_add(images, g_object_ref(firmware));
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_set_steps(progress, images->len);
+	for (guint i = 0; i < images->len; i++) {
+		FuFirmware *image = g_ptr_array_index(images, i);
+		g_autoptr(GPtrArray) chunks = fu_firmware_get_chunks(image, error);
+		if (chunks == NULL)
+			return FALSE;
+		fu_progress_add_step(progress,
+				     FWUPD_STATUS_DEVICE_WRITE,
+				     fu_dfu_device_calculate_chunks_size(chunks));
+	}
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *image = g_ptr_array_index(images, i);
 		FuDfuTargetTransferFlags flags_local = DFU_TARGET_TRANSFER_FLAG_NONE;
@@ -1688,15 +1721,6 @@ fu_dfu_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **err
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	/* require detach -> attach */
-	locker = fu_device_locker_new_full(device,
-					   (FuDeviceLockerFunc)fu_device_detach,
-					   (FuDeviceLockerFunc)fu_device_attach,
-					   error);
-	if (locker == NULL)
-		return NULL;
 
 	/* get data from hardware */
 	g_debug("uploading from device->host");
@@ -1719,6 +1743,7 @@ fu_dfu_device_prepare_firmware(FuDevice *device,
 	return fu_firmware_new_from_gtypes(fw,
 					   flags,
 					   error,
+					   FU_TYPE_IHEX_FIRMWARE,
 					   FU_TYPE_DFUSE_FIRMWARE,
 					   FU_TYPE_DFU_FIRMWARE,
 					   FU_TYPE_FIRMWARE,
@@ -1752,6 +1777,7 @@ fu_dfu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 {
 	FuDfuDevice *self = FU_DFU_DEVICE(device);
 	FuDfuDevicePrivate *priv = GET_PRIVATE(self);
+	guint64 tmp = 0;
 
 	if (g_strcmp0(key, FU_QUIRKS_DFU_FORCE_VERSION) == 0) {
 		if (value != NULL) {
@@ -1769,28 +1795,16 @@ fu_dfu_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *valu
 		return FALSE;
 	}
 	if (g_strcmp0(key, "DfuForceTimeout") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < G_MAXUINT) {
-			priv->timeout_ms = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid DFU timeout");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
+			return FALSE;
+		priv->timeout_ms = tmp;
+		return TRUE;
 	}
 	if (g_strcmp0(key, "DfuForceTransferSize") == 0) {
-		guint64 tmp = fu_common_strtoull(value);
-		if (tmp < G_MAXUINT16) {
-			priv->force_transfer_size = tmp;
-			return TRUE;
-		}
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "invalid DFU transfer size");
-		return FALSE;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+			return FALSE;
+		priv->force_transfer_size = tmp;
+		return TRUE;
 	}
 	if (g_strcmp0(key, "DfuAltName") == 0) {
 		fu_dfu_device_set_chip_id(self, value);
@@ -1947,4 +1961,7 @@ fu_dfu_device_init(FuDfuDevice *self)
 					FU_DFU_DEVICE_FLAG_NO_BUS_RESET_ATTACH,
 					"no-bus-reset-attach");
 	fu_device_register_private_flag(FU_DEVICE(self), FU_DFU_DEVICE_FLAG_GD32, "gd32");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_DFU_DEVICE_FLAG_ALLOW_ZERO_POLLTIMEOUT,
+					"allow-zero-polltimeout");
 }

@@ -232,7 +232,8 @@ fu_nvme_device_parse_cns(FuNvmeDevice *self, const guint8 *buf, gsize sz, GError
 	fawr = (buf[260] & 0x10) >> 4;
 	nfws = (buf[260] & 0x0e) >> 1;
 	s1ro = buf[260] & 0x01;
-	g_debug("fawr: %u, nr fw slots: %u, slot1 r/o: %u", fawr, nfws, s1ro);
+	if (g_getenv("FWUPD_NVME_VERBOSE") != NULL)
+		g_debug("fawr: %u, nr fw slots: %u, slot1 r/o: %u", fawr, nfws, s1ro);
 
 	/* FRU globally unique identifier (FGUID) */
 	gu = fu_nvme_device_get_guid_safe(buf, 127);
@@ -274,6 +275,10 @@ fu_nvme_device_probe(FuDevice *device, GError **error)
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_nvme_device_parent_class)->probe(device, error))
 		return FALSE;
+
+	/* fix up vendor name so we can remove it from the product name */
+	if (g_strcmp0(fu_device_get_vendor(FU_DEVICE(device)), "Samsung Electronics Co Ltd") == 0)
+		fu_device_set_vendor(FU_DEVICE(device), "Samsung");
 
 	/* set the physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "pci", error))
@@ -388,7 +393,10 @@ fu_nvme_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *val
 {
 	FuNvmeDevice *self = FU_NVME_DEVICE(device);
 	if (g_strcmp0(key, "NvmeBlockSize") == 0) {
-		self->write_block_size = fu_common_strtoull(value);
+		guint64 tmp = 0;
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		self->write_block_size = tmp;
 		return TRUE;
 	}
 

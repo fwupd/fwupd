@@ -209,18 +209,6 @@ fu_hailuck_bl_device_write_block(FuHailuckBlDevice *self,
 	return TRUE;
 }
 
-static FuFirmware *
-fu_hailuck_bl_device_prepare_firmware(FuDevice *device,
-				      GBytes *fw,
-				      FwupdInstallFlags flags,
-				      GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_hailuck_kbd_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_hailuck_bl_device_write_firmware(FuDevice *device,
 				    FuFirmware *firmware,
@@ -303,6 +291,7 @@ static void
 fu_hailuck_bl_device_init(FuHailuckBlDevice *self)
 {
 	fu_device_set_firmware_size(FU_DEVICE(self), 0x4000);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_HAILUCK_KBD_FIRMWARE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.hailuck.kbd");
 	fu_device_set_name(FU_DEVICE(self), "Keyboard [bootloader]");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -319,7 +308,6 @@ fu_hailuck_bl_device_class_init(FuHailuckBlDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->dump_firmware = fu_hailuck_bl_device_dump_firmware;
-	klass_device->prepare_firmware = fu_hailuck_bl_device_prepare_firmware;
 	klass_device->write_firmware = fu_hailuck_bl_device_write_firmware;
 	klass_device->attach = fu_hailuck_bl_device_attach;
 	klass_device->probe = fu_hailuck_bl_device_probe;

@@ -197,18 +197,6 @@ fu_wacom_device_set_version_bootloader(FuWacomDevice *self, GError **error)
 	return TRUE;
 }
 
-static FuFirmware *
-fu_wacom_device_prepare_firmware(FuDevice *device,
-				 GBytes *fw,
-				 FwupdInstallFlags flags,
-				 GError **error)
-{
-	g_autoptr(FuFirmware) firmware = fu_ihex_firmware_new();
-	if (!fu_firmware_parse(firmware, fw, flags, error))
-		return NULL;
-	return g_steal_pointer(&firmware);
-}
-
 static gboolean
 fu_wacom_device_write_firmware(FuDevice *device,
 			       FuFirmware *firmware,
@@ -327,16 +315,24 @@ fu_wacom_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *va
 {
 	FuWacomDevice *self = FU_WACOM_DEVICE(device);
 	FuWacomDevicePrivate *priv = GET_PRIVATE(self);
+	guint64 tmp = 0;
+
 	if (g_strcmp0(key, "WacomI2cFlashBlockSize") == 0) {
-		priv->flash_block_size = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXSIZE, error))
+			return FALSE;
+		priv->flash_block_size = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "WacomI2cFlashBaseAddr") == 0) {
-		priv->flash_base_addr = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		priv->flash_base_addr = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "WacomI2cFlashSize") == 0) {
-		priv->flash_size = fu_common_strtoull(value);
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT32, error))
+			return FALSE;
+		priv->flash_size = tmp;
 		return TRUE;
 	}
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
@@ -362,6 +358,7 @@ fu_wacom_device_init(FuWacomDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
+	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_IHEX_FIRMWARE);
 }
 
 static void
@@ -369,7 +366,6 @@ fu_wacom_device_class_init(FuWacomDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->to_string = fu_wacom_device_to_string;
-	klass_device->prepare_firmware = fu_wacom_device_prepare_firmware;
 	klass_device->write_firmware = fu_wacom_device_write_firmware;
 	klass_device->attach = fu_wacom_device_attach;
 	klass_device->detach = fu_wacom_device_detach;

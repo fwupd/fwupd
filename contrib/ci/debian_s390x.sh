@@ -22,7 +22,9 @@ meson .. \
 	-Dplugin_dell=false \
 	-Dplugin_modem_manager=false \
 	-Dplugin_msr=false \
+	-Dplugin_mtd=false \
 	-Dplugin_redfish=false \
+	-Dplugin_powerd=false \
 	-Dintrospection=false \
 	-Ddocs=none \
 	-Dlibxmlb:introspection=false \

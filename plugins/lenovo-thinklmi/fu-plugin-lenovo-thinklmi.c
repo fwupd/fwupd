@@ -8,14 +8,8 @@
 
 #include <fwupdplugin.h>
 
-void
-fu_plugin_init(FuPlugin *plugin)
-{
-	fu_plugin_set_build_hash(plugin, FU_BUILD_HASH);
-}
-
-gboolean
-fu_plugin_startup(FuPlugin *plugin, GError **error)
+static gboolean
+fu_plugin_lenovo_thinklmi_startup(FuPlugin *plugin, GError **error)
 {
 	g_autofree gchar *sysfsfwdir = NULL;
 	g_autofree gchar *thinklmidir = NULL;
@@ -84,8 +78,8 @@ fu_plugin_lenovo_firmware_locked(gboolean *locked, GError **error)
 	return TRUE;
 }
 
-void
-fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
+static void
+fu_plugin_lenovo_thinklmi_device_registered(FuPlugin *plugin, FuDevice *device)
 {
 	gboolean locked = FALSE;
 	gboolean pending = FALSE;
@@ -110,4 +104,12 @@ fu_plugin_device_registered(FuPlugin *plugin, FuDevice *device)
 		fu_device_inhibit(device,
 				  "uefi-capsule-pending-reboot",
 				  "UEFI BIOS settings update pending reboot");
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->startup = fu_plugin_lenovo_thinklmi_startup;
+	vfuncs->device_registered = fu_plugin_lenovo_thinklmi_device_registered;
 }

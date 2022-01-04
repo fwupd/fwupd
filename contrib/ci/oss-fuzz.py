@@ -354,7 +354,6 @@ def _build(bld: Builder) -> None:
         Fuzzer("elantp"),
         Fuzzer("pixart", srcdir="pixart-rf", pattern="pxi-firmware"),
         Fuzzer("redfish-smbios", srcdir="redfish", pattern="redfish-smbios"),
-        Fuzzer("solokey"),
         Fuzzer("synaptics-prometheus", pattern="synaprom-firmware"),
         Fuzzer("synaptics-cape"),
         Fuzzer("synaptics-mst"),

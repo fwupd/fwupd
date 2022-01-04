@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-freebsd:
-    runs-on: macos-latest
+    runs-on: macos-10.15
     timeout-minutes: 30
     name: build-freebsd-package
     steps:
@@ -23,7 +23,7 @@ jobs:
         prepare: |
           pkg install -y git python3 glib meson pkgconf gobject-introspection \
             vala gtk-doc json-glib gpgme gnutls sqlite3 curl gcab libarchive \
-            libelf libgpg-error gettext-tools gtk-update-icon-cache atk pango \
+            libgpg-error gettext-tools gtk-update-icon-cache atk pango \
             binutils gcc protobuf-c
         sync: rsync
         run: ./contrib/ci/build_freebsd_package.sh

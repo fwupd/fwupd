@@ -376,21 +376,15 @@ fu_main_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuUtilPri
 }
 
 static void
-fu_main_engine_percentage_changed_cb(FuEngine *engine, guint percentage, FuUtilPrivate *priv)
-{
-	fu_progressbar_update(priv->progressbar, FWUPD_STATUS_UNKNOWN, percentage);
-}
-
-static void
 fu_util_progress_percentage_changed_cb(FuProgress *progress, guint percentage, FuUtilPrivate *priv)
 {
-	fu_progressbar_update(priv->progressbar, FWUPD_STATUS_UNKNOWN, percentage);
+	fu_progressbar_update(priv->progressbar, fu_progress_get_status(progress), percentage);
 }
 
 static void
 fu_util_progress_status_changed_cb(FuProgress *progress, FwupdStatus status, FuUtilPrivate *priv)
 {
-	fu_progressbar_update(priv->progressbar, status, 0);
+	fu_progressbar_update(priv->progressbar, status, fu_progress_get_percentage(progress));
 }
 
 static gboolean
@@ -1214,6 +1208,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 				     priv->request,
 				     install_tasks,
 				     blob_cab,
+				     priv->progress,
 				     priv->flags,
 				     error))
 		return FALSE;
@@ -1723,7 +1718,10 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 		has_pending = TRUE;
 		/* TRANSLATORS: shown when shutting down to switch to the new version */
 		g_print("%s %s…\n", _("Activating firmware update"), fu_device_get_name(device));
-		if (!fu_engine_activate(priv->engine, fu_device_get_id(device), error))
+		if (!fu_engine_activate(priv->engine,
+					fu_device_get_id(device),
+					priv->progress,
+					error))
 			return FALSE;
 	}
 
@@ -2419,7 +2417,7 @@ fu_util_verify_update(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* add checksums */
-	if (!fu_engine_verify_update(priv->engine, fu_device_get_id(dev), error))
+	if (!fu_engine_verify_update(priv->engine, fu_device_get_id(dev), priv->progress, error))
 		return FALSE;
 
 	/* show checksums */
@@ -3158,7 +3156,8 @@ main(int argc, char *argv[])
 			      fu_util_get_plugins);
 	fu_util_cmd_array_add(cmd_array,
 			      "get-details",
-			      NULL,
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILE"),
 			      /* TRANSLATORS: command description */
 			      _("Gets details about a firmware file"),
 			      fu_util_get_details);
@@ -3487,10 +3486,6 @@ main(int argc, char *argv[])
 	g_signal_connect(priv->engine,
 			 "status-changed",
 			 G_CALLBACK(fu_main_engine_status_changed_cb),
-			 priv);
-	g_signal_connect(priv->engine,
-			 "percentage-changed",
-			 G_CALLBACK(fu_main_engine_percentage_changed_cb),
 			 priv);
 
 	/* just show versions and exit */
