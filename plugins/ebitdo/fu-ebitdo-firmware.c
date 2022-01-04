@@ -105,7 +105,7 @@ fu_ebitdo_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) blob = NULL;
 
 	/* header then payload */
-	blob = fu_firmware_get_bytes(firmware, error);
+	blob = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (blob == NULL)
 		return NULL;
 	fu_byte_array_append_uint32(buf, fu_firmware_get_version_raw(firmware), G_LITTLE_ENDIAN);

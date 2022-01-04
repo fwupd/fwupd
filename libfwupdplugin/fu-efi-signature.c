@@ -102,7 +102,7 @@ static gchar *
 fu_efi_signature_get_checksum(FuFirmware *firmware, GChecksumType csum_kind, GError **error)
 {
 	FuEfiSignature *self = FU_EFI_SIGNATURE(firmware);
-	g_autoptr(GBytes) data = fu_firmware_get_bytes(firmware, error);
+	g_autoptr(GBytes) data = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (data == NULL)
 		return NULL;
 

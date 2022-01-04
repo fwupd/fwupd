@@ -238,6 +238,8 @@ void
 fu_firmware_set_idx(FuFirmware *self, guint64 idx);
 GBytes *
 fu_firmware_get_bytes(FuFirmware *self, GError **error);
+GBytes *
+fu_firmware_get_bytes_with_patches(FuFirmware *self, GError **error);
 void
 fu_firmware_set_bytes(FuFirmware *self, GBytes *bytes);
 guint8
@@ -301,3 +303,5 @@ GBytes *
 fu_firmware_get_image_by_idx_bytes(FuFirmware *self, guint64 idx, GError **error);
 FuFirmware *
 fu_firmware_get_image_by_checksum(FuFirmware *self, const gchar *checksum, GError **error);
+void
+fu_firmware_add_patch(FuFirmware *self, gsize offset, GBytes *blob);

@@ -516,7 +516,7 @@ fu_ihex_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GString) str = g_string_new("");
 
 	/* payload */
-	fw = fu_firmware_get_bytes(firmware, error);
+	fw = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (fw == NULL)
 		return NULL;
 	if (!fu_ihex_firmware_image_to_string(fw,

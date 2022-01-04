@@ -174,7 +174,7 @@ fu_synaprom_firmware_write(FuFirmware *firmware, GError **error)
 	g_byte_array_append(blob, (const guint8 *)&hdr, sizeof(hdr));
 
 	/* add payload */
-	payload = fu_firmware_get_bytes(firmware, error);
+	payload = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (payload == NULL)
 		return NULL;
 	fu_byte_array_append_uint16(blob, FU_SYNAPROM_FIRMWARE_TAG_MFW_PAYLOAD, G_LITTLE_ENDIAN);

@@ -8,7 +8,8 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
+
 #include <glib/gi18n.h>
 #include <glib/gstdio.h>
 #ifdef HAVE_GIO_UNIX
@@ -2418,6 +2419,114 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 	return TRUE;
 }
 
+static GBytes *
+fu_util_hex_string_to_bytes(const gchar *val, GError **error)
+{
+	gsize valsz;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	/* sanity check */
+	if (val == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "nothing to parse");
+		return NULL;
+	}
+
+	/* parse each hex byte */
+	valsz = strlen(val);
+	for (guint i = 0; i < valsz; i += 2) {
+		guint8 tmp = 0;
+		if (!fu_firmware_strparse_uint8_safe(val, valsz, i, &tmp, error))
+			return NULL;
+		fu_byte_array_append_uint8(buf, tmp);
+	}
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+}
+
+static gboolean
+fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FuContext *ctx = fu_engine_get_context(priv->engine);
+	GType gtype;
+	g_autofree gchar *firmware_type = NULL;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GBytes) blob_dst = NULL;
+	g_autoptr(GBytes) blob_src = NULL;
+	g_autoptr(GBytes) patch = NULL;
+	guint64 offset = 0;
+
+	/* check args */
+	if (g_strv_length(values) != 3 && g_strv_length(values) != 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_ARGS,
+			    "Invalid arguments, expected %s",
+			    "FILENAME OFFSET DATA [FIRMWARE-TYPE]");
+		return FALSE;
+	}
+
+	/* hardcoded */
+	if (g_strv_length(values) == 4)
+		firmware_type = g_strdup(values[3]);
+
+	/* load file */
+	blob_src = fu_common_get_contents_bytes(values[0], error);
+	if (blob_src == NULL)
+		return FALSE;
+
+	/* parse offset */
+	if (!fu_common_strtoull_full(values[1], &offset, 0x0, G_MAXUINT32, error)) {
+		g_prefix_error(error, "failed to parse offset: ");
+		return FALSE;
+	}
+
+	/* parse blob */
+	patch = fu_util_hex_string_to_bytes(values[2], error);
+	if (patch == NULL)
+		return FALSE;
+	if (g_bytes_get_size(patch) == 0) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS, "no data provided");
+		return FALSE;
+	}
+
+	/* load engine */
+	if (!fu_engine_load(priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, error))
+		return FALSE;
+
+	/* find the GType to use */
+	if (firmware_type == NULL)
+		firmware_type = fu_util_prompt_for_firmware_type(priv, error);
+	if (firmware_type == NULL)
+		return FALSE;
+	gtype = fu_context_get_firmware_gtype_by_id(ctx, firmware_type);
+	if (gtype == G_TYPE_INVALID) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_FOUND,
+			    "GType %s not supported",
+			    firmware_type);
+		return FALSE;
+	}
+	firmware = g_object_new(gtype, NULL);
+	if (!fu_firmware_parse(firmware, blob_src, priv->flags, error))
+		return FALSE;
+
+	/* add patch */
+	fu_firmware_add_patch(firmware, offset, patch);
+
+	/* write new file */
+	blob_dst = fu_firmware_write(firmware, error);
+	if (blob_dst == NULL)
+		return FALSE;
+	if (!fu_common_set_contents_bytes(values[0], blob_dst, error))
+		return FALSE;
+	str = fu_firmware_to_string(firmware);
+	g_print("%s", str);
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_util_verify_update(FuUtilPrivate *priv, gchar **values, GError **error)
 {
@@ -3329,6 +3438,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Read a firmware blob from a device"),
 			      fu_util_firmware_dump);
+	fu_util_cmd_array_add(cmd_array,
+			      "firmware-patch",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME OFFSET DATA [FIRMWARE-TYPE]"),
+			      /* TRANSLATORS: command description */
+			      _("Patch a firmware blob at a known offset"),
+			      fu_util_firmware_patch);
 	fu_util_cmd_array_add(
 	    cmd_array,
 	    "firmware-convert",

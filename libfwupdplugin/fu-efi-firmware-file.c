@@ -292,7 +292,7 @@ fu_efi_firmware_file_write_sections(FuFirmware *firmware, GError **error)
 
 	/* no sections defined */
 	if (images->len == 0)
-		return fu_firmware_get_bytes(firmware, error);
+		return fu_firmware_get_bytes_with_patches(firmware, error);
 
 	/* add each section */
 	for (guint i = 0; i < images->len; i++) {

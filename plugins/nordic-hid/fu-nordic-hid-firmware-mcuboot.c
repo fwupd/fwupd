@@ -24,7 +24,7 @@ static GBytes *
 fu_nordic_hid_firmware_mcuboot_write(FuFirmware *firmware, GError **error)
 {
 	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GBytes) blob = fu_firmware_get_bytes(firmware, error);
+	g_autoptr(GBytes) blob = fu_firmware_get_bytes_with_patches(firmware, error);
 
 	if (blob == NULL)
 		return NULL;

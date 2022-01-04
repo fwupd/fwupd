@@ -336,7 +336,7 @@ fu_efi_firmware_volume_write(FuFirmware *firmware, GError **error)
 			return NULL;
 		}
 	} else {
-		img_blob = fu_firmware_get_bytes(firmware, error);
+		img_blob = fu_firmware_get_bytes_with_patches(firmware, error);
 		if (img_blob == NULL) {
 			g_prefix_error(error, "no EFI FV payload: ");
 			return NULL;

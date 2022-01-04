@@ -2835,6 +2835,45 @@ fu_firmware_dfu_func(void)
 }
 
 static void
+fu_firmware_dfu_patch_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *csum = NULL;
+	g_autofree gchar *filename_dfu = NULL;
+	g_autoptr(FuFirmware) firmware = fu_dfu_firmware_new();
+	g_autoptr(GBytes) data_dfu = NULL;
+	g_autoptr(GBytes) data_new = NULL;
+	g_autoptr(GBytes) data_patch0 = g_bytes_new_static("XXXX", 4);
+	g_autoptr(GBytes) data_patch1 = g_bytes_new_static("HELO", 4);
+	g_autoptr(GError) error = NULL;
+
+	filename_dfu = g_test_build_filename(G_TEST_DIST, "tests", "firmware.dfu", NULL);
+	data_dfu = fu_common_get_contents_bytes(filename_dfu, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_dfu);
+	ret = fu_firmware_parse(firmware, data_dfu, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add a couple of patches */
+	fu_firmware_add_patch(firmware, 0x0, data_patch0);
+	fu_firmware_add_patch(firmware, 0x0, data_patch1);
+	fu_firmware_add_patch(firmware, 136 - 4, data_patch1);
+
+	data_new = fu_firmware_write(firmware, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_new);
+	fu_common_dump_full(G_LOG_DOMAIN,
+			    "patch",
+			    g_bytes_get_data(data_new, NULL),
+			    g_bytes_get_size(data_new),
+			    20,
+			    FU_DUMP_FLAGS_SHOW_ASCII | FU_DUMP_FLAGS_SHOW_ADDRESSES);
+	csum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data_new);
+	g_assert_cmpstr(csum, ==, "0722727426092ac564861d1a11697182017be83f");
+}
+
+static void
 fu_firmware_func(void)
 {
 	gboolean ret;
@@ -3885,6 +3924,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware{srec}", fu_firmware_srec_func);
 	g_test_add_func("/fwupd/firmware{srec-xml}", fu_firmware_srec_xml_func);
 	g_test_add_func("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
+	g_test_add_func("/fwupd/firmware{dfu-patch}", fu_firmware_dfu_patch_func);
 	g_test_add_func("/fwupd/firmware{dfuse}", fu_firmware_dfuse_func);
 	g_test_add_func("/fwupd/firmware{dfuse-xml}", fu_firmware_dfuse_xml_func);
 	g_test_add_func("/fwupd/firmware{fmap}", fu_firmware_fmap_func);
