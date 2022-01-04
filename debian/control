@@ -5,7 +5,7 @@ Uploaders: Steve McIntyre <93sam@debian.org>,
            Matthias Klumpp <mak@debian.org>,
            Mario Limonciello <superm1@gmail.com>
 Build-Depends:
-	fwupd-unsigned-dev,
+	fwupd-unsigned-dev [amd64 arm64 armhf i386],
 	bash-completion,
 	bubblewrap,
 	debhelper (>= 12),
