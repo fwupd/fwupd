@@ -66,7 +66,8 @@ Build-Depends:
 	valac,
 	valgrind [!ia64 !riscv64 !x32 !mips !sparc64 !sh4 !ppc64 !powerpcspe !hppa !alpha !mips64el !armhf !armel !mipsel !m68k],
 Build-Depends-Indep: libglib2.0-doc <!nodoc>
-Standards-Version: 4.5.0
+Rules-Requires-Root: no
+Standards-Version: 4.6.0.1
 Section: admin
 Homepage: https://github.com/fwupd/fwupd
 Vcs-Git: https://salsa.debian.org/efi-team/fwupd.git
