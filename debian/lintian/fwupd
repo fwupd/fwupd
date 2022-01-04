@@ -5,9 +5,6 @@ fwupd binary: systemd-service-file-missing-install-key lib/systemd/system/system
 #see debian bug 896012
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-*/libfu_plugin_upower.so
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-*/libfu_plugin_uefi_recovery.so
-#EFI applications are PE executables
-fwupd: executable-not-elf-or-script usr/libexec/fwupd/efi/*.efi
-fwupd: portable-executable-missing-security-features usr/libexec/fwupd/efi/*.efi SafeSEH
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-*/libfu_plugin_modem_manager.so
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-*/libfu_plugin_pci_bcr.so
 fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-*/libfu_plugin_pci_mei.so
