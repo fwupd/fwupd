@@ -68,6 +68,7 @@ struct FuUtilPrivate {
 	gboolean prepare_blob;
 	gboolean cleanup_blob;
 	gboolean enable_json_state;
+	gboolean interactive;
 	FwupdInstallFlags flags;
 	gboolean show_all;
 	gboolean disable_ssl_strict;
@@ -236,6 +237,15 @@ fu_util_start_engine(FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **erro
 #ifdef HAVE_SYSTEMD
 	g_autoptr(GError) error_local = NULL;
 #endif
+
+#ifdef HAVE_GETUID
+	/* ensure root user */
+	if (priv->interactive && (getuid() != 0 || geteuid() != 0)) {
+		/* TRANSLATORS: we're poking around as a power user */
+		g_printerr("%s\n", _("This program may only work correctly as root"));
+	}
+#endif
+
 	if (!fu_util_lock(priv, error)) {
 		/* TRANSLATORS: another fwupdtool instance is already running */
 		g_prefix_error(error, "%s: ", _("Failed to lock"));
@@ -3068,7 +3078,6 @@ main(int argc, char *argv[])
 	gboolean version = FALSE;
 	gboolean ignore_checksum = FALSE;
 	gboolean ignore_vid_pid = FALSE;
-	gboolean interactive = isatty(fileno(stdout)) != 0;
 	g_auto(GStrv) plugin_glob = NULL;
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
 	g_autoptr(GError) error = NULL;
@@ -3241,13 +3250,6 @@ main(int argc, char *argv[])
 	bindtextdomain(GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
-
-#ifdef HAVE_GETUID
-	/* ensure root user */
-	if (interactive && (getuid() != 0 || geteuid() != 0))
-		/* TRANSLATORS: we're poking around as a power user */
-		g_printerr("%s\n", _("This program may only work correctly as root"));
-#endif
 
 	/* create helper object */
 	priv->main_ctx = g_main_context_new();
@@ -3543,10 +3545,10 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_sort(cmd_array);
 
 	/* non-TTY consoles cannot answer questions */
-	if (!interactive) {
+	priv->interactive = isatty(fileno(stdout)) != 0;
+	if (!priv->interactive) {
 		priv->no_reboot_check = TRUE;
 		priv->no_safety_check = TRUE;
-		fu_progressbar_set_interactive(priv->progressbar, FALSE);
 	} else {
 		/* set our implemented feature set */
 		fu_engine_request_set_feature_flags(
@@ -3554,6 +3556,7 @@ main(int argc, char *argv[])
 		    FWUPD_FEATURE_FLAG_DETACH_ACTION | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
 			FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_UPDATE_ACTION);
 	}
+	fu_progressbar_set_interactive(priv->progressbar, priv->interactive);
 
 	/* get a list of the commands */
 	priv->context = g_option_context_new(NULL);
