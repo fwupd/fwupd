@@ -118,8 +118,8 @@ fu_usb_device_is_open(FuUsbDevice *device)
 
 /**
  * fu_usb_device_set_configuration:
- * @configuration: a #FuUsbDevice
- * @sss: the configuration value to set
+ * @device: a #FuUsbDevice
+ * @configuration: the configuration value to set
  *
  * Set the active bConfigurationValue for the device.
  *
@@ -135,7 +135,7 @@ fu_usb_device_set_configuration(FuUsbDevice *device, gint configuration)
 
 /**
  * fu_usb_device_add_interface:
- * @configuration: a #FuUsbDevice
+ * @device: a #FuUsbDevice
  * @number: bInterfaceNumber of the interface
  *
  * Adds an interface that will be claimed on `->open()` and released on `->close()`.
