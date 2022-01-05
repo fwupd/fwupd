@@ -6587,25 +6587,6 @@ fu_engine_load_quirks_for_hwid(FuEngine *self, const gchar *hwid)
 	}
 }
 
-static void
-fu_engine_load_quirks(FuEngine *self, FuQuirksLoadFlags quirks_flags)
-{
-	GPtrArray *guids = fu_context_get_hwid_guids(self->ctx);
-	g_autoptr(GError) error = NULL;
-
-	/* rebuild silo if required */
-	if (!fu_context_load_quirks(self->ctx, quirks_flags, &error)) {
-		g_warning("Failed to load quirks: %s", error->message);
-		return;
-	}
-
-	/* search each hwid */
-	for (guint i = 0; i < guids->len; i++) {
-		const gchar *hwid = g_ptr_array_index(guids, i);
-		fu_engine_load_quirks_for_hwid(self, hwid);
-	}
-}
-
 static gboolean
 fu_engine_update_history_device(FuEngine *self, FuDevice *dev_history, GError **error)
 {
@@ -6809,9 +6790,11 @@ gboolean
 fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 {
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
+	GPtrArray *guids;
 	guint backend_cnt = 0;
 	g_autoptr(GPtrArray) checksums_approved = NULL;
 	g_autoptr(GPtrArray) checksums_blocked = NULL;
+	g_autoptr(GError) error_quirks = NULL;
 #ifndef _WIN32
 	g_autoptr(GError) error_local = NULL;
 #endif
@@ -6908,9 +6891,24 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if ((self->app_flags & FU_APP_FLAGS_NO_IDLE_SOURCES) == 0)
 		fu_idle_set_timeout(self->idle, fu_config_get_idle_timeout(self->config));
 
+	/* on a read-only filesystem don't care about the cache GUID */
+	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
+		quirks_flags |= FU_QUIRKS_LOAD_FLAG_READONLY_FS;
+	if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
+		quirks_flags |= FU_QUIRKS_LOAD_FLAG_NO_CACHE;
+	if (!fu_context_load_quirks(self->ctx, quirks_flags, &error_quirks))
+		g_warning("Failed to load quirks: %s", error_quirks->message);
+
 	/* load SMBIOS and the hwids */
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO)
 		fu_context_load_hwinfo(self->ctx, NULL);
+
+	/* set quirks for each hwid */
+	guids = fu_context_get_hwid_guids(self->ctx);
+	for (guint i = 0; i < guids->len; i++) {
+		const gchar *hwid = g_ptr_array_index(guids, i);
+		fu_engine_load_quirks_for_hwid(self, hwid);
+	}
 
 	/* load AppStream metadata */
 	if (!fu_engine_load_metadata_store(self, flags, error)) {
@@ -6975,13 +6973,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		g_prefix_error(error, "Failed to load plugins: ");
 		return FALSE;
 	}
-
-	/* on a read-only filesystem don't care about the cache GUID */
-	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
-		quirks_flags |= FU_QUIRKS_LOAD_FLAG_READONLY_FS;
-	if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
-		quirks_flags |= FU_QUIRKS_LOAD_FLAG_NO_CACHE;
-	fu_engine_load_quirks(self, quirks_flags);
 
 	/* set up battery threshold */
 	fu_engine_context_set_battery_threshold(self->ctx);
