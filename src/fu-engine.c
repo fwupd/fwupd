@@ -6993,9 +6993,10 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	fu_engine_set_status(self, FWUPD_STATUS_LOADING);
 
 	/* add devices */
-	fu_engine_plugins_setup(self);
-	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
+	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
+		fu_engine_plugins_setup(self);
 		fu_engine_plugins_coldplug(self);
+	}
 
 	/* coldplug backends */
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
