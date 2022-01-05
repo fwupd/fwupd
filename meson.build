@@ -209,7 +209,7 @@ if get_option('hsi')
 endif
 libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
 if get_option('gusb')
-  gusb = dependency('gusb', version : '>= 0.3.0', fallback : ['gusb', 'gusb_dep'])
+  gusb = dependency('gusb', version : '>= 0.3.9', fallback : ['gusb', 'gusb_dep'])
   conf.set('HAVE_GUSB', '1')
 endif
 if get_option('sqlite')
