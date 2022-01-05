@@ -5619,6 +5619,10 @@ fu_engine_plugin_device_register(FuEngine *self, FuDevice *device)
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
 		fu_plugin_runner_device_register(plugin, device);
 	}
+	for (guint i = 0; i < self->backends->len; i++) {
+		FuBackend *backend = g_ptr_array_index(self->backends, i);
+		fu_backend_registered(backend, device);
+	}
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_REGISTERED);
 }
 

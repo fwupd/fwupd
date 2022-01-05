@@ -104,6 +104,26 @@ fu_backend_device_changed(FuBackend *self, FuDevice *device)
 }
 
 /**
+ * fu_backend_registered:
+ * @self: a #FuBackend
+ * @device: a device
+ *
+ * Calls the ->registered() vfunc for the backend. This allows the backend to perform shared
+ * backend actions on superclassed devices.
+ *
+ * Since: 1.7.4
+ **/
+void
+fu_backend_registered(FuBackend *self, FuDevice *device)
+{
+	FuBackendClass *klass = FU_BACKEND_GET_CLASS(self);
+	g_return_if_fail(FU_IS_BACKEND(self));
+	g_return_if_fail(FU_IS_DEVICE(device));
+	if (klass->registered != NULL)
+		klass->registered(self, device);
+}
+
+/**
  * fu_backend_setup:
  * @self: a #FuBackend
  * @error: (nullable): optional return location for an error
