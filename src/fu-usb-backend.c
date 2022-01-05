@@ -20,6 +20,36 @@ struct _FuUsbBackend {
 
 G_DEFINE_TYPE(FuUsbBackend, fu_usb_backend, FU_TYPE_BACKEND)
 
+#define FU_USB_BACKEND_POLL_INTERVAL_DEFAULT	     1000
+#define FU_USB_BACKEND_POLL_INTERVAL_WAIT_FOR_REPLUG 5
+
+static void
+fu_usb_backend_set_hotplug_poll_interval(FuUsbBackend *self)
+{
+#if G_USB_CHECK_VERSION(0, 3, 10)
+	gboolean has_wfr = FALSE;
+	g_autoptr(GPtrArray) devices = fu_backend_get_devices(FU_BACKEND(self));
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
+			has_wfr = TRUE;
+			break;
+		}
+	}
+	g_usb_context_set_hotplug_poll_interval(self->usb_ctx,
+						has_wfr
+						    ? FU_USB_BACKEND_POLL_INTERVAL_WAIT_FOR_REPLUG
+						    : FU_USB_BACKEND_POLL_INTERVAL_DEFAULT);
+#endif
+}
+
+static void
+fu_usb_backend_device_notify_flags_cb(FuDevice *device, GParamSpec *pspec, FuBackend *backend)
+{
+	FuUsbBackend *self = FU_USB_BACKEND(backend);
+	fu_usb_backend_set_hotplug_poll_interval(self);
+}
+
 static void
 fu_usb_backend_device_added_cb(GUsbContext *ctx, GUsbDevice *usb_device, FuBackend *backend)
 {
@@ -28,6 +58,12 @@ fu_usb_backend_device_added_cb(GUsbContext *ctx, GUsbDevice *usb_device, FuBacke
 	/* success */
 	device = fu_usb_device_new_with_context(fu_backend_get_context(backend), usb_device);
 	fu_backend_device_added(backend, FU_DEVICE(device));
+
+	/* on win32 we need to poll the context faster */
+	g_signal_connect(FU_DEVICE(device),
+			 "notify::flags",
+			 G_CALLBACK(fu_usb_backend_device_notify_flags_cb),
+			 backend);
 }
 
 static void
