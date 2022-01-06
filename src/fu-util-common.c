@@ -20,7 +20,6 @@
 #endif
 
 #ifdef _WIN32
-#include <cstdio>
 #include <wchar.h>
 #include <windows.h>
 #endif
