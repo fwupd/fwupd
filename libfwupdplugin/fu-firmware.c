@@ -33,7 +33,7 @@ typedef struct {
 	guint64 addr;
 	guint64 offset;
 	gsize size;
-	GPtrArray *chunks; /* nullable, element-type FuChunk */
+	GPtrArray *chunks;  /* nullable, element-type FuChunk */
 	GPtrArray *patches; /* nullable, element-type FuFirmwarePatch */
 } FuFirmwarePrivate;
 

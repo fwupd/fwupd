@@ -9,7 +9,7 @@
 #include <fwupdplugin.h>
 
 struct FuPluginData {
-	GDBusProxy *proxy; /* nullable */
+	GDBusProxy *proxy;	   /* nullable */
 	GDBusProxy *proxy_manager; /* nullable */
 };
 
