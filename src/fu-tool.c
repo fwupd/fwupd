@@ -21,12 +21,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#ifdef _WIN32
-#include <stdio.h>
-#include <wchar.h>
-#include <windows.h>
-#endif
-
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 
@@ -3073,48 +3067,6 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
 }
 
-static gboolean
-fu_util_setup_console(GError **error)
-{
-#ifdef _WIN32
-	HANDLE hOut;
-	DWORD dwMode = 0;
-
-	/* workaround Windows setting the codepage to 1252 */
-	g_setenv("LANG", "C.UTF-8", FALSE);
-
-	/* enable VT sequences */
-	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	if (hOut == INVALID_HANDLE_VALUE) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
-			    "failed to get stdout [%u]",
-			    (guint)GetLastError());
-		return FALSE;
-	}
-	if (!GetConsoleMode(hOut, &dwMode)) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
-			    "failed to get mode [%u]",
-			    (guint)GetLastError());
-		return FALSE;
-	}
-	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-	if (!SetConsoleMode(hOut, dwMode)) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
-			    "failed to set mode [%u]",
-			    (guint)GetLastError());
-		return FALSE;
-	}
-#endif
-	/* success */
-	return TRUE;
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -3128,6 +3080,7 @@ main(int argc, char *argv[])
 	gboolean ignore_vid_pid = FALSE;
 	g_auto(GStrv) plugin_glob = NULL;
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
+	g_autoptr(GError) error_console = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
 	g_autofree gchar *cmd_descriptions = NULL;
@@ -3288,12 +3241,11 @@ main(int argc, char *argv[])
 	     NULL},
 	    {NULL}};
 
-	/* do early */
-	if (!fu_util_setup_console(&error)) {
-		/* TRANSLATORS: we failed to set up the terminal */
-		g_print("%s: %s\n", _("Failed to initialize console"), error->message);
-		return EXIT_FAILURE;
-	}
+#ifdef _WIN32
+	/* workaround Windows setting the codepage to 1252 */
+	g_setenv("LANG", "C.UTF-8", FALSE);
+#endif
+
 	setlocale(LC_ALL, "");
 
 	bindtextdomain(GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
@@ -3594,11 +3546,12 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_sort(cmd_array);
 
 	/* non-TTY consoles cannot answer questions */
-	priv->interactive = isatty(fileno(stdout)) != 0;
-	if (!priv->interactive) {
+	if (!fu_util_setup_interactive_console(&error_console)) {
+		g_debug("failed to initialize interactive console: %s", error_console->message);
 		priv->no_reboot_check = TRUE;
 		priv->no_safety_check = TRUE;
 	} else {
+		priv->interactive = TRUE;
 		/* set our implemented feature set */
 		fu_engine_request_set_feature_flags(
 		    priv->request,
