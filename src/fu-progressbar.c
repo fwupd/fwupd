@@ -26,7 +26,6 @@ struct _FuProgressbar {
 	guint length_percentage;   /* chars */
 	guint length_status;	   /* chars */
 	guint percentage;
-	guint to_erase; /* chars */
 	GSource *timer_source;
 	gint64 last_animated; /* monotonic */
 	GTimer *time_elapsed;
@@ -101,9 +100,7 @@ fu_progressbar_erase_line(FuProgressbar *self)
 {
 	if (!self->interactive)
 		return;
-	for (guint i = 0; i < self->to_erase; i++)
-		g_print("\b");
-	self->to_erase = 0;
+	g_print("\033[G");
 }
 
 static gboolean
@@ -203,12 +200,10 @@ fu_progressbar_refresh(FuProgressbar *self, FwupdStatus status, guint percentage
 
 	/* dump to screen */
 	g_print("%s", str->str);
-	self->to_erase = g_utf8_strlen(str->str, -1);
 
 	/* done */
 	if (is_idle_newline) {
 		g_print("\n");
-		self->to_erase = 0;
 		return;
 	}
 }
