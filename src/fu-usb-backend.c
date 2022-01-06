@@ -20,6 +20,7 @@ struct _FuUsbBackend {
 
 G_DEFINE_TYPE(FuUsbBackend, fu_usb_backend, FU_TYPE_BACKEND)
 
+#define FU_USB_BACKEND_POLL_INTERVAL_DEFAULT	 1000 /* ms */
 #define FU_USB_BACKEND_POLL_INTERVAL_WAIT_REPLUG 5 /* ms */
 
 static void
@@ -27,13 +28,18 @@ fu_usb_backend_device_notify_flags_cb(FuDevice *device, GParamSpec *pspec, FuBac
 {
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
 
-	/* set this to poll insanely fast -- note we don't have to set it back as this is for win32
-	 * that only has fwupdtool -- which will exit on either error or success */
+	/* if waiting for a disconnect, set win32 to poll insanely fast -- and set it
+	 * back to the default when the device removal was detected */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
-		g_debug("setting poll interval to %ums",
+		g_debug("setting USB poll interval to %ums to detect replug",
 			(guint)FU_USB_BACKEND_POLL_INTERVAL_WAIT_REPLUG);
 		g_usb_context_set_hotplug_poll_interval(self->usb_ctx,
 							FU_USB_BACKEND_POLL_INTERVAL_WAIT_REPLUG);
+	} else {
+		g_debug("resetting USB poll interval to default %ums",
+			(guint)FU_USB_BACKEND_POLL_INTERVAL_DEFAULT);
+		g_usb_context_set_hotplug_poll_interval(self->usb_ctx,
+							FU_USB_BACKEND_POLL_INTERVAL_DEFAULT);
 	}
 }
 
