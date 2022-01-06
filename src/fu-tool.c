@@ -3080,6 +3080,7 @@ main(int argc, char *argv[])
 	gboolean ignore_vid_pid = FALSE;
 	g_auto(GStrv) plugin_glob = NULL;
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
+	g_autoptr(GError) error_console = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
 	g_autofree gchar *cmd_descriptions = NULL;
@@ -3545,11 +3546,12 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_sort(cmd_array);
 
 	/* non-TTY consoles cannot answer questions */
-	priv->interactive = isatty(fileno(stdout)) != 0;
-	if (!priv->interactive) {
+	if (!fu_util_setup_interactive_console(&error_console)) {
+		g_debug("failed to initialize interactive console: %s", error_console->message);
 		priv->no_reboot_check = TRUE;
 		priv->no_safety_check = TRUE;
 	} else {
+		priv->interactive = TRUE;
 		/* set our implemented feature set */
 		fu_engine_request_set_feature_flags(
 		    priv->request,
