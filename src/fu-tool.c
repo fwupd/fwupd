@@ -21,6 +21,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifdef _WIN32
+#include <stdio.h>
+#include <wchar.h>
+#include <windows.h>
+#endif
+
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
 
@@ -3067,6 +3073,48 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
 }
 
+static gboolean
+fu_util_setup_console(GError **error)
+{
+#ifdef _WIN32
+	HANDLE hOut;
+	DWORD dwMode = 0;
+
+	/* workaround Windows setting the codepage to 1252 */
+	g_setenv("LANG", "C.UTF-8", FALSE);
+
+	/* enable VT sequences */
+	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (hOut == INVALID_HANDLE_VALUE) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "failed to get stdout [%u]",
+			    (guint)GetLastError());
+		return FALSE;
+	}
+	if (!GetConsoleMode(hOut, &dwMode)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "failed to get mode [%u]",
+			    (guint)GetLastError());
+		return FALSE;
+	}
+	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	if (!SetConsoleMode(hOut, dwMode)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "failed to set mode [%u]",
+			    (guint)GetLastError());
+		return FALSE;
+	}
+#endif
+	/* success */
+	return TRUE;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -3240,11 +3288,12 @@ main(int argc, char *argv[])
 	     NULL},
 	    {NULL}};
 
-#ifdef _WIN32
-	/* workaround Windows setting the codepage to 1252 */
-	g_setenv("LANG", "C.UTF-8", FALSE);
-#endif
-
+	/* do early */
+	if (!fu_util_setup_console(&error)) {
+		/* TRANSLATORS: we failed to set up the terminal */
+		g_print("%s: %s\n", _("Failed to initialize console"), error->message);
+		return EXIT_FAILURE;
+	}
 	setlocale(LC_ALL, "");
 
 	bindtextdomain(GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
