@@ -8,8 +8,10 @@ fwupd (1.7.3-1) UNRELEASED; urgency=medium
   * drop unused debian/source/include-binaries
   * Add Rules-Requires-Root clause
   * Fix man page location
+  * disable logitech bulk controller on ubuntu by default
+  * disable logitech bulk controller on ubuntu by default
 
- -- Mario Limonciello <superm1@gmail.com>  Tue, 04 Jan 2022 14:24:19 -0600
+ -- Mario Limonciello <superm1@gmail.com>  Thu, 06 Jan 2022 10:44:29 -0600
 
 fwupd (1.7.1-1) unstable; urgency=medium
 
