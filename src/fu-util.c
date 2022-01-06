@@ -3712,7 +3712,7 @@ main(int argc, char *argv[])
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
 	gboolean enable_ipfs = FALSE;
-	gboolean is_interactive = TRUE;
+	gboolean is_interactive = FALSE;
 	gboolean no_history = FALSE;
 	gboolean offline = FALSE;
 	gboolean ret;
@@ -3721,6 +3721,7 @@ main(int argc, char *argv[])
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
 	g_autoptr(GDateTime) dt_now = g_date_time_new_now_utc();
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_console = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
 	g_autofree gchar *cmd_descriptions = NULL;
 	g_autofree gchar *filter = NULL;
@@ -4209,15 +4210,17 @@ main(int argc, char *argv[])
 	}
 
 	/* non-TTY consoles cannot answer questions */
-	if (isatty(fileno(stdout)) == 0) {
-		is_interactive = FALSE;
+	if (!fu_util_setup_interactive_console(&error_console)) {
+		g_debug("failed to initialize interactive console: %s", error_console->message);
 		priv->no_unreported_check = TRUE;
 		priv->no_metadata_check = TRUE;
 		priv->no_reboot_check = TRUE;
 		priv->no_safety_check = TRUE;
 		priv->no_remote_check = TRUE;
-		fu_progressbar_set_interactive(priv->progressbar, FALSE);
+	} else {
+		is_interactive = TRUE;
 	}
+	fu_progressbar_set_interactive(priv->progressbar, is_interactive);
 
 	/* parse filter flags */
 	if (filter != NULL) {
