@@ -776,9 +776,8 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 				     GError **error)
 {
 	FuCrosEcUsbDevice *self = FU_CROS_EC_USB_DEVICE(device);
-	GPtrArray *sections;
+	g_autoptr(GPtrArray) sections = NULL;
 	FuCrosEcFirmware *cros_ec_firmware = FU_CROS_EC_FIRMWARE(firmware);
-	gint num_txed_sections = 0;
 
 	fu_device_remove_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_SPECIAL);
 
@@ -841,11 +840,9 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 		return TRUE;
 	}
 
-	sections = fu_cros_ec_firmware_get_sections(cros_ec_firmware);
-	if (sections == NULL) {
-		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "invalid sections");
+	sections = fu_cros_ec_firmware_get_needed_sections(cros_ec_firmware, error);
+	if (sections == NULL)
 		return FALSE;
-	}
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -853,51 +850,39 @@ fu_cros_ec_usb_device_write_firmware(FuDevice *device,
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
 	for (guint i = 0; i < sections->len; i++) {
 		FuCrosEcFirmwareSection *section = g_ptr_array_index(sections, i);
+		g_autoptr(GError) error_local = NULL;
 
-		if (section->ustatus == FU_CROS_EC_FW_NEEDED) {
-			g_autoptr(GError) error_local = NULL;
-
-			if (!fu_cros_ec_usb_device_transfer_section(device,
-								    firmware,
-								    section,
-								    fu_progress_get_child(progress),
-								    &error_local)) {
-				if (g_error_matches(error_local,
-						    G_USB_DEVICE_ERROR,
-						    G_USB_DEVICE_ERROR_NOT_SUPPORTED)) {
-					g_debug("failed to transfer section, trying another write, "
-						"ignoring error: %s",
-						error_local->message);
-					fu_device_add_flag(
-					    device,
-					    FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
-					fu_progress_finished(progress);
-					return TRUE;
-				}
-				g_propagate_error(error, g_steal_pointer(&error_local));
-				return FALSE;
+		if (!fu_cros_ec_usb_device_transfer_section(device,
+							    firmware,
+							    section,
+							    fu_progress_get_child(progress),
+							    &error_local)) {
+			if (g_error_matches(error_local,
+					    G_USB_DEVICE_ERROR,
+					    G_USB_DEVICE_ERROR_NOT_SUPPORTED)) {
+				g_debug("failed to transfer section, trying another write, "
+					"ignoring error: %s",
+					error_local->message);
+				fu_device_add_flag(device,
+						   FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
+				fu_progress_finished(progress);
+				return TRUE;
 			}
-			num_txed_sections++;
-
-			if (self->in_bootloader) {
-				fu_device_set_version(FU_DEVICE(device), section->version.triplet);
-			} else {
-				fu_device_set_version_bootloader(FU_DEVICE(device),
-								 section->version.triplet);
-			}
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
 		}
+
+		if (self->in_bootloader) {
+			fu_device_set_version(FU_DEVICE(device), section->version.triplet);
+		} else {
+			fu_device_set_version_bootloader(FU_DEVICE(device),
+							 section->version.triplet);
+		}
+
 		fu_progress_step_done(progress);
 	}
 	/* send done */
 	fu_cros_ec_usb_device_send_done(device);
-
-	if (num_txed_sections == 0) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "no sections transferred");
-		return FALSE;
-	}
 
 	if (self->in_bootloader)
 		fu_device_add_private_flag(device, FU_CROS_EC_USB_DEVICE_FLAG_RW_WRITTEN);
