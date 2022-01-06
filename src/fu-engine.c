@@ -5873,20 +5873,6 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 			fu_device_set_alternate(device, device_alt);
 	}
 
-	if (fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN &&
-	    fu_common_version_guess_format(fu_device_get_version(device)) ==
-		FWUPD_VERSION_FORMAT_NUMBER) {
-		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_set_update_error(device, "VersionFormat is ambiguous for this device");
-	}
-
-	/* no vendor-id, and so no way to lock it down! */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
-	    fu_device_get_vendor_ids(device)->len == 0) {
-		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_set_update_error(device, "No vendor ID set");
-	}
-
 	/* sometimes inherit flags from recent history */
 	fu_engine_device_inherit_history(self, device);
 
@@ -5894,12 +5880,16 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED))
 		fu_engine_plugin_device_register(self, device);
 
-	/* does the device *still* not have a vendor ID? */
+	if (fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN &&
+	    fu_common_version_guess_format(fu_device_get_version(device)) ==
+		FWUPD_VERSION_FORMAT_NUMBER) {
+		fu_device_inhibit(device, "version-format", "VersionFormat is ambiguous");
+	}
+
+	/* no vendor-id, and so no way to lock it down! */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
 	    fu_device_get_vendor_ids(device)->len == 0) {
-		g_warning("device %s [%s] does not define a vendor-id!",
-			  fu_device_get_id(device),
-			  fu_device_get_name(device));
+		fu_device_inhibit(device, "vendor-id", "No vendor ID set");
 	}
 
 	/* create new device */
