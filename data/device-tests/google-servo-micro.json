@@ -1,0 +1,28 @@
+{
+  "name": "Google Servo Micro",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/3c3123b6eaa89d5469553b301210a9e4cb06efa98a1cb7c6847a1d10bb0a0c4b-servo_micro_v2.4.0.cab",
+      "components": [
+        {
+          "version": "2.4.0",
+          "guids": [
+            "13564257-c649-586d-b4e4-4f048d480f36"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/1dc362734f138e71fa838ac5503491d297715d7e9bccc0424a62c4a5c68526cc-servo_micro_v2.4.17.cab",
+      "components": [
+        {
+          "version": "2.4.17",
+          "guids": [
+            "13564257-c649-586d-b4e4-4f048d480f36"
+          ]
+        }
+      ]
+    }
+  ]
+}
