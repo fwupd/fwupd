@@ -186,12 +186,21 @@ fu_util_lock(FuUtilPrivate *priv, GError **error)
 	    .l_type = F_WRLCK,
 	    .l_whence = SEEK_SET,
 	};
-	g_autofree gchar *lockdir = NULL;
 	g_autofree gchar *lockfn = NULL;
+	gboolean use_user = FALSE;
+
+#ifdef HAVE_GETUID
+	if (getuid() != 0 || geteuid() != 0)
+		use_user = TRUE;
+#endif
 
 	/* open file */
-	lockdir = fu_common_get_path(FU_PATH_KIND_LOCKDIR);
-	lockfn = g_build_filename(lockdir, "fwupdtool", NULL);
+	if (use_user) {
+		lockfn = fu_util_get_user_cache_path("fwupdtool");
+	} else {
+		g_autofree gchar *lockdir = fu_common_get_path(FU_PATH_KIND_LOCKDIR);
+		lockfn = g_build_filename(lockdir, "fwupdtool", NULL);
+	}
 	if (!fu_common_mkdir_parent(lockfn, error))
 		return FALSE;
 	priv->lock_fd = g_open(lockfn, O_RDWR | O_CREAT, S_IRWXU);
