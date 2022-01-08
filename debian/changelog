@@ -10,8 +10,9 @@ fwupd (1.7.3-1) UNRELEASED; urgency=medium
   * Fix man page location
   * disable logitech bulk controller on ubuntu by default
   * disable logitech bulk controller on ubuntu by default
+  * add dual license nature of dell-dock plugin to debian/copyright
 
- -- Mario Limonciello <superm1@gmail.com>  Thu, 06 Jan 2022 10:44:29 -0600
+ -- Mario Limonciello <superm1@gmail.com>  Fri, 07 Jan 2022 23:41:05 -0600
 
 fwupd (1.7.1-1) unstable; urgency=medium
 
