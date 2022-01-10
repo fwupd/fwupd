@@ -51,6 +51,7 @@ typedef struct {
 	GHashTable *metadata; /* (nullable) */
 	GRWLock metadata_mutex;
 	GPtrArray *parent_guids;
+	GPtrArray *instance_ids_only_quirks; /* (nullable) */
 	GRWLock parent_guids_mutex;
 	GPtrArray *parent_physical_ids; /* (nullable) */
 	guint remove_delay;		/* ms */
@@ -1868,6 +1869,28 @@ fu_device_has_guid(FuDevice *self, const gchar *guid)
 	return fwupd_device_has_guid(FWUPD_DEVICE(self), guid);
 }
 
+static void
+fu_device_add_instance_id_only_quirks(FuDevice *self, const gchar *instance_id)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	/* not required */
+	if (g_getenv("FWUPD_PROBE_VERBOSE") == NULL)
+		return;
+
+	/* ensure */
+	if (priv->instance_ids_only_quirks == NULL)
+		priv->instance_ids_only_quirks = g_ptr_array_new_with_free_func(g_free);
+
+	/* if not already exists then add */
+	for (guint i = 0; i < priv->instance_ids_only_quirks->len; i++) {
+		const gchar *id_tmp = g_ptr_array_index(priv->instance_ids_only_quirks, i);
+		if (g_strcmp0(instance_id, id_tmp) == 0)
+			return;
+	}
+	g_ptr_array_add(priv->instance_ids_only_quirks, g_strdup(instance_id));
+}
+
 /**
  * fu_device_add_instance_id_full:
  * @self: a #FuDevice
@@ -1902,8 +1925,11 @@ fu_device_add_instance_id_full(FuDevice *self,
 	guid = fwupd_guid_hash_string(instance_id);
 	if ((flags & FU_DEVICE_INSTANCE_FLAG_NO_QUIRKS) == 0)
 		fu_device_add_guid_quirks(self, guid);
-	if ((flags & FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS) == 0)
+	if ((flags & FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS)) {
+		fu_device_add_instance_id_only_quirks(self, instance_id);
+	} else {
 		fwupd_device_add_instance_id(FWUPD_DEVICE(self), instance_id);
+	}
 
 	/* already done by ->setup(), so this must be ->registered() */
 	if (priv->done_setup)
@@ -3393,6 +3419,14 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 	for (guint i = 0; i < priv->possible_plugins->len; i++) {
 		const gchar *name = g_ptr_array_index(priv->possible_plugins, i);
 		fu_common_string_append_kv(str, idt + 1, "PossiblePlugin", name);
+	}
+	if (priv->instance_ids_only_quirks != NULL) {
+		for (guint i = 0; i < priv->instance_ids_only_quirks->len; i++) {
+			const gchar *id = g_ptr_array_index(priv->instance_ids_only_quirks, i);
+			g_autofree gchar *guid = fwupd_guid_hash_string(id);
+			g_autofree gchar *name = g_strdup_printf("%s ← %s ☆", guid, id);
+			fu_common_string_append_kv(str, idt + 1, "QuirkGuid", name);
+		}
 	}
 	if (priv->parent_physical_ids != NULL && priv->parent_physical_ids->len > 0) {
 		g_autofree gchar *flags = fu_common_strjoin_array(",", priv->parent_physical_ids);
@@ -4909,6 +4943,8 @@ fu_device_finalize(GObject *object)
 		g_ptr_array_unref(priv->parent_physical_ids);
 	if (priv->private_flag_items != NULL)
 		g_ptr_array_unref(priv->private_flag_items);
+	if (priv->instance_ids_only_quirks != NULL)
+		g_ptr_array_unref(priv->instance_ids_only_quirks);
 	g_ptr_array_unref(priv->parent_guids);
 	g_ptr_array_unref(priv->possible_plugins);
 	g_ptr_array_unref(priv->retry_recs);
