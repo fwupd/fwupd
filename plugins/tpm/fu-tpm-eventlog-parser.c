@@ -36,7 +36,8 @@
 static void
 fu_tpm_eventlog_parser_item_free(FuTpmEventlogItem *item)
 {
-	g_bytes_unref(item->blob);
+	if (item->blob != NULL)
+		g_bytes_unref(item->blob);
 	if (item->checksum_sha1 != NULL)
 		g_bytes_unref(item->checksum_sha1);
 	if (item->checksum_sha256 != NULL)
@@ -48,7 +49,6 @@ void
 fu_tpm_eventlog_item_to_string(FuTpmEventlogItem *item, guint idt, GString *str)
 {
 	const gchar *tmp;
-	g_autofree gchar *blobstr = fu_tpm_eventlog_blobstr(item->blob);
 	g_autofree gchar *pcrstr =
 	    g_strdup_printf("%s (%u)", fu_tpm_eventlog_pcr_to_string(item->pcr), item->pcr);
 	fu_common_string_append_kv(str, idt, "PCR", pcrstr);
@@ -64,8 +64,11 @@ fu_tpm_eventlog_item_to_string(FuTpmEventlogItem *item, guint idt, GString *str)
 		g_autofree gchar *csum = fu_tpm_eventlog_strhex(item->checksum_sha256);
 		fu_common_string_append_kv(str, idt, "ChecksumSha256", csum);
 	}
-	if (blobstr != NULL)
-		fu_common_string_append_kv(str, idt, "BlobStr", blobstr);
+	if (item->blob != NULL) {
+		g_autofree gchar *blobstr = fu_tpm_eventlog_blobstr(item->blob);
+		if (blobstr != NULL)
+			fu_common_string_append_kv(str, idt, "BlobStr", blobstr);
+	}
 }
 
 static GPtrArray *
@@ -184,35 +187,28 @@ fu_tpm_eventlog_parser_parse_blob_v2(const guint8 *buf,
 		idx += sizeof(datasz);
 		if (pcr == ESYS_TR_PCR0 || flags & FU_TPM_EVENTLOG_PARSER_FLAG_ALL_PCRS) {
 			FuTpmEventlogItem *item;
-			g_autofree guint8 *data = NULL;
 
 			/* build item */
-			data = g_malloc0(datasz);
-			if (!fu_memcpy_safe(data,
-					    datasz,
-					    0x0, /* dst */
-					    buf,
-					    bufsz,
-					    idx,
-					    datasz, /* src */
-					    error))
-				return NULL;
-
-			/* not normally required */
-			if (g_getenv("FWUPD_TPM_EVENTLOG_VERBOSE") != NULL) {
-				fu_common_dump_full(G_LOG_DOMAIN,
-						    "Event Data",
-						    data,
-						    datasz,
-						    20,
-						    FU_DUMP_FLAGS_SHOW_ASCII);
-			}
 			item = g_new0(FuTpmEventlogItem, 1);
 			item->pcr = pcr;
 			item->kind = event_type;
 			item->checksum_sha1 = g_steal_pointer(&checksum_sha1);
 			item->checksum_sha256 = g_steal_pointer(&checksum_sha256);
-			item->blob = g_bytes_new_take(g_steal_pointer(&data), datasz);
+			if (datasz > 0) {
+				g_autofree guint8 *data = g_malloc0(datasz);
+				if (!fu_memcpy_safe(data,
+						    datasz,
+						    0x0, /* dst */
+						    buf,
+						    bufsz,
+						    idx,
+						    datasz, /* src */
+						    error))
+					return NULL;
+				item->blob = g_bytes_new_take(g_steal_pointer(&data), datasz);
+				if (g_getenv("FWUPD_TPM_EVENTLOG_VERBOSE") != NULL)
+					fu_common_dump_bytes(G_LOG_DOMAIN, "TpmEvent", item->blob);
+			}
 			g_ptr_array_add(items, item);
 		}
 
@@ -285,7 +281,6 @@ fu_tpm_eventlog_parser_new(const guint8 *buf,
 		if (pcr == ESYS_TR_PCR0 || flags & FU_TPM_EVENTLOG_PARSER_FLAG_ALL_PCRS) {
 			FuTpmEventlogItem *item;
 			guint8 digest[TPM2_SHA1_DIGEST_SIZE] = {0x0};
-			g_autofree guint8 *data = NULL;
 
 			/* copy hash */
 			if (!fu_memcpy_safe(digest,
@@ -299,26 +294,26 @@ fu_tpm_eventlog_parser_new(const guint8 *buf,
 				return NULL;
 
 			/* build item */
-			data = g_malloc0(datasz);
-			if (!fu_memcpy_safe(data,
-					    datasz,
-					    0x0, /* dst */
-					    buf,
-					    bufsz,
-					    idx + FU_TPM_EVENTLOG_V1_SIZE, /* src */
-					    datasz,
-					    error))
-				return NULL;
 			item = g_new0(FuTpmEventlogItem, 1);
 			item->pcr = pcr;
 			item->kind = event_type;
 			item->checksum_sha1 = g_bytes_new(digest, sizeof(digest));
-			item->blob = g_bytes_new_take(g_steal_pointer(&data), datasz);
+			if (datasz > 0) {
+				g_autofree guint8 *data = g_malloc0(datasz);
+				if (!fu_memcpy_safe(data,
+						    datasz,
+						    0x0, /* dst */
+						    buf,
+						    bufsz,
+						    idx + FU_TPM_EVENTLOG_V1_SIZE, /* src */
+						    datasz,
+						    error))
+					return NULL;
+				item->blob = g_bytes_new_take(g_steal_pointer(&data), datasz);
+				if (g_getenv("FWUPD_TPM_EVENTLOG_VERBOSE") != NULL)
+					fu_common_dump_bytes(G_LOG_DOMAIN, "TpmEvent", item->blob);
+			}
 			g_ptr_array_add(items, item);
-
-			/* not normally required */
-			if (g_getenv("FWUPD_TPM_EVENTLOG_VERBOSE") != NULL)
-				fu_common_dump_bytes(G_LOG_DOMAIN, "Event Data", item->blob);
 		}
 		idx += datasz;
 	}
