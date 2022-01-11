@@ -354,6 +354,7 @@ fu_usb_device_close(FuDevice *device, GError **error)
 	if (priv->usb_device_locker == NULL)
 		return TRUE;
 
+#ifdef HAVE_GUSB
 	/* release interfaces, ignoring errors */
 	for (guint i = 0; priv->interfaces != NULL && i < priv->interfaces->len; i++) {
 		FuUsbDeviceInterface *iface = g_ptr_array_index(priv->interfaces, i);
@@ -381,6 +382,7 @@ fu_usb_device_close(FuDevice *device, GError **error)
 		}
 		iface->claimed = FALSE;
 	}
+#endif
 
 	g_clear_object(&priv->usb_device_locker);
 	return TRUE;
