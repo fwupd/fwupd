@@ -56,6 +56,7 @@ struct _FuQuirks {
 	XbSilo *silo;
 	XbQuery *query_kv;
 	XbQuery *query_vs;
+	gboolean verbose;
 };
 
 G_DEFINE_TYPE(FuQuirks, fu_quirks, G_TYPE_OBJECT)
@@ -430,6 +431,8 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
 		g_warning("failed to query: %s", error->message);
 		return NULL;
 	}
+	if (self->verbose)
+		g_debug("%s:%s → %s", guid, key, xb_node_get_text(n));
 	return xb_node_get_text(n);
 }
 
@@ -495,6 +498,8 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 	}
 	for (guint i = 0; i < results->len; i++) {
 		XbNode *n = g_ptr_array_index(results, i);
+		if (self->verbose)
+			g_debug("%s → %s", guid, xb_node_get_text(n));
 		iter_cb(self, xb_node_get_attr(n, "key"), xb_node_get_text(n), user_data);
 	}
 	return TRUE;
@@ -518,6 +523,7 @@ fu_quirks_load(FuQuirks *self, FuQuirksLoadFlags load_flags, GError **error)
 	g_return_val_if_fail(FU_IS_QUIRKS(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 	self->load_flags = load_flags;
+	self->verbose = g_getenv("FWUPD_XMLB_VERBOSE") != NULL;
 	return fu_quirks_check_silo(self, error);
 }
 
