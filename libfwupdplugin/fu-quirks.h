@@ -51,10 +51,10 @@ fu_quirks_load(FuQuirks *self,
 	       FuQuirksLoadFlags load_flags,
 	       GError **error) G_GNUC_WARN_UNUSED_RESULT;
 const gchar *
-fu_quirks_lookup_by_id(FuQuirks *self, const gchar *group, const gchar *key);
+fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key);
 gboolean
 fu_quirks_lookup_by_id_iter(FuQuirks *self,
-			    const gchar *group,
+			    const gchar *guid,
 			    FuQuirksIter iter_cb,
 			    gpointer user_data);
 void

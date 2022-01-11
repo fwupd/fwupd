@@ -372,7 +372,7 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
 /**
  * fu_quirks_lookup_by_id:
  * @self: a #FuQuirks
- * @group: a string group, e.g. `DeviceInstanceId=USB\VID_1235&PID_AB11`
+ * @guid: GUID to lookup
  * @key: an ID to match the entry, e.g. `Name`
  *
  * Looks up an entry in the hardware database using a string value.
@@ -382,9 +382,8 @@ fu_quirks_check_silo(FuQuirks *self, GError **error)
  * Since: 1.0.1
  **/
 const gchar *
-fu_quirks_lookup_by_id(FuQuirks *self, const gchar *group, const gchar *key)
+fu_quirks_lookup_by_id(FuQuirks *self, const gchar *guid, const gchar *key)
 {
-	g_autofree gchar *group_key = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(XbNode) n = NULL;
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
@@ -392,7 +391,7 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *group, const gchar *key)
 #endif
 
 	g_return_val_if_fail(FU_IS_QUIRKS(self), NULL);
-	g_return_val_if_fail(group != NULL, NULL);
+	g_return_val_if_fail(guid != NULL, NULL);
 	g_return_val_if_fail(key != NULL, NULL);
 
 	/* ensure up to date */
@@ -406,14 +405,13 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *group, const gchar *key)
 		return NULL;
 
 	/* query */
-	group_key = fu_quirks_build_group_key(group);
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
-	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, group_key, NULL);
+	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 1, key, NULL);
 	n = xb_silo_query_first_with_context(self->silo, self->query_kv, &context, &error);
 #else
-	if (!xb_query_bind_str(self->query_kv, 0, group_key, &error)) {
+	if (!xb_query_bind_str(self->query_kv, 0, guid, &error)) {
 		g_warning("failed to bind 0: %s", error->message);
 		return NULL;
 	}
@@ -438,7 +436,7 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *group, const gchar *key)
 /**
  * fu_quirks_lookup_by_id_iter:
  * @self: a #FuQuirks
- * @group: string of group to lookup
+ * @guid: GUID to lookup
  * @iter_cb: (scope async): a function to call for each result
  * @user_data: user data passed to @iter_cb
  *
@@ -450,11 +448,10 @@ fu_quirks_lookup_by_id(FuQuirks *self, const gchar *group, const gchar *key)
  **/
 gboolean
 fu_quirks_lookup_by_id_iter(FuQuirks *self,
-			    const gchar *group,
+			    const gchar *guid,
 			    FuQuirksIter iter_cb,
 			    gpointer user_data)
 {
-	g_autofree gchar *group_key = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) results = NULL;
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
@@ -462,7 +459,7 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 #endif
 
 	g_return_val_if_fail(FU_IS_QUIRKS(self), FALSE);
-	g_return_val_if_fail(group != NULL, FALSE);
+	g_return_val_if_fail(guid != NULL, FALSE);
 	g_return_val_if_fail(iter_cb != NULL, FALSE);
 
 	/* ensure up to date */
@@ -476,13 +473,12 @@ fu_quirks_lookup_by_id_iter(FuQuirks *self,
 		return FALSE;
 
 	/* query */
-	group_key = fu_quirks_build_group_key(group);
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
-	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, group_key, NULL);
+	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
 	results = xb_silo_query_with_context(self->silo, self->query_vs, &context, &error);
 #else
-	if (!xb_query_bind_str(self->query_vs, 0, group_key, &error)) {
+	if (!xb_query_bind_str(self->query_vs, 0, guid, &error)) {
 		g_warning("failed to bind 0: %s", error->message);
 		return FALSE;
 	}

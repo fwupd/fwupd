@@ -759,19 +759,31 @@ fu_plugin_quirks_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* exact */
-	tmp = fu_context_lookup_quirk_by_id(ctx, "USB\\VID_0A5C&PID_6412", "Flags");
+	/* USB\\VID_0A5C&PID_6412 */
+	tmp = fu_context_lookup_quirk_by_id(ctx, "7a1ba7b9-6bcd-54a4-8a36-d60cc5ee935c", "Flags");
 	g_assert_cmpstr(tmp, ==, "ignore-runtime");
-	tmp = fu_context_lookup_quirk_by_id(ctx, "ACME Inc.=True", "Name");
+
+	/* ACME Inc.=True */
+	tmp = fu_context_lookup_quirk_by_id(ctx, "ec77e295-7c63-5935-9957-be0472d9593a", "Name");
 	g_assert_cmpstr(tmp, ==, "awesome");
-	tmp = fu_context_lookup_quirk_by_id(ctx, "CORP*", "Name");
+
+	/* CORP* */
+	tmp = fu_context_lookup_quirk_by_id(ctx, "3731cce4-484c-521f-a652-892c8e0a65c7", "Name");
 	g_assert_cmpstr(tmp, ==, "town");
-	tmp = fu_context_lookup_quirk_by_id(ctx, "baz", "Unfound");
+
+	/* baz */
+	tmp = fu_context_lookup_quirk_by_id(ctx, "579a3b1c-d1db-5bdc-b6b9-e2c1b28d5b8a", "Unfound");
 	g_assert_cmpstr(tmp, ==, NULL);
-	tmp = fu_context_lookup_quirk_by_id(ctx, "unfound", "tests");
+
+	/* unfound */
+	tmp = fu_context_lookup_quirk_by_id(ctx, "8ff2ed23-b37e-5f61-b409-b7fe9563be36", "tests");
 	g_assert_cmpstr(tmp, ==, NULL);
-	tmp = fu_context_lookup_quirk_by_id(ctx, "unfound", "unfound");
+
+	/* unfound */
+	tmp = fu_context_lookup_quirk_by_id(ctx, "8ff2ed23-b37e-5f61-b409-b7fe9563be36", "unfound");
 	g_assert_cmpstr(tmp, ==, NULL);
+
+	/* GUID */
 	tmp = fu_context_lookup_quirk_by_id(ctx, "bb9ec3e2-77b3-53bc-a1f1-b05916715627", "Flags");
 	g_assert_cmpstr(tmp, ==, "clever");
 }
@@ -792,7 +804,7 @@ fu_plugin_quirks_performance_func(void)
 	/* lookup */
 	g_timer_reset(timer);
 	for (guint j = 0; j < 1000; j++) {
-		const gchar *group = "USB\\VID_0BDA&PID_1100";
+		const gchar *group = "bb9ec3e2-77b3-53bc-a1f1-b05916715627";
 		for (guint i = 0; keys[i] != NULL; i++) {
 			const gchar *tmp = fu_quirks_lookup_by_id(quirks, group, keys[i]);
 			g_assert_cmpstr(tmp, !=, NULL);
