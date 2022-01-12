@@ -51,9 +51,6 @@ fu_dell_dock_status_setup(FuDevice *device, GError **error)
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_version(device, dynamic_version);
 	fu_device_set_logical_id(FU_DEVICE(device), "status");
-
-	fu_dell_dock_clone_updatable(device);
-
 	return TRUE;
 }
 
@@ -160,6 +157,7 @@ static void
 fu_dell_dock_status_init(FuDellDockStatus *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.dock");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 }
 
 static void
