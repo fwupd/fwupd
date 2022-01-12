@@ -247,14 +247,6 @@ fu_util_start_engine(FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **erro
 	g_autoptr(GError) error_local = NULL;
 #endif
 
-#ifdef HAVE_GETUID
-	/* ensure root user */
-	if (priv->interactive && (getuid() != 0 || geteuid() != 0)) {
-		/* TRANSLATORS: we're poking around as a power user */
-		g_printerr("%s\n", _("This program may only work correctly as root"));
-	}
-#endif
-
 	if (!fu_util_lock(priv, error)) {
 		/* TRANSLATORS: another fwupdtool instance is already running */
 		g_prefix_error(error, "%s: ", _("Failed to lock"));
@@ -3669,6 +3661,13 @@ main(int argc, char *argv[])
 			g_debug("%s\n", error->message);
 			return EXIT_NOTHING_TO_DO;
 		}
+#ifdef HAVE_GETUID
+		/* if not root, then notify users on the error path */
+		if (priv->interactive && (getuid() != 0 || geteuid() != 0)) {
+			/* TRANSLATORS: we're poking around as a power user */
+			g_printerr("%s\n", _("NOTE: This program may only work correctly as root"));
+		}
+#endif
 		return EXIT_FAILURE;
 	}
 
