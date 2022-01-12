@@ -637,7 +637,7 @@ fu_plugin_uefi_capsule_unlock(FuPlugin *plugin, FuDevice *device, GError **error
 	/* clone the info from real device but prevent it from being flashed */
 	device_flags_alt = fu_device_get_flags(device_alt);
 	fu_device_set_flags(device, device_flags_alt);
-	fu_device_remove_flag(device_alt, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_inhibit(device_alt, "alt-device", "Preventing upgrades as alternate");
 
 	/* make sure that this unlocked device can be updated */
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_QUAD);

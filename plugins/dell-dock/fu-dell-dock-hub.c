@@ -197,6 +197,7 @@ fu_dell_dock_hub_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_dell_dock_hub_init(FuDellDockHub *self)
 {
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_retry_set_delay(FU_DEVICE(self), 1000);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_DELL_DOCK_HUB_FLAG_HAS_BRIDGE,
