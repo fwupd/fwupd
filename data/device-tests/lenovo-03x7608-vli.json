@@ -3,37 +3,18 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/a1c4d77e21d2733519d09bb2cce558b76052483ca5e976f7e49898e8a0ab6c86-Lenovo-Travel_Hub_Gen2_New.cab",
+      "url": "https://fwupd.org/downloads/ebfda3c96543d6d7ad97a972344f4d34a14549c535095bfbb1860115a88e6ff6-Lenovo-TravalHub-2020-12-11-153442.cab",
       "components": [
         {
           "name": "tier1",
-          "version": "4.64",
+          "version": "4.74",
           "guids": [
             "3fc55e47-f57a-55bd-9f41-ac60280bd689"
           ]
         },
         {
           "name": "tier3",
-          "version": "138.4.69.18",
-          "guids": [
-            "3ae6610b-5c33-5714-96e3-05735eb9b2a5"
-          ]
-        }
-      ]
-    },
-    {
-      "url": "https://fwupd.org/downloads/4c1cc0c3f855a2435f8e3b5dafe26f05148c151e9164e8c3c7c41507f9155e0f-Lenovo-Travel_Hub_Gen2_Old.cab",
-      "components": [
-        {
-          "name": "tier1",
-          "version": "4.44",
-          "guids": [
-            "3fc55e47-f57a-55bd-9f41-ac60280bd689"
-          ]
-        },
-        {
-          "name": "tier3",
-          "version": "138.4.17.18",
+          "version": "138.04.72.18",
           "guids": [
             "3ae6610b-5c33-5714-96e3-05735eb9b2a5"
           ]
