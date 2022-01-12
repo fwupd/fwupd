@@ -914,6 +914,7 @@ fu_util_device_test_filename(FuUtilPrivate *priv,
 			     GError **error)
 {
 	JsonNode *json_root;
+	JsonNode *json_steps;
 	JsonObject *json_obj;
 	guint repeat = 1;
 	g_autoptr(JsonParser) parser = json_parser_new();
@@ -943,6 +944,14 @@ fu_util_device_test_filename(FuUtilPrivate *priv,
 				    "JSON invalid as has no 'steps'");
 		return FALSE;
 	}
+	json_steps = json_object_get_member(json_obj, "steps");
+	if (!JSON_NODE_HOLDS_ARRAY(json_steps)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "JSON invalid as has 'steps' is not an array");
+		return FALSE;
+	}
 
 	/* some elements are optional */
 	if (json_object_has_member(json_obj, "name")) {
@@ -965,7 +974,7 @@ fu_util_device_test_filename(FuUtilPrivate *priv,
 	json_builder_set_member_name(helper->builder, "steps");
 	json_builder_begin_array(helper->builder);
 	for (guint j = 0; j < repeat; j++) {
-		JsonArray *json_array = json_object_get_array_member(json_obj, "steps");
+		JsonArray *json_array = json_node_get_array(json_steps);
 		for (guint i = 0; i < json_array_get_length(json_array); i++) {
 			JsonNode *json_node = json_array_get_element(json_array, i);
 			json_obj = json_node_get_object(json_node);
