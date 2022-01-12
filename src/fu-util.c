@@ -851,8 +851,10 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 		url_safe = g_strdup(url);
 	}
 	filename = fu_util_download_if_required(priv, url_safe, error);
-	if (filename == NULL)
+	if (filename == NULL) {
+		g_prefix_error(error, "failed to download %s: ", url_safe);
 		return FALSE;
+	}
 
 	/* log */
 	json_builder_set_member_name(helper->builder, "url");
