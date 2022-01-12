@@ -505,7 +505,6 @@ fu_realtek_mst_device_probe_version(FuDevice *device, GError **error)
 	g_autofree gchar *version_str = NULL;
 
 	/* ensure probed state is cleared in case of error */
-	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	self->active_bank = FLASH_BANK_INVALID;
 	fu_device_set_version(device, NULL);
@@ -514,18 +513,18 @@ fu_realtek_mst_device_probe_version(FuDevice *device, GError **error)
 		return FALSE;
 
 	if (!info.is_enabled) {
-		g_debug("dual-bank mode is not enabled");
+		fu_device_inhibit(device, "dual-bank", "Dual-bank mode is not enabled");
 		return TRUE;
 	}
 	if (info.mode != DUAL_BANK_DIFF) {
-		g_debug("can only update from dual-bank-diff mode");
+		fu_device_inhibit(device, "dual-bank", "Can only update from dual-bank-diff mode");
 		return TRUE;
 	}
 	/* dual-bank mode seems to be fully supported, so we can update
 	 * regardless of the active bank- if it's FLASH_BANK_BOOT, updating is
 	 * possible even if the current version is unknown */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_uninhibit(device, "dual-bank");
 
 	g_debug("device is currently running from bank %u", info.active_bank);
 	g_return_val_if_fail(info.active_bank <= FLASH_BANK_MAX_VALUE, FALSE);
@@ -945,6 +944,7 @@ fu_realtek_mst_device_init(FuRealtekMstDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rtd2142");
 	fu_device_set_vendor(FU_DEVICE(self), "Realtek");
 	fu_device_add_vendor_id(FU_DEVICE(self), "PCI:0x10EC");

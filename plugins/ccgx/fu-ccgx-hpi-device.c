@@ -1493,9 +1493,9 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 
 	/* not supported in boot mode */
 	if (self->fw_mode == FW_MODE_BOOT) {
-		fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_inhibit(device, "device-in-boot-mode", "Not supported in BOOT mode");
 	} else {
-		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_uninhibit(device, "device-in-boot-mode");
 	}
 
 	/* if we are coming back from reset, wait for hardware to settle */
@@ -1595,6 +1595,7 @@ fu_ccgx_hpi_device_init(FuCcgxHpiDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SELF_RECOVERY);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_retry_set_delay(FU_DEVICE(self), HPI_CMD_RETRY_DELAY);
 

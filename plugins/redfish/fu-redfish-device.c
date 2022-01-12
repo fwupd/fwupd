@@ -494,10 +494,14 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 	/* reasons why the device might not be updatable */
 	if (json_object_has_member(member, "Updateable")) {
 		if (!json_object_get_boolean_member(member, "Updateable"))
-			fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_inhibit(dev, "not-updatable", "Updateable property is FALSE");
+		else
+			fu_device_uninhibit(dev, "not-updatable");
 	}
 	if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_IS_BACKUP))
-		fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_inhibit(dev, "is-backup", "Is a backup partition");
+	else
+		fu_device_uninhibit(dev, "is-backup");
 
 	/* use related items to set extra instance IDs */
 	if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&

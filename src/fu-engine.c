@@ -4518,9 +4518,10 @@ fu_engine_get_details(FuEngine *self, FuEngineRequest *request, gint fd, GError 
 				g_debug("%s failed requirement checks: %s",
 					fu_device_get_id(dev),
 					error_req->message);
-				fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+				fu_device_inhibit(dev, "failed-reqs", error_req->message);
 			} else {
 				g_debug("%s passed requirement checks", fu_device_get_id(dev));
+				fu_device_uninhibit(dev, "failed-reqs");
 			}
 		}
 

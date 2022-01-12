@@ -393,10 +393,10 @@ fu_plugin_uefi_capsule_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 	if (data->esp == NULL)
 		data->esp = fu_common_get_esp_default(&error_local);
 	if (data->esp == NULL) {
-		fu_device_set_update_error(FU_DEVICE(dev), error_local->message);
-		fu_device_remove_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_inhibit(device, "no-esp", error_local->message);
 	} else {
 		fu_uefi_device_set_esp(dev, data->esp);
+		fu_device_uninhibit(device, "no-esp");
 	}
 	fu_plugin_device_add(plugin, FU_DEVICE(dev));
 }

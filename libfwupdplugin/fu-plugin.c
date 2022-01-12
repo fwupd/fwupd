@@ -464,19 +464,15 @@ fu_plugin_device_add(FuPlugin *self, FuDevice *device)
 
 	/* proxy to device where required */
 	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE)) {
-		g_debug("plugin %s has _CLEAR_UPDATABLE, so removing from %s",
-			fu_plugin_get_name(self),
-			fu_device_get_id(device));
-		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	}
-	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_USER_WARNING) &&
-	    fu_device_get_update_error(device) == NULL) {
-		const gchar *tmp = fu_plugin_build_device_update_error(self);
-		g_debug("setting %s update error to '%s' from %s",
-			fu_device_get_id(device),
-			tmp,
-			fu_plugin_get_name(self));
-		fu_device_set_update_error(device, tmp);
+		if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_USER_WARNING)) {
+			fu_device_inhibit(device,
+					  "clear-updatable",
+					  fu_plugin_build_device_update_error(self));
+		} else {
+			fu_device_inhibit(device,
+					  "clear-updatable",
+					  "Plugin disallowed updates with no user warning");
+		}
 	}
 
 	g_debug("emit added from %s: %s", fu_plugin_get_name(self), fu_device_get_id(device));
