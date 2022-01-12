@@ -3,7 +3,7 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/8e67c3eb84a6a52c39980eea7e048b723554af2c3604c72a33994d4ecf5e6c14-Logitech-RBM18-RBM18.00_B0010.cab",
+      "url": "https://fwupd.org/downloads/597a12cca95b9dcf19e82e5add970a45bf658de8c82dc329cc271a6c50d68752-Logitech-RBM18-RBM18.00_B0010.cab",
       "components": [
         {
           "version": "RBM18.00_B0010",
