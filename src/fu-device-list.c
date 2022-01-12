@@ -434,9 +434,6 @@ fu_device_list_device_delayed_remove_cb(gpointer user_data)
 static void
 fu_device_list_remove_with_delay(FuDeviceItem *item)
 {
-	/* we can't do anything with an unconnected device */
-	fu_device_remove_flag(item->device, FWUPD_DEVICE_FLAG_UPDATABLE);
-
 	/* give the hardware time to re-enumerate or the user time to
 	 * re-insert the device with a magic button pressed */
 	g_debug("waiting %ums for %s device removal",
@@ -477,6 +474,9 @@ fu_device_list_remove(FuDeviceList *self, FuDevice *device)
 		g_debug("device %s not found", fu_device_get_id(device));
 		return;
 	}
+
+	/* we can't do anything with an unconnected device */
+	fu_device_inhibit(item->device, "unconnected", "Device has been removed");
 
 	/* ensure never fired if the remove delay is changed */
 	if (item->remove_id > 0) {
@@ -584,6 +584,7 @@ fu_device_list_clear_wait_for_replug(FuDeviceList *self, FuDeviceItem *item)
 			fu_device_remove_flag(item->device_old, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 		}
 	}
+	fu_device_uninhibit(item->device, "unconnected");
 
 	/* optional debug */
 	if (g_getenv("FWUPD_DEVICE_LIST_VERBOSE") != NULL) {
@@ -747,6 +748,7 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 		/* same ID, different object */
 		g_debug("found existing device %s, reusing item", fu_device_get_id(item->device));
 		fu_device_list_replace(self, item, device);
+		fu_device_uninhibit(device, "unconnected");
 		return;
 	}
 
@@ -761,6 +763,7 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 			fu_device_get_plugin(item->device),
 			fu_device_get_plugin(device));
 		fu_device_list_replace(self, item, device);
+		fu_device_uninhibit(device, "unconnected");
 		return;
 	}
 
@@ -775,6 +778,7 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 				fu_device_get_plugin(item->device),
 				fu_device_get_plugin(device));
 			fu_device_list_replace(self, item, device);
+			fu_device_uninhibit(device, "unconnected");
 			return;
 		} else {
 			g_debug("not adding matching %s for device add, use "

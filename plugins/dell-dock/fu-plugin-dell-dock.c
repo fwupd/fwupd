@@ -183,9 +183,6 @@ fu_plugin_dell_dock_backend_device_added(FuPlugin *plugin, FuDevice *device, GEr
 
 	fu_plugin_device_add(plugin, FU_DEVICE(hub));
 
-	/* clear updatable flag if parent doesn't have it */
-	fu_dell_dock_clone_updatable(FU_DEVICE(hub));
-
 	return TRUE;
 }
 
@@ -233,12 +230,6 @@ fu_plugin_dell_dock_device_registered(FuPlugin *plugin, FuDevice *device)
 	if (g_strcmp0(fu_device_get_plugin(device), "dell_dock") == 0 &&
 	    (FU_IS_DELL_DOCK_EC(device) || FU_IS_DELL_DOCK_USB4(device)))
 		fu_plugin_dell_dock_separate_activation(plugin);
-
-	if (g_strcmp0(fu_device_get_plugin(device), "thunderbolt") != 0 ||
-	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INTERNAL))
-		return;
-	/* clone updatable flag to leave in needs activation state */
-	fu_dell_dock_clone_updatable(device);
 }
 
 static gboolean

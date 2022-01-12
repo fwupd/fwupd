@@ -579,17 +579,16 @@ fu_dell_dock_ec_get_dock_data(FuDevice *device, GError **error)
 	if (self->data->board_id >= self->board_min) {
 		if (status != FW_UPDATE_IN_PROGRESS) {
 			fu_dell_dock_ec_set_board(device);
-			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_uninhibit(device, "update-pending");
 		} else {
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
-			fu_device_set_update_error(device,
-						   "A pending update will be completed "
-						   "next time the dock is "
-						   "unplugged from your computer");
+			fu_device_inhibit(device,
+					  "update-pending",
+					  "A pending update will be completed next time the dock "
+					  "is unplugged from your computer");
 		}
 	} else {
-		g_warning("This utility does not support this board, disabling updates for %s",
-			  fu_device_get_name(device));
+		fu_device_inhibit(device, "not-supported", "Utility does not support this board");
 	}
 
 	return TRUE;
@@ -1014,6 +1013,8 @@ fu_dell_dock_ec_init(FuDellDockEc *self)
 	self->data = g_new0(FuDellDockDockDataStructure, 1);
 	self->raw_versions = g_new0(FuDellDockDockPackageFWVersion, 1);
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.dock");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN);
 }
 
 static void

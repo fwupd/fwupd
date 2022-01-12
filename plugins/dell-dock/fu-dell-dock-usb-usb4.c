@@ -575,9 +575,6 @@ fu_dell_dock_usb4_probe(FuDevice *device, GError **error)
 	self->intf_nr = GR_USB_INTERFACE_NUMBER;
 	self->blocksz = GR_USB_BLOCK_SIZE;
 	fu_device_set_logical_id(FU_DEVICE(device), "usb4");
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION);
 	return TRUE;
 }
 
@@ -591,6 +588,9 @@ static void
 fu_dell_dock_usb4_init(FuDellDockUsb4 *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHERIT_ACTIVATION);
 }
 
 static void

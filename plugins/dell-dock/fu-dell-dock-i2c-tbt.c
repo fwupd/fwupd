@@ -215,8 +215,6 @@ fu_dell_dock_tbt_setup(FuDevice *device, GError **error)
 		return TRUE;
 	}
 
-	fu_dell_dock_clone_updatable(device);
-
 	return TRUE;
 }
 
@@ -275,6 +273,7 @@ static void
 fu_dell_dock_tbt_init(FuDellDockTbt *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 }
 
 static void

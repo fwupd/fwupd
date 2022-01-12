@@ -1153,8 +1153,6 @@ fu_dell_dock_mst_setup(FuDevice *device, GError **error)
 		fu_device_set_version(device, version);
 	}
 
-	fu_dell_dock_clone_updatable(device);
-
 	return TRUE;
 }
 
@@ -1237,6 +1235,7 @@ static void
 fu_dell_dock_mst_init(FuDellDockMst *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.synaptics.mst");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 }
 
 static void
