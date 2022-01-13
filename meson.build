@@ -108,6 +108,9 @@ warning_flags = [
   '-Wvla',
   '-Wwrite-strings'
 ]
+if host_machine.system() != 'windows'
+  warning_flags += ['-fanalyzer', '-Wno-analyzer-null-dereference']
+endif
 cc = meson.get_compiler('c')
 add_project_arguments(cc.get_supported_arguments(warning_flags), language : 'c')
 
