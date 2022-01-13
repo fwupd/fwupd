@@ -1,4 +1,4 @@
-fwupd (1.7.3-1) UNRELEASED; urgency=medium
+fwupd (1.7.3-1) unstable; urgency=medium
 
   * New upstream version (1.7.3)
   * ignore subprojects and build directory from upstream builds in same folder
@@ -24,6 +24,7 @@ fwupd (1.7.1-1) unstable; urgency=medium
 
   [ Steve McIntyre ]
   * Update Mario's email address in debian/control
+  * Move manpages into section 8, fix lintian warnings.
 
  -- Mario Limonciello <superm1@gmail.com>  Mon, 03 Jan 2022 18:27:46 +0000
 
