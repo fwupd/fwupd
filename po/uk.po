@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Yuri Chornoivan <yurchor@ukr.net>, 2015-2021
+# Yuri Chornoivan <yurchor@ukr.net>, 2015-2022
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -885,6 +885,10 @@ msgid "FILENAME DEVICE-ID"
 msgstr "НАЗВА_ФАЙЛА ІД_ПРИСТРОЮ"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+msgstr "НАЗВА-ФАЙЛА ВІДСТУП ДАНІ [ТИП-МІКРОПРОГРАМИ]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "НАЗВА_ФАЙЛА [ІД_ПРИСТРОЮ|GUID]"
 
@@ -1550,6 +1554,10 @@ msgstr "Обробляємо системний dbx…"
 #. TRANSLATORS: remote filename base
 msgid "Password"
 msgstr "Пароль"
+
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr "Накласти латку на бінарний файл мікропрограми за відомим відступом"
 
 msgid "Payload"
 msgstr "Вміст"

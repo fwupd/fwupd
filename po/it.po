@@ -4,7 +4,7 @@
 #
 # Translators:
 # Gianvito Cavasoli <gianvito@gmx.it>, 2016
-# Milo Casagrande <milo@ubuntu.com>, 2017-2021
+# Milo Casagrande <milo@ubuntu.com>, 2017-2022
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -205,6 +205,13 @@ msgid "%u device has a firmware upgrade available."
 msgid_plural "%u devices have a firmware upgrade available."
 msgstr[0] "%u dispositivo ha un aggiornamento firmware disponibile."
 msgstr[1] "%u dispositivi hanno un aggiornamento firmware disponibile."
+
+#. TRANSLATORS: this is shown in the MOTD
+#, c-format
+msgid "%u device is not the best known configuration."
+msgid_plural "%u devices are not the best known configuration."
+msgstr[0] "%u dispositivo non dispone della configurazione migliore."
+msgstr[1] "%u dispositivi non dispongono della configurazione migliore."
 
 #. TRANSLATORS: duration in minutes
 #, c-format
@@ -853,6 +860,10 @@ msgstr "NOMEFILE NOME-ALT-DISPOSITIVO|ID-ALT-DISPOSITIVO [NOME-ALT-IMMAGINE|ID-A
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ID"
 msgstr "NOMEFILE ID-DISPOSITIVO"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+msgstr "FILENAME OFFSET DATA [TIPO-FIRMWARE]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
@@ -1515,6 +1526,10 @@ msgstr "Lettura dbx di sistema…"
 msgid "Password"
 msgstr "Password"
 
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr "Esegue una patch di un blob firmware a un offset noto"
+
 msgid "Payload"
 msgstr "Carico"
 
@@ -1691,6 +1706,10 @@ msgstr "Fornisce tutti gli ID hardware per un dispositivo"
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Per maggiori informazioni eseguire «fwupdmgr get-upgrades»."
+
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync-bkc` to complete this action."
+msgstr "Eseguire «fwupdmgr sync-bkc» per completare questa azione."
 
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
@@ -1982,6 +2001,12 @@ msgstr "PCR TPM vuoti"
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
 msgstr "TPM v2.0"
+
+#. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
+msgid "Tag"
+msgid_plural "Tags"
+msgstr[0] "Tag"
+msgstr[1] "Tag"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
@@ -2331,6 +2356,13 @@ msgstr "La propria distribuzione potrebbe non aver verificato la compatibilità 
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
 msgstr "Utilizzando questo firmware, l'hardware potrebbe danneggiarsi; inoltre, l'installazione di questa versione potrebbe annullare la garanzia con %s."
+
+#. TRANSLATORS: BKC is the industry name for the best known configuration and
+#. is a set
+#. * of firmware that works together
+#, c-format
+msgid "Your system is set up to the BKC of %s."
+msgstr "Il sistema è impostato per il BKC di %s."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"

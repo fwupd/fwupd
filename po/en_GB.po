@@ -4,7 +4,7 @@
 #
 # Translators:
 # Andi Chandler <andi@gowling.com>, 2019-2020
-# Richard Hughes <richard@hughsie.com>, 2015,2017-2021
+# Richard Hughes <richard@hughsie.com>, 2015,2017-2022
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -868,6 +868,10 @@ msgid "FILENAME DEVICE-ID"
 msgstr "FILENAME DEVICE-ID"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+msgstr "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "FILENAME [DEVICE-ID|GUID]"
 
@@ -1527,6 +1531,10 @@ msgstr "Parsing system dbx…"
 #. TRANSLATORS: remote filename base
 msgid "Password"
 msgstr "Password"
+
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr "Patch a firmware blob at a known offset"
 
 msgid "Payload"
 msgstr "Payload"
