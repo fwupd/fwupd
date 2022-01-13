@@ -80,6 +80,9 @@ cd $root
 contrib/ci/generate_news.py $VERSION > $DESTDIR/news.txt
 echo $VERSION > $DESTDIR/VERSION
 
+#disable motd for Windows
+sed -i 's,UpdateMotd=.*,UpdateMotd=false,' $DESTDIR/etc/fwupd/daemon.conf
+
 # create a setup binary
 cd $DESTDIR
 mkdir -p $DESTDIR/setup

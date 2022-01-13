@@ -19,12 +19,13 @@
 #define FASTBOOT_EP_IN			   0x81
 #define FASTBOOT_EP_OUT			   0x01
 #define FASTBOOT_CMD_BUFSZ		   64 /* bytes */
+#define FASTBOOT_US_TO_MS		   1000
 
 struct _FuFastbootDevice {
 	FuUsbDevice parent_instance;
 	gboolean secure;
 	guint blocksz;
-	guint8 intf_nr;
+	guint operation_delay;
 };
 
 G_DEFINE_TYPE(FuFastbootDevice, fu_fastboot_device, FU_TYPE_USB_DEVICE)
@@ -33,7 +34,6 @@ static void
 fu_fastboot_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
-	fu_common_string_append_kx(str, idt, "InterfaceNumber", self->intf_nr);
 	fu_common_string_append_kx(str, idt, "BlockSize", self->blocksz);
 	fu_common_string_append_kb(str, idt, "Secure", self->secure);
 }
@@ -49,29 +49,7 @@ fu_fastboot_device_probe(FuDevice *device, GError **error)
 	intf = g_usb_device_get_interface(usb_device, 0xff, 0x42, 0x03, error);
 	if (intf == NULL)
 		return FALSE;
-	self->intf_nr = g_usb_interface_get_number(intf);
-	return TRUE;
-}
-
-static gboolean
-fu_fastboot_device_open(FuDevice *device, GError **error)
-{
-	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	/* FuUsbDevice->open */
-	if (!FU_DEVICE_CLASS(fu_fastboot_device_parent_class)->open(device, error))
-		return FALSE;
-
-	if (!g_usb_device_claim_interface(usb_device,
-					  self->intf_nr,
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  error)) {
-		g_prefix_error(error, "failed to claim interface: ");
-		return FALSE;
-	}
-
-	/* success */
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), g_usb_interface_get_number(intf));
 	return TRUE;
 }
 
@@ -92,6 +70,7 @@ fu_fastboot_buffer_dump(const gchar *title, const guint8 *buf, gsize sz)
 static gboolean
 fu_fastboot_device_write(FuDevice *device, const guint8 *buf, gsize buflen, GError **error)
 {
+	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
 	gboolean ret;
 	gsize actual_len = 0;
@@ -111,6 +90,10 @@ fu_fastboot_device_write(FuDevice *device, const guint8 *buf, gsize buflen, GErr
 					 FASTBOOT_TRANSACTION_TIMEOUT,
 					 NULL,
 					 error);
+
+	/* give device some time to handle action */
+	g_usleep(self->operation_delay * FASTBOOT_US_TO_MS);
+
 	if (!ret) {
 		g_prefix_error(error, "failed to do bulk transfer: ");
 		return FALSE;
@@ -176,6 +159,9 @@ fu_fastboot_device_read(FuDevice *device,
 						 FASTBOOT_TRANSACTION_TIMEOUT,
 						 NULL,
 						 &error_local);
+		/* give device some time to handle action */
+		g_usleep(self->operation_delay * FASTBOOT_US_TO_MS);
+
 		if (!ret) {
 			if (g_error_matches(error_local,
 					    G_USB_DEVICE_ERROR,
@@ -664,38 +650,25 @@ fu_fastboot_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_fastboot_device_close(FuDevice *device, GError **error)
-{
-	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	/* we're done here */
-	if (!g_usb_device_release_interface(usb_device,
-					    self->intf_nr,
-					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					    error)) {
-		g_prefix_error(error, "failed to release interface: ");
-		return FALSE;
-	}
-
-	/* FuUsbDevice->close */
-	return FU_DEVICE_CLASS(fu_fastboot_device_parent_class)->close(device, error);
-}
-
-static gboolean
 fu_fastboot_device_set_quirk_kv(FuDevice *device,
 				const gchar *key,
 				const gchar *value,
 				GError **error)
 {
 	FuFastbootDevice *self = FU_FASTBOOT_DEVICE(device);
+	guint64 tmp = 0;
 
 	/* load from quirks */
 	if (g_strcmp0(key, "FastbootBlockSize") == 0) {
-		guint64 tmp = 0;
 		if (!fu_common_strtoull_full(value, &tmp, 0x40, 0x100000, error))
 			return FALSE;
 		self->blocksz = tmp;
+		return TRUE;
+	}
+	if (g_strcmp0(key, "FastbootOperationDelay") == 0) {
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXSIZE, error))
+			return FALSE;
+		self->operation_delay = tmp;
 		return TRUE;
 	}
 
@@ -733,6 +706,8 @@ fu_fastboot_device_init(FuFastbootDevice *self)
 {
 	/* this is a safe default, even using USBv1 */
 	self->blocksz = 512;
+	/* no delay is applied by default after a read or write operation */
+	self->operation_delay = 0;
 	fu_device_add_protocol(FU_DEVICE(self), "com.google.fastboot");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
@@ -752,7 +727,5 @@ fu_fastboot_device_class_init(FuFastbootDeviceClass *klass)
 	klass_device->attach = fu_fastboot_device_attach;
 	klass_device->to_string = fu_fastboot_device_to_string;
 	klass_device->set_quirk_kv = fu_fastboot_device_set_quirk_kv;
-	klass_device->open = fu_fastboot_device_open;
-	klass_device->close = fu_fastboot_device_close;
 	klass_device->set_progress = fu_fastboot_device_set_progress;
 }

@@ -46,3 +46,7 @@ gboolean
 fu_usb_device_is_open(FuUsbDevice *device);
 GUdevDevice *
 fu_usb_device_find_udev_device(FuUsbDevice *device, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+void
+fu_usb_device_set_configuration(FuUsbDevice *device, gint configuration);
+void
+fu_usb_device_add_interface(FuUsbDevice *device, guint8 number);

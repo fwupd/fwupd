@@ -28,6 +28,7 @@ struct _FuCfiDeviceClass {
  * @FU_CFI_DEVICE_CMD_SECTOR_ERASE:	Sector erase
  * @FU_CFI_DEVICE_CMD_WRITE_EN:		Write enable
  * @FU_CFI_DEVICE_CMD_WRITE_STATUS:	Write status
+ * @FU_CFI_DEVICE_CMD_BLOCK_ERASE:	Block erase
  *
  * Commands used when calling fu_cfi_device_get_cmd().
  **/
@@ -40,6 +41,7 @@ typedef enum {
 	FU_CFI_DEVICE_CMD_SECTOR_ERASE,
 	FU_CFI_DEVICE_CMD_WRITE_EN,
 	FU_CFI_DEVICE_CMD_WRITE_STATUS,
+	FU_CFI_DEVICE_CMD_BLOCK_ERASE,
 	/*< private >*/
 	FU_CFI_DEVICE_CMD_LAST
 } FuCfiDeviceCmd;
@@ -62,5 +64,9 @@ guint32
 fu_cfi_device_get_sector_size(FuCfiDevice *self);
 void
 fu_cfi_device_set_sector_size(FuCfiDevice *self, guint32 sector_size);
+guint32
+fu_cfi_device_get_block_size(FuCfiDevice *self);
+void
+fu_cfi_device_set_block_size(FuCfiDevice *self, guint32 block_size);
 gboolean
 fu_cfi_device_get_cmd(FuCfiDevice *self, FuCfiDeviceCmd cmd, guint8 *value, GError **error);

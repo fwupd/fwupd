@@ -14,7 +14,8 @@ with a non-standard filesystem layout.
 * `FWUPD_DEVICE_TESTS_BASE_URI` sets the base URI when downloading firmware for the device-tests
 * `FWUPD_SUPPORTED` overrides the `-Dsupported_build` meson option at runtime
 * `FWUPD_VERBOSE` is set when running `--verbose`
-* `FWUPD_XMLB_VERBOSE` can be set to show Xmlb silo regeneration
+* `FWUPD_XMLB_VERBOSE` can be set to show Xmlb silo regeneration and quirk matches
+* `FWUPD_DOWNLOAD_VERBOSE` can be used to show wget or curl output
 * standard glibc variables like `LANG` are also honored for CLI tools that are translated
 * libcurl respects the session proxy, e.g. `http_proxy`, `all_proxy`, `sftp_proxy` and `no_proxy`
 

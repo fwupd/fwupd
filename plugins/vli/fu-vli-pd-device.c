@@ -835,7 +835,10 @@ fu_vli_pd_device_init(FuVliPdDevice *self)
 					"has-i2c-ps186");
 
 	/* connect up attach or detach vfuncs when kind is known */
-	g_signal_connect(self, "notify::kind", G_CALLBACK(fu_vli_pd_device_kind_changed_cb), NULL);
+	g_signal_connect(FU_VLI_DEVICE(self),
+			 "notify::kind",
+			 G_CALLBACK(fu_vli_pd_device_kind_changed_cb),
+			 NULL);
 }
 
 static void

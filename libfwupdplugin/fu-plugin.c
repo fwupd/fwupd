@@ -10,6 +10,7 @@
 
 #include <errno.h>
 #include <fwupd.h>
+#include <glib/gstdio.h>
 #include <gmodule.h>
 #include <string.h>
 #include <unistd.h>
@@ -463,19 +464,15 @@ fu_plugin_device_add(FuPlugin *self, FuDevice *device)
 
 	/* proxy to device where required */
 	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_CLEAR_UPDATABLE)) {
-		g_debug("plugin %s has _CLEAR_UPDATABLE, so removing from %s",
-			fu_plugin_get_name(self),
-			fu_device_get_id(device));
-		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-	}
-	if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_USER_WARNING) &&
-	    fu_device_get_update_error(device) == NULL) {
-		const gchar *tmp = fu_plugin_build_device_update_error(self);
-		g_debug("setting %s update error to '%s' from %s",
-			fu_device_get_id(device),
-			tmp,
-			fu_plugin_get_name(self));
-		fu_device_set_update_error(device, tmp);
+		if (fu_plugin_has_flag(self, FWUPD_PLUGIN_FLAG_USER_WARNING)) {
+			fu_device_inhibit(device,
+					  "clear-updatable",
+					  fu_plugin_build_device_update_error(self));
+		} else {
+			fu_device_inhibit(device,
+					  "clear-updatable",
+					  "Plugin disallowed updates with no user warning");
+		}
 	}
 
 	g_debug("emit added from %s: %s", fu_plugin_get_name(self), fu_device_get_id(device));
@@ -492,8 +489,11 @@ fu_plugin_device_add(FuPlugin *self, FuDevice *device)
 	}
 
 	/* watch to see if children are added or removed at runtime */
-	g_signal_connect(device, "child-added", G_CALLBACK(fu_plugin_device_child_added_cb), self);
-	g_signal_connect(device,
+	g_signal_connect(FU_DEVICE(device),
+			 "child-added",
+			 G_CALLBACK(fu_plugin_device_child_added_cb),
+			 self);
+	g_signal_connect(FU_DEVICE(device),
 			 "child-removed",
 			 G_CALLBACK(fu_plugin_device_child_removed_cb),
 			 self);
@@ -831,7 +831,7 @@ fu_plugin_runner_startup(FuPlugin *self, GError **error)
 	priv->config_monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, error);
 	if (priv->config_monitor == NULL)
 		return FALSE;
-	g_signal_connect(priv->config_monitor,
+	g_signal_connect(G_FILE_MONITOR(priv->config_monitor),
 			 "changed",
 			 G_CALLBACK(fu_plugin_config_monitor_changed_cb),
 			 self);
@@ -2261,6 +2261,49 @@ fu_plugin_set_config_value(FuPlugin *self, const gchar *key, const gchar *value,
 }
 
 /**
+ * fu_plugin_set_secure_config_value:
+ * @self: a #FuPlugin
+ * @key: a settings key
+ * @value: (nullable): a settings value
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets a plugin config file value and updates file so that non-privileged users
+ * cannot read it.
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.7.4
+ **/
+gboolean
+fu_plugin_set_secure_config_value(FuPlugin *self,
+				  const gchar *key,
+				  const gchar *value,
+				  GError **error)
+{
+	g_autofree gchar *conf_path = fu_plugin_get_config_filename(self);
+	gint ret;
+
+	g_return_val_if_fail(FU_IS_PLUGIN(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	if (!g_file_test(conf_path, G_FILE_TEST_EXISTS)) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "%s is missing", conf_path);
+		return FALSE;
+	}
+	ret = g_chmod(conf_path, 0660);
+	if (ret == -1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "failed to set permissions on %s",
+			    conf_path);
+		return FALSE;
+	}
+
+	return fu_plugin_set_config_value(self, key, value, error);
+}
+
+/**
  * fu_plugin_get_config_value_boolean:
  * @self: a #FuPlugin
  * @key: a settings key
@@ -2325,6 +2368,16 @@ fu_plugin_class_init(FuPluginClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_plugin_finalize;
+
+	/**
+	 * FuPlugin::device-added:
+	 * @self: the #FuPlugin instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-added signal is emitted when a device has been added by the plugin.
+	 *
+	 * Since: 0.8.0
+	 **/
 	signals[SIGNAL_DEVICE_ADDED] = g_signal_new("device-added",
 						    G_TYPE_FROM_CLASS(object_class),
 						    G_SIGNAL_RUN_LAST,
@@ -2335,6 +2388,15 @@ fu_plugin_class_init(FuPluginClass *klass)
 						    G_TYPE_NONE,
 						    1,
 						    FU_TYPE_DEVICE);
+	/**
+	 * FuPlugin::device-removed:
+	 * @self: the #FuPlugin instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-removed signal is emitted when a device has been removed by the plugin.
+	 *
+	 * Since: 0.8.0
+	 **/
 	signals[SIGNAL_DEVICE_REMOVED] =
 	    g_signal_new("device-removed",
 			 G_TYPE_FROM_CLASS(object_class),
@@ -2346,6 +2408,15 @@ fu_plugin_class_init(FuPluginClass *klass)
 			 G_TYPE_NONE,
 			 1,
 			 FU_TYPE_DEVICE);
+	/**
+	 * FuPlugin::device-register:
+	 * @self: the #FuPlugin instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-register signal is emitted when another plugin has added the device.
+	 *
+	 * Since: 0.9.7
+	 **/
 	signals[SIGNAL_DEVICE_REGISTER] =
 	    g_signal_new("device-register",
 			 G_TYPE_FROM_CLASS(object_class),
@@ -2357,6 +2428,18 @@ fu_plugin_class_init(FuPluginClass *klass)
 			 G_TYPE_NONE,
 			 1,
 			 FU_TYPE_DEVICE);
+	/**
+	 * FuPlugin::check-supported:
+	 * @self: the #FuPlugin instance that emitted the signal
+	 * @guid: a device GUID
+	 *
+	 * The ::check-supported signal is emitted when a plugin wants to ask the daemon if a
+	 * specific device GUID is supported in the existing system metadata.
+	 *
+	 * Returns: %TRUE if the GUID is found
+	 *
+	 * Since: 1.0.0
+	 **/
 	signals[SIGNAL_CHECK_SUPPORTED] =
 	    g_signal_new("check-supported",
 			 G_TYPE_FROM_CLASS(object_class),
@@ -2377,6 +2460,15 @@ fu_plugin_class_init(FuPluginClass *klass)
 						     g_cclosure_marshal_VOID__VOID,
 						     G_TYPE_NONE,
 						     0);
+	/**
+	 * FuPlugin::config-changed:
+	 * @self: the #FuPlugin instance that emitted the signal
+	 *
+	 * The ::config-changed signal is emitted when one or more config files have changed which
+	 * may affect how the daemon should be run.
+	 *
+	 * Since: 1.7.0
+	 **/
 	signals[SIGNAL_CONFIG_CHANGED] =
 	    g_signal_new("config-changed",
 			 G_TYPE_FROM_CLASS(object_class),

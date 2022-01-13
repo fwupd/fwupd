@@ -312,6 +312,7 @@ fu_device_cfi_device_func(void)
 	g_assert_cmpint(fu_cfi_device_get_size(cfi_device), ==, 0x10000);
 	g_assert_cmpint(fu_cfi_device_get_page_size(cfi_device), ==, 0x200);
 	g_assert_cmpint(fu_cfi_device_get_sector_size(cfi_device), ==, 0x2000);
+	g_assert_cmpint(fu_cfi_device_get_block_size(cfi_device), ==, 0x8000);
 }
 
 static void
@@ -477,6 +478,30 @@ _strnsplit_nop_cb(GString *token, guint token_idx, gpointer user_data, GError **
 	guint *cnt = (guint *)user_data;
 	(*cnt)++;
 	return TRUE;
+}
+
+static void
+fu_common_memmem_func(void)
+{
+	const guint8 haystack[] = {'H', 'A', 'Y', 'S'};
+	const guint8 needle[] = {'A', 'Y'};
+	gboolean ret;
+	gsize offset = 0;
+	g_autoptr(GError) error = NULL;
+
+	ret = fu_memmem_safe(haystack, sizeof(haystack), needle, sizeof(needle), &offset, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	g_assert_cmpint(offset, ==, 0x1);
+
+	ret = fu_memmem_safe(haystack + 2,
+			     sizeof(haystack) - 2,
+			     needle,
+			     sizeof(needle),
+			     &offset,
+			     &error);
+	g_assert_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND);
+	g_assert_false(ret);
 }
 
 static void
@@ -694,8 +719,11 @@ fu_plugin_delay_func(void)
 	g_autoptr(FuDevice) device = NULL;
 
 	plugin = fu_plugin_new(NULL);
-	g_signal_connect(plugin, "device-added", G_CALLBACK(_plugin_device_added_cb), &device_tmp);
-	g_signal_connect(plugin,
+	g_signal_connect(FU_PLUGIN(plugin),
+			 "device-added",
+			 G_CALLBACK(_plugin_device_added_cb),
+			 &device_tmp);
+	g_signal_connect(FU_PLUGIN(plugin),
 			 "device-removed",
 			 G_CALLBACK(_plugin_device_added_cb),
 			 &device_tmp);
@@ -731,19 +759,31 @@ fu_plugin_quirks_func(void)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
-	/* exact */
-	tmp = fu_context_lookup_quirk_by_id(ctx, "USB\\VID_0A5C&PID_6412", "Flags");
+	/* USB\\VID_0A5C&PID_6412 */
+	tmp = fu_context_lookup_quirk_by_id(ctx, "7a1ba7b9-6bcd-54a4-8a36-d60cc5ee935c", "Flags");
 	g_assert_cmpstr(tmp, ==, "ignore-runtime");
-	tmp = fu_context_lookup_quirk_by_id(ctx, "ACME Inc.=True", "Name");
+
+	/* ACME Inc.=True */
+	tmp = fu_context_lookup_quirk_by_id(ctx, "ec77e295-7c63-5935-9957-be0472d9593a", "Name");
 	g_assert_cmpstr(tmp, ==, "awesome");
-	tmp = fu_context_lookup_quirk_by_id(ctx, "CORP*", "Name");
+
+	/* CORP* */
+	tmp = fu_context_lookup_quirk_by_id(ctx, "3731cce4-484c-521f-a652-892c8e0a65c7", "Name");
 	g_assert_cmpstr(tmp, ==, "town");
-	tmp = fu_context_lookup_quirk_by_id(ctx, "baz", "Unfound");
+
+	/* baz */
+	tmp = fu_context_lookup_quirk_by_id(ctx, "579a3b1c-d1db-5bdc-b6b9-e2c1b28d5b8a", "Unfound");
 	g_assert_cmpstr(tmp, ==, NULL);
-	tmp = fu_context_lookup_quirk_by_id(ctx, "unfound", "tests");
+
+	/* unfound */
+	tmp = fu_context_lookup_quirk_by_id(ctx, "8ff2ed23-b37e-5f61-b409-b7fe9563be36", "tests");
 	g_assert_cmpstr(tmp, ==, NULL);
-	tmp = fu_context_lookup_quirk_by_id(ctx, "unfound", "unfound");
+
+	/* unfound */
+	tmp = fu_context_lookup_quirk_by_id(ctx, "8ff2ed23-b37e-5f61-b409-b7fe9563be36", "unfound");
 	g_assert_cmpstr(tmp, ==, NULL);
+
+	/* GUID */
 	tmp = fu_context_lookup_quirk_by_id(ctx, "bb9ec3e2-77b3-53bc-a1f1-b05916715627", "Flags");
 	g_assert_cmpstr(tmp, ==, "clever");
 }
@@ -764,7 +804,7 @@ fu_plugin_quirks_performance_func(void)
 	/* lookup */
 	g_timer_reset(timer);
 	for (guint j = 0; j < 1000; j++) {
-		const gchar *group = "USB\\VID_0BDA&PID_1100";
+		const gchar *group = "bb9ec3e2-77b3-53bc-a1f1-b05916715627";
 		for (guint i = 0; keys[i] != NULL; i++) {
 			const gchar *tmp = fu_quirks_lookup_by_id(quirks, group, keys[i]);
 			g_assert_cmpstr(tmp, !=, NULL);
@@ -1765,7 +1805,7 @@ fu_device_private_flags_func(void)
 			==,
 			"FuDevice:\n"
 			"  Flags:                none\n"
-			"  CustomFlags:          baz\n" /* compat */
+			"  CustomFlags:          baz\n"
 			"  PrivateFlags:         foo\n");
 }
 
@@ -2807,6 +2847,45 @@ fu_firmware_dfu_func(void)
 }
 
 static void
+fu_firmware_dfu_patch_func(void)
+{
+	gboolean ret;
+	g_autofree gchar *csum = NULL;
+	g_autofree gchar *filename_dfu = NULL;
+	g_autoptr(FuFirmware) firmware = fu_dfu_firmware_new();
+	g_autoptr(GBytes) data_dfu = NULL;
+	g_autoptr(GBytes) data_new = NULL;
+	g_autoptr(GBytes) data_patch0 = g_bytes_new_static("XXXX", 4);
+	g_autoptr(GBytes) data_patch1 = g_bytes_new_static("HELO", 4);
+	g_autoptr(GError) error = NULL;
+
+	filename_dfu = g_test_build_filename(G_TEST_DIST, "tests", "firmware.dfu", NULL);
+	data_dfu = fu_common_get_contents_bytes(filename_dfu, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_dfu);
+	ret = fu_firmware_parse(firmware, data_dfu, FWUPD_INSTALL_FLAG_NONE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
+	/* add a couple of patches */
+	fu_firmware_add_patch(firmware, 0x0, data_patch0);
+	fu_firmware_add_patch(firmware, 0x0, data_patch1);
+	fu_firmware_add_patch(firmware, 136 - 4, data_patch1);
+
+	data_new = fu_firmware_write(firmware, &error);
+	g_assert_no_error(error);
+	g_assert_nonnull(data_new);
+	fu_common_dump_full(G_LOG_DOMAIN,
+			    "patch",
+			    g_bytes_get_data(data_new, NULL),
+			    g_bytes_get_size(data_new),
+			    20,
+			    FU_DUMP_FLAGS_SHOW_ASCII | FU_DUMP_FLAGS_SHOW_ADDRESSES);
+	csum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data_new);
+	g_assert_cmpstr(csum, ==, "0722727426092ac564861d1a11697182017be83f");
+}
+
+static void
 fu_firmware_func(void)
 {
 	gboolean ret;
@@ -3566,7 +3645,7 @@ fu_progress_func(void)
 	FuProgressHelper helper = {0};
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
 
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_progress_percentage_changed_cb),
 			 &helper);
@@ -3592,7 +3671,7 @@ fu_progress_child_func(void)
 
 	/* reset */
 	fu_progress_set_steps(progress, 2);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_progress_percentage_changed_cb),
 			 &helper);
@@ -3642,7 +3721,7 @@ fu_progress_parent_one_step_proxy_func(void)
 
 	/* one step */
 	fu_progress_set_steps(progress, 1);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_progress_percentage_changed_cb),
 			 &helper);
@@ -3789,6 +3868,7 @@ main(int argc, char **argv)
 	g_setenv("FWUPD_LOCALSTATEDIR", "/tmp/fwupd-self-test/var", TRUE);
 
 	g_test_add_func("/fwupd/common{strnsplit}", fu_common_strnsplit_func);
+	g_test_add_func("/fwupd/common{memmem}", fu_common_memmem_func);
 	g_test_add_func("/fwupd/progress", fu_progress_func);
 	g_test_add_func("/fwupd/progress{child}", fu_progress_child_func);
 	g_test_add_func("/fwupd/progress{parent-1-step}", fu_progress_parent_one_step_proxy_func);
@@ -3856,6 +3936,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/firmware{srec}", fu_firmware_srec_func);
 	g_test_add_func("/fwupd/firmware{srec-xml}", fu_firmware_srec_xml_func);
 	g_test_add_func("/fwupd/firmware{dfu}", fu_firmware_dfu_func);
+	g_test_add_func("/fwupd/firmware{dfu-patch}", fu_firmware_dfu_patch_func);
 	g_test_add_func("/fwupd/firmware{dfuse}", fu_firmware_dfuse_func);
 	g_test_add_func("/fwupd/firmware{dfuse-xml}", fu_firmware_dfuse_xml_func);
 	g_test_add_func("/fwupd/firmware{fmap}", fu_firmware_fmap_func);

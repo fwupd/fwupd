@@ -114,8 +114,11 @@ fu_plugin_flashrom_device_set_bios_info(FuPlugin *plugin, FuDevice *device)
 
 	/* BIOS characteristics */
 	if (fu_common_read_uint32_safe(buf, bufsz, 0xa, &bios_char, G_LITTLE_ENDIAN, NULL)) {
-		if ((bios_char & (1 << 11)) == 0)
-			fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+		if ((bios_char & (1 << 11)) == 0) {
+			fu_device_inhibit(device,
+					  "bios-characteristics",
+					  "Not supported from SMBIOS");
+		}
 	}
 }
 

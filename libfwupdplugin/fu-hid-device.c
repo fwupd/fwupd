@@ -578,6 +578,13 @@ fu_hid_device_class_init(FuHidDeviceClass *klass)
 	klass_device->close = fu_hid_device_close;
 	klass_device->to_string = fu_hid_device_to_string;
 
+	/**
+	 * FuHidDevice:interface:
+	 *
+	 * The HID interface to use.
+	 *
+	 * Since: 1.4.0
+	 */
 	pspec = g_param_spec_uint("interface",
 				  NULL,
 				  NULL,

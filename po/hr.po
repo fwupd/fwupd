@@ -212,6 +212,14 @@ msgstr[0] "%u uređaj ima dostupnu nadopunu firmvera."
 msgstr[1] "%u uređaja imaju dostupnu nadopunu firmvera."
 msgstr[2] "%u uređaja ima dostupnu nadopunu firmvera."
 
+#. TRANSLATORS: this is shown in the MOTD
+#, c-format
+msgid "%u device is not the best known configuration."
+msgid_plural "%u devices are not the best known configuration."
+msgstr[0] "%u uređaj nema najbolje poznato podešavanje."
+msgstr[1] "%u uređaja nema najbolje poznato podešavanje."
+msgstr[2] "%u uređaja nema najbolje poznato podešavanje."
+
 #. TRANSLATORS: duration in minutes
 #, c-format
 msgid "%u hour"
@@ -565,6 +573,12 @@ msgstr "Prebaci u način učitača pokretanja"
 #. TRANSLATORS: more details about the update link
 msgid "Details"
 msgstr "Pojedinosti"
+
+#. TRANSLATORS: the best known configuration is a set of software that we know
+#. works well
+#. * together. In the OEM and ODM industries it is often called a BKC
+msgid "Deviate from the best known configuration?"
+msgstr "Odustani od najbolje poznatog podešavanja?"
 
 #. TRANSLATORS: description of device ability
 msgid "Device Flags"
@@ -1981,6 +1995,10 @@ msgstr "Prebaci ogranak sa %s na %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Zamijeni ogranak firmvera na uređaju"
 
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the host best known configuration"
+msgstr "Uskladi inačicu firmvera s najbolje poznatim podešavanjem na poslužitelju"
+
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
 msgstr "Sustav zahtijeva vanjski izvor energije"
@@ -2055,6 +2073,12 @@ msgstr "Nema blokiranih firmvera"
 #. * the domain administrator
 msgid "There is no approved firmware."
 msgstr "Ne postoji odobreni firmver."
+
+#. TRANSLATORS: %1 is the current device version number, and %2 is the
+#. command name, e.g. `fwupdmgr sync-bkc`
+#, c-format
+msgid "This device will be reverted back to %s when the %s command is performed."
+msgstr "Ovaj uređaj će biti vraćen natrag na %s kada se %s naredba pokrene."
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."

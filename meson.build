@@ -1,5 +1,5 @@
 project('fwupd', 'c',
-  version : '1.7.3',
+  version : '1.7.4',
   license : 'LGPL-2.1+',
   meson_version : '>=0.50.0',
   default_options : ['warning_level=2', 'c_std=c99'],
@@ -193,8 +193,8 @@ endif
 if gio.version().version_compare ('>= 2.55.0')
   conf.set('HAVE_GIO_2_55_0', '1')
 endif
-if build_standalone
 gmodule = dependency('gmodule-2.0')
+if build_standalone
 if get_option('gudev')
   gudev = dependency('gudev-1.0', version : '>= 232')
   conf.set('HAVE_GUDEV', '1')

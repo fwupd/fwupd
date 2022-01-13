@@ -494,10 +494,14 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 	/* reasons why the device might not be updatable */
 	if (json_object_has_member(member, "Updateable")) {
 		if (!json_object_get_boolean_member(member, "Updateable"))
-			fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_inhibit(dev, "not-updatable", "Updateable property is FALSE");
+		else
+			fu_device_uninhibit(dev, "not-updatable");
 	}
 	if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_IS_BACKUP))
-		fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_inhibit(dev, "is-backup", "Is a backup partition");
+	else
+		fu_device_uninhibit(dev, "is-backup");
 
 	/* use related items to set extra instance IDs */
 	if (fu_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
@@ -804,6 +808,7 @@ fu_redfish_device_init(FuRedfishDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_NAME);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_REDFISH_DEVICE_FLAG_IS_BACKUP,
 					"is-backup");
@@ -842,6 +847,11 @@ fu_redfish_device_class_init(FuRedfishDeviceClass *klass)
 	klass_device->to_string = fu_redfish_device_to_string;
 	klass_device->probe = fu_redfish_device_probe;
 
+	/**
+	 * FuRedfishDevice:backend:
+	 *
+	 * The backend that added the device.
+	 */
 	pspec =
 	    g_param_spec_object("backend",
 				NULL,
@@ -850,6 +860,11 @@ fu_redfish_device_class_init(FuRedfishDeviceClass *klass)
 				G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BACKEND, pspec);
 
+	/**
+	 * FuRedfishDevice:member:
+	 *
+	 * The JSON root member for the device.
+	 */
 	pspec =
 	    g_param_spec_pointer("member",
 				 NULL,

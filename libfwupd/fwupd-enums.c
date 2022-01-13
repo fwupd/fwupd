@@ -54,7 +54,7 @@ fwupd_status_to_string(FwupdStatus status)
 
 /**
  * fwupd_status_from_string:
- * @status: a string, e.g. `decompressing`
+ * @status: (nullable): a string, e.g. `decompressing`
  *
  * Converts a string to an enumerated status.
  *
@@ -208,7 +208,7 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 
 /**
  * fwupd_device_flag_from_string:
- * @device_flag: a string, e.g. `require-ac`
+ * @device_flag: (nullable): a string, e.g. `require-ac`
  *
  * Converts a string to a enumerated device flag.
  *
@@ -363,7 +363,7 @@ fwupd_plugin_flag_to_string(FwupdPluginFlags plugin_flag)
 
 /**
  * fwupd_plugin_flag_from_string:
- * @plugin_flag: a string, e.g. `require-ac`
+ * @plugin_flag: (nullable): a string, e.g. `require-ac`
  *
  * Converts a string to an enumerated plugin flag.
  *
@@ -435,7 +435,7 @@ fwupd_update_state_to_string(FwupdUpdateState update_state)
 
 /**
  * fwupd_update_state_from_string:
- * @update_state: a string, e.g. `pending`
+ * @update_state: (nullable): a string, e.g. `pending`
  *
  * Converts a string to a enumerated update state.
  *
@@ -485,7 +485,7 @@ fwupd_trust_flag_to_string(FwupdTrustFlags trust_flag)
 
 /**
  * fwupd_trust_flag_from_string:
- * @trust_flag: a string, e.g. `payload`
+ * @trust_flag: (nullable): a string, e.g. `payload`
  *
  * Converts a string to a enumerated trust flag.
  *
@@ -537,7 +537,7 @@ fwupd_feature_flag_to_string(FwupdFeatureFlags feature_flag)
 
 /**
  * fwupd_feature_flag_from_string:
- * @feature_flag: a string, e.g. `detach-action`
+ * @feature_flag: (nullable): a string, e.g. `detach-action`
  *
  * Converts a string to a enumerated feature flag.
  *
@@ -567,7 +567,7 @@ fwupd_feature_flag_from_string(const gchar *feature_flag)
 
 /**
  * fwupd_keyring_kind_from_string:
- * @keyring_kind: a string, e.g. `gpg`
+ * @keyring_kind: (nullable): a string, e.g. `gpg`
  *
  * Converts an printable string to an enumerated keyring kind.
  *
@@ -647,7 +647,7 @@ fwupd_release_flag_to_string(FwupdReleaseFlags release_flag)
 
 /**
  * fwupd_release_flag_from_string:
- * @release_flag: a string, e.g. `trusted-payload`
+ * @release_flag: (nullable): a string, e.g. `trusted-payload`
  *
  * Converts a string to an enumerated release flag.
  *
@@ -701,7 +701,7 @@ fwupd_release_urgency_to_string(FwupdReleaseUrgency release_urgency)
 
 /**
  * fwupd_release_urgency_from_string:
- * @release_urgency: a string, e.g. `low`
+ * @release_urgency: (nullable): a string, e.g. `low`
  *
  * Converts a string to an enumerated release urgency value.
  *
@@ -725,7 +725,7 @@ fwupd_release_urgency_from_string(const gchar *release_urgency)
 
 /**
  * fwupd_version_format_from_string:
- * @str: a string, e.g. `quad`
+ * @str: (nullable): a string, e.g. `quad`
  *
  * Converts text to a display version type.
  *

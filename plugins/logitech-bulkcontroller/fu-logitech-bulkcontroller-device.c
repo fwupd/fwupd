@@ -145,7 +145,7 @@ fu_logitech_bulkcontroller_device_probe(FuDevice *device, GError **error)
 				   UPD_INTERFACE_SUBPROTOCOL_ID) {
 				g_autoptr(GPtrArray) endpoints =
 				    g_usb_interface_get_endpoints(intf);
-				self->sync_iface = g_usb_interface_get_number(intf);
+				self->update_iface = g_usb_interface_get_number(intf);
 				if (endpoints == NULL)
 					continue;
 				for (guint j = 0; j < endpoints->len; j++) {
@@ -160,6 +160,8 @@ fu_logitech_bulkcontroller_device_probe(FuDevice *device, GError **error)
 			}
 		}
 	}
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->update_iface);
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), self->sync_iface);
 	return TRUE;
 #else
 	g_set_error_literal(error,
@@ -869,62 +871,6 @@ fu_logitech_bulkcontroller_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
-fu_logitech_bulkcontroller_device_open(FuDevice *device, GError **error)
-{
-	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	/* FuUsbDevice->open */
-	if (!FU_DEVICE_CLASS(fu_logitech_bulkcontroller_device_parent_class)->open(device, error))
-		return FALSE;
-
-	/* claim both interfaces */
-	if (!g_usb_device_claim_interface(usb_device,
-					  self->update_iface,
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  error)) {
-		g_prefix_error(error, "failed to claim update interface: ");
-		return FALSE;
-	}
-	if (!g_usb_device_claim_interface(usb_device,
-					  self->sync_iface,
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  error)) {
-		g_prefix_error(error, "failed to claim sync interface: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
-fu_logitech_bulkcontroller_device_close(FuDevice *device, GError **error)
-{
-	FuLogitechBulkcontrollerDevice *self = FU_LOGITECH_BULKCONTROLLER_DEVICE(device);
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	if (!g_usb_device_release_interface(usb_device,
-					    self->update_iface,
-					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					    error)) {
-		g_prefix_error(error, "failed to release update interface: ");
-		return FALSE;
-	}
-	if (!g_usb_device_release_interface(usb_device,
-					    self->sync_iface,
-					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					    error)) {
-		g_prefix_error(error, "failed to release sync interface: ");
-		return FALSE;
-	}
-
-	/* FuUsbDevice->close */
-	return FU_DEVICE_CLASS(fu_logitech_bulkcontroller_device_parent_class)
-	    ->close(device, error);
-}
-
-static gboolean
 fu_logitech_bulkcontroller_device_get_handshake_cb(FuDevice *device,
 						   gpointer user_data,
 						   GError **error)
@@ -1203,7 +1149,5 @@ fu_logitech_bulkcontroller_device_class_init(FuLogitechBulkcontrollerDeviceClass
 	klass_device->write_firmware = fu_logitech_bulkcontroller_device_write_firmware;
 	klass_device->probe = fu_logitech_bulkcontroller_device_probe;
 	klass_device->setup = fu_logitech_bulkcontroller_device_setup;
-	klass_device->open = fu_logitech_bulkcontroller_device_open;
-	klass_device->close = fu_logitech_bulkcontroller_device_close;
 	klass_device->set_progress = fu_logitech_bulkcontroller_device_set_progress;
 }

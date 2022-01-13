@@ -58,7 +58,7 @@ fu_plugin_linux_swap_startup(FuPlugin *plugin, GError **error)
 	data->monitor = g_file_monitor(data->file, G_FILE_MONITOR_NONE, NULL, error);
 	if (data->monitor == NULL)
 		return FALSE;
-	g_signal_connect(data->monitor,
+	g_signal_connect(G_FILE_MONITOR(data->monitor),
 			 "changed",
 			 G_CALLBACK(fu_plugin_linux_swap_changed_cb),
 			 plugin);

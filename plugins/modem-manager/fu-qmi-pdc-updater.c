@@ -377,7 +377,7 @@ fu_qmi_pdc_updater_load_config_ready(GObject *qmi_client, GAsyncResult *res, gpo
 	/* after receiving the response to our request, we now expect an indication
 	 * with the actual result of the operation */
 	g_warn_if_fail(ctx->indication_id == 0);
-	ctx->indication_id = g_signal_connect(ctx->qmi_client,
+	ctx->indication_id = g_signal_connect(QMI_CLIENT_PDC(ctx->qmi_client),
 					      "load-config",
 					      G_CALLBACK(fu_qmi_pdc_updater_load_config_indication),
 					      ctx);
@@ -588,7 +588,7 @@ fu_qmi_pdc_updater_activate_config_ready(GObject *qmi_client, GAsyncResult *res,
 	 */
 	g_warn_if_fail(ctx->indication_id == 0);
 	ctx->indication_id =
-	    g_signal_connect(ctx->qmi_client,
+	    g_signal_connect(QMI_CLIENT_PDC(ctx->qmi_client),
 			     "activate-config",
 			     G_CALLBACK(fu_qmi_pdc_updater_activate_config_indication),
 			     ctx);
@@ -705,7 +705,7 @@ fu_qmi_pdc_updater_set_selected_config_ready(GObject *qmi_client,
 	 * with the actual result of the operation */
 	g_warn_if_fail(ctx->indication_id == 0);
 	ctx->indication_id =
-	    g_signal_connect(ctx->qmi_client,
+	    g_signal_connect(QMI_CLIENT_PDC(ctx->qmi_client),
 			     "set-selected-config",
 			     G_CALLBACK(fu_qmi_pdc_updater_set_selected_config_indication),
 			     ctx);

@@ -281,12 +281,43 @@ GBytes *
 fu_common_get_contents_fd(gint fd, gsize count, GError **error)
 {
 #ifdef HAVE_GIO_UNIX
-	guint8 tmp[0x8000] = {0x0};
-	g_autoptr(GByteArray) buf = g_byte_array_new();
-	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GInputStream) stream = NULL;
 
 	g_return_val_if_fail(fd > 0, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	/* read the entire fd to a data blob */
+	stream = g_unix_input_stream_new(fd, TRUE);
+	return fu_common_get_contents_stream(stream, count, error);
+#else
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Not supported as <glib-unix.h> is unavailable");
+	return NULL;
+#endif
+}
+
+/**
+ * fu_common_get_contents_stream:
+ * @stream: input stream
+ * @count: the maximum number of bytes to read
+ * @error: (nullable): optional return location for an error
+ *
+ * Reads a blob from a specific input stream.
+ *
+ * Returns: (transfer full): a #GBytes, or %NULL
+ *
+ * Since: 1.7.4
+ **/
+GBytes *
+fu_common_get_contents_stream(GInputStream *stream, gsize count, GError **error)
+{
+	guint8 tmp[0x8000] = {0x0};
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+	g_autoptr(GError) error_local = NULL;
+
+	g_return_val_if_fail(G_IS_INPUT_STREAM(stream), NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* this is invalid */
@@ -297,9 +328,6 @@ fu_common_get_contents_fd(gint fd, gsize count, GError **error)
 				    "A maximum read size must be specified");
 		return NULL;
 	}
-
-	/* read the entire fd to a data blob */
-	stream = g_unix_input_stream_new(fd, TRUE);
 
 	/* read from stream in 32kB chunks */
 	while (TRUE) {
@@ -326,13 +354,6 @@ fu_common_get_contents_fd(gint fd, gsize count, GError **error)
 		}
 	}
 	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
-#else
-	g_set_error_literal(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "Not supported as <glib-unix.h> is unavailable");
-	return NULL;
-#endif
 }
 
 #ifdef HAVE_LIBARCHIVE
@@ -729,6 +750,7 @@ fu_common_spawn_helper_free(FuCommonSpawnHelper *helper)
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(FuCommonSpawnHelper, fu_common_spawn_helper_free)
 #pragma clang diagnostic pop
 
+#ifndef _WIN32
 static gboolean
 fu_common_spawn_timeout_cb(gpointer user_data)
 {
@@ -745,6 +767,7 @@ fu_common_spawn_cancelled_cb(GCancellable *cancellable, FuCommonSpawnHelper *hel
 	/* just propagate */
 	g_cancellable_cancel(helper->cancellable);
 }
+#endif
 
 /**
  * fu_common_spawn_sync:
@@ -773,7 +796,9 @@ fu_common_spawn_sync(const gchar *const *argv,
 	g_autoptr(FuCommonSpawnHelper) helper = NULL;
 	g_autoptr(GSubprocess) subprocess = NULL;
 	g_autofree gchar *argv_str = NULL;
+#ifndef _WIN32
 	gulong cancellable_id = 0;
+#endif
 
 	g_return_val_if_fail(argv != NULL, FALSE);
 	g_return_val_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable), FALSE);
@@ -789,6 +814,7 @@ fu_common_spawn_sync(const gchar *const *argv,
 	if (subprocess == NULL)
 		return FALSE;
 
+#ifndef _WIN32
 	/* watch for process to exit */
 	helper = g_new0(FuCommonSpawnHelper, 1);
 	helper->handler_cb = handler_cb;
@@ -814,6 +840,7 @@ fu_common_spawn_sync(const gchar *const *argv,
 	g_cancellable_disconnect(cancellable, cancellable_id);
 	if (g_cancellable_set_error_if_cancelled(helper->cancellable, error))
 		return FALSE;
+#endif
 	return g_subprocess_wait_check(subprocess, cancellable, error);
 }
 
@@ -1225,6 +1252,28 @@ fu_common_error_array_get_best(GPtrArray *errors)
 }
 
 /**
+ * fu_common_get_win32_basedir:
+ *
+ * Gets the base directory that fwupd has been launched from on Windows.
+ * This is the directory containing all subdirectories (IE 'C:\Program Files (x86)\fwupd\')
+ *
+ * Returns: The system path, or %NULL if invalid
+ *
+ * Since: 1.7.4
+ **/
+static gchar *
+fu_common_get_win32_basedir(void)
+{
+#ifdef _WIN32
+	char drive_buf[_MAX_DRIVE];
+	char dir_buf[_MAX_DIR];
+	_splitpath(_pgmptr, drive_buf, dir_buf, NULL, NULL);
+	return g_build_filename(drive_buf, dir_buf, "..", NULL);
+#endif
+	return NULL;
+}
+
+/**
  * fu_common_get_path:
  * @path_kind: a #FuPathKind e.g. %FU_PATH_KIND_DATADIR_PKG
  *
@@ -1247,10 +1296,17 @@ fu_common_get_path(FuPathKind path_kind)
 		tmp = g_getenv("FWUPD_LOCALSTATEDIR");
 		if (tmp != NULL)
 			return g_strdup(tmp);
+#ifdef _WIN32
+		return g_build_filename(g_getenv("USERPROFILE"),
+					PACKAGE_NAME,
+					FWUPD_LOCALSTATEDIR,
+					NULL);
+#else
 		tmp = g_getenv("SNAP_USER_DATA");
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_LOCALSTATEDIR, NULL);
 		return g_build_filename(FWUPD_LOCALSTATEDIR, NULL);
+#endif
 	/* /proc */
 	case FU_PATH_KIND_PROCFS:
 		tmp = g_getenv("FWUPD_PROCFS");
@@ -1301,7 +1357,11 @@ fu_common_get_path(FuPathKind path_kind)
 		tmp = g_getenv("SNAP_USER_DATA");
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_SYSCONFDIR, NULL);
+		basedir = fu_common_get_win32_basedir();
+		if (basedir != NULL)
+			return g_build_filename(basedir, FWUPD_SYSCONFDIR, NULL);
 		return g_strdup(FWUPD_SYSCONFDIR);
+
 	/* /usr/lib/<triplet>/fwupd-plugins-3 */
 	case FU_PATH_KIND_PLUGINDIR_PKG:
 		tmp = g_getenv("FWUPD_PLUGINDIR");
@@ -1310,6 +1370,9 @@ fu_common_get_path(FuPathKind path_kind)
 		tmp = g_getenv("SNAP");
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_PLUGINDIR, NULL);
+		basedir = fu_common_get_win32_basedir();
+		if (basedir != NULL)
+			return g_build_filename(basedir, FWUPD_PLUGINDIR, NULL);
 		return g_build_filename(FWUPD_PLUGINDIR, NULL);
 	/* /usr/share/fwupd */
 	case FU_PATH_KIND_DATADIR_PKG:
@@ -1319,6 +1382,9 @@ fu_common_get_path(FuPathKind path_kind)
 		tmp = g_getenv("SNAP");
 		if (tmp != NULL)
 			return g_build_filename(tmp, FWUPD_DATADIR, PACKAGE_NAME, NULL);
+		basedir = fu_common_get_win32_basedir();
+		if (basedir != NULL)
+			return g_build_filename(basedir, FWUPD_DATADIR, PACKAGE_NAME, NULL);
 		return g_build_filename(FWUPD_DATADIR, PACKAGE_NAME, NULL);
 	/* /usr/share/fwupd/quirks.d */
 	case FU_PATH_KIND_DATADIR_QUIRKS:
@@ -1402,6 +1468,9 @@ fu_common_get_path(FuPathKind path_kind)
 #else
 		return NULL;
 #endif
+	/* C:\Program Files (x86)\fwupd\ */
+	case FU_PATH_KIND_WIN32_BASEDIR:
+		return fu_common_get_win32_basedir();
 	/* this shouldn't happen */
 	default:
 		g_warning("cannot build path for unknown kind %u", path_kind);
@@ -1643,11 +1712,17 @@ fu_common_dump_full(const gchar *log_domain,
 	/* offset line */
 	if (flags & FU_DUMP_FLAGS_SHOW_ADDRESSES) {
 		g_string_append(str, "       │ ");
-		for (gsize i = 0; i < columns; i++)
+		for (gsize i = 0; i < columns; i++) {
 			g_string_append_printf(str, "%02x ", (guint)i);
+			if (flags & FU_DUMP_FLAGS_SHOW_ASCII)
+				g_string_append(str, "    ");
+		}
 		g_string_append(str, "\n───────┼");
-		for (gsize i = 0; i < columns; i++)
+		for (gsize i = 0; i < columns; i++) {
 			g_string_append(str, "───");
+			if (flags & FU_DUMP_FLAGS_SHOW_ASCII)
+				g_string_append(str, "────");
+		}
 		g_string_append_printf(str, "\n0x%04x │ ", (guint)0);
 	}
 
@@ -2282,6 +2357,82 @@ fu_memcpy_safe(guint8 *dst,
 	/* phew! */
 	memcpy(dst + dst_offset, src + src_offset, n);
 	return TRUE;
+}
+
+/**
+ * fu_memmem_safe:
+ * @haystack: destination buffer
+ * @haystack_sz: maximum size of @haystack, typically `sizeof(haystack)`
+ * @needle: source buffer
+ * @needle_sz: maximum size of @haystack, typically `sizeof(needle)`
+ * @offset: (out) (nullable): offset in bytes @needle has been found in @haystack
+ * @error: (nullable): optional return location for an error
+ *
+ * Finds a block of memory in another block of memory in a safe way.
+ *
+ * Returns: %TRUE if the needle was found in the haystack, %FALSE otherwise
+ *
+ * Since: 1.7.4
+ **/
+gboolean
+fu_memmem_safe(const guint8 *haystack,
+	       gsize haystack_sz,
+	       const guint8 *needle,
+	       gsize needle_sz,
+	       gsize *offset,
+	       GError **error)
+{
+#ifdef HAVE_MEMMEM
+	const guint8 *tmp;
+#endif
+	g_return_val_if_fail(haystack != NULL, FALSE);
+	g_return_val_if_fail(needle != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	/* nothing to find */
+	if (needle_sz == 0) {
+		if (offset != NULL)
+			*offset = 0;
+		return TRUE;
+	}
+
+	/* impossible */
+	if (needle_sz > haystack_sz) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_FOUND,
+			    "needle of 0x%02x bytes is larger than haystack of 0x%02x bytes",
+			    (guint)needle_sz,
+			    (guint)haystack_sz);
+		return FALSE;
+	}
+
+#ifdef HAVE_MEMMEM
+	/* trust glibc to do a binary or linear search as appropriate */
+	tmp = memmem(haystack, haystack_sz, needle, needle_sz);
+	if (tmp != NULL) {
+		if (offset != NULL)
+			*offset = tmp - haystack;
+		return TRUE;
+	}
+#else
+	for (gsize i = 0; i < haystack_sz - needle_sz; i++) {
+		if (memcmp(haystack + i, needle, needle_sz) == 0) {
+			if (offset != NULL)
+				*offset = i;
+			return TRUE;
+		}
+	}
+#endif
+
+	/* not found */
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "needle of 0x%02x bytes was not found in haystack of 0x%02x bytes",
+		    (guint)needle_sz,
+		    (guint)haystack_sz);
+	return FALSE;
 }
 
 /**
@@ -3198,7 +3349,24 @@ fu_common_get_volume_by_device(const gchar *device, GError **error)
 		if (val == NULL)
 			continue;
 		if (g_strcmp0(g_variant_get_bytestring(val), device) == 0) {
-			return g_object_new(FU_TYPE_VOLUME, "proxy-block", proxy_blk, NULL);
+			g_autoptr(GDBusProxy) proxy_fs = NULL;
+			g_autoptr(GError) error_local = NULL;
+			proxy_fs = g_dbus_proxy_new_sync(g_dbus_proxy_get_connection(proxy_blk),
+							 G_DBUS_PROXY_FLAGS_NONE,
+							 NULL,
+							 UDISKS_DBUS_SERVICE,
+							 g_dbus_proxy_get_object_path(proxy_blk),
+							 UDISKS_DBUS_INTERFACE_FILESYSTEM,
+							 NULL,
+							 &error_local);
+			if (proxy_fs == NULL)
+				g_debug("ignoring: %s", error_local->message);
+			return g_object_new(FU_TYPE_VOLUME,
+					    "proxy-block",
+					    proxy_blk,
+					    "proxy-filesystem",
+					    proxy_fs,
+					    NULL);
 		}
 	}
 
@@ -3788,6 +3956,28 @@ fu_battery_state_to_string(FuBatteryState battery_state)
 		return "empty";
 	if (battery_state == FU_BATTERY_STATE_FULLY_CHARGED)
 		return "fully-charged";
+	return NULL;
+}
+
+/**
+ * fu_lid_state_to_string:
+ * @lid_state: a battery state, e.g. %FU_LID_STATE_CLOSED
+ *
+ * Converts an enumerated type to a string.
+ *
+ * Returns: a string, or %NULL for invalid
+ *
+ * Since: 1.7.4
+ **/
+const gchar *
+fu_lid_state_to_string(FuLidState lid_state)
+{
+	if (lid_state == FU_LID_STATE_UNKNOWN)
+		return "unknown";
+	if (lid_state == FU_LID_STATE_OPEN)
+		return "open";
+	if (lid_state == FU_LID_STATE_CLOSED)
+		return "closed";
 	return NULL;
 }
 

@@ -344,7 +344,7 @@ fu_dfu_firmware_write(FuFirmware *firmware, GError **error)
 	}
 
 	/* add footer */
-	fw = fu_firmware_get_bytes(firmware, error);
+	fw = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (fw == NULL)
 		return NULL;
 	return fu_dfu_firmware_append_footer(self, fw, error);

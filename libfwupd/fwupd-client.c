@@ -356,7 +356,7 @@ fwupd_client_set_percentage(FwupdClient *self, guint percentage)
 static void
 fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 				   GVariant *changed_properties,
-				   GStrv invalidated_properties,
+				   const GStrv invalidated_properties,
 				   FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
@@ -683,11 +683,14 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	priv->proxy = g_steal_pointer(&proxy);
 
 	/* connect signals, etc. */
-	g_signal_connect(priv->proxy,
+	g_signal_connect(G_DBUS_PROXY(priv->proxy),
 			 "g-properties-changed",
 			 G_CALLBACK(fwupd_client_properties_changed_cb),
 			 self);
-	g_signal_connect(priv->proxy, "g-signal", G_CALLBACK(fwupd_client_signal_cb), self);
+	g_signal_connect(G_DBUS_PROXY(priv->proxy),
+			 "g-signal",
+			 G_CALLBACK(fwupd_client_signal_cb),
+			 self);
 	val = g_dbus_proxy_get_cached_property(priv->proxy, "DaemonVersion");
 	if (val != NULL)
 		fwupd_client_set_daemon_version(self, g_variant_get_string(val, NULL));
@@ -1385,7 +1388,7 @@ fwupd_client_get_device_by_id_cb(GObject *source, GAsyncResult *res, gpointer us
 /**
  * fwupd_client_get_device_by_id_async:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -1564,7 +1567,7 @@ fwupd_client_get_releases_cb(GObject *source, GAsyncResult *res, gpointer user_d
 /**
  * fwupd_client_get_releases_async:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -1647,7 +1650,7 @@ fwupd_client_get_downgrades_cb(GObject *source, GAsyncResult *res, gpointer user
 /**
  * fwupd_client_get_downgrades_async:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -1730,7 +1733,7 @@ fwupd_client_get_upgrades_cb(GObject *source, GAsyncResult *res, gpointer user_d
 /**
  * fwupd_client_get_upgrades_async:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -1972,7 +1975,7 @@ fwupd_client_verify_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 /**
  * fwupd_client_verify_async:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -2050,7 +2053,7 @@ fwupd_client_verify_update_cb(GObject *source, GAsyncResult *res, gpointer user_
 /**
  * fwupd_client_verify_update_async:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -2128,7 +2131,7 @@ fwupd_client_unlock_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 /**
  * fwupd_client_unlock_async:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -2286,7 +2289,7 @@ fwupd_client_get_results_cb(GObject *source, GAsyncResult *res, gpointer user_da
 /**
  * fwupd_client_get_results_async:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -2456,7 +2459,7 @@ fwupd_client_install_stream_async(FwupdClient *self,
 /**
  * fwupd_client_install_bytes_async:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @bytes: cabinet archive
  * @install_flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @cancellable: (nullable): optional #GCancellable
@@ -2539,7 +2542,7 @@ fwupd_client_install_bytes_finish(FwupdClient *self, GAsyncResult *res, GError *
 /**
  * fwupd_client_install_async:
  * @self: a #FwupdClient
- * @device_id: the device ID
+ * @device_id: (not nullable): the device ID
  * @filename: the filename to install
  * @install_flags: install flags, e.g. %FWUPD_INSTALL_FLAG_ALLOW_REINSTALL
  * @cancellable: (nullable): optional #GCancellable
@@ -4295,9 +4298,9 @@ fwupd_client_modify_device_cb(GObject *source, GAsyncResult *res, gpointer user_
 /**
  * fwupd_client_modify_device_async:
  * @self: a #FwupdClient
- * @device_id: the device ID
- * @key: the key, e.g. `Flags`
- * @value: the value, e.g. `reported`
+ * @device_id: (not nullable): the device ID
+ * @key: (not nullable): the key, e.g. `Flags`
+ * @value: (not nullable): the value, e.g. `reported`
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -4402,7 +4405,7 @@ fwupd_client_get_remote_by_id_cb(GObject *source, GAsyncResult *res, gpointer us
 /**
  * fwupd_client_get_remote_by_id_async:
  * @self: a #FwupdClient
- * @remote_id: the remote ID, e.g. `lvfs-testing`
+ * @remote_id: (not nullable): the remote ID, e.g. `lvfs-testing`
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
  * @callback_data: the data to pass to @callback
@@ -4505,8 +4508,8 @@ fwupd_client_get_user_agent(FwupdClient *self)
 /**
  * fwupd_client_set_user_agent_for_package:
  * @self: a #FwupdClient
- * @package_name: client program name, e.g. `gnome-software`
- * @package_version: client program version, e.g. `3.28.1`
+ * @package_name: (not nullable): client program name, e.g. `gnome-software`
+ * @package_version: (not nullable): client program version, e.g. `3.28.1`
  *
  * Builds a user-agent to use for the download.
  *
@@ -4748,7 +4751,7 @@ fwupd_client_download_bytes2_async(FwupdClient *self,
 /**
  * fwupd_client_download_bytes_async:
  * @self: a #FwupdClient
- * @url: the remote URL
+ * @url: (not nullable): the remote URL
  * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
  * @cancellable: (nullable): optional #GCancellable
  * @callback: the function to run on completion
@@ -4857,8 +4860,8 @@ fwupd_client_upload_bytes_thread_cb(GTask *task,
 /**
  * fwupd_client_upload_bytes_async:
  * @self: a #FwupdClient
- * @url: the remote URL
- * @payload: payload string
+ * @url: (not nullable): the remote URL
+ * @payload: (not nullable): payload string
  * @signature: (nullable): signature string
  * @flags: download flags, e.g. %FWUPD_CLIENT_DOWNLOAD_FLAG_NONE
  * @cancellable: (nullable): optional #GCancellable
@@ -4896,6 +4899,7 @@ fwupd_client_upload_bytes_async(FwupdClient *self,
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	g_return_if_fail(url != NULL);
+	g_return_if_fail(payload != NULL);
 	g_return_if_fail(cancellable == NULL || G_IS_CANCELLABLE(cancellable));
 	g_return_if_fail(priv->proxy != NULL);
 
@@ -4965,7 +4969,7 @@ fwupd_client_upload_bytes_finish(FwupdClient *self, GAsyncResult *res, GError **
 /**
  * fwupd_client_add_hint:
  * @self: a #FwupdClient
- * @key: the key, e.g. `locale`
+ * @key: (not nullable): the key, e.g. `locale`
  * @value: (nullable): the value @key should be set
  *
  * Sets optional hints from the client that may affect the list of devices.

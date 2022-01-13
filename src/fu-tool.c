@@ -8,7 +8,8 @@
 
 #include "config.h"
 
-#include <fwupd.h>
+#include <fwupdplugin.h>
+
 #include <glib/gi18n.h>
 #include <glib/gstdio.h>
 #ifdef HAVE_GIO_UNIX
@@ -67,6 +68,7 @@ struct FuUtilPrivate {
 	gboolean prepare_blob;
 	gboolean cleanup_blob;
 	gboolean enable_json_state;
+	gboolean interactive;
 	FwupdInstallFlags flags;
 	gboolean show_all;
 	gboolean disable_ssl_strict;
@@ -184,12 +186,21 @@ fu_util_lock(FuUtilPrivate *priv, GError **error)
 	    .l_type = F_WRLCK,
 	    .l_whence = SEEK_SET,
 	};
-	g_autofree gchar *lockdir = NULL;
 	g_autofree gchar *lockfn = NULL;
+	gboolean use_user = FALSE;
+
+#ifdef HAVE_GETUID
+	if (getuid() != 0 || geteuid() != 0)
+		use_user = TRUE;
+#endif
 
 	/* open file */
-	lockdir = fu_common_get_path(FU_PATH_KIND_LOCKDIR);
-	lockfn = g_build_filename(lockdir, "fwupdtool", NULL);
+	if (use_user) {
+		lockfn = fu_util_get_user_cache_path("fwupdtool");
+	} else {
+		g_autofree gchar *lockdir = fu_common_get_path(FU_PATH_KIND_LOCKDIR);
+		lockfn = g_build_filename(lockdir, "fwupdtool", NULL);
+	}
 	if (!fu_common_mkdir_parent(lockfn, error))
 		return FALSE;
 	priv->lock_fd = g_open(lockfn, O_RDWR | O_CREAT, S_IRWXU);
@@ -235,6 +246,7 @@ fu_util_start_engine(FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **erro
 #ifdef HAVE_SYSTEMD
 	g_autoptr(GError) error_local = NULL;
 #endif
+
 	if (!fu_util_lock(priv, error)) {
 		/* TRANSLATORS: another fwupdtool instance is already running */
 		g_prefix_error(error, "%s: ", _("Failed to lock"));
@@ -876,7 +888,7 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
@@ -1014,7 +1026,7 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 	}
 	priv->current_operation = FU_UTIL_OPERATION_READ;
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
@@ -1034,12 +1046,26 @@ fu_util_install_task_sort_cb(gconstpointer a, gconstpointer b)
 	return fu_install_task_compare(task1, task2);
 }
 
+static void
+fu_util_stdout_cb(const gchar *line, gpointer user_data)
+{
+	if (g_getenv("FWUPD_DOWNLOAD_VERBOSE") != NULL)
+		g_debug("'%s'", line);
+}
+
 static gboolean
 fu_util_download_out_of_process(const gchar *uri, const gchar *fn, GError **error)
 {
+#ifdef _WIN32
+	g_autofree gchar *basedir = fu_common_get_path(FU_PATH_KIND_WIN32_BASEDIR);
+	g_autofree gchar *cert = g_build_filename(basedir, "bin", "ca-bundle.crt", NULL);
+	const gchar *argv[][7] = {{"curl.exe", uri, "--output", fn, "--cacert", cert, NULL},
+				  {NULL}};
+#else
 	const gchar *argv[][5] = {{"wget", uri, "-O", fn, NULL},
 				  {"curl", uri, "--output", fn, NULL},
 				  {NULL}};
+#endif
 	for (guint i = 0; argv[i][0] != NULL; i++) {
 		g_autoptr(GError) error_local = NULL;
 		g_autofree gchar *fn_tmp = NULL;
@@ -1048,7 +1074,7 @@ fu_util_download_out_of_process(const gchar *uri, const gchar *fn, GError **erro
 			g_debug("%s", error_local->message);
 			continue;
 		}
-		return fu_common_spawn_sync(argv[i], NULL, NULL, 0, NULL, error);
+		return fu_common_spawn_sync(argv[i], fu_util_stdout_cb, NULL, 0, NULL, error);
 	}
 	g_set_error_literal(error,
 			    FWUPD_ERROR,
@@ -1198,7 +1224,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
@@ -1413,7 +1439,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
@@ -1490,7 +1516,7 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
@@ -1951,11 +1977,23 @@ fu_util_monitor(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* watch for any hotplugged device */
-	g_signal_connect(client, "changed", G_CALLBACK(fu_util_changed_cb), priv);
-	g_signal_connect(client, "device-added", G_CALLBACK(fu_util_device_added_cb), priv);
-	g_signal_connect(client, "device-removed", G_CALLBACK(fu_util_device_removed_cb), priv);
-	g_signal_connect(client, "device-changed", G_CALLBACK(fu_util_device_changed_cb), priv);
-	g_signal_connect(priv->cancellable, "cancelled", G_CALLBACK(fu_util_cancelled_cb), priv);
+	g_signal_connect(FWUPD_CLIENT(client), "changed", G_CALLBACK(fu_util_changed_cb), priv);
+	g_signal_connect(FWUPD_CLIENT(client),
+			 "device-added",
+			 G_CALLBACK(fu_util_device_added_cb),
+			 priv);
+	g_signal_connect(FWUPD_CLIENT(client),
+			 "device-removed",
+			 G_CALLBACK(fu_util_device_removed_cb),
+			 priv);
+	g_signal_connect(FWUPD_CLIENT(client),
+			 "device-changed",
+			 G_CALLBACK(fu_util_device_changed_cb),
+			 priv);
+	g_signal_connect(G_CANCELLABLE(priv->cancellable),
+			 "cancelled",
+			 G_CALLBACK(fu_util_cancelled_cb),
+			 priv);
 	g_main_loop_run(priv->loop);
 	return TRUE;
 }
@@ -2387,6 +2425,114 @@ fu_util_firmware_convert(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	str_dst = fu_firmware_to_string(firmware_dst);
 	g_print("%s", str_dst);
+
+	/* success */
+	return TRUE;
+}
+
+static GBytes *
+fu_util_hex_string_to_bytes(const gchar *val, GError **error)
+{
+	gsize valsz;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
+
+	/* sanity check */
+	if (val == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "nothing to parse");
+		return NULL;
+	}
+
+	/* parse each hex byte */
+	valsz = strlen(val);
+	for (guint i = 0; i < valsz; i += 2) {
+		guint8 tmp = 0;
+		if (!fu_firmware_strparse_uint8_safe(val, valsz, i, &tmp, error))
+			return NULL;
+		fu_byte_array_append_uint8(buf, tmp);
+	}
+	return g_byte_array_free_to_bytes(g_steal_pointer(&buf));
+}
+
+static gboolean
+fu_util_firmware_patch(FuUtilPrivate *priv, gchar **values, GError **error)
+{
+	FuContext *ctx = fu_engine_get_context(priv->engine);
+	GType gtype;
+	g_autofree gchar *firmware_type = NULL;
+	g_autofree gchar *str = NULL;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GBytes) blob_dst = NULL;
+	g_autoptr(GBytes) blob_src = NULL;
+	g_autoptr(GBytes) patch = NULL;
+	guint64 offset = 0;
+
+	/* check args */
+	if (g_strv_length(values) != 3 && g_strv_length(values) != 4) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_ARGS,
+			    "Invalid arguments, expected %s",
+			    "FILENAME OFFSET DATA [FIRMWARE-TYPE]");
+		return FALSE;
+	}
+
+	/* hardcoded */
+	if (g_strv_length(values) == 4)
+		firmware_type = g_strdup(values[3]);
+
+	/* load file */
+	blob_src = fu_common_get_contents_bytes(values[0], error);
+	if (blob_src == NULL)
+		return FALSE;
+
+	/* parse offset */
+	if (!fu_common_strtoull_full(values[1], &offset, 0x0, G_MAXUINT32, error)) {
+		g_prefix_error(error, "failed to parse offset: ");
+		return FALSE;
+	}
+
+	/* parse blob */
+	patch = fu_util_hex_string_to_bytes(values[2], error);
+	if (patch == NULL)
+		return FALSE;
+	if (g_bytes_get_size(patch) == 0) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS, "no data provided");
+		return FALSE;
+	}
+
+	/* load engine */
+	if (!fu_engine_load(priv->engine, FU_ENGINE_LOAD_FLAG_READONLY, error))
+		return FALSE;
+
+	/* find the GType to use */
+	if (firmware_type == NULL)
+		firmware_type = fu_util_prompt_for_firmware_type(priv, error);
+	if (firmware_type == NULL)
+		return FALSE;
+	gtype = fu_context_get_firmware_gtype_by_id(ctx, firmware_type);
+	if (gtype == G_TYPE_INVALID) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_FOUND,
+			    "GType %s not supported",
+			    firmware_type);
+		return FALSE;
+	}
+	firmware = g_object_new(gtype, NULL);
+	if (!fu_firmware_parse(firmware, blob_src, priv->flags, error))
+		return FALSE;
+
+	/* add patch */
+	fu_firmware_add_patch(firmware, offset, patch);
+
+	/* write new file */
+	blob_dst = fu_firmware_write(firmware, error);
+	if (blob_dst == NULL)
+		return FALSE;
+	if (!fu_common_set_contents_bytes(values[0], blob_dst, error))
+		return FALSE;
+	str = fu_firmware_to_string(firmware);
+	g_print("%s", str);
 
 	/* success */
 	return TRUE;
@@ -2903,7 +3049,7 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
@@ -2933,9 +3079,9 @@ main(int argc, char *argv[])
 	gboolean version = FALSE;
 	gboolean ignore_checksum = FALSE;
 	gboolean ignore_vid_pid = FALSE;
-	gboolean interactive = isatty(fileno(stdout)) != 0;
 	g_auto(GStrv) plugin_glob = NULL;
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
+	g_autoptr(GError) error_console = NULL;
 	g_autoptr(GError) error = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
 	g_autofree gchar *cmd_descriptions = NULL;
@@ -3106,13 +3252,6 @@ main(int argc, char *argv[])
 	bindtextdomain(GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
 	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	textdomain(GETTEXT_PACKAGE);
-
-#ifdef HAVE_GETUID
-	/* ensure root user */
-	if (interactive && (getuid() != 0 || geteuid() != 0))
-		/* TRANSLATORS: we're poking around as a power user */
-		g_printerr("%s\n", _("This program may only work correctly as root"));
-#endif
 
 	/* create helper object */
 	priv->main_ctx = g_main_context_new();
@@ -3303,6 +3442,13 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Read a firmware blob from a device"),
 			      fu_util_firmware_dump);
+	fu_util_cmd_array_add(cmd_array,
+			      "firmware-patch",
+			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
+			      _("FILENAME OFFSET DATA [FIRMWARE-TYPE]"),
+			      /* TRANSLATORS: command description */
+			      _("Patch a firmware blob at a known offset"),
+			      fu_util_firmware_patch);
 	fu_util_cmd_array_add(
 	    cmd_array,
 	    "firmware-convert",
@@ -3392,23 +3538,28 @@ main(int argc, char *argv[])
 	/* do stuff on ctrl+c */
 	priv->cancellable = g_cancellable_new();
 	fu_util_setup_signal_handlers(priv);
-	g_signal_connect(priv->cancellable, "cancelled", G_CALLBACK(fu_util_cancelled_cb), priv);
+	g_signal_connect(G_CANCELLABLE(priv->cancellable),
+			 "cancelled",
+			 G_CALLBACK(fu_util_cancelled_cb),
+			 priv);
 
 	/* sort by command name */
 	fu_util_cmd_array_sort(cmd_array);
 
 	/* non-TTY consoles cannot answer questions */
-	if (!interactive) {
+	if (!fu_util_setup_interactive_console(&error_console)) {
+		g_debug("failed to initialize interactive console: %s", error_console->message);
 		priv->no_reboot_check = TRUE;
 		priv->no_safety_check = TRUE;
-		fu_progressbar_set_interactive(priv->progressbar, FALSE);
 	} else {
+		priv->interactive = TRUE;
 		/* set our implemented feature set */
 		fu_engine_request_set_feature_flags(
 		    priv->request,
 		    FWUPD_FEATURE_FLAG_DETACH_ACTION | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
 			FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_UPDATE_ACTION);
 	}
+	fu_progressbar_set_interactive(priv->progressbar, priv->interactive);
 
 	/* get a list of the commands */
 	priv->context = g_option_context_new(NULL);
@@ -3475,15 +3626,15 @@ main(int argc, char *argv[])
 
 	/* load engine */
 	priv->engine = fu_engine_new(FU_APP_FLAGS_NO_IDLE_SOURCES);
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-added",
 			 G_CALLBACK(fu_main_engine_device_added_cb),
 			 priv);
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-removed",
 			 G_CALLBACK(fu_main_engine_device_removed_cb),
 			 priv);
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "status-changed",
 			 G_CALLBACK(fu_main_engine_status_changed_cb),
 			 priv);
@@ -3510,6 +3661,13 @@ main(int argc, char *argv[])
 			g_debug("%s\n", error->message);
 			return EXIT_NOTHING_TO_DO;
 		}
+#ifdef HAVE_GETUID
+		/* if not root, then notify users on the error path */
+		if (priv->interactive && (getuid() != 0 || geteuid() != 0)) {
+			/* TRANSLATORS: we're poking around as a power user */
+			g_printerr("%s\n", _("NOTE: This program may only work correctly as root"));
+		}
+#endif
 		return EXIT_FAILURE;
 	}
 

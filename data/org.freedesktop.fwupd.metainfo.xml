@@ -34,6 +34,37 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.7.4" date="2022-01-13">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add firmware branch support for ModemManager devices</li>
+          <li>Allow firmware engineers to patch files at known offsets</li>
+          <li>Show why more devices are not marked as updatable</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Allow fwupdtool to be run as the non-root user in more cases</li>
+          <li>Assign the Logitech bulkcontroller update interface correctly</li>
+          <li>Do not allow UEFI updates when the laptop lid is closed</li>
+          <li>Do not autoload ipmi-si to avoid warning on non-server hardware</li>
+          <li>Do not show a critical warning for a weird TPM event log</li>
+          <li>Fix waiting for USB devices when using Windows</li>
+          <li>Ignore non-PCI NVMe devices</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>HP USB-C G2 Dock</li>
+          <li>Many UF2 devices, experimentally</li>
+          <li>More PixArt devices</li>
+          <li>Nordic HID devices using MCUBoot</li>
+          <li>Quectel EG25-G LTE Modem</li>
+          <li>ThinkPad Thunderbolt 4 Dock</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.7.3" date="2021-12-13">
       <description>
         <p>

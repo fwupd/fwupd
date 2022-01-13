@@ -2318,9 +2318,18 @@ fu_device_list_delay_func(gconstpointer user_data)
 	guint changed_cnt = 0;
 	guint removed_cnt = 0;
 
-	g_signal_connect(device_list, "added", G_CALLBACK(_device_list_count_cb), &added_cnt);
-	g_signal_connect(device_list, "removed", G_CALLBACK(_device_list_count_cb), &removed_cnt);
-	g_signal_connect(device_list, "changed", G_CALLBACK(_device_list_count_cb), &changed_cnt);
+	g_signal_connect(FU_DEVICE_LIST(device_list),
+			 "added",
+			 G_CALLBACK(_device_list_count_cb),
+			 &added_cnt);
+	g_signal_connect(FU_DEVICE_LIST(device_list),
+			 "removed",
+			 G_CALLBACK(_device_list_count_cb),
+			 &removed_cnt);
+	g_signal_connect(FU_DEVICE_LIST(device_list),
+			 "changed",
+			 G_CALLBACK(_device_list_count_cb),
+			 &changed_cnt);
 
 	/* add one device */
 	fu_device_set_id(device1, "device1");
@@ -2534,9 +2543,18 @@ fu_device_list_compatible_func(gconstpointer user_data)
 	guint changed_cnt = 0;
 	guint removed_cnt = 0;
 
-	g_signal_connect(device_list, "added", G_CALLBACK(_device_list_count_cb), &added_cnt);
-	g_signal_connect(device_list, "removed", G_CALLBACK(_device_list_count_cb), &removed_cnt);
-	g_signal_connect(device_list, "changed", G_CALLBACK(_device_list_count_cb), &changed_cnt);
+	g_signal_connect(FU_DEVICE_LIST(device_list),
+			 "added",
+			 G_CALLBACK(_device_list_count_cb),
+			 &added_cnt);
+	g_signal_connect(FU_DEVICE_LIST(device_list),
+			 "removed",
+			 G_CALLBACK(_device_list_count_cb),
+			 &removed_cnt);
+	g_signal_connect(FU_DEVICE_LIST(device_list),
+			 "changed",
+			 G_CALLBACK(_device_list_count_cb),
+			 &changed_cnt);
 
 	/* add one device in runtime mode */
 	fu_device_set_id(device1, "device1");
@@ -2604,9 +2622,18 @@ fu_device_list_remove_chain_func(gconstpointer user_data)
 	guint changed_cnt = 0;
 	guint removed_cnt = 0;
 
-	g_signal_connect(device_list, "added", G_CALLBACK(_device_list_count_cb), &added_cnt);
-	g_signal_connect(device_list, "removed", G_CALLBACK(_device_list_count_cb), &removed_cnt);
-	g_signal_connect(device_list, "changed", G_CALLBACK(_device_list_count_cb), &changed_cnt);
+	g_signal_connect(FU_DEVICE_LIST(device_list),
+			 "added",
+			 G_CALLBACK(_device_list_count_cb),
+			 &added_cnt);
+	g_signal_connect(FU_DEVICE_LIST(device_list),
+			 "removed",
+			 G_CALLBACK(_device_list_count_cb),
+			 &removed_cnt);
+	g_signal_connect(FU_DEVICE_LIST(device_list),
+			 "changed",
+			 G_CALLBACK(_device_list_count_cb),
+			 &changed_cnt);
 
 	/* add child */
 	fu_device_set_id(device_child, "child");
@@ -2649,9 +2676,18 @@ fu_device_list_func(gconstpointer user_data)
 	guint changed_cnt = 0;
 	guint removed_cnt = 0;
 
-	g_signal_connect(device_list, "added", G_CALLBACK(_device_list_count_cb), &added_cnt);
-	g_signal_connect(device_list, "removed", G_CALLBACK(_device_list_count_cb), &removed_cnt);
-	g_signal_connect(device_list, "changed", G_CALLBACK(_device_list_count_cb), &changed_cnt);
+	g_signal_connect(FU_DEVICE_LIST(device_list),
+			 "added",
+			 G_CALLBACK(_device_list_count_cb),
+			 &added_cnt);
+	g_signal_connect(FU_DEVICE_LIST(device_list),
+			 "removed",
+			 G_CALLBACK(_device_list_count_cb),
+			 &removed_cnt);
+	g_signal_connect(FU_DEVICE_LIST(device_list),
+			 "changed",
+			 G_CALLBACK(_device_list_count_cb),
+			 &changed_cnt);
 
 	/* add both */
 	fu_device_set_id(device1, "device1");
@@ -2872,11 +2908,11 @@ fu_plugin_module_func(gconstpointer user_data)
 	ret = fu_plugin_runner_startup(self->plugin, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
-	g_signal_connect(self->plugin,
+	g_signal_connect(FU_PLUGIN(self->plugin),
 			 "device-added",
 			 G_CALLBACK(_plugin_device_added_cb),
 			 &device);
-	g_signal_connect(self->plugin,
+	g_signal_connect(FU_PLUGIN(self->plugin),
 			 "device-register",
 			 G_CALLBACK(_plugin_device_register_cb),
 			 &device);
@@ -2901,7 +2937,10 @@ fu_plugin_module_func(gconstpointer user_data)
 	return;
 #endif
 	/* schedule an offline update */
-	g_signal_connect(progress, "status-changed", G_CALLBACK(_plugin_status_changed_cb), &cnt);
+	g_signal_connect(FU_PROGRESS(progress),
+			 "status-changed",
+			 G_CALLBACK(_plugin_status_changed_cb),
+			 &cnt);
 	mapped_file_fn =
 	    g_test_build_filename(G_TEST_DIST, "tests", "colorhug", "firmware.bin", NULL);
 	mapped_file = g_mapped_file_new(mapped_file_fn, FALSE, &error);
@@ -3264,7 +3303,7 @@ fu_plugin_composite_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	g_signal_connect(self->plugin,
+	g_signal_connect(FU_PLUGIN(self->plugin),
 			 "device-added",
 			 G_CALLBACK(_plugin_composite_device_added_cb),
 			 devices);
@@ -3466,7 +3505,7 @@ fu_security_attr_func(gconstpointer user_data)
 	g_assert_no_error(error);
 	g_assert_true(ret);
 	ret = fu_security_attrs_from_json(attrs2, json_parser_get_root(parser), &error);
-	if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED)) {
+	if (g_error_matches(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
 		g_test_skip(error->message);
 		return;
 	}

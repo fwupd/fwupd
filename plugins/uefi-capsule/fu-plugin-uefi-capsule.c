@@ -393,10 +393,10 @@ fu_plugin_uefi_capsule_register_proxy_device(FuPlugin *plugin, FuDevice *device)
 	if (data->esp == NULL)
 		data->esp = fu_common_get_esp_default(&error_local);
 	if (data->esp == NULL) {
-		fu_device_set_update_error(FU_DEVICE(dev), error_local->message);
-		fu_device_remove_flag(FU_DEVICE(dev), FWUPD_DEVICE_FLAG_UPDATABLE);
+		fu_device_inhibit(device, "no-esp", error_local->message);
 	} else {
 		fu_uefi_device_set_esp(dev, data->esp);
+		fu_device_uninhibit(device, "no-esp");
 	}
 	fu_plugin_device_add(plugin, FU_DEVICE(dev));
 }
@@ -465,6 +465,8 @@ fu_plugin_uefi_capsule_coldplug_device(FuPlugin *plugin, FuUefiDevice *dev, GErr
 	}
 	if (fu_context_has_hwid_flag(ctx, "no-ux-capsule"))
 		fu_device_add_private_flag(FU_DEVICE(dev), FU_UEFI_DEVICE_FLAG_NO_UX_CAPSULE);
+	if (fu_context_has_hwid_flag(ctx, "no-lid-closed"))
+		fu_device_add_internal_flag(FU_DEVICE(dev), FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED);
 
 	/* set fallback name if nothing else is set */
 	device_kind = fu_uefi_device_get_kind(dev);
@@ -771,7 +773,7 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, GError **error)
 		fu_plugin_uefi_capsule_load_config(plugin, FU_DEVICE(dev));
 
 		/* watch in case we set needs-reboot in the engine */
-		g_signal_connect(dev,
+		g_signal_connect(FU_DEVICE(dev),
 				 "notify::update-state",
 				 G_CALLBACK(fu_plugin_uefi_update_state_notify_cb),
 				 plugin);

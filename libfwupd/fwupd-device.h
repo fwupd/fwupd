@@ -46,6 +46,8 @@ fwupd_device_get_composite_id(FwupdDevice *self);
 void
 fwupd_device_set_composite_id(FwupdDevice *self, const gchar *composite_id);
 FwupdDevice *
+fwupd_device_get_root(FwupdDevice *self);
+FwupdDevice *
 fwupd_device_get_parent(FwupdDevice *self);
 void
 fwupd_device_set_parent(FwupdDevice *self, FwupdDevice *parent);

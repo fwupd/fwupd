@@ -11,6 +11,7 @@
 
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
+#include "fwupd-error.h"
 #include "fwupd-security-attr-private.h"
 
 /**
@@ -70,7 +71,7 @@ fwupd_security_attr_flag_to_string(FwupdSecurityAttrFlags flag)
 
 /**
  * fwupd_security_attr_flag_from_string:
- * @flag: a string, e.g. `success`
+ * @flag: (nullable): a string, e.g. `success`
  *
  * Converts a string to an enumerated flag.
  *
@@ -140,7 +141,7 @@ fwupd_security_attr_result_to_string(FwupdSecurityAttrResult result)
 
 /**
  * fwupd_security_attr_result_from_string:
- * @result: a string, e.g. `not-encrypted`
+ * @result: (nullable): a string, e.g. `not-encrypted`
  *
  * Converts a string to an enumerated result.
  *
@@ -1068,8 +1069,8 @@ fwupd_security_attr_from_json(FwupdSecurityAttr *self, JsonNode *json_node, GErr
 	return TRUE;
 #else
 	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_SUPPORTED,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "json-glib version too old");
 	return FALSE;
 #endif
@@ -1252,7 +1253,7 @@ fwupd_security_attr_set_from_variant_iter(FwupdSecurityAttr *self, GVariantIter 
 
 /**
  * fwupd_security_attr_from_variant:
- * @value: the serialized data
+ * @value: (not nullable): the serialized data
  *
  * Creates a new security attribute using serialized data.
  *
@@ -1266,6 +1267,8 @@ fwupd_security_attr_from_variant(GVariant *value)
 	FwupdSecurityAttr *rel = NULL;
 	const gchar *type_string;
 	g_autoptr(GVariantIter) iter = NULL;
+
+	g_return_val_if_fail(value != NULL, NULL);
 
 	type_string = g_variant_get_type_string(value);
 	if (g_strcmp0(type_string, "(a{sv})") == 0) {
@@ -1284,7 +1287,7 @@ fwupd_security_attr_from_variant(GVariant *value)
 
 /**
  * fwupd_security_attr_array_from_variant:
- * @value: the serialized data
+ * @value: (not nullable): the serialized data
  *
  * Creates an array of new security attributes using serialized data.
  *

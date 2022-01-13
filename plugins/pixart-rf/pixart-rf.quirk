@@ -58,6 +58,21 @@ GType = FuPxiBleDevice
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 
+# Chicony Cheetos keyboard v2
+[HIDRAW\VEN_04F2&DEV_2125]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# Chicony Cheetos keyboard UK
+[HIDRAW\VEN_04F2&DEV_2188]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# Chicony Cheetos keyboard v2 UK
+[HIDRAW\VEN_04F2&DEV_2189]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
 # Chicony Cheetos mouse
 [HIDRAW\VEN_04F2&DEV_2103]
 Plugin = pixart_rf
@@ -73,6 +88,16 @@ GType = FuPxiBleDevice
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 
+# Targus BT Keyboard AKB872
+[HIDRAW\VEN_1048&DEV_3003]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# Targus BT Keyboard AKB869
+[HIDRAW\VEN_1048&DEV_3004]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
 # AKR123 Bluetooth Keyboard
 [HIDRAW\VEN_04F2&DEV_2199]
 Plugin = pixart_rf
@@ -84,12 +109,22 @@ Plugin = pixart_rf
 GType = FuPxiBleDevice
 
 # j5 Wireless Keyboard
-[HIDRAW\VEN_2DE5&DEV_2051]
+[HIDRAW\VEN_2DE5&DEV_2125]
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 
 # j5 Wireless Mouse
 [HIDRAW\VEN_2DE5&DEV_2103]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# CTL Bluetooth Keyboard
+[HIDRAW\VEN_04F2&DEV_2179]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# CTL Bluetooth Mouse
+[HIDRAW\VEN_04F2&DEV_2178]
 Plugin = pixart_rf
 GType = FuPxiBleDevice
 
@@ -100,5 +135,35 @@ GType = FuPxiBleDevice
 
 # Primax Vivaldi2 Mouse
 [HIDRAW\VEN_03F0&DEV_614A]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# HP 320 BTKB
+[HIDRAW\VEN_0461&DEV_4F01]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# Pixart 2403
+[HIDRAW\VEN_093A&DEV_2403]
+Plugin = pixart_rf
+GType = FuPxiReceiverDevice
+
+# Pixart 2463
+[HIDRAW\VEN_093A&DEV_2463]
+Plugin = pixart_rf
+GType = FuPxiReceiverDevice
+
+# Pixart 2832
+[HIDRAW\VEN_093A&DEV_2832]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# Pixart 2851
+[HIDRAW\VEN_093A&DEV_2851]
+Plugin = pixart_rf
+GType = FuPxiBleDevice
+
+# Pixart 2852
+[HIDRAW\VEN_093A&DEV_2852]
 Plugin = pixart_rf
 GType = FuPxiBleDevice

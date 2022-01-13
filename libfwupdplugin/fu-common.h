@@ -82,6 +82,7 @@ typedef guint FuEndianType;
  * /var/lib/fwupd/metadata)
  * @FU_PATH_KIND_LOCALSTATEDIR_REMOTES: The local state directory for remotes (IE
  * /var/lib/fwupd/remotes.d)
+ * @FU_PATH_KIND_WIN32_BASEDIR:		The root of the install directory on Windows
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -109,6 +110,7 @@ typedef enum {
 	FU_PATH_KIND_LOCALSTATEDIR_QUIRKS,
 	FU_PATH_KIND_LOCALSTATEDIR_METADATA,
 	FU_PATH_KIND_LOCALSTATEDIR_REMOTES,
+	FU_PATH_KIND_WIN32_BASEDIR,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;
@@ -158,6 +160,22 @@ typedef enum {
 } FuBatteryState;
 
 /**
+ * FuLidState:
+ * @FU_LID_STATE_UNKNOWN:		Unknown
+ * @FU_LID_STATE_OPEN:			Charging
+ * @FU_LID_STATE_CLOSED:		Discharging
+ *
+ * The device lid state.
+ **/
+typedef enum {
+	FU_LID_STATE_UNKNOWN,
+	FU_LID_STATE_OPEN,
+	FU_LID_STATE_CLOSED,
+	/*< private >*/
+	FU_LID_STATE_LAST
+} FuLidState;
+
+/**
  * FuOutputHandler:
  * @line: text data
  * @user_data: user data
@@ -198,6 +216,10 @@ fu_common_set_contents_bytes(const gchar *filename,
 			     GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GBytes *
 fu_common_get_contents_bytes(const gchar *filename, GError **error) G_GNUC_WARN_UNUSED_RESULT;
+GBytes *
+fu_common_get_contents_stream(GInputStream *stream,
+			      gsize count,
+			      GError **error) G_GNUC_WARN_UNUSED_RESULT;
 GBytes *
 fu_common_get_contents_fd(gint fd, gsize count, GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
@@ -259,6 +281,13 @@ fu_memcpy_safe(guint8 *dst,
 	       gsize src_sz,
 	       gsize src_offset,
 	       gsize n,
+	       GError **error) G_GNUC_WARN_UNUSED_RESULT;
+gboolean
+fu_memmem_safe(const guint8 *haystack,
+	       gsize haystack_sz,
+	       const guint8 *needle,
+	       gsize needle_sz,
+	       gsize *offset,
 	       GError **error) G_GNUC_WARN_UNUSED_RESULT;
 gboolean
 fu_common_read_uint8_safe(const guint8 *buf,
@@ -456,6 +485,8 @@ gboolean
 fu_common_reset_firmware_search_path(GError **error);
 const gchar *
 fu_battery_state_to_string(FuBatteryState battery_state);
+const gchar *
+fu_lid_state_to_string(FuLidState lid_state);
 
 void
 fu_xmlb_builder_insert_kv(XbBuilderNode *bn, const gchar *key, const gchar *value);

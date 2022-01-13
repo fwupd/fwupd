@@ -358,6 +358,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("synaptics-cape"),
         Fuzzer("synaptics-mst"),
         Fuzzer("synaptics-rmi"),
+        Fuzzer("uf2"),
         Fuzzer("wacom-usb", pattern="wac-firmware"),
     ]:
         fuzz_objs = []

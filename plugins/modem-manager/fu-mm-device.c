@@ -35,6 +35,13 @@
 /* Amount of time for the modem to get firmware version */
 #define MAX_WAIT_TIME_SECS 150 /* s */
 
+/**
+ * FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE
+ *
+ * If no AT response is expected when entering fastboot mode.
+ */
+#define FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE (1 << 0)
+
 struct _FuMmDevice {
 	FuDevice parent_instance;
 	MMManager *manager;
@@ -52,6 +59,7 @@ struct _FuMmDevice {
 	 */
 	MMModemFirmwareUpdateMethod update_methods;
 	gchar *detach_fastboot_at;
+	gchar *branch_at;
 	gint port_at_ifnum;
 	gint port_qmi_ifnum;
 	gint port_mbim_ifnum;
@@ -598,7 +606,7 @@ fu_mm_device_qcdm_cmd(FuMmDevice *self, const guint8 *cmd, gsize cmd_len, GError
 #endif /* MM_CHECK_VERSION(1,17,2) */
 
 static gboolean
-fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, GError **error)
+fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, gboolean has_response, GError **error)
 {
 	const gchar *buf;
 	gsize bufsz = 0;
@@ -617,6 +625,12 @@ fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, GError **error)
 				       error)) {
 		g_prefix_error(error, "failed to write %s: ", cmd);
 		return FALSE;
+	}
+
+	/* AT command has no response, return TRUE */
+	if (!has_response) {
+		g_debug("No response expected for AT command: '%s', assuming succeed", cmd);
+		return TRUE;
 	}
 
 	/* response */
@@ -640,7 +654,9 @@ fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, GError **error)
 			    cmd);
 		return FALSE;
 	}
-	if (memcmp(buf, "\r\nOK\r\n", 6) != 0) {
+
+	/* return error if AT command failed */
+	if (g_strrstr(buf, "\r\nOK\r\n") == NULL) {
 		g_autofree gchar *tmp = g_strndup(buf + 2, bufsz - 4);
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -650,6 +666,29 @@ fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, GError **error)
 			    tmp);
 		return FALSE;
 	}
+
+	/* set firmware branch if returned */
+	if (self->branch_at != NULL && g_strcmp0(cmd, self->branch_at) == 0) {
+		/*
+		 * example AT+GETFWBRANCH response:
+		 *
+		 * \r\nFOSS-002 \r\n\r\nOK\r\n
+		 *
+		 * remove \r\n, and OK to get branch name
+		 */
+		g_auto(GStrv) parts = g_strsplit(buf, "\r\n", -1);
+
+		for (int j = 0; parts[j] != NULL; j++) {
+			/* Ignore empty strings, and OK responses */
+			if (g_strcmp0(parts[j], "") != 0 && g_strcmp0(parts[j], "OK") != 0) {
+				/* Set branch */
+				fu_device_set_branch(FU_DEVICE(self), parts[j]);
+				g_debug("Firmware branch reported as '%s'", parts[j]);
+				break;
+			}
+		}
+	}
+
 	return TRUE;
 }
 
@@ -681,17 +720,25 @@ fu_mm_device_detach_fastboot(FuDevice *device, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	gboolean has_response = TRUE;
 
 	/* boot to fastboot mode */
 	locker = fu_device_locker_new_full(device,
 					   (FuDeviceLockerFunc)fu_mm_device_io_open,
 					   (FuDeviceLockerFunc)fu_mm_device_io_close,
 					   error);
+
+	/* expect response for fastboot AT command */
+	if (fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE)) {
+		has_response = FALSE;
+	}
+
 	if (locker == NULL)
 		return FALSE;
-	if (!fu_mm_device_at_cmd(self, "AT", error))
+	if (!fu_mm_device_at_cmd(self, "AT", TRUE, error))
 		return FALSE;
-	if (!fu_mm_device_at_cmd(self, self->detach_fastboot_at, error)) {
+	if (!fu_mm_device_at_cmd(self, self->detach_fastboot_at, has_response, error)) {
 		g_prefix_error(error, "rebooting into fastboot not supported: ");
 		return FALSE;
 	}
@@ -1412,6 +1459,22 @@ fu_mm_device_write_firmware(FuDevice *device,
 }
 
 static gboolean
+fu_mm_device_set_quirk_kv(FuDevice *device, const gchar *key, const gchar *value, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+
+	/* load from quirks */
+	if (g_strcmp0(key, "ModemManagerBranchAtCommand") == 0) {
+		self->branch_at = g_strdup(value);
+		return TRUE;
+	}
+
+	/* failed */
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "quirk key not supported");
+	return FALSE;
+}
+
+static gboolean
 fu_mm_device_attach_qmi_pdc(FuMmDevice *self, GError **error)
 {
 	g_autoptr(FuDeviceLocker) locker = NULL;
@@ -1483,6 +1546,37 @@ fu_mm_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 	return TRUE;
 }
 
+static gboolean
+fu_mm_device_setup(FuDevice *device, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+
+	/* Create IO channel to send AT commands to the modem */
+	locker = fu_device_locker_new_full(device,
+					   (FuDeviceLockerFunc)fu_mm_device_io_open,
+					   (FuDeviceLockerFunc)fu_mm_device_io_close,
+					   error);
+	if (locker == NULL)
+		return FALSE;
+	/*
+	 * firmware branch AT command may fail if not implemented,
+	 * clear error if not supported
+	 */
+	if (self->branch_at != NULL) {
+		g_autoptr(GError) error_branch = NULL;
+		if (!fu_mm_device_at_cmd(self, self->branch_at, TRUE, &error_branch))
+			g_debug("unable to get firmware branch: %s", error_branch->message);
+	}
+
+	if (fu_device_get_branch(device) != NULL)
+		g_debug("using firmware branch: %s", fu_device_get_branch(device));
+	else
+		g_debug("using firmware branch: default");
+
+	return TRUE;
+}
+
 static void
 fu_mm_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -1499,10 +1593,14 @@ fu_mm_device_init(FuMmDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USE_RUNTIME_VERSION);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_summary(FU_DEVICE(self), "Mobile broadband device");
 	fu_device_add_icon(FU_DEVICE(self), "network-modem");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE,
+					"detach-at-fastboot-has-no-response");
 }
 
 static void
@@ -1517,6 +1615,7 @@ fu_mm_device_finalize(GObject *object)
 	if (self->omodem != NULL)
 		g_object_unref(self->omodem);
 	g_free(self->detach_fastboot_at);
+	g_free(self->branch_at);
 	g_free(self->port_at);
 	g_free(self->port_qmi);
 	g_free(self->port_mbim);
@@ -1533,13 +1632,22 @@ fu_mm_device_class_init(FuMmDeviceClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	object_class->finalize = fu_mm_device_finalize;
+	klass_device->setup = fu_mm_device_setup;
+	klass_device->reload = fu_mm_device_setup;
 	klass_device->to_string = fu_mm_device_to_string;
+	klass_device->set_quirk_kv = fu_mm_device_set_quirk_kv;
 	klass_device->probe = fu_mm_device_probe;
 	klass_device->detach = fu_mm_device_detach;
 	klass_device->write_firmware = fu_mm_device_write_firmware;
 	klass_device->attach = fu_mm_device_attach;
 	klass_device->set_progress = fu_mm_device_set_progress;
 
+	/**
+	 * FuMmDevice::attach-finished:
+	 * @self: the #FuMmDevice instance that emitted the signal
+	 *
+	 * The ::attach-finished signal is emitted when the device has attached.
+	 **/
 	signals[SIGNAL_ATTACH_FINISHED] = g_signal_new("attach-finished",
 						       G_TYPE_FROM_CLASS(object_class),
 						       G_SIGNAL_RUN_LAST,
@@ -1552,9 +1660,9 @@ fu_mm_device_class_init(FuMmDeviceClass *klass)
 }
 
 FuMmDevice *
-fu_mm_device_new(MMManager *manager, MMObject *omodem)
+fu_mm_device_new(FuContext *ctx, MMManager *manager, MMObject *omodem)
 {
-	FuMmDevice *self = g_object_new(FU_TYPE_MM_DEVICE, NULL);
+	FuMmDevice *self = g_object_new(FU_TYPE_MM_DEVICE, "context", ctx, NULL);
 	self->manager = g_object_ref(manager);
 	self->omodem = g_object_ref(omodem);
 	self->port_at_ifnum = -1;
@@ -1599,9 +1707,9 @@ fu_plugin_mm_inhibited_device_info_free(FuPluginMmInhibitedDeviceInfo *info)
 }
 
 FuMmDevice *
-fu_mm_device_udev_new(MMManager *manager, FuPluginMmInhibitedDeviceInfo *info)
+fu_mm_device_udev_new(FuContext *ctx, MMManager *manager, FuPluginMmInhibitedDeviceInfo *info)
 {
-	FuMmDevice *self = g_object_new(FU_TYPE_MM_DEVICE, NULL);
+	FuMmDevice *self = g_object_new(FU_TYPE_MM_DEVICE, "context", ctx, NULL);
 	g_debug("creating udev-based mm device at %s", info->physical_id);
 	self->manager = g_object_ref(manager);
 	fu_device_set_physical_id(FU_DEVICE(self), info->physical_id);

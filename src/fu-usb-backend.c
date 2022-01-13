@@ -20,6 +20,33 @@ struct _FuUsbBackend {
 
 G_DEFINE_TYPE(FuUsbBackend, fu_usb_backend, FU_TYPE_BACKEND)
 
+#define FU_USB_BACKEND_POLL_INTERVAL_DEFAULT	 1000 /* ms */
+#define FU_USB_BACKEND_POLL_INTERVAL_WAIT_REPLUG 5    /* ms */
+
+#ifdef _WIN32
+static void
+fu_usb_backend_device_notify_flags_cb(FuDevice *device, GParamSpec *pspec, FuBackend *backend)
+{
+#if G_USB_CHECK_VERSION(0, 3, 10)
+	FuUsbBackend *self = FU_USB_BACKEND(backend);
+
+	/* if waiting for a disconnect, set win32 to poll insanely fast -- and set it
+	 * back to the default when the device removal was detected */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG)) {
+		g_debug("setting USB poll interval to %ums to detect replug",
+			(guint)FU_USB_BACKEND_POLL_INTERVAL_WAIT_REPLUG);
+		g_usb_context_set_hotplug_poll_interval(self->usb_ctx,
+							FU_USB_BACKEND_POLL_INTERVAL_WAIT_REPLUG);
+	} else {
+		g_usb_context_set_hotplug_poll_interval(self->usb_ctx,
+							FU_USB_BACKEND_POLL_INTERVAL_DEFAULT);
+	}
+#else
+	g_warning("GUsb >= 0.3.10 may be needed to notice device enumeration");
+#endif
+}
+#endif
+
 static void
 fu_usb_backend_device_added_cb(GUsbContext *ctx, GUsbDevice *usb_device, FuBackend *backend)
 {
@@ -61,11 +88,11 @@ fu_usb_backend_setup(FuBackend *backend, GError **error)
 		return FALSE;
 	}
 	g_object_weak_ref(G_OBJECT(self->usb_ctx), fu_usb_backend_context_finalized_cb, self);
-	g_signal_connect(self->usb_ctx,
+	g_signal_connect(G_USB_CONTEXT(self->usb_ctx),
 			 "device-added",
 			 G_CALLBACK(fu_usb_backend_device_added_cb),
 			 self);
-	g_signal_connect(self->usb_ctx,
+	g_signal_connect(G_USB_CONTEXT(self->usb_ctx),
 			 "device-removed",
 			 G_CALLBACK(fu_usb_backend_device_removed_cb),
 			 self);
@@ -79,6 +106,22 @@ fu_usb_backend_coldplug(FuBackend *backend, GError **error)
 	FuUsbBackend *self = FU_USB_BACKEND(backend);
 	g_usb_context_enumerate(self->usb_ctx);
 	return TRUE;
+}
+
+static void
+fu_usb_backend_registered(FuBackend *backend, FuDevice *device)
+{
+#ifdef _WIN32
+	/* not required */
+	if (!FU_IS_USB_DEVICE(device))
+		return;
+
+	/* on win32 we need to poll the context faster */
+	g_signal_connect(FU_DEVICE(device),
+			 "notify::flags",
+			 G_CALLBACK(fu_usb_backend_device_notify_flags_cb),
+			 backend);
+#endif
 }
 
 static void
@@ -108,6 +151,7 @@ fu_usb_backend_class_init(FuUsbBackendClass *klass)
 	object_class->finalize = fu_usb_backend_finalize;
 	klass_backend->setup = fu_usb_backend_setup;
 	klass_backend->coldplug = fu_usb_backend_coldplug;
+	klass_backend->registered = fu_usb_backend_registered;
 }
 
 FuBackend *

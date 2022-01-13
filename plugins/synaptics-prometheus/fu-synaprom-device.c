@@ -63,24 +63,6 @@ typedef struct __attribute__((packed)) {
 
 G_DEFINE_TYPE(FuSynapromDevice, fu_synaprom_device, FU_TYPE_USB_DEVICE)
 
-static gboolean
-fu_synaprom_device_open(FuDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-
-	/* FuUsbDevice->open */
-	if (!FU_DEVICE_CLASS(fu_synaprom_device_parent_class)->open(device, error))
-		return FALSE;
-
-	if (!g_usb_device_claim_interface(usb_device,
-					  0x0,
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  error)) {
-		return FALSE;
-	}
-	return TRUE;
-}
-
 gboolean
 fu_synaprom_device_cmd_send(FuSynapromDevice *device,
 			    GByteArray *request,
@@ -534,6 +516,7 @@ fu_synaprom_device_init(FuSynapromDevice *self)
 	fu_device_set_summary(FU_DEVICE(self), "Fingerprint reader");
 	fu_device_set_vendor(FU_DEVICE(self), "Synaptics");
 	fu_device_add_icon(FU_DEVICE(self), "touchpad-disabled");
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x0);
 }
 
 static void
@@ -546,7 +529,6 @@ fu_synaprom_device_class_init(FuSynapromDeviceClass *klass)
 	klass_device->reload = fu_synaprom_device_setup;
 	klass_device->attach = fu_synaprom_device_attach;
 	klass_device->detach = fu_synaprom_device_detach;
-	klass_device->open = fu_synaprom_device_open;
 	klass_device->set_progress = fu_synaprom_device_set_progress;
 }
 

@@ -142,7 +142,7 @@ fu_udev_backend_coldplug(FuBackend *backend, GError **error)
 			subsystems[i] = g_strdup(subsystem);
 		}
 		self->gudev_client = g_udev_client_new((const gchar *const *)subsystems);
-		g_signal_connect(self->gudev_client,
+		g_signal_connect(G_UDEV_CLIENT(self->gudev_client),
 				 "uevent",
 				 G_CALLBACK(fu_udev_backend_uevent_cb),
 				 self);

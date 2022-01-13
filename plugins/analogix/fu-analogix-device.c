@@ -13,7 +13,6 @@
 
 struct _FuAnalogixDevice {
 	FuUsbDevice parent_instance;
-	guint8 iface_idx; /* bInterfaceNumber */
 	guint16 ocm_version;
 	guint16 custom_version;
 };
@@ -24,7 +23,6 @@ static void
 fu_analogix_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuAnalogixDevice *self = FU_ANALOGIX_DEVICE(device);
-	fu_common_string_append_kx(str, idt, "IfaceIdx", self->iface_idx);
 	fu_common_string_append_kx(str, idt, "OcmVersion", self->ocm_version);
 	fu_common_string_append_kx(str, idt, "CustomVersion", self->custom_version);
 }
@@ -152,27 +150,6 @@ fu_analogix_device_get_update_status(FuAnalogixDevice *self,
 }
 
 static gboolean
-fu_analogix_device_open(FuDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	FuAnalogixDevice *self = FU_ANALOGIX_DEVICE(device);
-
-	/* FuUsbDevice->open */
-	if (!FU_DEVICE_CLASS(fu_analogix_device_parent_class)->open(device, error))
-		return FALSE;
-	if (!g_usb_device_claim_interface(usb_device,
-					  self->iface_idx,
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  error)) {
-		g_prefix_error(error, "failed to claim interface: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_analogix_device_setup(FuDevice *device, GError **error)
 {
 	FuAnalogixDevice *self = FU_ANALOGIX_DEVICE(device);
@@ -237,7 +214,8 @@ fu_analogix_device_find_interface(FuUsbDevice *device, GError **error)
 			endpoints = g_usb_interface_get_endpoints(intf);
 			if (endpoints == NULL)
 				continue;
-			self->iface_idx = g_usb_interface_get_number(intf);
+			fu_usb_device_add_interface(FU_USB_DEVICE(self),
+						    g_usb_interface_get_number(intf));
 			return TRUE;
 		}
 	}
@@ -415,25 +393,6 @@ fu_analogix_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
-static gboolean
-fu_analogix_device_close(FuDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	FuAnalogixDevice *self = FU_ANALOGIX_DEVICE(device);
-
-	/* release interface */
-	if (!g_usb_device_release_interface(usb_device,
-					    self->iface_idx,
-					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					    error)) {
-		g_prefix_error(error, "failed to release interface: ");
-		return FALSE;
-	}
-
-	/* FuUsbDevice->close */
-	return FU_DEVICE_CLASS(fu_analogix_device_parent_class)->close(device, error);
-}
-
 static void
 fu_analogix_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -463,8 +422,6 @@ fu_analogix_device_class_init(FuAnalogixDeviceClass *klass)
 	klass_device->to_string = fu_analogix_device_to_string;
 	klass_device->write_firmware = fu_analogix_device_write_firmware;
 	klass_device->setup = fu_analogix_device_setup;
-	klass_device->open = fu_analogix_device_open;
 	klass_device->probe = fu_analogix_device_probe;
-	klass_device->close = fu_analogix_device_close;
 	klass_device->set_progress = fu_analogix_device_set_progress;
 }

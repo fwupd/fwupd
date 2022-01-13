@@ -265,29 +265,6 @@ fu_logitech_hidpp_bootloader_set_bl_version(FuLogitechHidPpBootloader *self, GEr
 }
 
 static gboolean
-fu_logitech_hidpp_bootloader_open(FuDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	const guint idx = 0x00;
-
-	/* FuUsbDevice->open */
-	if (!FU_DEVICE_CLASS(fu_logitech_hidpp_bootloader_parent_class)->open(device, error))
-		return FALSE;
-
-	/* claim the only interface */
-	if (!g_usb_device_claim_interface(usb_device,
-					  idx,
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  error)) {
-		g_prefix_error(error, "Failed to claim 0x%02x: ", idx);
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_logitech_hidpp_bootloader_setup(FuDevice *device, GError **error)
 {
 	FuLogitechHidPpBootloader *self = FU_UNIFYING_BOOTLOADER(device);
@@ -321,23 +298,6 @@ fu_logitech_hidpp_bootloader_setup(FuDevice *device, GError **error)
 
 	/* get bootloader version */
 	return fu_logitech_hidpp_bootloader_set_bl_version(self, error);
-}
-
-static gboolean
-fu_logitech_hidpp_bootloader_close(FuDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	if (usb_device != NULL) {
-		if (!g_usb_device_release_interface(usb_device,
-						    0x00,
-						    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-						    error)) {
-			return FALSE;
-		}
-	}
-
-	/* FuUsbDevice->close */
-	return FU_DEVICE_CLASS(fu_logitech_hidpp_bootloader_parent_class)->close(device, error);
 }
 
 gboolean
@@ -479,6 +439,7 @@ fu_logitech_hidpp_bootloader_init(FuLogitechHidPpBootloader *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_LOGITECH_HIDPP_BOOTLOADER_FLAG_IS_SIGNED,
 					"is-signed");
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
 }
 
 static void
@@ -488,6 +449,4 @@ fu_logitech_hidpp_bootloader_class_init(FuLogitechHidPpBootloaderClass *klass)
 	klass_device->to_string = fu_logitech_hidpp_bootloader_to_string;
 	klass_device->attach = fu_logitech_hidpp_bootloader_attach;
 	klass_device->setup = fu_logitech_hidpp_bootloader_setup;
-	klass_device->open = fu_logitech_hidpp_bootloader_open;
-	klass_device->close = fu_logitech_hidpp_bootloader_close;
 }

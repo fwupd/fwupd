@@ -15,29 +15,6 @@
 G_DEFINE_TYPE(FuSteelseriesDevice, fu_steelseries_device, FU_TYPE_USB_DEVICE)
 
 static gboolean
-fu_steelseries_device_open(FuDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	const guint8 iface_idx = 0x00;
-
-	/* FuUsbDevice->open */
-	if (!FU_DEVICE_CLASS(fu_steelseries_device_parent_class)->open(device, error))
-		return FALSE;
-
-	/* get firmware version on SteelSeries Rival 100 */
-	if (!g_usb_device_claim_interface(usb_device,
-					  iface_idx,
-					  G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					  error)) {
-		g_prefix_error(error, "failed to claim interface: ");
-		return FALSE;
-	}
-
-	/* success */
-	return TRUE;
-}
-
-static gboolean
 fu_steelseries_device_setup(FuDevice *device, GError **error)
 {
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
@@ -104,29 +81,11 @@ fu_steelseries_device_setup(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_steelseries_device_close(FuDevice *device, GError **error)
-{
-	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	const guint8 iface_idx = 0x00;
-
-	/* we're done here */
-	if (!g_usb_device_release_interface(usb_device,
-					    iface_idx,
-					    G_USB_DEVICE_CLAIM_INTERFACE_BIND_KERNEL_DRIVER,
-					    error)) {
-		g_prefix_error(error, "failed to release interface: ");
-		return FALSE;
-	}
-
-	/* FuUsbDevice->close */
-	return FU_DEVICE_CLASS(fu_steelseries_device_parent_class)->close(device, error);
-}
-
 static void
-fu_steelseries_device_init(FuSteelseriesDevice *device)
+fu_steelseries_device_init(FuSteelseriesDevice *self)
 {
-	fu_device_set_version_format(FU_DEVICE(device), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
+	fu_usb_device_add_interface(FU_USB_DEVICE(self), 0x00);
 }
 
 static void
@@ -134,6 +93,4 @@ fu_steelseries_device_class_init(FuSteelseriesDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->setup = fu_steelseries_device_setup;
-	klass_device->open = fu_steelseries_device_open;
-	klass_device->close = fu_steelseries_device_close;
 }

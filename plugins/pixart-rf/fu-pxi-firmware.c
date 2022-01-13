@@ -159,7 +159,7 @@ fu_pxi_firmware_write(FuFirmware *firmware, GError **error)
 	};
 
 	/* data first */
-	blob = fu_firmware_get_bytes(firmware, error);
+	blob = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (blob == NULL)
 		return NULL;
 	buf = g_byte_array_sized_new(g_bytes_get_size(blob) + sizeof(fw_header));

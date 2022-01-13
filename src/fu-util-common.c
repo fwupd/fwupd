@@ -9,6 +9,7 @@
 #include <config.h>
 #include <glib/gi18n.h>
 #include <stdio.h>
+#include <unistd.h>
 #ifdef HAVE_GUSB
 #include <gusb.h>
 #endif
@@ -16,6 +17,11 @@
 #include <xmlb.h>
 #ifdef HAVE_LIBCURL
 #include <curl/curl.h>
+#endif
+
+#ifdef _WIN32
+#include <wchar.h>
+#include <windows.h>
 #endif
 
 #include "fu-common.h"
@@ -2486,4 +2492,64 @@ fu_util_is_url(const gchar *perhaps_url)
 	return g_str_has_prefix(perhaps_url, "http://") ||
 	       g_str_has_prefix(perhaps_url, "https://");
 #endif
+}
+
+gboolean
+fu_util_setup_interactive_console(GError **error)
+{
+#ifdef _WIN32
+	HANDLE hOut;
+	DWORD dwMode = 0;
+
+	/* enable VT sequences */
+	hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (hOut == INVALID_HANDLE_VALUE) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "failed to get stdout [%u]",
+			    (guint)GetLastError());
+		return FALSE;
+	}
+	if (!GetConsoleMode(hOut, &dwMode)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "failed to get mode [%u]",
+			    (guint)GetLastError());
+		return FALSE;
+	}
+	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	if (!SetConsoleMode(hOut, dwMode)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "failed to set mode [%u]",
+			    (guint)GetLastError());
+		return FALSE;
+	}
+	if (!SetConsoleOutputCP(CP_UTF8)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "failed to set output UTF-8 [%u]",
+			    (guint)GetLastError());
+		return FALSE;
+	}
+	if (!SetConsoleCP(CP_UTF8)) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "failed to set UTF-8 [%u]",
+			    (guint)GetLastError());
+		return FALSE;
+	}
+#else
+	if (isatty(fileno(stdout)) == 0) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "not a TTY");
+		return FALSE;
+	}
+#endif
+	/* success */
+	return TRUE;
 }

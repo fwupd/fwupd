@@ -96,7 +96,7 @@ fu_ifd_image_write(FuFirmware *firmware, GError **error)
 		}
 	} else {
 		g_autoptr(GBytes) bytes = NULL;
-		bytes = fu_firmware_get_bytes(firmware, error);
+		bytes = fu_firmware_get_bytes_with_patches(firmware, error);
 		if (bytes == NULL)
 			return NULL;
 		fu_byte_array_append_bytes(buf, bytes);

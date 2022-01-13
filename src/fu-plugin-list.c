@@ -94,7 +94,7 @@ fu_plugin_list_add(FuPluginList *self, FuPlugin *plugin)
 	g_hash_table_insert(self->plugins_hash,
 			    g_strdup(fu_plugin_get_name(plugin)),
 			    g_object_ref(plugin));
-	g_signal_connect(plugin,
+	g_signal_connect(FU_PLUGIN(plugin),
 			 "rules-changed",
 			 G_CALLBACK(fu_plugin_list_rules_changed_cb),
 			 self);

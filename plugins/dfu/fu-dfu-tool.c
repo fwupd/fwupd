@@ -267,73 +267,6 @@ fu_dfu_device_wait_for_replug(FuDfuTool *self, FuDfuDevice *device, guint timeou
 	return TRUE;
 }
 
-static GBytes *
-fu_dfu_tool_parse_hex_string(const gchar *val, GError **error)
-{
-	gsize result_size;
-	g_autofree guint8 *result = NULL;
-
-	/* sanity check */
-	if (val == NULL) {
-		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "nothing to parse");
-		return NULL;
-	}
-
-	/* parse each hex byte */
-	result_size = strlen(val) / 2;
-	result = g_malloc(result_size);
-	for (guint i = 0; i < result_size; i++) {
-		gchar buf[3] = {"xx"};
-		gchar *endptr = NULL;
-		guint64 tmp;
-
-		/* copy two bytes and parse as hex */
-		memcpy(buf, val + (i * 2), 2);
-		tmp = g_ascii_strtoull(buf, &endptr, 16);
-		if (tmp > 0xff || endptr[0] != '\0') {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "failed to parse '%s'",
-				    val);
-			return NULL;
-		}
-		result[i] = tmp;
-	}
-	return g_bytes_new(result, result_size);
-}
-
-static guint
-fu_dfu_tool_bytes_replace(GBytes *data, GBytes *search, GBytes *replace)
-{
-	gsize data_sz;
-	gsize replace_sz;
-	gsize search_sz;
-	guint8 *data_buf;
-	guint8 *replace_buf;
-	guint8 *search_buf;
-	guint cnt = 0;
-
-	data_buf = (gpointer)g_bytes_get_data(data, &data_sz);
-	search_buf = (gpointer)g_bytes_get_data(search, &search_sz);
-	replace_buf = (gpointer)g_bytes_get_data(replace, &replace_sz);
-
-	g_return_val_if_fail(search_sz == replace_sz, 0);
-
-	/* find and replace each one */
-	for (gsize i = 0; i < data_sz - search_sz + 1; i++) {
-		if (memcmp(data_buf + i, search_buf, search_sz) == 0) {
-			g_print("Replacing %" G_GSIZE_FORMAT " bytes @0x%04x\n",
-				replace_sz,
-				(guint)i);
-			memcpy(data_buf + i, replace_buf, replace_sz);
-			i += replace_sz;
-			cnt++;
-		}
-	}
-	return cnt;
-}
-
 static gboolean
 fu_dfu_tool_parse_firmware_from_file(FuFirmware *firmware,
 				     GFile *file,
@@ -372,72 +305,11 @@ fu_dfu_tool_write_firmware_to_file(FuFirmware *firmware, GFile *file, GError **e
 static gboolean
 fu_dfu_tool_replace_data(FuDfuTool *self, gchar **values, GError **error)
 {
-	guint cnt = 0;
-	g_autoptr(FuFirmware) firmware = NULL;
-	g_autoptr(GFile) file = NULL;
-	g_autoptr(GBytes) data_search = NULL;
-	g_autoptr(GBytes) data_replace = NULL;
-	g_autoptr(GPtrArray) images = NULL;
-
-	/* check args */
-	if (g_strv_length(values) < 3) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "Invalid arguments, expected FILE SEARCH REPLACE"
-				    " -- e.g. `firmware.dfu deadbeef beefdead");
-		return FALSE;
-	}
-
-	/* open */
-	file = g_file_new_for_path(values[0]);
-	firmware = fu_dfu_firmware_new();
-	if (!fu_dfu_tool_parse_firmware_from_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, error)) {
-		return FALSE;
-	}
-
-	/* parse hex values */
-	data_search = fu_dfu_tool_parse_hex_string(values[1], error);
-	if (data_search == NULL)
-		return FALSE;
-	data_replace = fu_dfu_tool_parse_hex_string(values[2], error);
-	if (data_replace == NULL)
-		return FALSE;
-	if (g_bytes_get_size(data_search) != g_bytes_get_size(data_replace)) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "search and replace were different sizes");
-		return FALSE;
-	}
-
-	/* get each data segment */
-	images = fu_firmware_get_images(firmware);
-	for (guint i = 0; i < images->len; i++) {
-		FuFirmware *image = g_ptr_array_index(images, i);
-		g_autoptr(GPtrArray) chunks = fu_firmware_get_chunks(image, error);
-		if (chunks == NULL)
-			return FALSE;
-		for (guint j = 0; j < chunks->len; j++) {
-			FuChunk *chk = g_ptr_array_index(chunks, j);
-			g_autoptr(GBytes) contents = fu_chunk_get_bytes(chk);
-			if (contents == NULL)
-				continue;
-			cnt += fu_dfu_tool_bytes_replace(contents, data_search, data_replace);
-		}
-	}
-
-	/* nothing done */
-	if (cnt == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_FOUND,
-				    "search string was not found");
-		return FALSE;
-	}
-
-	/* write out new file */
-	return fu_dfu_tool_write_firmware_to_file(firmware, file, error);
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "Available as `fwupdtool firmware-patch`");
+	return FALSE;
 }
 
 static void
@@ -483,8 +355,11 @@ fu_dfu_tool_read_alt(FuDfuTool *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* set up progress */
-	g_signal_connect(progress, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
+			 "status-changed",
+			 G_CALLBACK(fu_tool_action_changed_cb),
+			 self);
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_tool_action_changed_cb),
 			 self);
@@ -592,8 +467,11 @@ fu_dfu_tool_read(FuDfuTool *self, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	g_signal_connect(progress, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
+			 "status-changed",
+			 G_CALLBACK(fu_tool_action_changed_cb),
+			 self);
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_tool_action_changed_cb),
 			 self);
@@ -667,8 +545,11 @@ fu_dfu_tool_write_alt(FuDfuTool *self, gchar **values, GError **error)
 		return FALSE;
 
 	/* set up progress */
-	g_signal_connect(progress, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
+			 "status-changed",
+			 G_CALLBACK(fu_tool_action_changed_cb),
+			 self);
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_tool_action_changed_cb),
 			 self);
@@ -798,8 +679,11 @@ fu_dfu_tool_write(FuDfuTool *self, gchar **values, GError **error)
 	}
 
 	/* transfer */
-	g_signal_connect(progress, "status-changed", G_CALLBACK(fu_tool_action_changed_cb), self);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
+			 "status-changed",
+			 G_CALLBACK(fu_tool_action_changed_cb),
+			 self);
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_tool_action_changed_cb),
 			 self);

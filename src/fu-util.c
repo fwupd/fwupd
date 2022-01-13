@@ -851,8 +851,10 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 		url_safe = g_strdup(url);
 	}
 	filename = fu_util_download_if_required(priv, url_safe, error);
-	if (filename == NULL)
+	if (filename == NULL) {
+		g_prefix_error(error, "failed to download %s: ", url_safe);
 		return FALSE;
+	}
 
 	/* log */
 	json_builder_set_member_name(helper->builder, "url");
@@ -912,6 +914,7 @@ fu_util_device_test_filename(FuUtilPrivate *priv,
 			     GError **error)
 {
 	JsonNode *json_root;
+	JsonNode *json_steps;
 	JsonObject *json_obj;
 	guint repeat = 1;
 	g_autoptr(JsonParser) parser = json_parser_new();
@@ -941,6 +944,14 @@ fu_util_device_test_filename(FuUtilPrivate *priv,
 				    "JSON invalid as has no 'steps'");
 		return FALSE;
 	}
+	json_steps = json_object_get_member(json_obj, "steps");
+	if (!JSON_NODE_HOLDS_ARRAY(json_steps)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "JSON invalid as has 'steps' is not an array");
+		return FALSE;
+	}
 
 	/* some elements are optional */
 	if (json_object_has_member(json_obj, "name")) {
@@ -963,7 +974,7 @@ fu_util_device_test_filename(FuUtilPrivate *priv,
 	json_builder_set_member_name(helper->builder, "steps");
 	json_builder_begin_array(helper->builder);
 	for (guint j = 0; j < repeat; j++) {
-		JsonArray *json_array = json_object_get_array_member(json_obj, "steps");
+		JsonArray *json_array = json_node_get_array(json_steps);
 		for (guint i = 0; i < json_array_get_length(json_array); i++) {
 			JsonNode *json_node = json_array_get_element(json_array, i);
 			json_obj = json_node_get_object(json_node);
@@ -989,7 +1000,7 @@ fu_util_device_test(FuUtilPrivate *priv, gchar **values, GError **error)
 					 .name = "Unknown"};
 
 	/* required for interactive devices */
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -1101,11 +1112,11 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -2316,11 +2327,11 @@ fu_util_update_all(FuUtilPrivate *priv, GError **error)
 	if (devices == NULL)
 		return FALSE;
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -2414,11 +2425,11 @@ fu_util_update_by_id(FuUtilPrivate *priv, const gchar *device_id, GError **error
 
 	/* get devices from daemon */
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -2622,11 +2633,11 @@ fu_util_downgrade(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_DOWNGRADE;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -2688,11 +2699,11 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -2816,11 +2827,11 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -3229,7 +3240,7 @@ fu_util_security_as_json(FuUtilPrivate *priv, GPtrArray *attrs, GPtrArray *event
 	json_builder_end_array(builder);
 
 	/* events */
-	if (events->len > 0) {
+	if (events != NULL && events->len > 0) {
 		json_builder_set_member_name(builder, "HostSecurityEvents");
 		json_builder_begin_array(builder);
 		for (guint i = 0; i < attrs->len; i++) {
@@ -3254,11 +3265,11 @@ fu_util_sync_bkc(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* update the console if composite devices are also updated */
 	priv->current_operation = FU_UTIL_OPERATION_INSTALL;
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-changed",
 			 G_CALLBACK(fu_util_update_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "device-request",
 			 G_CALLBACK(fu_util_update_device_request_cb),
 			 priv);
@@ -3334,6 +3345,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
 	g_autoptr(GPtrArray) attrs = NULL;
 	g_autoptr(GPtrArray) events = NULL;
+	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *str = NULL;
 
 	/* not ready yet */
@@ -3352,9 +3364,18 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* the "when" */
-	events = fwupd_client_get_host_security_events(priv->client, 10, priv->cancellable, error);
-	if (events == NULL)
-		return FALSE;
+	events = fwupd_client_get_host_security_events(priv->client,
+						       10,
+						       priv->cancellable,
+						       &error_local);
+	if (events == NULL) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("ignoring failed events: %s", error_local->message);
+		} else {
+			g_propagate_error(error, g_steal_pointer(&error_local));
+			return FALSE;
+		}
+	}
 
 	/* not for human consumption */
 	if (priv->as_json)
@@ -3374,7 +3395,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_print("%s\n", str);
 
 	/* events */
-	if (events->len > 0) {
+	if (events != NULL && events->len > 0) {
 		g_autofree gchar *estr = fu_util_security_events_to_string(events, flags);
 		if (estr != NULL)
 			g_print("%s\n", estr);
@@ -3702,7 +3723,7 @@ main(int argc, char *argv[])
 	gboolean allow_older = FALSE;
 	gboolean allow_reinstall = FALSE;
 	gboolean enable_ipfs = FALSE;
-	gboolean is_interactive = TRUE;
+	gboolean is_interactive = FALSE;
 	gboolean no_history = FALSE;
 	gboolean offline = FALSE;
 	gboolean ret;
@@ -3711,6 +3732,7 @@ main(int argc, char *argv[])
 	g_autoptr(FuUtilPrivate) priv = g_new0(FuUtilPrivate, 1);
 	g_autoptr(GDateTime) dt_now = g_date_time_new_now_utc();
 	g_autoptr(GError) error = NULL;
+	g_autoptr(GError) error_console = NULL;
 	g_autoptr(GPtrArray) cmd_array = fu_util_cmd_array_new();
 	g_autofree gchar *cmd_descriptions = NULL;
 	g_autofree gchar *filter = NULL;
@@ -4199,15 +4221,17 @@ main(int argc, char *argv[])
 	}
 
 	/* non-TTY consoles cannot answer questions */
-	if (isatty(fileno(stdout)) == 0) {
-		is_interactive = FALSE;
+	if (!fu_util_setup_interactive_console(&error_console)) {
+		g_debug("failed to initialize interactive console: %s", error_console->message);
 		priv->no_unreported_check = TRUE;
 		priv->no_metadata_check = TRUE;
 		priv->no_reboot_check = TRUE;
 		priv->no_safety_check = TRUE;
 		priv->no_remote_check = TRUE;
-		fu_progressbar_set_interactive(priv->progressbar, FALSE);
+	} else {
+		is_interactive = TRUE;
 	}
+	fu_progressbar_set_interactive(priv->progressbar, is_interactive);
 
 	/* parse filter flags */
 	if (filter != NULL) {
@@ -4262,11 +4286,11 @@ main(int argc, char *argv[])
 	/* connect to the daemon */
 	priv->client = fwupd_client_new();
 	fwupd_client_set_main_context(priv->client, priv->main_ctx);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "notify::percentage",
 			 G_CALLBACK(fu_util_client_notify_cb),
 			 priv);
-	g_signal_connect(priv->client,
+	g_signal_connect(FWUPD_CLIENT(priv->client),
 			 "notify::status",
 			 G_CALLBACK(fu_util_client_notify_cb),
 			 priv);

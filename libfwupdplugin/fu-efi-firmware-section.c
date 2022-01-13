@@ -219,7 +219,7 @@ fu_efi_firmware_section_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GBytes) blob = NULL;
 
 	/* simple blob for now */
-	blob = fu_firmware_get_bytes(firmware, error);
+	blob = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (blob == NULL)
 		return NULL;
 

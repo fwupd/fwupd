@@ -74,6 +74,7 @@ typedef struct {
 	FuDeviceInternalFlags internal_flags;
 	guint64 private_flags;
 	GPtrArray *private_flag_items; /* (nullable) */
+	gchar *custom_flags;
 	gulong notify_flags_handler_id;
 } FuDevicePrivate;
 
@@ -232,6 +233,10 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "use-proxy-fallback";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)
 		return "no-auto-remove";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR)
+		return "md-set-vendor";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED)
+		return "no-lid-closed";
 	return NULL;
 }
 
@@ -288,6 +293,10 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_USE_PROXY_FALLBACK;
 	if (g_strcmp0(flag, "no-auto-remove") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE;
+	if (g_strcmp0(flag, "md-set-vendor") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR;
+	if (g_strcmp0(flag, "no-lid-closed") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -3093,11 +3102,14 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 void
 fu_device_set_custom_flags(FuDevice *self, const gchar *custom_flags)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
 	g_return_if_fail(FU_IS_DEVICE(self));
 	g_return_if_fail(custom_flags != NULL);
 
-	/* display what was set when converting to a string */
-	fu_device_set_metadata(self, "CustomFlags", custom_flags);
+	/* save what was set so we can use it for incorporating a superclass */
+	g_free(priv->custom_flags);
+	priv->custom_flags = g_strdup(custom_flags);
 
 	/* look for any standard FwupdDeviceFlags */
 	if (custom_flags != NULL) {
@@ -3120,8 +3132,9 @@ fu_device_set_custom_flags(FuDevice *self, const gchar *custom_flags)
 const gchar *
 fu_device_get_custom_flags(FuDevice *self)
 {
+	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_DEVICE(self), NULL);
-	return fu_device_get_metadata(self, "CustomFlags");
+	return priv->custom_flags;
 }
 
 /**
@@ -3346,6 +3359,8 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv(str, idt + 1, "ProxyId", fu_device_get_id(priv->proxy));
 	if (priv->proxy_guid != NULL)
 		fu_common_string_append_kv(str, idt + 1, "ProxyGuid", priv->proxy_guid);
+	if (priv->custom_flags != NULL)
+		fu_common_string_append_kv(str, idt + 1, "CustomFlags", priv->custom_flags);
 	if (priv->battery_level != FU_BATTERY_VALUE_INVALID)
 		fu_common_string_append_ku(str, idt + 1, "BatteryLevel", priv->battery_level);
 	if (priv->battery_threshold != FU_BATTERY_VALUE_INVALID)
@@ -3411,6 +3426,15 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 		}
 		tmps = fu_common_strjoin_array(",", tmpv);
 		fu_common_string_append_kv(str, idt + 1, "PrivateFlags", tmps);
+	}
+	if (priv->inhibits != NULL) {
+		g_autoptr(GList) values = g_hash_table_get_values(priv->inhibits);
+		for (GList *l = values; l != NULL; l = l->next) {
+			FuDeviceInhibit *inhibit = (FuDeviceInhibit *)l->data;
+			g_autofree gchar *val =
+			    g_strdup_printf("[%s] %s", inhibit->inhibit_id, inhibit->reason);
+			fu_common_string_append_kv(str, idt + 1, "Inhibit", val);
+		}
 	}
 
 	/* subclassed */
@@ -4516,6 +4540,8 @@ fu_device_incorporate(FuDevice *self, FuDevice *donor)
 		fu_device_set_proxy(self, priv_donor->proxy);
 	if (priv->proxy_guid == NULL && priv_donor->proxy_guid != NULL)
 		fu_device_set_proxy_guid(self, priv_donor->proxy_guid);
+	if (priv->custom_flags == NULL && priv_donor->custom_flags != NULL)
+		fu_device_set_custom_flags(self, priv_donor->custom_flags);
 	if (priv->ctx == NULL)
 		fu_device_set_context(self, fu_device_get_context(donor));
 	g_rw_lock_reader_lock(&priv_donor->parent_guids_mutex);
@@ -4665,6 +4691,15 @@ fu_device_class_init(FuDeviceClass *klass)
 	object_class->get_property = fu_device_get_property;
 	object_class->set_property = fu_device_set_property;
 
+	/**
+	 * FuDevice::child-added:
+	 * @self: the #FuDevice instance that emitted the signal
+	 * @device: the #FuDevice child
+	 *
+	 * The ::child-added signal is emitted when a device has been added as a child.
+	 *
+	 * Since: 1.0.8
+	 **/
 	signals[SIGNAL_CHILD_ADDED] = g_signal_new("child-added",
 						   G_TYPE_FROM_CLASS(object_class),
 						   G_SIGNAL_RUN_LAST,
@@ -4675,6 +4710,15 @@ fu_device_class_init(FuDeviceClass *klass)
 						   G_TYPE_NONE,
 						   1,
 						   FU_TYPE_DEVICE);
+	/**
+	 * FuDevice::child-removed:
+	 * @self: the #FuDevice instance that emitted the signal
+	 * @device: the #FuDevice child
+	 *
+	 * The ::child-removed signal is emitted when a device has been removed as a child.
+	 *
+	 * Since: 1.0.8
+	 **/
 	signals[SIGNAL_CHILD_REMOVED] = g_signal_new("child-removed",
 						     G_TYPE_FROM_CLASS(object_class),
 						     G_SIGNAL_RUN_LAST,
@@ -4685,6 +4729,15 @@ fu_device_class_init(FuDeviceClass *klass)
 						     G_TYPE_NONE,
 						     1,
 						     FU_TYPE_DEVICE);
+	/**
+	 * FuDevice::request:
+	 * @self: the #FuDevice instance that emitted the signal
+	 * @request: the #FwupdRequest
+	 *
+	 * The ::request signal is emitted when the device needs interactive action from the user.
+	 *
+	 * Since: 1.6.2
+	 **/
 	signals[SIGNAL_REQUEST] = g_signal_new("request",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,
@@ -4696,6 +4749,13 @@ fu_device_class_init(FuDeviceClass *klass)
 					       1,
 					       FWUPD_TYPE_REQUEST);
 
+	/**
+	 * FuDevice:physical-id:
+	 *
+	 * The device physical ID.
+	 *
+	 * Since: 1.1.2
+	 */
 	pspec = g_param_spec_string("physical-id",
 				    NULL,
 				    NULL,
@@ -4703,6 +4763,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_PHYSICAL_ID, pspec);
 
+	/**
+	 * FuDevice:logical-id:
+	 *
+	 * The device logical ID.
+	 *
+	 * Since: 1.1.2
+	 */
 	pspec = g_param_spec_string("logical-id",
 				    NULL,
 				    NULL,
@@ -4710,6 +4777,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_LOGICAL_ID, pspec);
 
+	/**
+	 * FuDevice:backend-id:
+	 *
+	 * The device backend ID.
+	 *
+	 * Since: 1.5.8
+	 */
 	pspec = g_param_spec_string("backend-id",
 				    NULL,
 				    NULL,
@@ -4717,6 +4791,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BACKEND_ID, pspec);
 
+	/**
+	 * FuDevice:battery-level:
+	 *
+	 * The device battery level in percent.
+	 *
+	 * Since: 1.5.8
+	 */
 	pspec = g_param_spec_uint("battery-level",
 				  NULL,
 				  NULL,
@@ -4726,6 +4807,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BATTERY_LEVEL, pspec);
 
+	/**
+	 * FuDevice:battery-threshold:
+	 *
+	 * The device battery threshold in percent.
+	 *
+	 * Since: 1.5.8
+	 */
 	pspec = g_param_spec_uint("battery-threshold",
 				  NULL,
 				  NULL,
@@ -4735,6 +4823,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				  G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BATTERY_THRESHOLD, pspec);
 
+	/**
+	 * FuDevice:context:
+	 *
+	 * The #FuContext to use.
+	 *
+	 * Since: 1.6.0
+	 */
 	pspec = g_param_spec_object("context",
 				    NULL,
 				    NULL,
@@ -4742,6 +4837,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_CONTEXT, pspec);
 
+	/**
+	 * FuDevice:proxy:
+	 *
+	 * The device proxy to use.
+	 *
+	 * Since: 1.4.1
+	 */
 	pspec = g_param_spec_object("proxy",
 				    NULL,
 				    NULL,
@@ -4749,6 +4851,13 @@ fu_device_class_init(FuDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_PROXY, pspec);
 
+	/**
+	 * FuDevice:parent:
+	 *
+	 * The device parent.
+	 *
+	 * Since: 1.0.8
+	 */
 	pspec = g_param_spec_object("parent",
 				    NULL,
 				    NULL,
@@ -4769,8 +4878,10 @@ fu_device_init(FuDevice *self)
 	priv->retry_recs = g_ptr_array_new_with_free_func(g_free);
 	g_rw_lock_init(&priv->parent_guids_mutex);
 	g_rw_lock_init(&priv->metadata_mutex);
-	priv->notify_flags_handler_id =
-	    g_signal_connect(self, "notify::flags", G_CALLBACK(fu_device_flags_notify_cb), NULL);
+	priv->notify_flags_handler_id = g_signal_connect(FWUPD_DEVICE(self),
+							 "notify::flags",
+							 G_CALLBACK(fu_device_flags_notify_cb),
+							 NULL);
 }
 
 static void
@@ -4807,6 +4918,7 @@ fu_device_finalize(GObject *object)
 	g_free(priv->logical_id);
 	g_free(priv->backend_id);
 	g_free(priv->proxy_guid);
+	g_free(priv->custom_flags);
 
 	G_OBJECT_CLASS(fu_device_parent_class)->finalize(object);
 }

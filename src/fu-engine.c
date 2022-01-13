@@ -230,24 +230,30 @@ fu_engine_watch_device(FuEngine *self, FuDevice *device)
 		g_signal_handlers_disconnect_by_func(device_old, fu_engine_history_notify_cb, self);
 		g_signal_handlers_disconnect_by_func(device_old, fu_engine_device_request_cb, self);
 	}
-	g_signal_connect(device, "notify::flags", G_CALLBACK(fu_engine_generic_notify_cb), self);
-	g_signal_connect(device,
+	g_signal_connect(FU_DEVICE(device),
+			 "notify::flags",
+			 G_CALLBACK(fu_engine_generic_notify_cb),
+			 self);
+	g_signal_connect(FU_DEVICE(device),
 			 "notify::update-message",
 			 G_CALLBACK(fu_engine_generic_notify_cb),
 			 self);
-	g_signal_connect(device,
+	g_signal_connect(FU_DEVICE(device),
 			 "notify::update-image",
 			 G_CALLBACK(fu_engine_generic_notify_cb),
 			 self);
-	g_signal_connect(device,
+	g_signal_connect(FU_DEVICE(device),
 			 "notify::update-state",
 			 G_CALLBACK(fu_engine_history_notify_cb),
 			 self);
-	g_signal_connect(device,
+	g_signal_connect(FU_DEVICE(device),
 			 "notify::update-error",
 			 G_CALLBACK(fu_engine_history_notify_cb),
 			 self);
-	g_signal_connect(device, "request", G_CALLBACK(fu_engine_device_request_cb), self);
+	g_signal_connect(FU_DEVICE(device),
+			 "request",
+			 G_CALLBACK(fu_engine_device_request_cb),
+			 self);
 }
 
 static void
@@ -278,10 +284,24 @@ fu_engine_ensure_device_battery_inhibit(FuEngine *self, FuDevice *device)
 }
 
 static void
+fu_engine_ensure_device_lid_inhibit(FuEngine *self, FuDevice *device)
+{
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED) &&
+	    fu_context_get_lid_state(self->ctx) == FU_LID_STATE_CLOSED) {
+		fu_device_inhibit(device,
+				  "lid-closed-system",
+				  "Cannot install update when the lid is closed");
+		return;
+	}
+	fu_device_uninhibit(device, "lid-closed-system");
+}
+
+static void
 fu_engine_device_added_cb(FuDeviceList *device_list, FuDevice *device, FuEngine *self)
 {
 	fu_engine_watch_device(self, device);
 	fu_engine_ensure_device_battery_inhibit(self, device);
+	fu_engine_ensure_device_lid_inhibit(self, device);
 	g_signal_emit(self, signals[SIGNAL_DEVICE_ADDED], 0, device);
 }
 
@@ -3595,6 +3615,23 @@ fu_engine_md_refresh_device_name(FuEngine *self, FuDevice *device, XbNode *compo
 }
 
 static void
+fu_engine_md_refresh_device_vendor(FuEngine *self, FuDevice *device, XbNode *component)
+{
+	const gchar *vendor = NULL;
+
+	/* require data */
+	if (component == NULL)
+		return;
+
+	/* copy 1:1 */
+	vendor = xb_node_query_text(component, "developer_name", NULL);
+	if (vendor != NULL) {
+		fu_device_set_vendor(device, vendor);
+		fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
+	}
+}
+
+static void
 fu_engine_md_refresh_device_icon(FuEngine *self, FuDevice *device, XbNode *component)
 {
 	const gchar *icon = NULL;
@@ -3743,6 +3780,8 @@ fu_engine_md_refresh_device_from_component(FuEngine *self, FuDevice *device, XbN
 		fu_engine_md_refresh_device_name_category(self, device, component);
 	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON))
 		fu_engine_md_refresh_device_icon(self, device, component);
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR))
+		fu_engine_md_refresh_device_vendor(self, device, component);
 
 	/* fix the version */
 	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT))
@@ -4479,9 +4518,10 @@ fu_engine_get_details(FuEngine *self, FuEngineRequest *request, gint fd, GError 
 				g_debug("%s failed requirement checks: %s",
 					fu_device_get_id(dev),
 					error_req->message);
-				fu_device_remove_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE);
+				fu_device_inhibit(dev, "failed-reqs", error_req->message);
 			} else {
 				g_debug("%s passed requirement checks", fu_device_get_id(dev));
+				fu_device_uninhibit(dev, "failed-reqs");
 			}
 		}
 
@@ -5580,6 +5620,10 @@ fu_engine_plugin_device_register(FuEngine *self, FuDevice *device)
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
 		fu_plugin_runner_device_register(plugin, device);
 	}
+	for (guint i = 0; i < self->backends->len; i++) {
+		FuBackend *backend = g_ptr_array_index(self->backends, i);
+		fu_backend_registered(backend, device);
+	}
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_REGISTERED);
 }
 
@@ -5834,20 +5878,6 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 			fu_device_set_alternate(device, device_alt);
 	}
 
-	if (fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN &&
-	    fu_common_version_guess_format(fu_device_get_version(device)) ==
-		FWUPD_VERSION_FORMAT_NUMBER) {
-		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_set_update_error(device, "VersionFormat is ambiguous for this device");
-	}
-
-	/* no vendor-id, and so no way to lock it down! */
-	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
-	    fu_device_get_vendor_ids(device)->len == 0) {
-		fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_set_update_error(device, "No vendor ID set");
-	}
-
 	/* sometimes inherit flags from recent history */
 	fu_engine_device_inherit_history(self, device);
 
@@ -5855,12 +5885,16 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_REGISTERED))
 		fu_engine_plugin_device_register(self, device);
 
-	/* does the device *still* not have a vendor ID? */
+	if (fu_device_get_version_format(device) == FWUPD_VERSION_FORMAT_UNKNOWN &&
+	    fu_common_version_guess_format(fu_device_get_version(device)) ==
+		FWUPD_VERSION_FORMAT_NUMBER) {
+		fu_device_inhibit(device, "version-format", "VersionFormat is ambiguous");
+	}
+
+	/* no vendor-id, and so no way to lock it down! */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
 	    fu_device_get_vendor_ids(device)->len == 0) {
-		g_warning("device %s [%s] does not define a vendor-id!",
-			  fu_device_get_id(device),
-			  fu_device_get_name(device));
+		fu_device_inhibit(device, "vendor-id", "No vendor ID set");
 	}
 
 	/* create new device */
@@ -6324,27 +6358,27 @@ fu_engine_load_plugins(FuEngine *self, GError **error)
 		}
 
 		/* watch for changes */
-		g_signal_connect(plugin,
+		g_signal_connect(FU_PLUGIN(plugin),
 				 "device-added",
 				 G_CALLBACK(fu_engine_plugin_device_added_cb),
 				 self);
-		g_signal_connect(plugin,
+		g_signal_connect(FU_PLUGIN(plugin),
 				 "device-removed",
 				 G_CALLBACK(fu_engine_plugin_device_removed_cb),
 				 self);
-		g_signal_connect(plugin,
+		g_signal_connect(FU_PLUGIN(plugin),
 				 "device-register",
 				 G_CALLBACK(fu_engine_plugin_device_register_cb),
 				 self);
-		g_signal_connect(plugin,
+		g_signal_connect(FU_PLUGIN(plugin),
 				 "check-supported",
 				 G_CALLBACK(fu_engine_plugin_check_supported_cb),
 				 self);
-		g_signal_connect(plugin,
+		g_signal_connect(FU_PLUGIN(plugin),
 				 "rules-changed",
 				 G_CALLBACK(fu_engine_plugin_rules_changed_cb),
 				 self);
-		g_signal_connect(plugin,
+		g_signal_connect(FU_PLUGIN(plugin),
 				 "config-changed",
 				 G_CALLBACK(fu_engine_plugin_config_changed_cb),
 				 self);
@@ -6545,25 +6579,6 @@ fu_engine_load_quirks_for_hwid(FuEngine *self, const gchar *hwid)
 		}
 		g_debug("enabling %s due to HwId %s", plugins[i], hwid);
 		fu_plugin_remove_flag(plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
-	}
-}
-
-static void
-fu_engine_load_quirks(FuEngine *self, FuQuirksLoadFlags quirks_flags)
-{
-	GPtrArray *guids = fu_context_get_hwid_guids(self->ctx);
-	g_autoptr(GError) error = NULL;
-
-	/* rebuild silo if required */
-	if (!fu_context_load_quirks(self->ctx, quirks_flags, &error)) {
-		g_warning("Failed to load quirks: %s", error->message);
-		return;
-	}
-
-	/* search each hwid */
-	for (guint i = 0; i < guids->len; i++) {
-		const gchar *hwid = g_ptr_array_index(guids, i);
-		fu_engine_load_quirks_for_hwid(self, hwid);
 	}
 }
 
@@ -6770,9 +6785,11 @@ gboolean
 fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 {
 	FuQuirksLoadFlags quirks_flags = FU_QUIRKS_LOAD_FLAG_NONE;
+	GPtrArray *guids;
 	guint backend_cnt = 0;
 	g_autoptr(GPtrArray) checksums_approved = NULL;
 	g_autoptr(GPtrArray) checksums_blocked = NULL;
+	g_autoptr(GError) error_quirks = NULL;
 #ifndef _WIN32
 	g_autoptr(GError) error_local = NULL;
 #endif
@@ -6869,9 +6886,24 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if ((self->app_flags & FU_APP_FLAGS_NO_IDLE_SOURCES) == 0)
 		fu_idle_set_timeout(self->idle, fu_config_get_idle_timeout(self->config));
 
+	/* on a read-only filesystem don't care about the cache GUID */
+	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
+		quirks_flags |= FU_QUIRKS_LOAD_FLAG_READONLY_FS;
+	if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
+		quirks_flags |= FU_QUIRKS_LOAD_FLAG_NO_CACHE;
+	if (!fu_context_load_quirks(self->ctx, quirks_flags, &error_quirks))
+		g_warning("Failed to load quirks: %s", error_quirks->message);
+
 	/* load SMBIOS and the hwids */
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO)
 		fu_context_load_hwinfo(self->ctx, NULL);
+
+	/* set quirks for each hwid */
+	guids = fu_context_get_hwid_guids(self->ctx);
+	for (guint i = 0; i < guids->len; i++) {
+		const gchar *hwid = g_ptr_array_index(guids, i);
+		fu_engine_load_quirks_for_hwid(self, hwid);
+	}
 
 	/* load AppStream metadata */
 	if (!fu_engine_load_metadata_store(self, flags, error)) {
@@ -6937,32 +6969,29 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		return FALSE;
 	}
 
-	/* on a read-only filesystem don't care about the cache GUID */
-	if (flags & FU_ENGINE_LOAD_FLAG_READONLY)
-		quirks_flags |= FU_QUIRKS_LOAD_FLAG_READONLY_FS;
-	if (flags & FU_ENGINE_LOAD_FLAG_NO_CACHE)
-		quirks_flags |= FU_QUIRKS_LOAD_FLAG_NO_CACHE;
-	fu_engine_load_quirks(self, quirks_flags);
-
 	/* set up battery threshold */
 	fu_engine_context_set_battery_threshold(self->ctx);
 
 	/* watch the device list for updates and proxy */
-	g_signal_connect(self->device_list, "added", G_CALLBACK(fu_engine_device_added_cb), self);
-	g_signal_connect(self->device_list,
+	g_signal_connect(FU_DEVICE_LIST(self->device_list),
+			 "added",
+			 G_CALLBACK(fu_engine_device_added_cb),
+			 self);
+	g_signal_connect(FU_DEVICE_LIST(self->device_list),
 			 "removed",
 			 G_CALLBACK(fu_engine_device_removed_cb),
 			 self);
-	g_signal_connect(self->device_list,
+	g_signal_connect(FU_DEVICE_LIST(self->device_list),
 			 "changed",
 			 G_CALLBACK(fu_engine_device_changed_cb),
 			 self);
 	fu_engine_set_status(self, FWUPD_STATUS_LOADING);
 
 	/* add devices */
-	fu_engine_plugins_setup(self);
-	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG)
+	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
+		fu_engine_plugins_setup(self);
 		fu_engine_plugins_coldplug(self);
+	}
 
 	/* coldplug backends */
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {
@@ -6971,15 +7000,15 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 			g_autoptr(GError) error_backend = NULL;
 			if (!fu_backend_get_enabled(backend))
 				continue;
-			g_signal_connect(backend,
+			g_signal_connect(FU_BACKEND(backend),
 					 "device-added",
 					 G_CALLBACK(fu_engine_backend_device_added_cb),
 					 self);
-			g_signal_connect(backend,
+			g_signal_connect(FU_BACKEND(backend),
 					 "device-removed",
 					 G_CALLBACK(fu_engine_backend_device_removed_cb),
 					 self);
-			g_signal_connect(backend,
+			g_signal_connect(FU_BACKEND(backend),
 					 "device-changed",
 					 G_CALLBACK(fu_engine_backend_device_changed_cb),
 					 self);
@@ -7012,6 +7041,13 @@ fu_engine_class_init(FuEngineClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_engine_finalize;
 
+	/**
+	 * FuEngine::changed:
+	 * @self: the #FuEngine instance that emitted the signal
+	 *
+	 * The ::changed signal is emitted when the engine has changed, for instance when a device
+	 * state has been modified.
+	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("changed",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,
@@ -7021,6 +7057,13 @@ fu_engine_class_init(FuEngineClass *klass)
 					       g_cclosure_marshal_VOID__VOID,
 					       G_TYPE_NONE,
 					       0);
+	/**
+	 * FuEngine::device-added:
+	 * @self: the #FuEngine instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-added signal is emitted when a device has been added.
+	 **/
 	signals[SIGNAL_DEVICE_ADDED] = g_signal_new("device-added",
 						    G_TYPE_FROM_CLASS(object_class),
 						    G_SIGNAL_RUN_LAST,
@@ -7031,6 +7074,13 @@ fu_engine_class_init(FuEngineClass *klass)
 						    G_TYPE_NONE,
 						    1,
 						    FU_TYPE_DEVICE);
+	/**
+	 * FuEngine::device-removed:
+	 * @self: the #FuEngine instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-removed signal is emitted when a device has been removed.
+	 **/
 	signals[SIGNAL_DEVICE_REMOVED] = g_signal_new("device-removed",
 						      G_TYPE_FROM_CLASS(object_class),
 						      G_SIGNAL_RUN_LAST,
@@ -7041,6 +7091,13 @@ fu_engine_class_init(FuEngineClass *klass)
 						      G_TYPE_NONE,
 						      1,
 						      FU_TYPE_DEVICE);
+	/**
+	 * FuEngine::device-changed:
+	 * @self: the #FuEngine instance that emitted the signal
+	 * @device: the #FuDevice
+	 *
+	 * The ::device-changed signal is emitted when a device has been changed.
+	 **/
 	signals[SIGNAL_DEVICE_CHANGED] = g_signal_new("device-changed",
 						      G_TYPE_FROM_CLASS(object_class),
 						      G_SIGNAL_RUN_LAST,
@@ -7051,6 +7108,14 @@ fu_engine_class_init(FuEngineClass *klass)
 						      G_TYPE_NONE,
 						      1,
 						      FU_TYPE_DEVICE);
+	/**
+	 * FuEngine::device-request:
+	 * @self: the #FuEngine instance that emitted the signal
+	 * @request: the #FwupdRequest
+	 *
+	 * The ::device-request signal is emitted when the engine has asked the front end for an
+	 * interactive request.
+	 **/
 	signals[SIGNAL_DEVICE_REQUEST] = g_signal_new("device-request",
 						      G_TYPE_FROM_CLASS(object_class),
 						      G_SIGNAL_RUN_LAST,
@@ -7061,6 +7126,13 @@ fu_engine_class_init(FuEngineClass *klass)
 						      G_TYPE_NONE,
 						      1,
 						      FWUPD_TYPE_REQUEST);
+	/**
+	 * FuEngine::status-changed:
+	 * @self: the #FuEngine instance that emitted the signal
+	 * @status: the #FwupdStatus
+	 *
+	 * The ::status-changed signal is emitted when the daemon global status has changed.
+	 **/
 	signals[SIGNAL_STATUS_CHANGED] = g_signal_new("status-changed",
 						      G_TYPE_FROM_CLASS(object_class),
 						      G_SIGNAL_RUN_LAST,
@@ -7095,6 +7167,7 @@ fu_engine_context_battery_changed_cb(FuContext *ctx, GParamSpec *pspec, FuEngine
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
 		fu_engine_ensure_device_battery_inhibit(self, device);
+		fu_engine_ensure_device_lid_inhibit(self, device);
 	}
 }
 
@@ -7134,30 +7207,37 @@ fu_engine_init(FuEngine *self)
 	fu_context_set_runtime_versions(self->ctx, self->runtime_versions);
 	fu_context_set_compile_versions(self->ctx, self->compile_versions);
 
-	g_signal_connect(self->ctx,
+	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "security-changed",
 			 G_CALLBACK(fu_engine_context_security_changed_cb),
 			 self);
-	g_signal_connect(self->ctx,
+	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::battery-state",
 			 G_CALLBACK(fu_engine_context_battery_changed_cb),
 			 self);
-	g_signal_connect(self->ctx,
+	g_signal_connect(FU_CONTEXT(self->ctx),
+			 "notify::lid-state",
+			 G_CALLBACK(fu_engine_context_battery_changed_cb),
+			 self);
+	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::battery-level",
 			 G_CALLBACK(fu_engine_context_battery_changed_cb),
 			 self);
-	g_signal_connect(self->ctx,
+	g_signal_connect(FU_CONTEXT(self->ctx),
 			 "notify::battery-threshold",
 			 G_CALLBACK(fu_engine_context_battery_changed_cb),
 			 self);
 
-	g_signal_connect(self->config, "changed", G_CALLBACK(fu_engine_config_changed_cb), self);
-	g_signal_connect(self->remote_list,
+	g_signal_connect(FU_CONFIG(self->config),
+			 "changed",
+			 G_CALLBACK(fu_engine_config_changed_cb),
+			 self);
+	g_signal_connect(FU_REMOTE_LIST(self->remote_list),
 			 "changed",
 			 G_CALLBACK(fu_engine_remote_list_changed_cb),
 			 self);
 
-	g_signal_connect(self->idle,
+	g_signal_connect(FU_IDLE(self->idle),
 			 "notify::status",
 			 G_CALLBACK(fu_engine_idle_status_notify_cb),
 			 self);

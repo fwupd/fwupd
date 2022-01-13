@@ -355,10 +355,24 @@ fwupd_plugin_class_init(FwupdPluginClass *klass)
 	object_class->get_property = fwupd_plugin_get_property;
 	object_class->set_property = fwupd_plugin_set_property;
 
+	/**
+	 * FwupdPlugin:name:
+	 *
+	 * The plugin name.
+	 *
+	 * Since: 1.5.0
+	 */
 	pspec =
 	    g_param_spec_string("name", NULL, NULL, NULL, G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_NAME, pspec);
 
+	/**
+	 * FwupdPlugin:flags:
+	 *
+	 * The plugin flags.
+	 *
+	 * Since: 1.5.0
+	 */
 	pspec = g_param_spec_uint64("flags",
 				    NULL,
 				    NULL,
@@ -396,7 +410,7 @@ fwupd_plugin_set_from_variant_iter(FwupdPlugin *self, GVariantIter *iter)
 
 /**
  * fwupd_plugin_from_variant:
- * @value: the serialized data
+ * @value: (not nullable): the serialized data
  *
  * Creates a new plugin using serialized data.
  *
@@ -429,7 +443,7 @@ fwupd_plugin_from_variant(GVariant *value)
 
 /**
  * fwupd_plugin_array_from_variant:
- * @value: the serialized data
+ * @value: (not nullable): the serialized data
  *
  * Creates an array of new plugins using serialized data.
  *
@@ -443,6 +457,8 @@ fwupd_plugin_array_from_variant(GVariant *value)
 	GPtrArray *array = NULL;
 	gsize sz;
 	g_autoptr(GVariant) untuple = NULL;
+
+	g_return_val_if_fail(value != NULL, NULL);
 
 	array = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	untuple = g_variant_get_child_value(value, 0);

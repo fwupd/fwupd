@@ -31,7 +31,7 @@
 #define FU_PXI_BLE_DEVICE_RF_CMD_HID_SN 0x0
 
 #define FU_PXI_WIRELESS_DEVICE_TARGET_RECEIVER 0
-#define FU_PXI_RECEIVER_DEVICE_OTA_BUF_SZ      32 /* bytes */
+#define FU_PXI_RECEIVER_DEVICE_OTA_BUF_SZ      64 /* bytes */
 #define FU_PXI_DEVICE_MODEL_NAME_LEN	       12 /* bytes */
 
 #define FU_PXI_DEVICE_OBJECT_SIZE_MAX 4096 /* bytes */

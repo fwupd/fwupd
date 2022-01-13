@@ -123,7 +123,10 @@ fu_remote_list_add_inotify(FuRemoteList *self, const gchar *filename, GError **e
 		fu_remote_list_fixup_inotify_error(error);
 		return FALSE;
 	}
-	g_signal_connect(monitor, "changed", G_CALLBACK(fu_remote_list_monitor_changed_cb), self);
+	g_signal_connect(G_FILE_MONITOR(monitor),
+			 "changed",
+			 G_CALLBACK(fu_remote_list_monitor_changed_cb),
+			 self);
 	g_ptr_array_add(self->monitors, monitor);
 	return TRUE;
 }
@@ -520,6 +523,13 @@ fu_remote_list_class_init(FuRemoteListClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_remote_list_finalize;
 
+	/**
+	 * FuRemoteList::changed:
+	 * @self: the #FuRemoteList instance that emitted the signal
+	 *
+	 * The ::changed signal is emitted when the list of remotes has
+	 * changed, for instance when a remote has been added or removed.
+	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("changed",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,

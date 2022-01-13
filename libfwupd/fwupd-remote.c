@@ -420,7 +420,7 @@ fwupd_remote_set_security_report_uri(FwupdRemote *self, const gchar *security_re
 
 /**
  * fwupd_remote_kind_from_string:
- * @kind: a string, e.g. `download`
+ * @kind: (nullable): a string, e.g. `download`
  *
  * Converts an printable string to an enumerated type.
  *
@@ -591,7 +591,7 @@ fwupd_remote_setup(FwupdRemote *self, GError **error)
 /**
  * fwupd_remote_load_from_filename:
  * @self: a #FwupdRemote
- * @filename: a filename
+ * @filename: (not nullable): a filename
  * @cancellable: (nullable): optional #GCancellable
  * @error: (nullable): optional return location for an error
  *
@@ -1044,7 +1044,7 @@ fwupd_remote_get_checksum(FwupdRemote *self)
 /**
  * fwupd_remote_build_firmware_uri:
  * @self: a #FwupdRemote
- * @url: the URL to use
+ * @url: (not nullable): the URL to use
  * @error: (nullable): optional return location for an error
  *
  * Builds a URI for the URL using the username and password set for the remote,
@@ -1148,7 +1148,7 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 
 	/* replace the URI if required */
 	baseuri = g_path_get_dirname(priv->metadata_uri);
-	metadata_uri = g_build_filename(baseuri, id, NULL);
+	metadata_uri = g_build_path("/", baseuri, id, NULL);
 	if (g_strcmp0(metadata_uri, priv->metadata_uri) != 0) {
 		g_debug("changing metadata URI from %s to %s", priv->metadata_uri, metadata_uri);
 		g_free(priv->metadata_uri);
@@ -1162,7 +1162,7 @@ fwupd_remote_load_signature_jcat(FwupdRemote *self, JcatFile *jcat_file, GError 
 /**
  * fwupd_remote_load_signature_bytes:
  * @self: a #FwupdRemote
- * @bytes: data blob
+ * @bytes: (not nullable): data blob
  * @error: (nullable): optional return location for an error
  *
  * Parses the signature, updating the metadata URI as appropriate.
@@ -1203,7 +1203,7 @@ fwupd_remote_load_signature_bytes(FwupdRemote *self, GBytes *bytes, GError **err
 /**
  * fwupd_remote_load_signature:
  * @self: a #FwupdRemote
- * @filename: a filename
+ * @filename: (not nullable): a filename
  * @error: (nullable): optional return location for an error
  *
  * Parses the signature, updating the metadata URI as appropriate.
@@ -1366,7 +1366,7 @@ fwupd_remote_set_from_variant_iter(FwupdRemote *self, GVariantIter *iter)
 	g_autoptr(GVariantIter) iter3 = g_variant_iter_copy(iter);
 
 	/* three passes, as we have to construct Id -> Url -> * */
-	while (g_variant_iter_loop(iter, "{sv}", &key, &value)) {
+	while (g_variant_iter_loop(iter, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_REMOTE_ID) == 0)
 			fwupd_remote_set_id(self, g_variant_get_string(value, NULL));
 		if (g_strcmp0(key, "Type") == 0)
@@ -1374,7 +1374,7 @@ fwupd_remote_set_from_variant_iter(FwupdRemote *self, GVariantIter *iter)
 		if (g_strcmp0(key, "Keyring") == 0)
 			fwupd_remote_set_keyring_kind(self, g_variant_get_uint32(value));
 	}
-	while (g_variant_iter_loop(iter2, "{sv}", &key, &value)) {
+	while (g_variant_iter_loop(iter2, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, FWUPD_RESULT_KEY_URI) == 0)
 			fwupd_remote_set_metadata_uri(self, g_variant_get_string(value, NULL));
 		if (g_strcmp0(key, "FilenameCache") == 0)
@@ -1387,7 +1387,7 @@ fwupd_remote_set_from_variant_iter(FwupdRemote *self, GVariantIter *iter)
 			fwupd_remote_set_security_report_uri(self,
 							     g_variant_get_string(value, NULL));
 	}
-	while (g_variant_iter_loop(iter3, "{sv}", &key, &value)) {
+	while (g_variant_iter_loop(iter3, "{&sv}", &key, &value)) {
 		if (g_strcmp0(key, "Username") == 0) {
 			fwupd_remote_set_username(self, g_variant_get_string(value, NULL));
 		} else if (g_strcmp0(key, "Password") == 0) {
@@ -1718,7 +1718,7 @@ fwupd_remote_finalize(GObject *obj)
 
 /**
  * fwupd_remote_from_variant:
- * @value: the serialized data
+ * @value: (not nullable): the serialized data
  *
  * Creates a new remote using serialized data.
  *
@@ -1751,7 +1751,7 @@ fwupd_remote_from_variant(GVariant *value)
 
 /**
  * fwupd_remote_array_from_variant:
- * @value: the serialized data
+ * @value: (not nullable): the serialized data
  *
  * Creates an array of new devices using serialized data.
  *
@@ -1765,6 +1765,8 @@ fwupd_remote_array_from_variant(GVariant *value)
 	GPtrArray *remotes = NULL;
 	gsize sz;
 	g_autoptr(GVariant) untuple = NULL;
+
+	g_return_val_if_fail(value != NULL, NULL);
 
 	remotes = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	untuple = g_variant_get_child_value(value, 0);

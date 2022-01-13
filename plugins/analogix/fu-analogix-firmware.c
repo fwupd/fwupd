@@ -40,7 +40,7 @@ fu_analogix_firmware_parse(FuFirmware *firmware,
 	/* convert to binary with FuIhexFirmware->parse */
 	if (!klass->parse(firmware, fw, addr_start, addr_end, flags, error))
 		return FALSE;
-	blob = fu_firmware_get_bytes(firmware, error);
+	blob = fu_firmware_get_bytes_with_patches(firmware, error);
 	if (blob == NULL)
 		return FALSE;
 

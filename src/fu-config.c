@@ -261,7 +261,10 @@ fu_config_load(FuConfig *self, GError **error)
 	self->monitor = g_file_monitor(file, G_FILE_MONITOR_NONE, NULL, error);
 	if (self->monitor == NULL)
 		return FALSE;
-	g_signal_connect(self->monitor, "changed", G_CALLBACK(fu_config_monitor_changed_cb), self);
+	g_signal_connect(G_FILE_MONITOR(self->monitor),
+			 "changed",
+			 G_CALLBACK(fu_config_monitor_changed_cb),
+			 self);
 
 	/* success */
 	return TRUE;
@@ -367,6 +370,13 @@ fu_config_class_init(FuConfigClass *klass)
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_config_finalize;
 
+	/**
+	 * FuConfig::changed:
+	 * @self: the #FuConfig instance that emitted the signal
+	 *
+	 * The ::changed signal is emitted when the config file has
+	 * changed, for instance when a parameter has been modified.
+	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("changed",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,

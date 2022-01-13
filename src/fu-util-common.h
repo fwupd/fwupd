@@ -147,3 +147,5 @@ void
 fu_util_show_unsupported_warn(void);
 gboolean
 fu_util_is_url(const gchar *perhaps_url);
+gboolean
+fu_util_setup_interactive_console(GError **error);

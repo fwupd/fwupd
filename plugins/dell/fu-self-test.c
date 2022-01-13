@@ -93,12 +93,12 @@ fu_plugin_dell_tpm_func(gconstpointer user_data)
 	memset(&tpm_out, 0x0, sizeof(tpm_out));
 
 	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	added_id = g_signal_connect(self->plugin_uefi_capsule,
+	added_id = g_signal_connect(FU_PLUGIN(self->plugin_uefi_capsule),
 				    "device-added",
 				    G_CALLBACK(_plugin_device_added_cb),
 				    devices);
 
-	register_id = g_signal_connect(self->plugin_dell,
+	register_id = g_signal_connect(FU_PLUGIN(self->plugin_dell),
 				       "device-register",
 				       G_CALLBACK(fu_engine_plugin_device_register_cb),
 				       self->plugin_uefi_capsule);
@@ -274,11 +274,11 @@ fu_plugin_dell_dock_func(gconstpointer user_data)
 	fake_usb_device =
 	    fu_usb_device_new_with_context(fu_plugin_get_context(self->plugin_dell), NULL);
 	devices = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
-	added_id = g_signal_connect(self->plugin_uefi_capsule,
+	added_id = g_signal_connect(FU_PLUGIN(self->plugin_uefi_capsule),
 				    "device-added",
 				    G_CALLBACK(_plugin_device_added_cb),
 				    devices);
-	register_id = g_signal_connect(self->plugin_dell,
+	register_id = g_signal_connect(FU_PLUGIN(self->plugin_dell),
 				       "device-register",
 				       G_CALLBACK(fu_engine_plugin_device_register_cb),
 				       self->plugin_uefi_capsule);

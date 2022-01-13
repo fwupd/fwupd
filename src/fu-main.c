@@ -635,11 +635,11 @@ fu_main_authorize_activate_cb(GObject *source, GAsyncResult *res, gpointer user_
 
 	/* progress */
 	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_main_progress_percentage_changed_cb),
 			 helper->priv);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
 			 "status-changed",
 			 G_CALLBACK(fu_main_progress_status_changed_cb),
 			 helper->priv);
@@ -679,11 +679,11 @@ fu_main_authorize_verify_update_cb(GObject *source, GAsyncResult *res, gpointer 
 
 	/* progress */
 	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_main_progress_percentage_changed_cb),
 			 helper->priv);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
 			 "status-changed",
 			 G_CALLBACK(fu_main_progress_status_changed_cb),
 			 helper->priv);
@@ -788,11 +788,11 @@ fu_main_authorize_install_queue(FuMainAuthHelper *helper_ref)
 
 	/* all authenticated, so install all the things */
 	fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
 			 "percentage-changed",
 			 G_CALLBACK(fu_main_progress_percentage_changed_cb),
 			 helper->priv);
-	g_signal_connect(progress,
+	g_signal_connect(FU_PROGRESS(progress),
 			 "status-changed",
 			 G_CALLBACK(fu_main_progress_status_changed_cb),
 			 helper->priv);
@@ -1167,7 +1167,7 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 	}
 	if (g_strcmp0(method_name, "SelfSign") == 0) {
 		GVariant *prop_value;
-		gchar *prop_key;
+		const gchar *prop_key;
 		g_autofree gchar *value = NULL;
 		g_autoptr(FuMainAuthHelper) helper = NULL;
 #ifdef HAVE_POLKIT
@@ -1600,11 +1600,11 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 
 		/* progress */
 		fu_progress_set_profile(progress, g_getenv("FWUPD_VERBOSE") != NULL);
-		g_signal_connect(progress,
+		g_signal_connect(FU_PROGRESS(progress),
 				 "percentage-changed",
 				 G_CALLBACK(fu_main_progress_percentage_changed_cb),
 				 priv);
-		g_signal_connect(progress,
+		g_signal_connect(FU_PROGRESS(progress),
 				 "status-changed",
 				 G_CALLBACK(fu_main_progress_status_changed_cb),
 				 priv);
@@ -1651,7 +1651,7 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 	if (g_strcmp0(method_name, "Install") == 0) {
 		GVariant *prop_value;
 		const gchar *device_id = NULL;
-		gchar *prop_key;
+		const gchar *prop_key;
 		gint32 fd_handle = 0;
 		gint fd;
 		guint64 archive_size_max;
@@ -2085,24 +2085,27 @@ main(int argc, char *argv[])
 
 	/* load engine */
 	priv->engine = fu_engine_new(FU_APP_FLAGS_NONE);
-	g_signal_connect(priv->engine, "changed", G_CALLBACK(fu_main_engine_changed_cb), priv);
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
+			 "changed",
+			 G_CALLBACK(fu_main_engine_changed_cb),
+			 priv);
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-added",
 			 G_CALLBACK(fu_main_engine_device_added_cb),
 			 priv);
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-removed",
 			 G_CALLBACK(fu_main_engine_device_removed_cb),
 			 priv);
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-changed",
 			 G_CALLBACK(fu_main_engine_device_changed_cb),
 			 priv);
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "device-request",
 			 G_CALLBACK(fu_main_engine_device_request_cb),
 			 priv);
-	g_signal_connect(priv->engine,
+	g_signal_connect(FU_ENGINE(priv->engine),
 			 "status-changed",
 			 G_CALLBACK(fu_main_engine_status_changed_cb),
 			 priv);
@@ -2118,12 +2121,15 @@ main(int argc, char *argv[])
 
 	/* restart the daemon if the binary gets replaced */
 	priv->argv0_monitor = g_file_monitor_file(argv0_file, G_FILE_MONITOR_NONE, NULL, &error);
-	g_signal_connect(priv->argv0_monitor, "changed", G_CALLBACK(fu_main_argv_changed_cb), priv);
+	g_signal_connect(G_FILE_MONITOR(priv->argv0_monitor),
+			 "changed",
+			 G_CALLBACK(fu_main_argv_changed_cb),
+			 priv);
 
 #if GLIB_CHECK_VERSION(2, 63, 3)
 	/* shut down on low memory event as we can just rescan hardware */
 	priv->memory_monitor = g_memory_monitor_dup_default();
-	g_signal_connect(G_OBJECT(priv->memory_monitor),
+	g_signal_connect(G_MEMORY_MONITOR(priv->memory_monitor),
 			 "low-memory-warning",
 			 G_CALLBACK(fu_main_memory_monitor_warning_cb),
 			 priv);

@@ -237,7 +237,7 @@ _g_ascii_is_digits(const gchar *str)
 
 /**
  * fu_common_version_ensure_semver:
- * @version: a version number, e.g. ` V1.2.3 `
+ * @version: (nullable): a version number, e.g. ` V1.2.3 `
  *
  * Builds a semver from the possibly crazy version number.
  *
@@ -289,7 +289,7 @@ fu_common_version_ensure_semver(const gchar *version)
 
 /**
  * fu_common_version_parse_from_format
- * @version: a version number
+ * @version: (nullable): a version number
  * @fmt: a version format, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
  *
  * Returns a dotted decimal version string from a version string using @fmt.
@@ -303,7 +303,7 @@ fu_common_version_ensure_semver(const gchar *version)
  * Anything with a `.` or that doesn't match `[0-9]` or `0x[a-f,0-9]` is considered
  * a string and returned without modification.
  *
- * Returns: a version number, e.g. `1.0.3`
+ * Returns: a version number, e.g. `1.0.3`, or %NULL on error
  *
  * Since: 1.3.3
  */
@@ -314,6 +314,10 @@ fu_common_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt
 	gchar *endptr = NULL;
 	guint64 tmp;
 	guint base;
+
+	/* sanity check */
+	if (version == NULL)
+		return NULL;
 
 	/* already dotted decimal */
 	if (g_strstr_len(version, -1, ".") != NULL)
@@ -345,7 +349,7 @@ fu_common_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt
 
 /**
  * fu_common_version_guess_format:
- * @version: a version number, e.g. `1.2.3`
+ * @version: (nullable): a version number, e.g. `1.2.3`
  *
  * Guesses the version format from the version number. This is only a heuristic
  * and plugins and components should explicitly set the version format whenever
@@ -412,7 +416,7 @@ fu_common_version_convert_base(FwupdVersionFormat fmt)
 
 /**
  * fu_common_version_verify_format:
- * @version: a string, e.g. `0x1234`
+ * @version: (not nullable): a string, e.g. `0x1234`
  * @fmt: a version format
  * @error: (nullable): optional return location for an error
  *
@@ -510,8 +514,8 @@ fu_common_vercmp_safe(const gchar *version_a, const gchar *version_b)
 
 /**
  * fu_common_vercmp_full:
- * @version_a: the semver release version, e.g. `1.2.3`
- * @version_b: the semver release version, e.g. `1.2.3.1`
+ * @version_a: (nullable): the semver release version, e.g. `1.2.3`
+ * @version_b: (nullable): the semver release version, e.g. `1.2.3.1`
  * @fmt: a version format, e.g. %FWUPD_VERSION_FORMAT_PLAIN
  *
  * Compares version numbers for sorting taking into account the version format

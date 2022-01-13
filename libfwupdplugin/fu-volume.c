@@ -94,6 +94,13 @@ fu_volume_class_init(FuVolumeClass *klass)
 	object_class->get_property = fu_volume_get_property;
 	object_class->set_property = fu_volume_set_property;
 
+	/**
+	 * FuVolume:proxy-block:
+	 *
+	 * The proxy for the block interface.
+	 *
+	 * Since: 1.4.6
+	 */
 	pspec =
 	    g_param_spec_object("proxy-block",
 				NULL,
@@ -102,6 +109,13 @@ fu_volume_class_init(FuVolumeClass *klass)
 				G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_PROXY_BLOCK, pspec);
 
+	/**
+	 * FuVolume:proxy-filesystem:
+	 *
+	 * The proxy for the filesystem interface.
+	 *
+	 * Since: 1.4.6
+	 */
 	pspec =
 	    g_param_spec_object("proxy-filesystem",
 				NULL,
@@ -110,6 +124,13 @@ fu_volume_class_init(FuVolumeClass *klass)
 				G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_PROXY_FILESYSTEM, pspec);
 
+	/**
+	 * FuVolume:mount-path:
+	 *
+	 * The UNIX mount path.
+	 *
+	 * Since: 1.4.6
+	 */
 	pspec =
 	    g_param_spec_string("mount-path",
 				NULL,

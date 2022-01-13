@@ -6,7 +6,7 @@
 # Ascii Wolf <mail@asciiwolf.com>, 2017,2019-2020
 # Ascii Wolf <mail@asciiwolf.com>, 2017
 # Marek Černocký <marek@manet.cz>, 2016,2018
-# Pavel Borecki <pavel.borecki@gmail.com>, 2020-2021
+# Pavel Borecki <pavel.borecki@gmail.com>, 2020-2022
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -888,6 +888,10 @@ msgid "FILENAME DEVICE-ID"
 msgstr "SOUBOR IDENTIFIKÁTOR-ZAŘÍZENÍ"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+msgstr "SOUBOR POSUN DATA [TYP-FIRMWARE]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "SOUBOR [IDENTIFIKÁTOR-ZAŘÍZ|GUID]"
 
@@ -1554,6 +1558,10 @@ msgstr "Zpracovávání systémového dbx…"
 msgid "Password"
 msgstr "Heslo"
 
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr "Opravit blob firmware na známém posunu"
+
 msgid "Payload"
 msgstr "Obsah"
 
@@ -2031,6 +2039,14 @@ msgstr "Prázdné PCR registry v TPM"
 #. TRANSLATORS: Title: TPM = Trusted Platform Module
 msgid "TPM v2.0"
 msgstr "TPM v2.0"
+
+#. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
+msgid "Tag"
+msgid_plural "Tags"
+msgstr[0] "Štítek"
+msgstr[1] "Štítky"
+msgstr[2] "Štítků"
+msgstr[3] "Štítky"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"

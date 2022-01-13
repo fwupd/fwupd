@@ -20,7 +20,7 @@ aka "B0" is supported and tested.
 
 This plugin supports the following protocol ID:
 
-* "Nordic HID Config Channel"
+* Nordic HID Config Channel: com.nordic.hidcfgchannel
 
 ## GUID Generation
 
@@ -29,6 +29,15 @@ with the addition of the target board and bootloader name:
 
 * `HIDRAW\VEN_1915&DEV_52DE&BOARD_nrf52840dk&BL_B0` -> 22952036-c346-5755-9646-7bf766b28922
 * `HIDRAW\VEN_1915&DEV_52DE&BOARD_nrf52840dk&BL_MCUBOOT` -> 43b38427-fdf5-5400-a23c-f3eb7ea00e7c
+
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### NordicHidBootloader
+
+Explicitly set the expected bootloader type: "B0" or "MCUBOOT"
+This quirk must be set for devices without support of `bootloader variant` DFU option.
 
 ## Update Behavior
 

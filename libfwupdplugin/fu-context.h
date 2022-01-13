@@ -73,6 +73,10 @@ FuBatteryState
 fu_context_get_battery_state(FuContext *self);
 void
 fu_context_set_battery_state(FuContext *self, FuBatteryState battery_state);
+FuLidState
+fu_context_get_lid_state(FuContext *self);
+void
+fu_context_set_lid_state(FuContext *self, FuLidState lid_state);
 guint
 fu_context_get_battery_level(FuContext *self);
 void

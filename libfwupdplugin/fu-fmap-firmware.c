@@ -6,8 +6,6 @@
 
 #include "config.h"
 
-#include <string.h>
-
 #include "fu-common.h"
 #include "fu-fmap-firmware.h"
 
@@ -25,31 +23,6 @@
 G_DEFINE_TYPE(FuFmapFirmware, fu_fmap_firmware, FU_TYPE_FIRMWARE)
 
 static gboolean
-fu_fmap_firmware_find_offset(FuFmapFirmware *self, const guint8 *buf, gsize bufsz, GError **error)
-{
-#ifdef HAVE_MEMMEM
-	const guint8 *tmp;
-
-	g_return_val_if_fail(buf != NULL, FALSE);
-
-	/* trust glibc to do a binary or linear search as appropriate */
-	tmp = memmem(buf, bufsz, FMAP_SIGNATURE, 8);
-	if (tmp == NULL) {
-		g_set_error_literal(error,
-				    G_IO_ERROR,
-				    G_IO_ERROR_INVALID_DATA,
-				    "fmap header not found");
-		return FALSE;
-	}
-	fu_firmware_set_offset(FU_FIRMWARE(self), tmp - buf);
-	return TRUE;
-#else
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_INVALID_DATA, "memmem() not available");
-	return FALSE;
-#endif
-}
-
-static gboolean
 fu_fmap_firmware_parse(FuFirmware *firmware,
 		       GBytes *fw,
 		       guint64 addr_start,
@@ -57,7 +30,6 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 		       FwupdInstallFlags flags,
 		       GError **error)
 {
-	FuFmapFirmware *self = FU_FMAP_FIRMWARE(firmware);
 	FuFmapFirmwareClass *klass_firmware = FU_FMAP_FIRMWARE_GET_CLASS(firmware);
 	gsize bufsz;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
@@ -75,8 +47,9 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 
 	/* only search for the fmap signature if not fuzzing */
 	if ((flags & FWUPD_INSTALL_FLAG_NO_SEARCH) == 0) {
-		if (!fu_fmap_firmware_find_offset(self, buf, bufsz, error))
+		if (!fu_memmem_safe(buf, bufsz, (const guint8 *)FMAP_SIGNATURE, 8, &offset, error))
 			return FALSE;
+		fu_firmware_set_offset(firmware, offset);
 	}
 
 	/* load header */
@@ -85,7 +58,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 			    0x0, /* dst */
 			    buf,
 			    bufsz,
-			    fu_firmware_get_offset(firmware), /* src */
+			    offset, /* src */
 			    sizeof(fmap),
 			    error))
 		return FALSE;
@@ -108,7 +81,7 @@ fu_fmap_firmware_parse(FuFirmware *firmware,
 			    GUINT16_FROM_LE(fmap.nareas));
 		return FALSE;
 	}
-	offset = fu_firmware_get_offset(firmware) + sizeof(fmap);
+	offset += sizeof(fmap);
 
 	for (gsize i = 0; i < GUINT16_FROM_LE(fmap.nareas); i++) {
 		FuFmapArea area;
@@ -187,7 +160,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	total_sz = offset = sizeof(hdr) + (sizeof(FuFmapArea) * images->len);
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		g_autoptr(GBytes) fw = fu_firmware_get_bytes(img, error);
+		g_autoptr(GBytes) fw = fu_firmware_get_bytes_with_patches(img, error);
 		if (fw == NULL)
 			return NULL;
 		total_sz += g_bytes_get_size(fw);
@@ -199,7 +172,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
 		const gchar *id = fu_firmware_get_id(img);
-		g_autoptr(GBytes) fw = fu_firmware_get_bytes(img, NULL);
+		g_autoptr(GBytes) fw = fu_firmware_get_bytes_with_patches(img, NULL);
 		FuFmapArea area = {
 		    .offset = GUINT32_TO_LE(fu_firmware_get_offset(firmware) + offset),
 		    .size = GUINT32_TO_LE(g_bytes_get_size(fw)),
@@ -215,7 +188,7 @@ fu_fmap_firmware_write(FuFirmware *firmware, GError **error)
 	/* add the images */
 	for (guint i = 0; i < images->len; i++) {
 		FuFirmware *img = g_ptr_array_index(images, i);
-		g_autoptr(GBytes) fw = fu_firmware_get_bytes(img, NULL);
+		g_autoptr(GBytes) fw = fu_firmware_get_bytes_with_patches(img, NULL);
 		fu_byte_array_append_bytes(buf, fw);
 	}
 

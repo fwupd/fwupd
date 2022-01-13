@@ -74,7 +74,7 @@ parts:
     after: [nettle]
   meson:
     plugin: python
-    source: https://github.com/mesonbuild/meson/releases/download/0.54.0/meson-0.54.0.tar.gz
+    source: https://github.com/mesonbuild/meson/releases/download/0.60.2/meson-0.60.2.tar.gz
     build-packages:
       - ninja-build
       - python3-distutils-extra
@@ -87,7 +87,7 @@ parts:
   # this is for the library only, we don't care about the daemon "in-snap"
   modemmanager:
     plugin: autotools
-    source: https://gitlab.freedesktop.org/mobile-broadband/ModemManager.git
+    source: https://github.com/freedesktop/ModemManager.git
     source-tag: 1.14.0
     # build without these; system daemon needs them
     build-packages:
@@ -110,7 +110,7 @@ parts:
       - -lib/girepository-1.0
   libmbim:
     plugin: autotools
-    source: https://gitlab.freedesktop.org/mobile-broadband/libmbim.git
+    source: https://github.com/freedesktop/libmbim.git
     source-tag: 1.24.0
     after: [modemmanager]
     # build without these; system daemon needs them
@@ -128,9 +128,24 @@ parts:
       - -lib/systemd
       - -lib/udev
       - -lib/girepository-1.0
+  json-glib:
+    plugin: meson
+    source: https://gitlab.gnome.org/GNOME/json-glib.git
+    source-tag: 1.6.6
+    after: [meson]
+    meson-parameters: [--prefix=/,
+                       -Dgtk_doc=disabled,
+                       -Dintrospection=disabled,
+                       -Dman=false,
+                       -Dtests=false]
+    prime:
+      - -include
+      - -bin
+      - -lib/*/pkgconfig
+      - -share
   libqmi:
     plugin: autotools
-    source: https://gitlab.freedesktop.org/mobile-broadband/libqmi.git
+    source: https://github.com/freedesktop/libqmi.git
     source-tag: 1.26.0
     after: [modemmanager, libmbim]
     # build without these; system daemon needs them
@@ -205,7 +220,6 @@ parts:
       - libgcab-dev
       - libglib2.0-dev
       - libgpgme11-dev
-      - libjson-glib-dev
       - liblzma-dev
       - libpango1.0-dev
       - libpci-dev
@@ -230,7 +244,6 @@ parts:
       - libusb-1.0-0
       - libgudev-1.0-0
       - libgpgme11
-      - libjson-glib-1.0-0
       - libpolkit-gobject-1-0
       - libsmbios-c2
       - glib-networking
@@ -272,7 +285,7 @@ parts:
       - -usr/lib/*/pkgconfig
       # we don't want system gnutls leaking in
       - -usr/lib/*/libgnutls*
-    after: [meson, build-introspection, modemmanager, libmbim, libqmi, tpm2-tss, gnutls, curl]
+    after: [meson, build-introspection, modemmanager, libmbim, libqmi, tpm2-tss, gnutls, curl, json-glib]
   fix-bash-completion:
     plugin: make
     source: contrib/snap/fix-bash-completion

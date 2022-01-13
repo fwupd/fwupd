@@ -509,6 +509,15 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 		fu_device_add_instance_id_full(device, devid, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
 	}
 
+	/* add devtype */
+	tmp = g_udev_device_get_devtype(priv->udev_device);
+	if (tmp != NULL) {
+		g_autofree gchar *devtype = g_utf8_strup(tmp, -1);
+		g_autofree gchar *devid = NULL;
+		devid = g_strdup_printf("%s\\TYPE_%s", subsystem, devtype);
+		fu_device_add_instance_id_full(device, devid, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	}
+
 	/* add the driver */
 	if (priv->driver != NULL) {
 		g_autofree gchar *devid = NULL;
@@ -1104,7 +1113,8 @@ fu_udev_device_set_physical_id(FuUdevDevice *self, const gchar *subsystems, GErr
 		physical_id = g_strdup_printf("PCI_SLOT_NAME=%s", tmp);
 	} else if (g_strcmp0(subsystem, "usb") == 0 || g_strcmp0(subsystem, "mmc") == 0 ||
 		   g_strcmp0(subsystem, "i2c") == 0 || g_strcmp0(subsystem, "platform") == 0 ||
-		   g_strcmp0(subsystem, "scsi") == 0 || g_strcmp0(subsystem, "mtd") == 0) {
+		   g_strcmp0(subsystem, "scsi") == 0 || g_strcmp0(subsystem, "mtd") == 0 ||
+		   g_strcmp0(subsystem, "block") == 0) {
 		tmp = g_udev_device_get_property(udev_device, "DEVPATH");
 		if (tmp == NULL) {
 			g_set_error_literal(error,
@@ -2064,6 +2074,14 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 	device_class->bind_driver = fu_udev_device_bind_driver;
 	device_class->unbind_driver = fu_udev_device_unbind_driver;
 
+	/**
+	 * FuUdevDevice::changed:
+	 * @self: the #FuUdevDevice instance that emitted the signal
+	 *
+	 * The ::changed signal is emitted when the low-level GUdevDevice has changed.
+	 *
+	 * Since: 1.1.2
+	 **/
 	signals[SIGNAL_CHANGED] = g_signal_new("changed",
 					       G_TYPE_FROM_CLASS(object_class),
 					       G_SIGNAL_RUN_LAST,
@@ -2074,6 +2092,13 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 					       G_TYPE_NONE,
 					       0);
 
+	/**
+	 * FuUdevDevice:udev-device:
+	 *
+	 * The low-level GUdevDevice.
+	 *
+	 * Since: 1.1.2
+	 */
 	pspec = g_param_spec_object("udev-device",
 				    NULL,
 				    NULL,
@@ -2081,6 +2106,13 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_UDEV_DEVICE, pspec);
 
+	/**
+	 * FuUdevDevice:subsystem:
+	 *
+	 * The device subsystem.
+	 *
+	 * Since: 1.1.2
+	 */
 	pspec = g_param_spec_string("subsystem",
 				    NULL,
 				    NULL,
@@ -2088,6 +2120,13 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_SUBSYSTEM, pspec);
 
+	/**
+	 * FuUdevDevice:bind-id:
+	 *
+	 * The bind ID to use when binding a new driver.
+	 *
+	 * Since: 1.7.2
+	 */
 	pspec = g_param_spec_string("bind-id",
 				    NULL,
 				    NULL,
@@ -2095,6 +2134,13 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_BIND_ID, pspec);
 
+	/**
+	 * FuUdevDevice:driver:
+	 *
+	 * The driver being used for the device.
+	 *
+	 * Since: 1.5.3
+	 */
 	pspec = g_param_spec_string("driver",
 				    NULL,
 				    NULL,
@@ -2102,6 +2148,13 @@ fu_udev_device_class_init(FuUdevDeviceClass *klass)
 				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_DRIVER, pspec);
 
+	/**
+	 * FuUdevDevice:device-file:
+	 *
+	 * The low level file to use for device access.
+	 *
+	 * Since: 1.3.1
+	 */
 	pspec = g_param_spec_string("device-file",
 				    NULL,
 				    NULL,
