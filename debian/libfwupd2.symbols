@@ -54,6 +54,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  LIBFWUPD_1.7.1@LIBFWUPD_1.7.1 1.7.1
  LIBFWUPD_1.7.2@LIBFWUPD_1.7.2 1.7.2
  LIBFWUPD_1.7.3@LIBFWUPD_1.7.3 1.7.3
+ LIBFWUPD_1.7.4@LIBFWUPD_1.7.4 1.7.4
  fwupd_build_history_report_json@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_machine_id@LIBFWUPD_1.0.4 1.0.4
  fwupd_build_user_agent@LIBFWUPD_1.0.3 1.0.3
@@ -233,6 +234,7 @@ libfwupd.so.2 libfwupd2 #MINVER#
  fwupd_device_get_protocols@LIBFWUPD_1.5.8 1.5.8
  fwupd_device_get_release_default@LIBFWUPD_0.9.8 1.0.0
  fwupd_device_get_releases@LIBFWUPD_0.9.8 1.0.0
+ fwupd_device_get_root@LIBFWUPD_1.7.4 1.7.4
  fwupd_device_get_serial@LIBFWUPD_1.1.2 1.1.2
  fwupd_device_get_status@LIBFWUPD_1.4.0 1.4.0
  fwupd_device_get_summary@LIBFWUPD_0.9.3 1.0.0
