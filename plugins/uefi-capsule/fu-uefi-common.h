@@ -61,6 +61,11 @@ typedef struct __attribute__((__packed__)) {
 #define FU_UEFI_COMMON_REQUIRED_ESP_FREE_SPACE (32 * 1024 * 1024)
 
 gchar *
+fu_uefi_get_fallback_app_path(FuDevice *device,
+			      const gchar *esp_path,
+			      const gchar *cmd,
+			      GError **error);
+gchar *
 fu_uefi_get_esp_app_path(FuDevice *device, const gchar *esp_path, const gchar *cmd, GError **error);
 gchar *
 fu_uefi_get_built_app_path(GError **error);

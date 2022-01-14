@@ -304,7 +304,7 @@ fu_uefi_bootmgr_bootnext(FuDevice *device,
 				device,
 				FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH)) {
 				shim_app =
-				    fu_uefi_get_esp_app_path(device, esp_path, "boot", error);
+				    fu_uefi_get_fallback_app_path(device, esp_path, "boot", error);
 				if (shim_app == NULL)
 					return FALSE;
 			}
@@ -327,11 +327,12 @@ fu_uefi_bootmgr_bootnext(FuDevice *device,
 			}
 			use_fwup_path = FALSE;
 		} else if ((flags & FU_UEFI_BOOTMGR_FLAG_USE_SHIM_FOR_SB) > 0) {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_BROKEN_SYSTEM,
-					    "Secure boot is enabled, but shim isn't installed to "
-					    "the EFI system partition");
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_BROKEN_SYSTEM,
+				    "Secure boot is enabled, but shim isn't installed to "
+				    "%s",
+				    shim_app);
 			return FALSE;
 		}
 	}
