@@ -6449,6 +6449,13 @@ fu_engine_backend_device_removed_cb(FuBackend *backend, FuDevice *device, FuEngi
 		FuDevice *device_tmp = g_ptr_array_index(devices, i);
 		if (g_strcmp0(fu_device_get_backend_id(device_tmp),
 			      fu_device_get_backend_id(device)) == 0) {
+			if (fu_device_has_internal_flag(device_tmp,
+							FU_DEVICE_INTERNAL_FLAG_NO_AUTO_REMOVE)) {
+				g_debug("not auto-removing backend device %s [%s] due to flags",
+					fu_device_get_name(device_tmp),
+					fu_device_get_id(device_tmp));
+				continue;
+			}
 			g_debug("auto-removing backend device %s [%s]",
 				fu_device_get_name(device_tmp),
 				fu_device_get_id(device_tmp));
