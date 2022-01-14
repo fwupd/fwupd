@@ -98,6 +98,10 @@ fu_thunderbolt_retimer_setup(FuDevice *device, GError **error)
 	guint16 vid;
 	g_autofree gchar *instance = NULL;
 
+	/* get version */
+	if (!fu_thunderbolt_device_get_version(FU_THUNDERBOLT_DEVICE(self), error))
+		return FALSE;
+
 	/* as defined in PCIe 4.0 spec */
 	vid = fu_udev_device_get_vendor(FU_UDEV_DEVICE(self));
 	if (vid == 0x0) {
