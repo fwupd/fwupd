@@ -60,6 +60,21 @@ fu_uefi_bootmgr_get_suffix(GError **error)
 }
 
 gchar *
+fu_uefi_get_fallback_app_path(FuDevice *device,
+			      const gchar *esp_path,
+			      const gchar *cmd,
+			      GError **error)
+{
+	const gchar *suffix = fu_uefi_bootmgr_get_suffix(error);
+	g_autofree gchar *base = NULL;
+	if (suffix == NULL)
+		return NULL;
+
+	base = g_build_filename(esp_path, "EFI", "boot", NULL);
+	return g_strdup_printf("%s/%s%s.efi", base, cmd, suffix);
+}
+
+gchar *
 fu_uefi_get_esp_app_path(FuDevice *device, const gchar *esp_path, const gchar *cmd, GError **error)
 {
 	const gchar *suffix = fu_uefi_bootmgr_get_suffix(error);
@@ -220,12 +235,6 @@ fu_uefi_get_esp_path_for_os(FuDevice *device, const gchar *base)
 				return g_steal_pointer(&id_like_path);
 			}
 		}
-	}
-	/* try to fallback to use UEFI removable path if ID_LIKE path doesn't exist */
-	if (fu_device_has_private_flag(device, FU_UEFI_DEVICE_FLAG_FALLBACK_TO_REMOVABLE_PATH)) {
-		esp_path = g_build_filename(base, "EFI", "boot", NULL);
-		if (!g_file_test(esp_path, G_FILE_TEST_IS_DIR))
-			g_debug("failed to fallback due to missing %s", esp_path);
 	}
 	return g_steal_pointer(&esp_path);
 #else
