@@ -151,7 +151,7 @@ fu_thunderbolt_controller_can_update(FuThunderboltController *self)
 }
 
 static gboolean
-fu_thunderbolt_controller_set_port_offline_cb(gpointer user_data)
+fu_thunderbolt_controller_set_port_online_cb(gpointer user_data)
 {
 	FuThunderboltController *self = FU_THUNDERBOLT_CONTROLLER(user_data);
 	g_autoptr(GError) error_local = NULL;
@@ -170,7 +170,7 @@ fu_thunderbolt_controller_setup_usb4(FuThunderboltController *self, GError **err
 	if (!fu_thunderbolt_udev_set_port_offline(FU_UDEV_DEVICE(self), error))
 		return FALSE;
 	self->host_online_timer_id =
-	    g_timeout_add_seconds(5, fu_thunderbolt_controller_set_port_offline_cb, self);
+	    g_timeout_add_seconds(5, fu_thunderbolt_controller_set_port_online_cb, self);
 	return TRUE;
 }
 
