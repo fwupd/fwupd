@@ -2288,12 +2288,40 @@ fu_util_maybe_send_reports(FuUtilPrivate *priv, const gchar *remote_id, GError *
 }
 
 static gboolean
-fu_util_update_all(FuUtilPrivate *priv, GError **error)
+fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	gboolean supported = FALSE;
 	gboolean no_updates_header = FALSE;
 	gboolean latest_header = FALSE;
+
+	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "--allow-older is not supported for this command");
+		return FALSE;
+	}
+
+	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "--allow-reinstall is not supported for this command");
+		return FALSE;
+	}
+
+	/* DEVICE-ID and GUID are acceptable args to update */
+	for (guint idx = 0; idx < g_strv_length(values); idx++) {
+		if (!fwupd_guid_is_valid(values[idx]) && !fwupd_device_id_is_valid(values[idx])) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "'%s' is not a valid GUID nor DEVICE-ID",
+				    values[idx]);
+			return FALSE;
+		}
+	}
 
 	/* get devices from daemon */
 	devices = fwupd_client_get_devices(priv->client, NULL, error);
@@ -2312,9 +2340,11 @@ fu_util_update_all(FuUtilPrivate *priv, GError **error)
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		FwupdRelease *rel;
+		const gchar *device_id = fu_device_get_id(dev);
 		const gchar *remote_id;
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
+		gboolean dev_skip_byid = TRUE;
 
 		/* not going to have results, so save a D-Bus round-trip */
 		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
@@ -2330,6 +2360,17 @@ fu_util_update_all(FuUtilPrivate *priv, GError **error)
 			g_printerr(" • %s\n", fwupd_device_get_name(dev));
 			continue;
 		}
+
+		/* only process particular DEVICE-ID or GUID if specified */
+		for (guint idx = 0; idx < g_strv_length(values); idx++) {
+			const gchar *tmpid = values[idx];
+			if (fwupd_device_has_guid(dev, tmpid) || g_strcmp0(device_id, tmpid) == 0) {
+				dev_skip_byid = FALSE;
+				break;
+			}
+		}
+		if (g_strv_length(values) > 0 && dev_skip_byid)
+			continue;
 		if (!fu_util_filter_device(priv, dev))
 			continue;
 		supported = TRUE;
@@ -2381,81 +2422,6 @@ fu_util_update_all(FuUtilPrivate *priv, GError **error)
 	}
 
 	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
-}
-
-static gboolean
-fu_util_update_by_id(FuUtilPrivate *priv, const gchar *device_id, GError **error)
-{
-	FwupdRelease *rel;
-	const gchar *remote_id;
-	g_autoptr(FwupdDevice) dev = NULL;
-	g_autoptr(GPtrArray) rels = NULL;
-
-	/* do not allow a partial device-id */
-	dev = fu_util_get_device_by_id(priv, device_id, error);
-	if (dev == NULL)
-		return FALSE;
-
-	/* get devices from daemon */
-	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-changed",
-			 G_CALLBACK(fu_util_update_device_changed_cb),
-			 priv);
-	g_signal_connect(FWUPD_CLIENT(priv->client),
-			 "device-request",
-			 G_CALLBACK(fu_util_update_device_request_cb),
-			 priv);
-
-	/* get the releases for this device and filter for validity */
-	rels = fwupd_client_get_upgrades(priv->client, fwupd_device_get_id(dev), NULL, error);
-	if (rels == NULL)
-		return FALSE;
-	rel = g_ptr_array_index(rels, 0);
-	if (!fu_util_update_device_with_release(priv, dev, rel, error))
-		return FALSE;
-	fu_util_display_current_message(priv);
-
-	/* send report if we're supposed to */
-	remote_id = fwupd_release_get_remote_id(rel);
-	if (!fu_util_maybe_send_reports(priv, remote_id, error))
-		return FALSE;
-
-	/* we don't want to ask anything */
-	if (priv->no_reboot_check) {
-		g_debug("skipping reboot check");
-		return TRUE;
-	}
-
-	/* the update needs the user to restart the computer */
-	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
-}
-
-static gboolean
-fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "--allow-older is not supported for this command");
-		return FALSE;
-	}
-
-	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "--allow-reinstall is not supported for this command");
-		return FALSE;
-	}
-
-	if (g_strv_length(values) == 0)
-		return fu_util_update_all(priv, error);
-	if (g_strv_length(values) == 1)
-		return fu_util_update_by_id(priv, values[0], error);
-	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INVALID_ARGS, "Invalid arguments");
-	return FALSE;
 }
 
 static gboolean
@@ -3953,7 +3919,8 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("[DEVICE-ID|GUID]"),
 			      /* TRANSLATORS: command description */
-			      _("Updates all firmware to latest versions available"),
+			      _("Updates all specified devices to latest firmware version, or all "
+				"devices if unspecified"),
 			      fu_util_update);
 	fu_util_cmd_array_add(cmd_array,
 			      "verify",

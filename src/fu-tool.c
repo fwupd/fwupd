@@ -1335,11 +1335,51 @@ fu_util_install_release(FuUtilPrivate *priv, FwupdRelease *rel, GError **error)
 }
 
 static gboolean
-fu_util_update_all(FuUtilPrivate *priv, GError **error)
+fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(GPtrArray) devices = NULL;
 	gboolean no_updates_header = FALSE;
 	gboolean latest_header = FALSE;
+
+	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "--allow-older is not supported for this command");
+		return FALSE;
+	}
+
+	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "--allow-reinstall is not supported for this command");
+		return FALSE;
+	}
+
+	if (!fu_util_start_engine(priv,
+				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
+				      FU_ENGINE_LOAD_FLAG_REMOTES,
+				  error))
+		return FALSE;
+
+	/* DEVICE-ID and GUID are acceptable args to update */
+	for (guint idx = 0; idx < g_strv_length(values); idx++) {
+		if (!fwupd_guid_is_valid(values[idx]) && !fwupd_device_id_is_valid(values[idx])) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "'%s' is not a valid GUID nor DEVICE-ID",
+				    values[idx]);
+			return FALSE;
+		}
+	}
+
+	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
+	g_signal_connect(FU_ENGINE(priv->engine),
+			 "device-changed",
+			 G_CALLBACK(fu_util_update_device_changed_cb),
+			 priv);
 
 	devices = fu_engine_get_devices(priv->engine, error);
 	if (devices == NULL)
@@ -1349,10 +1389,21 @@ fu_util_update_all(FuUtilPrivate *priv, GError **error)
 	for (guint i = 0; i < devices->len; i++) {
 		FwupdDevice *dev = g_ptr_array_index(devices, i);
 		FwupdRelease *rel;
-		const gchar *device_id;
+		const gchar *device_id = fu_device_get_id(dev);
 		g_autoptr(GPtrArray) rels = NULL;
 		g_autoptr(GError) error_local = NULL;
+		gboolean dev_skip_byid = TRUE;
 
+		/* only process particular DEVICE-ID or GUID if specified */
+		for (guint idx = 0; idx < g_strv_length(values); idx++) {
+			const gchar *tmpid = values[idx];
+			if (fwupd_device_has_guid(dev, tmpid) || g_strcmp0(device_id, tmpid) == 0) {
+				dev_skip_byid = FALSE;
+				break;
+			}
+		}
+		if (g_strv_length(values) > 0 && dev_skip_byid)
+			continue;
 		if (!fu_util_is_interesting_device(dev))
 			continue;
 		/* only show stuff that has metadata available */
@@ -1372,7 +1423,6 @@ fu_util_update_all(FuUtilPrivate *priv, GError **error)
 		if (!fu_util_filter_device(priv, dev))
 			continue;
 
-		device_id = fu_device_get_id(dev);
 		rels = fu_engine_get_upgrades(priv->engine, priv->request, device_id, &error_local);
 		if (rels == NULL) {
 			if (!latest_header) {
@@ -1402,85 +1452,6 @@ fu_util_update_all(FuUtilPrivate *priv, GError **error)
 			continue;
 		}
 		fu_util_display_current_message(priv);
-	}
-	return TRUE;
-}
-
-static gboolean
-fu_util_update_by_id(FuUtilPrivate *priv, const gchar *id, GError **error)
-{
-	FwupdRelease *rel;
-	g_autoptr(FuDevice) dev = NULL;
-	g_autoptr(GPtrArray) rels = NULL;
-
-	/* do not allow a partial device-id, lookup GUIDs */
-	dev = fu_util_get_device(priv, id, error);
-	if (dev == NULL)
-		return FALSE;
-
-	/* get the releases for this device and filter for validity */
-	rels = fu_engine_get_upgrades(priv->engine, priv->request, fu_device_get_id(dev), error);
-	if (rels == NULL)
-		return FALSE;
-
-	/* detect bitlocker */
-	if (!priv->no_safety_check) {
-		if (!fu_util_prompt_warning_fde(FWUPD_DEVICE(dev), error))
-			return FALSE;
-	}
-	rel = g_ptr_array_index(rels, 0);
-	if (!fu_util_install_release(priv, rel, error))
-		return FALSE;
-	fu_util_display_current_message(priv);
-
-	return TRUE;
-}
-
-static gboolean
-fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_OLDER) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "--allow-older is not supported for this command");
-		return FALSE;
-	}
-
-	if (priv->flags & FWUPD_INSTALL_FLAG_ALLOW_REINSTALL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "--allow-reinstall is not supported for this command");
-		return FALSE;
-	}
-
-	if (g_strv_length(values) > 1) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INVALID_ARGS,
-				    "Invalid arguments");
-		return FALSE;
-	}
-
-	if (!fu_util_start_engine(priv,
-				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
-				      FU_ENGINE_LOAD_FLAG_REMOTES,
-				  error))
-		return FALSE;
-
-	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
-	g_signal_connect(FU_ENGINE(priv->engine),
-			 "device-changed",
-			 G_CALLBACK(fu_util_update_device_changed_cb),
-			 priv);
-
-	if (g_strv_length(values) == 1) {
-		if (!fu_util_update_by_id(priv, values[0], error))
-			return FALSE;
-	} else {
-		if (!fu_util_update_all(priv, error))
-			return FALSE;
 	}
 
 	/* we don't want to ask anything */
@@ -3443,7 +3414,8 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
 			      _("[DEVICE-ID|GUID]"),
 			      /* TRANSLATORS: command description */
-			      _("Update all devices that match local metadata"),
+			      _("Updates all specified devices to latest firmware version, or all "
+				"devices if unspecified"),
 			      fu_util_update);
 	fu_util_cmd_array_add(cmd_array,
 			      "self-sign",
