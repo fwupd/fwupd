@@ -243,18 +243,19 @@ fu_util_lock(FuUtilPrivate *priv, GError **error)
 static gboolean
 fu_util_start_engine(FuUtilPrivate *priv, FuEngineLoadFlags flags, GError **error)
 {
-#ifdef HAVE_SYSTEMD
-	g_autoptr(GError) error_local = NULL;
-#endif
-
 	if (!fu_util_lock(priv, error)) {
 		/* TRANSLATORS: another fwupdtool instance is already running */
 		g_prefix_error(error, "%s: ", _("Failed to lock"));
 		return FALSE;
 	}
 #ifdef HAVE_SYSTEMD
-	if (!fu_systemd_unit_stop(fu_util_get_systemd_unit(), &error_local))
-		g_debug("Failed to stop daemon: %s", error_local->message);
+	if (getuid() != 0 || geteuid() != 0) {
+		g_debug("not attempting to stop daemon when running as user");
+	} else {
+		g_autoptr(GError) error_local = NULL;
+		if (!fu_systemd_unit_stop(fu_util_get_systemd_unit(), &error_local))
+			g_debug("Failed to stop daemon: %s", error_local->message);
+	}
 #endif
 	if (!fu_engine_load(priv->engine, flags, error))
 		return FALSE;
