@@ -2553,3 +2553,29 @@ fu_util_setup_interactive_console(GError **error)
 	/* success */
 	return TRUE;
 }
+
+gboolean
+fu_util_print_builder(JsonBuilder *builder, GError **error)
+{
+	g_autofree gchar *data = NULL;
+	g_autoptr(JsonGenerator) json_generator = NULL;
+	g_autoptr(JsonNode) json_root = NULL;
+
+	/* export as a string */
+	json_root = json_builder_get_root(builder);
+	json_generator = json_generator_new();
+	json_generator_set_pretty(json_generator, TRUE);
+	json_generator_set_root(json_generator, json_root);
+	data = json_generator_to_data(json_generator, NULL);
+	if (data == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Failed to convert to JSON string");
+		return FALSE;
+	}
+
+	/* just print */
+	g_print("%s\n", data);
+	return TRUE;
+}
