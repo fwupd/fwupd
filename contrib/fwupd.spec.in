@@ -137,6 +137,7 @@ Provides: fwupdate-efi
 # optional, but a really good idea
 Recommends: udisks2
 Recommends: bluez
+Recommends: jq
 
 %if 0%{?have_modem_manager}
 Recommends: %{name}-plugin-modem-manager

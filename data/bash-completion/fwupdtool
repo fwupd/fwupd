@@ -64,22 +64,25 @@ _fwupdtool_opts=(
 _show_filters()
 {
 	local flags
-	flags="$(command @libexecdir@/fwupdtool get-device-flags 2>/dev/null)"
+	flags="$(command fwupdtool get-device-flags 2>/dev/null)"
 	COMPREPLY+=( $(compgen -W "${flags}" -- "$cur") )
 }
 
 _show_firmware_types()
 {
 	local firmware_types
-	firmware_types="$(command @libexecdir@/fwupdtool get-firmware-types 2>/dev/null)"
+	firmware_types="$(command fwupdtool get-firmware-types 2>/dev/null)"
 	COMPREPLY+=( $(compgen -W "${firmware_types}" -- "$cur") )
 }
 
 
 _show_plugins()
 {
+	if ! command -v jq &> /dev/null; then
+		return 0
+	fi
 	local plugins
-	plugins="$(command @libexecdir@/fwupdtool get-plugins 2>/dev/null)"
+	plugins="$(command fwupdtool get-plugins --json 2>/dev/null | jq '.Plugins | .[] | .Name')"
 	COMPREPLY+=( $(compgen -W "${plugins}" -- "$cur") )
 }
 

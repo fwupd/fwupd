@@ -65,7 +65,7 @@ _fwupdmgr_opts=(
 _show_filters()
 {
 	local flags
-	flags="$(command @libexecdir@/fwupdtool get-device-flags 2>/dev/null)"
+	flags="$(command fwupdtool get-device-flags 2>/dev/null)"
 	COMPREPLY+=( $(compgen -W "${flags}" -- "$cur") )
 }
 
@@ -76,12 +76,12 @@ _show_modifiers()
 
 _show_device_ids()
 {
+	if ! command -v jq &> /dev/null; then
+		return 0
+	fi
 	local description
-	OLDIFS=$IFS
-	IFS=$'\n'
-	description="$(command fwupdagent get-devices 2>/dev/null | sed -e 's,"Name" :,,; s,",,g; s,\,,,g; s,[[:space:]]\+,,' | command awk '!/DeviceId/ { line = $0 }; /DeviceId/ { print $3 " { "line" }"}')"
+	description="$(command fwupdmgr get-devices --json 2>/dev/null | jq '.Devices | .[] | .DeviceId')"
 	COMPREPLY+=( $(compgen -W "${description}" -- "$cur") )
-	IFS=$OLDIFS
 }
 
 _show_remotes()
@@ -107,7 +107,7 @@ _fwupdmgr()
 	esac
 
 	case $command in
-	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update|get-updates|switch-branch)
+	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update|get-updates|switch-branch|update|upgrade)
 		if [[ "$prev" = "$command" ]]; then
 			_show_device_ids
 		else

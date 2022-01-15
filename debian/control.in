@@ -56,7 +56,8 @@ Recommends: python3,
 	    secureboot-db,
 	    udisks2,
 	    fwupd-unsigned,
-	    fwupd-signed
+	    fwupd-signed,
+	    jq
 Suggests: gir1.2-fwupd-2.0
 Provides: fwupdate
 Conflicts: fwupdate-amd64-signed,
