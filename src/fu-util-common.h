@@ -8,6 +8,7 @@
 
 #include <fwupd.h>
 #include <glib.h>
+#include <json-glib/json-glib.h>
 
 #include "fwupd-security-attr-private.h"
 
@@ -149,3 +150,5 @@ gboolean
 fu_util_is_url(const gchar *perhaps_url);
 gboolean
 fu_util_setup_interactive_console(GError **error);
+gboolean
+fu_util_print_builder(JsonBuilder *builder, GError **error);

@@ -23,6 +23,7 @@
 
 #include "fwupd-common-private.h"
 #include "fwupd-device-private.h"
+#include "fwupd-plugin-private.h"
 
 #include "fu-cabinet.h"
 #include "fu-context-private.h"
@@ -416,6 +417,25 @@ fu_util_plugin_name_sort_cb(FuPlugin **item1, FuPlugin **item2)
 }
 
 static gboolean
+fu_util_get_plugins_as_json(FuUtilPrivate *priv, GPtrArray *plugins, GError **error)
+{
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+	json_builder_begin_object(builder);
+
+	json_builder_set_member_name(builder, "Plugins");
+	json_builder_begin_array(builder);
+	for (guint i = 0; i < plugins->len; i++) {
+		FwupdPlugin *plugin = g_ptr_array_index(plugins, i);
+		json_builder_begin_object(builder);
+		fwupd_plugin_to_json(plugin, builder);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+	return fu_util_print_builder(builder, error);
+}
+
+static gboolean
 fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GPtrArray *plugins;
@@ -427,6 +447,10 @@ fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* print */
 	plugins = fu_engine_get_plugins(priv->engine);
 	g_ptr_array_sort(plugins, (GCompareFunc)fu_util_plugin_name_sort_cb);
+	if (priv->as_json)
+		return fu_util_get_plugins_as_json(priv, plugins, error);
+
+	/* print */
 	for (guint i = 0; i < plugins->len; i++) {
 		FuPlugin *plugin = g_ptr_array_index(plugins, i);
 		g_autofree gchar *str = fu_util_plugin_to_string(FWUPD_PLUGIN(plugin), 0);
