@@ -287,6 +287,11 @@ if build_standalone and get_option('plugin_uefi')
   readelf = find_program ('readelf')
   genpeimg = find_program ('genpeimg', required: false)
 
+  efivar = dependency('efivar')
+  if cc.has_header_symbol('efivar/efivar-types.h', 'efi_time_t', dependencies : efivar)
+    conf.set('HAVE_EFI_TIME_T', '1')
+  endif
+
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
   conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
 

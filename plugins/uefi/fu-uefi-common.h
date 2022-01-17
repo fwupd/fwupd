@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <efivar/efivar.h>
 #include <glib.h>
 #include <efivar.h>
 
@@ -14,6 +15,7 @@
 #define EFI_CAPSULE_HEADER_FLAGS_POPULATE_SYSTEM_TABLE	0x00020000
 #define EFI_CAPSULE_HEADER_FLAGS_INITIATE_RESET		0x00040000
 
+#ifndef HAVE_EFI_TIME_T
 typedef struct __attribute__((__packed__)) {
 	guint16		 year;
 	guint8		 month;
@@ -27,6 +29,7 @@ typedef struct __attribute__((__packed__)) {
 	guint8		 daylight;
 	guint8		 pad2;
 } efi_time_t;
+#endif
 
 typedef struct __attribute__((__packed__)) {
 	efi_guid_t	 guid;
