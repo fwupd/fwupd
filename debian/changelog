@@ -1,9 +1,10 @@
-fwupd (1.7.4-1) UNRELEASED; urgency=medium
+fwupd (1.7.4-1) unstable; urgency=medium
 
   * New upstream version (1.7.4)
   * Drop manpages section patch, upstream
+  * Add a patch that fixes compilation with newer efivar
 
- -- Mario Limonciello <superm1@gmail.com>  Thu, 13 Jan 2022 09:23:40 -0600
+ -- Mario Limonciello <superm1@gmail.com>  Mon, 17 Jan 2022 09:42:56 -0600
 
 fwupd (1.7.3-1) unstable; urgency=medium
 
