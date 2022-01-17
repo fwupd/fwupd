@@ -79,7 +79,7 @@ Files:  *.metainfo.xml
 Copyright: Richard Hughes <richard@hughsie.com>
 License: CC0-1.0
 
-Files: plugins/dell-dock
+Files: plugins/dell-dock/*
 Copyright: 2018 Dell Inc.
 License: LGPL-2.1+ OR MIT
 
