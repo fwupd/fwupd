@@ -9,6 +9,7 @@
 
 #include <fwupdplugin.h>
 
+#include <efivar/efivar.h>
 #include <glib.h>
 
 #define EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET  0x00010000
@@ -17,6 +18,7 @@
 
 #define EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED 0x0000000000000004ULL
 
+#ifndef HAVE_EFI_TIME_T
 typedef struct __attribute__((__packed__)) {
 	guint16 year;
 	guint8 month;
@@ -30,6 +32,7 @@ typedef struct __attribute__((__packed__)) {
 	guint8 daylight;
 	guint8 pad2;
 } efi_time_t;
+#endif
 
 typedef struct __attribute__((__packed__)) {
 	fwupd_guid_t guid;
