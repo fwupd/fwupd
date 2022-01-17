@@ -386,18 +386,24 @@ fu_main_engine_device_removed_cb(FuEngine *engine, FuDevice *device, FuUtilPriva
 static void
 fu_main_engine_status_changed_cb(FuEngine *engine, FwupdStatus status, FuUtilPrivate *priv)
 {
+	if (priv->as_json)
+		return;
 	fu_progressbar_update(priv->progressbar, status, 0);
 }
 
 static void
 fu_util_progress_percentage_changed_cb(FuProgress *progress, guint percentage, FuUtilPrivate *priv)
 {
+	if (priv->as_json)
+		return;
 	fu_progressbar_update(priv->progressbar, fu_progress_get_status(progress), percentage);
 }
 
 static void
 fu_util_progress_status_changed_cb(FuProgress *progress, FwupdStatus status, FuUtilPrivate *priv)
 {
+	if (priv->as_json)
+		return;
 	fu_progressbar_update(priv->progressbar, status, fu_progress_get_percentage(progress));
 }
 
