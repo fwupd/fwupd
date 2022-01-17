@@ -1,7 +1,4 @@
 # bootloader
-[USB\VID_0483&PID_5750]
-Plugin = ebitdo
-Flags = is-bootloader
 [USB\VID_2DC8&PID_5750]
 Plugin = ebitdo
 Flags = is-bootloader
