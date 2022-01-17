@@ -1,0 +1,9 @@
+# This is the ID assigned to STMicroelectronics, and also seems to be used by other vendors who
+# did not change the default from the devkit. Install this quirk file if your 8bitdo controller
+# uses the legacy bootloader from 2018.
+#
+# See https://github.com/fwupd/fwupd/issues/4180 for more information
+
+[USB\VID_0483&PID_5750]
+Plugin = ebitdo
+Flags = is-bootloader
