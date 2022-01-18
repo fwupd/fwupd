@@ -2016,6 +2016,17 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      NULL},
 		     /* ------------------------------------------*/
+		     {"org.fwupd.hsi.Kernel.Tainted",
+		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
+		      /* TRANSLATORS: HSI event title */
+		      _("Kernel is tainted")},
+		     {"org.fwupd.hsi.Kernel.Tainted",
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
+		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
+		      /* TRANSLATORS: HSI event title */
+		      _("Kernel is no longer tainted")},
+		     /* ------------------------------------------*/
 		     {"org.fwupd.hsi.Kernel.Lockdown",
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
@@ -2026,6 +2037,17 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
 		      _("Kernel lockdown enabled")},
+		     /* ------------------------------------------*/
+		     {"org.fwupd.hsi.AcpiDmar",
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("Pre-boot DMA protection is disabled")},
+		     {"org.fwupd.hsi.AcpiDmar",
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
+		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
+		      /* TRANSLATORS: HSI event title */
+		      _("Pre-boot DMA protection is enabled")},
 		     /* ------------------------------------------*/
 		     {"org.fwupd.hsi.Uefi.SecureBoot",
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
@@ -2053,6 +2075,12 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_VALID,
 		      /* TRANSLATORS: HSI event title */
 		      _("A TPM PCR is now an invalid value")},
+		     /* ------------------------------------------*/
+		     {"org.fwupd.hsi.Tpm.ReconstructionPcr0",
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+		      /* TRANSLATORS: HSI event title */
+		      _("TPM PCR0 reconstruction is invalid")},
 		     {NULL, 0, 0, NULL}};
 
 	/* sanity check */
