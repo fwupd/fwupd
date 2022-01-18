@@ -1776,6 +1776,28 @@ fu_device_inhibit_func(void)
 	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 }
 
+static void
+fu_device_inhibit_updateable_func(void)
+{
+	g_autoptr(FuDevice) device = fu_device_new();
+
+	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
+	g_assert_cmpstr(fu_device_get_update_error(device), ==, NULL);
+
+	/* first one */
+	fu_device_inhibit(device, "needs-activation", "Device is pending activation");
+	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
+	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_cmpstr(fu_device_get_update_error(device), ==, "Device is pending activation");
+
+	/* activated, but still not updatable */
+	fu_device_uninhibit(device, "needs-activation");
+	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
+	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
+	g_assert_cmpstr(fu_device_get_update_error(device), ==, NULL);
+}
+
 #define TEST_FLAG_FOO (1 << 0)
 #define TEST_FLAG_BAR (1 << 1)
 #define TEST_FLAG_BAZ (1 << 2)
@@ -3950,6 +3972,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/device{flags}", fu_device_flags_func);
 	g_test_add_func("/fwupd/device{custom-flags}", fu_device_private_flags_func);
 	g_test_add_func("/fwupd/device{inhibit}", fu_device_inhibit_func);
+	g_test_add_func("/fwupd/device{inhibit-updateable}", fu_device_inhibit_updateable_func);
 	g_test_add_func("/fwupd/device{parent}", fu_device_parent_func);
 	g_test_add_func("/fwupd/device{children}", fu_device_children_func);
 	g_test_add_func("/fwupd/device{incorporate}", fu_device_incorporate_func);

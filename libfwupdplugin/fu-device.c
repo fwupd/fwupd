@@ -2546,13 +2546,17 @@ fu_device_ensure_inhibits(FuDevice *self)
 		g_signal_handler_block(self, priv->notify_flags_handler_id);
 
 	/* was okay -> not okay */
-	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE) && nr_inhibits > 0) {
+	if (nr_inhibits > 0) {
 		g_autofree gchar *reasons_str = NULL;
 		g_autoptr(GList) values = g_hash_table_get_values(priv->inhibits);
 		g_autoptr(GPtrArray) reasons = g_ptr_array_new();
 
-		fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE);
-		fu_device_add_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
+		/* updatable -> updatable-hidden -- which is required as devices might have
+		 * inhibits and *not* be automatically updatable */
+		if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE)) {
+			fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE);
+			fu_device_add_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
+		}
 
 		/* update update error */
 		for (GList *l = values; l != NULL; l = l->next) {
@@ -2561,12 +2565,11 @@ fu_device_ensure_inhibits(FuDevice *self)
 		}
 		reasons_str = fu_common_strjoin_array(", ", reasons);
 		fu_device_set_update_error(self, reasons_str);
-	}
-
-	/* not okay -> is okay */
-	if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN) && nr_inhibits == 0) {
-		fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
-		fu_device_add_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE);
+	} else {
+		if (fu_device_has_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
+			fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN);
+			fu_device_add_flag(self, FWUPD_DEVICE_FLAG_UPDATABLE);
+		}
 		fu_device_set_update_error(self, NULL);
 	}
 
