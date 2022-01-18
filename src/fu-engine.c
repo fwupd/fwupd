@@ -4291,6 +4291,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FwupdRelease) rel = NULL;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(GError) error_reqs = NULL;
 	g_autoptr(GPtrArray) provides = NULL;
 	g_autoptr(GPtrArray) tags = NULL;
 	g_autoptr(XbNode) description = NULL;
@@ -4327,6 +4328,8 @@ fu_engine_get_result_from_component(FuEngine *self,
 			fu_device_set_version_raw(dev, fu_device_get_version_raw(device));
 			fu_device_set_version_format(dev, fu_device_get_version_format(device));
 			fu_device_set_version(dev, fu_device_get_version(device));
+		} else {
+			fu_device_inhibit(dev, "not-found", "Device was not found");
 		}
 
 		/* add GUID */
@@ -4355,10 +4358,12 @@ fu_engine_get_result_from_component(FuEngine *self,
 					  request,
 					  task,
 					  FWUPD_INSTALL_FLAG_IGNORE_VID_PID,
-					  error))
-		return NULL;
+					  &error_reqs)) {
+		fu_device_inhibit(dev, "failed-reqs", error_reqs->message);
+		/* continue */
+	}
 
-		/* verify trust */
+	/* verify trust */
 #if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	query = xb_query_new_full(xb_node_get_silo(component),
 				  "releases/release",
