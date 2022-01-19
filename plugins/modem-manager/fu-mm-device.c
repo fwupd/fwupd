@@ -1565,28 +1565,39 @@ fu_mm_device_attach(FuDevice *device, FuProgress *progress, GError **error)
 }
 
 static gboolean
-fu_mm_device_setup(FuDevice *device, GError **error)
+fu_mm_device_setup_branch_at(FuMmDevice *self, GError **error)
 {
-	FuMmDevice *self = FU_MM_DEVICE(device);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
 	/* Create IO channel to send AT commands to the modem */
-	locker = fu_device_locker_new_full(device,
+	locker = fu_device_locker_new_full(self,
 					   (FuDeviceLockerFunc)fu_mm_device_io_open,
 					   (FuDeviceLockerFunc)fu_mm_device_io_close,
 					   error);
 	if (locker == NULL)
 		return FALSE;
-	/*
-	 * firmware branch AT command may fail if not implemented,
-	 * clear error if not supported
-	 */
+
+	/* firmware branch AT command may fail if not implemented,
+	 * clear error if not supported */
 	if (self->branch_at != NULL) {
 		g_autoptr(GError) error_branch = NULL;
 		if (!fu_mm_device_at_cmd(self, self->branch_at, TRUE, &error_branch))
 			g_debug("unable to get firmware branch: %s", error_branch->message);
 	}
 
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_mm_device_setup(FuDevice *device, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+
+	if (self->port_at != NULL) {
+		if (!fu_mm_device_setup_branch_at(self, error))
+			return FALSE;
+	}
 	if (fu_device_get_branch(device) != NULL)
 		g_debug("using firmware branch: %s", fu_device_get_branch(device));
 	else
