@@ -493,10 +493,10 @@ fu_nordic_hid_cfg_channel_get_bl_name(FuNordicHidCfgChannel *self, GError **erro
 	g_autoptr(FuNordicCfgChannelMsg) res = g_new0(FuNordicCfgChannelMsg, 1);
 
 	/* query for the bootloader name if the board support it */
-	if (fu_nordic_hid_cfg_channel_get_event_id(self, "dfu", "bootloader_var", &event_id)) {
+	if (fu_nordic_hid_cfg_channel_get_event_id(self, "dfu", "module_variant", &event_id)) {
 		if (!fu_nordic_hid_cfg_channel_cmd_send(self,
 							"dfu",
-							"bootloader_var",
+							"module_variant",
 							CONFIG_STATUS_FETCH,
 							NULL,
 							0,
