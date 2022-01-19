@@ -188,6 +188,15 @@ fu_firehose_validate_rawprogram(GBytes *rawprogram,
 gboolean
 fu_firehose_updater_open(FuFirehoseUpdater *self, GError **error)
 {
+	/* sanity check */
+	if (self->port == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no firehose port provided for filename");
+		return FALSE;
+	}
+
 	g_debug("opening firehose port...");
 	self->io_channel = fu_io_channel_new_file(self->port, error);
 	return (self->io_channel != NULL);
