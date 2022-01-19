@@ -551,6 +551,15 @@ fu_mm_device_probe(FuDevice *device, GError **error)
 static gboolean
 fu_mm_device_io_open_qcdm(FuMmDevice *self, GError **error)
 {
+	/* sanity check */
+	if (self->port_qcdm == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no QCDM port provided for filename");
+		return FALSE;
+	}
+
 	/* open device */
 	self->io_channel = fu_io_channel_new_file(self->port_qcdm, error);
 	if (self->io_channel == NULL)
@@ -695,6 +704,15 @@ fu_mm_device_at_cmd(FuMmDevice *self, const gchar *cmd, gboolean has_response, G
 static gboolean
 fu_mm_device_io_open(FuMmDevice *self, GError **error)
 {
+	/* sanity check */
+	if (self->port_at == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no AT port provided for filename");
+		return FALSE;
+	}
+
 	/* open device */
 	self->io_channel = fu_io_channel_new_file(self->port_at, error);
 	if (self->io_channel == NULL)
