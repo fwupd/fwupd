@@ -3,10 +3,10 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/839c1a8177b19ef3db5e67f31be92c35a25ae5c7bf431740e6568d5b005313b7-nordic-nrf52840dk-mcuboot-0.0.0_0.cab",
+      "url": "https://fwupd.org/downloads/904ff137256218bc617661bb4fc2bfddad19522c7e54773d1fd0290b54adfcee-nordic-nrf52840dk-mcuboot-0.0.0_2.cab",
       "components": [
         {
-          "version": "0.0.0.0",
+          "version": "0.0.0.2",
           "guids": [
             "43b38427-fdf5-5400-a23c-f3eb7ea00e7c"
           ]
@@ -14,10 +14,10 @@
       ]
     },
     {
-      "url": "https://fwupd.org/downloads/6fb9dcfc1e26a5b0367d0a8a484f93ba156f846c1fb49013f3a934adc964788c-nordic-nrf52840dk-mcuboot-0.0.0_1.cab",
+      "url": "https://fwupd.org/downloads/2eb21f9439f0c4928c14548ff5c5c73ad6590d23fa704c58c4afa88168bcea90-nordic-nrf52840dk-mcuboot-0.0.0_3.cab",
       "components": [
         {
-          "version": "0.0.0.1",
+          "version": "0.0.0.3",
           "guids": [
             "43b38427-fdf5-5400-a23c-f3eb7ea00e7c"
           ]
