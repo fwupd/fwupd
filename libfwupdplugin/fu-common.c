@@ -1448,6 +1448,13 @@ fu_common_get_path(FuPathKind path_kind)
 			return g_build_filename(tmp, NULL);
 		basedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR);
 		return g_build_filename(basedir, "cache", PACKAGE_NAME, NULL);
+	/* /var/etc/fwupd */
+	case FU_PATH_KIND_LOCALCONFDIR_PKG:
+		tmp = g_getenv("LOCALCONF_DIRECTORY");
+		if (tmp != NULL && g_file_test(tmp, G_FILE_TEST_EXISTS))
+			return g_build_filename(tmp, NULL);
+		basedir = fu_common_get_path(FU_PATH_KIND_LOCALSTATEDIR);
+		return g_build_filename(basedir, "etc", PACKAGE_NAME, NULL);
 	/* /run/lock */
 	case FU_PATH_KIND_LOCKDIR:
 		return g_strdup("/run/lock");

@@ -23,15 +23,15 @@ fu_config_finalize(GObject *obj);
 
 struct _FuConfig {
 	GObject parent_instance;
-	GFileMonitor *monitor;
+	GPtrArray *monitors;	      /* (element-type GFileMonitor) */
 	GPtrArray *disabled_devices;  /* (element-type utf-8) */
 	GPtrArray *disabled_plugins;  /* (element-type utf-8) */
 	GPtrArray *approved_firmware; /* (element-type utf-8) */
 	GPtrArray *blocked_firmware;  /* (element-type utf-8) */
 	GPtrArray *uri_schemes;	      /* (element-type utf-8) */
+	GPtrArray *filenames;	      /* (element-type utf-8) */
 	guint64 archive_size_max;
 	guint idle_timeout;
-	gchar *config_file;
 	gchar *host_bkc;
 	gboolean update_motd;
 	gboolean enumerate_all_devices;
@@ -65,13 +65,30 @@ fu_config_reload(FuConfig *self, GError **error)
 	g_autoptr(GError) error_ignore_power = NULL;
 	g_autoptr(GError) error_only_trusted = NULL;
 	g_autoptr(GError) error_enumerate_all = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 
-	if (g_file_test(self->config_file, G_FILE_TEST_EXISTS)) {
-		g_debug("loading config values from %s", self->config_file);
-		if (!g_key_file_load_from_file(keyfile, self->config_file, G_KEY_FILE_NONE, error))
+	/* we have to load each file into a buffer as g_key_file_load_from_file() clears the
+	 * GKeyFile state before loading each file, and we want to allow the mutable version to be
+	 * incomplete and just *override* a specific option */
+	for (guint i = 0; i < self->filenames->len; i++) {
+		const gchar *fn = g_ptr_array_index(self->filenames, i);
+		g_debug("trying to load config values from %s", fn);
+		if (g_file_test(fn, G_FILE_TEST_EXISTS)) {
+			g_autoptr(GBytes) blob = fu_common_get_contents_bytes(fn, error);
+			if (blob == NULL)
+				return FALSE;
+			fu_byte_array_append_bytes(buf, blob);
+		}
+	}
+
+	/* load if either file found */
+	if (buf->len > 0) {
+		if (!g_key_file_load_from_data(keyfile,
+					       (const gchar *)buf->data,
+					       buf->len,
+					       G_KEY_FILE_NONE,
+					       error))
 			return FALSE;
-	} else {
-		g_warning("Daemon configuration %s not found", self->config_file);
 	}
 
 	/* get disabled devices */
@@ -223,7 +240,8 @@ fu_config_monitor_changed_cb(GFileMonitor *monitor,
 {
 	FuConfig *self = FU_CONFIG(user_data);
 	g_autoptr(GError) error = NULL;
-	g_debug("%s changed, reloading all configs", self->config_file);
+	g_autofree gchar *fn = g_file_get_path(file);
+	g_debug("%s changed, reloading all configs", fn);
 	if (!fu_config_reload(self, &error))
 		g_warning("failed to rescan daemon config: %s", error->message);
 	fu_config_emit_changed(self);
@@ -233,38 +251,55 @@ gboolean
 fu_config_set_key_value(FuConfig *self, const gchar *key, const gchar *value, GError **error)
 {
 	g_autoptr(GKeyFile) keyfile = g_key_file_new();
-	if (!g_key_file_load_from_file(keyfile, self->config_file, G_KEY_FILE_KEEP_COMMENTS, error))
+	const gchar *fn;
+
+	/* sanity check */
+	if (self->filenames->len == 0) {
+		g_set_error(error, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED, "no config to load");
+		return FALSE;
+	}
+
+	/* only write the file in /etc */
+	fn = g_ptr_array_index(self->filenames, 0);
+	if (!g_key_file_load_from_file(keyfile, fn, G_KEY_FILE_KEEP_COMMENTS, error))
 		return FALSE;
 	g_key_file_set_string(keyfile, "fwupd", key, value);
-	if (!g_key_file_save_to_file(keyfile, self->config_file, error))
+	if (!g_key_file_save_to_file(keyfile, fn, error))
 		return FALSE;
+
 	return fu_config_reload(self, error);
 }
 
 gboolean
 fu_config_load(FuConfig *self, GError **error)
 {
-	g_autofree gchar *configdir = NULL;
-	g_autoptr(GFile) file = NULL;
+	g_autofree gchar *configdir_mut = fu_common_get_path(FU_PATH_KIND_LOCALCONFDIR_PKG);
+	g_autofree gchar *configdir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
 
 	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
-	g_return_val_if_fail(self->config_file == NULL, FALSE);
+	g_return_val_if_fail(self->filenames->len == 0, FALSE);
 
 	/* load the main daemon config file */
-	configdir = fu_common_get_path(FU_PATH_KIND_SYSCONFDIR_PKG);
-	self->config_file = g_build_filename(configdir, "daemon.conf", NULL);
+	g_ptr_array_add(self->filenames, g_build_filename(configdir, "daemon.conf", NULL));
+	g_ptr_array_add(self->filenames, g_build_filename(configdir_mut, "daemon.conf", NULL));
 	if (!fu_config_reload(self, error))
 		return FALSE;
 
-	/* set up a notify watch */
-	file = g_file_new_for_path(self->config_file);
-	self->monitor = g_file_monitor(file, G_FILE_MONITOR_NONE, NULL, error);
-	if (self->monitor == NULL)
-		return FALSE;
-	g_signal_connect(G_FILE_MONITOR(self->monitor),
-			 "changed",
-			 G_CALLBACK(fu_config_monitor_changed_cb),
-			 self);
+	/* set up a notify watches */
+	for (guint i = 0; i < self->filenames->len; i++) {
+		const gchar *fn = g_ptr_array_index(self->filenames, i);
+		g_autoptr(GFile) file = g_file_new_for_path(fn);
+		g_autoptr(GFileMonitor) monitor = NULL;
+
+		monitor = g_file_monitor(file, G_FILE_MONITOR_NONE, NULL, error);
+		if (monitor == NULL)
+			return FALSE;
+		g_signal_connect(G_FILE_MONITOR(monitor),
+				 "changed",
+				 G_CALLBACK(fu_config_monitor_changed_cb),
+				 self);
+		g_ptr_array_add(self->monitors, g_steal_pointer(&monitor));
+	}
 
 	/* success */
 	return TRUE;
@@ -391,11 +426,13 @@ fu_config_class_init(FuConfigClass *klass)
 static void
 fu_config_init(FuConfig *self)
 {
+	self->filenames = g_ptr_array_new_with_free_func(g_free);
 	self->disabled_devices = g_ptr_array_new_with_free_func(g_free);
 	self->disabled_plugins = g_ptr_array_new_with_free_func(g_free);
 	self->approved_firmware = g_ptr_array_new_with_free_func(g_free);
 	self->blocked_firmware = g_ptr_array_new_with_free_func(g_free);
 	self->uri_schemes = g_ptr_array_new_with_free_func(g_free);
+	self->monitors = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 }
 
 static void
@@ -403,16 +440,17 @@ fu_config_finalize(GObject *obj)
 {
 	FuConfig *self = FU_CONFIG(obj);
 
-	if (self->monitor != NULL) {
-		g_file_monitor_cancel(self->monitor);
-		g_object_unref(self->monitor);
+	for (guint i = 0; i < self->monitors->len; i++) {
+		GFileMonitor *monitor = g_ptr_array_index(self->monitors, i);
+		g_file_monitor_cancel(monitor);
 	}
+	g_ptr_array_unref(self->filenames);
+	g_ptr_array_unref(self->monitors);
 	g_ptr_array_unref(self->disabled_devices);
 	g_ptr_array_unref(self->disabled_plugins);
 	g_ptr_array_unref(self->approved_firmware);
 	g_ptr_array_unref(self->blocked_firmware);
 	g_ptr_array_unref(self->uri_schemes);
-	g_free(self->config_file);
 	g_free(self->host_bkc);
 
 	G_OBJECT_CLASS(fu_config_parent_class)->finalize(obj);

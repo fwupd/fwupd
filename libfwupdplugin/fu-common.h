@@ -83,6 +83,7 @@ typedef guint FuEndianType;
  * @FU_PATH_KIND_LOCALSTATEDIR_REMOTES: The local state directory for remotes (IE
  * /var/lib/fwupd/remotes.d)
  * @FU_PATH_KIND_WIN32_BASEDIR:		The root of the install directory on Windows
+ * @FU_PATH_KIND_LOCALCONFDIR_PKG:	The package configuration override (IE /var/etc/fwupd)
  *
  * Path types to use when dynamically determining a path at runtime
  **/
@@ -111,6 +112,7 @@ typedef enum {
 	FU_PATH_KIND_LOCALSTATEDIR_METADATA,
 	FU_PATH_KIND_LOCALSTATEDIR_REMOTES,
 	FU_PATH_KIND_WIN32_BASEDIR,
+	FU_PATH_KIND_LOCALCONFDIR_PKG,
 	/*< private >*/
 	FU_PATH_KIND_LAST
 } FuPathKind;
