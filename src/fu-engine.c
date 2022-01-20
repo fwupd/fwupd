@@ -741,13 +741,18 @@ gboolean
 fu_engine_modify_config(FuEngine *self, const gchar *key, const gchar *value, GError **error)
 {
 	const gchar *keys[] = {"ArchiveSizeMax",
-			       "DisabledDevices",
+			       "ApprovedFirmware",
 			       "BlockedFirmware",
+			       "DisabledDevices",
 			       "DisabledPlugins",
-			       "IdleTimeout",
-			       "VerboseDomains",
-			       "UpdateMotd",
 			       "EnumerateAllDevices",
+			       "HostBkc",
+			       "IdleTimeout",
+			       "IgnorePower",
+			       "OnlyTrusted",
+			       "UpdateMotd",
+			       "UriSchemes",
+			       "VerboseDomains",
 			       NULL};
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
