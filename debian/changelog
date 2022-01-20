@@ -1,3 +1,9 @@
+fwupd (1.7.4-1pop0) focal; urgency=medium
+
+  * Backport to Pop
+
+ -- Jeremy Soller <jeremy@system76.com>  Thu, 20 Jan 2022 15:28:41 -0700
+
 fwupd (1.7.4-1) unstable; urgency=medium
 
   * New upstream version (1.7.4)
