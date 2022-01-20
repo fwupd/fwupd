@@ -613,14 +613,17 @@ To meet HSI-3 on systems that run this test, the result must be `supported`. *[v
 
 ### [DRAM memory encryption](#org.fwupd.hsi.EncryptedRam)
 
-TME (Intel) or TSME (AMD) is used by the firmware on supported SOCs to encrypt all data on external memory buses.
+TME (Intel) or SME (AMD) is used by the hardware on supported SOCs to encrypt all data on external memory buses.
 It mitigates against an attacker being able to capture memory data while the system is running or to capture memory by removing a DRAM chip.
 
-**Impact:** A local attacker can either extract unencrypted content by attaching debug probes on the DIM modules, or by removing them and inserting them into a computer with a modified DRAM controller.
+This encryption may be activated by either transparently via firmware configuration or by code running in the Linux kernel.
+
+**Impact:** A local attacker can either extract unencrypted content by attaching debug probes on the DIMM modules, or by removing them and inserting them into a computer with a modified DRAM controller.
 
 **Possible results:**
 
-- `enabled`: detected and enabled
+- `encrypted`: detected and enabled
+- `not-encrypted`: detected but disabled
 - `not-supported`: not available
 
 To meet HSI-4 on systems that run this test, the result must be `enabled`. *[v1.5.0]*
