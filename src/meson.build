@@ -74,6 +74,7 @@ endif
 if build_daemon
 fwupdmgr = executable(
   'fwupdmgr',
+  fu_hash,
   sources : [
     'fu-util.c',
     'fu-history.c',
@@ -114,6 +115,7 @@ endif
 if get_option('systemd') and get_option('offline')
 fwupdoffline = executable(
   'fwupdoffline',
+  fu_hash,
   sources : [
     'fu-history.c',
     'fu-offline.c',
