@@ -161,7 +161,7 @@ fu_rts54hub_rtd21xx_device_read_status_raw(FuRts54hubRtd21xxDevice *self,
 {
 	guint8 buf = 0x00;
 	if (!fu_rts54hub_rtd21xx_device_i2c_read(self,
-						 UC_ISP_SLAVE_ADDR,
+						 UC_ISP_TARGET_ADDR,
 						 UC_FOREGROUND_STATUS,
 						 &buf,
 						 sizeof(buf),
