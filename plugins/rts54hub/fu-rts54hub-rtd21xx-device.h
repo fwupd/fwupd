@@ -22,7 +22,7 @@ struct _FuRts54hubRtd21xxDeviceClass {
 
 #define I2C_DELAY_AFTER_SEND 5000 /* us */
 
-#define UC_ISP_SLAVE_ADDR	      0x3A
+#define UC_ISP_TARGET_ADDR	      0x3A
 #define UC_FOREGROUND_STATUS	      0x31
 #define UC_FOREGROUND_OPCODE	      0x33
 #define UC_FOREGROUND_ISP_DATA_OPCODE 0x34
