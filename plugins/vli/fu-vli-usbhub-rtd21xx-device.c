@@ -23,7 +23,7 @@ G_DEFINE_TYPE(FuVliUsbhubRtd21xxDevice, fu_vli_usbhub_rtd21xx_device, FU_TYPE_DE
 
 #define I2C_DELAY_AFTER_SEND 5000 /* us */
 
-#define UC_FOREGROUND_SLAVE_ADDR      0x3A
+#define UC_FOREGROUND_TARGET_ADDR     0x3A
 #define UC_FOREGROUND_STATUS	      0x31
 #define UC_FOREGROUND_OPCODE	      0x33
 #define UC_FOREGROUND_ISP_DATA_OPCODE 0x34
@@ -131,7 +131,7 @@ fu_vli_usbhub_device_rtd21xx_read_status_raw(FuVliUsbhubRtd21xxDevice *self,
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(FU_DEVICE(self)));
 	guint8 buf[] = {0x00};
 	if (!fu_vli_usbhub_device_i2c_read(parent,
-					   UC_FOREGROUND_SLAVE_ADDR,
+					   UC_FOREGROUND_TARGET_ADDR,
 					   UC_FOREGROUND_STATUS,
 					   buf,
 					   sizeof(buf),
@@ -177,7 +177,7 @@ fu_vli_usbhub_rtd21xx_ensure_version_unlocked(FuVliUsbhubRtd21xxDevice *self, GE
 	g_autofree gchar *version = NULL;
 
 	if (!fu_vli_usbhub_device_i2c_write(parent,
-					    UC_FOREGROUND_SLAVE_ADDR,
+					    UC_FOREGROUND_TARGET_ADDR,
 					    UC_FOREGROUND_OPCODE,
 					    buf_req,
 					    sizeof(buf_req),
@@ -189,7 +189,7 @@ fu_vli_usbhub_rtd21xx_ensure_version_unlocked(FuVliUsbhubRtd21xxDevice *self, GE
 	/* wait for device ready */
 	g_usleep(300000);
 	if (!fu_vli_usbhub_device_i2c_read(parent,
-					   UC_FOREGROUND_SLAVE_ADDR,
+					   UC_FOREGROUND_TARGET_ADDR,
 					   0x00,
 					   buf_rep,
 					   sizeof(buf_rep),
@@ -286,7 +286,7 @@ fu_vli_usbhub_rtd21xx_device_attach(FuDevice *device, FuProgress *progress, GErr
 	if (locker == NULL)
 		return FALSE;
 	if (!fu_vli_usbhub_device_i2c_write(parent,
-					    UC_FOREGROUND_SLAVE_ADDR,
+					    UC_FOREGROUND_TARGET_ADDR,
 					    UC_FOREGROUND_OPCODE,
 					    buf,
 					    sizeof(buf),
@@ -341,7 +341,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	write_buf[0] = ISP_CMD_ENTER_FW_UPDATE;
 	write_buf[1] = 0x01;
 	if (!fu_vli_usbhub_device_i2c_write(parent,
-					    UC_FOREGROUND_SLAVE_ADDR,
+					    UC_FOREGROUND_TARGET_ADDR,
 					    UC_FOREGROUND_OPCODE,
 					    write_buf,
 					    2,
@@ -355,7 +355,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	/* get project ID address */
 	write_buf[0] = ISP_CMD_GET_PROJECT_ID_ADDR;
 	if (!fu_vli_usbhub_device_i2c_write(parent,
-					    UC_FOREGROUND_SLAVE_ADDR,
+					    UC_FOREGROUND_TARGET_ADDR,
 					    UC_FOREGROUND_OPCODE,
 					    write_buf,
 					    1,
@@ -367,7 +367,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	/* read back 6 bytes data */
 	g_usleep(I2C_DELAY_AFTER_SEND * 40);
 	if (!fu_vli_usbhub_device_i2c_read(parent,
-					   UC_FOREGROUND_SLAVE_ADDR,
+					   UC_FOREGROUND_TARGET_ADDR,
 					   UC_FOREGROUND_STATUS,
 					   read_buf,
 					   6,
@@ -402,7 +402,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 	if (!fu_vli_usbhub_device_i2c_write(parent,
-					    UC_FOREGROUND_SLAVE_ADDR,
+					    UC_FOREGROUND_TARGET_ADDR,
 					    UC_FOREGROUND_OPCODE,
 					    write_buf,
 					    project_id_count + 1,
@@ -417,7 +417,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 	write_buf[0] = ISP_CMD_FW_UPDATE_START;
 	fu_common_write_uint16(write_buf + 1, ISP_DATA_BLOCKSIZE, G_BIG_ENDIAN);
 	if (!fu_vli_usbhub_device_i2c_write(parent,
-					    UC_FOREGROUND_SLAVE_ADDR,
+					    UC_FOREGROUND_TARGET_ADDR,
 					    UC_FOREGROUND_OPCODE,
 					    write_buf,
 					    3,
@@ -437,7 +437,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 		if (!fu_vli_usbhub_device_rtd21xx_read_status(self, NULL, error))
 			return FALSE;
 		if (!fu_vli_usbhub_device_i2c_write(parent,
-						    UC_FOREGROUND_SLAVE_ADDR,
+						    UC_FOREGROUND_TARGET_ADDR,
 						    UC_FOREGROUND_ISP_DATA_OPCODE,
 						    fu_chunk_get_data_out(chk),
 						    fu_chunk_get_data_sz(chk),
@@ -460,7 +460,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 		return FALSE;
 	write_buf[0] = ISP_CMD_FW_UPDATE_ISP_DONE;
 	if (!fu_vli_usbhub_device_i2c_write(parent,
-					    UC_FOREGROUND_SLAVE_ADDR,
+					    UC_FOREGROUND_TARGET_ADDR,
 					    UC_FOREGROUND_OPCODE,
 					    write_buf,
 					    1,
@@ -475,7 +475,7 @@ fu_vli_usbhub_rtd21xx_device_write_firmware(FuDevice *device,
 		return FALSE;
 	write_buf[0] = ISP_CMD_FW_UPDATE_EXIT;
 	if (!fu_vli_usbhub_device_i2c_write(parent,
-					    UC_FOREGROUND_SLAVE_ADDR,
+					    UC_FOREGROUND_TARGET_ADDR,
 					    UC_FOREGROUND_OPCODE,
 					    write_buf,
 					    1,

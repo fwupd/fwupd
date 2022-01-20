@@ -41,7 +41,7 @@ fu_rts54hub_rtd21xx_ensure_version_unlocked(FuRts54hubRtd21xxBackground *self, G
 	g_autofree gchar *version = NULL;
 
 	if (!fu_rts54hub_rtd21xx_device_i2c_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						  UC_ISP_SLAVE_ADDR,
+						  UC_ISP_TARGET_ADDR,
 						  UC_BACKGROUND_OPCODE,
 						  buf_req,
 						  sizeof(buf_req),
@@ -53,7 +53,7 @@ fu_rts54hub_rtd21xx_ensure_version_unlocked(FuRts54hubRtd21xxBackground *self, G
 	/* wait for device ready */
 	g_usleep(300000);
 	if (!fu_rts54hub_rtd21xx_device_i2c_read(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						 UC_ISP_SLAVE_ADDR,
+						 UC_ISP_TARGET_ADDR,
 						 0x00,
 						 buf_rep,
 						 sizeof(buf_rep),
@@ -139,7 +139,7 @@ fu_rts54hub_rtd21xx_background_attach(FuDevice *device, FuProgress *progress, GE
 	if (locker == NULL)
 		return FALSE;
 	if (!fu_rts54hub_rtd21xx_device_i2c_write(self,
-						  UC_ISP_SLAVE_ADDR,
+						  UC_ISP_TARGET_ADDR,
 						  UC_BACKGROUND_OPCODE,
 						  buf,
 						  sizeof(buf),
@@ -226,7 +226,7 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 	/* get project ID address */
 	write_buf[0] = ISP_CMD_GET_PROJECT_ID_ADDR;
 	if (!fu_rts54hub_rtd21xx_device_i2c_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						  UC_ISP_SLAVE_ADDR,
+						  UC_ISP_TARGET_ADDR,
 						  UC_BACKGROUND_OPCODE,
 						  write_buf,
 						  1,
@@ -238,7 +238,7 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 	/* read back 6 bytes data */
 	g_usleep(I2C_DELAY_AFTER_SEND * 40);
 	if (!fu_rts54hub_rtd21xx_device_i2c_read(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						 UC_ISP_SLAVE_ADDR,
+						 UC_ISP_TARGET_ADDR,
 						 0x00,
 						 read_buf,
 						 6,
@@ -271,7 +271,7 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 		return FALSE;
 	}
 	if (!fu_rts54hub_rtd21xx_device_i2c_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						  UC_ISP_SLAVE_ADDR,
+						  UC_ISP_TARGET_ADDR,
 						  UC_BACKGROUND_OPCODE,
 						  write_buf,
 						  project_id_count + 1,
@@ -286,7 +286,7 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 	write_buf[0] = ISP_CMD_FW_UPDATE_START;
 	fu_common_write_uint16(write_buf + 1, ISP_DATA_BLOCKSIZE, G_BIG_ENDIAN);
 	if (!fu_rts54hub_rtd21xx_device_i2c_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						  UC_ISP_SLAVE_ADDR,
+						  UC_ISP_TARGET_ADDR,
 						  UC_BACKGROUND_OPCODE,
 						  write_buf,
 						  3,
@@ -308,7 +308,7 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 							    error))
 			return FALSE;
 		if (!fu_rts54hub_rtd21xx_device_i2c_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
-							  UC_ISP_SLAVE_ADDR,
+							  UC_ISP_TARGET_ADDR,
 							  UC_BACKGROUND_ISP_DATA_OPCODE,
 							  fu_chunk_get_data(chk),
 							  fu_chunk_get_data_sz(chk),
@@ -331,7 +331,7 @@ fu_rts54hub_rtd21xx_background_write_firmware(FuDevice *device,
 		return FALSE;
 	write_buf[0] = ISP_CMD_FW_UPDATE_ISP_DONE;
 	if (!fu_rts54hub_rtd21xx_device_i2c_write(FU_RTS54HUB_RTD21XX_DEVICE(self),
-						  UC_ISP_SLAVE_ADDR,
+						  UC_ISP_TARGET_ADDR,
 						  UC_BACKGROUND_OPCODE,
 						  write_buf,
 						  1,
