@@ -52,9 +52,7 @@ fu_vli_usbhub_header_to_string(FuVliUsbhubHeader *hdr, guint idt, GString *str)
 	fu_vli_usbhub_header_export(hdr, bn);
 	xml = xb_builder_node_export(bn,
 				     XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE |
-#if LIBXMLB_CHECK_VERSION(0, 2, 2)
 					 XB_NODE_EXPORT_FLAG_COLLAPSE_EMPTY |
-#endif
 					 XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
 				     NULL);
 	fu_common_string_append_kv(str, idt, "xml", xml);

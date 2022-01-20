@@ -994,29 +994,18 @@ fu_engine_get_component_by_guid(FuEngine *self, const gchar *guid)
 {
 	XbNode *component;
 	g_autoptr(GError) error_local = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
-#endif
 
 	/* no components in silo */
 	if (self->query_component_by_guid == NULL)
 		return NULL;
 
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	xb_query_context_set_flags(&context, XB_QUERY_FLAG_USE_INDEXES);
 	xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
 	component = xb_silo_query_first_with_context(self->silo,
 						     self->query_component_by_guid,
 						     &context,
 						     &error_local);
-#else
-	if (!xb_query_bind_str(self->query_component_by_guid, 0, guid, &error_local)) {
-		g_warning("failed to bind 0: %s", error_local->message);
-		return NULL;
-	}
-	component =
-	    xb_silo_query_first_full(self->silo, self->query_component_by_guid, &error_local);
-#endif
 	if (component == NULL) {
 		if (!g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) &&
 		    !g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT))
@@ -1102,21 +1091,11 @@ fu_engine_verify_from_system_metadata(FuEngine *self, FuDevice *device, GError *
 		const gchar *guid = g_ptr_array_index(guids, i);
 		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GPtrArray) releases = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 		g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
-#endif
 
 		/* bind GUID and then query */
-#if LIBXMLB_CHECK_VERSION(0, 3, 0)
 		xb_value_bindings_bind_str(xb_query_context_get_bindings(&context), 0, guid, NULL);
 		releases = xb_silo_query_with_context(self->silo, query, &context, &error_local);
-#else
-		if (!xb_query_bind_str(query, 0, guid, error)) {
-			g_prefix_error(error, "failed to bind string: ");
-			return NULL;
-		}
-		releases = xb_silo_query_full(self->silo, query, &error_local);
-#endif
 		if (releases == NULL) {
 			if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND) ||
 			    g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_INVALID_ARGUMENT)) {
@@ -2669,9 +2648,7 @@ fu_engine_install(FuEngine *self,
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(XbNode) rel_newest = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	g_autoptr(XbQuery) query = NULL;
-#endif
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(FU_IS_PROGRESS(progress), FALSE);
@@ -2694,7 +2671,6 @@ fu_engine_install(FuEngine *self,
 	}
 
 	/* get the newest version */
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	query = xb_query_new_full(xb_node_get_silo(component),
 				  "releases/release",
 				  XB_QUERY_FLAG_FORCE_NODE_CACHE,
@@ -2702,9 +2678,6 @@ fu_engine_install(FuEngine *self,
 	if (query == NULL)
 		return FALSE;
 	rel_newest = xb_node_query_first_full(component, query, &error_local);
-#else
-	rel_newest = xb_node_query_first(component, "releases/release", &error_local);
-#endif
 	if (rel_newest == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -2741,11 +2714,7 @@ fu_engine_install(FuEngine *self,
 	/* install each intermediate release, or install only the newest version */
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES)) {
 		g_autoptr(GPtrArray) rels = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 		rels = xb_node_query_full(component, query, &error_local);
-#else
-		rels = xb_node_query(component, "releases/release", 0, &error_local);
-#endif
 		if (rels == NULL) {
 			g_set_error(error,
 				    FWUPD_ERROR,
@@ -4301,9 +4270,7 @@ fu_engine_get_result_from_component(FuEngine *self,
 	g_autoptr(GPtrArray) tags = NULL;
 	g_autoptr(XbNode) description = NULL;
 	g_autoptr(XbNode) release = NULL;
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	g_autoptr(XbQuery) query = NULL;
-#endif
 
 	dev = fu_device_new_with_context(self->ctx);
 	provides = xb_node_query(component, "provides/firmware[@type=$'flashed']", 0, &error_local);
@@ -4369,7 +4336,6 @@ fu_engine_get_result_from_component(FuEngine *self,
 	}
 
 	/* verify trust */
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 	query = xb_query_new_full(xb_node_get_silo(component),
 				  "releases/release",
 				  XB_QUERY_FLAG_FORCE_NODE_CACHE,
@@ -4377,9 +4343,6 @@ fu_engine_get_result_from_component(FuEngine *self,
 	if (query == NULL)
 		return NULL;
 	release = xb_node_query_first_full(component, query, &error_local);
-#else
-	release = xb_node_query_first(component, "releases/release", &error_local);
-#endif
 	if (release == NULL) {
 		g_set_error(error,
 			    FWUPD_ERROR,

@@ -1069,11 +1069,7 @@ fu_cabinet_parse(FuCabinet *self, GBytes *data, FuCabinetParseFlags flags, GErro
 	/* prepare query */
 	query = xb_query_new_full(self->silo,
 				  "releases/release",
-#if LIBXMLB_CHECK_VERSION(0, 2, 0)
 				  XB_QUERY_FLAG_FORCE_NODE_CACHE,
-#else
-				  XB_QUERY_FLAG_NONE,
-#endif
 				  error);
 	if (query == NULL)
 		return FALSE;

@@ -592,6 +592,9 @@
     <distro id="fedora">
       <package>gtk-doc</package>
     </distro>
+    <distro id="void">
+      <package>gtk-doc</package>
+    </distro>
     <distro id="debian">
       <control />
       <package variant="x86_64" />
