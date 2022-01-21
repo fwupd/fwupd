@@ -29,8 +29,6 @@ gboolean
 fu_history_remove_device(FuHistory *self, FuDevice *device, GError **error);
 gboolean
 fu_history_remove_all(FuHistory *self, GError **error);
-gboolean
-fu_history_remove_all_with_state(FuHistory *self, FwupdUpdateState update_state, GError **error);
 FuDevice *
 fu_history_get_device_by_id(FuHistory *self, const gchar *device_id, GError **error);
 GPtrArray *

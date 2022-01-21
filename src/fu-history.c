@@ -780,58 +780,6 @@ fu_history_add_device(FuHistory *self, FuDevice *device, FwupdRelease *release, 
 }
 
 /**
- * fu_history_remove_all_with_state:
- * @self: a #FuHistory
- * @update_state: a #FwupdUpdateState
- * @error: (nullable): optional return location for an error
- *
- * Remove all devices from the history database that match
- * state update_state
- *
- * Returns: @TRUE if successful, @FALSE for failure
- *
- * Since: 1.0.4
- **/
-gboolean
-fu_history_remove_all_with_state(FuHistory *self, FwupdUpdateState update_state, GError **error)
-{
-#ifdef HAVE_SQLITE
-	gint rc;
-	g_autoptr(sqlite3_stmt) stmt = NULL;
-	g_autoptr(GRWLockWriterLocker) locker = NULL;
-
-	g_return_val_if_fail(FU_IS_HISTORY(self), FALSE);
-
-	/* lazy load */
-	if (!fu_history_load(self, error))
-		return FALSE;
-
-	/* remove entries */
-	locker = g_rw_lock_writer_locker_new(&self->db_mutex);
-	g_return_val_if_fail(locker != NULL, FALSE);
-	g_debug("removing all devices with update_state %s",
-		fwupd_update_state_to_string(update_state));
-	rc = sqlite3_prepare_v2(self->db,
-				"DELETE FROM history WHERE update_state = ?1",
-				-1,
-				&stmt,
-				NULL);
-	if (rc != SQLITE_OK) {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_INTERNAL,
-			    "Failed to prepare SQL to delete history: %s",
-			    sqlite3_errmsg(self->db));
-		return FALSE;
-	}
-	sqlite3_bind_int(stmt, 1, update_state);
-	return fu_history_stmt_exec(self, stmt, NULL, error);
-#else
-	return TRUE;
-#endif
-}
-
-/**
  * fu_history_remove_all:
  * @self: a #FuHistory
  * @error: (nullable): optional return location for an error

@@ -5653,6 +5653,10 @@ fu_engine_clear_results(FuEngine *self, const gchar *device_id, GError **error)
 			return FALSE;
 	}
 
+	/* if the offline update never got run, unstage it */
+	if (fu_device_get_update_state(device) == FWUPD_UPDATE_STATE_PENDING)
+		fu_device_set_update_state(device, FWUPD_UPDATE_STATE_UNKNOWN);
+
 	/* override */
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NOTIFIED);
 	return fu_history_modify_device(self->history, device, error);
