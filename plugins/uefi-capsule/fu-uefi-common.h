@@ -9,7 +9,10 @@
 
 #include <fwupdplugin.h>
 
+#ifdef HAVE_EFI_TIME_T
 #include <efivar/efivar.h>
+#endif
+
 #include <glib.h>
 
 #define EFI_CAPSULE_HEADER_FLAGS_PERSIST_ACROSS_RESET  0x00010000
