@@ -28,7 +28,6 @@
 #include "fwupd-release-private.h"
 #include "fwupd-remote-private.h"
 
-#include "fu-history.h"
 #include "fu-plugin-private.h"
 #include "fu-polkit-agent.h"
 #include "fu-progressbar.h"
@@ -1167,13 +1166,6 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 	fu_util_print_tree(root, title);
 
 	return TRUE;
-}
-
-static gboolean
-fu_util_clear_history(FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	g_autoptr(FuHistory) history = fu_history_new();
-	return fu_history_remove_all(history, error);
 }
 
 static gboolean
@@ -3874,12 +3866,6 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Show history of firmware updates"),
 			      fu_util_get_history);
-	fu_util_cmd_array_add(cmd_array,
-			      "clear-history",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Erase all firmware update history"),
-			      fu_util_clear_history);
 	fu_util_cmd_array_add(cmd_array,
 			      "report-history",
 			      NULL,

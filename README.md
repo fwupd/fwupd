@@ -79,10 +79,6 @@ To report the status of an update run:
 
 `# fwupdmgr report-history`
 
-To clear the local history of updates:
-
-`# fwupdmgr clear-history`
-
  Only updates that were distributed from the LVFS will be reported to the LVFS.
 
 ## Enterprise use
