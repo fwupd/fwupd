@@ -52,6 +52,8 @@ MESON_ARGS=	-Dgudev=false \
 		-Dplugin_realtek_mst=false \
 		-Dplugin_thunderbolt=false \
 		-Dplugin_tpm=false \
+		-Dplugin_bcm57xx=false \
+		-Dplugin_ep963x=false \
 		-Dpolkit=false \
 		-Dsystemd=false \
 		-Doffline=false \
