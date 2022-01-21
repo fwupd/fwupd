@@ -1,7 +1,6 @@
 _fwupdmgr_cmd_list=(
 	'activate'
 	'block-firmware'
-	'clear-history'
 	'clear-results'
 	'disable-remote'
 	'device-test'

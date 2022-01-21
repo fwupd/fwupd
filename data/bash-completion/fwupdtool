@@ -1,6 +1,7 @@
 _fwupdtool_cmd_list=(
 	'activate'
 	'build-firmware'
+	'clear-history'
 	'esp-list'
 	'esp-mount'
 	'esp-unmount'

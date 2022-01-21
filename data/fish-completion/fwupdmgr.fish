@@ -35,7 +35,6 @@ complete -c fwupdmgr -l filter -d 'Filter with a set of device flags'
 # complete subcommands
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a activate -d 'Activate devices'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a block-firmware -d 'Blocks a specific firmware from being installed'
-complete -c fwupdmgr -n '__fish_use_subcommand' -x -a clear-history -d 'Erase all firmware update history'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a clear-results -d 'Clears the results from the last update'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a disable-remote -d 'Disables a given remote'
 complete -c fwupdmgr -n '__fish_use_subcommand' -x -a downgrade -d 'Downgrades the firmware on a device'
