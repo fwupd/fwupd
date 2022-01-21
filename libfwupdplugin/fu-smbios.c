@@ -73,7 +73,7 @@ typedef struct {
 G_DEFINE_TYPE(FuSmbios, fu_smbios, FU_TYPE_FIRMWARE)
 
 static void
-fu_smbios_convert_dt_value(FuSmbios *self, guint8 type, guint8 offset, guint8 value)
+fu_smbios_set_integer(FuSmbios *self, guint8 type, guint8 offset, guint8 value)
 {
 	FuSmbiosItem *item = g_ptr_array_index(self->items, type);
 	for (guint i = item->buf->len; i < (guint)offset + 1; i++)
@@ -82,36 +82,63 @@ fu_smbios_convert_dt_value(FuSmbios *self, guint8 type, guint8 offset, guint8 va
 }
 
 static void
+fu_smbios_set_string(FuSmbios *self, guint8 type, guint8 offset, const gchar *buf, gssize bufsz)
+{
+	FuSmbiosItem *item = g_ptr_array_index(self->items, type);
+
+	/* NUL terminated UTF-8 */
+	if (bufsz < 0)
+		bufsz = strlen(buf);
+
+	/* add value to string table */
+	g_ptr_array_add(item->strings, g_strndup(buf, (gsize)bufsz));
+	fu_smbios_set_integer(self, type, offset, item->strings->len);
+}
+
+static gboolean
 fu_smbios_convert_dt_string(FuSmbios *self,
 			    guint8 type,
 			    guint8 offset,
 			    const gchar *path,
 			    const gchar *subpath)
 {
-	FuSmbiosItem *item = g_ptr_array_index(self->items, type);
 	gsize bufsz = 0;
 	g_autofree gchar *fn = g_build_filename(path, subpath, NULL);
 	g_autofree gchar *buf = NULL;
 
 	/* not found */
 	if (!g_file_get_contents(fn, &buf, &bufsz, NULL))
-		return;
+		return FALSE;
+	if (bufsz == 0)
+		return FALSE;
+	fu_smbios_set_string(self, type, offset, buf, (gssize)bufsz);
+	return TRUE;
+}
 
-	/* add to strtab */
-	g_ptr_array_add(item->strings, g_strndup(buf, bufsz));
-	fu_smbios_convert_dt_value(self, type, offset, item->strings->len);
+static gchar **
+fu_smbios_convert_dt_string_array(FuSmbios *self, const gchar *path, const gchar *subpath)
+{
+	gsize bufsz = 0;
+	g_autofree gchar *fn = g_build_filename(path, subpath, NULL);
+	g_autofree gchar *buf = NULL;
+	g_auto(GStrv) split = NULL;
+
+	/* not found */
+	if (!g_file_get_contents(fn, &buf, &bufsz, NULL))
+		return NULL;
+	if (bufsz == 0)
+		return NULL;
+
+	/* return only if valid */
+	split = g_strsplit(buf, ",", -1);
+	if (g_strv_length(split) == 0)
+		return NULL;
+
+	/* success */
+	return g_steal_pointer(&split);
 }
 
 #ifdef HAVE_KENV_H
-static void
-fu_smbios_kenv_sysctl_string(FuSmbios *self, guint8 type, guint8 offset, const gchar *buf)
-{
-	FuSmbiosItem *item = g_ptr_array_index(self->items, type);
-
-	/* add to strtab */
-	g_ptr_array_add(item->strings, g_strdup(buf));
-	fu_smbios_convert_dt_value(self, type, offset, item->strings->len);
-}
 
 static gboolean
 fu_smbios_convert_kenv_string(FuSmbios *self,
@@ -123,7 +150,7 @@ fu_smbios_convert_kenv_string(FuSmbios *self,
 	g_autofree gchar *value = fu_kenv_get_string(sminfo, error);
 	if (value == NULL)
 		return FALSE;
-	fu_smbios_kenv_sysctl_string(self, type, offset, value);
+	fu_smbios_set_string(self, type, offset, buf, -1);
 	return TRUE;
 }
 
@@ -216,6 +243,9 @@ fu_smbios_setup_from_kenv(FuSmbios *self, GError **error)
 static gboolean
 fu_smbios_setup_from_path_dt(FuSmbios *self, const gchar *path, GError **error)
 {
+	gboolean has_family;
+	gboolean has_model;
+	gboolean has_vendor;
 	g_autofree gchar *fn_battery = NULL;
 
 	/* add all four faked structures */
@@ -230,24 +260,60 @@ fu_smbios_setup_from_path_dt(FuSmbios *self, const gchar *path, GError **error)
 	/* if it has a battery it is portable (probably a laptop) */
 	fn_battery = g_build_filename(path, "battery", NULL);
 	if (g_file_test(fn_battery, G_FILE_TEST_EXISTS)) {
-		fu_smbios_convert_dt_value(self,
-					   FU_SMBIOS_STRUCTURE_TYPE_CHASSIS,
-					   0x05,
-					   FU_SMBIOS_CHASSIS_KIND_PORTABLE);
+		fu_smbios_set_integer(self,
+				      FU_SMBIOS_STRUCTURE_TYPE_CHASSIS,
+				      0x05,
+				      FU_SMBIOS_CHASSIS_KIND_PORTABLE);
 	}
 
 	/* DMI:Manufacturer */
-	fu_smbios_convert_dt_string(self, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x04, path, "vendor");
+	has_vendor = fu_smbios_convert_dt_string(self,
+						 FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
+						 0x04,
+						 path,
+						 "vendor");
 
 	/* DMI:Family */
-	fu_smbios_convert_dt_string(self,
-				    FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
-				    0x1a,
-				    path,
-				    "model-name");
+	has_family = fu_smbios_convert_dt_string(self,
+						 FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
+						 0x1a,
+						 path,
+						 "model-name");
 
 	/* DMI:ProductName */
-	fu_smbios_convert_dt_string(self, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x05, path, "model");
+	has_model =
+	    fu_smbios_convert_dt_string(self, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x05, path, "model");
+
+	/* fall back to the first compatible string if required */
+	if (!has_vendor || !has_model || !has_family) {
+		g_auto(GStrv) parts = NULL;
+
+		/* NULL if invalid, otherwise we're sure this has size of exactly 3 */
+		parts = fu_smbios_convert_dt_string_array(self, path, "compatible");
+		if (parts != NULL) {
+			if (!has_vendor && g_strv_length(parts) > 0) {
+				fu_smbios_set_string(self,
+						     FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
+						     0x4,
+						     parts[0],
+						     -1);
+			}
+			if (!has_model && g_strv_length(parts) > 1) {
+				fu_smbios_set_string(self,
+						     FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
+						     0x05,
+						     parts[1],
+						     -1);
+			}
+			if (!has_family && g_strv_length(parts) > 2) {
+				fu_smbios_set_string(self,
+						     FU_SMBIOS_STRUCTURE_TYPE_SYSTEM,
+						     0x1a,
+						     parts[2],
+						     -1);
+			}
+		}
+	}
 
 	/* DMI:BiosVersion */
 	fu_smbios_convert_dt_string(self,
@@ -375,24 +441,19 @@ fu_smbios_setup_from_file(FuSmbios *self, const gchar *filename, GError **error)
 static gboolean
 fu_smbios_encode_string_from_kernel(FuSmbios *self,
 				    const gchar *file_contents,
-				    guint8 smbios_type,
-				    guint8 smbios_offset,
+				    guint8 type,
+				    guint8 offset,
 				    GError **error)
 {
-	FuSmbiosItem *item = g_ptr_array_index(self->items, smbios_type);
-
-	/* add value to string table */
-	g_ptr_array_add(item->strings, g_strdup(file_contents));
-	/* add string table index to SMBIOS table */
-	fu_smbios_convert_dt_value(self, smbios_type, smbios_offset, item->strings->len);
+	fu_smbios_set_string(self, type, offset, file_contents, -1);
 	return TRUE;
 }
 
 static gboolean
 fu_smbios_encode_byte_from_kernel(FuSmbios *self,
 				  const gchar *file_contents,
-				  guint8 smbios_type,
-				  guint8 smbios_offset,
+				  guint8 type,
+				  guint8 offset,
 				  GError **error)
 {
 	gchar *endp;
@@ -415,7 +476,7 @@ fu_smbios_encode_byte_from_kernel(FuSmbios *self,
 		return FALSE;
 	}
 
-	fu_smbios_convert_dt_value(self, smbios_type, smbios_offset, value);
+	fu_smbios_set_integer(self, type, offset, value);
 	return TRUE;
 }
 

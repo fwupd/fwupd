@@ -437,6 +437,35 @@ fu_smbios_dt_func(void)
 }
 
 static void
+fu_smbios_dt_fallback_func(void)
+{
+	const gchar *str;
+	gboolean ret;
+	g_autofree gchar *path = NULL;
+	g_autoptr(FuSmbios) smbios = fu_smbios_new();
+	g_autoptr(GError) error = NULL;
+
+	path = g_test_build_filename(G_TEST_DIST, "tests", "devicetree-fallback", "base", NULL);
+	ret = fu_smbios_setup_from_path(smbios, path, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+	if (g_getenv("FWUPD_VERBOSE") != NULL) {
+		g_autofree gchar *dump = fu_smbios_to_string(smbios);
+		g_debug("%s", dump);
+	}
+
+	/* get vendor */
+	str = fu_smbios_get_string(smbios, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x04, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(str, ==, "solidrun");
+
+	/* get model */
+	str = fu_smbios_get_string(smbios, FU_SMBIOS_STRUCTURE_TYPE_SYSTEM, 0x05, &error);
+	g_assert_no_error(error);
+	g_assert_cmpstr(str, ==, "honeycomb");
+}
+
+static void
 fu_smbios_class_func(void)
 {
 	g_autofree gchar *path = g_test_build_filename(G_TEST_DIST, "tests", "dmi", "class", NULL);
@@ -3945,6 +3974,7 @@ main(int argc, char **argv)
 	g_test_add_func("/fwupd/smbios", fu_smbios_func);
 	g_test_add_func("/fwupd/smbios3", fu_smbios3_func);
 	g_test_add_func("/fwupd/smbios{dt}", fu_smbios_dt_func);
+	g_test_add_func("/fwupd/smbios{dt-fallback}", fu_smbios_dt_fallback_func);
 	g_test_add_func("/fwupd/smbios{class}", fu_smbios_class_func);
 	g_test_add_func("/fwupd/firmware", fu_firmware_func);
 	g_test_add_func("/fwupd/firmware{common}", fu_firmware_common_func);
