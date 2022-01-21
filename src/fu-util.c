@@ -1487,13 +1487,6 @@ fu_util_clear_results(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
-fu_util_clear_offline(FuUtilPrivate *priv, gchar **values, GError **error)
-{
-	g_autoptr(FuHistory) history = fu_history_new();
-	return fu_history_remove_all_with_state(history, FWUPD_UPDATE_STATE_PENDING, error);
-}
-
-static gboolean
 fu_util_verify_update(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FwupdDevice) dev = NULL;
@@ -3943,12 +3936,6 @@ main(int argc, char *argv[])
 			      /* TRANSLATORS: command description */
 			      _("Clears the results from the last update"),
 			      fu_util_clear_results);
-	fu_util_cmd_array_add(cmd_array,
-			      "clear-offline",
-			      NULL,
-			      /* TRANSLATORS: command description */
-			      _("Clears any updates scheduled to be updated offline"),
-			      fu_util_clear_offline);
 	fu_util_cmd_array_add(cmd_array,
 			      "get-results",
 			      /* TRANSLATORS: command argument: uppercase, spaces->dashes */
