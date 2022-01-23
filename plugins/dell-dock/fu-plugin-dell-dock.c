@@ -139,15 +139,22 @@ fu_plugin_dell_dock_backend_device_added(FuPlugin *plugin, FuDevice *device, GEr
 	const gchar *key = NULL;
 	GPtrArray *devices;
 	FuDevice *ec_device;
-	guint8 ec_type;
+	guint device_vid;
+	guint device_pid;
 
 	/* not interesting */
 	if (!FU_IS_USB_DEVICE(device))
 		return TRUE;
 
+	device_vid = (guint)fu_usb_device_get_vid(FU_USB_DEVICE(device));
+	device_pid = (guint)fu_usb_device_get_pid(FU_USB_DEVICE(device));
+	g_debug("%s: processing usb device, vid: 0x%x, pid: 0x%x",
+		fu_plugin_get_name(plugin),
+		device_vid,
+		device_pid);
+
 	/* GR controller internal USB HUB */
-	if ((guint)fu_usb_device_get_vid(FU_USB_DEVICE(device)) == GR_USB_VID &&
-	    (guint)fu_usb_device_get_pid(FU_USB_DEVICE(device)) == GR_USB_PID) {
+	if (device_vid == GR_USB_VID && device_pid == GR_USB_PID) {
 		g_autoptr(FuDellDockUsb4) usb4_dev = NULL;
 		usb4_dev = fu_dell_dock_usb4_new(FU_USB_DEVICE(device));
 		locker = fu_device_locker_new(FU_DEVICE(usb4_dev), error);
@@ -178,11 +185,11 @@ fu_plugin_dell_dock_backend_device_added(FuPlugin *plugin, FuDevice *device, GEr
 	/* add hub instance id after ec probed */
 	devices = fu_plugin_get_devices(plugin);
 	ec_device = fu_plugin_dell_dock_get_ec(devices);
-	ec_type = fu_dell_dock_get_ec_type(ec_device);
-	fu_dell_dock_hub_add_instance(FU_DEVICE(hub), ec_type);
-
+	if (ec_device != NULL) {
+		guint8 ec_type = fu_dell_dock_get_ec_type(ec_device);
+		fu_dell_dock_hub_add_instance(FU_DEVICE(hub), ec_type);
+	}
 	fu_plugin_device_add(plugin, FU_DEVICE(hub));
-
 	return TRUE;
 }
 
