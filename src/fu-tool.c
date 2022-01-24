@@ -3573,7 +3573,8 @@ main(int argc, char *argv[])
 		fu_engine_request_set_feature_flags(
 		    priv->request,
 		    FWUPD_FEATURE_FLAG_DETACH_ACTION | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
-			FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_UPDATE_ACTION);
+			FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_UPDATE_ACTION |
+			FWUPD_FEATURE_FLAG_COMMUNITY_TEXT);
 	}
 	fu_progressbar_set_interactive(priv->progressbar, priv->interactive);
 
