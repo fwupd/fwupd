@@ -532,6 +532,8 @@ fwupd_feature_flag_to_string(FwupdFeatureFlags feature_flag)
 		return "requests";
 	if (feature_flag == FWUPD_FEATURE_FLAG_FDE_WARNING)
 		return "fde-warning";
+	if (feature_flag == FWUPD_FEATURE_FLAG_COMMUNITY_TEXT)
+		return "community-text";
 	return NULL;
 }
 
@@ -562,6 +564,8 @@ fwupd_feature_flag_from_string(const gchar *feature_flag)
 		return FWUPD_FEATURE_FLAG_REQUESTS;
 	if (g_strcmp0(feature_flag, "fde-warning") == 0)
 		return FWUPD_FEATURE_FLAG_FDE_WARNING;
+	if (g_strcmp0(feature_flag, "community-text") == 0)
+		return FWUPD_FEATURE_FLAG_COMMUNITY_TEXT;
 	return FWUPD_FEATURE_FLAG_LAST;
 }
 
@@ -642,6 +646,8 @@ fwupd_release_flag_to_string(FwupdReleaseFlags release_flag)
 		return "blocked-approval";
 	if (release_flag == FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH)
 		return "is-alternate-branch";
+	if (release_flag == FWUPD_RELEASE_FLAG_IS_COMMUNITY)
+		return "is-community";
 	return NULL;
 }
 
@@ -672,6 +678,8 @@ fwupd_release_flag_from_string(const gchar *release_flag)
 		return FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL;
 	if (g_strcmp0(release_flag, "is-alternate-branch") == 0)
 		return FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH;
+	if (g_strcmp0(release_flag, "is-community") == 0)
+		return FWUPD_RELEASE_FLAG_IS_COMMUNITY;
 	return FWUPD_RELEASE_FLAG_NONE;
 }
 
