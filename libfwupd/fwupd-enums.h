@@ -73,17 +73,19 @@ typedef enum {
  * @FWUPD_FEATURE_FLAG_SWITCH_BRANCH:		Can switch the firmware branch
  * @FWUPD_FEATURE_FLAG_REQUESTS:		Can show interactive requests
  * @FWUPD_FEATURE_FLAG_FDE_WARNING:		Can warn about full disk encryption
+ * @FWUPD_FEATURE_FLAG_COMMUNITY_TEXT:		Can show information about community supported
  *
  * The flags to the feature capabilities of the front-end client.
  **/
 typedef enum {
-	FWUPD_FEATURE_FLAG_NONE = 0,		   /* Since: 1.4.5 */
-	FWUPD_FEATURE_FLAG_CAN_REPORT = 1 << 0,	   /* Since: 1.4.5 */
-	FWUPD_FEATURE_FLAG_DETACH_ACTION = 1 << 1, /* Since: 1.4.5 */
-	FWUPD_FEATURE_FLAG_UPDATE_ACTION = 1 << 2, /* Since: 1.4.5 */
-	FWUPD_FEATURE_FLAG_SWITCH_BRANCH = 1 << 3, /* Since: 1.5.0 */
-	FWUPD_FEATURE_FLAG_REQUESTS = 1 << 4,	   /* Since: 1.6.2 */
-	FWUPD_FEATURE_FLAG_FDE_WARNING = 1 << 5,   /* Since: 1.7.1 */
+	FWUPD_FEATURE_FLAG_NONE = 0,		    /* Since: 1.4.5 */
+	FWUPD_FEATURE_FLAG_CAN_REPORT = 1 << 0,	    /* Since: 1.4.5 */
+	FWUPD_FEATURE_FLAG_DETACH_ACTION = 1 << 1,  /* Since: 1.4.5 */
+	FWUPD_FEATURE_FLAG_UPDATE_ACTION = 1 << 2,  /* Since: 1.4.5 */
+	FWUPD_FEATURE_FLAG_SWITCH_BRANCH = 1 << 3,  /* Since: 1.5.0 */
+	FWUPD_FEATURE_FLAG_REQUESTS = 1 << 4,	    /* Since: 1.6.2 */
+	FWUPD_FEATURE_FLAG_FDE_WARNING = 1 << 5,    /* Since: 1.7.1 */
+	FWUPD_FEATURE_FLAG_COMMUNITY_TEXT = 1 << 6, /* Since: 1.7.5 */
 	/*< private >*/
 	FWUPD_FEATURE_FLAG_LAST
 } FwupdFeatureFlags;
@@ -573,6 +575,14 @@ typedef guint64 FwupdDeviceFlags;
  * Since: 1.5.0
  */
 #define FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH (1u << 6)
+/**
+ * FWUPD_RELEASE_FLAG_IS_COMMUNITY:
+ *
+ * The release is supported by the community and not the hardware vendor.
+ *
+ * Since: 1.7.5
+ */
+#define FWUPD_RELEASE_FLAG_IS_COMMUNITY (1u << 7)
 /**
  * FWUPD_RELEASE_FLAG_UNKNOWN:
  *

@@ -394,6 +394,41 @@ fu_util_update_reboot(GError **error)
 	return val != NULL;
 }
 
+static gchar *
+fu_util_get_release_description_with_fallback(FwupdRelease *rel)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	/* add what we've got from the vendor */
+	if (fwupd_release_get_description(rel) != NULL)
+		g_string_append(str, fwupd_release_get_description(rel));
+
+	/* add this client side to get the translations */
+	if (!fwupd_release_has_flag(rel, FWUPD_RELEASE_FLAG_IS_COMMUNITY)) {
+		g_string_append_printf(
+		    str,
+		    "<p>%s</p>",
+		    /* TRANSLATORS: the vendor did not upload this */
+		    _("This firmware is provided by LVFS community members and is not "
+		      "provided (or supported) by the original hardware vendor."));
+		g_string_append_printf(
+		    str,
+		    "<p>%s</p>",
+		    /* TRANSLATORS: if it breaks, you get to keep both pieces */
+		    _("Installing this update may also void any device warranty."));
+	}
+
+	/* this can't be from the LVFS, but the user could be installing a local file */
+	if (str->len == 0) {
+		g_string_append_printf(str,
+				       "<p>%s</p>",
+				       /* TRANSLATORS: naughty vendor */
+				       _("The vendor did not supply any release notes."));
+	}
+
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
 gboolean
 fu_util_prompt_warning(FwupdDevice *device,
 		       FwupdRelease *release,
@@ -401,8 +436,8 @@ fu_util_prompt_warning(FwupdDevice *device,
 		       GError **error)
 {
 	FwupdDeviceFlags flags;
-	const gchar *desc_tmp;
 	gint vercmp;
+	g_autofree gchar *desc_fb = NULL;
 	g_autoptr(GString) title = g_string_new(NULL);
 	g_autoptr(GString) str = g_string_new(NULL);
 
@@ -439,9 +474,9 @@ fu_util_prompt_warning(FwupdDevice *device,
 	}
 
 	/* description is optional */
-	desc_tmp = fwupd_release_get_description(release);
-	if (desc_tmp != NULL) {
-		g_autofree gchar *desc = fu_util_convert_description(desc_tmp, NULL);
+	desc_fb = fu_util_get_release_description_with_fallback(release);
+	if (desc_fb != NULL) {
+		g_autofree gchar *desc = fu_util_convert_description(desc_fb, NULL);
 		if (desc != NULL)
 			g_string_append_printf(str, "\n%s", desc);
 	}
@@ -1680,6 +1715,10 @@ fu_util_release_flag_to_string(FwupdReleaseFlags release_flag)
 		/* TRANSLATORS: is not the main firmware stream */
 		return _("Alternate branch");
 	}
+	if (release_flag == FWUPD_RELEASE_FLAG_IS_COMMUNITY) {
+		/* TRANSLATORS: is not supported by the vendor */
+		return _("Community supported");
+	}
 
 	/* fall back for unknown types */
 	return fwupd_release_flag_to_string(release_flag);
@@ -1694,6 +1733,7 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 	GPtrArray *tags = fwupd_release_get_tags(rel);
 	GString *str = g_string_new(NULL);
 	guint64 flags = fwupd_release_get_flags(rel);
+	g_autofree gchar *desc_fb = NULL;
 	g_autoptr(GString) flags_str = g_string_new(NULL);
 
 	g_return_val_if_fail(FWUPD_IS_RELEASE(rel), NULL);
@@ -1815,9 +1855,10 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 		title = "";
 	}
 
-	if (fwupd_release_get_description(rel) != NULL) {
+	desc_fb = fu_util_get_release_description_with_fallback(rel);
+	if (desc_fb != NULL) {
 		g_autofree gchar *desc = NULL;
-		desc = fu_util_convert_description(fwupd_release_get_description(rel), NULL);
+		desc = fu_util_convert_description(desc_fb, NULL);
 		if (desc == NULL)
 			desc = g_strdup(fwupd_release_get_description(rel));
 		/* TRANSLATORS: multiline description of device */

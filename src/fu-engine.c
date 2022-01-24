@@ -607,6 +607,9 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 		if (remote == NULL)
 			g_warning("no remote found for release %s", version_rel);
 	}
+	tmp = xb_node_query_text(component, "../custom/value[@key='LVFS::Distributor']", NULL);
+	if (g_strcmp0(tmp, "community") == 0)
+		fwupd_release_add_flag(rel, FWUPD_RELEASE_FLAG_IS_COMMUNITY);
 	artifact = xb_node_query_first(release, "artifacts/artifact", NULL);
 	if (artifact != NULL) {
 		if (!fu_engine_set_release_from_artifact(self, rel, remote, artifact, error))
@@ -626,6 +629,17 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 			    "<p>Some of the platform secrets may be invalidated when "
 			    "updating this firmware. Please ensure you have the volume "
 			    "recovery key before continuing.</p>");
+		}
+		if (fwupd_release_has_flag(rel, FWUPD_RELEASE_FLAG_IS_COMMUNITY) &&
+		    request != NULL &&
+		    !fu_engine_request_has_feature_flag(request,
+							FWUPD_FEATURE_FLAG_COMMUNITY_TEXT)) {
+			g_string_prepend(
+			    str,
+			    "<p>This firmware is provided by LVFS community "
+			    "members and is not provided (or supported) by the original "
+			    "hardware vendor. "
+			    "Installing this update may also void any device warranty.</p>");
 		}
 		if (str->len > 0)
 			fwupd_release_set_description(rel, str->str);

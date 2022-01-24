@@ -4278,7 +4278,8 @@ main(int argc, char *argv[])
 			priv->client,
 			FWUPD_FEATURE_FLAG_CAN_REPORT | FWUPD_FEATURE_FLAG_SWITCH_BRANCH |
 			    FWUPD_FEATURE_FLAG_REQUESTS | FWUPD_FEATURE_FLAG_UPDATE_ACTION |
-			    FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_DETACH_ACTION,
+			    FWUPD_FEATURE_FLAG_FDE_WARNING | FWUPD_FEATURE_FLAG_DETACH_ACTION |
+			    FWUPD_FEATURE_FLAG_COMMUNITY_TEXT,
 			priv->cancellable,
 			&error)) {
 			g_printerr("Failed to set front-end features: %s\n", error->message);
