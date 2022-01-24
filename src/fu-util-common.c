@@ -1647,9 +1647,49 @@ fu_util_release_urgency_to_string(FwupdReleaseUrgency release_urgency)
 	return _("Unknown");
 }
 
+static const gchar *
+fu_util_release_flag_to_string(FwupdReleaseFlags release_flag)
+{
+	if (release_flag == FWUPD_RELEASE_FLAG_NONE)
+		return NULL;
+	if (release_flag == FWUPD_RELEASE_FLAG_TRUSTED_PAYLOAD) {
+		/* TRANSLATORS: We verified the payload against the server */
+		return _("Trusted payload");
+	}
+	if (release_flag == FWUPD_RELEASE_FLAG_TRUSTED_METADATA) {
+		/* TRANSLATORS: We verified the meatdata against the server */
+		return _("Trusted metadata");
+	}
+	if (release_flag == FWUPD_RELEASE_FLAG_IS_UPGRADE) {
+		/* TRANSLATORS: version is newer */
+		return _("Is upgrade");
+	}
+	if (release_flag == FWUPD_RELEASE_FLAG_IS_DOWNGRADE) {
+		/* TRANSLATORS: version is older */
+		return _("Is downgrade");
+	}
+	if (release_flag == FWUPD_RELEASE_FLAG_BLOCKED_VERSION) {
+		/* TRANSLATORS: version cannot be installed due to policy */
+		return _("Blocked version");
+	}
+	if (release_flag == FWUPD_RELEASE_FLAG_BLOCKED_APPROVAL) {
+		/* TRANSLATORS: version cannot be installed due to policy */
+		return _("Not approved");
+	}
+	if (release_flag == FWUPD_RELEASE_FLAG_IS_ALTERNATE_BRANCH) {
+		/* TRANSLATORS: is not the main firmware stream */
+		return _("Alternate branch");
+	}
+
+	/* fall back for unknown types */
+	return fwupd_release_flag_to_string(release_flag);
+}
+
 gchar *
 fu_util_release_to_string(FwupdRelease *rel, guint idt)
 {
+	const gchar *title;
+	const gchar *tmp2;
 	GPtrArray *issues = fwupd_release_get_issues(rel);
 	GPtrArray *tags = fwupd_release_get_tags(rel);
 	GString *str = g_string_new(NULL);
@@ -1761,18 +1801,20 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 					   fwupd_release_get_update_message(rel));
 	}
 
+	/* TRANSLATORS: release attributes */
+	title = _("Release Flags");
 	for (guint i = 0; i < 64; i++) {
+		g_autofree gchar *bullet = NULL;
 		if ((flags & ((guint64)1 << i)) == 0)
 			continue;
-		g_string_append_printf(flags_str,
-				       "%s|",
-				       fwupd_release_flag_to_string((guint64)1 << i));
+		tmp2 = fu_util_release_flag_to_string((guint64)1 << i);
+		if (tmp2 == NULL)
+			continue;
+		bullet = g_strdup_printf("• %s", tmp2);
+		fu_common_string_append_kv(str, idt + 1, title, bullet);
+		title = "";
 	}
-	if (flags_str->len > 0) {
-		g_string_truncate(flags_str, flags_str->len - 1);
-		/* TRANSLATORS: release properties */
-		fu_common_string_append_kv(str, idt + 1, _("Flags"), flags_str->str);
-	}
+
 	if (fwupd_release_get_description(rel) != NULL) {
 		g_autofree gchar *desc = NULL;
 		desc = fu_util_convert_description(fwupd_release_get_description(rel), NULL);
