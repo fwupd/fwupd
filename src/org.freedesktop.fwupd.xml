@@ -23,6 +23,18 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='HostBkc' type='s' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            The optional best known configuration to use when syncing back to a
+            known state, e.g. <doc:tt>vendor-factory-2021q1</doc:tt>.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <property name='HostProduct' type='s' access='read'>
       <doc:doc>
         <doc:description>
@@ -290,6 +302,31 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='GetHostSecurityEvents'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Gets a list of all the Host Security ID events.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='u' name='limit' direction='in'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>The maximum number of events, or 0 for no limit.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <arg type='aa{sv}' name='attrs' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>An array of HSI attributes, with any properties set on each.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
     <method name='GetReportMetadata'>
       <doc:doc>
         <doc:description>
@@ -299,6 +336,25 @@
         </doc:description>
       </doc:doc>
       <arg type='a{ss}' name='attrs' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>An array of string key values.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+    </method>
+
+    <!--***********************************************************-->
+    <method name='SetHints'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Sets optional hints from the client that may affect the list of devices.
+            A typical hint might be <doc:tt>locale</doc:tt> and unknown hints should be ignored.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+      <arg type='a{ss}' name='hints' direction='in'>
         <doc:doc>
           <doc:summary>
             <doc:para>An array of string key values.</doc:para>
@@ -826,6 +882,24 @@
         <doc:description>
           <doc:para>
             A device has been changed.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </signal>
+
+    <!--***********************************************************-->
+    <signal name='DeviceRequest'>
+      <arg type='a{sv}' name='request' direction='out'>
+        <doc:doc>
+          <doc:summary>
+            <doc:para>A device request.</doc:para>
+          </doc:summary>
+        </doc:doc>
+      </arg>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            A device request to the client.
           </doc:para>
         </doc:description>
       </doc:doc>

@@ -6,34 +6,14 @@
 
 #include "config.h"
 
+#include <fwupdplugin.h>
+
 #include <string.h>
 
-#include "fu-common.h"
 #include "fu-wac-common.h"
 
-guint32
-fu_wac_calculate_checksum32le (const guint8 *data, gsize len)
-{
-	guint32 csum = 0x0;
-	g_return_val_if_fail (len % 4 == 0, G_MAXUINT32);
-	for (guint i = 0; i < len; i += 4) {
-		guint32 tmp;
-		memcpy (&tmp, &data[i], sizeof(guint32));
-		csum += GUINT32_FROM_LE (tmp);
-	}
-	return GUINT32_TO_LE (csum);
-}
-
-guint32
-fu_wac_calculate_checksum32le_bytes (GBytes *blob)
-{
-	gsize len = 0;
-	const guint8 *data = g_bytes_get_data (blob, &len);
-	return fu_wac_calculate_checksum32le (data, len);
-}
-
 const gchar *
-fu_wac_report_id_to_string (guint8 report_id)
+fu_wac_report_id_to_string(guint8 report_id)
 {
 	if (report_id == FU_WAC_REPORT_ID_FW_DESCRIPTOR)
 		return "FwDescriptor";
@@ -75,12 +55,14 @@ fu_wac_report_id_to_string (guint8 report_id)
 }
 
 void
-fu_wac_buffer_dump (const gchar *title, guint8 cmd, const guint8 *buf, gsize sz)
+fu_wac_buffer_dump(const gchar *title, guint8 cmd, const guint8 *buf, gsize sz)
 {
 	g_autofree gchar *tmp = NULL;
-	if (g_getenv ("FWUPD_WACOM_USB_VERBOSE") == NULL)
+	if (g_getenv("FWUPD_WACOM_USB_VERBOSE") == NULL)
 		return;
-	tmp = g_strdup_printf ("%s %s (%" G_GSIZE_FORMAT ")",
-			       title, fu_wac_report_id_to_string (cmd), sz);
-	fu_common_dump_raw (G_LOG_DOMAIN, tmp, buf, sz);
+	tmp = g_strdup_printf("%s %s (%" G_GSIZE_FORMAT ")",
+			      title,
+			      fu_wac_report_id_to_string(cmd),
+			      sz);
+	fu_common_dump_raw(G_LOG_DOMAIN, tmp, buf, sz);
 }

@@ -51,6 +51,6 @@ if __name__ == "__main__":
         for fn in os.listdir(dirname):
             if fn.endswith(".po"):
                 _process_file(os.path.join(dirname, fn))
-    except NotADirectoryError as _:
+    except NotADirectoryError:
         print("path required")
         sys.exit(2)

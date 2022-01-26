@@ -8,9 +8,10 @@
 
 #include <gio/gio.h>
 
-#define FU_TYPE_ACPI_DMAR (fu_acpi_dmar_get_type ())
-G_DECLARE_FINAL_TYPE (FuAcpiDmar, fu_acpi_dmar, FU, ACPI_DMAR, GObject)
+#define FU_TYPE_ACPI_DMAR (fu_acpi_dmar_get_type())
+G_DECLARE_FINAL_TYPE(FuAcpiDmar, fu_acpi_dmar, FU, ACPI_DMAR, GObject)
 
-FuAcpiDmar	*fu_acpi_dmar_new		(GBytes		*blob,
-						 GError		**error);
-gboolean	 fu_acpi_dmar_get_opt_in	(FuAcpiDmar	*self);
+FuAcpiDmar *
+fu_acpi_dmar_new(GBytes *blob, GError **error);
+gboolean
+fu_acpi_dmar_get_opt_in(FuAcpiDmar *self);

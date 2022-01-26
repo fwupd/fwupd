@@ -1,15 +1,24 @@
 subdir('builder')
 subdir('pki')
 subdir('remotes.d')
-subdir('bash-completion')
-subdir('fish-completion')
+
+if get_option('bash_completion')
+  subdir('bash-completion')
+endif
+
+if get_option('fish_completion')
+  subdir('fish-completion')
+endif
+
+if get_option('tests')
+subdir('device-tests')
+endif
 
 if build_daemon
 subdir('motd')
 endif
 
 if get_option('tests')
-  subdir('tests')
   if build_daemon
     subdir('installed-tests')
   endif
@@ -19,15 +28,18 @@ if build_standalone
   install_data(['daemon.conf'],
     install_dir : join_paths(sysconfdir, 'fwupd')
   )
+  install_data(['power.quirk', 'cfi.quirk'],
+    install_dir: join_paths(datadir, 'fwupd', 'quirks.d'))
 endif
 
-install_data(['org.freedesktop.fwupd.metainfo.xml'],
-  install_dir: join_paths(datadir, 'metainfo')
-)
-
-install_data(['org.freedesktop.fwupd.svg'],
-  install_dir : join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
-)
+if get_option('metainfo')
+  install_data(['org.freedesktop.fwupd.metainfo.xml'],
+    install_dir: join_paths(datadir, 'metainfo')
+  )
+  install_data(['org.freedesktop.fwupd.svg'],
+    install_dir : join_paths(datadir, 'icons', 'hicolor', 'scalable', 'apps')
+  )
+endif
 
 if build_daemon
   install_data(['org.freedesktop.fwupd.conf'],
@@ -47,10 +59,9 @@ if get_option('systemd') and build_daemon
   con2.set('bindir', bindir)
   con2.set('datadir', datadir)
   con2.set('localstatedir', localstatedir)
-  con2.set('package_name', meson.project_name())
   rw_directories = []
   if get_option('plugin_uefi_capsule')
-    rw_directories += ['-/boot/efi', '-/efi/EFI', '-/boot/EFI']
+    rw_directories += ['-/boot/efi', '-/efi/EFI', '-/boot/EFI', '-/boot/grub']
   endif
 
   dynamic_options = []
@@ -65,17 +76,30 @@ if get_option('systemd') and build_daemon
   else
     dynamic_options += ['ReadWriteDirectories=' + ' '.join(rw_directories)]
   endif
+  #pull configuration/cache/state from /etc and /var only if prefix is /usr
+  if get_option('prefix') == '/usr'
+    dynamic_options += 'ConfigurationDirectory=fwupd'
+    dynamic_options += 'StateDirectory=fwupd'
+    dynamic_options += 'CacheDirectory=fwupd'
+  endif
+  if get_option('plugin_redfish')
+    dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX AF_INET AF_INET6'
+  else
+    dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX'
+  endif
   con2.set('dynamic_options', '\n'.join(dynamic_options))
   con2.set('motd_dir', motd_dir)
 
   # replace @bindir@
-  configure_file(
-    input : 'fwupd-offline-update.service.in',
-    output : 'fwupd-offline-update.service',
-    configuration : con2,
-    install: true,
-    install_dir: systemdunitdir,
-  )
+  if get_option('offline')
+    configure_file(
+      input : 'fwupd-offline-update.service.in',
+      output : 'fwupd-offline-update.service',
+      configuration : con2,
+      install: true,
+      install_dir: systemdunitdir,
+    )
+  endif
 
   # replace @dynamic_options@
   configure_file(

@@ -1,15 +1,4 @@
-#these are intended to be d-bus activated
-fwupd binary: systemd-service-file-missing-install-key lib/systemd/system/fwupd-offline-update.service
-fwupd binary: systemd-service-file-missing-install-key lib/systemd/system/fwupd.service
-fwupd binary: systemd-service-file-missing-install-key lib/systemd/system/system-update.target.wants/fwupd-offline-update.service
-#see debian bug 896012
-fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_upower.so
-fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_uefi_recovery.so
-#EFI applications are PE executables
-fwupd: executable-not-elf-or-script usr/libexec/fwupd/efi/*.efi
-fwupd: portable-executable-missing-security-features usr/libexec/fwupd/efi/*.efi SafeSEH
-fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_modem_manager.so
-fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_pci_bcr.so
-fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_pci_mei.so
-fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_iommu.so
-fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-3/libfu_plugin_msr.so
+#these are intended to be D-bus activated
+fwupd binary: systemd-service-file-missing-install-key lib/systemd/system/*
+#see Debian bug 896012
+fwupd: library-not-linked-against-libc usr/lib/*/fwupd-plugins-*/*

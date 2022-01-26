@@ -16,7 +16,7 @@ msgstr ""
 "Language: ru\n"
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -325,10 +325,6 @@ msgid "Do not check for old metadata"
 msgstr "Не проверять старые метаданные"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Не проверять перезагрузку после обновления"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Не проверять незарегистрированную историю"
 
@@ -449,10 +445,6 @@ msgstr "Имя файла"
 msgid "Filename Signature"
 msgstr "Подпись имени файла"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Агент прошивки"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Базовый URI прошивки"
@@ -502,10 +494,6 @@ msgid "GUID"
 msgstr "GUID"
 
 #. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Получить все устройства и возможные выпуски"
-
-#. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Получить все устройства, которые поддерживают обновления прошивки"
 
@@ -545,9 +533,6 @@ msgstr "Установить двоичную прошивку на устрой
 msgid "Install a firmware file on this hardware"
 msgstr "Установить файл прошивки на это оборудование"
 
-msgid "Install old version of system firmware"
-msgstr "Установить старую версию системной прошивки"
-
 msgid "Install signed device firmware"
 msgstr "Установить подписанную прошивку устройства"
 
@@ -573,6 +558,7 @@ msgstr "Установка обновления прошивки…"
 msgid "Installing on %s…"
 msgstr "Установка на устройство %s…"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Хранилище ключей"
 
@@ -648,10 +634,6 @@ msgstr "ОК"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Переопределить путь ESP по умолчанию"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Отменить предупреждения и выполнить действие"
 
 #. TRANSLATORS: remote filename base
 msgid "Password"
@@ -825,6 +807,7 @@ msgstr "Выключить сейчас?"
 msgid "Sign data using the client certificate"
 msgstr "Подписать данные с использованием сертификата клиента"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "Подписать данные с использованием сертификата клиента"

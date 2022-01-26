@@ -1,4 +1,9 @@
-if get_option('gusb')
+if get_option('plugin_fastboot')
+
+if not get_option('gusb')
+  error('gusb is required for plugin_fastboot')
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginFastboot"']
 
 install_data(['fastboot.quirk'],

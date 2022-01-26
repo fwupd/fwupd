@@ -1,4 +1,4 @@
-if host_machine.system() == 'linux'
+if get_option('hsi') and host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginLinuxSwap"']
 
 shared_module('fu_plugin_linux_swap',
@@ -23,7 +23,6 @@ shared_module('fu_plugin_linux_swap',
     plugin_deps,
   ],
 )
-endif
 
 if get_option('tests')
   e = executable(
@@ -49,4 +48,5 @@ if get_option('tests')
     install_dir : installed_test_bindir,
   )
   test('linux-swap-self-test', e)  # added to installed-tests
+endif
 endif

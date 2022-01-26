@@ -6,16 +6,13 @@ Before=display-manager.service
 
 [Service]
 Type=dbus
+TimeoutSec=180
 RuntimeDirectory=@motd_dir@
 RuntimeDirectoryPreserve=yes
 BusName=org.freedesktop.fwupd
 ExecStart=@libexecdir@/fwupd/fwupd
-StateDirectory=@package_name@
-CacheDirectory=@package_name@
-ConfigurationDirectory=@package_name@
 PrivateTmp=yes
 ProtectHome=yes
 ProtectSystem=full
-RestrictAddressFamilies=AF_NETLINK AF_UNIX
 SystemCallFilter=~@mount
 @dynamic_options@

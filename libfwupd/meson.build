@@ -18,6 +18,7 @@ install_headers([
     'fwupd-enums.h',
     'fwupd-error.h',
     'fwupd-remote.h',
+    'fwupd-request.h',
     'fwupd-security-attr.h',
     'fwupd-release.h',
     'fwupd-plugin.h',
@@ -48,6 +49,8 @@ libfwupd_src = [
   'fwupd-release.c',        # fuzzing
   'fwupd-plugin.c',
   'fwupd-remote.c',
+  'fwupd-request.c',        # fuzzing
+  'fwupd-version.c',
 ]
 
 fwupd_mapfile = 'fwupd.map'
@@ -121,6 +124,11 @@ if get_option('introspection')
       'fwupd-remote.c',
       'fwupd-remote.h',
       'fwupd-remote-private.h',
+      'fwupd-request.c',
+      'fwupd-request.h',
+      'fwupd-request-private.h',
+      'fwupd-version.c',
+      fwupd_version_h,
     ],
     nsversion : '2.0',
     namespace : 'Fwupd',
@@ -132,13 +140,14 @@ if get_option('introspection')
     includes : [
       'Gio-2.0',
       'GObject-2.0',
+      'Json-1.0',
     ],
     install : true
   )
 
   gnome.generate_vapi('fwupd',
     sources : fwupd_gir[0],
-    packages : ['gio-2.0'],
+    packages : ['gio-2.0', 'json-glib-1.0'],
     install : true,
   )
 
@@ -171,8 +180,9 @@ if get_option('introspection')
 endif
 
 if get_option('tests')
-  testdatadir = join_paths(meson.source_root(), 'data')
-  localremotetestdir = join_paths(meson.source_root(), 'plugins', 'dell-esrt')
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fwupd-self-test',
     sources : [
@@ -188,12 +198,9 @@ if get_option('tests')
     c_args : [
       '-DG_LOG_DOMAIN="Fwupd"',
       '-DLOCALSTATEDIR="' + localstatedir + '"',
-      '-DTESTDATADIR="' + testdatadir + '"',
-      '-DFU_SELF_TEST_REMOTES_DIR="' + testdatadir + '"',
-      '-DFU_LOCAL_REMOTE_DIR="' + localremotetestdir + '"',
     ],
   )
-  test('fwupd-self-test', e, timeout: 60)
+  test('fwupd-self-test', e, timeout: 60, env : env)
   if gio.version().version_compare ('>= 2.64.0')
     e = executable(
       'fwupd-thread-test',

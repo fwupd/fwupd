@@ -47,12 +47,9 @@ LIBFWUPDPLUGIN_0.8.0 {
     fu_plugin_open;
     fu_plugin_runner_clear_results;
     fu_plugin_runner_coldplug;
-    fu_plugin_runner_coldplug_cleanup;
-    fu_plugin_runner_coldplug_prepare;
     fu_plugin_runner_get_results;
     fu_plugin_runner_startup;
     fu_plugin_runner_unlock;
-    fu_plugin_runner_update;
     fu_plugin_runner_verify;
     fu_plugin_set_name;
   local: *;
@@ -151,11 +148,6 @@ LIBFWUPDPLUGIN_1.0.3 {
     fu_common_read_uint32;
     fu_common_write_uint16;
     fu_common_write_uint32;
-    fu_device_get_progress;
-    fu_device_get_status;
-    fu_device_set_progress;
-    fu_device_set_progress_full;
-    fu_device_set_status;
     fu_usb_device_is_open;
   local: *;
 } LIBFWUPDPLUGIN_1.0.2;
@@ -215,7 +207,6 @@ LIBFWUPDPLUGIN_1.1.0 {
   global:
     fu_device_get_alternate_id;
     fu_device_get_custom_flags;
-    fu_device_has_custom_flag;
     fu_device_incorporate;
     fu_device_set_alternate_id;
     fu_device_set_custom_flags;
@@ -256,11 +247,6 @@ LIBFWUPDPLUGIN_1.1.2 {
     fu_device_set_poll_interval;
     fu_device_setup;
     fu_plugin_runner_device_removed;
-    fu_plugin_runner_update_attach;
-    fu_plugin_runner_update_cleanup;
-    fu_plugin_runner_update_detach;
-    fu_plugin_runner_update_prepare;
-    fu_plugin_runner_update_reload;
     fu_udev_device_emit_changed;
     fu_udev_device_get_dev;
     fu_udev_device_get_model;
@@ -317,7 +303,6 @@ LIBFWUPDPLUGIN_1.2.4 {
     fu_common_string_append_kx;
     fu_device_incorporate_from_component;
     fu_plugin_get_build_hash;
-    fu_plugin_set_build_hash;
     fu_udev_device_get_slot_depth;
   local: *;
 } LIBFWUPDPLUGIN_1.2.2;
@@ -423,14 +408,12 @@ LIBFWUPDPLUGIN_1.3.3 {
     fu_firmware_set_version;
     fu_firmware_write_file;
     fu_plugin_add_firmware_gtype;
-    fu_plugin_set_device_gtype;
     fu_quirks_lookup_by_id_iter;
     fu_udev_device_get_fd;
     fu_udev_device_ioctl;
     fu_udev_device_pread;
     fu_udev_device_pwrite;
     fu_udev_device_set_fd;
-    fu_udev_device_set_readonly;
   local: *;
 } LIBFWUPDPLUGIN_1.3.2;
 
@@ -559,7 +542,6 @@ LIBFWUPDPLUGIN_1.5.0 {
     fu_device_dump_firmware;
     fu_device_report_metadata_post;
     fu_device_report_metadata_pre;
-    fu_device_sleep_with_progress;
     fu_device_unbind_driver;
     fu_efivar_get_data_bytes;
     fu_efivar_secure_boot_enabled_full;
@@ -717,6 +699,10 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_byte_array_align_up;
     fu_byte_array_set_size_full;
     fu_bytes_get_data_safe;
+    fu_cabinet_add_file;
+    fu_cabinet_export;
+    fu_cabinet_get_file;
+    fu_cabinet_sign;
     fu_common_align_up;
     fu_context_add_compile_version;
     fu_context_add_firmware_gtype;
@@ -780,9 +766,232 @@ LIBFWUPDPLUGIN_1.6.0 {
     fu_firmware_set_size;
     fu_firmware_write_chunk;
     fu_ihex_firmware_set_padding_value;
+    fu_plugin_add_device_gtype;
     fu_plugin_get_context;
+    fu_udev_device_get_siblings_with_subsystem;
     fu_xmlb_builder_insert_kb;
     fu_xmlb_builder_insert_kv;
     fu_xmlb_builder_insert_kx;
   local: *;
 } LIBFWUPDPLUGIN_1.5.8;
+
+LIBFWUPDPLUGIN_1.6.1 {
+  global:
+    fu_backend_coldplug;
+    fu_backend_device_added;
+    fu_backend_device_changed;
+    fu_backend_device_removed;
+    fu_backend_get_context;
+    fu_backend_get_devices;
+    fu_backend_get_enabled;
+    fu_backend_get_name;
+    fu_backend_get_type;
+    fu_backend_lookup_by_id;
+    fu_backend_set_enabled;
+    fu_backend_setup;
+    fu_i2c_device_get_bus_number;
+    fu_i2c_device_get_type;
+    fu_i2c_device_read;
+    fu_i2c_device_write;
+    fu_kenv_get_string;
+    fu_srec_firmware_record_get_type;
+    fu_version_string;
+  local: *;
+} LIBFWUPDPLUGIN_1.6.0;
+
+LIBFWUPDPLUGIN_1.6.2 {
+  global:
+    fu_common_check_kernel_version;
+    fu_common_crc16_full;
+    fu_common_get_firmware_search_path;
+    fu_common_reset_firmware_search_path;
+    fu_common_set_firmware_search_path;
+    fu_device_add_guid_full;
+    fu_device_add_parent_physical_id;
+    fu_device_add_private_flag;
+    fu_device_emit_request;
+    fu_device_get_parent_physical_ids;
+    fu_device_get_private_flags;
+    fu_device_get_proxy_with_fallback;
+    fu_device_get_request_cnt;
+    fu_device_get_results;
+    fu_device_has_parent_physical_id;
+    fu_device_has_private_flag;
+    fu_device_new_with_context;
+    fu_device_register_private_flag;
+    fu_device_remove_child;
+    fu_device_remove_private_flag;
+    fu_device_set_private_flags;
+    fu_device_set_update_state;
+    fu_device_set_vendor;
+    fu_efi_firmware_file_get_type;
+    fu_efi_firmware_file_new;
+    fu_efi_firmware_filesystem_get_type;
+    fu_efi_firmware_filesystem_new;
+    fu_efi_firmware_section_get_type;
+    fu_efi_firmware_section_new;
+    fu_efi_firmware_volume_get_type;
+    fu_efi_firmware_volume_new;
+    fu_efi_guid_to_name;
+    fu_i2c_device_read_full;
+    fu_i2c_device_set_bus_number;
+    fu_i2c_device_write_full;
+    fu_ifd_access_to_string;
+    fu_ifd_bios_get_type;
+    fu_ifd_bios_new;
+    fu_ifd_firmware_check_jedec_cmd;
+    fu_ifd_firmware_get_type;
+    fu_ifd_firmware_new;
+    fu_ifd_image_get_access;
+    fu_ifd_image_get_type;
+    fu_ifd_image_new;
+    fu_ifd_image_set_access;
+    fu_ifd_region_to_access;
+    fu_ifd_region_to_name;
+    fu_ifd_region_to_string;
+    fu_plugin_add_udev_subsystem;
+    fu_smbios_setup_from_kernel;
+    fu_udev_device_get_children_with_subsystem;
+    fu_udev_device_set_dev;
+  local: *;
+} LIBFWUPDPLUGIN_1.6.1;
+
+LIBFWUPDPLUGIN_1.7.0 {
+  global:
+    fu_cfu_device_offer_to_string;
+    fu_cfu_device_reject_to_string;
+    fu_cfu_device_status_to_string;
+    fu_cfu_offer_get_bank;
+    fu_cfu_offer_get_component_id;
+    fu_cfu_offer_get_force_ignore_version;
+    fu_cfu_offer_get_force_immediate_reset;
+    fu_cfu_offer_get_hw_variant;
+    fu_cfu_offer_get_milestone;
+    fu_cfu_offer_get_product_id;
+    fu_cfu_offer_get_protocol_revision;
+    fu_cfu_offer_get_segment_number;
+    fu_cfu_offer_get_token;
+    fu_cfu_offer_get_type;
+    fu_cfu_offer_new;
+    fu_cfu_offer_set_bank;
+    fu_cfu_offer_set_component_id;
+    fu_cfu_offer_set_force_ignore_version;
+    fu_cfu_offer_set_force_immediate_reset;
+    fu_cfu_offer_set_hw_variant;
+    fu_cfu_offer_set_milestone;
+    fu_cfu_offer_set_product_id;
+    fu_cfu_offer_set_protocol_revision;
+    fu_cfu_offer_set_segment_number;
+    fu_cfu_offer_set_token;
+    fu_cfu_payload_get_type;
+    fu_cfu_payload_new;
+    fu_common_strnsplit_full;
+    fu_device_attach_full;
+    fu_device_detach_full;
+    fu_device_set_progress;
+    fu_plugin_runner_attach;
+    fu_plugin_runner_cleanup;
+    fu_plugin_runner_detach;
+    fu_plugin_runner_prepare;
+    fu_plugin_runner_reload;
+    fu_plugin_runner_write_firmware;
+    fu_plugin_set_config_value;
+    fu_progress_add_flag;
+    fu_progress_add_step;
+    fu_progress_finished;
+    fu_progress_flag_from_string;
+    fu_progress_flag_to_string;
+    fu_progress_get_child;
+    fu_progress_get_id;
+    fu_progress_get_percentage;
+    fu_progress_get_status;
+    fu_progress_get_steps;
+    fu_progress_get_type;
+    fu_progress_has_flag;
+    fu_progress_new;
+    fu_progress_remove_flag;
+    fu_progress_reset;
+    fu_progress_set_id;
+    fu_progress_set_percentage;
+    fu_progress_set_percentage_full;
+    fu_progress_set_profile;
+    fu_progress_set_status;
+    fu_progress_set_steps;
+    fu_progress_sleep;
+    fu_progress_step_done;
+  local: *;
+} LIBFWUPDPLUGIN_1.6.2;
+
+LIBFWUPDPLUGIN_1.7.1 {
+  global:
+    fu_cfi_device_get_cmd;
+    fu_cfi_device_get_flash_id;
+    fu_cfi_device_get_size;
+    fu_cfi_device_get_type;
+    fu_cfi_device_new;
+    fu_cfi_device_set_flash_id;
+    fu_cfi_device_set_size;
+    fu_common_check_full_disk_encryption;
+    fu_common_crc8_full;
+    fu_common_mkdir;
+    fu_device_add_string;
+    fu_device_get_internal_flags;
+    fu_device_set_internal_flags;
+    fu_security_attrs_append_internal;
+    fu_udev_device_new_with_context;
+    fu_usb_device_new_with_context;
+  local: *;
+} LIBFWUPDPLUGIN_1.7.0;
+
+LIBFWUPDPLUGIN_1.7.2 {
+  global:
+    fu_context_has_hwid_flag;
+    fu_device_get_firmware_gtype;
+    fu_device_set_firmware_gtype;
+    fu_security_attrs_get_by_appstream_id;
+    fu_udev_device_get_bind_id;
+    fu_udev_device_get_sysfs_attr_uint64;
+    fu_udev_device_seek;
+    fu_udev_device_set_bind_id;
+  local: *;
+} LIBFWUPDPLUGIN_1.7.1;
+
+LIBFWUPDPLUGIN_1.7.3 {
+  global:
+    fu_archive_firmware_get_type;
+    fu_archive_firmware_new;
+    fu_cfi_device_get_page_size;
+    fu_cfi_device_get_sector_size;
+    fu_cfi_device_set_page_size;
+    fu_cfi_device_set_sector_size;
+    fu_common_strtoull_full;
+    fu_common_sum16;
+    fu_common_sum16_bytes;
+    fu_common_sum16w;
+    fu_common_sum16w_bytes;
+    fu_common_sum32;
+    fu_common_sum32_bytes;
+    fu_common_sum32w;
+    fu_common_sum32w_bytes;
+    fu_common_sum8;
+    fu_common_sum8_bytes;
+  local: *;
+} LIBFWUPDPLUGIN_1.7.2;
+
+LIBFWUPDPLUGIN_1.7.4 {
+  global:
+    fu_backend_registered;
+    fu_cfi_device_get_block_size;
+    fu_cfi_device_set_block_size;
+    fu_common_get_contents_stream;
+    fu_context_get_lid_state;
+    fu_context_set_lid_state;
+    fu_firmware_add_patch;
+    fu_firmware_get_bytes_with_patches;
+    fu_lid_state_to_string;
+    fu_memmem_safe;
+    fu_plugin_set_secure_config_value;
+    fu_usb_device_add_interface;
+    fu_usb_device_set_configuration;
+  local: *;
+} LIBFWUPDPLUGIN_1.7.3;

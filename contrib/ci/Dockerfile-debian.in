@@ -1,24 +1,6 @@
 FROM %%%ARCH_PREFIX%%%debian:testing
 %%%OS%%%
 ENV CI_NETWORK true
-RUN echo "deb http://ftp.us.debian.org/debian unstable main contrib non-free" >> /etc/apt/sources.list
-RUN echo 'Package: *\n\
-Pin: release a=testing\n\
-Pin-Priority: 900\n\
-\n\
-Package: *\n\
-Pin: release a=unstable\n\
-Pin-Priority: 800\n\
-\n\
-Package: libflashrom-dev\n\
-Pin: release a=unstable\n\
-Pin-Priority: 901\n\
-\n\
-Package: libflashrom1\n\
-Pin: release a=unstable\n\
-Pin-Priority: 901\n'\
- > /etc/apt/preferences
-RUN cat /etc/apt/preferences
 RUN echo fubar > /etc/machine-id
 %%%ARCH_SPECIFIC_COMMAND%%%
 %%%INSTALL_DEPENDENCIES_COMMAND%%%

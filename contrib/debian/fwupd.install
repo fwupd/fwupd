@@ -2,7 +2,10 @@ usr/bin/*
 etc/*
 usr/share/bash-completion
 usr/share/fish/vendor_completions.d
-usr/share/fwupd/*
+usr/share/fwupd/*.*
+usr/share/fwupd/metainfo/*
+usr/share/fwupd/quirks.d/*
+usr/share/fwupd/remotes.d/*
 usr/share/dbus-1/*
 usr/share/icons/*
 usr/share/polkit-1/*
@@ -13,7 +16,6 @@ usr/share/man/man1/*
 lib/systemd/system/*
 lib/systemd/system-preset/*
 lib/systemd/system-shutdown/*
-var/lib/fwupd
 lib/udev/rules.d/*
 data/daemon.conf etc/fwupd
 debian/fwupd.pkla /var/lib/polkit-1/localauthority/10-vendor.d

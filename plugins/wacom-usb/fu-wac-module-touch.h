@@ -8,7 +8,8 @@
 
 #include "fu-wac-module.h"
 
-#define FU_TYPE_WAC_MODULE_TOUCH (fu_wac_module_touch_get_type ())
-G_DECLARE_FINAL_TYPE (FuWacModuleTouch, fu_wac_module_touch, FU, WAC_MODULE_TOUCH, FuWacModule)
+#define FU_TYPE_WAC_MODULE_TOUCH (fu_wac_module_touch_get_type())
+G_DECLARE_FINAL_TYPE(FuWacModuleTouch, fu_wac_module_touch, FU, WAC_MODULE_TOUCH, FuWacModule)
 
-FuWacModule	*fu_wac_module_touch_new	(GUsbDevice	*usb_device);
+FuWacModule *
+fu_wac_module_touch_new(FuContext *context, GUsbDevice *usb_device);

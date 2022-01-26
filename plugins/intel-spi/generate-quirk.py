@@ -24,15 +24,15 @@ if __name__ == "__main__":
         sys.exit(1)
 
     chipsets = {
-        "apl": Chipset(flags="PCH", bios_cntl=0xDC, spibar_proxy="00:0d.2"),
-        "c620": Chipset(flags="PCH", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
-        "ich0": Chipset(flags="ICH", bios_cntl=0x4E),
-        "ich2345": Chipset(flags="ICH", bios_cntl=0x4E),
-        "ich6": Chipset(flags="ICH", bios_cntl=0xDC),
-        "pch100": Chipset(flags="PCH", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
-        "pch300": Chipset(flags="PCH", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
-        "pch400": Chipset(flags="PCH", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
-        "poulsbo": Chipset(flags="ICH", bios_cntl=0xD8),
+        "apl": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:0d.2"),
+        "c620": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
+        "ich0": Chipset(flags="ich", bios_cntl=0x4E),
+        "ich2345": Chipset(flags="ich", bios_cntl=0x4E),
+        "ich6": Chipset(flags="ich", bios_cntl=0xDC),
+        "pch100": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
+        "pch300": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
+        "pch400": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
+        "poulsbo": Chipset(flags="ich", bios_cntl=0xD8),
     }
 
     devices = {"PCI\VEN_8086&DEV_A0A4": "pch100"}

@@ -17,11 +17,8 @@ dfu = static_library(
     'fu-dfu-target-avr.c',
   ],
   dependencies : [
-    giounix,
+    plugin_deps,
     libm,
-    libxmlb,
-    gusb,
-    gudev,
   ],
   link_with : [
     fwupd,
@@ -50,6 +47,7 @@ shared_module('fu_plugin_dfu',
   c_args : cargs,
   dependencies : [
     plugin_deps,
+    libm,
   ],
   link_with : [
     fwupd,
@@ -58,6 +56,7 @@ shared_module('fu_plugin_dfu',
   ],
 )
 
+if get_option('compat_cli')
 fu_dfu_tool = executable(
   'dfu-tool',
   fu_hash,
@@ -70,11 +69,7 @@ fu_dfu_tool = executable(
     fwupdplugin_incdir,
   ],
   dependencies : [
-    libxmlb,
-    giounix,
-    libm,
-    gusb,
-    gudev,
+    plugin_deps,
   ],
   link_with : [
     dfu,
@@ -85,8 +80,9 @@ fu_dfu_tool = executable(
   install : true,
   install_dir : bindir
 )
+endif
 
-if get_option('man')
+if get_option('compat_cli') and get_option('man')
   configure_file(
     input : 'dfu-tool.1',
     output : 'dfu-tool.1',
@@ -97,9 +93,9 @@ if get_option('man')
 endif
 
 if get_option('tests')
-  testdatadirs = environment()
-  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
-  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'fu-dfu-self-test',
     fu_hash,
@@ -112,10 +108,7 @@ if get_option('tests')
       fwupdplugin_incdir,
     ],
     dependencies : [
-      libxmlb,
-      gio,
-      gusb,
-      gudev,
+      plugin_deps,
       libm,
     ],
     link_with : [
@@ -126,7 +119,7 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('fu-dfu-self-test', e, env : testdatadirs)  # added to installed-tests
+  test('fu-dfu-self-test', e, env : env)  # added to installed-tests
 endif
 
 plugindfu_incdir = include_directories('.')

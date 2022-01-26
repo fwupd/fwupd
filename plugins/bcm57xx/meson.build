@@ -1,3 +1,7 @@
+if get_option('plugin_bcm57xx')
+if not get_option('gudev')
+  error('gudev is required for plugin_bcm57xx')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginBcm57xx"']
 
 install_data(['bcm57xx.quirk'],
@@ -34,6 +38,11 @@ shared_module('fu_plugin_bcm57xx',
 )
 
 if get_option('tests')
+  install_data(['tests/bcm57xx.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'))
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'bcm57xx-self-test',
     fu_hash,
@@ -60,5 +69,6 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('bcm57xx-self-test', e)
+  test('bcm57xx-self-test', e, env : env)
+endif
 endif

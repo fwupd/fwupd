@@ -9,7 +9,7 @@
 #include "fu-ccgx-hpi-common.h"
 
 const gchar *
-fu_ccgx_pd_resp_to_string (CyPDResp val)
+fu_ccgx_pd_resp_to_string(CyPDResp val)
 {
 	if (val == CY_PD_RESP_NO_RESPONSE)
 		return "resp-no-response";

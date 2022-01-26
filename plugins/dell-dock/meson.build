@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginDellDock"']
 
 install_data(['dell-dock.quirk'],
@@ -14,7 +15,8 @@ shared_module('fu_plugin_dell_dock',
     'fu-dell-dock-i2c-ec.c',
     'fu-dell-dock-hub.c',
     'fu-dell-dock-i2c-tbt.c',
-    'fu-dell-dock-i2c-mst.c'
+    'fu-dell-dock-i2c-mst.c',
+    'fu-dell-dock-usb-usb4.c'
   ],
   include_directories : [
     root_incdir,
@@ -33,3 +35,4 @@ shared_module('fu_plugin_dell_dock',
     gudev,
   ],
 )
+endif

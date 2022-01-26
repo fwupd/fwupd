@@ -2,22 +2,22 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="1052.3622"
    height="744.09448"
    id="svg2"
    version="1.1"
-   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
    sodipodi:docname="architecture-plan.svg"
-   inkscape:export-filename="/home/hughsie/Code/colord/doc/website/img/architecture-plan.png"
-   inkscape:export-xdpi="59.99197"
-   inkscape:export-ydpi="59.99197">
+   inkscape:export-filename="/home/hughsie/Code/lvfs-website/docs/source/img/architecture-plan.png"
+   inkscape:export-xdpi="56.18"
+   inkscape:export-ydpi="56.18"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <defs
      id="defs4">
     <marker
@@ -212,6 +212,90 @@
          style="fill-rule:evenodd;stroke:#000000;stroke-width:1.00000003pt;marker-start:none"
          transform="matrix(-0.2,0,0,-0.2,-1.2,0)" />
     </marker>
+    <marker
+       inkscape:stockid="Arrow1Send"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Send-7-5"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3875-0-3"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(-0.2,0,0,-0.2,-1.2,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Send"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Send-7-5-2"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3875-0-3-9"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(-0.2,0,0,-0.2,-1.2,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Send"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Send-7-5-9"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3875-0-3-3"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(-0.2,0,0,-0.2,-1.2,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Send"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Send-7-5-2-6"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3875-0-3-9-0"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(-0.2,0,0,-0.2,-1.2,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Send"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Send-7-7-8"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3875-0-4-6"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(-0.2,0,0,-0.2,-1.2,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Send"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Send-7-7-4"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3875-0-4-8"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;marker-start:none"
+         transform="matrix(-0.2,0,0,-0.2,-1.2,0)" />
+    </marker>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -220,19 +304,20 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.98994949"
-     inkscape:cx="389.43059"
-     inkscape:cy="357.12277"
+     inkscape:zoom="1.4"
+     inkscape:cx="914.28572"
+     inkscape:cy="428.92857"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
      showguides="true"
      inkscape:guide-bbox="true"
-     inkscape:window-width="1920"
-     inkscape:window-height="1016"
+     inkscape:window-width="3840"
+     inkscape:window-height="1563"
      inkscape:window-x="0"
-     inkscape:window-y="27"
-     inkscape:window-maximized="1">
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:pagecheckerboard="0">
     <inkscape:grid
        type="xygrid"
        id="grid2985"
@@ -249,7 +334,6 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -266,23 +350,23 @@
        x="450"
        y="672.36218"
        ry="5"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       x="540.91553"
-       y="710.87421"
+       x="540.784"
+       y="710.68219"
        id="text2989"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
          sodipodi:role="line"
          id="tspan2991"
-         x="540.91553"
-         y="710.87421"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle">fwupd</tspan></text>
+         x="540.784"
+         y="710.68219"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle">fwupd</tspan></text>
     <rect
        ry="5"
        y="872.36218"
@@ -290,24 +374,49 @@
        height="60"
        width="180"
        id="rect2993"
-       style="fill:#fce94f;fill-opacity:1;stroke:#edd400;stroke-width:1.88976378;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       style="fill:#fce94f;fill-opacity:1;stroke:#edd400;stroke-width:1.88976;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
     <text
        id="text2995"
-       y="909.75421"
-       x="269.15802"
+       y="908.67682"
+       x="269.78665"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle"
-         y="909.75421"
-         x="269.15802"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle"
+         y="908.67682"
+         x="269.78665"
          id="tspan2997"
-         sodipodi:role="line">ESRT</tspan></text>
+         sodipodi:role="line">Bluetooth (bluez)</tspan></text>
+    <rect
+       ry="5"
+       y="953.2677"
+       x="305"
+       height="60"
+       width="125"
+       id="rect2993-3"
+       style="fill:#fcaf3e;fill-opacity:1;stroke:#f57900;stroke-width:1.5748;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
+    <text
+       id="text2995-6"
+       y="988.89972"
+       x="367.32932"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       xml:space="preserve"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle"
+         y="988.89972"
+         x="367.32932"
+         id="tspan2997-7"
+         sodipodi:role="line">Keyboard</tspan></text>
     <rect
        ry="5"
        y="672.36218"
@@ -316,26 +425,26 @@
        width="180"
        id="rect2993-4"
        style="fill:#fce94f;fill-opacity:1;stroke:#edd400;stroke-width:1.88976378;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
     <text
        id="text2995-9"
-       y="696.98621"
-       x="270.23569"
+       y="698.25549"
+       x="270.25598"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:89.99999762%;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle"
-         y="696.98621"
-         x="270.23569"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:90%;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle"
+         y="698.25549"
+         x="270.25598"
          sodipodi:role="line"
          id="tspan4991">custom</tspan><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:89.99999762%;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle"
-         y="716.18622"
-         x="270.23569"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:90%;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle"
+         y="717.45544"
+         x="270.25598"
          sodipodi:role="line"
          id="tspan1140">plugins</tspan></text>
     <rect
@@ -346,23 +455,23 @@
        x="180"
        y="772.36218"
        ry="5"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       x="269.30994"
-       y="810.13818"
+       style="font-style:normal;font-weight:normal;font-size:18.6667px;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       x="269.76666"
+       y="807.29016"
        id="text3025-0"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
          sodipodi:role="line"
          id="tspan3027-2"
-         x="269.30994"
-         y="810.13818"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle">udev</tspan></text>
+         x="269.76666"
+         y="807.29016"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.6667px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle">udev, sysfs, ESRT</tspan></text>
     <rect
        ry="5"
        y="672.36218"
@@ -371,21 +480,21 @@
        width="180"
        id="rect3053"
        style="fill:#ad7fa8;fill-opacity:1;stroke:#75507b;stroke-width:1.88976378;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
     <text
        id="text3055"
-       y="707.93018"
-       x="810.49799"
+       y="707.9942"
+       x="810.35199"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle"
-         y="707.93018"
-         x="810.49799"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle"
+         y="707.9942"
+         x="810.35199"
          id="tspan3057"
          sodipodi:role="line">systemd</tspan></text>
     <rect
@@ -396,31 +505,31 @@
        x="719.54187"
        y="772.36218"
        ry="5"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       x="809.0918"
-       y="807.82349"
+       x="809.21118"
+       y="807.85553"
        id="text3061"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
          sodipodi:role="line"
          id="tspan3063"
-         x="809.0918"
-         y="807.82349"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle">pending.db</tspan></text>
+         x="809.21118"
+         y="807.85553"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle">pending.db</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Send)"
        d="m 360,702.36218 h 85"
        id="path3841"
        inkscape:connector-curvature="0"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Send)"
@@ -428,26 +537,26 @@
        id="path3843"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccc"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Send)"
+       style="fill:none;stroke:#000096;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Send)"
        d="m 360,892.36218 h 140 v -155"
        id="path3845"
        inkscape:connector-curvature="0"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"
        sodipodi:nodetypes="ccc" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Sstart);marker-end:none"
+       style="fill:none;stroke:#000096;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Sstart);marker-end:none"
        d="M 715,702.36218 H 630"
        id="path3849"
        inkscape:connector-curvature="0"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Sstart);marker-end:url(#Arrow1Send)"
@@ -455,45 +564,45 @@
        id="path3851"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccc"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.95742708px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:none;stroke:#000000;stroke-width:0.95742708;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:3.82970834,3.82970834;stroke-dashoffset:0"
        d="M 40,632.36218 H 920"
        id="path5615"
        inkscape:connector-curvature="0"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        x="48.273308"
        y="481.51367"
        id="text5617"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
          sodipodi:role="line"
          id="tspan5619"
          x="48.273308"
          y="481.51367"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell">internet</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">internet</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        x="48.977306"
        y="661.21936"
        id="text5621"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
          sodipodi:role="line"
          id="tspan5623"
          x="48.977306"
          y="661.21936"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell">system</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">system</tspan></text>
     <rect
        ry="5"
        y="532.36218"
@@ -502,105 +611,91 @@
        width="180"
        id="rect5625"
        style="fill:#729fcf;fill-opacity:1;stroke:#3465a4;stroke-width:1.88976383;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
     <rect
-       ry="5"
-       y="532.36218"
-       x="720"
-       height="60"
+       inkscape:export-ydpi="76.281731"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       style="fill:#8ae234;fill-opacity:1;stroke:#73d216;stroke-width:1.88976;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect1516-7"
        width="180"
-       id="rect5657"
-       style="fill:#d3d7cf;fill-opacity:1;stroke:#888a85;stroke-width:1.88976383;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       height="60"
+       x="180"
+       y="398.2677"
+       ry="5" />
     <text
        id="text5659"
-       y="560.53821"
-       x="809.99036"
+       y="435.73438"
+       x="269.64801"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:89.99999762%;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle"
-         y="560.53821"
-         x="809.99036"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:90%;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle"
+         y="435.73438"
+         x="269.64801"
          sodipodi:role="line"
-         id="tspan4993">download</tspan><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:89.99999762%;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle"
-         y="579.73822"
-         x="809.99036"
-         sodipodi:role="line"
-         id="tspan1162">cache</tspan></text>
+         id="tspan1162">IPFS</tspan></text>
     <rect
        ry="5"
-       y="392.36218"
-       x="720"
+       y="398.2677"
+       x="740"
        height="60"
        width="180"
        id="rect5675"
-       style="fill:#8ae234;fill-opacity:1;stroke:#73d216;stroke-width:1.88976383;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       style="fill:#8ae234;fill-opacity:1;stroke:#73d216;stroke-width:1.88976;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
     <text
        id="text5677"
-       y="429.75418"
-       x="810.52722"
+       y="435.73434"
+       x="830.32001"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle"
-         y="429.75418"
-         x="810.52722"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle"
+         y="435.73434"
+         x="830.32001"
          id="tspan5679"
          sodipodi:role="line">CDN</tspan></text>
-    <path
-       style="fill:none;stroke:#000000;stroke-width:4.61880207;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Sstart-5);marker-end:url(#Arrow1Send-7)"
-       d="m 635,562.36218 80,0"
-       id="path5673-3"
-       inkscape:connector-curvature="0"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"
-       sodipodi:nodetypes="cc" />
     <text
        id="text7584"
        y="784.36218"
        x="665"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
-         style="font-size:12px;line-height:1.25;-inkscape-font-specification:Cantarell;font-family:Cantarell;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
          y="784.36218"
          x="665"
          id="tspan7586"
          sodipodi:role="line">sqlite</tspan></text>
     <text
        id="text5627-8"
-       y="565.40881"
-       x="532.26953"
+       y="565.33417"
+       x="532.22626"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"
        transform="scale(1.0144841,0.98572269)"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:1;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle"
-         y="565.40881"
-         x="532.26953"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:1;font-family:Overpass;-inkscape-font-specification:Overpass;text-align:center;text-anchor:middle"
+         y="565.33417"
+         x="532.22626"
          sodipodi:role="line"
          id="tspan3086-5">gnome-software</tspan><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:1;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle"
-         y="586.74213"
-         x="532.26953"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:1;font-family:Overpass;-inkscape-font-specification:Overpass;text-align:center;text-anchor:middle"
+         y="586.66748"
+         x="532.22626"
          sodipodi:role="line"
          id="tspan1643">fwupdmgr</tspan></text>
     <path
@@ -608,30 +703,141 @@
        d="m 520,672.36218 v -75"
        id="path5631"
        inkscape:connector-curvature="0"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#680096;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Send-7-5)"
+       d="m 340,953.2677 v -15"
+       id="path5631-56"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"
+       sodipodi:nodetypes="cc" />
+    <rect
+       ry="5"
+       y="953.2677"
+       x="160"
+       height="60"
+       width="125"
+       id="rect2993-3-1"
+       style="fill:#fcaf3e;fill-opacity:1;stroke:#f57900;stroke-width:1.5748;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
+    <text
+       id="text2995-6-2"
+       y="990.60638"
+       x="221.95598"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       xml:space="preserve"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle"
+         y="990.60638"
+         x="221.95598"
+         id="tspan2997-7-7"
+         sodipodi:role="line">Mouse</tspan></text>
+    <path
+       style="fill:none;stroke:#680096;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Send-7-5-2)"
+       d="m 255,953.2677 v -15"
+       id="path5631-56-0"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"
+       sodipodi:nodetypes="cc" />
+    <rect
+       ry="5"
+       y="953.2677"
+       x="795"
+       height="60"
+       width="125"
+       id="rect2993-3-6"
+       style="fill:#fcaf3e;fill-opacity:1;stroke:#f57900;stroke-width:1.5748;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
+    <text
+       id="text2995-6-26"
+       y="989.47571"
+       x="857.60663"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       xml:space="preserve"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle"
+         y="989.47571"
+         x="857.60663"
+         id="tspan2997-7-1"
+         sodipodi:role="line">SAS / RAID</tspan></text>
+    <path
+       style="fill:none;stroke:#00962f;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Send-7-5-9)"
+       d="m 830,953.2677 v -15"
+       id="path5631-56-8"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"
+       sodipodi:nodetypes="cc" />
+    <rect
+       ry="5"
+       y="953.2677"
+       x="650"
+       height="60"
+       width="125"
+       id="rect2993-3-1-7"
+       style="fill:#fcaf3e;fill-opacity:1;stroke:#f57900;stroke-width:1.5748;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
+    <text
+       id="text2995-6-2-9"
+       y="990.73438"
+       x="712.06268"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       xml:space="preserve"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle"
+         y="990.73438"
+         x="712.06268"
+         id="tspan2997-7-7-2"
+         sodipodi:role="line">BMC</tspan></text>
+    <path
+       style="fill:none;stroke:#00962f;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Send-7-5-2-6)"
+       d="m 745,953.2677 v -15"
+       id="path5631-56-0-0"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"
        sodipodi:nodetypes="cc" />
     <path
        inkscape:connector-curvature="0"
        id="path4995"
        d="m 560,667.36218 v -75"
        style="fill:none;stroke:#000096;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Sstart-5)"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"
        sodipodi:nodetypes="cc" />
     <text
        id="text3912-9"
-       y="656.83887"
+       y="657.4826"
        x="571.74591"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell"
-         y="656.83887"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+         y="657.4826"
          x="571.74591"
          id="tspan3914-1"
          sodipodi:role="line">UpdateMetadata()</tspan></text>
@@ -641,18 +847,18 @@
        x="443.65182"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
          y="657.29486"
          x="443.65182"
          id="tspan3914-1-0"
          sodipodi:role="line">GetDevices()</tspan></text>
     <rect
-       inkscape:export-ydpi="119.94408"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
+       inkscape:export-ydpi="76.281731"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
        style="fill:#fce94f;fill-opacity:1;stroke:#edd400;stroke-width:1.88976383;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect1164"
        width="180"
@@ -662,88 +868,102 @@
        ry="5" />
     <text
        id="text2995-2"
-       y="906.76807"
-       x="809.51031"
+       y="909.93549"
+       x="809.78668"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle"
-         y="906.76807"
-         x="809.51031"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle"
+         y="909.93549"
+         x="809.78668"
          id="tspan2997-94"
-         sodipodi:role="line">sysfs</tspan></text>
+         sodipodi:role="line">IPMI &amp; Redfish</tspan></text>
     <path
-       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Send-7-6)"
+       style="fill:none;stroke:#850c0c;stroke-width:4;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Send-7-6)"
        d="m 720.04697,892.36218 h -140 l -0.047,-155"
        id="path3845-0"
        inkscape:connector-curvature="0"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"
        sodipodi:nodetypes="ccc" />
     <text
        id="text3912-93"
-       y="413.17078"
-       x="629.65826"
+       y="419.17078"
+       x="637.65826"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell"
-         y="413.17078"
-         x="629.65826"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+         y="419.17078"
+         x="637.65826"
          id="tspan3914-6"
          sodipodi:role="line">only metadata</tspan></text>
     <text
+       id="text3912-93-9"
+       y="553.17078"
+       x="293.65826"
+       style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       xml:space="preserve"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+         y="553.17078"
+         x="293.65826"
+         id="tspan3914-6-7"
+         sodipodi:role="line">manual user opt-in</tspan></text>
+    <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       x="369.91306"
-       y="533.40283"
+       x="561.75336"
+       y="478.40228"
        id="text5147"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
          sodipodi:role="line"
          id="tspan5149"
-         x="369.91306"
-         y="533.40283"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell">firmware</tspan></text>
+         x="561.75336"
+         y="478.40228"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal">firmware</tspan></text>
     <rect
        ry="3.6824954"
-       y="-1012.3622"
-       x="450"
+       y="-1013.2677"
+       x="450.24799"
        height="60"
        width="180"
        id="rect5625-0"
-       style="fill:#e9b96e;fill-opacity:1;stroke:#c17d11;stroke-width:1.88976383;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       style="fill:#e9b96e;fill-opacity:1;stroke:#c17d11;stroke-width:1.88976;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        transform="scale(1,-1)"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
     <path
        style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Sstart);marker-end:url(#Arrow1Send)"
        d="M 540,737.36218 V 949.61613"
        id="path5631-5"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cc"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
     <text
        id="text5627-8-5"
-       y="1001.7748"
+       y="1002.6934"
        x="532.31067"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"
        transform="scale(1.0144841,0.98572269)"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle"
-         y="1001.7748"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.3333px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle"
+         y="1002.6934"
          x="532.31067"
          sodipodi:role="line"
          id="tspan3086-5-8">AppStream XML</tspan></text>
@@ -868,29 +1088,25 @@
        d="m -99.547824,692.36218 h 33.086413 c 8.091033,0 14.64837,6.55734 14.64837,14.64837 v 33.08369 c 0,8.09375 -6.557337,14.65381 -14.64837,14.65381 h -33.086413 c -8.091036,0 -14.651086,-6.56006 -14.651086,-14.65381 v -33.08369 c 0,-8.09103 6.56005,-14.64837 14.651086,-14.64837 z"
        id="rect159_2_" />
     <text
-       style="font-size:32.60869598px;line-height:0%;fill:#a7a7a7;fill-opacity:1;stroke-width:2.71739125"
+       style="font-size:32.6087px;line-height:0%;fill:#a7a7a7;fill-opacity:1;stroke-width:2.71739"
        y="648.76978"
        x="-320.80948"
-       id="text1529">
-      <tspan
-         style="font-size:21.73913002px;stroke-width:2.71739125"
+       id="text1529"><tspan
+         style="font-size:21.7391px;stroke-width:2.71739"
          id="tspan1531"
          font-size="8"
          y="648.76978"
-         x="-320.80948" />
-    </text>
+         x="-320.80948" /></text>
     <text
-       style="font-size:32.60869598px;line-height:0%;fill:#a7a7a7;fill-opacity:1;stroke-width:2.71739125"
+       style="font-size:32.6087px;line-height:0%;fill:#a7a7a7;fill-opacity:1;stroke-width:2.71739"
        y="730.29156"
        x="-320.80948"
-       id="text1553">
-      <tspan
-         style="font-size:21.73913002px;stroke-width:2.71739125"
+       id="text1553"><tspan
+         style="font-size:21.7391px;stroke-width:2.71739"
          id="tspan1555"
          font-size="8"
          y="730.29156"
-         x="-320.80948" />
-    </text>
+         x="-320.80948" /></text>
     <path
        inkscape:connector-curvature="0"
        style="fill:#ef2929;stroke-width:2.71739125"
@@ -907,111 +1123,134 @@
        d="m -100.64918,772.81191 h 33.083693 c 8.091033,0 14.656522,6.5625 14.656522,14.6538 v 33.08641 c 0,8.08859 -6.565217,14.65381 -14.656522,14.65381 h -33.083693 c -8.09103,0 -14.65109,-6.56522 -14.65109,-14.65381 v -33.08641 c 0,-8.0913 6.56006,-14.6538 14.65109,-14.6538 z"
        id="rect344_1_" />
     <rect
-       inkscape:export-ydpi="119.94408"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       style="fill:#8ae234;fill-opacity:1;stroke:#73d216;stroke-width:1.88976383;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       inkscape:export-ydpi="76.281731"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       style="fill:#8ae234;fill-opacity:1;stroke:#73d216;stroke-width:1.88976;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect1516"
        width="180"
        height="60"
-       x="180"
-       y="392.36218"
+       x="450"
+       y="398.2677"
        ry="5" />
     <text
-       inkscape:export-ydpi="119.94408"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
+       inkscape:export-ydpi="76.281731"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
-       x="269.3602"
-       y="429.75418"
+       style="font-style:normal;font-weight:normal;font-size:29.3333px;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+       x="539.54529"
+       y="438.53436"
        id="text1520"><tspan
          sodipodi:role="line"
          id="tspan1518"
-         x="269.3602"
-         y="429.75418"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:21.33333397px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell;text-align:center;text-anchor:middle">LVFS</tspan></text>
+         x="539.54529"
+         y="438.53436"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:29.3333px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:center;text-anchor:middle">LVFS</tspan></text>
     <path
-       style="fill:none;stroke:#000000;stroke-width:4.61880207;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Send-7-7)"
-       d="m 320,452.36218 v 90 c 40,0 46.54259,4e-5 125,0"
+       style="fill:none;stroke:#000000;stroke-width:4.6188;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Send-7-7)"
+       d="m 555,458.2677 v 70"
        id="path5673-9"
        inkscape:connector-curvature="0"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"
-       sodipodi:nodetypes="ccc" />
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"
+       sodipodi:nodetypes="cc" />
     <path
-       sodipodi:nodetypes="cccc"
-       inkscape:export-ydpi="119.94408"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
+       sodipodi:nodetypes="ccc"
+       inkscape:export-ydpi="76.281731"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
        inkscape:connector-curvature="0"
        id="path1621"
-       d="m 750,452.36218 v 20 H 600 v 55"
+       d="m 830,458.2677 v 105 H 635"
        style="fill:none;stroke:#000000;stroke-width:4.619;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Send-7-4)" />
     <path
-       inkscape:export-ydpi="119.94408"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
+       inkscape:export-ydpi="76.281731"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
        inkscape:connector-curvature="0"
        id="path1645"
        d="M 40,492.36218 H 920"
-       style="fill:none;stroke:#000000;stroke-width:0.95742708px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:none;stroke:#000000;stroke-width:0.95742708;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:3.82970834,3.82970834;stroke-dashoffset:0"
        sodipodi:nodetypes="cc" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:4.61880207;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Send-7)"
-       d="M 360,422.36218 H 720"
+       style="fill:none;stroke:#000000;stroke-width:4.6188;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Send-7)"
+       d="M 630,428.2677 H 735"
        id="path5673"
        inkscape:connector-curvature="0"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731"
        sodipodi:nodetypes="cc" />
     <text
-       inkscape:export-ydpi="119.94408"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
+       inkscape:export-ydpi="76.281731"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
        id="text1649"
        y="622.40277"
        x="48.977306"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
          y="622.40277"
          x="48.977306"
          id="tspan1647"
          sodipodi:role="line">session</tspan></text>
     <text
-       inkscape:export-ydpi="119.94408"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
+       inkscape:export-ydpi="76.281731"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
        id="text1653"
-       y="564.36218"
-       x="304.29874"
+       y="471.21198"
+       x="524.59814"
        style="font-style:normal;font-weight:normal;line-height:0%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:Cantarell;-inkscape-font-specification:Cantarell"
-         y="564.36218"
-         x="304.29874"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;direction:rtl"
+         y="471.21198"
+         x="524.59814"
          id="tspan1651"
-         sodipodi:role="line">embargoed metadata</tspan></text>
+         sodipodi:role="line">embargoed</tspan><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;line-height:1.25;font-family:Overpass;-inkscape-font-specification:'Overpass, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;direction:rtl"
+         y="486.21198"
+         x="524.59814"
+         sodipodi:role="line"
+         id="tspan154671">metadata</tspan></text>
     <path
        sodipodi:nodetypes="ccc"
-       inkscape:export-ydpi="119.94408"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
+       inkscape:export-ydpi="76.281731"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
        inkscape:connector-curvature="0"
        id="path1655"
-       d="m 210,452.36218 v 120 h 235"
-       style="fill:none;stroke:#000000;stroke-width:4.61880207;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:4.61880207, 4.61880207000000009;stroke-dashoffset:0;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Send-7-7)" />
+       d="m 265,458.2677 v 105 h 180"
+       style="fill:none;stroke:#000000;stroke-width:4.6188;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:4.6188, 4.6188;stroke-dashoffset:0;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Send-7-7)" />
+    <path
+       sodipodi:nodetypes="cc"
+       inkscape:export-ydpi="76.281731"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:connector-curvature="0"
+       id="path1655-8"
+       d="m 530,458.2677 v 70"
+       style="fill:none;stroke:#000000;stroke-width:4.6188;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:4.6188, 4.6188;stroke-dashoffset:0;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Send-7-7-4)" />
+    <path
+       sodipodi:nodetypes="cc"
+       inkscape:export-ydpi="76.281731"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:connector-curvature="0"
+       id="path1655-0"
+       d="M 450,428.2677 H 365"
+       style="fill:none;stroke:#000000;stroke-width:4.6188;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:4.6188, 4.6188;stroke-dashoffset:0;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow1Send-7-7-8)" />
     <path
        inkscape:connector-curvature="0"
-       style="fill:#2e3536;fill-opacity:1;stroke:#fafafa;stroke-width:0.06651004;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 195.46836,407.98946 c -5.75398,0 -10.26133,2.63953 -10.26133,6.00885 v 16.72761 c 0,3.36932 4.50735,6.00899 10.26133,6.00899 5.75397,0 10.26132,-2.63967 10.26132,-6.00899 v -16.72761 c 7e-5,-3.36975 -4.50729,-6.00885 -10.26132,-6.00885 z m 0,0.86614 c 5.1666,0 9.53152,2.35511 9.53152,5.14284 0,2.78774 -4.36534,5.14286 -9.53152,5.14286 -5.16661,0 -9.53165,-2.35512 -9.53165,-5.14286 0,-2.78773 4.36473,-5.14284 9.53165,-5.14284 z m -9.53153,7.40559 c 1.49733,2.21646 5.15229,3.74611 9.53153,3.74611 4.37923,0 8.03431,-1.52965 9.53164,-3.74611 v 3.31303 c 0,2.78774 -4.36546,5.14285 -9.53164,5.14285 -5.16661,0 -9.53153,-2.35511 -9.53153,-5.14285 z m 0,5.57634 c 1.49733,2.21603 5.15229,3.74554 9.53153,3.74554 4.37923,0 8.03431,-1.52951 9.53164,-3.74554 v 3.31262 c 0,2.78773 -4.36546,5.14284 -9.53164,5.14284 -5.16661,0 -9.53153,-2.35511 -9.53153,-5.14284 z m 0,5.57578 c 1.49733,2.21559 5.15193,3.74568 9.53153,3.74568 4.3796,0 8.03431,-1.52966 9.53164,-3.74568 v 3.31275 c 0,2.78773 -4.36546,5.14271 -9.53164,5.14271 -5.16661,0 -9.53153,-2.35498 -9.53153,-5.14271 z"
+       style="fill:#2e3536;fill-opacity:1;stroke:#fafafa;stroke-width:0.06651;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 465.46836,413.89498 c -5.75398,0 -10.26133,2.63953 -10.26133,6.00885 v 16.72761 c 0,3.36932 4.50735,6.00899 10.26133,6.00899 5.75397,0 10.26132,-2.63967 10.26132,-6.00899 v -16.72761 c 7e-5,-3.36975 -4.50729,-6.00885 -10.26132,-6.00885 z m 0,0.86614 c 5.1666,0 9.53152,2.35511 9.53152,5.14284 0,2.78774 -4.36534,5.14286 -9.53152,5.14286 -5.16661,0 -9.53165,-2.35512 -9.53165,-5.14286 0,-2.78773 4.36473,-5.14284 9.53165,-5.14284 z m -9.53153,7.40559 c 1.49733,2.21646 5.15229,3.74611 9.53153,3.74611 4.37923,0 8.03431,-1.52965 9.53164,-3.74611 v 3.31303 c 0,2.78774 -4.36546,5.14285 -9.53164,5.14285 -5.16661,0 -9.53153,-2.35511 -9.53153,-5.14285 z m 0,5.57634 c 1.49733,2.21603 5.15229,3.74554 9.53153,3.74554 4.37923,0 8.03431,-1.52951 9.53164,-3.74554 v 3.31262 c 0,2.78773 -4.36546,5.14284 -9.53164,5.14284 -5.16661,0 -9.53153,-2.35511 -9.53153,-5.14284 z m 0,5.57578 c 1.49733,2.21559 5.15193,3.74568 9.53153,3.74568 4.3796,0 8.03431,-1.52966 9.53164,-3.74568 v 3.31275 c 0,2.78773 -4.36546,5.14271 -9.53164,5.14271 -5.16661,0 -9.53153,-2.35498 -9.53153,-5.14271 z"
        id="path857"
-       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/010-architecture-plan.png"
-       inkscape:export-xdpi="119.94408"
-       inkscape:export-ydpi="119.94408" />
+       inkscape:export-filename="/home/hughsie/Documents/Presentations/LVFS/resources/architecture-plan.png"
+       inkscape:export-xdpi="76.281731"
+       inkscape:export-ydpi="76.281731" />
   </g>
   <style
      id="style1470"

@@ -321,7 +321,7 @@ def run_installation(directory, verbose, allow_reinstall, allow_older, uninstall
         try:
             install_snap(directory, verbose, allow_reinstall, allow_older, uninstall)
             return True
-        except Exception as _:
+        except Exception:
             if verbose:
                 print("Snap installation failed")
             if not try_flatpak:

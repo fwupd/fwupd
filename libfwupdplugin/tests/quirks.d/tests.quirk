@@ -1,0 +1,26 @@
+[USB\VID_0A5C&PID_6412]
+Flags = ignore-runtime
+
+[ACME Inc.=True]
+Name = awesome
+
+[CORP*]
+Name = town
+
+[USB\VID_0BDA&PID_1100]
+Flags = clever
+Name = Hub
+Children = FuDevice|USB\VID_0763&PID_2806&I2C_01
+
+[USB\VID_0763&PID_2806&I2C_01]
+Name = HDMI
+Flags = updatable,internal
+
+[CFI\FLASHID_3730]
+Name = A25Lxxx
+CfiDeviceCmdChipErase = 0xc7
+CfiDeviceCmdSectorErase = 0x20
+CfiDevicePageSize = 0x200
+CfiDeviceSectorSize = 0x2000
+CfiDeviceBlockSize = 0x8000
+FirmwareSizeMax = 0x10000

@@ -1,15 +1,13 @@
 .\" Report problems in https://github.com/fwupd/fwupd
-.TH man 8 "11 April 2021" @PACKAGE_VERSION@ "fwupdagent man page"
+.TH man 1 "11 April 2021" @PACKAGE_VERSION@ "fwupdagent man page"
 .SH NAME
 fwupdagent \- firmware updating agent
 .SH SYNOPSIS
 fwupdagent [CMD]
 .SH DESCRIPTION
-fwupdagent is a command line fwupd client intended to be used by scripts.
+fwupdagent used to be a command line fwupd client intended to be used by scripts.
+You should now use the 100% compatible \fBfwupdmgr --json\fR command instead.
 The output is JSON and guaranteed to be stable.
-.SH OPTIONS
-The fwupdagent command takes various options depending on the action.
-Run \fBfwupdagent --help\fR for the full list.
 .SH EXIT STATUS
 Commands that successfully execute will return "0".
 .SH SEE ALSO

@@ -1,26 +1,27 @@
 name: Continuous Integration
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   pre-commit:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Refresh dependencies
         run: sudo apt update
       - name: Install dependencies
-        run: sudo apt install shellcheck -y
+        run: sudo apt install shellcheck clang-format -y
       - name: Run pre-commit hooks
         run: |
           ./contrib/setup
           source venv/bin/activate
-          sed -i "/no-commit-to-branch/d; /args: [--branch, master, --pattern, 1_.*_X]/d" .pre-commit-config.yaml
-          pre-commit run --all-files
-
+          sed -i "/no-commit-to-branch/,+1d" .pre-commit-config.yaml
+          pre-commit run --hook-stage commit --all-files
   abi:
     runs-on: ubuntu-20.04
     steps:
@@ -30,7 +31,7 @@ jobs:
       - name: Refresh dependencies
         run: sudo apt update
       - name: Install dependencies
-        run: ./contrib/ci/generate_dependencies.py | sudo xargs apt install -y
+        run: sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
       - name: Check ABI
         run: ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
 
@@ -38,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [fedora, debian-x86_64, arch, debian-i386]
+        os: [fedora, debian-x86_64, arch, debian-i386, void]
     steps:
       - uses: actions/checkout@v2
       - name: Docker login
@@ -55,6 +56,7 @@ jobs:
 
   fuzzing:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
     - name: Build Fuzzers
       id: build
@@ -74,3 +76,4 @@ jobs:
       with:
         name: artifacts
         path: ./out/artifacts
+

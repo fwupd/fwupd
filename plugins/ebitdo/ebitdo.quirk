@@ -1,7 +1,4 @@
 # bootloader
-[USB\VID_0483&PID_5750]
-Plugin = ebitdo
-Flags = is-bootloader
 [USB\VID_2DC8&PID_5750]
 Plugin = ebitdo
 Flags = is-bootloader
@@ -97,3 +94,24 @@ Plugin = ebitdo
 Flags = ~is-bootloader
 InstallDuration = 120
 
+# SN30v2
+[USB\VID_2DC8&PID_9012]
+Plugin = ebitdo
+Flags = ~is-bootloader
+InstallDuration = 120
+
+# SN30 Pro for Android
+[USB\VID_2DC8&PID_2100]
+Plugin = ebitdo
+Flags = ~is-bootloader
+InstallDuration = 120
+[USB\VID_2DC8&PID_2101]
+Plugin = ebitdo
+Flags = ~is-bootloader
+InstallDuration = 120
+
+# N30 Pro 2
+[USB\VID_2DC8&PID_9015]
+Plugin = ebitdo
+Flags = ~is-bootloader
+InstallDuration = 120

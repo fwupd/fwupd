@@ -147,10 +147,6 @@ msgid "Do not check for old metadata"
 msgstr "Не проверавај старе метаподатке"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Не проверавај да ли је потребно поновно покретање након ажурирања"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Не проверавај непослати историјат"
 
@@ -281,9 +277,6 @@ msgstr "Мирујем…"
 msgid "Install a firmware file on this hardware"
 msgstr "Инсталирај датотеку са фирмвером на овај уређај"
 
-msgid "Install old version of system firmware"
-msgstr "Инсталирајте старо издање системског фирмвера"
-
 msgid "Install signed device firmware"
 msgstr "Инсталирајте потписани фирмвер за уређаје"
 
@@ -300,6 +293,7 @@ msgstr "Инсталирајте непотписани системски фи�
 msgid "Installing firmware update…"
 msgstr "Инсталирам ажурирање фирмвера…"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Привезак"
 

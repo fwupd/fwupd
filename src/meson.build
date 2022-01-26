@@ -1,4 +1,8 @@
-if build_daemon
+if get_option('tests')
+subdir('tests')
+endif
+
+if build_daemon and get_option('introspection')
   install_data(['org.freedesktop.fwupd.xml'],
     install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
   )
@@ -13,7 +17,6 @@ daemon_dep = [
   giounix,
   gmodule,
   gudev,
-  sqlite,
   libjsonglib,
 ]
 
@@ -28,6 +31,10 @@ endif
 
 if get_option('libarchive')
   daemon_dep += libarchive
+endif
+if get_option('sqlite')
+  daemon_dep += sqlite
+  client_dep += sqlite
 endif
 
 if get_option('systemd')
@@ -50,7 +57,6 @@ daemon_src = [
   'fu-install-task.c',
   'fu-keyring-utils.c',
   'fu-plugin-list.c',
-  'fu-backend.c',
   'fu-remote-list.c',
   'fu-security-attr.c',
 ] + systemd_src
@@ -68,6 +74,7 @@ endif
 if build_daemon
 fwupdmgr = executable(
   'fwupdmgr',
+  fu_hash,
   sources : [
     'fu-util.c',
     'fu-history.c',
@@ -86,7 +93,6 @@ fwupdmgr = executable(
     libfwupd_deps,
     libxmlb,
     client_dep,
-    sqlite,
   ],
   link_with : [
     fwupd,
@@ -95,39 +101,21 @@ fwupdmgr = executable(
   install : true,
   install_dir : bindir
 )
+
+# for compatibility
+if get_option('compat_cli')
+meson.add_install_script(
+  'sh', '-c',
+  'ln -fs fwupdmgr @0@@1@'.format(
+      '${DESTDIR}',
+      join_paths(get_option('prefix'), get_option('bindir'), 'fwupdagent')))
+endif
 endif
 
-if get_option('agent')
-fwupdagent = executable(
-  'fwupdagent',
-  sources : [
-    'fu-agent.c',
-    'fu-security-attr.c',
-    'fu-util-common.c',
-    systemd_src,
-  ],
-  include_directories : [
-    root_incdir,
-    fwupd_incdir,
-    fwupdplugin_incdir,
-  ],
-  dependencies : [
-    libfwupd_deps,
-    libxmlb,
-    client_dep,
-  ],
-  link_with : [
-    fwupd,
-    fwupdplugin,
-  ],
-  install : true,
-  install_dir : bindir
-)
-endif
-
-if get_option('systemd')
+if get_option('systemd') and get_option('offline')
 fwupdoffline = executable(
   'fwupdoffline',
+  fu_hash,
   sources : [
     'fu-history.c',
     'fu-offline.c',
@@ -144,7 +132,6 @@ fwupdoffline = executable(
     libfwupd_deps,
     client_dep,
     libxmlb,
-    sqlite,
   ],
   link_with : [
     fwupd,
@@ -183,7 +170,6 @@ fwupdtool = executable(
     libxmlb,
     libgcab,
     client_dep,
-    sqlite,
     valgrind,
   ],
   link_with : [
@@ -203,8 +189,6 @@ if get_option('man')
       install: true,
       install_dir: join_paths(mandir, 'man1'),
     )
-  endif
-  if get_option('agent')
     configure_file(
       input : 'fwupdagent.1',
       output : 'fwupdagent.1',
@@ -257,9 +241,15 @@ executable(
 endif
 
 if get_option('tests')
-  testdatadir_src = join_paths(meson.source_root(), 'data', 'tests')
-  testdatadir_dst = join_paths(meson.build_root(), 'data', 'tests')
-  pluginbuilddir = join_paths(meson.build_root(), 'plugins', 'test')
+  test_deps += colorhug_test_firmware
+  test_deps += hwid_test_firmware
+  test_deps += multiple_rels_test_firmware
+  test_deps += noreqs_test_firmware
+  test_deps += builder_test_firmware
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'fu-self-test',
     resources_src,
@@ -283,33 +273,7 @@ if get_option('tests')
       fwupdplugin
     ],
     c_args : [
-      '-DTESTDATADIR_SRC="' + testdatadir_src + '"',
-      '-DTESTDATADIR_DST="' + testdatadir_dst + '"',
-      '-DPLUGINBUILDDIR="' + pluginbuilddir + '"',
     ],
   )
-  test('fu-self-test', e, is_parallel:false, timeout:180)
-
-  # for fuzzing
-  fwupd_firmware_dump = executable(
-    'fwupd-firmware-dump',
-    sources : [
-      'fu-firmware-dump.c',
-      daemon_src,
-    ],
-    include_directories : [
-      root_incdir,
-      fwupd_incdir,
-      fwupdplugin_incdir,
-    ],
-    dependencies : [
-      daemon_dep,
-    ],
-    link_with : [
-      fwupd,
-      fwupdplugin,
-    ],
-  )
+  test('fu-self-test', e, is_parallel:false, timeout:180, env : env)
 endif
-
-subdir('fuzzing')

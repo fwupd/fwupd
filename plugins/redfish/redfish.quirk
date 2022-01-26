@@ -1,0 +1,20 @@
+# Lenovo ThinkSystem
+[42f00735-c9ab-5374-bd63-a5deee5881e0]
+Flags = wildcard-targets,reset-required
+
+[REDFISH\VENDOR_Lenovo&ID_BMC-Backup]
+ParentGuid = REDFISH\VENDOR_Lenovo&ID_BMC-Primary
+Flags = dual-image,is-backup
+
+[REDFISH\VENDOR_Lenovo&ID_BMC-Primary]
+ParentGuid = REDFISH\VENDOR_Lenovo&ID_BMC-Primary
+Flags = dual-image
+
+[REDFISH\VENDOR_Lenovo&ID_LXPM]
+Flags = ~updatable
+[REDFISH\VENDOR_Lenovo&ID_LXPMLinuxDriver]
+Flags = ~updatable
+ParentGuid = REDFISH\VENDOR_Lenovo&ID_LXPM
+[REDFISH\VENDOR_Lenovo&ID_LXPMWindowsDriver]
+Flags = ~updatable
+ParentGuid = REDFISH\VENDOR_Lenovo&ID_LXPM

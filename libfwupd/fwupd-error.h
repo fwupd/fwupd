@@ -10,7 +10,7 @@
 
 G_BEGIN_DECLS
 
-#define FWUPD_ERROR			fwupd_error_quark()
+#define FWUPD_ERROR fwupd_error_quark()
 
 /**
  * FwupdError:
@@ -31,33 +31,38 @@ G_BEGIN_DECLS
  * @FWUPD_ERROR_BROKEN_SYSTEM:			User has configured their system in a broken way
  * @FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW:		The system battery level is too low
  * @FWUPD_ERROR_NEEDS_USER_ACTION:		User needs to do an action to complete the update
+ * @FWUPD_ERROR_AUTH_EXPIRED:			Failed to get auth as credentials have expired
  *
  * The error code.
  **/
 typedef enum {
-	FWUPD_ERROR_INTERNAL,			/* Since: 0.1.1 */
-	FWUPD_ERROR_VERSION_NEWER,		/* Since: 0.1.1 */
-	FWUPD_ERROR_VERSION_SAME,		/* Since: 0.1.1 */
-	FWUPD_ERROR_ALREADY_PENDING,		/* Since: 0.1.1 */
-	FWUPD_ERROR_AUTH_FAILED,		/* Since: 0.1.1 */
-	FWUPD_ERROR_READ,			/* Since: 0.1.1 */
-	FWUPD_ERROR_WRITE,			/* Since: 0.1.1 */
-	FWUPD_ERROR_INVALID_FILE,		/* Since: 0.1.1 */
-	FWUPD_ERROR_NOT_FOUND,			/* Since: 0.1.1 */
-	FWUPD_ERROR_NOTHING_TO_DO,		/* Since: 0.1.1 */
-	FWUPD_ERROR_NOT_SUPPORTED,		/* Since: 0.1.1 */
-	FWUPD_ERROR_SIGNATURE_INVALID,		/* Since: 0.1.2 */
-	FWUPD_ERROR_AC_POWER_REQUIRED,		/* Since: 0.8.0 */
-	FWUPD_ERROR_PERMISSION_DENIED,		/* Since: 0.9.8 */
-	FWUPD_ERROR_BROKEN_SYSTEM,		/* Since: 1.2.8 */
-	FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW,	/* Since: 1.2.10 */
-	FWUPD_ERROR_NEEDS_USER_ACTION,		/* Since: 1.3.3 */
+	FWUPD_ERROR_INTERNAL,		   /* Since: 0.1.1 */
+	FWUPD_ERROR_VERSION_NEWER,	   /* Since: 0.1.1 */
+	FWUPD_ERROR_VERSION_SAME,	   /* Since: 0.1.1 */
+	FWUPD_ERROR_ALREADY_PENDING,	   /* Since: 0.1.1 */
+	FWUPD_ERROR_AUTH_FAILED,	   /* Since: 0.1.1 */
+	FWUPD_ERROR_READ,		   /* Since: 0.1.1 */
+	FWUPD_ERROR_WRITE,		   /* Since: 0.1.1 */
+	FWUPD_ERROR_INVALID_FILE,	   /* Since: 0.1.1 */
+	FWUPD_ERROR_NOT_FOUND,		   /* Since: 0.1.1 */
+	FWUPD_ERROR_NOTHING_TO_DO,	   /* Since: 0.1.1 */
+	FWUPD_ERROR_NOT_SUPPORTED,	   /* Since: 0.1.1 */
+	FWUPD_ERROR_SIGNATURE_INVALID,	   /* Since: 0.1.2 */
+	FWUPD_ERROR_AC_POWER_REQUIRED,	   /* Since: 0.8.0 */
+	FWUPD_ERROR_PERMISSION_DENIED,	   /* Since: 0.9.8 */
+	FWUPD_ERROR_BROKEN_SYSTEM,	   /* Since: 1.2.8 */
+	FWUPD_ERROR_BATTERY_LEVEL_TOO_LOW, /* Since: 1.2.10 */
+	FWUPD_ERROR_NEEDS_USER_ACTION,	   /* Since: 1.3.3 */
+	FWUPD_ERROR_AUTH_EXPIRED,	   /* Since: 1.7.5 */
 	/*< private >*/
 	FWUPD_ERROR_LAST
 } FwupdError;
 
-GQuark		 fwupd_error_quark			(void);
-const gchar	*fwupd_error_to_string			(FwupdError	 error);
-FwupdError	 fwupd_error_from_string		(const gchar	*error);
+GQuark
+fwupd_error_quark(void);
+const gchar *
+fwupd_error_to_string(FwupdError error);
+FwupdError
+fwupd_error_from_string(const gchar *error);
 
 G_END_DECLS

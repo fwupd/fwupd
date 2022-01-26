@@ -8,7 +8,12 @@
 
 #include "fu-wac-module.h"
 
-#define FU_TYPE_WAC_MODULE_BLUETOOTH (fu_wac_module_bluetooth_get_type ())
-G_DECLARE_FINAL_TYPE (FuWacModuleBluetooth, fu_wac_module_bluetooth, FU, WAC_MODULE_BLUETOOTH, FuWacModule)
+#define FU_TYPE_WAC_MODULE_BLUETOOTH (fu_wac_module_bluetooth_get_type())
+G_DECLARE_FINAL_TYPE(FuWacModuleBluetooth,
+		     fu_wac_module_bluetooth,
+		     FU,
+		     WAC_MODULE_BLUETOOTH,
+		     FuWacModule)
 
-FuWacModule	*fu_wac_module_bluetooth_new	(GUsbDevice	*usb_device);
+FuWacModule *
+fu_wac_module_bluetooth_new(FuContext *context, GUsbDevice *usb_device);

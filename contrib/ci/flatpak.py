@@ -24,8 +24,8 @@ def prepare(target):
     sdk = "runtime/%s/x86_64/%s" % (data["sdk"], data["runtime-version"])
     num_modules = len(data["modules"])
 
-    # update to build from master
-    data["branch"] = "master"
+    # update to build from main
+    data["branch"] = "main"
     for index in range(0, num_modules):
         module = data["modules"][index]
         if type(module) != dict or not "name" in module:
@@ -87,4 +87,4 @@ if __name__ == "__main__":
 # flatpak run --command=sh --devel org.freedesktop.fwupd
 
 # to run fwupdtool as root:
-# sudo flatpak run org.freedesktop.fwupd --verbose get-devices
+# sudo -i flatpak run org.freedesktop.fwupd --verbose get-devices

@@ -8,7 +8,8 @@
 
 #include "fu-firmware.h"
 
-#define FU_TYPE_EFI_SIGNATURE_LIST (fu_efi_signature_list_get_type ())
-G_DECLARE_FINAL_TYPE (FuEfiSignatureList, fu_efi_signature_list, FU, EFI_SIGNATURE_LIST, FuFirmware)
+#define FU_TYPE_EFI_SIGNATURE_LIST (fu_efi_signature_list_get_type())
+G_DECLARE_FINAL_TYPE(FuEfiSignatureList, fu_efi_signature_list, FU, EFI_SIGNATURE_LIST, FuFirmware)
 
-FuFirmware		*fu_efi_signature_list_new		(void);
+FuFirmware *
+fu_efi_signature_list_new(void);

@@ -7,13 +7,19 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 #include "fu-thelio-io-device.h"
 
-void
-fu_plugin_init (FuPlugin *plugin)
+static void
+fu_plugin_thelio_io_init(FuPlugin *plugin)
 {
-	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_THELIO_IO_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_THELIO_IO_DEVICE);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_thelio_io_init;
 }

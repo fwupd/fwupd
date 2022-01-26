@@ -6,28 +6,28 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 #include "fu-vli-pd-device.h"
 #include "fu-vli-pd-firmware.h"
 #include "fu-vli-usbhub-device.h"
 #include "fu-vli-usbhub-firmware.h"
 
-void
-fu_plugin_init (FuPlugin *plugin)
+static void
+fu_plugin_vli_init(FuPlugin *plugin)
 {
-	FuContext *ctx = fu_plugin_get_context (plugin);
-	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_VLI_USBHUB_FIRMWARE);
-	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_VLI_PD_FIRMWARE);
-	fu_context_add_quirk_key (ctx, "VliDeviceKind");
-	fu_context_add_quirk_key (ctx, "VliSpiAutoDetect");
-	fu_context_add_quirk_key (ctx, "VliSpiCmdChipErase");
-	fu_context_add_quirk_key (ctx, "VliSpiCmdReadId");
-	fu_context_add_quirk_key (ctx, "VliSpiCmdReadIdSz");
-	fu_context_add_quirk_key (ctx, "VliSpiCmdSectorErase");
+	FuContext *ctx = fu_plugin_get_context(plugin);
+	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_VLI_USBHUB_FIRMWARE);
+	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_VLI_PD_FIRMWARE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_VLI_USBHUB_DEVICE);
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_VLI_PD_DEVICE);
+	fu_context_add_quirk_key(ctx, "VliDeviceKind");
+	fu_context_add_quirk_key(ctx, "VliSpiAutoDetect");
+}
 
-	/* register the custom types */
-	g_type_ensure (FU_TYPE_VLI_USBHUB_DEVICE);
-	g_type_ensure (FU_TYPE_VLI_PD_DEVICE);
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_vli_init;
 }

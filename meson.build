@@ -1,7 +1,7 @@
 project('fwupd', 'c',
-  version : '1.6.0',
+  version : '1.7.5',
   license : 'LGPL-2.1+',
-  meson_version : '>=0.47.0',
+  meson_version : '>=0.50.0',
   default_options : ['warning_level=2', 'c_std=c99'],
 )
 
@@ -12,9 +12,9 @@ fwupd_minor_version = varr[1]
 fwupd_micro_version = varr[2]
 
 conf = configuration_data()
-conf.set('FWUPD_MAJOR_VERSION', fwupd_major_version)
-conf.set('FWUPD_MINOR_VERSION', fwupd_minor_version)
-conf.set('FWUPD_MICRO_VERSION', fwupd_micro_version)
+conf.set('MAJOR_VERSION', fwupd_major_version)
+conf.set('MINOR_VERSION', fwupd_minor_version)
+conf.set('MICRO_VERSION', fwupd_micro_version)
 conf.set_quoted('PACKAGE_VERSION', fwupd_version)
 
 # get source version, falling back to package version
@@ -50,7 +50,7 @@ libfwupd_lt_current = '2'
 libfwupd_lt_revision = '0'
 libfwupd_lt_age = '0'
 libfwupd_lt_version = '@0@.@1@.@2@'.format(libfwupd_lt_current, libfwupd_lt_age, libfwupd_lt_revision)
-libfwupdplugin_lt_current = '2'
+libfwupdplugin_lt_current = '5'
 libfwupdplugin_lt_revision = '0'
 libfwupdplugin_lt_age = '0'
 libfwupdplugin_lt_version = '@0@.@1@.@2@'.format(libfwupdplugin_lt_current, libfwupdplugin_lt_age, libfwupdplugin_lt_revision)
@@ -108,14 +108,11 @@ warning_flags = [
   '-Wvla',
   '-Wwrite-strings'
 ]
+if host_machine.system() != 'windows'
+  warning_flags += ['-fanalyzer', '-Wno-analyzer-null-dereference']
+endif
 cc = meson.get_compiler('c')
 add_project_arguments(cc.get_supported_arguments(warning_flags), language : 'c')
-
-# use honggfuzz for parallel persistent fuzzing
-honggfuzz = find_program('honggfuzz', required: false)
-if cc.has_function('HF_ITER')
-  conf.set('HAVE_HF_ITER', '1')
-endif
 
 if not meson.is_cross_build()
   add_project_arguments('-fstack-protector-strong', language : 'c')
@@ -150,6 +147,7 @@ add_project_arguments('-DFWUPD_DISABLE_DEPRECATED', language : 'c')
 
 # needed for symlink() and BYTE_ORDER
 add_project_arguments('-D_BSD_SOURCE', language : 'c')
+add_project_arguments('-D__BSD_VISIBLE', language : 'c')
 add_project_arguments('-D_XOPEN_SOURCE=700', language : 'c')
 
 # needed for memfd_create()
@@ -198,8 +196,8 @@ endif
 if gio.version().version_compare ('>= 2.55.0')
   conf.set('HAVE_GIO_2_55_0', '1')
 endif
-if build_standalone
 gmodule = dependency('gmodule-2.0')
+if build_standalone
 if get_option('gudev')
   gudev = dependency('gudev-1.0', version : '>= 232')
   conf.set('HAVE_GUDEV', '1')
@@ -209,12 +207,18 @@ endif
 if get_option('bluez')
   conf.set('HAVE_BLUEZ', '1')
 endif
+if get_option('hsi')
+  conf.set('HAVE_HSI', '1')
+endif
 libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
 if get_option('gusb')
-  gusb = dependency('gusb', version : '>= 0.3.5', fallback : ['gusb', 'gusb_dep'])
+  gusb = dependency('gusb', version : '>= 0.3.0', fallback : ['gusb', 'gusb_dep'])
   conf.set('HAVE_GUSB', '1')
 endif
-sqlite = dependency('sqlite3')
+if get_option('sqlite')
+  sqlite = dependency('sqlite3')
+  conf.set('HAVE_SQLITE', '1')
+endif
 if get_option('libarchive')
   libarchive = dependency('libarchive')
   conf.set('HAVE_LIBARCHIVE', '1')
@@ -249,9 +253,16 @@ if build_daemon
 endif
 libm = cc.find_library('m', required: false)
 libgcab = dependency('libgcab-1.0', version : '>= 1.0', fallback : ['gcab', 'gcab_dep'])
-gcab = find_program('gcab', required : get_option('tests'))
+if libgcab.type_name() == 'pkgconfig' and cc.has_function('gcab_file_set_bytes', dependencies: libgcab)
+  conf.set('HAVE_GCAB_FILE_SET_BYTES', '1')
+endif
+
 bashcomp = dependency('bash-completion', required: false)
-python3 = find_program('python3')
+if host_machine.system() != 'freebsd'
+  python3 = find_program('python3')
+else
+  python3 = find_program('python3.8', 'python3', 'python3.9')
+endif
 
 if get_option('gnutls')
   gnutls = dependency('gnutls', version : '>= 3.6.0')
@@ -279,20 +290,28 @@ if get_option('default_library') != 'static'
   if host_machine.system() == 'windows'
     platform_deps += cc.find_library('shlwapi')
   endif
+  if host_machine.system() == 'freebsd'
+    platform_deps += dependency('efivar')
+  endif
 endif
 
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
-
-if build_standalone and get_option('plugin_altos')
-  libelf = dependency('libelf')
+if get_option('offline')
+  if not get_option('systemd')
+    warning('-Doffline=true requires -Dsystemd=true')
+  endif
+  conf.set('HAVE_FWUPDOFFLINE', '1')
 endif
 
 host_cpu = host_machine.cpu_family()
 
 if cc.has_header('sys/utsname.h')
   conf.set('HAVE_UTSNAME_H', '1')
+endif
+if cc.has_header('sys/inotify.h')
+  conf.set('HAVE_INOTIFY_H', '1')
 endif
 if cc.has_header('sys/ioctl.h')
   conf.set('HAVE_IOCTL_H', '1')
@@ -303,8 +322,14 @@ endif
 if cc.has_header('sys/socket.h')
   conf.set('HAVE_SOCKET_H', '1')
 endif
+if cc.has_header('sys/io.h') and cc.has_function('outb', prefix: '#include <sys/io.h>')
+  conf.set('HAVE_IO_H', '1')
+endif
 if cc.has_header('linux/ethtool.h')
   conf.set('HAVE_ETHTOOL_H', '1')
+endif
+if cc.has_header('mtd/mtd-user.h')
+  conf.set('HAVE_MTD_USER_H', '1')
 endif
 if cc.has_header('linux/hidraw.h')
   conf.set('HAVE_HIDRAW_H', '1')
@@ -317,6 +342,9 @@ if cc.has_header('poll.h')
 endif
 if cc.has_header('fnmatch.h')
   conf.set('HAVE_FNMATCH_H', '1')
+endif
+if cc.has_header('kenv.h')
+  conf.set('HAVE_KENV_H', '1')
 endif
 if cc.has_header('malloc.h')
   conf.set('HAVE_MALLOC_H', '1')
@@ -349,8 +377,32 @@ endif
 if cc.has_header_symbol('locale.h', 'LC_MESSAGES')
   conf.set('HAVE_LC_MESSAGES', '1')
 endif
+if cc.has_header('linux/ipmi.h')
+  have_linux_ipmi = true
+  conf.set('HAVE_LINUX_IPMI_H', '1')
+else
+  have_linux_ipmi = false
+endif
+if cc.has_header_symbol('linux/ipmi_msgdefs.h', 'IPMI_DEVICE_IN_FW_UPDATE_ERR')
+  conf.set('HAVE_IPMI_DEVICE_IN_FW_UPDATE_ERR', '1')
+endif
+if cc.has_header_symbol('linux/ipmi_msgdefs.h', 'IPMI_DEVICE_IN_INIT_ERR')
+  conf.set('HAVE_IPMI_DEVICE_IN_INIT_ERR', '1')
+endif
+if cc.has_header_symbol('fcntl.h', 'F_WRLCK')
+  conf.set('HAVE_WRLCK', '1')
+endif
+if cc.has_header_symbol('fcntl.h', 'F_OFD_SETLK')
+  conf.set('HAVE_OFD', '1')
+endif
 if cc.has_function('pwrite', args : '-D_XOPEN_SOURCE')
   conf.set('HAVE_PWRITE', '1')
+endif
+
+if host_machine.system() == 'freebsd'
+  if cc.has_type('struct efi_esrt_entry_v1', prefix: '#include <sys/types.h>\n#include <sys/efiio.h>')
+    conf.set('HAVE_FREEBSD_ESRT', '1')
+  endif
 endif
 
 if build_standalone and get_option('plugin_tpm')
@@ -361,37 +413,38 @@ else
 endif
 
 if build_standalone and get_option('plugin_uefi_capsule')
-  cairo = dependency('cairo')
-  fontconfig = cc.find_library('fontconfig')
-  freetype = cc.find_library('freetype')
   efiboot = dependency('efiboot')
-  objcopy = find_program ('objcopy')
-  readelf = find_program ('readelf')
-  genpeimg = find_program ('genpeimg', required: false)
+
+  efivar = dependency('efivar')
+  if cc.has_header_symbol('efivar/efivar-types.h', 'efi_time_t', dependencies : efivar)
+    conf.set('HAVE_EFI_TIME_T', '1')
+  endif
 
   efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
-  conf.set_quoted ('EFI_APP_LOCATION', efi_app_location)
+  conf.set_quoted('EFI_APP_LOCATION', efi_app_location)
 
   if host_cpu == 'x86'
           EFI_MACHINE_TYPE_NAME = 'ia32'
-          gnu_efi_arch = 'ia32'
   elif host_cpu == 'x86_64'
           EFI_MACHINE_TYPE_NAME = 'x64'
-          gnu_efi_arch = 'x86_64'
   elif host_cpu == 'arm'
           EFI_MACHINE_TYPE_NAME = 'arm'
-          gnu_efi_arch = 'arm'
   elif host_cpu == 'aarch64'
           EFI_MACHINE_TYPE_NAME = 'aa64'
-          gnu_efi_arch = 'aarch64'
   else
           EFI_MACHINE_TYPE_NAME = ''
-          gnu_efi_arch = ''
   endif
   conf.set_quoted('EFI_MACHINE_TYPE_NAME', EFI_MACHINE_TYPE_NAME)
-  r = run_command([python3, 'po/test-deps'])
-  if r.returncode() != 0
-    error(r.stdout())
+
+  if get_option('efi_binary')
+    efi_binary = dependency ('fwupd-efi', fallback: ['fwupd-efi', 'fwupd_efi_dep'])
+  endif
+
+  if get_option('plugin_uefi_capsule_splash')
+    r = run_command([python3, 'po/test-deps'])
+    if r.returncode() != 0
+      error(r.stdout())
+    endif
   endif
 endif
 
@@ -406,8 +459,8 @@ endif
 if build_standalone and get_option('plugin_modem_manager')
   libmm_glib = dependency('mm-glib', version : '>= 1.10.0')
   add_project_arguments('-DMM_REQUIRED_VERSION="1.10.0"', language : 'c')
-  libqmi_glib = dependency('qmi-glib', version : '>= 1.22.0')
-  add_project_arguments('-DQMI_REQUIRED_VERSION="1.23.1"', language : 'c')
+  libqmi_glib = dependency('qmi-glib', version : '>= 1.23.1')
+  libmbim_glib = dependency('mbim-glib', version : '>= 1.22.0')
 endif
 
 if get_option('soup_session_compat')
@@ -477,13 +530,12 @@ conf.set_quoted('FWUPD_DATADIR', datadir)
 conf.set_quoted('FWUPD_LOCALSTATEDIR', localstatedir)
 conf.set_quoted('FWUPD_SYSCONFDIR', sysconfdir)
 conf.set_quoted('FWUPD_LOCALEDIR', localedir)
-conf.set_quoted('FWUPD_FUZZINGSRCDIR', join_paths(meson.source_root(), 'src', 'fuzzing'))
 
 if build_standalone
 if host_machine.system() == 'windows'
-  plugin_dir = 'fwupd-plugins-3'
+  plugin_dir = 'fwupd-plugins-@0@'.format(libfwupdplugin_lt_current)
 else
-  plugin_dir = join_paths(libdir, 'fwupd-plugins-3')
+  plugin_dir = join_paths(libdir, 'fwupd-plugins-@0@'.format(libfwupdplugin_lt_current))
 endif
 conf.set_quoted('FWUPD_PLUGINDIR', plugin_dir)
 endif
@@ -525,17 +577,38 @@ if get_option('libarchive')
   plugin_deps += libarchive
 endif
 
+if get_option('plugin_logitech_bulkcontroller')
+    protobufc = dependency('libprotobuf-c')
+    protoc = find_program('protoc', 'protoc-c')
+    plugin_deps += protobufc
+endif
+
 root_incdir = include_directories('.')
 
-if get_option('gtkdoc')
-  gtkdocscan = find_program('gtkdoc-scan', required : true)
-  subdir('docs')
+if get_option('docs') == 'gtkdoc'
+  gtkdocscan = find_program('gtkdoc-scan')
+elif get_option('docs') == 'docgen'
+  r = run_command([python3, 'docs/test-deps.py'])
+  if r.returncode() != 0
+    error(r.stdout())
+  endif
+  gidocgen_dep = dependency('gi-docgen',
+    version: '>= 2021.1',
+    native: true,
+    fallback: ['gi-docgen', 'dummy_dep'],
+  )
+  gidocgen = find_program('gi-docgen')
+  if not get_option('introspection')
+    error('introspection is needed for docgen')
+  endif
 endif
+
 subdir('libfwupd')
 if build_daemon and get_option('polkit')
   subdir('policy')
 endif
 if build_standalone
+  gcab = find_program('gcab', required : get_option('tests'))
   subdir('data')
   subdir('po')
   subdir('libfwupdplugin')
@@ -543,9 +616,10 @@ if build_standalone
   subdir('plugins')
   subdir('contrib')
 endif
+subdir('docs')
 
 if get_option('systemd') and build_daemon
-  meson.add_install_script('meson_post_install.sh', systemdunitdir, localstatedir)
+  meson.add_install_script('meson_post_install.sh', systemdunitdir)
 endif
 
 makensis = find_program('makensis', required : false)
@@ -556,18 +630,4 @@ if makensis.found()
       makensis,
       join_paths(meson.source_root(), 'contrib', 'setup-win32.nsi'),
   ])
-endif
-
-codespell = find_program('codespell', required : false)
-if codespell.found()
-run_target('codespell',
-  command: [
-    codespell,
-    meson.source_root(),
-    '--write-changes',
-    '--builtin', 'clear,informal,en-GB_to_en-US',
-    '--skip', '*.po,*.csv,*.svg,*.p7c,subprojects,.git,pcrs,build*,.ossfuzz',
-    '--ignore-words-list', 'conexant,Conexant,gir,GIR,hsi,HSI,cancelled,Cancelled,te',
-  ]
-)
 endif

@@ -34,6 +34,7 @@ shared_module('fu_plugin_test',
 )
 
 shared_module('fu_plugin_invalid',
+  fu_hash,
   sources : [
     'fu-plugin-invalid.c',
   ],

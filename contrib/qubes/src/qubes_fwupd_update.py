@@ -59,7 +59,7 @@ class FwupdUpdate:
         p = subprocess.Popen(cmd_xl_list, stdout=subprocess.PIPE)
         output = p.communicate()[0].decode()
         if p.returncode != 0:
-            raise Exception("fwudp-qubes: Firmware downgrade failed")
+            raise Exception("fwupd-qubes: Firmware downgrade failed")
         return self.updatevm in output
 
     def _encrypt_update_url(self, url):
