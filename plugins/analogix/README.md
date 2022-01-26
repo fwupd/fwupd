@@ -22,6 +22,9 @@ This plugin supports the following protocol ID:
 These devices use the standard USB DeviceInstanceId values, e.g.
 
 * `USB\VID_1F29&PID_7518`
+* `USB\VID_050D&PID_008B`
+* `USB\VID_047D&PID_80C8`
+* `USB\VID_0502&PID_04C4`
 
 ## Update Behavior
 
@@ -32,6 +35,9 @@ The device is updated at runtime using USB control transfers.
 The vendor ID is set from the USB vendor. The list of USB VIDs used is:
 
 * `USB:0x1F29`
+* `USB:0x050D`
+* `USB:0x047D`
+* `USB:0x0502`
 
 ## External Interface Access
 
