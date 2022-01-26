@@ -10,48 +10,45 @@
 #include "fu-vli-usbhub-i2c-common.h"
 
 gboolean
-fu_vli_usbhub_i2c_check_status (FuVliUsbhubI2cStatus status, GError **error)
+fu_vli_usbhub_i2c_check_status(FuVliUsbhubI2cStatus status, GError **error)
 {
 	if (status == FU_VLI_USBHUB_I2C_STATUS_OK)
 		return TRUE;
 	if (status == FU_VLI_USBHUB_I2C_STATUS_HEADER) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Incorrect header value of data frame");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Incorrect header value of data frame");
 		return FALSE;
 	}
 	if (status == FU_VLI_USBHUB_I2C_STATUS_COMMAND) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid command data");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Invalid command data");
 		return FALSE;
 	}
 	if (status == FU_VLI_USBHUB_I2C_STATUS_ADDRESS) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Invalid address range");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Invalid address range");
 		return FALSE;
 	}
 	if (status == FU_VLI_USBHUB_I2C_STATUS_PACKETSIZE) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Incorrect payload data length");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Incorrect payload data length");
 		return FALSE;
 	}
 	if (status == FU_VLI_USBHUB_I2C_STATUS_CHECKSUM) {
-		g_set_error_literal (error,
-				     FWUPD_ERROR,
-				     FWUPD_ERROR_INTERNAL,
-				     "Incorrect frame data checksum");
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "Incorrect frame data checksum");
 		return FALSE;
 	}
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_INTERNAL,
-		     "Unknown error [0x%02x]", status);
+	g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "Unknown error [0x%02x]", status);
 	return FALSE;
 }

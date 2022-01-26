@@ -10,7 +10,7 @@ import hashlib
 
 
 def usage(return_code):
-    """ print usage and exit with the supplied return code """
+    """print usage and exit with the supplied return code"""
     if return_code == 0:
         out = sys.stdout
     else:

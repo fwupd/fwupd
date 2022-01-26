@@ -4,13 +4,6 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-/**
- * SECTION:fu-dfu-common
- * @short_description: Common functions for DFU
- *
- * These helper objects allow converting from enum values to strings.
- */
-
 #include "config.h"
 
 #include <string.h>
@@ -23,10 +16,10 @@
  *
  * Converts an enumerated value to a string.
  *
- * Return value: a string
+ * Returns: a string
  **/
 const gchar *
-fu_dfu_state_to_string (FuDfuState state)
+fu_dfu_state_to_string(FuDfuState state)
 {
 	if (state == FU_DFU_STATE_APP_IDLE)
 		return "appIDLE";
@@ -59,10 +52,10 @@ fu_dfu_state_to_string (FuDfuState state)
  *
  * Converts an enumerated value to a string.
  *
- * Return value: a string
+ * Returns: a string
  **/
 const gchar *
-fu_dfu_status_to_string (FuDfuStatus status)
+fu_dfu_status_to_string(FuDfuStatus status)
 {
 	if (status == FU_DFU_STATUS_OK)
 		return "OK";
@@ -105,10 +98,10 @@ fu_dfu_status_to_string (FuDfuStatus status)
  *
  * Creates a monolithic block of memory from an array of #GBytes.
  *
- * Return value: (transfer full): a new GBytes
+ * Returns: (transfer full): a new GBytes
  **/
 GBytes *
-fu_dfu_utils_bytes_join_array (GPtrArray *chunks)
+fu_dfu_utils_bytes_join_array(GPtrArray *chunks)
 {
 	gsize total_size = 0;
 	guint32 offset = 0;
@@ -116,21 +109,21 @@ fu_dfu_utils_bytes_join_array (GPtrArray *chunks)
 
 	/* get the size of all the chunks */
 	for (guint i = 0; i < chunks->len; i++) {
-		GBytes *chunk_tmp = g_ptr_array_index (chunks, i);
-		total_size += g_bytes_get_size (chunk_tmp);
+		GBytes *chunk_tmp = g_ptr_array_index(chunks, i);
+		total_size += g_bytes_get_size(chunk_tmp);
 	}
 
 	/* copy them into a buffer */
-	buffer = g_malloc0 (total_size);
+	buffer = g_malloc0(total_size);
 	for (guint i = 0; i < chunks->len; i++) {
 		const guint8 *chunk_data;
 		gsize chunk_size = 0;
-		GBytes *chunk_tmp = g_ptr_array_index (chunks, i);
-		chunk_data = g_bytes_get_data (chunk_tmp, &chunk_size);
+		GBytes *chunk_tmp = g_ptr_array_index(chunks, i);
+		chunk_data = g_bytes_get_data(chunk_tmp, &chunk_size);
 		if (chunk_size == 0)
 			continue;
-		memcpy (buffer + offset, chunk_data, chunk_size);
+		memcpy(buffer + offset, chunk_data, chunk_size);
 		offset += chunk_size;
 	}
-	return g_bytes_new_take (buffer, total_size);
+	return g_bytes_new_take(buffer, total_size);
 }

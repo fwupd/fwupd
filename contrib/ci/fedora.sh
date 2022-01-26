@@ -3,7 +3,7 @@ set -e
 set -x
 
 #get any missing deps from the container
-./contrib/ci/generate_dependencies.py | xargs dnf install -y
+./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o fedora
 
 #generate a tarball
 git config tar.tar.xz.command "xz -c"
@@ -15,7 +15,7 @@ if [ "$QUBES" = "true" ]; then
 fi
 
 meson .. \
-    -Dgtkdoc=true \
+    -Ddocs=none \
     -Dman=true \
     -Dtests=true \
     -Dgusb:tests=false \
@@ -40,7 +40,7 @@ sed "s,#VERSION#,$RPMVERSION,;
      s,#ALPHATAG#,alpha,;
      s,enable_dummy 0,enable_dummy 1,;
      s,Source0.*,Source0:\tfwupd-$VERSION.tar.xz," \
-	contrib/fwupd.spec.in > build/fwupd.spec
+	build/contrib/fwupd.spec.in > build/fwupd.spec
 
 if [ -n "$CI" ]; then
 	sed -i "s,enable_ci 0,enable_ci 1,;" build/fwupd.spec

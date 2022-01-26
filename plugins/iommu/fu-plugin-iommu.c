@@ -6,54 +6,61 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
 struct FuPluginData {
-	gboolean		 has_iommu;
+	gboolean has_iommu;
 };
 
-void
-fu_plugin_init (FuPlugin *plugin)
+static void
+fu_plugin_iommu_init(FuPlugin *plugin)
 {
-	FuContext *ctx = fu_plugin_get_context (plugin);
-	fu_plugin_alloc_data (plugin, sizeof (FuPluginData));
-	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_context_add_udev_subsystem (ctx, "iommu");
+	fu_plugin_alloc_data(plugin, sizeof(FuPluginData));
+	fu_plugin_add_udev_subsystem(plugin, "iommu");
 }
 
-gboolean
-fu_plugin_backend_device_added (FuPlugin *plugin, FuDevice *device, GError **error)
+static gboolean
+fu_plugin_iommu_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuPluginData *priv = fu_plugin_get_data (plugin);
+	FuPluginData *priv = fu_plugin_get_data(plugin);
 
 	/* interesting device? */
-	if (!FU_IS_UDEV_DEVICE (device))
+	if (!FU_IS_UDEV_DEVICE(device))
 		return TRUE;
-	if (g_strcmp0 (fu_udev_device_get_subsystem (FU_UDEV_DEVICE (device)), "iommu") != 0)
+	if (g_strcmp0(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), "iommu") != 0)
 		return TRUE;
 	priv->has_iommu = TRUE;
 
 	return TRUE;
 }
 
-void
-fu_plugin_add_security_attrs (FuPlugin *plugin, FuSecurityAttrs *attrs)
+static void
+fu_plugin_iommu_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
-	FuPluginData *data = fu_plugin_get_data (plugin);
+	FuPluginData *data = fu_plugin_get_data(plugin);
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 
 	/* create attr */
-	attr = fwupd_security_attr_new (FWUPD_SECURITY_ATTR_ID_IOMMU);
-	fwupd_security_attr_set_level (attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
-	fwupd_security_attr_set_plugin (attr, fu_plugin_get_name (plugin));
-	fu_security_attrs_append (attrs, attr);
+	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_IOMMU);
+	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_IMPORTANT);
+	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	fu_security_attrs_append(attrs, attr);
 
 	if (!data->has_iommu) {
-		fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND);
 		return;
 	}
 
 	/* success */
-	fwupd_security_attr_add_flag (attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
-	fwupd_security_attr_set_result (attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENABLED);
+}
+
+void
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
+{
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_iommu_init;
+	vfuncs->backend_device_added = fu_plugin_iommu_backend_device_added;
+	vfuncs->add_security_attrs = fu_plugin_iommu_add_security_attrs;
 }

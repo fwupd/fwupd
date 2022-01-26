@@ -1,12 +1,13 @@
-fwupd
-=====
-[![Build Status](https://travis-ci.org/fwupd/fwupd.png?branch=master)](https://travis-ci.org/fwupd/fwupd)
+# fwupd
+
+[![Build Status](https://github.com/fwupd/fwupd/actions/workflows/main.yml/badge.svg)](https://github.com/fwupd/fwupd/actions/workflows/main.yml)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/10744/badge.svg)](https://scan.coverity.com/projects/10744)
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/fwupd.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:fwupd)
+[![CircleCI](https://circleci.com/gh/fwupd/fwupd/tree/main.svg?style=svg)](https://circleci.com/gh/fwupd/fwupd/tree/main)
 
 This project aims to make updating firmware on Linux automatic, safe and reliable.
 
-Additional information is available at the website: https://fwupd.org/
+Additional information is available [at the website](https://fwupd.org/).
 
 ## Compiling
 
@@ -27,8 +28,8 @@ useful to update a specific device on the command line that needs a bleeding
 edge fwupd version, but it should not be considered as a replacement to the
 distro-provided system version.
 
-LVFS
-----
+## LVFS
+
 This project is configured by default to download firmware from the [Linux Vendor
 Firmware Service (LVFS)](https://fwupd.org/).
 
@@ -38,8 +39,7 @@ their firmware available to Linux users.
 You can find more information about the technical details of creating a firmware
 capsule in the hardware vendors section of the [fwupd website](https://fwupd.org).
 
-Basic usage flow (command line)
-------------------------------
+## Basic usage flow (command line)
 
 If you have a device with firmware supported by fwupd, this is how you will check
 for updates and apply them using fwupd's command line tools.
@@ -66,8 +66,7 @@ This will download and apply all updates for your system.
 You can find more information about the update workflow in the end
 users section of the [fwupd website](https://fwupd.org).
 
-Reporting status
----------------
+## Reporting status
 
 fwupd will encourage users to report both successful and failed updates back
 to LVFS.  This is an optional feature, but encouraged as it provides valuable
@@ -80,14 +79,9 @@ To report the status of an update run:
 
 `# fwupdmgr report-history`
 
-To clear the local history of updates:
-
-`# fwupdmgr clear-history`
-
  Only updates that were distributed from the LVFS will be reported to the LVFS.
 
-Enterprise use
---------------
+## Enterprise use
 
 The flow of updates can be controlled in the enterprise using the
 "approved updates" feature. This allows the domain administrator to filter
@@ -108,10 +102,62 @@ to two updates in the metadata file.
 Additionally, the list of approved firmware can be supplemented using
 `fwupdmgr set-approved-firmware baz` or using the D-Bus interface.
 
-Other frontends
--------------------
+## Local metadata
 
- 1. [GNOME Software](https://wiki.gnome.org/Apps/Software) is the graphical
+Local metadata can be saved in `/var/lib/fwupd/local.d` or `/usr/share/fwupd/local.d`
+which are scanned at daemon startup. This can be used to add site-specific BKC
+tags to existing metadata stores. For instance:
+
+    <?xml version='1.0' encoding='utf-8'?>
+    <components origin="mycompanyname">
+      <component merge="append">
+        <provides>
+          <firmware>3ef35d3b-ceeb-5e27-8c0a-ac25f90367ab</firmware>
+          <firmware>2ef35d3b-ceeb-5e27-8c0a-ac25f90367ac</firmware>
+          <firmware>1ef35d3b-ceeb-5e27-8c0a-ac25f90367ad</firmware>
+        </provides>
+        <releases>
+          <release version="225.53.1649"/>
+          <release version="224.48.1605"/>
+        </releases>
+        <tags>
+          <tag>mycompanyname-2022q1</tag>
+        </tags>
+      </component>
+    </components>
+
+This then appears when getting the releases for that specific GUID:
+
+    fwupdmgr get-releases --json 3ef35d3b-ceeb-5e27-8c0a-ac25f90367ab
+    {
+      "Releases" : [
+        {
+          ...
+          "Version" : "225.53.1649",
+          "Tags" : [
+            "mycompanyname-2022q1"
+          ],
+          ...
+        },
+        {
+          ...
+          "Version" : "224.48.1605",
+          "Tags" : [
+            "mycompanyname-2022q1"
+          ],
+          ...
+        },
+        {
+          ...
+          "Version" : "224.45.1389",
+          ...
+        }
+      ]
+    }
+
+## Other frontends
+
+1. [GNOME Software](https://wiki.gnome.org/Apps/Software) is the graphical
  frontend available. When compiled with firmware support, it will check for
  updates periodically and automatically download firmware in the background.
  After the firmware has been downloaded a popup will be displayed in GNOME
@@ -128,9 +174,7 @@ Other frontends
  The remote administration interface can be used to download and deploy firmware
  updates.
 
-
-Fuzzing
--------
+## Fuzzing
 
 There are several automated fuzzing tests in fwupd. These take some time to run:
 

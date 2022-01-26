@@ -1,7 +1,7 @@
 [main]
 host = https://www.transifex.com
 
-[fwupd.master]
+[fwupd.main]
 file_filter = po/<lang>.po
 source_file = po/fwupd.pot
 source_lang = en

@@ -1,0 +1,28 @@
+{
+  "name": "Realtek 4-Port USB Hub",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/460a18d93f5d6118908d8437009ebbd6eceb3c6a0cdfbaf31f8a96df008564da-Realtek-RTS5423-1.56.cab",
+      "components": [
+        {
+          "version": "1.56",
+          "guids": [
+            "b2d2fae3-1546-5d16-a9af-ac117a255a91"
+          ]
+        }
+      ]
+    },
+    {
+      "url": "https://fwupd.org/downloads/659e721b0efbe2dfc003d3d30ea5b771c00113cc9a162333ee5a8918c4515f69-Realtek-RTS5423-1.57.cab",
+      "components": [
+        {
+          "version": "1.57",
+          "guids": [
+            "b2d2fae3-1546-5d16-a9af-ac117a255a91"
+          ]
+        }
+      ]
+    }
+  ]
+}

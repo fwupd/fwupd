@@ -6,15 +6,21 @@
 
 #include "config.h"
 
-#include "fu-plugin-vfuncs.h"
+#include <fwupdplugin.h>
 
-#include "fu-cros-ec-usb-device.h"
 #include "fu-cros-ec-firmware.h"
+#include "fu-cros-ec-usb-device.h"
+
+static void
+fu_plugin_cros_ec_init(FuPlugin *plugin)
+{
+	fu_plugin_add_device_gtype(plugin, FU_TYPE_CROS_EC_USB_DEVICE);
+	fu_plugin_add_firmware_gtype(plugin, NULL, FU_TYPE_CROS_EC_FIRMWARE);
+}
 
 void
-fu_plugin_init (FuPlugin *plugin)
+fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
-	fu_plugin_set_build_hash (plugin, FU_BUILD_HASH);
-	fu_plugin_set_device_gtype (plugin, FU_TYPE_CROS_EC_USB_DEVICE);
-	fu_plugin_add_firmware_gtype (plugin, NULL, FU_TYPE_CROS_EC_FIRMWARE);
+	vfuncs->build_hash = FU_BUILD_HASH;
+	vfuncs->init = fu_plugin_cros_ec_init;
 }

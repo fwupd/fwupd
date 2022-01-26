@@ -22,8 +22,7 @@ def cd(path):
     os.chdir(prev_cwd)
 
 
-firmware_metainfo_template = """
-<?xml version="1.0" encoding="UTF-8"?>
+firmware_metainfo_template = """<?xml version="1.0" encoding="UTF-8"?>
 <component type="firmware">
   <id>org.{developer_name}.guid{firmware_id}</id>
   <name>{firmware_name}</name>
@@ -46,6 +45,10 @@ firmware_metainfo_template = """
       </description>
     </release>
   </releases>
+  <custom>
+    <value key="LVFS::VersionFormat">{version_format}</value>
+    <value key="LVFS::UpdateProtocol">{update_protocol}</value>
+  </custom>
 </component>
 """
 
@@ -94,24 +97,24 @@ def create_firmware_cab(exe, folder):
 
 
 def main(args):
-    with tempfile.TemporaryDirectory() as dir:
-        print("Using temp directory {}".format(dir))
+    with tempfile.TemporaryDirectory() as d:
+        print("Using temp directory {}".format(d))
 
         if args.exe:
             print("Extracting firmware exe")
-            extract_exe(args.exe, dir)
+            extract_exe(args.exe, d)
 
         print("Locating firmware bin")
-        get_firmware_bin(dir, args.bin, dir)
+        get_firmware_bin(d, args.bin, d)
 
         print("Creating metainfo")
-        make_firmware_metainfo(args, dir)
+        make_firmware_metainfo(args, d)
 
         print("Creating cabinet file")
-        create_firmware_cab(args, dir)
+        create_firmware_cab(args, d)
 
         print("Done")
-        shutil.copy(os.path.join(dir, "firmware.cab"), args.out)
+        shutil.copy(os.path.join(d, "firmware.cab"), args.out)
 
 
 if __name__ == "__main__":
@@ -144,6 +147,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "--release-version",
         help="Version number of the firmware package",
+        required=True,
+    )
+    parser.add_argument(
+        "--version-format",
+        help="Version format, e.g. quad or triplet",
+        required=True,
+    )
+    parser.add_argument(
+        "--update-protocol",
+        help="Update protocol, e.g. org.uefi.capsule",
         required=True,
     )
     parser.add_argument(

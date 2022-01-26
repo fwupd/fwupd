@@ -1,4 +1,8 @@
-if host_machine.system() == 'linux'
+if get_option('plugin_pixart_rf') and host_machine.system() == 'linux'
+if not get_option('gudev')
+  error('gudev is required for plugin_pixart_rf')
+endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
 
 install_data(['pixart-rf.quirk'],
@@ -9,7 +13,10 @@ shared_module('fu_plugin_pixart_rf',
   fu_hash,
   sources : [
     'fu-plugin-pixart-rf.c',
-    'fu-pxi-device.c',
+    'fu-pxi-common.c',
+    'fu-pxi-ble-device.c',
+    'fu-pxi-receiver-device.c',
+    'fu-pxi-wireless-device.c',
     'fu-pxi-firmware.c',      # fuzzing
   ],
   include_directories : [
@@ -28,9 +35,13 @@ shared_module('fu_plugin_pixart_rf',
     fwupdplugin,
   ],
 )
-endif
 
 if get_option('tests')
+  install_data(['tests/pixart.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'))
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'pxi-self-test',
     fu_hash,
@@ -53,5 +64,6 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('pxi-self-test', e)
+  test('pxi-self-test', e, env : env)
+endif
 endif

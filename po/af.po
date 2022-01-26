@@ -15,7 +15,7 @@ msgstr ""
 "Language: af\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -175,6 +175,7 @@ msgstr "Ledig…"
 msgid "Installing on %s…"
 msgstr "Installeer tans op %s…"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Sleutelring"
 

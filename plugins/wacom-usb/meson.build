@@ -9,10 +9,12 @@ shared_module('fu_plugin_wacom_usb',
   fu_hash,
   sources : [
     'fu-wac-common.c',
+    'fu-wac-android-device.c',
     'fu-wac-device.c',
     'fu-wac-firmware.c',          # fuzzing
     'fu-wac-module.c',
     'fu-wac-module-bluetooth.c',
+    'fu-wac-module-bluetooth-id6.c',
     'fu-wac-module-touch.c',
     'fu-plugin-wacom-usb.c',
   ],
@@ -34,9 +36,11 @@ shared_module('fu_plugin_wacom_usb',
 )
 
 if get_option('tests')
-  testdatadirs = environment()
-  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
-  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  install_data(['tests/wacom-usb.builder.xml'],
+    install_dir: join_paths(installed_test_datadir, 'tests'))
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'wacom-usb-self-test',
     fu_hash,
@@ -51,11 +55,7 @@ if get_option('tests')
       fwupdplugin_incdir,
     ],
     dependencies : [
-      libxmlb,
-      gio,
-      gusb,
-      gudev,
-      libm,
+      plugin_deps,
     ],
     link_with : [
       fwupd,
@@ -65,6 +65,6 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('wacom-usb-self-test', e, env : testdatadirs)  # added to installed-tests
+  test('wacom-usb-self-test', e, env : env)  # added to installed-tests
 endif
 endif

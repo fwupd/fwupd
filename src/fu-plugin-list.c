@@ -4,42 +4,41 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
-#define G_LOG_DOMAIN				"FuPluginList"
+#define G_LOG_DOMAIN "FuPluginList"
 
 #include "config.h"
 
 #include <glib-object.h>
 
+#include "fwupd-error.h"
+
 #include "fu-plugin-list.h"
 #include "fu-plugin-private.h"
 
-#include "fwupd-error.h"
-
 /**
- * SECTION:fu-plugin-list
- * @short_description: a list of plugins
+ * FuPluginList:
  *
  * This list of plugins provides a way to get the specific plugin quickly using
  * a hash table and also any plugin-list specific functionality such as
  * sorting by dependency order.
  *
- * See also: #FuPlugin
+ * See also: [class@FuPlugin]
  */
 
-static void fu_plugin_list_finalize	 (GObject *obj);
+static void
+fu_plugin_list_finalize(GObject *obj);
 
-struct _FuPluginList
-{
-	GObject			 parent_instance;
-	GPtrArray		*plugins;		/* of FuPlugin */
-	GHashTable		*plugins_hash;		/* of name : FuPlugin */
+struct _FuPluginList {
+	GObject parent_instance;
+	GPtrArray *plugins;	  /* of FuPlugin */
+	GHashTable *plugins_hash; /* of name : FuPlugin */
 };
 
-G_DEFINE_TYPE (FuPluginList, fu_plugin_list, G_TYPE_OBJECT)
+G_DEFINE_TYPE(FuPluginList, fu_plugin_list, G_TYPE_OBJECT)
 
 /**
  * fu_plugin_list_get_all:
- * @self: A #FuPluginList
+ * @self: a #FuPluginList
  *
  * Gets all the plugins that have been added.
  *
@@ -48,16 +47,37 @@ G_DEFINE_TYPE (FuPluginList, fu_plugin_list, G_TYPE_OBJECT)
  * Since: 1.0.2
  **/
 GPtrArray *
-fu_plugin_list_get_all (FuPluginList *self)
+fu_plugin_list_get_all(FuPluginList *self)
 {
-	g_return_val_if_fail (FU_IS_PLUGIN_LIST (self), NULL);
+	g_return_val_if_fail(FU_IS_PLUGIN_LIST(self), NULL);
 	return self->plugins;
+}
+
+static void
+fu_plugin_list_rules_changed_cb(FuPlugin *plugin, gpointer user_data)
+{
+	FuPluginList *self = FU_PLUGIN_LIST(user_data);
+	GPtrArray *rules = fu_plugin_get_rules(plugin, FU_PLUGIN_RULE_CONFLICTS);
+	if (rules == NULL)
+		return;
+	for (guint j = 0; j < rules->len; j++) {
+		const gchar *plugin_name = g_ptr_array_index(rules, j);
+		FuPlugin *dep = fu_plugin_list_find_by_name(self, plugin_name, NULL);
+		if (dep == NULL)
+			continue;
+		if (fu_plugin_has_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED))
+			continue;
+		g_debug("late disabling %s as conflicts with %s",
+			fu_plugin_get_name(dep),
+			fu_plugin_get_name(plugin));
+		fu_plugin_add_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED);
+	}
 }
 
 /**
  * fu_plugin_list_add:
- * @self: A #FuPluginList
- * @plugin: A #FuPlugin
+ * @self: a #FuPluginList
+ * @plugin: a plugin
  *
  * Adds a plugin to the list. The plugin name is used for a hash key and must
  * be set before calling this function.
@@ -65,22 +85,26 @@ fu_plugin_list_get_all (FuPluginList *self)
  * Since: 1.0.2
  **/
 void
-fu_plugin_list_add (FuPluginList *self, FuPlugin *plugin)
+fu_plugin_list_add(FuPluginList *self, FuPlugin *plugin)
 {
-	g_return_if_fail (FU_IS_PLUGIN_LIST (self));
-	g_return_if_fail (FU_IS_PLUGIN (plugin));
-	g_return_if_fail (fu_plugin_get_name (plugin) != NULL);
-	g_ptr_array_add (self->plugins, g_object_ref (plugin));
-	g_hash_table_insert (self->plugins_hash,
-			     g_strdup (fu_plugin_get_name (plugin)),
-			     g_object_ref (plugin));
+	g_return_if_fail(FU_IS_PLUGIN_LIST(self));
+	g_return_if_fail(FU_IS_PLUGIN(plugin));
+	g_return_if_fail(fu_plugin_get_name(plugin) != NULL);
+	g_ptr_array_add(self->plugins, g_object_ref(plugin));
+	g_hash_table_insert(self->plugins_hash,
+			    g_strdup(fu_plugin_get_name(plugin)),
+			    g_object_ref(plugin));
+	g_signal_connect(FU_PLUGIN(plugin),
+			 "rules-changed",
+			 G_CALLBACK(fu_plugin_list_rules_changed_cb),
+			 self);
 }
 
 /**
  * fu_plugin_list_find_by_name:
- * @self: A #FuPluginList
- * @name: A #FuPlugin name, e.g. "dfu"
- * @error: A #GError, or %NULL
+ * @self: a #FuPluginList
+ * @name: a plugin name, e.g. `dfu`
+ * @error: (nullable): optional return location for an error
  *
  * Finds a specific plugin using the plugin name.
  *
@@ -89,35 +113,34 @@ fu_plugin_list_add (FuPluginList *self, FuPlugin *plugin)
  * Since: 1.0.2
  **/
 FuPlugin *
-fu_plugin_list_find_by_name (FuPluginList *self, const gchar *name, GError **error)
+fu_plugin_list_find_by_name(FuPluginList *self, const gchar *name, GError **error)
 {
-	g_return_val_if_fail (FU_IS_PLUGIN_LIST (self), NULL);
-	g_return_val_if_fail (name != NULL, NULL);
-	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
-	for (guint i = 0; i < self->plugins->len; i++) {
-		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
-		if (g_strcmp0 (fu_plugin_get_name (plugin), name) == 0)
-			return plugin;
+	FuPlugin *plugin;
+
+	g_return_val_if_fail(FU_IS_PLUGIN_LIST(self), NULL);
+	g_return_val_if_fail(name != NULL, NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
+	plugin = g_hash_table_lookup(self->plugins_hash, name);
+	if (plugin == NULL) {
+		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no plugin %s found", name);
+		return NULL;
 	}
-	g_set_error (error,
-		     FWUPD_ERROR,
-		     FWUPD_ERROR_NOT_FOUND,
-		     "no plugin %s found", name);
-	return NULL;
+	return plugin;
 }
 
 static gint
-fu_plugin_list_sort_cb (gconstpointer a, gconstpointer b)
+fu_plugin_list_sort_cb(gconstpointer a, gconstpointer b)
 {
-	FuPlugin **pa = (FuPlugin **) a;
-	FuPlugin **pb = (FuPlugin **) b;
-	return fu_plugin_order_compare (*pa, *pb);
+	FuPlugin **pa = (FuPlugin **)a;
+	FuPlugin **pb = (FuPlugin **)b;
+	return fu_plugin_order_compare(*pa, *pb);
 }
 
 /**
  * fu_plugin_list_depsolve:
- * @self: A #FuPluginList
- * @error: A #GError, or %NULL
+ * @self: a #FuPluginList
+ * @error: (nullable): optional return location for an error
  *
  * Depsolves the list of plugins into the correct order. Some plugin methods
  * are called on all plugins and for some situations the order they are called
@@ -129,75 +152,75 @@ fu_plugin_list_sort_cb (gconstpointer a, gconstpointer b)
  * Since: 1.0.2
  **/
 gboolean
-fu_plugin_list_depsolve (FuPluginList *self, GError **error)
+fu_plugin_list_depsolve(FuPluginList *self, GError **error)
 {
 	FuPlugin *dep;
 	GPtrArray *deps;
 	gboolean changes;
 	guint dep_loop_check = 0;
 
-	g_return_val_if_fail (FU_IS_PLUGIN_LIST (self), FALSE);
-	g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+	g_return_val_if_fail(FU_IS_PLUGIN_LIST(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	/* order by deps */
 	do {
 		changes = FALSE;
 		for (guint i = 0; i < self->plugins->len; i++) {
-			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
-			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_RUN_AFTER);
+			FuPlugin *plugin = g_ptr_array_index(self->plugins, i);
+			deps = fu_plugin_get_rules(plugin, FU_PLUGIN_RULE_RUN_AFTER);
 			if (deps == NULL)
 				continue;
 			for (guint j = 0; j < deps->len && !changes; j++) {
-				const gchar *plugin_name = g_ptr_array_index (deps, j);
-				dep = fu_plugin_list_find_by_name (self, plugin_name, NULL);
+				const gchar *plugin_name = g_ptr_array_index(deps, j);
+				dep = fu_plugin_list_find_by_name(self, plugin_name, NULL);
 				if (dep == NULL) {
-					g_debug ("cannot find plugin '%s' "
-						 "requested by '%s'",
-						 plugin_name,
-						 fu_plugin_get_name (plugin));
+					g_debug("cannot find plugin '%s' "
+						"requested by '%s'",
+						plugin_name,
+						fu_plugin_get_name(plugin));
 					continue;
 				}
-				if (fu_plugin_has_flag (dep, FWUPD_PLUGIN_FLAG_DISABLED))
+				if (fu_plugin_has_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED))
 					continue;
-				if (fu_plugin_get_order (plugin) <= fu_plugin_get_order (dep)) {
-					g_debug ("%s [%u] to be ordered after %s [%u] "
-						 "so promoting to [%u]",
-						 fu_plugin_get_name (plugin),
-						 fu_plugin_get_order (plugin),
-						 fu_plugin_get_name (dep),
-						 fu_plugin_get_order (dep),
-						 fu_plugin_get_order (dep) + 1);
-					fu_plugin_set_order (plugin, fu_plugin_get_order (dep) + 1);
+				if (fu_plugin_get_order(plugin) <= fu_plugin_get_order(dep)) {
+					g_debug("%s [%u] to be ordered after %s [%u] "
+						"so promoting to [%u]",
+						fu_plugin_get_name(plugin),
+						fu_plugin_get_order(plugin),
+						fu_plugin_get_name(dep),
+						fu_plugin_get_order(dep),
+						fu_plugin_get_order(dep) + 1);
+					fu_plugin_set_order(plugin, fu_plugin_get_order(dep) + 1);
 					changes = TRUE;
 				}
 			}
 		}
 		for (guint i = 0; i < self->plugins->len; i++) {
-			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
-			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_RUN_BEFORE);
+			FuPlugin *plugin = g_ptr_array_index(self->plugins, i);
+			deps = fu_plugin_get_rules(plugin, FU_PLUGIN_RULE_RUN_BEFORE);
 			if (deps == NULL)
 				continue;
 			for (guint j = 0; j < deps->len && !changes; j++) {
-				const gchar *plugin_name = g_ptr_array_index (deps, j);
-				dep = fu_plugin_list_find_by_name (self, plugin_name, NULL);
+				const gchar *plugin_name = g_ptr_array_index(deps, j);
+				dep = fu_plugin_list_find_by_name(self, plugin_name, NULL);
 				if (dep == NULL) {
-					g_debug ("cannot find plugin '%s' "
-						 "requested by '%s'",
-						 plugin_name,
-						 fu_plugin_get_name (plugin));
+					g_debug("cannot find plugin '%s' "
+						"requested by '%s'",
+						plugin_name,
+						fu_plugin_get_name(plugin));
 					continue;
 				}
-				if (fu_plugin_has_flag (dep, FWUPD_PLUGIN_FLAG_DISABLED))
+				if (fu_plugin_has_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED))
 					continue;
-				if (fu_plugin_get_order (plugin) >= fu_plugin_get_order (dep)) {
-					g_debug ("%s [%u] to be ordered before %s [%u] "
-						 "so promoting to [%u]",
-						 fu_plugin_get_name (plugin),
-						 fu_plugin_get_order (plugin),
-						 fu_plugin_get_name (dep),
-						 fu_plugin_get_order (dep),
-						 fu_plugin_get_order (dep) + 1);
-					fu_plugin_set_order (dep, fu_plugin_get_order (plugin) + 1);
+				if (fu_plugin_get_order(plugin) >= fu_plugin_get_order(dep)) {
+					g_debug("%s [%u] to be ordered before %s [%u] "
+						"so promoting to [%u]",
+						fu_plugin_get_name(plugin),
+						fu_plugin_get_order(plugin),
+						fu_plugin_get_name(dep),
+						fu_plugin_get_order(dep),
+						fu_plugin_get_order(dep) + 1);
+					fu_plugin_set_order(dep, fu_plugin_get_order(plugin) + 1);
 					changes = TRUE;
 				}
 			}
@@ -205,31 +228,32 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 
 		/* set priority as well */
 		for (guint i = 0; i < self->plugins->len; i++) {
-			FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
-			deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_BETTER_THAN);
+			FuPlugin *plugin = g_ptr_array_index(self->plugins, i);
+			deps = fu_plugin_get_rules(plugin, FU_PLUGIN_RULE_BETTER_THAN);
 			if (deps == NULL)
 				continue;
 			for (guint j = 0; j < deps->len && !changes; j++) {
-				const gchar *plugin_name = g_ptr_array_index (deps, j);
-				dep = fu_plugin_list_find_by_name (self, plugin_name, NULL);
+				const gchar *plugin_name = g_ptr_array_index(deps, j);
+				dep = fu_plugin_list_find_by_name(self, plugin_name, NULL);
 				if (dep == NULL) {
-					g_debug ("cannot find plugin '%s' "
-						 "referenced by '%s'",
-						 plugin_name,
-						 fu_plugin_get_name (plugin));
+					g_debug("cannot find plugin '%s' "
+						"referenced by '%s'",
+						plugin_name,
+						fu_plugin_get_name(plugin));
 					continue;
 				}
-				if (fu_plugin_has_flag (dep, FWUPD_PLUGIN_FLAG_DISABLED))
+				if (fu_plugin_has_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED))
 					continue;
-				if (fu_plugin_get_priority (plugin) <= fu_plugin_get_priority (dep)) {
-					g_debug ("%s [%u] better than %s [%u] "
-						 "so bumping to [%u]",
-						 fu_plugin_get_name (plugin),
-						 fu_plugin_get_priority (plugin),
-						 fu_plugin_get_name (dep),
-						 fu_plugin_get_priority (dep),
-						 fu_plugin_get_priority (dep) + 1);
-					fu_plugin_set_priority (plugin, fu_plugin_get_priority (dep) + 1);
+				if (fu_plugin_get_priority(plugin) <= fu_plugin_get_priority(dep)) {
+					g_debug("%s [%u] better than %s [%u] "
+						"so bumping to [%u]",
+						fu_plugin_get_name(plugin),
+						fu_plugin_get_priority(plugin),
+						fu_plugin_get_name(dep),
+						fu_plugin_get_priority(dep),
+						fu_plugin_get_priority(dep) + 1);
+					fu_plugin_set_priority(plugin,
+							       fu_plugin_get_priority(dep) + 1);
 					changes = TRUE;
 				}
 			}
@@ -237,65 +261,65 @@ fu_plugin_list_depsolve (FuPluginList *self, GError **error)
 
 		/* check we're not stuck */
 		if (dep_loop_check++ > 100) {
-			g_set_error_literal (error,
-					     FWUPD_ERROR,
-					     FWUPD_ERROR_INTERNAL,
-					     "got stuck in dep loop");
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_INTERNAL,
+					    "got stuck in dep loop");
 			return FALSE;
 		}
 	} while (changes);
 
 	/* check for conflicts */
 	for (guint i = 0; i < self->plugins->len; i++) {
-		FuPlugin *plugin = g_ptr_array_index (self->plugins, i);
-		if (fu_plugin_has_flag (plugin, FWUPD_PLUGIN_FLAG_DISABLED))
+		FuPlugin *plugin = g_ptr_array_index(self->plugins, i);
+		if (fu_plugin_has_flag(plugin, FWUPD_PLUGIN_FLAG_DISABLED))
 			continue;
-		deps = fu_plugin_get_rules (plugin, FU_PLUGIN_RULE_CONFLICTS);
+		deps = fu_plugin_get_rules(plugin, FU_PLUGIN_RULE_CONFLICTS);
 		if (deps == NULL)
 			continue;
 		for (guint j = 0; j < deps->len && !changes; j++) {
-			const gchar *plugin_name = g_ptr_array_index (deps, j);
-			dep = fu_plugin_list_find_by_name (self, plugin_name, NULL);
+			const gchar *plugin_name = g_ptr_array_index(deps, j);
+			dep = fu_plugin_list_find_by_name(self, plugin_name, NULL);
 			if (dep == NULL)
 				continue;
-			if (fu_plugin_has_flag (dep, FWUPD_PLUGIN_FLAG_DISABLED))
+			if (fu_plugin_has_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED))
 				continue;
-			g_debug ("disabling %s as conflicts with %s",
-				 fu_plugin_get_name (dep),
-				 fu_plugin_get_name (plugin));
-			fu_plugin_add_flag (dep, FWUPD_PLUGIN_FLAG_DISABLED);
+			g_debug("disabling %s as conflicts with %s",
+				fu_plugin_get_name(dep),
+				fu_plugin_get_name(plugin));
+			fu_plugin_add_flag(dep, FWUPD_PLUGIN_FLAG_DISABLED);
 		}
 	}
 
 	/* sort by order */
-	g_ptr_array_sort (self->plugins, fu_plugin_list_sort_cb);
+	g_ptr_array_sort(self->plugins, fu_plugin_list_sort_cb);
 	return TRUE;
 }
 
 static void
-fu_plugin_list_class_init (FuPluginListClass *klass)
+fu_plugin_list_class_init(FuPluginListClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fu_plugin_list_finalize;
 }
 
 static void
-fu_plugin_list_init (FuPluginList *self)
+fu_plugin_list_init(FuPluginList *self)
 {
-	self->plugins = g_ptr_array_new_with_free_func ((GDestroyNotify) g_object_unref);
-	self->plugins_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
-						    g_free, (GDestroyNotify) g_object_unref);
+	self->plugins = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	self->plugins_hash =
+	    g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_object_unref);
 }
 
 static void
-fu_plugin_list_finalize (GObject *obj)
+fu_plugin_list_finalize(GObject *obj)
 {
-	FuPluginList *self = FU_PLUGIN_LIST (obj);
+	FuPluginList *self = FU_PLUGIN_LIST(obj);
 
-	g_ptr_array_unref (self->plugins);
-	g_hash_table_unref (self->plugins_hash);
+	g_ptr_array_unref(self->plugins);
+	g_hash_table_unref(self->plugins_hash);
 
-	G_OBJECT_CLASS (fu_plugin_list_parent_class)->finalize (obj);
+	G_OBJECT_CLASS(fu_plugin_list_parent_class)->finalize(obj);
 }
 
 /**
@@ -308,9 +332,9 @@ fu_plugin_list_finalize (GObject *obj)
  * Since: 1.0.2
  **/
 FuPluginList *
-fu_plugin_list_new (void)
+fu_plugin_list_new(void)
 {
 	FuPluginList *self;
-	self = g_object_new (FU_TYPE_PLUGIN_LIST, NULL);
-	return FU_PLUGIN_LIST (self);
+	self = g_object_new(FU_TYPE_PLUGIN_LIST, NULL);
+	return FU_PLUGIN_LIST(self);
 }

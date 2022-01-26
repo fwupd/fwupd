@@ -1,12 +1,13 @@
-# RTS5423
-[USB\VID_0BDA&PID_1100]
+# Realtek USBHub (HID Device)
+[USB\VID_0BDA&PID_5A00]
 Plugin = rts54hid
+GType = FuRts54HidDevice
 FirmwareSizeMin = 0x10000
 FirmwareSizeMax = 0x40000
-Children = FuRts54HidModule|USB\VID_0BDA&PID_1100&I2C_01
+Children = FuRts54HidModule|USB\VID_0BDA&PID_5A00&I2C_01
 
 # this is a fictitious example...
-[USB\VID_0BDA&PID_1100&I2C_01]
+[USB\VID_0BDA&PID_5A00&I2C_01]
 Plugin = rts54hid
 Name = HDMI Converter
 Flags = updatable

@@ -1,0 +1,25 @@
+{
+  "name": "Lenovo Travel Hub Gen2 [VL817]",
+  "interactive": false,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/ebfda3c96543d6d7ad97a972344f4d34a14549c535095bfbb1860115a88e6ff6-Lenovo-TravalHub-2020-12-11-153442.cab",
+      "components": [
+        {
+          "name": "tier1",
+          "version": "4.74",
+          "guids": [
+            "3fc55e47-f57a-55bd-9f41-ac60280bd689"
+          ]
+        },
+        {
+          "name": "tier3",
+          "version": "138.04.72.18",
+          "guids": [
+            "3ae6610b-5c33-5714-96e3-05735eb9b2a5"
+          ]
+        }
+      ]
+    }
+  ]
+}

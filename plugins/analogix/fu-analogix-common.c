@@ -6,7 +6,7 @@
 #include "fu-analogix-common.h"
 
 const gchar *
-fu_analogix_update_status_to_string (AnxUpdateStatus status)
+fu_analogix_update_status_to_string(AnxUpdateStatus status)
 {
 	if (status == UPDATE_STATUS_INVALID)
 		return "invalid";

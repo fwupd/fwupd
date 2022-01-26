@@ -1,0 +1,206 @@
+_fwupdmgr_cmd_list=(
+	'activate'
+	'block-firmware'
+	'clear-results'
+	'disable-remote'
+	'device-test'
+	'downgrade'
+	'download'
+	'enable-remote'
+	'get-approved-firmware'
+	'get-blocked-firmware'
+	'get-details'
+	'get-devices'
+	'get-history'
+	'get-releases'
+	'get-remotes'
+	'get-results'
+	'get-topology'
+	'get-updates'
+	'get-upgrades'
+	'get-plugins'
+	'install'
+	'modify-config'
+	'modify-remote'
+	'reinstall'
+	'refresh'
+	'report-history'
+	'security'
+	'set-approved-firmware'
+	'switch-branch'
+	'sync-bkc'
+	'unlock'
+	'unblock-firmware'
+	'update'
+	'upgrade'
+	'verify'
+	'verify-update'
+	'--version'
+)
+
+_fwupdmgr_opts=(
+	'--verbose'
+	'--offline'
+	'--allow-reinstall'
+	'--allow-older'
+	'--allow-branch-switch'
+	'--force'
+	'--assume-yes'
+	'--no-history'
+	'--no-unreported-check'
+	'--no-metadata-check'
+	'--no-reboot-check'
+	'--no-safety-check'
+	'--no-remote-check'
+	'--show-all'
+	'--sign'
+	'--filter'
+	'--disable-ssl-strict'
+	'--ipfs'
+	'--json'
+)
+
+_show_filters()
+{
+	local flags
+	flags="$(command fwupdtool get-device-flags 2>/dev/null)"
+	COMPREPLY+=( $(compgen -W "${flags}" -- "$cur") )
+}
+
+_show_modifiers()
+{
+	COMPREPLY+=( $(compgen -W '${_fwupdmgr_opts[@]}' -- "$cur") )
+}
+
+_show_device_ids()
+{
+	if ! command -v jq &> /dev/null; then
+		return 0
+	fi
+	local description
+	description="$(command fwupdmgr get-devices --json 2>/dev/null | jq '.Devices | .[] | .DeviceId')"
+	COMPREPLY+=( $(compgen -W "${description}" -- "$cur") )
+}
+
+_show_remotes()
+{
+	local remotes
+	remotes="$(command fwupdmgr get-remotes | command awk '/Remote ID/ { print $4 }')"
+	COMPREPLY+=( $(compgen -W "${remotes}" -- "$cur") )
+}
+
+_fwupdmgr()
+{
+	local cur prev command
+	COMPREPLY=()
+	cur=`_get_cword`
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+	command=${COMP_WORDS[1]}
+
+	case $prev in
+	--filter)
+		_show_filters
+		return 0
+		;;
+	esac
+
+	case $command in
+	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update|get-updates|switch-branch|update|upgrade)
+		if [[ "$prev" = "$command" ]]; then
+			_show_device_ids
+		else
+			_show_modifiers
+		fi
+		;;
+	get-details)
+		#browse for file
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	device-test)
+		#browse for files
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	install)
+		#find files
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#device ID or modifiers
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			_show_device_ids
+			_show_modifiers
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	modify-remote)
+		#find remotes
+		if [[ "$prev" = "$command" ]]; then
+			_show_remotes
+		#add key
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			local keys
+			keys="$(command fwupdmgr get-remotes | command awk -v pattern="Remote ID:.*${prev}$" '$0~pattern{show=1; next}/Remote/{show=0}{gsub(/:.*/,"")}show')"
+			COMPREPLY+=( $(compgen -W "${keys}" -- "$cur") )
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	enable-remote)
+		#find remotes
+		if [[ "$prev" = "$command" ]]; then
+			_show_remotes
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	disable-remote)
+		#find remotes
+		if [[ "$prev" = "$command" ]]; then
+			_show_remotes
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	refresh)
+		#find first file
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#find second file
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			_filedir
+		#find remote ID
+		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
+			_show_remotes
+		else
+			_show_modifiers
+		fi
+		;;
+	*)
+		#find first command
+		if [[ ${COMP_CWORD} = 1 ]]; then
+			COMPREPLY=( $(compgen -W '${_fwupdmgr_cmd_list[@]}' -- "$cur") )
+		#modifiers for all commands
+		else
+			_show_modifiers
+		fi
+		;;
+	esac
+
+	return 0
+}
+
+complete -F _fwupdmgr fwupdmgr

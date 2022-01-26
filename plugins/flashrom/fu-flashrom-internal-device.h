@@ -8,8 +8,12 @@
 
 #include "fu-flashrom-device.h"
 
-#define FU_TYPE_FLASHROM_INTERNAL_DEVICE (fu_flashrom_internal_device_get_type ())
-G_DECLARE_FINAL_TYPE (FuFlashromInternalDevice, fu_flashrom_internal_device, FU,
-		      FLASHROM_INTERNAL_DEVICE, FuFlashromDevice)
+#define FU_TYPE_FLASHROM_INTERNAL_DEVICE (fu_flashrom_internal_device_get_type())
+G_DECLARE_FINAL_TYPE(FuFlashromInternalDevice,
+		     fu_flashrom_internal_device,
+		     FU,
+		     FLASHROM_INTERNAL_DEVICE,
+		     FuFlashromDevice)
 
-FuDevice	*fu_flashrom_internal_device_new			(void);
+FuDevice *
+fu_flashrom_internal_device_new(FuContext *ctx);

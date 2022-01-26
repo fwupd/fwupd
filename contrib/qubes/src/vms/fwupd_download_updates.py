@@ -45,10 +45,10 @@ class DownloadData(FwupdVmCommon):
         p = subprocess.Popen(cmd_metadata)
         p.wait()
         if p.returncode != 0:
-            raise Exception("fwudp-qubes: Downloading metadata file failed")
+            raise Exception("fwupd-qubes: Downloading metadata file failed")
         if not os.path.exists(self.metadata_file):
             raise FileNotFoundError(
-                "fwudp-qubes: Downloaded metadata file does not exist"
+                "fwupd-qubes: Downloaded metadata file does not exist"
             )
 
     def _download_metadata_jcat(self):
@@ -61,10 +61,10 @@ class DownloadData(FwupdVmCommon):
         p = subprocess.Popen(cmd_metadata)
         p.wait()
         if p.returncode != 0:
-            raise Exception("fwudp-qubes: Downloading metadata file failed")
+            raise Exception("fwupd-qubes: Downloading metadata file failed")
         if not os.path.exists(f"{self.metadata_file}.jcat"):
             raise FileNotFoundError(
-                "fwudp-qubes: Downloaded metadata file does not exist"
+                "fwupd-qubes: Downloaded metadata file does not exist"
             )
 
     def download_metadata(self, url=None):
@@ -97,10 +97,10 @@ class DownloadData(FwupdVmCommon):
         p = subprocess.Popen(cmd_update)
         p.wait()
         if p.returncode != 0:
-            raise Exception("fwudp-qubes: Downloading update file failed")
+            raise Exception("fwupd-qubes: Downloading update file failed")
         if not os.path.exists(update_path):
             raise FileNotFoundError(
-                "fwudp-qubes: Downloaded update file does not exist"
+                "fwupd-qubes: Downloaded update file does not exist"
             )
         self.check_shasum(update_path, sha)
         print("Update file downloaded successfully")

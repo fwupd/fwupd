@@ -50,7 +50,7 @@ class PotFile:
                     continue
                 try:
                     key, value = line.split(" ", maxsplit=1)
-                except ValueError as _:
+                except ValueError:
                     continue
                 if key == "msgid":
                     lang_en = value[1:-1]
@@ -74,7 +74,7 @@ def _cairo_surface_write_to_bmp(img: cairo.ImageSurface) -> bytes:
             54,  # pixel array offset
             40,  # DIB header
             img.get_width(),  # width
-            -img.get_height(),  # height (top down)
+            img.get_height(),  # height
             1,  # planes
             32,  # BPP
             0,  # no compression
@@ -101,7 +101,7 @@ def main(args) -> int:
                 potfile = PotFile(os.path.join(args.podir, "{}.po".format(lang)))
                 try:
                     label_translated = potfile.msgs[args.label]
-                except KeyError as _:
+                except KeyError:
                     continue
                 if label_translated == args.label:
                     continue
@@ -149,7 +149,7 @@ def main(args) -> int:
                 del img, cctx, pctx, layout
 
                 def find_size(fs, f, data):
-                    """ find our size, I hope... """
+                    """find our size, I hope..."""
                     (ink, log) = gs.extents(f)
                     if ink.height == 0 or ink.width == 0:
                         return False
@@ -179,15 +179,20 @@ def main(args) -> int:
                 PangoCairo.context_set_font_options(pctx, font_option)
 
                 cctx.set_source_rgb(1, 1, 1)
-                cctx.move_to(x, y)
+                cctx.move_to(x, y - surface_height / 2)
 
                 def do_write(fs, f, data):
-                    """ write out glyphs """
+                    """write out glyphs"""
                     ink = gs.extents(f)[0]
                     if ink.height == 0 or ink.width == 0:
                         return False
                     PangoCairo.show_glyph_string(cctx, f, gs)
                     return True
+
+                # flip the image to write the bitmap upside-down
+                mat = cairo.Matrix()
+                mat.scale(1, -1)
+                cctx.transform(mat)
 
                 fs.foreach(do_write, None)
                 img.flush()

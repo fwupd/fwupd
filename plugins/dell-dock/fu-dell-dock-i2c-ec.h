@@ -17,27 +17,35 @@
 
 #include "config.h"
 
-#include "fu-device.h"
+#include <fwupdplugin.h>
 
-#define FU_TYPE_DELL_DOCK_EC (fu_dell_dock_ec_get_type ())
-G_DECLARE_FINAL_TYPE (FuDellDockEc, fu_dell_dock_ec, FU, DELL_DOCK_EC, FuDevice)
+#define FU_TYPE_DELL_DOCK_EC (fu_dell_dock_ec_get_type())
+G_DECLARE_FINAL_TYPE(FuDellDockEc, fu_dell_dock_ec, FU, DELL_DOCK_EC, FuDevice)
 
-FuDellDockEc 	*fu_dell_dock_ec_new			(FuDevice *proxy);
+FuDellDockEc *
+fu_dell_dock_ec_new(FuDevice *proxy);
 
-const gchar	*fu_dell_dock_ec_get_module_type	(FuDevice *device);
-gboolean	 fu_dell_dock_ec_needs_tbt		(FuDevice *device);
-gboolean	 fu_dell_dock_ec_tbt_passive		(FuDevice *device);
-gboolean	 fu_dell_dock_ec_modify_lock		(FuDevice *self,
-							 guint8 target,
-							 gboolean unlocked,
-							 GError **error);
+const gchar *
+fu_dell_dock_ec_get_module_type(FuDevice *device);
+gboolean
+fu_dell_dock_ec_needs_tbt(FuDevice *device);
+gboolean
+fu_dell_dock_ec_tbt_passive(FuDevice *device);
+gboolean
+fu_dell_dock_ec_modify_lock(FuDevice *self, guint8 target, gboolean unlocked, GError **error);
 
-gboolean	fu_dell_dock_ec_reboot_dock		(FuDevice *device,
-							 GError **error);
+gboolean
+fu_dell_dock_ec_reboot_dock(FuDevice *device, GError **error);
 
-const gchar	*fu_dell_dock_ec_get_mst_version	(FuDevice *device);
-const gchar	*fu_dell_dock_ec_get_tbt_version	(FuDevice *device);
-guint32		 fu_dell_dock_ec_get_status_version	(FuDevice *device);
-gboolean	 fu_dell_dock_ec_commit_package 	(FuDevice *device,
-							 GBytes *blob_fw,
-							 GError **error);
+const gchar *
+fu_dell_dock_ec_get_mst_version(FuDevice *device);
+const gchar *
+fu_dell_dock_ec_get_tbt_version(FuDevice *device);
+guint32
+fu_dell_dock_ec_get_status_version(FuDevice *device);
+gboolean
+fu_dell_dock_ec_commit_package(FuDevice *device, GBytes *blob_fw, GError **error);
+gboolean
+fu_dell_dock_module_is_usb4(FuDevice *device);
+guint8
+fu_dell_dock_get_ec_type(FuDevice *device);

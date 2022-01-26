@@ -3,7 +3,6 @@ if not get_option('gudev')
   error('gudev is required for plugin_thunderbolt')
 endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
-cargs += '-DTESTDATADIR="' + join_paths(meson.source_root(), 'data', 'tests') + '"'
 install_data([
   'thunderbolt.quirk',
   ],
@@ -13,7 +12,10 @@ fu_plugin_thunderbolt = shared_module('fu_plugin_thunderbolt',
   fu_hash,
   sources : [
     'fu-plugin-thunderbolt.c',
+    'fu-thunderbolt-common.c',
     'fu-thunderbolt-device.c',
+    'fu-thunderbolt-retimer.c',
+    'fu-thunderbolt-controller.c',
     'fu-thunderbolt-firmware.c',
     'fu-thunderbolt-firmware-update.c',
   ],
@@ -39,14 +41,20 @@ install_data(['thunderbolt.conf'],
 )
 # we use functions from 2.52 in the tests
 if get_option('tests') and umockdev.found() and gio.version().version_compare('>= 2.52')
-  cargs += '-DPLUGINBUILDDIR="' + meson.current_build_dir() + '"'
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
   e = executable(
     'thunderbolt-self-test',
     fu_hash,
     sources : [
       'fu-self-test.c',
       'fu-plugin-thunderbolt.c',
+      'fu-thunderbolt-common.c',
       'fu-thunderbolt-device.c',
+      'fu-thunderbolt-retimer.c',
+      'fu-thunderbolt-controller.c',
       'fu-thunderbolt-firmware.c',
       'fu-thunderbolt-firmware-update.c',
     ],
@@ -66,12 +74,11 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
     ],
     c_args : cargs
   )
-  test_env = environment()
   if get_option('b_sanitize') == 'address'
-    test_env.prepend('LD_PRELOAD', 'libasan.so.5', 'libumockdev-preload.so.0', separator : ' ')
+    env.prepend('LD_PRELOAD', 'libasan.so.5', 'libumockdev-preload.so.0', separator : ' ')
   else
-    test_env.prepend('LD_PRELOAD', 'libumockdev-preload.so.0')
+    env.prepend('LD_PRELOAD', 'libumockdev-preload.so.0')
   endif
-  test('thunderbolt-self-test', e, env: test_env, timeout : 120)
+  test('thunderbolt-self-test', e, env: env, timeout : 120)
 endif
 endif

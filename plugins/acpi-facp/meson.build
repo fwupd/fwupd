@@ -1,4 +1,4 @@
-if host_machine.system() == 'linux'
+if get_option('hsi') and host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiFacp"']
 
 shared_module('fu_plugin_acpi_facp',
@@ -25,9 +25,9 @@ shared_module('fu_plugin_acpi_facp',
 )
 
 if get_option('tests')
-  testdatadirs = environment()
-  testdatadirs.set('G_TEST_SRCDIR', meson.current_source_dir())
-  testdatadirs.set('G_TEST_BUILDDIR', meson.current_build_dir())
+  env = environment()
+  env.set('G_TEST_SRCDIR', meson.current_source_dir())
+  env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   e = executable(
     'acpi-facp-self-test',
     fu_hash,
@@ -50,6 +50,6 @@ if get_option('tests')
     install : true,
     install_dir : installed_test_bindir,
   )
-  test('acpi-facp-self-test', e, env : testdatadirs)  # added to installed-tests
+  test('acpi-facp-self-test', e, env : env)  # added to installed-tests
 endif
 endif

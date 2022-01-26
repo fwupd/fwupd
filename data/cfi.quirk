@@ -1,0 +1,74 @@
+[CFI\FLASHID_3730]
+Name = A25Lxxx
+CfiDeviceCmdChipErase = 0xc7
+CfiDeviceCmdSectorErase = 0x20
+
+[CFI\FLASHID_1F65]
+Name = AT25F512A/B
+CfiDeviceCmdReadId = 0x15
+CfiDeviceCmdChipErase = 0x62
+CfiDeviceCmdSectorErase = 0x00
+FirmwareSizeMax = 0x10000
+
+[CFI\FLASHID_1C31]
+Name = EN25Fxx
+CfiDeviceCmdChipErase = 0x60
+CfiDeviceCmdSectorErase = 0x20
+
+[CFI\FLASHID_C840]
+Name = GD25Qxxx
+CfiDeviceCmdChipErase = 0xC7
+CfiDeviceCmdSectorErase = 0x20
+
+[CFI\FLASHID_0020]
+Name = M25PxxA/xx
+CfiDeviceCmdChipErase = 0xC7
+CfiDeviceCmdSectorErase = 0x00
+
+[CFI\FLASHID_C220]
+Name = MX25Lxxx/xxxC/xxxE
+CfiDeviceCmdChipErase = 0x60
+CfiDeviceCmdSectorErase = 0x20
+
+[CFI\FLASHID_C222]
+Name = MX25Lxxx1E
+CfiDeviceCmdChipErase = 0x60
+CfiDeviceCmdSectorErase = 0x20
+
+[CFI\FLASHID_00BF]
+Name = PCT/SST25VFxxx/xxxA
+CfiDeviceCmdReadId = 0x90
+CfiDeviceCmdChipErase = 0x60
+CfiDeviceCmdSectorErase = 0x20
+
+[CFI\FLASHID_009D]
+Name = PM25LDxxx
+CfiDeviceCmdReadId = 0x90
+CfiDeviceCmdChipErase = 0xC7
+CfiDeviceCmdSectorErase = 0xD7
+
+[CFI\FLASHID_009D]
+Name = PM25LVxxx
+CfiDeviceCmdReadId = 0xAB
+CfiDeviceCmdChipErase = 0xC7
+CfiDeviceCmdSectorErase = 0xD7
+
+[CFI\FLASHID_00EF]
+Name = W25XxxBV/W25XxxCL
+CfiDeviceCmdChipErase = 0xC7
+CfiDeviceCmdSectorErase = 0x20
+
+#[CFI\FLASHID_XXXX]
+#Name = FM25Fxxx
+#CfiDeviceCmdChipErase = 0xC7
+#CfiDeviceCmdSectorErase = 0x20
+
+#[CFI\FLASHID_XXXX]
+#Name = KH25LxxxxE
+#CfiDeviceCmdChipErase = 0x60
+#CfiDeviceCmdSectorErase = 0x20
+
+#[CFI\FLASHID_XXXX]
+#Name = MX25Vxxx
+#CfiDeviceCmdChipErase = 0x60
+#CfiDeviceCmdSectorErase = 0x20

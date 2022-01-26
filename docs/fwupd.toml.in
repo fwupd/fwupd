@@ -1,0 +1,65 @@
+[library]
+version = "@version@"
+browse_url = "https://github.com/fwupd/fwupd"
+repository_url = "https://github.com/fwupd/fwupd.git"
+website_url = "https://www.fwupd.org"
+authors = "fwupd Development Team"
+logo_url = "org.freedesktop.fwupd.svg"
+license = "LGPL-2.1-or-later"
+description = "Functionality exported by libfwupd for client applications"
+dependencies = [
+                "GObject-2.0",
+                "Gio-2.0",
+                "Json-1.0"
+]
+devhelp = true
+search_index = true
+
+  [dependencies."GObject-2.0"]
+  name = "GObject"
+  description = "The base type system library"
+  docs_url = "https://developer.gnome.org/gobject/stable/"
+
+  [dependencies."Gio-2.0"]
+  name = "Gio"
+  description = "A modern, easy-to-use VFS API"
+  docs_url = "https://developer.gnome.org/gio/stable/"
+
+  [dependencies."Json-1.0"]
+  name = "Json"
+  description = "API for efficient parsing and writing of JSON (JavaScript Object Notation) streams"
+  docs_url = "https://developer.gnome.org/json-glib/stable/"
+
+[theme]
+name = "basic"
+show_index_summary = true
+show_class_hierarchy = true
+
+[source-location]
+base_url = "https://github.com/fwupd/fwupd/blob/@version@/"
+
+[extra]
+content_images = [
+  "../data/org.freedesktop.fwupd.svg",
+]
+urlmap_file = "urlmap_fwupd.js"
+
+[[object]]
+name = "build_user_agent_system"
+hidden = true
+
+[[object]]
+name = "hash_kv_to_variant"
+hidden = true
+
+[[object]]
+name = "variant_to_hash_kv"
+hidden = true
+
+[[object]]
+name = "input_stream_read_bytes_async"
+hidden = true
+
+[[object]]
+name = "input_stream_read_bytes_finish"
+hidden = true

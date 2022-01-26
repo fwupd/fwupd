@@ -1,8 +1,6 @@
-Wacom USB Support
-=================
+# Wacom USB
 
-Introduction
-------------
+## Introduction
 
 Wacom provides interactive pen displays, pen tablets, and styluses to equip and
 inspire everyone make the world a more creative place.
@@ -16,41 +14,37 @@ programmed using a more complicated erase, write, verify algorithm based
 on a historical update protocol. The "sub-module" devices use a newer protocol,
 again based on HID, but are handled differently depending on their type.
 
-Firmware Format
----------------
+## Firmware Format
 
 The daemon will decompress the cabinet archive and extract a firmware blob in
 the following formats:
 
- * Touch module: Intel HEX file format
- * Bluetooth module: Unknown airoflash file format
- * EMR module: Plain SREC file format
- * Main module: SREC file format, with a custom `WACOM` vendor header
+* Touch module: Intel HEX file format
+* Bluetooth module: Unknown airoflash file format
+* EMR module: Plain SREC file format
+* Main module: SREC file format, with a custom `WACOM` vendor header
 
 This plugin supports the following protocol ID:
 
- * com.wacom.usb
+* com.wacom.usb
 
-GUID Generation
----------------
+## GUID Generation
 
 These devices use the standard USB DeviceInstanceId values, e.g.
 
- * `USB\VID_056A&PID_0378&REV_0001`
- * `USB\VID_056A&PID_0378`
- * `USB\VID_056A`
+* `USB\VID_056A&PID_0378&REV_0001`
+* `USB\VID_056A&PID_0378`
+* `USB\VID_056A`
 
-Update Behavior
----------------
+## Update Behavior
 
 The firmware is deployed when the device is in normal runtime mode, and the
 device will reset when the new firmware has been written.
 
-Vendor ID Security
-------------------
+## Vendor ID Security
 
 The vendor ID is set from the USB vendor, for example set to `USB:0x056A`
 
-External interface access
--------------------------
+## External Interface Access
+
 This plugin requires read/write access to `/dev/bus/usb`.

@@ -18,7 +18,7 @@ msgstr ""
 "Language: hu\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -88,12 +88,14 @@ msgstr "%s frissítés"
 msgid "%s and all connected devices may not be usable while updating."
 msgstr "Lehet, hogy a(z) %s és az összes kapcsolódó eszköz használhatatlan lesz a frissítés alatt."
 
-#. TRANSLATORS: warn the user before updating, %1 is a device name
+#. TRANSLATORS: warn the user before
+#. * updating, %1 is a device name
 #, c-format
 msgid "%s must remain connected for the duration of the update to avoid damage."
 msgstr "A károsodás elkerülése miatt szükséges, hogy a(z) %s kapcsolódva maradjon a frissítés során."
 
-#. TRANSLATORS: warn the user before updating, %1 is a machine name
+#. TRANSLATORS: warn the user before updating, %1 is a machine
+#. * name
 #, c-format
 msgid "%s must remain plugged into a power source for the duration of the update to avoid damage."
 msgstr "A károsodás elkerülése miatt szükséges, hogy a(z) %s csatlakoztatva maradjon egy áramforráshoz a frissítés során."
@@ -304,10 +306,6 @@ msgstr "Törli a legutóbbi frissítésből származó eredményeket"
 msgid "Command not found"
 msgstr "A parancs nem található"
 
-#. TRANSLATORS: prompt to apply the update
-msgid "Continue with update?"
-msgstr "Folytatja a frissítést?"
-
 #. TRANSLATORS: Device supports some form of checksum verification
 msgid "Cryptographic hash verification is available"
 msgstr "Kriptográfiai hash ellenőrzés érhető el"
@@ -408,10 +406,6 @@ msgid "Do not check for old metadata"
 msgstr "Ne ellenőrizze a régi metaadatokat"
 
 #. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "Ne ellenőrizze az újraindítást a frissítés után"
-
-#. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
 msgstr "Ne ellenőrizze a nem jelentett előzményeket"
 
@@ -426,16 +420,6 @@ msgstr "Ne tartalmazza az időbélyeg előtagot"
 #. TRANSLATORS: command line option
 msgid "Do not perform device safety checks"
 msgstr "Ne végezzen eszköz biztonsági ellenőrzéseket"
-
-msgid "Do not upload report at this time, but prompt again for future updates"
-msgid_plural "Do not upload reports at this time, but prompt again for future updates"
-msgstr[0] "Most ne töltsön fel jelentést, de kérdezzen rá a jövőben"
-msgstr[1] "Most ne töltsön fel jelentéseket, de kérdezzen rá a jövőben"
-
-msgid "Do not upload report, and never ask to upload reports for future updates"
-msgid_plural "Do not upload reports, and never ask to upload reports for future updates"
-msgstr[0] "Ne töltsön fel jelentést, és sose kérdezzen rá a jövőben"
-msgstr[1] "Ne töltsön fel jelentéseket, és sose kérdezzen rá a jövőben"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -566,10 +550,6 @@ msgstr "Fájlnév aláírása"
 msgid "Filter with a set of device flags using a ~ prefix to exclude, e.g. 'internal,~needs-reboot'"
 msgstr "Szűrés eszközjelzők megadásával, ~ előtag a kihagyáshoz, például „internal,~needs-reboot”"
 
-#. TRANSLATORS: program name
-msgid "Firmware Agent"
-msgstr "Firmware ügynök"
-
 #. TRANSLATORS: remote URI
 msgid "Firmware Base URI"
 msgstr "Firmware kiindulópont URI"
@@ -627,10 +607,6 @@ msgid "Get all device flags supported by fwupd"
 msgstr "Az fwupd által támogatott összes eszközjelző lekérése"
 
 #. TRANSLATORS: command description
-msgid "Get all devices and possible releases"
-msgstr "Összes eszköz és a lehetséges kiadások lekérése"
-
-#. TRANSLATORS: command description
 msgid "Get all devices that support firmware updates"
 msgstr "Minden eszköz lekérése, amelyek támogatják a firmware frissítéseket"
 
@@ -658,7 +634,7 @@ msgstr "Lekéri az eszközhöz tartozó kiadásokat"
 msgid "Gets the results from the last update"
 msgstr "A legutóbbi frissítésből származó eredményeket kéri le"
 
-#. TRANSLATORS: The hardware is waiting to be replugged
+#. TRANSLATORS: the hardware is waiting to be replugged
 msgid "Hardware is waiting to be replugged"
 msgstr "A hardver újracsatlakoztatásra vár"
 
@@ -685,9 +661,6 @@ msgstr "Firmware blob telepítése egy eszközre"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "Egy firmware fájl telepítése ezen a hardveren"
-
-msgid "Install old version of system firmware"
-msgstr "A rendszer firmware régi verziójának telepítése"
 
 msgid "Install signed device firmware"
 msgstr "Aláírt eszköz firmware telepítése"
@@ -732,6 +705,7 @@ msgid_plural "Issues"
 msgstr[0] "Probléma"
 msgstr[1] "Problémák"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "Kulcstartó"
 
@@ -851,10 +825,6 @@ msgstr "OK"
 #. TRANSLATORS: command line option
 msgid "Override the default ESP path"
 msgstr "Az alapértelmezett ESP útvonal felülbírálása"
-
-#. TRANSLATORS: command line option
-msgid "Override warnings and force the action"
-msgstr "Figyelmeztetések felülbírálása, és a művelet kényszerítése"
 
 #. TRANSLATORS: command description
 msgid "Parse and show details about a firmware file"
@@ -1065,6 +1035,7 @@ msgstr "Leállítja most?"
 msgid "Sign data using the client certificate"
 msgstr "Adatok aláírása az ügyféltanúsítvánnyal"
 
+#. TRANSLATORS: command description
 msgctxt "command-description"
 msgid "Sign data using the client certificate"
 msgstr "Adatok aláírása az ügyféltanúsítvánnyal"
@@ -1265,25 +1236,9 @@ msgstr "%s frissítése: %s -> %s…"
 msgid "Updating %s…"
 msgstr "%s frissítése…"
 
-#. TRANSLATORS: message letting the user know an upgrade is available
-#. * %1 is the device name and %2 and %3 are version strings
-#, c-format
-msgid "Upgrade available for %s from %s to %s"
-msgstr "%s frissítés érhető el, erről: %s, erre: %s"
-
-msgid "Upload report just this one time, but prompt again for future updates"
-msgid_plural "Upload reports just this one time, but prompt again for future updates"
-msgstr[0] "Most töltse fel a jelentést, de kérdezzen rá a jövőben"
-msgstr[1] "Most töltse fel a jelentéseket, de kérdezzen rá a jövőben"
-
 #. TRANSLATORS: ask the user to upload
 msgid "Upload report now?"
 msgstr "Feltölti most a jelentést?"
-
-msgid "Upload report this time and automatically upload reports after completing future updates"
-msgid_plural "Upload reports this time and automatically upload reports after completing future updates"
-msgstr[0] "Most töltse fel a jelentést, és automatikusan tegye meg ezt a jövőben"
-msgstr[1] "Most töltse fel a jelentéseket, és automatikusan tegye meg ezt a jövőben"
 
 #. TRANSLATORS: explain why we want to upload
 msgid "Uploading firmware reports helps hardware vendors to quickly identify failing and successful updates on real devices."

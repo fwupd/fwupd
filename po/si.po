@@ -1,0 +1,183 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the fwupd package.
+#
+# Translators:
+# හෙළබස, 2021
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: \n"
+"Language-Team: Sinhala (http://www.transifex.com/freedesktop/fwupd/language/si/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: si\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. TRANSLATORS: Title: %s is ME kind, e.g. CSME/TXT
+#, c-format
+msgid "%s version"
+msgstr "අනුවාදය %s"
+
+#. TRANSLATORS: this is a command alias, e.g. 'get-devices'
+#, c-format
+msgid "Alias to %s"
+msgstr "%s ට අපනාමය"
+
+#. TRANSLATORS: command line option
+msgid "Apply firmware updates"
+msgstr "ස්ථිරාංගයේ අනුවාද යොදන්න"
+
+#. TRANSLATORS: command line option
+msgid "Apply update files"
+msgstr "යාවත්කාල ගොනු යොදන්න"
+
+#. TRANSLATORS: actually sending the update to the hardware
+msgid "Applying update…"
+msgstr "යාවත්කාලය යොදමින්…"
+
+msgid "BYTES"
+msgstr "බයිට"
+
+#. TRANSLATORS: this is to abort the interactive prompt
+msgid "Cancel"
+msgstr "අවලංගු කරන්න"
+
+#. TRANSLATORS: this is when a device ctrl+c's a watch
+msgid "Cancelled"
+msgstr "අවලංගු කෙරිණි"
+
+#. TRANSLATORS: this is when the daemon state changes
+msgid "Changed"
+msgstr "වෙනස් විය"
+
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is inactive and not used
+msgid "Disabled"
+msgstr "අබල කර ඇත"
+
+#. TRANSLATORS: downloading from a remote server
+msgid "Downloading…"
+msgstr "බාගත වෙමින්…"
+
+#. TRANSLATORS: Suffix: the HSI result
+#. TRANSLATORS: Plugin is active and in use
+#. TRANSLATORS: if the remote is enabled
+msgid "Enabled"
+msgstr "සබල කර ඇත"
+
+#. TRANSLATORS: erasing contents of the flash chips
+msgid "Erasing…"
+msgstr "මකා දැමෙමින්…"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME"
+msgstr "ගොනුවේනම"
+
+#. TRANSLATORS: Suffix: the fallback HSI result
+#. TRANSLATORS: the update state of the specific device
+msgid "Failed"
+msgstr "අසමත් විය"
+
+#. TRANSLATORS: dbx file failed to be applied as an update
+msgid "Failed to apply update"
+msgstr "යාවත්කාලය යෙදීමට අසමත් විය"
+
+#. TRANSLATORS: another fwupdtool instance is already running
+msgid "Failed to lock"
+msgstr "අගුළු ලෑමට අසමත් විය"
+
+#. TRANSLATORS: we could not reboot for some reason
+msgid "Failed to reboot"
+msgstr "නැවත ඇරඹීමට අසමත් විය"
+
+#. TRANSLATORS: console message when no Plymouth is installed
+msgid "Installing Firmware…"
+msgstr "ස්ථිරාංගය ස්ථාපනය වෙමින්…"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+msgid "Installing firmware update…"
+msgstr "ස්ථිරාංගයේ අනුවාදය ස්ථාපනය වෙමින්…"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Invalid"
+msgstr "වලංගු නොවේ"
+
+#. TRANSLATORS: parsing the firmware information
+msgid "Loading…"
+msgstr "පූරණය වෙමින්…"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Locked"
+msgstr "අගුළු ලා ඇත"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Not supported"
+msgstr "සහාය නොදක්වයි"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "OK"
+msgstr "හරි"
+
+#. TRANSLATORS: %1 is a device name
+#, c-format
+msgid "Reading from %s…"
+msgstr "%s වෙතින් කියැවෙමින්…"
+
+#. TRANSLATORS: reading from the flash chips
+msgid "Reading…"
+msgstr "කියවෙමින්…"
+
+#. TRANSLATORS: console message when not using plymouth
+msgid "Rebooting…"
+msgstr "නැවත ඇරඹෙමින්…"
+
+#. TRANSLATORS: the first replacement is a display name
+#. * e.g. "ColorHugALS" and the second is a version number
+#. * e.g. "1.2.3"
+#, c-format
+msgid "Reinstalling %s with %s... "
+msgstr "%s සමඟ %s නැවත ස්ථාපනය වෙමින්... "
+
+#. TRANSLATORS: restarting the device to pick up new F/W
+msgid "Restarting device…"
+msgstr "උපාංගය නැවත ඇරඹෙමින්…"
+
+#. TRANSLATORS: command line option
+msgid "Show all results"
+msgstr "සියළුම ප්‍රතිඵල පෙන්වන්න"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Supported"
+msgstr "සහාය දක්වයි"
+
+#. TRANSLATORS: current daemon status is unknown
+#. TRANSLATORS: we don't know the license of the update
+#. TRANSLATORS: unknown release urgency
+msgid "Unknown"
+msgstr "නොදනී"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Unlocked"
+msgstr "අගුළු හැර ඇත"
+
+#. TRANSLATORS: Suffix: the HSI result
+msgid "Valid"
+msgstr "වලංගුයි"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "අනුවාදය"
+
+#. TRANSLATORS: this is a prefix on the console
+msgid "WARNING:"
+msgstr "අවවාදය:"
+
+#. TRANSLATORS: waiting for device to do something
+msgid "Waiting…"
+msgstr "රැඳෙමින්…"
+
+#. TRANSLATORS: writing to the flash chips
+msgid "Writing…"
+msgstr "ලියවෙමින්…"

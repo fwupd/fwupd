@@ -1,3 +1,4 @@
+if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginAnalogix"']
 
 install_data(['analogix.quirk'],
@@ -28,3 +29,4 @@ shared_module('fu_plugin_analogix',
     plugin_deps,
   ],
 )
+endif

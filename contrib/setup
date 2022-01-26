@@ -1,38 +1,163 @@
 #!/bin/bash -e
-# Setup the repository.
+# Setup the repository and local system for development
 
 cd "$(dirname "$0")/.."
 
-# Add default vscode settings if not existing
-SETTINGS_FILE=./.vscode/settings.json
-SETTINGS_TEMPLATE_FILE=./contrib/vscode/settings.json
-if [ ! -f "$SETTINGS_FILE" ]; then
-    mkdir ./.vscode
-    echo "Copy $SETTINGS_TEMPLATE_FILE to $SETTINGS_FILE."
-    cp "$SETTINGS_TEMPLATE_FILE" "$SETTINGS_FILE"
-fi
+HELPER=./contrib/ci/fwupd_setup_helpers.py
+HELPER_ARGS="-y"
 
-#if interactive install build deps
-if [ -n "$PS1" ] || [[ $- == *i* ]] || [ -f /dev/.cros_milestone ]; then
-    read -p  "Install build dependencies? (y/n) " question
-    if [ "$question" = "y" ]; then
-        DEPS=$(./contrib/ci/generate_dependencies.py)
-        OS=$(python3 -c "import distro; print(distro.linux_distribution()[0].split()[0].lower())")
-        if [ "$OS" = "debian" ] || [ "$OS" = "ubuntu" ]; then
-            if ! python3 -c "import venv"; then
-                DEPS="python3-venv"
-            fi
-            sudo apt install $DEPS
-        elif [ "$OS" = "fedora" ]; then
-            sudo dnf install $DEPS
-        elif [ "$OS" = "arch" ]; then
-            pacman -Syu --noconfirm --needed $DEPS
+rename_branch()
+{
+    OLD=master
+    NEW=main
+    if git log $OLD >/dev/null 2>&1 &&
+       git remote get-url origin 2>&1 | grep fwupd/fwupd.git >/dev/null 2>&1; then
+        read -p "Rename existing $OLD branch to $NEW? (y/N) " question
+        if [ "$question" = "y" ]; then
+            git branch -m $OLD $NEW
+            git fetch origin
+            git branch -u origin/$NEW $NEW
+            git remote set-head origin -a
         fi
     fi
+}
+
+setup_deps()
+{
+    read -p "Install build dependencies? (y/N) " question
+    if [ "$question" = "y" ]; then
+        $(which sudo) python3 $HELPER install-dependencies $HELPER_ARGS -y
+    fi
+}
+
+setup_run_dev()
+{
+    read -p "Set up dbus activated daemon and PolicyKit actions from /usr/local? (y/N) " question
+    if [ "$question" = "y" ]; then
+        ./contrib/prepare-system /usr/local install
+    fi
+}
+
+setup_unsafe_polkit_rules()
+{
+    read -p "Install developer-friendly **unsafe** PolicyKit rules into /etc/polkit-1/rules.d? (y/N) " question
+    if [ "$question" = "y" ]; then
+        sudo cp ./policy/org.freedesktop.fwupd-unsafe.rules /etc/polkit-1/rules.d/
+    fi
+}
+
+setup_vscode()
+{
+    # Add default vscode settings if not existing
+    SETTINGS_FILE=./.vscode/settings.json
+    SETTINGS_TEMPLATE_FILE=./contrib/vscode/settings.json
+    if [ ! -f "$SETTINGS_FILE" ]; then
+        mkdir ./.vscode
+        echo "Copy $SETTINGS_TEMPLATE_FILE to $SETTINGS_FILE."
+        cp "$SETTINGS_TEMPLATE_FILE" "$SETTINGS_FILE"
+    fi
+}
+
+setup_git()
+{
+    echo "Configuring git environment"
+    git config include.path ../.gitconfig
+}
+
+install_pip()
+{
+    package=$1
+    args=$2
+    if ! python3 -m pip install $package $args; then
+        $(which sudo) python3 $HELPER install-pip $HELPER_ARGS -y
+    fi
+    #try once more
+    python3 -m pip install $package
+}
+
+setup_precommit()
+{
+    echo "Configuring pre-commit hooks"
+    python3 -m venv venv
+    source venv/bin/activate
+
+    install_pip pre-commit
+    pre-commit install
+}
+
+setup_prepush()
+{
+    read -p "Run tests locally before pushing to remote branches? THIS WILL SLOW DOWN EVERY PUSH but reduce the risk of failing CI. (y/N) " question
+    if [ "$question" = "y" ]; then
+        pre-commit install -t pre-push
+    else
+        pre-commit uninstall -t pre-push
+    fi
+}
+
+check_markdown()
+{
+    if ! python3 $HELPER test-markdown; then
+        install_pip markdown --upgrade
+    fi
+}
+
+detect_os()
+{
+    for i in "$@"; do
+        case $i in
+            --os=*)
+                OS="${i#*=}"
+                shift
+                ;;
+            --debug)
+                DEBUG=1
+                shift
+                ;;
+            *)
+                ;;
+        esac
+    done
+    if [ -z $OS ]; then
+        OS=$(python3 $HELPER detect-profile)
+        if [ -z "$OS" ]; then
+            install_pip distro
+            OS=$(python3 $HELPER detect-profile)
+        fi
+        echo "Using OS profile $OS to setup"
+    fi
+    if [ -n "$OS" ];then
+        HELPER_ARGS="$HELPER_ARGS --os $OS"
+    fi
+    if [ -n "$DEBUG" ]; then
+        set -x
+        HELPER_ARGS="$HELPER_ARGS --debug"
+    fi
+}
+
+#needed for arguments for some commands
+detect_os "$@"
+
+#always setup pre-commit
+setup_precommit
+
+#always setup git environment
+setup_git
+
+#if interactive install build deps and prepare environment
+if [ -t 2 ]; then
+    case $OS in
+        debian|ubuntu|arch|fedora)
+            setup_deps
+            setup_run_dev
+            ;;
+        void)
+            setup_deps
+            ;;
+    esac
+    setup_unsafe_polkit_rules
+    check_markdown
+    setup_vscode
+    rename_branch
+    setup_prepush
 fi
-
-python3 -m venv venv
-source venv/bin/activate
-
-python3 -m pip install pre-commit
-pre-commit install

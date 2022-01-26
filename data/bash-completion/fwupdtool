@@ -1,0 +1,191 @@
+_fwupdtool_cmd_list=(
+	'activate'
+	'build-firmware'
+	'clear-history'
+	'esp-list'
+	'esp-mount'
+	'esp-unmount'
+	'firmware-build'
+	'firmware-convert'
+	'firmware-export'
+	'firmware-extract'
+	'firmware-parse'
+	'firmware-sign'
+	'firmware-patch'
+	'get-updates'
+	'get-upgrades'
+	'get-details'
+	'get-firmware-types'
+	'get-device-flags'
+	'get-devices'
+	'get-history'
+	'get-plugins'
+	'get-remotes'
+	'get-topology'
+	'hwids'
+	'update'
+	'upgrade'
+	'install'
+	'install-blob'
+	'monitor'
+	'reinstall'
+	'security'
+	'switch-branch'
+	'self-sign'
+	'smbios-dump'
+	'attach'
+	'detach'
+	'firmware-dump'
+	'refresh'
+	'verify-update'
+	'watch'
+	'unbind-driver'
+	'bind-driver'
+	'export-hwids'
+)
+
+_fwupdtool_opts=(
+	'--verbose'
+	'--enable-json-state'
+	'--allow-reinstall'
+	'--allow-older'
+	'--force'
+	'--show-all'
+	'--plugins'
+	'--prepare'
+	'--cleanup'
+	'--filter'
+	'--method'
+	'--disable-ssl-strict'
+	'--no-safety-check'
+	'--ignore-checksum'
+	'--ignore-vid-pid'
+)
+
+_show_filters()
+{
+	local flags
+	flags="$(command fwupdtool get-device-flags 2>/dev/null)"
+	COMPREPLY+=( $(compgen -W "${flags}" -- "$cur") )
+}
+
+_show_firmware_types()
+{
+	local firmware_types
+	firmware_types="$(command fwupdtool get-firmware-types 2>/dev/null)"
+	COMPREPLY+=( $(compgen -W "${firmware_types}" -- "$cur") )
+}
+
+
+_show_plugins()
+{
+	if ! command -v jq &> /dev/null; then
+		return 0
+	fi
+	local plugins
+	plugins="$(command fwupdtool get-plugins --json 2>/dev/null | jq '.Plugins | .[] | .Name')"
+	COMPREPLY+=( $(compgen -W "${plugins}" -- "$cur") )
+}
+
+_show_modifiers()
+{
+	COMPREPLY+=( $(compgen -W '${_fwupdtool_opts[@]}' -- "$cur") )
+}
+
+_fwupdtool()
+{
+	local cur prev command
+	COMPREPLY=()
+	cur=`_get_cword`
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+	command=${COMP_WORDS[1]}
+
+	case $prev in
+	--plugins)
+		_show_plugins
+		return 0
+		;;
+	--filter)
+		_show_filters
+		return 0
+		;;
+	esac
+
+	case $command in
+	get-details|install|install-blob|firmware-dump)
+		#find files
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	attach|detach|activate|verify-update|reinstall|get-updates)
+		if [[ "$prev" = "$command" ]]; then
+			_show_device_ids
+		#modifiers
+		else
+			_show_modifiers
+		fi
+		;;
+	build-firmware)
+		#file in
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#file out
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			_filedir
+		#script
+		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
+			_filedir
+		#output
+		elif [[ "$prev" = "${COMP_WORDS[4]}" ]]; then
+			_filedir
+		else
+			_show_modifiers
+		fi
+		;;
+	firmware-parse|firmware-patch)
+		#find files
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#firmware_type
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			_show_firmware_types
+		else
+			_show_modifiers
+		fi
+		;;
+	firmware-convert)
+		#file in
+		if [[ "$prev" = "$command" ]]; then
+			_filedir
+		#file out
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			_filedir
+		#firmware_type in
+		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
+			_show_firmware_types
+		#firmware_type out
+		elif [[ "$prev" = "${COMP_WORDS[4]}" ]]; then
+			_show_firmware_types
+		else
+			_show_modifiers
+		fi
+		;;
+	*)
+		#find first command
+		if [[ ${COMP_CWORD} = 1 ]]; then
+			COMPREPLY=( $(compgen -W '${_fwupdtool_cmd_list[@]}' -- "$cur") )
+		#modifiers for all commands
+		else
+			_show_modifiers
+		fi
+		;;
+	esac
+
+	return 0
+}
+
+complete -F _fwupdtool fwupdtool

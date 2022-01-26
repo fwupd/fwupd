@@ -1,5 +1,6 @@
-Vendor Firmware
-===============
+# Remotes
+
+## Vendor Firmware
 
 These are the steps to add vendor firmware that is installed as part of an embedded image such as an OSTree or ChromeOS image:
 
@@ -39,27 +40,27 @@ certificate. If this is the case also change `Keyring=gpg` or `Keyring=pkcs7`
 in `/etc/fwupd/remotes.d/vendor.conf` and ensure the correct public key or
 signing certificate is installed in the `/etc/pki/fwupd` location.
 
-Automatic metadata generation
-=============================
+## Automatic metadata generation
+
 `fwupd` and `fwupdtool` support automatically generating metadata for a remote
 by configuring it to be a *directory* type. This is very convenient if you want to dynamically add firmware from multiple packages while generating the image but there are a few deficiencies:
+
 * There will be a performance impact of starting the daemon or tool measured by O(# CAB files)
 * It's not possible to verify metadata signature and any file validation should be part of the image validation.
 
 To enable this:
+
 * Change `/etc/fwupd/remotes.d/vendor-directory.conf` to have `Enabled=true`
-* Change `/etc/fwupd/remotes.d/vendor.conf-directory` to have the correct `Title`
+* Change `/etc/fwupd/remotes.d/vendor-directory.conf` to have the correct `Title`
 * Deploy the firmware to `/usr/share/fwupd/remotes.d/vendor/firmware`
 * Change `MetadataURI` to that of the directory (Eg `/usr/share/fwupd/remotes.d/vendor/`)
 
-
-Mirroring a Repository
-======================
+## Mirroring a Repository
 
 The LVFS currently outputs XML with absolute URI locations, e.g.
 `<location>http://foo/bar.cab</location>` rather than `<location>bar.cab</location>`
 
-This makes mirroring the master LVFS (or other private instance) somewhat tricky.
+This makes mirroring the upstream LVFS (or other private instance) somewhat tricky.
 To work around this issue client remotes can specify `FirmwareBaseURI` to
 replace the URI of the firmware before it is downloaded.
 

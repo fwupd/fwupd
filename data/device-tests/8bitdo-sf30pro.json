@@ -1,0 +1,17 @@
+{
+  "name": "8BitDo SF30Pro",
+  "interactive": true,
+  "steps": [
+    {
+      "url": "https://fwupd.org/downloads/3d3a65ee2e8581647fb09d752fa7e21ee1566481-8Bitdo-SF30_Pro-SN30_Pro-1.26.cab",
+      "components": [
+        {
+          "version": "1.26",
+          "guids": [
+            "269b3121-097b-50d8-b9ba-d1f64f9cd241"
+          ]
+        }
+      ]
+    }
+  ]
+}

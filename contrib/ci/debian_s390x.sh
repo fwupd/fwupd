@@ -7,7 +7,8 @@ export LC_ALL=C.UTF-8
 #evaluate using Debian's build flags
 eval "$(dpkg-buildflags --export=sh)"
 #filter out -Bsymbolic-functions
-export LDFLAGS=$(dpkg-buildflags --get LDFLAGS | sed "s/-Wl,-Bsymbolic-functions\s//")
+LDFLAGS=$(dpkg-buildflags --get LDFLAGS | sed "s/-Wl,-Bsymbolic-functions\s//")
+export LDFLAGS
 
 rm -rf build
 mkdir -p build
@@ -21,9 +22,11 @@ meson .. \
 	-Dplugin_dell=false \
 	-Dplugin_modem_manager=false \
 	-Dplugin_msr=false \
+	-Dplugin_mtd=false \
 	-Dplugin_redfish=false \
+	-Dplugin_powerd=false \
 	-Dintrospection=false \
-	-Dgtkdoc=false \
+	-Ddocs=none \
 	-Dlibxmlb:introspection=false \
 	-Dlibxmlb:gtkdoc=false \
 	-Dman=false

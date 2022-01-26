@@ -157,9 +157,6 @@ msgstr "Slaapt..."
 msgid "Install a firmware file on this hardware"
 msgstr "Een firmware-bestand op deze hardware installeren"
 
-msgid "Install old version of system firmware"
-msgstr "Oude versie van systeemfirmware installeren"
-
 msgid "Install signed device firmware"
 msgstr "Ondertekende apparaatfirmware installeren"
 

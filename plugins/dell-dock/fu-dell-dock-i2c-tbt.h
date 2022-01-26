@@ -18,9 +18,10 @@
 
 #include "config.h"
 
-#include "fu-device.h"
+#include <fwupdplugin.h>
 
-#define FU_TYPE_DELL_DOCK_TBT (fu_dell_dock_tbt_get_type ())
-G_DECLARE_FINAL_TYPE (FuDellDockTbt, fu_dell_dock_tbt, FU, DELL_DOCK_TBT, FuDevice)
+#define FU_TYPE_DELL_DOCK_TBT (fu_dell_dock_tbt_get_type())
+G_DECLARE_FINAL_TYPE(FuDellDockTbt, fu_dell_dock_tbt, FU, DELL_DOCK_TBT, FuDevice)
 
-FuDellDockTbt 	*fu_dell_dock_tbt_new	(FuDevice	*proxy);
+FuDellDockTbt *
+fu_dell_dock_tbt_new(FuDevice *proxy);

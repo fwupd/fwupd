@@ -10,8 +10,8 @@ shared_module('fu_plugin_flashrom',
   sources : [
     'fu-flashrom-device.c',
     'fu-flashrom-internal-device.c',
-    'fu-flashrom-lspcon-i2c-spi-device.c',
     'fu-plugin-flashrom.c',
+    'fu-flashrom-cmos.c',
   ],
   include_directories : [
     root_incdir,

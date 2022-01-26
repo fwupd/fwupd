@@ -4,7 +4,8 @@ Plugin = dfu
 
 # GD32VF103 Rev1
 [USB\VID_28E9&PID_0189]
-Flags = gd32,force-dfu-mode
+Flags = gd32,force-dfu-mode,will-disappear
+Name = GD32VF103
 Vendor = GDMicroelectronics
 
 # Realtek USB camera
@@ -20,7 +21,7 @@ Flags = detach-for-attach
 # Openmoko Freerunner / GTA02
 [USB\VID_1D50&PID_5119]
 Plugin = dfu
-Flags = ignore-polltimeout,no-pid-change,no-fu-dfu-runtime,needs-bootloader,no-get-status-upload
+Flags = ignore-polltimeout,no-pid-change,no-dfu-runtime,needs-bootloader,no-get-status-upload
 
 # OpenPCD Reader
 [USB\VID_16C0&PID_076B]
@@ -68,7 +69,7 @@ Flags = attach-upload-download
 # HydraBus
 [USB\VID_1D50&PID_60A7]
 Plugin = dfu
-Flags = no-fu-dfu-runtime,needs-bootloader
+Flags = no-dfu-runtime,needs-bootloader
 
 # Jabra 410 [appIDLE & dfuIDLE]
 [USB\VID_0B0E&PID_0411]
@@ -249,7 +250,7 @@ DfuAltName = @Flash/0x0/1*128Kg
 DfuAltName = @Flash/0x0/1*128Kg
 
 # ATxmega128D4	[USER]		USER=0x20000
- [DFU_AVR\CID_0x1e9747]
+[DFU_AVR\CID_0x1e9747]
 DfuAltName = @Flash/0x0/1*128Kg
 
 # ATxmega128A1	[USER]		USER=0x20000
@@ -330,7 +331,7 @@ DfuAltName = @Flash/0x0/1*32Kg
 
 # STM32F745 dfuse bootloader
 [USB\VID_0483&PID_DF11]
-Flags = absent-sector-size
+Flags = absent-sector-size,will-disappear
 Plugin = dfu
 DfuForceVersion = 011a
 DfuForceTimeout = 5000
@@ -338,49 +339,101 @@ DfuForceTimeout = 5000
 # Poly Studio
 [USB\VID_095D&PID_9217]
 Plugin = dfu
-Flags = manifest-poll,no-bus-reset-attach
+Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout
 RemoveDelay = 60000
 [USB\VID_095D&PID_9218]
 Plugin = dfu
-Flags = manifest-poll,no-bus-reset-attach
+Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout
 RemoveDelay = 60000
 
 # Poly Eagle Eye Cube
 [USB\VID_095D&PID_9212]
 Plugin = dfu
-Flags = manifest-poll
+Flags = manifest-poll,allow-zero-polltimeout
 RemoveDelay = 30000
 [USB\VID_095D&PID_9213]
 Plugin = dfu
-Flags = manifest-poll
+Flags = manifest-poll,allow-zero-polltimeout
 RemoveDelay = 30000
 
-# Poly P30
+# Poly Studio P15
 [USB\VID_095D&PID_9290]
 Plugin = dfu
-Flags = manifest-poll
+Flags = manifest-poll,allow-zero-polltimeout
 RemoveDelay = 60000
 [USB\VID_095D&PID_9291]
 Plugin = dfu
-Flags = manifest-poll
+Flags = manifest-poll,allow-zero-polltimeout
 RemoveDelay = 60000
 
 # Poly ULCC
 [USB\VID_095D&PID_9160]
 Plugin = dfu
-Flags = manifest-poll,no-bus-reset-attach
+Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout
 RemoveDelay = 60000
 [USB\VID_095D&PID_927B]
 Plugin = dfu
-Flags = manifest-poll,no-bus-reset-attach
+Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout
 RemoveDelay = 60000
 
 # Poly Eagle Eye Mini
 [USB\VID_095D&PID_3001]
 Plugin = dfu
-Flags = manifest-poll
+Flags = manifest-poll,allow-zero-polltimeout
 RemoveDelay = 9000
 [USB\VID_095D&PID_3002]
 Plugin = dfu
-Flags = manifest-poll
+Flags = manifest-poll,allow-zero-polltimeout
 RemoveDelay = 9000
+
+# Poly Studio R30
+[USB\VID_095D&PID_92B2]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout
+RemoveDelay = 60000
+[USB\VID_095D&PID_92B3]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout
+RemoveDelay = 60000
+
+# Poly Studio P5
+[USB\VID_095D&PID_9296]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout
+RemoveDelay = 9000
+[USB\VID_095D&PID_9297]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout
+RemoveDelay = 9000
+
+# Poly Studio E70
+[USB\VID_095D&PID_92A1]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout
+RemoveDelay = 90000
+[USB\VID_095D&PID_92A2]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout
+RemoveDelay = 90000
+
+# Poly Studio P21
+[USB\VID_095D&PID_9298]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout
+RemoveDelay = 9000
+[USB\VID_095D&PID_9299]
+Plugin = dfu
+Flags = manifest-poll,allow-zero-polltimeout
+RemoveDelay = 9000
+
+# AVer ATLAS CAM
+[USB\VID_2574&PID_0A70]
+Plugin = dfu
+Flags = detach-for-attach
+RemoveDelay = 60000
+
+# AVer CAM520 Pro2
+[USB\VID_2574&PID_0A30]
+Plugin = dfu
+Flags = detach-for-attach
+RemoveDelay = 180000

@@ -15,7 +15,7 @@ msgstr ""
 "Language: zh_TW\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#. more than a minute
+#. TRANSLATORS: more than a minute
 #, c-format
 msgid "%.0f minute remaining"
 msgid_plural "%.0f minutes remaining"
@@ -180,10 +180,6 @@ msgstr "顯示版本"
 #. TRANSLATORS: command line option
 msgid "Do not check for old metadata"
 msgstr "不要檢查中介資料是否老舊"
-
-#. TRANSLATORS: command line option
-msgid "Do not check for reboot after update"
-msgstr "不要檢查是否更新後要重新開機"
 
 #. TRANSLATORS: command line option
 msgid "Do not check for unreported history"
@@ -358,9 +354,6 @@ msgstr "在裝置上安裝韌體 blob"
 msgid "Install a firmware file on this hardware"
 msgstr "在此硬體安裝韌體檔案"
 
-msgid "Install old version of system firmware"
-msgstr "安裝舊版本的系統韌體"
-
 msgid "Install signed device firmware"
 msgstr "安裝已簽署的裝置韌體"
 
@@ -382,6 +375,7 @@ msgstr "安裝韌體更新中…"
 msgid "Installing on %s…"
 msgstr "正安裝到 %s…"
 
+#. TRANSLATORS: keyring type, e.g. GPG or PKCS7
 msgid "Keyring"
 msgstr "鑰匙圈"
 

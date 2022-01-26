@@ -1,0 +1,282 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the fwupd package.
+#
+# Translators:
+# A S Alam, 2021
+msgid ""
+msgstr ""
+"Project-Id-Version: fwupd\n"
+"Report-Msgid-Bugs-To: \n"
+"Language-Team: Panjabi (Punjabi) (http://www.transifex.com/freedesktop/fwupd/language/pa/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pa\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Secure Boot`
+#, c-format
+msgid "%s Configuration Update"
+msgstr "%s ਸੰਰਚਨਾ ਅੱਪਡੇਟ"
+
+#. TRANSLATORS: a specific part of hardware,
+#. * the first %s is the device name, e.g. 'Unifying Receiver`
+#, c-format
+msgid "%s Device Update"
+msgstr "%s ਡਿਵਾਈਸ ਅੱਪਡੇਟ"
+
+#. TRANSLATORS: the entire system, e.g. all internal devices,
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s System Update"
+msgstr "%s ਸਿਸਟਮ ਅੱਪਡੇਟ"
+
+#. TRANSLATORS: this is the fallback where we don't know if the release
+#. * is updating the system, the device, or a device class, or something else
+#. --
+#. * the first %s is the device name, e.g. 'ThinkPad P50`
+#, c-format
+msgid "%s Update"
+msgstr "%s ਅੱਪਡੇਟ"
+
+#. TRANSLATORS: duration in minutes
+#, c-format
+msgid "%u minute"
+msgid_plural "%u minutes"
+msgstr[0] "%u ਮਿੰਟ"
+msgstr[1] "%uਮਿੰਟ"
+
+#. TRANSLATORS: duration in seconds
+#, c-format
+msgid "%u second"
+msgid_plural "%u seconds"
+msgstr[0] "%u ਸਕਿੰਟ"
+msgstr[1] "%u ਸਕਿੰਟ"
+
+msgid "Activate the new firmware on the device"
+msgstr "ਡਿਵਾਈਸ ਉੱਤੇ ਨਵਾਂ ਫਿਰਮਵੇਅਰ ਸਰਗਰਮ ਕਰੋ"
+
+#. TRANSLATORS: command line option
+msgid "Apply firmware updates"
+msgstr "ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟ ਲਾਗੂ ਕਰੋ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on a removable device"
+msgstr "ਹਟਾਉਣਯੋਗ ਡਿਵਾਈਸ ਉੱਤੇ ਫਿਰਮਵੇਅਰ ਡਾਊਨਗਰੇਡ ਕਰਨ ਲਈ ਪਰਮਾਣਕਿਤਾ ਚਾਹੀਦੀ ਹੈ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to downgrade the firmware on this machine"
+msgstr "ਇਸ ਮਸ਼ੀਨ ਉੱਤੇ ਫਿਰਮਵੇਅਰ ਨੂੰ ਡਾਊਨਗਰੇਡ ਕਰਨ ਲਈ ਪਰਮਾਣਕਿਤਾ ਚਾਹੀਦੀ ਹੈ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to unlock a device"
+msgstr "ਡਿਵਾਈਸ ਨੂੰ ਅਣ-ਲਾਕ ਕਰਨ ਲਈ ਪਰਮਾਣਕਿਤਾ ਚਾਹੀਦੀ ਹੈ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on a removable device"
+msgstr "ਹਟਾਉਣਯੋਗ ਡਿਵਾਈਸ ਉੱਤੇ ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟ ਕਰਨ ਲਈ ਪਰਮਾਣਕਿਤਾ ਚਾਹੀਦੀ ਹੈ"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on this machine"
+msgstr "ਇਸ ਮਸ਼ੀਨ ਉੱਤੇ ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟ ਕਰਨ ਲਈ ਪਰਮਾਣਕਿਤਾ ਚਾਹੀਦੀ ਹੈ"
+
+msgid "BYTES"
+msgstr "ਬਾਈਟ"
+
+#. TRANSLATORS: error message
+msgid "Command not found"
+msgstr "ਕਮਾਂਡ ਨਹੀਂ ਲੱਭੀ"
+
+#. TRANSLATORS: when the update was built
+msgid "Created"
+msgstr "ਬਣਾਇਆ"
+
+#. TRANSLATORS: the release urgency
+msgid "Critical"
+msgstr "ਗੰਭੀਰ"
+
+#. TRANSLATORS: multiline description of device
+msgid "Description"
+msgstr "ਵਰਣਨ"
+
+#. TRANSLATORS: more details about the update link
+msgid "Details"
+msgstr "ਵੇਰਵੇ"
+
+#. TRANSLATORS: ID for hardware, typically a SHA1 sum
+msgid "Device ID"
+msgstr "ਡਿਵਾਈਸ ID"
+
+#. TRANSLATORS: length of time the update takes to apply
+msgid "Duration"
+msgstr "ਲੱਗਣਾ ਸਮਾਂ"
+
+msgid "Enabling this functionality is done at your own risk, which means you have to contact your original equipment manufacturer regarding any problems caused by these updates. Only problems with the update process itself should be filed at $OS_RELEASE:BUG_REPORT_URL$."
+msgstr "ਇਹ ਸਹੂਲਤ ਨੂੰ ਆਪਣੇ ਖਤਰੇ ਉੱਤੇ ਹੀ ਸਮਰੱਥ ਕਰੋ, ਜਿਸ ਦਾ ਅਰਥ ਹੋਵੇਗਾ ਕਿ ਇਹਨਾਂ ਅੱਪਡੇਟਾਂ ਨਾਲ ਆਈ ਕਿਸੇ ਵੀ ਸਮੱਸਿਆ ਵਾਸਤੇ ਤੁਸੀਂ ਅਸਲ ਡਿਵਾਈਸ ਨਿਰਮਾਤਾ ਨਾਲ ਸੰਪਰਕ ਕਰੋਗੇ। ਅੱਪਡੇਟ ਕਰਨ ਦੀ ਕਾਰਵਾਈ ਸੰਬੰਧੀ ਕਿਸੇ ਵੀ ਸਮੱਸਿਆ ਬਾਰੇ $OS_RELEASE:BUG_REPORT_URL$ ਉੱਤੇ ਰਿਪੋਰਟ ਕਰੋ।"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME"
+msgstr "ਫਾਇਲ-ਨਾਂ"
+
+#. TRANSLATORS: filename of the local file
+msgid "Filename"
+msgstr "ਫਾਇਲ-ਦਾ-ਨਾਂ"
+
+#. TRANSLATORS: the release urgency
+msgid "High"
+msgstr "ਵੱਧ"
+
+msgid "Install old version of signed system firmware"
+msgstr "ਸਾਈਨ ਕੀਤੇ ਸਿਸਟਮ ਫਿਰਮਵੇਅਰ ਦਾ ਪੁਰਾਣਾ ਵਰਜ਼ਨ ਇੰਸਟਾਲ ਕਰੋ"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "ਬਿਨ-ਸਾਈਨ ਕੀਤੇ ਸਿਸਟਮ ਫਿਰਮਵੇਅਰ ਦਾ ਪੁਰਾਣਾ ਵਰਜ਼ਨ ਇੰਸਟਾਲ ਕਰੋ"
+
+msgid "Install signed device firmware"
+msgstr "ਸਾਈਨ ਕੀਤਾ ਡਿਵਾਈਸ ਫਿਰਮਵੇਅਰ ਇੰਸਟਾਲ ਕਰੋ"
+
+msgid "Install signed system firmware"
+msgstr "ਸਾਈਨ ਕੀਤਾ ਸਿਸਟਮ ਫਿਰਮਵੇਅਰ ਇੰਸਟਾਲ ਕਰੋ"
+
+msgid "Install unsigned device firmware"
+msgstr "ਬਿਨ-ਸਾਈਨ ਕੀਤਾ ਡਿਵਾਈਸ ਫਿਰਮਵੇਅਰ ਇੰਸਟਾਲ ਕਰੋ"
+
+msgid "Install unsigned system firmware"
+msgstr "ਬਿਨਾਂ-ਸਾਈਨ ਕੀਤਾ ਸਿਸਟਮ ਫਿਰਮਵੇਅਰ ਇੰਸਟਾਲ ਕਰੋ"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+msgid "Installing firmware update…"
+msgstr "ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟ ਇੰਸਟਾਲ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ…"
+
+#. TRANSLATORS: issue fixed with the release, e.g. CVE
+msgid "Issue"
+msgid_plural "Issues"
+msgstr[0] "ਮਸਲਾ"
+msgstr[1] "ਮਸਲੇ"
+
+#. TRANSLATORS: e.g. GPLv2+, Proprietary etc
+msgid "License"
+msgstr "ਲਸੰਸ"
+
+msgid "Linux Vendor Firmware Service (stable firmware)"
+msgstr "ਲੀਨਕਸ ਵੇਂਡਰ ਫਿਰਮਵੇਅਰ ਸਰਵਿਸ (ਸਟੇਬਲ ਫਿਰਮਵੇਅਰ)"
+
+msgid "Linux Vendor Firmware Service (testing firmware)"
+msgstr "ਲੀਨਕਸ ਵੇਂਡਰ ਫਿਰਮਵੇਅਰ ਸਰਵਿਸ (ਟੈਸਟਿੰਗ ਫਿਰਮਵੇਅਰ)"
+
+#. TRANSLATORS: the release urgency
+msgid "Low"
+msgstr "ਘੱਟ"
+
+#. TRANSLATORS: the release urgency
+msgid "Medium"
+msgstr "ਠੀਕ-ਠਾਕ"
+
+msgid "Modify daemon configuration"
+msgstr "ਡੈਮਨ ਸੰਰਚਨਾ ਸੋਧੋ"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Needs reboot"
+msgstr "ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਲੋੜ ਹੈ"
+
+#. TRANSLATORS: version number of new firmware
+msgid "New version"
+msgstr "ਨਵਾਂ ਵਰਜ਼ਨ"
+
+#. TRANSLATORS: remote filename base
+msgid "Password"
+msgstr "ਪਾਸਵਰਡ"
+
+#. TRANSLATORS: a non-free software license
+msgid "Proprietary"
+msgstr "ਪ੍ਰੋਪ੍ਰੇਟਰੀ"
+
+#. TRANSLATORS: command description
+msgid "Read firmware from device into a file"
+msgstr "ਡਿਵਾਈਸ ਲਈ ਫਿਰਮਵੇਅਰ ਨੂੰ ਫਾਇਲ ਤੋਂ ਪੜ੍ਹੋ"
+
+#. TRANSLATORS: reboot to apply the update
+msgid "Restart now?"
+msgstr "ਹੁਣੇ ਮੁੜ-ਚਾਲੂ ਕਰਨਾ ਹੈ?"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot disabled"
+msgstr "ਸੁਰੱਖਿਅਤ ਬੂਟ ਅਸਮਰੱਥ ਹੈ"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "ਸੁਰੱਖਿਅਤ ਬੂਟ ਸਮਰੱਥ ਹੈ"
+
+#. TRANSLATORS: file size of the download
+msgid "Size"
+msgstr "ਆਕਾਰ"
+
+#. TRANSLATORS: source (as in code) link
+msgid "Source"
+msgstr "ਸਰੋਤ"
+
+#. TRANSLATORS: the update state of the specific device
+msgid "Success"
+msgstr "ਸਫ਼ਲ"
+
+#. TRANSLATORS: one line summary of device
+msgid "Summary"
+msgstr "ਸਾਰ"
+
+#. TRANSLATORS: Must be plugged in to an outlet
+msgid "System requires external power source"
+msgstr "ਸਿਸਟਮ ਨੂੰ ਬਾਹਰੀ ਪਾਵਰ ਸਰੋਤ ਚਾਹੀਦਾ ਹੈ"
+
+#. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
+msgid "Tag"
+msgid_plural "Tags"
+msgstr[0] "ਟੈਗ"
+msgstr[1] "ਟੈਗ"
+
+#. TRANSLATORS: do not translate the variables marked using $
+msgid "The LVFS is a free service that operates as an independent legal entity and has no connection with $OS_RELEASE:NAME$. Your distributor may not have verified any of the firmware updates for compatibility with your system or connected devices. All firmware is provided only by the original equipment manufacturer."
+msgstr "LVFS ਮੁਫ਼ਤ ਸਰਵਿਸ ਹੈ, ਜੋ ਕਿ ਆਜ਼ਾਦ ਕਨੂੰਨੀ ਸੰਸਥਾ ਵਜੋਂ ਕੰਮ ਕਰਦੀ ਹੈ ਅਤੇ $OS_RELEASE:NAME$ ਨਾਲ ਕੋਈ ਸੰਬੰਧ ਨਹੀਂ ਹੈ। ਤੁਹਾਡੇ ਡਿਸਟਰੀਬਿਊਟਰ ਨੇ ਤੁਹਾਡੇ ਸਿਸਟਮ ਜਾਂ ਕਨੈਕਟ ਹੋਏ ਡਿਵਾਈਸਾਂ ਲਈ ਅਨੁਕੂਲਤਾ ਵਾਸਤੇ ਫਿਰਮਵੇਅਰ ਅੱਪਡੇਟਾਂ ਨੂੰ ਤਸਦੀਕ ਨਹੀਂ ਕੀਤੇ ਹਨ। ਸਾਰੇ ਫਿਰਮਵੇਅਰ ਅਸਲ ਡਿਵਾਈਸ ਨਿਮਰਾਤਾਵਾਂ ਵਲੋਂ ਹੀ ਦਿੱਤੇ ਜਾ ਗਏ ਹਨ।"
+
+#. TRANSLATORS: remote type, e.g. remote or local
+msgid "Type"
+msgstr "ਕਿਸਮ"
+
+#. TRANSLATORS: program name
+msgid "UEFI Firmware Utility"
+msgstr "UEFI ਫਿਰਮਵੇਅਰ ਸਹੂਲਤ"
+
+#. TRANSLATORS: Name of hardware
+msgid "Unknown Device"
+msgstr "ਅਣਪਛਾਤਾ ਡਿਵਾਈਸ"
+
+msgid "Unlock the device to allow access"
+msgstr "ਪਹੁੰਚ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣ ਲਈ ਡਿਵਾਈਸ ਅਣ-ਲਾਕ ਕਰੋ"
+
+#. TRANSLATORS: Update can only be done from offline mode
+msgid "Update requires a reboot"
+msgstr "ਅੱਪਡੇਟ ਲਈ ਮੁੜ-ਚਾਲੂ ਕਰਨ ਦੀ ਲੋੜ ਹੈ"
+
+#. TRANSLATORS: how important the release is
+msgid "Urgency"
+msgstr "ਜ਼ਰੂਰਤ"
+
+#. TRANSLATORS: remote filename base
+msgid "Username"
+msgstr "ਵਰਤੋਂਕਾਰ-ਨਾਂ"
+
+msgid "VID:PID"
+msgstr "VID:PID"
+
+#. TRANSLATORS: manufacturer of hardware
+msgid "Vendor"
+msgstr "ਵੇਂਡਰ"
+
+#. TRANSLATORS: the detected version number of the dbx
+msgid "Version"
+msgstr "ਵਰਜ਼ਨ"
+
+#. TRANSLATORS: this is the default branch name when unset
+msgid "default"
+msgstr "ਮੂਲ"

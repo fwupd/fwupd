@@ -8,4 +8,5 @@
 
 #include "fu-udev-device.h"
 
-void		 fu_udev_device_emit_changed		(FuUdevDevice	*self);
+void
+fu_udev_device_emit_changed(FuUdevDevice *self);

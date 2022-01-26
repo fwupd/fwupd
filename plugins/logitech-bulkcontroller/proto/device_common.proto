@@ -1,0 +1,48 @@
+/*
+ * Copyright (c) 1999-2021 Logitech, Inc.
+ * All Rights Reserved
+ *
+ * SPDX-License-Identifier: LGPL-2.1+
+ */
+
+syntax = "proto3";
+
+package logi.device.proto;
+
+option java_package = "com.logitech.vc.proto";
+
+/**
+ * This error messages describe a failure that was encountered
+ * by the Sync service and primarily consist of an error code
+ * and a short, human-readable message. Therefore, if a client
+ * receives a message with a field reserved for Error messages,
+ * it is prudent that the application first check if there are
+ * errors before doing any further processing of the message.
+ */
+message Error
+{
+	/**
+	 * (REQUIRED) Error code.
+	 */
+	uint32 error_code = 1;
+
+	/**
+	 * (OPTIONAL) Short, human-readable error message. If no
+	 * message is available, then this will be an empty string.
+	 */
+	string error_message = 2;
+
+	/**
+	 * (OPTIONAL) A URI to a log file or some other document
+	 * that contains more detailed information about the error.
+	 * If such a file is not available, this will be an empty
+	 * string.
+	 */
+	string error_log_uri = 3;
+
+	/**
+	 * (OPTIONAL) An optional JSON string with additional
+	 * metadata that may be useful to the client.
+	 */
+	string json_metadata = 4;
+}

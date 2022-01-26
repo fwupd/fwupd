@@ -1,0 +1,12 @@
+# Mouse nRF52 Desktop
+[HIDRAW\VEN_1915&DEV_52DE]
+Plugin = nordic_hid
+GType = FuNordicHidCfgChannel
+#NordicHidBootloader = B0
+#NordicHidBootloader = MCUBOOT
+
+# Nordic Semiconductor ASA Dongle nRF52 Desktop
+[HIDRAW\VEN_1915&DEV_52DC]
+Plugin = nordic_hid
+GType = FuNordicHidCfgChannel
+NordicHidBootloader = B0

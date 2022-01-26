@@ -6,7 +6,7 @@ is running under a hypervisor. The Xen does not pass the ESRT tables to
 paravirtualized dom0, so the Qubes is not able to provide sysfs information.
 More information you can find it this thread:
 
-https://patchwork.kernel.org/patch/11715901/
+<https://patchwork.kernel.org/patch/11715901/>
 
 ## Requirements
 
@@ -22,14 +22,14 @@ Make sure that your hardware has available firmware updates in the [LVFS](https:
 
 UEFI capsule updates and downgrades were tested on DELL XPS 15 9560.
 
-```
-$ sudo qubes-fwupdmgr downgrade
+```shell
+sudo qubes-fwupdmgr downgrade
 ```
 
 ## UEFI capsule update - update
 
-```
-$ sudo qubes-fwupdmgr update
+```shell
+sudo qubes-fwupdmgr update
 ```
 
 ## Update process

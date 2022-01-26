@@ -153,9 +153,6 @@ msgstr "Získa výsledky z poslednej aktualizácie"
 msgid "Install a firmware file on this hardware"
 msgstr "Nainštaluje súbor firmvéru do tohoto hardvéru"
 
-msgid "Install old version of system firmware"
-msgstr "Nainštaluje staršiu verziu firmvéru systému"
-
 msgid "Install signed device firmware"
 msgstr "Nainštaluje podpísaný firmvér zariadenia"
 

@@ -1,4 +1,4 @@
-if host_machine.system() == 'linux'
+if get_option('hsi') and host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginPciMei"']
 
 install_data(['pci-mei.quirk'],
