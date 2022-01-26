@@ -1,3 +1,15 @@
 # Phoenix-Lite
 [USB\VID_1F29&PID_7518]
 Plugin = analogix
+
+# Belkin
+[USB\VID_050D&PID_008B]
+Plugin = analogix
+
+# Kensington
+[USB\VID_047D&PID_80C8]
+Plugin = analogix
+
+# ACER
+[USB\VID_0502&PID_04C4]
+Plugin = analogix
