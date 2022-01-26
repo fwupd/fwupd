@@ -241,7 +241,24 @@ fu_analogix_device_probe (FuDevice *device, GError **error)
 		g_prefix_error (error, "failed to find update interface: ");
 		return FALSE;
 	}
-
+        guint16 vid = fu_usb_device_get_vid (FU_USB_DEVICE (device));
+	if (vid == 0x1F29)
+	{
+		fu_device_set_vendor (device, "Analogix Semiconductor Inc.");
+	}
+	else if (vid == 0x050D)
+	{
+		fu_device_set_vendor (device, "Belkin");
+	}
+	else if (vid == 0x047D)
+	{
+		fu_device_set_vendor (device, "Kensington");
+	}
+	else if (vid == 0x0502)
+	{
+		fu_device_set_vendor (device, "Acer");
+	}
+	else{}
 	/* success */
 	return TRUE;
 }
