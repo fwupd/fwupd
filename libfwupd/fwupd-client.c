@@ -736,6 +736,30 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 			  g_steal_pointer(&task));
 }
 
+static void
+fwupd_client_connect_get_connection_cb(GObject *source, GAsyncResult *res, gpointer user_data)
+{
+	g_autoptr(GTask) task = G_TASK(user_data);
+	GCancellable *cancellable = g_task_get_cancellable(task);
+	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GError) error = NULL;
+
+	connection = g_dbus_connection_new_for_address_finish(res, &error);
+	if (connection == NULL) {
+		g_task_return_error(task, g_steal_pointer(&error));
+		return;
+	}
+	g_dbus_proxy_new(connection,
+			 G_DBUS_PROXY_FLAGS_NONE,
+			 NULL,
+			 NULL, /* bus_name */
+			 FWUPD_DBUS_PATH,
+			 FWUPD_DBUS_INTERFACE,
+			 cancellable,
+			 fwupd_client_connect_get_proxy_cb,
+			 g_steal_pointer(&task));
+}
+
 /**
  * fwupd_client_connect_async:
  * @self: a #FwupdClient
@@ -758,6 +782,7 @@ fwupd_client_connect_async(FwupdClient *self,
 			   gpointer callback_data)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	const gchar *socket_filename = g_getenv("FWUPD_DBUS_SOCKET");
 	g_autoptr(GTask) task = g_task_new(self, cancellable, callback, callback_data);
 	g_autoptr(GMutexLocker) locker = g_mutex_locker_new(&priv->proxy_mutex);
 
@@ -772,6 +797,19 @@ fwupd_client_connect_async(FwupdClient *self,
 		return;
 	}
 
+	/* use peer-to-peer only if the env variable is set */
+	if (socket_filename != NULL) {
+		g_autofree gchar *address = g_strdup_printf("unix:path=%s", socket_filename);
+		g_dbus_connection_new_for_address(address,
+						  G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT,
+						  NULL,
+						  cancellable,
+						  fwupd_client_connect_get_connection_cb,
+						  g_steal_pointer(&task));
+		return;
+	}
+
+	/* typical case */
 	g_dbus_proxy_new_for_bus(G_BUS_TYPE_SYSTEM,
 				 G_DBUS_PROXY_FLAGS_NONE,
 				 NULL,
