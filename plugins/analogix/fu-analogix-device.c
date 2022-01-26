@@ -411,7 +411,6 @@ fu_analogix_device_init(FuAnalogixDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
-	fu_device_set_vendor(FU_DEVICE(self), "Analogix Semiconductor Inc.");
 	fu_device_set_firmware_gtype(FU_DEVICE(self), FU_TYPE_ANALOGIX_FIRMWARE);
 }
 
