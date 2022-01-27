@@ -19,9 +19,8 @@ export LDFLAGS
 
 root=$(pwd)
 rm -rf ${root}/build
-mkdir -p ${root}/build
-chown nobody build ${root}/subprojects
-sudo -u nobody meson build -Dman=false -Ddocs=docgen -Dgusb:tests=false -Dplugin_platform_integrity=true --prefix=${root}/dist
+chown -R nobody ${root}
+sudo -u nobody meson ${root}/build -Dman=false -Ddocs=docgen -Dgusb:tests=false -Dplugin_platform_integrity=true --prefix=${root}/dist
 #build with clang
 sudo -u nobody ninja -C ${root}/build test -v
 
