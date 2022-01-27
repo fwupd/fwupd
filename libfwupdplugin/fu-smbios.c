@@ -150,7 +150,7 @@ fu_smbios_convert_kenv_string(FuSmbios *self,
 	g_autofree gchar *value = fu_kenv_get_string(sminfo, error);
 	if (value == NULL)
 		return FALSE;
-	fu_smbios_set_string(self, type, offset, buf, -1);
+	fu_smbios_set_string(self, type, offset, value, -1);
 	return TRUE;
 }
 
