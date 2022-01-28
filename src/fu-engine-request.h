@@ -31,6 +31,8 @@ void
 fu_engine_request_set_locale(FuEngineRequest *self, const gchar *locale);
 gboolean
 fu_engine_request_has_feature_flag(FuEngineRequest *self, FwupdFeatureFlags feature_flag);
+gboolean
+fu_engine_request_has_device_flag(FuEngineRequest *self, FwupdDeviceFlags device_flag);
 FwupdDeviceFlags
 fu_engine_request_get_device_flags(FuEngineRequest *self);
 void

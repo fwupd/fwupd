@@ -77,6 +77,7 @@ typedef struct {
 	PolkitAuthority *authority;
 #endif
 	guint owner_id;
+	guint process_quit_id;
 	FuEngine *engine;
 	gboolean update_in_progress;
 	gboolean pending_sigterm;
@@ -982,6 +983,32 @@ fu_main_device_id_valid(const gchar *device_id, GError **error)
 	return FALSE;
 }
 
+static gboolean
+fu_main_schedule_process_quit_cb(gpointer user_data)
+{
+	FuMainPrivate *priv = (FuMainPrivate *)user_data;
+
+	g_debug("daemon asked to quit, shutting down");
+	priv->process_quit_id = 0;
+	g_main_loop_quit(priv->loop);
+	return G_SOURCE_REMOVE;
+}
+
+static void
+fu_main_schedule_process_quit(FuMainPrivate *priv)
+{
+	/* busy? */
+	if (priv->update_in_progress) {
+		g_warning("asked to quit during a firmware update, ignoring");
+		return;
+	}
+
+	/* allow the daemon to respond to the request, then quit */
+	if (priv->process_quit_id != 0)
+		g_source_remove(priv->process_quit_id);
+	priv->process_quit_id = g_idle_add(fu_main_schedule_process_quit_cb, priv);
+}
+
 static void
 fu_main_daemon_method_call(GDBusConnection *connection,
 			   const gchar *sender,
@@ -1163,6 +1190,18 @@ fu_main_daemon_method_call(GDBusConnection *connection,
 #else
 		fu_main_authorize_set_blocked_firmware_cb(NULL, NULL, g_steal_pointer(&helper));
 #endif /* HAVE_POLKIT */
+		return;
+	}
+	if (g_strcmp0(method_name, "Quit") == 0) {
+		if (!fu_engine_request_has_device_flag(request, FWUPD_DEVICE_FLAG_TRUSTED)) {
+			g_dbus_method_invocation_return_error_literal(invocation,
+								      FWUPD_ERROR,
+								      FWUPD_ERROR_PERMISSION_DENIED,
+								      "Permission denied");
+			return;
+		}
+		fu_main_schedule_process_quit(priv);
+		g_dbus_method_invocation_return_value(invocation, NULL);
 		return;
 	}
 	if (g_strcmp0(method_name, "SelfSign") == 0) {
@@ -1990,6 +2029,8 @@ static void
 fu_main_private_free(FuMainPrivate *priv)
 {
 	g_hash_table_unref(priv->sender_items);
+	if (priv->process_quit_id != 0)
+		g_source_remove(priv->process_quit_id);
 	if (priv->loop != NULL)
 		g_main_loop_unref(priv->loop);
 	if (priv->owner_id > 0)
