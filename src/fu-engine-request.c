@@ -80,6 +80,13 @@ fu_engine_request_set_device_flags(FuEngineRequest *self, FwupdDeviceFlags devic
 	self->device_flags = device_flags;
 }
 
+gboolean
+fu_engine_request_has_device_flag(FuEngineRequest *self, FwupdDeviceFlags device_flag)
+{
+	g_return_val_if_fail(FU_IS_ENGINE_REQUEST(self), FALSE);
+	return (self->device_flags & device_flag) > 0;
+}
+
 static void
 fu_engine_request_init(FuEngineRequest *self)
 {

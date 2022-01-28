@@ -822,6 +822,17 @@
     </method>
 
     <!--***********************************************************-->
+    <method name='Quit'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            Ask the daemon to quit. This can only be called by the root user.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </method>
+
+    <!--***********************************************************-->
     <signal name='Changed'>
       <doc:doc>
         <doc:description>
