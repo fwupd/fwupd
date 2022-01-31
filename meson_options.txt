@@ -1,5 +1,6 @@
 option('build', type : 'combo', choices : ['all', 'standalone', 'library'], value : 'all', description : 'build type')
 option('consolekit', type : 'boolean', value : true, description : 'enable ConsoleKit support')
+option('static_analysis', type : 'boolean', value : false, description : 'enable GCC static analysis support')
 option('firmware-packager', type : 'boolean', value : true, description : 'enable firmware-packager installation')
 option('docs', type : 'combo', choices : ['none', 'gtkdoc', 'docgen'], value : 'docgen', description : 'developer documentation type')
 option('introspection', type : 'boolean', value : true, description : 'generate GObject Introspection data')

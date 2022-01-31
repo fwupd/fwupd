@@ -108,7 +108,7 @@ warning_flags = [
   '-Wvla',
   '-Wwrite-strings'
 ]
-if host_machine.system() != 'windows'
+if get_option('static_analysis') and host_machine.system() != 'windows'
   warning_flags += ['-fanalyzer', '-Wno-analyzer-null-dereference']
 endif
 cc = meson.get_compiler('c')
