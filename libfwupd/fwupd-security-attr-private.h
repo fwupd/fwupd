@@ -296,6 +296,22 @@ G_BEGIN_DECLS
  * Since: 1.8.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION "org.fwupd.hsi.Amd.RollbackProtection"
+/**
+ * FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION
+ *
+ * Host Security ID attribute for SPI Write protection
+ *
+ * Since: 1.8.0
+ **/
+#define FWUPD_SECURITY_ATTR_ID_AMD_SPI_WRITE_PROTECTION "org.fwupd.hsi.Amd.SpiWriteProtection"
+/**
+ * FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION
+ *
+ * Host Security ID attribute for SPI replay protection
+ *
+ * Since: 1.8.0
+ **/
+#define FWUPD_SECURITY_ATTR_ID_AMD_SPI_REPLAY_PROTECTION "org.fwupd.hsi.Amd.SpiReplayProtection"
 
 GVariant *
 fwupd_security_attr_to_variant(FwupdSecurityAttr *self);
