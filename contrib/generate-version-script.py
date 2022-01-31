@@ -9,10 +9,12 @@ import sys
 import argparse
 import xml.etree.ElementTree as ET
 
-from pkg_resources import parse_version
-
 XMLNS = "{http://www.gtk.org/introspection/core/1.0}"
 XMLNS_C = "{http://www.gtk.org/introspection/c/1.0}"
+
+
+def parse_version(ver):
+    return tuple(map(int, ver.split(".")))
 
 
 def usage(return_code):
