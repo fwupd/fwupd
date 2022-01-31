@@ -941,11 +941,6 @@ fu_cabinet_sign_enumerate_firmware(FuCabinet *self, GPtrArray *files, GError **e
 			g_ptr_array_add(files, g_strdup(xb_node_get_attr(n, "filename")));
 		}
 	}
-	g_error(
-	    "%s",
-	    xb_silo_export(silo,
-			   XB_NODE_EXPORT_FLAG_FORMAT_MULTILINE | XB_NODE_EXPORT_FLAG_FORMAT_INDENT,
-			   NULL));
 
 	/* success */
 	return TRUE;
