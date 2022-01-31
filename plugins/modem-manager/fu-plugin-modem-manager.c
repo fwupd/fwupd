@@ -18,8 +18,6 @@
 /* amount of time to wait for ports of the same device	being exposed by kernel */
 #define FU_MM_UDEV_DEVICE_PORTS_TIMEOUT 3 /* s */
 
-typedef struct FuPluginMmInhibitedDeviceInfo FuPluginMmInhibitedDeviceInfo;
-
 struct FuPluginData {
 	MMManager *manager;
 	gboolean manager_ready;
