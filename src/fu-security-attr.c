@@ -183,6 +183,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: if fwupd supports HSI on this chip */
 		return g_strdup(_("Supported CPU"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION) == 0) {
+		/* TRANSLATORS: Title: if firmware enforces rollback protection */
+		return g_strdup(_("Rollback protection"));
+	}
 
 	/* we should not get here */
 	return g_strdup(fwupd_security_attr_get_name(attr));

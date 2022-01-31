@@ -287,6 +287,15 @@ G_BEGIN_DECLS
  * Since: 1.8.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU "org.fwupd.hsi.SupportedCpu"
+/**
+ * FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION
+ *
+ * Host Security ID attribute for Rollback protection of AMD platform
+ * firmware
+ *
+ * Since: 1.8.0
+ **/
+#define FWUPD_SECURITY_ATTR_ID_AMD_ROLLBACK_PROTECTION "org.fwupd.hsi.Amd.RollbackProtection"
 
 GVariant *
 fwupd_security_attr_to_variant(FwupdSecurityAttr *self);
