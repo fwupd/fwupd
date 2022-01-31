@@ -1734,7 +1734,6 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 	GString *str = g_string_new(NULL);
 	guint64 flags = fwupd_release_get_flags(rel);
 	g_autofree gchar *desc_fb = NULL;
-	g_autoptr(GString) flags_str = g_string_new(NULL);
 
 	g_return_val_if_fail(FWUPD_IS_RELEASE(rel), NULL);
 
