@@ -31,9 +31,7 @@ MMModemFirmwareUpdateMethod
 fu_mm_device_get_update_methods(FuMmDevice *device);
 
 /* support for udev-based devices */
-
-typedef struct FuPluginMmInhibitedDeviceInfo FuPluginMmInhibitedDeviceInfo;
-struct FuPluginMmInhibitedDeviceInfo {
+typedef struct {
 	gchar *inhibited_uid;
 	gchar *physical_id;
 	gchar *vendor;
@@ -45,7 +43,8 @@ struct FuPluginMmInhibitedDeviceInfo {
 	gint port_at_ifnum;
 	gint port_qmi_ifnum;
 	gint port_mbim_ifnum;
-};
+} FuPluginMmInhibitedDeviceInfo;
+
 FuPluginMmInhibitedDeviceInfo *
 fu_plugin_mm_inhibited_device_info_new(FuMmDevice *device);
 void
