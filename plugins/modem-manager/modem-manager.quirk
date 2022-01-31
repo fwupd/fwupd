@@ -45,6 +45,7 @@ Summary = Quectel EG25-G modem
 CounterpartGuid = USB\VID_18D1&PID_D00D
 Flags = detach-at-fastboot-has-no-response
 ModemManagerBranchAtCommand = AT+GETFWBRANCH
+Plugin = modem_manager
 
 # Quectel EG25-G in fastboot mode
 [USB\VID_18D1&PID_D00D]

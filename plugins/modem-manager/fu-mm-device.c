@@ -86,6 +86,8 @@ struct _FuMmDevice {
 #if MM_CHECK_VERSION(1, 17, 2)
 	FuFirehoseUpdater *firehose_updater;
 #endif
+	/* for sahara */
+	FuUsbDevice *usb_device;
 
 	/* firmware path */
 	gchar *firmware_path;
@@ -1637,6 +1639,8 @@ static void
 fu_mm_device_finalize(GObject *object)
 {
 	FuMmDevice *self = FU_MM_DEVICE(object);
+	if (self->usb_device != NULL)
+		g_object_unref(self->usb_device);
 	if (self->attach_idle)
 		g_source_remove(self->attach_idle);
 	if (self->qmi_pdc_active_id)
@@ -1734,6 +1738,21 @@ fu_plugin_mm_inhibited_device_info_free(FuPluginMmInhibitedDeviceInfo *info)
 		g_ptr_array_unref(info->guids);
 	g_free(info->detach_fastboot_at);
 	g_free(info);
+}
+
+FuUsbDevice *
+fu_mm_device_get_usb_device(FuMmDevice *self)
+{
+	g_return_val_if_fail(FU_IS_MM_DEVICE(self), NULL);
+	return self->usb_device;
+}
+
+void
+fu_mm_device_set_usb_device(FuMmDevice *self, FuUsbDevice *usb_device)
+{
+	g_return_if_fail(FU_IS_MM_DEVICE(self));
+	g_return_if_fail(FU_IS_USB_DEVICE(usb_device));
+	g_set_object(&self->usb_device, usb_device);
 }
 
 FuMmDevice *
