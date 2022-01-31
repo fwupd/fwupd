@@ -639,6 +639,26 @@ To meet HSI-4 on systems that run this test, the result must be `enabled`. *[v1.
 - [Intel TME Press Release](https://software.intel.com/content/www/us/en/develop/blogs/intel-releases-new-technology-specification-for-memory-encryption.html)
 - [WikiChip SME Overview](https://en.wikichip.org/wiki/x86/sme)
 
+<a id="org.fwupd.hsi.Amd.PlatformRollbackProtection"></a>
+
+### [AMD Rollback protection](#org.fwupd.hsi.Amd.RollbackProtection)
+
+AMD SOCs include the ability to prevent a rollback attack by a rollback protection feature on the firmware.  This feature prevents an attacker from loading an older
+firmware onto the part after a security vulnerability has been fixed.
+
+**Impact:** SOCs without this feature may be attacked by an attacker installing an older firmware that takes advantage of a well-known vulnerability.
+
+**Possible results:**
+
+- `enabled`: rollback protection enabled
+- `not-enabled`: rollback protection disabled
+
+To meet HSI-1 on AMD systems that run this test, the result must be `enabled`. *[v1.8.0]*
+
+**References:**
+
+- [Rollback protection](https://www.psacertified.org/blog/anti-rollback-explained/)
+
 <a id="org.fwupd.hsi.IntelSmap"></a>
 
 ### [Supervisor Mode Access Prevention](#org.fwupd.hsi.IntelSmap)
