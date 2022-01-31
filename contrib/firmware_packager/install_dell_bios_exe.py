@@ -100,7 +100,6 @@ def prompt_reboot():
 if __name__ == "__main__":
     ARGS = parse_args()
     CLIENT = Fwupd.Client()
-    CLIENT.connect()
     check_exists(ARGS.exe)
     directory = tempfile.mkdtemp()
     guid, deviceid, version = find_uefi_device(CLIENT, ARGS.deviceid)

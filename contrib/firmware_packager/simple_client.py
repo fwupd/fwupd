@@ -147,7 +147,6 @@ def check_exists(cab):
 if __name__ == "__main__":
     ARGS = parse_args()
     CLIENT = Fwupd.Client()
-    CLIENT.connect()
 
     if ARGS.command == "get-devices":
         get_devices(CLIENT)
