@@ -13,7 +13,6 @@ meson ../ \
     -Dhsi=false \
     -Dintrospection=false \
     -Dlibarchive=false \
-    -Dlogind=false \
     -Dman=false \
     -Dmetainfo=false \
     -Doffline=false \
@@ -38,7 +37,7 @@ meson ../ \
     -Dplugin_thunderbolt=false \
     -Dplugin_tpm=false \
     -Dplugin_uefi_capsule=false \
-    -Dplugin_upower=false \
+    -Dplugin_uf2=false \
     -Dplugin_upower=false \
     -Dpolkit=false \
     -Dsqlite=false \
