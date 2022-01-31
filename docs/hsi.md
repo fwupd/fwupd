@@ -661,6 +661,36 @@ To meet HSI-1 on AMD systems that run this test, the result must be `enabled`. *
 
 <a id="org.fwupd.hsi.IntelSmap"></a>
 
+### [AMD SPI Write protections](#org.fwupd.hsi.Amd.SpiWriteProtection)
+
+SOCs may enforce control of the SPI bus to prevent writes other than by verified entities.
+
+**Impact:** SOCs without this feature may be attacked by an attacker modifying the SPI.
+
+**Possible results:**
+
+- `enabled`: spi protections enabled
+- `not-enabled`: spi protections disabled
+
+To meet HSI-2 on systems that run this test, the result must be `enabled`. *[v1.8.0]*
+
+<a id="org.fwupd.hsi.Amd.SpiWriteProtection"></a>
+
+### [AMD SPI Replay protections](#org.fwupd.hsi.Amd.SpiReplayProtection)
+
+SOCs may include support for replay-protected monotonic counters to prevent replay attacks.
+
+**Impact:** SOCs without this feature may be attacked by an attacker modifying the SPI.
+
+**Possible results:**
+
+- `enabled`: spi protections enabled
+- `not-enabled`: spi protections disabled
+
+To meet HSI-3 on systems that run this test, the result must be `enabled`. *[v1.8.0]*
+
+<a id="org.fwupd.hsi.Amd.SpiReplayProtection"></a>
+
 ### [Supervisor Mode Access Prevention](#org.fwupd.hsi.IntelSmap)
 
 Without Supervisor Mode Access Prevention, the supervisor code usually has full read and write access to user-space memory mappings.
