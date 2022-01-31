@@ -252,7 +252,7 @@ fu_util_perhaps_show_unreported(FuUtilPrivate *priv, GError **error)
 	}
 
 	/* get all devices from the history database */
-	devices = fwupd_client_get_history(priv->client, NULL, &error_local);
+	devices = fwupd_client_get_history(priv->client, priv->cancellable, &error_local);
 	if (devices == NULL) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO))
 			return TRUE;
@@ -261,7 +261,7 @@ fu_util_perhaps_show_unreported(FuUtilPrivate *priv, GError **error)
 	}
 
 	/* create a map of RemoteID to RemoteURI */
-	remotes = fwupd_client_get_remotes(priv->client, NULL, error);
+	remotes = fwupd_client_get_remotes(priv->client, priv->cancellable, error);
 	if (remotes == NULL)
 		return FALSE;
 	remote_id_uri_map = g_hash_table_new(g_str_hash, g_str_equal);
@@ -390,7 +390,7 @@ fu_util_perhaps_show_unreported(FuUtilPrivate *priv, GError **error)
 									remote_id,
 									"ReportURI",
 									"",
-									NULL,
+									priv->cancellable,
 									error))
 						return FALSE;
 				}
@@ -424,7 +424,7 @@ fu_util_perhaps_show_unreported(FuUtilPrivate *priv, GError **error)
 								remote_id,
 								"AutomaticReports",
 								"true",
-								NULL,
+								priv->cancellable,
 								error))
 					return FALSE;
 			}
@@ -554,7 +554,7 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autofree gchar *title = fu_util_get_tree_title(priv);
 
 	/* get results from daemon */
-	devs = fwupd_client_get_devices(priv->client, NULL, error);
+	devs = fwupd_client_get_devices(priv->client, priv->cancellable, error);
 	if (devs == NULL)
 		return FALSE;
 
@@ -604,7 +604,7 @@ fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) plugins = NULL;
 
 	/* get results from daemon */
-	plugins = fwupd_client_get_plugins(priv->client, NULL, error);
+	plugins = fwupd_client_get_plugins(priv->client, priv->cancellable, error);
 	if (plugins == NULL)
 		return FALSE;
 	if (priv->as_json)
@@ -719,7 +719,8 @@ fu_util_device_test_component(FuUtilPrivate *priv,
 		g_autoptr(GPtrArray) devices = NULL;
 
 		g_debug("looking for guid %s", guid);
-		devices = fwupd_client_get_devices_by_guid(priv->client, guid, NULL, NULL);
+		devices =
+		    fwupd_client_get_devices_by_guid(priv->client, guid, priv->cancellable, NULL);
 		if (devices == NULL)
 			continue;
 		if (devices->len > 1) {
@@ -839,7 +840,7 @@ fu_util_device_test_step(FuUtilPrivate *priv,
 				  FWUPD_DEVICE_ID_ANY,
 				  filename,
 				  priv->flags,
-				  NULL,
+				  priv->cancellable,
 				  &error_local)) {
 		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND)) {
 			json_builder_set_member_name(helper->builder, "info");
@@ -1104,7 +1105,12 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 			return FALSE;
 	}
 
-	if (!fwupd_client_install(priv->client, id, filename, priv->flags, NULL, error))
+	if (!fwupd_client_install(priv->client,
+				  id,
+				  filename,
+				  priv->flags,
+				  priv->cancellable,
+				  error))
 		return FALSE;
 
 	fu_util_display_current_message(priv);
@@ -1156,7 +1162,7 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* implied, important for get-details on a device not in your system */
 	priv->show_all = TRUE;
 
-	array = fwupd_client_get_details(priv->client, values[0], NULL, error);
+	array = fwupd_client_get_details(priv->client, values[0], priv->cancellable, error);
 	if (array == NULL)
 		return FALSE;
 	if (priv->as_json)
@@ -1195,7 +1201,7 @@ fu_util_report_history_for_remote(FuUtilPrivate *priv,
 			return FALSE;
 	}
 
-	remote = fwupd_client_get_remote_by_id(priv->client, remote_id, NULL, error);
+	remote = fwupd_client_get_remote_by_id(priv->client, remote_id, priv->cancellable, error);
 	if (remote == NULL)
 		return FALSE;
 
@@ -1246,7 +1252,7 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* get all devices from the history database, then filter them,
 	 * adding to a hash map of report-ids */
-	devices = fwupd_client_get_history(priv->client, NULL, error);
+	devices = fwupd_client_get_history(priv->client, priv->cancellable, error);
 	if (devices == NULL)
 		return FALSE;
 	report_map = g_hash_table_new_full(g_str_hash,
@@ -1284,7 +1290,10 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 			g_debug("%s has no RemoteID", fwupd_device_get_id(dev));
 			continue;
 		}
-		remote = fwupd_client_get_remote_by_id(priv->client, remote_id, NULL, error);
+		remote = fwupd_client_get_remote_by_id(priv->client,
+						       remote_id,
+						       priv->cancellable,
+						       error);
 		if (remote == NULL)
 			return FALSE;
 		if (fwupd_remote_get_report_uri(remote) == NULL) {
@@ -1327,7 +1336,7 @@ fu_util_report_history(FuUtilPrivate *priv, gchar **values, GError **error)
 							fwupd_device_get_id(dev),
 							"Flags",
 							"reported",
-							NULL,
+							priv->cancellable,
 							error))
 				return FALSE;
 		}
@@ -1352,7 +1361,7 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autofree gchar *title = fu_util_get_tree_title(priv);
 
 	/* get all devices from the history database */
-	devices = fwupd_client_get_history(priv->client, NULL, error);
+	devices = fwupd_client_get_history(priv->client, priv->cancellable, error);
 	if (devices == NULL)
 		return FALSE;
 
@@ -1387,7 +1396,7 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 		/* try to lookup releases from client */
 		rels = fwupd_client_get_releases(priv->client,
 						 fwupd_device_get_id(dev),
-						 NULL,
+						 priv->cancellable,
 						 &error_local);
 		if (rels == NULL) {
 			g_debug("failed to get releases for %s: %s",
@@ -1427,7 +1436,8 @@ fu_util_get_device_by_id(FuUtilPrivate *priv, const gchar *id, GError **error)
 {
 	if (fwupd_guid_is_valid(id)) {
 		g_autoptr(GPtrArray) devices = NULL;
-		devices = fwupd_client_get_devices_by_guid(priv->client, id, NULL, error);
+		devices =
+		    fwupd_client_get_devices_by_guid(priv->client, id, priv->cancellable, error);
 		if (devices == NULL)
 			return NULL;
 		return fu_util_prompt_for_device(priv, devices, error);
@@ -1442,7 +1452,7 @@ fu_util_get_device_by_id(FuUtilPrivate *priv, const gchar *id, GError **error)
 			return NULL;
 		}
 	}
-	return fwupd_client_get_device_by_id(priv->client, id, NULL, error);
+	return fwupd_client_get_device_by_id(priv->client, id, priv->cancellable, error);
 }
 
 static FwupdDevice *
@@ -1460,7 +1470,7 @@ fu_util_get_device_or_prompt(FuUtilPrivate *priv, gchar **values, GError **error
 	}
 
 	/* get all devices from daemon */
-	devices = fwupd_client_get_devices(priv->client, NULL, error);
+	devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
 	if (devices == NULL)
 		return NULL;
 	return fu_util_prompt_for_device(priv, devices, error);
@@ -1475,7 +1485,10 @@ fu_util_clear_results(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (dev == NULL)
 		return FALSE;
 
-	return fwupd_client_clear_results(priv->client, fwupd_device_get_id(dev), NULL, error);
+	return fwupd_client_clear_results(priv->client,
+					  fwupd_device_get_id(dev),
+					  priv->cancellable,
+					  error);
 }
 
 static gboolean
@@ -1488,7 +1501,10 @@ fu_util_verify_update(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (dev == NULL)
 		return FALSE;
 
-	if (!fwupd_client_verify_update(priv->client, fwupd_device_get_id(dev), NULL, error)) {
+	if (!fwupd_client_verify_update(priv->client,
+					fwupd_device_get_id(dev),
+					priv->cancellable,
+					error)) {
 		g_prefix_error(error, "failed to verify update %s: ", fu_device_get_name(dev));
 		return FALSE;
 	}
@@ -1504,7 +1520,7 @@ fu_util_download_metadata_enable_lvfs(FuUtilPrivate *priv, GError **error)
 	g_autoptr(FwupdRemote) remote = NULL;
 
 	/* is the LVFS available but disabled? */
-	remote = fwupd_client_get_remote_by_id(priv->client, "lvfs", NULL, error);
+	remote = fwupd_client_get_remote_by_id(priv->client, "lvfs", priv->cancellable, error);
 	if (remote == NULL)
 		return TRUE;
 	g_print("%s\n%s\n%s [Y|n]: ",
@@ -1537,7 +1553,7 @@ fu_util_check_oldest_remote(FuUtilPrivate *priv, guint64 *age_oldest, GError **e
 	gboolean checked = FALSE;
 
 	/* get the age of the oldest enabled remotes */
-	remotes = fwupd_client_get_remotes(priv->client, NULL, error);
+	remotes = fwupd_client_get_remotes(priv->client, priv->cancellable, error);
 	if (remotes == NULL)
 		return FALSE;
 	for (guint i = 0; i < remotes->len; i++) {
@@ -1592,7 +1608,7 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 		}
 	}
 
-	remotes = fwupd_client_get_remotes(priv->client, NULL, error);
+	remotes = fwupd_client_get_remotes(priv->client, priv->cancellable, error);
 	if (remotes == NULL)
 		return FALSE;
 	for (guint i = 0; i < remotes->len; i++) {
@@ -1620,7 +1636,7 @@ fu_util_download_metadata(FuUtilPrivate *priv, GError **error)
 	}
 
 	/* get devices from daemon */
-	devs = fwupd_client_get_devices(priv->client, NULL, error);
+	devs = fwupd_client_get_devices(priv->client, priv->cancellable, error);
 	if (devs == NULL)
 		return FALSE;
 
@@ -1663,7 +1679,7 @@ fu_util_refresh(FuUtilPrivate *priv, gchar **values, GError **error)
 					  values[2],
 					  values[0],
 					  values[1],
-					  NULL,
+					  priv->cancellable,
 					  error))
 		return FALSE;
 
@@ -1693,7 +1709,10 @@ fu_util_get_results(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (dev == NULL)
 		return FALSE;
 
-	rel = fwupd_client_get_results(priv->client, fwupd_device_get_id(dev), NULL, error);
+	rel = fwupd_client_get_results(priv->client,
+				       fwupd_device_get_id(dev),
+				       priv->cancellable,
+				       error);
 	if (rel == NULL)
 		return FALSE;
 	if (priv->as_json)
@@ -1715,7 +1734,10 @@ fu_util_get_releases(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* get the releases for this device */
-	rels = fwupd_client_get_releases(priv->client, fwupd_device_get_id(dev), NULL, error);
+	rels = fwupd_client_get_releases(priv->client,
+					 fwupd_device_get_id(dev),
+					 priv->cancellable,
+					 error);
 	if (rels == NULL)
 		return FALSE;
 
@@ -1798,7 +1820,10 @@ fu_util_verify(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (dev == NULL)
 		return FALSE;
 
-	if (!fwupd_client_verify(priv->client, fwupd_device_get_id(dev), NULL, error)) {
+	if (!fwupd_client_verify(priv->client,
+				 fwupd_device_get_id(dev),
+				 priv->cancellable,
+				 error)) {
 		g_prefix_error(error, "failed to verify %s: ", fu_device_get_name(dev));
 		return FALSE;
 	}
@@ -1823,7 +1848,7 @@ fu_util_unlock(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT))
 		priv->completion_flags |= FWUPD_DEVICE_FLAG_NEEDS_REBOOT;
 
-	if (!fwupd_client_unlock(priv->client, fwupd_device_get_id(dev), NULL, error))
+	if (!fwupd_client_unlock(priv->client, fwupd_device_get_id(dev), priv->cancellable, error))
 		return FALSE;
 
 	return fu_util_prompt_complete(priv->completion_flags, TRUE, error);
@@ -1890,7 +1915,7 @@ fu_util_get_updates_as_json(FuUtilPrivate *priv, GPtrArray *devices, GError **er
 		/* get the releases for this device and filter for validity */
 		rels = fwupd_client_get_upgrades(priv->client,
 						 fwupd_device_get_id(dev),
-						 NULL,
+						 priv->cancellable,
 						 &error_local);
 		if (rels == NULL) {
 			g_debug("no upgrades: %s", error_local->message);
@@ -1927,7 +1952,7 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* handle both forms */
 	if (g_strv_length(values) == 0) {
-		devices = fwupd_client_get_devices(priv->client, NULL, error);
+		devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
 		if (devices == NULL)
 			return FALSE;
 	} else if (g_strv_length(values) == 1) {
@@ -1976,7 +2001,7 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		/* get the releases for this device and filter for validity */
 		rels = fwupd_client_get_upgrades(priv->client,
 						 fwupd_device_get_id(dev),
-						 NULL,
+						 priv->cancellable,
 						 &error_local);
 		if (rels == NULL) {
 			if (!latest_header) {
@@ -2053,7 +2078,7 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) remotes = NULL;
 	g_autofree gchar *title = fu_util_get_tree_title(priv);
 
-	remotes = fwupd_client_get_remotes(priv->client, NULL, error);
+	remotes = fwupd_client_get_remotes(priv->client, priv->cancellable, error);
 	if (remotes == NULL)
 		return FALSE;
 	if (priv->as_json)
@@ -2180,7 +2205,7 @@ fu_util_prompt_warning_composite(FuUtilPrivate *priv,
 	}
 
 	/* find other devices matching the composite ID and the release checksum */
-	devices = fwupd_client_get_devices(priv->client, NULL, error);
+	devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
 	if (devices == NULL)
 		return FALSE;
 	for (guint i = 0; i < devices->len; i++) {
@@ -2202,7 +2227,7 @@ fu_util_prompt_warning_composite(FuUtilPrivate *priv,
 			continue;
 		rels = fwupd_client_get_releases(priv->client,
 						 fwupd_device_get_id(dev_tmp),
-						 NULL,
+						 priv->cancellable,
 						 &error_local);
 		if (rels == NULL) {
 			g_debug("ignoring: %s", error_local->message);
@@ -2260,7 +2285,7 @@ fu_util_maybe_send_reports(FuUtilPrivate *priv, const gchar *remote_id, GError *
 		g_debug("not sending reports, no remote");
 		return TRUE;
 	}
-	remote = fwupd_client_get_remote_by_id(priv->client, remote_id, NULL, error);
+	remote = fwupd_client_get_remote_by_id(priv->client, remote_id, priv->cancellable, error);
 	if (remote == NULL)
 		return FALSE;
 	if (fwupd_remote_get_automatic_reports(remote)) {
@@ -2309,7 +2334,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 	}
 
 	/* get devices from daemon */
-	devices = fwupd_client_get_devices(priv->client, NULL, error);
+	devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
 	if (devices == NULL)
 		return FALSE;
 	priv->current_operation = FU_UTIL_OPERATION_UPDATE;
@@ -2363,7 +2388,7 @@ fu_util_update(FuUtilPrivate *priv, gchar **values, GError **error)
 		/* get the releases for this device and filter for validity */
 		rels = fwupd_client_get_upgrades(priv->client,
 						 fwupd_device_get_id(dev),
-						 NULL,
+						 priv->cancellable,
 						 &error_local);
 		if (rels == NULL) {
 			if (!latest_header) {
@@ -2540,7 +2565,10 @@ fu_util_downgrade(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* get the releases for this device and filter for validity */
-	rels = fwupd_client_get_downgrades(priv->client, fwupd_device_get_id(dev), NULL, error);
+	rels = fwupd_client_get_downgrades(priv->client,
+					   fwupd_device_get_id(dev),
+					   priv->cancellable,
+					   error);
 	if (rels == NULL) {
 		g_autofree gchar *downgrade_str =
 		    /* TRANSLATORS: message letting the user know no device downgrade available
@@ -2599,7 +2627,10 @@ fu_util_reinstall(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* try to lookup/match release from client */
-	rels = fwupd_client_get_releases(priv->client, fwupd_device_get_id(dev), NULL, error);
+	rels = fwupd_client_get_releases(priv->client,
+					 fwupd_device_get_id(dev),
+					 priv->cancellable,
+					 error);
 	if (rels == NULL)
 		return FALSE;
 	for (guint j = 0; j < rels->len; j++) {
@@ -2674,7 +2705,10 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* get all releases, including the alternate branch versions */
-	rels = fwupd_client_get_releases(priv->client, fwupd_device_get_id(dev), NULL, error);
+	rels = fwupd_client_get_releases(priv->client,
+					 fwupd_device_get_id(dev),
+					 priv->cancellable,
+					 error);
 	if (rels == NULL)
 		return FALSE;
 
@@ -2788,7 +2822,7 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 	/* handle both forms */
 	if (g_strv_length(values) == 0) {
 		/* activate anything with _NEEDS_ACTIVATION */
-		devices = fwupd_client_get_devices(priv->client, NULL, error);
+		devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
 		if (devices == NULL)
 			return FALSE;
 		for (guint i = 0; i < devices->len; i++) {
@@ -2836,7 +2870,10 @@ fu_util_activate(FuUtilPrivate *priv, gchar **values, GError **error)
 			/* TRANSLATORS: shown when shutting down to switch to the new version */
 			_("Activating firmware update for"),
 			fwupd_device_get_name(device));
-		if (!fwupd_client_activate(priv->client, NULL, fwupd_device_get_id(device), error))
+		if (!fwupd_client_activate(priv->client,
+					   priv->cancellable,
+					   fwupd_device_get_id(device),
+					   error))
 			return FALSE;
 	}
 
@@ -2966,7 +3003,7 @@ fu_util_get_remote_with_security_report_uri(FuUtilPrivate *priv, GError **error)
 	g_autoptr(GPtrArray) remotes = NULL;
 
 	/* get all remotes */
-	remotes = fwupd_client_get_remotes(priv->client, NULL, error);
+	remotes = fwupd_client_get_remotes(priv->client, priv->cancellable, error);
 	if (remotes == NULL)
 		return NULL;
 
@@ -3026,7 +3063,7 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 								fwupd_remote_get_id(remote),
 								"SecurityReportURI",
 								"",
-								NULL,
+								priv->cancellable,
 								error))
 					return FALSE;
 			}
@@ -3137,7 +3174,7 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 							fwupd_remote_get_id(remote),
 							"AutomaticSecurityReports",
 							"true",
-							NULL,
+							priv->cancellable,
 							error))
 				return FALSE;
 		}
@@ -3439,7 +3476,7 @@ fu_util_get_history_checksum(FuUtilPrivate *priv, GError **error)
 	g_autoptr(FwupdRelease) release = NULL;
 	g_autoptr(GPtrArray) devices = NULL;
 
-	devices = fwupd_client_get_history(priv->client, NULL, error);
+	devices = fwupd_client_get_history(priv->client, priv->cancellable, error);
 	if (devices == NULL)
 		return NULL;
 	device = fu_util_prompt_for_device(priv, devices, error);
@@ -3594,7 +3631,7 @@ fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 	g_autoptr(GPtrArray) plugins = NULL;
 
 	/* get plugins from daemon, ignoring if the daemon is too old */
-	plugins = fwupd_client_get_plugins(priv->client, NULL, NULL);
+	plugins = fwupd_client_get_plugins(priv->client, priv->cancellable, NULL);
 	if (plugins == NULL)
 		return;
 
