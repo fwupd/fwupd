@@ -17,6 +17,10 @@ G_DECLARE_FINAL_TYPE(FuMmDevice, fu_mm_device, FU, MM_DEVICE, FuDevice)
 
 FuMmDevice *
 fu_mm_device_new(FuContext *ctx, MMManager *manager, MMObject *omodem);
+FuUsbDevice *
+fu_mm_device_get_usb_device(FuMmDevice *self);
+void
+fu_mm_device_set_usb_device(FuMmDevice *self, FuUsbDevice *usb_device);
 const gchar *
 fu_mm_device_get_inhibition_uid(FuMmDevice *device);
 const gchar *
