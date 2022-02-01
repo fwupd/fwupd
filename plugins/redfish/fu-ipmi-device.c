@@ -179,7 +179,7 @@ fu_ipmi_device_errcode_to_string(guint8 errcode)
 		return "nak-on-write";
 	if (errcode == IPMI_ERR_UNSPECIFIED)
 		return "unspecified";
-	return "unspecified";
+	return "unknown";
 }
 
 static gboolean
