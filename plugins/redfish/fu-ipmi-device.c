@@ -33,6 +33,24 @@
 #define IPMI_PASSWORD_SET_PASSWORD  0x02
 #define IPMI_PASSWORD_TEST_PASSWORD 0x03
 
+/* these are not provided in ipmi_msgdefs.h */
+#define IPMI_INVALID_COMMAND_ON_LUN_ERR	    0xC2
+#define IPMI_OUT_OF_SPACE_ERR		    0xC4
+#define IPMI_CANCELLED_OR_INVALID_ERR	    0xC5
+#define IPMI_OUT_OF_RANGE_ERR		    0xC9
+#define IPMI_CANNOT_RETURN_DATA_ERR	    0xCA
+#define IPMI_NOT_FOUND_ERR		    0xCB
+#define IPMI_INVALID_DATA_FIELD_ERR	    0xCC
+#define IPMI_COMMAND_ILLEGAL_ERR	    0xCD
+#define IPMI_RESPONSE_NOT_PROVIDED_ERR	    0xCE
+#define IPMI_DUPLICATED_REQUEST_ERR	    0xCF
+#define IPMI_SDR_IN_UPDATE_MODE_ERR	    0xD0
+#define IPMI_DEVICE_IN_UPDATE_MODE_ERR	    0xD1
+#define IPMI_INITIALIZATION_IN_PROGRESS_ERR 0xD2
+#define IPMI_DESTINATION_UNAVAILABLE_ERR    0xD3
+#define IPMI_INSUFFICIENT_PRIVILEGE_ERR	    0xD4
+#define IPMI_COMMAND_DISABLED_ERR	    0xD6
+
 struct _FuIpmiDevice {
 	FuUdevDevice parent_instance;
 	glong seq;
@@ -179,6 +197,39 @@ fu_ipmi_device_errcode_to_string(guint8 errcode)
 		return "nak-on-write";
 	if (errcode == IPMI_ERR_UNSPECIFIED)
 		return "unspecified";
+	/* these are not defined in ipmi_msgdefs.h but used in reality */
+	if (errcode == IPMI_INVALID_COMMAND_ON_LUN_ERR)
+		return "invalid-command-on-lun";
+	if (errcode == IPMI_OUT_OF_SPACE_ERR)
+		return "out-of-space";
+	if (errcode == IPMI_CANCELLED_OR_INVALID_ERR)
+		return "cancelled-or-invalid";
+	if (errcode == IPMI_OUT_OF_RANGE_ERR)
+		return "out-of-range";
+	if (errcode == IPMI_CANNOT_RETURN_DATA_ERR)
+		return "cannot-return-data";
+	if (errcode == IPMI_NOT_FOUND_ERR)
+		return "not-found";
+	if (errcode == IPMI_INVALID_DATA_FIELD_ERR)
+		return "invalid-data-field";
+	if (errcode == IPMI_COMMAND_ILLEGAL_ERR)
+		return "command-illegal";
+	if (errcode == IPMI_RESPONSE_NOT_PROVIDED_ERR)
+		return "response-not-provided";
+	if (errcode == IPMI_DUPLICATED_REQUEST_ERR)
+		return "duplicated-request";
+	if (errcode == IPMI_SDR_IN_UPDATE_MODE_ERR)
+		return "sdr-in-update-mode";
+	if (errcode == IPMI_DEVICE_IN_UPDATE_MODE_ERR)
+		return "device-in-update-mode";
+	if (errcode == IPMI_INITIALIZATION_IN_PROGRESS_ERR)
+		return "initialization-in-progress";
+	if (errcode == IPMI_DESTINATION_UNAVAILABLE_ERR)
+		return "destination-unavailable";
+	if (errcode == IPMI_INSUFFICIENT_PRIVILEGE_ERR)
+		return "insufficient-privilege";
+	if (errcode == IPMI_COMMAND_DISABLED_ERR)
+		return "command-disabled";
 	return "unknown";
 }
 
