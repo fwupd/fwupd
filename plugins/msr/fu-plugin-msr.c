@@ -63,6 +63,7 @@ fu_plugin_msr_startup(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	guint eax = 0;
+	guint ebx = 0;
 	guint ecx = 0;
 
 	if (!g_file_test("/dev/cpu", G_FILE_TEST_IS_DIR)) {
@@ -82,8 +83,9 @@ fu_plugin_msr_startup(FuPlugin *plugin, GError **error)
 
 	/* indicates support for SME and SEV */
 	if (fu_common_get_cpu_vendor() == FU_CPU_VENDOR_AMD) {
-		if (!fu_common_cpuid(0x8000001f, &eax, NULL, NULL, NULL, error))
+		if (!fu_common_cpuid(0x8000001f, &eax, &ebx, NULL, NULL, error))
 			return FALSE;
+		g_debug("SME/SEV check MSR: eax 0%x, ebx 0%x", eax, ebx);
 		priv->amd64_syscfg_supported = ((eax >> 0) & 0x1) > 0;
 		priv->amd64_sev_supported = ((eax >> 1) & 0x1) > 0;
 	}
@@ -157,7 +159,8 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 						G_LITTLE_ENDIAN,
 						error))
 			return FALSE;
-		g_debug("PCI_MSR_AMD64_SYSCFG: sme_is_enabled=%i",
+		g_debug("PCI_MSR_AMD64_SYSCFG: 0%x, sme_is_enabled=%i",
+			priv->amd64_syscfg.data,
 			priv->amd64_syscfg.fields.sme_is_enabled);
 	}
 	if (priv->amd64_sev_supported) {
@@ -176,7 +179,8 @@ fu_plugin_msr_backend_device_added(FuPlugin *plugin, FuDevice *device, GError **
 						G_LITTLE_ENDIAN,
 						error))
 			return FALSE;
-		g_debug("PCI_MSR_AMD64_SEV: sev_is_enabled=%i",
+		g_debug("PCI_MSR_AMD64_SEV: 0%x, sev_is_enabled=%i",
+			priv->amd64_sev.data,
 			priv->amd64_sev.fields.sev_is_enabled);
 	}
 
