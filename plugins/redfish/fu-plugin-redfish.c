@@ -300,6 +300,9 @@ fu_redfish_plugin_ipmi_create_user(FuPlugin *plugin, GError **error)
 	fu_redfish_backend_set_username(data->backend, username_fwupd);
 	fu_redfish_backend_set_password(data->backend, password_tmp);
 
+	/* wait for Redfish to sync */
+	g_usleep(2 * G_USEC_PER_SEC);
+
 	/* now use Redfish to change the temporary password to the actual password */
 	request = fu_redfish_backend_request_new(data->backend);
 	uri = g_strdup_printf("/redfish/v1/AccountService/Accounts/%u", (guint)user_id - 1);
