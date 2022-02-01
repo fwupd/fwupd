@@ -66,10 +66,13 @@ fu_plugin_add_security_attrs_tsme(const gchar *path, FuSecurityAttrs *attrs)
 		return;
 	}
 
-	if (val)
-		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
+	if (!val) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENCRYPTED);
+		return;
+	}
 
-	/* success */
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
+	fwupd_security_attr_add_obsolete(attr, "msr");
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 }
 
