@@ -618,7 +618,7 @@ fu_device_retry_full(FuDevice *self,
 	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
 	g_return_val_if_fail(func != NULL, FALSE);
 	g_return_val_if_fail(count >= 1, FALSE);
-	g_return_val_if_fail(error != NULL, FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 	for (guint i = 0;; i++) {
 		g_autoptr(GError) error_local = NULL;
