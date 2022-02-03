@@ -45,6 +45,7 @@ if get_option('tests') and umockdev.found() and gio.version().version_compare('>
   env.set('G_TEST_SRCDIR', meson.current_source_dir())
   env.set('G_TEST_BUILDDIR', meson.current_build_dir())
   env.set('FWUPD_LOCALSTATEDIR', '/tmp/fwupd-self-test/var')
+  env.set('FWUPD_DATADIR_QUIRKS', meson.current_source_dir())
   e = executable(
     'thunderbolt-self-test',
     fu_hash,
