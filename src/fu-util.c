@@ -3676,6 +3676,25 @@ fu_util_show_plugin_warnings(FuUtilPrivate *priv)
 	}
 }
 
+static gboolean
+fu_util_version(FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(GHashTable) metadata = NULL;
+	g_autofree gchar *str = NULL;
+
+	/* get metadata */
+	metadata = fwupd_client_get_report_metadata(priv->client, priv->cancellable, error);
+	if (metadata == NULL)
+		return FALSE;
+
+	/* dump to the screen in the most appropriate format */
+	if (priv->as_json)
+		return fu_util_project_versions_as_json(metadata, error);
+	str = fu_util_project_versions_to_string(metadata);
+	g_print("%s", str);
+	return TRUE;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -4245,22 +4264,6 @@ main(int argc, char *argv[])
 			 G_CALLBACK(fu_util_client_notify_cb),
 			 priv);
 
-	/* just show versions and exit */
-	if (version) {
-		g_autofree gchar *version_str = fu_util_get_versions();
-		g_print("%s\n", version_str);
-		if (!fwupd_client_connect(priv->client, priv->cancellable, &error)) {
-			g_printerr("Failed to connect to daemon: %s\n", error->message);
-			return EXIT_FAILURE;
-		}
-		g_print("daemon version:\t%s\n", fwupd_client_get_daemon_version(priv->client));
-		if (fwupd_client_get_host_bkc(priv->client) != NULL) {
-			g_print("host best-known-configuration:\t%s\n",
-				fwupd_client_get_host_bkc(priv->client));
-		}
-		return EXIT_SUCCESS;
-	}
-
 	/* show a warning if the daemon is tainted */
 	if (!fwupd_client_connect(priv->client, priv->cancellable, &error)) {
 		g_printerr("Failed to connect to daemon: %s\n", error->message);
@@ -4275,6 +4278,15 @@ main(int argc, char *argv[])
 			   /* TRANSLATORS: the user is SOL for support... */
 			   _("The daemon has loaded 3rd party code and "
 			     "is no longer supported by the upstream developers!"));
+	}
+
+	/* just show versions and exit */
+	if (version) {
+		if (!fu_util_version(priv, &error)) {
+			g_printerr("%s\n", error->message);
+			return EXIT_FAILURE;
+		}
+		return EXIT_SUCCESS;
 	}
 
 	/* show user-visible warnings from the plugins */
