@@ -2150,8 +2150,9 @@ fu_engine_get_report_metadata(FuEngine *self, GError **error)
 #endif
 
 	/* find out what BKC is being targeted to understand "odd" upgrade paths */
-	tmp = fu_config_get_host_bkc(self->config) if (tmp != NULL)
-	    g_hash_table_insert(hash, g_strdup("HostBkc"), g_strdup(tmp));
+	tmp = fu_config_get_host_bkc(self->config);
+	if (tmp != NULL)
+		g_hash_table_insert(hash, g_strdup("HostBkc"), g_strdup(tmp));
 
 	/* DMI data */
 	tmp = fu_context_get_hwid_value(self->ctx, FU_HWIDS_KEY_PRODUCT_NAME);

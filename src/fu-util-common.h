@@ -58,8 +58,6 @@ gboolean
 fu_util_is_interesting_device(FwupdDevice *dev);
 gchar *
 fu_util_get_user_cache_path(const gchar *fn);
-gchar *
-fu_util_get_versions(void);
 
 void
 fu_util_warning_box(const gchar *title, const gchar *body, guint width);
@@ -152,3 +150,7 @@ gboolean
 fu_util_setup_interactive_console(GError **error);
 gboolean
 fu_util_print_builder(JsonBuilder *builder, GError **error);
+gchar *
+fu_util_project_versions_to_string(GHashTable *metadata);
+gboolean
+fu_util_project_versions_as_json(GHashTable *metadata, GError **error);

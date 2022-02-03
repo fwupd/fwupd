@@ -284,26 +284,6 @@ fu_util_get_user_cache_path(const gchar *fn)
 	return g_build_filename(root, "fwupd", basename, NULL);
 }
 
-gchar *
-fu_util_get_versions(void)
-{
-	GString *string = g_string_new("");
-
-	g_string_append_printf(string, "client version:\t%s\n", SOURCE_VERSION);
-	g_string_append_printf(string, "compile-time dependency versions\n");
-#ifdef HAVE_GUSB
-	g_string_append_printf(string,
-			       "\tgusb:\t%d.%d.%d\n",
-			       G_USB_MAJOR_VERSION,
-			       G_USB_MINOR_VERSION,
-			       G_USB_MICRO_VERSION);
-#endif
-#ifdef EFIVAR_LIBRARY_VERSION
-	g_string_append_printf(string, "\tefivar:\t%s", EFIVAR_LIBRARY_VERSION);
-#endif
-	return g_string_free(string, FALSE);
-}
-
 static gboolean
 fu_util_update_shutdown(GError **error)
 {
@@ -2690,4 +2670,114 @@ fu_util_print_builder(JsonBuilder *builder, GError **error)
 	/* just print */
 	g_print("%s\n", data);
 	return TRUE;
+}
+
+typedef enum {
+	FU_UTIL_DEPENDENCY_KIND_UNKNOWN,
+	FU_UTIL_DEPENDENCY_KIND_RUNTIME,
+	FU_UTIL_DEPENDENCY_KIND_COMPILE,
+} FuUtilDependencyKind;
+
+static const gchar *
+fu_util_dependency_kind_to_string(FuUtilDependencyKind dependency_kind)
+{
+	if (dependency_kind == FU_UTIL_DEPENDENCY_KIND_RUNTIME)
+		return "runtime";
+	if (dependency_kind == FU_UTIL_DEPENDENCY_KIND_COMPILE)
+		return "compile";
+	return NULL;
+}
+
+static gchar *
+fu_util_parse_project_dependency(const gchar *str, FuUtilDependencyKind *dependency_kind)
+{
+	g_return_val_if_fail(str != NULL, NULL);
+	if (g_str_has_prefix(str, "RuntimeVersion(")) {
+		gsize strsz = strlen(str);
+		if (dependency_kind != NULL)
+			*dependency_kind = FU_UTIL_DEPENDENCY_KIND_RUNTIME;
+		return g_strndup(str + 15, strsz - 16);
+	}
+	if (g_str_has_prefix(str, "CompileVersion(")) {
+		gsize strsz = strlen(str);
+		if (dependency_kind != NULL)
+			*dependency_kind = FU_UTIL_DEPENDENCY_KIND_COMPILE;
+		return g_strndup(str + 15, strsz - 16);
+	}
+	return g_strdup(str);
+}
+
+static gboolean
+fu_util_print_version_key_valid(const gchar *key)
+{
+	g_return_val_if_fail(key != NULL, FALSE);
+	if (g_str_has_prefix(key, "RuntimeVersion"))
+		return TRUE;
+	if (g_str_has_prefix(key, "CompileVersion"))
+		return TRUE;
+	return FALSE;
+}
+
+gboolean
+fu_util_project_versions_as_json(GHashTable *metadata, GError **error)
+{
+	GHashTableIter iter;
+	const gchar *key;
+	const gchar *value;
+	g_autoptr(JsonBuilder) builder = json_builder_new();
+
+	json_builder_begin_object(builder);
+	json_builder_set_member_name(builder, "Versions");
+	json_builder_begin_array(builder);
+	g_hash_table_iter_init(&iter, metadata);
+	while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value)) {
+		FuUtilDependencyKind dependency_kind = FU_UTIL_DEPENDENCY_KIND_UNKNOWN;
+		g_autofree gchar *project = NULL;
+
+		/* add version keys */
+		if (!fu_util_print_version_key_valid(key))
+			continue;
+		project = fu_util_parse_project_dependency(key, &dependency_kind);
+		json_builder_begin_object(builder);
+		if (dependency_kind != FU_UTIL_DEPENDENCY_KIND_UNKNOWN) {
+			json_builder_set_member_name(builder, "Type");
+			json_builder_add_string_value(
+			    builder,
+			    fu_util_dependency_kind_to_string(dependency_kind));
+		}
+		json_builder_set_member_name(builder, "AppstreamId");
+		json_builder_add_string_value(builder, project);
+		json_builder_set_member_name(builder, "Version");
+		json_builder_add_string_value(builder, value);
+		json_builder_end_object(builder);
+	}
+	json_builder_end_array(builder);
+	json_builder_end_object(builder);
+	return fu_util_print_builder(builder, error);
+}
+
+gchar *
+fu_util_project_versions_to_string(GHashTable *metadata)
+{
+	GHashTableIter iter;
+	const gchar *key;
+	const gchar *value;
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	g_hash_table_iter_init(&iter, metadata);
+	while (g_hash_table_iter_next(&iter, (gpointer *)&key, (gpointer *)&value)) {
+		FuUtilDependencyKind dependency_kind = FU_UTIL_DEPENDENCY_KIND_UNKNOWN;
+		g_autofree gchar *project = NULL;
+
+		/* print version keys */
+		if (!fu_util_print_version_key_valid(key))
+			continue;
+		project = fu_util_parse_project_dependency(key, &dependency_kind);
+		g_string_append_printf(str,
+				       "%-10s%-30s%s\n",
+				       fu_util_dependency_kind_to_string(dependency_kind),
+				       project,
+				       value);
+	}
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
