@@ -3071,6 +3071,25 @@ fu_util_switch_branch(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gboolean
+fu_util_version(FuUtilPrivate *priv, GError **error)
+{
+	g_autoptr(GHashTable) metadata = NULL;
+	g_autofree gchar *str = NULL;
+
+	/* get metadata */
+	metadata = fu_engine_get_report_metadata(priv->engine, error);
+	if (metadata == NULL)
+		return FALSE;
+
+	/* dump to the screen in the most appropriate format */
+	if (priv->as_json)
+		return fu_util_project_versions_as_json(metadata, error);
+	str = fu_util_project_versions_to_string(metadata);
+	g_print("%s", str);
+	return TRUE;
+}
+
+static gboolean
 fu_util_clear_history(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	g_autoptr(FuHistory) history = fu_history_new();
@@ -3658,8 +3677,10 @@ main(int argc, char *argv[])
 
 	/* just show versions and exit */
 	if (version) {
-		g_autofree gchar *version_str = fu_util_get_versions();
-		g_print("%s\n", version_str);
+		if (!fu_util_version(priv, &error)) {
+			g_printerr("%s\n", error->message);
+			return EXIT_FAILURE;
+		}
 		return EXIT_SUCCESS;
 	}
 
