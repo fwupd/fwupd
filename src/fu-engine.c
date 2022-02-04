@@ -762,6 +762,8 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 			fwupd_release_set_update_image(rel, tmp);
 		}
 	}
+	if (xb_node_get_attr(release, "date_eol") != NULL)
+		fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_END_OF_LIFE);
 
 	/* sort the locations by scheme */
 	g_ptr_array_sort_with_data(fwupd_release_get_locations(rel),
