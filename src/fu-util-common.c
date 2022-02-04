@@ -1238,6 +1238,10 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: we might ask the user the recovery key when next booting Windows */
 		return _("Full disk encryption secrets may be invalidated when updating");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_END_OF_LIFE) {
+		/* TRANSLATORS: the vendor is no longer supporting the device */
+		return _("End of life");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
 		/* skip */
 		return NULL;

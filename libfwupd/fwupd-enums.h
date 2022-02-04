@@ -496,6 +496,15 @@ typedef enum {
  */
 #define FWUPD_DEVICE_FLAG_AFFECTS_FDE (1llu << 45)
 /**
+ * FWUPD_DEVICE_FLAG_END_OF_LIFE:
+ *
+ * The device is no longer supported by the original hardware vendor as it is considered
+ * end-of-life. It it unlikely to receive firmware updates, even for security issues.
+ *
+ * Since: 1.7.5
+ */
+#define FWUPD_DEVICE_FLAG_END_OF_LIFE (1llu << 46)
+/**
  * FWUPD_DEVICE_FLAG_UNKNOWN:
  *
  * This flag is not defined, this typically will happen from mismatched
