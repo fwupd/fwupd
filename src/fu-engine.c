@@ -7491,9 +7491,6 @@ fu_engine_init(FuEngine *self)
 #endif
 
 	g_hash_table_insert(self->compile_versions,
-			    g_strdup("com.redhat.fwupdate"),
-			    g_strdup("12"));
-	g_hash_table_insert(self->compile_versions,
 			    g_strdup("org.freedesktop.fwupd"),
 			    g_strdup(VERSION));
 #ifdef HAVE_GUSB
