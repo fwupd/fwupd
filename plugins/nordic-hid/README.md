@@ -2,9 +2,13 @@
 
 ## Introduction
 
-This plugin is able flash the firmware on:
+This plugin is able flash the firmware for the hardware supported by `nRF52-Desktop`.
+Tested with the following devices:
 
-* nRF52-Desktop: nrf52840dk development kit
+* [nrf52840dk development kit](https://www.nordicsemi.com/Products/nRF52840)
+* [nRF52840 Dongle](https://www.nordicsemi.com/Products/Development-hardware/nrf52840-dongle)
+* nRF52840 Gaming Mouse
+* nRF52832 Desktop Keyboard
 
 The plugin is using Nordic Semiconductor
 [HID config channel](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/applications/nrf_desktop/doc/config_channel.html)
