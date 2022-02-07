@@ -1614,7 +1614,7 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 		return TRUE;
 	}
 	if (g_strcmp0(key, FU_QUIRKS_REMOVE_DELAY) == 0) {
-		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT64, error))
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT, error))
 			return FALSE;
 		fu_device_set_remove_delay(self, tmp);
 		return TRUE;
