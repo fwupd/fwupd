@@ -3362,6 +3362,8 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 		fu_common_string_append_kv(str, idt + 1, "ProxyId", fu_device_get_id(priv->proxy));
 	if (priv->proxy_guid != NULL)
 		fu_common_string_append_kv(str, idt + 1, "ProxyGuid", priv->proxy_guid);
+	if (priv->remove_delay != 0)
+		fu_common_string_append_ku(str, idt + 1, "RemoveDelay", priv->remove_delay);
 	if (priv->custom_flags != NULL)
 		fu_common_string_append_kv(str, idt + 1, "CustomFlags", priv->custom_flags);
 	if (priv->battery_level != FU_BATTERY_VALUE_INVALID)
