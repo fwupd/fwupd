@@ -7,6 +7,7 @@
 # Corentin Noël <tintou@noel.tf>, 2020
 # Franck <franck.routier@gmail.com>, 2015
 # Julien Humbert <julroy67@gmail.com>, 2020-2021
+# Yolopix ​, 2022
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -151,6 +152,14 @@ msgid "Authentication is required to sign data using the client certificate"
 msgstr "Une authentification est nécessaire pour signer les données en utilisant le certificat du client"
 
 #. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to unlock a device"
+msgstr "Authentification requise pour déverrouiller un périphérique"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
+msgid "Authentication is required to update the firmware on a removable device"
+msgstr "Authentification requise pour mettre à jour le micrologiciel sur un périphérique amovible"
+
+#. TRANSLATORS: this is the PolicyKit modal dialog
 msgid "Authentication is required to update the firmware on this machine"
 msgstr "Une authentification est nécessaire pour mettre à jour le micrologiciel sur cette machine"
 
@@ -262,6 +271,10 @@ msgstr "Le périphérique est verrouillé"
 msgid "Device removed:"
 msgstr "Périphérique retiré :"
 
+#. TRANSLATORS: command line option
+msgid "Device update method"
+msgstr "Méthode de mise à jour du périphérique"
+
 #. TRANSLATORS: Suffix: the HSI result
 #. TRANSLATORS: Plugin is inactive and not used
 msgid "Disabled"
@@ -273,6 +286,10 @@ msgstr "Débogage fwupdate désactivé"
 #. TRANSLATORS: command line option
 msgid "Display version"
 msgstr "Afficher la version"
+
+#. TRANSLATORS: command line option
+msgid "Do not check for old metadata"
+msgstr "Ne pas vérifier d'anciennes métadonnées"
 
 #. TRANSLATORS: command line option
 msgid "Do not write to the history database"
@@ -346,6 +363,10 @@ msgstr "Échec"
 #. TRANSLATORS: dbx file failed to be applied as an update
 msgid "Failed to apply update"
 msgstr "Échec d'application de la mise à jour"
+
+#. TRANSLATORS: we could not get the devices to update offline
+msgid "Failed to get pending devices"
+msgstr "Impossible d'obtenir les périphériques en attente"
 
 #. TRANSLATORS: we could not install for some reason
 msgid "Failed to install firmware update"
@@ -436,13 +457,16 @@ msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Les mises à jour de micrologiciel sont désactivées ; exécutez «fwupdmgr unlock» pour les activer"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Drapeaux"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
 msgstr "Trouvé"
+
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "Chiffrement complet du disque détecté"
 
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
@@ -488,12 +512,22 @@ msgstr "Durée d'installation"
 msgid "Install a firmware file on this hardware"
 msgstr "Installer un fichier de micrologiciel sur ce matériel"
 
+msgid "Install signed device firmware"
+msgstr "Installer le micrologiciel signé du périphérique"
+
 msgid "Install signed system firmware"
 msgstr "Installer le micrologiciel signé du système"
+
+msgid "Install unsigned system firmware"
+msgstr "Installer le micrologiciel non signé du système"
 
 #. TRANSLATORS: console message when no Plymouth is installed
 msgid "Installing Firmware…"
 msgstr "Installation de micrologiciel…"
+
+#. TRANSLATORS: this is shown when updating the firmware after the reboot
+msgid "Installing firmware update…"
+msgstr "Installation de la mise à jour du micrologiciel..."
 
 #. TRANSLATORS: %1 is a device name
 #, c-format
@@ -562,6 +596,10 @@ msgstr "Espace d'échange (swap) Linux"
 #. TRANSLATORS: command line option
 msgid "List entries in dbx"
 msgstr "Afficher la liste des entrées de la base dbx"
+
+#. TRANSLATORS: command line option
+msgid "List supported firmware updates"
+msgstr "Liste les mises à jour de micrologiciel supportées"
 
 #. TRANSLATORS: parsing the firmware information
 msgid "Loading…"
@@ -706,6 +744,10 @@ msgstr "Lecture…"
 msgid "Rebooting…"
 msgstr "Redémarrage…"
 
+#. TRANSLATORS: command description
+msgid "Reinstall firmware on a device"
+msgstr "Réinstaller le micrologiciel sur un périphérique"
+
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second is a version number
 #. * e.g. "1.2.3"
@@ -740,6 +782,22 @@ msgstr "Redémarrage du périphérique…"
 #. TRANSLATORS: this is shown in the MOTD
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Exécutez «fwupdmgr get-upgrades» pour plus d'informations."
+
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync-bkc` to complete this action."
+msgstr "Exécutez `fwupdmgr sync-bkc` pour terminer cette action."
+
+#. TRANSLATORS: scheduling an update to be done on the next boot
+msgid "Scheduling…"
+msgstr "Planification..."
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot disabled"
+msgstr "Démarrage sécurisé désactivé"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "Démarrage sécurisé activé"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -924,6 +982,10 @@ msgstr "Inconnu"
 msgid "Unlocked"
 msgstr "Déverrouillé"
 
+#. TRANSLATORS: command description
+msgid "Unlocks the device for firmware access"
+msgstr "Déverrouille le périphérique pour l'accès au micrologiciel"
+
 #. TRANSLATORS: Device is updatable in this or any other mode
 msgid "Updatable"
 msgstr "Mise à jour possible"
@@ -952,10 +1014,6 @@ msgstr "Mettre à jour maintenant ?"
 #. TRANSLATORS: Update can only be done from offline mode
 msgid "Update requires a reboot"
 msgstr "La mise à jour nécessite un redémarrage"
-
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Met à jour tous les micrologiciels aux dernières versions disponibles"
 
 msgid "Updating"
 msgstr "Mise à jour"

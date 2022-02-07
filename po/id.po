@@ -476,10 +476,6 @@ msgid "Choose a volume:"
 msgstr "Pilih volume:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Membersihkan semua pembaruan yang dijadwalkan untuk diperbarui luring"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Membersihkan hasil dari pemutakhiran terakhir"
 
@@ -993,7 +989,6 @@ msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Pembaruan firmware dinonaktifkan; jalankan 'fwupdmgr unlock' untuk mengaktifkan"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Flag"
 
@@ -2147,10 +2142,6 @@ msgstr "Pesan Pembaruan"
 msgid "Update State"
 msgstr "Keadaan Pembaruan"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "Perbarui semua perangkat yang cocok dengan metadata lokal"
-
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Kegagalan pembaruan adalah masalah yang telah diketahui, kunjungi URL ini untuk informasi lebih lanjut:"
@@ -2173,10 +2164,6 @@ msgstr "Mutakhirkan informasi verifikasi perangkat yang tersimpan"
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
 msgstr "Perbarui metadata yang disimpan dengan konten saat ini"
-
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Mutakhirkan semua firmware ke versi terbaru yang tersedia"
 
 msgid "Updating"
 msgstr "Memutakhirkan"

@@ -892,10 +892,6 @@ msgstr "Desbloqueado"
 msgid "Unset the debugging flag during update"
 msgstr "Quitar a bandeira de depuración durante a actualización"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "Actualizar todos os dispositivos que coincidan os metadatos locais"
-
 #. TRANSLATORS: ask the user if we can update the metadata
 msgid "Update now?"
 msgstr "Actualizar agora"

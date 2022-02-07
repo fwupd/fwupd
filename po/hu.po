@@ -295,10 +295,6 @@ msgid "Choose a release:"
 msgstr "Válasszon kiadást:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Törli a beütemezett offline frissítéseket"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Törli a legutóbbi frissítésből származó eredményeket"
 
@@ -580,7 +576,6 @@ msgid "Firmware updates are supported on this machine."
 msgstr "A firmware frissítések támogatottak ezen a gépen."
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Jelzők"
 
@@ -1193,10 +1188,6 @@ msgstr "Frissítési üzenet"
 msgid "Update State"
 msgstr "Frissítés állapota"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "Az összes olyan eszköz frissítése, amely illeszkedik a helyi metaadatokra"
-
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "A feltöltési hiba ismert probléma, további információkért látogassa meg ezt az URL-t:"
@@ -1219,10 +1210,6 @@ msgstr "A tárolt eszközellenőrzési információk frissítése"
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
 msgstr "A tárolt metaadatok frissítése a jelenlegi tartalommal"
-
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Minden firmware-t az elérhető legfrissebb verziókra frissít"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are

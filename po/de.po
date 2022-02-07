@@ -453,10 +453,6 @@ msgid "Choose a volume:"
 msgstr "Wählen Sie einen Datenträger:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Löscht alle für die Offline-Aktualisierung geplanten Aktualisierungen"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Bereinigt die Ergebnisse der letzten Aktualisierung"
 
@@ -1914,10 +1910,6 @@ msgstr "Aktualisierungsmeldung"
 msgid "Update State"
 msgstr "Aktualisierungsstatus"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "Alle Geräte aktualisieren, die mit lokalen Metadaten übereinstimmen"
-
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Der Aktualisierungsfehler ist ein bekanntes Problem, besuchen Sie diese URL für weitere Informationen:"
@@ -1940,10 +1932,6 @@ msgstr "Gespeicherte Geräteverifizierungsinformationen aktualisieren"
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
 msgstr "Die gespeicherten Metadaten mit dem aktuellen Inhalt aktualisieren"
-
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Alle Firmware auf die neueste verfügbare Version aktualisieren"
 
 msgid "Updating"
 msgstr "Wird aktualisiert"

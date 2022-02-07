@@ -115,10 +115,6 @@ msgid "Choose a release:"
 msgstr "選擇發行版："
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "清除任何排程好的離線更新"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "清除上次更新的結果"
 
@@ -616,10 +612,6 @@ msgstr "是否立刻更更新？"
 
 msgid "Update the stored device verification information"
 msgstr "更新儲存的裝置核驗資訊"
-
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "將所有韌體更新至可用的最新版本"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are

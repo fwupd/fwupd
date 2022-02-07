@@ -326,6 +326,10 @@ msgstr "Дозволити перевстановлення наявних ве�
 msgid "Allow switching firmware branch"
 msgstr "Дозволити перемикання гілок мікропрограми"
 
+#. TRANSLATORS: is not the main firmware stream
+msgid "Alternate branch"
+msgstr "Альтернативна гілка"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Для завершення оновлення слід перезавантажити систему."
@@ -446,6 +450,10 @@ msgstr "Пов'язати новий драйвер ядра"
 msgid "Blocked firmware files:"
 msgstr "Заблоковані файли мікропрограм:"
 
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Blocked version"
+msgstr "Заблокована версія"
+
 #. TRANSLATORS: we will not offer this firmware to the user
 msgid "Blocking firmware:"
 msgstr "Блокуємо мікропрограму:"
@@ -520,16 +528,16 @@ msgid "Choose a volume:"
 msgstr "Виберіть том:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Спорожняє список усіх оновлень, які заплановано для автономного режиму"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Вилучає результати останнього оновлення"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Такої команди не знайдено"
+
+#. TRANSLATORS: is not supported by the vendor
+msgid "Community supported"
+msgstr "Підтримка спільноти"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -809,6 +817,10 @@ msgstr "Увімкнено"
 msgid "Enabled fwupdate debugging"
 msgstr "Увімкнено діагностику fwupdate"
 
+#. TRANSLATORS: Plugin is active only if hardware is found
+msgid "Enabled if hardware matches"
+msgstr "Увімкнено, якщо обладнання є відповідним"
+
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Вмикає вказане віддалене сховище"
@@ -1050,7 +1062,6 @@ msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Оновлення мікропрограми вимкнено; віддайте команду 'fwupdmgr unlock', щоб їх увімкнути"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Прапорці"
 
@@ -1235,6 +1246,10 @@ msgstr "Встановлюємо оновлення мікропрограми�
 msgid "Installing on %s…"
 msgstr "Встановлюємо на %s…"
 
+#. TRANSLATORS: if it breaks, you get to keep both pieces
+msgid "Installing this update may also void any device warranty."
+msgstr "Встановлення цього оновлення може призвести до припинення будь-яких гарантійних зобов'язань щодо пристрою."
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
@@ -1286,9 +1301,17 @@ msgstr "Внутрішній пристрій"
 msgid "Invalid"
 msgstr "Некоректна"
 
+#. TRANSLATORS: version is older
+msgid "Is downgrade"
+msgstr "Є старішою версією"
+
 #. TRANSLATORS: Is currently in bootloader mode
 msgid "Is in bootloader mode"
 msgstr "Перебуває у режимі завантажувача"
+
+#. TRANSLATORS: version is newer
+msgid "Is upgrade"
+msgstr "Є оновленням"
 
 #. TRANSLATORS: issue fixed with the release, e.g. CVE
 msgid "Issue"
@@ -1301,6 +1324,14 @@ msgstr[3] "Вада"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "КЛЮЧ,ЗНАЧЕННЯ"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is no longer tainted"
+msgstr "Ядро більше не використовує сторонні модулі"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is tainted"
+msgstr "Ядро використовує сторонні модулі"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown disabled"
@@ -1441,6 +1472,10 @@ msgstr "Стежити за подіями у фоновій службі"
 msgid "Mounts the ESP"
 msgstr "Монтує ESP"
 
+#. TRANSLATORS: we're poking around as a power user
+msgid "NOTE: This program may only work correctly as root"
+msgstr "Зауваження: програма зможе працювати належними чином лише від імені користувача root"
+
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "Потребує перезавантаження після встановлення"
@@ -1497,6 +1532,10 @@ msgstr "Для решти пристроїв немає доступних он�
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "Не застосовано жодного оновлення"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Not approved"
+msgstr "Не затверджено"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -1592,6 +1631,14 @@ msgstr "Не встановлено залежності додатка"
 msgid "Pre-boot DMA protection"
 msgstr "Захист DMA до завантаження"
 
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is disabled"
+msgstr "Захист DMA перед завантаженням вимкнено"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is enabled"
+msgstr "Захист DMA перед завантаженням увімкнено"
+
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
 msgstr "Попередня версія"
@@ -1678,6 +1725,10 @@ msgstr "Повторно встановлюємо %s з номером верс�
 #. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
 msgid "Release Branch"
 msgstr "Гілка випусків"
+
+#. TRANSLATORS: release attributes
+msgid "Release Flags"
+msgstr "Прапорці випуску"
 
 #. TRANSLATORS: the exact component on the server
 msgid "Release ID"
@@ -2028,6 +2079,10 @@ msgstr "ТЕКСТ"
 msgid "TPM PCR0 reconstruction"
 msgstr "Відновлення PCR0 TPM"
 
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is invalid"
+msgstr "Відновлення PCR0 TPM є некоректним"
+
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
 msgid "TPM empty PCRs"
@@ -2083,6 +2138,10 @@ msgstr "Мікропрограма з %s не постачається %s, по�
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "Годинник системи налаштовано неправильно — це може зашкодити отриманню файлів."
 
+#. TRANSLATORS: naughty vendor
+msgid "The vendor did not supply any release notes."
+msgstr "Виробником не надано ніяких нотаток щодо випуску."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "Заблокованих файлів мікропрограм немає"
@@ -2097,6 +2156,10 @@ msgstr "Немає схвалених мікропрограм."
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "Цей пристрій буде повернуто до %s у результаті виконання команди %s."
+
+#. TRANSLATORS: the vendor did not upload this
+msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
+msgstr "Цю мікропрограму створено учасниками спільноти LVFS. Її не було надано початковим виробником обладнання. Виробник також не здійснюватиме підтримки цієї мікропрограми."
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
@@ -2144,6 +2207,14 @@ msgstr "Цей інструмент читає і обробляє журнал 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Проміжна помилка"
+
+#. TRANSLATORS: We verified the meatdata against the server
+msgid "Trusted metadata"
+msgstr "Надійні метадані"
+
+#. TRANSLATORS: We verified the payload against the server
+msgid "Trusted payload"
+msgstr "Надійні дані"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -2252,10 +2323,6 @@ msgstr "Повідомлення щодо оновлення"
 msgid "Update State"
 msgstr "Стан оновлення"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "Оновити усі пристрої, які відповідають локальним метаданим"
-
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Нам відомо про помилку під час оновлення. Будь ласка, відвідайте цю адресу, щоб дізнатися більше:"
@@ -2280,8 +2347,8 @@ msgid "Update the stored metadata with current contents"
 msgstr "Оновити збережені метадані поточними даними"
 
 #. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Оновлює усі мікропрограми до найновіших доступних версій"
+msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
+msgstr "Оновлює усі вказані пристрої до найсвіжішої версії мікропрограми. Якщо пристрої не вказано, оновлює усі пристрої."
 
 msgid "Updating"
 msgstr "Оновлення"

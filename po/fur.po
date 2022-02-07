@@ -168,10 +168,6 @@ msgid "Choose a release:"
 msgstr "Sielç une publicazion:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Al nete ducj i inzornaments programâts di fâ fûr rêt"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Al nete i risultâts dal ultin inzornament"
 
@@ -811,10 +807,6 @@ msgstr "Inzornâ cumò?"
 
 msgid "Update the stored device verification information"
 msgstr "Inzorne lis informazions di verifiche dal dispositîf archiviadis"
-
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Al inzorne ducj i firmware ae ultime version disponibile"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are

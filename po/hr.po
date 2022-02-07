@@ -7,7 +7,7 @@
 # gogo <trebelnik2@gmail.com>, 2016
 # Ping <mail@milotype.de>, 2020-2021
 # Ping <mail@milotype.de>, 2021
-# gogo <trebelnik2@gmail.com>, 2016-2021
+# gogo <trebelnik2@gmail.com>, 2016-2022
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -322,6 +322,10 @@ msgstr "Dopusti ponovnu instalaciju firmvera postojeće inačice"
 msgid "Allow switching firmware branch"
 msgstr "Dopusti prebacivanje između firmver grana"
 
+#. TRANSLATORS: is not the main firmware stream
+msgid "Alternate branch"
+msgstr "Alternativni ogranak"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Nadopuna zahtijeva ponovno pokretanje za završetak."
@@ -441,6 +445,10 @@ msgstr "Spoji novi pogon jezgre"
 msgid "Blocked firmware files:"
 msgstr "Datoteke blokiranog firmvera:"
 
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Blocked version"
+msgstr "Blokirana inačica"
+
 #. TRANSLATORS: we will not offer this firmware to the user
 msgid "Blocking firmware:"
 msgstr "Blokiranje firmvera:"
@@ -515,16 +523,16 @@ msgid "Choose a volume:"
 msgstr "Odaberite uređaj:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Uklanja sve nadopune zakazne za izvanmrežno nadopunjivanje"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Uklanja rezultate posljednje nadopune"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Naredba nije pronađena"
+
+#. TRANSLATORS: is not supported by the vendor
+msgid "Community supported"
+msgstr "Podržano od strane zajednice"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -804,6 +812,10 @@ msgstr "Omogućeno"
 msgid "Enabled fwupdate debugging"
 msgstr "Omogući fwupdate otklanjanje grešaka"
 
+#. TRANSLATORS: Plugin is active only if hardware is found
+msgid "Enabled if hardware matches"
+msgstr "Omogućeno ako se hardver podudara"
+
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Omogućuje zadane udaljene lokacije"
@@ -878,6 +890,10 @@ msgstr "NAZIV DATOTEKE UREĐAJA-ALT-NAZIV|UREĐAJ-ALT-ID [SLIKA-ALT-NAZIV|SLIKA-
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ID"
 msgstr "NAZIV DATOTEKE ID-UREĐAJA"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+msgstr "NAZIV DATOTEKE POMAKA PODATAKA [FIRMVER-VRSTA]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
@@ -1040,7 +1056,6 @@ msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Nadopune firmvera su onemogućene ; pokrenite 'fwupdmgr unlock' za omogućavanje"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Oznake"
 
@@ -1224,6 +1239,10 @@ msgstr "Instalacija nadopune firmvera…"
 msgid "Installing on %s…"
 msgstr "Instaliram na %s…"
 
+#. TRANSLATORS: if it breaks, you get to keep both pieces
+msgid "Installing this update may also void any device warranty."
+msgstr "Instaliranje ove nadopune može poništiti svako jamstvo uređaja."
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
@@ -1275,9 +1294,17 @@ msgstr "Unutrašnji uređaj"
 msgid "Invalid"
 msgstr "Nevaljano"
 
+#. TRANSLATORS: version is older
+msgid "Is downgrade"
+msgstr "Je nadogradnja na stariju inačicu"
+
 #. TRANSLATORS: Is currently in bootloader mode
 msgid "Is in bootloader mode"
 msgstr "U načinu učitača pokretanja je"
+
+#. TRANSLATORS: version is newer
+msgid "Is upgrade"
+msgstr "Je nadogradnja"
 
 #. TRANSLATORS: issue fixed with the release, e.g. CVE
 msgid "Issue"
@@ -1289,6 +1316,14 @@ msgstr[2] "Problemi"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "KLJUČ,VRIJEDNOST"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is no longer tainted"
+msgstr "Kernel više nije kontaminiran"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is tainted"
+msgstr "Kernel je kontaminiran"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown disabled"
@@ -1319,10 +1354,10 @@ msgid "License"
 msgstr "Licenca"
 
 msgid "Linux Vendor Firmware Service (stable firmware)"
-msgstr "Firmver Usluga Linux Proizvođača (LVFS) (stabilni firmver)."
+msgstr "Firmver Usluga Linux Proizvođača (LVFS) (stabilni firmver)"
 
 msgid "Linux Vendor Firmware Service (testing firmware)"
-msgstr "Firmver Usluga Linux Proizvođača (LVFS) (testni firmver)."
+msgstr "Firmver Usluga Linux Proizvođača (LVFS) (testni firmver)"
 
 #. TRANSLATORS: Title: if it's tainted or not
 msgid "Linux kernel"
@@ -1429,6 +1464,10 @@ msgstr "Nadgledaj događaje pozadinskim programom"
 msgid "Mounts the ESP"
 msgstr "Montira ESP"
 
+#. TRANSLATORS: we're poking around as a power user
+msgid "NOTE: This program may only work correctly as root"
+msgstr "NAPOMENA: Ovaj program može samo raditi samo s korijenskim ovlastima"
+
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "Potrebno je ponovno pokretanje nakon instalacije"
@@ -1485,6 +1524,10 @@ msgstr "Nema dostupnih nadopuna za preostale uređaje"
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "Nema primijenjenih nadopuna"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Not approved"
+msgstr "Nije odobreno"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -1543,6 +1586,10 @@ msgstr "Obrada dbx-a sustava…"
 msgid "Password"
 msgstr "Lozinka"
 
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr "Zakrpaj datoteku firmvera na poznati pomak"
+
 msgid "Payload"
 msgstr "Sadržaj prijenosa"
 
@@ -1575,6 +1622,14 @@ msgstr "Zavisnosti priključka nedostaju"
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "DMA zaštita predpokretanja"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is disabled"
+msgstr "DMA zaštita prije pokretanja je onemogućena"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is enabled"
+msgstr "DMA zaštita prije pokretanja je omogućena"
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1662,6 +1717,10 @@ msgstr "Ponovna instalacija %s inačice %s... "
 #. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
 msgid "Release Branch"
 msgstr "Ogranak izdanja"
+
+#. TRANSLATORS: release attributes
+msgid "Release Flags"
+msgstr "Oznake izdanja"
 
 #. TRANSLATORS: the exact component on the server
 msgid "Release ID"
@@ -2011,6 +2070,10 @@ msgstr "TEKST"
 msgid "TPM PCR0 reconstruction"
 msgstr "TPM PCR0 rekonstrukcija"
 
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is invalid"
+msgstr "TPM PCR0 rekonstrukcija je nevaljana"
+
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
 msgid "TPM empty PCRs"
@@ -2065,6 +2128,10 @@ msgstr "Firmver od %s se ne isporučuje od %s, dobavljač hardvera."
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "Sat sustava nije pravilno postavljen i preuzimanje datoteka možda ne uspije."
 
+#. TRANSLATORS: naughty vendor
+msgid "The vendor did not supply any release notes."
+msgstr "Proizvođač nije objavio nikakve bilješke izdanja."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "Nema blokiranih firmvera"
@@ -2079,6 +2146,10 @@ msgstr "Ne postoji odobreni firmver."
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "Ovaj uređaj će biti vraćen natrag na %s kada se %s naredba pokrene."
+
+#. TRANSLATORS: the vendor did not upload this
+msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
+msgstr "Ovaj firmver je omogućen od strane LVFS članova zajednice i nije omogućen (ili podržan) od strane izvornog proizvođača hardvera."
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
@@ -2126,6 +2197,14 @@ msgstr "Ovo pomagalo će očitati i obraditi TPM zapis događaja iz frimvera sus
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Privremeni kvar"
+
+#. TRANSLATORS: We verified the meatdata against the server
+msgid "Trusted metadata"
+msgstr "Provjereni metapodaci"
+
+#. TRANSLATORS: We verified the payload against the server
+msgid "Trusted payload"
+msgstr "Provjereni sadržaj prijenosa"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -2234,10 +2313,6 @@ msgstr "Poruka nadopune"
 msgid "Update State"
 msgstr "Stanje nadopune"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "Nadopuni sve uređaje koji se podudaraju s lokalnim metapodacima"
-
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Neuspješna nadopuna je poznat problem, posjetite ovaj URL za više informacija:"
@@ -2262,8 +2337,8 @@ msgid "Update the stored metadata with current contents"
 msgstr "Nadopuni pohranjene metapodatke s trenutnim sadržajem"
 
 #. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Nadopuni sav firmver na najnovije dostupne inačice"
+msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
+msgstr "Nadopuni sve navedene uređaje na najnovije inačice firmvera, ili sve uređaje ako nisu navedeni"
 
 msgid "Updating"
 msgstr "Nadopunjivanje"
