@@ -19,6 +19,12 @@
 #endif
 #include <errno.h>
 
+#ifdef _WIN32
+#include <sysinfoapi.h>
+#include <winerror.h>
+#include <winreg.h>
+#endif
+
 #include "fwupd-common-private.h"
 #include "fwupd-enums-private.h"
 #include "fwupd-error.h"
@@ -6980,6 +6986,31 @@ fu_engine_load_local_metadata_watches(FuEngine *self, GError **error)
 	return TRUE;
 }
 
+#ifdef _WIN32
+static gchar *
+fu_common_win32_registry_get_string(HKEY hkey,
+				    const gchar *subkey,
+				    const gchar *value,
+				    GError **error)
+{
+	gchar buf[255] = {'\0'};
+	DWORD bufsz = sizeof(buf);
+	LSTATUS rc;
+
+	rc = RegGetValue(hkey, subkey, value, RRF_RT_REG_SZ, NULL, (PVOID)&buf, &bufsz);
+	if (rc != ERROR_SUCCESS) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_INVAL,
+			    "Failed to get registry string %s [0x%lX]",
+			    subkey,
+			    (unsigned long)rc);
+		return NULL;
+	}
+	return g_strndup(buf, bufsz);
+}
+#endif
+
 /**
  * fu_engine_load:
  * @self: a #FuEngine
@@ -6999,9 +7030,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	g_autoptr(GPtrArray) checksums_approved = NULL;
 	g_autoptr(GPtrArray) checksums_blocked = NULL;
 	g_autoptr(GError) error_quirks = NULL;
-#ifndef _WIN32
 	g_autoptr(GError) error_local = NULL;
-#endif
+
 	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
 	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -7029,13 +7059,18 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 		return FALSE;
 	}
 
-/* TODO: Read registry key [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography] "MachineGuid" */
-#ifndef _WIN32
 	/* cache machine ID so we can use it from a sandboxed app */
+#ifdef _WIN32
+	self->host_machine_id =
+	    fu_common_win32_registry_get_string(HKEY_LOCAL_MACHINE,
+						"SOFTWARE\\Microsoft\\Cryptography",
+						"MachineGuid",
+						&error_local);
+#else
 	self->host_machine_id = fwupd_build_machine_id("fwupd", &error_local);
+#endif
 	if (self->host_machine_id == NULL)
 		g_debug("failed to build machine-id: %s", error_local->message);
-#endif
 
 	/* ensure these exist before starting */
 	if (!fu_engine_ensure_paths_exist(error))
