@@ -11,6 +11,10 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#ifdef _WIN32
+#include <sysinfoapi.h>
+#endif
+
 #include "fwupd-error.h"
 
 #include "fu-common.h"
@@ -788,6 +792,13 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 	return fu_smbios_setup_from_path_dmi(self, path, error);
 }
 
+#ifdef _WIN32
+#define FU_SMBIOS_FT_SIG_ACPI	0x41435049
+#define FU_SMBIOS_FT_SIG_FIRM	0x4649524D
+#define FU_SMBIOS_FT_SIG_RSMB	0x52534D42
+#define FU_SMBIOS_FT_RAW_OFFSET 0x08
+#endif
+
 /**
  * fu_smbios_setup:
  * @self: a #FuSmbios
@@ -802,6 +813,43 @@ fu_smbios_setup_from_path(FuSmbios *self, const gchar *path, GError **error)
 gboolean
 fu_smbios_setup(FuSmbios *self, GError **error)
 {
+#ifdef _WIN32
+	gsize bufsz;
+	guint rc;
+	g_autofree guint8 *buf = NULL;
+
+	rc = GetSystemFirmwareTable(FU_SMBIOS_FT_SIG_RSMB, 0, 0, 0);
+	if (rc <= 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to access RSMB [%u]",
+			    (guint)GetLastError());
+		return FALSE;
+	}
+	if (rc < FU_SMBIOS_FT_RAW_OFFSET || rc > 0x1000000) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_FILE,
+				    "RSMB impossible size");
+		return FALSE;
+	}
+	bufsz = rc;
+	buf = g_malloc0(bufsz);
+	rc = GetSystemFirmwareTable(FU_SMBIOS_FT_SIG_RSMB, 0, buf, (DWORD)bufsz);
+	if (rc <= 0) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "failed to read RSMB [%u]",
+			    (guint)GetLastError());
+		return FALSE;
+	}
+	return fu_smbios_setup_from_data(self,
+					 buf + FU_SMBIOS_FT_RAW_OFFSET,
+					 bufsz - FU_SMBIOS_FT_RAW_OFFSET,
+					 error);
+#else
 	g_autofree gchar *path = NULL;
 	g_autofree gchar *path_dt = NULL;
 	g_autofree gchar *sysfsfwdir = NULL;
@@ -847,6 +895,7 @@ fu_smbios_setup(FuSmbios *self, GError **error)
 			    FWUPD_ERROR_INVALID_FILE,
 			    "neither SMBIOS or DT found");
 	return FALSE;
+#endif
 }
 
 static void
