@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2021
+# Antoni Bella Pérez <antonibella5@yahoo.com>, 2017-2022
 # Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2017
 msgid ""
 msgstr ""
@@ -503,10 +503,6 @@ msgid "Choose a volume:"
 msgstr "Trieu un volum:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Neteja qualsevol actualització programada per a ser actualitzada sense connexió."
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Esborra els resultats de l'última actualització."
 
@@ -868,6 +864,10 @@ msgid "FILENAME DEVICE-ID"
 msgstr "NOM_FITXER ID_DISPOSITIU"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+msgstr "NOM_FITXER DESPLAÇAMENT DADES [TIPUS_MICROPROGRAMARI]"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
 msgstr "NOM_FITXER [ID_DISPOSITIU|GUID]"
 
@@ -1027,7 +1027,6 @@ msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Actualitzacions de microprogramari inhabilitades: executeu «fwupdmgr unlock» per a habilitar-les"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Etiquetes"
 
@@ -1527,6 +1526,10 @@ msgstr "S'està analitzant la dbx del sistema..."
 #. TRANSLATORS: remote filename base
 msgid "Password"
 msgstr "Contrasenya"
+
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr "Apedaça un blob de microprogramari amb un desplaçament conegut"
 
 msgid "Payload"
 msgstr "Carrega útil"
@@ -2217,10 +2220,6 @@ msgstr "Missatge de l'actualització"
 msgid "Update State"
 msgstr "Estat en actualitzar"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "Actualitza tots els dispositius que coincideixin amb les metadades locals."
-
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Que falli en actualitzar és un problema conegut, visiteu aquest URL per a obtenir més informació:"
@@ -2243,10 +2242,6 @@ msgstr "Actualitza la informació de verificació dels dispositius emmagatzemats
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
 msgstr "Actualitza les metadades emmagatzemades amb el contingut actual."
-
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Actualitza tot el microprogramari a les versions més recents."
 
 msgid "Updating"
 msgstr "S'està actualitzant"

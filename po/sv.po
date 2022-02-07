@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Anders Jonsson <transifex@norsjovallen.se>, 2017,2019-2021
+# Anders Jonsson <transifex@norsjovallen.se>, 2017,2019-2022
 # Andreas Henriksson <andreas@fatal.se>, 2017
 # Josef Andersson <josef.andersson@fripost.org>, 2015,2017-2018
 # Josef Andersson <l10nl18nsweja@gmail.com>, 2015,2017
@@ -316,6 +316,10 @@ msgstr "Tillåt ominstallation av befintliga versioner av fast programvara"
 msgid "Allow switching firmware branch"
 msgstr "Tillåt att byta gren för fast programvara"
 
+#. TRANSLATORS: is not the main firmware stream
+msgid "Alternate branch"
+msgstr "Alternativ gren"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "En uppdatering kräver en omstart för att färdigställas."
@@ -434,6 +438,10 @@ msgstr "Bind ny kärndrivrutin"
 msgid "Blocked firmware files:"
 msgstr "Blockerade fast programvarufiler:"
 
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Blocked version"
+msgstr "Blockerad version"
+
 #. TRANSLATORS: we will not offer this firmware to the user
 msgid "Blocking firmware:"
 msgstr "Blockera fast programvara:"
@@ -508,16 +516,16 @@ msgid "Choose a volume:"
 msgstr "Välj en volym:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Rensa eventuella uppdateringar som schemalagts att bli tillämpade frånkopplade"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Rensar resultaten från senaste uppdateringen"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Kommandot hittades inte"
+
+#. TRANSLATORS: is not supported by the vendor
+msgid "Community supported"
+msgstr "Stöds av gemenskapen"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -797,6 +805,10 @@ msgstr "Aktiverad"
 msgid "Enabled fwupdate debugging"
 msgstr "Aktiverade fwupdate-felsökning"
 
+#. TRANSLATORS: Plugin is active only if hardware is found
+msgid "Enabled if hardware matches"
+msgstr "Aktiverad om hårdvaran matchar"
+
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Aktiverar en given fjärrkälla"
@@ -871,6 +883,10 @@ msgstr "FILNAMN ENHET-ALT-NAMN|ENHET-ALT-ID [AVBILD-ALT-NAMN|AVBILD-ALT-ID]"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ID"
 msgstr "FILNAMN ENHETS-ID"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+msgstr "FILNAMN AVSTÅND DATA [FAST-PROGRAMVARUTYP]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
@@ -1032,7 +1048,6 @@ msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Uppdateringar för fast programvara är inaktiverade; kör ”fwupdmgr unlock” för att aktivera"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Flaggor"
 
@@ -1215,6 +1230,10 @@ msgstr "Installerar uppdatering för fast programvara…"
 msgid "Installing on %s…"
 msgstr "Installerar på %s…"
 
+#. TRANSLATORS: if it breaks, you get to keep both pieces
+msgid "Installing this update may also void any device warranty."
+msgstr "Installation av denna uppdatering kan också ogiltigförklara eventuell garanti för enheten."
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
@@ -1266,9 +1285,17 @@ msgstr "Intern enhet"
 msgid "Invalid"
 msgstr "Ogiltig"
 
+#. TRANSLATORS: version is older
+msgid "Is downgrade"
+msgstr "Är nedgradering"
+
 #. TRANSLATORS: Is currently in bootloader mode
 msgid "Is in bootloader mode"
 msgstr "Är i starthanterarläge"
+
+#. TRANSLATORS: version is newer
+msgid "Is upgrade"
+msgstr "Är uppgradering"
 
 #. TRANSLATORS: issue fixed with the release, e.g. CVE
 msgid "Issue"
@@ -1279,6 +1306,14 @@ msgstr[1] "Problem"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "NYCKEL,VÄRDE"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is no longer tainted"
+msgstr "Kärnan är ej längre befläckad"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is tainted"
+msgstr "Kärnan är befläckad"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown disabled"
@@ -1419,6 +1454,10 @@ msgstr "Övervaka demonen för händelser"
 msgid "Mounts the ESP"
 msgstr "Monterar ESP"
 
+#. TRANSLATORS: we're poking around as a power user
+msgid "NOTE: This program may only work correctly as root"
+msgstr "OBS: Detta program kommer endast fungera korrekt som root"
+
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "Kräver en omstart efter installation"
@@ -1475,6 +1514,10 @@ msgstr "Inga uppdateringar tillgängliga för kvarvarande enheter"
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "Inga uppdateringar applicerades"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Not approved"
+msgstr "Inte godkänd"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -1533,6 +1576,10 @@ msgstr "Tolkar system-dbx…"
 msgid "Password"
 msgstr "Lösenord"
 
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr "Patcha en fast programvaru-blob på ett känt avstånd"
+
 msgid "Payload"
 msgstr "Nyttolast"
 
@@ -1565,6 +1612,14 @@ msgstr "Beroenden för insticksmodul saknas"
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "DMA-skydd före uppstart"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is disabled"
+msgstr "DMA-skydd före uppstart är inaktiverat"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is enabled"
+msgstr "DMA-skydd före uppstart är aktiverat"
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1652,6 +1707,10 @@ msgstr "Återinstallerar %s med %s… "
 #. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
 msgid "Release Branch"
 msgstr "Utgåvegren"
+
+#. TRANSLATORS: release attributes
+msgid "Release Flags"
+msgstr "Utgåveflaggor"
 
 #. TRANSLATORS: the exact component on the server
 msgid "Release ID"
@@ -2000,6 +2059,10 @@ msgstr "TEXT"
 msgid "TPM PCR0 reconstruction"
 msgstr "TPM PCR0-rekonstruktion"
 
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is invalid"
+msgstr "TPM PCR0-rekonstruktion är ogiltig"
+
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
 msgid "TPM empty PCRs"
@@ -2053,6 +2116,10 @@ msgstr "Fast programvara från %s levereras inte av %s, hårdvaruleverantören."
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "Systemklockan har inte ställts in korrekt och hämtning av filer kan misslyckas."
 
+#. TRANSLATORS: naughty vendor
+msgid "The vendor did not supply any release notes."
+msgstr "Tillverkaren tillhandahöll inte några kommentarer till utgåvan."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "Det finns inga blockerade fast programvarufiler"
@@ -2067,6 +2134,10 @@ msgstr "Det finns ingen godkänd fast programvara."
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "Denna enhet kommer att återställas till %s när kommandot %s körs."
+
+#. TRANSLATORS: the vendor did not upload this
+msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
+msgstr "Denna fasta programvara tillhandahålls av medlemmar av LVFS-gemenskapen och varken tillhandahålls (eller stöds) av den ursprungliga hårdvarutillverkaren."
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
@@ -2114,6 +2185,14 @@ msgstr "Detta verktyg läser och analyserar TPM-händelseloggen från systemets 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Tillfälligt misslyckande"
+
+#. TRANSLATORS: We verified the meatdata against the server
+msgid "Trusted metadata"
+msgstr "Betrodda metadata"
+
+#. TRANSLATORS: We verified the payload against the server
+msgid "Trusted payload"
+msgstr "Betrodd nyttolast"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -2222,10 +2301,6 @@ msgstr "Uppdateringsmeddelande"
 msgid "Update State"
 msgstr "Uppdateringstillstånd"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "Uppdatera alla enheter som matchar lokal metadata"
-
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Misslyckad uppdatering är ett känt fel, besök denna URL för mer information:"
@@ -2250,8 +2325,8 @@ msgid "Update the stored metadata with current contents"
 msgstr "Uppdatera lagrad metadata med aktuellt innehåll"
 
 #. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Uppdaterar all fast programvara till de senast tillgängliga versionerna"
+msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
+msgstr "Uppdaterar alla angivna enheter till senaste version av fast programvara, eller alla enheter om ej angivet"
 
 msgid "Updating"
 msgstr "Uppdaterar"

@@ -244,10 +244,6 @@ msgstr "Ontgrendelt het apparaat voor firmware-toegang"
 msgid "Update the stored device verification information"
 msgstr "Opgeslagen apparaatverificatie-informatie bijwerken"
 
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Werkt alle firmware bij naar de nieuwste versies die beschikbaar zijn"
-
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"

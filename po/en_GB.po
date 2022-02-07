@@ -311,6 +311,10 @@ msgstr "Allow reinstalling existing firmware versions"
 msgid "Allow switching firmware branch"
 msgstr "Allow switching firmware branch"
 
+#. TRANSLATORS: is not the main firmware stream
+msgid "Alternate branch"
+msgstr "Alternate branch"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "An update requires a reboot to complete."
@@ -429,6 +433,10 @@ msgstr "Bind new kernel driver"
 msgid "Blocked firmware files:"
 msgstr "Blocked firmware files:"
 
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Blocked version"
+msgstr "Blocked version"
+
 #. TRANSLATORS: we will not offer this firmware to the user
 msgid "Blocking firmware:"
 msgstr "Blocking firmware:"
@@ -503,16 +511,16 @@ msgid "Choose a volume:"
 msgstr "Choose a volume:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Clears any updates scheduled to be updated offline"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Clears the results from the last update"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Command not found"
+
+#. TRANSLATORS: is not supported by the vendor
+msgid "Community supported"
+msgstr "Community supported"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -792,6 +800,10 @@ msgstr "Enabled"
 msgid "Enabled fwupdate debugging"
 msgstr "Enabled fwupdate debugging"
 
+#. TRANSLATORS: Plugin is active only if hardware is found
+msgid "Enabled if hardware matches"
+msgstr "Enabled if hardware matches"
+
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Enables a given remote"
@@ -1031,7 +1043,6 @@ msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Flags"
 
@@ -1214,6 +1225,10 @@ msgstr "Installing firmware update…"
 msgid "Installing on %s…"
 msgstr "Installing on %s…"
 
+#. TRANSLATORS: if it breaks, you get to keep both pieces
+msgid "Installing this update may also void any device warranty."
+msgstr "Installing this update may also void any device warranty."
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
@@ -1265,9 +1280,17 @@ msgstr "Internal device"
 msgid "Invalid"
 msgstr "Invalid"
 
+#. TRANSLATORS: version is older
+msgid "Is downgrade"
+msgstr "Is downgrade"
+
 #. TRANSLATORS: Is currently in bootloader mode
 msgid "Is in bootloader mode"
 msgstr "Is in bootloader mode"
+
+#. TRANSLATORS: version is newer
+msgid "Is upgrade"
+msgstr "Is upgrade"
 
 #. TRANSLATORS: issue fixed with the release, e.g. CVE
 msgid "Issue"
@@ -1278,6 +1301,14 @@ msgstr[1] "Issues"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "KEY,VALUE"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is no longer tainted"
+msgstr "Kernel is no longer tainted"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is tainted"
+msgstr "Kernel is tainted"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown disabled"
@@ -1418,6 +1449,10 @@ msgstr "Monitor the daemon for events"
 msgid "Mounts the ESP"
 msgstr "Mounts the ESP"
 
+#. TRANSLATORS: we're poking around as a power user
+msgid "NOTE: This program may only work correctly as root"
+msgstr "NOTE: This program may only work correctly as root"
+
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "Needs a reboot after installation"
@@ -1474,6 +1509,10 @@ msgstr "No updates available for remaining devices"
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "No updates were applied"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Not approved"
+msgstr "Not approved"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -1569,6 +1608,14 @@ msgstr "Plugin dependencies missing"
 msgid "Pre-boot DMA protection"
 msgstr "Pre-boot DMA protection"
 
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is disabled"
+msgstr "Pre-boot DMA protection is disabled"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is enabled"
+msgstr "Pre-boot DMA protection is enabled"
+
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
 msgstr "Previous version"
@@ -1655,6 +1702,10 @@ msgstr "Reinstalling %s with %s... "
 #. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
 msgid "Release Branch"
 msgstr "Release Branch"
+
+#. TRANSLATORS: release attributes
+msgid "Release Flags"
+msgstr "Release Flags"
 
 #. TRANSLATORS: the exact component on the server
 msgid "Release ID"
@@ -2003,6 +2054,10 @@ msgstr "TEXT"
 msgid "TPM PCR0 reconstruction"
 msgstr "TPM PCR0 reconstruction"
 
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is invalid"
+msgstr "TPM PCR0 reconstruction is invalid"
+
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
 msgid "TPM empty PCRs"
@@ -2056,6 +2111,10 @@ msgstr "The firmware from %s is not supplied by %s, the hardware vendor."
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "The system clock has not been set correctly and downloading files may fail."
 
+#. TRANSLATORS: naughty vendor
+msgid "The vendor did not supply any release notes."
+msgstr "The vendor did not supply any release notes."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "There are no blocked firmware files"
@@ -2070,6 +2129,10 @@ msgstr "There is no approved firmware."
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "This device will be reverted back to %s when the %s command is performed."
+
+#. TRANSLATORS: the vendor did not upload this
+msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
+msgstr "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
@@ -2117,6 +2180,14 @@ msgstr "This tool will read and parse the TPM event log from the system firmware
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Transient failure"
+
+#. TRANSLATORS: We verified the meatdata against the server
+msgid "Trusted metadata"
+msgstr "Trusted metadata"
+
+#. TRANSLATORS: We verified the payload against the server
+msgid "Trusted payload"
+msgstr "Trusted payload"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -2225,10 +2296,6 @@ msgstr "Update Message"
 msgid "Update State"
 msgstr "Update State"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "Update all devices that match local metadata"
-
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Update failure is a known issue, visit this URL for more information:"
@@ -2253,8 +2320,8 @@ msgid "Update the stored metadata with current contents"
 msgstr "Update the stored metadata with current contents"
 
 #. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Updates all firmware to latest versions available"
+msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
+msgstr "Updates all specified devices to latest firmware version, or all devices if unspecified"
 
 msgid "Updating"
 msgstr "Updating"

@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Boyuan Yang <073plan@gmail.com>, 2017,2020
+# Boyuan Yang <073plan@gmail.com>, 2017,2020,2022
 # Dingzhong Chen <wsxy162@gmail.com>, 2020-2021
 # Dingzhong Chen <wsxy162@gmail.com>, 2016-2019
 # Mingcong Bai <jeffbai@aosc.xyz>, 2017-2018
@@ -458,10 +458,6 @@ msgstr "选择发行版本："
 #. TRANSLATORS: get interactive prompt
 msgid "Choose a volume:"
 msgstr "选择卷："
-
-#. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "清除任何计划的离线更新"
 
 #. TRANSLATORS: command description
 msgid "Clears the results from the last update"
@@ -969,7 +965,6 @@ msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "固件更新已禁用；运行“fwupdmgr unlock”以启用"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "标志"
 
@@ -983,6 +978,10 @@ msgstr "强制操作忽略所有警告"
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Found"
 msgstr "找到"
+
+#. TRANSLATORS: title text, shown as a warning
+msgid "Full Disk Encryption Detected"
+msgstr "探测到全盘加密"
 
 #. TRANSLATORS: global ID common to all similar hardware
 msgid "GUID"
@@ -1059,6 +1058,14 @@ msgstr "主机安全 ID"
 msgid "IOMMU"
 msgstr "IOMMU"
 
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection disabled"
+msgstr "IOMMU 设备保护已禁用"
+
+#. TRANSLATORS: HSI event title
+msgid "IOMMU device protection enabled"
+msgstr "IOMMU 设备保护已启用"
+
 #. TRANSLATORS: daemon is inactive
 msgid "Idle…"
 msgstr "空闲…"
@@ -1094,6 +1101,12 @@ msgstr "在设备上安装固件比特块"
 #. TRANSLATORS: command description
 msgid "Install a firmware file on this hardware"
 msgstr "在此硬件上安装固件文件"
+
+msgid "Install old version of signed system firmware"
+msgstr "安装旧版本的已签名系统固件"
+
+msgid "Install old version of unsigned system firmware"
+msgstr "安装旧版本的未签名系统固件"
 
 msgid "Install signed device firmware"
 msgstr "安装已签名的设备固件"
@@ -1429,6 +1442,10 @@ msgstr "正在解析系统 dbx……"
 msgid "Password"
 msgstr "密码"
 
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr "在已知偏移量处对固件二进制文件打补丁"
+
 msgid "Payload"
 msgstr "载荷"
 
@@ -1597,6 +1614,10 @@ msgstr "返回机器的所有硬件 ID"
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "运行 \"fwupdmgr get-upgrades\" 获取更多信息。"
 
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync-bkc` to complete this action."
+msgstr "运行 `fwupdmgr sync-bkc` 以完成此操作。"
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "当使用安装比特块时运行插件组合清理例程"
@@ -1648,6 +1669,14 @@ msgstr "如有可能，安排安装到下次重启"
 #. TRANSLATORS: scheduling an update to be done on the next boot
 msgid "Scheduling…"
 msgstr "正在计划…"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot disabled"
+msgstr "安全启动已禁用"
+
+#. TRANSLATORS: HSI event title
+msgid "Secure Boot enabled"
+msgstr "安全启动已启用"
 
 #. TRANSLATORS: %s is a link to a website
 #, c-format
@@ -1870,6 +1899,11 @@ msgstr "TPM PCR0 重建"
 msgid "TPM v2.0"
 msgstr "TPM v2.0"
 
+#. TRANSLATORS: release tag set for release, e.g. lenovo-2021q3
+msgid "Tag"
+msgid_plural "Tags"
+msgstr[0] "标签"
+
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Tainted"
 msgstr "受污染"
@@ -1892,6 +1926,12 @@ msgstr "TPM PCR0 跟重建的不同。"
 #. TRANSLATORS: the user is SOL for support...
 msgid "The daemon has loaded 3rd party code and is no longer supported by the upstream developers!"
 msgstr "守护进程已经加载了第三方代码，并且上游开发者不再支持。"
+
+#. TRANSLATORS: this is for the device tests, %1 is the device
+#. * version, %2 is what we expected
+#, c-format
+msgid "The device version did not match: got %s, expected %s"
+msgstr "设备版本不匹配：得到 %s，期望 %s"
 
 #. TRANSLATORS: %1 is the firmware vendor, %2 is the device vendor name
 #, c-format
@@ -2065,10 +2105,6 @@ msgstr "更新消息"
 msgid "Update State"
 msgstr "更新状态"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "更新所有符合本地元数据的设备"
-
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "更新失败为已知问题，请访问此 URL 以获取详情："
@@ -2091,10 +2127,6 @@ msgstr "更新存储的设备验证信息"
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
 msgstr "使用当前内容更新存储的元数据"
-
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "将所有固件都更新为最新版本"
 
 msgid "Updating"
 msgstr "正在更新"

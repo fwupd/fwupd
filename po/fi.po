@@ -498,10 +498,6 @@ msgid "Choose a volume:"
 msgstr "Valitse asema:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Tyhjentää päivitykset, jotka on tarkoitus päivittää yhteydettömässä tilassa"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Tyhjennä viimeisimmän päivityksen tulokset"
 
@@ -1016,7 +1012,6 @@ msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Laiteohjelmiston päivitykset poistettu käytöstä; suorita 'fwupdmgr unlock' ottaaksesi ne käyttöön"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Liput"
 
@@ -2186,10 +2181,6 @@ msgstr "Päivityksen viesti"
 msgid "Update State"
 msgstr "Päivityksen tila"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "Päivitä kaikki paikallisia metatietoja vastaavat laitteet"
-
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Päivityksen epäonnistuminen on tunnettu ongelma. Saat lisätietoja tästä URL-osoitteesta:"
@@ -2212,10 +2203,6 @@ msgstr "Päivitä laitteen tallennetut vahvistustiedot"
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
 msgstr "Päivitä tallennetut metatiedot nykyisellä sisällöllä"
-
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Päivittää kaikki laiteohjelmistot uusimpiin saatavilla oleviin versioihin"
 
 msgid "Updating"
 msgstr "Päivittää"

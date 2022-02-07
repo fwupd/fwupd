@@ -95,10 +95,6 @@ msgid "Choose a release:"
 msgstr "Изаберите издање:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Очисти сва ажурирања заказана за ажурирање ван мреже"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Чисти резултате последњег ажурирања"
 
@@ -456,10 +452,6 @@ msgstr "Ажурирати сада?"
 
 msgid "Update the stored device verification information"
 msgstr "Ажурирајте причуване податке потврђивања уређаја"
-
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Ажурира сав фирмвер на последња доступна издања"
 
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are

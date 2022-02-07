@@ -34,6 +34,39 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.7.5" date="2022-02-07">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a flag to indicate the firmware is not provided by the vendor</li>
+          <li>Add support for showing dependency versions in JSON format</li>
+          <li>Allow fwupd to operate in socket mode without a D-Bus daemon</li>
+          <li>Allow marking a device as End-of-Life by the OEM vendor</li>
+          <li>Allow specifying the machine Best Known Configuration locally</li>
+          <li>Fall back to the ARM Device Tree 'compatible' data when required</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Be more robust by retrying IPMI transactions on servers</li>
+          <li>Change the expired Redfish password when required</li>
+          <li>Fix a ModemManager segfault on startup for some MBIM-QDU devices</li>
+          <li>Fix a possible dell-dock segfault at startup</li>
+          <li>Fix compiling with new versions of efivar</li>
+          <li>Fix the Nordic bootloader type detection</li>
+          <li>Fix USB4 retimer enumeration</li>
+          <li>Get the SMBIOS table and host machine ID when running on Windows</li>
+          <li>Show results when calling get-details if failing requirements</li>
+          <li>Uninhibit the modem using ModemManager after upgrade</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Future Analogix devices</li>
+          <li>NovaCustom NV4x</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.7.4" date="2022-01-13">
       <description>
         <p>

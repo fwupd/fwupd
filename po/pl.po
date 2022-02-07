@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the fwupd package.
 #
 # Translators:
-# Piotr Drąg <piotrdrag@gmail.com>, 2015-2021
+# Piotr Drąg <piotrdrag@gmail.com>, 2015-2022
 msgid ""
 msgstr ""
 "Project-Id-Version: fwupd\n"
@@ -326,6 +326,10 @@ msgstr "Umożliwia ponowne instalowanie istniejących wersji oprogramowania sprz
 msgid "Allow switching firmware branch"
 msgstr "Umożliwia przełączanie gałęzi oprogramowania sprzętowego"
 
+#. TRANSLATORS: is not the main firmware stream
+msgid "Alternate branch"
+msgstr "Alternatywna gałąź"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Ukończenie aktualizacji wymaga ponownego uruchomienia."
@@ -446,6 +450,10 @@ msgstr "Dowiązuje nowy sterownik jądra"
 msgid "Blocked firmware files:"
 msgstr "Zablokowane pliki oprogramowania sprzętowego:"
 
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Blocked version"
+msgstr "Zablokowana wersja"
+
 #. TRANSLATORS: we will not offer this firmware to the user
 msgid "Blocking firmware:"
 msgstr "Blokowanie oprogramowania sprzętowego:"
@@ -520,16 +528,16 @@ msgid "Choose a volume:"
 msgstr "Proszę wybrać wolumin:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Usuwa wszystkie zaplanowane aktualizacje w trybie offline"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Usuwa wyniki z ostatniej aktualizacji"
 
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Nie odnaleziono polecenia"
+
+#. TRANSLATORS: is not supported by the vendor
+msgid "Community supported"
+msgstr "Wspierane przez społeczność"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -809,6 +817,10 @@ msgstr "Włączone"
 msgid "Enabled fwupdate debugging"
 msgstr "Włączono debugowanie fwupdate"
 
+#. TRANSLATORS: Plugin is active only if hardware is found
+msgid "Enabled if hardware matches"
+msgstr "Włączone, jeśli sprzęt pasuje"
+
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Włącza podane repozytorium"
@@ -883,6 +895,10 @@ msgstr "NAZWA-PLIKU ALTERNATYWNA-NAZWA-URZĄDZENIA|ALTERNATYWNY-IDENTYFIKATOR-UR
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME DEVICE-ID"
 msgstr "NAZWA-PLIKU IDENTYFIKATOR-URZĄDZENIA"
+
+#. TRANSLATORS: command argument: uppercase, spaces->dashes
+msgid "FILENAME OFFSET DATA [FIRMWARE-TYPE]"
+msgstr "NAZWA-PLIKU WYRÓWNANIE DANE [TYP-OPROGRAMOWANIA-SPRZĘTOWEGO]"
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "FILENAME [DEVICE-ID|GUID]"
@@ -1046,7 +1062,6 @@ msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Aktualizacje oprogramowania sprzętowego są wyłączone; wykonanie polecenia „fwupdmgr unlock” je włączy"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Flagi"
 
@@ -1231,6 +1246,10 @@ msgstr "Instalowanie aktualizacji oprogramowania sprzętowego…"
 msgid "Installing on %s…"
 msgstr "Instalowanie na urządzeniu %s…"
 
+#. TRANSLATORS: if it breaks, you get to keep both pieces
+msgid "Installing this update may also void any device warranty."
+msgstr "Zainstalowanie tej aktualizacji może także spowodować utratę wszelkiej gwarancji na urządzenie."
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "Intel BootGuard"
@@ -1282,9 +1301,17 @@ msgstr "Wewnętrzne urządzenie"
 msgid "Invalid"
 msgstr "Nieprawidłowe"
 
+#. TRANSLATORS: version is older
+msgid "Is downgrade"
+msgstr "Jest instalacją poprzedniej wersji"
+
 #. TRANSLATORS: Is currently in bootloader mode
 msgid "Is in bootloader mode"
 msgstr "Jest w trybie programu startowego"
+
+#. TRANSLATORS: version is newer
+msgid "Is upgrade"
+msgstr "Jest aktualizacją"
 
 #. TRANSLATORS: issue fixed with the release, e.g. CVE
 msgid "Issue"
@@ -1297,6 +1324,14 @@ msgstr[3] "Błędy"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "KLUCZ,WARTOŚĆ"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is no longer tainted"
+msgstr "Jądro nie jest już skażone"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is tainted"
+msgstr "Jądro jest skażone"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown disabled"
@@ -1437,6 +1472,10 @@ msgstr "Monitoruje zdarzenia usługi"
 msgid "Mounts the ESP"
 msgstr "Montuje MSP"
 
+#. TRANSLATORS: we're poking around as a power user
+msgid "NOTE: This program may only work correctly as root"
+msgstr "UWAGA: ten program może działać poprawnie tylko jako root"
+
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "Wymaga ponownego uruchomienia po instalacji"
@@ -1493,6 +1532,10 @@ msgstr "Brak dostępnych aktualizacji dla pozostałych urządzeń"
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "Nie zastosowano żadnych aktualizacji"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Not approved"
+msgstr "Niezatwierdzone"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -1551,6 +1594,10 @@ msgstr "Przetwarzanie systemowej bazy dbx…"
 msgid "Password"
 msgstr "Hasło"
 
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr "Łata zamknięte oprogramowanie sprzętowe pod znanym wyrównaniem"
+
 msgid "Payload"
 msgstr "Dane"
 
@@ -1583,6 +1630,14 @@ msgstr "Brak zależności wtyczki"
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Ochrona DMA przed uruchomieniem"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is disabled"
+msgstr "Ochrona DMA przed uruchomieniem jest wyłączona"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is enabled"
+msgstr "Ochrona DMA przed uruchomieniem jest włączona"
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1670,6 +1725,10 @@ msgstr "Ponowne instalowanie %s za pomocą %s… "
 #. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
 msgid "Release Branch"
 msgstr "Gałąź wydania"
+
+#. TRANSLATORS: release attributes
+msgid "Release Flags"
+msgstr "Flagi wydania"
 
 #. TRANSLATORS: the exact component on the server
 msgid "Release ID"
@@ -2020,6 +2079,10 @@ msgstr "TEKST"
 msgid "TPM PCR0 reconstruction"
 msgstr "Rekonstrukcja PCR0 TPM"
 
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is invalid"
+msgstr "Rekonstrukcja PCR0 TPM jest nieprawidłowa"
+
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
 msgid "TPM empty PCRs"
@@ -2075,6 +2138,10 @@ msgstr "Oprogramowanie sprzętowe od firmy %s nie jest dostarczane przez firmę 
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "Zegar komputera nie jest poprawnie ustawiony i pobieranie plików może się nie powieść."
 
+#. TRANSLATORS: naughty vendor
+msgid "The vendor did not supply any release notes."
+msgstr "Dostawca nie dostarczył żadnych informacji o wydaniu."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "Nie ma zablokowanych plików oprogramowania sprzętowego"
@@ -2089,6 +2156,10 @@ msgstr "Nie ma zatwierdzonego oprogramowania sprzętowego."
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "To urządzenie zostanie przywrócone do wersji %s po wykonaniu polecenia %s."
+
+#. TRANSLATORS: the vendor did not upload this
+msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
+msgstr "To oprogramowanie sprzętowe jest dostarczane przez członków społeczności LVFS i nie jest dostarczane (ani wspierane) przez oryginalnego dostawcę sprzętu."
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
@@ -2136,6 +2207,14 @@ msgstr "To narzędzie odczyta i przetworzy dziennik zdarzeń TPM z oprogramowa
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Przejściowe niepowodzenie"
+
+#. TRANSLATORS: We verified the meatdata against the server
+msgid "Trusted metadata"
+msgstr "Zweryfikowane metadane"
+
+#. TRANSLATORS: We verified the payload against the server
+msgid "Trusted payload"
+msgstr "Zweryfikowane dane"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -2244,10 +2323,6 @@ msgstr "Komunikat aktualizacji"
 msgid "Update State"
 msgstr "Stan aktualizacji"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "Aktualizuje wszystkie urządzenia pasujące do lokalnych metadanych"
-
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Niepowodzenie aktualizacji to znany problem, pod tym adresem dostępnych jest więcej informacji:"
@@ -2272,8 +2347,8 @@ msgid "Update the stored metadata with current contents"
 msgstr "Aktualizuje przechowywane metadane obecną zawartością"
 
 #. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Aktualizuje całe oprogramowanie sprzętowe do najnowszych dostępnych wersji"
+msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
+msgstr "Aktualizuje wszystkie podane urządzenia do najnowszej wersji oprogramowania sprzętowego, lub wszystkie urządzenia, jeśli nie podano żadnych"
 
 msgid "Updating"
 msgstr "Aktualizowanie"

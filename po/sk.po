@@ -211,10 +211,6 @@ msgstr "Odomknúť zariadenie na umožnenie prístupu"
 msgid "Unlocks the device for firmware access"
 msgstr "Odomkne zariadenie pre prístup k firmvéru"
 
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Aktualizuje všetok firmvér na najnovšiu dostupnú verziu"
-
 #. TRANSLATORS: the first replacement is a display name
 #. * e.g. "ColorHugALS" and the second and third are
 #. * version numbers e.g. "1.2.3"

@@ -296,10 +296,6 @@ msgid "Choose a volume:"
 msgstr "Bölüm seçiniz:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Çevrimdışı olarak güncellenmesi planlanan tüm güncellemeleri temizler"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Son güncellemenin sonuçlarını temizler"
 
@@ -563,7 +559,6 @@ msgid "Firmware updates are supported on this machine."
 msgstr "Ürün yazılımı güncellemeleri bu makinede destekleniyor."
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Bayraklar"
 
@@ -1237,10 +1232,6 @@ msgstr "Güncelleme için yeniden başlatma gerekli"
 
 msgid "Update the stored device verification information"
 msgstr "Saklanan aygıt doğrulama bilgilerini güncelle"
-
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Tüm ürün yazılımlarını mevcut en son sürümlere güncelle"
 
 #. TRANSLATORS: %1 is a device name
 #, c-format

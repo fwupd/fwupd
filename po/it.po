@@ -503,10 +503,6 @@ msgid "Choose a volume:"
 msgstr "Scegliere un volume:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "Annulla gli aggiornamenti pianificati per essere eseguiti offline"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "Pulisce i risultati dell'ultimo aggiornamento"
 
@@ -561,6 +557,12 @@ msgstr "Scollega in modalità bootloader"
 #. TRANSLATORS: more details about the update link
 msgid "Details"
 msgstr "Dettagli"
+
+#. TRANSLATORS: the best known configuration is a set of software that we know
+#. works well
+#. * together. In the OEM and ODM industries it is often called a BKC
+msgid "Deviate from the best known configuration?"
+msgstr "Allontanarsi dalla migliore configurazione nota?"
 
 #. TRANSLATORS: description of device ability
 msgid "Device Flags"
@@ -1025,7 +1027,6 @@ msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "Aggiornamenti firmware disabilitati; eseguire «fwupdmgr unlock» per abilitarli"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "Flag"
 
@@ -1981,6 +1982,10 @@ msgstr "Passare dal ramo %s a %s?"
 msgid "Switch the firmware branch on the device"
 msgstr "Cambia il ramo del firmware sul dispositivo"
 
+#. TRANSLATORS: command description
+msgid "Sync firmware versions to the host best known configuration"
+msgstr "Sincronizza le versioni del firmware con quelle migliori note dell'host"
+
 #. TRANSLATORS: Must be plugged in to an outlet
 msgid "System requires external power source"
 msgstr "Il sistema richiede una sorgente elettrica esterna"
@@ -2054,6 +2059,12 @@ msgstr "Non ci sono file di firmware bloccati"
 #. * the domain administrator
 msgid "There is no approved firmware."
 msgstr "Non ci sono firmware approvati."
+
+#. TRANSLATORS: %1 is the current device version number, and %2 is the
+#. command name, e.g. `fwupdmgr sync-bkc`
+#, c-format
+msgid "This device will be reverted back to %s when the %s command is performed."
+msgstr "Questo dispositivo verrà retrocesso alla versione %s all'esecuzione del comando %s. "
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
@@ -2209,10 +2220,6 @@ msgstr "Messaggio aggiornamento"
 msgid "Update State"
 msgstr "Stato aggiornamento"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "Aggiorna tutti i dispositivi corrispondenti ai metadati locali"
-
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "Questo è un problema noto, consultare il seguente URL per maggiori informazioni:"
@@ -2235,10 +2242,6 @@ msgstr "Aggiornamento delle informazioni di verifica del dispositivo salvate"
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
 msgstr "Aggiorna i metadati salvati con il contenuto attuale"
-
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "Aggiorna tutti i firmware all'ultima versione disponibile"
 
 msgid "Updating"
 msgstr "Aggiornamento in corso"

@@ -456,10 +456,6 @@ msgid "Choose a volume:"
 msgstr "볼륨 선택:"
 
 #. TRANSLATORS: command description
-msgid "Clears any updates scheduled to be updated offline"
-msgstr "오프라인으로 업데이트할 업데이트 지우기"
-
-#. TRANSLATORS: command description
 msgid "Clears the results from the last update"
 msgstr "최근 업데이트 결과 지우기"
 
@@ -965,7 +961,6 @@ msgid "Firmware updates disabled; run 'fwupdmgr unlock' to enable"
 msgstr "펌웨어 업그레이드 비활성화됨. 활성화하려면 'fwupdmgr unlock' 명령을 실행하십시오"
 
 #. TRANSLATORS: description of plugin state, e.g. disabled
-#. TRANSLATORS: release properties
 msgid "Flags"
 msgstr "플래그"
 
@@ -2061,10 +2056,6 @@ msgstr "업데이트 메시지"
 msgid "Update State"
 msgstr "업데이트 상태"
 
-#. TRANSLATORS: command description
-msgid "Update all devices that match local metadata"
-msgstr "로컬 메타데이터와 일치하는 모든 장치 업데이트"
-
 #. TRANSLATORS: the server sent the user a small message
 msgid "Update failure is a known issue, visit this URL for more information:"
 msgstr "알 수 없는 이유로 업데이트가 실패했습니다. 더 많은 정보를 보려면 다음 URL을 참조하십시오:"
@@ -2087,10 +2078,6 @@ msgstr "저장된 장치 검증 정보 업데이트"
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
 msgstr "저장된 메타데이터를 현재 내용으로 업데이트"
-
-#. TRANSLATORS: command description
-msgid "Updates all firmware to latest versions available"
-msgstr "모든 펌웨어를 사용할 수 있는 최신 버전으로 업데이트"
 
 msgid "Updating"
 msgstr "업데이트"
