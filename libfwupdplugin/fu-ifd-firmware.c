@@ -324,6 +324,14 @@ fu_ifd_firmware_write(FuFirmware *firmware, GError **error)
 			g_prefix_error(error, "failed to write %s: ", fu_firmware_get_id(img));
 			return NULL;
 		}
+		if (g_bytes_get_data(blob, NULL) == NULL) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "failed to write %s",
+				    fu_firmware_get_id(img));
+			return NULL;
+		}
 		g_hash_table_insert(blobs, GUINT_TO_POINTER(i), g_bytes_ref(blob));
 
 		/* check total size */
