@@ -35,7 +35,7 @@ fu_thunderbolt_udev_set_port_offline(FuUdevDevice *device, GError **error)
 	g_autoptr(GError) error_offline = NULL;
 	g_autoptr(GError) error_rescan = NULL;
 	if (fu_thunderbolt_device_check_usb4_port_path(device, offline, &error_offline)) {
-		if (!fu_udev_device_write_sysfs(device, offline, "1", error)) {
+		if (!fu_udev_device_write_sysfs(device, offline, "1", &error_offline)) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_INTERNAL,
@@ -66,10 +66,10 @@ fu_thunderbolt_udev_set_port_online(FuUdevDevice *device, GError **error)
 {
 	FuUdevDevice *udev = FU_UDEV_DEVICE(device);
 	const gchar *offline = "usb4_port1/offline";
-	g_autoptr(GError) error_offline = NULL;
+	g_autoptr(GError) error_online = NULL;
 
-	if (fu_thunderbolt_device_check_usb4_port_path(device, offline, &error_offline)) {
-		if (!fu_udev_device_write_sysfs(udev, offline, "0", error)) {
+	if (fu_thunderbolt_device_check_usb4_port_path(device, offline, &error_online)) {
+		if (!fu_udev_device_write_sysfs(udev, offline, "0", &error_online)) {
 			g_prefix_error(error, "setting port online failed: ");
 			return FALSE;
 		}
