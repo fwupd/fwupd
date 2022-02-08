@@ -1298,9 +1298,9 @@ fu_dfu_device_probe(FuDevice *device, GError **error)
 
 	/* check capabilities */
 	if (!fu_dfu_device_can_download(self)) {
-		g_warning("%04x:%04x is missing download capability",
-			  g_usb_device_get_vid(usb_device),
-			  g_usb_device_get_pid(usb_device));
+		g_debug("%04x:%04x is missing download capability",
+			g_usb_device_get_vid(usb_device),
+			g_usb_device_get_pid(usb_device));
 	}
 
 	/* hardware from Jabra literally reboots if you try to retry a failed
