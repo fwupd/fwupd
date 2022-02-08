@@ -908,17 +908,27 @@ fu_firmware_build(FuFirmware *self, XbNode *n, GError **error)
 		fu_firmware_set_filename(self, tmp);
 	}
 	data = xb_node_query_first(n, "data", NULL);
-	if (data != NULL && xb_node_get_text(data) != NULL) {
-		gsize bufsz = 0;
-		g_autofree guchar *buf = NULL;
+	if (data != NULL) {
+		guint64 sz = xb_node_get_attr_as_uint(data, "size");
 		g_autoptr(GBytes) blob = NULL;
-		buf = g_base64_decode(xb_node_get_text(data), &bufsz);
-		blob = g_bytes_new(buf, bufsz);
-		fu_firmware_set_bytes(self, blob);
-	} else if (data != NULL) {
-		g_autoptr(GBytes) blob = NULL;
-		blob = g_bytes_new(NULL, 0);
-		fu_firmware_set_bytes(self, blob);
+
+		/* base64 encoded data */
+		if (xb_node_get_text(data) != NULL) {
+			gsize bufsz = 0;
+			g_autofree guchar *buf = NULL;
+			buf = g_base64_decode(xb_node_get_text(data), &bufsz);
+			blob = g_bytes_new(buf, bufsz);
+		} else {
+			blob = g_bytes_new(NULL, 0);
+		}
+
+		/* padding is optional */
+		if (sz == 0 || sz == G_MAXUINT64) {
+			fu_firmware_set_bytes(self, blob);
+		} else {
+			g_autoptr(GBytes) blob_padded = fu_common_bytes_pad(blob, (gsize)sz);
+			fu_firmware_set_bytes(self, blob_padded);
+		}
 	}
 
 	/* optional chunks */
