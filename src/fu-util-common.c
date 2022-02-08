@@ -384,7 +384,7 @@ fu_util_get_release_description_with_fallback(FwupdRelease *rel)
 		g_string_append(str, fwupd_release_get_description(rel));
 
 	/* add this client side to get the translations */
-	if (!fwupd_release_has_flag(rel, FWUPD_RELEASE_FLAG_IS_COMMUNITY)) {
+	if (fwupd_release_has_flag(rel, FWUPD_RELEASE_FLAG_IS_COMMUNITY)) {
 		g_string_append_printf(
 		    str,
 		    "<p>%s</p>",
