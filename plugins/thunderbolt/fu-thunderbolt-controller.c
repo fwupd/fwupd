@@ -310,7 +310,8 @@ fu_thunderbolt_controller_write_firmware(FuDevice *device,
 	if (!FU_DEVICE_CLASS(fu_thunderbolt_controller_parent_class)
 		 ->write_firmware(device, firmware, progress, flags, error))
 		return FALSE;
-	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_USABLE_DURING_UPDATE))
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 	return TRUE;
 }
 
