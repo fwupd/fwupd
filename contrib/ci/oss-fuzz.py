@@ -250,6 +250,7 @@ def _build(bld: Builder) -> None:
             "-Dbsymbolic_functions=false",
             "-Dtests=false",
             "-Dinternal_pcre=true",
+            "--force-fallback-for=libpcre",
         ],
     )
     bld.add_work_includedir("include/glib-2.0")
