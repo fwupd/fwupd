@@ -154,7 +154,6 @@ class Builder:
             print("building {} into {}".format(fn_src, fn_dst))
             try:
                 argv = [
-                    "sudo",
                     "build/src/fwupdtool",
                     "firmware-build",
                     fn_src,
