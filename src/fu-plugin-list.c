@@ -121,6 +121,12 @@ fu_plugin_list_find_by_name(FuPluginList *self, const gchar *name, GError **erro
 	g_return_val_if_fail(name != NULL, NULL);
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
+	/* sanity check */
+	if (self->plugins->len == 0) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no plugins loaded");
+		return NULL;
+	}
+
 	plugin = g_hash_table_lookup(self->plugins_hash, name);
 	if (plugin == NULL) {
 		g_set_error(error, FWUPD_ERROR, FWUPD_ERROR_NOT_FOUND, "no plugin %s found", name);
