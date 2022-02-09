@@ -101,7 +101,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &verbose,
 					 /* TRANSLATORS: command line option */
-					 _("Show extra debugging information"),
+					 N_("Show extra debugging information"),
 					 NULL},
 					{"pcr",
 					 'p',
@@ -109,9 +109,14 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_INT,
 					 &pcr,
 					 /* TRANSLATORS: command line option */
-					 _("Only show single PCR value"),
+					 N_("Only show single PCR value"),
 					 NULL},
 					{NULL}};
+
+	setlocale(LC_ALL, "");
+	bindtextdomain(GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
+	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+	textdomain(GETTEXT_PACKAGE);
 
 #ifdef HAVE_GETUID
 	/* ensure root user */
@@ -119,11 +124,6 @@ main(int argc, char *argv[])
 		/* TRANSLATORS: we're poking around as a power user */
 		g_printerr("%s\n", _("This program may only work correctly as root"));
 #endif
-
-	setlocale(LC_ALL, "");
-	bindtextdomain(GETTEXT_PACKAGE, FWUPD_LOCALEDIR);
-	bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-	textdomain(GETTEXT_PACKAGE);
 
 	/* TRANSLATORS: program name */
 	g_set_application_name(_("fwupd TPM event log utility"));
