@@ -7144,13 +7144,6 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if (flags & FU_ENGINE_LOAD_FLAG_HWINFO)
 		fu_context_load_hwinfo(self->ctx, NULL);
 
-	/* set quirks for each hwid */
-	guids = fu_context_get_hwid_guids(self->ctx);
-	for (guint i = 0; i < guids->len; i++) {
-		const gchar *hwid = g_ptr_array_index(guids, i);
-		fu_engine_load_quirks_for_hwid(self, hwid);
-	}
-
 	/* load AppStream metadata */
 	if (!fu_engine_load_metadata_store(self, flags, error)) {
 		g_prefix_error(error, "Failed to load AppStream data: ");
@@ -7217,6 +7210,13 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	if (!fu_engine_load_plugins(self, error)) {
 		g_prefix_error(error, "Failed to load plugins: ");
 		return FALSE;
+	}
+
+	/* set quirks for each hwid */
+	guids = fu_context_get_hwid_guids(self->ctx);
+	for (guint i = 0; i < guids->len; i++) {
+		const gchar *hwid = g_ptr_array_index(guids, i);
+		fu_engine_load_quirks_for_hwid(self, hwid);
 	}
 
 	/* set up battery threshold */
