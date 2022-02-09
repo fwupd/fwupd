@@ -25,6 +25,8 @@ fu_intel_spi_kind_from_string(const gchar *kind)
 		return FU_INTEL_SPI_KIND_ICH2345;
 	if (g_strcmp0(kind, "ich6") == 0)
 		return FU_INTEL_SPI_KIND_ICH6;
+	if (g_strcmp0(kind, "pch200") == 0)
+		return FU_INTEL_SPI_KIND_PCH200;
 	if (g_strcmp0(kind, "pch300") == 0)
 		return FU_INTEL_SPI_KIND_PCH300;
 	if (g_strcmp0(kind, "pch400") == 0)
@@ -51,6 +53,8 @@ fu_intel_spi_kind_to_string(FuIntelSpiKind kind)
 		return "ich2345";
 	if (kind == FU_INTEL_SPI_KIND_ICH6)
 		return "ich6";
+	if (kind == FU_INTEL_SPI_KIND_PCH200)
+		return "pch200";
 	if (kind == FU_INTEL_SPI_KIND_PCH300)
 		return "pch300";
 	if (kind == FU_INTEL_SPI_KIND_PCH400)

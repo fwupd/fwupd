@@ -2,6 +2,10 @@
 Plugin = intel_spi
 IntelSpiKind = pch100
 
+[PCI\VEN_8086&DEV_9D24]
+Plugin = intel_spi
+IntelSpiKind = pch200
+
 [PCI\VEN_8086&DEV_2410]
 Plugin = intel_spi
 IntelSpiKind = ich0
@@ -65,10 +69,6 @@ IntelSpiKind = ich6
 [PCI\VEN_8086&DEV_8119]
 Plugin = intel_spi
 IntelSpiKind = poulsbo
-
-[PCI\VEN_8086&DEV_9D24]
-Plugin = intel_spi
-IntelSpiKind = pch200
 
 [PCI\VEN_8086&DEV_9D43]
 Plugin = intel_spi
@@ -282,6 +282,10 @@ IntelSpiKind = c620
 Plugin = intel_spi
 IntelSpiKind = c620
 
+[PCI\VEN_8086&DEV_1BCA]
+Plugin = intel_spi
+IntelSpiKind = c620
+
 [PCI\VEN_8086&DEV_A2C4]
 Plugin = intel_spi
 IntelSpiKind = pch100
@@ -303,6 +307,14 @@ Plugin = intel_spi
 IntelSpiKind = pch100
 
 [PCI\VEN_8086&DEV_A2C9]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A2CA]
+Plugin = intel_spi
+IntelSpiKind = pch100
+
+[PCI\VEN_8086&DEV_A2CC]
 Plugin = intel_spi
 IntelSpiKind = pch100
 
@@ -361,6 +373,34 @@ IntelSpiKind = pch300
 [PCI\VEN_8086&DEV_3482]
 Plugin = intel_spi
 IntelSpiKind = pch300
+
+[PCI\VEN_8086&DEV_0684]
+Plugin = intel_spi
+IntelSpiKind = pch400
+
+[PCI\VEN_8086&DEV_0685]
+Plugin = intel_spi
+IntelSpiKind = pch400
+
+[PCI\VEN_8086&DEV_0687]
+Plugin = intel_spi
+IntelSpiKind = pch400
+
+[PCI\VEN_8086&DEV_068C]
+Plugin = intel_spi
+IntelSpiKind = pch400
+
+[PCI\VEN_8086&DEV_068D]
+Plugin = intel_spi
+IntelSpiKind = pch400
+
+[PCI\VEN_8086&DEV_068E]
+Plugin = intel_spi
+IntelSpiKind = pch400
+
+[PCI\VEN_8086&DEV_0697]
+Plugin = intel_spi
+IntelSpiKind = pch400
 
 
 [INTEL_SPI_CHIPSET\APL]

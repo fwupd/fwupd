@@ -30,12 +30,13 @@ if __name__ == "__main__":
         "ich2345": Chipset(flags="ich", bios_cntl=0x4E),
         "ich6": Chipset(flags="ich", bios_cntl=0xDC),
         "pch100": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
+        "pch200": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
         "pch300": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
         "pch400": Chipset(flags="pch", bios_cntl=0xDC, spibar_proxy="00:1f.5"),
         "poulsbo": Chipset(flags="ich", bios_cntl=0xD8),
     }
 
-    devices = {"PCI\VEN_8086&DEV_A0A4": "pch100"}
+    devices = {"PCI\VEN_8086&DEV_A0A4": "pch100", "PCI\VEN_8086&DEV_9D24": "pch200"}
 
     with open("intel-spi.quirk", "w") as out_f:
         with open(sys.argv[1], "r") as in_f:
