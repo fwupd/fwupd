@@ -259,8 +259,11 @@ fu_plugin_tpm_eventlog_report_metadata(FuPlugin *plugin)
 
 	for (guint i = 0; i < data->ev_items->len; i++) {
 		FuTpmEventlogItem *item = g_ptr_array_index(data->ev_items, i);
-		g_autofree gchar *blobstr = fu_tpm_eventlog_blobstr(item->blob);
+		g_autofree gchar *blobstr = NULL;
 		g_autofree gchar *checksum = NULL;
+
+		if (item->blob == NULL)
+			continue;
 		if (item->checksum_sha1 != NULL)
 			checksum = fu_tpm_eventlog_strhex(item->checksum_sha1);
 		else if (item->checksum_sha256 != NULL)
@@ -268,6 +271,7 @@ fu_plugin_tpm_eventlog_report_metadata(FuPlugin *plugin)
 		else
 			continue;
 		g_string_append_printf(str, "0x%08x %s", item->kind, checksum);
+		blobstr = fu_tpm_eventlog_blobstr(item->blob);
 		if (blobstr != NULL)
 			g_string_append_printf(str, " [%s]", blobstr);
 		g_string_append(str, "\n");
