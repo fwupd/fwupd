@@ -349,7 +349,7 @@ fu_intel_spi_device_setup(FuDevice *device, GError **error)
 		g_autoptr(FuDevice) child = NULL;
 		if (self->freg[i] == 0x0)
 			continue;
-		child = fu_ifd_device_new(i, self->freg[i]);
+		child = fu_ifd_device_new(fu_device_get_context(device), i, self->freg[i]);
 		for (guint j = 1; j < 4; j++) {
 			FuIfdAccess access;
 			access = fu_ifd_region_to_access(i, self->flash_master[j - 1], TRUE);
