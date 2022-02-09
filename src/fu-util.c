@@ -3722,7 +3722,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &verbose,
 					 /* TRANSLATORS: command line option */
-					 _("Show extra debugging information"),
+					 N_("Show extra debugging information"),
 					 NULL},
 					{"version",
 					 '\0',
@@ -3730,7 +3730,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &version,
 					 /* TRANSLATORS: command line option */
-					 _("Show client and daemon versions"),
+					 N_("Show client and daemon versions"),
 					 NULL},
 					{"offline",
 					 '\0',
@@ -3738,7 +3738,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &offline,
 					 /* TRANSLATORS: command line option */
-					 _("Schedule installation for next reboot when possible"),
+					 N_("Schedule installation for next reboot when possible"),
 					 NULL},
 					{"allow-reinstall",
 					 '\0',
@@ -3746,7 +3746,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &allow_reinstall,
 					 /* TRANSLATORS: command line option */
-					 _("Allow reinstalling existing firmware versions"),
+					 N_("Allow reinstalling existing firmware versions"),
 					 NULL},
 					{"allow-older",
 					 '\0',
@@ -3754,7 +3754,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &allow_older,
 					 /* TRANSLATORS: command line option */
-					 _("Allow downgrading firmware versions"),
+					 N_("Allow downgrading firmware versions"),
 					 NULL},
 					{"allow-branch-switch",
 					 '\0',
@@ -3762,7 +3762,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &allow_branch_switch,
 					 /* TRANSLATORS: command line option */
-					 _("Allow switching firmware branch"),
+					 N_("Allow switching firmware branch"),
 					 NULL},
 					{"force",
 					 '\0',
@@ -3770,7 +3770,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &force,
 					 /* TRANSLATORS: command line option */
-					 _("Force the action by relaxing some runtime checks"),
+					 N_("Force the action by relaxing some runtime checks"),
 					 NULL},
 					{"assume-yes",
 					 'y',
@@ -3778,7 +3778,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &priv->assume_yes,
 					 /* TRANSLATORS: command line option */
-					 _("Answer yes to all questions"),
+					 N_("Answer yes to all questions"),
 					 NULL},
 					{"sign",
 					 '\0',
@@ -3786,7 +3786,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &priv->sign,
 					 /* TRANSLATORS: command line option */
-					 _("Sign the uploaded data with the client certificate"),
+					 N_("Sign the uploaded data with the client certificate"),
 					 NULL},
 					{"no-unreported-check",
 					 '\0',
@@ -3794,7 +3794,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &priv->no_unreported_check,
 					 /* TRANSLATORS: command line option */
-					 _("Do not check for unreported history"),
+					 N_("Do not check for unreported history"),
 					 NULL},
 					{"no-metadata-check",
 					 '\0',
@@ -3802,7 +3802,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &priv->no_metadata_check,
 					 /* TRANSLATORS: command line option */
-					 _("Do not check for old metadata"),
+					 N_("Do not check for old metadata"),
 					 NULL},
 					{"no-remote-check",
 					 '\0',
@@ -3810,7 +3810,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &priv->no_remote_check,
 					 /* TRANSLATORS: command line option */
-					 _("Do not check if download remotes should be enabled"),
+					 N_("Do not check if download remotes should be enabled"),
 					 NULL},
 					{"no-reboot-check",
 					 '\0',
@@ -3818,7 +3818,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &priv->no_reboot_check,
 					 /* TRANSLATORS: command line option */
-					 _("Do not check or prompt for reboot after update"),
+					 N_("Do not check or prompt for reboot after update"),
 					 NULL},
 					{"no-safety-check",
 					 '\0',
@@ -3826,7 +3826,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &priv->no_safety_check,
 					 /* TRANSLATORS: command line option */
-					 _("Do not perform device safety checks"),
+					 N_("Do not perform device safety checks"),
 					 NULL},
 					{"no-history",
 					 '\0',
@@ -3834,7 +3834,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &no_history,
 					 /* TRANSLATORS: command line option */
-					 _("Do not write to the history database"),
+					 N_("Do not write to the history database"),
 					 NULL},
 					{"show-all",
 					 '\0',
@@ -3842,7 +3842,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &priv->show_all,
 					 /* TRANSLATORS: command line option */
-					 _("Show all results"),
+					 N_("Show all results"),
 					 NULL},
 					{"show-all-devices",
 					 '\0',
@@ -3850,7 +3850,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &priv->show_all,
 					 /* TRANSLATORS: command line option */
-					 _("Show devices that are not updatable"),
+					 N_("Show devices that are not updatable"),
 					 NULL},
 					{"disable-ssl-strict",
 					 '\0',
@@ -3858,7 +3858,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &priv->disable_ssl_strict,
 					 /* TRANSLATORS: command line option */
-					 _("Ignore SSL strict checks when downloading files"),
+					 N_("Ignore SSL strict checks when downloading files"),
 					 NULL},
 					{"ipfs",
 					 '\0',
@@ -3866,7 +3866,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &enable_ipfs,
 					 /* TRANSLATORS: command line option */
-					 _("Only use IPFS when downloading files"),
+					 N_("Only use IPFS when downloading files"),
 					 NULL},
 					{"filter",
 					 '\0',
@@ -3874,8 +3874,8 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_STRING,
 					 &filter,
 					 /* TRANSLATORS: command line option */
-					 _("Filter with a set of device flags using a ~ prefix to "
-					   "exclude, e.g. 'internal,~needs-reboot'"),
+					 N_("Filter with a set of device flags using a ~ prefix to "
+					    "exclude, e.g. 'internal,~needs-reboot'"),
 					 NULL},
 					{"json",
 					 '\0',
@@ -3883,7 +3883,7 @@ main(int argc, char *argv[])
 					 G_OPTION_ARG_NONE,
 					 &priv->as_json,
 					 /* TRANSLATORS: command line option */
-					 _("Output in JSON format"),
+					 N_("Output in JSON format"),
 					 NULL},
 					{NULL}};
 

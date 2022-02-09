@@ -81,7 +81,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &verbose,
 	     /* TRANSLATORS: command line option */
-	     _("Show extra debugging information"),
+	     N_("Show extra debugging information"),
 	     NULL},
 	    {"version",
 	     '\0',
@@ -89,7 +89,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &action_version,
 	     /* TRANSLATORS: command line option */
-	     _("Display version"),
+	     N_("Display version"),
 	     NULL},
 	    {"log",
 	     'L',
@@ -97,7 +97,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &action_log,
 	     /* TRANSLATORS: command line option */
-	     _("Show the debug log from the last attempted update"),
+	     N_("Show the debug log from the last attempted update"),
 	     NULL},
 	    {"list",
 	     'l',
@@ -105,7 +105,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &action_list,
 	     /* TRANSLATORS: command line option */
-	     _("List supported firmware updates"),
+	     N_("List supported firmware updates"),
 	     NULL},
 	    {"supported",
 	     's',
@@ -113,7 +113,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &action_supported,
 	     /* TRANSLATORS: command line option */
-	     _("Query for firmware update support"),
+	     N_("Query for firmware update support"),
 	     NULL},
 	    {"info",
 	     'i',
@@ -121,7 +121,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &action_info,
 	     /* TRANSLATORS: command line option */
-	     _("Show the information of firmware update status"),
+	     N_("Show the information of firmware update status"),
 	     NULL},
 	    {"enable",
 	     'e',
@@ -129,7 +129,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &action_enable,
 	     /* TRANSLATORS: command line option */
-	     _("Enable firmware update support on supported systems"),
+	     N_("Enable firmware update support on supported systems"),
 	     NULL},
 	    {"esp-path",
 	     'p',
@@ -137,16 +137,16 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_STRING,
 	     &esp_path,
 	     /* TRANSLATORS: command line option */
-	     _("Override the default ESP path"),
+	     N_("Override the default ESP path"),
 	     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-	     _("PATH")},
+	     N_("PATH")},
 	    {"set-debug",
 	     'd',
 	     G_OPTION_FLAG_NONE,
 	     G_OPTION_ARG_NONE,
 	     &action_set_debug,
 	     /* TRANSLATORS: command line option */
-	     _("Set the debugging flag during update"),
+	     N_("Set the debugging flag during update"),
 	     NULL},
 	    {"unset-debug",
 	     'D',
@@ -154,7 +154,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &action_unset_debug,
 	     /* TRANSLATORS: command line option */
-	     _("Unset the debugging flag during update"),
+	     N_("Unset the debugging flag during update"),
 	     NULL},
 	    {"apply",
 	     'a',
@@ -162,16 +162,16 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_STRING,
 	     &apply,
 	     /* TRANSLATORS: command line option */
-	     _("Apply firmware updates"),
+	     N_("Apply firmware updates"),
 	     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-	     C_("A single GUID", "GUID")},
+	     NC_("A single GUID", "GUID")},
 	    {"method",
 	     'm',
 	     G_OPTION_FLAG_NONE,
 	     G_OPTION_ARG_STRING,
 	     &type,
 	     /* TRANSLATORS: command line option */
-	     _("Device update method"),
+	     N_("Device update method"),
 	     "nvram|cod|grub"},
 	    {"flags",
 	     'f',
@@ -179,7 +179,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_STRING,
 	     &flags,
 	     /* TRANSLATORS: command line option */
-	     _("Use quirk flags when installing firmware"),
+	     N_("Use quirk flags when installing firmware"),
 	     NULL},
 	    {NULL}};
 

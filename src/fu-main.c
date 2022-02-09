@@ -2122,7 +2122,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &timed_exit,
 	     /* TRANSLATORS: exit after we've started up, used for user profiling */
-	     _("Exit after a small delay"),
+	     N_("Exit after a small delay"),
 	     NULL},
 	    {"immediate-exit",
 	     '\0',
@@ -2130,7 +2130,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &immediate_exit,
 	     /* TRANSLATORS: exit straight away, used for automatic profiling */
-	     _("Exit after the engine has loaded"),
+	     N_("Exit after the engine has loaded"),
 	     NULL},
 	    {NULL}};
 	g_autoptr(FuMainPrivate) priv = NULL;

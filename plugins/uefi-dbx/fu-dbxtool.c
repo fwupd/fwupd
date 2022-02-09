@@ -104,7 +104,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &verbose,
 	     /* TRANSLATORS: command line option */
-	     _("Show extra debugging information"),
+	     N_("Show extra debugging information"),
 	     NULL},
 	    {"version",
 	     '\0',
@@ -112,7 +112,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &action_version,
 	     /* TRANSLATORS: command line option */
-	     _("Show the calculated version of the dbx"),
+	     N_("Show the calculated version of the dbx"),
 	     NULL},
 	    {"list",
 	     'l',
@@ -120,7 +120,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &action_list,
 	     /* TRANSLATORS: command line option */
-	     _("List entries in dbx"),
+	     N_("List entries in dbx"),
 	     NULL},
 	    {"apply",
 	     'a',
@@ -128,7 +128,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &action_apply,
 	     /* TRANSLATORS: command line option */
-	     _("Apply update files"),
+	     N_("Apply update files"),
 	     NULL},
 	    {"dbx",
 	     'd',
@@ -136,16 +136,16 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_STRING,
 	     &dbxfile,
 	     /* TRANSLATORS: command line option */
-	     _("Specify the dbx database file"),
+	     N_("Specify the dbx database file"),
 	     /* TRANSLATORS: command argument: uppercase, spaces->dashes */
-	     _("FILENAME")},
+	     N_("FILENAME")},
 	    {"force",
 	     'f',
 	     0,
 	     G_OPTION_ARG_NONE,
 	     &force,
 	     /* TRANSLATORS: command line option */
-	     _("Apply update even when not advised"),
+	     N_("Apply update even when not advised"),
 	     NULL},
 	    {NULL}};
 

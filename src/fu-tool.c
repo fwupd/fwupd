@@ -3121,7 +3121,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &version,
 	     /* TRANSLATORS: command line option */
-	     _("Show client and daemon versions"),
+	     N_("Show client and daemon versions"),
 	     NULL},
 	    {"allow-reinstall",
 	     '\0',
@@ -3129,7 +3129,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &allow_reinstall,
 	     /* TRANSLATORS: command line option */
-	     _("Allow reinstalling existing firmware versions"),
+	     N_("Allow reinstalling existing firmware versions"),
 	     NULL},
 	    {"allow-older",
 	     '\0',
@@ -3137,7 +3137,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &allow_older,
 	     /* TRANSLATORS: command line option */
-	     _("Allow downgrading firmware versions"),
+	     N_("Allow downgrading firmware versions"),
 	     NULL},
 	    {"allow-branch-switch",
 	     '\0',
@@ -3145,7 +3145,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &allow_branch_switch,
 	     /* TRANSLATORS: command line option */
-	     _("Allow switching firmware branch"),
+	     N_("Allow switching firmware branch"),
 	     NULL},
 	    {"force",
 	     '\0',
@@ -3153,7 +3153,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &force,
 	     /* TRANSLATORS: command line option */
-	     _("Force the action by relaxing some runtime checks"),
+	     N_("Force the action by relaxing some runtime checks"),
 	     NULL},
 	    {"ignore-checksum",
 	     '\0',
@@ -3161,7 +3161,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &ignore_checksum,
 	     /* TRANSLATORS: command line option */
-	     _("Ignore firmware checksum failures"),
+	     N_("Ignore firmware checksum failures"),
 	     NULL},
 	    {"ignore-vid-pid",
 	     '\0',
@@ -3169,7 +3169,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &ignore_vid_pid,
 	     /* TRANSLATORS: command line option */
-	     _("Ignore firmware hardware mismatch failures"),
+	     N_("Ignore firmware hardware mismatch failures"),
 	     NULL},
 	    {"no-reboot-check",
 	     '\0',
@@ -3177,7 +3177,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &priv->no_reboot_check,
 	     /* TRANSLATORS: command line option */
-	     _("Do not check or prompt for reboot after update"),
+	     N_("Do not check or prompt for reboot after update"),
 	     NULL},
 	    {"no-safety-check",
 	     '\0',
@@ -3185,7 +3185,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &priv->no_safety_check,
 	     /* TRANSLATORS: command line option */
-	     _("Do not perform device safety checks"),
+	     N_("Do not perform device safety checks"),
 	     NULL},
 	    {"show-all",
 	     '\0',
@@ -3193,7 +3193,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &priv->show_all,
 	     /* TRANSLATORS: command line option */
-	     _("Show all results"),
+	     N_("Show all results"),
 	     NULL},
 	    {"show-all-devices",
 	     '\0',
@@ -3201,7 +3201,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &priv->show_all,
 	     /* TRANSLATORS: command line option */
-	     _("Show devices that are not updatable"),
+	     N_("Show devices that are not updatable"),
 	     NULL},
 	    {"plugins",
 	     '\0',
@@ -3209,7 +3209,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_STRING_ARRAY,
 	     &plugin_glob,
 	     /* TRANSLATORS: command line option */
-	     _("Manually enable specific plugins"),
+	     N_("Manually enable specific plugins"),
 	     NULL},
 	    {"plugin-whitelist",
 	     '\0',
@@ -3217,7 +3217,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_STRING_ARRAY,
 	     &plugin_glob,
 	     /* TRANSLATORS: command line option */
-	     _("Manually enable specific plugins"),
+	     N_("Manually enable specific plugins"),
 	     NULL},
 	    {"prepare",
 	     '\0',
@@ -3225,7 +3225,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &priv->prepare_blob,
 	     /* TRANSLATORS: command line option */
-	     _("Run the plugin composite prepare routine when using install-blob"),
+	     N_("Run the plugin composite prepare routine when using install-blob"),
 	     NULL},
 	    {"cleanup",
 	     '\0',
@@ -3233,7 +3233,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &priv->cleanup_blob,
 	     /* TRANSLATORS: command line option */
-	     _("Run the plugin composite cleanup routine when using install-blob"),
+	     N_("Run the plugin composite cleanup routine when using install-blob"),
 	     NULL},
 	    {"enable-json-state",
 	     '\0',
@@ -3241,7 +3241,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &priv->enable_json_state,
 	     /* TRANSLATORS: command line option */
-	     _("Save device state into a JSON file between executions"),
+	     N_("Save device state into a JSON file between executions"),
 	     NULL},
 	    {"disable-ssl-strict",
 	     '\0',
@@ -3249,7 +3249,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &priv->disable_ssl_strict,
 	     /* TRANSLATORS: command line option */
-	     _("Ignore SSL strict checks when downloading files"),
+	     N_("Ignore SSL strict checks when downloading files"),
 	     NULL},
 	    {"filter",
 	     '\0',
@@ -3257,8 +3257,8 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_STRING,
 	     &filter,
 	     /* TRANSLATORS: command line option */
-	     _("Filter with a set of device flags using a ~ prefix to "
-	       "exclude, e.g. 'internal,~needs-reboot'"),
+	     N_("Filter with a set of device flags using a ~ prefix to "
+		"exclude, e.g. 'internal,~needs-reboot'"),
 	     NULL},
 	    {"json",
 	     '\0',
@@ -3266,7 +3266,7 @@ main(int argc, char *argv[])
 	     G_OPTION_ARG_NONE,
 	     &priv->as_json,
 	     /* TRANSLATORS: command line option */
-	     _("Output in JSON format"),
+	     N_("Output in JSON format"),
 	     NULL},
 	    {NULL}};
 
