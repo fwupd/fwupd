@@ -131,9 +131,9 @@ fu_ifd_device_class_init(FuIfdDeviceClass *klass)
 }
 
 FuDevice *
-fu_ifd_device_new(FuIfdRegion region, guint32 freg)
+fu_ifd_device_new(FuContext *ctx, FuIfdRegion region, guint32 freg)
 {
-	FuIfdDevice *self = FU_IFD_DEVICE(g_object_new(FU_TYPE_IFD_DEVICE, NULL));
+	FuIfdDevice *self = FU_IFD_DEVICE(g_object_new(FU_TYPE_IFD_DEVICE, "context", ctx, NULL));
 	fu_ifd_device_set_region(self, region);
 	fu_ifd_device_set_freg(self, freg);
 	return FU_DEVICE(self);
