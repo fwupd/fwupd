@@ -149,6 +149,9 @@ fu_tpm_eventlog_blobstr(GBytes *blob)
 	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
 	g_autoptr(GString) str = g_string_new(NULL);
 
+	g_return_val_if_fail(blob != NULL, NULL);
+
+	buf = g_bytes_get_data(blob, &bufsz);
 	for (gsize i = 0; i < bufsz; i++) {
 		gchar chr = buf[i];
 		if (g_ascii_isprint(chr)) {
