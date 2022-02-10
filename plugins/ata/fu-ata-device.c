@@ -224,6 +224,7 @@ fu_ata_device_parse_vendor_name(FuAtaDevice *self, const gchar *name)
 			 {"726060*", 0x101c, "Western Digital"},
 			 {"CT*", 0xc0a9, "Crucial"},
 			 {"DT0*", 0x1179, "Toshiba"},
+			 {"EK0*", 0x1590, "HPE"},
 			 {"EZEX*", 0x101c, "Western Digital"},
 			 {"GB0*", 0x1590, "HPE"},
 			 {"GOODRAM*", 0x1987, "Phison"},
