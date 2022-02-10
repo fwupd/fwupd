@@ -779,6 +779,11 @@ fu_util_release_get_name(FwupdRelease *release)
 			 * PCI card, not the logical wired connection */
 			return g_strdup_printf(_("%s Network Interface Update"), name);
 		}
+		if (g_strcmp0(cat, "X-VideoDisplay") == 0) {
+			/* TRANSLATORS: Video Display refers to the laptop internal display or
+			 * external monitor */
+			return g_strdup_printf(_("%s Display Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release

@@ -3786,6 +3786,8 @@ fu_common_device_category_to_name(const gchar *cat)
 		return "Mouse";
 	if (g_strcmp0(cat, "X-Keyboard") == 0)
 		return "Keyboard";
+	if (g_strcmp0(cat, "X-VideoDisplay") == 0)
+		return "Display";
 	return NULL;
 }
 
