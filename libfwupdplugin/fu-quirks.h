@@ -284,3 +284,11 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key);
  * Since: 1.6.2
  **/
 #define FU_QUIRKS_INHIBIT "Inhibit"
+/**
+ * FU_QUIRKS_ISSUE:
+ *
+ * The quirk key to add security issues affecting a specific device.
+ *
+ * Since: 1.7.6
+ **/
+#define FU_QUIRKS_ISSUE "Issue"

@@ -748,3 +748,10 @@ LIBFWUPD_1.7.4 {
     fwupd_device_get_root;
   local: *;
 } LIBFWUPD_1.7.3;
+
+LIBFWUPD_1.7.6 {
+  global:
+    fwupd_device_add_issue;
+    fwupd_device_get_issues;
+  local: *;
+} LIBFWUPD_1.7.4;
