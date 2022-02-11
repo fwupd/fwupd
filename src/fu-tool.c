@@ -2792,6 +2792,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
 	g_autoptr(FuSecurityAttrs) attrs = NULL;
 	g_autoptr(FuSecurityAttrs) events = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) items = NULL;
 	g_autoptr(GPtrArray) events_array = NULL;
 	g_autofree gchar *str = NULL;
@@ -2843,6 +2844,16 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	events_array = fu_security_attrs_get_all(attrs);
 	if (events_array->len > 0) {
 		g_autofree gchar *estr = fu_util_security_events_to_string(events_array, flags);
+		if (estr != NULL)
+			g_print("%s\n", estr);
+	}
+
+	/* print the "also" */
+	devices = fu_engine_get_devices(priv->engine, error);
+	if (devices == NULL)
+		return FALSE;
+	if (devices->len > 0) {
+		g_autofree gchar *estr = fu_util_security_issues_to_string(devices);
 		if (estr != NULL)
 			g_print("%s\n", estr);
 	}
