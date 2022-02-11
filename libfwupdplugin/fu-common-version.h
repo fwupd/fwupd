@@ -21,6 +21,8 @@ gchar *
 fu_common_version_parse_from_format(const gchar *version, FwupdVersionFormat fmt);
 gchar *
 fu_common_version_ensure_semver(const gchar *version);
+gchar *
+fu_common_version_ensure_semver_full(const gchar *version, FwupdVersionFormat fmt);
 FwupdVersionFormat
 fu_common_version_guess_format(const gchar *version);
 gboolean

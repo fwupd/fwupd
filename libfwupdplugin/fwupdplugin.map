@@ -995,3 +995,9 @@ LIBFWUPDPLUGIN_1.7.4 {
     fu_usb_device_set_configuration;
   local: *;
 } LIBFWUPDPLUGIN_1.7.3;
+
+LIBFWUPDPLUGIN_1.7.6 {
+  global:
+    fu_common_version_ensure_semver_full;
+  local: *;
+} LIBFWUPDPLUGIN_1.7.4;

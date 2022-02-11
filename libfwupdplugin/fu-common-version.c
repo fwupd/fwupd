@@ -235,6 +235,73 @@ _g_ascii_is_digits(const gchar *str)
 	return TRUE;
 }
 
+static guint
+fwupd_version_format_number_sections(FwupdVersionFormat fmt)
+{
+	if (fmt == FWUPD_VERSION_FORMAT_PLAIN || fmt == FWUPD_VERSION_FORMAT_NUMBER ||
+	    fmt == FWUPD_VERSION_FORMAT_HEX)
+		return 1;
+	if (fmt == FWUPD_VERSION_FORMAT_PAIR || fmt == FWUPD_VERSION_FORMAT_BCD)
+		return 2;
+	if (fmt == FWUPD_VERSION_FORMAT_TRIPLET || fmt == FWUPD_VERSION_FORMAT_SURFACE_LEGACY ||
+	    fmt == FWUPD_VERSION_FORMAT_SURFACE || fmt == FWUPD_VERSION_FORMAT_DELL_BIOS)
+		return 3;
+	if (fmt == FWUPD_VERSION_FORMAT_QUAD || fmt == FWUPD_VERSION_FORMAT_INTEL_ME ||
+	    fmt == FWUPD_VERSION_FORMAT_INTEL_ME2)
+		return 4;
+	return 0;
+}
+
+/**
+ * fu_common_version_ensure_semver_full:
+ * @version: (nullable): a version number, e.g. ` V1.2.3 `
+ * @fmt: a version format, e.g. %FWUPD_VERSION_FORMAT_TRIPLET
+ *
+ * Builds a semver from the possibly crazy version number. Depending on the @semver value
+ * the string will be split and a string in the correct format will be returned.
+ *
+ * Returns: a version number, e.g. `1.2.3`, or %NULL if the version was not valid
+ *
+ * Since: 1.7.6
+ */
+gchar *
+fu_common_version_ensure_semver_full(const gchar *version, FwupdVersionFormat fmt)
+{
+	guint sections_actual;
+	guint sections_expected = fwupd_version_format_number_sections(fmt);
+	g_autofree gchar *tmp = NULL;
+	g_auto(GStrv) split = NULL;
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	/* split into all sections */
+	tmp = fu_common_version_ensure_semver(version);
+	if (tmp == NULL)
+		return NULL;
+	if (fmt == FWUPD_VERSION_FORMAT_UNKNOWN)
+		return g_steal_pointer(&tmp);
+	split = g_strsplit(tmp, ".", -1);
+	sections_actual = g_strv_length(split);
+
+	/* add zero sections as required */
+	if (sections_actual < sections_expected) {
+		for (guint i = 0; i < sections_expected - sections_actual; i++) {
+			if (str->len > 0)
+				g_string_append(str, ".");
+			g_string_append(str, "0");
+		}
+	}
+
+	/* only add enough sections for the format */
+	for (guint i = 0; i < sections_actual && i < sections_expected; i++) {
+		if (str->len > 0)
+			g_string_append(str, ".");
+		g_string_append(str, split[i]);
+	}
+
+	/* success */
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
 /**
  * fu_common_version_ensure_semver:
  * @version: (nullable): a version number, e.g. ` V1.2.3 `
@@ -280,6 +347,10 @@ fu_common_version_ensure_semver(const gchar *version)
 			continue;
 		}
 	}
+
+	/* remove any trailing dot */
+	if (version_safe->len > 0 && version_safe->str[version_safe->len - 1] == '.')
+		g_string_truncate(version_safe, version_safe->len - 1);
 
 	/* found no digits */
 	if (digit_cnt == 0)
