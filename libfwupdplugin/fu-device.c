@@ -2411,7 +2411,9 @@ fu_device_set_version(FuDevice *self, const gchar *version)
 
 	/* sanitize if required */
 	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER)) {
-		version_safe = fu_common_version_ensure_semver(version);
+		version_safe =
+		    fu_common_version_ensure_semver_full(version,
+							 fu_device_get_version_format(self));
 		if (g_strcmp0(version, version_safe) != 0)
 			g_debug("converted '%s' to '%s'", version, version_safe);
 	} else {
