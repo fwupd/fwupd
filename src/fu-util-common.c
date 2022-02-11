@@ -1293,6 +1293,7 @@ fu_util_device_to_string(FwupdDevice *dev, guint idt)
 {
 	FwupdUpdateState state;
 	GPtrArray *guids = fwupd_device_get_guids(dev);
+	GPtrArray *issues = fwupd_device_get_issues(dev);
 	GPtrArray *vendor_ids = fwupd_device_get_vendor_ids(dev);
 	GPtrArray *instance_ids = fwupd_device_get_instance_ids(dev);
 	const gchar *tmp;
@@ -1505,6 +1506,14 @@ fu_util_device_to_string(FwupdDevice *dev, guint idt)
 			bullet = g_strdup_printf("• %s", tmp2);
 			fu_common_string_append_kv(str, idt + 1, "", bullet);
 		}
+	}
+	for (guint i = 0; i < issues->len; i++) {
+		const gchar *issue = g_ptr_array_index(issues, i);
+		fu_common_string_append_kv(str,
+					   idt + 1,
+					   /* TRANSLATORS: issue fixed with the release, e.g. CVE */
+					   i == 0 ? ngettext("Issue", "Issues", issues->len) : "",
+					   issue);
 	}
 
 	return g_string_free(g_steal_pointer(&str), FALSE);
@@ -2242,6 +2251,41 @@ fu_util_security_events_to_string(GPtrArray *events, FuSecurityAttrToStringFlags
 			g_string_append_printf(str, "%s\n", _("Host Security Events"));
 		}
 		g_string_append_printf(str, "  %s:  %s %s\n", dtstr, check, eventstr);
+	}
+
+	/* no output required */
+	if (str->len == 0)
+		return NULL;
+
+	/* success */
+	return g_string_free(g_steal_pointer(&str), FALSE);
+}
+
+gchar *
+fu_util_security_issues_to_string(GPtrArray *devices)
+{
+	g_autoptr(GString) str = g_string_new(NULL);
+
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *device = g_ptr_array_index(devices, i);
+		GPtrArray *issues = fwupd_device_get_issues(device);
+		if (issues->len == 0)
+			continue;
+		if (str->len == 0) {
+			g_string_append_printf(
+			    str,
+			    "%s\n",
+			    /* TRANSLATORS: now list devices with unfixed high-priority issues */
+			    _("There are devices with issues:"));
+		}
+		g_string_append_printf(str,
+				       "\n  %s — %s:\n",
+				       fwupd_device_get_vendor(device),
+				       fwupd_device_get_name(device));
+		for (guint j = 0; j < issues->len; j++) {
+			const gchar *issue = g_ptr_array_index(issues, j);
+			g_string_append_printf(str, "   • %s\n", issue);
+		}
 	}
 
 	/* no output required */

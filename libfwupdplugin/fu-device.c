@@ -1545,6 +1545,12 @@ fu_device_set_quirk_kv(FuDevice *self, const gchar *key, const gchar *value, GEr
 			fu_device_add_protocol(self, sections[i]);
 		return TRUE;
 	}
+	if (g_strcmp0(key, FU_QUIRKS_ISSUE) == 0) {
+		g_auto(GStrv) sections = g_strsplit(value, ",", -1);
+		for (guint i = 0; sections[i] != NULL; i++)
+			fu_device_add_issue(self, sections[i]);
+		return TRUE;
+	}
 	if (g_strcmp0(key, FU_QUIRKS_VERSION) == 0) {
 		fu_device_set_version(self, value);
 		return TRUE;

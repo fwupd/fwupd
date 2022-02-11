@@ -3206,9 +3206,15 @@ fu_util_upload_security(FuUtilPrivate *priv, GPtrArray *attrs, GError **error)
 }
 
 static gboolean
-fu_util_security_as_json(FuUtilPrivate *priv, GPtrArray *attrs, GPtrArray *events, GError **error)
+fu_util_security_as_json(FuUtilPrivate *priv,
+			 GPtrArray *attrs,
+			 GPtrArray *events,
+			 GPtrArray *devices,
+			 GError **error)
 {
+	g_autoptr(GPtrArray) devices_issues = NULL;
 	g_autoptr(JsonBuilder) builder = json_builder_new();
+
 	json_builder_begin_object(builder);
 
 	/* attrs */
@@ -3230,6 +3236,27 @@ fu_util_security_as_json(FuUtilPrivate *priv, GPtrArray *attrs, GPtrArray *event
 			FwupdSecurityAttr *attr = g_ptr_array_index(attrs, i);
 			json_builder_begin_object(builder);
 			fwupd_security_attr_to_json(attr, builder);
+			json_builder_end_object(builder);
+		}
+		json_builder_end_array(builder);
+	}
+
+	/* devices */
+	devices_issues = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	for (guint i = 0; i < devices->len; i++) {
+		FwupdDevice *device = g_ptr_array_index(devices, i);
+		GPtrArray *issues = fwupd_device_get_issues(device);
+		if (issues->len == 0)
+			continue;
+		g_ptr_array_add(devices_issues, g_object_ref(device));
+	}
+	if (devices_issues->len > 0) {
+		json_builder_set_member_name(builder, "Devices");
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < devices_issues->len; i++) {
+			FwupdDevice *device = g_ptr_array_index(devices_issues, i);
+			json_builder_begin_object(builder);
+			fwupd_device_to_json(device, builder);
 			json_builder_end_object(builder);
 		}
 		json_builder_end_array(builder);
@@ -3327,6 +3354,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	FuSecurityAttrToStringFlags flags = FU_SECURITY_ATTR_TO_STRING_FLAG_NONE;
 	g_autoptr(GPtrArray) attrs = NULL;
+	g_autoptr(GPtrArray) devices = NULL;
 	g_autoptr(GPtrArray) events = NULL;
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *str = NULL;
@@ -3360,9 +3388,14 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 	}
 
+	/* the "also" */
+	devices = fwupd_client_get_devices(priv->client, priv->cancellable, error);
+	if (devices == NULL)
+		return FALSE;
+
 	/* not for human consumption */
 	if (priv->as_json)
-		return fu_util_security_as_json(priv, attrs, events, error);
+		return fu_util_security_as_json(priv, attrs, events, devices, error);
 
 	g_print("%s \033[1m%s\033[0m\n",
 		/* TRANSLATORS: this is a string like 'HSI:2-U' */
@@ -3382,6 +3415,13 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_autofree gchar *estr = fu_util_security_events_to_string(events, flags);
 		if (estr != NULL)
 			g_print("%s\n", estr);
+	}
+
+	/* known CVEs */
+	if (devices->len > 0) {
+		g_autofree gchar *estr = fu_util_security_issues_to_string(devices);
+		if (estr != NULL)
+			g_print("%s", estr);
 	}
 
 	/* opted-out */

@@ -39,6 +39,7 @@ typedef struct {
 	GPtrArray *protocols;
 	GPtrArray *instance_ids;
 	GPtrArray *icons;
+	GPtrArray *issues; /* of utf-8 */
 	gchar *name;
 	gchar *serial;
 	gchar *summary;
@@ -126,6 +127,47 @@ fwupd_device_add_checksum(FwupdDevice *self, const gchar *checksum)
 			return;
 	}
 	g_ptr_array_add(priv->checksums, g_strdup(checksum));
+}
+
+/**
+ * fwupd_device_get_issues:
+ * @self: a #FwupdDevice
+ *
+ * Gets the list of issues currently affecting this device.
+ *
+ * Returns: (element-type utf8) (transfer none): the issues, which may be empty
+ *
+ * Since: 1.7.6
+ **/
+GPtrArray *
+fwupd_device_get_issues(FwupdDevice *self)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
+	return priv->issues;
+}
+
+/**
+ * fwupd_device_add_issue:
+ * @self: a #FwupdDevice
+ * @issue: (not nullable): the update issue, e.g. `CVE-2019-12345`
+ *
+ * Adds an current issue to this device.
+ *
+ * Since: 1.7.6
+ **/
+void
+fwupd_device_add_issue(FwupdDevice *self, const gchar *issue)
+{
+	FwupdDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_DEVICE(self));
+	g_return_if_fail(issue != NULL);
+	for (guint i = 0; i < priv->issues->len; i++) {
+		const gchar *issue_tmp = g_ptr_array_index(priv->issues, i);
+		if (g_strcmp0(issue_tmp, issue) == 0)
+			return;
+	}
+	g_ptr_array_add(priv->issues, g_strdup(issue));
 }
 
 /**
@@ -1841,6 +1883,15 @@ fwupd_device_to_variant_full(FwupdDevice *self, FwupdDeviceFlags flags)
 				      FWUPD_RESULT_KEY_PROTOCOL,
 				      g_variant_new_string(str->str));
 	}
+	if (priv->issues->len > 0) {
+		g_autofree const gchar **strv = g_new0(const gchar *, priv->issues->len + 1);
+		for (guint i = 0; i < priv->issues->len; i++)
+			strv[i] = (const gchar *)g_ptr_array_index(priv->issues, i);
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_ISSUES,
+				      g_variant_new_strv(strv, -1));
+	}
 	if (priv->version != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
@@ -2084,6 +2135,12 @@ fwupd_device_from_key_value(FwupdDevice *self, const gchar *key, GVariant *value
 		protocols = g_strsplit(g_variant_get_string(value, NULL), "|", -1);
 		for (guint i = 0; protocols[i] != NULL; i++)
 			fwupd_device_add_protocol(self, protocols[i]);
+		return;
+	}
+	if (g_strcmp0(key, FWUPD_RESULT_KEY_ISSUES) == 0) {
+		g_autofree const gchar **strv = g_variant_get_strv(value, NULL);
+		for (guint i = 0; strv[i] != NULL; i++)
+			fwupd_device_add_issue(self, strv[i]);
 		return;
 	}
 	if (g_strcmp0(key, FWUPD_RESULT_KEY_VERSION) == 0) {
@@ -2616,6 +2673,15 @@ fwupd_device_to_json(FwupdDevice *self, JsonBuilder *builder)
 		}
 		json_builder_end_array(builder);
 	}
+	if (priv->issues->len > 0) {
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_ISSUES);
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < priv->issues->len; i++) {
+			const gchar *tmp = g_ptr_array_index(priv->issues, i);
+			json_builder_add_string_value(builder, tmp);
+		}
+		json_builder_end_array(builder);
+	}
 	if (priv->flags != FWUPD_DEVICE_FLAG_NONE) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_FLAGS);
 		json_builder_begin_array(builder);
@@ -2820,6 +2886,10 @@ fwupd_device_to_string(FwupdDevice *self)
 	for (guint i = 0; i < priv->protocols->len; i++) {
 		const gchar *tmp = g_ptr_array_index(priv->protocols, i);
 		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_PROTOCOL, tmp);
+	}
+	for (guint i = 0; i < priv->issues->len; i++) {
+		const gchar *tmp = g_ptr_array_index(priv->issues, i);
+		fwupd_pad_kv_str(str, FWUPD_RESULT_KEY_ISSUES, tmp);
 	}
 	fwupd_pad_kv_dfl(str, FWUPD_RESULT_KEY_FLAGS, priv->flags);
 	for (guint i = 0; i < priv->checksums->len; i++) {
@@ -3116,6 +3186,7 @@ fwupd_device_init(FwupdDevice *self)
 	priv->checksums = g_ptr_array_new_with_free_func(g_free);
 	priv->vendor_ids = g_ptr_array_new_with_free_func(g_free);
 	priv->protocols = g_ptr_array_new_with_free_func(g_free);
+	priv->issues = g_ptr_array_new_with_free_func(g_free);
 	priv->children = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	priv->releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 }
@@ -3159,6 +3230,7 @@ fwupd_device_finalize(GObject *object)
 	g_ptr_array_unref(priv->checksums);
 	g_ptr_array_unref(priv->children);
 	g_ptr_array_unref(priv->releases);
+	g_ptr_array_unref(priv->issues);
 
 	G_OBJECT_CLASS(fwupd_device_parent_class)->finalize(object);
 }
