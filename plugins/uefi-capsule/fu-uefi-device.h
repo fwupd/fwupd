@@ -84,6 +84,12 @@ typedef enum {
  * Do not use RT->SetVariable.
  */
 #define FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE (1 << 6)
+/**
+ * FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP:
+ *
+ * Do not prepend a plausible missing capsule header.
+ */
+#define FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP (1 << 7)
 
 FuUefiDeviceKind
 fu_uefi_device_kind_from_string(const gchar *kind);
