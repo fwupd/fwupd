@@ -395,23 +395,37 @@ GBytes *
 fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 {
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	gsize fw_length;
-	const guint8 *data = g_bytes_get_data(fw, &fw_length);
+	gsize bufsz;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *guid_new = NULL;
 
 	priv->missing_header = FALSE;
 
 	/* GUID is the first 16 bytes */
-	if (fw_length < sizeof(fwupd_guid_t)) {
+	if (bufsz < sizeof(fwupd_guid_t)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "Invalid payload");
 		return NULL;
 	}
-	guid_new = fwupd_guid_to_string((fwupd_guid_t *)data, FWUPD_GUID_FLAG_MIXED_ENDIAN);
+
+	/* check for HP firmware that has some weird logo header prefix */
+	if (!fu_device_has_private_flag(FU_DEVICE(self),
+					FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP)) {
+		guint8 hdr[5] = {0x0};
+		if (!fu_memcpy_safe(hdr, sizeof(hdr), 0x0, buf, bufsz, 0x0, sizeof(hdr), error))
+			return NULL;
+		if (memcmp(hdr, "$LOGO", 5) == 0) {
+			g_warning("auto-enabling NO_CAPSULE_HEADER_FIXUP, this HP system probably "
+				  "needs Flags=no-capsule-header-fixup in uefi-capsule.quirk");
+			fu_device_add_private_flag(FU_DEVICE(self),
+						   FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP);
+		}
+	}
 
 	/* ESRT header matches payload */
+	guid_new = fwupd_guid_to_string((fwupd_guid_t *)buf, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 	if (g_strcmp0(fu_uefi_device_get_guid(self), guid_new) == 0) {
 		g_debug("ESRT matches payload GUID");
 		return g_bytes_ref(fw);
@@ -420,7 +434,7 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 		return g_bytes_ref(fw);
 	} else {
 		guint header_size = getpagesize();
-		guint8 *new_data = g_malloc(fw_length + header_size);
+		guint8 *new_data = g_malloc(bufsz + header_size);
 		guint8 *capsule = new_data + header_size;
 		fwupd_guid_t esrt_guid = {0x0};
 		efi_capsule_header_t *header = (efi_capsule_header_t *)new_data;
@@ -429,7 +443,7 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 		priv->missing_header = TRUE;
 		header->flags = priv->capsule_flags;
 		header->header_size = header_size;
-		header->capsule_image_size = fw_length + header_size;
+		header->capsule_image_size = bufsz + header_size;
 		if (!fwupd_guid_from_string(fu_uefi_device_get_guid(self),
 					    &esrt_guid,
 					    FWUPD_GUID_FLAG_MIXED_ENDIAN,
@@ -438,9 +452,9 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 			return NULL;
 		}
 		memcpy(&header->guid, &esrt_guid, sizeof(fwupd_guid_t));
-		memcpy(capsule, data, fw_length);
+		memcpy(capsule, buf, bufsz);
 
-		return g_bytes_new_take(new_data, fw_length + header_size);
+		return g_bytes_new_take(new_data, bufsz + header_size);
 	}
 }
 
