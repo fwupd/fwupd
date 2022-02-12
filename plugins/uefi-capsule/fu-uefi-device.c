@@ -30,7 +30,6 @@ typedef struct {
 	guint64 fmp_hardware_instance;
 	gboolean missing_header;
 	gboolean automounted_esp;
-	gboolean requires_header;
 } FuUefiDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuUefiDevice, fu_uefi_device, FU_TYPE_DEVICE)
@@ -416,10 +415,9 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 	if (g_strcmp0(fu_uefi_device_get_guid(self), guid_new) == 0) {
 		g_debug("ESRT matches payload GUID");
 		return g_bytes_ref(fw);
-		/* Type that doesn't require a header */
-	} else if (!priv->requires_header) {
+	} else if (fu_device_has_private_flag(FU_DEVICE(self),
+					      FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP)) {
 		return g_bytes_ref(fw);
-		/* Missing, add a header */
 	} else {
 		guint header_size = getpagesize();
 		guint8 *new_data = g_malloc(fw_length + header_size);
@@ -658,9 +656,7 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 	/* whether to create a missing header */
 	if (priv->kind == FU_UEFI_DEVICE_KIND_FMP ||
 	    priv->kind == FU_UEFI_DEVICE_KIND_DELL_TPM_FIRMWARE)
-		priv->requires_header = FALSE;
-	else
-		priv->requires_header = TRUE;
+		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP);
 
 	/* Windows seems to be case insensitive, but for convenience we'll
 	 * match the upper case values typically specified in the .inf file */
@@ -760,6 +756,9 @@ fu_uefi_device_init(FuUefiDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_UEFI_DEVICE_FLAG_NO_RT_SET_VARIABLE,
 					"no-rt-set-variable");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP,
+					"no-capsule-header-fixup");
 }
 
 static void

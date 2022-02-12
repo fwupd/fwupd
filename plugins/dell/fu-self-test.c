@@ -231,6 +231,11 @@ fu_plugin_dell_tpm_func(gconstpointer user_data)
 	g_assert_nonnull(device_v12);
 	g_assert_false(fu_device_has_flag(device_v12, FWUPD_DEVICE_FLAG_UPDATABLE));
 
+	/* ensure flags set */
+	ret = fu_device_probe(device_v20, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
 	/* With one flash left we need an override */
 	ret = fu_plugin_runner_write_firmware(self->plugin_uefi_capsule,
 					      device_v20,
