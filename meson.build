@@ -383,6 +383,12 @@ if cc.has_header('linux/ipmi.h')
 else
   have_linux_ipmi = false
 endif
+if cc.has_header_symbol('linux/gpio.h', 'GPIO_V2_LINE_FLAG_OUTPUT')
+  have_linux_gpio = true
+  conf.set('HAVE_LINUX_GPIO_H', '1')
+else
+  have_linux_gpio = false
+endif
 if cc.has_header_symbol('linux/ipmi_msgdefs.h', 'IPMI_DEVICE_IN_FW_UPDATE_ERR')
   conf.set('HAVE_IPMI_DEVICE_IN_FW_UPDATE_ERR', '1')
 endif
