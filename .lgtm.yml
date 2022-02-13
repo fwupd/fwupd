@@ -24,7 +24,7 @@ extraction:
     - "export LD_LIBRARY_PATH=$LGTM_WORKSPACE/installdir/usr/lib:$LD_LIBRARY_PATH"
     configure:
       command:
-      - "meson setup _lgtm_build_dir -Defi_binary=false -Dplugin_uefi_capsule_splash=false -Ddocs=none"
+      - "meson setup _lgtm_build_dir -Defi_binary=false -Dplugin_uefi_capsule_splash=false -Dplugin_gpio=false -Ddocs=none"
     index:
       build_command:
       - "ninja -C _lgtm_build_dir"
