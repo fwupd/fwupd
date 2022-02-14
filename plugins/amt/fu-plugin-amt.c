@@ -457,7 +457,7 @@ fu_plugin_amt_create_device(FuPlugin *plugin, GError **error)
 
 	dev = fu_device_new_with_context(fu_plugin_get_context(plugin));
 	fu_device_set_id(dev, "/dev/mei0");
-	fu_device_set_vendor(dev, "Intel Corporation");
+	fu_device_set_vendor(dev, "Intel");
 	fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_icon(dev, "computer");
 	fu_device_add_parent_guid(dev, "main-system-firmware");
@@ -465,16 +465,16 @@ fu_plugin_amt_create_device(FuPlugin *plugin, GError **error)
 		return NULL;
 	switch (state) {
 	case 0:
-		fu_device_set_name(dev, "Intel AMT [unprovisioned]");
+		fu_device_set_name(dev, "AMT [unprovisioned]");
 		break;
 	case 1:
-		fu_device_set_name(dev, "Intel AMT [being provisioned]");
+		fu_device_set_name(dev, "AMT [being provisioned]");
 		break;
 	case 2:
-		fu_device_set_name(dev, "Intel AMT [provisioned]");
+		fu_device_set_name(dev, "AMT [provisioned]");
 		break;
 	default:
-		fu_device_set_name(dev, "Intel AMT [unknown]");
+		fu_device_set_name(dev, "AMT [unknown]");
 		break;
 	}
 	fu_device_set_summary(dev,
