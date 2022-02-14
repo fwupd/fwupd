@@ -88,26 +88,48 @@ fu_uefi_get_esp_app_path(FuDevice *device, const gchar *esp_path, const gchar *c
 gchar *
 fu_uefi_get_built_app_path(GError **error)
 {
-	const gchar *extension = "";
 	const gchar *suffix;
-	g_autofree gchar *source_path = NULL;
 	g_autofree gchar *prefix = NULL;
-	if (fu_efivar_secure_boot_enabled())
-		extension = ".signed";
+	g_autofree gchar *source_path = NULL;
+	g_autofree gchar *source_path_signed = NULL;
+	gboolean source_path_exists = FALSE;
+	gboolean source_path_signed_exists = FALSE;
+
 	suffix = fu_uefi_bootmgr_get_suffix(error);
 	if (suffix == NULL)
 		return NULL;
 	prefix = fu_common_get_path(FU_PATH_KIND_EFIAPPDIR);
-	source_path = g_strdup_printf("%s/fwupd%s.efi%s", prefix, suffix, extension);
-	if (!g_file_test(source_path, G_FILE_TEST_EXISTS)) {
-		g_set_error(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_NOT_FOUND,
-			    "%s cannot be found",
-			    source_path);
-		return NULL;
+
+	source_path = g_strdup_printf("%s/fwupd%s.efi", prefix, suffix);
+	source_path_signed = g_strdup_printf("%s.signed", source_path);
+
+	source_path_exists = g_file_test(source_path, G_FILE_TEST_EXISTS);
+	source_path_signed_exists = g_file_test(source_path_signed, G_FILE_TEST_EXISTS);
+
+	if (fu_efivar_secure_boot_enabled()) {
+		if (!source_path_signed_exists) {
+			g_set_error(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_FOUND,
+				    "%s cannot be found",
+				    source_path_signed);
+			return NULL;
+		}
+		return g_steal_pointer(&source_path_signed);
 	}
-	return g_steal_pointer(&source_path);
+
+	if (source_path_exists)
+		return g_steal_pointer(&source_path);
+	if (source_path_signed_exists)
+		return g_steal_pointer(&source_path_signed);
+
+	g_set_error(error,
+		    G_IO_ERROR,
+		    G_IO_ERROR_NOT_FOUND,
+		    "%s and %s cannot be found",
+		    source_path,
+		    source_path_signed);
+	return NULL;
 }
 
 gboolean
