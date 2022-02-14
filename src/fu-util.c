@@ -1943,8 +1943,9 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 	gboolean supported = FALSE;
 	g_autoptr(GNode) root = g_node_new(NULL);
 	g_autofree gchar *title = fu_util_get_tree_title(priv);
-	gboolean no_updates_header = FALSE;
-	gboolean latest_header = FALSE;
+	g_autoptr(GPtrArray) devices_inhibited = g_ptr_array_new();
+	g_autoptr(GPtrArray) devices_no_support = g_ptr_array_new();
+	g_autoptr(GPtrArray) devices_no_upgrades = g_ptr_array_new();
 
 	/* are the remotes very old */
 	if (!fu_util_perhaps_refresh_remotes(priv, error))
@@ -1981,22 +1982,20 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		GNode *child;
 
 		/* not going to have results, so save a D-Bus round-trip */
-		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE))
+		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+		    !fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN))
 			continue;
-		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
-			if (!no_updates_header) {
-				/* TRANSLATORS: message letting the user know no device upgrade
-				 * available due to missing on LVFS */
-				g_printerr("%s\n",
-					   _("Devices with no available firmware updates: "));
-				no_updates_header = TRUE;
-			}
-			g_printerr(" • %s\n", fwupd_device_get_name(dev));
-			continue;
-		}
 		if (!fu_util_filter_device(priv, dev))
 			continue;
+		if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_SUPPORTED)) {
+			g_ptr_array_add(devices_no_support, dev);
+			continue;
+		}
 		supported = TRUE;
+		if (fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN)) {
+			g_ptr_array_add(devices_inhibited, dev);
+			continue;
+		}
 
 		/* get the releases for this device and filter for validity */
 		rels = fwupd_client_get_upgrades(priv->client,
@@ -2004,15 +2003,7 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 						 priv->cancellable,
 						 &error_local);
 		if (rels == NULL) {
-			if (!latest_header) {
-				/* TRANSLATORS: message letting the user know no device upgrade
-				 * available */
-				g_printerr(
-				    "%s\n",
-				    _("Devices with the latest available firmware version:"));
-				latest_header = TRUE;
-			}
-			g_printerr(" • %s\n", fwupd_device_get_name(dev));
+			g_ptr_array_add(devices_no_upgrades, dev);
 			/* discard the actual reason from user, but leave for debugging */
 			g_debug("%s", error_local->message);
 			continue;
@@ -2026,6 +2017,35 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		}
 	}
 
+	/* devices that have no updates available for whatever reason */
+	if (devices_no_support->len > 0) {
+		/* TRANSLATORS: message letting the user know no device upgrade
+		 * available due to missing on LVFS */
+		g_printerr("%s\n", _("Devices with no available firmware updates: "));
+		for (guint i = 0; i < devices_no_support->len; i++) {
+			FwupdDevice *dev = g_ptr_array_index(devices_no_support, i);
+			g_printerr(" • %s\n", fwupd_device_get_name(dev));
+		}
+	}
+	if (devices_no_upgrades->len > 0) {
+		/* TRANSLATORS: message letting the user know no device upgrade available */
+		g_printerr("%s\n", _("Devices with the latest available firmware version:"));
+		for (guint i = 0; i < devices_no_upgrades->len; i++) {
+			FwupdDevice *dev = g_ptr_array_index(devices_no_upgrades, i);
+			g_printerr(" • %s\n", fwupd_device_get_name(dev));
+		}
+	}
+	if (devices_inhibited->len > 0) {
+		/* TRANSLATORS: the device has a reason it can't update, e.g. laptop lid closed */
+		g_printerr("%s\n", _("Devices not currently updatable:"));
+		for (guint i = 0; i < devices_inhibited->len; i++) {
+			FwupdDevice *dev = g_ptr_array_index(devices_inhibited, i);
+			g_printerr(" • %s — %s\n",
+				   fwupd_device_get_name(dev),
+				   fwupd_device_get_update_error(dev));
+		}
+	}
+
 	/* nag? */
 	if (!fu_util_perhaps_show_unreported(priv, error))
 		return FALSE;
@@ -2035,7 +2055,8 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
-				    "No updatable devices");
+				    /* TRANSLATORS: this is an error string */
+				    _("No updatable devices"));
 		return FALSE;
 	}
 	/* no updates available */
@@ -2043,7 +2064,8 @@ fu_util_get_updates(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOTHING_TO_DO,
-				    _("No updates available for remaining devices"));
+				    /* TRANSLATORS: this is an error string */
+				    _("No updates available"));
 		return FALSE;
 	}
 
