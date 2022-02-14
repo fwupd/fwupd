@@ -55,7 +55,6 @@ Recommends: python3,
 	    dbus,
 	    secureboot-db,
 	    udisks2,
-	    fwupd-unsigned,
 	    fwupd-signed,
 	    jq
 Suggests: gir1.2-fwupd-2.0
