@@ -33,6 +33,12 @@ Branch = coreboot
 VersionFormat = plain
 Flags = reset-cmos
 
+# StarLite Mk III (coreboot GUID)
+[3d2f164a-8818-58fd-a082-6c60a67e21a6]
+Branch = coreboot
+VersionFormat = plain
+Flags = reset-cmos
+
 # StarLabTop Mk IV (coreboot GUID)
 [0ee5867c-93f0-5fb4-adf1-9d686ea1183a]
 Branch = coreboot
