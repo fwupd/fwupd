@@ -111,6 +111,7 @@ static void
 fu_ata_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuAtaDevice *self = FU_ATA_DEVICE(device);
+	FU_DEVICE_CLASS(fu_ata_device_parent_class)->to_string(device, idt, str);
 	fu_common_string_append_kx(str, idt, "TransferMode", self->transfer_mode);
 	fu_common_string_append_kx(str, idt, "TransferBlocks", self->transfer_blocks);
 	if (self->oui != 0x0)
