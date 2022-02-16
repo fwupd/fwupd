@@ -186,7 +186,6 @@ if get_option('tests')
     c_args : cargs
   )
   test('uefi-self-test', e, env: env)
-endif
 
 # to use these do `sudo systemctl edit fwupd.service` and set
 # Environment="FWUPD_SYSFSFWDIR=/usr/share/installed-tests/fwupd"
@@ -206,5 +205,6 @@ install_data([
   ],
   install_dir : join_paths(installed_test_datadir, 'efi/efivars'),
 )
+endif
 
 endif
