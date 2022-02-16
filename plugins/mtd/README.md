@@ -13,9 +13,11 @@ This plugin supports the following protocol ID:
 
 ## GUID Generation
 
-These devices use custom DeviceInstanceId values built from the device `NAME`, e.g.
+These devices use custom DeviceInstanceId values built from the device `NAME` and DMI data, e.g.
 
 * `MTD\NAME_Factory`
+* `MTD\VENDOR_foo&NAME_baz`
+* `MTD\VENDOR_foo&PRODUCT_bar&NAME_baz`
 
 ## Update Behavior
 

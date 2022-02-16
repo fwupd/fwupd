@@ -30,33 +30,10 @@ fu_plugin_mtd_startup(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
-static gboolean
-fu_plugin_mtd_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
-{
-	FuContext *ctx = fu_plugin_get_context(plugin);
-	const gchar *vendor;
-
-	fu_device_set_summary(dev, "Memory Technology Device");
-	fu_device_add_protocol(dev, "org.infradead.mtd");
-	fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_INTERNAL);
-	fu_device_add_flag(dev, FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
-	fu_device_add_icon(dev, "drive-harddisk-solidstate");
-
-	/* set vendor ID as the BIOS vendor */
-	vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
-	if (vendor != NULL) {
-		g_autofree gchar *vendor_id = g_strdup_printf("DMI:%s", vendor);
-		fu_device_add_vendor_id(dev, vendor_id);
-	}
-
-	return TRUE;
-}
-
 void
 fu_plugin_init_vfuncs(FuPluginVfuncs *vfuncs)
 {
 	vfuncs->build_hash = FU_BUILD_HASH;
 	vfuncs->init = fu_plugin_mtd_init;
 	vfuncs->startup = fu_plugin_mtd_startup;
-	vfuncs->device_created = fu_plugin_mtd_device_created;
 }
