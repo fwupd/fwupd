@@ -3788,6 +3788,8 @@ fu_common_device_category_to_name(const gchar *cat)
 		return "Keyboard";
 	if (g_strcmp0(cat, "X-VideoDisplay") == 0)
 		return "Display";
+	if (g_strcmp0(cat, "X-BaseboardManagementController") == 0)
+		return "BMC";
 	return NULL;
 }
 

@@ -784,6 +784,11 @@ fu_util_release_get_name(FwupdRelease *release)
 			 * external monitor */
 			return g_strdup_printf(_("%s Display Update"), name);
 		}
+		if (g_strcmp0(cat, "X-BaseboardManagementController") == 0) {
+			/* TRANSLATORS: BMC refers to baseboard management controller which
+			 * is the device that updates all the other firmware on the system */
+			return g_strdup_printf(_("%s BMC Update"), name);
+		}
 	}
 
 	/* TRANSLATORS: this is the fallback where we don't know if the release
