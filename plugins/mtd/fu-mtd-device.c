@@ -28,6 +28,42 @@ fu_mtd_device_to_string(FuDevice *device, guint idt, GString *str)
 }
 
 static gboolean
+fu_mtd_device_setup(FuDevice *device, GError **error)
+{
+	GType firmware_gtype = fu_device_get_firmware_gtype(device);
+	const gchar *fn;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autoptr(GFile) file = NULL;
+
+	/* nothing to do */
+	if (firmware_gtype == G_TYPE_INVALID)
+		return TRUE;
+
+	/* read entire contents */
+	fn = fu_udev_device_get_device_file(FU_UDEV_DEVICE(device));
+	if (fn == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Not supported as no device file");
+		return FALSE;
+	}
+	file = g_file_new_for_path(fn);
+	firmware = g_object_new(firmware_gtype, NULL);
+	if (!fu_firmware_parse_file(firmware, file, FWUPD_INSTALL_FLAG_NONE, error))
+		return FALSE;
+
+	/* copy over the version */
+	if (fu_firmware_get_version(firmware) != NULL)
+		fu_device_set_version(device, fu_firmware_get_version(firmware));
+	if (fu_firmware_get_version_raw(firmware) != G_MAXUINT64)
+		fu_device_set_version_raw(device, fu_firmware_get_version_raw(firmware));
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_mtd_device_probe(FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
@@ -309,6 +345,7 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->probe = fu_mtd_device_probe;
+	klass_device->setup = fu_mtd_device_setup;
 	klass_device->to_string = fu_mtd_device_to_string;
 	klass_device->write_firmware = fu_mtd_device_write_firmware;
 }
