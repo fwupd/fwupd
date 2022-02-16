@@ -290,11 +290,94 @@ fu_plugin_add_security_attr_dci_locked(FuPlugin *plugin, FuSecurityAttrs *attrs)
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_LOCKED);
 }
 
+static gboolean
+fu_plugin_msr_safe_kernel_for_sme(FuPlugin *plugin, GError **error)
+{
+	g_autofree gchar *min = fu_plugin_get_config_value(plugin, "MinimumSmeKernelVersion");
+
+	if (min == NULL) {
+		g_debug("Ignoring kernel safety checks");
+		return TRUE;
+	}
+	return fu_common_check_kernel_version(min, error);
+}
+
+static gboolean
+fu_plugin_msr_kernel_enabled_sme(GError **error)
+{
+	g_autofree gchar *buf = NULL;
+	gsize bufsz = 0;
+	if (!g_file_get_contents("/proc/cpuinfo", &buf, &bufsz, error))
+		return FALSE;
+	if (bufsz > 0) {
+		g_auto(GStrv) tokens = fu_common_strnsplit(buf, bufsz, " ", -1);
+		for (guint i = 0; tokens[i] != NULL; i++) {
+			if (g_strcmp0(tokens[i], "sme") == 0)
+				return TRUE;
+		}
+	}
+
+	g_set_error_literal(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "sme support not enabled by kernel");
+	return FALSE;
+}
+
+static void
+fu_plugin_add_security_attr_amd_sme_enabled(FuPlugin *plugin, FuSecurityAttrs *attrs)
+{
+	FuPluginData *priv = fu_plugin_get_data(plugin);
+	FuDevice *device = fu_plugin_cache_lookup(plugin, "cpu");
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+	g_autoptr(GError) error_local = NULL;
+
+	/* this MSR is only valid for a subset of AMD CPUs */
+	if (fu_common_get_cpu_vendor() != FU_CPU_VENDOR_AMD)
+		return;
+
+	/* create attr */
+	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM);
+	fwupd_security_attr_set_plugin(attr, fu_plugin_get_name(plugin));
+	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_SYSTEM_PROTECTION);
+	if (device != NULL)
+		fwupd_security_attr_add_guids(attr, fu_device_get_guids(device));
+	fu_security_attrs_append(attrs, attr);
+
+	/* check fields */
+	if (!priv->amd64_syscfg_supported) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_SUPPORTED);
+		return;
+	}
+
+	if (!priv->amd64_syscfg.fields.sme_is_enabled) {
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		return;
+	}
+
+	if (!fu_plugin_msr_safe_kernel_for_sme(plugin, &error_local)) {
+		g_debug("Unable to properly detect SME: %s", error_local->message);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_UNKNOWN);
+		return;
+	}
+
+	if (!(fu_plugin_msr_kernel_enabled_sme(&error_local))) {
+		g_debug("%s", error_local->message);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED);
+		return;
+	}
+
+	/* success */
+	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_ENCRYPTED);
+}
+
 static void
 fu_plugin_msr_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs)
 {
 	fu_plugin_add_security_attr_dci_enabled(plugin, attrs);
 	fu_plugin_add_security_attr_dci_locked(plugin, attrs);
+	fu_plugin_add_security_attr_amd_sme_enabled(plugin, attrs);
 }
 
 void
