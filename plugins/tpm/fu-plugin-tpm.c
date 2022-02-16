@@ -297,6 +297,11 @@ fu_plugin_tpm_coldplug_eventlog(FuPlugin *plugin, GError **error)
 	g_autofree gchar *str = NULL;
 	g_autofree guint8 *buf = NULL;
 
+	/* do not show a warning if no TPM exists, or the kernel is too old */
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_debug("no %s, so skipping", fn);
+		return TRUE;
+	}
 	if (!g_file_get_contents(fn, (gchar **)&buf, &bufsz, error))
 		return FALSE;
 	if (bufsz == 0) {
