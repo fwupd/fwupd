@@ -11,6 +11,9 @@ install_data(['fwupd-msr.conf'],
 )
 endif
 
+install_data(['msr.conf'],
+  install_dir:  join_paths(sysconfdir, 'fwupd')
+)
 shared_module('fu_plugin_msr',
   fu_hash,
   sources : [
