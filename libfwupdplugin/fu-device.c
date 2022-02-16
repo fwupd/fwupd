@@ -3381,6 +3381,12 @@ fu_device_add_string(FuDevice *self, guint idt, GString *str)
 					   idt + 1,
 					   "BatteryThreshold",
 					   priv->battery_threshold);
+	if (priv->firmware_gtype != G_TYPE_INVALID) {
+		fu_common_string_append_kv(str,
+					   idt + 1,
+					   "FirmwareGType",
+					   g_type_name(priv->firmware_gtype));
+	}
 	if (priv->size_min > 0) {
 		g_autofree gchar *sz = g_strdup_printf("%" G_GUINT64_FORMAT, priv->size_min);
 		fu_common_string_append_kv(str, idt + 1, "FirmwareSizeMin", sz);
