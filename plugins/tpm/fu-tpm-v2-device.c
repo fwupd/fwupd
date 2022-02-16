@@ -253,7 +253,7 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 
 	/* suppress warning messages about missing TCTI libraries for tpm2-tss <2.3 */
 	if (g_getenv("FWUPD_UEFI_VERBOSE") == NULL)
-		g_setenv("TSS2_LOG", "esys+error,tcti+none", FALSE);
+		g_setenv("TSS2_LOG", "esys+none,tcti+none", FALSE);
 
 	/* setup TSS */
 	rc = Esys_Initialize(&ctx, NULL, NULL);
