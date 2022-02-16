@@ -80,8 +80,22 @@ Flags = reset-cmos
 # NovaCustom NV4x (HwId)
 [25b6ea34-8f52-598e-a27a-31e03014dbe3]
 Plugin = flashrom
+[59caeff5-6a3c-595b-aab1-56500d0fecbc]
+Plugin = flashrom
 
 # NovaCustom NV4x (Dasharo GUID)
 [9a8c30e2-1b7e-5b28-9632-fc2fbf8cd0ba]
+Branch = dasharo
+VersionFormat = triplet
+[41a8fb3d-213a-5a8a-b0f4-e2a7c55aaf80]
+Branch = dasharo
+VersionFormat = triplet
+
+# NovaCustom NS5x (HwId)
+[bab4f96c-34e4-5b92-a785-4e4489b1c395]
+Plugin = flashrom
+
+# NovaCustom NS5x (Dasharo GUID)
+[43455705-4c7d-5440-b285-8362b67a5743]
 Branch = dasharo
 VersionFormat = triplet
