@@ -83,7 +83,8 @@ jobs:
             - "*.snap"
 
   publish-docs:
-    machine: true
+    machine:
+      image: circleci/classic:latest
     steps:
       - attach_workspace:
           at: .
