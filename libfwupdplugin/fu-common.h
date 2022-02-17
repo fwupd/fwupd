@@ -410,6 +410,8 @@ fu_common_strnsplit_full(const gchar *str,
 gchar *
 fu_common_strsafe(const gchar *str, gsize maxsz);
 gchar *
+fu_common_instance_id_strsafe(const gchar *str);
+gchar *
 fu_common_strjoin_array(const gchar *separator, GPtrArray *array);
 gboolean
 fu_common_kernel_locked_down(void);

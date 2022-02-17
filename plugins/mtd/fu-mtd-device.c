@@ -46,11 +46,11 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	/* get name */
 	name = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "name", NULL);
 	if (name != NULL) {
-		g_autofree gchar *devid = NULL;
-		g_autofree gchar *name_safe = g_strdup(name);
-		g_strdelimit(name_safe, " /\\\"", '-');
-		devid = g_strdup_printf("MTD\\NAME_%s", name_safe);
-		fu_device_add_instance_id(FU_DEVICE(self), devid);
+		g_autofree gchar *name_safe = fu_common_instance_id_strsafe(name);
+		if (name_safe != NULL) {
+			g_autofree gchar *devid = g_strdup_printf("MTD\\NAME_%s", name_safe);
+			fu_device_add_instance_id(FU_DEVICE(self), devid);
+		}
 		fu_device_set_name(FU_DEVICE(self), name);
 	}
 
