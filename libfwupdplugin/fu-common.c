@@ -4191,3 +4191,65 @@ fu_common_reset_firmware_search_path(GError **error)
 
 	return fu_common_set_firmware_search_path(contents, error);
 }
+
+static gboolean
+fu_common_strsafe_instance_id_is_valid_char(gchar c)
+{
+	if (c == ' ')
+		return FALSE;
+	if (c == '_')
+		return FALSE;
+	if (c == '&')
+		return FALSE;
+	if (c == '/')
+		return FALSE;
+	if (c == '\\')
+		return FALSE;
+	return g_ascii_isprint(c);
+}
+
+/**
+ * fu_common_instance_id_strsafe:
+ * @str: (nullable): part of the string to sanitize
+ *
+ * Sanitize the string used as part of the InstanceID.
+ *
+ * Returns: a string, or %NULL if invalid
+ *
+ * Since: 1.7.6
+ **/
+gchar *
+fu_common_instance_id_strsafe(const gchar *str)
+{
+	g_autoptr(GString) tmp = g_string_new(NULL);
+	gboolean has_content = FALSE;
+
+	/* sanity check */
+	if (str == NULL)
+		return NULL;
+
+	/* use - to replace problematic chars -- but only once per section */
+	for (guint i = 0; str[i] != '\0'; i++) {
+		gchar c = str[i];
+		if (!fu_common_strsafe_instance_id_is_valid_char(c)) {
+			if (has_content) {
+				g_string_append_c(tmp, '-');
+				has_content = FALSE;
+			}
+		} else {
+			g_string_append_c(tmp, c);
+			has_content = TRUE;
+		}
+	}
+
+	/* remove any trailing replacements */
+	if (tmp->len > 0 && tmp->str[tmp->len - 1] == '-')
+		g_string_truncate(tmp, tmp->len - 1);
+
+	/* nothing left! */
+	if (tmp->len == 0)
+		return NULL;
+
+	/* success */
+	return g_string_free(g_steal_pointer(&tmp), FALSE);
+}

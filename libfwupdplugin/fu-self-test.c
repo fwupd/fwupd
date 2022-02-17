@@ -574,6 +574,8 @@ fu_common_strsafe_func(void)
 		    {"dave\x03\x04XXX", "dave..X"},
 		    {"\x03\x03", NULL},
 		    {NULL, NULL}};
+	g_autofree gchar *id_part = fu_common_instance_id_strsafe("_ _LEN&VO&\\&");
+	g_assert_cmpstr(id_part, ==, "LEN-VO");
 	for (guint i = 0; strs[i].in != NULL; i++) {
 		g_autofree gchar *tmp = fu_common_strsafe(strs[i].in, 7);
 		g_assert_cmpstr(tmp, ==, strs[i].op);

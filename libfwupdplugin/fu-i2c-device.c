@@ -129,11 +129,11 @@ fu_i2c_device_probe(FuDevice *device, GError **error)
 	/* i2c devices all expose a name */
 	tmp = g_udev_device_get_sysfs_attr(udev_device, "name");
 	if (tmp != NULL) {
-		g_autofree gchar *devid = NULL;
-		g_autofree gchar *name_safe = g_strdup(tmp);
-		g_strdelimit(name_safe, " /\\\"", '-');
-		devid = g_strdup_printf("I2C\\NAME_%s", name_safe);
-		fu_device_add_instance_id(FU_DEVICE(self), devid);
+		g_autofree gchar *name_safe = fu_common_instance_id_strsafe(tmp);
+		if (name_safe != NULL) {
+			g_autofree gchar *devid = g_strdup_printf("I2C\\NAME_%s", name_safe);
+			fu_device_add_instance_id(FU_DEVICE(self), devid);
+		}
 	}
 
 	/* get bus number out of sysfs path */
