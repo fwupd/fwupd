@@ -998,6 +998,7 @@ LIBFWUPDPLUGIN_1.7.4 {
 
 LIBFWUPDPLUGIN_1.7.6 {
   global:
+    fu_common_instance_id_strsafe;
     fu_common_version_ensure_semver_full;
   local: *;
 } LIBFWUPDPLUGIN_1.7.4;

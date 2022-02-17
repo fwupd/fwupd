@@ -300,15 +300,15 @@ fu_udev_device_probe_serio(FuUdevDevice *self, GError **error)
 	/* firmware ID */
 	tmp = g_udev_device_get_property(priv->udev_device, "SERIO_FIRMWARE_ID");
 	if (tmp != NULL) {
-		g_autofree gchar *devid = NULL;
 		g_autofree gchar *id_safe = NULL;
 		/* this prefix is not useful */
 		if (g_str_has_prefix(tmp, "PNP: "))
 			tmp += 5;
-		id_safe = g_utf8_strup(tmp, -1);
-		g_strdelimit(id_safe, " /\\\"", '-');
-		devid = g_strdup_printf("SERIO\\FWID_%s", id_safe);
-		fu_device_add_instance_id(FU_DEVICE(self), devid);
+		id_safe = fu_common_instance_id_strsafe(tmp);
+		if (id_safe != NULL) {
+			g_autofree gchar *devid = g_strdup_printf("SERIO\\FWID_%s", id_safe);
+			fu_device_add_instance_id(FU_DEVICE(self), devid);
+		}
 	}
 	return TRUE;
 }
