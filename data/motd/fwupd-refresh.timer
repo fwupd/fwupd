@@ -1,5 +1,6 @@
 [Unit]
 Description=Refresh fwupd metadata regularly
+ConditionVirtualization=!container
 
 [Timer]
 OnCalendar=*-*-* 6,18:00

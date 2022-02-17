@@ -3,6 +3,7 @@ Description=Firmware update daemon
 Documentation=https://fwupd.org/
 After=dbus.service
 Before=display-manager.service
+ConditionVirtualization=!container
 
 [Service]
 Type=dbus
