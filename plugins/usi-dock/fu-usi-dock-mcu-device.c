@@ -194,7 +194,6 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 	for (guint i = 0; components[i].name != NULL; i++) {
 		const guint8 *val = outbuf + components[i].offset;
 		g_autofree gchar *version = NULL;
-		g_autofree gchar *instance_id = NULL;
 		g_autoptr(FuDevice) child = NULL;
 
 		child = fu_usi_dock_child_new(fu_device_get_context(FU_DEVICE(self)));
@@ -361,11 +360,15 @@ fu_usi_dock_mcu_device_enumerate_children(FuUsiDockMcuDevice *self, GError **err
 		}
 
 		/* add virtual device */
-		instance_id = g_strdup_printf("USB\\VID_%04X&PID_%04X&CID_%s",
-					      fu_usb_device_get_vid(FU_USB_DEVICE(self)),
-					      fu_usb_device_get_pid(FU_USB_DEVICE(self)),
-					      components[i].name);
-		fu_device_add_instance_id(child, instance_id);
+		fu_device_add_instance_u16(child,
+					   "VID",
+					   fu_usb_device_get_vid(FU_USB_DEVICE(self)));
+		fu_device_add_instance_u16(child,
+					   "PID",
+					   fu_usb_device_get_pid(FU_USB_DEVICE(self)));
+		fu_device_add_instance_str(child, "CID", components[i].name);
+		if (!fu_device_build_instance_id(child, error, "USB", "VID", "PID", "CID", NULL))
+			return FALSE;
 		if (fu_device_get_name(child) == NULL)
 			fu_device_set_name(child, components[i].name);
 		fu_device_set_logical_id(child, components[i].name);

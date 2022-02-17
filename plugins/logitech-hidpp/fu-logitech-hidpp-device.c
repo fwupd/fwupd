@@ -487,7 +487,6 @@ fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidPpDevice *self, GError **er
 {
 	FuLogitechHidPpDevicePrivate *priv = GET_PRIVATE(self);
 	guint8 idx;
-	g_autofree gchar *devid = NULL;
 	g_autoptr(FuLogitechHidPpHidppMsg) msg = fu_logitech_hidpp_msg_new();
 	g_autoptr(GString) str = g_string_new(NULL);
 
@@ -512,11 +511,9 @@ fu_logitech_hidpp_device_fetch_model_id(FuLogitechHidPpDevice *self, GError **er
 	fu_logitech_hidpp_device_set_model_id(self, str->str);
 
 	/* add one more instance ID */
-	devid = g_strdup_printf("HIDRAW\\VEN_%04X&MOD_%s",
-				(guint)FU_UNIFYING_DEVICE_VID,
-				priv->model_id);
-	fu_device_add_instance_id(FU_DEVICE(self), devid);
-	return TRUE;
+	fu_device_add_instance_u16(FU_DEVICE(self), "VEN", FU_UNIFYING_DEVICE_VID);
+	fu_device_add_instance_str(FU_DEVICE(self), "MOD", priv->model_id);
+	return fu_device_build_instance_id(FU_DEVICE(self), error, "HIDRAW", "VEN", "MOD", NULL);
 }
 
 static gboolean

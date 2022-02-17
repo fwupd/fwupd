@@ -41,12 +41,10 @@ fu_cfu_module_get_bank(FuCfuModule *self)
 gboolean
 fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize offset, GError **error)
 {
-	FuDevice *parent = fu_device_get_proxy(FU_DEVICE(self));
+	FuDevice *device = FU_DEVICE(self);
+	FuDevice *parent = fu_device_get_proxy(device);
 	guint32 version_raw = 0;
 	guint8 tmp = 0;
-	g_autofree gchar *instance_id0 = NULL;
-	g_autofree gchar *instance_id1 = NULL;
-	g_autofree gchar *instance_id2 = NULL;
 	g_autofree gchar *logical_id = NULL;
 	g_autofree gchar *version = NULL;
 
@@ -55,48 +53,47 @@ fu_cfu_module_setup(FuCfuModule *self, const guint8 *buf, gsize bufsz, gsize off
 		return FALSE;
 
 	/* these GUIDs may cause the name or version-format to be overwritten */
-	instance_id0 = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X",
-				       fu_udev_device_get_vendor(FU_UDEV_DEVICE(parent)),
-				       fu_udev_device_get_model(FU_UDEV_DEVICE(parent)));
-	fu_device_add_instance_id(FU_DEVICE(self), instance_id0);
-	instance_id1 = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&CID_%02X",
-				       fu_udev_device_get_vendor(FU_UDEV_DEVICE(parent)),
-				       fu_udev_device_get_model(FU_UDEV_DEVICE(parent)),
-				       self->component_id);
-	fu_device_add_instance_id(FU_DEVICE(self), instance_id1);
+	fu_device_add_instance_u8(device, "CID", self->component_id);
+	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "CID", NULL))
+		return FALSE;
 
 	/* bank */
 	if (!fu_common_read_uint8_safe(buf, bufsz, offset + 0x4, &tmp, error))
 		return FALSE;
 	self->bank = tmp & 0b11;
-	instance_id2 = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&CID_%02X&BANK_%01X",
-				       fu_udev_device_get_vendor(FU_UDEV_DEVICE(parent)),
-				       fu_udev_device_get_model(FU_UDEV_DEVICE(parent)),
-				       self->component_id,
-				       self->bank);
-	fu_device_add_instance_id(FU_DEVICE(self), instance_id2);
+	fu_device_add_instance_u4(device, "BANK", self->bank);
+	if (!fu_device_build_instance_id(device,
+					 error,
+					 "HIDRAW",
+					 "VEN",
+					 "DEV",
+					 "CID",
+					 "BANK",
+					 NULL))
+		return FALSE;
 
 	/* set name, if not already set using a quirk */
-	if (fu_device_get_name(FU_DEVICE(self)) == NULL) {
+	if (fu_device_get_name(device) == NULL) {
 		g_autofree gchar *name = NULL;
 		name = g_strdup_printf("%s (0x%02X:0x%02x)",
 				       fu_device_get_name(parent),
 				       self->component_id,
 				       self->bank);
-		fu_device_set_name(FU_DEVICE(self), name);
+		fu_device_set_name(device, name);
 	}
 
 	/* version */
 	if (!fu_common_read_uint32_safe(buf, bufsz, offset, &version_raw, G_LITTLE_ENDIAN, error))
 		return FALSE;
-	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
-	version = fu_common_version_from_uint32(version_raw,
-						fu_device_get_version_format(FU_DEVICE(self)));
-	fu_device_set_version(FU_DEVICE(self), version);
+	fu_device_set_version_raw(device, version_raw);
+	version = fu_common_version_from_uint32(version_raw, fu_device_get_version_format(device));
+	fu_device_set_version(device, version);
 
 	/* logical ID */
 	logical_id = g_strdup_printf("CID:0x%02x,BANK:0x%02x", self->component_id, self->bank);
-	fu_device_set_logical_id(FU_DEVICE(self), logical_id);
+	fu_device_set_logical_id(device, logical_id);
 
 	/* success */
 	return TRUE;

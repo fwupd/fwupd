@@ -97,7 +97,6 @@ fu_uefi_dbx_prepare_firmware(FuDevice *device, GBytes *fw, FwupdInstallFlags fla
 static gboolean
 fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 {
-	g_autofree gchar *arch_up = NULL;
 	g_autoptr(FuFirmware) kek = fu_efi_signature_list_new();
 	g_autoptr(GBytes) kek_blob = NULL;
 	g_autoptr(GPtrArray) sigs = NULL;
@@ -108,23 +107,19 @@ fu_uefi_dbx_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	if (!fu_firmware_parse(kek, kek_blob, FWUPD_INSTALL_FLAG_NO_SEARCH, error))
 		return FALSE;
-	arch_up = g_utf8_strup(EFI_MACHINE_TYPE_NAME, -1);
+	fu_device_add_instance_strup(device, "ARCH", EFI_MACHINE_TYPE_NAME);
+
 	sigs = fu_firmware_get_images(kek);
 	for (guint j = 0; j < sigs->len; j++) {
 		FuEfiSignature *sig = g_ptr_array_index(sigs, j);
 		g_autofree gchar *checksum = NULL;
-		g_autofree gchar *checksum_up = NULL;
-		g_autofree gchar *devid1 = NULL;
-		g_autofree gchar *devid2 = NULL;
 
 		checksum = fu_firmware_get_checksum(FU_FIRMWARE(sig), G_CHECKSUM_SHA256, error);
 		if (checksum == NULL)
 			return FALSE;
-		checksum_up = g_utf8_strup(checksum, -1);
-		devid1 = g_strdup_printf("UEFI\\CRT_%s", checksum_up);
-		fu_device_add_instance_id(device, devid1);
-		devid2 = g_strdup_printf("UEFI\\CRT_%s&ARCH_%s", checksum_up, arch_up);
-		fu_device_add_instance_id(device, devid2);
+		fu_device_add_instance_strup(device, "CRT", checksum);
+		fu_device_build_instance_id(device, NULL, "UEFI", "CRT", NULL);
+		fu_device_build_instance_id(device, NULL, "UEFI", "CRT", "ARCH", NULL);
 	}
 	return fu_uefi_dbx_device_set_version_number(device, error);
 }

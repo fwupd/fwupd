@@ -174,7 +174,6 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 	gsize sz = 0;
 	guint16 value = 0x29;
 	guint8 data[0x0c] = {0x0};
-	g_autofree gchar *devid = NULL;
 
 	/* longer descriptor for SuperSpeed */
 	if (fu_usb_device_get_spec(self) >= 0x0300)
@@ -200,20 +199,12 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 
 	/* see http://www.usblyzer.com/usb-hub-class-decoder.htm */
 	if (sz == 0x09) {
-		devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&HUB_%02X",
-					g_usb_device_get_vid(priv->usb_device),
-					g_usb_device_get_pid(priv->usb_device),
-					data[7]);
-		fu_device_add_instance_id(FU_DEVICE(self), devid);
+		fu_device_add_instance_u8(FU_DEVICE(self), "HUB", data[7]);
 	} else if (sz == 0x0c) {
-		devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&HUB_%02X%02X",
-					g_usb_device_get_vid(priv->usb_device),
-					g_usb_device_get_pid(priv->usb_device),
-					data[11],
-					data[10]);
-		fu_device_add_instance_id(FU_DEVICE(self), devid);
+		g_autofree gchar *hub = g_strdup_printf("%02X%02X", data[11], data[10]);
+		fu_device_add_instance_str(FU_DEVICE(self), "HUB", hub);
 	}
-	return TRUE;
+	return fu_device_build_instance_id(FU_DEVICE(self), error, "VID", "PID", "HUB", NULL);
 }
 #endif
 
@@ -395,9 +386,6 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	FuUsbDevice *self = FU_USB_DEVICE(device);
 	FuUsbDevicePrivate *priv = GET_PRIVATE(self);
 	guint16 release;
-	g_autofree gchar *devid0 = NULL;
-	g_autofree gchar *devid1 = NULL;
-	g_autofree gchar *devid2 = NULL;
 	g_autofree gchar *platform_id = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(GPtrArray) intfs = NULL;
@@ -417,17 +405,12 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* add GUIDs in order of priority */
-	devid2 = g_strdup_printf("USB\\VID_%04X&PID_%04X&REV_%04X",
-				 g_usb_device_get_vid(priv->usb_device),
-				 g_usb_device_get_pid(priv->usb_device),
-				 release);
-	fu_device_add_instance_id(device, devid2);
-	devid1 = g_strdup_printf("USB\\VID_%04X&PID_%04X",
-				 g_usb_device_get_vid(priv->usb_device),
-				 g_usb_device_get_pid(priv->usb_device));
-	fu_device_add_instance_id(device, devid1);
-	devid0 = g_strdup_printf("USB\\VID_%04X", g_usb_device_get_vid(priv->usb_device));
-	fu_device_add_instance_id_full(device, devid0, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	fu_device_add_instance_u16(device, "VID", g_usb_device_get_vid(priv->usb_device));
+	fu_device_add_instance_u16(device, "PID", g_usb_device_get_pid(priv->usb_device));
+	fu_device_add_instance_u16(device, "REV", release);
+	fu_device_build_instance_id_quirk(device, NULL, "USB", "VID", NULL);
+	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", NULL);
+	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "REV", NULL);
 
 	/* add the interface GUIDs */
 	intfs = g_usb_device_get_interfaces(priv->usb_device, error);
@@ -435,20 +418,18 @@ fu_usb_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	for (guint i = 0; i < intfs->len; i++) {
 		GUsbInterface *intf = g_ptr_array_index(intfs, i);
-		g_autofree gchar *intid1 = NULL;
-		g_autofree gchar *intid2 = NULL;
-		g_autofree gchar *intid3 = NULL;
-		intid1 = g_strdup_printf("USB\\CLASS_%02X&SUBCLASS_%02X&PROT_%02X",
-					 g_usb_interface_get_class(intf),
-					 g_usb_interface_get_subclass(intf),
-					 g_usb_interface_get_protocol(intf));
-		fu_device_add_instance_id_full(device, intid1, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
-		intid2 = g_strdup_printf("USB\\CLASS_%02X&SUBCLASS_%02X",
-					 g_usb_interface_get_class(intf),
-					 g_usb_interface_get_subclass(intf));
-		fu_device_add_instance_id_full(device, intid2, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
-		intid3 = g_strdup_printf("USB\\CLASS_%02X", g_usb_interface_get_class(intf));
-		fu_device_add_instance_id_full(device, intid3, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+		fu_device_add_instance_u8(device, "CLASS", g_usb_interface_get_class(intf));
+		fu_device_add_instance_u8(device, "SUBCLASS", g_usb_interface_get_subclass(intf));
+		fu_device_add_instance_u8(device, "PROT", g_usb_interface_get_protocol(intf));
+		fu_device_build_instance_id_quirk(device, NULL, "USB", "CLASS", NULL);
+		fu_device_build_instance_id_quirk(device, NULL, "USB", "CLASS", "SUBCLASS", NULL);
+		fu_device_build_instance_id_quirk(device,
+						  NULL,
+						  "USB",
+						  "CLASS",
+						  "SUBCLASS",
+						  "PROT",
+						  NULL);
 	}
 
 	/* add 2 levels of parent IDs */

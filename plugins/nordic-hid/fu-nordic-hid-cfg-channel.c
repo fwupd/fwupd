@@ -936,7 +936,6 @@ static gboolean
 fu_nordic_hid_cfg_channel_setup(FuDevice *device, GError **error)
 {
 	FuNordicHidCfgChannel *self = FU_NORDIC_HID_CFG_CHANNEL(device);
-	g_autofree gchar *target_id = NULL;
 
 	/* get the board name */
 	if (!fu_nordic_hid_cfg_channel_get_board_name(self, error))
@@ -965,15 +964,17 @@ fu_nordic_hid_cfg_channel_setup(FuDevice *device, GError **error)
 		fu_device_set_name(device, physical_id);
 	}
 
-	/* additional GUID based on VID/PID and target area to flash
-	 * needed to distinguish images aimed to different bootloaders */
-	target_id = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&BOARD_%s&BL_%s",
-				    fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)),
-				    fu_udev_device_get_model(FU_UDEV_DEVICE(device)),
-				    self->board_name,
-				    self->bl_name);
-	fu_device_add_guid(device, target_id);
-	return TRUE;
+	/* generate IDs */
+	fu_device_add_instance_strsafe(device, "BOARD", self->board_name);
+	fu_device_add_instance_strsafe(device, "BL", self->bl_name);
+	return fu_device_build_instance_id(device,
+					   error,
+					   "HIDRAW",
+					   "VEN",
+					   "DEV",
+					   "BOARD",
+					   "BL",
+					   NULL);
 }
 
 static void

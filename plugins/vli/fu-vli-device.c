@@ -480,15 +480,10 @@ fu_vli_device_set_kind(FuVliDevice *self, FuVliDeviceKind device_kind)
 		fu_device_set_firmware_size_max(FU_DEVICE(self), sz);
 
 	/* add extra DEV GUID too */
-	if (priv->kind != FU_VLI_DEVICE_KIND_UNKNOWN) {
-		GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
-		g_autofree gchar *devid1 = NULL;
-		devid1 = g_strdup_printf("USB\\VID_%04X&PID_%04X&DEV_%s",
-					 g_usb_device_get_vid(usb_device),
-					 g_usb_device_get_pid(usb_device),
-					 fu_vli_common_device_kind_to_string(priv->kind));
-		fu_device_add_instance_id(FU_DEVICE(self), devid1);
-	}
+	fu_device_add_instance_str(FU_DEVICE(self),
+				   "DEV",
+				   fu_vli_common_device_kind_to_string(priv->kind));
+	fu_device_build_instance_id(FU_DEVICE(self), NULL, "USB", "VID", "PID", "DEV", NULL);
 }
 
 void
@@ -597,14 +592,11 @@ fu_vli_device_setup(FuDevice *device, GError **error)
 
 	/* get the flash chip attached */
 	if (priv->spi_auto_detect) {
-		GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(self));
 		if (!fu_vli_device_spi_read_flash_id(self, error)) {
 			g_prefix_error(error, "failed to read SPI chip ID: ");
 			return FALSE;
 		}
 		if (priv->flash_id != 0x0) {
-			g_autofree gchar *devid1 = NULL;
-			g_autofree gchar *devid2 = NULL;
 			g_autofree gchar *flash_id = fu_vli_device_get_flash_id_str(self);
 
 			/* use the correct flash device */
@@ -613,17 +605,23 @@ fu_vli_device_setup(FuDevice *device, GError **error)
 				return FALSE;
 
 			/* add extra instance IDs to include the SPI variant */
-			devid2 = g_strdup_printf("USB\\VID_%04X&PID_%04X&SPI_%s&REV_%04X",
-						 g_usb_device_get_vid(usb_device),
-						 g_usb_device_get_pid(usb_device),
-						 flash_id,
-						 g_usb_device_get_release(usb_device));
-			fu_device_add_instance_id(device, devid2);
-			devid1 = g_strdup_printf("USB\\VID_%04X&PID_%04X&SPI_%s",
-						 g_usb_device_get_vid(usb_device),
-						 g_usb_device_get_pid(usb_device),
-						 flash_id);
-			fu_device_add_instance_id(device, devid1);
+			fu_device_add_instance_str(device, "SPI", flash_id);
+			if (!fu_device_build_instance_id(device,
+							 error,
+							 "USB",
+							 "VID",
+							 "PID",
+							 "SPI",
+							 NULL))
+				return FALSE;
+			fu_device_build_instance_id(device,
+						    NULL,
+						    "USB",
+						    "VID",
+						    "PID",
+						    "SPI",
+						    "REV",
+						    NULL);
 		}
 	}
 

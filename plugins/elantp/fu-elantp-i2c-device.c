@@ -150,9 +150,6 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 	guint16 vid;
 	guint8 buf[30] = {0x0};
 	guint8 ic_type;
-	g_autofree gchar *instance_id1 = NULL;
-	g_autofree gchar *instance_id2 = NULL;
-	g_autofree gchar *instance_id_ic_type = NULL;
 	g_autofree gchar *version_bl = NULL;
 	g_autofree gchar *version = NULL;
 
@@ -178,11 +175,10 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* add GUIDs in order of priority */
-	if (vid != 0x0 && pid != 0x0) {
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("HIDRAW\\VID_%04X&PID_%04X", vid, pid);
-		fu_device_add_instance_id(device, devid);
-	}
+	fu_device_add_instance_u16(device, "VID", vid);
+	fu_device_add_instance_u16(device, "PID", pid);
+	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VID", "PID", NULL))
+		return FALSE;
 
 	/* get pattern */
 	if (!fu_elantp_i2c_device_read_cmd(self, ETP_CMD_I2C_GET_HID_ID, buf, sizeof(buf), error)) {
@@ -241,11 +237,14 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 					G_LITTLE_ENDIAN,
 					error))
 		return FALSE;
+	fu_device_add_instance_u16(device, "MOD", self->module_id);
 
 	/* define the extra instance IDs */
-	instance_id1 =
-	    g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&MOD_%04X", vid, pid, self->module_id);
-	fu_device_add_instance_id(device, instance_id1);
+	fu_device_add_instance_u16(device, "VEN", vid);
+	fu_device_add_instance_u16(device, "DEV", pid);
+	fu_device_add_instance_u16(device, "MOD", self->module_id);
+	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "MOD", NULL))
+		return FALSE;
 
 	/* get OSM version */
 	if (!fu_elantp_i2c_device_read_cmd(self,
@@ -278,12 +277,11 @@ fu_elantp_i2c_device_setup(FuDevice *device, GError **error)
 	} else {
 		ic_type = (tmp >> 8) & 0xFF;
 	}
-	instance_id_ic_type = g_strdup_printf("ELANTP\\ICTYPE_%02X", ic_type);
-	fu_device_add_instance_id(device, instance_id_ic_type);
 
 	/* define the extra instance IDs (ic_type + module_id) */
-	instance_id2 = g_strdup_printf("ELANTP\\ICTYPE_%02X&MOD_%04X", ic_type, self->module_id);
-	fu_device_add_instance_id(device, instance_id2);
+	fu_device_add_instance_u8(device, "ICTYPE", ic_type);
+	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", NULL);
+	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", NULL);
 
 	/* no quirk entry */
 	if (self->ic_page_count == 0x0) {

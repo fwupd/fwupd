@@ -511,18 +511,13 @@ fu_vli_usbhub_rtd21xx_device_probe(FuDevice *device, GError **error)
 {
 	FuVliDeviceKind device_kind = FU_VLI_DEVICE_KIND_RTD21XX;
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
-	g_autofree gchar *instance_id = NULL;
 
 	fu_device_set_name(device, fu_vli_common_device_kind_to_string(device_kind));
 	fu_device_set_physical_id(device, fu_device_get_physical_id(FU_DEVICE(parent)));
 
 	/* add instance ID */
-	instance_id = g_strdup_printf("USB\\VID_%04X&PID_%04X&I2C_%s",
-				      fu_usb_device_get_vid(FU_USB_DEVICE(parent)),
-				      fu_usb_device_get_pid(FU_USB_DEVICE(parent)),
-				      fu_vli_common_device_kind_to_string(device_kind));
-	fu_device_add_instance_id(device, instance_id);
-	return TRUE;
+	fu_device_add_instance_str(device, "I2C", fu_vli_common_device_kind_to_string(device_kind));
+	return fu_device_build_instance_id(device, error, "USB", "VID", "PID", "I2C", NULL);
 }
 
 static void

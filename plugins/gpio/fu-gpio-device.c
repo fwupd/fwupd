@@ -68,10 +68,12 @@ fu_gpio_device_setup(FuDevice *device, GError **error)
 	/* label is optional, but name is always set */
 	if (info.label[0] != '\0') {
 		g_autofree gchar *logical_id = fu_common_strsafe(info.label, sizeof(info.label));
-		g_autofree gchar *instance_id = NULL;
 		fu_device_set_logical_id(device, logical_id);
-		instance_id = g_strdup_printf("GPIO\\ID_%s", logical_id);
-		fu_device_add_instance_id(device, instance_id);
+
+		/* add instance ID */
+		fu_device_add_instance_strsafe(device, "ID", logical_id);
+		if (!fu_device_build_instance_id(device, error, "GPIO", "ID", NULL))
+			return FALSE;
 	}
 
 	/* success */

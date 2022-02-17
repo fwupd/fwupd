@@ -35,7 +35,6 @@ fu_hailuck_kbd_device_detach(FuDevice *device, FuProgress *progress, GError **er
 static gboolean
 fu_hailuck_kbd_device_probe(FuDevice *device, GError **error)
 {
-	g_autofree gchar *devid = NULL;
 	g_autoptr(FuHailuckTpDevice) tp_device = fu_hailuck_tp_device_new(FU_DEVICE(device));
 
 	/* FuUsbDevice->probe */
@@ -43,10 +42,9 @@ fu_hailuck_kbd_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* add extra keyboard-specific GUID */
-	devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&MODE_KBD",
-				fu_usb_device_get_vid(FU_USB_DEVICE(device)),
-				fu_usb_device_get_pid(FU_USB_DEVICE(device)));
-	fu_device_add_instance_id(device, devid);
+	fu_device_add_instance_str(device, "MODE", "KBD");
+	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "MODE", NULL))
+		return FALSE;
 
 	/* add touchpad */
 	if (!fu_device_probe(FU_DEVICE(tp_device), error))

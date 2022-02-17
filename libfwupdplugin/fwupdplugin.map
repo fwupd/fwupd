@@ -1003,3 +1003,17 @@ LIBFWUPDPLUGIN_1.7.6 {
     fu_udev_device_get_parent_with_subsystem;
   local: *;
 } LIBFWUPDPLUGIN_1.7.4;
+
+LIBFWUPDPLUGIN_1.7.7 {
+  global:
+    fu_device_add_instance_str;
+    fu_device_add_instance_strsafe;
+    fu_device_add_instance_strup;
+    fu_device_add_instance_u16;
+    fu_device_add_instance_u32;
+    fu_device_add_instance_u4;
+    fu_device_add_instance_u8;
+    fu_device_build_instance_id;
+    fu_device_build_instance_id_quirk;
+  local: *;
+} LIBFWUPDPLUGIN_1.7.6;

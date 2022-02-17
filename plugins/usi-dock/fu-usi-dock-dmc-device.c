@@ -19,7 +19,7 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 {
 	FuDevice *parent = fu_device_get_parent(device);
 	if (parent != NULL) {
-		g_autofree gchar *instance_id = NULL;
+		g_autoptr(GError) error = NULL;
 
 		/* slightly odd: the MCU device uses the DMC version number */
 		g_debug("absorbing DMC version into MCU");
@@ -28,11 +28,9 @@ fu_usi_dock_dmc_device_parent_notify_cb(FuDevice *device, GParamSpec *pspec, gpo
 		fu_device_set_serial(parent, fu_device_get_serial(device));
 
 		/* allow matching firmware */
-		instance_id = g_strdup_printf("USB\\VID_%04X&PID_%04X&CID_%s",
-					      fu_usb_device_get_vid(FU_USB_DEVICE(parent)),
-					      fu_usb_device_get_pid(FU_USB_DEVICE(parent)),
-					      fu_device_get_name(device));
-		fu_device_add_instance_id(parent, instance_id);
+		fu_device_add_instance_str(parent, "CID", fu_device_get_name(device));
+		if (!fu_device_build_instance_id(parent, &error, "USB", "VID", "PID", "CID", NULL))
+			g_warning("failed to build ID: %s", error->message);
 
 		/* don't allow firmware updates on this */
 		fu_device_set_name(device, "Dock Management Controller Information");

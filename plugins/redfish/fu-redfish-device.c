@@ -66,7 +66,6 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 {
 	FuRedfishDevicePrivate *priv = GET_PRIVATE(self);
 	JsonObject *json_obj;
-	const gchar *subsystem = "PCI";
 	guint64 vendor_id = 0x0;
 	guint64 model_id = 0x0;
 	guint64 subsystem_vendor_id = 0x0;
@@ -133,25 +132,19 @@ fu_redfish_device_probe_related_pcie_item(FuRedfishDevice *self, const gchar *ur
 	}
 
 	/* add more instance IDs if possible */
-	if (vendor_id != 0x0 && model_id != 0x0) {
-		g_autofree gchar *devid1 = NULL;
-		devid1 = g_strdup_printf("%s\\VEN_%04X&DEV_%04X",
-					 subsystem,
-					 (guint)vendor_id,
-					 (guint)model_id);
-		fu_device_add_instance_id(FU_DEVICE(self), devid1);
-	}
-	if (vendor_id != 0x0 && model_id != 0x0 && subsystem_vendor_id != 0x0 &&
-	    subsystem_model_id != 0x0) {
-		g_autofree gchar *devid2 = NULL;
-		devid2 = g_strdup_printf("%s\\VEN_%04X&DEV_%04X&SUBSYS_%04X%04X",
-					 subsystem,
-					 (guint)vendor_id,
-					 (guint)model_id,
+	if (vendor_id != 0x0)
+		fu_device_add_instance_u16(FU_DEVICE(self), "VEN", vendor_id);
+	if (model_id != 0x0)
+		fu_device_add_instance_u16(FU_DEVICE(self), "DEV", model_id);
+	if (subsystem_vendor_id != 0x0 && subsystem_model_id != 0x0) {
+		g_autofree gchar *subsys = NULL;
+		subsys = g_strdup_printf("%04X%04X",
 					 (guint)subsystem_vendor_id,
 					 (guint)subsystem_model_id);
-		fu_device_add_instance_id(FU_DEVICE(self), devid2);
+		fu_device_add_instance_str(FU_DEVICE(self), "SUBSYS", subsys);
 	}
+	fu_device_build_instance_id(FU_DEVICE(self), NULL, "PCI", "VEN", "DEV", NULL);
+	fu_device_build_instance_id(FU_DEVICE(self), NULL, "PCI", "VEN", "DEV", "SUBSYS", NULL);
 
 	/* success */
 	return TRUE;
@@ -449,31 +442,31 @@ fu_redfish_device_probe(FuDevice *dev, GError **error)
 		}
 	}
 
+	/* add IDs */
+	fu_device_add_instance_strsafe(dev, "VENDOR", fu_device_get_vendor(dev));
+	fu_device_add_instance_str(dev, "SOFTWAREID", guid);
+	fu_device_add_instance_str(dev, "ID", fu_device_get_backend_id(dev));
+
 	/* some vendors use a GUID, others use an ID like BMC-AFBT-10 */
 	guid_lower = g_ascii_strdown(guid, -1);
 	if (fwupd_guid_is_valid(guid_lower)) {
 		fu_device_add_guid(dev, guid_lower);
-	} else if (fu_device_get_vendor(dev) != NULL) {
-		const gchar *instance_id_suffix = "";
-		g_autofree gchar *instance_id = NULL;
+	} else {
 		if (fu_device_has_private_flag(dev, FU_REDFISH_DEVICE_FLAG_UNSIGNED_BUILD))
-			instance_id_suffix = "&TYPE_UNSIGNED";
-		instance_id = g_strdup_printf("REDFISH\\VENDOR_%s&SOFTWAREID_%s%s",
-					      fu_device_get_vendor(dev),
-					      guid,
-					      instance_id_suffix);
-		g_strdelimit(instance_id, " ", '_');
-		fu_device_add_instance_id(dev, instance_id);
+			fu_device_add_instance_str(dev, "TYPE", "UNSIGNED");
+
+		fu_device_build_instance_id(dev,
+					    NULL,
+					    "REDFISH",
+					    "VENDOR",
+					    "SOFTWAREID",
+					    "TYPE",
+					    NULL);
+		fu_device_build_instance_id(dev, NULL, "REDFISH", "VENDOR", "SOFTWAREID", NULL);
 	}
 
 	/* used for quirking and parenting */
-	if (fu_device_get_vendor(dev) != NULL && fu_device_get_backend_id(dev) != NULL) {
-		g_autofree gchar *instance_id = NULL;
-		instance_id = g_strdup_printf("REDFISH\\VENDOR_%s&ID_%s",
-					      fu_device_get_vendor(dev),
-					      fu_device_get_backend_id(dev));
-		fu_device_add_instance_id(dev, instance_id);
-	}
+	fu_device_build_instance_id(dev, NULL, "REDFISH", "VENDOR", "ID", NULL);
 
 	if (json_object_has_member(member, "Name")) {
 		const gchar *tmp = json_object_get_string_member(member, "Name");

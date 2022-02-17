@@ -69,13 +69,9 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	FuContext *ctx = fu_device_get_context(device);
 	FuMtdDevice *self = FU_MTD_DEVICE(device);
 	const gchar *name;
-	const gchar *product;
 	const gchar *vendor;
 	guint64 flags = 0;
 	guint64 size = 0;
-	g_autofree gchar *name_safe = NULL;
-	g_autofree gchar *product_safe = NULL;
-	g_autofree gchar *vendor_safe = NULL;
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_mtd_device_parent_class)->probe(device, error))
@@ -87,44 +83,25 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 
 	/* get name */
 	name = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "name", NULL);
-	if (name != NULL) {
-		name_safe = fu_common_instance_id_strsafe(name);
-		if (name_safe != NULL) {
-			g_autofree gchar *devid = g_strdup_printf("MTD\\NAME_%s", name_safe);
-			fu_device_add_instance_id(FU_DEVICE(self), devid);
-		}
+	if (name != NULL)
 		fu_device_set_name(FU_DEVICE(self), name);
-	}
 
 	/* set vendor ID as the BIOS vendor */
 	vendor = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER);
 	if (vendor != NULL) {
 		g_autofree gchar *vendor_id = g_strdup_printf("DMI:%s", vendor);
 		fu_device_add_vendor_id(device, vendor_id);
-		vendor_safe = fu_common_instance_id_strsafe(vendor);
 	}
 
 	/* use vendor and product as an optional instance ID prefix */
-	product = fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME);
-	if (product != NULL)
-		product_safe = fu_common_instance_id_strsafe(product);
-	if (vendor_safe != NULL && product_safe != NULL && name_safe != NULL) {
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("MTD\\VENDOR_%s&PRODUCT_%s&NAME_%s",
-					vendor_safe,
-					product_safe,
-					name_safe);
-		fu_device_add_instance_id(device, devid);
-	}
-	if (vendor_safe != NULL && name_safe != NULL) {
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("MTD\\VENDOR_%s&NAME_%s", vendor_safe, name_safe);
-		fu_device_add_instance_id(device, devid);
-	}
-	if (name_safe != NULL) {
-		g_autofree gchar *devid = g_strdup_printf("MTD\\NAME_%s", name_safe);
-		fu_device_add_instance_id(FU_DEVICE(self), devid);
-	}
+	fu_device_add_instance_strsafe(device, "NAME", name);
+	fu_device_add_instance_strsafe(device, "VENDOR", vendor);
+	fu_device_add_instance_strsafe(device,
+				       "PRODUCT",
+				       fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME));
+	fu_device_build_instance_id(device, NULL, "MTD", "NAME", NULL);
+	fu_device_build_instance_id(device, NULL, "MTD", "VENDOR", "NAME", NULL);
+	fu_device_build_instance_id(device, NULL, "MTD", "VENDOR", "PRODUCT", "NAME", NULL);
 
 	/* get properties about the device */
 	if (!fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device), "size", &size, error))

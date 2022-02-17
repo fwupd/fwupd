@@ -20,20 +20,9 @@ G_DEFINE_TYPE(FuHailuckTpDevice, fu_hailuck_tp_device, FU_TYPE_DEVICE)
 static gboolean
 fu_hailuck_tp_device_probe(FuDevice *device, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
-	g_autofree gchar *devid1 = NULL;
-	g_autofree gchar *devid2 = NULL;
-
-	devid1 = g_strdup_printf("USB\\VID_%04X&PID_%04X",
-				 fu_usb_device_get_vid(FU_USB_DEVICE(parent)),
-				 fu_usb_device_get_pid(FU_USB_DEVICE(parent)));
-	fu_device_add_instance_id(device, devid1);
-	devid2 = g_strdup_printf("USB\\VID_%04X&PID_%04X&MODE_TP",
-				 fu_usb_device_get_vid(FU_USB_DEVICE(parent)),
-				 fu_usb_device_get_pid(FU_USB_DEVICE(parent)));
-	fu_device_add_instance_id(device, devid2);
-
-	return TRUE;
+	/* add extra touchpad-specific GUID */
+	fu_device_add_instance_str(device, "MODE", "TP");
+	return fu_device_build_instance_id(device, error, "USB", "VID", "PID", "MODE", NULL);
 }
 
 typedef struct {

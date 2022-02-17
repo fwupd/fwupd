@@ -41,8 +41,6 @@ fu_wacom_aes_add_recovery_hwid(FuDevice *device, GError **error)
 	FuWacomRawVerifyResponse rsp = {.report_id = FU_WACOM_RAW_BL_REPORT_ID_GET,
 					.size8 = 0x00,
 					.data = {0x00}};
-	g_autofree gchar *devid1 = NULL;
-	g_autofree gchar *devid2 = NULL;
 	guint16 pid;
 
 	if (!fu_wacom_device_set_feature(FU_WACOM_DEVICE(device),
@@ -77,12 +75,13 @@ fu_wacom_aes_add_recovery_hwid(FuDevice *device, GError **error)
 		return FALSE;
 	}
 
-	devid1 = g_strdup_printf("HIDRAW\\VEN_2D1F&DEV_%04X", pid);
-	devid2 = g_strdup_printf("HIDRAW\\VEN_056A&DEV_%04X", pid);
-	fu_device_add_instance_id(device, devid1);
-	fu_device_add_instance_id(device, devid2);
-
-	return TRUE;
+	/* add recovery IDs */
+	fu_device_add_instance_u16(device, "VEN", 0x2D1F);
+	fu_device_add_instance_u16(device, "DEV", pid);
+	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VID", "PID", NULL))
+		return FALSE;
+	fu_device_add_instance_u16(device, "VEN", 0x056A);
+	return fu_device_build_instance_id(device, error, "HIDRAW", "VID", "PID", NULL);
 }
 
 static gboolean

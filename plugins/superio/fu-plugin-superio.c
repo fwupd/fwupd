@@ -22,7 +22,6 @@ fu_plugin_superio_coldplug_chipset(FuPlugin *plugin, const gchar *guid, GError *
 	const gchar *dmi_vendor;
 	const gchar *chipset;
 	GType custom_gtype;
-	g_autofree gchar *devid = NULL;
 	g_autoptr(FuSuperioDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
@@ -51,8 +50,9 @@ fu_plugin_superio_coldplug_chipset(FuPlugin *plugin, const gchar *guid, GError *
 			   NULL);
 
 	/* add this so we can attach all the other quirks */
-	devid = g_strdup_printf("SUPERIO\\GUID_%s", guid);
-	fu_device_add_instance_id(FU_DEVICE(dev), devid);
+	fu_device_add_instance_str(FU_DEVICE(dev), "GUID", guid);
+	if (!fu_device_build_instance_id(FU_DEVICE(dev), error, "SUPERIO", "GUID", NULL))
+		return FALSE;
 
 	/* set ID and ports via quirks */
 	if (!fu_device_probe(FU_DEVICE(dev), error))

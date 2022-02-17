@@ -531,10 +531,11 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 	}
 	memcpy(&device_id_be, buf, 4);
 	priv->device_id = GINT32_FROM_BE(device_id_be);
+
 	if (buf[0] == ATMEL_MANUFACTURER_CODE1) {
-		chip_id_guid = g_strdup_printf("DFU_AVR\\CID_0x%08x", (guint)priv->device_id);
+		chip_id_guid = g_strdup_printf("0x%08x", (guint)priv->device_id);
 	} else if (buf[0] == ATMEL_MANUFACTURER_CODE2) {
-		chip_id_guid = g_strdup_printf("DFU_AVR\\CID_0x%06x", (guint)priv->device_id >> 8);
+		chip_id_guid = g_strdup_printf("0x%06x", (guint)priv->device_id >> 8);
 	} else {
 		g_set_error(error,
 			    FWUPD_ERROR,
@@ -549,7 +550,9 @@ fu_dfu_target_avr_setup(FuDfuTarget *target, GError **error)
 
 	/* set the alt-name using the chip ID via a quirk */
 	device = fu_dfu_target_get_device(target);
-	fu_device_add_instance_id(FU_DEVICE(device), chip_id_guid);
+	fu_device_add_instance_str(FU_DEVICE(device), "CID", chip_id_guid);
+	if (!fu_device_build_instance_id(FU_DEVICE(device), error, "DFU_AVR", "CID", NULL))
+		return FALSE;
 	chip_id = fu_dfu_device_get_chip_id(device);
 	if (chip_id == NULL) {
 		fu_dfu_device_remove_attribute(fu_dfu_target_get_device(target),

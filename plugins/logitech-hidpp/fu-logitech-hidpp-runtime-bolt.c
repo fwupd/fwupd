@@ -359,7 +359,6 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 		guint16 version_raw = 0;
 		g_autofree gchar *version = NULL;
 		g_autoptr(FuLogitechHidPpRadio) radio = NULL;
-		g_autofree gchar *instance_id = NULL;
 		g_autoptr(GString) radio_version = NULL;
 
 		msg->report_id = HIDPP_REPORT_ID_SHORT;
@@ -374,6 +373,7 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 			g_prefix_error(error, "failed to read device config: ");
 			return FALSE;
 		}
+
 		switch (msg->data[0]) {
 		case 0:
 			/* main application */
@@ -409,15 +409,26 @@ fu_logitech_hidpp_runtime_bolt_setup_internal(FuDevice *device, GError **error)
 			/* SoftDevice */
 			radio_version = g_string_new(NULL);
 			radio = fu_logitech_hidpp_radio_new(ctx, i);
+			fu_device_add_instance_u16(
+			    FU_DEVICE(radio),
+			    "VEN",
+			    fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)));
+			fu_device_add_instance_u16(
+			    FU_DEVICE(radio),
+			    "DEV",
+			    fu_udev_device_get_model(FU_UDEV_DEVICE(device)));
+			fu_device_add_instance_u8(FU_DEVICE(radio), "ENT", msg->data[0]);
 			fu_device_set_physical_id(FU_DEVICE(radio),
 						  fu_device_get_physical_id(device));
 			fu_device_set_logical_id(FU_DEVICE(radio), "Receiver_SoftDevice");
-
-			instance_id =
-			    g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&ENT_05",
-					    fu_udev_device_get_vendor(FU_UDEV_DEVICE(device)),
-					    fu_udev_device_get_model(FU_UDEV_DEVICE(device)));
-			fu_device_add_guid(FU_DEVICE(radio), instance_id);
+			if (!fu_device_build_instance_id(FU_DEVICE(radio),
+							 error,
+							 "HIDRAW",
+							 "VEN",
+							 "DEV",
+							 "ENT",
+							 NULL))
+				return FALSE;
 			if (!fu_common_read_uint16_safe(msg->data,
 							sizeof(msg->data),
 							0x03,

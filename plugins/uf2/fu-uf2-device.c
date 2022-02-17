@@ -62,10 +62,11 @@ fu_uf2_device_probe_current_fw(FuDevice *device, GBytes *fw, GError **error)
 
 	/* add instance ID for quirks */
 	if (fu_firmware_get_idx(firmware) != 0x0) {
-		g_autofree gchar *id0 = NULL;
-		id0 = g_strdup_printf("UF2\\FAMILY_%08X", (guint32)fu_firmware_get_idx(firmware));
-		fu_device_add_instance_id_full(device, id0, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+		fu_device_add_instance_u32(device,
+					   "FAMILY",
+					   (guint32)fu_firmware_get_idx(firmware));
 	}
+	fu_device_build_instance_id_quirk(device, NULL, "UF2", "FAMILY", NULL);
 
 	/* add device checksum */
 	fw_raw = fu_firmware_get_bytes(firmware, error);
@@ -289,11 +290,10 @@ fu_uf2_device_setup(FuDevice *device, GError **error)
 		if (g_str_has_prefix(lines[i], "Model: ")) {
 			fu_device_set_name(device, lines[i] + 7);
 		} else if (g_str_has_prefix(lines[i], "Board-ID: ")) {
-			g_autofree gchar *devid = NULL;
-			devid = g_strdup_printf("UF2\\BOARD_%s", lines[i] + 10);
-			fu_device_add_instance_id(device, devid);
+			fu_device_add_instance_strsafe(device, "BOARD", lines[i] + 10);
 		}
 	}
+	fu_device_build_instance_id(device, NULL, "UF2", "BOARD", NULL);
 
 	/* this might exist */
 	fn2 = fu_block_device_get_full_path(self, "CURRENT.UF2", error);
@@ -314,7 +314,6 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 {
 	GUdevDevice *udev_device = fu_udev_device_get_dev(FU_UDEV_DEVICE(device));
 	const gchar *tmp;
-	const gchar *uuid;
 	guint64 vid = 0;
 	guint64 pid = 0;
 
@@ -350,20 +349,23 @@ fu_uf2_device_probe(FuDevice *device, GError **error)
 	tmp = g_udev_device_get_property(udev_device, "ID_VENDOR_ID");
 	if (tmp != NULL)
 		vid = g_ascii_strtoull(tmp, NULL, 16);
+	if (vid != 0x0)
+		fu_device_add_instance_u16(device, "VID", vid);
 	tmp = g_udev_device_get_property(udev_device, "ID_MODEL_ID");
 	if (tmp != NULL)
 		pid = g_ascii_strtoull(tmp, NULL, 16);
-	uuid = g_udev_device_get_property(udev_device, "ID_FS_UUID");
-	if (uuid != NULL && vid != 0x0 && pid != 0x0) {
-		g_autofree gchar *devid =
-		    g_strdup_printf("USB\\VID_%04X&PID_%04X&UUID_%s", (guint)vid, (guint)pid, uuid);
-		fu_device_add_instance_id(device, devid);
-	}
-	if (vid != 0x0 && pid != 0x0) {
-		g_autofree gchar *devid =
-		    g_strdup_printf("USB\\VID_%04X&PID_%04X", (guint)vid, (guint)pid);
-		fu_device_add_instance_id(device, devid);
-	}
+	if (pid != 0x0)
+		fu_device_add_instance_u16(device, "PID", pid);
+	tmp = g_udev_device_get_property(udev_device, "ID_FS_UUID");
+	fu_device_add_instance_str(device, "UUID", tmp);
+	if (!fu_device_build_instance_id_quirk(device, error, "USB", "VID", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "UUID", NULL))
+		return FALSE;
+
+	/* vendor-id */
 	if (vid != 0x0) {
 		g_autofree gchar *vendor_id = g_strdup_printf("USB:0x%04X", (guint)vid);
 		fu_device_add_vendor_id(device, vendor_id);

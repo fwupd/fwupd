@@ -42,20 +42,13 @@ fu_hailuck_bl_device_attach(FuDevice *device, FuProgress *progress, GError **err
 static gboolean
 fu_hailuck_bl_device_probe(FuDevice *device, GError **error)
 {
-	g_autofree gchar *devid = NULL;
-
 	/* FuUsbDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_hailuck_bl_device_parent_class)->probe(device, error))
 		return FALSE;
 
-	/* add extra keyboard-specific GUID */
-	devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&MODE_KBD",
-				fu_usb_device_get_vid(FU_USB_DEVICE(device)),
-				fu_usb_device_get_pid(FU_USB_DEVICE(device)));
-	fu_device_add_instance_id(device, devid);
-
-	/* success */
-	return TRUE;
+	/* add instance ID */
+	fu_device_add_instance_str(device, "MODE", "KBD");
+	return fu_device_build_instance_id(device, error, "USB", "VID", "PID", "MODE", NULL);
 }
 
 static gboolean

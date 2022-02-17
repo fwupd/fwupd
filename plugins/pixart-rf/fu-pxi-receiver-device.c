@@ -725,7 +725,6 @@ fu_pxi_receiver_device_add_peripherals(FuPxiReceiverDevice *device, guint idx, G
 {
 #ifdef HAVE_HIDRAW_H
 	struct ota_fw_dev_model model = {0x0};
-	g_autofree gchar *instance_id = NULL;
 	g_autofree gchar *model_name = NULL;
 	g_autofree gchar *model_version = NULL;
 
@@ -734,21 +733,38 @@ fu_pxi_receiver_device_add_peripherals(FuPxiReceiverDevice *device, guint idx, G
 		return FALSE;
 	model_version = g_strndup((gchar *)model.version, 5);
 	model_name = g_strndup((gchar *)model.name, FU_PXI_DEVICE_MODEL_NAME_LEN);
-	instance_id = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&MODEL_%s",
-				      device->vendor,
-				      device->product,
-				      model_name);
+
 	if (model.type == OTA_WIRELESS_MODULE_TYPE_RECEIVER) {
 		fu_device_set_version(FU_DEVICE(device), model_version);
-		fu_device_add_instance_id(FU_DEVICE(device), instance_id);
+		fu_device_add_instance_u16(FU_DEVICE(device), "VEN", device->vendor);
+		fu_device_add_instance_u16(FU_DEVICE(device), "DEV", device->product);
+		fu_device_add_instance_str(FU_DEVICE(device), "MODEL", model_name);
+		if (!fu_device_build_instance_id(FU_DEVICE(device),
+						 error,
+						 "HIDRAW",
+						 "VEN",
+						 "DEV",
+						 "MODEL",
+						 NULL))
+			return FALSE;
 	} else {
-		g_autoptr(FuPxiWirelessDevice) wireless_device = fu_pxi_wireless_device_new(&model);
+		g_autoptr(FuPxiWirelessDevice) child = fu_pxi_wireless_device_new(&model);
 		g_autofree gchar *logical_id = g_strdup_printf("IDX:0x%02x", idx);
-		fu_device_add_instance_id(FU_DEVICE(wireless_device), instance_id);
-		fu_device_set_name(FU_DEVICE(wireless_device), model_name);
-		fu_device_set_version(FU_DEVICE(wireless_device), model_version);
-		fu_device_set_logical_id(FU_DEVICE(wireless_device), logical_id);
-		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(wireless_device));
+		fu_device_add_instance_u16(FU_DEVICE(child), "VEN", device->vendor);
+		fu_device_add_instance_u16(FU_DEVICE(child), "DEV", device->product);
+		fu_device_add_instance_str(FU_DEVICE(child), "MODEL", model_name);
+		if (!fu_device_build_instance_id(FU_DEVICE(child),
+						 error,
+						 "HIDRAW",
+						 "VEN",
+						 "DEV",
+						 "MODEL",
+						 NULL))
+			return FALSE;
+		fu_device_set_name(FU_DEVICE(child), model_name);
+		fu_device_set_version(FU_DEVICE(child), model_version);
+		fu_device_set_logical_id(FU_DEVICE(child), logical_id);
+		fu_device_add_child(FU_DEVICE(device), FU_DEVICE(child));
 	}
 	return TRUE;
 #else

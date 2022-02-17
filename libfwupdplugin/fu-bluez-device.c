@@ -171,24 +171,19 @@ fu_bluez_device_set_modalias(FuBluezDevice *self, const gchar *modalias)
 		fu_firmware_strparse_uint16_safe(modalias, modaliaslen, 21, &rev, NULL);
 	}
 
-	if (vid != 0x0 && pid != 0x0 && rev != 0x0) {
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("BLUETOOTH\\VID_%04X&PID_%04X&REV_%04X", vid, pid, rev);
-		fu_device_add_instance_id(FU_DEVICE(self), devid);
-	}
-	if (vid != 0x0 && pid != 0x0) {
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("BLUETOOTH\\VID_%04X&PID_%04X", vid, pid);
-		fu_device_add_instance_id(FU_DEVICE(self), devid);
-	}
+	/* add generated IDs */
+	if (vid != 0x0)
+		fu_device_add_instance_u16(FU_DEVICE(self), "VID", vid);
+	if (pid != 0x0)
+		fu_device_add_instance_u16(FU_DEVICE(self), "PID", pid);
+	fu_device_add_instance_u16(FU_DEVICE(self), "REV", rev);
+	fu_device_build_instance_id_quirk(FU_DEVICE(self), NULL, "BLUETOOTH", "VID", NULL);
+	fu_device_build_instance_id(FU_DEVICE(self), NULL, "BLUETOOTH", "VID", "PID", NULL);
+	fu_device_build_instance_id(FU_DEVICE(self), NULL, "BLUETOOTH", "VID", "PID", "REV", NULL);
+
+	/* set vendor ID */
 	if (vid != 0x0) {
-		g_autofree gchar *devid = NULL;
-		g_autofree gchar *vendor_id = NULL;
-		devid = g_strdup_printf("BLUETOOTH\\VID_%04X", vid);
-		fu_device_add_instance_id_full(FU_DEVICE(self),
-					       devid,
-					       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
-		vendor_id = g_strdup_printf("BLUETOOTH:%04X", vid);
+		g_autofree gchar *vendor_id = g_strdup_printf("BLUETOOTH:%04X", vid);
 		fu_device_add_vendor_id(FU_DEVICE(self), vendor_id);
 	}
 }

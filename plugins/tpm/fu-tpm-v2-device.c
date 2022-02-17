@@ -236,10 +236,6 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	guint32 version1 = 0;
 	guint32 version2 = 0;
 	guint64 version_raw;
-	g_autofree gchar *id1 = NULL;
-	g_autofree gchar *id2 = NULL;
-	g_autofree gchar *id3 = NULL;
-	g_autofree gchar *id4 = NULL;
 	g_autofree gchar *manufacturer = NULL;
 	g_autofree gchar *model1 = NULL;
 	g_autofree gchar *model2 = NULL;
@@ -302,14 +298,14 @@ fu_tpm_v2_device_setup(FuDevice *device, GError **error)
 	model = g_strjoin("", model1, model2, model3, model4, NULL);
 
 	/* add GUIDs to daemon */
-	id1 = g_strdup_printf("TPM\\VEN_%s&DEV_%04X", manufacturer, tpm_type);
-	fu_device_add_instance_id(device, id1);
-	id2 = g_strdup_printf("TPM\\VEN_%s&MOD_%s", manufacturer, model);
-	fu_device_add_instance_id(device, id2);
-	id3 = g_strdup_printf("TPM\\VEN_%s&DEV_%04X&VER_%s", manufacturer, tpm_type, family);
-	fu_device_add_instance_id(device, id3);
-	id4 = g_strdup_printf("TPM\\VEN_%s&MOD_%s&VER_%s", manufacturer, model, family);
-	fu_device_add_instance_id(device, id4);
+	fu_device_add_instance_str(device, "VEN", manufacturer);
+	fu_device_add_instance_u16(device, "DEV", tpm_type);
+	fu_device_add_instance_str(device, "MOD", model);
+	fu_device_add_instance_str(device, "VER", family);
+	fu_device_build_instance_id(device, NULL, "TPM", "VEN", "DEV", NULL);
+	fu_device_build_instance_id(device, NULL, "TPM", "VEN", "MOD", NULL);
+	fu_device_build_instance_id(device, NULL, "TPM", "VEN", "DEV", "VER", NULL);
+	fu_device_build_instance_id(device, NULL, "TPM", "VEN", "MOD", "VER", NULL);
 
 	/* enforce vendors can only ship updates for their own hardware */
 	vendor_id = g_strdup_printf("TPM:%s", manufacturer);
