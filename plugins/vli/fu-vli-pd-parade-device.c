@@ -665,23 +665,17 @@ fu_vli_pd_parade_device_dump_firmware(FuDevice *device, FuProgress *progress, GE
 static gboolean
 fu_vli_pd_parade_device_probe(FuDevice *device, GError **error)
 {
-	FuVliPdDevice *parent = FU_VLI_PD_DEVICE(fu_device_get_parent(device));
 	FuVliPdParadeDevice *self = FU_VLI_PD_PARADE_DEVICE(device);
-	g_autofree gchar *instance_id1 = NULL;
 
 	/* get version */
 	if (!fu_vli_pd_parade_device_read_fw_ver(self, error))
 		return FALSE;
 
 	/* use header to populate device info */
-	instance_id1 = g_strdup_printf("USB\\VID_%04X&PID_%04X&I2C_%s",
-				       fu_usb_device_get_vid(FU_USB_DEVICE(parent)),
-				       fu_usb_device_get_pid(FU_USB_DEVICE(parent)),
-				       fu_vli_common_device_kind_to_string(self->device_kind));
-	fu_device_add_instance_id(device, instance_id1);
-
-	/* success */
-	return TRUE;
+	fu_device_add_instance_str(device,
+				   "I2C",
+				   fu_vli_common_device_kind_to_string(self->device_kind));
+	return fu_device_build_instance_id(device, error, "USB", "VID", "PID", "I2C", NULL);
 }
 
 static void

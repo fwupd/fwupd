@@ -1335,7 +1335,6 @@ static gboolean
 fu_ccgx_hpi_device_ensure_silicon_id(FuCcgxHpiDevice *self, GError **error)
 {
 	guint8 buf[2] = {0x0};
-	g_autofree gchar *instance_id = NULL;
 
 	if (!fu_ccgx_hpi_device_reg_read(self, CY_PD_SILICON_ID, buf, sizeof(buf), error)) {
 		g_prefix_error(error, "get silicon id error: ");
@@ -1350,10 +1349,9 @@ fu_ccgx_hpi_device_ensure_silicon_id(FuCcgxHpiDevice *self, GError **error)
 		return FALSE;
 
 	/* add quirks */
-	instance_id = g_strdup_printf("CCGX\\SID_%04X", self->silicon_id);
-	fu_device_add_instance_id_full(FU_DEVICE(self),
-				       instance_id,
-				       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	if (self->silicon_id != 0x0)
+		fu_device_add_instance_u16(FU_DEVICE(self), "SID", self->silicon_id);
+	fu_device_build_instance_id_quirk(FU_DEVICE(self), NULL, "CCGX", "SID", NULL);
 
 	/* sanity check */
 	if (self->flash_row_size == 0x0 || self->flash_size == 0x0 ||
@@ -1361,8 +1359,7 @@ fu_ccgx_hpi_device_ensure_silicon_id(FuCcgxHpiDevice *self, GError **error)
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "invalid row size for Instance ID %s: 0x%x/0x%x",
-			    instance_id,
+			    "invalid row size for: 0x%x/0x%x",
 			    self->flash_row_size,
 			    self->flash_size);
 		return FALSE;
@@ -1378,36 +1375,6 @@ fu_ccgx_hpi_device_set_version_raw(FuCcgxHpiDevice *self, guint32 version_raw)
 	g_autofree gchar *version = fu_ccgx_version_to_string(version_raw);
 	fu_device_set_version(FU_DEVICE(self), version);
 	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
-}
-
-static void
-fu_ccgx_hpi_device_setup_with_fw_mode(FuCcgxHpiDevice *self)
-{
-	fu_device_set_logical_id(FU_DEVICE(self), fu_ccgx_fw_mode_to_string(self->fw_mode));
-}
-
-static void
-fu_ccgx_hpi_device_setup_with_app_type(FuCcgxHpiDevice *self)
-{
-	if (self->silicon_id != 0x0 && self->fw_app_type != 0x0) {
-		g_autofree gchar *instance_id1 = NULL;
-		g_autofree gchar *instance_id2 = NULL;
-
-		/* we get fw_image_type from the quirk */
-		instance_id1 = g_strdup_printf("USB\\VID_%04X&PID_%04X&SID_%04X&APP_%04X",
-					       fu_usb_device_get_vid(FU_USB_DEVICE(self)),
-					       fu_usb_device_get_pid(FU_USB_DEVICE(self)),
-					       self->silicon_id,
-					       self->fw_app_type);
-		fu_device_add_instance_id(FU_DEVICE(self), instance_id1);
-		instance_id2 = g_strdup_printf("USB\\VID_%04X&PID_%04X&SID_%04X&APP_%04X&MODE_%s",
-					       fu_usb_device_get_vid(FU_USB_DEVICE(self)),
-					       fu_usb_device_get_pid(FU_USB_DEVICE(self)),
-					       self->silicon_id,
-					       self->fw_app_type,
-					       fu_ccgx_fw_mode_to_string(self->fw_mode));
-		fu_device_add_instance_id(FU_DEVICE(self), instance_id2);
-	}
 }
 
 static gboolean
@@ -1442,7 +1409,8 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 	self->hpi_addrsz = mode & 0x80 ? 2 : 1;
 	self->num_ports = (mode >> 2) & 0x03 ? 2 : 1;
 	self->fw_mode = (FWMode)(mode & 0x03);
-	fu_ccgx_hpi_device_setup_with_fw_mode(self);
+	fu_device_set_logical_id(device, fu_ccgx_fw_mode_to_string(self->fw_mode));
+	fu_device_add_instance_str(device, "MODE", fu_device_get_logical_id(device));
 
 	/* get silicon ID */
 	if (!fu_ccgx_hpi_device_ensure_silicon_id(self, error))
@@ -1481,7 +1449,8 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 
 		/* add GUIDs that are specific to the firmware app type */
 		self->fw_app_type = versions[self->fw_mode] & 0xffff;
-		fu_ccgx_hpi_device_setup_with_app_type(self);
+		if (self->fw_app_type != 0x0)
+			fu_device_add_instance_u16(device, "APP", self->fw_app_type);
 
 		/* if running in bootloader force an upgrade to any version */
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_IS_BOOTLOADER)) {
@@ -1497,6 +1466,18 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 	} else {
 		fu_device_uninhibit(device, "device-in-boot-mode");
 	}
+
+	/* add extra instance IDs */
+	fu_device_build_instance_id_quirk(device, NULL, "USB", "VID", "PID", "SID", "APP", NULL);
+	fu_device_build_instance_id_quirk(device,
+					  NULL,
+					  "USB",
+					  "VID",
+					  "PID",
+					  "SID",
+					  "APP",
+					  "MODE",
+					  NULL);
 
 	/* if we are coming back from reset, wait for hardware to settle */
 	if (!fu_ccgx_hpi_device_get_event(self,

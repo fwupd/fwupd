@@ -699,3 +699,22 @@ gboolean
 fu_device_has_private_flag(FuDevice *self, guint64 flag);
 void
 fu_device_emit_request(FuDevice *self, FwupdRequest *request);
+
+void
+fu_device_add_instance_str(FuDevice *self, const gchar *key, const gchar *value);
+void
+fu_device_add_instance_strsafe(FuDevice *self, const gchar *key, const gchar *value);
+void
+fu_device_add_instance_strup(FuDevice *self, const gchar *key, const gchar *value);
+void
+fu_device_add_instance_u4(FuDevice *self, const gchar *key, guint8 value);
+void
+fu_device_add_instance_u8(FuDevice *self, const gchar *key, guint8 value);
+void
+fu_device_add_instance_u16(FuDevice *self, const gchar *key, guint16 value);
+void
+fu_device_add_instance_u32(FuDevice *self, const gchar *key, guint32 value);
+gboolean
+fu_device_build_instance_id(FuDevice *self, GError **error, const gchar *subsystem, ...);
+gboolean
+fu_device_build_instance_id_quirk(FuDevice *self, GError **error, const gchar *subsystem, ...);

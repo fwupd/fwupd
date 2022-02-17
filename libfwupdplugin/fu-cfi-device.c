@@ -184,31 +184,19 @@ fu_cfi_device_probe(FuDevice *device, GError **error)
 {
 	FuCfiDevice *self = FU_CFI_DEVICE(device);
 	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
+	g_autofree gchar *flash_id_jedec = NULL;
 
-	/* load the parameters from quirks */
-	if (priv->flash_id != NULL) {
-		g_autofree gchar *flash_id_jedec = NULL;
-		g_autofree gchar *instance_id0 = NULL;
-		g_autofree gchar *instance_id1 = NULL;
-
-		/* least specific so adding first */
-		flash_id_jedec = fu_cfi_device_get_flash_id_jedec(self);
-		if (flash_id_jedec != NULL) {
-			instance_id1 = g_strdup_printf("CFI\\FLASHID_%s", flash_id_jedec);
-			fu_device_add_instance_id_full(FU_DEVICE(self),
-						       instance_id1,
-						       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
-		}
-
-		/* this is most specific and can override keys of instance_id1 */
-		instance_id0 = g_strdup_printf("CFI\\FLASHID_%s", priv->flash_id);
-		fu_device_add_instance_id_full(FU_DEVICE(self),
-					       instance_id0,
-					       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	/* least specific so adding first */
+	flash_id_jedec = fu_cfi_device_get_flash_id_jedec(self);
+	if (flash_id_jedec != NULL) {
+		fu_device_add_instance_str(device, "FLASHID", flash_id_jedec);
+		if (!fu_device_build_instance_id_quirk(device, error, "CFI", "FLASHID", NULL))
+			return FALSE;
 	}
 
-	/* success */
-	return TRUE;
+	/* this is most specific and can override */
+	fu_device_add_instance_str(device, "FLASHID", priv->flash_id);
+	return fu_device_build_instance_id_quirk(device, error, "CFI", "FLASHID", NULL);
 }
 
 /**

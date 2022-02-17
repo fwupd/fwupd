@@ -412,8 +412,12 @@ fu_synaptics_cxaudio_device_setup(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	self->chip_id = self->chip_id_base + chip_id_offset;
-	chip_id = g_strdup_printf("SYNAPTICS_CXAUDIO\\ID_CX%u", self->chip_id);
-	fu_device_add_instance_id_full(device, chip_id, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+
+	/* add instance ID */
+	chip_id = g_strdup_printf("CX%u", self->chip_id);
+	fu_device_add_instance_str(device, "ID", chip_id);
+	if (!fu_device_build_instance_id_quirk(device, error, "SYNAPTICS_CXAUDIO", "ID", NULL))
+		return FALSE;
 
 	/* set summary */
 	summary = g_strdup_printf("CX%u USB audio device", self->chip_id);

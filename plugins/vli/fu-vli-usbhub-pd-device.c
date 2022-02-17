@@ -46,12 +46,9 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 	FuVliPdHdr hdr = {0x0};
 	FuVliUsbhubPdDevice *self = FU_VLI_USBHUB_PD_DEVICE(device);
 	FuVliUsbhubDevice *parent = FU_VLI_USBHUB_DEVICE(fu_device_get_parent(device));
+	const gchar *name;
 	guint32 fwver;
 	g_autofree gchar *fwver_str = NULL;
-	g_autofree gchar *instance_id0 = NULL;
-	g_autofree gchar *instance_id1 = NULL;
-	g_autofree gchar *instance_id2 = NULL;
-	g_autofree gchar *instance_id3 = NULL;
 
 	/* legacy location */
 	if (!fu_vli_device_spi_read_block(FU_VLI_DEVICE(parent),
@@ -95,30 +92,27 @@ fu_vli_usbhub_pd_device_setup(FuDevice *device, GError **error)
 			    fwver);
 		return FALSE;
 	}
-	fu_device_set_name(device, fu_vli_common_device_kind_to_string(self->device_kind));
+	name = fu_vli_common_device_kind_to_string(self->device_kind);
+	fu_device_set_name(device, name);
 
 	/* use header to populate device info */
 	fu_device_set_version_raw(device, fwver);
 	fwver_str = fu_common_version_from_uint32(fwver, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_version(device, fwver_str);
-	instance_id0 = g_strdup_printf("USB\\VID_%04X&PID_%04X&APP_%02X",
-				       GUINT16_FROM_LE(hdr.vid),
-				       GUINT16_FROM_LE(hdr.pid),
-				       fwver & 0xff);
-	fu_device_add_instance_id(device, instance_id0);
-	instance_id1 = g_strdup_printf("USB\\VID_%04X&PID_%04X&DEV_%s",
-				       GUINT16_FROM_LE(hdr.vid),
-				       GUINT16_FROM_LE(hdr.pid),
-				       fu_vli_common_device_kind_to_string(self->device_kind));
-	fu_device_add_instance_id(device, instance_id1);
 
 	/* add standard GUIDs in order of priority */
-	instance_id2 = g_strdup_printf("USB\\VID_%04X&PID_%04X",
-				       GUINT16_FROM_LE(hdr.vid),
-				       GUINT16_FROM_LE(hdr.pid));
-	fu_device_add_instance_id(device, instance_id2);
-	instance_id3 = g_strdup_printf("USB\\VID_%04X", GUINT16_FROM_LE(hdr.vid));
-	fu_device_add_instance_id_full(device, instance_id3, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	fu_device_add_instance_u16(device, "VID", GUINT16_FROM_LE(hdr.vid));
+	fu_device_add_instance_u16(device, "PID", GUINT16_FROM_LE(hdr.pid));
+	fu_device_add_instance_u8(device, "APP", fwver & 0xff);
+	fu_device_add_instance_str(device, "DEV", name);
+	if (!fu_device_build_instance_id_quirk(device, error, "USB", "VID", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "DEV", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "APP", NULL))
+		return FALSE;
 
 	/* these have a backup section */
 	if (fu_vli_common_device_kind_get_offset(self->device_kind) == VLI_USBHUB_FLASHMAP_ADDR_PD)

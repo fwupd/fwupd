@@ -300,15 +300,12 @@ fu_udev_device_probe_serio(FuUdevDevice *self, GError **error)
 	/* firmware ID */
 	tmp = g_udev_device_get_property(priv->udev_device, "SERIO_FIRMWARE_ID");
 	if (tmp != NULL) {
-		g_autofree gchar *id_safe = NULL;
 		/* this prefix is not useful */
 		if (g_str_has_prefix(tmp, "PNP: "))
 			tmp += 5;
-		id_safe = fu_common_instance_id_strsafe(tmp);
-		if (id_safe != NULL) {
-			g_autofree gchar *devid = g_strdup_printf("SERIO\\FWID_%s", id_safe);
-			fu_device_add_instance_id(FU_DEVICE(self), devid);
-		}
+		fu_device_add_instance_strsafe(FU_DEVICE(self), "FWID", tmp);
+		if (!fu_device_build_instance_id(FU_DEVICE(self), error, "SERIO", "FWID", NULL))
+			return FALSE;
 	}
 	return TRUE;
 }
@@ -459,71 +456,37 @@ fu_udev_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* add GUIDs in order of priority */
-	if (priv->vendor != 0x0000 && priv->model != 0x0000 && priv->subsystem_vendor != 0x0000 &&
-	    priv->subsystem_model != 0x0000) {
-		g_autofree gchar *devid1 = NULL;
-		g_autofree gchar *devid2 = NULL;
-		devid1 = g_strdup_printf("%s\\VEN_%04X&DEV_%04X&SUBSYS_%04X%04X&REV_%02X",
-					 subsystem,
-					 priv->vendor,
-					 priv->model,
-					 priv->subsystem_vendor,
-					 priv->subsystem_model,
-					 priv->revision);
-		fu_device_add_instance_id(device, devid1);
-		devid2 = g_strdup_printf("%s\\VEN_%04X&DEV_%04X&SUBSYS_%04X%04X",
-					 subsystem,
-					 priv->vendor,
-					 priv->model,
-					 priv->subsystem_vendor,
-					 priv->subsystem_model);
-		fu_device_add_instance_id(device, devid2);
+	if (priv->vendor != 0x0000)
+		fu_device_add_instance_u16(device, "VEN", priv->vendor);
+	if (priv->model != 0x0000)
+		fu_device_add_instance_u16(device, "DEV", priv->model);
+	if (priv->subsystem_vendor != 0x0000 && priv->subsystem_model != 0x0000) {
+		g_autofree gchar *subsys =
+		    g_strdup_printf("%04X%04X", priv->subsystem_vendor, priv->subsystem_model);
+		fu_device_add_instance_str(device, "SUBSYS", subsys);
 	}
-	if (priv->vendor != 0x0000 && priv->model != 0x0000) {
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("%s\\VEN_%04X&DEV_%04X&REV_%02X",
-					subsystem,
-					priv->vendor,
-					priv->model,
-					priv->revision);
-		fu_device_add_instance_id(device, devid);
-	}
-	if (priv->vendor != 0x0000 && priv->model != 0x0000) {
-		g_autofree gchar *devid = NULL;
-		devid =
-		    g_strdup_printf("%s\\VEN_%04X&DEV_%04X", subsystem, priv->vendor, priv->model);
-		fu_device_add_instance_id(device, devid);
-	}
-	if (priv->vendor != 0x0000) {
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("%s\\VEN_%04X", subsystem, priv->vendor);
-		fu_device_add_instance_id_full(device, devid, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
-	}
+	fu_device_add_instance_u8(device, "REV", priv->revision);
+
+	fu_device_build_instance_id_quirk(device, NULL, subsystem, "VEN", NULL);
+	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", NULL);
+	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", "REV", NULL);
+	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", "SUBSYS", NULL);
+	fu_device_build_instance_id(device, NULL, subsystem, "VEN", "DEV", "SUBSYS", "REV", NULL);
 
 	/* add device class */
 	tmp = g_udev_device_get_sysfs_attr(priv->udev_device, "class");
-	if (tmp != NULL && g_str_has_prefix(tmp, "0x")) {
-		g_autofree gchar *class_id = g_utf8_strup(tmp + 2, -1);
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("%s\\VEN_%04X&CLASS_%s", subsystem, priv->vendor, class_id);
-		fu_device_add_instance_id_full(device, devid, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
-	}
+	if (tmp != NULL && g_str_has_prefix(tmp, "0x"))
+		tmp += 2;
+	fu_device_add_instance_strup(device, "CLASS", tmp);
+	fu_device_build_instance_id_quirk(device, NULL, subsystem, "VEN", "CLASS", NULL);
 
 	/* add devtype */
-	tmp = g_udev_device_get_devtype(priv->udev_device);
-	if (tmp != NULL) {
-		g_autofree gchar *devtype = g_utf8_strup(tmp, -1);
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("%s\\TYPE_%s", subsystem, devtype);
-		fu_device_add_instance_id_full(device, devid, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
-	}
+	fu_device_add_instance_strup(device, "TYPE", g_udev_device_get_devtype(priv->udev_device));
+	fu_device_build_instance_id_quirk(device, NULL, subsystem, "TYPE", NULL);
 
 	/* add the driver */
-	if (priv->driver != NULL) {
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("%s\\DRIVER_%s", subsystem, priv->driver);
-		fu_device_add_instance_id_full(device, devid, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
-	}
+	fu_device_add_instance_str(device, "DRIVER", priv->driver);
+	fu_device_build_instance_id_quirk(device, NULL, subsystem, "DRIVER", NULL);
 
 	/* add subsystem to match in plugins */
 	if (subsystem != NULL) {

@@ -164,9 +164,7 @@ static gboolean
 fu_fresco_pd_device_setup(FuDevice *device, GError **error)
 {
 	FuFrescoPdDevice *self = FU_FRESCO_PD_DEVICE(device);
-	FuUsbDevice *usb_device = FU_USB_DEVICE(device);
 	guint8 ver[4] = {0x0};
-	g_autofree gchar *instance_id = NULL;
 	g_autofree gchar *version = NULL;
 
 	/* FuUsbDevice->setup */
@@ -185,14 +183,10 @@ fu_fresco_pd_device_setup(FuDevice *device, GError **error)
 
 	/* get customer ID */
 	self->customer_id = ver[1];
-	instance_id = g_strdup_printf("USB\\VID_%04X&PID_%04X&CID_%02X",
-				      fu_usb_device_get_vid(usb_device),
-				      fu_usb_device_get_pid(usb_device),
-				      self->customer_id);
-	fu_device_add_instance_id(device, instance_id);
 
-	/* success */
-	return TRUE;
+	/* add extra instance ID */
+	fu_device_add_instance_u8(device, "CID", self->customer_id);
+	return fu_device_build_instance_id(device, error, "USB", "VID", "PID", "CID", NULL);
 }
 
 static FuFirmware *
