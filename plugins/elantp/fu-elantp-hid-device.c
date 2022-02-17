@@ -161,9 +161,6 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	guint16 tmp;
 	guint8 buf[2] = {0x0};
 	guint8 ic_type;
-	g_autofree gchar *instance_id1 = NULL;
-	g_autofree gchar *instance_id2 = NULL;
-	g_autofree gchar *instance_id_ic_type = NULL;
 	g_autofree gchar *version_bl = NULL;
 	g_autofree gchar *version = NULL;
 
@@ -212,11 +209,11 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	self->module_id = fu_common_read_uint16(buf, G_LITTLE_ENDIAN);
 
 	/* define the extra instance IDs */
-	instance_id1 = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&MOD_%04X",
-				       fu_udev_device_get_vendor(udev_device),
-				       fu_udev_device_get_model(udev_device),
-				       self->module_id);
-	fu_device_add_instance_id(device, instance_id1);
+	fu_device_add_instance_u16(device, "VEN", fu_udev_device_get_vendor(udev_device));
+	fu_device_add_instance_u16(device, "DEV", fu_udev_device_get_model(udev_device));
+	fu_device_add_instance_u16(device, "MOD", self->module_id);
+	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "MOD", NULL))
+		return FALSE;
 
 	/* get OSM version */
 	if (!fu_elantp_hid_device_read_cmd(self,
@@ -241,12 +238,11 @@ fu_elantp_hid_device_setup(FuDevice *device, GError **error)
 	} else {
 		ic_type = (tmp >> 8) & 0xFF;
 	}
-	instance_id_ic_type = g_strdup_printf("ELANTP\\ICTYPE_%02X", ic_type);
-	fu_device_add_instance_id(device, instance_id_ic_type);
 
 	/* define the extra instance IDs (ic_type + module_id) */
-	instance_id2 = g_strdup_printf("ELANTP\\ICTYPE_%02X&MOD_%04X", ic_type, self->module_id);
-	fu_device_add_instance_id(device, instance_id2);
+	fu_device_add_instance_u8(device, "ICTYPE", ic_type);
+	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", NULL);
+	fu_device_build_instance_id(device, NULL, "ELANTP", "ICTYPE", "MOD", NULL);
 
 	/* no quirk entry */
 	if (self->ic_page_count == 0x0) {

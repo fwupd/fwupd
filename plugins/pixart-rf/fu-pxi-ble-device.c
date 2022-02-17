@@ -812,35 +812,32 @@ static gboolean
 fu_pxi_ble_device_setup_guid(FuPxiBleDevice *self, GError **error)
 {
 #ifdef HAVE_HIDRAW_H
+	FuDevice *device = FU_DEVICE(self);
 	struct hidraw_devinfo hid_raw_info = {0x0};
-	g_autofree gchar *devid = NULL;
 	g_autoptr(GString) dev_name = NULL;
+	g_autoptr(GString) model_name = NULL;
 
 	/* extra GUID with device name */
 	if (!fu_pxi_ble_device_get_raw_info(self, &hid_raw_info, error))
 		return FALSE;
-	dev_name = g_string_new(fu_device_get_name(FU_DEVICE(self)));
+	dev_name = g_string_new(fu_device_get_name(device));
 	g_string_ascii_up(dev_name);
 	fu_common_string_replace(dev_name, " ", "_");
-	devid = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&NAME_%s",
-				(guint)hid_raw_info.vendor,
-				(guint)hid_raw_info.product,
-				dev_name->str);
-	fu_device_add_instance_id(FU_DEVICE(self), devid);
 
 	/* extra GUID with model name*/
-	if (self->model_name != NULL) {
-		g_autofree gchar *devid2 = NULL;
-		g_autoptr(GString) model_name = NULL;
-		model_name = g_string_new(self->model_name);
-		g_string_ascii_up(model_name);
-		fu_common_string_replace(model_name, " ", "_");
-		devid2 = g_strdup_printf("HIDRAW\\VEN_%04X&DEV_%04X&MODEL_%s",
-					 (guint)hid_raw_info.vendor,
-					 (guint)hid_raw_info.product,
-					 model_name->str);
-		fu_device_add_instance_id(FU_DEVICE(self), devid2);
-	}
+	model_name = g_string_new(self->model_name);
+	g_string_ascii_up(model_name);
+	fu_common_string_replace(model_name, " ", "_");
+
+	/* generate IDs */
+	fu_device_add_instance_u16(device, "VEN", hid_raw_info.vendor);
+	fu_device_add_instance_u16(device, "DEV", hid_raw_info.product);
+	fu_device_add_instance_str(device, "NAME", dev_name->str);
+	fu_device_add_instance_str(device, "MODEL", model_name->str);
+	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "NAME", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, error, "HIDRAW", "VEN", "DEV", "MODEL", NULL))
+		return FALSE;
 #endif
 	return TRUE;
 }

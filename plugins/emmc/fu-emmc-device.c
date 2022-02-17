@@ -139,9 +139,6 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 	guint64 manfid = 0;
 	const gchar *tmp;
 	g_autoptr(GUdevDevice) udev_parent = NULL;
-	g_autofree gchar *name_only = NULL;
-	g_autofree gchar *man_oem = NULL;
-	g_autofree gchar *man_oem_name = NULL;
 	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(GRegex) dev_regex = NULL;
 
@@ -206,23 +203,19 @@ fu_emmc_device_probe(FuDevice *device, GError **error)
 			    fu_device_get_name(device));
 		return FALSE;
 	}
+	fu_device_add_instance_strsafe(device, "NAME", tmp);
+	fu_device_build_instance_id(device, NULL, "EMMC", "NAME", NULL);
 	fu_device_set_name(device, tmp);
-	name_only = g_strdup_printf("EMMC\\NAME_%s", fu_device_get_name(device));
-	fu_device_add_instance_id(device, name_only);
 
 	/* manfid + oemid, manfid + oemid + name */
 	if (!fu_emmc_device_get_sysattr_guint64(udev_parent, "manfid", &manfid, error))
 		return FALSE;
 	if (!fu_emmc_device_get_sysattr_guint64(udev_parent, "oemid", &oemid, error))
 		return FALSE;
-	man_oem =
-	    g_strdup_printf("EMMC\\%04" G_GUINT64_FORMAT "&%04" G_GUINT64_FORMAT, manfid, oemid);
-	fu_device_add_instance_id(device, man_oem);
-	man_oem_name = g_strdup_printf("EMMC\\MAN_%04X&OEM_%04X&NAME_%s",
-				       (guint)manfid,
-				       (guint)oemid,
-				       fu_device_get_name(device));
-	fu_device_add_instance_id(device, man_oem_name);
+	fu_device_add_instance_u16(device, "MAN", manfid);
+	fu_device_add_instance_u16(device, "OEM", oemid);
+	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "OEM", NULL);
+	fu_device_build_instance_id(device, NULL, "EMMC", "MAN", "OEM", "NAME", NULL);
 
 	/* set the vendor */
 	tmp = g_udev_device_get_sysfs_attr(udev_parent, "manfid");

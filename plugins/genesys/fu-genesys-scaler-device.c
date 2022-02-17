@@ -1402,8 +1402,6 @@ fu_genesys_scaler_device_probe(FuDevice *device, GError **error)
 	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(device);
 	guint8 buf[7 + 1] = {0};
 	g_autofree gchar *guid = NULL;
-	g_autofree gchar *guid_upper = NULL;
-	g_autofree gchar *instance_id = NULL;
 	g_autofree gchar *version = NULL;
 
 	if (!fu_genesys_scaler_device_get_level(self, &self->level, error))
@@ -1425,9 +1423,12 @@ fu_genesys_scaler_device_probe(FuDevice *device, GError **error)
 	fu_device_set_version(device, version);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_logical_id(device, "scaler");
-	guid_upper = g_ascii_strup(guid, -1);
-	instance_id = g_strdup_printf("GENESYS_SCALER\\MSTAR_TSUM_G&PUBKEY_%s", guid_upper);
-	fu_device_add_instance_id(device, instance_id);
+
+	/* add instance ID */
+	fu_device_add_instance_str(device, "MSTAR", "TSUM_G");
+	fu_device_add_instance_strup(device, "PUBKEY", guid);
+	fu_device_build_instance_id(device, NULL, "GENESYS_SCALER", "MSTAR", "PUBKEY", NULL);
+
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 	self->vc.req_read = GENESYS_SCALER_MSTAR_READ;

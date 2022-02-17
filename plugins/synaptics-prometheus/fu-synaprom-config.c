@@ -73,11 +73,12 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 	FuSynapromCmdIotaFind cmd = {0x0};
 	FuSynapromIotaConfigVersion cfg;
 	FuSynapromReplyIotaFindHdr hdr;
+	g_autofree gchar *configid1_str = NULL;
+	g_autofree gchar *configid2_str = NULL;
 	g_autofree gchar *version = NULL;
 	g_autoptr(GByteArray) reply = NULL;
 	g_autoptr(GByteArray) request = NULL;
 	g_autoptr(FuProgress) progress = fu_progress_new(G_STRLOC);
-	g_autofree gchar *devid = NULL;
 
 	/* get IOTA */
 	cmd.itype = GUINT16_TO_LE((guint16)FU_SYNAPROM_IOTA_ITYPE_CONFIG_VERSION);
@@ -125,13 +126,15 @@ fu_synaprom_config_setup(FuDevice *device, GError **error)
 		self->configid2,
 		GUINT16_FROM_LE(cfg.version));
 
+	/* we should have made these a %08% uint32_t... */
+	configid1_str = g_strdup_printf("%u", self->configid1);
+	configid2_str = g_strdup_printf("%u", self->configid2);
+
 	/* append the configid to the generated GUID */
-	devid = g_strdup_printf("USB\\VID_%04X&PID_%04X&CFG1_%u&CFG2_%u",
-				fu_usb_device_get_vid(FU_USB_DEVICE(parent)),
-				fu_usb_device_get_pid(FU_USB_DEVICE(parent)),
-				self->configid1,
-				self->configid2);
-	fu_device_add_instance_id(FU_DEVICE(self), devid);
+	fu_device_add_instance_str(device, "CFG1", configid1_str);
+	fu_device_add_instance_str(device, "CFG2", configid2_str);
+	if (!fu_device_build_instance_id(device, error, "USB", "VID", "PID", "CFG1", "CFG2", NULL))
+		return FALSE;
 
 	/* no downgrades are allowed */
 	version = g_strdup_printf("%04u", GUINT16_FROM_LE(cfg.version));

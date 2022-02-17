@@ -383,22 +383,20 @@ fu_realtek_mst_device_probe(FuDevice *device, GError **error)
 {
 	FuRealtekMstDevice *self = FU_REALTEK_MST_DEVICE(device);
 	FuContext *context = fu_device_get_context(device);
-	const gchar *hardware_family = NULL;
 	const gchar *quirk_name = NULL;
-	g_autofree gchar *family_instance_id = NULL;
-	g_autofree gchar *instance_id = NULL;
 
 	/* set custom instance ID and load matching quirks */
-	instance_id =
-	    g_strdup_printf("REALTEK-MST\\NAME_%s",
-			    fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "name", NULL));
-	fu_device_add_instance_id(device, instance_id);
+	fu_device_add_instance_str(
+	    device,
+	    "NAME",
+	    fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "name", NULL));
+	if (!fu_device_build_instance_id(device, error, "REALTEK-MST", "NAME", NULL))
+		return FALSE;
 
-	hardware_family = fu_context_get_hwid_value(context, FU_HWIDS_KEY_FAMILY);
-	family_instance_id = g_strdup_printf("%s&FAMILY_%s", instance_id, hardware_family);
-	fu_device_add_instance_id_full(device,
-				       family_instance_id,
-				       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
+	fu_device_add_instance_str(device,
+				   "FAMILY",
+				   fu_context_get_hwid_value(context, FU_HWIDS_KEY_FAMILY));
+	fu_device_build_instance_id_quirk(device, NULL, "REALTEK-MST", "NAME", "FAMILY", NULL);
 
 	/* having loaded quirks, check this device is supported */
 	quirk_name = fu_device_get_name(device);

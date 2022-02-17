@@ -477,8 +477,6 @@ fu_intel_spi_device_set_quirk_kv(FuDevice *device,
 		return TRUE;
 	}
 	if (g_strcmp0(key, "IntelSpiKind") == 0) {
-		g_autofree gchar *instance_id = NULL;
-		g_autofree gchar *kind_up = NULL;
 
 		/* validate */
 		self->kind = fu_intel_spi_kind_from_string(value);
@@ -492,10 +490,8 @@ fu_intel_spi_device_set_quirk_kv(FuDevice *device,
 		}
 
 		/* get things like SPIBAR */
-		kind_up = g_ascii_strup(value, -1);
-		instance_id = g_strdup_printf("INTEL_SPI_CHIPSET\\ID_%s", kind_up);
-		fu_device_add_instance_id(device, instance_id);
-		return TRUE;
+		fu_device_add_instance_strup(device, "ID", value);
+		return fu_device_build_instance_id(device, error, "INTEL_SPI_CHIPSET", "ID", NULL);
 	}
 	if (g_strcmp0(key, "IntelSpiBarProxy") == 0) {
 		self->spibar_proxy = g_strdup(value);

@@ -121,9 +121,6 @@ fu_cpu_device_add_instance_ids(FuDevice *device, GError **error)
 	guint32 model_id_ext;
 	guint32 processor_id;
 	guint32 stepping_id;
-	g_autofree gchar *devid1 = NULL;
-	g_autofree gchar *devid2 = NULL;
-	g_autofree gchar *devid3 = NULL;
 
 	/* decode according to https://en.wikipedia.org/wiki/CPUID */
 	if (!fu_common_cpuid(0x1, &eax, NULL, NULL, NULL, error))
@@ -141,17 +138,16 @@ fu_cpu_device_add_instance_ids(FuDevice *device, GError **error)
 	if (family_id == 15)
 		family_id += family_id_ext;
 
-	devid1 = g_strdup_printf("CPUID\\PRO_%01X&FAM_%02X", processor_id, family_id);
-	fu_device_add_instance_id(device, devid1);
-	devid2 =
-	    g_strdup_printf("CPUID\\PRO_%01X&FAM_%02X&MOD_%02X", processor_id, family_id, model_id);
-	fu_device_add_instance_id(device, devid2);
-	devid3 = g_strdup_printf("CPUID\\PRO_%01X&FAM_%02X&MOD_%02X&STP_%01X",
-				 processor_id,
-				 family_id,
-				 model_id,
-				 stepping_id);
-	fu_device_add_instance_id(device, devid3);
+	/* add GUIDs */
+	fu_device_add_instance_u4(device, "PRO", processor_id);
+	fu_device_add_instance_u8(device, "FAM", family_id);
+	fu_device_add_instance_u8(device, "MOD", model_id);
+	fu_device_add_instance_u4(device, "STP", stepping_id);
+	fu_device_build_instance_id(device, NULL, "CPUID", "PRO", "FAM", NULL);
+	fu_device_build_instance_id(device, NULL, "CPUID", "PRO", "FAM", "MOD", NULL);
+	fu_device_build_instance_id(device, NULL, "CPUID", "PRO", "FAM", "MOD", "STP", NULL);
+
+	/* success */
 	return TRUE;
 }
 

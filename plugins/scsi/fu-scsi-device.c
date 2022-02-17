@@ -20,10 +20,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	const gchar *name;
 	const gchar *vendor;
 	const gchar *version;
-	g_autofree gchar *name_safe = NULL;
-	g_autofree gchar *subsystem = NULL;
-	g_autofree gchar *vendor_safe = NULL;
-	g_autofree gchar *version_safe = NULL;
+	g_autofree gchar *vendor_id = NULL;
 	g_autoptr(GPtrArray) block_devs = NULL;
 
 	/* ignore */
@@ -37,8 +34,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 
 	/* vendor */
 	vendor = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "vendor", NULL);
-	vendor_safe = fu_common_instance_id_strsafe(vendor);
-	if (vendor_safe == NULL || g_strcmp0(vendor_safe, "ATA") == 0) {
+	if (vendor == NULL || g_strcmp0(vendor, "ATA") == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -46,57 +42,27 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	fu_device_set_vendor(device, vendor);
+	vendor_id = g_strdup_printf("SCSI:%s", vendor);
+	fu_device_add_vendor_id(device, vendor_id);
 
 	/* name */
 	name = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "model", NULL);
-	name_safe = fu_common_instance_id_strsafe(name);
-	if (name_safe == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no assigned name");
-		return FALSE;
-	}
 	fu_device_set_name(device, name);
 
 	/* version */
 	version = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "rev", NULL);
-	version_safe = fu_common_instance_id_strsafe(version);
-	if (version_safe == NULL) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "no assigned version");
-		return FALSE;
-	}
 	fu_device_set_version(device, version);
 
 	/* add GUIDs */
-	subsystem = g_utf8_strup(fu_udev_device_get_subsystem(FU_UDEV_DEVICE(device)), -1);
-	if (subsystem != NULL && vendor_safe != NULL && name_safe != NULL && version_safe != NULL) {
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("%s\\VEN_%s&DEV_%s&REV_%s",
-					subsystem,
-					vendor_safe,
-					name_safe,
-					version_safe);
-		fu_device_add_instance_id(device, devid);
-	}
-	if (subsystem != NULL && vendor_safe != NULL && name_safe != NULL) {
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("%s\\VEN_%s&DEV_%s", subsystem, vendor_safe, name_safe);
-		fu_device_add_instance_id(device, devid);
-	}
-	if (subsystem != NULL && vendor_safe != NULL) {
-		g_autofree gchar *devid = NULL;
-		devid = g_strdup_printf("%s\\VEN_%s", subsystem, vendor_safe);
-		fu_device_add_instance_id_full(device, devid, FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
-	}
-	if (vendor_safe != NULL) {
-		g_autofree gchar *vendor_id = NULL;
-		vendor_id = g_strdup_printf("SCSI:%s", vendor_safe);
-		fu_device_add_vendor_id(device, vendor_id);
-	}
+	fu_device_add_instance_strsafe(device, "VEN", vendor);
+	fu_device_add_instance_strsafe(device, "DEV", name);
+	fu_device_add_instance_strsafe(device, "REV", version);
+	if (!fu_device_build_instance_id_quirk(device, NULL, "SCSI", "VEN", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, NULL, "SCSI", "VEN", "DEV", NULL))
+		return FALSE;
+	if (!fu_device_build_instance_id(device, NULL, "SCSI", "VEN", "DEV", "REV", NULL))
+		return FALSE;
 
 	/* check all block devices, although there should only be one */
 	block_devs = fu_udev_device_get_children_with_subsystem(FU_UDEV_DEVICE(device), "block");
