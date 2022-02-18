@@ -1257,6 +1257,14 @@ fu_util_device_flag_to_string(guint64 device_flag)
 		/* TRANSLATORS: the vendor is no longer supporting the device */
 		return _("End of life");
 	}
+	if (device_flag == FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD) {
+		/* TRANSLATORS: firmware is verified on-device the payload using strong crypto */
+		return _("Signed Payload");
+	}
+	if (device_flag == FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD) {
+		/* TRANSLATORS: firmware payload is unsigned and it is possible to modify it */
+		return _("Unsigned Payload");
+	}
 	if (device_flag == FWUPD_DEVICE_FLAG_SKIPS_RESTART) {
 		/* skip */
 		return NULL;

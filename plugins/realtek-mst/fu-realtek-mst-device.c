@@ -945,6 +945,7 @@ fu_realtek_mst_device_init(FuRealtekMstDevice *self)
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_PAIR);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rtd2142");
 	fu_device_set_vendor(FU_DEVICE(self), "Realtek");
 	fu_device_add_vendor_id(FU_DEVICE(self), "PCI:0x10EC");

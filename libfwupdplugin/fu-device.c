@@ -2967,6 +2967,12 @@ fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag)
 	if (flag & FWUPD_DEVICE_FLAG_IS_BOOTLOADER)
 		fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_NEEDS_BOOTLOADER);
 
+	/* being both a signed and unsigned is invalid */
+	if (flag & FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD)
+		fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	if (flag & FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD)
+		fu_device_remove_flag(self, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+
 	/* one implies the other */
 	if (flag & FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE)
 		flag |= FWUPD_DEVICE_FLAG_CAN_VERIFY;

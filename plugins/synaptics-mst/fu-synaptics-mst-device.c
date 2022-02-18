@@ -1351,6 +1351,22 @@ fu_synaptics_mst_device_rescan(FuDevice *device, GError **error)
 	}
 	self->family = fu_synaptics_mst_family_from_chip_id(self->chip_id);
 
+	/* VMM >= 6 use RSA2048 */
+	switch (self->family) {
+	case FU_SYNAPTICS_MST_FAMILY_TESLA:
+	case FU_SYNAPTICS_MST_FAMILY_LEAF:
+	case FU_SYNAPTICS_MST_FAMILY_PANAMERA:
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+		break;
+	case FU_SYNAPTICS_MST_FAMILY_CAYENNE:
+	case FU_SYNAPTICS_MST_FAMILY_SPYDER:
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+		break;
+	default:
+		g_warning("family 0x%02x does not indicate unsigned/signed payload", self->family);
+		break;
+	}
+
 	/* check the active bank for debugging */
 	if (self->family == FU_SYNAPTICS_MST_FAMILY_PANAMERA) {
 		if (!fu_synaptics_mst_device_get_active_bank_panamera(self, error))

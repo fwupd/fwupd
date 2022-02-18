@@ -14,32 +14,12 @@
 
 typedef struct {
 	guint8 version_bl_major;
-	gboolean signed_firmware;
 	FuIOChannel *io_channel;
 } FuLogitechHidPpRuntimePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuLogitechHidPpRuntime, fu_logitech_hidpp_runtime, FU_TYPE_UDEV_DEVICE)
 
 #define GET_PRIVATE(o) (fu_logitech_hidpp_runtime_get_instance_private(o))
-
-gboolean
-fu_logitech_hidpp_runtime_get_signed_firmware(FuLogitechHidPpRuntime *self)
-{
-	FuLogitechHidPpRuntimePrivate *priv;
-	g_return_val_if_fail(FU_IS_HIDPP_RUNTIME(self), FALSE);
-	priv = GET_PRIVATE(self);
-	return priv->signed_firmware;
-}
-
-void
-fu_logitech_hidpp_runtime_set_signed_firmware(FuLogitechHidPpRuntime *self,
-					      gboolean signed_firmware)
-{
-	FuLogitechHidPpRuntimePrivate *priv;
-	g_return_if_fail(FU_IS_HIDPP_RUNTIME(self));
-	priv = GET_PRIVATE(self);
-	priv->signed_firmware = signed_firmware;
-}
 
 FuIOChannel *
 fu_logitech_hidpp_runtime_get_io_channel(FuLogitechHidPpRuntime *self)
@@ -81,11 +61,7 @@ fu_logitech_hidpp_runtime_set_version_bl_major(FuLogitechHidPpRuntime *self,
 static void
 fu_logitech_hidpp_runtime_to_string(FuDevice *device, guint idt, GString *str)
 {
-	FuLogitechHidPpRuntime *self = FU_HIDPP_RUNTIME(device);
-	FuLogitechHidPpRuntimePrivate *priv = GET_PRIVATE(self);
-
 	FU_DEVICE_CLASS(fu_logitech_hidpp_runtime_parent_class)->to_string(device, idt, str);
-	fu_common_string_append_kb(str, idt, "SignedFirmware", priv->signed_firmware);
 }
 
 gboolean

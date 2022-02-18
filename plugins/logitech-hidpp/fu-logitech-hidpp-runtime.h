@@ -21,11 +21,6 @@ struct _FuLogitechHidPpRuntimeClass {
 
 gboolean
 fu_logitech_hidpp_runtime_enable_notifications(FuLogitechHidPpRuntime *self, GError **error);
-gboolean
-fu_logitech_hidpp_runtime_get_signed_firmware(FuLogitechHidPpRuntime *self);
-void
-fu_logitech_hidpp_runtime_set_signed_firmware(FuLogitechHidPpRuntime *self,
-					      gboolean signed_firmware);
 FuIOChannel *
 fu_logitech_hidpp_runtime_get_io_channel(FuLogitechHidPpRuntime *self);
 void

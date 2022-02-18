@@ -505,6 +505,25 @@ typedef enum {
  */
 #define FWUPD_DEVICE_FLAG_END_OF_LIFE (1llu << 46)
 /**
+ * FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD:
+ *
+ * The firmware payload is verified on-device the payload using strong cryptography such
+ * as RSA, AES or ECC.
+ *
+ * It is usually not possible to modify or flash custom firmware not provided by the vendor.
+ *
+ * Since: 1.7.6
+ */
+#define FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD (1llu << 47)
+/**
+ * FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD:
+ *
+ * The firmware payload is unsigned and it is possible to modify and flash custom firmware.
+ *
+ * Since: 1.7.6
+ */
+#define FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD (1llu << 48)
+/**
  * FWUPD_DEVICE_FLAG_UNKNOWN:
  *
  * This flag is not defined, this typically will happen from mismatched

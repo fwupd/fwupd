@@ -85,6 +85,7 @@ fu_parade_lspcon_device_init(FuParadeLspconDevice *self)
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_CAN_VERIFY);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_firmware_size(device, 0x10000);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
 }

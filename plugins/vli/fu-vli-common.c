@@ -76,6 +76,12 @@ fu_vli_common_device_kind_to_string(FuVliDeviceKind device_kind)
 		return "PS186";
 	if (device_kind == FU_VLI_DEVICE_KIND_RTD21XX)
 		return "RTD21XX";
+	if (device_kind == FU_VLI_DEVICE_KIND_VL107)
+		return "VL107";
+	if (device_kind == FU_VLI_DEVICE_KIND_VL650)
+		return "VL650";
+	if (device_kind == FU_VLI_DEVICE_KIND_VL830)
+		return "VL830";
 	return NULL;
 }
 
@@ -146,6 +152,12 @@ fu_vli_common_device_kind_from_string(const gchar *device_kind)
 		return FU_VLI_DEVICE_KIND_PS186;
 	if (g_strcmp0(device_kind, "RTD21XX") == 0)
 		return FU_VLI_DEVICE_KIND_RTD21XX;
+	if (g_strcmp0(device_kind, "VL107") == 0)
+		return FU_VLI_DEVICE_KIND_VL107;
+	if (g_strcmp0(device_kind, "VL650") == 0)
+		return FU_VLI_DEVICE_KIND_VL650;
+	if (g_strcmp0(device_kind, "VL830") == 0)
+		return FU_VLI_DEVICE_KIND_VL830;
 	return FU_VLI_DEVICE_KIND_UNKNOWN;
 }
 
@@ -210,6 +222,12 @@ fu_vli_common_device_kind_get_size(FuVliDeviceKind device_kind)
 		return 0x20000 * 2;
 	if (device_kind == FU_VLI_DEVICE_KIND_PS186)
 		return 0x40000;
+	if (device_kind == FU_VLI_DEVICE_KIND_VL107)
+		return 0x80000;
+	if (device_kind == FU_VLI_DEVICE_KIND_VL650)
+		return 0x40000;
+	if (device_kind == FU_VLI_DEVICE_KIND_VL830)
+		return 0x100000;
 	return 0x0;
 }
 
