@@ -481,6 +481,12 @@ fu_mbim_qdu_updater_write(FuMbimQduUpdater *self,
 	return g_steal_pointer(&digest);
 }
 
+MbimDevice *
+fu_mbim_qdu_updater_get_mbim_device(FuMbimQduUpdater *self)
+{
+	return self->mbim_device;
+}
+
 static void
 fu_mbim_qdu_updater_init(FuMbimQduUpdater *self)
 {

@@ -29,5 +29,7 @@ gchar *
 fu_mbim_qdu_updater_check_ready(FuMbimQduUpdater *self, GError **error);
 gboolean
 fu_mbim_qdu_updater_close(FuMbimQduUpdater *self, GError **error);
+MbimDevice *
+fu_mbim_qdu_updater_get_mbim_device(FuMbimQduUpdater *self);
 
 #endif /* MBIM_CHECK_VERSION(1,25,3) */
