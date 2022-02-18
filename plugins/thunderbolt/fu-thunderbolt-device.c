@@ -444,6 +444,28 @@ fu_thunderbolt_device_write_firmware(FuDevice *device,
 	return TRUE;
 }
 
+static gboolean
+fu_thunderbolt_device_probe(FuDevice *device, GError **error)
+{
+	g_autoptr(FuUdevDevice) udev_parent = NULL;
+
+	/* FuUdevDevice->probe */
+	if (!FU_DEVICE_CLASS(fu_thunderbolt_device_parent_class)->probe(device, error))
+		return FALSE;
+
+	/* if the PCI ID is Intel then it's signed, no idea otherwise */
+	udev_parent = fu_udev_device_get_parent_with_subsystem(FU_UDEV_DEVICE(device), "pci");
+	if (udev_parent != NULL) {
+		if (!fu_device_probe(FU_DEVICE(udev_parent), error))
+			return FALSE;
+		if (fu_udev_device_get_vendor(udev_parent) == 0x8086)
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	}
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fu_thunderbolt_device_set_progress(FuDevice *self, FuProgress *progress)
 {
@@ -471,6 +493,7 @@ fu_thunderbolt_device_class_init(FuThunderboltDeviceClass *klass)
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
 	klass_device->activate = fu_thunderbolt_device_activate;
 	klass_device->to_string = fu_thunderbolt_device_to_string;
+	klass_device->probe = fu_thunderbolt_device_probe;
 	klass_device->prepare_firmware = fu_thunderbolt_device_prepare_firmware;
 	klass_device->write_firmware = fu_thunderbolt_device_write_firmware;
 	klass_device->attach = fu_thunderbolt_device_attach;

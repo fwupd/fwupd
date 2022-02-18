@@ -833,6 +833,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 	}
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_DFU_CONTROL);
 	if (idx != 0x00) {
+		fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 		fu_device_remove_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifying");
 	}
@@ -858,6 +859,7 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 			fu_device_remove_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_IS_BOOTLOADER);
 		}
 		fu_device_add_protocol(FU_DEVICE(device), "com.logitech.unifyingsigned");
+		fu_device_add_flag(FU_DEVICE(device), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	}
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_DFU);
 	if (idx != 0x00) {

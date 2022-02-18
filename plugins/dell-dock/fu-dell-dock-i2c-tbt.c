@@ -274,6 +274,7 @@ fu_dell_dock_tbt_init(FuDellDockTbt *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.intel.thunderbolt");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 }
 
 static void

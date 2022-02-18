@@ -522,6 +522,7 @@ fu_synaptics_rmi_v5_device_setup(FuSynapticsRmiDevice *self, GError **error)
 			return FALSE;
 		}
 		fu_synaptics_rmi_device_set_sig_size(self, sig_size);
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	} else {
 		fu_synaptics_rmi_device_set_sig_size(self, 0);
 	}

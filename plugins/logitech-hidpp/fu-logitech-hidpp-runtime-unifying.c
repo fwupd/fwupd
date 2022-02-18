@@ -113,12 +113,14 @@ fu_logitech_hidpp_runtime_unifying_setup_internal(FuDevice *device, GError **err
 		     config[8] >= 0x04) ||
 		    (fu_logitech_hidpp_runtime_get_version_bl_major(self) == 0x03 &&
 		     config[8] >= 0x02)) {
-			fu_logitech_hidpp_runtime_set_signed_firmware(self, TRUE);
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 			fu_device_add_protocol(device, "com.logitech.unifyingsigned");
 		}
 	}
-	if (!fu_logitech_hidpp_runtime_get_signed_firmware(self))
+	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD)) {
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 		fu_device_add_protocol(device, "com.logitech.unifying");
+	}
 
 	/* enable HID++ notifications */
 	if (!fu_logitech_hidpp_runtime_enable_notifications(self, error)) {

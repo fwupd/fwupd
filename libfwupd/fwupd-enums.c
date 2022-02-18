@@ -203,6 +203,10 @@ fwupd_device_flag_to_string(FwupdDeviceFlags device_flag)
 		return "affects-fde";
 	if (device_flag == FWUPD_DEVICE_FLAG_END_OF_LIFE)
 		return "end-of-life";
+	if (device_flag == FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD)
+		return "signed-payload";
+	if (device_flag == FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD)
+		return "unsigned-payload";
 	if (device_flag == FWUPD_DEVICE_FLAG_UNKNOWN)
 		return "unknown";
 	return NULL;
@@ -316,6 +320,10 @@ fwupd_device_flag_from_string(const gchar *device_flag)
 		return FWUPD_DEVICE_FLAG_AFFECTS_FDE;
 	if (g_strcmp0(device_flag, "end-of-life") == 0)
 		return FWUPD_DEVICE_FLAG_END_OF_LIFE;
+	if (g_strcmp0(device_flag, "signed-payload") == 0)
+		return FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD;
+	if (g_strcmp0(device_flag, "unsigned-payload") == 0)
+		return FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD;
 	return FWUPD_DEVICE_FLAG_UNKNOWN;
 }
 

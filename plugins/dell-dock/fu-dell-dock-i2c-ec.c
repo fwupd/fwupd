@@ -1014,6 +1014,7 @@ fu_dell_dock_ec_init(FuDellDockEc *self)
 	self->raw_versions = g_new0(FuDellDockDockPackageFWVersion, 1);
 	fu_device_add_protocol(FU_DEVICE(self), "com.dell.dock");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_INHIBIT_CHILDREN);
 }
 

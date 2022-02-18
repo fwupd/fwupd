@@ -19,6 +19,7 @@ SuperioGType = FuSuperioIt89Device
 SuperioId = 0x8987
 SuperioPort = 0x4e
 InstallDuration = 20
+Flags = unsigned-payload
 
 # Star LabTop Mk IV (HwId)
 [baf1d04e-fd16-5e6a-93cc-1c23d171f879]
@@ -35,6 +36,7 @@ SuperioGType = FuSuperioIt89Device
 SuperioId = 0x5570
 SuperioPort = 0x4e
 InstallDuration = 20
+Flags = signed-payload
 
 # Star Lite Mk II (HwId)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
@@ -43,6 +45,7 @@ SuperioGType = FuSuperioIt89Device
 SuperioId = 0x8987
 SuperioPort = 0x4e
 InstallDuration = 20
+Flags = unsigned-payload
 
 # Star Lite Mk III (HwId)
 [d5521faa-c50b-5d64-971d-8fd400030c51]
@@ -51,6 +54,7 @@ SuperioGType = FuSuperioIt89Device
 SuperioId = 0x8987
 SuperioPort = 0x4e
 InstallDuration = 20
+Flags = signed-payload
 
 # Tuxedo InifinityBook S14 Gen6
 [6c80d85b-d0b6-5ee2-99d4-ec28dd32febd]
