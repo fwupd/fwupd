@@ -355,6 +355,27 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="libgpiod">
+    <distro id="centos">
+      <package />
+    </distro>
+    <distro id="fedora">
+      <package />
+    </distro>
+    <distro id="void">
+      <package />
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x" />
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+  </dependency>
   <dependency type="build" id="gcab">
     <distro id="centos">
       <package />
