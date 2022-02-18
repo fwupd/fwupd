@@ -68,7 +68,12 @@ fu_util_using_correct_daemon(GError **error)
 #ifdef HAVE_SYSTEMD
 	g_autofree gchar *default_target = NULL;
 	g_autoptr(GError) error_local = NULL;
-	const gchar *target = fu_util_get_systemd_unit();
+	const gchar *target;
+
+	if (g_getenv("FWUPD_DBUS_SOCKET") != NULL)
+		return TRUE;
+
+	target = fu_util_get_systemd_unit();
 
 	default_target = fu_systemd_get_default_target(&error_local);
 	if (default_target == NULL) {
