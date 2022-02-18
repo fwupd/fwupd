@@ -661,6 +661,7 @@ fu_bcm57xx_device_set_progress(FuDevice *self, FuProgress *progress)
 static void
 fu_bcm57xx_device_init(FuBcm57xxDevice *self)
 {
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.broadcom.bcm57xx");
 	fu_device_add_icon(FU_DEVICE(self), "network-wired");
 

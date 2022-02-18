@@ -1330,6 +1330,7 @@ static void
 fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_protocol(FU_DEVICE(self), "com.genesys.usbhub");
 	fu_device_retry_set_delay(FU_DEVICE(self), 30);	   /* ms */
 	fu_device_set_remove_delay(FU_DEVICE(self), 5000); /* ms */

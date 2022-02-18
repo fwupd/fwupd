@@ -426,6 +426,54 @@ fu_vli_device_set_kind(FuVliDevice *self, FuVliDeviceKind device_kind)
 		g_object_notify(G_OBJECT(self), "kind");
 	}
 
+	/* newer chips use SHA-256 and ECDSA-256 */
+	switch (device_kind) {
+	case FU_VLI_DEVICE_KIND_MSP430:
+	case FU_VLI_DEVICE_KIND_PS186:
+	case FU_VLI_DEVICE_KIND_RTD21XX:
+	case FU_VLI_DEVICE_KIND_VL100:
+	case FU_VLI_DEVICE_KIND_VL101:
+	case FU_VLI_DEVICE_KIND_VL102:
+	case FU_VLI_DEVICE_KIND_VL103:
+	case FU_VLI_DEVICE_KIND_VL104:
+	case FU_VLI_DEVICE_KIND_VL105:
+	case FU_VLI_DEVICE_KIND_VL120:
+	case FU_VLI_DEVICE_KIND_VL210:
+	case FU_VLI_DEVICE_KIND_VL211:
+	case FU_VLI_DEVICE_KIND_VL212:
+	case FU_VLI_DEVICE_KIND_VL810:
+	case FU_VLI_DEVICE_KIND_VL811:
+	case FU_VLI_DEVICE_KIND_VL811PB0:
+	case FU_VLI_DEVICE_KIND_VL811PB3:
+	case FU_VLI_DEVICE_KIND_VL812B0:
+	case FU_VLI_DEVICE_KIND_VL812B3:
+	case FU_VLI_DEVICE_KIND_VL812Q4S:
+	case FU_VLI_DEVICE_KIND_VL813:
+	case FU_VLI_DEVICE_KIND_VL815:
+	case FU_VLI_DEVICE_KIND_VL817:
+	case FU_VLI_DEVICE_KIND_VL819Q7:
+	case FU_VLI_DEVICE_KIND_VL819Q8:
+	case FU_VLI_DEVICE_KIND_VL820Q7:
+	case FU_VLI_DEVICE_KIND_VL820Q8:
+	case FU_VLI_DEVICE_KIND_VL821Q7:
+	case FU_VLI_DEVICE_KIND_VL821Q8:
+	case FU_VLI_DEVICE_KIND_VL822Q5:
+	case FU_VLI_DEVICE_KIND_VL822Q7:
+	case FU_VLI_DEVICE_KIND_VL822Q8:
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+		break;
+	case FU_VLI_DEVICE_KIND_VL107:
+	case FU_VLI_DEVICE_KIND_VL650:
+	case FU_VLI_DEVICE_KIND_VL830:
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+		break;
+	default:
+		g_warning("device kind %s [0x%02x] does not indicate unsigned/signed payload",
+			  fu_vli_common_device_kind_to_string(device_kind),
+			  device_kind);
+		break;
+	}
+
 	/* set maximum firmware size */
 	sz = fu_vli_common_device_kind_get_size(device_kind);
 	if (sz > 0x0)

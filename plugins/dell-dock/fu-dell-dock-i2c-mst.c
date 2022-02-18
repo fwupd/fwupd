@@ -1172,12 +1172,14 @@ fu_dell_dock_mst_probe(FuDevice *device, GError **error)
 		self->mst_rc_command_addr = CAYENNE_MST_RC_COMMAND_ADDR;
 		self->mst_rc_data_addr = CAYENNE_MST_RC_DATA_ADDR;
 		self->mst_core_mcu_bootloader_addr = CAYENNE_MST_CORE_MCU_BOOTLOADER_STS;
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 		return TRUE;
 	case Panamera_mst:
 		self->mst_rc_trigger_addr = PANAMERA_MST_RC_TRIGGER_ADDR;
 		self->mst_rc_command_addr = PANAMERA_MST_RC_COMMAND_ADDR;
 		self->mst_rc_data_addr = PANAMERA_MST_RC_DATA_ADDR;
 		self->mst_core_mcu_bootloader_addr = PANAMERA_MST_CORE_MCU_BOOTLOADER_STS;
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 		return TRUE;
 	case Unknown:
 	default:
