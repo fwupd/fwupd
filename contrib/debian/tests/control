@@ -1,5 +1,5 @@
 Tests: ci
-Restrictions: needs-root
+Restrictions: needs-root, allow-stderr
 
 Tests: libfwupd-dev
 Depends: build-essential, libfwupd-dev, pkg-config
