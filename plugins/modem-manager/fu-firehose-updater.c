@@ -489,25 +489,25 @@ static gboolean
 fu_firehose_updater_send_program_file(FuFirehoseUpdater *self,
 				      const gchar *program_filename,
 				      GBytes *program_file,
-				      guint payload_size,
-				      guint sector_size,
+				      gsize payload_size,
+				      gsize sector_size,
 				      GError **error)
 {
 	g_autoptr(GPtrArray) chunks = NULL;
 	FuChunk *chk;
 
 	chunks = fu_chunk_array_new_from_bytes(program_file, 0, 0, payload_size);
-	/* last block needs to be padded to the next payload_size,
+	/* last block needs to be padded to the next sector_size,
 	 * so that we always send full sectors */
 	chk = g_ptr_array_index(chunks, chunks->len - 1);
-	if (fu_chunk_get_data_sz(chk) != payload_size) {
+	if ((fu_chunk_get_data_sz(chk) % sector_size) != 0) {
 		g_autoptr(GBytes) padded_bytes = NULL;
-		g_autofree guint8 *padded_block = g_malloc0(payload_size);
-		g_return_val_if_fail(padded_block != NULL, FALSE);
-		memcpy(padded_block, fu_chunk_get_data(chk), fu_chunk_get_data_sz(chk));
-		padded_bytes = g_bytes_new(padded_block, payload_size);
+		gsize padded_sz = sector_size * (fu_chunk_get_data_sz(chk) / sector_size + 1);
+
+		padded_bytes = fu_common_bytes_pad(fu_chunk_get_bytes(chk), padded_sz);
 		fu_chunk_set_bytes(chk, padded_bytes);
-		g_return_val_if_fail(fu_chunk_get_data_sz(chk) == payload_size, FALSE);
+
+		g_return_val_if_fail(fu_chunk_get_data_sz(chk) == padded_sz, FALSE);
 	}
 	for (guint i = 0; i < chunks->len; i++) {
 		chk = g_ptr_array_index(chunks, i);
@@ -656,7 +656,7 @@ fu_firehose_updater_run_action_program(FuFirehoseUpdater *self,
 		return FALSE;
 	}
 
-	while ((payload_size + (guint)program_sector_size) < max_payload_size)
+	while ((payload_size + (guint)program_sector_size) <= max_payload_size)
 		payload_size += (guint)program_sector_size;
 
 	g_debug("sending program file '%s' (%zu bytes)",
