@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 # only run as root, possibly only in CI
 if [ "$(id -u)" -ne 0 ]; then exit 0; fi
