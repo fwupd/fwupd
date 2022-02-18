@@ -792,74 +792,6 @@ fu_mm_device_detach_fastboot(FuDevice *device, GError **error)
 	return TRUE;
 }
 
-#if MM_CHECK_VERSION(1, 17, 2)
-static gboolean
-fu_mm_device_find_edl_port(FuDevice *device, GError **error)
-{
-	FuMmDevice *self = FU_MM_DEVICE(device);
-
-	for (guint i = 0; i < 30; i++) {
-		if (fu_mm_utils_find_device_file(fu_device_get_physical_id(FU_DEVICE(self)),
-						 "wwan",
-						 &self->port_edl,
-						 NULL))
-			return TRUE;
-
-		g_usleep(250 * 1000);
-	}
-
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Couldn't find EDL port");
-	return FALSE;
-}
-
-static gboolean
-fu_mm_device_qcdm_switch_to_edl(FuDevice *device, GError **error)
-{
-	FuMmDevice *self = FU_MM_DEVICE(device);
-	static const guint8 emergency_download[] = {0x4b, 0x65, 0x01, 0x00, 0x54, 0x0f, 0x7e};
-
-	/* trigger emergency download mode, up to 30s retrying until the QCDM
-	 * port goes away; this takes us to the EDL (embedded downloader) execution
-	 * environment */
-
-	for (guint i = 0; i < 30; i++) {
-		g_autoptr(GError) error_local = NULL;
-		g_autoptr(FuDeviceLocker) locker = NULL;
-
-		if (i > 0)
-			g_usleep(G_USEC_PER_SEC);
-
-		locker = fu_device_locker_new_full(self,
-						   (FuDeviceLockerFunc)fu_mm_device_io_open_qcdm,
-						   (FuDeviceLockerFunc)fu_mm_device_io_close,
-						   &error_local);
-		if (locker == NULL) {
-			if (i > 0 &&
-			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
-				return fu_mm_device_find_edl_port(device, error);
-			g_debug("couldn't open QCDM port to switch to EDL mode: %s",
-				error_local->message);
-			break;
-		}
-
-		if (!fu_mm_device_qcdm_cmd(self,
-					   emergency_download,
-					   G_N_ELEMENTS(emergency_download),
-					   &error_local)) {
-			g_debug("couldn't send QCDM command to switch to EDL mode: %s",
-				error_local->message);
-			break;
-		}
-	}
-
-	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Couldn't switch device to embedded downloader execution environment");
-	return FALSE;
-}
-#endif /* MM_CHECK_VERSION(1,17,2) */
-
 static gboolean
 fu_mm_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
@@ -1279,6 +1211,72 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 #endif /* MM_CHECK_VERSION(1,17,1) && MBIM_CHECK_VERSION(1,25,3) */
 
 #if MM_CHECK_VERSION(1, 17, 2)
+static gboolean
+fu_mm_device_find_edl_port(FuDevice *device, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+
+	for (guint i = 0; i < 30; i++) {
+		if (fu_mm_utils_find_device_file(fu_device_get_physical_id(FU_DEVICE(self)),
+						 "wwan",
+						 &self->port_edl,
+						 NULL))
+			return TRUE;
+
+		g_usleep(250 * 1000);
+	}
+
+	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Couldn't find EDL port");
+	return FALSE;
+}
+
+static gboolean
+fu_mm_device_qcdm_switch_to_edl(FuDevice *device, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	static const guint8 emergency_download[] = {0x4b, 0x65, 0x01, 0x00, 0x54, 0x0f, 0x7e};
+
+	/* trigger emergency download mode, up to 30s retrying until the QCDM
+	 * port goes away; this takes us to the EDL (embedded downloader) execution
+	 * environment */
+
+	for (guint i = 0; i < 30; i++) {
+		g_autoptr(GError) error_local = NULL;
+		g_autoptr(FuDeviceLocker) locker = NULL;
+
+		if (i > 0)
+			g_usleep(G_USEC_PER_SEC);
+
+		locker = fu_device_locker_new_full(self,
+						   (FuDeviceLockerFunc)fu_mm_device_io_open_qcdm,
+						   (FuDeviceLockerFunc)fu_mm_device_io_close,
+						   &error_local);
+		if (locker == NULL) {
+			if (i > 0 &&
+			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
+				return fu_mm_device_find_edl_port(device, error);
+			g_debug("couldn't open QCDM port to switch to EDL mode: %s",
+				error_local->message);
+			break;
+		}
+
+		if (!fu_mm_device_qcdm_cmd(self,
+					   emergency_download,
+					   G_N_ELEMENTS(emergency_download),
+					   &error_local)) {
+			g_debug("couldn't send QCDM command to switch to EDL mode: %s",
+				error_local->message);
+			break;
+		}
+	}
+
+	g_set_error_literal(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_FAILED,
+			    "Couldn't switch device to embedded downloader execution environment");
+	return FALSE;
+}
+
 static gboolean
 fu_mm_device_firehose_open(FuMmDevice *self, GError **error)
 {
