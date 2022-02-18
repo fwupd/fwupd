@@ -53,3 +53,8 @@ Summary = Quectel EG25-G modem (fastboot)
 CounterpartGuid = USB\VID_2C7C&PID_0125
 Flags = detach-at-fastboot-has-no-response
 ModemManagerBranchAtCommand = AT+GETFWBRANCH
+
+# Qualcomm Sahara device
+[USB\VID_05C6&PID_9008]
+Summary = Qualcomm based modems in EDL (sahara)
+Plugin = modem_manager

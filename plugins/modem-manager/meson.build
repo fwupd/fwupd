@@ -23,6 +23,7 @@ shared_module('fu_plugin_modem_manager',
     'fu-qmi-pdc-updater.c',
     'fu-mbim-qdu-updater.c',
     'fu-firehose-updater.c',
+    'fu-sahara-loader.c',
     'fu-mm-utils.c'
   ],
   include_directories : [
