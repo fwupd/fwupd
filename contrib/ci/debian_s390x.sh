@@ -19,7 +19,7 @@ meson .. \
 	--werror \
 	-Dplugin_flashrom=disabled \
 	-Dplugin_uefi_capsule=false \
-	-Dplugin_dell=false \
+	-Dplugin_dell=disabled \
 	-Dplugin_modem_manager=false \
 	-Dplugin_msr=false \
 	-Dplugin_mtd=false \

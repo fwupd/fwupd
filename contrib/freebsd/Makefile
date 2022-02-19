@@ -42,7 +42,7 @@ SHEBANG_GLOB=	*.py
 
 MESON_ARGS=	-Dgudev=false \
 		-Dplugin_amt=false \
-		-Dplugin_dell=false \
+		-Dplugin_dell=disabled \
 		-Dplugin_emmc=false \
 		-Dplugin_nvme=disabled \
 		-Dplugin_parade_lspcon=false \
@@ -51,7 +51,7 @@ MESON_ARGS=	-Dgudev=false \
 		-Dplugin_synaptics_rmi=false \
 		-Dplugin_realtek_mst=false \
 		-Dplugin_thunderbolt=false \
-		-Dplugin_tpm=false \
+		-Dplugin_tpm=disabled \
 		-Dplugin_bcm57xx=false \
 		-Dplugin_ep963x=false \
 		-Dpolkit=false \

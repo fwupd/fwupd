@@ -28,7 +28,7 @@ meson .. \
     -Dplugin_flashrom=disabled \
     -Dplugin_uefi_capsule=false \
     -Dplugin_redfish=disabled \
-    -Dplugin_dell=false \
+    -Dplugin_dell=disabled \
     -Dplugin_logitech_bulkcontroller=false \
     -Dplugin_nvme=disabled \
     -Dplugin_parade_lspcon=false \
@@ -38,7 +38,7 @@ meson .. \
     -Dplugin_cfu=false \
     -Dplugin_cpu=false \
     -Dplugin_ep963x=false \
-    -Dplugin_tpm=false \
+    -Dplugin_tpm=disabled \
     -Dsystemd=false \
     -Doffline=false \
     -Dplugin_emmc=false \

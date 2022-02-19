@@ -24,7 +24,7 @@ meson .. \
     -Dplugin_modem_manager=false \
     -Dplugin_thunderbolt=true \
     -Dplugin_uefi_capsule=true \
-    -Dplugin_dell=true \
+    -Dplugin_dell=enabled \
     -Dplugin_synaptics_mst=true $@
 ninja-build dist
 popd

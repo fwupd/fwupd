@@ -255,19 +255,19 @@ fwupd wrapper for Qubes OS
 %if 0%{?have_uefi}
     -Dplugin_uefi_capsule=true \
     -Dplugin_uefi_pk=true \
-    -Dplugin_tpm=true \
+    -Dplugin_tpm=enabled \
     -Dplugin_gpio=true \
     -Defi_binary=false \
 %else
     -Dplugin_uefi_capsule=false \
     -Dplugin_uefi_pk=false \
-    -Dplugin_tpm=false \
+    -Dplugin_tpm=disabled \
 %endif
 %if 0%{?have_dell}
-    -Dplugin_dell=true \
+    -Dplugin_dell=enabled \
     -Dplugin_synaptics_mst=true \
 %else
-    -Dplugin_dell=false \
+    -Dplugin_dell=disabled \
     -Dplugin_synaptics_mst=false \
 %endif
 %if 0%{?have_modem_manager}
