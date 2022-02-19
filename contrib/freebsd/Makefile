@@ -54,7 +54,7 @@ MESON_ARGS=	-Dgudev=false \
 		-Dplugin_tpm=disabled \
 		-Dplugin_bcm57xx=false \
 		-Dplugin_ep963x=false \
-		-Dpolkit=false \
+		-Dpolkit=disabled \
 		-Dsystemd=false \
 		-Doffline=false \
 		-Dtests=false \

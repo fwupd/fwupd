@@ -39,7 +39,7 @@ meson ../ \
     -Dplugin_uefi_capsule=false \
     -Dplugin_uf2=false \
     -Dplugin_upower=false \
-    -Dpolkit=false \
+    -Dpolkit=disabled \
     -Dsqlite=false \
     -Dtests=false \
     -Dudevdir=/tmp \

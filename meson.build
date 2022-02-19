@@ -234,15 +234,16 @@ if libcurl_daemon.found()
     conf.set('HAVE_LIBCURL_7_62_0', '1')
   endif
 endif
-if build_daemon
-  if get_option('polkit')
-    polkit = dependency('polkit-gobject-1', version : '>= 0.103')
-    conf.set('HAVE_POLKIT', '1')
-    if polkit.version().version_compare('>= 0.114')
-      conf.set('HAVE_POLKIT_0_114', '1')
-    endif
+polkit = dependency('polkit-gobject-1', version : '>= 0.103', required: get_option('polkit'))
+if polkit.found()
+  conf.set('HAVE_POLKIT', '1')
+  if polkit.version().version_compare('>= 0.114')
+    conf.set('HAVE_POLKIT_0_114', '1')
+  endif
   conf.set_quoted ('POLKIT_ACTIONDIR', polkit.get_pkgconfig_variable('actiondir'))
-  else
+endif
+if build_daemon
+  if not polkit.found()
     warning('Polkit is disabled, the daemon will allow ALL client actions')
   endif
   udevdir = get_option('udevdir')
@@ -575,7 +576,7 @@ elif get_option('docs') == 'docgen'
 endif
 
 subdir('libfwupd')
-if build_daemon and get_option('polkit')
+if polkit.found()
   subdir('policy')
 endif
 if build_standalone
