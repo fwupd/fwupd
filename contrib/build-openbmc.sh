@@ -12,7 +12,7 @@ meson ../ \
     -Dgusb=false \
     -Dhsi=false \
     -Dintrospection=false \
-    -Dlibarchive=false \
+    -Dlibarchive=disabled \
     -Dman=false \
     -Dmetainfo=false \
     -Doffline=false \
@@ -40,7 +40,7 @@ meson ../ \
     -Dplugin_uf2=false \
     -Dplugin_upower=false \
     -Dpolkit=disabled \
-    -Dsqlite=false \
+    -Dsqlite=disabled \
     -Dtests=false \
     -Dudevdir=/tmp \
     -Dsystemd_root_prefix=/tmp \

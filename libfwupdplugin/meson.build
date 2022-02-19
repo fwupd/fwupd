@@ -191,16 +191,9 @@ library_deps = [
   valgrind,
   libjcat,
   lzma_daemon,
+  libarchive,
   platform_deps,
 ]
-
-if get_option('libarchive')
-  library_deps += libarchive
-endif
-
-if lzma_daemon.found()
-  library_deps += lzma_daemon
-endif
 
 fwupdplugin_mapfile = 'fwupdplugin.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupdplugin_mapfile)

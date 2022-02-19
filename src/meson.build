@@ -11,6 +11,7 @@ endif
 client_src = []
 systemd_src = []
 daemon_dep = [
+  libarchive,
   libjcat,
   libxmlb,
   libgcab,
@@ -19,23 +20,17 @@ daemon_dep = [
   gudev,
   libjsonglib,
   polkit,
+  sqlite,
 ]
 
 client_dep = [
   gudev,
+  sqlite,
 ]
 
 if get_option('gusb')
   daemon_dep += gusb
   client_dep += gusb
-endif
-
-if get_option('libarchive')
-  daemon_dep += libarchive
-endif
-if get_option('sqlite')
-  daemon_dep += sqlite
-  client_dep += sqlite
 endif
 
 if get_option('systemd')
