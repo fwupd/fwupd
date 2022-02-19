@@ -276,13 +276,9 @@ else
   endif
 endif
 
-if get_option('lzma')
-  lzma = dependency('liblzma')
+lzma_daemon = dependency('liblzma', required: get_option('lzma'))
+if lzma_daemon.found()
   conf.set('HAVE_LZMA', '1')
-else
-  if get_option('plugin_intel_spi')
-    error('plugin_intel_spi needs -Dlzma=true to work')
-  endif
 endif
 
 platform_deps = []

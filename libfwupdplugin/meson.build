@@ -190,6 +190,7 @@ library_deps = [
   libgcab,
   valgrind,
   libjcat,
+  lzma_daemon,
   platform_deps,
 ]
 
@@ -197,8 +198,8 @@ if get_option('libarchive')
   library_deps += libarchive
 endif
 
-if get_option('lzma')
-  library_deps += lzma
+if lzma_daemon.found()
+  library_deps += lzma_daemon
 endif
 
 fwupdplugin_mapfile = 'fwupdplugin.map'
