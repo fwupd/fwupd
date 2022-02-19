@@ -187,7 +187,7 @@ There are several automated fuzzing tests in fwupd. These take some time to run:
 
     CC=hfuzz-clang meson --default-library=static \
         -Dudevdir=/tmp -Dsystemd_root_prefix=/tmp \
-        -Dplugin_redfish=false -Dcurl=false \
+        -Dplugin_redfish=disabled -Dcurl=disabled \
         -Dintrospection=false ../
     ninja install
     ninja fuzz-firmware

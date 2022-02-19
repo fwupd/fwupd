@@ -31,7 +31,7 @@ meson ../ \
     -Dplugin_pixart_rf=false \
     -Dplugin_powerd=false \
     -Dplugin_realtek_mst=false \
-    -Dplugin_redfish=false \
+    -Dplugin_redfish=disabled \
     -Dplugin_synaptics_mst=false \
     -Dplugin_synaptics_rmi=false \
     -Dplugin_thunderbolt=false \

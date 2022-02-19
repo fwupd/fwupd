@@ -32,11 +32,8 @@ libfwupd_deps = [
     gmodule,
     libjcat,
     libjsonglib,
+    libcurl_daemon,
 ]
-
-if get_option('curl')
-  libfwupd_deps += libcurl
-endif
 
 libfwupd_src = [
   'fwupd-client.c',
@@ -91,10 +88,8 @@ pkgg.generate(
 if get_option('introspection')
   fwupd_gir_deps = [
       giounix,
+      libcurl_daemon,
   ]
-  if get_option('curl')
-    fwupd_gir_deps += libcurl
-  endif
   fwupd_gir = gnome.generate_gir(fwupd,
     sources : [
       'fwupd-client.c',
