@@ -1,4 +1,6 @@
-if get_option('plugin_intel_spi')
+lzma_intel_spi = dependency('liblzma', required: get_option('plugin_intel_spi'))
+
+if lzma_intel_spi.found() and host_machine.system() == 'linux'
 cargs = ['-DG_LOG_DOMAIN="FuPluginIntelSpi"']
 
 install_data(['intel-spi.quirk'],

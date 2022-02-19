@@ -450,6 +450,7 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_linux_swap.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_linux_tainted.so
 %if 0%{?have_msr}
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_intel_spi.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_msr.so
 %endif
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_mtd.so
