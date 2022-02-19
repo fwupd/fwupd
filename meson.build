@@ -227,10 +227,10 @@ endif
 libjcat = dependency('jcat', version : '>= 0.1.4', fallback : ['libjcat', 'libjcat_dep'])
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
-if get_option('curl')
-  libcurl = dependency('libcurl', version : '>= 7.56.0')
+libcurl_daemon = dependency('libcurl', version : '>= 7.56.0', required: get_option('curl'))
+if libcurl_daemon.found()
   conf.set('HAVE_LIBCURL', '1')
-  if libcurl.version().version_compare('>= 7.62.0')
+  if libcurl_daemon.version().version_compare('>= 7.62.0')
     conf.set('HAVE_LIBCURL_7_62_0', '1')
   endif
 endif

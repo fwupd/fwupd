@@ -82,7 +82,7 @@ if get_option('systemd') and build_daemon
     dynamic_options += 'StateDirectory=fwupd'
     dynamic_options += 'CacheDirectory=fwupd'
   endif
-  if get_option('plugin_redfish')
+  if not get_option('plugin_redfish').disabled()
     dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX AF_INET AF_INET6'
   else
     dynamic_options += 'RestrictAddressFamilies=AF_NETLINK AF_UNIX'

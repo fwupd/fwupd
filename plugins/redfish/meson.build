@@ -1,7 +1,6 @@
-if get_option('plugin_redfish')
-if not get_option('curl')
-  error('curl is required for plugin_redfish')
-endif
+libcurl_redfish = dependency('libcurl', version : '>= 7.56.0', required: get_option('plugin_redfish'))
+
+if libcurl_redfish.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginRedfish"']
 
 install_data(['redfish.quirk'],
@@ -48,7 +47,7 @@ shared_module('fu_plugin_redfish',
   c_args : cargs,
   dependencies : [
     plugin_deps,
-    libcurl,
+    libcurl_redfish,
   ],
 )
 
@@ -93,7 +92,7 @@ if get_option('tests')
     c_args : cargs,
     dependencies : [
       plugin_deps,
-      libcurl,
+      libcurl_redfish,
     ],
     link_with : [
       fwupd,
