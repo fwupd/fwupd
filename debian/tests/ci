@@ -2,4 +2,8 @@
 set -e
 sed "s,^DisabledPlugins=.*,DisabledPlugins=," -i /etc/fwupd/daemon.conf
 sed "s,^VerboseDomains=.*,VerboseDomains=*,"  -i /etc/fwupd/daemon.conf
+sed "s,ConditionVirtualization=.*,," 		\
+	/lib/systemd/system/fwupd.service >	\
+	/etc/systemd/system/fwupd.service
+systemctl daemon-reload
 gnome-desktop-testing-runner fwupd
