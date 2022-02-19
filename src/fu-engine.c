@@ -3741,6 +3741,34 @@ fu_engine_md_refresh_device_vendor(FuEngine *self, FuDevice *device, XbNode *com
 }
 
 static void
+fu_engine_md_refresh_device_signed(FuEngine *self, FuDevice *device, XbNode *component)
+{
+	const gchar *value = NULL;
+
+	/* require data */
+	if (component == NULL)
+		return;
+
+	/* already set, possibly by a quirk */
+	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD) ||
+	    fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD))
+		return;
+
+	/* copy 1:1 */
+	value = xb_node_query_text(component, "custom/value[@key='LVFS::DeviceIntegrity']", NULL);
+	if (value != NULL) {
+		if (g_strcmp0(value, "signed") == 0) {
+			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+		} else if (g_strcmp0(value, "unsigned") == 0) {
+			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+		} else {
+			g_warning("payload value unexpected: %s, expected signed|unsigned", value);
+		}
+		fu_device_remove_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
+	}
+}
+
+static void
 fu_engine_md_refresh_device_icon(FuEngine *self, FuDevice *device, XbNode *component)
 {
 	const gchar *icon = NULL;
@@ -3895,6 +3923,8 @@ fu_engine_md_refresh_device_from_component(FuEngine *self, FuDevice *device, XbN
 		fu_engine_md_refresh_device_icon(self, device, component);
 	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR))
 		fu_engine_md_refresh_device_vendor(self, device, component);
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED))
+		fu_engine_md_refresh_device_signed(self, device, component);
 
 	/* fix the version */
 	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT))

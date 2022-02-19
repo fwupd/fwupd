@@ -239,6 +239,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "no-lid-closed";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_PROBE)
 		return "no-probe";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED)
+		return "md-set-signed";
 	return NULL;
 }
 
@@ -301,6 +303,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED;
 	if (g_strcmp0(flag, "no-probe") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_NO_PROBE;
+	if (g_strcmp0(flag, "md-set-signed") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 

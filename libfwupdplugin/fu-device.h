@@ -438,6 +438,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_NO_PROBE (1ull << 22)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED:
+ *
+ * Set the signed/unsigned payload from the metadata if available.
+ *
+ * Since: 1.7.6
+ */
+#define FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED (1ull << 23)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
