@@ -1,7 +1,6 @@
-if get_option('plugin_nvme')
-if not get_option('gudev')
-  error('gudev is required for plugin_nvme')
-endif
+gudev_nvme = dependency('gudev-1.0', version : '>= 232', required: get_option('plugin_nvme'))
+
+if gudev_nvme.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
 
 install_data([
