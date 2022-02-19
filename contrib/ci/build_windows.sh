@@ -7,7 +7,7 @@ export DESTDIR=${root}/dist
 build=$root/build-win32
 rm -rf $DESTDIR $build
 
-# For logitech bulk controller being disabled (-Dplugin_logitech_bulkcontroller=false):
+# For logitech bulk controller being disabled (-Dplugin_logitech_bulkcontroller=disabled):
 # See https://bugzilla.redhat.com/show_bug.cgi?id=1991749
 # When fixed need to do the following to enable:
 # 1. need to add mingw64-protobuf mingw64-protobuf-tools to CI build deps
@@ -16,6 +16,7 @@ rm -rf $DESTDIR $build
 
 #build
 mkdir -p $build $DESTDIR && cd $build
+python3 -m pip install --user "meson >= 0.60.0"
 meson .. \
     --cross-file=../contrib/mingw64.cross \
     --prefix=/ \
@@ -24,34 +25,6 @@ meson .. \
     -Dbuild=standalone \
     -Ddocs=none \
     -Dhsi=false \
-    -Dpolkit=false \
-    -Dplugin_flashrom=false \
-    -Dplugin_uefi_capsule=false \
-    -Dplugin_redfish=false \
-    -Dplugin_dell=false \
-    -Dplugin_logitech_bulkcontroller=false \
-    -Dplugin_nvme=false \
-    -Dplugin_parade_lspcon=false \
-    -Dplugin_realtek_mst=false \
-    -Dplugin_platform_integrity=false \
-    -Dplugin_bcm57xx=false \
-    -Dplugin_pixart_rf=false \
-    -Dplugin_cfu=false \
-    -Dplugin_cpu=false \
-    -Dplugin_ep963x=false \
-    -Dplugin_tpm=false \
-    -Dsystemd=false \
-    -Doffline=false \
-    -Dplugin_emmc=false \
-    -Dplugin_amt=false \
-    -Dplugin_mtd=false \
-    -Dintrospection=false \
-    -Dplugin_thunderbolt=false \
-    -Dplugin_scsi=false \
-    -Dplugin_synaptics_mst=false \
-    -Dplugin_synaptics_rmi=false \
-    -Dplugin_upower=false \
-    -Dplugin_powerd=false \
     -Dman=false \
     -Dmetainfo=false \
     -Dsoup_session_compat=false \
@@ -68,10 +41,7 @@ meson .. \
     -Dgusb:tests=false \
     -Dgusb:docs=false \
     -Dgusb:introspection=false \
-    -Dgusb:vapi=false \
-    -Dbluez=false \
-    -Dsqlite=false \
-    -Dgudev=false $@
+    -Dgusb:vapi=false $@
 VERSION=$(meson introspect . --projectinfo | jq -r .version)
 ninja -v
 ninja -v install

@@ -32,6 +32,7 @@ jobs:
                                   gcc
                                   gcab
                                   ca-certificates
+                                  python3-pip
                                   mingw32-nsis
                                   mingw64-brotli
                                   mingw64-gcc

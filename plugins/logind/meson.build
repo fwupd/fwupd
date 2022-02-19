@@ -1,7 +1,4 @@
-if get_option('systemd') or get_option('elogind')
-if host_machine.system() != 'linux'
-  error('linux is required for systemd')
-endif
+if libsystemd.found() or elogind.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogind"']
 
 shared_module('fu_plugin_logind',

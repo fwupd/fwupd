@@ -1,4 +1,5 @@
-if get_option('plugin_powerd') and host_machine.system() == 'linux' and gio.version().version_compare('>=2.58')
+if get_option('plugin_powerd').disable_auto_if(host_machine.system() != 'linux').require(gio.version().version_compare('>=2.58'),
+     error_message: 'gio 2.58 or later needed for powerd').allowed()
   cargs = ['-DG_LOG_DOMAIN="FuPluginPowerd"']
 
 shared_module('fu_plugin_powerd',

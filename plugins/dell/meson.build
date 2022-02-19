@@ -1,4 +1,10 @@
-if get_option('plugin_dell')
+tpm2tss_dell = dependency('tss2-esys', version : '>= 2.0', required: get_option('plugin_dell'))
+libsmbios_c = dependency('libsmbios_c', version : '>= 2.4.0', required: get_option('plugin_dell'))
+
+if tpm2tss_dell.found() and libsmbios_c.found() and \
+   get_option('plugin_dell').require(get_option('plugin_uefi_capsule').allowed(),
+    error_message: 'plugin_uefi_capsule is needed for plugin_dell').allowed()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginDell"']
 
 install_data(['dell.quirk'],
@@ -28,7 +34,7 @@ shared_module('fu_plugin_dell',
   dependencies : [
     plugin_deps,
     libsmbios_c,
-    tpm2tss,
+    tpm2tss_dell,
   ],
 )
 
@@ -54,7 +60,7 @@ if get_option('tests')
       plugin_deps,
       libsmbios_c,
       valgrind,
-      tpm2tss,
+      tpm2tss_dell,
     ],
     link_with : [
       fwupd,

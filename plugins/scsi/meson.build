@@ -1,7 +1,5 @@
-if get_option('plugin_scsi')
-if not get_option('gudev')
-  error('gudev is required for plugin_scsi')
-endif
+if get_option('plugin_scsi').require(gudev.found(),
+    error_message: 'gudev is needed for plugin_scsi').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginScsi"']
 
 install_data([

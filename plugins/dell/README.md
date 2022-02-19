@@ -44,7 +44,7 @@ For Dell support you will need libsmbios_c version 2.4.0 or later.
 * [binaries](https://github.com/dell/libsmbios/releases)
 
 If you don't want or need this functionality you can use the
-`-Dplugin_dell=false` option.
+`-Dplugin_dell=disabled` option.
 
 ## Devices powered by the Dell Plugin
 

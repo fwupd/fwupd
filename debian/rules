@@ -17,27 +17,27 @@ ifneq ($(CI),)
 endif
 
 ifneq ($(DEB_HOST_ARCH_CPU),ia64)
-	CONFARGS += -Dplugin_flashrom=true
+	CONFARGS += -Dplugin_flashrom=enabled
 else
-	CONFARGS += -Dplugin_flashrom=false
+	CONFARGS += -Dplugin_flashrom=disabled
 endif
 
 ifeq (yes,$(shell pkg-config --exists libsmbios_c && echo yes))
-	CONFARGS += -Dplugin_dell=true
+	CONFARGS += -Dplugin_dell=enabled
 else
-	CONFARGS += -Dplugin_dell=false
+	CONFARGS += -Dplugin_dell=disabled
 endif
 
 ifeq (yes,$(shell pkg-config --exists efivar && echo yes))
-	CONFARGS += -Dplugin_uefi_capsule=true -Defi_binary=false
+	CONFARGS += -Dplugin_uefi_capsule=enabled -Defi_binary=false
 else
-	CONFARGS += -Dplugin_uefi_capsule=false
+	CONFARGS += -Dplugin_uefi_capsule=disabled
 endif
 
 ifneq ($(filter $(DEB_HOST_ARCH_CPU),i386 amd64),)
-	CONFARGS += -Dplugin_msr=true
+	CONFARGS += -Dplugin_msr=enabled
 else
-	CONFARGS += -Dplugin_msr=false
+	CONFARGS += -Dplugin_msr=disabled
 endif
 
 ifneq ($(QUBES_OPTION),)
@@ -46,10 +46,10 @@ endif
 
 #Needs a MIR
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
-       CONFARGS += -Dplugin_logitech_bulkcontroller=false
+       CONFARGS += -Dplugin_logitech_bulkcontroller=disabled
 endif
 
-CONFARGS += -Dplugin_dummy=true -Dplugin_powerd=false -Ddocs=gtkdoc -Dsupported_build=true -Dplugin_modem_manager=true
+CONFARGS += -Dplugin_dummy=true -Dplugin_powerd=disabled -Ddocs=gtkdoc -Dsupported_build=enabled -Dplugin_modem_manager=enabled
 
 %:
 	dh $@ --with gir

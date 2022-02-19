@@ -1,7 +1,5 @@
-if get_option('plugin_synaptics_mst')
-if not get_option('gudev')
-  error('gudev is required for plugin_synaptics_mst')
-endif
+if get_option('plugin_synaptics_mst').require(gudev.found(),
+    error_message: 'gudev is needed for plugin_synaptics_mst').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsMST"']
 
 install_data(['synaptics-mst.quirk'],

@@ -7,7 +7,7 @@ defines the software interface between an OS and platform firmware.
 With the UpdateCapsule boot service it can be used to update system firmware.
 
 If you don't want or need this functionality you can use the
-`-Dplugin_uefi_capsule=false` option.
+`-Dplugin_uefi_capsule=disabled` option.
 
 When this plugin is enabled, the companion UEFI binary may also be built from the [fwupd-efi](https://github.com/fwupd/fwupd-efi) project if not already present on the filesystem.
 This behavior can be overridden using the meson option `-Defi_binary=false`.

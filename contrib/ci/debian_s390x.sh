@@ -17,14 +17,13 @@ cd build
 meson .. \
 	--cross-file s390x_cross.txt \
 	--werror \
-	-Dplugin_flashrom=false \
-	-Dplugin_uefi_capsule=false \
-	-Dplugin_dell=false \
-	-Dplugin_modem_manager=false \
-	-Dplugin_msr=false \
+	-Dplugin_flashrom=disabled \
+	-Dplugin_uefi_capsule=disabled \
+	-Dplugin_dell=disabled \
+	-Dplugin_modem_manager=disabled \
+	-Dplugin_msr=disabled \
 	-Dplugin_mtd=false \
-	-Dplugin_redfish=false \
-	-Dplugin_powerd=false \
+	-Dplugin_powerd=disabled \
 	-Dintrospection=false \
 	-Ddocs=none \
 	-Dlibxmlb:introspection=false \

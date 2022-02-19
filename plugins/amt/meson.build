@@ -1,4 +1,4 @@
-if get_option('plugin_amt')
+if get_option('plugin_amt').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAmt"']
 
 shared_module('fu_plugin_amt',

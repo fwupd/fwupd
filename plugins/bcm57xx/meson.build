@@ -1,7 +1,5 @@
-if get_option('plugin_bcm57xx')
-if not get_option('gudev')
-  error('gudev is required for plugin_bcm57xx')
-endif
+if get_option('plugin_bcm57xx').require(gudev.found(),
+    error_message: 'gudev is needed for plugin_bcm57xx').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginBcm57xx"']
 
 install_data(['bcm57xx.quirk'],

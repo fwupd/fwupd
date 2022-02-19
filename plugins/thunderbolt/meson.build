@@ -1,7 +1,5 @@
-if get_option('plugin_thunderbolt')
-if not get_option('gudev')
-  error('gudev is required for plugin_thunderbolt')
-endif
+if get_option('plugin_thunderbolt').require(gudev.found(),
+    error_message: 'gudev is needed for plugin_thunderbolt').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 install_data([
   'thunderbolt.quirk',

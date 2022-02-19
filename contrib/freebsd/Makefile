@@ -40,22 +40,10 @@ USE_LDCONFIG=	yes
 
 SHEBANG_GLOB=	*.py
 
-MESON_ARGS=	-Dgudev=false \
+MESON_ARGS=	-Dgudev=disabled \
 		-Dplugin_amt=false \
-		-Dplugin_dell=false \
-		-Dplugin_emmc=false \
-		-Dplugin_nvme=false \
-		-Dplugin_parade_lspcon=false \
-		-Dplugin_redfish=false \
-		-Dplugin_synaptics_mst=false \
-		-Dplugin_synaptics_rmi=false \
-		-Dplugin_realtek_mst=false \
-		-Dplugin_thunderbolt=false \
-		-Dplugin_tpm=false \
-		-Dplugin_bcm57xx=false \
-		-Dplugin_ep963x=false \
-		-Dpolkit=false \
-		-Dsystemd=false \
+		-Dpolkit=disabled \
+		-Dsystemd=disabled \
 		-Doffline=false \
 		-Dtests=false \
 		-Ddocs=gtkdoc \

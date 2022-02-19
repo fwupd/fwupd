@@ -1,7 +1,9 @@
-if get_option('hsi') and get_option('plugin_tpm')
-if not get_option('gudev')
-  error('gudev is required for tpm')
-endif
+tpm2tss_tpm = dependency('tss2-esys', version : '>= 2.0', required: get_option('plugin_tpm'))
+
+if get_option('hsi') and \
+   tpm2tss_tpm.found() and \
+   get_option('plugin_tpm').require(gudev.found(),
+    error_message: 'gudev is needed for plugin_tpm').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
 
 install_data([
@@ -34,7 +36,7 @@ plugin_tpm = shared_module('fu_plugin_tpm',
   c_args : cargs,
   dependencies : [
     plugin_deps,
-    tpm2tss,
+    tpm2tss_tpm,
   ],
 )
 
@@ -61,7 +63,7 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
-      tpm2tss,
+      tpm2tss_tpm,
     ],
     link_with : [
       fwupd,
@@ -87,7 +89,7 @@ executable(
   ],
   dependencies : [
       plugin_deps,
-      tpm2tss,
+      tpm2tss_tpm,
   ],
   link_with : [
     fwupd,

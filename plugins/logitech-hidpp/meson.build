@@ -1,4 +1,4 @@
-if get_option('gudev') and get_option('gusb')
+if gudev.found() and gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechHidPp"']
 
 install_data([

@@ -2,47 +2,32 @@ if get_option('tests')
 subdir('tests')
 endif
 
-if build_daemon and get_option('introspection')
-  install_data(['org.freedesktop.fwupd.xml'],
-    install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
-  )
-endif
-
 client_src = []
 systemd_src = []
 daemon_dep = [
+  libarchive,
   libjcat,
   libxmlb,
   libgcab,
   giounix,
   gmodule,
   gudev,
+  gusb,
   libjsonglib,
+  polkit,
+  sqlite,
 ]
 
 client_dep = [
   gudev,
+  gusb,
+  sqlite,
 ]
-
-if get_option('gusb')
-  daemon_dep += gusb
-  client_dep += gusb
-endif
-
-if get_option('libarchive')
-  daemon_dep += libarchive
-endif
-if get_option('sqlite')
-  daemon_dep += sqlite
-  client_dep += sqlite
-endif
-
-if get_option('systemd')
+if libsystemd.found()
   systemd_src += 'fu-systemd.c'
 endif
-if build_daemon and get_option('polkit')
+if polkit.found()
   client_src += 'fu-polkit-agent.c'
-  daemon_dep += polkit
 endif
 
 daemon_src = [
@@ -61,17 +46,22 @@ daemon_src = [
   'fu-security-attr.c',
 ] + systemd_src
 
-if get_option('gudev')
+if gudev.found()
   daemon_src += 'fu-udev-backend.c'
 endif
-if get_option('gusb')
+if gusb.found()
   daemon_src += 'fu-usb-backend.c'
 endif
-if get_option('bluez')
+if bluez.allowed()
   daemon_src += 'fu-bluez-backend.c'
 endif
 
 if build_daemon
+if introspection.allowed()
+  install_data(['org.freedesktop.fwupd.xml'],
+    install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
+  )
+endif
 fwupdmgr = executable(
   'fwupdmgr',
   fu_hash,
@@ -112,7 +102,7 @@ meson.add_install_script(
 endif
 endif
 
-if get_option('systemd') and get_option('offline')
+if offline.allowed()
 fwupdoffline = executable(
   'fwupdoffline',
   fu_hash,

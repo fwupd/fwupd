@@ -1,3 +1,17 @@
+# some of these are controlled by meson tristate features
+plugin_deps = [
+  gio,
+  giounix,
+  gnutls,
+  gmodule,
+  gudev,
+  gusb,
+  libarchive,
+  libjsonglib,
+  libxmlb,
+  protobufc,
+]
+
 subdir('acpi-dmar')
 subdir('acpi-facp')
 subdir('acpi-phat')

@@ -1,4 +1,5 @@
-if get_option('plugin_flashrom')
+if get_option('plugin_flashrom').enabled() or \
+   (get_option('plugin_flashrom').auto() and libflashrom.found())
 cargs = ['-DG_LOG_DOMAIN="FuPluginFlashrom"']
 
 install_data(['flashrom.quirk'],

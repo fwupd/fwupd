@@ -1,4 +1,4 @@
-if get_option('gudev')
+if gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginSuperio"']
 
 install_data(['superio.quirk'],

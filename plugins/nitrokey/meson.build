@@ -1,4 +1,4 @@
-if get_option('plugin_nitrokey')
+if get_option('plugin_nitrokey').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginNitrokey"']
 
 install_data(['nitrokey.quirk'],

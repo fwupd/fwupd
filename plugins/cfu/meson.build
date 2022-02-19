@@ -1,7 +1,5 @@
-if get_option('plugin_cfu')
-if not get_option('gudev')
-  error('gudev is required for plugin_cfu')
-endif
+if get_option('plugin_cfu').require(gudev.found(),
+    error_message: 'gudev is needed for plugin_cfu').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCfu"']
 
 install_data([
