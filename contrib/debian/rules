@@ -23,9 +23,9 @@ else
 endif
 
 ifeq (yes,$(shell pkg-config --exists libsmbios_c && echo yes))
-	CONFARGS += -Dplugin_dell=true
+	CONFARGS += -Dplugin_dell=enabled
 else
-	CONFARGS += -Dplugin_dell=false
+	CONFARGS += -Dplugin_dell=disabled
 endif
 
 ifeq (yes,$(shell pkg-config --exists efivar && echo yes))

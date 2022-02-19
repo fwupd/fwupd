@@ -401,13 +401,6 @@ if host_machine.system() == 'freebsd'
   endif
 endif
 
-if build_standalone and get_option('plugin_tpm')
-  tpm2tss = dependency('tss2-esys', version : '>= 2.0')
-  conf.set('HAVE_TSS2', '1')
-else
-  tpm2tss = dependency('', required: false)
-endif
-
 if build_standalone and get_option('plugin_uefi_capsule')
   efiboot = dependency('efiboot')
 
@@ -441,14 +434,6 @@ if build_standalone and get_option('plugin_uefi_capsule')
     if r.returncode() != 0
       error(r.stdout())
     endif
-  endif
-endif
-
-if build_standalone and get_option('plugin_dell')
-  libsmbios_c = dependency('libsmbios_c', version : '>= 2.4.0')
-  conf.set('HAVE_DELL', '1')
-  if not get_option('plugin_uefi_capsule')
-    error('plugin_dell also needs plugin_uefi_capsule to work')
   endif
 endif
 

@@ -12,7 +12,7 @@ cd build
 meson .. \
 	--werror \
 	-Dplugin_uefi_capsule=false \
-	-Dplugin_dell=false \
+	-Dplugin_dell=disabled \
 	-Dplugin_modem_manager=false \
 	-Dplugin_synaptics_mst=true \
 	-Dplugin_flashrom=enabled \

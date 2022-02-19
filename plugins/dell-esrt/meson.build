@@ -1,4 +1,4 @@
-if get_option('plugin_dell')
+if libsmbios_c.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginDellEsrt"']
 
 install_data(['metadata.xml'],

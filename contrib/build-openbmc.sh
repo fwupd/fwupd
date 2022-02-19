@@ -20,7 +20,7 @@ meson ../ \
     -Dplugin_amt=false \
     -Dplugin_bcm57xx=false \
     -Dplugin_cfu=false \
-    -Dplugin_dell=false \
+    -Dplugin_dell=disabled \
     -Dplugin_emmc=false \
     -Dplugin_ep963x=false \
     -Dplugin_fastboot=false \
@@ -35,7 +35,7 @@ meson ../ \
     -Dplugin_synaptics_mst=false \
     -Dplugin_synaptics_rmi=false \
     -Dplugin_thunderbolt=false \
-    -Dplugin_tpm=false \
+    -Dplugin_tpm=disabled \
     -Dplugin_uefi_capsule=false \
     -Dplugin_uf2=false \
     -Dplugin_upower=false \
