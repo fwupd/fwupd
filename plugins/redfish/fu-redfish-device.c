@@ -809,6 +809,7 @@ fu_redfish_device_init(FuRedfishDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VERFMT);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_ICON);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR);
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_REDFISH_DEVICE_FLAG_IS_BACKUP,
 					"is-backup");

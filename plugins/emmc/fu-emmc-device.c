@@ -544,6 +544,7 @@ fu_emmc_device_init(FuEmmcDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "org.jedec.mmc");
 	fu_device_add_icon(FU_DEVICE(self), "media-memory");
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 }
 
 static void

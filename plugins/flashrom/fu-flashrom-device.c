@@ -72,6 +72,7 @@ static void
 fu_flashrom_device_init(FuFlashromDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "org.flashrom");
+	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 }
 
 static void
