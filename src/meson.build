@@ -18,6 +18,7 @@ daemon_dep = [
   gmodule,
   gudev,
   libjsonglib,
+  polkit,
 ]
 
 client_dep = [
@@ -40,9 +41,8 @@ endif
 if get_option('systemd')
   systemd_src += 'fu-systemd.c'
 endif
-if build_daemon and get_option('polkit')
+if polkit.found()
   client_src += 'fu-polkit-agent.c'
-  daemon_dep += polkit
 endif
 
 daemon_src = [
