@@ -17,9 +17,9 @@ ifneq ($(CI),)
 endif
 
 ifneq ($(DEB_HOST_ARCH_CPU),ia64)
-	CONFARGS += -Dplugin_flashrom=true
+	CONFARGS += -Dplugin_flashrom=enabled
 else
-	CONFARGS += -Dplugin_flashrom=false
+	CONFARGS += -Dplugin_flashrom=disabled
 endif
 
 ifeq (yes,$(shell pkg-config --exists libsmbios_c && echo yes))

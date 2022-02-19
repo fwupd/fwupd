@@ -20,7 +20,7 @@ meson .. \
     -Dtests=true \
     -Dgusb:tests=false \
     -Dplugin_dummy=true \
-    -Dplugin_flashrom=true \
+    -Dplugin_flashrom=enabled \
     -Dplugin_modem_manager=false \
     -Dplugin_thunderbolt=true \
     -Dplugin_uefi_capsule=true \

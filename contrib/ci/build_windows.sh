@@ -25,7 +25,7 @@ meson .. \
     -Ddocs=none \
     -Dhsi=false \
     -Dpolkit=false \
-    -Dplugin_flashrom=false \
+    -Dplugin_flashrom=disabled \
     -Dplugin_uefi_capsule=false \
     -Dplugin_redfish=disabled \
     -Dplugin_dell=false \

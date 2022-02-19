@@ -475,8 +475,8 @@ endif
 
 umockdev = dependency('umockdev-1.0', required: false)
 
-if build_standalone and get_option('plugin_flashrom')
-  libflashrom = dependency('flashrom', fallback : ['flashrom', 'flashrom_dep'])
+if build_standalone
+  libflashrom = dependency('flashrom', fallback : ['flashrom', 'flashrom_dep'], required: get_option('plugin_flashrom'))
 endif
 
 if build_standalone and get_option('systemd')
