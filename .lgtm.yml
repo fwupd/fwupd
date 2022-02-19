@@ -11,7 +11,7 @@ extraction:
       - python3-wheel
       - libssl-dev
     after_prepare:
-    - python3 -m pip install --user "meson >= 0.52.0"
+    - python3 -m pip install --user "meson >= 0.60.0"
     - export PATH="$HOME/.local/bin:$PATH"
     - "cd $LGTM_WORKSPACE"
     - "mkdir installdir"

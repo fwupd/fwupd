@@ -1,4 +1,4 @@
-if get_option('plugin_upower') and host_machine.system() == 'linux'
+if get_option('plugin_upower').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUpower"']
 
 shared_module('fu_plugin_upower',

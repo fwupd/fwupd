@@ -1,7 +1,8 @@
-if get_option('plugin_nvme')
-if not get_option('gudev')
-  error('gudev is required for plugin_nvme')
-endif
+nvme_header = cc.has_header('linux/nvme_ioctl.h', required: get_option('plugin_nvme'))
+
+if nvme_header and \
+   get_option('plugin_nvme').require(gudev.found(),
+    error_message: 'gudev is needed for plugin_nvme').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginNvme"']
 
 install_data([

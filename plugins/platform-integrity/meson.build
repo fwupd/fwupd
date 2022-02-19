@@ -7,7 +7,7 @@ install_data([
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
-if get_option('systemd')
+if libsystemd.found()
 install_data(['fwupd-platform-integrity.conf'],
   install_dir: systemd_modules_load_dir,
 )

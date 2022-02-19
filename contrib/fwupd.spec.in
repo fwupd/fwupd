@@ -242,46 +242,46 @@ fwupd wrapper for Qubes OS
     -Dplugin_dummy=false \
 %endif
 %if 0%{?have_flashrom}
-    -Dplugin_flashrom=true \
+    -Dplugin_flashrom=enabled \
 %else
-    -Dplugin_flashrom=false \
+    -Dplugin_flashrom=disabled \
 %endif
 %if 0%{?have_msr}
-    -Dplugin_msr=true \
+    -Dplugin_msr=enabled \
 %else
-    -Dplugin_msr=false \
+    -Dplugin_msr=disabled \
 %endif
-    -Dplugin_thunderbolt=true \
+    -Dplugin_thunderbolt=enabled \
 %if 0%{?have_uefi}
-    -Dplugin_uefi_capsule=true \
-    -Dplugin_uefi_pk=true \
-    -Dplugin_tpm=true \
-    -Dplugin_gpio=true \
+    -Dplugin_uefi_capsule=enabled \
+    -Dplugin_uefi_pk=enabled \
+    -Dplugin_tpm=enabled \
+    -Dplugin_gpio=enabled \
     -Defi_binary=false \
 %else
-    -Dplugin_uefi_capsule=false \
-    -Dplugin_uefi_pk=false \
-    -Dplugin_tpm=false \
+    -Dplugin_uefi_capsule=disabled \
+    -Dplugin_uefi_pk=disabled \
+    -Dplugin_tpm=disabled \
 %endif
 %if 0%{?have_dell}
-    -Dplugin_dell=true \
-    -Dplugin_synaptics_mst=true \
+    -Dplugin_dell=enabled \
+    -Dplugin_synaptics_mst=enabled \
 %else
-    -Dplugin_dell=false \
-    -Dplugin_synaptics_mst=false \
+    -Dplugin_dell=disabled \
+    -Dplugin_synaptics_mst=disabled \
 %endif
 %if 0%{?have_modem_manager}
-    -Dplugin_modem_manager=true \
+    -Dplugin_modem_manager=enabled \
 %else
-    -Dplugin_modem_manager=false \
+    -Dplugin_modem_manager=disabled \
 %endif
 %if 0%{?qubes_packages}
     -Dqubes=true \
 %endif
     -Dman=true \
-    -Dbluez=true \
-    -Dplugin_powerd=false \
-    -Dsupported_build=true
+    -Dbluez=enabled \
+    -Dplugin_powerd=disabled \
+    -Dsupported_build=enabled
 
 %meson_build
 
@@ -418,6 +418,7 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_analogix.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_ata.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_bcm57xx.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_cfu.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_ccgx.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_colorhug.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_cros_ec.so
