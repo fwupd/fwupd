@@ -265,16 +265,9 @@ else
   python3 = find_program('python3.8', 'python3', 'python3.9')
 endif
 
-if get_option('gnutls')
-  gnutls = dependency('gnutls', version : '>= 3.6.0')
+gnutls = dependency('gnutls', version : '>= 3.6.0', required: get_option('gnutls'))
+if gnutls.found()
   conf.set('HAVE_GNUTLS', '1')
-else
-  if get_option('plugin_uefi_pk')
-    error('plugin_uefi_pk needs -Dgnutls=true to work')
-  endif
-  if get_option('plugin_synaptics_rmi')
-    error('plugin_synaptics_rmi needs -Dgnutls=true to work')
-  endif
 endif
 
 lzma_daemon = dependency('liblzma', required: get_option('lzma'))
@@ -542,6 +535,7 @@ if build_standalone
   plugin_deps += gmodule
   plugin_deps += gudev
   plugin_deps += libjsonglib
+  plugin_deps += gnutls
 endif
 
 if get_option('gusb')
