@@ -215,13 +215,13 @@ if get_option('gusb')
   gusb = dependency('gusb', version : '>= 0.3.0', fallback : ['gusb', 'gusb_dep'])
   conf.set('HAVE_GUSB', '1')
 endif
-if get_option('sqlite')
-  sqlite = dependency('sqlite3')
+sqlite = dependency('sqlite3', required: get_option('sqlite'))
+if sqlite.found()
   conf.set('HAVE_SQLITE', '1')
 endif
-if get_option('libarchive')
-  libarchive = dependency('libarchive')
-  conf.set('HAVE_LIBARCHIVE', '1')
+libarchive = dependency('libarchive', required: get_option('libarchive'))
+if libarchive.found()
+    conf.set('HAVE_LIBARCHIVE', '1')
 endif
 endif
 libjcat = dependency('jcat', version : '>= 0.1.4', fallback : ['libjcat', 'libjcat_dep'])
@@ -536,14 +536,11 @@ if build_standalone
   plugin_deps += gudev
   plugin_deps += libjsonglib
   plugin_deps += gnutls
+  plugin_deps += libarchive
 endif
 
 if get_option('gusb')
   plugin_deps += gusb
-endif
-
-if get_option('libarchive')
-  plugin_deps += libarchive
 endif
 
 if get_option('plugin_logitech_bulkcontroller')

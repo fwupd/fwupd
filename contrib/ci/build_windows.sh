@@ -70,7 +70,7 @@ meson .. \
     -Dgusb:introspection=false \
     -Dgusb:vapi=false \
     -Dbluez=false \
-    -Dsqlite=false \
+    -Dsqlite=disabled \
     -Dgudev=false $@
 VERSION=$(meson introspect . --projectinfo | jq -r .version)
 ninja -v
