@@ -467,11 +467,7 @@ if get_option('soup_session_compat')
     conf.set('SOUP_SESSION_COMPAT', '1')
 endif
 
-if build_standalone and get_option('plugin_nvme')
-  if not cc.has_header('linux/nvme_ioctl.h')
-    error('NVMe support requires kernel >= 4.4')
-  endif
-endif
+nvme_header = cc.has_header('linux/nvme_ioctl.h', required: get_option('plugin_nvme'))
 
 umockdev = dependency('umockdev-1.0', required: false)
 

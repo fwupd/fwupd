@@ -30,7 +30,7 @@ meson .. \
     -Dplugin_redfish=disabled \
     -Dplugin_dell=false \
     -Dplugin_logitech_bulkcontroller=false \
-    -Dplugin_nvme=false \
+    -Dplugin_nvme=disabled \
     -Dplugin_parade_lspcon=false \
     -Dplugin_realtek_mst=false \
     -Dplugin_bcm57xx=false \
