@@ -359,6 +359,7 @@ done
 /usr/lib/modules-load.d/fwupd-msr.conf
 %config(noreplace)%{_sysconfdir}/fwupd/msr.conf
 %endif
+/usr/lib/modules-load.d/fwupd-platform-integrity.conf
 /usr/lib/modules-load.d/fwupd-redfish.conf
 %{_datadir}/dbus-1/system.d/org.freedesktop.fwupd.conf
 %{_datadir}/bash-completion/completions/fwupdmgr
@@ -459,6 +460,7 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_parade_lspcon.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_pci_bcr.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_pci_mei.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_platform_integrity.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_pixart_rf.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_realtek_mst.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_redfish.so

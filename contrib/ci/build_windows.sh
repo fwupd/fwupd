@@ -33,7 +33,6 @@ meson .. \
     -Dplugin_nvme=false \
     -Dplugin_parade_lspcon=false \
     -Dplugin_realtek_mst=false \
-    -Dplugin_platform_integrity=false \
     -Dplugin_bcm57xx=false \
     -Dplugin_pixart_rf=false \
     -Dplugin_cfu=false \

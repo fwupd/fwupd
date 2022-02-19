@@ -1,4 +1,4 @@
-if get_option('hsi') and get_option('plugin_platform_integrity')
+if get_option('hsi')
 cargs = ['-DG_LOG_DOMAIN="FuPluginPlatformIntegrity"']
 
 install_data([
