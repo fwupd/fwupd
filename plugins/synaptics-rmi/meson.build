@@ -1,5 +1,8 @@
 if get_option('plugin_synaptics_rmi')
-if not get_option('gudev')
+if not gnutls.found()
+  error('gnutls is needed for plugin_synaptics_rmi')
+endif
+if not gudev.found()
   error('gudev is required for plugin_synaptics_rmi')
 endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsRmi"']
@@ -31,7 +34,6 @@ shared_module('fu_plugin_synaptics_rmi',
   c_args : cargs,
   dependencies : [
     plugin_deps,
-    gnutls,
   ],
   link_with : [
     fwupd,
