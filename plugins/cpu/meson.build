@@ -1,4 +1,5 @@
-if get_option('hsi') and get_option('plugin_cpu')
+if get_option('plugin_cpu').disable_auto_if(host_machine.system() != 'linux').require(get_option('hsi'),
+    error_message: 'plugin_cpu needs hsi to be set').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginCpu"']
 
 install_data(['cpu.quirk'],

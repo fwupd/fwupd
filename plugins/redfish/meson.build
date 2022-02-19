@@ -1,7 +1,5 @@
-if get_option('plugin_redfish')
-if not get_option('curl')
-  error('curl is required for plugin_redfish')
-endif
+if get_option('plugin_redfish').require(libcurl.found(),
+    error_message: 'curl is needed for plugin_redfish').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginRedfish"']
 
 install_data(['redfish.quirk'],
@@ -13,7 +11,7 @@ if have_linux_ipmi
   ipmi_src += 'fu-ipmi-device.c'
 endif
 
-if get_option('systemd') and have_linux_ipmi
+if libsystemd.found() and have_linux_ipmi
 install_data(['fwupd-redfish.conf'],
   install_dir: systemd_modules_load_dir,
 )

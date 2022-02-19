@@ -29,11 +29,10 @@ build() {
     fi
     arch-meson -D b_lto=false $CI ../build \
         -Dplugin_intel_spi=true \
-        -Dplugin_powerd=false \
-        -Dlzma=true \
+        -Dplugin_powerd=disabled \
         -Ddocs=gtkdoc \
         -Defi_binary=false \
-        -Dsupported_build=true
+        -Dsupported_build=enabled
 
     ninja -v -C ../build
 }

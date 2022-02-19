@@ -1,8 +1,6 @@
-if get_option('plugin_uf2') and host_machine.system() == 'linux'
-if not get_option('gusb')
-  error('gusb is required for plugin_uf2')
-endif
 
+if get_option('plugin_uf2').require(gudev.found(),
+    error_message: 'gudev is needed for plugin_uf2').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUf2"']
 
 install_data(['uf2.quirk'],

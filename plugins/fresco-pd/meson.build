@@ -1,4 +1,4 @@
-if get_option('gusb')
+if gusb.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginFrescoPd"']
 
 install_data(['fresco-pd.quirk'],

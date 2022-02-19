@@ -161,6 +161,8 @@ introspection_deps = [
   libxmlb,
   libjcat,
   giounix,
+  gusb,
+  gudev,
 ]
 
 pkgg_requires = [ 'gio-2.0',
@@ -172,16 +174,8 @@ pkgg_requires = [ 'gio-2.0',
                   'libgcab-1.0',
                   'xmlb',
                   'jcat',
+                  'gusb'
 ]
-
-if get_option('gusb')
-  introspection_deps += gusb
-  pkgg_requires +=  'gusb'
-endif
-
-if get_option('gudev')
-  introspection_deps += gudev
-endif
 
 library_deps = [
   introspection_deps,
@@ -190,16 +184,10 @@ library_deps = [
   libgcab,
   valgrind,
   libjcat,
+  lzma,
+  libarchive,
   platform_deps,
 ]
-
-if get_option('libarchive')
-  library_deps += libarchive
-endif
-
-if get_option('lzma')
-  library_deps += lzma
-endif
 
 fwupdplugin_mapfile = 'fwupdplugin.map'
 vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), fwupdplugin_mapfile)
@@ -238,11 +226,11 @@ fwupdplugin_pkgg.generate(
   description : 'library for plugins to use to interact with fwupd daemon',
 )
 
-if get_option('introspection')
+if introspection.allowed()
   gir_dep = declare_dependency(sources: fwupd_gir)
   girtargets = []
   extra_args = []
-  if get_option('gusb')
+  if gusb.found()
     if gusb.type_name() == 'internal'
       girtargets += subproject('gusb').get_variable('libgusb_girtarget')[0]
     else

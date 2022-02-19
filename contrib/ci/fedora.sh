@@ -14,18 +14,20 @@ if [ "$QUBES" = "true" ]; then
     QUBES_MACRO=(--define "qubes_packages 1")
 fi
 
+dnf install -y python3-pip
+python3 -m pip install --user "meson >= 0.60.0"
 meson .. \
     -Ddocs=none \
     -Dman=true \
     -Dtests=true \
     -Dgusb:tests=false \
     -Dplugin_dummy=true \
-    -Dplugin_flashrom=true \
-    -Dplugin_modem_manager=false \
-    -Dplugin_thunderbolt=true \
-    -Dplugin_uefi_capsule=true \
-    -Dplugin_dell=true \
-    -Dplugin_synaptics_mst=true $@
+    -Dplugin_flashrom=enabled \
+    -Dplugin_modem_manager=disabled \
+    -Dplugin_thunderbolt=enabled \
+    -Dplugin_uefi_capsule=enabled \
+    -Dplugin_dell=enabled \
+    -Dplugin_synaptics_mst=enabled $@
 ninja-build dist
 popd
 VERSION=`meson introspect build --projectinfo | jq -r .version`

@@ -1,4 +1,4 @@
-if get_option('plugin_uefi_capsule')
+if efiboot.found() and efivar.found()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiCapsule"']
 

@@ -1,4 +1,10 @@
 if get_option('plugin_intel_spi')
+
+if not lzma.found() or \
+   host_machine.system() != 'linux' or \
+   (host_cpu != 'x86' and host_cpu != 'x86_64')
+    error('unsupported configuration for intel_spi')
+endif
 cargs = ['-DG_LOG_DOMAIN="FuPluginIntelSpi"']
 
 install_data(['intel-spi.quirk'],

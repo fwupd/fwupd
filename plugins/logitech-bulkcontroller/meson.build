@@ -1,8 +1,4 @@
-if get_option('plugin_logitech_bulkcontroller')
-
-if not get_option('gusb')
-  error('gusb is required for plugin_logitech_bulkcontroller')
-endif
+if gusb.found() and protobufc.found() and protoc.found()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginLogitechBulkController"']
 

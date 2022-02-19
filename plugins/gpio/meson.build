@@ -1,10 +1,6 @@
-if get_option('plugin_gpio')
-if not get_option('gudev')
-  error('gudev is required for plugin_gpio')
-endif
-if not have_linux_gpio
-  error('linux/gpio.h (with API v2) is required for plugin_gpio')
-endif
+gpio_header = cc.has_header_symbol('linux/gpio.h', 'GPIO_V2_LINE_FLAG_OUTPUT', required: get_option('plugin_gpio'))
+
+if gpio_header and gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginGpio"']
 
 install_data([

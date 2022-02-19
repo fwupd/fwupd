@@ -1,7 +1,6 @@
-if get_option('plugin_emmc')
-if not get_option('gudev')
-  error('gudev is required for plugin_emmc')
-endif
+if get_option('plugin_emmc').require(gudev.found(),
+    error_message: 'gudev is needed for plugin_emmc').allowed()
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginEmmc"']
 
 install_data(['emmc.quirk'],

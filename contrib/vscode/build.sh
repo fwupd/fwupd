@@ -9,7 +9,7 @@ fi
 
 # build in tree
 sudo rm -rf build ${ROOT}/dist
-meson build --prefix=${ROOT}/dist -Dsystemd=false -Dudevdir=${ROOT}/dist -Ddocs=none
+meson build --prefix=${ROOT}/dist -Dsystemd=disabled -Dudevdir=${ROOT}/dist -Ddocs=none
 ninja -C build install
 
 #create helper scripts
