@@ -515,20 +515,6 @@ configure_file(
 protobufc = dependency('libprotobuf-c', required: get_option('plugin_logitech_bulkcontroller'))
 protoc = find_program('protoc', 'protoc-c', required: get_option('plugin_logitech_bulkcontroller'))
 
-if build_standalone
-  plugin_deps = []
-  plugin_deps += libxmlb
-  plugin_deps += gio
-  plugin_deps += giounix
-  plugin_deps += gmodule
-  plugin_deps += gudev
-  plugin_deps += libjsonglib
-  plugin_deps += gnutls
-  plugin_deps += libarchive
-  plugin_deps += gusb
-  plugin_deps += protobufc
-endif
-
 root_incdir = include_directories('.')
 
 if get_option('docs') == 'gtkdoc'
