@@ -24,7 +24,7 @@ meson ../ \
     -Dplugin_emmc=false \
     -Dplugin_ep963x=false \
     -Dplugin_fastboot=false \
-    -Dplugin_logitech_bulkcontroller=false \
+    -Dplugin_logitech_bulkcontroller=disabled \
     -Dplugin_nitrokey=false \
     -Dplugin_nvme=disabled \
     -Dplugin_parade_lspcon=false \

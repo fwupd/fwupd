@@ -25,7 +25,7 @@ option('plugin_emmc', type : 'boolean', value : true, description : 'enable eMMC
 option('plugin_ep963x', type : 'boolean', value : true, description : 'enable EP963x support')
 option('plugin_fastboot', type : 'boolean', value : true, description : 'enable Fastboot support')
 option('plugin_gpio', type : 'feature', description : 'Linux GPIO support')
-option('plugin_logitech_bulkcontroller', type : 'boolean', value : true, description : 'enable Logitech bulk controller support')
+option('plugin_logitech_bulkcontroller', type : 'feature', description : 'Logitech bulk controller support')
 option('plugin_parade_lspcon', type : 'boolean', value : true, description : 'enable Parade LSPCON support')
 option('plugin_pixart_rf', type : 'boolean', value : true, description : 'enable PixartRF support')
 option('plugin_realtek_mst', type : 'boolean', value : true, description : 'enable Realtek MST hub support')
