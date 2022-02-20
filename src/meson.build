@@ -18,6 +18,7 @@ daemon_dep = [
   giounix,
   gmodule,
   gudev,
+  gusb,
   libjsonglib,
   polkit,
   sqlite,
@@ -25,13 +26,9 @@ daemon_dep = [
 
 client_dep = [
   gudev,
+  gusb,
   sqlite,
 ]
-
-if get_option('gusb')
-  daemon_dep += gusb
-  client_dep += gusb
-endif
 
 if get_option('systemd')
   systemd_src += 'fu-systemd.c'
@@ -59,7 +56,7 @@ daemon_src = [
 if get_option('gudev')
   daemon_src += 'fu-udev-backend.c'
 endif
-if get_option('gusb')
+if gusb.found()
   daemon_src += 'fu-usb-backend.c'
 endif
 if get_option('bluez')

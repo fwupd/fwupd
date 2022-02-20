@@ -211,8 +211,8 @@ if get_option('hsi')
   conf.set('HAVE_HSI', '1')
 endif
 libxmlb = dependency('xmlb', version : '>= 0.1.13', fallback : ['libxmlb', 'libxmlb_dep'])
-if get_option('gusb')
-  gusb = dependency('gusb', version : '>= 0.3.0', fallback : ['gusb', 'gusb_dep'])
+gusb = dependency('gusb', version : '>= 0.3.0', fallback : ['gusb', 'gusb_dep'], required: get_option('gusb'))
+if gusb.found()
   conf.set('HAVE_GUSB', '1')
 endif
 sqlite = dependency('sqlite3', required: get_option('sqlite'))
@@ -509,8 +509,8 @@ conf.set_quoted('FWUPD_PLUGINDIR', plugin_dir)
 endif
 
 # sanity check, otherwise there is not point building
-if host_machine.system() == 'windows' and not get_option('gusb')
-  error('-Dgusb=true is required for Windows build')
+if host_machine.system() == 'windows' and not gusb.found()
+  error('gusb feature is required for Windows build')
 endif
 
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
@@ -537,9 +537,6 @@ if build_standalone
   plugin_deps += libjsonglib
   plugin_deps += gnutls
   plugin_deps += libarchive
-endif
-
-if get_option('gusb')
   plugin_deps += gusb
 endif
 

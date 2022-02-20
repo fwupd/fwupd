@@ -161,6 +161,7 @@ introspection_deps = [
   libxmlb,
   libjcat,
   giounix,
+  gusb,
 ]
 
 pkgg_requires = [ 'gio-2.0',
@@ -172,12 +173,8 @@ pkgg_requires = [ 'gio-2.0',
                   'libgcab-1.0',
                   'xmlb',
                   'jcat',
+                  'gusb'
 ]
-
-if get_option('gusb')
-  introspection_deps += gusb
-  pkgg_requires +=  'gusb'
-endif
 
 if get_option('gudev')
   introspection_deps += gudev
@@ -236,7 +233,7 @@ if get_option('introspection')
   gir_dep = declare_dependency(sources: fwupd_gir)
   girtargets = []
   extra_args = []
-  if get_option('gusb')
+  if gusb.found()
     if gusb.type_name() == 'internal'
       girtargets += subproject('gusb').get_variable('libgusb_girtarget')[0]
     else
