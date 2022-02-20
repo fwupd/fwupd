@@ -46,7 +46,7 @@ endif
 
 #Needs a MIR
 ifeq (yes,$(shell dpkg-vendor --derives-from Ubuntu && echo yes))
-       CONFARGS += -Dplugin_logitech_bulkcontroller=false
+       CONFARGS += -Dplugin_logitech_bulkcontroller=disabled
 endif
 
 CONFARGS += -Dplugin_dummy=true -Dplugin_powerd=false -Ddocs=gtkdoc -Dsupported_build=true -Dplugin_modem_manager=true

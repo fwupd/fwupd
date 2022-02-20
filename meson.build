@@ -527,6 +527,9 @@ configure_file(
   configuration : conf
 )
 
+protobufc = dependency('libprotobuf-c', required: get_option('plugin_logitech_bulkcontroller'))
+protoc = find_program('protoc', 'protoc-c', required: get_option('plugin_logitech_bulkcontroller'))
+
 if build_standalone
   plugin_deps = []
   plugin_deps += libxmlb
@@ -538,12 +541,7 @@ if build_standalone
   plugin_deps += gnutls
   plugin_deps += libarchive
   plugin_deps += gusb
-endif
-
-if get_option('plugin_logitech_bulkcontroller')
-    protobufc = dependency('libprotobuf-c')
-    protoc = find_program('protoc', 'protoc-c')
-    plugin_deps += protobufc
+  plugin_deps += protobufc
 endif
 
 root_incdir = include_directories('.')
