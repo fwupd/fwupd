@@ -622,7 +622,7 @@ if get_option('systemd') and build_daemon
   meson.add_install_script('meson_post_install.sh', systemdunitdir)
 endif
 
-makensis = find_program('makensis', required : false)
+makensis = find_program('makensis', required : host_machine.system() == 'windows')
 if makensis.found()
   run_target(
     'makensis',
