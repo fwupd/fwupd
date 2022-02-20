@@ -1,6 +1,6 @@
 if get_option('plugin_fastboot')
 
-if not get_option('gusb')
+if not gusb.found()
   error('gusb is required for plugin_fastboot')
 endif
 

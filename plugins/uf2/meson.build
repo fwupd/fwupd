@@ -1,5 +1,5 @@
 if get_option('plugin_uf2') and host_machine.system() == 'linux'
-if not get_option('gusb')
+if not gusb.found()
   error('gusb is required for plugin_uf2')
 endif
 

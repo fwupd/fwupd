@@ -9,7 +9,7 @@ meson ../ \
     -Dfish_completion=false \
     -Dfirmware-packager=false \
     -Dgudev=false \
-    -Dgusb=false \
+    -Dgusb=disabled \
     -Dhsi=false \
     -Dintrospection=false \
     -Dlibarchive=disabled \
