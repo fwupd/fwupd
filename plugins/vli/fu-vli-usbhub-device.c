@@ -624,6 +624,19 @@ fu_vli_usbhub_device_guess_kind(FuVliUsbhubDevice *self, GError **error)
 }
 
 static gboolean
+_fu_usb_device_has_child(FuUsbDevice *self, guint16 vid, guint16 pid)
+{
+	g_autoptr(GPtrArray) children = g_usb_device_get_children(fu_usb_device_get_dev(self));
+	for (guint i = 0; i < children->len; i++) {
+		GUsbDevice *usb_device = g_ptr_array_index(children, i);
+		if (g_usb_device_get_vid(usb_device) == vid &&
+		    g_usb_device_get_pid(usb_device) == pid)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static gboolean
 fu_vli_usbhub_device_probe(FuDevice *device, GError **error)
 {
 	guint16 usbver = fu_usb_device_get_spec(FU_USB_DEVICE(device));
@@ -644,6 +657,22 @@ fu_vli_usbhub_device_probe(FuDevice *device, GError **error)
 	} else {
 		fu_device_set_summary(device, "USB hub");
 	}
+
+	/* check for the DA300 which does not respond well to probing */
+	if ((fu_usb_device_get_vid(FU_USB_DEVICE(device)) == 0x2109 &&
+	     fu_usb_device_get_pid(FU_USB_DEVICE(device)) == 0x2820 &&
+	     _fu_usb_device_has_child(FU_USB_DEVICE(device), 0x208E, 0x0001)) ||
+	    (fu_usb_device_get_vid(FU_USB_DEVICE(device)) == 0x2109 &&
+	     fu_usb_device_get_pid(FU_USB_DEVICE(device)) == 0x0820 &&
+	     _fu_usb_device_has_child(FU_USB_DEVICE(device), 0x0BDA, 0x8153))) {
+		g_set_error(error,
+			    G_IO_ERROR,
+			    G_IO_ERROR_NOT_SUPPORTED,
+			    "DA300 hardware is not supported");
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
