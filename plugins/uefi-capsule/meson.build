@@ -119,18 +119,18 @@ install_data(['uefi_capsule.conf'],
 
 # add all the .po files as inputs to watch
 ux_linguas = run_command(
-  'cat', files(join_paths(meson.source_root(), 'po', 'LINGUAS')),
+  'cat', files(join_paths(meson.project_source_root(), 'po', 'LINGUAS')),
 ).stdout().strip().split('\n')
 ux_capsule_pofiles = []
 foreach ux_lingua : ux_linguas
-  ux_capsule_pofiles += join_paths(meson.source_root(), 'po', '@0@.po'.format(ux_lingua))
+  ux_capsule_pofiles += join_paths(meson.project_source_root(), 'po', '@0@.po'.format(ux_lingua))
 endforeach
 
 if get_option('plugin_uefi_capsule_splash')
   # add the archive of pregenerated images
   custom_target('ux-capsule-tar',
     input : [
-      join_paths(meson.source_root(), 'po', 'LINGUAS'),
+      join_paths(meson.project_source_root(), 'po', 'LINGUAS'),
       join_paths(meson.current_source_dir(), 'make-images.py'),
       ux_capsule_pofiles,
     ],
@@ -138,7 +138,7 @@ if get_option('plugin_uefi_capsule_splash')
     command : [
       python3.path(),
       join_paths(meson.current_source_dir(), 'make-images.py'),
-      '--podir', join_paths(meson.source_root(), 'po'),
+      '--podir', join_paths(meson.project_source_root(), 'po'),
       '--label', 'Installing firmware update…',
       '--out', '@OUTPUT@',
     ],

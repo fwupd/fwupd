@@ -83,8 +83,8 @@ elif get_option('docs') == 'gtkdoc'
   gnome.gtkdoc(
     'fwupd',
     src_dir : [
-      join_paths(meson.source_root(), 'libfwupd'),
-      join_paths(meson.source_root(), 'libfwupdplugin'),
+      join_paths(meson.project_source_root(), 'libfwupd'),
+      join_paths(meson.project_source_root(), 'libfwupdplugin'),
       join_paths(meson.build_root(), 'libfwupd'),
       join_paths(meson.build_root(), 'libfwupdplugin'),
       join_paths(meson.current_source_dir()),

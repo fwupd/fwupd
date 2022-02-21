@@ -21,8 +21,8 @@ if build_standalone and get_option('lvfs') != 'false'
     input: 'lvfs.metainfo.xml',
     output: 'org.freedesktop.fwupd.remotes.lvfs.metainfo.xml',
     type: 'xml',
-    po_dir: join_paths(meson.source_root(), 'po'),
-    data_dirs: join_paths(meson.source_root(), 'po'),
+    po_dir: join_paths(meson.project_source_root(), 'po'),
+    data_dirs: join_paths(meson.project_source_root(), 'po'),
     install: true,
     install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
   )
@@ -30,8 +30,8 @@ if build_standalone and get_option('lvfs') != 'false'
     input: 'lvfs-testing.metainfo.xml',
     output: 'org.freedesktop.fwupd.remotes.lvfs-testing.metainfo.xml',
     type: 'xml',
-    po_dir: join_paths(meson.source_root(), 'po'),
-    data_dirs: join_paths(meson.source_root(), 'po'),
+    po_dir: join_paths(meson.project_source_root(), 'po'),
+    data_dirs: join_paths(meson.project_source_root(), 'po'),
     install: true,
     install_dir: join_paths(get_option('datadir'), 'fwupd', 'metainfo')
   )
