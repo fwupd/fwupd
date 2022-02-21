@@ -142,3 +142,5 @@ GPtrArray *
 fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *subsystem);
 GPtrArray *
 fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *subsystem);
+FuUdevDevice *
+fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsystem);

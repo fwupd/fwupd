@@ -1000,5 +1000,6 @@ LIBFWUPDPLUGIN_1.7.6 {
   global:
     fu_common_instance_id_strsafe;
     fu_common_version_ensure_semver_full;
+    fu_udev_device_get_parent_with_subsystem;
   local: *;
 } LIBFWUPDPLUGIN_1.7.4;
