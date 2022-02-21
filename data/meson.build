@@ -59,7 +59,7 @@ if build_daemon
     con2.set('datadir', datadir)
     con2.set('localstatedir', localstatedir)
     rw_directories = []
-    if get_option('plugin_uefi_capsule')
+    if not get_option('plugin_uefi_capsule').disabled()
       rw_directories += ['-/boot/efi', '-/efi/EFI', '-/boot/EFI', '-/boot/grub']
     endif
 

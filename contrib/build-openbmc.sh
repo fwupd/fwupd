@@ -36,7 +36,7 @@ meson ../ \
     -Dplugin_synaptics_rmi=false \
     -Dplugin_thunderbolt=false \
     -Dplugin_tpm=disabled \
-    -Dplugin_uefi_capsule=false \
+    -Dplugin_uefi_capsule=disabled \
     -Dplugin_uf2=false \
     -Dplugin_upower=false \
     -Dpolkit=disabled \

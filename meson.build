@@ -397,10 +397,10 @@ if host_machine.system() == 'freebsd'
   endif
 endif
 
-if build_standalone and get_option('plugin_uefi_capsule')
-  efiboot = dependency('efiboot')
+efiboot = dependency('efiboot', required: get_option('plugin_uefi_capsule'))
+efivar = dependency('efivar', required: get_option('plugin_uefi_capsule'))
+if build_standalone and efiboot.found() and efivar.found()
 
-  efivar = dependency('efivar')
   if cc.has_header_symbol('efivar/efivar-types.h', 'efi_time_t', dependencies : efivar)
     conf.set('HAVE_EFI_TIME_T', '1')
   endif
