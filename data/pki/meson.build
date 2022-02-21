@@ -1,7 +1,7 @@
 # only install files that are going to be used
 if libjcat.type_name() != 'internal' and libjcat.version().version_compare('>= 0.1.9')
-  supported_gpg = libjcat.get_pkgconfig_variable('supported_gpg')
-  supported_pkcs7 = libjcat.get_pkgconfig_variable('supported_pkcs7')
+  supported_gpg = libjcat.get_variable(pkgconfig : 'supported_gpg')
+  supported_pkcs7 = libjcat.get_variable(pkgconfig : 'supported_pkcs7')
 else
   supported_gpg = '1'
   supported_pkcs7 = '1'
