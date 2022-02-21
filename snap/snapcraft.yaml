@@ -189,7 +189,7 @@ parts:
                        -Ddocs=none,
                        -Dintrospection=false,
                        -Dman=false,
-                       -Dplugin_modem_manager=true,
+                       -Dplugin_modem_manager=enabled,
                        -Dplugin_powerd=false,
                        -Dudevdir=$SNAPCRAFT_STAGE/lib/udev,
                        "-Dgusb:tests=false",

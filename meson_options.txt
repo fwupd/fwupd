@@ -40,7 +40,7 @@ option('plugin_uefi_capsule_splash', type : 'boolean', value : true, description
 option('plugin_uefi_pk', type : 'boolean', value : true, description : 'enable UEFI PK support')
 option('plugin_nitrokey', type : 'boolean', value : true, description : 'enable Nitrokey support')
 option('plugin_nvme', type : 'feature', description : 'enable NVMe support')
-option('plugin_modem_manager', type : 'boolean', value : false, description : 'enable ModemManager support')
+option('plugin_modem_manager', type : 'feature', description : 'ModemManager support')
 option('plugin_msr', type : 'boolean', value : true, description : 'enable MSR support')
 option('plugin_mtd', type : 'boolean', value : true, description : 'enable MTD support')
 option('plugin_flashrom', type : 'feature', description : 'enable flashrom support')

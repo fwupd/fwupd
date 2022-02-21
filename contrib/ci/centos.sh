@@ -13,7 +13,7 @@ meson .. \
 	--werror \
 	-Dplugin_uefi_capsule=disabled \
 	-Dplugin_dell=disabled \
-	-Dplugin_modem_manager=false \
+	-Dplugin_modem_manager=disabled \
 	-Dplugin_synaptics_mst=true \
 	-Dplugin_flashrom=enabled \
 	-Dintrospection=true \
