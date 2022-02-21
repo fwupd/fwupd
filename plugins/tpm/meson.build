@@ -1,7 +1,6 @@
-gudev_tpm = dependency('gudev-1.0', version : '>= 232', required: get_option('plugin_tpm'))
 tpm2tss_tpm = dependency('tss2-esys', version : '>= 2.0', required: get_option('plugin_tpm'))
 
-if get_option('hsi') and gudev_tpm.found() and tpm2tss_tpm.found()
+if get_option('hsi') and gudev.found() and tpm2tss_tpm.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginTpm"']
 
 install_data([

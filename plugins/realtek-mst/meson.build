@@ -1,9 +1,8 @@
 if get_option('plugin_realtek_mst')
-
-if not get_option('gudev')
+# TODO when upgrading to meson 0.59 as baseline use require()
+if not gudev.found()
   error('gudev is required for plugin_realtek_mst')
 endif
-
 cargs = ['-DG_LOG_DOMAIN="FuPluginRealtekMst"']
 
 install_data(['realtek-mst.quirk'],

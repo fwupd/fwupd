@@ -198,11 +198,9 @@ if gio.version().version_compare ('>= 2.55.0')
 endif
 gmodule = dependency('gmodule-2.0')
 if build_standalone
-if get_option('gudev')
-  gudev = dependency('gudev-1.0', version : '>= 232')
+gudev = dependency('gudev-1.0', version : '>= 232', required: get_option('gudev'))
+if gudev.found()
   conf.set('HAVE_GUDEV', '1')
-else
-  gudev = dependency('', required : false)
 endif
 if get_option('bluez')
   conf.set('HAVE_BLUEZ', '1')
@@ -433,8 +431,6 @@ endif
 if get_option('soup_session_compat')
     conf.set('SOUP_SESSION_COMPAT', '1')
 endif
-
-nvme_header = cc.has_header('linux/nvme_ioctl.h', required: get_option('plugin_nvme'))
 
 umockdev = dependency('umockdev-1.0', required: false)
 

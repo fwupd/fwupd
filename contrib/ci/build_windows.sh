@@ -51,6 +51,7 @@ meson .. \
     -Dplugin_synaptics_rmi=false \
     -Dplugin_upower=false \
     -Dplugin_powerd=false \
+    -Dplugin_uf2=false \
     -Dman=false \
     -Dmetainfo=false \
     -Dsoup_session_compat=false \
@@ -70,7 +71,7 @@ meson .. \
     -Dgusb:vapi=false \
     -Dbluez=false \
     -Dsqlite=disabled \
-    -Dgudev=false $@
+    -Dgudev=disabled $@
 VERSION=$(meson introspect . --projectinfo | jq -r .version)
 ninja -v
 ninja -v install
