@@ -29,8 +29,7 @@ client_dep = [
   gusb,
   sqlite,
 ]
-
-if get_option('systemd')
+if libsystemd.found()
   systemd_src += 'fu-systemd.c'
 endif
 if polkit.found()
@@ -104,7 +103,7 @@ meson.add_install_script(
 endif
 endif
 
-if get_option('systemd') and get_option('offline')
+if libsystemd.found() and get_option('offline')
 fwupdoffline = executable(
   'fwupdoffline',
   fu_hash,

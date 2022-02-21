@@ -5,7 +5,7 @@ install_data(['msr.quirk'],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
 
-if get_option('systemd')
+if libsystemd.found()
 install_data(['fwupd-msr.conf'],
   install_dir: systemd_modules_load_dir,
 )

@@ -40,7 +40,7 @@ meson .. \
     -Dplugin_cpu=false \
     -Dplugin_ep963x=false \
     -Dplugin_tpm=disabled \
-    -Dsystemd=false \
+    -Dsystemd=disabled \
     -Doffline=false \
     -Dplugin_emmc=false \
     -Dplugin_amt=false \

@@ -51,7 +51,7 @@ option('plugin_upower', type : 'boolean', value : true, description : 'enable su
 option('plugin_powerd', type : 'boolean', value : true, description : 'enable support for powerd')
 option('qubes', type : 'boolean', value : false, description : 'build packages for Qubes OS')
 option('supported_build', type : 'boolean', value : false, description: 'distribution package with upstream support')
-option('systemd', type : 'boolean', value : true, description : 'enable systemd support')
+option('systemd', type : 'feature', description : 'systemd support')
 option('systemd_root_prefix', type: 'string', value: '', description: 'Directory to base systemd’s installation directories on')
 option('elogind', type : 'boolean', value : false, description : 'enable elogind support')
 option('tests', type : 'boolean', value : true, description : 'enable tests')
