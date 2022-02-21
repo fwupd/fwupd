@@ -62,18 +62,18 @@ Flags = usb2
 [USB\VID_2109&PID_0820]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = usb3,has-shared-spi-pd
+Flags = usb3
 [USB\VID_2109&PID_2820]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = usb2,has-shared-spi-pd
+Flags = usb2
 
 # VL822
 [USB\VID_2109&PID_0822]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = usb3,has-shared-spi-pd
+Flags = usb3
 [USB\VID_2109&PID_2822]
 Plugin = vli
 GType = FuVliUsbhubDevice
-Flags = usb2,has-shared-spi-pd
+Flags = usb2
