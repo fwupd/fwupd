@@ -1,7 +1,6 @@
-if get_option('hsi') and get_option('plugin_uefi_pk')
-if not gnutls.found()
-  error('gnutls is needed for plugin_uefi_pk')
-endif
+if get_option('hsi') and \
+   get_option('plugin_uefi_pk').require(gnutls.found(),
+   error_message: 'gnutls is needed for plugin_uefi_pk').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiPk"']
 
 shared_module('fu_plugin_uefi_pk',

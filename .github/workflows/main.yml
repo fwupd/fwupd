@@ -31,7 +31,9 @@ jobs:
       - name: Refresh dependencies
         run: sudo apt update
       - name: Install dependencies
-        run: sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
+        run: |
+          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
+          python3 -m pip install --user "meson >= 0.60.0"
       - name: Check ABI
         run: ./contrib/ci/check-abi $(git describe --abbrev=0 --tags) $(git rev-parse HEAD)
 
@@ -42,7 +44,9 @@ jobs:
       - name: Refresh dependencies
         run: sudo apt update
       - name: Install dependencies
-        run: sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
+        run: |
+          sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies -o ubuntu --yes
+          python3 -m pip install --user "meson >= 0.60.0"
       - name: Build
         run: |
           ./contrib/build-openbmc.sh

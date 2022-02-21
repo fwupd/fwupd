@@ -1,8 +1,5 @@
-if get_option('plugin_parade_lspcon') and gudev.found()
-# TODO when upgrading to meson 0.59 as baseline use require()
-if not gudev.found()
-  error('gudev is required for plugin_parade_lspcon')
-endif
+if get_option('plugin_parade_lspcon').require(gudev.found(),
+    error_message: 'gudev is needed for plugin_parade_lspcon').allowed()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginParadeLspcon"']
 

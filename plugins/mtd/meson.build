@@ -1,4 +1,4 @@
-if get_option('plugin_mtd')
+if get_option('plugin_mtd').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginMtd"']
 
 install_data([

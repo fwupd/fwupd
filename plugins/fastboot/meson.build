@@ -1,9 +1,5 @@
-if get_option('plugin_fastboot')
-
-if not gusb.found()
-  error('gusb is required for plugin_fastboot')
-endif
-
+if get_option('plugin_fastboot').require(gusb.found(),
+    error_message: 'gusb is needed for plugin_fastboot').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginFastboot"']
 
 install_data(['fastboot.quirk'],

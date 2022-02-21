@@ -90,7 +90,7 @@ if build_daemon
     con2.set('motd_dir', motd_dir)
 
     # replace @bindir@
-    if get_option('offline')
+    if offline.allowed()
       configure_file(
         input : 'fwupd-offline-update.service.in',
         output : 'fwupd-offline-update.service',
@@ -119,7 +119,7 @@ if build_daemon
     )
   endif
 
-  if libsystemd.found() or get_option('elogind')
+  if libsystemd.found() or elogind.found()
     con2 = configuration_data()
     con2.set('libexecdir', libexecdir)
 

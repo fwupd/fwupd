@@ -2,12 +2,6 @@ if get_option('tests')
 subdir('tests')
 endif
 
-if build_daemon and get_option('introspection')
-  install_data(['org.freedesktop.fwupd.xml'],
-    install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
-  )
-endif
-
 client_src = []
 systemd_src = []
 daemon_dep = [
@@ -58,11 +52,16 @@ endif
 if gusb.found()
   daemon_src += 'fu-usb-backend.c'
 endif
-if get_option('bluez')
+if bluez.allowed()
   daemon_src += 'fu-bluez-backend.c'
 endif
 
 if build_daemon
+if introspection.allowed()
+  install_data(['org.freedesktop.fwupd.xml'],
+    install_dir : join_paths(datadir, 'dbus-1', 'interfaces')
+  )
+endif
 fwupdmgr = executable(
   'fwupdmgr',
   fu_hash,
@@ -103,7 +102,7 @@ meson.add_install_script(
 endif
 endif
 
-if libsystemd.found() and get_option('offline')
+if offline.allowed()
 fwupdoffline = executable(
   'fwupdoffline',
   fu_hash,

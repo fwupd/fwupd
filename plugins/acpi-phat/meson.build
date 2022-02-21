@@ -1,4 +1,4 @@
-if get_option('plugin_acpi_phat') and host_machine.system() == 'linux'
+if get_option('plugin_acpi_phat').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginAcpiPhat"']
 
 shared_module('fu_plugin_acpi_phat',

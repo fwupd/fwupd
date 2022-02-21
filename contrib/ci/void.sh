@@ -14,8 +14,8 @@ rm -rf build
 meson build \
  -Dgusb:tests=false \
  -Dgcab:docs=false \
- -Dconsolekit=false \
+ -Dconsolekit=disabled \
  -Dsystemd=disabled \
- -Doffline=false \
- -Delogind=true
+ -Doffline=disabled \
+ -Delogind=enabled
 ninja -C build test -v

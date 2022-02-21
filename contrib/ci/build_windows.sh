@@ -16,6 +16,7 @@ rm -rf $DESTDIR $build
 
 #build
 mkdir -p $build $DESTDIR && cd $build
+python3 -m pip install --user "meson >= 0.60.0"
 meson .. \
     --cross-file=../contrib/mingw64.cross \
     --prefix=/ \
@@ -48,11 +49,6 @@ meson .. \
     -Dintrospection=false \
     -Dplugin_thunderbolt=false \
     -Dplugin_scsi=false \
-    -Dplugin_synaptics_mst=false \
-    -Dplugin_synaptics_rmi=false \
-    -Dplugin_upower=false \
-    -Dplugin_powerd=false \
-    -Dplugin_uf2=false \
     -Dman=false \
     -Dmetainfo=false \
     -Dsoup_session_compat=false \
@@ -69,10 +65,7 @@ meson .. \
     -Dgusb:tests=false \
     -Dgusb:docs=false \
     -Dgusb:introspection=false \
-    -Dgusb:vapi=false \
-    -Dbluez=false \
-    -Dsqlite=disabled \
-    -Dgudev=disabled $@
+    -Dgusb:vapi=false $@
 VERSION=$(meson introspect . --projectinfo | jq -r .version)
 ninja -v
 ninja -v install

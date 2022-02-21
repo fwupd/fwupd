@@ -29,7 +29,7 @@ build() {
     fi
     arch-meson -D b_lto=false $CI ../build \
         -Dplugin_intel_spi=enabled \
-        -Dplugin_powerd=false \
+        -Dplugin_powerd=disabled \
         -Ddocs=gtkdoc \
         -Defi_binary=false \
         -Dsupported_build=true
