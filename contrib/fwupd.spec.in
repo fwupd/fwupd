@@ -247,9 +247,9 @@ fwupd wrapper for Qubes OS
     -Dplugin_flashrom=disabled \
 %endif
 %if 0%{?have_msr}
-    -Dplugin_msr=true \
+    -Dplugin_msr=enabled \
 %else
-    -Dplugin_msr=false \
+    -Dplugin_msr=disabled \
 %endif
     -Dplugin_thunderbolt=true \
 %if 0%{?have_uefi}

@@ -28,6 +28,7 @@ meson ../ \
     -Dplugin_nitrokey=false \
     -Dplugin_nvme=disabled \
     -Dplugin_modem_manager=disabled \
+    -Dplugin_msr=disabled \
     -Dplugin_parade_lspcon=false \
     -Dplugin_pixart_rf=false \
     -Dplugin_powerd=false \
