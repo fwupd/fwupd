@@ -120,6 +120,7 @@ struct _FuGenesysUsbhubDevice {
 
 G_DEFINE_TYPE(FuGenesysUsbhubDevice, fu_genesys_usbhub_device, FU_TYPE_USB_DEVICE)
 
+#if G_USB_CHECK_VERSION(0, 3, 8)
 static gboolean
 fu_genesys_usbhub_device_mstar_scaler_setup(FuGenesysUsbhubDevice *self, GError **error)
 {
@@ -131,6 +132,7 @@ fu_genesys_usbhub_device_mstar_scaler_setup(FuGenesysUsbhubDevice *self, GError 
 	/* success */
 	return TRUE;
 }
+#endif
 
 static gboolean
 fu_genesys_usbhub_device_read_flash(FuGenesysUsbhubDevice *self,
@@ -205,6 +207,7 @@ fu_genesys_usbhub_device_reset(FuGenesysUsbhubDevice *self, GError **error)
 	return TRUE;
 }
 
+#if G_USB_CHECK_VERSION(0, 3, 8)
 static FuCfiDevice *
 fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 {
@@ -277,6 +280,7 @@ fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "no CFI device found");
 	return NULL;
 }
+#endif
 
 static gboolean
 fu_genesys_usbhub_device_wait_flash_status_register_cb(FuDevice *device,
@@ -517,6 +521,7 @@ fu_genesys_usbhub_device_close(FuDevice *device, GError **error)
 	return TRUE;
 }
 
+#if G_USB_CHECK_VERSION(0, 3, 8)
 static gboolean
 fu_genesys_usbhub_device_get_descriptor_data(GBytes *desc_bytes,
 					     guint8 *dst,
@@ -601,6 +606,7 @@ fu_genesys_usbhub_device_get_fw_size(FuGenesysUsbhubDevice *self, int bank_num, 
 	/* success */
 	return TRUE;
 }
+#endif
 
 static gboolean
 fu_genesys_usbhub_device_detach(FuDevice *device, FuProgress *progress, GError **error)
