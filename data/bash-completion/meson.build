@@ -1,6 +1,6 @@
 if bashcomp.found()
-  completions_dir = bashcomp.get_pkgconfig_variable('completionsdir',
-    define_variable: bashcomp.version().version_compare('>= 2.10') ? ['datadir', datadir] : ['prefix', prefix],
+  completions_dir = bashcomp.get_variable(pkgconfig : 'completionsdir',
+    pkgconfig_define: bashcomp.version().version_compare('>= 2.10') ? ['datadir', datadir] : ['prefix', prefix],
   )
 
   install_data(['fwupdtool'],
