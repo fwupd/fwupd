@@ -35,7 +35,7 @@ option('plugin_scsi', type: 'boolean', value: true, description : 'enable SCSI s
 option('plugin_tpm', type : 'feature', description : 'TPM support')
 option('plugin_thunderbolt', type : 'boolean', value : true, description : 'enable Thunderbolt support')
 option('plugin_redfish', type : 'feature' , description : 'Redfish support')
-option('plugin_uefi_capsule', type : 'boolean', value : true, description : 'enable UEFI capsule support')
+option('plugin_uefi_capsule', type : 'feature', description : 'UEFI capsule support')
 option('plugin_uefi_capsule_splash', type : 'boolean', value : true, description : 'enable UEFI capsule splash support')
 option('plugin_uefi_pk', type : 'boolean', value : true, description : 'enable UEFI PK support')
 option('plugin_nitrokey', type : 'boolean', value : true, description : 'enable Nitrokey support')

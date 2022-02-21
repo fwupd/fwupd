@@ -253,13 +253,13 @@ fwupd wrapper for Qubes OS
 %endif
     -Dplugin_thunderbolt=true \
 %if 0%{?have_uefi}
-    -Dplugin_uefi_capsule=true \
+    -Dplugin_uefi_capsule=enabled \
     -Dplugin_uefi_pk=true \
     -Dplugin_tpm=enabled \
     -Dplugin_gpio=true \
     -Defi_binary=false \
 %else
-    -Dplugin_uefi_capsule=false \
+    -Dplugin_uefi_capsule=disabled \
     -Dplugin_uefi_pk=false \
     -Dplugin_tpm=disabled \
 %endif

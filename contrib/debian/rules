@@ -29,9 +29,9 @@ else
 endif
 
 ifeq (yes,$(shell pkg-config --exists efivar && echo yes))
-	CONFARGS += -Dplugin_uefi_capsule=true -Defi_binary=false
+	CONFARGS += -Dplugin_uefi_capsule=enabled -Defi_binary=false
 else
-	CONFARGS += -Dplugin_uefi_capsule=false
+	CONFARGS += -Dplugin_uefi_capsule=disabled
 endif
 
 ifneq ($(filter $(DEB_HOST_ARCH_CPU),i386 amd64),)
