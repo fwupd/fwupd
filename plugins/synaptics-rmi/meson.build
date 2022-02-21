@@ -5,6 +5,7 @@ endif
 if not gudev.found()
   error('gudev is required for plugin_synaptics_rmi')
 endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginSynapticsRmi"']
 
 install_data(['synaptics-rmi.quirk'],
@@ -62,7 +63,6 @@ if get_option('tests')
     ],
     dependencies : [
       plugin_deps,
-      gnutls,
     ],
     link_with : [
       fwupd,

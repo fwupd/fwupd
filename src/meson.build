@@ -52,7 +52,7 @@ daemon_src = [
   'fu-security-attr.c',
 ] + systemd_src
 
-if get_option('gudev')
+if gudev.found()
   daemon_src += 'fu-udev-backend.c'
 endif
 if gusb.found()

@@ -8,7 +8,7 @@ meson ../ \
     -Delogind=false \
     -Dfish_completion=false \
     -Dfirmware-packager=false \
-    -Dgudev=false \
+    -Dgudev=disabled \
     -Dgusb=disabled \
     -Dhsi=false \
     -Dintrospection=false \

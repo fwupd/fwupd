@@ -1,8 +1,4 @@
 if get_option('plugin_pixart_rf') and host_machine.system() == 'linux'
-if not get_option('gudev')
-  error('gudev is required for plugin_pixart_rf')
-endif
-
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
 
 install_data(['pixart-rf.quirk'],

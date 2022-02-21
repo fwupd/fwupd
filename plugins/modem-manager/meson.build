@@ -2,7 +2,7 @@ libmm_glib = dependency('mm-glib', version : '>= 1.10.0', required: get_option('
 libqmi_glib = dependency('qmi-glib', version : '>= 1.23.1', required: get_option('plugin_modem_manager'))
 libmbim_glib = dependency('mbim-glib', version : '>= 1.22.0', required: get_option('plugin_modem_manager'))
 
-if libmm_glib.found() and libqmi_glib.found() and libmbim_glib.found()
+if libmm_glib.found() and libqmi_glib.found() and libmbim_glib.found() and gudev.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginMm"']
 cargs +=['-DMM_REQUIRED_VERSION="1.10.0"']
 

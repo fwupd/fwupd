@@ -1,7 +1,9 @@
 if get_option('plugin_thunderbolt')
-if not get_option('gudev')
+# TODO when upgrading to meson 0.59 as baseline use require()
+if not gudev.found()
   error('gudev is required for plugin_thunderbolt')
 endif
+
 cargs = ['-DG_LOG_DOMAIN="FuPluginThunderbolt"']
 install_data([
   'thunderbolt.quirk',

@@ -46,7 +46,7 @@ if build_daemon
     install_dir : join_paths(datadir, 'dbus-1', 'system.d')
   )
 
-  if get_option('gudev')
+  if gudev.found()
     install_data(['90-fwupd-devices.rules'],
       install_dir : join_paths(udevdir, 'rules.d')
     )

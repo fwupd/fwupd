@@ -40,7 +40,7 @@ USE_LDCONFIG=	yes
 
 SHEBANG_GLOB=	*.py
 
-MESON_ARGS=	-Dgudev=false \
+MESON_ARGS=	-Dgudev=disabled \
 		-Dplugin_amt=false \
 		-Dplugin_dell=disabled \
 		-Dplugin_emmc=false \

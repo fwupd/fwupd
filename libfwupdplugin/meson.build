@@ -162,6 +162,7 @@ introspection_deps = [
   libjcat,
   giounix,
   gusb,
+  gudev,
 ]
 
 pkgg_requires = [ 'gio-2.0',
@@ -175,10 +176,6 @@ pkgg_requires = [ 'gio-2.0',
                   'jcat',
                   'gusb'
 ]
-
-if get_option('gudev')
-  introspection_deps += gudev
-endif
 
 library_deps = [
   introspection_deps,
