@@ -344,12 +344,9 @@ if cc.has_header('malloc.h')
 	 conf.set('HAVE_MALLOC_TRIM', '1')
   endif
 endif
-if cc.has_header('cpuid.h') and cc.has_header_symbol('cpuid.h', '__get_cpuid_count') and (host_cpu == 'x86' or host_cpu == 'x86_64')
+has_cpuid = cc.has_header_symbol('cpuid.h', '__get_cpuid_count', required: get_option('plugin_msr'))
+if has_cpuid
   conf.set('HAVE_CPUID_H', '1')
-else
-  if get_option('plugin_msr')
-    error('cpuid.h is required for -Dplugin_msr=true')
-  endif
 endif
 if cc.has_function('getuid')
   conf.set('HAVE_GETUID', '1')
