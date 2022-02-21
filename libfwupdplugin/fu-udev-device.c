@@ -1935,6 +1935,34 @@ fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *cons
 }
 
 /**
+ * fu_udev_device_get_parent_with_subsystem
+ * @self: a #FuUdevDevice
+ * @subsystem: the name of a udev subsystem
+ *
+ * Get the device that is a parent of self and has the provided subsystem.
+ *
+ * Returns: (transfer full): device, or %NULL
+ *
+ * Since: 1.7.6
+ */
+FuUdevDevice *
+fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsystem)
+{
+#ifdef HAVE_GUDEV
+	FuUdevDevicePrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GUdevDevice) device_tmp = NULL;
+
+	device_tmp = g_udev_device_get_parent_with_subsystem(priv->udev_device, subsystem, NULL);
+	if (device_tmp == NULL)
+		return NULL;
+	return fu_udev_device_new_with_context(fu_device_get_context(FU_DEVICE(self)),
+					       g_steal_pointer(&device_tmp));
+#else
+	return NULL;
+#endif
+}
+
+/**
  * fu_udev_device_get_children_with_subsystem
  * @self: a #FuUdevDevice
  * @subsystem: the name of a udev subsystem
