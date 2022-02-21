@@ -44,7 +44,6 @@ MESON_ARGS=	-Dgudev=false \
 		-Dplugin_amt=false \
 		-Dplugin_dell=false \
 		-Dplugin_emmc=false \
-		-Dplugin_gpio=false \
 		-Dplugin_nvme=false \
 		-Dplugin_parade_lspcon=false \
 		-Dplugin_redfish=false \
