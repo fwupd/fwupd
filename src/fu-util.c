@@ -207,14 +207,14 @@ fu_util_prompt_for_device(FuUtilPrivate *priv, GPtrArray *devices, GError **erro
 	if (devices_filtered->len == 1) {
 		dev = g_ptr_array_index(devices_filtered, 0);
 		/* TRANSLATORS: Device has been chosen by the daemon for the user */
-		g_print("%s: %s\n", _("Selected device"), fwupd_device_get_name(dev));
+		g_printerr("%s: %s\n", _("Selected device"), fwupd_device_get_name(dev));
 		return g_object_ref(dev);
 	}
 
 	/* TRANSLATORS: get interactive prompt */
-	g_print("%s\n", _("Choose a device:"));
+	g_printerr("%s\n", _("Choose a device:"));
 	/* TRANSLATORS: this is to abort the interactive prompt */
-	g_print("0.\t%s\n", _("Cancel"));
+	g_printerr("0.\t%s\n", _("Cancel"));
 	for (guint i = 0; i < devices_filtered->len; i++) {
 		dev = g_ptr_array_index(devices_filtered, i);
 		g_print("%u.\t%s (%s)\n",
