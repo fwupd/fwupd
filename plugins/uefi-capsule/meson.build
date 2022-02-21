@@ -136,7 +136,7 @@ if get_option('plugin_uefi_capsule_splash')
     ],
     output : 'uefi-capsule-ux.tar.xz',
     command : [
-      python3.path(),
+      python3.full_path(),
       join_paths(meson.current_source_dir(), 'make-images.py'),
       '--podir', join_paths(meson.project_source_root(), 'po'),
       '--label', 'Installing firmware update…',
