@@ -20,7 +20,7 @@ meson .. \
 	-Dplugin_flashrom=disabled \
 	-Dplugin_uefi_capsule=disabled \
 	-Dplugin_dell=disabled \
-	-Dplugin_modem_manager=false \
+	-Dplugin_modem_manager=disabled \
 	-Dplugin_msr=false \
 	-Dplugin_mtd=false \
 	-Dplugin_powerd=false \

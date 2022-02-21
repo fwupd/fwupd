@@ -271,9 +271,9 @@ fwupd wrapper for Qubes OS
     -Dplugin_synaptics_mst=false \
 %endif
 %if 0%{?have_modem_manager}
-    -Dplugin_modem_manager=true \
+    -Dplugin_modem_manager=enabled \
 %else
-    -Dplugin_modem_manager=false \
+    -Dplugin_modem_manager=disabled \
 %endif
 %if 0%{?qubes_packages}
     -Dqubes=true \

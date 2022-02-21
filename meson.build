@@ -433,13 +433,6 @@ if build_standalone and efiboot.found() and efivar.found()
   endif
 endif
 
-if build_standalone and get_option('plugin_modem_manager')
-  libmm_glib = dependency('mm-glib', version : '>= 1.10.0')
-  add_project_arguments('-DMM_REQUIRED_VERSION="1.10.0"', language : 'c')
-  libqmi_glib = dependency('qmi-glib', version : '>= 1.23.1')
-  libmbim_glib = dependency('mbim-glib', version : '>= 1.22.0')
-endif
-
 if get_option('soup_session_compat')
     conf.set('SOUP_SESSION_COMPAT', '1')
 endif

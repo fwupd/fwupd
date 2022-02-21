@@ -21,7 +21,7 @@ meson .. \
     -Dgusb:tests=false \
     -Dplugin_dummy=true \
     -Dplugin_flashrom=enabled \
-    -Dplugin_modem_manager=false \
+    -Dplugin_modem_manager=disabled \
     -Dplugin_thunderbolt=true \
     -Dplugin_uefi_capsule=enabled \
     -Dplugin_dell=enabled \
