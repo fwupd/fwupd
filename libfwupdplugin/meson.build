@@ -139,7 +139,7 @@ fu_hash = custom_target(
   'fu-hash.h',
   input : fwupdplugin_src,
   output : 'fu-hash.h',
-  command : [python3.path(),
+  command : [python3.full_path(),
              join_paths(meson.current_source_dir(), 'fu-hash.py'),
              '@OUTPUT@', '@INPUT@']
 )
