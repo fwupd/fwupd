@@ -226,7 +226,7 @@ fwupdplugin_pkgg.generate(
   description : 'library for plugins to use to interact with fwupd daemon',
 )
 
-if get_option('introspection')
+if introspection.allowed()
   gir_dep = declare_dependency(sources: fwupd_gir)
   girtargets = []
   extra_args = []

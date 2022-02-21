@@ -23,7 +23,7 @@ meson .. \
 	-Dplugin_modem_manager=disabled \
 	-Dplugin_msr=disabled \
 	-Dplugin_mtd=false \
-	-Dplugin_powerd=false \
+	-Dplugin_powerd=disabled \
 	-Dintrospection=false \
 	-Ddocs=none \
 	-Dlibxmlb:introspection=false \

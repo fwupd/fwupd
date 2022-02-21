@@ -1,12 +1,6 @@
-if get_option('plugin_uf2')
 
-# TODO when upgrading to meson 0.59 as baseline use require()
-if not gudev.found()
-  error('gudev is required for plugin_uf2')
-endif
-if host_machine.system() != 'linux'
-  error('plugin_uf2 is only supported on Linux')
-endif
+if get_option('plugin_uf2').require(gudev.found(),
+    error_message: 'gudev is needed for plugin_uf2').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginUf2"']
 
 install_data(['uf2.quirk'],

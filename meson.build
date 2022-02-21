@@ -1,7 +1,7 @@
 project('fwupd', 'c',
   version : '1.7.6',
   license : 'LGPL-2.1+',
-  meson_version : '>=0.50.0',
+  meson_version : '>=0.60.0',
   default_options : ['warning_level=2', 'c_std=c99'],
 )
 
@@ -198,11 +198,13 @@ if gio.version().version_compare ('>= 2.55.0')
 endif
 gmodule = dependency('gmodule-2.0')
 if build_standalone
-gudev = dependency('gudev-1.0', version : '>= 232', required: get_option('gudev'))
+gudev = dependency('gudev-1.0', version : '>= 232',
+                    required: get_option('gudev').disable_auto_if(host_machine.system() != 'linux'))
 if gudev.found()
   conf.set('HAVE_GUDEV', '1')
 endif
-if get_option('bluez')
+bluez = get_option('bluez').disable_auto_if(host_machine.system() != 'linux')
+if bluez.allowed()
   conf.set('HAVE_BLUEZ', '1')
 endif
 if get_option('hsi')
@@ -232,7 +234,8 @@ if libcurl_daemon.found()
     conf.set('HAVE_LIBCURL_7_62_0', '1')
   endif
 endif
-polkit = dependency('polkit-gobject-1', version : '>= 0.103', required: get_option('polkit'))
+polkit = dependency('polkit-gobject-1', version : '>= 0.103',
+         required: get_option('polkit').disable_auto_if(host_machine.system() != 'linux'))
 if polkit.found()
   conf.set('HAVE_POLKIT', '1')
   if polkit.version().version_compare('>= 0.114')
@@ -287,11 +290,11 @@ if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
 
-libsystemd = dependency('libsystemd', required: get_option('systemd'))
-if get_option('offline')
-  if not libsystemd.found()
-    warning('-Doffline=true requires systemd')
-  endif
+libsystemd = dependency('libsystemd',
+                        required: get_option('systemd').disable_auto_if(host_machine.system() != 'linux'))
+offline = get_option('offline').require(libsystemd.found(),
+    error_message: '-Doffline=enabled requires systemd')
+if offline.allowed()
   conf.set('HAVE_FWUPDOFFLINE', '1')
 endif
 
@@ -435,7 +438,9 @@ endif
 umockdev = dependency('umockdev-1.0', required: false)
 
 if build_standalone
-  libflashrom = dependency('flashrom', fallback : ['flashrom', 'flashrom_dep'], required: get_option('plugin_flashrom'))
+  libflashrom = dependency('flashrom', 
+                            fallback : ['flashrom', 'flashrom_dep'], 
+                            required: get_option('plugin_flashrom').disable_auto_if(host_machine.system() != 'linux'))
 endif
 
 if libsystemd.found()
@@ -460,12 +465,12 @@ if libsystemd.found()
   endif
 endif
 
-if build_standalone and get_option('elogind')
-  elogind = dependency('libelogind', version : '>= 211')
+elogind = dependency('systemd', 'libelogind', required: get_option('elogind'))
+if elogind.found()
   conf.set('HAVE_LOGIND' , '1')
 endif
 
-if build_standalone and get_option('consolekit')
+if get_option('consolekit').disable_auto_if(host_machine.system() != 'linux').allowed()
   conf.set('HAVE_CONSOLEKIT' , '1')
 endif
 
@@ -517,6 +522,7 @@ protoc = find_program('protoc', 'protoc-c', required: get_option('plugin_logitec
 
 root_incdir = include_directories('.')
 
+introspection = get_option('introspection').disable_auto_if(host_machine.system() != 'linux')
 if get_option('docs') == 'gtkdoc'
   gtkdocscan = find_program('gtkdoc-scan')
 elif get_option('docs') == 'docgen'
@@ -529,7 +535,7 @@ elif get_option('docs') == 'docgen'
     native: true,
     fallback: ['gi-docgen', 'dummy_dep'],
   )
-  gidocgen = find_program('gi-docgen', required: get_option('introspection'))
+  gidocgen = find_program('gi-docgen', required: introspection)
 endif
 
 subdir('libfwupd')

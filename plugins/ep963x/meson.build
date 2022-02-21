@@ -1,4 +1,4 @@
-if get_option('plugin_ep963x')
+if get_option('plugin_ep963x').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginEp963x"']
 
 install_data([

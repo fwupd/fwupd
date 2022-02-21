@@ -1,4 +1,4 @@
-if get_option('plugin_pixart_rf') and host_machine.system() == 'linux'
+if get_option('plugin_pixart_rf').disable_auto_if(host_machine.system() != 'linux').allowed()
 cargs = ['-DG_LOG_DOMAIN="FuPluginPixartRf"']
 
 install_data(['pixart-rf.quirk'],

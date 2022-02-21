@@ -85,7 +85,7 @@ pkgg.generate(
   description : 'fwupd is a system daemon for installing device firmware',
 )
 
-if get_option('introspection')
+if introspection.allowed()
   fwupd_gir_deps = [
       giounix,
       libcurl_daemon,

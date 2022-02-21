@@ -1,4 +1,5 @@
-libcurl_redfish = dependency('libcurl', version : '>= 7.56.0', required: get_option('plugin_redfish'))
+libcurl_redfish = dependency('libcurl', version : '>= 7.56.0', 
+                              required: get_option('plugin_redfish').disable_auto_if(host_machine.system() != 'linux'))
 
 if libcurl_redfish.found()
 cargs = ['-DG_LOG_DOMAIN="FuPluginRedfish"']

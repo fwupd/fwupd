@@ -1,9 +1,9 @@
 tpm2tss_dell = dependency('tss2-esys', version : '>= 2.0', required: get_option('plugin_dell'))
 libsmbios_c = dependency('libsmbios_c', version : '>= 2.4.0', required: get_option('plugin_dell'))
 
-if get_option('plugin_dell').enabled() and get_option('plugin_uefi_capsule').disabled()
-    error('plugin_dell is force-enabled but plugin_uefi_capsule is disabled, these options are incompatible')
-elif tpm2tss_dell.found() and libsmbios_c.found()
+if tpm2tss_dell.found() and libsmbios_c.found() and \
+   get_option('plugin_dell').require(get_option('plugin_uefi_capsule').allowed(),
+    error_message: 'plugin_uefi_capsule is needed for plugin_dell').allowed()
 
 cargs = ['-DG_LOG_DOMAIN="FuPluginDell"']
 

@@ -16,6 +16,7 @@ rm -rf $DESTDIR $build
 
 #build
 mkdir -p $build $DESTDIR && cd $build
+python3 -m pip install --user "meson >= 0.60.0"
 meson .. \
     --cross-file=../contrib/mingw64.cross \
     --prefix=/ \
@@ -24,34 +25,7 @@ meson .. \
     -Dbuild=standalone \
     -Ddocs=none \
     -Dhsi=false \
-    -Dpolkit=disabled \
-    -Dplugin_flashrom=disabled \
-    -Dplugin_uefi_capsule=disabled \
-    -Dplugin_redfish=disabled \
-    -Dplugin_dell=disabled \
-    -Dplugin_logitech_bulkcontroller=disabled \
-    -Dplugin_nvme=disabled \
-    -Dplugin_parade_lspcon=false \
-    -Dplugin_realtek_mst=false \
-    -Dplugin_bcm57xx=false \
-    -Dplugin_pixart_rf=false \
-    -Dplugin_cfu=false \
-    -Dplugin_cpu=false \
-    -Dplugin_ep963x=false \
-    -Dplugin_tpm=disabled \
-    -Dsystemd=disabled \
-    -Doffline=false \
-    -Dplugin_emmc=false \
-    -Dplugin_amt=false \
-    -Dplugin_mtd=false \
-    -Dintrospection=false \
-    -Dplugin_thunderbolt=false \
     -Dplugin_scsi=false \
-    -Dplugin_synaptics_mst=false \
-    -Dplugin_synaptics_rmi=false \
-    -Dplugin_upower=false \
-    -Dplugin_powerd=false \
-    -Dplugin_uf2=false \
     -Dman=false \
     -Dmetainfo=false \
     -Dsoup_session_compat=false \
@@ -68,10 +42,7 @@ meson .. \
     -Dgusb:tests=false \
     -Dgusb:docs=false \
     -Dgusb:introspection=false \
-    -Dgusb:vapi=false \
-    -Dbluez=false \
-    -Dsqlite=disabled \
-    -Dgudev=disabled $@
+    -Dgusb:vapi=false $@
 VERSION=$(meson introspect . --projectinfo | jq -r .version)
 ninja -v
 ninja -v install
