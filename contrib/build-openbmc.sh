@@ -1,6 +1,7 @@
 #!/bin/sh
 
 meson ../ \
+    -Dauto_features=disabled \
     -Dbash_completion=false \
     -Dcompat_cli=false \
     -Dconsolekit=false \
@@ -8,11 +9,8 @@ meson ../ \
     -Delogind=false \
     -Dfish_completion=false \
     -Dfirmware-packager=false \
-    -Dgudev=disabled \
-    -Dgusb=disabled \
     -Dhsi=false \
     -Dintrospection=false \
-    -Dlibarchive=disabled \
     -Dman=false \
     -Dmetainfo=false \
     -Doffline=false \
@@ -20,29 +18,19 @@ meson ../ \
     -Dplugin_amt=false \
     -Dplugin_bcm57xx=false \
     -Dplugin_cfu=false \
-    -Dplugin_dell=disabled \
     -Dplugin_emmc=false \
     -Dplugin_ep963x=false \
     -Dplugin_fastboot=false \
-    -Dplugin_logitech_bulkcontroller=disabled \
     -Dplugin_nitrokey=false \
-    -Dplugin_nvme=disabled \
-    -Dplugin_modem_manager=disabled \
-    -Dplugin_msr=disabled \
     -Dplugin_parade_lspcon=false \
     -Dplugin_pixart_rf=false \
     -Dplugin_powerd=false \
     -Dplugin_realtek_mst=false \
-    -Dplugin_redfish=disabled \
     -Dplugin_synaptics_mst=false \
     -Dplugin_synaptics_rmi=false \
     -Dplugin_thunderbolt=false \
-    -Dplugin_tpm=disabled \
-    -Dplugin_uefi_capsule=disabled \
     -Dplugin_uf2=false \
     -Dplugin_upower=false \
-    -Dpolkit=disabled \
-    -Dsqlite=disabled \
     -Dtests=false \
     -Dudevdir=/tmp \
     -Dsystemd_root_prefix=/tmp \
