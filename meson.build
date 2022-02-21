@@ -563,6 +563,6 @@ if makensis.found()
     'makensis',
     command: [
       makensis,
-      join_paths(meson.source_root(), 'contrib', 'setup-win32.nsi'),
+      join_paths(meson.project_source_root(), 'contrib', 'setup-win32.nsi'),
   ])
 endif
