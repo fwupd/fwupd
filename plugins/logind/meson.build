@@ -1,4 +1,4 @@
-if get_option('systemd') or get_option('elogind')
+if libsystemd.found() or get_option('elogind')
 if host_machine.system() != 'linux'
   error('linux is required for systemd')
 endif

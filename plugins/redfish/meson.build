@@ -12,7 +12,7 @@ if have_linux_ipmi
   ipmi_src += 'fu-ipmi-device.c'
 endif
 
-if get_option('systemd') and have_linux_ipmi
+if libsystemd.found() and have_linux_ipmi
 install_data(['fwupd-redfish.conf'],
   install_dir: systemd_modules_load_dir,
 )

@@ -288,9 +288,11 @@ endif
 if valgrind.found()
   conf.set('HAVE_VALGRIND', '1')
 endif
+
+libsystemd = dependency('libsystemd', required: get_option('systemd'))
 if get_option('offline')
-  if not get_option('systemd')
-    warning('-Doffline=true requires -Dsystemd=true')
+  if not libsystemd.found()
+    warning('-Doffline=true requires systemd')
   endif
   conf.set('HAVE_FWUPDOFFLINE', '1')
 endif
@@ -450,9 +452,8 @@ if build_standalone
   libflashrom = dependency('flashrom', fallback : ['flashrom', 'flashrom_dep'], required: get_option('plugin_flashrom'))
 endif
 
-if build_standalone and get_option('systemd')
-  systemd = dependency('systemd', version : '>= 211')
-  libsystemd = dependency('libsystemd')
+if libsystemd.found()
+  systemd = dependency('systemd', version : '>= 211', required: get_option('systemd'))
   conf.set('HAVE_SYSTEMD' , '1')
   conf.set('HAVE_LOGIND' , '1')
   systemd_root_prefix = get_option('systemd_root_prefix')
@@ -471,8 +472,6 @@ if build_standalone and get_option('systemd')
     systemd_shutdown_dir = systemd.get_pkgconfig_variable('systemdshutdowndir', define_variable: [systemd_root_prefix_varname, systemd_root_prefix])
     systemd_modules_load_dir = systemd.get_pkgconfig_variable('modulesloaddir', define_variable: [systemd_root_prefix_varname, systemd_root_prefix])
   endif
-else
-  libsystemd = dependency('', required: false)
 endif
 
 if build_standalone and get_option('elogind')
@@ -576,7 +575,7 @@ if build_standalone
 endif
 subdir('docs')
 
-if get_option('systemd') and build_daemon
+if build_daemon and libsystemd.found()
   meson.add_install_script('meson_post_install.sh', systemdunitdir)
 endif
 

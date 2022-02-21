@@ -1,5 +1,5 @@
 
-if get_option('systemd')
+if libsystemd.found()
   install_data(['fwupd-refresh.timer'],
     install_dir: systemdunitdir)
   install_data(['fwupd-refresh.preset'],
@@ -13,7 +13,7 @@ con2 = configuration_data()
 con2.set('bindir', bindir)
 con2.set('motd_fullpath', motd_fullpath)
 
-if get_option('systemd')
+if libsystemd.found()
   configure_file(
     input : 'fwupd-refresh.service.in',
     output : 'fwupd-refresh.service',
