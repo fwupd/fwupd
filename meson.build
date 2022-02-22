@@ -224,7 +224,7 @@ if get_option('libarchive')
   conf.set('HAVE_LIBARCHIVE', '1')
 endif
 endif
-libjcat = dependency('jcat', version : '>= 0.1.0', fallback : ['libjcat', 'libjcat_dep'])
+libjcat = dependency('jcat', version : '>= 0.1.4', fallback : ['libjcat', 'libjcat_dep'])
 libjsonglib = dependency('json-glib-1.0', version : '>= 1.1.1')
 valgrind = dependency('valgrind', required: false)
 if get_option('curl')
