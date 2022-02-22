@@ -2303,13 +2303,8 @@ fu_device_set_name(FuDevice *self, const gchar *value)
 
 	/* overwriting? */
 	value_safe = fu_device_sanitize_name(value);
-	if (g_strcmp0(value_safe, fu_device_get_name(self)) == 0) {
-		const gchar *id = fu_device_get_id(self);
-		g_debug("%s device overwriting same name value: %s",
-			id != NULL ? id : "unknown",
-			value_safe);
+	if (g_strcmp0(value_safe, fu_device_get_name(self)) == 0)
 		return;
-	}
 
 	/* changing */
 	if (fu_device_get_name(self) != NULL) {
