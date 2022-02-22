@@ -237,6 +237,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "md-set-vendor";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED)
 		return "no-lid-closed";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_NO_PROBE)
+		return "no-probe";
 	return NULL;
 }
 
@@ -297,6 +299,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_MD_SET_VENDOR;
 	if (g_strcmp0(flag, "no-lid-closed") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED;
+	if (g_strcmp0(flag, "no-probe") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_NO_PROBE;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
@@ -4162,11 +4166,25 @@ fu_device_probe(FuDevice *self, GError **error)
 	if (priv->done_probe)
 		return TRUE;
 
+	/* device self-assigned */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_NO_PROBE)) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not probing");
+		return FALSE;
+	}
+
 	/* subclassed */
 	if (klass->probe != NULL) {
 		if (!klass->probe(self, error))
 			return FALSE;
 	}
+
+	/* vfunc skipped device */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_NO_PROBE)) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not probing");
+		return FALSE;
+	}
+
+	/* success */
 	priv->done_probe = TRUE;
 	return TRUE;
 }
@@ -4295,6 +4313,12 @@ fu_device_setup(FuDevice *self, GError **error)
 	if (klass->setup != NULL) {
 		if (!klass->setup(self, error))
 			return FALSE;
+	}
+
+	/* vfunc skipped device */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_NO_PROBE)) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not probing");
+		return FALSE;
 	}
 
 	/* run setup on the children too (unless done already) */
