@@ -3138,6 +3138,16 @@ fu_util_clear_history(FuUtilPrivate *priv, gchar **values, GError **error)
 	return fu_history_remove_all(history, error);
 }
 
+static gboolean
+fu_util_setup_interactive(FuUtilPrivate *priv, GError **error)
+{
+	if (!priv->as_json) {
+		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "using --json");
+		return FALSE;
+	}
+	return fu_util_setup_interactive_console(error);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -3632,7 +3642,7 @@ main(int argc, char *argv[])
 	fu_util_cmd_array_sort(cmd_array);
 
 	/* non-TTY consoles cannot answer questions */
-	if (!fu_util_setup_interactive_console(&error_console)) {
+	if (!fu_util_setup_interactive(priv, &error_console)) {
 		g_debug("failed to initialize interactive console: %s", error_console->message);
 		priv->no_reboot_check = TRUE;
 		priv->no_safety_check = TRUE;
