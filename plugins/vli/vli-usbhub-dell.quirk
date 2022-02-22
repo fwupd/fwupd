@@ -1,0 +1,5 @@
+# Dell DA300
+[USB\VID_2109&PID_0820&REV_3003]
+Flags = no-probe
+[USB\VID_2109&PID_2820&REV_3003]
+Flags = no-probe

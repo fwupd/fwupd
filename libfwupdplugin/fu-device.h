@@ -429,6 +429,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_NO_LID_CLOSED (1ull << 21)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_NO_PROBE:
+ *
+ * Do not probe this device.
+ *
+ * Since: 1.7.6
+ */
+#define FU_DEVICE_INTERNAL_FLAG_NO_PROBE (1ull << 22)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
