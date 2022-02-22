@@ -7515,6 +7515,9 @@ fu_engine_init(FuEngine *self)
 #if G_USB_CHECK_VERSION(0, 3, 1)
 	fu_engine_add_runtime_version(self, "org.freedesktop.gusb", g_usb_version_string());
 #endif
+#if LIBJCAT_CHECK_VERSION(0, 1, 11)
+	fu_engine_add_runtime_version(self, "com.hughsie.libjcat", jcat_version_string());
+#endif
 
 	/* optional kernel version */
 #ifdef HAVE_UTSNAME_H
@@ -7534,6 +7537,12 @@ fu_engine_init(FuEngine *self)
 					    G_USB_MINOR_VERSION,
 					    G_USB_MICRO_VERSION));
 #endif
+	g_hash_table_insert(self->compile_versions,
+			    g_strdup("com.hughsie.libjcat"),
+			    g_strdup_printf("%i.%i.%i",
+					    JCAT_MAJOR_VERSION,
+					    JCAT_MINOR_VERSION,
+					    JCAT_MICRO_VERSION));
 }
 
 static void
