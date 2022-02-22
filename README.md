@@ -9,6 +9,13 @@ This project aims to make updating firmware on Linux automatic, safe and reliabl
 
 Additional information is available [at the website](https://fwupd.org/).
 
+## Where to get help?
+
+- GitHub issues & discussions in [this repository](https://github.com/fwupd/fwupd)
+- Libera IRC channel `#fwupd`.
+  You can join through Libera's [IRC](https://libera.chat/)
+  or via the IRC bridge on [Matrix](https://matrix.to/#/#fwupd:libera.chat).
+
 ## Compiling
 
 The most up to date compilation instructions are available in the [Wiki](https://github.com/fwupd/fwupd/wiki/Compilation).
@@ -60,8 +67,8 @@ If updates are available for any devices on the system, they'll be displayed.
 
 This will download and apply all updates for your system.
 
-* Updates that can be applied live will be done immediately.
-* Updates that run at bootup will be staged for the next reboot.
+- Updates that can be applied live will be done immediately.
+- Updates that run at bootup will be staged for the next reboot.
 
 You can find more information about the update workflow in the end
 users section of the [fwupd website](https://fwupd.org).
