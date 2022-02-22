@@ -4123,17 +4123,8 @@ fu_engine_get_newest_signature_jcat_result(GPtrArray *results, GError **error)
 	/* get the first signature, ignoring the checksums */
 	for (guint i = 0; i < results->len; i++) {
 		JcatResult *result = g_ptr_array_index(results, i);
-#if LIBJCAT_CHECK_VERSION(0, 1, 3)
 		if (jcat_result_get_method(result) == JCAT_BLOB_METHOD_SIGNATURE)
 			return g_object_ref(result);
-#else
-		guint verify_kind = 0;
-		g_autoptr(JcatEngine) engine = NULL;
-		g_object_get(result, "engine", &engine, NULL);
-		g_object_get(engine, "verify-kind", &verify_kind, NULL);
-		if (verify_kind == 2) /* SIGNATURE */
-			return g_object_ref(result);
-#endif
 	}
 
 	/* should never happen due to %JCAT_VERIFY_FLAG_REQUIRE_SIGNATURE */
