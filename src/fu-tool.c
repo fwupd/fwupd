@@ -534,6 +534,15 @@ fu_util_prompt_for_device(FuUtilPrivate *priv, GPtrArray *devices_opt, GError **
 		return g_object_ref(dev);
 	}
 
+	/* ignore */
+	if (priv->as_json) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "Cannot be interactive with --json");
+		return NULL;
+	}
+
 	/* TRANSLATORS: get interactive prompt */
 	g_print("%s\n", _("Choose a device:"));
 	/* TRANSLATORS: this is to abort the interactive prompt */
