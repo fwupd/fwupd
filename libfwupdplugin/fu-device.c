@@ -3072,7 +3072,6 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 			priv->private_flags &= ~item->value;
 			return;
 		}
-		g_debug("no registered custom flag %s on %s", hint + 1, G_OBJECT_TYPE_NAME(self));
 		return;
 	}
 
@@ -3092,7 +3091,6 @@ fu_device_set_custom_flag(FuDevice *self, const gchar *hint)
 		priv->private_flags |= item->value;
 		return;
 	}
-	g_debug("no registered custom flag %s on %s", hint, G_OBJECT_TYPE_NAME(self));
 }
 
 /**
