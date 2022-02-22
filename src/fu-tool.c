@@ -66,6 +66,7 @@ struct FuUtilPrivate {
 	gboolean as_json;
 	gboolean no_reboot_check;
 	gboolean no_safety_check;
+	gboolean no_device_prompt;
 	gboolean prepare_blob;
 	gboolean cleanup_blob;
 	gboolean enable_json_state;
@@ -532,6 +533,15 @@ fu_util_prompt_for_device(FuUtilPrivate *priv, GPtrArray *devices_opt, GError **
 		/* TRANSLATORS: Device has been chosen by the daemon for the user */
 		g_print("%s: %s\n", _("Selected device"), fu_device_get_name(dev));
 		return g_object_ref(dev);
+	}
+
+	/* no questions */
+	if (priv->no_device_prompt) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_FOUND,
+				    "can't prompt for devices");
+		return NULL;
 	}
 
 	/* TRANSLATORS: get interactive prompt */
@@ -3219,6 +3229,14 @@ main(int argc, char *argv[])
 	     /* TRANSLATORS: command line option */
 	     N_("Do not perform device safety checks"),
 	     NULL},
+	    {"no-device-prompt",
+	     '\0',
+	     0,
+	     G_OPTION_ARG_NONE,
+	     &priv->no_device_prompt,
+	     /* TRANSLATORS: command line option */
+	     N_("Do not prompt for devices"),
+	     NULL},
 	    {"show-all",
 	     '\0',
 	     0,
@@ -3618,6 +3636,7 @@ main(int argc, char *argv[])
 		g_debug("failed to initialize interactive console: %s", error_console->message);
 		priv->no_reboot_check = TRUE;
 		priv->no_safety_check = TRUE;
+		priv->no_device_prompt = TRUE;
 	} else {
 		priv->interactive = TRUE;
 		/* set our implemented feature set */
