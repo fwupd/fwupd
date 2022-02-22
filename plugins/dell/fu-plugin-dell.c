@@ -354,14 +354,17 @@ fu_plugin_dell_backend_device_added(FuPlugin *plugin, FuDevice *device, GError *
 	}
 
 	dock_info = &buf.record->dock_info;
-	g_debug("Dock description: %s", dock_info->dock_description);
-	/* Note: fw package version is deprecated, look at components instead */
-	g_debug("Dock flash pkg ver: 0x%x", dock_info->flash_pkg_version);
+
+	if (g_getenv("FWUPD_DELL_VERBOSE") != NULL) {
+		g_debug("Dock description: %s", dock_info->dock_description);
+		/* Note: fw package version is deprecated, look at components instead */
+		g_debug("Dock flash pkg ver: 0x%x", dock_info->flash_pkg_version);
+		g_debug("Dock cable type: %" G_GUINT32_FORMAT, dock_info->cable_type);
+		g_debug("Dock location: %d", dock_info->location);
+		g_debug("Dock component count: %d", dock_info->component_count);
+	}
 	if (dock_info->flash_pkg_version == 0x00ffffff)
 		g_debug("WARNING: dock flash package version invalid");
-	g_debug("Dock cable type: %" G_GUINT32_FORMAT, dock_info->cable_type);
-	g_debug("Dock location: %d", dock_info->location);
-	g_debug("Dock component count: %d", dock_info->component_count);
 
 	for (guint i = 0; i < dock_info->component_count; i++) {
 		g_autofree gchar *fw_str = NULL;
