@@ -4,6 +4,7 @@ cargs = ['-DG_LOG_DOMAIN="FuPluginVliUsbhub"']
 install_data([
   'vli-pd.quirk',
   'vli-usbhub.quirk',
+  'vli-usbhub-dell.quirk',
   'vli-usbhub-lenovo.quirk',
   'vli-usbhub-hyper.quirk',
   'vli-usbhub-bizlink.quirk',
