@@ -207,8 +207,10 @@ fu_util_prompt_for_device(FuUtilPrivate *priv, GPtrArray *devices, GError **erro
 	/* exactly one */
 	if (devices_filtered->len == 1) {
 		dev = g_ptr_array_index(devices_filtered, 0);
-		/* TRANSLATORS: Device has been chosen by the daemon for the user */
-		g_print("%s: %s\n", _("Selected device"), fwupd_device_get_name(dev));
+		if (!priv->as_json) {
+			/* TRANSLATORS: device has been chosen by the daemon for the user */
+			g_print("%s: %s\n", _("Selected device"), fwupd_device_get_name(dev));
+		}
 		return g_object_ref(dev);
 	}
 
