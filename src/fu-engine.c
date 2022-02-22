@@ -6642,9 +6642,15 @@ fu_engine_backend_device_added_cb(FuBackend *backend, FuDevice *device, FuEngine
 	/* add any extra quirks */
 	fu_device_set_context(device, self->ctx);
 	if (!fu_device_probe(device, &error_local)) {
-		g_warning("failed to probe device %s: %s",
-			  fu_device_get_backend_id(device),
-			  error_local->message);
+		if (!g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_warning("failed to probe device %s: %s",
+				  fu_device_get_backend_id(device),
+				  error_local->message);
+		} else if (g_getenv("FWUPD_PROBE_VERBOSE") != NULL) {
+			g_debug("failed to probe device %s : %s",
+				fu_device_get_backend_id(device),
+				error_local->message);
+		}
 		return;
 	}
 
