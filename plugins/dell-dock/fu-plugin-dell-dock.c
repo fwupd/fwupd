@@ -223,6 +223,10 @@ fu_plugin_dell_dock_separate_activation(FuPlugin *plugin)
 static void
 fu_plugin_dell_dock_device_registered(FuPlugin *plugin, FuDevice *device)
 {
+	/* dell dock delays the activation so skips device restart */
+	if (fu_device_has_guid(device, DELL_DOCK_TBT_INSTANCE_ID))
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SKIPS_RESTART);
+
 	/* usb4 device from thunderbolt plugin */
 	if (g_strcmp0(fu_device_get_plugin(device), "thunderbolt") == 0 &&
 	    fu_device_has_guid(device, DELL_DOCK_USB4_INSTANCE_ID)) {
