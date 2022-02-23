@@ -464,6 +464,7 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_redfish.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_rts54hid.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_rts54hub.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_scsi.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_steelseries.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_superio.so
 %if 0%{?have_dell}

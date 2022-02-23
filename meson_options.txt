@@ -31,6 +31,7 @@ option('plugin_pixart_rf', type : 'boolean', value : true, description : 'enable
 option('plugin_realtek_mst', type : 'boolean', value : true, description : 'enable Realtek MST hub support')
 option('plugin_synaptics_mst', type: 'boolean', value: true, description : 'enable Synaptics MST hub support')
 option('plugin_synaptics_rmi', type: 'boolean', value: true, description : 'enable Synaptics RMI support')
+option('plugin_scsi', type: 'boolean', value: true, description : 'enable SCSI support')
 option('plugin_tpm', type : 'boolean', value : true, description : 'enable TPM support')
 option('plugin_thunderbolt', type : 'boolean', value : true, description : 'enable Thunderbolt support')
 option('plugin_redfish', type : 'boolean', value : true, description : 'enable Redfish support')
