@@ -47,6 +47,7 @@ meson .. \
     -Dplugin_mtd=false \
     -Dintrospection=false \
     -Dplugin_thunderbolt=false \
+    -Dplugin_scsi=false \
     -Dplugin_synaptics_mst=false \
     -Dplugin_synaptics_rmi=false \
     -Dplugin_upower=false \
