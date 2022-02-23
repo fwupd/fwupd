@@ -540,7 +540,7 @@ fu_ata_device_command(FuAtaDevice *self,
 	cdb[8] = tf->dev;
 	cdb[9] = tf->command;
 	if (g_getenv("FWUPD_ATA_VERBOSE") != NULL) {
-		fu_common_dump_raw(G_LOG_DOMAIN, "CBD", cdb, sizeof(cdb));
+		fu_common_dump_raw(G_LOG_DOMAIN, "CDB", cdb, sizeof(cdb));
 		if (dxfer_direction == SG_DXFER_TO_DEV && dxferp != NULL) {
 			fu_common_dump_raw(G_LOG_DOMAIN, "outgoing_data", dxferp, dxfer_len);
 		}
