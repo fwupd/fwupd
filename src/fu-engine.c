@@ -3750,17 +3750,17 @@ fu_engine_md_refresh_device_signed(FuEngine *self, FuDevice *device, XbNode *com
 		return;
 
 	/* already set, possibly by a quirk */
-	if (fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD) ||
-	    fu_device_has_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD))
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD) ||
+	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD))
 		return;
 
 	/* copy 1:1 */
 	value = xb_node_query_text(component, "custom/value[@key='LVFS::DeviceIntegrity']", NULL);
 	if (value != NULL) {
 		if (g_strcmp0(value, "signed") == 0) {
-			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 		} else if (g_strcmp0(value, "unsigned") == 0) {
-			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 		} else {
 			g_warning("payload value unexpected: %s, expected signed|unsigned", value);
 		}
