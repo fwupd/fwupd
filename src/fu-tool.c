@@ -3143,7 +3143,7 @@ fu_util_clear_history(FuUtilPrivate *priv, gchar **values, GError **error)
 static gboolean
 fu_util_setup_interactive(FuUtilPrivate *priv, GError **error)
 {
-	if (!priv->as_json) {
+	if (priv->as_json) {
 		g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "using --json");
 		return FALSE;
 	}
