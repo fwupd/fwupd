@@ -3,12 +3,12 @@
   "interactive": false,
   "steps": [
     {
-      "url": "https://fwupd.org/downloads/d1e6fd47cf673138ee7f0f0073901262ff4cd06b6f98e1a6ba55eb1998d1a58b-talos2-bcm5719-0.4.44.cab",
+      "url": "https://fwupd.org/downloads/6cf165037a381eb29c183319e031def6b87e3ce955781ecf73f28751a1365db2-kh08p-bcm5719-0.4.62.cab",
       "components": [
         {
           "version": "0.4.62",
           "guids": [
-            "https://fwupd.org/downloads/6cf165037a381eb29c183319e031def6b87e3ce955781ecf73f28751a1365db2-kh08p-bcm5719-0.4.62.cab"
+            "ec5b8a9e-973b-58cc-935b-8322fabaebe9"
           ]
         }
       ]
