@@ -41,7 +41,6 @@ fu_plugin_upower_rescan_devices(FuPlugin *plugin)
 	/* check that we "have" a battery */
 	type_val = g_dbus_proxy_get_cached_property(data->proxy, "Type");
 	if (type_val == NULL || g_variant_get_uint32(type_val) == 0) {
-		g_warning("failed to query power type");
 		fu_context_set_battery_state(ctx, FU_BATTERY_STATE_UNKNOWN);
 		fu_context_set_battery_level(ctx, FU_BATTERY_VALUE_INVALID);
 		return;
