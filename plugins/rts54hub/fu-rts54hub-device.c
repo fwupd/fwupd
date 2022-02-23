@@ -550,6 +550,7 @@ static void
 fu_rts54hub_device_init(FuRts54HubDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.realtek.rts54");
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_set_remove_delay(FU_DEVICE(self), FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE);
 }
 
