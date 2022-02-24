@@ -1,0 +1,9 @@
+# VL820
+[USB\VID_2109&PID_0820]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3
+[USB\VID_2109&PID_2820]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2

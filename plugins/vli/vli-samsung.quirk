@@ -1,0 +1,7 @@
+# Samsung
+[USB\VID_04E8&PID_A025]
+Plugin = vli
+GType = FuVliPdDevice
+[USB\VID_04E8&PID_A048]
+Plugin = vli
+GType = FuVliPdDevice

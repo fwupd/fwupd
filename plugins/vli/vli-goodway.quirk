@@ -1,4 +1,4 @@
-#Goodway
+# Goodway Minibons
 [USB\VID_065F&PID_F817]
 Plugin = vli
 GType = FuVliUsbhubDevice
