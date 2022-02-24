@@ -25,7 +25,6 @@ meson .. \
     -Dbuild=standalone \
     -Ddocs=none \
     -Dhsi=false \
-    -Dplugin_scsi=false \
     -Dman=false \
     -Dmetainfo=false \
     -Dsoup_session_compat=false \
