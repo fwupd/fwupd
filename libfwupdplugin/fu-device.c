@@ -2255,7 +2255,14 @@ fu_device_fixup_vendor_name(FuDevice *self)
 void
 fu_device_set_vendor(FuDevice *self, const gchar *vendor)
 {
-	fwupd_device_set_vendor(FWUPD_DEVICE(self), vendor);
+	g_autofree gchar *vendor_safe = NULL;
+
+	/* trim any leading and trailing spaces */
+	if (vendor != NULL)
+		vendor_safe = fu_common_strstrip(vendor);
+
+	/* proxy */
+	fwupd_device_set_vendor(FWUPD_DEVICE(self), vendor_safe);
 	fu_device_fixup_vendor_name(self);
 }
 

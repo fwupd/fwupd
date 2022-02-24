@@ -263,7 +263,7 @@ fu_device_name_func(void)
 	g_autoptr(FuDevice) device2 = fu_device_new();
 
 	/* vendor then name */
-	fu_device_set_vendor(device1, "Hughski");
+	fu_device_set_vendor(device1, "  Hughski  ");
 	fu_device_set_name(device1, "HUGHSKI  ColorHug(TM)__Pro  ");
 	g_assert_cmpstr(fu_device_get_vendor(device1), ==, "Hughski");
 	g_assert_cmpstr(fu_device_get_name(device1), ==, "ColorHug™ Pro");
