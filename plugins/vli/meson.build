@@ -2,13 +2,13 @@ if get_option('gusb')
 cargs = ['-DG_LOG_DOMAIN="FuPluginVliUsbhub"']
 
 install_data([
-  'vli-pd.quirk',
-  'vli-usbhub.quirk',
-  'vli-usbhub-dell.quirk',
-  'vli-usbhub-lenovo.quirk',
-  'vli-usbhub-hyper.quirk',
-  'vli-usbhub-bizlink.quirk',
-  'vli-usbhub-minibons.quirk',
+  'vli-bizlink.quirk',
+  'vli-dell.quirk',
+  'vli-goodway.quirk',
+  'vli-hyper.quirk',
+  'vli-lenovo.quirk',
+  'vli.quirk',
+  'vli-samsung.quirk',
   ],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
 )
