@@ -1915,10 +1915,14 @@ fu_udev_device_get_siblings_with_subsystem(FuUdevDevice *self, const gchar *cons
 	g_autoptr(GList) enumerated = g_udev_client_query_by_subsystem(udev_client, subsystem);
 	for (GList *element = enumerated; element != NULL; element = element->next) {
 		g_autoptr(GUdevDevice) enumerated_device = element->data;
-		g_autoptr(GUdevDevice) enumerated_parent =
-		    g_udev_device_get_parent(enumerated_device);
-		const gchar *enumerated_parent_path =
-		    g_udev_device_get_sysfs_path(enumerated_parent);
+		g_autoptr(GUdevDevice) enumerated_parent = NULL;
+		const gchar *enumerated_parent_path;
+
+		/* get parent, if it exists */
+		enumerated_parent = g_udev_device_get_parent(enumerated_device);
+		if (enumerated_parent == NULL)
+			break;
+		enumerated_parent_path = g_udev_device_get_sysfs_path(enumerated_parent);
 
 		/* if the sysfs path of self's parent is the same as that of the
 		 * located device's parent, they are siblings */
@@ -1986,10 +1990,14 @@ fu_udev_device_get_children_with_subsystem(FuUdevDevice *self, const gchar *cons
 	g_autoptr(GList) enumerated = g_udev_client_query_by_subsystem(udev_client, subsystem);
 	for (GList *element = enumerated; element != NULL; element = element->next) {
 		g_autoptr(GUdevDevice) enumerated_device = element->data;
-		g_autoptr(GUdevDevice) enumerated_parent =
-		    g_udev_device_get_parent(enumerated_device);
-		const gchar *enumerated_parent_path =
-		    g_udev_device_get_sysfs_path(enumerated_parent);
+		g_autoptr(GUdevDevice) enumerated_parent = NULL;
+		const gchar *enumerated_parent_path;
+
+		/* get parent, if it exists */
+		enumerated_parent = g_udev_device_get_parent(enumerated_device);
+		if (enumerated_parent == NULL)
+			break;
+		enumerated_parent_path = g_udev_device_get_sysfs_path(enumerated_parent);
 
 		/* enumerated device is a child of self if its parent is the
 		 * same as self */
