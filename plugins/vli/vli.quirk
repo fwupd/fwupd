@@ -1,4 +1,74 @@
-# Generic
+# 3470_Class
+[USB\VID_2109&PID_0810]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_0811]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_0812]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_0813]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = needs-unlock-legacy813
+[USB\VID_2109&PID_8110]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_8113]
+Plugin = vli
+GType = FuVliUsbhubDevice
+
+# 3507_Class
+[USB\VID_2109&PID_0210]
+Plugin = vli
+GType = FuVliUsbhubDevice
+
+# 3545_Class
+[USB\VID_2109&PID_0211]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_2211]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_0212]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_2212]
+Plugin = vli
+GType = FuVliUsbhubDevice
+
+# VL817
+[USB\VID_2109&PID_0817]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3
+[USB\VID_2109&PID_2817]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+
+# VL819
+[USB\VID_2109&PID_0819]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3
+[USB\VID_2109&PID_2819]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+
+# VL822
+[USB\VID_2109&PID_0822]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3
+[USB\VID_2109&PID_2822]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+
+# Generic PD
 [USB\VID_0800&PID_0800]
 Plugin = vli
 GType = FuVliPdDevice
@@ -41,37 +111,6 @@ VliDeviceKind = VL107
 Plugin = vli
 GType = FuVliPdDevice
 [USB\VID_2109&PID_D102]
-Plugin = vli
-GType = FuVliPdDevice
-
-# Lenovo VGA
-[USB\VID_17EF&PID_7211]
-Plugin = vli
-GType = FuVliPdDevice
-
-# Lenovo HDMI
-[USB\VID_17EF&PID_7212]
-Plugin = vli
-GType = FuVliPdDevice
-Flags = dual-image
-
-# Lenovo
-[USB\VID_17EF&PID_7215]
-Plugin = vli
-GType = FuVliPdDevice
-[USB\VID_17EF&PID_7217]
-Plugin = vli
-GType = FuVliPdDevice
-[USB\VID_17EF&PID_7223]
-Plugin = vli
-GType = FuVliPdDevice
-Flags = dual-image
-
-# Samsung
-[USB\VID_04E8&PID_A025]
-Plugin = vli
-GType = FuVliPdDevice
-[USB\VID_04E8&PID_A048]
 Plugin = vli
 GType = FuVliPdDevice
 

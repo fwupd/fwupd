@@ -279,3 +279,26 @@ Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
 ParentGuid = USB\VID_2109&PID_2822
+
+# Lenovo VGA
+[USB\VID_17EF&PID_7211]
+Plugin = vli
+GType = FuVliPdDevice
+
+# Lenovo HDMI
+[USB\VID_17EF&PID_7212]
+Plugin = vli
+GType = FuVliPdDevice
+Flags = dual-image
+
+# Lenovo
+[USB\VID_17EF&PID_7215]
+Plugin = vli
+GType = FuVliPdDevice
+[USB\VID_17EF&PID_7217]
+Plugin = vli
+GType = FuVliPdDevice
+[USB\VID_17EF&PID_7223]
+Plugin = vli
+GType = FuVliPdDevice
+Flags = dual-image
