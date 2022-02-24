@@ -31,7 +31,7 @@ option('plugin_pixart_rf', type : 'feature', description : 'PixartRF support', d
 option('plugin_realtek_mst', type : 'feature', description : 'Realtek MST hub support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_synaptics_mst', type: 'feature', description : 'Synaptics MST hub support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_synaptics_rmi', type: 'feature', description : 'Synaptics RMI support', deprecated: {'true': 'enabled', 'false': 'disabled'})
-option('plugin_scsi', type: 'boolean', value: true, description : 'enable SCSI support')
+option('plugin_scsi', type: 'feature', description : 'SCSI support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_tpm', type : 'feature', description : 'TPM support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_thunderbolt', type : 'feature', description : 'Thunderbolt support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_redfish', type : 'feature' , description : 'Redfish support', deprecated: {'true': 'enabled', 'false': 'disabled'})
