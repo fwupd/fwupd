@@ -626,7 +626,7 @@ msgstr "Planifiche la instalazion pe volte sucessive che si torne a inviâ cuant
 msgid "Scheduling…"
 msgstr "Daûr a planificâ…"
 
-#. TRANSLATORS: Device has been chosen by the daemon for the user
+#. TRANSLATORS: device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Dispositîf selezionât"
 

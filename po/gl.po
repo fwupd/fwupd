@@ -731,7 +731,7 @@ msgstr "Escritura do SPI"
 msgid "Scheduling…"
 msgstr "Planificando…"
 
-#. TRANSLATORS: Device has been chosen by the daemon for the user
+#. TRANSLATORS: device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Seleccionar un dispositivo"
 

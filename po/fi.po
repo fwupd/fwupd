@@ -4,7 +4,7 @@
 #
 # Translators:
 # Jiri Grönroos <jiri.gronroos@iki.fi>, 2017-2018,2020-2021
-# Kimmo Kujansuu <mrkujansuu@gmail.com>, 2019-2021
+# Kimmo Kujansuu <mrkujansuu@gmail.com>, 2019-2022
 # Timo Jyrinki <timo.jyrinki@gmail.com>, 2021
 # Ville-Pekka Vainio <vpvainio@iki.fi>, 2021
 msgid ""
@@ -306,6 +306,10 @@ msgstr "Salli laiteohjelmiston nykyisten versioiden asentaminen uudelleen"
 msgid "Allow switching firmware branch"
 msgstr "Salli laiteohjelmiston haaran vaihtaminen"
 
+#. TRANSLATORS: is not the main firmware stream
+msgid "Alternate branch"
+msgstr "Vaihtoehtoinen haara"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Päivitys vaatii uudelleenkäynnistyksen."
@@ -424,6 +428,10 @@ msgstr "Kytke uusi ytimen ajuri"
 msgid "Blocked firmware files:"
 msgstr "Estetyt laiteohjelmistotiedostot:"
 
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Blocked version"
+msgstr "Estetty versio"
+
 #. TRANSLATORS: we will not offer this firmware to the user
 msgid "Blocking firmware:"
 msgstr "Laiteohjelmiston estäminen:"
@@ -504,6 +512,10 @@ msgstr "Tyhjennä viimeisimmän päivityksen tulokset"
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "Komentoa ei löytynyt"
+
+#. TRANSLATORS: is not supported by the vendor
+msgid "Community supported"
+msgstr "Yhteisön tukema"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -631,11 +643,21 @@ msgstr "Onnistuneesti päivitetyt laitteet:"
 msgid "Devices that were not updated correctly:"
 msgstr "Laitteet, joita ei päivitetty oikein:"
 
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Laitteet, joille ei ole saatavilla laiteohjelmiston päivityksiä:"
 
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
+#. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
 #. * available
 msgid "Devices with the latest available firmware version:"
@@ -777,6 +799,10 @@ msgstr "Käytössä"
 msgid "Enabled fwupdate debugging"
 msgstr "fwupdaten vianjäljitys on käytössä"
 
+#. TRANSLATORS: Plugin is active only if hardware is found
+msgid "Enabled if hardware matches"
+msgstr "Käytössä, jos laitteisto vastaa"
+
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Ota käyttöön annettu lähde"
@@ -795,6 +821,10 @@ msgstr "Salattu"
 #. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
 msgid "Encrypted RAM"
 msgstr "Salattu RAM-muisti"
+
+#. TRANSLATORS: the vendor is no longer supporting the device
+msgid "End of life"
+msgstr "Käyttöaika loppu"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -1245,9 +1275,17 @@ msgstr "Sisäinen laite"
 msgid "Invalid"
 msgstr "Virheellinen"
 
+#. TRANSLATORS: version is older
+msgid "Is downgrade"
+msgstr "On vanhempi"
+
 #. TRANSLATORS: Is currently in bootloader mode
 msgid "Is in bootloader mode"
 msgstr "On käynnistyslataintilassa"
+
+#. TRANSLATORS: version is newer
+msgid "Is upgrade"
+msgstr "On päivitys"
 
 #. TRANSLATORS: issue fixed with the release, e.g. CVE
 msgid "Issue"
@@ -1258,6 +1296,14 @@ msgstr[1] "Ongelmat"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "AVAIN,ARVO"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is no longer tainted"
+msgstr "Kernel ei ole enää saastunut"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is tainted"
+msgstr "Kernel on saastunut"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown disabled"
@@ -1398,6 +1444,10 @@ msgstr "Seuraa tapahtumien taustaprosessia"
 msgid "Mounts the ESP"
 msgstr "Liitä ESP"
 
+#. TRANSLATORS: we're poking around as a power user
+msgid "NOTE: This program may only work correctly as root"
+msgstr "HUOMAA: Ohjelma saattaa toimia oikein vain root käyttäjänä"
+
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "Tarvitsee uudelleenkäynnistyksen asennuksen jälkeen"
@@ -1454,6 +1504,10 @@ msgstr "Muille laitteille ei ole saatavilla päivityksiä"
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "Päivityksiä ei toteutettu"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Not approved"
+msgstr "Hylätty"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -1512,6 +1566,10 @@ msgstr "Jäsennetään järjestelmän dbx:ää..."
 msgid "Password"
 msgstr "Salasana"
 
+#. TRANSLATORS: command description
+msgid "Patch a firmware blob at a known offset"
+msgstr "Korjaa laiteohjelmiston blob tunnetulla vastineella"
+
 msgid "Payload"
 msgstr "Tietosisältö"
 
@@ -1544,6 +1602,14 @@ msgstr "Laajennuksen riippuvuudet puuttuvat"
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Käynnistystä edeltävä DMA-suojaus"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is disabled"
+msgstr "Käynnistystä edeltävä DMA-suojaus on poistettu käytöstä"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is enabled"
+msgstr "Käynnistystä edeltävä DMA-suojaus on käytössä"
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1689,6 +1755,10 @@ msgstr "Palauta kaikki koneen laitetunnukset"
 msgid "Run `fwupdmgr get-upgrades` for more information."
 msgstr "Suorita `fwupdmgr get-upgrades` saadaksesi lisätietoja."
 
+#. TRANSLATORS: this is shown in the MOTD
+msgid "Run `fwupdmgr sync-bkc` to complete this action."
+msgstr "Suorita \"fwupdmgr sync-bkc\" suorittaaksesi tämä toiminto loppuun."
+
 #. TRANSLATORS: command line option
 msgid "Run the plugin composite cleanup routine when using install-blob"
 msgstr "Suorita liitännäisen yhteinen siivousrutiini, kun käytetään komentoa install-blob"
@@ -1754,7 +1824,7 @@ msgstr "Secure Boot käytössä"
 msgid "See %s for more information."
 msgstr "Katso %s saadaksesi lisätietoja."
 
-#. TRANSLATORS: Device has been chosen by the daemon for the user
+#. TRANSLATORS: device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Valittu laite"
 
@@ -1971,6 +2041,10 @@ msgstr "TEKSTI"
 msgid "TPM PCR0 reconstruction"
 msgstr "TPM PCR0 -jälleenrakennus"
 
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is invalid"
+msgstr "TPM PCR0 jälleenrakennus on virheellinen"
+
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
 msgid "TPM empty PCRs"
@@ -2073,6 +2147,14 @@ msgstr "Tämä työkalu lukee ja jäsentää TPM-tapahtumalokin järjestelmän l
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Ohimenevä häiriö"
+
+#. TRANSLATORS: We verified the meatdata against the server
+msgid "Trusted metadata"
+msgstr "Luotettu metatieto"
+
+#. TRANSLATORS: We verified the payload against the server
+msgid "Trusted payload"
+msgstr "Luotettu lataus"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -2204,6 +2286,10 @@ msgstr "Päivitä laitteen tallennetut vahvistustiedot"
 msgid "Update the stored metadata with current contents"
 msgstr "Päivitä tallennetut metatiedot nykyisellä sisällöllä"
 
+#. TRANSLATORS: command description
+msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
+msgstr "Päivittää kaikki määritetyt laitteet uusimpaan firmware versioon tai niihin joita ei ole määritetty"
+
 msgid "Updating"
 msgstr "Päivittää"
 
@@ -2320,6 +2406,13 @@ msgstr "Jakelijasi ei ehkä ole varmistanut laiteohjelmistopäivitysten yhteenso
 #, c-format
 msgid "Your hardware may be damaged using this firmware, and installing this release may void any warranty with %s."
 msgstr "Laitteistosi saattaa vaurioitua tämän laiteohjelmiston käytöllä. Asentaminen voi mitätöidä toimittajan %s takuun."
+
+#. TRANSLATORS: BKC is the industry name for the best known configuration and
+#. is a set
+#. * of firmware that works together
+#, c-format
+msgid "Your system is set up to the BKC of %s."
+msgstr "Järjestelmäsi on asetettu BKC %s."
 
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "[CHECKSUM]"

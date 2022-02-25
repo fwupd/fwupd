@@ -804,7 +804,7 @@ msgstr "Démarrage sécurisé activé"
 msgid "See %s for more information."
 msgstr "Voir %s pour plus d'informations."
 
-#. TRANSLATORS: Device has been chosen by the daemon for the user
+#. TRANSLATORS: device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Périphérique sélectionné"
 

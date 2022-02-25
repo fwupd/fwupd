@@ -589,11 +589,21 @@ msgstr "성공적으로 업데이트된 장치:"
 msgid "Devices that were not updated correctly:"
 msgstr "올바르게 업데이트되지 않은 장치:"
 
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "펌웨어 업데이트를 사용할 수 없는 장치:"
 
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
+#. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
 #. * available
 msgid "Devices with the latest available firmware version:"
@@ -1645,7 +1655,7 @@ msgstr "작업 계획 중…"
 msgid "See %s for more information."
 msgstr "자세한 정보는 %s 사이트를 참조하십시오."
 
-#. TRANSLATORS: Device has been chosen by the daemon for the user
+#. TRANSLATORS: device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "선택한 장치"
 

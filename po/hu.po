@@ -963,7 +963,7 @@ msgstr "Telepítés ütemezése a következő újraindításkor, ha lehetséges"
 msgid "Scheduling…"
 msgstr "Ütemezés…"
 
-#. TRANSLATORS: Device has been chosen by the daemon for the user
+#. TRANSLATORS: device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Kiválasztott eszköz"
 

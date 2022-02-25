@@ -311,6 +311,10 @@ msgstr "Permetre tornar a instal·lar les versions existents del microprogramari
 msgid "Allow switching firmware branch"
 msgstr "Permet canviar de branca de microprogramari"
 
+#. TRANSLATORS: is not the main firmware stream
+msgid "Alternate branch"
+msgstr "Branca alternativa"
+
 #. TRANSLATORS: explain why we want to reboot
 msgid "An update requires a reboot to complete."
 msgstr "Una actualització requereix un reinici per a completar-se."
@@ -429,6 +433,10 @@ msgstr "Vincula el controlador actual."
 msgid "Blocked firmware files:"
 msgstr "Fitxers del microprogramari bloquejat:"
 
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Blocked version"
+msgstr "Versió bloquejada"
+
 #. TRANSLATORS: we will not offer this firmware to the user
 msgid "Blocking firmware:"
 msgstr "Microprogramari bloquejat:"
@@ -509,6 +517,10 @@ msgstr "Esborra els resultats de l'última actualització."
 #. TRANSLATORS: error message
 msgid "Command not found"
 msgstr "No s'ha trobat cap ordre"
+
+#. TRANSLATORS: is not supported by the vendor
+msgid "Community supported"
+msgstr "Recolzada per la comunitat"
 
 #. TRANSLATORS: command description
 msgid "Convert a firmware file"
@@ -642,11 +654,21 @@ msgstr "Els dispositius que s'han actualitzat correctament:"
 msgid "Devices that were not updated correctly:"
 msgstr "Els dispositius que no s'han actualitzat correctament:"
 
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Dispositius sense actualitzacions de microprogramari disponibles:"
 
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
+#. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
 #. * available
 msgid "Devices with the latest available firmware version:"
@@ -788,6 +810,10 @@ msgstr "Habilitat"
 msgid "Enabled fwupdate debugging"
 msgstr "La depuració del «fwupdate» està habilitada"
 
+#. TRANSLATORS: Plugin is active only if hardware is found
+msgid "Enabled if hardware matches"
+msgstr "Activat si hi ha cap coincidència de maquinari"
+
 #. TRANSLATORS: command description
 msgid "Enables a given remote"
 msgstr "Habilita un remot indicat."
@@ -806,6 +832,10 @@ msgstr "Encriptada"
 #. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
 msgid "Encrypted RAM"
 msgstr "RAM encriptada"
+
+#. TRANSLATORS: the vendor is no longer supporting the device
+msgid "End of life"
+msgstr "Final de la vida"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -1209,6 +1239,10 @@ msgstr "S'està instal·lant l'actualització de microprogramari..."
 msgid "Installing on %s…"
 msgstr "S'està instal·lant a %s…"
 
+#. TRANSLATORS: if it breaks, you get to keep both pieces
+msgid "Installing this update may also void any device warranty."
+msgstr "La instal·lació d'aquesta actualització també pot anul·lar qualsevol garantia del dispositiu."
+
 #. TRANSLATORS: Title: BootGuard is a trademark from Intel
 msgid "Intel BootGuard"
 msgstr "BootGuard d'Intel"
@@ -1260,9 +1294,17 @@ msgstr "Dispositiu intern"
 msgid "Invalid"
 msgstr "No vàlid"
 
+#. TRANSLATORS: version is older
+msgid "Is downgrade"
+msgstr "Està desactualitzada"
+
 #. TRANSLATORS: Is currently in bootloader mode
 msgid "Is in bootloader mode"
 msgstr "Està en el mode carregador d'arrencada"
+
+#. TRANSLATORS: version is newer
+msgid "Is upgrade"
+msgstr "Està actualitzada"
 
 #. TRANSLATORS: issue fixed with the release, e.g. CVE
 msgid "Issue"
@@ -1273,6 +1315,14 @@ msgstr[1] "Problemes"
 #. TRANSLATORS: command argument: uppercase, spaces->dashes
 msgid "KEY,VALUE"
 msgstr "CLAU,VALOR"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is no longer tainted"
+msgstr "El nucli ja no està contaminat"
+
+#. TRANSLATORS: HSI event title
+msgid "Kernel is tainted"
+msgstr "El nucli està contaminat"
 
 #. TRANSLATORS: HSI event title
 msgid "Kernel lockdown disabled"
@@ -1413,6 +1463,10 @@ msgstr "Monitora el dimoni per als esdeveniments."
 msgid "Mounts the ESP"
 msgstr "Munta l'ESP."
 
+#. TRANSLATORS: we're poking around as a power user
+msgid "NOTE: This program may only work correctly as root"
+msgstr "Nota: aquest programa només pot funcionar correctament com a root"
+
 #. TRANSLATORS: Requires a reboot to apply firmware or to reload hardware
 msgid "Needs a reboot after installation"
 msgstr "Requereix un reinici després de la instal·lació"
@@ -1469,6 +1523,10 @@ msgstr "No hi ha cap actualització disponible per als dispositius restants"
 #. TRANSLATORS: nothing was updated offline
 msgid "No updates were applied"
 msgstr "No s'han aplicat les actualitzacions"
+
+#. TRANSLATORS: version cannot be installed due to policy
+msgid "Not approved"
+msgstr "No aprovada"
 
 #. TRANSLATORS: Suffix: the HSI result
 msgid "Not found"
@@ -1532,7 +1590,7 @@ msgid "Patch a firmware blob at a known offset"
 msgstr "Apedaça un blob de microprogramari amb un desplaçament conegut"
 
 msgid "Payload"
-msgstr "Carrega útil"
+msgstr "Part útil"
 
 #. TRANSLATORS: the update state of the specific device
 msgid "Pending"
@@ -1563,6 +1621,14 @@ msgstr "Manquen les dependències del connector"
 #. TRANSLATORS: Title: DMA as in https://en.wikipedia.org/wiki/DMA_attack
 msgid "Pre-boot DMA protection"
 msgstr "Protecció DMA durant la prearrencada"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is disabled"
+msgstr "La protecció DMA de la prearrencada està desactivada"
+
+#. TRANSLATORS: HSI event title
+msgid "Pre-boot DMA protection is enabled"
+msgstr "La protecció DMA de la prearrencada està activada"
 
 #. TRANSLATORS: version number of previous firmware
 msgid "Previous version"
@@ -1650,6 +1716,10 @@ msgstr "S'està reinstal·lant %s amb %s... "
 #. TRANSLATORS: the stream of firmware, e.g. nonfree or open-source
 msgid "Release Branch"
 msgstr "Branca de llançament"
+
+#. TRANSLATORS: release attributes
+msgid "Release Flags"
+msgstr "Etiquetes de llançament"
 
 #. TRANSLATORS: the exact component on the server
 msgid "Release ID"
@@ -1777,7 +1847,7 @@ msgstr "Està habilitada l'arrencada segura"
 msgid "See %s for more information."
 msgstr "Per a més informació, vegeu %s."
 
-#. TRANSLATORS: Device has been chosen by the daemon for the user
+#. TRANSLATORS: device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Dispositiu seleccionat"
 
@@ -1998,6 +2068,10 @@ msgstr "TEXT"
 msgid "TPM PCR0 reconstruction"
 msgstr "Reconstrucció PCR0 del TPM"
 
+#. TRANSLATORS: HSI event title
+msgid "TPM PCR0 reconstruction is invalid"
+msgstr "La reconstrucció PCR0 del TPM no es valida"
+
 #. TRANSLATORS: Title: PCRs (Platform Configuration Registers) shouldn't be
 #. empty
 msgid "TPM empty PCRs"
@@ -2051,6 +2125,10 @@ msgstr "El microprogramari des de %s no és proporcionat per %s, el proveïdor d
 msgid "The system clock has not been set correctly and downloading files may fail."
 msgstr "El rellotge del sistema no s'ha configurat correctament i pot fallar la descàrrega de fitxers."
 
+#. TRANSLATORS: naughty vendor
+msgid "The vendor did not supply any release notes."
+msgstr "El proveïdor no ha subministrat les notes de llançament."
+
 #. TRANSLATORS: nothing to show
 msgid "There are no blocked firmware files"
 msgstr "No hi ha cap fitxer de microprogramari bloquejat."
@@ -2065,6 +2143,10 @@ msgstr "No hi ha cap microprogramari aprovat."
 #, c-format
 msgid "This device will be reverted back to %s when the %s command is performed."
 msgstr "Aquest dispositiu es revertirà a %s quan es realitzi l'ordre %s."
+
+#. TRANSLATORS: the vendor did not upload this
+msgid "This firmware is provided by LVFS community members and is not provided (or supported) by the original hardware vendor."
+msgstr "Aquest microprogramari és proporcionat pels membres de la comunitat LVFS i no és proporcionada (o admesa) pel proveïdor de maquinari original."
 
 #. TRANSLATORS: unsupported build of the package
 msgid "This package has not been validated, it may not work properly."
@@ -2112,6 +2194,14 @@ msgstr "Aquesta eina llegirà i analitzarà el registre d'esdeveniments TPM des 
 #. TRANSLATORS: the update state of the specific device
 msgid "Transient failure"
 msgstr "Fallada transitòria"
+
+#. TRANSLATORS: We verified the meatdata against the server
+msgid "Trusted metadata"
+msgstr "Metadades de confiança"
+
+#. TRANSLATORS: We verified the payload against the server
+msgid "Trusted payload"
+msgstr "Part útil de confiança"
 
 #. TRANSLATORS: remote type, e.g. remote or local
 msgid "Type"
@@ -2242,6 +2332,10 @@ msgstr "Actualitza la informació de verificació dels dispositius emmagatzemats
 #. TRANSLATORS: command description
 msgid "Update the stored metadata with current contents"
 msgstr "Actualitza les metadades emmagatzemades amb el contingut actual."
+
+#. TRANSLATORS: command description
+msgid "Updates all specified devices to latest firmware version, or all devices if unspecified"
+msgstr "Actualitza tots els dispositius especificats a la versió més recent del microprogramari o tots els dispositius sense especificar "
 
 msgid "Updating"
 msgstr "S'està actualitzant"
