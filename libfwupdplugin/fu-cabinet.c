@@ -31,6 +31,7 @@ struct _FuCabinet {
 	guint64 size_max;
 	GCabCabinet *gcab_cabinet;
 	gchar *container_checksum;
+	gchar *container_checksum_alt;
 	XbBuilder *builder;
 	XbSilo *silo;
 	JcatContext *jcat_context;
@@ -48,6 +49,7 @@ fu_cabinet_finalize(GObject *obj)
 	if (self->builder != NULL)
 		g_object_unref(self->builder);
 	g_free(self->container_checksum);
+	g_free(self->container_checksum_alt);
 	g_object_unref(self->gcab_cabinet);
 	g_object_unref(self->jcat_context);
 	g_object_unref(self->jcat_file);
@@ -412,47 +414,70 @@ static XbBuilderNode *
 _xb_builder_node_get_child_by_element_attr(XbBuilderNode *bn,
 					   const gchar *element,
 					   const gchar *attr_name,
-					   const gchar *attr_value)
+					   const gchar *attr_value,
+					   const gchar *attr2_name,
+					   const gchar *attr2_value)
 {
 	GPtrArray *bcs = xb_builder_node_get_children(bn);
 	for (guint i = 0; i < bcs->len; i++) {
 		XbBuilderNode *bc = g_ptr_array_index(bcs, i);
 		if (g_strcmp0(xb_builder_node_get_element(bc), element) != 0)
 			continue;
-		if (g_strcmp0(xb_builder_node_get_attr(bc, attr_name), attr_value) == 0)
+		if (g_strcmp0(xb_builder_node_get_attr(bc, attr_name), attr_value) != 0)
+			continue;
+		if (g_strcmp0(xb_builder_node_get_attr(bc, attr2_name), attr2_value) == 0)
 			return g_object_ref(bc);
 	}
 	return NULL;
 }
 
+static void
+fu_cabinet_ensure_container_checksum(XbBuilderNode *bn, const gchar *type, const gchar *checksum)
+{
+	g_autoptr(XbBuilderNode) csum = NULL;
+
+	/* verify it exists */
+	csum = _xb_builder_node_get_child_by_element_attr(bn,
+							  "checksum",
+							  "type",
+							  type,
+							  "target",
+							  "container");
+	if (csum == NULL) {
+		csum = xb_builder_node_insert(bn,
+					      "checksum",
+					      "type",
+					      type,
+					      "target",
+					      "container",
+					      NULL);
+	}
+
+	/* verify it is correct */
+	if (g_strcmp0(xb_builder_node_get_text(csum), checksum) != 0) {
+		if (xb_builder_node_get_text(csum) != NULL) {
+			g_warning("invalid container checksum %s, fixing up to %s",
+				  xb_builder_node_get_text(csum),
+				  checksum);
+		}
+		xb_builder_node_set_text(csum, checksum, -1);
+	}
+}
+
 static gboolean
-fu_cabinet_set_container_checksum_cb(XbBuilderFixup *builder_fixup,
-				     XbBuilderNode *bn,
-				     gpointer user_data,
-				     GError **error)
+fu_cabinet_ensure_container_checksum_cb(XbBuilderFixup *builder_fixup,
+					XbBuilderNode *bn,
+					gpointer user_data,
+					GError **error)
 {
 	FuCabinet *self = FU_CABINET(user_data);
-	g_autoptr(XbBuilderNode) csum = NULL;
 
 	/* not us */
 	if (g_strcmp0(xb_builder_node_get_element(bn), "release") != 0)
 		return TRUE;
 
-	/* verify it exists */
-	csum = _xb_builder_node_get_child_by_element_attr(bn, "checksum", "type", "container");
-	if (csum == NULL) {
-		csum = xb_builder_node_insert(bn, "checksum", "target", "container", NULL);
-	}
-
-	/* verify it is correct */
-	if (g_strcmp0(xb_builder_node_get_text(csum), self->container_checksum) != 0) {
-		if (xb_builder_node_get_text(csum) != NULL) {
-			g_warning("invalid container checksum %s, fixing up to %s",
-				  xb_builder_node_get_text(csum),
-				  self->container_checksum);
-		}
-		xb_builder_node_set_text(csum, self->container_checksum, -1);
-	}
+	fu_cabinet_ensure_container_checksum(bn, "sha1", self->container_checksum);
+	fu_cabinet_ensure_container_checksum(bn, "sha256", self->container_checksum_alt);
 	return TRUE;
 }
 
@@ -673,8 +698,8 @@ fu_cabinet_build_silo(FuCabinet *self, GBytes *data, GError **error)
 	xb_builder_add_fixup(self->builder, fixup1);
 
 	/* ensure the container checksum is always set */
-	fixup2 = xb_builder_fixup_new("SetContainerChecksum",
-				      fu_cabinet_set_container_checksum_cb,
+	fixup2 = xb_builder_fixup_new("EnsureContainerChecksum",
+				      fu_cabinet_ensure_container_checksum_cb,
 				      self,
 				      NULL);
 	xb_builder_add_fixup(self->builder, fixup2);
@@ -1046,6 +1071,7 @@ fu_cabinet_parse(FuCabinet *self, GBytes *data, FuCabinetParseFlags flags, GErro
 
 	/* build xmlb silo */
 	self->container_checksum = g_compute_checksum_for_bytes(G_CHECKSUM_SHA1, data);
+	self->container_checksum_alt = g_compute_checksum_for_bytes(G_CHECKSUM_SHA256, data);
 	if (!fu_cabinet_build_silo(self, data, error))
 		return FALSE;
 
