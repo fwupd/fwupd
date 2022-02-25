@@ -19,11 +19,13 @@ conf.set_quoted('PACKAGE_VERSION', fwupd_version)
 
 # get source version, falling back to package version
 git = find_program('git', required : false)
+tag = false
 if git.found()
   source_version = run_command(git, 'describe').stdout().strip()
   if source_version == ''
     source_version = fwupd_version
   endif
+  tag = run_command([git, 'describe', '--exact-match']).returncode() == 0
 else
   source_version = fwupd_version
 endif
@@ -474,7 +476,7 @@ if get_option('consolekit').disable_auto_if(host_machine.system() != 'linux').al
   conf.set('HAVE_CONSOLEKIT' , '1')
 endif
 
-if get_option('supported_build')
+if get_option('supported_build').disable_auto_if(not tag).allowed()
     conf.set('SUPPORTED_BUILD', '1')
 endif
 

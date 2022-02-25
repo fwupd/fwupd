@@ -32,7 +32,7 @@ build() {
         -Dplugin_powerd=disabled \
         -Ddocs=gtkdoc \
         -Defi_binary=false \
-        -Dsupported_build=true
+        -Dsupported_build=enabled
 
     ninja -v -C ../build
 }

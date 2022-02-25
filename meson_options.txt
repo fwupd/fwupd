@@ -49,7 +49,7 @@ option('plugin_uf2', type : 'feature', description : 'support for UF2', deprecat
 option('plugin_upower', type : 'feature', description : 'support for UPower', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_powerd', type : 'feature', description : 'support for powerd', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('qubes', type : 'boolean', value : false, description : 'build packages for Qubes OS')
-option('supported_build', type : 'boolean', value : false, description: 'distribution package with upstream support')
+option('supported_build', type : 'feature', description: 'distribution package with upstream support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('systemd', type : 'feature', description : 'systemd support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('systemd_root_prefix', type: 'string', value: '', description: 'Directory to base systemd’s installation directories on')
 option('elogind', type : 'feature', description : 'elogind support', deprecated: {'true': 'enabled', 'false': 'disabled'})

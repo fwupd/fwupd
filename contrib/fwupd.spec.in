@@ -281,7 +281,7 @@ fwupd wrapper for Qubes OS
     -Dman=true \
     -Dbluez=enabled \
     -Dplugin_powerd=disabled \
-    -Dsupported_build=true
+    -Dsupported_build=enabled
 
 %meson_build
 
