@@ -9,3 +9,19 @@ Flags = force-align,needs-shutdown
 # Kingston
 [NVME\VEN_2646]
 Flags = needs-shutdown
+
+# KIOXIA
+[NVME\VEN_1179]
+Flags = signed-payload
+[NVME\VEN_1E0F]
+Flags = signed-payload
+
+# SSSTC
+[NVME\VEN_14A4]
+Flags = signed-payload
+[NVME\VEN_1E95]
+Flags = signed-payload
+
+# SK Hynix
+[NVME\VEN_1C5C]
+Flags = signed-payload
