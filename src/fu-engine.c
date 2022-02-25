@@ -683,9 +683,16 @@ fu_engine_set_release_from_appstream(FuEngine *self,
 	if (tmp != NULL)
 		fwupd_release_set_source_url(rel, tmp);
 	if (artifact == NULL) {
-		tmp = xb_node_query_text(release, "checksum[@target='container']", NULL);
-		if (tmp != NULL)
-			fwupd_release_add_checksum(rel, tmp);
+		g_autoptr(GPtrArray) checksums = NULL;
+		checksums = xb_node_query(release, "checksum[@target='container']", 0, NULL);
+		if (checksums != NULL) {
+			for (guint i = 0; i < checksums->len; i++) {
+				XbNode *n = g_ptr_array_index(checksums, i);
+				if (xb_node_get_text(n) == NULL)
+					continue;
+				fwupd_release_add_checksum(rel, xb_node_get_text(n));
+			}
+		}
 	}
 	if (artifact == NULL) {
 		tmp64 = xb_node_query_text_as_uint(release, "size[@type='installed']", NULL);
