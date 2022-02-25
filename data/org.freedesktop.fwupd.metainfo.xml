@@ -34,6 +34,44 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.7.6" date="2022-02-25">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add a flag for UEFI devices that never want a capsule header auto-added</li>
+          <li>Add a flag to indicate the device has a signed or unsigned payload</li>
+          <li>Add a plugin to set a GPIO pin for the duration of an update</li>
+          <li>Add a simple plugin to enumerate (but not update) SCSI hardware</li>
+          <li>Add two more instance IDs to the MTD devices</li>
+          <li>Add X-BaseboardManagementController as an update category</li>
+          <li>Allow assigning issues to devices for known high priority problems</li>
+          <li>Parse the MTD firmware version using the defined GType</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Check the IFD sections have non-zero data length to fix a critical warning</li>
+          <li>Modify the AT retry behavior to fix getting the firmware branch</li>
+          <li>Do not run fwupd-refresh automatically in containers</li>
+          <li>Do not show a warning if the TPM eventlog does not exist</li>
+          <li>Do not show TSS2 warning messages by default</li>
+          <li>Fix a critical warning when loading an empty TPM eventlog item</li>
+          <li>Fix a logic error when adding the community warning in fwupdmgr</li>
+          <li>Fix loading flashrom devices in coreboot mode</li>
+          <li>Fix the error handling when updating USB4 retimers</li>
+          <li>Show the user when devices are not updatable due to inhibits</li>
+          <li>Skip probing the Dell DA300 device to avoid a warning</li>
+          <li>Try harder to convert to a version into a correct semver</li>
+          <li>Use multiple checksums when there are no provided artifacts</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>HP M2xfd monitors</li>
+          <li>Star Lite Mk III</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.7.5" date="2022-02-07">
       <description>
         <p>

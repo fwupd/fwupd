@@ -659,11 +659,21 @@ msgstr "Enheter som har uppdaterats:"
 msgid "Devices that were not updated correctly:"
 msgstr "Enheter som inte uppdaterades korrekt:"
 
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device
+#. * upgrade available due to missing on LVFS
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available due to missing on LVFS
 #. TRANSLATORS: message letting the user know no device
 #. * upgrade available due to missing on LVFS
 msgid "Devices with no available firmware updates: "
 msgstr "Enheter utan tillgängliga uppdateringar för fast programvara: "
 
+#. TRANSLATORS: message letting the user know no device upgrade available
+#. TRANSLATORS: message letting the user know no device upgrade
+#. * available
+#. TRANSLATORS: message letting the user know no device upgrade available
 #. TRANSLATORS: message letting the user know no device upgrade
 #. * available
 msgid "Devices with the latest available firmware version:"
@@ -827,6 +837,10 @@ msgstr "Krypterad"
 #. TRANSLATORS: Title: Memory contents are encrypted, e.g. Intel TME
 msgid "Encrypted RAM"
 msgstr "Krypterat RAM"
+
+#. TRANSLATORS: the vendor is no longer supporting the device
+msgid "End of life"
+msgstr "Har nått slutet på sin livstid"
 
 #. TRANSLATORS: command description
 msgid "Erase all firmware update history"
@@ -1838,7 +1852,7 @@ msgstr "Secure Boot aktiverad"
 msgid "See %s for more information."
 msgstr "Se %s för mer information."
 
-#. TRANSLATORS: Device has been chosen by the daemon for the user
+#. TRANSLATORS: device has been chosen by the daemon for the user
 msgid "Selected device"
 msgstr "Vald enhet"
 
