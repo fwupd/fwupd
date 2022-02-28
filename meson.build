@@ -456,14 +456,14 @@ if libsystemd.found()
     systemd_shutdown_dir = systemd.get_variable(pkgconfig : 'systemdshutdowndir')
     systemd_modules_load_dir = systemd.get_variable(pkgconfig : 'modulesloaddir')
   else
-    systemdunitdir = systemd.get_variable(pkgconfig : 'systemdsystemunitdir', define_variable: ['rootprefix', systemd_root_prefix])
-    systemdsystempresetdir = systemd.get_variable(pkgconfig : 'systemdsystempresetdir', define_variable: ['rootprefix', systemd_root_prefix])
+    systemdunitdir = systemd.get_variable(pkgconfig : 'systemdsystemunitdir', pkgconfig_define: ['rootprefix', systemd_root_prefix])
+    systemdsystempresetdir = systemd.get_variable(pkgconfig : 'systemdsystempresetdir', pkgconfig_define: ['rootprefix', systemd_root_prefix])
     systemd_root_prefix_varname = 'root_prefix'
     if systemd.version().version_compare('< 246')
       systemd_root_prefix_varname = 'rootprefix'
     endif
-    systemd_shutdown_dir = systemd.get_variable(pkgconfig : 'systemdshutdowndir', define_variable: [systemd_root_prefix_varname, systemd_root_prefix])
-    systemd_modules_load_dir = systemd.get_variable(pkgconfig : 'modulesloaddir', define_variable: [systemd_root_prefix_varname, systemd_root_prefix])
+    systemd_shutdown_dir = systemd.get_variable(pkgconfig : 'systemdshutdowndir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
+    systemd_modules_load_dir = systemd.get_variable(pkgconfig : 'modulesloaddir', pkgconfig_define: [systemd_root_prefix_varname, systemd_root_prefix])
   endif
 endif
 
