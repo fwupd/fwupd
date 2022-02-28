@@ -483,6 +483,7 @@ endif
 gnome = import('gnome')
 i18n = import('i18n')
 
+conf.set_quoted('FWUPD_PREFIX', prefix)
 conf.set_quoted('FWUPD_BINDIR', bindir)
 conf.set_quoted('FWUPD_LIBDIR', libdir)
 conf.set_quoted('FWUPD_LIBEXECDIR', libexecdir)

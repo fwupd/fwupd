@@ -27,7 +27,7 @@ fu_test_is_installed_test(void)
 	const gchar *builddir = g_getenv("G_TEST_BUILDDIR");
 	if (builddir == NULL)
 		return FALSE;
-	return g_str_has_prefix(builddir, "/usr");
+	return g_str_has_prefix(builddir, FWUPD_PREFIX);
 }
 
 static void
