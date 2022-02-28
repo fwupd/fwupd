@@ -1132,6 +1132,14 @@
       <package variant="x86_64" />
     </distro>
   </dependency>
+  <dependency type="build" id="libqrtr-glib-dev">
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libqrtr-glib-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+  </dependency>
   <dependency type="build" id="libpolkit-gobject-1-dev">
     <distro id="centos">
       <package>polkit-devel</package>
