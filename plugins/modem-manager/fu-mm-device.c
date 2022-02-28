@@ -38,6 +38,9 @@
 /* Amount of time for the modem to get firmware version */
 #define MAX_WAIT_TIME_SECS 150 /* s */
 
+/* Out-of-tree modem-power driver is unsupported */
+#define MODEM_POWER_SYSFS_PATH "/sys/class/modem-power"
+
 /**
  * FU_MM_DEVICE_FLAG_DETACH_AT_FASTBOOT_HAS_NO_RESPONSE
  *
@@ -1171,6 +1174,21 @@ fu_mm_device_get_firmware_version_mbim(FuDevice *device, GError **error)
 	return ctx.version;
 }
 
+static FuFirmware *
+fu_mm_device_prepare_firmware(FuDevice *device, GBytes *fw, FwupdInstallFlags flags, GError **error)
+{
+	/* detect presence of unsupported modem-power driver */
+	if (g_file_test(MODEM_POWER_SYSFS_PATH, G_FILE_TEST_EXISTS)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "Upgrading is unsupported with the modem-power driver");
+		return NULL;
+	}
+
+	return fu_firmware_new_from_bytes(fw);
+}
+
 static gboolean
 fu_mm_device_writeln(const gchar *fn, const gchar *buf, GError **error)
 {
@@ -1695,6 +1713,7 @@ fu_mm_device_class_init(FuMmDeviceClass *klass)
 	klass_device->set_quirk_kv = fu_mm_device_set_quirk_kv;
 	klass_device->probe = fu_mm_device_probe;
 	klass_device->detach = fu_mm_device_detach;
+	klass_device->prepare_firmware = fu_mm_device_prepare_firmware;
 	klass_device->write_firmware = fu_mm_device_write_firmware;
 	klass_device->attach = fu_mm_device_attach;
 	klass_device->set_progress = fu_mm_device_set_progress;
