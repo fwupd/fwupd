@@ -1350,7 +1350,7 @@ fu_ccgx_hpi_device_ensure_silicon_id(FuCcgxHpiDevice *self, GError **error)
 		return FALSE;
 
 	/* add quirks */
-	instance_id = g_strdup_printf("CCGX\\SID_%X", self->silicon_id);
+	instance_id = g_strdup_printf("CCGX\\SID_%04X", self->silicon_id);
 	fu_device_add_instance_id_full(FU_DEVICE(self),
 				       instance_id,
 				       FU_DEVICE_INSTANCE_FLAG_ONLY_QUIRKS);
