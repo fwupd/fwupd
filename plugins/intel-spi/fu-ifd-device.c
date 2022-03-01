@@ -33,7 +33,7 @@ fu_ifd_device_set_region(FuIfdDevice *self, FuIfdRegion region)
 	fu_device_set_name(FU_DEVICE(self), fu_ifd_region_to_name(region));
 	fu_device_set_logical_id(FU_DEVICE(self), region_str);
 	region_str_up = g_ascii_strup(region_str, -1);
-	instance_id = g_strdup_printf("IFD\\%s", region_str_up);
+	instance_id = g_strdup_printf("IFD\\NAME_%s", region_str_up);
 	fu_device_add_instance_id(FU_DEVICE(self), instance_id);
 }
 
