@@ -595,8 +595,6 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 	FuUefiDevice *self = FU_UEFI_DEVICE(device);
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
 	FwupdVersionFormat version_format;
-	g_autofree gchar *devid = NULL;
-	g_autofree gchar *guid_strup = NULL;
 	g_autofree gchar *version_lowest = NULL;
 	g_autofree gchar *version = NULL;
 
@@ -658,11 +656,7 @@ fu_uefi_device_probe(FuDevice *device, GError **error)
 	    priv->kind == FU_UEFI_DEVICE_KIND_DELL_TPM_FIRMWARE)
 		fu_device_add_private_flag(device, FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP);
 
-	/* Windows seems to be case insensitive, but for convenience we'll
-	 * match the upper case values typically specified in the .inf file */
-	guid_strup = g_ascii_strup(priv->fw_class, -1);
-	devid = g_strdup_printf("UEFI\\RES_{%s}", guid_strup);
-	fu_device_add_instance_id(device, devid);
+	/* success */
 	return TRUE;
 }
 
