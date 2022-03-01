@@ -493,7 +493,7 @@ fu_intel_spi_device_set_quirk_kv(FuDevice *device,
 
 		/* get things like SPIBAR */
 		kind_up = g_ascii_strup(value, -1);
-		instance_id = g_strdup_printf("INTEL_SPI_CHIPSET\\%s", kind_up);
+		instance_id = g_strdup_printf("INTEL_SPI_CHIPSET\\ID_%s", kind_up);
 		fu_device_add_instance_id(device, instance_id);
 		return TRUE;
 	}

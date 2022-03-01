@@ -403,48 +403,48 @@ Plugin = intel_spi
 IntelSpiKind = pch400
 
 
-[INTEL_SPI_CHIPSET\APL]
+[INTEL_SPI_CHIPSET\ID_APL]
 IntelSpiBarProxy = 00:0d.2
 IntelSpiBiosCntl = 0xDC
 Flags = pch
 
-[INTEL_SPI_CHIPSET\C620]
+[INTEL_SPI_CHIPSET\ID_C620]
 IntelSpiBarProxy = 00:1f.5
 IntelSpiBiosCntl = 0xDC
 Flags = pch
 
-[INTEL_SPI_CHIPSET\ICH0]
+[INTEL_SPI_CHIPSET\ID_ICH0]
 IntelSpiBiosCntl = 0x4E
 Flags = ich
 
-[INTEL_SPI_CHIPSET\ICH2345]
+[INTEL_SPI_CHIPSET\ID_ICH2345]
 IntelSpiBiosCntl = 0x4E
 Flags = ich
 
-[INTEL_SPI_CHIPSET\ICH6]
+[INTEL_SPI_CHIPSET\ID_ICH6]
 IntelSpiBiosCntl = 0xDC
 Flags = ich
 
-[INTEL_SPI_CHIPSET\PCH100]
+[INTEL_SPI_CHIPSET\ID_PCH100]
 IntelSpiBarProxy = 00:1f.5
 IntelSpiBiosCntl = 0xDC
 Flags = pch
 
-[INTEL_SPI_CHIPSET\PCH200]
+[INTEL_SPI_CHIPSET\ID_PCH200]
 IntelSpiBarProxy = 00:1f.5
 IntelSpiBiosCntl = 0xDC
 Flags = pch
 
-[INTEL_SPI_CHIPSET\PCH300]
+[INTEL_SPI_CHIPSET\ID_PCH300]
 IntelSpiBarProxy = 00:1f.5
 IntelSpiBiosCntl = 0xDC
 Flags = pch
 
-[INTEL_SPI_CHIPSET\PCH400]
+[INTEL_SPI_CHIPSET\ID_PCH400]
 IntelSpiBarProxy = 00:1f.5
 IntelSpiBiosCntl = 0xDC
 Flags = pch
 
-[INTEL_SPI_CHIPSET\POULSBO]
+[INTEL_SPI_CHIPSET\ID_POULSBO]
 IntelSpiBiosCntl = 0xD8
 Flags = ich
