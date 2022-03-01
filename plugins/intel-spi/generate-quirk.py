@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
         for kind in sorted(chipsets):
             cs = chipsets[kind]
-            out_f.write("\n[INTEL_SPI_CHIPSET\\{}]\n".format(kind.upper()))
+            out_f.write("\n[INTEL_SPI_CHIPSET\\ID_{}]\n".format(kind.upper()))
             if cs.spibar:
                 out_f.write("IntelSpiBar = 0x{:x}\n".format(cs.spibar))
             if cs.spibar_proxy:
