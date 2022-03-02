@@ -391,6 +391,7 @@ fu_engine_requirements_version_require_func(gconstpointer user_data)
 	fu_device_set_version_bootloader(device, "4.5.6");
 	fu_device_add_vendor_id(device, "FFFF");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED);
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 
@@ -479,6 +480,7 @@ fu_engine_requirements_child_func(gconstpointer user_data)
 	fu_device_set_version_bootloader(device, "4.5.6");
 	fu_device_add_vendor_id(device, "FFFF");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(child, "0.0.999");
@@ -534,6 +536,7 @@ fu_engine_requirements_child_fail_func(gconstpointer user_data)
 	fu_device_set_version_bootloader(device, "4.5.6");
 	fu_device_add_vendor_id(device, "FFFF");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_set_version_format(child, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(child, "0.0.1");
@@ -631,6 +634,7 @@ fu_engine_requirements_device_func(gconstpointer user_data)
 	fu_device_add_vendor_id(device, "USB:0xFFFF");
 	fu_device_add_vendor_id(device, "PCI:0x0000");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_VERSION_CHECK_REQUIRED);
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 
@@ -678,6 +682,7 @@ fu_engine_requirements_device_plain_func(gconstpointer user_data)
 	fu_device_set_version(device, "5101AALB");
 	fu_device_add_vendor_id(device, "FFFF");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 
 	/* make the component require three things */
@@ -726,6 +731,7 @@ fu_engine_requirements_version_format_func(gconstpointer user_data)
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_version(device, "1.2.3.4");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 
 	/* make the component require three things */
@@ -770,6 +776,7 @@ fu_engine_requirements_only_upgrade_func(gconstpointer user_data)
 	/* set up a dummy device */
 	fu_device_set_version(device, "1.2.4");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_ONLY_VERSION_UPGRADE);
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 
@@ -834,6 +841,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	fu_device_set_version(device1, "1.2.3");
 	fu_device_add_vendor_id(device1, "FFFF");
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_guid(device1, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_protocol(device1, "com.acme");
 	fu_engine_add_device(engine, device1);
@@ -843,6 +851,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	fu_device_set_version_format(parent, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(parent, "1.0.0");
 	fu_device_add_flag(parent, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(parent, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_guid(parent, "42f3d696-0b6f-4d69-908f-357f98ef115e");
 	fu_device_add_protocol(parent, "com.acme");
 	fu_device_add_child(parent, device1);
@@ -857,6 +866,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	fu_device_set_version(unrelated_device3, "1.5.3");
 	fu_device_add_vendor_id(unrelated_device3, "FFFF");
 	fu_device_add_flag(unrelated_device3, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(unrelated_device3, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_guid(unrelated_device3, "3e455c08-352e-4a16-84d3-f04287289fa2");
 	fu_engine_add_device(engine, unrelated_device3);
 
@@ -884,6 +894,7 @@ fu_engine_requirements_sibling_device_func(gconstpointer user_data)
 	fu_device_set_version(device2, "4.5.6");
 	fu_device_add_vendor_id(device2, "FFFF");
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_guid(device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
 	fu_device_add_child(parent, device2);
 	fu_engine_add_device(engine, device2);
@@ -932,6 +943,7 @@ fu_engine_requirements_other_device_func(gconstpointer user_data)
 	fu_device_set_version_format(device1, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device1, "1.2.3");
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_guid(device1, "12345678-1234-1234-1234-123456789012");
 
 	/* set up a different device */
@@ -1004,6 +1016,7 @@ fu_engine_requirements_protocol_check_func(gconstpointer user_data)
 	fu_device_set_version(device1, "1.2.3");
 	fu_device_add_guid(device1, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device1, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_engine_add_device(engine, device1);
 
 	fu_device_set_id(device2, "UEFI");
@@ -1014,6 +1027,7 @@ fu_engine_requirements_protocol_check_func(gconstpointer user_data)
 	fu_device_set_version(device2, "1.2.3");
 	fu_device_add_guid(device2, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_engine_add_device(engine, device2);
 
 	/* make sure both devices added */
@@ -1084,6 +1098,7 @@ fu_engine_requirements_parent_device_func(gconstpointer user_data)
 	fu_device_set_version_format(device2, FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_set_version(device2, "4.5.6");
 	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device2, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_guid(device2, "1ff60ab2-3905-06a1-b476-0371f00c9e9b");
 
 	/* set up a parent device */
@@ -1396,6 +1411,7 @@ fu_engine_require_hwid_func(gconstpointer user_data)
 	fu_device_set_version(device, "1.2.2");
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_engine_add_device(engine, device);
 
 	/* get component */
@@ -1552,6 +1568,7 @@ fu_engine_downgrade_func(gconstpointer user_data)
 	fu_device_set_name(device, "Test Device");
 	fu_device_add_guid(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 #ifndef HAVE_POLKIT
 	g_test_expect_message("FuEngine",
 			      G_LOG_LEVEL_WARNING,
@@ -1664,6 +1681,7 @@ fu_engine_install_duration_func(gconstpointer user_data)
 	fu_device_add_guid(device, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
 	fu_device_set_install_duration(device, 999);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 #ifndef HAVE_POLKIT
 	g_test_expect_message("FuEngine",
 			      G_LOG_LEVEL_WARNING,
@@ -1735,6 +1753,7 @@ fu_engine_history_func(gconstpointer user_data)
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_checksum(device, "0123456789abcdef0123456789abcdef01234567");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_created(device, 1515338000);
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
@@ -1874,6 +1893,7 @@ fu_engine_multiple_rels_func(gconstpointer user_data)
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_checksum(device, "0123456789abcdef0123456789abcdef01234567");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_INSTALL_ALL_RELEASES);
 	fu_device_set_created(device, 1515338000);
 	fu_engine_add_device(engine, device);
@@ -1968,6 +1988,7 @@ fu_engine_history_inherit(gconstpointer user_data)
 	fu_device_set_plugin(device, "test");
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_created(device, 1515338000);
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
@@ -2106,6 +2127,7 @@ fu_engine_install_needs_reboot(gconstpointer user_data)
 	fu_device_set_plugin(device, "test");
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_created(device, 1515338000);
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
@@ -2194,6 +2216,7 @@ fu_engine_history_error_func(gconstpointer user_data)
 	fu_device_set_plugin(device, "test");
 	fu_device_add_guid(device, "12345678-1234-1234-1234-123456789012");
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
 	fu_device_set_created(device, 1515338000);
 	fu_engine_add_device(engine, device);
 	devices = fu_engine_get_devices(engine, &error);
