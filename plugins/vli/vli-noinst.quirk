@@ -1,3 +1,63 @@
+# 3470_Class
+[USB\VID_2109&PID_0810]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_0811]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_0812]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_0813]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = needs-unlock-legacy813
+[USB\VID_2109&PID_8110]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_8113]
+Plugin = vli
+GType = FuVliUsbhubDevice
+
+# 3507_Class
+[USB\VID_2109&PID_0210]
+Plugin = vli
+GType = FuVliUsbhubDevice
+
+# 3545_Class
+[USB\VID_2109&PID_0211]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_2211]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_0212]
+Plugin = vli
+GType = FuVliUsbhubDevice
+[USB\VID_2109&PID_2212]
+Plugin = vli
+GType = FuVliUsbhubDevice
+
+# VL817
+[USB\VID_2109&PID_0817]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3
+[USB\VID_2109&PID_2817]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+
+# VL819
+[USB\VID_2109&PID_0819]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3
+[USB\VID_2109&PID_2819]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+
 # VL820
 [USB\VID_2109&PID_0820]
 Plugin = vli
@@ -7,3 +67,49 @@ Flags = usb3
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb2
+
+# VL822
+[USB\VID_2109&PID_0822]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb3
+[USB\VID_2109&PID_2822]
+Plugin = vli
+GType = FuVliUsbhubDevice
+Flags = usb2
+
+# Generic PD
+VliDeviceKind = VL100
+[USB\VID_2109&PID_0100]
+Plugin = vli
+GType = FuVliPdDevice
+VliDeviceKind = VL100
+[USB\VID_2109&PID_0101]
+Plugin = vli
+GType = FuVliPdDevice
+VliDeviceKind = VL101
+[USB\VID_2109&PID_0102]
+Plugin = vli
+GType = FuVliPdDevice
+VliDeviceKind = VL102
+[USB\VID_2109&PID_0103]
+Plugin = vli
+GType = FuVliPdDevice
+Flags = dual-image
+VliDeviceKind = VL103
+[USB\VID_2109&PID_0104]
+Plugin = vli
+GType = FuVliPdDevice
+VliDeviceKind = VL104
+[USB\VID_2109&PID_0105]
+Plugin = vli
+GType = FuVliPdDevice
+VliDeviceKind = VL105
+[USB\VID_2109&PID_0106]
+Plugin = vli
+GType = FuVliPdDevice
+VliDeviceKind = VL106
+[USB\VID_2109&PID_0107]
+Plugin = vli
+GType = FuVliPdDevice
+VliDeviceKind = VL107
