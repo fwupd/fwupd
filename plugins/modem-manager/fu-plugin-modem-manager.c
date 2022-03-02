@@ -18,10 +18,14 @@
 /* amount of time to wait for ports of the same device	being exposed by kernel */
 #define FU_MM_UDEV_DEVICE_PORTS_TIMEOUT 3 /* s */
 
+/* out-of-tree modem-power driver is unsupported */
+#define MODEM_POWER_SYSFS_PATH "/sys/class/modem-power"
+
 struct FuPluginData {
 	MMManager *manager;
 	gboolean manager_ready;
 	GUdevClient *udev_client;
+	GFileMonitor *modem_power_monitor;
 	guint udev_timeout_id;
 
 	/* when a device is inhibited from MM, we store all relevant details
@@ -215,6 +219,18 @@ fu_plugin_mm_inhibit_device(FuPlugin *plugin, FuDevice *device, GError **error)
 }
 
 static void
+fu_plugin_mm_ensure_modem_power_inhibit(FuPlugin *plugin, FuDevice *device)
+{
+	if (g_file_test(MODEM_POWER_SYSFS_PATH, G_FILE_TEST_EXISTS)) {
+		fu_device_inhibit(device,
+				  "modem-power",
+				  "The modem-power kernel driver cannot be used");
+	} else {
+		fu_device_uninhibit(device, "modem-power");
+	}
+}
+
+static void
 fu_plugin_mm_device_add(FuPlugin *plugin, MMObject *modem)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
@@ -233,6 +249,7 @@ fu_plugin_mm_device_add(FuPlugin *plugin, MMObject *modem)
 		g_warning("failed to probe MM device: %s", error->message);
 		return;
 	}
+	fu_plugin_mm_ensure_modem_power_inhibit(plugin, FU_DEVICE(dev));
 	fu_plugin_device_add(plugin, FU_DEVICE(dev));
 	fu_plugin_cache_add(plugin, object_path, dev);
 	fu_plugin_cache_add(plugin, fu_device_get_physical_id(FU_DEVICE(dev)), dev);
@@ -346,11 +363,27 @@ fu_plugin_mm_coldplug(FuPlugin *plugin, GError **error)
 	return TRUE;
 }
 
+static void
+fu_plugin_mm_modem_power_changed_cb(GFileMonitor *monitor,
+				    GFile *file,
+				    GFile *other_file,
+				    GFileMonitorEvent event_type,
+				    gpointer user_data)
+{
+	FuPlugin *plugin = FU_PLUGIN(user_data);
+	GPtrArray *devices = fu_plugin_get_devices(plugin);
+	for (guint i = 0; i < devices->len; i++) {
+		FuDevice *device = g_ptr_array_index(devices, i);
+		fu_plugin_mm_ensure_modem_power_inhibit(plugin, device);
+	}
+}
+
 static gboolean
 fu_plugin_mm_startup(FuPlugin *plugin, GError **error)
 {
 	FuPluginData *priv = fu_plugin_get_data(plugin);
 	g_autoptr(GDBusConnection) connection = NULL;
+	g_autoptr(GFile) file = g_file_new_for_path(MODEM_POWER_SYSFS_PATH);
 
 	connection = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, error);
 	if (connection == NULL)
@@ -361,6 +394,15 @@ fu_plugin_mm_startup(FuPlugin *plugin, GError **error)
 					    error);
 	if (priv->manager == NULL)
 		return FALSE;
+
+	/* detect presence of unsupported modem-power driver */
+	priv->modem_power_monitor = g_file_monitor(file, G_FILE_MONITOR_NONE, NULL, error);
+	if (priv->modem_power_monitor == NULL)
+		return FALSE;
+	g_signal_connect(priv->modem_power_monitor,
+			 "changed",
+			 G_CALLBACK(fu_plugin_mm_modem_power_changed_cb),
+			 plugin);
 
 	return TRUE;
 }
@@ -384,6 +426,8 @@ fu_plugin_mm_destroy(FuPlugin *plugin)
 		g_object_unref(priv->udev_client);
 	if (priv->manager != NULL)
 		g_object_unref(priv->manager);
+	if (priv->modem_power_monitor != NULL)
+		g_object_unref(priv->modem_power_monitor);
 }
 
 static gboolean
