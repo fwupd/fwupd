@@ -6031,6 +6031,19 @@ fu_engine_add_device(FuEngine *self, FuDevice *device)
 			  fu_device_get_name(device));
 	}
 
+#ifndef SUPPORTED_BUILD
+	/* we don't know if this device has a signed or unsigned payload */
+	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD) &&
+	    !fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED)) {
+		g_warning("%s device does not define payload %s [%s]",
+			  fu_device_get_plugin(device),
+			  fu_device_get_name(device),
+			  fu_device_get_id(device));
+	}
+#endif
+
 	/* if this device is locked get some metadata from AppStream */
 	component = fu_engine_get_component_by_guids(self, device);
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_LOCKED)) {
