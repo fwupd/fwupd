@@ -1223,7 +1223,7 @@ fu_device_add_child(FuDevice *self, FuDevice *child)
 		FuDevice *child_tmp = g_ptr_array_index(children, i);
 		guint remove_delay = fu_device_get_remove_delay(child_tmp);
 		if (remove_delay > priv->remove_delay) {
-			g_debug("setting remove delay to %u as child is greater than %u",
+			g_debug("setting remove delay to %ums as child is greater than %ums",
 				remove_delay,
 				priv->remove_delay);
 			priv->remove_delay = remove_delay;
@@ -3185,7 +3185,7 @@ fu_device_get_remove_delay(FuDevice *self)
 /**
  * fu_device_set_remove_delay:
  * @self: a #FuDevice
- * @remove_delay: the delay value
+ * @remove_delay: the value in milliseconds
  *
  * Sets the amount of time a device is allowed to return in bootloader mode.
  *
