@@ -271,7 +271,7 @@ fu_quirks_add_possible_key(FuQuirks *self, const gchar *possible_key);
 /**
  * FU_QUIRKS_REMOVE_DELAY:
  *
- * The quirk key for the device removal delay in seconds.
+ * The quirk key for the device removal delay in milliseconds.
  *
  * Since: 1.5.0
  **/

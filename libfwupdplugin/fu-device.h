@@ -109,7 +109,7 @@ typedef enum {
  * chain of slow USB hubs. This should be used when the device is able to
  * reset itself between bootloader->runtime->bootloader.
  */
-#define FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE 10000
+#define FU_DEVICE_REMOVE_DELAY_RE_ENUMERATE 10000 /* ms */
 
 /**
  * FU_DEVICE_REMOVE_DELAY_USER_REPLUG:
@@ -118,7 +118,7 @@ typedef enum {
  * being slow and clumsy. This should be used when the user has to do something,
  * e.g. unplug, press a magic button and then replug.
  */
-#define FU_DEVICE_REMOVE_DELAY_USER_REPLUG 40000
+#define FU_DEVICE_REMOVE_DELAY_USER_REPLUG 40000 /* ms */
 
 /**
  * FuDeviceRetryFunc:
