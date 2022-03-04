@@ -339,91 +339,91 @@ DfuForceTimeout = 5000
 # Poly Studio
 [USB\VID_095D&PID_9217]
 Plugin = dfu
-Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout
+Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout,signed-payload
 RemoveDelay = 60000
 [USB\VID_095D&PID_9218]
 Plugin = dfu
-Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout
+Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout,signed-payload
 RemoveDelay = 60000
 
 # Poly Eagle Eye Cube
 [USB\VID_095D&PID_9212]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,unsigned-payload
 RemoveDelay = 30000
 [USB\VID_095D&PID_9213]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,unsigned-payload
 RemoveDelay = 30000
 
 # Poly Studio P15
 [USB\VID_095D&PID_9290]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload
 RemoveDelay = 60000
 [USB\VID_095D&PID_9291]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload
 RemoveDelay = 60000
 
 # Poly ULCC
 [USB\VID_095D&PID_9160]
 Plugin = dfu
-Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout
+Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout,signed-payload
 RemoveDelay = 60000
 [USB\VID_095D&PID_927B]
 Plugin = dfu
-Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout
+Flags = manifest-poll,no-bus-reset-attach,allow-zero-polltimeout,signed-payload
 RemoveDelay = 60000
 
 # Poly Eagle Eye Mini
 [USB\VID_095D&PID_3001]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,unsigned-payload
 RemoveDelay = 9000
 [USB\VID_095D&PID_3002]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,unsigned-payload
 RemoveDelay = 9000
 
 # Poly Studio R30
 [USB\VID_095D&PID_92B2]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload
 RemoveDelay = 60000
 [USB\VID_095D&PID_92B3]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload
 RemoveDelay = 60000
 
 # Poly Studio P5
 [USB\VID_095D&PID_9296]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,unsigned-payload
 RemoveDelay = 9000
 [USB\VID_095D&PID_9297]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,unsigned-payload
 RemoveDelay = 9000
 
 # Poly Studio E70
 [USB\VID_095D&PID_92A1]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload
 RemoveDelay = 90000
 [USB\VID_095D&PID_92A2]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,signed-payload
 RemoveDelay = 90000
 
 # Poly Studio P21
 [USB\VID_095D&PID_9298]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,unsigned-payload
 RemoveDelay = 9000
 [USB\VID_095D&PID_9299]
 Plugin = dfu
-Flags = manifest-poll,allow-zero-polltimeout
+Flags = manifest-poll,allow-zero-polltimeout,unsigned-payload
 RemoveDelay = 9000
 
 # AVer ATLAS CAM
