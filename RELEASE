@@ -1,26 +1,10 @@
 fwupd Release Notes
 
-Forking stable branch:
-
-When forking main into a stable 1_7_X, be sure to disable the following CI jobs:
- * publish-docs
- * publish-stable
-
-To make sure it's done right, you can reference commit 433e809318c68c9ab6d4ae50ee9c4312503185d8
-
-Write release entries:
+1. Write release entries:
 
 git log --format="%s" --cherry-pick --right-only 1.7.6... | grep -i -v trivial | grep -v Merge | sort | uniq
 Add any user visible changes into ../data/org.freedesktop.fwupd.metainfo.xml
 appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > NEWS
-
-Update translations:
-
-ninja-build fwupd-pot
-tx push --source
-tx pull --all --force --minimum-perc=5
-ninja-build fix-translations
-git add ../po/*.po
 
 2. Commit changes to git:
 
