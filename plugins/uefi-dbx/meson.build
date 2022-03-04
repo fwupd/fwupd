@@ -1,6 +1,10 @@
 if get_option('plugin_uefi_capsule')
 cargs = ['-DG_LOG_DOMAIN="FuPluginUefiDbx"']
 
+install_data(['uefi-dbx.quirk'],
+  install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
+)
+
 shared_module('fu_plugin_uefi_dbx',
   fu_hash,
   sources : [
