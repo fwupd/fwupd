@@ -82,33 +82,6 @@ jobs:
           paths:
             - "*.snap"
 
-  publish-docs:
-    machine:
-      image: circleci/classic:latest
-    steps:
-      - attach_workspace:
-          at: .
-      - add_ssh_keys:
-          fingerprints:
-            - "d8:73:05:1b:7c:93:8c:12:41:78:15:3d:5d:af:b4:c2"
-      - run:
-          name: Clone docs
-          working_directory: dist/share/doc/fwupd
-          command: |
-            git clone --depth 1 git@github.com:fwupd/fwupd.github.io.git
-      - deploy:
-          name: Trigger docs deployment
-          working_directory: dist/share/doc/fwupd/fwupd.github.io
-          command: |
-            git config credential.helper 'cache --timeout=120'
-            git config user.email "info@fwupd.org"
-            git config user.name "Documentation deployment Bot"
-            rm -rf *
-            cp  ../libfwupd* ../*html . -R
-            git add .
-            git commit -a --allow-empty -m "Trigger deployment"
-            git push git@github.com:fwupd/fwupd.github.io.git
-
   publish-edge:
     docker:
       - image: cibuilds/snapcraft:stable
@@ -121,19 +94,6 @@ jobs:
             mkdir .snapcraft
             echo $SNAPCRAFT_LOGIN_FILE | base64 --decode --ignore-garbage > .snapcraft/snapcraft.cfg
             snapcraft push *.snap --release edge
-
-  publish-stable:
-    docker:
-      - image: cibuilds/snapcraft:stable
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: "Publish to Store"
-          command: |
-            mkdir .snapcraft
-            echo $SNAPCRAFT_LOGIN_FILE | base64 --decode --ignore-garbage > .snapcraft/snapcraft.cfg
-            snapcraft push *.snap --release stable
 
   publish-github-exe-release:
     docker:
