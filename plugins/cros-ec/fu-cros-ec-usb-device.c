@@ -988,6 +988,7 @@ fu_cros_ec_usb_device_init(FuCrosEcUsbDevice *self)
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_CROS_EC_USB_DEVICE_FLAG_RO_WRITTEN,
 					"ro-written");
