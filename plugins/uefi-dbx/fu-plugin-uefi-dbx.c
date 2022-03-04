@@ -26,6 +26,11 @@ fu_plugin_uefi_dbx_coldplug(FuPlugin *plugin, GError **error)
 		return FALSE;
 	if (!fu_device_setup(FU_DEVICE(device), error))
 		return FALSE;
+	if (fu_context_has_hwid_flag(fu_plugin_get_context(plugin), "no-dbx-updates")) {
+		fu_device_inhibit(FU_DEVICE(device),
+				  "no-dbx",
+				  "System firmware cannot accept DBX updates");
+	}
 	fu_plugin_device_add(plugin, FU_DEVICE(device));
 	return TRUE;
 }
