@@ -447,6 +447,15 @@ fu_util_get_plugins(FuUtilPrivate *priv, gchar **values, GError **error)
 {
 	GPtrArray *plugins;
 
+	/* parse arguments */
+	if (g_strv_length(values) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
 	/* load engine */
 	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_HWINFO, error))
 		return FALSE;
@@ -732,7 +741,7 @@ fu_util_get_details(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	title = fu_util_get_tree_title(priv);
 
-	/* check args */
+	/* parse arguments */
 	if (g_strv_length(values) != 1) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -819,6 +828,15 @@ fu_util_get_devices(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GNode) root = g_node_new(NULL);
 	g_autofree gchar *title = NULL;
 	g_autoptr(GPtrArray) devs = NULL;
+
+	/* parse arguments */
+	if (g_strv_length(values) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
 
 	/* load engine */
 	if (!fu_util_start_engine(priv,
@@ -917,7 +935,7 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(FuDevice) device = NULL;
 	g_autoptr(GBytes) blob_fw = NULL;
 
-	/* invalid args */
+	/* parse arguments */
 	if (g_strv_length(values) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1010,7 +1028,7 @@ fu_util_firmware_sign(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GBytes) cert = NULL;
 	g_autoptr(GBytes) privkey = NULL;
 
-	/* invalid args */
+	/* parse arguments */
 	if (g_strv_length(values) != 3) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -1049,7 +1067,7 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GBytes) blob_empty = g_bytes_new(NULL, 0);
 	g_autoptr(GBytes) blob_fw = NULL;
 
-	/* invalid args */
+	/* parse arguments */
 	if (g_strv_length(values) == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
@@ -2622,6 +2640,15 @@ fu_util_get_history(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 	title = fu_util_get_tree_title(priv);
 
+	/* parse arguments */
+	if (g_strv_length(values) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
+
 	/* get all devices from the history database */
 	devices = fu_engine_get_history(priv->engine, error);
 	if (devices == NULL)
@@ -2777,6 +2804,15 @@ fu_util_get_remotes(FuUtilPrivate *priv, gchar **values, GError **error)
 	if (!fu_util_start_engine(priv, FU_ENGINE_LOAD_FLAG_REMOTES, error))
 		return FALSE;
 	title = fu_util_get_tree_title(priv);
+
+	/* parse arguments */
+	if (g_strv_length(values) != 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INVALID_ARGS,
+				    "Invalid arguments");
+		return FALSE;
+	}
 
 	/* list remotes */
 	remotes = fu_engine_get_remotes(priv->engine, error);
