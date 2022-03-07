@@ -16,6 +16,10 @@ Flags = signed-payload
 [NVME\VEN_1E0F]
 Flags = signed-payload
 
+# Samsung
+[NVME\VEN_144D]
+Flags = signed-payload
+
 # SSSTC
 [NVME\VEN_14A4]
 Flags = signed-payload
