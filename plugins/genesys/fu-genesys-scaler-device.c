@@ -15,8 +15,12 @@
 #include "fu-genesys-scaler-device.h"
 #include "fu-genesys-scaler-firmware.h"
 
-#define GENESYS_SCALER_MSTAR_READ  0x7a
-#define GENESYS_SCALER_MSTAR_WRITE 0x7b
+#define GENESYS_SCALER_MSTAR_READ     0x7a
+#define GENESYS_SCALER_MSTAR_WRITE    0x7b
+#define GENESYS_SCALER_MSTAR_DATA_OUT 0x7c
+#define GENESYS_SCALER_MSTAR_DATA_IN  0x7f
+
+#define GENESYS_SCALER_CMD_DDCCI_FIRMWARE_PACKET_VERSION 0x06
 
 #define GENESYS_SCALER_CMD_DATA_WRITE 0x10
 #define GENESYS_SCALER_CMD_DATA_READ  0x11
@@ -43,6 +47,13 @@ typedef struct {
 	guint8 req_read;
 	guint8 req_write;
 } FuGenesysVendorCommand;
+
+typedef struct {
+	guint8 stage;
+	guint8 model;
+	guint8 major;
+	guint8 minor;
+} FuGenesysScalerFirmwarePacketVersion;
 
 struct _FuGenesysScalerDevice {
 	FuDevice parent_instance;
@@ -1402,13 +1413,136 @@ fu_genesys_scaler_device_write_flash(FuGenesysScalerDevice *self,
 	return TRUE;
 }
 
+static guint8
+fu_genesys_scaler_device_calculate_checksum(guint8 *buf, gsize bufsz)
+{
+	guint8 checksum = 0x00;
+
+	for (gsize i = 0; i < bufsz; i++)
+		checksum ^= buf[i];
+
+	return checksum;
+}
+
+static gboolean
+fu_genesys_scaler_device_get_ddcci_data(FuGenesysScalerDevice *self,
+					guint8 cmd,
+					guint8 *buf,
+					guint bufsz,
+					GError **error)
+{
+	FuDevice *parent_device = fu_device_get_parent(FU_DEVICE(self));
+	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(parent_device));
+	guint8 data[] = {0x6e, 0x51, 0x83, 0xcd, 0x01, 0x00 /* command */, 0x00 /* checksum */};
+
+	data[5] = cmd;
+	data[6] = fu_genesys_scaler_device_calculate_checksum(data, 6);
+
+	if (!g_usb_device_control_transfer(usb_device,
+					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					   G_USB_DEVICE_RECIPIENT_DEVICE,
+					   GENESYS_SCALER_MSTAR_DATA_OUT,
+					   0x0000,	 /* value */
+					   0x0000,	 /* idx */
+					   data,	 /* data */
+					   sizeof(data), /* data length */
+					   NULL,	 /* actual length */
+					   GENESYS_SCALER_USB_TIMEOUT,
+					   NULL,
+					   error)) {
+		g_prefix_error(error, "error setting dddci data: ");
+		return FALSE;
+	}
+
+	g_usleep(100000); /* 100ms */
+
+	if (!g_usb_device_control_transfer(usb_device,
+					   G_USB_DEVICE_DIRECTION_DEVICE_TO_HOST,
+					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					   G_USB_DEVICE_RECIPIENT_DEVICE,
+					   GENESYS_SCALER_MSTAR_DATA_IN,
+					   0x0001, /* value */
+					   0x0000, /* idx */
+					   buf,	   /* data */
+					   bufsz,  /* data length */
+					   NULL,   /* actual length */
+					   GENESYS_SCALER_USB_TIMEOUT,
+					   NULL,
+					   error)) {
+		g_prefix_error(error, "error getting dddci data: ");
+		return FALSE;
+	}
+
+	g_usleep(100000); /* 100ms */
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_genesys_scaler_device_get_firmware_packet_version(FuGenesysScalerDevice *self,
+						     FuGenesysScalerFirmwarePacketVersion *ver,
+						     GError **error)
+{
+	guint8 buf[0x40];
+	guint8 offset = 4;
+
+	if (!fu_genesys_scaler_device_get_ddcci_data(
+		self,
+		GENESYS_SCALER_CMD_DDCCI_FIRMWARE_PACKET_VERSION,
+		buf,
+		sizeof(buf),
+		error))
+		return FALSE;
+
+	if (buf[0] == 0x6f && buf[1] == 0x6e) {
+		gsize len = buf[2] ^ 0x80;
+		guint8 checksum;
+
+		if (len >= sizeof(buf)) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "error dddci length too large, got 0x%x, expected <= 0x%zx: ",
+				    (guint)len,
+				    sizeof(buf));
+			return FALSE;
+		}
+
+		buf[0] = 0x50; /* drifted value */
+		checksum = fu_genesys_scaler_device_calculate_checksum(buf, len + 3);
+		if (buf[len + 3] != checksum) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "error dddci checksum mismatch, got 0x%02x, expected 0x%02x",
+				    buf[len + 3],
+				    checksum);
+			return FALSE;
+		}
+
+		offset = 7;
+	}
+
+	ver->stage = buf[offset];
+	ver->model = buf[offset + 1];
+	ver->major = buf[offset + 2];
+	ver->minor = buf[offset + 3];
+
+	/* success */
+	return TRUE;
+}
+
 static gboolean
 fu_genesys_scaler_device_probe(FuDevice *device, GError **error)
 {
 	FuGenesysScalerDevice *self = FU_GENESYS_SCALER_DEVICE(device);
+	FuGenesysScalerFirmwarePacketVersion ver;
 	guint8 buf[7 + 1] = {0};
 	g_autofree gchar *guid = NULL;
 	g_autofree gchar *version = NULL;
+	g_autofree gchar *panelrev = NULL;
 
 	if (!fu_genesys_scaler_device_get_level(self, &self->level, error))
 		return FALSE;
@@ -1423,9 +1557,13 @@ fu_genesys_scaler_device_probe(FuDevice *device, GError **error)
 
 	if (!fu_genesys_scaler_device_get_version(self, buf, sizeof(buf), error))
 		return FALSE;
-	version =
-	    fu_common_strsafe((const gchar *)&buf[1], 6); /* ?RIM123; where ? is 0x06 (length?) */
+	/* ?xIM123; where ? is 0x06 (length?) */
+	panelrev = fu_common_strsafe((const gchar *)&buf[1], 6);
 
+	if (!fu_genesys_scaler_device_get_firmware_packet_version(self, &ver, error))
+		return FALSE;
+
+	version = g_strdup_printf("%d.%d.%d.%d", ver.stage, ver.model, ver.major, ver.minor);
 	fu_device_set_version(device, version);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PLAIN);
 	fu_device_set_logical_id(device, "scaler");
@@ -1433,7 +1571,15 @@ fu_genesys_scaler_device_probe(FuDevice *device, GError **error)
 	/* add instance ID */
 	fu_device_add_instance_str(device, "MSTAR", "TSUM_G");
 	fu_device_add_instance_strup(device, "PUBKEY", guid);
+	fu_device_add_instance_strup(device, "PANELREV", panelrev);
 	fu_device_build_instance_id(device, NULL, "GENESYS_SCALER", "MSTAR", "PUBKEY", NULL);
+	fu_device_build_instance_id(device,
+				    NULL,
+				    "GENESYS_SCALER",
+				    "MSTAR",
+				    "PUBKEY",
+				    "PANELREV",
+				    NULL);
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 
