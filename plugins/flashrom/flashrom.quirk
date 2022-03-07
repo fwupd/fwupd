@@ -10,10 +10,12 @@ VersionFormat = quad
 # StarLite Mk II (HwId)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
 Plugin = flashrom
+FirmwareSizeMax = 0x800000
 
 # StarLite Mk III (HwId)
 [d5521faa-c50b-5d64-971d-8fd400030c51]
 Plugin = flashrom
+FirmwareSizeMax = 0x800000
 
 # StarLabTop Mk III (HwId)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
