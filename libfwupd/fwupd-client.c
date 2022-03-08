@@ -4567,7 +4567,7 @@ fwupd_client_set_user_agent_for_package(FwupdClient *self,
 					const gchar *package_version)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
-	GString *str = g_string_new(NULL);
+	g_autoptr(GString) str = g_string_new(NULL);
 	g_autofree gchar *system = NULL;
 
 	g_return_if_fail(FWUPD_IS_CLIENT(self));
@@ -4588,7 +4588,7 @@ fwupd_client_set_user_agent_for_package(FwupdClient *self,
 
 	/* success */
 	g_free(priv->user_agent);
-	priv->user_agent = g_string_free(str, FALSE);
+	priv->user_agent = g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 #ifdef HAVE_LIBCURL
