@@ -2833,7 +2833,7 @@ gchar *
 fwupd_device_to_string(FwupdDevice *self)
 {
 	FwupdDevicePrivate *priv = GET_PRIVATE(self);
-	GString *str = g_string_new(NULL);
+	g_autoptr(GString) str = g_string_new(NULL);
 	g_autoptr(GPtrArray) guid_helpers = NULL;
 
 	g_return_val_if_fail(FWUPD_IS_DEVICE(self), NULL);
@@ -2950,7 +2950,7 @@ fwupd_device_to_string(FwupdDevice *self)
 		g_string_append_printf(str, "  \n  [%s]\n%s", FWUPD_RESULT_KEY_RELEASE, tmp);
 	}
 
-	return g_string_free(str, FALSE);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 static void
