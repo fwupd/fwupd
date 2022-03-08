@@ -169,6 +169,14 @@ fwupd_get_os_release(GError **error)
 		}
 	}
 
+	if (filename == NULL) {
+		g_autofree gchar *os_release =
+		    g_build_filename(g_getenv("FWUPD_SYSCONFDIR"), "os-release", NULL);
+		if (g_file_test(os_release, G_FILE_TEST_EXISTS)) {
+			filename = strdup(os_release);
+		}
+	}
+
 	hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	if (filename == NULL) {
 #if defined(_WIN32)
