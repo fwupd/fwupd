@@ -13,19 +13,16 @@
 #include <libflashrom.h>
 #include <string.h>
 
-#include "fu-flashrom-internal-device.h"
+#include "fu-flashrom-device.h"
 
 #define SELFCHECK_TRUE 1
 
 static void
 fu_plugin_flashrom_init(FuPlugin *plugin)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
-
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_METADATA_SOURCE, "linux_lockdown");
 	fu_plugin_add_rule(plugin, FU_PLUGIN_RULE_CONFLICTS, "coreboot"); /* obsoleted */
 	fu_plugin_add_flag(plugin, FWUPD_PLUGIN_FLAG_REQUIRE_HWID);
-	fu_context_add_quirk_key(ctx, "FlashromProgrammer");
 }
 
 static int
@@ -150,7 +147,7 @@ fu_plugin_flashrom_coldplug(FuPlugin *plugin, GError **error)
 {
 	FuContext *ctx = fu_plugin_get_context(plugin);
 	const gchar *dmi_vendor;
-	g_autoptr(FuDevice) device = fu_flashrom_internal_device_new(ctx);
+	g_autoptr(FuDevice) device = fu_flashrom_device_new(ctx);
 
 	fu_device_set_context(device, ctx);
 	fu_device_set_name(device, fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME));
@@ -165,7 +162,6 @@ fu_plugin_flashrom_coldplug(FuPlugin *plugin, GError **error)
 	fu_plugin_flashrom_device_set_version(plugin, device);
 	fu_plugin_flashrom_device_set_hwids(plugin, device);
 	fu_plugin_flashrom_device_set_bios_info(plugin, device);
-	fu_flashrom_device_set_programmer_name(FU_FLASHROM_DEVICE(device), "internal");
 	if (!fu_device_setup(device, error))
 		return FALSE;
 

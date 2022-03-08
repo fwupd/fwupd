@@ -54,16 +54,6 @@ mode, but it is only used when the device is rebooted.
 
 The vendor ID is set from the BIOS vendor, for example `DMI:Google`
 
-## Quirk Use
-
-This plugin uses the following plugin-specific quirks:
-
-### FlashromProgrammer
-
-Used to specify the libflashrom programmer to be used.
-
-Since: 1.5.9
-
 ## External Interface Access
 
 This plugin requires access to all interfaces that `libflashrom` has been compiled for.
