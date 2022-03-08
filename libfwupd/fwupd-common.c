@@ -308,7 +308,7 @@ fwupd_build_user_agent_system(void)
 gchar *
 fwupd_build_user_agent(const gchar *package_name, const gchar *package_version)
 {
-	GString *str = g_string_new(NULL);
+	g_autoptr(GString) str = g_string_new(NULL);
 	g_autofree gchar *system = NULL;
 
 	g_return_val_if_fail(package_name != NULL, NULL);
@@ -327,7 +327,7 @@ fwupd_build_user_agent(const gchar *package_name, const gchar *package_version)
 		g_string_append_printf(str, " fwupd/%s", PACKAGE_VERSION);
 
 	/* success */
-	return g_string_free(str, FALSE);
+	return g_string_free(g_steal_pointer(&str), FALSE);
 }
 
 /**
