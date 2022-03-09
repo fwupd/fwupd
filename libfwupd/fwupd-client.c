@@ -66,6 +66,7 @@ typedef struct {
 	gchar *host_product;
 	gchar *host_machine_id;
 	gchar *host_security_id;
+	gboolean only_trusted;
 	GMutex proxy_mutex; /* for @proxy */
 	GDBusProxy *proxy;
 	GProxyResolver *proxy_resolver;
@@ -108,6 +109,7 @@ enum {
 	PROP_HOST_SECURITY_ID,
 	PROP_HOST_BKC,
 	PROP_INTERACTIVE,
+	PROP_ONLY_TRUSTED,
 	PROP_LAST
 };
 
@@ -421,6 +423,14 @@ fwupd_client_properties_changed_cb(GDBusProxy *proxy,
 		if (val != NULL)
 			fwupd_client_set_host_security_id(self, g_variant_get_string(val, NULL));
 	}
+	if (g_variant_dict_contains(dict, "OnlyTrusted")) {
+		g_autoptr(GVariant) val = NULL;
+		val = g_dbus_proxy_get_cached_property(proxy, "OnlyTrusted");
+		if (val != NULL) {
+			priv->only_trusted = g_variant_get_boolean(val);
+			fwupd_client_object_notify(self, "only-trusted");
+		}
+	}
 }
 
 static void
@@ -666,6 +676,7 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	g_autoptr(GVariant) val6 = NULL;
 	g_autoptr(GVariant) val7 = NULL;
 	g_autoptr(GVariant) val8 = NULL;
+	g_autoptr(GVariant) val9 = NULL;
 	g_autoptr(GMutexLocker) locker = NULL;
 
 	proxy = g_dbus_proxy_new_finish(res, &error);
@@ -715,6 +726,9 @@ fwupd_client_connect_get_proxy_cb(GObject *source, GAsyncResult *res, gpointer u
 	val8 = g_dbus_proxy_get_cached_property(priv->proxy, "HostBkc");
 	if (val8 != NULL)
 		fwupd_client_set_host_bkc(self, g_variant_get_string(val8, NULL));
+	val9 = g_dbus_proxy_get_cached_property(priv->proxy, "OnlyTrusted");
+	if (val9 != NULL)
+		priv->only_trusted = g_variant_get_boolean(val9);
 
 	/* build client hints */
 	g_variant_builder_init(&builder, G_VARIANT_TYPE("a{ss}"));
@@ -3281,6 +3295,24 @@ fwupd_client_get_tainted(FwupdClient *self)
 }
 
 /**
+ * fwupd_client_get_only_trusted:
+ * @self: a #FwupdClient
+ *
+ * Gets if the daemon is verifying signatures from a trusted authority.
+ *
+ * Returns: %TRUE if the daemon is checking signatures
+ *
+ * Since: 1.8.0
+ **/
+gboolean
+fwupd_client_get_only_trusted(FwupdClient *self)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	return priv->only_trusted;
+}
+
+/**
  * fwupd_client_get_daemon_interactive:
  * @self: a #FwupdClient
  *
@@ -5106,6 +5138,9 @@ fwupd_client_get_property(GObject *object, guint prop_id, GValue *value, GParamS
 	case PROP_HOST_SECURITY_ID:
 		g_value_set_string(value, priv->host_security_id);
 		break;
+	case PROP_ONLY_TRUSTED:
+		g_value_set_boolean(value, priv->only_trusted);
+		break;
 	case PROP_INTERACTIVE:
 		g_value_set_boolean(value, priv->interactive);
 		break;
@@ -5414,6 +5449,20 @@ fwupd_client_class_init(FwupdClientClass *klass)
 				    NULL,
 				    G_PARAM_READABLE | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_HOST_SECURITY_ID, pspec);
+
+	/**
+	 * FwupdClient:only-trusted:
+	 *
+	 * If the daemon is verifying signatures from a trusted authority.
+	 *
+	 * Since: 1.8.0
+	 */
+	pspec = g_param_spec_boolean("only-trusted",
+				     NULL,
+				     NULL,
+				     TRUE,
+				     G_PARAM_READABLE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_ONLY_TRUSTED, pspec);
 }
 
 static void

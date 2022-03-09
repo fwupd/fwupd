@@ -59,6 +59,8 @@ gboolean
 fu_engine_load_plugins(FuEngine *self, GError **error);
 gboolean
 fu_engine_get_tainted(FuEngine *self);
+gboolean
+fu_engine_get_only_trusted(FuEngine *self);
 const gchar *
 fu_engine_get_host_product(FuEngine *self);
 const gchar *
