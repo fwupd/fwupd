@@ -73,6 +73,9 @@ elif host_machine.system() == 'freebsd'
 elif host_machine.system() == 'windows'
   fwupdplugin_src += 'fu-common-windows.c'
   fwupdplugin_src += 'fu-efivar-windows.c'  # fuzzing
+elif host_machine.system() == 'darwin'
+  fwupdplugin_src += 'fu-common-darwin.c'
+  fwupdplugin_src += 'fu-efivar-darwin.c'
 else
   error('no OS support for @0@'.format(host_machine.system()))
 endif
@@ -215,7 +218,7 @@ fwupdplugin = library(
   link_with : [
     fwupd,
   ],
-  link_args : vflag,
+  link_args : cc.get_supported_link_arguments([vflag]),
   link_depends : fwupdplugin_mapfile,
   install : true
 )
