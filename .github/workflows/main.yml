@@ -71,6 +71,20 @@ jobs:
           echo $GITHUB_WORKSPACE
           docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest
 
+  macos:
+    strategy:
+      matrix:
+        os: [ macos-10.15, macos-11 ]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: install dependencies
+      run: brew install meson gcab libusb gobject-introspection sqlite libarchive json-glib curl gnutls protobuf-c vala
+    - uses: actions/checkout@v2
+    - name: configure
+      run: ./contrib/ci/build_macos.sh
+    - name: build
+      run: ninja -C build-macos
+
   fuzzing:
     runs-on: ubuntu-latest
     timeout-minutes: 20
