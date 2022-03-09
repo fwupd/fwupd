@@ -63,7 +63,7 @@ fwupd = library(
       '-DLOCALSTATEDIR="' + localstatedir + '"',
     ],
   include_directories : root_incdir,
-  link_args : vflag,
+  link_args : cc.get_supported_link_arguments([vflag]),
   link_depends : fwupd_mapfile,
   install : true
 )

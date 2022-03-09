@@ -155,6 +155,9 @@ add_project_arguments('-D_XOPEN_SOURCE=700', language : 'c')
 # needed for memfd_create()
 add_project_arguments('-D_GNU_SOURCE', language : 'c')
 
+# needed for memmem()
+add_project_arguments('-D_DARWIN_C_SOURCE=900000', language : 'c')
+
 # sanity check
 if get_option('build') == 'all'
   build_standalone = true
