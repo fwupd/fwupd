@@ -110,6 +110,7 @@ struct _FuEngine {
 	FuDeviceList *device_list;
 	FwupdStatus status;
 	gboolean tainted;
+	gboolean only_trusted;
 	gboolean write_history;
 	guint percentage;
 	FuHistory *history;
@@ -6272,6 +6273,13 @@ gboolean
 fu_engine_get_tainted(FuEngine *self)
 {
 	return self->tainted;
+}
+
+gboolean
+fu_engine_get_only_trusted(FuEngine *self)
+{
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	return fu_config_get_only_trusted(self->config);
 }
 
 const gchar *

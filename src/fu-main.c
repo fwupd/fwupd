@@ -1889,6 +1889,9 @@ fu_main_daemon_get_property(GDBusConnection *connection_,
 	if (g_strcmp0(property_name, "Interactive") == 0)
 		return g_variant_new_boolean(isatty(fileno(stdout)) != 0);
 
+	if (g_strcmp0(property_name, "OnlyTrusted") == 0)
+		return g_variant_new_boolean(fu_engine_get_only_trusted(priv->engine));
+
 	/* return an error */
 	g_set_error(error,
 		    G_DBUS_ERROR,

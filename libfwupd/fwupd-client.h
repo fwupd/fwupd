@@ -364,6 +364,8 @@ fwupd_client_get_status(FwupdClient *self);
 gboolean
 fwupd_client_get_tainted(FwupdClient *self);
 gboolean
+fwupd_client_get_only_trusted(FwupdClient *self);
+gboolean
 fwupd_client_get_daemon_interactive(FwupdClient *self);
 guint
 fwupd_client_get_percentage(FwupdClient *self);
