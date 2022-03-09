@@ -112,6 +112,17 @@
     </property>
 
     <!--***********************************************************-->
+    <property name='OnlyTrusted' type='b' access='read'>
+      <doc:doc>
+        <doc:description>
+          <doc:para>
+            If the daemon requires trusted payloads.
+          </doc:para>
+        </doc:description>
+      </doc:doc>
+    </property>
+
+    <!--***********************************************************-->
     <method name='GetDevices'>
       <doc:doc>
         <doc:description>

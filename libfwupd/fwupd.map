@@ -755,3 +755,9 @@ LIBFWUPD_1.7.6 {
     fwupd_device_get_issues;
   local: *;
 } LIBFWUPD_1.7.4;
+
+LIBFWUPD_1.8.0 {
+  global:
+    fwupd_client_get_only_trusted;
+  local: *;
+} LIBFWUPD_1.7.6;
