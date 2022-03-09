@@ -123,12 +123,56 @@ GType = FuLogitechHidPpDevice
 Flags = add-radio,ble,rebind-attach,no-request-required
 InstallDuration = 270
 
+# M650 For Business
+[HIDRAW\VEN_046D&MOD_B03200000000]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,no-request-required
+InstallDuration = 270
+
+# M650 For Business (BLE direct)
+[HIDRAW\VEN_046D&DEV_B032]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,ble,rebind-attach,no-request-required
+InstallDuration = 270
+
+# M550
+[HIDRAW\VEN_046D&MOD_B02B00000000]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,no-request-required
+InstallDuration = 270
+
+# M550 (BLE direct)
+[HIDRAW\VEN_046D&DEV_B02B]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,ble,rebind-attach,no-request-required
+InstallDuration = 270
+
+# K650
+[HIDRAW\VEN_046D&MOD_B36F00000000]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,no-request-required
+InstallDuration = 270
+
+# K650 (BLE direct)
+[HIDRAW\VEN_046D&DEV_B36F]
+Plugin = logitech_hidpp
+GType = FuLogitechHidPpDevice
+Flags = add-radio,ble,rebind-attach,no-request-required
+InstallDuration = 270
+
+# K650 For Business
 [HIDRAW\VEN_046D&MOD_B37000000000]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpDevice
 Flags = add-radio,no-request-required
 InstallDuration = 270
 
+# K650 For Business (BLE direct)
 [HIDRAW\VEN_046D&DEV_B370]
 Plugin = logitech_hidpp
 GType = FuLogitechHidPpDevice
