@@ -154,17 +154,24 @@ GHashTable *
 fwupd_get_os_release(GError **error)
 {
 	const gchar *filename = NULL;
-	const gchar *paths[] = {"/etc/os-release", "/usr/lib/os-release", NULL};
+	const gchar *sysconfdir = g_getenv("FWUPD_SYSCONFDIR");
 	g_autofree gchar *buf = NULL;
 	g_auto(GStrv) lines = NULL;
 	g_autoptr(GHashTable) hash = NULL;
+	g_autoptr(GPtrArray) paths = g_ptr_array_new_with_free_func(g_free);
 
 	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
 	/* find the correct file */
-	for (guint i = 0; paths[i] != NULL; i++) {
-		if (g_file_test(paths[i], G_FILE_TEST_EXISTS)) {
-			filename = paths[i];
+	if (sysconfdir != NULL)
+		g_ptr_array_add(paths, g_build_filename(sysconfdir, "os-release", NULL));
+	if (g_strcmp0(sysconfdir, "/etc") != 0)
+		g_ptr_array_add(paths, g_strdup("/etc/os-release"));
+	g_ptr_array_add(paths, g_strdup("/usr/lib/os-release"));
+	for (guint i = 0; i < paths->len; i++) {
+		const gchar *path = g_ptr_array_index(paths, i);
+		if (g_file_test(path, G_FILE_TEST_EXISTS)) {
+			filename = path;
 			break;
 		}
 	}

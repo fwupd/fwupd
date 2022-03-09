@@ -1,0 +1,6 @@
+ID_LIKE=chromiumos
+GOOGLE_CRASH_ID=ChromeOS
+NAME=Chrome OS
+ID=chromeos
+HOME_URL=https://www.chromium.org/chromium-os
+BUG_REPORT_URL=https://crbug.com/new
