@@ -856,6 +856,44 @@ fwupd_client_connect_finish(FwupdClient *self, GAsyncResult *res, GError **error
 	return g_task_propagate_boolean(G_TASK(res), error);
 }
 
+/**
+ * fwupd_client_disconnect: (skip)
+ * @self: a #FwupdClient
+ * @error: (nullable): optional return location for an error
+ *
+ * Tears down client after use. You only need to call this method if you are:
+ *
+ * - connecting to the daemon in one thread and finalizing the client in another one
+ * - to change the `FWUPD_DBUS_SOCKET` for a different peer-to-peer connection
+ * - to add or change connection hints as specified by `fwupd_client_add_hint()`
+ *
+ * Returns: %TRUE for success
+ *
+ * Since: 1.8.0
+ **/
+gboolean
+fwupd_client_disconnect(FwupdClient *self, GError **error)
+{
+	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_autoptr(GMutexLocker) locker = g_mutex_locker_new(&priv->proxy_mutex);
+
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+	g_assert(locker != NULL);
+
+	/* sanity check */
+	if (priv->proxy == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_INTERNAL, "not connected");
+		return FALSE;
+	}
+	g_signal_handlers_disconnect_by_data(priv->proxy, self);
+	g_clear_object(&priv->proxy);
+
+	/* success */
+	return TRUE;
+}
+
 static void
 fwupd_client_fixup_dbus_error(GError *error)
 {
