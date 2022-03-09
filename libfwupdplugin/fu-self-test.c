@@ -1017,7 +1017,7 @@ fu_common_spawn_func(void)
 	guint lines = 0;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *fn = NULL;
-	const gchar *argv[3] = {"replace", "test", NULL};
+	const gchar *argv[4] = {"/bin/sh", "replace", "test", NULL};
 
 #ifdef _WIN32
 	g_test_skip("Known failures on Windows right now, skipping spawn func test");
@@ -1025,7 +1025,7 @@ fu_common_spawn_func(void)
 #endif
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "spawn.sh", NULL);
-	argv[0] = fn;
+	argv[1] = fn;
 	ret = fu_common_spawn_sync(argv, fu_test_stdout_cb, &lines, 0, NULL, &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
@@ -1039,7 +1039,7 @@ fu_common_spawn_timeout_func(void)
 	guint lines = 0;
 	g_autoptr(GError) error = NULL;
 	g_autofree gchar *fn = NULL;
-	const gchar *argv[3] = {"replace", "test", NULL};
+	const gchar *argv[4] = {"/bin/sh", "replace", "test", NULL};
 
 #ifdef _WIN32
 	g_test_skip("Known failures on Windows right now, skipping spawn timeout test");
@@ -1047,8 +1047,8 @@ fu_common_spawn_timeout_func(void)
 #endif
 
 	fn = g_test_build_filename(G_TEST_DIST, "tests", "spawn.sh", NULL);
-	argv[0] = fn;
-	ret = fu_common_spawn_sync(argv, fu_test_stdout_cb, &lines, 50, NULL, &error);
+	argv[1] = fn;
+	ret = fu_common_spawn_sync(argv, fu_test_stdout_cb, &lines, 500, NULL, &error);
 	g_assert_error(error, G_IO_ERROR, G_IO_ERROR_CANCELLED);
 	g_assert_false(ret);
 	g_assert_cmpint(lines, ==, 1);
