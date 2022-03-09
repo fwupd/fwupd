@@ -1,4 +1,4 @@
 [wrap-git]
 directory = libjcat
 url = https://github.com/hughsie/libjcat.git
-revision = 0.1.9
+revision = 0.1.11
