@@ -21,6 +21,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	const gchar *vendor;
 	const gchar *version;
 	g_autofree gchar *vendor_id = NULL;
+	g_autofree gchar *vendor_safe = NULL;
 	g_autoptr(GPtrArray) block_devs = NULL;
 
 	/* ignore */
@@ -34,7 +35,8 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 
 	/* vendor */
 	vendor = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "vendor", NULL);
-	if (vendor == NULL || g_strcmp0(vendor, "ATA") == 0) {
+	vendor_safe = fu_common_strstrip(vendor);
+	if (vendor_safe == NULL || g_strcmp0(vendor_safe, "ATA") == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -42,7 +44,7 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 		return FALSE;
 	}
 	fu_device_set_vendor(device, vendor);
-	vendor_id = g_strdup_printf("SCSI:%s", vendor);
+	vendor_id = g_strdup_printf("SCSI:%s", vendor_safe);
 	fu_device_add_vendor_id(device, vendor_id);
 
 	/* name */
