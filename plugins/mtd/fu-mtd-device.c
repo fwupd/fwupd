@@ -72,6 +72,7 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	const gchar *vendor;
 	guint64 flags = 0;
 	guint64 size = 0;
+	g_autoptr(GError) error_local = NULL;
 
 	/* FuUdevDevice->probe */
 	if (!FU_DEVICE_CLASS(fu_mtd_device_parent_class)->probe(device, error))
@@ -80,6 +81,22 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	/* set physical ID */
 	if (!fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "mtd", error))
 		return FALSE;
+
+	/* flags have to exist */
+	if (!fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device),
+						  "flags",
+						  &flags,
+						  &error_local)) {
+		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_NOT_FOUND)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "no MTD flags");
+			return FALSE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
 
 	/* get name */
 	name = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "name", NULL);
@@ -107,8 +124,6 @@ fu_mtd_device_probe(FuDevice *device, GError **error)
 	if (!fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device), "size", &size, error))
 		return FALSE;
 	fu_device_set_firmware_size_max(device, size);
-	if (!fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device), "flags", &flags, error))
-		return FALSE;
 #ifdef HAVE_MTD_USER_H
 	if ((flags & MTD_NO_ERASE) == 0) {
 		if (!fu_udev_device_get_sysfs_attr_uint64(FU_UDEV_DEVICE(device),
