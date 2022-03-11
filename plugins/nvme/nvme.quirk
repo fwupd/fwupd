@@ -39,3 +39,7 @@ Flags = signed-payload
 Flags = unsigned-payload
 [NVME\VEN_2646&DEV_5012]
 Flags = unsigned-payload
+
+# Western Digital
+[NVME\VEN_101C]
+Flags = signed-payload
