@@ -35,7 +35,8 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 
 	/* vendor */
 	vendor = fu_udev_device_get_sysfs_attr(FU_UDEV_DEVICE(device), "vendor", NULL);
-	vendor_safe = fu_common_strstrip(vendor);
+	if (vendor != NULL)
+		vendor_safe = fu_common_strstrip(vendor);
 	if (vendor_safe == NULL || g_strcmp0(vendor_safe, "ATA") == 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
