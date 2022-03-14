@@ -64,6 +64,7 @@ BuildRequires: sqlite-devel
 BuildRequires: systemd >= %{systemd_version}
 BuildRequires: systemd-devel
 BuildRequires: libarchive-devel
+BuildRequires: libcbor-devel
 BuildRequires: gobject-introspection-devel
 BuildRequires: gcab
 %ifarch %{valgrind_arches}
