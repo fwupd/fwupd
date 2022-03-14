@@ -458,6 +458,16 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_AUTO_PAUSE_POLLING (1ull << 24)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG:
+ *
+ * Only use the device removal delay when explicitly waiting for a replug, rather than every time
+ * the device is removed.
+ *
+ * Since: 1.8.1
+ */
+#define FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG (1ull << 25)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
