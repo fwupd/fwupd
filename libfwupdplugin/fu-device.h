@@ -447,6 +447,15 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED (1ull << 23)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_ONLY_WFR_REMOVE_DELAY:
+ *
+ * Only use the device removal delay when waiting for reboot.
+ *
+ * Since: 1.8.0
+ */
+#define FU_DEVICE_INTERNAL_FLAG_ONLY_WFR_REMOVE_DELAY (1ull << 24)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);

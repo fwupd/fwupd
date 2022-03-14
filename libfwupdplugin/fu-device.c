@@ -242,6 +242,8 @@ fu_device_internal_flag_to_string(FuDeviceInternalFlags flag)
 		return "no-probe";
 	if (flag == FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED)
 		return "md-set-signed";
+	if (flag == FU_DEVICE_INTERNAL_FLAG_ONLY_WFR_REMOVE_DELAY)
+		return "only-wfr-remove-delay";
 	return NULL;
 }
 
@@ -306,6 +308,8 @@ fu_device_internal_flag_from_string(const gchar *flag)
 		return FU_DEVICE_INTERNAL_FLAG_NO_PROBE;
 	if (g_strcmp0(flag, "md-set-signed") == 0)
 		return FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED;
+	if (g_strcmp0(flag, "only-wfr-remove-delay") == 0)
+		return FU_DEVICE_INTERNAL_FLAG_ONLY_WFR_REMOVE_DELAY;
 	return FU_DEVICE_INTERNAL_FLAG_UNKNOWN;
 }
 
