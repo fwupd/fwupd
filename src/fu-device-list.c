@@ -446,6 +446,17 @@ fu_device_list_remove_with_delay(FuDeviceItem *item)
 					item);
 }
 
+static gboolean
+fu_device_list_should_remove_with_delay(FuDevice *device)
+{
+	if (fu_device_get_remove_delay(device) == 0)
+		return FALSE;
+	if (fu_device_has_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_ONLY_WAIT_FOR_REPLUG) &&
+	    !fu_device_has_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG))
+		return FALSE;
+	return TRUE;
+}
+
 /**
  * fu_device_list_remove:
  * @self: a device list
@@ -487,7 +498,7 @@ fu_device_list_remove(FuDeviceList *self, FuDevice *device)
 	}
 
 	/* delay the removal and check for replug */
-	if (fu_device_get_remove_delay(item->device) > 0) {
+	if (fu_device_list_should_remove_with_delay(item->device)) {
 		fu_device_list_remove_with_delay(item);
 		return;
 	}
