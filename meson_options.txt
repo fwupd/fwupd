@@ -14,6 +14,7 @@ option('polkit', type: 'feature', description : 'PolKit support in daemon', depr
 option('gnutls', type: 'feature', description : 'GnuTLS support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('sqlite', type: 'feature', description : 'sqlite support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('lzma', type: 'feature', description : 'LZMA support', deprecated: {'true': 'enabled', 'false': 'disabled'})
+option('cbor', type: 'feature', description : 'CBOR support for coSWID and uSWID')
 option('plugin_amt', type : 'feature', description : 'Intel AMT support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_acpi_phat', type : 'feature', description : 'ACPI PHAT support', deprecated: {'true': 'enabled', 'false': 'disabled'})
 option('plugin_bcm57xx', type : 'feature', description : 'BCM57xx support', deprecated: {'true': 'enabled', 'false': 'disabled'})

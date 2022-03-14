@@ -26,7 +26,14 @@ class Builder:
             "OUT", os.path.realpath(os.path.join(DEFAULT_BUILDDIR, "out"))
         )
         self.srcdir = self._ensure_environ("SRC", os.path.realpath(".."))
-        self.ldflags = ["-lpthread", "-lresolv", "-ldl", "-lffi", "-lz", "-llzma"]
+        self.ldflags = [
+            "-lpthread",
+            "-lresolv",
+            "-ldl",
+            "-lffi",
+            "-lz",
+            "-llzma",
+        ]
 
         # defined in env
         self.cflags = ["-Wno-deprecated-declarations", "-g"]
@@ -86,6 +93,26 @@ class Builder:
                 check=True,
             )
             subprocess.run(["ninja", "install"], cwd=srcdir_build, check=True)
+
+    def build_cmake_project(self, srcdir: str, argv=None) -> None:
+        """configure and build the meson project"""
+        if not argv:
+            argv = []
+        srcdir_build = os.path.join(srcdir, DEFAULT_BUILDDIR)
+        if not os.path.exists(srcdir_build):
+            os.makedirs(srcdir_build, exist_ok=True)
+            subprocess.run(
+                [
+                    "cmake",
+                    "-DCMAKE_INSTALL_PREFIX:PATH={}".format(self.builddir),
+                    "-DCMAKE_INSTALL_LIBDIR={}".format("lib"),
+                ]
+                + argv
+                + [".."],
+                cwd=srcdir_build,
+                check=True,
+            )
+            subprocess.run(["make", "all", "install"], cwd=srcdir_build, check=True)
 
     def add_work_includedir(self, value: str) -> None:
         """add a CFLAG"""
@@ -236,6 +263,13 @@ class Fuzzer:
 
 def _build(bld: Builder) -> None:
 
+    # CBOR
+    src = bld.checkout_source(
+        "libcbor", url="https://github.com/PJK/libcbor.git", commit="v0.9.0"
+    )
+    bld.build_cmake_project(src)
+    bld.add_build_ldflag("lib/libcbor.a")
+
     # GLib
     src = bld.checkout_source(
         "glib", url="https://gitlab.gnome.org/GNOME/glib.git", commit="glib-2-68"
@@ -316,6 +350,7 @@ def _build(bld: Builder) -> None:
         Fuzzer("fmap"),
         Fuzzer("ihex"),
         Fuzzer("srec"),
+        Fuzzer("uswid"),
         Fuzzer("efi-firmware-filesystem", pattern="efi-firmware-filesystem"),
         Fuzzer("efi-firmware-volume", pattern="efi-firmware-volume"),
         Fuzzer("ifd"),
@@ -396,7 +431,8 @@ if __name__ == "__main__":
     # install missing deps here rather than patching the Dockerfile in oss-fuzz
     try:
         subprocess.check_call(
-            ["apt-get", "install", "-y", "liblzma-dev"], stdout=open(os.devnull, "wb")
+            ["apt-get", "install", "-y", "liblzma-dev", "libcbor-dev"],
+            stdout=open(os.devnull, "wb"),
         )
     except FileNotFoundError:
         pass

@@ -278,6 +278,11 @@ if lzma.found()
   conf.set('HAVE_LZMA', '1')
 endif
 
+cbor = dependency('libcbor', version : '>= 0.7.0', required: get_option('cbor'))
+if cbor.found()
+  conf.set('HAVE_CBOR', '1')
+endif
+
 platform_deps = []
 if get_option('default_library') != 'static'
   if host_machine.system() == 'windows'

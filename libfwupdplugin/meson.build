@@ -53,6 +53,8 @@ fwupdplugin_src = [
   'fu-ifd-common.c',              # fuzzing
   'fu-ifd-firmware.c',            # fuzzing
   'fu-ifd-image.c',               # fuzzing
+  'fu-uswid-firmware.c',          # fuzzing
+  'fu-coswid-firmware.c',         # fuzzing
   'fu-efivar.c',
   'fu-udev-device.c',
   'fu-i2c-device.c',
@@ -102,6 +104,8 @@ fwupdplugin_headers = [
   'fu-ifd-bios.h',
   'fu-ifd-common.h',
   'fu-ifd-firmware.h',
+  'fu-uswid-firmware.h',
+  'fu-coswid-firmware.h',
   'fu-ifd-image.h',
   'fu-volume.h',
   'fu-firmware.h',
@@ -186,6 +190,7 @@ library_deps = [
   libjcat,
   lzma,
   libarchive,
+  cbor,
   platform_deps,
 ]
 

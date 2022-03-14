@@ -211,6 +211,7 @@ parts:
       - gcab
       - gnu-efi
       - libarchive-dev
+      - libcbor-dev
       - libcairo-dev
       - libefiboot-dev
       - libefivar-dev
@@ -235,6 +236,7 @@ parts:
     stage-packages:
       - libgcab-1.0-0
       - libarchive13
+      - libcbor0
       - libassuan0
       - liblcms2-2
       - liblzma5
