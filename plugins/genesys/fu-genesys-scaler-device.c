@@ -372,10 +372,12 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 	}
 
 	if (data_out[3] == 0xff) {
-		g_prefix_error(error,
-			       "error reading GPIO-Out Register 0x%02x%02x: ",
-			       data_out[1],
-			       data_out[2]);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "error reading GPIO-Out Register 0x%02x%02x: ",
+			    data_out[1],
+			    data_out[2]);
 		return FALSE;
 	}
 
@@ -453,10 +455,12 @@ fu_genesys_scaler_device_disable_wp(FuGenesysScalerDevice *self, gboolean disabl
 	}
 
 	if (data_en[3] == 0xff) {
-		g_prefix_error(error,
-			       "error reading GPIO-Enable Register 0x%02x%02x: ",
-			       data_en[1],
-			       data_en[2]);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "error reading GPIO-Enable Register 0x%02x%02x: ",
+			    data_en[1],
+			    data_en[2]);
 		return FALSE;
 	}
 
@@ -548,13 +552,15 @@ fu_genesys_scaler_device_pause_r2_cpu(FuGenesysScalerDevice *self, GError **erro
 	}
 
 	if (data[5] == 0xff) {
-		g_prefix_error(error,
-			       "error reading register 0x%02x%02x%02x%02x%02x: ",
-			       data[0],
-			       data[1],
-			       data[2],
-			       data[3],
-			       data[4]);
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "error reading register 0x%02x%02x%02x%02x%02x: ",
+			    data[0],
+			    data[1],
+			    data[2],
+			    data[3],
+			    data[4]);
 		return FALSE;
 	}
 
