@@ -838,10 +838,16 @@ fu_common_spawn_sync(const gchar *const *argv,
 	fu_common_spawn_create_pollable_source(helper);
 	g_main_loop_run(helper->loop);
 	g_cancellable_disconnect(cancellable, cancellable_id);
+#endif
+	if (!g_subprocess_wait_check(subprocess, cancellable, error))
+		return FALSE;
+#ifndef _WIN32
 	if (g_cancellable_set_error_if_cancelled(helper->cancellable, error))
 		return FALSE;
 #endif
-	return g_subprocess_wait_check(subprocess, cancellable, error);
+
+	/* success */
+	return TRUE;
 }
 
 /**
