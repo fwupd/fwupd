@@ -41,6 +41,7 @@
 #include "fu-common.h"
 #include "fu-config.h"
 #include "fu-context-private.h"
+#include "fu-coswid-firmware.h"
 #include "fu-debug.h"
 #include "fu-device-list.h"
 #include "fu-device-private.h"
@@ -68,6 +69,7 @@
 #include "fu-security-attr.h"
 #include "fu-security-attrs-private.h"
 #include "fu-udev-device-private.h"
+#include "fu-uswid-firmware.h"
 #include "fu-version.h"
 
 #ifdef HAVE_GUDEV
@@ -7236,6 +7238,8 @@ fu_engine_load(FuEngine *self, FuEngineLoadFlags flags, GError **error)
 	fu_context_add_firmware_gtype(self->ctx, "ifd-firmware", FU_TYPE_IFD_FIRMWARE);
 	fu_context_add_firmware_gtype(self->ctx, "cfu-offer", FU_TYPE_CFU_OFFER);
 	fu_context_add_firmware_gtype(self->ctx, "cfu-payload", FU_TYPE_CFU_PAYLOAD);
+	fu_context_add_firmware_gtype(self->ctx, "uswid", FU_TYPE_USWID_FIRMWARE);
+	fu_context_add_firmware_gtype(self->ctx, "coswid", FU_TYPE_COSWID_FIRMWARE);
 
 	/* set up backends */
 	if (flags & FU_ENGINE_LOAD_FLAG_COLDPLUG) {

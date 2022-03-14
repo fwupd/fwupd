@@ -31,7 +31,7 @@ LIB_DEPENDS=	libcurl.so:ftp/curl \
 
 RUN_DEPENDS=	${LOCALBASE}/libexec/fwupd/efi/fwupdx64.efi:sysutils/fwupd-efi
 
-USES=		gnome libarchive meson pkgconfig python:3.8+ shebangfix sqlite
+USES=		gnome libarchive meson pkgconfig python:3.8+ shebangfix sqlite cbor
 USE_GITHUB=	yes
 USE_GNOME=	glib20 introspection:build
 GH_ACCOUNT=

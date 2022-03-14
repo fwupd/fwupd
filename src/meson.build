@@ -16,6 +16,7 @@ daemon_dep = [
   libjsonglib,
   polkit,
   sqlite,
+  cbor,
 ]
 
 client_dep = [

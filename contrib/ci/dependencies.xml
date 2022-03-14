@@ -698,6 +698,30 @@
       <package>libarchive-devel</package>
     </distro>
   </dependency>
+  <dependency type="build" id="libcbor-dev">
+    <distro id="arch">
+      <package>libcbor</package>
+    </distro>
+    <distro id="centos">
+      <package>libcbor-devel</package>
+    </distro>
+    <distro id="fedora">
+      <package>libcbor-devel</package>
+    </distro>
+    <distro id="debian">
+      <control />
+      <package variant="x86_64" />
+      <package variant="s390x">libcbor-dev:s390x</package>
+      <package variant="i386" />
+    </distro>
+    <distro id="ubuntu">
+      <control />
+      <package variant="x86_64" />
+    </distro>
+    <distro id="void">
+      <package>libcbor-devel</package>
+    </distro>
+  </dependency>
   <dependency type="build" id="libefivar-dev">
     <distro id="arch">
       <package>efivar</package>

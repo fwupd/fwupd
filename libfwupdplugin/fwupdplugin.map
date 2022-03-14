@@ -1020,6 +1020,10 @@ LIBFWUPDPLUGIN_1.7.7 {
 
 LIBFWUPDPLUGIN_1.8.0 {
   global:
+    fu_coswid_firmware_get_type;
+    fu_coswid_firmware_new;
     fu_device_has_inhibit;
+    fu_uswid_firmware_get_type;
+    fu_uswid_firmware_new;
   local: *;
 } LIBFWUPDPLUGIN_1.7.7;
