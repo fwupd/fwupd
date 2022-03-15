@@ -188,7 +188,6 @@ fu_logitech_hidpp_device_ping(FuLogitechHidPpDevice *self, GError **error)
 		}
 		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_HOST_UNREACHABLE)) {
 			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNREACHABLE);
-			fu_device_inhibit(FU_DEVICE(self), "unreachable", "device is unreachable");
 			return TRUE;
 		}
 		g_propagate_error(error, g_steal_pointer(&error_local));
@@ -197,12 +196,10 @@ fu_logitech_hidpp_device_ping(FuLogitechHidPpDevice *self, GError **error)
 
 	/* device no longer asleep */
 	fu_device_remove_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNREACHABLE);
-	fu_device_uninhibit(FU_DEVICE(self), "unreachable");
 	children = fu_device_get_children(FU_DEVICE(self));
 	for (guint i = 0; i < children->len; i++) {
 		FuDevice *radio = g_ptr_array_index(children, i);
 		fu_device_remove_flag(radio, FWUPD_DEVICE_FLAG_UNREACHABLE);
-		fu_device_uninhibit(radio, "unreachable");
 	}
 
 	/* if the device index is unset, grab it from the reply */
