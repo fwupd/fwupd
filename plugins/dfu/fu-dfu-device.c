@@ -531,10 +531,10 @@ fu_dfu_device_remove_attribute(FuDfuDevice *self, FuDfuDeviceAttrs attribute)
  * Returns: a new #FuDfuDevice
  **/
 FuDfuDevice *
-fu_dfu_device_new(GUsbDevice *usb_device)
+fu_dfu_device_new(FuContext *ctx, GUsbDevice *usb_device)
 {
 	FuDfuDevice *self;
-	self = g_object_new(FU_TYPE_DFU_DEVICE, "usb-device", usb_device, NULL);
+	self = g_object_new(FU_TYPE_DFU_DEVICE, "usb-device", usb_device, "context", ctx, NULL);
 	return self;
 }
 

@@ -176,9 +176,9 @@ fu_dell_dock_status_class_init(FuDellDockStatusClass *klass)
 }
 
 FuDellDockStatus *
-fu_dell_dock_status_new(void)
+fu_dell_dock_status_new(FuContext *ctx)
 {
 	FuDellDockStatus *self = NULL;
-	self = g_object_new(FU_TYPE_DELL_DOCK_STATUS, NULL);
+	self = g_object_new(FU_TYPE_DELL_DOCK_STATUS, "context", ctx, NULL);
 	return self;
 }

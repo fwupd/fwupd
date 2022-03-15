@@ -3548,6 +3548,23 @@ fu_device_set_context(FuDevice *self, FuContext *ctx)
 {
 	FuDevicePrivate *priv = GET_PRIVATE(self);
 	g_return_if_fail(FU_IS_DEVICE(self));
+	g_return_if_fail(FU_IS_CONTEXT(ctx) || ctx == NULL);
+
+#ifndef SUPPORTED_BUILD
+	if (priv->ctx != NULL && ctx == NULL) {
+		g_critical("clearing device context for %s [%s]",
+			   fu_device_get_name(self),
+			   fu_device_get_id(self));
+		return;
+	}
+	if (priv->ctx != NULL && priv->ctx == ctx) {
+		g_critical("re-setting device context for %s [%s]",
+			   fu_device_get_name(self),
+			   fu_device_get_id(self));
+		return;
+	}
+#endif
+
 	if (g_set_object(&priv->ctx, ctx))
 		g_object_notify(G_OBJECT(self), "context");
 }
