@@ -1138,7 +1138,7 @@ fu_dell_dock_mst_set_quirk_kv(FuDevice *device,
 static gboolean
 fu_dell_dock_mst_setup(FuDevice *device, GError **error)
 {
-	FuDevice *parent;
+	FuDevice *proxy = fu_device_get_proxy(device);
 	const gchar *version;
 
 	/* sanity check that we can talk to MST */
@@ -1146,8 +1146,7 @@ fu_dell_dock_mst_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* set version from EC if we know it */
-	parent = fu_device_get_parent(device);
-	version = fu_dell_dock_ec_get_mst_version(parent);
+	version = fu_dell_dock_ec_get_mst_version(proxy);
 	if (version != NULL) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 		fu_device_set_version(device, version);
@@ -1193,15 +1192,12 @@ static gboolean
 fu_dell_dock_mst_open(FuDevice *device, GError **error)
 {
 	FuDellDockMst *self = FU_DELL_DOCK_MST(device);
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *proxy = fu_device_get_proxy(device);
 
 	g_return_val_if_fail(self->unlock_target != 0, FALSE);
-	g_return_val_if_fail(parent != NULL, FALSE);
+	g_return_val_if_fail(proxy != NULL, FALSE);
 
-	if (fu_device_get_proxy(device) == NULL)
-		fu_device_set_proxy(device, fu_device_get_proxy(parent));
-
-	if (!fu_device_open(fu_device_get_proxy(device), error))
+	if (!fu_device_open(proxy, error))
 		return FALSE;
 
 	/* open up access to controller bus */
@@ -1255,9 +1251,9 @@ fu_dell_dock_mst_class_init(FuDellDockMstClass *klass)
 }
 
 FuDellDockMst *
-fu_dell_dock_mst_new(FuContext *ctx)
+fu_dell_dock_mst_new(FuDevice *proxy)
 {
 	FuDellDockMst *device = NULL;
-	device = g_object_new(FU_TYPE_DELL_DOCK_MST, "context", ctx, NULL);
+	device = g_object_new(FU_TYPE_DELL_DOCK_MST, "proxy", proxy, NULL);
 	return device;
 }

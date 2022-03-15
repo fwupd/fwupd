@@ -126,7 +126,7 @@ fu_dell_dock_tbt_write_fw(FuDevice *device,
 
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_BUSY);
 
-	if (fu_dell_dock_ec_tbt_passive(fu_device_get_parent(device))) {
+	if (fu_dell_dock_ec_tbt_passive(fu_device_get_proxy(device))) {
 		g_debug("using passive flow for Thunderbolt");
 	} else if (!fu_dell_dock_hid_tbt_authenticate(fu_device_get_proxy(device),
 						      &tbt_base_settings,
@@ -184,13 +184,12 @@ static gboolean
 fu_dell_dock_tbt_setup(FuDevice *device, GError **error)
 {
 	FuDellDockTbt *self = FU_DELL_DOCK_TBT(device);
-	FuDevice *parent;
+	FuDevice *proxy = fu_device_get_proxy(device);
 	const gchar *version;
 	const gchar *hub_version;
 
 	/* set version from EC if we know it */
-	parent = fu_device_get_parent(device);
-	version = fu_dell_dock_ec_get_tbt_version(parent);
+	version = fu_dell_dock_ec_get_tbt_version(proxy);
 	if (version != NULL) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_PAIR);
 		fu_device_set_version(device, version);
@@ -221,8 +220,8 @@ fu_dell_dock_tbt_setup(FuDevice *device, GError **error)
 static gboolean
 fu_dell_dock_tbt_probe(FuDevice *device, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
-	fu_device_set_physical_id(device, fu_device_get_physical_id(parent));
+	FuDevice *proxy = fu_device_get_proxy(device);
+	fu_device_set_physical_id(device, fu_device_get_physical_id(proxy));
 	fu_device_set_logical_id(FU_DEVICE(device), "tbt");
 	fu_device_add_instance_id(device, DELL_DOCK_TBT_INSTANCE_ID);
 	/* this is true only when connected to non-thunderbolt port */

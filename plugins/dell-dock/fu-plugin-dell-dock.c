@@ -45,65 +45,54 @@ fu_plugin_dell_dock_init(FuPlugin *plugin)
 }
 
 static gboolean
-fu_plugin_dell_dock_create_node(FuPlugin *plugin, FuDevice *device, GError **error)
+fu_plugin_dell_dock_setup_node(FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	g_autoptr(FuDeviceLocker) locker = NULL;
-
-	locker = fu_device_locker_new(device, error);
-	if (locker == NULL)
-		return FALSE;
-
-	fu_plugin_device_add(plugin, device);
-
-	return TRUE;
+	g_autoptr(FuDeviceLocker) locker = fu_device_locker_new(device, error);
+	return locker != NULL;
 }
 
 static gboolean
-fu_plugin_dell_dock_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
+fu_plugin_dell_dock_probe(FuPlugin *plugin, FuDevice *hub_device, GError **error)
 {
-	const gchar *instance;
 	g_autoptr(FuDellDockEc) ec_device = NULL;
 	g_autoptr(FuDellDockMst) mst_device = NULL;
 	g_autoptr(FuDellDockStatus) status_device = NULL;
-	FuContext *ctx = fu_plugin_get_context(plugin);
 
 	/* create ec endpoint */
-	ec_device = fu_dell_dock_ec_new(proxy);
-	if (!fu_plugin_dell_dock_create_node(plugin, FU_DEVICE(ec_device), error))
+	ec_device = fu_dell_dock_ec_new(hub_device);
+	if (!fu_plugin_dell_dock_setup_node(plugin, FU_DEVICE(ec_device), error))
 		return FALSE;
+	fu_device_add_child(hub_device, FU_DEVICE(ec_device));
 
 	/* create mst endpoint */
-	mst_device = fu_dell_dock_mst_new(ctx);
+	mst_device = fu_dell_dock_mst_new(FU_DEVICE(ec_device));
 	if (fu_dell_dock_get_ec_type(FU_DEVICE(ec_device)) == ATOMIC_BASE)
-		instance = DELL_DOCK_VMM6210_INSTANCE_ID;
+		fu_device_add_instance_id(FU_DEVICE(mst_device), DELL_DOCK_VMM6210_INSTANCE_ID);
 	else
-		instance = DELL_DOCK_VM5331_INSTANCE_ID;
-	fu_device_add_guid(FU_DEVICE(mst_device), fwupd_guid_hash_string(instance));
-	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(mst_device));
-	fu_device_add_instance_id(FU_DEVICE(mst_device), instance);
-	if (!fu_plugin_dell_dock_create_node(plugin, FU_DEVICE(mst_device), error))
+		fu_device_add_instance_id(FU_DEVICE(mst_device), DELL_DOCK_VM5331_INSTANCE_ID);
+	if (!fu_plugin_dell_dock_setup_node(plugin, FU_DEVICE(mst_device), error))
 		return FALSE;
+	fu_device_add_child(hub_device, FU_DEVICE(mst_device));
 
 	/* create package version endpoint */
-	status_device = fu_dell_dock_status_new(ctx);
+	status_device = fu_dell_dock_status_new(FU_DEVICE(ec_device));
 	if (fu_dell_dock_get_ec_type(FU_DEVICE(ec_device)) == ATOMIC_BASE)
-		instance = DELL_DOCK_ATOMIC_STATUS_INSTANCE_ID;
+		fu_device_add_instance_id(FU_DEVICE(status_device),
+					  DELL_DOCK_ATOMIC_STATUS_INSTANCE_ID);
 	else if (fu_dell_dock_module_is_usb4(FU_DEVICE(ec_device)))
-		instance = DELL_DOCK_DOCK2_INSTANCE_ID;
+		fu_device_add_instance_id(FU_DEVICE(status_device), DELL_DOCK_DOCK2_INSTANCE_ID);
 	else
-		instance = DELL_DOCK_DOCK1_INSTANCE_ID;
-	fu_device_add_guid(FU_DEVICE(status_device), fwupd_guid_hash_string(instance));
-	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(status_device));
-	fu_device_add_instance_id(FU_DEVICE(status_device), instance);
-	if (!fu_plugin_dell_dock_create_node(plugin, FU_DEVICE(status_device), error))
+		fu_device_add_instance_id(FU_DEVICE(status_device), DELL_DOCK_DOCK1_INSTANCE_ID);
+	if (!fu_plugin_dell_dock_setup_node(plugin, FU_DEVICE(status_device), error))
 		return FALSE;
+	fu_device_add_child(hub_device, FU_DEVICE(status_device));
 
 	/* create TBT endpoint if Thunderbolt SKU and Thunderbolt link inactive */
 	if (fu_dell_dock_ec_needs_tbt(FU_DEVICE(ec_device))) {
-		g_autoptr(FuDellDockTbt) tbt_device = fu_dell_dock_tbt_new(proxy);
-		fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(tbt_device));
-		if (!fu_plugin_dell_dock_create_node(plugin, FU_DEVICE(tbt_device), error))
+		g_autoptr(FuDellDockTbt) tbt_device = fu_dell_dock_tbt_new(FU_DEVICE(ec_device));
+		if (!fu_plugin_dell_dock_setup_node(plugin, FU_DEVICE(tbt_device), error))
 			return FALSE;
+		fu_device_add_child(hub_device, FU_DEVICE(tbt_device));
 	}
 
 	return TRUE;

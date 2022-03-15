@@ -40,13 +40,11 @@ fu_dell_dock_status_ver_string(guint32 status_version)
 static gboolean
 fu_dell_dock_status_setup(FuDevice *device, GError **error)
 {
-	FuDevice *parent;
+	FuDevice *proxy = fu_device_get_proxy(device);
 	guint32 status_version;
 	g_autofree gchar *dynamic_version = NULL;
 
-	parent = fu_device_get_parent(device);
-	status_version = fu_dell_dock_ec_get_status_version(parent);
-
+	status_version = fu_dell_dock_ec_get_status_version(proxy);
 	dynamic_version = fu_dell_dock_status_ver_string(status_version);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_version(device, dynamic_version);
@@ -62,7 +60,7 @@ fu_dell_dock_status_write(FuDevice *device,
 			  GError **error)
 {
 	FuDellDockStatus *self = FU_DELL_DOCK_STATUS(device);
-	FuDevice *parent;
+	FuDevice *proxy = fu_device_get_proxy(device);
 	gsize length = 0;
 	guint32 status_version = 0;
 	const guint8 *data;
@@ -89,8 +87,7 @@ fu_dell_dock_status_write(FuDevice *device,
 	dynamic_version = fu_dell_dock_status_ver_string(status_version);
 	g_debug("writing status firmware version %s", dynamic_version);
 
-	parent = fu_device_get_parent(device);
-	if (!fu_dell_dock_ec_commit_package(parent, fw, error))
+	if (!fu_dell_dock_ec_commit_package(proxy, fw, error))
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */
@@ -102,19 +99,19 @@ fu_dell_dock_status_write(FuDevice *device,
 static gboolean
 fu_dell_dock_status_open(FuDevice *device, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *proxy = fu_device_get_proxy(device);
 
-	g_return_val_if_fail(parent != NULL, FALSE);
+	g_return_val_if_fail(proxy != NULL, FALSE);
 
-	return fu_device_open(parent, error);
+	return fu_device_open(proxy, error);
 }
 
 static gboolean
 fu_dell_dock_status_close(FuDevice *device, GError **error)
 {
-	FuDevice *parent = fu_device_get_parent(device);
+	FuDevice *proxy = fu_device_get_proxy(device);
 
-	return fu_device_close(parent, error);
+	return fu_device_close(proxy, error);
 }
 
 static gboolean
@@ -176,9 +173,9 @@ fu_dell_dock_status_class_init(FuDellDockStatusClass *klass)
 }
 
 FuDellDockStatus *
-fu_dell_dock_status_new(FuContext *ctx)
+fu_dell_dock_status_new(FuDevice *proxy)
 {
 	FuDellDockStatus *self = NULL;
-	self = g_object_new(FU_TYPE_DELL_DOCK_STATUS, "context", ctx, NULL);
+	self = g_object_new(FU_TYPE_DELL_DOCK_STATUS, "proxy", proxy, NULL);
 	return self;
 }
