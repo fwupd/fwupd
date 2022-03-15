@@ -149,7 +149,6 @@ fu_plugin_flashrom_coldplug(FuPlugin *plugin, GError **error)
 	const gchar *dmi_vendor;
 	g_autoptr(FuDevice) device = fu_flashrom_device_new(ctx);
 
-	fu_device_set_context(device, ctx);
 	fu_device_set_name(device, fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_PRODUCT_NAME));
 	fu_device_set_vendor(device, fu_context_get_hwid_value(ctx, FU_HWIDS_KEY_MANUFACTURER));
 

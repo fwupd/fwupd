@@ -23,4 +23,4 @@
 G_DECLARE_FINAL_TYPE(FuDellDockStatus, fu_dell_dock_status, FU, DELL_DOCK_STATUS, FuDevice)
 
 FuDellDockStatus *
-fu_dell_dock_status_new(void);
+fu_dell_dock_status_new(FuContext *ctx);

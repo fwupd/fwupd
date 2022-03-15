@@ -33,11 +33,9 @@ fu_plugin_thunderbolt_safe_kernel(FuPlugin *plugin, GError **error)
 static gboolean
 fu_plugin_thunderbolt_device_created(FuPlugin *plugin, FuDevice *dev, GError **error)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
 	fu_plugin_add_rule(plugin,
 			   FU_PLUGIN_RULE_INHIBITS_IDLE,
 			   "thunderbolt requires device wakeup");
-	fu_device_set_context(dev, ctx);
 	return TRUE;
 }
 

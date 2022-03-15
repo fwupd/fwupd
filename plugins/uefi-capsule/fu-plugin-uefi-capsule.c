@@ -706,7 +706,6 @@ fu_plugin_uefi_capsule_check_cod_support(GError **error)
 static gboolean
 fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, GError **error)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
 	FuPluginData *data = fu_plugin_get_data(plugin);
 	const gchar *str;
 	gboolean has_fde = FALSE;
@@ -750,7 +749,6 @@ fu_plugin_uefi_capsule_coldplug(FuPlugin *plugin, GError **error)
 		FuUefiDevice *dev = g_ptr_array_index(devices, i);
 		g_autoptr(GError) error_device = NULL;
 
-		fu_device_set_context(FU_DEVICE(dev), ctx);
 		if (data->esp != NULL)
 			fu_uefi_device_set_esp(dev, data->esp);
 		if (!fu_plugin_uefi_capsule_coldplug_device(plugin, dev, &error_device)) {
