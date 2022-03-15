@@ -180,7 +180,6 @@ fu_dfu_tool_get_default_device(FuDfuTool *self, GError **error)
 		gchar *tmp;
 		guint64 pid;
 		guint64 vid;
-		g_autoptr(FuDfuDevice) device = NULL;
 		g_autoptr(GUsbDevice) usb_device = NULL;
 
 		/* parse */
@@ -220,17 +219,14 @@ fu_dfu_tool_get_default_device(FuDfuTool *self, GError **error)
 				       (guint)pid);
 			return NULL;
 		}
-		device = fu_dfu_device_new(usb_device);
-		fu_device_set_context(FU_DEVICE(device), self->ctx);
-		return g_steal_pointer(&device);
+		return fu_dfu_device_new(self->ctx, usb_device);
 	}
 
 	/* auto-detect first device */
 	devices = g_usb_context_get_devices(self->usb_context);
 	for (guint i = 0; i < devices->len; i++) {
 		GUsbDevice *usb_device = g_ptr_array_index(devices, i);
-		g_autoptr(FuDfuDevice) device = fu_dfu_device_new(usb_device);
-		fu_device_set_context(FU_DEVICE(device), self->ctx);
+		g_autoptr(FuDfuDevice) device = fu_dfu_device_new(self->ctx, usb_device);
 		if (fu_device_probe(FU_DEVICE(device), NULL))
 			return g_steal_pointer(&device);
 	}

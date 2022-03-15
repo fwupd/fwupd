@@ -45,7 +45,7 @@ struct _FuDfuDeviceClass {
 };
 
 FuDfuDevice *
-fu_dfu_device_new(GUsbDevice *usb_device);
+fu_dfu_device_new(FuContext *ctx, GUsbDevice *usb_device);
 const gchar *
 fu_dfu_device_get_platform_id(FuDfuDevice *self);
 GPtrArray *

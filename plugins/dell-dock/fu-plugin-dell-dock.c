@@ -47,10 +47,8 @@ fu_plugin_dell_dock_init(FuPlugin *plugin)
 static gboolean
 fu_plugin_dell_dock_create_node(FuPlugin *plugin, FuDevice *device, GError **error)
 {
-	FuContext *ctx = fu_plugin_get_context(plugin);
 	g_autoptr(FuDeviceLocker) locker = NULL;
 
-	fu_device_set_context(device, ctx);
 	locker = fu_device_locker_new(device, error);
 	if (locker == NULL)
 		return FALSE;
@@ -75,12 +73,11 @@ fu_plugin_dell_dock_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 		return FALSE;
 
 	/* create mst endpoint */
-	mst_device = fu_dell_dock_mst_new();
+	mst_device = fu_dell_dock_mst_new(ctx);
 	if (fu_dell_dock_get_ec_type(FU_DEVICE(ec_device)) == ATOMIC_BASE)
 		instance = DELL_DOCK_VMM6210_INSTANCE_ID;
 	else
 		instance = DELL_DOCK_VM5331_INSTANCE_ID;
-	fu_device_set_context(FU_DEVICE(mst_device), ctx);
 	fu_device_add_guid(FU_DEVICE(mst_device), fwupd_guid_hash_string(instance));
 	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(mst_device));
 	fu_device_add_instance_id(FU_DEVICE(mst_device), instance);
@@ -88,14 +85,13 @@ fu_plugin_dell_dock_probe(FuPlugin *plugin, FuDevice *proxy, GError **error)
 		return FALSE;
 
 	/* create package version endpoint */
-	status_device = fu_dell_dock_status_new();
+	status_device = fu_dell_dock_status_new(ctx);
 	if (fu_dell_dock_get_ec_type(FU_DEVICE(ec_device)) == ATOMIC_BASE)
 		instance = DELL_DOCK_ATOMIC_STATUS_INSTANCE_ID;
 	else if (fu_dell_dock_module_is_usb4(FU_DEVICE(ec_device)))
 		instance = DELL_DOCK_DOCK2_INSTANCE_ID;
 	else
 		instance = DELL_DOCK_DOCK1_INSTANCE_ID;
-	fu_device_set_context(FU_DEVICE(status_device), ctx);
 	fu_device_add_guid(FU_DEVICE(status_device), fwupd_guid_hash_string(instance));
 	fu_device_add_child(FU_DEVICE(ec_device), FU_DEVICE(status_device));
 	fu_device_add_instance_id(FU_DEVICE(status_device), instance);

@@ -1255,9 +1255,9 @@ fu_dell_dock_mst_class_init(FuDellDockMstClass *klass)
 }
 
 FuDellDockMst *
-fu_dell_dock_mst_new(void)
+fu_dell_dock_mst_new(FuContext *ctx)
 {
 	FuDellDockMst *device = NULL;
-	device = g_object_new(FU_TYPE_DELL_DOCK_MST, NULL);
+	device = g_object_new(FU_TYPE_DELL_DOCK_MST, "context", ctx, NULL);
 	return device;
 }

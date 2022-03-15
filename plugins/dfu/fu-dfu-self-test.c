@@ -10,6 +10,7 @@
 
 #include <string.h>
 
+#include "fu-context-private.h"
 #include "fu-dfu-device.h"
 #include "fu-dfu-sector.h"
 #include "fu-dfu-target-private.h"
@@ -64,7 +65,8 @@ fu_dfu_target_dfuse_func(void)
 {
 	gboolean ret;
 	gchar *tmp;
-	g_autoptr(FuDfuDevice) device = fu_dfu_device_new(NULL);
+	g_autoptr(FuContext) ctx = fu_context_new();
+	g_autoptr(FuDfuDevice) device = fu_dfu_device_new(ctx, NULL);
 	g_autoptr(FuDfuTarget) target = NULL;
 	g_autoptr(GError) error = NULL;
 

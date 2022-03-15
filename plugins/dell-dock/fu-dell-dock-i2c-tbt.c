@@ -294,7 +294,8 @@ fu_dell_dock_tbt_class_init(FuDellDockTbtClass *klass)
 FuDellDockTbt *
 fu_dell_dock_tbt_new(FuDevice *proxy)
 {
-	FuDellDockTbt *self = g_object_new(FU_TYPE_DELL_DOCK_TBT, NULL);
+	FuContext *ctx = fu_device_get_context(proxy);
+	FuDellDockTbt *self = g_object_new(FU_TYPE_DELL_DOCK_TBT, "context", ctx, NULL);
 	fu_device_set_proxy(FU_DEVICE(self), proxy);
 	return self;
 }
