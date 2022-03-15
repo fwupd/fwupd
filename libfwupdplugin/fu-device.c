@@ -1112,6 +1112,12 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 
+	/* if the proxy has a context, make the child inherit it */
+	if (proxy != NULL) {
+		if (priv->ctx == NULL && fu_device_get_context(proxy) != NULL)
+			fu_device_set_context(self, fu_device_get_context(proxy));
+	}
+
 	if (priv->proxy != NULL)
 		g_object_remove_weak_pointer(G_OBJECT(priv->proxy), (gpointer *)&priv->proxy);
 	if (proxy != NULL)
