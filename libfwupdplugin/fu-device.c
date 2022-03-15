@@ -2653,6 +2653,30 @@ fu_device_inhibit(FuDevice *self, const gchar *inhibit_id, const gchar *reason)
 }
 
 /**
+ * fu_device_has_inhibit:
+ * @self: a #FuDevice
+ * @inhibit_id: an ID used for inhibiting, e.g. `low-power`
+ *
+ * Check if the device already has an inhibit with a specific ID.
+ *
+ * Returns: %TRUE if added
+ *
+ * Since: 1.8.0
+ **/
+gboolean
+fu_device_has_inhibit(FuDevice *self, const gchar *inhibit_id)
+{
+	FuDevicePrivate *priv = GET_PRIVATE(self);
+
+	g_return_val_if_fail(FU_IS_DEVICE(self), FALSE);
+	g_return_val_if_fail(inhibit_id != NULL, FALSE);
+
+	if (priv->inhibits == NULL)
+		return FALSE;
+	return g_hash_table_contains(priv->inhibits, inhibit_id);
+}
+
+/**
  * fu_device_uninhibit:
  * @self: a #FuDevice
  * @inhibit_id: an ID used for uninhibiting, e.g. `low-power`
