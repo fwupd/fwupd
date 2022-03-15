@@ -436,10 +436,6 @@ fu_plugin_get_config_filename(FuPlugin *self)
  * has already been added by a different plugin then this request will be
  * ignored.
  *
- * Plugins should use fu_plugin_device_add_delay() if they are not capable of
- * actually flashing an image to the hardware so that higher-priority plugins
- * can add the device themselves.
- *
  * Since: 0.8.0
  **/
 void
