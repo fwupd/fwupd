@@ -1785,9 +1785,11 @@ fu_device_inhibit_func(void)
 
 	/* does not exist -> fine */
 	fu_device_uninhibit(device, "NOTGOINGTOEXIST");
+	g_assert_false(fu_device_has_inhibit(device, "NOTGOINGTOEXIST"));
 
 	/* first one */
 	fu_device_inhibit(device, "needs-activation", "Device is pending activation");
+	g_assert_true(fu_device_has_inhibit(device, "needs-activation"));
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
 
@@ -1798,6 +1800,7 @@ fu_device_inhibit_func(void)
 
 	/* activated, power still too low */
 	fu_device_uninhibit(device, "needs-activation");
+	g_assert_false(fu_device_has_inhibit(device, "needs-activation"));
 	g_assert_true(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE_HIDDEN));
 	g_assert_false(fu_device_has_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE));
 
