@@ -485,7 +485,8 @@ fu_device_list_remove(FuDeviceList *self, FuDevice *device)
 	}
 
 	/* delay the removal and check for replug */
-	if (fu_device_get_remove_delay(item->device) > 0) {
+	if (fu_device_has_flag(item->device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG) &&
+	    fu_device_get_remove_delay(item->device) > 0) {
 		fu_device_list_remove_with_delay(item);
 		return;
 	}
