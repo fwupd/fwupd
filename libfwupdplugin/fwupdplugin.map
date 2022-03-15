@@ -1017,3 +1017,9 @@ LIBFWUPDPLUGIN_1.7.7 {
     fu_device_build_instance_id_quirk;
   local: *;
 } LIBFWUPDPLUGIN_1.7.6;
+
+LIBFWUPDPLUGIN_1.8.0 {
+  global:
+    fu_device_has_inhibit;
+  local: *;
+} LIBFWUPDPLUGIN_1.7.7;

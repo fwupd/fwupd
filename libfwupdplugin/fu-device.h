@@ -524,6 +524,8 @@ void
 fu_device_inhibit(FuDevice *self, const gchar *inhibit_id, const gchar *reason);
 void
 fu_device_uninhibit(FuDevice *self, const gchar *inhibit_id);
+gboolean
+fu_device_has_inhibit(FuDevice *self, const gchar *inhibit_id);
 const gchar *
 fu_device_get_physical_id(FuDevice *self);
 void
