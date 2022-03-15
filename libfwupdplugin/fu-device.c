@@ -2955,6 +2955,8 @@ fu_device_remove_flag(FuDevice *self, FwupdDeviceFlags flag)
 	/* allow it to be updatable again */
 	if (flag & FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)
 		fu_device_uninhibit(self, "needs-activation");
+	if (flag & FWUPD_DEVICE_FLAG_UNREACHABLE)
+		fu_device_uninhibit(self, "unreachable");
 }
 
 /**
@@ -2996,6 +2998,10 @@ fu_device_add_flag(FuDevice *self, FwupdDeviceFlags flag)
 	/* don't let devices be updated until activated */
 	if (flag & FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION)
 		fu_device_inhibit(self, "needs-activation", "Pending activation");
+
+	/* do not let devices be updated until back in range */
+	if (flag & FWUPD_DEVICE_FLAG_UNREACHABLE)
+		fu_device_inhibit(self, "unreachable", "Device is unreachable");
 }
 
 typedef struct {

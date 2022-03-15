@@ -139,12 +139,10 @@ fu_logitech_hidpp_runtime_bolt_update_paired_device(FuLogitechHidPpRuntimeBolt *
 			GPtrArray *children = NULL;
 			/* any successful 'ping' will clear this */
 			fu_device_add_flag(FU_DEVICE(child), FWUPD_DEVICE_FLAG_UNREACHABLE);
-			fu_device_inhibit(FU_DEVICE(child), "unreachable", "device is unreachable");
 			children = fu_device_get_children(FU_DEVICE(child));
 			for (guint i = 0; i < children->len; i++) {
 				FuDevice *radio = g_ptr_array_index(children, i);
 				fu_device_add_flag(radio, FWUPD_DEVICE_FLAG_UNREACHABLE);
-				fu_device_inhibit(radio, "unreachable", "device is unreachable");
 			}
 		}
 	} else if (reachable) {
