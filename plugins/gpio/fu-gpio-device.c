@@ -190,6 +190,7 @@ fu_gpio_device_assign(FuGpioDevice *self, const gchar *id, gboolean value, GErro
 static void
 fu_gpio_device_init(FuGpioDevice *self)
 {
+	fu_udev_device_set_flags(FU_UDEV_DEVICE(self), FU_UDEV_DEVICE_FLAG_OPEN_READ);
 }
 
 static void
