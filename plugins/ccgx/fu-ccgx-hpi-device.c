@@ -1468,16 +1468,8 @@ fu_ccgx_hpi_device_setup(FuDevice *device, GError **error)
 	}
 
 	/* add extra instance IDs */
-	fu_device_build_instance_id_quirk(device, NULL, "USB", "VID", "PID", "SID", "APP", NULL);
-	fu_device_build_instance_id_quirk(device,
-					  NULL,
-					  "USB",
-					  "VID",
-					  "PID",
-					  "SID",
-					  "APP",
-					  "MODE",
-					  NULL);
+	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "SID", "APP", NULL);
+	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "SID", "APP", "MODE", NULL);
 
 	/* if we are coming back from reset, wait for hardware to settle */
 	if (!fu_ccgx_hpi_device_get_event(self,
