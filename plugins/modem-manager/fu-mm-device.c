@@ -1280,7 +1280,7 @@ fu_mm_device_qcdm_switch_to_edl(FuDevice *device, GError **error)
 static gboolean
 fu_mm_device_firehose_open(FuMmDevice *self, GError **error)
 {
-	self->firehose_updater = fu_firehose_updater_new(self->port_edl);
+	self->firehose_updater = fu_firehose_updater_new(self->port_edl, NULL);
 	return fu_firehose_updater_open(self->firehose_updater, error);
 }
 
