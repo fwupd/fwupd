@@ -733,6 +733,7 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 		if (g_strcmp0(fu_device_get_id(device), fu_device_get_id(item->device)) == 0) {
 			g_debug("found existing device %s", fu_device_get_id(device));
 			if (device != item->device) {
+				fu_device_uninhibit(item->device, "unconnected");
 				fu_device_incorporate_update_state(device, item->device);
 				fu_device_list_item_set_device(item, device);
 			}
@@ -745,6 +746,7 @@ fu_device_list_add(FuDeviceList *self, FuDevice *device)
 		if (item->device_old != NULL &&
 		    g_strcmp0(fu_device_get_id(device), fu_device_get_id(item->device_old)) == 0) {
 			g_debug("found old device %s, swapping", fu_device_get_id(device));
+			fu_device_uninhibit(item->device, "unconnected");
 			fu_device_incorporate_update_state(device, item->device);
 			g_set_object(&item->device_old, item->device);
 			fu_device_list_item_set_device(item, device);
