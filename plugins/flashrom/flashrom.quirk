@@ -7,13 +7,23 @@ Plugin = flashrom
 Plugin = flashrom
 VersionFormat = quad
 
-# StarLite Mk II (HwId)
+# StarLite Mk II (HwId - AMI)
 [013b60e5-1023-5bee-8ae5-14cae21377b7]
+Plugin = flashrom
+FirmwareSizeMax = 0x800000
+
+# StarLite Mk II (HwId - coreboot)
+[0130a1a1-f888-5977-820a-6214bf1d6ab2]
 Plugin = flashrom
 FirmwareSizeMax = 0x800000
 
 # StarLite Mk III (HwId)
 [d5521faa-c50b-5d64-971d-8fd400030c51]
+Plugin = flashrom
+FirmwareSizeMax = 0x800000
+
+# StarLite Mk IV (HwId)
+[0fc25c8c-ffa8-54ad-a216-d13cfe75bee4]
 Plugin = flashrom
 FirmwareSizeMax = 0x800000
 
@@ -35,8 +45,20 @@ Branch = coreboot
 VersionFormat = plain
 Flags = reset-cmos
 
+# StarLite Mk II (coreboot GUID)
+[2993474c-b4c4-5b7c-b2e1-a471d8d328a5]
+Branch = coreboot
+VersionFormat = plain
+Flags = reset-cmos
+
 # StarLite Mk III (coreboot GUID)
 [3d2f164a-8818-58fd-a082-6c60a67e21a6]
+Branch = coreboot
+VersionFormat = plain
+Flags = reset-cmos
+
+# StarLite Mk IV (coreboot GUID)
+[5dc1dd5b-761e-5146-8ac2-1fdd8445f2ff]
 Branch = coreboot
 VersionFormat = plain
 Flags = reset-cmos
