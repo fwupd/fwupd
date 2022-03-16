@@ -266,23 +266,26 @@ fu_plugin_mm_device_removed_cb(MMManager *manager, MMObject *modem, FuPlugin *pl
 {
 	const gchar *object_path = mm_object_get_path(modem);
 	FuMmDevice *dev = fu_plugin_cache_lookup(plugin, object_path);
+	MMModemFirmwareUpdateMethod update_methods = MM_MODEM_FIRMWARE_UPDATE_METHOD_NONE;
+
 	if (dev == NULL)
 		return;
 	g_debug("removed modem: %s", mm_object_get_path(modem));
 
-#if MM_CHECK_VERSION(1, 17, 1)
+#if MM_CHECK_VERSION(1, 19, 1)
 	/* No information will be displayed during the upgrade process if the
 	 * device is removed, the main reason is that device is "removed" from
 	 * ModemManager, but it still exists in the system */
-	if (!(fu_mm_device_get_update_methods(FU_MM_DEVICE(dev)) &
-	      MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU)) {
+	update_methods =
+	    MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU | MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA;
+#elif MM_CHECK_VERSION(1, 17, 1)
+	update_methods = MM_MODEM_FIRMWARE_UPDATE_METHOD_MBIM_QDU;
+#endif
+
+	if (!(fu_mm_device_get_update_methods(FU_MM_DEVICE(dev)) & update_methods)) {
 		fu_plugin_cache_remove(plugin, object_path);
 		fu_plugin_device_remove(plugin, FU_DEVICE(dev));
 	}
-#else
-	fu_plugin_cache_remove(plugin, object_path);
-	fu_plugin_device_remove(plugin, FU_DEVICE(dev));
-#endif /* MM_CHECK_VERSION(1,17,1) */
 }
 
 static void
