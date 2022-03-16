@@ -2,6 +2,36 @@
 # need to have an extra GUID of WacomAES or WacomEMR added so that the flash
 # constants are set correctly.
 
+#Lenovo X1 Yoga Gen7 5308
+[HIDRAW\VEN_056A&DEV_5308]
+Plugin = wacom_raw
+Guid = WacomAES
+
+#Lenovo X1 Yoga Gen7 5309
+[HIDRAW\VEN_056A&DEV_5309]
+Plugin = wacom_raw
+Guid = WacomAES
+
+#Lenovo X1 Yoga Gen7 530A
+[HIDRAW\VEN_056A&DEV_530A]
+Plugin = wacom_raw
+Guid = WacomAES
+
+#Lenovo X1 Yoga Gen7 530B
+[HIDRAW\VEN_056A&DEV_530B]
+Plugin = wacom_raw
+Guid = WacomAES
+
+#Lenovo X1 Yoga Gen7 52B5
+[HIDRAW\VEN_056A&DEV_52B5]
+Plugin = wacom_raw
+Guid = WacomAES
+
+#Lenovo X1 Yoga Gen7 52C4
+[HIDRAW\VEN_056A&DEV_52C4]
+Plugin = wacom_raw
+Guid = WacomAES
+
 # Dell Chromebook Enterprise 5300
 [HIDRAW\VEN_2D1F&DEV_4946]
 Plugin = wacom_raw
