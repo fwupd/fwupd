@@ -35,6 +35,15 @@ fu_gpio_device_probe(FuDevice *device, GError **error)
 	if (!FU_DEVICE_CLASS(fu_gpio_device_parent_class)->probe(device, error))
 		return FALSE;
 
+	/* no device file */
+	if (fu_udev_device_get_device_file(FU_UDEV_DEVICE(device)) == NULL) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "no device file");
+		return FALSE;
+	}
+
 	/* set the physical ID */
 	return fu_udev_device_set_physical_id(FU_UDEV_DEVICE(device), "gpio", error);
 }
