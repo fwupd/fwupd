@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2020 Aleksander Morgado <aleksander@aleksander.es>
- * Copyright (C) 2021 Quectel Wireless Solutions Co., Ltd.
+ * Copyright (C) 2021 Ivan Mikhanchuk <ivan.mikhanchuk@quectel.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -11,11 +11,13 @@
 
 #include <xmlb.h>
 
+#include "fu-sahara-loader.h"
+
 #define FU_TYPE_FIREHOSE_UPDATER (fu_firehose_updater_get_type())
 G_DECLARE_FINAL_TYPE(FuFirehoseUpdater, fu_firehose_updater, FU, FIREHOSE_UPDATER, GObject)
 
 FuFirehoseUpdater *
-fu_firehose_updater_new(const gchar *port);
+fu_firehose_updater_new(const gchar *port, FuSaharaLoader *sahara);
 
 gboolean
 fu_firehose_updater_open(FuFirehoseUpdater *self, GError **error);

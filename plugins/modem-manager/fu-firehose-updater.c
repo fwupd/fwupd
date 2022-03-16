@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2020 Aleksander Morgado <aleksander@aleksander.es>
- * Copyright (C) 2021 Quectel Wireless Solutions Co., Ltd.
+ * Copyright (C) 2021 Ivan Mikhanchuk <ivan.mikhanchuk@quectel.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
  */
@@ -52,6 +52,7 @@
 struct _FuFirehoseUpdater {
 	GObject parent_instance;
 	gchar *port;
+	FuSaharaLoader *sahara;
 	FuIOChannel *io_channel;
 };
 
@@ -74,6 +75,30 @@ fu_firehose_updater_log_message(const gchar *action, GBytes *msg)
 	msg_strsafe = fu_common_strsafe(msg_data, msg_size);
 
 	g_debug("%s: %.*s", action, (gint)msg_size, msg_strsafe);
+}
+
+static GBytes *
+fu_firehose_read(FuFirehoseUpdater *self, guint timeout_ms, FuIOChannelFlags flags, GError **error)
+{
+	if (self->sahara != NULL) {
+		GByteArray *bytearr = fu_sahara_loader_qdl_read(self->sahara, error);
+		return bytearr == NULL ? NULL : g_byte_array_free_to_bytes(bytearr);
+	}
+
+	return fu_io_channel_read_bytes(self->io_channel, -1, timeout_ms, flags, error);
+}
+
+static gboolean
+fu_firehose_write(FuFirehoseUpdater *self,
+		  GBytes *bytes,
+		  guint timeout_ms,
+		  FuIOChannelFlags flags,
+		  GError **error)
+{
+	if (self->sahara != NULL)
+		return fu_sahara_loader_qdl_write_bytes(self->sahara, bytes, error);
+
+	return fu_io_channel_write_bytes(self->io_channel, bytes, timeout_ms, flags, error);
 }
 
 static gboolean
@@ -188,6 +213,11 @@ fu_firehose_validate_rawprogram(GBytes *rawprogram,
 gboolean
 fu_firehose_updater_open(FuFirehoseUpdater *self, GError **error)
 {
+	if (fu_sahara_loader_qdl_is_open(self->sahara)) {
+		g_debug("using sahara qdl port for firehose");
+		return TRUE;
+	}
+
 	/* sanity check */
 	if (self->port == NULL) {
 		g_set_error_literal(error,
@@ -198,17 +228,28 @@ fu_firehose_updater_open(FuFirehoseUpdater *self, GError **error)
 	}
 
 	g_debug("opening firehose port...");
-	self->io_channel = fu_io_channel_new_file(self->port, error);
-	return (self->io_channel != NULL);
+
+	if (self->port != NULL) {
+		self->io_channel = fu_io_channel_new_file(self->port, error);
+		return self->io_channel != NULL;
+	}
+
+	g_set_error(error,
+		    G_IO_ERROR,
+		    G_IO_ERROR_NOT_FOUND,
+		    "No device to write firehose commands to");
+	return FALSE;
 }
 
 gboolean
 fu_firehose_updater_close(FuFirehoseUpdater *self, GError **error)
 {
-	g_debug("closing firehose port...");
-	if (!fu_io_channel_shutdown(self->io_channel, error))
-		return FALSE;
-	g_clear_object(&self->io_channel);
+	if (self->io_channel != NULL) {
+		g_debug("closing firehose port...");
+		if (!fu_io_channel_shutdown(self->io_channel, error))
+			return FALSE;
+		g_clear_object(&self->io_channel);
+	}
 	return TRUE;
 }
 
@@ -297,11 +338,11 @@ fu_firehose_updater_send_and_receive(FuFirehoseUpdater *self,
 		cmd_bytes = g_byte_array_free_to_bytes(take_cmd_bytearray);
 
 		fu_firehose_updater_log_message("writing", cmd_bytes);
-		if (!fu_io_channel_write_bytes(self->io_channel,
-					       cmd_bytes,
-					       1500,
-					       FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
-					       error)) {
+		if (!fu_firehose_write(self,
+				       cmd_bytes,
+				       1500,
+				       FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
+				       error)) {
 			g_prefix_error(error, "Failed to write command: ");
 			return FALSE;
 		}
@@ -312,11 +353,10 @@ fu_firehose_updater_send_and_receive(FuFirehoseUpdater *self,
 		g_autoptr(XbSilo) silo = NULL;
 		g_autoptr(XbNode) response_node = NULL;
 
-		rsp_bytes = fu_io_channel_read_bytes(self->io_channel,
-						     -1,
-						     DEFAULT_RECV_TIMEOUT_MS,
-						     FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
-						     error);
+		rsp_bytes = fu_firehose_read(self,
+					     DEFAULT_RECV_TIMEOUT_MS,
+					     FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
+					     error);
 		if (rsp_bytes == NULL) {
 			g_prefix_error(error, "Failed to read XML message: ");
 			return FALSE;
@@ -355,13 +395,9 @@ fu_firehose_updater_initialize(FuFirehoseUpdater *self, GError **error)
 
 	for (guint i = 0; i < MAX_RECV_MESSAGES; i++) {
 		g_autoptr(GBytes) rsp_bytes = NULL;
+		guint timeout = (i == 0 ? INITIALIZE_INITIAL_TIMEOUT_MS : INITIALIZE_TIMEOUT_MS);
 
-		rsp_bytes = fu_io_channel_read_bytes(
-		    self->io_channel,
-		    -1,
-		    (i == 0 ? INITIALIZE_INITIAL_TIMEOUT_MS : INITIALIZE_TIMEOUT_MS),
-		    FU_IO_CHANNEL_FLAG_SINGLE_SHOT,
-		    NULL);
+		rsp_bytes = fu_firehose_read(self, timeout, FU_IO_CHANNEL_FLAG_SINGLE_SHOT, NULL);
 		if (rsp_bytes == NULL)
 			break;
 
@@ -520,11 +556,11 @@ fu_firehose_updater_send_program_file(FuFirehoseUpdater *self,
 				chunks->len,
 				program_filename);
 
-		if (!fu_io_channel_write_bytes(self->io_channel,
-					       fu_chunk_get_bytes(chk),
-					       1500,
-					       FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
-					       error)) {
+		if (!fu_firehose_write(self,
+				       fu_chunk_get_bytes(chk),
+				       1500,
+				       FU_IO_CHANNEL_FLAG_FLUSH_INPUT,
+				       error)) {
 			g_prefix_error(error,
 				       "Failed to write block %u/%u of file '%s': ",
 				       i + 1,
@@ -834,6 +870,7 @@ fu_firehose_updater_finalize(GObject *object)
 	FuFirehoseUpdater *self = FU_FIREHOSE_UPDATER(object);
 	g_warn_if_fail(self->io_channel == NULL);
 	g_free(self->port);
+	g_object_unref(self->sahara);
 	G_OBJECT_CLASS(fu_firehose_updater_parent_class)->finalize(object);
 }
 
@@ -845,9 +882,12 @@ fu_firehose_updater_class_init(FuFirehoseUpdaterClass *klass)
 }
 
 FuFirehoseUpdater *
-fu_firehose_updater_new(const gchar *port)
+fu_firehose_updater_new(const gchar *port, FuSaharaLoader *sahara)
 {
 	FuFirehoseUpdater *self = g_object_new(FU_TYPE_FIREHOSE_UPDATER, NULL);
-	self->port = g_strdup(port);
+	if (port != NULL)
+		self->port = g_strdup(port);
+	if (sahara != NULL)
+		self->sahara = g_object_ref(sahara);
 	return self;
 }
