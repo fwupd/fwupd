@@ -22,6 +22,8 @@
 #include "fu-firehose-updater.h"
 #endif
 
+#include "fu-sahara-loader.h"
+
 /* Amount of time for the modem to boot in fastboot mode. */
 #define FU_MM_DEVICE_REMOVE_DELAY_RE_ENUMERATE 20000 /* ms */
 
@@ -86,6 +88,7 @@ struct _FuMmDevice {
 	/* firehose update handling */
 	gchar *port_qcdm;
 	gchar *port_edl;
+	FuSaharaLoader *sahara_loader;
 #if MM_CHECK_VERSION(1, 17, 2)
 	FuFirehoseUpdater *firehose_updater;
 #endif
@@ -170,6 +173,9 @@ validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **er
 #endif /* MM_CHECK_VERSION(1,17,1) */
 #if MM_CHECK_VERSION(1, 17, 2)
 		MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE,
+#endif
+#if MM_CHECK_VERSION(1, 19, 1)
+		MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE | MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA,
 #endif
 	};
 	g_autofree gchar *methods_str = NULL;
@@ -302,10 +308,10 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 #if MM_CHECK_VERSION(1, 17, 2)
 	if (self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE) {
 		for (guint i = 0; i < n_ports; i++) {
-			if (ports[i].type == MM_MODEM_PORT_TYPE_QCDM) {
+			if (ports[i].type == MM_MODEM_PORT_TYPE_QCDM)
 				self->port_qcdm = g_strdup_printf("/dev/%s", ports[i].name);
-				break;
-			}
+			else if (ports[i].type == MM_MODEM_PORT_TYPE_MBIM)
+				self->port_mbim = g_strdup_printf("/dev/%s", ports[i].name);
 		}
 		fu_device_add_protocol(device, "com.qualcomm.firehose");
 	}
@@ -346,9 +352,9 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 
 #endif /* MM_CHECK_VERSION(1,17,1) */
 #if MM_CHECK_VERSION(1, 17, 2)
-	/* a qcdm port is required for firehose */
+	/* a qcdm or mbim port is required for firehose */
 	if ((self->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_FIREHOSE) &&
-	    (self->port_qcdm == NULL)) {
+	    (self->port_qcdm == NULL && self->port_mbim == NULL)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -1212,75 +1218,109 @@ fu_mm_device_write_firmware_mbim_qdu(FuDevice *device,
 
 #if MM_CHECK_VERSION(1, 17, 2)
 static gboolean
-fu_mm_device_find_edl_port(FuDevice *device, GError **error)
+fu_mm_find_device_file(FuDevice *device, gpointer userdata, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
+	const gchar *subsystem = (const gchar *)userdata;
 
-	for (guint i = 0; i < 30; i++) {
-		if (fu_mm_utils_find_device_file(fu_device_get_physical_id(FU_DEVICE(self)),
-						 "wwan",
-						 &self->port_edl,
-						 NULL))
-			return TRUE;
-
-		g_usleep(250 * 1000);
-	}
-
-	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_FAILED, "Couldn't find EDL port");
-	return FALSE;
+	return fu_mm_utils_find_device_file(fu_device_get_physical_id(FU_DEVICE(self)),
+					    subsystem,
+					    &self->port_edl,
+					    error);
 }
 
 static gboolean
-fu_mm_device_qcdm_switch_to_edl(FuDevice *device, GError **error)
+fu_mm_device_find_edl_port(FuDevice *device, const gchar *subsystem, GError **error)
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
+
+	g_clear_pointer(&self->port_edl, g_free);
+
+	return fu_device_retry_full(device,
+				    fu_mm_find_device_file,
+				    30,
+				    250,
+				    (gpointer)subsystem,
+				    error);
+}
+
+static gboolean
+fu_mm_device_qcdm_switch_to_edl(FuDevice *device, gpointer userdata, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	g_autoptr(GError) error_local = NULL;
+	g_autoptr(FuDeviceLocker) locker = NULL;
 	static const guint8 emergency_download[] = {0x4b, 0x65, 0x01, 0x00, 0x54, 0x0f, 0x7e};
 
-	/* trigger emergency download mode, up to 30s retrying until the QCDM
-	 * port goes away; this takes us to the EDL (embedded downloader) execution
-	 * environment */
+	locker = fu_device_locker_new_full(self,
+					   (FuDeviceLockerFunc)fu_mm_device_io_open_qcdm,
+					   (FuDeviceLockerFunc)fu_mm_device_io_close,
+					   &error_local);
 
-	for (guint i = 0; i < 30; i++) {
-		g_autoptr(GError) error_local = NULL;
-		g_autoptr(FuDeviceLocker) locker = NULL;
-
-		if (i > 0)
-			g_usleep(G_USEC_PER_SEC);
-
-		locker = fu_device_locker_new_full(self,
-						   (FuDeviceLockerFunc)fu_mm_device_io_open_qcdm,
-						   (FuDeviceLockerFunc)fu_mm_device_io_close,
-						   &error_local);
-		if (locker == NULL) {
-			if (i > 0 &&
-			    g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE))
-				return fu_mm_device_find_edl_port(device, error);
-			g_debug("couldn't open QCDM port to switch to EDL mode: %s",
-				error_local->message);
-			break;
+	if (locker == NULL) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE)) {
+			return fu_mm_device_find_edl_port(device, "wwan", error);
 		}
-
-		if (!fu_mm_device_qcdm_cmd(self,
-					   emergency_download,
-					   G_N_ELEMENTS(emergency_download),
-					   &error_local)) {
-			g_debug("couldn't send QCDM command to switch to EDL mode: %s",
-				error_local->message);
-			break;
-		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
 	}
 
-	g_set_error_literal(error,
-			    G_IO_ERROR,
-			    G_IO_ERROR_FAILED,
-			    "Couldn't switch device to embedded downloader execution environment");
+	if (!fu_mm_device_qcdm_cmd(self,
+				   emergency_download,
+				   G_N_ELEMENTS(emergency_download),
+				   error))
+		return FALSE;
+
+	g_set_error(error,
+		    FWUPD_ERROR,
+		    FWUPD_ERROR_NOT_FOUND,
+		    "Device haven't switched to EDL yet");
 	return FALSE;
 }
+
+#if MBIM_CHECK_VERSION(1, 27, 5)
+static void
+fu_mm_device_switch_to_edl_mbim_ready(MbimDevice *device, GAsyncResult *res, GMainLoop *loop)
+{
+	/* No need to check for a response since MBIM
+	 * port goes away without sending one */
+
+	g_main_loop_quit(loop);
+}
+
+static gboolean
+fu_mm_device_mbim_switch_to_edl(FuDevice *device, GError **error)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(MbimMessage) message = NULL;
+	g_autoptr(GMainLoop) mainloop = g_main_loop_new(NULL, FALSE);
+
+	locker = fu_device_locker_new_full(device,
+					   (FuDeviceLockerFunc)fu_mm_device_mbim_open,
+					   (FuDeviceLockerFunc)fu_mm_device_mbim_close,
+					   error);
+	if (locker == NULL)
+		return FALSE;
+
+	message = mbim_message_qdu_quectel_reboot_set_new(MBIM_QDU_QUECTEL_REBOOT_TYPE_EDL, NULL);
+	mbim_device_command(fu_mbim_qdu_updater_get_mbim_device(self->mbim_qdu_updater),
+			    message,
+			    5,
+			    NULL,
+			    (GAsyncReadyCallback)fu_mm_device_switch_to_edl_mbim_ready,
+			    mainloop);
+
+	g_main_loop_run(mainloop);
+
+	return TRUE;
+}
+#endif // MBIM_CHECK_VERSION(1, 27, 5)
 
 static gboolean
 fu_mm_device_firehose_open(FuMmDevice *self, GError **error)
 {
-	self->firehose_updater = fu_firehose_updater_new(self->port_edl, NULL);
+	self->firehose_updater = fu_firehose_updater_new(self->port_edl, self->sahara_loader);
 	return fu_firehose_updater_open(self->firehose_updater, error);
 }
 
@@ -1314,6 +1354,24 @@ fu_mm_device_firehose_write(FuMmDevice *self,
 					 error);
 }
 
+#if MM_CHECK_VERSION(1, 19, 1) && MBIM_CHECK_VERSION(1, 25, 7)
+static gboolean
+fu_mm_device_sahara_open(FuMmDevice *self, GError **error)
+{
+	self->sahara_loader = fu_sahara_loader_new();
+	return fu_sahara_loader_open(self->sahara_loader, self->usb_device, error);
+}
+
+static gboolean
+fu_mm_device_sahara_close(FuMmDevice *self, GError **error)
+{
+	g_autoptr(FuSaharaLoader) loader = NULL;
+
+	loader = g_steal_pointer(&self->sahara_loader);
+	return fu_sahara_loader_close(loader, error);
+}
+#endif // MM_CHECK_VERSION(1, 19, 1) && MBIM_CHECK_VERSION(1, 25, 7)
+
 static gboolean
 fu_mm_setup_firmware_dir(FuMmDevice *self, GError **error)
 {
@@ -1342,16 +1400,10 @@ fu_mm_setup_firmware_dir(FuMmDevice *self, GError **error)
 }
 
 static gboolean
-fu_mm_copy_firehose_prog(FuMmDevice *self, FuArchive *archive, GError **error)
+fu_mm_copy_firehose_prog(FuMmDevice *self, GBytes *prog, GError **error)
 {
 	g_autofree gchar *qcom_fw_dir = NULL;
 	g_autofree gchar *firehose_file_path = NULL;
-	g_autoptr(GBytes) firehose_prog = NULL;
-
-	/* lookup firehose-prog bootloader */
-	firehose_prog = fu_archive_lookup_by_fn(archive, "firehose-prog.mbn", error);
-	if (firehose_prog == NULL)
-		return FALSE;
 
 	qcom_fw_dir = g_build_filename(self->firmware_path, "qcom", NULL);
 	if (!fu_common_mkdir_parent(qcom_fw_dir, error))
@@ -1359,7 +1411,7 @@ fu_mm_copy_firehose_prog(FuMmDevice *self, FuArchive *archive, GError **error)
 
 	firehose_file_path = g_build_filename(qcom_fw_dir, "prog_firehose_sdx24.mbn", NULL);
 
-	if (!fu_common_set_contents_bytes(firehose_file_path, firehose_prog, error))
+	if (!fu_common_set_contents_bytes(firehose_file_path, prog, error))
 		return FALSE;
 
 	return TRUE;
@@ -1390,6 +1442,7 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 {
 	FuMmDevice *self = FU_MM_DEVICE(device);
 	GBytes *firehose_rawprogram;
+	GBytes *firehose_prog;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autoptr(FuArchive) archive = NULL;
 	g_autoptr(XbSilo) firehose_rawprogram_silo = NULL;
@@ -1406,24 +1459,6 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 	archive = fu_archive_new(fw, FU_ARCHIVE_FLAG_IGNORE_PATH, error);
 	if (archive == NULL)
 		return FALSE;
-	fu_progress_step_done(progress);
-
-	/* modify firmware search path and restore it before function returns */
-	locker = fu_device_locker_new_full(self,
-					   (FuDeviceLockerFunc)fu_mm_prepare_firmware_search_path,
-					   (FuDeviceLockerFunc)fu_mm_restore_firmware_search_path,
-					   error);
-	if (locker == NULL)
-		return FALSE;
-
-	/* firehose modems that switch to the EDL mode over QCDM port require
-	 * firehose binary to be present in the firmware-loader search path. */
-	if (!fu_mm_copy_firehose_prog(self, archive, error))
-		return FALSE;
-
-	/* switch to embedded downloader (EDL) execution environment */
-	if (!fu_mm_device_qcdm_switch_to_edl(FU_DEVICE(self), error))
-		return FALSE;
 
 	/* lookup and validate firehose-rawprogram actions */
 	firehose_rawprogram = fu_archive_lookup_by_fn(archive, "firehose-rawprogram.xml", error);
@@ -1435,6 +1470,72 @@ fu_mm_device_write_firmware_firehose(FuDevice *device,
 					     &firehose_rawprogram_actions,
 					     error)) {
 		g_prefix_error(error, "Invalid firehose rawprogram manifest: ");
+		return FALSE;
+	}
+
+	/* lookup firehose-prog bootloader */
+	firehose_prog = fu_archive_lookup_by_fn(archive, "firehose-prog.mbn", error);
+	if (firehose_prog == NULL)
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* Firehose program needs to be loaded to the modem before firehose update process can
+	 * start. Generally, modems use Sahara protocol to load the firehose binary.
+	 *
+	 * In case of MHI PCI modems, the mhi_wwan driver reads the firehose binary from the
+	 * firmware-loader and writes it to the modem.
+	 **/
+	if (g_strrstr(fu_device_get_physical_id(device), "pci") && self->port_qcdm != NULL) {
+		/* modify firmware search path and restore it before function returns */
+		locker = fu_device_locker_new_full(
+		    self,
+		    (FuDeviceLockerFunc)fu_mm_prepare_firmware_search_path,
+		    (FuDeviceLockerFunc)fu_mm_restore_firmware_search_path,
+		    error);
+		if (locker == NULL)
+			return FALSE;
+
+		/* firehose modems that use mhi_pci drivers require firehose binary
+		 * to be present in the firmware-loader search path. */
+		if (!fu_mm_copy_firehose_prog(self, firehose_prog, error))
+			return FALSE;
+		/* trigger emergency download mode, up to 30s retrying until the QCDM
+		 * port goes away; this takes us to the EDL (embedded downloader) execution
+		 * environment */
+		if (!fu_device_retry_full(FU_DEVICE(self),
+					  fu_mm_device_qcdm_switch_to_edl,
+					  30,
+					  1000,
+					  NULL,
+					  error))
+			return FALSE;
+
+		g_debug("found edl port: %s", self->port_edl);
+	}
+#if MM_CHECK_VERSION(1, 19, 1) && MBIM_CHECK_VERSION(1, 25, 7)
+	else if ((FU_MM_DEVICE(self)->update_methods & MM_MODEM_FIRMWARE_UPDATE_METHOD_SAHARA) &&
+		 self->port_mbim != NULL) {
+		/* switch to emergency download (EDL) execution environment */
+		if (!fu_mm_device_mbim_switch_to_edl(device, error))
+			return FALSE;
+
+		locker = fu_device_locker_new_full(self,
+						   (FuDeviceLockerFunc)fu_mm_device_sahara_open,
+						   (FuDeviceLockerFunc)fu_mm_device_sahara_close,
+						   error);
+		if (locker == NULL)
+			return FALSE;
+
+		/* use sahara port to load firehose binary */
+		if (!fu_sahara_loader_run(self->sahara_loader, firehose_prog, error))
+			return FALSE;
+	}
+#endif // MM_CHECK_VERSION(1, 19, 1) && MBIM_CHECK_VERSION(1, 25, 7)
+	else {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "suitable port not found");
 		return FALSE;
 	}
 	fu_progress_step_done(progress);
