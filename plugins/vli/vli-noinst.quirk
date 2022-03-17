@@ -31,12 +31,6 @@ GType = FuVliUsbhubDevice
 [USB\VID_2109&PID_2211]
 Plugin = vli
 GType = FuVliUsbhubDevice
-[USB\VID_2109&PID_0212]
-Plugin = vli
-GType = FuVliUsbhubDevice
-[USB\VID_2109&PID_2212]
-Plugin = vli
-GType = FuVliUsbhubDevice
 
 # VL817
 [USB\VID_2109&PID_0817]
@@ -113,3 +107,58 @@ VliDeviceKind = VL106
 Plugin = vli
 GType = FuVliPdDevice
 VliDeviceKind = VL107
+
+# Generic devices
+[USB\VID_2109&PID_D101]
+Plugin = vli
+GType = FuVliPdDevice
+[USB\VID_2109&PID_D102]
+Plugin = vli
+GType = FuVliPdDevice
+
+[USB\VID_2109&PID_8880]
+Plugin = vli
+GType = FuVliPdDevice
+
+# VL671,U3TT, VT3547
+[USB\VID_2109&PID_8881]
+Plugin = vli
+GType = FuVliPdDevice
+[USB\VID_2109&PID_8882]
+Plugin = vli
+GType = FuVliPdDevice
+[USB\VID_2109&PID_8883]
+Plugin = vli
+GType = FuVliPdDevice
+
+# Realtek
+[USB\VID_2109&PID_8884]
+Plugin = vli
+GType = FuVliPdDevice
+
+# VL650, VT3555
+[USB\VID_2109&PID_8885]
+Plugin = vli
+GType = FuVliPdDevice
+
+# MStar, VT3518
+[USB\VID_2109&PID_8886]
+Plugin = vli
+GType = FuVliPdDevice
+
+[USB\VID_2109&PID_8887]
+Plugin = vli
+GType = FuVliPdDevice
+
+[USB\VID_2109&PID_8889]
+Plugin = vli
+GType = FuVliPdDevice
+
+# Novatek, VT3538
+[USB\VID_2109&PID_888A]
+Plugin = vli
+GType = FuVliPdDevice
+
+[USB\VID_2109&PID_888B]
+Plugin = vli
+GType = FuVliPdDevice

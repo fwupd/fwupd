@@ -52,15 +52,3 @@ GType = FuVliPdDevice
 [USB\VID_2109&PID_888B]
 Plugin = vli
 GType = FuVliPdDevice
-[USB\VID_2109&PID_888C]
-Plugin = vli
-GType = FuVliPdDevice
-[USB\VID_2109&PID_888D]
-Plugin = vli
-GType = FuVliPdDevice
-[USB\VID_2109&PID_888E]
-Plugin = vli
-GType = FuVliPdDevice
-[USB\VID_2109&PID_888F]
-Plugin = vli
-GType = FuVliPdDevice
