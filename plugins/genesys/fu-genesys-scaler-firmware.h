@@ -116,7 +116,7 @@ typedef struct __attribute__((packed)) {
 	 *           If no need to protect, Special Protect sector = 0x000000;
 	 */
 	union {
-		guint32 r32;
+		guint8 r24[3];
 		struct {
 			guint8 addr_low[2];
 			guint8 addr_high : 4;
