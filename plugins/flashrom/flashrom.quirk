@@ -42,37 +42,31 @@ Plugin = flashrom
 # StarLabTop Mk III (coreboot GUID)
 [d33219e2-b84c-53a8-a624-27af9752dba6]
 Branch = coreboot
-VersionFormat = plain
 Flags = reset-cmos
 
 # StarLite Mk II (coreboot GUID)
 [2993474c-b4c4-5b7c-b2e1-a471d8d328a5]
 Branch = coreboot
-VersionFormat = plain
 Flags = reset-cmos
 
 # StarLite Mk III (coreboot GUID)
 [3d2f164a-8818-58fd-a082-6c60a67e21a6]
 Branch = coreboot
-VersionFormat = plain
 Flags = reset-cmos
 
 # StarLite Mk IV (coreboot GUID)
 [5dc1dd5b-761e-5146-8ac2-1fdd8445f2ff]
 Branch = coreboot
-VersionFormat = plain
 Flags = reset-cmos
 
 # StarLabTop Mk IV (coreboot GUID)
 [0ee5867c-93f0-5fb4-adf1-9d686ea1183a]
 Branch = coreboot
-VersionFormat = plain
 Flags = reset-cmos
 
 # StarBook Mk V (coreboot GUID)
 [54c96fef-31e7-5011-a3ff-ea8e855d9acd]
 Branch = coreboot
-VersionFormat = plain
 Flags = reset-cmos
 
 # NovaCustom NV4x (HwId)
@@ -82,3 +76,4 @@ Plugin = flashrom
 # NovaCustom NV4x (Dasharo GUID)
 [9a8c30e2-1b7e-5b28-9632-fc2fbf8cd0ba]
 Branch = dasharo
+VersionFormat = triplet
