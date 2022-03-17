@@ -26,12 +26,13 @@ LIB_DEPENDS=	libcurl.so:ftp/curl \
 		libjcat.so:textproc/libjcat \
 		libjson-glib-1.0.so:devel/json-glib \
 		libprotobuf-c.so:devel/protobuf-c \
+		libcbor.so:devel/libcbor \
 		libxmlb.so:textproc/libxmlb \
 		libefiboot.so:devel/gnu-efi
 
 RUN_DEPENDS=	${LOCALBASE}/libexec/fwupd/efi/fwupdx64.efi:sysutils/fwupd-efi
 
-USES=		gnome libarchive meson pkgconfig python:3.8+ shebangfix sqlite cbor
+USES=		gnome libarchive meson pkgconfig python:3.8+ shebangfix sqlite
 USE_GITHUB=	yes
 USE_GNOME=	glib20 introspection:build
 GH_ACCOUNT=
