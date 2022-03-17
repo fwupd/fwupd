@@ -4,7 +4,7 @@ Flags = wildcard-targets,reset-required
 
 [REDFISH\VENDOR_Lenovo&ID_BMC-Backup]
 ParentGuid = REDFISH\VENDOR_Lenovo&ID_BMC-Primary
-Flags = dual-image,is-backup
+Flags = dual-image,is-backup,no-probe
 
 [REDFISH\VENDOR_Lenovo&ID_BMC-Primary]
 ParentGuid = REDFISH\VENDOR_Lenovo&ID_BMC-Primary

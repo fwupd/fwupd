@@ -92,6 +92,7 @@ fu_redfish_backend_coldplug_member(FuRedfishBackend *self, JsonObject *member, G
 {
 	g_autoptr(FuDevice) dev = NULL;
 	g_autoptr(FuDeviceLocker) locker = NULL;
+	g_autoptr(GError) error_local = NULL;
 
 	/* create of the correct type */
 	dev = g_object_new(self->device_gtype,
@@ -108,9 +109,15 @@ fu_redfish_backend_coldplug_member(FuRedfishBackend *self, JsonObject *member, G
 		fu_device_add_private_flag(dev, FU_REDFISH_DEVICE_FLAG_WILDCARD_TARGETS);
 
 	/* probe + setup */
-	locker = fu_device_locker_new(dev, error);
-	if (locker == NULL)
+	locker = fu_device_locker_new(dev, &error_local);
+	if (locker == NULL) {
+		if (g_error_matches(error_local, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED)) {
+			g_debug("failed to setup: %s", error_local->message);
+			return TRUE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
 		return FALSE;
+	}
 	if (self->max_image_size != 0)
 		fu_device_set_firmware_size_max(dev, (guint64)self->max_image_size);
 	fu_backend_device_added(FU_BACKEND(self), dev);
