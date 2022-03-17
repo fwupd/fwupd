@@ -200,7 +200,7 @@ fu_mtd_device_write(FuMtdDevice *self, GPtrArray *chunks, FuProgress *progress, 
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (!fu_udev_device_pwrite_full(FU_UDEV_DEVICE(self),
-						0x0,
+						fu_chunk_get_address(chk),
 						fu_chunk_get_data(chk),
 						fu_chunk_get_data_sz(chk),
 						error)) {
@@ -231,7 +231,7 @@ fu_mtd_device_verify(FuMtdDevice *self, GPtrArray *chunks, FuProgress *progress,
 		g_autoptr(GBytes) blob2 = NULL;
 
 		if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(self),
-					       0x0,
+					       fu_chunk_get_address(chk),
 					       buf,
 					       fu_chunk_get_data_sz(chk),
 					       error)) {
