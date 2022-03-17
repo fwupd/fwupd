@@ -279,6 +279,40 @@ fu_mtd_device_write_verify(FuMtdDevice *self, GBytes *fw, FuProgress *progress, 
 	return TRUE;
 }
 
+static GBytes *
+fu_mtd_device_dump_firmware(FuDevice *device, FuProgress *progress, GError **error)
+{
+	FuMtdDevice *self = FU_MTD_DEVICE(device);
+	gsize bufsz = fu_device_get_firmware_size_max(device);
+	g_autofree guint8 *buf = g_malloc0(bufsz);
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
+
+	/* read each chunk */
+	chunks = fu_chunk_array_mutable_new(buf, bufsz, 0x0, 0x0, 10 * 1024);
+	fu_progress_set_steps(progress, chunks->len);
+	for (guint i = 0; i < chunks->len; i++) {
+		FuChunk *chk = g_ptr_array_index(chunks, i);
+		if (!fu_udev_device_pread_full(FU_UDEV_DEVICE(self),
+					       fu_chunk_get_address(chk),
+					       fu_chunk_get_data_out(chk),
+					       fu_chunk_get_data_sz(chk),
+					       error)) {
+			g_prefix_error(error,
+				       "failed to read @0x%x: ",
+				       (guint)fu_chunk_get_address(chk));
+			return NULL;
+		}
+		fu_progress_step_done(progress);
+	}
+
+	/* success */
+	return g_bytes_new_take(g_steal_pointer(&buf), bufsz);
+}
+
 static gboolean
 fu_mtd_device_write_firmware(FuDevice *device,
 			     FuFirmware *firmware,
@@ -348,5 +382,6 @@ fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 	klass_device->probe = fu_mtd_device_probe;
 	klass_device->setup = fu_mtd_device_setup;
 	klass_device->to_string = fu_mtd_device_to_string;
+	klass_device->dump_firmware = fu_mtd_device_dump_firmware;
 	klass_device->write_firmware = fu_mtd_device_write_firmware;
 }
