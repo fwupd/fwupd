@@ -1564,6 +1564,7 @@ fu_ccgx_hpi_device_init(FuCcgxHpiDevice *self)
 	self->ep_bulk_in = PD_I2C_USB_EP_BULK_IN;
 	self->ep_intr_in = PD_I2C_USB_EP_INTR_IN;
 	fu_device_add_protocol(FU_DEVICE(self), "com.cypress.ccgx");
+	fu_device_add_protocol(FU_DEVICE(self), "com.infineon.ccgx");
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
