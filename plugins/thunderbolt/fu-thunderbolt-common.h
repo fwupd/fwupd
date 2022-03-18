@@ -9,6 +9,13 @@
 
 #include <fwupdplugin.h>
 
+/**
+ * FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION:
+ *
+ * Forces composite device components to be enumerated.
+ */
+#define FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION (1ull << 1)
+
 gboolean
 fu_thunderbolt_udev_set_port_online(FuUdevDevice *device, GError **error);
 gboolean
