@@ -29,4 +29,30 @@ shared_module('fu_plugin_mtd',
     plugin_deps,
   ],
 )
+
+if get_option('tests')
+  e = executable(
+    'mtd-self-test',
+    sources : [
+      'fu-self-test.c',
+      'fu-mtd-device.c',
+    ],
+    include_directories : [
+      root_incdir,
+      fwupd_incdir,
+      fwupdplugin_incdir,
+    ],
+    c_args : cargs,
+    dependencies : [
+      plugin_deps,
+    ],
+    link_with : [
+      fwupd,
+      fwupdplugin,
+    ],
+    install : true,
+    install_dir : installed_test_bindir,
+  )
+  test('mtd-self-test', e)  # added to installed-tests
+endif
 endif

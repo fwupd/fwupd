@@ -25,6 +25,7 @@ run_test vli-self-test
 run_test uefi-dbx-self-test
 run_test synaptics-prometheus-self-test
 run_test dfu-self-test
+run_test mtd-self-test
 
 # success!
 exit 0
