@@ -11,6 +11,8 @@ This plugin supports the following protocol IDs:
 
 * com.cypress.ccgx
 * com.cypress.ccgx.dmc
+* com.infineon.ccgx
+* com.infineon.ccgx.dmc
 
 ## Device Flash
 
