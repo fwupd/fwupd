@@ -64,6 +64,28 @@ fu_mtd_device_setup(FuDevice *device, GError **error)
 }
 
 static gboolean
+fu_mtd_device_open(FuDevice *device, GError **error)
+{
+	g_autoptr(GError) error_local = NULL;
+
+	/* FuUdevDevice->open */
+	if (!FU_DEVICE_CLASS(fu_mtd_device_parent_class)->open(device, &error_local)) {
+		if (g_error_matches(error_local, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED)) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    error_local->message);
+			return FALSE;
+		}
+		g_propagate_error(error, g_steal_pointer(&error_local));
+		return FALSE;
+	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
 fu_mtd_device_probe(FuDevice *device, GError **error)
 {
 	FuContext *ctx = fu_device_get_context(device);
@@ -379,6 +401,7 @@ static void
 fu_mtd_device_class_init(FuMtdDeviceClass *klass)
 {
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	klass_device->open = fu_mtd_device_open;
 	klass_device->probe = fu_mtd_device_probe;
 	klass_device->setup = fu_mtd_device_setup;
 	klass_device->to_string = fu_mtd_device_to_string;
