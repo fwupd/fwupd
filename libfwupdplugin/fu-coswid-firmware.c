@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#if HAVE_CBOR
+#ifdef HAVE_CBOR
 #include <cbor.h>
 #endif
 
@@ -83,7 +83,7 @@ G_DEFINE_TYPE(FuCoswidFirmware, fu_coswid_firmware, FU_TYPE_FIRMWARE)
 #define COSWID_GLOBAL_MAP_UNSPSC_CODE		    56
 #define COSWID_GLOBAL_MAP_UNSPSC_VERSION	    57
 
-#if HAVE_CBOR
+#ifdef HAVE_CBOR
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(cbor_item_t, cbor_intermediate_decref)
 
 static gchar *
@@ -103,7 +103,7 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 			 FwupdInstallFlags flags,
 			 GError **error)
 {
-#if HAVE_CBOR
+#ifdef HAVE_CBOR
 	struct cbor_load_result result = {0x0};
 	struct cbor_pair *pairs = NULL;
 	g_autoptr(cbor_item_t) item = NULL;
@@ -164,7 +164,7 @@ fu_coswid_firmware_parse(FuFirmware *firmware,
 static GBytes *
 fu_coswid_firmware_write(FuFirmware *firmware, GError **error)
 {
-#if HAVE_CBOR
+#ifdef HAVE_CBOR
 	gsize buflen;
 	gsize bufsz = 0;
 	g_autofree guchar *buf = NULL;
