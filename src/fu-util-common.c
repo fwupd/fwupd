@@ -2593,6 +2593,7 @@ fu_util_switch_branch_warning(FwupdDevice *dev,
 gboolean
 fu_util_prompt_warning_fde(FwupdDevice *dev, GError **error)
 {
+	const gchar *url = "https://github.com/fwupd/fwupd/wiki/Full-Disk-Encryption-Detected";
 	g_autoptr(GString) str = g_string_new(NULL);
 
 	if (!fwupd_device_has_flag(dev, FWUPD_DEVICE_FLAG_AFFECTS_FDE))
@@ -2607,6 +2608,11 @@ fu_util_prompt_warning_fde(FwupdDevice *dev, GError **error)
 			/* TRANSLATORS: 'recovery key' here refers to a code, rather than a physical
 			   metal thing */
 			_("Please ensure you have the volume recovery key before continuing."));
+	g_string_append(str, "\n\n");
+	g_string_append_printf(str,
+			       /* TRANSLATORS: the %1 is a URL to a wiki page */
+			       _("See %s for more details."),
+			       url);
 	/* TRANSLATORS: title text, shown as a warning */
 	fu_util_warning_box(_("Full Disk Encryption Detected"), str->str, 80);
 
