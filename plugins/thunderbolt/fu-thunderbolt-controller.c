@@ -289,7 +289,9 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 	} else {
 		fu_device_add_internal_flag(device, FU_DEVICE_INTERNAL_FLAG_REPLUG_MATCH_GUID);
 	}
-	if (self->controller_kind == FU_THUNDERBOLT_CONTROLLER_KIND_HOST) {
+	if (self->controller_kind == FU_THUNDERBOLT_CONTROLLER_KIND_HOST &&
+	    fu_device_has_private_flag(FU_DEVICE(self),
+				       FU_THUNDERBOLT_DEVICE_FLAG_FORCE_ENUMERATION)) {
 		g_autoptr(GError) error_local = NULL;
 		if (!fu_thunderbolt_controller_setup_usb4(self, &error_local))
 			g_warning("failed to setup host: %s", error_local->message);
