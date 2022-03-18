@@ -91,6 +91,7 @@ static void
 fu_ccgx_hid_device_init(FuCcgxHidDevice *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.cypress.ccgx");
+	fu_device_add_protocol(FU_DEVICE(self), "com.infineon.ccgx");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_WILL_DISAPPEAR);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
