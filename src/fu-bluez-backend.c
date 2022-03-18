@@ -81,7 +81,6 @@ static void
 fu_bluez_backend_object_added(FuBluezBackend *self, GDBusObject *object)
 {
 	g_autoptr(GDBusInterface) iface = NULL;
-	g_auto(GStrv) names = NULL;
 
 	iface = g_dbus_object_get_interface(object, "org.bluez.Device1");
 	if (iface == NULL)
