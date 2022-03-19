@@ -201,7 +201,7 @@ FirmwareSize = 0x8000
 Plugin = vli
 GType = FuVliUsbhubDevice
 Flags = usb3
-CounterpartGuid = USB\VID_17EF
+CounterpartGuid = USB\VID_17EF&PID_7236
 [USB\VID_17EF&PID_7236]
 Plugin = vli
 GType = FuVliUsbhubDevice
@@ -257,28 +257,6 @@ ParentGuid = USB\VID_17EF&PID_A392
 [USB\VID_17EF&PID_A395]
 Plugin = vli
 GType = FuVliUsbhubDevice
-
-# Lenovo Modularized dock (with VIA USB PID?!)
-[USB\VID_2109&PID_1822]
-Plugin = vli
-GType = FuVliUsbhubDevice
-Flags = usb3
-CounterpartGuid = USB\VID_2109&PID_2822
-[USB\VID_2109&PID_2822]
-Plugin = vli
-GType = FuVliUsbhubDevice
-Flags = usb2
-[USB\VID_2109&PID_3822]
-Plugin = vli
-GType = FuVliUsbhubDevice
-Flags = usb3
-ParentGuid = USB\VID_2109&PID_1822
-CounterpartGuid = USB\VID_2109&PID_4822
-[USB\VID_2109&PID_4822]
-Plugin = vli
-GType = FuVliUsbhubDevice
-Flags = usb2
-ParentGuid = USB\VID_2109&PID_2822
 
 # Lenovo VGA
 [USB\VID_17EF&PID_7211]
