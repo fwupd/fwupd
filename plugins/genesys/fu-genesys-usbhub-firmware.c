@@ -153,6 +153,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	} else {
 		code_size = 0x6000;
 	}
+	fu_firmware_set_size(firmware, code_size);
 
 	/* calculate checksum */
 	if ((flags & FWUPD_INSTALL_FLAG_IGNORE_CHECKSUM) == 0)
