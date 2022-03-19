@@ -7,7 +7,6 @@ install_data([
   'vli-goodway.quirk',
   'vli-hyper.quirk',
   'vli-lenovo.quirk',
-  'vli.quirk',
   'vli-samsung.quirk',
   ],
   install_dir: join_paths(datadir, 'fwupd', 'quirks.d')
