@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2022 Gaël PORTAY <gael.portay@collabora.com>
  * Copyright (C) 2021 Ricardo Cañuelo <ricardo.canuelo@collabora.com>
  *
  * SPDX-License-Identifier: LGPL-2.1+
@@ -115,6 +116,7 @@ struct _FuGenesysUsbhubDevice {
 	gboolean read_first_bank;
 	gboolean write_recovery_bank;
 
+	guint8 public_key[0x212];
 	FuCfiDevice *cfi_device;
 };
 
@@ -693,6 +695,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autofree guint8 *buf = NULL;
+	g_autofree gchar *guid = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->setup(device, error)) {
@@ -926,6 +929,21 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		self->write_recovery_bank = address == self->fw_bank_addr[1];
 	}
 
+	/* get public key */
+	if (!fu_memcpy_safe(self->public_key,
+			    sizeof(self->public_key),
+			    0, /* dst */
+			    g_bytes_get_data(blob, NULL),
+			    g_bytes_get_size(blob),
+			    self->fw_data_total_count, /* src */
+			    sizeof(self->public_key),
+			    error))
+		return FALSE;
+	guid =
+	    fwupd_guid_hash_data(self->public_key, sizeof(self->public_key), FWUPD_GUID_FLAG_NONE);
+	fu_device_add_instance_strup(device, "PUBKEY", guid);
+	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "PUBKEY", NULL);
+
 	/* have MStar scaler */
 	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER))
 		if (!fu_genesys_usbhub_device_mstar_scaler_setup(self, error))
@@ -969,11 +987,30 @@ fu_genesys_usbhub_device_prepare_firmware(FuDevice *device,
 					  FwupdInstallFlags flags,
 					  GError **error)
 {
+	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
 	g_autoptr(FuFirmware) firmware = fu_genesys_usbhub_firmware_new();
 
 	/* parse firmware */
 	if (!fu_firmware_parse(firmware, fw, flags, error))
 		return NULL;
+
+	/* has public-key */
+	if (g_bytes_get_size(fw) >= fu_firmware_get_size(firmware) + sizeof(self->public_key)) {
+		gsize bufsz = 0;
+		const guint8 *buf = g_bytes_get_data(fw, &bufsz);
+
+		if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL)
+			fu_common_dump_raw(G_LOG_DOMAIN, "Footer", buf, bufsz);
+		if (memcmp(buf + fu_firmware_get_size(firmware),
+			   self->public_key,
+			   sizeof(self->public_key)) != 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_SIGNATURE_INVALID,
+					    "mismatch public-key");
+			return NULL;
+		}
+	}
 
 	/* check size */
 	if (g_bytes_get_size(fw) > fu_device_get_firmware_size_max(device)) {
