@@ -1910,6 +1910,7 @@ fu_engine_check_requirements(FuEngine *self,
 			     GError **error)
 {
 	FuDevice *device = fu_install_task_get_device(task);
+	const gchar *protocol;
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GPtrArray) reqs_hard = NULL;
 	g_autoptr(GPtrArray) reqs_soft = NULL;
@@ -1959,6 +1960,20 @@ fu_engine_check_requirements(FuEngine *self,
 		return FALSE;
 	}
 
+	/* ensure protocol is registered with the device */
+	protocol = xb_node_query_text(fu_install_task_get_component(task),
+				      "custom/value[@key='LVFS::UpdateProtocol']",
+				      NULL);
+	if (protocol != NULL && !fu_device_has_protocol(device, protocol)) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "protocol %s is not supported by device",
+			    protocol);
+		return FALSE;
+	}
+
+	/* success */
 	return TRUE;
 }
 
