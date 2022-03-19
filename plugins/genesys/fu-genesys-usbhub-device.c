@@ -23,6 +23,14 @@
  * Device has a MStar scaler attached via I2C.
  */
 #define FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER (1 << 0)
+/**
+ * FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY:
+ *
+ * Device has a public-key appended to firmware.
+ *
+ * Since 1.7.7
+ */
+#define FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY (1 << 1)
 
 #define GENESYS_USBHUB_STATIC_TOOL_DESC_IDX_USB_3_0  0x84
 #define GENESYS_USBHUB_DYNAMIC_TOOL_DESC_IDX_USB_3_0 0x85
@@ -616,8 +624,10 @@ static gboolean
 fu_genesys_usbhub_device_detach(FuDevice *device, FuProgress *progress, GError **error)
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
-	if (!fu_genesys_usbhub_device_authenticate(self, error))
-		return FALSE;
+	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY)) {
+		if (!fu_genesys_usbhub_device_authenticate(self, error))
+			return FALSE;
+	}
 	if (!fu_genesys_usbhub_device_set_isp_mode(self, ISP_ENTER, error))
 		return FALSE;
 
@@ -695,7 +705,6 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	g_autoptr(GError) error_local = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autofree guint8 *buf = NULL;
-	g_autofree gchar *guid = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->setup(device, error)) {
@@ -815,8 +824,10 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		}
 	}
 
-	if (!fu_genesys_usbhub_device_authenticate(self, error))
-		return FALSE;
+	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY)) {
+		if (!fu_genesys_usbhub_device_authenticate(self, error))
+			return FALSE;
+	}
 	if (!fu_genesys_usbhub_device_set_isp_mode(self, ISP_ENTER, error))
 		return FALSE;
 	self->cfi_device = fu_genesys_usbhub_device_cfi_setup(self, error);
@@ -927,19 +938,24 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		self->write_recovery_bank = address == self->fw_bank_addr[1];
 	}
 
-	/* get public key */
-	if (!fu_memcpy_safe(self->public_key,
-			    sizeof(self->public_key),
-			    0, /* dst */
-			    g_bytes_get_data(blob, NULL),
-			    g_bytes_get_size(blob),
-			    self->fw_data_total_count, /* src */
-			    sizeof(self->public_key),
-			    error))
-		return FALSE;
-	guid =
-	    fwupd_guid_hash_data(self->public_key, sizeof(self->public_key), FWUPD_GUID_FLAG_NONE);
-	fu_device_add_instance_strup(device, "PUBKEY", guid);
+	/* has public key */
+	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY)) {
+		g_autofree gchar *guid = NULL;
+		if (!fu_memcpy_safe(self->public_key,
+				    sizeof(self->public_key),
+				    0, /* dst */
+				    g_bytes_get_data(blob, NULL),
+				    g_bytes_get_size(blob),
+				    self->fw_data_total_count, /* src */
+				    sizeof(self->public_key),
+				    error))
+			return FALSE;
+		guid = fwupd_guid_hash_data(self->public_key,
+					    sizeof(self->public_key),
+					    FWUPD_GUID_FLAG_NONE);
+		fu_device_add_instance_strup(device, "PUBKEY", guid);
+	}
+
 	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "PUBKEY", NULL);
 
 	/* have MStar scaler */
@@ -1379,6 +1395,9 @@ fu_genesys_usbhub_device_init(FuGenesysUsbhubDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER,
 					"has-mstar-scaler");
+	fu_device_register_private_flag(FU_DEVICE(self),
+					FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY,
+					"has-public-key");
 	self->vcs.req_switch = GENESYS_USBHUB_GL_HUB_SWITCH;
 	self->vcs.req_read = GENESYS_USBHUB_GL_HUB_READ;
 	self->vcs.req_write = GENESYS_USBHUB_GL_HUB_WRITE;
