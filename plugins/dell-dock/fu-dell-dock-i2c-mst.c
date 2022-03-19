@@ -1138,7 +1138,7 @@ fu_dell_dock_mst_set_quirk_kv(FuDevice *device,
 static gboolean
 fu_dell_dock_mst_setup(FuDevice *device, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *parent = fu_device_get_parent(device);
 	const gchar *version;
 
 	/* sanity check that we can talk to MST */
@@ -1146,7 +1146,7 @@ fu_dell_dock_mst_setup(FuDevice *device, GError **error)
 		return FALSE;
 
 	/* set version from EC if we know it */
-	version = fu_dell_dock_ec_get_mst_version(proxy);
+	version = fu_dell_dock_ec_get_mst_version(parent);
 	if (version != NULL) {
 		fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_TRIPLET);
 		fu_device_set_version(device, version);
@@ -1255,5 +1255,6 @@ fu_dell_dock_mst_new(FuDevice *proxy)
 {
 	FuDellDockMst *device = NULL;
 	device = g_object_new(FU_TYPE_DELL_DOCK_MST, "proxy", proxy, NULL);
+	fu_device_set_proxy(FU_DEVICE(device), proxy);
 	return device;
 }

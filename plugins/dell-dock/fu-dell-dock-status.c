@@ -40,11 +40,11 @@ fu_dell_dock_status_ver_string(guint32 status_version)
 static gboolean
 fu_dell_dock_status_setup(FuDevice *device, GError **error)
 {
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *parent = fu_device_get_parent(device);
 	guint32 status_version;
 	g_autofree gchar *dynamic_version = NULL;
 
-	status_version = fu_dell_dock_ec_get_status_version(proxy);
+	status_version = fu_dell_dock_ec_get_status_version(parent);
 	dynamic_version = fu_dell_dock_status_ver_string(status_version);
 	fu_device_set_version_format(device, FWUPD_VERSION_FORMAT_QUAD);
 	fu_device_set_version(device, dynamic_version);
@@ -60,7 +60,7 @@ fu_dell_dock_status_write(FuDevice *device,
 			  GError **error)
 {
 	FuDellDockStatus *self = FU_DELL_DOCK_STATUS(device);
-	FuDevice *proxy = fu_device_get_proxy(device);
+	FuDevice *parent = fu_device_get_parent(device);
 	gsize length = 0;
 	guint32 status_version = 0;
 	const guint8 *data;
@@ -87,7 +87,7 @@ fu_dell_dock_status_write(FuDevice *device,
 	dynamic_version = fu_dell_dock_status_ver_string(status_version);
 	g_debug("writing status firmware version %s", dynamic_version);
 
-	if (!fu_dell_dock_ec_commit_package(proxy, fw, error))
+	if (!fu_dell_dock_ec_commit_package(parent, fw, error))
 		return FALSE;
 
 	/* dock will reboot to re-read; this is to appease the daemon */
@@ -177,5 +177,6 @@ fu_dell_dock_status_new(FuDevice *proxy)
 {
 	FuDellDockStatus *self = NULL;
 	self = g_object_new(FU_TYPE_DELL_DOCK_STATUS, "proxy", proxy, NULL);
+	fu_device_set_proxy(FU_DEVICE(self), proxy);
 	return self;
 }

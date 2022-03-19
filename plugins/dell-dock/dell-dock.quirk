@@ -29,7 +29,6 @@ Plugin = dell_dock
 [USB\VID_413C&PID_B06F&hub]
 Name = RTS5413 in Dell dock
 Summary = USB 3.1 Generation 1 Hub
-ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
 Plugin = dell_dock
 Vendor = Dell Inc.
 Icon = dock-usb
@@ -44,7 +43,6 @@ InstallDuration = 14
 [USB\VID_413C&PID_B06E&hub]
 Name = RTS5487 in Dell dock
 Summary = USB 3.1 Generation 2 Hub
-ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
 Vendor = Dell Inc.
 Plugin = dell_dock
 Icon = dock-usb
@@ -158,7 +156,6 @@ Name = VMM5331 in Dell dock
 Summary = Multi Stream Transport controller
 Vendor = Dell Inc.
 Plugin = dell_dock
-ParentGuid = USB\VID_413C&PID_B06E&hub&embedded
 Flags = skips-restart,dual-image,usable-during-update
 FirmwareSize = 524288
 DellDockUnlockTarget = 9
