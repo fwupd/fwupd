@@ -1,3 +1,8 @@
+# Genesys Logic USB Hubs
+
+[USB\VID_05E3&PID_0610]
+Plugin = genesys
+
 # HP M2xfd
 
 # usbhub
