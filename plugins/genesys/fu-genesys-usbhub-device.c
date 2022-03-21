@@ -850,7 +850,6 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		} else {
 			self->code_size = self->fw_data_total_count;
 		}
-		fu_device_set_firmware_size_max(device, 0x8000);
 		break;
 	case ISP_MODEL_HUB_GL3590:
 		if (!fu_genesys_usbhub_device_get_fw_size(self, 0, error))
@@ -858,11 +857,11 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		self->fw_bank_addr[0] = 0x0000;
 		self->fw_bank_addr[1] = 0x10000;
 		self->fw_data_total_count = 0x10000;
-		fu_device_set_firmware_size_max(device, 0x10000);
 		break;
 	default:
 		break;
 	}
+	fu_device_set_firmware_size_max(device, self->fw_data_total_count);
 
 	/* verify firmware integrity */
 	bufsz = self->fw_data_total_count + self->extend_size;
