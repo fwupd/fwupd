@@ -27,3 +27,9 @@ typedef struct __attribute__((packed)) {
 
 	guint8 firmware_version[4]; /* MMmm=MM.mm (ASCII string) */
 } FuGenesysStaticToolString;
+
+#define GENESYS_USBHUB_FW_SIG_OFFSET   0xFC
+#define GENESYS_USBHUB_FW_SIG_LEN      4
+#define GENESYS_USBHUB_FW_SIG_TEXT_HUB "XROM"
+
+#define GENESYS_USBHUB_CODE_SIZE_OFFSET 0xFB
