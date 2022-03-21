@@ -80,7 +80,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 			    0, /* dst */
 			    buf,
 			    bufsz,
-			    0xfc,
+			    GENESYS_USBHUB_FW_SIG_OFFSET,
 			    sizeof(sign),
 			    error))
 		return FALSE;
@@ -187,7 +187,7 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 	/* signature */
 	if (!fu_memcpy_safe(buf->data,
 			    buf->len,
-			    0xfc, /* dst */
+			    GENESYS_USBHUB_FW_SIG_OFFSET, /* dst */
 			    sign,
 			    sizeof(sign),
 			    0x0, /* src */
