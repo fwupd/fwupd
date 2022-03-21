@@ -71,21 +71,6 @@ typedef enum {
 	ISP_ENTER,
 } FuGenesysIspMode;
 
-typedef enum {
-	ISP_MODEL_UNKNOWN,
-
-	/* hub */
-	ISP_MODEL_HUB_GL3510,
-	ISP_MODEL_HUB_GL3521,
-	ISP_MODEL_HUB_GL3523,
-	ISP_MODEL_HUB_GL3590,
-	ISP_MODEL_HUB_GL7000,
-	ISP_MODEL_HUB_GL3525,
-
-	/* pd */
-	ISP_MODEL_PD_GL9510,
-} FuGenesysModel;
-
 typedef struct __attribute__((packed)) {
 	guint8 tool_version[6]; /* ISP tool defined by itself */
 	guint8 address_mode;
@@ -104,8 +89,7 @@ struct _FuGenesysUsbhubDevice {
 	FuGenesysStaticToolString static_ts;
 	FuGenesysFirmwareInfoToolString fwinfo_ts;
 	FuGenesysVendorCommandSetting vcs;
-	guint32 isp_model;
-	guint8 isp_revision;
+	FuGenesysChip chip;
 	guint32 flash_erase_delay;
 	guint32 flash_write_delay;
 	guint32 flash_block_size;
@@ -752,9 +736,9 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		gchar rev[3] = {0};
 
 		if (memcmp(self->static_ts.mask_project_ic_type, "3523", 4) == 0) {
-			self->isp_model = ISP_MODEL_HUB_GL3523;
+			self->chip.model = ISP_MODEL_HUB_GL3523;
 		} else if (memcmp(self->static_ts.mask_project_ic_type, "3590", 4) == 0) {
-			self->isp_model = ISP_MODEL_HUB_GL3590;
+			self->chip.model = ISP_MODEL_HUB_GL3590;
 		} else {
 			g_autofree gchar *ic_type =
 			    fu_common_strsafe((const gchar *)&self->static_ts.mask_project_ic_type,
@@ -767,7 +751,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 			return FALSE;
 		}
 		memcpy(rev, &self->static_ts.mask_project_ic_type[4], 2);
-		self->isp_revision = fu_common_strtoull(rev);
+		self->chip.revision = fu_common_strtoull(rev);
 	}
 
 	dynamic_buf =
@@ -835,12 +819,12 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		self->flash_sector_size = sector_size;
 
 	/* setup firmware parameters */
-	switch (self->isp_model) {
+	switch (self->chip.model) {
 	case ISP_MODEL_HUB_GL3523:
 		self->fw_bank_addr[0] = 0x0000;
 		self->fw_bank_addr[1] = 0x8000;
 		self->extend_size = GL3523_PUBLIC_KEY_LEN + GL3523_SIG_LEN;
-		if (self->isp_revision == 50) {
+		if (self->chip.revision == 50) {
 			self->fw_data_total_count = 0x8000;
 			if (!fu_genesys_usbhub_device_get_fw_size(self, 0, error))
 				return FALSE;
@@ -927,7 +911,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		}
 
 		self->read_first_bank =
-		    (self->isp_model == ISP_MODEL_HUB_GL3523) && self->fw_bank_vers[0] != 0;
+		    (self->chip.model == ISP_MODEL_HUB_GL3523) && self->fw_bank_vers[0] != 0;
 		self->write_recovery_bank = address == self->fw_bank_addr[1];
 	}
 
