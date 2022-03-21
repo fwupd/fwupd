@@ -21,6 +21,8 @@
  * FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER:
  *
  * Device has a MStar scaler attached via I2C.
+ *
+ * Since 1.7.6
  */
 #define FU_GENESYS_USBHUB_FLAG_HAS_MSTAR_SCALER (1 << 0)
 /**
