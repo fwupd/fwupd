@@ -14,9 +14,54 @@
 struct _FuGenesysUsbhubFirmware {
 	FuFirmwareClass parent_instance;
 	FuGenesysStaticToolString static_ts;
+	FuGenesysChip chip;
 };
 
 G_DEFINE_TYPE(FuGenesysUsbhubFirmware, fu_genesys_usbhub_firmware, FU_TYPE_FIRMWARE)
+
+static gboolean
+fu_genesys_usbhub_firmware_get_chip(FuGenesysUsbhubFirmware *self,
+				    const guint8 *buf,
+				    gsize bufsz,
+				    GError **error)
+{
+	guint8 project_ic_type[6];
+
+	if (!fu_memcpy_safe(project_ic_type,
+			    sizeof(project_ic_type),
+			    0, /* dst */
+			    buf,
+			    bufsz,
+			    GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523 + 8, /* src */
+			    sizeof(project_ic_type),
+			    error))
+		return FALSE;
+
+	if (memcmp(project_ic_type, "3523", 4) == 0) {
+		self->chip.model = ISP_MODEL_HUB_GL3523;
+		self->chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+		return TRUE;
+	}
+
+	if (!fu_memcpy_safe(project_ic_type,
+			    sizeof(project_ic_type),
+			    0, /* dst */
+			    buf,
+			    bufsz,
+			    GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3590 + 8, /* src */
+			    sizeof(project_ic_type),
+			    error))
+		return FALSE;
+
+	if (memcmp(project_ic_type, "3590", 4) == 0) {
+		self->chip.model = ISP_MODEL_HUB_GL3590;
+		self->chip.revision = 10 * (project_ic_type[4] - '0') + (project_ic_type[5] - '0');
+		return TRUE;
+	}
+
+	g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "Unsupported IC");
+	return FALSE;
+}
 
 static gboolean
 fu_genesys_usbhub_firmware_verify(const guint8 *buf, gsize bufsz, guint16 code_size, GError **error)
@@ -69,9 +114,10 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	guint8 sign[4];
-	guint32 code_size = 0x6000;
+	guint32 code_size = 0;
+	guint32 static_ts_offset = 0;
 	guint16 version_raw = 0;
-	gboolean is3590 = FALSE;
+	g_autoptr(GBytes) fw_payload = NULL;
 	g_autofree gchar *version = NULL;
 
 	/* check signature */
@@ -94,44 +140,31 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 		return FALSE;
 	}
 
+	/* get chip */
+	if (!fu_genesys_usbhub_firmware_get_chip(self, buf, bufsz, error))
+		return FALSE;
+
+	switch (self->chip.model) {
+	case ISP_MODEL_HUB_GL3523:
+		static_ts_offset = GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523;
+		break;
+	case ISP_MODEL_HUB_GL3590:
+		static_ts_offset = GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3590;
+		break;
+	default:
+		break;
+	}
+
 	/* get static tool string */
 	if (!fu_memcpy_safe((guint8 *)&self->static_ts,
 			    sizeof(self->static_ts),
 			    0, /* dst */
 			    buf,
 			    bufsz,
-			    GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523, /* src */
+			    static_ts_offset, /* src */
 			    sizeof(self->static_ts),
 			    error))
 		return FALSE;
-
-	/* not a GL3523, is GL3590? */
-	if (memcmp(self->static_ts.mask_project_ic_type, "3523", 4) != 0) {
-		if (!fu_memcpy_safe((guint8 *)&self->static_ts,
-				    sizeof(self->static_ts),
-				    0, /* dst */
-				    buf,
-				    bufsz,
-				    GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3590, /* src */
-				    sizeof(self->static_ts),
-				    error))
-			return FALSE;
-
-		/* not a GL3590 either */
-		if (memcmp(self->static_ts.mask_project_ic_type, "3590", 4) != 0) {
-			g_autofree gchar *tmp =
-			    fu_common_strsafe((const gchar *)&self->static_ts.mask_project_ic_type,
-					      sizeof(self->static_ts.mask_project_ic_type));
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "IC type %s not supported",
-				    tmp);
-			return FALSE;
-		}
-
-		is3590 = TRUE;
-	}
 
 	/* unsupported static tool string */
 	if (self->static_ts.tool_string_version == 0xff) {
@@ -143,16 +176,35 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	}
 
 	/* deduce code size */
-	if (!is3590) {
-		guint8 ic_type_revision;
-
+	switch (self->chip.model) {
+	case ISP_MODEL_HUB_GL3523: {
 		code_size = 0x6000;
-		ic_type_revision = 10 * (self->static_ts.mask_project_ic_type[4] - '0') +
-				   (self->static_ts.mask_project_ic_type[5] - '0');
-		if (ic_type_revision == 50)
-			code_size = 0x8000;
-	} else {
-		code_size = 0x10000;
+		if (self->chip.revision == 50) {
+			guint8 kbs = 0;
+
+			if (!fu_common_read_uint8_safe(buf,
+						       bufsz,
+						       GENESYS_USBHUB_CODE_SIZE_OFFSET,
+						       &kbs,
+						       error))
+				return FALSE;
+			code_size = 1024 * kbs;
+		}
+		break;
+	}
+	case ISP_MODEL_HUB_GL3590: {
+		guint8 kbs = 0;
+		if (!fu_common_read_uint8_safe(buf,
+					       bufsz,
+					       GENESYS_USBHUB_CODE_SIZE_OFFSET,
+					       &kbs,
+					       error))
+			return FALSE;
+		code_size = 1024 * kbs;
+		break;
+	}
+	default:
+		break;
 	}
 	fu_firmware_set_size(firmware, code_size);
 

@@ -11,6 +11,26 @@ typedef struct {
 	guint8 expected_val;
 } FuGenesysWaitFlashRegisterHelper;
 
+typedef enum {
+	ISP_MODEL_UNKNOWN,
+
+	/* hub */
+	ISP_MODEL_HUB_GL3510,
+	ISP_MODEL_HUB_GL3521,
+	ISP_MODEL_HUB_GL3523,
+	ISP_MODEL_HUB_GL3590,
+	ISP_MODEL_HUB_GL7000,
+	ISP_MODEL_HUB_GL3525,
+
+	/* pd */
+	ISP_MODEL_PD_GL9510,
+} FuGenesysModel;
+
+typedef struct {
+	FuGenesysModel model;
+	gint32 revision;
+} FuGenesysChip;
+
 typedef struct __attribute__((packed)) {
 	guint8 tool_string_version; /* 0xff = not supported */
 
