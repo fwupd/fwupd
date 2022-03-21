@@ -69,7 +69,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 	gsize bufsz = 0;
 	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	guint8 sign[4];
-	guint16 code_size = 0x6000;
+	guint32 code_size = 0x6000;
 	guint16 version_raw = 0;
 	gboolean is3590 = FALSE;
 	g_autofree gchar *version = NULL;
@@ -151,7 +151,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 		if (ic_type_revision == 50)
 			code_size = 0x8000;
 	} else {
-		code_size = 0x6000;
+		code_size = 0x10000;
 	}
 	fu_firmware_set_size(firmware, code_size);
 
