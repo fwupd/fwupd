@@ -34,12 +34,16 @@
  * FU_SCALER_FLAG_PAUSE_R2_CPU:
  *
  * Pause R2 CPU.
+ *
+ * Since 1.7.6
  */
 #define FU_SCALER_FLAG_PAUSE_R2_CPU (1 << 1)
 /**
  * FU_SCALER_FLAG_USE_I2C_CH0:
  *
  * Use I2C ch0.
+ *
+ * Since 1.7.6
  */
 #define FU_SCALER_FLAG_USE_I2C_CH0 (1 << 0)
 
