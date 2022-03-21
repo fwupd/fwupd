@@ -863,7 +863,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 			return FALSE;
 		self->fw_bank_addr[0] = 0x0000;
 		self->fw_bank_addr[1] = 0x10000;
-		self->fw_data_total_count = 0x8000;
+		self->fw_data_total_count = 0x10000;
 		fu_device_set_firmware_size_max(device, 0x10000);
 		break;
 	default:
