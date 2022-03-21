@@ -78,6 +78,12 @@ typedef struct __attribute__((packed)) {
 	guint8 update_fw_time[12]; /* YYYYMMDDhhmm */
 } FuGenesysFirmwareInfoToolString;
 
+typedef enum {
+	BANK_MASK_CODE,
+	BANK_FIRST,
+	BANK_SECOND,
+} FuGenesysRunningBank;
+
 typedef struct {
 	guint8 req_switch;
 	guint8 req_read;
@@ -87,9 +93,11 @@ typedef struct {
 struct _FuGenesysUsbhubDevice {
 	FuUsbDevice parent_instance;
 	FuGenesysStaticToolString static_ts;
+	FuGenesysDynamicToolString dynamic_ts;
 	FuGenesysFirmwareInfoToolString fwinfo_ts;
 	FuGenesysVendorCommandSetting vcs;
 	FuGenesysChip chip;
+	guint32 running_bank;
 	guint32 flash_erase_delay;
 	guint32 flash_write_delay;
 	guint32 flash_block_size;
@@ -98,7 +106,8 @@ struct _FuGenesysUsbhubDevice {
 
 	guint32 fw_bank_addr[2];
 	guint16 fw_bank_vers[2];
-	guint32 code_size; /* 0: get from device */
+	guint32 fw_key_addr[2];
+	guint32 code_size[2];
 	guint32 fw_data_total_count;
 	guint32 extend_size;
 	gboolean read_first_bank;
@@ -577,7 +586,7 @@ fu_genesys_usbhub_device_get_fw_size(FuGenesysUsbhubDevice *self, int bank_num, 
 	guint8 kbs = 0;
 
 	g_return_val_if_fail(bank_num < 2, FALSE);
-	g_return_val_if_fail(self->code_size == 0, FALSE);
+	g_return_val_if_fail(self->code_size[bank_num] == 0, FALSE);
 
 	if (!fu_genesys_usbhub_device_check_fw_signature(self, bank_num, error))
 		return FALSE;
@@ -593,7 +602,7 @@ fu_genesys_usbhub_device_get_fw_size(FuGenesysUsbhubDevice *self, int bank_num, 
 		g_prefix_error(error, "error getting fw size from device: ");
 		return FALSE;
 	}
-	self->code_size = 1024 * kbs;
+	self->code_size[bank_num] = 1024 * kbs;
 
 	/* success */
 	return TRUE;
@@ -632,12 +641,15 @@ fu_genesys_usbhub_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 {
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
 	gsize address = self->fw_bank_addr[0];
-	gsize size = self->code_size + self->extend_size;
+	gsize size = self->code_size[0] + self->extend_size;
 	g_autoptr(FuDeviceLocker) locker = NULL;
 	g_autofree guint8 *buf = NULL;
 
-	if (self->fw_bank_vers[0] == 0 && fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE))
+	if (self->fw_bank_vers[0] == 0 &&
+	    fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE)) {
 		address = self->fw_bank_addr[1];
+		size = self->code_size[1] + self->extend_size;
+	}
 
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
@@ -667,24 +679,59 @@ fu_genesys_usbhub_device_dump_firmware(FuDevice *device, FuProgress *progress, G
 }
 
 static gboolean
+fu_genesys_usbhub_device_get_fw_version(FuDevice *device, int bank_num, GError **error)
+{
+	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
+	gsize address = self->fw_bank_addr[bank_num];
+	gsize bufsz;
+	guint16 version_raw;
+	g_autoptr(FuFirmware) firmware = NULL;
+	g_autofree guint8 *buf = NULL;
+
+	g_return_val_if_fail(bank_num < 2, FALSE);
+
+	if (self->code_size[bank_num] == 0)
+		if (!fu_genesys_usbhub_device_get_fw_size(self, bank_num, error))
+			return FALSE;
+
+	if (!fu_genesys_usbhub_device_check_fw_signature(self, bank_num, error))
+		return FALSE;
+
+	bufsz = self->code_size[bank_num];
+	buf = g_malloc0(bufsz);
+	if (!fu_genesys_usbhub_device_read_flash(self, address, buf, bufsz, NULL, error))
+		return FALSE;
+
+	firmware = fu_genesys_usbhub_firmware_new();
+	if (!fu_firmware_parse(firmware,
+			       g_bytes_new_take(buf, bufsz),
+			       FWUPD_INSTALL_FLAG_NONE,
+			       error)) {
+		self->fw_bank_vers[bank_num] = 0;
+		return FALSE;
+	}
+
+	version_raw = fu_firmware_get_version_raw(firmware);
+	if (version_raw != 0xffff)
+		self->fw_bank_vers[bank_num] = version_raw;
+
+	return TRUE;
+}
+
+static gboolean
 fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 {
 #if G_USB_CHECK_VERSION(0, 3, 8)
 	FuGenesysUsbhubDevice *self = FU_GENESYS_USBHUB_DEVICE(device);
 	GUsbDevice *usb_device = fu_usb_device_get_dev(FU_USB_DEVICE(device));
-	gsize bufsz;
 	guint32 block_size;
 	guint32 sector_size;
-	guint16 version_raw;
 	guint8 static_idx = 0;
 	guint8 dynamic_idx = 0;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) static_buf = NULL;
 	g_autoptr(GBytes) dynamic_buf = NULL;
 	g_autoptr(GBytes) fw_buf = NULL;
-	g_autoptr(GError) error_local = NULL;
-	g_autoptr(GBytes) blob = NULL;
-	g_autofree guint8 *buf = NULL;
 
 	/* FuUsbDevice->setup */
 	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->setup(device, error)) {
@@ -764,6 +811,19 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to get dynamic tool info from device: ");
 		return FALSE;
 	}
+	if (!fu_genesys_usbhub_device_get_descriptor_data(dynamic_buf,
+							  (guint8 *)&self->dynamic_ts,
+							  sizeof(FuGenesysDynamicToolString),
+							  error)) {
+		g_prefix_error(error, "failed to get dynamic tool info from device: ");
+		return FALSE;
+	}
+	if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL) {
+		fu_common_dump_raw(G_LOG_DOMAIN,
+				   "Dynamic info",
+				   (guint8 *)&self->dynamic_ts,
+				   sizeof(FuGenesysDynamicToolString));
+	}
 
 	fw_buf =
 	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
@@ -826,77 +886,53 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		self->extend_size = GL3523_PUBLIC_KEY_LEN + GL3523_SIG_LEN;
 		if (self->chip.revision == 50) {
 			self->fw_data_total_count = 0x8000;
-			if (!fu_genesys_usbhub_device_get_fw_size(self, 0, error))
-				return FALSE;
+			self->fw_key_addr[0] = 0x7D00;
+			self->fw_key_addr[1] = 0xFD00;
 		} else {
 			self->fw_data_total_count = 0x6000;
-			self->code_size = self->fw_data_total_count;
+			self->fw_key_addr[0] = 0x6000;
+			self->fw_key_addr[1] = 0xE000;
+			self->code_size[0] = self->code_size[1] = self->fw_data_total_count;
+		}
+		if (self->dynamic_ts.running_mode == 'M') {
+			self->running_bank = BANK_MASK_CODE;
+		} else if ((self->dynamic_ts.bonding & 0x10) > 0) {
+			self->running_bank = BANK_SECOND;
+		} else {
+			self->running_bank = BANK_FIRST;
 		}
 		break;
 	case ISP_MODEL_HUB_GL3590:
-		if (!fu_genesys_usbhub_device_get_fw_size(self, 0, error))
-			return FALSE;
 		self->fw_bank_addr[0] = 0x0000;
 		self->fw_bank_addr[1] = 0x10000;
+		self->fw_key_addr[0] = 0xFF00;
+		self->fw_key_addr[1] = 0x1FF00;
 		self->fw_data_total_count = 0x10000;
+		if (self->dynamic_ts.running_mode == 'M') {
+			self->running_bank = BANK_MASK_CODE;
+		} else if ((self->dynamic_ts.bonding & 0x80) > 0) {
+			self->running_bank = BANK_SECOND;
+		} else {
+			self->running_bank = BANK_FIRST;
+		}
 		break;
 	default:
 		break;
 	}
 	fu_device_set_firmware_size_max(device, self->fw_data_total_count);
 
-	/* verify firmware integrity */
-	bufsz = self->fw_data_total_count + self->extend_size;
-	buf = g_malloc0(bufsz);
-	if (!fu_genesys_usbhub_device_read_flash(self,
-						 self->fw_bank_addr[0],
-						 buf,
-						 bufsz,
-						 NULL,
-						 error))
-		return FALSE;
-	blob = g_bytes_new_take(g_steal_pointer(&buf), bufsz);
-	firmware = fu_genesys_usbhub_firmware_new();
-	if (!fu_firmware_parse(firmware, blob, FWUPD_INSTALL_FLAG_NONE, &error_local)) {
-		g_debug("ignoring firmware: %s", error_local->message);
-		self->fw_bank_vers[0] = 0;
-	} else {
-		version_raw = fu_firmware_get_version_raw(firmware);
-		if (version_raw != 0xffff)
-			self->fw_bank_vers[0] = version_raw;
-	}
-
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE)) {
-		gsize address = self->fw_bank_addr[0];
-		gsize bufsz_dual;
-		g_autoptr(FuFirmware) firmware_dual = NULL;
+		gsize address;
+		g_autoptr(GError) error_local = NULL;
 		g_autoptr(GError) error_local_dual = NULL;
-		g_autoptr(GBytes) blob_dual = NULL;
-		g_autofree guint8 *buf_dual = NULL;
+
+		/* verify firmware integrity */
+		if (!fu_genesys_usbhub_device_get_fw_version(device, 0, &error_local))
+			g_debug("ignoring firmware on bank 0: %s", error_local->message);
 
 		/* verify dual firmware integrity */
-		bufsz_dual = self->fw_data_total_count + self->extend_size;
-		buf_dual = g_malloc0(bufsz_dual);
-		if (!fu_genesys_usbhub_device_read_flash(self,
-							 self->fw_bank_addr[1],
-							 buf_dual,
-							 bufsz_dual,
-							 NULL,
-							 error))
-			return FALSE;
-		blob_dual = g_bytes_new_take(g_steal_pointer(&buf_dual), bufsz_dual);
-		firmware_dual = fu_genesys_usbhub_firmware_new();
-		if (!fu_firmware_parse(firmware_dual,
-				       blob_dual,
-				       FWUPD_INSTALL_FLAG_NONE,
-				       &error_local_dual)) {
-			g_debug("ignoring recovery firmware: %s", error_local_dual->message);
-			self->fw_bank_vers[1] = 0;
-		} else {
-			version_raw = fu_firmware_get_version_raw(firmware_dual);
-			if (version_raw != 0xffff)
-				self->fw_bank_vers[1] = version_raw;
-		}
+		if (!fu_genesys_usbhub_device_get_fw_version(device, 1, &error_local_dual))
+			g_debug("ignoring firmware on bank 1: %s", error_local_dual->message);
 
 		/* write recovery needed? */
 		if (self->fw_bank_vers[0] == 0 && self->fw_bank_vers[1] == 0) {
@@ -918,14 +954,12 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	/* has public key */
 	if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY)) {
 		g_autofree gchar *guid = NULL;
-		if (!fu_memcpy_safe(self->public_key,
-				    sizeof(self->public_key),
-				    0, /* dst */
-				    g_bytes_get_data(blob, NULL),
-				    g_bytes_get_size(blob),
-				    self->fw_data_total_count, /* src */
-				    sizeof(self->public_key),
-				    error))
+		if (!fu_genesys_usbhub_device_read_flash(self,
+							 self->fw_key_addr[0],
+							 self->public_key,
+							 sizeof(self->public_key),
+							 NULL,
+							 error))
 			return FALSE;
 		guid = fwupd_guid_hash_data(self->public_key,
 					    sizeof(self->public_key),
@@ -963,11 +997,12 @@ fu_genesys_usbhub_device_to_string(FuDevice *device, guint idt, GString *str)
 	fu_common_string_append_kx(str, idt, "FlashRwSize", self->flash_rw_size);
 	fu_common_string_append_kx(str, idt, "FwBank0Addr", self->fw_bank_addr[0]);
 	fu_common_string_append_kx(str, idt, "FwBank0Vers", self->fw_bank_vers[0]);
+	fu_common_string_append_kx(str, idt, "FwBank0CodeSize", self->code_size[0]);
 	if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE)) {
 		fu_common_string_append_kx(str, idt, "FwBank1Addr", self->fw_bank_addr[1]);
 		fu_common_string_append_kx(str, idt, "FwBank1Vers", self->fw_bank_vers[1]);
+		fu_common_string_append_kx(str, idt, "FwBank1CodeSize", self->code_size[1]);
 	}
-	fu_common_string_append_kx(str, idt, "CodeSize", self->code_size);
 	fu_common_string_append_kx(str, idt, "FwDataTotalCount", self->fw_data_total_count);
 	fu_common_string_append_kx(str, idt, "ExtendSize", self->extend_size);
 }
@@ -1156,7 +1191,7 @@ fu_genesys_usbhub_device_write_recovery(FuGenesysUsbhubDevice *self,
 
 	/* reuse fw on first bank for GL3523 */
 	if (self->read_first_bank) {
-		bufsz = self->code_size;
+		bufsz = self->code_size[0];
 		if (bufsz == 0) {
 			g_set_error_literal(error,
 					    G_IO_ERROR,

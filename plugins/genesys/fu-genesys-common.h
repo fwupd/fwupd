@@ -48,6 +48,51 @@ typedef struct __attribute__((packed)) {
 	guint8 firmware_version[4]; /* MMmm=MM.mm (ASCII string) */
 } FuGenesysStaticToolString;
 
+typedef struct __attribute__((packed)) {
+	guint8 running_mode; /* 'M' or 'C' */
+
+	guint8 ss_port_number; /* super-speed port number */
+	guint8 hs_port_number; /* high-speed port number */
+
+	guint8 ss_connection_status; /* bit field. ON = DFP is a super-speed device */
+	guint8 hs_connection_status; /* bit field. ON = DFP is a high-speed device */
+	guint8 fs_connection_status; /* bit field. ON = DFP is a full-speed device */
+	guint8 ls_connection_status; /* bit field. ON = DFP is a low-speed device */
+
+	guint8 charging;		  /* bit field. ON = DFP is a charging port */
+	guint8 non_removable_port_status; /* bit field. ON = DFP is a non-removable port */
+
+	/*
+	 * Bonding reports Hardware register status for GL3523:
+	 *   2 / 4 ports         : 1 means 4 ports, 0 means 2 ports
+	 *   MTT / STT           : 1 means Multi Token Transfer, 0 means Single TT
+	 *   Type - C            : 1 means disable, 0 means enable
+	 *   QC                  : 1 means disable, 0 means enable
+	 *   Flash dump location : 1 means 32KB offset bank 1, 0 means 0 offset bank 0.
+	 *
+	 * Tool string Version 1:
+	 *   Bit3 : Flash dump location
+	 *   BIT2 : Type - C
+	 *   BIT1 : MTT / STT
+	 *   BIT0 : 2 / 4 ports
+	 *
+	 * Tool string Version 2 or newer :
+	 *   Bit4 : Flash dump location
+	 *   BIT3 : Type - C
+	 *   BIT2 : MTT / STT
+	 *   BIT1 : 2 / 4 ports
+	 *   BIT0 : QC
+	 *
+	 * Default use '0'~'F', plus Bit4 may over value, should extract that.
+	 *
+	 * Bonding for GL3590:
+	 *   Bit7 : Flash dump location, 0 means bank 0, 1 means bank 1.
+	 */
+	guint8 bonding;
+
+	guint8 reserved[22];
+} FuGenesysDynamicToolString;
+
 #define GENESYS_USBHUB_FW_SIG_OFFSET	    0xFC
 #define GENESYS_USBHUB_FW_SIG_LEN	    4
 #define GENESYS_USBHUB_FW_SIG_TEXT_HUB	    "XROM"
