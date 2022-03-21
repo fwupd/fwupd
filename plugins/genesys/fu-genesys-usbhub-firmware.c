@@ -85,7 +85,8 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 			    error))
 		return FALSE;
 
-	if (memcmp(sign, "XROM", sizeof(sign)) != 0 && memcmp(sign, "SRON", sizeof(sign)) != 0) {
+	if (memcmp(sign, GENESYS_USBHUB_FW_SIG_TEXT_HUB, sizeof(sign)) != 0 &&
+	    memcmp(sign, GENESYS_USBHUB_FW_SIG_TEXT_HUB_SIGN, sizeof(sign)) != 0) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_NOT_SUPPORTED,
@@ -99,7 +100,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 			    0, /* dst */
 			    buf,
 			    bufsz,
-			    0x221, /* src */
+			    GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523, /* src */
 			    sizeof(self->static_ts),
 			    error))
 		return FALSE;
@@ -111,7 +112,7 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 				    0, /* dst */
 				    buf,
 				    bufsz,
-				    0x241, /* src */
+				    GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3590, /* src */
 				    sizeof(self->static_ts),
 				    error))
 			return FALSE;
@@ -161,7 +162,12 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 			return FALSE;
 
 	/* get firmware version */
-	if (!fu_common_read_uint16_safe(buf, bufsz, 0x10E, &version_raw, G_LITTLE_ENDIAN, error))
+	if (!fu_common_read_uint16_safe(buf,
+					bufsz,
+					GENESYS_USBHUB_VERSION_OFFSET,
+					&version_raw,
+					G_LITTLE_ENDIAN,
+					error))
 		return FALSE;
 	fu_firmware_set_version_raw(firmware, version_raw);
 	version =
@@ -179,7 +185,6 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 	guint16 code_size = 0x6000;
 	guint16 checksum;
-	const guint8 sign[] = {'X', 'R', 'O', 'M'};
 
 	/* fixed size */
 	fu_byte_array_set_size(buf, code_size);
@@ -188,17 +193,17 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 	if (!fu_memcpy_safe(buf->data,
 			    buf->len,
 			    GENESYS_USBHUB_FW_SIG_OFFSET, /* dst */
-			    sign,
-			    sizeof(sign),
+			    (const guint8 *)GENESYS_USBHUB_FW_SIG_TEXT_HUB,
+			    GENESYS_USBHUB_FW_SIG_LEN,
 			    0x0, /* src */
-			    sizeof(sign),
+			    GENESYS_USBHUB_FW_SIG_LEN,
 			    error))
 		return NULL;
 
 	/* static tool string */
 	if (!fu_memcpy_safe(buf->data,
 			    buf->len,
-			    0x221, /* dst */
+			    GENESYS_USBHUB_STATIC_TOOL_STRING_OFFSET_GL3523, /* dst */
 			    (const guint8 *)&self->static_ts,
 			    sizeof(self->static_ts),
 			    0x0, /* src */
@@ -219,7 +224,7 @@ fu_genesys_usbhub_firmware_write(FuFirmware *firmware, GError **error)
 	/* version */
 	if (!fu_common_write_uint16_safe(buf->data,
 					 buf->len,
-					 0x10E,
+					 GENESYS_USBHUB_VERSION_OFFSET,
 					 0x1234, // TODO: parse from firmware version string
 					 G_BIG_ENDIAN,
 					 error))
