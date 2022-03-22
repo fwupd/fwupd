@@ -27,6 +27,11 @@ fu_test_mtd_device_func(void)
 	g_autoptr(GUdevClient) udev_client = g_udev_client_new(NULL);
 	g_autoptr(GUdevDevice) udev_device = NULL;
 
+	/* do not save silo */
+	ret = fu_context_load_quirks(ctx, FU_QUIRKS_LOAD_FLAG_NO_CACHE, &error);
+	g_assert_no_error(error);
+	g_assert_true(ret);
+
 	udev_device =
 	    g_udev_client_query_by_sysfs_path(udev_client, "/sys/devices/virtual/mtd/mtd0");
 	if (udev_device == NULL) {
