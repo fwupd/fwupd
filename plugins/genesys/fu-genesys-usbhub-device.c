@@ -747,10 +747,14 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		} else if (memcmp(self->static_ts.mask_project_ic_type, "3590", 4) == 0) {
 			self->isp_model = ISP_MODEL_HUB_GL3590;
 		} else {
-			g_set_error_literal(error,
-					    FWUPD_ERROR,
-					    FWUPD_ERROR_INTERNAL,
-					    "Unknown ISP model");
+			g_autofree gchar *ic_type =
+			    fu_common_strsafe((const gchar *)&self->static_ts.mask_project_ic_type,
+					      sizeof(self->static_ts.mask_project_ic_type));
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "IC type %s not supported",
+				    ic_type);
 			return FALSE;
 		}
 		memcpy(rev, &self->static_ts.mask_project_ic_type[4], 2);
