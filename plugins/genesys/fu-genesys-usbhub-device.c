@@ -642,19 +642,17 @@ fu_genesys_usbhub_device_check_fw_signature(FuGenesysUsbhubDevice *self,
 	return TRUE;
 }
 
-/* read the firmware size from the firmware stored in the device */
+/* read the code size from the firmware stored in the device */
 static gboolean
-fu_genesys_usbhub_device_get_fw_size(FuGenesysUsbhubDevice *self, int bank_num, GError **error)
+fu_genesys_usbhub_device_get_code_size(FuGenesysUsbhubDevice *self, int bank_num, GError **error)
 {
 	guint8 kbs = 0;
-
 	g_return_val_if_fail(bank_num < 2, FALSE);
-	g_return_val_if_fail(self->code_size == 0, FALSE);
 
 	if (!fu_genesys_usbhub_device_check_fw_signature(self, bank_num, error))
 		return FALSE;
 
-	/* get firmware size from device */
+	/* get code size from device */
 	if (!fu_genesys_usbhub_device_read_flash(self,
 						 self->fw_bank_addr[bank_num] +
 						     GENESYS_USBHUB_CODE_SIZE_OFFSET,
@@ -940,7 +938,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 
 		if (self->chip.revision == 50) {
 			self->fw_data_total_count = 0x8000;
-			if (!fu_genesys_usbhub_device_get_fw_size(self, 0, error))
+			if (!fu_genesys_usbhub_device_get_code_size(self, 0, error))
 				return FALSE;
 		} else {
 			self->fw_data_total_count = 0x6000;
@@ -970,7 +968,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		break;
 	}
 	case ISP_MODEL_HUB_GL3590:
-		if (!fu_genesys_usbhub_device_get_fw_size(self, 0, error))
+		if (!fu_genesys_usbhub_device_get_code_size(self, 0, error))
 			return FALSE;
 		self->fw_bank_addr[0] = 0x0000;
 		self->fw_bank_addr[1] = 0x10000;
