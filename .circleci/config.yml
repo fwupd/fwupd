@@ -36,6 +36,7 @@ jobs:
                                   mingw32-nsis
                                   mingw64-brotli
                                   mingw64-gcc
+                                  mingw64-gettext
                                   mingw64-pkg-config
                                   mingw64-glib2
                                   mingw64-gnutls
