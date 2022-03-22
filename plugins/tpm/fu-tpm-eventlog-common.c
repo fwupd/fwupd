@@ -144,26 +144,9 @@ fu_tpm_eventlog_strhex(GBytes *blob)
 gchar *
 fu_tpm_eventlog_blobstr(GBytes *blob)
 {
-	gboolean has_printable = FALSE;
-	gsize bufsz = 0;
-	const guint8 *buf = g_bytes_get_data(blob, &bufsz);
-	g_autoptr(GString) str = g_string_new(NULL);
-
 	g_return_val_if_fail(blob != NULL, NULL);
-
-	buf = g_bytes_get_data(blob, &bufsz);
-	for (gsize i = 0; i < bufsz; i++) {
-		gchar chr = buf[i];
-		if (g_ascii_isprint(chr)) {
-			g_string_append_c(str, chr);
-			has_printable = TRUE;
-		} else {
-			g_string_append_c(str, '.');
-		}
-	}
-	if (!has_printable)
-		return NULL;
-	return g_string_free(g_steal_pointer(&str), FALSE);
+	return g_base64_encode((const guchar *)g_bytes_get_data(blob, NULL),
+			       g_bytes_get_size(blob));
 }
 
 GPtrArray *
