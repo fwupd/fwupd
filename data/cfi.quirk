@@ -106,6 +106,18 @@ Vendor = PMC
 # Fudan
 [CFI\FLASHID_A1]
 Vendor = Fudan
+[CFI\FLASHID_A131]
+Name = FM25xxx
+CfiDeviceBlockSize = 0x10000
+CfiDeviceSectorSize = 0x1000
+CfiDevicePageSize = 0x100
+CfiDeviceCmdBlockErase = 0xd8
+[CFI\FLASHID_A13110]
+Name = FM25W04
+FirmwareSizeMax = 0x80000
+[CFI\FLASHID_A13111]
+Name = FM25F01
+FirmwareSizeMax = 0x20000
 
 # Hyundai
 [CFI\FLASHID_AD]
