@@ -4,6 +4,7 @@
 
 This plugin allows updating the Genesys Logic USB Hub devices.
 
+* GL3521
 * GL3523
 * GL3590
 

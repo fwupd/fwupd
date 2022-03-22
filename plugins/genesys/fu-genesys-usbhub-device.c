@@ -120,6 +120,9 @@ typedef enum {
 #define GL3523_BONDING_VALID_BIT 0x0F
 #define GL3590_BONDING_VALID_BIT 0x7F
 
+#define GL3523_BONDING_FLASH_DUMP_LOCATION_BIT 1 << 4
+#define GL3590_BONDING_FLASH_DUMP_LOCATION_BIT 1 << 7
+
 typedef enum {
 	ISP_EXIT,
 	ISP_ENTER,
@@ -153,6 +156,7 @@ struct _FuGenesysUsbhubDevice {
 	FuGenesysChip chip;
 	guint32 running_bank;
 	guint8 bonding;
+	gboolean flash_dump_location_bit;
 	guint32 flash_erase_delay;
 	guint32 flash_write_delay;
 	guint32 flash_block_size;
@@ -678,6 +682,49 @@ fu_genesys_tsdigit_value(gchar c)
 		return c - 'a' + 10;
 	return g_ascii_digit_value(c);
 }
+
+static gboolean
+fu_genesys_usbhub_device_get_bonding_and_flash_dump_location_bit(FuGenesysUsbhubDevice *self,
+								 GError **error)
+{
+	gint bonding;
+
+	/* bonding is not supported */
+	if (fu_genesys_tsdigit_value(self->static_ts.tool_string_version) <
+		TOOL_STRING_VERSION_BONDING ||
+	    self->dynamic_ts.bonding == 0) {
+		/* success */
+		return TRUE;
+	}
+
+	if (self->chip.model == ISP_MODEL_HUB_GL3590) {
+		self->bonding = (self->dynamic_ts.bonding & GL3590_BONDING_VALID_BIT);
+		self->flash_dump_location_bit =
+		    self->dynamic_ts.bonding & GL3590_BONDING_FLASH_DUMP_LOCATION_BIT;
+
+		/* success */
+		return TRUE;
+	}
+
+	bonding = fu_genesys_tsdigit_value((gchar)self->dynamic_ts.bonding);
+	if (bonding == -1) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INTERNAL,
+			    "wrong bonding value 0x%02x",
+			    self->dynamic_ts.bonding);
+		return FALSE;
+	}
+
+	if (fu_genesys_tsdigit_value(self->static_ts.tool_string_version) <
+	    TOOL_STRING_VERSION_BONDING_QC)
+		bonding <<= 1;
+	self->bonding = (bonding & GL3523_BONDING_VALID_BIT);
+	self->flash_dump_location_bit = bonding & GL3523_BONDING_FLASH_DUMP_LOCATION_BIT;
+
+	/* success */
+	return TRUE;
+}
 #endif
 
 static gboolean
@@ -816,7 +863,9 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 				   sizeof(FuGenesysStaticToolString));
 	}
 
-	if (memcmp(self->static_ts.mask_project_ic_type, "3523", 4) == 0) {
+	if (memcmp(self->static_ts.mask_project_ic_type, "3521", 4) == 0) {
+		self->chip.model = ISP_MODEL_HUB_GL3521;
+	} else if (memcmp(self->static_ts.mask_project_ic_type, "3523", 4) == 0) {
 		self->chip.model = ISP_MODEL_HUB_GL3523;
 	} else if (memcmp(self->static_ts.mask_project_ic_type, "3590", 4) == 0) {
 		self->chip.model = ISP_MODEL_HUB_GL3590;
@@ -926,10 +975,27 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	if (sector_size != 0)
 		self->flash_sector_size = sector_size;
 
+	/* get bonding and flash dump location bit */
+	if (!fu_genesys_usbhub_device_get_bonding_and_flash_dump_location_bit(self, error))
+		return FALSE;
+	fu_device_add_instance_u8(device, "BONDING", self->bonding);
+
+	if (self->dynamic_ts.running_mode == 'M') {
+		self->running_bank = BANK_MASK_CODE;
+	} else if (self->flash_dump_location_bit) {
+		self->running_bank = BANK_SECOND;
+	} else {
+		self->running_bank = BANK_FIRST;
+	}
+
 	/* setup firmware parameters */
 	switch (self->chip.model) {
+	case ISP_MODEL_HUB_GL3521:
+		self->code_size = 0x5000;
+		self->fw_bank_addr[0] = 0x0000;
+		self->fw_data_total_count = 0x5000;
+		break;
 	case ISP_MODEL_HUB_GL3523: {
-		gint bonding = 0;
 		self->fw_bank_addr[0] = 0x0000;
 		self->fw_bank_addr[1] = 0x8000;
 
@@ -944,27 +1010,6 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 			self->fw_data_total_count = 0x6000;
 			self->code_size = self->fw_data_total_count;
 		}
-
-		bonding = fu_genesys_tsdigit_value((gchar)self->dynamic_ts.bonding);
-		if (bonding == -1) {
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
-				    "GL3523 bonding value(0x%02x) is wrong",
-				    self->dynamic_ts.bonding);
-			return FALSE;
-		}
-		if (tool_string_version < TOOL_STRING_VERSION_BONDING_QC)
-			bonding <<= 1;
-		self->bonding = (bonding & GL3523_BONDING_VALID_BIT);
-
-		if (self->dynamic_ts.running_mode == 'M') {
-			self->running_bank = BANK_MASK_CODE;
-		} else if ((bonding & 0x10) > 0) {
-			self->running_bank = BANK_SECOND;
-		} else {
-			self->running_bank = BANK_FIRST;
-		}
 		break;
 	}
 	case ISP_MODEL_HUB_GL3590:
@@ -973,15 +1018,6 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		self->fw_bank_addr[0] = 0x0000;
 		self->fw_bank_addr[1] = 0x10000;
 		self->fw_data_total_count = 0x10000;
-		self->bonding = (self->dynamic_ts.bonding & GL3590_BONDING_VALID_BIT);
-
-		if (self->dynamic_ts.running_mode == 'M') {
-			self->running_bank = BANK_MASK_CODE;
-		} else if ((self->dynamic_ts.bonding & 0x80) > 0) {
-			self->running_bank = BANK_SECOND;
-		} else {
-			self->running_bank = BANK_FIRST;
-		}
 		break;
 	default:
 		break;
@@ -1080,7 +1116,6 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	ic_type = fu_common_strsafe((const gchar *)self->static_ts.mask_project_ic_type,
 				    sizeof(self->static_ts.mask_project_ic_type));
 	fu_device_add_instance_str(device, "IC", ic_type);
-	fu_device_add_instance_u8(device, "BONDING", self->bonding);
 
 	if (self->running_bank != BANK_MASK_CODE) {
 		const gchar *vendor = fwupd_device_get_vendor(FWUPD_DEVICE(device));
@@ -1096,6 +1131,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		fu_device_add_instance_strup(device, "VENDORSUP", guid);
 	}
 
+	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "IC", NULL);
 	fu_device_build_instance_id(device, NULL, "USB", "VID", "PID", "IC", "BONDING", NULL);
 	fu_device_build_instance_id(device,
 				    NULL,
