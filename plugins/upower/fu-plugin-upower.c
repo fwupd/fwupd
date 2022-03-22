@@ -13,6 +13,17 @@ struct FuPluginData {
 	GDBusProxy *proxy_manager; /* nullable */
 };
 
+typedef enum {
+	UP_DEVICE_STATE_UNKNOWN,
+	UP_DEVICE_STATE_CHARGING,
+	UP_DEVICE_STATE_DISCHARGING,
+	UP_DEVICE_STATE_EMPTY,
+	UP_DEVICE_STATE_FULLY_CHARGED,
+	UP_DEVICE_STATE_PENDING_CHARGE,
+	UP_DEVICE_STATE_PENDING_DISCHARGE,
+	UP_DEVICE_STATE_LAST
+} UpDeviceState;
+
 static void
 fu_plugin_upower_init(FuPlugin *plugin)
 {
@@ -52,7 +63,27 @@ fu_plugin_upower_rescan_devices(FuPlugin *plugin)
 		fu_context_set_battery_level(ctx, FU_BATTERY_VALUE_INVALID);
 		return;
 	}
-	fu_context_set_battery_state(ctx, g_variant_get_uint32(state_val));
+
+	/* map from UpDeviceState to FuBatteryState */
+	switch (g_variant_get_uint32(state_val)) {
+	case UP_DEVICE_STATE_CHARGING:
+	case UP_DEVICE_STATE_PENDING_CHARGE:
+		fu_context_set_battery_state(ctx, FU_BATTERY_STATE_CHARGING);
+		break;
+	case UP_DEVICE_STATE_DISCHARGING:
+	case UP_DEVICE_STATE_PENDING_DISCHARGE:
+		fu_context_set_battery_state(ctx, FU_BATTERY_STATE_DISCHARGING);
+		break;
+	case UP_DEVICE_STATE_EMPTY:
+		fu_context_set_battery_state(ctx, FU_BATTERY_STATE_EMPTY);
+		break;
+	case UP_DEVICE_STATE_FULLY_CHARGED:
+		fu_context_set_battery_state(ctx, FU_BATTERY_STATE_FULLY_CHARGED);
+		break;
+	default:
+		fu_context_set_battery_state(ctx, FU_BATTERY_STATE_UNKNOWN);
+		break;
+	}
 
 	/* get percentage */
 	percentage_val = g_dbus_proxy_get_cached_property(data->proxy, "Percentage");
