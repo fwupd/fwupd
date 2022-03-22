@@ -841,13 +841,13 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	case ISP_MODEL_HUB_GL3523:
 		self->fw_bank_addr[0] = 0x0000;
 		self->fw_bank_addr[1] = 0x8000;
-		self->fw_data_total_count = 0x6000;
 		self->extend_size = GL3523_PUBLIC_KEY_LEN + GL3523_SIG_LEN;
 		if (self->isp_revision == 50) {
 			self->fw_data_total_count = 0x8000;
 			if (!fu_genesys_usbhub_device_get_fw_size(self, 0, error))
 				return FALSE;
 		} else {
+			self->fw_data_total_count = 0x6000;
 			self->code_size = self->fw_data_total_count;
 		}
 		break;
