@@ -29,3 +29,13 @@ Flags = signed-payload
 # SK Hynix
 [NVME\VEN_1C5C]
 Flags = signed-payload
+
+# Kingston
+[NVME\VEN_2646&DEV_5013]
+Flags = signed-payload
+[NVME\VEN_2646&DEV_500A]
+Flags = signed-payload
+[NVME\VEN_2646&DEV_500B]
+Flags = unsigned-payload
+[NVME\VEN_2646&DEV_5012]
+Flags = unsigned-payload
