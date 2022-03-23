@@ -752,7 +752,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 					      sizeof(self->static_ts.mask_project_ic_type));
 			g_set_error(error,
 				    FWUPD_ERROR,
-				    FWUPD_ERROR_INTERNAL,
+				    FWUPD_ERROR_NOT_SUPPORTED,
 				    "IC type %s not supported",
 				    ic_type);
 			return FALSE;
