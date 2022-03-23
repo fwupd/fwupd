@@ -1614,6 +1614,18 @@ fwupd_release_to_variant(FwupdRelease *self)
 				      FWUPD_RESULT_KEY_DETACH_IMAGE,
 				      g_variant_new_string(priv->detach_image));
 	}
+	if (priv->update_message != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_UPDATE_MESSAGE,
+				      g_variant_new_string(priv->update_message));
+	}
+	if (priv->update_image != NULL) {
+		g_variant_builder_add(&builder,
+				      "{sv}",
+				      FWUPD_RESULT_KEY_UPDATE_IMAGE,
+				      g_variant_new_string(priv->update_image));
+	}
 	if (priv->filename != NULL) {
 		g_variant_builder_add(&builder,
 				      "{sv}",
