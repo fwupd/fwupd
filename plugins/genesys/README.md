@@ -24,7 +24,7 @@ This plugin supports the following protocol IDs:
 
 These devices use the standard USB DeviceInstanceId values for the USB Hub, e.g.
 
-* HP Mxfd FHD Monitor: `USB\VID_03F0&PID_0610`
+* HP USB-C Controller: `USB\VID_03F0&PID_0610`
 
 These devices also use custom GUID values for the Scaler, e.g.
 
