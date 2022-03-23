@@ -7042,7 +7042,7 @@ fu_engine_load_local_metadata_watches(FuEngine *self, GError **error)
 	/* add the watches even if the directory does not exist */
 	for (guint i = 0; i < G_N_ELEMENTS(path_kinds); i++) {
 		GFileMonitor *monitor;
-		GFile *file;
+		g_autoptr(GFile) file = NULL;
 		g_autoptr(GError) error_local = NULL;
 		g_autofree gchar *base = fu_common_get_path(path_kinds[i]);
 		g_autofree gchar *fn = g_build_filename(base, "local.d", NULL);
