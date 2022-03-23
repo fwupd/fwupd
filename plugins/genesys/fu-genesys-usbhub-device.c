@@ -750,7 +750,6 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	}
 	if (self->static_ts.tool_string_version != 0xff) {
 		gchar rev[3] = {0};
-		guint64 tmp;
 
 		if (memcmp(self->static_ts.mask_project_ic_type, "3523", 4) == 0) {
 			self->isp_model = ISP_MODEL_HUB_GL3523;
@@ -768,8 +767,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 			return FALSE;
 		}
 		memcpy(rev, &self->static_ts.mask_project_ic_type[4], 2);
-		tmp = fu_common_strtoull(rev);
-		self->isp_revision = tmp;
+		self->isp_revision = fu_common_strtoull(rev);
 	}
 
 	dynamic_buf =
