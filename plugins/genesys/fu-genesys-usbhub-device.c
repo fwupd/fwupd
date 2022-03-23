@@ -469,8 +469,10 @@ static gboolean
 fu_genesys_usbhub_device_probe(FuDevice *device, GError **error)
 {
 	/* FuUsbDevice->probe */
-	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->probe(device, error))
+	if (!FU_DEVICE_CLASS(fu_genesys_usbhub_device_parent_class)->probe(device, error)) {
+		g_prefix_error(error, "error probing device: ");
 		return FALSE;
+	}
 
 	/* success */
 	return TRUE;
