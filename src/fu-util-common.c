@@ -1855,6 +1855,13 @@ fu_util_release_to_string(FwupdRelease *rel, guint idt)
 					   _("Update Message"),
 					   fwupd_release_get_update_message(rel));
 	}
+	if (fwupd_release_get_update_image(rel) != NULL) {
+		fu_common_string_append_kv(str,
+					   idt + 1,
+					   /* TRANSLATORS: helpful image for the update */
+					   _("Update Image"),
+					   fwupd_release_get_update_image(rel));
+	}
 
 	/* TRANSLATORS: release attributes */
 	title = _("Release Flags");
