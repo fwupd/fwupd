@@ -149,6 +149,11 @@ fu_tpm_eventlog_blobstr(GBytes *blob)
 			       g_bytes_get_size(blob));
 }
 
+typedef struct __attribute__((packed)) {
+	guint8 Signature[16];
+	guint8 StartupLocality;
+} TCG_EfiStartupLocalityEvent;
+
 GPtrArray *
 fu_tpm_eventlog_calc_checksums(GPtrArray *items, guint8 pcr, GError **error)
 {
@@ -175,6 +180,22 @@ fu_tpm_eventlog_calc_checksums(GPtrArray *items, guint8 pcr, GError **error)
 		FuTpmEventlogItem *item = g_ptr_array_index(items, i);
 		if (item->pcr != pcr)
 			continue;
+
+		/* if TXT is enabled then the first event for PCR0 should be a StartupLocality */
+		if (item->kind == EV_NO_ACTION && item->pcr == 0 && item->blob != NULL && i == 0) {
+			gsize bufsz;
+			const guint8 *buf = g_bytes_get_data(item->blob, &bufsz);
+			if (bufsz == sizeof(TCG_EfiStartupLocalityEvent)) {
+				/* the final byte indicates the locality from which TPM2_Startup()
+				 * was issued -- which is the initial value of PCR0 */
+				if (strncmp((const char *)buf, "StartupLocality", bufsz - 2) == 0) {
+					digest_sha256[TPM2_SHA256_DIGEST_SIZE - 1] = buf[bufsz - 1];
+					digest_sha1[TPM2_SHA1_DIGEST_SIZE - 1] = buf[bufsz - 1];
+					continue;
+				}
+			}
+		}
+
 		if (item->checksum_sha1 != NULL) {
 			g_autoptr(GChecksum) csum_sha1 = g_checksum_new(G_CHECKSUM_SHA1);
 			g_checksum_update(csum_sha1, (const guchar *)digest_sha1, digest_sha1_len);
