@@ -175,6 +175,22 @@ fu_tpm_eventlog_calc_checksums(GPtrArray *items, guint8 pcr, GError **error)
 		FuTpmEventlogItem *item = g_ptr_array_index(items, i);
 		if (item->pcr != pcr)
 			continue;
+		/* If TXT is enabled then the first event for PCR0
+		 * should be a StartupLocality event. The final byte
+		 * of this event indicates the locality from which
+		 * TPM2_Startup() was issued. The initial value of
+		 * PCR0 is equal to the locality. */
+		if (item->kind == EV_NO_ACTION && item->pcr == 0 && i == 0) {
+			gsize blob_sz;
+			const guint8 *blob_p = g_bytes_get_data(item->blob, &blob_sz);
+			if (blob_sz == 17 && blob_p[blob_sz-2] == 0) {
+				if (g_strcmp0((const char *)blob_p, "StartupLocality") == 0) {
+					digest_sha256[TPM2_SHA256_DIGEST_SIZE-1] = blob_p[blob_sz-1];
+					digest_sha1[TPM2_SHA1_DIGEST_SIZE-1] = blob_p[blob_sz-1];
+					continue;
+				}
+			}
+		}
 		if (item->checksum_sha1 != NULL) {
 			g_autoptr(GChecksum) csum_sha1 = g_checksum_new(G_CHECKSUM_SHA1);
 			g_checksum_update(csum_sha1, (const guchar *)digest_sha1, digest_sha1_len);
