@@ -515,6 +515,11 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 		}
 	}
 
+	/* fix up vendor name */
+	if (g_strcmp0(fu_device_get_vendor(device), "QUALCOMM INCORPORATED") == 0)
+		fu_device_set_vendor(device, "Qualcomm");
+
+	/* success */
 	return TRUE;
 }
 
