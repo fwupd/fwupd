@@ -260,6 +260,7 @@ fu_thunderbolt_controller_setup(FuDevice *device, GError **error)
 						    (guint)did,
 						    self->is_native ? "-native" : "");
 			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_DUAL_IMAGE);
+			fu_device_add_flag(device, FWUPD_DEVICE_FLAG_UPDATABLE);
 
 			/* check if device is authorized */
 			if (!fu_thunderbolt_device_check_authorized(FU_THUNDERBOLT_DEVICE(self),
