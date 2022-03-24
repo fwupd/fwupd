@@ -24,6 +24,7 @@ struct _FuCcgxDmcDevice {
 	guint8 ep_intr_in;
 	guint8 ep_bulk_out;
 	DmcUpdateModel update_model;
+	guint16 trig_code; /* trigger code for update */
 };
 
 /**
@@ -174,7 +175,7 @@ fu_ccgx_dmc_device_send_start_upgrade(FuCcgxDmcDevice *self,
 		G_USB_DEVICE_RECIPIENT_DEVICE,
 		DMC_RQT_CODE_UPGRADE_START, /* request */
 		value,			    /* value */
-		1, /* index, forced update for Adicora only, other dock will ignore it */
+		1, /* index, forced update */
 		(guint8 *)custom_meta_data, /* data */
 		custom_meta_bufsz,	    /* length */
 		NULL,			    /* actual length */
@@ -189,7 +190,7 @@ fu_ccgx_dmc_device_send_start_upgrade(FuCcgxDmcDevice *self,
 
 static gboolean
 fu_ccgx_dmc_device_send_download_trigger(FuCcgxDmcDevice *self,
-					 DmcTriggerCode trigger,
+					 guint16 trigger,
 					 GError **error)
 {
 	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
@@ -318,6 +319,7 @@ fu_ccgx_dmc_device_to_string(FuDevice *device, guint idt, GString *str)
 				   fu_ccgx_fw_image_type_to_string(self->fw_image_type));
 	fu_common_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
 	fu_common_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
+	fu_common_string_append_kx(str, idt, "Trigger Code", self->trig_code);
 }
 
 static gboolean
@@ -552,11 +554,13 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 			    dmc_int_rqt.data[0]);
 		return FALSE;
 	}
+
+	self->update_model = DMC_UPDATE_MODEL_NONE;
 	if (dmc_int_rqt.data[0] == DMC_DEVICE_STATUS_UPDATE_PHASE_1_COMPLETE) {
 		self->update_model = DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER;
 	} else if (dmc_int_rqt.data[0] == DMC_DEVICE_STATUS_FW_DOWNLOADED_UPDATE_PEND) {
 		self->update_model = DMC_UPDATE_MODEL_PENDING_RESET;
-	} else {
+	} else if (dmc_int_rqt.data[0] >= DMC_DEVICE_STATUS_PHASE2_UPDATE_FAIL_INVALID_FWCT) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
@@ -564,6 +568,7 @@ fu_ccgx_dmc_write_firmware(FuDevice *device,
 			    dmc_int_rqt.data[0]);
 		return FALSE;
 	}
+
 	fu_progress_step_done(progress);
 
 	/* success */
@@ -616,33 +621,26 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 		return TRUE;
 
 	if (self->update_model == DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER) {
-		DmcTriggerCode trigger_code = DMC_TRIGGER_CODE_UPDATE_NOW;
-
-		if (manual_replug)
-			trigger_code = DMC_TRIGGER_CODE_UPDATE_ON_DISCONNECT;
-
-		if (!fu_ccgx_dmc_device_send_download_trigger(self, trigger_code, error)) {
-			g_prefix_error(error, "download trigger error: ");
-			return FALSE;
-		}
+		if (self->trig_code > 0) {
+			if (!fu_ccgx_dmc_device_send_download_trigger(self, self->trig_code, error)) {
+				g_prefix_error(error, "download trigger error: ");
+				return FALSE;
+			}
+			if (self->trig_code == 2) /* trigger code for update on disconnect */
+				manual_replug = TRUE;
+		}	
 	} else if (self->update_model == DMC_UPDATE_MODEL_PENDING_RESET) {
 		if (!fu_ccgx_dmc_device_send_sort_reset(self, manual_replug, error)) {
 			g_prefix_error(error, "soft reset error: ");
 			return FALSE;
 		}
-	} else {
-		g_set_error(error,
-			    FWUPD_ERROR,
-			    FWUPD_ERROR_NOT_SUPPORTED,
-			    "invalid update model = %u",
-			    self->update_model);
-		return FALSE;
 	}
 
 	if (manual_replug)
 		return TRUE;
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
+
 	return TRUE;
 }
 
@@ -684,6 +682,9 @@ fu_ccgx_dmc_device_setup(FuDevice *device, GError **error)
 	fu_device_set_version(FU_DEVICE(self), version);
 	fu_device_set_version_raw(FU_DEVICE(self), version_raw);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+
+	if (dock_id.custom_meta_data_flag > 0)
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
 	return TRUE;
 }
 
@@ -694,7 +695,14 @@ fu_ccgx_dmc_device_set_quirk_kv(FuDevice *device,
 				GError **error)
 {
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
+	guint64 tmp;
 
+	if (g_strcmp0(key, "CcgxDmcTrigCode") == 0) {
+		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
+			return FALSE;
+		self->trig_code = tmp;
+		return TRUE;
+	}
 	if (g_strcmp0(key, "CcgxImageKind") == 0) {
 		self->fw_image_type = fu_ccgx_fw_image_type_from_string(value);
 		if (self->fw_image_type != FW_IMAGE_TYPE_UNKNOWN)
@@ -705,6 +713,7 @@ fu_ccgx_dmc_device_set_quirk_kv(FuDevice *device,
 				    "invalid CcgxImageKind");
 		return FALSE;
 	}
+
 	g_set_error_literal(error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED, "no supported");
 	return FALSE;
 }
