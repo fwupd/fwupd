@@ -449,10 +449,12 @@ fu_ata_device_parse_id(FuAtaDevice *self, const guint8 *buf, gsize sz, GError **
 	/* for Phison this is per-chipset -- which is specified in the version prefix */
 	if (g_strcmp0(fu_device_get_vendor(device), "Phison") == 0 &&
 	    fu_device_get_version(device) != NULL) {
-		if (g_str_has_prefix(fu_device_get_version(device), "SB"))
+		if (g_str_has_prefix(fu_device_get_version(device), "SB")) {
 			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
-		else if (g_str_has_prefix(fu_device_get_version(device), "SH"))
+		} else if (g_str_has_prefix(fu_device_get_version(device), "SC") ||
+			   g_str_has_prefix(fu_device_get_version(device), "SH")) {
 			fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+		}
 	}
 
 	return TRUE;
