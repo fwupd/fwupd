@@ -794,14 +794,6 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 	if (!fu_logitech_hidpp_device_fetch_model_id(self, error))
 		return FALSE;
 
-	/* get the firmware information */
-	if (!fu_logitech_hidpp_device_fetch_firmware_info(self, error))
-		return FALSE;
-
-	/* get the battery level */
-	if (!fu_logitech_hidpp_device_fetch_battery_level(self, error))
-		return FALSE;
-
 	/* try using HID++2.0 */
 	idx = fu_logitech_hidpp_device_feature_get_idx(self, HIDPP_FEATURE_GET_DEVICE_NAME_TYPE);
 	if (idx != 0x00) {
@@ -867,6 +859,14 @@ fu_logitech_hidpp_device_setup(FuDevice *device, GError **error)
 		fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifying");
 		fu_device_add_protocol(FU_DEVICE(self), "com.logitech.unifyingsigned");
 	}
+
+	/* get the firmware information */
+	if (!fu_logitech_hidpp_device_fetch_firmware_info(self, error))
+		return FALSE;
+
+	/* get the battery level */
+	if (!fu_logitech_hidpp_device_fetch_battery_level(self, error))
+		return FALSE;
 
 	/* poll for pings to track active state */
 	fu_device_set_poll_interval(device, FU_HIDPP_DEVICE_POLLING_INTERVAL);
