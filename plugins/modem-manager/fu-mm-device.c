@@ -196,6 +196,41 @@ validate_firmware_update_method(MMModemFirmwareUpdateMethod methods, GError **er
 	return FALSE;
 }
 
+static void
+fu_mm_device_probe_quectel_flags(FuMmDevice *self)
+{
+	const gchar *version = fu_device_get_version(FU_DEVICE(self));
+	g_autofree gchar *name = NULL;
+	struct {
+		const gchar *name;
+		const gchar *version;
+	} secboot[] = {{"EM05GF", "EM05GFAR07A07M1G_01.005.01.005"},
+		       {"EM05CE", "EM05CEFCR08A16M1G_LNV"},
+		       {"EM120G", "EM120RGLAPR02A07M4G_18.018.18.018"},
+		       {"EM160G", "EM160RGLAPR02A07M4G_18.018.18.018"},
+		       {"EG25GG", "EG25GGBR07A07M2G_OCPU_30.001.30.001"},
+		       {NULL, NULL}};
+
+	/* find model name and compare with table from Quectel */
+	if (version == NULL)
+		return;
+	name = g_strndup(version, 6);
+	for (guint i = 0; secboot[i].name != NULL; i++) {
+		if (g_strcmp0(name, secboot[i].name) == 0) {
+			if (fu_common_vercmp_full(version,
+						  secboot[i].version,
+						  FWUPD_VERSION_FORMAT_PLAIN) >= 0) {
+				fu_device_add_flag(FU_DEVICE(self),
+						   FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+			} else {
+				fu_device_add_flag(FU_DEVICE(self),
+						   FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+			}
+			return;
+		}
+	}
+}
+
 static gboolean
 fu_mm_device_probe_default(FuDevice *device, GError **error)
 {
@@ -518,6 +553,12 @@ fu_mm_device_probe_default(FuDevice *device, GError **error)
 	/* fix up vendor name */
 	if (g_strcmp0(fu_device_get_vendor(device), "QUALCOMM INCORPORATED") == 0)
 		fu_device_set_vendor(device, "Qualcomm");
+
+	/* Quectel secboot enabled */
+	if (fu_device_get_name(device) != NULL &&
+	    g_str_has_prefix(fu_device_get_name(device), "QUECTEL")) {
+		fu_mm_device_probe_quectel_flags(self);
+	}
 
 	/* success */
 	return TRUE;
