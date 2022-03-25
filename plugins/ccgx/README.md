@@ -1,8 +1,8 @@
-# Cypress
+# Infineon Technologies
 
 ## Introduction
 
-This plugin can flash firmware on Cypress CCGx USB-C controller family of
+This plugin can flash firmware on Infineon CCGx USB-C controller family of
 devices used in docks.
 
 ## Supported Protocols
@@ -100,3 +100,10 @@ The vendor ID is set from the USB vendor, for example set to `USB:0x04B4`
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.
+
+## Trigger Code
+
+DMC devices need a specified trigger code to request the device to update 
+the firmware and the trigger code depends on the devices.
+
+Set the trigger code for your device using "CcgxDmcTriggerCode" qurik key.

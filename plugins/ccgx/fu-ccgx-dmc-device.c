@@ -168,20 +168,19 @@ fu_ccgx_dmc_device_send_start_upgrade(FuCcgxDmcDevice *self,
 			    custom_meta_bufsz);
 		return FALSE;
 	}
-	if (!g_usb_device_control_transfer(
-		fu_usb_device_get_dev(FU_USB_DEVICE(self)),
-		G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
-		G_USB_DEVICE_REQUEST_TYPE_VENDOR,
-		G_USB_DEVICE_RECIPIENT_DEVICE,
-		DMC_RQT_CODE_UPGRADE_START, /* request */
-		value,			    /* value */
-		1, /* index, forced update */
-		(guint8 *)custom_meta_data, /* data */
-		custom_meta_bufsz,	    /* length */
-		NULL,			    /* actual length */
-		DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
-		NULL,
-		error)) {
+	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
+					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
+					   G_USB_DEVICE_REQUEST_TYPE_VENDOR,
+					   G_USB_DEVICE_RECIPIENT_DEVICE,
+					   DMC_RQT_CODE_UPGRADE_START, /* request */
+					   value,		       /* value */
+					   1,			       /* index, forced update */
+					   (guint8 *)custom_meta_data, /* data */
+					   custom_meta_bufsz,	       /* length */
+					   NULL,		       /* actual length */
+					   DMC_CONTROL_TRANSFER_DEFAULT_TIMEOUT,
+					   NULL,
+					   error)) {
 		g_prefix_error(error, "send reset error: ");
 		return FALSE;
 	}
@@ -319,7 +318,7 @@ fu_ccgx_dmc_device_to_string(FuDevice *device, guint idt, GString *str)
 				   fu_ccgx_fw_image_type_to_string(self->fw_image_type));
 	fu_common_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
 	fu_common_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
-	fu_common_string_append_kx(str, idt, "Trigger Code", self->trig_code);
+	fu_common_string_append_kx(str, idt, "TriggerCode", self->trig_code);
 }
 
 static gboolean
@@ -622,13 +621,13 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 
 	if (self->update_model == DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER) {
 		if (self->trig_code > 0) {
-			if (!fu_ccgx_dmc_device_send_download_trigger(self, self->trig_code, error)) {
+			if (!fu_ccgx_dmc_device_send_download_trigger(self,
+								      self->trig_code,
+								      error)) {
 				g_prefix_error(error, "download trigger error: ");
 				return FALSE;
 			}
-			if (self->trig_code == 2) /* trigger code for update on disconnect */
-				manual_replug = TRUE;
-		}	
+		}
 	} else if (self->update_model == DMC_UPDATE_MODEL_PENDING_RESET) {
 		if (!fu_ccgx_dmc_device_send_sort_reset(self, manual_replug, error)) {
 			g_prefix_error(error, "soft reset error: ");
@@ -636,8 +635,14 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 		}
 	}
 
-	if (manual_replug)
+	if (manual_replug) {
+		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_NEEDS_ACTIVATION);
+		fu_device_inhibit(device,
+				  "update-pending",
+				  "A pending update will be completed next time the device "
+				  "is unplugged from your computer");
 		return TRUE;
+	}
 
 	fu_device_add_flag(device, FWUPD_DEVICE_FLAG_WAIT_FOR_REPLUG);
 
@@ -685,6 +690,9 @@ fu_ccgx_dmc_device_setup(FuDevice *device, GError **error)
 
 	if (dock_id.custom_meta_data_flag > 0)
 		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_SIGNED_PAYLOAD);
+	else
+		fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+
 	return TRUE;
 }
 
