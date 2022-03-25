@@ -40,7 +40,7 @@ daemon_src = [
   'fu-engine-request.c',
   'fu-history.c',
   'fu-idle.c',
-  'fu-install-task.c',
+  'fu-release.c',
   'fu-keyring-utils.c',
   'fu-plugin-list.c',
   'fu-remote-list.c',
