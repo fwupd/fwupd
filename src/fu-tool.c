@@ -1103,11 +1103,11 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 }
 
 static gint
-fu_util_install_task_sort_cb(gconstpointer a, gconstpointer b)
+fu_util_release_sort_cb(gconstpointer a, gconstpointer b)
 {
-	FuInstallTask *task1 = *((FuInstallTask **)a);
-	FuInstallTask *task2 = *((FuInstallTask **)b);
-	return fu_install_task_compare(task1, task2);
+	FuRelease *release1 = *((FuRelease **)a);
+	FuRelease *release2 = *((FuRelease **)b);
+	return fu_release_compare(release1, release2);
 }
 
 static void
@@ -1175,7 +1175,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) components = NULL;
 	g_autoptr(GPtrArray) devices_possible = NULL;
 	g_autoptr(GPtrArray) errors = NULL;
-	g_autoptr(GPtrArray) install_tasks = NULL;
+	g_autoptr(GPtrArray) releases = NULL;
 	g_autoptr(XbSilo) silo = NULL;
 
 	/* load engine */
@@ -1229,21 +1229,23 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 
 	/* for each component in the silo */
 	errors = g_ptr_array_new_with_free_func((GDestroyNotify)g_error_free);
-	install_tasks = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
+	releases = g_ptr_array_new_with_free_func((GDestroyNotify)g_object_unref);
 	for (guint i = 0; i < components->len; i++) {
 		XbNode *component = g_ptr_array_index(components, i);
 
 		/* do any devices pass the requirements */
 		for (guint j = 0; j < devices_possible->len; j++) {
 			FuDevice *device = g_ptr_array_index(devices_possible, j);
-			g_autoptr(FuInstallTask) task = NULL;
+			g_autoptr(FuRelease) release = fu_release_new();
 			g_autoptr(GError) error_local = NULL;
 
 			/* is this component valid for the device */
-			task = fu_install_task_new(device, component);
+			fu_release_set_device(release, device);
+			fu_release_set_request(release, priv->request);
+			if (!fu_release_load(release, component, NULL, priv->flags, error))
+				return FALSE;
 			if (!fu_engine_check_requirements(priv->engine,
-							  priv->request,
-							  task,
+							  release,
 							  priv->flags | FWUPD_INSTALL_FLAG_FORCE,
 							  &error_local)) {
 				g_debug("first pass requirement on %s:%s failed: %s",
@@ -1257,8 +1259,7 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 			/* make a second pass using possibly updated version format now */
 			fu_engine_md_refresh_device_from_component(priv->engine, device, component);
 			if (!fu_engine_check_requirements(priv->engine,
-							  priv->request,
-							  task,
+							  release,
 							  priv->flags,
 							  &error_local)) {
 				g_debug("second pass requirement on %s:%s failed: %s",
@@ -1273,15 +1274,15 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 			fu_device_incorporate_from_component(device, component);
 
 			/* success */
-			g_ptr_array_add(install_tasks, g_steal_pointer(&task));
+			g_ptr_array_add(releases, g_steal_pointer(&release));
 		}
 	}
 
 	/* order the install tasks by the device priority */
-	g_ptr_array_sort(install_tasks, fu_util_install_task_sort_cb);
+	g_ptr_array_sort(releases, fu_util_release_sort_cb);
 
 	/* nothing suitable */
-	if (install_tasks->len == 0) {
+	if (releases->len == 0) {
 		GError *error_tmp = fu_common_error_array_get_best(errors);
 		g_propagate_error(error, error_tmp);
 		return FALSE;
@@ -1294,13 +1295,13 @@ fu_util_install(FuUtilPrivate *priv, gchar **values, GError **error)
 			 priv);
 
 	/* install all the tasks */
-	if (!fu_engine_install_tasks(priv->engine,
-				     priv->request,
-				     install_tasks,
-				     blob_cab,
-				     priv->progress,
-				     priv->flags,
-				     error))
+	if (!fu_engine_install_releases(priv->engine,
+					priv->request,
+					releases,
+					blob_cab,
+					priv->progress,
+					priv->flags,
+					error))
 		return FALSE;
 
 	fu_util_display_current_message(priv);
