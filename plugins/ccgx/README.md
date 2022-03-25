@@ -97,13 +97,17 @@ the DMC/HPI and runtime modes are treated as the same device.
 
 The vendor ID is set from the USB vendor, for example set to `USB:0x04B4`
 
+## Quirk Use
+
+This plugin uses the following plugin-specific quirks:
+
+### CcgxDmcTriggerCode
+
+DMC devices need a specified trigger code to request the device to update
+the firmware and the trigger code depends on the device.
+
+Since: 1.8.0
+
 ## External Interface Access
 
 This plugin requires read/write access to `/dev/bus/usb`.
-
-## Trigger Code
-
-DMC devices need a specified trigger code to request the device to update 
-the firmware and the trigger code depends on the devices.
-
-Set the trigger code for your device using "CcgxDmcTriggerCode" qurik key.
