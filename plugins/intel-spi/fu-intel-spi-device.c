@@ -506,6 +506,14 @@ fu_intel_spi_device_set_quirk_kv(FuDevice *device,
 }
 
 static void
+fu_intel_spi_device_finalize(GObject *object)
+{
+	FuIntelSpiDevice *self = FU_INTEL_SPI_DEVICE(object);
+	g_free(self->spibar_proxy);
+	G_OBJECT_CLASS(fu_intel_spi_device_parent_class)->finalize(object);
+}
+
+static void
 fu_intel_spi_device_init(FuIntelSpiDevice *self)
 {
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
@@ -519,7 +527,9 @@ fu_intel_spi_device_init(FuIntelSpiDevice *self)
 static void
 fu_intel_spi_device_class_init(FuIntelSpiDeviceClass *klass)
 {
+	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	object_class->finalize = fu_intel_spi_device_finalize;
 	klass_device->to_string = fu_intel_spi_device_to_string;
 	klass_device->probe = fu_intel_spi_device_probe;
 	klass_device->setup = fu_intel_spi_device_setup;
