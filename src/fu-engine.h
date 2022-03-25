@@ -15,9 +15,8 @@
 
 #include "fu-common.h"
 #include "fu-context.h"
-#include "fu-engine-request.h"
-#include "fu-install-task.h"
 #include "fu-plugin.h"
+#include "fu-release.h"
 #include "fu-security-attrs.h"
 
 #define FU_TYPE_ENGINE (fu_engine_get_type())
@@ -160,13 +159,12 @@ fu_engine_composite_prepare(FuEngine *self, GPtrArray *devices, GError **error);
 gboolean
 fu_engine_composite_cleanup(FuEngine *self, GPtrArray *devices, GError **error);
 gboolean
-fu_engine_install(FuEngine *self,
-		  FuInstallTask *task,
-		  GBytes *blob_cab,
-		  FuProgress *progress,
-		  FwupdInstallFlags flags,
-		  FwupdFeatureFlags feature_flags,
-		  GError **error);
+fu_engine_install_release(FuEngine *self,
+			  FuRelease *task,
+			  GBytes *blob_cab,
+			  FuProgress *progress,
+			  FwupdInstallFlags flags,
+			  GError **error);
 gboolean
 fu_engine_install_blob(FuEngine *self,
 		       FuDevice *device,
@@ -176,13 +174,13 @@ fu_engine_install_blob(FuEngine *self,
 		       FwupdFeatureFlags feature_flags,
 		       GError **error);
 gboolean
-fu_engine_install_tasks(FuEngine *self,
-			FuEngineRequest *request,
-			GPtrArray *install_tasks,
-			GBytes *blob_cab,
-			FuProgress *progress,
-			FwupdInstallFlags flags,
-			GError **error);
+fu_engine_install_releases(FuEngine *self,
+			   FuEngineRequest *request,
+			   GPtrArray *releases,
+			   GBytes *blob_cab,
+			   FuProgress *progress,
+			   FwupdInstallFlags flags,
+			   GError **error);
 GPtrArray *
 fu_engine_get_details(FuEngine *self, FuEngineRequest *request, gint fd, GError **error);
 gboolean
@@ -221,11 +219,10 @@ fu_engine_add_plugin(FuEngine *self, FuPlugin *plugin);
 void
 fu_engine_add_runtime_version(FuEngine *self, const gchar *component_id, const gchar *version);
 gboolean
-fu_engine_check_trust(FuEngine *self, FuInstallTask *task, GError **error);
+fu_engine_check_trust(FuEngine *self, FuRelease *task, GError **error);
 gboolean
 fu_engine_check_requirements(FuEngine *self,
-			     FuEngineRequest *request,
-			     FuInstallTask *task,
+			     FuRelease *release,
 			     FwupdInstallFlags flags,
 			     GError **error);
 void
