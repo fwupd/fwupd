@@ -1922,8 +1922,7 @@ fu_udev_device_get_parent_with_subsystem(FuUdevDevice *self, const gchar *subsys
 	device_tmp = g_udev_device_get_parent_with_subsystem(priv->udev_device, subsystem, NULL);
 	if (device_tmp == NULL)
 		return NULL;
-	return fu_udev_device_new_with_context(fu_device_get_context(FU_DEVICE(self)),
-					       g_steal_pointer(&device_tmp));
+	return fu_udev_device_new_with_context(fu_device_get_context(FU_DEVICE(self)), device_tmp);
 #else
 	return NULL;
 #endif
