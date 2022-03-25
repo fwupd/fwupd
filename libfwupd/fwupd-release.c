@@ -63,6 +63,8 @@ typedef struct {
 	gchar *update_image;
 } FwupdReleasePrivate;
 
+enum { PROP_0, PROP_REMOTE_ID, PROP_LAST };
+
 G_DEFINE_TYPE_WITH_PRIVATE(FwupdRelease, fwupd_release, G_TYPE_OBJECT)
 #define GET_PRIVATE(o) (fwupd_release_get_instance_private(o))
 
@@ -109,6 +111,7 @@ fwupd_release_set_remote_id(FwupdRelease *self, const gchar *remote_id)
 
 	g_free(priv->remote_id);
 	priv->remote_id = g_strdup(remote_id);
+	g_object_notify(G_OBJECT(self), "remote-id");
 }
 
 /**
@@ -2214,10 +2217,58 @@ fwupd_release_to_string(FwupdRelease *self)
 }
 
 static void
+fwupd_release_get_property(GObject *obj, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	FwupdRelease *self = FWUPD_RELEASE(obj);
+	FwupdReleasePrivate *priv = GET_PRIVATE(self);
+
+	switch (prop_id) {
+	case PROP_REMOTE_ID:
+		g_value_set_string(value, priv->remote_id);
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(obj, prop_id, pspec);
+		break;
+	}
+}
+
+static void
+fwupd_release_set_property(GObject *obj, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	FwupdRelease *self = FWUPD_RELEASE(obj);
+
+	switch (prop_id) {
+	case PROP_REMOTE_ID:
+		fwupd_release_set_remote_id(self, g_value_get_string(value));
+		break;
+	default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID(obj, prop_id, pspec);
+		break;
+	}
+}
+
+static void
 fwupd_release_class_init(FwupdReleaseClass *klass)
 {
+	GParamSpec *pspec;
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	object_class->finalize = fwupd_release_finalize;
+	object_class->get_property = fwupd_release_get_property;
+	object_class->set_property = fwupd_release_set_property;
+
+	/**
+	 * FwupdRelease:remote-id:
+	 *
+	 * The remote ID.
+	 *
+	 * Since: 1.8.0
+	 */
+	pspec = g_param_spec_string("remote-id",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READWRITE | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_REMOTE_ID, pspec);
 }
 
 static void
