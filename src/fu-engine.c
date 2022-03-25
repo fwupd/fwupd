@@ -1098,8 +1098,8 @@ fu_engine_verify_update(FuEngine *self,
 static XbNode *
 fu_engine_get_component_by_guid(FuEngine *self, const gchar *guid)
 {
-	XbNode *component;
 	g_autoptr(GError) error_local = NULL;
+	g_autoptr(XbNode) component = NULL;
 #if LIBXMLB_CHECK_VERSION(0, 3, 0)
 	g_auto(XbQueryContext) context = XB_QUERY_CONTEXT_INIT();
 #endif
