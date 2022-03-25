@@ -24,7 +24,7 @@ struct _FuCcgxDmcDevice {
 	guint8 ep_intr_in;
 	guint8 ep_bulk_out;
 	DmcUpdateModel update_model;
-	guint16 trig_code; /* trigger code for update */
+	guint16 trigger_code;
 };
 
 /**
@@ -188,9 +188,7 @@ fu_ccgx_dmc_device_send_start_upgrade(FuCcgxDmcDevice *self,
 }
 
 static gboolean
-fu_ccgx_dmc_device_send_download_trigger(FuCcgxDmcDevice *self,
-					 guint16 trigger,
-					 GError **error)
+fu_ccgx_dmc_device_send_download_trigger(FuCcgxDmcDevice *self, guint16 trigger, GError **error)
 {
 	if (!g_usb_device_control_transfer(fu_usb_device_get_dev(FU_USB_DEVICE(self)),
 					   G_USB_DEVICE_DIRECTION_HOST_TO_DEVICE,
@@ -318,7 +316,7 @@ fu_ccgx_dmc_device_to_string(FuDevice *device, guint idt, GString *str)
 				   fu_ccgx_fw_image_type_to_string(self->fw_image_type));
 	fu_common_string_append_kx(str, idt, "EpBulkOut", self->ep_bulk_out);
 	fu_common_string_append_kx(str, idt, "EpIntrIn", self->ep_intr_in);
-	fu_common_string_append_kx(str, idt, "TriggerCode", self->trig_code);
+	fu_common_string_append_kx(str, idt, "TriggerCode", self->trigger_code);
 }
 
 static gboolean
@@ -620,9 +618,9 @@ fu_ccgx_dmc_device_attach(FuDevice *device, FuProgress *progress, GError **error
 		return TRUE;
 
 	if (self->update_model == DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER) {
-		if (self->trig_code > 0) {
+		if (self->trigger_code > 0) {
 			if (!fu_ccgx_dmc_device_send_download_trigger(self,
-								      self->trig_code,
+								      self->trigger_code,
 								      error)) {
 				g_prefix_error(error, "download trigger error: ");
 				return FALSE;
@@ -705,10 +703,10 @@ fu_ccgx_dmc_device_set_quirk_kv(FuDevice *device,
 	FuCcgxDmcDevice *self = FU_CCGX_DMC_DEVICE(device);
 	guint64 tmp;
 
-	if (g_strcmp0(key, "CcgxDmcTrigCode") == 0) {
+	if (g_strcmp0(key, "CcgxDmcTriggerCode") == 0) {
 		if (!fu_common_strtoull_full(value, &tmp, 0, G_MAXUINT16, error))
 			return FALSE;
-		self->trig_code = tmp;
+		self->trigger_code = tmp;
 		return TRUE;
 	}
 	if (g_strcmp0(key, "CcgxImageKind") == 0) {
