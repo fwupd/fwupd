@@ -2090,91 +2090,91 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		FwupdSecurityAttrResult result_old;
 		FwupdSecurityAttrResult result_new;
 		const gchar *text;
-	} items[] = {{"org.fwupd.hsi.Iommu",
+	} items[] = {{FWUPD_SECURITY_ATTR_ID_IOMMU,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
 		      _("IOMMU device protection enabled")},
-		     {"org.fwupd.hsi.Iommu",
+		     {FWUPD_SECURITY_ATTR_ID_IOMMU,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
 		      /* TRANSLATORS: HSI event title */
 		      _("IOMMU device protection disabled")},
 		     /* ------------------------------------------*/
-		     {"org.fwupd.hsi.Fwupd.Plugins",
+		     {FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS,
 		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
 		      NULL},
-		     {"org.fwupd.hsi.Fwupd.Plugins",
+		     {FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
 		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
 		      NULL},
-		     {"org.fwupd.hsi.Fwupd.Plugins",
+		     {FWUPD_SECURITY_ATTR_ID_FWUPD_PLUGINS,
 		      FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      NULL},
 		     /* ------------------------------------------*/
-		     {"org.fwupd.hsi.Kernel.Tainted",
+		     {FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED,
 		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
 		      /* TRANSLATORS: HSI event title */
 		      _("Kernel is tainted")},
-		     {"org.fwupd.hsi.Kernel.Tainted",
+		     {FWUPD_SECURITY_ATTR_ID_KERNEL_TAINTED,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED,
 		      FWUPD_SECURITY_ATTR_RESULT_TAINTED,
 		      /* TRANSLATORS: HSI event title */
 		      _("Kernel is no longer tainted")},
 		     /* ------------------------------------------*/
-		     {"org.fwupd.hsi.Kernel.Lockdown",
+		     {FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
 		      _("Kernel lockdown disabled")},
-		     {"org.fwupd.hsi.Kernel.Lockdown",
+		     {FWUPD_SECURITY_ATTR_ID_KERNEL_LOCKDOWN,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
 		      _("Kernel lockdown enabled")},
 		     /* ------------------------------------------*/
-		     {"org.fwupd.hsi.AcpiDmar",
+		     {FWUPD_SECURITY_ATTR_ID_ACPI_DMAR,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
 		      _("Pre-boot DMA protection is disabled")},
-		     {"org.fwupd.hsi.AcpiDmar",
+		     {FWUPD_SECURITY_ATTR_ID_ACPI_DMAR,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
 		      _("Pre-boot DMA protection is enabled")},
 		     /* ------------------------------------------*/
-		     {"org.fwupd.hsi.Uefi.SecureBoot",
+		     {FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
 		      _("Secure Boot disabled")},
-		     {"org.fwupd.hsi.Uefi.SecureBoot",
+		     {FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
 		      _("Secure Boot enabled")},
 		     /* ------------------------------------------*/
-		     {"org.fwupd.hsi.Tpm.EmptyPcr",
+		     {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR,
 		      FWUPD_SECURITY_ATTR_RESULT_UNKNOWN,
 		      FWUPD_SECURITY_ATTR_RESULT_VALID,
 		      /* TRANSLATORS: HSI event title */
 		      _("All TPM PCRs are valid")},
-		     {"org.fwupd.hsi.Tpm.EmptyPcr",
+		     {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR,
 		      FWUPD_SECURITY_ATTR_RESULT_VALID,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
-		      /* TRANSLATORS: HSI event title */
-		      _("All TPM PCRs are now valid")},
-		     {"org.fwupd.hsi.Uefi.SecureBoot",
-		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
-		      FWUPD_SECURITY_ATTR_RESULT_VALID,
 		      /* TRANSLATORS: HSI event title */
 		      _("A TPM PCR is now an invalid value")},
+		     {FWUPD_SECURITY_ATTR_ID_TPM_EMPTY_PCR,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+		      FWUPD_SECURITY_ATTR_RESULT_VALID,
+		      /* TRANSLATORS: HSI event title */
+		      _("All TPM PCRs are now valid")},
 		     /* ------------------------------------------*/
-		     {"org.fwupd.hsi.Tpm.ReconstructionPcr0",
+		     {FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_FOUND,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
 		      /* TRANSLATORS: HSI event title */
