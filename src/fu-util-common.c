@@ -2186,6 +2186,11 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
 		      /* TRANSLATORS: HSI event title */
 		      _("TPM PCR0 reconstruction is invalid")},
+		     {FWUPD_SECURITY_ATTR_ID_TPM_RECONSTRUCTION_PCR0,
+		      FWUPD_SECURITY_ATTR_RESULT_NOT_VALID,
+		      FWUPD_SECURITY_ATTR_RESULT_VALID,
+		      /* TRANSLATORS: HSI event title */
+		      _("TPM PCR0 reconstruction is now valid")},
 		     {NULL, 0, 0, NULL}};
 
 	/* sanity check */
