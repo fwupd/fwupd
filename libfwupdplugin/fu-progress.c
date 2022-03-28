@@ -316,7 +316,7 @@ fu_progress_set_percentage(FuProgress *self, guint percentage)
 		return;
 
 	/* is it less */
-	if (percentage < priv->percentage) {
+	if (priv->percentage != G_MAXUINT && percentage < priv->percentage) {
 		if (priv->profile) {
 			g_autoptr(GString) str = g_string_new(NULL);
 			fu_progress_build_parent_chain(self, str, 0);
@@ -408,7 +408,7 @@ fu_progress_reset(FuProgress *self)
 	/* reset values */
 	priv->step_max = 0;
 	priv->step_now = 0;
-	priv->percentage = 0;
+	priv->percentage = G_MAXUINT;
 
 	/* only use the timer if profiling; it's expensive */
 	if (priv->profile)
@@ -454,6 +454,9 @@ fu_progress_set_steps(FuProgress *self, guint step_max)
 
 	/* set step_max */
 	priv->step_max = step_max;
+
+	/* show that the sub-progress has been created */
+	fu_progress_set_percentage(self, 0);
 }
 
 /**
@@ -861,6 +864,7 @@ static void
 fu_progress_init(FuProgress *self)
 {
 	FuProgressPrivate *priv = GET_PRIVATE(self);
+	priv->percentage = G_MAXUINT;
 	priv->timer = g_timer_new();
 	priv->steps = g_ptr_array_new_with_free_func(g_free);
 }
