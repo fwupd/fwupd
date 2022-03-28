@@ -4490,7 +4490,6 @@ XbSilo *
 fu_engine_get_silo_from_blob(FuEngine *self, GBytes *blob_cab, GError **error)
 {
 	g_autoptr(FuCabinet) cabinet = fu_cabinet_new();
-	g_autoptr(XbSilo) silo = NULL;
 
 	g_return_val_if_fail(FU_IS_ENGINE(self), NULL);
 	g_return_val_if_fail(blob_cab != NULL, NULL);
@@ -4502,9 +4501,7 @@ fu_engine_get_silo_from_blob(FuEngine *self, GBytes *blob_cab, GError **error)
 	fu_cabinet_set_jcat_context(cabinet, self->jcat_context);
 	if (!fu_cabinet_parse(cabinet, blob_cab, FU_CABINET_PARSE_FLAG_NONE, error))
 		return NULL;
-	silo = fu_cabinet_get_silo(cabinet);
-	fu_engine_set_status(self, FWUPD_STATUS_IDLE);
-	return g_steal_pointer(&silo);
+	return fu_cabinet_get_silo(cabinet);
 }
 
 static FuDevice *
