@@ -1020,6 +1020,8 @@ LIBFWUPDPLUGIN_1.7.7 {
 
 LIBFWUPDPLUGIN_1.8.0 {
   global:
+    fu_cfi_device_chip_select;
+    fu_cfi_device_chip_select_locker_new;
     fu_common_reverse_uint8;
     fu_coswid_firmware_get_type;
     fu_coswid_firmware_new;

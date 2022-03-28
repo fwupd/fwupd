@@ -467,6 +467,64 @@ fu_cfi_device_to_string(FuDevice *device, guint idt, GString *str)
 		fu_common_string_append_kx(str, idt, "BlockSize", priv->block_size);
 }
 
+/**
+ * fu_cfi_device_chip_select:
+ * @self: a #FuCfiDevice
+ * @value: boolean
+ * @error: (nullable): optional return location for an error
+ *
+ * Sets the chip select value.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.8.0
+ **/
+gboolean
+fu_cfi_device_chip_select(FuCfiDevice *self, gboolean value, GError **error)
+{
+	FuCfiDeviceClass *klass = FU_CFI_DEVICE_GET_CLASS(self);
+	g_return_val_if_fail(FU_IS_CFI_DEVICE(self), FALSE);
+	g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+	if (klass->chip_select == NULL) {
+		g_set_error_literal(error, FWUPD_ERROR, FWUPD_ERROR_NOT_SUPPORTED, "not supported");
+		return FALSE;
+	}
+	return klass->chip_select(self, value, error);
+}
+
+static gboolean
+fu_cfi_device_chip_select_assert(GObject *device, GError **error)
+{
+	return fu_cfi_device_chip_select(FU_CFI_DEVICE(device), TRUE, error);
+}
+
+static gboolean
+fu_cfi_device_chip_select_deassert(GObject *device, GError **error)
+{
+	return fu_cfi_device_chip_select(FU_CFI_DEVICE(device), FALSE, error);
+}
+
+/**
+ * fu_cfi_device_chip_select_locker_new:
+ * @self: a #FuCfiDevice
+ *
+ * Creates a custom device locker that asserts and deasserts the chip select signal.
+ *
+ * Returns: (transfer full): (nullable): a #FuDeviceLocker
+ *
+ * Since: 1.8.0
+ **/
+FuDeviceLocker *
+fu_cfi_device_chip_select_locker_new(FuCfiDevice *self, GError **error)
+{
+	g_return_val_if_fail(FU_IS_CFI_DEVICE(self), NULL);
+	g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+	return fu_device_locker_new_full(self,
+					 fu_cfi_device_chip_select_assert,
+					 fu_cfi_device_chip_select_deassert,
+					 error);
+}
+
 static void
 fu_cfi_device_init(FuCfiDevice *self)
 {
