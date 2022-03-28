@@ -1777,6 +1777,20 @@ fu_mm_device_setup(FuDevice *device, GError **error)
 }
 
 static void
+fu_mm_device_incorporate(FuDevice *device, FuDevice *donor_device)
+{
+	FuMmDevice *self = FU_MM_DEVICE(device);
+	FuMmDevice *donor = FU_MM_DEVICE(donor_device);
+
+	self->update_methods = fu_mm_device_get_update_methods(donor);
+	self->detach_fastboot_at = g_strdup(fu_mm_device_get_detach_fastboot_at(donor));
+	self->inhibition_uid = g_strdup(fu_mm_device_get_inhibition_uid(donor));
+	self->port_at_ifnum = fu_mm_device_get_port_at_ifnum(donor);
+	self->port_qmi_ifnum = fu_mm_device_get_port_qmi_ifnum(donor);
+	self->port_mbim_ifnum = fu_mm_device_get_port_mbim_ifnum(donor);
+}
+
+static void
 fu_mm_device_set_progress(FuDevice *self, FuProgress *progress)
 {
 	fu_progress_set_id(progress, G_STRLOC);
@@ -1843,6 +1857,7 @@ fu_mm_device_class_init(FuMmDeviceClass *klass)
 	klass_device->write_firmware = fu_mm_device_write_firmware;
 	klass_device->attach = fu_mm_device_attach;
 	klass_device->set_progress = fu_mm_device_set_progress;
+	klass_device->incorporate = fu_mm_device_incorporate;
 
 	/**
 	 * FuMmDevice::attach-finished:
@@ -1873,39 +1888,16 @@ fu_mm_device_new(FuContext *ctx, MMManager *manager, MMObject *omodem)
 	return self;
 }
 
-FuPluginMmInhibitedDeviceInfo *
-fu_plugin_mm_inhibited_device_info_new(FuMmDevice *device)
+FuMmDevice *
+fu_mm_shadow_device_new(FuMmDevice *device)
 {
-	FuPluginMmInhibitedDeviceInfo *info;
-
-	info = g_new0(FuPluginMmInhibitedDeviceInfo, 1);
-	info->physical_id = g_strdup(fu_device_get_physical_id(FU_DEVICE(device)));
-	info->vendor = g_strdup(fu_device_get_vendor(FU_DEVICE(device)));
-	info->name = g_strdup(fu_device_get_name(FU_DEVICE(device)));
-	info->version = g_strdup(fu_device_get_version(FU_DEVICE(device)));
-	info->guids = fu_device_get_guids(FU_DEVICE(device));
-	info->update_methods = fu_mm_device_get_update_methods(device);
-	info->detach_fastboot_at = g_strdup(fu_mm_device_get_detach_fastboot_at(device));
-	info->port_at_ifnum = fu_mm_device_get_port_at_ifnum(device);
-	info->port_qmi_ifnum = fu_mm_device_get_port_qmi_ifnum(device);
-	info->port_mbim_ifnum = fu_mm_device_get_port_mbim_ifnum(device);
-	info->inhibited_uid = g_strdup(fu_mm_device_get_inhibition_uid(device));
-
-	return info;
-}
-
-void
-fu_plugin_mm_inhibited_device_info_free(FuPluginMmInhibitedDeviceInfo *info)
-{
-	g_free(info->inhibited_uid);
-	g_free(info->physical_id);
-	g_free(info->vendor);
-	g_free(info->name);
-	g_free(info->version);
-	if (info->guids)
-		g_ptr_array_unref(info->guids);
-	g_free(info->detach_fastboot_at);
-	g_free(info);
+	FuMmDevice *shadow_device = NULL;
+	shadow_device = g_object_new(FU_TYPE_MM_DEVICE,
+				     "context",
+				     fu_device_get_context(FU_DEVICE(device)),
+				     NULL);
+	fu_device_incorporate(FU_DEVICE(shadow_device), FU_DEVICE(device));
+	return shadow_device;
 }
 
 FuUsbDevice *
@@ -1924,23 +1916,13 @@ fu_mm_device_set_usb_device(FuMmDevice *self, FuUsbDevice *usb_device)
 }
 
 FuMmDevice *
-fu_mm_device_udev_new(FuContext *ctx, MMManager *manager, FuPluginMmInhibitedDeviceInfo *info)
+fu_mm_device_udev_new(FuContext *ctx, MMManager *manager, FuMmDevice *shadow_device)
 {
 	FuMmDevice *self = g_object_new(FU_TYPE_MM_DEVICE, "context", ctx, NULL);
-	g_debug("creating udev-based mm device at %s", info->physical_id);
+	g_debug("creating udev-based mm device at %s",
+		fu_device_get_physical_id(FU_DEVICE(shadow_device)));
 	self->manager = g_object_ref(manager);
-	fu_device_set_physical_id(FU_DEVICE(self), info->physical_id);
-	fu_device_set_vendor(FU_DEVICE(self), info->vendor);
-	fu_device_set_name(FU_DEVICE(self), info->name);
-	fu_device_set_version(FU_DEVICE(self), info->version);
-	self->update_methods = info->update_methods;
-	self->detach_fastboot_at = g_strdup(info->detach_fastboot_at);
-	self->port_at_ifnum = info->port_at_ifnum;
-	self->port_qmi_ifnum = info->port_qmi_ifnum;
-
-	for (guint i = 0; i < info->guids->len; i++)
-		fu_device_add_guid(FU_DEVICE(self), g_ptr_array_index(info->guids, i));
-
+	fu_device_incorporate(FU_DEVICE(self), FU_DEVICE(shadow_device));
 	return self;
 }
 
