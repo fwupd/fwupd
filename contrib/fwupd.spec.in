@@ -422,6 +422,7 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_bcm57xx.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_cfu.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_ccgx.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_ch341a.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_colorhug.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_cros_ec.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_cpu.so

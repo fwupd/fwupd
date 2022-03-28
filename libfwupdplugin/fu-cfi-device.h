@@ -15,7 +15,8 @@ G_DECLARE_DERIVABLE_TYPE(FuCfiDevice, fu_cfi_device, FU, CFI_DEVICE, FuDevice)
 
 struct _FuCfiDeviceClass {
 	FuDeviceClass parent_class;
-	gpointer __reserved[31];
+	gboolean (*chip_select)(FuCfiDevice *self, gboolean value, GError **error);
+	gpointer __reserved[30];
 };
 
 /**
@@ -70,3 +71,8 @@ void
 fu_cfi_device_set_block_size(FuCfiDevice *self, guint32 block_size);
 gboolean
 fu_cfi_device_get_cmd(FuCfiDevice *self, FuCfiDeviceCmd cmd, guint8 *value, GError **error);
+
+gboolean
+fu_cfi_device_chip_select(FuCfiDevice *self, gboolean value, GError **error);
+FuDeviceLocker *
+fu_cfi_device_chip_select_locker_new(FuCfiDevice *self, GError **error);

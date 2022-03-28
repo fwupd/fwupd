@@ -1,0 +1,2 @@
+[USB\VID_1A86&PID_5512]
+Plugin = ch341a
