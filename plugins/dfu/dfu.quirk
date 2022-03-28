@@ -71,6 +71,10 @@ Flags = attach-upload-download
 Plugin = dfu
 Flags = no-dfu-runtime,needs-bootloader
 
+# Hughski AT90USBKEY Mouse+DFU Demo
+[USB\VID_273F&PID_2000]
+Flags = unsigned-payload
+
 # Jabra 410 [appIDLE & dfuIDLE]
 [USB\VID_0B0E&PID_0411]
 Plugin = dfu
