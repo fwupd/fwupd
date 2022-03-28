@@ -3091,6 +3091,7 @@ fu_engine_prepare(FuEngine *self, FwupdInstallFlags flags, const gchar *device_i
 
 	/* don't rely on a plugin clearing this */
 	fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_ANOTHER_WRITE_REQUIRED);
+	fu_device_inhibit(device, "update-in-progress", "An update is in progress");
 
 	if (!fu_engine_device_check_power(self, device, flags, error))
 		return FALSE;
@@ -3126,6 +3127,7 @@ fu_engine_cleanup(FuEngine *self, FwupdInstallFlags flags, const gchar *device_i
 		g_prefix_error(error, "failed to get device before update cleanup: ");
 		return FALSE;
 	}
+	fu_device_uninhibit(device, "update-in-progress");
 	str = fu_device_to_string(device);
 	g_debug("cleanup -> %s", str);
 	if (!fu_engine_device_cleanup(self, device, flags, error))
