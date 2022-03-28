@@ -5336,7 +5336,7 @@ fwupd_client_class_init(FwupdClientClass *klass)
 	    g_signal_new("device-request",
 			 G_TYPE_FROM_CLASS(object_class),
 			 G_SIGNAL_RUN_LAST,
-			 G_STRUCT_OFFSET(FwupdClientClass, device_changed),
+			 G_STRUCT_OFFSET(FwupdClientClass, device_request),
 			 NULL,
 			 NULL,
 			 g_cclosure_marshal_generic,
