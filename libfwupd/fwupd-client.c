@@ -488,6 +488,7 @@ GMainContext *
 fwupd_client_get_main_context(FwupdClient *self)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FWUPD_IS_CLIENT(self), NULL);
 	if (priv->main_ctx != NULL)
 		return g_main_context_ref(priv->main_ctx);
 	return g_main_context_new();
@@ -506,6 +507,7 @@ void
 fwupd_client_set_main_context(FwupdClient *self, GMainContext *main_ctx)
 {
 	FwupdClientPrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FWUPD_IS_CLIENT(self));
 	if (main_ctx == priv->main_ctx)
 		return;
 	g_clear_pointer(&priv->main_ctx, g_main_context_unref);
