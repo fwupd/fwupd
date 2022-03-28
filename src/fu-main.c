@@ -292,10 +292,14 @@ fu_main_device_array_to_variant(FuMainPrivate *priv,
 
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
-		GVariant *tmp =
-		    fwupd_device_to_variant_full(FWUPD_DEVICE(device),
-						 fu_engine_request_get_device_flags(request));
-		g_variant_builder_add_value(&builder, tmp);
+		FwupdDeviceFlags flags = fu_engine_request_get_device_flags(request);
+		if (!fu_device_has_internal_flag(device,
+						 FU_DEVICE_INTERNAL_FLAG_PRIVATE_SERIAL_NUMBER)) {
+			flags |= FWUPD_DEVICE_FLAG_TRUSTED;
+		}
+		g_variant_builder_add_value(
+		    &builder,
+		    fwupd_device_to_variant_full(FWUPD_DEVICE(device), flags));
 	}
 	return g_variant_new("(aa{sv})", &builder);
 }

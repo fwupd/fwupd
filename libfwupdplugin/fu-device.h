@@ -447,6 +447,18 @@ typedef guint64 FuDeviceInternalFlags;
  */
 #define FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED (1ull << 23)
 
+/**
+ * FU_DEVICE_INTERNAL_FLAG_PRIVATE_SERIAL_NUMBER:
+ *
+ * Keep the device serial number and instance IDs private for non-root users.
+ *
+ * NOTE: This doesn't make sense for removable devices as the attacker could just unplug the device
+ * and use a laptop where this restriction isn't being enforced.
+ *
+ * Since: 1.8.0
+ */
+#define FU_DEVICE_INTERNAL_FLAG_PRIVATE_SERIAL_NUMBER (1ull << 24)
+
 /* accessors */
 gchar *
 fu_device_to_string(FuDevice *self);
