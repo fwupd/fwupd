@@ -415,43 +415,14 @@ ch_colorhug_device_calculate_checksum(const guint8 *data, guint32 len)
 }
 
 static gboolean
-fu_colorhug_device_write_firmware(FuDevice *device,
-				  FuFirmware *firmware,
-				  FuProgress *progress,
-				  FwupdInstallFlags flags,
-				  GError **error)
+fu_colorhug_device_write_blocks(FuColorhugDevice *self,
+				GPtrArray *chunks,
+				FuProgress *progress,
+				GError **error)
 {
-	FuColorhugDevice *self = FU_COLORHUG_DEVICE(device);
-	g_autoptr(GBytes) fw = NULL;
-	g_autoptr(GPtrArray) chunks = NULL;
-
 	/* progress */
 	fu_progress_set_id(progress, G_STRLOC);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 19);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 44);
-	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 35);
-
-	/* get default image */
-	fw = fu_firmware_get_bytes(firmware, error);
-	if (fw == NULL)
-		return FALSE;
-
-	/* don't auto-boot firmware */
-	if (!fu_colorhug_device_set_flash_success(self, FALSE, error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	/* erase flash */
-	if (!fu_colorhug_device_erase(self, self->start_addr, g_bytes_get_size(fw), error))
-		return FALSE;
-	fu_progress_step_done(progress);
-
-	/* write each block */
-	chunks = fu_chunk_array_new_from_bytes(fw,
-					       self->start_addr,
-					       0x00, /* page_sz */
-					       CH_FLASH_TRANSFER_BLOCK_SIZE);
+	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		guint8 buf[CH_FLASH_TRANSFER_BLOCK_SIZE + 4];
@@ -487,13 +458,22 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 		}
 
 		/* update progress */
-		fu_progress_set_percentage_full(fu_progress_get_child(progress),
-						(gsize)i + 1,
-						(gsize)chunks->len);
+		fu_progress_step_done(progress);
 	}
-	fu_progress_step_done(progress);
 
-	/* verify each block */
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_colorhug_device_verify_blocks(FuColorhugDevice *self,
+				 GPtrArray *chunks,
+				 FuProgress *progress,
+				 GError **error)
+{
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		guint8 buf[3];
@@ -532,10 +512,58 @@ fu_colorhug_device_write_firmware(FuDevice *device,
 		}
 
 		/* update progress */
-		fu_progress_set_percentage_full(fu_progress_get_child(progress),
-						(gsize)i + 1,
-						(gsize)chunks->len);
+		fu_progress_step_done(progress);
 	}
+
+	/* success */
+	return TRUE;
+}
+
+static gboolean
+fu_colorhug_device_write_firmware(FuDevice *device,
+				  FuFirmware *firmware,
+				  FuProgress *progress,
+				  FwupdInstallFlags flags,
+				  GError **error)
+{
+	FuColorhugDevice *self = FU_COLORHUG_DEVICE(device);
+	g_autoptr(GBytes) fw = NULL;
+	g_autoptr(GPtrArray) chunks = NULL;
+
+	/* progress */
+	fu_progress_set_id(progress, G_STRLOC);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_BUSY, 1);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_ERASE, 19);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_WRITE, 44);
+	fu_progress_add_step(progress, FWUPD_STATUS_DEVICE_VERIFY, 35);
+
+	/* get default image */
+	fw = fu_firmware_get_bytes(firmware, error);
+	if (fw == NULL)
+		return FALSE;
+
+	/* don't auto-boot firmware */
+	if (!fu_colorhug_device_set_flash_success(self, FALSE, error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* erase flash */
+	if (!fu_colorhug_device_erase(self, self->start_addr, g_bytes_get_size(fw), error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* write each block */
+	chunks = fu_chunk_array_new_from_bytes(fw,
+					       self->start_addr,
+					       0x00, /* page_sz */
+					       CH_FLASH_TRANSFER_BLOCK_SIZE);
+	if (!fu_colorhug_device_write_blocks(self, chunks, fu_progress_get_child(progress), error))
+		return FALSE;
+	fu_progress_step_done(progress);
+
+	/* verify each block */
+	if (!fu_colorhug_device_verify_blocks(self, chunks, fu_progress_get_child(progress), error))
+		return FALSE;
 	fu_progress_step_done(progress);
 
 	/* success! */
