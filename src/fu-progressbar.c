@@ -155,11 +155,8 @@ fu_progressbar_refresh(FuProgressbar *self, FwupdStatus status, guint percentage
 	fu_progressbar_erase_line(self);
 
 	/* add status */
-	if (status == FWUPD_STATUS_IDLE) {
-		percentage = 100;
+	if (status == FWUPD_STATUS_IDLE || status == FWUPD_STATUS_UNKNOWN) {
 		status = self->status;
-		is_idle_newline = TRUE;
-	} else if (status == FWUPD_STATUS_WAITING_FOR_AUTH) {
 		is_idle_newline = TRUE;
 	}
 	if (percentage == 100)
@@ -262,7 +259,7 @@ fu_progressbar_spin_cb(gpointer user_data)
 	FuProgressbar *self = FU_PROGRESSBAR(user_data);
 
 	/* ignore */
-	if (self->status == FWUPD_STATUS_IDLE || self->status == FWUPD_STATUS_WAITING_FOR_AUTH)
+	if (self->status == FWUPD_STATUS_IDLE || self->status == FWUPD_STATUS_UNKNOWN)
 		return G_SOURCE_CONTINUE;
 
 	/* move the spinner index up to down */
@@ -315,6 +312,10 @@ fu_progressbar_update(FuProgressbar *self, FwupdStatus status, guint percentage)
 {
 	g_return_if_fail(FU_IS_PROGRESSBAR(self));
 
+	/* not useful */
+	if (status == FWUPD_STATUS_UNKNOWN)
+		return;
+
 	/* ignore initial client connection */
 	if (self->status == FWUPD_STATUS_UNKNOWN && status == FWUPD_STATUS_IDLE) {
 		self->status = status;
@@ -335,7 +336,7 @@ fu_progressbar_update(FuProgressbar *self, FwupdStatus status, guint percentage)
 	/* if the main loop isn't spinning and we've not had a chance to
 	 * execute the callback just do the refresh now manually */
 	if (percentage == 0 && status != FWUPD_STATUS_IDLE &&
-	    status != FWUPD_STATUS_WAITING_FOR_AUTH && self->status != FWUPD_STATUS_UNKNOWN) {
+	    self->status != FWUPD_STATUS_UNKNOWN) {
 		if ((g_get_monotonic_time() - self->last_animated) / 1000 > 40) {
 			fu_progressbar_spin_inc(self);
 			fu_progressbar_refresh(self, status, percentage);
