@@ -164,11 +164,27 @@ fu_engine_emit_changed(FuEngine *self)
 }
 
 static void
-fu_engine_emit_device_changed(FuEngine *self, FuDevice *device)
+fu_engine_emit_device_changed_safe(FuEngine *self, FuDevice *device)
 {
 	/* invalidate host security attributes */
 	g_clear_pointer(&self->host_security_id, g_free);
 	g_signal_emit(self, signals[SIGNAL_DEVICE_CHANGED], 0, device);
+}
+
+/* get the latest version of the device */
+static void
+fu_engine_emit_device_changed(FuEngine *self, const gchar *device_id)
+{
+	g_autoptr(FuDevice) device = NULL;
+	g_autoptr(GError) error = NULL;
+
+	/* get the latest version of this */
+	device = fu_device_list_get_by_id(self->device_list, device_id, &error);
+	if (device == NULL) {
+		g_warning("cannot emit device-changed: %s", error->message);
+		return;
+	}
+	fu_engine_emit_device_changed_safe(self, device);
 }
 
 FuContext *
@@ -207,7 +223,7 @@ fu_engine_set_status(FuEngine *self, FwupdStatus status)
 static void
 fu_engine_generic_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
 {
-	fu_engine_emit_device_changed(self, device);
+	fu_engine_emit_device_changed(self, fu_device_get_id(device));
 }
 
 static void
@@ -221,7 +237,7 @@ fu_engine_history_notify_cb(FuDevice *device, GParamSpec *pspec, FuEngine *self)
 				  error_local->message);
 		}
 	}
-	fu_engine_emit_device_changed(self, device);
+	fu_engine_emit_device_changed(self, fu_device_get_id(device));
 }
 
 static void
@@ -337,7 +353,7 @@ static void
 fu_engine_device_changed_cb(FuDeviceList *device_list, FuDevice *device, FuEngine *self)
 {
 	fu_engine_watch_device(self, device);
-	fu_engine_emit_device_changed(self, device);
+	fu_engine_emit_device_changed(self, fu_device_get_id(device));
 }
 
 /* convert hex and decimal versions to dotted style */
@@ -841,7 +857,7 @@ fu_engine_unlock(FuEngine *self, const gchar *device_id, GError **error)
 		return FALSE;
 
 	/* make the UI update */
-	fu_engine_emit_device_changed(self, device);
+	fu_engine_emit_device_changed_safe(self, device);
 	fu_engine_emit_changed(self);
 	return TRUE;
 }
@@ -1039,7 +1055,7 @@ fu_engine_verify_update(FuEngine *self,
 					     FU_PLUGIN_VERIFY_FLAG_NONE,
 					     error))
 			return FALSE;
-		fu_engine_emit_device_changed(self, device);
+		fu_engine_emit_device_changed_safe(self, device);
 	}
 
 	/* we got nothing */
@@ -3244,7 +3260,7 @@ fu_engine_activate(FuEngine *self, const gchar *device_id, FuProgress *progress,
 	if (!fu_plugin_runner_activate(plugin, device, progress, error))
 		return FALSE;
 
-	fu_engine_emit_device_changed(self, device);
+	fu_engine_emit_device_changed_safe(self, device);
 	fu_engine_emit_changed(self);
 
 	return TRUE;
@@ -3481,6 +3497,7 @@ fu_engine_install_blob(FuEngine *self,
 		return FALSE;
 
 	/* make the UI update */
+	fu_engine_emit_device_changed(self, device_id);
 	g_debug("Updating %s took %f seconds",
 		fu_device_get_name(device),
 		g_timer_elapsed(timer, NULL));
@@ -3719,7 +3736,7 @@ fu_engine_ensure_device_supported(FuEngine *self, FuDevice *device)
 	if (!is_supported) {
 		if (fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED)) {
 			fu_device_remove_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED);
-			fu_engine_emit_device_changed(self, device);
+			fu_engine_emit_device_changed_safe(self, device);
 		}
 		return;
 	}
@@ -3727,7 +3744,7 @@ fu_engine_ensure_device_supported(FuEngine *self, FuDevice *device)
 	/* was unsupported, now supported */
 	if (!fu_device_has_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED)) {
 		fu_device_add_flag(device, FWUPD_DEVICE_FLAG_SUPPORTED);
-		fu_engine_emit_device_changed(self, device);
+		fu_engine_emit_device_changed_safe(self, device);
 	}
 }
 
