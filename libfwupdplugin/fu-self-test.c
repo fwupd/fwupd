@@ -3729,15 +3729,16 @@ fu_progress_func(void)
 			 &helper);
 
 	fu_progress_set_steps(progress, 5);
+	g_assert_cmpint(helper.last_percentage, ==, 0);
 
 	fu_progress_step_done(progress);
-	g_assert_cmpint(helper.updates, ==, 1);
+	g_assert_cmpint(helper.updates, ==, 2);
 	g_assert_cmpint(helper.last_percentage, ==, 20);
 
 	for (guint i = 0; i < 4; i++)
 		fu_progress_step_done(progress);
 	g_assert_cmpint(helper.last_percentage, ==, 100);
-	g_assert_cmpint(helper.updates, ==, 5);
+	g_assert_cmpint(helper.updates, ==, 6);
 }
 
 static void
