@@ -174,6 +174,7 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 	gsize sz = 0;
 	guint16 value = 0x29;
 	guint8 data[0x0c] = {0x0};
+	g_autoptr(GString) hub = g_string_new(NULL);
 
 	/* longer descriptor for SuperSpeed */
 	if (fu_usb_device_get_spec(self) >= 0x0300)
@@ -197,13 +198,22 @@ fu_usb_device_query_hub(FuUsbDevice *self, GError **error)
 	if (g_getenv("FU_USB_DEVICE_DEBUG") != NULL)
 		fu_common_dump_raw(G_LOG_DOMAIN, "HUB_DT", data, sz);
 
-	/* see http://www.usblyzer.com/usb-hub-class-decoder.htm */
-	if (sz == 0x09) {
-		fu_device_add_instance_u8(FU_DEVICE(self), "HUB", data[7]);
-	} else if (sz == 0x0c) {
-		g_autofree gchar *hub = g_strdup_printf("%02X%02X", data[11], data[10]);
-		fu_device_add_instance_str(FU_DEVICE(self), "HUB", hub);
+	/* for USB 3: size is fixed as max ports is 15,
+	 * for USB 2: size is variable as max ports is 255 */
+	if (fu_usb_device_get_spec(self) >= 0x0300 && sz == 0x0C) {
+		g_string_append_printf(hub, "%02X", data[0x0B]);
+		g_string_append_printf(hub, "%02X", data[0x0A]);
+	} else if (sz >= 9) {
+		guint8 numbytes = fu_common_align_up(data[2] + 1, 0x03) / 8;
+		for (guint i = 0; i < numbytes; i++) {
+			guint8 tmp = 0x0;
+			if (!fu_common_read_uint8_safe(data, sz, 7 + i, &tmp, error))
+				return FALSE;
+			g_string_append_printf(hub, "%02X", tmp);
+		}
 	}
+	if (hub->len > 0)
+		fu_device_add_instance_str(FU_DEVICE(self), "HUB", hub->str);
 	return fu_device_build_instance_id(FU_DEVICE(self), error, "VID", "PID", "HUB", NULL);
 }
 #endif
