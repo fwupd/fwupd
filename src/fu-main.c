@@ -463,7 +463,6 @@ fu_main_authorize_unlock_cb(GObject *source, GAsyncResult *res, gpointer user_da
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
-	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish(POLKIT_AUTHORITY(source), res, &error);
 	if (!fu_main_authorization_is_valid(auth, &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
@@ -483,6 +482,7 @@ fu_main_authorize_unlock_cb(GObject *source, GAsyncResult *res, gpointer user_da
 	}
 
 	/* success */
+	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -495,7 +495,6 @@ fu_main_authorize_set_approved_firmware_cb(GObject *source, GAsyncResult *res, g
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
-	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish(POLKIT_AUTHORITY(source), res, &error);
 	if (!fu_main_authorization_is_valid(auth, &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
@@ -513,6 +512,7 @@ fu_main_authorize_set_approved_firmware_cb(GObject *source, GAsyncResult *res, g
 		const gchar *csum = g_ptr_array_index(helper->checksums, i);
 		fu_engine_add_approved_firmware(helper->priv->engine, csum);
 	}
+	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -525,7 +525,6 @@ fu_main_authorize_set_blocked_firmware_cb(GObject *source, GAsyncResult *res, gp
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
-	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish(POLKIT_AUTHORITY(source), res, &error);
 	if (!fu_main_authorization_is_valid(auth, &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
@@ -543,6 +542,7 @@ fu_main_authorize_set_blocked_firmware_cb(GObject *source, GAsyncResult *res, gp
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
 		return;
 	}
+	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -556,7 +556,6 @@ fu_main_authorize_self_sign_cb(GObject *source, GAsyncResult *res, gpointer user
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
-	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish(POLKIT_AUTHORITY(source), res, &error);
 	if (!fu_main_authorization_is_valid(auth, &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
@@ -577,6 +576,7 @@ fu_main_authorize_self_sign_cb(GObject *source, GAsyncResult *res, gpointer user
 	}
 
 	/* success */
+	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, g_variant_new("(s)", sig));
 }
 
@@ -607,6 +607,7 @@ fu_main_modify_config_cb(GObject *source, GAsyncResult *res, gpointer user_data)
 	}
 
 	/* success */
+	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -633,7 +634,6 @@ fu_main_authorize_activate_cb(GObject *source, GAsyncResult *res, gpointer user_
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
-	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish(POLKIT_AUTHORITY(source), res, &error);
 	if (!fu_main_authorization_is_valid(auth, &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
@@ -659,6 +659,7 @@ fu_main_authorize_activate_cb(GObject *source, GAsyncResult *res, gpointer user_
 	}
 
 	/* success */
+	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -672,7 +673,6 @@ fu_main_authorize_verify_update_cb(GObject *source, GAsyncResult *res, gpointer 
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
-	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish(POLKIT_AUTHORITY(source), res, &error);
 	if (!fu_main_authorization_is_valid(auth, &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
@@ -703,6 +703,7 @@ fu_main_authorize_verify_update_cb(GObject *source, GAsyncResult *res, gpointer 
 	}
 
 	/* success */
+	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -715,7 +716,6 @@ fu_main_authorize_modify_remote_cb(GObject *source, GAsyncResult *res, gpointer 
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
-	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish(POLKIT_AUTHORITY(source), res, &error);
 	if (!fu_main_authorization_is_valid(auth, &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
@@ -739,6 +739,7 @@ fu_main_authorize_modify_remote_cb(GObject *source, GAsyncResult *res, gpointer 
 	}
 
 	/* success */
+	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
@@ -754,7 +755,6 @@ fu_main_authorize_install_cb(GObject *source, GAsyncResult *res, gpointer user_d
 	g_autoptr(PolkitAuthorizationResult) auth = NULL;
 
 	/* get result */
-	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	auth = polkit_authority_check_authorization_finish(POLKIT_AUTHORITY(source), res, &error);
 	if (!fu_main_authorization_is_valid(auth, &error)) {
 		g_dbus_method_invocation_return_gerror(helper->invocation, error);
@@ -823,6 +823,7 @@ fu_main_authorize_install_queue(FuMainAuthHelper *helper_ref)
 	}
 
 	/* success */
+	fu_main_set_status(helper->priv, FWUPD_STATUS_IDLE);
 	g_dbus_method_invocation_return_value(helper->invocation, NULL);
 }
 
