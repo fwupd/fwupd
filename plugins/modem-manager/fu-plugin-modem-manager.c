@@ -130,10 +130,6 @@ fu_plugin_mm_udev_device_port_added(FuPlugin *plugin,
 		fu_plugin_mm_udev_device_ports_timeout_reset(plugin);
 		return;
 	}
-
-	/* device is being created, update is complete, uninhibit */
-	fu_plugin_mm_uninhibit_device(plugin);
-
 	/* create device and add to cache */
 	dev = fu_mm_device_udev_new(fu_plugin_get_context(plugin), priv->manager, priv->inhibited);
 	fu_mm_device_udev_add_port(dev, subsystem, path, ifnum);
