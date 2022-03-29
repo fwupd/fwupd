@@ -32,6 +32,7 @@ meson ../ \
     -Dplugin_powerd=false \
     -Dplugin_realtek_mst=false \
     -Dplugin_redfish=false \
+    -Dplugin_scsi=false \
     -Dplugin_synaptics_mst=false \
     -Dplugin_synaptics_rmi=false \
     -Dplugin_thunderbolt=false \
