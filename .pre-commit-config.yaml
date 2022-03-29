@@ -28,7 +28,7 @@ repos:
     -   id: codespell
         args: ['--config', './contrib/codespell.cfg', --write-changes]
 -   repo: https://github.com/ambv/black
-    rev: 21.6b0
+    rev: 22.3.0
     hooks:
     - id: black
 -   repo: local
