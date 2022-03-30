@@ -20,6 +20,10 @@ with a non-standard filesystem layout.
 * standard glibc variables like `LANG` are also honored for CLI tools that are translated
 * libcurl respects the session proxy, e.g. `http_proxy`, `all_proxy`, `sftp_proxy` and `no_proxy`
 
+## daemon
+
+* `FWUPD_MACHINE_KIND` can be used to override the detected machine type, e.g. `physical`, `virtual`, or `container`
+
 ## Self Tests
 
 * `CI_NETWORK` if CI is running with network access
