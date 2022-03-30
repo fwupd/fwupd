@@ -5825,6 +5825,13 @@ fu_engine_get_only_trusted(FuEngine *self)
 	return fu_config_get_only_trusted(self->config);
 }
 
+gboolean
+fu_engine_get_show_device_private(FuEngine *self)
+{
+	g_return_val_if_fail(FU_IS_ENGINE(self), FALSE);
+	return fu_config_get_show_device_private(self->config);
+}
+
 const gchar *
 fu_engine_get_host_product(FuEngine *self)
 {
