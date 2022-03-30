@@ -32,7 +32,7 @@ typedef struct {
 } FuGenesysChip;
 
 typedef struct __attribute__((packed)) {
-	guint8 tool_string_version; /* 0xff = not supported */
+	guint8 tool_string_version;
 
 	/* byte arrays are ASCII encoded and not NUL terminated */
 	guint8 mask_project_code[4];

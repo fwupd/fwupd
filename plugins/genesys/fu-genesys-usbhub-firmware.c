@@ -166,15 +166,6 @@ fu_genesys_usbhub_firmware_parse(FuFirmware *firmware,
 			    error))
 		return FALSE;
 
-	/* unsupported static tool string */
-	if (self->static_ts.tool_string_version == 0xff) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "Static Tool String not supported");
-		return FALSE;
-	}
-
 	/* deduce code size */
 	switch (self->chip.model) {
 	case ISP_MODEL_HUB_GL3523: {
