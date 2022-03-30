@@ -276,6 +276,8 @@ fu_progress_get_percentage(FuProgress *self)
 {
 	FuProgressPrivate *priv = GET_PRIVATE(self);
 	g_return_val_if_fail(FU_IS_PROGRESS(self), G_MAXUINT);
+	if (priv->percentage == G_MAXUINT)
+		return 0;
 	return priv->percentage;
 }
 
