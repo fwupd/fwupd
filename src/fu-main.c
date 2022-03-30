@@ -54,6 +54,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(PolkitSubject, g_object_unref)
 #endif /* HAVE_POLKIT */
 
 typedef enum {
+	FU_MAIN_MACHINE_KIND_UNKNOWN,
 	FU_MAIN_MACHINE_KIND_PHYSICAL,
 	FU_MAIN_MACHINE_KIND_VIRTUAL,
 	FU_MAIN_MACHINE_KIND_CONTAINER,
@@ -84,6 +85,18 @@ typedef struct {
 	gboolean pending_sigterm;
 	FuMainMachineKind machine_kind;
 } FuMainPrivate;
+
+static FuMainMachineKind
+fu_main_machine_kind_from_string(const gchar *kind)
+{
+	if (g_strcmp0(kind, "physical") == 0)
+		return FU_MAIN_MACHINE_KIND_PHYSICAL;
+	if (g_strcmp0(kind, "virtual") == 0)
+		return FU_MAIN_MACHINE_KIND_VIRTUAL;
+	if (g_strcmp0(kind, "container") == 0)
+		return FU_MAIN_MACHINE_KIND_CONTAINER;
+	return FU_MAIN_MACHINE_KIND_UNKNOWN;
+}
 
 static gboolean
 fu_main_sigterm_cb(gpointer user_data)
@@ -2114,6 +2127,7 @@ main(int argc, char *argv[])
 {
 	gboolean immediate_exit = FALSE;
 	gboolean timed_exit = FALSE;
+	const gchar *machine_kind = g_getenv("FWUPD_MACHINE_KIND");
 	const gchar *socket_filename = g_getenv("FWUPD_DBUS_SOCKET");
 	const GOptionEntry options[] = {
 	    {"timed-exit",
@@ -2163,6 +2177,23 @@ main(int argc, char *argv[])
 						   g_free,
 						   (GDestroyNotify)fu_main_sender_item_free);
 	priv->loop = g_main_loop_new(NULL, FALSE);
+
+	/* allow overriding for development */
+	if (machine_kind != NULL) {
+		priv->machine_kind = fu_main_machine_kind_from_string(machine_kind);
+		if (priv->machine_kind == FU_MAIN_MACHINE_KIND_UNKNOWN) {
+			g_printerr("Invalid machine kind specified: %s\n", machine_kind);
+			return EXIT_FAILURE;
+		}
+	} else {
+		if (fu_main_is_hypervisor()) {
+			priv->machine_kind = FU_MAIN_MACHINE_KIND_VIRTUAL;
+		} else if (fu_main_is_container()) {
+			priv->machine_kind = FU_MAIN_MACHINE_KIND_CONTAINER;
+		} else {
+			priv->machine_kind = FU_MAIN_MACHINE_KIND_PHYSICAL;
+		}
+	}
 
 	/* load engine */
 	priv->engine = fu_engine_new(FU_APP_FLAGS_NONE);
@@ -2232,13 +2263,6 @@ main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 #endif
-
-	/* are we a VM? */
-	if (fu_main_is_hypervisor()) {
-		priv->machine_kind = FU_MAIN_MACHINE_KIND_VIRTUAL;
-	} else if (fu_main_is_container()) {
-		priv->machine_kind = FU_MAIN_MACHINE_KIND_CONTAINER;
-	}
 
 	/* own the object */
 	if (socket_filename != NULL) {
