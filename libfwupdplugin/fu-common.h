@@ -457,6 +457,9 @@ guint32
 fu_common_crc32_full(const guint8 *buf, gsize bufsz, guint32 crc, guint32 polynomial);
 
 guint8
+fu_common_reverse_uint8(guint8 value);
+
+guint8
 fu_common_sum8(const guint8 *buf, gsize bufsz);
 guint8
 fu_common_sum8_bytes(GBytes *blob);
