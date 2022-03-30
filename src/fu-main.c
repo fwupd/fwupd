@@ -299,15 +299,17 @@ fu_main_device_array_to_variant(FuMainPrivate *priv,
 				GError **error)
 {
 	GVariantBuilder builder;
+	FwupdDeviceFlags flags = fu_engine_request_get_device_flags(request);
 
 	g_return_val_if_fail(devices->len > 0, NULL);
 	g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
 
+	/* override when required */
+	if (fu_engine_get_show_device_private(priv->engine))
+		flags |= FWUPD_DEVICE_FLAG_TRUSTED;
 	for (guint i = 0; i < devices->len; i++) {
 		FuDevice *device = g_ptr_array_index(devices, i);
-		GVariant *tmp =
-		    fwupd_device_to_variant_full(FWUPD_DEVICE(device),
-						 fu_engine_request_get_device_flags(request));
+		GVariant *tmp = fwupd_device_to_variant_full(FWUPD_DEVICE(device), flags);
 		g_variant_builder_add_value(&builder, tmp);
 	}
 	return g_variant_new("(aa{sv})", &builder);

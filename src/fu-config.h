@@ -42,5 +42,7 @@ gboolean
 fu_config_get_ignore_power(FuConfig *self);
 gboolean
 fu_config_get_only_trusted(FuConfig *self);
+gboolean
+fu_config_get_show_device_private(FuConfig *self);
 const gchar *
 fu_config_get_host_bkc(FuConfig *self);
