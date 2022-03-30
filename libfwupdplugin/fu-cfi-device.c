@@ -19,6 +19,7 @@
  */
 
 typedef struct {
+	gchar *manufacturer_id;
 	gchar *flash_id;
 	guint8 cmd_read_id_sz;
 	guint32 page_size;
@@ -28,7 +29,7 @@ typedef struct {
 } FuCfiDevicePrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE(FuCfiDevice, fu_cfi_device, FU_TYPE_DEVICE)
-enum { PROP_0, PROP_FLASH_ID, PROP_LAST };
+enum { PROP_0, PROP_FLASH_ID, PROP_MANUFACTURER_ID, PROP_LAST };
 
 #define GET_PRIVATE(o) (fu_cfi_device_get_instance_private(o))
 
@@ -129,6 +130,44 @@ fu_cfi_device_set_flash_id(FuCfiDevice *self, const gchar *flash_id)
 	priv->flash_id = g_strdup(flash_id);
 }
 
+/**
+ * fu_cfi_device_get_manufacturer_id:
+ * @self: a #FuCfiDevice
+ *
+ * Gets the manufacturer ID that represents the device vendor.
+ *
+ * Returns: the ID, or %NULL
+ *
+ * Since: 1.8.0
+ **/
+const gchar *
+fu_cfi_device_get_manufacturer_id(FuCfiDevice *self)
+{
+	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_val_if_fail(FU_IS_CFI_DEVICE(self), NULL);
+	return priv->manufacturer_id;
+}
+
+/**
+ * fu_cfi_device_set_manufacturer_id:
+ * @self: a #FuCfiDevice
+ * @manufacturer_id: (nullable): The chip ID, e.g. `FE` or `AE`
+ *
+ * Sets the manufacturer ID that represents the device vendor.
+ *
+ * Since: 1.8.0
+ **/
+void
+fu_cfi_device_set_manufacturer_id(FuCfiDevice *self, const gchar *manufacturer_id)
+{
+	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
+	g_return_if_fail(FU_IS_CFI_DEVICE(self));
+	if (g_strcmp0(manufacturer_id, priv->manufacturer_id) == 0)
+		return;
+	g_free(priv->manufacturer_id);
+	priv->manufacturer_id = g_strdup(manufacturer_id);
+}
+
 static void
 fu_cfi_device_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
@@ -137,6 +176,9 @@ fu_cfi_device_get_property(GObject *object, guint prop_id, GValue *value, GParam
 	switch (prop_id) {
 	case PROP_FLASH_ID:
 		g_value_set_object(value, priv->flash_id);
+		break;
+	case PROP_MANUFACTURER_ID:
+		g_value_set_object(value, priv->manufacturer_id);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -152,6 +194,9 @@ fu_cfi_device_set_property(GObject *object, guint prop_id, const GValue *value, 
 	case PROP_FLASH_ID:
 		fu_cfi_device_set_flash_id(self, g_value_get_string(value));
 		break;
+	case PROP_MANUFACTURER_ID:
+		fu_cfi_device_set_manufacturer_id(self, g_value_get_string(value));
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -164,6 +209,7 @@ fu_cfi_device_finalize(GObject *object)
 	FuCfiDevice *self = FU_CFI_DEVICE(object);
 	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
 	g_free(priv->flash_id);
+	g_free(priv->manufacturer_id);
 	G_OBJECT_CLASS(fu_cfi_device_parent_class)->finalize(object);
 }
 
@@ -195,7 +241,10 @@ fu_cfi_device_probe(FuDevice *device, GError **error)
 	}
 
 	/* this is most specific and can override */
+	fu_device_add_instance_str(device, "MANID", priv->manufacturer_id);
 	fu_device_add_instance_str(device, "FLASHID", priv->flash_id);
+	fu_device_build_instance_id_quirk(device, NULL, "CFI", "MANID", NULL);
+	fu_device_build_instance_id_quirk(device, NULL, "CFI", "MANID", "FLASHID", NULL);
 	return fu_device_build_instance_id_quirk(device, error, "CFI", "FLASHID", NULL);
 }
 
@@ -445,6 +494,7 @@ fu_cfi_device_to_string(FuDevice *device, guint idt, GString *str)
 {
 	FuCfiDevice *self = FU_CFI_DEVICE(device);
 	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
+	fu_common_string_append_kv(str, idt, "ManufacturerId", priv->manufacturer_id);
 	fu_common_string_append_kv(str, idt, "FlashId", priv->flash_id);
 	for (guint i = 0; i < FU_CFI_DEVICE_CMD_LAST; i++) {
 		fu_common_string_append_kx(str, idt, fu_cfi_device_cmd_to_string(i), priv->cmds[i]);
@@ -499,6 +549,20 @@ fu_cfi_device_class_init(FuCfiDeviceClass *klass)
 				    NULL,
 				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
 	g_object_class_install_property(object_class, PROP_FLASH_ID, pspec);
+
+	/**
+	 * FuCfiDevice:manufacturer-id:
+	 *
+	 * The CCI JEDEC manufacturer ID.
+	 *
+	 * Since: 1.8.0
+	 */
+	pspec = g_param_spec_string("manufacturer-id",
+				    NULL,
+				    NULL,
+				    NULL,
+				    G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_NAME);
+	g_object_class_install_property(object_class, PROP_MANUFACTURER_ID, pspec);
 }
 
 /**

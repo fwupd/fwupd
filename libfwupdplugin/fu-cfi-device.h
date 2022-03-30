@@ -52,6 +52,10 @@ const gchar *
 fu_cfi_device_get_flash_id(FuCfiDevice *self);
 void
 fu_cfi_device_set_flash_id(FuCfiDevice *self, const gchar *flash_id);
+const gchar *
+fu_cfi_device_get_manufacturer_id(FuCfiDevice *self);
+void
+fu_cfi_device_set_manufacturer_id(FuCfiDevice *self, const gchar *vendor_id);
 guint64
 fu_cfi_device_get_size(FuCfiDevice *self);
 void

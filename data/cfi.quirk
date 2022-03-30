@@ -1,3 +1,8 @@
+[CFI\MANID_7F]
+Vendor = AMIC
+[CFI\MANID_EF]
+Vendor = Winbond
+
 [CFI\FLASHID_3730]
 Name = A25Lxxx
 CfiDeviceCmdChipErase = 0xc7
