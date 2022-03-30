@@ -66,6 +66,60 @@ typedef enum {
 	TOOL_STRING_VERSION_13BYTE_DYNAMIC,
 } FuGenesysToolStringVersion;
 
+typedef struct __attribute__((packed)) {
+	guint8 running_mode; /* 'M' for mask code, the others for bank code */
+
+	guint8 ss_port_number; /* super-speed port number */
+	guint8 hs_port_number; /* high-speed port number */
+
+	guint8 ss_connection_status; /* bit field. ON = DFP is a super-speed device */
+	guint8 hs_connection_status; /* bit field. ON = DFP is a high-speed device */
+	guint8 fs_connection_status; /* bit field. ON = DFP is a full-speed device */
+	guint8 ls_connection_status; /* bit field. ON = DFP is a low-speed device */
+
+	guint8 charging;		  /* bit field. ON = DFP is a charging port */
+	guint8 non_removable_port_status; /* bit field. ON = DFP is a non-removable port */
+
+	/*
+	 * Bonding reports Hardware register status for GL3523:
+	 *   2 / 4 ports         : 1 means 4 ports, 0 means 2 ports
+	 *   MTT / STT           : 1 means Multi Token Transfer, 0 means Single TT
+	 *   Type - C            : 1 means disable, 0 means enable
+	 *   QC                  : 1 means disable, 0 means enable
+	 *   Flash dump location : 1 means 32KB offset bank 1, 0 means 0 offset bank 0.
+	 *
+	 * Tool string Version 1:
+	 *   Bit3 : Flash dump location
+	 *   BIT2 : Type - C
+	 *   BIT1 : MTT / STT
+	 *   BIT0 : 2 / 4 ports
+	 *
+	 * Tool string Version 2 or newer :
+	 *   Bit4 : Flash dump location
+	 *   BIT3 : Type - C
+	 *   BIT2 : MTT / STT
+	 *   BIT1 : 2 / 4 ports
+	 *   BIT0 : QC
+	 *
+	 * Default use '0'~'F', plus Bit4 may over value, should extract that.
+	 *
+	 * Bonding for GL3590:
+	 *   Bit7 : Flash dump location, 0 means bank 0, 1 means bank 1.
+	 */
+	guint8 bonding;
+
+	guint8 reserved[22];
+} FuGenesysDynamicToolString;
+
+typedef enum {
+	BANK_MASK_CODE,
+	BANK_FIRST,
+	BANK_SECOND,
+} FuGenesysRunningBank;
+
+#define GL3523_BONDING_VALID_BIT 0x0F
+#define GL3590_BONDING_VALID_BIT 0x7F
+
 typedef enum {
 	ISP_EXIT,
 	ISP_ENTER,
@@ -87,9 +141,12 @@ typedef struct {
 struct _FuGenesysUsbhubDevice {
 	FuUsbDevice parent_instance;
 	FuGenesysStaticToolString static_ts;
+	FuGenesysDynamicToolString dynamic_ts;
 	FuGenesysFirmwareInfoToolString fwinfo_ts;
 	FuGenesysVendorCommandSetting vcs;
 	FuGenesysChip chip;
+	guint32 running_bank;
+	guint8 bonding;
 	guint32 flash_erase_delay;
 	guint32 flash_write_delay;
 	guint32 flash_block_size;
@@ -783,6 +840,19 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		g_prefix_error(error, "failed to get dynamic tool info from device: ");
 		return FALSE;
 	}
+	if (!fu_genesys_usbhub_device_get_descriptor_data(dynamic_buf,
+							  (guint8 *)&self->dynamic_ts,
+							  sizeof(FuGenesysDynamicToolString),
+							  error)) {
+		g_prefix_error(error, "failed to get dynamic tool info from device: ");
+		return FALSE;
+	}
+	if (g_getenv("FWUPD_GENESYS_USBHUB_VERBOSE") != NULL) {
+		fu_common_dump_raw(G_LOG_DOMAIN,
+				   "Dynamic info",
+				   (guint8 *)&self->dynamic_ts,
+				   sizeof(FuGenesysDynamicToolString));
+	}
 
 	fw_buf =
 	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
@@ -827,6 +897,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	}
 	if (!fu_genesys_usbhub_device_set_isp_mode(self, ISP_ENTER, error))
 		return FALSE;
+	/* setup cfi device */
 	self->cfi_device = fu_genesys_usbhub_device_cfi_setup(self, error);
 	if (self->cfi_device == NULL)
 		return FALSE;
@@ -839,10 +910,12 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 
 	/* setup firmware parameters */
 	switch (self->chip.model) {
-	case ISP_MODEL_HUB_GL3523:
+	case ISP_MODEL_HUB_GL3523: {
+		gint bonding = 0;
 		self->fw_bank_addr[0] = 0x0000;
 		self->fw_bank_addr[1] = 0x8000;
 		self->extend_size = GL3523_PUBLIC_KEY_LEN + GL3523_SIG_LEN;
+
 		if (self->chip.revision == 50) {
 			self->fw_data_total_count = 0x8000;
 			if (!fu_genesys_usbhub_device_get_fw_size(self, 0, error))
@@ -851,13 +924,44 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 			self->fw_data_total_count = 0x6000;
 			self->code_size = self->fw_data_total_count;
 		}
+
+		bonding = fu_genesys_tsdigit_value((gchar)self->dynamic_ts.bonding);
+		if (bonding == -1) {
+			g_set_error(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_INTERNAL,
+				    "GL3523 bonding value(0x%02x) is wrong",
+				    self->dynamic_ts.bonding);
+			return FALSE;
+		}
+		if (self->static_ts.tool_string_version < TOOL_STRING_VERSION_BONDING_QC)
+			bonding <<= 1;
+		self->bonding = (bonding & GL3523_BONDING_VALID_BIT);
+
+		if (self->dynamic_ts.running_mode == 'M') {
+			self->running_bank = BANK_MASK_CODE;
+		} else if ((bonding & 0x10) > 0) {
+			self->running_bank = BANK_SECOND;
+		} else {
+			self->running_bank = BANK_FIRST;
+		}
 		break;
+	}
 	case ISP_MODEL_HUB_GL3590:
 		if (!fu_genesys_usbhub_device_get_fw_size(self, 0, error))
 			return FALSE;
 		self->fw_bank_addr[0] = 0x0000;
 		self->fw_bank_addr[1] = 0x10000;
 		self->fw_data_total_count = 0x10000;
+		self->bonding = (self->dynamic_ts.bonding & GL3590_BONDING_VALID_BIT);
+
+		if (self->dynamic_ts.running_mode == 'M') {
+			self->running_bank = BANK_MASK_CODE;
+		} else if ((self->dynamic_ts.bonding & 0x80) > 0) {
+			self->running_bank = BANK_SECOND;
+		} else {
+			self->running_bank = BANK_FIRST;
+		}
 		break;
 	default:
 		break;
