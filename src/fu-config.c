@@ -37,6 +37,7 @@ struct _FuConfig {
 	gboolean enumerate_all_devices;
 	gboolean ignore_power;
 	gboolean only_trusted;
+	gboolean show_device_private;
 };
 
 G_DEFINE_TYPE(FuConfig, fu_config, G_TYPE_OBJECT)
@@ -64,6 +65,7 @@ fu_config_reload(FuConfig *self, GError **error)
 	g_autoptr(GError) error_update_motd = NULL;
 	g_autoptr(GError) error_ignore_power = NULL;
 	g_autoptr(GError) error_only_trusted = NULL;
+	g_autoptr(GError) error_show_device_private = NULL;
 	g_autoptr(GError) error_enumerate_all = NULL;
 	g_autoptr(GByteArray) buf = g_byte_array_new();
 
@@ -221,6 +223,17 @@ fu_config_reload(FuConfig *self, GError **error)
 	if (!self->only_trusted && error_only_trusted != NULL) {
 		g_debug("failed to read OnlyTrusted key: %s", error_only_trusted->message);
 		self->only_trusted = TRUE;
+	}
+
+	/* whether to show private device data, e.g. serial numbers */
+	self->show_device_private = g_key_file_get_boolean(keyfile,
+							   "fwupd",
+							   "ShowDevicePrivate",
+							   &error_show_device_private);
+	if (!self->show_device_private && error_show_device_private != NULL) {
+		g_debug("failed to read ShowDevicePrivate key: %s",
+			error_show_device_private->message);
+		self->show_device_private = TRUE;
 	}
 
 	/* fetch host best known configuration */
@@ -383,6 +396,13 @@ fu_config_get_only_trusted(FuConfig *self)
 {
 	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
 	return self->only_trusted;
+}
+
+gboolean
+fu_config_get_show_device_private(FuConfig *self)
+{
+	g_return_val_if_fail(FU_IS_CONFIG(self), FALSE);
+	return self->show_device_private;
 }
 
 gboolean
