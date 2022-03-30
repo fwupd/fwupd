@@ -151,6 +151,8 @@ fu_progressbar_refresh(FuProgressbar *self, FwupdStatus status, guint percentage
 	gboolean is_idle_newline = FALSE;
 	g_autoptr(GString) str = g_string_new(NULL);
 
+	g_return_if_fail(percentage <= 100);
+
 	/* erase previous line */
 	fu_progressbar_erase_line(self);
 
