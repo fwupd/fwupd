@@ -3887,6 +3887,39 @@ fu_common_sum32w_bytes(GBytes *blob, FuEndianType endian)
 }
 
 /**
+ * fu_common_reverse_uint8:
+ * @value: integer
+ *
+ * Calculates the reverse bit order for a single byte.
+ *
+ * Returns: the @value, reversed
+ *
+ * Since: 1.8.0
+ **/
+guint8
+fu_common_reverse_uint8(guint8 value)
+{
+	guint8 tmp = 0;
+	if (value & 0x01)
+		tmp = 0x80;
+	if (value & 0x02)
+		tmp |= 0x40;
+	if (value & 0x04)
+		tmp |= 0x20;
+	if (value & 0x08)
+		tmp |= 0x10;
+	if (value & 0x10)
+		tmp |= 0x08;
+	if (value & 0x20)
+		tmp |= 0x04;
+	if (value & 0x40)
+		tmp |= 0x02;
+	if (value & 0x80)
+		tmp |= 0x01;
+	return tmp;
+}
+
+/**
  * fu_common_uri_get_scheme:
  * @uri: valid URI, e.g. `https://foo.bar/baz`
  *
