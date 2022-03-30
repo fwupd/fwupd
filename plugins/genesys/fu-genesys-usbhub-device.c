@@ -534,6 +534,15 @@ fu_genesys_usbhub_device_get_descriptor_data(GBytes *desc_bytes,
 	for (gsize i = 0, j = 0; i < bufsz && j < dst_size; i += 2, j++)
 		dst[j] = buf[i];
 
+	/* legacy hub replies "USB2.0 Hub" or "USB3.0 Hub" */
+	if (memcmp(dst, "USB", 3) == 0) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "tool string unsupported");
+		return FALSE;
+	}
+
 	/* success */
 	return TRUE;
 }
@@ -597,6 +606,16 @@ fu_genesys_usbhub_device_get_fw_size(FuGenesysUsbhubDevice *self, int bank_num, 
 
 	/* success */
 	return TRUE;
+}
+
+static gint
+fu_genesys_tsdigit_value(gchar c)
+{
+	if (c >= 'A' && c <= 'Z')
+		return c - 'A' + 10;
+	if (c >= 'a' && c <= 'z')
+		return c - 'a' + 10;
+	return g_ascii_digit_value(c);
 }
 #endif
 
@@ -678,6 +697,8 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	guint16 version_raw;
 	guint8 static_idx = 0;
 	guint8 dynamic_idx = 0;
+	gchar rev[3] = {0};
+	gint tool_string_version = 0;
 	g_autoptr(FuFirmware) firmware = NULL;
 	g_autoptr(GBytes) static_buf = NULL;
 	g_autoptr(GBytes) dynamic_buf = NULL;
@@ -732,27 +753,25 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 				   (guint8 *)&self->static_ts,
 				   sizeof(FuGenesysStaticToolString));
 	}
-	if (self->static_ts.tool_string_version != 0xff) {
-		gchar rev[3] = {0};
 
-		if (memcmp(self->static_ts.mask_project_ic_type, "3523", 4) == 0) {
-			self->chip.model = ISP_MODEL_HUB_GL3523;
-		} else if (memcmp(self->static_ts.mask_project_ic_type, "3590", 4) == 0) {
-			self->chip.model = ISP_MODEL_HUB_GL3590;
-		} else {
-			g_autofree gchar *ic_type =
-			    fu_common_strsafe((const gchar *)&self->static_ts.mask_project_ic_type,
-					      sizeof(self->static_ts.mask_project_ic_type));
-			g_set_error(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "IC type %s not supported",
-				    ic_type);
-			return FALSE;
-		}
-		memcpy(rev, &self->static_ts.mask_project_ic_type[4], 2);
-		self->chip.revision = fu_common_strtoull(rev);
+	if (memcmp(self->static_ts.mask_project_ic_type, "3523", 4) == 0) {
+		self->chip.model = ISP_MODEL_HUB_GL3523;
+	} else if (memcmp(self->static_ts.mask_project_ic_type, "3590", 4) == 0) {
+		self->chip.model = ISP_MODEL_HUB_GL3590;
+	} else {
+		g_autofree gchar *ic_type =
+		    fu_common_strsafe((const gchar *)&self->static_ts.mask_project_ic_type,
+				      sizeof(self->static_ts.mask_project_ic_type));
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "IC type %s not supported",
+			    ic_type);
+		return FALSE;
 	}
+	memcpy(rev, &self->static_ts.mask_project_ic_type[4], 2);
+	self->chip.revision = fu_common_strtoull(rev);
+	tool_string_version = fu_genesys_tsdigit_value(self->static_ts.tool_string_version);
 
 	dynamic_buf =
 	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
@@ -789,7 +808,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 				   sizeof(FuGenesysFirmwareInfoToolString));
 	}
 
-	if (self->static_ts.tool_string_version >= TOOL_STRING_VERSION_VENDOR_SUPPORT) {
+	if (tool_string_version >= TOOL_STRING_VERSION_VENDOR_SUPPORT) {
 		g_autoptr(GBytes) vendor_buf = g_usb_device_get_string_descriptor_bytes_full(
 		    usb_device,
 		    GENESYS_USBHUB_VENDOR_SUPPORT_DESC_IDX,
