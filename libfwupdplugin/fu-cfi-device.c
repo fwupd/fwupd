@@ -36,23 +36,23 @@ static const gchar *
 fu_cfi_device_cmd_to_string(FuCfiDeviceCmd cmd)
 {
 	if (cmd == FU_CFI_DEVICE_CMD_READ_ID)
-		return "CfiDeviceCmdReadId";
+		return "ReadId";
 	if (cmd == FU_CFI_DEVICE_CMD_PAGE_PROG)
-		return "CfiDeviceCmdPageProg";
+		return "PageProg";
 	if (cmd == FU_CFI_DEVICE_CMD_CHIP_ERASE)
-		return "CfiDeviceCmdChipErase";
+		return "ChipErase";
 	if (cmd == FU_CFI_DEVICE_CMD_READ_DATA)
-		return "CfiDeviceCmdReadData";
+		return "ReadData";
 	if (cmd == FU_CFI_DEVICE_CMD_READ_STATUS)
-		return "CfiDeviceCmdReadStatus";
+		return "ReadStatus";
 	if (cmd == FU_CFI_DEVICE_CMD_SECTOR_ERASE)
-		return "CfiDeviceCmdSectorErase";
+		return "SectorErase";
 	if (cmd == FU_CFI_DEVICE_CMD_WRITE_EN)
-		return "CfiDeviceCmdWriteEn";
+		return "WriteEn";
 	if (cmd == FU_CFI_DEVICE_CMD_WRITE_STATUS)
-		return "CfiDeviceCmdWriteStatus";
+		return "WriteStatus";
 	if (cmd == FU_CFI_DEVICE_CMD_BLOCK_ERASE)
-		return "CfiDeviceCmdBlockErase";
+		return "BlockErase";
 	return NULL;
 }
 
