@@ -299,7 +299,7 @@ fu_genesys_usbhub_device_cfi_setup(FuGenesysUsbhubDevice *self, GError **error)
 			if (cfi_device == NULL)
 				continue;
 
-			if (!fu_device_probe(FU_DEVICE(cfi_device), &error_local)) {
+			if (!fu_device_setup(FU_DEVICE(cfi_device), &error_local)) {
 				g_debug("ignoring %s: %s", flash_id, error_local->message);
 				continue;
 			}

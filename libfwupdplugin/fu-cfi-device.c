@@ -15,6 +15,8 @@
  *
  * A chip conforming to the Common Flash Memory Interface, typically a SPI flash chip.
  *
+ * Where required, the quirks instance IDs will be added in ->setup().
+ *
  * See also: [class@FuDevice]
  */
 
@@ -180,7 +182,7 @@ fu_cfi_device_get_flash_id_jedec(FuCfiDevice *self)
 }
 
 static gboolean
-fu_cfi_device_probe(FuDevice *device, GError **error)
+fu_cfi_device_setup(FuDevice *device, GError **error)
 {
 	FuCfiDevice *self = FU_CFI_DEVICE(device);
 	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
@@ -482,7 +484,7 @@ fu_cfi_device_class_init(FuCfiDeviceClass *klass)
 	object_class->finalize = fu_cfi_device_finalize;
 	object_class->get_property = fu_cfi_device_get_property;
 	object_class->set_property = fu_cfi_device_set_property;
-	klass_device->probe = fu_cfi_device_probe;
+	klass_device->setup = fu_cfi_device_setup;
 	klass_device->to_string = fu_cfi_device_to_string;
 	klass_device->set_quirk_kv = fu_cfi_device_set_quirk_kv;
 
