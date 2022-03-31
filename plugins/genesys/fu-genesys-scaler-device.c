@@ -1622,7 +1622,7 @@ fu_genesys_scaler_device_setup(FuDevice *device, GError **error)
 	guint32 page_size;
 
 	self->cfi_device = fu_cfi_device_new(fu_device_get_context(FU_DEVICE(self)), "C84016");
-	if (!fu_device_probe(FU_DEVICE(self->cfi_device), error))
+	if (!fu_device_setup(FU_DEVICE(self->cfi_device), error))
 		return FALSE;
 
 	sector_size = fu_cfi_device_get_sector_size(self->cfi_device);
