@@ -1111,6 +1111,13 @@ fu_device_set_proxy(FuDevice *self, FuDevice *proxy)
 
 	g_return_if_fail(FU_IS_DEVICE(self));
 
+	/* copy from proxy */
+	if (proxy != NULL) {
+		if (fu_device_get_physical_id(self) == NULL &&
+		    fu_device_get_physical_id(proxy) != NULL)
+			fu_device_set_physical_id(self, fu_device_get_physical_id(proxy));
+	}
+
 	if (priv->proxy != NULL)
 		g_object_remove_weak_pointer(G_OBJECT(priv->proxy), (gpointer *)&priv->proxy);
 	if (proxy != NULL)
