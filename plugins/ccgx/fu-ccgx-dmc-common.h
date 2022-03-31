@@ -10,7 +10,7 @@
 
 /* maximum number of programmable devices expected to be connected in dock.
  * this is design limitation. This shall not be edited, unless stated by C Y*/
-#define DMC_DOCK_MAX_DEV_COUNT 8
+#define DMC_DOCK_MAX_DEV_COUNT 16
 
 /* size of FW version structure in bytes */
 #define DMC_DOCK_FW_VERSION_SIZE 8
@@ -139,15 +139,6 @@ typedef enum {
 	DMC_RQT_CODE_TRIGGER = 0xDA
 } DmcRqtCode;
 
-/* this data type enumerates the opcode of triggering the download, in case of
- * 2 stage update */
-typedef enum {
-	DMC_TRIGGER_CODE_DONT_UPDATE,
-	DMC_TRIGGER_CODE_UPDATE_NOW,
-	DMC_TRIGGER_CODE_UPDATE_ON_DISCONNECT,
-	DMC_TRIGGER_CODE_UNKNOWN
-} DmcTriggerCode;
-
 /* this data type enumerates the opcode of interrupt read */
 typedef enum {
 	DMC_INT_OPCODE_FW_UPGRADE_RQT = 1,
@@ -167,7 +158,7 @@ typedef enum {
 } DmcFwctAnalysisStatus;
 
 typedef enum {
-	DMC_UPDATE_MODEL_UNKNOWN = 0,
+	DMC_UPDATE_MODEL_NONE = 0,
 	/* need to trigger after updating FW */
 	DMC_UPDATE_MODEL_DOWNLOAD_TRIGGER,
 	/* need to set soft reset after updating FW */
