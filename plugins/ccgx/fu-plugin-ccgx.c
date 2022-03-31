@@ -26,6 +26,7 @@ fu_plugin_ccgx_init(FuPlugin *plugin)
 	fu_context_add_quirk_key(ctx, "CcgxFlashRowSize");
 	fu_context_add_quirk_key(ctx, "CcgxFlashSize");
 	fu_context_add_quirk_key(ctx, "CcgxImageKind");
+	fu_context_add_quirk_key(ctx, "CcgxDmcTriggerCode");
 }
 
 void
