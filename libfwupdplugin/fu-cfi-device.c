@@ -169,36 +169,34 @@ fu_cfi_device_finalize(GObject *object)
 	G_OBJECT_CLASS(fu_cfi_device_parent_class)->finalize(object);
 }
 
-/* returns at most 4 chars from the ID, or %NULL if no different from existing ID */
-static gchar *
-fu_cfi_device_get_flash_id_jedec(FuCfiDevice *self)
-{
-	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
-	if (priv->flash_id == NULL)
-		return NULL;
-	if (strlen(priv->flash_id) <= 4)
-		return NULL;
-	return g_strndup(priv->flash_id, 4);
-}
-
 static gboolean
 fu_cfi_device_setup(FuDevice *device, GError **error)
 {
+	gsize flash_idsz = 0;
 	FuCfiDevice *self = FU_CFI_DEVICE(device);
 	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
-	g_autofree gchar *flash_id_jedec = NULL;
 
-	/* least specific so adding first */
-	flash_id_jedec = fu_cfi_device_get_flash_id_jedec(self);
-	if (flash_id_jedec != NULL) {
-		fu_device_add_instance_str(device, "FLASHID", flash_id_jedec);
+	/* sanity check */
+	if (priv->flash_id != NULL)
+		flash_idsz = strlen(priv->flash_id);
+	if (flash_idsz == 0 || flash_idsz % 2 != 0) {
+		g_set_error_literal(error,
+				    G_IO_ERROR,
+				    G_IO_ERROR_NOT_SUPPORTED,
+				    "not a valid flash-id");
+		return FALSE;
+	}
+
+	/* typically this will add quirk strings of 2, 4, then 6 bytes */
+	for (guint i = 0; i < flash_idsz; i += 2) {
+		g_autofree gchar *flash_id = g_strndup(priv->flash_id, i + 2);
+		fu_device_add_instance_str(device, "FLASHID", flash_id);
 		if (!fu_device_build_instance_id_quirk(device, error, "CFI", "FLASHID", NULL))
 			return FALSE;
 	}
 
-	/* this is most specific and can override */
-	fu_device_add_instance_str(device, "FLASHID", priv->flash_id);
-	return fu_device_build_instance_id_quirk(device, error, "CFI", "FLASHID", NULL);
+	/* success */
+	return TRUE;
 }
 
 /**
