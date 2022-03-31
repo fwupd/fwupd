@@ -1,8 +1,35 @@
-[CFI\FLASHID_3730]
-Name = A25Lxxx
-CfiDeviceCmdChipErase = 0xc7
+# No Manufacturer
+[CFI\FLASHID_0020]
+Name = M25PxxA/xx
+CfiDeviceCmdChipErase = 0xC7
+CfiDeviceCmdSectorErase = 0x00
+[CFI\FLASHID_00BF]
+Name = PCT/SST25VFxxx/xxxA
+CfiDeviceCmdReadId = 0x90
+CfiDeviceCmdChipErase = 0x60
+CfiDeviceCmdSectorErase = 0x20
+[CFI\FLASHID_009D]
+Name = PM25LDxxx
+CfiDeviceCmdReadId = 0x90
+CfiDeviceCmdChipErase = 0xC7
+CfiDeviceCmdSectorErase = 0xD7
+[CFI\FLASHID_009D]
+Name = PM25LVxxx
+CfiDeviceCmdReadId = 0xAB
+CfiDeviceCmdChipErase = 0xC7
+CfiDeviceCmdSectorErase = 0xD7
+[CFI\FLASHID_00EF]
+Name = W25XxxBV/W25XxxCL
+CfiDeviceCmdChipErase = 0xC7
 CfiDeviceCmdSectorErase = 0x20
 
+# Fujitsu
+[CFI\FLASHID_04]
+Vendor = Fujitsu
+
+# Atmel
+[CFI\FLASHID_1F]
+Vendor = Atmel
 [CFI\FLASHID_1F65]
 Name = AT25F512A/B
 CfiDeviceCmdReadId = 0x15
@@ -10,65 +37,123 @@ CfiDeviceCmdChipErase = 0x62
 CfiDeviceCmdSectorErase = 0x00
 FirmwareSizeMax = 0x10000
 
+# EON
+[CFI\FLASHID_1C]
+Vendor = EON
 [CFI\FLASHID_1C31]
 Name = EN25Fxx
 CfiDeviceCmdChipErase = 0x60
 CfiDeviceCmdSectorErase = 0x20
 
-[CFI\FLASHID_C840]
-Name = GD25Qxxx
-CfiDeviceCmdChipErase = 0xC7
+# ST
+[CFI\FLASHID_20]
+Vendor = ST
+
+# Catalyst
+[CFI\FLASHID_31]
+Vendor = Catalyst
+
+# AMIC
+[CFI\FLASHID_37]
+Vendor = AMIC
+[CFI\FLASHID_3730]
+Name = A25Lxxx
+CfiDeviceCmdChipErase = 0xc7
 CfiDeviceCmdSectorErase = 0x20
 
-[CFI\FLASHID_0020]
-Name = M25PxxA/xx
-CfiDeviceCmdChipErase = 0xC7
-CfiDeviceCmdSectorErase = 0x00
+# SyncMOS
+[CFI\FLASHID_40]
+Vendor = SyncMOS
 
+# ESI
+[CFI\FLASHID_4A]
+Vendor = ESI
+
+# Alliance
+[CFI\FLASHID_52]
+Vendor = Alliance
+
+# Tenx
+[CFI\FLASHID_5E]
+Vendor = Tenx
+
+# Sanyo
+[CFI\FLASHID_62]
+Vendor = Sanyo
+
+# AMIC
+[CFI\FLASHID_7F]
+Vendor = AMIC
+[CFI\FLASHID_7F9D21]
+Name = A49LF040A
+FirmwareSizeMax = 0x20000
+
+[CFI\FLASHID_89]
+Vendor = Intel
+
+# Elite
+[CFI\FLASHID_8C]
+Vendor = Elite
+
+# Texas Instruments
+[CFI\FLASHID_97]
+Vendor = Texas Instruments
+
+# PMC
+[CFI\FLASHID_9D]
+Vendor = PMC
+
+# Fudan
+[CFI\FLASHID_A1]
+Vendor = Fudan
+
+# Hyundai
+[CFI\FLASHID_AD]
+Vendor = Hyundai
+
+# Sharp
+[CFI\FLASHID_B0]
+Vendor = Sharp
+
+# SST
+[CFI\FLASHID_BF]
+Vendor = SST
+
+# Macronix
+[CFI\FLASHID_C2]
+Vendor = Macronix
 [CFI\FLASHID_C220]
 Name = MX25Lxxx/xxxC/xxxE
 CfiDeviceCmdChipErase = 0x60
 CfiDeviceCmdSectorErase = 0x20
-
 [CFI\FLASHID_C222]
 Name = MX25Lxxx1E
 CfiDeviceCmdChipErase = 0x60
 CfiDeviceCmdSectorErase = 0x20
 
-[CFI\FLASHID_00BF]
-Name = PCT/SST25VFxxx/xxxA
-CfiDeviceCmdReadId = 0x90
-CfiDeviceCmdChipErase = 0x60
-CfiDeviceCmdSectorErase = 0x20
-
-[CFI\FLASHID_009D]
-Name = PM25LDxxx
-CfiDeviceCmdReadId = 0x90
-CfiDeviceCmdChipErase = 0xC7
-CfiDeviceCmdSectorErase = 0xD7
-
-[CFI\FLASHID_009D]
-Name = PM25LVxxx
-CfiDeviceCmdReadId = 0xAB
-CfiDeviceCmdChipErase = 0xC7
-CfiDeviceCmdSectorErase = 0xD7
-
-[CFI\FLASHID_00EF]
-Name = W25XxxBV/W25XxxCL
+# GigaDevice
+[CFI\FLASHID_C8]
+Vendor = GigaDevice
+[CFI\FLASHID_C840]
+Name = GD25Qxxx
 CfiDeviceCmdChipErase = 0xC7
 CfiDeviceCmdSectorErase = 0x20
 
-#[CFI\FLASHID_XXXX]
-#Name = FM25Fxxx
-#CfiDeviceCmdChipErase = 0xC7
-#CfiDeviceCmdSectorErase = 0x20
+# Nantronics
+[CFI\FLASHID_D5]
+Vendor = Nantronics
 
-#[CFI\FLASHID_XXXX]
-#Name = KH25LxxxxE
-#CfiDeviceCmdChipErase = 0x60
-#CfiDeviceCmdSectorErase = 0x20
+# Winbond
+[CFI\FLASHID_DA]
+Vendor = Winbond
 
-#[CFI\FLASHID_XXXX]
-#Name = MX25Vxxx
-#CfiDeviceCmdChipErase = 0x60
-#CfiDeviceCmdSectorErase = 0x20
+# Winbond (ex Nexcom)
+[CFI\FLASHID_EF]
+Vendor = Winbond
+[CFI\FLASHID_EF4018]
+Name = W25Q128
+FirmwareSizeMax = 0x1000000
+
+# Fidelix
+[CFI\FLASHID_F8]
+Vendor = Fidelix
