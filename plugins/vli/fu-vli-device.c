@@ -601,7 +601,7 @@ fu_vli_device_setup(FuDevice *device, GError **error)
 
 			/* use the correct flash device */
 			fu_cfi_device_set_flash_id(priv->cfi_device, flash_id);
-			if (!fu_device_probe(FU_DEVICE(priv->cfi_device), error))
+			if (!fu_device_setup(FU_DEVICE(priv->cfi_device), error))
 				return FALSE;
 
 			/* add extra instance IDs to include the SPI variant */

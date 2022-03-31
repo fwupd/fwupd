@@ -294,7 +294,7 @@ fu_device_cfi_device_func(void)
 	g_assert_true(ret);
 
 	cfi_device = fu_cfi_device_new(ctx, "3730");
-	ret = fu_device_probe(FU_DEVICE(cfi_device), &error);
+	ret = fu_device_setup(FU_DEVICE(cfi_device), &error);
 	g_assert_no_error(error);
 	g_assert_true(ret);
 
