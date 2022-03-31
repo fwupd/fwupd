@@ -1,4 +1,9 @@
-# System76 Launch
+# System76 launch_1
 [USB\VID_3384&PID_0001&REV_0001]
 Plugin = system76_launch
 CounterpartGuid = USB\VID_03EB&PID_2FF4
+
+# System76 launch_lite_1
+[USB\VID_3384&PID_0005&REV_0001]
+Plugin = system76_launch
+CounterpartGuid = USB\VID_03EB&PID_2FF9

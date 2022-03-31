@@ -139,10 +139,20 @@ fu_system76_launch_device_detach(FuDevice *device, FuProgress *progress, GError 
 	/* generate a message if not already set */
 	if (fu_device_get_update_message(device) == NULL) {
 		g_autofree gchar *msg = NULL;
+		const gchar *unlock_keys;
+		switch (fu_usb_device_get_pid(FU_USB_DEVICE(device))) {
+		case 0x0001: /* launch_1 */
+			unlock_keys = "Fn+Esc";
+			break;
+		default:
+			unlock_keys = "Left Ctrl+Right Ctrl+Esc";
+			break;
+		}
 		msg = g_strdup_printf(
 		    "To ensure you have physical access, %s needs to be manually unlocked. "
-		    "Please press Fn+Esc to unlock and re-run the update.",
-		    fu_device_get_name(device));
+		    "Please press %s to unlock and re-run the update.",
+		    fu_device_get_name(device),
+		    unlock_keys);
 		fu_device_set_update_message(device, msg);
 	}
 
