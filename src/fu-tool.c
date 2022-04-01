@@ -941,6 +941,7 @@ fu_util_install_blob(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* get device */
+	priv->filter_include |= FWUPD_DEVICE_FLAG_UPDATABLE;
 	if (g_strv_length(values) >= 2) {
 		device = fu_util_get_device(priv, values[1], error);
 		if (device == NULL)
@@ -2591,6 +2592,7 @@ fu_util_verify_update(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* get device */
+	priv->filter_include |= FWUPD_DEVICE_FLAG_UPDATABLE;
 	if (g_strv_length(values) == 1) {
 		dev = fu_util_get_device(priv, values[0], error);
 		if (dev == NULL)
