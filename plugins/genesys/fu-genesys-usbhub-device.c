@@ -986,7 +986,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	default:
 		break;
 	}
-	fu_device_set_firmware_size_max(device, self->fw_data_total_count);
+	fu_device_set_firmware_size_max(device, self->fw_data_total_count + self->extend_size);
 
 	/* verify firmware integrity */
 	bufsz = self->fw_data_total_count + self->extend_size;
