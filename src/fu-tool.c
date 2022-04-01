@@ -1589,6 +1589,7 @@ fu_util_detach(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* get device */
+	priv->filter_exclude |= FWUPD_DEVICE_FLAG_IS_BOOTLOADER;
 	if (g_strv_length(values) >= 1) {
 		device = fu_util_get_device(priv, values[0], error);
 		if (device == NULL)
@@ -1686,6 +1687,7 @@ fu_util_attach(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* get device */
+	priv->filter_include |= FWUPD_DEVICE_FLAG_IS_BOOTLOADER;
 	if (g_strv_length(values) >= 1) {
 		device = fu_util_get_device(priv, values[0], error);
 		if (device == NULL)
