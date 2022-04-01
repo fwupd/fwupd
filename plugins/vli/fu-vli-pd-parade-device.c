@@ -697,6 +697,7 @@ fu_vli_pd_parade_device_init(FuVliPdParadeDevice *self)
 	self->page7 = 0x1E;
 	fu_device_add_icon(FU_DEVICE(self), "video-display");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UPDATABLE);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_set_version_format(FU_DEVICE(self), FWUPD_VERSION_FORMAT_TRIPLET);
 	fu_device_add_protocol(FU_DEVICE(self), "com.vli.i2c");
 	fu_device_set_install_duration(FU_DEVICE(self), 15); /* seconds */
