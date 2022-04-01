@@ -289,6 +289,7 @@ fu_fastboot_device_download(FuDevice *device, GBytes *fw, FuProgress *progress, 
 					       0x00, /* start addr */
 					       0x00, /* page_sz */
 					       self->blocksz);
+	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (!fu_fastboot_device_write(device,
@@ -296,7 +297,7 @@ fu_fastboot_device_download(FuDevice *device, GBytes *fw, FuProgress *progress, 
 					      fu_chunk_get_data_sz(chk),
 					      error))
 			return FALSE;
-		fu_progress_set_percentage_full(progress, (gsize)i + 1, (gsize)chunks->len);
+		fu_progress_step_done(progress);
 	}
 	if (!fu_fastboot_device_read(device,
 				     NULL,

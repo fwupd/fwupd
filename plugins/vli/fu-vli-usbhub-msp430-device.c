@@ -227,6 +227,7 @@ fu_vli_usbhub_msp430_device_write_firmware(FuDevice *device,
 
 	/* transfer by I²C write, and check status by I²C read */
 	fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_WRITE);
+	fu_progress_set_steps(progress, records->len);
 	for (guint j = 0; j < records->len; j++) {
 		FuIhexFirmwareRecord *rcd = g_ptr_array_index(records, j);
 		FuVliUsbhubDeviceRequest req = {0x0};
@@ -277,7 +278,7 @@ fu_vli_usbhub_msp430_device_write_firmware(FuDevice *device,
 				     &req,
 				     error))
 			return FALSE;
-		fu_progress_set_percentage_full(progress, (gsize)j + 1, (gsize)records->len);
+		fu_progress_step_done(progress);
 	}
 
 	/* the device automatically reboots */
