@@ -2815,26 +2815,11 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GPtrArray) events_array = NULL;
 	g_autofree gchar *str = NULL;
 
-	/* not ready yet */
-	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "The HSI specification is not yet complete. "
-				    "To ignore this warning, use --force");
-		return FALSE;
-	}
-
 	if (!fu_util_start_engine(priv,
 				  FU_ENGINE_LOAD_FLAG_COLDPLUG | FU_ENGINE_LOAD_FLAG_HWINFO |
 				      FU_ENGINE_LOAD_FLAG_REMOTES,
 				  error))
 		return FALSE;
-
-	g_print("%s \033[1m%s\033[0m\n",
-		/* TRANSLATORS: this is a string like 'HSI:2-U' */
-		_("Host Security ID:"),
-		fu_engine_get_host_security_id(priv->engine));
 
 	/* show or hide different elements */
 	if (priv->show_all) {
@@ -2842,8 +2827,29 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 		flags |= FU_SECURITY_ATTR_TO_STRING_FLAG_SHOW_URLS;
 	}
 
-	/* print the "why" */
 	attrs = fu_engine_get_host_security_attrs(priv->engine);
+	items = fu_security_attrs_get_all(attrs);
+	for (guint j = 0; j < items->len; j++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(items, j);
+
+		if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA))
+			continue;
+		if (priv->flags & FWUPD_INSTALL_FLAG_FORCE)
+			continue;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Not enough data was provided to make an HSI calculation. "
+				    "To ignore this warning, use --force.");
+		return FALSE;
+	}
+
+	g_print("%s \033[1m%s\033[0m\n",
+		/* TRANSLATORS: this is a string like 'HSI:2-U' */
+		_("Host Security ID:"),
+		fu_engine_get_host_security_id(priv->engine));
+
+	/* print the "why" */
 	if (priv->as_json) {
 		str = fu_security_attrs_to_json_string(attrs, error);
 		if (str == NULL)
@@ -2851,7 +2857,7 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 		g_print("%s\n", str);
 		return TRUE;
 	}
-	items = fu_security_attrs_get_all(attrs);
+
 	str = fu_util_security_attrs_to_string(items, flags);
 	g_print("%s\n", str);
 
