@@ -33,3 +33,7 @@ Flags = no-coalesce
 # Dynabook (né Toshiba) X30, X40
 [28108d08-5027-42c2-a5b8-92d6ede9b97b]
 VersionFormat = bcd
+
+# HP Dev One
+[9f7962c7-7d0e-473d-8a01-c168912f1f14]
+Flags = no-ux-capsule
