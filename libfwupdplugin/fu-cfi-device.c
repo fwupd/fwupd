@@ -17,6 +17,12 @@
  *
  * Where required, the quirks instance IDs will be added in ->setup().
  *
+ * The defaults are set as follows, and can be overridden in quirk files:
+ *
+ * * `PageSize`: 0x100
+ * * `SectorSize`: 0x1000
+ * * `BlockSize`: 0x10000
+ *
  * See also: [class@FuDevice]
  */
 
@@ -33,6 +39,10 @@ G_DEFINE_TYPE_WITH_PRIVATE(FuCfiDevice, fu_cfi_device, FU_TYPE_DEVICE)
 enum { PROP_0, PROP_FLASH_ID, PROP_LAST };
 
 #define GET_PRIVATE(o) (fu_cfi_device_get_instance_private(o))
+
+#define FU_CFI_DEVICE_PAGE_SIZE_DEFAULT	  0x100
+#define FU_CFI_DEVICE_SECTOR_SIZE_DEFAULT 0x1000
+#define FU_CFI_DEVICE_BLOCK_SIZE_DEFAULT  0x10000
 
 static const gchar *
 fu_cfi_device_cmd_to_string(FuCfiDeviceCmd cmd)
@@ -245,7 +255,7 @@ fu_cfi_device_get_cmd(FuCfiDevice *self, FuCfiDeviceCmd cmd, guint8 *value, GErr
  *
  * This is typically set with the `CfiDevicePageSize` quirk key.
  *
- * Returns: page size in bytes, or 0 if unknown
+ * Returns: page size in bytes
  *
  * Since: 1.7.3
  **/
@@ -282,7 +292,7 @@ fu_cfi_device_set_page_size(FuCfiDevice *self, guint32 page_size)
  *
  * This is typically set with the `CfiDeviceSectorSize` quirk key.
  *
- * Returns: sector size in bytes, or 0 if unknown
+ * Returns: sector size in bytes
  *
  * Since: 1.7.3
  **/
@@ -319,7 +329,7 @@ fu_cfi_device_set_block_size(FuCfiDevice *self, guint32 block_size)
  *
  * This is typically set with the `CfiDeviceBlockSize` quirk key.
  *
- * Returns: block size in bytes, or 0 if unknown
+ * Returns: block size in bytes
  *
  * Since: 1.7.4
  **/
@@ -461,6 +471,9 @@ static void
 fu_cfi_device_init(FuCfiDevice *self)
 {
 	FuCfiDevicePrivate *priv = GET_PRIVATE(self);
+	priv->page_size = FU_CFI_DEVICE_PAGE_SIZE_DEFAULT;
+	priv->sector_size = FU_CFI_DEVICE_SECTOR_SIZE_DEFAULT;
+	priv->block_size = FU_CFI_DEVICE_BLOCK_SIZE_DEFAULT;
 	priv->cmds[FU_CFI_DEVICE_CMD_WRITE_STATUS] = 0x01;
 	priv->cmds[FU_CFI_DEVICE_CMD_PAGE_PROG] = 0x02;
 	priv->cmds[FU_CFI_DEVICE_CMD_READ_DATA] = 0x03;
