@@ -60,6 +60,8 @@ fwupd_security_attr_flag_to_string(FwupdSecurityAttrFlags flag)
 		return "success";
 	if (flag == FWUPD_SECURITY_ATTR_FLAG_OBSOLETED)
 		return "obsoleted";
+	if (flag == FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA)
+		return "missing-data";
 	if (flag == FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES)
 		return "runtime-updates";
 	if (flag == FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ATTESTATION)
@@ -86,6 +88,8 @@ fwupd_security_attr_flag_from_string(const gchar *flag)
 		return FWUPD_SECURITY_ATTR_FLAG_SUCCESS;
 	if (g_strcmp0(flag, "obsoleted") == 0)
 		return FWUPD_SECURITY_ATTR_FLAG_OBSOLETED;
+	if (g_strcmp0(flag, "missing-data") == 0)
+		return FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA;
 	if (g_strcmp0(flag, "runtime-updates") == 0)
 		return FWUPD_SECURITY_ATTR_FLAG_RUNTIME_UPDATES;
 	if (g_strcmp0(flag, "runtime-attestation") == 0)
