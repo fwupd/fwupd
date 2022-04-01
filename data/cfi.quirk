@@ -150,6 +150,16 @@ Vendor = GigaDevice
 Name = GD25Qxxx
 CfiDeviceCmdChipErase = 0xC7
 CfiDeviceCmdSectorErase = 0x20
+CfiDeviceCmdBlockErase = 0xd8
+CfiDeviceBlockSize = 0x10000
+CfiDeviceSectorSize = 0x1000
+CfiDevicePageSize = 0x100
+[CFI\FLASHID_C84012]
+Name = GD25Q20C
+FirmwareSizeMax = 0x40000
+[CFI\FLASHID_C84016]
+Name = GD25Q32C
+FirmwareSizeMax = 0x400000
 
 # Nantronics
 [CFI\FLASHID_D5]
