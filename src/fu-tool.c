@@ -1080,6 +1080,7 @@ fu_util_firmware_dump(FuUtilPrivate *priv, gchar **values, GError **error)
 		return FALSE;
 
 	/* get device */
+	priv->filter_include |= FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE;
 	if (g_strv_length(values) >= 2) {
 		device = fu_util_get_device(priv, values[1], error);
 		if (device == NULL)

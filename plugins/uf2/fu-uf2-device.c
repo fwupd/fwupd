@@ -409,6 +409,7 @@ fu_uf2_device_init(FuUf2Device *self)
 {
 	fu_device_add_protocol(FU_DEVICE(self), "com.microsoft.uf2");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 }
 
 static void
