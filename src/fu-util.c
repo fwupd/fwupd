@@ -3371,20 +3371,25 @@ fu_util_security(FuUtilPrivate *priv, gchar **values, GError **error)
 	g_autoptr(GError) error_local = NULL;
 	g_autofree gchar *str = NULL;
 
-	/* not ready yet */
-	if ((priv->flags & FWUPD_INSTALL_FLAG_FORCE) == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "The HSI specification is not yet complete. "
-				    "To ignore this warning, use --force");
-		return FALSE;
-	}
-
 	/* the "why" */
 	attrs = fwupd_client_get_host_security_attrs(priv->client, priv->cancellable, error);
 	if (attrs == NULL)
 		return FALSE;
+
+	for (guint j = 0; j < attrs->len; j++) {
+		FwupdSecurityAttr *attr = g_ptr_array_index(attrs, j);
+
+		if (!fwupd_security_attr_has_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA))
+			continue;
+		if (priv->flags & FWUPD_INSTALL_FLAG_FORCE)
+			continue;
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Not enough data was provided to make an HSI calculation. "
+				    "To ignore this warning, use --force");
+		return FALSE;
+	}
 
 	/* the "when" */
 	events = fwupd_client_get_host_security_events(priv->client,
