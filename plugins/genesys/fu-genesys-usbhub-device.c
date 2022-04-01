@@ -934,7 +934,9 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 		gint bonding = 0;
 		self->fw_bank_addr[0] = 0x0000;
 		self->fw_bank_addr[1] = 0x8000;
-		self->extend_size = GL3523_PUBLIC_KEY_LEN + GL3523_SIG_LEN;
+
+		if (fu_device_has_private_flag(device, FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY))
+			self->extend_size = GL3523_PUBLIC_KEY_LEN + GL3523_SIG_LEN;
 
 		if (self->chip.revision == 50) {
 			self->fw_data_total_count = 0x8000;
