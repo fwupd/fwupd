@@ -236,6 +236,7 @@ fu_superio_it55_device_get_firmware(FuDevice *device, FuProgress *progress, GErr
 	g_autofree guint8 *buf = NULL;
 
 	buf = g_malloc0(fwsize);
+	fu_progress_set_steps(progress, block_count);
 	for (guint i = 0; i < block_count; ++i) {
 		if (!fu_superio_device_ec_write_cmd(self, SIO_CMD_EC_READ_BLOCK, error) ||
 		    !fu_superio_device_ec_write_cmd(self, i, error))
@@ -244,9 +245,8 @@ fu_superio_it55_device_get_firmware(FuDevice *device, FuProgress *progress, GErr
 		for (guint j = 0; j < BLOCK_SIZE; ++j, ++offset) {
 			if (!fu_superio_device_ec_read_data(self, &buf[offset], error))
 				return NULL;
-
-			fu_progress_set_percentage_full(progress, (gsize)i + 1, (gsize)block_count);
 		}
+		fu_progress_step_done(progress);
 	}
 
 	return g_bytes_new_take(g_steal_pointer(&buf), fwsize);

@@ -118,6 +118,7 @@ fu_hailuck_bl_device_dump_firmware(FuDevice *device, FuProgress *progress, GErro
 	/* receive data back */
 	fu_byte_array_set_size(fwbuf, fwsz);
 	chunks = fu_chunk_array_mutable_new(fwbuf->data, fwbuf->len, 0x0, 0x0, 2048);
+	fu_progress_set_steps(progress, chunks->len);
 	for (guint i = 0; i < chunks->len; i++) {
 		FuChunk *chk = g_ptr_array_index(chunks, i);
 		if (!fu_hailuck_bl_device_read_block(self,
@@ -125,7 +126,7 @@ fu_hailuck_bl_device_dump_firmware(FuDevice *device, FuProgress *progress, GErro
 						     fu_chunk_get_data_sz(chk),
 						     error))
 			return NULL;
-		fu_progress_set_percentage_full(progress, i + 1, chunks->len);
+		fu_progress_step_done(progress);
 	}
 
 	/* success */

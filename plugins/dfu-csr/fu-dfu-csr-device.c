@@ -371,6 +371,7 @@ fu_dfu_csr_device_download(FuDevice *device,
 						   FU_DFU_CSR_COMMAND_HEADER_SIZE);
 
 	/* send to hardware */
+	fu_progress_set_steps(progress, chunks->len);
 	for (idx = 0; idx < chunks->len; idx++) {
 		FuChunk *chk = g_ptr_array_index(chunks, idx);
 		g_autoptr(GBytes) blob_tmp = fu_chunk_get_bytes(chk);
@@ -380,7 +381,7 @@ fu_dfu_csr_device_download(FuDevice *device,
 			return FALSE;
 
 		/* update progress */
-		fu_progress_set_percentage_full(progress, (gsize)idx + 1, (gsize)chunks->len);
+		fu_progress_step_done(progress);
 	}
 
 	/* all done */

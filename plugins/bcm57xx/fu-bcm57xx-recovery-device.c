@@ -344,6 +344,7 @@ fu_bcm57xx_recovery_device_nvram_read(FuBcm57xxRecoveryDevice *self,
 				      FuProgress *progress,
 				      GError **error)
 {
+	fu_progress_set_steps(progress, bufsz);
 	for (guint i = 0; i < bufsz; i++) {
 		BcmRegNVMCommand tmp = {0};
 		guint32 val32 = 0;
@@ -377,7 +378,7 @@ fu_bcm57xx_recovery_device_nvram_read(FuBcm57xxRecoveryDevice *self,
 			return FALSE;
 		buf[i] = GUINT32_FROM_BE(val32);
 		address += sizeof(guint32);
-		fu_progress_set_percentage_full(progress, i + 1, bufsz);
+		fu_progress_step_done(progress);
 	}
 
 	/* success */
@@ -405,6 +406,7 @@ fu_bcm57xx_recovery_device_nvram_write(FuBcm57xxRecoveryDevice *self,
 		return FALSE;
 	}
 
+	fu_progress_set_steps(progress, bufsz_dwrds);
 	for (guint i = 0; i < bufsz_dwrds; i++) {
 		BcmRegNVMCommand tmp = {0};
 		if (!fu_bcm57xx_recovery_device_nvram_clear_done(self, error))
@@ -436,7 +438,7 @@ fu_bcm57xx_recovery_device_nvram_write(FuBcm57xxRecoveryDevice *self,
 			return FALSE;
 		}
 		address += sizeof(guint32);
-		fu_progress_set_percentage_full(progress, i + 1, bufsz_dwrds);
+		fu_progress_step_done(progress);
 	}
 
 	/* success */
