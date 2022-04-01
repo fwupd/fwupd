@@ -1942,6 +1942,7 @@ fu_genesys_scaler_device_init(FuGenesysScalerDevice *self)
 	fu_device_retry_set_delay(FU_DEVICE(self), 10); /* ms */
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_DUAL_IMAGE);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_UNSIGNED_PAYLOAD);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_SCALER_FLAG_PAUSE_R2_CPU,
 					"pause-r2-cpu");

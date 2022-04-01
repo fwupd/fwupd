@@ -382,6 +382,7 @@ fu_mtd_device_init(FuMtdDevice *self)
 	fu_device_add_protocol(FU_DEVICE(self), "org.infradead.mtd");
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_INTERNAL);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_REBOOT);
+	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_CAN_VERIFY_IMAGE);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_add_icon(FU_DEVICE(self), "drive-harddisk-solidstate");
 	fu_udev_device_set_flags(FU_UDEV_DEVICE(self),
