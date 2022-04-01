@@ -408,6 +408,7 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 			g_prefix_error(error, "failed to write 1st address zero: ");
 			return FALSE;
 		}
+		fu_progress_set_steps(progress, chunks_sig->len);
 		for (guint i = 0; i < chunks_sig->len; i++) {
 			FuChunk *chk = g_ptr_array_index(chunks_sig, i);
 			if (!fu_synaptics_rmi_v5_device_write_block(self,
@@ -421,9 +422,7 @@ fu_synaptics_rmi_v5_device_write_firmware(FuDevice *device,
 					       fu_chunk_get_idx(chk));
 				return FALSE;
 			}
-			fu_progress_set_percentage_full(progress,
-							(gsize)i + 1,
-							(gsize)chunks_sig->len);
+			fu_progress_step_done(progress);
 		}
 		g_usleep(1000 * 1000);
 	}

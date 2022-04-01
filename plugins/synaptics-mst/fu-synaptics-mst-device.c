@@ -348,6 +348,7 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 		g_usleep(FLASH_SETTLE_TIME);
 
 		/* write firmware */
+		fu_progress_set_steps(progress, write_loops);
 		for (guint32 i = 0; i < write_loops; i++) {
 			g_autoptr(GError) error_local = NULL;
 			if (!fu_synaptics_mst_connection_rc_set_command(connection,
@@ -361,9 +362,7 @@ fu_synaptics_mst_device_update_esm(FuSynapticsMstDevice *self,
 			}
 			write_offset += unit_sz;
 			write_idx += unit_sz;
-			fu_progress_set_percentage_full(progress,
-							(goffset)i + 1,
-							(goffset)write_loops);
+			fu_progress_step_done(progress);
 		}
 
 		/* check ESM checksum */
@@ -428,6 +427,7 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 		g_debug("Waiting for flash clear to settle");
 		g_usleep(FLASH_SETTLE_TIME);
 
+		fu_progress_set_steps(progress, write_loops);
 		for (guint32 i = 0; i < write_loops; i++) {
 			g_autoptr(GError) error_local = NULL;
 			guint8 length = BLOCK_UNIT;
@@ -459,9 +459,7 @@ fu_synaptics_mst_device_update_tesla_leaf_firmware(FuSynapticsMstDevice *self,
 			}
 			offset += length;
 			data_to_write -= length;
-			fu_progress_set_percentage_full(progress,
-							(goffset)i + 1,
-							(goffset)write_loops);
+			fu_progress_step_done(progress);
 		}
 
 		/* check data just written */
@@ -587,6 +585,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 		    fu_synaptics_mst_connection_new(fu_udev_device_get_fd(FU_UDEV_DEVICE(self)),
 						    self->layer,
 						    self->rad);
+		fu_progress_set_steps(progress, write_loops);
 		for (guint32 i = 0; i < write_loops; i++) {
 			g_autoptr(GError) error_local = NULL;
 			if (!fu_synaptics_mst_connection_rc_set_command(connection,
@@ -611,9 +610,7 @@ fu_synaptics_mst_device_update_panamera_firmware(FuSynapticsMstDevice *self,
 
 			write_offset += unit_sz;
 			write_idx += unit_sz;
-			fu_progress_set_percentage_full(progress,
-							(goffset)i + 1,
-							(goffset)write_loops);
+			fu_progress_step_done(progress);
 		}
 
 		/* verify CRC */
@@ -878,6 +875,7 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 		g_debug("Waiting for flash clear to settle");
 		g_usleep(FLASH_SETTLE_TIME);
 
+		fu_progress_set_steps(progress, write_loops);
 		for (guint32 i = 0; i < write_loops; i++) {
 			g_autoptr(GError) error_local = NULL;
 			guint8 length = BLOCK_UNIT;
@@ -909,9 +907,7 @@ fu_synaptics_mst_device_update_cayenne_firmware(FuSynapticsMstDevice *self,
 			}
 			offset += length;
 			data_to_write -= length;
-			fu_progress_set_percentage_full(progress,
-							(goffset)i * 100,
-							(goffset)(write_loops - 1) * 100);
+			fu_progress_step_done(progress);
 		}
 
 		/* verify CRC */
