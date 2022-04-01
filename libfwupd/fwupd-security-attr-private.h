@@ -280,6 +280,14 @@ G_BEGIN_DECLS
  * Since: 1.5.5
  **/
 #define FWUPD_SECURITY_ATTR_ID_UEFI_PK "org.fwupd.hsi.Uefi.Pk"
+/**
+ * FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU
+ *
+ * Host Security ID attribute for Supported CPU
+ *
+ * Since: 1.8.0
+ **/
+#define FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU "org.fwupd.hsi.SupportedCpu"
 
 GVariant *
 fwupd_security_attr_to_variant(FwupdSecurityAttr *self);
