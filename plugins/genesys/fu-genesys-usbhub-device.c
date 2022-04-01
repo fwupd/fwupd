@@ -832,7 +832,6 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 	}
 	memcpy(rev, &self->static_ts.mask_project_ic_type[4], 2);
 	self->chip.revision = fu_common_strtoull(rev);
-	tool_string_version = fu_genesys_tsdigit_value(self->static_ts.tool_string_version);
 
 	dynamic_buf =
 	    g_usb_device_get_string_descriptor_bytes_full(usb_device,
@@ -882,6 +881,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 				   sizeof(FuGenesysFirmwareInfoToolString));
 	}
 
+	tool_string_version = fu_genesys_tsdigit_value(self->static_ts.tool_string_version);
 	if (tool_string_version >= TOOL_STRING_VERSION_VENDOR_SUPPORT) {
 		g_autoptr(GBytes) vendor_buf = g_usb_device_get_string_descriptor_bytes_full(
 		    usb_device,
@@ -954,7 +954,7 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 				    self->dynamic_ts.bonding);
 			return FALSE;
 		}
-		if (self->static_ts.tool_string_version < TOOL_STRING_VERSION_BONDING_QC)
+		if (tool_string_version < TOOL_STRING_VERSION_BONDING_QC)
 			bonding <<= 1;
 		self->bonding = (bonding & GL3523_BONDING_VALID_BIT);
 
