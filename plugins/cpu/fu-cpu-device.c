@@ -404,18 +404,40 @@ fu_cpu_device_add_security_attrs_intel_smap(FuCpuDevice *self, FuSecurityAttrs *
 }
 
 static void
+fu_cpu_device_add_supported_cpu_attribute(FuCpuDevice *self, FuSecurityAttrs *attrs)
+{
+	g_autoptr(FwupdSecurityAttr) attr = NULL;
+
+	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_SUPPORTED_CPU);
+	fwupd_security_attr_set_plugin(attr, fu_device_get_plugin(FU_DEVICE(self)));
+	fwupd_security_attr_set_level(attr, FWUPD_SECURITY_ATTR_LEVEL_CRITICAL);
+	fwupd_security_attr_add_guids(attr, fu_device_get_guids(FU_DEVICE(self)));
+
+	switch (fu_common_get_cpu_vendor()) {
+	case FU_CPU_VENDOR_INTEL:
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
+		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
+		break;
+	default:
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+	}
+	fu_security_attrs_append(attrs, attr);
+}
+
+static void
 fu_cpu_device_add_security_attrs(FuDevice *device, FuSecurityAttrs *attrs)
 {
 	FuCpuDevice *self = FU_CPU_DEVICE(device);
 
 	/* only Intel */
-	if (fu_common_get_cpu_vendor() != FU_CPU_VENDOR_INTEL)
-		return;
+	if (fu_common_get_cpu_vendor() == FU_CPU_VENDOR_INTEL) {
+		fu_cpu_device_add_security_attrs_intel_cet_enabled(self, attrs);
+		fu_cpu_device_add_security_attrs_intel_cet_active(self, attrs);
+		fu_cpu_device_add_security_attrs_intel_tme(self, attrs);
+		fu_cpu_device_add_security_attrs_intel_smap(self, attrs);
+	}
 
-	fu_cpu_device_add_security_attrs_intel_cet_enabled(self, attrs);
-	fu_cpu_device_add_security_attrs_intel_cet_active(self, attrs);
-	fu_cpu_device_add_security_attrs_intel_tme(self, attrs);
-	fu_cpu_device_add_security_attrs_intel_smap(self, attrs);
+	fu_cpu_device_add_supported_cpu_attribute(self, attrs);
 }
 
 static void
