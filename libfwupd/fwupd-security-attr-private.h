@@ -14,13 +14,16 @@
 G_BEGIN_DECLS
 
 /**
- * FWUPD_SECURITY_ATTR_ID_ACPI_DMAR:
+ * FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION:
  *
- * Host Security ID attribute for ACPI DMAR table
+ * Host Security ID attribute for Pre-boot DMA protection
  *
- * Since: 1.5.0
+ * This was previously known as org.fwupd.hsi.AcpiDmar for Intel from 1.5.0+.
+ *
+ * Since: 1.5.0 (for Intel only)
+ * Since: 1.8.0 (for all vendors)
  **/
-#define FWUPD_SECURITY_ATTR_ID_ACPI_DMAR "org.fwupd.hsi.AcpiDmar"
+#define FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION "org.fwupd.hsi.PrebootDma"
 /**
  * FWUPD_SECURITY_ATTR_ID_ENCRYPTED_RAM:
  *

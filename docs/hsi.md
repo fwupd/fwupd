@@ -437,14 +437,16 @@ To meet HSI-2 on systems that run this test, the result must be `valid`. *[v1.5.
 - [Linux Kernel TPM Documentation](https://www.kernel.org/doc/html/latest/security/tpm/tpm_event_log.html)
 
 <a id="org.fwupd.hsi.AcpiDmar"></a>
+<a id="org.fwupd.hsi.PrebootDma"></a>
 
-### [Pre-boot DMA protection](#org.fwupd.hsi.AcpiDmar)
+### [Pre-boot DMA protection](#org.fwupd.hsi.PrebootDma)
 
 The IOMMU on modern systems is used to mitigate against DMA attacks.
 All I/O for devices capable of DMA is mapped into a private virtual memory region.
-The ACPI DMAR table is used to set up pre-boot DMA protection which eliminates some firmware attacks.
+On Intel systems the ACPI DMAR table indicated the system is configured with pre-boot DMA protection which eliminates some firmware attacks.
+On AMD systems the ACPI IVRS table indicates the same.
 
-**Impact:** Without a DMAR table the IOMMU is disabled at boot.
+**Impact:** The IOMMU may is disabled at boot.
 An attacker could connect a malicious peripheral using ThunderBolt and reboot the machine, which would allow the attacker to modify the system memory.
 This would allow subverting the Secure Boot protection, and also invalidate any system attestation.
 
@@ -454,11 +456,15 @@ This would allow subverting the Secure Boot protection, and also invalidate any 
 - `not-valid`: could not determine state
 - `not-enabled`: was not enabled
 
-To meet HSI-3 on systems that run this test, the result must be `enabled`. *[v1.5.0]*
+To meet HSI-3 on systems that run this test, the result must be `enabled`. *[v1.8.0]*
+
+Note: a previous version of this attribute existed in 1.5.0 but was only for Intel systems.
+It was renamed in 1.8.0 to support other vendors.
 
 **References:**
 
 - [IOMMU Wikipedia Page](https://en.wikipedia.org/wiki/Input%E2%80%93output_memory_management_unit)
+- [AMD IVRS Specification](https://www.amd.com/system/files/TechDocs/48882_IOMMU.pdf)
 
 <a id="org.fwupd.hsi.Kernel.IntelBootguard"></a>
 <a id="org.fwupd.hsi.IntelBootguard.Enabled"></a>
