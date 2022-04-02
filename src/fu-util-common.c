@@ -2143,12 +2143,12 @@ fu_util_security_event_to_string(FwupdSecurityAttr *attr)
 		      /* TRANSLATORS: HSI event title */
 		      _("Kernel lockdown enabled")},
 		     /* ------------------------------------------*/
-		     {FWUPD_SECURITY_ATTR_ID_ACPI_DMAR,
+		     {FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
 		      _("Pre-boot DMA protection is disabled")},
-		     {FWUPD_SECURITY_ATTR_ID_ACPI_DMAR,
+		     {FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION,
 		      FWUPD_SECURITY_ATTR_RESULT_NOT_ENABLED,
 		      FWUPD_SECURITY_ATTR_RESULT_ENABLED,
 		      /* TRANSLATORS: HSI event title */
