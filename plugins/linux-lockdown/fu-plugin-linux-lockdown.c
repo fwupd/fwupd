@@ -102,6 +102,13 @@ fu_plugin_linux_lockdown_startup(FuPlugin *plugin, GError **error)
 
 	path = fu_common_get_path(FU_PATH_KIND_SYSFSDIR_SECURITY);
 	fn = g_build_filename(path, "lockdown", NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Kernel doesn't offer lockdown support.");
+		return FALSE;
+	}
 	data->file = g_file_new_for_path(fn);
 	data->monitor = g_file_monitor(data->file, G_FILE_MONITOR_NONE, NULL, error);
 	if (data->monitor == NULL)
@@ -126,9 +133,13 @@ fu_plugin_linux_lockdown_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *a
 	fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_RUNTIME_ISSUE);
 	fu_security_attrs_append(attrs, attr);
 
+	if (data->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN) {
+		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_MISSING_DATA);
+		return;
+	}
+
 	/* load file */
-	if (data->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_INVALID ||
-	    data->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_UNKNOWN) {
+	if (data->lockdown == FU_PLUGIN_LINUX_LOCKDOWN_INVALID) {
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_VALID);
 		return;
 	}
