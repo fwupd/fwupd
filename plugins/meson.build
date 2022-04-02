@@ -14,6 +14,7 @@ plugin_deps = [
 
 subdir('acpi-dmar')
 subdir('acpi-facp')
+subdir('acpi-ivrs')
 subdir('acpi-phat')
 subdir('amt')
 subdir('analogix')
