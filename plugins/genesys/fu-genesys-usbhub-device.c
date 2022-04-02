@@ -1084,14 +1084,15 @@ fu_genesys_usbhub_device_setup(FuDevice *device, GError **error)
 
 	if (self->running_bank != BANK_MASK_CODE) {
 		const gchar *vendor = fwupd_device_get_vendor(FWUPD_DEVICE(device));
-		guint16 port_num =
-		    (self->dynamic_ts.ss_port_number << 8) + self->dynamic_ts.hs_port_number;
+		guint8 portnum = fu_genesys_tsdigit_value(self->dynamic_ts.ss_port_number) << 4 |
+				 fu_genesys_tsdigit_value(self->dynamic_ts.hs_port_number);
 		g_autofree gchar *guid = NULL;
+
 		guid = fwupd_guid_hash_data((const guint8 *)&self->vs_ts,
 					    sizeof(self->vs_ts),
 					    FWUPD_GUID_FLAG_NONE);
 		fu_device_add_instance_strup(device, "VENDOR", vendor);
-		fu_device_add_instance_u16(device, "PORTNUM", port_num);
+		fu_device_add_instance_u8(device, "PORTNUM", portnum);
 		fu_device_add_instance_strup(device, "VENDORSUP", guid);
 	}
 
