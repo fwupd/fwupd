@@ -54,6 +54,13 @@ fu_plugin_linux_swap_startup(FuPlugin *plugin, GError **error)
 
 	procfs = fu_common_get_path(FU_PATH_KIND_PROCFS);
 	fn = g_build_filename(procfs, "swaps", NULL);
+	if (!g_file_test(fn, G_FILE_TEST_EXISTS)) {
+		g_set_error_literal(error,
+				    FWUPD_ERROR,
+				    FWUPD_ERROR_NOT_SUPPORTED,
+				    "Kernel doesn't offer swap support.");
+		return FALSE;
+	}
 	data->file = g_file_new_for_path(fn);
 	data->monitor = g_file_monitor(data->file, G_FILE_MONITOR_NONE, NULL, error);
 	if (data->monitor == NULL)
@@ -74,6 +81,9 @@ fu_plugin_linux_swap_add_security_attrs(FuPlugin *plugin, FuSecurityAttrs *attrs
 	g_autoptr(FuLinuxSwap) swap = NULL;
 	g_autoptr(FwupdSecurityAttr) attr = NULL;
 	g_autoptr(GError) error_local = NULL;
+
+	if (data->file == NULL)
+		return;
 
 	/* create attr */
 	attr = fwupd_security_attr_new(FWUPD_SECURITY_ATTR_ID_KERNEL_SWAP);
