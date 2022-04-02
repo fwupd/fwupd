@@ -415,6 +415,7 @@ fu_cpu_device_add_supported_cpu_attribute(FuCpuDevice *self, FuSecurityAttrs *at
 
 	switch (fu_common_get_cpu_vendor()) {
 	case FU_CPU_VENDOR_INTEL:
+	case FU_CPU_VENDOR_AMD:
 		fwupd_security_attr_add_flag(attr, FWUPD_SECURITY_ATTR_FLAG_SUCCESS);
 		fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_VALID);
 		break;
