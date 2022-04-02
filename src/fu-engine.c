@@ -5890,17 +5890,15 @@ fu_engine_ensure_security_attrs_tainted(FuEngine *self)
 	fwupd_security_attr_set_result(attr, FWUPD_SECURITY_ATTR_RESULT_NOT_TAINTED);
 }
 
+/*
+ * Get chassis type from SMBIOS data and verify HSI makes sense for it
+ */
 static gchar *
 fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 {
-	guint val;
+	guint val =
+	    fu_context_get_smbios_integer(self->ctx, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 0x05);
 
-	/* get chassis type from SMBIOS data */
-	val = fu_context_get_smbios_integer(self->ctx, FU_SMBIOS_STRUCTURE_TYPE_CHASSIS, 0x05);
-	if (val == G_MAXUINT)
-		return g_strdup("HSI-INVALID:chassis");
-
-	/* verify HSI makes sense for this chassis type */
 	switch (val) {
 	case FU_SMBIOS_CHASSIS_KIND_DESKTOP:
 	case FU_SMBIOS_CHASSIS_KIND_LOW_PROFILE_DESKTOP:
@@ -5926,7 +5924,6 @@ fu_engine_attrs_calculate_hsi_for_chassis(FuEngine *self)
 		break;
 	}
 
-	/* failed */
 	return g_strdup_printf("HSI-INVALID:chassis[0x%02x]", val);
 }
 
