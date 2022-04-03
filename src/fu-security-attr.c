@@ -194,6 +194,10 @@ fu_security_attr_get_name(FwupdSecurityAttr *attr)
 		/* TRANSLATORS: Title: if hardware enforces control of SPI writes */
 		return g_strdup(_("SPI write protection"));
 	}
+	if (g_strcmp0(appstream_id, FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED) == 0) {
+		/* TRANSLATORS: Title: if the part has been fused */
+		return g_strdup(_("Fused platform"));
+	}
 
 	/* we should not get here */
 	return g_strdup(fwupd_security_attr_get_name(attr));
