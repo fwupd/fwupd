@@ -351,8 +351,9 @@ To meet HSI-1 on systems that run this test, the result must be `valid`. *[v1.5.
 - [Intel CSME Security Review Cumulative Update](https://www.intel.com/content/www/us/en/security-center/advisory/intel-sa-00086.html)
 
 <a id="org.fwupd.hsi.IntelDci.Enabled"></a>
+<a id="org.fwupd.hsi.PlatformDebugEnabled"></a>
 
-### [Intel DCI](#org.fwupd.hsi.IntelDci.Enabled)
+### [Intel DCI](#org.fwupd.hsi.PlatformDebugEnabled)
 
 Newer Intel CPUs support debugging over USB3 via a proprietary Direct Connection Interface (DCI) with the use of off-the-shelf hardware.
 
@@ -366,6 +367,8 @@ This makes privilege escalation from user to root possible, and also modifying S
 
 To meet HSI-1 on systems that run this test, the result must be `not-enabled`. *[v1.5.0]*
 
+Note: this attribute was previously known as org.fwupd.hsi.IntelDci.Enabled in 1.5.0, but was renamed in 1.8.0 to support other vendors.
+
 **References:**
 
 - [Intel Direct Connect Interface](https://www.intel.co.uk/content/www/uk/en/support/articles/000029393/processors.html)
@@ -373,20 +376,23 @@ To meet HSI-1 on systems that run this test, the result must be `not-enabled`. *
 - [RISC-V EDK PCH register definitions](https://github.com/riscv/riscv-edk2-platforms/blob/85a50de1b459d1d6644a402081120770aa6dd8c7/Silicon/Intel/CoffeelakeSiliconPkg/Pch/Include/Register/PchRegsDci.h)
 
 <a id="org.fwupd.hsi.IntelDci.Locked"></a>
+<a id="org.fwupd.hsi.PlatformDebugLocked"></a>
 
-### [Intel DCI](#org.fwupd.hsi.IntelDci.Locked)
+### [Part is debug locked](#org.fwupd.hsi.PlatformDebugLocked)
 
-Newer Intel CPUs support debugging over USB3 via a proprietary Direct Connection Interface (DCI) with the use of off-the-shelf hardware.
+Some devices support a concept of whether a part has been unlocked for debugging using proprietary hardware.  Such parts allow access to registers that are typically restricted when parts are fused.
+On Intel systems access to this interface is done via a proprietary Direct Connection Interface (DCI).
 
-**Impact:** A local attacker with root access would be able to enable DCI. This would allow them full access to all registers and memory in the system, and is able to make changes.
-This allows using SMM to write to system firmware for a persistent backdoor.
+**Impact:** If using a debug unlocked part, the platform's overall security will be decreased as an attacker may have elevated access to registers and memory within the system and can potentially enable persistent backdoors.
 
 **Possible results:**
 
-- `locked`: CPU debugging has been disabled
-- `not-locked`: is is still possible to enable CPU debugging
+- `locked`: device is locked
+- `not-locked`: device is not not locked
 
-To meet HSI-2 on systems that run this test, the result must be `locked`. *[v1.5.0]*
+To meet HSI-2 on systems that run this test, the result must be `locked`. *[v1.8.0]*
+
+Note: this attribute was previously known as org.fwupd.hsi.IntelDci.Locked in 1.5.0, but was renamed in 1.8.0 to support other vendors.
 
 **References:**
 
