@@ -267,6 +267,14 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED "org.fwupd.hsi.PlatformDebugEnabled"
 /**
+ * FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED:
+ *
+ * Host Security ID attribute for fused parts
+ *
+ * Since: 1.8.0
+ **/
+#define FWUPD_SECURITY_ATTR_ID_PLATFORM_FUSED "org.fwupd.hsi.PlatformFused"
+/**
  * FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED:
  *
  * Host Security ID attribute for parts locked from debugging

@@ -375,6 +375,22 @@ Note: this attribute was previously known as org.fwupd.hsi.IntelDci.Enabled in 1
 - [Chipsec 4xxlp register definitions](https://github.com/chipsec/chipsec/blob/master/chipsec/cfg/8086/pch_4xxlp.xml#L270)
 - [RISC-V EDK PCH register definitions](https://github.com/riscv/riscv-edk2-platforms/blob/85a50de1b459d1d6644a402081120770aa6dd8c7/Silicon/Intel/CoffeelakeSiliconPkg/Pch/Include/Register/PchRegsDci.h)
 
+<a id="org.fwupd.hsi.PlatformFused"></a>
+
+### [Part is fused](#org.fwupd.hsi.PlatformFused)
+
+When fuses are blown in parts from some manufacturers the hardware will enforce protections against
+tampering or accessing of certain registers.
+
+**Impact:** If using an unfused part, the platform's overall security will be decreased.
+
+**Possible results:**
+
+- `locked`: device is fused
+- `not-locked`: device is not fused
+
+To meet HSI-1 on systems that run this test, the result must be `locked`. *[v1.8.0]*
+
 <a id="org.fwupd.hsi.IntelDci.Locked"></a>
 <a id="org.fwupd.hsi.PlatformDebugLocked"></a>
 
