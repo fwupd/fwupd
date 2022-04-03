@@ -256,21 +256,27 @@ G_BEGIN_DECLS
  **/
 #define FWUPD_SECURITY_ATTR_ID_UEFI_SECUREBOOT "org.fwupd.hsi.Uefi.SecureBoot"
 /**
- * FWUPD_SECURITY_ATTR_ID_INTEL_DCI_ENABLED:
+ * FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED:
  *
- * Host Security ID attribute for Intel DCI enabled
+ * Host Security ID attribute for parts with debugging capabilities enabled
  *
- * Since: 1.5.0
+ * This was previously known as org.fwupd.hsi.PlatformDebugEnabled for Intel 1.5.0+
+ * It was renamed for all vendor support in 1.8.0. *
+ *
+ * Since: 1.8.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_ENABLED "org.fwupd.hsi.IntelDci.Enabled"
+#define FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_ENABLED "org.fwupd.hsi.PlatformDebugEnabled"
 /**
- * FWUPD_SECURITY_ATTR_ID_INTEL_DCI_LOCKED:
+ * FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED:
  *
- * Host Security ID attribute for Intel DCI locked
+ * Host Security ID attribute for parts locked from debugging
  *
- * Since: 1.5.0
+ * This was previously known as org.fwupd.hsi.IntelDci.Locked for Intel 1.5.0+
+ * It was renamed for all vendor support in 1.8.0.
+ *
+ * Since: 1.8.0
  **/
-#define FWUPD_SECURITY_ATTR_ID_INTEL_DCI_LOCKED "org.fwupd.hsi.IntelDci.Locked"
+#define FWUPD_SECURITY_ATTR_ID_PLATFORM_DEBUG_LOCKED "org.fwupd.hsi.PlatformDebugLocked"
 /**
  * FWUPD_SECURITY_ATTR_ID_UEFI_PK:
  *
