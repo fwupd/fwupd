@@ -381,9 +381,13 @@ static gboolean
 fu_engine_add_local_release_metadata(FuEngine *self, FuRelease *release, GError **error)
 {
 	FuDevice *dev = fu_release_get_device(release);
-	GPtrArray *guids = fu_device_get_guids(dev);
+	GPtrArray *guids;
 	g_autoptr(XbQuery) query = NULL;
 	g_autoptr(GError) error_query = NULL;
+
+	/* no device matched */
+	if (dev == NULL)
+		return TRUE;
 
 	/* prepare query with bound GUID parameter */
 	query = xb_query_new_full(self->silo,
@@ -400,6 +404,7 @@ fu_engine_add_local_release_metadata(FuEngine *self, FuRelease *release, GError 
 	}
 
 	/* use prepared query for each GUID */
+	guids = fu_device_get_guids(dev);
 	for (guint i = 0; i < guids->len; i++) {
 		const gchar *guid = g_ptr_array_index(guids, i);
 		g_autoptr(GError) error_local = NULL;
