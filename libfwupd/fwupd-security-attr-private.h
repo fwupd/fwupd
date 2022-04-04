@@ -20,8 +20,7 @@ G_BEGIN_DECLS
  *
  * This was previously known as org.fwupd.hsi.AcpiDmar for Intel from 1.5.0+.
  *
- * Since: 1.5.0 (for Intel only)
- * Since: 1.8.0 (for all vendors)
+ * Since: 1.8.0
  **/
 #define FWUPD_SECURITY_ATTR_ID_PREBOOT_DMA_PROTECTION "org.fwupd.hsi.PrebootDma"
 /**
