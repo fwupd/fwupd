@@ -1,0 +1,15 @@
+# SABRE RGB PRO WIRELESS
+[USB\VID_1B1C&PID_1B98]
+Plugin = corsair
+GType = FuCorsairDevice
+Name = SABRE RGB PRO WIRELESS Gaming Mouse
+Icon = input-mouse
+CorsairDeviceKind = mouse
+
+# SLIPSTREAM WIRELESS USB Receiver
+[USB\VID_1B1C&PID_1BA6]
+Plugin = corsair
+GType = FuCorsairDevice
+Name = SLIPSTREAM WIRELESS USB Receiver
+Icon = input-mouse
+CorsairDeviceKind = receiver
