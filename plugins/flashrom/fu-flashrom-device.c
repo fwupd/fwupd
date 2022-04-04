@@ -21,7 +21,6 @@
 
 struct _FuFlashromDevice {
 	FuUdevDevice parent_instance;
-	gsize flash_size;
 	struct flashrom_flashctx *flashctx;
 	struct flashrom_programmer *flashprog;
 };
@@ -105,13 +104,18 @@ fu_flashrom_device_open(FuDevice *device, GError **error)
 				    "flash probe failed: unknown error");
 		return FALSE;
 	}
-	self->flash_size = flashrom_flash_getsize(self->flashctx);
-	if (self->flash_size == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "flash size zero");
-		return FALSE;
+
+	/* get the flash size from the device if not already been quirked */
+	if (fu_device_get_firmware_size_max(device) == 0) {
+		gsize flash_size = flashrom_flash_getsize(self->flashctx);
+		if (flash_size == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "flash size zero");
+			return FALSE;
+		}
+		fu_device_set_firmware_size_max(device, flash_size);
 	}
 
 	return TRUE;
@@ -143,7 +147,8 @@ fu_flashrom_device_prepare(FuDevice *device, FwupdInstallFlags flags, GError **e
 		return FALSE;
 	if (!g_file_test(firmware_orig, G_FILE_TEST_EXISTS)) {
 		struct flashrom_layout *layout;
-		g_autofree guint8 *newcontents = g_malloc0(self->flash_size);
+		gsize flash_size = fu_device_get_firmware_size_max(device);
+		g_autofree guint8 *newcontents = g_malloc0(flash_size);
 		g_autoptr(GBytes) buf = NULL;
 
 		if (flashrom_layout_read_from_ifd(&layout, self->flashctx, NULL, 0)) {
@@ -167,14 +172,14 @@ fu_flashrom_device_prepare(FuDevice *device, FwupdInstallFlags flags, GError **e
 		flashrom_layout_set(self->flashctx, layout);
 
 		fu_progress_set_status(progress, FWUPD_STATUS_DEVICE_READ);
-		if (flashrom_image_read(self->flashctx, newcontents, self->flash_size)) {
+		if (flashrom_image_read(self->flashctx, newcontents, flash_size)) {
 			g_set_error_literal(error,
 					    FWUPD_ERROR,
 					    FWUPD_ERROR_READ,
 					    "failed to back up original firmware");
 			return FALSE;
 		}
-		buf = g_bytes_new_static(newcontents, self->flash_size);
+		buf = g_bytes_new_static(newcontents, flash_size);
 		if (!fu_common_set_contents_bytes(firmware_orig, buf, error))
 			return FALSE;
 	}
@@ -227,13 +232,13 @@ fu_flashrom_device_write_firmware(FuDevice *device,
 
 	/* write region */
 	flashrom_layout_set(self->flashctx, layout);
-	if (sz != self->flash_size) {
+	if (sz != fu_device_get_firmware_size_max(device)) {
 		g_set_error(error,
 			    FWUPD_ERROR,
 			    FWUPD_ERROR_NOT_SUPPORTED,
 			    "invalid image size 0x%x, expected 0x%x",
 			    (guint)sz,
-			    (guint)self->flash_size);
+			    (guint)fu_device_get_firmware_size_max(device));
 		return FALSE;
 	}
 	rc = flashrom_image_write(self->flashctx, (void *)buf, sz, NULL /* refbuffer */);
