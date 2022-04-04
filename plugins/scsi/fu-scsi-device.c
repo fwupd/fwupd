@@ -60,13 +60,12 @@ fu_scsi_device_probe(FuDevice *device, GError **error)
 	fu_device_add_instance_strsafe(device, "VEN", vendor);
 	fu_device_add_instance_strsafe(device, "DEV", name);
 	fu_device_add_instance_strsafe(device, "REV", version);
-	if (!fu_device_build_instance_id_quirk(device, NULL, "SCSI", "VEN", NULL))
+	if (!fu_device_build_instance_id_quirk(device, error, "SCSI", "VEN", NULL))
 		return FALSE;
-	if (!fu_device_build_instance_id(device, NULL, "SCSI", "VEN", "DEV", NULL))
+	if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", NULL))
 		return FALSE;
-	if (!fu_device_build_instance_id(device, NULL, "SCSI", "VEN", "DEV", "REV", NULL))
+	if (!fu_device_build_instance_id(device, error, "SCSI", "VEN", "DEV", "REV", NULL))
 		return FALSE;
-
 	/* check all block devices, although there should only be one */
 	block_devs = fu_udev_device_get_children_with_subsystem(FU_UDEV_DEVICE(device), "block");
 	for (guint i = 0; i < block_devs->len; i++) {
