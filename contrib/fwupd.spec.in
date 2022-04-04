@@ -412,9 +412,7 @@ done
 /usr/lib/udev/rules.d/*.rules
 /usr/lib/systemd/system-shutdown/fwupd.shutdown
 %dir %{_libdir}/fwupd-plugins-%{fwupdplugin_version}
-%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_acpi_dmar.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_acpi_facp.so
-%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_acpi_ivrs.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_acpi_phat.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_amt.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_analogix.so
@@ -453,6 +451,8 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_linux_swap.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_linux_tainted.so
 %if 0%{?have_msr}
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_acpi_dmar.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_acpi_ivrs.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_msr.so
 %endif
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_mtd.so
