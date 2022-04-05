@@ -34,6 +34,42 @@
     <binary>fwupdagent</binary>
   </provides>
   <releases>
+    <release version="1.7.7" date="2022-04-05">
+      <description>
+        <p>
+          This release adds the following features:
+        </p>
+        <ul>
+          <li>Add CCGX trigger code to support future hardware</li>
+          <li>Add signed and unsigned payload metadata to more devices</li>
+          <li>Allow overriding the detected machine type</li>
+          <li>Allow quirking the flashrom flash size</li>
+          <li>Do not allow the DBX update for broken firmware versions</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Do not add the backup BMC device as it shares the same GUIDs</li>
+          <li>Do not hardcode the libexecdir to /usr/libexec</li>
+          <li>Do not leak child processes when canceling</li>
+          <li>Do not throw away the TPM eventlog when uploading reports to the LVFS</li>
+          <li>Don't export USB4 host controllers if they do not have unique GUIDs</li>
+          <li>Fix build for MacOS</li>
+          <li>Fix the TPM eventlog replay for Intel TXT machines</li>
+          <li>Fix writing large MTD images</li>
+          <li>Never send the DeviceChanged signal with invalid data</li>
+          <li>Return the correct error when there is no GPIO device to open</li>
+          <li>Show the update message and update image in front end tools</li>
+          <li>Support the new PENDING upower device states</li>
+        </ul>
+        <p>This release adds support for the following hardware:</p>
+        <ul>
+          <li>Logitech M550, M650 and K650</li>
+          <li>More Elan fingerprint readers</li>
+          <li>More Star Labs StarLite laptops</li>
+          <li>More Wacom panels found on Lenovo laptops</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.7.6" date="2022-02-25">
       <description>
         <p>
