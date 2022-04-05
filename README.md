@@ -1,6 +1,7 @@
 # fwupd
 
 [![Build Status](https://github.com/fwupd/fwupd/actions/workflows/main.yml/badge.svg)](https://github.com/fwupd/fwupd/actions/workflows/main.yml)
+[![CodeQL](https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/fwupd/fwupd/actions/workflows/codeql-analysis.yml)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/10744/badge.svg)](https://scan.coverity.com/projects/10744)
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/fwupd.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:fwupd)
 [![CircleCI](https://circleci.com/gh/fwupd/fwupd/tree/main.svg?style=svg)](https://circleci.com/gh/fwupd/fwupd/tree/main)

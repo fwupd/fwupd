@@ -1,0 +1,46 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'cpp', 'python' ]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+
+    - name: Install dependencies
+      run: >
+        sudo apt-get update &&
+        sudo ./contrib/ci/fwupd_setup_helpers.py install-dependencies --yes -o ubuntu &&
+        python3 -m pip install --user "meson >= 0.60.0"
+
+    - name: Build
+      run: |
+        mkdir -p $GITHUB_WORKSPACE/build
+        cd $GITHUB_WORKSPACE/build
+        meson .. -Dman=false -Ddocs=none  -Defi_binary=false -Dplugin_uefi_capsule_splash=false --prefix=$GITHUB_WORKSPACE/dist
+        ninja
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
