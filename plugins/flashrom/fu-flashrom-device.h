@@ -21,7 +21,5 @@ const gchar *
 fu_flashrom_device_get_programmer_name(FuFlashromDevice *self);
 void
 fu_flashrom_device_set_programmer_args(FuFlashromDevice *self, const gchar *args);
-gsize
-fu_flashrom_device_get_flash_size(FuFlashromDevice *self);
 struct flashrom_flashctx *
 fu_flashrom_device_get_flashctx(FuFlashromDevice *self);

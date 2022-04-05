@@ -13,7 +13,6 @@
 typedef struct {
 	gchar *programmer_name;
 	gchar *programmer_args;
-	gsize flash_size;
 	struct flashrom_flashctx *flashctx;
 	struct flashrom_programmer *flashprog;
 } FuFlashromDevicePrivate;
@@ -50,14 +49,6 @@ fu_flashrom_device_set_programmer_args(FuFlashromDevice *self, const gchar *args
 		return;
 	g_free(priv->programmer_args);
 	priv->programmer_args = g_strdup(args);
-}
-
-gsize
-fu_flashrom_device_get_flash_size(FuFlashromDevice *self)
-{
-	FuFlashromDevicePrivate *priv = GET_PRIVATE(self);
-	g_return_val_if_fail(FU_IS_FLASHROM_DEVICE(self), 0);
-	return priv->flash_size;
 }
 
 struct flashrom_flashctx *
@@ -175,13 +166,18 @@ fu_flashrom_device_open(FuDevice *device, GError **error)
 				    "flash probe failed: unknown error");
 		return FALSE;
 	}
-	priv->flash_size = flashrom_flash_getsize(priv->flashctx);
-	if (priv->flash_size == 0) {
-		g_set_error_literal(error,
-				    FWUPD_ERROR,
-				    FWUPD_ERROR_NOT_SUPPORTED,
-				    "flash size zero");
-		return FALSE;
+
+	/* get the flash size from the device if not already been quirked */
+	if (fu_device_get_firmware_size_max(device) == 0) {
+		gsize flash_size = flashrom_flash_getsize(priv->flashctx);
+		if (flash_size == 0) {
+			g_set_error_literal(error,
+					    FWUPD_ERROR,
+					    FWUPD_ERROR_NOT_SUPPORTED,
+					    "flash size zero");
+			return FALSE;
+		}
+		fu_device_set_firmware_size_max(device, flash_size);
 	}
 
 	return TRUE;

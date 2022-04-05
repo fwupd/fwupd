@@ -60,7 +60,7 @@ fu_flashrom_internal_device_prepare(FuDevice *device, FwupdInstallFlags flags, G
 	if (!g_file_test(firmware_orig, G_FILE_TEST_EXISTS)) {
 		FuFlashromDevice *parent = FU_FLASHROM_DEVICE(device);
 		struct flashrom_flashctx *flashctx = fu_flashrom_device_get_flashctx(parent);
-		gsize flash_size = fu_flashrom_device_get_flash_size(parent);
+		gsize flash_size = fu_device_get_firmware_size_max(device);
 		struct flashrom_layout *layout;
 		g_autofree guint8 *newcontents = g_malloc0(flash_size);
 		g_autoptr(GBytes) buf = NULL;
@@ -110,7 +110,7 @@ fu_flashrom_internal_device_write_firmware(FuDevice *device,
 {
 	FuFlashromDevice *parent = FU_FLASHROM_DEVICE(device);
 	struct flashrom_flashctx *flashctx = fu_flashrom_device_get_flashctx(parent);
-	gsize flash_size = fu_flashrom_device_get_flash_size(parent);
+	gsize flash_size = fu_device_get_firmware_size_max(device);
 	struct flashrom_layout *layout;
 	gsize sz = 0;
 	gint rc;
