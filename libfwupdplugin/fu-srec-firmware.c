@@ -385,7 +385,7 @@ fu_srec_firmware_parse(FuFirmware *firmware,
 			}
 
 			/* could be anything, lets assume text */
-			for (guint8 i = 0; i < rcd->buf->len; i++) {
+			for (guint i = 0; i < rcd->buf->len; i++) {
 				gchar tmp = rcd->buf->data[i];
 				if (!g_ascii_isgraph(tmp))
 					break;

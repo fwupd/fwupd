@@ -350,7 +350,7 @@ fu_dfu_csr_device_download(FuDevice *device,
 			   GError **error)
 {
 	FuDfuCsrDevice *self = FU_DFU_CSR_DEVICE(device);
-	guint16 idx;
+	guint idx;
 	g_autoptr(GBytes) blob_empty = NULL;
 	g_autoptr(GBytes) blob = NULL;
 	g_autoptr(GPtrArray) chunks = NULL;
@@ -369,6 +369,14 @@ fu_dfu_csr_device_download(FuDevice *device,
 					       0x0,
 					       FU_DFU_CSR_PACKET_DATA_SIZE -
 						   FU_DFU_CSR_COMMAND_HEADER_SIZE);
+	if (chunks->len > G_MAXUINT16) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_INVALID_FILE,
+			    "too many chunks for hardware: 0x%x",
+			    chunks->len);
+		return FALSE;
+	}
 
 	/* send to hardware */
 	fu_progress_set_steps(progress, chunks->len);
