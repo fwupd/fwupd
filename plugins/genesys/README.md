@@ -56,7 +56,7 @@ Since 1.7.6.
 
 Device has a public-key appended to firmware.
 
-Since 1.7.7
+Since 1.8.0
 
 ### GenesysUsbhubSwitchRequest
 
