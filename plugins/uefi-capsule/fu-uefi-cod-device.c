@@ -187,22 +187,25 @@ fu_uefi_cod_device_write_firmware(FuDevice *device,
 		gsize bufsz = 0;
 		guint64 os_indications = 0;
 		g_autofree guint8 *buf = NULL;
+		g_autoptr(GError) error_local = NULL;
+
+		/* the firmware does not normally populate OsIndications by default */
 		if (!fu_efivar_get_data(FU_EFIVAR_GUID_EFI_GLOBAL,
 					"OsIndications",
 					&buf,
 					&bufsz,
 					NULL,
-					error)) {
-			g_prefix_error(error, "failed to read EFI variable: ");
-			return FALSE;
+					&error_local)) {
+			g_debug("failed to read EFI variable: %s", error_local->message);
+		} else {
+			if (!fu_common_read_uint64_safe(buf,
+							bufsz,
+							0x0,
+							&os_indications,
+							G_LITTLE_ENDIAN,
+							error))
+				return FALSE;
 		}
-		if (!fu_common_read_uint64_safe(buf,
-						bufsz,
-						0x0,
-						&os_indications,
-						G_LITTLE_ENDIAN,
-						error))
-			return FALSE;
 		os_indications |= EFI_OS_INDICATIONS_FILE_CAPSULE_DELIVERY_SUPPORTED;
 		if (!fu_efivar_set_data(FU_EFIVAR_GUID_EFI_GLOBAL,
 					"OsIndications",
