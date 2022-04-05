@@ -104,11 +104,12 @@ _show_modifiers()
 
 _fwupdtool()
 {
-	local cur prev command
+	local cur prev command args
 	COMPREPLY=()
 	cur=`_get_cword`
 	prev=${COMP_WORDS[COMP_CWORD-1]}
 	command=${COMP_WORDS[1]}
+	_count_args
 
 	case $prev in
 	--plugins)
@@ -124,83 +125,68 @@ _fwupdtool()
 	case $command in
 	get-details|install|install-blob|firmware-dump)
 		#find files
-		if [[ "$prev" = "$command" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_filedir
 		#device ID
-		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+		elif [[ "$args" = "3" ]]; then
 			_show_device_ids
-		#modifiers
-		else
-			_show_modifiers
 		fi
 		;;
 	attach|detach|activate|verify-update|reinstall|get-updates)
 		#device ID
-		if [[ "$prev" = "$command" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_show_device_ids
-		#modifiers
-		else
-			_show_modifiers
 		fi
 		;;
 	build-firmware)
 		#file in
-		if [[ "$prev" = "$command" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_filedir
 		#file out
-		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+		elif [[ "$args" = "3" ]]; then
 			_filedir
 		#script
-		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
+		elif [[ "$args" = "4" ]]; then
 			_filedir
 		#output
-		elif [[ "$prev" = "${COMP_WORDS[4]}" ]]; then
+		elif [[ "$args" = "5" ]]; then
 			_filedir
-		#modifiers
-		else
-			_show_modifiers
 		fi
 		;;
 	firmware-parse|firmware-patch)
 		#find files
-		if [[ "$prev" = "$command" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_filedir
 		#firmware_type
-		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+		elif [[ "$args" = "3" ]]; then
 			_show_firmware_types
-		#modifiers
-		else
-			_show_modifiers
 		fi
 		;;
 	firmware-convert)
 		#file in
-		if [[ "$prev" = "$command" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_filedir
 		#file out
-		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+		elif [[ "$args" = "3" ]]; then
 			_filedir
 		#firmware_type in
-		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
+		elif [[ "$args" = "4" ]]; then
 			_show_firmware_types
 		#firmware_type out
-		elif [[ "$prev" = "${COMP_WORDS[4]}" ]]; then
+		elif [[ "$args" = "5" ]]; then
 			_show_firmware_types
-		#modifiers
-		else
-			_show_modifiers
 		fi
 		;;
 	*)
 		#find first command
-		if [[ ${COMP_CWORD} = 1 ]]; then
+		if [[ "$args" = "1" ]]; then
 			COMPREPLY=( $(compgen -W '${_fwupdtool_cmd_list[@]}' -- "$cur") )
-		#modifiers for all commands
-		else
-			_show_modifiers
 		fi
 		;;
 	esac
+
+	#modifiers
+	_show_modifiers
 
 	return 0
 }

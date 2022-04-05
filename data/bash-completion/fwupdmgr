@@ -102,11 +102,12 @@ _show_remotes()
 
 _fwupdmgr()
 {
-	local cur prev command
+	local cur prev command args
 	COMPREPLY=()
 	cur=`_get_cword`
 	prev=${COMP_WORDS[COMP_CWORD-1]}
 	command=${COMP_WORDS[1]}
+	_count_args
 
 	case $prev in
 	--filter)
@@ -118,113 +119,86 @@ _fwupdmgr()
 	case $command in
 	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update|get-updates|switch-branch|update|upgrade)
 		#device ID
-		if [[ "$prev" = "$command" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_show_device_ids
-		#modifiers
-		else
-			_show_modifiers
 		fi
 		;;
 	get-details)
 		#find files
-		if [[ "$prev" = "$command" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_filedir
-		#modifiers
-		else
-			_show_modifiers
 		fi
 		;;
 	device-test)
 		#find files
-		if [[ "$prev" = "$command" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_filedir
-		#modifiers
-		else
-			_show_modifiers
 		fi
 		;;
 	install)
 		#device ID
-		if [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_show_device_ids
 		#version
-		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
+		elif [[ "$args" = "3" ]]; then
 			_show_release_versions "$prev"
-		#modifiers
-		else
-			_show_modifiers
 		fi
 		;;
 	local-install)
 		#find files
-		if [[ "$prev" = "$command" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_filedir
 		#device ID or modifiers
-		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+		elif [[ "$args" = "3" ]]; then
 			_show_device_ids
-			_show_modifiers
-		#modifiers
-		else
 			_show_modifiers
 		fi
 		;;
 	modify-remote)
 		#find remotes
-		if [[ "$prev" = "$command" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_show_remotes
 		#add key
-		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+		elif [[ "$args" = "3" ]]; then
 			local keys
 			keys="$(command fwupdmgr get-remotes | command awk -v pattern="Remote ID:.*${prev}$" '$0~pattern{show=1; next}/Remote/{show=0}{gsub(/:.*/,"")}show')"
 			COMPREPLY+=( $(compgen -W "${keys}" -- "$cur") )
-		#modifiers
-		else
-			_show_modifiers
 		fi
 		;;
 	enable-remote)
 		#find remotes
-		if [[ "$prev" = "$command" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_show_remotes
-		#modifiers
-		else
-			_show_modifiers
 		fi
 		;;
 	disable-remote)
 		#find remotes
-		if [[ "$prev" = "$command" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_show_remotes
-		#modifiers
-		else
-			_show_modifiers
 		fi
 		;;
 	refresh)
 		#find first file
-		if [[ "$prev" = "$command" ]]; then
+		if [[ "$args" = "2" ]]; then
 			_filedir
 		#find second file
-		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+		elif [[ "$args" = "3" ]]; then
 			_filedir
 		#find remote ID
-		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
+		elif [[ "$args" = "4" ]]; then
 			_show_remotes
-		#modifiers
-		else
-			_show_modifiers
 		fi
 		;;
 	*)
 		#find first command
-		if [[ ${COMP_CWORD} = 1 ]]; then
+		if [[ "$args" = "1" ]]; then
 			COMPREPLY=( $(compgen -W '${_fwupdmgr_cmd_list[@]}' -- "$cur") )
-		#modifiers for all commands
-		else
-			_show_modifiers
 		fi
 		;;
 	esac
+
+	#modifiers
+	_show_modifiers
 
 	return 0
 }
