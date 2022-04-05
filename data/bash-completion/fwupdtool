@@ -126,6 +126,9 @@ _fwupdtool()
 		#find files
 		if [[ "$prev" = "$command" ]]; then
 			_filedir
+		#device ID
+		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
+			_show_device_ids
 		#modifiers
 		else
 			_show_modifiers
