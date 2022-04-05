@@ -291,7 +291,6 @@ fu_flashrom_device_init(FuFlashromDevice *self)
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_NEEDS_SHUTDOWN);
 	fu_device_add_flag(FU_DEVICE(self), FWUPD_DEVICE_FLAG_REQUIRE_AC);
 	fu_device_add_protocol(FU_DEVICE(self), "org.flashrom");
-	fu_device_add_instance_id(FU_DEVICE(self), "main-system-firmware");
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_ENSURE_SEMVER);
 	fu_device_add_internal_flag(FU_DEVICE(self), FU_DEVICE_INTERNAL_FLAG_MD_SET_SIGNED);
 	fu_device_set_physical_id(FU_DEVICE(self), "flashrom");
@@ -301,6 +300,13 @@ fu_flashrom_device_init(FuFlashromDevice *self)
 	fu_device_register_private_flag(FU_DEVICE(self),
 					FU_FLASHROM_DEVICE_FLAG_RESET_CMOS,
 					"reset-cmos");
+}
+
+static void
+fu_flashrom_device_constructed(GObject *obj)
+{
+	FuFlashromDevice *self = FU_FLASHROM_DEVICE(obj);
+	fu_device_add_instance_id(FU_DEVICE(self), "main-system-firmware");
 }
 
 static void
@@ -314,6 +320,7 @@ fu_flashrom_device_class_init(FuFlashromDeviceClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS(klass);
 	FuDeviceClass *klass_device = FU_DEVICE_CLASS(klass);
+	object_class->constructed = fu_flashrom_device_constructed;
 	object_class->finalize = fu_flashrom_device_finalize;
 	klass_device->set_quirk_kv = fu_flashrom_device_set_quirk_kv;
 	klass_device->probe = fu_flashrom_device_probe;
