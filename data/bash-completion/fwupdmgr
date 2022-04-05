@@ -117,14 +117,16 @@ _fwupdmgr()
 
 	case $command in
 	activate|clear-results|downgrade|get-releases|get-results|unlock|verify|verify-update|get-updates|switch-branch|update|upgrade)
+		#device ID
 		if [[ "$prev" = "$command" ]]; then
 			_show_device_ids
+		#modifiers
 		else
 			_show_modifiers
 		fi
 		;;
 	get-details)
-		#browse for file
+		#find files
 		if [[ "$prev" = "$command" ]]; then
 			_filedir
 		#modifiers
@@ -133,7 +135,7 @@ _fwupdmgr()
 		fi
 		;;
 	device-test)
-		#browse for files
+		#find files
 		if [[ "$prev" = "$command" ]]; then
 			_filedir
 		#modifiers
@@ -208,6 +210,7 @@ _fwupdmgr()
 		#find remote ID
 		elif [[ "$prev" = "${COMP_WORDS[3]}" ]]; then
 			_show_remotes
+		#modifiers
 		else
 			_show_modifiers
 		fi

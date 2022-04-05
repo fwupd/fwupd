@@ -135,6 +135,7 @@ _fwupdtool()
 		fi
 		;;
 	attach|detach|activate|verify-update|reinstall|get-updates)
+		#device ID
 		if [[ "$prev" = "$command" ]]; then
 			_show_device_ids
 		#modifiers
@@ -155,6 +156,7 @@ _fwupdtool()
 		#output
 		elif [[ "$prev" = "${COMP_WORDS[4]}" ]]; then
 			_filedir
+		#modifiers
 		else
 			_show_modifiers
 		fi
@@ -166,6 +168,7 @@ _fwupdtool()
 		#firmware_type
 		elif [[ "$prev" = "${COMP_WORDS[2]}" ]]; then
 			_show_firmware_types
+		#modifiers
 		else
 			_show_modifiers
 		fi
@@ -183,6 +186,7 @@ _fwupdtool()
 		#firmware_type out
 		elif [[ "$prev" = "${COMP_WORDS[4]}" ]]; then
 			_show_firmware_types
+		#modifiers
 		else
 			_show_modifiers
 		fi
