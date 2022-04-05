@@ -229,6 +229,15 @@ fu_wac_device_ensure_flash_descriptors(FuWacDevice *self, GError **error)
 			return FALSE;
 		g_ptr_array_add(self->flash_descriptors, fd);
 	}
+	if (self->flash_descriptors->len > G_MAXUINT16) {
+		g_set_error(error,
+			    FWUPD_ERROR,
+			    FWUPD_ERROR_NOT_SUPPORTED,
+			    "too many flash descriptors for hardware: 0x%x",
+			    self->flash_descriptors->len);
+		return FALSE;
+	}
+
 	g_debug("added %u flash descriptors", self->flash_descriptors->len);
 	return TRUE;
 }
@@ -507,7 +516,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 	fu_progress_step_done(progress);
 
 	/* clear all checksums of pages */
-	for (guint16 i = 0; i < self->flash_descriptors->len; i++) {
+	for (guint i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
 		if (fu_wav_device_flash_descriptor_is_wp(fd))
 			continue;
@@ -521,7 +530,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 					 g_direct_equal,
 					 NULL,
 					 (GDestroyNotify)g_bytes_unref);
-	for (guint16 i = 0; i < self->flash_descriptors->len; i++) {
+	for (guint i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
 		GBytes *blob_block;
 		g_autoptr(GBytes) blob_tmp = NULL;
@@ -540,7 +549,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 
 	/* write the data into the flash page */
 	csum_local = g_new0(guint32, self->flash_descriptors->len);
-	for (guint16 i = 0; i < self->flash_descriptors->len; i++) {
+	for (guint i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
 		GBytes *blob_block;
 		g_autoptr(GPtrArray) chunks = NULL;
@@ -606,7 +615,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 	}
 
 	/* calculate CRC inside device */
-	for (guint16 i = 0; i < self->flash_descriptors->len; i++) {
+	for (guint i = 0; i < self->flash_descriptors->len; i++) {
 		if (!fu_wac_device_calculate_checksum_of_block(self, i, error))
 			return FALSE;
 	}
@@ -614,7 +623,7 @@ fu_wac_device_write_firmware(FuDevice *device,
 	/* read all CRC of all pages and verify with local CRC */
 	if (!fu_wac_device_ensure_checksums(self, error))
 		return FALSE;
-	for (guint16 i = 0; i < self->flash_descriptors->len; i++) {
+	for (guint i = 0; i < self->flash_descriptors->len; i++) {
 		FuWacFlashDescriptor *fd = g_ptr_array_index(self->flash_descriptors, i);
 		GBytes *blob_block;
 		guint32 csum_rom;
