@@ -30,7 +30,7 @@
  *
  * Device has a public-key appended to firmware.
  *
- * Since 1.7.7
+ * Since 1.8.0
  */
 #define FU_GENESYS_USBHUB_FLAG_HAS_PUBLIC_KEY (1 << 1)
 
