@@ -313,7 +313,7 @@ fu_fresco_pd_device_write_firmware(FuDevice *device,
 			break;
 	}
 	g_debug("begin_addr: 0x%04x", begin_addr);
-	for (guint16 i = begin_addr + 3; i < begin_addr + 0x400; i += 3) {
+	for (guint i = begin_addr + 3; i < (guint)begin_addr + 0x400; i += 3) {
 		for (guint j = 0; j < 3; j++) {
 			if (!fu_fresco_pd_device_read_byte(self, i + j, &config[j], error)) {
 				g_prefix_error(error, "failed to read config byte %u: ", j);

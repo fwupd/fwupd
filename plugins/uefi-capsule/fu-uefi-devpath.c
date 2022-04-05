@@ -94,7 +94,7 @@ fu_uefi_devpath_parse(const guint8 *buf, gsize sz, FuUefiDevpathParseFlags flags
 					    sz - offset,
 					    32,
 					    FU_DUMP_FLAGS_SHOW_ADDRESSES);
-			for (guint16 i = offset + 4; i <= sz - 4; i++) {
+			for (gsize i = offset + 4; i <= sz - 4; i++) {
 				if (memcmp(buf + i, "\x7f\xff\x04\x00", 4) == 0) {
 					hdr_length = i - offset;
 					g_debug("found END_ENTIRE at 0x%04x", (guint)(i - offset));
