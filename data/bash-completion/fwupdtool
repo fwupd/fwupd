@@ -77,6 +77,15 @@ _show_firmware_types()
 	COMPREPLY+=( $(compgen -W "${firmware_types}" -- "$cur") )
 }
 
+_show_device_ids()
+{
+	if ! command -v jq &> /dev/null; then
+		return 0
+	fi
+	local description
+	description="$(command fwupdmgr get-devices --json 2>/dev/null | jq '.Devices | .[] | .DeviceId')"
+	COMPREPLY+=( $(compgen -W "${description}" -- "$cur") )
+}
 
 _show_plugins()
 {
