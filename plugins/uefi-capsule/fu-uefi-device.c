@@ -395,21 +395,21 @@ GBytes *
 fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 {
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	gsize fw_length;
-	const guint8 *data = g_bytes_get_data(fw, &fw_length);
+	gsize bufsz;
+	const guint8 *buf = g_bytes_get_data(fw, &bufsz);
 	g_autofree gchar *guid_new = NULL;
 
 	priv->missing_header = FALSE;
 
 	/* GUID is the first 16 bytes */
-	if (fw_length < sizeof(fwupd_guid_t)) {
+	if (bufsz < sizeof(fwupd_guid_t)) {
 		g_set_error_literal(error,
 				    FWUPD_ERROR,
 				    FWUPD_ERROR_INVALID_FILE,
 				    "Invalid payload");
 		return NULL;
 	}
-	guid_new = fwupd_guid_to_string((fwupd_guid_t *)data, FWUPD_GUID_FLAG_MIXED_ENDIAN);
+	guid_new = fwupd_guid_to_string((fwupd_guid_t *)buf, FWUPD_GUID_FLAG_MIXED_ENDIAN);
 
 	/* ESRT header matches payload */
 	if (g_strcmp0(fu_uefi_device_get_guid(self), guid_new) == 0) {
@@ -419,17 +419,18 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 					      FU_UEFI_DEVICE_FLAG_NO_CAPSULE_HEADER_FIXUP)) {
 		return g_bytes_ref(fw);
 	} else {
-		guint header_size = getpagesize();
-		guint8 *new_data = g_malloc(fw_length + header_size);
-		guint8 *capsule = new_data + header_size;
+		guint hdrsize = getpagesize();
 		fwupd_guid_t esrt_guid = {0x0};
-		efi_capsule_header_t *header = (efi_capsule_header_t *)new_data;
+		efi_capsule_header_t header = {0x0};
+		g_autoptr(GByteArray) buf_hdr = g_byte_array_new();
 
 		g_warning("missing or invalid embedded capsule header");
 		priv->missing_header = TRUE;
-		header->flags = priv->capsule_flags;
-		header->header_size = header_size;
-		header->capsule_image_size = fw_length + header_size;
+
+		/* create a fake header with plausible contents */
+		header.flags = priv->capsule_flags;
+		header.header_size = hdrsize;
+		header.capsule_image_size = bufsz + hdrsize;
 		if (!fwupd_guid_from_string(fu_uefi_device_get_guid(self),
 					    &esrt_guid,
 					    FWUPD_GUID_FLAG_MIXED_ENDIAN,
@@ -437,10 +438,13 @@ fu_uefi_device_fixup_firmware(FuUefiDevice *self, GBytes *fw, GError **error)
 			g_prefix_error(error, "Invalid ESRT GUID: ");
 			return NULL;
 		}
-		memcpy(&header->guid, &esrt_guid, sizeof(fwupd_guid_t));
-		memcpy(capsule, data, fw_length);
+		memcpy(&header.guid, &esrt_guid, sizeof(fwupd_guid_t));
 
-		return g_bytes_new_take(new_data, fw_length + header_size);
+		/* prepend the header to the payload */
+		g_byte_array_append(buf_hdr, (const guint8 *)&header, sizeof(header));
+		fu_byte_array_set_size(buf_hdr, hdrsize);
+		g_byte_array_append(buf_hdr, buf, bufsz);
+		return g_byte_array_free_to_bytes(g_steal_pointer(&buf_hdr));
 	}
 }
 
@@ -452,9 +456,8 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 				 GError **error)
 {
 	FuUefiDevicePrivate *priv = GET_PRIVATE(self);
-	gsize datasz = 0;
 	gsize dp_bufsz = 0;
-	g_autofree guint8 *data = NULL;
+	g_autoptr(GByteArray) buf = g_byte_array_new();
 	g_autofree guint8 *dp_buf = NULL;
 	efi_update_info_t info = {
 	    .update_info_version = 0x7,
@@ -479,14 +482,12 @@ fu_uefi_device_write_update_info(FuUefiDevice *self,
 	/* save this header and body to the hardware */
 	if (!fwupd_guid_from_string(guid, &info.guid, FWUPD_GUID_FLAG_MIXED_ENDIAN, error))
 		return FALSE;
-	datasz = sizeof(info) + dp_bufsz;
-	data = g_malloc0(datasz);
-	memcpy(data, &info, sizeof(info));
-	memcpy(data + sizeof(info), dp_buf, dp_bufsz);
+	g_byte_array_append(buf, (const guint8 *)&info, sizeof(info));
+	g_byte_array_append(buf, dp_buf, dp_bufsz);
 	return fu_efivar_set_data(FU_EFIVAR_GUID_FWUPDATE,
 				  varname,
-				  data,
-				  datasz,
+				  buf->data,
+				  buf->len,
 				  FU_EFIVAR_ATTR_NON_VOLATILE | FU_EFIVAR_ATTR_BOOTSERVICE_ACCESS |
 				      FU_EFIVAR_ATTR_RUNTIME_ACCESS,
 				  error);
