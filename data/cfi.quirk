@@ -182,6 +182,9 @@ Vendor = Winbond
 # Winbond (ex Nexcom)
 [CFI\FLASHID_EF]
 Vendor = Winbond
+[CFI\FLASHID_EF3010]
+Name = W25X05CL
+FirmwareSizeMax = 0x10000
 [CFI\FLASHID_EF4018]
 Name = W25Q128
 FirmwareSizeMax = 0x1000000
