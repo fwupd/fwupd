@@ -2649,6 +2649,15 @@ fwupd_device_to_json(FwupdDevice *self, JsonBuilder *builder)
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_DEVICE_ID, priv->id);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_PARENT_DEVICE_ID, priv->parent_id);
 	fwupd_common_json_add_string(builder, FWUPD_RESULT_KEY_COMPOSITE_ID, priv->composite_id);
+	if (priv->instance_ids->len > 0) {
+		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_INSTANCE_IDS);
+		json_builder_begin_array(builder);
+		for (guint i = 0; i < priv->instance_ids->len; i++) {
+			const gchar *instance_id = g_ptr_array_index(priv->instance_ids, i);
+			json_builder_add_string_value(builder, instance_id);
+		}
+		json_builder_end_array(builder);
+	}
 	if (priv->guids->len > 0) {
 		json_builder_set_member_name(builder, FWUPD_RESULT_KEY_GUID);
 		json_builder_begin_array(builder);
